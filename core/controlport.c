@@ -99,16 +99,16 @@ void control_write(const uint16_t pio, const uint8_t byte)
              control.cpu_speed = byte & 0b00010011;
              switch(control.cpu_speed&3) {
                  case 0:
-                         asic_set_clock_rate(6000000);
+                         asic_set_clock_rate(6000000); // 6 MHz
                          break;
                  case 1:
-                         asic_set_clock_rate(12000000);
+                         asic_set_clock_rate(12000000); // 12 MHz
                          break;
                  case 2:
-                         asic_set_clock_rate(24000000);
+                         asic_set_clock_rate(24000000); // 24 MHz
                          break;
                  case 3:
-                         asic_set_clock_rate(48000000);
+                         asic_set_clock_rate(48000000); // 48 MHz
                          break;
                  default:
                          break;
