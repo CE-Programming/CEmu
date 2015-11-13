@@ -6,7 +6,7 @@
 // Global unk3 state
 cxxx_state_t cxxx;
 
-// Read from the 0xE000 range of ports
+// Read from the 0xCXXX range of ports
 uint8_t cxxx_read(const uint16_t pio) {
 
   uint8_t addr = pio&0xFF;
@@ -17,7 +17,7 @@ uint8_t cxxx_read(const uint16_t pio) {
   return read_byte;
 }
 
-// Write to the 0xE000 range of ports
+// Write to the 0xCXXX range of ports
 void cxxx_write(const uint16_t pio, const uint8_t byte)
 {
     uint8_t addr = pio & 0xFF;

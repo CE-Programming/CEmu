@@ -7,6 +7,7 @@
 #include "core/cpu.h"
 #include "core/memory.h"
 
+#include "core/cxxx.h"
 #include "core/exxx.h"
 #include "core/runloop.h"
 #include "core/keypad.h"

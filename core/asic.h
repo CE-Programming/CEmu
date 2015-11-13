@@ -8,6 +8,7 @@ extern "C" {
 #include <stdint.h>
 
 #include <core/cpu.h>
+#include <core/cxxx.h>
 #include <core/exxx.h>
 #include <core/memory.h>
 #include <core/tidevices.h>

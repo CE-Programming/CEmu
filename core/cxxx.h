@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-// Standard EXXX state
+// Standard CXXX state
 struct cxxx_state {
         uint8_t ports[0x100];  // No idea how big this is...
 };
