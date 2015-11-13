@@ -64,23 +64,18 @@ struct asic_state {
 // Type definitions
 typedef struct asic_state asic_state_t;
 
-// Externals
-extern mem_state_t mem;
-extern eZ80cpu_t cpu;
-extern asic_state_t asic;
-extern flash_state_t flash;
-extern lcd_cntrl_state_t lcd;
-extern keypad_state_t keypad;
-extern interrupt_state_t intrpt;
-
 // Available Functions
 void asic_init(ti_device_type);
-void asic_free();
+void asic_free(void);
 
 int asic_set_clock_rate(int);
 
 int asic_add_timer(int, double, timer_tick, void *);
 void asic_remove_timer(int);
+
+uint8_t read_unimplemented_port(const uint16_t addr);
+
+void write_unimplemented_port(const uint16_t addr, uint8_t value);
 
 #ifdef __cplusplus
 }

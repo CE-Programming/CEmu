@@ -12,7 +12,7 @@
 // Global CPU state
 eZ80cpu_t cpu;
 
-void cpu_init() {
+void cpu_init(void) {
     context_init();  // initilize execution context
     cpu.memory = &mem;
 }
@@ -53,7 +53,7 @@ void cpu_push(uint32_t value) {
         cpu.registers.SPL -= 3; cpu.registers.SPL &= 0xFFFFFF;
     }
 }
-uint32_t cpu_pop() {
+uint32_t cpu_pop(void) {
     uint32_t p;
     if(cpu.S) { // pop 2 bytes
         p = cpu_read_word(cpu.registers.SPS);
@@ -66,14 +66,14 @@ uint32_t cpu_pop() {
     }
 }
 
-void get_cntrl_data_blocks_format(){
+static void get_cntrl_data_blocks_format(void) {
     cpu.L = cpu.ADL || cpu.MADL;
     cpu.IL = cpu.ADL || cpu.MADL;
     cpu.S = !cpu.L;
     cpu.IS = !cpu.IL;
 }
 
-void daa() {
+static void daa(void) {
 	eZ80registers_t *r = &cpu.registers;
 	uint8_t old = r->A;
 	uint8_t v = 0;
@@ -98,10 +98,10 @@ void daa() {
 	}
 }
 
-void execute_alu(int i, uint8_t v) {
+static void execute_alu(int i, uint8_t v) {
 	uint8_t old;
-	context.cycles += 4;
 	eZ80registers_t *r = &cpu.registers;
+	context.cycles += 4;
 	switch (i) {
 	  case 0: // ADD A, v
 		  old = r->A;
@@ -164,8 +164,15 @@ void execute_alu(int i, uint8_t v) {
 		  break;
 	}
 }
-void execute_rot(int y, int z, int switch_opcode_data) {
-	uint8_t r = read_reg(z);
+
+static void execute_rot(int y, int z, int switch_opcode_data) {
+	uint8_t r;
+	uint8_t old_7;
+	uint8_t old_0;
+	uint8_t old_c;
+	eZ80registers_t *reg;
+
+	r = read_reg(z);
 	if (z == 6 && switch_opcode_data) {
 		// reset the PC back to the offset, so
 		// the write reads it correctly
@@ -174,11 +181,11 @@ void execute_rot(int y, int z, int switch_opcode_data) {
 	}
 
 	//uint8_t old_r = r;
-	uint8_t old_7 = (r & 0x80) > 0;
-	uint8_t old_0 = (r & 0x01) > 0;
-	uint8_t old_c = context.cpu->registers.flags.C > 0;
+	old_7 = (r & 0x80) > 0;
+	old_0 = (r & 0x01) > 0;
+	old_c = context.cpu->registers.flags.C > 0;
 
-	eZ80registers_t *reg = &cpu.registers;
+	reg = &cpu.registers;
 	switch (y) {
 	case 0: // RLC r[z]
 		r <<= 1; r |= old_7;
@@ -231,7 +238,8 @@ void execute_rot(int y, int z, int switch_opcode_data) {
 		break;
 	}
 }
-void execute_rot_acc(int y)
+
+static void execute_rot_acc(int y)
 {
  eZ80registers_t *r = &cpu.registers;
  uint8_t old;
@@ -307,7 +315,7 @@ void execute_rot_acc(int y)
   }
 }
 
-void execute_bli(int y, int z) {
+static void execute_bli(int y, int z) {
 	eZ80registers_t *r = &cpu.registers;
 	eZ80portrange_t portr;
 	uint8_t old = 0, new = 0, hc;
@@ -787,8 +795,6 @@ void execute_bli(int y, int z) {
 int cpu_execute(int cycles) {
   eZ80portrange_t portr;
 
-  get_cntrl_data_blocks_format();
-
   // variable declaration
   int8_t s;
   uint8_t u;
@@ -806,6 +812,8 @@ int cpu_execute(int cycles) {
   int reset_prefix;
 
   eZ80registers_t *r = &cpu.registers;
+
+  get_cntrl_data_blocks_format();
 
   while (cycles > 0 || cpu.prefix != 0)
   {

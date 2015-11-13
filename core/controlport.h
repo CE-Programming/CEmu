@@ -25,7 +25,8 @@ typedef struct control_state control_state_t;
 extern control_state_t control;
 
 // Available Functions
-eZ80portrange_t init_control();
+void free_control(void *_state);
+eZ80portrange_t init_control(void);
 
 #ifdef __cplusplus
 }

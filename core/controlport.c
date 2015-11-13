@@ -9,7 +9,7 @@
 control_state_t control;
 
 // Read from the 0x0000 range of ports
-uint8_t control_read(const uint16_t pio) {
+static uint8_t control_read(const uint16_t pio) {
   uint8_t addr = pio & 0x7F;
 
   uint8_t read_byte;
@@ -43,7 +43,7 @@ uint8_t control_read(const uint16_t pio) {
 }
 
 // Write to the 0x0000 range of ports
-void control_write(const uint16_t pio, const uint8_t byte)
+static void control_write(const uint16_t pio, const uint8_t byte)
 {
   uint8_t addr = pio & 0x7F;
 
@@ -199,7 +199,9 @@ void free_control(void *_state) {
     free(state);
 }
 
-eZ80portrange_t init_control() {
+static const eZ80portrange_t device = { .read_in = control_read, .write_out = control_write };
+
+eZ80portrange_t init_control(void) {
     int i;
     // Initialize device to default state
     for(i = 0; i<0x80; i++) {
@@ -234,6 +236,5 @@ eZ80portrange_t init_control() {
     control.ports[0x3B] = 0xFF; // Probably right
     control.ports[0x3C] = 0xDF; // Probably right
 
-    eZ80portrange_t device = { control_read, control_write };
     return device;
 }

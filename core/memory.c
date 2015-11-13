@@ -6,7 +6,7 @@
 // Global MEMORY state
 mem_state_t mem;
 
-void mem_init() {
+void mem_init(void) {
     mem.flash=(uint8_t*)malloc(0x3FFFFF);     // allocate flash memory
     memset(mem.flash, 0xFF, 0x3FFFFF);
 
@@ -18,7 +18,7 @@ void mem_init() {
     mem.flash_unlocked = 0;
 }
 
-void mem_free() {
+void mem_free(void) {
     free(mem.ram);
     free(mem.flash);
 }
@@ -35,8 +35,9 @@ uint8_t* phys_mem_ptr(uint32_t addr, uint32_t size) {
 // returns wait cycles
 uint8_t memory_read_byte(uint32_t address)
 {
+    int addr; // XXX should be uint32_t
     address &= 0xFFFFFF;
-    int addr = (int)address;
+    addr = (int)address;
 
     switch( upperNibble24(addr) ) {
 
@@ -85,18 +86,19 @@ uint8_t memory_read_byte(uint32_t address)
     return 0;
 }
 
-int mem_wait_states() {
+int mem_wait_states(void) {
      return mem.wait_state;
 }
 
-void mem_reset_wait_states() {
+void mem_reset_wait_states(void) {
      mem.wait_state = 0;
 }
 
 void memory_write_byte(uint32_t address, const uint8_t byte)
 {
+    int addr; // XXX should be uint32_t
     address &= 0xFFFFFF;
-    int addr = (int)address;
+    addr = (int)address;
 
     switch( upperNibble24(addr) ) {
 

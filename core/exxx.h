@@ -19,7 +19,7 @@ typedef struct exxx_state exxx_state_t;
 extern exxx_state_t exxx;
 
 // Avbailable functions
-eZ80portrange_t init_exxx();
+eZ80portrange_t init_exxx(void);
 
 #ifdef __cplusplus
 }

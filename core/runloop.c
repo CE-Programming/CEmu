@@ -16,7 +16,7 @@ static double orwl_timebase = 0.0;
 static uint64_t orwl_timestart = 0;
 #endif
 
-long long get_time_nsec() {
+static long long get_time_nsec(void) {
 #ifdef EMSCRIPTEN
 	return emscripten_get_now() * 1000000;
 #else
@@ -44,10 +44,10 @@ long long get_time_nsec() {
 
 runloop_state_t runloop;
 
-void runloop_init() {
+void runloop_init(void) {
+	int i;
 	runloop.asic = &asic;
 	runloop.last_end = get_time_nsec();
-	int i;
 	for (i = 0; i < asic.timers->max_timers; i++) {
 		eZ80_hardware_timer_t *timer = &asic.timers->timers[i];
 		if (timer->flags & TIMER_IN_USE) {
@@ -59,7 +59,7 @@ void runloop_init() {
 	runloop.max_tick_count = 40;
 }
 
-int runloop_compare(const void *first, const void *second) {
+static int runloop_compare(const void *first, const void *second) {
 	const timer_tick_t *a = first;
 	const timer_tick_t *b = second;
 
@@ -71,14 +71,17 @@ void runloop_tick_cycles(int cycles) {
 	int cycles_until_next_tick = cycles;
 	int current_tick = 0;
 	int i;
+	int tick_i = 0;
+
 	for (i = 0; i < runloop.asic->timers->max_timers; i++) {
+		int tot_cycles;
 		eZ80_hardware_timer_t *timer = &runloop.asic->timers->timers[i];
 
 		if (!(timer->flags & TIMER_IN_USE)) {
 			continue;
 		}
 
-		int tot_cycles = cycles;
+		tot_cycles = cycles;
 		if (timer->cycles_until_tick < tot_cycles) {
 			retry:
 			runloop.ticks[current_tick].index = i;
@@ -106,7 +109,6 @@ void runloop_tick_cycles(int cycles) {
 		cycles_until_next_tick = runloop.ticks[0].after_cycle;
 	}
 
-	int tick_i = 0;
 	while (cycles > 0) {
 		int ran = cycles_until_next_tick - cpu_execute(cycles_until_next_tick);
 
@@ -128,15 +130,16 @@ void runloop_tick_cycles(int cycles) {
 	runloop.spare_cycles = cycles;
 }
 
-void runloop_tick() {
+void runloop_tick(void) {
 	long long now = get_time_nsec();
 	long long ticks_between = now - runloop.last_end;
 
 	float seconds = (float)ticks_between / (float)1000000000;
 	int cycles = seconds * (float)runloop.asic->clock_rate;
 
-	if (cycles == 0)
+	if (cycles == 0) {
 		return;
+	}
 
 	runloop_tick_cycles(cycles);
 	runloop.last_end = now;

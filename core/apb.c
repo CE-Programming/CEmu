@@ -4,7 +4,7 @@
 #define map_port(addr) ((addr>>12)&0xF)
 
 // Global APB state
-apb_map_entry_t apb_map[0x0F];
+apb_map_entry_t apb_map[0x10];
 
 /* The APB (Advanced Peripheral Bus) hosts peripherals that do not require
  * high bandwidth. The bridge to the APB is accessed via addresses 0xE00000-0xFB0000.

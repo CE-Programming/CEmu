@@ -20,7 +20,7 @@ DebugWindow::DebugWindow(QWidget *parent) :  QMainWindow(parent),ui(new Ui::Debu
   item->setPos(0, 0);
   for(int x = 0; x < columns; x++) {
     for(int y = 1; y < rows+1; y++) {
-      QGraphicsSimpleTextItem *item = scene->addSimpleText(QString("%1").arg(y, 5, 16, QChar('0')), font);
+      item = scene->addSimpleText(QString("%1").arg(y, 5, 16, QChar('0')), font);
       item->setPos(x * column_width, y * row_height);
     }
   }

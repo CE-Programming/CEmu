@@ -7,7 +7,7 @@
 flash_state_t flash;
 
 // Read from the 0x1000 range of ports
-uint8_t flash_read(const uint16_t pio) {
+static uint8_t flash_read(const uint16_t pio) {
 
   uint8_t addr = pio&0xFF;
   uint8_t read_byte;
@@ -27,7 +27,7 @@ uint8_t flash_read(const uint16_t pio) {
 }
 
 // Write to the 0x1000 range of ports
-void flash_write(const uint16_t pio, const uint8_t byte)
+static void flash_write(const uint16_t pio, const uint8_t byte)
 {
   uint8_t addr = pio & 0xFF;
 
@@ -47,7 +47,10 @@ void flash_write(const uint16_t pio, const uint8_t byte)
   }
 }
 
-eZ80portrange_t init_flash() {
+static const eZ80portrange_t device = { .read_in = flash_read, .write_out = flash_write };
+
+
+eZ80portrange_t init_flash(void) {
     int i;
     // Initialize device to default state
     for(i = 0; i<0x100; i++) {
@@ -57,6 +60,5 @@ eZ80portrange_t init_flash() {
     flash.ports[0x07] = 0xFF; // From WikiTI
     flash.map = 0x06;     // From WikiTI
 
-    eZ80portrange_t device = { flash_read, flash_write };
     return device;
 }

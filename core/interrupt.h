@@ -37,10 +37,7 @@ typedef struct interrupt_state interrupt_state_t;
 extern interrupt_state_t intrpt;
 
 // Available Functions
-eZ80portrange_t init_intrpt();
-
-uint8_t init_read(const uint16_t pio);
-void init_write(const uint16_t pio, const uint8_t byte);
+eZ80portrange_t init_intrpt(void);
 
 #ifdef __cplusplus
 }

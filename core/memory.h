@@ -15,7 +15,7 @@ struct mem_state {
   uint8_t *vram;      // vram mem
   int flash_mapped;
   int flash_unlocked;
-  int wait_state;
+  int wait_state; // XXX should be unsigned
 };
 
 // Type definitions
@@ -27,21 +27,17 @@ extern mem_state_t mem;
 // Available Functions
 uint8_t *phys_mem_ptr(uint32_t addr, uint32_t size);
 
-int mem_wait_states();
-int reset_mem_wait_states();
+int mem_wait_states(void); // XXX unsigned
+void mem_reset_wait_states(void);
 
 typedef struct apb_map_entry apb_map_entry;
 
-void mem_init();
-void mem_free();
+void mem_init(void);
+void mem_free(void);
 
 uint8_t memory_read_byte(const uint32_t);
 void memory_write_byte(const uint32_t, const uint8_t);
 
-void apb_set_map(int, eZ80portrange_t*);
-
-uint8_t mmio_read_byte(const uint32_t);
-void mmio_write_byte(const uint32_t, const uint8_t);
 #ifdef __cplusplus
 }
 #endif

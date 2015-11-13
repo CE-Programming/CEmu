@@ -13,11 +13,15 @@ void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
 
     uint32_t mode = lcd.control >> 1 & 7;
     uint32_t bpp;
+    uint32_t *in;
+    int row;
 
-    if (mode <= 5)
+    if (mode <= 5) {
         bpp = 1 << mode;
-    else
+    }
+    else {
         bpp = 16;
+    }
 
     if (mode == 7) {
         // 444 format
@@ -37,11 +41,10 @@ void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
         bitfields[2] = tmp;
     }
 
-    uint32_t *in = (uint32_t*)lcd.memory->vram;
+    in = (uint32_t*)lcd.memory->vram;
     if (!in || !lcd.upbase || (((lcd.control>>11)&0x1) == 0)) {
         memset(buffer, 0x00, 320 * 240 * 2); return;
     }
-    int row;
     for (row = 0; row < 240; ++row) {
         uint16_t *out = buffer + (row * 320);
         uint32_t words = (320 / 32) * bpp;
@@ -201,13 +204,14 @@ void lcd_write(const uint16_t pio, const uint8_t byte)
   }
 }
 
-void lcd_init() {
+void lcd_init(void) {
   lcd.control = 0x92D;
   lcd.upbase = 0xD40000;
   lcd.memory = &mem;
 }
 
-eZ80portrange_t init_lcd() {
-    eZ80portrange_t device = { lcd_read, lcd_write };
+static const eZ80portrange_t device = { .read_in = lcd_read, .write_out = lcd_write };
+
+eZ80portrange_t init_lcd(void) {
     return device;
 }

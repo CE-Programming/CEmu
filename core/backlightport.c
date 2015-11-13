@@ -14,7 +14,7 @@ struct backlight_state {
 };
 
 // Read from the 0xB000 range of ports
-uint8_t backlight_read(const uint16_t pio) {
+static uint8_t backlight_read(const uint16_t pio) {
 
   uint8_t addr = pio & 0xFF;
   uint8_t read_byte = 0;
@@ -54,7 +54,7 @@ uint8_t backlight_read(const uint16_t pio) {
 }
 
 // Write to the 0xB000 range of ports
-void backlight_write(const uint16_t pio, const uint8_t byte)
+static void backlight_write(const uint16_t pio, const uint8_t byte)
 {
   uint8_t addr = pio & 0xFF;
 
@@ -80,7 +80,11 @@ void backlight_write(const uint16_t pio, const uint8_t byte)
   }
 }
 
-eZ80portrange_t init_backlight() {
+static const eZ80portrange_t device = {
+                           .read_in = backlight_read,
+                           .write_out = backlight_write };
+
+eZ80portrange_t init_backlight(void) {
     int i;
     // Initialize device to default state
     for(i = 0; i<0x100; i++) {
@@ -93,8 +97,5 @@ eZ80portrange_t init_backlight() {
     backlight.ports[0x20] = 0xFF; // backlight scaler? (unimplemented)
     backlight.brightness = 0xFF; // backlight level (PWM)
 
-    eZ80portrange_t device = {
-                               .read_in = backlight_read,
-                               .write_out = backlight_write };
     return device;
 }

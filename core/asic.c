@@ -30,7 +30,7 @@ void write_unimplemented_port(const uint16_t addr, uint8_t value) {
     //printf("Attempted to write unimplemented port: 0x%04X <- 0x%02X", addr, value);
 }
 
-void plug_devices() {
+static void plug_devices(void) {
     /* Unimplemented devices */
     int i;
     eZ80portrange_t unimplemented_range = { read_unimplemented_port, write_unimplemented_port };
@@ -88,7 +88,7 @@ void asic_init(ti_device_type type) {
     plug_devices();
 }
 
-void asic_free() {
+void asic_free(void) {
     mem_free();
 }
 
@@ -102,9 +102,10 @@ int asic_add_timer(int flags, double frequency, timer_tick tick, void *data) {
 		}
 
 		if (i == asic.timers->max_timers - 1) {
+			eZ80_hardware_timer_t *ne;
 			asic.timers->max_timers += 10;
 			asic.timers->timers = realloc(asic.timers->timers, sizeof(eZ80_hardware_timer_t) * asic.timers->max_timers);
-			eZ80_hardware_timer_t *ne = &asic.timers->timers[asic.timers->max_timers - 10];
+			ne = &asic.timers->timers[asic.timers->max_timers - 10];
 			memset(ne, 0, sizeof(eZ80_hardware_timer_t) * 10);
 		}
 	}

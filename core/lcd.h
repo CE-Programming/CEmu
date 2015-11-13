@@ -54,11 +54,11 @@ struct lcd_cntrl_state {
 };
 
 // Available Functions
-void set_defualt_pal();
+void set_default_pal(void);
 void set_pal(char *path);
 
-void lcd_init();
-eZ80portrange_t init_lcd();
+void lcd_init(void);
+eZ80portrange_t init_lcd(void);
 
 void lcd_write(const uint16_t, const uint8_t);
 uint8_t lcd_read(const uint16_t);

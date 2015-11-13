@@ -7,7 +7,7 @@
 exxx_state_t exxx;
 
 // Read from the 0xEXXX range of ports
-uint8_t exxx_read(const uint16_t pio) {
+static uint8_t exxx_read(const uint16_t pio) {
 
   uint8_t addr = pio&0x7F;
   uint8_t read_byte;
@@ -24,11 +24,16 @@ uint8_t exxx_read(const uint16_t pio) {
 }
 
 // Write to the 0xEXXX range of ports
-void exxx_write(const uint16_t pio, const uint8_t byte)
+static void exxx_write(const uint16_t pio, const uint8_t byte)
 {
     uint8_t addr = pio & 0x7F;
     exxx.ports[addr] = byte;
 }
+
+static const eZ80portrange_t device = {
+    .read_in = exxx_read,
+    .write_out = exxx_write
+};
 
 eZ80portrange_t init_exxx() {
     int i;
@@ -36,11 +41,6 @@ eZ80portrange_t init_exxx() {
     for(i = 0; i<0x80; i++) {
         exxx.ports[i] = 0;
     }
-
-    eZ80portrange_t device = {
-        .read_in = exxx_read,
-        .write_out = exxx_write
-    };
 
     return device;
 }

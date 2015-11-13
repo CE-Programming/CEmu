@@ -26,9 +26,9 @@ typedef struct runloop_state runloop_state_t;
 // Externals
 extern asic_state_t asic;
 
-void runloop_init();
+void runloop_init(void);
 void runloop_tick_cycles(int);
-void runloop_tick();
+void runloop_tick(void);
 
 #ifdef __cplusplus
 }

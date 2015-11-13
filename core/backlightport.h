@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-eZ80portrange_t init_backlight();
+eZ80portrange_t init_backlight(void);
 
 #ifdef __cplusplus
 }

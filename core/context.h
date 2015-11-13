@@ -37,31 +37,30 @@ typedef struct execution_context execution_context_t;
 
 // Global CONTEXT state
 extern execution_context_t context;
-extern eZ80cpu_t cpu;
 
 // Available Functions
-void context_init();
+void context_init(void);
 
-void set_is_context();
-void set_il_context();
+void set_is_context(void);
+void set_il_context(void);
 
-uint8_t is_read_next_byte();
-int8_t is_read_next_signed_byte();
-uint32_t is_read_next_word();
+uint8_t is_read_next_byte(void);
+int8_t is_read_next_signed_byte(void);
+uint32_t is_read_next_word(void);
 
-uint8_t il_read_next_byte();
-int8_t il_read_next_signed_byte();
-uint32_t il_read_next_word();
+uint8_t il_read_next_byte(void);
+int8_t il_read_next_signed_byte(void);
+uint32_t il_read_next_word(void);
 
-uint8_t HorIHr();
+uint8_t HorIHr(void);
 uint8_t HorIHw(const uint8_t value);
-uint8_t LorILr();
+uint8_t LorILr(void);
 uint8_t LorILw(const uint8_t value);
 
-uint32_t HLorIr();
+uint32_t HLorIr(void);
 uint32_t HLorIw(const uint32_t value);
 
-uint8_t indHLorIr();
+uint8_t indHLorIr(void);
 uint8_t indHLorIw(const uint8_t value);
 
 uint8_t read_reg(const int i);

@@ -5,7 +5,7 @@
 // Global KEYPAD state
 keypad_state_t keypad;
 
-uint8_t keypad_read(const uint16_t pio)
+static uint8_t keypad_read(const uint16_t pio)
 {
   int index = (int)pio & 0x7F;
   int bit_offset = (index&3)<<3;
@@ -50,7 +50,7 @@ uint8_t keypad_read(const uint16_t pio)
    }
 }
 
-void keypad_write(const uint16_t pio, const uint8_t byte)
+static void keypad_write(const uint16_t pio, const uint8_t byte)
 {
  int index = (int)pio & 0x7F;
  int bit_offset = (index&3)<<3;
@@ -100,11 +100,12 @@ void keypad_write(const uint16_t pio, const uint8_t byte)
   }
 }
 
-eZ80portrange_t init_keypad() {
+static const eZ80portrange_t device = { .read_in = keypad_read, .write_out = keypad_write };
+
+eZ80portrange_t init_keypad(void) {
 	int i;
 	for(i=0; i<16; i++) {
 	    keypad.data[i] = 0;
 	}
-	eZ80portrange_t device = { keypad_read, keypad_write };
 	return device;
 }

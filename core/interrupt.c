@@ -2,7 +2,7 @@
 
 interrupt_state_t intrpt;
 
-uint8_t intrpt_read(const uint16_t pio) {
+static uint8_t intrpt_read(const uint16_t pio) {
    int index = (int)pio & 0xFF;
    int bit_offset = (index&3)<<3;
 
@@ -42,7 +42,7 @@ uint8_t intrpt_read(const uint16_t pio) {
    return byte_read;
 }
 
-void intrpt_write(const uint16_t pio, const uint8_t byte) {
+static void intrpt_write(const uint16_t pio, const uint8_t byte) {
   int index = (int)pio & 0xFF;
   int bit_offset = (index&3)<<3;
 
@@ -64,13 +64,14 @@ void intrpt_write(const uint16_t pio, const uint8_t byte) {
    }
 }
 
-eZ80portrange_t init_intrpt() {
+static const eZ80portrange_t device = { .read_in = intrpt_read,
+                             .write_out = intrpt_write };
+
+eZ80portrange_t init_intrpt(void) {
   intrpt.int_enable_mask = 0x00003011; // Default state
   intrpt.int_latch = 0x00000019;  // Default state
   intrpt.revision = 0x00010900;   // Revision register 1.9.0.
   intrpt.f_irq = 0x16; // unused
   intrpt.f_fiq = 0x16; // unused
-  eZ80portrange_t device = { .read_in = intrpt_read,
-                             .write_out = intrpt_write };
   return device;
 }

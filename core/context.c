@@ -4,16 +4,17 @@
 // Global CONTEXT state
 execution_context_t context;
 
-void context_init() {
+void context_init(void) {
     context.cpu = &cpu;
 }
 
-uint8_t is_read_next_byte() {
+uint8_t is_read_next_byte(void) {
+  uint8_t b;
   if(context.cpu->ADL == 0) {
       context.cpu->registers.PC&=0xFFFF;
       context.cpu->registers.PC|=context.cpu->registers.MBASE<<16;
   }
-  uint8_t b = cpu_read_byte(context.cpu->registers.PC);
+  b = cpu_read_byte(context.cpu->registers.PC);
   context.cpu->registers.PC++;
   if(context.cpu->ADL == 0) {
       context.cpu->registers.PC&=0xFFFF;
@@ -21,7 +22,7 @@ uint8_t is_read_next_byte() {
   }
   return b;
 }
-int8_t is_read_next_signed_byte() {
+int8_t is_read_next_signed_byte(void) {
   int8_t s = (int8_t)cpu_read_byte(context.cpu->registers.PC);
 
   context.cpu->registers.PC++;
@@ -31,53 +32,53 @@ int8_t is_read_next_signed_byte() {
   }
   return s;
 }
-uint32_t is_read_next_word() {
+uint32_t is_read_next_word(void) {
   uint32_t w = cpu_read_word(context.cpu->registers.PC);
   context.cpu->registers.PC += 2;
   return w;
 }
-uint8_t il_read_next_byte() {
+uint8_t il_read_next_byte(void) {
   uint8_t b = cpu_read_byte(context.cpu->registers.PC);
 
   context.cpu->registers.PC++; context.cpu->registers.PC &= 0xFFFFFF;
   return b;
 }
-int8_t il_read_next_signed_byte() {
+int8_t il_read_next_signed_byte(void) {
   int8_t s = (int8_t)cpu_read_byte(context.cpu->registers.PC);
 
   context.cpu->registers.PC++; context.cpu->registers.PC&=0xFFFFFF;
   return s;
 }
-uint32_t il_read_next_word() {
+uint32_t il_read_next_word(void) {
   uint32_t w = cpu_read_word(context.cpu->registers.PC);
 
   context.cpu->registers.PC += 3; context.cpu->registers.PC&=0xFFFFFF;
   return w;
 }
 
-void set_il_context() {
+void set_il_context(void) {
   context.nu = il_read_next_byte;
   context.ns = il_read_next_signed_byte;
   context.nw = il_read_next_word;
 }
-void set_is_context() {
+void set_is_context(void) {
   context.nu = is_read_next_byte;
   context.ns = is_read_next_signed_byte;
   context.nw = is_read_next_word;
 }
 
-uint8_t HorIHr() {
-	if (context.cpu->prefix >> 8 == 0xDD) {
-		return context.cpu->registers.IXH;
-	} else if (context.cpu->prefix >> 8 == 0xFD) {
-		return context.cpu->registers.IYH;
-	} else {
-		return context.cpu->registers.H;
-	}
+uint8_t HorIHr(void) {
+    if (context.cpu->prefix >> 8 == 0xDD) {
+        return context.cpu->registers.IXH;
+    } else if (context.cpu->prefix >> 8 == 0xFD) {
+        return context.cpu->registers.IYH;
+    } else {
+        return context.cpu->registers.H;
+    }
 }
 uint8_t HorIHw(const uint8_t value) {
-	if (context.cpu->prefix >> 8 == 0xDD) {
-	    context.cpu->registers.IXH = value;
+    if (context.cpu->prefix >> 8 == 0xDD) {
+        context.cpu->registers.IXH = value;
     } else if (context.cpu->prefix >> 8 == 0xFD) {
             context.cpu->registers.IYH = value;
     } else {
@@ -85,7 +86,8 @@ uint8_t HorIHw(const uint8_t value) {
     }
     return value;
 }
-uint8_t LorILr() {
+
+uint8_t LorILr(void) {
     if (context.cpu->prefix >> 8 == 0xDD) {
             return context.cpu->registers.IXL;
     } else if (context.cpu->prefix >> 8 == 0xFD) {
@@ -94,6 +96,7 @@ uint8_t LorILr() {
             return context.cpu->registers.L;
     }
 }
+
 uint8_t LorILw(const uint8_t value) {
     if (context.cpu->prefix >> 8 == 0xDD) {
             context.cpu->registers.IXL = value;
@@ -104,7 +107,8 @@ uint8_t LorILw(const uint8_t value) {
     }
     return value;
 }
-uint32_t HLorIr() {
+
+uint32_t HLorIr(void) {
     if(context.cpu->S) {
         if (context.cpu->prefix >> 8 == 0xDD) {
             return context.cpu->registers.IX&0xFFFF;
@@ -123,6 +127,7 @@ uint32_t HLorIr() {
         }
     }
 }
+
 uint32_t HLorIw(const uint32_t value) {
     if (context.cpu->prefix >> 8 == 0xDD) {
         context.cpu->registers.IX = value;
@@ -133,7 +138,8 @@ uint32_t HLorIw(const uint32_t value) {
     }
     return value;
 }
-uint8_t indHLorIr() {
+
+uint8_t indHLorIr(void) {
     // This function erases the prefix early so that the next read (H or L) does not
     // use IXH or IXL
     if (context.cpu->prefix >> 8 == 0xDD) {
@@ -150,6 +156,7 @@ uint8_t indHLorIr() {
         return cpu_read_byte(context.cpu->registers.HL);
     }
 }
+
 uint8_t indHLorIw(const uint8_t value) {
     if (context.cpu->prefix >> 8 == 0xDD) {
         context.cycles += 9;
@@ -166,6 +173,7 @@ uint8_t indHLorIw(const uint8_t value) {
     }
     return value;
 }
+
 uint8_t read_reg(const int i) {
 	switch (i) {
 	case 0: return context.cpu->registers.B;
@@ -191,6 +199,7 @@ uint8_t read_reg(const int i) {
 	  }
 	return 0; // This should never happen
 }
+
 uint8_t write_reg(const int i, const uint8_t value) {
 	switch (i) {
 	case 0: return context.cpu->registers.B = value;
@@ -216,14 +225,16 @@ uint8_t write_reg(const int i, const uint8_t value) {
 	case 7: return context.cpu->registers.A = value;
 	  }
 	  return 0; // This should never happen
-  }
+}
+  
 uint8_t read_write_reg(const int read, const int write) {
     if (write == 0x06 || read == 0x06) { // Reading from/writing to (IX/IY + n)
+        uint8_t r;
         uint16_t old_prefix = context.cpu->prefix;
         if (write == 0x06) {
             context.cpu->prefix &= 0xFF;
         }
-        uint8_t r = read_reg(read);
+        r = read_reg(read);
         context.cpu->prefix = old_prefix;
         if (read == 0x06) {
             context.cpu->prefix &= 0xFF;
@@ -233,6 +244,7 @@ uint8_t read_write_reg(const int read, const int write) {
         return write_reg(write, read_reg(read));
     }
 }
+
 uint32_t read_rp(const int i) {
     if(context.cpu->S) {
         switch (i) {
@@ -252,6 +264,7 @@ uint32_t read_rp(const int i) {
         return 0; // This should never happen
     }
 }
+
 uint32_t write_rp(const int i, const uint32_t value) {
     if(context.cpu->S) {
         switch (i) {
@@ -271,6 +284,7 @@ uint32_t write_rp(const int i, const uint32_t value) {
         return 0; // This should never happen
     }
 }
+
 uint32_t read_rp2(const int i) {
     if(context.cpu->S) {
         switch (i) {
@@ -290,6 +304,7 @@ uint32_t read_rp2(const int i) {
         return 0; // This should never happen
     }
 }
+
 uint32_t write_rp2(const int i, const uint32_t value) {
     if(context.cpu->S) {
         switch (i) {
@@ -309,6 +324,7 @@ uint32_t write_rp2(const int i, const uint32_t value) {
         return 0; // This should never happen
     }
 }
+
 uint8_t read_cc(const int i) {
     eZ80registers_t *r = &context.cpu->registers;
     switch (i) {

@@ -21,7 +21,7 @@ typedef struct flash_state flash_state_t;
 extern flash_state_t flash;
 
 // Avbailable functions
-eZ80portrange_t init_flash();
+eZ80portrange_t init_flash(void);
 
 #ifdef __cplusplus
 }

@@ -29,10 +29,7 @@ typedef struct keypad_state keypad_state_t;
 extern keypad_state_t keypad;
 
 // Available Functions
-eZ80portrange_t init_keypad();
-
-uint8_t keypad_read(const uint16_t pio);
-void keypad_write(const uint16_t pio, const uint8_t byte);
+eZ80portrange_t init_keypad(void);
 
 #ifdef __cplusplus
 }

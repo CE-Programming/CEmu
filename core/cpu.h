@@ -43,11 +43,9 @@ typedef struct eZ80cpu eZ80cpu_t;
 
 // Externals
 extern eZ80cpu_t cpu;
-extern mem_state_t mem;
-extern apb_map_entry_t apb_map[0x0F];
 
 // Available Functions
-void cpu_init();
+void cpu_init(void);
 
 uint8_t cpu_read_byte(const uint32_t address);
 uint32_t cpu_read_word(const uint32_t address);
@@ -55,7 +53,7 @@ void cpu_write_byte(uint32_t address, uint8_t value);
 void cpu_write_word(uint32_t address, uint32_t value);
 
 void cpu_push(uint32_t value);
-uint32_t cpu_pop();
+uint32_t cpu_pop(void);
 
 int cpu_execute(int cycles);
 #ifdef __cplusplus
