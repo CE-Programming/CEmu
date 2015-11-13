@@ -31,10 +31,10 @@ struct lcd_cntrl_state {
 
   // 256x16-bit color palette registers
   // 256 palette entries organized as 128 locations of two entries per word
-  uint16_t palette[0x100];
+  uint16_t palette[0x101];
   // Cursor image RAM register
   // 256-word wide values defining images overlaid by the hw cursor mechanism
-  int cursorimage[0x100];
+  int cursorimage[0x101];
   uint32_t crsrCtrl;           // Cursor control register
   uint32_t crsrConfig;         // Cursor configuration register
   uint32_t crsrPalette0;       // Cursor palette registers
