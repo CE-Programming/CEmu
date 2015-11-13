@@ -7,12 +7,11 @@
 mem_state_t mem;
 
 void mem_init(void) {
-    mem.flash=(uint8_t*)malloc(0x3FFFFF);     // allocate flash memory
-    memset(mem.flash, 0xFF, 0x3FFFFF);
+    mem.flash=(uint8_t*)malloc(0x400000);     // allocate flash memory
+    memset(mem.flash, 0xFF, 0x400000);
 
-    mem.ram=(uint8_t*)malloc(0x657FF);      // allocate ram memory
-    mem.vram=mem.ram+0x40000;              // allocate vram memory
-    memset(mem.ram, 0x00, 0x657FF);
+    mem.ram=(uint8_t*)calloc(0x65800, sizeof(uint8_t)); // allocate ram memory
+    mem.vram = mem.ram + 0x40000;                           // allocate vram memory
 
     mem.flash_mapped = 0;
     mem.flash_unlocked = 0;
