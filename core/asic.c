@@ -30,9 +30,9 @@ void write_unimplemented_port(const uint16_t addr, uint8_t value) {
 void plug_devices() {
     /* Unimplemented devices */
     int i;
+    eZ80portrange_t unimplemented_range = { read_unimplemented_port, write_unimplemented_port };
     for (i = 0; i < 0x10; i++) {
-            eZ80portrange_t range = { read_unimplemented_port, write_unimplemented_port };
-            asic.cpu->prange[i] = range;
+            asic.cpu->prange[i] = unimplemented_range;
     }
 
     // Port ranges 0x0 -> 0xF
@@ -48,8 +48,8 @@ void plug_devices() {
   //asic.cpu->prange[0x9] = init_protected();
     asic.cpu->prange[0xA] = init_keypad();
     asic.cpu->prange[0xB] = init_backlight();
-  //asic.cpu->prange[0xC] = init_unknown();
-  //asic.cpu->prange[0xD] = init_unknown_2();
+    asic.cpu->prange[0xC] = init_cxxx();
+  //asic.cpu->prange[0xD] = init_dxxx();
     asic.cpu->prange[0xE] = init_exxx();
 
     for(i=0; i<0x10; i++) {
