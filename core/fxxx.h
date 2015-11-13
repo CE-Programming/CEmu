@@ -9,7 +9,6 @@ extern "C" {
 
 // Standard FXXX state
 struct fxxx_state {
-        uint8_t ports[0x100];  // No idea how big this is...
 };
 
 // Type definitions

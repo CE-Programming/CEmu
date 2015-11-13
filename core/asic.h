@@ -69,6 +69,9 @@ extern mem_state_t mem;
 extern eZ80cpu_t cpu;
 extern asic_state_t asic;
 extern flash_state_t flash;
+extern lcd_cntrl_state_t lcd;
+extern keypad_state_t keypad;
+extern interrupt_state_t intrpt;
 
 // Available Functions
 void asic_init(ti_device_type);

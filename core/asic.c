@@ -34,7 +34,7 @@ void plug_devices() {
     /* Unimplemented devices */
     int i;
     eZ80portrange_t unimplemented_range = { read_unimplemented_port, write_unimplemented_port };
-    for (i = 0; i < 0x10; i++) {
+    for (i=0; i<=0xF; i++) {
             asic.cpu->prange[i] = unimplemented_range;
     }
 
@@ -56,7 +56,7 @@ void plug_devices() {
     asic.cpu->prange[0xE] = init_exxx();
     asic.cpu->prange[0xF] = init_fxxx();
 
-    for(i=0; i<0x10; i++) {
+    for(i=0x0; i<=0xF; i++) {
         apb_set_map(i, &asic.cpu->prange[i]);       // mmio port handler
     }
 }

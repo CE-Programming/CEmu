@@ -60,7 +60,7 @@ void intrpt_write(const uint16_t pio, const uint8_t byte) {
              write8(intrpt.int_invr,bit_offset,byte);
              break;
        default:
-            break;
+             break;
    }
 }
 
