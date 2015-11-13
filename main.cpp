@@ -95,8 +95,8 @@ int main(int argc, char *argv[])
            fclose(rom);
         }
 
-        //port_write_byte(0x0000,0xFF);
-        std::cout<<std::hex<<(int)port_read_byte(0xE014)<<std::endl;
+        //Should read 0x09
+        std::cout<<"0x"<<std::hex<<(int)port_read_byte(0x5051)<<std::endl;
 
         if (emucontext.cycles < 0) { // Run indefinitely
             for(;;) {

@@ -10,6 +10,7 @@
 #include "core/cxxx.h"
 #include "core/exxx.h"
 #include "core/fxxx.h"
+#include "core/interrupt.h"
 #include "core/runloop.h"
 #include "core/keypad.h"
 #include "core/controlport.h"
@@ -43,7 +44,7 @@ void plug_devices() {
   //asic.cpu->prange[0x2] = init_sha256();
   //asic.cpu->prange[0x3] = init_usb();
     asic.cpu->prange[0x4] = init_lcd();
-  //asic.cpu->prange[0x5] = init_intrpt();
+    asic.cpu->prange[0x5] = init_intrpt();
   //asic.cpu->prange[0x6] = init_wtchdog();
   //asic.cpu->prange[0x7] = init_gpt();
   //asic.cpu->prange[0x8] = init_rtc();

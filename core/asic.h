@@ -12,6 +12,7 @@ extern "C" {
 #include <core/exxx.h>
 #include <core/fxxx.h>
 #include <core/memory.h>
+#include <core/interrupt.h>
 #include <core/tidevices.h>
 #include <core/keypad.h>
 #include <core/controlport.h>
