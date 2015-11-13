@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "asic.h"
+
 // Global CONTROL state
 control_state_t control;
 
@@ -13,6 +15,9 @@ uint8_t control_read(const uint16_t pio) {
   uint8_t read_byte;
 
   switch (addr) {
+  case 0x01:
+             return control.cpu_speed & 0b00010011;
+             break;
   case 0x02:
              read_byte = control.ports[addr] | 1;
              break;
@@ -89,6 +94,25 @@ void control_write(const uint16_t pio, const uint8_t byte)
                  control.ports[0x5014] |= 0x80);
              } */
 
+             break;
+  case 0x01:
+             control.cpu_speed = byte & 0b00010011;
+             switch(control.cpu_speed&3) {
+                 case 0:
+                         asic_set_clock_rate(6000000);
+                         break;
+                 case 1:
+                         asic_set_clock_rate(12000000);
+                         break;
+                 case 2:
+                         asic_set_clock_rate(24000000);
+                         break;
+                 case 3:
+                         asic_set_clock_rate(48000000);
+                         break;
+                 default:
+                         break;
+             }
              break;
   case 0x02:
              control.ports[addr] = 0;

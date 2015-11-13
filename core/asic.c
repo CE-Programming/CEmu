@@ -82,9 +82,8 @@ void asic_init(ti_device_type type) {
     asic.timers->timers = calloc(sizeof(eZ80_hardware_timer_t), 20);
 
     asic.stopped = 0;
-    asic.stopped = 0;
-    runloop_init();
 
+    runloop_init();
     plug_devices();
 }
 
