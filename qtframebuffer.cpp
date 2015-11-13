@@ -1,5 +1,5 @@
 #include "qtframebuffer.h"
-#include "core\asic.h"
+#include "core/asic.h"
 
 QImage renderFramebuffer()
 {
