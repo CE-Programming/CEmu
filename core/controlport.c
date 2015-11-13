@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "asic.h"
+#include "core/asic.h"
 
 // Global CONTROL state
 control_state_t control;
