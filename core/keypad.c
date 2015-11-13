@@ -15,7 +15,7 @@ uint8_t keypad_read(const uint16_t pio)
     case 0x2:        // keypad data range
          return read8(keypad.data[(mask8(index)-0x10) & 15],(index & 1)<<3);
     default:
-      switch( mask8(index) ) {
+      switch( index ) {
       case 0x00:
       case 0x01:
       case 0x02:
@@ -52,7 +52,7 @@ uint8_t keypad_read(const uint16_t pio)
 
 void keypad_write(const uint16_t pio, const uint8_t byte)
 {
- int index = (int)pio % 0x80;
+ int index = (int)pio & 0x7F;
  int bit_offset = (index&3)<<3;
 
  switch( upperNibble8(index) ) {
@@ -60,7 +60,7 @@ void keypad_write(const uint16_t pio, const uint8_t byte)
    case 0x2:    // we can't write to the data section (read-only)
            return;
    default:
-     switch( mask8(index) ) {
+     switch( index ) {
         case 0x00:
         case 0x01:
         case 0x02:
