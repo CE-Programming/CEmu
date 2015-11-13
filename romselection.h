@@ -2,6 +2,9 @@
 #define ROMSELECTION_H
 
 #include <QDialog>
+#include <QString>
+
+bool fileExists(const QString &path);
 
 namespace Ui {
   class RomSelection;

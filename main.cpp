@@ -1,7 +1,4 @@
-#include "mainwindow.h"
-#include "cemusettings.h"
-#include "debugwindow.h"
-#include "optionswindow.h"
+#include "main.h"
 
 #include <QApplication>
 #include <QStandardPaths>
@@ -13,15 +10,6 @@
 #include <climits>
 
 #include "core/runloop.h"
-
-typedef struct {
-	ti_device_type device;
-	asic_state_t *device_asic;
-	char *rom_file;
-	int cycles;
-	int print_state;
-	int no_rom_check;
-} context_t;
 
 context_t emucontext;
 
@@ -35,7 +23,7 @@ context_t create_context(void) {
 	return context;
 }
 
-void mem_load_vram(char *path) {
+void mem_load_vram(const char *path) {
   FILE *romfile;
   size_t index;
   uint8_t byte_read;

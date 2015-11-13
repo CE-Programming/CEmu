@@ -5,7 +5,7 @@
 #include <QFileInfo>
 #include <QtWidgets>
 
-bool fileExists(QString path) {
+bool fileExists(const QString &path) {
     QFileInfo checkFile(path);
     return (checkFile.exists() && checkFile.isFile());
 }
