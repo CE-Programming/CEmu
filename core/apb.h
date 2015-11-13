@@ -24,6 +24,10 @@ typedef struct apb_map_entry apb_map_entry_t;
 
 // External APB entries
 extern apb_map_entry_t apb_map[0x0F];
+
+uint8_t mmio_read_byte(const uint32_t addr);
+void mmio_write_byte(const uint32_t addr, const uint8_t value);
+
 uint8_t port_read_byte(const uint16_t addr);
 void port_write_byte(const uint16_t addr, const uint8_t value);
 
