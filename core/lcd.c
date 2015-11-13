@@ -91,9 +91,9 @@ void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
 
 uint8_t lcd_read(const uint16_t pio)
 {
-  int index = (int)pio;
-  int bit_offset = (index&3)<<3;
-  int low_index = mask8(index);
+  uint16_t index = pio;
+  uint8_t bit_offset = (index&3)<<3;
+  uint8_t low_index = mask8(index);
 
   switch( upper16(index) ) {
     case 0x0:
@@ -148,9 +148,9 @@ uint8_t lcd_read(const uint16_t pio)
 
 void lcd_write(const uint16_t pio, const uint8_t byte)
 {
-  int index = (int)pio;
-  int bit_offset = (index&3)<<3;
-  int low_index = mask8(index);
+  uint16_t index = pio;
+  uint8_t bit_offset = (pio&3)<<3;
+  uint8_t low_index = mask8(index);
 
   switch( upper16(index) ) {
     case 0x0:
@@ -163,7 +163,7 @@ void lcd_write(const uint16_t pio, const uint8_t byte)
               write8(lcd.timing1,bit_offset,byte); return;
             case 0x08: case 0x09: case 0x0A: case 0x0B:
               write8(lcd.timing2,bit_offset,byte); return;
-            case 0x0C: case 0x0D: case 0x0E: case 0x0F:
+    case 0x0C: case 0x0D: case 0x0E: case 0x0F:
               write8(lcd.timing3,bit_offset,byte); return;
           }
         case 0x1:

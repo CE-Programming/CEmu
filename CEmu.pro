@@ -16,10 +16,10 @@ QMAKE_CXXFLAGS += $$GLOBAL_FLAGS -fno-exceptions
 QMAKE_LFLAGS += -flto -fPIE
 
 if (macx | linux) {
-    GLOBAL_FLAGS   += -fstack-protector-all -Wstack-protector
+    GLOBAL_FLAGS   += -fstack-protector-all -Wstack-protector -fPIC
     QMAKE_CFLAGS   += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error
     QMAKE_CXXFLAGS += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error
-    QMAKE_LFLAGS   += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -fPIC
+    QMAKE_LFLAGS   += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error
 }
 if (macx) {
     QMAKE_LFLAGS += -Wl,-dead_strip

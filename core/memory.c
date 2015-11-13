@@ -34,9 +34,9 @@ uint8_t* phys_mem_ptr(uint32_t addr, uint32_t size) {
 // returns wait cycles
 uint8_t memory_read_byte(uint32_t address)
 {
-    int addr; // XXX should be uint32_t
+    uint32_t addr; // XXX should be uint32_t
     address &= 0xFFFFFF;
-    addr = (int)address;
+    addr = address;
 
     switch( upperNibble24(addr) ) {
 
@@ -95,9 +95,9 @@ void mem_reset_wait_states(void) {
 
 void memory_write_byte(uint32_t address, const uint8_t byte)
 {
-    int addr; // XXX should be uint32_t
+    uint32_t addr; // XXX should be uint32_t
     address &= 0xFFFFFF;
-    addr = (int)address;
+    addr = address;
 
     switch( upperNibble24(addr) ) {
 

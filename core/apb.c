@@ -17,15 +17,15 @@ void apb_set_map(int entry, eZ80portrange_t *range){
 }
 
 inline uint8_t mmio_read_byte(const uint32_t addr) {
-  return apb_map[map_range(addr)].range->read_in( addr );
+  return apb_map[map_range(addr)].range->read_in( addr&0xFFF );
 }
 inline void mmio_write_byte(const uint32_t addr, const uint8_t value) {
-  apb_map[map_range(addr)].range->write_out( addr, value);
+  apb_map[map_range(addr)].range->write_out( addr&0xFFF, value);
 }
 
 inline uint8_t port_read_byte(const uint16_t addr) {
-  return apb_map[map_port(addr)].range->read_in( addr );
+  return apb_map[map_port(addr)].range->read_in( addr&0xFFF );
 }
 inline void port_write_byte(const uint16_t addr, const uint8_t value) {
-  apb_map[map_port(addr)].range->write_out( addr, value);
+  apb_map[map_port(addr)].range->write_out( addr&0xFFF, value);
 }

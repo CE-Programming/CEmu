@@ -7,8 +7,8 @@ keypad_state_t keypad;
 
 static uint8_t keypad_read(const uint16_t pio)
 {
-  int index = (int)pio & 0x7F;
-  int bit_offset = (index&3)<<3;
+  uint16_t index = pio & 0x7F;
+  uint8_t bit_offset = (index&3)<<3;
 
   switch( upperNibble8(index) ) {
     case 0x1:
@@ -52,8 +52,8 @@ static uint8_t keypad_read(const uint16_t pio)
 
 static void keypad_write(const uint16_t pio, const uint8_t byte)
 {
- int index = (int)pio & 0x7F;
- int bit_offset = (index&3)<<3;
+ uint16_t index = (int)pio & 0x7F;
+ uint8_t bit_offset = (index&3)<<3;
 
  switch( upperNibble8(index) ) {
    case 0x1:

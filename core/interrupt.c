@@ -3,8 +3,8 @@
 interrupt_state_t intrpt;
 
 static uint8_t intrpt_read(const uint16_t pio) {
-   int index = (int)pio & 0xFF;
-   int bit_offset = (index&3)<<3;
+   uint16_t index = pio&0xFF;
+   uint8_t bit_offset = (index&3)<<3;
 
    uint8_t byte_read;
 
@@ -43,8 +43,8 @@ static uint8_t intrpt_read(const uint16_t pio) {
 }
 
 static void intrpt_write(const uint16_t pio, const uint8_t byte) {
-  int index = (int)pio & 0xFF;
-  int bit_offset = (index&3)<<3;
+  uint16_t index = pio&0xFF;
+  uint8_t bit_offset = (index&3)<<3;
 
    switch(index) {
        case 0x04: case 0x05: case 0x06: case 0x07:
