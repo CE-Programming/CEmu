@@ -1,10 +1,6 @@
 #ifndef DEFINES
 #define DEFINES
 
-#define lcdwidth 320
-#define lcdheight 240
-
-
 #define GETMASK(index, size) (((1 << (size)) - 1) << (index))
 #define READFROM(data, index, size) (((data) & GETMASK((index), (size))) >> (index))
 #define WRITE(data, index, size, value) ((data) = ((data) & (~GETMASK((index), (size)))) | ((value) << (index)))

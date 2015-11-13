@@ -1,7 +1,7 @@
 #include "lcdwidget.h"
 #include "qtframebuffer.h"
 
-LCDWidget::LCDWidget(QWidget *parent) : QWidget(parent)
+LCDWidget::LCDWidget(QWidget *p) : QWidget(p)
 {
   connect(&refresh_timer, SIGNAL(timeout()), this, SLOT(update()));
 

@@ -2,10 +2,10 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "romselection.h"
-#include "aboutwindow.h"
-#include "optionswindow.h"
-#include "lcdwidget.h"
+#include <romselection.h>
+#include <aboutwindow.h>
+#include <optionswindow.h>
+#include <lcdwidget.h>
 
 namespace Ui {
 class MainWindow;
@@ -16,7 +16,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(QWidget *p = 0);
     ~MainWindow();
 
 private slots:

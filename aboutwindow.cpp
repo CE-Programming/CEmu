@@ -2,8 +2,8 @@
 #include "ui_aboutwindow.h"
 #include <QPixmap>
 
-AboutWindow::AboutWindow(QWidget *parent) :
-  QDialog(parent),
+AboutWindow::AboutWindow(QWidget *p) :
+  QDialog(p),
   ui(new Ui::AboutWindow)
 {
   ui->setupUi(this);

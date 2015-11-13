@@ -7,22 +7,26 @@ TEMPLATE = app
 
 CONFIG += c++11 c11
 
-# Warnings, optimizations and hardening...
-
-GLOBAL_FLAGS = -W -Wall -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-nonliteral -Werror=format-security -Werror=declaration-after-statement -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -fno-strict-overflow -Winit-self -fstack-protector-all -Wstack-protector --param=ssp-buffer-size=1 -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -ffunction-sections -fdata-sections -fPIC
+GLOBAL_FLAGS = -W -Wall -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-nonliteral -Werror=format-security -Werror=declaration-after-statement -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -fno-strict-overflow -Winit-self --param=ssp-buffer-size=1 -ffunction-sections -fdata-sections
 
 QMAKE_CFLAGS += $$GLOBAL_FLAGS
 
 QMAKE_CXXFLAGS += $$GLOBAL_FLAGS -fno-exceptions
 
-QMAKE_LFLAGS += -flto -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -fPIC -fPIE
+QMAKE_LFLAGS += -flto -fPIE
 
+if (macx | linux) {
+    GLOBAL_FLAGS   += -fstack-protector-all -Wstack-protector
+    QMAKE_CFLAGS   += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error
+    QMAKE_CXXFLAGS += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error
+    QMAKE_LFLAGS   += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -fPIC
+}
 if (macx) {
     QMAKE_LFLAGS += -Wl,-dead_strip
-} else {
+}
+if (linux) {
     QMAKE_LFLAGS += -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack -Wl,--gc-sections -pie
 }
-
 
 SOURCES += main.cpp\
     mainwindow.cpp \
@@ -30,7 +34,6 @@ SOURCES += main.cpp\
     optionswindow.cpp \
     romselection.cpp \
     aboutwindow.cpp \
-    debugwindow.cpp \
     qtframebuffer.cpp \
     lcdwidget.cpp \
     core/asic.c \
@@ -56,7 +59,6 @@ HEADERS  += mainwindow.h \
     optionswindow.h \
     romselection.h \
     aboutwindow.h \
-    debugwindow.h \
     qtframebuffer.h \
     lcdwidget.h \
     core/asic.h \
@@ -83,8 +85,7 @@ HEADERS  += mainwindow.h \
 FORMS    += mainwindow.ui \
     optionswindow.ui \
     romselection.ui \
-    aboutwindow.ui \
-    debugwindow.ui
+    aboutwindow.ui
 
 RESOURCES +=
 

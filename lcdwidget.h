@@ -11,7 +11,7 @@ class LCDWidget : public QWidget
 {
   Q_OBJECT
   public:
-      LCDWidget(QWidget *parent);
+      LCDWidget(QWidget *p = 0);
       ~LCDWidget();
 
   protected:

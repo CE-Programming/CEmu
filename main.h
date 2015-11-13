@@ -1,10 +1,9 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include "mainwindow.h"
-#include "cemusettings.h"
-#include "debugwindow.h"
-#include "optionswindow.h"
+#include <mainwindow.h>
+#include <cemusettings.h>
+#include <optionswindow.h>
 
 typedef struct {
     ti_device_type device;

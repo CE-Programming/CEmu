@@ -12,7 +12,7 @@ class OptionsWindow : public QDialog
   Q_OBJECT
 
 public:
-  explicit OptionsWindow(QWidget *parent = 0);
+  explicit OptionsWindow(QWidget *p = 0);
   ~OptionsWindow();
 
 private:

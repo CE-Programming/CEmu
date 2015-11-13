@@ -10,8 +10,8 @@ bool fileExists(const QString &path) {
     return (checkFile.exists() && checkFile.isFile());
 }
 
-RomSelection::RomSelection(QWidget *parent) :
-  QDialog(parent),
+RomSelection::RomSelection(QWidget *p) :
+  QDialog(p),
   ui(new Ui::RomSelection)
 {
   ui->setupUi(this);
