@@ -36,7 +36,8 @@ SOURCES += main.cpp\
     core/apb.c \
     core/exxx.c \
     core/dxxx.c \
-    core/cxxx.c
+    core/cxxx.c \
+    core/fxxx.c
 
 HEADERS  += mainwindow.h \
     cemusettings.h \
@@ -62,7 +63,8 @@ HEADERS  += mainwindow.h \
     core/apb.h \
     core/exxx.h \
     core/dxxx.h \
-    core/cxxx.h
+    core/cxxx.h \
+    core/fxxx.h
 
 FORMS    += mainwindow.ui \
     optionswindow.ui \

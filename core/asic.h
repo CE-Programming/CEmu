@@ -10,6 +10,7 @@ extern "C" {
 #include <core/cpu.h>
 #include <core/cxxx.h>
 #include <core/exxx.h>
+#include <core/fxxx.h>
 #include <core/memory.h>
 #include <core/tidevices.h>
 #include <core/keypad.h>

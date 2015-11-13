@@ -1,5 +1,5 @@
-#ifndef CXXX_H
-#define CXXX_H
+#ifndef FXXX_H
+#define FXXX_H
 
 #include <core/apb.h>
 
@@ -7,19 +7,19 @@
 extern "C" {
 #endif
 
-// Standard CXXX state
-struct cxxx_state {
+// Standard FXXX state
+struct fxxx_state {
         uint8_t ports[0x100];  // No idea how big this is...
 };
 
 // Type definitions
-typedef struct cxxx_state cxxx_state_t;
+typedef struct fxxx_state fxxx_state_t;
 
-// Global CXXX state
-extern cxxx_state_t cxxx;
+// Global unk3 state
+extern fxxx_state_t fxxx;
 
 // Avbailable functions
-eZ80portrange_t init_cxxx();
+eZ80portrange_t init_fxxx();
 
 #ifdef __cplusplus
 }

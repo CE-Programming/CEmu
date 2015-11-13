@@ -9,6 +9,7 @@
 
 #include "core/cxxx.h"
 #include "core/exxx.h"
+#include "core/fxxx.h"
 #include "core/runloop.h"
 #include "core/keypad.h"
 #include "core/controlport.h"
@@ -52,6 +53,7 @@ void plug_devices() {
     asic.cpu->prange[0xC] = init_cxxx();
   //asic.cpu->prange[0xD] = init_dxxx();
     asic.cpu->prange[0xE] = init_exxx();
+    asic.cpu->prange[0xF] = init_fxxx();
 
     for(i=0; i<0x10; i++) {
         apb_set_map(i, &asic.cpu->prange[i]);       // mmio port handler

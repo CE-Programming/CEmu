@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Global unk3 state
+// Global EXXX state
 exxx_state_t exxx;
 
 // Read from the 0xEXXX range of ports

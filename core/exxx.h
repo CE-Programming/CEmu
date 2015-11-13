@@ -15,7 +15,7 @@ struct exxx_state {
 // Type definitions
 typedef struct exxx_state exxx_state_t;
 
-// Global unk3 state
+// Global EXXX state
 extern exxx_state_t exxx;
 
 // Avbailable functions
