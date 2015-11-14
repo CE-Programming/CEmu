@@ -24,7 +24,6 @@ private slots:
   void on_cancel_clicked();
   void on_browse_sel_clicked();
   void on_browse_clicked();
-
   void on_next_clicked();
 
 private:

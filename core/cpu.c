@@ -1,6 +1,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+#include "core/emu.h"
 #include "core/registers.h"
 #include "core/cpu.h"
 #include "core/context.h"
@@ -13,6 +15,7 @@
 eZ80cpu_t cpu;
 
 void cpu_init(void) {
+    gui_debug_printf("Initiallized CPU...\n");
     context_init();  // initilize execution context
     cpu.memory = &mem;
 }

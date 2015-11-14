@@ -1,4 +1,5 @@
 #include "core/asic.h"
+#include "core/emu.h"
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -59,9 +60,11 @@ static void plug_devices(void) {
     for(i=0x0; i<=0xF; i++) {
         apb_set_map(i, &asic.cpu->prange[i]);       // mmio port handler
     }
+    gui_debug_printf("Initiallized APB...\n");
 }
 
 void asic_init(ti_device_type type) {
+    gui_debug_printf("Initiallized ASIC...\n");
     // First, initilize memory and LCD
     mem_init();
     lcd_init();

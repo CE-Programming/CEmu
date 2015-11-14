@@ -17,6 +17,15 @@ QImage renderFramebuffer()
 
 void paintFramebuffer(QPainter *p)
 {
-    QImage img = renderFramebuffer();
-    p->drawImage(p->window(), img);
+    if(lcd.memory == NULL)
+    {
+        p->fillRect(p->window(), Qt::black);
+        p->setPen(Qt::white);
+        p->drawText(p->window(), Qt::AlignCenter, QObject::tr("LCD OFF"));
+    }
+    else
+    {
+        QImage img = renderFramebuffer();
+        p->drawImage(p->window(), img);
+    }
 }

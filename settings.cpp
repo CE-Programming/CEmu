@@ -3,7 +3,7 @@
 #include <QSettings>
 #include <QStandardPaths>
 
-#include "cemusettings.h"
+#include "settings.h"
 
 // Global static pointer used to ensure a single instance of the class.
 CEmuSettings* CEmuSettings::m_pInstance = NULL;

@@ -1,76 +1,46 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "lcdwidget.h"
-#include "optionswindow.h"
-
 #include <QLabel>
+#include <iostream>
 
-MainWindow::MainWindow(QWidget *p) : QMainWindow(p),ui(new Ui::MainWindow)
+#include "settings.h"
+
+MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);              // setup the UI
 
-    running=false;                  // we're not running yet
-    debug=false;                    // not in debug mode
+    // Emulator -> GUI
+    connect(&emu, SIGNAL(debugStr(QString)), this, SLOT(debugStr(QString))); //Not queued connection as it may cause a hang
 
-    mAboutWindow=NULL;              // initialize members
-    mRomSelection=NULL;
-    mOptionsWindow=NULL;
-    mLCD=NULL;
+    // GUI -> Emulator
+    connect(ui->buttonReset, SIGNAL(clicked()), &emu, SLOT(test()));
+
+    QString rompath = CEmuSettings::Instance()->getROMLocation();
+    emu.rom = rompath.toStdString();
+    emu.start();
+    //std::cout<<emu.rom<<std::endl;
 }
 
 // window destructor
 MainWindow::~MainWindow()
 {
-    if(mAboutWindow != NULL)
-        delete mAboutWindow;        // free the memory
-    if(mRomSelection != NULL)
-        delete mRomSelection;       // free the memory
-    if(mLCD != NULL)
-        delete mLCD;                // free the memory
-    delete ui;                      // free the memory
+    delete ui;
 }
 
-// enter about screen
-void MainWindow::on_actionAbout_triggered()
+void MainWindow::closeEvent(QCloseEvent *e)
 {
-    if(mAboutWindow != NULL)
-        delete mAboutWindow;         // free the memory
-    mAboutWindow = new AboutWindow();
-    mAboutWindow->show();
+    qDebug("Terminating emulator thread...");
+
+    if(emu.stop())
+        qDebug("Successful!");
+    else
+        qDebug("Failed.");
+
+    QMainWindow::closeEvent(e);
 }
 
-// enter setup wizard
-void MainWindow::on_actionSetup_Wizard_triggered()
+void MainWindow::debugStr(QString str)
 {
-    if(mRomSelection != NULL)
-        delete mRomSelection;         // free the memory
-    mRomSelection = new RomSelection();
-    mRomSelection->show();
-}
-
-// close all windows
-void MainWindow::on_actionExit_triggered()
-{
-    // exit with code=0, because technically it is okay
-    // probably leaks a ton of memory too
-    // better hope the OS can handle it
-    exit(0);
-}
-
-void MainWindow::on_actionOptions_triggered()
-{
-  if(mOptionsWindow != NULL)
-      delete mOptionsWindow;         // free the memory
-  mOptionsWindow = new OptionsWindow();
-  mOptionsWindow->exec();
-}
-
-void MainWindow::on_action100_2_triggered()
-{
-    this->setFixedSize(340,280);
-}
-
-void MainWindow::on_action200_2_triggered()
-{
-    this->setFixedSize(320*2,(280*2)-80);
+    ui->console->moveCursor(QTextCursor::End);
+    ui->console->insertPlainText(str);
 }

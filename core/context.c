@@ -1,10 +1,12 @@
 #include "core/context.h"
+#include "core/emu.h"
 #include <stdio.h>
 
 // Global CONTEXT state
 execution_context_t context;
 
 void context_init(void) {
+    gui_debug_printf("Initialized execution context...\n");
     context.cpu = &cpu;
 }
 

@@ -1,4 +1,5 @@
 #include "core/flashport.h"
+#include "core/emu.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -52,6 +53,7 @@ static const eZ80portrange_t device = { .read_in = flash_read, .write_out = flas
 
 eZ80portrange_t init_flash(void) {
     int i;
+    gui_debug_printf("Initialized flash ports...\n");
     // Initialize device to default state
     for(i = 0; i<0x100; i++) {
         flash.ports[i] = 0;

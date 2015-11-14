@@ -1,4 +1,5 @@
 #include "core/memory.h"
+#include "core/emu.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -7,6 +8,7 @@
 mem_state_t mem;
 
 void mem_init(void) {
+    gui_debug_printf("Initiallized memory...\n");
     mem.flash=(uint8_t*)malloc(0x400000);     // allocate flash memory
     memset(mem.flash, 0xFF, 0x400000);
 
@@ -18,6 +20,7 @@ void mem_init(void) {
 }
 
 void mem_free(void) {
+    gui_debug_printf("Freed memory...\n");
     free(mem.ram);
     free(mem.flash);
 }

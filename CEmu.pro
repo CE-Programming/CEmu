@@ -9,14 +9,13 @@ CONFIG += c++11 c11
 
 GLOBAL_FLAGS = -W -Wall -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-nonliteral -Werror=format-security -Werror=declaration-after-statement -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -fno-strict-overflow -Winit-self --param=ssp-buffer-size=1 -ffunction-sections -fdata-sections
 
-QMAKE_CFLAGS += $$GLOBAL_FLAGS
+QMAKE_CFLAGS += $$GLOBAL_FLAGS -fstack-protector-all -Wstack-protector -fPIC
 
-QMAKE_CXXFLAGS += $$GLOBAL_FLAGS -fno-exceptions
+QMAKE_CXXFLAGS += $$GLOBAL_FLAGS -fno-exceptions -fstack-protector-all -Wstack-protector -fPIC
 
-QMAKE_LFLAGS += -flto -fPIE
+QMAKE_LFLAGS += -flto -fPIE -fstack-protector-all -Wstack-protector -fPIC
 
 if (macx | linux) {
-    GLOBAL_FLAGS   += -fstack-protector-all -Wstack-protector -fPIC
     QMAKE_CFLAGS   += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error
     QMAKE_CXXFLAGS += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error
     QMAKE_LFLAGS   += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error
@@ -30,7 +29,6 @@ if (linux) {
 
 SOURCES += main.cpp\
     mainwindow.cpp \
-    cemusettings.cpp \
     optionswindow.cpp \
     romselection.cpp \
     aboutwindow.cpp \
@@ -52,10 +50,12 @@ SOURCES += main.cpp\
     core/dxxx.c \
     core/cxxx.c \
     core/fxxx.c \
-    core/interrupt.c
+    core/interrupt.c \
+    emuthread.cpp \
+    core/emu.c \
+    settings.cpp
 
 HEADERS  += mainwindow.h \
-    cemusettings.h \
     optionswindow.h \
     romselection.h \
     aboutwindow.h \
@@ -80,7 +80,9 @@ HEADERS  += mainwindow.h \
     core/cxxx.h \
     core/fxxx.h \
     core/interrupt.h \
-    main.h
+    emuthread.h \
+    core/emu.h \
+    settings.h
 
 FORMS    += mainwindow.ui \
     optionswindow.ui \

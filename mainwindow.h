@@ -2,10 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <romselection.h>
-#include <aboutwindow.h>
-#include <optionswindow.h>
-#include <lcdwidget.h>
+#include <QSettings>
+
+#include "emuthread.h"
 
 namespace Ui {
 class MainWindow;
@@ -19,24 +18,21 @@ public:
     explicit MainWindow(QWidget *p = 0);
     ~MainWindow();
 
+public slots:
+    void closeEvent(QCloseEvent *) override;
+
+    //Debugging
+    void debugStr(QString str);
+
 private slots:
-    void on_actionAbout_triggered();
-    void on_actionSetup_Wizard_triggered();
-    void on_actionExit_triggered();
-    void on_actionOptions_triggered();
-    void on_action100_2_triggered();
-    void on_action200_2_triggered();
 
 private:
-    Ui::MainWindow *ui;
+    Ui::MainWindow *ui = nullptr;
 
-    bool running;
-    bool debug;
-
-    OptionsWindow *mOptionsWindow;
-    AboutWindow *mAboutWindow;
-    RomSelection *mRomSelection;
-    LCDWidget *mLCD;
+    EmuThread emu;
 };
+
+// Used as global instance by EmuThread and friends
+extern MainWindow *main_window;
 
 #endif // MAINWINDOW_H
