@@ -18,7 +18,7 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>900</width>
+    <width>461</width>
     <height>420</height>
    </size>
   </property>
@@ -146,15 +146,53 @@
       </property>
       <item>
        <layout class="QVBoxLayout" name="verticalLayout">
+        <property name="spacing">
+         <number>0</number>
+        </property>
         <property name="bottomMargin">
          <number>0</number>
         </property>
         <item>
-         <widget class="QPushButton" name="buttonReset">
-          <property name="text">
-           <string>Test</string>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <property name="bottomMargin">
+           <number>0</number>
           </property>
-         </widget>
+          <item>
+           <widget class="QToolButton" name="toolButton_3">
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="toolButton_4">
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="buttonReset">
+            <property name="text">
+             <string>Test</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="toolButton_6">
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="toolButton_5">
+            <property name="text">
+             <string>...</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
          <widget class="QFrame" name="frame">
@@ -215,6 +253,22 @@
      </layout>
     </item>
     <item>
+     <spacer name="horizontalSpacer">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="sizeType">
+       <enum>QSizePolicy::Fixed</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>5</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="sizePolicy">
        <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
@@ -226,7 +280,7 @@
        <enum>Qt::LeftToRight</enum>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>2</number>
       </property>
       <property name="documentMode">
        <bool>false</bool>
@@ -438,7 +492,7 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>408</width>
+             <width>397</width>
              <height>284</height>
             </rect>
            </property>
@@ -509,17 +563,17 @@
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
    </widget>
+   <widget class="QMenu" name="menuScreenshot">
+    <property name="title">
+     <string>Screenshot</string>
+    </property>
+    <addaction name="actionTake_Screenshot_2"/>
+    <addaction name="actionRecord_GIF_2"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuScreenshot"/>
    <addaction name="menuHelp"/>
   </widget>
-  <action name="actionNew">
-   <property name="text">
-    <string>New</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+N</string>
-   </property>
-  </action>
   <action name="actionOpen">
    <property name="text">
     <string>Open...</string>
@@ -530,116 +584,9 @@
     <string>Save...</string>
    </property>
   </action>
-  <action name="actionRecord_GIF">
-   <property name="text">
-    <string>Record GIF</string>
-   </property>
-  </action>
-  <action name="actionTake_Screenshot">
-   <property name="text">
-    <string>Take Screenshot...</string>
-   </property>
-  </action>
-  <action name="actionClose">
-   <property name="text">
-    <string>Close</string>
-   </property>
-  </action>
   <action name="actionExit">
    <property name="text">
     <string>Exit</string>
-   </property>
-  </action>
-  <action name="actionEnable_Skin">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Enable Skin</string>
-   </property>
-  </action>
-  <action name="actionPause">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Pause</string>
-   </property>
-  </action>
-  <action name="action25">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>25%</string>
-   </property>
-  </action>
-  <action name="action50">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>50%</string>
-   </property>
-  </action>
-  <action name="action100">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>100%</string>
-   </property>
-  </action>
-  <action name="action200">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>200%</string>
-   </property>
-  </action>
-  <action name="action400">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>400%</string>
-   </property>
-  </action>
-  <action name="actionMaximum">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Maximum</string>
-   </property>
-  </action>
-  <action name="actionCustom">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Custom...</string>
-   </property>
-  </action>
-  <action name="actionOptions">
-   <property name="text">
-    <string>Options</string>
-   </property>
-  </action>
-  <action name="actionReset_Calculator">
-   <property name="text">
-    <string>Reset calculator</string>
-   </property>
-  </action>
-  <action name="actionOpen_Debugger">
-   <property name="text">
-    <string>Open debugger...</string>
-   </property>
-  </action>
-  <action name="actionTurn_on_calculator">
-   <property name="text">
-    <string>Turn on calculator</string>
    </property>
   </action>
   <action name="actionSetup">
@@ -652,24 +599,14 @@
     <string>About</string>
    </property>
   </action>
-  <action name="actionScaled_x2">
+  <action name="actionTake_Screenshot_2">
    <property name="text">
-    <string>Variables</string>
+    <string>Take Screenshot...</string>
    </property>
   </action>
-  <action name="action100_2">
+  <action name="actionRecord_GIF_2">
    <property name="text">
-    <string>100%</string>
-   </property>
-  </action>
-  <action name="action200_2">
-   <property name="text">
-    <string>200%</string>
-   </property>
-  </action>
-  <action name="action400_2">
-   <property name="text">
-    <string>400%</string>
+    <string>Record GIF...</string>
    </property>
   </action>
  </widget>
