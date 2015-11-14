@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/skin">
+        <file>resources/skin/ti84pce.jpg</file>
+    </qresource>
+</RCC>

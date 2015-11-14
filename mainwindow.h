@@ -4,7 +4,8 @@
 #include <QMainWindow>
 #include <QSettings>
 
-#include "emuthread.h"
+#include <romselection.h>
+#include <emuthread.h>
 
 namespace Ui {
 class MainWindow;
@@ -23,6 +24,11 @@ public slots:
 
     //Debugging
     void debugStr(QString str);
+
+    // Actions
+    void runSetup(void);
+    void showAbout(void);
+    void actionExit(void);
 
 private slots:
 

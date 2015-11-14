@@ -40,7 +40,7 @@ int emulate(void)
         } else {
            FILE *rom = fopen(rom_image, "rb");
            if (!rom) {
-              gui_debug_printf("Error opening '%s'.\n", rom_image);
+              gui_debug_printf("Error opening ROM image.\n", rom_image);
               asic_free();
               return 1;
            }

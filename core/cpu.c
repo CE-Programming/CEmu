@@ -15,9 +15,10 @@
 eZ80cpu_t cpu;
 
 void cpu_init(void) {
-    gui_debug_printf("Initiallized CPU...\n");
     context_init();  // initilize execution context
+    memset(&cpu, 0x00, sizeof(eZ80cpu_t));
     cpu.memory = &mem;
+    gui_debug_printf("Initiallized CPU...\n");
 }
 
 uint8_t cpu_read_byte(const uint32_t address) {

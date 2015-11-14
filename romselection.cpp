@@ -3,8 +3,10 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QtWidgets>
+#include <QMessageBox>
 
 #include "settings.h"
+#include "core/flash.h"
 
 bool fileExists(const QString &path) {
     QFileInfo checkFile(path);
@@ -41,7 +43,7 @@ void RomSelection::on_create_sel_clicked()
 
 void RomSelection::on_cancel_clicked()
 {
-    close();
+    this->close();
 }
 
 void RomSelection::on_browse_sel_clicked()
@@ -63,6 +65,11 @@ void RomSelection::on_browse_clicked()
 void RomSelection::on_next_clicked()
 {
   if(ui->browse_sel->isChecked()) {
-      CEmuSettings::Instance()->setROMLocation(this->ui->rompath->text());
+      if(flash_open(ui->rompath->text().toLatin1()) == 0) {
+          QMessageBox::critical(this, trUtf8("Invalid ROM image"), trUtf8("You have selected an invalid ROM image."));
+          return;
+      }
+      CEmuSettings::Instance()->setROMLocation(ui->rompath->text());
+      this->close();
   }
 }

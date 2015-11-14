@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
-    <height>345</height>
+    <width>900</width>
+    <height>421</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -18,30 +18,124 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>600</width>
-    <height>345</height>
+    <width>900</width>
+    <height>420</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>600</width>
-    <height>345</height>
+    <width>900</width>
+    <height>421</height>
    </size>
+  </property>
+  <property name="palette">
+   <palette>
+    <active>
+     <colorrole role="Button">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Base">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Window">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+    </active>
+    <inactive>
+     <colorrole role="Button">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Base">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Window">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+    </inactive>
+    <disabled>
+     <colorrole role="Button">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Base">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+     <colorrole role="Window">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </brush>
+     </colorrole>
+    </disabled>
+   </palette>
   </property>
   <property name="windowTitle">
    <string>CEmu</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
   <widget class="QWidget" name="centralWidget">
    <property name="minimumSize">
     <size>
-     <width>320</width>
-     <height>240</height>
+     <width>900</width>
+     <height>400</height>
     </size>
    </property>
    <property name="maximumSize">
     <size>
-     <width>640</width>
-     <height>480</height>
+     <width>900</width>
+     <height>400</height>
     </size>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -63,19 +157,57 @@
          </widget>
         </item>
         <item>
-         <widget class="LCDWidget" name="widget" native="true">
+         <widget class="QFrame" name="frame">
           <property name="minimumSize">
            <size>
-            <width>320</width>
-            <height>240</height>
+            <width>440</width>
+            <height>350</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>320</width>
-            <height>240</height>
+            <width>440</width>
+            <height>350</height>
            </size>
           </property>
+          <property name="styleSheet">
+           <string notr="true">.QFrame { background-image: url(:/skin/resources/skin/ti84pce.jpg); }</string>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <widget class="LCDWidget" name="widget" native="true">
+           <property name="geometry">
+            <rect>
+             <x>62</x>
+             <y>80</y>
+             <width>320</width>
+             <height>240</height>
+            </rect>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>320</width>
+             <height>240</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>320</width>
+             <height>240</height>
+            </size>
+           </property>
+           <property name="palette">
+            <palette>
+             <active/>
+             <inactive/>
+             <disabled/>
+            </palette>
+           </property>
+          </widget>
          </widget>
         </item>
        </layout>
@@ -83,7 +215,271 @@
      </layout>
     </item>
     <item>
-     <widget class="QPlainTextEdit" name="console"/>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="layoutDirection">
+       <enum>Qt::LeftToRight</enum>
+      </property>
+      <property name="currentIndex">
+       <number>3</number>
+      </property>
+      <property name="documentMode">
+       <bool>false</bool>
+      </property>
+      <property name="tabsClosable">
+       <bool>false</bool>
+      </property>
+      <property name="movable">
+       <bool>true</bool>
+      </property>
+      <property name="tabBarAutoHide">
+       <bool>true</bool>
+      </property>
+      <widget class="QWidget" name="keypadtab">
+       <attribute name="title">
+        <string>Keypad</string>
+       </attribute>
+      </widget>
+      <widget class="QWidget" name="tab_6">
+       <attribute name="title">
+        <string>File Transfer</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <widget class="QTreeWidget" name="treeWidget">
+          <column>
+           <property name="text">
+            <string>Filename</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Size</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item>
+         <widget class="QProgressBar" name="progressBar">
+          <property name="value">
+           <number>0</number>
+          </property>
+          <property name="textVisible">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_5">
+       <attribute name="title">
+        <string>Screenshot</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <widget class="QGroupBox" name="groupBox">
+          <property name="title">
+           <string>Screenshot</string>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QToolButton" name="toolButton_2">
+             <property name="text">
+              <string>Record GIF</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="toolButton">
+             <property name="text">
+              <string>Take Sceenshot</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="groupBox_2">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="title">
+           <string>Autosave</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout">
+           <item row="1" column="1">
+            <widget class="QLabel" name="label">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Autosave Path:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QCheckBox" name="checkBox">
+             <property name="text">
+              <string>Enable Autosave</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QLineEdit" name="lineEdit">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="3">
+            <widget class="QPushButton" name="pushButton">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Browse..</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QCheckBox" name="checkBox_2">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Use increasing numbers</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="groupBox_3">
+          <property name="title">
+           <string>GIF Options</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_2">
+           <item row="1" column="1">
+            <widget class="QSlider" name="horizontalSlider">
+             <property name="minimum">
+              <number>9</number>
+             </property>
+             <property name="maximum">
+              <number>33</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="tickPosition">
+              <enum>QSlider::TicksBelow</enum>
+             </property>
+             <property name="tickInterval">
+              <number>2</number>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>9</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QLabel" name="label_4">
+             <property name="text">
+              <string>33</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>Output Framerate:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QCheckBox" name="checkBox_3">
+             <property name="text">
+              <string>Double Size</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+          <zorder>horizontalSlider</zorder>
+          <zorder>label_2</zorder>
+          <zorder>label_3</zorder>
+          <zorder>label_4</zorder>
+          <zorder>checkBox_3</zorder>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_2">
+       <attribute name="title">
+        <string>Settings</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QToolBox" name="toolBox">
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="page">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>408</width>
+             <height>284</height>
+            </rect>
+           </property>
+           <attribute name="label">
+            <string>General</string>
+           </attribute>
+          </widget>
+          <widget class="QWidget" name="page_2">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>408</width>
+             <height>284</height>
+            </rect>
+           </property>
+           <attribute name="label">
+            <string>Startup</string>
+           </attribute>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_3">
+       <attribute name="title">
+        <string>Debugger</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_4"/>
+      </widget>
+      <widget class="QWidget" name="consoletab">
+       <attribute name="title">
+        <string>Console</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QPlainTextEdit" name="console"/>
+        </item>
+       </layout>
+      </widget>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -92,81 +488,28 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>600</width>
+     <width>900</width>
      <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>File</string>
+     <string>&amp;File</string>
     </property>
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
     <addaction name="separator"/>
-    <addaction name="actionRecord_GIF"/>
-    <addaction name="actionTake_Screenshot"/>
-    <addaction name="separator"/>
     <addaction name="actionExit"/>
-   </widget>
-   <widget class="QMenu" name="menuView">
-    <property name="title">
-     <string>View</string>
-    </property>
-    <widget class="QMenu" name="menuZoom">
-     <property name="title">
-      <string>Zoom</string>
-     </property>
-     <addaction name="action100_2"/>
-     <addaction name="action200_2"/>
-     <addaction name="action400_2"/>
-    </widget>
-    <addaction name="actionEnable_Skin"/>
-    <addaction name="separator"/>
-    <addaction name="menuZoom"/>
-    <addaction name="separator"/>
-    <addaction name="actionScaled_x2"/>
-   </widget>
-   <widget class="QMenu" name="menuCalculator">
-    <property name="title">
-     <string>Calculator</string>
-    </property>
-    <widget class="QMenu" name="menuSpeed">
-     <property name="title">
-      <string>Speed</string>
-     </property>
-     <addaction name="actionPause"/>
-     <addaction name="action25"/>
-     <addaction name="action50"/>
-     <addaction name="action100"/>
-     <addaction name="action200"/>
-     <addaction name="action400"/>
-     <addaction name="actionMaximum"/>
-     <addaction name="actionCustom"/>
-    </widget>
-    <addaction name="menuSpeed"/>
-    <addaction name="separator"/>
-    <addaction name="actionOptions"/>
-   </widget>
-   <widget class="QMenu" name="menuDebug">
-    <property name="title">
-     <string>Debug</string>
-    </property>
-    <addaction name="actionReset_Calculator"/>
-    <addaction name="actionOpen_Debugger"/>
-    <addaction name="actionTurn_on_calculator"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
-     <string>Setup</string>
+     <string>S&amp;etup</string>
     </property>
-    <addaction name="actionSetup_Wizard"/>
+    <addaction name="actionSetup"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuView"/>
-   <addaction name="menuCalculator"/>
-   <addaction name="menuDebug"/>
    <addaction name="menuHelp"/>
   </widget>
   <action name="actionNew">
@@ -299,7 +642,7 @@
     <string>Turn on calculator</string>
    </property>
   </action>
-  <action name="actionSetup_Wizard">
+  <action name="actionSetup">
    <property name="text">
     <string>Setup Wizard</string>
    </property>

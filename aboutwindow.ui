@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>152</width>
-    <height>112</height>
+    <height>166</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -71,20 +71,33 @@
     </rect>
    </property>
    <property name="text">
-    <string> (C) 2015-2016 Matt Waltz</string>
+    <string>(C) 2015-2016</string>
    </property>
   </widget>
   <widget class="QPushButton" name="pushButton">
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>80</y>
+     <y>130</y>
      <width>91</width>
      <height>23</height>
     </rect>
    </property>
    <property name="text">
     <string>OK</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_5">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>80</y>
+     <width>81</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Matt Waltz</string>
    </property>
   </widget>
  </widget>

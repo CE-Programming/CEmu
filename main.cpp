@@ -8,13 +8,11 @@
 
 #include "mainwindow.h"
 #include "romselection.h"
+#include "settings.h"
 
 int main(int argc, char *argv[])
 {
     QApplication z(argc, argv);
-
-    RomSelection a;
-    a.exec();
 
     MainWindow EmuWin;
     EmuWin.show();

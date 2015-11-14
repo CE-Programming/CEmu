@@ -22,6 +22,7 @@ extern flash_state_t flash;
 
 // Avbailable functions
 eZ80portrange_t init_flash(void);
+int flash_open(const char *filename);
 
 #ifdef __cplusplus
 }

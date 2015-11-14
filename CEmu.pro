@@ -29,7 +29,6 @@ if (linux) {
 
 SOURCES += main.cpp\
     mainwindow.cpp \
-    optionswindow.cpp \
     romselection.cpp \
     aboutwindow.cpp \
     qtframebuffer.cpp \
@@ -39,7 +38,6 @@ SOURCES += main.cpp\
     core/context.c \
     core/controlport.c \
     core/cpu.c \
-    core/flashport.c \
     core/keypad.c \
     core/lcd.c \
     core/memory.c \
@@ -53,10 +51,10 @@ SOURCES += main.cpp\
     core/interrupt.c \
     emuthread.cpp \
     core/emu.c \
-    settings.cpp
+    settings.cpp \
+    core/flash.c
 
 HEADERS  += mainwindow.h \
-    optionswindow.h \
     romselection.h \
     aboutwindow.h \
     qtframebuffer.h \
@@ -67,7 +65,6 @@ HEADERS  += mainwindow.h \
     core/controlport.h \
     core/cpu.h \
     core/defines.h \
-    core/flashport.h \
     core/keypad.h \
     core/lcd.h \
     core/memory.h \
@@ -82,13 +79,14 @@ HEADERS  += mainwindow.h \
     core/interrupt.h \
     emuthread.h \
     core/emu.h \
-    settings.h
+    settings.h \
+    core/flash.h
 
 FORMS    += mainwindow.ui \
-    optionswindow.ui \
     romselection.ui \
     aboutwindow.ui
 
-RESOURCES +=
+RESOURCES += \
+    resources.qrc
 
 RC_ICONS += icon.ico

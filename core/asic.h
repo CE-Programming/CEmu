@@ -16,7 +16,7 @@ extern "C" {
 #include <core/tidevices.h>
 #include <core/keypad.h>
 #include <core/controlport.h>
-#include <core/flashport.h>
+#include <core/flash.h>
 #include <core/lcd.h>
 #include <core/backlightport.h>
 
