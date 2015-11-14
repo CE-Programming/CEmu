@@ -1,4 +1,5 @@
 #include "core/interrupt.h"
+#include "core/emu.h"
 
 interrupt_state_t intrpt;
 
@@ -73,5 +74,6 @@ eZ80portrange_t init_intrpt(void) {
   intrpt.revision = 0x00010900;   // Revision register 1.9.0.
   intrpt.f_irq = 0x16; // unused
   intrpt.f_fiq = 0x16; // unused
+  gui_console_printf("Initialized interrupt contoller...\n");
   return device;
 }

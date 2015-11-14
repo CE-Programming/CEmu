@@ -22,13 +22,14 @@ public:
 public slots:
     void closeEvent(QCloseEvent *) override;
 
-    //Debugging
-    void debugStr(QString str);
-
     // Actions
     void runSetup(void);
     void showAbout(void);
     void actionExit(void);
+
+    // Console
+    void clearConsole(void);
+    void consoleStr(QString str);
 
 private slots:
 

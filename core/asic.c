@@ -60,11 +60,10 @@ static void plug_devices(void) {
     for(i=0x0; i<=0xF; i++) {
         apb_set_map(i, &asic.cpu->prange[i]);       // mmio port handler
     }
-    gui_debug_printf("Initiallized APB...\n");
+    gui_console_printf("Initiallized APB...\n");
 }
 
 void asic_init(ti_device_type type) {
-    gui_debug_printf("Initiallized ASIC...\n");
     // First, initilize memory and LCD
     mem_init();
     lcd_init();
@@ -89,10 +88,12 @@ void asic_init(ti_device_type type) {
 
     runloop_init();
     plug_devices();
+    gui_console_printf("Initiallized ASIC...\n");
 }
 
 void asic_free(void) {
     mem_free();
+    gui_console_printf("Freed ASIC...\n");
 }
 
 int asic_add_timer(int flags, double frequency, timer_tick tick, void *data) {

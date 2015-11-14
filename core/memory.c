@@ -8,7 +8,6 @@
 mem_state_t mem;
 
 void mem_init(void) {
-    gui_debug_printf("Initiallized memory...\n");
     mem.flash=(uint8_t*)malloc(0x400000);     // allocate flash memory
     memset(mem.flash, 0xFF, 0x400000);
 
@@ -17,12 +16,13 @@ void mem_init(void) {
 
     mem.flash_mapped = 0;
     mem.flash_unlocked = 0;
+    gui_console_printf("Initialized memory...\n");
 }
 
 void mem_free(void) {
-    gui_debug_printf("Freed memory...\n");
     free(mem.ram);
     free(mem.flash);
+    gui_console_printf("Freed memory...\n");
 }
 
 uint8_t* phys_mem_ptr(uint32_t addr, uint32_t size) {

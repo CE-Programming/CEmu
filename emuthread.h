@@ -15,7 +15,7 @@ public:
     std::string rom = "";
 
 signals:
-    void debugStr(QString str);
+    void consoleStr(QString str);
     void exited(int retcode);
 
 public slots:

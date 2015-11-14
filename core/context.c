@@ -6,12 +6,13 @@
 execution_context_t context;
 
 void context_init(void) {
-    gui_debug_printf("Initialized execution context...\n");
     context.cpu = &cpu;
+    gui_console_printf("Initialized execution context...\n");
 }
 
 uint8_t is_read_next_byte(void) {
   uint8_t b;
+
   if(context.cpu->ADL == 0) {
       context.cpu->registers.PC&=0xFFFF;
       context.cpu->registers.PC|=context.cpu->registers.MBASE<<16;

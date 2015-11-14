@@ -15,8 +15,8 @@ extern const char *rom_image;
 
 // GUI callbacks
 void gui_do_stuff();
-void gui_debug_printf(const char *fmt, ...);
-void gui_debug_vprintf(const char *fmt, va_list ap);
+void gui_console_printf(const char *fmt, ...);
+void gui_console_vprintf(const char *fmt, va_list ap);
 void gui_perror(const char *msg);
 
 int emulate(void);

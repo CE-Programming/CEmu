@@ -11,10 +11,13 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
     ui->setupUi(this);              // setup the UI
 
     // Emulator -> GUI
-    connect(&emu, SIGNAL(debugStr(QString)), this, SLOT(debugStr(QString))); //Not queued connection as it may cause a hang
+    connect(&emu, SIGNAL(consoleStr(QString)), this, SLOT(consoleStr(QString))); //Not queued connection as it may cause a hang
 
     // GUI -> Emulator
     connect(ui->buttonReset, SIGNAL(clicked()), &emu, SLOT(test()));
+
+    // Console actions
+    connect(ui->buttonConsoleclear, SIGNAL(clicked()), this, SLOT(clearConsole()));
 
     // Toolbar Actions
     connect(ui->actionSetup, SIGNAL(triggered()), this, SLOT(runSetup()));
@@ -48,7 +51,7 @@ void MainWindow::closeEvent(QCloseEvent *e)
     QMainWindow::closeEvent(e);
 }
 
-void MainWindow::debugStr(QString str)
+void MainWindow::consoleStr(QString str)
 {
     ui->console->moveCursor(QTextCursor::End);
     ui->console->insertPlainText(str);
@@ -66,6 +69,11 @@ void MainWindow::runSetup(void) {
         return;
     }
     emu.start();
+}
+
+void MainWindow::clearConsole(void) {
+    this->ui->console->clear();
+    this->consoleStr("Console Cleared.\n");
 }
 
 void MainWindow::showAbout(void) {

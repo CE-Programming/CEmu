@@ -35,12 +35,12 @@ int emulate(void)
     asic_init(TI84pCE);
 
     if (rom_image == NULL) {
-           gui_debug_printf("No ROM image specified.");
+           gui_console_printf("No ROM image specified.");
            return 1;
         } else {
            FILE *rom = fopen(rom_image, "rb");
            if (!rom) {
-              gui_debug_printf("Error opening ROM image.\n", rom_image);
+              gui_console_printf("Error opening ROM image.\n", rom_image);
               asic_free();
               return 1;
            }

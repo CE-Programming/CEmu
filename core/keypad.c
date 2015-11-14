@@ -105,9 +105,9 @@ static const eZ80portrange_t device = { .read_in = keypad_read, .write_out = key
 
 eZ80portrange_t init_keypad(void) {
 	int i;
-	gui_debug_printf("Initiallized keypad...\n");
 	for(i=0; i<16; i++) {
 	    keypad.data[i] = 0;
 	}
+	gui_console_printf("Initialized keypad...\n");
 	return device;
 }

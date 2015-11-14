@@ -70,7 +70,7 @@ static const eZ80portrange_t device = { .read_in = flash_read, .write_out = flas
 
 eZ80portrange_t init_flash(void) {
     int i;
-    gui_debug_printf("Initialized flash ports...\n");
+
     // Initialize device to default state
     for(i = 0; i<0x100; i++) {
         flash.ports[i] = 0;
@@ -79,5 +79,6 @@ eZ80portrange_t init_flash(void) {
     flash.ports[0x07] = 0xFF; // From WikiTI
     flash.map = 0x06;     // From WikiTI
 
+    gui_console_printf("Initialized flash device...\n");
     return device;
 }

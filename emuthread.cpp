@@ -17,26 +17,26 @@ void gui_do_stuff()
     emu_thread->doStuff();
 }
 
-void gui_debug_printf(const char *fmt, ...)
+void gui_console_printf(const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
 
-    gui_debug_vprintf(fmt, ap);
+    gui_console_vprintf(fmt, ap);
 
     va_end(ap);
 }
 
-void gui_debug_vprintf(const char *fmt, va_list ap)
+void gui_console_vprintf(const char *fmt, va_list ap)
 {
     QString str;
     str.vsprintf(fmt, ap);
-    emu_thread->debugStr(str);
+    emu_thread->consoleStr(str);
 }
 
 void gui_perror(const char *msg)
 {
-    gui_debug_printf("%s: %s\n", msg, strerror(errno));
+    gui_console_printf("%s: %s\n", msg, strerror(errno));
 }
 
 EmuThread::EmuThread(QObject *p) : QThread(p)
@@ -83,5 +83,5 @@ bool EmuThread::stop()
 
 void EmuThread::test()
 {
-    gui_debug_printf("GUI Test\n");
+    gui_console_printf("Calculator Reset Triggered...\n");
 }
