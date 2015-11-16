@@ -47,6 +47,8 @@ bool emu_start();
 void emu_loop(bool reset);
 void emu_cleanup(void);
 
+void throttle_interval_event(int index);
+
 #ifdef __cplusplus
 }
 #endif
