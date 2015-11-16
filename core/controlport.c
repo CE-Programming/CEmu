@@ -100,16 +100,16 @@ static void control_write(const uint16_t pio, const uint8_t byte)
              control.cpu_speed = byte & 0b00010011;
              switch(control.cpu_speed & 0b00000011) {
                  case 0:
-                         set_cpu_clock_rate(6000000); // 6 MHz
+                         set_cpu_clock_rate(6e6); // 6 MHz
                          break;
                  case 1:
-                         set_cpu_clock_rate(12000000); // 12 MHz
+                         set_cpu_clock_rate(12e6); // 12 MHz
                          break;
                  case 2:
-                         set_cpu_clock_rate(24000000); // 24 MHz
+                         set_cpu_clock_rate(24e6); // 24 MHz
                          break;
                  case 3:
-                         set_cpu_clock_rate(48000000); // 48 MHz
+                         set_cpu_clock_rate(48e6); // 48 MHz
                          break;
                  default:
                          break;
