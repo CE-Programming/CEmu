@@ -7,25 +7,23 @@ TEMPLATE = app
 
 CONFIG += c++11 c11
 
-GLOBAL_FLAGS = -W -Wall -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-nonliteral -Werror=format-security -Werror=declaration-after-statement -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -fno-strict-overflow -Winit-self --param=ssp-buffer-size=1 -ffunction-sections -fdata-sections
-
-QMAKE_CFLAGS += $$GLOBAL_FLAGS -fstack-protector-all -Wstack-protector
-
-QMAKE_CXXFLAGS += $$GLOBAL_FLAGS -fno-exceptions -fstack-protector-all -Wstack-protector
-
-QMAKE_LFLAGS += -flto -fPIE -fstack-protector-all -Wstack-protector
+GLOBAL_FLAGS = -W -Wall -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=declaration-after-statement -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -fno-strict-overflow -Winit-self -ffunction-sections -fdata-sections
 
 if (macx | linux) {
-    QMAKE_CFLAGS   += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -fPIC
-    QMAKE_CXXFLAGS += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -fPIC
-    QMAKE_LFLAGS   += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -fPIC
+    GLOBAL_FLAGS += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -fstack-protector-all -Wstack-protector --param=ssp-buffer-size=1 -fPIC
 }
 if (macx) {
-    QMAKE_LFLAGS += -Wl,-dead_strip
+    MORE_LFLAGS += -Wl,-dead_strip
 }
 if (linux) {
-    QMAKE_LFLAGS += -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack -Wl,--gc-sections -pie
+    MORE_LFLAGS += -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack -Wl,--gc-sections -pie
 }
+
+QMAKE_CFLAGS += $$GLOBAL_FLAGS
+QMAKE_CXXFLAGS += $$GLOBAL_FLAGS -fno-exceptions
+QMAKE_LFLAGS += -flto -fPIE $$GLOBAL_FLAGS $$MORE_LFLAGS
+
+
 
 SOURCES += main.cpp\
     mainwindow.cpp \
