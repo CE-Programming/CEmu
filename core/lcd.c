@@ -188,7 +188,10 @@ void lcd_write(const uint16_t pio, const uint8_t value) {
     return;
 }
 
-static const eZ80portrange_t device = { .read_in = lcd_read, .write_out = lcd_write };
+static const eZ80portrange_t device = {
+    .read_in    = lcd_read,
+    .write_out  = lcd_write
+};
 
 eZ80portrange_t init_lcd(void) {
     return device;

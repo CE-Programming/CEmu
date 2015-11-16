@@ -101,7 +101,10 @@ static void keypad_write(const uint16_t pio, const uint8_t byte)
   }
 }
 
-static const eZ80portrange_t device = { .read_in = keypad_read, .write_out = keypad_write };
+static const eZ80portrange_t device = {
+    .read_in    = keypad_read,
+    .write_out  = keypad_write
+};
 
 eZ80portrange_t init_keypad(void) {
 	int i;

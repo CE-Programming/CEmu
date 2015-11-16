@@ -65,7 +65,10 @@ static void flash_write(const uint16_t pio, const uint8_t byte)
   }
 }
 
-static const eZ80portrange_t device = { .read_in = flash_read, .write_out = flash_write };
+static const eZ80portrange_t device = {
+    .read_in    = flash_read,
+    .write_out  = flash_write
+};
 
 
 eZ80portrange_t init_flash(void) {

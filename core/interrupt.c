@@ -65,8 +65,10 @@ static void intrpt_write(const uint16_t pio, const uint8_t byte) {
    }
 }
 
-static const eZ80portrange_t device = { .read_in = intrpt_read,
-                             .write_out = intrpt_write };
+static const eZ80portrange_t device = {
+    .read_in    = intrpt_read,
+    .write_out  = intrpt_write
+};
 
 eZ80portrange_t init_intrpt(void) {
   intrpt.int_enable_mask = 0x00003011; // Default state

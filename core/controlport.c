@@ -201,7 +201,10 @@ void free_control(void *_state) {
     free(state);
 }
 
-static const eZ80portrange_t device = { .read_in = control_read, .write_out = control_write };
+static const eZ80portrange_t device = {
+    .read_in    = control_read,
+    .write_out  = control_write
+};
 
 eZ80portrange_t init_control(void) {
     int i;

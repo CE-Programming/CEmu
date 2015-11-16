@@ -24,8 +24,8 @@ static void cxxx_write(const uint16_t pio, const uint8_t byte)
 }
 
 static const eZ80portrange_t pcxxx = {
-    .read_in = cxxx_read,
-    .write_out = cxxx_write
+    .read_in    = cxxx_read,
+    .write_out  = cxxx_write
 };
 
 eZ80portrange_t init_cxxx() {
@@ -65,8 +65,8 @@ static void exxx_write(const uint16_t pio, const uint8_t byte)
 }
 
 static const eZ80portrange_t pexxx = {
-    .read_in = exxx_read,
-    .write_out = exxx_write
+    .read_in    = exxx_read,
+    .write_out  = exxx_write
 };
 
 eZ80portrange_t init_exxx() {
@@ -93,8 +93,8 @@ static uint8_t fxxx_read(const uint16_t pio) {
 }
 
 static const eZ80portrange_t pfxxx = {
-    .read_in = fxxx_read,
-    .write_out = fxxx_write
+    .read_in    = fxxx_read,
+    .write_out  = fxxx_write
 };
 
 eZ80portrange_t init_fxxx(void) {
