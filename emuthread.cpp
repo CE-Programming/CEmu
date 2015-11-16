@@ -2,6 +2,8 @@
 
 #include <cassert>
 #include <iostream>
+#include <cstdarg>
+#include <chrono>
 
 #include <QEventLoop>
 #include <QTimer>
@@ -12,9 +14,9 @@
 
 EmuThread *emu_thread = nullptr;
 
-void gui_do_stuff()
+void gui_do_stuff(bool wait)
 {
-    emu_thread->doStuff();
+    emu_thread->doStuff(wait);
 }
 
 void gui_console_printf(const char *fmt, ...)
@@ -39,6 +41,21 @@ void gui_perror(const char *msg)
     gui_console_printf("%s: %s\n", msg, strerror(errno));
 }
 
+void throttle_timer_off()
+{
+    emu_thread->setTurboMode(true);
+}
+
+void throttle_timer_on()
+{
+    emu_thread->setTurboMode(false);
+}
+
+void throttle_timer_wait()
+{
+    emu_thread->throttleTimerWait();
+}
+
 EmuThread::EmuThread(QObject *p) : QThread(p)
 {
     assert(emu_thread == nullptr);
@@ -46,19 +63,60 @@ EmuThread::EmuThread(QObject *p) : QThread(p)
 }
 
 //Called occasionally, only way to do something in the same thread the emulator runs in.
-void EmuThread::doStuff()
+void EmuThread::doStuff(bool w)
 {
-    while(paused)
-        msleep(100);
+    do
+    {
+        /*if(do_suspend)
+        {
+            bool success = emu_suspend(snapshot_path.c_str());
+            do_suspend = false;
+            emit suspended(success);
+        }
+
+        if(enter_debugger)
+        {
+            setPaused(false);
+            enter_debugger = false;
+            debugger(DBG_USER, 0);
+        }*/
+
+        if(/*is_paused && */0)
+            msleep(100);
+
+    } while(/*is_paused && */0);
 }
+
+void EmuThread::throttleTimerWait()
+{
+    unsigned int now = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    unsigned int throttle = throttle_delay * 1000;
+    unsigned int left = throttle - (now % throttle);
+    if(left > 0)
+        QThread::usleep(left);
+}
+
+void EmuThread::setTurboMode(bool enabled)
+{
+    turbo_mode = enabled;
+    emit turboModeChanged(enabled);
+}
+
+void EmuThread::toggleTurbo()
+{
+    setTurboMode(!turbo_mode);
+}
+
 
 void EmuThread::run()
 {
     rom_image = rom.c_str();
 
-    int ret = emulate();
+    bool reset_true = true;
+    bool success = emu_start();
+    if(success) { emu_loop(reset_true); }
 
-    emit exited(ret);
+    emit exited(0);
 }
 
 void EmuThread::setPaused(bool pause)

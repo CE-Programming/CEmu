@@ -9,16 +9,16 @@ CONFIG += c++11 c11
 
 GLOBAL_FLAGS = -W -Wall -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-nonliteral -Werror=format-security -Werror=declaration-after-statement -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -fno-strict-overflow -Winit-self --param=ssp-buffer-size=1 -ffunction-sections -fdata-sections
 
-QMAKE_CFLAGS += $$GLOBAL_FLAGS -fstack-protector-all -Wstack-protector -fPIC
+QMAKE_CFLAGS += $$GLOBAL_FLAGS -fstack-protector-all -Wstack-protector
 
-QMAKE_CXXFLAGS += $$GLOBAL_FLAGS -fno-exceptions -fstack-protector-all -Wstack-protector -fPIC
+QMAKE_CXXFLAGS += $$GLOBAL_FLAGS -fno-exceptions -fstack-protector-all -Wstack-protector
 
-QMAKE_LFLAGS += -flto -fPIE -fstack-protector-all -Wstack-protector -fPIC
+QMAKE_LFLAGS += -flto -fPIE -fstack-protector-all -Wstack-protector
 
 if (macx | linux) {
-    QMAKE_CFLAGS   += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error
-    QMAKE_CXXFLAGS += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error
-    QMAKE_LFLAGS   += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error
+    QMAKE_CFLAGS   += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -fPIC
+    QMAKE_CXXFLAGS += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -fPIC
+    QMAKE_LFLAGS   += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -fPIC
 }
 if (macx) {
     QMAKE_LFLAGS += -Wl,-dead_strip
@@ -42,17 +42,14 @@ SOURCES += main.cpp\
     core/lcd.c \
     core/memory.c \
     core/registers.c \
-    core/runloop.c \
     core/apb.c \
-    core/exxx.c \
-    core/dxxx.c \
-    core/cxxx.c \
-    core/fxxx.c \
     core/interrupt.c \
     emuthread.cpp \
-    core/emu.c \
     settings.cpp \
-    core/flash.c
+    core/flash.c \
+    core/misc.c \
+    core/schedule.c \
+    core/emu.cpp
 
 HEADERS  += mainwindow.h \
     romselection.h \
@@ -69,18 +66,15 @@ HEADERS  += mainwindow.h \
     core/lcd.h \
     core/memory.h \
     core/registers.h \
-    core/runloop.h \
     core/tidevices.h \
     core/apb.h \
-    core/exxx.h \
-    core/dxxx.h \
-    core/cxxx.h \
-    core/fxxx.h \
     core/interrupt.h \
     emuthread.h \
     core/emu.h \
     settings.h \
-    core/flash.h
+    core/flash.h \
+    core/misc.h \
+    core/schedule.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \

@@ -8,9 +8,7 @@ extern "C" {
 #include <stdint.h>
 
 #include <core/cpu.h>
-#include <core/cxxx.h>
-#include <core/exxx.h>
-#include <core/fxxx.h>
+#include <core/misc.h>
 #include <core/memory.h>
 #include <core/interrupt.h>
 #include <core/tidevices.h>
@@ -67,8 +65,12 @@ typedef struct asic_state asic_state_t;
 // Available Functions
 void asic_init(ti_device_type);
 void asic_free(void);
+void asic_reset(void);
 
-int asic_set_clock_rate(int);
+// External Global ASIC state
+extern asic_state_t asic;
+
+uint32_t set_cpu_clock_rate(uint32_t new_rate);
 
 int asic_add_timer(int, double, timer_tick, void *);
 void asic_remove_timer(int);

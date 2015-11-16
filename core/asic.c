@@ -8,19 +8,27 @@
 #include "core/cpu.h"
 #include "core/memory.h"
 
-#include "core/cxxx.h"
-#include "core/exxx.h"
-#include "core/fxxx.h"
+#include "core/misc.h"
 #include "core/interrupt.h"
-#include "core/runloop.h"
 #include "core/keypad.h"
 #include "core/controlport.h"
 #include "core/flash.h"
 #include "core/lcd.h"
 #include "core/backlightport.h"
+#include "core/schedule.h"
 
 // Global ASIC state
 asic_state_t asic;
+
+void (*reset_procs[20])(void);
+unsigned int reset_proc_count;
+
+static void add_reset_proc(void (*proc)(void))
+{
+    if (reset_proc_count == sizeof(reset_procs)/sizeof(*reset_procs))
+        abort();
+    reset_procs[reset_proc_count++] = proc;
+}
 
 uint8_t read_unimplemented_port(const uint16_t addr) {
     //printf("Attempted to read unimplemented port: 0x%04X", addr);
@@ -60,13 +68,13 @@ static void plug_devices(void) {
     for(i=0x0; i<=0xF; i++) {
         apb_set_map(i, &asic.cpu->prange[i]);       // mmio port handler
     }
+    add_reset_proc(lcd_reset);
     gui_console_printf("Initiallized APB...\n");
 }
 
 void asic_init(ti_device_type type) {
     // First, initilize memory and LCD
     mem_init();
-    lcd_init();
     cpu_init();
 
     asic.mem = &mem;
@@ -86,7 +94,6 @@ void asic_init(ti_device_type type) {
 
     asic.stopped = 0;
 
-    runloop_init();
     plug_devices();
     gui_console_printf("Initiallized ASIC...\n");
 }
@@ -96,48 +103,19 @@ void asic_free(void) {
     gui_console_printf("Freed ASIC...\n");
 }
 
-int asic_add_timer(int flags, double frequency, timer_tick tick, void *data) {
-	eZ80_hardware_timer_t *timer = 0;
-	int i;
-	for (i = 0; i < asic.timers->max_timers; i++) {
-		if (!(asic.timers->timers[i].flags & TIMER_IN_USE)) {
-			timer = &asic.timers->timers[i];
-			break;
-		}
+void asic_reset(void) {
+    unsigned int i;
+    for(i = 0; i < reset_proc_count; i++)
+        reset_procs[i]();
 
-		if (i == asic.timers->max_timers - 1) {
-			eZ80_hardware_timer_t *ne;
-			asic.timers->max_timers += 10;
-			asic.timers->timers = realloc(asic.timers->timers, sizeof(eZ80_hardware_timer_t) * asic.timers->max_timers);
-			ne = &asic.timers->timers[asic.timers->max_timers - 10];
-			memset(ne, 0, sizeof(eZ80_hardware_timer_t) * 10);
-		}
-	}
-
-	timer->cycles_until_tick = asic.clock_rate / frequency;
-	timer->flags = flags | TIMER_IN_USE;
-	timer->frequency = frequency;
-	timer->on_tick = tick;
-	timer->data = data;
-	return i;
+    sched.clock_rates[CLOCK_CPU] = 48000000;
+    sched.clock_rates[CLOCK_APB] = 48000000;
 }
 
-void asic_remove_timer(int index) {
-	asic.timers->timers[index].flags &= ~TIMER_IN_USE;
-}
+uint32_t set_cpu_clock_rate(uint32_t new_rate) {
+    uint32_t old_rate = sched.clock_rates[CLOCK_CPU];
+    uint32_t cpu_new_rate[1] = { new_rate };
+    sched_set_clocks(1, cpu_new_rate);
 
-int asic_set_clock_rate(int new_rate) {
-	int old_rate = asic.clock_rate;
-
-	int i;
-	for (i = 0; i < asic.timers->max_timers; i++) {
-		eZ80_hardware_timer_t *timer = &asic.timers->timers[i];
-		if (timer->flags & TIMER_IN_USE) {
-			timer->cycles_until_tick =
-				new_rate / (timer->cycles_until_tick * timer->frequency);
-		}
-	}
-
-	asic.clock_rate = new_rate;
-	return old_rate;
+    return old_rate;
 }

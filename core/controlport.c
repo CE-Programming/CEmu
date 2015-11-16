@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "core/asic.h"
+#include "core/emu.h"
 
 // Global CONTROL state
 control_state_t control;
@@ -97,22 +98,23 @@ static void control_write(const uint16_t pio, const uint8_t byte)
              break;
   case 0x01:
              control.cpu_speed = byte & 0b00010011;
-             switch(control.cpu_speed&3) {
+             switch(control.cpu_speed & 0b00000011) {
                  case 0:
-                         asic_set_clock_rate(6000000); // 6 MHz
+                         set_cpu_clock_rate(6000000); // 6 MHz
                          break;
                  case 1:
-                         asic_set_clock_rate(12000000); // 12 MHz
+                         set_cpu_clock_rate(12000000); // 12 MHz
                          break;
                  case 2:
-                         asic_set_clock_rate(24000000); // 24 MHz
+                         set_cpu_clock_rate(24000000); // 24 MHz
                          break;
                  case 3:
-                         asic_set_clock_rate(48000000); // 48 MHz
+                         set_cpu_clock_rate(48000000); // 48 MHz
                          break;
                  default:
                          break;
              }
+             //gui_console_printf("CPU clock rate set to: %d MHz\n", 6*(1<<(control.cpu_speed & 0b00000011)));
              break;
   case 0x02:
              control.ports[addr] = 0;

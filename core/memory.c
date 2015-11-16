@@ -7,12 +7,15 @@
 // Global MEMORY state
 mem_state_t mem;
 
-void mem_init(void) {
-    mem.flash=(uint8_t*)malloc(0x400000);     // allocate flash memory
-    memset(mem.flash, 0xFF, 0x400000);
+const uint32_t ram_size = 0x65800;
+const uint32_t ram_base = 0xD00000;
+const uint32_t flash_size = 0x400000;
 
-    mem.ram=(uint8_t*)calloc(0x65800, sizeof(uint8_t)); // allocate ram memory
-    mem.vram = mem.ram + 0x40000;                           // allocate vram memory
+void mem_init(void) {
+    mem.flash=(uint8_t*)malloc(flash_size);     // allocate flash memory
+    memset(mem.flash, 0xFF, flash_size);
+
+    mem.ram=(uint8_t*)calloc(ram_size, sizeof(uint8_t)); // allocate ram memory
 
     mem.flash_mapped = 0;
     mem.flash_unlocked = 0;
@@ -27,10 +30,9 @@ void mem_free(void) {
 
 uint8_t* phys_mem_ptr(uint32_t addr, uint32_t size) {
     if(addr<0xD00000) {
-        if(addr+size < 0x400000) { return NULL; }
            return mem.flash+addr;
     }
-    if(addr+size < 0x65800) { return NULL; }
+    addr -= 0xD00000;
     return mem.ram+addr;
 }
 

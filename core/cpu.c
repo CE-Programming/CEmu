@@ -796,7 +796,7 @@ static void execute_bli(int y, int z) {
 	}
 }
 
-int cpu_execute(int cycles) {
+int cpu_execute(void) {
   eZ80portrange_t portr;
 
   // variable declaration
@@ -819,7 +819,7 @@ int cpu_execute(int cycles) {
 
   get_cntrl_data_blocks_format();
 
-  while (cycles > 0 || cpu.prefix != 0)
+  while ((!exiting && cycle_count_delta < 0) || cpu.prefix != 0)
   {
     context.cycles = 0;
 
@@ -852,6 +852,8 @@ int cpu_execute(int cycles) {
     // fetch opcode
 
     context.opcode = context.nu();
+
+    //logprintf(LOG_CPU, "Fetched Opcode: 0x%02X", context.opcode);
 
     old_r = r->R;
     r->R++;
@@ -1764,11 +1766,11 @@ int cpu_execute(int cycles) {
     get_cntrl_data_blocks_format();
 
 exit_loop:
-    cycles -= context.cycles;
+    cycle_count_delta += context.cycles;
     if (context.cycles == 0) {
             //log_message(cpu.log, L_ERROR, "cpu", "Error: Unrecognized instruction 0x%02X.".opcode);
-            cycles--;
+            cycle_count_delta++;
     }
   }
-  return cycles;
+  return cycle_count_delta;
 }

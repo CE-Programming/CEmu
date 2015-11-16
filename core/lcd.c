@@ -3,7 +3,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "core/schedule.h"
 #include "core/memory.h"
+#include "core/emu.h"
 
 // Global LCD state
 lcd_cntrl_state_t lcd;
@@ -41,7 +43,7 @@ void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
         bitfields[2] = tmp;
     }
 
-    in = (uint32_t*)lcd.memory->vram;
+    in = (uint32_t*)phys_mem_ptr(lcd.upcurr, (320 * 240) / 8 * bpp);
     if (!in || !lcd.upbase || (((lcd.control>>11)&0x1) == 0)) {
         memset(buffer, 0x00, 320 * 240 * 2); return;
     }
@@ -89,125 +91,101 @@ void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
     }
 }
 
-uint8_t lcd_read(const uint16_t pio)
-{
-  uint16_t index = pio;
-  uint8_t bit_offset = (index&3)<<3;
-  uint8_t low_index = mask8(index);
-
-  switch( upper16(index) ) {
-    case 0x0:
-      switch( low_index>>4 ) {
-        case 0x0:
-          switch( low_index ) {
-            case 0x00: case 0x01: case 0x02: case 0x03:
-              return read8(lcd.timing0,bit_offset);
-            case 0x04: case 0x05: case 0x06: case 0x07:
-              return read8(lcd.timing1,bit_offset);
-            case 0x08: case 0x09: case 0x0A: case 0x0B:
-              return read8(lcd.timing2,bit_offset);
-            case 0x0C: case 0x0D: case 0x0E: case 0x0F:
-              return read8(lcd.timing3,bit_offset);
-          }
-        case 0x1:
-          switch( low_index ) {
-            case 0x10: case 0x11: case 0x12: case 0x13:
-              return read8(lcd.upbase,bit_offset);
-            case 0x14: case 0x15: case 0x16: case 0x17:
-              return read8(lcd.lpbase,bit_offset);
-            case 0x18: case 0x19: case 0x1A: case 0x1B:
-              return read8(lcd.control,bit_offset);
-            case 0x1C: case 0x1D: case 0x1E: case 0x1F:
-              return read8(lcd.imsc,bit_offset);
-          }
-        default:
-          switch( low_index ) {
-            case 0x20: case 0x21: case 0x22: case 0x23:
-              return read8(lcd.ris,bit_offset);
-            case 0x24: case 0x25: case 0x26: case 0x27:
-              return read8(lcd.mis,bit_offset);
-            case 0x28: case 0x29: case 0x2A: case 0x2B:
-            /* LCDIcr */ return 0;
-            case 0x2C: case 0x2D: case 0x2E: case 0x2F:
-              return read8(lcd.upcurr,bit_offset);
-            case 0x30: case 0x31: case 0x32: case 0x33:
-              return read8(lcd.lpcurr,bit_offset);
-            break;
-          }
-      }
-    case 0x0C:
-    default:
-      index -= 0x200;
-      if(index < 0x200) {
-          return read8(lcd.palette[index],(index&1)<<3);
-      }
-      break;
-  }
-  return 0;
+static void lcd_event(int index) {
+    int pcd = 1;
+    int htime, vtime;
+    if (!(lcd.timing[2] & (1 << 26)))
+        pcd = (lcd.timing[2] >> 27 << 5) + (lcd.timing[2] & 0x1F) + 2;
+    htime =   (lcd.timing[0] >> 24 & 0x0FF) + 1  // Back porch
+            + (lcd.timing[0] >> 16 & 0x0FF) + 1  // Front porch
+            + (lcd.timing[0] >>  8 & 0x0FF) + 1  // Sync pulse
+            + (lcd.timing[2] >> 16 & 0x3FF) + 1; // Active
+    vtime =   (lcd.timing[1] >> 24 & 0x0FF)      // Back porch
+            + (lcd.timing[1] >> 16 & 0x0FF)      // Front porch
+            + (lcd.timing[1] >> 10 & 0x03F) + 1  // Sync pulse
+            + (lcd.timing[1]       & 0x3FF) + 1; // Active
+    event_repeat(index, pcd * htime * vtime);
+    // for now, assuming vcomp occurs at same time UPBASE is loaded
+    lcd.upcurr = lcd.upbase;
+    lcd.ris |= 0xC;
+    //int_set(INT_LCD, lcd.ris & lcd.mis);
 }
 
-void lcd_write(const uint16_t pio, const uint8_t byte)
-{
-  uint16_t index = pio;
-  uint8_t bit_offset = (pio&3)<<3;
-  uint8_t low_index = mask8(index);
-
-  switch( upper16(index) ) {
-    case 0x0:
-      switch( low_index>>4 ) {
-        case 0x0:
-          switch( low_index ) {
-            case 0x00: case 0x01: case 0x02: case 0x03:
-              write8(lcd.timing0,bit_offset,byte); return;
-            case 0x04: case 0x05: case 0x06: case 0x07:
-              write8(lcd.timing1,bit_offset,byte); return;
-            case 0x08: case 0x09: case 0x0A: case 0x0B:
-              write8(lcd.timing2,bit_offset,byte); return;
-    case 0x0C: case 0x0D: case 0x0E: case 0x0F:
-              write8(lcd.timing3,bit_offset,byte); return;
-          }
-        case 0x1:
-          switch( low_index ) {
-            case 0x10: case 0x11: case 0x12: case 0x13:
-              write8(lcd.upbase,bit_offset,byte); return;
-            case 0x14: case 0x15: case 0x16: case 0x17:
-              write8(lcd.lpbase,bit_offset,byte); return;
-            case 0x18: case 0x19: case 0x1A: case 0x1B:
-              write8(lcd.control,bit_offset,byte); return;
-            case 0x1C: case 0x1D: case 0x1E: case 0x1F:
-              write8(lcd.imsc,bit_offset,byte); return;
-          }
-        default:
-          switch( low_index ) {
-            case 0x20: case 0x21: case 0x22: case 0x23:
-              write8(lcd.ris,bit_offset,byte); return;
-            case 0x24: case 0x25: case 0x26: case 0x27:
-              write8(lcd.mis,bit_offset,byte); return;
-            case 0x28: case 0x29: case 0x2A: case 0x2B:
-            /*LcdIcr*/ return;
-            case 0x2C: case 0x2D: case 0x2E: case 0x2F:
-              write8(lcd.upcurr,bit_offset,byte); return;
-            case 0x30: case 0x31: case 0x32: case 0x33:
-              write8(lcd.lpcurr,bit_offset,byte); return;
-            default:
-              break;
-          }
-      }
-    case 0xC:
-      return;
-    default:
-      index -= 0x200;
-      if(index < 0x200) {
-          write8(lcd.palette[index],(index&1)<<3,byte); return;
-      }
-      return;
-  }
+void lcd_reset(void) {
+    // Palette is unchanged on a reset (TODO)
+    // memset(&lcd, 0, (char *)&lcd.palette - (char *)&lcd);
+    sched.items[SCHED_LCD].clock = CLOCK_12M;
+    //sched.items[SCHED_LCD].second = -1;
+    sched.items[SCHED_LCD].proc = lcd_event;
+    lcd.control = 0x92D;
+    lcd.upbase = 0xD40000;
 }
 
-void lcd_init(void) {
-  lcd.control = 0x92D;
-  lcd.upbase = 0xD40000;
-  lcd.memory = &mem;
+uint8_t lcd_read(const uint16_t pio) {
+    uint16_t offset = pio & 0xFFF;
+    uint8_t bit_offset = (offset & 0b11) << 0b11;
+
+    if (offset < 0x200) {
+        if(offset < 0x010) { return read8(lcd.timing[offset >> 2], bit_offset); }
+        if(offset < 0x014 && offset >= 0x010) { return read8(lcd.upbase, bit_offset); }
+        if(offset < 0x018 && offset >= 0x014) { return read8(lcd.lpbase, bit_offset); }
+        if(offset < 0x01C && offset >= 0x018) { return read8(lcd.control, bit_offset); }
+        if(offset < 0x020 && offset >= 0x01C) { return read8(lcd.imsc, bit_offset); }
+        if(offset < 0x024 && offset >= 0x020) { return read8(lcd.mis, bit_offset); }
+        if(offset < 0x028 && offset >= 0x024) { return read8(lcd.mis & lcd.ris, bit_offset); }
+    } else if (offset < 0x400) {
+        return *(uint32_t *)((uint8_t *)lcd.palette + offset - 0x200);
+    } else if (offset >= 0xFE0) {
+        static const uint8_t id[1][8] = {
+            { 0x11, 0x11, 0x14, 0x00, 0x0D, 0xF0, 0x05, 0xB1 }
+        };
+        return read8(id[0][(offset - 0xFE0) >> 2], bit_offset);
+    }
+    return 0;
+    //return bad_read_word(addr);
+}
+
+void lcd_write(const uint16_t pio, const uint8_t value) {
+    uint32_t offset = pio & 0xFFF;
+    uint8_t bit_offset = (pio & 0b11) << 0b11;
+
+    if (offset < 0x200) {
+        if(offset < 0x010) {
+            write8(lcd.timing[offset >> 2], bit_offset, value);
+            return;
+        }
+        if(offset < 0x014 && offset >= 0x010) {
+            write8(lcd.upbase, bit_offset, value & ~0b111);
+            if(value & 0b111) { gui_console_printf("Warning: LCD upper panel base not 8-byte aligned!\n"); return; }
+        }
+        if(offset < 0x018 && offset >= 0x014) {
+            write8(lcd.lpbase, bit_offset, value & ~0b111);
+            if(value & 0b111) { gui_console_printf("Warning: LCD lower panel base not 8-byte aligned!\n"); return; }
+        }
+        if(offset < 0x01C && offset >= 0x018) {
+            if ((value ^ lcd.control) & 1) {
+                if (value & 1) { event_set(SCHED_LCD, 0); }
+                else { event_clear(SCHED_LCD); }
+            }
+            write8(lcd.control, bit_offset, value);
+            return;
+        }
+        if(offset < 0x020 && offset >= 0x01C) {
+            write8(lcd.imsc, bit_offset, value&0x1E); return;
+            //int_set(INT_LCD, lcd.int_status & lcd.int_mask);
+            return;
+        }
+        if(offset < 0x02C && offset >= 0x028) {
+            lcd.ris &= ~value;
+            //int_set(INT_LCD, lcd.int_status & lcd.int_mask);
+            return;
+        }
+    } else if (offset < 0x400) {
+        *(uint32_t *)((uint8_t *)lcd.palette + offset - 0x200) = value;
+        return;
+    }
+    //bad_write_word(addr, value);
+    return;
 }
 
 static const eZ80portrange_t device = { .read_in = lcd_read, .write_out = lcd_write };
