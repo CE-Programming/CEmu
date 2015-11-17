@@ -16,6 +16,9 @@ public:
     std::string rom = "";
 
 signals:
+    // Debugger
+    void debuggerEntered(bool state);
+
     void consoleStr(QString str);
     void exited(int retcode);
 
@@ -30,11 +33,15 @@ public slots:
     bool stop();
     void test();
 
+    // Debugging
+    void enterDebugger();
+
     // Emulation settings
     void setTurboMode(bool state);
     void toggleTurbo();
 
 private:
+    bool enter_debugger = false;
 };
 
 // For friends

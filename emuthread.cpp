@@ -62,6 +62,11 @@ EmuThread::EmuThread(QObject *p) : QThread(p)
     emu_thread = this;
 }
 
+void EmuThread::enterDebugger()
+{
+    enter_debugger = true;
+}
+
 //Called occasionally, only way to do something in the same thread the emulator runs in.
 void EmuThread::doStuff(bool w)
 {

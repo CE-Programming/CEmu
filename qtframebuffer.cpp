@@ -17,7 +17,7 @@ QImage renderFramebuffer()
 
 void paintFramebuffer(QPainter *p)
 {
-    if(&mem == NULL)
+    if(0)
     {
         p->fillRect(p->window(), Qt::black);
         p->setPen(Qt::white);

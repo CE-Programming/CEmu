@@ -18,7 +18,7 @@ void cpu_init(void) {
     context_init();  // initilize execution context
     memset(&cpu, 0x00, sizeof(eZ80cpu_t));
     cpu.memory = &mem;
-    gui_console_printf("Initiallized CPU...\n");
+    gui_console_printf("Initialized CPU...\n");
 }
 
 uint8_t cpu_read_byte(const uint32_t address) {
@@ -853,7 +853,8 @@ int cpu_execute(void) {
 
     context.opcode = context.nu();
 
-    //logprintf(LOG_CPU, "Fetched Opcode: 0x%02X", context.opcode);
+    //gui_console_printf("Fetched Opcode: %02X\n", context.opcode);
+    //system("pause");
 
     old_r = r->R;
     r->R++;
@@ -1768,7 +1769,7 @@ int cpu_execute(void) {
 exit_loop:
     cycle_count_delta += context.cycles;
     if (context.cycles == 0) {
-            //log_message(cpu.log, L_ERROR, "cpu", "Error: Unrecognized instruction 0x%02X.".opcode);
+            //logprintf(LOG_CPU, "Error: Unrecognized instruction 0x%02X.", context.opcode);
             cycle_count_delta++;
     }
   }

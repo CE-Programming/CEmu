@@ -65,11 +65,17 @@ static void plug_devices(void) {
     asic.cpu->prange[0xE] = init_exxx();
     asic.cpu->prange[0xF] = init_fxxx();
 
+    // Populate APB ports
     for(i=0x0; i<=0xF; i++) {
-        apb_set_map(i, &asic.cpu->prange[i]);       // mmio port handler
+        apb_set_map(i, &asic.cpu->prange[i]);
     }
+
+    reset_proc_count = 0;
+
+    // Populate reset callbacks
     add_reset_proc(lcd_reset);
-    gui_console_printf("Initiallized APB...\n");
+
+    gui_console_printf("Initialized APB...\n");
 }
 
 void asic_init(ti_device_type type) {
@@ -80,22 +86,16 @@ void asic_init(ti_device_type type) {
     asic.mem = &mem;
     asic.cpu = &cpu;
 
-    asic.cpu->memory = asic.mem;
     asic.cpu->read_byte = memory_read_byte;
     asic.cpu->write_byte = memory_write_byte;
     asic.cpu->get_mem_wait_states = mem_wait_states;
     asic.battery = BATTERIES_GOOD;
     asic.device = type;
-    asic.clock_rate = 6000000;
-
-    asic.timers = calloc(sizeof(eZ80_hardware_timers_t), 1);
-    asic.timers->max_timers = 20;
-    asic.timers->timers = calloc(sizeof(eZ80_hardware_timer_t), 20);
 
     asic.stopped = 0;
 
     plug_devices();
-    gui_console_printf("Initiallized ASIC...\n");
+    gui_console_printf("Initialized ASIC...\n");
 }
 
 void asic_free(void) {

@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QSettings>
+#include <QLabel>
 
 #include <romselection.h>
 #include <emuthread.h>
@@ -20,7 +21,9 @@ public:
     ~MainWindow();
 
 public slots:
+    // Misc.
     void closeEvent(QCloseEvent *) override;
+    void showStatusMsg(QString str);
 
     // Actions
     void runSetup(void);
@@ -30,13 +33,15 @@ public slots:
     // Console
     void clearConsole(void);
     void consoleStr(QString str);
+    void raiseDebugger();
 
 private slots:
 
 private:
     Ui::MainWindow *ui = nullptr;
-
     EmuThread emu;
+
+    QLabel status_label;
 };
 
 // Used as global instance by EmuThread and friends

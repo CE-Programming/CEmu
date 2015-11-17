@@ -2,6 +2,8 @@
 #include "ui_mainwindow.h"
 #include <QLabel>
 #include <iostream>
+#include <QDockWidget>
+#include <QMessageBox>
 
 #include "aboutwindow.h"
 #include "settings.h"
@@ -36,6 +38,16 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::raiseDebugger()
+{
+    ui->tabWidget->setCurrentWidget(ui->tabDebugger);
+}
+
+void MainWindow::showStatusMsg(QString str)
+{
+    status_label.setText(str);
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)

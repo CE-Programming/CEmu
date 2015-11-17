@@ -24,8 +24,8 @@
   </property>
   <property name="maximumSize">
    <size>
-    <width>1000</width>
-    <height>441</height>
+    <width>16777215</width>
+    <height>16777215</height>
    </size>
   </property>
   <property name="palette">
@@ -134,8 +134,8 @@
    </property>
    <property name="maximumSize">
     <size>
-     <width>1000</width>
-     <height>400</height>
+     <width>16777215</width>
+     <height>16777215</height>
     </size>
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -266,7 +266,7 @@
        <enum>Qt::LeftToRight</enum>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>4</number>
       </property>
       <property name="documentMode">
        <bool>false</bool>
@@ -603,7 +603,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="debugtab">
+      <widget class="QWidget" name="tabDebugger">
        <attribute name="title">
         <string>Debug</string>
        </attribute>
@@ -2841,7 +2841,7 @@
              </size>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <property name="tabsClosable">
              <bool>false</bool>
@@ -2873,7 +2873,11 @@
                  <number>0</number>
                 </property>
                 <item>
-                 <widget class="QLineEdit" name="portRequest"/>
+                 <widget class="QLineEdit" name="portRequest">
+                  <property name="maxLength">
+                   <number>4</number>
+                  </property>
+                 </widget>
                 </item>
                 <item>
                  <widget class="QPushButton" name="pushButton">
