@@ -33,7 +33,11 @@ public slots:
     // Console
     void clearConsole(void);
     void consoleStr(QString str);
+
+    // Debugger
     void raiseDebugger();
+    void currentChangedSlot(int);
+    void populateDebugWindow();
 
 private slots:
 

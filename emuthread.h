@@ -3,6 +3,8 @@
 
 #include <QThread>
 
+#include "core/asic.h"
+
 class EmuThread : public QThread
 {
     Q_OBJECT
@@ -12,6 +14,7 @@ public:
     void doStuff(bool);
     void throttleTimerWait();
 
+    asic_state_t *asic_ptr = NULL;
     volatile bool paused = false;
     std::string rom = "";
 
@@ -46,5 +49,9 @@ private:
 
 // For friends
 extern EmuThread *emu_thread;
+enum current_registers {
+  AF, HL, DE, BC, IX, IY, AF_, HL_, DE_, BC_,
+  MB, PC, SPS, SPL
+};
 
 #endif // EMUTHREAD_H

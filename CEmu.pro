@@ -23,8 +23,6 @@ QMAKE_CFLAGS += $$GLOBAL_FLAGS
 QMAKE_CXXFLAGS += $$GLOBAL_FLAGS -fno-exceptions
 QMAKE_LFLAGS += -flto -fPIE $$GLOBAL_FLAGS $$MORE_LFLAGS
 
-
-
 SOURCES += main.cpp\
     mainwindow.cpp \
     romselection.cpp \
@@ -47,7 +45,8 @@ SOURCES += main.cpp\
     core/flash.c \
     core/misc.c \
     core/schedule.c \
-    core/emu.cpp
+    core/emu.cpp \
+    core/debug.c
 
 HEADERS  += mainwindow.h \
     romselection.h \
@@ -72,7 +71,8 @@ HEADERS  += mainwindow.h \
     settings.h \
     core/flash.h \
     core/misc.h \
-    core/schedule.h
+    core/schedule.h \
+    core/debug.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \

@@ -11,6 +11,7 @@
 #include "mainwindow.h"
 
 #include "core/emu.h"
+#include "core/debug.h"
 
 EmuThread *emu_thread = nullptr;
 
@@ -56,6 +57,13 @@ void throttle_timer_wait()
     emu_thread->throttleTimerWait();
 }
 
+void gui_debugger_entered_or_left(bool entered)
+{
+    if(entered != 0) {
+        emu_thread->debuggerEntered(entered);
+    }
+}
+
 EmuThread::EmuThread(QObject *p) : QThread(p)
 {
     assert(emu_thread == nullptr);
@@ -68,23 +76,15 @@ void EmuThread::enterDebugger()
 }
 
 //Called occasionally, only way to do something in the same thread the emulator runs in.
-void EmuThread::doStuff(bool w)
+void EmuThread::doStuff(bool waitfor)
 {
     do
     {
-        /*if(do_suspend)
-        {
-            bool success = emu_suspend(snapshot_path.c_str());
-            do_suspend = false;
-            emit suspended(success);
-        }
-
         if(enter_debugger)
         {
-            setPaused(false);
             enter_debugger = false;
             debugger(DBG_USER, 0);
-        }*/
+        }
 
         if(/*is_paused && */0)
             msleep(100);
@@ -119,6 +119,9 @@ void EmuThread::run()
 
     bool reset_true = true;
     bool success = emu_start();
+
+    asic_ptr = &asic;
+
     if(success) { emu_loop(reset_true); }
 
     emit exited(0);

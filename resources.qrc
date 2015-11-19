@@ -2,4 +2,12 @@
     <qresource prefix="/skin">
         <file>resources/skin/ti84pce.jpg</file>
     </qresource>
+    <qresource prefix="/icons">
+        <file>resources/icons/break.png</file>
+        <file>resources/icons/goto.png</file>
+        <file>resources/icons/run.png</file>
+        <file>resources/icons/stepover.png</file>
+        <file>resources/icons/stop.png</file>
+        <file>resources/icons/step.png</file>
+    </qresource>
 </RCC>

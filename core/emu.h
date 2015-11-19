@@ -39,9 +39,12 @@ extern const char *rom_image;
 
 // GUI callbacks
 void gui_do_stuff(bool wait);
-void gui_console_printf(const char *fmt, ...);
-void gui_console_vprintf(const char *fmt, va_list ap);
-void gui_perror(const char *msg);
+void gui_console_printf(const char *, ...);
+void gui_console_vprintf(const char *, va_list);
+void gui_perror(const char *);
+void gui_debugger_entered_or_left(bool);
+void gui_debugger_show_registers(void);
+void gui_debugger_set_registers(void);
 
 bool emu_start();
 void emu_loop(bool reset);

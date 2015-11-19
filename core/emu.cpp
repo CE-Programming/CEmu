@@ -10,6 +10,9 @@
 
 const char *rom_image = NULL;
 
+// For the debugger
+uint32_t reg_array[0x0E];
+
 /* cycle_count_delta is a (usually negative) number telling what the time is relative
  * to the next scheduled event. See sched.c */
 int cycle_count_delta = 0;
@@ -40,17 +43,6 @@ void emuprintf(const char *format, ...) {
     va_start(va, format);
     gui_console_vprintf(format, va);
     va_end(va);
-}
-
-void warn(const char *fmt, ...) {
-    va_list va;
-    va_start(va, fmt);
-    gui_console_printf("Warning (%06X): ", asic.cpu->registers.PC);
-    gui_console_vprintf(fmt, va);
-    gui_console_printf("\n");
-    va_end(va);
-    //if (debug_on_warn)
-        //debugger(DBG_EXCEPTION, 0);
 }
 
 void error(const char *fmt, ...) {
@@ -98,7 +90,7 @@ void throttle_interval_event(int index)
         prev = interval_end;
     }
 
-    //gui_do_stuff(true);
+    gui_do_stuff(true);
 
     if (!turbo_mode && speed > 0.7)
         throttle_timer_wait();
