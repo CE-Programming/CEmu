@@ -10,6 +10,8 @@
 #include "emuthread.h"
 #include "core/debug.h"
 
+char tmpBuf[20] = {0};
+
 MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);              // setup the UI
@@ -68,7 +70,8 @@ void MainWindow::raiseDebugger()
 }
 
 static QString int2hex(uint32_t a, uint8_t l) {
-  return QString("%1").arg(a, l, 16, QLatin1Char( '0' )).toUpper();
+    ::sprintf(tmpBuf, "%0*X", l, a);
+    return QString(tmpBuf);
 }
 
 void MainWindow::populateDebugWindow()
