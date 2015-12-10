@@ -111,10 +111,10 @@ int parity(uint8_t x);
 
 #define _flag_undef(a) (a & (FLAG_3 | FLAG_5))
 
-#define _flag_overflow_b_add(op1, op2, result) __flag_pv((op1 & 0x80) == (op2 & 0x80) && (op1 & 0x80) != (result & 0x80))
-#define _flag_overflow_b_sub(op1, op2, result) __flag_pv((op1 & 0x80) != (op2 & 0x80) && (op1 & 0x80) != (result & 0x80))
-#define _flag_overflow_w_add(op1, op2, result, mode) __flag_pv((op1 & (0x8000<<(mode<<3))) == (op2 & (0x8000<<(mode<<3))) && (op1 & (0x8000<<(mode<<3))) != (result & (0x8000<<(mode<<3))))
-#define _flag_overflow_w_sub(op1, op2, result, mode) __flag_pv((op1 & (0x8000<<(mode<<3))) != (op2 & (0x8000<<(mode<<3))) && (op1 & (0x8000<<(mode<<3))) != (result & (0x8000<<(mode<<3))))
+#define _flag_overflow_b_add(op1, op2, result) __flag_pv(~((op1) ^ (op2)) & ((op1) ^ (result)) & 0x80)
+#define _flag_overflow_b_sub(op1, op2, result) __flag_pv(((op1) ^ (op2)) & ((op1) ^ (result)) & 0x80)
+#define _flag_overflow_w_add(op1, op2, result, mode) __flag_pv(~((op1) ^ (op2)) & ((op1) ^ (result)) & (0x8000 << ((mode) << 3)))
+#define _flag_overflow_w_sub(op1, op2, result, mode) __flag_pv(((op1) ^ (op2)) & ((op1) ^ (result)) & (0x8000 << ((mode) << 3)))
 
 #define _flag_halfcarry_b_add(op1, op2, carry) __flag_h(((op1 & 0xf) + (op2 & 0xf) + carry) & 0x10)
 #define _flag_halfcarry_b_sub(op1, op2, carry) __flag_h(((op1 & 0xf) - (op2 & 0xf) - carry) & 0x10)
