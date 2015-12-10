@@ -1265,7 +1265,7 @@ int cpu_execute(void) {
                            }
                            r->HL++; mask_mode(r->HL, cpu.L);
                            r->BC--; mask_mode(r->BC, cpu.L);
-                           r->F = _flag_zero(r->BC) | _flag_n_msb_set(old);
+                           r->F = _flag_zero(r->BC) | _flag_n_msb_set(old) | _flag_undef(r->F);
                            if (r->BC) {
                                    context.cycles += 3;
                                    r->PC -= 2;
@@ -1280,7 +1280,7 @@ int cpu_execute(void) {
                            }
                            r->HL++; mask_mode(r->HL, cpu.L);
                            r->BC--; mask_mode(r->BC, cpu.L);
-                           r->F = _flag_zero(r->BC) | _flag_n_msb_set(old);
+                           r->F = _flag_zero(r->BC) | _flag_n_msb_set(old) | _flag_undef(r->F);
                            if (r->BC) {
                                    context.cycles += 3;
                                    r->PC -= 2;
@@ -1303,7 +1303,7 @@ int cpu_execute(void) {
                            }
                            r->HL--; mask_mode(r->HL, cpu.L);
                            r->BC--; mask_mode(r->BC, cpu.L);
-                           r->F = _flag_zero(r->BC) | _flag_n_msb_set(old);
+                           r->F = _flag_zero(r->BC) | _flag_n_msb_set(old) | _flag_undef(r->F);
                            if (r->BC) {
                                    context.cycles += 3;
                                    r->PC -= 2;
@@ -1318,7 +1318,7 @@ int cpu_execute(void) {
                            }
                            r->HL--; mask_mode(r->HL, cpu.L);
                            r->BC--; mask_mode(r->BC, cpu.L);
-                           r->F = _flag_zero(r->BC) | _flag_n_msb_set(old);
+                           r->F = _flag_zero(r->BC) | _flag_n_msb_set(old) | _flag_undef(r->F);
                            if (r->BC) {
                                    context.cycles += 3;
                                    r->PC -= 2;
