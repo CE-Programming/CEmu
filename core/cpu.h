@@ -22,6 +22,7 @@ struct eZ80cpu {
           uint8_t int_mode    : 2;  // Current interrupt mode
 
 	  // Internal use:
+	  uint8_t SUFFIX      : 1;  // There was an explicit suffix
 	  uint8_t S	      : 1;  // The CPU data block operates in Z80 mode using 16-bit registers. All addresses use MBASE
 	  uint8_t L	      : 1;  // The CPU data block operates in ADL mode using 24-bit registers. Addresses do not use MBASE.
 	  uint8_t IS	      : 1;  // The CPU control block operates in Z80 mode. For instructions with an ambiguous number of bytes, 2 bytes of immediate data or address must be fetched.

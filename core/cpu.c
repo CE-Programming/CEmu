@@ -71,8 +71,9 @@ uint32_t cpu_pop(void) {
 }
 
 static void get_cntrl_data_blocks_format(void) {
-    cpu.L = cpu.ADL || cpu.MADL;
-    cpu.IL = cpu.ADL || cpu.MADL;
+    cpu.SUFFIX = 0;
+    cpu.L = cpu.ADL;
+    cpu.IL = cpu.ADL;
     cpu.S = !cpu.L;
     cpu.IS = !cpu.IL;
 }
@@ -1516,24 +1517,28 @@ int cpu_execute(void) {
            case 1: // ignore prefixed prefixes
                   if (context.opcode == 0x40) // .SIS
                   {
+                      cpu.SUFFIX = 1;
                       cpu.S = 1; cpu.IS = 1;
                       cpu.L = 0; cpu.IL = 0;
                       goto exit_loop;
                   }
                   else if (context.opcode == 0x49) // .SIL
                   {
+                      cpu.SUFFIX = 1;
                       cpu.S = 1; cpu.IS = 0;
                       cpu.L = 0; cpu.IL = 1;
                       goto exit_loop;
                   }
                   else if (context.opcode == 0x52) // .LIS
                   {
+                      cpu.SUFFIX = 1;
                       cpu.S = 0; cpu.IS = 1;
                       cpu.L = 1; cpu.IL = 0;
                       goto exit_loop;
                   }
                   else if (context.opcode == 0x5B) // .LIL
                   {
+                      cpu.SUFFIX = 1;
                       cpu.S = 0; cpu.IS = 0;
                       cpu.L = 1; cpu.IL = 1;
                       goto exit_loop;
