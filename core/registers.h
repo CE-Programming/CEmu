@@ -109,9 +109,7 @@ int parity(uint8_t x);
 
 #define _flag_parity(a) __flag_pv(!parity(a))
 
-#define _flag_undef_w(a,mode)	({ uint32_t _res = (a); __flag_5(_res & (0x2000<<(mode<<3))) | __flag_3(_res & (0x800<<(mode<<3)));})
-#define _flag_undef_b(a)	({ uint8_t _res = (a); __flag_5(_res & 0x20) | __flag_3(_res & 0x8);})
-#define _flag_undef_b_block(a)	({ uint8_t _res = (a); __flag_5(_res & 0x2) | __flag_3(_res & 0x8);})
+#define _flag_undef(a) (a & (FLAG_3 | FLAG_5))
 
 #define _flag_overflow_b_add(op1, op2, result) __flag_pv((op1 & 0x80) == (op2 & 0x80) && (op1 & 0x80) != (result & 0x80))
 #define _flag_overflow_b_sub(op1, op2, result) __flag_pv((op1 & 0x80) != (op2 & 0x80) && (op1 & 0x80) != (result & 0x80))

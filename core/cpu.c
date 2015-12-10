@@ -90,13 +90,13 @@ static void daa(void) {
 	if (r->flags.N) {
 		r->A -= v;
 		r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-			| _flag_undef_b(r->A) | _flag_parity(r->A)
+			| _flag_undef(r->F) | _flag_parity(r->A)
 			| _flag_subtract(r->flags.N) | __flag_c(v >= 0x60)
 			| _flag_halfcarry_b_sub(old, v, 0);
 	} else {
 		r->A += v;
 		r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-			| _flag_undef_b(r->A) | _flag_parity(r->A)
+			| _flag_undef(r->F) | _flag_parity(r->A)
 			| _flag_subtract(r->flags.N) | __flag_c(v >= 0x60)
 			| _flag_halfcarry_b_add(old, v, 0);
 	}
@@ -111,7 +111,7 @@ static void execute_alu(int i, uint8_t v) {
 		  old = r->A;
 		  r->A += v;
 		  r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-			  | _flag_undef_b(r->A) | _flag_overflow_b_add(old, v, r->A)
+			  | _flag_undef(r->F) | _flag_overflow_b_add(old, v, r->A)
 			  | _flag_subtract(0) | _flag_carry_b(old + v)
 			  | _flag_halfcarry_b_add(old, v, 0);
 		  break;
@@ -119,7 +119,7 @@ static void execute_alu(int i, uint8_t v) {
 		  old = r->A;
 		  r->A += v + r->flags.C;
 		  r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-			  | _flag_undef_b(r->A) | _flag_overflow_b_add(old, v, r->A)
+			  | _flag_undef(r->F) | _flag_overflow_b_add(old, v, r->A)
 			  | _flag_subtract(0) | _flag_carry_b(old + v + r->flags.C)
 			  | _flag_halfcarry_b_add(old, v, r->flags.C);
 		  break;
@@ -127,7 +127,7 @@ static void execute_alu(int i, uint8_t v) {
 		  old = r->A;
 		  r->A -= v;
 		  r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-			  | _flag_undef_b(r->A) | _flag_overflow_b_sub(old, v, r->A)
+			  | _flag_undef(r->F) | _flag_overflow_b_sub(old, v, r->A)
 			  | _flag_subtract(1) | _flag_carry_b(old - v)
 			  | _flag_halfcarry_b_sub(old, v, 0);
 		  break;
@@ -135,7 +135,7 @@ static void execute_alu(int i, uint8_t v) {
 		  old = r->A;
 		  r->A -= v + r->flags.C;
 		  r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-			  | _flag_undef_b(r->A) | _flag_overflow_b_sub(old, v, r->A)
+			  | _flag_undef(r->F) | _flag_overflow_b_sub(old, v, r->A)
 			  | _flag_subtract(1) | _flag_carry_b(old - v - r->flags.C)
 			  | _flag_halfcarry_b_sub(old, v, r->flags.C);
 		  break;
@@ -143,25 +143,25 @@ static void execute_alu(int i, uint8_t v) {
 		  old = r->A;
 		  r->A &= v;
 		  r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-			  | _flag_undef_b(r->A) | _flag_parity(r->A)
+			  | _flag_undef(r->F) | _flag_parity(r->A)
 			  | FLAG_H;
 		  break;
 	  case 5: // XOR v
 		  old = r->A;
 		  r->A ^= v;
 		  r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-			  | _flag_undef_b(r->A) | _flag_parity(r->A);
+			  | _flag_undef(r->F) | _flag_parity(r->A);
 		  break;
 	  case 6: // OR v
 		  old = r->A;
 		  r->A |= v;
 		  r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-			  | _flag_undef_b(r->A) | _flag_parity(r->A);
+			  | _flag_undef(r->F) | _flag_parity(r->A);
 		  break;
 	  case 7: // CP v
 		  old = r->A - v;
 		  r->F = _flag_sign_b(old) | _flag_zero(old)
-			  | _flag_undef_b(v) | _flag_subtract(1)
+			  | _flag_undef(r->F) | _flag_subtract(1)
 			  | _flag_carry_b(r->A - v)
 			  | _flag_overflow_b_sub(r->A, v, old)
 			  | _flag_halfcarry_b_sub(r->A, v, 0);
@@ -195,50 +195,50 @@ static void execute_rot(int y, int z, int switch_opcode_data) {
 		r <<= 1; r |= old_7;
 		write_reg(z, r);
 		reg->F = __flag_c(old_7) | _flag_sign_b(r) | _flag_parity(r)
-			| _flag_undef_b(r) | _flag_zero(r);
+			| _flag_undef(reg->F) | _flag_zero(r);
 		break;
 	case 1: // RRC r[z]
 		r >>= 1; r |= old_0 << 7;
 		write_reg(z, r);
 		reg->F = __flag_c(old_0) | _flag_sign_b(r) | _flag_parity(r)
-			| _flag_undef_b(r) | _flag_zero(r);
+			| _flag_undef(reg->F) | _flag_zero(r);
 		break;
 	case 2: // RL r[z]
 		r <<= 1; r |= old_c;
 		write_reg(z, r);
 		reg->F = __flag_c(old_7) | _flag_sign_b(r) | _flag_parity(r)
-			| _flag_undef_b(r) | _flag_zero(r);
+			| _flag_undef(reg->F) | _flag_zero(r);
 		break;
 	case 3: // RR r[z]
 		r >>= 1; r |= old_c << 7;
 		write_reg(z, r);
 		reg->F = __flag_c(old_0) | _flag_sign_b(r) | _flag_parity(r)
-			| _flag_undef_b(r) | _flag_zero(r);
+			| _flag_undef(reg->F) | _flag_zero(r);
 		break;
 	case 4: // SLA r[z]
 		r <<= 1;
 		write_reg(z, r);
 		reg->F = __flag_c(old_7) | _flag_sign_b(r) | _flag_parity(r)
-			| _flag_undef_b(r) | _flag_zero(r);
+			| _flag_undef(reg->F) | _flag_zero(r);
 		break;
 	case 5: // SRA r[z]
 		r >>= 1;
 		r |= old_7 << 7;
 		write_reg(z, r);
 		reg->F = __flag_c(old_0) | _flag_sign_b(r) | _flag_parity(r)
-			| _flag_undef_b(r) | _flag_zero(r);
+			| _flag_undef(reg->F) | _flag_zero(r);
 		break;
 	case 6: // SLL r[z]
 		r <<= 1; r |= 1;
 		write_reg(z, r);
 		reg->F = __flag_c(old_7) | _flag_sign_b(r) | _flag_parity(r)
-			| _flag_undef_b(r) | _flag_zero(r);
+			| _flag_undef(reg->F) | _flag_zero(r);
 		break;
 	case 7: // SRL r[z]
 		r >>= 1;
 		write_reg(z, r);
 		reg->F = __flag_c(old_0) | _flag_sign_b(r) | _flag_parity(r)
-			| _flag_undef_b(r) | _flag_zero(r);
+			| _flag_undef(reg->F) | _flag_zero(r);
 		break;
 	}
 }
@@ -256,8 +256,6 @@ static void execute_rot_acc(int y)
            r->A <<= 1;
            r->A |= old;
            r->flags.N = r->flags.H = 0;
-           r->flags._3 = (r->A & FLAG_3) > 0;
-           r->flags._5 = (r->A & FLAG_5) > 0;
            break;
     case 1: // RRCA
            context.cycles += 1;
@@ -266,8 +264,6 @@ static void execute_rot_acc(int y)
            r->A >>= 1;
            r->A |= old << 7;
            r->flags.N = r->flags.H = 0;
-           r->flags._3 = (r->A & FLAG_3) > 0;
-           r->flags._5 = (r->A & FLAG_5) > 0;
          break;
     case 2: // RLA
            context.cycles += 1;
@@ -276,8 +272,6 @@ static void execute_rot_acc(int y)
            r->A <<= 1;
            r->A |= old;
            r->flags.N = r->flags.H = 0;
-           r->flags._3 = (r->A & FLAG_3) > 0;
-           r->flags._5 = (r->A & FLAG_5) > 0;
            break;
     case 3: // RRA
            context.cycles += 1;
@@ -286,8 +280,6 @@ static void execute_rot_acc(int y)
            r->A >>= 1;
            r->A |= old << 7;
            r->flags.N = r->flags.H = 0;
-           r->flags._3 = (r->A & FLAG_3) > 0;
-           r->flags._5 = (r->A & FLAG_5) > 0;
            break;
     case 4: // DAA
            context.cycles += 1;
@@ -298,23 +290,17 @@ static void execute_rot_acc(int y)
            context.cycles += 1;
            r->A = ~r->A;
            r->flags.N = r->flags.H = 1;
-           r->flags._3 = (r->A & FLAG_3) > 0;
-           r->flags._5 = (r->A & FLAG_5) > 0;
            break;
     case 6: // SCF
            context.cycles += 1;
            r->flags.C = 1;
            r->flags.N = r->flags.H = 0;
-           r->flags._3 = (r->A & FLAG_3) > 0;
-           r->flags._5 = (r->A & FLAG_5) > 0;
            break;
     case 7: // CCF
            context.cycles += 1;
            r->flags.H = r->flags.C;
            r->flags.C = !r->flags.C;
            r->flags.N = 0;
-           r->flags._3 = (r->A & FLAG_3) > 0;
-           r->flags._5 = (r->A & FLAG_5) > 0;
            break;
   }
 }
@@ -322,7 +308,7 @@ static void execute_rot_acc(int y)
 static void execute_bli(int y, int z) {
 	eZ80registers_t *r = &cpu.registers;
 	eZ80portrange_t portr;
-	uint8_t old = 0, new = 0, hc;
+	uint8_t old = 0, new = 0;
 
 	switch (y) {
 	case 0:
@@ -337,7 +323,7 @@ static void execute_bli(int y, int z) {
 			r->HL++; mask_mode(r->HL, cpu.L);
 			r->C++;
 			r->B--; mask_mode(r->BC, cpu.L);
-			r->F = _flag_zero(r->B) | _flag_n_msb_set(old);
+			r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
 			break;
 		case 3: // OTIM
 			context.cycles += 5;
@@ -349,7 +335,7 @@ static void execute_bli(int y, int z) {
 			r->HL++; mask_mode(r->HL, cpu.L);
 			r->C++;
 			r->B--; mask_mode(r->BC, cpu.L);
-			r->F = _flag_zero(r->B) | _flag_n_msb_set(old);  // undefined bits are reset to 0
+			r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);  // undefined bits are reset to 0
 			break;
 		case 4: // INI2 -- Same as INI, C incremented
 			context.cycles += 5;
@@ -361,7 +347,7 @@ static void execute_bli(int y, int z) {
 			r->HL++; mask_mode(r->HL, cpu.L);
 			r->C++;
 			r->B--; mask_mode(r->BC, cpu.L);
-			r->F = _flag_zero(r->B) | _flag_n_msb_set(old);
+			r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
 			break;
 		}
 		break;
@@ -377,7 +363,7 @@ static void execute_bli(int y, int z) {
 			r->HL--; mask_mode(r->HL, cpu.L);
 			r->C--;
 			r->B--; mask_mode(r->BC, cpu.L);
-			r->F = _flag_zero(r->B) | _flag_n_msb_set(old);
+			r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
 			break;
 		case 3: // OTDM
 			portr = context.cpu->prange[0x00];  // output to the 0x0000 port range
@@ -388,7 +374,7 @@ static void execute_bli(int y, int z) {
 			r->HL--; mask_mode(r->HL, cpu.L);
 			r->C--;
 			r->B--; mask_mode(r->BC, cpu.L);
-			r->F = _flag_zero(r->B) | _flag_n_msb_set(old);
+			r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
 			break;
 		case 4: // IND2 -- Same as IND, C decremented
 			context.cycles += 5;
@@ -399,7 +385,7 @@ static void execute_bli(int y, int z) {
 			}
 			r->HL--; mask_mode(r->HL, cpu.L);
 			r->BC-=0x0101; mask_mode(r->BC, cpu.L);
-			r->F = _flag_zero(r->BC) | _flag_n_msb_set(old);
+			r->F = _flag_zero(r->BC) | _flag_n_msb_set(old) | _flag_undef(r->F);
 			break;
 		}
 		break;
@@ -415,7 +401,7 @@ static void execute_bli(int y, int z) {
 			r->HL++; mask_mode(r->HL, cpu.L);
 			r->C++;
 			r->B--; mask_mode(r->BC, cpu.L);
-			r->F = _flag_zero(r->B) | _flag_n_msb_set(old);
+			r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
 			if (r->B) {
 				context.cycles += 3;
 				r->PC -= 2;
@@ -431,7 +417,7 @@ static void execute_bli(int y, int z) {
 			r->HL++; mask_mode(r->HL, cpu.L);
 			r->C++;
 			r->B--; mask_mode(r->BC, cpu.L);
-			r->F = _flag_zero(r->B) | _flag_n_msb_set(old);
+			r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
 			if (r->B) {
 				context.cycles += 3;
 				r->PC -= 2;
@@ -447,7 +433,7 @@ static void execute_bli(int y, int z) {
 			r->DE++; mask_mode(r->DE, cpu.L);
 			r->HL++; mask_mode(r->HL, cpu.L);
 			r->BC--; mask_mode(r->BC, cpu.L);
-			r->F = _flag_zero(r->BC) | _flag_n_msb_set(old);
+			r->F = _flag_zero(r->BC) | _flag_n_msb_set(old) | _flag_undef(r->F);
 			if (r->BC) {
 				context.cycles += 3;
 				r->PC -= 2;
@@ -467,7 +453,7 @@ static void execute_bli(int y, int z) {
 			r->HL++; mask_mode(r->HL, cpu.L);
 			r->C--;
 			r->B--; mask_mode(r->BC, cpu.L);
-			r->F = _flag_zero(r->B) | _flag_n_msb_set(old);
+			r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
 			if (r->B) {
 				context.cycles += 3;
 				r->PC -= 2;
@@ -483,7 +469,7 @@ static void execute_bli(int y, int z) {
 			r->HL++; mask_mode(r->HL, cpu.L);
 			r->C--;
 			r->B--; mask_mode(r->BC, cpu.L);
-			r->F = _flag_zero(r->B) | _flag_n_msb_set(old);
+			r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
 			if (r->B) {
 				context.cycles += 3;
 				r->PC -= 2;
@@ -498,7 +484,7 @@ static void execute_bli(int y, int z) {
 			}
 			r->HL--; mask_mode(r->HL, cpu.L);
 			r->BC-=0x0101; mask_mode(r->BC, cpu.L);
-			r->F = _flag_zero(r->BC) | _flag_n_msb_set(old);
+			r->F = _flag_zero(r->BC) | _flag_n_msb_set(old) | _flag_undef(r->F);
 			if (r->BC) {
 				context.cycles += 3;
 				r->PC -= 2;
@@ -516,9 +502,8 @@ static void execute_bli(int y, int z) {
 			r->DE++; mask_mode(r->DE, cpu.L);
 			r->BC--; mask_mode(r->BC, cpu.L);
 			new = r->A + old;
-			r->F = (r->F & (FLAG_S | FLAG_Z | FLAG_C))
-				| __flag_pv(r->BC) | _flag_subtract(0)
-				| _flag_undef_b_block(new);
+			r->flags.PV = r->BC != 0;
+			r->flags.N = 0;
 			break;
 		case 1: // CPI
 			context.cycles += 3;
@@ -526,11 +511,10 @@ static void execute_bli(int y, int z) {
 			r->HL++; mask_mode(r->HL, cpu.L);
 			r->BC--; mask_mode(r->BC, cpu.L);
 			new = r->A - old;
-			hc = _flag_halfcarry_b_sub(r->A, old, 0) > 0;
 			r->F = _flag_sign_b(new) | _flag_zero(new)
-				| __flag_h(hc) | __flag_pv(r->BC)
+				| _flag_halfcarry_b_sub(r->A, old, 0) | __flag_pv(r->BC)
 				| _flag_subtract(1) | __flag_c(r->flags.C)
-				| _flag_undef_b_block(new - hc);
+				| _flag_undef(r->F);
 			break;
 		case 2: // INI
 			context.cycles += 5;
@@ -541,7 +525,7 @@ static void execute_bli(int y, int z) {
 			}
 			r->HL++; mask_mode(r->HL, cpu.L);
 			r->B--; mask_mode(r->BC, cpu.L);
-			r->F = _flag_zero(r->B) | _flag_n_msb_set(old);
+			r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
 			break;
 		case 3: // OUTI
 			context.cycles += 5;
@@ -552,7 +536,7 @@ static void execute_bli(int y, int z) {
 			}
 			r->HL++; mask_mode(r->HL, cpu.L);
 			r->B--; mask_mode(r->BC, cpu.L);
-			r->F = _flag_zero(r->B) | _flag_n_msb_set(old);
+			r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
 			break;
 		case 4: // OUTI2 -- Exactly like OUTI, just also increments C
 			context.cycles += 5;
@@ -564,7 +548,7 @@ static void execute_bli(int y, int z) {
 			r->HL++; mask_mode(r->HL, cpu.L);
 			r->C++;
 			r->B--; mask_mode(r->BC, cpu.L);
-			r->F = _flag_zero(r->B) | _flag_n_msb_set(old);
+			r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
 			break;
 		}
 		break;
@@ -578,9 +562,8 @@ static void execute_bli(int y, int z) {
 			r->DE--; mask_mode(r->DE, cpu.L);
 			r->BC--; mask_mode(r->BC, cpu.L);
 			new = r->A + old;
-			r->F = (r->F & (FLAG_S | FLAG_Z | FLAG_C))
-				| __flag_pv(r->BC) | _flag_subtract(0)
-				| _flag_undef_b_block(new);
+			r->flags.PV = r->BC != 0;
+			r->flags.N = 0;
 			break;
 		case 1: // CPD
 			context.cycles += 3;
@@ -588,11 +571,11 @@ static void execute_bli(int y, int z) {
 			r->HL--; mask_mode(r->HL, cpu.L);
 			r->BC--; mask_mode(r->BC, cpu.L);
 			new = r->A - old;
-			hc = _flag_halfcarry_b_sub(r->A, old, 0) > 0;
 			r->F = _flag_sign_b(new) | _flag_zero(new)
-				| __flag_h(hc) | __flag_pv(r->BC)
+				| _flag_halfcarry_b_sub(r->A, old, 0)
+				| __flag_pv(r->BC)
 				| _flag_subtract(1) | __flag_c(r->flags.C)
-				| _flag_undef_b_block(new - hc);
+				| _flag_undef(r->F);
 			break;
 		case 2: // IND
 			context.cycles += 5;
@@ -639,9 +622,8 @@ static void execute_bli(int y, int z) {
 			r->DE++; mask_mode(r->DE, cpu.L);
 			r->BC--; mask_mode(r->BC, cpu.L);
 			new = r->A + old;
-			r->F = (r->F & (FLAG_S | FLAG_Z | FLAG_C))
-				| __flag_pv(r->BC) | _flag_subtract(0)
-				| _flag_undef_b_block(new);
+			r->flags.PV = r->BC != 0;
+			r->flags.N = 0;
 			if (r->BC) {
 				context.cycles += 3;
 				r->PC -= 2;
@@ -653,11 +635,10 @@ static void execute_bli(int y, int z) {
 			r->HL++; mask_mode(r->HL, cpu.L);
 			r->BC--; mask_mode(r->BC, cpu.L);
 			new = r->A - old;
-			hc = _flag_halfcarry_b_sub(r->A, old, 0) > 0;
 			r->F = _flag_sign_b(new) | _flag_zero(new)
-				| __flag_h(hc) | __flag_pv(r->BC)
+				| _flag_halfcarry_b_sub(r->A, old, 0) | __flag_pv(r->BC)
 				| _flag_subtract(1) | __flag_c(r->flags.C)
-				| _flag_undef_b_block(new - hc);
+				| _flag_undef(r->F);
 			if (r->BC && !r->flags.Z) {
 				context.cycles += 3;
 				r->PC -= 2;
@@ -672,7 +653,7 @@ static void execute_bli(int y, int z) {
 			}
 			r->HL++; mask_mode(r->HL, cpu.L);
 			r->B--; mask_mode(r->BC, cpu.L);
-			r->F = _flag_zero(r->B) | _flag_n_msb_set(old);
+			r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
 			if (r->B) {
 				context.cycles += 3;
 				r->PC -= 2;
@@ -687,7 +668,7 @@ static void execute_bli(int y, int z) {
 			}
 			r->HL++; mask_mode(r->HL, cpu.L);
 			r->B--; mask_mode(r->BC, cpu.L);
-			r->F = _flag_zero(r->B) | _flag_n_msb_set(old);
+			r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
 			if (r->B) {
 				context.cycles += 3;
 				r->PC -= 2;
@@ -703,7 +684,7 @@ static void execute_bli(int y, int z) {
 			r->HL++; mask_mode(r->HL, cpu.L);
 			r->DE++; mask_mode(r->DE, cpu.L);
 			r->BC--; mask_mode(r->BC, cpu.L);
-			r->F = _flag_zero(r->BC) | _flag_n_msb_set(old);
+			r->F = _flag_zero(r->BC) | _flag_n_msb_set(old) | _flag_undef(r->F);
 			if (r->BC) {
 				context.cycles += 3;
 				r->PC -= 2;
@@ -721,9 +702,8 @@ static void execute_bli(int y, int z) {
 			r->DE--; mask_mode(r->DE, cpu.L);
 			r->BC--; mask_mode(r->BC, cpu.L);
 			new = r->A + old;
-			r->F = (r->F & (FLAG_S | FLAG_Z | FLAG_C))
-				| __flag_pv(r->BC) | _flag_subtract(0)
-				| _flag_undef_b_block(new);
+			r->flags.PV = r->BC != 0;
+			r->flags.N = 0;
 			if (r->BC) {
 				context.cycles += 5;
 				r->PC -= 2;
@@ -735,11 +715,10 @@ static void execute_bli(int y, int z) {
 			r->HL--; mask_mode(r->HL, cpu.L);
 			r->BC--; mask_mode(r->BC, cpu.L);
 			new = r->A - old;
-			hc = _flag_halfcarry_b_sub(r->A, old, 0) > 0;
 			r->F = _flag_sign_b(new) | _flag_zero(new)
-				| __flag_h(hc) | __flag_pv(r->BC)
+				| _flag_halfcarry_b_sub(r->A, old, 0) | __flag_pv(r->BC)
 				| _flag_subtract(1) | __flag_c(r->flags.C)
-				| _flag_undef_b_block(new - hc);
+				| _flag_undef(r->F);
 			if (r->BC && !r->flags.Z) {
 				context.cycles += 3;
 				r->PC -= 2;
@@ -754,7 +733,7 @@ static void execute_bli(int y, int z) {
 			}
 			r->HL--; mask_mode(r->HL, cpu.L);
 			r->B--; mask_mode(r->BC, cpu.L);
-			r->F = _flag_zero(r->B) | _flag_n_msb_set(old);
+			r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
 			if (r->B) {
 				context.cycles += 3;
 				r->PC -= 2;
@@ -769,7 +748,7 @@ static void execute_bli(int y, int z) {
 			}
 			r->HL--; mask_mode(r->HL, cpu.L);
 			r->B--; mask_mode(r->BC, cpu.L);
-			r->F = _flag_zero(r->B) | _flag_n_msb_set(old);
+			r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
 			if (r->B) {
 				context.cycles += 3;
 				r->PC -= 2;
@@ -785,7 +764,7 @@ static void execute_bli(int y, int z) {
 			r->HL--; mask_mode(r->HL, cpu.L);
 			r->DE--; mask_mode(r->DE, cpu.L);
 			r->BC--; mask_mode(r->BC, cpu.L);
-			r->F = _flag_zero(r->BC) | _flag_n_msb_set(old);
+			r->F = _flag_zero(r->BC) | _flag_n_msb_set(old) | _flag_undef(r->F);
 			if (r->BC) {
 				context.cycles += 3;
 				r->PC -= 2;
@@ -877,8 +856,7 @@ int cpu_execute(void) {
                 context.cycles += 2;
                 old = read_reg(context.z);
                 new = old & (1 << context.y);
-                r->F = _flag_sign_b(new) | _flag_zero(new)
-                       | (context.z == 6 ? _flag_undef_w(r->WZ, cpu.L) : _flag_undef_b(old))
+                r->F = _flag_sign_b(new) | _flag_zero(new) | _flag_undef(r->F)
                        | _flag_parity(new) | __flag_c(r->flags.C)
                        | FLAG_H;
                 break;
@@ -923,7 +901,7 @@ int cpu_execute(void) {
                                 new = portr.read_in(context.nu());
                                 write_reg(context.y, new);
                                 r->F = _flag_sign_b(new) | _flag_zero(new)
-                                        | _flag_undef_b(new) | _flag_parity(new);
+                                        | _flag_undef(r->F) | _flag_parity(new);
                         }
                         break;
                 case 1:
@@ -955,7 +933,7 @@ int cpu_execute(void) {
                         context.cycles += 2;
                         s = r->A & read_reg(context.y);
                         r->F = _flag_sign_b(s) | _flag_zero(s)
-                                | _flag_undef_b(s) | _flag_parity(s)
+                                | _flag_undef(r->F) | _flag_parity(s)
                                 | FLAG_H;
                         break;
                 case 5: // OPCODETRAP
@@ -1033,7 +1011,7 @@ int cpu_execute(void) {
                                     new = portr.read_in(addr_range(r->BC));
                                     write_reg(context.y, new);
                                     r->F = _flag_sign_b(new) | _flag_zero(new)
-                                            | _flag_undef_b(new) | _flag_parity(new);
+                                            | _flag_undef(r->F) | _flag_parity(new);
                             }
                         }
                         break;
@@ -1058,7 +1036,7 @@ int cpu_execute(void) {
                           r->HL -= op_word + r->flags.C;
                           mask_mode(r->HL, cpu.L);
                           r->F = _flag_sign_w(r->HL, cpu.L) | _flag_zero(r->HL)
-                                 | _flag_undef_w(r->HL, cpu.L) | _flag_overflow_w_sub(old_word, op_word, r->HL, cpu.L)
+                                 | _flag_undef(r->F) | _flag_overflow_w_sub(old_word, op_word, r->HL, cpu.L)
                                  | _flag_subtract(1) | _flag_carry_w(old_word - op_word - r->flags.C, cpu.L)
                                  | _flag_halfcarry_w_sub(old_word, op_word, r->flags.C, cpu.L);
 
@@ -1069,7 +1047,7 @@ int cpu_execute(void) {
                           r->HL += op_word + r->flags.C;
                           mask_mode(r->HL, cpu.L);
                           r->F = _flag_sign_w(r->HL, cpu.L) | _flag_zero(r->HL)
-                                 | _flag_undef_w(r->HL, cpu.L) | _flag_overflow_w_add(old_word, op_word, r->HL, cpu.L)
+                                 | _flag_undef(r->F) | _flag_overflow_w_add(old_word, op_word, r->HL, cpu.L)
                                  | _flag_subtract(0) | _flag_carry_w(old_word + op_word + r->flags.C, cpu.L)
                                  | _flag_halfcarry_w_add(old_word, op_word, r->flags.C, cpu.L);
                         }
@@ -1096,7 +1074,7 @@ int cpu_execute(void) {
                                    r->A = -r->A;
                                    new = r->A;
                                    r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-                                          | _flag_undef_b(r->A) | __flag_pv(old == 0x80)
+                                          | _flag_undef(r->F) | __flag_pv(old == 0x80)
                                           | _flag_subtract(1) | __flag_c(old != 0)
                                           | _flag_halfcarry_b_sub(0, old, 0);
                                    break;
@@ -1113,7 +1091,7 @@ int cpu_execute(void) {
                                    new = r->A & u;
                                    old = r->A;
                                    r->F = _flag_sign_b(new) | _flag_zero(new)
-                                          | _flag_undef_b(new) | _flag_parity(new)
+                                          | _flag_undef(r->F) | _flag_parity(new)
                                           | FLAG_H;
                                    break;
                             case 3:  // TSTIO n
@@ -1226,7 +1204,7 @@ int cpu_execute(void) {
                                   old = r->A;
                                   r->A = r->I&0xFF;
                                   r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-                                         | _flag_undef_b(r->A) | __flag_pv(cpu.IEF2)
+                                         | _flag_undef(r->F) | __flag_pv(cpu.IEF2)
                                          | _flag_subtract(0) | __flag_c(r->flags.C);
                                   break;
                            case 3: // LD A, R
@@ -1234,7 +1212,7 @@ int cpu_execute(void) {
                                   old = r->A;
                                   r->A = r->R;
                                   r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-                                         | _flag_undef_b(r->A) | __flag_pv(cpu.IEF2)
+                                         | _flag_undef(r->F) | __flag_pv(cpu.IEF2)
                                          | _flag_subtract(0) | __flag_c(r->flags.C);
                                   break;
                            case 4: // RRD
@@ -1247,7 +1225,7 @@ int cpu_execute(void) {
                                   new |= old << 4;
                                   cpu_write_byte(r->HL, new);
                                   r->F = __flag_c(r->flags.C) | _flag_sign_b(r->A) | _flag_zero(r->A)
-                                          | _flag_parity(r->A) | _flag_undef_b(r->A);
+                                          | _flag_parity(r->A) | _flag_undef(r->F);
                                   break;
                            case 5: // RLD
                                   context.cycles += 14;
@@ -1259,7 +1237,7 @@ int cpu_execute(void) {
                                   new |= old & 0x0F;
                                   cpu_write_byte(r->HL, new);
                                   r->F = __flag_c(r->flags.C) | _flag_sign_b(r->A) | _flag_zero(r->A)
-                                          | _flag_parity(r->A) | _flag_undef_b(r->A);
+                                          | _flag_parity(r->A) | _flag_undef(r->F);
                                   break;
                           default: // OPCODETRAP
                                   context.cycles += 1;
@@ -1420,7 +1398,7 @@ int cpu_execute(void) {
                               op_word = read_rp(context.p);
                               r->WZ = new_word = HLorIw(old_word + op_word);
                               r->F = __flag_s(r->flags.S) | _flag_zero(!r->flags.Z)
-                                      | _flag_undef_w(new_word, cpu.L) | __flag_pv(r->flags.PV)
+                                      | _flag_undef(r->F) | __flag_pv(r->flags.PV)
                                       | _flag_subtract(0) | _flag_carry_w(old_word + op_word, cpu.L)
                                       | _flag_halfcarry_w_add(old_word, op_word, 0, cpu.L);
                               break;
@@ -1499,7 +1477,7 @@ int cpu_execute(void) {
                      new = write_reg(context.y, old + 1);
                      r->F = __flag_c(r->flags.C) | _flag_sign_b(new) | _flag_zero(new)
                              | _flag_halfcarry_b_add(old, 0, 1) | __flag_pv(old == 0x7F)
-                             | _flag_undef_b(new);
+                             | _flag_undef(r->F);
                      break;
              case 5: // DEC r[y]
                     context.cycles += 4;
@@ -1511,7 +1489,7 @@ int cpu_execute(void) {
                      new = write_reg(context.y, old - 1);
                      r->F = __flag_c(r->flags.C) | _flag_sign_b(new) | _flag_zero(new)
                              | _flag_halfcarry_b_sub(old, 0, 1) | __flag_pv(old == 0x80)
-                             | _flag_subtract(1) | _flag_undef_b(new);
+                             | _flag_subtract(1) | _flag_undef(r->F);
                      break;
               case 6: // LD r[y], n
                      context.cycles += 2;
