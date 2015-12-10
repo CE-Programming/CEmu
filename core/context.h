@@ -41,6 +41,7 @@ extern execution_context_t context;
 // Available Functions
 void context_init(void);
 
+void set_context(uint8_t);
 void set_is_context(void);
 void set_il_context(void);
 

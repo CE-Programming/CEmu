@@ -823,7 +823,7 @@ int cpu_execute(void) {
     }
 
     // first, initialize the execution context (ADL vs. Z80 mode)
-    (cpu.IS) ? set_is_context() : set_il_context();
+    set_context(cpu.IS);
 
     // default = no prefix
     reset_prefix = 1;
@@ -1581,14 +1581,7 @@ int cpu_execute(void) {
                                              exx(&cpu.registers);
                                              break;
                                       case 2: // JP (rr)
-                                              if(cpu.L && !cpu.ADL) {
-                                                  cpu.ADL = 1;
-                                                  set_il_context();
-                                              }
-                                              if(cpu.S && cpu.ADL) {
-                                                  cpu.ADL = 0;
-                                                  set_is_context();
-                                              }
+                                              if (cpu.ADL != cpu.L) set_context(cpu.ADL = cpu.L);
                                               context.cycles += 4;
                                               r->PC = HLorIr();
                                               break;
@@ -1602,30 +1595,29 @@ int cpu_execute(void) {
                            break;
                     case 2: // JP cc[y], nn
                             context.cycles += 4;
+                            if (cpu.ADL != cpu.IL) {
+                                set_context(cpu.IL);
+                            }
                             w = context.nw();
                             if (read_cc(context.y)) {
                                 r->PC = w;
+                                if (cpu.ADL != cpu.L) {
+                                    set_context(cpu.ADL = cpu.L);
+                                }
                             }
                             break;
                     case 3:
                             switch (context.y)
                             {
                              case 0: // JP nn
-                                     if((cpu.S && cpu.IL) || (cpu.L && cpu.IS)) { // illegal instructions: treated as OPCODETRAPs
-                                         context.cycles += 1;
-                                         cpu.IEF_wait = 1;
-                                         break;
-                                     }
-                                     if(cpu.L && cpu.IL && !cpu.ADL) {
-                                         cpu.ADL = 1;   // set the ADL bit if jp.lil
-                                         set_il_context();
-                                     }
-                                     if(cpu.S && cpu.IS && cpu.ADL) {
-                                         cpu.ADL = 0;   // reset the ADL bit if jp.sis
-                                         set_is_context();
-                                     }
                                      context.cycles += 5;
+                                     if (cpu.ADL != cpu.IL) {
+                                         set_context(cpu.IL);
+                                     }
                                      r->PC = context.nw();
+                                     if (cpu.ADL != cpu.L) {
+                                         set_context(cpu.ADL = cpu.L);
+                                     }
                                      break;
                              case 1: // 0xCB prefixed opcodes
                                      context.cycles += 1;

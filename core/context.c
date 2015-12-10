@@ -69,6 +69,9 @@ void set_is_context(void) {
   context.ns = is_read_next_signed_byte;
   context.nw = is_read_next_word;
 }
+void set_context(uint8_t mode) {
+  mode ? set_il_context() : set_is_context();
+}
 
 uint8_t HorIHr(void) {
     if (context.cpu->prefix >> 8 == 0xDD) {
