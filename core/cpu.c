@@ -1194,7 +1194,7 @@ int cpu_execute(void) {
                         {
                           case 0: // LD I, A
                                  context.cycles += 2;
-                                 r->I = r->A | (((r->I>>8)<<8));
+                                 r->I = r->A;
                                  break;
                           case 1: // LD R, A
                                  context.cycles += 2;
@@ -1202,15 +1202,13 @@ int cpu_execute(void) {
                                  break;
                           case 2: // LD A, I
                                   context.cycles += 2;
-                                  old = r->A;
-                                  r->A = r->I&0xFF;
+                                  r->A = r->I;
                                   r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
                                          | _flag_undef(r->F) | __flag_pv(cpu.IEF2)
                                          | _flag_subtract(0) | __flag_c(r->flags.C);
                                   break;
                            case 3: // LD A, R
                                   context.cycles += 5;
-                                  old = r->A;
                                   r->A = r->R;
                                   r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
                                          | _flag_undef(r->F) | __flag_pv(cpu.IEF2)
@@ -1288,11 +1286,13 @@ int cpu_execute(void) {
                                    r->PC -= 2;
                            }
                            break;
-                case 0xC7: // LD I,HL
-                           cpu.registers.I = cpu.registers.HL;
+                case 0xC7: // LD I, HL
+                           context.cycles += 2;
+                           r->I = r->HL;
                            break;
                 case 0xD7: // LD HL, I
-                           cpu.registers.HL = cpu.registers.I;
+                           context.cycles += 2;
+                           r->HL = r->I | (r->MBASE << 16);
                            break;
                 case 0xCA: // INDRX
                            context.cycles += 2;
