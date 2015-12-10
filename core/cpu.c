@@ -1038,7 +1038,7 @@ int cpu_execute(void) {
                           r->F = _flag_sign_w(r->HL, cpu.L) | _flag_zero(r->HL)
                                  | _flag_undef(r->F) | _flag_overflow_w_sub(old_word, op_word, r->HL, cpu.L)
                                  | _flag_subtract(1) | _flag_carry_w(old_word - op_word - r->flags.C, cpu.L)
-                                 | _flag_halfcarry_w_sub(old_word, op_word, r->flags.C, cpu.L);
+                                 | _flag_halfcarry_w_sub(old_word, op_word, r->flags.C);
 
                         } else { // ADC HL, rp[p]
                           context.cycles += 2;
@@ -1049,7 +1049,7 @@ int cpu_execute(void) {
                           r->F = _flag_sign_w(r->HL, cpu.L) | _flag_zero(r->HL)
                                  | _flag_undef(r->F) | _flag_overflow_w_add(old_word, op_word, r->HL, cpu.L)
                                  | _flag_subtract(0) | _flag_carry_w(old_word + op_word + r->flags.C, cpu.L)
-                                 | _flag_halfcarry_w_add(old_word, op_word, r->flags.C, cpu.L);
+                                 | _flag_halfcarry_w_add(old_word, op_word, r->flags.C);
                         }
                         break;
                  case 3:
@@ -1400,7 +1400,7 @@ int cpu_execute(void) {
                               r->F = __flag_s(r->flags.S) | _flag_zero(!r->flags.Z)
                                       | _flag_undef(r->F) | __flag_pv(r->flags.PV)
                                       | _flag_subtract(0) | _flag_carry_w(old_word + op_word, cpu.L)
-                                      | _flag_halfcarry_w_add(old_word, op_word, 0, cpu.L);
+                                      | _flag_halfcarry_w_add(old_word, op_word, 0);
                               break;
                       }
                       break;

@@ -118,8 +118,8 @@ int parity(uint8_t x);
 
 #define _flag_halfcarry_b_add(op1, op2, carry) __flag_h(((op1 & 0xf) + (op2 & 0xf) + carry) & 0x10)
 #define _flag_halfcarry_b_sub(op1, op2, carry) __flag_h(((op1 & 0xf) - (op2 & 0xf) - carry) & 0x10)
-#define _flag_halfcarry_w_add(op1, op2, carry, mode) __flag_h(( (op1 & (0xfffff>>(mode<<3))) + (op2 & (0xfffff>>(mode<<3))) + carry) & (0x1000<<(mode<<3)))
-#define _flag_halfcarry_w_sub(op1, op2, carry, mode) __flag_h(( (op1 & (0xfffff>>(mode<<3))) - (op2 & (0xfffff>>(mode<<3))) - carry) & (0x1000<<(mode<<3)))
+#define _flag_halfcarry_w_add(op1, op2, carry) __flag_h(((op1 & 0xfff) + (op2 & 0xfff) + carry) & 0x1000)
+#define _flag_halfcarry_w_sub(op1, op2, carry) __flag_h(((op1 & 0xfff) - (op2 & 0xfff) - carry) & 0x1000)
 
 #define _flag_subtract(a)   ((a) ? FLAG_N : 0)
 #define _flag_zero(a)       ((a) ? 0 : FLAG_Z)
