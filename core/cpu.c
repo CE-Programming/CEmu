@@ -1115,12 +1115,48 @@ int cpu_execute(void) {
                             case 0: // RETN
                                    // Note: Does not implement non-maskable interrupts
                                    context.cycles += 6;
-                                   r->PC = cpu_pop();
+                                   if (cpu.SUFFIX) {
+                                       w = cpu_read_byte(r->SPL++) & 1;
+                                       if (cpu.ADL) {
+                                           r->PCL = cpu_read_byte(r->SPL++);
+                                           r->PCH = cpu_read_byte(r->SPL++);
+                                       } else {
+                                           r->PCL = cpu_read_byte(r->SPS++);
+                                           r->PCH = cpu_read_byte(r->SPS++);
+                                       }
+                                       if (w) {
+                                           r->PCU = cpu_read_byte(r->SPL++);
+                                           if (!cpu.L && !cpu.ADL) {
+                                               r->PCU = 0;
+                                           }
+                                       }
+                                       cpu.ADL = w;
+                                   } else {
+                                       r->PC = cpu_pop();
+                                   }
                                    break;
                             case 1: // RETI
                                    // Note: Does not implement non-maskable interrupts
                                    context.cycles += 6;
-                                   r->PC = cpu_pop();
+                                   if (cpu.SUFFIX) {
+                                       w = cpu_read_byte(r->SPL++) & 1;
+                                       if (cpu.ADL) {
+                                           r->PCL = cpu_read_byte(r->SPL++);
+                                           r->PCH = cpu_read_byte(r->SPL++);
+                                       } else {
+                                           r->PCL = cpu_read_byte(r->SPS++);
+                                           r->PCH = cpu_read_byte(r->SPS++);
+                                       }
+                                       if (w) {
+                                           r->PCU = cpu_read_byte(r->SPL++);
+                                           if (!cpu.L && !cpu.ADL) {
+                                               r->PCU = 0;
+                                           }
+                                       }
+                                       cpu.ADL = w;
+                                   } else {
+                                       r->PC = cpu_pop();
+                                   }
                                    break;
                             case 2: // LEA IY, IX + d
                                    context.cycles += 3;
