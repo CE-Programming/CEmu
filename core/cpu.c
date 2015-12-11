@@ -1658,9 +1658,9 @@ int cpu_execute(void) {
                                              exx(&cpu.registers);
                                              break;
                                       case 2: // JP (rr)
-                                              if (cpu.ADL != cpu.L) set_context(cpu.ADL = cpu.L);
                                               context.cycles += 4;
                                               r->PC = HLorIr();
+                                              cpu.ADL = cpu.L;
                                               break;
                                       case 3: // LD SP, HL
                                              context.cycles += 6;
@@ -1678,9 +1678,7 @@ int cpu_execute(void) {
                             w = context.nw();
                             if (read_cc(context.y)) {
                                 r->PC = w;
-                                if (cpu.ADL != cpu.L) {
-                                    set_context(cpu.ADL = cpu.L);
-                                }
+                                cpu.ADL = cpu.L;
                             }
                             break;
                     case 3:
@@ -1692,9 +1690,7 @@ int cpu_execute(void) {
                                          set_context(cpu.IL);
                                      }
                                      r->PC = context.nw();
-                                     if (cpu.ADL != cpu.L) {
-                                         set_context(cpu.ADL = cpu.L);
-                                     }
+                                     cpu.ADL = cpu.L;
                                      break;
                              case 1: // 0xCB prefixed opcodes
                                      context.cycles += 1;
