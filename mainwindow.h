@@ -2,7 +2,6 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QSettings>
 #include <QLabel>
 
 #include <romselection.h>

@@ -1,8 +1,9 @@
 #ifndef ROMSELECTION_H
 #define ROMSELECTION_H
 
-#include <QDialog>
-#include <QString>
+#include <QtWidgets/QDialog>
+
+class QString;
 
 bool fileExists(const QString &path);
 

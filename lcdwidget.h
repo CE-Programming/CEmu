@@ -2,7 +2,6 @@
 #define LCDWIDGET_H
 
 #include <QWidget>
-#include <QImage>
 #include <QTimer>
 
 #include <qtframebuffer.h>

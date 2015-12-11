@@ -5,8 +5,8 @@
 #include <cstdarg>
 #include <chrono>
 
-#include <QEventLoop>
-#include <QTimer>
+#include <QtCore/QEventLoop>
+#include <QtCore/QTimer>
 
 #include "mainwindow.h"
 
@@ -80,14 +80,15 @@ void EmuThread::doStuff(bool waitfor)
 {
     do
     {
-        if(enter_debugger)
+        if (enter_debugger)
         {
             enter_debugger = false;
             debugger(DBG_USER, 0);
         }
 
-        if(/*is_paused && */0)
+        if (/*is_paused && */0) {
             msleep(100);
+        }
 
     } while(/*is_paused && */0);
 }
@@ -97,8 +98,9 @@ void EmuThread::throttleTimerWait()
     unsigned int now = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
     unsigned int throttle = throttle_delay * 1000;
     unsigned int left = throttle - (now % throttle);
-    if(left > 0)
+    if (left > 0) {
         QThread::usleep(left);
+    }
 }
 
 void EmuThread::setTurboMode(bool enabled)
@@ -140,7 +142,9 @@ bool EmuThread::stop()
     {
         terminate();
         if(!this->wait(200))
+        {
             return false;
+        }
     }
 
     emu_cleanup();

@@ -1,9 +1,9 @@
 #include "romselection.h"
 #include "ui_romselection.h"
-#include <QFile>
-#include <QFileInfo>
-#include <QtWidgets>
-#include <QMessageBox>
+#include <QtCore/QFile>
+#include <QtCore/QFileInfo>
+#include <QtWidgets/QFileDialog>
+#include <QtWidgets/QMessageBox>
 
 #include "settings.h"
 #include "core/flash.h"
@@ -15,16 +15,16 @@ bool fileExists(const QString &path) {
 
 RomSelection::RomSelection(QWidget *p) : QDialog(p), ui(new Ui::RomSelection)
 {
-  ui->setupUi(this);
-  setWindowModality(Qt::ApplicationModal);
-  setWindowFlags(Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint );
+    ui->setupUi(this);
+    setWindowModality(Qt::ApplicationModal);
+    setWindowFlags(Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint );
 
-  connect(ui->rompath, SIGNAL(textChanged(QString)), this, SLOT(checkInput(QString)));
+    connect(ui->rompath, SIGNAL(textChanged(QString)), this, SLOT(checkInput(QString)));
 }
 
 RomSelection::~RomSelection()
 {
-  delete ui;
+    delete ui;
 }
 
 void RomSelection::checkInput(const QString &path)
@@ -64,12 +64,12 @@ void RomSelection::on_browse_clicked()
 
 void RomSelection::on_next_clicked()
 {
-  if(ui->browse_sel->isChecked()) {
-      if(flash_open(ui->rompath->text().toLatin1()) == 0) {
-          QMessageBox::critical(this, trUtf8("Invalid ROM image"), trUtf8("You have selected an invalid ROM image."));
-          return;
-      }
-      CEmuSettings::Instance()->setROMLocation(ui->rompath->text());
-      this->close();
-  }
+    if(ui->browse_sel->isChecked()) {
+        if(flash_open(ui->rompath->text().toLatin1()) == 0) {
+            QMessageBox::critical(this, trUtf8("Invalid ROM image"), trUtf8("You have selected an invalid ROM image."));
+            return;
+        }
+        CEmuSettings::Instance()->setROMLocation(ui->rompath->text());
+        this->close();
+    }
 }

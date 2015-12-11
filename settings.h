@@ -1,7 +1,7 @@
 #ifndef CEMUSETTINGS_H
 #define CEMUSETTINGS_H
 
-#include <QSettings>
+class QSettings;
 
 class CEmuSettings
 {

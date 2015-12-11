@@ -1,9 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QLabel>
-#include <iostream>
-#include <QDockWidget>
-#include <QMessageBox>
 
 #include "aboutwindow.h"
 #include "settings.h"
@@ -34,7 +30,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
     emu.rom = CEmuSettings::Instance()->getROMLocation().toStdString();
     if(emu.rom == "") {
         runSetup();
-    } else {
+    }
+    else {
         emu.start();
     }
 }

@@ -1,10 +1,4 @@
-#include <QApplication>
-#include <QStandardPaths>
-#include <QDir>
-#include <iostream>
-#include <cstdlib>
-#include <ctime>
-#include <climits>
+#include <QtWidgets/QApplication>
 
 #include "mainwindow.h"
 #include "romselection.h"

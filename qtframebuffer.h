@@ -2,7 +2,8 @@
 #define QTFRAMEBUFFER_H
 
 #include <QImage>
-#include <QPainter>
+
+class QPainter;
 
 #include <core/asic.h>
 

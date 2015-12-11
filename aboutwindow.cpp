@@ -1,21 +1,21 @@
 #include "aboutwindow.h"
 #include "ui_aboutwindow.h"
-#include <QPixmap>
+#include <QtGui/QPixmap>
 
 AboutWindow::AboutWindow(QWidget *p) :
-  QDialog(p),
-  ui(new Ui::AboutWindow)
+    QDialog(p),
+    ui(new Ui::AboutWindow)
 {
-  ui->setupUi(this);
-  setWindowModality(Qt::ApplicationModal);
-  setWindowFlags(Qt::WindowTitleHint | Qt::CustomizeWindowHint);
-  QPixmap pix("C:/icon.ico");
-  ui->label->setPixmap(pix);
+    ui->setupUi(this);
+    setWindowModality(Qt::ApplicationModal);
+    setWindowFlags(Qt::WindowTitleHint | Qt::CustomizeWindowHint);
+    QPixmap pix("C:/icon.ico");
+    ui->label->setPixmap(pix);
 }
 
 AboutWindow::~AboutWindow()
 {
-  delete ui;
+    delete ui;
 }
 
 void AboutWindow::on_pushButton_clicked()

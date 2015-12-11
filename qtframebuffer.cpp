@@ -1,4 +1,5 @@
 #include "qtframebuffer.h"
+#include <QtGui/QPainter>
 #include "core/asic.h"
 
 QImage renderFramebuffer()
