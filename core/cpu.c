@@ -1793,8 +1793,23 @@ int cpu_execute(void) {
                              break;
                       case 7: // RST y*8
                              context.cycles += 6;
-                             cpu_push(r->PC);
-                             r->PC = context.y * 8;
+                             if (cpu.SUFFIX) {
+                                 if (cpu.ADL) {
+                                     cpu_write_byte(--r->SPL, r->PCU);
+                                 }
+                                 if (cpu.IL || (cpu.L && !cpu.ADL)) {
+                                     cpu_write_byte(--r->SPL, r->PCH);
+                                     cpu_write_byte(--r->SPL, r->PCL);
+                                 } else {
+                                     cpu_write_byte(--r->SPS, r->PCH);
+                                     cpu_write_byte(--r->SPS, r->PCL);
+                                 }
+                                 cpu_write_byte(--r->SPL, (cpu.MADL << 1) | cpu.ADL);
+                                 cpu.ADL = cpu.IL;
+                             } else {
+                                 cpu_push(r->PC);
+                             }
+                             r->PC = context.y << 3;
                              break;
                     }
                     break;
