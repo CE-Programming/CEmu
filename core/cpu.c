@@ -1680,7 +1680,22 @@ int cpu_execute(void) {
                            w = context.nw();
                            if (read_cc(context.y)) {
                                context.cycles += 3;
-                               cpu_push(r->PC);
+                               if (cpu.SUFFIX) {
+                                   if (cpu.ADL) {
+                                       cpu_write_byte(--r->SPL, r->PCU);
+                                   }
+                                   if (cpu.IL || (cpu.L && !cpu.ADL)) {
+                                       cpu_write_byte(--r->SPL, r->PCH);
+                                       cpu_write_byte(--r->SPL, r->PCL);
+                                   } else {
+                                       cpu_write_byte(--r->SPS, r->PCH);
+                                       cpu_write_byte(--r->SPS, r->PCL);
+                                   }
+                                   cpu_write_byte(--r->SPL, (cpu.MADL << 1) | cpu.ADL);
+                                   cpu.ADL = cpu.IL;
+                               } else {
+                                   cpu_push(r->PC);
+                               }
                                r->PC = w;
                            }
                            break;
@@ -1697,7 +1712,22 @@ int cpu_execute(void) {
                                       case 0: // CALL nn
                                              context.cycles += 7;
                                              w = context.nw();
-                                             cpu_push(r->PC);
+                                             if (cpu.SUFFIX) {
+                                                 if (cpu.ADL) {
+                                                     cpu_write_byte(--r->SPL, r->PCU);
+                                                 }
+                                                 if (cpu.IL || (cpu.L && !cpu.ADL)) {
+                                                     cpu_write_byte(--r->SPL, r->PCH);
+                                                     cpu_write_byte(--r->SPL, r->PCL);
+                                                 } else {
+                                                     cpu_write_byte(--r->SPS, r->PCH);
+                                                     cpu_write_byte(--r->SPS, r->PCL);
+                                                 }
+                                                 cpu_write_byte(--r->SPL, (cpu.MADL << 1) | cpu.ADL);
+                                                 cpu.ADL = cpu.IL;
+                                             } else {
+                                                 cpu_push(r->PC);
+                                             }
                                              r->PC = w;
                                              break;
                                       case 1: // 0xDD prefixed opcodes

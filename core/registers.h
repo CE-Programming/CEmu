@@ -56,7 +56,14 @@ typedef struct {
 	uint32_t _AF, _BC, _DE, _HL;
 	uint32_t SPL;
 	uint16_t SPS;
-	uint32_t PC;
+	union {
+		uint32_t PC;
+		struct {
+			uint8_t PCL;
+			uint8_t PCH;
+			uint8_t PCU;
+		};
+	};
 	union {
 		uint32_t IX;
 		struct {
