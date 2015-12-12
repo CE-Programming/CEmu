@@ -22,7 +22,7 @@ void cpu_init(void) {
 }
 
 uint8_t cpu_read_byte(const uint32_t address) {
-    if(cpu.ADL || cpu.MADL) // address use MBASE
+    if(cpu.ADL) // address use MBASE
         return cpu.read_byte(address&0xFFFFFF);
     return cpu.read_byte((address&0xFFFF) | ((cpu.registers.MBASE)<<16));
 }
@@ -182,7 +182,7 @@ static void execute_rot(int y, int z, int switch_opcode_data) {
 		// reset the PC back to the offset, so
 		// the write reads it correctly
 		context.cpu->registers.PC--;
-		mask_mode(context.cpu->registers.PC, context.cpu->ADL || context.cpu->MADL);
+		mask_mode(context.cpu->registers.PC, context.cpu->ADL);
 	}
 
 	//uint8_t old_r = r;
@@ -1394,7 +1394,7 @@ int cpu_execute(void) {
                           if (r->B != 0) {                   // if B != 0
                               context.cycles += 2;
                               cpu.registers.PC += s;        // add rjump offset
-                              if(!cpu.ADL && !cpu.MADL) {
+                              if(!cpu.ADL) {
                                   cpu.registers.PC &= 0xFFFF;   // mask to 16 bit
                                   cpu.registers.PC |= cpu.registers.MBASE<<16;
                               } else {
@@ -1406,7 +1406,7 @@ int cpu_execute(void) {
                           context.cycles += 3;
                           s = context.ns();
                           cpu.registers.PC += s;          // add rjump offset
-                          mask_mode(cpu.registers.PC, cpu.ADL || cpu.MADL);
+                          mask_mode(cpu.registers.PC, cpu.ADL);
                           break;
                   case 4:
                   case 5:
@@ -1417,7 +1417,7 @@ int cpu_execute(void) {
                           if (read_cc(context.y - 4)) {
                               context.cycles += 1;
                               cpu.registers.PC += s;          // add rjump offset
-                              mask_mode(cpu.registers.PC, cpu.ADL || cpu.MADL);
+                              mask_mode(cpu.registers.PC, cpu.ADL);
                           }
                           break;
                  }
@@ -1509,7 +1509,7 @@ int cpu_execute(void) {
                      old = read_reg(context.y);
                      if (context.y == 6 && cpu.prefix >> 8) {
                        cpu.registers.PC++;
-                       mask_mode(cpu.registers.PC, cpu.ADL || cpu.MADL);
+                       mask_mode(cpu.registers.PC, cpu.ADL);
                      }
                      new = write_reg(context.y, old + 1);
                      r->F = __flag_c(r->flags.C) | _flag_sign_b(new) | _flag_zero(new)
@@ -1521,7 +1521,7 @@ int cpu_execute(void) {
                     old = read_reg(context.y);
                     if (context.y == 6 && cpu.prefix >> 8) {
                       cpu.registers.PC--;
-                      mask_mode(cpu.registers.PC, cpu.ADL || cpu.MADL);
+                      mask_mode(cpu.registers.PC, cpu.ADL);
                     }
                      new = write_reg(context.y, old - 1);
                      r->F = __flag_c(r->flags.C) | _flag_sign_b(new) | _flag_zero(new)
@@ -1532,17 +1532,17 @@ int cpu_execute(void) {
                      context.cycles += 2;
                      if (context.y == 6 && cpu.prefix >> 8) { // LD (IX/IY + d), n
                        cpu.registers.PC++;
-                       mask_mode(cpu.registers.PC, cpu.ADL || cpu.MADL);
+                       mask_mode(cpu.registers.PC, cpu.ADL);
                      }
                      old = context.nu();
                      if (context.y == 6 && cpu.prefix >> 8) { // LD (IX/IY + d), n
                        cpu.registers.PC -= 2;
-                       mask_mode(cpu.registers.PC, cpu.ADL || cpu.MADL);
+                       mask_mode(cpu.registers.PC, cpu.ADL);
                      }
                      write_reg(context.y, old);
                      if (context.y == 6 && cpu.prefix >> 8) { // LD (IX/IY + d), n
                        cpu.registers.PC++;
-                       mask_mode(cpu.registers.PC, cpu.ADL || cpu.MADL);
+                       mask_mode(cpu.registers.PC, cpu.ADL);
                      }
                      break;
               case 7:
