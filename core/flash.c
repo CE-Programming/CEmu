@@ -26,43 +26,42 @@ int flash_open(const char *filename) {
 
 // Read from the 0x1000 range of ports
 static uint8_t flash_read(const uint16_t pio) {
+    uint8_t addr = pio&0xFF;
+    uint8_t read_byte;
 
-  uint8_t addr = pio&0xFF;
-  uint8_t read_byte;
-
-  switch (addr) {
-      case 0x02:
-                 read_byte = flash.map;
-                 break;
-      case 0x05:
-                 read_byte = flash.added_wait_states;
-                 break;
-      default:
-                 read_byte = flash.ports[addr];
-                 break;
-  }
-  return read_byte;
+    switch (addr) {
+        case 0x02:
+            read_byte = flash.map;
+            break;
+        case 0x05:
+            read_byte = flash.added_wait_states;
+            break;
+        default:
+            read_byte = flash.ports[addr];
+            break;
+    }
+    return read_byte;
 }
 
 // Write to the 0x1000 range of ports
 static void flash_write(const uint16_t pio, const uint8_t byte)
 {
-  uint8_t addr = pio & 0xFF;
+    uint8_t addr = pio & 0xFF;
 
-  switch (addr) {
-      case 0x00:
-                 flash.ports[addr] = byte & 1;
-                 break;
-      case 0x02:
-                 flash.map = byte;
-                 break;
-      case 0x05:
-                 flash.added_wait_states = byte;
-                 break;
-      default:
-                 flash.ports[addr] = byte;
-                 break;
-  }
+    switch (addr) {
+        case 0x00:
+            flash.ports[addr] = byte & 1;
+            break;
+        case 0x02:
+            flash.map = byte;
+            break;
+        case 0x05:
+            flash.added_wait_states = byte;
+            break;
+        default:
+            flash.ports[addr] = byte;
+            break;
+    }
 }
 
 static const eZ80portrange_t device = {

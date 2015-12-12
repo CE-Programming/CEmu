@@ -12,10 +12,10 @@ const uint32_t ram_base = 0xD00000;
 const uint32_t flash_size = 0x400000;
 
 void mem_init(void) {
-    mem.flash=(uint8_t*)malloc(flash_size);     // allocate flash memory
+    mem.flash=(uint8_t*)malloc(flash_size);     // allocate Flash memory
     memset(mem.flash, 0xFF, flash_size);
 
-    mem.ram=(uint8_t*)calloc(ram_size, sizeof(uint8_t)); // allocate ram memory
+    mem.ram=(uint8_t*)calloc(ram_size, sizeof(uint8_t)); // allocate RAM
 
     mem.flash_mapped = 0;
     mem.flash_unlocked = 0;
@@ -30,7 +30,7 @@ void mem_free(void) {
 
 uint8_t* phys_mem_ptr(uint32_t addr, uint32_t size) {
     if(addr<0xD00000) {
-           return mem.flash+addr;
+        return mem.flash+addr;
     }
     addr -= 0xD00000;
     return mem.ram+addr;
@@ -43,121 +43,122 @@ uint8_t memory_read_byte(uint32_t address)
     address &= 0xFFFFFF;
     addr = address;
 
-    switch( upperNibble24(addr) ) {
-
-    // FLASH
-    case 0x0: case 0x1: case 0x2: case 0x3:
-        mem.wait_state += 5;
-        return mem.flash[addr];
-
-    // MAYBE FLASH
-    case 0x4: case 0x5: case 0x6: case 0x7:
-        addr -= 0x400000;
-        if(mem.flash_mapped) {
+    switch(upperNibble24(addr)) {
+        // FLASH
+        case 0x0: case 0x1: case 0x2: case 0x3:
             mem.wait_state += 5;
             return mem.flash[addr];
-        }
-        mem.wait_state += 257;
-        return 0;
 
-    // UNMAPPED
-    case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
-        mem.wait_state += 257;
-        return 0;
-
-    // RAM
-    case 0xD:
-        addr -= 0xD00000;
-        if(addr <= 0x657FF) {
-            mem.wait_state += 3;
-            return mem.ram[addr];
-        }
-    // UNMAPPED
-        addr -=  0x65800;
-        if(addr <= 0x1A7FF) {
-            mem.wait_state += 3;
+        // MAYBE FLASH
+        case 0x4: case 0x5: case 0x6: case 0x7:
+            addr -= 0x400000;
+            if(mem.flash_mapped) {
+                mem.wait_state += 5;
+                return mem.flash[addr];
+            }
+            mem.wait_state += 257;
             return 0;
-        }
-    // MIRRORED
-        return memory_read_byte(address-0x80000);
-    case 0xE: case 0xF:
-        mem.wait_state += 2;
-        return mmio_read_byte(addr);          // read byte from mmio
-    default:
-        mem.wait_state += 1;
-        break;
+
+        // UNMAPPED
+        case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
+            mem.wait_state += 257;
+            return 0;
+
+        // RAM
+        case 0xD:
+            addr -= 0xD00000;
+            if(addr <= 0x657FF) {
+                mem.wait_state += 3;
+                return mem.ram[addr];
+            }
+        // UNMAPPED
+            addr -=  0x65800;
+            if(addr <= 0x1A7FF) {
+                mem.wait_state += 3;
+                return 0;
+            }
+        // MIRRORED
+            return memory_read_byte(address-0x80000);
+
+        case 0xE: case 0xF:
+            mem.wait_state += 2;
+            return mmio_read_byte(addr);          // read byte from mmio
+
+        default:
+            mem.wait_state += 1;
+            break;
     }
     return 0;
 }
 
 int mem_wait_states(void) {
-     return mem.wait_state;
+    return mem.wait_state;
 }
 
 void mem_reset_wait_states(void) {
-     mem.wait_state = 0;
+    mem.wait_state = 0;
 }
 
-void memory_write_byte(uint32_t address, const uint8_t byte)
-{
+void memory_write_byte(uint32_t address, const uint8_t byte) {
     uint32_t addr; // XXX should be uint32_t
     address &= 0xFFFFFF;
     addr = address;
 
-    switch( upperNibble24(addr) ) {
-
-    // FLASH
-    case 0x0: case 0x1: case 0x2: case 0x3:
-        if(mem.flash_unlocked) {
-            mem.flash[addr] = byte;
-        }
-        mem.wait_state += 5;
-        return;
-
-    // MAYBE FLASH
-    case 0x4: case 0x5: case 0x6: case 0x7:
-        addr -= 0x400000;
-        if(mem.flash_unlocked) {
-          if(mem.flash_mapped) {
-              mem.wait_state += 5;
-              mem.flash[addr] = byte;
-              return;
-          }
-        }
-        mem.wait_state += 257;
-        return;
-
-    // UNMAPPED
-    case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
-        mem.wait_state += 5;
-        return;
-
-    // RAM
-    case 0xD:
-        addr -= 0xD00000;
-        if(addr <= 0x657FF) {
-            mem.wait_state += 1;
-            mem.ram[addr] = byte;
-            mem.wait_state += 1;
+    switch(upperNibble24(addr)) {
+        // FLASH
+        case 0x0: case 0x1: case 0x2: case 0x3:
+            if(mem.flash_unlocked) {
+                mem.flash[addr] = byte;
+            }
+            mem.wait_state += 5;
             return;
-        }
+
+        // MAYBE FLASH
+        case 0x4: case 0x5: case 0x6: case 0x7:
+            addr -= 0x400000;
+            if(mem.flash_unlocked) {
+                if(mem.flash_mapped) {
+                    mem.wait_state += 5;
+                    mem.flash[addr] = byte;
+                    return;
+                }
+            }
+            mem.wait_state += 257;
+            return;
+
         // UNMAPPED
-        addr -=  0x65800;
-        if(addr <= 0x1A7FF) {
-            mem.wait_state = 1;
+        case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
+            mem.wait_state += 5;
             return;
-        }
-        // MIRRORED
-            memory_write_byte(address-0x80000, byte);
-            return;
+
+        // RAM
+        case 0xD:
+            addr -= 0xD00000;
+            if(addr <= 0x657FF) {
+                mem.wait_state += 1;
+                mem.ram[addr] = byte;
+                mem.wait_state += 1;
+                return;
+            }
+            // UNMAPPED
+            addr -=  0x65800;
+            if(addr <= 0x1A7FF) {
+                mem.wait_state = 1;
+                return;
+            }
+            // MIRRORED
+                memory_write_byte(address-0x80000, byte);
+                return;
+
         // MMIO <-> Advanced Perphrial Bus
         case 0xE: case 0xF:
             mem.wait_state = 2;
             mmio_write_byte(addr, byte);         // write byte to the mmio port
             return;
+
         default:
             mem.wait_state = 1;
-          break;
+            break;
     }
     return;
 }

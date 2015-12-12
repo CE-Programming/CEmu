@@ -12,20 +12,20 @@ extern "C" {
 enum clock_id { CLOCK_CPU, CLOCK_APB, CLOCK_27M, CLOCK_12M, CLOCK_32K };
 
 enum sched_item_index {
-        SCHED_THROTTLE,
-        SCHED_KEYPAD,
-        SCHED_LCD,
-        SCHED_TIMERS,
-        SCHED_WATCHDOG,
-        SCHED_NUM_ITEMS
+    SCHED_THROTTLE,
+    SCHED_KEYPAD,
+    SCHED_LCD,
+    SCHED_TIMERS,
+    SCHED_WATCHDOG,
+    SCHED_NUM_ITEMS
 };
 
 struct sched_item {
-        enum clock_id clock;
-        int second; // -1 = disabled
-        uint32_t tick;
-        uint32_t cputick;
-        void (*proc)(int index);
+    enum clock_id clock;
+    int second; // -1 = disabled
+    uint32_t tick;
+    uint32_t cputick;
+    void (*proc)(int index);
 };
 
 typedef struct sched_state {

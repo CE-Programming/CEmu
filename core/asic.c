@@ -25,8 +25,9 @@ unsigned int reset_proc_count;
 
 static void add_reset_proc(void (*proc)(void))
 {
-    if (reset_proc_count == sizeof(reset_procs)/sizeof(*reset_procs))
+    if (reset_proc_count == sizeof(reset_procs)/sizeof(*reset_procs)) {
         abort();
+    }
     reset_procs[reset_proc_count++] = proc;
 }
 
@@ -105,8 +106,9 @@ void asic_free(void) {
 
 void asic_reset(void) {
     unsigned int i;
-    for(i = 0; i < reset_proc_count; i++)
+    for(i = 0; i < reset_proc_count; i++) {
         reset_procs[i]();
+    }
 
     sched.clock_rates[CLOCK_CPU] = 48000000;
     sched.clock_rates[CLOCK_APB] = 48000000;

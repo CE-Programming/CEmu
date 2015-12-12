@@ -10,12 +10,12 @@ extern "C" {
 #endif
 
 struct mem_state {
-  uint8_t *flash;     // flash mem
-  uint8_t *ram;       // ram mem
-  uint8_t *vram;      // vram mem
-  int flash_mapped;
-  int flash_unlocked;
-  int wait_state; // XXX should be unsigned
+    uint8_t *flash;     // Flash mem
+    uint8_t *ram;       // RAM
+    uint8_t *vram;      // VRAM
+    int flash_mapped;
+    int flash_unlocked;
+    int wait_state; // XXX should be unsigned
 };
 
 // Type definitions

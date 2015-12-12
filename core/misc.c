@@ -6,18 +6,16 @@ fxxx_state_t fxxx; // Global FXXX state
 
 // Read from the 0xCXXX range of ports
 static uint8_t cxxx_read(const uint16_t pio) {
+    uint8_t addr = pio&0xFF;
+    uint8_t read_byte;
 
-  uint8_t addr = pio&0xFF;
-  uint8_t read_byte;
+    read_byte = cxxx.ports[addr];
 
-  read_byte = cxxx.ports[addr];
-
-  return read_byte;
+    return read_byte;
 }
 
 // Write to the 0xCXXX range of ports
-static void cxxx_write(const uint16_t pio, const uint8_t byte)
-{
+static void cxxx_write(const uint16_t pio, const uint8_t byte) {
     uint8_t addr = pio & 0xFF;
 
     cxxx.ports[addr] = byte;
@@ -29,9 +27,9 @@ static const eZ80portrange_t pcxxx = {
 };
 
 eZ80portrange_t init_cxxx() {
-    int i;
+    unsigned int i;
     // Initialize device to default state
-    for(i = 0; i<0x80; i++) {
+    for(i = 0; i<sizeof(cxxx.ports) / sizeof(cxxx.ports[0]); i++) {
         cxxx.ports[i] = 0;
     }
 
@@ -42,24 +40,22 @@ eZ80portrange_t init_cxxx() {
 
 // Read from the 0xEXXX range of ports
 static uint8_t exxx_read(const uint16_t pio) {
+    uint8_t addr = pio&0x7F;
+    uint8_t read_byte;
 
-  uint8_t addr = pio&0x7F;
-  uint8_t read_byte;
-
-  switch (addr) {
-      case 0x14:
-                 read_byte = 32 | exxx.ports[addr];
-                 break;
-      default:
-                 read_byte = exxx.ports[addr];
-                 break;
-  }
-  return read_byte;
+    switch (addr) {
+        case 0x14:
+            read_byte = 32 | exxx.ports[addr];
+            break;
+        default:
+            read_byte = exxx.ports[addr];
+            break;
+    }
+    return read_byte;
 }
 
 // Write to the 0xEXXX range of ports
-static void exxx_write(const uint16_t pio, const uint8_t byte)
-{
+static void exxx_write(const uint16_t pio, const uint8_t byte) {
     uint8_t addr = pio & 0x7F;
     exxx.ports[addr] = byte;
 }
@@ -70,9 +66,9 @@ static const eZ80portrange_t pexxx = {
 };
 
 eZ80portrange_t init_exxx() {
-    int i;
+    unsigned int i;
     // Initialize device to default state
-    for(i = 0; i<0x80; i++) {
+    for(i = 0; i<sizeof(exxx.ports) / sizeof(exxx.ports[0]); i++) {
         exxx.ports[i] = 0;
     }
 

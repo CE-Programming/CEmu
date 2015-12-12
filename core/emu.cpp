@@ -57,22 +57,20 @@ void error(const char *fmt, ...) {
 }
 
 static void mem_load_vram(const char *path) {
-  FILE *romfile;
-  size_t index;
-  uint8_t byte_read;
+    FILE *romfile;
+    size_t index;
+    uint8_t byte_read;
 
-  romfile=fopen(path, "rb");
+    romfile=fopen(path, "rb");
 
-  for(index=0;index<(320*240*2);index++)
-  {
-      fread(&byte_read,1,1,romfile);
-      mem.ram[index+0x40000] = byte_read;
-  }
-  fclose(romfile);
+    for(index=0;index<(320*240*2);index++) {
+        fread(&byte_read,1,1,romfile);
+        mem.ram[index+0x40000] = byte_read;
+    }
+    fclose(romfile);
 }
 
-void throttle_interval_event(int index)
-{
+void throttle_interval_event(int index) {
     event_repeat(index, 27000000 / 60);
 
     static int intervals = 0, prev_intervals = 0;
@@ -92,12 +90,12 @@ void throttle_interval_event(int index)
 
     gui_do_stuff(true);
 
-    if (!turbo_mode && speed > 0.7)
+    if (!turbo_mode && speed > 0.7) {
         throttle_timer_wait();
+    }
 }
 
-bool emu_start()
-{
+bool emu_start() {
     long lSize;
 
     throttle_timer_on();
@@ -108,35 +106,32 @@ bool emu_start()
 
     if (rom_image == NULL) {
         gui_console_printf("No ROM image specified.");
-         return false;
+        return false;
     } else {
-         FILE *rom = fopen(rom_image, "rb");
-         if (!rom) {
+        FILE *rom = fopen(rom_image, "rb");
+        if (!rom) {
             gui_console_printf("Error opening ROM image.\n", rom_image);
             emu_cleanup();
             return false;
-         }
+        }
 
-         // get rom file size
-         fseek(rom , 0L , SEEK_END);
-         lSize=ftell(rom);
-         rewind(rom);
+        // get rom file size
+        fseek(rom , 0L , SEEK_END);
+        lSize=ftell(rom);
+        rewind(rom);
 
-         fread(asic.mem->flash, 1, lSize, rom);
+        fread(asic.mem->flash, 1, lSize, rom);
 
-         fclose(rom);
+        fclose(rom);
     }
 
     mem_load_vram(rom_image);
     return true;
 }
 
-void emu_loop(bool reset)
-{
-    if(reset)
-    {
-    reset:
-
+void emu_loop(bool reset) {
+    if (reset) {
+reset:
         cpu_events &= EVENT_DEBUG_STEP;
 
         sched_reset();
@@ -163,8 +158,6 @@ void emu_loop(bool reset)
     }
 }
 
-void emu_cleanup(void)
-{
-
+void emu_cleanup(void) {
     asic_free();
 }

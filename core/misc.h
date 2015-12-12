@@ -8,10 +8,10 @@ extern "C" {
 #endif
 
 struct cxxx_state {
-        uint8_t ports[0x100]; // Standard CXXX state
+    uint8_t ports[0x100]; // Standard CXXX state
 };
 struct exxx_state {
-        uint8_t ports[0x80];  // Standard EXXX state
+    uint8_t ports[0x80];  // Standard EXXX state
 };
 struct fxxx_state {           // Standard FXXX state
 };

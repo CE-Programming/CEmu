@@ -10,91 +10,91 @@ extern "C" {
 #endif
 
 typedef struct {
-	union {
-		uint32_t AF;
-		struct {
-			union {
-				uint8_t F;
-				struct {
-					uint8_t C  : 1;
-					uint8_t N  : 1;
-					uint8_t PV : 1;
-					uint8_t _3 : 1;
-					uint8_t H  : 1;
-					uint8_t _5 : 1;
-					uint8_t Z  : 1;
-					uint8_t S  : 1;
-				} flags;
-			};
-			uint8_t A;
-		};
-	};
-	union {
-		uint32_t BC;
-		struct {
-			uint8_t C;
-			uint8_t B;
-			uint8_t BCU;
-		};
-	};
-	union {
-		uint32_t DE;
-		struct {
-			uint8_t E;
-			uint8_t D;
-			uint8_t DEU;
-		};
-	};
-	union {
-		uint32_t HL;
-		struct {
-			uint8_t L;
-			uint8_t H;
-			uint8_t HLU;
-		};
-	};
-	uint32_t _AF, _BC, _DE, _HL;
-	uint32_t SPL;
-	uint16_t SPS;
-	union {
-		uint32_t PC;
-		struct {
-			uint8_t PCL;
-			uint8_t PCH;
-			uint8_t PCU;
-		};
-	};
-	union {
-		uint32_t IX;
-		struct {
-			uint8_t IXL;
-			uint8_t IXH;
-			uint8_t IXU;
-		};
-	};
-	union {
-		uint32_t IY;
-		struct {
-			uint8_t IYL;
-			uint8_t IYH;
-			uint8_t IYU;
-		};
-	};
-	uint16_t I;
-	uint8_t R, MBASE;  // interrupt, r, and z80 MBASE
-	uint32_t WZ;
+    union {
+        uint32_t AF;
+        struct {
+            union {
+                uint8_t F;
+                struct {
+                    uint8_t C  : 1;
+                    uint8_t N  : 1;
+                    uint8_t PV : 1;
+                    uint8_t _3 : 1;
+                    uint8_t H  : 1;
+                    uint8_t _5 : 1;
+                    uint8_t Z  : 1;
+                    uint8_t S  : 1;
+                } flags;
+            };
+            uint8_t A;
+        };
+    };
+    union {
+        uint32_t BC;
+        struct {
+            uint8_t C;
+            uint8_t B;
+            uint8_t BCU;
+        };
+    };
+    union {
+        uint32_t DE;
+        struct {
+            uint8_t E;
+            uint8_t D;
+            uint8_t DEU;
+        };
+    };
+    union {
+        uint32_t HL;
+        struct {
+            uint8_t L;
+            uint8_t H;
+            uint8_t HLU;
+        };
+    };
+    uint32_t _AF, _BC, _DE, _HL;
+    uint32_t SPL;
+    uint16_t SPS;
+    union {
+        uint32_t PC;
+        struct {
+            uint8_t PCL;
+            uint8_t PCH;
+            uint8_t PCU;
+        };
+    };
+    union {
+        uint32_t IX;
+        struct {
+            uint8_t IXL;
+            uint8_t IXH;
+            uint8_t IXU;
+        };
+    };
+    union {
+        uint32_t IY;
+        struct {
+            uint8_t IYL;
+            uint8_t IYH;
+            uint8_t IYU;
+        };
+    };
+    uint16_t I;
+    uint8_t R, MBASE;  // interrupt, r, and z80 MBASE
+    uint32_t WZ;
 } eZ80registers_t;
 
 typedef enum {
-	FLAG_S =  1 << 7,
-	FLAG_Z =  1 << 6,
-	FLAG_5 =  1 << 5,
-	FLAG_H =  1 << 4,
-	FLAG_3 =  1 << 3,
-	FLAG_PV = 1 << 2,
-	FLAG_N  = 1 << 1,
-	FLAG_C  = 1 << 0,
-	FLAG_NONE = 0
+    FLAG_S =  1 << 7,
+    FLAG_Z =  1 << 6,
+    FLAG_5 =  1 << 5,
+    FLAG_H =  1 << 4,
+    FLAG_3 =  1 << 3,
+    FLAG_PV = 1 << 2,
+    FLAG_N  = 1 << 1,
+    FLAG_C  = 1 << 0,
+    FLAG_NONE = 0
 } eZ80flags;
 
 void exx(eZ80registers_t *r);

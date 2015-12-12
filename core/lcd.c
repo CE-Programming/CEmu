@@ -53,8 +53,9 @@ void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
         if (bpp < 16) {
             uint32_t mask = (1 << bpp) - 1;
             uint32_t bi = (lcd.control & (1 << 9)) ? 0 : 24;
-            if (!(lcd.control & (1 << 10)))
+            if (!(lcd.control & (1 << 10))) {
                 bi ^= (8 - bpp);
+            }
             do {
                 uint32_t word = *in++;
                 int bitpos = 32;
@@ -94,8 +95,9 @@ void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
 static void lcd_event(int index) {
     int pcd = 1;
     int htime, vtime;
-    if (!(lcd.timing[2] & (1 << 26)))
+    if (!(lcd.timing[2] & (1 << 26))) {
         pcd = (lcd.timing[2] >> 27 << 5) + (lcd.timing[2] & 0x1F) + 2;
+    }
     htime =   (lcd.timing[0] >> 24 & 0x0FF) + 1  // Back porch
             + (lcd.timing[0] >> 16 & 0x0FF) + 1  // Front porch
             + (lcd.timing[0] >>  8 & 0x0FF) + 1  // Sync pulse
@@ -154,12 +156,16 @@ void lcd_write(const uint16_t pio, const uint8_t value) {
             write8(lcd.timing[offset >> 2], bit_offset, value);
         } else if (offset == 0x010) {
             write8(lcd.upbase, bit_offset, value);
-            if (lcd.upbase & 0b111) { gui_console_printf("Warning: LCD upper panel base not 8-byte aligned!\n"); }
-	    lcd.upbase &= ~0b111;
+            if (lcd.upbase & 0b111) {
+                gui_console_printf("Warning: LCD upper panel base not 8-byte aligned!\n");
+            }
+            lcd.upbase &= ~0b111;
         } else if (offset == 0x014) {
             write8(lcd.lpbase, bit_offset, value);
-            if (lcd.lpbase & 0b111) { gui_console_printf("Warning: LCD lower panel base not 8-byte aligned!\n"); }
-	    lcd.lpbase &= ~0b111;
+            if (lcd.lpbase & 0b111) {
+                gui_console_printf("Warning: LCD lower panel base not 8-byte aligned!\n");
+            }
+            lcd.lpbase &= ~0b111;
         } else if (offset == 0x018) {
             if (((value << bit_offset) ^ lcd.control) & 1) {
                 if (value & 1) { event_set(SCHED_LCD, 0); }

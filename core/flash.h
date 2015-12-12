@@ -9,9 +9,9 @@ extern "C" {
 
 // Standard FLASH state
 struct flash_state {
-        uint8_t ports[0x100];
-        uint8_t added_wait_states;
-        uint8_t map;
+    uint8_t ports[0x100];
+    uint8_t added_wait_states;
+    uint8_t map;
 };
 
 // Type definitions

@@ -19,19 +19,19 @@ extern "C" {
 #include <core/backlightport.h>
 
 typedef enum {
-	BATTERIES_REMOVED,
-	BATTERIES_LOW,
-	BATTERIES_GOOD
+    BATTERIES_REMOVED,
+    BATTERIES_LOW,
+    BATTERIES_GOOD
 } battery_state;
 
 struct asic_state {
-	int stopped;
-	ti_device_type device;
-	battery_state battery;
-	int battery_remove_check;
+    int stopped;
+    ti_device_type device;
+    battery_state battery;
+    int battery_remove_check;
 
-	mem_state_t* mem;
-	eZ80cpu_t *cpu;
+    mem_state_t* mem;
+    eZ80cpu_t *cpu;
 };
 
 // Type definitions

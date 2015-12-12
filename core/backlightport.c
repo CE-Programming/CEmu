@@ -9,75 +9,75 @@ typedef struct backlight_state backlight_state_t;
 backlight_state_t backlight;
 
 struct backlight_state {
-        uint8_t ports[0x100];
-        uint8_t brightness;
+    uint8_t ports[0x100];
+    uint8_t brightness;
 };
 
 // Read from the 0xB000 range of ports
 static uint8_t backlight_read(const uint16_t pio) {
+    uint8_t addr = pio & 0xFF;
+    uint8_t read_byte = 0;
 
-  uint8_t addr = pio & 0xFF;
-  uint8_t read_byte = 0;
-
-  switch (addr) {
-      case 0x08:
-      case 0x09:
-      case 0x0A:
-      case 0x0B: //Ports B008-B00B always read 0
-                 read_byte = 0;
-                 break;
-      case 0x0D:
-      case 0x0E:
-      case 0x0F: //Ports B00D-B00F always read 0
-                 read_byte = 0;
-                 break;
-      case 0x10:
-      case 0x11:
-      case 0x12:
-      case 0x13: //Ports B010-B013 always read 0
-                 read_byte = 0;
-                 break;
-      case 0x1C:
-      case 0x1D:
-      case 0x1E:
-      case 0x1F: //Ports B01C-B01F always read 0
-                 read_byte = 0;
-                 break;
-      case 0x24:
-                 read_byte = backlight.brightness;
-                 break;
-      default:
-                 read_byte = backlight.ports[addr];
-                 break;
-  }
-  return read_byte;
+    switch (addr) {
+        case 0x08:
+        case 0x09:
+        case 0x0A:
+        case 0x0B: //Ports B008-B00B always read 0
+            read_byte = 0;
+            break;
+        case 0x0D:
+        case 0x0E:
+        case 0x0F: //Ports B00D-B00F always read 0
+            read_byte = 0;
+            break;
+        case 0x10:
+        case 0x11:
+        case 0x12:
+        case 0x13: //Ports B010-B013 always read 0
+            read_byte = 0;
+            break;
+        case 0x1C:
+        case 0x1D:
+        case 0x1E:
+        case 0x1F: //Ports B01C-B01F always read 0
+            read_byte = 0;
+            break;
+        case 0x24:
+            read_byte = backlight.brightness;
+            break;
+        default:
+            read_byte = backlight.ports[addr];
+            break;
+    }
+    return read_byte;
 }
 
 // Write to the 0xB000 range of ports
 static void backlight_write(const uint16_t pio, const uint8_t byte)
 {
-  uint8_t addr = pio & 0xFF;
+    uint8_t addr = pio & 0xFF;
 
-  switch (addr) {
-      case 0x01:
-      case 0x02:
-      case 0x03:
-      case 0x0B: //Fixed?
-                 break;
-      case 0x21:
-      case 0x22:
-                 if(byte != 0) backlight.brightness = 0x00;
-                 break;
-      case 0x24:
-                 backlight.brightness = byte;
-      case 0x25:
-      case 0x26:
-                 if(byte != 0) backlight.brightness = 0x00;
-                 break;
-      default:
-                 backlight.ports[addr] = byte;
-                 break;
-  }
+    switch (addr) {
+        case 0x01:
+        case 0x02:
+        case 0x03:
+        case 0x0B: //Fixed?
+            break;
+        case 0x21:
+        case 0x22:
+        case 0x25:
+        case 0x26:
+            if(byte != 0) {
+                backlight.brightness = 0x00;
+            }
+            break;
+        case 0x24:
+            backlight.brightness = byte;
+            break;
+        default:
+            backlight.ports[addr] = byte;
+            break;
+    }
 }
 
 static const eZ80portrange_t device = {

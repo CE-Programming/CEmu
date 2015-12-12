@@ -9,8 +9,8 @@ extern "C" {
 #include <core/defines.h>
 
 struct eZ80portrange {
-	uint8_t (*read_in)(const uint16_t);
-	void (*write_out)(const uint16_t, const uint8_t);
+    uint8_t (*read_in)(const uint16_t);
+    void (*write_out)(const uint16_t, const uint8_t);
 };
 typedef struct eZ80portrange eZ80portrange_t;
 

@@ -12,25 +12,25 @@ extern "C" {
 
 // Standard CONTEXT state
 struct execution_context {
-	int cycles;	// Number of cycles per execuction block
-	eZ80cpu_t *cpu; // Pointer to Global CPU state
-	union {
-		uint8_t opcode;  // Current OpCode
-		struct {
-		  uint8_t z : 3;
-		  uint8_t y : 3;
-		  uint8_t x : 2;
-		};
-		struct {
-		  uint8_t r : 1;
-		  uint8_t   : 2;
-		  uint8_t q : 1;
-		  uint8_t p : 2;
-		};
-	};
-	uint8_t (*nu)();     // ADL get next Unsigned byte
-	int8_t (*ns)();      // ADL get next Signed byte
-	uint32_t (*nw)();    // ADL get next Word
+    int cycles; // Number of cycles per execuction block
+    eZ80cpu_t *cpu; // Pointer to Global CPU state
+    union {
+        uint8_t opcode;  // Current OpCode
+        struct {
+            uint8_t z : 3;
+            uint8_t y : 3;
+            uint8_t x : 2;
+        };
+        struct {
+            uint8_t r : 1;
+            uint8_t   : 2;
+            uint8_t q : 1;
+            uint8_t p : 2;
+        };
+    };
+    uint8_t (*nu)();     // ADL get next Unsigned byte
+    int8_t (*ns)();      // ADL get next Signed byte
+    uint32_t (*nw)();    // ADL get next Word
 };
 
 // Type definitions

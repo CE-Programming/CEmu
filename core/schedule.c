@@ -61,8 +61,9 @@ uint32_t sched_process_pending_events(void) {
             //printf("[%8d] New second\n", cputick);
             int i;
             for (i = 0; i < SCHED_NUM_ITEMS; i++) {
-                if (sched.items[i].second >= 0)
+                if (sched.items[i].second >= 0) {
                     sched.items[i].second--;
+                }
             }
             cputick -= sched.clock_rates[CLOCK_CPU];
         } else {
@@ -97,7 +98,7 @@ uint32_t event_ticks_remaining(int index) {
 
     struct sched_item *item = &sched.items[index];
     return item->second * sched.clock_rates[item->clock]
-            + item->tick - muldiv(cputick, sched.clock_rates[item->clock], sched.clock_rates[CLOCK_CPU]);
+        + item->tick - muldiv(cputick, sched.clock_rates[item->clock], sched.clock_rates[CLOCK_CPU]);
 }
 
 void sched_set_clocks(int count, uint32_t *new_rates) {
@@ -107,8 +108,9 @@ void sched_set_clocks(int count, uint32_t *new_rates) {
     int i;
     for (i = 0; i < SCHED_NUM_ITEMS; i++) {
         struct sched_item *item = &sched.items[i];
-        if (item->second >= 0)
+        if (item->second >= 0) {
             remaining[i] = event_ticks_remaining(i);
+        }
     }
     cputick = muldiv(cputick, new_rates[CLOCK_CPU], sched.clock_rates[CLOCK_CPU]);
     memcpy(sched.clock_rates, new_rates, sizeof(uint32_t) * count);
