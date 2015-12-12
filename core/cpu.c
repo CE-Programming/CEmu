@@ -824,7 +824,7 @@ int cpu_execute(void) {
     }
 
     // first, initialize the execution context (ADL vs. Z80 mode)
-    set_context(cpu.IS);
+    set_context(cpu.IL);
 
     // default = no prefix
     reset_prefix = 1;
