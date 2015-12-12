@@ -13,11 +13,7 @@
 extern "C" {
 #endif
 
-struct debug_state {
-    bool stopped;
-};
-typedef struct debug_state debug_state_t;
-extern debug_state_t emu_debug;
+extern volatile bool in_debugger;
 
 enum DBG_REASON {
     DBG_USER,

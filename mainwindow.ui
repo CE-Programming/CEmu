@@ -623,19 +623,16 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>Stop</string>
+               <string>Run</string>
               </property>
               <property name="icon">
                <iconset resource="resources.qrc">
-                <normaloff>:/icons/resources/icons/stop.png</normaloff>:/icons/resources/icons/stop.png</iconset>
+                <normaloff>:/icons/resources/icons/run.png</normaloff>:/icons/resources/icons/run.png</iconset>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QPushButton" name="buttonStep">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
                 <horstretch>0</horstretch>
@@ -653,9 +650,6 @@
             </item>
             <item>
              <widget class="QPushButton" name="buttonStepOver">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
                 <horstretch>0</horstretch>
@@ -673,9 +667,6 @@
             </item>
             <item>
              <widget class="QPushButton" name="buttonBreakpoint">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
                 <horstretch>0</horstretch>
@@ -693,9 +684,6 @@
             </item>
             <item>
              <widget class="QPushButton" name="buttonGoto">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
                 <horstretch>0</horstretch>
@@ -715,9 +703,6 @@
           </item>
           <item>
            <widget class="QTabWidget" name="tabDebugging">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
             <property name="sizePolicy">
              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Minimum">
               <horstretch>0</horstretch>
@@ -751,23 +736,7 @@
              </attribute>
              <layout class="QHBoxLayout" name="horizontalLayout_6">
               <item>
-               <widget class="QTableView" name="disasmView">
-                <property name="focusPolicy">
-                 <enum>Qt::WheelFocus</enum>
-                </property>
-                <property name="contextMenuPolicy">
-                 <enum>Qt::NoContextMenu</enum>
-                </property>
-                <property name="toolTip">
-                 <string notr="true"/>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QTableView
-{
-    outline: 0;
-}</string>
-                </property>
-               </widget>
+               <widget class="QPlainTextEdit" name="disassemblyView"/>
               </item>
              </layout>
             </widget>
@@ -854,9 +823,6 @@
           </property>
           <item>
            <widget class="QScrollArea" name="scrollArea2">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
             <property name="sizePolicy">
              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
@@ -898,10 +864,7 @@
              </property>
              <layout class="QHBoxLayout" name="horizontalLayout_11">
               <item>
-               <widget class="QGroupBox" name="registerGroup">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
+               <widget class="QGroupBox" name="registergroup">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
                   <horstretch>0</horstretch>
@@ -1055,37 +1018,6 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="2" column="4">
-                  <widget class="QLineEdit" name="de_regView">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>15</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>50</width>
-                     <height>15</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>000000</string>
-                   </property>
-                   <property name="maxLength">
-                    <number>6</number>
-                   </property>
-                   <property name="frame">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
                  <item row="2" column="1">
                   <widget class="QLineEdit" name="deregView">
                    <property name="sizePolicy">
@@ -1107,7 +1039,7 @@
                     </size>
                    </property>
                    <property name="text">
-                    <string>000000</string>
+                    <string/>
                    </property>
                    <property name="maxLength">
                     <number>6</number>
@@ -1161,70 +1093,8 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="0" column="4">
-                  <widget class="QLineEdit" name="af_regView">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>15</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>50</width>
-                     <height>15</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>0000</string>
-                   </property>
-                   <property name="maxLength">
-                    <number>4</number>
-                   </property>
-                   <property name="frame">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="4" column="4">
-                  <widget class="QLineEdit" name="pcregView">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>15</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>50</width>
-                     <height>15</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>000000</string>
-                   </property>
-                   <property name="maxLength">
-                    <number>6</number>
-                   </property>
-                   <property name="frame">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
                  <item row="5" column="4">
-                  <widget class="QLineEdit" name="splregView">
+                  <widget class="QLineEdit" name="hl_regView">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -1244,72 +1114,10 @@
                     </size>
                    </property>
                    <property name="text">
-                    <string>000000</string>
+                    <string/>
                    </property>
                    <property name="maxLength">
                     <number>6</number>
-                   </property>
-                   <property name="frame">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="4">
-                  <widget class="QLineEdit" name="bc_regView">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>15</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>50</width>
-                     <height>15</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>000000</string>
-                   </property>
-                   <property name="maxLength">
-                    <number>6</number>
-                   </property>
-                   <property name="frame">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="6" column="4">
-                  <widget class="QLineEdit" name="spsregView">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>15</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>50</width>
-                     <height>15</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>0000</string>
-                   </property>
-                   <property name="maxLength">
-                    <number>4</number>
                    </property>
                    <property name="frame">
                     <bool>true</bool>
@@ -1337,7 +1145,7 @@
                     </size>
                    </property>
                    <property name="text">
-                    <string>000000</string>
+                    <string/>
                    </property>
                    <property name="maxLength">
                     <number>6</number>
@@ -1500,7 +1308,7 @@
                     </size>
                    </property>
                    <property name="text">
-                    <string>000000</string>
+                    <string/>
                    </property>
                    <property name="maxLength">
                     <number>6</number>
@@ -1575,7 +1383,7 @@
                     </size>
                    </property>
                    <property name="text">
-                    <string>00</string>
+                    <string/>
                    </property>
                    <property name="maxLength">
                     <number>2</number>
@@ -1694,7 +1502,7 @@
                     </size>
                    </property>
                    <property name="text">
-                    <string>000000</string>
+                    <string/>
                    </property>
                    <property name="maxLength">
                     <number>6</number>
@@ -1748,6 +1556,37 @@
                    </property>
                   </widget>
                  </item>
+                 <item row="1" column="4">
+                  <widget class="QLineEdit" name="splregView">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>15</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>50</width>
+                     <height>15</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="maxLength">
+                    <number>6</number>
+                   </property>
+                   <property name="frame">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
                  <item row="1" column="1">
                   <widget class="QLineEdit" name="hlregView">
                    <property name="sizePolicy">
@@ -1769,7 +1608,7 @@
                     </size>
                    </property>
                    <property name="text">
-                    <string>000000</string>
+                    <string/>
                    </property>
                    <property name="maxLength">
                     <number>6</number>
@@ -1844,7 +1683,7 @@
                     </size>
                    </property>
                    <property name="text">
-                    <string>0000</string>
+                    <string/>
                    </property>
                    <property name="maxLength">
                     <number>4</number>
@@ -1986,8 +1825,64 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="1" column="4">
-                  <widget class="QLineEdit" name="hl_regView">
+                 <item row="3" column="4">
+                  <widget class="QLineEdit" name="bc_regView">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>15</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>50</width>
+                     <height>15</height>
+                    </size>
+                   </property>
+                   <property name="maxLength">
+                    <number>6</number>
+                   </property>
+                   <property name="frame">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="4">
+                  <widget class="QLineEdit" name="de_regView">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>15</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>50</width>
+                     <height>15</height>
+                    </size>
+                   </property>
+                   <property name="maxLength">
+                    <number>6</number>
+                   </property>
+                   <property name="frame">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="6" column="4">
+                  <widget class="QLineEdit" name="spsregView">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -2007,10 +1902,72 @@
                     </size>
                    </property>
                    <property name="text">
-                    <string>000000</string>
+                    <string/>
+                   </property>
+                   <property name="maxLength">
+                    <number>4</number>
+                   </property>
+                   <property name="frame">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="4">
+                  <widget class="QLineEdit" name="pcregView">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>15</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>50</width>
+                     <height>15</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string/>
                    </property>
                    <property name="maxLength">
                     <number>6</number>
+                   </property>
+                   <property name="frame">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="4">
+                  <widget class="QLineEdit" name="af_regView">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>15</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>50</width>
+                     <height>15</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="maxLength">
+                    <number>4</number>
                    </property>
                    <property name="frame">
                     <bool>true</bool>
@@ -2021,10 +1978,7 @@
                </widget>
               </item>
               <item>
-               <widget class="QGroupBox" name="flagGroup">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
+               <widget class="QGroupBox" name="groupBox">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -2051,10 +2005,7 @@
                   <number>5</number>
                  </property>
                  <item>
-                  <widget class="QCheckBox" name="checkS">
-                   <property name="enabled">
-                    <bool>true</bool>
-                   </property>
+                  <widget class="QCheckBox" name="checkBox_2">
                    <property name="palette">
                     <palette>
                      <active>
@@ -2095,16 +2046,10 @@
                    <property name="text">
                     <string>s</string>
                    </property>
-                   <property name="checked">
-                    <bool>false</bool>
-                   </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QCheckBox" name="checkZ">
-                   <property name="enabled">
-                    <bool>true</bool>
-                   </property>
+                  <widget class="QCheckBox" name="checkBox">
                    <property name="palette">
                     <palette>
                      <active>
@@ -2148,10 +2093,7 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QCheckBox" name="check5">
-                   <property name="enabled">
-                    <bool>true</bool>
-                   </property>
+                  <widget class="QCheckBox" name="checkBox_5">
                    <property name="palette">
                     <palette>
                      <active>
@@ -2195,10 +2137,7 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QCheckBox" name="checkHC">
-                   <property name="enabled">
-                    <bool>true</bool>
-                   </property>
+                  <widget class="QCheckBox" name="checkBox_3">
                    <property name="palette">
                     <palette>
                      <active>
@@ -2242,10 +2181,7 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QCheckBox" name="check3">
-                   <property name="enabled">
-                    <bool>true</bool>
-                   </property>
+                  <widget class="QCheckBox" name="checkBox_6">
                    <property name="palette">
                     <palette>
                      <active>
@@ -2289,10 +2225,7 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QCheckBox" name="checkPV">
-                   <property name="enabled">
-                    <bool>true</bool>
-                   </property>
+                  <widget class="QCheckBox" name="checkBox_4">
                    <property name="palette">
                     <palette>
                      <active>
@@ -2336,10 +2269,7 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QCheckBox" name="checkN">
-                   <property name="enabled">
-                    <bool>true</bool>
-                   </property>
+                  <widget class="QCheckBox" name="checkBox_8">
                    <property name="palette">
                     <palette>
                      <active>
@@ -2383,10 +2313,7 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QCheckBox" name="checkC">
-                   <property name="enabled">
-                    <bool>true</bool>
-                   </property>
+                  <widget class="QCheckBox" name="checkBox_7">
                    <property name="palette">
                     <palette>
                      <active>
@@ -2431,14 +2358,14 @@
                  </item>
                 </layout>
                 <zorder>scrollArea2</zorder>
-                <zorder>checkZ</zorder>
-                <zorder>checkC</zorder>
-                <zorder>checkS</zorder>
-                <zorder>check5</zorder>
-                <zorder>checkHC</zorder>
-                <zorder>check3</zorder>
-                <zorder>checkPV</zorder>
-                <zorder>checkN</zorder>
+                <zorder>checkBox</zorder>
+                <zorder>checkBox_7</zorder>
+                <zorder>checkBox_2</zorder>
+                <zorder>checkBox_5</zorder>
+                <zorder>checkBox_3</zorder>
+                <zorder>checkBox_6</zorder>
+                <zorder>checkBox_4</zorder>
+                <zorder>checkBox_8</zorder>
                </widget>
               </item>
              </layout>
@@ -2447,9 +2374,6 @@
           </item>
           <item>
            <widget class="QScrollArea" name="scrollArea1">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
             <property name="minimumSize">
              <size>
               <width>100</width>
@@ -2481,10 +2405,7 @@
                  <number>0</number>
                 </property>
                 <item>
-                 <widget class="QGroupBox" name="cpuGroup">
-                  <property name="enabled">
-                   <bool>true</bool>
-                  </property>
+                 <widget class="QGroupBox" name="groupBox_2">
                   <property name="title">
                    <string>CPU State</string>
                   </property>
@@ -2505,7 +2426,7 @@
                     <number>3</number>
                    </property>
                    <item row="1" column="2">
-                    <widget class="QLineEdit" name="freqView">
+                    <widget class="QLineEdit" name="lineEdit_2">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                        <horstretch>0</horstretch>
@@ -2524,16 +2445,13 @@
                        <height>15</height>
                       </size>
                      </property>
-                     <property name="text">
-                      <string>00.00</string>
-                     </property>
                      <property name="alignment">
-                      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                     </widget>
                    </item>
                    <item row="0" column="2">
-                    <widget class="QCheckBox" name="checkHalt">
+                    <widget class="QCheckBox" name="checkBox_9">
                      <property name="palette">
                       <palette>
                        <active>
@@ -2621,7 +2539,7 @@
                     </widget>
                    </item>
                    <item row="2" column="2">
-                    <widget class="QLineEdit" name="busView">
+                    <widget class="QLineEdit" name="lineEdit_3">
                      <property name="maximumSize">
                       <size>
                        <width>30</width>
@@ -2634,14 +2552,11 @@
                      <property name="autoFillBackground">
                       <bool>false</bool>
                      </property>
-                     <property name="text">
-                      <string>00</string>
-                     </property>
                      <property name="maxLength">
                       <number>2</number>
                      </property>
                      <property name="alignment">
-                      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                      </property>
                      <property name="dragEnabled">
                       <bool>false</bool>
@@ -2699,10 +2614,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QGroupBox" name="intrptGroup">
-                  <property name="enabled">
-                   <bool>true</bool>
-                  </property>
+                 <widget class="QGroupBox" name="groupBox_3">
                   <property name="title">
                    <string>Interrupts</string>
                   </property>
@@ -2726,7 +2638,7 @@
                     <number>2</number>
                    </property>
                    <item row="1" column="0">
-                    <widget class="QCheckBox" name="checkIEF2">
+                    <widget class="QCheckBox" name="checkBox_12">
                      <property name="palette">
                       <palette>
                        <active>
@@ -2770,7 +2682,7 @@
                     </widget>
                    </item>
                    <item row="0" column="0">
-                    <widget class="QCheckBox" name="checkIEF1">
+                    <widget class="QCheckBox" name="checkBox_11">
                      <property name="palette">
                       <palette>
                        <active>
@@ -2946,7 +2858,7 @@
                     </widget>
                    </item>
                    <item row="2" column="1">
-                    <widget class="QLineEdit" name="iregView">
+                    <widget class="QLineEdit" name="lineEdit_4">
                      <property name="minimumSize">
                       <size>
                        <width>0</width>
@@ -2958,9 +2870,6 @@
                        <width>30</width>
                        <height>15</height>
                       </size>
-                     </property>
-                     <property name="text">
-                      <string>00</string>
                      </property>
                      <property name="maxLength">
                       <number>2</number>
@@ -2968,7 +2877,7 @@
                     </widget>
                    </item>
                    <item row="3" column="1">
-                    <widget class="QLineEdit" name="rregView">
+                    <widget class="QLineEdit" name="lineEdit_5">
                      <property name="minimumSize">
                       <size>
                        <width>0</width>
@@ -2980,9 +2889,6 @@
                        <width>30</width>
                        <height>15</height>
                       </size>
-                     </property>
-                     <property name="text">
-                      <string>00</string>
                      </property>
                      <property name="maxLength">
                       <number>2</number>
@@ -2990,7 +2896,7 @@
                     </widget>
                    </item>
                    <item row="4" column="1">
-                    <widget class="QLineEdit" name="immodeView">
+                    <widget class="QLineEdit" name="lineEdit_6">
                      <property name="minimumSize">
                       <size>
                        <width>0</width>
@@ -3002,9 +2908,6 @@
                        <width>30</width>
                        <height>15</height>
                       </size>
-                     </property>
-                     <property name="text">
-                      <string>00</string>
                      </property>
                      <property name="maxLength">
                       <number>2</number>
@@ -3017,10 +2920,7 @@
                </layout>
               </item>
               <item>
-               <widget class="QGroupBox" name="displayGroup">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
+               <widget class="QGroupBox" name="groupBox_4">
                 <property name="title">
                  <string>Display</string>
                 </property>
@@ -3044,7 +2944,7 @@
                   <number>2</number>
                  </property>
                  <item row="0" column="0">
-                  <widget class="QCheckBox" name="checkDispPwr">
+                  <widget class="QCheckBox" name="checkBox_10">
                    <property name="palette">
                     <palette>
                      <active>
@@ -3132,7 +3032,7 @@
                   </widget>
                  </item>
                  <item row="1" column="1">
-                  <widget class="QSlider" name="brightnessSlider">
+                  <widget class="QSlider" name="horizontalSlider">
                    <property name="orientation">
                     <enum>Qt::Horizontal</enum>
                    </property>

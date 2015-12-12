@@ -1,5 +1,5 @@
-#ifndef EMU_H
-#define EMU_H
+#ifndef _H_EMU
+#define _H_EMU
 
 #include <stdarg.h>
 #include <stdbool.h>
@@ -17,7 +17,7 @@ extern uint32_t cpu_events;
 #define EVENT_WAITING 4
 
 // Settings
-extern volatile bool exiting, is_running, debug_on_start, debug_on_warn;
+extern volatile bool exiting, debug_on_start, debug_on_warn;
 
 extern bool turbo_mode;
 
@@ -42,7 +42,9 @@ void gui_do_stuff(bool wait);
 void gui_console_printf(const char *, ...);
 void gui_console_vprintf(const char *, va_list);
 void gui_perror(const char *);
-void gui_debugger_entered();
+void gui_debugger_entered_or_left(bool);
+void gui_debugger_show_registers(void);
+void gui_debugger_set_registers(void);
 
 bool emu_start();
 void emu_loop(bool reset);

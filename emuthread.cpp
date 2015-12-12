@@ -57,9 +57,11 @@ void throttle_timer_wait()
     emu_thread->throttleTimerWait();
 }
 
-void gui_debugger_entered()
+void gui_debugger_entered_or_left(bool entered)
 {
-    emu_thread->debuggerEntered();
+    if(entered != 0) {
+        emu_thread->debuggerEntered(entered);
+    }
 }
 
 EmuThread::EmuThread(QObject *p) : QThread(p)
@@ -78,14 +80,15 @@ void EmuThread::doStuff(bool waitfor)
 {
     do
     {
-        if(enter_debugger)
+        if (enter_debugger)
         {
             enter_debugger = false;
             debugger(DBG_USER, 0);
         }
 
-        if(/*is_paused && */0)
+        if (/*is_paused && */0) {
             msleep(100);
+        }
 
     } while(/*is_paused && */0);
 }
@@ -95,8 +98,9 @@ void EmuThread::throttleTimerWait()
     unsigned int now = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
     unsigned int throttle = throttle_delay * 1000;
     unsigned int left = throttle - (now % throttle);
-    if( left > 0 )
+    if (left > 0) {
         QThread::usleep(left);
+    }
 }
 
 void EmuThread::setTurboMode(bool enabled)
@@ -138,7 +142,9 @@ bool EmuThread::stop()
     {
         terminate();
         if(!this->wait(200))
+        {
             return false;
+        }
     }
 
     emu_cleanup();
