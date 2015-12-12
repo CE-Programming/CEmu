@@ -947,10 +947,10 @@ int cpu_execute(void) {
                         cpu.IEF_wait = 1;
                         break;
                  case 7:
-                        if (context.r) { // LD (HL), rp3[r]
-                            cpu_write_word(r->HL, read_rp3(context.r));
-                        } else { // LD rp3[r], (HL)
-                            write_rp3(context.r, cpu_read_word(r->HL));
+                        if (context.r) { // LD (HL), rp3[p]
+                            cpu_write_word(r->HL, read_rp3(context.p));
+                        } else { // LD rp3[p], (HL)
+                            write_rp3(context.p, cpu_read_word(r->HL));
                         }
                         break;
                }
