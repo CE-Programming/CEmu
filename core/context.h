@@ -22,14 +22,15 @@ struct execution_context {
 		  uint8_t x : 2;
 		};
 		struct {
-		  uint8_t   : 3;
+		  uint8_t r : 1;
+		  uint8_t   : 2;
 		  uint8_t q : 1;
 		  uint8_t p : 2;
-	  };
-  };
-  uint8_t (*nu)();     // ADL get next Unsigned byte
-  int8_t (*ns)();      // ADL get next Signed byte
-  uint32_t (*nw)();    // ADL get next Word
+		};
+	};
+	uint8_t (*nu)();     // ADL get next Unsigned byte
+	int8_t (*ns)();      // ADL get next Signed byte
+	uint32_t (*nw)();    // ADL get next Word
 };
 
 // Type definitions
@@ -64,14 +65,19 @@ uint32_t HLorIw(const uint32_t value);
 uint8_t indHLorIr(void);
 uint8_t indHLorIw(const uint8_t value);
 
+uint32_t read_word_indHLorI(void);
+uint32_t write_word_indHLorI(const uint32_t value);
+
 uint8_t read_reg(const int i);
 uint8_t write_reg(const int i, const uint8_t value);
 uint8_t read_write_reg(const int read, const int write);
 
 uint32_t read_rp(const int i);
 uint32_t read_rp2(const int i);
+uint32_t read_rp3(const int i);
 uint32_t write_rp(const int i, const uint32_t value);
 uint32_t write_rp2(const int i, const uint32_t value);
+uint32_t write_rp3(const int i, const uint32_t value);
 
 uint8_t read_cc(const int i);
 

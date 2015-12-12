@@ -180,6 +180,39 @@ uint8_t indHLorIw(const uint8_t value) {
     return value;
 }
 
+uint32_t read_word_indHLorI(void) {
+    if (context.cpu->prefix >> 8 == 0xDD) {
+        context.cycles += 4;
+        context.cpu->prefix = 0;
+        context.cpu->registers.WZ = context.cpu->registers.IX + context.ns();
+        return cpu_read_word(context.cpu->registers.WZ);
+    } else if (context.cpu->prefix >> 8 == 0xFD) {
+        context.cycles += 4;
+        context.cpu->prefix = 0;
+        context.cpu->registers.WZ = context.cpu->registers.IY + context.ns();
+        return cpu_read_word(context.cpu->registers.WZ);
+    } else {
+        return cpu_read_word(context.cpu->registers.HL);
+    }
+}
+
+uint32_t write_word_indHLorI(const uint32_t value) {
+    if (context.cpu->prefix >> 8 == 0xDD) {
+        context.cycles += 9;
+        context.cpu->prefix = 0;
+        context.cpu->registers.WZ = context.cpu->registers.IX + context.ns();
+        cpu_write_word(context.cpu->registers.WZ, value);
+    } else if (context.cpu->prefix >> 8 == 0xFD) {
+        context.cycles += 9;
+        context.cpu->prefix = 0;
+        context.cpu->registers.WZ = context.cpu->registers.IY + context.ns();
+        cpu_write_word(context.cpu->registers.WZ, value);
+    } else {
+        cpu_write_word(context.cpu->registers.HL, value);
+    }
+    return value;
+}
+
 uint8_t read_reg(const int i) {
 	switch (i) {
 	case 0: return context.cpu->registers.B;
@@ -326,6 +359,50 @@ uint32_t write_rp2(const int i, const uint32_t value) {
         case 1: return context.cpu->registers.DE = value&0xFFFFFF;
         case 2: return HLorIw(value)&0xFFFFFF;
         case 3: return context.cpu->registers.AF = value&0xFFFFFF;
+        }
+        return 0; // This should never happen
+    }
+}
+
+uint32_t read_rp3(const int i) {
+    if(context.cpu->S) {
+        switch (i) {
+        case 0: return context.cpu->registers.BC&0xFFFF;
+        case 1: return context.cpu->registers.DE&0xFFFF;
+        case 2: return context.cpu->registers.HL&0xFFFF;
+        case 3: return context.cpu->prefix >> 8 == 0xFD ?
+                    context.cpu->registers.IY&0xFFFF :
+                    context.cpu->registers.IX&0xFFFF;
+        }           // DD -> IX, ED -> IX, FD -> IY
+        return 0; // This should never happen
+    } else {
+        switch (i) {
+        case 0: return context.cpu->registers.BC&0xFFFFFF;
+        case 1: return context.cpu->registers.DE&0xFFFFFF;
+        case 2: return context.cpu->registers.HL&0xFFFFFF;
+        case 3: return context.cpu->prefix >> 8 == 0xFD ?
+                    context.cpu->registers.IY&0xFFFFFF :
+                    context.cpu->registers.IX&0xFFFFFF;
+        }           // DD -> IX, ED -> IX, FD -> IY
+        return 0; // This should never happen
+    }
+}
+
+uint32_t write_rp3(const int i, const uint32_t value) {
+    if(context.cpu->S) {
+        switch (i) {
+        case 0: return context.cpu->registers.BC = value&0xFFFF;
+        case 1: return context.cpu->registers.DE = value&0xFFFF;
+        case 2: return context.cpu->registers.HL = value&0xFFFF;
+        case 3: return HLorIw(value);
+        }
+        return 0; // This should never happen
+    } else {
+        switch (i) {
+        case 0: return context.cpu->registers.BC = value&0xFFFFFF;
+        case 1: return context.cpu->registers.DE = value&0xFFFFFF;
+        case 2: return context.cpu->registers.HL = value&0xFFFFFF;
+        case 3: return HLorIw(value)&0xFFFFFF;
         }
         return 0; // This should never happen
     }
