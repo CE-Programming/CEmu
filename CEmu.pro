@@ -46,7 +46,9 @@ SOURCES += main.cpp\
     core/misc.c \
     core/schedule.c \
     core/emu.cpp \
-    core/debug.c
+    core/debug.c \
+    core/disasm.cpp \
+    mainwindowdebug.cpp
 
 HEADERS  += mainwindow.h \
     romselection.h \
@@ -72,7 +74,8 @@ HEADERS  += mainwindow.h \
     core/flash.h \
     core/misc.h \
     core/schedule.h \
-    core/debug.h
+    core/debug.h \
+    core/disasm.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \

@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QSettings>
 #include <QLabel>
 
 #include <romselection.h>
@@ -22,7 +23,6 @@ public:
 public slots:
     // Misc.
     void closeEvent(QCloseEvent *) override;
-    void showStatusMsg(QString str);
 
     // Actions
     void runSetup(void);
@@ -34,13 +34,20 @@ public slots:
     void consoleStr(QString str);
 
     // Debugger
+    void initDebugger();
+    void checkDebuggerState();
     void raiseDebugger();
-    void currentChangedSlot(int);
     void populateDebugWindow();
 
 private slots:
+    void enableDebugger( bool );
 
 private:
+    typedef struct gui_debug_state {
+        bool stopped;
+    } gui_debug_state_t;
+    gui_debug_state_t gui_debug;
+
     Ui::MainWindow *ui = nullptr;
     EmuThread emu;
 

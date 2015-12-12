@@ -1,11 +1,11 @@
 #include "core/debug.h"
 #include "core/emu.h"
 
-volatile bool in_debugger = false;
+debug_state_t emu_debug;
 
 void debugger(enum DBG_REASON reason, uint32_t addr) {
-    gui_debugger_entered_or_left(in_debugger = true);
+    emu_debug.stopped = true;
+    gui_debugger_entered();
 
-    //gdbstub_debugger(reason, addr);
-    gui_debugger_entered_or_left(in_debugger = false);
+    while( emu_debug.stopped ) {};
 }
