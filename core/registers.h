@@ -132,7 +132,7 @@ int parity(uint8_t x);
 #define _flag_zero(a)       ((a) ? 0 : FLAG_Z)
 
 #define _flag_n_msb_set(a)  ((a>>7) ? FLAG_N : 0)
-#define mask_mode(a, mode)  (a &= ~(~0xffff << (mode << 3)))
+#define mask_mode(a, mode)  (a &= (0xFFFF<<(mode<<3))|0xFF)
 
 #ifdef __cplusplus
 }
