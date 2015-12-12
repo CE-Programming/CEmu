@@ -146,46 +146,39 @@ uint8_t lcd_read(const uint16_t pio) {
 }
 
 void lcd_write(const uint16_t pio, const uint8_t value) {
-    uint32_t offset = pio & 0xFFF;
-    uint8_t bit_offset = (pio & 0b11) << 0b11;
-
+    uint32_t offset = pio & 0xFFC;
     if (offset < 0x200) {
-        if(offset < 0x010) {
+        uint8_t byte_offset = pio & 0b11;
+        uint8_t bit_offset = byte_offset << 0b11;
+        if (offset < 0x010) {
             write8(lcd.timing[offset >> 2], bit_offset, value);
-            return;
-        }
-        if(offset < 0x014 && offset >= 0x010) {
-            write8(lcd.upbase, bit_offset, value & ~0b111);
-            if(value & 0b111) { gui_console_printf("Warning: LCD upper panel base not 8-byte aligned!\n"); return; }
-        }
-        if(offset < 0x018 && offset >= 0x014) {
-            write8(lcd.lpbase, bit_offset, value & ~0b111);
-            if(value & 0b111) { gui_console_printf("Warning: LCD lower panel base not 8-byte aligned!\n"); return; }
-        }
-        if(offset < 0x01C && offset >= 0x018) {
-            if ((value ^ lcd.control) & 1) {
+        } else if (offset == 0x010) {
+            write8(lcd.upbase, bit_offset, value);
+            if (lcd.upbase & 0b111) { gui_console_printf("Warning: LCD upper panel base not 8-byte aligned!\n"); }
+	    lcd.upbase &= ~0b111;
+        } else if (offset == 0x014) {
+            write8(lcd.lpbase, bit_offset, value);
+            if (lcd.lpbase & 0b111) { gui_console_printf("Warning: LCD lower panel base not 8-byte aligned!\n"); }
+	    lcd.lpbase &= ~0b111;
+        } else if (offset == 0x018) {
+            if (((value << bit_offset) ^ lcd.control) & 1) {
                 if (value & 1) { event_set(SCHED_LCD, 0); }
                 else { event_clear(SCHED_LCD); }
             }
             write8(lcd.control, bit_offset, value);
-            return;
-        }
-        if(offset < 0x020 && offset >= 0x01C) {
-            write8(lcd.imsc, bit_offset, value&0x1E); return;
+        } else if (offset == 0x01C) {
+            write8(lcd.imsc, bit_offset, value);
+            lcd.imsc &= 0x1E;
             //int_set(INT_LCD, lcd.int_status & lcd.int_mask);
-            return;
-        }
-        if(offset < 0x02C && offset >= 0x028) {
-            lcd.ris &= ~value;
+        } else if (offset == 0x028) {
+            lcd.ris &= ~(value << bit_offset);
             //int_set(INT_LCD, lcd.int_status & lcd.int_mask);
-            return;
         }
     } else if (offset < 0x400) {
-        *(uint32_t *)((uint8_t *)lcd.palette + offset - 0x200) = value;
-        return;
+        write8(lcd.palette[pio >> 1 & 0xFF], pio & 1, value);
+    } else {
+        //bad_write_word(addr, value);
     }
-    //bad_write_word(addr, value);
-    return;
 }
 
 static const eZ80portrange_t device = {

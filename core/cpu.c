@@ -7,8 +7,8 @@
 #include "core/cpu.h"
 #include "core/context.h"
 
-#define port_range(a) ((a&0xFFFF)>>12)&0xF  // converts an address to a port range 0x0-0xF
-#define addr_range(a) (a-(a&0xF000))&0xFFFF // converts an address to a port range value 0x0000-0xFFFF
+#define port_range(a) (((a)>>12)&0xF) // converts an address to a port range 0x0-0xF
+#define addr_range(a) ((a)&0xFFF)     // converts an address to a port range value 0x0000-0xFFF
 #define swap(a, b) do { (a) ^= (b); (b) ^= (a); (a) ^= (b); } while(0)
 
 // Global CPU state
