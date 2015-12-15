@@ -1033,8 +1033,7 @@ int cpu_execute(void) {
                                         break;
                                     case 1:  // LEA IX, IY + d
                                         context.cycles += 3;
-                                        s = context.ns();
-                                        r->IX = r->IY + s;
+                                        r->IX = r->IY + context.ns();
                                         mask_mode(r->IX, cpu.L);
                                         break;
                                     case 2:  // TST A,n
@@ -1110,8 +1109,7 @@ int cpu_execute(void) {
                                     break;
                                 case 2: // LEA IY, IX + d
                                     context.cycles += 3;
-                                    s = context.ns();
-                                    r->IY = r->IX + s;
+                                    r->IY = r->IX + context.ns();
                                     mask_mode(r->IY, cpu.L);
                                     break;
                                 case 3:
@@ -1121,11 +1119,7 @@ int cpu_execute(void) {
                                     break;
                                 case 4: // PEA IX + d
                                     context.cycles += 6;
-                                    s = context.ns();
-                                    r->IX += s;
-                                    mask_mode(r->IX, cpu.L);
-                                    r->WZ = r->IX;
-                                    cpu_push(r->WZ);
+                                    cpu_push(r->IX + context.ns());
                                     break;
                                 case 5: // LD MB,A
                                     context.cycles += 2;
@@ -1151,11 +1145,7 @@ int cpu_execute(void) {
                                     break;
                                 case 4: // PEA IY + d
                                     context.cycles += 6;
-                                    s = context.ns();
-                                    r->IY += s;
-                                    mask_mode(r->IY, cpu.L);
-                                    r->WZ = r->IY;
-                                    cpu_push(r->WZ);
+                                    cpu_push(r->IY + context.ns());
                                     break;
                                 case 5: // LD A,MB
                                     if(cpu.ADL) {
