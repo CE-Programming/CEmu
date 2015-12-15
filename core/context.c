@@ -142,14 +142,23 @@ uint32_t HLorIr(void) {
 }
 
 uint32_t HLorIw(const uint32_t value) {
-    if (context.cpu->prefix >> 8 == 0xDD) {
-        context.cpu->registers.IX = value;
-    } else if (context.cpu->prefix >> 8 == 0xFD) {
-        context.cpu->registers.IY = value;
+    if(context.cpu->S) {
+        if (context.cpu->prefix >> 8 == 0xDD) {
+            return context.cpu->registers.IX = value&0xFFFF;
+        } else if (context.cpu->prefix >> 8 == 0xFD) {
+            return context.cpu->registers.IY = value&0xFFFF;
+        } else {
+            return context.cpu->registers.HL = value&0xFFFF;
+        }
     } else {
-        context.cpu->registers.HL = value;
+        if (context.cpu->prefix >> 8 == 0xDD) {
+            return context.cpu->registers.IX = value&0xFFFFFF;
+        } else if (context.cpu->prefix >> 8 == 0xFD) {
+            return context.cpu->registers.IY = value&0xFFFFFF;
+        } else {
+            return context.cpu->registers.HL = value&0xFFFFFF;
+        }
     }
-    return value;
 }
 
 uint8_t indHLorIr(void) {

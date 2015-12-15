@@ -1497,24 +1497,28 @@ int cpu_execute(void) {
                     break;
                 case 1: // ignore prefixed prefixes
                     if (context.opcode == 0x40) { // .SIS
+                        context.cycles += 1;
                         cpu.SUFFIX = 1;
                         cpu.S = 1; cpu.IS = 1;
                         cpu.L = 0; cpu.IL = 0;
                         goto exit_loop;
                     }
-                    else if (context.opcode == 0x49) { // .SIL
-                        cpu.SUFFIX = 1;
-                        cpu.S = 1; cpu.IS = 0;
-                        cpu.L = 0; cpu.IL = 1;
-                        goto exit_loop;
-                    }
-                    else if (context.opcode == 0x52) { // .LIS
+                    else if (context.opcode == 0x49) { // .LIS
+                        context.cycles += 1;
                         cpu.SUFFIX = 1;
                         cpu.S = 0; cpu.IS = 1;
                         cpu.L = 1; cpu.IL = 0;
                         goto exit_loop;
                     }
+                    else if (context.opcode == 0x52) { // .SIL
+                        context.cycles += 1;
+                        cpu.SUFFIX = 1;
+                        cpu.S = 1; cpu.IS = 0;
+                        cpu.L = 0; cpu.IL = 1;
+                        goto exit_loop;
+                    }
                     else if (context.opcode == 0x5B) { // .LIL
+                        context.cycles += 1;
                         cpu.SUFFIX = 1;
                         cpu.S = 0; cpu.IS = 0;
                         cpu.L = 1; cpu.IL = 1;
@@ -1787,9 +1791,8 @@ int cpu_execute(void) {
 
         if (reset_prefix) {
             cpu.prefix = 0;
+            get_cntrl_data_blocks_format();
         }
-
-        get_cntrl_data_blocks_format();
 
 exit_loop:
         cycle_count_delta += context.cycles;
