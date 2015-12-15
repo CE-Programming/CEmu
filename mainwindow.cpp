@@ -6,6 +6,9 @@
 #include "emuthread.h"
 #include "core/debug.h"
 
+#include <QFileDialog>
+#include <QMessageBox>
+
 char tmpBuf[20] = {0};
 
 MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
@@ -26,12 +29,15 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
     connect(ui->actionSetup, SIGNAL(triggered()), this, SLOT(runSetup()));
     connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(showAbout()));
     connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(actionExit()));
+    connect(ui->actionScreenshot, SIGNAL(triggered()), this, SLOT(screenshot()));
+
+    // Other GUI actinos
+    connect(ui->buttonScreenshot, SIGNAL(clicked()), this, SLOT(screenshot()));
 
     emu.rom = CEmuSettings::Instance()->getROMLocation().toStdString();
     if(emu.rom == "") {
         runSetup();
-    }
-    else {
+    } else {
         emu.start();
     }
 }
@@ -145,6 +151,18 @@ void MainWindow::runSetup(void) {
         return;
     }
     emu.start();
+}
+
+void MainWindow::screenshot(void)
+{
+    QImage image = renderFramebuffer();
+
+    QString filename = QFileDialog::getSaveFileName(this, tr("Save Screenshot"), QString(), tr("PNG images (*.png)"));
+    if(filename.isEmpty())
+        return;
+
+    if(!image.save(filename, "PNG"))
+        QMessageBox::critical(this, tr("Screenshot failed"), tr("Failed to save screenshot!"));
 }
 
 void MainWindow::clearConsole(void) {

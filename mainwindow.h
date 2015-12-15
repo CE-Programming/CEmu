@@ -26,6 +26,7 @@ public slots:
 
     // Actions
     void runSetup(void);
+    void screenshot(void);
     void showAbout(void);
     void actionExit(void);
 
