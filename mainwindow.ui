@@ -167,7 +167,7 @@
            </size>
           </property>
           <property name="styleSheet">
-           <string notr="true">.QFrame { background-image: url(:/skin/resources/skin/ti84pce.jpg); }</string>
+           <string notr="true">.QFrame { background-image: url(:/skin/resources/skin/ti84pce.png); }</string>
           </property>
           <property name="frameShape">
            <enum>QFrame::NoFrame</enum>
@@ -2700,8 +2700,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>265</width>
-               <height>362</height>
+               <width>250</width>
+               <height>361</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_6">

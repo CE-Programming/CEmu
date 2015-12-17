@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/skin">
-        <file>resources/skin/ti84pce.jpg</file>
+        <file>resources/skin/ti84pce.png</file>
     </qresource>
     <qresource prefix="/icons">
         <file>resources/icons/break.png</file>
