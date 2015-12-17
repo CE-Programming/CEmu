@@ -77,6 +77,22 @@ uint32_t cpu_pop(void) {
     }
 }
 
+uint8_t cpu_read_in(uint16_t pio) {
+    uint8_t value = 0;
+    eZ80portrange_t portr = context.cpu->prange[port_range(pio)];
+    if (portr.read_in != NULL) {
+        value = portr.read_in(addr_range(pio));
+    }
+    return value;
+}
+
+void cpu_write_out(uint16_t pio, uint8_t value) {
+    eZ80portrange_t portr = context.cpu->prange[port_range(pio)];
+    if (portr.write_out != NULL) {
+        portr.write_out(addr_range(pio), value);
+    }
+}
+
 static void get_cntrl_data_blocks_format(void) {
     cpu.SUFFIX = 0;
     cpu.L = cpu.ADL;
@@ -108,6 +124,17 @@ static void daa(void) {
             | _flag_subtract(r->flags.N) | __flag_c(v >= 0x60)
             | _flag_halfcarry_b_add(old, v, 0);
     }
+}
+
+static uint32_t dec_bc_partial_mode(eZ80registers_t *r, uint8_t mode) {
+    uint32_t value = r->BC - 1;
+    mask_mode(value, mode);
+    if (mode) {
+        r->BC = value;
+    } else {
+        r->BCS = value;
+    }
+    return value;
 }
 
 static void execute_alu(int i, uint8_t v) {
@@ -148,20 +175,17 @@ static void execute_alu(int i, uint8_t v) {
                 | _flag_halfcarry_b_sub(old, v, r->flags.C);
             break;
         case 4: // AND v
-            old = r->A;
             r->A &= v;
             r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
                 | _flag_undef(r->F) | _flag_parity(r->A)
                 | FLAG_H;
             break;
         case 5: // XOR v
-            old = r->A;
             r->A ^= v;
             r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
                 | _flag_undef(r->F) | _flag_parity(r->A);
             break;
         case 6: // OR v
-            old = r->A;
             r->A |= v;
             r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
                 | _flag_undef(r->F) | _flag_parity(r->A);
@@ -314,7 +338,6 @@ static void execute_rot_acc(int y)
 
 static void execute_bli(int y, int z) {
     eZ80registers_t *r = &cpu.registers;
-    eZ80portrange_t portr;
     uint8_t old = 0, new = 0;
 
     switch (y) {
@@ -322,39 +345,34 @@ static void execute_bli(int y, int z) {
             switch (z) {
                 case 2: // INIM
                     context.cycles += 5;
-                    portr = context.cpu->prange[0x00];  // output to the 0x0000 port range
-                    if (portr.read_in != NULL) {
-                        old = portr.read_in(r->C);
-                        cpu_write_byte(r->HL, old);
-                    }
+                    cpu_write_byte(r->HL, new = cpu_read_in(r->C));
                     r->HL++; mask_mode(r->HL, cpu.L);
                     r->C++;
-                    r->B--; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
+                    old = r->B;
+                    r->B--;
+                    r->F = _flag_sign_b(r->B) | _flag_zero(r->B)
+                        | _flag_halfcarry_b_sub(old, 0, 1) | _flag_parity(new)
+                        | _flag_subtract(_flag_sign_b(new)) | _flag_undef(r->F);
                     break;
                 case 3: // OTIM
                     context.cycles += 5;
-                    portr = context.cpu->prange[0x00];  // output to the 0x0000 port range
-                    if (portr.write_out != NULL) {
-                        old = cpu_read_byte(r->HL);
-                        portr.write_out(r->C, old);  // c->byte in 0x0000 range
-                    }
+                    cpu_write_out(r->C, new = cpu_read_byte(r->HL));
                     r->HL++; mask_mode(r->HL, cpu.L);
                     r->C++;
-                    r->B--; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);  // undefined bits are reset to 0
+                    old = r->B;
+                    r->B--;
+                    r->F = _flag_sign_b(r->B) | _flag_zero(r->B)
+                        | _flag_halfcarry_b_sub(old, 0, 1) | _flag_parity(new)
+                        | _flag_subtract(_flag_sign_b(new)) | _flag_undef(r->F);
                     break;
-                case 4: // INI2 -- Same as INI, C incremented
+                case 4: // INI2
                     context.cycles += 5;
-                    portr = context.cpu->prange[port_range(r->BC)];
-                    if (portr.read_in != NULL) {
-                        old = portr.read_in(addr_range(r->BC));
-                        cpu_write_byte(r->HL, old);
-                    }
+                    cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
                     r->HL++; mask_mode(r->HL, cpu.L);
                     r->C++;
-                    r->B--; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
+                    r->B--;
+                    r->flags.Z = _flag_zero(r->B) != 0;
+                    r->flags.N = _flag_sign_b(new) != 0;
                     break;
             }
             break;
@@ -362,37 +380,34 @@ static void execute_bli(int y, int z) {
             switch (z) {
                 case 2: // INDM
                     context.cycles += 5;
-                    portr = context.cpu->prange[0x00];  // output to the 0x0000 port range
-                    if (portr.read_in != NULL) {
-                        old = portr.read_in(r->C);
-                        cpu_write_byte(r->HL, old);
-                    }
+                    cpu_write_byte(r->HL, new = cpu_read_in(r->C));
                     r->HL--; mask_mode(r->HL, cpu.L);
                     r->C--;
-                    r->B--; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
+                    old = r->B;
+                    r->B--;
+                    r->F = _flag_sign_b(r->B) | _flag_zero(r->B)
+                        | _flag_halfcarry_b_sub(old, 0, 1) | _flag_parity(new)
+                        | _flag_subtract(_flag_sign_b(new)) | _flag_undef(r->F);
                     break;
                 case 3: // OTDM
-                    portr = context.cpu->prange[0x00];  // output to the 0x0000 port range
-                    if (portr.write_out != NULL) {
-                        old = cpu_read_byte(r->HL);
-                        portr.write_out(r->C, old);  // c->byte in 0x0000 range
-                    }
+                    context.cycles += 5;
+                    cpu_write_out(r->C, new = cpu_read_byte(r->HL));
                     r->HL--; mask_mode(r->HL, cpu.L);
                     r->C--;
-                    r->B--; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
+                    old = r->B;
+                    r->B--;
+                    r->F = _flag_sign_b(r->B) | _flag_zero(r->B)
+                        | _flag_halfcarry_b_sub(old, 0, 1) | _flag_parity(new)
+                        | _flag_subtract(_flag_sign_b(new)) | _flag_undef(r->F);
                     break;
-                case 4: // IND2 -- Same as IND, C decremented
+                case 4: // IND2
                     context.cycles += 5;
-                    portr = context.cpu->prange[port_range(r->BC)];
-                    if (portr.read_in != NULL) {
-                        old = portr.read_in(addr_range(r->BC));
-                        cpu_write_byte(r->HL, old);
-                    }
+                    cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
                     r->HL--; mask_mode(r->HL, cpu.L);
-                    r->BC-=0x0101; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->BC) | _flag_n_msb_set(old) | _flag_undef(r->F);
+                    r->C--;
+                    r->B--;
+                    r->flags.Z = _flag_zero(r->B) != 0;
+                    r->flags.N = _flag_sign_b(new) != 0;
                     break;
             }
             break;
@@ -400,101 +415,88 @@ static void execute_bli(int y, int z) {
             switch (z) {
                 case 2: // INIMR
                     context.cycles += 2;
-                    portr = context.cpu->prange[0x00];  // output to the 0x0000 port range
-                    if (portr.read_in != NULL) {
-                        old = portr.read_in(r->C);
-                        cpu_write_byte(r->HL, old);
-                    }
+                    cpu_write_byte(r->HL, new = cpu_read_in(r->C));
                     r->HL++; mask_mode(r->HL, cpu.L);
                     r->C++;
-                    r->B--; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
+                    r->B--;
+                    r->flags.Z = _flag_zero(r->B) != 0;
+                    r->flags.N = _flag_sign_b(new) != 0;
                     if (r->B) {
-                        context.cycles += 3;
-                        r->PC -= 2;
+                        context.cycles += 1;
+                        r->PC -= 2 + cpu.SUFFIX;
                     }
                     break;
                 case 3: // OTIMR
                     context.cycles += 2;
-                    portr = context.cpu->prange[0x00];  // output to the 0x0000 port range
-                    if (portr.write_out != NULL) {
-                        old = cpu_read_byte(r->HL);
-                        portr.write_out(r->C, old);  // c->byte in 0x0000 range
-                    }
+                    cpu_write_out(r->C, new = cpu_read_byte(r->HL));
                     r->HL++; mask_mode(r->HL, cpu.L);
                     r->C++;
-                    r->B--; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
+                    old = r->B;
+                    r->B--;
+                    r->F = _flag_sign_b(r->B) | _flag_zero(r->B)
+                        | _flag_halfcarry_b_sub(old, 0, 1) | _flag_parity(new)
+                        | _flag_subtract(_flag_sign_b(new)) | _flag_undef(r->F);
                     if (r->B) {
-                        context.cycles += 3;
-                        r->PC -= 2;
+                        context.cycles += 1;
+                        r->PC -= 2 + cpu.SUFFIX;
                     }
                     break;
                 case 4: // INI2R
                     context.cycles += 2;
-                    portr = context.cpu->prange[port_range(r->DE)];  // output to the 0x0000 port range
-                    if (portr.read_in != NULL) {
-                        old = portr.read_in(addr_range(r->DE));
-                        cpu_write_byte(r->HL, old);
-                    }
-                    r->DE++; mask_mode(r->DE, cpu.L);
+                    cpu_write_byte(r->HL, new = cpu_read_in(r->DE));
                     r->HL++; mask_mode(r->HL, cpu.L);
-                    r->BC--; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->BC) | _flag_n_msb_set(old) | _flag_undef(r->F);
-                    if (r->BC) {
-                        context.cycles += 3;
-                        r->PC -= 2;
+                    r->DE++; mask_mode(r->DE, cpu.L);
+                    old = dec_bc_partial_mode(r, cpu.L); // Do not mask BC
+                    r->flags.Z = _flag_zero(old) != 0;
+                    r->flags.N = _flag_sign_b(new) != 0;
+                    if (old) {
+                        context.cycles += 1;
+                        r->PC -= 2 + cpu.SUFFIX;
                     }
                     break;
             }
             break;
         case 3:
             switch (z) {
-                case 2: // INDMR -- C is decremented
+                case 2: // INDMR
                     context.cycles += 2;
-                    portr = context.cpu->prange[0x00];  // output to the 0x0000 port range
-                    if (portr.read_in != NULL) {
-                        old = portr.read_in(r->C);
-                        cpu_write_byte(r->HL, old);
-                    }
-                    r->HL++; mask_mode(r->HL, cpu.L);
+                    cpu_write_byte(r->HL, new = cpu_read_in(r->C));
+                    r->HL--; mask_mode(r->HL, cpu.L);
                     r->C--;
-                    r->B--; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
+                    r->B--;
+                    r->flags.Z = _flag_zero(r->B) != 0;
+                    r->flags.N = _flag_sign_b(new) != 0;
                     if (r->B) {
-                        context.cycles += 3;
-                        r->PC -= 2;
+                        context.cycles += 1;
+                        r->PC -= 2 + cpu.SUFFIX;
                     }
                     break;
                 case 3: // OTDMR
                     context.cycles += 2;
-                    portr = context.cpu->prange[0x00];  // output to the 0x0000 port range
-                    if (portr.write_out != NULL) {
-                        old = cpu_read_byte(r->HL);
-                        portr.write_out(r->C, old);  // c->byte in 0x0000 range
-                    }
-                    r->HL++; mask_mode(r->HL, cpu.L);
+                    cpu_write_out(r->C, new = cpu_read_byte(r->HL));
+                    r->HL--; mask_mode(r->HL, cpu.L);
                     r->C--;
-                    r->B--; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
+                    old = r->B;
+                    r->B--;
+                    r->F = _flag_sign_b(r->B) | _flag_zero(r->B)
+                        | _flag_halfcarry_b_sub(old, 0, 1) | _flag_parity(new)
+                        | _flag_subtract(_flag_sign_b(new)) | _flag_undef(r->F);
                     if (r->B) {
-                        context.cycles += 3;
-                        r->PC -= 2;
+                        context.cycles += 1;
+                        r->PC -= 2 + cpu.SUFFIX;
                     }
                     break;
                 case 4: // IND2R
                     context.cycles += 2;
-                    portr = context.cpu->prange[port_range(r->BC)];
-                    if (portr.read_in != NULL) {
-                        old = portr.read_in(addr_range(r->BC));
-                        cpu_write_byte(r->HL, old);
-                    }
+                    cpu_write_byte(r->HL, new = cpu_read_in(r->DE));
                     r->HL--; mask_mode(r->HL, cpu.L);
-                    r->BC-=0x0101; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->BC) | _flag_n_msb_set(old) | _flag_undef(r->F);
-                    if (r->BC) {
-                        context.cycles += 3;
-                        r->PC -= 2;
+                    r->DE--; mask_mode(r->DE, cpu.L);
+                    old = dec_bc_partial_mode(r, cpu.L); // Do not mask BC
+                    r->flags.Z = _flag_zero(old) != 0;
+                    r->flags.N = _flag_sign_b(new) != 0;
+                    if (old) {
+                        context.cycles += 1;
+                        r->PC -= 2 + cpu.SUFFIX;
                     }
                     break;
             }
@@ -525,44 +527,35 @@ static void execute_bli(int y, int z) {
                     break;
                 case 2: // INI
                     context.cycles += 5;
-                    portr = context.cpu->prange[port_range(r->BC)];
-                    if (portr.read_in != NULL) {
-                        old = portr.read_in(addr_range(r->BC));
-                        cpu_write_byte(r->HL, old);
-                    }
+                    cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
                     r->HL++; mask_mode(r->HL, cpu.L);
-                    r->B--; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
+                    r->B--;
+                    r->flags.Z = _flag_zero(r->B) != 0;
+                    r->flags.N = _flag_sign_b(new) != 0;
                     break;
                 case 3: // OUTI
                     context.cycles += 5;
-                    portr = context.cpu->prange[port_range(r->BC)];
-                    if (portr.write_out != NULL) {
-                        old = cpu_read_byte(r->HL);
-                        portr.write_out(addr_range(r->BC), old);
-                    }
+                    cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
                     r->HL++; mask_mode(r->HL, cpu.L);
-                    r->B--; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
+                    r->B--;
+                    r->flags.Z = _flag_zero(r->B) != 0;
+                    r->flags.N = _flag_sign_b(new) != 0;
                     break;
-                case 4: // OUTI2 -- Exactly like OUTI, just also increments C
+                case 4: // OUTI2
                     context.cycles += 5;
-                    portr = context.cpu->prange[port_range(r->BC)];
-                    if (portr.write_out != NULL) {
-                        old = cpu_read_byte(r->HL);
-                        portr.write_out(addr_range(r->BC), old);
-                    }
+                    cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
                     r->HL++; mask_mode(r->HL, cpu.L);
                     r->C++;
-                    r->B--; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
+                    r->B--;
+                    r->flags.Z = _flag_zero(r->B) != 0;
+                    r->flags.N = _flag_sign_b(new) != 0;
                     break;
             }
             break;
         case 5:
             switch (z) {
                 case 0: // LDD
-                    context.cycles += 12;
+                    context.cycles += 5;
                     old = cpu_read_byte(r->HL);
                     r->HL--; mask_mode(r->HL, cpu.L);
                     cpu_write_byte(r->DE, old);
@@ -586,36 +579,28 @@ static void execute_bli(int y, int z) {
                     break;
                 case 2: // IND
                     context.cycles += 5;
-                    portr = context.cpu->prange[port_range(r->BC)];
-                    if (portr.read_in != NULL) {
-                        old = portr.read_in(addr_range(r->BC));
-                        cpu_write_byte(r->HL, old);
-                    }
+                    cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
                     r->HL--; mask_mode(r->HL, cpu.L);
-                    r->B--; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->B) | _flag_n_msb_set(old);
+                    r->B--;
+                    r->flags.Z = _flag_zero(r->B) != 0;
+                    r->flags.N = _flag_sign_b(new) != 0;
                     break;
                 case 3: // OUTD
                     context.cycles += 5;
-                    portr = context.cpu->prange[port_range(r->BC)];
-                    if (portr.write_out != NULL) {
-                        old = cpu_read_byte(r->HL);
-                        portr.write_out(addr_range(r->BC), old);
-                    }
+                    cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
                     r->HL--; mask_mode(r->HL, cpu.L);
-                    r->B--; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->B) | _flag_n_msb_set(old);
+                    r->B--;
+                    r->flags.Z = _flag_zero(r->B) != 0;
+                    r->flags.N = _flag_sign_b(new) != 0;
                     break;
-                case 4: // OUTD2 -- Same as OUTD, C decrements
+                case 4: // OUTD2
                     context.cycles += 5;
-                    portr = context.cpu->prange[port_range(r->BC)];
-                    if (portr.write_out != NULL) {
-                        old = cpu_read_byte(r->HL);
-                        portr.write_out(addr_range(r->BC), old);
-                    }
+                    cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
                     r->HL--; mask_mode(r->HL, cpu.L);
-                    r->BC-=0x0101; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->BC) | _flag_n_msb_set(old);
+                    r->C--;
+                    r->B--;
+                    r->flags.Z = _flag_zero(r->B) != 0;
+                    r->flags.N = _flag_sign_b(new) != 0;
                     break;
             }
             break;
@@ -632,8 +617,8 @@ static void execute_bli(int y, int z) {
                     r->flags.PV = r->BC != 0;
                     r->flags.N = 0;
                     if (r->BC) {
-                        context.cycles += 3;
-                        r->PC -= 2;
+                        context.cycles += 1;
+                        r->PC -= 2 + cpu.SUFFIX;
                     }
                     break;
                 case 1: // CPIR
@@ -647,54 +632,45 @@ static void execute_bli(int y, int z) {
                         | _flag_subtract(1) | __flag_c(r->flags.C)
                         | _flag_undef(r->F);
                     if (r->BC && !r->flags.Z) {
-                        context.cycles += 3;
-                        r->PC -= 2;
+                        context.cycles += 1;
+                        r->PC -= 2 + cpu.SUFFIX;
                     }
                     break;
                 case 2: // INIR
                     context.cycles += 2;
-                    portr = context.cpu->prange[port_range(r->BC)];
-                    if (portr.read_in != NULL) {
-                        old = portr.read_in(addr_range(r->BC));
-                        cpu_write_byte(r->HL, old);
-                    }
+                    cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
                     r->HL++; mask_mode(r->HL, cpu.L);
-                    r->B--; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
+                    r->B--;
+                    r->flags.Z = _flag_zero(r->B) != 0;
+                    r->flags.N = _flag_sign_b(new) != 0;
                     if (r->B) {
-                        context.cycles += 3;
-                        r->PC -= 2;
+                        context.cycles += 1;
+                        r->PC -= 2 + cpu.SUFFIX;
                     }
                     break;
                 case 3: // OTIR
                     context.cycles += 2;
-                    portr = context.cpu->prange[port_range(r->BC)];
-                    if (portr.write_out != NULL) {
-                        old = cpu_read_byte(r->HL);
-                        portr.write_out(addr_range(r->BC), old);
-                    }
+                    cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
                     r->HL++; mask_mode(r->HL, cpu.L);
-                    r->B--; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
+                    r->B--;
+                    r->flags.Z = _flag_zero(r->B) != 0;
+                    r->flags.N = _flag_sign_b(new) != 0;
                     if (r->B) {
-                        context.cycles += 3;
-                        r->PC -= 2;
+                        context.cycles += 1;
+                        r->PC -= 2 + cpu.SUFFIX;
                     }
                     break;
                 case 4: // OTI2R
                     context.cycles += 2;
-                    portr = context.cpu->prange[port_range(r->DE)];
-                    if (portr.write_out != NULL) {
-                        old = cpu_read_byte(r->HL);
-                        portr.write_out(addr_range(r->BC), old);
-                    }
+                    cpu_write_out(r->DE, new = cpu_read_byte(r->HL));
                     r->HL++; mask_mode(r->HL, cpu.L);
                     r->DE++; mask_mode(r->DE, cpu.L);
-                    r->BC--; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->BC) | _flag_n_msb_set(old) | _flag_undef(r->F);
-                    if (r->BC) {
-                        context.cycles += 3;
-                        r->PC -= 2;
+                    old = dec_bc_partial_mode(r, cpu.L); // Do not mask BC
+                    r->flags.Z = _flag_zero(old) != 0;
+                    r->flags.N = _flag_sign_b(new) != 0;
+                    if (old) {
+                        context.cycles += 1;
+                        r->PC -= 2 + cpu.SUFFIX;
                     }
                     break;
             }
@@ -702,7 +678,7 @@ static void execute_bli(int y, int z) {
         case 7:
             switch (z) {
                 case 0: // LDDR
-                    context.cycles += 4;
+                    context.cycles += 2;
                     old = cpu_read_byte(r->HL);
                     r->HL--; mask_mode(r->HL, cpu.L);
                     cpu_write_byte(r->DE, old);
@@ -712,8 +688,8 @@ static void execute_bli(int y, int z) {
                     r->flags.PV = r->BC != 0;
                     r->flags.N = 0;
                     if (r->BC) {
-                        context.cycles += 5;
-                        r->PC -= 2;
+                        context.cycles += 1;
+                        r->PC -= 2 + cpu.SUFFIX;
                     }
                     break;
                 case 1: // CPDR
@@ -727,54 +703,45 @@ static void execute_bli(int y, int z) {
                         | _flag_subtract(1) | __flag_c(r->flags.C)
                         | _flag_undef(r->F);
                     if (r->BC && !r->flags.Z) {
-                        context.cycles += 3;
-                        r->PC -= 2;
+                        context.cycles += 1;
+                        r->PC -= 2 + cpu.SUFFIX;
                     }
                     break;
                 case 2: // INDR
                     context.cycles += 2;
-                    portr = context.cpu->prange[port_range(r->BC)];
-                    if (portr.read_in != NULL) {
-                        old = portr.read_in(addr_range(r->BC));
-                        cpu_write_byte(r->HL, old);
-                    }
+                    cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
                     r->HL--; mask_mode(r->HL, cpu.L);
-                    r->B--; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
+                    r->B--;
+                    r->flags.Z = _flag_zero(r->B) != 0;
+                    r->flags.N = _flag_sign_b(new) != 0;
                     if (r->B) {
-                        context.cycles += 3;
-                        r->PC -= 2;
+                        context.cycles += 1;
+                        r->PC -= 2 + cpu.SUFFIX;
                     }
                     break;
                 case 3: // OTDR
                     context.cycles += 2;
-                    portr = context.cpu->prange[port_range(r->BC)];
-                    if (portr.write_out != NULL) {
-                        old = cpu_read_byte(r->HL);
-                        portr.write_out(addr_range(r->BC), old);
-                    }
+                    cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
                     r->HL--; mask_mode(r->HL, cpu.L);
-                    r->B--; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->B) | _flag_n_msb_set(old) | _flag_undef(r->F);
+                    r->B--;
+                    r->flags.Z = _flag_zero(r->B) != 0;
+                    r->flags.N = _flag_sign_b(new) != 0;
                     if (r->B) {
-                        context.cycles += 3;
-                        r->PC -= 2;
+                        context.cycles += 1;
+                        r->PC -= 2 + cpu.SUFFIX;
                     }
                     break;
                 case 4: // OTD2R
                     context.cycles += 2;
-                    portr = context.cpu->prange[port_range(r->BC)];
-                    if (portr.write_out != NULL) {
-                        old = cpu_read_byte(r->HL);
-                        portr.write_out(addr_range(r->BC), old);
-                    }
+                    cpu_write_out(r->DE, new = cpu_read_byte(r->HL));
                     r->HL--; mask_mode(r->HL, cpu.L);
                     r->DE--; mask_mode(r->DE, cpu.L);
-                    r->BC--; mask_mode(r->BC, cpu.L);
-                    r->F = _flag_zero(r->BC) | _flag_n_msb_set(old) | _flag_undef(r->F);
-                    if (r->BC) {
-                        context.cycles += 3;
-                        r->PC -= 2;
+                    old = dec_bc_partial_mode(r, cpu.L); // Do not mask BC
+                    r->flags.Z = _flag_zero(old) != 0;
+                    r->flags.N = _flag_sign_b(new) != 0;
+                    if (old) {
+                        context.cycles += 1;
+                        r->PC -= 2 + cpu.SUFFIX;
                     }
                     break;
             }
@@ -783,11 +750,8 @@ static void execute_bli(int y, int z) {
 }
 
 int cpu_execute(void) {
-    eZ80portrange_t portr;
-
     // variable declaration
     int8_t s;
-    uint8_t u;
     uint32_t w;
 
     uint8_t old = 0;
@@ -797,7 +761,6 @@ int cpu_execute(void) {
     uint32_t new_word;
 
     uint32_t op_word;
-    uint8_t old_r;
 
     int reset_prefix;
 
@@ -831,16 +794,12 @@ int cpu_execute(void) {
         reset_prefix = 1;
 
         // fetch opcode
-
         context.opcode = context.nu();
 
         //gui_console_printf("Fetched Opcode: %02X\n", context.opcode);
         //system("pause");
 
-        old_r = r->R;
-        r->R++;
-        r->R &= 0x7F;
-        r->R |= old_r & 0x80;
+        r->R = ((r->R + 1) & 0x7F) | (r->R & 0x80);
 
         if ((cpu.prefix & 0xFF) == 0xCB) {
             int switch_opcode_data = cpu.prefix >> 8;
@@ -891,28 +850,20 @@ int cpu_execute(void) {
                             if (context.y == 6) { // OPCODETRAP
                                 context.cycles += 1;
                                 cpu.IEF_wait = 1;
-                                break;
-                            }
-                            // IN0 r[y], (n)
-                            context.cycles += 4;
-                            portr = context.cpu->prange[0x00];  // output to the 0x0000 port range
-                            if (portr.read_in != NULL) {
-                                new = portr.read_in(context.nu());
-                                write_reg(context.y, new);
+                            } else { // IN0 r[y], (n)
+                                context.cycles += 4;
+                                write_reg(context.y, new = cpu_read_in(context.nu()));
                                 r->F = _flag_sign_b(new) | _flag_zero(new)
-                                    | _flag_undef(r->F) | _flag_parity(new);
+                                    | _flag_undef(r->F) | _flag_parity(new)
+                                    | __flag_c(r->flags.C);
                             }
                             break;
                          case 1:
                             if (context.y == 6) { // LD IY, (HL)
                                 r->IY = cpu_read_word(r->HL);
-                                break;
-                            }
-                            // OUT0 (n), r[y]
-                            context.cycles += 4;
-                            portr = context.cpu->prange[0x00];  // output to the 0x0000 port range
-                            if (portr.write_out != NULL) {
-                                portr.write_out(context.nu(), read_reg(context.y));
+                            } else { // OUT0 (n), r[y]
+                                context.cycles += 4;
+                                cpu_write_out(context.nu(), read_reg(context.y));
                             }
                             break;
                         case 2: // LEA rp3[p], IX
@@ -927,9 +878,9 @@ int cpu_execute(void) {
                             break;
                         case 4: // TST A, r[y]
                             context.cycles += 2;
-                            s = r->A & read_reg(context.y);
-                            r->F = _flag_sign_b(s) | _flag_zero(s)
-                                | _flag_undef(r->F) | _flag_parity(s)
+                            new = r->A & read_reg(context.y);
+                            r->F = _flag_sign_b(new) | _flag_zero(new)
+                                | _flag_undef(r->F) | _flag_parity(new)
                                 | FLAG_H;
                             break;
                         case 5: // OPCODETRAP
@@ -945,6 +896,7 @@ int cpu_execute(void) {
                             cpu.IEF_wait = 1;
                             break;
                         case 7:
+                            context.cycles += 1;
                             if (context.r) { // LD (HL), rp3[p]
                                 cpu_write_word(r->HL, read_rp3(context.p));
                             } else { // LD rp3[p], (HL)
@@ -959,29 +911,21 @@ int cpu_execute(void) {
                             if (context.y == 6) { // OPCODETRAP (ADL)
                                 context.cycles += 1;
                                 cpu.IEF_wait = 1;
-                                break;
                             } else { // IN r[y], (BC)
                                 context.cycles += 3;
-                                portr = context.cpu->prange[port_range(r->BC)];  // output to the 0x0000 port range
-                                if (portr.read_in != NULL) {
-                                    new = portr.read_in(addr_range(r->BC));
-                                    write_reg(context.y, new);
-                                    r->F = _flag_sign_b(new) | _flag_zero(new)
-                                        | _flag_undef(r->F) | _flag_parity(new);
-                                }
+                                write_reg(context.y, new = cpu_read_in(r->BC));
+                                r->F = _flag_sign_b(new) | _flag_zero(new)
+                                    | _flag_undef(r->F) | _flag_parity(new)
+                                    | __flag_c(r->flags.C);
                             }
                             break;
                         case 1:
                             if (context.y == 6) { // OPCODETRAP (ADL)
                                 context.cycles += 1;
                                 cpu.IEF_wait = 1;
-                                break;
                             } else { // OUT (BC), r[y]
                                 context.cycles += 3;
-                                portr = context.cpu->prange[port_range(r->BC)];
-                                if (portr.write_out != NULL) {
-                                    portr.write_out(addr_range(r->BC), read_reg(context.y));
-                                }
+                                cpu_write_out(r->BC, read_reg(context.y));
                             }
                             break;
                         case 2:
@@ -1025,7 +969,6 @@ int cpu_execute(void) {
                                         context.cycles += 2;
                                         old = r->A;
                                         r->A = -r->A;
-                                        new = r->A;
                                         r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
                                             | _flag_undef(r->F) | __flag_pv(old == 0x80)
                                             | _flag_subtract(1) | __flag_c(old != 0)
@@ -1036,19 +979,20 @@ int cpu_execute(void) {
                                         r->IX = r->IY + context.ns();
                                         mask_mode(r->IX, cpu.L);
                                         break;
-                                    case 2:  // TST A,n
+                                    case 2:  // TST A, n
                                         context.cycles += 2;
-                                        u = context.nu();
-                                        old = r->A;
-                                        new = r->A & u;
-                                        old = r->A;
+                                        new = r->A & context.nu();
                                         r->F = _flag_sign_b(new) | _flag_zero(new)
                                             | _flag_undef(r->F) | _flag_parity(new)
                                             | FLAG_H;
                                         break;
                                     case 3:  // TSTIO n
-                                       // UNIMPLEMENTED
-                                       break;
+                                        context.cycles += 4;
+                                        new = cpu_read_in(r->C) & context.nu();
+                                        r->F = _flag_sign_b(new) | _flag_zero(new)
+                                            | _flag_undef(r->F) | _flag_parity(new)
+                                            | FLAG_H;
+                                        break;
                                 }
                             }
                             else { // MLT rp[p]
@@ -1232,32 +1176,26 @@ int cpu_execute(void) {
                     switch(context.opcode) {
                         case 0xC2: // INIRX
                             context.cycles += 2;
-                            portr = context.cpu->prange[port_range(r->DE)];
-                            if (portr.read_in != NULL) {
-                                old = portr.read_in(addr_range(r->DE));
-                                cpu_write_byte(r->HL, old);
-                            }
+                            cpu_write_byte(r->HL, new = cpu_read_in(r->DE));
                             r->HL++; mask_mode(r->HL, cpu.L);
-                            r->BC--; mask_mode(r->BC, cpu.L);
-                            r->F = _flag_zero(r->BC) | _flag_n_msb_set(old) | _flag_undef(r->F);
-                            if (r->BC) {
+                            old = dec_bc_partial_mode(r, cpu.L); // Do not mask BC
+                            r->flags.Z = _flag_zero(old) != 0;
+                            r->flags.N = _flag_sign_b(new) != 0;
+                            if (old) {
                                 context.cycles += 3;
-                                r->PC -= 2;
+                                r->PC -= 2 + cpu.SUFFIX;
                             }
                             break;
                         case 0xC3: // OTIRX
                             context.cycles += 2;
-                            portr = context.cpu->prange[port_range(r->DE)];
-                            if (portr.write_out != NULL) {
-                                old = cpu_read_byte(r->HL);
-                                portr.write_out(addr_range(r->DE), old);
-                            }
+                            cpu_write_out(r->DE, new = cpu_read_byte(r->HL));
                             r->HL++; mask_mode(r->HL, cpu.L);
-                            r->BC--; mask_mode(r->BC, cpu.L);
-                            r->F = _flag_zero(r->BC) | _flag_n_msb_set(old) | _flag_undef(r->F);
-                            if (r->BC) {
+                            old = dec_bc_partial_mode(r, cpu.L); // Do not mask BC
+                            r->flags.Z = _flag_zero(old) != 0;
+                            r->flags.N = _flag_sign_b(new) != 0;
+                            if (old) {
                                 context.cycles += 3;
-                                r->PC -= 2;
+                                r->PC -= 2 + cpu.SUFFIX;
                             }
                             break;
                         case 0xC7: // LD I, HL
@@ -1270,32 +1208,26 @@ int cpu_execute(void) {
                             break;
                         case 0xCA: // INDRX
                             context.cycles += 2;
-                            portr = context.cpu->prange[port_range(r->DE)];
-                            if (portr.read_in != NULL) {
-                                old = portr.read_in(addr_range(r->DE));
-                                cpu_write_byte(r->HL, old);
-                            }
+                            cpu_write_byte(r->HL, new = cpu_read_in(r->DE));
                             r->HL--; mask_mode(r->HL, cpu.L);
-                            r->BC--; mask_mode(r->BC, cpu.L);
-                            r->F = _flag_zero(r->BC) | _flag_n_msb_set(old) | _flag_undef(r->F);
-                            if (r->BC) {
+                            old = dec_bc_partial_mode(r, cpu.L); // Do not mask BC
+                            r->flags.Z = _flag_zero(old) != 0;
+                            r->flags.N = _flag_sign_b(new) != 0;
+                            if (old) {
                                 context.cycles += 3;
-                                r->PC -= 2;
+                                r->PC -= 2 + cpu.SUFFIX;
                             }
                             break;
                         case 0xCB: // OTDRX
                             context.cycles += 2;
-                            portr = context.cpu->prange[port_range(r->DE)];
-                            if (portr.write_out != NULL) {
-                                old = cpu_read_byte(r->HL);
-                                portr.write_out(addr_range(r->DE), old);
-                            }
+                            cpu_write_out(r->DE, new = cpu_read_byte(r->HL));
                             r->HL--; mask_mode(r->HL, cpu.L);
-                            r->BC--; mask_mode(r->BC, cpu.L);
-                            r->F = _flag_zero(r->BC) | _flag_n_msb_set(old) | _flag_undef(r->F);
-                            if (r->BC) {
+                            old = dec_bc_partial_mode(r, cpu.L); // Do not mask BC
+                            r->flags.Z = _flag_zero(old) != 0;
+                            r->flags.N = _flag_sign_b(new) != 0;
+                            if (old) {
                                 context.cycles += 3;
-                                r->PC -= 2;
+                                r->PC -= 2 + cpu.SUFFIX;
                             }
                             break;
                         default:   // OPCODETRAP
@@ -1484,6 +1416,7 @@ int cpu_execute(void) {
                             break;
                         case 7:
                             if (cpu.prefix >> 8) {
+                                context.cycles += 1;
                                 if (context.q) { // LD (IX/IY + d), rp3[p]
                                     cpu_write_word(HLorIr() + context.ns(), read_rp3(context.p));
                                 } else { // LD rp3[p], (IX/IY + d)
@@ -1643,19 +1576,11 @@ int cpu_execute(void) {
                                     break;
                                 case 2: // OUT (n), A
                                     context.cycles += 3;
-                                    r->WZ = (r->A<<8) | context.nu();
-                                    portr = context.cpu->prange[port_range(r->WZ)];
-                                    if (portr.write_out != NULL) {
-                                            portr.write_out(addr_range(r->WZ), r->A);
-                                    }
+                                    cpu_write_out((r->A << 8) | context.nu(), r->A);
                                     break;
                                 case 3: // IN A, (n)
                                     context.cycles += 3;
-                                    r->WZ = (r->A<<8) | context.nu();
-                                    portr = context.cpu->prange[port_range(r->WZ)];
-                                    if (portr.read_in != NULL) {
-                                            r->A = portr.read_in(addr_range(r->WZ));
-                                    }
+                                    r->A = cpu_read_in((r->A << 8) | context.nu());
                                     break;
                                 case 4: // EX (SP), HL/I
                                     context.cycles += 7;

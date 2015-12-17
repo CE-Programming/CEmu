@@ -56,6 +56,9 @@ void cpu_write_word(uint32_t address, uint32_t value);
 void cpu_push(uint32_t value);
 uint32_t cpu_pop(void);
 
+uint8_t cpu_read_in(uint16_t pio);
+void cpu_write_out(uint16_t pio, uint8_t value);
+
 int cpu_execute(void);
 #ifdef __cplusplus
 }

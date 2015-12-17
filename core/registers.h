@@ -11,7 +11,7 @@ extern "C" {
 
 typedef struct {
     union {
-        uint32_t AF;
+        uint16_t AF;
         struct {
             union {
                 uint8_t F;
@@ -31,6 +31,7 @@ typedef struct {
     };
     union {
         uint32_t BC;
+        uint16_t BCS;
         struct {
             uint8_t C;
             uint8_t B;
@@ -39,6 +40,7 @@ typedef struct {
     };
     union {
         uint32_t DE;
+        uint16_t DES;
         struct {
             uint8_t E;
             uint8_t D;
@@ -47,17 +49,20 @@ typedef struct {
     };
     union {
         uint32_t HL;
+        uint16_t HLs;
         struct {
             uint8_t L;
             uint8_t H;
             uint8_t HLU;
         };
     };
-    uint32_t _AF, _BC, _DE, _HL;
+    uint16_t _AF;
+    uint32_t _BC, _DE, _HL;
     uint32_t SPL;
     uint16_t SPS;
     union {
         uint32_t PC;
+        uint16_t PCS;
         struct {
             uint8_t PCL;
             uint8_t PCH;
@@ -66,6 +71,7 @@ typedef struct {
     };
     union {
         uint32_t IX;
+        uint16_t IXS;
         struct {
             uint8_t IXL;
             uint8_t IXH;
@@ -74,6 +80,7 @@ typedef struct {
     };
     union {
         uint32_t IY;
+        uint16_t IYS;
         struct {
             uint8_t IYL;
             uint8_t IYH;
@@ -131,7 +138,6 @@ int parity(uint8_t x);
 #define _flag_subtract(a)   ((a) ? FLAG_N : 0)
 #define _flag_zero(a)       ((a) ? 0 : FLAG_Z)
 
-#define _flag_n_msb_set(a)  ((a>>7) ? FLAG_N : 0)
 #define mask_mode(a, mode)  (a &= (0xFFFF<<(mode<<3))|0xFF)
 
 #ifdef __cplusplus

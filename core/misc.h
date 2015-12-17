@@ -14,6 +14,7 @@ struct exxx_state {
     uint8_t ports[0x80];  // Standard EXXX state
 };
 struct fxxx_state {           // Standard FXXX state
+    uint8_t dummy;            // Silence warning, remove if other fields are added.
 };
 
 // Type definitions
