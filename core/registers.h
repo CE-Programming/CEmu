@@ -9,8 +9,25 @@
 extern "C" {
 #endif
 
+typedef union {
+    uint16_t hl, hls;
+    struct {
+        uint8_t l;
+        uint8_t h;
+    };
+} short_reg_t;
+typedef union {
+    uint32_t hl;
+    uint16_t hls;
+    struct {
+        uint8_t l;
+        uint8_t h;
+        uint8_t u;
+    };
+} long_reg_t;
 typedef struct {
     union {
+        short_reg_t af;
         uint16_t AF;
         struct {
             union {
@@ -30,6 +47,7 @@ typedef struct {
         };
     };
     union {
+        long_reg_t bc;
         uint32_t BC;
         uint16_t BCS;
         struct {
@@ -39,6 +57,7 @@ typedef struct {
         };
     };
     union {
+        long_reg_t de;
         uint32_t DE;
         uint16_t DES;
         struct {
@@ -48,43 +67,58 @@ typedef struct {
         };
     };
     union {
-        uint32_t HL;
-        uint16_t HLs;
+        long_reg_t index[4];
         struct {
-            uint8_t L;
-            uint8_t H;
-            uint8_t HLU;
+            union {
+                long_reg_t hl;
+                uint32_t HL;
+                uint16_t HLs;
+                struct {
+                    uint8_t L;
+                    uint8_t H;
+                    uint8_t HLU;
+                };
+            };
+            uint32_t _HL;
+            union {
+                long_reg_t ix;
+                uint32_t IX;
+                uint16_t IXS;
+                struct {
+                    uint8_t IXL;
+                    uint8_t IXH;
+                    uint8_t IXU;
+                };
+            };
+            union {
+                long_reg_t iy;
+                uint32_t IY;
+                uint16_t IYS;
+                struct {
+                    uint8_t IYL;
+                    uint8_t IYH;
+                    uint8_t IYU;
+                };
+            };
         };
     };
     uint16_t _AF;
-    uint32_t _BC, _DE, _HL;
-    uint32_t SPL;
-    uint16_t SPS;
+    uint32_t _BC, _DE;
     union {
+        long_reg_t stack[2];
+        struct {
+            uint16_t SPS, SPSU;
+            uint32_t SPL;
+        };
+    };
+    union {
+        long_reg_t pc;
         uint32_t PC;
         uint16_t PCS;
         struct {
             uint8_t PCL;
             uint8_t PCH;
             uint8_t PCU;
-        };
-    };
-    union {
-        uint32_t IX;
-        uint16_t IXS;
-        struct {
-            uint8_t IXL;
-            uint8_t IXH;
-            uint8_t IXU;
-        };
-    };
-    union {
-        uint32_t IY;
-        uint16_t IYS;
-        struct {
-            uint8_t IYL;
-            uint8_t IYH;
-            uint8_t IYU;
         };
     };
     uint16_t I;

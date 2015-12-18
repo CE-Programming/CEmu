@@ -22,6 +22,7 @@ struct eZ80cpu {
         uint8_t int_mode    : 2;  // Current interrupt mode
 
         // Internal use:
+        uint8_t PREFIX      : 2;  // Which index register is in use. 0: hl, 2: ix, 3: iy
         uint8_t SUFFIX      : 1;  // There was an explicit suffix
         uint8_t S           : 1;  // The CPU data block operates in Z80 mode using 16-bit registers. All addresses use MBASE
         uint8_t L           : 1;  // The CPU data block operates in ADL mode using 24-bit registers. Addresses do not use MBASE.
@@ -30,12 +31,12 @@ struct eZ80cpu {
         uint8_t IEF_wait    : 1;  // Wait for interrupt
         uint8_t halted      : 1;  // Have we halted the CPU?
     };
+    int cycles;
     uint8_t bus;
-    uint16_t prefix;
     mem_state_t *memory;  // pointer to memory
     int (*get_mem_wait_states)();
-    uint8_t (*read_byte)(const uint32_t address);
-    void (*write_byte)(const uint32_t address, uint8_t byte);
+    uint8_t (*read_byte)(uint32_t address, int *cycles);
+    void (*write_byte)(uint32_t address, uint8_t byte, int *cycles);
     int interrupt;
 };
 
@@ -48,18 +49,8 @@ extern eZ80cpu_t cpu;
 // Available Functions
 void cpu_init(void);
 
-uint8_t cpu_read_byte(const uint32_t address);
-uint32_t cpu_read_word(const uint32_t address);
-void cpu_write_byte(uint32_t address, uint8_t value);
-void cpu_write_word(uint32_t address, uint32_t value);
-
-void cpu_push(uint32_t value);
-uint32_t cpu_pop(void);
-
-uint8_t cpu_read_in(uint16_t pio);
-void cpu_write_out(uint16_t pio, uint8_t value);
-
 int cpu_execute(void);
+
 #ifdef __cplusplus
 }
 #endif

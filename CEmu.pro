@@ -34,7 +34,6 @@ SOURCES += main.cpp\
     lcdwidget.cpp \
     core/asic.c \
     core/backlightport.c \
-    core/context.c \
     core/controlport.c \
     core/cpu.c \
     core/keypad.c \
@@ -58,7 +57,6 @@ HEADERS  += mainwindow.h \
     lcdwidget.h \
     core/asic.h \
     core/backlightport.h \
-    core/context.h \
     core/controlport.h \
     core/cpu.h \
     core/defines.h \

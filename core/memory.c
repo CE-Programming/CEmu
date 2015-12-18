@@ -37,7 +37,7 @@ uint8_t* phys_mem_ptr(uint32_t addr, uint32_t size) {
 }
 
 // returns wait cycles
-uint8_t memory_read_byte(uint32_t address)
+uint8_t memory_read_byte(uint32_t address, int *cycles)
 {
     uint32_t addr; // XXX should be uint32_t
     address &= 0xFFFFFF;
@@ -46,46 +46,44 @@ uint8_t memory_read_byte(uint32_t address)
     switch(upperNibble24(addr)) {
         // FLASH
         case 0x0: case 0x1: case 0x2: case 0x3:
-            mem.wait_state += 5;
+            *cycles += 5;
             return mem.flash[addr];
 
         // MAYBE FLASH
         case 0x4: case 0x5: case 0x6: case 0x7:
             addr -= 0x400000;
-            if(mem.flash_mapped) {
-                mem.wait_state += 5;
+            if (mem.flash_mapped) {
+                *cycles += 5;
                 return mem.flash[addr];
             }
-            mem.wait_state += 257;
-            return 0;
 
         // UNMAPPED
         case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
-            mem.wait_state += 257;
+            *cycles += 257;
             return 0;
 
         // RAM
         case 0xD:
             addr -= 0xD00000;
-            if(addr <= 0x657FF) {
-                mem.wait_state += 3;
+            if (addr < 0x65800) {
+                *cycles += 3;
                 return mem.ram[addr];
             }
         // UNMAPPED
-            addr -=  0x65800;
-            if(addr <= 0x1A7FF) {
-                mem.wait_state += 3;
+            addr -= 0x65800;
+            if(addr < 0x1A800) {
+                *cycles += 3;
                 return 0;
             }
         // MIRRORED
-            return memory_read_byte(address-0x80000);
+            return memory_read_byte(address - 0x80000, cycles);
 
         case 0xE: case 0xF:
-            mem.wait_state += 2;
+            *cycles += 2;
             return mmio_read_byte(addr);          // read byte from mmio
 
         default:
-            mem.wait_state += 1;
+            *cycles += 1;
             break;
     }
     return 0;
@@ -99,7 +97,7 @@ void mem_reset_wait_states(void) {
     mem.wait_state = 0;
 }
 
-void memory_write_byte(uint32_t address, const uint8_t byte) {
+void memory_write_byte(uint32_t address, const uint8_t byte, int *cycles) {
     uint32_t addr; // XXX should be uint32_t
     address &= 0xFFFFFF;
     addr = address;
@@ -110,7 +108,7 @@ void memory_write_byte(uint32_t address, const uint8_t byte) {
             if(mem.flash_unlocked) {
                 mem.flash[addr] = byte;
             }
-            mem.wait_state += 5;
+            *cycles += 5;
             return;
 
         // MAYBE FLASH
@@ -118,46 +116,45 @@ void memory_write_byte(uint32_t address, const uint8_t byte) {
             addr -= 0x400000;
             if(mem.flash_unlocked) {
                 if(mem.flash_mapped) {
-                    mem.wait_state += 5;
+                    *cycles += 5;
                     mem.flash[addr] = byte;
                     return;
                 }
             }
-            mem.wait_state += 257;
+            *cycles += 257;
             return;
 
         // UNMAPPED
         case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
-            mem.wait_state += 5;
+            *cycles += 5;
             return;
 
         // RAM
         case 0xD:
             addr -= 0xD00000;
             if(addr <= 0x657FF) {
-                mem.wait_state += 1;
+                *cycles += 2;
                 mem.ram[addr] = byte;
-                mem.wait_state += 1;
                 return;
             }
             // UNMAPPED
             addr -=  0x65800;
             if(addr <= 0x1A7FF) {
-                mem.wait_state = 1;
+                *cycles += 1;
                 return;
             }
             // MIRRORED
-                memory_write_byte(address-0x80000, byte);
-                return;
+            memory_write_byte(address - 0x80000, byte, cycles);
+            return;
 
         // MMIO <-> Advanced Perphrial Bus
         case 0xE: case 0xF:
-            mem.wait_state = 2;
+            *cycles += 2;
             mmio_write_byte(addr, byte);         // write byte to the mmio port
             return;
 
         default:
-            mem.wait_state = 1;
+            *cycles += 1;
             break;
     }
     return;
