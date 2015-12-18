@@ -1123,12 +1123,7 @@ int cpu_execute(void) {
                             cpu.L = 1; cpu.IL = 1;
                             goto exit_loop;
                         case 6: // HALT
-                            //cpu.halted = 1;
-                            cpu_push_word(r->PC);
-                            r->PC = 0x38;
-                            static int status = 0x11;
-                            intrpt.raw_status |= status;
-                            status = 0x10;
+                            cpu.halted = 1;
                             break;
                         case 4: // LD H, H
                         case 5: // LD L, L
@@ -1730,7 +1725,7 @@ int cpu_execute(void) {
         cpu_get_cntrl_data_blocks_format();
 
 exit_loop:
-        cycle_count_delta += context.cycles;
+        cycle_count_delta += cpu.cycles;
         if (context.cycles == 0) {
             //logprintf(LOG_CPU, "Error: Unrecognized instruction 0x%02X.", context.opcode);
             cycle_count_delta++;
