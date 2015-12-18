@@ -35,8 +35,8 @@ struct eZ80cpu {
     uint8_t bus;
     mem_state_t *memory;  // pointer to memory
     int (*get_mem_wait_states)();
-    uint8_t (*read_byte)(uint32_t address, int *cycles);
-    void (*write_byte)(uint32_t address, uint8_t byte, int *cycles);
+    uint8_t (*read_byte)(uint32_t address);
+    void (*write_byte)(uint32_t address, uint8_t byte);
     int interrupt;
 };
 

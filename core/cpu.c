@@ -31,7 +31,7 @@ static uint32_t cpu_address_mode(uint32_t address, uint8_t mode) {
 }
 
 static uint8_t cpu_fetch_byte(void) {
-    return cpu.read_byte(cpu_address_mode(cpu.registers.PC++, cpu.ADL), &cpu.cycles);
+    return cpu.read_byte(cpu_address_mode(cpu.registers.PC++, cpu.ADL));
 }
 static int8_t cpu_fetch_offset(void) {
     return (int8_t)cpu_fetch_byte();
@@ -46,10 +46,10 @@ static uint32_t cpu_fetch_word(void) {
 }
 
 static uint8_t cpu_read_byte(uint32_t address) {
-    return cpu.read_byte(cpu_address_mode(address, cpu.L), &cpu.cycles);
+    return cpu.read_byte(cpu_address_mode(address, cpu.L));
 }
 static void cpu_write_byte(uint32_t address, uint8_t value) {
-    cpu.write_byte(cpu_address_mode(address, cpu.L), value, &cpu.cycles);
+    cpu.write_byte(cpu_address_mode(address, cpu.L), value);
 }
 
 static uint32_t cpu_read_word(uint32_t address) {
@@ -1726,7 +1726,7 @@ int cpu_execute(void) {
 
 exit_loop:
         cycle_count_delta += cpu.cycles;
-        if (context.cycles == 0) {
+        if (cpu.cycles == 0) {
             //logprintf(LOG_CPU, "Error: Unrecognized instruction 0x%02X.", context.opcode);
             cycle_count_delta++;
         }

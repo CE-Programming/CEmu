@@ -89,7 +89,6 @@ void asic_init(ti_device_type type) {
 
     asic.cpu->read_byte = memory_read_byte;
     asic.cpu->write_byte = memory_write_byte;
-    asic.cpu->get_mem_wait_states = mem_wait_states;
     asic.battery = BATTERIES_GOOD;
     asic.device = type;
 
