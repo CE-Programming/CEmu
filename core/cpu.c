@@ -13,9 +13,18 @@
 // Global CPU state
 eZ80cpu_t cpu;
 
+static void cpu_get_cntrl_data_blocks_format(void) {
+    cpu.PREFIX = cpu.SUFFIX = 0;
+    cpu.L = cpu.ADL;
+    cpu.IL = cpu.ADL;
+    cpu.S = !cpu.L;
+    cpu.IS = !cpu.IL;
+}
+
 void cpu_init(void) {
     memset(&cpu, 0x00, sizeof(eZ80cpu_t));
     cpu.memory = &mem;
+    cpu_get_cntrl_data_blocks_format();
     gui_console_printf("Initialized CPU...\n");
 }
 
@@ -186,10 +195,10 @@ static void cpu_write_reg(int i, uint8_t value) {
 }
 static void cpu_read_write_reg(int read, int write) {
     uint8_t value;
-    int old_PREFIX = cpu.PREFIX;
-    cpu.PREFIX = (write != 6) ? old_PREFIX : 0;
+    int old_prefix = cpu.PREFIX;
+    cpu.PREFIX = (write != 6) ? old_prefix : 0;
     value = cpu_read_reg(read);
-    cpu.PREFIX = (read != 6) ? old_PREFIX : 0;
+    cpu.PREFIX = (read != 6) ? old_prefix : 0;
     cpu_write_reg(write, value);
 }
 
@@ -294,14 +303,6 @@ static uint8_t cpu_read_cc(const int i) {
         case 7: return  r->flags.S;
         default: abort();
     }
-}
-
-static void cpu_get_cntrl_data_blocks_format(void) {
-    cpu.PREFIX = cpu.SUFFIX = 0;
-    cpu.L = cpu.ADL;
-    cpu.IL = cpu.ADL;
-    cpu.S = !cpu.L;
-    cpu.IS = !cpu.IL;
 }
 
 static void cpu_execute_daa(void) {
@@ -929,12 +930,10 @@ int cpu_execute(void) {
         };
     } context;
 
-    cpu_get_cntrl_data_blocks_format();
-
-    while ((!exiting && cycle_count_delta < 0) || cpu.PREFIX) {
+    while (!exiting && cycle_count_delta < 0) {
         cpu.cycles = 0;
 
-        if (cpu.IEF2 && !cpu.PREFIX) {
+        if (cpu.IEF2 && !cpu.PREFIX && !cpu.SUFFIX) {
             if (cpu.IEF_wait) {
                 cpu.IEF_wait = 0;
             } else {
