@@ -26,6 +26,15 @@ QMAKE_CFLAGS += $$GLOBAL_FLAGS
 QMAKE_CXXFLAGS += $$GLOBAL_FLAGS -fno-exceptions
 QMAKE_LFLAGS += -flto -fPIE $$GLOBAL_FLAGS $$MORE_LFLAGS
 
+ios {
+    DEFINES += IS_IOS_BUILD __arm__
+    QMAKE_INFO_PLIST = Info.plist
+    QMAKE_CFLAGS += -mno-thumb
+    QMAKE_CXXFLAGS += -mno-thumb
+    QMAKE_LFLAGS += -mno-thumb
+    QMAKE_IOS_DEVICE_ARCHS = armv7
+}
+
 SOURCES += main.cpp\
     mainwindow.cpp \
     romselection.cpp \
