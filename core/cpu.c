@@ -1376,7 +1376,7 @@ int cpu_execute(void) {
                                                         break;
                                                     case 7:
                                                         cpu.PREFIX = 2;
-                                                        if (context.r) { // LD (HL), rp3[p]
+                                                        if (context.q) { // LD (HL), rp3[p]
                                                             cpu_write_word(r->HL, cpu_read_rp3(context.p));
                                                         } else { // LD rp3[p], (HL)
                                                             cpu_write_rp3(context.p, cpu_read_word(r->HL));
