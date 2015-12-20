@@ -14,7 +14,7 @@ static uint8_t keypad_read(const uint16_t pio)
     switch(upperNibble8(index)) {
         case 0x1:
         case 0x2:        // keypad data range
-            return read8(keypad.data[(mask8(index)-0x10) & 15],(index & 1)<<3);
+            return ((uint8_t *)keypad.data)[index & 0xF];
         default:
             switch(index) {
                 case 0x00:

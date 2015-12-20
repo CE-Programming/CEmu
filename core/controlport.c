@@ -36,6 +36,9 @@ static uint8_t control_read(const uint16_t pio) {
             if(control.unknown_g_Xb != 0x00) { addr |= 0x80; }
             if(control.unknown_g_Bd != 0x00) { addr |= 0x40; }
             break;
+        case 0x28:
+            read_byte = control.ports[addr] | 0x08;
+            break;
         default:
             read_byte = control.ports[addr];
             break;
@@ -184,6 +187,7 @@ static void control_write(const uint16_t pio, const uint8_t byte)
             control.ports[addr] = byte;
             break;
         case 0x28:
+            mem.flash_unlocked = (byte & 4) != 0;
             control.ports[addr] = byte & 247;
             break;
         default:

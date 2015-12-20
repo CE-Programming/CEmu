@@ -99,7 +99,7 @@ void memory_write_byte(uint32_t address, const uint8_t byte) {
         // FLASH
         case 0x0: case 0x1: case 0x2: case 0x3:
             if(mem.flash_unlocked) {
-                mem.flash[addr] = byte;
+                mem.flash[addr] &= byte;
             }
             cpu.cycles += 5;
             return;
@@ -110,7 +110,7 @@ void memory_write_byte(uint32_t address, const uint8_t byte) {
             if(mem.flash_unlocked) {
                 if(mem.flash_mapped) {
                     cpu.cycles += 5;
-                    mem.flash[addr] = byte;
+                    mem.flash[addr] &= byte;
                     return;
                 }
             }

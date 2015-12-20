@@ -125,7 +125,7 @@ bool emu_start() {
         fclose(rom);
     }
 
-    mem_load_vram(rom_image);
+    //mem_load_vram(rom_image);
     return true;
 }
 

@@ -5,6 +5,7 @@
 #include "core/emu.h"
 #include "core/registers.h"
 #include "core/cpu.h"
+#include "core/interrupt.h"
 
 #define port_range(a) (((a)>>12)&0xF) // converts an address to a port range 0x0-0xF
 #define addr_range(a) ((a)&0xFFF)     // converts an address to a port range value 0x0000-0xFFF
@@ -446,6 +447,8 @@ static void cpu_execute_rot(int y, int z, uint32_t address, uint8_t value) {
             value >>= 1;
             new_c = old_0;
             break;
+        default:
+            abort();
     }
     cpu_write_reg_prefetched(z, address, value);
     r->F = __flag_c(new_c) | _flag_sign_b(value) | _flag_parity(value)
@@ -1082,6 +1085,8 @@ int cpu_execute(void) {
                         }
                         if (context.y == 6) {
                             w = cpu_index_address();
+                        } else {
+                            w = 0;
                         }
                         cpu_write_reg_prefetched(context.y, w, cpu_fetch_byte());
                         break;
@@ -1122,7 +1127,13 @@ int cpu_execute(void) {
                             cpu.L = 1; cpu.IL = 1;
                             goto exit_loop;
                         case 6: // HALT
-                            cpu.halted = 1;
+                            //cpu.halted = 1;
+                            cpu_push_word(r->PC);
+                            r->PC = 0x38;
+                            static int count = 0;
+                            intrpt.raw_status |= 0x10 >> !count;
+                            intrpt.int_enable_mask |= 0x10 >> !count;
+                            if (!count--) count = 8;
                             break;
                         case 4: // LD H, H
                         case 5: // LD L, L
