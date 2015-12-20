@@ -1128,6 +1128,7 @@ int cpu_execute(void) {
                             goto exit_loop;
                         case 6: // HALT
                             //cpu.halted = 1;
+                            cpu.cycles = -cycle_count_delta;
                             cpu_push_word(r->PC);
                             r->PC = 0x38;
                             static int count = 0;
