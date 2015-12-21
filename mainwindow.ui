@@ -268,24 +268,38 @@
        <attribute name="title">
         <string>Keypad</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_14">
-        <item>
-         <widget class="QWidget" name="keypadWidget" native="true">
-          <widget class="QPushButton" name="pushButton_2">
-           <property name="geometry">
-            <rect>
-             <x>10</x>
-             <y>10</y>
-             <width>75</width>
-             <height>23</height>
-            </rect>
-           </property>
-           <property name="text">
-            <string>Graph Test</string>
-           </property>
-          </widget>
-          <zorder>pushButton_2</zorder>
-          <zorder></zorder>
+       <layout class="QGridLayout" name="gridLayout_8">
+        <item row="0" column="0">
+         <widget class="QQuickWidget" name="keypadWidget">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>270</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>270</width>
+            <height>340</height>
+           </size>
+          </property>
+          <property name="focusPolicy">
+           <enum>Qt::NoFocus</enum>
+          </property>
+          <property name="resizeMode">
+           <enum>QQuickWidget::SizeViewToRootObject</enum>
+          </property>
+          <property name="source">
+           <url>
+            <string>qrc:/qml/qml/Keypad.qml</string>
+           </url>
+          </property>
          </widget>
         </item>
        </layout>
@@ -645,7 +659,7 @@
                <string>Stop</string>
               </property>
               <property name="icon">
-               <iconset>
+               <iconset resource="resources.qrc">
                 <normaloff>:/icons/resources/icons/stop.png</normaloff>:/icons/resources/icons/stop.png</iconset>
               </property>
              </widget>
@@ -665,7 +679,7 @@
                <string>Step</string>
               </property>
               <property name="icon">
-               <iconset>
+               <iconset resource="resources.qrc">
                 <normaloff>:/icons/resources/icons/step.png</normaloff>:/icons/resources/icons/step.png</iconset>
               </property>
              </widget>
@@ -685,7 +699,7 @@
                <string>Step Over</string>
               </property>
               <property name="icon">
-               <iconset>
+               <iconset resource="resources.qrc">
                 <normaloff>:/icons/resources/icons/stepover.png</normaloff>:/icons/resources/icons/stepover.png</iconset>
               </property>
              </widget>
@@ -705,7 +719,7 @@
                <string>Breakpoint</string>
               </property>
               <property name="icon">
-               <iconset>
+               <iconset resource="resources.qrc">
                 <normaloff>:/icons/resources/icons/break.png</normaloff>:/icons/resources/icons/break.png</iconset>
               </property>
              </widget>
@@ -725,7 +739,7 @@
                <string>Goto</string>
               </property>
               <property name="icon">
-               <iconset>
+               <iconset resource="resources.qrc">
                 <normaloff>:/icons/resources/icons/goto.png</normaloff>:/icons/resources/icons/goto.png</iconset>
               </property>
              </widget>
@@ -895,7 +909,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>208</width>
+               <width>212</width>
                <height>304</height>
               </rect>
              </property>
@@ -2723,8 +2737,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>277</width>
-               <height>300</height>
+               <width>254</width>
+               <height>297</height>
               </rect>
              </property>
              <property name="minimumSize">
@@ -3448,7 +3462,7 @@
      <x>0</x>
      <y>0</y>
      <width>1000</width>
-     <height>18</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -3518,12 +3532,19 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
+   <class>QQuickWidget</class>
+   <extends>QWidget</extends>
+   <header>QtQuickWidgets/QQuickWidget</header>
+  </customwidget>
+  <customwidget>
    <class>LCDWidget</class>
    <extends>QWidget</extends>
    <header>lcdwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

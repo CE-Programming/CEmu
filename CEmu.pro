@@ -3,7 +3,7 @@ lessThan(QT_MAJOR_VERSION, 5) : error("You need at least Qt 5 to build CEmu!")
 # Version
 DEFINES += CEMU_VERSION=0.2
 
-QT += core gui quick widgets
+QT += core gui quick widgets quickwidgets
 
 TARGET = CEmu
 TEMPLATE = app
@@ -95,4 +95,4 @@ FORMS    += mainwindow.ui \
 RESOURCES += \
     resources.qrc
 
-RC_ICONS += icon.ico
+RC_ICONS += resources\icons\icon.ico

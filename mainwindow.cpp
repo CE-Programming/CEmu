@@ -12,6 +12,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QPixmap>
+#include <QQuickWidget>
 
 char tmpBuf[20] = {0};
 
@@ -218,9 +219,4 @@ void MainWindow::showAbout()
 
 void MainWindow::actionExit(void) {
     this->close();
-}
-
-void MainWindow::on_pushButton_2_clicked()
-{
-    keypad.key_map[1] = 1;
 }

@@ -13,10 +13,10 @@ QMLBridge::QMLBridge(QObject *p) : QObject(p)
 QMLBridge::~QMLBridge()
 {}
 
-constexpr const int ROWS = 8, COLS = 11;
+constexpr const int ROWS = 8, COLS = 8;
 
 void QMLBridge::keypadStateChanged(int keymap_id, bool state) {
-    int col = keymap_id % 11, row = keymap_id / 11;
+    int col = keymap_id % COLS, row = keymap_id / COLS;
     assert(row < ROWS);
     //assert(col < COLS); Not needed.
 
