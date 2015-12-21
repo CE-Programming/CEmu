@@ -1063,31 +1063,29 @@ int cpu_execute(void) {
                         }
                         break;
                     case 4: // INC r[y]
-                        old = cpu_read_reg(context.y);
+                        w = (context.y == 6) ? cpu_index_address() : 0;
+                        old = cpu_read_reg_prefetched(context.y, w);
                         new = old + 1;
-                        cpu_write_reg(context.y, new);
+                        cpu_write_reg_prefetched(context.y, w, new);
                         r->F = __flag_c(r->flags.C) | _flag_sign_b(new) | _flag_zero(new)
                             | _flag_halfcarry_b_add(old, 0, 1) | __flag_pv(new == 0x80)
                             | _flag_subtract(0) | _flag_undef(r->F);
                         break;
                     case 5: // DEC r[y]
-                        old = cpu_read_reg(context.y);
+                        w = (context.y == 6) ? cpu_index_address() : 0;
+                        old = cpu_read_reg_prefetched(context.y, w);
                         new = old - 1;
-                        cpu_write_reg(context.y, new);
+                        cpu_write_reg_prefetched(context.y, w, new);
                         r->F = __flag_c(r->flags.C) | _flag_sign_b(new) | _flag_zero(new)
                             | _flag_halfcarry_b_sub(old, 0, 1) | __flag_pv(old == 0x80)
                             | _flag_subtract(1) | _flag_undef(r->F);
-                     break;
+                        break;
                     case 6: // LD r[y], n
                         if (context.y == 7 && cpu.PREFIX) { // LD (IX/IY + d), IY/IX
                             cpu_write_word(cpu_index_address(), cpu_read_other_index());
                             break;
                         }
-                        if (context.y == 6) {
-                            w = cpu_index_address();
-                        } else {
-                            w = 0;
-                        }
+                        w = (context.y == 6) ? cpu_index_address() : 0;
                         cpu_write_reg_prefetched(context.y, w, cpu_fetch_byte());
                         break;
                     case 7:
