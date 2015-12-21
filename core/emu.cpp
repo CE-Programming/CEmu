@@ -56,20 +56,6 @@ void error(const char *fmt, ...) {
     cpu_events |= EVENT_RESET;
 }
 
-static void mem_load_vram(const char *path) {
-    FILE *romfile;
-    size_t index;
-    uint8_t byte_read;
-
-    romfile=fopen(path, "rb");
-
-    for(index=0;index<(320*240*2);index++) {
-        fread(&byte_read,1,1,romfile);
-        mem.ram[index+0x40000] = byte_read;
-    }
-    fclose(romfile);
-}
-
 void throttle_interval_event(int index) {
     event_repeat(index, 27000000 / 60);
 

@@ -13,4 +13,12 @@
         <file>resources/icons/icon.ico</file>
         <file>resources/icons/icon.png</file>
     </qresource>
+    <qresource prefix="/qml">
+        <file>qml/Keypad.qml</file>
+        <file>qml/NAlphaButton.qml</file>
+        <file>qml/NBigButton.qml</file>
+        <file>qml/NButton.qml</file>
+        <file>qml/NNumButton.qml</file>
+        <file>qml/NDualButton.qml</file>
+    </qresource>
 </RCC>

@@ -40,12 +40,14 @@ public slots:
     void populateDebugWindow();
 
 private slots:
+    void on_pushButton_2_clicked();
 
 private:
     Ui::MainWindow *ui = nullptr;
     EmuThread emu;
 
     QLabel status_label;
+    bool in_debugger;
 };
 
 // Used as global instance by EmuThread and friends

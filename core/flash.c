@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Global flash state
+/* Global flash state */
 flash_state_t flash;
 
 int flash_open(const char *filename) {
@@ -24,7 +24,7 @@ int flash_open(const char *filename) {
     return (size == 4*1024*1024);
 }
 
-// Read from the 0x1000 range of ports
+/* Read from the 0x1000 range of ports */
 static uint8_t flash_read(const uint16_t pio) {
     uint8_t addr = pio&0xFF;
     uint8_t read_byte;
@@ -43,7 +43,7 @@ static uint8_t flash_read(const uint16_t pio) {
     return read_byte;
 }
 
-// Write to the 0x1000 range of ports
+/* Write to the 0x1000 range of ports */
 static void flash_write(const uint16_t pio, const uint8_t byte)
 {
     uint8_t addr = pio & 0xFF;
@@ -73,13 +73,13 @@ static const eZ80portrange_t device = {
 eZ80portrange_t init_flash(void) {
     int i;
 
-    // Initialize device to default state
+    /* Initialize device to default state */
     for(i = 0; i<0x100; i++) {
         flash.ports[i] = 0;
     }
-    flash.ports[0x00] = 0x01; // From WikiTI
-    flash.ports[0x07] = 0xFF; // From WikiTI
-    flash.map = 0x06;     // From WikiTI
+    flash.ports[0x00] = 0x01; /* From WikiTI */
+    flash.ports[0x07] = 0xFF; /* From WikiTI */
+    flash.map = 0x06;     /* From WikiTI */
 
     gui_console_printf("Initialized flash device...\n");
     return device;
