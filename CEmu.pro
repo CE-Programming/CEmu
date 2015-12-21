@@ -1,4 +1,4 @@
-lessThan(QT_MAJOR_VERSION, 5) : error("You need at least Qt 5 to build firebird!")
+lessThan(QT_MAJOR_VERSION, 5) : error("You need at least Qt 5 to build CEmu!")
 
 # Version
 DEFINES += CEMU_VERSION=0.2
