@@ -122,7 +122,7 @@ typedef struct {
         };
     };
     uint16_t I;
-    uint8_t R, MBASE;  // interrupt, r, and z80 MBASE
+    uint8_t R, MBASE;  /* interrupt, r, and z80 MBASE */
     uint32_t WZ;
 } eZ80registers_t;
 
@@ -141,7 +141,7 @@ typedef enum {
 void exx(eZ80registers_t *r);
 int parity(uint8_t x);
 
-// S Z 5 H 3 PV N C
+/* S Z 5 H 3 PV N C */
 #define __flag_s(a)  ((a) ? FLAG_S  : 0)
 #define __flag_5(a)  ((a) ? FLAG_5  : 0)
 #define __flag_h(a)  ((a) ? FLAG_H  : 0)

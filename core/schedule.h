@@ -1,4 +1,4 @@
-// Declarations for schedule.c
+/* Declarations for schedule.c */
 
 #ifndef SCHEDULE_H
 #define SCHEDULE_H
@@ -22,7 +22,7 @@ enum sched_item_index {
 
 struct sched_item {
     enum clock_id clock;
-    int second; // -1 = disabled
+    int second; /* -1 = disabled */
     uint32_t tick;
     uint32_t cputick;
     void (*proc)(int index);
@@ -32,7 +32,7 @@ typedef struct sched_state {
     struct sched_item items[SCHED_NUM_ITEMS];
     uint32_t clock_rates[6];
     uint32_t next_cputick;
-    int next_index; // -1 if no more events this second
+    int next_index; /* -1 if no more events this second */
 } sched_state_t;
 
 extern sched_state_t sched;

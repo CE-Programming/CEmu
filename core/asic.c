@@ -17,7 +17,7 @@
 #include "core/backlightport.h"
 #include "core/schedule.h"
 
-// Global ASIC state
+/* Global ASIC state */
 asic_state_t asic;
 
 void (*reset_procs[20])(void);
@@ -48,14 +48,14 @@ static void plug_devices(void) {
             asic.cpu->prange[i] = unimplemented_range;
     }
 
-    // Port ranges 0x0 -> 0xF
+    /* Port ranges 0x0 -> 0xF */
     asic.cpu->prange[0x0] = init_control();
     asic.cpu->prange[0x1] = init_flash();
   //asic.cpu->prange[0x2] = init_sha256();
   //asic.cpu->prange[0x3] = init_usb();
     asic.cpu->prange[0x4] = init_lcd();
     asic.cpu->prange[0x5] = init_intrpt();
-  //asic.cpu->prange[0x6] = init_wtchdog();
+  //asic.cpu->prange[0x6] = init_watchdog();
   //asic.cpu->prange[0x7] = init_gpt();
   //asic.cpu->prange[0x8] = init_rtc();
   //asic.cpu->prange[0x9] = init_protected();
@@ -66,21 +66,21 @@ static void plug_devices(void) {
     asic.cpu->prange[0xE] = init_exxx();
     asic.cpu->prange[0xF] = init_fxxx();
 
-    // Populate APB ports
+    /* Populate APB ports */
     for(i=0x0; i<=0xF; i++) {
         apb_set_map(i, &asic.cpu->prange[i]);
     }
 
     reset_proc_count = 0;
 
-    // Populate reset callbacks
+    /* Populate reset callbacks */
     add_reset_proc(lcd_reset);
 
     gui_console_printf("Initialized APB...\n");
 }
 
 void asic_init(ti_device_type type) {
-    // First, initilize memory and LCD
+    /* First, initilize memory and LCD */
     mem_init();
     cpu_init();
 

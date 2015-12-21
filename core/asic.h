@@ -34,13 +34,13 @@ struct asic_state {
     eZ80cpu_t *cpu;
 };
 
-// Type definitions
+/* Type definitions */
 typedef struct asic_state asic_state_t;
 
-// External Global ASIC state
+/* External Global ASIC state */
 extern asic_state_t asic;
 
-// Available Functions
+/* Available Functions */
 void asic_init(ti_device_type);
 void asic_free(void);
 void asic_reset(void);

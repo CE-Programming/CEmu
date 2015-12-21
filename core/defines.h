@@ -24,4 +24,4 @@
 #define inc24(data)  ((data+1)&0xFFFFFF)
 #define dec24(data)  ((data-1)&0xFFFFFF)
 
-#endif // DEFINES
+#endif /* DEFINES */

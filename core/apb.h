@@ -14,15 +14,15 @@ struct eZ80portrange {
 };
 typedef struct eZ80portrange eZ80portrange_t;
 
-// Standard APB entry
+/* Standard APB entry */
 struct apb_map_entry {
     eZ80portrange_t *range;
 };
 
-// Type definitions
+/* Type definitions */
 typedef struct apb_map_entry apb_map_entry_t;
 
-// External APB entries
+/* External APB entries */
 extern apb_map_entry_t apb_map[0x10];
 
 void apb_set_map(int entry, eZ80portrange_t* range);

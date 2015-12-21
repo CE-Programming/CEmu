@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-// Standard KEYPAD state
+/* Standard KEYPAD state */
 struct keypad_state {
     uint32_t cntrl;
     uint32_t size;
@@ -19,16 +19,16 @@ struct keypad_state {
     uint16_t data[16];
     uint32_t gpio_interrupt_ack;
     uint32_t gpio_interrupt_mask;
-    uint8_t data_write_enabled;
+    uint8_t  data_write_enabled;
 };
 
-// Type definitions
+/* Type definitions */
 typedef struct keypad_state keypad_state_t;
 
-// Global KEYPAD state
+/* Global KEYPAD state */
 extern keypad_state_t keypad;
 
-// Available Functions
+/* Available Functions */
 eZ80portrange_t init_keypad(void);
 
 #ifdef __cplusplus

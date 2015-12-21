@@ -16,7 +16,7 @@ extern uint32_t cpu_events;
 #define EVENT_DEBUG_STEP 2
 #define EVENT_WAITING 4
 
-// Settings
+/* Settings */
 extern volatile bool exiting, debug_on_start, debug_on_warn;
 
 extern bool turbo_mode;
@@ -34,10 +34,10 @@ void throttle_timer_wait();
 void warn(const char *fmt, ...);
 void error(const char *fmt, ...);
 
-// ROM image
+/* ROM image */
 extern const char *rom_image;
 
-// GUI callbacks
+/* GUI callbacks */
 void gui_do_stuff(bool wait);
 void gui_console_printf(const char *, ...);
 void gui_console_vprintf(const char *, va_list);
