@@ -1,12 +1,12 @@
 #ifndef DEFINES
 #define DEFINES
 
-#define GETMASK(index, size) (((1 << (size)) - 1) << (index))
+#define GETMASK(index, size) (((1U << (size)) - 1) << (index))
 #define READFROM(data, index, size) (((data) & GETMASK((index), (size))) >> (index))
-#define WRITE(data, index, size, value) ((data) = ((data) & (~GETMASK((index), (size)))) | ((value) << (index)))
+#define WRITE(data, index, size, value) ((data) = ((data) & (~GETMASK((index), (size)))) | ((uint32_t)(value) << (index)))
 
-#define write8(data, index, value) ((data) = ((data) & (~GETMASK((index), (8)))) | ((value) << (index)))
-#define read8(data, index) (((data) & GETMASK((index), (8))) >> (index))
+#define write8(data, index, value) WRITE(data, index, 8, value)
+#define read8(data, index) READFROM(data, index, 8)
 
 #define upperNibble8(data) ((data >> 4) & 0xF)
 #define upperNibble16(data) ((data >> 12) & 0xF)

@@ -1105,6 +1105,7 @@ int cpu_execute(void) {
                 break;
             case 1: // ignore prefixed prefixes
                 if (context.z == context.y) {
+                    static int count = 0;
                     switch (context.z) {
                         case 0: // .SIS
                             cpu.SUFFIX = 1;
@@ -1131,7 +1132,6 @@ int cpu_execute(void) {
                             cpu.cycles = -cycle_count_delta;
                             cpu_push_word(r->PC);
                             r->PC = 0x38;
-                            static int count = 0;
                             intrpt.raw_status |= 0x10 >> !count;
                             intrpt.int_enable_mask |= 0x10 >> !count;
                             if (!count--) count = 8;
