@@ -4,10 +4,11 @@
 #include <string.h>
 
 #include "core/schedule.h"
+#include "core/interrupt.h"
 #include "core/memory.h"
 #include "core/emu.h"
 
-// Global LCD state
+/* Global LCD state */
 lcd_cntrl_state_t lcd;
 
 /* Draw the current screen into a 16bpp upside-down bitmap. */
@@ -26,18 +27,18 @@ void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
     }
 
     if (mode == 7) {
-        // 444 format
+        /* 444 format */
         bitfields[0] = 0x000F;
         bitfields[1] = 0x00F0;
         bitfields[2] = 0x0F00;
     } else {
-        // 565 format
+        /* 565 format */
         bitfields[0] = 0x001F;
         bitfields[1] = 0x07E0;
         bitfields[2] = 0xF800;
     }
     if (lcd.control & (1 << 8)) {
-        // BGR format (R high, B low)
+        /* BGR format (R high, B low) */
         uint32_t tmp = bitfields[0];
         bitfields[0] = bitfields[2];
         bitfields[2] = tmp;
@@ -72,7 +73,7 @@ void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
             }
             in += 160;
         } else if (mode == 5) {
-            // 32bpp mode: Convert 888 to 565
+            /* 32bpp mode: Convert 888 to 565 */
             do {
                 uint32_t word = *in++;
                 *out++ = (word >> 8 & 0xF800) | (word >> 5 & 0x7E0) | (word >> 3 & 0x1F);
@@ -107,20 +108,18 @@ static void lcd_event(int index) {
             + (lcd.timing[1] >> 10 & 0x03F) + 1  // Sync pulse
             + (lcd.timing[1]       & 0x3FF) + 1; // Active
     event_repeat(index, pcd * htime * vtime);
-    // for now, assuming vcomp occurs at same time UPBASE is loaded
+    /* for now, assuming vcomp occurs at same time UPBASE is loaded */
     lcd.upcurr = lcd.upbase;
     lcd.ris |= 0xC;
-    //int_set(INT_LCD, lcd.ris & lcd.mis);
+    intrpt_set(INT_LCD, lcd.ris & lcd.mis);
 }
 
 void lcd_reset(void) {
     // Palette is unchanged on a reset (TODO)
     // memset(&lcd, 0, (char *)&lcd.palette - (char *)&lcd);
     sched.items[SCHED_LCD].clock = CLOCK_12M;
-    //sched.items[SCHED_LCD].second = -1;
+    sched.items[SCHED_LCD].second = -1;
     sched.items[SCHED_LCD].proc = lcd_event;
-    lcd.control = 0x92D;
-    lcd.upbase = 0xD40000;
 }
 
 uint8_t lcd_read(const uint16_t pio) {
@@ -175,10 +174,10 @@ void lcd_write(const uint16_t pio, const uint8_t value) {
         } else if (offset == 0x01C) {
             write8(lcd.imsc, bit_offset, value);
             lcd.imsc &= 0x1E;
-            //int_set(INT_LCD, lcd.int_status & lcd.int_mask);
+            intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
         } else if (offset == 0x028) {
             lcd.ris &= ~(value << bit_offset);
-            //int_set(INT_LCD, lcd.int_status & lcd.int_mask);
+            intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
         }
     } else if (offset < 0x400) {
         write8(lcd.palette[pio >> 1 & 0xFF], pio & 1, value);

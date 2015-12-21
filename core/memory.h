@@ -11,8 +11,8 @@ extern "C" {
 
 struct mem_state {
     uint8_t *flash;     /* Flash mem */
-    uint8_t *ram;       /* RAM       */
-    uint8_t *vram;      /* VRAM      */
+    uint8_t *ram;       /* RAM */
+    uint8_t *vram;      /* VRAM */
     int flash_mapped;
     int flash_unlocked;
 };

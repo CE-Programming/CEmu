@@ -1,4 +1,4 @@
-QT += core gui
+QT += core gui qml
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -10,7 +10,7 @@ TRANSLATIONS += i18n/fr_FR.ts
 
 CONFIG += c++11 c11
 
-GLOBAL_FLAGS = -W -Wall -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=declaration-after-statement -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -fno-strict-overflow -Winit-self -ffunction-sections -fdata-sections
+GLOBAL_FLAGS = -W -Wall -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -fno-strict-overflow -Winit-self -ffunction-sections -fdata-sections
 
 if (macx | linux) {
     GLOBAL_FLAGS += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -fstack-protector-all -Wstack-protector --param=ssp-buffer-size=1 -fPIC
@@ -53,7 +53,9 @@ SOURCES += main.cpp\
     core/misc.c \
     core/schedule.c \
     core/emu.cpp \
-    core/debug.c
+    core/debug.c \
+    qtkeypadbridge.cpp \
+    qmlbridge.cpp
 
 HEADERS  += mainwindow.h \
     romselection.h \
@@ -78,7 +80,10 @@ HEADERS  += mainwindow.h \
     core/flash.h \
     core/misc.h \
     core/schedule.h \
-    core/debug.h
+    core/debug.h \
+    keymap.h \
+    qtkeypadbridge.h \
+    qmlbridge.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \

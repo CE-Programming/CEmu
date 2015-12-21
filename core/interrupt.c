@@ -1,7 +1,25 @@
 #include "core/interrupt.h"
 #include "core/emu.h"
+#include <string.h>
 
 interrupt_state_t intrpt;
+
+static void update() {
+    /* perform some interrupt updating things here */
+}
+
+void intrpt_set(uint32_t int_num, int on) {
+    if (on) {
+        intrpt.int_enable_mask |= 1 << int_num;
+    } else {
+        intrpt.int_enable_mask &= ~(1 << int_num);
+    }
+    update();
+}
+
+void intrpt_reset() {
+    memset(&intrpt, 0, sizeof(intrpt));
+}
 
 static uint8_t intrpt_read(const uint16_t pio) {
     uint16_t index = pio&0xFF;
@@ -9,7 +27,7 @@ static uint8_t intrpt_read(const uint16_t pio) {
 
     uint8_t byte_read;
 
-    if(index >= 0x20 && index <= 0x3F) index-= 0x20; // Ports 5020-503F are identical in function to 0x5000-0x501F
+    if(index >= 0x20 && index <= 0x3F) index-= 0x20; /* Ports 5020-503F are identical in function to 0x5000-0x501F */
 
     switch(index) {
         case 0x00: case 0x01: case 0x02: case 0x03:
@@ -24,7 +42,7 @@ static uint8_t intrpt_read(const uint16_t pio) {
         case 0x10: case 0x11: case 0x12: case 0x13:
             byte_read = read8(intrpt.int_invr,bit_offset);
             break;
-        case 0x14: case 0x15: case 0x16: case 0x17:    // Masked interrupt status (used by ISR). Should be equal to (0x5000 & 0x5004)
+        case 0x14: case 0x15: case 0x16: case 0x17:    /* Masked interrupt status (used by ISR). Should be equal to (0x5000 & 0x5004) */
             byte_read = read8(intrpt.raw_status & intrpt.int_enable_mask,bit_offset);
             break;
         case 0x50: case 0x51: case 0x52: case 0x53:

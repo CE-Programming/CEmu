@@ -5,7 +5,7 @@
 
 typedef struct backlight_state backlight_state_t;
 
-// Global BACKLIGHT state
+/* Global BACKLIGHT state */
 backlight_state_t backlight;
 
 struct backlight_state {
@@ -13,7 +13,7 @@ struct backlight_state {
     uint8_t brightness;
 };
 
-// Read from the 0xB000 range of ports
+/* Read from the 0xBXXX range of ports */
 static uint8_t backlight_read(const uint16_t pio) {
     uint8_t addr = pio & 0xFF;
     uint8_t read_byte = 0;
@@ -52,7 +52,7 @@ static uint8_t backlight_read(const uint16_t pio) {
     return read_byte;
 }
 
-// Write to the 0xB000 range of ports
+/* Write to the 0xBXXX range of ports */
 static void backlight_write(const uint16_t pio, const uint8_t byte)
 {
     uint8_t addr = pio & 0xFF;
@@ -87,7 +87,7 @@ static const eZ80portrange_t device = {
 
 eZ80portrange_t init_backlight(void) {
     int i;
-    // Initialize device to default state
+    /* Initialize device to default state */
     for(i = 0; i<0x100; i++) {
         backlight.ports[i] = 0x00;
     }
@@ -95,8 +95,8 @@ eZ80portrange_t init_backlight(void) {
     backlight.ports[0x01] = 0x64;
     backlight.ports[0x02] = 0x61;
     backlight.ports[0x03] = 0x4C;
-    backlight.ports[0x20] = 0xFF; // backlight scaler? (unimplemented)
-    backlight.brightness = 0xFF; // backlight level (PWM)
+    backlight.ports[0x20] = 0xFF; /* backlight scaler? (unimplemented) */
+    backlight.brightness = 0xFF;  /* backlight level (PWM)             */
 
     return device;
 }

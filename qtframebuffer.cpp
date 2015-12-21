@@ -18,7 +18,7 @@ QImage renderFramebuffer()
 
 void paintFramebuffer(QPainter *p)
 {
-    if(0)
+    if(!(lcd.control & 0x800))
     {
         p->fillRect(p->window(), Qt::black);
         p->setPen(Qt::white);
