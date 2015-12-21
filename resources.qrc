@@ -9,5 +9,8 @@
         <file>resources/icons/stepover.png</file>
         <file>resources/icons/stop.png</file>
         <file>resources/icons/step.png</file>
+        <file>resources/icons/icon.icns</file>
+        <file>resources/icons/icon.ico</file>
+        <file>resources/icons/icon.png</file>
     </qresource>
 </RCC>

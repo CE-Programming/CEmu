@@ -1,6 +1,9 @@
-QT += core gui
+lessThan(QT_MAJOR_VERSION, 5) : error("You need at least Qt 5 to build firebird!")
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+# Version
+DEFINES += CEMU_VERSION=0.2
+
+QT += core gui widgets
 
 TARGET = CEmu
 TEMPLATE = app
@@ -31,10 +34,12 @@ ios {
     QMAKE_INFO_PLIST = Info.plist
 }
 
+macx: ICON = resources/icons/icon.icns
+
+
 SOURCES += main.cpp\
     mainwindow.cpp \
     romselection.cpp \
-    aboutwindow.cpp \
     qtframebuffer.cpp \
     lcdwidget.cpp \
     core/asic.c \
@@ -57,7 +62,6 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.h \
     romselection.h \
-    aboutwindow.h \
     qtframebuffer.h \
     lcdwidget.h \
     core/asic.h \
@@ -81,8 +85,7 @@ HEADERS  += mainwindow.h \
     core/debug.h
 
 FORMS    += mainwindow.ui \
-    romselection.ui \
-    aboutwindow.ui
+    romselection.ui
 
 RESOURCES += \
     resources.qrc
