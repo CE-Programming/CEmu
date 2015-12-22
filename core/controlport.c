@@ -69,33 +69,6 @@ static void control_write(const uint16_t pio, const uint8_t byte)
                     control.unknown_flag_0 = (byte == 0x03 ? 10 : 0);
                     break;
             }
-
-            /* switch (byte & 3) {
-                case 0:
-                    this.oa = 1;
-                    break;
-                case 1:
-                    this.oa = 2;
-                    break;
-                case 2:            // TI originally put 16 (and after that, 17)
-                    this.oa = 3;
-                    break;
-                case 3:
-                    this.oa = 4;
-            }
-
-            this.Wa = 60 * this.pb * this.oa;
-            this.Xa = 60 * this.pb * this.oa * 84 / 100 >> 0;
-            this.Ya = 60 * this.pb * this.oa * 92 / 100 >> 0; // looks lime timings things to me
-
-            if ((byte & 32) != 0) {
-                control.ports[0x5000] |= 0x80;
-            }
-
-            if ((control.ports[0x5004] & 0x80) != 0) {
-                control.ports[0x5014] |= 0x80);
-            } */
-
             break;
         case 0x01:
             control.cpu_speed = byte & 0b00010011;
