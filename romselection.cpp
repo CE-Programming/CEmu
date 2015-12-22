@@ -70,6 +70,6 @@ void RomSelection::on_next_clicked()
             return;
         }
         CEmuSettings::Instance()->setROMLocation(ui->rompath->text());
-        this->close();
     }
+    this->close();
 }

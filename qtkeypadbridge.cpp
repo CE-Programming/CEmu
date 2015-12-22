@@ -4,6 +4,8 @@
 #include "core/keypad.h"
 #include "qmlbridge.h"
 
+#include <iostream>
+
 QtKeypadBridge qt_keypad_bridge;
 
 void QtKeypadBridge::keyPressEvent(QKeyEvent *event)
@@ -74,6 +76,8 @@ void QtKeypadBridge::keyReleaseEvent(QKeyEvent *event)
 bool QtKeypadBridge::eventFilter(QObject *obj, QEvent *e)
 {
     Q_UNUSED(obj);
+
+    // OKAY, WHY IS THIS NOT WORKING... THE EVENT FILTER IS CALLED, YET NEVER ON A KEYPRESS...
 
     if(e->type() == QEvent::KeyPress) {
         keyPressEvent(static_cast<QKeyEvent*>(e));

@@ -178,11 +178,11 @@
           <property name="lineWidth">
            <number>0</number>
           </property>
-          <widget class="LCDWidget" name="widget" native="true">
+          <widget class="LCDWidget" name="lcdWidget" native="true">
            <property name="geometry">
             <rect>
-             <x>62</x>
-             <y>80</y>
+             <x>60</x>
+             <y>77</y>
              <width>320</width>
              <height>240</height>
             </rect>
@@ -236,6 +236,9 @@
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
+      </property>
+      <property name="focusPolicy">
+       <enum>Qt::NoFocus</enum>
       </property>
       <property name="layoutDirection">
        <enum>Qt::LeftToRight</enum>
@@ -909,7 +912,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>208</width>
+               <width>212</width>
                <height>304</height>
               </rect>
              </property>
@@ -2737,8 +2740,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>242</width>
-               <height>204</height>
+               <width>254</width>
+               <height>297</height>
               </rect>
              </property>
              <property name="minimumSize">
