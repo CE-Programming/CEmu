@@ -23,8 +23,6 @@ static void gpt_write(const uint16_t pio, const uint8_t byte)
     uint16_t index = (int)pio & 0xFF;
     uint8_t bit_offset = (index&3)<<3;
 
-    uint8_t timer = (index & 0xF) & 3;
-
     gui_console_printf("Attempted write of timers: %04X\n", pio);
 }
 

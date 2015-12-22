@@ -56,7 +56,7 @@ static void plug_devices(void) {
   //asic.cpu->prange[0x3] = init_usb();
     asic.cpu->prange[0x4] = init_lcd();
     asic.cpu->prange[0x5] = init_intrpt();
-  //asic.cpu->prange[0x6] = init_watchdog();
+    asic.cpu->prange[0x6] = init_watchdog();
     asic.cpu->prange[0x7] = init_gpt();
   //asic.cpu->prange[0x8] = init_rtc();
   //asic.cpu->prange[0x9] = init_protected();
@@ -78,6 +78,7 @@ static void plug_devices(void) {
     add_reset_proc(lcd_reset);
     add_reset_proc(keypad_reset);
     add_reset_proc(gpt_reset);
+    add_reset_proc(watchdog_reset);
 
     gui_console_printf("Initialized APB...\n");
 }

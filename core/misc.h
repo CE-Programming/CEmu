@@ -7,6 +7,14 @@
 extern "C" {
 #endif
 
+struct watchdog_state {
+    uint32_t count;       /* Standard WATCHDOG state */
+    uint32_t load;
+    uint16_t restart;
+    uint32_t control;
+    uint32_t status;
+    uint32_t intrpt_length;
+};
 struct cxxx_state {
     uint8_t ports[0x100]; /* Standard CXXX state */
 };
@@ -18,15 +26,19 @@ struct fxxx_state {       /* Standard FXXX state */
 };
 
 /* Type definitions */
+typedef struct watchdog_state watchdog_state_t;
 typedef struct cxxx_state cxxx_state_t;
 typedef struct exxx_state exxx_state_t;
 typedef struct fxxx_state fxxx_state_t;
 
-extern cxxx_state_t cxxx;   /* Global CXXX state */
-extern exxx_state_t exxx;   /* Global EXXX state */
-extern fxxx_state_t fxxx;   /* Global FXXX state */
+extern watchdog_state_t watchdog;   /* Global WATCHDOG state */
+extern cxxx_state_t cxxx;           /* Global CXXX state */
+extern exxx_state_t exxx;           /* Global EXXX state */
+extern fxxx_state_t fxxx;           /* Global FXXX state */
 
 /* Available functions */
+void watchdog_reset(void);
+eZ80portrange_t init_watchdog(void);
 eZ80portrange_t init_exxx(void);
 eZ80portrange_t init_cxxx(void);
 eZ80portrange_t init_fxxx(void);
