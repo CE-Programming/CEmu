@@ -16,6 +16,7 @@
 #include "core/lcd.h"
 #include "core/backlightport.h"
 #include "core/timers.h"
+#include "core/usb.h"
 #include "core/schedule.h"
 
 /* Global ASIC state */
@@ -53,7 +54,7 @@ static void plug_devices(void) {
     asic.cpu->prange[0x0] = init_control();
     asic.cpu->prange[0x1] = init_flash();
   //asic.cpu->prange[0x2] = init_sha256();
-  //asic.cpu->prange[0x3] = init_usb();
+    asic.cpu->prange[0x3] = init_usb();
     asic.cpu->prange[0x4] = init_lcd();
     asic.cpu->prange[0x5] = init_intrpt();
     asic.cpu->prange[0x6] = init_watchdog();

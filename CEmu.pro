@@ -61,7 +61,8 @@ SOURCES += main.cpp\
     core/debug.c \
     qtkeypadbridge.cpp \
     qmlbridge.cpp \
-    core/timers.c
+    core/timers.c \
+    core/usb.c
 
 HEADERS  += mainwindow.h \
     romselection.h \
@@ -89,7 +90,8 @@ HEADERS  += mainwindow.h \
     keymap.h \
     qtkeypadbridge.h \
     qmlbridge.h \
-    core/timers.h
+    core/timers.h \
+    core/usb.h
 
 FORMS    += mainwindow.ui \
     romselection.ui

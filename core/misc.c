@@ -19,7 +19,7 @@ static void watchdog_event(int index) {
     }
 
     if ((watchdog.count == 0) && ((watchdog.control & 2) || (watchdog.control & 1))) {
-        //TODO: trigger event to reset the cpu
+        cpu_events |= EVENT_RESET;
         gui_console_printf("Watchdog reset triggered...");
     } else {
         //intrpt_set(INT_WATCHDOG, 1);  // TODO: find which bit this sets, if any
@@ -44,7 +44,7 @@ static uint8_t watchdog_read(const uint16_t pio) {
         case 0x010:
             return read8(watchdog.status,bit_offset);
         case 0x018:
-            return read8(watchdog.intrpt_length,bit_offset);
+            return read8(watchdog.intrpt_length,bit_offset);    // TODO: Find out what this does
         case 0x01C: case 0x01D: case 0x01E: case 0x01F:
             return read8(revision, bit_offset);
         default:
