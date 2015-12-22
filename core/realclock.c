@@ -31,6 +31,6 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_rtc(void) {
-    gui_console_printf("Initialized general purpose timers...\n");
+    gui_console_printf("Initialized real time clock...\n");
     return device;
 }
