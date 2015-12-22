@@ -87,7 +87,8 @@ static uint8_t sha256_read(uint16_t pio) {
     static const uint32_t unknown_value = 0x500;
 
     switch (index) {
-        case 0x00: return 0; // bit 0 = busy
+        case 0x00: case 0x01: case 0x02: case 0x03:
+            return 0; // bit 0 = busy
         case 0x08: case 0x09: case 0x0A: case 0x0B:
             return read8(unknown_value, bit_offset);
     }
@@ -105,7 +106,7 @@ static void sha256_write(uint16_t pio, uint8_t byte) {
     uint8_t bit_offset = (index&3)<<3;
 
     switch ( index ) {
-        case 0x00:
+        case 0x00: case 0x01: case 0x02: case 0x03:
             if (byte & 0x10) {
                 memset(sha256.hash_state, 0, sizeof(sha256.hash_state));
             } else {
