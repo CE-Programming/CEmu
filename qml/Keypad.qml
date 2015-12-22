@@ -159,7 +159,7 @@ Rectangle {
             width: 36
             height: 20
             color: "#000000"
-            text: "x2"
+            text: "x²"
             keymap_id: 20
         }
 
@@ -195,7 +195,7 @@ Rectangle {
             width: 36
             height: 20
             color: "#ffffff"
-            text: "/"
+            text: "÷"
             keymap_id: 52
             font_color: "#000"
         }
@@ -245,7 +245,7 @@ Rectangle {
             width: 36
             height: 20
             color: "#ffffff"
-            text: "*"
+            text: "x"
             keymap_id: 51
             font_color: "#000"
         }
