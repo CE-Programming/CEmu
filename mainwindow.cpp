@@ -193,20 +193,23 @@ void MainWindow::showAbout()
     #define STRINGIFY(x) STRINGIFYMAGIC(x)
     QMessageBox about_box(this);
     about_box.addButton(QMessageBox::Ok);
-    about_box.setIconPixmap(QPixmap(":/icons/icon.png")); // FIXME !??
+    about_box.setIconPixmap(QPixmap(":/icons/resources/icons/icon.png"));
     about_box.setWindowTitle(tr("About CEmu"));
     about_box.setText(tr("<h3>CEmu %1</h3>"
                          "<a href='https://github.com/nspire-emus/firebird'>On GitHub</a><br>"
-                         "<br>Main authors:<br>"
+                         "<br>"
+                         "Main authors:<br>"
                          "Matt Waltz (<a href='https://github.com/MateoConLechuga'>MateoConLechuga</a>)<br>"
                          "Jacob Young (<a href='https://github.com/jacobly0'>jacobly0</a>)<br>"
-                         "<br>Other contributors:<br>"
+                         "<br>"
+                         "Other contributors:<br>"
                          "Adrien Bertrand (<a href='https://github.com/adriweb'>adriweb</a>)<br>"
                          "Lionel Debroux (<a href='https://github.com/debrouxl'>debrouxl</a>)<br>"
                          "Fabian Vogt (<a href='https://github.com/Vogtinator'>Vogtinator</a>)<br>"
                          "<br>"
                          "Many thanks to the <a href='https://github.com/KnightOS/z80e'>z80e</a> and <a href='https://github.com/nspire-emus/firebird'>Firebird</a> projects<br>"
-                         "<br>This work is licensed under the GPLv3.<br>"
+                         "<br>"
+                         "This work is licensed under the GPLv3.<br>"
                          "To view a copy of this license, visit <a href='https://www.gnu.org/licenses/gpl-3.0.html'>https://www.gnu.org/licenses/gpl-3.0.html</a>")
                          .arg(QStringLiteral(STRINGIFY(CEMU_VERSION))));
     about_box.setTextFormat(Qt::RichText);
