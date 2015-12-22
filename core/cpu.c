@@ -1005,7 +1005,7 @@ int cpu_execute(void) {
                                 cpu_write_rp(context.p, cpu_fetch_word());
                                 break;
                             case 1: // ADD HL,rr
-                                old_word = cpu_read_index();
+                                old_word = cpu_mask_mode(cpu_read_index(), cpu.L);
                                 op_word = cpu_read_rp(context.p);
                                 new_word = old_word + op_word;
                                 cpu_write_index(cpu_mask_mode(new_word, cpu.L));
