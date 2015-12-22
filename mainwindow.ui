@@ -286,7 +286,7 @@
           <property name="maximumSize">
            <size>
             <width>270</width>
-            <height>340</height>
+            <height>360</height>
            </size>
           </property>
           <property name="focusPolicy">
@@ -909,7 +909,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>212</width>
+               <width>208</width>
                <height>304</height>
               </rect>
              </property>
@@ -2737,8 +2737,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>254</width>
-               <height>297</height>
+               <width>242</width>
+               <height>204</height>
               </rect>
              </property>
              <property name="minimumSize">

@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-// Standard KEYPAD state
+/* Standard KEYPAD state */
 struct keypad_state {
     uint32_t cntrl;
     uint32_t size;

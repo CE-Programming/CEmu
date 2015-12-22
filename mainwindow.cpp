@@ -22,7 +22,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
 
     // Register QtKeypadBridge for the virtual keyboard functionality
     ui->keypadWidget->installEventFilter(&qt_keypad_bridge);
-    ui->widget->installEventFilter(&qt_keypad_bridge);
 
     // Emulator -> GUI
     connect(&emu, SIGNAL(consoleStr(QString)), this, SLOT(consoleStr(QString))); //Not queued connection as it may cause a hang

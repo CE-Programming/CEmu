@@ -1,5 +1,5 @@
 #include "qtkeypadbridge.h"
-#include <iostream>
+
 #include "keymap.h"
 #include "core/keypad.h"
 #include "qmlbridge.h"
