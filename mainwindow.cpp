@@ -8,6 +8,7 @@
 #include "qtkeypadbridge.h"
 
 #include "core/debug.h"
+#include "core/gif.h"
 
 #include <QFileDialog>
 #include <QMessageBox>
@@ -39,6 +40,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
     connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(showAbout()));
     connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(actionExit()));
     connect(ui->actionScreenshot, SIGNAL(triggered()), this, SLOT(screenshot()));
+    connect(ui->actionRecord_GIF, &QAction::triggered, this, &MainWindow::recordGIF);
 
     // Other GUI actinos
     connect(ui->buttonScreenshot, SIGNAL(clicked()), this, SLOT(screenshot()));
@@ -180,6 +182,35 @@ void MainWindow::screenshot(void)
 
     if(!image.save(filename, "PNG"))
         QMessageBox::critical(this, tr("Screenshot failed"), tr("Failed to save screenshot!"));
+}
+
+void MainWindow::recordGIF()
+{
+    static QString path;
+
+    if(path.isEmpty())
+    {
+        // TODO: Use QTemporaryFile?
+        path = QDir::tempPath() + QDir::separator() + QStringLiteral("firebird_tmp.gif");
+
+        gif_start_recording(path.toStdString().c_str(), 3);
+    }
+    else
+    {
+        if(gif_stop_recording())
+        {
+            QString filename = QFileDialog::getSaveFileName(this, tr("Save Recording"), QString(), tr("GIF images (*.gif)"));
+            if(filename.isEmpty())
+                QFile(path).remove();
+            else
+                QFile(path).rename(filename);
+        } else {
+            QMessageBox::warning(this, tr("Failed recording GIF"), tr("A failure occured during recording"));
+        }
+        path = QString();
+    }
+
+    ui->actionRecord_GIF->setChecked(path.isEmpty());
 }
 
 void MainWindow::clearConsole(void) {

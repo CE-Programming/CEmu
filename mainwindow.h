@@ -27,6 +27,7 @@ public slots:
     // Actions
     void runSetup(void);
     void screenshot(void);
+    void recordGIF();
     void showAbout(void);
     void actionExit(void);
 

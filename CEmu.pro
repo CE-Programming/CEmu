@@ -64,7 +64,8 @@ SOURCES += main.cpp\
     core/timers.c \
     core/usb.c \
     core/sha256.c \
-    core/realclock.c
+    core/realclock.c \
+    core/gif.cpp
 
 HEADERS  += mainwindow.h \
     romselection.h \
@@ -95,7 +96,9 @@ HEADERS  += mainwindow.h \
     core/timers.h \
     core/usb.h \
     core/sha256.h \
-    core/realclock.h
+    core/realclock.h \
+    core/giflib.h \
+    core/gif.h
 
 FORMS    += mainwindow.ui \
     romselection.ui

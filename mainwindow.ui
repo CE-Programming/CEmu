@@ -3490,7 +3490,7 @@
      <string>Screenshot</string>
     </property>
     <addaction name="actionScreenshot"/>
-    <addaction name="actionRecord"/>
+    <addaction name="actionRecord_GIF"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuScreenshot"/>
@@ -3526,7 +3526,10 @@
     <string>Take Screenshot...</string>
    </property>
   </action>
-  <action name="actionRecord">
+  <action name="actionRecord_GIF">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Record GIF...</string>
    </property>
