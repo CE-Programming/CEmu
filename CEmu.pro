@@ -63,7 +63,8 @@ SOURCES += main.cpp\
     qmlbridge.cpp \
     core/timers.c \
     core/usb.c \
-    core/sha256.c
+    core/sha256.c \
+    core/realclock.c
 
 HEADERS  += mainwindow.h \
     romselection.h \
@@ -93,7 +94,8 @@ HEADERS  += mainwindow.h \
     qmlbridge.h \
     core/timers.h \
     core/usb.h \
-    core/sha256.h
+    core/sha256.h \
+    core/realclock.h
 
 FORMS    += mainwindow.ui \
     romselection.ui

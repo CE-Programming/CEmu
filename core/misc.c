@@ -4,7 +4,9 @@
 #include <string.h>
 
 watchdog_state_t watchdog;
+protected_state_t protect;
 cxxx_state_t cxxx; // Global CXXX state
+dxxx_state_t dxxx; // Global DXXX state
 exxx_state_t exxx; // Global EXXX state
 fxxx_state_t fxxx; // Global FXXX state
 
@@ -111,28 +113,52 @@ void watchdog_reset() {
     watchdog.count = 0x03EF1480;
 }
 
-eZ80portrange_t init_watchdog() {
+eZ80portrange_t init_watchdog(void) {
     gui_console_printf("Initialized watchdog timer...\n");
     return pwatchdog;
 }
 
 /* ============================================= */
 
+/* TODO: Implement PROTECTED (0x9XXX) range */
+
+/* Read from the 0x9XXX range of ports */
+static uint8_t protected_read(const uint16_t pio) {
+    return 0;
+}
+
+/* Write to the 0x9XXX range of ports */
+static void protected_write(const uint16_t pio, const uint8_t byte) {
+    return;
+}
+
+static const eZ80portrange_t p9xxx = {
+    .read_in    = protected_read,
+    .write_out  = protected_write
+};
+
+eZ80portrange_t init_protected(void) {
+    gui_console_printf("Initialized protected port range...\n");
+    return p9xxx;
+}
+
+/* ============================================= */
+
 /* Read from the 0xCXXX range of ports */
 static uint8_t cxxx_read(const uint16_t pio) {
-    uint8_t addr = pio&0xFF;
+    uint8_t index = pio&0xFF;
     uint8_t read_byte;
 
-    read_byte = cxxx.ports[addr];
+    read_byte = cxxx.ports[index];
 
     return read_byte;
 }
 
 /* Write to the 0xCXXX range of ports */
 static void cxxx_write(const uint16_t pio, const uint8_t byte) {
-    uint8_t addr = pio & 0xFF;
+    uint8_t index = pio & 0xFF;
 
-    cxxx.ports[addr] = byte;
+    cxxx.ports[index] = byte;
 }
 
 static const eZ80portrange_t pcxxx = {
@@ -140,7 +166,7 @@ static const eZ80portrange_t pcxxx = {
     .write_out  = cxxx_write
 };
 
-eZ80portrange_t init_cxxx() {
+eZ80portrange_t init_cxxx(void) {
     unsigned int i;
     /* Initialize device to default state */
     for(i = 0; i<sizeof(cxxx.ports) / sizeof(cxxx.ports[0]); i++) {
@@ -152,17 +178,40 @@ eZ80portrange_t init_cxxx() {
 
 /* ============================================= */
 
+/* TODO: Implement DXXX range */
+
+/* Read from the 0xDXXX range of ports */
+static uint8_t dxxx_read(const uint16_t pio) {
+    return 0;
+}
+
+/* Write to the 0xDXXX range of ports */
+static void dxxx_write(const uint16_t pio, const uint8_t byte) {
+    return;
+}
+
+static const eZ80portrange_t pdxxx = {
+    .read_in    = dxxx_read,
+    .write_out  = dxxx_write
+};
+
+eZ80portrange_t init_dxxx(void) {
+    return pdxxx;
+}
+
+/* ============================================= */
+
 /* Read from the 0xEXXX range of ports */
 static uint8_t exxx_read(const uint16_t pio) {
-    uint8_t addr = pio&0x7F;
+    uint8_t index = pio&0x7F;
     uint8_t read_byte;
 
-    switch (addr) {
+    switch (index) {
         case 0x14:
-            read_byte = 32 | exxx.ports[addr];
+            read_byte = 32 | exxx.ports[index];
             break;
         default:
-            read_byte = exxx.ports[addr];
+            read_byte = exxx.ports[index];
             break;
     }
     return read_byte;
@@ -170,8 +219,8 @@ static uint8_t exxx_read(const uint16_t pio) {
 
 /* Write to the 0xEXXX range of ports */
 static void exxx_write(const uint16_t pio, const uint8_t byte) {
-    uint8_t addr = pio & 0x7F;
-    exxx.ports[addr] = byte;
+    uint8_t index = pio & 0x7F;
+    exxx.ports[index] = byte;
 }
 
 static const eZ80portrange_t pexxx = {
@@ -179,7 +228,7 @@ static const eZ80portrange_t pexxx = {
     .write_out  = exxx_write
 };
 
-eZ80portrange_t init_exxx() {
+eZ80portrange_t init_exxx(void) {
     unsigned int i;
     /* Initialize device to default state */
     for(i = 0; i<sizeof(exxx.ports) / sizeof(exxx.ports[0]); i++) {

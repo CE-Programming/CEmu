@@ -17,6 +17,10 @@ extern "C" {
 #include <core/flash.h>
 #include <core/lcd.h>
 #include <core/backlightport.h>
+#include <core/timers.h>
+#include <core/usb.h>
+#include <core/realclock.h>
+#include <core/sha256.h>
 
 typedef enum {
     BATTERIES_REMOVED,

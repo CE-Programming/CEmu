@@ -17,6 +17,8 @@
 #include "core/backlightport.h"
 #include "core/timers.h"
 #include "core/usb.h"
+#include "core/sha256.h"
+#include "core/realclock.h"
 #include "core/schedule.h"
 
 /* Global ASIC state */
@@ -53,18 +55,18 @@ static void plug_devices(void) {
     /* Port ranges 0x0 -> 0xF*/
     asic.cpu->prange[0x0] = init_control();
     asic.cpu->prange[0x1] = init_flash();
-  //asic.cpu->prange[0x2] = init_sha256();
+    asic.cpu->prange[0x2] = init_sha256();
     asic.cpu->prange[0x3] = init_usb();
     asic.cpu->prange[0x4] = init_lcd();
     asic.cpu->prange[0x5] = init_intrpt();
     asic.cpu->prange[0x6] = init_watchdog();
     asic.cpu->prange[0x7] = init_gpt();
-  //asic.cpu->prange[0x8] = init_rtc();
-  //asic.cpu->prange[0x9] = init_protected();
+    asic.cpu->prange[0x8] = init_rtc();
+    asic.cpu->prange[0x9] = init_protected();
     asic.cpu->prange[0xA] = init_keypad();
     asic.cpu->prange[0xB] = init_backlight();
     asic.cpu->prange[0xC] = init_cxxx();
-  //asic.cpu->prange[0xD] = init_dxxx();
+    asic.cpu->prange[0xD] = init_dxxx();
     asic.cpu->prange[0xE] = init_exxx();
     asic.cpu->prange[0xF] = init_fxxx();
 
@@ -79,6 +81,7 @@ static void plug_devices(void) {
     add_reset_proc(lcd_reset);
     add_reset_proc(keypad_reset);
     add_reset_proc(gpt_reset);
+    add_reset_proc(rtc_reset);
     add_reset_proc(watchdog_reset);
 
     gui_console_printf("Initialized APB...\n");
