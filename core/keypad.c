@@ -13,7 +13,7 @@ void keypad_intrpt_check() {
 }
 
 void keypad_on_pressed() {
-    intrpt_set(INT_PWR, true);
+    intrpt_set(INT_ON, true);
 }
 
 static uint8_t keypad_read(const uint16_t pio)

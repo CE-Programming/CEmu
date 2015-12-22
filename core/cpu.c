@@ -1128,11 +1128,15 @@ int cpu_execute(void) {
                         case 6: // HALT
                             //cpu.halted = 1;
                             cpu.cycles = -cycle_count_delta;
-                            cpu_push_word(r->PC);
-                            r->PC = 0x38;
-                            intrpt.raw_status |= 0x10 >> !count;
-                            intrpt.int_enable_mask |= 0x10 >> !count;
-                            if (!count--) count = 8;
+                            if (cpu.IEF1) {
+                                cpu_push_word(r->PC);
+                                r->PC = 0x38;
+                                intrpt.raw_status |= 0x10 >> !count;
+                                intrpt.int_enable_mask |= 0x10 >> !count;
+                                if (!count--) count = 8;
+                            } else {
+                                r->PC--;
+                            }
                             break;
                         case 4: // LD H, H
                         case 5: // LD L, L

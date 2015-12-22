@@ -10,9 +10,9 @@ static void update() {
 
 void intrpt_set(uint32_t int_num, int on) {
     if (on) {
-        intrpt.int_enable_mask |= 1 << int_num;
+        intrpt.raw_status |= 1 << int_num;
     } else {
-        intrpt.int_enable_mask &= ~(1 << int_num);
+        intrpt.raw_status &= ~(1 << int_num);
     }
     update();
 }

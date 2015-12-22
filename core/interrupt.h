@@ -9,6 +9,7 @@
 extern "C" {
 #endif
 
+#define INT_ON        0
 #define INT_TIMER0    1
 #define INT_TIMER1    2
 #define INT_TIMER3    3
