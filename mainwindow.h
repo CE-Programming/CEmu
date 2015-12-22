@@ -30,6 +30,7 @@ public slots:
     void recordGIF();
     void showAbout(void);
     void actionExit(void);
+    void setUIMode(bool docks_enabled);
 
     // Console
     void clearConsole(void);
@@ -48,6 +49,9 @@ private:
 
     QLabel status_label;
     bool in_debugger;
+
+    // To make it possible to activate the debugger
+    QDockWidget *dock_debugger = nullptr;
 };
 
 // Used as global instance by EmuThread and friends

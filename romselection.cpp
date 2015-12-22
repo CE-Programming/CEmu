@@ -67,9 +67,9 @@ void RomSelection::on_next_clicked()
     if(ui->browse_sel->isChecked()) {
         if(flash_open(ui->rompath->text().toLatin1()) == 0) {
             QMessageBox::critical(this, trUtf8("Invalid ROM image"), trUtf8("You have selected an invalid ROM image."));
+            this->close();
             return;
         }
         CEmuSettings::Instance()->setROMLocation(ui->rompath->text());
     }
-    this->close();
 }

@@ -14,6 +14,8 @@
 #include <QMessageBox>
 #include <QPixmap>
 #include <QQuickWidget>
+#include <QDockWidget>
+#include <QShortcut>
 
 char tmpBuf[20] = {0};
 
@@ -22,7 +24,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
     ui->setupUi(this);              // setup the UI
 
     // Register QtKeypadBridge for the virtual keyboard functionality
-    this->installEventFilter(&qt_keypad_bridge);
+    ui->lcdWidget->installEventFilter(&qt_keypad_bridge);
 
     // Emulator -> GUI
     connect(&emu, SIGNAL(consoleStr(QString)), this, SLOT(consoleStr(QString))); //Not queued connection as it may cause a hang
@@ -45,6 +47,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
     // Other GUI actinos
     connect(ui->buttonScreenshot, SIGNAL(clicked()), this, SLOT(screenshot()));
 
+    setUIMode(true);
+
     in_debugger = false;
 
     emu.rom = CEmuSettings::Instance()->getROMLocation().toStdString();
@@ -53,6 +57,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
     } else {
         emu.start();
     }
+
+    ui->lcdWidget->setFocus();
 }
 
 // window destructor
@@ -85,8 +91,6 @@ void MainWindow::raiseDebugger()
     ui->buttonRun->setIconSize(pix.size());
 
     in_debugger = !in_debugger;
-    ui->scrollArea1->setEnabled( in_debugger );
-    ui->scrollArea2->setEnabled( in_debugger );
     ui->tabDebugging->setEnabled( in_debugger );
     ui->buttonBreakpoint->setEnabled( in_debugger );
     ui->buttonGoto->setEnabled( in_debugger );
@@ -170,6 +174,55 @@ void MainWindow::runSetup(void) {
         return;
     }
     emu.start();
+}
+
+void MainWindow::setUIMode(bool docks_enabled)
+{
+    // Already in this mode?
+    if(docks_enabled == ui->tabWidget->isHidden())
+        return;
+
+    //settings->setValue(QStringLiteral("docksEnabled"), docks_enabled);
+
+    // Enabling tabs needs a restart
+    if(!docks_enabled)
+    {
+        QMessageBox::warning(this, trUtf8("Restart needed"), trUtf8("You need to restart firebird to enable the tab interface."));
+        return;
+    }
+
+    // Create "Docks" menu to make closing and opening docks more intuitive
+    QMenu *docks_menu = new QMenu(tr("Docks"), this);
+    ui->menubar->insertMenu(ui->menuAbout->menuAction(), docks_menu);
+
+    //Convert the tabs into QDockWidgets
+    QDockWidget *last_dock = nullptr;
+    while(ui->tabWidget->count())
+    {
+        QDockWidget *dw = new QDockWidget(ui->tabWidget->tabText(0));
+        dw->setWindowIcon(ui->tabWidget->tabIcon(0));
+        dw->setObjectName(dw->windowTitle());
+
+        // Fill "Docks" menu
+        QAction *action = dw->toggleViewAction();
+        action->setIcon(dw->windowIcon());
+        docks_menu->addAction(action);
+
+        QWidget *tab = ui->tabWidget->widget(0);
+        if(tab == ui->tabDebugger)
+            dock_debugger = dw;
+
+        dw->setWidget(tab);
+
+        addDockWidget(Qt::RightDockWidgetArea, dw);
+        if(last_dock != nullptr)
+            tabifyDockWidget(last_dock, dw);
+
+        last_dock = dw;
+    }
+
+    ui->tabWidget->setHidden(true);
+    //ui->uiDocks->setChecked(docks_enabled);
 }
 
 void MainWindow::screenshot(void)
