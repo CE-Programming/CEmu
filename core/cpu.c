@@ -1583,13 +1583,13 @@ int cpu_execute(void) {
                                                     case 7:
                                                         switch (context.y) {
                                                             case 0: // LD I, A
-                                                                r->I = r->A;
+                                                                r->I = r->A | (r->I&0xF0);
                                                                 break;
                                                             case 1: // LD R, A
                                                                 r->R = r->A;
                                                                 break;
                                                             case 2: // LD A, I
-                                                                r->A = r->I;
+                                                                r->A = r->I & 0x0F;
                                                                 r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
                                                                     | _flag_undef(r->F) | __flag_pv(cpu.IEF2)
                                                                     | _flag_subtract(0) | __flag_c(r->flags.C);

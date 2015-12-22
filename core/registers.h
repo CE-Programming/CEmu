@@ -123,7 +123,6 @@ typedef struct {
     };
     uint16_t I;
     uint8_t R, MBASE;  /* interrupt, r, and z80 MBASE */
-    uint32_t WZ;
 } eZ80registers_t;
 
 typedef enum {

@@ -2,13 +2,15 @@
 #define _H_RTC
 
 #include <core/cpu.h>
+#include <time.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 struct rtc_state {
-    uint32_t dummy;     // Remove when implemented
+    time_t rawtime;
+    struct tm *timeinfo;
 };
 
 /* Type Definitions */

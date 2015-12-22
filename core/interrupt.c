@@ -27,6 +27,8 @@ static uint8_t intrpt_read(const uint16_t pio) {
 
     uint8_t byte_read;
 
+    static const uint32_t revision = 0x00010900;
+
     if(index >= 0x20 && index <= 0x3F) index-= 0x20; /* Ports 5020-503F are identical in function to 0x5000-0x501F */
 
     switch(index) {
@@ -46,7 +48,7 @@ static uint8_t intrpt_read(const uint16_t pio) {
             byte_read = read8(intrpt.raw_status & intrpt.int_enable_mask,bit_offset);
             break;
         case 0x50: case 0x51: case 0x52: case 0x53:
-            byte_read = read8(intrpt.revision,bit_offset);
+            byte_read = read8(revision,bit_offset);
             break;
         case 0x54:
             byte_read = intrpt.f_irq;
@@ -91,7 +93,6 @@ static const eZ80portrange_t device = {
 eZ80portrange_t init_intrpt(void) {
     intrpt.int_enable_mask = 0x00003011; // Default state
     intrpt.int_latch = 0x00000019;  // Default state
-    intrpt.revision = 0x00010900;   // Revision register 1.9.0.
     intrpt.f_irq = 0x16; // unused
     intrpt.f_fiq = 0x16; // unused
     gui_console_printf("Initialized interrupt contoller...\n");

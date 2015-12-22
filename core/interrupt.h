@@ -26,7 +26,6 @@ struct interrupt_state {
     uint32_t int_latch        : 22;  // Determines whether bits of 5000 will latch. 0 means raw signal, 1 means latched
     uint32_t int_invr         : 22;  // Inverts the raw signal of the interrupts corresponding to each 1 bit. Can be used to latch on a high-to-low change
 
-    uint32_t revision;
     uint8_t f_irq;
     uint8_t f_fiq;
 };
