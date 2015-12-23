@@ -26,6 +26,10 @@ struct rtc_state {
     uint8_t write_hour;
     uint16_t write_day;
     uint8_t interrupt;
+    uint8_t hold_sec;
+    uint8_t hold_min;
+    uint8_t hold_hour;
+    uint8_t hold_day;
 };
 
 /* Type Definitions */

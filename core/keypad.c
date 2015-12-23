@@ -86,7 +86,7 @@ static void keypad_write(const uint16_t pio, const uint8_t byte)
         case 0x00: case 0x01: case 0x02: case 0x03:
         write8(keypad.cntrl,bit_offset,byte);
         if (keypad.cntrl & 2) {
-            event_set(SCHED_KEYPAD, ((keypad.cntrl >> 16) + (keypad.cntrl >> 2 & 0x3FFF))/1000);
+            event_set(SCHED_KEYPAD, ((keypad.cntrl >> 16) + (keypad.cntrl >> 2 & 0x3FFF))/100);
         } else {
             event_clear(SCHED_KEYPAD);
         }

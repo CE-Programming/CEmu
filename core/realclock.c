@@ -1,4 +1,5 @@
 #include <time.h>
+#include <string.h>
 
 #include "core/realclock.h"
 #include "core/emu.h"
@@ -17,21 +18,21 @@ static void rtc_event(int index) {
         return;
     }
 
-    if ((currsec > rtc.prevsec) && (rtc.control & 128)) {
-        if(rtc.control & 1) { rtc.interrupt |= 1; }
+    if (currsec > rtc.prevsec) {
+        if (rtc.control & 1) { rtc.interrupt |= 1; }
         rtc.read_sec++;
         rtc.prevsec = currsec;
-        if(rtc.read_sec > 59) {
+        if (rtc.read_sec > 59) {
             rtc.read_sec = 0;
-            if(rtc.control & 2) { rtc.interrupt |= 2; }
+            if (rtc.control & 2) { rtc.interrupt |= 2; }
             rtc.read_min++;
-            if(rtc.read_min > 59) {
+            if (rtc.read_min > 59) {
                 rtc.read_min = 0;
-                if(rtc.control & 4) { rtc.interrupt |= 4; }
+                if (rtc.control & 4) { rtc.interrupt |= 4; }
                 rtc.read_hour++;
-                if(rtc.read_hour > 23) {
+                if (rtc.read_hour > 23) {
                     rtc.read_hour = 0;
-                    if(rtc.control & 8) { rtc.interrupt |= 8; }
+                    if (rtc.control & 8) { rtc.interrupt |= 8; }
                     rtc.read_day++;
                 }
             }
@@ -43,6 +44,13 @@ static void rtc_event(int index) {
     }
 }
 
+static void hold_read(void) {
+    rtc.hold_sec = rtc.read_sec;
+    rtc.hold_min = rtc.read_min;
+    rtc.hold_hour = rtc.read_hour;
+    rtc.hold_day = rtc.read_day;
+}
+
 static uint8_t rtc_read(const uint16_t pio)
 {
     static const uint32_t revision = 0x00010500;
@@ -51,12 +59,16 @@ static uint8_t rtc_read(const uint16_t pio)
 
     switch (index) {
         case 0x00:
+            if(!(rtc.control & 128)) { return rtc.hold_sec; }
             return rtc.read_sec;
         case 0x04:
+            if(!(rtc.control & 128)) { return rtc.hold_min; }
             return rtc.read_min;
         case 0x08:
+            if(!(rtc.control & 128)) { return rtc.hold_hour; }
             return rtc.read_hour;
         case 0x0C: case 0x0D:
+            if(!(rtc.control & 128)) { return rtc.hold_day; }
             return read8(rtc.read_day, bit_offset);
         case 0x10:
             return rtc.alarm_sec;
@@ -107,6 +119,9 @@ static void rtc_write(const uint16_t pio, const uint8_t byte)
                 rtc.control &= ~(64);
                 rtc.interrupt |= 32;  /* Load operation complete */
             }
+            if (!(rtc.control & 128)) {
+                hold_read();
+            }
         case 0x24:
             rtc.write_sec = byte; return;
         case 0x28:
@@ -121,6 +136,7 @@ static void rtc_write(const uint16_t pio, const uint8_t byte)
 }
 
 void rtc_reset() {
+    memset(&rtc,0,sizeof(rtc));
     rtc.prevsec = time(NULL);
 
     sched.items[SCHED_RTC].clock = CLOCK_12M;
