@@ -5,14 +5,20 @@
 interrupt_state_t intrpt;
 
 static void update() {
-    /* perform some interrupt updating things here */
+    uint32_t status;
+    size_t request;
+    for (request = 0; request < sizeof(intrpt.request) / sizeof(*intrpt.request); request++) {
+        status = intrpt.status ^ intrpt.request[request].inverted;
+        intrpt.request[request].status = (status & ~intrpt.request[request].latched) |
+            ((intrpt.request[request].status | status) & intrpt.request[request].latched);
+    }
 }
 
 void intrpt_set(uint32_t int_num, int on) {
     if (on) {
-        intrpt.raw_status |= 1 << int_num;
+        intrpt.status |= 1 << int_num;
     } else {
-        intrpt.raw_status &= ~(1 << int_num);
+        intrpt.status &= ~(1 << int_num);
     }
     update();
 }
@@ -21,66 +27,70 @@ void intrpt_reset() {
     memset(&intrpt, 0, sizeof(intrpt));
 }
 
-static uint8_t intrpt_read(const uint16_t pio) {
-    uint16_t index = pio&0xFF;
-    uint8_t bit_offset = (index&3)<<3;
+static uint8_t intrpt_read(uint16_t pio) {
+    uint16_t index = pio >> 2 & 0x3F;
+    uint8_t request = pio >> 5 & 1;
+    uint8_t bit_offset = (pio & 3) << 3;
 
-    uint8_t byte_read;
+    uint8_t value;
 
     static const uint32_t revision = 0x00010900;
 
-    if(index >= 0x20 && index <= 0x3F) index-= 0x20; /* Ports 5020-503F are identical in function to 0x5000-0x501F */
-
     switch(index) {
-        case 0x00: case 0x01: case 0x02: case 0x03:
-            byte_read = read8(intrpt.raw_status ^ intrpt.int_invr,bit_offset);
+        case 0:
+        case 8:
+            value = read8(intrpt.request[request].status, bit_offset);
             break;
-        case 0x04: case 0x05: case 0x06: case 0x07:
-            byte_read = read8(intrpt.int_enable_mask,bit_offset);
+        case 1:
+        case 9:
+            value = read8(intrpt.request[request].enabled, bit_offset);
             break;
-        case 0x0C: case 0x0D: case 0x0E: case 0x0F:
-            byte_read = read8(intrpt.int_latch,bit_offset);
+        case 3:
+        case 11:
+            value = read8(intrpt.request[request].latched, bit_offset);
             break;
-        case 0x10: case 0x11: case 0x12: case 0x13:
-            byte_read = read8(intrpt.int_invr,bit_offset);
+        case 4:
+        case 12:
+            value = read8(intrpt.request[request].inverted, bit_offset);
             break;
-        case 0x14: case 0x15: case 0x16: case 0x17:    /* Masked interrupt status (used by ISR). Should be equal to (0x5000 & 0x5004) */
-            byte_read = read8(intrpt.raw_status & intrpt.int_enable_mask,bit_offset);
+        case 5:
+        case 13:
+            value = read8(intrpt.request[request].status & intrpt.request[request].enabled, bit_offset);
             break;
-        case 0x50: case 0x51: case 0x52: case 0x53:
-            byte_read = read8(revision,bit_offset);
+        case 20:
+            value = read8(revision, bit_offset);
             break;
-        case 0x54:
-            byte_read = intrpt.f_irq;
-            break;
-        case 0x55:
-            byte_read = intrpt.f_fiq;
+        case 21:
+            value = (bit_offset & 16) ? 0 : 22;
             break;
         default:
-            byte_read = 0;
+            value = 0;
             break;
     }
-    return byte_read;
+    return value;
 }
 
-static void intrpt_write(const uint16_t pio, const uint8_t byte) {
-    uint16_t index = pio&0xFF;
-    uint8_t bit_offset = (index&3)<<3;
+static void intrpt_write(uint16_t pio, uint8_t value) {
+    uint16_t index = pio >> 2 & 0x3F;
+    uint8_t request = pio >> 5 & 1;
+    uint8_t bit_offset = (pio & 3) << 3;
 
     switch(index) {
-        case 0x04: case 0x05: case 0x06: case 0x07:
-            write8(intrpt.int_enable_mask,bit_offset,byte);
+        case 1:
+        case 9:
+            write8(intrpt.request[request].enabled, bit_offset, value);
             break;
-        case 0x08: case 0x09: case 0x0A: case 0x0B:
-            intrpt.raw_status &= ~((byte << bit_offset) & intrpt.int_latch);
+        case 2:
+        case 10:
+            intrpt.request[request].status &= ~((value << bit_offset) & intrpt.request[request].latched);
             break;
-        case 0x0C: case 0x0D: case 0x0E: case 0x0F:
-            write8(intrpt.int_latch,bit_offset,byte);
+        case 3:
+        case 11:
+            write8(intrpt.request[request].enabled, bit_offset, value);
             break;
-        case 0x10: case 0x11: case 0x12: case 0x13:
-            write8(intrpt.int_invr,bit_offset,byte);
-            break;
-        default:
+        case 4:
+        case 12:
+            write8(intrpt.request[request].inverted, bit_offset, value);
             break;
     }
 }
@@ -91,10 +101,8 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_intrpt(void) {
-    intrpt.int_enable_mask = 0x00003011; // Default state
-    intrpt.int_latch = 0x00000019;  // Default state
-    intrpt.f_irq = 0x16; // unused
-    intrpt.f_fiq = 0x16; // unused
+    intrpt.request->enabled = 0x00003011; // Default state
+    intrpt.request->latched = 0x00000019;  // Default state
     gui_console_printf("Initialized interrupt contoller...\n");
     return device;
 }

@@ -341,6 +341,30 @@ static uint32_t cpu_dec_bc_partial_mode() {
     return value;
 }
 
+static void cpu_call(int condition, uint32_t address, uint8_t mixed) {
+    eZ80registers_t *r = &cpu.registers;
+    if (condition) {
+        cpu.cycles += 0;
+        if (mixed) {
+            if (cpu.ADL) {
+                cpu_write_byte(--r->SPL, r->PCU);
+            }
+            if (cpu.IL || (cpu.L && !cpu.ADL)) {
+                cpu_write_byte(--r->SPL, r->PCH);
+                cpu_write_byte(--r->SPL, r->PCL);
+            } else {
+                cpu_write_byte(--r->SPS, r->PCH);
+                cpu_write_byte(--r->SPS, r->PCL);
+            }
+            cpu_write_byte(--r->SPL, (cpu.MADL << 1) | cpu.ADL);
+            cpu.ADL = cpu.IL;
+        } else {
+            cpu_push_word(r->PC);
+        }
+        r->PC = address;
+    }
+}
+
 static void cpu_execute_alu(int i, uint8_t v) {
     uint8_t old;
     eZ80registers_t *r = &cpu.registers;
@@ -904,7 +928,7 @@ static void cpu_execute_bli(int y, int z) {
     }
 }
 
-int cpu_execute(void) {
+int cpu_execute(int cycles) {
     // variable declaration
     int8_t s;
     uint32_t w;
@@ -933,24 +957,26 @@ int cpu_execute(void) {
         };
     } context;
 
-    while (!exiting && cycle_count_delta < 0) {
-        cpu.cycles = 0;
+    int cycle_offset = 0;
 
-        if (cpu.IEF2 && !cpu.PREFIX && !cpu.SUFFIX) {
-            if (cpu.IEF_wait) {
-                cpu.IEF_wait = 0;
-            } else {
-                if (cpu.interrupt) {
-                    cpu.halted = 0;
-                    //handle_interrupt();
-                    goto exit_loop;
-                }
-            }
-        }
-        if (cpu.halted) { // has the CPU halted?
-            cpu.cycles++;
-            goto exit_loop;
-        }
+    if (cycles >= 0) {
+        return cycles; // no cycles, do nothing
+    }
+
+    if (cpu.IEF_wait) {
+        cpu.IEF1 = cpu.IEF2 = 1;
+    }
+    if (cpu.IEF1 && (intrpt.request->status & intrpt.request->enabled)) {
+        cpu.cycles = 0;
+        cpu_call(1, cpu.IM == 2 ? cpu_read_word(r->I << 8 | r->R) : 0x38, cpu.MADL);
+        cycles += cpu.cycles;
+        cpu.halted = 0;
+    } else if (cpu.halted) {
+        cycles = 0; // consume all of the cycles
+    }
+
+    while (!exiting && cycles < 0) {
+        cpu.cycles = 0;
 
         // fetch opcode
         context.opcode = cpu_fetch_byte();
@@ -1103,7 +1129,6 @@ int cpu_execute(void) {
                 break;
             case 1: // ignore prefixed prefixes
                 if (context.z == context.y) {
-                    static int count = 0;
                     switch (context.z) {
                         case 0: // .SIS
                             cpu.SUFFIX = 1;
@@ -1126,16 +1151,9 @@ int cpu_execute(void) {
                             cpu.L = 1; cpu.IL = 1;
                             goto exit_loop;
                         case 6: // HALT
-                            //cpu.halted = 1;
-                            cpu.cycles = -cycle_count_delta;
-                            if (cpu.IEF1) {
-                                cpu_push_word(r->PC);
-                                r->PC = 0x38;
-                                intrpt.raw_status |= 0x10 >> !count;
-                                intrpt.int_enable_mask |= 0x10 >> !count;
-                                if (!count--) count = 8;
-                            } else {
-                                r->PC--;
+                            cpu.halted = 1;
+                            if (cycles + cpu.cycles < 0) {
+                                cpu.cycles = -cycles;
                             }
                             break;
                         case 4: // LD H, H
@@ -1282,34 +1300,15 @@ int cpu_execute(void) {
                                 cpu.IEF2 = 0;
                                 break;
                             case 7: // EI
-                                cpu.IEF1 = 1;
-                                cpu.IEF2 = 1;
                                 cpu.IEF_wait = 1;
-                                break;
+                                cycles += cpu.cycles;
+                                cycle_offset = cycles + 1;
+                                cycles = -1; // execute one more instruction
+                                continue;
                         }
                         break;
                     case 4: // CALL cc[y], nn
-                        w = cpu_fetch_word();
-                        if (cpu_read_cc(context.y)) {
-                            cpu.cycles += 0;
-                            if (cpu.SUFFIX) {
-                                if (cpu.ADL) {
-                                    cpu_write_byte(--r->SPL, r->PCU);
-                                }
-                                if (cpu.IL || (cpu.L && !cpu.ADL)) {
-                                    cpu_write_byte(--r->SPL, r->PCH);
-                                    cpu_write_byte(--r->SPL, r->PCL);
-                                } else {
-                                    cpu_write_byte(--r->SPS, r->PCH);
-                                    cpu_write_byte(--r->SPS, r->PCL);
-                                }
-                                cpu_write_byte(--r->SPL, (cpu.MADL << 1) | cpu.ADL);
-                                cpu.ADL = cpu.IL;
-                            } else {
-                                cpu_push_word(r->PC);
-                            }
-                            r->PC = w;
-                        }
+                        cpu_call(cpu_read_cc(context.y), cpu_fetch_word(), cpu.SUFFIX);
                         break;
                     case 5:
                         switch (context.q) {
@@ -1319,25 +1318,7 @@ int cpu_execute(void) {
                             case 1:
                                 switch (context.p) {
                                     case 0: // CALL nn
-                                        cpu.cycles += 0;
-                                        w = cpu_fetch_word();
-                                        if (cpu.SUFFIX) {
-                                            if (cpu.ADL) {
-                                                cpu_write_byte(--r->SPL, r->PCU);
-                                            }
-                                            if (cpu.IL || (cpu.L && !cpu.ADL)) {
-                                                cpu_write_byte(--r->SPL, r->PCH);
-                                                cpu_write_byte(--r->SPL, r->PCL);
-                                            } else {
-                                                cpu_write_byte(--r->SPS, r->PCH);
-                                                cpu_write_byte(--r->SPS, r->PCL);
-                                            }
-                                            cpu_write_byte(--r->SPL, (cpu.MADL << 1) | cpu.ADL);
-                                            cpu.ADL = cpu.IL;
-                                        } else {
-                                            cpu_push_word(r->PC);
-                                        }
-                                        r->PC = w;
+                                        cpu_call(1, cpu_fetch_word(), cpu.SUFFIX);
                                         break;
                                     case 1: // 0xDD prefixed opcodes
                                         cpu.PREFIX = 2;
@@ -1738,11 +1719,11 @@ int cpu_execute(void) {
         cpu_get_cntrl_data_blocks_format();
 
 exit_loop:
-        cycle_count_delta += cpu.cycles;
+        cycles += cpu.cycles;
         if (cpu.cycles == 0) {
             //logprintf(LOG_CPU, "Error: Unrecognized instruction 0x%02X.", context.opcode);
-            cycle_count_delta++;
+            cycles++;
         }
     }
-    return cycle_count_delta;
+    return cycles - cycle_offset;
 }

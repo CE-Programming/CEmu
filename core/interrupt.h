@@ -19,19 +19,21 @@ extern "C" {
 #define INT_RTC      12
 #define INT_PWR      15  // Probably power bit. Probably.
 
-struct interrupt_state {
-    uint32_t raw_status       : 22;  // Raw interrupt status (can be either raw signal or latched on signal change from low-to-high)
-    uint32_t int_enable_mask  : 22;  // Interrupt enable mask
-//  uint32_t int_ack          : 22;  // Interrupt acknowledge (used by ISR), seems to only affect latched status bits
-    uint32_t int_latch        : 22;  // Determines whether bits of 5000 will latch. 0 means raw signal, 1 means latched
-    uint32_t int_invr         : 22;  // Inverts the raw signal of the interrupts corresponding to each 1 bit. Can be used to latch on a high-to-low change
+typedef struct interrupt_request {
+    uint32_t status   : 22;
+    uint32_t          :  2;
+    uint32_t enabled  : 22;
+    uint32_t          :  2;
+    uint32_t latched  : 22;
+    uint32_t          :  2;
+    uint32_t inverted : 22;
+    uint32_t          :  2;
+} interrupt_request_t;
 
-    uint8_t f_irq;
-    uint8_t f_fiq;
-};
-
-/* Type definitions */
-typedef struct interrupt_state interrupt_state_t;
+typedef struct interrupt_state {
+    uint32_t status;
+    interrupt_request_t request[2];
+} interrupt_state_t;
 
 /* External INTERRUPT state */
 extern interrupt_state_t intrpt;

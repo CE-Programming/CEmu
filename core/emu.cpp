@@ -8,6 +8,8 @@
 #include "core/schedule.h"
 #include "core/asic.h"
 
+#include <QtCore/QThread>
+
 const char *rom_image = NULL;
 
 // For the debugger
@@ -116,6 +118,8 @@ bool emu_start() {
 }
 
 void emu_loop(bool reset) {
+    static int count = 0;
+
     if (reset) {
 reset:
         cpu_events &= EVENT_DEBUG_STEP;
@@ -134,12 +138,18 @@ reset:
 
     while (!exiting) {
         sched_process_pending_events();
-        while (!exiting && cycle_count_delta < 0) {
-            if (cpu_events & EVENT_RESET) {
-                gui_console_printf("CPU Reset triggered...");
-                goto reset;
+        if (cpu_events & EVENT_RESET) {
+            gui_console_printf("CPU Reset triggered...");
+            goto reset;
+        }
+        if (cycle_count_delta < 0) {
+            cycle_count_delta = cpu_execute(cycle_count_delta);  // execute instructions with available clock cycles
+            if (cpu.IEF1 && cpu.halted) {
+                if (!(count & 0xFFFF)) intrpt_set(4 - !(count >> 16), true);
+                if (!count--) count = 8 << 16;
             }
-            cpu_execute();  // execute instructions with available clock cycles
+        } else {
+            QThread::yieldCurrentThread();
         }
     }
 }
