@@ -42,7 +42,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
     connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(showAbout()));
     connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(actionExit()));
     connect(ui->actionScreenshot, SIGNAL(triggered()), this, SLOT(screenshot()));
-    connect(ui->actionRecord_GIF, &QAction::triggered, this, &MainWindow::recordGIF);
+    connect(ui->actionRecord_GIF, SIGNAL(triggered()), this, SLOT(recordGIF()));
+    connect(ui->buttonGIF, SIGNAL(clicked()), this, SLOT(recordGIF()));
 
     // Other GUI actinos
     connect(ui->buttonScreenshot, SIGNAL(clicked()), this, SLOT(screenshot()));
@@ -243,8 +244,7 @@ void MainWindow::recordGIF()
 
     if(path.isEmpty())
     {
-        // TODO: Use QTemporaryFile?
-        path = QDir::tempPath() + QDir::separator() + QStringLiteral("firebird_tmp.gif");
+        path = QStringLiteral("c:\\cemu_tmp.gif");
 
         gif_start_recording(path.toStdString().c_str(), 3);
     }

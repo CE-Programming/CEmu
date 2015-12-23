@@ -30,6 +30,7 @@ bool gif_start_recording(const char *filename, unsigned int frameskip)
 
     buffer.resize(320*240);
 
+    gui_console_printf("Started recording GIF image.\n");
     return recording;
 }
 
@@ -76,5 +77,7 @@ bool gif_stop_recording()
 
     buffer.clear();
     GifEnd(&writer);
+
+    gui_console_printf("Done recording GIF image.\n");
     return ret;
 }
