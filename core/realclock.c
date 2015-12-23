@@ -10,10 +10,11 @@
 rtc_state_t rtc;
 
 static void rtc_event(int index) {
+    time_t currsec;
     /* Update 3 or so times a second just so we don't miss a step */
     event_repeat(index, 27000000 / 4);
 
-    time_t currsec = time(NULL);
+    currsec = time(NULL);
     if (!(rtc.control & 1)) {
         return;
     }

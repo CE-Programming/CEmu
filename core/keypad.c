@@ -47,13 +47,14 @@ static uint8_t keypad_read(const uint16_t pio)
 
 /* Scan next row of keypad, if scanning is enabled */
 static void keypad_scan_event(int index) {
-    if (keypad.current_row >= 16) {
+    uint16_t row;
+    if (keypad.current_row >= sizeof(keypad.data) / sizeof(keypad.data[0])) {
         return; /* too many keypad rows */
     }
 
-    uint16_t row = ~keypad.key_map[keypad.current_row];
+    row = ~keypad.key_map[keypad.current_row];
     row &= ~(0x80000 >> keypad.current_row); /* Emulate weird diagonal glitch */
-    row |= -1 << (keypad.size >> 8 & 0xFF);  /* Unused columns read as 1 */
+    row |= 0xFFFF << (keypad.size >> 8 & 0xFF);  /* Unused columns read as 1 */
     row = ~row;
 
     if (keypad.data[keypad.current_row] != row) {
