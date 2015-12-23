@@ -8,56 +8,6 @@ Rectangle {
     
     color: "#fff"
 
-    NBigButton {
-        id: nBigButton1
-        x: 187
-        y: 52
-        width: 29
-        height: 20
-        color: "#ffffff"
-        text: "/\\"
-        keymap_id: 59
-        font_color: "#000"
-    }
-
-    NBigButton {
-        id: nBigButton2
-        x: 187
-        y: 78
-        width: 29
-        height: 20
-        color: "#ffffff"
-        radius: 2
-        text: "\\/"
-        keymap_id: 56
-        font_color: "#000"
-    }
-
-    NBigButton {
-        id: nBigButton49
-        x: 222
-        y: 52
-        width: 17
-        height: 46
-        color: "#ffffff"
-        radius: 0
-        text: ">"
-        keymap_id: 58
-        font_color: "#000"
-    }
-
-    NBigButton {
-        id: nBigButton50
-        x: 164
-        y: 52
-        width: 17
-        height: 46
-        color: "#ffffff"
-        text: "<"
-        keymap_id: 57
-        font_color: "#000"
-    }
-
     GridLayout {
         x: 31
         y: 120
@@ -549,6 +499,46 @@ Rectangle {
         color: "#7b7bdb"
         text: qsTr("list")
         font.pixelSize: 12
+    }
+
+    NBigButton {
+        id: nBigButton1
+        x: 185
+        y: 39
+        color: "#ffffff"
+        text: "∧"
+        font_color: "#000"
+        keymap_id: 59
+    }
+
+    NBigButton {
+        id: nBigButton2
+        x: 185
+        y: 91
+        color: "#ffffff"
+        text: "∨"
+        font_color: "#000"
+        keymap_id: 56
+    }
+
+    NBigButton {
+        id: nBigButton49
+        x: 160
+        y: 65
+        color: "#ffffff"
+        text: "<"
+        font_color: "#000"
+        keymap_id: 57
+    }
+
+    NBigButton {
+        id: nBigButton50
+        x: 210
+        y: 65
+        color: "#ffffff"
+        text: ">"
+        font_color: "#000"
+        keymap_id: 58
     }
 
 

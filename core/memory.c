@@ -8,9 +8,9 @@
 // Global MEMORY state
 mem_state_t mem;
 
-const uint32_t ram_size = 0x65800;
-const uint32_t ram_base = 0xD00000;
-const uint32_t flash_size = 0x400000;
+static const uint32_t ram_size = 0x65800;
+static const uint32_t ram_base = 0xD00000;
+static const uint32_t flash_size = 0x400000;
 
 void mem_init(void) {
     mem.flash=(uint8_t*)malloc(flash_size);     // allocate Flash memory
