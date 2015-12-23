@@ -25,7 +25,7 @@ void QtKeypadBridge::keyPressEvent(QKeyEvent *event)
             {
                 if(key == keymap[row][col].key && keymap[row][col].alt == (bool(event->modifiers() & Qt::AltModifier) || bool(event->modifiers() & Qt::MetaModifier)))
                 {
-                    if(row == 0 && col == 9)
+                    if(row == 2 && col == 0)
                         keypad_on_pressed();
 
                     keypad.key_map[row] |= 1 << col;

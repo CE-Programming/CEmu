@@ -2,8 +2,7 @@
 #include "core/emu.h"
 #include "core/schedule.h"
 #include "core/interrupt.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
 
 /* Global GPT state */
 general_timers_state_t gpt;
@@ -80,7 +79,7 @@ static void gpt_write(const uint16_t pio, const uint8_t byte)
 }
 
 void gpt_reset() {
-
+    memset(&gpt,0,sizeof(gpt));
 }
 
 static const eZ80portrange_t device = {

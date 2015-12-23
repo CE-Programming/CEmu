@@ -79,7 +79,7 @@ eZ80portrange_t init_flash(void) {
     }
     flash.ports[0x00] = 0x01; /* From WikiTI */
     flash.ports[0x07] = 0xFF; /* From WikiTI */
-    flash.map = 0x06;     /* From WikiTI */
+    flash.map = 0x06;         /* From WikiTI */
 
     gui_console_printf("Initialized flash device...\n");
     return device;

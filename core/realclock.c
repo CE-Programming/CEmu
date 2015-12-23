@@ -68,7 +68,7 @@ static uint8_t rtc_read(const uint16_t pio)
             if(!(rtc.control & 128)) { return rtc.hold_hour; }
             return rtc.read_hour;
         case 0x0C: case 0x0D:
-            if(!(rtc.control & 128)) { return rtc.hold_day; }
+            if(!(rtc.control & 128)) { return read8(rtc.hold_day, bit_offset); }
             return read8(rtc.read_day, bit_offset);
         case 0x10:
             return rtc.alarm_sec;
