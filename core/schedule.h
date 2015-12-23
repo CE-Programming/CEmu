@@ -15,6 +15,7 @@ enum sched_item_index {
     SCHED_THROTTLE,
     SCHED_KEYPAD,
     SCHED_LCD,
+    SCHED_RTC,
     SCHED_TIMER0,
     SCHED_TIMER1,
     SCHED_TIMER2,

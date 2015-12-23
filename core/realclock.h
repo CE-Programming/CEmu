@@ -9,8 +9,23 @@ extern "C" {
 #endif
 
 struct rtc_state {
-    time_t rawtime;
-    struct tm *timeinfo;
+    /* Previos second counter */
+    time_t prevsec;
+
+    /* Registers */
+    uint8_t read_sec;
+    uint8_t read_min;
+    uint8_t read_hour;
+    uint16_t read_day;
+    uint8_t alarm_sec;
+    uint8_t alarm_min;
+    uint8_t alarm_hour;
+    uint8_t control;
+    uint8_t write_sec;
+    uint8_t write_min;
+    uint8_t write_hour;
+    uint16_t write_day;
+    uint8_t interrupt;
 };
 
 /* Type Definitions */
