@@ -61,7 +61,7 @@ static void flash_erase_sector(uint32_t addr, uint8_t byte) {
     /* Get sector */
     addr /= length;
     memset(mem.flash + (addr * length), 0xFF, length);
-    gui_console_printf("Erased flash sector %0X2.\n", addr);
+    gui_console_printf("Erased flash sector %02X.\n", addr);
 }
 
 static void flash_unlock(uint32_t addr, uint8_t byte) {
