@@ -8,65 +8,36 @@
 
 QtKeypadBridge qt_keypad_bridge;
 
-void QtKeypadBridge::keyPressEvent(QKeyEvent *event)
+void QtKeypadBridge::keyEvent(QKeyEvent *event, bool press)
 {
     Qt::Key key = static_cast<Qt::Key>(event->key());
+    printf("%x\n", event->key());
 
-    switch(key)
+    auto& keymap = keymap_tp;
+    for(unsigned int row = 0; row < sizeof(keymap)/sizeof(*keymap); ++row)
     {
-    case Qt::Key_Return:
-        key = Qt::Key_Enter;
-
-    default:
-        auto& keymap = keymap_tp;
-        for(unsigned int row = 0; row < sizeof(keymap)/sizeof(*keymap); ++row)
+        for(unsigned int col = 0; col < sizeof(*keymap)/sizeof(**keymap); ++col)
         {
-            for(unsigned int col = 0; col < sizeof(*keymap)/sizeof(**keymap); ++col)
+            for(unsigned int index = 0; index < sizeof((**keymap).key)/sizeof(*(**keymap).key); ++index)
             {
-                if(key == keymap[row][col].key && keymap[row][col].alt == (bool(event->modifiers() & Qt::AltModifier) || bool(event->modifiers() & Qt::MetaModifier)))
+                if(key == keymap[row][col].key[index] && keymap[row][col].alt == (bool(event->modifiers() & Qt::AltModifier) || bool(event->modifiers() & Qt::MetaModifier)))
                 {
                     if(row == 2 && col == 0)
-                        keypad_on_pressed();
-
-                    keypad.key_map[row] |= 1 << col;
-                    notifyKeypadStateChanged(row, col, true);
-                    keypad_intrpt_check();
+                    {
+                        if (press)
+                            keypad_on_pressed();
+                    }
+                    else
+                    {
+                        keypad.key_map[row] &= ~(1 << col);
+                        keypad.key_map[row] |= press << col;
+                        notifyKeypadStateChanged(row, col, press);
+                        keypad_intrpt_check();
+                    }
                     return;
                 }
             }
         }
-        return;
-    }
-
-    keypad.gpio_interrupt_mask |= 0x800;
-
-    keypad_intrpt_check();
-}
-
-void QtKeypadBridge::keyReleaseEvent(QKeyEvent *event)
-{
-    Qt::Key key = static_cast<Qt::Key>(event->key());
-
-    switch(key)
-    {
-    case Qt::Key_Return:
-        key = Qt::Key_Enter;
-    default:
-        auto& keymap = keymap_tp;
-        for(unsigned int row = 0; row < sizeof(keymap)/sizeof(*keymap); ++row)
-        {
-            for(unsigned int col = 0; col < sizeof(*keymap)/sizeof(**keymap); ++col)
-            {
-                if(key == keymap[row][col].key && keymap[row][col].alt == (bool(event->modifiers() & Qt::AltModifier) || bool(event->modifiers() & Qt::MetaModifier)))
-                {
-                    keypad.key_map[row] &= ~(1 << col);
-                    notifyKeypadStateChanged(row, col, false);
-                    keypad_intrpt_check();
-                    return;
-                }
-            }
-        }
-        return;
     }
 
     keypad.gpio_interrupt_mask |= 0x800;
@@ -80,9 +51,9 @@ bool QtKeypadBridge::eventFilter(QObject *obj, QEvent *e)
     // OKAY, WHY IS THIS NOT WORKING... THE EVENT FILTER IS CALLED, YET NEVER ON A KEYPRESS...
 
     if(e->type() == QEvent::KeyPress) {
-        keyPressEvent(static_cast<QKeyEvent*>(e));
+        keyEvent(static_cast<QKeyEvent*>(e), true);
     } else if(e->type() == QEvent::KeyRelease) {
-        keyReleaseEvent(static_cast<QKeyEvent*>(e));
+        keyEvent(static_cast<QKeyEvent*>(e), false);
     } else {
         return false;
     }

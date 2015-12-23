@@ -10,8 +10,7 @@
 class QtKeypadBridge : public QObject
 {
 public:
-    static void keyPressEvent(QKeyEvent *event);
-    static void keyReleaseEvent(QKeyEvent *event);
+    static void keyEvent(QKeyEvent *event, bool press);
 
     virtual bool eventFilter(QObject *obj, QEvent *e);
 };
