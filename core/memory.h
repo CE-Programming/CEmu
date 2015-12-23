@@ -9,12 +9,22 @@
 extern "C" {
 #endif
 
+struct flash_write {
+    uint32_t address;
+    uint32_t address_mask;
+    uint8_t value;
+    uint8_t value_mask;
+};
+typedef struct flash_write flash_write_t;
+
 struct mem_state {
+    flash_write_t flash_writes[6];
     uint8_t *flash;     /* Flash mem */
     uint8_t *ram;       /* RAM */
     uint8_t *vram;      /* VRAM */
     int flash_mapped;
     int flash_unlocked;
+    int flash_write_index;
 };
 
 /* Type definitions */
