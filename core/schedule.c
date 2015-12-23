@@ -9,7 +9,7 @@ sched_state_t sched;
 
 static inline uint32_t muldiv(uint32_t a, uint32_t b, uint32_t c) {
 #if defined(__i386__) || defined(__x86_64__)
-    asm ("mull %1; divl %2" : "+a" (a) : "m" (b), "m" (c) : "edx");
+    asm ("mull %k1\n\tdivl %k2" : "+a" (a) : "g" (b), "g" (c) : "cc", "edx");
     return a;
 #else
     uint64_t d = a;
