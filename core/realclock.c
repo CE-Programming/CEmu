@@ -17,7 +17,7 @@ static void rtc_event(int index) {
         return;
     }
 
-    if (currsec > rtc.prevsec) {
+    if ((currsec > rtc.prevsec) && (rtc.control & 128)) {
         if(rtc.control & 1) { rtc.interrupt |= 1; }
         rtc.read_sec++;
         rtc.prevsec = currsec;
