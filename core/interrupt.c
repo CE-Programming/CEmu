@@ -25,7 +25,7 @@ void intrpt_reset() {
 }
 
 static uint8_t intrpt_read(uint16_t pio) {
-    uint16_t index = pio & 0x3F;
+    uint16_t index = pio & 0xFF;
     uint8_t bit_offset = (pio & 3) << 3;
 
     static const uint32_t revision = 0x00010900;
@@ -60,7 +60,7 @@ static uint8_t intrpt_read(uint16_t pio) {
 }
 
 static void intrpt_write(uint16_t pio, uint8_t byte) {
-    uint16_t index = pio & 0x3F;
+    uint16_t index = pio & 0xFF;
     uint8_t bit_offset = (pio & 3) << 3;
 
     /* 	Ports 5020-503F are identical in function to 5000-501F */
