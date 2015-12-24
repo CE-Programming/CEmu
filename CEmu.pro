@@ -53,7 +53,6 @@ SOURCES += main.cpp\
     core/apb.c \
     core/interrupt.c \
     emuthread.cpp \
-    settings.cpp \
     core/flash.c \
     core/misc.c \
     core/schedule.c \
@@ -88,7 +87,6 @@ HEADERS  += mainwindow.h \
     core/interrupt.h \
     emuthread.h \
     core/emu.h \
-    settings.h \
     core/flash.h \
     core/misc.h \
     core/schedule.h \

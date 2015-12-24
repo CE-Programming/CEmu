@@ -1,17 +1,14 @@
 #include "romselection.h"
 #include "ui_romselection.h"
+
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QMessageBox>
 
-#include "settings.h"
 #include "core/flash.h"
 
-bool fileExists(const QString &path) {
-    QFileInfo checkFile(path);
-    return (checkFile.exists() && checkFile.isFile());
-}
+std::string romImagePath;
 
 RomSelection::RomSelection(QWidget *p) : QDialog(p), ui(new Ui::RomSelection)
 {
@@ -20,6 +17,11 @@ RomSelection::RomSelection(QWidget *p) : QDialog(p), ui(new Ui::RomSelection)
     setWindowFlags(Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint );
 
     connect(ui->rompath, SIGNAL(textChanged(QString)), this, SLOT(checkInput(QString)));
+}
+
+bool fileExists(const QString &path) {
+    QFileInfo checkFile(path);
+    return (checkFile.exists() && checkFile.isFile());
 }
 
 RomSelection::~RomSelection()
@@ -43,7 +45,8 @@ void RomSelection::on_create_sel_clicked()
 
 void RomSelection::on_cancel_clicked()
 {
-    this->close();
+    romImagePath.clear();
+    close();
 }
 
 void RomSelection::on_browse_sel_clicked()
@@ -59,7 +62,6 @@ void RomSelection::on_browse_clicked()
   ui->rompath->setText(
       QFileDialog::getOpenFileName(this, tr("Open ROM file"),"",
       tr("Known Types (*.rom *.sav);;ROM Image (*.rom);;Saved Image (*.sav);;All Files (*.*)")));
-
 }
 
 void RomSelection::on_next_clicked()
@@ -67,9 +69,9 @@ void RomSelection::on_next_clicked()
     if(ui->browse_sel->isChecked()) {
         if(flash_open(ui->rompath->text().toLatin1()) == 0) {
             QMessageBox::critical(this, trUtf8("Invalid ROM image"), trUtf8("You have selected an invalid ROM image."));
-            this->close();
             return;
         }
-        CEmuSettings::Instance()->setROMLocation(ui->rompath->text());
+        romImagePath = ui->rompath->text().toLatin1().toStdString();
+        close();
     }
 }

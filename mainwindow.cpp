@@ -1,7 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "settings.h"
 #include "emuthread.h"
 #include "qmlbridge.h"
 #include "qtframebuffer.h"
@@ -16,8 +15,10 @@
 #include <QQuickWidget>
 #include <QDockWidget>
 #include <QShortcut>
+#include <iostream>
 
 char tmpBuf[20] = {0};
+static const constexpr int WindowStateVersion = 0;
 
 MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
 {
@@ -30,8 +31,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
     connect(&emu, SIGNAL(consoleStr(QString)), this, SLOT(consoleStr(QString))); //Not queued connection as it may cause a hang
 
     // GUI -> Emulator
-    connect(ui->tabWidget, SIGNAL(currentChanged(int)), this, SLOT(currentChangedSlot(int)));
-    connect(ui->actionSetup, SIGNAL(triggered()), this, SLOT(runSetup()));
     connect(ui->buttonRun, SIGNAL(clicked(bool)), this, SLOT(raiseDebugger()));
 
     // Console actions
@@ -52,11 +51,22 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
 
     in_debugger = false;
 
-    emu.rom = CEmuSettings::Instance()->getROMLocation().toStdString();
-    if(emu.rom == "") {
-        runSetup();
+#ifdef Q_OS_ANDROID
+    QString path = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+    settings = new QSettings(path + QStringLiteral("/cemu.ini"), QSettings::IniFormat);
+#else
+    settings = new QSettings();
+#endif
+
+    restoreGeometry(settings->value(QStringLiteral("windowGeometry")).toByteArray());
+    restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
+
+    emu.rom = settings->value(QStringLiteral("romImage")).toByteArray().toStdString();
+
+    if(emu.rom.empty()) {
+       runSetup();
     } else {
-        emu.start();
+       emu.start();
     }
 
     ui->lcdWidget->setFocus();
@@ -65,11 +75,11 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
 // window destructor
 MainWindow::~MainWindow()
 {
+    settings->setValue(QStringLiteral("windowState"), saveState(WindowStateVersion));
+    settings->setValue(QStringLiteral("windowGeometry"), saveGeometry());
+
+    //delete settings;
     delete ui;
-}
-
-void MainWindow::currentChangedSlot(int index) {
-
 }
 
 void MainWindow::raiseDebugger()
@@ -164,23 +174,21 @@ void MainWindow::consoleStr(QString str)
 }
 
 void MainWindow::runSetup(void) {
-    RomSelection m;
-    m.exec();
+    romSelection.show();
+    romSelection.exec();
 
-    emu.stop();
-    QString rompath = CEmuSettings::Instance()->getROMLocation();
-    emu.rom = rompath.toStdString();
-    if(emu.rom == "") {
-        this->close();
-        return;
+    if (!romImagePath.empty()) {
+        settings->setValue(QStringLiteral("romImage"),QVariant(romImagePath.c_str()));
+        emu.rom = romImagePath;
+        emu.stop();
+        emu.start();
     }
-    emu.start();
 }
 
 void MainWindow::setUIMode(bool docks_enabled)
 {
     // Already in this mode?
-    if(docks_enabled == ui->tabWidget->isHidden())
+    if (docks_enabled == ui->tabWidget->isHidden())
         return;
 
     //settings->setValue(QStringLiteral("docksEnabled"), docks_enabled);
