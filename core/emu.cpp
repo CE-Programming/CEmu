@@ -121,6 +121,7 @@ bool emu_start() {
     return true;
 }
 
+#ifdef __EMSCRIPTEN__
 void emu_inner_loop(void)
 {
     sched_process_pending_events();
@@ -132,6 +133,7 @@ void emu_inner_loop(void)
         cpu_execute();  // execute instructions with available clock cycles
     }
 }
+#endif
 
 void emu_loop(bool reset) {
     static int count = 0;
