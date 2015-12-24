@@ -145,8 +145,8 @@ reset:
         if (cycle_count_delta < 0) {
             cycle_count_delta = cpu_execute(cycle_count_delta);  // execute instructions with available clock cycles
             if (cpu.IEF1 && cpu.halted) {
-                if (!(count & 0xFFFF)) intrpt_trigger(4 - !(count >> 16), INTERRUPT_PULSE);
-                if (!count--) count = 8 << 16;
+                intrpt_trigger(4 - !count, INTERRUPT_PULSE);
+                if (!count--) count = 8;
             }
         } else {
             QThread::yieldCurrentThread();
