@@ -115,11 +115,12 @@ static void lcd_event(int index) {
 }
 
 void lcd_reset(void) {
-    // Palette is unchanged on a reset (TODO)
-    // memset(&lcd, 0, (char *)&lcd.palette - (char *)&lcd);
+    /* Palette is unchanged on a reset */
+    memset(&lcd, 0, (char *)&lcd.palette - (char *)&lcd);
     sched.items[SCHED_LCD].clock = CLOCK_12M;
     sched.items[SCHED_LCD].second = -1;
     sched.items[SCHED_LCD].proc = lcd_event;
+    gui_console_printf("LCD reset.\n");
 }
 
 uint8_t lcd_read(const uint16_t pio) {

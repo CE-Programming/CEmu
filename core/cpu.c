@@ -966,7 +966,7 @@ int cpu_execute(int cycles) {
     if (cpu.IEF_wait) {
         cpu.IEF1 = cpu.IEF2 = 1;
     }
-    if (cpu.IEF1 && (intrpt.request->status & intrpt.request->enabled)) {
+    if (cpu.IEF1 && (intrpt.status & intrpt.enabled)) {
         cpu.cycles = 0;
         cpu_call(1, cpu.IM == 2 ? cpu_read_word(r->I << 8 | r->R) : 0x38, cpu.MADL);
         cycles += cpu.cycles;

@@ -19,20 +19,11 @@ extern "C" {
 #define INT_RTC      12
 #define INT_PWR      15  // Probably power bit. Probably.
 
-typedef struct interrupt_request {
-    uint32_t status   : 22;
-    uint32_t          :  2;
-    uint32_t enabled  : 22;
-    uint32_t          :  2;
-    uint32_t latched  : 22;
-    uint32_t          :  2;
-    uint32_t inverted : 22;
-    uint32_t          :  2;
-} interrupt_request_t;
-
 typedef struct interrupt_state {
     uint32_t status;
-    interrupt_request_t request[2];
+    uint32_t enabled;
+    uint32_t latched;
+    uint32_t inverted;
 } interrupt_state_t;
 
 /* External INTERRUPT state */

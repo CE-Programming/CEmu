@@ -13,6 +13,7 @@ void keypad_intrpt_check() {
 }
 
 void keypad_on_pressed() {
+    gui_console_printf("[ON] key pressed.\n");
     intrpt_set(INT_ON, true);
 }
 
@@ -48,6 +49,9 @@ static uint8_t keypad_read(const uint16_t pio)
 /* Scan next row of keypad, if scanning is enabled */
 static void keypad_scan_event(int index) {
     uint16_t row;
+
+    gui_console_printf("Scranning keypad row: %d\n", keypad.current_row);
+
     if (keypad.current_row >= sizeof(keypad.data) / sizeof(keypad.data[0])) {
         return; /* too many keypad rows */
     }
@@ -85,13 +89,14 @@ static void keypad_write(const uint16_t pio, const uint8_t byte)
 
     switch ( index & 0x7F ) {
         case 0x00: case 0x01: case 0x02: case 0x03:
-        write8(keypad.cntrl,bit_offset,byte);
-        if (keypad.cntrl & 2) {
-            event_set(SCHED_KEYPAD, ((keypad.cntrl >> 16) + (keypad.cntrl >> 2 & 0x3FFF))/1000);
-        } else {
-            event_clear(SCHED_KEYPAD);
-        }
-        return;
+            write8(keypad.cntrl,bit_offset,byte);
+            if (keypad.cntrl & 2) {
+                event_set(SCHED_KEYPAD, ((keypad.cntrl >> 16) + (keypad.cntrl >> 2 & 0x3FFF)));
+            } else {
+                event_clear(SCHED_KEYPAD);
+            }
+            keypad_scan_event(0);
+            return;
         case 0x04: case 0x05:
             write8(keypad.size,bit_offset,byte);
             return;
@@ -123,6 +128,8 @@ void keypad_reset() {
     sched.items[SCHED_KEYPAD].clock = CLOCK_APB;
     sched.items[SCHED_KEYPAD].second = -1;
     sched.items[SCHED_KEYPAD].proc = keypad_scan_event;
+
+    gui_console_printf("Keypad reset.\n");
 }
 
 static const eZ80portrange_t device = {
