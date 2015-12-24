@@ -66,6 +66,9 @@ SOURCES += main.cpp\
     core/gif.cpp \
     core/realclock.c \
 
+linux|macx|ios: SOURCES += core/os/os-linux.c
+win32: SOURCES += core/os/os-win32.c
+
 HEADERS  += mainwindow.h \
     romselection.h \
     qtframebuffer.h \
@@ -96,7 +99,8 @@ HEADERS  += mainwindow.h \
     core/sha256.h \
     core/realclock.h \
     core/giflib.h \
-    core/gif.h
+    core/gif.h \
+    core/os/os.h
 
 FORMS    += mainwindow.ui \
     romselection.ui

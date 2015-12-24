@@ -22,8 +22,10 @@
 // Finally, call GifEnd() to close the file handle and free memory.
 //
 
-#ifndef gif_h
-#define gif_h
+#ifndef GIFLIB_H
+#define GIFLIB_H
+
+#include "core/os/os.h"
 
 #include <stdio.h>   // for FILE*
 #include <string.h>  // for memcpy and bzero
@@ -691,7 +693,7 @@ void GifWriteLzwImage(FILE* f, uint8_t* image, uint32_t left, uint32_t top,  uin
                     GifWriteCode(f, stat, clearCode, codeSize); // clear tree
 
                     memset(codetree, 0, sizeof(GifLzwNode)*4096);
-                    curCode = -1;
+                    nextValue = -1;
                     codeSize = minCodeSize+1;
                     maxCode = clearCode+1;
                 }
@@ -725,14 +727,11 @@ struct GifWriter
 // Creates a gif file.
 // The input GIFWriter is assumed to be uninitialized.
 // The delay value is the time between frames in hundredths of a second - note that not all viewers pay much attention to this value.
-bool GifBegin( GifWriter* writer, const char* filename, uint32_t width, uint32_t height, uint32_t delay, int32_t bitDepth = 8, bool dither = false )
+bool GifBegin( GifWriter* writer, const char* filename, uint32_t width, uint32_t height, uint32_t delay)
 {
-#if _MSC_VER >= 1400
-        writer->f = 0;
-    fopen_s(&writer->f, filename, "wb");
-#else
-    writer->f = fopen(filename, "wb");
-#endif
+
+    writer->f = fopen_utf8(filename, "wb");
+
     if(!writer->f) return false;
 
     writer->firstFrame = true;

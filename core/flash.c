@@ -1,5 +1,7 @@
 #include "core/flash.h"
 #include "core/emu.h"
+#include "core/os/os.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,7 +12,7 @@ flash_state_t flash;
 int flash_open(const char *filename) {
     uint32_t size;
 
-    FILE* rom_read = fopen(filename, "r+b");
+    FILE* rom_read = fopen_utf8(filename, "r+b");
 
     if (!rom_read) {
         return 0;
