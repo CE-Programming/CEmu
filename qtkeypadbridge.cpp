@@ -39,7 +39,7 @@ void QtKeypadBridge::keyEvent(QKeyEvent *event, bool press)
         }
     }
 
-    keypad.gpio_interrupt_mask |= 0x800;
+    keypad.gpio_enable |= 0x800;
     keypad_intrpt_check();
 }
 
