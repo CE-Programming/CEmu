@@ -86,7 +86,7 @@ static void intrpt_write(uint16_t pio, uint8_t value) {
             break;
         case 3:
         case 11:
-            write8(intrpt.request[request].enabled, bit_offset, value);
+            write8(intrpt.request[request].latched, bit_offset, value);
             break;
         case 4:
         case 12:

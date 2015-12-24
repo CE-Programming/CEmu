@@ -2,8 +2,6 @@
 #include <QtQml>
 
 #include "mainwindow.h"
-#include "romselection.h"
-#include "settings.h"
 #include "qmlbridge.h"
 
 int main(int argc, char *argv[]) {

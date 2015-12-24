@@ -31,4 +31,7 @@ private:
   Ui::RomSelection *ui;
 };
 
+/* External path for mainwindow */
+extern std::string romImagePath;
+
 #endif // ROMSELECTION_H

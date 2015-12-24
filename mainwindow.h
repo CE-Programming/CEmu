@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QSettings>
 #include <QLabel>
 
 #include <romselection.h>
@@ -24,6 +25,8 @@ public slots:
     void closeEvent(QCloseEvent *) override;
     void showStatusMsg(QString str);
 
+    // ROM
+
     // Actions
     void runSetup(void);
     void screenshot(void);
@@ -38,13 +41,15 @@ public slots:
 
     // Debugger
     void raiseDebugger();
-    void currentChangedSlot(int);
     void populateDebugWindow();
 
 private slots:
 
 private:
     Ui::MainWindow *ui = nullptr;
+    QSettings *settings = nullptr;
+    RomSelection romSelection;
+
     EmuThread emu;
 
     QLabel status_label;
