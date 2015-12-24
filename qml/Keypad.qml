@@ -4,13 +4,13 @@ import QtQuick.Layouts 1.0
 Rectangle {
     id: rectangle1
     width: 265
-    height: 360
+    height: 370
     
     color: "#fff"
 
     GridLayout {
-        x: 31
-        y: 120
+        x: 32
+        y: 132
         rowSpacing: 15
         columns: 5
 
@@ -64,7 +64,7 @@ Rectangle {
             width: 36
             height: 20
             color: "#000000"
-            text: "x-1"
+            text: "x-¹"
             keymap_id: 21
         }
 
@@ -195,7 +195,7 @@ Rectangle {
             width: 36
             height: 20
             color: "#ffffff"
-            text: "x"
+            text: "×"
             keymap_id: 51
             font_color: "#000"
         }
@@ -349,8 +349,8 @@ Rectangle {
     }
 
     GridLayout {
-        x: 31
-        y: 47
+        x: 32
+        y: 62
         rowSpacing: 15
         columns: 3
 
@@ -395,7 +395,7 @@ Rectangle {
             width: 36
             height: 20
             color: "#000000"
-            text: "X,T,O,n"
+            text: "XTØn"
             keymap_id: 31
         }
 
@@ -410,8 +410,8 @@ Rectangle {
     }
 
     RowLayout {
-        x: 31
-        y: 8
+        x: 32
+        y: 23
         spacing: 5
 
         NBigButton {
@@ -429,7 +429,7 @@ Rectangle {
             width: 36
             height: 20
             color: "#ffffff"
-            text: "window"
+            text: "wind"
             keymap_id: 11
             font_color: "#000"
         }
@@ -467,64 +467,71 @@ Rectangle {
 
     Text {
         id: text1
-        x: 78
-        y: 34
+        x: 82
+        y: 50
         color: "#7b7bdb"
         text: qsTr("quit")
-        font.pixelSize: 12
+        textFormat: Text.PlainText
+        font.pixelSize: 10
     }
 
     Text {
         id: text2
-        x: 124
-        y: 34
+        x: 126
+        y: 50
         color: "#7b7bdb"
         text: qsTr("ins")
-        font.pixelSize: 12
+        textFormat: Text.PlainText
+        font.pixelSize: 10
     }
 
     Text {
         id: text3
-        x: 81
-        y: 68
+        x: 83
+        y: 85
         color: "#7b7bdb"
         text: qsTr("link")
-        font.pixelSize: 12
+        textFormat: Text.PlainText
+        font.pixelSize: 10
     }
 
     Text {
         id: text4
-        x: 122
-        y: 68
+        x: 126
+        y: 85
         color: "#7b7bdb"
         text: qsTr("list")
-        font.pixelSize: 12
+        textFormat: Text.PlainText
+        font.pixelSize: 10
     }
 
     NBigButton {
         id: nBigButton1
-        x: 185
-        y: 39
+        x: 189
+        y: 62
+        width: 20
         color: "#ffffff"
-        text: "∧"
+        text: "^"
         font_color: "#000"
         keymap_id: 59
     }
 
     NBigButton {
         id: nBigButton2
-        x: 185
-        y: 91
+        x: 189
+        y: 97
+        width: 20
         color: "#ffffff"
-        text: "∨"
+        text: "ᴠ"
         font_color: "#000"
         keymap_id: 56
     }
 
     NBigButton {
         id: nBigButton49
-        x: 160
-        y: 65
+        x: 163
+        y: 80
+        width: 20
         color: "#ffffff"
         text: "<"
         font_color: "#000"
@@ -533,12 +540,860 @@ Rectangle {
 
     NBigButton {
         id: nBigButton50
-        x: 210
-        y: 65
+        x: 215
+        y: 80
+        width: 20
+        height: 20
         color: "#ffffff"
         text: ">"
         font_color: "#000"
         keymap_id: 58
+    }
+
+    Text {
+        id: text5
+        x: 36
+        y: 85
+        color: "#7b7bdb"
+        text: qsTr("A-lock")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text6
+        x: 32
+        y: 120
+        color: "#7b7bdb"
+        text: qsTr("test")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text7
+        x: 72
+        y: 120
+        color: "#7b7bdb"
+        text: qsTr("angle")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text8
+        x: 114
+        y: 120
+        color: "#7b7bdb"
+        text: qsTr("draw")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text9
+        x: 155
+        y: 120
+        color: "#7b7bdb"
+        text: qsTr("distr")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text10
+        x: 32
+        y: 156
+        color: "#7b7bdb"
+        text: qsTr("matrix")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text11
+        x: 32
+        y: 190
+        color: "#7b7bdb"
+        text: qsTr("√")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text12
+        x: 72
+        y: 156
+        color: "#7b7bdb"
+        text: qsTr("sin-¹")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text13
+        x: 114
+        y: 156
+        color: "#7b7bdb"
+        text: qsTr("cos-¹")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text14
+        x: 155
+        y: 156
+        color: "#7b7bdb"
+        text: qsTr("tan-¹")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text15
+        x: 196
+        y: 156
+        color: "#7b7bdb"
+        text: qsTr("π")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text16
+        x: 72
+        y: 190
+        color: "#7b7bdb"
+        text: qsTr("EE")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text17
+        x: 114
+        y: 190
+        color: "#7b7bdb"
+        text: qsTr("{")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text18
+        x: 155
+        y: 190
+        color: "#7b7bdb"
+        text: qsTr("}")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text19
+        x: 196
+        y: 190
+        color: "#7b7bdb"
+        text: qsTr("e")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text20
+        x: 196
+        y: 225
+        color: "#7b7bdb"
+        text: qsTr("[")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text21
+        x: 196
+        y: 260
+        color: "#7b7bdb"
+        text: qsTr("]")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text22
+        x: 196
+        y: 296
+        color: "#7b7bdb"
+        text: qsTr("mem")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text23
+        x: 32
+        y: 225
+        color: "#7b7bdb"
+        text: qsTr("10×")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text24
+        x: 32
+        y: 260
+        width: 7
+        height: 11
+        color: "#7b7bdb"
+        text: qsTr("e×")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text25
+        x: 32
+        y: 296
+        color: "#7b7bdb"
+        text: qsTr("rcl")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text26
+        x: 32
+        y: 330
+        color: "#7b7bdb"
+        text: qsTr("off")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text27
+        x: 62
+        y: 330
+        color: "#7b7bdb"
+        text: qsTr("catalog")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text28
+        x: 72
+        y: 225
+        color: "#7b7bdb"
+        text: qsTr("u")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text29
+        x: 114
+        y: 225
+        color: "#7b7bdb"
+        text: qsTr("v")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text30
+        x: 155
+        y: 225
+        color: "#7b7bdb"
+        text: qsTr("w")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text31
+        x: 155
+        y: 260
+        color: "#7b7bdb"
+        text: qsTr("L6")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text32
+        x: 114
+        y: 260
+        color: "#7b7bdb"
+        text: qsTr("L5")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text33
+        x: 72
+        y: 260
+        color: "#7b7bdb"
+        text: qsTr("L4")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text34
+        x: 72
+        y: 296
+        color: "#7b7bdb"
+        text: qsTr("L1")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text35
+        x: 114
+        y: 296
+        color: "#7b7bdb"
+        text: qsTr("L2")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text36
+        x: 155
+        y: 296
+        color: "#7b7bdb"
+        text: qsTr("L3")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text37
+        x: 114
+        y: 330
+        color: "#7b7bdb"
+        text: qsTr("i")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text38
+        x: 155
+        y: 330
+        color: "#7b7bdb"
+        text: qsTr("ans")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text39
+        x: 196
+        y: 330
+        color: "#7b7bdb"
+        text: qsTr("entry")
+        textFormat: Text.PlainText
+        font.pixelSize: 9
+    }
+
+    Text {
+        id: text40
+        x: 62
+        y: 120
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("A")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text41
+        x: 103
+        y: 120
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("B")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text42
+        x: 143
+        y: 120
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("C")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text43
+        x: 62
+        y: 155
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("D")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text44
+        x: 103
+        y: 155
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("E")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text45
+        x: 143
+        y: 155
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("F")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text46
+        x: 183
+        y: 155
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("G")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text47
+        x: 223
+        y: 155
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("H")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text48
+        x: 62
+        y: 190
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("I")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text49
+        x: 103
+        y: 190
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("J")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text50
+        x: 143
+        y: 190
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("K")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text51
+        x: 183
+        y: 190
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("L")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text52
+        x: 223
+        y: 190
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("M")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text53
+        x: 62
+        y: 225
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("N")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text54
+        x: 103
+        y: 225
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("O")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text55
+        x: 143
+        y: 225
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("P")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text56
+        x: 183
+        y: 225
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("Q")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text57
+        x: 223
+        y: 225
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("R")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text58
+        x: 62
+        y: 260
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("S")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text59
+        x: 103
+        y: 260
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("T")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text60
+        x: 143
+        y: 260
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("U")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text61
+        x: 183
+        y: 260
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("V")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text62
+        x: 223
+        y: 260
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("W")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text63
+        x: 62
+        y: 295
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("X")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text64
+        x: 103
+        y: 295
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("Y")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text65
+        x: 143
+        y: 295
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("Z")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text66
+        x: 183
+        y: 295
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("Ø")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text67
+        x: 223
+        y: 295
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: "\""
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text68
+        x: 103
+        y: 330
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("_")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text69
+        x: 143
+        y: 330
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr(":")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text70
+        x: 183
+        y: 330
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("?")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text71
+        x: 219
+        y: 330
+        width: 24
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("solve")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text72
+        x: 20
+        y: 8
+        color: "#7b7bdb"
+        text: qsTr("stat plot")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text73
+        x: 74
+        y: 8
+        color: "#7b7bdb"
+        text: qsTr("tblset")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text74
+        x: 114
+        y: 8
+        color: "#7b7bdb"
+        text: qsTr("frmt")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text75
+        x: 155
+        y: 8
+        color: "#7b7bdb"
+        text: qsTr("calc")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text76
+        x: 196
+        y: 8
+        color: "#7b7bdb"
+        text: qsTr("table")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text77
+        x: 59
+        y: 8
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("f1")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text78
+        x: 101
+        y: 8
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("f2")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text79
+        x: 141
+        y: 8
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("f3")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text80
+        x: 181
+        y: 8
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("f4")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
+    }
+
+    Text {
+        id: text81
+        x: 222
+        y: 8
+        width: 13
+        height: 12
+        color: "#62dd6d"
+        text: qsTr("f5")
+        textFormat: Text.PlainText
+        font.pixelSize: 10
     }
 
 

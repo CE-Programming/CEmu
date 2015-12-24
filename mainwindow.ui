@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>965</width>
+    <width>899</width>
     <height>558</height>
    </rect>
   </property>
@@ -242,7 +242,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -274,14 +274,14 @@
           </property>
           <property name="minimumSize">
            <size>
-            <width>270</width>
-            <height>360</height>
+            <width>265</width>
+            <height>370</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>270</width>
-            <height>360</height>
+            <width>265</width>
+            <height>370</height>
            </size>
           </property>
           <property name="focusPolicy">
@@ -3327,7 +3327,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>965</width>
+     <width>899</width>
      <height>21</height>
     </rect>
    </property>
