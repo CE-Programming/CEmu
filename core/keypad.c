@@ -11,12 +11,12 @@ keypad_state_t keypad;
 void keypad_intrpt_check() {
     uint8_t status = (keypad.status & keypad.enable) | (keypad.gpio_status & keypad.gpio_enable);
 
-    intrpt_set(INT_KEYPAD, status);
+    intrpt_trigger(INT_KEYPAD, status ? INTERRUPT_SET : INTERRUPT_CLEAR);
 }
 
 void keypad_on_pressed(void) {
     gui_console_printf("[ON] key pressed.\n");
-    intrpt_set(INT_ON, true);
+    intrpt_trigger(INT_ON, INTERRUPT_PULSE);
 }
 
 static uint8_t keypad_read(const uint16_t pio)

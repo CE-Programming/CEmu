@@ -35,13 +35,19 @@ typedef struct interrupt_state {
     interrupt_request_t request[2];
 } interrupt_state_t;
 
+typedef enum interrupt_mode {
+    INTERRUPT_CLEAR,
+    INTERRUPT_SET,
+    INTERRUPT_PULSE
+} interrupt_mode_t;
+
 /* External INTERRUPT state */
 extern interrupt_state_t intrpt;
 
 /* Available Functions */
 eZ80portrange_t init_intrpt(void);
 void intrpt_reset(void);
-void intrpt_set(uint32_t int_num, int on);
+void intrpt_trigger(uint32_t int_num, interrupt_mode_t mode);
 
 #ifdef __cplusplus
 }

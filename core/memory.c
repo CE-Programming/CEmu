@@ -166,7 +166,6 @@ uint8_t memory_read_byte(const uint32_t address)
         // FLASH
         case 0x0: case 0x1: case 0x2: case 0x3:
             cpu.cycles += 5;
-            flash_reset(addr, 0);
             return mem.flash[addr];
 
         // MAYBE FLASH
@@ -174,7 +173,6 @@ uint8_t memory_read_byte(const uint32_t address)
             addr -= 0x400000;
             if (mem.flash_mapped) {
                 cpu.cycles += 5;
-                flash_reset(addr, 0);
                 return mem.flash[addr];
             }
 

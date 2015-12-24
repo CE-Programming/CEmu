@@ -111,7 +111,7 @@ static void lcd_event(int index) {
     /* for now, assuming vcomp occurs at same time UPBASE is loaded */
     lcd.upcurr = lcd.upbase;
     lcd.ris |= 0xC;
-    intrpt_set(INT_LCD, lcd.ris & lcd.mis);
+    intrpt_trigger(INT_LCD, lcd.ris & lcd.mis ? INTERRUPT_SET : INTERRUPT_CLEAR);
 }
 
 void lcd_reset(void) {
@@ -175,10 +175,10 @@ void lcd_write(const uint16_t pio, const uint8_t value) {
         } else if (offset == 0x01C) {
             write8(lcd.imsc, bit_offset, value);
             lcd.imsc &= 0x1E;
-            intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
+            intrpt_trigger(INT_LCD, lcd.ris & lcd.imsc ? INTERRUPT_SET : INTERRUPT_CLEAR);
         } else if (offset == 0x028) {
             lcd.ris &= ~(value << bit_offset);
-            intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
+            intrpt_trigger(INT_LCD, lcd.ris & lcd.imsc ? INTERRUPT_SET : INTERRUPT_CLEAR);
         }
     } else if (offset < 0x400) {
         write8(lcd.palette[pio >> 1 & 0xFF], pio & 1, value);

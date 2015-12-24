@@ -14,13 +14,16 @@ static void update() {
     }
 }
 
-void intrpt_set(uint32_t int_num, int on) {
-    if (on) {
+void intrpt_trigger(uint32_t int_num, interrupt_mode_t mode) {
+    if (mode) {
         intrpt.status |= 1 << int_num;
     } else {
         intrpt.status &= ~(1 << int_num);
     }
     update();
+    if (mode == INTERRUPT_PULSE) {
+        intrpt_trigger(int_num, INTERRUPT_CLEAR);
+    }
 }
 
 void intrpt_reset() {
@@ -86,7 +89,7 @@ static void intrpt_write(uint16_t pio, uint8_t value) {
             break;
         case 3:
         case 11:
-            write8(intrpt.request[request].enabled, bit_offset, value);
+            write8(intrpt.request[request].latched, bit_offset, value);
             break;
         case 4:
         case 12:

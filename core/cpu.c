@@ -29,11 +29,11 @@ void cpu_init(void) {
     gui_console_printf("Initialized CPU...\n");
 }
 
-static uint32_t cpu_mask_mode(uint32_t value, uint8_t mode) {
+static uint32_t cpu_mask_mode(uint32_t value, bool mode) {
     return value & (mode ? 0xFFFFFF : 0xFFFF);
 }
 
-static uint32_t cpu_address_mode(uint32_t address, uint8_t mode) {
+static uint32_t cpu_address_mode(uint32_t address, bool mode) {
     if (mode) {
         return address & 0xFFFFFF;
     }
@@ -341,7 +341,7 @@ static uint32_t cpu_dec_bc_partial_mode() {
     return value;
 }
 
-static void cpu_call(int condition, uint32_t address, uint8_t mixed) {
+static void cpu_call(bool condition, uint32_t address, uint8_t mixed) {
     eZ80registers_t *r = &cpu.registers;
     if (condition) {
         cpu.cycles += 0;
@@ -362,6 +362,33 @@ static void cpu_call(int condition, uint32_t address, uint8_t mixed) {
             cpu_push_word(r->PC);
         }
         r->PC = address;
+    }
+}
+
+static void cpu_return(bool condition) {
+    uint8_t adl;
+    eZ80registers_t *r = &cpu.registers;
+    if (condition) {
+        cpu.cycles += 0;
+        if (cpu.SUFFIX) {
+            adl = cpu_read_byte(r->SPL++) & 1;
+            if (cpu.ADL) {
+                r->PCL = cpu_read_byte(r->SPL++);
+                r->PCH = cpu_read_byte(r->SPL++);
+            } else {
+                r->PCL = cpu_read_byte(r->SPS++);
+                r->PCH = cpu_read_byte(r->SPS++);
+            }
+            if (adl) {
+                r->PCU = cpu_read_byte(r->SPL++);
+                if (!cpu.L && !cpu.ADL) {
+                    r->PCU = 0;
+                }
+            }
+            cpu.ADL = adl;
+        } else {
+            r->PC = cpu_pop_word();
+        }
     }
 }
 
@@ -1173,28 +1200,7 @@ int cpu_execute(int cycles) {
             case 3:
                 switch (context.z) {
                     case 0: // RET cc[y]
-                        if (cpu_read_cc(context.y)) {
-                            cpu.cycles += 0;
-                            if (cpu.SUFFIX) {
-                                w = cpu_read_byte(r->SPL++) & 1;
-                                if (cpu.ADL) {
-                                    r->PCL = cpu_read_byte(r->SPL++);
-                                    r->PCH = cpu_read_byte(r->SPL++);
-                                } else {
-                                    r->PCL = cpu_read_byte(r->SPS++);
-                                    r->PCH = cpu_read_byte(r->SPS++);
-                                }
-                                if (w) {
-                                    r->PCU = cpu_read_byte(r->SPL++);
-                                    if (!cpu.L && !cpu.ADL) {
-                                        r->PCU = 0;
-                                    }
-                                }
-                                cpu.ADL = w;
-                            } else {
-                                r->PC = cpu_pop_word();
-                            }
-                        }
+                        cpu_return(cpu_read_cc(context.y));
                         break;
                     case 1:
                         switch (context.q) {
@@ -1204,26 +1210,7 @@ int cpu_execute(int cycles) {
                             case 1:
                                 switch (context.p) {
                                     case 0: // RET
-                                        cpu.cycles += 0;
-                                        if (cpu.SUFFIX) {
-                                            w = cpu_read_byte(r->SPL++) & 1;
-                                            if (cpu.ADL) {
-                                                r->PCL = cpu_read_byte(r->SPL++);
-                                                r->PCH = cpu_read_byte(r->SPL++);
-                                            } else {
-                                                r->PCL = cpu_read_byte(r->SPS++);
-                                                r->PCH = cpu_read_byte(r->SPS++);
-                                            }
-                                            if (w) {
-                                                r->PCU = cpu_read_byte(r->SPL++);
-                                                if (!cpu.L && !cpu.ADL) {
-                                                    r->PCU = 0;
-                                                }
-                                            }
-                                            cpu.ADL = w;
-                                        } else {
-                                            r->PC = cpu_pop_word();
-                                        }
+                                        cpu_return(true);
                                         break;
                                     case 1: // EXX
                                         exx(&cpu.registers);
@@ -1296,8 +1283,7 @@ int cpu_execute(int cycles) {
                                 swap(r->HL, r->DE);
                                 break;
                             case 6: // DI
-                                cpu.IEF1 = 0;
-                                cpu.IEF2 = 0;
+                                cpu.IEF1 = cpu.IEF2 = 0;
                                 break;
                             case 7: // EI
                                 cpu.IEF_wait = 1;
@@ -1466,50 +1452,10 @@ int cpu_execute(int cycles) {
                                                     case 5:
                                                         switch (context.y) {
                                                             case 0: // RETN
-                                                                // Note: Does not implement non-maskable interrupts
-                                                                cpu.cycles += 0;
-                                                                if (cpu.SUFFIX) {
-                                                                    w = cpu_read_byte(r->SPL++) & 1;
-                                                                    if (cpu.ADL) {
-                                                                        r->PCL = cpu_read_byte(r->SPL++);
-                                                                        r->PCH = cpu_read_byte(r->SPL++);
-                                                                    } else {
-                                                                        r->PCL = cpu_read_byte(r->SPS++);
-                                                                        r->PCH = cpu_read_byte(r->SPS++);
-                                                                    }
-                                                                    if (w) {
-                                                                        r->PCU = cpu_read_byte(r->SPL++);
-                                                                        if (!cpu.L && !cpu.ADL) {
-                                                                            r->PCU = 0;
-                                                                        }
-                                                                    }
-                                                                    cpu.ADL = w;
-                                                                } else {
-                                                                    r->PC = cpu_pop_word();
-                                                                }
-                                                                break;
+                                                                // This is actually identical to reti on the z80
                                                             case 1: // RETI
-                                                                // Note: Does not implement non-maskable interrupts
-                                                                cpu.cycles += 0;
-                                                                if (cpu.SUFFIX) {
-                                                                    w = cpu_read_byte(r->SPL++) & 1;
-                                                                    if (cpu.ADL) {
-                                                                        r->PCL = cpu_read_byte(r->SPL++);
-                                                                        r->PCH = cpu_read_byte(r->SPL++);
-                                                                    } else {
-                                                                        r->PCL = cpu_read_byte(r->SPS++);
-                                                                        r->PCH = cpu_read_byte(r->SPS++);
-                                                                    }
-                                                                    if (w) {
-                                                                        r->PCU = cpu_read_byte(r->SPL++);
-                                                                        if (!cpu.L && !cpu.ADL) {
-                                                                            r->PCU = 0;
-                                                                        }
-                                                                    }
-                                                                    cpu.ADL = w;
-                                                                } else {
-                                                                    r->PC = cpu_pop_word();
-                                                                }
+                                                                cpu_return(true);
+                                                                cpu.IEF1 = cpu.IEF2;
                                                                 break;
                                                             case 2: // LEA IY, IX + d
                                                                 cpu.PREFIX = 2;
@@ -1572,13 +1518,13 @@ int cpu_execute(int cycles) {
                                                             case 2: // LD A, I
                                                                 r->A = r->I & 0x0F;
                                                                 r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-                                                                    | _flag_undef(r->F) | __flag_pv(cpu.IEF2)
+                                                                    | _flag_undef(r->F) | __flag_pv(cpu.IEF1)
                                                                     | _flag_subtract(0) | __flag_c(r->flags.C);
                                                                 break;
                                                             case 3: // LD A, R
                                                                 r->A = r->R;
                                                                 r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-                                                                    | _flag_undef(r->F) | __flag_pv(cpu.IEF2)
+                                                                    | _flag_undef(r->F) | __flag_pv(cpu.IEF1)
                                                                     | _flag_subtract(0) | __flag_c(r->flags.C);
                                                                 break;
                                                             case 4: // RRD
