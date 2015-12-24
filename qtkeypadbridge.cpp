@@ -11,7 +11,6 @@ QtKeypadBridge qt_keypad_bridge;
 void QtKeypadBridge::keyEvent(QKeyEvent *event, bool press)
 {
     Qt::Key key = static_cast<Qt::Key>(event->key());
-    printf("%x\n", event->key());
 
     auto& keymap = keymap_tp;
     for(unsigned int row = 0; row < sizeof(keymap)/sizeof(*keymap); ++row)
@@ -47,8 +46,6 @@ void QtKeypadBridge::keyEvent(QKeyEvent *event, bool press)
 bool QtKeypadBridge::eventFilter(QObject *obj, QEvent *e)
 {
     Q_UNUSED(obj);
-
-    // OKAY, WHY IS THIS NOT WORKING... THE EVENT FILTER IS CALLED, YET NEVER ON A KEYPRESS...
 
     if(e->type() == QEvent::KeyPress) {
         keyEvent(static_cast<QKeyEvent*>(e), true);

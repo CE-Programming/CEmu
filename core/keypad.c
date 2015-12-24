@@ -19,31 +19,34 @@ void keypad_on_pressed() {
 
 static uint8_t keypad_read(const uint16_t pio)
 {
-    uint16_t index = pio & 0x7F;
-    uint8_t bit_offset = (index&3)<<3;
+    uint16_t index = (pio >> 2) & 0x7F;
+    uint8_t bit_offset = (pio & 3) << 3;
 
-    switch(upperNibble8(index)) {
+    switch(upperNibble8(pio & 0x7F)) {
         case 0x1:
         case 0x2:        /* keypad data range */
             return ((uint8_t *)keypad.data)[index & 0xF];
         default:
             switch(index) {
-                case 0x00: case 0x01: case 0x02: case 0x03:     /* keypad contoller range */
+                case 0x00:
                     return read8(keypad.cntrl,bit_offset);
-                case 0x04: case 0x05:                           /* keypad size range */
+                case 0x01:
                     return read8(keypad.size,bit_offset);
-                case 0x08: case 0x09: case 0x0A: case 0x0B:     /* keypad interrupt acknowledge range */
+                case 0x02:
                     return read8(keypad.interrupt_ack,bit_offset);
-                case 0x0C: case 0x0D: case 0x0E: case 0x0F:     /* keypad interrupt mask range */
+                case 0x03:
                     return read8(keypad.interrupt_mask,bit_offset);
-                case 0x40: case 0x41: case 0x42: case 0x43:     /* GPIO interrupt acknowlegde range */
+                case 0x10:
                     return read8(keypad.gpio_interrupt_ack,bit_offset);
-                case 0x44: case 0x45: case 0x46: case 0x47:     /* GPIO interrupt mask range */
+                case 0x11:
                     return read8(keypad.gpio_interrupt_mask,bit_offset);
                 default:
-                    return 0; /* return 0 if unimplemented or not in range */
+                    break;
             }
     }
+
+    /* return 0 if unimplemented or not in range */
+    return 0;
 }
 
 /* Scan next row of keypad, if scanning is enabled */
@@ -59,11 +62,10 @@ static void keypad_scan_event(int index) {
     row |= 0xFFFF << (keypad.size >> 8 & 0xFF);  /* Unused columns read as 1 */
     row = ~row;
 
-    gui_console_printf("Scranning keypad row: %d -> %d\n", keypad.current_row, row);
-
     if (keypad.data[keypad.current_row] != row) {
         keypad.data[keypad.current_row] = row;
         keypad.interrupt_ack |= 2;
+        gui_console_printf("Row: %d -> Data: %d\n", keypad.current_row, row);
     }
 
     keypad.current_row++;
@@ -84,11 +86,11 @@ static void keypad_scan_event(int index) {
 
 static void keypad_write(const uint16_t pio, const uint8_t byte)
 {
-    uint16_t index = (int)pio & 0x7F;
-    uint8_t bit_offset = (index&3)<<3;
+    uint16_t index = (pio >> 2) & 0x7F;
+    uint8_t bit_offset = (pio & 3) << 3;
 
-    switch ( index & 0x7F ) {
-        case 0x00: case 0x01: case 0x02: case 0x03:
+    switch (index) {
+        case 0x00:
             write8(keypad.cntrl,bit_offset,byte);
             if (keypad.cntrl & 2) {
                 event_set(SCHED_KEYPAD, ((keypad.cntrl >> 16) + (keypad.cntrl >> 2 & 0x3FFF)));
@@ -97,19 +99,19 @@ static void keypad_write(const uint16_t pio, const uint8_t byte)
             }
             keypad_scan_event(0);
             return;
-        case 0x04: case 0x05:
+        case 0x01:
             write8(keypad.size,bit_offset,byte);
             return;
-        case 0x08: case 0x09: case 0x0A: case 0x0B:
+        case 0x02:
             write8(keypad.interrupt_ack,bit_offset,byte);
             return;
-        case 0x0C: case 0x0D: case 0x0E: case 0x0F:
+        case 0x03:
             write8(keypad.interrupt_mask,bit_offset,byte);
             return;
-        case 0x40: case 0x41: case 0x42: case 0x43:
+        case 0x10:
             write8(keypad.gpio_interrupt_ack,bit_offset,byte);
             return;
-        case 0x44: case 0x45: case 0x46: case 0x47:
+        case 0x11:
             write8(keypad.gpio_interrupt_mask,bit_offset,byte);
             return;
         default:

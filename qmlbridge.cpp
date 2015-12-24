@@ -20,10 +20,11 @@ void QMLBridge::keypadStateChanged(int keymap_id, bool state) {
     assert(row < ROWS);
     //assert(col < COLS); Not needed.
 
-    if(state)
+    if(state) {
         keypad.key_map[row] |= 1 << col;
-    else
+    } else {
         keypad.key_map[row] &= ~(1 << col);
+    }
 }
 
 static QObject *buttons[ROWS][COLS];
