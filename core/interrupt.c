@@ -25,60 +25,50 @@ void intrpt_reset() {
 }
 
 static uint8_t intrpt_read(uint16_t pio) {
-    uint16_t index = pio & 0xFF;
+    uint16_t index = (pio >> 2) & 0x1F;
     uint8_t bit_offset = (pio & 3) << 3;
 
     static const uint32_t revision = 0x00010900;
     static const uint8_t fiq_irq_val = 0x16;
 
-    /* 	Ports 5020-503F are identical in function to 5000-501F */
-    if((index < 0x40) && (index > 0x1F)) {
-        index -= 0x20;
-    }
-
     switch(index) {
-        case 0x00: case 0x01: case 0x02: case 0x03:
+        case 0x00:
             return read8(intrpt.status, bit_offset);
-        case 0x04: case 0x05: case 0x06: case 0x07:
+        case 0x01:
             return read8(intrpt.enabled, bit_offset);
-        case 0x0C: case 0x0D: case 0x0E: case 0x0F:
+        case 0x03:
             return read8(intrpt.latched, bit_offset);
-        case 0x10: case 0x11: case 0x12: case 0x13:
+        case 0x04:
             return read8(intrpt.inverted, bit_offset);
-        case 0x14: case 0x15: case 0x16: case 0x17:
+        case 0x05:
             return read8(intrpt.status & intrpt.enabled, bit_offset);
-        case 0x50: case 0x51: case 0x52: case 0x53:
+        case 0x14:
             return read8(revision, bit_offset);
-        case 0x54: case 0x55:
-            return fiq_irq_val;
         default:
             break;
     }
+
+    if((pio == 0x54) || (pio == 0x55)) { return fiq_irq_val; }
 
     /* Return 0 if unimplemented */
     return 0;
 }
 
 static void intrpt_write(uint16_t pio, uint8_t byte) {
-    uint16_t index = pio & 0xFF;
+    uint16_t index = (pio >> 2) & 0x1F;
     uint8_t bit_offset = (pio & 3) << 3;
 
-    /* 	Ports 5020-503F are identical in function to 5000-501F */
-    if((index < 0x40) && (index > 0x1F)) {
-        index -= 0x20;
-    }
-
     switch(index) {
-        case 0x04: case 0x05: case 0x06: case 0x07:
+        case 0x01:
             write8(intrpt.enabled, bit_offset, byte);
             return;
-        case 0x08: case 0x09: case 0x0A: case 0x0B:
+        case 0x02:
             write8(intrpt.status, bit_offset, intrpt.status & ~(byte & intrpt.latched));
             return;
-        case 0x0C: case 0x0D: case 0x0E: case 0x0F:
+        case 0x03:
             write8(intrpt.latched, bit_offset, byte);
             return;
-        case 0x10: case 0x11: case 0x12: case 0x13:
+        case 0x04:
             write8(intrpt.inverted, bit_offset, byte);
             return;
     }
