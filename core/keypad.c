@@ -9,7 +9,7 @@
 keypad_state_t keypad;
 
 void keypad_intrpt_check() {
-    intrpt_set(INT_KEYPAD, (keypad.interrupt_ack & keypad.interrupt_mask) | (keypad.gpio_interrupt_ack & keypad.gpio_interrupt_mask));
+    intrpt_set(INT_KEYPAD, (keypad.interrupt_ack & keypad.interrupt_mask));
 }
 
 void keypad_on_pressed() {
@@ -65,7 +65,6 @@ static void keypad_scan_event(int index) {
     if (keypad.data[keypad.current_row] != row) {
         keypad.data[keypad.current_row] = row;
         keypad.interrupt_ack |= 2;
-        gui_console_printf("Row: %d -> Data: %d\n", keypad.current_row, row);
     }
 
     keypad.current_row++;
@@ -97,22 +96,24 @@ static void keypad_write(const uint16_t pio, const uint8_t byte)
             } else {
                 event_clear(SCHED_KEYPAD);
             }
-            keypad_scan_event(0);
             return;
         case 0x01:
             write8(keypad.size,bit_offset,byte);
             return;
         case 0x02:
-            write8(keypad.interrupt_ack,bit_offset,byte);
+            write8(keypad.interrupt_ack,bit_offset,keypad.interrupt_ack & ~byte);
+            keypad_intrpt_check();
             return;
         case 0x03:
-            write8(keypad.interrupt_mask,bit_offset,byte);
+            write8(keypad.interrupt_mask,bit_offset,byte & 7);
             return;
         case 0x10:
             write8(keypad.gpio_interrupt_ack,bit_offset,byte);
+            keypad_intrpt_check();
             return;
         case 0x11:
-            write8(keypad.gpio_interrupt_mask,bit_offset,byte);
+            write8(keypad.gpio_interrupt_mask,bit_offset,keypad.gpio_interrupt_mask & ~byte);
+            keypad_intrpt_check();
             return;
         default:
             return;  /* Escape write sequence if unimplemented */
