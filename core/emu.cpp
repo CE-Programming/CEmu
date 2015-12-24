@@ -1,3 +1,7 @@
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
@@ -117,6 +121,18 @@ bool emu_start() {
     return true;
 }
 
+void emu_inner_loop(void)
+{
+    sched_process_pending_events();
+    while (!exiting && cycle_count_delta < 0) {
+        if (cpu_events & EVENT_RESET) {
+            gui_console_printf("CPU Reset triggered...");
+            // goto reset; // TODO : handle reset
+        }
+        cpu_execute();  // execute instructions with available clock cycles
+    }
+}
+
 void emu_loop(bool reset) {
     static int count = 0;
 
@@ -136,6 +152,10 @@ reset:
 
     exiting = false;
 
+#ifdef __EMSCRIPTEN__
+    // TODO: handle reset... see emu_inner_loop
+    emscripten_set_main_loop(emu_inner_loop, -1, 1);
+#else
     while (!exiting) {
         sched_process_pending_events();
         if (cpu_events & EVENT_RESET) {
@@ -152,6 +172,7 @@ reset:
             QThread::yieldCurrentThread();
         }
     }
+#endif
 }
 
 void emu_cleanup(void) {
