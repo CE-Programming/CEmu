@@ -1,6 +1,8 @@
 #ifndef _H_GIF
 #define _H_GIF
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

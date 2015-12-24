@@ -242,7 +242,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -3354,7 +3354,7 @@
    </widget>
    <widget class="QMenu" name="menuScreenshot">
     <property name="title">
-     <string>Screenshot</string>
+     <string>Capture</string>
     </property>
     <addaction name="actionScreenshot"/>
     <addaction name="actionRecord_GIF"/>
@@ -3396,12 +3396,18 @@
    </property>
   </action>
   <action name="actionScreenshot">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Take Screenshot...</string>
    </property>
   </action>
   <action name="actionRecord_GIF">
    <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="enabled">
     <bool>true</bool>
    </property>
    <property name="text">

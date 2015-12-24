@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "core/gif.h"
 #include "core/schedule.h"
 #include "core/interrupt.h"
 #include "core/memory.h"
@@ -112,6 +113,8 @@ static void lcd_event(int index) {
     lcd.upcurr = lcd.upbase;
     lcd.ris |= 0xC;
     intrpt_trigger(INT_LCD, lcd.ris & lcd.mis ? INTERRUPT_SET : INTERRUPT_CLEAR);
+
+    gif_new_frame();
 }
 
 void lcd_reset(void) {

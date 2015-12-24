@@ -29,8 +29,6 @@
 #include <string.h>  // for memcpy and bzero
 #include <stdint.h>  // for integer typedefs
 
-#include "core/os/os.h"
-
 // Define these macros to hook into a custom memory allocator.
 // TEMP_MALLOC and TEMP_FREE will only be called in stack fashion - frees in the reverse order of mallocs
 // and any temp memory allocated by a function will be freed before it exits.
@@ -693,7 +691,7 @@ void GifWriteLzwImage(FILE* f, uint8_t* image, uint32_t left, uint32_t top,  uin
                     GifWriteCode(f, stat, clearCode, codeSize); // clear tree
 
                     memset(codetree, 0, sizeof(GifLzwNode)*4096);
-                    nextValue = -1;
+                    curCode = -1;
                     codeSize = minCodeSize+1;
                     maxCode = clearCode+1;
                 }
@@ -727,9 +725,14 @@ struct GifWriter
 // Creates a gif file.
 // The input GIFWriter is assumed to be uninitialized.
 // The delay value is the time between frames in hundredths of a second - note that not all viewers pay much attention to this value.
-bool GifBegin( GifWriter* writer, const char* filename, uint32_t width, uint32_t height, uint32_t delay)
+bool GifBegin( GifWriter* writer, const char* filename, uint32_t width, uint32_t height, uint32_t delay, int32_t bitDepth = 8, bool dither = false )
 {
-    writer->f = fopen_utf8(filename, "wb");
+#if _MSC_VER >= 1400
+        writer->f = 0;
+    fopen_s(&writer->f, filename, "wb");
+#else
+    writer->f = fopen(filename, "wb");
+#endif
     if(!writer->f) return false;
 
     writer->firstFrame = true;

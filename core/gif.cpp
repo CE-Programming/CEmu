@@ -36,13 +36,15 @@ bool gif_start_recording(const char *filename, unsigned int frameskip)
 
 void gif_new_frame()
 {
-    if(!recording)
+    if(!recording) {
         return;
+    }
 
     std::lock_guard<std::mutex> gif_lock(gif_mutex);
 
-    if(!recording || --framenr)
+    if(!recording || --framenr) {
         return;
+    }
 
     framenr = framenrskip;
 

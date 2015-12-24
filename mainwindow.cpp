@@ -252,7 +252,8 @@ void MainWindow::recordGIF()
 
     if(path.isEmpty())
     {
-        path = QStringLiteral("c:\\cemu_tmp.gif");
+        // TODO: Use QTemporaryFile?
+        path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.gif");
 
         gif_start_recording(path.toStdString().c_str(), 3);
     }
@@ -271,7 +272,8 @@ void MainWindow::recordGIF()
         path = QString();
     }
 
-    ui->actionRecord_GIF->setChecked(path.isEmpty());
+    ui->actionRecord_GIF->setChecked(!path.isEmpty());
+    ui->buttonGIF->setText((!path.isEmpty()) ? QString("Stop Recording") : QString("Record GIF"));
 }
 
 void MainWindow::clearConsole(void) {
