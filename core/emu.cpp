@@ -94,7 +94,7 @@ bool emu_start() {
 
     log_enabled[LOG_CPU] = 1;
     log_file[LOG_CPU] = fopen("C:/LOG_CPU", "w");
-    asic_init(TI84pCE);
+    asic_init(TI84PCE);
 
     if (rom_image == NULL) {
         gui_console_printf("No ROM image specified.");

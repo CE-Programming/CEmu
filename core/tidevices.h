@@ -2,8 +2,8 @@
 #define TI_H
 
 typedef enum {
-    TI84pCE = 0,
-    TI83pCE = 1
+    TI84PCE = 0,
+    TI83PCE = 1
 } ti_device_type;
 
 #endif
