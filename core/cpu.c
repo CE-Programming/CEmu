@@ -291,7 +291,7 @@ static void cpu_write_rp3(int i, uint32_t value) {
     }
 }
 
-static uint8_t cpu_read_cc(const int i) {
+static bool cpu_read_cc(const int i) {
     eZ80registers_t *r = &cpu.registers;
     switch (i) {
         case 0: return !r->flags.Z;
@@ -991,13 +991,13 @@ int cpu_execute(int cycles) {
     }
 
     if (cpu.IEF_wait) {
+        cpu.IEF_wait = 0;
         cpu.IEF1 = cpu.IEF2 = 1;
     }
     if (cpu.IEF1 && (intrpt.request->status & intrpt.request->enabled)) {
-        cpu.cycles = 0;
-        cpu_call(1, cpu.IM == 2 ? cpu_read_word(r->I << 8 | r->R) : 0x38, cpu.MADL);
+        cpu.cycles = cpu.IEF1 = cpu.halted = 0;
+        cpu_call(true, cpu.IM == 3 ? cpu_read_word(r->I << 8 | r->R) : 0x38, cpu.MADL);
         cycles += cpu.cycles;
-        cpu.halted = 0;
     } else if (cpu.halted) {
         cycles = 0; // consume all of the cycles
     }
@@ -1304,7 +1304,7 @@ int cpu_execute(int cycles) {
                             case 1:
                                 switch (context.p) {
                                     case 0: // CALL nn
-                                        cpu_call(1, cpu_fetch_word(), cpu.SUFFIX);
+                                        cpu_call(true, cpu_fetch_word(), cpu.SUFFIX);
                                         break;
                                     case 1: // 0xDD prefixed opcodes
                                         cpu.PREFIX = 2;
@@ -1485,7 +1485,7 @@ int cpu_execute(int cycles) {
                                                             case 0:
                                                             case 2:
                                                             case 3: // IM im[y]
-                                                                //cpu_execute_im(context.y);
+                                                                cpu.IM = context.y;
                                                                 break;
                                                             case 1: // OPCODETRAP
                                                                 cpu.IEF_wait = 1;
