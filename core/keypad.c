@@ -31,17 +31,17 @@ static uint8_t keypad_read(const uint16_t pio)
         default:
             switch(index) {
                 case 0x00:
-                    return read8(keypad.cntrl,bit_offset);
+                    return read8(keypad.control, bit_offset);
                 case 0x01:
-                    return read8(keypad.size,bit_offset);
+                    return read8(keypad.size, bit_offset);
                 case 0x02:
-                    return read8(keypad.status,bit_offset);
+                    return read8(keypad.status, bit_offset);
                 case 0x03:
-                    return read8(keypad.enable,bit_offset);
+                    return read8(keypad.enable, bit_offset);
                 case 0x10:
-                    return read8(keypad.gpio_status,bit_offset);
+                    return read8(keypad.gpio_enable, bit_offset);
                 case 0x11:
-                    return read8(keypad.gpio_enable,bit_offset);
+                    return read8(keypad.gpio_status, bit_offset);
                 default:
                     break;
             }
@@ -65,21 +65,26 @@ static void keypad_scan_event(int index) {
     row = ~row;
 
     if (keypad.data[keypad.current_row] != row) {
-        keypad.data[keypad.current_row] = row;
-        keypad.status |= 6;
+        if (keypad.control & 2) {
+            keypad.status |= 2;
+            keypad.data[keypad.current_row] = row;
+        } else {
+            keypad.status |= 4;
+            keypad.data[keypad.current_row] = 0xFFFF;
+        }
     }
 
     keypad.current_row++;
-    if (keypad.current_row < (keypad.size & 0xFF)) {
-        event_repeat(index, keypad.cntrl >> 2 & 0x3FFF);
-    } else {
+    if (keypad.current_row < (keypad.size & 0xFF)) {  /* scan the next row */
+        event_repeat(index, keypad.control >> 2 & 0x3FFF);
+    } else {  /* finished scanning the keypad */
         keypad.current_row = 0;
-        keypad.enable |= 1;
-        if (keypad.cntrl & 1) {
-            event_repeat(index, (keypad.cntrl >> 16) + (keypad.cntrl >> 2 & 0x3FFF));
+        keypad.status |= keypad.enable & 1;
+        if (keypad.control & 1) {
+            event_repeat(index, (keypad.control >> 16) + (keypad.control >> 2 & 0x3FFF));
         } else {
             /* If in single scan mode, go to idle mode */
-            keypad.cntrl &= ~3;
+            keypad.control &= ~3;
         }
     }
     keypad_intrpt_check();
@@ -92,29 +97,29 @@ static void keypad_write(const uint16_t pio, const uint8_t byte)
 
     switch (index) {
         case 0x00:
-            write8(keypad.cntrl,bit_offset,byte);
-            if ((keypad.cntrl & 3)) {
-                event_set(SCHED_KEYPAD, ((keypad.cntrl >> 16) + (keypad.cntrl >> 2 & 0x3FFF)));
+            write8(keypad.control,bit_offset,byte);
+            if ((keypad.control & 3)) {
+                event_set(SCHED_KEYPAD, ((keypad.control >> 16) + (keypad.control >> 2 & 0x3FFF)));
             } else {
                 event_clear(SCHED_KEYPAD);
             }
             return;
         case 0x01:
-            write8(keypad.size,bit_offset,byte);
+            write8(keypad.size, bit_offset, byte);
             return;
         case 0x02:
-            write8(keypad.status,bit_offset,keypad.status & ~(byte & 7));
+            write8(keypad.status, bit_offset, keypad.status & ~byte);
             keypad_intrpt_check();
             return;
         case 0x03:
-            write8(keypad.enable,bit_offset,byte & 7);
+            write8(keypad.enable, bit_offset, byte & 7);
             return;
         case 0x10:
-            write8(keypad.gpio_status,bit_offset,byte);
+            write8(keypad.gpio_enable, bit_offset, byte);
             keypad_intrpt_check();
             return;
         case 0x11:
-            write8(keypad.gpio_enable,bit_offset,keypad.gpio_enable & ~byte);
+            write8(keypad.gpio_status, bit_offset, keypad.gpio_status & ~byte);
             keypad_intrpt_check();
             return;
         default:

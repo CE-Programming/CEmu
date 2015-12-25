@@ -11,7 +11,7 @@ extern "C" {
 
 /* Standard KEYPAD state */
 struct keypad_state {
-    uint32_t cntrl;
+    uint32_t control;
     uint32_t size;
     uint8_t  current_row;
     uint8_t  status;

@@ -34,7 +34,6 @@ public slots:
     virtual void run() override;
     void setPaused(bool paused);
     bool stop();
-    void test();
 
     // Debugging
     void enterDebugger();

@@ -18,7 +18,7 @@ void mem_init(void) {
     mem.ram=(uint8_t*)calloc(ram_size, sizeof(uint8_t)); // allocate RAM
 
     mem.flash_mapped = 0;
-    mem.flash_unlocked = 1;
+    mem.flash_unlocked = 0;
     gui_console_printf("Initialized memory...\n");
 }
 

@@ -150,8 +150,3 @@ bool EmuThread::stop()
     emu_cleanup();
     return true;
 }
-
-void EmuThread::test()
-{
-    gui_console_printf("Calculator Reset Triggered...\n");
-}
