@@ -12,7 +12,7 @@ static uint8_t gpt_read(const uint16_t pio)
     uint16_t index = pio & 0xFF;
     uint8_t bit_offset = (index&3)<<3;
 
-    static const uint32_t revision = 0x00010801;
+    //static const uint32_t revision = 0x00010801;
 
     uint8_t curr = ((index>>4)&0x3);
 

@@ -1616,7 +1616,7 @@ int cpu_execute(int cycles) {
                                                         }
                                                         break;
                                                     case 0xEE: // flash erase
-                                                        memset(mem.flash + (r->HL & ~0x3FFF), 0xFF, 0x4000);
+                                                        memset(mem.flash.block + (r->HL & ~0x3FFF), 0xFF, 0x4000);
                                                         break;
                                                     default:   // OPCODETRAP
                                                         cpu.IEF_wait = 1;

@@ -160,7 +160,7 @@ static void control_write(const uint16_t pio, const uint8_t byte)
             control.ports[addr] = byte;
             break;
         case 0x28:
-            mem.flash_unlocked = (byte & 4) != 0;
+            mem.flash.locked = (byte & 4) == 0;
             control.ports[addr] = byte & 247;
             break;
         default:

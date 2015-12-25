@@ -4,27 +4,44 @@
 #define MEMORY_H
 
 #include <core/apb.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-struct flash_write {
+typedef struct {
     uint32_t address;
     uint32_t address_mask;
     uint8_t value;
     uint8_t value_mask;
-};
-typedef struct flash_write flash_write_t;
+} flash_write_t;
+
+typedef struct {
+    bool locked;
+    uint8_t *ptr;
+} flash_sector_state_t;
+
+typedef struct {
+    bool locked;
+    uint8_t status;
+    flash_sector_state_t sector[64];
+    uint8_t *block;     /* Flash mem */
+
+    /* Internal */
+    bool mapped;
+    bool write_index;
+    bool running_command;
+    flash_write_t writes[6];
+} flash_chip_t;
+
+typedef struct {
+    uint8_t *block;       /* RAM mem */
+} ram_chip_t;
 
 struct mem_state {
-    flash_write_t flash_writes[6];
-    uint8_t *flash;     /* Flash mem */
-    uint8_t *ram;       /* RAM */
-    uint8_t *vram;      /* VRAM */
-    int flash_mapped;
-    int flash_unlocked;
-    int flash_write_index;
+    flash_chip_t flash;
+    ram_chip_t ram;
 };
 
 /* Type definitions */

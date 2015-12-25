@@ -112,7 +112,7 @@ bool emu_start() {
         lSize=ftell(rom);
         rewind(rom);
 
-        fread(asic.mem->flash, 1, lSize, rom);
+        fread(asic.mem->flash.block, 1, lSize, rom);
 
         fclose(rom);
     }

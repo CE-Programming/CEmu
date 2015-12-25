@@ -66,11 +66,10 @@ static void keypad_scan_event(int index) {
 
     if (keypad.data[keypad.current_row] != row) {
         if (keypad.control & 2) {
-            keypad.status |= 2;
+            keypad.status |= 2; /* if mode 3 or 2, generate data change interrupt */
             keypad.data[keypad.current_row] = row;
         } else {
-            keypad.status |= 4;
-            keypad.data[keypad.current_row] = 0xFFFF;
+            keypad.status |= 4; /* if mode 1, generate key pressed interrupt */
         }
     }
 
@@ -80,7 +79,7 @@ static void keypad_scan_event(int index) {
     } else {  /* finished scanning the keypad */
         keypad.current_row = 0;
         keypad.status |= keypad.enable & 1;
-        if (keypad.control & 1) {
+        if (keypad.control & 1) { /* are we in mode 1 or 3 */
             event_repeat(index, (keypad.control >> 16) + (keypad.control >> 2 & 0x3FFF));
         } else {
             /* If in single scan mode, go to idle mode */

@@ -4,84 +4,79 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 // Global MEMORY state
 mem_state_t mem;
 
 static const uint32_t ram_size = 0x65800;
 static const uint32_t flash_size = 0x400000;
+static const uint32_t flash_sector_size = 0x10000;
+static const uint32_t flash_sectors = 64;
 
 void mem_init(void) {
-    mem.flash=(uint8_t*)malloc(flash_size);     // allocate Flash memory
-    memset(mem.flash, 0xFF, flash_size);
+    unsigned int i;
 
-    mem.ram=(uint8_t*)calloc(ram_size, sizeof(uint8_t)); // allocate RAM
+    mem.flash.block = (uint8_t*)malloc(flash_size);               /* allocate Flash memory */
+    memset(mem.flash.block, 0xFF, flash_size);
 
-    mem.flash_mapped = 0;
-    mem.flash_unlocked = 0;
+    for (i = 0; i < flash_sectors; i++) {
+        mem.flash.sector[i].ptr = mem.flash.block + i;
+        mem.flash.sector[i].locked = false;
+    }
+
+    mem.ram.block = (uint8_t*)calloc(ram_size, sizeof(uint8_t));  /* allocate RAM */
+
+    mem.flash.mapped = false;
+    mem.flash.locked = false;
+    mem.flash.status = 0;
     gui_console_printf("Initialized memory...\n");
 }
 
 void mem_free(void) {
-    free(mem.ram);
-    free(mem.flash);
+    free(mem.ram.block);
+    free(mem.flash.block);
     gui_console_printf("Freed memory...\n");
 }
 
 uint8_t* phys_mem_ptr(uint32_t addr, uint32_t size) {
-    if(addr<0xD00000) {
-        return mem.flash+addr;
+    if (addr < 0xD00000) {
+        return mem.flash.block+addr;
     }
     addr -= 0xD00000;
-    return mem.ram+addr;
+    return mem.ram.block+addr;
 }
 
 static void flash_reset(uint32_t addr, uint8_t byte) {
     (void)addr;
     (void)byte;
-    mem.flash_write_index = 0;
+    mem.flash.write_index = 0;
 }
 
 static void flash_write(uint32_t addr, uint8_t byte) {
-    mem.flash[addr] &= byte;
+    mem.flash.block[addr] &= byte;
 }
 
 static void flash_erase(uint32_t addr, uint8_t byte) {
     (void)addr;
     (void)byte;
 
-    memset(mem.flash, 0xFF, flash_size);
+    memset(mem.flash.block, 0xFF, flash_size);
     gui_console_printf("Erased entire Flash chip.\n");
 }
 
 static void flash_erase_sector(uint32_t addr, uint8_t byte) {
-    static const uint32_t length = 0x10000;
     (void)byte;
 
-    /* Get sector */
-    addr /= length;
-    memset(mem.flash + (addr * length), 0xFF, length);
+    /* Reset sector */
+    memset(mem.flash.sector[addr / flash_sector_size].ptr, 0xFF, flash_sector_size);
     gui_console_printf("Erased flash sector %02X.\n", addr);
 }
 
-static void flash_unlock(uint32_t addr, uint8_t byte) {
-    (void)addr;
-    (void)byte;
-
-    mem.flash_unlocked = 1;
-}
-
-static void flash_lock(uint32_t addr, uint8_t byte) {
-    (void)addr;
-    (void)byte;
-
-    mem.flash_unlocked = 0;
-}
-
 struct flash_pattern {
-	int length;
-	const flash_write_t pattern[6];
-	void (*handler)(uint32_t address, uint8_t value);
+    int length;
+    const flash_write_t pattern[6];
+    void (*handler)(uint32_t address, uint8_t value);
 };
 typedef struct flash_pattern flash_pattern_t;
 
@@ -128,7 +123,15 @@ static flash_pattern_t patterns[] = {
 
 };
 
-static void flash_chip_handler(uint32_t address, uint8_t byte) {
+static uint8_t flash_read_handler(uint32_t address) {
+    if(mem.flash.running_command == false) {
+        return mem.flash.block[address];
+    } else {
+        return mem.flash.status;
+    }
+}
+
+static void flash_write_handler(uint32_t address, uint8_t byte) {
     int i;
     int partial_match = 0;
     flash_write_t *w;
@@ -136,19 +139,19 @@ static void flash_chip_handler(uint32_t address, uint8_t byte) {
 
     gui_console_printf("Flash Chip: Writting %02X -> %06X\t(Sector %02X)\n", byte, address, address / 0x10000);
 
-    w = &mem.flash_writes[mem.flash_write_index++];
+    w = &mem.flash.writes[mem.flash.write_index++];
     w->address = address;
     w->value = byte;
     for (pattern = patterns; pattern->length; pattern++) {
-        for (i = 0; i < mem.flash_write_index && i < pattern->length &&
-            (mem.flash_writes[i].address & pattern->pattern[i].address_mask) == pattern->pattern[i].address &&
-            (mem.flash_writes[i].value & pattern->pattern[i].value_mask) == pattern->pattern[i].value; i++) {
+        for (i = 0; i < mem.flash.write_index && i < pattern->length &&
+            (mem.flash.writes[i].address & pattern->pattern[i].address_mask) == pattern->pattern[i].address &&
+            (mem.flash.writes[i].value & pattern->pattern[i].value_mask) == pattern->pattern[i].value; i++) {
         }
         if (i == pattern->length) {
             pattern->handler(address, byte);
             partial_match = 0;
             break;
-        } else if (i == mem.flash_write_index) {
+        } else if (i == mem.flash.write_index) {
             partial_match = 1;
         }
     }
@@ -167,14 +170,14 @@ uint8_t memory_read_byte(const uint32_t address)
         // FLASH
         case 0x0: case 0x1: case 0x2: case 0x3:
             cpu.cycles += 5;
-            return mem.flash[addr];
+            return flash_read_handler(address);
 
         // MAYBE FLASH
         case 0x4: case 0x5: case 0x6: case 0x7:
             addr -= 0x400000;
-            if (mem.flash_mapped) {
+            if (mem.flash.mapped == true) {
                 cpu.cycles += 5;
-                return mem.flash[addr];
+                return flash_read_handler(address);
             }
 
         // UNMAPPED
@@ -187,7 +190,7 @@ uint8_t memory_read_byte(const uint32_t address)
             addr -= 0xD00000;
             if (addr < 0x65800) {
                 cpu.cycles += 3;
-                return mem.ram[addr];
+                return mem.ram.block[addr];
             }
         // UNMAPPED
             addr -= 0x65800;
@@ -216,8 +219,8 @@ void memory_write_byte(const uint32_t address, const uint8_t byte) {
     switch(upperNibble24(addr)) {
         // FLASH
         case 0x0: case 0x1: case 0x2: case 0x3:
-            if (mem.flash_unlocked) {
-                flash_chip_handler(addr, byte);
+            if (mem.flash.locked == false) {
+                flash_write_handler(addr, byte);
             }
             cpu.cycles += 5;
             return;
@@ -225,10 +228,10 @@ void memory_write_byte(const uint32_t address, const uint8_t byte) {
         // MAYBE FLASH
         case 0x4: case 0x5: case 0x6: case 0x7:
             addr -= 0x400000;
-            if (mem.flash_unlocked) {
-                if (mem.flash_mapped) {
+            if (mem.flash.locked == false) {
+                if (mem.flash.mapped == true) {
                     cpu.cycles += 5;
-                    flash_chip_handler(addr, byte);
+                    flash_write_handler(addr, byte);
                     return;
                 }
             }
@@ -245,7 +248,7 @@ void memory_write_byte(const uint32_t address, const uint8_t byte) {
             addr -= 0xD00000;
             if (addr <= 0x657FF) {
                 cpu.cycles += 2;
-                mem.ram[addr] = byte;
+                mem.ram.block[addr] = byte;
                 return;
             }
             // UNMAPPED
