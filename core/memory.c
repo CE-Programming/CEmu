@@ -55,8 +55,8 @@ static void flash_erase(uint32_t addr, uint8_t byte) {
 }
 
 static void flash_erase_sector(uint32_t addr, uint8_t byte) {
-    (void)byte;
     static const uint32_t length = 0x10000;
+    (void)byte;
 
     /* Get sector */
     addr /= length;
@@ -131,13 +131,14 @@ static flash_pattern_t patterns[] = {
 static void flash_chip_handler(uint32_t address, uint8_t byte) {
     int i;
     int partial_match = 0;
+    flash_write_t *w;
+    struct flash_pattern *pattern;
 
     gui_console_printf("Flash Chip: Writting %02X -> %06X\t(Sector %02X)\n", byte, address, address / 0x10000);
 
-    flash_write_t *w = &mem.flash_writes[mem.flash_write_index++];
+    w = &mem.flash_writes[mem.flash_write_index++];
     w->address = address;
     w->value = byte;
-    struct flash_pattern *pattern;
     for (pattern = patterns; pattern->length; pattern++) {
         for (i = 0; i < mem.flash_write_index && i < pattern->length &&
             (mem.flash_writes[i].address & pattern->pattern[i].address_mask) == pattern->pattern[i].address &&

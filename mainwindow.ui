@@ -859,21 +859,21 @@
             <item>
              <widget class="QGroupBox" name="groupBox">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
               <property name="minimumSize">
                <size>
-                <width>190</width>
-                <height>80</height>
+                <width>0</width>
+                <height>0</height>
                </size>
               </property>
               <property name="maximumSize">
                <size>
-                <width>190</width>
-                <height>80</height>
+                <width>16777215</width>
+                <height>16777215</height>
                </size>
               </property>
               <property name="title">
@@ -1250,20 +1250,20 @@
             <item>
              <widget class="QGroupBox" name="registergroup">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
               <property name="minimumSize">
                <size>
-                <width>190</width>
-                <height>200</height>
+                <width>0</width>
+                <height>0</height>
                </size>
               </property>
               <property name="maximumSize">
                <size>
-                <width>190</width>
+                <width>16777215</width>
                 <height>16777215</height>
                </size>
               </property>
@@ -1389,7 +1389,7 @@
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>55</width>
+                   <width>65</width>
                    <height>15</height>
                   </size>
                  </property>
@@ -1422,7 +1422,7 @@
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>55</width>
+                   <width>65</width>
                    <height>15</height>
                   </size>
                  </property>
@@ -1576,7 +1576,7 @@
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>55</width>
+                   <width>65</width>
                    <height>15</height>
                   </size>
                  </property>
@@ -1727,7 +1727,7 @@
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>55</width>
+                   <width>65</width>
                    <height>15</height>
                   </size>
                  </property>
@@ -1763,7 +1763,7 @@
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>55</width>
+                   <width>65</width>
                    <height>15</height>
                   </size>
                  </property>
@@ -1858,7 +1858,7 @@
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>55</width>
+                   <width>65</width>
                    <height>15</height>
                   </size>
                  </property>
@@ -1953,7 +1953,7 @@
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>55</width>
+                   <width>65</width>
                    <height>15</height>
                   </size>
                  </property>
@@ -1989,7 +1989,7 @@
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>55</width>
+                   <width>65</width>
                    <height>15</height>
                   </size>
                  </property>
@@ -2025,7 +2025,7 @@
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>55</width>
+                   <width>65</width>
                    <height>15</height>
                   </size>
                  </property>
@@ -2179,7 +2179,7 @@
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>55</width>
+                   <width>65</width>
                    <height>15</height>
                   </size>
                  </property>
@@ -2274,7 +2274,7 @@
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>55</width>
+                   <width>65</width>
                    <height>15</height>
                   </size>
                  </property>
@@ -2546,7 +2546,7 @@
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>55</width>
+                   <width>65</width>
                    <height>15</height>
                   </size>
                  </property>
@@ -2582,7 +2582,7 @@
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>55</width>
+                   <width>65</width>
                    <height>15</height>
                   </size>
                  </property>
@@ -2618,7 +2618,7 @@
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>55</width>
+                   <width>65</width>
                    <height>15</height>
                   </size>
                  </property>
@@ -2697,7 +2697,7 @@
                  </property>
                 </widget>
                </item>
-               <item row="2" column="0" colspan="2">
+               <item row="2" column="0">
                 <widget class="QLabel" name="label_5">
                  <property name="palette">
                   <palette>
@@ -2766,7 +2766,7 @@
                  </property>
                 </widget>
                </item>
-               <item row="3" column="0" colspan="2">
+               <item row="3" column="0">
                 <widget class="QLabel" name="label_6">
                  <property name="palette">
                   <palette>
@@ -2881,7 +2881,7 @@
                <property name="verticalSpacing">
                 <number>2</number>
                </property>
-               <item row="2" column="0">
+               <item row="1" column="0">
                 <widget class="QLabel" name="label_8">
                  <property name="palette">
                   <palette>
@@ -2969,7 +2969,7 @@
                  </property>
                 </widget>
                </item>
-               <item row="3" column="1">
+               <item row="2" column="2">
                 <widget class="QLineEdit" name="lineEdit_5">
                  <property name="minimumSize">
                   <size>
@@ -2988,7 +2988,7 @@
                  </property>
                 </widget>
                </item>
-               <item row="2" column="1">
+               <item row="1" column="2">
                 <widget class="QLineEdit" name="lineEdit_4">
                  <property name="minimumSize">
                   <size>
@@ -3007,7 +3007,7 @@
                  </property>
                 </widget>
                </item>
-               <item row="4" column="0">
+               <item row="3" column="0">
                 <widget class="QLabel" name="label_10">
                  <property name="palette">
                   <palette>
@@ -3051,7 +3051,7 @@
                  </property>
                 </widget>
                </item>
-               <item row="4" column="1">
+               <item row="3" column="2">
                 <widget class="QLineEdit" name="lineEdit_6">
                  <property name="minimumSize">
                   <size>
@@ -3070,7 +3070,7 @@
                  </property>
                 </widget>
                </item>
-               <item row="3" column="0">
+               <item row="2" column="0">
                 <widget class="QLabel" name="label_9">
                  <property name="palette">
                   <palette>
@@ -3114,7 +3114,7 @@
                  </property>
                 </widget>
                </item>
-               <item row="1" column="0">
+               <item row="0" column="1">
                 <widget class="QCheckBox" name="checkIEF2">
                  <property name="palette">
                   <palette>
@@ -3166,19 +3166,19 @@
               <property name="minimumSize">
                <size>
                 <width>0</width>
-                <height>60</height>
+                <height>0</height>
                </size>
               </property>
               <property name="maximumSize">
                <size>
                 <width>16777215</width>
-                <height>60</height>
+                <height>16777215</height>
                </size>
               </property>
               <property name="title">
                <string>Display</string>
               </property>
-              <layout class="QHBoxLayout" name="horizontalLayout_5">
+              <layout class="QGridLayout" name="gridLayout_9">
                <property name="leftMargin">
                 <number>6</number>
                </property>
@@ -3191,7 +3191,7 @@
                <property name="bottomMargin">
                 <number>5</number>
                </property>
-               <item>
+               <item row="0" column="0">
                 <widget class="QCheckBox" name="checkPowered">
                  <property name="palette">
                   <palette>
@@ -3241,7 +3241,7 @@
                  </property>
                 </widget>
                </item>
-               <item>
+               <item row="1" column="0">
                 <widget class="QLabel" name="label_7">
                  <property name="palette">
                   <palette>
@@ -3281,11 +3281,11 @@
                   </palette>
                  </property>
                  <property name="text">
-                  <string>    Brightness</string>
+                  <string>Brightness</string>
                  </property>
                 </widget>
                </item>
-               <item>
+               <item row="1" column="1">
                 <widget class="QSlider" name="horizontalSlider">
                  <property name="orientation">
                   <enum>Qt::Horizontal</enum>
