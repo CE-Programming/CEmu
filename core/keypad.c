@@ -24,30 +24,31 @@ static uint8_t keypad_read(const uint16_t pio)
     uint16_t index = (pio >> 2) & 0x7F;
     uint8_t bit_offset = (pio & 3) << 3;
 
-    switch(upperNibble8(pio & 0x7F)) {
-        case 0x1:
-        case 0x2:        /* keypad data range */
-            return ((uint8_t *)keypad.data)[(pio-0x10) & 0xF];
-        default:
-            switch(index) {
-                case 0x00:
-                    return read8(keypad.control, bit_offset);
-                case 0x01:
-                    return read8(keypad.size, bit_offset);
-                case 0x02:
-                    return read8(keypad.status, bit_offset);
-                case 0x03:
-                    return read8(keypad.enable, bit_offset);
-                case 0x10:
-                    return read8(keypad.gpio_enable, bit_offset);
-                case 0x11:
-                    return read8(keypad.gpio_status, bit_offset);
-                default:
-                    break;
-            }
+    uint8_t upper_index = (pio >> 4) & 0xF;
+    uint8_t lower_index = pio & 0xF;
+
+    if (upper_index == 0x1 || upper_index == 0x2) {
+        return read8(keypad.data[lower_index>>1],bit_offset);
     }
 
-    /* return 0 if unimplemented or not in range */
+    switch(index) {
+        case 0x00:
+            return read8(keypad.control, bit_offset);
+        case 0x01:
+            return read8(keypad.size, bit_offset);
+        case 0x02:
+            return read8(keypad.status, bit_offset);
+        case 0x03:
+            return read8(keypad.enable, bit_offset);
+        case 0x10:
+            return read8(keypad.gpio_enable, bit_offset);
+        case 0x11:
+            return read8(keypad.gpio_status, bit_offset);
+        default:
+            break;
+    }
+
+    /* return 0x00 if unimplemented or not in range */
     return 0;
 }
 
@@ -68,8 +69,10 @@ static void keypad_scan_event(int index) {
         if (keypad.control & 2) {
             keypad.status |= 2; /* if mode 3 or 2, generate data change interrupt */
             keypad.data[keypad.current_row] = row;
+            keypad_intrpt_check();
         } else {
             keypad.status |= 4; /* if mode 1, generate key pressed interrupt */
+            keypad_intrpt_check();
         }
     }
 
@@ -94,10 +97,14 @@ static void keypad_write(const uint16_t pio, const uint8_t byte)
     uint16_t index = (pio >> 2) & 0x7F;
     uint8_t bit_offset = (pio & 3) << 3;
 
+    uint8_t mode;
+
     switch (index) {
         case 0x00:
             write8(keypad.control,bit_offset,byte);
-            if ((keypad.control & 3)) {
+            mode = keypad.control & 3;
+            if (mode != 0) {
+                if (mode == 3) { keypad.current_row=0; /* reset the scan */ }
                 event_set(SCHED_KEYPAD, ((keypad.control >> 16) + (keypad.control >> 2 & 0x3FFF)));
             } else {
                 event_clear(SCHED_KEYPAD);

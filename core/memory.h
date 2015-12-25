@@ -24,7 +24,6 @@ typedef struct {
 
 typedef struct {
     bool locked;
-    uint8_t status;
     flash_sector_state_t sector[64];
     uint8_t *block;     /* Flash mem */
 

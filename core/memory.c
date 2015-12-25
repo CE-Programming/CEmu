@@ -29,7 +29,6 @@ void mem_init(void) {
 
     mem.flash.mapped = false;
     mem.flash.locked = false;
-    mem.flash.status = 0;
     gui_console_printf("Initialized memory...\n");
 }
 
@@ -73,14 +72,14 @@ static void flash_erase_sector(uint32_t addr, uint8_t byte) {
     gui_console_printf("Erased flash sector %02X.\n", addr);
 }
 
-struct flash_pattern {
+struct flash_write_pattern {
     int length;
     const flash_write_t pattern[6];
     void (*handler)(uint32_t address, uint8_t value);
 };
-typedef struct flash_pattern flash_pattern_t;
+typedef struct flash_write_pattern flash_write_pattern_t;
 
-static flash_pattern_t patterns[] = {
+static flash_write_pattern_t patterns[] = {
     {
         .length = 4,
         .pattern = {
@@ -127,7 +126,7 @@ static uint8_t flash_read_handler(uint32_t address) {
     if(mem.flash.running_command == false) {
         return mem.flash.block[address];
     } else {
-        return mem.flash.status;
+        return 0;
     }
 }
 
@@ -135,7 +134,7 @@ static void flash_write_handler(uint32_t address, uint8_t byte) {
     int i;
     int partial_match = 0;
     flash_write_t *w;
-    struct flash_pattern *pattern;
+    struct flash_write_pattern *pattern;
 
     gui_console_printf("Flash Chip: Writting %02X -> %06X\t(Sector %02X)\n", byte, address, address / 0x10000);
 
