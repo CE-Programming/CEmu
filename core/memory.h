@@ -10,6 +10,10 @@
 extern "C" {
 #endif
 
+#define NO_COMMAND          0
+#define FLASH_SECTOR_ERASE  1
+#define FLASH_CHIP_ERASE    2
+
 typedef struct {
     uint32_t address;
     uint32_t address_mask;
@@ -24,13 +28,14 @@ typedef struct {
 
 typedef struct {
     bool locked;
+    uint8_t write_index;
+    uint8_t read_index;
     flash_sector_state_t sector[64];
     uint8_t *block;     /* Flash mem */
 
     /* Internal */
     bool mapped;
-    bool write_index;
-    bool running_command;
+    uint8_t command;
     flash_write_t writes[6];
 } flash_chip_t;
 

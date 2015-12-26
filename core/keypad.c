@@ -101,8 +101,6 @@ static void keypad_write(const uint16_t pio, const uint8_t byte)
     uint16_t index = (pio >> 2) & 0x7F;
     uint8_t bit_offset = (pio & 3) << 3;
 
-    uint8_t mode;
-
     switch (index) {
         case 0x00:
             write8(keypad.control,bit_offset,byte);
