@@ -8,6 +8,7 @@
 
 #include "core/debug.h"
 #include "core/gif.h"
+#include "core/schedule.h"
 
 #include <QFileDialog>
 #include <QMessageBox>
@@ -17,7 +18,7 @@
 #include <QShortcut>
 #include <iostream>
 
-char tmpBuf[20] = {0};
+static char tmpBuf[20] = {0};
 static const constexpr int WindowStateVersion = 0;
 
 MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
@@ -69,6 +70,29 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
     } else {
        emu.start();
     }
+
+    ui->rompathView->setText(QString(emu.rom.c_str()));
+
+    ui->afregView->setInputMask(">HHHH");
+    ui->hlregView->setInputMask(">HHHHHH");
+    ui->deregView->setInputMask(">HHHHHH");
+    ui->bcregView->setInputMask(">HHHHHH");
+    ui->ixregView->setInputMask(">HHHHHH");
+    ui->iyregView->setInputMask(">HHHHHH");
+
+    ui->af_regView->setInputMask(">HHHH");
+    ui->hl_regView->setInputMask(">HHHHHH");
+    ui->de_regView->setInputMask(">HHHHHH");
+    ui->bc_regView->setInputMask(">HHHHHH");
+
+    ui->spsregView->setInputMask(">HHHH");
+    ui->splregView->setInputMask(">HHHHHH");
+
+    ui->pcregView->setInputMask(">HHHHHH");
+    ui->mbregView->setInputMask(">HH");
+    ui->iregView->setInputMask(">HHHH");
+    ui->rregView->setInputMask(">HH");
+    ui->imregView->setInputMask(">9");
 
     ui->lcdWidget->setFocus();
 }
@@ -136,6 +160,9 @@ void MainWindow::populateDebugWindow() {
 
     ui->pcregView->setText(int2hex(cpu.registers.PC, 6));
     ui->mbregView->setText(int2hex(cpu.registers.MBASE, 2));
+    ui->iregView->setText(int2hex(cpu.registers.I,4));
+    ui->rregView->setText(int2hex(cpu.registers.R,2));
+    ui->imregView->setText(int2hex(cpu.IM,1));
 
     ui->check3->setChecked(cpu.registers.flags._3);
     ui->check5->setChecked(cpu.registers.flags._5);
@@ -146,6 +173,7 @@ void MainWindow::populateDebugWindow() {
     ui->checkN->setChecked(cpu.registers.flags.N);
     ui->checkS->setChecked(cpu.registers.flags.S);
 
+    ui->checkPowered->setChecked(lcd.control & 0x800);
     ui->checkHalted->setChecked(cpu.halted);
     ui->checkIEF1->setChecked(cpu.IEF1);
     ui->checkIEF2->setChecked(cpu.IEF2);
@@ -258,7 +286,7 @@ void MainWindow::recordGIF()
         // TODO: Use QTemporaryFile?
         path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.gif");
 
-        gif_start_recording(path.toStdString().c_str(), 3);
+        gif_start_recording(path.toStdString().c_str(), ui->gif_frame_skip_slider->value());
     }
     else
     {

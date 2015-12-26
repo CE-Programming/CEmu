@@ -1,5 +1,6 @@
 #include "core/interrupt.h"
 #include "core/emu.h"
+#include "core/cpu.h"
 #include <string.h>
 
 interrupt_state_t intrpt;
@@ -104,8 +105,6 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_intrpt(void) {
-    intrpt.request->enabled = 0x00003011; // Default state
-    intrpt.request->latched = 0x00000019;  // Default state
     gui_console_printf("Initialized interrupt contoller...\n");
     return device;
 }
