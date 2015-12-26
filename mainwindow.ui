@@ -242,7 +242,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>4</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -3286,7 +3286,10 @@
                 </widget>
                </item>
                <item row="1" column="1">
-                <widget class="QSlider" name="horizontalSlider">
+                <widget class="QSlider" name="brightnessSlider">
+                 <property name="maximum">
+                  <number>255</number>
+                 </property>
                  <property name="orientation">
                   <enum>Qt::Horizontal</enum>
                  </property>

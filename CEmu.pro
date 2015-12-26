@@ -43,7 +43,6 @@ SOURCES += main.cpp\
     qtframebuffer.cpp \
     lcdwidget.cpp \
     core/asic.c \
-    core/backlightport.c \
     core/controlport.c \
     core/cpu.c \
     core/keypad.c \
@@ -65,6 +64,7 @@ SOURCES += main.cpp\
     core/sha256.c \
     core/gif.cpp \
     core/realclock.c \
+    core/backlight.c
 
 linux|macx|ios: SOURCES += core/os/os-linux.c
 win32: SOURCES += core/os/os-win32.c
@@ -74,7 +74,6 @@ HEADERS  += mainwindow.h \
     qtframebuffer.h \
     lcdwidget.h \
     core/asic.h \
-    core/backlightport.h \
     core/controlport.h \
     core/cpu.h \
     core/defines.h \
@@ -100,7 +99,8 @@ HEADERS  += mainwindow.h \
     core/realclock.h \
     core/giflib.h \
     core/gif.h \
-    core/os/os.h
+    core/os/os.h \
+    core/backlight.h
 
 FORMS    += mainwindow.ui \
     romselection.ui

@@ -149,6 +149,8 @@ void MainWindow::populateDebugWindow() {
     ui->checkHalted->setChecked(cpu.halted);
     ui->checkIEF1->setChecked(cpu.IEF1);
     ui->checkIEF2->setChecked(cpu.IEF2);
+
+    ui->brightnessSlider->setValue(backlight.brightness);
 }
 
 void MainWindow::showStatusMsg(QString str) {

@@ -14,7 +14,7 @@
 #include "core/controlport.h"
 #include "core/flash.h"
 #include "core/lcd.h"
-#include "core/backlightport.h"
+#include "core/backlight.h"
 #include "core/timers.h"
 #include "core/usb.h"
 #include "core/sha256.h"

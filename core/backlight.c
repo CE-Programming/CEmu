@@ -1,17 +1,10 @@
-#include "core/backlightport.h"
+#include "core/backlight.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct backlight_state backlight_state_t;
-
 /* Global BACKLIGHT state */
 backlight_state_t backlight;
-
-struct backlight_state {
-    uint8_t ports[0x100];
-    uint8_t brightness;
-};
 
 /* Read from the 0xBXXX range of ports */
 static uint8_t backlight_read(const uint16_t pio) {

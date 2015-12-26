@@ -2,6 +2,29 @@
 #include <QtGui/QPainter>
 #include "core/asic.h"
 
+#include <iostream>
+
+#define CLAMP(a) ( ((a) > 255) ? 255 : (((a) < 0) ? 0 : (int)(a)) )
+
+QImage brighten(QImage &img, float factor)
+{
+    /* Scale each RGB value by the brightening factor */
+    for(int y = 0; y < img.height(); y++) {
+        for(int x = 0; x < img.width(); x++) {
+            QRgb p = img.pixel(x, y);
+            int r = qRed(p) * factor;
+            r = CLAMP(r);
+            int g = qGreen(p) * factor;
+            g = CLAMP(g);
+            int b = qBlue(p) * factor;
+            b = CLAMP(b);
+            img.setPixel(x, y, qRgb(r, g, b));
+          }
+    }
+
+    return img;
+}
+
 QImage renderFramebuffer()
 {
     uint16_t *framebuffer = reinterpret_cast<uint16_t*>(malloc(320 * 240 * 2));
@@ -13,7 +36,7 @@ QImage renderFramebuffer()
 
     QImage image(reinterpret_cast<const uchar*>(framebuffer), 320, 240, 320 * 2, format, free, framebuffer);
 
-    return image;
+    return brighten(image,(300-(float)backlight.brightness)/160.0);
 }
 
 void paintFramebuffer(QPainter *p)

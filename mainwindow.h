@@ -43,8 +43,6 @@ public slots:
     void raiseDebugger();
     void populateDebugWindow();
 
-private slots:
-
 private:
     Ui::MainWindow *ui = nullptr;
     QSettings *settings = nullptr;
