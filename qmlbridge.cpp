@@ -18,13 +18,8 @@ static constexpr const int ROWS = 8, COLS = 8;
 void QMLBridge::keypadStateChanged(int keymap_id, bool state) {
     int col = keymap_id % COLS, row = keymap_id / COLS;
     assert(row < ROWS);
-    //assert(col < COLS); Not needed.
 
-    if(state) {
-        keypad.key_map[row] |= 1 << col;
-    } else {
-        keypad.key_map[row] &= ~(1 << col);
-    }
+    keypad_key_event(row, col, state);
 }
 
 static QObject *buttons[ROWS][COLS];
@@ -32,7 +27,6 @@ static QObject *buttons[ROWS][COLS];
 void QMLBridge::registerNButton(int keymap_id, QVariant button) {
     int col = keymap_id % COLS, row = keymap_id / COLS;
     assert(row < ROWS);
-    //assert(col < COLS); Not needed.
 
     if(buttons[row][col])
         qWarning() << "Warning: Button " << keymap_id << " already registered as " << buttons[row][col] << "!";
