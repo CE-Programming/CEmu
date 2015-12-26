@@ -8,19 +8,16 @@ extern "C" {
 #endif
 
 struct timer_state {
-    uint32_t counter;
-    uint32_t load;
-    uint32_t match1;
-    uint32_t match2;
+    uint32_t counter, reset, match[2];
 };
 typedef struct timer_state timer_state_t;
 
 /* Standard GPT state */
 struct general_timers_state {
-    timer_state_t timer[3];
-    uint32_t control;
-    uint32_t interrupt_state;
-    uint32_t interrupt_mask;    /* Probably unused? */
+    struct {
+        timer_state_t timer[3];
+        uint32_t control, status, mask, revision;
+    };
 };
 
 /* Type definitions */

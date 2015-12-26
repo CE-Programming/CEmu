@@ -1,4 +1,5 @@
 #include "core/timers.h"
+#include "core/controlport.h"
 #include "core/emu.h"
 #include "core/schedule.h"
 #include "core/interrupt.h"
@@ -7,79 +8,88 @@
 /* Global GPT state */
 general_timers_state_t gpt;
 
-static uint8_t gpt_read(const uint16_t pio)
-{
-    uint16_t index = pio & 0xFF;
-    uint8_t bit_offset = (index&3)<<3;
+static const int ost_ticks[4] = { 74, 154, 218, 314 };
+static void ost_event(int index) {
+    intrpt_trigger(INT_OSTMR, INTERRUPT_PULSE);
+    event_repeat(index, ost_ticks[control.ports[0] & 3]);
+}
 
-    //static const uint32_t revision = 0x00010801;
-
-    uint8_t curr = ((index>>4)&0x3);
-
-    if (index > 0x2F) {
-        switch (index) {
-            case 0x30: case 0x31: case 0x32: case 0x33:
-                return read8(gpt.control, bit_offset);
-            case 0x34: case 0x35: case 0x36: case 0x37:
-                return read8(gpt.interrupt_state, bit_offset);
-            case 0x38: case 0x39: case 0x3A: case 0x3B:
-                return read8(gpt.interrupt_mask, bit_offset);
-        }
-    } else {
-        switch (index & 0xF) {
-            case 0x00: case 0x01: case 0x02: case 0x03:
-                return read8(gpt.timer[curr].counter, bit_offset);
-            case 0x04: case 0x05: case 0x06: case 0x07:
-                return read8(gpt.timer[curr].load, bit_offset);
-            case 0x08: case 0x09: case 0x0A: case 0x0B:
-                return read8(gpt.timer[curr].match1, bit_offset);
-            case 0x0C: case 0x0D: case 0x0E: case 0x0F:
-                return read8(gpt.timer[curr].match2, bit_offset);
+static void gpt_update(void) {
+    uint8_t timer;
+    for (timer = 0; timer < 3; timer++) {
+        if (gpt.control >> timer * 3 & 1) {
+            sched.items[SCHED_TIMER1 + timer].clock = gpt.control >> timer * 3 & 2 ? CLOCK_32K : CLOCK_CPU;
+            event_set(SCHED_TIMER1 + timer, 1);
+        } else {
+            sched.items[SCHED_TIMER1 + timer].second = -1;
         }
     }
+}
 
+static void gpt_event(int index) {
+    int event;
+    timer_state_t *timer;
+    bool matched = false;
+    index -= SCHED_TIMER1;
+    if (gpt.control >> index * 3 & 1) {
+        timer = &gpt.timer[index];
+        if (gpt.control >> (9 + index) & 1) {
+            timer->counter++;
+        } else {
+            timer->counter--;
+        }
+        for (event = 0; event < 2; event++) {
+            if (timer->counter == timer->match[event]) {
+                gpt.status |= 1 << (index * 3 + event);
+                matched = true;
+            }
+        }
+        if (!timer->counter) {
+            gpt.status |= 1 << (index * 3 + 2);
+            timer->counter = timer->reset;
+            matched = true;
+        }
+        if (matched) {
+            intrpt_trigger(INT_TIMER1 + index, INTERRUPT_SET);
+        }
+        event_repeat(SCHED_TIMER1 + index, 1);
+    }
+}
+
+static uint8_t gpt_read(uint16_t address) {
+    if (address < 0x40) {
+        return ((uint8_t *)&gpt)[address];
+    }
     return 0;
 }
 
-static void gpt_write(const uint16_t pio, const uint8_t byte)
-{
-    uint16_t index = (int)pio & 0xFF;
-    uint8_t bit_offset = (index&3)<<3;
-
-    uint8_t curr = ((index>>4)&0x3);
-
-    if (index > 0x2F) {
-        switch (index) {
-            case 0x30: case 0x31: case 0x32: case 0x33:
-                write8(gpt.control, bit_offset, byte);
-                return;
-            case 0x34: case 0x35: case 0x36: case 0x37:
-                write8(gpt.interrupt_state, bit_offset, byte);
-                return;
-            case 0x38: case 0x39: case 0x3A: case 0x3B:
-                write8(gpt.interrupt_mask, bit_offset, byte);
-                return;
+static void gpt_write(uint16_t address, uint8_t value) {
+    uint8_t timer;
+    if (address >= 0x34 && address < 0x38) {
+        ((uint8_t *)&gpt)[address] &= ~value;
+        for (timer = 0; timer < 3; timer++) {
+            if (!(gpt.status >> timer * 3 & 0b111)) {
+                intrpt_trigger(INT_TIMER1 + timer, INTERRUPT_CLEAR);
+            }
         }
-    } else {
-        switch (index & 0xF) {
-            case 0x00: case 0x01: case 0x02: case 0x03:
-                write8(gpt.timer[curr].counter, bit_offset, byte);
-                return;
-            case 0x04: case 0x05: case 0x06: case 0x07:
-                write8(gpt.timer[curr].load, bit_offset, byte);
-                return;
-            case 0x08: case 0x09: case 0x0A: case 0x0B:
-                write8(gpt.timer[curr].match1, bit_offset, byte);
-                return;
-            case 0x0C: case 0x0D: case 0x0E: case 0x0F:
-                write8(gpt.timer[curr].match2, bit_offset, byte);
-                return;
+    } else if (address < 0x3C) {
+        ((uint8_t *)&gpt)[address] = value;
+        if (address >= 0x30) {
+            gpt_update();
         }
     }
 }
 
 void gpt_reset() {
-    memset(&gpt,0,sizeof(gpt));
+    uint8_t timer;
+    memset(&gpt, 0, sizeof gpt - sizeof gpt.revision);
+    gpt_update();
+    for (timer = 0; timer < 3; timer++) {
+        sched.items[SCHED_TIMER1 + timer].proc = gpt_event;
+    }
+    sched.items[SCHED_OSTIMER].clock = CLOCK_32K;
+    sched.items[SCHED_OSTIMER].proc = ost_event;
+    event_set(SCHED_OSTIMER, ost_ticks[control.ports[0] & 3]);
 }
 
 static const eZ80portrange_t device = {
@@ -88,6 +98,7 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_gpt(void) {
+    gpt.revision = 0x00010801;
     gui_console_printf("Initialized general purpose timers...\n");
     return device;
 }

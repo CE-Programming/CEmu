@@ -993,14 +993,14 @@ void cpu_execute(void) {
             cpu.IEF1 = cpu.IEF2 = 1;
         }
         if (cpu.IEF1 && (intrpt.request->status & intrpt.request->enabled)) {
-            cpu.cycles = cpu.IEF1 = cpu.halted = 0;
+            cpu.cycles = cpu.IEF1 = cpu.IEF2 = cpu.halted = 0;
             cpu_call(true, cpu.IM == 3 ? cpu_read_word(r->I << 8 | r->R) : 0x38, cpu.MADL);
             cycle_count_delta += cpu.cycles;
         } else if (cpu.halted) {
             cycle_count_delta = 0; // consume all of the cycles
         }
 
-        while (!exiting && cycle_count_delta < 0) {
+        while (!exiting && (cpu.PREFIX || cpu.SUFFIX || cycle_count_delta < 0)) {
             cpu.cycles = 0;
 
             // fetch opcode

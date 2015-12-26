@@ -136,8 +136,6 @@ void emu_inner_loop(void)
 #endif
 
 void emu_loop(bool reset) {
-    static int count = 0, shift = 0;
-
     if (reset) {
 reset:
         cpu_events &= EVENT_DEBUG_STEP;
@@ -166,10 +164,6 @@ reset:
         }
         if (cycle_count_delta < 0) {
             cpu_execute();  // execute instructions with available clock cycles
-            if (cpu.IEF1 && cpu.halted) {
-                if (!(count & ((1 << shift) - 1))) intrpt_trigger(4 - !(count >> shift), INTERRUPT_PULSE);
-                if (!count--) count = 8 << shift;
-            }
         } else {
             QThread::yieldCurrentThread();
         }

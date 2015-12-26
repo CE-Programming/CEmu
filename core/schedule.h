@@ -16,9 +16,10 @@ enum sched_item_index {
     SCHED_KEYPAD,
     SCHED_LCD,
     SCHED_RTC,
-    SCHED_TIMER0,
+    SCHED_OSTIMER,
     SCHED_TIMER1,
     SCHED_TIMER2,
+    SCHED_TIMER3,
     SCHED_WATCHDOG,
     SCHED_NUM_ITEMS
 };
