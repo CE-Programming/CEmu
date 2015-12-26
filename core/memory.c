@@ -21,7 +21,7 @@ void mem_init(void) {
     memset(mem.flash.block, 0xFF, flash_size);
 
     for (i = 0; i < flash_sectors; i++) {
-        mem.flash.sector[i].ptr = mem.flash.block + i;
+        mem.flash.block + (i*flash_sector_size);
         mem.flash.sector[i].locked = false;
     }
 

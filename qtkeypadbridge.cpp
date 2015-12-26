@@ -21,18 +21,8 @@ void QtKeypadBridge::keyEvent(QKeyEvent *event, bool press)
             {
                 if(key == keymap[row][col].key[index] && keymap[row][col].alt == (bool(event->modifiers() & Qt::AltModifier) || bool(event->modifiers() & Qt::MetaModifier)))
                 {
-                    if(row == 2 && col == 0)
-                    {
-                        if (press)
-                            keypad_on_pressed();
-                    }
-                    else
-                    {
-                        keypad.key_map[row] &= ~(1 << col);
-                        keypad.key_map[row] |= press << col;
-                        notifyKeypadStateChanged(row, col, press);
-                        keypad_intrpt_check();
-                    }
+                    keypad_key_event(row, col, press);
+                    notifyKeypadStateChanged(row, col, press);
                     return;
                 }
             }

@@ -11,8 +11,20 @@ extern "C" {
 
 /* Standard KEYPAD state */
 struct keypad_state {
-    uint32_t control;
-    uint32_t size;
+    union {
+        struct {
+            uint8_t mode : 2;
+            uint16_t row_wait : 14;
+            uint16_t scan_wait;
+        };
+        uint32_t control;
+    };
+    union {
+        struct {
+            uint8_t rows, cols;
+        };
+        uint32_t size;
+    };
     uint8_t  current_row;
     uint8_t  status;
     uint8_t  enable;
@@ -32,7 +44,7 @@ extern keypad_state_t keypad;
 eZ80portrange_t init_keypad(void);
 void keypad_intrpt_check(void);
 void keypad_reset(void);
-void keypad_on_pressed(void);
+void keypad_key_event(int row, int col, bool press);
 
 #ifdef __cplusplus
 }

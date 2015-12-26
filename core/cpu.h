@@ -49,7 +49,7 @@ extern eZ80cpu_t cpu;
 /* Available Functions */
 void cpu_init(void);
 
-int cpu_execute(int);
+void cpu_execute(void);
 
 #ifdef __cplusplus
 }
