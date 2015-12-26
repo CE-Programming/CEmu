@@ -111,7 +111,7 @@ static void keypad_write(const uint16_t pio, const uint8_t byte)
                 event_clear(SCHED_KEYPAD);
                 if (keypad.mode == 1) {
                     for (row = 0; row < keypad.rows; row++) {
-                        if (keypad.key_map[row] & (1 << keypad.cols) - 1) {
+                        if (keypad.key_map[row] & ((1 << keypad.cols) - 1)) {
                             keypad.status |= 4;
                             keypad_intrpt_check();
                             break;
@@ -127,7 +127,7 @@ static void keypad_write(const uint16_t pio, const uint8_t byte)
             write8(keypad.status, bit_offset, keypad.status & ~byte);
             if (keypad.mode == 1) {
                 for (row = 0; row < keypad.rows; row++) {
-                    if (keypad.key_map[row] & (1 << keypad.cols) - 1) {
+                    if (keypad.key_map[row] & ((1 << keypad.cols) - 1)) {
                         keypad.status |= 4;
                         break;
                     }

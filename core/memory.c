@@ -11,8 +11,10 @@ mem_state_t mem;
 
 static const uint32_t ram_size = 0x65800;
 static const uint32_t flash_size = 0x400000;
-static const uint32_t flash_sector_size = 0x10000;
-static const uint32_t flash_sectors = 64;
+static const uint32_t flash_sector_size_8K = 0x2000;
+static const uint32_t flash_sector_size_64K = 0x10000;
+static const uint32_t flash_sectors_8K = 8;
+static const uint32_t flash_sectors_64K = 63;
 
 void mem_init(void) {
     unsigned int i;
@@ -20,8 +22,13 @@ void mem_init(void) {
     mem.flash.block = (uint8_t*)malloc(flash_size);               /* allocate Flash memory */
     memset(mem.flash.block, 0xFF, flash_size);
 
-    for (i = 0; i < flash_sectors; i++) {
-        mem.flash.sector[i].ptr = mem.flash.block + (i*flash_sector_size);
+    for (i = 0; i < flash_sectors_8K; i++) {
+        mem.flash.sector[i].ptr = mem.flash.block + (i*flash_sector_size_8K);
+        mem.flash.sector[i].locked = true;
+    }
+
+    for (i = flash_sectors_8K; i < flash_sectors_64K+flash_sectors_8K; i++) {
+        mem.flash.sector[i].ptr = mem.flash.block + (i*flash_sector_size_64K);
         mem.flash.sector[i].locked = false;
     }
 
@@ -71,11 +78,28 @@ static void flash_erase(uint32_t addr, uint8_t byte) {
 static void flash_erase_sector(uint32_t addr, uint8_t byte) {
     (void)byte;
 
+    uint8_t sector;
+
     mem.flash.command = FLASH_SECTOR_ERASE;
 
     /* Reset sector */
-    memset(mem.flash.sector[addr / flash_sector_size].ptr, 0xFF, flash_sector_size);
-    gui_console_printf("Erased flash sector %02X.\n", addr / flash_sector_size);
+    if (addr < 0x10000) {
+        sector = addr / flash_sector_size_8K;
+        if(mem.flash.sector[sector].locked == false) {
+            memset(mem.flash.sector[sector].ptr, 0xFF, flash_sector_size_8K);
+        }
+    } else {
+        sector = addr / flash_sector_size_64K;
+        if(mem.flash.sector[sector].locked == false) {
+            memset(mem.flash.sector[sector].ptr, 0xFF, flash_sector_size_64K);
+        }
+    }
+}
+
+static void flash_verify_sector_protection(uint32_t addr, uint8_t byte) {
+    (void)byte;
+
+    mem.flash.command = FLASH_READ_SECTOR_PROTECTION;
 }
 
 typedef struct flash_write_pattern {
@@ -125,6 +149,15 @@ static flash_write_pattern_t patterns[] = {
         .handler = flash_erase
     },
     {
+        .length = 4,
+        .pattern = {
+            { .address = 0xAAA, .address_mask = 0xFFF, .value = 0xAA, .value_mask = 0xFF },
+            { .address = 0x555, .address_mask = 0xFFF, .value = 0x55, .value_mask = 0xFF },
+            { .address = 0xAAA, .address_mask = 0xFFF, .value = 0x90, .value_mask = 0xFF },
+        },
+        .handler = flash_verify_sector_protection
+    },
+    {
         .length = 0
     }
 
@@ -146,10 +179,13 @@ static uint8_t flash_read_handler(uint32_t address) {
         case FLASH_CHIP_ERASE:    /* Probably should properly emulate this, but not really nessasary. */
             mem.flash.command = NO_COMMAND;
             break;
+        case FLASH_READ_SECTOR_PROTECTION:  /* TODO correctly */
+            mem.flash.command = NO_COMMAND;
+            return mem.flash.block[address];
     }
 
-    /* Returning 0 is enough to emulate for the OS. TODO: Properly do this; not too important though */
-    return 0;
+    /* Returning 0x00 is enough to emulate for the OS. Set the msb bit for user routines? */
+    return 0x80;
 }
 
 static void flash_write_handler(uint32_t address, uint8_t byte) {
@@ -157,6 +193,15 @@ static void flash_write_handler(uint32_t address, uint8_t byte) {
     int partial_match = 0;
     flash_write_t *w;
     struct flash_write_pattern *pattern;
+
+    /* See if we can reset to default */
+    if (mem.flash.command) {
+        if (byte == 0xF0) {
+            mem.flash.command = NO_COMMAND;
+            flash_reset_write_index(address, byte);
+            return;
+        }
+    }
 
     w = &mem.flash.writes[mem.flash.write_index++];
     w->address = address;

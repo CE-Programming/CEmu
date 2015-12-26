@@ -10,9 +10,10 @@
 extern "C" {
 #endif
 
-#define NO_COMMAND          0
-#define FLASH_SECTOR_ERASE  1
-#define FLASH_CHIP_ERASE    2
+#define NO_COMMAND                   0
+#define FLASH_SECTOR_ERASE           1
+#define FLASH_CHIP_ERASE             2
+#define FLASH_READ_SECTOR_PROTECTION 3
 
 typedef struct {
     uint32_t address;
@@ -21,6 +22,8 @@ typedef struct {
     uint8_t value_mask;
 } flash_write_t;
 
+/* The first 8 sectors are 8K in length */
+/* The other 63 are 64K in length, uniform, for a total of 64 uniform sectors */
 typedef struct {
     bool locked;
     uint8_t *ptr;
@@ -30,7 +33,7 @@ typedef struct {
     bool locked;
     uint8_t write_index;
     uint8_t read_index;
-    flash_sector_state_t sector[64];
+    flash_sector_state_t sector[71];
     uint8_t *block;     /* Flash mem */
 
     /* Internal */
