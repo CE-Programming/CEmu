@@ -216,6 +216,7 @@ void MainWindow::runSetup(void) {
         settings->setValue(QStringLiteral("romImage"),QVariant(romImagePath.c_str()));
         emu.stop();
         emu.rom = romImagePath;
+        ui->rompathView->setText(romImagePath.c_str());
         emu.start();
     }
 }
