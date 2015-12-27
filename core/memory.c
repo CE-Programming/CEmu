@@ -42,8 +42,14 @@ void mem_init(void) {
 }
 
 void mem_free(void) {
-    free(mem.ram.block);
-    free(mem.flash.block);
+    if (mem.ram.block) {
+        free(mem.ram.block);
+        mem.ram.block = NULL;
+    }
+    if (mem.flash.block) {
+        free(mem.flash.block);
+        mem.flash.block = NULL;
+    }
     gui_console_printf("Freed memory...\n");
 }
 
