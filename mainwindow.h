@@ -23,7 +23,6 @@ public:
 public slots:
     // Misc.
     void closeEvent(QCloseEvent *) override;
-    void showStatusMsg(QString str);
 
     // ROM
 
@@ -46,11 +45,9 @@ public slots:
 private:
     Ui::MainWindow *ui = nullptr;
     QSettings *settings = nullptr;
-    RomSelection romSelection;
 
     EmuThread emu;
 
-    QLabel status_label;
     bool in_debugger;
 
     // To make it possible to activate the debugger

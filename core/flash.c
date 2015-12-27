@@ -9,23 +9,6 @@
 /* Global flash state */
 flash_state_t flash;
 
-int flash_open(const char *filename) {
-    uint32_t size;
-
-    FILE* rom_read = fopen_utf8(filename, "r+b");
-
-    if (!rom_read) {
-        return 0;
-    }
-    fseek(rom_read, 0, SEEK_END);
-    size = ftell(rom_read);
-    fseek(rom_read, 0, SEEK_SET);
-
-    fclose(rom_read);
-
-    return (size == 4*1024*1024);
-}
-
 /* Read from the 0x1000 range of ports */
 static uint8_t flash_read(const uint16_t pio) {
     uint8_t addr = pio&0xFF;

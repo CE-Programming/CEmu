@@ -122,8 +122,6 @@ void EmuThread::run()
     bool reset_true = true;
     bool success = emu_start();
 
-    asic_ptr = &asic;
-
     if(success) { emu_loop(reset_true); }
 
     emit exited(0);

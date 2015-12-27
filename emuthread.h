@@ -14,7 +14,6 @@ public:
     void doStuff(bool);
     void throttleTimerWait();
 
-    asic_state_t *asic_ptr = NULL;
     volatile bool paused = false;
     std::string rom = "";
 

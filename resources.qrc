@@ -18,4 +18,7 @@
         <file>qml/NBigButton.qml</file>
         <file>qml/NButton.qml</file>
     </qresource>
+    <qresource prefix="/setup">
+        <file>resources/setup/home.png</file>
+    </qresource>
 </RCC>

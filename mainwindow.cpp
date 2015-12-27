@@ -33,7 +33,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
     connect(&emu, SIGNAL(consoleStr(QString)), this, SLOT(consoleStr(QString))); //Not queued connection as it may cause a hang
 
     // GUI -> Emulator
-    connect(ui->buttonRun, SIGNAL(clicked(bool)), this, SLOT(raiseDebugger()));
+    connect(ui->buttonRun, SIGNAL(clicked(bool)), this, SLOT(populateDebugWindow()));
 
     // Console actions
     connect(ui->buttonConsoleclear, SIGNAL(clicked()), this, SLOT(clearConsole()));
@@ -109,11 +109,25 @@ MainWindow::~MainWindow()
 
 void MainWindow::raiseDebugger()
 {
+    // make sure we are set on the debug window, just in case
+    if(dock_debugger)
+    {
+        dock_debugger->setVisible(true);
+        dock_debugger->raise();
+    }
+    ui->tabWidget->setCurrentWidget(ui->tabDebugger);
+    in_debugger = true;
+    populateDebugWindow();
+}
+
+static QString int2hex(uint32_t a, uint8_t l) {
+    ::sprintf(tmpBuf, "%0*X", l, a);
+    return QString(tmpBuf);
+}
+
+void MainWindow::populateDebugWindow() {
     QPixmap pix;
     QIcon icon;
-
-    // make sure we are set on the debug window, just in case
-    ui->tabWidget->setCurrentWidget(ui->tabDebugger);
 
     if(in_debugger == false) {
         ui->buttonRun->setText("Run");
@@ -134,15 +148,8 @@ void MainWindow::raiseDebugger()
     ui->buttonStepOver->setEnabled( in_debugger );
 
     // populate the information on the degbug window
-    if (in_debugger == true) { this->populateDebugWindow(); }
-}
+    if (in_debugger == false) { return; }
 
-static QString int2hex(uint32_t a, uint8_t l) {
-    ::sprintf(tmpBuf, "%0*X", l, a);
-    return QString(tmpBuf);
-}
-
-void MainWindow::populateDebugWindow() {
     ui->afregView->setText(int2hex(cpu.registers.AF, 4));
     ui->hlregView->setText(int2hex(cpu.registers.HL, 6));
     ui->deregView->setText(int2hex(cpu.registers.DE, 6));
@@ -181,10 +188,6 @@ void MainWindow::populateDebugWindow() {
     ui->brightnessSlider->setValue(backlight.brightness);
 }
 
-void MainWindow::showStatusMsg(QString str) {
-    status_label.setText(str);
-}
-
 void MainWindow::closeEvent(QCloseEvent *e)
 {
     qDebug("Terminating emulator thread...");
@@ -205,13 +208,14 @@ void MainWindow::consoleStr(QString str)
 }
 
 void MainWindow::runSetup(void) {
+    RomSelection romSelection;
     romSelection.show();
     romSelection.exec();
 
     if (!romImagePath.empty()) {
         settings->setValue(QStringLiteral("romImage"),QVariant(romImagePath.c_str()));
-        emu.rom = romImagePath;
         emu.stop();
+        emu.rom = romImagePath;
         emu.start();
     }
 }
@@ -221,15 +225,6 @@ void MainWindow::setUIMode(bool docks_enabled)
     // Already in this mode?
     if (docks_enabled == ui->tabWidget->isHidden())
         return;
-
-    //settings->setValue(QStringLiteral("docksEnabled"), docks_enabled);
-
-    // Enabling tabs needs a restart
-    if(!docks_enabled)
-    {
-        QMessageBox::warning(this, trUtf8("Restart needed"), trUtf8("You need to restart firebird to enable the tab interface."));
-        return;
-    }
 
     // Create "Docks" menu to make closing and opening docks more intuitive
     QMenu *docks_menu = new QMenu(tr("Docks"), this);
@@ -262,7 +257,6 @@ void MainWindow::setUIMode(bool docks_enabled)
     }
 
     ui->tabWidget->setHidden(true);
-    //ui->uiDocks->setChecked(docks_enabled);
 }
 
 void MainWindow::screenshot(void)
@@ -345,5 +339,5 @@ void MainWindow::showAbout()
 }
 
 void MainWindow::actionExit(void) {
-    this->close();
+    close();
 }

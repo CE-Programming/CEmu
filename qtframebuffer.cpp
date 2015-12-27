@@ -1,8 +1,9 @@
 #include "qtframebuffer.h"
-#include <QtGui/QPainter>
-#include "core/asic.h"
+#include "qtkeypadbridge.h"
 
-#include <iostream>
+#include <QtGui/QPainter>
+
+#include "core/asic.h"
 
 #define CLAMP(a) ( ((a) > 255) ? 255 : (((a) < 0) ? 0 : (int)(a)) )
 
@@ -36,7 +37,9 @@ QImage renderFramebuffer()
 
     QImage image(reinterpret_cast<const uchar*>(framebuffer), 320, 240, 320 * 2, format, free, framebuffer);
 
-    return brighten(image,(300-(float)backlight.brightness)/160.0);
+    float factor = (300-(float)backlight.brightness)/160.0;
+    factor = (factor > 1) ? 1 : factor;
+    return brighten(image, factor);
 }
 
 void paintFramebuffer(QPainter *p)
@@ -46,10 +49,19 @@ void paintFramebuffer(QPainter *p)
         p->fillRect(p->window(), Qt::black);
         p->setPen(Qt::white);
         p->drawText(p->window(), Qt::AlignCenter, QObject::tr("LCD OFF"));
-    }
-    else
-    {
+    } else {
         QImage img = renderFramebuffer();
         p->drawImage(p->window(), img);
     }
+}
+
+QMLFramebuffer::QMLFramebuffer(QQuickItem *p)
+ : QQuickPaintedItem(p)
+{
+    installEventFilter(&qt_keypad_bridge);
+}
+
+void QMLFramebuffer::paint(QPainter *p)
+{
+    paintFramebuffer(p);
 }

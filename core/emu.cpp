@@ -11,13 +11,11 @@
 #include "core/emu.h"
 #include "core/schedule.h"
 #include "core/asic.h"
+#include "core/os/os.h"
 
 #include <QtCore/QThread>
 
 const char *rom_image = NULL;
-
-// For the debugger
-uint32_t reg_array[0x0E];
 
 /* cycle_count_delta is a (usually negative) number telling what the time is relative
  * to the next scheduled event. See sched.c */
@@ -100,7 +98,7 @@ bool emu_start() {
         gui_console_printf("No ROM image specified.");
         return false;
     } else {
-        FILE *rom = fopen(rom_image, "rb");
+        FILE *rom = fopen_utf8(rom_image, "rb");
         if (!rom) {
             gui_console_printf("Error opening ROM image.\n", rom_image);
             emu_cleanup();
@@ -117,7 +115,6 @@ bool emu_start() {
         fclose(rom);
     }
 
-    //mem_load_vram(rom_image);
     return true;
 }
 

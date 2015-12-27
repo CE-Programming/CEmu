@@ -1,13 +1,16 @@
-#ifndef QTFRAMEBUFFER_H
-#define QTFRAMEBUFFER_H
+#ifndef QMLFRAMEBUFFER_H
+#define QMLFRAMEBUFFER_H
 
-#include <QImage>
+#include <QQuickPaintedItem>
 
-class QPainter;
-
-#include <core/asic.h>
+class QMLFramebuffer : public QQuickPaintedItem
+{
+public:
+    QMLFramebuffer(QQuickItem *p = 0);
+    virtual void paint(QPainter *p) override;
+};
 
 QImage renderFramebuffer();
 void paintFramebuffer(QPainter *p);
 
-#endif // QTFRAMEBUFFER
+#endif // QMLFRAMEBUFFER_H
