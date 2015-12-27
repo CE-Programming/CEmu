@@ -342,3 +342,8 @@ void MainWindow::showAbout()
 void MainWindow::actionExit(void) {
     close();
 }
+
+void MainWindow::on_buttonRunSetup_clicked()
+{
+    runSetup();
+}
