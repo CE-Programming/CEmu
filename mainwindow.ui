@@ -267,7 +267,7 @@
         <item row="0" column="0">
          <widget class="QQuickWidget" name="keypadWidget">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
@@ -280,8 +280,8 @@
           </property>
           <property name="maximumSize">
            <size>
-            <width>265</width>
-            <height>370</height>
+            <width>16777215</width>
+            <height>16777215</height>
            </size>
           </property>
           <property name="focusPolicy">

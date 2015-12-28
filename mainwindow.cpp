@@ -28,6 +28,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
     ui->lcdWidget->installEventFilter(&qt_keypad_bridge);
     ui->keypadWidget->installEventFilter(&qt_keypad_bridge);
 
+    ui->keypadWidget->setResizeMode(QQuickWidget::ResizeMode::SizeRootObjectToView);
+
     // Emulator -> GUI
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr); // Not queued
 
@@ -49,7 +51,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
     connect(ui->actionRecord_GIF, &QAction::triggered, this, &MainWindow::recordGIF);
     connect(ui->buttonGIF, &QPushButton::clicked, this, &MainWindow::recordGIF);
 
-    // Other GUI actinos
+    // Other GUI actions
     connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
 
@@ -265,6 +267,7 @@ void MainWindow::showAbout()
 void MainWindow::actionExit(void) {
     close();
 }
+
 
 /* ================================================ */
 /* Debugger Things                                  */

@@ -2,11 +2,26 @@ import QtQuick 2.0
 import QtQuick.Layouts 1.0
 
 Rectangle {
+    id: wrapperRectangle
+    width: 265
+    height: 370
+    border.width: 0
+
+    Rectangle {
+
     id: rectangle1
     width: 265
     height: 370
-    
+
+    anchors {
+        horizontalCenter: parent.horizontalCenter;
+        verticalCenter: parent.verticalCenter;
+    }
+
+    scale: Math.min(parent.width / width, parent.height / height);
+
     color: "#fff"
+    border.width: 0
 
     GridLayout {
         x: 32
@@ -1405,7 +1420,7 @@ Rectangle {
 
 
 
-
+}
 
 }
 
