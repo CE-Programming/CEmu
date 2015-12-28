@@ -45,9 +45,11 @@ private:
     void raiseDebugger();
     void populateDebugWindow();
     void changeDebuggerState();
+    void pollPort();
 
     // Console
     void clearConsole(void);
+    void clearPortConsole(void);
 
     Ui::MainWindow *ui = nullptr;
     QSettings *settings = nullptr;

@@ -10,6 +10,7 @@
 #include "core/schedule.h"
 
 #include <QFileDialog>
+#include <QFont>
 #include <QMessageBox>
 #include <QPixmap>
 #include <QQuickWidget>
@@ -39,6 +40,9 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
     // Debugger
     connect(this, &MainWindow::debuggerChangedState, &emu, &EmuThread::setDebugMode);
     connect(&emu, &EmuThread::debuggerEntered, this, &MainWindow::raiseDebugger);
+    connect(ui->buttonPoll, &QPushButton::clicked, this, &MainWindow::pollPort);
+    connect(ui->portRequest, &QLineEdit::returnPressed, this, &MainWindow::pollPort);
+    connect(ui->buttonPortClear, &QPushButton::clicked, this, &MainWindow::clearPortConsole);
 
     // Console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, this, &MainWindow::clearConsole);
@@ -55,6 +59,11 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
     connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
 
+    //Set up monospace fonts
+    QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    ui->console->setFont(monospace);
+    ui->portView->setFont(monospace);
+
     setUIMode(true);
 
     debugger_on = false;
@@ -69,7 +78,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
     restoreGeometry(settings->value(QStringLiteral("windowGeometry")).toByteArray());
     restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
 
-    emu.rom = settings->value(QStringLiteral("romImage")).toByteArray().toStdString();
+    emu.rom = settings->value(QStringLiteral("romImage")).toString().toStdString();
 
     if(emu.rom.empty()) {
        runSetup();
@@ -78,27 +87,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
     }
 
     ui->rompathView->setText(QString(emu.rom.c_str()));
-
-    ui->afregView->setInputMask(">HHHH");
-    ui->hlregView->setInputMask(">HHHHHH");
-    ui->deregView->setInputMask(">HHHHHH");
-    ui->bcregView->setInputMask(">HHHHHH");
-    ui->ixregView->setInputMask(">HHHHHH");
-    ui->iyregView->setInputMask(">HHHHHH");
-
-    ui->af_regView->setInputMask(">HHHH");
-    ui->hl_regView->setInputMask(">HHHHHH");
-    ui->de_regView->setInputMask(">HHHHHH");
-    ui->bc_regView->setInputMask(">HHHHHH");
-
-    ui->spsregView->setInputMask(">HHHH");
-    ui->splregView->setInputMask(">HHHHHH");
-
-    ui->pcregView->setInputMask(">HHHHHH");
-    ui->mbregView->setInputMask(">HH");
-    ui->iregView->setInputMask(">HHHH");
-    ui->rregView->setInputMask(">HH");
-    ui->imregView->setInputMask(">9");
 
     ui->lcdWidget->setFocus();
 }
@@ -228,8 +216,12 @@ void MainWindow::recordGIF()
 }
 
 void MainWindow::clearConsole(void) {
-    this->ui->console->clear();
-    this->consoleStr("Console Cleared.\n");
+    ui->console->clear();
+    consoleStr("Console Cleared.\n");
+}
+
+void MainWindow::clearPortConsole(void) {
+    ui->portView->clear();
 }
 
 void MainWindow::showAbout()
@@ -273,6 +265,15 @@ void MainWindow::actionExit(void) {
 /* Debugger Things                                  */
 /* ================================================ */
 
+static int hex2int(QString str) {
+    return std::stoi(str.toStdString(),nullptr,16);
+}
+
+static QString int2hex(uint32_t a, uint8_t l) {
+    ::sprintf(tmpBuf, "%0*X", l, a);
+    return QString(tmpBuf);
+}
+
 void MainWindow::raiseDebugger()
 {
     // make sure we are set on the debug window, just in case
@@ -307,6 +308,7 @@ void MainWindow::changeDebuggerState()
     ui->buttonRun->setIcon(icon);
     ui->buttonRun->setIconSize(pix.size());
 
+    ui->tabDebugging->setEnabled( debugger_on );
     ui->buttonBreakpoint->setEnabled( debugger_on );
     ui->buttonGoto->setEnabled( debugger_on );
     ui->buttonStep->setEnabled( debugger_on );
@@ -317,15 +319,50 @@ void MainWindow::changeDebuggerState()
     ui->groupRegisters->setEnabled( debugger_on );
     ui->groupInterrupts->setEnabled( debugger_on );
 
+    /* Update all the changes in the core */
+    if (debugger_on == false) {
+        cpu.registers.AF = (uint16_t)hex2int(ui->afregView->text());
+        cpu.registers.HL = (uint32_t)hex2int(ui->hlregView->text());
+        cpu.registers.DE = (uint32_t)hex2int(ui->deregView->text());
+        cpu.registers.BC = (uint32_t)hex2int(ui->bcregView->text());
+        cpu.registers.IX = (uint32_t)hex2int(ui->ixregView->text());
+        cpu.registers.IY = (uint32_t)hex2int(ui->ixregView->text());
+
+        cpu.registers._AF = (uint16_t)hex2int(ui->af_regView->text());
+        cpu.registers._HL = (uint32_t)hex2int(ui->hl_regView->text());
+        cpu.registers._DE = (uint32_t)hex2int(ui->de_regView->text());
+        cpu.registers._BC = (uint32_t)hex2int(ui->bc_regView->text());
+
+        cpu.registers.SPL = (uint32_t)hex2int(ui->splregView->text());
+        cpu.registers.SPS = (uint16_t)hex2int(ui->spsregView->text());
+
+        cpu.registers.PC = (uint32_t)hex2int(ui->pcregView->text());
+        cpu.registers.MBASE = (uint8_t)hex2int(ui->mbregView->text());
+        cpu.registers.I = (uint16_t)hex2int(ui->iregView->text());
+        cpu.registers.R = (uint8_t)hex2int(ui->rregView->text());;
+        cpu.IM = (uint8_t)hex2int(ui->imregView->text());
+
+        cpu.registers.flags.Z = ui->checkZ->isChecked();
+        cpu.registers.flags.C = ui->checkC->isChecked();
+        cpu.registers.flags.H = ui->checkHC->isChecked();
+        cpu.registers.flags.PV = ui->checkPV->isChecked();
+        cpu.registers.flags.N = ui->checkN->isChecked();
+        cpu.registers.flags.S = ui->checkS->isChecked();
+        cpu.registers.flags._5 = ui->check5->isChecked();
+        cpu.registers.flags._3 = ui->check3->isChecked();
+
+        cpu.halted = ui->checkHalted->isChecked();
+        cpu.IEF1 = ui->checkIEF1->isChecked();
+        cpu.IEF2 = ui->checkIEF2->isChecked();
+
+        backlight.brightness = (uint8_t)ui->brightnessSlider->value();
+    }
+
     emit debuggerChangedState( debugger_on );
 }
 
-static QString int2hex(uint32_t a, uint8_t l) {
-    ::sprintf(tmpBuf, "%0*X", l, a);
-    return QString(tmpBuf);
-}
-
 void MainWindow::populateDebugWindow() {
+    ui->portRequest->clear();
     ui->afregView->setText(int2hex(cpu.registers.AF, 4));
     ui->hlregView->setText(int2hex(cpu.registers.HL, 6));
     ui->deregView->setText(int2hex(cpu.registers.DE, 6));
@@ -362,4 +399,22 @@ void MainWindow::populateDebugWindow() {
     ui->checkIEF2->setChecked(cpu.IEF2);
 
     ui->brightnessSlider->setValue(backlight.brightness);
+}
+
+void MainWindow::pollPort() {
+    if (ui->portRequest->text().isEmpty()) {
+        return;
+    }
+
+    std::string s = ui->portRequest->text().toUpper().toStdString();
+    if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos) {
+        return;
+    }
+
+    QString port = QString::fromStdString(s);
+    QString read = int2hex((uint32_t)port_read_byte((uint16_t)hex2int(port)),2);
+
+    ui->portView->moveCursor(QTextCursor::End);
+    ui->portView->insertPlainText("Port: "+port+" -> "+read+"\n");
+    ui->portRequest->clear();
 }
