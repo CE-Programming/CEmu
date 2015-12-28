@@ -6,7 +6,6 @@
 #include "qtframebuffer.h"
 #include "qtkeypadbridge.h"
 
-#include "core/debug.h"
 #include "core/gif.h"
 #include "core/schedule.h"
 
@@ -30,28 +29,33 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
     ui->keypadWidget->installEventFilter(&qt_keypad_bridge);
 
     // Emulator -> GUI
-    connect(&emu, SIGNAL(consoleStr(QString)), this, SLOT(consoleStr(QString))); //Not queued connection as it may cause a hang
+    connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr); // Not queued
 
     // GUI -> Emulator
-    connect(ui->buttonRun, SIGNAL(clicked(bool)), this, SLOT(populateDebugWindow()));
+    connect(ui->buttonRun, &QPushButton::clicked, this, &MainWindow::changeDebuggerState);
+
+    // Debugger
+    connect(this, &MainWindow::debuggerChangedState, &emu, &EmuThread::setDebugMode);
+    connect(&emu, &EmuThread::debuggerEntered, this, &MainWindow::raiseDebugger);
 
     // Console actions
-    connect(ui->buttonConsoleclear, SIGNAL(clicked()), this, SLOT(clearConsole()));
+    connect(ui->buttonConsoleclear, &QPushButton::clicked, this, &MainWindow::clearConsole);
 
     // Toolbar Actions
-    connect(ui->actionSetup, SIGNAL(triggered()), this, SLOT(runSetup()));
-    connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(showAbout()));
-    connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(actionExit()));
-    connect(ui->actionScreenshot, SIGNAL(triggered()), this, SLOT(screenshot()));
-    connect(ui->actionRecord_GIF, SIGNAL(triggered()), this, SLOT(recordGIF()));
-    connect(ui->buttonGIF, SIGNAL(clicked()), this, SLOT(recordGIF()));
+    connect(ui->actionSetup, &QAction::triggered, this, &MainWindow::runSetup);
+    connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::showAbout);
+    connect(ui->actionExit, &QAction::triggered, this, &MainWindow::actionExit);
+    connect(ui->actionScreenshot, &QAction::triggered, this, &MainWindow::screenshot);
+    connect(ui->actionRecord_GIF, &QAction::triggered, this, &MainWindow::recordGIF);
+    connect(ui->buttonGIF, &QPushButton::clicked, this, &MainWindow::recordGIF);
 
     // Other GUI actinos
-    connect(ui->buttonScreenshot, SIGNAL(clicked()), this, SLOT(screenshot()));
+    connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
+    connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
 
     setUIMode(true);
 
-    in_debugger = false;
+    debugger_on = false;
 
 #ifdef Q_OS_ANDROID
     QString path = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
@@ -103,89 +107,8 @@ MainWindow::~MainWindow()
     settings->setValue(QStringLiteral("windowState"), saveState(WindowStateVersion));
     settings->setValue(QStringLiteral("windowGeometry"), saveGeometry());
 
-    //delete settings;
+    delete settings;
     delete ui;
-}
-
-void MainWindow::raiseDebugger()
-{
-    // make sure we are set on the debug window, just in case
-    if(dock_debugger)
-    {
-        dock_debugger->setVisible(true);
-        dock_debugger->raise();
-    }
-    ui->tabWidget->setCurrentWidget(ui->tabDebugger);
-    in_debugger = true;
-    populateDebugWindow();
-}
-
-static QString int2hex(uint32_t a, uint8_t l) {
-    ::sprintf(tmpBuf, "%0*X", l, a);
-    return QString(tmpBuf);
-}
-
-void MainWindow::populateDebugWindow() {
-    QPixmap pix;
-    QIcon icon;
-
-    if(in_debugger == false) {
-        ui->buttonRun->setText("Run");
-        pix.load(":/icons/resources/icons/run.png");
-    } else {
-        ui->buttonRun->setText("Stop");
-        pix.load(":/icons/resources/icons/stop.png");
-    }
-    icon.addPixmap(pix);
-    ui->buttonRun->setIcon(icon);
-    ui->buttonRun->setIconSize(pix.size());
-
-    in_debugger = !in_debugger;
-    ui->tabDebugging->setEnabled( in_debugger );
-    ui->buttonBreakpoint->setEnabled( in_debugger );
-    ui->buttonGoto->setEnabled( in_debugger );
-    ui->buttonStep->setEnabled( in_debugger );
-    ui->buttonStepOver->setEnabled( in_debugger );
-
-    // populate the information on the degbug window
-    if (in_debugger == false) { return; }
-
-    ui->afregView->setText(int2hex(cpu.registers.AF, 4));
-    ui->hlregView->setText(int2hex(cpu.registers.HL, 6));
-    ui->deregView->setText(int2hex(cpu.registers.DE, 6));
-    ui->bcregView->setText(int2hex(cpu.registers.BC, 6));
-    ui->ixregView->setText(int2hex(cpu.registers.IX, 6));
-    ui->iyregView->setText(int2hex(cpu.registers.IY, 6));
-
-    ui->af_regView->setText(int2hex(cpu.registers._AF, 4));
-    ui->hl_regView->setText(int2hex(cpu.registers._HL, 6));
-    ui->de_regView->setText(int2hex(cpu.registers._DE, 6));
-    ui->bc_regView->setText(int2hex(cpu.registers._BC, 6));
-
-    ui->spsregView->setText(int2hex(cpu.registers.SPS, 4));
-    ui->splregView->setText(int2hex(cpu.registers.SPL, 6));
-
-    ui->pcregView->setText(int2hex(cpu.registers.PC, 6));
-    ui->mbregView->setText(int2hex(cpu.registers.MBASE, 2));
-    ui->iregView->setText(int2hex(cpu.registers.I,4));
-    ui->rregView->setText(int2hex(cpu.registers.R,2));
-    ui->imregView->setText(int2hex(cpu.IM,1));
-
-    ui->check3->setChecked(cpu.registers.flags._3);
-    ui->check5->setChecked(cpu.registers.flags._5);
-    ui->checkZ->setChecked(cpu.registers.flags.Z);
-    ui->checkC->setChecked(cpu.registers.flags.C);
-    ui->checkHC->setChecked(cpu.registers.flags.H);
-    ui->checkPV->setChecked(cpu.registers.flags.PV);
-    ui->checkN->setChecked(cpu.registers.flags.N);
-    ui->checkS->setChecked(cpu.registers.flags.S);
-
-    ui->checkPowered->setChecked(lcd.control & 0x800);
-    ui->checkHalted->setChecked(cpu.halted);
-    ui->checkIEF1->setChecked(cpu.IEF1);
-    ui->checkIEF2->setChecked(cpu.IEF2);
-
-    ui->brightnessSlider->setValue(backlight.brightness);
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)
@@ -343,7 +266,97 @@ void MainWindow::actionExit(void) {
     close();
 }
 
-void MainWindow::on_buttonRunSetup_clicked()
+/* ================================================ */
+/* Debugger Things                                  */
+/* ================================================ */
+
+void MainWindow::raiseDebugger()
 {
-    runSetup();
+    // make sure we are set on the debug window, just in case
+    if(dock_debugger)
+    {
+        dock_debugger->setVisible(true);
+        dock_debugger->raise();
+    }
+    ui->tabWidget->setCurrentWidget(ui->tabDebugger);
+
+    /* Set to false because we change it immediately with changeDebuggerState */
+    debugger_on = false;
+    changeDebuggerState();
+    populateDebugWindow();
+}
+
+void MainWindow::changeDebuggerState()
+{
+    QPixmap pix;
+    QIcon icon;
+
+    debugger_on = !debugger_on;
+
+    if(debugger_on) {
+        ui->buttonRun->setText("Run");
+        pix.load(":/icons/resources/icons/run.png");
+    } else {
+        ui->buttonRun->setText("Stop");
+        pix.load(":/icons/resources/icons/stop.png");
+    }
+    icon.addPixmap(pix);
+    ui->buttonRun->setIcon(icon);
+    ui->buttonRun->setIconSize(pix.size());
+
+    ui->buttonBreakpoint->setEnabled( debugger_on );
+    ui->buttonGoto->setEnabled( debugger_on );
+    ui->buttonStep->setEnabled( debugger_on );
+    ui->buttonStepOver->setEnabled( debugger_on );
+    ui->groupCPU->setEnabled( debugger_on );
+    ui->groupFlags->setEnabled( debugger_on );
+    ui->groupDisplay->setEnabled( debugger_on );
+    ui->groupRegisters->setEnabled( debugger_on );
+    ui->groupInterrupts->setEnabled( debugger_on );
+
+    emit debuggerChangedState( debugger_on );
+}
+
+static QString int2hex(uint32_t a, uint8_t l) {
+    ::sprintf(tmpBuf, "%0*X", l, a);
+    return QString(tmpBuf);
+}
+
+void MainWindow::populateDebugWindow() {
+    ui->afregView->setText(int2hex(cpu.registers.AF, 4));
+    ui->hlregView->setText(int2hex(cpu.registers.HL, 6));
+    ui->deregView->setText(int2hex(cpu.registers.DE, 6));
+    ui->bcregView->setText(int2hex(cpu.registers.BC, 6));
+    ui->ixregView->setText(int2hex(cpu.registers.IX, 6));
+    ui->iyregView->setText(int2hex(cpu.registers.IY, 6));
+
+    ui->af_regView->setText(int2hex(cpu.registers._AF, 4));
+    ui->hl_regView->setText(int2hex(cpu.registers._HL, 6));
+    ui->de_regView->setText(int2hex(cpu.registers._DE, 6));
+    ui->bc_regView->setText(int2hex(cpu.registers._BC, 6));
+
+    ui->spsregView->setText(int2hex(cpu.registers.SPS, 4));
+    ui->splregView->setText(int2hex(cpu.registers.SPL, 6));
+
+    ui->pcregView->setText(int2hex(cpu.registers.PC, 6));
+    ui->mbregView->setText(int2hex(cpu.registers.MBASE, 2));
+    ui->iregView->setText(int2hex(cpu.registers.I,4));
+    ui->rregView->setText(int2hex(cpu.registers.R,2));
+    ui->imregView->setText(int2hex(cpu.IM,1));
+
+    ui->check3->setChecked(cpu.registers.flags._3);
+    ui->check5->setChecked(cpu.registers.flags._5);
+    ui->checkZ->setChecked(cpu.registers.flags.Z);
+    ui->checkC->setChecked(cpu.registers.flags.C);
+    ui->checkHC->setChecked(cpu.registers.flags.H);
+    ui->checkPV->setChecked(cpu.registers.flags.PV);
+    ui->checkN->setChecked(cpu.registers.flags.N);
+    ui->checkS->setChecked(cpu.registers.flags.S);
+
+    ui->checkPowered->setChecked(lcd.control & 0x800);
+    ui->checkHalted->setChecked(cpu.halted);
+    ui->checkIEF1->setChecked(cpu.IEF1);
+    ui->checkIEF2->setChecked(cpu.IEF2);
+
+    ui->brightnessSlider->setValue(backlight.brightness);
 }

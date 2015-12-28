@@ -14,32 +14,21 @@ public:
     void doStuff(bool);
     void throttleTimerWait();
 
-    volatile bool paused = false;
     std::string rom = "";
 
 signals:
     // Debugger
-    void debuggerEntered(bool state);
+    void debuggerEntered();
 
     void consoleStr(QString str);
     void exited(int retcode);
 
-    // Status
-    void statusMsg(QString str);
-    void speedChanged(double value);
-    void turboModeChanged(bool state);
-
 public slots:
     virtual void run() override;
-    void setPaused(bool paused);
     bool stop();
 
     // Debugging
-    void enterDebugger();
-
-    // Emulation settings
-    void setTurboMode(bool state);
-    void toggleTurbo();
+    void setDebugMode(bool state);
 
 private:
     bool enter_debugger = false;

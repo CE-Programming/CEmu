@@ -73,14 +73,13 @@ void throttle_interval_event(int index) {
     auto time = std::chrono::duration_cast<std::chrono::microseconds>(interval_end - prev).count();
     if (time >= 500000) {
         speed = (double)10000 * (intervals - prev_intervals) / time;
-        //gui_show_speed(speed);
         prev_intervals = intervals;
         prev = interval_end;
     }
 
     gui_do_stuff(true);
 
-    if (!turbo_mode && speed > 0.7) {
+    if (!speed > 0.7) {
         throttle_timer_wait();
     }
 }
@@ -88,10 +87,6 @@ void throttle_interval_event(int index) {
 bool emu_start() {
     long lSize;
 
-    throttle_timer_on();
-
-    log_enabled[LOG_CPU] = 1;
-    log_file[LOG_CPU] = fopen("C:/LOG_CPU", "w");
     asic_init(TI84PCE);
 
     if (rom_image == NULL) {
@@ -132,32 +127,39 @@ void emu_inner_loop(void)
 }
 #endif
 
-void emu_loop(bool reset) {
-    if (reset) {
-reset:
-        cpu_events &= EVENT_DEBUG_STEP;
+static void emu_reset() {
+    cpu_events &= EVENT_DEBUG_STEP;
 
-        sched_reset();
+    sched_reset();
 
-        sched.items[SCHED_THROTTLE].clock = CLOCK_27M;
-        sched.items[SCHED_THROTTLE].proc = throttle_interval_event;
+    sched.items[SCHED_THROTTLE].clock = CLOCK_27M;
+    sched.items[SCHED_THROTTLE].proc = throttle_interval_event;
 
-        asic_reset();
-    }
+    asic_reset();
+
+    /* Drain everything */
+    cycle_count_delta = 0;
 
     sched_update_next_event(0);
+}
+
+void emu_loop(bool reset) {
+
+    if (reset) {
+        emu_reset();
+    }
 
     exiting = false;
 
 #ifdef __EMSCRIPTEN__
-    // TODO: handle reset... see emu_inner_loop
+    // TODO: handle reset... done?
     emscripten_set_main_loop(emu_inner_loop, -1, 1);
 #else
     while (!exiting) {
         sched_process_pending_events();
         if (cpu_events & EVENT_RESET) {
             gui_console_printf("CPU Reset triggered...");
-            goto reset;
+            emu_reset();
         }
         if (cycle_count_delta < 0) {
             cpu_execute();  // execute instructions with available clock cycles

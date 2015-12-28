@@ -15,13 +15,11 @@
 
 EmuThread *emu_thread = nullptr;
 
-void gui_do_stuff(bool wait)
-{
+void gui_do_stuff(bool wait) {
     emu_thread->doStuff(wait);
 }
 
-void gui_console_printf(const char *fmt, ...)
-{
+void gui_console_printf(const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
 
@@ -30,93 +28,57 @@ void gui_console_printf(const char *fmt, ...)
     va_end(ap);
 }
 
-void gui_console_vprintf(const char *fmt, va_list ap)
-{
+void gui_console_vprintf(const char *fmt, va_list ap) {
     QString str;
     str.vsprintf(fmt, ap);
     emu_thread->consoleStr(str);
 }
 
-void gui_perror(const char *msg)
-{
+void gui_perror(const char *msg) {
     gui_console_printf("%s: %s\n", msg, strerror(errno));
 }
 
-void throttle_timer_off()
-{
-    emu_thread->setTurboMode(true);
-}
-
-void throttle_timer_on()
-{
-    emu_thread->setTurboMode(false);
-}
-
-void throttle_timer_wait()
-{
+void throttle_timer_wait() {
     emu_thread->throttleTimerWait();
 }
 
-void gui_debugger_entered_or_left(bool entered)
-{
-    if(entered != 0) {
-        emu_thread->debuggerEntered(entered);
+void gui_debugger_entered_or_left(bool entered) {
+    if (entered == true) {
+        emu_thread->debuggerEntered();
     }
 }
 
-EmuThread::EmuThread(QObject *p) : QThread(p)
-{
+EmuThread::EmuThread(QObject *p) : QThread(p) {
     assert(emu_thread == nullptr);
     emu_thread = this;
 }
 
-void EmuThread::enterDebugger()
-{
-    enter_debugger = true;
-}
-
-//Called occasionally, only way to do something in the same thread the emulator runs in.
-void EmuThread::doStuff(bool waitfor)
-{
-    do
-    {
-        if (enter_debugger)
-        {
-            enter_debugger = false;
-            debugger(DBG_USER, 0);
-        }
-
-        if (/*is_paused && */0) {
-            msleep(100);
-        }
-
-    } while(/*is_paused && */0);
-}
-
-void EmuThread::throttleTimerWait()
-{
-    unsigned int now = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-    unsigned int throttle = throttle_delay * 1000;
-    unsigned int left = throttle - (now % throttle);
-    if (left > 0) {
-        QThread::usleep(left);
+void EmuThread::setDebugMode(bool state) {
+    enter_debugger = state;
+    if(in_debugger && !state) {
+        in_debugger = false;
     }
 }
 
-void EmuThread::setTurboMode(bool enabled)
-{
-    turbo_mode = enabled;
-    emit turboModeChanged(enabled);
+//Called occasionally, only way to do something in the same thread the emulator runs in.
+void EmuThread::doStuff(bool wait_for) {
+    (void)wait_for;
+
+    if (enter_debugger) {
+        enter_debugger = false;
+        debugger(DBG_USER, 0);
+    }
 }
 
-void EmuThread::toggleTurbo()
-{
-    setTurboMode(!turbo_mode);
+void EmuThread::throttleTimerWait() {
+    unsigned int now = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    unsigned int throttle = throttle_delay * 1000;
+    unsigned int left = throttle - (now % throttle);
+    if (left > 0)
+        QThread::usleep(left);
 }
 
-
-void EmuThread::run()
-{
+void EmuThread::run() {
     rom_image = rom.c_str();
 
     bool reset_true = true;
@@ -127,15 +89,15 @@ void EmuThread::run()
     emit exited(0);
 }
 
-void EmuThread::setPaused(bool pause)
-{
-    this->paused = pause;
-}
+bool EmuThread::stop() {
 
-bool EmuThread::stop()
-{
+    if(!isRunning())
+        return true;
+
     exiting = true;
-    paused = false;
+    /* Cause the cpu core to leave the loop and check for events */
+    cycle_count_delta = 0;
+
     if(!this->wait(200))
     {
         terminate();

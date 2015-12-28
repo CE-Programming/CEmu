@@ -9,7 +9,7 @@
 #include <emuthread.h>
 
 namespace Ui {
-class MainWindow;
+    class MainWindow;
 }
 
 class MainWindow : public QMainWindow
@@ -35,29 +35,30 @@ public slots:
     void setUIMode(bool docks_enabled);
 
     // Console
-    void clearConsole(void);
     void consoleStr(QString str);
 
+signals:
+    void debuggerChangedState(bool running);
+
+private:
     // Debugger
     void raiseDebugger();
     void populateDebugWindow();
+    void changeDebuggerState();
 
-private slots:
-    void on_buttonRunSetup_clicked();
+    // Console
+    void clearConsole(void);
 
-private:
     Ui::MainWindow *ui = nullptr;
     QSettings *settings = nullptr;
+    QDockWidget *dock_debugger = nullptr;
 
     EmuThread emu;
 
-    bool in_debugger;
-
-    // To make it possible to activate the debugger
-    QDockWidget *dock_debugger = nullptr;
+    bool debugger_on;
 };
 
-// Used as global instance by EmuThread and friends
+// Used as global instance by EmuThread and Debugger class
 extern MainWindow *main_window;
 
 #endif // MAINWINDOW_H
