@@ -59,6 +59,10 @@
 
 const int kGifTransIndex = 0;
 
+/**************/
+/* Structures */
+/**************/
+
 struct GifPalette
 {
     int bitDepth;
@@ -74,6 +78,61 @@ struct GifPalette
     uint8_t treeSplit[255];
 };
 
+// Simple structure to write out the LZW-compressed portion of the image
+// one bit at a time
+struct GifBitStatus
+{
+    uint8_t bitIndex;  // how many bits in the partial byte written so far
+    uint8_t byte;      // current partial byte
+
+    uint32_t chunkIndex;
+    uint8_t chunk[256];   // bytes are written in here until we have 256 of them, then written to the file
+};
+
+// The LZW dictionary is a 256-ary tree constructed as the file is encoded,
+// this is one node
+struct GifLzwNode
+{
+    uint16_t m_next[256];
+};
+
+struct GifWriter
+{
+    FILE* f;
+    uint8_t* oldImage;
+    bool firstFrame;
+};
+
+/**************/
+/* Prototypes */
+/**************/
+
+int GifIMax(int l, int r);
+int GifIMin(int l, int r);
+int GifIAbs(int i);
+void GifGetClosestPaletteColor(GifPalette* pPal, int r, int g, int b, int& bestInd, int& bestDiff, int treeRoot = 1);
+void GifSwapPixels(uint8_t* image, int pixA, int pixB);
+int GifPartition(uint8_t* image, const int left, const int right, const int elt, int pivotIndex);
+void GifPartitionByMedian(uint8_t* image, int left, int right, int com, int neededCenter);
+void GifSplitPalette(uint8_t* image, int numPixels, int firstElt, int lastElt, int splitElt, int splitDist, int treeNode, bool buildForDither, GifPalette* pal);
+int GifPickChangedPixels( const uint8_t* lastFrame, uint8_t* frame, int numPixels );
+void GifMakePalette( const uint8_t* lastFrame, const uint8_t* nextFrame, uint32_t width, uint32_t height, int bitDepth, bool buildForDither, GifPalette* pPal );
+void GifDitherImage( const uint8_t* lastFrame, const uint8_t* nextFrame, uint8_t* outFrame, uint32_t width, uint32_t height, GifPalette* pPal );
+void GifThresholdImage( const uint8_t* lastFrame, const uint8_t* nextFrame, uint8_t* outFrame, uint32_t width, uint32_t height, GifPalette* pPal );
+void GifWriteBit( GifBitStatus& stat, uint32_t bit );
+void GifWriteChunk( FILE* f, GifBitStatus& stat );
+void GifWriteCode( FILE* f, GifBitStatus& stat, uint32_t code, uint32_t length );
+void GifWritePalette( const GifPalette* pPal, FILE* f );
+void GifWriteLzwImage(FILE* f, uint8_t* image, uint32_t left, uint32_t top,  uint32_t width, uint32_t height, uint32_t delay, GifPalette* pPal);
+bool GifBegin( GifWriter* writer, const char* filename, uint32_t width, uint32_t height, uint32_t delay);
+bool GifWriteFrame( GifWriter* writer, const uint8_t* image, uint32_t width, uint32_t height, uint32_t delay, int bitDepth = 8, bool dither = false );
+bool GifEnd( GifWriter* writer );
+
+
+/******************/
+/* Implementation */
+/******************/
+
 // max, min, and abs functions
 int GifIMax(int l, int r) { return l>r?l:r; }
 int GifIMin(int l, int r) { return l<r?l:r; }
@@ -83,7 +142,7 @@ int GifIAbs(int i) { return i<0?-i:i; }
 // Takes as in/out parameters the current best color and its error -
 // only changes them if it finds a better color in its subtree.
 // this is the major hotspot in the code at the moment.
-void GifGetClosestPaletteColor(GifPalette* pPal, int r, int g, int b, int& bestInd, int& bestDiff, int treeRoot = 1)
+void GifGetClosestPaletteColor(GifPalette* pPal, int r, int g, int b, int& bestInd, int& bestDiff, int treeRoot)
 {
     // base case, reached the bottom of the tree
     if(treeRoot > (1<<pPal->bitDepth)-1)
@@ -523,17 +582,6 @@ void GifThresholdImage( const uint8_t* lastFrame, const uint8_t* nextFrame, uint
     }
 }
 
-// Simple structure to write out the LZW-compressed portion of the image
-// one bit at a time
-struct GifBitStatus
-{
-    uint8_t bitIndex;  // how many bits in the partial byte written so far
-    uint8_t byte;      // current partial byte
-
-    uint32_t chunkIndex;
-    uint8_t chunk[256];   // bytes are written in here until we have 256 of them, then written to the file
-};
-
 // insert a single bit
 void GifWriteBit( GifBitStatus& stat, uint32_t bit )
 {
@@ -576,13 +624,6 @@ void GifWriteCode( FILE* f, GifBitStatus& stat, uint32_t code, uint32_t length )
         }
     }
 }
-
-// The LZW dictionary is a 256-ary tree constructed as the file is encoded,
-// this is one node
-struct GifLzwNode
-{
-    uint16_t m_next[256];
-};
 
 // write a 256-color (8-bit) image palette to the file
 void GifWritePalette( const GifPalette* pPal, FILE* f )
@@ -717,13 +758,6 @@ void GifWriteLzwImage(FILE* f, uint8_t* image, uint32_t left, uint32_t top,  uin
     GIF_TEMP_FREE(codetree);
 }
 
-struct GifWriter
-{
-    FILE* f;
-    uint8_t* oldImage;
-    bool firstFrame;
-};
-
 // Creates a gif file.
 // The input GIFWriter is assumed to be uninitialized.
 // The delay value is the time between frames in hundredths of a second - note that not all viewers pay much attention to this value.
@@ -784,7 +818,7 @@ bool GifBegin( GifWriter* writer, const char* filename, uint32_t width, uint32_t
 // The GIFWriter should have been created by GIFBegin.
 // AFAIK, it is legal to use different bit depths for different frames of an image -
 // this may be handy to save bits in animations that don't change much.
-bool GifWriteFrame( GifWriter* writer, const uint8_t* image, uint32_t width, uint32_t height, uint32_t delay, int bitDepth = 8, bool dither = false )
+bool GifWriteFrame( GifWriter* writer, const uint8_t* image, uint32_t width, uint32_t height, uint32_t delay, int bitDepth, bool dither )
 {
     if(!writer->f) return false;
 
