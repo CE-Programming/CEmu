@@ -1,6 +1,6 @@
 # CEmu
 An open-source third-party TI-84 Plus CE / TI-83 Premium CE calculator emulator.  
-With a core made in C and GUI in C++ with Qt, it works natively on many platforms.
+With a core made in C and GUI in C++ with Qt, it works natively on many platforms. The core is even compilable with Emscripten, so as to be able to make a web-based version.
 
 ## TODO list
 ### Core
@@ -12,20 +12,16 @@ With a core made in C and GUI in C++ with Qt, it works natively on many platform
 * ...
 
 ### Overall features
-* GIF output
-* Variable transfer (Calc->Computer)
-* ROM dump tool
+* Variable transfer (Calc <-> Computer)
 * Disassembly view
 * Breakpoints
 * Step / Step over instructions in debugger
-* Port monitor
 * ...
 
 ### GUI
 * Window for changing keyboard equates
-* Fix icon things (mainwindow one -> use in aboutwindow, etc.)
-* Add brightness scale
-* Debugger GUI improvements
-* Debugger<->Emu interface
-* Plan for 83PCE / 84+CE differences (2 keypad setups, etc.)
+* HD Icon
+* Debugger-related improvements
+* Plan for 83PCE / 84+CE differences (2 keypad setups, "skins", etc.)
+* More translations
 * ...
