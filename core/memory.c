@@ -82,9 +82,9 @@ static void flash_erase(uint32_t addr, uint8_t byte) {
 }
 
 static void flash_erase_sector(uint32_t addr, uint8_t byte) {
-    (void)byte;
-
     uint8_t sector;
+
+    (void)byte;
 
     mem.flash.command = FLASH_SECTOR_ERASE;
 
