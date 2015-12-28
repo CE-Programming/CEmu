@@ -49,7 +49,7 @@ static void plug_devices(void) {
     int i;
     eZ80portrange_t unimplemented_range = { read_unimplemented_port, write_unimplemented_port };
     for (i=0; i<=0xF; i++) {
-            asic.cpu->prange[i] = unimplemented_range;
+        asic.cpu->prange[i] = unimplemented_range;
     }
 
     /* Port ranges 0x0 -> 0xF*/
