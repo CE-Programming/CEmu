@@ -79,7 +79,7 @@ void throttle_interval_event(int index) {
 
     gui_do_stuff(true);
 
-    if (!speed > 0.7) {
+    if (speed > 0.7) {
         throttle_timer_wait();
     }
 }
@@ -113,20 +113,6 @@ bool emu_start() {
     return true;
 }
 
-#ifdef __EMSCRIPTEN__
-void emu_inner_loop(void)
-{
-    sched_process_pending_events();
-    while (!exiting && cycle_count_delta < 0) {
-        if (cpu_events & EVENT_RESET) {
-            gui_console_printf("CPU Reset triggered...");
-            // goto reset; // TODO : handle reset
-        }
-        cpu_execute();  // execute instructions with available clock cycles
-    }
-}
-#endif
-
 static void emu_reset() {
     cpu_events &= EVENT_DEBUG_STEP;
 
@@ -143,6 +129,21 @@ static void emu_reset() {
     sched_update_next_event(0);
 }
 
+#ifdef __EMSCRIPTEN__
+void emu_inner_loop(void)
+{
+  while (!exiting) {
+      sched_process_pending_events();
+      if (cpu_events & EVENT_RESET) {
+          gui_console_printf("CPU Reset triggered...");
+          emu_reset();
+      }
+      if (cycle_count_delta < 0) {
+          cpu_execute();  // execute instructions with available clock cycles
+  }
+}
+#endif
+
 void emu_loop(bool reset) {
 
     if (reset) {
@@ -152,7 +153,6 @@ void emu_loop(bool reset) {
     exiting = false;
 
 #ifdef __EMSCRIPTEN__
-    // TODO: handle reset... done?
     emscripten_set_main_loop(emu_inner_loop, -1, 1);
 #else
     while (!exiting) {
