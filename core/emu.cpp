@@ -100,6 +100,10 @@ bool emu_start() {
             return false;
         }
 
+        // TODO: actually parse certificate
+        fseek(rom, 0x20017, SEEK_SET);
+        fread(&control.device_type, 1, 1, rom);
+
         // get rom file size
         fseek(rom , 0L , SEEK_END);
         lSize=ftell(rom);
