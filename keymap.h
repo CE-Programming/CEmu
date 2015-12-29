@@ -3,7 +3,7 @@
 
 //Don't use this as header file.
 
-#include <QKeyEvent>
+#include <QtGui/QKeyEvent>
 
 struct HostKey {
     Qt::Key key[3];

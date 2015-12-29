@@ -9,13 +9,14 @@
 #include "core/gif.h"
 #include "core/schedule.h"
 
-#include <QFileDialog>
-#include <QFont>
-#include <QMessageBox>
-#include <QPixmap>
-#include <QQuickWidget>
-#include <QDockWidget>
-#include <QShortcut>
+#include <QtWidgets/QFileDialog>
+#include <QtWidgets/QMessageBox>
+#include <QtWidgets/QDockWidget>
+#include <QtWidgets/QShortcut>
+#include <QtQuickWidgets/QQuickWidget>
+#include <QtGui/QFont>
+#include <QtGui/QPixmap>
+
 #include <iostream>
 
 static char tmpBuf[20] = {0};

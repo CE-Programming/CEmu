@@ -30,4 +30,5 @@
 # Qt stuff
 CEmu.pro.user*
 
-CEmu.pro.user
+# Other
+*.xcodeproj*

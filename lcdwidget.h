@@ -1,8 +1,8 @@
 #ifndef LCDWIDGET_H
 #define LCDWIDGET_H
 
-#include <QWidget>
-#include <QTimer>
+#include <QtWidgets/QWidget>
+#include <QtCore/QTimer>
 
 #include <qtframebuffer.h>
 

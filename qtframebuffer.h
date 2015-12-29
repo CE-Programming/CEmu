@@ -1,7 +1,7 @@
 #ifndef QMLFRAMEBUFFER_H
 #define QMLFRAMEBUFFER_H
 
-#include <QQuickPaintedItem>
+#include <QtQuick/QQuickPaintedItem>
 
 class QMLFramebuffer : public QQuickPaintedItem
 {

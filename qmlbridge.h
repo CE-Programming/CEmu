@@ -1,8 +1,8 @@
 #ifndef QMLBRIDGE_H
 #define QMLBRIDGE_H
 
-#include <QObject>
-#include <QtQml>
+#include <QtCore/QObject>
+#include <QtQml/QtQml>
 
 #include "emuthread.h"
 

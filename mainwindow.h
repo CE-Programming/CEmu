@@ -1,9 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
-#include <QSettings>
-#include <QLabel>
+#include <QtWidgets/QMainWindow>
+#include <QtWidgets/QLabel>
+#include <QtCore/QSettings>
 
 #include <romselection.h>
 #include <emuthread.h>

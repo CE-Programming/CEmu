@@ -1,7 +1,7 @@
 #ifndef EMUTHREAD_H
 #define EMUTHREAD_H
 
-#include <QThread>
+#include <QtCore/QThread>
 
 #include "core/asic.h"
 

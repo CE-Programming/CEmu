@@ -1,7 +1,7 @@
 #ifndef QTKEYPADBRIDGE_H
 #define QTKEYPADBRIDGE_H
 
-#include <QKeyEvent>
+#include <QtGui/QKeyEvent>
 
 /* This class is used by every Widget which wants to interact with the
  * virtual keypad. Simply call QtKeypadBridge::keyPressEvent or keyReleaseEvent

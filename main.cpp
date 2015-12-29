@@ -1,5 +1,5 @@
 #include <QtWidgets/QApplication>
-#include <QtQml>
+#include <QtQml/QtQml>
 
 #include "mainwindow.h"
 #include "qmlbridge.h"
