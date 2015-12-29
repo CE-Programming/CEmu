@@ -20,7 +20,7 @@ void keypad_key_event(int row, int col, bool press) {
         intrpt_trigger(INT_ON, press ? INTERRUPT_SET : INTERRUPT_CLEAR);
         if (press && control.ports[0] & 0x40) {
             control.ports[2] = ~1;
-            intrpt_trigger(19, INTERRUPT_SET);
+            intrpt_trigger(19, INTERRUPT_PULSE);
         }
     } else {
         if (press) {
