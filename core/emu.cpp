@@ -134,6 +134,7 @@ static void emu_reset() {
 }
 
 #ifdef __EMSCRIPTEN__
+// TODO : Make sure it works with the recent commits.
 void emu_inner_loop(void)
 {
   while (!exiting) {
@@ -144,6 +145,7 @@ void emu_inner_loop(void)
       }
       if (cycle_count_delta < 0) {
           cpu_execute();  // execute instructions with available clock cycles
+      }
   }
 }
 #else
