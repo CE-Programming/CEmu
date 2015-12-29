@@ -65,7 +65,7 @@ static void gpt_refresh(int index) {
     }
 }
 
-static void gpt_update(int index, void set(int index, uint64_t ticks)) {
+static void gpt_update(int index) {
     gpt_restore(index);
     gpt_refresh(index);
 }
