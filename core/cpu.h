@@ -11,7 +11,7 @@ extern "C" {
 #include <core/apb.h>
 
 /* eZ80 CPU State */
-struct eZ80cpu {
+typedef struct eZ80cpu {
     eZ80portrange_t prange[0x10];    /* 0x0000-0xF000 */
     eZ80registers_t registers;
     struct {
@@ -38,10 +38,7 @@ struct eZ80cpu {
     uint8_t (*read_byte)(uint32_t address);
     void (*write_byte)(uint32_t address, uint8_t byte);
     int interrupt;
-};
-
-/* Type definitions */
-typedef struct eZ80cpu eZ80cpu_t;
+} eZ80cpu_t;
 
 /* Externals */
 extern eZ80cpu_t cpu;

@@ -23,7 +23,12 @@ enum DBG_REASON {
     DBG_WRITE_BREAKPOINT,
 };
 
-void *virt_mem_ptr(uint32_t addr, uint32_t size);
+enum DBG_PORT_REASON {
+    DBG_NO_HANDLE,
+    DBG_PORT_READ,
+    DBG_PORT_WRITE,
+};
+
 void debugger(enum DBG_REASON reason, uint32_t addr);
 
 #ifdef __cplusplus

@@ -43,10 +43,14 @@ private:
     void populateDebugWindow();
     void changeDebuggerState();
     void pollPort();
+    void deletePort();
+    void portEnterWrite();
+    void portEnterRead();
+    void portStatic();
+    void updatePortData(int currentRow);
 
     // Console
     void clearConsole(void);
-    void clearPortConsole(void);
 
     // Settings
     void changeLCDRefresh(int value);

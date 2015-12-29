@@ -8,6 +8,7 @@
 
 #include "core/gif.h"
 #include "core/schedule.h"
+#include "core/debug.h"
 
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QMessageBox>
@@ -41,9 +42,12 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     // Debugger
     connect(this, &MainWindow::debuggerChangedState, &emu, &EmuThread::setDebugMode);
     connect(&emu, &EmuThread::debuggerEntered, this, &MainWindow::raiseDebugger);
-    connect(ui->buttonPoll, &QPushButton::clicked, this, &MainWindow::pollPort);
+    connect(ui->buttonAddPort, &QPushButton::clicked, this, &MainWindow::pollPort);
     connect(ui->portRequest, &QLineEdit::returnPressed, this, &MainWindow::pollPort);
-    connect(ui->buttonPortClear, &QPushButton::clicked, this, &MainWindow::clearPortConsole);
+    connect(ui->buttonDeletePort, &QPushButton::clicked, this, &MainWindow::deletePort);
+    connect(ui->buttonEnterRead, &QPushButton::clicked, this, &MainWindow::portEnterRead);
+    connect(ui->buttonEnterWrite, &QPushButton::clicked, this, &MainWindow::portEnterWrite);
+    connect(ui->buttonPortStatic, &QPushButton::clicked, this, &MainWindow::portStatic);
 
     // Console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, this, &MainWindow::clearConsole);
@@ -68,7 +72,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     // Set up monospace fonts
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     ui->console->setFont(monospace);
-    ui->portView->setFont(monospace);
 
     setUIMode(true);
 
@@ -95,7 +98,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     }
 
     ui->rompathView->setText(QString(emu.rom.c_str()));
-
+    ui->portView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->lcdWidget->setFocus();
 }
 
@@ -216,10 +219,6 @@ void MainWindow::recordGIF() {
 void MainWindow::clearConsole(void) {
     ui->console->clear();
     consoleStr("Console Cleared.\n");
-}
-
-void MainWindow::clearPortConsole(void) {
-    ui->portView->clear();
 }
 
 void MainWindow::showAbout() {
@@ -407,9 +406,18 @@ void MainWindow::populateDebugWindow() {
     ui->checkIEF2->setChecked(cpu.IEF2);
 
     ui->brightnessSlider->setValue(backlight.brightness);
+
+    for(int i=0; i<ui->portView->rowCount(); ++i) {
+        updatePortData(i);
+    }
 }
 
 void MainWindow::pollPort() {
+    uint8_t read;
+    uint16_t port;
+
+    const int currentRow = ui->portView->rowCount();
+
     if (ui->portRequest->text().isEmpty()) {
         return;
     }
@@ -419,10 +427,89 @@ void MainWindow::pollPort() {
         return;
     }
 
-    QString port = QString::fromStdString(s);
-    QString read = int2hex((uint32_t)port_read_byte((uint16_t)hex2int(port)),2);
+    /* Mark the port as read active */
+    port = (uint16_t)hex2int(QString::fromStdString(s));
+    read = (uint8_t)port_read_byte(port);
 
-    ui->portView->moveCursor(QTextCursor::End);
-    ui->portView->insertPlainText("Port: "+port+" -> "+read+"\n");
+    QString port_string = int2hex(port,4);
+
+    /* return if port is already set */
+    for (int i=0; i<currentRow; ++i) {
+        if(ui->portView->item(i, 0)->text() == port_string) {
+            return;
+        }
+    }
+
+    ui->portView->setRowCount(currentRow + 1);
+
+    QTableWidgetItem *port_range = new QTableWidgetItem(port_string);
+    QTableWidgetItem *port_data = new QTableWidgetItem(int2hex(read,2));
+    QTableWidgetItem *port_handler = new QTableWidgetItem("Static");
+    port_range->setFlags(Qt::ItemIsSelectable |  Qt::ItemIsEnabled);
+    port_data->setFlags(Qt::ItemIsSelectable |  Qt::ItemIsEnabled);
+    port_handler->setFlags(Qt::ItemIsSelectable |  Qt::ItemIsEnabled);
+
+    ui->portView->setItem(currentRow, 0, port_range);
+    ui->portView->setItem(currentRow, 1, port_data);
+    ui->portView->setItem(currentRow, 2, port_handler);
     ui->portRequest->clear();
+}
+
+void MainWindow::deletePort() {
+    if(!ui->portView->rowCount()) {
+        return;
+    }
+
+    const int currentRow = ui->portView->currentRow();
+
+    uint16_t port = (uint16_t)ui->portView->item(currentRow, 0)->text().toInt(nullptr,16);
+    mem.debug.ports[port] = DBG_NO_HANDLE;
+
+    ui->portView->takeItem(currentRow, 0);
+    ui->portView->takeItem(currentRow, 1);
+    ui->portView->takeItem(currentRow, 2);
+    ui->portView->removeRow(currentRow);
+}
+
+void MainWindow::updatePortData(int currentRow) {
+    uint16_t port = (uint16_t)ui->portView->item(currentRow, 0)->text().toInt(nullptr,16);
+    uint8_t read = (uint8_t)port_read_byte(port);
+
+    ui->portView->item(currentRow, 1)->setText(int2hex(read,2));
+}
+
+void MainWindow::portEnterWrite() {
+    if(!ui->portView->rowCount()) {
+        return;
+    }
+
+    const int currentRow = ui->portView->currentRow();
+
+    uint16_t port = (uint16_t)ui->portView->item(currentRow, 0)->text().toInt(nullptr,16);
+    ui->portView->item(currentRow, 2)->setText("Enter on Write");
+    mem.debug.ports[port] = DBG_PORT_WRITE;
+}
+
+void MainWindow::portEnterRead() {
+    if(!ui->portView->rowCount()) {
+        return;
+    }
+
+    const int currentRow = ui->portView->currentRow();
+
+    uint16_t port = (uint16_t)ui->portView->item(currentRow, 0)->text().toInt(nullptr,16);
+    ui->portView->item(currentRow, 2)->setText("Enter on Read");
+    mem.debug.ports[port] = DBG_PORT_READ;
+}
+
+void MainWindow::portStatic() {
+    if(!ui->portView->rowCount()) {
+        return;
+    }
+
+    const int currentRow = ui->portView->currentRow();
+
+    uint16_t port = (uint16_t)ui->portView->item(currentRow, 0)->text().toInt(nullptr,16);
+    ui->portView->item(currentRow, 2)->setText("Static");
+    mem.debug.ports[port] = DBG_NO_HANDLE;
 }

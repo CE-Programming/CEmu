@@ -34,11 +34,12 @@ void mem_init(void) {
 
     /* Sector 9 is locked */
     mem.flash.sector[9].locked = true;
+    mem.flash.locked = true;
 
-    mem.ram.block = (uint8_t*)calloc(ram_size, sizeof(uint8_t));  /* allocate RAM */
+    mem.ram.block = (uint8_t*)calloc(ram_size, sizeof(uint8_t));  /* Allocate RAM */
+    mem.debug.ports = (uint8_t*)calloc(0xFFFF, sizeof(uint8_t));  /* For port monitor */
 
     mem.flash.mapped = false;
-    mem.flash.locked = true;
     mem.flash.write_index = 0;
     mem.flash.command = NO_COMMAND;
     gui_console_printf("Initialized memory...\n");
