@@ -51,6 +51,9 @@ private:
     void clearConsole(void);
     void clearPortConsole(void);
 
+    // Settings
+    void changeLCDRefresh(int value);
+
     Ui::MainWindow *ui = nullptr;
     QSettings *settings = nullptr;
     QDockWidget *dock_debugger = nullptr;

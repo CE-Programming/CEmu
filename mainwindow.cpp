@@ -21,9 +21,9 @@
 static char tmpBuf[20] = {0};
 static const constexpr int WindowStateVersion = 0;
 
-MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
-{
-    ui->setupUi(this);              // setup the UI
+MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
+    // Setup the UI
+    ui->setupUi(this);
 
     // Register QtKeypadBridge for the virtual keyboard functionality
     ui->lcdWidget->installEventFilter(&qt_keypad_bridge);
@@ -58,6 +58,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
     // Other GUI actions
     connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
+    connect(ui->refreshSlider, &QSlider::valueChanged, this, &MainWindow::changeLCDRefresh);
 
     //Set up monospace fonts
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
@@ -77,10 +78,11 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
 
     restoreGeometry(settings->value(QStringLiteral("windowGeometry")).toByteArray());
     restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
+    changeLCDRefresh(settings->value(QStringLiteral("refreshRate"), QVariant(60)).toInt());
 
     emu.rom = settings->value(QStringLiteral("romImage")).toString().toStdString();
 
-    if(emu.rom.empty()) {
+    if (emu.rom.empty()) {
        runSetup();
     } else {
        emu.start();
@@ -92,8 +94,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow)
 }
 
 // window destructor
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
     settings->setValue(QStringLiteral("windowState"), saveState(WindowStateVersion));
     settings->setValue(QStringLiteral("windowGeometry"), saveGeometry());
 
@@ -101,11 +102,10 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::closeEvent(QCloseEvent *e)
-{
+void MainWindow::closeEvent(QCloseEvent *e) {
     qDebug("Terminating emulator thread...");
 
-    if(emu.stop()) {
+    if (emu.stop()) {
         qDebug("Successful!");
     } else {
         qDebug("Failed.");
@@ -114,8 +114,7 @@ void MainWindow::closeEvent(QCloseEvent *e)
     QMainWindow::closeEvent(e);
 }
 
-void MainWindow::consoleStr(QString str)
-{
+void MainWindow::consoleStr(QString str) {
     ui->console->moveCursor(QTextCursor::End);
     ui->console->insertPlainText(str);
 }
@@ -134,11 +133,11 @@ void MainWindow::runSetup(void) {
     }
 }
 
-void MainWindow::setUIMode(bool docks_enabled)
-{
+void MainWindow::setUIMode(bool docks_enabled) {
     // Already in this mode?
-    if (docks_enabled == ui->tabWidget->isHidden())
+    if (docks_enabled == ui->tabWidget->isHidden()) {
         return;
+    }
 
     // Create "Docks" menu to make closing and opening docks more intuitive
     QMenu *docks_menu = new QMenu(tr("Docks"), this);
@@ -146,8 +145,7 @@ void MainWindow::setUIMode(bool docks_enabled)
 
     //Convert the tabs into QDockWidgets
     QDockWidget *last_dock = nullptr;
-    while(ui->tabWidget->count())
-    {
+    while(ui->tabWidget->count()) {
         QDockWidget *dw = new QDockWidget(ui->tabWidget->tabText(0));
         dw->setWindowIcon(ui->tabWidget->tabIcon(0));
         dw->setObjectName(dw->windowTitle());
@@ -173,33 +171,27 @@ void MainWindow::setUIMode(bool docks_enabled)
     ui->tabWidget->setHidden(true);
 }
 
-void MainWindow::screenshot(void)
-{
+void MainWindow::screenshot(void) {
     QImage image = renderFramebuffer();
 
     QString filename = QFileDialog::getSaveFileName(this, tr("Save Screenshot"), QString(), tr("PNG images (*.png)"));
-    if(filename.isEmpty())
+    if (filename.isEmpty())
         return;
 
-    if(!image.save(filename, "PNG"))
+    if (!image.save(filename, "PNG"))
         QMessageBox::critical(this, tr("Screenshot failed"), tr("Failed to save screenshot!"));
 }
 
-void MainWindow::recordGIF()
-{
+void MainWindow::recordGIF() {
     static QString path;
 
-    if(path.isEmpty())
-    {
+    if (path.isEmpty()) {
         // TODO: Use QTemporaryFile?
         path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.gif");
 
         gif_start_recording(path.toStdString().c_str(), ui->gif_frame_skip_slider->value());
-    }
-    else
-    {
-        if(gif_stop_recording())
-        {
+    } else {
+        if (gif_stop_recording()) {
             QString filename = QFileDialog::getSaveFileName(this, tr("Save Recording"), QString(), tr("GIF images (*.gif)"));
             if(filename.isEmpty())
                 QFile(path).remove();
@@ -224,8 +216,7 @@ void MainWindow::clearPortConsole(void) {
     ui->portView->clear();
 }
 
-void MainWindow::showAbout()
-{
+void MainWindow::showAbout() {
     #define STRINGIFYMAGIC(x) #x
     #define STRINGIFY(x) STRINGIFYMAGIC(x)
     QMessageBox about_box(this);
@@ -274,8 +265,7 @@ static QString int2hex(uint32_t a, uint8_t l) {
     return QString(tmpBuf);
 }
 
-void MainWindow::raiseDebugger()
-{
+void MainWindow::raiseDebugger() {
     // make sure we are set on the debug window, just in case
     if(dock_debugger)
     {
@@ -290,8 +280,7 @@ void MainWindow::raiseDebugger()
     populateDebugWindow();
 }
 
-void MainWindow::changeDebuggerState()
-{
+void MainWindow::changeDebuggerState() {
     QPixmap pix;
     QIcon icon;
 
@@ -417,4 +406,11 @@ void MainWindow::pollPort() {
     ui->portView->moveCursor(QTextCursor::End);
     ui->portView->insertPlainText("Port: "+port+" -> "+read+"\n");
     ui->portRequest->clear();
+}
+
+void MainWindow::changeLCDRefresh(int value) {
+    settings->setValue(QStringLiteral("refreshRate"),QVariant(value));
+    ui->refreshLabel->setText(QString::fromStdString(std::to_string(value))+" FPS");
+    ui->refreshSlider->setValue(value);
+    ui->lcdWidget->refreshRate(value);
 }

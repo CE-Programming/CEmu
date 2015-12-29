@@ -37,7 +37,7 @@ QImage renderFramebuffer()
 
     QImage image(reinterpret_cast<const uchar*>(framebuffer), 320, 240, 320 * 2, format, free, framebuffer);
 
-    float factor = (300-(float)backlight.brightness)/160.0;
+    float factor = (310-(float)backlight.brightness)/160.0;
     factor = (factor > 1) ? 1 : factor;
     return brighten(image, factor);
 }

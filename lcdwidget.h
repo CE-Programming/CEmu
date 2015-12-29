@@ -10,6 +10,7 @@ class LCDWidget : public QWidget
 {
   Q_OBJECT
   public:
+      void refreshRate(int newrate);
       LCDWidget(QWidget *p = 0);
       ~LCDWidget();
 
