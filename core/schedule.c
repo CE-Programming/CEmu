@@ -24,17 +24,12 @@ void sched_reset(void) {
     memset(sched.items, 0, sizeof sched.items);
 }
 
-void event_repeat(int index, uint32_t ticks) {
+void event_repeat(int index, uint64_t ticks) {
     struct sched_item *item = &sched.items[index];
 
-    uint32_t prev = item->tick;
+    ticks += item->tick;
     item->second = ticks / sched.clock_rates[item->clock];
     item->tick = ticks % sched.clock_rates[item->clock];
-    if (prev >= sched.clock_rates[item->clock] - item->tick) {
-        item->second++;
-        item->tick -= sched.clock_rates[item->clock];
-    }
-    item->tick += prev;
 
     item->cputick = muldiv(item->tick, sched.clock_rates[CLOCK_CPU], sched.clock_rates[item->clock]);
 }
@@ -83,7 +78,7 @@ void event_clear(int index) {
 
     sched_update_next_event(cputick);
 }
-void event_set(int index, int ticks) {
+void event_set(int index, uint64_t ticks) {
     uint32_t cputick = sched_process_pending_events();
 
     struct sched_item *item = &sched.items[index];
