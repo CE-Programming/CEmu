@@ -143,7 +143,7 @@ void emu_inner_loop(void)
   }
 }
 #else
-void sleep(void) {
+void emu_sleep(void) {
     QThread::usleep(50);
 }
 #endif
