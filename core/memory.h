@@ -10,10 +10,12 @@
 extern "C" {
 #endif
 
-#define NO_COMMAND                   0
-#define FLASH_SECTOR_ERASE           1
-#define FLASH_CHIP_ERASE             2
-#define FLASH_READ_SECTOR_PROTECTION 3
+enum flash_commands {
+    NO_COMMAND,
+    FLASH_SECTOR_ERASE,
+    FLASH_CHIP_ERASE,
+    FLASH_READ_SECTOR_PROTECTION
+};
 
 typedef struct {
     uint32_t address;
