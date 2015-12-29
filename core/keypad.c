@@ -2,6 +2,7 @@
 #include "core/emu.h"
 #include "core/schedule.h"
 #include "core/interrupt.h"
+#include "core/controlport.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -17,6 +18,10 @@ void keypad_intrpt_check() {
 void keypad_key_event(int row, int col, bool press) {
     if (row == 2 && col == 0) {
         intrpt_trigger(INT_ON, press ? INTERRUPT_SET : INTERRUPT_CLEAR);
+        if (press && control.ports[0] & 0x40) {
+            control.ports[2] = ~1;
+            intrpt_trigger(19, INTERRUPT_SET);
+        }
     } else {
         if (press) {
             keypad.key_map[row] |= 1 << col;
