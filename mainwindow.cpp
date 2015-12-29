@@ -49,11 +49,14 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     // Toolbar Actions
     connect(ui->actionSetup, &QAction::triggered, this, &MainWindow::runSetup);
-    connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::showAbout);
-    connect(ui->actionExit, &QAction::triggered, this, &MainWindow::actionExit);
+    connect(ui->actionExit, &QAction::triggered, this, &MainWindow::close);
     connect(ui->actionScreenshot, &QAction::triggered, this, &MainWindow::screenshot);
     connect(ui->actionRecord_GIF, &QAction::triggered, this, &MainWindow::recordGIF);
     connect(ui->buttonGIF, &QPushButton::clicked, this, &MainWindow::recordGIF);
+
+    // About
+    connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::showAbout);
+    connect(ui->actionAbout_Qt, &QAction::triggered, qApp, &QApplication::aboutQt);
 
     // Other GUI actions
     connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
@@ -61,7 +64,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->refreshSlider, &QSlider::valueChanged, this, &MainWindow::changeLCDRefresh);
     connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::alwaysOnTop);
 
-    //Set up monospace fonts
+    // Set up monospace fonts
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     ui->console->setFont(monospace);
     ui->portView->setFont(monospace);
@@ -247,10 +250,6 @@ void MainWindow::showAbout() {
     about_box.exec();
     #undef STRINGIFY
     #undef STRINGIFYMAGIC
-}
-
-void MainWindow::actionExit(void) {
-    close();
 }
 
 void MainWindow::changeLCDRefresh(int value) {

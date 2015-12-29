@@ -95,6 +95,8 @@ bool EmuThread::stop() {
         return true;
 
     exiting = true;
+    in_debugger = false;
+
     /* Cause the cpu core to leave the loop and check for events */
     cycle_count_delta = 0;
 

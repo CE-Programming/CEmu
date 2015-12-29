@@ -24,14 +24,11 @@ public slots:
     // Misc.
     void closeEvent(QCloseEvent *) override;
 
-    // ROM
-
     // Actions
     void runSetup(void);
     void screenshot(void);
     void recordGIF();
     void showAbout(void);
-    void actionExit(void);
     void setUIMode(bool docks_enabled);
 
     // Console
