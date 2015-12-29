@@ -489,7 +489,7 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_8">
            <item>
-            <widget class="QCheckBox" name="checkAlwaysontop">
+            <widget class="QCheckBox" name="checkAlwaysOnTop">
              <property name="text">
               <string>Always show CEmu on top of other windows</string>
              </property>

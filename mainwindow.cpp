@@ -59,6 +59,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
     connect(ui->refreshSlider, &QSlider::valueChanged, this, &MainWindow::changeLCDRefresh);
+    connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::alwaysOnTop);
 
     //Set up monospace fonts
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
@@ -79,6 +80,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     restoreGeometry(settings->value(QStringLiteral("windowGeometry")).toByteArray());
     restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
     changeLCDRefresh(settings->value(QStringLiteral("refreshRate"), QVariant(60)).toInt());
+    alwaysOnTop(settings->value(QStringLiteral("onTop"), QVariant(0)).toInt());
 
     emu.rom = settings->value(QStringLiteral("romImage")).toString().toStdString();
 
@@ -251,6 +253,23 @@ void MainWindow::actionExit(void) {
     close();
 }
 
+void MainWindow::changeLCDRefresh(int value) {
+    settings->setValue(QStringLiteral("refreshRate"),QVariant(value));
+    ui->refreshLabel->setText(QString::fromStdString(std::to_string(value))+" FPS");
+    ui->refreshSlider->setValue(value);
+    ui->lcdWidget->refreshRate(value);
+}
+
+void MainWindow::alwaysOnTop(int state) {
+    if (!state) {
+        setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
+    } else {
+        setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
+    }
+    show();
+    settings->setValue(QStringLiteral("onTop"),QVariant(state));
+    ui->checkAlwaysOnTop->setCheckState(Qt::CheckState(state));
+}
 
 /* ================================================ */
 /* Debugger Things                                  */
@@ -406,11 +425,4 @@ void MainWindow::pollPort() {
     ui->portView->moveCursor(QTextCursor::End);
     ui->portView->insertPlainText("Port: "+port+" -> "+read+"\n");
     ui->portRequest->clear();
-}
-
-void MainWindow::changeLCDRefresh(int value) {
-    settings->setValue(QStringLiteral("refreshRate"),QVariant(value));
-    ui->refreshLabel->setText(QString::fromStdString(std::to_string(value))+" FPS");
-    ui->refreshSlider->setValue(value);
-    ui->lcdWidget->refreshRate(value);
 }

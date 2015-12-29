@@ -53,6 +53,7 @@ private:
 
     // Settings
     void changeLCDRefresh(int value);
+    void alwaysOnTop(int state);
 
     Ui::MainWindow *ui = nullptr;
     QSettings *settings = nullptr;
