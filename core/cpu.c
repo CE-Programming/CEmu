@@ -987,7 +987,6 @@ void cpu_execute(void) {
     int cycle_offset;
 
     while (!exiting && cycle_count_delta < 0) {
-        cycle_offset = 0;
         if (cpu.IEF_wait) {
             cpu.IEF_wait = 0;
             cpu.IEF1 = cpu.IEF2 = 1;
@@ -1001,7 +1000,7 @@ void cpu_execute(void) {
         }
 
         while (!exiting && (cpu.PREFIX || cpu.SUFFIX || cycle_count_delta < 0)) {
-            cpu.cycles = 0;
+            cpu.cycles = cycle_offset = 0;
 
             // fetch opcode
             context.opcode = cpu_fetch_byte();
