@@ -42,5 +42,5 @@ After downloading the source (you can clone the repo or just get the zip):
 * Provide more translations (for now, it's available in English and French). _If you want to help, tell us, or send patches / pull requests!_
 * Make a web-based version of CEmu, like there’s a web-based version of z80e for trying out KnightOS. _Compiling the CEmu core to JavaScript (and later WebAssembly), using Emscripten, is already known to work_
 * Think about CEmu's core’s integration on third-party projects, like TI-Planet's Project Builder - for instance, in C projects, in order to directly test the program, and eventually have live source-level debugging!
-* Look at [url=https://github.com/legumbre/gdb-z80]this gdb-z80[/url] project (code from 2011...) ; try to see if it can be updated for eZ80, and used with a CEmu GDB stub. Mainlining such code is highly preferable.
+* Look at [this gdb-z80](https://github.com/legumbre/gdb-z80) project (code from 2011...) ; try to see if it can be updated for eZ80, and used with a CEmu GDB stub. Mainlining such code is highly preferable.
 * ...
