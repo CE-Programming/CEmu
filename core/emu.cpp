@@ -142,6 +142,10 @@ void emu_inner_loop(void)
           cpu_execute();  // execute instructions with available clock cycles
   }
 }
+#else
+void sleep(void) {
+    QThread::usleep(50);
+}
 #endif
 
 void emu_loop(bool reset) {

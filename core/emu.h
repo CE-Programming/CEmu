@@ -49,6 +49,7 @@ void gui_debugger_set_registers(void);
 bool emu_start();
 void emu_loop(bool reset);
 void emu_cleanup(void);
+void sleep(void);
 
 void throttle_interval_event(int index);
 

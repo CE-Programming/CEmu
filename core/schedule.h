@@ -42,11 +42,11 @@ typedef struct sched_state {
 extern sched_state_t sched;
 
 void sched_reset(void);
-void event_repeat(int index, uint32_t ticks);
+void event_repeat(int index, uint64_t ticks);
 void sched_update_next_event(uint32_t cputick);
 uint32_t sched_process_pending_events(void);
 void event_clear(int index);
-void event_set(int index, int ticks);
+void event_set(int index, uint64_t ticks);
 uint32_t event_ticks_remaining(int index);
 void sched_set_clocks(int count, uint32_t *new_rates);
 

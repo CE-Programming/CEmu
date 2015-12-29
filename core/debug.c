@@ -10,6 +10,7 @@ void debugger(enum DBG_REASON reason, uint32_t addr) {
     do {
       /* TODO: debugger stuff */
       /* Such as step, step over, etc */
+        sleep();
     } while(in_debugger);
     gui_debugger_entered_or_left(in_debugger = false);
 }
