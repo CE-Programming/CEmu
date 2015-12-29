@@ -16,6 +16,7 @@ typedef union {
         uint8_t h;
     };
 } short_reg_t;
+
 typedef union {
     uint32_t hl;
     uint16_t hls;
@@ -25,6 +26,7 @@ typedef union {
         uint8_t u;
     };
 } long_reg_t;
+
 typedef struct {
     union {
         short_reg_t af;
