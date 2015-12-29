@@ -123,6 +123,10 @@ void asic_reset(void) {
     }
 }
 
+void asic_set_device_type(ti_device_type type) {
+    asic.device = type;
+}
+
 uint32_t set_cpu_clock_rate(uint32_t new_rate) {
     uint32_t old_rate = sched.clock_rates[CLOCK_CPU];
     uint32_t cpu_new_rate[1] = { new_rate };

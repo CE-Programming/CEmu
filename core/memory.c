@@ -21,6 +21,7 @@ void mem_init(void) {
 
     mem.flash.block = (uint8_t*)malloc(flash_size);               /* allocate Flash memory */
     memset(mem.flash.block, 0xFF, flash_size);
+    mem.flash.size = flash_size;
 
     for (i = 0; i < flash_sectors_8K; i++) {
         mem.flash.sector[i].ptr = mem.flash.block + (i*flash_sector_size_8K);

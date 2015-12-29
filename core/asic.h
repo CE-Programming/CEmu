@@ -48,6 +48,7 @@ extern asic_state_t asic;
 void asic_init(ti_device_type);
 void asic_free(void);
 void asic_reset(void);
+void asic_set_device_type(ti_device_type);
 
 uint32_t set_cpu_clock_rate(uint32_t new_rate);
 

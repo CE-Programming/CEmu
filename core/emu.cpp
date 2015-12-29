@@ -12,6 +12,7 @@
 #include "core/schedule.h"
 #include "core/asic.h"
 #include "core/os/os.h"
+#include "core/cert.h"
 
 #include <QtCore/QThread>
 
@@ -85,36 +86,164 @@ void throttle_interval_event(int index) {
 }
 
 bool emu_start() {
+    bool ret = false;
     long lSize;
 
     asic_init(TI84PCE);
 
     if (rom_image == NULL) {
         gui_console_printf("No ROM image specified.");
-        return false;
-    } else {
+    }
+    else {
         FILE *rom = fopen_utf8(rom_image, "rb");
-        if (!rom) {
+        do {
+            if (rom) {
+                uint16_t field_type;
+                const uint8_t *outer;
+                const uint8_t *current;
+                const uint8_t *data;
+                uint32_t outer_field_size;
+                uint32_t data_field_size;
+                ti_device_type device_type;
+                uint32_t offset;
+
+                // Get ROM file size
+                if (fseek(rom, 0L, SEEK_END) < 0) {
+                    break;
+                }
+
+                lSize = ftell(rom);
+                if (lSize < 0) {
+                    break;
+                }
+
+                if (fseek(rom, 0L, SEEK_SET) < 0) {
+                    break;
+                }
+
+                // Read whole ROM.
+                if (fread(asic.mem->flash.block, 1, lSize, rom) < (size_t)lSize) {
+                    break;
+                }
+
+                // Parse certificate fields to determine model.
+                //device_type = (ti_device_type)(asic.mem->flash.block[0x20017]);
+                // We've heard of the OS base being at 0x30000 on at least one calculator.
+                for (offset = 0x20000U; offset < 0x40000U; offset += 0x10000U) {
+                    outer = asic.mem->flash.block;
+                    // Outer 0x800(0) field.
+                    if (cert_field_get(outer + offset, asic.mem->flash.size - offset, &field_type, &outer, &outer_field_size)) {
+                        break;
+                    }
+                    if (field_type != 0x800F /*|| field_type == 0x800D || field_type == 0x800E*/) {
+                        continue;
+                    }
+                    //fprintf(stderr, "outer: %p\t%04X\t%p\t%u\n", asic.mem->flash.block, field_type, outer, outer_field_size);
+
+                    // Inner 0x801(0) field: calculator model
+                    if (cert_field_get(outer, outer_field_size, &field_type, &data, &data_field_size)) {
+                        break;
+                    }
+                    //fprintf(stderr, "inner 1: %p\t%04X\t%p\t%u\n", outer, field_type, data, data_field_size);
+                    if (field_type != 0x8012 || data[0] != 0x13) {
+                        break;
+                    }
+
+                    // Inner 0x802(0) field: skip.
+                    data_field_size = outer_field_size - (data + data_field_size - outer);
+                    data = outer;
+                    if (cert_field_next(&data, &data_field_size)) {
+                        break;
+                    }
+                    //fprintf(stderr, "data: %p\t%04X\t%p\t%u\n", outer, field_type, data, data_field_size);
+                    current = data;
+                    if (cert_field_get(current, data_field_size, &field_type, &data, &data_field_size)) {
+                        break;
+                    }
+                    //fprintf(stderr, "inner 2: %p\t%04X\t%p\t%u\n", outer, field_type, data, data_field_size);
+                    if (field_type != 0x8021) {
+                        break;
+                    }
+
+                    // Inner 0x803(0) field: skip.
+                    data_field_size = outer_field_size - (data + data_field_size - outer);
+                    data = current;
+                    if (cert_field_next(&data, &data_field_size)) {
+                        break;
+                    }
+                    current = data;
+                    //fprintf(stderr, "data: %p\t%04X\t%p\t%u\n", outer, field_type, data, data_field_size);
+                    if (cert_field_get(current, data_field_size, &field_type, &data, &data_field_size)) {
+                        break;
+                    }
+                    //fprintf(stderr, "inner 3: %p\t%04X\t%p\t%u\n", outer, field_type, data, data_field_size);
+                    if (field_type != 0x8032) {
+                        break;
+                    }
+
+                    // Inner 0x80A(0) field: skip.
+                    data_field_size = outer_field_size - (data + data_field_size - outer);
+                    data = current;
+                    if (cert_field_next(&data, &data_field_size)) {
+                        break;
+                    }
+                    current = data;
+                    //fprintf(stderr, "data: %p\t%04X\t%p\t%u\n", outer, field_type, data, data_field_size);
+                    if (cert_field_get(current, data_field_size, &field_type, &data, &data_field_size)) {
+                        break;
+                    }
+                    //fprintf(stderr, "inner 4: %p\t%04X\t%p\t%u\n", outer, field_type, data, data_field_size);
+                    if (field_type != 0x80A1) {
+                        break;
+                    }
+
+                    // Inner 0x80C(0) field: keep.
+                    data_field_size = outer_field_size - (data + data_field_size - outer);
+                    data = current;
+                    if (cert_field_next(&data, &data_field_size)) {
+                        break;
+                    }
+                    current = data;
+                    //fprintf(stderr, "data: %p\t%04X\t%p\t%u\n", outer, field_type, data, data_field_size);
+                    if (cert_field_get(current, data_field_size, &field_type, &data, &data_field_size)) {
+                        break;
+                    }
+                    //fprintf(stderr, "inner 5: %p\t%04X\t%p\t%u\n", outer, field_type, data, data_field_size);
+                    if (field_type != 0x80C2) {
+                        break;
+                    }
+
+                    //fprintf(stderr, "Found calculator type %02X\n", data[1]);
+                    if (data[1] != 0 && data[1] != 1) {
+                        break;
+                    }
+                    device_type = (ti_device_type)(data[1]);
+
+                    // If we come here, we've found something.
+                    ret = true;
+                    break;
+                }
+
+
+                if (ret) {
+                    control.device_type = device_type;
+                    // XXX asic_set_device_type(device_type) ?
+                }
+
+            }
+        } while(0);
+
+        if (!ret) {
             gui_console_printf("Error opening ROM image.\n", rom_image);
             emu_cleanup();
-            return false;
         }
 
-        // TODO: actually parse certificate
-        fseek(rom, 0x20017, SEEK_SET);
-        fread(&control.device_type, 1, 1, rom);
-
-        // get rom file size
-        fseek(rom , 0L , SEEK_END);
-        lSize=ftell(rom);
-        rewind(rom);
-
-        fread(asic.mem->flash.block, 1, lSize, rom);
-
-        fclose(rom);
+        if (rom) {
+            fclose(rom);
+        }
     }
 
-    return true;
+    return ret;
 }
 
 static void emu_reset() {

@@ -35,8 +35,9 @@ typedef struct {
     bool locked;
     uint8_t write_index;
     uint8_t read_index;
-    flash_sector_state_t sector[71];
+    flash_sector_state_t sector[8+63];
     uint8_t *block;     /* Flash mem */
+    uint32_t size;
 
     /* Internal */
     bool mapped;
