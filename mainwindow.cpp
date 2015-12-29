@@ -48,6 +48,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonEnterRead, &QPushButton::clicked, this, &MainWindow::portEnterRead);
     connect(ui->buttonEnterWrite, &QPushButton::clicked, this, &MainWindow::portEnterWrite);
     connect(ui->buttonPortStatic, &QPushButton::clicked, this, &MainWindow::portStatic);
+    connect(ui->portView, &QTableWidget::itemChanged, this, &MainWindow::portMonitorCheckboxToggled);
 
     // Console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, this, &MainWindow::clearConsole);
@@ -412,6 +413,20 @@ void MainWindow::populateDebugWindow() {
     }
 }
 
+void MainWindow::portMonitorCheckboxToggled(QTableWidgetItem * item)
+{
+    uint8_t col = item->column();
+    uint8_t row = item->row();
+
+    if (col >= 3) // r_break, w_break, or freeze
+    {
+        std::cerr << __FUNCTION__ << " - TODO: r_break, w_break, or freeze port monitor logic\n" << endl;
+        // todo : determine which one, with row and col
+        // Get value with item->checkState()
+        // todo : actual port-related logic
+    }
+}
+
 void MainWindow::pollPort() {
     uint8_t read;
     uint16_t port;
@@ -435,7 +450,7 @@ void MainWindow::pollPort() {
 
     /* return if port is already set */
     for (int i=0; i<currentRow; ++i) {
-        if(ui->portView->item(i, 0)->text() == port_string) {
+        if (ui->portView->item(i, 0)->text() == port_string) {
             return;
         }
     }
@@ -443,15 +458,26 @@ void MainWindow::pollPort() {
     ui->portView->setRowCount(currentRow + 1);
 
     QTableWidgetItem *port_range = new QTableWidgetItem(port_string);
-    QTableWidgetItem *port_data = new QTableWidgetItem(int2hex(read,2));
-    QTableWidgetItem *port_handler = new QTableWidgetItem("Static");
+    QTableWidgetItem *port_data = new QTableWidgetItem(int2hex(read, 2));
+    QTableWidgetItem *port_prevdata = new QTableWidgetItem("TODO");
+    QTableWidgetItem *port_rBreak = new QTableWidgetItem();
+    QTableWidgetItem *port_wBreak = new QTableWidgetItem();
+    QTableWidgetItem *port_freeze = new QTableWidgetItem();
+
     port_range->setFlags(Qt::ItemIsSelectable |  Qt::ItemIsEnabled);
     port_data->setFlags(Qt::ItemIsSelectable |  Qt::ItemIsEnabled);
-    port_handler->setFlags(Qt::ItemIsSelectable |  Qt::ItemIsEnabled);
+    port_prevdata->setFlags(Qt::ItemIsSelectable |  Qt::ItemIsEnabled);
+    port_rBreak->setCheckState(Qt::Unchecked);
+    port_wBreak->setCheckState(Qt::Unchecked);
+    port_freeze->setCheckState(Qt::Unchecked);
 
     ui->portView->setItem(currentRow, 0, port_range);
     ui->portView->setItem(currentRow, 1, port_data);
-    ui->portView->setItem(currentRow, 2, port_handler);
+    ui->portView->setItem(currentRow, 2, port_prevdata);
+    ui->portView->setItem(currentRow, 3, port_rBreak);
+    ui->portView->setItem(currentRow, 4, port_wBreak);
+    ui->portView->setItem(currentRow, 5, port_freeze);
+
     ui->portRequest->clear();
 }
 

@@ -3,6 +3,7 @@
 
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QLabel>
+#include <QtWidgets/QTableWidgetItem>
 #include <QtCore/QSettings>
 
 #include <romselection.h>
@@ -42,6 +43,7 @@ private:
     void raiseDebugger();
     void populateDebugWindow();
     void changeDebuggerState();
+    void portMonitorCheckboxToggled(QTableWidgetItem * item);
     void pollPort();
     void deletePort();
     void portEnterWrite();

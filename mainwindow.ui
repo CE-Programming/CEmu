@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>976</width>
-    <height>583</height>
+    <width>1080</width>
+    <height>624</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -467,6 +467,9 @@
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Preferred</enum>
+          </property>
           <property name="sizeHint" stdset="0">
            <size>
             <width>20</width>
@@ -624,6 +627,9 @@
          <spacer name="verticalSpacer_2">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Preferred</enum>
           </property>
           <property name="sizeHint" stdset="0">
            <size>
@@ -937,14 +943,26 @@
               <property name="selectionBehavior">
                <enum>QAbstractItemView::SelectRows</enum>
               </property>
-              <attribute name="horizontalHeaderStretchLastSection">
+              <property name="sortingEnabled">
+               <bool>true</bool>
+              </property>
+              <property name="wordWrap">
+               <bool>false</bool>
+              </property>
+              <property name="cornerButtonEnabled">
+               <bool>false</bool>
+              </property>
+              <attribute name="horizontalHeaderDefaultSectionSize">
+               <number>75</number>
+              </attribute>
+              <attribute name="horizontalHeaderHighlightSections">
                <bool>true</bool>
               </attribute>
-              <attribute name="verticalHeaderVisible">
-               <bool>false</bool>
+              <attribute name="horizontalHeaderMinimumSectionSize">
+               <number>75</number>
               </attribute>
-              <attribute name="verticalHeaderDefaultSectionSize">
-               <number>20</number>
+              <attribute name="horizontalHeaderStretchLastSection">
+               <bool>false</bool>
               </attribute>
               <column>
                <property name="text">
@@ -958,7 +976,22 @@
               </column>
               <column>
                <property name="text">
-                <string>Monitoring State</string>
+                <string>Prev. data</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>R break</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>W break</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Freeze</string>
                </property>
               </column>
              </widget>
@@ -3452,8 +3485,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>976</width>
-     <height>21</height>
+     <width>1080</width>
+     <height>22</height>
     </rect>
    </property>
    <property name="sizePolicy">
