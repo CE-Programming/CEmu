@@ -48,13 +48,10 @@ typedef struct {
     uint8_t *block;       /* RAM mem */
 } ram_chip_t;
 
-struct mem_state {
+typedef struct mem_state {
     flash_chip_t flash;
     ram_chip_t ram;
-};
-
-/* Type definitions */
-typedef struct mem_state mem_state_t;
+} mem_state_t;
 
 /* Global MEMORY state */
 extern mem_state_t mem;
@@ -66,6 +63,7 @@ typedef struct apb_map_entry apb_map_entry;
 
 void mem_init(void);
 void mem_free(void);
+void mem_reset(void);
 
 uint8_t memory_read_byte(uint32_t address);
 void memory_write_byte(uint32_t address, uint8_t value);

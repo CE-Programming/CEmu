@@ -56,6 +56,11 @@ void mem_free(void) {
     gui_console_printf("Freed memory...\n");
 }
 
+void mem_reset(void) {
+    memset(mem.ram.block, 0, ram_size);
+    gui_console_printf("RAM reset.\n");
+}
+
 uint8_t* phys_mem_ptr(uint32_t addr, uint32_t size) {
     if (addr < 0xD00000) {
         return mem.flash.block+addr;

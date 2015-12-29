@@ -83,6 +83,7 @@ static void plug_devices(void) {
     add_reset_proc(gpt_reset);
     add_reset_proc(rtc_reset);
     add_reset_proc(watchdog_reset);
+    add_reset_proc(mem_reset);
 
     gui_console_printf("Initialized APB...\n");
 }
