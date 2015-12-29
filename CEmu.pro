@@ -65,7 +65,8 @@ SOURCES += main.cpp\
     core/gif.cpp \
     core/realclock.c \
     core/backlight.c \
-    core/cert.c
+    core/cert.c \
+    core/disasm.cpp
 
 linux|macx|ios: SOURCES += core/os/os-linux.c
 win32: SOURCES += core/os/os-win32.c
@@ -102,7 +103,8 @@ HEADERS  += mainwindow.h \
     core/gif.h \
     core/os/os.h \
     core/backlight.h \
-    core/cert.h
+    core/cert.h \
+    core/disasm.h
 
 FORMS    += mainwindow.ui \
     romselection.ui
