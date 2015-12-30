@@ -246,6 +246,13 @@ bool emu_start() {
     return ret;
 }
 
+
+void emu_cleanup(void) {
+    if(mem.ram.block) { free(mem.ram.block); mem.ram.block = NULL; }
+    if(mem.flash.block) { free(mem.flash.block); mem.flash.block = NULL; }
+    if(mem.debug.ports) { free(mem.debug.ports); mem.debug.ports = NULL; }
+}
+
 static void emu_reset() {
     cpu_events &= EVENT_DEBUG_STEP;
 
@@ -306,9 +313,7 @@ void emu_loop(bool reset) {
             QThread::yieldCurrentThread();
         }
     }
-#endif
-}
 
-void emu_cleanup(void) {
-    asic_free();
+    emu_cleanup();
+#endif
 }

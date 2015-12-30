@@ -131,12 +131,13 @@ void MainWindow::runSetup(void) {
 
     if (!romImagePath.empty()) {
         settings->setValue(QStringLiteral("romImage"),QVariant(romImagePath.c_str()));
-        emu.stop();
-        emu.rom = romImagePath;
-        ui->rompathView->setText(romImagePath.c_str());
-        emu.start();
+        if(emu.stop()) {
+            emu.rom = romImagePath;
+            ui->rompathView->setText(romImagePath.c_str());
+            emu.start();
+        }
     } else {
-        exit(0);
+        if(emu.rom.empty()) { exit(0); }
     }
 }
 

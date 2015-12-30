@@ -100,14 +100,11 @@ void asic_init(ti_device_type type) {
     asic.battery = BATTERIES_GOOD;
     asic.device = type;
 
-    asic.stopped = 0;
-
     plug_devices();
     gui_console_printf("Initialized ASIC...\n");
 }
 
 void asic_free(void) {
-    mem_free();
     gui_console_printf("Freed ASIC...\n");
 }
 

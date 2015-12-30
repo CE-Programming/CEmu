@@ -109,6 +109,5 @@ bool EmuThread::stop() {
         }
     }
 
-    emu_cleanup();
     return true;
 }

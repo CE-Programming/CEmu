@@ -63,10 +63,18 @@ void mem_reset(void) {
 
 uint8_t* phys_mem_ptr(uint32_t addr, uint32_t size) {
     if (addr < 0xD00000) {
-        return mem.flash.block+addr;
+        if (mem.flash.block != NULL) {
+            return mem.flash.block+addr;
+        } else {
+            return NULL;
+        }
     }
-    addr -= 0xD00000;
-    return mem.ram.block+addr;
+    if (mem.ram.block != NULL) {
+        addr -= 0xD00000;
+        return mem.ram.block+addr;
+    } else {
+       return NULL;
+    }
 }
 
 static void flash_reset_write_index(uint32_t addr, uint8_t byte) {
