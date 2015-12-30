@@ -36,7 +36,7 @@ private:
   Ui::RomSelection *ui;
   uint8_t *rom_array = nullptr;
   unsigned int num_read_segments = 0;
-  bool segment_filled[20] = {0};
+  bool segment_filled[20]; /* Filled to false in the .cpp */
 };
 
 /* External path for mainwindow */

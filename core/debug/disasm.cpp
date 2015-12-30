@@ -243,7 +243,7 @@ void disassembleInstruction(void) {
         };
         struct {
             uint8_t r : 1;
-            uint8_t   : 2;
+            uint8_t dummy : 2;
             uint8_t q : 1;
             uint8_t p : 2;
         };

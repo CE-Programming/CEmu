@@ -16,7 +16,7 @@ void apb_set_map(int entry, eZ80portrange_t *range){
     apb_map[entry].range = range;
 }
 
-inline uint8_t port_read_byte(const uint32_t addr) {
+uint8_t port_read_byte(const uint32_t addr) {
     uint16_t port = (port_range(addr) << 12) | addr_range(addr);
     uint8_t value = apb_map[port_range(addr)].range->read_in(addr_range(addr));
 
@@ -26,7 +26,7 @@ inline uint8_t port_read_byte(const uint32_t addr) {
     return value;
 }
 
-inline void port_write_byte(const uint32_t addr, const uint8_t value) {
+void port_write_byte(const uint32_t addr, const uint8_t value) {
     uint16_t port = (port_range(addr) << 12) | addr_range(addr);
 
     if (mem.debug.ports[port] &= DBG_PORT_FREEZE) {

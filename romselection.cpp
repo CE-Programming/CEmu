@@ -146,6 +146,10 @@ void RomSelection::on_mergeButton_clicked() {
         return;
     }
 
+    for (int i = 0; i < 20; i++) {
+        segment_filled[i] = false;
+    }
+
     /* As of right now, there are only 11 data segements that need to be loaded. */
     /* Luckily if more are needed, this code can handle it. */
     /* Data segments go from A-K, so let's be sure we load them all, and they are valid */
