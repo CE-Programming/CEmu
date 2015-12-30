@@ -87,7 +87,7 @@ static void plug_devices(void) {
     gui_console_printf("Initialized APB...\n");
 }
 
-void asic_init(ti_device_type type) {
+void asic_init(void) {
     /* First, initilize memory and LCD */
     mem_init();
     cpu_init();
@@ -98,7 +98,6 @@ void asic_init(ti_device_type type) {
     asic.cpu->read_byte = memory_read_byte;
     asic.cpu->write_byte = memory_write_byte;
     asic.battery = BATTERIES_GOOD;
-    asic.device = type;
 
     plug_devices();
     gui_console_printf("Initialized ASIC...\n");
@@ -117,10 +116,6 @@ void asic_reset(void) {
     for(i = 0; i < reset_proc_count; i++) {
         reset_procs[i]();
     }
-}
-
-void asic_set_device_type(ti_device_type type) {
-    asic.device = type;
 }
 
 uint32_t set_cpu_clock_rate(uint32_t new_rate) {

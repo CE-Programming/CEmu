@@ -89,7 +89,7 @@ bool emu_start() {
     bool ret = false;
     long lSize;
 
-    asic_init(TI84PCE);
+    asic_init();
 
     if (rom_image == NULL) {
         gui_console_printf("No ROM image specified.");
@@ -227,7 +227,7 @@ bool emu_start() {
 
                 if (ret) {
                     control.device_type = device_type;
-                    // XXX asic_set_device_type(device_type) ?
+                    asic.device_type = device_type;
                 }
 
             }
