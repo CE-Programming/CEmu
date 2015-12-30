@@ -15,12 +15,11 @@ After downloading the source (you can clone the repo or just get the zip):
 
 
 ## TODO list
-### Core
-* Implement protected port range (0x9XXX)
 * Implement unknown port range (0xDXXX)
-* Implement timers
-* Implement proper interrupt handling
-* Implement USB
+* Implement USB (0xDXXX appears to be a part of this as well)
+* Fix watchdog timer things
+* Add more flash handlers
+* Bug fixes
 * ...
 
 ### Overall features

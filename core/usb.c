@@ -1,9 +1,7 @@
-#include "core/usb.h"
-#include "core/emu.h"
-#include "core/schedule.h"
-#include "core/interrupt.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include "usb.h"
+#include "emu.h"
+#include "schedule.h"
+#include "interrupt.h"
 
 /* Global GPT state */
 usb_state_t usb;

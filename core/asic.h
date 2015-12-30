@@ -5,22 +5,20 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
-
-#include <core/cpu.h>
-#include <core/misc.h>
-#include <core/memory.h>
-#include <core/interrupt.h>
-#include <core/tidevices.h>
-#include <core/keypad.h>
-#include <core/controlport.h>
-#include <core/flash.h>
-#include <core/lcd.h>
-#include <core/backlight.h>
-#include <core/timers.h>
-#include <core/usb.h>
-#include <core/realclock.h>
-#include <core/sha256.h>
+#include "cpu.h"
+#include "misc.h"
+#include "mem.h"
+#include "interrupt.h"
+#include "tidevices.h"
+#include "keypad.h"
+#include "control.h"
+#include "flash.h"
+#include "lcd.h"
+#include "backlight.h"
+#include "timers.h"
+#include "usb.h"
+#include "realclock.h"
+#include "sha256.h"
 
 typedef enum {
     BATTERIES_REMOVED,
@@ -28,7 +26,7 @@ typedef enum {
     BATTERIES_GOOD
 } battery_state;
 
-struct asic_state {
+typedef struct asic_state {
     int stopped;
     ti_device_type device;
     battery_state battery;
@@ -36,10 +34,7 @@ struct asic_state {
 
     mem_state_t* mem;
     eZ80cpu_t *cpu;
-};
-
-/* Type definitions */
-typedef struct asic_state asic_state_t;
+} asic_state_t;
 
 /* External Global ASIC state */
 extern asic_state_t asic;

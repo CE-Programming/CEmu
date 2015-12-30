@@ -1,10 +1,10 @@
 #include <time.h>
 #include <string.h>
 
-#include "core/realclock.h"
-#include "core/emu.h"
-#include "core/schedule.h"
-#include "core/interrupt.h"
+#include "realclock.h"
+#include "emu.h"
+#include "schedule.h"
+#include "interrupt.h"
 
 /* Global GPT state */
 rtc_state_t rtc;
@@ -19,6 +19,7 @@ static void rtc_event(int index) {
         return;
     }
 
+    /* TODO -- these events need to trigger interrupts */
     if (currsec > rtc.prevsec) {
         if (rtc.control & 1) { rtc.interrupt |= 1; }
         rtc.read_sec++;
@@ -40,7 +41,8 @@ static void rtc_event(int index) {
         }
     }
 
-    if ((rtc.control & 16) && (rtc.read_sec == rtc.alarm_sec)) {
+    if ((rtc.control & 16) && (rtc.read_sec == rtc.alarm_sec) &&
+        (rtc.read_min == rtc.alarm_min) && (rtc.read_hour == rtc.alarm_hour)) {
             rtc.interrupt |= 16;
     }
 }
@@ -142,6 +144,8 @@ void rtc_reset() {
 
     sched.items[SCHED_RTC].clock = CLOCK_12M;
     sched.items[SCHED_RTC].proc = rtc_event;
+
+    gui_console_printf("RTC Reset.\n");
 }
 
 static const eZ80portrange_t device = {

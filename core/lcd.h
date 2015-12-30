@@ -1,20 +1,14 @@
 #ifndef LCD_H
 #define LCD_H
 
-#include <core/memory.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* Type definitions */
-typedef struct lcd_cntrl_state lcd_cntrl_state_t;
-
-/* Global LCD state */
-extern lcd_cntrl_state_t lcd;
+#include "apb.h"
 
 /* Standard LCD state */
-struct lcd_cntrl_state {
+typedef struct lcd_cntrl_state {
     uint32_t timing[4];
 
     uint32_t control;     /* Control register */
@@ -45,12 +39,12 @@ struct lcd_cntrl_state {
     uint32_t crsricr;            /* Cursor interrupt clear register */
     uint32_t crsrris;            /* Cursor raw interrupt status register - const */
     uint32_t crsrmis;            /* Cursor masked interrupt status register - const */
-};
+} lcd_cntrl_state_t;
+
+/* Global LCD state */
+extern lcd_cntrl_state_t lcd;
 
 /* Available Functions */
-void set_default_pal(void);
-void set_pal(char *path);
-
 void lcd_reset(void);
 eZ80portrange_t init_lcd(void);
 

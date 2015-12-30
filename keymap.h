@@ -1,7 +1,7 @@
 #ifndef KEYMAP_H
 #define KEYMAP_H
 
-//Don't use this as header file.
+// Don't use this as header file.
 
 #include <QtGui/QKeyEvent>
 
@@ -86,4 +86,4 @@ HostKey keymap_tp[8][8] =
 { kd, kl, kr, ku, knone, knone, knone, knone }
 };
 
-#endif // KEYMAP_H
+#endif

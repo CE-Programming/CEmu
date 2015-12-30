@@ -16,4 +16,4 @@ public:
 
 extern QtKeypadBridge qt_keypad_bridge;
 
-#endif // QTKEYPADBRIDGE_H
+#endif

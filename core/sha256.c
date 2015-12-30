@@ -1,6 +1,7 @@
 #include <string.h>
-#include "core/sha256.h"
-#include "core/emu.h"
+
+#include "sha256.h"
+#include "emu.h"
 
 static sha256_state_t sha256;
 
@@ -77,6 +78,7 @@ static void process_block() {
 void sha256_reset(void) {
     memset(sha256.hash_state, 0, sizeof(sha256.hash_state));
     memset(sha256.hash_block, 0, sizeof(sha256.hash_block));
+    gui_console_printf("SHA256 chip reset.");
 }
 
 static uint8_t sha256_read(uint16_t pio) {

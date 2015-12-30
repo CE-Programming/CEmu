@@ -6,8 +6,8 @@
 #include <QtWidgets/QTableWidgetItem>
 #include <QtCore/QSettings>
 
-#include <romselection.h>
-#include <emuthread.h>
+#include "romselection.h"
+#include "emuthread.h"
 
 namespace Ui {
     class MainWindow;
@@ -41,14 +41,12 @@ signals:
 private:
     // Debugger
     void raiseDebugger();
+    void updateDebuggerChanges();
     void populateDebugWindow();
     void changeDebuggerState();
     void portMonitorCheckboxToggled(QTableWidgetItem * item);
     void pollPort();
     void deletePort();
-    void portEnterWrite();
-    void portEnterRead();
-    void portStatic();
     void updatePortData(int currentRow);
 
     // Console
@@ -70,4 +68,4 @@ private:
 // Used as global instance by EmuThread and Debugger class
 extern MainWindow *main_window;
 
-#endif // MAINWINDOW_H
+#endif

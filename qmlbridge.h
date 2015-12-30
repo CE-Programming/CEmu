@@ -24,4 +24,4 @@ void notifyKeypadStateChanged(int row, int col, bool state);
 QObject *qmlBridgeFactory(QQmlEngine *engine, QJSEngine *scriptEngine);
 
 
-#endif // QMLBRIDGE_H
+#endif

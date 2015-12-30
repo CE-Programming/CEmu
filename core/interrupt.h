@@ -1,13 +1,11 @@
-/* Declarations for interrupt.c */
-
-#ifndef _H_INTERRUPT
-#define _H_INTERRUPT
-
-#include <core/apb.h>
+#ifndef INTERRUPT_H
+#define INTERRUPT_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "apb.h"
 
 #define INT_ON        0
 #define INT_TIMER1    1

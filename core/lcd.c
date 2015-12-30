@@ -1,13 +1,11 @@
-#include "core/lcd.h"
-#include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 
-#include "core/gif.h"
-#include "core/schedule.h"
-#include "core/interrupt.h"
-#include "core/memory.h"
-#include "core/emu.h"
+#include "lcd.h"
+#include "schedule.h"
+#include "interrupt.h"
+#include "mem.h"
+#include "emu.h"
+#include "capture/gif.h"
 
 /* Global LCD state */
 lcd_cntrl_state_t lcd;

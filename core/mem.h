@@ -1,14 +1,11 @@
-/* Declarations for memory.c */
-
-#ifndef MEMORY_H
-#define MEMORY_H
-
-#include <core/apb.h>
-#include <stdbool.h>
+#ifndef MEM_H
+#define MEM_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "apb.h"
 
 enum flash_commands {
     NO_COMMAND,
@@ -67,16 +64,14 @@ typedef struct mem_state {
 extern mem_state_t mem;
 
 /* Available Functions */
-uint8_t *phys_mem_ptr(uint32_t address, uint32_t size);
-
-typedef struct apb_map_entry apb_map_entry;
-
 void mem_init(void);
 void mem_free(void);
 void mem_reset(void);
 
 uint8_t memory_read_byte(uint32_t address);
 void memory_write_byte(uint32_t address, uint8_t value);
+
+uint8_t *phys_mem_ptr(uint32_t address, uint32_t size);
 
 #ifdef __cplusplus
 }

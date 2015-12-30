@@ -1,27 +1,23 @@
 #ifndef TIMERS_H
 #define TIMERS_H
 
-#include <core/cpu.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-struct timer_state {
+#include "apb.h"
+
+typedef struct timer_state {
     uint32_t counter, reset, match[2];
-};
-typedef struct timer_state timer_state_t;
+} timer_state_t;
 
 /* Standard GPT state */
-struct general_timers_state {
+typedef struct general_timers_state {
     struct {
         timer_state_t timer[3];
         uint32_t control, status, mask, revision;
     };
-};
-
-/* Type definitions */
-typedef struct general_timers_state general_timers_state_t;
+} general_timers_state_t;
 
 /* Global GPT state */
 extern general_timers_state_t gpt;

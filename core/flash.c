@@ -1,10 +1,8 @@
-#include "core/flash.h"
-#include "core/emu.h"
-#include "core/os/os.h"
-
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+
+#include "flash.h"
+#include "emu.h"
+#include "os/os.h"
 
 /* Global flash state */
 flash_state_t flash;

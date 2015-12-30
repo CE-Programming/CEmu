@@ -1,15 +1,12 @@
-#include "core/controlport.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
-#include "core/asic.h"
-#include "core/emu.h"
+#include "control.h"
+#include "asic.h"
 
 // Global CONTROL state
 control_state_t control;
 
-// Read from the 0x0000 range of ports
+// Read from the 0x0XXX range of ports
 static uint8_t control_read(const uint16_t pio) {
     uint8_t addr = pio & 0x7F;
 
@@ -46,7 +43,7 @@ static uint8_t control_read(const uint16_t pio) {
     return read_byte;
 }
 
-// Write to the 0x0000 range of ports
+// Write to the 0x0XXX range of ports
 static void control_write(const uint16_t pio, const uint8_t byte)
 {
     uint8_t addr = pio & 0x7F;

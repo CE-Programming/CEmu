@@ -1,7 +1,10 @@
-#include "core/misc.h"
-#include "core/schedule.h"
-#include "core/emu.h"
 #include <string.h>
+
+#include "misc.h"
+#include "schedule.h"
+#include "emu.h"
+#include "defines.h"
+#include "interrupt.h"
 
 watchdog_state_t watchdog;
 protected_state_t protect;
@@ -24,7 +27,7 @@ static void watchdog_event(int index) {
         cpu_events |= EVENT_RESET;
         gui_console_printf("Watchdog reset triggered...");
     } else {
-        //intrpt_set(INT_WATCHDOG, 1);  // TODO: find which bit this sets, if any
+        //intrpt_trigger(INT_WATCHDOG, INTERRUPT_SET);  // TODO
         event_repeat(SCHED_WATCHDOG, watchdog.load);
     }
 }
@@ -111,6 +114,8 @@ void watchdog_reset() {
     sched.items[SCHED_WATCHDOG].proc = watchdog_event;
     watchdog.load = 0x03EF1480;   /* (66MHz) */
     watchdog.count = 0x03EF1480;
+
+    gui_console_printf("Watchdog Timer Reset.\n");
 }
 
 eZ80portrange_t init_watchdog(void) {
@@ -120,15 +125,16 @@ eZ80portrange_t init_watchdog(void) {
 
 /* ============================================= */
 
-/* TODO: Implement PROTECTED (0x9XXX) range */
+/* TODO: Is the (0x9XXX) range complete enough? */
 
 /* Read from the 0x9XXX range of ports */
 static uint8_t protected_read(const uint16_t pio) {
-    return 0;
+    return protect.ports[pio & 0xFF];
 }
 
 /* Write to the 0x9XXX range of ports */
 static void protected_write(const uint16_t pio, const uint8_t byte) {
+    protect.ports[pio & 0xFF] = byte;
     return;
 }
 
@@ -146,19 +152,12 @@ eZ80portrange_t init_protected(void) {
 
 /* Read from the 0xCXXX range of ports */
 static uint8_t cxxx_read(const uint16_t pio) {
-    uint8_t index = pio&0xFF;
-    uint8_t read_byte;
-
-    read_byte = cxxx.ports[index];
-
-    return read_byte;
+    return cxxx.ports[pio & 0xFF];
 }
 
 /* Write to the 0xCXXX range of ports */
 static void cxxx_write(const uint16_t pio, const uint8_t byte) {
-    uint8_t index = pio & 0xFF;
-
-    cxxx.ports[index] = byte;
+    cxxx.ports[pio & 0xFF] = byte;
 }
 
 static const eZ80portrange_t pcxxx = {
@@ -178,7 +177,7 @@ eZ80portrange_t init_cxxx(void) {
 
 /* ============================================= */
 
-/* TODO: Implement DXXX range */
+/* TODO: Implement DXXX range -- USB related? */
 
 /* Read from the 0xDXXX range of ports */
 static uint8_t dxxx_read(const uint16_t pio) {
@@ -203,7 +202,7 @@ eZ80portrange_t init_dxxx(void) {
 
 /* Read from the 0xEXXX range of ports */
 static uint8_t exxx_read(const uint16_t pio) {
-    uint8_t index = pio&0x7F;
+    uint8_t index = pio & 0x7F;
     uint8_t read_byte;
 
     switch (index) {
@@ -219,8 +218,7 @@ static uint8_t exxx_read(const uint16_t pio) {
 
 /* Write to the 0xEXXX range of ports */
 static void exxx_write(const uint16_t pio, const uint8_t byte) {
-    uint8_t index = pio & 0x7F;
-    exxx.ports[index] = byte;
+    exxx.ports[pio & 0x7F] = byte;
 }
 
 static const eZ80portrange_t pexxx = {
@@ -229,24 +227,19 @@ static const eZ80portrange_t pexxx = {
 };
 
 eZ80portrange_t init_exxx(void) {
-    unsigned int i;
-    /* Initialize device to default state */
-    for(i = 0; i<sizeof(exxx.ports) / sizeof(exxx.ports[0]); i++) {
-        exxx.ports[i] = 0;
-    }
-
+    memset(&exxx, 0, sizeof exxx);
     return pexxx;
 }
 
 /* ============================================= */
 
-/* Write to the 0xFXXX range of ports */
+/* Write to the 0xFXXX range of ports -- This is unmapped, so no real point */
 static void fxxx_write(const uint16_t pio, const uint8_t value) {
 }
 
 /* Read from the 0xFXXX range of ports */
 static uint8_t fxxx_read(const uint16_t pio) {
-    return 0x00;
+    return 0;
 }
 
 static const eZ80portrange_t pfxxx = {

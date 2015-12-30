@@ -5,8 +5,7 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
-#include <core/defines.h>
+#include "defines.h"
 
 /* Adapted from libtifiles by the original author */
 int cert_field_get(const uint8_t *data, uint32_t length, uint16_t *field_type, const uint8_t **contents, uint32_t *field_size);

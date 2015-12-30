@@ -1,20 +1,19 @@
-#ifndef _H_EMU
-#define _H_EMU
-
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stdint.h>
+#ifndef EMU_H
+#define EMU_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include "defines.h"
+
 extern int cycle_count_delta;
 extern int throttle_delay;
 extern uint32_t cpu_events;
-#define EVENT_RESET 1
-#define EVENT_DEBUG_STEP 2
-#define EVENT_WAITING 4
+
+#define EVENT_RESET       1
+#define EVENT_DEBUG_STEP  2
+#define EVENT_WAITING     4
 
 /* Settings */
 extern volatile bool exiting, debug_on_start, debug_on_warn;

@@ -1,11 +1,11 @@
-#ifndef _H_GIF
-#define _H_GIF
-
-#include <stdbool.h>
+#ifndef GIF_H
+#define GIF_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <stdbool.h>
 
 bool gif_start_recording(const char *filename, unsigned int frameskip);
 void gif_new_frame();

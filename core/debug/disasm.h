@@ -1,12 +1,13 @@
 #ifndef DISASM_H
 #define DISASM_H
 
-#include <stdbool.h>
 #include <string>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "../defines.h"
 
 typedef struct disasm_state {
   std::string instruction;

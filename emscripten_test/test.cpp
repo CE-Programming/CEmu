@@ -6,7 +6,7 @@
 #include <iostream>
 #include "core/asic.h"
 #include "core/emu.h"
-#include "core/debug.h"
+#include "core/debug/debug.h"
 
 extern "C" {
 

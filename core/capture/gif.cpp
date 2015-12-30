@@ -2,11 +2,10 @@
 #include <mutex>
 #include <vector>
 
-#include "core/emu.h"
-#include "core/gif.h"
-#include "core/lcd.h"
-
-#include "core/giflib.h"
+#include "../emu.h"
+#include "../lcd.h"
+#include "gif.h"
+#include "giflib.h"
 
 struct RGB24 {
     uint8_t r, g, b, a;

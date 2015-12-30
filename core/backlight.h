@@ -1,11 +1,11 @@
 #ifndef BACKLIGHTPORT_H
 #define BACKLIGHTPORT_H
 
-#include <core/apb.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "apb.h"
 
 typedef struct backlight_state {
     uint8_t ports[0x100];

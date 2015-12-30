@@ -46,11 +46,9 @@ SOURCES += main.cpp\
     qtkeypadbridge.cpp \
     qmlbridge.cpp \
     core/asic.c \
-    core/controlport.c \
     core/cpu.c \
     core/keypad.c \
     core/lcd.c \
-    core/memory.c \
     core/registers.c \
     core/apb.c \
     core/interrupt.c \
@@ -58,15 +56,17 @@ SOURCES += main.cpp\
     core/misc.c \
     core/schedule.c \
     core/emu.cpp \
-    core/debug.c \
     core/timers.c \
     core/usb.c \
     core/sha256.c \
-    core/gif.cpp \
     core/realclock.c \
     core/backlight.c \
     core/cert.c \
-    core/disasm.cpp
+    core/control.c \
+    core/mem.c \
+    core/capture/gif.cpp \
+    core/debug/disasm.cpp \
+    core/debug/debug.c
 
 linux|macx|ios: SOURCES += core/os/os-linux.c
 win32: SOURCES += core/os/os-win32.c
@@ -80,12 +80,10 @@ HEADERS  += mainwindow.h \
     qmlbridge.h \
     keymap.h \
     core/asic.h \
-    core/controlport.h \
     core/cpu.h \
     core/defines.h \
     core/keypad.h \
     core/lcd.h \
-    core/memory.h \
     core/registers.h \
     core/tidevices.h \
     core/apb.h \
@@ -94,17 +92,19 @@ HEADERS  += mainwindow.h \
     core/flash.h \
     core/misc.h \
     core/schedule.h \
-    core/debug.h \
     core/timers.h \
     core/usb.h \
     core/sha256.h \
     core/realclock.h \
-    core/giflib.h \
-    core/gif.h \
     core/os/os.h \
     core/backlight.h \
     core/cert.h \
-    core/disasm.h
+    core/control.h \
+    core/mem.h \
+    core/capture/gif.h \
+    core/capture/giflib.h \
+    core/debug/debug.h \
+    core/debug/disasm.h
 
 FORMS    += mainwindow.ui \
     romselection.ui

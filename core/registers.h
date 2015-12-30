@@ -1,13 +1,11 @@
 #ifndef REGISTERS_H
 #define REGISTERS_H
 
-#include <stdint.h>
-
-#include <core/defines.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "defines.h"
 
 typedef union {
     uint16_t hl, hls;

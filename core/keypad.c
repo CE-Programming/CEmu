@@ -1,10 +1,8 @@
-#include "core/keypad.h"
-#include "core/emu.h"
-#include "core/schedule.h"
-#include "core/interrupt.h"
-#include "core/controlport.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include "keypad.h"
+#include "emu.h"
+#include "schedule.h"
+#include "interrupt.h"
+#include "control.h"
 
 /* Global KEYPAD state */
 keypad_state_t keypad;

@@ -1,7 +1,12 @@
-#include "core/debug.h"
-#include "core/emu.h"
+#include "debug.h"
+#include "../apb.h"
+#include "../emu.h"
 
 volatile bool in_debugger = false;
+
+inline uint8_t debug_port_read_byte(const uint32_t addr) {
+    return apb_map[port_range(addr)].range->read_in(addr_range(addr));
+}
 
 /* okay, so looking at the data inside the asic should be okay when using this function, */
 /* since it is called outside of cpu_execute(). Which means no read/write errors. */

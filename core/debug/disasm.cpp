@@ -1,6 +1,6 @@
-#include "disasm.h"
-
 #include <string>
+
+#include "disasm.h"
 
 disasm_state_t disasm;
 

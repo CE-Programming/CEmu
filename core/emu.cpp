@@ -2,19 +2,19 @@
 #include <emscripten.h>
 #endif
 
+#include <QtCore/QThread>
+
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
 #include <cstdio>
 #include <cctype>
 
-#include "core/emu.h"
-#include "core/schedule.h"
-#include "core/asic.h"
-#include "core/os/os.h"
-#include "core/cert.h"
-
-#include <QtCore/QThread>
+#include "emu.h"
+#include "schedule.h"
+#include "asic.h"
+#include "cert.h"
+#include "os/os.h"
 
 const char *rom_image = NULL;
 

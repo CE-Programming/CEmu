@@ -14,4 +14,4 @@ QImage renderFramebuffer();
 QImage brighten(QImage &img, float factor);
 void paintFramebuffer(QPainter *p);
 
-#endif // QMLFRAMEBUFFER_H
+#endif

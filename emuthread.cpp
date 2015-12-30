@@ -11,7 +11,7 @@
 #include "mainwindow.h"
 
 #include "core/emu.h"
-#include "core/debug.h"
+#include "core/debug/debug.h"
 
 EmuThread *emu_thread = nullptr;
 

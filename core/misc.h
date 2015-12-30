@@ -1,11 +1,11 @@
 #ifndef MISC_H
 #define MISC_H
 
-#include "core/apb.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "apb.h"
 
 struct watchdog_state {
     uint32_t count;       /* Standard WATCHDOG state */
@@ -15,8 +15,8 @@ struct watchdog_state {
     uint32_t status;
     uint32_t intrpt_length;
 };
-struct protected_state {       /* Standard DXXX state */
-    uint8_t dummy;        /* Silence warning, remove if other fields are added. */
+struct protected_state {  /* Standard DXXX state */
+    uint8_t ports[0x100];
 };
 struct cxxx_state {
     uint8_t ports[0x100]; /* Standard CXXX state */

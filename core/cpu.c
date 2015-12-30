@@ -1,15 +1,9 @@
 #include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 
-#include "core/emu.h"
-#include "core/registers.h"
-#include "core/cpu.h"
-#include "core/interrupt.h"
-
-#define port_range(a) (((a)>>12)&0xF) // converts an address to a port range 0x0-0xF
-#define addr_range(a) ((a)&0xFFF)     // converts an address to a port range value 0x0000-0xFFF
-#define swap(a, b) do { (a) ^= (b); (b) ^= (a); (a) ^= (b); } while(0)
+#include "cpu.h"
+#include "emu.h"
+#include "registers.h"
+#include "interrupt.h"
 
 // Global CPU state
 eZ80cpu_t cpu;
@@ -24,7 +18,6 @@ static void cpu_get_cntrl_data_blocks_format(void) {
 
 void cpu_init(void) {
     memset(&cpu, 0x00, sizeof(eZ80cpu_t));
-    cpu.memory = &mem;
     cpu_get_cntrl_data_blocks_format();
     gui_console_printf("Initialized CPU...\n");
 }
@@ -108,19 +101,12 @@ static uint32_t cpu_pop_word(void) {
     return value;
 }
 
-static uint8_t cpu_read_in(uint16_t pio) {
-    uint8_t value = 0;
-    eZ80portrange_t portr = cpu.prange[port_range(pio)];
-    if (portr.read_in != NULL) {
-        value = portr.read_in(addr_range(pio));
-    }
-    return value;
+inline static uint8_t cpu_read_in(uint16_t pio) {
+    return port_read_byte(pio);
 }
-static void cpu_write_out(uint16_t pio, uint8_t value) {
-    eZ80portrange_t portr = cpu.prange[port_range(pio)];
-    if (portr.write_out != NULL) {
-        portr.write_out(addr_range(pio), value);
-    }
+
+inline static void cpu_write_out(uint16_t pio, uint8_t value) {
+    port_write_byte(pio, value);
 }
 
 static uint32_t cpu_read_sp(void) {
@@ -1016,7 +1002,7 @@ void cpu_execute(void) {
                                 case 0:  // NOP
                                     break;
                                 case 1:  // EX af,af'
-                                    swap(r->AF, r->_AF);
+                                    rswap(r->AF, r->_AF);
                                     break;
                                 case 2: // DJNZ d
                                     s = cpu_fetch_offset();
@@ -1278,7 +1264,7 @@ void cpu_execute(void) {
                                     cpu_write_word(w, new_word);
                                     break;
                                 case 5: // EX DE, HL
-                                    swap(r->HL, r->DE);
+                                    rswap(r->HL, r->DE);
                                     break;
                                 case 6: // DI
                                     cpu.IEF1 = cpu.IEF2 = 0;

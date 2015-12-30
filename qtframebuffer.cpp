@@ -1,14 +1,12 @@
-#include "qtframebuffer.h"
-#include "qtkeypadbridge.h"
-
 #include <QtGui/QPainter>
 
+#include "qtframebuffer.h"
+#include "qtkeypadbridge.h"
 #include "core/asic.h"
 
 #define CLAMP(a) ( ((a) > 255) ? 255 : (((a) < 0) ? 0 : (int)(a)) )
 
-QImage brighten(QImage &img, float factor)
-{
+QImage brighten(QImage &img, float factor) {
     /* Scale each RGB value by the brightening factor */
     for(int y = 0; y < img.height(); y++) {
         for(int x = 0; x < img.width(); x++) {
@@ -26,8 +24,7 @@ QImage brighten(QImage &img, float factor)
     return img;
 }
 
-QImage renderFramebuffer()
-{
+QImage renderFramebuffer() {
     uint16_t *framebuffer = reinterpret_cast<uint16_t*>(malloc(320 * 240 * 2));
 
     uint32_t bitfields[] = { 0x01F, 0x000, 0x000};
@@ -42,10 +39,8 @@ QImage renderFramebuffer()
     return brighten(image, factor);
 }
 
-void paintFramebuffer(QPainter *p)
-{
-    if(!(lcd.control & 0x800))
-    {
+void paintFramebuffer(QPainter *p) {
+    if (!(lcd.control & 0x800)) {
         p->fillRect(p->window(), Qt::black);
         p->setPen(Qt::white);
         p->drawText(p->window(), Qt::AlignCenter, QObject::tr("LCD OFF"));
@@ -55,13 +50,10 @@ void paintFramebuffer(QPainter *p)
     }
 }
 
-QMLFramebuffer::QMLFramebuffer(QQuickItem *p)
- : QQuickPaintedItem(p)
-{
+QMLFramebuffer::QMLFramebuffer(QQuickItem *p) : QQuickPaintedItem(p) {
     installEventFilter(&qt_keypad_bridge);
 }
 
-void QMLFramebuffer::paint(QPainter *p)
-{
+void QMLFramebuffer::paint(QPainter *p) {
     paintFramebuffer(p);
 }

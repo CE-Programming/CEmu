@@ -1,17 +1,17 @@
+#include <QtWidgets/QMessageBox>
+
 #include <iostream>
 #include <cassert>
 #include <unistd.h>
-#include <QtWidgets/QMessageBox>
 
 #include "qmlbridge.h"
-
 #include "core/keypad.h"
 
-QMLBridge::QMLBridge(QObject *p) : QObject(p)
-{}
+QMLBridge::QMLBridge(QObject *p) : QObject(p) {
+}
 
-QMLBridge::~QMLBridge()
-{}
+QMLBridge::~QMLBridge() {
+}
 
 static constexpr const int ROWS = 8, COLS = 8;
 

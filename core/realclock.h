@@ -1,14 +1,14 @@
 #ifndef _H_RTC
 #define _H_RTC
 
-#include <core/cpu.h>
-#include <time.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-struct rtc_state {
+#include <time.h>
+#include "apb.h"
+
+typedef struct rtc_state {
     /* Previos second counter */
     time_t prevsec;
 
@@ -30,10 +30,7 @@ struct rtc_state {
     uint8_t hold_min;
     uint8_t hold_hour;
     uint8_t hold_day;
-};
-
-/* Type Definitions */
-typedef struct rtc_state rtc_state_t;
+} rtc_state_t;
 
 /* Global GPT state */
 extern rtc_state_t rtc;

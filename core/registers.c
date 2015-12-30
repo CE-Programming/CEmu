@@ -1,6 +1,4 @@
-#include "core/registers.h"
-#include <stdio.h>
-#include <stdint.h>
+#include "registers.h"
 
 void exx(eZ80registers_t *r) {
     uint32_t temp;

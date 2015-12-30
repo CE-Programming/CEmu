@@ -1,12 +1,11 @@
-#include "romselection.h"
-#include "ui_romselection.h"
-
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QMessageBox>
 
-#include "core/flash.h"
+#include "romselection.h"
+#include "ui_romselection.h"
+
 #include "core/os/os.h"
 
 std::string romImagePath;
@@ -104,7 +103,7 @@ void RomSelection::on_browse_clicked() {
 
 void RomSelection::on_next_clicked() {
     if (ui->browse_sel->isChecked()) {
-        if(flash_open(ui->rompath->text().toLatin1()) == false) {
+        if (flash_open(ui->rompath->text().toLatin1()) == false) {
             QMessageBox::critical(this, trUtf8("Invalid ROM image"), trUtf8("You have selected an invalid ROM image."));
             return;
         }
@@ -149,7 +148,7 @@ void RomSelection::on_mergeButton_clicked() {
                tmp_buf[3] == 'D' && tmp_buf[4] == 'a' && tmp_buf[5] == 't' && tmp_buf[6] == 'a') {
 
                 fread(&tmp_buf,1,2,read_segment);
-                if(tmp_buf[0] == 0xE9 && tmp_buf[1] == 0xFF) {
+                if (tmp_buf[0] == 0xE9 && tmp_buf[1] == 0xFF) {
 
                 /* First one is 'A' */
                 tmpint = tmp_buf[7]-'A';
@@ -172,7 +171,7 @@ void RomSelection::on_mergeButton_clicked() {
       }
       fclose(read_segment);
     }
-    if(ui->progressBar->value() == num_rom_segments) {
+    if (ui->progressBar->value() == num_rom_segments) {
         ui->hiddenLabel_1->setVisible(true);
         ui->hiddenLabel_2->setVisible(true);
         ui->romsaveBrowse->setVisible(true);
@@ -182,8 +181,9 @@ void RomSelection::on_mergeButton_clicked() {
 void RomSelection::on_dumpButton_clicked() {
     FILE* save_program;
     QString filename = QFileDialog::getSaveFileName(this, tr("Save ROM Dumper Program"), QString(), tr("ROM Dumper (*.8xp)"));
-    if(filename.isEmpty())
+    if (filename.isEmpty()) {
         return;
+    }
 
     save_program = fopen_utf8(filename.toStdString().c_str(), "w+b");
 

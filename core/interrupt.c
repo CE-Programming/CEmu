@@ -1,7 +1,8 @@
-#include "core/interrupt.h"
-#include "core/emu.h"
-#include "core/cpu.h"
 #include <string.h>
+
+#include "interrupt.h"
+#include "emu.h"
+#include "cpu.h"
 
 interrupt_state_t intrpt;
 

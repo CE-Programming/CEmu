@@ -1,13 +1,11 @@
-/* Declarations for sha256.c */
-
 #ifndef _H_SHA256
 #define _H_SHA256
-
-#include <core/cpu.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "apb.h"
 
 typedef struct sha256_state {
     uint32_t hash_state[8];

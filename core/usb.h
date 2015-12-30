@@ -1,19 +1,16 @@
 #ifndef _H_USB
 #define _H_USB
 
-#include <core/cpu.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* Standard USB state */
-struct usb_state {
-    uint8_t dummy;
-};
+#include "apb.h"
 
-/* Type definitions */
-typedef struct usb_state usb_state_t;
+/* Standard USB state */
+typedef struct usb_state {
+    uint8_t dummy;
+} usb_state_t;
 
 /* Global GPT state */
 extern usb_state_t usb;

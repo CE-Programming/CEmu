@@ -1,25 +1,24 @@
-#include "core/asic.h"
-#include "core/emu.h"
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "core/cpu.h"
-#include "core/memory.h"
-
-#include "core/misc.h"
-#include "core/interrupt.h"
-#include "core/keypad.h"
-#include "core/controlport.h"
-#include "core/flash.h"
-#include "core/lcd.h"
-#include "core/backlight.h"
-#include "core/timers.h"
-#include "core/usb.h"
-#include "core/sha256.h"
-#include "core/realclock.h"
-#include "core/schedule.h"
+#include "asic.h"
+#include "emu.h"
+#include "cpu.h"
+#include "mem.h"
+#include "misc.h"
+#include "interrupt.h"
+#include "keypad.h"
+#include "control.h"
+#include "flash.h"
+#include "lcd.h"
+#include "backlight.h"
+#include "timers.h"
+#include "usb.h"
+#include "sha256.h"
+#include "realclock.h"
+#include "schedule.h"
 
 /* Global ASIC state */
 asic_state_t asic;

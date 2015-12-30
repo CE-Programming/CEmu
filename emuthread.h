@@ -37,4 +37,4 @@ private:
 // For friends
 extern EmuThread *emu_thread;
 
-#endif // EMUTHREAD_H
+#endif

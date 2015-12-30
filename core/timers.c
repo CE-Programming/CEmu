@@ -1,9 +1,10 @@
-#include "core/timers.h"
-#include "core/controlport.h"
-#include "core/emu.h"
-#include "core/schedule.h"
-#include "core/interrupt.h"
 #include <string.h>
+
+#include "timers.h"
+#include "control.h"
+#include "emu.h"
+#include "schedule.h"
+#include "interrupt.h"
 
 /* Global GPT state */
 general_timers_state_t gpt;
@@ -14,7 +15,6 @@ static void ost_event(int index) {
     event_repeat(index, ost_ticks[control.ports[0] & 3]);
 }
 
-#include <stdio.h>
 static void gpt_restore(int index) {
     timer_state_t *timer = &gpt.timer[index -= SCHED_TIMER1];
     uint32_t invert = gpt.control >> (9 + index) & 1 ? ~0 : 0;
@@ -122,6 +122,7 @@ void gpt_reset() {
     sched.items[SCHED_OSTIMER].clock = CLOCK_32K;
     sched.items[SCHED_OSTIMER].proc = ost_event;
     event_set(SCHED_OSTIMER, ost_ticks[control.ports[0] & 3]);
+    gui_console_printf("GPT reset.\n");
 }
 
 static const eZ80portrange_t device = {

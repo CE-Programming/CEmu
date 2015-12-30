@@ -1,10 +1,8 @@
-#include "core/memory.h"
-#include "core/cpu.h"
-#include "core/emu.h"
-#include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
+
+#include "mem.h"
+#include "emu.h"
+#include "cpu.h"
 
 // Global MEMORY state
 mem_state_t mem;
@@ -249,7 +247,7 @@ uint8_t memory_read_byte(const uint32_t address)
     uint32_t addr;
     addr = address & 0xFFFFFF;
 
-    switch(upperNibble24(addr)) {
+    switch((addr >> 20) & 0xF) {
         // FLASH
         case 0x0: case 0x1: case 0x2: case 0x3:
             cpu.cycles += 5;
@@ -286,7 +284,7 @@ uint8_t memory_read_byte(const uint32_t address)
 
         case 0xE: case 0xF:
             cpu.cycles += 2;
-            return mmio_read_byte(addr);          // read byte from mmio
+            return port_read_byte(addr);          // read byte from mmio
 
         default:
             cpu.cycles += 1;
@@ -299,7 +297,7 @@ void memory_write_byte(const uint32_t address, const uint8_t byte) {
     uint32_t addr;
     addr = address & 0xFFFFFF;
 
-    switch(upperNibble24(addr)) {
+    switch((addr >> 20) & 0xF) {
         // FLASH
         case 0x0: case 0x1: case 0x2: case 0x3:
             if (mem.flash.locked == false) {
@@ -347,7 +345,7 @@ void memory_write_byte(const uint32_t address, const uint8_t byte) {
         // MMIO <-> Advanced Perphrial Bus
         case 0xE: case 0xF:
             cpu.cycles += 2;
-            mmio_write_byte(addr, byte);         // write byte to the mmio port
+            port_write_byte(addr, byte);         // write byte to the mmio port
             return;
 
         default:

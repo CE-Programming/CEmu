@@ -1,15 +1,3 @@
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
-
-#include "emuthread.h"
-#include "qmlbridge.h"
-#include "qtframebuffer.h"
-#include "qtkeypadbridge.h"
-
-#include "core/gif.h"
-#include "core/schedule.h"
-#include "core/debug.h"
-
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QDockWidget>
@@ -18,7 +6,17 @@
 #include <QtGui/QFont>
 #include <QtGui/QPixmap>
 
-#include <iostream>
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
+
+#include "emuthread.h"
+#include "qmlbridge.h"
+#include "qtframebuffer.h"
+#include "qtkeypadbridge.h"
+
+#include "core/schedule.h"
+#include "core/debug/debug.h"
+#include "core/capture/gif.h"
 
 static char tmpBuf[20] = {0};
 static const constexpr int WindowStateVersion = 0;
@@ -45,9 +43,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonAddPort, &QPushButton::clicked, this, &MainWindow::pollPort);
     connect(ui->portRequest, &QLineEdit::returnPressed, this, &MainWindow::pollPort);
     connect(ui->buttonDeletePort, &QPushButton::clicked, this, &MainWindow::deletePort);
-    connect(ui->buttonEnterRead, &QPushButton::clicked, this, &MainWindow::portEnterRead);
-    connect(ui->buttonEnterWrite, &QPushButton::clicked, this, &MainWindow::portEnterWrite);
-    connect(ui->buttonPortStatic, &QPushButton::clicked, this, &MainWindow::portStatic);
     connect(ui->portView, &QTableWidget::itemChanged, this, &MainWindow::portMonitorCheckboxToggled);
 
     // Console actions
@@ -85,11 +80,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     settings = new QSettings();
 #endif
 
-    restoreGeometry(settings->value(QStringLiteral("windowGeometry")).toByteArray());
-    restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
-    changeLCDRefresh(settings->value(QStringLiteral("refreshRate"), QVariant(60)).toInt());
-    alwaysOnTop(settings->value(QStringLiteral("onTop"), QVariant(0)).toInt());
-
     emu.rom = settings->value(QStringLiteral("romImage")).toString().toStdString();
 
     if (emu.rom.empty()) {
@@ -97,6 +87,11 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     } else {
        emu.start();
     }
+
+    restoreGeometry(settings->value(QStringLiteral("windowGeometry")).toByteArray());
+    restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
+    changeLCDRefresh(settings->value(QStringLiteral("refreshRate"), QVariant(60)).toInt());
+    alwaysOnTop(settings->value(QStringLiteral("onTop"), QVariant(0)).toInt());
 
     ui->rompathView->setText(QString(emu.rom.c_str()));
     ui->portView->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -140,6 +135,8 @@ void MainWindow::runSetup(void) {
         emu.rom = romImagePath;
         ui->rompathView->setText(romImagePath.c_str());
         emu.start();
+    } else {
+        exit(0);
     }
 }
 
@@ -286,8 +283,7 @@ static QString int2hex(uint32_t a, uint8_t l) {
 
 void MainWindow::raiseDebugger() {
     // make sure we are set on the debug window, just in case
-    if(dock_debugger)
-    {
+    if (dock_debugger) {
         dock_debugger->setVisible(true);
         dock_debugger->raise();
     }
@@ -299,13 +295,58 @@ void MainWindow::raiseDebugger() {
     populateDebugWindow();
 }
 
+void MainWindow::updateDebuggerChanges() {
+  /* Update all the changes in the core */
+  if (debugger_on == false) {
+      cpu.registers.AF = (uint16_t)hex2int(ui->afregView->text());
+      cpu.registers.HL = (uint32_t)hex2int(ui->hlregView->text());
+      cpu.registers.DE = (uint32_t)hex2int(ui->deregView->text());
+      cpu.registers.BC = (uint32_t)hex2int(ui->bcregView->text());
+      cpu.registers.IX = (uint32_t)hex2int(ui->ixregView->text());
+      cpu.registers.IY = (uint32_t)hex2int(ui->ixregView->text());
+
+      cpu.registers._AF = (uint16_t)hex2int(ui->af_regView->text());
+      cpu.registers._HL = (uint32_t)hex2int(ui->hl_regView->text());
+      cpu.registers._DE = (uint32_t)hex2int(ui->de_regView->text());
+      cpu.registers._BC = (uint32_t)hex2int(ui->bc_regView->text());
+
+      cpu.registers.SPL = (uint32_t)hex2int(ui->splregView->text());
+      cpu.registers.SPS = (uint16_t)hex2int(ui->spsregView->text());
+
+      cpu.registers.PC = (uint32_t)hex2int(ui->pcregView->text());
+      cpu.registers.MBASE = (uint8_t)hex2int(ui->mbregView->text());
+      cpu.registers.I = (uint16_t)hex2int(ui->iregView->text());
+      cpu.registers.R = (uint8_t)hex2int(ui->rregView->text());;
+      cpu.IM = (uint8_t)hex2int(ui->imregView->text());
+
+      cpu.registers.flags.Z = ui->checkZ->isChecked();
+      cpu.registers.flags.C = ui->checkC->isChecked();
+      cpu.registers.flags.H = ui->checkHC->isChecked();
+      cpu.registers.flags.PV = ui->checkPV->isChecked();
+      cpu.registers.flags.N = ui->checkN->isChecked();
+      cpu.registers.flags.S = ui->checkS->isChecked();
+      cpu.registers.flags._5 = ui->check5->isChecked();
+      cpu.registers.flags._3 = ui->check3->isChecked();
+
+      cpu.halted = ui->checkHalted->isChecked();
+      cpu.IEF1 = ui->checkIEF1->isChecked();
+      cpu.IEF2 = ui->checkIEF2->isChecked();
+
+      backlight.brightness = (uint8_t)ui->brightnessSlider->value();
+  }
+}
+
 void MainWindow::changeDebuggerState() {
     QPixmap pix;
     QIcon icon;
 
+    if(emu.rom.empty()) {
+        return;
+    }
+
     debugger_on = !debugger_on;
 
-    if(debugger_on) {
+    if (debugger_on) {
         ui->buttonRun->setText("Run");
         pix.load(":/icons/resources/icons/run.png");
     } else {
@@ -327,44 +368,7 @@ void MainWindow::changeDebuggerState() {
     ui->groupRegisters->setEnabled( debugger_on );
     ui->groupInterrupts->setEnabled( debugger_on );
 
-    /* Update all the changes in the core */
-    if (debugger_on == false) {
-        cpu.registers.AF = (uint16_t)hex2int(ui->afregView->text());
-        cpu.registers.HL = (uint32_t)hex2int(ui->hlregView->text());
-        cpu.registers.DE = (uint32_t)hex2int(ui->deregView->text());
-        cpu.registers.BC = (uint32_t)hex2int(ui->bcregView->text());
-        cpu.registers.IX = (uint32_t)hex2int(ui->ixregView->text());
-        cpu.registers.IY = (uint32_t)hex2int(ui->ixregView->text());
-
-        cpu.registers._AF = (uint16_t)hex2int(ui->af_regView->text());
-        cpu.registers._HL = (uint32_t)hex2int(ui->hl_regView->text());
-        cpu.registers._DE = (uint32_t)hex2int(ui->de_regView->text());
-        cpu.registers._BC = (uint32_t)hex2int(ui->bc_regView->text());
-
-        cpu.registers.SPL = (uint32_t)hex2int(ui->splregView->text());
-        cpu.registers.SPS = (uint16_t)hex2int(ui->spsregView->text());
-
-        cpu.registers.PC = (uint32_t)hex2int(ui->pcregView->text());
-        cpu.registers.MBASE = (uint8_t)hex2int(ui->mbregView->text());
-        cpu.registers.I = (uint16_t)hex2int(ui->iregView->text());
-        cpu.registers.R = (uint8_t)hex2int(ui->rregView->text());;
-        cpu.IM = (uint8_t)hex2int(ui->imregView->text());
-
-        cpu.registers.flags.Z = ui->checkZ->isChecked();
-        cpu.registers.flags.C = ui->checkC->isChecked();
-        cpu.registers.flags.H = ui->checkHC->isChecked();
-        cpu.registers.flags.PV = ui->checkPV->isChecked();
-        cpu.registers.flags.N = ui->checkN->isChecked();
-        cpu.registers.flags.S = ui->checkS->isChecked();
-        cpu.registers.flags._5 = ui->check5->isChecked();
-        cpu.registers.flags._3 = ui->check3->isChecked();
-
-        cpu.halted = ui->checkHalted->isChecked();
-        cpu.IEF1 = ui->checkIEF1->isChecked();
-        cpu.IEF2 = ui->checkIEF2->isChecked();
-
-        backlight.brightness = (uint8_t)ui->brightnessSlider->value();
-    }
+    updateDebuggerChanges();
 
     emit debuggerChangedState( debugger_on );
 }
@@ -413,17 +417,30 @@ void MainWindow::populateDebugWindow() {
     }
 }
 
-void MainWindow::portMonitorCheckboxToggled(QTableWidgetItem * item)
-{
-    uint8_t col = item->column();
-    uint8_t row = item->row();
+void MainWindow::portMonitorCheckboxToggled(QTableWidgetItem * item) {
+    auto col = item->column();
+    auto row = item->row();
+    uint8_t value = DBG_NO_HANDLE;
 
-    if (col >= 3) // r_break, w_break, or freeze
+    uint16_t port = (uint16_t)ui->portView->item(row, 0)->text().toInt(nullptr,16);
+
+    // Handle R_Break, W_Break, and Freeze
+    if (col > 1)
     {
-        std::cerr << __FUNCTION__ << " - TODO: r_break, w_break, or freeze port monitor logic\n" << endl;
-        // todo : determine which one, with row and col
-        // Get value with item->checkState()
-        // todo : actual port-related logic
+        if (col == 2) { // Break on read
+            value = DBG_PORT_READ;
+        }
+        if (col == 3) { // Break on write
+            value = DBG_PORT_WRITE;
+        }
+        if (col == 4) { // Freeze
+            value = DBG_PORT_FREEZE;
+        }
+        if (item->checkState() != Qt::Checked) {
+            mem.debug.ports[port] &= ~value;
+        } else {
+            mem.debug.ports[port] |= value;
+        }
     }
 }
 
@@ -444,7 +461,7 @@ void MainWindow::pollPort() {
 
     /* Mark the port as read active */
     port = (uint16_t)hex2int(QString::fromStdString(s));
-    read = (uint8_t)port_read_byte(port);
+    read = (uint8_t)debug_port_read_byte(port);
 
     QString port_string = int2hex(port,4);
 
@@ -459,24 +476,21 @@ void MainWindow::pollPort() {
 
     QTableWidgetItem *port_range = new QTableWidgetItem(port_string);
     QTableWidgetItem *port_data = new QTableWidgetItem(int2hex(read, 2));
-    QTableWidgetItem *port_prevdata = new QTableWidgetItem("TODO");
     QTableWidgetItem *port_rBreak = new QTableWidgetItem();
     QTableWidgetItem *port_wBreak = new QTableWidgetItem();
     QTableWidgetItem *port_freeze = new QTableWidgetItem();
 
     port_range->setFlags(Qt::ItemIsSelectable |  Qt::ItemIsEnabled);
     port_data->setFlags(Qt::ItemIsSelectable |  Qt::ItemIsEnabled);
-    port_prevdata->setFlags(Qt::ItemIsSelectable |  Qt::ItemIsEnabled);
     port_rBreak->setCheckState(Qt::Unchecked);
     port_wBreak->setCheckState(Qt::Unchecked);
     port_freeze->setCheckState(Qt::Unchecked);
 
     ui->portView->setItem(currentRow, 0, port_range);
     ui->portView->setItem(currentRow, 1, port_data);
-    ui->portView->setItem(currentRow, 2, port_prevdata);
-    ui->portView->setItem(currentRow, 3, port_rBreak);
-    ui->portView->setItem(currentRow, 4, port_wBreak);
-    ui->portView->setItem(currentRow, 5, port_freeze);
+    ui->portView->setItem(currentRow, 2, port_rBreak);
+    ui->portView->setItem(currentRow, 3, port_wBreak);
+    ui->portView->setItem(currentRow, 4, port_freeze);
 
     ui->portRequest->clear();
 }
@@ -491,51 +505,12 @@ void MainWindow::deletePort() {
     uint16_t port = (uint16_t)ui->portView->item(currentRow, 0)->text().toInt(nullptr,16);
     mem.debug.ports[port] = DBG_NO_HANDLE;
 
-    ui->portView->takeItem(currentRow, 0);
-    ui->portView->takeItem(currentRow, 1);
-    ui->portView->takeItem(currentRow, 2);
     ui->portView->removeRow(currentRow);
 }
 
 void MainWindow::updatePortData(int currentRow) {
     uint16_t port = (uint16_t)ui->portView->item(currentRow, 0)->text().toInt(nullptr,16);
-    uint8_t read = (uint8_t)port_read_byte(port);
+    uint8_t read = (uint8_t)debug_port_read_byte(port);
 
     ui->portView->item(currentRow, 1)->setText(int2hex(read,2));
-}
-
-void MainWindow::portEnterWrite() {
-    if(!ui->portView->rowCount()) {
-        return;
-    }
-
-    const int currentRow = ui->portView->currentRow();
-
-    uint16_t port = (uint16_t)ui->portView->item(currentRow, 0)->text().toInt(nullptr,16);
-    ui->portView->item(currentRow, 2)->setText("Enter on Write");
-    mem.debug.ports[port] = DBG_PORT_WRITE;
-}
-
-void MainWindow::portEnterRead() {
-    if(!ui->portView->rowCount()) {
-        return;
-    }
-
-    const int currentRow = ui->portView->currentRow();
-
-    uint16_t port = (uint16_t)ui->portView->item(currentRow, 0)->text().toInt(nullptr,16);
-    ui->portView->item(currentRow, 2)->setText("Enter on Read");
-    mem.debug.ports[port] = DBG_PORT_READ;
-}
-
-void MainWindow::portStatic() {
-    if(!ui->portView->rowCount()) {
-        return;
-    }
-
-    const int currentRow = ui->portView->currentRow();
-
-    uint16_t port = (uint16_t)ui->portView->item(currentRow, 0)->text().toInt(nullptr,16);
-    ui->portView->item(currentRow, 2)->setText("Static");
-    mem.debug.ports[port] = DBG_NO_HANDLE;
 }

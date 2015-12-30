@@ -1,5 +1,10 @@
-#ifndef DEFINES
-#define DEFINES
+#ifndef DEFINES_H
+#define DEFINES_H
+
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdarg.h>
 
 #define GETMASK(index, size) (((1U << (size)) - 1) << (index))
 #define READFROM(data, index, size) (((data) & GETMASK((index), (size))) >> (index))
@@ -8,20 +13,8 @@
 #define write8(data, index, value) WRITE(data, index, 8, value)
 #define read8(data, index) READFROM(data, index, 8)
 
-#define upperNibble8(data)  ((data >> 4) & 0xF)
-#define upperNibble16(data) ((data >> 12) & 0xF)
-#define upperNibble24(data) ((data >> 20) & 0xF)
-#define upperNibble32(data) ((data >> 28) & 0xF)
-
-#define upper16(data)   ((data >> 8) & 0xFF)
-#define upper24(data)   ((data >> 16) & 0xFF)
-#define upper32(data)   ((data >> 24) & 0xFF)
-
-#define mask8(data)     ((data & 0xFF))
-#define mask16(data)    ((data & 0xFFFF))
-#define mask24(data)    ((data & 0xFFFFFF))
-
-#define inc24(data)     ((data+1)&0xFFFFFF)
-#define dec24(data)     ((data-1)&0xFFFFFF)
+#define port_range(a) (((a)>>12)&0xF) // converts an address to a port range 0x0-0xF
+#define addr_range(a) ((a)&0xFFF)     // converts an address to a port range value 0x0000-0xFFF
+#define rswap(a, b) do { (a) ^= (b); (b) ^= (a); (a) ^= (b); } while(0)
 
 #endif // DEFINES

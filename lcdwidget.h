@@ -4,7 +4,7 @@
 #include <QtWidgets/QWidget>
 #include <QtCore/QTimer>
 
-#include <qtframebuffer.h>
+#include "qtframebuffer.h"
 
 class LCDWidget : public QWidget
 {
@@ -21,4 +21,4 @@ class LCDWidget : public QWidget
       QTimer refresh_timer;
   };
 
-#endif // LCDWIDGET_H
+#endif

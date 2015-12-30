@@ -5,10 +5,9 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
-#include <core/registers.h>
-#include <core/memory.h>
-#include <core/apb.h>
+#include "registers.h"
+#include "mem.h"
+#include "apb.h"
 
 /* eZ80 CPU State */
 typedef struct eZ80cpu {
@@ -32,9 +31,7 @@ typedef struct eZ80cpu {
         uint8_t halted      : 1;  /* Have we halted the CPU?                                                                     */
     };
     int cycles;
-    uint8_t bus;
-    mem_state_t *memory;  // pointer to memory
-    int (*get_mem_wait_states)();
+    uint8_t bus;  /* TODO */
     uint8_t (*read_byte)(uint32_t address);
     void (*write_byte)(uint32_t address, uint8_t byte);
     int interrupt;
