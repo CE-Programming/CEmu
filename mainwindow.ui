@@ -242,11 +242,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-<<<<<<< HEAD
-       <number>1</number>
-=======
        <number>0</number>
->>>>>>> origin/master
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
