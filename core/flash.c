@@ -9,7 +9,7 @@ flash_state_t flash;
 
 /* Read from the 0x1000 range of ports */
 static uint8_t flash_read(const uint16_t pio) {
-    uint8_t addr = pio&0xFF;
+    uint8_t addr = pio & 0xFF;
     uint8_t read_byte;
 
     switch (addr) {
