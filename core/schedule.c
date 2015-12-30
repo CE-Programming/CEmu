@@ -20,6 +20,7 @@ void sched_reset(void) {
     const uint32_t def_rates[] = { 0, 0, 27000000, 12000000, 32768 };
     memcpy(sched.clock_rates, def_rates, sizeof(def_rates));
     memset(sched.items, 0, sizeof sched.items);
+    sched.next_index = 0;
 }
 
 void event_repeat(int index, uint64_t ticks) {
