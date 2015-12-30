@@ -140,7 +140,7 @@ void lcd_reset(void) {
 
 uint8_t lcd_read(const uint16_t pio) {
     uint16_t offset = pio & 0xFFF;
-    uint8_t bit_offset = (offset & 0b11) << 0b11;
+    uint8_t bit_offset = (offset & 0x3) << 0x3;
 
     if (offset < 0x200) {
         if(offset < 0x010) { return read8(lcd.timing[offset >> 2], bit_offset); }
@@ -165,22 +165,22 @@ uint8_t lcd_read(const uint16_t pio) {
 void lcd_write(const uint16_t pio, const uint8_t value) {
     uint32_t offset = pio & 0xFFC;
     if (offset < 0x200) {
-        uint8_t byte_offset = pio & 0b11;
-        uint8_t bit_offset = byte_offset << 0b11;
+        uint8_t byte_offset = pio & 0x3;
+        uint8_t bit_offset = byte_offset << 0x3;
         if (offset < 0x010) {
             write8(lcd.timing[offset >> 2], bit_offset, value);
         } else if (offset == 0x010) {
             write8(lcd.upbase, bit_offset, value);
-            if (lcd.upbase & 0b111) {
+            if (lcd.upbase & 0x7) {
                 gui_console_printf("Warning: LCD upper panel base not 8-byte aligned!\n");
             }
-            lcd.upbase &= ~0b111;
+            lcd.upbase &= ~0x7;
         } else if (offset == 0x014) {
             write8(lcd.lpbase, bit_offset, value);
-            if (lcd.lpbase & 0b111) {
+            if (lcd.lpbase & 0x7) {
                 gui_console_printf("Warning: LCD lower panel base not 8-byte aligned!\n");
             }
-            lcd.lpbase &= ~0b111;
+            lcd.lpbase &= ~0x7;
         } else if (offset == 0x018) {
             if (((value << bit_offset) ^ lcd.control) & 1) {
                 if (value & 1) { event_set(SCHED_LCD, 0); }

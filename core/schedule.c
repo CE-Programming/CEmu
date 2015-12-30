@@ -19,7 +19,7 @@
 
 sched_state_t sched;
 
-static inline uint32_t muldiv(uint32_t a, uint32_t b, uint32_t c) {
+static __inline uint32_t muldiv(uint32_t a, uint32_t b, uint32_t c) {
 #if defined(__i386__) || defined(__x86_64__)
     asm ("mull %k1\n\tdivl %k2" : "+a" (a) : "g" (b), "g" (c) : "cc", "edx");
     return a;

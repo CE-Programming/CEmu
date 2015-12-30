@@ -88,7 +88,7 @@ static void gpt_some(int which, void update(int index)) {
 
 static uint8_t gpt_read(uint16_t address) {
     uint8_t value = 0;
-    gpt_some(address >> 4 & 0b11, gpt_update);
+    gpt_some(address >> 4 & 0x3, gpt_update);
     if (address < 0x40) {
         value = ((uint8_t *)&gpt)[address];
     }
@@ -100,12 +100,12 @@ static void gpt_write(uint16_t address, uint8_t value) {
     if (address >= 0x34 && address < 0x38) {
         ((uint8_t *)&gpt)[address] &= ~value;
         for (timer = 0; timer < 3; timer++) {
-            if (!(gpt.status >> timer * 3 & 0b111)) {
+            if (!(gpt.status >> timer * 3 & 0x7)) {
                 intrpt_trigger(INT_TIMER1 + timer, INTERRUPT_CLEAR);
             }
         }
     } else if (address < 0x3C) {
-        timer = address >> 4 & 0b11;
+        timer = address >> 4 & 0x3;
         gpt_some(timer, gpt_restore);
         ((uint8_t *)&gpt)[address] = value;
         gpt_some(timer, gpt_refresh);

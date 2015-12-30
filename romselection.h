@@ -2,6 +2,7 @@
 #define ROMSELECTION_H
 
 #include <QtWidgets/QDialog>
+#include <stdint.h>
 
 class QString;
 
