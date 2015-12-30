@@ -32,3 +32,5 @@ CEmu.pro.user*
 
 # Other
 *.xcodeproj*
+*.autosave
+core/*.autosave
