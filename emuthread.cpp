@@ -111,7 +111,7 @@ bool EmuThread::stop() {
     exiting = true;
     in_debugger = false;
 
-    /* Cause the cpu core to leave the loop and check for events */
+    /* Cause the CPU core to leave the loop and check for events */
     cycle_count_delta = 0;
 
     if(!this->wait(200))
