@@ -31,33 +31,31 @@
         <translation>Variables</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="311"/>
         <source>Filename</source>
-        <translation>Nom de fichier</translation>
+        <translation type="vanished">Nom de fichier</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="316"/>
         <source>Size</source>
-        <translation>Taille</translation>
+        <translation type="vanished">Taille</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="335"/>
-        <location filename="../mainwindow.ui" line="3328"/>
+        <location filename="../mainwindow.ui" line="310"/>
+        <location filename="../mainwindow.ui" line="3488"/>
         <source>Capture</source>
         <translation>Capture</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="341"/>
+        <location filename="../mainwindow.ui" line="316"/>
         <source>Screenshot</source>
         <translation>Copie d&apos;écran</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="359"/>
+        <location filename="../mainwindow.ui" line="340"/>
         <source>Record GIF</source>
         <translation>Enregistrement GIF</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="378"/>
+        <location filename="../mainwindow.ui" line="359"/>
         <source>Take Sceenshot</source>
         <translation>Prendre une copie d&apos;écran</translation>
     </message>
@@ -82,7 +80,7 @@
         <translation type="vanished">Utiliser des nombres croissants</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="388"/>
+        <location filename="../mainwindow.ui" line="369"/>
         <source>GIF Options</source>
         <translation>Options du GIF</translation>
     </message>
@@ -96,12 +94,12 @@
         <translation type="vanished">Taille doublée</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="476"/>
+        <location filename="../mainwindow.ui" line="460"/>
         <source>Settings</source>
         <translation>Paramètres</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="482"/>
+        <location filename="../mainwindow.ui" line="466"/>
         <source>General</source>
         <translation>Général</translation>
     </message>
@@ -110,7 +108,7 @@
         <translation type="vanished">Automatiquement sauver et reprendre l&apos;état</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="488"/>
+        <location filename="../mainwindow.ui" line="472"/>
         <source>Always show CEmu on top of other windows</source>
         <translation>Toumonrs afficher CEmu par dessus d&apos;autres fenêtres</translation>
     </message>
@@ -119,17 +117,17 @@
         <translation type="vanished">Afficher la barre de statut</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="498"/>
+        <location filename="../mainwindow.ui" line="482"/>
         <source>Startup</source>
         <translation>Démarrage</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="504"/>
+        <location filename="../mainwindow.ui" line="488"/>
         <source>Turn on calculator on startup</source>
         <translation>Allumer la calculatrice lors du démarrage</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="511"/>
+        <location filename="../mainwindow.ui" line="495"/>
         <source>Automatically load saved ROM image</source>
         <translation>Automatiquement charger l&apos;image ROM sauvée</translation>
     </message>
@@ -138,12 +136,12 @@
         <translation type="vanished">Vérifier les mises-à-jour lors du démarrage</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="521"/>
+        <location filename="../mainwindow.ui" line="559"/>
         <source>ROM Image</source>
         <translation>Image ROM</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="537"/>
+        <location filename="../mainwindow.ui" line="575"/>
         <source>ROM Location:</source>
         <translation>Emplacement de la ROM :</translation>
     </message>
@@ -160,7 +158,7 @@
         <translation type="vanished">Version :</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="574"/>
+        <location filename="../mainwindow.ui" line="621"/>
         <source>Debug</source>
         <translation>Debug</translation>
     </message>
@@ -169,42 +167,37 @@
         <translation type="vanished">Lancer</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="620"/>
+        <location filename="../mainwindow.ui" line="679"/>
         <source>Step</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="646"/>
+        <location filename="../mainwindow.ui" line="711"/>
         <source>Step Over</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="678"/>
+        <location filename="../mainwindow.ui" line="743"/>
         <source>Breakpoint</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="704"/>
+        <location filename="../mainwindow.ui" line="775"/>
         <source>Goto</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="748"/>
+        <location filename="../mainwindow.ui" line="819"/>
         <source>Disassembly</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="754"/>
+        <location filename="../mainwindow.ui" line="825"/>
         <source>Port Monitor</source>
         <translation>Moniteur de ports</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="803"/>
-        <source>Poll Port</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../mainwindow.ui" line="813"/>
+        <location filename="../mainwindow.ui" line="958"/>
         <source>Memory</source>
         <translation type="unfinished"></translation>
     </message>
@@ -213,213 +206,300 @@
         <translation type="vanished">Adresse</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="819"/>
+        <location filename="../mainwindow.ui" line="964"/>
         <source>Breakpoints</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1261"/>
+        <location filename="../mainwindow.ui" line="1406"/>
         <source>Registers</source>
         <translation>Registres</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1598"/>
+        <location filename="../mainwindow.ui" line="1752"/>
         <source>spl</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1319"/>
+        <location filename="../mainwindow.ui" line="1464"/>
         <source>af</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="2476"/>
+        <location filename="../mainwindow.ui" line="2654"/>
         <source>sps</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1447"/>
+        <location filename="../mainwindow.ui" line="1598"/>
         <source>hl</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="2109"/>
+        <location filename="../mainwindow.ui" line="2281"/>
         <source>pc</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="2417"/>
+        <location filename="../mainwindow.ui" line="2595"/>
         <source>mb</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="2050"/>
+        <location filename="../mainwindow.ui" line="2222"/>
         <source>af&apos;</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="2299"/>
+        <location filename="../mainwindow.ui" line="2477"/>
         <source>ix</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1657"/>
+        <location filename="../mainwindow.ui" line="1811"/>
         <source>hl&apos;</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="2358"/>
+        <location filename="../mainwindow.ui" line="2536"/>
         <source>de&apos;</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1883"/>
+        <location filename="../mainwindow.ui" line="2046"/>
         <source>iy</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="2204"/>
+        <location filename="../mainwindow.ui" line="2379"/>
         <source>de</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1506"/>
+        <location filename="../mainwindow.ui" line="1657"/>
         <source>bc</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1788"/>
+        <location filename="../mainwindow.ui" line="1948"/>
         <source>bc&apos;</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="864"/>
+        <location filename="../mainwindow.ui" line="1009"/>
         <source>Flags</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1183"/>
+        <location filename="../mainwindow.ui" line="1328"/>
         <source>s</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1139"/>
+        <location filename="../mainwindow.ui" line="1284"/>
         <source>z</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="957"/>
-        <location filename="../mainwindow.ui" line="1007"/>
-        <source>x</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../mainwindow.ui" line="1227"/>
+        <location filename="../mainwindow.ui" line="1372"/>
         <source>hc</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1051"/>
+        <location filename="../mainwindow.ui" line="1196"/>
         <source>p/v</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="394"/>
+        <location filename="../mainwindow.ui" line="375"/>
         <source>11</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="401"/>
+        <location filename="../mainwindow.ui" line="382"/>
         <source>Frame skip:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="448"/>
+        <location filename="../mainwindow.ui" line="429"/>
         <source>1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="550"/>
+        <location filename="../mainwindow.ui" line="511"/>
+        <source>Change this if your CPU is overloaded.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="542"/>
+        <source>60 FPS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="549"/>
+        <source>Refresh Rate:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="594"/>
         <source>Run setup...</source>
         <translation>Lancer l&apos;assistant...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="594"/>
+        <location filename="../mainwindow.ui" line="647"/>
         <source>Stop</source>
         <translation>Arrêter</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="913"/>
+        <location filename="../mainwindow.ui" line="858"/>
+        <source>Add</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="871"/>
+        <source>Delete</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="929"/>
+        <source>Port</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="934"/>
+        <source>Data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="939"/>
+        <source>Break Read</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="944"/>
+        <source>Break Write</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="949"/>
+        <source>Freeze</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="1058"/>
         <source>n</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1095"/>
+        <location filename="../mainwindow.ui" line="1102"/>
+        <source>3</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="1152"/>
+        <source>5</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="1240"/>
         <source>c</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="2610"/>
+        <location filename="../mainwindow.ui" line="1497"/>
+        <location filename="../mainwindow.ui" line="1533"/>
+        <location filename="../mainwindow.ui" line="1690"/>
+        <location filename="../mainwindow.ui" line="1844"/>
+        <location filename="../mainwindow.ui" line="1981"/>
+        <location filename="../mainwindow.ui" line="2079"/>
+        <location filename="../mainwindow.ui" line="2118"/>
+        <location filename="../mainwindow.ui" line="2157"/>
+        <location filename="../mainwindow.ui" line="2314"/>
+        <location filename="../mainwindow.ui" line="2765"/>
+        <source>&gt;HHHHHH</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="1883"/>
+        <location filename="../mainwindow.ui" line="3067"/>
+        <source>&gt;HH</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="2412"/>
+        <location filename="../mainwindow.ui" line="2687"/>
+        <location filename="../mainwindow.ui" line="2726"/>
+        <location filename="../mainwindow.ui" line="3095"/>
+        <source>&gt;HHHH</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="2797"/>
         <source>CPU State</source>
         <translation>Etat du CPU</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="2693"/>
+        <location filename="../mainwindow.ui" line="2924"/>
         <source>Freq</source>
         <translation>Fréq.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="2762"/>
-        <source>Bus</source>
-        <translation>Bus</translation>
+        <location filename="../mainwindow.ui" line="3551"/>
+        <source>About Qt</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="2806"/>
+        <source>Bus</source>
+        <translation type="vanished">Bus</translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="2880"/>
         <source>Halted</source>
         <translation>Interrompu</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="2819"/>
+        <location filename="../mainwindow.ui" line="2937"/>
         <source>Interrupts</source>
         <translation>Interruptions</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3113"/>
+        <location filename="../mainwindow.ui" line="3258"/>
         <source>IEF2</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="2924"/>
+        <location filename="../mainwindow.ui" line="3042"/>
         <source>IEF1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="2880"/>
+        <location filename="../mainwindow.ui" line="2998"/>
         <source>I</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3069"/>
+        <location filename="../mainwindow.ui" line="3214"/>
         <source>R</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3006"/>
+        <location filename="../mainwindow.ui" line="3142"/>
         <source>IM</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3138"/>
+        <location filename="../mainwindow.ui" line="505"/>
+        <location filename="../mainwindow.ui" line="3283"/>
         <source>Display</source>
         <translation>Ecran</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3193"/>
+        <location filename="../mainwindow.ui" line="3338"/>
         <source>Powered</source>
         <translation>Allumé</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3243"/>
+        <location filename="../mainwindow.ui" line="3388"/>
         <source>Brightness</source>
         <translation>Luminosité</translation>
     </message>
@@ -428,129 +508,138 @@
         <translation type="vanished">Console de débug</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3292"/>
+        <location filename="../mainwindow.ui" line="3446"/>
         <source>Clear Console</source>
         <translation>Vider la console</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3271"/>
+        <location filename="../mainwindow.ui" line="3416"/>
         <source>Console</source>
         <translation>Console</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3319"/>
+        <location filename="../mainwindow.ui" line="3167"/>
+        <source>&gt;9</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="3473"/>
         <source>&amp;File</source>
         <translation>&amp;Fichier</translation>
     </message>
     <message>
+        <location filename="../mainwindow.ui" line="3482"/>
         <source>S&amp;etup</source>
-        <translation type="vanished">Configuration</translation>
+        <translation>Configuration</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3352"/>
+        <location filename="../mainwindow.ui" line="3507"/>
         <source>Open...</source>
         <translation>Ouvrir...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3357"/>
+        <location filename="../mainwindow.ui" line="3512"/>
         <source>Save...</source>
         <translation>Sauver...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3362"/>
+        <location filename="../mainwindow.ui" line="3517"/>
         <source>Exit</source>
         <translation>Quitter</translation>
     </message>
     <message>
+        <location filename="../mainwindow.ui" line="3522"/>
         <source>Setup Wizard</source>
-        <translation type="vanished">Assistant de configuration</translation>
+        <translation>Assistant de configuration</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3335"/>
+        <location filename="../mainwindow.ui" line="3495"/>
         <source>About</source>
         <translation>A propos</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3341"/>
         <source>Setup...</source>
-        <translation>Configuration</translation>
+        <translation type="vanished">Configuration</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3367"/>
         <source>Setup wizard</source>
-        <translation>Assistant de configuration</translation>
+        <translation type="vanished">Assistant de configuration</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3372"/>
-        <location filename="../mainwindow.cpp" line="240"/>
+        <location filename="../mainwindow.ui" line="3527"/>
+        <location filename="../mainwindow.cpp" line="229"/>
         <source>About CEmu</source>
         <translation>A propos de CEmu</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3380"/>
+        <location filename="../mainwindow.ui" line="3535"/>
         <source>Take Screenshot...</source>
         <translation>Prendre une copie d&apos;écran</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="3391"/>
+        <location filename="../mainwindow.ui" line="3546"/>
         <source>Record GIF...</source>
         <translation>Prendre une capture GIF...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="154"/>
+        <location filename="../mainwindow.cpp" line="151"/>
         <source>Docks</source>
         <translation>Docks</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="190"/>
+        <location filename="../mainwindow.cpp" line="185"/>
         <source>Save Screenshot</source>
         <translation>Enregistrer la capture</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="190"/>
+        <location filename="../mainwindow.cpp" line="185"/>
         <source>PNG images (*.png)</source>
         <translation>Images PNG (*.png)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="195"/>
+        <location filename="../mainwindow.cpp" line="190"/>
         <source>Screenshot failed</source>
         <translation>Erreur de capture</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="195"/>
+        <location filename="../mainwindow.cpp" line="190"/>
         <source>Failed to save screenshot!</source>
         <translation>La capture n&apos;a pas pu être sauvegardée</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="213"/>
+        <location filename="../mainwindow.cpp" line="203"/>
         <source>Save Recording</source>
         <translation>Enregistrer la capture</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="213"/>
+        <location filename="../mainwindow.cpp" line="203"/>
         <source>GIF images (*.gif)</source>
         <translation>Images GIF (*.gif)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="219"/>
+        <location filename="../mainwindow.cpp" line="209"/>
         <source>Failed recording GIF</source>
         <translation>Erreur de la capture GIF</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="219"/>
+        <location filename="../mainwindow.cpp" line="209"/>
         <source>A failure occured during recording</source>
         <translation>Une erreur est survenue lors de la capture</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="241"/>
+        <location filename="../mainwindow.cpp" line="230"/>
+        <source>&lt;h3&gt;CEmu %1&lt;/h3&gt;&lt;a href=&apos;https://github.com/MateoConLechuga/CEmu&apos;&gt;On GitHub&lt;/a&gt;&lt;br&gt;&lt;br&gt;Main authors:&lt;br&gt;Matt Waltz (&lt;a href=&apos;https://github.com/MateoConLechuga&apos;&gt;MateoConLechuga&lt;/a&gt;)&lt;br&gt;Jacob Young (&lt;a href=&apos;https://github.com/jacobly0&apos;&gt;jacobly0&lt;/a&gt;)&lt;br&gt;&lt;br&gt;Other contributors:&lt;br&gt;Adrien Bertrand (&lt;a href=&apos;https://github.com/adriweb&apos;&gt;adriweb&lt;/a&gt;)&lt;br&gt;Lionel Debroux (&lt;a href=&apos;https://github.com/debrouxl&apos;&gt;debrouxl&lt;/a&gt;)&lt;br&gt;Fabian Vogt (&lt;a href=&apos;https://github.com/Vogtinator&apos;&gt;Vogtinator&lt;/a&gt;)&lt;br&gt;&lt;br&gt;Many thanks to the &lt;a href=&apos;https://github.com/KnightOS/z80e&apos;&gt;z80e&lt;/a&gt; (MIT license &lt;a href=&apos;https://github.com/KnightOS/z80e/blob/master/LICENSE&apos;&gt;here&lt;/a&gt;) and &lt;a href=&apos;https://github.com/nspire-emus/firebird&apos;&gt;Firebird&lt;/a&gt; (GPLv3 license &lt;a href=&apos;https://github.com/nspire-emus/firebird/blob/master/LICENSE&apos;&gt;here&lt;/a&gt;) projects&lt;br&gt;&lt;br&gt;This work is licensed under the GPLv3.&lt;br&gt;To view a copy of this license, visit &lt;a href=&apos;https://www.gnu.org/licenses/gpl-3.0.html&apos;&gt;https://www.gnu.org/licenses/gpl-3.0.html&lt;/a&gt;</source>
+        <translation>&lt;h3&gt;CEmu %1&lt;/h3&gt;&lt;a href=&apos;https://github.com/MateoConLechuga/CEmu&apos;&gt;Sur GitHub&lt;/a&gt;&lt;br&gt;&lt;br&gt;Auteurs principaux:&lt;br&gt;Matt Waltz (&lt;a href=&apos;https://github.com/MateoConLechuga&apos;&gt;MateoConLechuga&lt;/a&gt;)&lt;br&gt;Jacob Young (&lt;a href=&apos;https://github.com/jacobly0&apos;&gt;jacobly0&lt;/a&gt;)&lt;br&gt;&lt;br&gt;Autres contributeurs:&lt;br&gt;Adrien Bertrand (&lt;a href=&apos;https://github.com/adriweb&apos;&gt;adriweb&lt;/a&gt;)&lt;br&gt;Lionel Debroux (&lt;a href=&apos;https://github.com/debrouxl&apos;&gt;debrouxl&lt;/a&gt;)&lt;br&gt;Fabian Vogt (&lt;a href=&apos;https://github.com/Vogtinator&apos;&gt;Vogtinator&lt;/a&gt;)&lt;br&gt;&lt;br&gt;Un grand merci aux projets &lt;a href=&apos;https://github.com/KnightOS/z80e&apos;&gt;z80e&lt;/a&gt; (licence MIT &lt;a href=&apos;https://github.com/KnightOS/z80e/blob/master/LICENSE&apos;&gt;ici&lt;/a&gt;) et &lt;a href=&apos;https://github.com/nspire-emus/firebird&apos;&gt;Firebird&lt;/a&gt; (license GPLv3 &lt;a href=&apos;https://github.com/nspire-emus/firebird/blob/master/LICENSE&apos;&gt;ici&lt;/a&gt;)&lt;br&gt;&lt;br&gt;Projet sous licence GPLv3.&lt;br&gt;Pour voir une copie de cette licence, visitez &lt;a href=&apos;https://www.gnu.org/licenses/gpl-3.0.html&apos;&gt;https://www.gnu.org/licenses/gpl-3.0.html&lt;/a&gt;</translation>
+    </message>
+    <message>
         <source>&lt;h3&gt;CEmu %1&lt;/h3&gt;&lt;a href=&apos;https://github.com/nspire-emus/firebird&apos;&gt;On GitHub&lt;/a&gt;&lt;br&gt;&lt;br&gt;Main authors:&lt;br&gt;Matt Waltz (&lt;a href=&apos;https://github.com/MateoConLechuga&apos;&gt;MateoConLechuga&lt;/a&gt;)&lt;br&gt;Jacob Young (&lt;a href=&apos;https://github.com/jacobly0&apos;&gt;jacobly0&lt;/a&gt;)&lt;br&gt;&lt;br&gt;Other contributors:&lt;br&gt;Adrien Bertrand (&lt;a href=&apos;https://github.com/adriweb&apos;&gt;adriweb&lt;/a&gt;)&lt;br&gt;Lionel Debroux (&lt;a href=&apos;https://github.com/debrouxl&apos;&gt;debrouxl&lt;/a&gt;)&lt;br&gt;Fabian Vogt (&lt;a href=&apos;https://github.com/Vogtinator&apos;&gt;Vogtinator&lt;/a&gt;)&lt;br&gt;&lt;br&gt;Many thanks to the &lt;a href=&apos;https://github.com/KnightOS/z80e&apos;&gt;z80e&lt;/a&gt; and &lt;a href=&apos;https://github.com/nspire-emus/firebird&apos;&gt;Firebird&lt;/a&gt; projects&lt;br&gt;&lt;br&gt;This work is licensed under the GPLv3.&lt;br&gt;To view a copy of this license, visit &lt;a href=&apos;https://www.gnu.org/licenses/gpl-3.0.html&apos;&gt;https://www.gnu.org/licenses/gpl-3.0.html&lt;/a&gt;</source>
-        <translation>&lt;h3&gt;CEmu %1&lt;/h3&gt;&lt;a href=&apos;https://github.com/nspire-emus/firebird&apos;&gt;Sur GitHub&lt;/a&gt;&lt;br&gt;&lt;br&gt;Auteurs principaux:&lt;br&gt;Matt Waltz (&lt;a href=&apos;https://github.com/MateoConLechuga&apos;&gt;MateoConLechuga&lt;/a&gt;)&lt;br&gt;Jacob Young (&lt;a href=&apos;https://github.com/jacobly0&apos;&gt;jacobly0&lt;/a&gt;)&lt;br&gt;&lt;br&gt;Autres contributeurs:&lt;br&gt;Adrien Bertrand (&lt;a href=&apos;https://github.com/adriweb&apos;&gt;adriweb&lt;/a&gt;)&lt;br&gt;Lionel Debroux (&lt;a href=&apos;https://github.com/debrouxl&apos;&gt;debrouxl&lt;/a&gt;)&lt;br&gt;Fabian Vogt (&lt;a href=&apos;https://github.com/Vogtinator&apos;&gt;Vogtinator&lt;/a&gt;)&lt;br&gt;&lt;br&gt;Un grand merci aux projets &lt;a href=&apos;https://github.com/KnightOS/z80e&apos;&gt;z80e&lt;/a&gt; et &lt;a href=&apos;https://github.com/nspire-emus/firebird&apos;&gt;Firebird&lt;/a&gt;&lt;br&gt;&lt;br&gt;Projet sous licence GPLv3.&lt;br&gt;Pour voir une opie de cette licence, visitez &lt;a href=&apos;https://www.gnu.org/licenses/gpl-3.0.html&apos;&gt;https://www.gnu.org/licenses/gpl-3.0.html&lt;/a&gt;</translation>
+        <translation type="vanished">&lt;h3&gt;CEmu %1&lt;/h3&gt;&lt;a href=&apos;https://github.com/nspire-emus/firebird&apos;&gt;Sur GitHub&lt;/a&gt;&lt;br&gt;&lt;br&gt;Auteurs principaux:&lt;br&gt;Matt Waltz (&lt;a href=&apos;https://github.com/MateoConLechuga&apos;&gt;MateoConLechuga&lt;/a&gt;)&lt;br&gt;Jacob Young (&lt;a href=&apos;https://github.com/jacobly0&apos;&gt;jacobly0&lt;/a&gt;)&lt;br&gt;&lt;br&gt;Autres contributeurs:&lt;br&gt;Adrien Bertrand (&lt;a href=&apos;https://github.com/adriweb&apos;&gt;adriweb&lt;/a&gt;)&lt;br&gt;Lionel Debroux (&lt;a href=&apos;https://github.com/debrouxl&apos;&gt;debrouxl&lt;/a&gt;)&lt;br&gt;Fabian Vogt (&lt;a href=&apos;https://github.com/Vogtinator&apos;&gt;Vogtinator&lt;/a&gt;)&lt;br&gt;&lt;br&gt;Un grand merci aux projets &lt;a href=&apos;https://github.com/KnightOS/z80e&apos;&gt;z80e&lt;/a&gt; et &lt;a href=&apos;https://github.com/nspire-emus/firebird&apos;&gt;Firebird&lt;/a&gt;&lt;br&gt;&lt;br&gt;Projet sous licence GPLv3.&lt;br&gt;Pour voir une opie de cette licence, visitez &lt;a href=&apos;https://www.gnu.org/licenses/gpl-3.0.html&apos;&gt;https://www.gnu.org/licenses/gpl-3.0.html&lt;/a&gt;</translation>
     </message>
 </context>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../qtframebuffer.cpp" line="51"/>
+        <location filename="../qtframebuffer.cpp" line="46"/>
         <source>LCD OFF</source>
         <translation>LCD éteint</translation>
     </message>
@@ -692,53 +781,53 @@
         <translation>Parcourir</translation>
     </message>
     <message>
-        <location filename="../romselection.cpp" line="101"/>
+        <location filename="../romselection.cpp" line="100"/>
         <source>Open ROM file</source>
         <translation>Ouvrir la ROM</translation>
     </message>
     <message>
-        <location filename="../romselection.cpp" line="102"/>
+        <location filename="../romselection.cpp" line="101"/>
         <source>Known Types (*.rom *.sav);;ROM Image (*.rom);;Saved Image (*.sav);;All Files (*.*)</source>
         <translation>Types connus (*&gt;rom, *.sav);;Image ROM (*.rom);;Images sauvées (*.sav);;Tous les fichiers (*.*)</translation>
     </message>
     <message>
-        <location filename="../romselection.cpp" line="108"/>
+        <location filename="../romselection.cpp" line="107"/>
         <source>Invalid ROM image</source>
         <translation>Image ROM invalide</translation>
     </message>
     <message>
-        <location filename="../romselection.cpp" line="108"/>
+        <location filename="../romselection.cpp" line="107"/>
         <source>You have selected an invalid ROM image.</source>
         <translation>Vous avez choisi une image ROM invalide</translation>
     </message>
     <message>
-        <location filename="../romselection.cpp" line="129"/>
+        <location filename="../romselection.cpp" line="128"/>
         <source>ROMData (*.8xv)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../romselection.cpp" line="167"/>
-        <location filename="../romselection.cpp" line="170"/>
+        <location filename="../romselection.cpp" line="166"/>
+        <location filename="../romselection.cpp" line="169"/>
         <source>Invalid</source>
         <translation>Invalide</translation>
     </message>
     <message>
-        <location filename="../romselection.cpp" line="167"/>
+        <location filename="../romselection.cpp" line="166"/>
         <source>Invalid ROM segment.</source>
         <translation>Segment de ROM invalide.</translation>
     </message>
     <message>
-        <location filename="../romselection.cpp" line="170"/>
+        <location filename="../romselection.cpp" line="169"/>
         <source>Invalid ROM segment name.</source>
         <translation>Nom du segment de ROM invalide.</translation>
     </message>
     <message>
-        <location filename="../romselection.cpp" line="184"/>
+        <location filename="../romselection.cpp" line="183"/>
         <source>Save ROM Dumper Program</source>
         <translation>Enregistrer le programme de dump de ROM</translation>
     </message>
     <message>
-        <location filename="../romselection.cpp" line="184"/>
+        <location filename="../romselection.cpp" line="183"/>
         <source>ROM Dumper (*.8xp)</source>
         <translation>Dumper de ROM (*.8xp)</translation>
     </message>

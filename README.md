@@ -5,6 +5,10 @@ With a core made in C and GUI in C++ with Qt, it works natively on many platform
 Here's what it looks like on Mac OS X:  
 <a href="https://i.imgur.com/0BJsPoG.png"><img src="https://i.imgur.com/L9nuir2.png" /></div></a>
 
+## License
+CEmu is licensed under the [GPLv3](LICENSE).  
+_Acknowledgements_: Some CEmu parts are [inspired] from the [z80e](https://github.com/KnightOS/z80e) (MIT license [here](https://github.com/KnightOS/z80e/blob/master/LICENSE)) and [Firebird](LICENSE) (GPLv3 license [here](https://github.com/nspire-emus/firebird/blob/master/LICENSE)) projects.
+
 ## Downloads
 No binaries yet! When available, they'll be here, though: https://github.com/MateoConLechuga/CEmu/releases
 

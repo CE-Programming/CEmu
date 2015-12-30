@@ -239,7 +239,7 @@ void MainWindow::showAbout() {
                          "Lionel Debroux (<a href='https://github.com/debrouxl'>debrouxl</a>)<br>"
                          "Fabian Vogt (<a href='https://github.com/Vogtinator'>Vogtinator</a>)<br>"
                          "<br>"
-                         "Many thanks to the <a href='https://github.com/KnightOS/z80e'>z80e</a> and <a href='https://github.com/nspire-emus/firebird'>Firebird</a> projects<br>"
+                         "Many thanks to the <a href='https://github.com/KnightOS/z80e'>z80e</a> (MIT license <a href='https://github.com/KnightOS/z80e/blob/master/LICENSE'>here</a>) and <a href='https://github.com/nspire-emus/firebird'>Firebird</a> (GPLv3 license <a href='https://github.com/nspire-emus/firebird/blob/master/LICENSE'>here</a>) projects<br>"
                          "<br>"
                          "This work is licensed under the GPLv3.<br>"
                          "To view a copy of this license, visit <a href='https://www.gnu.org/licenses/gpl-3.0.html'>https://www.gnu.org/licenses/gpl-3.0.html</a>")
