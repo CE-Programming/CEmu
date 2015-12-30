@@ -2,6 +2,9 @@
 An open-source third-party TI-84 Plus CE / TI-83 Premium CE calculator emulator.  
 With a core made in C and GUI in C++ with Qt, it works natively on many platforms. The core is even compilable with Emscripten, so as to be able to make a web-based version.
 
+Here's what it looks like on Mac OS X:  
+<a href="https://i.imgur.com/0BJsPoG.png"><img src="https://i.imgur.com/L9nuir2.png" /></div></a>
+
 ## Downloads
 No binaries yet! When available, they'll be here, though: https://github.com/MateoConLechuga/CEmu/releases
 
