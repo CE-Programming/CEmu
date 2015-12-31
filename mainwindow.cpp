@@ -174,6 +174,7 @@ void MainWindow::setUIMode(bool docks_enabled) {
         QDockWidget *dw = new QDockWidget(ui->tabWidget->tabText(0));
         dw->setWindowIcon(ui->tabWidget->tabIcon(0));
         dw->setObjectName(dw->windowTitle());
+        dw->setAllowedAreas(Qt::AllDockWidgetAreas);
 
         // Fill "Docks" menu
         QAction *action = dw->toggleViewAction();
