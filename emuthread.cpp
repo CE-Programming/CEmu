@@ -87,11 +87,11 @@ void EmuThread::setDebugMode(bool state) {
 
 void EmuThread::enterSendState() {
     enter_send_state = true;
-    link.is_sending = false;
+    link_state.is_sending = false;
 }
 
 void EmuThread::sendVariable() {
-    link.is_sending = true;
+    link_state.is_sending = true;
 }
 
 //Called occasionally, only way to do something in the same thread the emulator runs in.

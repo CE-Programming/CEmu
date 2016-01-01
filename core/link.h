@@ -17,7 +17,7 @@ typedef struct link_state {
     std::string current_file;
 } link_state_t;
 
-extern link_state_t link;
+extern link_state_t link_state;
 
 bool sendVariableLink(void);
 

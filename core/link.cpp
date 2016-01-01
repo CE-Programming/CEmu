@@ -7,7 +7,7 @@
 #include "emu.h"
 #include "os/os.h"
 
-link_state_t link;
+link_state_t link_state;
 
 static const int ram_start = 0xD00000;
 
@@ -34,9 +34,9 @@ bool sendVariableLink(void) {
     /* Wait for the GUI to send the file */
     do {
         emu_sleep();
-    } while(!link.is_sending);
+    } while(!link_state.is_sending);
 
-    var = fopen_utf8(link.current_file.c_str(),"r+b");
+    var = fopen_utf8(link_state.current_file.c_str(),"r+b");
 
     /* check to see if we are executing an asm program */
     if (!(mem.ram.block[0xD0118C-ram_start] | mem.ram.block[0xD0118D-ram_start]<<8)) {

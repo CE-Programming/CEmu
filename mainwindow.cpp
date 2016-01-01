@@ -319,7 +319,7 @@ void MainWindow::selectFiles() {
     }
 
     for (int i = 0; i < fileNames.size(); i++) {
-        link.current_file = fileNames.at(i).toStdString();
+        link_state.current_file = fileNames.at(i).toStdString();
 
         // Because the other thread will not update this fast enough
         link_sending = true;
