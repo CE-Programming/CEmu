@@ -38,6 +38,8 @@ public slots:
 
 signals:
     void debuggerChangedState(bool running);
+    void triggerEmuSendState();
+    void sendVariable();
 
 private:
     // Debugger
@@ -58,6 +60,10 @@ private:
     void changeLCDRefresh(int value);
     void alwaysOnTop(int state);
 
+    // Linking
+    void selectFiles();
+    void setSendState(bool);
+
     Ui::MainWindow *ui = nullptr;
     QSettings *settings = nullptr;
     QDockWidget *dock_debugger = nullptr;
@@ -65,6 +71,7 @@ private:
     EmuThread emu;
 
     bool debugger_on;
+    bool link_sending;
 };
 
 // Used as global instance by EmuThread and Debugger class

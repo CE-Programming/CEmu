@@ -42,7 +42,8 @@ void gui_console_printf(const char *, ...);
 void gui_console_vprintf(const char *, va_list);
 void gui_perror(const char *);
 void gui_debugger_entered_or_left(bool);
-void gui_debugger_send_command(int reason, uint32_t addr);
+void gui_debugger_send_command(int, uint32_t);
+void gui_send_entered(bool);
 
 bool emu_start();
 void emu_loop(bool reset);

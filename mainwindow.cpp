@@ -12,6 +12,7 @@
  * GNU General Public License for more details.
 */
 
+#include <QtCore/QFileInfo>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QDockWidget>
@@ -30,7 +31,9 @@
 
 #include "core/schedule.h"
 #include "core/debug/debug.h"
+#include "core/link.h"
 #include "core/capture/gif.h"
+#include "core/os/os.h"
 
 static char tmpBuf[20] = {0};
 static const int WindowStateVersion = 0;
@@ -59,6 +62,12 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->portRequest, &QLineEdit::returnPressed, this, &MainWindow::pollPort);
     connect(ui->buttonDeletePort, &QPushButton::clicked, this, &MainWindow::deletePort);
     connect(ui->portView, &QTableWidget::itemChanged, this, &MainWindow::portMonitorCheckboxToggled);
+
+    // Linking
+    connect(ui->buttonSend, &QPushButton::clicked, &emu, &EmuThread::enterSendState);
+    connect(&emu, &EmuThread::enteredSendState, this, &MainWindow::selectFiles);
+    connect(&emu, &EmuThread::sendState, this, &MainWindow::setSendState);
+    connect(this, &MainWindow::sendVariable, &emu, &EmuThread::sendVariable);
 
     // Console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, this, &MainWindow::clearConsole);
@@ -285,6 +294,39 @@ void MainWindow::alwaysOnTop(int state) {
     show();
     settings->setValue(QStringLiteral("onTop"),QVariant(state));
     ui->checkAlwaysOnTop->setCheckState(Qt::CheckState(state));
+}
+
+/* ================================================ */
+/* Linking Things                                   */
+/* ================================================ */
+
+void MainWindow::setSendState(bool newstate) {
+    printf("Changed. %d\n",newstate);
+    link_sending = newstate;
+}
+
+void MainWindow::selectFiles() {
+    QFileDialog dialog(this);
+    QStringList fileNames;
+
+    dialog.setDirectory(QDir::homePath());
+    dialog.setFileMode(QFileDialog::ExistingFiles);
+    dialog.setNameFilter(trUtf8("TI Variable (*.8xp)"));
+    if (dialog.exec()) {
+        fileNames = dialog.selectedFiles();
+    } else {
+        return;
+    }
+
+    for (int i = 0; i < fileNames.size(); i++) {
+        link.current_file = fileNames.at(i).toStdString();
+
+        // Because the other thread will not update this fast enough
+        link_sending = true;
+
+        // Send the variable to the emulator
+        this->sendVariable();
+    }
 }
 
 /* ================================================ */

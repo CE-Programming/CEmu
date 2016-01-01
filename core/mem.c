@@ -335,14 +335,14 @@ void memory_write_byte(const uint32_t address, const uint8_t byte) {
         // RAM
         case 0xD:
             addr -= 0xD00000;
-            if (addr <= 0x657FF) {
+            if (addr < 0x65800) {
                 cpu.cycles += 2;
                 mem.ram.block[addr] = byte;
                 return;
             }
             // UNMAPPED
             addr -=  0x65800;
-            if (addr <= 0x1A7FF) {
+            if (addr < 0x1A800) {
                 cpu.cycles += 1;
                 return;
             }

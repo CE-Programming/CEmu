@@ -22,6 +22,9 @@ signals:
     void debuggerEntered();
     void sendDebugCommand(int reason, uint32_t addr);
 
+    void enteredSendState();
+    void sendState(bool);
+
     void consoleStr(QString str);
     void exited(int retcode);
 
@@ -32,8 +35,13 @@ public slots:
     // Debugging
     void setDebugMode(bool state);
 
+    // Linking
+    void enterSendState();
+    void sendVariable();
+
 private:
     bool enter_debugger = false;
+    bool enter_send_state = false;
 };
 
 // For friends

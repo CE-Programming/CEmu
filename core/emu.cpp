@@ -262,7 +262,7 @@ bool emu_start() {
 
 
 void emu_cleanup(void) {
-    if(mem.ram.block) { free(mem.ram.block); mem.ram.block = NULL; }
+    //if(mem.ram.block) { free(mem.ram.block); mem.ram.block = NULL; }
     if(mem.flash.block) { free(mem.flash.block); mem.flash.block = NULL; }
     if(mem.debug.ports) { free(mem.debug.ports); mem.debug.ports = NULL; }
 }

@@ -119,7 +119,6 @@ void RomSelection::on_mergeButton_clicked() {
     QFileDialog dialog(this);
     QStringList fileNames;
 
-    /* allocate 65Kb for each chunck */
     uint8_t tmp_buf[10];
     int tmpint;
 
