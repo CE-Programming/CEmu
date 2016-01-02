@@ -179,7 +179,6 @@ void RomSelection::on_mergeButton_clicked() {
     }
     if (ui->progressBar->value() == num_rom_segments) {
         ui->hiddenLabel_1->setVisible(true);
-        ui->hiddenLabel_2->setVisible(true);
         ui->romsaveBrowse->setVisible(true);
     }
 }
@@ -204,7 +203,6 @@ void RomSelection::on_nextButton_2_clicked() {
     rom_array = (uint8_t*)malloc(rom_size);
     memset(rom_array, 0xFF, rom_size);
     ui->hiddenLabel_1->setVisible(false);
-    ui->hiddenLabel_2->setVisible(false);
     ui->romsaveBrowse->setVisible(false);
     ui->stackedWidget->setCurrentIndex(ui->stackedWidget->currentIndex()+1);
 }
