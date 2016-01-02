@@ -55,9 +55,8 @@
         <translation>Enregistrement GIF</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="395"/>
         <source>Take Sceenshot</source>
-        <translation>Prendre une copie d&apos;écran</translation>
+        <translation type="vanished">Prendre une copie d&apos;écran</translation>
     </message>
     <message>
         <source>Autosave</source>
@@ -331,9 +330,14 @@
         <translation>Rafraîchir la liste des variables de l&apos;émulateur...</translation>
     </message>
     <message>
+        <location filename="../mainwindow.ui" line="395"/>
+        <source>Take Screenshot</source>
+        <translation>Prendre une copie d&apos;écran</translation>
+    </message>
+    <message>
         <location filename="../mainwindow.ui" line="411"/>
         <source>11</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">11</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="418"/>
@@ -343,7 +347,7 @@
     <message>
         <location filename="../mainwindow.ui" line="465"/>
         <source>1</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">1</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="547"/>
@@ -594,7 +598,7 @@
     <message>
         <location filename="../mainwindow.ui" line="3578"/>
         <source>Take Screenshot...</source>
-        <translation>Prendre une copie d&apos;écran</translation>
+        <translation>Prendre une copie d&apos;écran...</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3589"/>
@@ -624,7 +628,7 @@
     <message>
         <location filename="../mainwindow.cpp" line="217"/>
         <source>Failed to save screenshot!</source>
-        <translation>La capture n&apos;a pas pu être sauvegardée</translation>
+        <translation>La capture n&apos;a pas pu être sauvegardée!</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="230"/>
