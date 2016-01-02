@@ -131,9 +131,12 @@ void RomSelection::on_mergeButton_clicked() {
         return;
     }
 
+#if (defined(_MSC_VER) && _MSC_VER < 1900)
+    /* No support of non-static data member initializers... */
     for (int i = 0; i < 20; i++) {
         segment_filled[i] = false;
     }
+#endif
 
     /* As of right now, there are only 11 data segements that need to be loaded. */
     /* Luckily if more are needed, this code can handle it. */

@@ -36,7 +36,12 @@ private:
   Ui::RomSelection *ui;
   uint8_t *rom_array = nullptr;
   unsigned int num_read_segments = 0;
-  bool segment_filled[20]; /* Filled to false in the .cpp */
+#if (defined(_MSC_VER) && _MSC_VER < 1900)
+  bool segment_filled[20]; /* No support of non-static data member initializers. Filled later */
+#else
+  bool segment_filled[20] = {0};
+#endif
+
 };
 
 /* External path for mainwindow */

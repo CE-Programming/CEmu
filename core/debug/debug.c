@@ -4,7 +4,7 @@
 
 volatile bool in_debugger = false;
 
-uint8_t debug_port_read_byte(const uint32_t addr) {
+CEMU_INLINE uint8_t debug_port_read_byte(const uint32_t addr) {
     return apb_map[port_range(addr)].range->read_in(addr_range(addr));
 }
 

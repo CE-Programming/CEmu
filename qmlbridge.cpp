@@ -26,7 +26,7 @@ QMLBridge::QMLBridge(QObject *p) : QObject(p) {
 QMLBridge::~QMLBridge() {
 }
 
-static const int ROWS = 8, COLS = 8;
+static const CEMU_CONSTEXPR int ROWS = 8, COLS = 8;
 
 void QMLBridge::keypadStateChanged(int keymap_id, bool state) {
     int col = keymap_id % COLS, row = keymap_id / COLS;
