@@ -331,7 +331,8 @@ void MainWindow::selectFiles() {
 
     setSendState(false);
 
-    Sleep(300);
+    QThread::usleep(300000);
+
     ui->sendBar->setValue(0);
 }
 
