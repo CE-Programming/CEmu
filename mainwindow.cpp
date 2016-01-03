@@ -300,6 +300,10 @@ void MainWindow::alwaysOnTop(int state) {
 /* ================================================ */
 
 void MainWindow::selectFiles() {
+    if (debugger_on) {
+       return;
+    }
+
     setSendState(true);
 
     QFileDialog dialog(this);
@@ -311,16 +315,24 @@ void MainWindow::selectFiles() {
     if (dialog.exec()) {
         fileNames = dialog.selectedFiles();
     } else {
+        setSendState(false);
         return;
     }
+
+    ui->sendBar->setMaximum(fileNames.size());
 
     for (int i = 0; i < fileNames.size(); i++) {
         // Send the variable to the emulator
         if(!sendVariableLink(fileNames.at(i).toStdString().c_str())) {
             QMessageBox::warning(this, tr("Failed Transfer"), tr("A failure occured during transfer of: ")+fileNames.at(i));
         }
+        ui->sendBar->setValue(ui->sendBar->value()+1);
     }
+
     setSendState(false);
+
+    Sleep(300);
+    ui->sendBar->setValue(0);
 }
 
 /* ================================================ */

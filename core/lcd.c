@@ -157,8 +157,9 @@ uint8_t lcd_read(const uint16_t pio) {
         };
         return read8(id[0][(offset - 0xFE0) >> 2], bit_offset);
     }
+
+    /* Return 0 if bad read */
     return 0;
-    //return bad_read_word(addr);
 }
 
 void lcd_write(const uint16_t pio, const uint8_t value) {
@@ -196,8 +197,6 @@ void lcd_write(const uint16_t pio, const uint8_t value) {
         }
     } else if (offset < 0x400) {
         write8(lcd.palette[pio >> 1 & 0xFF], (pio & 1) << 3, value);
-    } else {
-        //bad_write_word(addr, value);
     }
 }
 

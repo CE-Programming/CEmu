@@ -6,7 +6,7 @@
 #include "emu.h"
 #include "os/os.h"
 
-volatile bool emu_is_sending = true;
+volatile bool emu_is_sending = false;
 
 static const int ram_start = 0xD00000;
 static const int safe_ram_loc = 0xD052C6;
