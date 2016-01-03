@@ -39,7 +39,9 @@ public slots:
 signals:
     void debuggerChangedState(bool running);
     void triggerEmuSendState();
-    void sendVariable();
+
+    void setSendState(bool);
+    void sendVariable(std::string);
 
 private:
     // Debugger
@@ -62,7 +64,6 @@ private:
 
     // Linking
     void selectFiles();
-    void setSendState(bool);
 
     Ui::MainWindow *ui = nullptr;
     QSettings *settings = nullptr;

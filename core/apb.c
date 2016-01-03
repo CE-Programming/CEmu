@@ -20,7 +20,7 @@ uint8_t port_read_byte(const uint16_t addr) {
     uint16_t port = (port_range(addr) << 12) | addr_range(addr);
     uint8_t value = apb_map[port_range(addr)].range->read_in(addr_range(addr));
 
-    if (mem.debug.ports[port] &= DBG_PORT_READ) {
+    if (mem.debug.ports[port] & DBG_PORT_READ) {
         debugger(DBG_PORT_READ_BREAKPOINT, port);
     }
     return value;
@@ -29,14 +29,14 @@ uint8_t port_read_byte(const uint16_t addr) {
 void port_write_byte(const uint16_t addr, const uint8_t value) {
     uint16_t port = (port_range(addr) << 12) | addr_range(addr);
 
-    if (mem.debug.ports[port] &= DBG_PORT_FREEZE) {
+    if (mem.debug.ports[port] & DBG_PORT_FREEZE) {
         printf("%04X -> %02X\n",port,mem.debug.ports[port]);
         return;
     }
 
     apb_map[port_range(addr)].range->write_out(addr_range(addr), value);
 
-    if (mem.debug.ports[port] &= DBG_PORT_WRITE) {
+    if (mem.debug.ports[port] & DBG_PORT_WRITE) {
         debugger(DBG_PORT_WRITE_BREAKPOINT, port);
     }
 }

@@ -67,7 +67,7 @@ SOURCES += main.cpp\
     core/capture/gif.cpp \
     core/debug/disasm.cpp \
     core/debug/debug.c \
-    core/link.cpp
+    core/link.c
 
 linux|macx|ios: SOURCES += core/os/os-linux.c
 win32: SOURCES += core/os/os-win32.c

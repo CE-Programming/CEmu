@@ -67,12 +67,6 @@ void gui_debugger_entered_or_left(bool entered) {
     }
 }
 
-void gui_send_entered(bool entered) {
-    if(entered == true) {
-       emu_thread->enteredSendState();
-    }
-}
-
 EmuThread::EmuThread(QObject *p) : QThread(p) {
     assert(emu_thread == nullptr);
     emu_thread = this;
@@ -85,13 +79,9 @@ void EmuThread::setDebugMode(bool state) {
     }
 }
 
-void EmuThread::enterSendState() {
-    enter_send_state = true;
-    link.is_sending = false;
-}
-
-void EmuThread::sendVariable() {
-    link.is_sending = true;
+void EmuThread::setSendState(bool state) {
+    enter_send_state = state;
+    emu_is_sending = state;
 }
 
 //Called occasionally, only way to do something in the same thread the emulator runs in.
@@ -100,7 +90,7 @@ void EmuThread::doStuff(bool wait_for) {
 
     if (enter_send_state) {
         enter_send_state = false;
-        sendVariableLink();
+        enterVariableLink();
     }
 
     if (enter_debugger) {
@@ -135,6 +125,7 @@ bool EmuThread::stop() {
 
     exiting = true;
     in_debugger = false;
+    emu_is_sending = false;
 
     /* Cause the CPU core to leave the loop and check for events */
     cycle_count_delta = 0;

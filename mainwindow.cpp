@@ -64,10 +64,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->portView, &QTableWidget::itemChanged, this, &MainWindow::portMonitorCheckboxToggled);
 
     // Linking
-    connect(ui->buttonSend, &QPushButton::clicked, &emu, &EmuThread::enterSendState);
-    connect(&emu, &EmuThread::enteredSendState, this, &MainWindow::selectFiles);
-    connect(&emu, &EmuThread::sendState, this, &MainWindow::setSendState);
-    connect(this, &MainWindow::sendVariable, &emu, &EmuThread::sendVariable);
+    connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::selectFiles);
+    connect(this, &MainWindow::setSendState, &emu, &EmuThread::setSendState);
 
     // Console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, this, &MainWindow::clearConsole);
@@ -94,6 +92,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     ui->console->setFont(monospace);
 
     qRegisterMetaType<uint32_t>("uint32_t");
+    qRegisterMetaType<std::string>("std::string");
 
     setUIMode(true);
 
@@ -300,18 +299,15 @@ void MainWindow::alwaysOnTop(int state) {
 /* Linking Things                                   */
 /* ================================================ */
 
-void MainWindow::setSendState(bool newstate) {
-    printf("Changed. %d\n",newstate);
-    link_sending = newstate;
-}
-
 void MainWindow::selectFiles() {
+    setSendState(true);
+
     QFileDialog dialog(this);
     QStringList fileNames;
 
     dialog.setDirectory(QDir::homePath());
     dialog.setFileMode(QFileDialog::ExistingFiles);
-    dialog.setNameFilter(trUtf8("TI Variable (*.8xp)"));
+    dialog.setNameFilter(tr("TI Varaible (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8ci *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca);;All Files (*.*)"));
     if (dialog.exec()) {
         fileNames = dialog.selectedFiles();
     } else {
@@ -319,14 +315,12 @@ void MainWindow::selectFiles() {
     }
 
     for (int i = 0; i < fileNames.size(); i++) {
-        link.current_file = fileNames.at(i).toStdString();
-
-        // Because the other thread will not update this fast enough
-        link_sending = true;
-
         // Send the variable to the emulator
-        this->sendVariable();
+        if(!sendVariableLink(fileNames.at(i).toStdString().c_str())) {
+            QMessageBox::warning(this, tr("Failed Transfer"), tr("A failure occured during transfer of: ")+fileNames.at(i));
+        }
     }
+    setSendState(false);
 }
 
 /* ================================================ */

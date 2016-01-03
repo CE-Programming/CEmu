@@ -1,25 +1,16 @@
 #ifndef LINK_H
 #define LINK_H
 
-#include <string>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include <stdbool.h>
 
-typedef struct link_state {
-    bool is_sending;
-    bool is_recieving;
-    bool sending;
-    bool recieving;
-    std::string current_file;
-} link_state_t;
+extern volatile bool emu_is_sending;
 
-extern link_state_t link;
-
-bool sendVariableLink(void);
+void enterVariableLink(void);
+bool sendVariableLink(const char *var_name);
 
 #ifdef __cplusplus
 }

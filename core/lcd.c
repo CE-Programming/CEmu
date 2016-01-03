@@ -26,84 +26,83 @@ lcd_cntrl_state_t lcd;
 
 /* Draw the current screen into a 16bpp upside-down bitmap. */
 void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
+  uint32_t mode = lcd.control >> 1 & 7;
+  uint32_t bpp;
+  if (mode <= 5)
+      bpp = 1 << mode;
+  else
+      bpp = 16;
 
-    uint32_t mode = lcd.control >> 1 & 7;
-    uint32_t bpp;
-    uint32_t *in;
-    int row;
+  if (mode == 7) {
+      // 444 format
+      bitfields[0] = 0x000F;
+      bitfields[1] = 0x00F0;
+      bitfields[2] = 0x0F00;
+  } else {
+      // 565 format
+      bitfields[0] = 0x001F;
+      bitfields[1] = 0x07E0;
+      bitfields[2] = 0xF800;
+  }
+  if (lcd.control & (1 << 8)) {
+      // BGR format (R high, B low)
+      uint32_t tmp = bitfields[0];
+      bitfields[0] = bitfields[2];
+      bitfields[2] = tmp;
+  }
 
-    if (mode <= 5) {
-        bpp = 1 << mode;
-    }
-    else {
-        bpp = 16;
-    }
+  uint32_t *in = (uint32_t *)(intptr_t)phys_mem_ptr(lcd.upcurr, (320 * 240) / 8 * bpp);
+  if (!in || !lcd.upcurr) {
+      memset(buffer, 0, 320 * 240 * 2);
+      return;
+  }
+  int row;
+  for (row = 0; row < 240; ++row) {
+      uint16_t *out = buffer + (row * 320);
+      uint32_t words = (320 / 32) * bpp;
+      if (bpp < 16) {
+          uint32_t mask = (1 << bpp) - 1;
+          uint32_t bi = (lcd.control & (1 << 9)) ? 0 : 24;
+          if (!(lcd.control & (1 << 10)))
+              bi ^= (8 - bpp);
+          do {
+              uint32_t word = *in++;
+              int bitpos = 32;
+              do {
+                  uint16_t color = lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask];
+                  *out++ = color + (color & 0xFFE0) + (color >> 10 & 0x20);
+              } while (bitpos != 0);
+          } while (--words != 0);
+      } else if (mode == 4) {
+          uint32_t i, bi = lcd.control >> 9 & 1;
+          for (i = 0; i < 320; i++) {
+              uint16_t color = ((uint16_t *)in)[i ^ bi];
+              uint8_t r = color & 0x1F,
+                      g = (color >> 5) & 0x1F,
+                      b = (color >> 10) & 0x1F;
 
-    if (mode == 7) {
-        /* 444 format */
-        bitfields[0] = 0x000F;
-        bitfields[1] = 0x00F0;
-        bitfields[2] = 0x0F00;
-    } else {
-        /* 565 format */
-        bitfields[0] = 0x001F;
-        bitfields[1] = 0x07E0;
-        bitfields[2] = 0xF800;
-    }
-    if (lcd.control & (1 << 8)) {
-        /* BGR format (R high, B low) */
-        uint32_t tmp = bitfields[0];
-        bitfields[0] = bitfields[2];
-        bitfields[2] = tmp;
-    }
-
-    in = (uint32_t*)phys_mem_ptr(lcd.upcurr, (320 * 240) / 8 * bpp);
-    if (!in || !lcd.upbase || (((lcd.control>>11)&0x1) == 0)) {
-        memset(buffer, 0x00, 320 * 240 * 2); return;
-    }
-    for (row = 0; row < 240; ++row) {
-        uint16_t *out = buffer + (row * 320);
-        uint32_t words = (320 / 32) * bpp;
-        if (bpp < 16) {
-            uint32_t mask = (1 << bpp) - 1;
-            uint32_t bi = (lcd.control & (1 << 9)) ? 0 : 24;
-            if (!(lcd.control & (1 << 10))) {
-                bi ^= (8 - bpp);
-            }
-            do {
-                uint32_t word = *in++;
-                int bitpos = 32;
-                do {
-                    uint16_t color = lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask];
-                    *out++ = color + (color & 0xFFE0) + (color >> 10 & 0x20);
-                } while (bitpos != 0);
-            } while (--words != 0);
-        } else if (mode == 4) {
-            uint32_t i, bi = lcd.control >> 9 & 1;
-            for (i = 0; i < 320; i++) {
-                uint16_t color = ((uint16_t *)in)[i ^ bi];
-                out[i] = color + (color & 0xFFE0) + (color >> 10 & 0x20);
-            }
-            in += 160;
-        } else if (mode == 5) {
-            /* 32bpp mode: Convert 888 to 565 */
-            do {
-                uint32_t word = *in++;
-                *out++ = (word >> 8 & 0xF800) | (word >> 5 & 0x7E0) | (word >> 3 & 0x1F);
-            } while (--words != 0);
-        } else {
-            if (!(lcd.control & (1 << 9))) {
-                memcpy(out, in, 320*2);
-                in += 160;
-            } else {
-                uint32_t *outw = (uint32_t *)out;
-                do {
-                    uint32_t word = *in++;
-                    *outw++ = word << 16 | word >> 16;
-                } while (--words != 0);
-            }
-        }
-    }
+              out[i] = (r << 11) | (g << 6) | b | (color >> 10 & 0x20);
+          }
+          in += 160;
+      } else if (mode == 5) {
+          // 32bpp mode: Convert 888 to 565
+          do {
+              uint32_t word = *in++;
+              *out++ = (word >> 8 & 0xF800) | (word >> 5 & 0x7E0) | (word >> 3 & 0x1F);
+          } while (--words != 0);
+      } else {
+          if (!(lcd.control & (1 << 9))) {
+              memcpy(out, in, 640);
+              in += 160;
+          } else {
+              uint32_t *outw = (uint32_t *)out;
+              do {
+                  uint32_t word = *in++;
+                  *outw++ = word << 16 | word >> 16;
+              } while (--words != 0);
+          }
+      }
+  }
 }
 
 static void lcd_event(int index) {
@@ -196,7 +195,7 @@ void lcd_write(const uint16_t pio, const uint8_t value) {
             intrpt_trigger(INT_LCD, lcd.ris & lcd.imsc ? INTERRUPT_SET : INTERRUPT_CLEAR);
         }
     } else if (offset < 0x400) {
-        write8(lcd.palette[pio >> 1 & 0xFF], pio & 1, value);
+        write8(lcd.palette[pio >> 1 & 0xFF], (pio & 1) << 3, value);
     } else {
         //bad_write_word(addr, value);
     }
