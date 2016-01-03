@@ -10,6 +10,7 @@ extern "C" {
 #include <stdbool.h>
 
 extern volatile bool emu_is_sending;
+extern volatile bool emu_is_recieving;
 
 void enterVariableLink(void);
 bool listVariablesLink(void);

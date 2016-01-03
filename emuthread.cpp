@@ -84,12 +84,22 @@ void EmuThread::setSendState(bool state) {
     emu_is_sending = state;
 }
 
+void EmuThread::setRecieveState(bool state) {
+    enter_recieve_state = state;
+    emu_is_recieving = state;
+}
+
 //Called occasionally, only way to do something in the same thread the emulator runs in.
 void EmuThread::doStuff(bool wait_for) {
     (void)wait_for;
 
     if (enter_send_state) {
         enter_send_state = false;
+        enterVariableLink();
+    }
+
+    if (enter_recieve_state) {
+        enter_recieve_state = false;
         enterVariableLink();
     }
 

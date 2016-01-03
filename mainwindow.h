@@ -42,6 +42,7 @@ signals:
 
     void setSendState(bool);
     void sendVariable(std::string);
+    void setRecieveState(bool);
 
 private:
     // Debugger
@@ -64,6 +65,8 @@ private:
 
     // Linking
     void selectFiles();
+    void refreshVariableList();
+    void saveSelected();
 
     Ui::MainWindow *ui = nullptr;
     QSettings *settings = nullptr;
@@ -71,8 +74,8 @@ private:
 
     EmuThread emu;
 
-    bool debugger_on;
-    bool link_sending;
+    bool debugger_on = false;
+    bool in_recieving_mode = false;
 };
 
 // Used as global instance by EmuThread and Debugger class

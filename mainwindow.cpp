@@ -66,6 +66,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     // Linking
     connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::selectFiles);
     connect(this, &MainWindow::setSendState, &emu, &EmuThread::setSendState);
+    connect(ui->buttonRefreshList, &QPushButton::clicked, this, &MainWindow::refreshVariableList);
+    connect(this, &MainWindow::setRecieveState, &emu, &EmuThread::setRecieveState);
 
     // Console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, this, &MainWindow::clearConsole);
@@ -120,6 +122,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     ui->rompathView->setText(QString(emu.rom.c_str()));
     ui->portView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->emuVarView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->lcdWidget->setFocus();
 }
 
@@ -299,6 +302,11 @@ void MainWindow::alwaysOnTop(int state) {
 /* Linking Things                                   */
 /* ================================================ */
 
+static QString int2str(uint16_t a) {
+    ::sprintf(tmpBuf, "%d", a);
+    return QString(tmpBuf);
+}
+
 void MainWindow::selectFiles() {
     if (debugger_on) {
        return;
@@ -334,6 +342,60 @@ void MainWindow::selectFiles() {
     QThread::usleep(300000);
 
     ui->sendBar->setValue(0);
+}
+
+void MainWindow::refreshVariableList() {
+    int currentRow;
+    calc_var_t var;
+
+    while(ui->emuVarView->rowCount() > 0) {
+        ui->emuVarView->removeRow(0);
+    }
+
+    if (debugger_on) {
+        return;
+    }
+
+    if (in_recieving_mode) {
+        ui->buttonRefreshList->setText("Refresh Emulator Variable List...");
+        ui->buttonRecieveFiles->setEnabled(false);
+        setRecieveState(false);
+    } else {
+        ui->buttonRefreshList->setText("Continue Emulation");
+        ui->buttonRecieveFiles->setEnabled(true);
+        setRecieveState(true);
+        QThread::usleep(500000);
+
+        vat_search_init(&var);
+        while (vat_search_next(&var)) {
+            if(var.size && (var.name[0] != '#' && var.name[0] != '!' && var.name[0] != '.')) {
+                currentRow = ui->emuVarView->rowCount();
+                ui->emuVarView->setRowCount(currentRow + 1);
+
+                QTableWidgetItem *var_name = new QTableWidgetItem(calc_var_name_to_utf8(var.name));
+                QTableWidgetItem *var_type = new QTableWidgetItem(calc_var_type_names[var.type]);
+                QTableWidgetItem *var_size = new QTableWidgetItem(int2str(var.size));
+                QTableWidgetItem *var_selected = new QTableWidgetItem();
+
+                var_selected->setCheckState(Qt::Unchecked);
+
+                ui->emuVarView->setItem(currentRow, 0, var_selected);
+                ui->emuVarView->setItem(currentRow, 1, var_name);
+                ui->emuVarView->setItem(currentRow, 2, var_type);
+                ui->emuVarView->setItem(currentRow, 3, var_size);
+            }
+        }
+    }
+
+    in_recieving_mode = !in_recieving_mode;
+}
+
+void MainWindow::saveSelected() {
+    for(int i=0; i<ui->emuVarView->rowCount(); i++) {
+        if(ui->emuVarView->item(i, 0)->checkState() == Qt::Checked) {
+            /* TODO: Stuff to save the variable */
+        }
+    }
 }
 
 /* ================================================ */
@@ -548,8 +610,6 @@ void MainWindow::pollPort() {
     QTableWidgetItem *port_wBreak = new QTableWidgetItem();
     QTableWidgetItem *port_freeze = new QTableWidgetItem();
 
-    port_range->setFlags(Qt::ItemIsSelectable |  Qt::ItemIsEnabled);
-    port_data->setFlags(Qt::ItemIsSelectable |  Qt::ItemIsEnabled);
     port_rBreak->setCheckState(Qt::Unchecked);
     port_wBreak->setCheckState(Qt::Unchecked);
     port_freeze->setCheckState(Qt::Unchecked);

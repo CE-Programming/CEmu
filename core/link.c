@@ -7,6 +7,7 @@
 #include "os/os.h"
 
 volatile bool emu_is_sending = false;
+volatile bool emu_is_recieving = false;
 
 static const int ram_start = 0xD00000;
 static const int safe_ram_loc = 0xD052C6;
@@ -29,10 +30,10 @@ static const uint8_t archivevar[14] = {
 };
 
 void enterVariableLink(void) {
-  /* Wait for the GUI to send the file */
+  /* Wait for the GUI to finish whatever it needs to do */
   do {
       emu_sleep();
-  } while(emu_is_sending);
+  } while(emu_is_sending || emu_is_recieving);
 }
 
 bool listVariablesLink(void) {
