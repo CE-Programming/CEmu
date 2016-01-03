@@ -20,6 +20,7 @@ const char *calc_var_type_names[0x20] = {
     "Complex",
     "Complex List",
     "Undefined",
+    "Window",
     "Zoom Store",
     "Table Range",
     "LCD",
@@ -30,13 +31,12 @@ const char *calc_var_type_names[0x20] = {
     "Group",
     "Unknown #1",
     "Unknown #2",
-    "Unknown #3",
     "Image",
+    "Unknown #4",
     "Unknown #5",
     "Unknown #6",
     "Unknown #7",
     "Unknown #8",
-    "Unknown #9",
 };
 
 const char *calc_var_name_to_utf8(uint8_t name[8]) {
