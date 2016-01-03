@@ -395,7 +395,7 @@
               <enum>Qt::ElideMiddle</enum>
              </property>
              <attribute name="horizontalHeaderDefaultSectionSize">
-              <number>80</number>
+              <number>100</number>
              </attribute>
              <attribute name="horizontalHeaderHighlightSections">
               <bool>false</bool>
@@ -415,11 +415,6 @@
              <attribute name="verticalHeaderHighlightSections">
               <bool>false</bool>
              </attribute>
-             <column>
-              <property name="text">
-               <string>Select</string>
-              </property>
-             </column>
              <column>
               <property name="text">
                <string>Name</string>

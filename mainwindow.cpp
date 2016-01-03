@@ -63,6 +63,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     // Linking
     connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::selectFiles);
+    connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::selectFiles);
     connect(this, &MainWindow::setSendState, &emu, &EmuThread::setSendState);
     connect(ui->buttonRefreshList, &QPushButton::clicked, this, &MainWindow::refreshVariableList);
     connect(this, &MainWindow::setReceiveState, &emu, &EmuThread::setReceiveState);
@@ -369,14 +370,12 @@ void MainWindow::refreshVariableList() {
                 QTableWidgetItem *var_name = new QTableWidgetItem(calc_var_name_to_utf8(var.name));
                 QTableWidgetItem *var_type = new QTableWidgetItem(calc_var_type_names[var.type]);
                 QTableWidgetItem *var_size = new QTableWidgetItem(QString::number(var.size));
-                QTableWidgetItem *var_selected = new QTableWidgetItem();
 
-                var_selected->setCheckState(Qt::Unchecked);
+                var_name->setCheckState(Qt::Unchecked);
 
-                ui->emuVarView->setItem(currentRow, 0, var_selected);
-                ui->emuVarView->setItem(currentRow, 1, var_name);
-                ui->emuVarView->setItem(currentRow, 2, var_type);
-                ui->emuVarView->setItem(currentRow, 3, var_size);
+                ui->emuVarView->setItem(currentRow, 0, var_name);
+                ui->emuVarView->setItem(currentRow, 1, var_type);
+                ui->emuVarView->setItem(currentRow, 2, var_size);
             }
         }
     }
