@@ -352,7 +352,6 @@ void MainWindow::refreshVariableList() {
         ui->buttonRefreshList->setText("Refresh Emulator Variable List...");
         ui->buttonReceiveFiles->setEnabled(false);
         setReceiveState(false);
-        vars.clear();
     } else {
         ui->buttonRefreshList->setText("Continue Emulation");
         ui->buttonReceiveFiles->setEnabled(true);
@@ -360,6 +359,7 @@ void MainWindow::refreshVariableList() {
         QThread::msleep(500);
 
         vat_search_init(&var);
+        vars.clear();
         while (vat_search_next(&var)) {
             if (var.size > 2 && (var.name[0] != '#' && var.name[0] != '!' && var.name[0] != '.')) {
                 vars.append(var);

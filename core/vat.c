@@ -6,7 +6,7 @@
 
 const char *calc_var_type_names[0x20] = {
     "Real",
-    "List",
+    "Real List",
     "Matrix",
     "Equation",
     "String",
@@ -21,7 +21,7 @@ const char *calc_var_type_names[0x20] = {
     "Complex List",
     "Undefined",
     "Window",
-    "Zoom Store",
+    "Recall Window",
     "Table Range",
     "LCD",
     "Backup",
@@ -29,14 +29,14 @@ const char *calc_var_type_names[0x20] = {
     "Application Variable",
     "Temp Program",
     "Group",
+    "Real Fraction",
     "Unknown #1",
-    "Unknown #2",
     "Image",
-    "Unknown #4",
-    "Unknown #5",
-    "Unknown #6",
-    "Unknown #7",
-    "Unknown #8",
+    "Complex Fraction",
+    "Real Radical",
+    "Complex Radical",
+    "Complex Pi",
+    "Real Pi",
 };
 
 const char *calc_var_name_to_utf8(uint8_t name[8]) {
@@ -82,17 +82,20 @@ const char *calc_var_name_to_utf8(uint8_t name[8]) {
                     *dest++ = 'Y';
                     *dest++ = '\xE2';
                     *dest++ = '\x82';
-                    *dest++ = '\x80' + (name[1] & 0xF);
+                    *dest++ = '\x80' + ((name[1] & 0xF) + 1) % 10;
                 } else if (name[1] < 0x40) {
                     *dest++ = 'X' + (name[1] & 1);
                     *dest++ = '\xE2';
                     *dest++ = '\x82';
-                    *dest++ = '\x80' + (name[1] >> 1 & 0xF);
+                    *dest++ = '\x81' + (name[1] >> 1 & 0xF);
+                    *dest++ = '\xE1';
+                    *dest++ = '\xB4';
+                    *dest++ = '\x9B';
                 } else if (name[1] < 0x80) {
                     *dest++ = 'r';
                     *dest++ = '\xE2';
                     *dest++ = '\x82';
-                    *dest++ = '\x80' + (name[1] & 0xF);
+                    *dest++ = '\x81' + (name[1] & 0xF);
                 } else {
                     *dest++ = 'u' + (name[1] & 3);
                 }
@@ -179,7 +182,7 @@ bool vat_search_next(calc_var_t *var) {
         case CALC_VAR_TYPE_REAL:
             var->size = 9;
             break;
-        case CALC_VAR_TYPE_LIST:
+        case CALC_VAR_TYPE_REAL_LIST:
             var->size = 2 + (var->data[0] | var->data[1] << 8) * 9;
             break;
         case CALC_VAR_TYPE_MATRIX:
