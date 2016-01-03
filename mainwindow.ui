@@ -242,7 +242,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -392,7 +392,7 @@
               </size>
              </property>
              <property name="text">
-              <string>Take Sceenshot</string>
+              <string>Take Screenshot</string>
              </property>
             </widget>
            </item>
@@ -3502,7 +3502,7 @@
      <x>0</x>
      <y>0</y>
      <width>1080</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="sizePolicy">

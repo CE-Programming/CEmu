@@ -36,7 +36,7 @@
 #include "core/os/os.h"
 
 static char tmpBuf[20] = {0};
-static const int WindowStateVersion = 0;
+static const CEMU_CONSTEXPR int WindowStateVersion = 0;
 
 MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     // Setup the UI
