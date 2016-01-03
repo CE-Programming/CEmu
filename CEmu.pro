@@ -67,7 +67,8 @@ SOURCES += main.cpp\
     core/capture/gif.cpp \
     core/debug/disasm.cpp \
     core/debug/debug.c \
-    core/link.c
+    core/link.c \
+    core/vat.c
 
 linux|macx|ios: SOURCES += core/os/os-linux.c
 win32: SOURCES += core/os/os-win32.c
@@ -106,7 +107,8 @@ HEADERS  += mainwindow.h \
     core/capture/giflib.h \
     core/debug/debug.h \
     core/debug/disasm.h \
-    core/link.h
+    core/link.h \
+    core/vat.h
 
 FORMS    += mainwindow.ui \
     romselection.ui

@@ -35,6 +35,19 @@ void enterVariableLink(void) {
   } while(emu_is_sending);
 }
 
+bool listVariablesLink(void) {
+    calc_var_t var;
+    vat_search_init(&var);
+    puts("VAT:");
+    while (vat_search_next(&var)) {
+        printf("type: %s, name: %s, size: %hu\n",
+               calc_var_type_names[var.type],
+               calc_var_name_to_utf8(var.name),
+               var.size);
+    }
+    return true;
+}
+
 /* Really hackish way to send a variable -- Like, on a scale of 1 to hackish, it's like really hackish */
 /* Proper USB emulation should really be a thing at some point :P */
 bool sendVariableLink(const char *var_name) {
