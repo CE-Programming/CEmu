@@ -80,7 +80,7 @@ bool sendVariableLink(const char *var_name) {
         return false;
     }
 
-    var = fopen_utf8(var_name,"r+b");
+    var = fopen_utf8(var_name,"rb");
 
     /* Check the name */
     fread(&tmp_buf[0], 1, 8, var);
@@ -149,4 +149,44 @@ bool sendVariableLink(const char *var_name) {
 
     fclose(var);
     return true;
+}
+
+#define STRINGIFYMAGIC(x) #x
+#define STRINGIFY(x) STRINGIFYMAGIC(x)
+static char header[] = "**TI83F*\x1A\x0A\0File dumped from CEmu " STRINGIFY(CEMU_VERSION);
+#undef STRIGIFY
+#undef STRIGIFYMAGIC
+bool receiveVariableLink(int count, const calc_var_t *vars, const char *file_name) {
+    FILE *file = fopen_utf8(file_name, "w+b");;
+    calc_var_t var;
+    uint16_t header_size = 13, size = 0, checksum = 0;
+    int byte;
+    if (!file) return false;
+    if (fwrite(header, sizeof header - 1, 1, file) != 1) goto err;
+    if (fseek(file, 0x37, SEEK_SET))                     goto err;
+    while (count--) {
+        if (!vat_search_find(vars++, &var))              goto err;
+        if (fwrite(&header_size,       2, 1, file) != 1) goto err;
+        if (fwrite(&var.size,          2, 1, file) != 1) goto err;
+        if (fwrite(&var.type,          1, 1, file) != 1) goto err;
+        if (fwrite(&var.name,          8, 1, file) != 1) goto err;
+        if (fwrite(&var.version,       1, 1, file) != 1) goto err;
+        if (fputc(var.archived << 7, file) == EOF)       goto err;
+        if (fwrite(&var.size,          2, 1, file) != 1) goto err;
+        if (fwrite(var.data,    var.size, 1, file) != 1) goto err;
+        size += 17 + var.size;
+    }
+    if (fseek(file, 0x35, SEEK_SET))                     goto err;
+    if (fwrite(&size,                  2, 1, file) != 1) goto err;
+    while ((byte = fgetc(file)) != EOF) {
+        checksum += byte;
+    }
+    if (ferror(file))                                    goto err;
+    if (fwrite(&checksum,              2, 1, file) != 1) goto err;
+    return !fclose(file);
+
+ err:
+    fclose(file);
+    remove(file_name);
+    return false;
 }

@@ -4,10 +4,12 @@
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QTableWidgetItem>
+#include <QtWidgets/QFileDialog>
 #include <QtCore/QSettings>
 
 #include "romselection.h"
 #include "emuthread.h"
+#include "core/vat.h"
 #include "core/debug/debug.h"
 
 namespace Ui {
@@ -42,7 +44,7 @@ signals:
 
     void setSendState(bool);
     void sendVariable(std::string);
-    void setRecieveState(bool);
+    void setReceiveState(bool);
 
 private:
     // Debugger
@@ -64,6 +66,7 @@ private:
     void alwaysOnTop(int state);
 
     // Linking
+    QStringList showVariableFileDialog(QFileDialog::AcceptMode mode);
     void selectFiles();
     void refreshVariableList();
     void saveSelected();
@@ -76,6 +79,8 @@ private:
 
     bool debugger_on = false;
     bool in_recieving_mode = false;
+
+    QList<calc_var_t> vars;
 };
 
 // Used as global instance by EmuThread and Debugger class

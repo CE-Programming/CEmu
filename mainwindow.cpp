@@ -13,7 +13,6 @@
 */
 
 #include <QtCore/QFileInfo>
-#include <QtWidgets/QFileDialog>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QDockWidget>
 #include <QtWidgets/QShortcut>
@@ -35,7 +34,6 @@
 #include "core/capture/gif.h"
 #include "core/os/os.h"
 
-static char tmpBuf[20] = {0};
 static const CEMU_CONSTEXPR int WindowStateVersion = 0;
 
 MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
@@ -67,7 +65,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::selectFiles);
     connect(this, &MainWindow::setSendState, &emu, &EmuThread::setSendState);
     connect(ui->buttonRefreshList, &QPushButton::clicked, this, &MainWindow::refreshVariableList);
-    connect(this, &MainWindow::setRecieveState, &emu, &EmuThread::setRecieveState);
+    connect(this, &MainWindow::setReceiveState, &emu, &EmuThread::setReceiveState);
+    connect(ui->buttonReceiveFiles, &QPushButton::clicked, this, &MainWindow::saveSelected);
 
     // Console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, this, &MainWindow::clearConsole);
@@ -302,9 +301,14 @@ void MainWindow::alwaysOnTop(int state) {
 /* Linking Things                                   */
 /* ================================================ */
 
-static QString int2str(uint16_t a) {
-    ::sprintf(tmpBuf, "%d", a);
-    return QString(tmpBuf);
+QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode) {
+    QFileDialog dialog(this);
+    dialog.setAcceptMode(mode);
+    dialog.setFileMode(mode == QFileDialog::AcceptOpen ? QFileDialog::ExistingFiles : QFileDialog::AnyFile);
+    dialog.setDirectory(QDir::homePath());
+    dialog.setNameFilter(tr("TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8ci *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca);;All Files (*.*)"));
+    dialog.setDefaultSuffix("8xg");
+    return dialog.exec() ? dialog.selectedFiles() : QStringList();
 }
 
 void MainWindow::selectFiles() {
@@ -314,18 +318,7 @@ void MainWindow::selectFiles() {
 
     setSendState(true);
 
-    QFileDialog dialog(this);
-    QStringList fileNames;
-
-    dialog.setDirectory(QDir::homePath());
-    dialog.setFileMode(QFileDialog::ExistingFiles);
-    dialog.setNameFilter(tr("TI Varaible (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8ci *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca);;All Files (*.*)"));
-    if (dialog.exec()) {
-        fileNames = dialog.selectedFiles();
-    } else {
-        setSendState(false);
-        return;
-    }
+    QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptOpen);
 
     ui->sendBar->setMaximum(fileNames.size());
 
@@ -339,8 +332,7 @@ void MainWindow::selectFiles() {
 
     setSendState(false);
 
-    QThread::usleep(300000);
-
+    QThread::msleep(300);
     ui->sendBar->setValue(0);
 }
 
@@ -358,23 +350,25 @@ void MainWindow::refreshVariableList() {
 
     if (in_recieving_mode) {
         ui->buttonRefreshList->setText("Refresh Emulator Variable List...");
-        ui->buttonRecieveFiles->setEnabled(false);
-        setRecieveState(false);
+        ui->buttonReceiveFiles->setEnabled(false);
+        setReceiveState(false);
+        vars.clear();
     } else {
         ui->buttonRefreshList->setText("Continue Emulation");
-        ui->buttonRecieveFiles->setEnabled(true);
-        setRecieveState(true);
-        QThread::usleep(500000);
+        ui->buttonReceiveFiles->setEnabled(true);
+        setReceiveState(true);
+        QThread::msleep(500);
 
         vat_search_init(&var);
         while (vat_search_next(&var)) {
-            if(var.size && (var.name[0] != '#' && var.name[0] != '!' && var.name[0] != '.')) {
+            if (var.size > 2 && (var.name[0] != '#' && var.name[0] != '!' && var.name[0] != '.')) {
+                vars.append(var);
                 currentRow = ui->emuVarView->rowCount();
                 ui->emuVarView->setRowCount(currentRow + 1);
 
                 QTableWidgetItem *var_name = new QTableWidgetItem(calc_var_name_to_utf8(var.name));
                 QTableWidgetItem *var_type = new QTableWidgetItem(calc_var_type_names[var.type]);
-                QTableWidgetItem *var_size = new QTableWidgetItem(int2str(var.size));
+                QTableWidgetItem *var_size = new QTableWidgetItem(QString::number(var.size));
                 QTableWidgetItem *var_selected = new QTableWidgetItem();
 
                 var_selected->setCheckState(Qt::Unchecked);
@@ -391,9 +385,16 @@ void MainWindow::refreshVariableList() {
 }
 
 void MainWindow::saveSelected() {
-    for(int i=0; i<ui->emuVarView->rowCount(); i++) {
-        if(ui->emuVarView->item(i, 0)->checkState() == Qt::Checked) {
-            /* TODO: Stuff to save the variable */
+    QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptSave);
+    if (fileNames.size() == 1) {
+        QVector<calc_var_t> selectedVars;
+        for (int currentRow = 0; currentRow < ui->emuVarView->rowCount(); currentRow++) {
+            if (ui->emuVarView->item(currentRow, 0)->checkState()) {
+                selectedVars.append(vars[currentRow]);
+            }
+        }
+        if (!receiveVariableLink(selectedVars.size(), selectedVars.constData(), fileNames.at(0).toUtf8())) {
+            QMessageBox::warning(this, tr("Failed Transfer"), tr("A failure occured during transfer of: ")+fileNames.at(0));
         }
     }
 }
@@ -407,8 +408,7 @@ static int hex2int(QString str) {
 }
 
 static QString int2hex(uint32_t a, uint8_t l) {
-    ::sprintf(tmpBuf, "%0*X", l, a);
-    return QString(tmpBuf);
+    return QString::number(a, 16).rightJustified(l, '0');
 }
 
 void MainWindow::raiseDebugger() {

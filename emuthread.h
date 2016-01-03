@@ -34,12 +34,12 @@ public slots:
 
     // Linking
     void setSendState(bool state);
-    void setRecieveState(bool state);
+    void setReceiveState(bool state);
 
 private:
     bool enter_debugger = false;
     bool enter_send_state = false;
-    bool enter_recieve_state = false;
+    bool enter_receive_state = false;
 };
 
 // For friends

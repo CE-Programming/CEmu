@@ -343,9 +343,9 @@
          </widget>
         </item>
         <item>
-         <widget class="QGroupBox" name="groupRecieve">
+         <widget class="QGroupBox" name="groupReceive">
           <property name="title">
-           <string>Recieve</string>
+           <string>Receive</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_7">
            <item>
@@ -362,7 +362,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="buttonRecieveFiles">
+            <widget class="QPushButton" name="buttonReceiveFiles">
              <property name="enabled">
               <bool>false</bool>
              </property>
@@ -395,7 +395,7 @@
               <enum>Qt::ElideMiddle</enum>
              </property>
              <attribute name="horizontalHeaderDefaultSectionSize">
-              <number>50</number>
+              <number>80</number>
              </attribute>
              <attribute name="horizontalHeaderHighlightSections">
               <bool>false</bool>

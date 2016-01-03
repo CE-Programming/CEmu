@@ -40,18 +40,24 @@ const char *calc_var_type_names[0x20] = {
 };
 
 const char *calc_var_name_to_utf8(uint8_t name[8]) {
-    char buffer[17], *dest = buffer;
+    static char buffer[17];
+    char *dest = buffer;
     uint8_t i;
     for (i = 0; i < 8 && name[i] >= 'A' && name[i] <= 'Z' + 1; i++) {
-        if (name[i] <= 'Z') {
-            *dest++ = name[i];
-        } else {
+        if (name[i] == 'Z' + 1) {
             *dest++ = '\xCE';
             *dest++ = '\xB8';
+        } else {
+            *dest++ = name[i];
         }
     }
     if (!i) {
         switch (name[0]) {
+            case 0x21:
+            case 0x23:
+            case 0x2E:
+                *dest++ = name[0];
+                break;
             case 0x3C:
                 *dest++ = 'I';
                 *dest++ = 'm';
@@ -69,7 +75,7 @@ const char *calc_var_name_to_utf8(uint8_t name[8]) {
                 *dest++ = 'L';
                 *dest++ = '\xE2';
                 *dest++ = '\x82';
-                *dest++ = '\x80' + name[1];
+                *dest++ = '\x81' + name[1];
                 break;
             case 0x5E:
                 if (name[1] < 0x20) {
@@ -127,7 +133,7 @@ const char *calc_var_name_to_utf8(uint8_t name[8]) {
         }
     }
     *dest = '\0';
-    return strdup(buffer);
+    return buffer;
 }
 
 void vat_search_init(calc_var_t *var) {
@@ -141,7 +147,7 @@ bool vat_search_next(calc_var_t *var) {
                   *progPtr  = phys_mem_ptr(*(uint32_t *)phys_mem_ptr(0xD0259D, 4) & 0xFFFFFF, 1),
                   *symTable = phys_mem_ptr(0xD3FFFF, 1);
     uint32_t address;
-    uint8_t i, *name = var->name;
+    uint8_t i;
     bool prog = var->vat <= progPtr;
     if (!var->vat || var->vat < userMem || var->vat <= pTemp || var->vat > symTable) {
         return false;
@@ -160,7 +166,7 @@ bool vat_search_next(calc_var_t *var) {
     } else {
         var->namelen = 3;
     }
-    if (address > 0xC0000 && address < 0x400000) {
+    if ((var->archived = address > 0xC0000 && address < 0x400000)) {
         address += 9 + prog + var->namelen;
     } else if (!(address >= 0xD1A881 && address < 0xD40000)) {
         return false;
@@ -171,33 +177,39 @@ bool vat_search_next(calc_var_t *var) {
     }
     switch (var->type = var->type1 & 0x1F) {
         case CALC_VAR_TYPE_REAL:
-            var->size  = 9;
+            var->size = 9;
             break;
         case CALC_VAR_TYPE_LIST:
-            var->size  = *var->data++;
-            var->size |= *var->data++ << 8;
-            var->size *= 9;
+            var->size = 2 + (var->data[0] | var->data[1] << 8) * 9;
             break;
         case CALC_VAR_TYPE_MATRIX:
-            var->size  = *var->data++;
-            var->size *= *var->data++;
-            var->size *= 9;
+            var->size = 2 + (var->data[0] * var->data[1]) * 9;
             break;
         case CALC_VAR_TYPE_CPLX:
-            var->size  = 18;
+            var->size = 18;
             break;
         case CALC_VAR_TYPE_CPLX_LIST:
-            var->size  = *var->data++;
-            var->size |= *var->data++ << 8;
-            var->size *= 18;
+            var->size = 2 + (var->data[0] | var->data[1] << 8) * 18;
             break;
         default:
-            var->size  = *var->data++;
-            var->size |= *var->data++ << 8;
+            var->size = 2 + (var->data[0] | var->data[1] << 8);
             break;
     }
-    for (i = var->namelen; i; i--) {
-        *name++ = *var->vat--;
+    for (i = 0; i < var->namelen; i++) {
+        var->name[i] = *var->vat--;
     }
+    memset(var->name + var->namelen, 0, sizeof var->name - var->namelen);
     return true;
+}
+
+bool vat_search_find(const calc_var_t *target, calc_var_t *result) {
+    vat_search_init(result);
+    while (vat_search_next(result)) {
+        if (result->type == target->type &&
+            result->namelen == target->namelen &&
+            !memcmp(result->name, target->name, target->namelen)) {
+            return true;
+        }
+    }
+    return false;
 }

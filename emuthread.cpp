@@ -84,8 +84,8 @@ void EmuThread::setSendState(bool state) {
     emu_is_sending = state;
 }
 
-void EmuThread::setRecieveState(bool state) {
-    enter_recieve_state = state;
+void EmuThread::setReceiveState(bool state) {
+    enter_receive_state = state;
     emu_is_recieving = state;
 }
 
@@ -98,8 +98,8 @@ void EmuThread::doStuff(bool wait_for) {
         enterVariableLink();
     }
 
-    if (enter_recieve_state) {
-        enter_recieve_state = false;
+    if (enter_receive_state) {
+        enter_receive_state = false;
         enterVariableLink();
     }
 

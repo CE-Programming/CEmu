@@ -47,13 +47,15 @@ extern const char *calc_var_type_names[0x20];
 const char *calc_var_name_to_utf8(uint8_t name[8]);
 
 typedef struct calc_var {
-    uint8_t *vat, type1, type2, version, namelen, name[8], *data;
+    uint8_t *vat, type1, type2, version, namelen, name[9], *data;
     calc_var_type_t type;
     uint16_t size;
+    bool archived;
 } calc_var_t;
 
 void vat_search_init(calc_var_t *);
 bool vat_search_next(calc_var_t *);
+bool vat_search_find(const calc_var_t *, calc_var_t *);
 
 #ifdef __cplusplus
 }
