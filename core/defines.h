@@ -12,12 +12,6 @@
     #define CEMU_CONSTEXPR constexpr
 #endif
 
-#ifdef _MSC_VER
-    #define CEMU_INLINE __inline
-#else
-    #define CEMU_INLINE inline
-#endif
-
 #define GETMASK(index, size) (((1U << (size)) - 1) << (index))
 #define READFROM(data, index, size) (((data) & GETMASK((index), (size))) >> (index))
 #define WRITE(data, index, size, value) ((data) = ((data) & (~GETMASK((index), (size)))) | ((uint32_t)(value) << (index)))
