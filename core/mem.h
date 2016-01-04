@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include "apb.h"
+#include "debug/debug.h"
 
 enum flash_commands {
     NO_COMMAND,
@@ -45,12 +46,6 @@ typedef struct {
 typedef struct {
     uint8_t *block;       /* RAM mem */
 } ram_chip_t;
-
-typedef struct {
-    uint8_t *flash;       /* For debugging */
-    uint8_t *ram;
-    uint8_t *ports;
-} debug_state_t;
 
 typedef struct mem_state {
     flash_chip_t flash;

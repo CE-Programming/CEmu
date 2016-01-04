@@ -42,6 +42,13 @@ RomSelection::RomSelection(QWidget *p) : QDialog(p), ui(new Ui::RomSelection) {
     setWindowFlags(Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint );
 
     connect(ui->rompath, SIGNAL(textChanged(QString)), this, SLOT(checkInput(QString)));
+
+#define STRINGIFYMAGIC(x) #x
+#define STRINGIFY(x) STRINGIFYMAGIC(x)
+    ui->versionLabel->setText(ui->versionLabel->text()+QStringLiteral(STRINGIFY(CEMU_VERSION)));
+#undef STRIGIFY
+#undef STRIGIFYMAGIC
+
     ui->stackedWidget->setCurrentIndex(0);
     ui->progressBar->setMaximum(num_rom_segments);
 }

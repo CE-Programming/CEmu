@@ -60,6 +60,10 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->portRequest, &QLineEdit::returnPressed, this, &MainWindow::pollPort);
     connect(ui->buttonDeletePort, &QPushButton::clicked, this, &MainWindow::deletePort);
     connect(ui->portView, &QTableWidget::itemChanged, this, &MainWindow::portMonitorCheckboxToggled);
+    connect(ui->buttonAddBreakpoint, &QPushButton::clicked, this, &MainWindow::addBreakpoint);
+    connect(ui->breakRequest, &QLineEdit::returnPressed, this, &MainWindow::addBreakpoint);
+    connect(ui->buttonRemoveBreakpoint, &QPushButton::clicked, this, &MainWindow::deleteBreakpoint);
+    connect(ui->breakpointView, &QTableWidget::itemChanged, this, &MainWindow::breakpointCheckboxToggled);
 
     // Linking
     connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::selectFiles);
@@ -324,8 +328,7 @@ void MainWindow::selectFiles() {
     ui->sendBar->setMaximum(fileNames.size());
 
     for (int i = 0; i < fileNames.size(); i++) {
-        // Send the variable to the emulator
-        if(!sendVariableLink(fileNames.at(i).toStdString().c_str())) {
+        if(!sendVariableLink(fileNames.at(i).toUtf8())) {
             QMessageBox::warning(this, tr("Failed Transfer"), tr("A failure occured during transfer of: ")+fileNames.at(i));
         }
         ui->sendBar->setValue(ui->sendBar->value()+1);
@@ -469,7 +472,7 @@ void MainWindow::changeDebuggerState() {
     QPixmap pix;
     QIcon icon;
 
-    if(emu.rom.empty()) {
+    if (emu.rom.empty()) {
         return;
     }
 
@@ -481,7 +484,10 @@ void MainWindow::changeDebuggerState() {
     } else {
         ui->buttonRun->setText("Stop");
         pix.load(":/icons/resources/icons/stop.png");
+        ui->portChangeView->clear();
+        ui->breakChangeView->clear();
     }
+    setReceiveState(false);
     icon.addPixmap(pix);
     ui->buttonRun->setIcon(icon);
     ui->buttonRun->setIconSize(pix.size());
@@ -496,6 +502,16 @@ void MainWindow::changeDebuggerState() {
     ui->groupDisplay->setEnabled( debugger_on );
     ui->groupRegisters->setEnabled( debugger_on );
     ui->groupInterrupts->setEnabled( debugger_on );
+
+    ui->buttonSend->setEnabled( !debugger_on );
+    ui->buttonRefreshList->setEnabled( !debugger_on );
+    ui->emuVarView->setEnabled( !debugger_on );
+    ui->buttonReceiveFiles->setEnabled( !debugger_on && in_recieving_mode);
+
+    if (in_recieving_mode && !debugger_on) {
+        in_recieving_mode = false;
+        refreshVariableList();
+    }
 
     updateDebuggerChanges();
 
@@ -525,6 +541,8 @@ void MainWindow::populateDebugWindow() {
     ui->rregView->setText(int2hex(cpu.registers.R,2));
     ui->imregView->setText(int2hex(cpu.IM,1));
 
+    ui->freqView->setText(QString::number(sched.clock_rates[CLOCK_CPU]));
+
     ui->check3->setChecked(cpu.registers.flags._3);
     ui->check5->setChecked(cpu.registers.flags._5);
     ui->checkZ->setChecked(cpu.registers.flags.Z);
@@ -535,6 +553,8 @@ void MainWindow::populateDebugWindow() {
     ui->checkS->setChecked(cpu.registers.flags.S);
 
     ui->checkPowered->setChecked(lcd.control & 0x800);
+    ui->checkADL->setChecked(cpu.ADL);
+    ui->checkMADL->setChecked(cpu.MADL);
     ui->checkHalted->setChecked(cpu.halted);
     ui->checkIEF1->setChecked(cpu.IEF1);
     ui->checkIEF2->setChecked(cpu.IEF2);
@@ -635,17 +655,110 @@ void MainWindow::deletePort() {
     ui->portView->removeRow(currentRow);
 }
 
+void MainWindow::breakpointCheckboxToggled(QTableWidgetItem * item) {
+    auto col = item->column();
+    auto row = item->row();
+    uint8_t value = DBG_NO_HANDLE;
+
+    uint32_t address = (uint32_t)ui->breakpointView->item(row, 0)->text().toInt(nullptr,16);
+
+    // Handle R_Break, W_Break, and E_Break
+    if (col > 0)
+    {
+        if (col == 1) { // Break on read
+            value = DBG_READ_BREAKPOINT;
+        }
+        if (col == 2) { // Break on write
+            value = DBG_WRITE_BREAKPOINT;
+        }
+        if (col == 3) { // Break on execution
+            value = DBG_EXEC_BREAKPOINT;
+        }
+        if (item->checkState() != Qt::Checked) {
+            mem.debug.block[address] &= ~value;
+        } else {
+            mem.debug.block[address] |= value;
+        }
+    }
+}
+
+void MainWindow::addBreakpoint() {
+    uint32_t address;
+
+    const int currentRow = ui->breakpointView->rowCount();
+
+    if (ui->breakRequest->text().isEmpty()) {
+        return;
+    }
+
+    std::string s = ui->breakRequest->text().toUpper().toStdString();
+    if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos) {
+        return;
+    }
+
+    address = (uint32_t)hex2int(QString::fromStdString(s));
+
+    QString address_string = int2hex(address,6);
+
+    /* return if address is already set */
+    for (int i=0; i<currentRow; ++i) {
+        if (ui->breakpointView->item(i, 0)->text() == address_string) {
+            return;
+        }
+    }
+
+    ui->breakpointView->setRowCount(currentRow + 1);
+
+    QTableWidgetItem *iaddress = new QTableWidgetItem(address_string);
+    QTableWidgetItem *rBreak = new QTableWidgetItem();
+    QTableWidgetItem *wBreak = new QTableWidgetItem();
+    QTableWidgetItem *eBreak = new QTableWidgetItem();
+
+    rBreak->setCheckState(Qt::Unchecked);
+    wBreak->setCheckState(Qt::Unchecked);
+    eBreak->setCheckState(Qt::Unchecked);
+
+    ui->breakpointView->setItem(currentRow, 0, iaddress);
+    ui->breakpointView->setItem(currentRow, 1, rBreak);
+    ui->breakpointView->setItem(currentRow, 2, wBreak);
+    ui->breakpointView->setItem(currentRow, 3, eBreak);
+
+    ui->breakRequest->clear();
+}
+
+void MainWindow::deleteBreakpoint() {
+    if(!ui->breakpointView->rowCount()) {
+        return;
+    }
+
+    const int currentRow = ui->breakpointView->currentRow();
+
+    uint32_t address = (uint32_t)ui->breakpointView->item(currentRow, 0)->text().toInt(nullptr,16);
+    mem.debug.block[address] = DBG_NO_HANDLE;
+
+    ui->breakpointView->removeRow(currentRow);
+}
+
 void MainWindow::processDebugCommand(int reason, uint32_t input) {
+    int row = 0;
 
-    // We hit a port read; raise the correct entry in the port monitor table
-    if (reason == DBG_PORT_READ_BREAKPOINT || reason == DBG_PORT_WRITE_BREAKPOINT) {
-        int row = 0;
+    // We hit a normal breakpoint; raise the correct entry in the port monitor table
+    if (reason == HIT_READ_BREAKPOINT || reason == HIT_WRITE_BREAKPOINT || reason == HIT_EXEC_BREAKPOINT) {
+        ui->tabDebugging->setCurrentIndex(3);
+        // find the correct entry
+        while( (uint32_t)ui->breakpointView->item(row++, 0)->text().toInt(nullptr,16) != input );
+        row--;
+        ui->breakChangeView->setText("Address "+ui->breakpointView->item(row, 0)->text()+" "+((reason == HIT_READ_BREAKPOINT) ? "Read" : (reason == HIT_WRITE_BREAKPOINT) ? "Write" : "Executed"));
+        ui->breakpointView->selectRow(row);
+    }
 
+    // We hit a port read or write; raise the correct entry in the port monitor table
+    if (reason == HIT_PORT_READ_BREAKPOINT || reason == HIT_PORT_WRITE_BREAKPOINT) {
         ui->tabDebugging->setCurrentIndex(1);
         // find the correct entry
         while( (uint32_t)ui->portView->item(row++, 0)->text().toInt(nullptr,16) != input );
         row--;
-        ui->portChangeView->setText("Port "+ui->portView->item(row, 0)->text()+" "+((reason == DBG_PORT_READ_BREAKPOINT) ? "Read" : "Write"));
+        ui->portChangeView->setText("Port "+ui->portView->item(row, 0)->text()+" "+((reason == HIT_PORT_READ_BREAKPOINT) ? "Read" : "Write"));
         ui->portView->selectRow(row);
     }
 }

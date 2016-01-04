@@ -71,7 +71,7 @@ void error(const char *fmt, ...) {
     gui_console_vprintf(fmt, va);
     gui_console_printf("\n");
     va_end(va);
-    //debugger(DBG_EXCEPTION, 0);
+    debugger(DBG_EXCEPTION, 0);
     cpu_events |= EVENT_RESET;
 }
 
@@ -262,9 +262,7 @@ bool emu_start() {
 
 
 void emu_cleanup(void) {
-    if(mem.ram.block) { free(mem.ram.block); mem.ram.block = NULL; }
-    if(mem.flash.block) { free(mem.flash.block); mem.flash.block = NULL; }
-    if(mem.debug.ports) { free(mem.debug.ports); mem.debug.ports = NULL; }
+    asic_free();
 }
 
 static void emu_reset() {

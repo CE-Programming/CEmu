@@ -35,8 +35,10 @@ void mem_init(void) {
     mem.flash.sector[9].locked = true;
     mem.flash.locked = true;
 
-    mem.ram.block = (uint8_t*)calloc(ram_size, sizeof(uint8_t));  /* Allocate RAM */
-    mem.debug.ports = (uint8_t*)calloc(0xFFFF, sizeof(uint8_t));  /* For port monitor */
+    mem.ram.block = (uint8_t*)calloc(ram_size, sizeof(uint8_t));      /* Allocate RAM */
+
+    mem.debug.block = (uint8_t*)calloc(0xFFFFFF, sizeof(uint8_t));    /* Allocate Debug memory */
+    mem.debug.ports = (uint8_t*)calloc(0xFFFF, sizeof(uint8_t));      /* Allocate Debug Port Monitor */
 
     mem.flash.mapped = false;
     mem.flash.write_index = 0;
@@ -52,6 +54,14 @@ void mem_free(void) {
     if (mem.flash.block) {
         free(mem.flash.block);
         mem.flash.block = NULL;
+    }
+    if (mem.debug.block) {
+        free(mem.debug.block);
+        mem.debug.block = NULL;
+    }
+    if (mem.debug.ports) {
+        free(mem.debug.ports);
+        mem.debug.ports = NULL;
     }
     gui_console_printf("Freed memory...\n");
 }
@@ -252,58 +262,70 @@ static void flash_write_handler(uint32_t address, uint8_t byte) {
 /* returns wait cycles */
 uint8_t memory_read_byte(const uint32_t address)
 {
-    uint32_t addr;
-    addr = address & 0xFFFFFF;
+    uint8_t value = 0;
+    uint32_t addr = address & 0xFFFFFF;
 
     switch((addr >> 20) & 0xF) {
         // FLASH
         case 0x0: case 0x1: case 0x2: case 0x3:
             cpu.cycles += 5;
-            return flash_read_handler(address);
+            value = flash_read_handler(address);
+            break;
 
         // MAYBE FLASH
         case 0x4: case 0x5: case 0x6: case 0x7:
             addr -= 0x400000;
             if (mem.flash.mapped == true) {
                 cpu.cycles += 5;
-                return flash_read_handler(address);
+                value = flash_read_handler(address);
             }
+            break;
 
         // UNMAPPED
         case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
             cpu.cycles += 257;
-            return 0;
+            break;
 
         // RAM
         case 0xD:
             addr -= 0xD00000;
             if (addr < 0x65800) {
                 cpu.cycles += 3;
-                return mem.ram.block[addr];
+                value = mem.ram.block[addr];
+                break;
             }
         // UNMAPPED
             addr -= 0x65800;
             if (addr < 0x1A800) {
                 cpu.cycles += 3;
-                return 0;
+                break;
             }
         // MIRRORED
-            return memory_read_byte(addr - 0x80000);
+            value = memory_read_byte(addr - 0x80000);
+            break;
 
         case 0xE: case 0xF:
             cpu.cycles += 2;
-            return port_read_byte(mmio_range(addr)<<12 | addr_range(addr));          // read byte from mmio
+            value = port_read_byte(mmio_range(addr)<<12 | addr_range(addr));          // read byte from mmio
+            break;
 
         default:
             cpu.cycles += 1;
             break;
     }
-    return 0;
+
+    if (mem.debug.block[addr] & DBG_READ_BREAKPOINT) {
+        debugger(HIT_READ_BREAKPOINT, addr);
+    }
+    if ((mem.debug.block[addr] & DBG_EXEC_BREAKPOINT) && (cpu.registers.PC == ((addr+1)&0xFFFFFF))) {
+        debugger(HIT_EXEC_BREAKPOINT, addr);
+    }
+
+    return value;
 }
 
 void memory_write_byte(const uint32_t address, const uint8_t byte) {
-    uint32_t addr;
-    addr = address & 0xFFFFFF;
+    uint32_t addr = address & 0xFFFFFF;
 
     switch((addr >> 20) & 0xF) {
         // FLASH
@@ -312,7 +334,7 @@ void memory_write_byte(const uint32_t address, const uint8_t byte) {
                 flash_write_handler(addr, byte);
             }
             cpu.cycles += 5;
-            return;
+            break;
 
         // MAYBE FLASH
         case 0x4: case 0x5: case 0x6: case 0x7:
@@ -321,16 +343,16 @@ void memory_write_byte(const uint32_t address, const uint8_t byte) {
                 if (mem.flash.mapped == true) {
                     cpu.cycles += 5;
                     flash_write_handler(addr, byte);
-                    return;
+                    break;
                 }
             }
             cpu.cycles += 257;
-            return;
+            break;
 
         // UNMAPPED
         case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
             cpu.cycles += 5;
-            return;
+            break;
 
         // RAM
         case 0xD:
@@ -338,27 +360,32 @@ void memory_write_byte(const uint32_t address, const uint8_t byte) {
             if (addr < 0x65800) {
                 cpu.cycles += 2;
                 mem.ram.block[addr] = byte;
-                return;
+                break;
             }
             // UNMAPPED
             addr -=  0x65800;
             if (addr < 0x1A800) {
                 cpu.cycles += 1;
-                return;
+                break;
             }
             // MIRRORED
             memory_write_byte(addr - 0x80000, byte);
-            return;
+            break;
 
         // MMIO <-> Advanced Perphrial Bus
         case 0xE: case 0xF:
             cpu.cycles += 2;
             port_write_byte(mmio_range(addr)<<12 | addr_range(addr), byte);         // write byte to the mmio port
-            return;
+            break;
 
         default:
             cpu.cycles += 1;
             break;
     }
+
+    if (mem.debug.block[addr] & DBG_WRITE_BREAKPOINT) {
+        debugger(HIT_WRITE_BREAKPOINT, addr);
+    }
+
     return;
 }

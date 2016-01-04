@@ -33,13 +33,13 @@ public slots:
     void screenshot(void);
     void recordGIF();
     void showAbout(void);
-    void setUIMode(bool docks_enabled);
+    void setUIMode(bool);
 
     // Console
-    void consoleStr(QString str);
+    void consoleStr(QString);
 
 signals:
-    void debuggerChangedState(bool running);
+    void debuggerChangedState(bool);
     void triggerEmuSendState();
 
     void setSendState(bool);
@@ -52,11 +52,15 @@ private:
     void updateDebuggerChanges();
     void populateDebugWindow();
     void changeDebuggerState();
-    void processDebugCommand(int reason, uint32_t input);
-    void portMonitorCheckboxToggled(QTableWidgetItem * item);
+    void processDebugCommand(int, uint32_t);
+    void portMonitorCheckboxToggled(QTableWidgetItem *);
     void pollPort();
     void deletePort();
-    void updatePortData(int currentRow);
+    void updatePortData(int);
+
+    void deleteBreakpoint();
+    void addBreakpoint();
+    void breakpointCheckboxToggled(QTableWidgetItem *);
 
     // Console
     void clearConsole(void);

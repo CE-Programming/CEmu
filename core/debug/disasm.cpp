@@ -60,7 +60,7 @@ static void disasm_rot(int y, int z) {
             disasm.instruction = "srl ";
             break;
         default:
-            abort();
+            break;
     }
     // TODO: Add value[z]
 }
