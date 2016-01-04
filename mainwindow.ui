@@ -323,7 +323,7 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="0">
+           <item row="0" column="1">
             <widget class="QProgressBar" name="sendBar">
              <property name="maximum">
               <number>1</number>
@@ -404,7 +404,7 @@
               <number>40</number>
              </attribute>
              <attribute name="horizontalHeaderStretchLastSection">
-              <bool>true</bool>
+              <bool>false</bool>
              </attribute>
              <attribute name="verticalHeaderVisible">
               <bool>false</bool>
@@ -498,7 +498,7 @@
         <item>
          <widget class="QGroupBox" name="gifoptionsgroup">
           <property name="title">
-           <string>GIF Options</string>
+           <string>Animated GIF Options</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_2">
            <item row="1" column="2">
@@ -637,7 +637,14 @@
            <string>Display</string>
           </property>
           <layout class="QGridLayout" name="gridLayout">
-           <item row="2" column="1">
+           <item row="0" column="1">
+            <widget class="QLabel" name="refreshLabel">
+             <property name="text">
+              <string>60 FPS</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
             <widget class="QSlider" name="refreshSlider">
              <property name="toolTip">
               <string>Change this if your CPU is overloaded.</string>
@@ -668,17 +675,10 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="refreshLabel">
-             <property name="text">
-              <string>60 FPS</string>
-             </property>
-            </widget>
-           </item>
            <item row="0" column="0">
             <widget class="QLabel" name="label_2">
              <property name="text">
-              <string>Refresh Rate:</string>
+              <string>Refresh rate:</string>
              </property>
             </widget>
            </item>
@@ -704,7 +704,7 @@
            <item row="0" column="0" alignment="Qt::AlignRight">
             <widget class="QLabel" name="label">
              <property name="text">
-              <string>ROM Location:</string>
+              <string>ROM image file:</string>
              </property>
             </widget>
            </item>
@@ -723,7 +723,7 @@
               </size>
              </property>
              <property name="text">
-              <string>Run setup...</string>
+              <string>Setup wizard...</string>
              </property>
             </widget>
            </item>
@@ -938,7 +938,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>1</number>
           </property>
           <property name="tabsClosable">
            <bool>false</bool>
