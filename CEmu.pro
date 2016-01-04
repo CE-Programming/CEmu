@@ -12,7 +12,7 @@ TEMPLATE = app
 TRANSLATIONS += i18n/fr_FR.ts
 
 CONFIG += c++11
-!win32 {
+!win32-msvc* {
     GLOBAL_FLAGS = -W -Wall -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -fno-strict-overflow -Winit-self -ffunction-sections -fdata-sections
 
     if (macx | linux) {
