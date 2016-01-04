@@ -104,6 +104,9 @@ void asic_init(void) {
 }
 
 void asic_free(void) {
+    mem_free();
+    asic.mem = NULL;
+    asic.cpu = NULL;
     gui_console_printf("Freed ASIC...\n");
 }
 

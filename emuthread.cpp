@@ -25,6 +25,7 @@
 #include "mainwindow.h"
 
 #include "core/emu.h"
+#include "core/link.h"
 #include "core/debug/debug.h"
 
 EmuThread *emu_thread = nullptr;
@@ -78,9 +79,29 @@ void EmuThread::setDebugMode(bool state) {
     }
 }
 
+void EmuThread::setSendState(bool state) {
+    enter_send_state = state;
+    emu_is_sending = state;
+}
+
+void EmuThread::setReceiveState(bool state) {
+    enter_receive_state = state;
+    emu_is_recieving = state;
+}
+
 //Called occasionally, only way to do something in the same thread the emulator runs in.
 void EmuThread::doStuff(bool wait_for) {
     (void)wait_for;
+
+    if (enter_send_state) {
+        enter_send_state = false;
+        enterVariableLink();
+    }
+
+    if (enter_receive_state) {
+        enter_receive_state = false;
+        enterVariableLink();
+    }
 
     if (enter_debugger) {
         enter_debugger = false;
@@ -114,6 +135,7 @@ bool EmuThread::stop() {
 
     exiting = true;
     in_debugger = false;
+    emu_is_sending = false;
 
     /* Cause the CPU core to leave the loop and check for events */
     cycle_count_delta = 0;

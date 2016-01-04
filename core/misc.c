@@ -129,12 +129,32 @@ eZ80portrange_t init_watchdog(void) {
 
 /* Read from the 0x9XXX range of ports */
 static uint8_t protected_read(const uint16_t pio) {
-    return protect.ports[pio & 0xFF];
+
+    uint8_t value = 0;
+
+    switch (pio) {
+        case 0xB00:
+            value = protect.led_state;
+            break;
+        default:
+            value = protect.unknown_ports[pio & 0xFF];
+            break;
+    }
+    return value;
 }
 
 /* Write to the 0x9XXX range of ports */
 static void protected_write(const uint16_t pio, const uint8_t byte) {
-    protect.ports[pio & 0xFF] = byte;
+
+    switch (pio) {
+        case 0xB00:
+            protect.led_state = byte;
+            break;
+        default:
+            protect.unknown_ports[pio & 0xFF] = byte;
+            break;
+    }
+
     return;
 }
 

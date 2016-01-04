@@ -9,18 +9,31 @@ extern "C" {
 
 extern volatile bool in_debugger;
 
-#define DBG_USER                  0
-#define DBG_EXCEPTION             1
-#define DBG_EXEC_BREAKPOINT       2
-#define DBG_READ_BREAKPOINT       3
-#define DBG_WRITE_BREAKPOINT      4
-#define DBG_PORT_WRITE_BREAKPOINT 5
-#define DBG_PORT_READ_BREAKPOINT  6
+enum {
+        DBG_USER,
+        DBG_EXCEPTION,
+        HIT_EXEC_BREAKPOINT,
+        HIT_READ_BREAKPOINT,
+        HIT_WRITE_BREAKPOINT,
+        HIT_PORT_WRITE_BREAKPOINT,
+        HIT_PORT_READ_BREAKPOINT
+};
 
-#define DBG_NO_HANDLE   0
-#define DBG_PORT_READ   1
-#define DBG_PORT_WRITE  2
-#define DBG_PORT_FREEZE 4
+/* For Port Monitoring */
+#define DBG_NO_HANDLE             0
+#define DBG_PORT_READ             1
+#define DBG_PORT_WRITE            2
+#define DBG_PORT_FREEZE           4
+
+/* For Memory Brakpoints */
+#define DBG_READ_BREAKPOINT       1
+#define DBG_WRITE_BREAKPOINT      2
+#define DBG_EXEC_BREAKPOINT       4
+
+typedef struct {        /* For debugging */
+    uint8_t *block;
+    uint8_t *ports;
+} debug_state_t;
 
 uint8_t debug_port_read_byte(const uint32_t addr);
 void debugger(int reason, uint32_t addr);

@@ -42,6 +42,13 @@ RomSelection::RomSelection(QWidget *p) : QDialog(p), ui(new Ui::RomSelection) {
     setWindowFlags(Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint );
 
     connect(ui->rompath, SIGNAL(textChanged(QString)), this, SLOT(checkInput(QString)));
+
+#define STRINGIFYMAGIC(x) #x
+#define STRINGIFY(x) STRINGIFYMAGIC(x)
+    ui->versionLabel->setText(ui->versionLabel->text()+QStringLiteral(STRINGIFY(CEMU_VERSION)));
+#undef STRIGIFY
+#undef STRIGIFYMAGIC
+
     ui->stackedWidget->setCurrentIndex(0);
     ui->progressBar->setMaximum(num_rom_segments);
 }
@@ -119,7 +126,6 @@ void RomSelection::on_mergeButton_clicked() {
     QFileDialog dialog(this);
     QStringList fileNames;
 
-    /* allocate 65Kb for each chunck */
     uint8_t tmp_buf[10];
     int tmpint;
 
@@ -132,9 +138,12 @@ void RomSelection::on_mergeButton_clicked() {
         return;
     }
 
+#if (defined(_MSC_VER) && _MSC_VER < 1900)
+    /* No support of non-static data member initializers... */
     for (int i = 0; i < 20; i++) {
         segment_filled[i] = false;
     }
+#endif
 
     /* As of right now, there are only 11 data segements that need to be loaded. */
     /* Luckily if more are needed, this code can handle it. */
@@ -177,7 +186,6 @@ void RomSelection::on_mergeButton_clicked() {
     }
     if (ui->progressBar->value() == num_rom_segments) {
         ui->hiddenLabel_1->setVisible(true);
-        ui->hiddenLabel_2->setVisible(true);
         ui->romsaveBrowse->setVisible(true);
     }
 }
@@ -202,7 +210,6 @@ void RomSelection::on_nextButton_2_clicked() {
     rom_array = (uint8_t*)malloc(rom_size);
     memset(rom_array, 0xFF, rom_size);
     ui->hiddenLabel_1->setVisible(false);
-    ui->hiddenLabel_2->setVisible(false);
     ui->romsaveBrowse->setVisible(false);
     ui->stackedWidget->setCurrentIndex(ui->stackedWidget->currentIndex()+1);
 }

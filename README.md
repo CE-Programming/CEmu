@@ -1,4 +1,4 @@
-# CEmu
+# CEmu [![Build Status](https://travis-ci.org/MateoConLechuga/CEmu.svg)](https://travis-ci.org/MateoConLechuga/CEmu)
 An open-source third-party TI-84 Plus CE / TI-83 Premium CE calculator emulator.  
 With a core made in C and GUI in C++ with Qt, it works natively on many platforms. The core is even compilable with Emscripten, so as to be able to make a web-based version.
 
@@ -10,7 +10,7 @@ CEmu is licensed under the [GPLv3](LICENSE).
 _Acknowledgements_: Some CEmu parts are [inspired] from the [z80e](https://github.com/KnightOS/z80e) (MIT license [here](https://github.com/KnightOS/z80e/blob/master/LICENSE)) and [Firebird](https://github.com/nspire-emus/firebird) (GPLv3 license [here](https://github.com/nspire-emus/firebird/blob/master/LICENSE)) projects.
 
 ## Downloads
-No binaries yet! When available, they'll be here, though: https://github.com/MateoConLechuga/CEmu/releases
+No binaries yet as the code keeps changing these days! When available, they'll be here, though: https://github.com/MateoConLechuga/CEmu/releases
 
 ## How to build
 After downloading the source (you can clone the repo or just get the zip):
