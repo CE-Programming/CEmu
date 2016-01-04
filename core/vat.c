@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 
-const char *calc_var_type_names[0x20] = {
+const char *calc_var_type_names[0x40] = {
     "Real",
     "Real List",
     "Matrix",
@@ -36,7 +36,39 @@ const char *calc_var_type_names[0x20] = {
     "Real Radical",
     "Complex Radical",
     "Complex Pi",
+    "Complex Pi Fraction",
     "Real Pi",
+    "Real Pi Fraction",
+    "Unknown #2",
+    "Operating System",
+    "Flash Application",
+    "Certificate",
+    "Unknown #3",
+    "Certificate Memory",
+    "Unknown #4",
+    "Clock",
+    "Unknown #5",
+    "Unknown #6",
+    "Unknown #7",
+    "Unknown #8",
+    "Unknown #9",
+    "Unknown #10",
+    "Unknown #11",
+    "Unknown #12",
+    "Unknown #13",
+    "Unknown #14",
+    "Unknown #15",
+    "Unknown #16",
+    "Unknown #17",
+    "Unknown #18",
+    "Unknown #19",
+    "Unknown #20",
+    "Unknown #21",
+    "Unknown #22",
+    "Unknown #23",
+    "Unknown #24",
+    "Flash License",
+    "Unknown #25",
 };
 
 const char *calc_var_name_to_utf8(uint8_t name[8]) {
@@ -178,7 +210,7 @@ bool vat_search_next(calc_var_t *var) {
     if (!var->data) {
         return false;
     }
-    switch (var->type = var->type1 & 0x1F) {
+    switch (var->type = var->type1 & 0x3F) {
         case CALC_VAR_TYPE_REAL:
             var->size = 9;
             break;
