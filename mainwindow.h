@@ -8,6 +8,7 @@
 
 #include "romselection.h"
 #include "emuthread.h"
+#include "core/debug/debug.h"
 
 namespace Ui {
     class MainWindow;
@@ -44,6 +45,7 @@ private:
     void updateDebuggerChanges();
     void populateDebugWindow();
     void changeDebuggerState();
+    void processDebugCommand(int reason, uint32_t input);
     void portMonitorCheckboxToggled(QTableWidgetItem * item);
     void pollPort();
     void deletePort();

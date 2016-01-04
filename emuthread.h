@@ -4,6 +4,7 @@
 #include <QtCore/QThread>
 
 #include "core/asic.h"
+#include "core/debug/debug.h"
 
 class EmuThread : public QThread
 {
@@ -19,6 +20,7 @@ public:
 signals:
     // Debugger
     void debuggerEntered();
+    void sendDebugCommand(int reason, uint32_t addr);
 
     void consoleStr(QString str);
     void exited(int retcode);

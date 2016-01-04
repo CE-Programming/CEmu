@@ -242,7 +242,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>4</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -869,6 +869,13 @@
                 </property>
                 <property name="text">
                  <string>Delete</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="portChangeView">
+                <property name="text">
+                 <string/>
                 </property>
                </widget>
               </item>
@@ -3459,7 +3466,7 @@
      <x>0</x>
      <y>0</y>
      <width>1080</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="sizePolicy">

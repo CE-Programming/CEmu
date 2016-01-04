@@ -52,6 +52,10 @@ void gui_perror(const char *msg) {
     gui_console_printf("%s: %s\n", msg, strerror(errno));
 }
 
+void gui_debugger_send_command(int reason, uint32_t addr) {
+    emu_thread->sendDebugCommand(reason, addr);
+}
+
 void throttle_timer_wait() {
     emu_thread->throttleTimerWait();
 }

@@ -54,6 +54,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     // Debugger
     connect(this, &MainWindow::debuggerChangedState, &emu, &EmuThread::setDebugMode);
     connect(&emu, &EmuThread::debuggerEntered, this, &MainWindow::raiseDebugger);
+    connect(&emu, &EmuThread::sendDebugCommand, this, &MainWindow::processDebugCommand);
     connect(ui->buttonAddPort, &QPushButton::clicked, this, &MainWindow::pollPort);
     connect(ui->portRequest, &QLineEdit::returnPressed, this, &MainWindow::pollPort);
     connect(ui->buttonDeletePort, &QPushButton::clicked, this, &MainWindow::deletePort);
@@ -82,6 +83,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     // Set up monospace fonts
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     ui->console->setFont(monospace);
+
+    qRegisterMetaType<uint32_t>("uint32_t");
 
     setUIMode(true);
 
@@ -521,6 +524,21 @@ void MainWindow::deletePort() {
     mem.debug.ports[port] = DBG_NO_HANDLE;
 
     ui->portView->removeRow(currentRow);
+}
+
+void MainWindow::processDebugCommand(int reason, uint32_t input) {
+
+    // We hit a port read; raise the correct entry in the port monitor table
+    if (reason == DBG_PORT_READ_BREAKPOINT || reason == DBG_PORT_WRITE_BREAKPOINT) {
+        int row = 0;
+
+        ui->tabDebugging->setCurrentIndex(1);
+        // find the correct entry
+        while( (uint32_t)ui->portView->item(row++, 0)->text().toInt(nullptr,16) != input );
+        row--;
+        ui->portChangeView->setText("Port "+ui->portView->item(row, 0)->text()+" "+((reason == DBG_PORT_READ_BREAKPOINT) ? "Read" : "Write"));
+        ui->portView->selectRow(row);
+    }
 }
 
 void MainWindow::updatePortData(int currentRow) {

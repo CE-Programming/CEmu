@@ -111,6 +111,7 @@ static void cpu_push_word(uint32_t value) {
     cpu_push_byte(value >> 8);
     cpu_push_byte(value);
 }
+
 static uint32_t cpu_pop_word(void) {
     uint32_t value = cpu_pop_byte();
     value |= cpu_pop_byte() << 8;
@@ -120,11 +121,11 @@ static uint32_t cpu_pop_word(void) {
     return value;
 }
 
-__inline static uint8_t cpu_read_in(uint16_t pio) {
+static uint8_t cpu_read_in(uint16_t pio) {
     return port_read_byte(pio);
 }
 
-__inline static void cpu_write_out(uint16_t pio, uint8_t value) {
+static void cpu_write_out(uint16_t pio, uint8_t value) {
     port_write_byte(pio, value);
 }
 

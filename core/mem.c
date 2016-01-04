@@ -292,7 +292,7 @@ uint8_t memory_read_byte(const uint32_t address)
 
         case 0xE: case 0xF:
             cpu.cycles += 2;
-            return port_read_byte(addr);          // read byte from mmio
+            return port_read_byte(mmio_range(addr)<<12 | addr_range(addr));          // read byte from mmio
 
         default:
             cpu.cycles += 1;
@@ -353,7 +353,7 @@ void memory_write_byte(const uint32_t address, const uint8_t byte) {
         // MMIO <-> Advanced Perphrial Bus
         case 0xE: case 0xF:
             cpu.cycles += 2;
-            port_write_byte(addr, byte);         // write byte to the mmio port
+            port_write_byte(mmio_range(addr)<<12 | addr_range(addr), byte);         // write byte to the mmio port
             return;
 
         default:
