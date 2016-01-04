@@ -10,7 +10,8 @@ CEmu is licensed under the [GPLv3](LICENSE).
 _Acknowledgements_: Some CEmu parts are [inspired] from the [z80e](https://github.com/KnightOS/z80e) (MIT license [here](https://github.com/KnightOS/z80e/blob/master/LICENSE)) and [Firebird](https://github.com/nspire-emus/firebird) (GPLv3 license [here](https://github.com/nspire-emus/firebird/blob/master/LICENSE)) projects.
 
 ## Downloads
-No binaries yet as the code keeps changing these days! When available, they'll be here, though: https://github.com/MateoConLechuga/CEmu/releases
+No stable binaries yet as the code keeps changing these days! When available, they'll be here, though: https://github.com/MateoConLechuga/CEmu/releases
+Nightly win32 binaries available here (hosted by pimathbrainiac): http://pimathbrainiac.me/CEmu/
 
 ## How to build
 After downloading the source (you can clone the repo or just get the zip):
