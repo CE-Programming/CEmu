@@ -47,11 +47,12 @@ static const uint8_t pgrm_loader[41] = {
   0xED, 0x53, 0xC6, 0x52, 0xD0, // ld (safe_ram_loc),de
   0x18, 0xFE                    // _sink: jr _sink
 };
+
 void enterVariableLink(void) {
-  /* Wait for the GUI to finish whatever it needs to do */
-  do {
-      emu_sleep();
-  } while(emu_is_sending || emu_is_recieving);
+    /* Wait for the GUI to finish whatever it needs to do */
+    do {
+        emu_sleep();
+    } while(emu_is_sending || emu_is_recieving);
 }
 
 bool listVariablesLink(void) {
@@ -165,10 +166,11 @@ static char header[] = "**TI83F*\x1A\x0A\0File dumped from CEmu " STRINGIFY(CEMU
 #undef STRIGIFY
 #undef STRIGIFYMAGIC
 bool receiveVariableLink(int count, const calc_var_t *vars, const char *file_name) {
-    FILE *file = fopen_utf8(file_name, "w+b");;
+    FILE *file;
     calc_var_t var;
     uint16_t header_size = 13, size = 0, checksum = 0;
     int byte;
+    file = fopen_utf8(file_name, "w+b");;
     if (!file) return false;
     if (fwrite(header, sizeof header - 1, 1, file) != 1) goto w_err;
     if (fseek(file, 0x37, SEEK_SET))                     goto w_err;
