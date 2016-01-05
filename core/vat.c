@@ -85,9 +85,10 @@ const char *calc_var_name_to_utf8(uint8_t name[8]) {
     }
     if (!i) {
         switch (name[0]) {
-            case 0x21:
-            case 0x23:
-            case 0x2E:
+            case '!':
+            case '#':
+            case '.':
+            case '@':
                 *dest++ = name[0];
                 break;
             case 0x3C:

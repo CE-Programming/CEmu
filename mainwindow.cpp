@@ -366,7 +366,7 @@ void MainWindow::refreshVariableList() {
         vat_search_init(&var);
         vars.clear();
         while (vat_search_next(&var)) {
-            if (var.size > 2 && (var.name[0] != '#' && var.name[0] != '!' && var.name[0] != '.')) {
+            if (var.size > 2 && (var.name[0] != '!' && var.name[0] != '#' && var.name[0] != '.' && var.name[0] != '@')) {
                 vars.append(var);
                 currentRow = ui->emuVarView->rowCount();
                 ui->emuVarView->setRowCount(currentRow + 1);
