@@ -569,6 +569,7 @@ void MainWindow::populateDebugWindow() {
     for(int i=0; i<256; i++) {
         drawNextDisassembleLine();
     }
+    ui->disassemblyView->moveCursor(QTextCursor::Start);
 
     for(int i=0; i<ui->portView->rowCount(); ++i) {
         updatePortData(i);
@@ -782,6 +783,12 @@ void MainWindow::updatePortData(int currentRow) {
 void MainWindow::drawNextDisassembleLine() {
     disasm.base_address = disasm.new_address;
     disassembleInstruction();
-    ui->disassemblyView->moveCursor(QTextCursor::End);
-    ui->disassemblyView->insertPlainText(QString::fromStdString(disasm.instruction.data+"\t"+disasm.instruction.opcode+disasm.instruction.mode_suffix+disasm.instruction.arguments+"\n"));
+    QString formattedLine = QString::fromStdString("<pre>"
+                            + disasm.instruction.data + "\t"
+                            + "<font color='darkblue'>" + disasm.instruction.opcode + "</font>"
+                            + disasm.instruction.mode_suffix
+                            + disasm.instruction.arguments
+                            + "</pre>");
+    formattedLine.replace(QRegExp("([\\(\\)])"), "<font color='green'>\\1</font>");
+    ui->disassemblyView->appendHtml(formattedLine);
 }

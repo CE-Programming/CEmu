@@ -78,14 +78,15 @@ void DisasmWidget::lineNumberAreaPaintEvent(QPaintEvent *e)
 
     QTextBlock block = firstVisibleBlock();
     int blockNumber = block.blockNumber();
-    int top = (int) blockBoundingGeometry(block).translated(contentOffset()).top();
+    int top = (int) blockBoundingGeometry(block).translated(contentOffset()).top() - 1;
     int bottom = top + (int) blockBoundingRect(block).height();
+    int width = lineNumberArea->width() - 1;
 
     while (block.isValid() && top <= e->rect().bottom()) {
         if (block.isVisible() && bottom >= e->rect().top()) {
             QString number = QString::number(blockNumber + 1);
             painter.setPen(Qt::black);
-            painter.drawText(0, top, lineNumberArea->width(), fontMetrics().height(), Qt::AlignRight, number);
+            painter.drawText(0, top, width, fontMetrics().height(), Qt::AlignRight, number);
         }
 
         block = block.next();
