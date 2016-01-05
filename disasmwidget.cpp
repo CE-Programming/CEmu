@@ -5,51 +5,42 @@
 #include "core/debug/debug.h"
 #include "core/debug/disasm.h"
 
-DisasmWidget::DisasmWidget(QWidget *p) : QPlainTextEdit(p)
-{
-    lineNumberArea = new LineNumberArea(this);
+DisasmWidget::DisasmWidget(QWidget *p) : QPlainTextEdit(p) {
+    addressArea = new LineNumberArea(this);
 
-    connect(this, SIGNAL(blockCountChanged(int)), this, SLOT(updateLineNumberAreaWidth(int)));
-    connect(this, SIGNAL(updateRequest(QRect,int)), this, SLOT(updateLineNumberArea(QRect,int)));
-    connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(highlightCurrentLine()));
+    connect(this, &QPlainTextEdit::updateRequest, this, &DisasmWidget::updateLineNumberArea);
+    connect(this, &QPlainTextEdit::cursorPositionChanged, this, &DisasmWidget::highlightCurrentLine);
 
-    updateLineNumberAreaWidth(0);
+    updateLineNumberAreaWidth();
     highlightCurrentLine();
 }
 
-int DisasmWidget::lineNumberAreaWidth()
-{
-    int space = 3 + fontMetrics().width(QLatin1Char('9')) * 6;
-
-    return space;
+int DisasmWidget::lineNumberAreaWidth() {
+    return 3 + fontMetrics().width(QLatin1Char('9')) * 6;
 }
 
-void DisasmWidget::updateLineNumberAreaWidth(int /* newBlockCount */)
-{
+void DisasmWidget::updateLineNumberAreaWidth() {
     setViewportMargins(lineNumberAreaWidth(), 0, 0, 0);
 }
 
-void DisasmWidget::updateLineNumberArea(const QRect &recta, int dy)
-{
-    if (dy)
-        lineNumberArea->scroll(0, dy);
-    else
-        lineNumberArea->update(0, recta.y(), lineNumberArea->width(), recta.height());
-
+void DisasmWidget::updateLineNumberArea(const QRect &recta, int dy) {
+    if (dy) {
+        addressArea->scroll(0, dy);
+    } else {
+        addressArea->update(0, recta.y(), addressArea->width(), recta.height());
+    }
     if (recta.contains(viewport()->rect()))
-        updateLineNumberAreaWidth(0);
+        updateLineNumberAreaWidth();
 }
 
-void DisasmWidget::resizeEvent(QResizeEvent *e)
-{
+void DisasmWidget::resizeEvent(QResizeEvent *e) {
     QPlainTextEdit::resizeEvent(e);
 
     QRect cr = contentsRect();
-    lineNumberArea->setGeometry(QRect(cr.left(), cr.top(), lineNumberAreaWidth(), cr.height()));
+    addressArea->setGeometry(QRect(cr.left(), cr.top(), lineNumberAreaWidth(), cr.height()));
 }
 
-void DisasmWidget::highlightCurrentLine()
-{
+void DisasmWidget::highlightCurrentLine() {
     QList<QTextEdit::ExtraSelection> extra;
 
     QTextEdit::ExtraSelection selection;
@@ -65,28 +56,30 @@ void DisasmWidget::highlightCurrentLine()
     setExtraSelections(extra);
 }
 
-void DisasmWidget::lineNumberAreaPaintEvent(QPaintEvent *e)
-{
-    QPainter painter(lineNumberArea);
+void DisasmWidget::lineNumberAreaPaintEvent(QPaintEvent *e) {
+    QPainter painter(addressArea);
     painter.fillRect(e->rect(), Qt::lightGray);
 
     QTextBlock block = firstVisibleBlock();
     int blockNumber = block.blockNumber();
     int blockSize = 0;
     int address_offset;
+
     for(int i=0; i<blockNumber; i++) {
         address_offset = disasm.start_address + blockSize;
         blockSize += mem.debug.block[address_offset]&15;
     }
+
     int top = (int) blockBoundingGeometry(block).translated(contentOffset()).top();
     int bottom = top + (int) blockBoundingRect(block).height();
+    int width_s = addressArea->width() - 1;
 
     while (block.isValid() && top <= e->rect().bottom()) {
         address_offset = disasm.start_address + blockSize;
         if (block.isVisible() && bottom >= e->rect().top()) {
             QString number = QString::number(address_offset, 16).rightJustified(6, '0').toUpper();
             painter.setPen(Qt::black);
-            painter.drawText(0, top, lineNumberArea->width(), fontMetrics().height(), Qt::AlignLeft, number);
+            painter.drawText(0, top, width_s, fontMetrics().height(), Qt::AlignLeft, number);
         }
 
         block = block.next();

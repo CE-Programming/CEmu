@@ -27,12 +27,12 @@ protected:
     void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
 
 private slots:
-    void updateLineNumberAreaWidth(int newBlockCount);
+    void updateLineNumberAreaWidth();
     void highlightCurrentLine();
     void updateLineNumberArea(const QRect &, int);
 
 private:
-    QWidget *lineNumberArea;
+    QWidget *addressArea;
 };
 
 class LineNumberArea : public QWidget
