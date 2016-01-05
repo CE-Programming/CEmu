@@ -6,27 +6,16 @@ disasm_state_t disasm;
 
 static char tmpbuf[20];
 
-static const std::string reg_table[] = {
-    "b",
-    "c",
-    "d",
-    "e",
-    "h",
-    "l",
-    "(hl)",
-    "a",
-};
-
 static const std::string index_h[] = {
     "h",
-    "",
+    "i",
     "ixh",
     "iyh",
 };
 
 static const std::string index_l[] = {
     "l",
-    "",
+    "i",
     "ixl",
     "iyl",
 };
@@ -38,36 +27,15 @@ static const std::string index_table[] = {
     "iy",
 };
 
-static const std::string rp_table[] = {
-    "bc",
-    "de",
-    "hl",
-    "sp",
-};
-
-static const std::string rp2_table[] = {
-    "bc",
-    "de",
-    "hl",
-    "af",
-};
-
-static const std::string rp3_table[] = {
-    "bc",
-    "de",
-    "hl",
-    "af",
-};
-
 static const std::string alu_table[] = {
     "add",
-    "adc",
-    "sub",
-    "sbc",
-    "and",
-    "xor",
-    "or",
-    "cp",
+  "adc",
+  "sub",
+  "sbc",
+  "and",
+  "xor",
+  "or",
+  "cp",
 };
 
 static const std::string rot_table[] = {
@@ -169,6 +137,18 @@ static uint32_t disasm_fetch_word(void) {
     return value;
 }
 
+static std::string disasm_read_index(void) {
+    return index_table[disasm.prefix];
+}
+
+static std::string disasm_index_address(void) {
+    std::string value = disasm_read_index();
+    if (disasm.prefix) {
+        value += strOffset(disasm_fetch_offset());
+    }
+    return value;
+}
+
 static std::string disasm_read_reg(int i) {
     std::string value;
     switch (i) {
@@ -217,7 +197,7 @@ static std::string disasm_read_reg_prefetched(int i, std::string address) {
         case 3: value = "e"; break;
         case 4: value = index_h[disasm.prefix]; break;
         case 5: value = index_l[disasm.prefix]; break;
-        //case 6: value = disasm_read_byte(address); break;
+        case 6: value = "("+address+")"; break;
         case 7: value = "a"; break;
         default: abort();
     }
@@ -232,7 +212,7 @@ static void disasm_write_reg_prefetched(int i, std::string address, std::string 
         case 3: disasm.instruction.arguments = "e,"+value; break;
         case 4: disasm.instruction.arguments = index_h[disasm.prefix]+","+value; break;
         case 5: disasm.instruction.arguments = index_l[disasm.prefix]+","+value; break;
-        //case 6: disasm.instruction.arguments = value; break;
+        case 6: disasm.instruction.arguments = address+value; break;
         case 7: disasm.instruction.arguments = "a,"+value; break;
         default: abort();
     }
@@ -267,15 +247,6 @@ static std::string disasm_read_rp2(int i) {
         return disasm_read_rp(i);
     }
 }
-
-static void disasm_write_rp2(int i, std::string value) {
-    if (i == 3) {
-        disasm.instruction.arguments = "af,"+value;
-    } else {
-        disasm_write_rp(i, value);
-    }
-}
-
 static std::string disasm_read_rp3(int i) {
     std::string value;
     switch (i) {
@@ -286,15 +257,6 @@ static std::string disasm_read_rp3(int i) {
         default: abort();
     }
     return value;
-}
-static void cpu_write_rp3(int i, std::string value) {
-    switch (i) {
-        case 0: disasm.instruction.arguments = "bc,"+value; break;
-        case 1: disasm.instruction.arguments = "de,"+value; break;
-        case 2: disasm.instruction.arguments = "hl,"+value; break;
-        case 3: disasm.instruction.arguments = index_table[disasm.prefix]+","+value; break;
-        default: abort();
-    }
 }
 
 static void disasm_bli(int y, int z) {
@@ -432,6 +394,8 @@ static void disasm_bli(int y, int z) {
 
 void disassembleInstruction(void) {
     std::string tmpstr;
+    std::string old;
+    std::string w;
 
     disasm.new_address = disasm.base_address;
 
@@ -500,7 +464,7 @@ void disassembleInstruction(void) {
                                     break;
                                 }
                                 disasm.instruction.opcode = "ld";
-                                disasm.instruction.arguments = rp_table[context.p]+","+strW(disasm_fetch_word());
+                                disasm.instruction.arguments = disasm_read_rp(context.p)+","+strW(disasm_fetch_word());
                                 break;
                             case 1: // ADD HL,rr
                                 disasm.instruction.opcode = "add";
@@ -522,7 +486,7 @@ void disassembleInstruction(void) {
                                         break;
                                     case 2: // LD (Mmn), HL
                                         disasm.instruction.opcode = "ld";
-                                        disasm.instruction.arguments = strWind(disasm_fetch_word())+",hl";
+                                        disasm.instruction.arguments = strWind(disasm_fetch_word())+","+index_table[disasm.prefix];
                                         break;
                                     case 3: // LD (Mmn), A
                                         disasm.instruction.opcode = "ld";
@@ -542,7 +506,7 @@ void disassembleInstruction(void) {
                                         break;
                                     case 2: // LD HL, (Mmn)
                                         disasm.instruction.opcode = "ld";
-                                        disasm.instruction.arguments = "hl,"+strWind(disasm_fetch_word());
+                                        disasm.instruction.arguments = index_table[disasm.prefix]+","+strWind(disasm_fetch_word());
                                         break;
                                     case 3: // LD A, (Mmn)
                                         disasm.instruction.opcode = "ld";
@@ -566,11 +530,13 @@ void disassembleInstruction(void) {
                         break;
                     case 4: // INC r[y]
                         disasm.instruction.opcode = "inc";
-                        disasm.instruction.arguments = disasm_read_reg(context.y);
+                        w = (context.y == 6) ? disasm_index_address() : "0";
+                        disasm.instruction.arguments = disasm_read_reg_prefetched(context.y, w);
                         break;
                     case 5: // DEC r[y]
                         disasm.instruction.opcode = "dec";
-                        disasm.instruction.arguments = disasm_read_reg(context.y);
+                        w = (context.y == 6) ? disasm_index_address() : "0";
+                        disasm.instruction.arguments = disasm_read_reg_prefetched(context.y, w);
                         break;
                     case 6: // LD r[y], n
                         if (context.y == 7 && disasm.prefix) { // LD (IX/IY + d), IY/IX
@@ -578,6 +544,8 @@ void disassembleInstruction(void) {
                             disasm.instruction.arguments = "("+index_table[disasm.prefix]+strOffset(disasm_fetch_offset())+"),"+index_table[disasm.prefix ^ 1];
                             break;
                         }
+                        w = (context.y == 6) ? disasm_index_address() : "0";
+                        disasm_write_reg_prefetched(context.y, w, strS(disasm_fetch_byte()));
                         break;
                     case 7:
                         if (disasm.prefix) {
@@ -691,23 +659,25 @@ void disassembleInstruction(void) {
                                 disasm.instruction.arguments = strW(disasm_fetch_word());
                                 break;
                             case 1: // 0xCB prefixed opcodes
+                                w = disasm_index_address();
                                 context.opcode = disasm_fetch_byte();
+                                old = disasm_read_reg_prefetched(context.z, w);
                                 switch (context.x) {
                                     case 0: // rot[y] r[z]
                                         disasm.instruction.opcode = rot_table[context.y];
-                                        disasm.instruction.arguments = disasm_read_reg(context.z);
+                                        disasm.instruction.arguments = old;
                                         break;
                                     case 1: // BIT y, r[z]
                                         disasm.instruction.opcode = "bit";
-                                        disasm.instruction.arguments = std::to_string(context.y)+","+disasm_read_reg(context.z);
+                                        disasm.instruction.arguments = std::to_string(context.y)+","+old;
                                         break;
                                     case 2: // RES y, r[z]
                                         disasm.instruction.opcode = "res";
-                                        disasm.instruction.arguments = std::to_string(context.y)+","+disasm_read_reg(context.z);
+                                        disasm.instruction.arguments = std::to_string(context.y)+","+old;
                                         break;
                                     case 3: // SET y, r[z]
                                         disasm.instruction.opcode = "set";
-                                        disasm.instruction.arguments = std::to_string(context.y)+","+disasm_read_reg(context.z);
+                                        disasm.instruction.arguments = std::to_string(context.y)+","+old;
                                         break;
                                 }
                                 break;
@@ -868,7 +838,7 @@ void disassembleInstruction(void) {
                                                         }
                                                         else { // MLT rp[p]
                                                             disasm.instruction.opcode = "mlt";
-                                                            disasm.instruction.arguments = rp_table[context.p];
+                                                            disasm.instruction.arguments = disasm_read_rp(context.p);
                                                             break;
                                                         }
                                                         break;
@@ -1032,3 +1002,4 @@ exit_loop:
       continue;
     } while (disasm.prefix || disasm.suffix);
 }
+
