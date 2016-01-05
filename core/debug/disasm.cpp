@@ -217,14 +217,14 @@ static std::string disasm_read_reg_prefetched(int i, std::string address) {
         case 3: value = "e"; break;
         case 4: value = index_h[disasm.prefix]; break;
         case 5: value = index_l[disasm.prefix]; break;
-        //case 6: value = cpu_read_byte(address); break;
+        //case 6: value = disasm_read_byte(address); break;
         case 7: value = "a"; break;
         default: abort();
     }
     return value;
 }
 
-static void disasm_write_reg_prefetched(int i, uint32_t address, std::string value) {
+static void disasm_write_reg_prefetched(int i, std::string address, std::string value) {
     switch (i) {
         case 0: disasm.instruction.arguments = "b,"+value; break;
         case 1: disasm.instruction.arguments = "c,"+value; break;
@@ -232,7 +232,7 @@ static void disasm_write_reg_prefetched(int i, uint32_t address, std::string val
         case 3: disasm.instruction.arguments = "e,"+value; break;
         case 4: disasm.instruction.arguments = index_h[disasm.prefix]+","+value; break;
         case 5: disasm.instruction.arguments = index_l[disasm.prefix]+","+value; break;
-        //case 6: disasm.instruction.arguments = cpu_write_byte(address, value); break;
+        //case 6: disasm.instruction.arguments = value; break;
         case 7: disasm.instruction.arguments = "a,"+value; break;
         default: abort();
     }
@@ -670,7 +670,7 @@ void disassembleInstruction(void) {
                                         break;
                                     case 2: // JP (rr)
                                         disasm.instruction.opcode = "jp";
-                                        disasm.instruction.opcode = "("+index_table[disasm.prefix]+")";
+                                        disasm.instruction.arguments = "("+index_table[disasm.prefix]+")";
                                         break;
                                     case 3: // LD SP, INDEX
                                         disasm.instruction.opcode = "ld";
@@ -721,7 +721,7 @@ void disassembleInstruction(void) {
                                 break;
                             case 4: // EX (SP), HL/I
                                 disasm.instruction.opcode = "ex";
-                                disasm.instruction.arguments = "(sp),hl";
+                                disasm.instruction.arguments = "(sp),"+index_table[disasm.prefix];
                                 break;
                             case 5: // EX DE, HL
                                 disasm.instruction.opcode = "ex";
