@@ -2,29 +2,25 @@
 #define DISASM_H
 
 #include <string>
+#include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "../defines.h"
-
-typedef struct disasm_state {
-  std::string instruction;
+typedef struct {
+  std::string opcode;
+  std::string arguments;
   std::string mode_suffix;
+} eZ80_instuction_t;
+
+typedef struct {
+  eZ80_instuction_t instruction;
   uint8_t prefix, suffix;
   uint32_t base_address;
   uint32_t new_address;
-  bool mode;            /* 0 for Z80, 1 for ADL */
+  uint8_t IL, IS, S, L;
   uint8_t *data;
 } disasm_state_t;
 
 extern disasm_state_t disasm;
 
-void disassembleInstruction();
-
-#ifdef __cplusplus
-}
-#endif
+void disassembleInstruction(void);
 
 #endif

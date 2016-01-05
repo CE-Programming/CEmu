@@ -1514,7 +1514,7 @@ void cpu_execute(void) {
                                                         case 7:
                                                             switch (context.y) {
                                                                 case 0: // LD I, A
-                                                                    r->I = r->A | (r->I&0xF0);
+                                                                    r->I = r->A | (r->I & 0xF0);
                                                                     break;
                                                                 case 1: // LD R, A
                                                                     r->R = r->A;
@@ -1592,7 +1592,7 @@ void cpu_execute(void) {
                                                             }
                                                             break;
                                                         case 0xC7: // LD I, HL
-                                                            r->I = r->HL;
+                                                            r->I = r->HL & 0xFFFF;
                                                             break;
                                                         case 0xD7: // LD HL, I
                                                             r->HL = r->I | (r->MBASE << 16);
