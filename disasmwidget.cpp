@@ -1,6 +1,9 @@
 #include <QtWidgets>
 
 #include "disasmwidget.h"
+#include "core/mem.h"
+#include "core/debug/debug.h"
+#include "core/debug/disasm.h"
 
 DisasmWidget::DisasmWidget(QWidget *p) : QPlainTextEdit(p)
 {
@@ -16,14 +19,7 @@ DisasmWidget::DisasmWidget(QWidget *p) : QPlainTextEdit(p)
 
 int DisasmWidget::lineNumberAreaWidth()
 {
-    int digits = 1;
-    int max = qMax(1, blockCount());
-    while (max >= 10) {
-        max /= 10;
-        ++digits;
-    }
-
-    int space = 3 + fontMetrics().width(QLatin1Char('9')) * digits;
+    int space = 3 + fontMetrics().width(QLatin1Char('9')) * 6;
 
     return space;
 }
@@ -54,21 +50,19 @@ void DisasmWidget::resizeEvent(QResizeEvent *e)
 
 void DisasmWidget::highlightCurrentLine()
 {
-    QList<QTextEdit::ExtraSelection> extraSelectionsa;
+    QList<QTextEdit::ExtraSelection> extra;
 
-    if (!isReadOnly()) {
-        QTextEdit::ExtraSelection selection;
+    QTextEdit::ExtraSelection selection;
 
-        QColor lineColor = QColor(Qt::yellow).lighter(160);
+    QColor lineColor = QColor(Qt::yellow).lighter(160);
 
-        selection.format.setBackground(lineColor);
-        selection.format.setProperty(QTextFormat::FullWidthSelection, true);
-        selection.cursor = textCursor();
-        selection.cursor.clearSelection();
-        extraSelectionsa.append(selection);
-    }
+    selection.format.setBackground(lineColor);
+    selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+    selection.cursor = textCursor();
+    selection.cursor.clearSelection();
+    extra.append(selection);
 
-    setExtraSelections(extraSelectionsa);
+    setExtraSelections(extra);
 }
 
 void DisasmWidget::lineNumberAreaPaintEvent(QPaintEvent *e)
@@ -78,19 +72,26 @@ void DisasmWidget::lineNumberAreaPaintEvent(QPaintEvent *e)
 
     QTextBlock block = firstVisibleBlock();
     int blockNumber = block.blockNumber();
+    int blockSize = 0;
+    int address_offset;
+    for(int i=0; i<blockNumber; i++) {
+        address_offset = disasm.start_address + blockSize;
+        blockSize += mem.debug.block[address_offset]&15;
+    }
     int top = (int) blockBoundingGeometry(block).translated(contentOffset()).top();
     int bottom = top + (int) blockBoundingRect(block).height();
 
     while (block.isValid() && top <= e->rect().bottom()) {
+        address_offset = disasm.start_address + blockSize;
         if (block.isVisible() && bottom >= e->rect().top()) {
-            QString number = QString::number(blockNumber + 1);
+            QString number = QString::number(address_offset, 16).rightJustified(6, '0').toUpper();
             painter.setPen(Qt::black);
-            painter.drawText(0, top, lineNumberArea->width(), fontMetrics().height(), Qt::AlignRight, number);
+            painter.drawText(0, top, lineNumberArea->width(), fontMetrics().height(), Qt::AlignLeft, number);
         }
 
         block = block.next();
         top = bottom;
         bottom = top + (int) blockBoundingRect(block).height();
-        ++blockNumber;
+        blockSize += mem.debug.block[address_offset]&15;
     }
 }

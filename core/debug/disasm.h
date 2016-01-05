@@ -17,6 +17,7 @@ typedef struct {
   uint8_t prefix, suffix;
   uint32_t base_address;
   uint32_t new_address;
+  uint32_t start_address;
   uint8_t IL, IS, S, L;
 } disasm_state_t;
 

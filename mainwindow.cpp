@@ -97,6 +97,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     // Set up monospace fonts
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     ui->console->setFont(monospace);
+    ui->disassemblyView->setFont(monospace);
 
     qRegisterMetaType<uint32_t>("uint32_t");
     qRegisterMetaType<std::string>("std::string");
@@ -562,13 +563,15 @@ void MainWindow::populateDebugWindow() {
 
     ui->brightnessSlider->setValue(backlight.brightness);
 
-    disasm.new_address = cpu.registers.PC;
+    disasm.start_address = disasm.new_address = cpu.registers.PC;
 
     ui->disassemblyView->clear();
 
     for(int i=0; i<256; i++) {
         drawNextDisassembleLine();
     }
+
+    ui->disassemblyView->moveCursor(QTextCursor::Start);
 
     for(int i=0; i<ui->portView->rowCount(); ++i) {
         updatePortData(i);
@@ -782,6 +785,8 @@ void MainWindow::updatePortData(int currentRow) {
 void MainWindow::drawNextDisassembleLine() {
     disasm.base_address = disasm.new_address;
     disassembleInstruction();
+    mem.debug.block[disasm.base_address] &= ~15;
+    mem.debug.block[disasm.base_address] |= disasm.instruction.size;
     ui->disassemblyView->moveCursor(QTextCursor::End);
-    ui->disassemblyView->insertPlainText(QString::fromStdString(disasm.instruction.data+"\t"+disasm.instruction.opcode+disasm.instruction.mode_suffix+disasm.instruction.arguments+"\n"));
+    ui->disassemblyView->insertPlainText(QString::fromStdString(disasm.instruction.data+"\t    "+disasm.instruction.opcode+disasm.instruction.mode_suffix+disasm.instruction.arguments+"\n"));
 }

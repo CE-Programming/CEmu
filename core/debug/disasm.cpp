@@ -30,13 +30,13 @@ static const std::string index_table[] = {
 
 static const std::string alu_table[] = {
     "add",
-  "adc",
-  "sub",
-  "sbc",
-  "and",
-  "xor",
-  "or",
-  "cp",
+    "adc",
+    "sub",
+    "sbc",
+    "and",
+    "xor",
+    "or",
+    "cp",
 };
 
 static const std::string rot_table[] = {
@@ -85,45 +85,46 @@ static const std::string im_table[] = {
 
 static std::string strW(uint32_t data) {
     if(disasm.IL) {
-        sprintf(tmpbuf,"%06X",data);
+        sprintf(tmpbuf,"$%06x",data);
     } else {
-        sprintf(tmpbuf,"%04X",data);
+        sprintf(tmpbuf,"$%04x",data);
     }
     return std::string(tmpbuf);
 }
 
 static std::string strWind(uint32_t data) {
     if(disasm.IL) {
-        sprintf(tmpbuf,"(%06X)",data);
+        sprintf(tmpbuf,"($%06x)",data);
     } else {
-        sprintf(tmpbuf,"(%04X)",data);
+        sprintf(tmpbuf,"($%04x)",data);
     }
     return std::string(tmpbuf);
 }
 
 static std::string strS(uint8_t data) {
-    sprintf(tmpbuf,"%02X",data);
+    sprintf(tmpbuf,"$%02x",data);
     return std::string(tmpbuf);
 }
 
 static std::string strSind(uint8_t data) {
-    sprintf(tmpbuf,"(%02X)",data);
+    sprintf(tmpbuf,"($%02x)",data);
     return std::string(tmpbuf);
 }
 
 
 static std::string strOffset(uint8_t data) {
     if (data & 128) {
-        sprintf(tmpbuf,"-%02X",(0-data)&0xFF);
+        sprintf(tmpbuf,"-$%02x",(0-data)&0xFF);
     } else {
-        sprintf(tmpbuf,"+%02X",data);
+        sprintf(tmpbuf,"+$%02x",data);
     }
     return std::string(tmpbuf);
 }
 
 static uint8_t disasm_fetch_byte(void) {
     uint8_t value = memory_read_byte(disasm.new_address++);
-    disasm.instruction.data += strS(value);
+    sprintf(tmpbuf,"%02x",value);
+    disasm.instruction.data += std::string(tmpbuf);
     disasm.instruction.size++;
     return value;
 }
@@ -162,7 +163,7 @@ static std::string disasm_read_reg(int i) {
         case 3: value = "e"; break;
         case 4: value = index_h[disasm.prefix]; break;
         case 5: value = index_l[disasm.prefix]; break;
-        case 6: value = "("+index_table[disasm.prefix]+strOffset(disasm_fetch_offset())+")"; break;
+      case 6: value = "("+index_table[disasm.prefix]+ ((disasm.prefix) ? strOffset(disasm_fetch_offset()) : "") +")"; break;
         case 7: value = "a"; break;
         default: break;
     }
@@ -176,7 +177,7 @@ static void disasm_write_reg(int i, std::string value) {
         case 3: disasm.instruction.arguments = "e,"+value; break;
         case 4: disasm.instruction.arguments = index_h[disasm.prefix]+","+value; break;
         case 5: disasm.instruction.arguments = index_l[disasm.prefix]+","+value; break;
-        case 6: disasm.instruction.arguments = "("+index_table[disasm.prefix]+strOffset(disasm_fetch_offset())+"),"+value; break;
+        case 6: disasm.instruction.arguments = "("+index_table[disasm.prefix]+ ((disasm.prefix) ? strOffset(disasm_fetch_offset()) : "") +"),"+value; break;
         case 7: disasm.instruction.arguments = "a,"+value; break;
         default: break;
     }
@@ -241,6 +242,7 @@ static std::string disasm_read_rp2(int i) {
         return disasm_read_rp(i);
     }
 }
+
 static std::string disasm_read_rp3(int i) {
     std::string value;
     switch (i) {
@@ -393,11 +395,15 @@ void disassembleInstruction(void) {
 
     disasm.new_address = disasm.base_address;
 
-    disasm.instruction.arguments = disasm.instruction.data = disasm.instruction.opcode = "";
+    disasm.instruction.data = "";
+    disasm.instruction.opcode = "";
     disasm.instruction.mode_suffix = " ";
+    disasm.instruction.arguments = "";
+    disasm.instruction.size = 0;
 
     disasm.IL = 1;
-    disasm.instruction.size = disasm.prefix = disasm.suffix = 0;
+    disasm.prefix = 0;
+    disasm.suffix = 0;
 
     union {
         uint8_t opcode;
@@ -452,7 +458,7 @@ void disassembleInstruction(void) {
                             case 0: // LD rr, Mmn
                                 if (context.p == 3 && disasm.prefix) { // LD IY/IX, (IX/IY + d)
                                     disasm.instruction.opcode = "ld";
-                                    disasm.instruction.arguments = index_table[disasm.prefix] + "(" + index_table[disasm.prefix ^ 1] + strOffset(disasm_fetch_offset()) + ")" ;
+                                    disasm.instruction.arguments = index_table[disasm.prefix] + ",(" + index_table[disasm.prefix ^ 1] + strOffset(disasm_fetch_offset()) + ")" ;
                                     break;
                                 }
                                 disasm.instruction.opcode = "ld";
@@ -549,7 +555,6 @@ void disassembleInstruction(void) {
                                 disasm.instruction.opcode = "ld";
                                 disasm.instruction.arguments = disasm_read_rp3(context.p)+",("+index_table[disasm.prefix]+strOffset(disasm_fetch_offset())+")";
                             }
-
                         } else {
                             disasm.instruction.opcode = rot_acc_table[context.y];
                         }
@@ -764,6 +769,7 @@ void disassembleInstruction(void) {
                                                         disasm.instruction.opcode = "OPCODETRAP";
                                                         break;
                                                     case 7:
+                                                        disasm.prefix = 2;
                                                         if (context.q) { // LD (HL), rp3[p]
                                                             disasm.instruction.opcode = "ld";
                                                             disasm.instruction.arguments = "(hl),"+disasm_read_rp3(context.p);
