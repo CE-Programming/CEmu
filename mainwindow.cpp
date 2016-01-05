@@ -570,8 +570,9 @@ void MainWindow::populateDebugWindow() {
     for(int i=0; i<256; i++) {
         drawNextDisassembleLine();
     }
-    ui->disassemblyView->moveCursor(QTextCursor::Start);
-
+    QFont disasmFont = ui->disassemblyView->font();
+    disasmFont.setPointSize(12);
+    ui->disassemblyView->setFont(disasmFont);
     ui->disassemblyView->moveCursor(QTextCursor::Start);
 
     for(int i=0; i<ui->portView->rowCount(); ++i) {
@@ -788,12 +789,18 @@ void MainWindow::drawNextDisassembleLine() {
     disassembleInstruction();
     mem.debug.block[disasm.base_address] &= ~15;
     mem.debug.block[disasm.base_address] |= disasm.instruction.size;
-    QString formattedLine = QString::fromStdString("<pre>"
-                            + disasm.instruction.data + "\t\t"
-                            + "<font color='darkblue'>" + disasm.instruction.opcode + "</font>"
-                            + disasm.instruction.mode_suffix
-                            + disasm.instruction.arguments
-                            + "</pre>");
-    formattedLine.replace(QRegExp("([\\(\\$\\)])"), "<font color='green'>\\1</font>");
+
+    QString formattedLine = QString("<pre><b><font color='#444'><i>%1</i></font>\t%2  <font color='darkblue'>%3</font>%4%5</b></pre>")
+                               .arg(int2hex(disasm.base_address, 6).toUpper(),
+                                    QString::fromStdString(disasm.instruction.data).toUpper().leftJustified(12, ' '),
+                                    QString::fromStdString(disasm.instruction.opcode),
+                                    QString::fromStdString(disasm.instruction.mode_suffix),
+                                    QString::fromStdString(disasm.instruction.arguments));
+
+    // Simple syntax highlighting
+    formattedLine.replace(QRegExp("([\\(\\)])"), "<font color='green'>\\1</font>");      // Parentheses
+    formattedLine.replace(QRegExp("(\\$[0-9a-fA-F]+)"), "<font color='red'>\\1</font>"); // hex numbers
+    formattedLine.replace(QRegExp("([ ,])(\\d+)"), "\\1<font color='red'>\\2</font>");   // dec numbers
+
     ui->disassemblyView->appendHtml(formattedLine);
 }
