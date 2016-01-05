@@ -30,6 +30,7 @@
 
 #include "core/schedule.h"
 #include "core/debug/debug.h"
+#include "core/debug/disasm.h"
 #include "core/link.h"
 #include "core/capture/gif.h"
 #include "core/os/os.h"
@@ -561,6 +562,14 @@ void MainWindow::populateDebugWindow() {
 
     ui->brightnessSlider->setValue(backlight.brightness);
 
+    disasm.new_address = cpu.registers.PC;
+
+    ui->disassemblyView->clear();
+
+    for(int i=0; i<256; i++) {
+        drawNextDisassembleLine();
+    }
+
     for(int i=0; i<ui->portView->rowCount(); ++i) {
         updatePortData(i);
     }
@@ -768,4 +777,11 @@ void MainWindow::updatePortData(int currentRow) {
     uint8_t read = (uint8_t)debug_port_read_byte(port);
 
     ui->portView->item(currentRow, 1)->setText(int2hex(read,2));
+}
+
+void MainWindow::drawNextDisassembleLine() {
+    disasm.base_address = disasm.new_address;
+    disassembleInstruction();
+    ui->disassemblyView->moveCursor(QTextCursor::End);
+    ui->disassemblyView->insertPlainText(QString::fromStdString(disasm.instruction.data+"\t"+disasm.instruction.opcode+disasm.instruction.mode_suffix+disasm.instruction.arguments+"\n"));
 }

@@ -62,6 +62,8 @@ private:
     void addBreakpoint();
     void breakpointCheckboxToggled(QTableWidgetItem *);
 
+    void drawNextDisassembleLine();
+
     // Console
     void clearConsole(void);
 

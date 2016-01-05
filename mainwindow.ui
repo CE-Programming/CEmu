@@ -242,7 +242,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>4</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -938,7 +938,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <property name="tabsClosable">
            <bool>false</bool>
@@ -950,7 +950,24 @@
            <attribute name="title">
             <string>Disassembly</string>
            </attribute>
-           <layout class="QHBoxLayout" name="horizontalLayout_6"/>
+           <layout class="QVBoxLayout" name="verticalLayout_9">
+            <item>
+             <widget class="DisasmWidget" name="disassemblyView">
+              <property name="documentTitle">
+               <string notr="true"/>
+              </property>
+              <property name="undoRedoEnabled">
+               <bool>false</bool>
+              </property>
+              <property name="plainText">
+               <string notr="true"/>
+              </property>
+              <property name="placeholderText">
+               <string notr="true"/>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </widget>
           <widget class="QWidget" name="portmonitortab">
            <attribute name="title">
@@ -3829,7 +3846,7 @@
      <x>0</x>
      <y>0</y>
      <width>1024</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -3934,6 +3951,11 @@
    <extends>QWidget</extends>
    <header>lcdwidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>DisasmWidget</class>
+   <extends>QPlainTextEdit</extends>
+   <header>disasmwidget.h</header>
   </customwidget>
  </customwidgets>
  <resources>

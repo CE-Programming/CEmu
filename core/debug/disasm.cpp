@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "disasm.h"
+#include "../mem.h"
 
 disasm_state_t disasm;
 
@@ -121,7 +122,10 @@ static std::string strOffset(uint8_t data) {
 }
 
 static uint8_t disasm_fetch_byte(void) {
-    return disasm.data[disasm.new_address++];
+    uint8_t value = memory_read_byte(disasm.new_address++);
+    disasm.instruction.data += strS(value);
+    disasm.instruction.size++;
+    return value;
 }
 
 static int8_t disasm_fetch_offset(void) {
@@ -228,16 +232,6 @@ static std::string disasm_read_rp(int i) {
         default: abort();
     }
     return value;
-}
-
-static void disasm_write_rp(int i, std::string value) {
-    switch (i) {
-        case 0: disasm.instruction.arguments = "bc,"+value; break;
-        case 1: disasm.instruction.arguments = "de,"+value; break;
-        case 2: disasm.instruction.arguments = index_table[disasm.prefix]+","+value; break;
-        case 3: disasm.instruction.arguments = "sp,"+value; break;
-        default: abort();
-    }
 }
 
 static std::string disasm_read_rp2(int i) {
@@ -399,13 +393,11 @@ void disassembleInstruction(void) {
 
     disasm.new_address = disasm.base_address;
 
-    disasm.instruction.opcode = "";
+    disasm.instruction.arguments = disasm.instruction.data = disasm.instruction.opcode = "";
     disasm.instruction.mode_suffix = " ";
-    disasm.instruction.arguments = "";
 
     disasm.IL = 1;
-    disasm.prefix = 0;
-    disasm.suffix = 0;
+    disasm.instruction.size = disasm.prefix = disasm.suffix = 0;
 
     union {
         uint8_t opcode;
@@ -424,7 +416,7 @@ void disassembleInstruction(void) {
 
     do {
         // fetch opcode
-        context.opcode = disasm.data[disasm.new_address++];
+        context.opcode = disasm_fetch_byte();
 
         switch (context.x) {
             case 0:
@@ -544,6 +536,7 @@ void disassembleInstruction(void) {
                             disasm.instruction.arguments = "("+index_table[disasm.prefix]+strOffset(disasm_fetch_offset())+"),"+index_table[disasm.prefix ^ 1];
                             break;
                         }
+                        disasm.instruction.opcode = "ld";
                         w = (context.y == 6) ? disasm_index_address() : "0";
                         disasm_write_reg_prefetched(context.y, w, strS(disasm_fetch_byte()));
                         break;

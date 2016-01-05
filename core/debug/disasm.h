@@ -8,6 +8,8 @@ typedef struct {
   std::string opcode;
   std::string arguments;
   std::string mode_suffix;
+  std::string data;
+  int size;
 } eZ80_instuction_t;
 
 typedef struct {
@@ -16,7 +18,6 @@ typedef struct {
   uint32_t base_address;
   uint32_t new_address;
   uint8_t IL, IS, S, L;
-  uint8_t *data;
 } disasm_state_t;
 
 extern disasm_state_t disasm;
