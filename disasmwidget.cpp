@@ -6,10 +6,11 @@ DisasmWidget::DisasmWidget(QWidget *p) : QPlainTextEdit(p)
 {
     lineNumberArea = new LineNumberArea(this);
 
-    connect(this, SIGNAL(blockCountChanged(int)), this, SLOT(updateLineNumberAreaWidth(int)));
-    connect(this, SIGNAL(updateRequest(QRect,int)), this, SLOT(updateLineNumberArea(QRect,int)));
-    connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(highlightCurrentLine()));
+    connect(this, &QPlainTextEdit::blockCountChanged, this, &DisasmWidget::updateLineNumberAreaWidth);
+    connect(this, &QPlainTextEdit::updateRequest, this, &DisasmWidget::updateLineNumberArea);
+    connect(this, &QPlainTextEdit::cursorPositionChanged, this, &DisasmWidget::highlightCurrentLine);
 
+    this->setReadOnly(true);
     updateLineNumberAreaWidth(0);
     highlightCurrentLine();
 }
@@ -56,17 +57,13 @@ void DisasmWidget::highlightCurrentLine()
 {
     QList<QTextEdit::ExtraSelection> extraSelectionsa;
 
-    if (!isReadOnly()) {
-        QTextEdit::ExtraSelection selection;
-
-        QColor lineColor = QColor(Qt::yellow).lighter(160);
-
-        selection.format.setBackground(lineColor);
-        selection.format.setProperty(QTextFormat::FullWidthSelection, true);
-        selection.cursor = textCursor();
-        selection.cursor.clearSelection();
-        extraSelectionsa.append(selection);
-    }
+    QTextEdit::ExtraSelection selection;
+    QColor lineColor = QColor(Qt::yellow).lighter(160);
+    selection.format.setBackground(lineColor);
+    selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+    selection.cursor = textCursor();
+    selection.cursor.clearSelection();
+    extraSelectionsa.append(selection);
 
     setExtraSelections(extraSelectionsa);
 }
