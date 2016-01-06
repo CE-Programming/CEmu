@@ -65,6 +65,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->breakRequest, &QLineEdit::returnPressed, this, &MainWindow::addBreakpoint);
     connect(ui->buttonRemoveBreakpoint, &QPushButton::clicked, this, &MainWindow::deleteBreakpoint);
     connect(ui->breakpointView, &QTableWidget::itemChanged, this, &MainWindow::breakpointCheckboxToggled);
+    connect(ui->actionReset_Calculator, &QAction::triggered, this, &MainWindow::resetCalculator );
 
     // Linking
     connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::selectFiles);
@@ -125,6 +126,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
     changeLCDRefresh(settings->value(QStringLiteral("refreshRate"), QVariant(60)).toInt());
     alwaysOnTop(settings->value(QStringLiteral("onTop"), QVariant(0)).toInt());
+    ui->textSizeSlider->setValue(settings->value(QStringLiteral("disasmTextSize"), QVariant(9)).toInt());
 
     ui->rompathView->setText(QString(emu.rom.c_str()));
     ui->portView->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -136,6 +138,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 MainWindow::~MainWindow() {
     settings->setValue(QStringLiteral("windowState"), saveState(WindowStateVersion));
     settings->setValue(QStringLiteral("windowGeometry"), saveGeometry());
+    settings->setValue(QStringLiteral("disasmTextSize"), QVariant(ui->textSizeSlider->value()));
 
     delete settings;
     delete ui;
@@ -563,15 +566,16 @@ void MainWindow::populateDebugWindow() {
 
     ui->brightnessSlider->setValue(backlight.brightness);
 
-    disasm.start_address = disasm.new_address = cpu.registers.PC;
+    disasm.new_address = cpu.registers.PC-0x80;
 
     ui->disassemblyView->clear();
 
-    for(int i=0; i<256; i++) {
+    for(int i=0; i<0x100; i++) {
         drawNextDisassembleLine();
     }
+
     QFont disasmFont = ui->disassemblyView->font();
-    disasmFont.setPointSize(12);
+    disasmFont.setPointSize(ui->textSizeSlider->value());
     ui->disassemblyView->setFont(disasmFont);
     ui->disassemblyView->moveCursor(QTextCursor::Start);
 
@@ -784,23 +788,38 @@ void MainWindow::updatePortData(int currentRow) {
     ui->portView->item(currentRow, 1)->setText(int2hex(read,2));
 }
 
+void MainWindow::resetCalculator() {
+    if (emu.stop()) {
+        emu.start();
+    } else {
+        qDebug("Reset Failed.");
+    }
+}
+
 void MainWindow::drawNextDisassembleLine() {
     disasm.base_address = disasm.new_address;
     disassembleInstruction();
-    mem.debug.block[disasm.base_address] &= ~15;
-    mem.debug.block[disasm.base_address] |= disasm.instruction.size;
 
-    QString formattedLine = QString("<pre><b><font color='#444'><i>%1</i></font>\t%2  <font color='darkblue'>%3</font>%4%5</b></pre>")
-                               .arg(int2hex(disasm.base_address, 6).toUpper(),
-                                    QString::fromStdString(disasm.instruction.data).toUpper().leftJustified(12, ' '),
-                                    QString::fromStdString(disasm.instruction.opcode),
-                                    QString::fromStdString(disasm.instruction.mode_suffix),
-                                    QString::fromStdString(disasm.instruction.arguments));
+    QString formattedLine;
+
+    if (ui->checkDataCol->isChecked()) {
+        formattedLine = QString("<pre><font color='#444'>%1</font>\t%2  <font color='darkblue'>%3</font>%4%5</pre>")
+                                   .arg(int2hex(disasm.base_address, 6).toUpper(),
+                                        QString::fromStdString(disasm.instruction.data).leftJustified(12, ' '),
+                                        QString::fromStdString(disasm.instruction.opcode),
+                                        QString::fromStdString(disasm.instruction.mode_suffix),
+                                        QString::fromStdString(disasm.instruction.arguments));
+    } else {
+        formattedLine = QString("<pre><font color='#444'>%1</font>\t<font color='darkblue'>%2  </font>%3%4</pre>")
+                                   .arg(int2hex(disasm.base_address, 6).toUpper(),
+                                        QString::fromStdString(disasm.instruction.opcode),
+                                        QString::fromStdString(disasm.instruction.mode_suffix),
+                                        QString::fromStdString(disasm.instruction.arguments));
+    }
 
     // Simple syntax highlighting
-    formattedLine.replace(QRegExp("([\\(\\)])"), "<font color='green'>\\1</font>");      // Parentheses
-    formattedLine.replace(QRegExp("(\\$[0-9a-fA-F]+)"), "<font color='red'>\\1</font>"); // hex numbers
-    formattedLine.replace(QRegExp("([ ,])(\\d+)"), "\\1<font color='red'>\\2</font>");   // dec numbers
+    formattedLine.replace(QRegExp("(\\$[0-9a-fA-F]+)"), "<font color='green'>\\1</font>"); // hex numbers
+    formattedLine.replace(QRegExp("([ ,])(\\d+)"), "\\1<font color='blue'>\\2</font>");    // dec numbers
 
     ui->disassemblyView->appendHtml(formattedLine);
 }

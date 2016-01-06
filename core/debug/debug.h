@@ -26,10 +26,9 @@ enum {
 #define DBG_PORT_FREEZE           4
 
 /* For Memory Brakpoints */
-/* Lower 4 bits are used for keeping the size of the diasassembled line when debugging */
-#define DBG_READ_BREAKPOINT       16
-#define DBG_WRITE_BREAKPOINT      32
-#define DBG_EXEC_BREAKPOINT       64
+#define DBG_READ_BREAKPOINT       1
+#define DBG_WRITE_BREAKPOINT      2
+#define DBG_EXEC_BREAKPOINT       4
 
 typedef struct {        /* For debugging */
     uint8_t *block;

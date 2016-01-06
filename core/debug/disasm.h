@@ -3,6 +3,7 @@
 
 #include <string>
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef struct {
   std::string opcode;
@@ -17,8 +18,8 @@ typedef struct {
   uint8_t prefix, suffix;
   uint32_t base_address;
   uint32_t new_address;
-  uint32_t start_address;
   uint8_t IL, IS, S, L;
+  bool hit_pc;
 } disasm_state_t;
 
 extern disasm_state_t disasm;

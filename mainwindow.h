@@ -64,6 +64,8 @@ private:
 
     void drawNextDisassembleLine();
 
+    void resetCalculator();
+
     // Console
     void clearConsole(void);
 

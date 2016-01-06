@@ -1,7 +1,7 @@
 #include <string.h>
 
 #include "disasm.h"
-#include "../mem.h"
+#include "../cpu.h"
 
 disasm_state_t disasm;
 
@@ -85,45 +85,48 @@ static const std::string im_table[] = {
 
 static std::string strW(uint32_t data) {
     if(disasm.IL) {
-        sprintf(tmpbuf,"$%06x",data);
+        sprintf(tmpbuf,"$%06X",data);
     } else {
-        sprintf(tmpbuf,"$%04x",data);
+        sprintf(tmpbuf,"$%04X",data);
     }
     return std::string(tmpbuf);
 }
 
 static std::string strWind(uint32_t data) {
     if(disasm.IL) {
-        sprintf(tmpbuf,"($%06x)",data);
+        sprintf(tmpbuf,"($%06X)",data);
     } else {
-        sprintf(tmpbuf,"($%04x)",data);
+        sprintf(tmpbuf,"($%04X)",data);
     }
     return std::string(tmpbuf);
 }
 
 static std::string strS(uint8_t data) {
-    sprintf(tmpbuf,"$%02x",data);
+    sprintf(tmpbuf,"$%02X",data);
     return std::string(tmpbuf);
 }
 
 static std::string strSind(uint8_t data) {
-    sprintf(tmpbuf,"($%02x)",data);
+    sprintf(tmpbuf,"($%02X)",data);
     return std::string(tmpbuf);
 }
 
 
 static std::string strOffset(uint8_t data) {
     if (data & 128) {
-        sprintf(tmpbuf,"-$%02x",(0-data)&0xFF);
+        sprintf(tmpbuf,"-$%02X",(0-data)&0xFF);
     } else {
-        sprintf(tmpbuf,"+$%02x",data);
+        sprintf(tmpbuf,"+$%02X",data);
     }
     return std::string(tmpbuf);
 }
 
 static uint8_t disasm_fetch_byte(void) {
     uint8_t value = memory_read_byte(disasm.new_address++);
-    sprintf(tmpbuf,"%02x",value);
+    if(disasm.new_address == cpu.registers.PC) {
+        disasm.hit_pc = true;
+    }
+    sprintf(tmpbuf,"%02X",value);
     disasm.instruction.data += std::string(tmpbuf);
     disasm.instruction.size++;
     return value;
@@ -163,12 +166,13 @@ static std::string disasm_read_reg(int i) {
         case 3: value = "e"; break;
         case 4: value = index_h[disasm.prefix]; break;
         case 5: value = index_l[disasm.prefix]; break;
-      case 6: value = "("+index_table[disasm.prefix]+ ((disasm.prefix) ? strOffset(disasm_fetch_offset()) : "") +")"; break;
+        case 6: value = "("+index_table[disasm.prefix]+ ((disasm.prefix) ? strOffset(disasm_fetch_offset()) : "") +")"; break;
         case 7: value = "a"; break;
         default: break;
     }
     return value;
 }
+
 static void disasm_write_reg(int i, std::string value) {
     switch (i) {
         case 0: disasm.instruction.arguments = "b,"+value; break;
@@ -400,6 +404,7 @@ void disassembleInstruction(void) {
     disasm.instruction.mode_suffix = " ";
     disasm.instruction.arguments = "";
     disasm.instruction.size = 0;
+    disasm.hit_pc = false;
 
     disasm.IL = 1;
     disasm.prefix = 0;
@@ -544,6 +549,9 @@ void disassembleInstruction(void) {
                         }
                         disasm.instruction.opcode = "ld";
                         w = (context.y == 6) ? disasm_index_address() : "0";
+                        if(!disasm.prefix) {
+                            w = "("+w+"),";
+                        }
                         disasm_write_reg_prefetched(context.y, w, strS(disasm_fetch_byte()));
                         break;
                     case 7:
