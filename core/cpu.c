@@ -1063,7 +1063,7 @@ void cpu_execute(void) {
                                     break;
                                 case 1: // ADD HL,rr
                                     old_word = cpu_mask_mode(cpu_read_index(), cpu.L);
-                                    op_word = cpu_read_rp(context.p);
+                                    op_word = cpu_mask_mode(cpu_read_rp(context.p), cpu.L);
                                     new_word = old_word + op_word;
                                     cpu_write_index(cpu_mask_mode(new_word, cpu.L));
                                     r->F = __flag_s(r->flags.S) | _flag_zero(!r->flags.Z)
@@ -1389,20 +1389,16 @@ void cpu_execute(void) {
                                                             }
                                                             break;
                                                         case 2:
+                                                            old_word = cpu_mask_mode(r->HL, cpu.L);
+                                                            op_word = cpu_mask_mode(cpu_read_rp(context.p), cpu.L);
                                                             if (context.q == 0) { // SBC HL, rp[p]
-                                                                old_word = r->HL;
-                                                                op_word = cpu_read_rp(context.p);
-                                                                r->HL -= op_word + r->flags.C;
-                                                                mask_mode(r->HL, cpu.L);
+                                                                r->HL = cpu_mask_mode(old_word - op_word - r->flags.C, cpu.L);
                                                                 r->F = _flag_sign_w(r->HL, cpu.L) | _flag_zero(r->HL)
                                                                     | _flag_undef(r->F) | _flag_overflow_w_sub(old_word, op_word, r->HL, cpu.L)
                                                                     | _flag_subtract(1) | _flag_carry_w(old_word - op_word - r->flags.C, cpu.L)
                                                                     | _flag_halfcarry_w_sub(old_word, op_word, r->flags.C);
                                                             } else { // ADC HL, rp[p]
-                                                                old_word = r->HL;
-                                                                op_word = cpu_read_rp(context.p);
-                                                                r->HL += op_word + r->flags.C;
-                                                                mask_mode(r->HL, cpu.L);
+                                                                r->HL = cpu_mask_mode(old_word + op_word + r->flags.C, cpu.L);
                                                                 r->F = _flag_sign_w(r->HL, cpu.L) | _flag_zero(r->HL)
                                                                     | _flag_undef(r->F) | _flag_overflow_w_add(old_word, op_word, r->HL, cpu.L)
                                                                     | _flag_subtract(0) | _flag_carry_w(old_word + op_word + r->flags.C, cpu.L)
