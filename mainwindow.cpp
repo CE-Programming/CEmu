@@ -530,6 +530,7 @@ void MainWindow::changeDebuggerState() {
     ui->groupDisplay->setEnabled( debugger_on );
     ui->groupRegisters->setEnabled( debugger_on );
     ui->groupInterrupts->setEnabled( debugger_on );
+    ui->groupStack->setEnabled( debugger_on );
 
     ui->buttonSend->setEnabled( !debugger_on );
     ui->buttonRefreshList->setEnabled( !debugger_on );
