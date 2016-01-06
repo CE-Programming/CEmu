@@ -242,7 +242,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>4</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -445,16 +445,53 @@
         <item>
          <widget class="QGroupBox" name="screenshotgroup">
           <property name="title">
-           <string>Screenshot</string>
+           <string>Still screenshot</string>
           </property>
-          <layout class="QGridLayout" name="gridLayout_10">
-           <item row="0" column="2">
+          <layout class="QFormLayout" name="formLayout_4">
+           <property name="formAlignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+           </property>
+           <item row="0" column="0">
+            <widget class="QPushButton" name="buttonScreenshot">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>160</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Take PNG Screenshot</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
             <widget class="QPushButton" name="buttonGIF_Screenshot">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="text">
               <string>Take GIF Screenshot</string>
              </property>
             </widget>
            </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="gifoptionsgroup">
+          <property name="title">
+           <string>Animated GIF</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout">
            <item row="0" column="0">
             <widget class="QPushButton" name="buttonGIF">
              <property name="sizePolicy">
@@ -480,49 +517,28 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="3">
-            <widget class="QPushButton" name="buttonScreenshot">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>160</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Take PNG Screenshot</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
-         <widget class="QGroupBox" name="gifoptionsgroup">
-          <property name="title">
-           <string>Animated GIF Options</string>
-          </property>
-          <layout class="QHBoxLayout" name="horizontalLayout_6">
-           <item>
+           <item row="1" column="0">
             <widget class="QLabel" name="framelabel">
              <property name="text">
               <string>Frame skip:</string>
              </property>
             </widget>
            </item>
-           <item>
+           <item row="1" column="4">
+            <widget class="QLabel" name="upper">
+             <property name="text">
+              <string>11</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
             <widget class="QLabel" name="lower">
              <property name="text">
               <string>1</string>
              </property>
             </widget>
            </item>
-           <item>
+           <item row="1" column="3">
             <widget class="QSlider" name="gif_frame_skip_slider">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -562,18 +578,26 @@
              </property>
             </widget>
            </item>
-           <item>
-            <widget class="QLabel" name="upper">
-             <property name="text">
-              <string>11</string>
+           <item row="1" column="5">
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
              </property>
-            </widget>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
-          <zorder>gif_frame_skip_slider</zorder>
           <zorder>lower</zorder>
           <zorder>upper</zorder>
           <zorder>framelabel</zorder>
+          <zorder>buttonGIF</zorder>
+          <zorder>gif_frame_skip_slider</zorder>
+          <zorder>horizontalSpacer</zorder>
          </widget>
         </item>
         <item>
@@ -1014,7 +1038,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>2</number>
+           <number>3</number>
           </property>
           <property name="tabsClosable">
            <bool>false</bool>
