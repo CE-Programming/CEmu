@@ -105,6 +105,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     ui->console->setFont(monospace);
     ui->disassemblyView->setFont(monospace);
+    ui->stackView->setFont(monospace);
 
     qRegisterMetaType<uint32_t>("uint32_t");
     qRegisterMetaType<std::string>("std::string");
@@ -608,6 +609,8 @@ void MainWindow::populateDebugWindow() {
     for(int i=0; i<ui->portView->rowCount(); ++i) {
         updatePortData(i);
     }
+
+    updateStackView();
 }
 
 void MainWindow::portMonitorCheckboxToggled(QTableWidgetItem * item) {
@@ -824,6 +827,20 @@ void MainWindow::resetCalculator() {
     } else {
         qDebug("Reset Failed.");
     }
+}
+
+void MainWindow::updateStackView() {
+    ui->stackView->clear();
+
+    QString formattedLine;
+
+    for(int i=0; i<30; i+=3) {
+       formattedLine = QString("<pre><font color='#444'>%1</font> %2</pre>")
+                                .arg(int2hex(cpu.registers.SPL+i, 6).toUpper(),
+                                     int2hex(cpu.read_byte(cpu.registers.SPL+i) | cpu.read_byte(cpu.registers.SPL+1+i)<<8 | cpu.read_byte(cpu.registers.SPL+2+i)<<16,6).toUpper());
+        ui->stackView->appendHtml(formattedLine);
+    }
+    ui->stackView->moveCursor(QTextCursor::Start, QTextCursor::MoveAnchor);
 }
 
 void MainWindow::drawNextDisassembleLine() {

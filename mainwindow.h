@@ -68,6 +68,7 @@ private:
     void resetCalculator();
 
     void stepPressed();
+    void updateStackView();
 
     // Console
     void clearConsole(void);
