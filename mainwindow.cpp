@@ -592,7 +592,7 @@ void MainWindow::populateDebugWindow() {
 
     ui->disassemblyView->clear();
 
-    for(int i=0; i<0x100; i++) {
+    for(int i=0; i<0x80; i++) {
         drawNextDisassembleLine();
     }
 
@@ -841,7 +841,7 @@ void MainWindow::drawNextDisassembleLine() {
     } else {
 
         // Simple syntax highlighting
-        formattedLine = QString("<pre><font color='#444'>%1</font>\t<font color='darkblue'>%2  </font>%3%4</pre>")
+        formattedLine = QString("<pre><font color='#444'>%1</font>\t<font color='darkblue'>%2</font>%3%4</pre>")
                                    .arg(int2hex(disasm.base_address, 6).toUpper(),
                                         QString::fromStdString(disasm.instruction.opcode),
                                         QString::fromStdString(disasm.instruction.mode_suffix),
@@ -860,5 +860,7 @@ void MainWindow::drawNextDisassembleLine() {
 }
 
 void MainWindow::stepPressed() {
+    debugger_on = false;
+    updateDebuggerChanges();
     emit setDebugStepMode();
 }
