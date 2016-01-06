@@ -836,7 +836,7 @@ void MainWindow::updateStackView() {
     QString formattedLine;
 
     for(int i=0; i<30; i+=3) {
-       formattedLine = QString("<pre><font color='#444'>%1</font> %2</pre>")
+       formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2</pre>")
                                 .arg(int2hex(cpu.registers.SPL+i, 6).toUpper(),
                                      int2hex(cpu.read_byte(cpu.registers.SPL+i) | cpu.read_byte(cpu.registers.SPL+1+i)<<8 | cpu.read_byte(cpu.registers.SPL+2+i)<<16,6).toUpper());
         ui->stackView->appendHtml(formattedLine);
@@ -850,23 +850,14 @@ void MainWindow::drawNextDisassembleLine() {
 
     QString formattedLine;
 
-    if (ui->checkDataCol->isChecked()) {
-        formattedLine = QString("<pre><font color='#444'>%1</font>\t%2  <font color='darkblue'>%3</font>%4%5</pre>")
-                                   .arg(int2hex(disasm.base_address, 6).toUpper(),
-                                        QString::fromStdString(disasm.instruction.data).leftJustified(12, ' '),
-                                        QString::fromStdString(disasm.instruction.opcode),
-                                        QString::fromStdString(disasm.instruction.mode_suffix),
-                                        QString::fromStdString(disasm.instruction.arguments));
-    } else {
+    formattedLine = QString("<pre><b><font color='#444'>%1</font></b>\t%2  <font color='darkblue'>%3</font>%4%5</pre>")
+                               .arg(int2hex(disasm.base_address, 6).toUpper(),
+                                    ui->checkDataCol->isChecked() ? QString::fromStdString(disasm.instruction.data).leftJustified(12, ' ') : "",
+                                    QString::fromStdString(disasm.instruction.opcode),
+                                    QString::fromStdString(disasm.instruction.mode_suffix),
+                                    QString::fromStdString(disasm.instruction.arguments));
 
-        // Simple syntax highlighting
-        formattedLine = QString("<pre><font color='#444'>%1</font>\t<font color='darkblue'>%2</font>%3%4</pre>")
-                                   .arg(int2hex(disasm.base_address, 6).toUpper(),
-                                        QString::fromStdString(disasm.instruction.opcode),
-                                        QString::fromStdString(disasm.instruction.mode_suffix),
-                                        QString::fromStdString(disasm.instruction.arguments));
-    }
-
+    // Simple syntax highlighting
     formattedLine.replace(QRegExp("(\\$[0-9a-fA-F]+)"), "<font color='green'>\\1</font>"); // hex numbers
     formattedLine.replace(QRegExp("([ ,])(\\d+)"), "\\1<font color='blue'>\\2</font>");    // dec numbers
 
