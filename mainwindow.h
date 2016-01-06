@@ -31,6 +31,7 @@ public slots:
     // Actions
     void runSetup(void);
     void screenshot(void);
+    void screenshotGIF();
     void recordGIF();
     void showAbout(void);
     void setUIMode(bool);
@@ -63,7 +64,6 @@ private:
     void breakpointCheckboxToggled(QTableWidgetItem *);
 
     void drawNextDisassembleLine();
-
     void resetCalculator();
 
     // Console

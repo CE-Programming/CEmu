@@ -84,6 +84,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->actionScreenshot, &QAction::triggered, this, &MainWindow::screenshot);
     connect(ui->actionRecord_GIF, &QAction::triggered, this, &MainWindow::recordGIF);
     connect(ui->buttonGIF, &QPushButton::clicked, this, &MainWindow::recordGIF);
+    connect(ui->actionTake_GIF_Screenshot, &QAction::triggered, this, &MainWindow::screenshotGIF);
+    connect(ui->buttonGIF_Screenshot, &QPushButton::clicked, this, &MainWindow::screenshotGIF);
 
     // About
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::showAbout);
@@ -217,23 +219,39 @@ void MainWindow::setUIMode(bool docks_enabled) {
     ui->tabWidget->setHidden(true);
 }
 
-void MainWindow::screenshot(void) {
+void MainWindow::screenshot() {
     QImage image = renderFramebuffer();
 
     QString filename = QFileDialog::getSaveFileName(this, tr("Save Screenshot"), QString(), tr("PNG images (*.png)"));
-    if (filename.isEmpty())
+    if (filename.isEmpty()) {
         return;
+    }
 
-    if (!image.save(filename, "PNG"))
+    if (!image.save(filename, "PNG")) {
         QMessageBox::critical(this, tr("Screenshot failed"), tr("Failed to save screenshot!"));
+    }
+}
+
+void MainWindow::screenshotGIF() {
+    QString filename = QFileDialog::getSaveFileName(this, tr("Save Screenshot"), QString(), tr("GIF images (*.gif)"));
+    if (filename.isEmpty()) {
+        return;
+    }
+
+    // TODO: Fix this and do it correctly //
+    gif_start_recording(filename.toStdString().c_str(), 1);
+    gif_new_frame();
+    if (!gif_stop_recording()) {
+        QMessageBox::critical(this, tr("Screenshot failed"), tr("Failed to save screenshot!"));
+    }
 }
 
 void MainWindow::recordGIF() {
-    static QString path;
+  static QString path;
 
-    if (path.isEmpty()) {
-        // TODO: Use QTemporaryFile?
-        path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.gif");
+  if (path.isEmpty()) {
+      // TODO: Use QTemporaryFile?
+      path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.gif");
 
         gif_start_recording(path.toStdString().c_str(), ui->gif_frame_skip_slider->value());
     } else {
