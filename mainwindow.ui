@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>957</width>
-    <height>683</height>
+    <width>1024</width>
+    <height>736</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -242,7 +242,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -507,22 +507,22 @@
           <property name="title">
            <string>Animated GIF Options</string>
           </property>
-          <layout class="QGridLayout" name="gridLayout_2">
-           <item row="1" column="2">
-            <widget class="QLabel" name="upper">
-             <property name="text">
-              <string>11</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
+          <layout class="QHBoxLayout" name="horizontalLayout_6">
+           <item>
             <widget class="QLabel" name="framelabel">
              <property name="text">
               <string>Frame skip:</string>
              </property>
             </widget>
            </item>
-           <item row="1" column="1">
+           <item>
+            <widget class="QLabel" name="lower">
+             <property name="text">
+              <string>1</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QSlider" name="gif_frame_skip_slider">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -562,18 +562,18 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="lower">
+           <item>
+            <widget class="QLabel" name="upper">
              <property name="text">
-              <string>1</string>
+              <string>11</string>
              </property>
             </widget>
            </item>
           </layout>
           <zorder>gif_frame_skip_slider</zorder>
-          <zorder>framelabel</zorder>
           <zorder>lower</zorder>
           <zorder>upper</zorder>
+          <zorder>framelabel</zorder>
          </widget>
         </item>
         <item>
@@ -655,7 +655,7 @@
           <property name="title">
            <string>Display</string>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_11">
+          <layout class="QHBoxLayout" name="horizontalLayout_10">
            <item>
             <widget class="QLabel" name="label_2">
              <property name="text">
@@ -709,7 +709,17 @@
           <property name="title">
            <string>Debugger</string>
           </property>
-          <layout class="QGridLayout" name="gridLayout_9">
+          <layout class="QFormLayout" name="formLayout">
+           <item row="0" column="0" colspan="2">
+            <widget class="QCheckBox" name="checkDataCol">
+             <property name="text">
+              <string>Show Data Column</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
            <item row="1" column="0">
             <widget class="QLabel" name="label_4">
              <property name="text">
@@ -742,16 +752,6 @@
              </property>
              <property name="tickInterval">
               <number>0</number>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QCheckBox" name="checkDataCol">
-             <property name="text">
-              <string>Show Data Column</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -1408,21 +1408,6 @@
                <bool>false</bool>
               </property>
               <layout class="QGridLayout" name="gridLayout_6">
-               <property name="leftMargin">
-                <number>8</number>
-               </property>
-               <property name="topMargin">
-                <number>8</number>
-               </property>
-               <property name="rightMargin">
-                <number>8</number>
-               </property>
-               <property name="bottomMargin">
-                <number>8</number>
-               </property>
-               <property name="spacing">
-                <number>5</number>
-               </property>
                <item row="0" column="7">
                 <widget class="QCheckBox" name="check3">
                  <property name="palette">
@@ -2249,7 +2234,7 @@
                 </widget>
                </item>
                <item row="2" column="0">
-                <layout class="QGridLayout" name="gridLayout_7" rowstretch="0,0,0,0,0,0,0,0,0,0,0" columnstretch="0,0,0,0,0">
+                <layout class="QGridLayout" name="gridLayout_7" rowstretch="0,0,0,0,0" columnstretch="0,0,0,0">
                  <property name="sizeConstraint">
                   <enum>QLayout::SetDefaultConstraint</enum>
                  </property>
@@ -3244,7 +3229,7 @@
                <bool>false</bool>
               </property>
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
@@ -3270,16 +3255,7 @@
               <property name="checkable">
                <bool>false</bool>
               </property>
-              <layout class="QFormLayout" name="formLayout">
-               <property name="formAlignment">
-                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-               </property>
-               <property name="horizontalSpacing">
-                <number>5</number>
-               </property>
-               <property name="verticalSpacing">
-                <number>5</number>
-               </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_5">
                <property name="leftMargin">
                 <number>8</number>
                </property>
@@ -3292,7 +3268,7 @@
                <property name="bottomMargin">
                 <number>8</number>
                </property>
-               <item row="0" column="0">
+               <item>
                 <widget class="QCheckBox" name="checkPowered">
                  <property name="palette">
                   <palette>
@@ -3342,7 +3318,7 @@
                  </property>
                 </widget>
                </item>
-               <item row="1" column="0">
+               <item>
                 <widget class="QLabel" name="label_7">
                  <property name="palette">
                   <palette>
@@ -3384,9 +3360,12 @@
                  <property name="text">
                   <string>Brightness</string>
                  </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
                 </widget>
                </item>
-               <item row="1" column="1">
+               <item>
                 <widget class="QSlider" name="brightnessSlider">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -3407,6 +3386,19 @@
                </item>
               </layout>
              </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer_4">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
             </item>
            </layout>
           </item>
@@ -4112,6 +4104,19 @@
               </layout>
              </widget>
             </item>
+            <item>
+             <spacer name="verticalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
            </layout>
           </item>
          </layout>
@@ -4165,8 +4170,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>957</width>
-     <height>21</height>
+     <width>1024</width>
+     <height>22</height>
     </rect>
    </property>
    <property name="sizePolicy">
