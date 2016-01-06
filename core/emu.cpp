@@ -316,10 +316,12 @@ void emu_loop(bool reset) {
     while (!exiting) {
         sched_process_pending_events();
         if (cpu_events & EVENT_RESET) {
+            cpu_events = EVENT_NONE;
             gui_console_printf("CPU Reset triggered...");
             emu_reset();
         }
-        if (cpu_events & EVENT_DEBUG_STEP) {
+        if (cpu_events & (EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OVER)) {
+            cpu_events = EVENT_NONE;
             debugger(DBG_STEP, 0);
         }
         if (cycle_count_delta < 0) {

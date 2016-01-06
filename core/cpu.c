@@ -1664,7 +1664,7 @@ void cpu_execute(void) {
 
             cpu_get_cntrl_data_blocks_format();
 
-            if (cpu_events & EVENT_DEBUG_STEP) {
+            if (cpu_events & (EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OVER)) {
                 // Flush the cycles
                 cycle_count_delta = 0;
                 break;

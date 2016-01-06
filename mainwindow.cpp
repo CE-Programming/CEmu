@@ -69,6 +69,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     connect(ui->buttonStep, &QPushButton::clicked, this, &MainWindow::stepPressed);
     connect(this, &MainWindow::setDebugStepMode, &emu, &EmuThread::setDebugStepMode);
+    connect(ui->buttonStepOver, &QPushButton::clicked, this, &MainWindow::stepOverPressed);
+    connect(this, &MainWindow::setDebugStepOverMode, &emu, &EmuThread::setDebugStepOverMode);
 
     // Linking
     connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::selectFiles);
@@ -708,7 +710,7 @@ void MainWindow::breakpointCheckboxToggled(QTableWidgetItem * item) {
     auto row = item->row();
     uint8_t value = DBG_NO_HANDLE;
 
-    uint32_t address = (uint32_t)ui->breakpointView->item(row, 0)->text().toInt(nullptr,16);
+    uint32_t address = (uint32_t)ui->breakpointView->item(row, 0)->text().toInt(nullptr,16)&0xFFFFFF;
 
     // Handle R_Break, W_Break, and E_Break
     if (col > 0)
@@ -725,6 +727,7 @@ void MainWindow::breakpointCheckboxToggled(QTableWidgetItem * item) {
         if (item->checkState() != Qt::Checked) {
             mem.debug.block[address] &= ~value;
         } else {
+            printf("%06X",address);
             mem.debug.block[address] |= value;
         }
     }
@@ -866,11 +869,17 @@ void MainWindow::drawNextDisassembleLine() {
     if (disasm.hit_pc == true) {
         ui->disassemblyView->highlightPCLine();
     }
-
 }
 
 void MainWindow::stepPressed() {
     debugger_on = false;
     updateDebuggerChanges();
     emit setDebugStepMode();
+}
+
+void MainWindow::stepOverPressed() {
+    debugger_on = false;
+    updateDebuggerChanges();
+    emit setDebugStepMode();
+    //emit setDebugStepOverMode();
 }

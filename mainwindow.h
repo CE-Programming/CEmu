@@ -47,6 +47,7 @@ signals:
     void sendVariable(std::string);
     void setReceiveState(bool);
     void setDebugStepMode();
+    void setDebugStepOverMode();
 
 private:
     // Debugger
@@ -68,6 +69,7 @@ private:
     void resetCalculator();
 
     void stepPressed();
+    void stepOverPressed();
     void updateStackView();
 
     // Console

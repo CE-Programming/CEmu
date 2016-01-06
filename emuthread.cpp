@@ -90,9 +90,15 @@ void EmuThread::setReceiveState(bool state) {
 }
 
 void EmuThread::setDebugStepMode() {
-  enter_debugger = false;
-  in_debugger = false;
-  cpu_events |= EVENT_DEBUG_STEP;
+    enter_debugger = false;
+    in_debugger = false;
+    cpu_events |= EVENT_DEBUG_STEP;
+}
+
+void EmuThread::setDebugStepOverMode() {
+    enter_debugger = false;
+    in_debugger = false;
+    cpu_events |= EVENT_DEBUG_STEP_OVER;
 }
 
 //Called occasionally, only way to do something in the same thread the emulator runs in.

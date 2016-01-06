@@ -302,7 +302,7 @@ uint8_t memory_read_byte(const uint32_t address)
             }
         // MIRRORED
             value = memory_read_byte(addr - 0x80000);
-            break;
+            return value;
 
         case 0xE: case 0xF:
             cpu.cycles += 2;
@@ -314,11 +314,13 @@ uint8_t memory_read_byte(const uint32_t address)
             break;
     }
 
-    if (mem.debug.block[addr] & DBG_READ_BREAKPOINT) {
-        debugger(HIT_READ_BREAKPOINT, addr);
-    }
-    if ((mem.debug.block[addr] & DBG_EXEC_BREAKPOINT) && (cpu.registers.PC == ((addr+1)&0xFFFFFF))) {
-        debugger(HIT_EXEC_BREAKPOINT, addr);
+    if (!in_debugger) {
+        if (mem.debug.block[address&0xFFFFFF] & DBG_READ_BREAKPOINT) {
+            debugger(HIT_READ_BREAKPOINT, addr);
+        }
+        if ((mem.debug.block[address&0xFFFFFF] & DBG_EXEC_BREAKPOINT) && (cpu.registers.PC == ((addr+1)&0xFFFFFF))) {
+            debugger(HIT_EXEC_BREAKPOINT, addr);
+        }
     }
 
     return value;
@@ -370,7 +372,7 @@ void memory_write_byte(const uint32_t address, const uint8_t byte) {
             }
             // MIRRORED
             memory_write_byte(addr - 0x80000, byte);
-            break;
+            return;
 
         // MMIO <-> Advanced Perphrial Bus
         case 0xE: case 0xF:
@@ -383,8 +385,10 @@ void memory_write_byte(const uint32_t address, const uint8_t byte) {
             break;
     }
 
-    if (mem.debug.block[addr] & DBG_WRITE_BREAKPOINT) {
-        debugger(HIT_WRITE_BREAKPOINT, addr);
+    if (!in_debugger) {
+        if (mem.debug.block[address&0xFFFFFF] & DBG_WRITE_BREAKPOINT) {
+            debugger(HIT_WRITE_BREAKPOINT, addr);
+        }
     }
 
     return;
