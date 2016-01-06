@@ -14,6 +14,9 @@ void debugger(int reason, uint32_t addr) {
     gui_debugger_entered_or_left(in_debugger = true);
     gui_debugger_send_command(reason, addr);
 
+    // If we stepped, clear it
+    cpu_events &= ~EVENT_DEBUG_STEP;
+
     do {
       /* TODO: debugger stuff */
       /* Such as step, step over, etc */

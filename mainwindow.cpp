@@ -67,6 +67,9 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->breakpointView, &QTableWidget::itemChanged, this, &MainWindow::breakpointCheckboxToggled);
     connect(ui->actionReset_Calculator, &QAction::triggered, this, &MainWindow::resetCalculator );
 
+    connect(ui->buttonStep, &QPushButton::clicked, this, &MainWindow::stepPressed);
+    connect(this, &MainWindow::setDebugStepMode, &emu, &EmuThread::setDebugStepMode);
+
     // Linking
     connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::selectFiles);
     connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::selectFiles);
@@ -74,6 +77,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonRefreshList, &QPushButton::clicked, this, &MainWindow::refreshVariableList);
     connect(this, &MainWindow::setReceiveState, &emu, &EmuThread::setReceiveState);
     connect(ui->buttonReceiveFiles, &QPushButton::clicked, this, &MainWindow::saveSelected);
+
 
     // Console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, this, &MainWindow::clearConsole);
@@ -595,7 +599,10 @@ void MainWindow::populateDebugWindow() {
     QFont disasmFont = ui->disassemblyView->font();
     disasmFont.setPointSize(ui->textSizeSlider->value());
     ui->disassemblyView->setFont(disasmFont);
-    ui->disassemblyView->moveCursor(QTextCursor::Start);
+    ui->disassemblyView->pccursor.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor);
+    ui->disassemblyView->pccursor.movePosition(QTextCursor::NextBlock, QTextCursor::MoveAnchor);
+    ui->disassemblyView->setTextCursor(ui->disassemblyView->pccursor);
+    ui->disassemblyView->centerCursor();
 
     for(int i=0; i<ui->portView->rowCount(); ++i) {
         updatePortData(i);
@@ -778,6 +785,10 @@ void MainWindow::deleteBreakpoint() {
 void MainWindow::processDebugCommand(int reason, uint32_t input) {
     int row = 0;
 
+    if (reason == DBG_STEP) {
+        ui->tabDebugging->setCurrentIndex(0);
+    }
+
     // We hit a normal breakpoint; raise the correct entry in the port monitor table
     if (reason == HIT_READ_BREAKPOINT || reason == HIT_WRITE_BREAKPOINT || reason == HIT_EXEC_BREAKPOINT) {
         ui->tabDebugging->setCurrentIndex(3);
@@ -828,6 +839,8 @@ void MainWindow::drawNextDisassembleLine() {
                                         QString::fromStdString(disasm.instruction.mode_suffix),
                                         QString::fromStdString(disasm.instruction.arguments));
     } else {
+
+        // Simple syntax highlighting
         formattedLine = QString("<pre><font color='#444'>%1</font>\t<font color='darkblue'>%2  </font>%3%4</pre>")
                                    .arg(int2hex(disasm.base_address, 6).toUpper(),
                                         QString::fromStdString(disasm.instruction.opcode),
@@ -835,9 +848,17 @@ void MainWindow::drawNextDisassembleLine() {
                                         QString::fromStdString(disasm.instruction.arguments));
     }
 
-    // Simple syntax highlighting
     formattedLine.replace(QRegExp("(\\$[0-9a-fA-F]+)"), "<font color='green'>\\1</font>"); // hex numbers
     formattedLine.replace(QRegExp("([ ,])(\\d+)"), "\\1<font color='blue'>\\2</font>");    // dec numbers
 
     ui->disassemblyView->appendHtml(formattedLine);
+
+    if (disasm.hit_pc == true) {
+        ui->disassemblyView->highlightPCLine();
+    }
+
+}
+
+void MainWindow::stepPressed() {
+    emit setDebugStepMode();
 }

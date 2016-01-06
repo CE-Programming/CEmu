@@ -319,6 +319,9 @@ void emu_loop(bool reset) {
             gui_console_printf("CPU Reset triggered...");
             emu_reset();
         }
+        if (cpu_events & EVENT_DEBUG_STEP) {
+            debugger(DBG_STEP, 0);
+        }
         if (cycle_count_delta < 0) {
             cpu_execute();  // execute instructions with available clock cycles
         } else {

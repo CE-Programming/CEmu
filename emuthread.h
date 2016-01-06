@@ -31,6 +31,7 @@ public slots:
 
     // Debugging
     void setDebugMode(bool state);
+    void setDebugStepMode();
 
     // Linking
     void setSendState(bool state);
