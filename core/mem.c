@@ -37,8 +37,8 @@ void mem_init(void) {
 
     mem.ram.block = (uint8_t*)calloc(ram_size, sizeof(uint8_t));      /* Allocate RAM */
 
-    mem.debug.block = (uint8_t*)calloc(0xFFFFFF, sizeof(uint8_t));    /* Allocate Debug memory */
-    mem.debug.ports = (uint8_t*)calloc(0xFFFF, sizeof(uint8_t));      /* Allocate Debug Port Monitor */
+    mem.debug.block = (uint8_t*)calloc(0x1000000, sizeof(uint8_t));    /* Allocate Debug memory */
+    mem.debug.ports = (uint8_t*)calloc(0x10000, sizeof(uint8_t));      /* Allocate Debug Port Monitor */
 
     mem.flash.mapped = false;
     mem.flash.write_index = 0;

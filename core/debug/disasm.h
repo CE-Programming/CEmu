@@ -16,8 +16,8 @@ typedef struct {
 typedef struct {
   eZ80_instuction_t instruction;
   uint8_t prefix, suffix;
-  uint32_t base_address;
-  uint32_t new_address;
+  int base_address;
+  int new_address;
   uint8_t IL, IS, S, L;
   bool hit_pc;
 } disasm_state_t;

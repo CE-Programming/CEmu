@@ -589,6 +589,7 @@ void MainWindow::populateDebugWindow() {
     ui->brightnessSlider->setValue(backlight.brightness);
 
     disasm.new_address = cpu.registers.PC-0x80;
+    if(disasm.new_address < 0) disasm.new_address = 0;
 
     ui->disassemblyView->clear();
 
