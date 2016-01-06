@@ -17,9 +17,15 @@ class DisasmWidget : public QPlainTextEdit
 
 public:
     DisasmWidget(QWidget *parent = 0);
+    void highlightPCLine();
+
+    QTextCursor pccursor;
 
 private slots:
     void highlightCurrentLine();
+
+private:
+    QList<QTextEdit::ExtraSelection> extraHighlights;
 };
 
 

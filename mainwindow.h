@@ -46,6 +46,7 @@ signals:
     void setSendState(bool);
     void sendVariable(std::string);
     void setReceiveState(bool);
+    void setDebugStepMode();
 
 private:
     // Debugger
@@ -65,6 +66,8 @@ private:
 
     void drawNextDisassembleLine();
     void resetCalculator();
+
+    void stepPressed();
 
     // Console
     void clearConsole(void);

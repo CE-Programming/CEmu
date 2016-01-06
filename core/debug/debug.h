@@ -12,6 +12,7 @@ extern volatile bool in_debugger;
 enum {
         DBG_USER,
         DBG_EXCEPTION,
+        DBG_STEP,
         HIT_EXEC_BREAKPOINT,
         HIT_READ_BREAKPOINT,
         HIT_WRITE_BREAKPOINT,

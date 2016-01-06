@@ -1664,6 +1664,11 @@ void cpu_execute(void) {
 
             cpu_get_cntrl_data_blocks_format();
 
+            if (cpu_events & EVENT_DEBUG_STEP) {
+                // Flush the cycles
+                cycle_count_delta = 0;
+                break;
+            }
 exit_loop:
             cycle_count_delta += cpu.cycles;
             if (cpu.cycles == 0) {

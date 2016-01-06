@@ -89,6 +89,12 @@ void EmuThread::setReceiveState(bool state) {
     emu_is_recieving = state;
 }
 
+void EmuThread::setDebugStepMode() {
+  enter_debugger = false;
+  in_debugger = false;
+  cpu_events |= EVENT_DEBUG_STEP;
+}
+
 //Called occasionally, only way to do something in the same thread the emulator runs in.
 void EmuThread::doStuff(bool wait_for) {
     (void)wait_for;
