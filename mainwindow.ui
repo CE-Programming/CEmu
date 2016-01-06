@@ -675,6 +675,54 @@
          </widget>
         </item>
         <item>
+         <widget class="QGroupBox" name="romgroup">
+          <property name="title">
+           <string>ROM Image</string>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_11">
+           <item>
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>File:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="rompathView">
+             <property name="frame">
+              <bool>false</bool>
+             </property>
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="buttonRunSetup">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Setup wizard...</string>
+             </property>
+             <property name="flat">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
          <widget class="QGroupBox" name="groupBox">
           <property name="title">
            <string>Display</string>
@@ -733,8 +781,8 @@
           <property name="title">
            <string>Debugger</string>
           </property>
-          <layout class="QFormLayout" name="formLayout">
-           <item row="0" column="0" colspan="2">
+          <layout class="QHBoxLayout" name="horizontalLayout_6">
+           <item>
             <widget class="QCheckBox" name="checkDataCol">
              <property name="text">
               <string>Show Data Column</string>
@@ -744,14 +792,27 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="0">
+           <item>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
             <widget class="QLabel" name="label_4">
              <property name="text">
               <string>Text Size:</string>
              </property>
             </widget>
            </item>
-           <item row="1" column="1">
+           <item>
             <widget class="QSlider" name="textSizeSlider">
              <property name="toolTip">
               <string/>
@@ -776,54 +837,6 @@
              </property>
              <property name="tickInterval">
               <number>0</number>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
-         <widget class="QGroupBox" name="romgroup">
-          <property name="title">
-           <string>ROM Image</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_3">
-           <item row="1" column="0">
-            <widget class="QPushButton" name="buttonRunSetup">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Setup wizard...</string>
-             </property>
-             <property name="flat">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QLineEdit" name="rompathView">
-             <property name="frame">
-              <bool>false</bool>
-             </property>
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0" alignment="Qt::AlignRight">
-            <widget class="QLabel" name="label">
-             <property name="text">
-              <string>ROM image file:</string>
              </property>
             </widget>
            </item>
