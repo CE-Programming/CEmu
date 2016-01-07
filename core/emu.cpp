@@ -266,6 +266,7 @@ void emu_cleanup(void) {
 }
 
 static void emu_reset() {
+    cpu_reset();
     cpu_events &= EVENT_DEBUG_STEP;
 
     sched_reset();

@@ -33,12 +33,6 @@ static void cpu_get_cntrl_data_blocks_format(void) {
     cpu.IL = cpu.ADL;
 }
 
-void cpu_init(void) {
-    memset(&cpu, 0x00, sizeof(eZ80cpu_t));
-    cpu_get_cntrl_data_blocks_format();
-    gui_console_printf("Initialized CPU...\n");
-}
-
 static uint32_t cpu_mask_mode(uint32_t value, bool mode) {
     return value & (mode ? 0xFFFFFF : 0xFFFF);
 }
@@ -50,8 +44,15 @@ static uint32_t cpu_address_mode(uint32_t address, bool mode) {
     return (cpu.registers.MBASE << 16) | (address & 0xFFFF);
 }
 
+static void cpu_prefetch(uint32_t address, bool mode) {
+    cpu.ADL = mode;
+    cpu.registers.PC = cpu_address_mode(address, mode);
+    cpu.prefetch = memory_read_byte(cpu.registers.PC);
+}
 static uint8_t cpu_fetch_byte(void) {
-    return memory_read_byte(cpu_address_mode(cpu.registers.PC++, cpu.ADL));
+    uint8_t value = cpu.prefetch;
+    cpu_prefetch(cpu.registers.PC + 1, cpu.ADL);
+    return value;
 }
 static int8_t cpu_fetch_offset(void) {
     return (int8_t)cpu_fetch_byte();
@@ -62,6 +63,16 @@ static uint32_t cpu_fetch_word(void) {
     if (cpu.IL) {
         value |= cpu_fetch_byte() << 16;
     }
+    return value;
+}
+static uint32_t cpu_fetch_word_no_prefetch(void) {
+    uint32_t value = cpu_fetch_byte();
+    value |= cpu.prefetch << 8;
+    if (cpu.IL) {
+        cpu_fetch_byte();
+        value |= cpu.prefetch << 16;
+    }
+    cpu.registers.PC++;
     return value;
 }
 
@@ -86,13 +97,6 @@ static void cpu_write_word(uint32_t address, uint32_t value) {
     if (cpu.L) {
         cpu_write_byte(address + 2, value >> 16);
     }
-}
-
-static void cpu_pop_mode(void) {
-    cpu.ADL = cpu_read_byte(cpu.registers.SPL++) & 1;
-}
-static void cpu_push_mode(void) {
-    cpu_write_byte(--cpu.registers.SPL, (cpu.MADL << 1) | cpu.ADL);
 }
 
 static uint8_t cpu_pop_byte(void) {
@@ -345,55 +349,47 @@ static uint32_t cpu_dec_bc_partial_mode() {
     return value;
 }
 
-static void cpu_call(bool condition, uint32_t address, uint8_t mixed) {
+static void cpu_call(uint32_t address, uint8_t mixed) {
     eZ80registers_t *r = &cpu.registers;
-    if (condition) {
-        cpu.cycles += 0;
-        if (mixed) {
-            if (cpu.ADL) {
-                cpu_write_byte(--r->SPL, r->PCU);
-            }
-            if (cpu.IL || (cpu.L && !cpu.ADL)) {
-                cpu_write_byte(--r->SPL, r->PCH);
-                cpu_write_byte(--r->SPL, r->PCL);
-            } else {
-                cpu_write_byte(--r->SPS, r->PCH);
-                cpu_write_byte(--r->SPS, r->PCL);
-            }
-            cpu_write_byte(--r->SPL, (cpu.MADL << 1) | cpu.ADL);
-            cpu.ADL = cpu.IL;
-        } else {
-            cpu_push_word(r->PC);
+    if (mixed) {
+        if (cpu.ADL) {
+            cpu_write_byte(--r->SPL, r->PCU);
         }
-        r->PC = address;
+        if (cpu.IL || (cpu.L && !cpu.ADL)) {
+            cpu_write_byte(--r->SPL, r->PCH);
+            cpu_write_byte(--r->SPL, r->PCL);
+        } else {
+            cpu_write_byte(--r->SPS, r->PCH);
+            cpu_write_byte(--r->SPS, r->PCL);
+        }
+        cpu_write_byte(--r->SPL, (cpu.MADL << 1) | cpu.ADL);
+    } else {
+        cpu_push_word(r->PC);
     }
+    cpu_prefetch(address, cpu.IL);
 }
 
-static void cpu_return(bool condition) {
-    uint8_t adl;
+static void cpu_return(void) {
     eZ80registers_t *r = &cpu.registers;
-    if (condition) {
-        cpu.cycles += 0;
-        if (cpu.SUFFIX) {
-            adl = cpu_read_byte(r->SPL++) & 1;
-            if (cpu.ADL) {
-                r->PCL = cpu_read_byte(r->SPL++);
-                r->PCH = cpu_read_byte(r->SPL++);
-            } else {
-                r->PCL = cpu_read_byte(r->SPS++);
-                r->PCH = cpu_read_byte(r->SPS++);
-            }
-            if (adl) {
-                r->PCU = cpu_read_byte(r->SPL++);
-                if (!cpu.L && !cpu.ADL) {
-                    r->PCU = 0;
-                }
-            }
-            cpu.ADL = adl;
+    uint32_t address;
+    bool mode = cpu.ADL;
+    cpu.cycles++;
+    if (cpu.SUFFIX) {
+        mode = cpu_read_byte(r->SPL++) & 1;
+        if (cpu.ADL) {
+            address  = cpu_read_byte(r->SPL++);
+            address |= cpu_read_byte(r->SPL++) << 8;
         } else {
-            r->PC = cpu_pop_word();
+            address  = cpu_read_byte(r->SPS++);
+            address |= cpu_read_byte(r->SPS++) << 8;
         }
+        if (mode) {
+            address |= cpu_mask_mode(cpu_read_byte(r->SPL++) << 16, cpu.ADL || cpu.L);
+        }
+    } else {
+        address = cpu_pop_word();
     }
+    cpu_prefetch(address, mode);
 }
 
 static void cpu_execute_alu(int i, uint8_t v) {
@@ -648,7 +644,7 @@ static void cpu_execute_bli(int y, int z) {
                     r->flags.Z = _flag_zero(r->B) != 0;
                     r->flags.N = _flag_sign_b(new) != 0;
                     if (r->B) {
-                        r->PC -= 2 + cpu.SUFFIX;
+                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
                     break;
                 case 3: // OTIMR
@@ -662,7 +658,7 @@ static void cpu_execute_bli(int y, int z) {
                         | _flag_halfcarry_b_sub(old, 0, 1)
                         | _flag_subtract(_flag_sign_b(new)) | _flag_undef(r->F);
                     if (r->B) {
-                        r->PC -= 2 + cpu.SUFFIX;
+                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
                     break;
                 case 4: // INI2R
@@ -674,7 +670,7 @@ static void cpu_execute_bli(int y, int z) {
                     r->flags.Z = _flag_zero(old) != 0;
                     r->flags.N = _flag_sign_b(new) != 0;
                     if (old) {
-                        r->PC -= 2 + cpu.SUFFIX;
+                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
                     break;
             }
@@ -690,7 +686,7 @@ static void cpu_execute_bli(int y, int z) {
                     r->flags.Z = _flag_zero(r->B) != 0;
                     r->flags.N = _flag_sign_b(new) != 0;
                     if (r->B) {
-                        r->PC -= 2 + cpu.SUFFIX;
+                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
                     break;
                 case 3: // OTDMR
@@ -704,7 +700,7 @@ static void cpu_execute_bli(int y, int z) {
                         | _flag_halfcarry_b_sub(old, 0, 1)
                         | _flag_subtract(_flag_sign_b(new)) | _flag_undef(r->F);
                     if (r->B) {
-                        r->PC -= 2 + cpu.SUFFIX;
+                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
                     break;
                 case 4: // IND2R
@@ -716,7 +712,7 @@ static void cpu_execute_bli(int y, int z) {
                     r->flags.Z = _flag_zero(old) != 0;
                     r->flags.N = _flag_sign_b(new) != 0;
                     if (old) {
-                        r->PC -= 2 + cpu.SUFFIX;
+                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
                     break;
             }
@@ -835,7 +831,7 @@ static void cpu_execute_bli(int y, int z) {
                     r->flags.PV = r->BC != 0;
                     r->flags.N = 0;
                     if (r->BC) {
-                        r->PC -= 2 + cpu.SUFFIX;
+                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
                     break;
                 case 1: // CPIR
@@ -850,7 +846,7 @@ static void cpu_execute_bli(int y, int z) {
                         | _flag_undef(r->F);
                     if (r->BC && !r->flags.Z) {
                         cpu.cycles++;
-                        r->PC -= 2 + cpu.SUFFIX;
+                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
                     break;
                 case 2: // INIR
@@ -861,7 +857,7 @@ static void cpu_execute_bli(int y, int z) {
                     r->flags.Z = _flag_zero(r->B) != 0;
                     r->flags.N = _flag_sign_b(new) != 0;
                     if (r->B) {
-                        r->PC -= 2 + cpu.SUFFIX;
+                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
                     break;
                 case 3: // OTIR
@@ -872,7 +868,7 @@ static void cpu_execute_bli(int y, int z) {
                     r->flags.Z = _flag_zero(r->B) != 0;
                     r->flags.N = _flag_sign_b(new) != 0;
                     if (r->B) {
-                        r->PC -= 2 + cpu.SUFFIX;
+                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
                     break;
                 case 4: // OTI2R
@@ -884,7 +880,7 @@ static void cpu_execute_bli(int y, int z) {
                     r->flags.Z = _flag_zero(old) != 0;
                     r->flags.N = _flag_sign_b(new) != 0;
                     if (old) {
-                        r->PC -= 2 + cpu.SUFFIX;
+                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
                     break;
             }
@@ -902,7 +898,7 @@ static void cpu_execute_bli(int y, int z) {
                     r->flags.PV = r->BC != 0;
                     r->flags.N = 0;
                     if (r->BC) {
-                        r->PC -= 2 + cpu.SUFFIX;
+                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
                     break;
                 case 1: // CPDR
@@ -917,7 +913,7 @@ static void cpu_execute_bli(int y, int z) {
                         | _flag_undef(r->F);
                     if (r->BC && !r->flags.Z) {
                         cpu.cycles++;
-                        r->PC -= 2 + cpu.SUFFIX;
+                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
                     break;
                 case 2: // INDR
@@ -928,7 +924,7 @@ static void cpu_execute_bli(int y, int z) {
                     r->flags.Z = _flag_zero(r->B) != 0;
                     r->flags.N = _flag_sign_b(new) != 0;
                     if (r->B) {
-                        r->PC -= 2 + cpu.SUFFIX;
+                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
                     break;
                 case 3: // OTDR
@@ -939,7 +935,7 @@ static void cpu_execute_bli(int y, int z) {
                     r->flags.Z = _flag_zero(r->B) != 0;
                     r->flags.N = _flag_sign_b(new) != 0;
                     if (r->B) {
-                        r->PC -= 2 + cpu.SUFFIX;
+                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
                     break;
                 case 4: // OTD2R
@@ -951,12 +947,22 @@ static void cpu_execute_bli(int y, int z) {
                     r->flags.Z = _flag_zero(old) != 0;
                     r->flags.N = _flag_sign_b(new) != 0;
                     if (old) {
-                        r->PC -= 2 + cpu.SUFFIX;
+                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
                     break;
             }
             break;
     }
+}
+
+void cpu_init(void) {
+    memset(&cpu, 0x00, sizeof(eZ80cpu_t));
+    gui_console_printf("Initialized CPU...\n");
+}
+
+void cpu_reset(void) {
+    cpu_prefetch(0, 0);
+    cpu_get_cntrl_data_blocks_format();
 }
 
 void cpu_execute(void) {
@@ -997,9 +1003,15 @@ void cpu_execute(void) {
             cpu.IEF1 = cpu.IEF2 = 1;
         }
         if (cpu.IEF1 && (intrpt.request->status & intrpt.request->enabled)) {
-            cpu.cycles = cpu.IEF1 = cpu.IEF2 = cpu.halted = 0;
-            cpu_call(true, cpu.IM == 3 ? cpu_read_word(r->I << 8 | r->R) : 0x38, cpu.MADL);
-            cycle_count_delta += cpu.cycles;
+            cpu.IEF1 = cpu.IEF2 = cpu.halted = 0;
+            cycle_count_delta++;
+            if (cpu.IM != 3) {
+                cpu_call(0x38, cpu.MADL);
+            } else {
+                cycle_count_delta++;
+                cpu_call(cpu_read_word(r->I << 8 | ~r->R), cpu.MADL);
+                cycle_count_delta += cpu.cycles;
+            }
         } else if (cpu.halted) {
             cycle_count_delta = 0; // consume all of the cycles
         }
@@ -1025,16 +1037,13 @@ void cpu_execute(void) {
                                 case 2: // DJNZ d
                                     s = cpu_fetch_offset();
                                     if (--r->B) {
-                                        w = cpu_mask_mode(r->PC + s, cpu.L);
-                                        cpu_fetch_byte();      // flush pipeline
-                                        r->PC = w;
+                                        cpu.cycles++;
+                                        cpu_prefetch(cpu_mask_mode(r->PC + s, cpu.L), cpu.ADL);
                                     }
                                     break;
                                 case 3: // JR d
                                     s = cpu_fetch_offset();
-                                    w = cpu_mask_mode(r->PC + s, cpu.L);
-                                    cpu_fetch_byte();      // flush pipeline
-                                    r->PC = w;
+                                    cpu_prefetch(cpu_mask_mode(r->PC + s, cpu.L), cpu.ADL);
                                     break;
                                 case 4:
                                 case 5:
@@ -1042,9 +1051,8 @@ void cpu_execute(void) {
                                 case 7: // JR cc[y-4], d
                                     s = cpu_fetch_offset();
                                     if (cpu_read_cc(context.y - 4)) {
-                                        w = cpu_mask_mode(r->PC + s, cpu.L);
-                                        cpu_fetch_byte();      // flush pipeline
-                                        r->PC = w;
+                                        cpu.cycles++;
+                                        cpu_prefetch(cpu_mask_mode(r->PC + s, cpu.L), cpu.ADL);
                                     }
                                     break;
                             }
@@ -1197,7 +1205,10 @@ void cpu_execute(void) {
                 case 3:
                     switch (context.z) {
                         case 0: // RET cc[y]
-                            cpu_return(cpu_read_cc(context.y));
+                            cpu.cycles++;
+                            if (cpu_read_cc(context.y)) {
+                                cpu_return();
+                            }
                             break;
                         case 1:
                             switch (context.q) {
@@ -1207,15 +1218,13 @@ void cpu_execute(void) {
                                 case 1:
                                     switch (context.p) {
                                         case 0: // RET
-                                            cpu_return(true);
+                                            cpu_return();
                                             break;
                                         case 1: // EXX
                                             exx(&cpu.registers);
                                             break;
                                         case 2: // JP (rr)
-                                            cpu.cycles += 0;
-                                            r->PC = cpu_read_index();
-                                            cpu.ADL = cpu.L;
+                                            cpu_prefetch(cpu_read_index(), cpu.L);
                                             break;
                                         case 3: // LD SP, HL
                                             cpu_write_sp(cpu_read_index());
@@ -1225,19 +1234,18 @@ void cpu_execute(void) {
                             }
                             break;
                         case 2: // JP cc[y], nn
-                            w = cpu_fetch_word();
                             if (cpu_read_cc(context.y)) {
-                                cpu.cycles += 0;
-                                r->PC = w;
-                                cpu.ADL = cpu.L;
+                                cpu.cycles++;
+                                cpu_prefetch(cpu_fetch_word_no_prefetch(), cpu.L);
+                            } else {
+                                cpu_fetch_word();
                             }
                             break;
                         case 3:
                             switch (context.y) {
                                 case 0: // JP nn
-                                    cpu.cycles += 0;
-                                    r->PC = cpu_fetch_word();
-                                    cpu.ADL = cpu.L;
+                                    cpu.cycles++;
+                                    cpu_prefetch(cpu_fetch_word_no_prefetch(), cpu.L);
                                     break;
                                 case 1: // 0xCB prefixed opcodes
                                     w = cpu_index_address();
@@ -1291,7 +1299,11 @@ void cpu_execute(void) {
                             }
                             break;
                         case 4: // CALL cc[y], nn
-                            cpu_call(cpu_read_cc(context.y), cpu_fetch_word(), cpu.SUFFIX);
+                            if (cpu_read_cc(context.y)) {
+                                cpu_call(cpu_fetch_word_no_prefetch(), cpu.SUFFIX);
+                            } else {
+                                cpu_fetch_word();
+                            }
                             break;
                         case 5:
                             switch (context.q) {
@@ -1301,7 +1313,7 @@ void cpu_execute(void) {
                                 case 1:
                                     switch (context.p) {
                                         case 0: // CALL nn
-                                            cpu_call(true, cpu_fetch_word(), cpu.SUFFIX);
+                                            cpu_call(cpu_fetch_word_no_prefetch(), cpu.SUFFIX);
                                             break;
                                         case 1: // 0xDD prefixed opcodes
                                             cpu.PREFIX = 2;
@@ -1447,8 +1459,8 @@ void cpu_execute(void) {
                                                                 case 0: // RETN
                                                                     // This is actually identical to reti on the z80
                                                                 case 1: // RETI
-                                                                    cpu_return(true);
                                                                     cpu.IEF1 = cpu.IEF2;
+                                                                    cpu_return();
                                                                     break;
                                                                 case 2: // LEA IY, IX + d
                                                                     cpu.PREFIX = 2;
@@ -1560,7 +1572,7 @@ void cpu_execute(void) {
                                                             r->flags.Z = _flag_zero(old) != 0;
                                                             r->flags.N = _flag_sign_b(new) != 0;
                                                             if (old) {
-                                                                r->PC -= 2 + cpu.SUFFIX;
+                                                                cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                                                             }
                                                             break;
                                                         case 0xC3: // OTIRX
@@ -1571,7 +1583,7 @@ void cpu_execute(void) {
                                                             r->flags.Z = _flag_zero(old) != 0;
                                                             r->flags.N = _flag_sign_b(new) != 0;
                                                             if (old) {
-                                                                r->PC -= 2 + cpu.SUFFIX;
+                                                                cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                                                             }
                                                             break;
                                                         case 0xC7: // LD I, HL
@@ -1588,7 +1600,7 @@ void cpu_execute(void) {
                                                             r->flags.Z = _flag_zero(old) != 0;
                                                             r->flags.N = _flag_sign_b(new) != 0;
                                                             if (old) {
-                                                                r->PC -= 2 + cpu.SUFFIX;
+                                                                cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                                                             }
                                                             break;
                                                         case 0xCB: // OTDRX
@@ -1599,7 +1611,7 @@ void cpu_execute(void) {
                                                             r->flags.Z = _flag_zero(old) != 0;
                                                             r->flags.N = _flag_sign_b(new) != 0;
                                                             if (old) {
-                                                                r->PC -= 2 + cpu.SUFFIX;
+                                                                cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                                                             }
                                                             break;
                                                         case 0xEE: // flash erase
@@ -1626,24 +1638,8 @@ void cpu_execute(void) {
                             cpu_execute_alu(context.y, cpu_fetch_byte());
                             break;
                         case 7: // RST y*8
-                            cpu.cycles += 0;
-                            if (cpu.SUFFIX) {
-                                if (cpu.ADL) {
-                                    cpu_write_byte(--r->SPL, r->PCU);
-                                }
-                                if (cpu.IL || (cpu.L && !cpu.ADL)) {
-                                    cpu_write_byte(--r->SPL, r->PCH);
-                                    cpu_write_byte(--r->SPL, r->PCL);
-                                } else {
-                                    cpu_write_byte(--r->SPS, r->PCH);
-                                    cpu_write_byte(--r->SPS, r->PCL);
-                                }
-                                cpu_write_byte(--r->SPL, (cpu.MADL << 1) | cpu.ADL);
-                                cpu.ADL = cpu.IL;
-                            } else {
-                                cpu_push_word(r->PC);
-                            }
-                            r->PC = context.y << 3;
+                            cpu.cycles++;
+                            cpu_call(context.y << 3, cpu.SUFFIX);
                             break;
                     }
                     break;

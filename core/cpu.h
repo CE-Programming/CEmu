@@ -50,7 +50,7 @@ typedef struct eZ80cpu {
         uint8_t halted      : 1;  /* Have we halted the CPU?                                                                     */
     };
     int cycles;
-    uint8_t bus;  /* TODO */
+    uint8_t prefetch, bus;  /* TODO */
     int interrupt;
 } eZ80cpu_t;
 
@@ -59,7 +59,7 @@ extern eZ80cpu_t cpu;
 
 /* Available Functions */
 void cpu_init(void);
-
+void cpu_reset(void);
 void cpu_execute(void);
 
 #ifdef __cplusplus
