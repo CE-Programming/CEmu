@@ -478,7 +478,7 @@ void MainWindow::updateDebuggerChanges() {
       cpu.registers.DE = (uint32_t)hex2int(ui->deregView->text());
       cpu.registers.BC = (uint32_t)hex2int(ui->bcregView->text());
       cpu.registers.IX = (uint32_t)hex2int(ui->ixregView->text());
-      cpu.registers.IY = (uint32_t)hex2int(ui->ixregView->text());
+      cpu.registers.IY = (uint32_t)hex2int(ui->iyregView->text());
 
       cpu.registers._AF = (uint16_t)hex2int(ui->af_regView->text());
       cpu.registers._HL = (uint32_t)hex2int(ui->hl_regView->text());
