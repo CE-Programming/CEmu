@@ -894,9 +894,9 @@ void MainWindow::drawNextDisassembleLine() {
 
     // Simple syntax highlighting
     QString instructionArgsHighlighted = QString::fromStdString(disasm.instruction.arguments)
-                                        .replace(QRegExp("(\\$[0-9a-fA-F]+)"), "<font color='green'>\\1</font>")           // hex numbers
-                                        .replace(QRegExp("(\\$[0-9a-fA-F]+)|(\\d+)"), "\\1<font color='blue'>\\2</font>")  // dec numbers
-                                        .replace(QRegExp("([\\(\\)])"), "<font color='#700'>\\1</font>");                  // parentheses
+                                        .replace(QRegExp("(\\$[0-9a-fA-F]+)"), "<font color='green'>\\1</font>")    // hex numbers
+                                        .replace(QRegExp("(^\\d)"), "<font color='blue'>\\1</font>")                // dec number
+                                        .replace(QRegExp("([\\(\\)])"), "<font color='#600'>\\1</font>");           // parentheses
 
     QString formattedLine = QString("<pre><b> %1 <font color='#444'>%2</font></b>    %3  <font color='darkblue'>%4%5</font>%6</pre>")
                                .arg(breakpointSymbols,
