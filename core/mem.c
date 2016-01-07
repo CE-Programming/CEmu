@@ -325,7 +325,7 @@ uint8_t memory_read_byte(const uint32_t address)
 
     if ((mem.debug.block[address] & DBG_EXEC_BREAKPOINT)) {
         disasmHighlight.hit_exec_breakpoint = true;
-        if (!in_debugger && (cpu.registers.PC == ((address+1)&0xFFFFFF))) {
+        if (!in_debugger && (cpu.registers.PC == (address&0xFFFFFF))) {
             debugger(HIT_EXEC_BREAKPOINT, address);
         }
     }
