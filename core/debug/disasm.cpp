@@ -577,25 +577,21 @@ void disassembleInstruction(void) {
                         case 0: // .SIS
                             disasm.suffix = 1;
                             disasm.instruction.mode_suffix = ".sis ";
-                            disasm.S = 1; disasm.IS = 1;
                             disasm.L = 0; disasm.IL = 0;
                             goto exit_loop;
                         case 1: // .LIS
                             disasm.suffix = 1;
                             disasm.instruction.mode_suffix = ".lis ";
-                            disasm.S = 0; disasm.IS = 1;
                             disasm.L = 1; disasm.IL = 0;
                             goto exit_loop;
                         case 2: // .SIL
                             disasm.suffix = 1;
                             disasm.instruction.mode_suffix = ".sil ";
-                            disasm.S = 1; disasm.IS = 0;
                             disasm.L = 0; disasm.IL = 1;
                             goto exit_loop;
                         case 3: // .LIL
                             disasm.suffix = 1;
                             disasm.instruction.mode_suffix = ".lil ";
-                            disasm.S = 0; disasm.IS = 0;
                             disasm.L = 1; disasm.IL = 1;
                             goto exit_loop;
                         case 6: // HALT

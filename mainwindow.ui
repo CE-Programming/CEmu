@@ -1229,10 +1229,20 @@
            </attribute>
            <layout class="QHBoxLayout" name="horizontalLayout_2">
             <item>
-             <widget class="QPlainTextEdit" name="plainTextEdit_2"/>
-            </item>
-            <item>
-             <widget class="QPlainTextEdit" name="plainTextEdit"/>
+             <widget class="QHexEdit" name="memoryView">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="horizontalScrollBarPolicy">
+               <enum>Qt::ScrollBarAlwaysOn</enum>
+              </property>
+              <property name="lineWrapMode">
+               <enum>QPlainTextEdit::WidgetWidth</enum>
+              </property>
+             </widget>
             </item>
            </layout>
           </widget>
@@ -4381,6 +4391,11 @@
    <class>DisasmWidget</class>
    <extends>QPlainTextEdit</extends>
    <header>disasmwidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QHexEdit</class>
+   <extends>QPlainTextEdit</extends>
+   <header>qhexedit.h</header>
   </customwidget>
  </customwidgets>
  <resources>

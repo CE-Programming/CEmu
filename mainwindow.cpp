@@ -824,7 +824,7 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
     bool ok;
 
     if (reason == DBG_STEP || reason == DBG_USER) {
-        ui->tabDebugging->setCurrentIndex(0);
+        if (reason == DBG_STEP) { ui->tabDebugging->setCurrentIndex(0); }
         updateDisasmView(cpu.registers.PC, true);
     }
 

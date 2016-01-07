@@ -70,7 +70,10 @@ SOURCES +=  utils.cpp \
     core/vat.c \
     core/capture/gif.cpp \
     core/debug/disasm.cpp \
-    core/debug/debug.c
+    core/debug/debug.c \
+    chunks.cpp \
+    commands.cpp \
+    qhexedit.cpp
 
 linux|macx|ios: SOURCES += os/os-linux.c
 win32: SOURCES += os/os-win32.c
@@ -113,7 +116,10 @@ HEADERS  +=  os/os.h \
     core/capture/giflib.h \
     core/debug/debug.h \
     core/debug/disasm.h \
-    core/debug/disasmc.h
+    core/debug/disasmc.h \
+    qhexedit.h \
+    chunks.h \
+    commands.h
 
 FORMS    += mainwindow.ui \
     romselection.ui
