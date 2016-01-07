@@ -305,7 +305,7 @@ uint8_t memory_read_byte(const uint32_t address)
                 break;
             }
         // MIRRORED
-            value = memory_read_byte(addr - 0x80000);
+            value = memory_read_byte(address - 0x80000);
             return value;
 
         case 0xE: case 0xF:
@@ -320,13 +320,13 @@ uint8_t memory_read_byte(const uint32_t address)
 
     if (mem.debug.block[address] & DBG_READ_BREAKPOINT) {
         disasmHighlight.hit_read_breakpoint = true;
-        if (!in_debugger) debugger(HIT_READ_BREAKPOINT, addr);
+        if (!in_debugger) debugger(HIT_READ_BREAKPOINT, address);
     }
 
     if ((mem.debug.block[address] & DBG_EXEC_BREAKPOINT)) {
         disasmHighlight.hit_exec_breakpoint = true;
         if (!in_debugger && (cpu.registers.PC == ((address+1)&0xFFFFFF))) {
-            debugger(HIT_EXEC_BREAKPOINT, addr);
+            debugger(HIT_EXEC_BREAKPOINT, address);
         }
     }
 
@@ -401,7 +401,7 @@ void memory_write_byte(const uint32_t address, const uint8_t byte) {
     }
 
     if (mem.debug.block[address&0xFFFFFF] & DBG_WRITE_BREAKPOINT) {
-        if (!in_debugger) debugger(HIT_WRITE_BREAKPOINT, addr);
+        if (!in_debugger) debugger(HIT_WRITE_BREAKPOINT, address);
     }
 
     return;
