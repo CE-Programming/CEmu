@@ -37,7 +37,8 @@ ios {
 macx: ICON = resources/icons/icon.icns
 
 
-SOURCES += main.cpp\
+SOURCES +=  utils.cpp \
+    main.cpp\
     mainwindow.cpp \
     romselection.cpp \
     qtframebuffer.cpp \
@@ -45,6 +46,7 @@ SOURCES += main.cpp\
     emuthread.cpp \
     qtkeypadbridge.cpp \
     qmlbridge.cpp \
+    disasmwidget.cpp \
     core/asic.c \
     core/cpu.c \
     core/keypad.c \
@@ -64,21 +66,23 @@ SOURCES += main.cpp\
     core/cert.c \
     core/control.c \
     core/mem.c \
-    core/capture/gif.cpp \
-    core/debug/disasm.cpp \
-    core/debug/debug.c \
     core/link.c \
     core/vat.c \
-    disasmwidget.cpp
+    core/capture/gif.cpp \
+    core/debug/disasm.cpp \
+    core/debug/debug.c
 
-linux|macx|ios: SOURCES += core/os/os-linux.c
-win32: SOURCES += core/os/os-win32.c
+linux|macx|ios: SOURCES += os/os-linux.c
+win32: SOURCES += os/os-win32.c
 
-HEADERS  += mainwindow.h \
+HEADERS  +=  os/os.h \
+    utils.h \
+    mainwindow.h \
     romselection.h \
     qtframebuffer.h \
     lcdwidget.h \
     emuthread.h \
+    disasmwidget.h \
     qtkeypadbridge.h \
     qmlbridge.h \
     keymap.h \
@@ -99,18 +103,16 @@ HEADERS  += mainwindow.h \
     core/usb.h \
     core/sha256.h \
     core/realclock.h \
-    core/os/os.h \
     core/backlight.h \
     core/cert.h \
     core/control.h \
     core/mem.h \
+    core/link.h \
+    core/vat.h \
     core/capture/gif.h \
     core/capture/giflib.h \
     core/debug/debug.h \
     core/debug/disasm.h \
-    core/link.h \
-    core/vat.h \
-    disasmwidget.h \
     core/debug/disasmc.h
 
 FORMS    += mainwindow.ui \

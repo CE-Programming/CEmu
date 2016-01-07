@@ -135,9 +135,12 @@ void EmuThread::run() {
     bool reset_true = true;
     bool success = emu_start();
 
-    if(success) { emu_loop(reset_true); }
-
-    emit exited(0);
+    if (success) {
+        emu_loop(reset_true);
+        emit exited(0);
+    } else {
+        emit exited(-1);
+    }
 }
 
 bool EmuThread::stop() {
