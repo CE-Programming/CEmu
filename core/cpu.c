@@ -1462,10 +1462,8 @@ void cpu_execute(void) {
                                                                     cpu_push_word(r->IX + cpu_fetch_offset());
                                                                     break;
                                                                 case 5: // LD MB, A
-                                                                    if (cpu.L) {
+                                                                    if (cpu.ADL) {
                                                                         r->MBASE = r->A;
-                                                                    } else { // OPCODETRAP
-                                                                        cpu.IEF_wait = 1;
                                                                     }
                                                                     break;
                                                                 case 7: // STMIX
@@ -1487,11 +1485,7 @@ void cpu_execute(void) {
                                                                     cpu_push_word(r->IY + cpu_fetch_offset());
                                                                     break;
                                                                 case 5: // LD A, MB
-                                                                    if (cpu.ADL) {
-                                                                        r->A = r->MBASE;
-                                                                    } else { // OPCODETRAP
-                                                                        cpu.IEF_wait = 1;
-                                                                    }
+                                                                    r->A = r->MBASE;
                                                                     break;
                                                                 case 6: // SLP -- NOT IMPLEMENTED
                                                                     break;
