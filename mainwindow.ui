@@ -1239,9 +1239,6 @@
               <property name="horizontalScrollBarPolicy">
                <enum>Qt::ScrollBarAlwaysOn</enum>
               </property>
-              <property name="lineWrapMode">
-               <enum>QPlainTextEdit::WidgetWidth</enum>
-              </property>
              </widget>
             </item>
            </layout>
