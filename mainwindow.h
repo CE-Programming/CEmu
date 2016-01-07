@@ -62,8 +62,8 @@ private:
     void deletePort();
     void updatePortData(int);
 
+    bool addBreakpoint();
     void deleteBreakpoint();
-    void addBreakpoint();
     void breakpointCheckboxToggled(QTableWidgetItem *);
 
     void drawNextDisassembleLine();

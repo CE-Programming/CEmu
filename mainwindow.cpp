@@ -684,7 +684,7 @@ void MainWindow::pollPort() {
     port = (uint16_t)hex2int(QString::fromStdString(s));
     read = (uint8_t)debug_port_read_byte(port);
 
-    QString port_string = int2hex(port,4);
+    QString port_string = int2hex(port,4).toUpper();
 
     /* return if port is already set */
     for (int i=0; i<currentRow; ++i) {
@@ -756,28 +756,29 @@ void MainWindow::breakpointCheckboxToggled(QTableWidgetItem * item) {
     updateDisasmView(address, true);
 }
 
-void MainWindow::addBreakpoint() {
+bool MainWindow::addBreakpoint() {
     uint32_t address;
 
     const int currentRow = ui->breakpointView->rowCount();
 
     if (ui->breakRequest->text().isEmpty()) {
-        return;
+        return false;
     }
 
     std::string s = ui->breakRequest->text().toUpper().toStdString();
     if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos) {
-        return;
+        return false;
     }
 
     address = (uint32_t)hex2int(QString::fromStdString(s));
 
-    QString address_string = int2hex(address,6);
+    QString address_string = int2hex(address,6).toUpper();
 
     /* return if address is already set */
     for (int i=0; i<currentRow; ++i) {
         if (ui->breakpointView->item(i, 0)->text() == address_string) {
-            return;
+            ui->breakpointView->selectRow(i);
+            return false;
         }
     }
 
@@ -800,6 +801,7 @@ void MainWindow::addBreakpoint() {
     ui->breakpointView->selectRow(currentRow);
 
     ui->breakRequest->clear();
+    return true;
 }
 
 void MainWindow::deleteBreakpoint() {
@@ -854,7 +856,7 @@ void MainWindow::updatePortData(int currentRow) {
     uint16_t port = (uint16_t)ui->portView->item(currentRow, 0)->text().toInt(nullptr,16);
     uint8_t read = (uint8_t)debug_port_read_byte(port);
 
-    ui->portView->item(currentRow, 1)->setText(int2hex(read,2));
+    ui->portView->item(currentRow, 1)->setText(int2hex(read,2).toUpper());
 }
 
 void MainWindow::resetCalculator() {
@@ -896,10 +898,9 @@ void MainWindow::drawNextDisassembleLine() {
     // Simple syntax highlighting
     QString instructionArgsHighlighted = QString::fromStdString(disasm.instruction.arguments)
                                         .replace(QRegularExpression("(\\$[0-9a-fA-F]+)"), "<font color='green'>\\1</font>")    // hex numbers
-                                        .replace(QRegularExpression("(^\\d)"), "<font color='blue'>\\1</font>")                // dec number
-                                        .replace(QRegularExpression("([\\(\\)])"), "<font color='#600'>\\1</font>");           // parentheses
+                                        .replace(QRegularExpression("(^\\d)"), "<font color='blue'>\\1</font>");               // dec number
 
-    QString formattedLine = QString("<pre><b> %1 <font color='#444'>%2</font></b>    %3  <font color='darkblue'>%4%5</font>%6</pre>")
+    QString formattedLine = QString("<pre><b>%1<font color='#444'>%2</font></b>    %3  <font color='darkblue'>%4%5</font>%6</pre>")
                                .arg(breakpointSymbols,
                                     int2hex(disasm.base_address, 6).toUpper(),
                                     ui->checkDataCol->isChecked() ? QString::fromStdString(disasm.instruction.data).leftJustified(12, ' ') : "",
@@ -913,33 +914,30 @@ void MainWindow::drawNextDisassembleLine() {
         disasm_offset = ui->disassemblyView->textCursor();
         disasm_offset.movePosition(QTextCursor::StartOfLine);
     }
-    if (disasmHighlight.hit_read_breakpoint == true) {
-        ui->disassemblyView->addHighlight(QColor(Qt::blue).lighter(160));
-    }
-    if (disasmHighlight.hit_write_breakpoint == true) {
-        ui->disassemblyView->addHighlight(QColor(Qt::green).lighter(160));
-    }
-    if (disasmHighlight.hit_exec_breakpoint == true) {
-        ui->disassemblyView->addHighlight(QColor(Qt::red).lighter(160));
-    }
     if (disasmHighlight.hit_pc == true) {
-        ui->disassemblyView->addHighlight(QColor(Qt::gray).lighter(140));
+        ui->disassemblyView->addHighlight(QColor(Qt::red).lighter(160));
     }
 }
 
 void MainWindow::setPCaddress(const QPoint& posa) {
+    QString set_pc = "Set PC to this address";
+    QString toggle_break = "Toggle breakpoint";
     QPoint globalPos = ui->disassemblyView->mapToGlobal(posa);
 
     QMenu contextMenu;
-    contextMenu.addAction("Set PC to this address");
+    contextMenu.addAction(set_pc);
+    contextMenu.addAction(toggle_break);
 
     QAction* selectedItem = contextMenu.exec(globalPos);
     if (selectedItem) {
-        ui->pcregView->setText(ui->disassemblyView->getSelectedAddress());
+        if (selectedItem->text() == set_pc) {
+            ui->pcregView->setText(ui->disassemblyView->getSelectedAddress());
+            cpu_flush((uint32_t)hex2int(ui->pcregView->text()), cpu.ADL);
+            updateDisasmView(cpu.registers.PC, true);
+        } else  if (selectedItem->text() == toggle_break) {
+            breakpointPressed();
+        }
     }
-
-    cpu_flush((uint32_t)hex2int(ui->pcregView->text()), cpu.ADL);
-    updateDisasmView(cpu.registers.PC, true);
 }
 
 void MainWindow::stepPressed() {
@@ -955,14 +953,16 @@ void MainWindow::stepOverPressed() {
 }
 
 void MainWindow::breakpointPressed() {
+    bool ok;
     QString address = ui->disassemblyView->getSelectedAddress();
 
     ui->breakRequest->setText(address);
-    addBreakpoint();
+    if(!addBreakpoint()) {
+        deleteBreakpoint();
+    }
     ui->breakRequest->clear();
-    ui->tabDebugging->setCurrentIndex(3);
 
-    updateDisasmView(address.toInt(nullptr, 16), true);
+    updateDisasmView(address.toInt(&ok, 16), true);
 }
 
 void MainWindow::gotoPressed() {
