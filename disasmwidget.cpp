@@ -24,8 +24,9 @@ void DisasmWidget::updateAllHighlights() {
 QString DisasmWidget::getSelectedAddress() {
   QTextCursor c = textCursor();
   c.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
-  c.setPosition(c.position()+6, QTextCursor::KeepAnchor);
-
+  c.setPosition(c.position()+5, QTextCursor::MoveAnchor); // +4 == size of the 3 debug symbols, + 1 space
+  c.setPosition(c.position()+6, QTextCursor::KeepAnchor); // +6 == size of the address
+                                                          // See MainWindow::drawNextDisassembleLine() for details
   return c.selectedText();
 }
 
