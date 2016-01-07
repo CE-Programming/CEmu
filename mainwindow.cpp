@@ -46,9 +46,11 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     ui->setupUi(this);
 
     // Register QtKeypadBridge for the virtual keyboard functionality
-    ui->lcdWidget->installEventFilter(&qt_keypad_bridge);
-    ui->keypadWidget->installEventFilter(&qt_keypad_bridge);
     this->installEventFilter(&qt_keypad_bridge);
+    // Same for all the tabs/docks (iterate over them instead of harcoding their names)
+    for (const auto& tab : ui->tabWidget->children()[0]->children()) {
+        tab->installEventFilter(&qt_keypad_bridge);
+    }
 
     ui->keypadWidget->setResizeMode(QQuickWidget::ResizeMode::SizeRootObjectToView);
     ui->disassemblyView->setContextMenuPolicy(Qt::CustomContextMenu);
