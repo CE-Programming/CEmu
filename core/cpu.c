@@ -31,8 +31,6 @@ static void cpu_get_cntrl_data_blocks_format(void) {
     cpu.PREFIX = cpu.SUFFIX = 0;
     cpu.L = cpu.ADL;
     cpu.IL = cpu.ADL;
-    cpu.S = !cpu.L;
-    cpu.IS = !cpu.IL;
 }
 
 void cpu_init(void) {
@@ -1162,22 +1160,18 @@ void cpu_execute(void) {
                         switch (context.z) {
                             case 0: // .SIS
                                 cpu.SUFFIX = 1;
-                                cpu.S = 1; cpu.IS = 1;
                                 cpu.L = 0; cpu.IL = 0;
                                 goto exit_loop;
                             case 1: // .LIS
                                 cpu.SUFFIX = 1;
-                                cpu.S = 0; cpu.IS = 1;
                                 cpu.L = 1; cpu.IL = 0;
                                 goto exit_loop;
                             case 2: // .SIL
                                 cpu.SUFFIX = 1;
-                                cpu.S = 1; cpu.IS = 0;
                                 cpu.L = 0; cpu.IL = 1;
                                 goto exit_loop;
                             case 3: // .LIL
                                 cpu.SUFFIX = 1;
-                                cpu.S = 0; cpu.IS = 0;
                                 cpu.L = 1; cpu.IL = 1;
                                 goto exit_loop;
                             case 6: // HALT

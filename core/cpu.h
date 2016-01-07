@@ -42,9 +42,9 @@ typedef struct eZ80cpu {
         /* Internal use: */
         uint8_t PREFIX      : 2;  /* Which index register is in use. 0: hl, 2: ix, 3: iy                                         */
         uint8_t SUFFIX      : 1;  /* There was an explicit suffix                                                                */
-        uint8_t S           : 1;  /* The CPU data block operates in Z80 mode using 16-bit registers. All addresses use MBASE.    */
+      /*uint8_t S           : 1;*//* The CPU data block operates in Z80 mode using 16-bit registers. All addresses use MBASE.    */
         uint8_t L           : 1;  /* The CPU data block operates in ADL mode using 24-bit registers. Addresses do not use MBASE. */
-        uint8_t IS          : 1;  /* The CPU control block operates in Z80 mode.                                                 */
+      /*uint8_t IS          : 1;*//* The CPU control block operates in Z80 mode.                                                 */
         uint8_t IL          : 1;  /* The CPU control block operates in ADL mode.                                                 */
         uint8_t IEF_wait    : 1;  /* Wait for interrupt                                                                          */
         uint8_t halted      : 1;  /* Have we halted the CPU?                                                                     */
