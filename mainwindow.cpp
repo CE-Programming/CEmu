@@ -691,7 +691,7 @@ void MainWindow::pollPort() {
 
     ui->portView->setRowCount(currentRow + 1);
 
-    QTableWidgetItem *port_range = new QTableWidgetItem(port_string);
+    QTableWidgetItem *port_range = new QTableWidgetItem(port_string.toUpper());
     QTableWidgetItem *port_data = new QTableWidgetItem(int2hex(read, 2));
     QTableWidgetItem *port_rBreak = new QTableWidgetItem();
     QTableWidgetItem *port_wBreak = new QTableWidgetItem();
@@ -711,7 +711,7 @@ void MainWindow::pollPort() {
 }
 
 void MainWindow::deletePort() {
-    if(!ui->portView->rowCount()) {
+    if(!ui->portView->rowCount() || !ui->portView->currentIndex().isValid()) {
         return;
     }
 
@@ -779,7 +779,7 @@ void MainWindow::addBreakpoint() {
 
     ui->breakpointView->setRowCount(currentRow + 1);
 
-    QTableWidgetItem *iaddress = new QTableWidgetItem(address_string);
+    QTableWidgetItem *iaddress = new QTableWidgetItem(address_string.toUpper());
     QTableWidgetItem *rBreak = new QTableWidgetItem();
     QTableWidgetItem *wBreak = new QTableWidgetItem();
     QTableWidgetItem *eBreak = new QTableWidgetItem();
@@ -799,7 +799,7 @@ void MainWindow::addBreakpoint() {
 }
 
 void MainWindow::deleteBreakpoint() {
-    if(!ui->breakpointView->rowCount()) {
+    if(!ui->breakpointView->rowCount() || !ui->breakpointView->currentIndex().isValid()) {
         return;
     }
 
@@ -813,6 +813,7 @@ void MainWindow::deleteBreakpoint() {
 
 void MainWindow::processDebugCommand(int reason, uint32_t input) {
     int row = 0;
+    bool ok;
 
     if (reason == DBG_STEP || reason == DBG_USER) {
         ui->tabDebugging->setCurrentIndex(0);
@@ -824,7 +825,7 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
         ui->tabDebugging->setCurrentIndex(0);
 
         // find the correct entry
-        while( (uint32_t)ui->breakpointView->item(row++, 0)->text().toInt(nullptr,16) != input );
+        while( (uint32_t)ui->breakpointView->item(row++, 0)->text().toInt(&ok,16) != input );
         row--;
 
         ui->breakChangeView->setText("Address "+ui->breakpointView->item(row, 0)->text()+" "+((reason == HIT_READ_BREAKPOINT) ? "Read" : (reason == HIT_WRITE_BREAKPOINT) ? "Write" : "Executed"));
@@ -837,8 +838,9 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
     if (reason == HIT_PORT_READ_BREAKPOINT || reason == HIT_PORT_WRITE_BREAKPOINT) {
         ui->tabDebugging->setCurrentIndex(1);
         // find the correct entry
-        while( (uint32_t)ui->portView->item(row++, 0)->text().toInt(nullptr,16) != input );
+        while( (uint32_t)ui->portView->item(row++, 0)->text().toInt(&ok,16) != input );
         row--;
+
         ui->portChangeView->setText("Port "+ui->portView->item(row, 0)->text()+" "+((reason == HIT_PORT_READ_BREAKPOINT) ? "Read" : "Write"));
         ui->portView->selectRow(row);
     }
@@ -917,11 +919,7 @@ void MainWindow::setPCaddress(const QPoint& posa) {
 
     QAction* selectedItem = contextMenu.exec(globalPos);
     if (selectedItem) {
-        QTextCursor c = ui->disassemblyView->textCursor();
-        c.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
-        c.setPosition(c.position()+6, QTextCursor::KeepAnchor);
-
-        ui->pcregView->setText(c.selectedText());
+        ui->pcregView->setText(ui->disassemblyView->getSelectedAddress());
     }
 
     cpu.registers.PC = (uint32_t)hex2int(ui->pcregView->text());
@@ -941,13 +939,7 @@ void MainWindow::stepOverPressed() {
 }
 
 void MainWindow::breakpointPressed() {
-    QString address;
-
-    QTextCursor c = ui->disassemblyView->textCursor();
-    c.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
-    c.setPosition(c.position()+6, QTextCursor::KeepAnchor);
-
-    address = c.selectedText();
+    QString address = ui->disassemblyView->getSelectedAddress();
 
     ui->breakRequest->setText(address);
     addBreakpoint();
@@ -961,7 +953,7 @@ void MainWindow::gotoPressed() {
     bool ok;
     QString address = QInputDialog::getText(this, tr("Goto Address"),
                                          tr("Input Address (In Hexadecimal):"), QLineEdit::Normal,
-                                         "", &ok).toUpper();
+                                         ui->disassemblyView->getSelectedAddress(), &ok).toUpper();
 
     if (!ok || (address.toStdString().find_first_not_of("0123456789ABCDEF") != std::string::npos) || (address.length()>6)) {
         return;

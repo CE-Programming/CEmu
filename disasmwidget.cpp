@@ -21,6 +21,14 @@ void DisasmWidget::updateAllHighlights() {
     setExtraSelections(extraHighlights);
 }
 
+QString DisasmWidget::getSelectedAddress() {
+  QTextCursor c = textCursor();
+  c.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
+  c.setPosition(c.position()+6, QTextCursor::KeepAnchor);
+
+  return c.selectedText();
+}
+
 void DisasmWidget::addHighlight(QColor color) {
     QTextEdit::ExtraSelection selection;
 
