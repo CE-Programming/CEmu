@@ -937,7 +937,7 @@ void MainWindow::setPCaddress(const QPoint& posa) {
         ui->pcregView->setText(ui->disassemblyView->getSelectedAddress());
     }
 
-    cpu.registers.PC = (uint32_t)hex2int(ui->pcregView->text());
+    cpu_flush((uint32_t)hex2int(ui->pcregView->text()), cpu.ADL);
     updateDisasmView(cpu.registers.PC, true);
 }
 
