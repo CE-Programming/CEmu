@@ -614,6 +614,7 @@ void MainWindow::populateDebugWindow() {
 
 void MainWindow::updateDisasmView(const int sentBase, const bool fromPane) {
     address_pane = sentBase;
+    disasm_offset_set = false;
     disasm.new_address = address_pane - ((fromPane) ? 0x80 : 0);
     if(disasm.new_address < 0) disasm.new_address = 0;
 
@@ -913,9 +914,17 @@ void MainWindow::drawNextDisassembleLine() {
     ui->disassemblyView->appendHtml(formattedLine);
 
     if (address_pane == disasm.base_address) {
+        disasm_offset_set = true;
         disasm_offset = ui->disassemblyView->textCursor();
         disasm_offset.movePosition(QTextCursor::StartOfLine);
+    } else {
+        if (disasm_offset_set == false && address_pane <= disasm.base_address+7) {
+            disasm_offset_set = true;
+            disasm_offset = ui->disassemblyView->textCursor();
+            disasm_offset.movePosition(QTextCursor::StartOfLine);
+        }
     }
+
     if (disasmHighlight.hit_pc == true) {
         ui->disassemblyView->addHighlight(QColor(Qt::red).lighter(160));
     }
@@ -962,6 +971,7 @@ void MainWindow::breakpointPressed() {
     if(!addBreakpoint()) {
         deleteBreakpoint();
     }
+
     ui->breakRequest->clear();
 
     updateDisasmView(address.toInt(&ok, 16), true);

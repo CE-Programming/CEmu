@@ -95,6 +95,7 @@ private:
     QSettings *settings = nullptr;
     QDockWidget *dock_debugger = nullptr;
     QTextCursor disasm_offset;
+    bool disasm_offset_set;
     int address_pane;
 
     EmuThread emu;
