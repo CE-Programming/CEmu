@@ -529,6 +529,10 @@ void MainWindow::changeDebuggerState() {
         pix.load(":/icons/resources/icons/stop.png");
         ui->portChangeView->clear();
         ui->breakChangeView->clear();
+
+        // Force focus back to the lcdWidget so that keyboard shortcuts work again
+        this->setWindowState(Qt::WindowActive);
+        ui->lcdWidget->setFocus();
     }
     setReceiveState(false);
     icon.addPixmap(pix);
