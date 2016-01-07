@@ -1026,18 +1026,15 @@ void cpu_execute(void) {
                                     break;
                                 case 2: // DJNZ d
                                     s = cpu_fetch_offset();
-                                    r->B--;                            // decrement B
-                                    if (r->B != 0) {                   // if B != 0
-                                        cpu.cycles += 0;
-                                        r->PC += s;        // add rjump offset
-                                        mask_mode(r->PC, cpu.ADL);
+                                    if (!--r->B) {
+                                        cpu_fetch_byte();  // flush pipeline
+                                        r->PC = cpu_mask_mode(r->PC + s, cpu.L);
                                     }
                                     break;
                                 case 3: // JR d
-                                    cpu.cycles += 0;
                                     s = cpu_fetch_offset();
-                                    r->PC += s;          // add rjump offset
-                                    mask_mode(r->PC, cpu.ADL);
+                                    cpu_fetch_byte();      // flush pipeline
+                                    r->PC = cpu_mask_mode(r->PC + s, cpu.L);
                                     break;
                                 case 4:
                                 case 5:
@@ -1045,9 +1042,8 @@ void cpu_execute(void) {
                                 case 7: // JR cc[y-4], d
                                     s = cpu_fetch_offset();
                                     if (cpu_read_cc(context.y - 4)) {
-                                        cpu.cycles += 0;
-                                        r->PC += s;          // add rjump offset
-                                        mask_mode(r->PC, cpu.ADL);
+                                        cpu_fetch_byte();  // flush pipeline
+                                        r->PC = cpu_mask_mode(r->PC + s, cpu.L);
                                     }
                                     break;
                             }
