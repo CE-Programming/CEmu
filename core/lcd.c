@@ -155,7 +155,7 @@ uint8_t lcd_read(const uint16_t pio) {
         if(offset < 0x024 && offset >= 0x020) { return read8(lcd.mis, bit_offset); }
         if(offset < 0x028 && offset >= 0x024) { return read8(lcd.mis & lcd.ris, bit_offset); }
     } else if (offset < 0x400) {
-        return *(uint32_t *)((uint8_t *)lcd.palette + offset - 0x200);
+        return *((uint8_t *)lcd.palette + offset - 0x200);
     } else if (offset >= 0xFE0) {
         static const uint8_t id[1][8] = {
             { 0x11, 0x11, 0x14, 0x00, 0x0D, 0xF0, 0x05, 0xB1 }
@@ -187,7 +187,7 @@ void lcd_write(const uint16_t pio, const uint8_t value) {
             }
             lcd.lpbase &= ~0b111;
         } else if (offset == 0x018) {
-            if (((value << bit_offset) ^ lcd.control) & 1) {
+            if ((((uint32_t)value << bit_offset) ^ lcd.control) & 1) {
                 if (value & 1) { event_set(SCHED_LCD, 0); }
                 else { event_clear(SCHED_LCD); }
             }
