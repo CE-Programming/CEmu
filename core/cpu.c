@@ -956,12 +956,18 @@ static void cpu_execute_bli(int y, int z) {
 }
 
 void cpu_init(void) {
-    memset(&cpu, 0x00, sizeof(eZ80cpu_t));
+    memset(&cpu, 0, sizeof cpu);
     gui_console_printf("Initialized CPU...\n");
 }
 
 void cpu_reset(void) {
-    cpu_prefetch(0, 0);
+    memset(&cpu.registers, 0, sizeof cpu.registers);
+    cpu.IEF1 = cpu.IEF2 = cpu.ADL = cpu.MADL = cpu.IM = cpu.IEF_wait = cpu.halted = 0;
+    cpu_flush(0, 0);
+}
+
+void cpu_flush(uint32_t address, bool mode) {
+    cpu_prefetch(address, mode);
     cpu_get_cntrl_data_blocks_format();
 }
 

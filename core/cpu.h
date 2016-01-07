@@ -60,6 +60,7 @@ extern eZ80cpu_t cpu;
 /* Available Functions */
 void cpu_init(void);
 void cpu_reset(void);
+void cpu_flush(uint32_t, bool);
 void cpu_execute(void);
 
 #ifdef __cplusplus
