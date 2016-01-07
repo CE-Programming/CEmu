@@ -36,7 +36,8 @@
 #include "core/debug/disasmc.h"
 #include "core/link.h"
 #include "core/capture/gif.h"
-#include "core/os/os.h"
+#include "utils.h"
+#include "os/os.h"
 
 static const CEMU_CONSTEXPR int WindowStateVersion = 0;
 
@@ -134,7 +135,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     emu.rom = settings->value(QStringLiteral("romImage")).toString().toStdString();
 
-    if (emu.rom.empty()) {
+    if (emu.rom.empty() || !fileExists(emu.rom)) {
        runSetup();
     } else {
        emu.start();

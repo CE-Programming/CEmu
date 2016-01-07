@@ -6,7 +6,8 @@
 #include "romselection.h"
 #include "ui_romselection.h"
 
-#include "core/os/os.h"
+#include "utils.h"
+#include "os/os.h"
 
 std::string romImagePath;
 
@@ -53,11 +54,6 @@ RomSelection::RomSelection(QWidget *p) : QDialog(p), ui(new Ui::RomSelection) {
     ui->progressBar->setMaximum(num_rom_segments);
 }
 
-bool fileExists(const QString &path) {
-    QFileInfo checkFile(path);
-    return (checkFile.exists() && checkFile.isFile());
-}
-
 RomSelection::~RomSelection() {
     if (rom_array != nullptr) { free(rom_array); }
     delete ui;
@@ -80,7 +76,7 @@ bool RomSelection::flash_open(const char *filename) {
 }
 
 void RomSelection::checkInput(const QString &path) {
-    ui->next->setEnabled(fileExists(path));
+    ui->next->setEnabled(fileExists(path.toStdString()));
 }
 
 void RomSelection::on_create_sel_clicked() {
