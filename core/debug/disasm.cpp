@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "disasm.h"
+#include "disasmc.h"
 #include "../cpu.h"
 
 disasm_state_t disasm;
@@ -123,9 +124,6 @@ static std::string strOffset(uint8_t data) {
 
 static uint8_t disasm_fetch_byte(void) {
     uint8_t value = memory_read_byte(disasm.new_address++);
-    if(disasm.new_address == cpu.registers.PC) {
-        disasm.hit_pc = true;
-    }
     sprintf(tmpbuf,"%02X",value);
     disasm.instruction.data += std::string(tmpbuf);
     disasm.instruction.size++;
@@ -399,12 +397,16 @@ void disassembleInstruction(void) {
 
     disasm.new_address = disasm.base_address;
 
+    disasmHighlight.hit_read_breakpoint = false;
+    disasmHighlight.hit_write_breakpoint = false;
+    disasmHighlight.hit_exec_breakpoint = false;
+    disasmHighlight.hit_pc = false;
+
     disasm.instruction.data = "";
     disasm.instruction.opcode = "";
     disasm.instruction.mode_suffix = " ";
     disasm.instruction.arguments = "";
     disasm.instruction.size = 0;
-    disasm.hit_pc = false;
 
     disasm.IL = 1;
     disasm.prefix = 0;

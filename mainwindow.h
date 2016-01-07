@@ -6,6 +6,7 @@
 #include <QtWidgets/QTableWidgetItem>
 #include <QtWidgets/QFileDialog>
 #include <QtCore/QSettings>
+#include <QTextCursor>
 
 #include "romselection.h"
 #include "emuthread.h"
@@ -71,6 +72,11 @@ private:
     void stepPressed();
     void stepOverPressed();
     void updateStackView();
+    void updateDisasmView(const int, const bool);
+
+    void gotoPressed();
+    void breakpointPressed();
+    void setPCaddress(const QPoint&);
 
     // Console
     void clearConsole(void);
@@ -88,6 +94,8 @@ private:
     Ui::MainWindow *ui = nullptr;
     QSettings *settings = nullptr;
     QDockWidget *dock_debugger = nullptr;
+    QTextCursor disasm_offset;
+    int address_pane;
 
     EmuThread emu;
 

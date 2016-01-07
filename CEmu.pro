@@ -110,7 +110,8 @@ HEADERS  += mainwindow.h \
     core/debug/disasm.h \
     core/link.h \
     core/vat.h \
-    disasmwidget.h
+    disasmwidget.h \
+    core/debug/disasmc.h
 
 FORMS    += mainwindow.ui \
     romselection.ui

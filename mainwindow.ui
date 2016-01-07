@@ -242,7 +242,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>4</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -578,26 +578,12 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="5">
-            <spacer name="horizontalSpacer">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
           </layout>
           <zorder>lower</zorder>
           <zorder>upper</zorder>
           <zorder>framelabel</zorder>
           <zorder>buttonGIF</zorder>
           <zorder>gif_frame_skip_slider</zorder>
-          <zorder>horizontalSpacer</zorder>
          </widget>
         </item>
         <item>
@@ -1051,7 +1037,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>0</number>
           </property>
           <property name="tabsClosable">
            <bool>false</bool>
@@ -4266,7 +4252,7 @@
      <x>0</x>
      <y>0</y>
      <width>1024</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="sizePolicy">

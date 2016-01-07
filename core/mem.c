@@ -3,9 +3,13 @@
 #include "mem.h"
 #include "emu.h"
 #include "cpu.h"
+#include "debug/disasmc.h"
 
 // Global MEMORY state
 mem_state_t mem;
+
+// For Debugging
+disasm_highlights_state_t disasmHighlight;
 
 static const uint32_t ram_size = 0x65800;
 static const uint32_t flash_size = 0x400000;
@@ -314,13 +318,24 @@ uint8_t memory_read_byte(const uint32_t address)
             break;
     }
 
-    if (!in_debugger) {
-        if (mem.debug.block[address&0xFFFFFF] & DBG_READ_BREAKPOINT) {
-            debugger(HIT_READ_BREAKPOINT, addr);
-        }
-        if ((mem.debug.block[address&0xFFFFFF] & DBG_EXEC_BREAKPOINT) && (cpu.registers.PC == ((addr+1)&0xFFFFFF))) {
+    if (mem.debug.block[address] & DBG_READ_BREAKPOINT) {
+        disasmHighlight.hit_read_breakpoint = true;
+        if (!in_debugger) debugger(HIT_READ_BREAKPOINT, addr);
+    }
+
+    if ((mem.debug.block[address] & DBG_EXEC_BREAKPOINT)) {
+        disasmHighlight.hit_exec_breakpoint = true;
+        if (!in_debugger && (cpu.registers.PC == ((address+1)&0xFFFFFF))) {
             debugger(HIT_EXEC_BREAKPOINT, addr);
         }
+    }
+
+    if (mem.debug.block[address] & DBG_WRITE_BREAKPOINT) {
+        disasmHighlight.hit_write_breakpoint = true;
+    }
+
+    if (cpu.registers.PC == address) {
+        disasmHighlight.hit_pc = true;
     }
 
     return value;
@@ -385,10 +400,8 @@ void memory_write_byte(const uint32_t address, const uint8_t byte) {
             break;
     }
 
-    if (!in_debugger) {
-        if (mem.debug.block[address&0xFFFFFF] & DBG_WRITE_BREAKPOINT) {
-            debugger(HIT_WRITE_BREAKPOINT, addr);
-        }
+    if (mem.debug.block[address&0xFFFFFF] & DBG_WRITE_BREAKPOINT) {
+        if (!in_debugger) debugger(HIT_WRITE_BREAKPOINT, addr);
     }
 
     return;
