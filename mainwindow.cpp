@@ -483,7 +483,6 @@ void MainWindow::updateDebuggerChanges() {
       cpu.registers.SPL = (uint32_t)hex2int(ui->splregView->text());
       cpu.registers.SPS = (uint16_t)hex2int(ui->spsregView->text());
 
-      cpu.registers.PC = (uint32_t)hex2int(ui->pcregView->text());
       cpu.registers.MBASE = (uint8_t)hex2int(ui->mbregView->text());
       cpu.registers.I = (uint16_t)hex2int(ui->iregView->text());
       cpu.registers.R = (uint8_t)hex2int(ui->rregView->text());;
@@ -499,8 +498,12 @@ void MainWindow::updateDebuggerChanges() {
       cpu.registers.flags._3 = ui->check3->isChecked();
 
       cpu.halted = ui->checkHalted->isChecked();
+      cpu.MADL = ui->checkMADL->isChecked();
+      cpu.halted = ui->checkHalted->isChecked();
       cpu.IEF1 = ui->checkIEF1->isChecked();
       cpu.IEF2 = ui->checkIEF2->isChecked();
+
+      cpu_flush((uint32_t)hex2int(ui->pcregView->text()), ui->checkADL->isChecked());
 
       backlight.brightness = (uint8_t)ui->brightnessSlider->value();
   }
