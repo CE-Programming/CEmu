@@ -25,7 +25,7 @@
 #ifndef GIFLIB_H
 #define GIFLIB_H
 
-#include "core/os/os.h"
+#include "../../os/os.h"
 
 #include <stdio.h>   // for FILE*
 #include <string.h>  // for memcpy and bzero
