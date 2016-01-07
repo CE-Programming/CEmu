@@ -880,26 +880,28 @@ void MainWindow::drawNextDisassembleLine() {
 
     disassembleInstruction();
 
+    // Watch out, maintainers: the (unformatted) line is later "parsed" in DisasmWidget::getSelectedAddress()
+    // with a cursor getting the address from it. Make sure the start position is correct.
+
     // Some round symbol things
-    QString breakpointSymbols = QString("<font color='#A3FFA3'><big>%1</big></font><font color='#A3A3FF'><big>%2</big></font><font color='#FFA3A3'><big>%3</big></font> ")
+    QString breakpointSymbols = QString("<font color='#A3FFA3'><big>%1</big></font><font color='#A3A3FF'><big>%2</big></font><font color='#FFA3A3'><big>%3</big></font>")
                                    .arg(((disasmHighlight.hit_read_breakpoint == true)  ? "&#9679;" : " "),
                                         ((disasmHighlight.hit_write_breakpoint == true) ? "&#9679;" : " "),
                                         ((disasmHighlight.hit_exec_breakpoint == true)  ? "&#9679;" : " "));
 
-    QString formattedLine = QString("<pre><b>%1 <font color='#444'>%2</font></b>\t%3  <font color='darkblue'>%4%5</font>%6</pre>")
+    // Simple syntax highlighting
+    QString instructionArgsHighlighted = QString::fromStdString(disasm.instruction.arguments)
+                                        .replace(QRegExp("(\\$[0-9a-fA-F]+)"), "<font color='green'>\\1</font>")           // hex numbers
+                                        .replace(QRegExp("(\\$[0-9a-fA-F]+)|(\\d+)"), "\\1<font color='blue'>\\2</font>")  // dec numbers
+                                        .replace(QRegExp("([\\(\\)])"), "<font color='#700'>\\1</font>");                  // parentheses
+
+    QString formattedLine = QString("<pre><b> %1 <font color='#444'>%2</font></b>    %3  <font color='darkblue'>%4%5</font>%6</pre>")
                                .arg(breakpointSymbols,
                                     int2hex(disasm.base_address, 6).toUpper(),
                                     ui->checkDataCol->isChecked() ? QString::fromStdString(disasm.instruction.data).leftJustified(12, ' ') : "",
                                     QString::fromStdString(disasm.instruction.opcode),
                                     QString::fromStdString(disasm.instruction.mode_suffix),
-                                    QString::fromStdString(disasm.instruction.arguments));
-
-    // Watch out, maintainers: the line is later "parsed" in DisasmWidget::getSelectedAddress()
-    // with a cursor getting the address from it. Make sure the start position is correct.
-
-    // Simple syntax highlighting
-    formattedLine.replace(QRegExp("(\\$[0-9a-fA-F]+)"), "<font color='green'>\\1</font>"); // hex numbers
-    formattedLine.replace(QRegExp("([ ,])(\\d+)"), "\\1<font color='blue'>\\2</font>");    // dec numbers
+                                    instructionArgsHighlighted);
 
     ui->disassemblyView->appendHtml(formattedLine);
 
