@@ -41,6 +41,7 @@ void mem_init(void) {
 
     mem.ram.block = (uint8_t*)calloc(ram_size, sizeof(uint8_t));      /* Allocate RAM */
 
+    mem.debug.stepOverAddress = -1;
     mem.debug.block = (uint8_t*)calloc(0x1000000, sizeof(uint8_t));    /* Allocate Debug memory */
     mem.debug.ports = (uint8_t*)calloc(0x10000, sizeof(uint8_t));      /* Allocate Debug Port Monitor */
 
@@ -318,20 +319,13 @@ uint8_t memory_read_byte(const uint32_t address)
             break;
     }
 
-    if (mem.debug.block[address] & DBG_READ_BREAKPOINT) {
-        disasmHighlight.hit_read_breakpoint = true;
-        if (!in_debugger) debugger(HIT_READ_BREAKPOINT, address);
-    }
-
-    if ((mem.debug.block[address] & DBG_EXEC_BREAKPOINT)) {
-        disasmHighlight.hit_exec_breakpoint = true;
-        if (!in_debugger && (cpu.registers.PC == (address&0xFFFFFF))) {
-            debugger(HIT_EXEC_BREAKPOINT, address);
+    if (mem.debug.block[address]) {
+        disasmHighlight.hit_read_breakpoint = mem.debug.block[address] & DBG_READ_BREAKPOINT;
+        disasmHighlight.hit_write_breakpoint = mem.debug.block[address] & DBG_WRITE_BREAKPOINT;
+        disasmHighlight.hit_exec_breakpoint = mem.debug.block[address] & DBG_EXEC_BREAKPOINT;
+        if (!in_debugger && disasmHighlight.hit_read_breakpoint) {
+            debugger(HIT_READ_BREAKPOINT, address);
         }
-    }
-
-    if (mem.debug.block[address] & DBG_WRITE_BREAKPOINT) {
-        disasmHighlight.hit_write_breakpoint = true;
     }
 
     if (cpu.registers.PC == address) {
@@ -400,8 +394,8 @@ void memory_write_byte(const uint32_t address, const uint8_t byte) {
             break;
     }
 
-    if (mem.debug.block[address&0xFFFFFF] & DBG_WRITE_BREAKPOINT) {
-        if (!in_debugger) debugger(HIT_WRITE_BREAKPOINT, address);
+    if (!in_debugger && mem.debug.block[address&0xFFFFFF] & DBG_WRITE_BREAKPOINT) {
+        debugger(HIT_WRITE_BREAKPOINT, address);
     }
 
     return;

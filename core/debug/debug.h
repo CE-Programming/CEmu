@@ -30,8 +30,10 @@ enum {
 #define DBG_READ_BREAKPOINT       1
 #define DBG_WRITE_BREAKPOINT      2
 #define DBG_EXEC_BREAKPOINT       4
+#define DBG_STEP_OVER_BREAKPOINT  8
 
 typedef struct {        /* For debugging */
+    uint32_t stepOverAddress;
     uint8_t *block;
     uint8_t *ports;
 } debug_state_t;

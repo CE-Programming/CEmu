@@ -27,6 +27,7 @@
 #include "core/emu.h"
 #include "core/link.h"
 #include "core/debug/debug.h"
+#include "core/debug/disasm.h"
 
 EmuThread *emu_thread = nullptr;
 
@@ -90,15 +91,19 @@ void EmuThread::setReceiveState(bool state) {
 }
 
 void EmuThread::setDebugStepMode() {
+    cpu_events |= EVENT_DEBUG_STEP;
     enter_debugger = false;
     in_debugger = false;
-    cpu_events |= EVENT_DEBUG_STEP;
 }
 
 void EmuThread::setDebugStepOverMode() {
+    disasm.base_address = cpu.registers.PC;
+    disassembleInstruction();
+    mem.debug.stepOverAddress = disasm.new_address;
+    mem.debug.block[mem.debug.stepOverAddress] |= DBG_STEP_OVER_BREAKPOINT;
+    cpu_events |= EVENT_DEBUG_STEP_OVER;
     enter_debugger = false;
     in_debugger = false;
-    cpu_events |= EVENT_DEBUG_STEP_OVER;
 }
 
 //Called occasionally, only way to do something in the same thread the emulator runs in.

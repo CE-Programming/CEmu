@@ -23,6 +23,7 @@
 #include "emu.h"
 #include "registers.h"
 #include "interrupt.h"
+#include "debug/debug.h"
 
 // Global CPU state
 eZ80cpu_t cpu;
@@ -50,7 +51,11 @@ static void cpu_prefetch(uint32_t address, bool mode) {
     cpu.prefetch = memory_read_byte(cpu.registers.PC);
 }
 static uint8_t cpu_fetch_byte(void) {
-    uint8_t value = cpu.prefetch;
+    uint8_t value;
+    if (!in_debugger && mem.debug.block[cpu.registers.PC] & (DBG_EXEC_BREAKPOINT | DBG_STEP_OVER_BREAKPOINT)) {
+        debugger(mem.debug.block[cpu.registers.PC] & DBG_EXEC_BREAKPOINT ? HIT_EXEC_BREAKPOINT : DBG_STEP, cpu.registers.PC);
+    }
+    value = cpu.prefetch;
     cpu_prefetch(cpu.registers.PC + 1, cpu.ADL);
     return value;
 }
@@ -1653,7 +1658,7 @@ void cpu_execute(void) {
 
             cpu_get_cntrl_data_blocks_format();
 
-            if (cpu_events & (EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OVER)) {
+            if (cpu_events & EVENT_DEBUG_STEP) {
                 // Flush the cycles
                 cycle_count_delta = 0;
                 break;
