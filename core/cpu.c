@@ -53,7 +53,7 @@ static uint32_t cpu_address_mode(uint32_t address, bool mode) {
 }
 
 static uint8_t cpu_fetch_byte(void) {
-    return cpu.read_byte(cpu_address_mode(cpu.registers.PC++, cpu.ADL));
+    return memory_read_byte(cpu_address_mode(cpu.registers.PC++, cpu.ADL));
 }
 static int8_t cpu_fetch_offset(void) {
     return (int8_t)cpu_fetch_byte();
@@ -68,10 +68,10 @@ static uint32_t cpu_fetch_word(void) {
 }
 
 static uint8_t cpu_read_byte(uint32_t address) {
-    return cpu.read_byte(cpu_address_mode(address, cpu.L));
+    return memory_read_byte(cpu_address_mode(address, cpu.L));
 }
 static void cpu_write_byte(uint32_t address, uint8_t value) {
-    cpu.write_byte(cpu_address_mode(address, cpu.L), value);
+    memory_write_byte(cpu_address_mode(address, cpu.L), value);
 }
 
 static uint32_t cpu_read_word(uint32_t address) {

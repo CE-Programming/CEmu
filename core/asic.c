@@ -95,8 +95,6 @@ void asic_init(void) {
     asic.mem = &mem;
     asic.cpu = &cpu;
 
-    asic.cpu->read_byte = memory_read_byte;
-    asic.cpu->write_byte = memory_write_byte;
     asic.battery = BATTERIES_GOOD;
 
     plug_devices();

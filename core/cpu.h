@@ -51,8 +51,6 @@ typedef struct eZ80cpu {
     };
     int cycles;
     uint8_t bus;  /* TODO */
-    uint8_t (*read_byte)(uint32_t address);
-    void (*write_byte)(uint32_t address, uint8_t byte);
     int interrupt;
 } eZ80cpu_t;
 

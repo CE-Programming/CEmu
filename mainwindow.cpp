@@ -869,7 +869,7 @@ void MainWindow::updateStackView() {
     for(int i=0; i<30; i+=3) {
        formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2</pre>")
                                 .arg(int2hex(cpu.registers.SPL+i, 6).toUpper(),
-                                     int2hex(cpu.read_byte(cpu.registers.SPL+i) | cpu.read_byte(cpu.registers.SPL+1+i)<<8 | cpu.read_byte(cpu.registers.SPL+2+i)<<16,6).toUpper());
+                                     int2hex(memory_read_byte(cpu.registers.SPL+i) | memory_read_byte(cpu.registers.SPL+1+i)<<8 | memory_read_byte(cpu.registers.SPL+2+i)<<16,6).toUpper());
         ui->stackView->appendHtml(formattedLine);
     }
     ui->stackView->moveCursor(QTextCursor::Start);
