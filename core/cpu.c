@@ -1026,15 +1026,17 @@ void cpu_execute(void) {
                                     break;
                                 case 2: // DJNZ d
                                     s = cpu_fetch_offset();
-                                    if (!--r->B) {
-                                        cpu_fetch_byte();  // flush pipeline
-                                        r->PC = cpu_mask_mode(r->PC + s, cpu.L);
+                                    if (--r->B) {
+                                        w = cpu_mask_mode(r->PC + s, cpu.L);
+                                        cpu_fetch_byte();      // flush pipeline
+                                        r->PC = w;
                                     }
                                     break;
                                 case 3: // JR d
                                     s = cpu_fetch_offset();
+                                    w = cpu_mask_mode(r->PC + s, cpu.L);
                                     cpu_fetch_byte();      // flush pipeline
-                                    r->PC = cpu_mask_mode(r->PC + s, cpu.L);
+                                    r->PC = w;
                                     break;
                                 case 4:
                                 case 5:
@@ -1042,8 +1044,9 @@ void cpu_execute(void) {
                                 case 7: // JR cc[y-4], d
                                     s = cpu_fetch_offset();
                                     if (cpu_read_cc(context.y - 4)) {
-                                        cpu_fetch_byte();  // flush pipeline
-                                        r->PC = cpu_mask_mode(r->PC + s, cpu.L);
+                                        w = cpu_mask_mode(r->PC + s, cpu.L);
+                                        cpu_fetch_byte();      // flush pipeline
+                                        r->PC = w;
                                     }
                                     break;
                             }
