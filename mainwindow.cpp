@@ -40,6 +40,8 @@
 #include "os/os.h"
 
 static const CEMU_CONSTEXPR int WindowStateVersion = 0;
+static const int flash_size = 0x400000;
+static const uint32_t ram_size = 0x65800;
 
 MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     // Setup the UI
@@ -171,6 +173,9 @@ MainWindow::~MainWindow() {
     settings->setValue(QStringLiteral("windowGeometry"), saveGeometry());
     settings->setValue(QStringLiteral("disasmTextSize"), QVariant(ui->textSizeSlider->value()));
 
+    delete ui->flashEdit;
+    delete ui->ramEdit;
+    delete ui->memEdit;
     delete settings;
     delete ui;
 }
@@ -1009,6 +1014,7 @@ QString MainWindow::getAddressString(bool &ok, QString String) {
                                          String, &ok).toUpper();
 
     if (!ok || (address.toStdString().find_first_not_of("0123456789ABCDEF") != std::string::npos) || (address.length() > 6)) {
+        ok = false;
         return QStringLiteral("");
     }
 
@@ -1183,29 +1189,32 @@ void MainWindow::memGotoPressed() {
     ui->memEdit->ensureVisible();
 }
 
-void MainWindow::syncHexView(int size_, QHexEdit *hex_view) {
-  int start = hex_view->addressOffset();
-
-  for (int i = 0; i<size_; i++) {
-      memory_force_write_byte(i+start, hex_view->dataAt(i, 1).at(0));
-  }
-
+void MainWindow::syncHexView(int posa, QHexEdit *hex_view) {
   populateDebugWindow();
   updateDisasmView(address_pane, from_pane);
   hex_view->setFocus();
+  hex_view->setCursorPosition(posa);
 }
 
 void MainWindow::flashSyncPressed() {
-    ui->flashEdit->setFocus();
-    syncHexView(0x400000, ui->flashEdit);
+    qint64 posa = ui->flashEdit->cursorPosition();
+    memcpy(mem.flash.block, (uint8_t*)ui->flashEdit->data().data(), flash_size);
+    syncHexView(posa, ui->flashEdit);
 }
 
 void MainWindow::ramSyncPressed() {
-    ui->ramEdit->setFocus();
-    syncHexView(0x65800, ui->ramEdit);
+  qint64 posa = ui->ramEdit->cursorPosition();
+  memcpy(mem.ram.block, (uint8_t*)ui->ramEdit->data().data(), ram_size);
+  syncHexView(posa, ui->ramEdit);
 }
 
 void MainWindow::memSyncPressed() {
-    ui->memEdit->setFocus();
-    syncHexView(mem_hex_size, ui->memEdit);
+  int start = ui->memEdit->addressOffset();
+  qint64 posa = ui->memEdit->cursorPosition();
+
+  for (int i = 0; i<mem_hex_size; i++) {
+      memory_force_write_byte(i+start, ui->memEdit->dataAt(i, 1).at(0));
+  }
+
+  syncHexView(posa, ui->memEdit);
 }
