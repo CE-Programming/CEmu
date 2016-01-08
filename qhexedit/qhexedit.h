@@ -260,7 +260,8 @@ public:
     QColor selectionColor();
     void setSelectionColor(const QColor &color);
 
-    void gotoLine(int line);
+    void setLine(int line);
+    int getLine();
 
 protected:
     // Handle events

@@ -117,12 +117,12 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::alwaysOnTop);
 
     // Hex Editor
-    connect(ui->buttonFlashRefresh, &QPushButton::clicked, this, &MainWindow::flashUpdatePressed);
-    connect(ui->buttonRamRefresh, &QPushButton::clicked, this, &MainWindow::ramUpdatePressed);
-    connect(ui->buttonMemRefresh, &QPushButton::clicked, this, &MainWindow::memUpdatePressed);
     connect(ui->buttonFlashGoto, &QPushButton::clicked, this, &MainWindow::flashGotoPressed);
+    connect(ui->buttonFlashSearch, &QPushButton::clicked, this, &MainWindow::flashSearchPressed);
     connect(ui->buttonRamGoto, &QPushButton::clicked, this, &MainWindow::ramGotoPressed);
+    connect(ui->buttonRamSearch, &QPushButton::clicked, this, &MainWindow::ramSearchPressed);
     connect(ui->buttonMemGoto, &QPushButton::clicked, this, &MainWindow::memGotoPressed);
+    connect(ui->buttonMemSearch, &QPushButton::clicked, this, &MainWindow::memSearchPressed);
 
     // Set up monospace fonts
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
@@ -622,6 +622,9 @@ void MainWindow::populateDebugWindow() {
     }
 
     updateStackView();
+    ramUpdate();
+    flashUpdate();
+    memUpdate();
 }
 
 void MainWindow::updateDisasmView(const int sentBase, const bool fromPane) {
@@ -1019,23 +1022,36 @@ void MainWindow::gotoPressed() {
 /* Hex Editor Things                                */
 /* ================================================ */
 
-void MainWindow::flashUpdatePressed() {
+void MainWindow::flashUpdate() {
     ui->flashEdit->setFocus();
+    int line = ui->flashEdit->getLine();
     ui->flashEdit->setData(QByteArray::fromRawData((char*)mem.flash.block, 0x400000));
+    ui->flashEdit->setLine(line);
 }
 
-void MainWindow::ramUpdatePressed() {
+void MainWindow::ramUpdate() {
     ui->ramEdit->setFocus();
+    int line = ui->ramEdit->getLine();
     ui->ramEdit->setData(QByteArray::fromRawData((char*)mem.ram.block, 0x65800));
     ui->ramEdit->setAddressOffset(0xD00000);
+    ui->ramEdit->setLine(line);
 }
 
-void MainWindow::memUpdatePressed() {
+void MainWindow::memUpdate() {
     ui->memEdit->setFocus();
     QByteArray mem_data;
-    int start = cpu.registers.PC-0x5000;
+
+    bool locked = ui->checkLockPosition->isChecked();
+    int start, line;
+    if (locked) {
+        start = (int)ui->memEdit->addressOffset();
+        line = ui->memEdit->getLine();
+    } else {
+        start = cpu.registers.PC-0x1000;
+    }
+
     if (start < 0) { start = 0; }
-    int end = start+0x10000;
+    int end = start+0x2000;
     if (end > 0xFFFFFF) { end = 0xFFFFFF; }
 
     for (int i=start; i<end; i++) {
@@ -1044,15 +1060,33 @@ void MainWindow::memUpdatePressed() {
 
     ui->memEdit->setData(mem_data);
     ui->memEdit->setAddressOffset(start);
-    ui->memEdit->setCursorPosition((cpu.registers.PC-start)<<1);
-    ui->memEdit->ensureVisible();
+
+    if (locked) {
+        ui->memEdit->setLine(line);
+    } else {
+        ui->memEdit->setCursorPosition((cpu.registers.PC-start)<<1);
+        ui->memEdit->ensureVisible();
+    }
+}
+
+void MainWindow::flashSearchPressed() {
+    bool ok;
+    QString search_string = QInputDialog::getText(this, tr("Flash Search"),
+                                                  tr("Input Search String:"), QLineEdit::Normal,
+                                                  "", &ok).toUpper();
+    ui->flashEdit->setFocus();
+    if(!ok) {
+        return;
+    }
+
+    ui->flashEdit->indexOf(search_string.toLatin1(), ui->flashEdit->cursorPosition());
 }
 
 void MainWindow::flashGotoPressed() {
-    ui->flashEdit->setFocus();
     bool ok;
     QString address = getAddressString(ok, "");
 
+    ui->flashEdit->setFocus();
     if (!ok) {
         return;
     }
@@ -1065,11 +1099,24 @@ void MainWindow::flashGotoPressed() {
     ui->flashEdit->ensureVisible();
 }
 
-void MainWindow::ramGotoPressed() {
+void MainWindow::ramSearchPressed() {
+    bool ok;
+    QString search_string = QInputDialog::getText(this, tr("RAM Search"),
+                                                  tr("Input Search String:"), QLineEdit::Normal,
+                                                  "", &ok).toUpper();
     ui->ramEdit->setFocus();
+    if(!ok) {
+        return;
+    }
+
+    ui->ramEdit->indexOf(search_string.toLatin1(), ui->ramEdit->cursorPosition());
+}
+
+void MainWindow::ramGotoPressed() {
     bool ok;
     QString address = getAddressString(ok, "");
 
+    ui->ramEdit->setFocus();
     if (!ok) {
         return;
     }
@@ -1081,12 +1128,24 @@ void MainWindow::ramGotoPressed() {
     ui->ramEdit->setCursorPosition(int_address<<1);
     ui->ramEdit->ensureVisible();
 }
+void MainWindow::memSearchPressed() {
+    bool ok;
+    QString search_string = QInputDialog::getText(this, tr("Memory Search"),
+                                                  tr("Input Search String:"), QLineEdit::Normal,
+                                                  "", &ok).toUpper();
+    ui->memEdit->setFocus();
+    if(!ok) {
+        return;
+    }
+
+    ui->memEdit->indexOf(search_string.toLatin1(), ui->memEdit->cursorPosition());
+}
 
 void MainWindow::memGotoPressed() {
-    ui->memEdit->setFocus();
     bool ok;
     QString address = getAddressString(ok, "");
 
+    ui->memEdit->setFocus();
     if (!ok) {
         return;
     }
@@ -1096,9 +1155,9 @@ void MainWindow::memGotoPressed() {
     }
 
     QByteArray mem_data;
-    int start = int_address-0x5000;
+    int start = int_address-0x500;
     if (start < 0) { start = 0; }
-    int end = start+0x10000;
+    int end = start+0x1000;
     if (end > 0xFFFFFF) { end = 0xFFFFFF; }
 
     for (int i=start; i<end; i++) {

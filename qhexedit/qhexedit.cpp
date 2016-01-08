@@ -32,10 +32,10 @@ QHexEdit::QHexEdit(QWidget *par) : QAbstractScrollArea(par) {
     _cursorTimer.setInterval(500);
     _cursorTimer.start();
 
-    setOverwriteMode(true);
-    setAsciiArea(true);
-    setAddressArea(true);
     setAddressWidth(6);
+    setAddressArea(true);
+    setAsciiArea(true);
+    setOverwriteMode(true);
     setHighlighting(true);
     setReadOnly(false);
 
@@ -760,8 +760,12 @@ void QHexEdit::adjust() {
     setCursorPosition(_cursorPosition);
 }
 
-void QHexEdit::gotoLine(int line) {
-    verticalScrollBar()->setValue(line/BYTES_PER_LINE);
+int QHexEdit::getLine() {
+    return verticalScrollBar()->value();
+}
+
+void QHexEdit::setLine(int line) {
+    verticalScrollBar()->setValue(line);
 }
 
 void QHexEdit::dataChangedPrivate(int) {

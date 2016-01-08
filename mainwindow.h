@@ -92,12 +92,15 @@ private:
     void saveSelected();
 
     // Hex Editor
-    void flashUpdatePressed();
+    void flashUpdate();
     void flashGotoPressed();
-    void ramUpdatePressed();
+    void flashSearchPressed();
+    void ramUpdate();
     void ramGotoPressed();
-    void memUpdatePressed();
+    void ramSearchPressed();
+    void memUpdate();
     void memGotoPressed();
+    void memSearchPressed();
 
     QString getAddressString(bool&, QString);
 
