@@ -400,3 +400,50 @@ void memory_write_byte(const uint32_t address, const uint8_t byte) {
 
     return;
 }
+
+void memory_force_write_byte(const uint32_t address, const uint8_t byte) {
+    uint32_t addr = address & 0xFFFFFF;
+
+    switch((addr >> 20) & 0xF) {
+        // FLASH
+        case 0x0: case 0x1: case 0x2: case 0x3:
+            mem.flash.block[addr] = byte;
+            break;
+
+        // MAYBE FLASH
+        case 0x4: case 0x5: case 0x6: case 0x7:
+            addr -= 0x400000;
+            mem.flash.block[addr] = byte;
+            break;
+
+        // UNMAPPED
+        //case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
+        //    break;
+
+        // RAM
+        case 0xD:
+            addr -= 0xD00000;
+            if (addr < 0x65800) {
+                mem.ram.block[addr] = byte;
+                break;
+            }
+            // UNMAPPED
+            addr -=  0x65800;
+            if (addr < 0x1A800) {
+                break;
+            }
+            // MIRRORED
+            memory_force_write_byte(addr - 0x80000, byte);
+            return;
+
+        // MMIO <-> Advanced Perphrial Bus
+        case 0xE: case 0xF:
+            port_force_write_byte(mmio_range(addr)<<12 | addr_range(addr), byte);         // write byte to the mmio port
+            break;
+
+        default:
+            break;
+    }
+
+    return;
+}

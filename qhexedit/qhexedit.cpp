@@ -24,20 +24,18 @@ QHexEdit::QHexEdit(QWidget *par) : QAbstractScrollArea(par) {
     setHighlightingColor(QColor(0xff, 0xff, 0x99, 0xff));
     setSelectionColor(this->palette().highlight().color());
 
-    connect(&_cursorTimer, SIGNAL(timeout()), this, SLOT(updateCursor()));
-    connect(verticalScrollBar(), SIGNAL(valueChanged(int)), this, SLOT(adjust()));
-    connect(horizontalScrollBar(), SIGNAL(valueChanged(int)), this, SLOT(adjust()));
-    connect(_undoStack, SIGNAL(indexChanged(int)), this, SLOT(dataChangedPrivate(int)));
+    connect(&_cursorTimer, &QTimer::timeout, this, &QHexEdit::updateCursor);
+    connect(_undoStack, &UndoStack::indexChanged, this, &QHexEdit::dataChangedPrivate);
+    connect(verticalScrollBar(), &QScrollBar::valueChanged, this, &QHexEdit::adjust);
+    connect(horizontalScrollBar(), &QScrollBar::valueChanged, this, &QHexEdit::adjust);
 
     _cursorTimer.setInterval(500);
     _cursorTimer.start();
+    _addressWidth = 6;
 
-    setAddressWidth(6);
     setAddressArea(true);
     setAsciiArea(true);
-    setOverwriteMode(true);
     setHighlighting(true);
-    setReadOnly(false);
 
     init();
 }
@@ -77,13 +75,6 @@ qint64 QHexEdit::addressOffset() {
     return _addressOffset;
 }
 
-void QHexEdit::setAddressWidth(int addressWidth_) {
-    _addressWidth = addressWidth_;
-    adjust();
-    setCursorPosition(_cursorPosition);
-    viewport()->update();
-}
-
 int QHexEdit::addressWidth() {
     qint64 sizeT = _chunks->size();
     int n = 1;
@@ -116,11 +107,8 @@ void QHexEdit::setCursorPosition(qint64 position) {
     viewport()->update(_cursorRect);
 
     // Check if cursor is in range
-    if (_overwriteMode && (position > (_chunks->size() * 2 - 1))) {
+    if (position > (_chunks->size() * 2 - 1)) {
         position = _chunks->size() * 2 - 1;
-    }
-    if (!_overwriteMode && (position > (_chunks->size() * 2))) {
-        position = _chunks->size() * 2;
     }
     if (position < 0) {
         position = 0;
@@ -188,15 +176,6 @@ QColor QHexEdit::highlightingColor() {
     return _brushHighlighted.color();
 }
 
-void QHexEdit::setOverwriteMode(bool overwriteMode_) {
-    _overwriteMode = overwriteMode_;
-    emit overwriteModeChanged(overwriteMode_);
-}
-
-bool QHexEdit::overwriteMode() {
-    return _overwriteMode;
-}
-
 void QHexEdit::setSelectionColor(const QColor &color) {
     _brushSelection = QBrush(color);
     _penSelection = QPen(Qt::white);
@@ -205,14 +184,6 @@ void QHexEdit::setSelectionColor(const QColor &color) {
 
 QColor QHexEdit::selectionColor() {
     return _brushSelection.color();
-}
-
-bool QHexEdit::isReadOnly() {
-    return _readOnly;
-}
-
-void QHexEdit::setReadOnly(bool readOnly) {
-    _readOnly = readOnly;
 }
 
 /* Access to data of qhexedit */
@@ -322,7 +293,7 @@ void QHexEdit::undo() {
     refresh();
 }
 
-// ********************************************************************** Handle events
+/* Handle events */
 void QHexEdit::keyPressEvent(QKeyEvent *e) {
     /* Cursor movements */
     if (e->matches(QKeySequence::MoveToNextChar)) {
@@ -376,11 +347,6 @@ void QHexEdit::keyPressEvent(QKeyEvent *e) {
     }
 
     /* Select commands */
-    if (e->matches(QKeySequence::SelectAll)) {
-        resetSelection(0);
-        setSelection(2*_chunks->size() + 1);
-    }
-
     if (e->matches(QKeySequence::SelectNextChar)) {
         qint64 posa = _cursorPosition + 1;
         setCursorPosition(posa);
@@ -424,18 +390,6 @@ void QHexEdit::keyPressEvent(QKeyEvent *e) {
     }
     if (e->matches(QKeySequence::SelectPreviousPage)) {
         qint64 posa = _cursorPosition - (((viewport()->height() / _pxCharHeight) - 1) * 2 * BYTES_PER_LINE);
-        setCursorPosition(posa);
-        setSelection(posa);
-    }
-
-    if (e->matches(QKeySequence::SelectEndOfDocument)) {
-        qint64 posa = _chunks->size() * 2;
-        setCursorPosition(posa);
-        setSelection(posa);
-    }
-
-    if (e->matches(QKeySequence::SelectStartOfDocument)) {
-        qint64 posa = 0;
         setCursorPosition(posa);
         setSelection(posa);
     }
@@ -557,8 +511,7 @@ void QHexEdit::mouseMoveEvent(QMouseEvent *e)
     _blink = false;
     viewport()->update();
     qint64 actPos = cursorPosition(e->pos());
-    if (actPos >= 0)
-    {
+    if (actPos >= 0) {
         setCursorPosition(actPos);
         setSelection(actPos);
     }
@@ -663,7 +616,7 @@ void QHexEdit::paintEvent(QPaintEvent *e)
     }
 
     // paint cursor
-    if (_blink && !_readOnly && hasFocus()) {
+    if (_blink && hasFocus()) {
         painter.fillRect(_cursorRect, this->palette().color(QPalette::WindowText));
     } else {
         painter.drawText(_pxCursorX, _pxCursorY, _hexDataShown.mid(_cursorPosition - _bPosFirst * 2, 1));

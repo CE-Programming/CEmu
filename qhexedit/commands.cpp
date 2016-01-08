@@ -8,8 +8,7 @@ class CharCommand : public QUndoCommand
 public:
     enum CCmd {insert, removeAt, overwrite};
 
-    CharCommand(Chunks * chunks, CCmd cmd, qint64 charPos, char newChar,
-                       QUndoCommand *parent=0);
+    CharCommand(Chunks * chunks, CCmd cmd, qint64 charPos, char newChar, QUndoCommand *parent=0);
 
     void undo();
     void redo();

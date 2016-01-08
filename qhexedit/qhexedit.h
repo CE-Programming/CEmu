@@ -8,8 +8,7 @@
 #include "chunks.h"
 #include "commands.h"
 
-class QHexEdit : public QAbstractScrollArea
-{
+class QHexEdit : public QAbstractScrollArea {
     Q_OBJECT
 
     /*! Property address area switch the address area on or off. Set addressArea true
@@ -28,10 +27,6 @@ class QHexEdit : public QAbstractScrollArea
     this property - with addressOffset() you get the current value.
     */
     Q_PROPERTY(qint64 addressOffset READ addressOffset WRITE setAddressOffset)
-
-    /*! Set and get the minimum width of the address area, width in characters.
-    */
-    Q_PROPERTY(int addressWidth READ addressWidth WRITE setAddressWidth)
 
     /*! Switch the ascii area on (true, show it) or off (false, hide it).
     */
@@ -60,25 +55,11 @@ class QHexEdit : public QAbstractScrollArea
     */
     Q_PROPERTY(QColor highlightingColor READ highlightingColor WRITE setHighlightingColor)
 
-    /*! Porperty overwrite mode sets (setOverwriteMode()) or gets (overwriteMode()) the mode
-    in which the editor works. In overwrite mode the user will overwrite existing data. The
-    size of data will be constant. In insert mode the size will grow, when inserting
-    new data.
-    */
-    Q_PROPERTY(bool overwriteMode READ overwriteMode WRITE setOverwriteMode)
-
     /*! Property selection color sets (setSelectionColor()) the backgorund
     color of selected text areas. You can also read the color
     (selectionColor()).
     */
     Q_PROPERTY(QColor selectionColor READ selectionColor WRITE setSelectionColor)
-
-    /*! Porperty readOnly sets (setReadOnly()) or gets (isReadOnly) the mode
-    in which the editor works. In readonly mode the the user can only navigate
-    through the data and select data; modifying is not possible. This
-    property's default is false.
-    */
-    Q_PROPERTY(bool readOnly READ isReadOnly WRITE setReadOnly)
 
     /*! Set the font of the widget. Please use fixed width fonts like Mono or Courier.*/
     Q_PROPERTY(QFont font READ font WRITE setFont)
@@ -234,7 +215,6 @@ public:
     void setAddressOffset(qint64 addressArea);
 
     int addressWidth();
-    void setAddressWidth(int addressWidth);
 
     bool asciiArea();
     void setAsciiArea(bool asciiArea);
@@ -250,12 +230,6 @@ public:
 
     QColor highlightingColor();
     void setHighlightingColor(const QColor &color);
-
-    bool overwriteMode();
-    void setOverwriteMode(bool overwriteMode);
-
-    bool isReadOnly();
-    void setReadOnly(bool readOnly);
 
     QColor selectionColor();
     void setSelectionColor(const QColor &color);
