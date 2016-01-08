@@ -24,11 +24,21 @@
 /* Global LCD state */
 lcd_cntrl_state_t lcd;
 
+#define dataswap(a, b) do { (a) ^= (b); (b) ^= (a); (a) ^= (b); } while(0)
+
 /* Draw the current screen into a 16bpp upside-down bitmap. */
 void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
     uint32_t mode = lcd.control >> 1 & 7;
     uint32_t bpp;
+    uint32_t words,word;
+    uint32_t i,bi,color,mask;
+    uint32_t *outw;
     uint32_t *in;
+    uint16_t *out;
+    uint8_t r,
+            g,
+            b;
+
     int row;
 
     if (mode <= 5) {
@@ -51,9 +61,7 @@ void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
     }
     if (lcd.control & (1 << 8)) {
         // BGR format (R high, B low)
-        uint32_t tmp = bitfields[0];
-        bitfields[0] = bitfields[2];
-        bitfields[2] = tmp;
+        dataswap(bitfields[0], bitfields[2]);
     }
 
     in = (uint32_t *)(intptr_t)phys_mem_ptr(lcd.upcurr, (320 * 240) / 8 * bpp);
@@ -61,48 +69,61 @@ void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
         memset(buffer, 0, 320 * 240 * 2);
         return;
     }
-    for (row = 0; row < 240; ++row) {
-        uint16_t *out = buffer + (row * 320);
-        uint32_t words = (320 / 32) * bpp;
-        if (bpp < 16) {
-            uint32_t mask = (1 << bpp) - 1;
-            uint32_t bi = (lcd.control & (1 << 9)) ? 0 : 24;
+
+    if (bpp < 16) {
+        for (row = 0; row < 240; ++row) {
+            out = buffer + (row * 320);
+            words = (320 / 32) * bpp;
+            mask = (1 << bpp) - 1;
+            bi = (lcd.control & (1 << 9)) ? 0 : 24;
             if (!(lcd.control & (1 << 10))) {
                 bi ^= (8 - bpp);
             }
             do {
-                uint32_t word = *in++;
+                word = *in++;
                 int bitpos = 32;
                 do {
-                    uint16_t color = lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask];
+                    color = lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask];
                     *out++ = color + (color & 0xFFE0) + (color >> 10 & 0x20);
                 } while (bitpos != 0);
             } while (--words != 0);
-        } else if (mode == 4) {
-            uint32_t i, bi = lcd.control >> 9 & 1;
+        }
+    } else if (mode == 4) {
+        for (row = 0; row < 240; ++row) {
+            out = buffer + (row * 320);
+            words = (320 / 32) * bpp;
+            bi = lcd.control >> 9 & 1;
             for (i = 0; i < 320; i++) {
-                uint16_t color = ((uint16_t *)in)[i ^ bi];
-                uint8_t r = color & 0x1F,
-                        g = (color >> 5) & 0x1F,
-                        b = (color >> 10) & 0x1F;
+                color = ((uint16_t *)in)[i ^ bi];
+                r = color & 0x1F;
+                g = (color >> 5) & 0x1F;
+                b = (color >> 10) & 0x1F;
 
                 out[i] = (r << 11) | (g << 6) | b | (color >> 10 & 0x20);
             }
             in += 160;
-        } else if (mode == 5) {
+       }
+    } else if (mode == 5) {
+        for (row = 0; row < 240; ++row) {
+            out = buffer + (row * 320);
+            words = (320 / 32) * bpp;
             // 32bpp mode: Convert 888 to 565
             do {
-                uint32_t word = *in++;
+                word = *in++;
                 *out++ = (word >> 8 & 0xF800) | (word >> 5 & 0x7E0) | (word >> 3 & 0x1F);
             } while (--words != 0);
-        } else {
+        }
+    } else {
+        for (row = 0; row < 240; ++row) {
+            out = buffer + (row * 320);
+            words = (320 / 32) * bpp;
             if (!(lcd.control & (1 << 9))) {
                 memcpy(out, in, 640);
                 in += 160;
             } else {
-                uint32_t *outw = (uint32_t *)out;
+                outw = (uint32_t *)out;
                 do {
-                    uint32_t word = *in++;
+                    word = *in++;
                     *outw++ = word << 16 | word >> 16;
                 } while (--words != 0);
             }
