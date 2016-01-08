@@ -520,19 +520,16 @@ void MainWindow::updateDebuggerChanges() {
   }
 }
 
-void MainWindow::changeDebuggerState() {
+void MainWindow::setDebuggerState(bool state) {
     QPixmap pix;
     QIcon icon;
 
-    if (emu.rom.empty()) {
-        return;
-    }
-
-    debugger_on = !debugger_on;
+    debugger_on = state;
 
     if (debugger_on) {
         ui->buttonRun->setText("Run");
         pix.load(":/icons/resources/icons/run.png");
+        populateDebugWindow();
     } else {
         ui->buttonRun->setText("Stop");
         pix.load(":/icons/resources/icons/stop.png");
@@ -564,12 +561,21 @@ void MainWindow::changeDebuggerState() {
     ui->emuVarView->setEnabled( !debugger_on );
     ui->buttonReceiveFiles->setEnabled( !debugger_on && in_recieving_mode);
 
-    if (in_recieving_mode && !debugger_on) {
-        in_recieving_mode = false;
-        refreshVariableList();
+    if (!debugger_on) {
+        updateDebuggerChanges();
+        if (in_recieving_mode) {
+            in_recieving_mode = false;
+            refreshVariableList();
+        }
+    }
+}
+
+void MainWindow::changeDebuggerState() {
+    if (emu.rom.empty()) {
+        return;
     }
 
-    updateDebuggerChanges();
+    setDebuggerState(!debugger_on);
 
     emit debuggerChangedState( debugger_on );
 }
@@ -630,6 +636,7 @@ void MainWindow::populateDebugWindow() {
 void MainWindow::updateDisasmView(const int sentBase, const bool fromPane) {
     address_pane = sentBase;
     disasm_offset_set = false;
+    disasm.adl = ui->checkADL->isChecked();
     disasm.new_address = address_pane - ((fromPane) ? 0x80 : 0);
     if(disasm.new_address < 0) disasm.new_address = 0;
 
@@ -974,9 +981,7 @@ void MainWindow::stepPressed() {
 }
 
 void MainWindow::stepOverPressed() {
-    // Since we are just stepping over, there's a point in disasbling the GUI
-    debugger_on = false;
-    updateDebuggerChanges();
+    setDebuggerState(false);
     emit setDebugStepOverMode();
 }
 

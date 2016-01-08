@@ -85,7 +85,7 @@ static const std::string im_table[] = {
 };
 
 static std::string strW(uint32_t data) {
-    if(disasm.IL) {
+    if(disasm.il) {
         sprintf(tmpbuf,"$%06X",data);
     } else {
         sprintf(tmpbuf,"$%04X",data);
@@ -94,7 +94,7 @@ static std::string strW(uint32_t data) {
 }
 
 static std::string strWind(uint32_t data) {
-    if(disasm.IL) {
+    if(disasm.il) {
         sprintf(tmpbuf,"($%06X)",data);
     } else {
         sprintf(tmpbuf,"($%04X)",data);
@@ -137,7 +137,7 @@ static int8_t disasm_fetch_offset(void) {
 static uint32_t disasm_fetch_word(void) {
     uint32_t value = disasm_fetch_byte();
     value |= disasm_fetch_byte() << 8;
-    if (disasm.IL) {
+    if (disasm.il) {
         value |= disasm_fetch_byte() << 16;
     }
     return value;
@@ -408,9 +408,9 @@ void disassembleInstruction(void) {
     disasm.instruction.arguments = "";
     disasm.instruction.size = 0;
 
-    disasm.IL = 1;
-    disasm.prefix = 0;
-    disasm.suffix = 0;
+    disasm.il = disasm.adl;
+    disasm.prefix = false;
+    disasm.suffix = false;
 
     union {
         uint8_t opcode;
@@ -577,22 +577,22 @@ void disassembleInstruction(void) {
                         case 0: // .SIS
                             disasm.suffix = 1;
                             disasm.instruction.mode_suffix = ".sis ";
-                            disasm.L = 0; disasm.IL = 0;
+                            disasm.il = false;
                             goto exit_loop;
                         case 1: // .LIS
                             disasm.suffix = 1;
                             disasm.instruction.mode_suffix = ".lis ";
-                            disasm.L = 1; disasm.IL = 0;
+                            disasm.il = false;
                             goto exit_loop;
                         case 2: // .SIL
                             disasm.suffix = 1;
                             disasm.instruction.mode_suffix = ".sil ";
-                            disasm.L = 0; disasm.IL = 1;
+                            disasm.il = true;
                             goto exit_loop;
                         case 3: // .LIL
                             disasm.suffix = 1;
                             disasm.instruction.mode_suffix = ".lil ";
-                            disasm.L = 1; disasm.IL = 1;
+                            disasm.il = true;
                             goto exit_loop;
                         case 6: // HALT
                             disasm.instruction.opcode = "halt";
@@ -868,7 +868,7 @@ void disassembleInstruction(void) {
                                                                 disasm.instruction.arguments = "ix"+strOffset(disasm_fetch_offset());
                                                                 break;
                                                             case 5: // LD MB, A
-                                                                if (disasm.IL) {
+                                                                if (disasm.il) {
                                                                     disasm.instruction.opcode = "ld";
                                                                     disasm.instruction.arguments = "mb,a";
                                                                 } else { // OPCODETRAP
@@ -896,7 +896,7 @@ void disassembleInstruction(void) {
                                                                 disasm.instruction.arguments = "iy"+strOffset(disasm_fetch_offset());
                                                                 break;
                                                             case 5: // LD A, MB
-                                                                if (disasm.IL) {
+                                                                if (disasm.il) {
                                                                     disasm.instruction.opcode = "ld";
                                                                     disasm.instruction.arguments = "a,mb";
                                                                 } else { // OPCODETRAP

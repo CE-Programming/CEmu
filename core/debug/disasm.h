@@ -6,19 +6,19 @@
 #include <stdbool.h>
 
 typedef struct {
-  std::string opcode;
-  std::string arguments;
-  std::string mode_suffix;
-  std::string data;
-  int size;
+    std::string opcode;
+    std::string arguments;
+    std::string mode_suffix;
+    std::string data;
+    int size;
 } eZ80_instuction_t;
 
 typedef struct {
-  eZ80_instuction_t instruction;
-  uint8_t prefix, suffix;
-  int32_t base_address;
-  int32_t new_address;
-  uint8_t IL, L;
+    eZ80_instuction_t instruction;
+    int32_t base_address;
+    int32_t new_address;
+    uint8_t prefix, suffix;
+    bool adl, il;
 } disasm_state_t;
 
 extern disasm_state_t disasm;

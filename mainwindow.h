@@ -55,6 +55,7 @@ private:
     void raiseDebugger();
     void updateDebuggerChanges();
     void populateDebugWindow();
+    void setDebuggerState(bool);
     void changeDebuggerState();
     void processDebugCommand(int, uint32_t);
     void portMonitorCheckboxToggled(QTableWidgetItem *);

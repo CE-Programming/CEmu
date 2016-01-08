@@ -98,6 +98,7 @@ void EmuThread::setDebugStepMode() {
 
 void EmuThread::setDebugStepOverMode() {
     disasm.base_address = cpu.registers.PC;
+    disasm.adl = cpu.ADL;
     disassembleInstruction();
     mem.debug.stepOverAddress = disasm.new_address;
     mem.debug.block[mem.debug.stepOverAddress] |= DBG_STEP_OVER_BREAKPOINT;
