@@ -91,6 +91,10 @@ private:
     void refreshVariableList();
     void saveSelected();
 
+    // Hex Editor
+    void flashUpdatePressed();
+    void ramUpdatePressed();
+
     Ui::MainWindow *ui = nullptr;
     QSettings *settings = nullptr;
     QDockWidget *dock_debugger = nullptr;

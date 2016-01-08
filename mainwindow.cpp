@@ -46,9 +46,11 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     ui->setupUi(this);
 
     // Register QtKeypadBridge for the virtual keyboard functionality
-    ui->lcdWidget->installEventFilter(&qt_keypad_bridge);
-    ui->keypadWidget->installEventFilter(&qt_keypad_bridge);
     this->installEventFilter(&qt_keypad_bridge);
+    // Same for all the tabs/docks (iterate over them instead of harcoding their names)
+    for (const auto& tab : ui->tabWidget->children()[0]->children()) {
+        tab->installEventFilter(&qt_keypad_bridge);
+    }
 
     ui->keypadWidget->setResizeMode(QQuickWidget::ResizeMode::SizeRootObjectToView);
     ui->disassemblyView->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -113,6 +115,10 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
     connect(ui->refreshSlider, &QSlider::valueChanged, this, &MainWindow::changeLCDRefresh);
     connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::alwaysOnTop);
+
+    // Hex Editor
+    connect(ui->buttonFlashRefresh, &QPushButton::clicked, this, &MainWindow::flashUpdatePressed);
+    connect(ui->buttonRamRefresh, &QPushButton::clicked, this, &MainWindow::ramUpdatePressed);
 
     // Set up monospace fonts
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
@@ -528,10 +534,6 @@ void MainWindow::changeDebuggerState() {
         pix.load(":/icons/resources/icons/stop.png");
         ui->portChangeView->clear();
         ui->breakChangeView->clear();
-
-        // Force focus back to the lcdWidget so that keyboard shortcuts work again
-        this->setWindowState(Qt::WindowActive);
-        ui->lcdWidget->setFocus();
     }
     setReceiveState(false);
     icon.addPixmap(pix);
@@ -956,12 +958,14 @@ void MainWindow::setPCaddress(const QPoint& posa) {
 }
 
 void MainWindow::stepPressed() {
+    // Since we are just stepping, there's no point in disasbling the GUI
     debugger_on = false;
     updateDebuggerChanges();
     emit setDebugStepMode();
 }
 
 void MainWindow::stepOverPressed() {
+    // Since we are just stepping over, there's a point in disasbling the GUI
     changeDebuggerState();
     emit setDebugStepOverMode();
 }
@@ -991,4 +995,16 @@ void MainWindow::gotoPressed() {
     }
 
     updateDisasmView(hex2int(address), false);
+}
+
+/* ================================================ */
+/* Hex Editor Things                                */
+/* ================================================ */
+
+void MainWindow::flashUpdatePressed() {
+    ui->flashEdit->setData(QByteArray::fromRawData((char*)mem.flash.block, 0x400000));
+}
+
+void MainWindow::ramUpdatePressed() {
+    ui->ramEdit->setData(QByteArray::fromRawData((char*)mem.ram.block, 0x400000));
 }

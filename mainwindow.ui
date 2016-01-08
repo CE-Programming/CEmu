@@ -242,7 +242,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>5</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -4211,7 +4211,7 @@
         <item>
          <widget class="QToolBox" name="toolboxMem">
           <property name="enabled">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
           <property name="currentIndex">
            <number>0</number>
@@ -4235,14 +4235,21 @@
                <number>0</number>
               </property>
               <item>
-               <widget class="QPushButton" name="buttonFlashGoto_2">
+               <widget class="QPushButton" name="buttonFlashRefresh">
+                <property name="text">
+                 <string>Refresh</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="buttonFlashGoto">
                 <property name="text">
                  <string>Goto</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton">
+               <widget class="QPushButton" name="buttonFlashSearch">
                 <property name="text">
                  <string>Search</string>
                 </property>
@@ -4280,8 +4287,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>276</width>
-             <height>120</height>
+             <width>456</width>
+             <height>567</height>
             </rect>
            </property>
            <attribute name="label">
@@ -4294,14 +4301,21 @@
                <number>0</number>
               </property>
               <item>
-               <widget class="QPushButton" name="buttonRamGoto_2">
+               <widget class="QPushButton" name="buttonRamRefresh">
+                <property name="text">
+                 <string>Refresh</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="buttonRamGoto">
                 <property name="text">
                  <string>Goto</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_2">
+               <widget class="QPushButton" name="buttonRamSearch">
                 <property name="text">
                  <string>Search</string>
                 </property>
@@ -4321,7 +4335,7 @@
                </spacer>
               </item>
               <item>
-               <widget class="QPushButton" name="buttonRamUpdate_2">
+               <widget class="QPushButton" name="buttonRamUpdate">
                 <property name="text">
                  <string>Update Changes</string>
                 </property>
@@ -4339,8 +4353,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>276</width>
-             <height>120</height>
+             <width>456</width>
+             <height>567</height>
             </rect>
            </property>
            <attribute name="label">
@@ -4353,14 +4367,21 @@
                <number>0</number>
               </property>
               <item>
-               <widget class="QPushButton" name="buttonMmioGoto_2">
+               <widget class="QPushButton" name="buttonMmioRefresh">
+                <property name="text">
+                 <string>Refresh</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="buttonMmioGoto">
                 <property name="text">
                  <string>Goto</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_3">
+               <widget class="QPushButton" name="buttonMmioSearch">
                 <property name="text">
                  <string>Search</string>
                 </property>
@@ -4380,7 +4401,7 @@
                </spacer>
               </item>
               <item>
-               <widget class="QPushButton" name="buttonMmioUpdate_2">
+               <widget class="QPushButton" name="buttonMmioUpdate">
                 <property name="text">
                  <string>Update Changes</string>
                 </property>
