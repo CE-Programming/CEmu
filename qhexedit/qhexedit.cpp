@@ -295,6 +295,7 @@ void QHexEdit::undo() {
 
 /* Handle events */
 void QHexEdit::keyPressEvent(QKeyEvent *e) {
+
     /* Cursor movements */
     if (e->matches(QKeySequence::MoveToNextChar)) {
         setCursorPosition(_cursorPosition + 1);
@@ -506,8 +507,7 @@ void QHexEdit::keyPressEvent(QKeyEvent *e) {
     refresh();
 }
 
-void QHexEdit::mouseMoveEvent(QMouseEvent *e)
-{
+void QHexEdit::mouseMoveEvent(QMouseEvent *e) {
     _blink = false;
     viewport()->update();
     qint64 actPos = cursorPosition(e->pos());
@@ -518,20 +518,17 @@ void QHexEdit::mouseMoveEvent(QMouseEvent *e)
     }
 }
 
-void QHexEdit::mousePressEvent(QMouseEvent *e)
-{
+void QHexEdit::mousePressEvent(QMouseEvent *e) {
     _blink = false;
     viewport()->update();
     qint64 cPos = cursorPosition(e->pos());
-    if (cPos >= 0)
-    {
+    if (cPos >= 0) {
         resetSelection(cPos);
         setCursorPosition(cPos);
     }
 }
 
-void QHexEdit::paintEvent(QPaintEvent *e)
-{
+void QHexEdit::paintEvent(QPaintEvent *e) {
     QPainter painter(viewport());
 
     /* process some useful calculations */
@@ -563,14 +560,12 @@ void QHexEdit::paintEvent(QPaintEvent *e)
 
         painter.setBackgroundMode(Qt::TransparentMode);
 
-        for (int row = 0, pxPosY = pxPosStartY; row <= _rowsShown; row++, pxPosY +=_pxCharHeight)
-        {
+        for (int row = 0, pxPosY = pxPosStartY; row <= _rowsShown; row++, pxPosY +=_pxCharHeight) {
             QByteArray hex;
             int pxPosX = _pxPosHexX - pxOfsX;
             int pxPosAsciiX2 = _pxPosAsciiX - pxOfsX;
             qint64 bPosLine = row * BYTES_PER_LINE;
-            for (int colIdx = 0; ((bPosLine + colIdx) < _dataShown.size() && (colIdx < BYTES_PER_LINE)); colIdx++)
-            {
+            for (int colIdx = 0; ((bPosLine + colIdx) < _dataShown.size() && (colIdx < BYTES_PER_LINE)); colIdx++) {
                 QColor c = viewport()->palette().color(QPalette::Base);
                 painter.setPen(colStandard);
 
@@ -681,8 +676,7 @@ void QHexEdit::init() {
 
 void QHexEdit::adjust() {
     // recalc Graphics
-    if (_addressArea)
-    {
+    if (_addressArea) {
         _addrDigits = addressWidth();
         _pxPosHexX = _pxGapAdr + _addrDigits * _pxCharWidth + _pxGapAdrHex;
     } else {
@@ -738,19 +732,15 @@ void QHexEdit::readBuffers() {
     _hexDataShown = QByteArray(_dataShown.toHex());
 }
 
-QString QHexEdit::toReadable(const QByteArray &ba)
-{
+QString QHexEdit::toReadable(const QByteArray &ba) {
     QString result;
 
-    for (int i=0; i < ba.size(); i += 16)
-    {
+    for (int i=0; i < ba.size(); i += 16) {
         QString addrStr = QString("%1").arg(_addressOffset + i, addressWidth(), 16, QChar('0'));
         QString hexStr;
         QString ascStr;
-        for (int j=0; j<16; j++)
-        {
-            if ((i + j) < ba.size())
-            {
+        for (int j=0; j<16; j++) {
+            if ((i + j) < ba.size()) {
                 hexStr.append(" ").append(ba.mid(i+j, 1).toHex());
                 char ch = ba[i + j];
                 if ((ch < 0x20) || (ch > 0x7e))
