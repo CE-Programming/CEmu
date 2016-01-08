@@ -551,7 +551,9 @@ void MainWindow::changeDebuggerState() {
     ui->groupRegisters->setEnabled( debugger_on );
     ui->groupInterrupts->setEnabled( debugger_on );
     ui->groupStack->setEnabled( debugger_on );
-    ui->toolboxMem->setEnabled( debugger_on );
+    ui->groupFlash->setEnabled( debugger_on );
+    ui->groupRAM->setEnabled( debugger_on );
+    ui->groupMMIO->setEnabled( debugger_on );
 
     ui->buttonSend->setEnabled( !debugger_on );
     ui->buttonRefreshList->setEnabled( !debugger_on );
@@ -961,6 +963,7 @@ void MainWindow::stepPressed() {
     // Since we are just stepping, there's no point in disasbling the GUI
     debugger_on = false;
     updateDebuggerChanges();
+    set_cpu_clock_rate(48e6); // 6 MHz
     emit setDebugStepMode();
 }
 

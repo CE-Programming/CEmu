@@ -2,6 +2,7 @@
 
 #include "control.h"
 #include "asic.h"
+#include "emu.h"
 
 // Global CONTROL state
 control_state_t control;
@@ -85,7 +86,7 @@ static void control_write(const uint16_t pio, const uint8_t byte)
                 default:
                     break;
             }
-            //gui_console_printf("CPU clock rate set to: %d MHz\n", 6*(1<<(control.cpu_speed & 0b00000011)));
+            gui_console_printf("CPU clock rate set to: %d MHz\n", 6*(1<<(control.cpu_speed & 0b00000011)));
             break;
         case 0x02:
             control.ports[addr] = 0;
@@ -163,11 +164,6 @@ static void control_write(const uint16_t pio, const uint8_t byte)
         default:
             break;
     }
-}
-
-void free_control(void *_state) {
-    control_state_t* state = (control_state_t*)_state;
-    free(state);
 }
 
 static const eZ80portrange_t device = {
