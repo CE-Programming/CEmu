@@ -119,6 +119,10 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     // Hex Editor
     connect(ui->buttonFlashRefresh, &QPushButton::clicked, this, &MainWindow::flashUpdatePressed);
     connect(ui->buttonRamRefresh, &QPushButton::clicked, this, &MainWindow::ramUpdatePressed);
+    connect(ui->buttonMemRefresh, &QPushButton::clicked, this, &MainWindow::memUpdatePressed);
+    connect(ui->buttonFlashGoto, &QPushButton::clicked, this, &MainWindow::flashGotoPressed);
+    connect(ui->buttonRamGoto, &QPushButton::clicked, this, &MainWindow::ramGotoPressed);
+    connect(ui->buttonMemGoto, &QPushButton::clicked, this, &MainWindow::memGotoPressed);
 
     // Set up monospace fonts
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
@@ -553,7 +557,7 @@ void MainWindow::changeDebuggerState() {
     ui->groupStack->setEnabled( debugger_on );
     ui->groupFlash->setEnabled( debugger_on );
     ui->groupRAM->setEnabled( debugger_on );
-    ui->groupMMIO->setEnabled( debugger_on );
+    ui->groupMem->setEnabled( debugger_on );
 
     ui->buttonSend->setEnabled( !debugger_on );
     ui->buttonRefreshList->setEnabled( !debugger_on );
@@ -963,7 +967,6 @@ void MainWindow::stepPressed() {
     // Since we are just stepping, there's no point in disasbling the GUI
     debugger_on = false;
     updateDebuggerChanges();
-    set_cpu_clock_rate(48e6); // 6 MHz
     emit setDebugStepMode();
 }
 
@@ -987,13 +990,24 @@ void MainWindow::breakpointPressed() {
     updateDisasmView(address.toInt(&ok, 16), true);
 }
 
-void MainWindow::gotoPressed() {
-    bool ok;
+QString MainWindow::getAddressString(bool &ok, QString String) {
     QString address = QInputDialog::getText(this, tr("Goto Address"),
                                          tr("Input Address (In Hexadecimal):"), QLineEdit::Normal,
-                                         ui->disassemblyView->getSelectedAddress(), &ok).toUpper();
+                                         String, &ok).toUpper();
 
-    if (!ok || (address.toStdString().find_first_not_of("0123456789ABCDEF") != std::string::npos) || (address.length()>6)) {
+    if (!ok || (address.toStdString().find_first_not_of("0123456789ABCDEF") != std::string::npos) || (address.length() > 6)) {
+        return QStringLiteral("");
+    }
+
+    return address;
+}
+
+void MainWindow::gotoPressed() {
+
+    bool ok;
+    QString address = getAddressString(ok, ui->disassemblyView->getSelectedAddress());
+
+    if (!ok) {
         return;
     }
 
@@ -1005,9 +1019,93 @@ void MainWindow::gotoPressed() {
 /* ================================================ */
 
 void MainWindow::flashUpdatePressed() {
+    ui->flashEdit->setFocus();
     ui->flashEdit->setData(QByteArray::fromRawData((char*)mem.flash.block, 0x400000));
 }
 
 void MainWindow::ramUpdatePressed() {
-    ui->ramEdit->setData(QByteArray::fromRawData((char*)mem.ram.block, 0x400000));
+    ui->ramEdit->setFocus();
+    ui->ramEdit->setData(QByteArray::fromRawData((char*)mem.ram.block, 0x65800));
+    ui->ramEdit->setAddressOffset(0xD00000);
+}
+
+void MainWindow::memUpdatePressed() {
+    ui->memEdit->setFocus();
+    QByteArray mem_data;
+    int start = cpu.registers.PC-0x5000;
+    if (start < 0) { start = 0; }
+    int end = start+0x10000;
+    if (end > 0xFFFFFF) { end = 0xFFFFFF; }
+
+    for (int i=start; i<end; i++) {
+        mem_data.append(memory_read_byte(i));
+    }
+
+    ui->memEdit->setData(mem_data);
+    ui->memEdit->setAddressOffset(start);
+    ui->memEdit->setCursorPosition((cpu.registers.PC-start)<<1);
+    ui->memEdit->ensureVisible();
+}
+
+void MainWindow::flashGotoPressed() {
+    ui->flashEdit->setFocus();
+    bool ok;
+    QString address = getAddressString(ok, "");
+
+    if (!ok) {
+        return;
+    }
+    int int_address = hex2int(address);
+    if (int_address > 0x3FFFFF) {
+        return;
+    }
+
+    ui->flashEdit->setCursorPosition(int_address<<1);
+    ui->flashEdit->ensureVisible();
+}
+
+void MainWindow::ramGotoPressed() {
+    ui->ramEdit->setFocus();
+    bool ok;
+    QString address = getAddressString(ok, "");
+
+    if (!ok) {
+        return;
+    }
+    int int_address = hex2int(address)-0xD00000;
+    if (int_address > 0x657FF || address < 0) {
+        return;
+    }
+
+    ui->ramEdit->setCursorPosition(int_address<<1);
+    ui->ramEdit->ensureVisible();
+}
+
+void MainWindow::memGotoPressed() {
+    ui->memEdit->setFocus();
+    bool ok;
+    QString address = getAddressString(ok, "");
+
+    if (!ok) {
+        return;
+    }
+    int int_address = hex2int(address);
+    if (int_address > 0xFFFFFF || int_address < 0) {
+        return;
+    }
+
+    QByteArray mem_data;
+    int start = int_address-0x5000;
+    if (start < 0) { start = 0; }
+    int end = start+0x10000;
+    if (end > 0xFFFFFF) { end = 0xFFFFFF; }
+
+    for (int i=start; i<end; i++) {
+        mem_data.append(memory_read_byte(i));
+    }
+
+    ui->memEdit->setData(mem_data);
+    ui->memEdit->setAddressOffset(start);
+    ui->memEdit->setCursorPosition((int_address-start)<<1);
+    ui->memEdit->ensureVisible();
 }

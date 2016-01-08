@@ -135,7 +135,7 @@ void QHexEdit::setCursorPosition(qint64 position) {
 
     _cursorRect = QRect(_pxCursorX, _pxCursorY + _pxCursorWidth, _pxCharWidth, _pxCursorWidth);
 
-    // Immiadately draw new cursor
+    // Immiedately draw new cursor
     _blink = true;
     viewport()->update(_cursorRect);
     emit currentAddressChanged(_bPosCurrent);
@@ -580,12 +580,12 @@ void QHexEdit::paintEvent(QPaintEvent *e)
 {
     QPainter painter(viewport());
 
-    // process some useful calculations
+    /* process some useful calculations */
     int pxOfsX = horizontalScrollBar()->value();
     int pxPosStartY = _pxCharHeight;
 
     if (e->rect() != _cursorRect) {
-        // draw some patterns if needed
+        /* Draw some patterns if needed */
         painter.fillRect(e->rect(), viewport()->palette().color(QPalette::Base));
         if (_asciiArea) {
             int linePos = _pxPosAsciiX - (_pxGapHexAscii / 2);
@@ -595,16 +595,16 @@ void QHexEdit::paintEvent(QPaintEvent *e)
 
         painter.setPen(viewport()->palette().color(QPalette::WindowText));
 
-        // paint address area
+        /* Paint address area */
         if (_addressArea) {
             QString address;
             for (int row=0, pxPosY = _pxCharHeight; row <= (_dataShown.size()/BYTES_PER_LINE); row++, pxPosY +=_pxCharHeight) {
                 address = QString("%1").arg(_bPosFirst + row*BYTES_PER_LINE + _addressOffset, _addrDigits, 16, QChar('0'));
-                painter.drawText(_pxPosAdrX - pxOfsX, pxPosY, address);
+                painter.drawText(_pxPosAdrX - pxOfsX, pxPosY, address.toUpper());
             }
         }
 
-        // paint hex and ascii area
+        /* Paint hex and ASCII area */
         QPen colStandard = QPen(viewport()->palette().color(QPalette::WindowText));
 
         painter.setBackgroundMode(Qt::TransparentMode);
@@ -635,20 +635,22 @@ void QHexEdit::paintEvent(QPaintEvent *e)
 
                 // render hex value
                 QRect r;
-                if (colIdx == 0)
+                if (colIdx == 0) {
                     r.setRect(pxPosX, pxPosY - _pxCharHeight + _pxSelectionSub, 2*_pxCharWidth, _pxCharHeight);
-                else
+                } else {
                     r.setRect(pxPosX - _pxCharWidth, pxPosY - _pxCharHeight + _pxSelectionSub, 3*_pxCharWidth, _pxCharHeight);
+                }
                 painter.fillRect(r, c);
                 hex = _hexDataShown.mid((bPosLine + colIdx) * 2, 2);
-                painter.drawText(pxPosX, pxPosY, hex);
+                painter.drawText(pxPosX, pxPosY, hex.toUpper());
                 pxPosX += 3*_pxCharWidth;
 
                 // render ascii value
                 if (_asciiArea) {
                     char ch = _dataShown.at(bPosLine + colIdx);
-                    if ((ch < 0x20) || (ch > 0x7e))
+                    if ((ch < 0x20) || (ch > 0x7e)) {
                             ch = '.';
+                    }
                     r.setRect(pxPosAsciiX2, pxPosY - _pxCharHeight + _pxSelectionSub, _pxCharWidth, _pxCharHeight);
                     painter.fillRect(r, c);
                     painter.drawText(pxPosAsciiX2, pxPosY, QChar(ch));
@@ -756,6 +758,10 @@ void QHexEdit::adjust() {
         _bPosLast = _chunks->size() - 1;
     readBuffers();
     setCursorPosition(_cursorPosition);
+}
+
+void QHexEdit::gotoLine(int line) {
+    verticalScrollBar()->setValue(line/BYTES_PER_LINE);
 }
 
 void QHexEdit::dataChangedPrivate(int) {

@@ -4256,13 +4256,6 @@
                </property>
               </spacer>
              </item>
-             <item>
-              <widget class="QPushButton" name="buttonFlashUpdate_2">
-               <property name="text">
-                <string>Update Changes</string>
-               </property>
-              </widget>
-             </item>
             </layout>
            </item>
            <item>
@@ -4319,13 +4312,6 @@
                </property>
               </spacer>
              </item>
-             <item>
-              <widget class="QPushButton" name="buttonRamUpdate">
-               <property name="text">
-                <string>Update Changes</string>
-               </property>
-              </widget>
-             </item>
             </layout>
            </item>
            <item>
@@ -4335,12 +4321,12 @@
          </widget>
         </item>
         <item>
-         <widget class="QGroupBox" name="groupMMIO">
+         <widget class="QGroupBox" name="groupMem">
           <property name="enabled">
            <bool>false</bool>
           </property>
           <property name="title">
-           <string>MMIO</string>
+           <string>Memory View</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_16">
            <item>
@@ -4349,21 +4335,21 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QPushButton" name="buttonMmioRefresh">
+              <widget class="QPushButton" name="buttonMemRefresh">
                <property name="text">
                 <string>Refresh</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="buttonMmioGoto">
+              <widget class="QPushButton" name="buttonMemGoto">
                <property name="text">
                 <string>Goto</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="buttonMmioSearch">
+              <widget class="QPushButton" name="buttonMemSearch">
                <property name="text">
                 <string>Search</string>
                </property>
@@ -4382,17 +4368,10 @@
                </property>
               </spacer>
              </item>
-             <item>
-              <widget class="QPushButton" name="buttonMmioUpdate">
-               <property name="text">
-                <string>Update Changes</string>
-               </property>
-              </widget>
-             </item>
             </layout>
            </item>
            <item>
-            <widget class="QHexEdit" name="mmioEdit"/>
+            <widget class="QHexEdit" name="memEdit"/>
            </item>
           </layout>
          </widget>

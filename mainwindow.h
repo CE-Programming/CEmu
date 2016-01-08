@@ -93,7 +93,13 @@ private:
 
     // Hex Editor
     void flashUpdatePressed();
+    void flashGotoPressed();
     void ramUpdatePressed();
+    void ramGotoPressed();
+    void memUpdatePressed();
+    void memGotoPressed();
+
+    QString getAddressString(bool&, QString);
 
     Ui::MainWindow *ui = nullptr;
     QSettings *settings = nullptr;
