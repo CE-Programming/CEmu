@@ -12,6 +12,7 @@
 #include "emuthread.h"
 #include "core/vat.h"
 #include "core/debug/debug.h"
+#include "qhexedit/qhexedit.h"
 
 namespace Ui {
     class MainWindow;
@@ -96,12 +97,16 @@ private:
     void flashUpdate();
     void flashGotoPressed();
     void flashSearchPressed();
+    void flashSyncPressed();
     void ramUpdate();
     void ramGotoPressed();
     void ramSearchPressed();
+    void ramSyncPressed();
     void memUpdate();
     void memGotoPressed();
     void memSearchPressed();
+    void memSyncPressed();
+    void syncHexView(int, QHexEdit*);
 
     QString getAddressString(bool&, QString);
 
@@ -110,7 +115,9 @@ private:
     QDockWidget *dock_debugger = nullptr;
     QTextCursor disasm_offset;
     bool disasm_offset_set;
+    bool from_pane;
     int address_pane;
+    int mem_hex_size;
 
     EmuThread emu;
 

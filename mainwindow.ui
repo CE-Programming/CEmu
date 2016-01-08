@@ -4249,6 +4249,13 @@
                </property>
               </spacer>
              </item>
+             <item>
+              <widget class="QPushButton" name="buttonFlashSync">
+               <property name="text">
+                <string>Sync Changes</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </item>
            <item>
@@ -4297,6 +4304,13 @@
                 </size>
                </property>
               </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="buttonRamSync">
+               <property name="text">
+                <string>Sync Changes</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -4349,8 +4363,21 @@
              </item>
              <item>
               <widget class="QCheckBox" name="checkLockPosition">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="text">
                 <string>Lock Position</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="buttonMemSync">
+               <property name="text">
+                <string>Sync Changes</string>
                </property>
               </widget>
              </item>

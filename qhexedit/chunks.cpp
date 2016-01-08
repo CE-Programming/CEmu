@@ -145,8 +145,7 @@ bool Chunks::write(QIODevice &iODevice, qint64 posa, qint64 count) {
 }
 
 
-// ***************************************** Set and get highlighting infos
-
+/* Set and get highlighting infos */
 void Chunks::setDataChanged(qint64 posa, bool dataChanged_) {
     if ((posa < 0) || (posa >= _size)) {
         return;

@@ -33,7 +33,7 @@ class QHexEdit : public QAbstractScrollArea {
     Q_PROPERTY(bool asciiArea READ asciiArea WRITE setAsciiArea)
 
     /*! Porperty cursorPosition sets or gets the position of the editor cursor
-    in QHexEdit. Every byte in data has to cursor positions: the lower and upper
+    in QHexEdit. Every byte in data has two cursor positions: the lower and upper
     Nibble. Maximum cursor position is factor two of data.size().
     */
     Q_PROPERTY(qint64 cursorPosition READ cursorPosition WRITE setCursorPosition)

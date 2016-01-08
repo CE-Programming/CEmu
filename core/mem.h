@@ -65,6 +65,7 @@ void mem_reset(void);
 
 uint8_t memory_read_byte(const uint32_t address);
 void memory_write_byte(const uint32_t address, const uint8_t value);
+void memory_force_write_byte(const uint32_t address, const uint8_t byte);
 
 uint8_t *phys_mem_ptr(uint32_t address, uint32_t size);
 

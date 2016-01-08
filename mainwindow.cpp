@@ -119,10 +119,13 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     // Hex Editor
     connect(ui->buttonFlashGoto, &QPushButton::clicked, this, &MainWindow::flashGotoPressed);
     connect(ui->buttonFlashSearch, &QPushButton::clicked, this, &MainWindow::flashSearchPressed);
+    connect(ui->buttonFlashSync, &QPushButton::clicked, this, &MainWindow::flashSyncPressed);
     connect(ui->buttonRamGoto, &QPushButton::clicked, this, &MainWindow::ramGotoPressed);
     connect(ui->buttonRamSearch, &QPushButton::clicked, this, &MainWindow::ramSearchPressed);
+    connect(ui->buttonRamSync, &QPushButton::clicked, this, &MainWindow::ramSyncPressed);
     connect(ui->buttonMemGoto, &QPushButton::clicked, this, &MainWindow::memGotoPressed);
     connect(ui->buttonMemSearch, &QPushButton::clicked, this, &MainWindow::memSearchPressed);
+    connect(ui->buttonMemSync, &QPushButton::clicked, this, &MainWindow::memSyncPressed);
 
     // Set up monospace fonts
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
@@ -635,6 +638,7 @@ void MainWindow::populateDebugWindow() {
 
 void MainWindow::updateDisasmView(const int sentBase, const bool fromPane) {
     address_pane = sentBase;
+    from_pane = fromPane;
     disasm_offset_set = false;
     disasm.adl = ui->checkADL->isChecked();
     disasm.new_address = address_pane - ((fromPane) ? 0x80 : 0);
@@ -1059,6 +1063,8 @@ void MainWindow::memUpdate() {
     int end = start+0x2000;
     if (end > 0xFFFFFF) { end = 0xFFFFFF; }
 
+    mem_hex_size = end-start;
+
     for (int i=start; i<end; i++) {
         mem_data.append(memory_read_byte(i));
     }
@@ -1165,6 +1171,8 @@ void MainWindow::memGotoPressed() {
     int end = start+0x1000;
     if (end > 0xFFFFFF) { end = 0xFFFFFF; }
 
+    mem_hex_size = end-start;
+
     for (int i=start; i<end; i++) {
         mem_data.append(memory_read_byte(i));
     }
@@ -1173,4 +1181,31 @@ void MainWindow::memGotoPressed() {
     ui->memEdit->setAddressOffset(start);
     ui->memEdit->setCursorPosition((int_address-start)<<1);
     ui->memEdit->ensureVisible();
+}
+
+void MainWindow::syncHexView(int size_, QHexEdit *hex_view) {
+  int start = hex_view->addressOffset();
+
+  for (int i = 0; i<size_; i++) {
+      memory_force_write_byte(i+start, hex_view->dataAt(i, 1).at(0));
+  }
+
+  populateDebugWindow();
+  updateDisasmView(address_pane, from_pane);
+  hex_view->setFocus();
+}
+
+void MainWindow::flashSyncPressed() {
+    ui->flashEdit->setFocus();
+    syncHexView(0x400000, ui->flashEdit);
+}
+
+void MainWindow::ramSyncPressed() {
+    ui->ramEdit->setFocus();
+    syncHexView(0x65800, ui->ramEdit);
+}
+
+void MainWindow::memSyncPressed() {
+    ui->memEdit->setFocus();
+    syncHexView(mem_hex_size, ui->memEdit);
 }
