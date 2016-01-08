@@ -32,10 +32,10 @@ QHexEdit::QHexEdit(QWidget *par) : QAbstractScrollArea(par) {
     _cursorTimer.setInterval(500);
     _cursorTimer.start();
 
-    setAddressWidth(6);
-    setAddressArea(true);
-    setAsciiArea(true);
     setOverwriteMode(true);
+    setAsciiArea(true);
+    setAddressArea(true);
+    setAddressWidth(6);
     setHighlighting(true);
     setReadOnly(false);
 
