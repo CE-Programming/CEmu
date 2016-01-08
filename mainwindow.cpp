@@ -972,7 +972,8 @@ void MainWindow::stepPressed() {
 
 void MainWindow::stepOverPressed() {
     // Since we are just stepping over, there's a point in disasbling the GUI
-    changeDebuggerState();
+    debugger_on = false;
+    updateDebuggerChanges();
     emit setDebugStepOverMode();
 }
 
