@@ -33,10 +33,11 @@
 const char *rom_image = NULL;
 
 /* cycle_count_delta is a (usually negative) number telling what the time is relative
- * to the next scheduled event. See sched.c */
+ * to the next scheduled event. See schedule.c */
 int cycle_count_delta = 0;
 
-int throttle_delay = 10; /* in milliseconds */
+/* in milliseconds */
+int throttle_delay = 10;
 
 uint32_t cpu_events;
 
@@ -315,7 +316,6 @@ void emu_loop(bool reset) {
     emscripten_set_main_loop(emu_inner_loop, -1, 1);
 #else
     while (!exiting) {
-        sched_process_pending_events();
         if (cpu_events & EVENT_RESET) {
             cpu_events = EVENT_NONE;
             gui_console_printf("CPU Reset triggered...");
@@ -325,6 +325,7 @@ void emu_loop(bool reset) {
             cpu_events = EVENT_NONE;
             debugger(DBG_STEP, 0);
         }
+        sched_process_pending_events();
         if (cycle_count_delta < 0) {
             cpu_execute();  // execute instructions with available clock cycles
         } else {

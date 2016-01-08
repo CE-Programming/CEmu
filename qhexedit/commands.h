@@ -21,7 +21,6 @@ steps: insert a "00", overwrite it with "03" and the overwrite it with "34". The
 3 steps are combined into a single step, insert a "34".
 
 The byte array oriented commands are just put into a set of single byte commands,
-which are pooled together with the macroBegin() and macroEnd() functionality of
 Qt's QUndoStack.
 */
 

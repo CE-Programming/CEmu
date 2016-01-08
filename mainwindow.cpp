@@ -46,11 +46,9 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     ui->setupUi(this);
 
     // Register QtKeypadBridge for the virtual keyboard functionality
+    ui->lcdWidget->installEventFilter(&qt_keypad_bridge);
+    ui->keypadWidget->installEventFilter(&qt_keypad_bridge);
     this->installEventFilter(&qt_keypad_bridge);
-    // Same for all the tabs/docks (iterate over them instead of harcoding their names)
-    for (const auto& tab : ui->tabWidget->children()[0]->children()) {
-        tab->installEventFilter(&qt_keypad_bridge);
-    }
 
     ui->keypadWidget->setResizeMode(QQuickWidget::ResizeMode::SizeRootObjectToView);
     ui->disassemblyView->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -126,7 +124,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     qRegisterMetaType<std::string>("std::string");
 
     setUIMode(true);
-
     debugger_on = false;
 
 #ifdef Q_OS_ANDROID
@@ -156,7 +153,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     ui->lcdWidget->setFocus();
 }
 
-// window destructor
 MainWindow::~MainWindow() {
     settings->setValue(QStringLiteral("windowState"), saveState(WindowStateVersion));
     settings->setValue(QStringLiteral("windowGeometry"), saveGeometry());
@@ -553,6 +549,7 @@ void MainWindow::changeDebuggerState() {
     ui->groupRegisters->setEnabled( debugger_on );
     ui->groupInterrupts->setEnabled( debugger_on );
     ui->groupStack->setEnabled( debugger_on );
+    ui->toolboxMem->setEnabled( debugger_on );
 
     ui->buttonSend->setEnabled( !debugger_on );
     ui->buttonRefreshList->setEnabled( !debugger_on );
@@ -965,8 +962,7 @@ void MainWindow::stepPressed() {
 }
 
 void MainWindow::stepOverPressed() {
-    debugger_on = false;
-    updateDebuggerChanges();
+    changeDebuggerState();
     emit setDebugStepOverMode();
 }
 
