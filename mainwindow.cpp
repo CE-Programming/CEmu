@@ -33,8 +33,6 @@
 #include "qtkeypadbridge.h"
 
 #include "core/schedule.h"
-#include "core/debug/debug.h"
-#include "core/debug/disasm.h"
 #include "core/debug/disasmc.h"
 #include "core/link.h"
 #include "core/capture/gif.h"
@@ -175,8 +173,6 @@ MainWindow::~MainWindow() {
     settings->setValue(QStringLiteral("windowState"), saveState(WindowStateVersion));
     settings->setValue(QStringLiteral("windowGeometry"), saveGeometry());
     settings->setValue(QStringLiteral("disasmTextSize"), QVariant(ui->textSizeSlider->value()));
-
-    equ_map.clear();
 
     delete ui->flashEdit;
     delete ui->ramEdit;
@@ -1245,47 +1241,42 @@ void MainWindow::addEquateFile() {
         return;
     }
 
-    unsigned int errCount = 0, goodCount = 0;
-    bool ok = false;
     std::string current;
-    uint32_t address;
     std::ifstream in;
     in.open(dialog.selectedFiles().at(0).toStdString());
 
     QRegularExpression equatesRegexp("^\\h*([^\\W\\d]\\w*)\\h*(?:=|\\h\\.?equ(?!\\d))\\h*(?|\\$([\\da-f]+)|(\\d[\\da-f]*)h)\\h*(?:;.*)?$",
                                      QRegularExpression::CaseInsensitiveOption);
-    QRegularExpressionMatch matches;
-    QStringList captures;
 
-    if (in.good())
-    {
+    if (in.good()) {
         // Reset the map
         disasm.address_map.clear();
 
-        while (std::getline(in, current))
-        {
-            matches = equatesRegexp.match(QString::fromStdString(current));
-            captures = matches.capturedTexts();
-            if (captures.length() == 3)
-            {
-                ok = false;
-                address = (uint32_t)(captures[2].toUInt(&ok, 16));
-                if (ok) {
-                    goodCount++;
-                    disasm.address_map[address] = captures[1].toStdString();
-                } else {
-                    errCount++;
-                }
+        while (std::getline(in, current)) {
+            QRegularExpressionMatch matches = equatesRegexp.match(QString::fromStdString(current));
+            if (matches.hasMatch()) {
+                addEquate(disasm.address_map, (uint32_t)matches.capturedRef(2).toUInt(0, 16), matches.captured(1).toStdString());
             }
         }
         in.close();
-        QMessageBox messageBox;
-        QString counts = QString(tr("%1 equates loaded (%2 error%3)"))
-                            .arg(QString::number(goodCount), QString::number(errCount), errCount > 1 ? "s" : "");
-        messageBox.information(0, tr("Equates loaded"), counts);
+        QMessageBox::information(this, tr("Equates Loaded"), tr("Loaded disassembly equates."));
     } else {
         QMessageBox messageBox;
         messageBox.critical(0, tr("Error"), tr("Couldn't open this file"));
         messageBox.setFixedSize(500,200);
+    }
+}
+
+void MainWindow::addEquate(addressMap_t &map, uint32_t address, std::string &&name) {
+    std::string &item = map[address];
+    if (item.empty()) {
+        item = std::move(name);
+        uint8_t *ptr = phys_mem_ptr(address - 4, 9);
+        if (ptr && ptr[4] == 0xC3 && (ptr[0] == 0xC3 || ptr[8] == 0xC3)) { // jump table?
+            address  = ptr[5] | ptr[6] << 8 | ptr[7] << 16;
+            if (phys_mem_ptr(address, 1)) {
+                addEquate(map, address, std::string(item));
+            }
+        }
     }
 }

@@ -12,6 +12,7 @@
 #include "emuthread.h"
 #include "core/vat.h"
 #include "core/debug/debug.h"
+#include "core/debug/disasm.h"
 #include "qhexedit/qhexedit.h"
 
 namespace Ui {
@@ -81,6 +82,7 @@ private:
     void setPCaddress(const QPoint&);
     void addEquateFile();
     void clearEquateFile();
+    void addEquate(addressMap_t &, uint32_t, std::string &&);
 
     // Console
     void clearConsole(void);
@@ -126,7 +128,6 @@ private:
     bool debugger_on = false;
     bool in_recieving_mode = false;
 
-    std::map<std::string, std::string> equ_map;
     QList<calc_var_t> vars;
 };
 
