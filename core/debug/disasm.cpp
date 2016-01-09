@@ -79,10 +79,6 @@ static const std::string im_table[] = {
     "?",
     "1",
     "2",
-    "0",
-    "?",
-    "1",
-    "2",
 };
 
 static std::string strW(uint32_t data) {
@@ -126,8 +122,8 @@ static std::string strSind(uint8_t data) {
 
 static std::string strOffset(uint8_t data) {
     if (data & 128) {
-        sprintf(tmpbuf,"-$%02X",(0-data)&0xFF);
-    } else {
+        sprintf(tmpbuf,"-$%02X",0x100-data);
+    } else if (data) {
         sprintf(tmpbuf,"+$%02X",data);
     }
     return std::string(tmpbuf);
@@ -849,6 +845,7 @@ void disassembleInstruction(void) {
                                                                     break;
                                                                 case 3:  // TSTIO n
                                                                     disasm.instruction.opcode = "tstio";
+                                                                    disasm.instruction.arguments = strS(disasm_fetch_byte());
                                                                     break;
                                                             }
                                                         }
