@@ -21,6 +21,8 @@
 #include <QtQuickWidgets/QQuickWidget>
 #include <QtGui/QFont>
 #include <QtGui/QPixmap>
+#include <fstream>
+#include <iostream>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -76,16 +78,16 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonRemoveBreakpoint, &QPushButton::clicked, this, &MainWindow::deleteBreakpoint);
     connect(ui->breakpointView, &QTableWidget::itemChanged, this, &MainWindow::breakpointCheckboxToggled);
     connect(ui->actionReset_Calculator, &QAction::triggered, this, &MainWindow::resetCalculator );
-
     connect(ui->buttonStep, &QPushButton::clicked, this, &MainWindow::stepPressed);
     connect(this, &MainWindow::setDebugStepMode, &emu, &EmuThread::setDebugStepMode);
     connect(ui->buttonStepOver, &QPushButton::clicked, this, &MainWindow::stepOverPressed);
     connect(this, &MainWindow::setDebugStepOverMode, &emu, &EmuThread::setDebugStepOverMode);
-
     connect(ui->buttonBreakpoint, &QPushButton::clicked, this, &MainWindow::breakpointPressed);
     connect(ui->buttonGoto, &QPushButton::clicked, this, &MainWindow::gotoPressed);
-
     connect(ui->disassemblyView, &QWidget::customContextMenuRequested, this, &MainWindow::setPCaddress);
+
+    // Debugger Options
+    connect(ui->buttonAddEquateFile, &QPushButton::clicked, this, &MainWindow::addEquateFile);
 
     // Linking
     connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::selectFiles);
@@ -1190,10 +1192,10 @@ void MainWindow::memGotoPressed() {
 }
 
 void MainWindow::syncHexView(int posa, QHexEdit *hex_view) {
-  populateDebugWindow();
-  updateDisasmView(address_pane, from_pane);
-  hex_view->setFocus();
-  hex_view->setCursorPosition(posa);
+    populateDebugWindow();
+    updateDisasmView(address_pane, from_pane);
+    hex_view->setFocus();
+    hex_view->setCursorPosition(posa);
 }
 
 void MainWindow::flashSyncPressed() {
@@ -1203,18 +1205,83 @@ void MainWindow::flashSyncPressed() {
 }
 
 void MainWindow::ramSyncPressed() {
-  qint64 posa = ui->ramEdit->cursorPosition();
-  memcpy(mem.ram.block, (uint8_t*)ui->ramEdit->data().data(), ram_size);
-  syncHexView(posa, ui->ramEdit);
+    qint64 posa = ui->ramEdit->cursorPosition();
+    memcpy(mem.ram.block, (uint8_t*)ui->ramEdit->data().data(), ram_size);
+    syncHexView(posa, ui->ramEdit);
 }
 
 void MainWindow::memSyncPressed() {
-  int start = ui->memEdit->addressOffset();
-  qint64 posa = ui->memEdit->cursorPosition();
+    int start = ui->memEdit->addressOffset();
+    qint64 posa = ui->memEdit->cursorPosition();
 
-  for (int i = 0; i<mem_hex_size; i++) {
-      memory_force_write_byte(i+start, ui->memEdit->dataAt(i, 1).at(0));
-  }
+    for (int i = 0; i<mem_hex_size; i++) {
+        memory_force_write_byte(i+start, ui->memEdit->dataAt(i, 1).at(0));
+    }
 
-  syncHexView(posa, ui->memEdit);
+    syncHexView(posa, ui->memEdit);
+}
+
+void MainWindow::addEquateFile() {
+    QFileDialog dialog(this);
+    dialog.setAcceptMode(QFileDialog::AcceptOpen);
+    dialog.setFileMode(QFileDialog::ExistingFile);
+    dialog.setDirectory(QDir::homePath());
+    dialog.setNameFilter(tr("Symbol Table File (*.lab)"));
+
+    if (!dialog.exec()) {
+        return;
+    }
+
+    std::string current;
+    std::string check;
+    std::string equate;
+    std::string equate_address;
+    std::ifstream in;
+    std::string lab_name = dialog.selectedFiles().at(0).toStdString();
+    in.open(lab_name);
+
+    if (in) {
+        // Reset the map
+        equ_map.clear();
+
+        while (getline(in, current)) {
+              check = QString::fromStdString(current).toLower().toStdString();
+              if (check.find_first_of(";") == std::string::npos    &&
+                 (check.find_first_of("equ") != std::string::npos  ||
+                  check.find_first_of(".equ") != std::string::npos ||
+                  check.find_first_of("=") != std::string::npos)) {
+
+                  // Replace all tabs with spaces so we don't mess up
+                  for (size_t i=0; i<current.length(); i++) {
+                      if (current[i] == '\t') {
+                          current[i] = ' ';
+                      }
+                  }
+
+                  // Pull the equates
+                  int start = current.find_first_not_of(' ');
+                  equate = current.substr(start, current.substr(start, current.length()).find_first_of(' '));
+                  equate_address = current.substr(current.find_last_of(' ')+1, current.length());
+
+                  // Handle prefixed and suffixed equates
+                  if (equate_address[0] == '$') {
+                      equate_address = equate_address.substr(1, equate_address.length());
+                  }
+                  if (equate_address[equate_address.length()-1] == 'h') {
+                      equate_address = equate_address.substr(0, equate_address.length()-1);
+                  }
+
+                  // Rewrite the new string
+                  if (equate_address.length() < 7) {
+                      equate_address = "$"+QString::fromStdString(equate_address).rightJustified(6, '0').toStdString();
+                  }
+
+                  // Add it to the map
+                  // std::cout << equate << "::" << equate_address << std::endl;
+                  // TODO
+              }
+        }
+
+        in.close();
+    }
 }

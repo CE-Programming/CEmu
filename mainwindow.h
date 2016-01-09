@@ -79,6 +79,7 @@ private:
     void gotoPressed();
     void breakpointPressed();
     void setPCaddress(const QPoint&);
+    void addEquateFile();
 
     // Console
     void clearConsole(void);
@@ -124,6 +125,7 @@ private:
     bool debugger_on = false;
     bool in_recieving_mode = false;
 
+    std::map<std::string, std::string> equ_map;
     QList<calc_var_t> vars;
 };
 
