@@ -188,10 +188,10 @@ bool receiveVariableLink(int count, const calc_var_t *vars, const char *file_nam
     }
     if (fseek(file, 0x35, SEEK_SET))                     goto w_err;
     if (fwrite(&size,                  2, 1, file) != 1) goto w_err;
-    while ((byte = fgetc(file)) != EOF) {
+    while (size--) {
+        if ((byte = fgetc(file)) == EOF)                 goto w_err;
         checksum += byte;
     }
-    if (ferror(file))                                    goto w_err;
     if (fwrite(&checksum,              2, 1, file) != 1) goto w_err;
     return !fclose(file);
 
