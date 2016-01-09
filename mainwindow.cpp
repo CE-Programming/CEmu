@@ -647,6 +647,7 @@ void MainWindow::updateDisasmView(const int sentBase, const bool fromPane) {
     from_pane = fromPane;
     disasm_offset_set = false;
     disasm.adl = ui->checkADL->isChecked();
+    disasm.base_address = -1;
     disasm.new_address = address_pane - ((fromPane) ? 0x80 : 0);
     if(disasm.new_address < 0) disasm.new_address = 0;
 
@@ -916,9 +917,29 @@ void MainWindow::updateStackView() {
 }
 
 void MainWindow::drawNextDisassembleLine() {
-    disasm.base_address = disasm.new_address;
+    std::string *label = 0;
+    if (disasm.base_address != disasm.new_address) {
+        disasm.base_address = disasm.new_address;
+        addressMap_t::iterator item = disasm.address_map.find(disasm.new_address);
+        if (item != disasm.address_map.end()) {
+            disasmHighlight.hit_read_breakpoint = false;
+            disasmHighlight.hit_write_breakpoint = false;
+            disasmHighlight.hit_exec_breakpoint = false;
+            disasmHighlight.hit_pc = false;
 
-    disassembleInstruction();
+            disasm.instruction.data = "";
+            disasm.instruction.opcode = "";
+            disasm.instruction.mode_suffix = " ";
+            disasm.instruction.arguments = "";
+            disasm.instruction.size = 0;
+
+            label = &item->second;
+        } else {
+            disassembleInstruction();
+        }
+    } else {
+        disassembleInstruction();
+    }
 
     // Watch out, maintainers: the (unformatted) line is later "parsed" in DisasmWidget::getSelectedAddress()
     // with a cursor getting the address from it. Make sure the start position is correct.
@@ -938,7 +959,7 @@ void MainWindow::drawNextDisassembleLine() {
     QString formattedLine = QString("<pre><b>%1<font color='#444'>%2</font></b>    %3  <font color='darkblue'>%4%5</font>%6</pre>")
                                .arg(breakpointSymbols,
                                     int2hex(disasm.base_address, 6).toUpper(),
-                                    ui->checkDataCol->isChecked() ? QString::fromStdString(disasm.instruction.data).leftJustified(12, ' ') : "",
+                                    label ? QString::fromStdString(*label) + ":" : ui->checkDataCol->isChecked() ? QString::fromStdString(disasm.instruction.data).leftJustified(12, ' ') : "",
                                     QString::fromStdString(disasm.instruction.opcode),
                                     QString::fromStdString(disasm.instruction.mode_suffix),
                                     instructionArgsHighlighted);
@@ -1251,11 +1272,24 @@ void MainWindow::addEquateFile() {
     if (in.good()) {
         // Reset the map
         disasm.address_map.clear();
-
         while (std::getline(in, current)) {
             QRegularExpressionMatch matches = equatesRegexp.match(QString::fromStdString(current));
             if (matches.hasMatch()) {
-                addEquate(disasm.address_map, (uint32_t)matches.capturedRef(2).toUInt(0, 16), matches.captured(1).toStdString());
+                uint32_t address = (uint32_t)matches.capturedRef(2).toUInt(0, 16);
+                std::string &item = disasm.address_map[address];
+                if (item.empty()) {
+                    item = matches.captured(1).toStdString();
+                    uint8_t *ptr = phys_mem_ptr(address - 4, 9);
+                    if (ptr && ptr[4] == 0xC3 && (ptr[0] == 0xC3 || ptr[8] == 0xC3)) { // jump table?
+                        uint32_t address2  = ptr[5] | ptr[6] << 8 | ptr[7] << 16;
+                        if (phys_mem_ptr(address2, 1)) {
+                            std::string &item2 = disasm.address_map[address2];
+                            if (item2.empty()) {
+                                item2 = "_" + item;
+                            }
+                        }
+                    }
+                }
             }
         }
         in.close();
@@ -1264,19 +1298,5 @@ void MainWindow::addEquateFile() {
         QMessageBox messageBox;
         messageBox.critical(0, tr("Error"), tr("Couldn't open this file"));
         messageBox.setFixedSize(500,200);
-    }
-}
-
-void MainWindow::addEquate(addressMap_t &map, uint32_t address, std::string &&name) {
-    std::string &item = map[address];
-    if (item.empty()) {
-        item = std::move(name);
-        uint8_t *ptr = phys_mem_ptr(address - 4, 9);
-        if (ptr && ptr[4] == 0xC3 && (ptr[0] == 0xC3 || ptr[8] == 0xC3)) { // jump table?
-            address  = ptr[5] | ptr[6] << 8 | ptr[7] << 16;
-            if (phys_mem_ptr(address, 1)) {
-                addEquate(map, address, std::string(item));
-            }
-        }
     }
 }

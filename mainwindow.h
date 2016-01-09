@@ -82,7 +82,6 @@ private:
     void setPCaddress(const QPoint&);
     void addEquateFile();
     void clearEquateFile();
-    void addEquate(addressMap_t &, uint32_t, std::string &&);
 
     // Console
     void clearConsole(void);
