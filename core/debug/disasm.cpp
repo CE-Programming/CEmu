@@ -1,4 +1,5 @@
 #include <string.h>
+#include <unordered_map>
 
 #include "disasm.h"
 #include "disasmc.h"
@@ -85,19 +86,29 @@ static const std::string im_table[] = {
 };
 
 static std::string strW(uint32_t data) {
-    if(disasm.il) {
-        sprintf(tmpbuf,"$%06X",data);
+    addressMap_t::const_iterator item = disasm.address_map.find(data);
+    if (item == disasm.address_map.end()) {
+        if(disasm.il) {
+            sprintf(tmpbuf,"$%06X",data);
+        } else {
+            sprintf(tmpbuf,"$%04X",data);
+        }
     } else {
-        sprintf(tmpbuf,"$%04X",data);
+        return item->second;
     }
     return std::string(tmpbuf);
 }
 
 static std::string strWind(uint32_t data) {
-    if(disasm.il) {
-        sprintf(tmpbuf,"($%06X)",data);
+    addressMap_t::const_iterator item = disasm.address_map.find(data);
+    if (item == disasm.address_map.end()) {
+        if(disasm.il) {
+            sprintf(tmpbuf,"($%06X)",data);
+        } else {
+            sprintf(tmpbuf,"($%04X)",data);
+        }
     } else {
-        sprintf(tmpbuf,"($%04X)",data);
+        return "("+item->second+")";
     }
     return std::string(tmpbuf);
 }

@@ -242,7 +242,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>3</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -767,62 +767,91 @@
           <property name="title">
            <string>Debugger</string>
           </property>
-          <layout class="QHBoxLayout" name="horizontalLayout_6">
-           <item>
-            <widget class="QCheckBox" name="checkDataCol">
-             <property name="text">
-              <string>Show Data Column</string>
+          <layout class="QGridLayout" name="gridLayout_3">
+           <item row="6" column="0">
+            <widget class="QPushButton" name="buttonAddEquateFile">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
              </property>
-             <property name="checked">
-              <bool>true</bool>
+             <property name="text">
+              <string>Add Equate File</string>
              </property>
             </widget>
            </item>
-           <item>
-            <spacer name="horizontalSpacer_2">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_4">
+           <item row="5" column="0">
+            <widget class="QLabel" name="label_6">
              <property name="text">
-              <string>Text Size:</string>
+              <string>Add a symbol table file to view defined symbols in the disassembly view</string>
              </property>
             </widget>
            </item>
-           <item>
-            <widget class="QSlider" name="textSizeSlider">
-             <property name="toolTip">
-              <string/>
+           <item row="8" column="0">
+            <widget class="QGroupBox" name="groupBox_5">
+             <property name="title">
+              <string>Disassembly View</string>
              </property>
-             <property name="minimum">
-              <number>5</number>
+             <layout class="QGridLayout" name="gridLayout_9">
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_4">
+                <property name="text">
+                 <string>Text Size</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QSlider" name="textSizeSlider">
+                <property name="toolTip">
+                 <string/>
+                </property>
+                <property name="minimum">
+                 <number>5</number>
+                </property>
+                <property name="maximum">
+                 <number>15</number>
+                </property>
+                <property name="pageStep">
+                 <number>2</number>
+                </property>
+                <property name="value">
+                 <number>9</number>
+                </property>
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="tickPosition">
+                 <enum>QSlider::TicksBelow</enum>
+                </property>
+                <property name="tickInterval">
+                 <number>0</number>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QCheckBox" name="checkDataCol">
+                <property name="text">
+                 <string>Show Data Column</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="7" column="0">
+            <widget class="QPushButton" name="buttonClearEquates">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
              </property>
-             <property name="maximum">
-              <number>15</number>
-             </property>
-             <property name="pageStep">
-              <number>2</number>
-             </property>
-             <property name="value">
-              <number>9</number>
-             </property>
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="tickPosition">
-              <enum>QSlider::TicksBelow</enum>
-             </property>
-             <property name="tickInterval">
-              <number>0</number>
+             <property name="text">
+              <string>Clear Current Equates</string>
              </property>
             </widget>
            </item>
@@ -1037,7 +1066,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>2</number>
           </property>
           <property name="tabsClosable">
            <bool>false</bool>
@@ -1379,68 +1408,6 @@
                </property>
               </column>
              </widget>
-            </item>
-           </layout>
-          </widget>
-          <widget class="QWidget" name="tabOptions">
-           <attribute name="title">
-            <string>Options</string>
-           </attribute>
-           <layout class="QVBoxLayout" name="verticalLayout_17">
-            <item>
-             <widget class="QGroupBox" name="groupBox_4">
-              <property name="title">
-               <string>Debuger Options</string>
-              </property>
-              <layout class="QGridLayout" name="gridLayout_2">
-               <item row="0" column="0">
-                <widget class="QLabel" name="label_5">
-                 <property name="text">
-                  <string>Add an symbol table file to view defined symbols in the disassembly view</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="2">
-                <spacer name="horizontalSpacer">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item row="1" column="0" colspan="2">
-                <widget class="QPushButton" name="buttonAddEquateFile">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Add Equate File</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item>
-             <spacer name="verticalSpacer_5">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>40</height>
-               </size>
-              </property>
-             </spacer>
             </item>
            </layout>
           </widget>

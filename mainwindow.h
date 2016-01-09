@@ -80,6 +80,7 @@ private:
     void breakpointPressed();
     void setPCaddress(const QPoint&);
     void addEquateFile();
+    void clearEquateFile();
 
     // Console
     void clearConsole(void);

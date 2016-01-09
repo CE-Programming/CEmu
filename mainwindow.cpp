@@ -88,6 +88,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     // Debugger Options
     connect(ui->buttonAddEquateFile, &QPushButton::clicked, this, &MainWindow::addEquateFile);
+    connect(ui->buttonClearEquates, &QPushButton::clicked, this, &MainWindow::clearEquateFile);
 
     // Linking
     connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::selectFiles);
@@ -174,6 +175,8 @@ MainWindow::~MainWindow() {
     settings->setValue(QStringLiteral("windowState"), saveState(WindowStateVersion));
     settings->setValue(QStringLiteral("windowGeometry"), saveGeometry());
     settings->setValue(QStringLiteral("disasmTextSize"), QVariant(ui->textSizeSlider->value()));
+
+    equ_map.clear();
 
     delete ui->flashEdit;
     delete ui->ramEdit;
@@ -1221,6 +1224,12 @@ void MainWindow::memSyncPressed() {
     syncHexView(posa, ui->memEdit);
 }
 
+void MainWindow::clearEquateFile() {
+    // Reset the map
+    disasm.address_map.clear();
+    QMessageBox::warning(this, tr("Equates Cleared"), tr("Cleared disassembly equates."));
+}
+
 void MainWindow::addEquateFile() {
     QFileDialog dialog(this);
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
@@ -1236,13 +1245,14 @@ void MainWindow::addEquateFile() {
     std::string check;
     std::string equate;
     std::string equate_address;
+    uint32_t address;
     std::ifstream in;
     std::string lab_name = dialog.selectedFiles().at(0).toStdString();
     in.open(lab_name);
 
     if (in) {
         // Reset the map
-        equ_map.clear();
+        disasm.address_map.clear();
 
         while (getline(in, current)) {
               check = QString::fromStdString(current).toLower().toStdString();
@@ -1264,7 +1274,7 @@ void MainWindow::addEquateFile() {
                   equate_address = current.substr(current.find_last_of(' ')+1, current.length());
 
                   // Handle prefixed and suffixed equates
-                  if (equate_address[0] == '$') {
+                  if (equate_address[0] == '$' || equate_address[0] == '0') {
                       equate_address = equate_address.substr(1, equate_address.length());
                   }
                   if (equate_address[equate_address.length()-1] == 'h') {
@@ -1272,13 +1282,13 @@ void MainWindow::addEquateFile() {
                   }
 
                   // Rewrite the new string
-                  if (equate_address.length() < 7) {
-                      equate_address = "$"+QString::fromStdString(equate_address).rightJustified(6, '0').toStdString();
-                  }
+                  bool ok;
+                  address = QString::fromStdString(equate_address).rightJustified(6, '0').toInt(&ok, 16);
 
-                  // Add it to the map
-                  // std::cout << equate << "::" << equate_address << std::endl;
-                  // TODO
+                  if (ok) {
+                      // Add it to the map
+                      disasm.address_map[address] = equate;
+                  }
               }
         }
 
