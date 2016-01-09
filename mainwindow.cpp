@@ -1235,63 +1235,57 @@ void MainWindow::addEquateFile() {
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
     dialog.setFileMode(QFileDialog::ExistingFile);
     dialog.setDirectory(QDir::homePath());
-    dialog.setNameFilter(tr("Symbol Table File (*.lab)"));
+
+    QStringList extFilters;
+    extFilters << tr("ASM equates file (*.inc)")
+               << tr("Symbol Table File (*.lab)");
+    dialog.setNameFilters(extFilters);
 
     if (!dialog.exec()) {
         return;
     }
 
+    unsigned int errCount = 0, goodCount = 0;
+    bool ok = false;
     std::string current;
-    std::string check;
-    std::string equate;
-    std::string equate_address;
     uint32_t address;
     std::ifstream in;
-    std::string lab_name = dialog.selectedFiles().at(0).toStdString();
-    in.open(lab_name);
+    in.open(dialog.selectedFiles().at(0).toStdString());
 
-    if (in) {
+    QRegularExpression equatesRegexp("^\\h*([^\\W\\d]\\w*)\\h*(?:=|\\h\\.?equ(?!\\d))\\h*(?|\\$([\\da-f]+)|(\\d[\\da-f]*)h)\\h*(?:;.*)?$",
+                                     QRegularExpression::CaseInsensitiveOption);
+    QRegularExpressionMatch matches;
+    QStringList captures;
+
+    if (in.good())
+    {
         // Reset the map
         disasm.address_map.clear();
 
-        while (getline(in, current)) {
-              check = QString::fromStdString(current).toLower().toStdString();
-              if (check.find_first_of(";") == std::string::npos    &&
-                 (check.find_first_of("equ") != std::string::npos  ||
-                  check.find_first_of(".equ") != std::string::npos ||
-                  check.find_first_of("=") != std::string::npos)) {
-
-                  // Replace all tabs with spaces so we don't mess up
-                  for (size_t i=0; i<current.length(); i++) {
-                      if (current[i] == '\t') {
-                          current[i] = ' ';
-                      }
-                  }
-
-                  // Pull the equates
-                  int start = current.find_first_not_of(' ');
-                  equate = current.substr(start, current.substr(start, current.length()).find_first_of(' '));
-                  equate_address = current.substr(current.find_last_of(' ')+1, current.length());
-
-                  // Handle prefixed and suffixed equates
-                  if (equate_address[0] == '$' || equate_address[0] == '0') {
-                      equate_address = equate_address.substr(1, equate_address.length());
-                  }
-                  if (equate_address[equate_address.length()-1] == 'h') {
-                      equate_address = equate_address.substr(0, equate_address.length()-1);
-                  }
-
-                  // Rewrite the new string
-                  bool ok;
-                  address = QString::fromStdString(equate_address).rightJustified(6, '0').toInt(&ok, 16);
-
-                  if (ok) {
-                      // Add it to the map
-                      disasm.address_map[address] = equate;
-                  }
-              }
+        while (std::getline(in, current))
+        {
+            matches = equatesRegexp.match(QString::fromStdString(current));
+            captures = matches.capturedTexts();
+            if (captures.length() == 3)
+            {
+                ok = false;
+                address = (uint32_t)(captures[2].toUInt(&ok, 16));
+                if (ok) {
+                    goodCount++;
+                    disasm.address_map[address] = captures[1].toStdString();
+                } else {
+                    errCount++;
+                }
+            }
         }
-
         in.close();
+        QMessageBox messageBox;
+        QString counts = QString(tr("%1 equates loaded (%2 error%3)"))
+                            .arg(QString::number(goodCount), QString::number(errCount), errCount > 1 ? "s" : "");
+        messageBox.information(0, tr("Equates loaded"), counts);
+    } else {
+        QMessageBox messageBox;
+        messageBox.critical(0, tr("Error"), tr("Couldn't open this file"));
+        messageBox.setFixedSize(500,200);
     }
 }
