@@ -1,4 +1,11 @@
-Portions of this program use the eZ80 emulator from the KnightOS Group, and Firebird, developed by Fabian Vogt
+Portions of this program use code, directly or modified, from:
+* z80e, a z80 emulator developed by KnightOS Group
+* Firebird, a TI-Nspire emulator developed by Fabian Vogt
+* QHexEdit2, developed by Simsys
+
+
+________________________________________________________
+z80e license:
 
 Copyright (c) 2014 The KnightOS Group
 
@@ -8,17 +15,26 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+
+________________________________________________________
+Firebird license:
+
 Copyright (C) 2015  Fabian Vogt
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+
+________________________________________________________
+QHexEdit2 license:
+
+GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1, February 1999
+As per https://github.com/Simsys/qhexedit2/blob/f1e342cd342efd0dc71ee6625fd8b28cf44f26b1/src/license.txt
+
+
+________________________________________________________
+CEmu license:
 
 GNU GENERAL PUBLIC LICENSE
 
