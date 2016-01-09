@@ -77,19 +77,21 @@ void mem_reset(void) {
 }
 
 uint8_t* phys_mem_ptr(uint32_t addr, uint32_t size) {
+    uint8_t **block;
+    uint32_t block_size, end_addr;
     if (addr < 0xD00000) {
-        if (mem.flash.block != NULL) {
-            return mem.flash.block+addr;
-        } else {
-            return NULL;
-        }
-    }
-    if (mem.ram.block != NULL) {
-        addr -= 0xD00000;
-        return mem.ram.block+addr;
+        block = &mem.flash.block;
+        block_size = flash_size;
     } else {
-       return NULL;
+        addr -= 0xD00000;
+        block = &mem.ram.block;
+        block_size = ram_size;
     }
+    end_addr = addr + size;
+    if (addr <= end_addr && addr <= block_size && end_addr <= block_size && *block) {
+        return *block + addr;
+    }
+    return NULL;
 }
 
 static void flash_reset_write_index(uint32_t addr, uint8_t byte) {
