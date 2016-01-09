@@ -31,8 +31,8 @@ QHexEdit::QHexEdit(QWidget *par) : QAbstractScrollArea(par) {
     _cursorTimer.start();
     _addressWidth = 6;
 
-    setAddressArea(true);
     setAsciiArea(true);
+    setAddressArea(true);
     setHighlighting(true);
 
     init();
