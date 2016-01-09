@@ -163,7 +163,7 @@ const char *calc_var_name_to_utf8(uint8_t name[8]) {
                 break;
             default:
                 for (i = 0; i < 8 && name[i]; i++) {
-                    dest += snprintf(dest, 3, "%02hhX", name[i]);
+                    dest += sprintf(dest, "%02hhX", name[i]);
                 }
                 break;
         }

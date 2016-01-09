@@ -57,9 +57,9 @@ void gif_new_frame()
     RGB24 *ptr24 = buffer.data();
     for(unsigned int i = 0; i < 320*240; ++i)
     {
-        ptr24->r = (*ptr16 & 0b1111100000000000) >> 8;
-        ptr24->g = (*ptr16 & 0b0000011111100000) >> 3;
-        ptr24->b = (*ptr16 & 0b0000000000011111) << 3;
+        ptr24->r = (*ptr16 & 0xF800) >> 8;
+        ptr24->g = (*ptr16 & 0x7E0) >> 3;
+        ptr24->b = (*ptr16 & 0x1F) << 3;
         ++ptr24;
         ++ptr16;
     }

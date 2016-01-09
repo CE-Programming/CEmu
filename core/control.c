@@ -15,7 +15,7 @@ static uint8_t control_read(const uint16_t pio) {
 
     switch (addr) {
         case 0x01:
-            return control.cpu_speed & 0b00010011;
+            return control.cpu_speed & 0x13;
             break;
         case 0x02:
             read_byte = control.ports[addr] | 1;
@@ -69,8 +69,8 @@ static void control_write(const uint16_t pio, const uint8_t byte)
             }
             break;
         case 0x01:
-            control.cpu_speed = byte & 0b00010011;
-            switch(control.cpu_speed & 0b00000011) {
+            control.cpu_speed = byte & 0x13;
+            switch(control.cpu_speed & 0x3) {
                 case 0:
                     set_cpu_clock_rate(6e6); // 6 MHz
                     break;

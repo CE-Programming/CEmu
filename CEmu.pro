@@ -12,22 +12,23 @@ TEMPLATE = app
 TRANSLATIONS += i18n/fr_FR.ts
 
 CONFIG += c++11
+!win32-msvc* {
+    GLOBAL_FLAGS = -W -Wall -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -fno-strict-overflow -Winit-self -ffunction-sections -fdata-sections
 
-GLOBAL_FLAGS = -W -Wall -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -fno-strict-overflow -Winit-self -ffunction-sections -fdata-sections
+    if (macx | linux) {
+        GLOBAL_FLAGS += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -fstack-protector-all -Wstack-protector --param=ssp-buffer-size=1 -fPIC
+    }
+    if (macx) {
+        MORE_LFLAGS += -Wl,-dead_strip
+    }
+    if (linux) {
+        MORE_LFLAGS += -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack -Wl,--gc-sections -pie
+    }
 
-if (macx | linux) {
-    GLOBAL_FLAGS += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -fstack-protector-all -Wstack-protector --param=ssp-buffer-size=1 -fPIC
+    QMAKE_CFLAGS += $$GLOBAL_FLAGS
+    QMAKE_CXXFLAGS += $$GLOBAL_FLAGS -fno-exceptions
+    QMAKE_LFLAGS += -flto -fPIE $$GLOBAL_FLAGS $$MORE_LFLAGS
 }
-if (macx) {
-    MORE_LFLAGS += -Wl,-dead_strip
-}
-if (linux) {
-    MORE_LFLAGS += -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack -Wl,--gc-sections -pie
-}
-
-QMAKE_CFLAGS += $$GLOBAL_FLAGS
-QMAKE_CXXFLAGS += $$GLOBAL_FLAGS -fno-exceptions
-QMAKE_LFLAGS += -flto -fPIE $$GLOBAL_FLAGS $$MORE_LFLAGS
 
 ios {
     DEFINES += IS_IOS_BUILD
