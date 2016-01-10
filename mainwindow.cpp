@@ -971,12 +971,10 @@ void MainWindow::drawNextDisassembleLine() {
         disasm_offset_set = true;
         disasm_offset = ui->disassemblyView->textCursor();
         disasm_offset.movePosition(QTextCursor::StartOfLine);
-    } else {
-        if (disasm_offset_set == false && address_pane >= disasm.base_address-7) {
-            disasm_offset_set = true;
-            disasm_offset = ui->disassemblyView->textCursor();
-            disasm_offset.movePosition(QTextCursor::StartOfLine);
-        }
+    } else if (disasm_offset_set == false && address_pane <= disasm.base_address+7) {
+        disasm_offset_set = true;
+        disasm_offset = ui->disassemblyView->textCursor();
+        disasm_offset.movePosition(QTextCursor::StartOfLine);
     }
 
     if (disasmHighlight.hit_pc == true) {
