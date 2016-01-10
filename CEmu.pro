@@ -122,7 +122,8 @@ HEADERS  +=  os/os.h \
     qhexedit/qhexedit.h
 
 FORMS    += mainwindow.ui \
-    romselection.ui
+    romselection.ui \
+    keybindings.ui
 
 RESOURCES += \
     resources.qrc

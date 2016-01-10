@@ -1121,7 +1121,6 @@ void MainWindow::searchEdit(QHexEdit *editor) {
         QString a = search_string.at(i);
         a.append(search_string.at(i+1));
         string_int.append(a.toInt(&ok, 16));
-
     }
     editor->indexOf(string_int, editor->cursorPosition());
 }

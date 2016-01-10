@@ -3,6 +3,7 @@
 #include "mem.h"
 #include "emu.h"
 #include "cpu.h"
+#include "flash.h"
 #include "debug/disasmc.h"
 
 // Global MEMORY state
@@ -275,7 +276,7 @@ uint8_t memory_read_byte(const uint32_t address)
     switch((addr >> 20) & 0xF) {
         // FLASH
         case 0x0: case 0x1: case 0x2: case 0x3:
-            cpu.cycles += 5;
+            cpu.cycles += 5 + flash.added_wait_states;
             value = flash_read_handler(address);
             break;
 
@@ -283,7 +284,7 @@ uint8_t memory_read_byte(const uint32_t address)
         case 0x4: case 0x5: case 0x6: case 0x7:
             addr -= 0x400000;
             if (mem.flash.mapped == true) {
-                cpu.cycles += 5;
+                cpu.cycles += 5 + flash.added_wait_states;
                 value = flash_read_handler(address);
             }
             break;
