@@ -82,6 +82,9 @@ static const std::string im_table[] = {
 };
 
 static std::string strW(uint32_t data) {
+    if (!disasm.l) {
+        data += cpu.registers.MBASE << 16;
+    }
     addressMap_t::const_iterator item = disasm.address_map.find(data);
     if (item == disasm.address_map.end()) {
         if(disasm.il) {
@@ -574,21 +577,25 @@ void disassembleInstruction(void) {
                         case 0: // .SIS
                             disasm.suffix = 1;
                             disasm.instruction.mode_suffix = ".sis ";
+                            disasm.l = false;
                             disasm.il = false;
                             goto exit_loop;
                         case 1: // .LIS
                             disasm.suffix = 1;
                             disasm.instruction.mode_suffix = ".lis ";
+                            disasm.l = true;
                             disasm.il = false;
                             goto exit_loop;
                         case 2: // .SIL
                             disasm.suffix = 1;
                             disasm.instruction.mode_suffix = ".sil ";
+                            disasm.l = false;
                             disasm.il = true;
                             goto exit_loop;
                         case 3: // .LIL
                             disasm.suffix = 1;
                             disasm.instruction.mode_suffix = ".lil ";
+                            disasm.l = true;
                             disasm.il = true;
                             goto exit_loop;
                         case 6: // HALT

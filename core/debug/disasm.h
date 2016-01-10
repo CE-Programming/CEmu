@@ -21,7 +21,7 @@ typedef struct {
     int32_t base_address;
     int32_t new_address;
     uint8_t prefix, suffix;
-    bool adl, il;
+    bool adl, il, l;
     addressMap_t address_map;
 } disasm_state_t;
 
