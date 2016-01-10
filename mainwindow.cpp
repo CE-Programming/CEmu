@@ -1265,10 +1265,10 @@ void MainWindow::addEquateFile() {
     std::ifstream in;
     in.open(dialog.selectedFiles().at(0).toStdString());
 
-    QRegularExpression equatesRegexp("^\\h*([^\\W\\d]\\w*)\\h*(?:=|\\h\\.?equ(?!\\d))\\h*(?|\\$([\\da-f]+)|(\\d[\\da-f]*)h)\\h*(?:;.*)?$",
-                                     QRegularExpression::CaseInsensitiveOption);
-
-    if (in.good()) {
+    if (in.good())
+    {
+        QRegularExpression equatesRegexp("^\\h*([^\\W\\d]\\w*)\\h*(?:=|\\h\\.?equ(?!\\d))\\h*(?|\\$([\\da-f]{6,})|(\\d[\\da-f]{5,})h)\\h*(?:;.*)?$",
+                                         QRegularExpression::CaseInsensitiveOption);
         // Reset the map
         disasm.address_map.clear();
         while (std::getline(in, current)) {
