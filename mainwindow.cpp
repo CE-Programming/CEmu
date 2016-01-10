@@ -395,6 +395,7 @@ void MainWindow::selectFiles() {
     setSendState(false);
 
     QThread::msleep(300);
+    ui->sendBar->setMaximum(1);
     ui->sendBar->setValue(0);
 }
 
