@@ -33,7 +33,7 @@ static const uint8_t header_data[10] = {
     0x2A, 0x2A, 0x54, 0x49, 0x38, 0x33, 0x46, 0x2A, 0x1A, 0x0A
 };
 
-static const uint8_t pgrm_loader[41] = {
+static const uint8_t pgrm_loader[39] = {
   0xF5,                         // push af
   0xE5,                         // push hl
   0xCD, 0x28, 0x06, 0x02,       // call _pushop1
@@ -43,7 +43,6 @@ static const uint8_t pgrm_loader[41] = {
   0xE1,                         // pop hl
   0xF1,                         // pop af
   0xCD, 0x38, 0x13, 0x02,       // call _createvar
-  0x13, 0x13,                   // inc de / inc de
   0xED, 0x53, 0xC6, 0x52, 0xD0, // ld (safe_ram_loc),de
   0x18, 0xFE                    // _sink: jr _sink
 };
@@ -100,7 +99,7 @@ bool sendVariableLink(const char *var_name) {
     if (fread(tmp_buf, 1, h_size, file) != h_size)        goto r_err;
     if (memcmp(tmp_buf, header_data, h_size))             goto r_err;
 
-    if (fseek(file, 0x48, 0))                             goto r_err;
+    if (fseek(file, 0x39, 0))                             goto r_err;
     if (fread(&var_size_low, 1, 1, file) != 1)            goto r_err;
     if (fread(&var_size_high, 1, 1, file) != 1)           goto r_err;
 
@@ -136,7 +135,7 @@ bool sendVariableLink(const char *var_name) {
 
     var_size = (var_size_high << 8) | var_size_low;
 
-    if (fseek(file, 0x4A, 0))                           goto r_err;
+    if (fseek(file, 0x48, 0))                           goto r_err;
     if (fread(var_ptr, 1, var_size, file) != var_size)  goto r_err;
 
     if (var_arc == 0x80) {
@@ -170,7 +169,8 @@ bool receiveVariableLink(int count, const calc_var_t *vars, const char *file_nam
     calc_var_t var;
     uint16_t header_size = 13, size = 0, checksum = 0;
     int byte;
-    file = fopen_utf8(file_name, "w+b");;
+    file = fopen_utf8(file_name, "w+b");
+    setbuf(file, NULL);
     if (!file) return false;
     if (fwrite(header, sizeof header - 1, 1, file) != 1) goto w_err;
     if (fseek(file, 0x37, SEEK_SET))                     goto w_err;

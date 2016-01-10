@@ -96,17 +96,7 @@ static std::string strW(uint32_t data) {
 }
 
 static std::string strWind(uint32_t data) {
-    addressMap_t::const_iterator item = disasm.address_map.find(data);
-    if (item == disasm.address_map.end()) {
-        if(disasm.il) {
-            sprintf(tmpbuf,"($%06X)",data);
-        } else {
-            sprintf(tmpbuf,"($%04X)",data);
-        }
-    } else {
-        return "("+item->second+")";
-    }
-    return std::string(tmpbuf);
+    return "("+strW(data)+")";
 }
 
 static std::string strS(uint8_t data) {
