@@ -1107,17 +1107,27 @@ void MainWindow::memUpdate() {
     }
 }
 
-void MainWindow::flashSearchPressed() {
+void MainWindow::searchEdit(QHexEdit *editor) {
     bool ok;
-    QString search_string = QInputDialog::getText(this, tr("Flash Search"),
-                                                  tr("Input Search String:"), QLineEdit::Normal,
+    QString search_string = QInputDialog::getText(this, tr("Search"),
+                                                  tr("Input Hexadecimal Search String:"), QLineEdit::Normal,
                                                   "", &ok).toUpper();
-    ui->flashEdit->setFocus();
-    if(!ok) {
+    editor->setFocus();
+    if(!ok || (search_string.length() & 1)) {
         return;
     }
+    QByteArray string_int;
+    for (int i=0; i<search_string.length(); i+=2) {
+        QString a = search_string.at(i);
+        a.append(search_string.at(i+1));
+        string_int.append(a.toInt(&ok, 16));
 
-    ui->flashEdit->indexOf(search_string.toLatin1(), ui->flashEdit->cursorPosition());
+    }
+    editor->indexOf(string_int, editor->cursorPosition());
+}
+
+void MainWindow::flashSearchPressed() {
+    searchEdit(ui->flashEdit);
 }
 
 void MainWindow::flashGotoPressed() {
@@ -1138,16 +1148,7 @@ void MainWindow::flashGotoPressed() {
 }
 
 void MainWindow::ramSearchPressed() {
-    bool ok;
-    QString search_string = QInputDialog::getText(this, tr("RAM Search"),
-                                                  tr("Input Search String:"), QLineEdit::Normal,
-                                                  "", &ok).toUpper();
-    ui->ramEdit->setFocus();
-    if(!ok) {
-        return;
-    }
-
-    ui->ramEdit->indexOf(search_string.toLatin1(), ui->ramEdit->cursorPosition());
+    searchEdit(ui->ramEdit);
 }
 
 void MainWindow::ramGotoPressed() {
@@ -1167,16 +1168,7 @@ void MainWindow::ramGotoPressed() {
     ui->ramEdit->ensureVisible();
 }
 void MainWindow::memSearchPressed() {
-    bool ok;
-    QString search_string = QInputDialog::getText(this, tr("Memory Search"),
-                                                  tr("Input Search String:"), QLineEdit::Normal,
-                                                  "", &ok).toUpper();
-    ui->memEdit->setFocus();
-    if(!ok) {
-        return;
-    }
-
-    ui->memEdit->indexOf(search_string.toLatin1(), ui->memEdit->cursorPosition());
+    searchEdit(ui->memEdit);
 }
 
 void MainWindow::memGotoPressed() {

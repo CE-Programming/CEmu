@@ -409,6 +409,7 @@ void disassembleInstruction(void) {
     disasm.instruction.size = 0;
 
     disasm.il = disasm.adl;
+    disasm.l = disasm.adl;
     disasm.prefix = false;
     disasm.suffix = false;
 

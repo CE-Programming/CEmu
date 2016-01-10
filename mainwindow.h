@@ -110,6 +110,7 @@ private:
     void memSearchPressed();
     void memSyncPressed();
     void syncHexView(int, QHexEdit*);
+    void searchEdit(QHexEdit*);
 
     QString getAddressString(bool&, QString);
 
