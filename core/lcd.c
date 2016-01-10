@@ -173,7 +173,7 @@ uint8_t lcd_read(const uint16_t pio) {
         if(offset < 0x018 && offset >= 0x014) { return read8(lcd.lpbase, bit_offset); }
         if(offset < 0x01C && offset >= 0x018) { return read8(lcd.control, bit_offset); }
         if(offset < 0x020 && offset >= 0x01C) { return read8(lcd.imsc, bit_offset); }
-        if(offset < 0x024 && offset >= 0x020) { return read8(lcd.mis, bit_offset); }
+        if(offset < 0x024 && offset >= 0x020) { return read8(lcd.ris, bit_offset); }
         if(offset < 0x028 && offset >= 0x024) { return read8(lcd.mis & lcd.ris, bit_offset); }
     } else if (offset < 0x400) {
         return *((uint8_t *)lcd.palette + offset - 0x200);
