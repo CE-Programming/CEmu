@@ -15,32 +15,34 @@ CONFIG += c++11
 
 # Only add GCC flags if we're not using MSVC
 if (!win32-msvc*) {
-    GLOBAL_FLAGS = -W -Wall -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -fno-strict-overflow -Winit-self -ffunction-sections -fdata-sections
+    GLOBAL_FLAGS += -W -Wall -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -Winit-self
+    GLOBAL_FLAGS += -flto -fPIE -ffunction-sections -fdata-sections -fno-strict-overflow 
 }
 
 if (macx | linux) {
-    GLOBAL_FLAGS += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -fstack-protector-all -Wstack-protector --param=ssp-buffer-size=1 -fPIC
+    GLOBAL_FLAGS += -Wstack-protector 
+    GLOBAL_FLAGS += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -fstack-protector-all --param=ssp-buffer-size=1
 }
 if (macx) {
-    MORE_LFLAGS += -Wl,-dead_strip
+    QMAKE_LFLAGS += -Wl,-dead_strip
 }
 if (linux) {
-    MORE_LFLAGS += -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack -Wl,--gc-sections -pie
+    QMAKE_LFLAGS += -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack -Wl,--gc-sections -pie
 }
 
 QMAKE_CFLAGS += $$GLOBAL_FLAGS
 
 if (!win32-msvc*) {
-    # GCC specific flags
+    # Clang/GCC specific flags
     QMAKE_CXXFLAGS += $$GLOBAL_FLAGS -fno-exceptions
-    QMAKE_LFLAGS += -flto -fPIE $$GLOBAL_FLAGS $$MORE_LFLAGS
+    QMAKE_LFLAGS += $$GLOBAL_FLAGS
 } else {
     # MSVC specific flags
     # TODO: add equivalent -Werror flags
     # For -Werror=shadow: /weC4456 /weC4457 /weC4458 /weC4459
     #     Source: https://connect.microsoft.com/VisualStudio/feedback/details/1355600/
     QMAKE_CXXFLAGS += /Wall $$GLOBAL_FLAGS
-    QMAKE_LFLAGS += $$GLOBAL_FLAGS $$MORE_LFLAGS
+    QMAKE_LFLAGS += $$GLOBAL_FLAGS
 }
 
 ios {
