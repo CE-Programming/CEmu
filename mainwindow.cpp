@@ -40,7 +40,7 @@
 #include "utils.h"
 #include "os/os.h"
 
-static const CEMU_CONSTEXPR int WindowStateVersion = 0;
+static const constexpr int WindowStateVersion = 0;
 static const int flash_size = 0x400000;
 static const uint32_t ram_size = 0x65800;
 

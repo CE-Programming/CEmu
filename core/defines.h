@@ -6,12 +6,6 @@
 #include <stdbool.h>
 #include <stdarg.h>
 
-#if (defined(_MSC_VER) && _MSC_VER < 1900)
-    #define CEMU_CONSTEXPR
-#else
-    #define CEMU_CONSTEXPR constexpr
-#endif
-
 #define GETMASK(index, size) (((1U << (size)) - 1) << (index))
 #define READFROM(data, index, size) (((data) & GETMASK((index), (size))) >> (index))
 #define WRITE(data, index, size, value) ((data) = ((data) & (~GETMASK((index), (size)))) | ((uint32_t)(value) << (index)))
