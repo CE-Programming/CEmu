@@ -80,8 +80,8 @@ void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
                 bi ^= (8 - bpp);
             }
             do {
-                word = *in++;
                 int bitpos = 32;
+                word = *in++;
                 do {
                     color = lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask];
                     *out++ = color + (color & 0xFFE0) + (color >> 10 & 0x20);
