@@ -242,7 +242,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -319,7 +319,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>Select Files...</string>
+              <string>Select files...</string>
              </property>
             </widget>
            </item>
@@ -347,8 +347,8 @@
           <property name="title">
            <string>Receive</string>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_7">
-           <item>
+          <layout class="QGridLayout" name="gridLayout_9">
+           <item row="0" column="0">
             <widget class="QPushButton" name="buttonRefreshList">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
@@ -357,27 +357,11 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>Refresh Emulator Variable List...</string>
+              <string>Refresh variable list...</string>
              </property>
             </widget>
            </item>
-           <item>
-            <widget class="QPushButton" name="buttonReceiveFiles">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Save Selected</string>
-             </property>
-            </widget>
-           </item>
-           <item>
+           <item row="2" column="0" colspan="3">
             <widget class="QTableWidget" name="emuVarView">
              <property name="editTriggers">
               <set>QAbstractItemView::NoEditTriggers</set>
@@ -432,6 +416,35 @@
              </column>
             </widget>
            </item>
+           <item row="0" column="2">
+            <widget class="QPushButton" name="buttonReceiveFiles">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Save selected</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <spacer name="horizontalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
           </layout>
          </widget>
         </item>
@@ -466,7 +479,7 @@
               </size>
              </property>
              <property name="text">
-              <string>Take PNG Screenshot</string>
+              <string>Screenshot as PNG</string>
              </property>
             </widget>
            </item>
@@ -479,7 +492,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>Take GIF Screenshot</string>
+              <string>Screenshot as GIF</string>
              </property>
             </widget>
            </item>
@@ -769,11 +782,24 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_17">
            <item>
+            <widget class="QCheckBox" name="checkDataCol">
+             <property name="text">
+              <string>Show Data column in disassembly</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
             <layout class="QHBoxLayout" name="horizontalLayout_12">
              <item>
               <widget class="QLabel" name="label_4">
                <property name="text">
-                <string>Text size</string>
+                <string>Text size:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
                </property>
               </widget>
              </item>
@@ -805,16 +831,6 @@
                </property>
               </widget>
              </item>
-             <item>
-              <widget class="QCheckBox" name="checkDataCol">
-               <property name="text">
-                <string>Show Data Column</string>
-               </property>
-               <property name="checked">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
             </layout>
            </item>
            <item>
@@ -831,7 +847,7 @@
                <item>
                 <widget class="QPushButton" name="buttonAddEquateFile">
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
@@ -857,7 +873,7 @@
                <item>
                 <widget class="QPushButton" name="buttonClearEquates">
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
@@ -877,7 +893,7 @@
         <item>
          <widget class="QGroupBox" name="groupBox_4">
           <property name="title">
-           <string>Key Bindings</string>
+           <string>Key bindings</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_3">
            <item row="0" column="1">
@@ -896,13 +912,13 @@
            <item row="0" column="0">
             <widget class="QPushButton" name="buttonKeys">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
              <property name="text">
-              <string>Change Key Bindings</string>
+              <string>Change key bindings...</string>
              </property>
             </widget>
            </item>
@@ -4299,9 +4315,6 @@
           <layout class="QVBoxLayout" name="verticalLayout_11">
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_2">
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
              <item>
               <widget class="QPushButton" name="buttonFlashGoto">
                <property name="text">
@@ -4332,7 +4345,7 @@
              <item>
               <widget class="QPushButton" name="buttonFlashSync">
                <property name="text">
-                <string>Sync Changes</string>
+                <string>Sync changes</string>
                </property>
               </widget>
              </item>
@@ -4355,9 +4368,6 @@
           <layout class="QVBoxLayout" name="verticalLayout_15">
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_15">
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
              <item>
               <widget class="QPushButton" name="buttonRamGoto">
                <property name="text">
@@ -4388,7 +4398,7 @@
              <item>
               <widget class="QPushButton" name="buttonRamSync">
                <property name="text">
-                <string>Sync Changes</string>
+                <string>Sync changes</string>
                </property>
               </widget>
              </item>
@@ -4411,9 +4421,6 @@
           <layout class="QVBoxLayout" name="verticalLayout_16">
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_16">
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
              <item>
               <widget class="QPushButton" name="buttonMemGoto">
                <property name="text">
@@ -4450,14 +4457,14 @@
                 </sizepolicy>
                </property>
                <property name="text">
-                <string>Lock Position</string>
+                <string>Lock position</string>
                </property>
               </widget>
              </item>
              <item>
               <widget class="QPushButton" name="buttonMemSync">
                <property name="text">
-                <string>Sync Changes</string>
+                <string>Sync changes</string>
                </property>
               </widget>
              </item>
@@ -4503,7 +4510,7 @@
            <enum>Qt::NoFocus</enum>
           </property>
           <property name="text">
-           <string>Clear Console</string>
+           <string>Clear console</string>
           </property>
          </widget>
         </item>
@@ -4519,7 +4526,7 @@
      <x>0</x>
      <y>0</y>
      <width>993</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -4596,7 +4603,10 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Take PNG Screenshot...</string>
+    <string>Take PNG screenshot...</string>
+   </property>
+   <property name="toolTip">
+    <string>Take PNG screenshot</string>
    </property>
   </action>
   <action name="actionRecord_GIF">
@@ -4607,7 +4617,10 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Record GIF...</string>
+    <string>Record animated GIF...</string>
+   </property>
+   <property name="toolTip">
+    <string>Record animated GIF</string>
    </property>
   </action>
   <action name="actionAbout_Qt">
@@ -4622,7 +4635,10 @@
   </action>
   <action name="actionTake_GIF_Screenshot">
    <property name="text">
-    <string>Take GIF Screenshot...</string>
+    <string>Take GIF screenshot...</string>
+   </property>
+   <property name="toolTip">
+    <string>Take GIF screenshot</string>
    </property>
   </action>
   <action name="actionDetached_LCD">
