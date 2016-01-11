@@ -208,6 +208,7 @@ void MainWindow::consoleStr(QString str) {
 }
 
 void MainWindow::popoutLCD() {
+    detached_lcd.setWindowFlags(windowFlags() | Qt::Tool);
     detached_lcd.show();
 }
 
