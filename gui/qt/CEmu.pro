@@ -14,7 +14,7 @@ CI = $$(CI)
 # Code beautifying
 DISTFILES += ../../.astylerc
 
-QT += core gui quick widgets quickwidgets network
+QT += core gui widgets network
 
 TARGET = CEmu
 TEMPLATE = app
@@ -71,19 +71,21 @@ ios {
 macx: ICON = resources/icons/icon.icns
 
 SOURCES +=  utils.cpp \
-    main.cpp\
+    main.cpp \
     mainwindow.cpp \
     romselection.cpp \
     qtframebuffer.cpp \
     lcdwidget.cpp \
     emuthread.cpp \
-    qtkeypadbridge.cpp \
-    qmlbridge.cpp \
-    keymap.cpp \
     datawidget.cpp \
     lcdpopout.cpp \
     searchwidget.cpp \
     basiccodeviewerwindow.cpp \
+    keypad/qtkeypadbridge.cpp \
+    keypad/keymap.cpp \
+    keypad/keypadwidget.cpp \
+    keypad/rectkey.cpp \
+    keypad/arrowkey.cpp \
     qhexedit/chunks.cpp \
     qhexedit/commands.cpp \
     qhexedit/qhexedit.cpp \
@@ -127,13 +129,23 @@ HEADERS  +=  utils.h \
     qtframebuffer.h \
     lcdwidget.h \
     emuthread.h \
-    qtkeypadbridge.h \
-    qmlbridge.h \
-    keymap.h \
     datawidget.h \
     lcdpopout.h \
     searchwidget.h \
     basiccodeviewerwindow.h \
+    keypad/qtkeypadbridge.h \
+    keypad/keymap.h \
+    keypad/keypadwidget.h \
+    keypad/key.h \
+    keypad/keyconfig.h \
+    keypad/rectkey.h \
+    keypad/graphkey.h \
+    keypad/secondkey.h \
+    keypad/alphakey.h \
+    keypad/otherkey.h \
+    keypad/numkey.h \
+    keypad/operkey.h \
+    keypad/arrowkey.h \
     qhexedit/chunks.h \
     qhexedit/commands.h \
     qhexedit/qhexedit.h \

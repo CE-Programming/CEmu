@@ -2,11 +2,6 @@
     <qresource prefix="/skin">
         <file>resources/skin/ti84pce.png</file>
     </qresource>
-    <qresource prefix="/qml">
-        <file>qml/Keypad.qml</file>
-        <file>qml/NBigButton.qml</file>
-        <file>qml/NButton.qml</file>
-    </qresource>
     <qresource prefix="/setup">
         <file>resources/setup/home.png</file>
     </qresource>

@@ -165,7 +165,7 @@
       <property name="tabBarAutoHide">
        <bool>false</bool>
       </property>
-      <widget class="QWidget" name="tabKeypad">
+      <widget class="KeypadWidget" name="keypadWidget" native="true">
        <attribute name="icon">
         <iconset resource="resources.qrc">
          <normaloff>:/icons/resources/icons/keypad.png</normaloff>:/icons/resources/icons/keypad.png</iconset>
@@ -173,41 +173,27 @@
        <attribute name="title">
         <string>Keypad</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_8">
-        <property name="leftMargin">
-         <number>0</number>
-        </property>
-        <property name="topMargin">
-         <number>0</number>
-        </property>
-        <property name="rightMargin">
-         <number>0</number>
-        </property>
-        <property name="bottomMargin">
-         <number>0</number>
-        </property>
-        <item row="0" column="0">
-         <widget class="QQuickWidget" name="keypadWidget">
-          <property name="minimumSize">
-           <size>
-            <width>192</width>
-            <height>296</height>
-           </size>
-          </property>
-          <property name="focusPolicy">
-           <enum>Qt::NoFocus</enum>
-          </property>
-          <property name="resizeMode">
-           <enum>QQuickWidget::SizeViewToRootObject</enum>
-          </property>
-          <property name="source">
-           <url>
-            <string>qrc:/qml/qml/Keypad.qml</string>
-           </url>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>196</width>
+         <height>300</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="focusPolicy">
+        <enum>Qt::NoFocus</enum>
+       </property>
       </widget>
       <widget class="QWidget" name="tabVariables">
        <attribute name="icon">
@@ -6874,11 +6860,6 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>QQuickWidget</class>
-   <extends>QWidget</extends>
-   <header>QtQuickWidgets/QQuickWidget</header>
-  </customwidget>
-  <customwidget>
    <class>QHexEdit</class>
    <extends>QPlainTextEdit</extends>
    <header>qhexedit/qhexedit.h</header>
@@ -6887,6 +6868,12 @@
    <class>LCDWidget</class>
    <extends>QWidget</extends>
    <header>lcdwidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>KeypadWidget</class>
+   <extends>QWidget</extends>
+   <header>keypad/keypadwidget.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>

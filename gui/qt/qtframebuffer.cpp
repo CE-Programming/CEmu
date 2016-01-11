@@ -12,13 +12,12 @@
  * GNU General Public License for more details.
 */
 
-#include <QtGui/QPainter>
-
 #include "qtframebuffer.h"
-#include "qtkeypadbridge.h"
 #include "../../core/backlight.h"
 #include "../../core/lcd.h"
 #include "../../core/asic.h"
+
+#include <QtGui/QPainter>
 
 QImage renderFramebuffer(lcd_state_t *lcds) {
     lcd_drawframe(lcd_framebuffer, lcds);
