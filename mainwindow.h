@@ -90,7 +90,8 @@ private:
     // Settings
     void changeLCDRefresh(int value);
     void alwaysOnTop(int state);
-    void popoutLCD(bool state);
+    void popoutLCD();
+    void changeKeys();
 
     // Linking
     QStringList showVariableFileDialog(QFileDialog::AcceptMode mode);
@@ -120,6 +121,7 @@ private:
     QSettings *settings = nullptr;
     QDockWidget *dock_debugger = nullptr;
     QTextCursor disasm_offset;
+    bool detached_state = false;
     bool disasm_offset_set;
     bool from_pane;
     int address_pane;

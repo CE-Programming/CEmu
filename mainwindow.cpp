@@ -31,6 +31,7 @@
 #include "qmlbridge.h"
 #include "qtframebuffer.h"
 #include "qtkeypadbridge.h"
+#include "keybindings.h"
 
 #include "core/schedule.h"
 #include "core/debug/disasmc.h"
@@ -61,6 +62,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     // View
     detached_lcd.setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->actionDetached_LCD, &QAction::triggered, this, &MainWindow::popoutLCD);
+    connect(&detached_lcd, &LCDWidget::closed, this, &MainWindow::popoutLCD);
     connect(&detached_lcd, &LCDWidget::lcdOpenRequested, this, &MainWindow::selectFiles);
     connect(ui->lcdWidget, &LCDWidget::lcdOpenRequested, this, &MainWindow::selectFiles);
 
@@ -125,6 +127,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
     connect(ui->refreshSlider, &QSlider::valueChanged, this, &MainWindow::changeLCDRefresh);
     connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::alwaysOnTop);
+    connect(ui->buttonKeys, &QPushButton::clicked, this, &MainWindow::changeKeys);
 
     // Hex Editor
     connect(ui->buttonFlashGoto, &QPushButton::clicked, this, &MainWindow::flashGotoPressed);
@@ -205,12 +208,20 @@ void MainWindow::consoleStr(QString str) {
     ui->console->insertPlainText(str);
 }
 
-void MainWindow::popoutLCD(bool state) {
-    if (state)
+void MainWindow::popoutLCD() {
+    detached_state = !detached_state;
+    if (detached_state) {
         detached_lcd.show();
-    else
+    } else {
         detached_lcd.hide();
-    ui->actionDetached_LCD->setChecked(state);
+    }
+    ui->actionDetached_LCD->setChecked(detached_state);
+}
+
+void MainWindow::changeKeys() {
+    KeyBindings keys;
+    keys.show();
+    keys.exec();
 }
 
 void MainWindow::runSetup() {
