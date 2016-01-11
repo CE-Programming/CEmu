@@ -149,6 +149,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     qRegisterMetaType<uint32_t>("uint32_t");
     qRegisterMetaType<std::string>("std::string");
 
+    setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
+    setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
     setUIMode(true);
     debugger_on = false;
 
@@ -259,7 +261,6 @@ void MainWindow::setUIMode(bool docks_enabled) {
         QDockWidget *dw = new QDockWidget(ui->tabWidget->tabText(0));
         dw->setWindowIcon(ui->tabWidget->tabIcon(0));
         dw->setObjectName(dw->windowTitle());
-        dw->setAllowedAreas(Qt::AllDockWidgetAreas);
 
         // Fill "Docks" menu
         QAction *action = dw->toggleViewAction();
