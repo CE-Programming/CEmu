@@ -181,8 +181,6 @@ MainWindow::~MainWindow() {
     settings->setValue(QStringLiteral("windowGeometry"), saveGeometry());
     settings->setValue(QStringLiteral("disasmTextSize"), QVariant(ui->textSizeSlider->value()));
 
-    detached_lcd.close();
-
     delete ui->flashEdit;
     delete ui->ramEdit;
     delete ui->memEdit;
@@ -207,9 +205,12 @@ void MainWindow::consoleStr(QString str) {
     ui->console->insertPlainText(str);
 }
 
-void MainWindow::popoutLCD() {
-    detached_lcd.setWindowFlags(windowFlags() | Qt::Tool);
-    detached_lcd.show();
+void MainWindow::popoutLCD(bool state) {
+    if (state)
+        detached_lcd.show();
+    else
+        detached_lcd.hide();
+    ui->actionDetached_LCD->setChecked(state);
 }
 
 void MainWindow::runSetup() {

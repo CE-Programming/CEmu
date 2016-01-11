@@ -90,7 +90,7 @@ private:
     // Settings
     void changeLCDRefresh(int value);
     void alwaysOnTop(int state);
-    void popoutLCD();
+    void popoutLCD(bool state);
 
     // Linking
     QStringList showVariableFileDialog(QFileDialog::AcceptMode mode);
@@ -126,7 +126,7 @@ private:
     int mem_hex_size;
 
     EmuThread emu;
-    LCDWidget detached_lcd;
+    LCDWidget detached_lcd{this, Qt::Window};
 
     bool debugger_on = false;
     bool in_recieving_mode = false;

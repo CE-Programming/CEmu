@@ -18,7 +18,7 @@
 #include "lcdwidget.h"
 #include "qtframebuffer.h"
 
-LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
+LCDWidget::LCDWidget(QWidget *p, Qt::WindowFlags f) : QWidget(p, f) {
     connect(&refresh_timer, SIGNAL(timeout()), this, SLOT(repaint()));
     connect(this, &QWidget::customContextMenuRequested, this, &LCDWidget::drawContext);
 
@@ -72,4 +72,20 @@ void LCDWidget::refreshRate(int newrate) {
     refresh_timer.stop();
     refresh_timer.setInterval(1000 / newrate);
     refresh_timer.start();
+}
+
+void LCDWidget::showEvent(QShowEvent *e)
+{
+    QWidget::showEvent(e);
+}
+
+void LCDWidget::hideEvent(QHideEvent *e)
+{
+    QWidget::hideEvent(e);
+}
+
+void LCDWidget::closeEvent(QCloseEvent *e)
+{
+    QWidget::closeEvent(e);
+    emit closed();
 }

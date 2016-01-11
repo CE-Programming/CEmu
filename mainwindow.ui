@@ -4493,7 +4493,7 @@
      <x>0</x>
      <y>0</y>
      <width>993</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -4600,6 +4600,9 @@
    </property>
   </action>
   <action name="actionDetached_LCD">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Detached LCD</string>
    </property>
