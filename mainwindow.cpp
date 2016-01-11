@@ -49,6 +49,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     // Register QtKeypadBridge for the virtual keyboard functionality
     this->installEventFilter(&qt_keypad_bridge);
+    detached_lcd.installEventFilter(&qt_keypad_bridge);
     // Same for all the tabs/docks (iterate over them instead of harcoding their names)
     for (const auto& tab : ui->tabWidget->children()[0]->children()) {
         tab->installEventFilter(&qt_keypad_bridge);
@@ -56,6 +57,11 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     ui->keypadWidget->setResizeMode(QQuickWidget::ResizeMode::SizeRootObjectToView);
     ui->disassemblyView->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    // View
+    connect(ui->actionDetached_LCD, &QAction::triggered, this, &MainWindow::popoutLCD);
+    connect(&detached_lcd, &LCDWidget::lcdOpenRequested, this, &MainWindow::selectFiles);
+    connect(ui->lcdWidget, &LCDWidget::lcdOpenRequested, this, &MainWindow::selectFiles);
 
     // Emulator -> GUI
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr); // Not queued
@@ -174,6 +180,8 @@ MainWindow::~MainWindow() {
     settings->setValue(QStringLiteral("windowGeometry"), saveGeometry());
     settings->setValue(QStringLiteral("disasmTextSize"), QVariant(ui->textSizeSlider->value()));
 
+    detached_lcd.close();
+
     delete ui->flashEdit;
     delete ui->ramEdit;
     delete ui->memEdit;
@@ -198,7 +206,11 @@ void MainWindow::consoleStr(QString str) {
     ui->console->insertPlainText(str);
 }
 
-void MainWindow::runSetup(void) {
+void MainWindow::popoutLCD() {
+    detached_lcd.show();
+}
+
+void MainWindow::runSetup() {
     RomSelection romSelection;
     romSelection.show();
     romSelection.exec();

@@ -14,10 +14,15 @@ class LCDWidget : public QWidget
       LCDWidget(QWidget *p = 0);
       ~LCDWidget();
 
+  signals:
+      void lcdOpenRequested();
+
   protected:
       virtual void paintEvent(QPaintEvent * /*event*/) Q_DECL_OVERRIDE;
 
   private:
+      void drawContext(const QPoint& posa);
+
       QTimer refresh_timer;
   };
 

@@ -4493,7 +4493,7 @@
      <x>0</x>
      <y>0</y>
      <width>993</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -4509,6 +4509,10 @@
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
     <addaction name="separator"/>
+    <addaction name="actionRecord_GIF"/>
+    <addaction name="actionTake_GIF_Screenshot"/>
+    <addaction name="actionScreenshot"/>
+    <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -4518,15 +4522,6 @@
     <addaction name="actionSetup"/>
     <addaction name="actionReset_Calculator"/>
    </widget>
-   <widget class="QMenu" name="menuScreenshot">
-    <property name="title">
-     <string>Capture</string>
-    </property>
-    <addaction name="actionRecord_GIF"/>
-    <addaction name="actionTake_GIF_Screenshot"/>
-    <addaction name="separator"/>
-    <addaction name="actionScreenshot"/>
-   </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
      <string>About</string>
@@ -4534,8 +4529,14 @@
     <addaction name="actionAbout"/>
     <addaction name="actionAbout_Qt"/>
    </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <addaction name="actionDetached_LCD"/>
+   </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuScreenshot"/>
+   <addaction name="menuView"/>
    <addaction name="menuHelp"/>
    <addaction name="menuAbout"/>
   </widget>
@@ -4596,6 +4597,11 @@
   <action name="actionTake_GIF_Screenshot">
    <property name="text">
     <string>Take GIF Screenshot...</string>
+   </property>
+  </action>
+  <action name="actionDetached_LCD">
+   <property name="text">
+    <string>Detached LCD</string>
    </property>
   </action>
  </widget>

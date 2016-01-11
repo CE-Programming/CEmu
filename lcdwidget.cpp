@@ -13,15 +13,35 @@
 */
 
 #include <QtGui/QPainter>
+#include <QMenu>
 
 #include "lcdwidget.h"
 #include "qtframebuffer.h"
 
 LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
+    setContextMenuPolicy(Qt::CustomContextMenu);
+
     connect(&refresh_timer, SIGNAL(timeout()), this, SLOT(repaint()));
+    connect(this, &QWidget::customContextMenuRequested, this, &LCDWidget::drawContext);
 
     // Default rate is 60 FPS
     refreshRate(60);
+}
+
+void LCDWidget::drawContext(const QPoint& posa) {
+    QString open = "Open...";
+    QPoint globalPos = this->mapToGlobal(posa);
+
+    QMenu contextMenu;
+    contextMenu.addAction(open);
+
+    QAction* selectedItem = contextMenu.exec(globalPos);
+    if (selectedItem) {
+        if (selectedItem->text() == open) {
+            emit lcdOpenRequested();
+            show();
+        }
+    }
 }
 
 LCDWidget::~LCDWidget(){}

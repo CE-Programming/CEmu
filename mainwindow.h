@@ -8,6 +8,7 @@
 #include <QtCore/QSettings>
 #include <QTextCursor>
 
+#include "lcdwidget.h"
 #include "romselection.h"
 #include "emuthread.h"
 #include "core/vat.h"
@@ -89,6 +90,7 @@ private:
     // Settings
     void changeLCDRefresh(int value);
     void alwaysOnTop(int state);
+    void popoutLCD();
 
     // Linking
     QStringList showVariableFileDialog(QFileDialog::AcceptMode mode);
@@ -124,6 +126,7 @@ private:
     int mem_hex_size;
 
     EmuThread emu;
+    LCDWidget detached_lcd;
 
     bool debugger_on = false;
     bool in_recieving_mode = false;
