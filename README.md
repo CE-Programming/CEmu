@@ -21,20 +21,15 @@ After downloading the source (you can clone the repo or just get the zip):
   * On Windows, if you are building with Visual Studio, you must use
     Visual Studio 2015 or newer. You also must download a Qt build that
     is compatible with Visual Studio 2015 or newer.
-    
     * If you don't have Visual Studio 2015 installed, we recommend
       installing [Visual Studio 2015 Community](https://go.microsoft.com/fwlink/?LinkId=691978&clcid=0x409).
-    
     * Qt v5.6 is the only version of Qt (at the moment) that supports
       VS2015.
-      
       * You can download the beta version of Qt v5.6
         [here](http://download.qt.io/development_releases/qt/5.6/5.6.0-beta/).
-      
       * Direct download links for Qt v5.6 (VS2015):
         [MSVC 2015 x86](http://download.qt.io/development_releases/qt/5.6/5.6.0-beta/qt-opensource-windows-x86-msvc2015-5.6.0-beta.exe)
         and [MSVC 2015 x64](http://download.qt.io/development_releases/qt/5.6/5.6.0-beta/qt-opensource-windows-x86-msvc2015_64-5.6.0-beta.exe)
-    
     * Note that the latest Qt v5.6 beta has a bug where the version of
       MSVC is incorrect. (It is displayed as 2013 or older.) This is
       simply a display bug. To ensure that you are using MSVC 2015,
