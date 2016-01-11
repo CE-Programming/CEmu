@@ -21,10 +21,10 @@
 #include <QtWidgets/QProgressDialog>
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QComboBox>
-#include <QtQuickWidgets/QQuickWidget>
 #include <QtWidgets/QScrollBar>
 #include <QtGui/QFont>
 #include <QtGui/QPixmap>
+#include <QtNetwork/QNetworkReply>
 
 #include <fstream>
 
@@ -40,9 +40,7 @@
 
 #include "lcdpopout.h"
 #include "emuthread.h"
-#include "qmlbridge.h"
 #include "qtframebuffer.h"
-#include "qtkeypadbridge.h"
 #include "searchwidget.h"
 #include "basiccodeviewerwindow.h"
 
@@ -70,18 +68,18 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     ui->console->setMaximumBlockCount(2000);
 
     // Register QtKeypadBridge for the virtual keyboard functionality
-    installEventFilter(&qt_keypad_bridge);
-    ui->lcdWidget->installEventFilter(&qt_keypad_bridge);
+    connect(&keypadBridge, &QtKeypadBridge::keyStateChanged, ui->keypadWidget, &KeypadWidget::changeKeyState);
+    installEventFilter(&keypadBridge);
+    ui->lcdWidget->installEventFilter(&keypadBridge);
     // Same for all the tabs/docks (iterate over them instead of harcoding their names)
     for (const auto& tab : ui->tabWidget->children()[0]->children()) {
-        tab->installEventFilter(&qt_keypad_bridge);
+        tab->installEventFilter(&keypadBridge);
     }
-
-    ui->keypadWidget->setResizeMode(QQuickWidget::ResizeMode::SizeRootObjectToView);
 
     // Emulator -> GUI
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr);
     connect(&emu, &EmuThread::errConsoleStr, this, &MainWindow::errConsoleStr);
+    connect(&emu, &EmuThread::started, this, &MainWindow::started, Qt::QueuedConnection);
     connect(&emu, &EmuThread::restored, this, &MainWindow::restored, Qt::QueuedConnection);
     connect(&emu, &EmuThread::saved, this, &MainWindow::saved, Qt::QueuedConnection);
     connect(&emu, &EmuThread::isBusy, this, &MainWindow::isBusy, Qt::QueuedConnection);
@@ -437,7 +435,13 @@ void MainWindow::exportRom() {
     }
 }
 
+void MainWindow::started(bool success) {
+    if(success) {
+        ui->keypadWidget->setType(get_device_type());
+    }
+}
 void MainWindow::restored(bool success) {
+    started(success);
     if(success) {
         showStatusMsg(tr("Emulation restored from image."));
     } else {
@@ -903,7 +907,7 @@ void MainWindow::keymapChanged() {
 
 void MainWindow::changeKeymap(const QString & value) {
     settings->setValue(QStringLiteral("keyMap"), value);
-    qt_keypad_bridge.setKeymap(value);
+    keypadBridge.setKeymap(value);
 }
 
 void MainWindow::alwaysOnTop(int state) {
@@ -2609,7 +2613,7 @@ void MainWindow::opContextMenu(const QPoint& posa) {
 }
 
 void MainWindow::createLCD() {
-    LCDPopout *p = new LCDPopout();
+    LCDPopout *p = new LCDPopout(&keypadBridge);
     p->show();
 }
 

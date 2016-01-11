@@ -13,6 +13,7 @@
 */
 
 #include <QtGui/QPainter>
+#include <QtGui/QMouseEvent>
 #include <QMenu>
 #include <QDrag>
 #include <QMimeData>

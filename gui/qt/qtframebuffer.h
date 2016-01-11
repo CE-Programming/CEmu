@@ -1,13 +1,15 @@
-#ifndef QMLFRAMEBUFFER_H
-#define QMLFRAMEBUFFER_H
+#ifndef QTFRAMEBUFFER_H
+#define QTFRAMEBUFFER_H
 
-#include <QtQuick/QQuickPaintedItem>
 #include "../../core/lcd.h"
 
-class QMLFramebuffer : public QQuickPaintedItem {
+#include <QtWidgets/QWidget>
+
+class QtFramebuffer : public QWidget
+{
 public:
-    QMLFramebuffer(QQuickItem *p = 0);
-    virtual void paint(QPainter *p) override;
+    QtFramebuffer(QWidget *parent = 0);
+    virtual void paintEvent(QPaintEvent *) Q_DECL_OVERRIDE;
 };
 
 QImage renderFramebuffer(lcd_state_t *lcds);
