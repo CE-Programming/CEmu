@@ -18,11 +18,12 @@ class LCDWidget : public QWidget
       void lcdOpenRequested();
 
   protected:
-      virtual void paintEvent(QPaintEvent * /*event*/) Q_DECL_OVERRIDE;
+      virtual void paintEvent(QPaintEvent */*event*/) Q_DECL_OVERRIDE;
 
   private:
       void drawContext(const QPoint& posa);
 
+      bool state_set = false;
       QTimer refresh_timer;
   };
 

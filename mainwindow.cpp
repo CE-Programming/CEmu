@@ -59,6 +59,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     ui->disassemblyView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     // View
+    detached_lcd.setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->actionDetached_LCD, &QAction::triggered, this, &MainWindow::popoutLCD);
     connect(&detached_lcd, &LCDWidget::lcdOpenRequested, this, &MainWindow::selectFiles);
     connect(ui->lcdWidget, &LCDWidget::lcdOpenRequested, this, &MainWindow::selectFiles);

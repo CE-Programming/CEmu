@@ -19,10 +19,13 @@
 #include "qtframebuffer.h"
 
 LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
-    setContextMenuPolicy(Qt::CustomContextMenu);
-
     connect(&refresh_timer, SIGNAL(timeout()), this, SLOT(repaint()));
     connect(this, &QWidget::customContextMenuRequested, this, &LCDWidget::drawContext);
+
+    setMaximumWidth(320*2);
+    setMaximumHeight(240*2);
+    setMinimumWidth(320);
+    setMinimumHeight(240);
 
     // Default rate is 60 FPS
     refreshRate(60);
@@ -30,16 +33,29 @@ LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
 
 void LCDWidget::drawContext(const QPoint& posa) {
     QString open = "Open...";
+    QString onTop = "Always on Top";
     QPoint globalPos = this->mapToGlobal(posa);
 
     QMenu contextMenu;
     contextMenu.addAction(open);
+    contextMenu.addAction(onTop);
+    contextMenu.actions().at(1)->setCheckable(true);
+    contextMenu.actions().at(1)->setChecked(state_set);
 
     QAction* selectedItem = contextMenu.exec(globalPos);
     if (selectedItem) {
         if (selectedItem->text() == open) {
             emit lcdOpenRequested();
             show();
+        } else {
+          state_set = !state_set;
+          contextMenu.actions().at(1)->setChecked(state_set);
+          if (!state_set) {
+                setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
+          } else {
+                setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
+          }
+          show();
         }
     }
 }
