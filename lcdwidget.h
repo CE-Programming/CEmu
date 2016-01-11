@@ -10,14 +10,9 @@ class LCDWidget : public QWidget
 {
   Q_OBJECT
   public:
-      LCDWidget(QWidget *parent, Qt::WindowFlags f = Qt::WindowFlags());
+      LCDWidget(QWidget *p = 0);
       ~LCDWidget();
       void refreshRate(int newrate);
-
-    public slots:
-      void showEvent(QShowEvent *e) override;
-      void hideEvent(QHideEvent *e) override;
-      void closeEvent(QCloseEvent *e) override;
 
   signals:
       void lcdOpenRequested();
@@ -25,6 +20,9 @@ class LCDWidget : public QWidget
 
   protected:
       virtual void paintEvent(QPaintEvent */*event*/) Q_DECL_OVERRIDE;
+      virtual void showEvent(QShowEvent *e) Q_DECL_OVERRIDE;
+      virtual void hideEvent(QHideEvent *e) Q_DECL_OVERRIDE;
+      virtual void closeEvent(QCloseEvent *e) Q_DECL_OVERRIDE;
 
   private:
       void drawContext(const QPoint& posa);

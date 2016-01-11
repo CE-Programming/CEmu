@@ -18,7 +18,7 @@
 #include "lcdwidget.h"
 #include "qtframebuffer.h"
 
-LCDWidget::LCDWidget(QWidget *p, Qt::WindowFlags f) : QWidget(p, f) {
+LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
     connect(&refresh_timer, SIGNAL(timeout()), this, SLOT(repaint()));
     connect(this, &QWidget::customContextMenuRequested, this, &LCDWidget::drawContext);
 
@@ -26,6 +26,8 @@ LCDWidget::LCDWidget(QWidget *p, Qt::WindowFlags f) : QWidget(p, f) {
     setMaximumHeight(240*2);
     setMinimumWidth(320);
     setMinimumHeight(240);
+
+    resize(320,240);
 
     // Default rate is 60 FPS
     refreshRate(60);

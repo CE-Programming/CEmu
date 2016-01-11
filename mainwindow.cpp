@@ -161,10 +161,10 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     emu.rom = settings->value(QStringLiteral("romImage")).toString().toStdString();
 
-    if (emu.rom.empty() || !fileExists(emu.rom)) {
-       runSetup();
-    } else {
+    if (fileExists(emu.rom)) {
        emu.start();
+    } else {
+       runSetup();
     }
 
     restoreGeometry(settings->value(QStringLiteral("windowGeometry")).toByteArray());
@@ -200,6 +200,7 @@ void MainWindow::closeEvent(QCloseEvent *e) {
         qDebug("Failed.");
     }
 
+    detached_lcd.close();
     QMainWindow::closeEvent(e);
 }
 
@@ -229,10 +230,11 @@ void MainWindow::runSetup() {
     romSelection.show();
     romSelection.exec();
 
+    emu.rom = romImagePath;
+
     if (!romImagePath.empty()) {
         settings->setValue(QStringLiteral("romImage"),QVariant(romImagePath.c_str()));
         if(emu.stop()) {
-            emu.rom = romImagePath;
             ui->rompathView->setText(romImagePath.c_str());
             emu.start();
         }

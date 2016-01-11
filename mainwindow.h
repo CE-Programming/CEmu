@@ -128,7 +128,7 @@ private:
     int mem_hex_size;
 
     EmuThread emu;
-    LCDWidget detached_lcd{this, Qt::Window};
+    LCDWidget detached_lcd;
 
     bool debugger_on = false;
     bool in_recieving_mode = false;
