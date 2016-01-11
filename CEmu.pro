@@ -13,7 +13,10 @@ TRANSLATIONS += i18n/fr_FR.ts
 
 CONFIG += c++11
 
-GLOBAL_FLAGS = -W -Wall -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -fno-strict-overflow -Winit-self -ffunction-sections -fdata-sections
+# Only add GCC flags if we're not using MSVC
+if (!win32-msvc*) {
+    GLOBAL_FLAGS = -W -Wall -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -fno-strict-overflow -Winit-self -ffunction-sections -fdata-sections
+}
 
 if (macx | linux) {
     GLOBAL_FLAGS += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -fstack-protector-all -Wstack-protector --param=ssp-buffer-size=1 -fPIC
@@ -26,8 +29,19 @@ if (linux) {
 }
 
 QMAKE_CFLAGS += $$GLOBAL_FLAGS
-QMAKE_CXXFLAGS += $$GLOBAL_FLAGS -fno-exceptions
-QMAKE_LFLAGS += -flto -fPIE $$GLOBAL_FLAGS $$MORE_LFLAGS
+
+if (!win32-msvc*) {
+    # GCC specific flags
+    QMAKE_CXXFLAGS += $$GLOBAL_FLAGS -fno-exceptions
+    QMAKE_LFLAGS += -flto -fPIE $$GLOBAL_FLAGS $$MORE_LFLAGS
+} else {
+    # MSVC specific flags
+    # TODO: add equivalent -Werror flags
+    # For -Werror=shadow: /weC4456 /weC4457 /weC4458 /weC4459
+    #     Source: https://connect.microsoft.com/VisualStudio/feedback/details/1355600/
+    QMAKE_CXXFLAGS += /Wall $$GLOBAL_FLAGS
+    QMAKE_LFLAGS += $$GLOBAL_FLAGS $$MORE_LFLAGS
+}
 
 ios {
     DEFINES += IS_IOS_BUILD
@@ -35,7 +49,6 @@ ios {
 }
 
 macx: ICON = resources/icons/icon.icns
-
 
 SOURCES +=  utils.cpp \
     main.cpp\
