@@ -16,7 +16,7 @@ void debugger(int reason, uint32_t addr) {
 
     if (mem.debug.stepOverAddress < 0x1000000) {
         mem.debug.block[mem.debug.stepOverAddress] &= ~DBG_STEP_OVER_BREAKPOINT;
-        mem.debug.stepOverAddress = -1;
+        mem.debug.stepOverAddress = UINT32_C(0xFFFFFFFF);
     }
 
     gui_debugger_send_command(reason, addr);

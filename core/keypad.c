@@ -13,7 +13,7 @@ void keypad_intrpt_check() {
     intrpt_trigger(INT_KEYPAD, status ? INTERRUPT_SET : INTERRUPT_CLEAR);
 }
 
-void keypad_key_event(int row, int col, bool press) {
+void keypad_key_event(unsigned int row, unsigned int col, bool press) {
     if (row == 2 && col == 0) {
         intrpt_trigger(INT_ON, press ? INTERRUPT_SET : INTERRUPT_CLEAR);
         if (press && control.ports[0] & 0x40) {

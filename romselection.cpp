@@ -12,7 +12,7 @@
 std::string romImagePath;
 
 static const size_t rom_size = 1024*1024*4;
-static const size_t rom_segment_size = 0xFFE9;
+static const uint32_t rom_segment_size = 0xFFE9;
 static int num_rom_segments = 11;
 static const uint8_t dumper_program[214] = {
     0x2A, 0x2A, 0x54, 0x49, 0x38, 0x33, 0x46, 0x2A, 0x1A, 0x0A, 0x00, 0x00,
@@ -60,7 +60,7 @@ RomSelection::~RomSelection() {
 }
 
 bool RomSelection::flash_open(const char *filename) {
-    size_t s;
+    long s;
 
     FILE* rom_read = fopen_utf8(filename, "r+b");
 
@@ -157,7 +157,7 @@ void RomSelection::on_mergeButton_clicked() {
                     if (segment_filled[tmpint] == false) {
                         segment_filled[tmpint] = true;
 
-                        fread(rom_array+(tmpint*rom_segment_size),1,0xFFE9,read_segment);
+                        fread(rom_array+(rom_segment_size*tmpint),1,0xFFE9,read_segment);
                         if (tmpint > num_rom_segments) {
                             ui->progressBar->setMaximum(tmpint);
                             num_rom_segments = tmpint;
@@ -217,10 +217,11 @@ void RomSelection::on_romsaveBrowse_clicked() {
 
     if (save_rom) {
         /* make sure the only thing in the rom is the boot+os */
-        int os_end = (rom_array[0x20105]) | (rom_array[0x20106]<<8) | (rom_array[0x20107]<<16);
+        /* FIXME this is cutting corners, should use cert.h functions instead */
+        uint32_t os_end = ((uint32_t)rom_array[0x20105]) | ((uint32_t)(rom_array[0x20106])<<8) | ((uint32_t)(rom_array[0x20107])<<16);
         memset(&rom_array[os_end],0xFF,rom_size-os_end-1);
 
-        /* Set the specifed flag */
+        /* Set the specified flag */
         rom_array[0x7E] = 0xFF;
         if (ui->toggleFlag->isChecked()) { rom_array[0x7E] = 0xFE; }
         if (ui->toggleFlash->isChecked()) { rom_array[0x7E] = 0x80; }

@@ -26,10 +26,10 @@ QMLBridge::QMLBridge(QObject *p) : QObject(p) {
 QMLBridge::~QMLBridge() {
 }
 
-static const constexpr int ROWS = 8, COLS = 8;
+static const constexpr unsigned int ROWS = 8U, COLS = 8U;
 
-void QMLBridge::keypadStateChanged(int keymap_id, bool state) {
-    int col = keymap_id % COLS, row = keymap_id / COLS;
+void QMLBridge::keypadStateChanged(unsigned int keymap_id, bool state) {
+    unsigned int col = keymap_id % COLS, row = keymap_id / COLS;
     assert(row < ROWS);
 
     keypad_key_event(row, col, state);
@@ -37,23 +37,24 @@ void QMLBridge::keypadStateChanged(int keymap_id, bool state) {
 
 static QObject *buttons[ROWS][COLS];
 
-void QMLBridge::registerNButton(int keymap_id, QVariant button) {
-    int col = keymap_id % COLS, row = keymap_id / COLS;
+void QMLBridge::registerNButton(unsigned int keymap_id, QVariant button) {
+    unsigned int col = keymap_id % COLS, row = keymap_id / COLS;
     assert(row < ROWS);
 
-    if(buttons[row][col])
+    if (buttons[row][col]) {
         qWarning() << "Warning: Button " << keymap_id << " already registered as " << buttons[row][col] << "!";
-    else
+    }
+    else {
         buttons[row][col] = button.value<QObject*>();
+    }
 }
 
 
-void notifyKeypadStateChanged(int row, int col, bool state) {
+void notifyKeypadStateChanged(unsigned int row, unsigned int col, bool state) {
     assert(row < ROWS);
     assert(col < COLS);
 
-    if(!buttons[row][col])
-    {
+    if(!buttons[row][col]) {
         qWarning() << "Warning: Button " << row*11+col << " not present in keypad!";
         return;
     }

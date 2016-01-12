@@ -26,11 +26,11 @@ QImage brighten(QImage &img, float factor) {
     for(int y = 0; y < img.height(); y++) {
         for(int x = 0; x < img.width(); x++) {
             QRgb p = img.pixel(x, y);
-            r = qRed(p) * factor;
+            r = (int)(factor * qRed(p));
             r = CLAMP(r);
-            g = qGreen(p) * factor;
+            g = (int)(factor * qGreen(p));
             g = CLAMP(g);
-            b = qBlue(p) * factor;
+            b = (int)(factor * qBlue(p));
             b = CLAMP(b);
             img.setPixel(x, y, qRgb(r, g, b));
           }

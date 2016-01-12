@@ -39,7 +39,7 @@ extern keypad_state_t keypad;
 eZ80portrange_t init_keypad(void);
 void keypad_intrpt_check(void);
 void keypad_reset(void);
-void keypad_key_event(int row, int col, bool press);
+void keypad_key_event(unsigned int row, unsigned int col, bool press);
 
 #ifdef __cplusplus
 }

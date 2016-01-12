@@ -34,7 +34,7 @@ static void watchdog_event(int index) {
 
 /* Watchdog read routine */
 static uint8_t watchdog_read(const uint16_t pio) {
-    uint8_t index = pio & 0xFFF;
+    uint8_t index = pio & 0xFF;
     uint8_t bit_offset = (index&3)<<3;
 
     static const uint32_t revision = 0x00010602;
@@ -64,7 +64,7 @@ static uint8_t watchdog_read(const uint16_t pio) {
 
 /* Watchdog write routine */
 static void watchdog_write(const uint16_t pio, const uint8_t byte) {
-    uint8_t index = pio & 0xFFF;
+    uint8_t index = pio & 0xFF;
     uint8_t bit_offset = (index&3)<<3;
 
     switch (index) {

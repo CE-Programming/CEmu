@@ -15,8 +15,9 @@ CONFIG += c++11
 
 # GCC/clang flags
 if (!win32-msvc*) {
-    GLOBAL_FLAGS    += -W -Wall -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -Winit-self
+    GLOBAL_FLAGS    += -g3 -W -Wall -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=declaration-after-statement -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -Winit-self
     GLOBAL_FLAGS    += -ffunction-sections -fdata-sections -fno-strict-overflow
+    QMAKE_CFLAGS    += -std=gnu11
     QMAKE_CXXFLAGS  += -fno-exceptions
     CONFIG(release, debug|release): GLOBAL_FLAGS += -O3 -flto
 } else {
@@ -37,7 +38,6 @@ linux: QMAKE_LFLAGS += -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack -Wl,--gc-secti
 QMAKE_CFLAGS    += $$GLOBAL_FLAGS
 QMAKE_CXXFLAGS  += $$GLOBAL_FLAGS
 QMAKE_LFLAGS    += $$GLOBAL_FLAGS
-
 
 ios {
     DEFINES += IS_IOS_BUILD
