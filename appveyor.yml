@@ -1,9 +1,3 @@
-configuration:
-  - 2015
-
-platform:
-  - x86
-
 install:
   - ps: Start-FileDownload 'https://copy.com/oHycsdlBbHf4YBMJ/Qt56_Beta_Win32_MSVC2015.7z?download=1'
   - 7z x -oC:\ Qt56_Beta_Win32_MSVC2015.7z
