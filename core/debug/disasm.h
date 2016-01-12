@@ -13,7 +13,7 @@ typedef struct {
     std::string arguments;
     std::string mode_suffix;
     std::string data;
-    int size;
+    unsigned int size;
 } eZ80_instuction_t;
 
 typedef struct {

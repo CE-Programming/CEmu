@@ -1,5 +1,5 @@
-#ifndef _H_SHA256
-#define _H_SHA256
+#ifndef H_SHA256
+#define H_SHA256
 
 #ifdef __cplusplus
 extern "C" {

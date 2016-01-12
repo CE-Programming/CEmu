@@ -72,7 +72,7 @@ typedef enum calc_var_type {
     CALC_VAR_TYPE_UNKNOWN23,
     CALC_VAR_TYPE_UNKNOWN24,
     CALC_VAR_TYPE_FLASH_LICENSE,
-    CALC_VAR_TYPE_UNKNOWN25,
+    CALC_VAR_TYPE_UNKNOWN25
 } calc_var_type_t;
 
 extern const char *calc_var_type_names[0x40];

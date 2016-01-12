@@ -1,5 +1,5 @@
-#ifndef _H_USB
-#define _H_USB
+#ifndef H_USB
+#define H_USB
 
 #ifdef __cplusplus
 extern "C" {

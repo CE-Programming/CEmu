@@ -1,5 +1,5 @@
-#ifndef _H_RTC
-#define _H_RTC
+#ifndef H_RTC
+#define H_RTC
 
 #ifdef __cplusplus
 extern "C" {

@@ -160,35 +160,35 @@ void exx(eZ80registers_t *r);
 int parity(uint8_t x);
 
 /* S Z 5 H 3 PV N C */
-#define __flag_s(a)  ((a) ? FLAG_S  : 0)
-#define __flag_5(a)  ((a) ? FLAG_5  : 0)
-#define __flag_h(a)  ((a) ? FLAG_H  : 0)
-#define __flag_3(a)  ((a) ? FLAG_3  : 0)
-#define __flag_pv(a) ((a) ? FLAG_PV : 0)
-#define __flag_c(a)  ((a) ? FLAG_C  : 0)
+#define cpuflag_s(a)  ((a) ? FLAG_S  : 0)
+#define cpuflag_5(a)  ((a) ? FLAG_5  : 0)
+#define cpuflag_h(a)  ((a) ? FLAG_H  : 0)
+#define cpuflag_3(a)  ((a) ? FLAG_3  : 0)
+#define cpuflag_pv(a) ((a) ? FLAG_PV : 0)
+#define cpuflag_c(a)  ((a) ? FLAG_C  : 0)
 
-#define _flag_carry_w(a,mode) __flag_c((a) & (0x10000<<(mode<<3)))
-#define _flag_carry_b(a) __flag_c((a) & 0x100)
+#define cpuflag_carry_w(a,mode) cpuflag_c((a) & (0x10000<<(mode<<3)))
+#define cpuflag_carry_b(a) cpuflag_c((a) & 0x100)
 
-#define _flag_sign_w(a,mode) __flag_s((a) & (0x8000<<(mode<<3)))
-#define _flag_sign_b(a) __flag_s((a) & 0x80)
+#define cpuflag_sign_w(a,mode) cpuflag_s((a) & (0x8000<<(mode<<3)))
+#define cpuflag_sign_b(a) cpuflag_s((a) & 0x80)
 
-#define _flag_parity(a) __flag_pv(!parity(a))
+#define cpuflag_parity(a) cpuflag_pv(!parity(a))
 
-#define _flag_undef(a) (a & (FLAG_3 | FLAG_5))
+#define cpuflag_undef(a) (a & (FLAG_3 | FLAG_5))
 
-#define _flag_overflow_b_add(op1, op2, result) __flag_pv(~((op1) ^ (op2)) & ((op1) ^ (result)) & 0x80)
-#define _flag_overflow_b_sub(op1, op2, result) __flag_pv(((op1) ^ (op2)) & ((op1) ^ (result)) & 0x80)
-#define _flag_overflow_w_add(op1, op2, result, mode) __flag_pv(~((op1) ^ (op2)) & ((op1) ^ (result)) & (0x8000 << ((mode) << 3)))
-#define _flag_overflow_w_sub(op1, op2, result, mode) __flag_pv(((op1) ^ (op2)) & ((op1) ^ (result)) & (0x8000 << ((mode) << 3)))
+#define cpuflag_overflow_b_add(op1, op2, result) cpuflag_pv(~((op1) ^ (op2)) & ((op1) ^ (result)) & 0x80)
+#define cpuflag_overflow_b_sub(op1, op2, result) cpuflag_pv(((op1) ^ (op2)) & ((op1) ^ (result)) & 0x80)
+#define cpuflag_overflow_w_add(op1, op2, result, mode) cpuflag_pv(~((op1) ^ (op2)) & ((op1) ^ (result)) & (0x8000 << ((mode) << 3)))
+#define cpuflag_overflow_w_sub(op1, op2, result, mode) cpuflag_pv(((op1) ^ (op2)) & ((op1) ^ (result)) & (0x8000 << ((mode) << 3)))
 
-#define _flag_halfcarry_b_add(op1, op2, carry) __flag_h(((op1 & 0xf) + (op2 & 0xf) + carry) & 0x10)
-#define _flag_halfcarry_b_sub(op1, op2, carry) __flag_h(((op1 & 0xf) - (op2 & 0xf) - carry) & 0x10)
-#define _flag_halfcarry_w_add(op1, op2, carry) __flag_h(((op1 & 0xfff) + (op2 & 0xfff) + carry) & 0x1000)
-#define _flag_halfcarry_w_sub(op1, op2, carry) __flag_h(((op1 & 0xfff) - (op2 & 0xfff) - carry) & 0x1000)
+#define cpuflag_halfcarry_b_add(op1, op2, carry) cpuflag_h(((op1 & 0xf) + (op2 & 0xf) + carry) & 0x10)
+#define cpuflag_halfcarry_b_sub(op1, op2, carry) cpuflag_h(((op1 & 0xf) - (op2 & 0xf) - carry) & 0x10)
+#define cpuflag_halfcarry_w_add(op1, op2, carry) cpuflag_h(((op1 & 0xfff) + (op2 & 0xfff) + carry) & 0x1000)
+#define cpuflag_halfcarry_w_sub(op1, op2, carry) cpuflag_h(((op1 & 0xfff) - (op2 & 0xfff) - carry) & 0x1000)
 
-#define _flag_subtract(a)   ((a) ? FLAG_N : 0)
-#define _flag_zero(a)       ((a) ? 0 : FLAG_Z)
+#define cpuflag_subtract(a)   ((a) ? FLAG_N : 0)
+#define cpuflag_zero(a)       ((a) ? 0 : FLAG_Z)
 
 #define mask_mode(a, mode)  (a &= (0xFFFF<<(mode<<3))|0xFF)
 

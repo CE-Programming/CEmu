@@ -326,21 +326,21 @@ static void cpu_execute_daa(void) {
     if ((r->A & 0xF) > 9 || r->flags.H) {
         v += 6;
     }
-    if (((r->A + v) >> 4) > 9 || _flag_carry_b(r->A + v) || r->flags.C) {
+    if (((r->A + v) >> 4) > 9 || cpuflag_carry_b(r->A + v) || r->flags.C) {
         v += 0x60;
     }
     if (r->flags.N) {
         r->A -= v;
-        r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-            | _flag_undef(r->F) | _flag_parity(r->A)
-            | _flag_subtract(r->flags.N) | __flag_c(v >= 0x60)
-            | _flag_halfcarry_b_sub(old, v, 0);
+        r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+            | cpuflag_undef(r->F) | cpuflag_parity(r->A)
+            | cpuflag_subtract(r->flags.N) | cpuflag_c(v >= 0x60)
+            | cpuflag_halfcarry_b_sub(old, v, 0);
     } else {
         r->A += v;
-        r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-            | _flag_undef(r->F) | _flag_parity(r->A)
-            | _flag_subtract(r->flags.N) | __flag_c(v >= 0x60)
-            | _flag_halfcarry_b_add(old, v, 0);
+        r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+            | cpuflag_undef(r->F) | cpuflag_parity(r->A)
+            | cpuflag_subtract(r->flags.N) | cpuflag_c(v >= 0x60)
+            | cpuflag_halfcarry_b_add(old, v, 0);
     }
 }
 
@@ -405,65 +405,65 @@ static void cpu_execute_alu(int i, uint8_t v) {
             cpu.cycles += 1;
             old = r->A;
             r->A += v;
-            r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-                | _flag_undef(r->F) | _flag_overflow_b_add(old, v, r->A)
-                | _flag_subtract(0) | _flag_carry_b(old + v)
-                | _flag_halfcarry_b_add(old, v, 0);
+            r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+                | cpuflag_undef(r->F) | cpuflag_overflow_b_add(old, v, r->A)
+                | cpuflag_subtract(0) | cpuflag_carry_b(old + v)
+                | cpuflag_halfcarry_b_add(old, v, 0);
             break;
         case 1: // ADC A, v
             cpu.cycles += 1;
             old = r->A;
             r->A += v + r->flags.C;
-            r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-                | _flag_undef(r->F) | _flag_overflow_b_add(old, v, r->A)
-                | _flag_subtract(0) | _flag_carry_b(old + v + r->flags.C)
-                | _flag_halfcarry_b_add(old, v, r->flags.C);
+            r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+                | cpuflag_undef(r->F) | cpuflag_overflow_b_add(old, v, r->A)
+                | cpuflag_subtract(0) | cpuflag_carry_b(old + v + r->flags.C)
+                | cpuflag_halfcarry_b_add(old, v, r->flags.C);
             break;
         case 2: // SUB v
             cpu.cycles += 1;
             old = r->A;
             r->A -= v;
-            r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-                | _flag_undef(r->F) | _flag_overflow_b_sub(old, v, r->A)
-                | _flag_subtract(1) | _flag_carry_b(old - v)
-                | _flag_halfcarry_b_sub(old, v, 0);
+            r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+                | cpuflag_undef(r->F) | cpuflag_overflow_b_sub(old, v, r->A)
+                | cpuflag_subtract(1) | cpuflag_carry_b(old - v)
+                | cpuflag_halfcarry_b_sub(old, v, 0);
             break;
         case 3: // SBC v
             cpu.cycles += 1;
             old = r->A;
             r->A -= v + r->flags.C;
-            r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-                | _flag_undef(r->F) | _flag_overflow_b_sub(old, v, r->A)
-                | _flag_subtract(1) | _flag_carry_b(old - v - r->flags.C)
-                | _flag_halfcarry_b_sub(old, v, r->flags.C);
+            r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+                | cpuflag_undef(r->F) | cpuflag_overflow_b_sub(old, v, r->A)
+                | cpuflag_subtract(1) | cpuflag_carry_b(old - v - r->flags.C)
+                | cpuflag_halfcarry_b_sub(old, v, r->flags.C);
             break;
         case 4: // AND v
             cpu.cycles += 1;
             r->A &= v;
-            r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-                | _flag_undef(r->F) | _flag_parity(r->A)
+            r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+                | cpuflag_undef(r->F) | cpuflag_parity(r->A)
                 | FLAG_H;
             break;
         case 5: // XOR v
             cpu.cycles += 1;
             r->A ^= v;
-            r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-                | _flag_undef(r->F) | _flag_parity(r->A);
+            r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+                | cpuflag_undef(r->F) | cpuflag_parity(r->A);
             break;
         case 6: // OR v
             cpu.cycles += 1;
             r->A |= v;
-            r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-                | _flag_undef(r->F) | _flag_parity(r->A);
+            r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+                | cpuflag_undef(r->F) | cpuflag_parity(r->A);
             break;
         case 7: // CP v
             cpu.cycles += 1;
             old = r->A - v;
-            r->F = _flag_sign_b(old) | _flag_zero(old)
-                | _flag_undef(r->F) | _flag_subtract(1)
-                | _flag_carry_b(r->A - v)
-                | _flag_overflow_b_sub(r->A, v, old)
-                | _flag_halfcarry_b_sub(r->A, v, 0);
+            r->F = cpuflag_sign_b(old) | cpuflag_zero(old)
+                | cpuflag_undef(r->F) | cpuflag_subtract(1)
+                | cpuflag_carry_b(r->A - v)
+                | cpuflag_overflow_b_sub(r->A, v, old)
+                | cpuflag_halfcarry_b_sub(r->A, v, 0);
             break;
     }
 }
@@ -522,8 +522,8 @@ static void cpu_execute_rot(int y, int z, uint32_t address, uint8_t value) {
             abort();
     }
     cpu_write_reg_prefetched(z, address, value);
-    r->F = __flag_c(new_c) | _flag_sign_b(value) | _flag_parity(value)
-        | _flag_undef(r->F) | _flag_zero(value);
+    r->F = cpuflag_c(new_c) | cpuflag_sign_b(value) | cpuflag_parity(value)
+        | cpuflag_undef(r->F) | cpuflag_zero(value);
 }
 
 static void cpu_execute_rot_acc(int y)
@@ -600,9 +600,9 @@ static void cpu_execute_bli(int y, int z) {
                     r->C++;
                     old = r->B;
                     r->B--;
-                    r->F = _flag_sign_b(r->B) | _flag_zero(r->B)
-                        | _flag_halfcarry_b_sub(old, 0, 1)
-                        | _flag_subtract(_flag_sign_b(new)) | _flag_undef(r->F);
+                    r->F = cpuflag_sign_b(r->B) | cpuflag_zero(r->B)
+                        | cpuflag_halfcarry_b_sub(old, 0, 1)
+                        | cpuflag_subtract(cpuflag_sign_b(new)) | cpuflag_undef(r->F);
                     break;
                 case 3: // OTIM
                     cpu.cycles += 1;
@@ -611,9 +611,9 @@ static void cpu_execute_bli(int y, int z) {
                     r->C++;
                     old = r->B;
                     r->B--;
-                    r->F = _flag_sign_b(r->B) | _flag_zero(r->B)
-                        | _flag_halfcarry_b_sub(old, 0, 1)
-                        | _flag_subtract(_flag_sign_b(new)) | _flag_undef(r->F);
+                    r->F = cpuflag_sign_b(r->B) | cpuflag_zero(r->B)
+                        | cpuflag_halfcarry_b_sub(old, 0, 1)
+                        | cpuflag_subtract(cpuflag_sign_b(new)) | cpuflag_undef(r->F);
                     break;
                 case 4: // INI2
                     cpu.cycles += 1;
@@ -621,8 +621,8 @@ static void cpu_execute_bli(int y, int z) {
                     r->HL++; mask_mode(r->HL, cpu.L);
                     r->C++;
                     r->B--;
-                    r->flags.Z = _flag_zero(r->B) != 0;
-                    r->flags.N = _flag_sign_b(new) != 0;
+                    r->flags.Z = cpuflag_zero(r->B) != 0;
+                    r->flags.N = cpuflag_sign_b(new) != 0;
                     break;
             }
             break;
@@ -635,9 +635,9 @@ static void cpu_execute_bli(int y, int z) {
                     r->C--;
                     old = r->B;
                     r->B--;
-                    r->F = _flag_sign_b(r->B) | _flag_zero(r->B)
-                        | _flag_halfcarry_b_sub(old, 0, 1)
-                        | _flag_subtract(_flag_sign_b(new)) | _flag_undef(r->F);
+                    r->F = cpuflag_sign_b(r->B) | cpuflag_zero(r->B)
+                        | cpuflag_halfcarry_b_sub(old, 0, 1)
+                        | cpuflag_subtract(cpuflag_sign_b(new)) | cpuflag_undef(r->F);
                     break;
                 case 3: // OTDM
                     cpu.cycles += 1;
@@ -646,9 +646,9 @@ static void cpu_execute_bli(int y, int z) {
                     r->C--;
                     old = r->B;
                     r->B--;
-                    r->F = _flag_sign_b(r->B) | _flag_zero(r->B)
-                        | _flag_halfcarry_b_sub(old, 0, 1)
-                        | _flag_subtract(_flag_sign_b(new)) | _flag_undef(r->F);
+                    r->F = cpuflag_sign_b(r->B) | cpuflag_zero(r->B)
+                        | cpuflag_halfcarry_b_sub(old, 0, 1)
+                        | cpuflag_subtract(cpuflag_sign_b(new)) | cpuflag_undef(r->F);
                     break;
                 case 4: // IND2
                     cpu.cycles += 1;
@@ -656,8 +656,8 @@ static void cpu_execute_bli(int y, int z) {
                     r->HL--; mask_mode(r->HL, cpu.L);
                     r->C--;
                     r->B--;
-                    r->flags.Z = _flag_zero(r->B) != 0;
-                    r->flags.N = _flag_sign_b(new) != 0;
+                    r->flags.Z = cpuflag_zero(r->B) != 0;
+                    r->flags.N = cpuflag_sign_b(new) != 0;
                     break;
             }
             break;
@@ -669,8 +669,8 @@ static void cpu_execute_bli(int y, int z) {
                     r->HL++; mask_mode(r->HL, cpu.L);
                     r->C++;
                     r->B--;
-                    r->flags.Z = _flag_zero(r->B) != 0;
-                    r->flags.N = _flag_sign_b(new) != 0;
+                    r->flags.Z = cpuflag_zero(r->B) != 0;
+                    r->flags.N = cpuflag_sign_b(new) != 0;
                     if (r->B) {
                         cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
@@ -682,9 +682,9 @@ static void cpu_execute_bli(int y, int z) {
                     r->C++;
                     old = r->B;
                     r->B--;
-                    r->F = _flag_sign_b(r->B) | _flag_zero(r->B)
-                        | _flag_halfcarry_b_sub(old, 0, 1)
-                        | _flag_subtract(_flag_sign_b(new)) | _flag_undef(r->F);
+                    r->F = cpuflag_sign_b(r->B) | cpuflag_zero(r->B)
+                        | cpuflag_halfcarry_b_sub(old, 0, 1)
+                        | cpuflag_subtract(cpuflag_sign_b(new)) | cpuflag_undef(r->F);
                     if (r->B) {
                         cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
@@ -695,8 +695,8 @@ static void cpu_execute_bli(int y, int z) {
                     r->HL++; mask_mode(r->HL, cpu.L);
                     r->DE++; mask_mode(r->DE, cpu.L);
                     old = cpu_dec_bc_partial_mode(); // Do not mask BC
-                    r->flags.Z = _flag_zero(old) != 0;
-                    r->flags.N = _flag_sign_b(new) != 0;
+                    r->flags.Z = cpuflag_zero(old) != 0;
+                    r->flags.N = cpuflag_sign_b(new) != 0;
                     if (old) {
                         cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
@@ -711,8 +711,8 @@ static void cpu_execute_bli(int y, int z) {
                     r->HL--; mask_mode(r->HL, cpu.L);
                     r->C--;
                     r->B--;
-                    r->flags.Z = _flag_zero(r->B) != 0;
-                    r->flags.N = _flag_sign_b(new) != 0;
+                    r->flags.Z = cpuflag_zero(r->B) != 0;
+                    r->flags.N = cpuflag_sign_b(new) != 0;
                     if (r->B) {
                         cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
@@ -724,9 +724,9 @@ static void cpu_execute_bli(int y, int z) {
                     r->C--;
                     old = r->B;
                     r->B--;
-                    r->F = _flag_sign_b(r->B) | _flag_zero(r->B)
-                        | _flag_halfcarry_b_sub(old, 0, 1)
-                        | _flag_subtract(_flag_sign_b(new)) | _flag_undef(r->F);
+                    r->F = cpuflag_sign_b(r->B) | cpuflag_zero(r->B)
+                        | cpuflag_halfcarry_b_sub(old, 0, 1)
+                        | cpuflag_subtract(cpuflag_sign_b(new)) | cpuflag_undef(r->F);
                     if (r->B) {
                         cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
@@ -737,8 +737,8 @@ static void cpu_execute_bli(int y, int z) {
                     r->HL--; mask_mode(r->HL, cpu.L);
                     r->DE--; mask_mode(r->DE, cpu.L);
                     old = cpu_dec_bc_partial_mode(); // Do not mask BC
-                    r->flags.Z = _flag_zero(old) != 0;
-                    r->flags.N = _flag_sign_b(new) != 0;
+                    r->flags.Z = cpuflag_zero(old) != 0;
+                    r->flags.N = cpuflag_sign_b(new) != 0;
                     if (old) {
                         cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
@@ -763,26 +763,26 @@ static void cpu_execute_bli(int y, int z) {
                     r->HL++; mask_mode(r->HL, cpu.L);
                     r->BC--; mask_mode(r->BC, cpu.L);
                     new = r->A - old;
-                    r->F = _flag_sign_b(new) | _flag_zero(new)
-                        | _flag_halfcarry_b_sub(r->A, old, 0) | __flag_pv(r->BC)
-                        | _flag_subtract(1) | __flag_c(r->flags.C)
-                        | _flag_undef(r->F);
+                    r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
+                        | cpuflag_halfcarry_b_sub(r->A, old, 0) | cpuflag_pv(r->BC)
+                        | cpuflag_subtract(1) | cpuflag_c(r->flags.C)
+                        | cpuflag_undef(r->F);
                     break;
                 case 2: // INI
                     cpu.cycles += 1;
                     cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
                     r->HL++; mask_mode(r->HL, cpu.L);
                     r->B--;
-                    r->flags.Z = _flag_zero(r->B) != 0;
-                    r->flags.N = _flag_sign_b(new) != 0;
+                    r->flags.Z = cpuflag_zero(r->B) != 0;
+                    r->flags.N = cpuflag_sign_b(new) != 0;
                     break;
                 case 3: // OUTI
                     cpu.cycles += 1;
                     cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
                     r->HL++; mask_mode(r->HL, cpu.L);
                     r->B--;
-                    r->flags.Z = _flag_zero(r->B) != 0;
-                    r->flags.N = _flag_sign_b(new) != 0;
+                    r->flags.Z = cpuflag_zero(r->B) != 0;
+                    r->flags.N = cpuflag_sign_b(new) != 0;
                     break;
                 case 4: // OUTI2
                     cpu.cycles += 1;
@@ -790,8 +790,8 @@ static void cpu_execute_bli(int y, int z) {
                     r->HL++; mask_mode(r->HL, cpu.L);
                     r->C++;
                     r->B--;
-                    r->flags.Z = _flag_zero(r->B) != 0;
-                    r->flags.N = _flag_sign_b(new) != 0;
+                    r->flags.Z = cpuflag_zero(r->B) != 0;
+                    r->flags.N = cpuflag_sign_b(new) != 0;
                     break;
             }
             break;
@@ -813,27 +813,27 @@ static void cpu_execute_bli(int y, int z) {
                     r->HL--; mask_mode(r->HL, cpu.L);
                     r->BC--; mask_mode(r->BC, cpu.L);
                     new = r->A - old;
-                    r->F = _flag_sign_b(new) | _flag_zero(new)
-                        | _flag_halfcarry_b_sub(r->A, old, 0)
-                        | __flag_pv(r->BC)
-                        | _flag_subtract(1) | __flag_c(r->flags.C)
-                        | _flag_undef(r->F);
+                    r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
+                        | cpuflag_halfcarry_b_sub(r->A, old, 0)
+                        | cpuflag_pv(r->BC)
+                        | cpuflag_subtract(1) | cpuflag_c(r->flags.C)
+                        | cpuflag_undef(r->F);
                     break;
                 case 2: // IND
                     cpu.cycles += 1;
                     cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
                     r->HL--; mask_mode(r->HL, cpu.L);
                     r->B--;
-                    r->flags.Z = _flag_zero(r->B) != 0;
-                    r->flags.N = _flag_sign_b(new) != 0;
+                    r->flags.Z = cpuflag_zero(r->B) != 0;
+                    r->flags.N = cpuflag_sign_b(new) != 0;
                     break;
                 case 3: // OUTD
                     cpu.cycles += 1;
                     cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
                     r->HL--; mask_mode(r->HL, cpu.L);
                     r->B--;
-                    r->flags.Z = _flag_zero(r->B) != 0;
-                    r->flags.N = _flag_sign_b(new) != 0;
+                    r->flags.Z = cpuflag_zero(r->B) != 0;
+                    r->flags.N = cpuflag_sign_b(new) != 0;
                     break;
                 case 4: // OUTD2
                     cpu.cycles += 1;
@@ -841,8 +841,8 @@ static void cpu_execute_bli(int y, int z) {
                     r->HL--; mask_mode(r->HL, cpu.L);
                     r->C--;
                     r->B--;
-                    r->flags.Z = _flag_zero(r->B) != 0;
-                    r->flags.N = _flag_sign_b(new) != 0;
+                    r->flags.Z = cpuflag_zero(r->B) != 0;
+                    r->flags.N = cpuflag_sign_b(new) != 0;
                     break;
             }
             break;
@@ -868,10 +868,10 @@ static void cpu_execute_bli(int y, int z) {
                     r->HL++; mask_mode(r->HL, cpu.L);
                     r->BC--; mask_mode(r->BC, cpu.L);
                     new = r->A - old;
-                    r->F = _flag_sign_b(new) | _flag_zero(new)
-                        | _flag_halfcarry_b_sub(r->A, old, 0) | __flag_pv(r->BC)
-                        | _flag_subtract(1) | __flag_c(r->flags.C)
-                        | _flag_undef(r->F);
+                    r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
+                        | cpuflag_halfcarry_b_sub(r->A, old, 0) | cpuflag_pv(r->BC)
+                        | cpuflag_subtract(1) | cpuflag_c(r->flags.C)
+                        | cpuflag_undef(r->F);
                     if (r->BC && !r->flags.Z) {
                         cpu.cycles += 1;
                         cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
@@ -882,8 +882,8 @@ static void cpu_execute_bli(int y, int z) {
                     cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
                     r->HL++; mask_mode(r->HL, cpu.L);
                     r->B--;
-                    r->flags.Z = _flag_zero(r->B) != 0;
-                    r->flags.N = _flag_sign_b(new) != 0;
+                    r->flags.Z = cpuflag_zero(r->B) != 0;
+                    r->flags.N = cpuflag_sign_b(new) != 0;
                     if (r->B) {
                         cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
@@ -893,8 +893,8 @@ static void cpu_execute_bli(int y, int z) {
                     cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
                     r->HL++; mask_mode(r->HL, cpu.L);
                     r->B--;
-                    r->flags.Z = _flag_zero(r->B) != 0;
-                    r->flags.N = _flag_sign_b(new) != 0;
+                    r->flags.Z = cpuflag_zero(r->B) != 0;
+                    r->flags.N = cpuflag_sign_b(new) != 0;
                     if (r->B) {
                         cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
@@ -905,8 +905,8 @@ static void cpu_execute_bli(int y, int z) {
                     r->HL++; mask_mode(r->HL, cpu.L);
                     r->DE++; mask_mode(r->DE, cpu.L);
                     old = cpu_dec_bc_partial_mode(); // Do not mask BC
-                    r->flags.Z = _flag_zero(old) != 0;
-                    r->flags.N = _flag_sign_b(new) != 0;
+                    r->flags.Z = cpuflag_zero(old) != 0;
+                    r->flags.N = cpuflag_sign_b(new) != 0;
                     if (old) {
                         cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
@@ -935,10 +935,10 @@ static void cpu_execute_bli(int y, int z) {
                     r->HL--; mask_mode(r->HL, cpu.L);
                     r->BC--; mask_mode(r->BC, cpu.L);
                     new = r->A - old;
-                    r->F = _flag_sign_b(new) | _flag_zero(new)
-                        | _flag_halfcarry_b_sub(r->A, old, 0) | __flag_pv(r->BC)
-                        | _flag_subtract(1) | __flag_c(r->flags.C)
-                        | _flag_undef(r->F);
+                    r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
+                        | cpuflag_halfcarry_b_sub(r->A, old, 0) | cpuflag_pv(r->BC)
+                        | cpuflag_subtract(1) | cpuflag_c(r->flags.C)
+                        | cpuflag_undef(r->F);
                     if (r->BC && !r->flags.Z) {
                         cpu.cycles += 1;
                         cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
@@ -949,8 +949,8 @@ static void cpu_execute_bli(int y, int z) {
                     cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
                     r->HL--; mask_mode(r->HL, cpu.L);
                     r->B--;
-                    r->flags.Z = _flag_zero(r->B) != 0;
-                    r->flags.N = _flag_sign_b(new) != 0;
+                    r->flags.Z = cpuflag_zero(r->B) != 0;
+                    r->flags.N = cpuflag_sign_b(new) != 0;
                     if (r->B) {
                         cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
@@ -960,8 +960,8 @@ static void cpu_execute_bli(int y, int z) {
                     cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
                     r->HL--; mask_mode(r->HL, cpu.L);
                     r->B--;
-                    r->flags.Z = _flag_zero(r->B) != 0;
-                    r->flags.N = _flag_sign_b(new) != 0;
+                    r->flags.Z = cpuflag_zero(r->B) != 0;
+                    r->flags.N = cpuflag_sign_b(new) != 0;
                     if (r->B) {
                         cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
@@ -972,8 +972,8 @@ static void cpu_execute_bli(int y, int z) {
                     r->HL--; mask_mode(r->HL, cpu.L);
                     r->DE--; mask_mode(r->DE, cpu.L);
                     old = cpu_dec_bc_partial_mode(); // Do not mask BC
-                    r->flags.Z = _flag_zero(old) != 0;
-                    r->flags.N = _flag_sign_b(new) != 0;
+                    r->flags.Z = cpuflag_zero(old) != 0;
+                    r->flags.N = cpuflag_sign_b(new) != 0;
                     if (old) {
                         cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
@@ -1113,10 +1113,10 @@ void cpu_execute(void) {
                                     op_word = cpu_mask_mode(cpu_read_rp(context.p), cpu.L);
                                     new_word = old_word + op_word;
                                     cpu_write_index(cpu_mask_mode(new_word, cpu.L));
-                                    r->F = __flag_s(r->flags.S) | _flag_zero(!r->flags.Z)
-                                        | _flag_undef(r->F) | __flag_pv(r->flags.PV)
-                                        | _flag_subtract(0) | _flag_carry_w(new_word, cpu.L)
-                                        | _flag_halfcarry_w_add(old_word, op_word, 0);
+                                    r->F = cpuflag_s(r->flags.S) | cpuflag_zero(!r->flags.Z)
+                                        | cpuflag_undef(r->F) | cpuflag_pv(r->flags.PV)
+                                        | cpuflag_subtract(0) | cpuflag_carry_w(new_word, cpu.L)
+                                        | cpuflag_halfcarry_w_add(old_word, op_word, 0);
                                     break;
                             }
                             break;
@@ -1182,9 +1182,9 @@ void cpu_execute(void) {
                             old = cpu_read_reg_prefetched(context.y, w);
                             new = old + 1;
                             cpu_write_reg_prefetched(context.y, w, new);
-                            r->F = __flag_c(r->flags.C) | _flag_sign_b(new) | _flag_zero(new)
-                                | _flag_halfcarry_b_add(old, 0, 1) | __flag_pv(new == 0x80)
-                                | _flag_subtract(0) | _flag_undef(r->F);
+                            r->F = cpuflag_c(r->flags.C) | cpuflag_sign_b(new) | cpuflag_zero(new)
+                                | cpuflag_halfcarry_b_add(old, 0, 1) | cpuflag_pv(new == 0x80)
+                                | cpuflag_subtract(0) | cpuflag_undef(r->F);
                             break;
                         case 5: // DEC r[y]
                             cpu.cycles += 1;
@@ -1192,9 +1192,9 @@ void cpu_execute(void) {
                             old = cpu_read_reg_prefetched(context.y, w);
                             new = old - 1;
                             cpu_write_reg_prefetched(context.y, w, new);
-                            r->F = __flag_c(r->flags.C) | _flag_sign_b(new) | _flag_zero(new)
-                                | _flag_halfcarry_b_sub(old, 0, 1) | __flag_pv(old == 0x80)
-                                | _flag_subtract(1) | _flag_undef(r->F);
+                            r->F = cpuflag_c(r->flags.C) | cpuflag_sign_b(new) | cpuflag_zero(new)
+                                | cpuflag_halfcarry_b_sub(old, 0, 1) | cpuflag_pv(old == 0x80)
+                                | cpuflag_subtract(1) | cpuflag_undef(r->F);
                             break;
                         case 6: // LD r[y], n
                             cpu.cycles += 2;
@@ -1325,8 +1325,8 @@ void cpu_execute(void) {
                                         case 1: // BIT y, r[z]
                                             cpu.cycles += 2;
                                             old &= (1 << context.y);
-                                            r->F = _flag_sign_b(old) | _flag_zero(old) | _flag_undef(r->F)
-                                               | _flag_parity(old) | __flag_c(r->flags.C)
+                                            r->F = cpuflag_sign_b(old) | cpuflag_zero(old) | cpuflag_undef(r->F)
+                                               | cpuflag_parity(old) | cpuflag_c(r->flags.C)
                                                | FLAG_H;
                                             break;
                                         case 2: // RES y, r[z]
@@ -1411,9 +1411,9 @@ void cpu_execute(void) {
                                                             } else { // IN0 r[y], (n)
                                                                 cpu.cycles += 2;
                                                                 cpu_write_reg(context.y, new = cpu_read_in(cpu_fetch_byte()));
-                                                                r->F = _flag_sign_b(new) | _flag_zero(new)
-                                                                    | _flag_undef(r->F) | _flag_parity(new)
-                                                                    | __flag_c(r->flags.C);
+                                                                r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
+                                                                    | cpuflag_undef(r->F) | cpuflag_parity(new)
+                                                                    | cpuflag_c(r->flags.C);
                                                             }
                                                             break;
                                                          case 1:
@@ -1438,8 +1438,8 @@ void cpu_execute(void) {
                                                         case 4: // TST A, r[y]
                                                             cpu.cycles += 2;
                                                             new = r->A & cpu_read_reg(context.y);
-                                                            r->F = _flag_sign_b(new) | _flag_zero(new)
-                                                                | _flag_undef(r->F) | _flag_parity(new)
+                                                            r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
+                                                                | cpuflag_undef(r->F) | cpuflag_parity(new)
                                                                 | FLAG_H;
                                                             break;
                                                         case 6:
@@ -1471,9 +1471,9 @@ void cpu_execute(void) {
                                                             } else { // IN r[y], (BC)
                                                                 cpu.cycles += 3;
                                                                 cpu_write_reg(context.y, new = cpu_read_in(r->BC));
-                                                                r->F = _flag_sign_b(new) | _flag_zero(new)
-                                                                    | _flag_undef(r->F) | _flag_parity(new)
-                                                                    | __flag_c(r->flags.C);
+                                                                r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
+                                                                    | cpuflag_undef(r->F) | cpuflag_parity(new)
+                                                                    | cpuflag_c(r->flags.C);
                                                             }
                                                             break;
                                                         case 1:
@@ -1490,17 +1490,17 @@ void cpu_execute(void) {
                                                             if (context.q == 0) { // SBC HL, rp[p]
                                                                 cpu.cycles += 2;
                                                                 r->HL = cpu_mask_mode(old_word - op_word - r->flags.C, cpu.L);
-                                                                r->F = _flag_sign_w(r->HL, cpu.L) | _flag_zero(r->HL)
-                                                                    | _flag_undef(r->F) | _flag_overflow_w_sub(old_word, op_word, r->HL, cpu.L)
-                                                                    | _flag_subtract(1) | _flag_carry_w(old_word - op_word - r->flags.C, cpu.L)
-                                                                    | _flag_halfcarry_w_sub(old_word, op_word, r->flags.C);
+                                                                r->F = cpuflag_sign_w(r->HL, cpu.L) | cpuflag_zero(r->HL)
+                                                                    | cpuflag_undef(r->F) | cpuflag_overflow_w_sub(old_word, op_word, r->HL, cpu.L)
+                                                                    | cpuflag_subtract(1) | cpuflag_carry_w(old_word - op_word - r->flags.C, cpu.L)
+                                                                    | cpuflag_halfcarry_w_sub(old_word, op_word, r->flags.C);
                                                             } else { // ADC HL, rp[p]
                                                                 cpu.cycles += 2;
                                                                 r->HL = cpu_mask_mode(old_word + op_word + r->flags.C, cpu.L);
-                                                                r->F = _flag_sign_w(r->HL, cpu.L) | _flag_zero(r->HL)
-                                                                    | _flag_undef(r->F) | _flag_overflow_w_add(old_word, op_word, r->HL, cpu.L)
-                                                                    | _flag_subtract(0) | _flag_carry_w(old_word + op_word + r->flags.C, cpu.L)
-                                                                    | _flag_halfcarry_w_add(old_word, op_word, r->flags.C);
+                                                                r->F = cpuflag_sign_w(r->HL, cpu.L) | cpuflag_zero(r->HL)
+                                                                    | cpuflag_undef(r->F) | cpuflag_overflow_w_add(old_word, op_word, r->HL, cpu.L)
+                                                                    | cpuflag_subtract(0) | cpuflag_carry_w(old_word + op_word + r->flags.C, cpu.L)
+                                                                    | cpuflag_halfcarry_w_add(old_word, op_word, r->flags.C);
                                                             }
                                                             break;
                                                         case 3:
@@ -1519,10 +1519,10 @@ void cpu_execute(void) {
                                                                         cpu.cycles += 2;
                                                                         old = r->A;
                                                                         r->A = -r->A;
-                                                                        r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-                                                                            | _flag_undef(r->F) | __flag_pv(old == 0x80)
-                                                                            | _flag_subtract(1) | __flag_c(old != 0)
-                                                                            | _flag_halfcarry_b_sub(0, old, 0);
+                                                                        r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+                                                                            | cpuflag_undef(r->F) | cpuflag_pv(old == 0x80)
+                                                                            | cpuflag_subtract(1) | cpuflag_c(old != 0)
+                                                                            | cpuflag_halfcarry_b_sub(0, old, 0);
                                                                         break;
                                                                     case 1:  // LEA IX, IY + d
                                                                         cpu.cycles += 3;
@@ -1532,15 +1532,15 @@ void cpu_execute(void) {
                                                                     case 2:  // TST A, n
                                                                         cpu.cycles += 2;
                                                                         new = r->A & cpu_fetch_byte();
-                                                                        r->F = _flag_sign_b(new) | _flag_zero(new)
-                                                                            | _flag_undef(r->F) | _flag_parity(new)
+                                                                        r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
+                                                                            | cpuflag_undef(r->F) | cpuflag_parity(new)
                                                                             | FLAG_H;
                                                                         break;
                                                                     case 3:  // TSTIO n
                                                                         cpu.cycles += 2;
                                                                         new = cpu_read_in(r->C) & cpu_fetch_byte();
-                                                                        r->F = _flag_sign_b(new) | _flag_zero(new)
-                                                                            | _flag_undef(r->F) | _flag_parity(new)
+                                                                        r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
+                                                                            | cpuflag_undef(r->F) | cpuflag_parity(new)
                                                                             | FLAG_H;
                                                                         break;
                                                                 }
@@ -1628,16 +1628,16 @@ void cpu_execute(void) {
                                                                 case 2: // LD A, I
                                                                     cpu.cycles += 2;
                                                                     r->A = r->I & 0x0F;
-                                                                    r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-                                                                        | _flag_undef(r->F) | __flag_pv(cpu.IEF1)
-                                                                        | _flag_subtract(0) | __flag_c(r->flags.C);
+                                                                    r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+                                                                        | cpuflag_undef(r->F) | cpuflag_pv(cpu.IEF1)
+                                                                        | cpuflag_subtract(0) | cpuflag_c(r->flags.C);
                                                                     break;
                                                                 case 3: // LD A, R
                                                                     cpu.cycles += 2;
                                                                     r->A = r->R;
-                                                                    r->F = _flag_sign_b(r->A) | _flag_zero(r->A)
-                                                                        | _flag_undef(r->F) | __flag_pv(cpu.IEF1)
-                                                                        | _flag_subtract(0) | __flag_c(r->flags.C);
+                                                                    r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+                                                                        | cpuflag_undef(r->F) | cpuflag_pv(cpu.IEF1)
+                                                                        | cpuflag_subtract(0) | cpuflag_c(r->flags.C);
                                                                     break;
                                                                 case 4: // RRD
                                                                     cpu.cycles += 5;
@@ -1648,8 +1648,8 @@ void cpu_execute(void) {
                                                                     new >>= 4;
                                                                     new |= old << 4;
                                                                     cpu_write_byte(r->HL, new);
-                                                                    r->F = __flag_c(r->flags.C) | _flag_sign_b(r->A) | _flag_zero(r->A)
-                                                                        | _flag_parity(r->A) | _flag_undef(r->F);
+                                                                    r->F = cpuflag_c(r->flags.C) | cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+                                                                        | cpuflag_parity(r->A) | cpuflag_undef(r->F);
                                                                     break;
                                                                 case 5: // RLD
                                                                     cpu.cycles += 5;
@@ -1660,8 +1660,8 @@ void cpu_execute(void) {
                                                                     new <<= 4;
                                                                     new |= old & 0x0F;
                                                                     cpu_write_byte(r->HL, new);
-                                                                    r->F = __flag_c(r->flags.C) | _flag_sign_b(r->A) | _flag_zero(r->A)
-                                                                        | _flag_parity(r->A) | _flag_undef(r->F);
+                                                                    r->F = cpuflag_c(r->flags.C) | cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
+                                                                        | cpuflag_parity(r->A) | cpuflag_undef(r->F);
                                                                     break;
                                                                 default: // OPCODETRAP
                                                                     cpu.IEF_wait = 1;
@@ -1684,8 +1684,8 @@ void cpu_execute(void) {
                                                             cpu_write_byte(r->HL, new = cpu_read_in(r->DE));
                                                             r->HL++; mask_mode(r->HL, cpu.L);
                                                             old = cpu_dec_bc_partial_mode(); // Do not mask BC
-                                                            r->flags.Z = _flag_zero(old) != 0;
-                                                            r->flags.N = _flag_sign_b(new) != 0;
+                                                            r->flags.Z = cpuflag_zero(old) != 0;
+                                                            r->flags.N = cpuflag_sign_b(new) != 0;
                                                             if (old) {
                                                                 cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                                                             }
@@ -1695,8 +1695,8 @@ void cpu_execute(void) {
                                                             cpu_write_out(r->DE, new = cpu_read_byte(r->HL));
                                                             r->HL++; mask_mode(r->HL, cpu.L);
                                                             old = cpu_dec_bc_partial_mode(); // Do not mask BC
-                                                            r->flags.Z = _flag_zero(old) != 0;
-                                                            r->flags.N = _flag_sign_b(new) != 0;
+                                                            r->flags.Z = cpuflag_zero(old) != 0;
+                                                            r->flags.N = cpuflag_sign_b(new) != 0;
                                                             if (old) {
                                                                 cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                                                             }
@@ -1714,8 +1714,8 @@ void cpu_execute(void) {
                                                             cpu_write_byte(r->HL, new = cpu_read_in(r->DE));
                                                             r->HL--; mask_mode(r->HL, cpu.L);
                                                             old = cpu_dec_bc_partial_mode(); // Do not mask BC
-                                                            r->flags.Z = _flag_zero(old) != 0;
-                                                            r->flags.N = _flag_sign_b(new) != 0;
+                                                            r->flags.Z = cpuflag_zero(old) != 0;
+                                                            r->flags.N = cpuflag_sign_b(new) != 0;
                                                             if (old) {
                                                                 cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                                                             }
@@ -1725,8 +1725,8 @@ void cpu_execute(void) {
                                                             cpu_write_out(r->DE, new = cpu_read_byte(r->HL));
                                                             r->HL--; mask_mode(r->HL, cpu.L);
                                                             old = cpu_dec_bc_partial_mode(); // Do not mask BC
-                                                            r->flags.Z = _flag_zero(old) != 0;
-                                                            r->flags.N = _flag_sign_b(new) != 0;
+                                                            r->flags.Z = cpuflag_zero(old) != 0;
+                                                            r->flags.N = cpuflag_sign_b(new) != 0;
                                                             if (old) {
                                                                 cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                                                             }
