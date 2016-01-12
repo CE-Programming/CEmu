@@ -52,8 +52,8 @@ static void cpu_prefetch(uint32_t address, bool mode) {
 }
 static uint8_t cpu_fetch_byte(void) {
     uint8_t value;
-    if (!in_debugger && mem.debug.block[cpu.registers.PC] & (DBG_EXEC_BREAKPOINT | DBG_STEP_OVER_BREAKPOINT)) {
-        debugger(mem.debug.block[cpu.registers.PC] & DBG_EXEC_BREAKPOINT ? HIT_EXEC_BREAKPOINT : DBG_STEP, cpu.registers.PC);
+    if (!in_debugger && (mem.debug.block[cpu.registers.PC] & (DBG_EXEC_BREAKPOINT | DBG_STEP_OVER_BREAKPOINT))) {
+        debugger((mem.debug.block[cpu.registers.PC] & DBG_EXEC_BREAKPOINT) ? HIT_EXEC_BREAKPOINT : DBG_STEP, cpu.registers.PC);
     }
     value = cpu.prefetch;
     cpu_prefetch(cpu.registers.PC + 1, cpu.ADL);

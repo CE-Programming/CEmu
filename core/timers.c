@@ -17,7 +17,7 @@ static void ost_event(int index) {
 
 static void gpt_restore(int index) {
     timer_state_t *timer = &gpt.timer[index -= SCHED_TIMER1];
-    uint32_t invert = gpt.control >> (9 + index) & 1 ? ~0 : 0;
+    uint32_t invert = (gpt.control >> (9 + index) & 1) ? ~0 : 0;
     if (gpt.control >> index * 3 & 1) {
         timer->counter += (event_ticks_remaining(SCHED_TIMER1 + index) + invert) ^ invert;
     }
@@ -28,12 +28,12 @@ static uint64_t gpt_next_event(int index) {
     timer_state_t *timer = &gpt.timer[index -= SCHED_TIMER1];
     uint32_t invert, event, temp = 0, status = 0, next = ~0;
     if (gpt.control >> index * 3 & 1) {
-        invert = gpt.control >> (9 + index) & 1 ? ~0 : 0;
+        invert = (gpt.control >> (9 + index) & 1) ? ~0 : 0;
         if (!timer->counter) {
             timer->counter = timer->reset;
             status = 1 << 2;
         }
-        for (event = 2; event < 3; event--) {
+        for (event = 2; (int32_t)event >= 0; event--) {
             if (event < 2) {
                 temp = timer->match[event];
             }
@@ -48,9 +48,9 @@ static uint64_t gpt_next_event(int index) {
         if (status) {
             intrpt_trigger(INT_TIMER1 + index, INTERRUPT_PULSE);
         }
-        gpt.status |= status << index * 3;
+        gpt.status |= status << index*3;
         timer->counter -= (next - ~invert) ^ invert;
-        item->clock = gpt.control >> index * 3 & 2 ? CLOCK_32K : CLOCK_CPU;
+        item->clock = (gpt.control >> index*3 & 2) ? CLOCK_32K : CLOCK_CPU;
         return (uint64_t)next + 1;
     }
     return 0;

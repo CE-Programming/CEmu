@@ -139,7 +139,7 @@ void RomSelection::on_mergeButton_clicked() {
     /* Data segments go from A-K, so let's be sure we load them all, and they are valid */
     for (int i = 0; i < fileNames.size(); i++) {
         read_segment = fopen_utf8(fileNames.at(i).toStdString().c_str(), "rb");
-        if (read_segment != NULL) {
+        if (read_segment) {
             /* make sure the name is right... */
             fseek(read_segment,0x3C,0);
             fread(&tmp_buf,1,8,read_segment);
@@ -147,31 +147,32 @@ void RomSelection::on_mergeButton_clicked() {
             fseek(read_segment,0x48,0);
 
             if (tmp_buf[0] == 'R' && tmp_buf[1] == 'O' && tmp_buf[2] == 'M' &&
-               tmp_buf[3] == 'D' && tmp_buf[4] == 'a' && tmp_buf[5] == 't' && tmp_buf[6] == 'a') {
+                    tmp_buf[3] == 'D' && tmp_buf[4] == 'a' && tmp_buf[5] == 't' && tmp_buf[6] == 'a') {
 
                 fread(&tmp_buf,1,2,read_segment);
                 if (tmp_buf[0] == 0xE9 && tmp_buf[1] == 0xFF) {
 
-                /* First one is 'A' */
-                tmpint = tmp_buf[7]-'A';
-                if (segment_filled[tmpint] == false) {
-                    segment_filled[tmpint] = true;
+                    /* First one is 'A' */
+                    tmpint = tmp_buf[7]-'A';
+                    if (segment_filled[tmpint] == false) {
+                        segment_filled[tmpint] = true;
 
-                    fread(rom_array+(tmpint*rom_segment_size),1,0xFFE9,read_segment);
-                    if (tmpint > num_rom_segments) {
-                        ui->progressBar->setMaximum(tmpint);
-                        num_rom_segments = tmpint;
+                        fread(rom_array+(tmpint*rom_segment_size),1,0xFFE9,read_segment);
+                        if (tmpint > num_rom_segments) {
+                            ui->progressBar->setMaximum(tmpint);
+                            num_rom_segments = tmpint;
+                        }
+                        ui->progressBar->setValue(ui->progressBar->value()+1);
                     }
-                    ui->progressBar->setValue(ui->progressBar->value()+1);
-                 }
-              } else {
+                } else {
                     QMessageBox::warning(this, tr("Invalid"), tr("Invalid ROM segment."));
-              }
-          } else {
+                }
+            } else {
                 QMessageBox::warning(this, tr("Invalid"), tr("Invalid ROM segment name."));
-          }
-      }
-      fclose(read_segment);
+            }
+
+            fclose(read_segment);
+        }
     }
     if (ui->progressBar->value() == num_rom_segments) {
         ui->hiddenLabel_1->setVisible(true);
@@ -188,10 +189,10 @@ void RomSelection::on_dumpButton_clicked() {
 
     save_program = fopen_utf8(filename.toStdString().c_str(), "w+b");
 
-    if(save_program) {
+    if (save_program) {
         fwrite(dumper_program, 1, 214, save_program);
+        fclose(save_program);
     }
-    fclose(save_program);
 }
 
 void RomSelection::on_nextButton_2_clicked() {
@@ -225,8 +226,9 @@ void RomSelection::on_romsaveBrowse_clicked() {
         if (ui->toggleFlash->isChecked()) { rom_array[0x7E] = 0x80; }
 
         fwrite(rom_array, 1, rom_size, save_rom);
+
+        fclose(save_rom);
     }
-    fclose(save_rom);
 
     close();
 }

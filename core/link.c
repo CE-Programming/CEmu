@@ -94,8 +94,10 @@ bool sendVariableLink(const char *var_name) {
     }
 
     file = fopen_utf8(var_name,"rb");
+    if (!file) {
+        return false;
+    }
 
-    if (!file) return false;
     if (fread(tmp_buf, 1, h_size, file) != h_size)        goto r_err;
     if (memcmp(tmp_buf, header_data, h_size))             goto r_err;
 
@@ -169,9 +171,12 @@ bool receiveVariableLink(int count, const calc_var_t *vars, const char *file_nam
     calc_var_t var;
     uint16_t header_size = 13, size = 0, checksum = 0;
     int byte;
+
     file = fopen_utf8(file_name, "w+b");
+    if (!file) {
+        return false;
+    }
     setbuf(file, NULL);
-    if (!file) return false;
     if (fwrite(header, sizeof header - 1, 1, file) != 1) goto w_err;
     if (fseek(file, 0x37, SEEK_SET))                     goto w_err;
     while (count--) {
@@ -193,9 +198,10 @@ bool receiveVariableLink(int count, const calc_var_t *vars, const char *file_nam
         checksum += byte;
     }
     if (fwrite(&checksum,              2, 1, file) != 1) goto w_err;
+
     return !fclose(file);
 
-  w_err:
+w_err:
     fclose(file);
     remove(file_name);
     return false;
