@@ -17,8 +17,33 @@ static GifWriter writer;
 static std::vector<RGB24> buffer;
 static unsigned int framenr = 0, framenrskip = 0, framedelay = 0;
 
-bool gif_start_recording(const char *filename, unsigned int frameskip)
-{
+bool gif_single_frame(const char *filename) {
+    buffer.resize(320*240);
+
+    uint16_t *ptr16 = lcd.framebuffer;
+    RGB24 *ptr24 = buffer.data();
+    for(unsigned int i = 0; i < 320*240; ++i) {
+        ptr24->r = (*ptr16 & 0b1111100000000000) >> 8;
+        ptr24->g = (*ptr16 & 0b0000011111100000) >> 3;
+        ptr24->b = (*ptr16 & 0b0000000000011111) << 3;
+        ++ptr24;
+        ++ptr16;
+    }
+
+    if (!GifBegin(&writer, filename, 320, 240, 0)) {
+        return false;
+    }
+    if (!GifWriteFrame(&writer, reinterpret_cast<const uint8_t*>(buffer.data()), 320, 240, true))  {
+        return false;
+    }
+    if (!GifEnd(&writer)) {
+        return false;
+    }
+
+    return true;
+}
+
+bool gif_start_recording(const char *filename, unsigned int frameskip) {
     std::lock_guard<std::mutex> lock(gif_mutex);
 
     framenr = framenrskip = frameskip;

@@ -16,7 +16,7 @@
 
 #include "qtframebuffer.h"
 #include "qtkeypadbridge.h"
-#include "core/asic.h"
+#include "core/lcd.h"
 
 #define CLAMP(a) ( ((a) > 255) ? 255 : (((a) < 0) ? 0 : (int)(a)) )
 
@@ -40,14 +40,13 @@ QImage brighten(QImage &img, float factor) {
 }
 
 static uint32_t bitfields[3] = { 0x01F, 0x000, 0x000};
-static uint16_t framebuffer[320 * 240];
 
 QImage renderFramebuffer() {
-    lcd_drawframe(framebuffer, bitfields);
+    lcd_drawframe(lcd.framebuffer, bitfields);
 
     QImage::Format format = *bitfields == 0x00F ? QImage::Format_RGB444 : QImage::Format_RGB16;
 
-    return QImage(reinterpret_cast<const uchar*>(framebuffer), 320, 240, 320 * 2, format);
+    return QImage(reinterpret_cast<const uchar*>(lcd.framebuffer), 320, 240, 320 * 2, format);
 }
 
 void paintFramebuffer(QPainter *p) {

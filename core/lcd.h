@@ -39,6 +39,9 @@ typedef struct lcd_cntrl_state {
     uint32_t crsricr;            /* Cursor interrupt clear register */
     uint32_t crsrris;            /* Cursor raw interrupt status register - const */
     uint32_t crsrmis;            /* Cursor masked interrupt status register - const */
+
+    /* Internal Use */
+    uint16_t framebuffer[320*240];
 } lcd_cntrl_state_t;
 
 /* Global LCD state */

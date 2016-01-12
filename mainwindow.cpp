@@ -292,10 +292,7 @@ void MainWindow::screenshotGIF() {
         return;
     }
 
-    // TODO: Fix this and do it correctly //
-    gif_start_recording(filename.toStdString().c_str(), 1);
-    gif_new_frame();
-    if (!gif_stop_recording()) {
+    if (!gif_single_frame(filename.toStdString().c_str())) {
         QMessageBox::critical(this, tr("Screenshot failed"), tr("Failed to save screenshot!"));
     }
 }
@@ -321,6 +318,7 @@ void MainWindow::recordGIF() {
         path = QString();
     }
 
+    ui->buttonGIF_Screenshot->setEnabled(!path.isEmpty());
     ui->actionRecord_GIF->setChecked(!path.isEmpty());
     ui->buttonGIF->setText((!path.isEmpty()) ? QString("Stop Recording") : QString("Record GIF"));
 }
