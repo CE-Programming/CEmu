@@ -18,6 +18,7 @@ if (!win32-msvc*) {
     GLOBAL_FLAGS += -W -Wall -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -Winit-self
     GLOBAL_FLAGS += -fPIE -ffunction-sections -fdata-sections -fno-strict-overflow
     GLOBAL_FLAGS_RELEASE += -O3 -flto
+    # Note: On OS X at least, -flto seems to trigger odr-violations that ASAN doesn't like.
 }
 
 macx|linux: GLOBAL_FLAGS += -Wstack-protector \
@@ -28,6 +29,9 @@ linux: QMAKE_LFLAGS += -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack -Wl,--gc-secti
 
 QMAKE_CFLAGS += $$GLOBAL_FLAGS
 QMAKE_LFLAGS += $$GLOBAL_FLAGS
+
+QMAKE_CFLAGS_RELEASE += $$GLOBAL_FLAGS_RELEASE
+QMAKE_CXXFLAGS_RELEASE += $$GLOBAL_FLAGS_RELEASE
 QMAKE_LFLAGS_RELEASE += $$GLOBAL_FLAGS_RELEASE
 
 if (!win32-msvc*) {
