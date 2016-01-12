@@ -22,11 +22,8 @@ LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
     connect(&refresh_timer, SIGNAL(timeout()), this, SLOT(repaint()));
     connect(this, &QWidget::customContextMenuRequested, this, &LCDWidget::drawContext);
 
-    const QSize size(320, 240);
-    setMinimumSize(size);
-    setBaseSize(size);
-    setSizeIncrement(size);
-    resize(size);
+    setFixedSize(320, 240);
+    lcd_size = 1;
 
     // Default rate is 60 FPS
     refreshRate(60);
@@ -34,29 +31,48 @@ LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
 
 void LCDWidget::drawContext(const QPoint& posa) {
     QString open = "Open...";
+    QString small = "Small";
+    QString med = "Medium";
+    QString large = "Large";
     QString onTop = "Always on Top";
     QPoint globalPos = this->mapToGlobal(posa);
 
     QMenu contextMenu;
-    contextMenu.addAction(open);
-    contextMenu.addAction(onTop);
+    contextMenu.addAction(open);    // 0
+    contextMenu.addAction(small);   // 1
+    contextMenu.addAction(med);     // 2
+    contextMenu.addAction(large);   // 3
+    contextMenu.addAction(onTop);   // 4
     contextMenu.actions().at(1)->setCheckable(true);
-    contextMenu.actions().at(1)->setChecked(state_set);
+    contextMenu.actions().at(2)->setCheckable(true);
+    contextMenu.actions().at(3)->setCheckable(true);
+    contextMenu.actions().at(4)->setCheckable(true);
+    contextMenu.actions().at(4)->setChecked(state_set);
+    contextMenu.actions().at(lcd_size)->setChecked(true);
 
     QAction* selectedItem = contextMenu.exec(globalPos);
     if (selectedItem) {
         if (selectedItem->text() == open) {
             emit lcdOpenRequested();
             show();
-        } else {
-          state_set = !state_set;
-          contextMenu.actions().at(1)->setChecked(state_set);
-          if (!state_set) {
-                setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
-          } else {
-                setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
-          }
-          show();
+        } else if (selectedItem->text() == onTop){
+            state_set = !state_set;
+            contextMenu.actions().at(1)->setChecked(state_set);
+            if (!state_set) {
+                  setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
+            } else {
+                  setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
+            }
+            show();
+        } else if (selectedItem->text() == small) {
+            lcd_size = 1;
+            setFixedSize(320*1, 240*1);
+        } else if (selectedItem->text() == med) {
+            lcd_size = 2;
+            setFixedSize(320*2, 240*2);
+        } else if (selectedItem->text() == large) {
+            lcd_size = 3;
+            setFixedSize(320*3, 240*3);
         }
     }
 }
@@ -69,7 +85,6 @@ void LCDWidget::paintEvent(QPaintEvent */*event*/) {
 }
 
 void LCDWidget::refreshRate(int newrate) {
-    // Change fps to fit cpu load
     refresh_timer.stop();
     refresh_timer.setInterval(1000 / newrate);
     refresh_timer.start();
