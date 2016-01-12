@@ -13,10 +13,8 @@ typedef struct timer_state {
 
 /* Standard GPT state */
 typedef struct general_timers_state {
-    struct {
-        timer_state_t timer[3];
-        uint32_t control, status, mask, revision;
-    };
+    timer_state_t timer[3];
+    uint32_t control, status, mask, revision;
 } general_timers_state_t;
 
 /* Global GPT state */

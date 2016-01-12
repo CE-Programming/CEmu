@@ -1,8 +1,8 @@
-#include "vat.h"
-#include "mem.h"
-
 #include <string.h>
 #include <stdio.h>
+
+#include "vat.h"
+#include "mem.h"
 
 const char *calc_var_type_names[0x40] = {
     "Real",

@@ -32,14 +32,6 @@ public slots:
     // Misc.
     void closeEvent(QCloseEvent *) override;
 
-    // Actions
-    void runSetup(void);
-    void screenshot(void);
-    void screenshotGIF();
-    void recordGIF();
-    void showAbout(void);
-    void setUIMode(bool);
-
     // Console
     void consoleStr(QString);
 
@@ -54,6 +46,14 @@ signals:
     void setDebugStepOverMode();
 
 private:
+    // Actions
+    void runSetup(void);
+    void screenshot(void);
+    void screenshotGIF();
+    void recordGIF();
+    void showAbout(void);
+    void setUIMode(bool);
+
     // Debugger
     void raiseDebugger();
     void updateDebuggerChanges();
@@ -65,22 +65,20 @@ private:
     void pollPort();
     void deletePort();
     void updatePortData(int);
-
-    bool addBreakpoint();
     void deleteBreakpoint();
     void breakpointCheckboxToggled(QTableWidgetItem *);
-
     void drawNextDisassembleLine();
-    void resetCalculator();
-
     void stepPressed();
     void stepOverPressed();
     void updateStackView();
     void updateDisasmView(const int, const bool);
-
     void gotoPressed();
     void breakpointPressed();
     void setPCaddress(const QPoint&);
+    bool addBreakpoint();
+
+    // Others
+    void resetCalculator();
     void addEquateFile();
     void clearEquateFile();
 

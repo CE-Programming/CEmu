@@ -51,6 +51,7 @@ void sched_update_next_event(uint32_t cputick) {
     int i;
     sched.next_cputick = sched.clock_rates[CLOCK_CPU];
     sched.next_index = -1;
+
     for(i = 0; i < SCHED_NUM_ITEMS; i++) {
         struct sched_item *item = &sched.items[i];
         if (item->proc != NULL && item->second == 0 && item->cputick < sched.next_cputick) {
@@ -58,15 +59,16 @@ void sched_update_next_event(uint32_t cputick) {
             sched.next_index = i;
         }
     }
-    //printf("Next event: (%8d,%d)\n", next_cputick, next_index);
+    /* printf("Next event: (%8d,%d)\n", next_cputick, next_index); */
     cycle_count_delta = cputick - sched.next_cputick;
 }
 
 uint32_t sched_process_pending_events(void) {
     uint32_t cputick = sched.next_cputick + cycle_count_delta;
+
     while (cputick >= sched.next_cputick) {
         if (sched.next_index < 0) {
-            //printf("[%8d] New second\n", cputick);
+            /* printf("[%8d] New second\n", cputick); */
             int i;
             for (i = 0; i < SCHED_NUM_ITEMS; i++) {
                 if (sched.items[i].second >= 0) {
@@ -75,7 +77,7 @@ uint32_t sched_process_pending_events(void) {
             }
             cputick -= sched.clock_rates[CLOCK_CPU];
         } else {
-            //printf("[%8d/%8d] Event %d\n", cputick, sched.next_cputick, sched.next_index);
+            /* printf("[%8d/%8d] Event %d\n", cputick, sched.next_cputick, sched.next_index); */
             sched.items[sched.next_index].second = -1;
             sched.items[sched.next_index].proc(sched.next_index);
         }
@@ -91,6 +93,7 @@ void event_clear(int index) {
 
     sched_update_next_event(cputick);
 }
+
 void event_set(int index, uint64_t ticks) {
     uint32_t cputick = sched_process_pending_events();
 
@@ -120,8 +123,10 @@ void sched_set_clocks(int count, uint32_t *new_rates) {
             remaining[i] = event_ticks_remaining(i);
         }
     }
+
     cputick = muldiv(cputick, new_rates[CLOCK_CPU], sched.clock_rates[CLOCK_CPU]);
     memcpy(sched.clock_rates, new_rates, sizeof(uint32_t) * count);
+
     for (i = 0; i < SCHED_NUM_ITEMS; i++) {
         struct sched_item *item = &sched.items[i];
         if (item->second >= 0) {

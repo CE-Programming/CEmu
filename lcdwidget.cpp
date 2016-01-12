@@ -30,23 +30,25 @@ LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
 }
 
 void LCDWidget::drawContext(const QPoint& posa) {
-    QString open = "Open...";
-    QString small = "Small";
-    QString med = "Medium";
-    QString large = "Large";
-    QString onTop = "Always on Top";
+    QString open  = "Open...",
+            small = "Small",
+            med   = "Medium",
+            large = "Large",
+            onTop = "Always on Top";
+
     QPoint globalPos = this->mapToGlobal(posa);
 
     QMenu contextMenu;
-    contextMenu.addAction(open);    // 0
-    contextMenu.addAction(small);   // 1
-    contextMenu.addAction(med);     // 2
-    contextMenu.addAction(large);   // 3
-    contextMenu.addAction(onTop);   // 4
+    contextMenu.addAction(open);                // 0
+    contextMenu.addAction(small);               // 1
+    contextMenu.addAction(med);                 // 2
+    contextMenu.addAction(large);               // 3
+    contextMenu.addAction(onTop);               // 4
     contextMenu.actions().at(1)->setCheckable(true);
     contextMenu.actions().at(2)->setCheckable(true);
     contextMenu.actions().at(3)->setCheckable(true);
     contextMenu.actions().at(4)->setCheckable(true);
+
     contextMenu.actions().at(4)->setChecked(state_set);
     contextMenu.actions().at(lcd_size)->setChecked(true);
 
@@ -57,12 +59,7 @@ void LCDWidget::drawContext(const QPoint& posa) {
             show();
         } else if (selectedItem->text() == onTop){
             state_set = !state_set;
-            contextMenu.actions().at(1)->setChecked(state_set);
-            if (!state_set) {
-                  setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
-            } else {
-                  setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
-            }
+            setWindowFlags(state_set ? windowFlags() | Qt::WindowStaysOnTopHint : windowFlags() & ~Qt::WindowStaysOnTopHint);
             show();
         } else if (selectedItem->text() == small) {
             lcd_size = 1;

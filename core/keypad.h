@@ -11,7 +11,7 @@ extern "C" {
 typedef struct keypad_state {
     union {
         struct {
-            uint8_t mode : 2;
+            uint8_t  mode     : 2;
             uint16_t row_wait : 14;
             uint16_t scan_wait;
         };

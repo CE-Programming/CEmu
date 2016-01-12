@@ -26,30 +26,15 @@ asic_state_t asic;
 void (*reset_procs[20])(void);
 unsigned int reset_proc_count;
 
-static void add_reset_proc(void (*proc)(void))
-{
+static void add_reset_proc(void (*proc)(void)) {
     if (reset_proc_count == sizeof(reset_procs)/sizeof(*reset_procs)) {
         abort();
     }
     reset_procs[reset_proc_count++] = proc;
 }
 
-uint8_t read_unimplemented_port(const uint16_t addr) {
-    /*printf("Attempted to read unimplemented port: 0x%04X", addr);*/
-    return 0;
-}
-
-void write_unimplemented_port(const uint16_t addr, uint8_t value) {
-    /*printf("Attempted to write unimplemented port: 0x%04X <- 0x%02X", addr, value);*/
-}
-
 static void plug_devices(void) {
-    /* Unimplemented devices */
-    int i;
-    eZ80portrange_t unimplemented_range = { read_unimplemented_port, write_unimplemented_port };
-    for (i=0; i<=0xF; i++) {
-        asic.cpu->prange[i] = unimplemented_range;
-    }
+    unsigned int i;
 
     /* Port ranges 0x0 -> 0xF*/
     asic.cpu->prange[0x0] = init_control();
@@ -70,7 +55,7 @@ static void plug_devices(void) {
     asic.cpu->prange[0xF] = init_fxxx();
 
     /* Populate APB ports */
-    for(i=0x0; i<=0xF; i++) {
+    for(i=0; i<=0xF; i++) {
         apb_set_map(i, &asic.cpu->prange[i]);
     }
 

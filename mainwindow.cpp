@@ -66,12 +66,12 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->lcdWidget, &LCDWidget::lcdOpenRequested, this, &MainWindow::selectFiles);
 
     // Emulator -> GUI
-    connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr); // Not queued
-
-    // GUI -> Emulator
-    connect(ui->buttonRun, &QPushButton::clicked, this, &MainWindow::changeDebuggerState);
+    connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr);
+    // Console actions
+    connect(ui->buttonConsoleclear, &QPushButton::clicked, this, &MainWindow::clearConsole);
 
     // Debugger
+    connect(ui->buttonRun, &QPushButton::clicked, this, &MainWindow::changeDebuggerState);
     connect(this, &MainWindow::debuggerChangedState, &emu, &EmuThread::setDebugMode);
     connect(&emu, &EmuThread::debuggerEntered, this, &MainWindow::raiseDebugger);
     connect(&emu, &EmuThread::sendDebugCommand, this, &MainWindow::processDebugCommand);
@@ -104,17 +104,16 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(this, &MainWindow::setReceiveState, &emu, &EmuThread::setReceiveState);
     connect(ui->buttonReceiveFiles, &QPushButton::clicked, this, &MainWindow::saveSelected);
 
-
-    // Console actions
-    connect(ui->buttonConsoleclear, &QPushButton::clicked, this, &MainWindow::clearConsole);
-
     // Toolbar Actions
     connect(ui->actionSetup, &QAction::triggered, this, &MainWindow::runSetup);
     connect(ui->actionExit, &QAction::triggered, this, &MainWindow::close);
     connect(ui->actionScreenshot, &QAction::triggered, this, &MainWindow::screenshot);
     connect(ui->actionRecord_GIF, &QAction::triggered, this, &MainWindow::recordGIF);
-    connect(ui->buttonGIF, &QPushButton::clicked, this, &MainWindow::recordGIF);
     connect(ui->actionTake_GIF_Screenshot, &QAction::triggered, this, &MainWindow::screenshotGIF);
+
+    // Capture
+    connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
+    connect(ui->buttonGIF, &QPushButton::clicked, this, &MainWindow::recordGIF);
     connect(ui->buttonGIF_Screenshot, &QPushButton::clicked, this, &MainWindow::screenshotGIF);
 
     // About
@@ -122,7 +121,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->actionAbout_Qt, &QAction::triggered, qApp, &QApplication::aboutQt);
 
     // Other GUI actions
-    connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
     connect(ui->refreshSlider, &QSlider::valueChanged, this, &MainWindow::changeLCDRefresh);
     connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::alwaysOnTop);

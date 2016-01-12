@@ -12,9 +12,6 @@ typedef struct sha256_state {
     uint32_t hash_block[16];
 } sha256_state_t;
 
-/* Type Definitions */
-typedef struct sha256_state sha256_state_t;
-
 eZ80portrange_t init_sha256(void);
 void sha256_reset(void);
 

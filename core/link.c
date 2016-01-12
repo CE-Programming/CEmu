@@ -13,20 +13,20 @@ static const int ram_start = 0xD00000;
 static const int safe_ram_loc = 0xD052C6;
 
 static const uint8_t jforcegraph[8] = {
-    0xFD, 0xCB, 0x03, 0x86,   // res graphdraw,(iy+graphflags)
-    0xC3, 0x7C, 0x14, 0x02    // jp _jforcegraphnokey
+    0xFD, 0xCB, 0x03, 0x86,   /* res graphdraw,(iy+graphflags) */
+    0xC3, 0x7C, 0x14, 0x02    /* jp _jforcegraphnokey          */
 };
 
 static const uint8_t jforcehome[6] = {
-    0x3E, 0x09,                // ld a,kclear
-    0xC3, 0x64, 0x01, 0x02     // jp _jforcecmd
+    0x3E, 0x09,                /* ld a,kclear   */
+    0xC3, 0x64, 0x01, 0x02     /* jp _jforcecmd */
 };
 
 static const uint8_t archivevar[14] = {
-    0xCD, 0xC8, 0x02, 0x02,     // call _op4toop1
-    0xCD, 0x0C, 0x05, 0x02,     // call _chkfindsym
-    0xCD, 0x4C, 0x14, 0x02,     // call _archivevar
-    0x18, 0xFE                  // _sink: jr _sink
+    0xCD, 0xC8, 0x02, 0x02,     /* call _op4toop1   */
+    0xCD, 0x0C, 0x05, 0x02,     /* call _chkfindsym */
+    0xCD, 0x4C, 0x14, 0x02,     /* call _archivevar */
+    0x18, 0xFE                  /* _sink: jr _sink  */
 };
 
 static const uint8_t header_data[10] = {
@@ -34,17 +34,17 @@ static const uint8_t header_data[10] = {
 };
 
 static const uint8_t pgrm_loader[39] = {
-  0xF5,                         // push af
-  0xE5,                         // push hl
-  0xCD, 0x28, 0x06, 0x02,       // call _pushop1
-  0xCD, 0x0C, 0x05, 0x02,       // call _chkfindsym
-  0xD4, 0x34, 0x14, 0x02,       // call nc,_delvararc
-  0xCD, 0xC4, 0x05, 0x02,       // call _popop1
-  0xE1,                         // pop hl
-  0xF1,                         // pop af
-  0xCD, 0x38, 0x13, 0x02,       // call _createvar
-  0xED, 0x53, 0xC6, 0x52, 0xD0, // ld (safe_ram_loc),de
-  0x18, 0xFE                    // _sink: jr _sink
+  0xF5,                         /* push af              */
+  0xE5,                         /* push hl              */
+  0xCD, 0x28, 0x06, 0x02,       /* call _pushop1        */
+  0xCD, 0x0C, 0x05, 0x02,       /* call _chkfindsym     */
+  0xD4, 0x34, 0x14, 0x02,       /* call nc,_delvararc   */
+  0xCD, 0xC4, 0x05, 0x02,       /* call _popop1         */
+  0xE1,                         /* pop hl               */
+  0xF1,                         /* pop af               */
+  0xCD, 0x38, 0x13, 0x02,       /* call _createvar      */
+  0xED, 0x53, 0xC6, 0x52, 0xD0, /* ld (safe_ram_loc),de */
+  0x18, 0xFE                    /* _sink: jr _sink      */
 };
 
 void enterVariableLink(void) {

@@ -4,10 +4,10 @@
 #include "asic.h"
 #include "emu.h"
 
-// Global CONTROL state
+/* Global CONTROL state */
 control_state_t control;
 
-// Read from the 0x0XXX range of ports
+/* Read from the 0x0XXX range of ports */
 static uint8_t control_read(const uint16_t pio) {
     uint8_t addr = pio & 0x7F;
 
@@ -44,9 +44,8 @@ static uint8_t control_read(const uint16_t pio) {
     return read_byte;
 }
 
-// Write to the 0x0XXX range of ports
-static void control_write(const uint16_t pio, const uint8_t byte)
-{
+/* Write to the 0x0XXX range of ports */
+static void control_write(const uint16_t pio, const uint8_t byte) {
     uint8_t addr = pio & 0x7F;
 
     switch (addr) {
@@ -72,16 +71,16 @@ static void control_write(const uint16_t pio, const uint8_t byte)
             control.cpu_speed = byte & 19;
             switch(control.cpu_speed & 3) {
                 case 0:
-                    set_cpu_clock_rate(6e6); // 6 MHz
+                    set_cpu_clock_rate(6e6);  /* 6 MHz  */
                     break;
                 case 1:
-                    set_cpu_clock_rate(12e6); // 12 MHz
+                    set_cpu_clock_rate(12e6); /* 12 MHz */
                     break;
                 case 2:
-                    set_cpu_clock_rate(24e6); // 24 MHz
+                    set_cpu_clock_rate(24e6); /* 24 MHz */
                     break;
                 case 3:
-                    set_cpu_clock_rate(48e6); // 48 MHz
+                    set_cpu_clock_rate(48e6); /* 48 MHz */
                     break;
                 default:
                     break;
@@ -172,39 +171,36 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_control(void) {
-    int i;
-    // Initialize device to default state
-    for(i = 0; i<0x80; i++) {
-        control.ports[i] = 0;
-    }
-    control.ports[0x00] = 0x03; // From WikiTI
-    control.ports[0x01] = 0x03; // From WikiTI
-    control.ports[0x02] = 0x01; // Probably right
-    control.ports[0x05] = 0x76; // From WikiTI
-    control.ports[0x06] = 0x03; // From WikiTI
-    control.ports[0x07] = 0xB7; // From WikiTI
-    control.ports[0x08] = 0xFD; // Does not compare to WikiTI's 0x7F
-    control.ports[0x0B] = 0x08; // Does not compare to WikiTI's 0xFC
-    control.ports[0x0C] = 0x00; // From WikiTI
-    control.ports[0x0D] = 0xFF; // From WikiTI
-    control.ports[0x0E] = 0x0A; // Good
-    control.ports[0x0F] = 0x42; // Good
-    control.ports[0x1C] = 0x80; // From WikiTI
-    control.ports[0x1F] = 0x01; // Does not compare to WikiTI's 0x42
-    control.ports[0x22] = 0xD0; // Probably right
-    control.ports[0x23] = 0xFF; // Probably right
-    control.ports[0x24] = 0xFF; // Probably right
-    control.ports[0x25] = 0xD3; // Probably right
-    control.ports[0x29] = 0x00; // From WikiTI
-    control.ports[0x2A] = 0x70; // Good
-    control.ports[0x2B] = 0xFE; // Good
-    control.ports[0x2C] = 0xFF; // Probably right
-    control.ports[0x30] = 0xFF; // Probably right
-    control.ports[0x34] = 0x30; // Probably right
-    control.ports[0x35] = 0x03; // Probably right
-    control.ports[0x3A] = 0xFF; // Probably right
-    control.ports[0x3B] = 0xFF; // Probably right
-    control.ports[0x3C] = 0xDF; // Probably right
+    memset(control.ports, 0, sizeof control.ports);
+
+    control.ports[0x00] = 0x03; /* From WikiTI      */
+    control.ports[0x01] = 0x03; /* From WikiTI      */
+    control.ports[0x02] = 0x01; /* Probably right   */
+    control.ports[0x05] = 0x76; /* From WikiTI      */
+    control.ports[0x06] = 0x03; /* From WikiTI      */
+    control.ports[0x07] = 0xB7; /* From WikiTI      */
+    control.ports[0x08] = 0xFD; /* WikiTI's :: 0x7F */
+    control.ports[0x0B] = 0x08; /* WikiTI's :: 0xFC */
+    control.ports[0x0C] = 0x00; /* From WikiTI      */
+    control.ports[0x0D] = 0xFF; /* From WikiTI      */
+    control.ports[0x0E] = 0x0A; /* Good             */
+    control.ports[0x0F] = 0x42; /* Good             */
+    control.ports[0x1C] = 0x80; /* From WikiTI      */
+    control.ports[0x1F] = 0x01; /* WikiTI's :: 0x42 */
+    control.ports[0x22] = 0xD0; /* Probably right   */
+    control.ports[0x23] = 0xFF; /* Probably right   */
+    control.ports[0x24] = 0xFF; /* Probably right   */
+    control.ports[0x25] = 0xD3; /* Probably right   */
+    control.ports[0x29] = 0x00; /* From WikiTI      */
+    control.ports[0x2A] = 0x70; /* Good             */
+    control.ports[0x2B] = 0xFE; /* Good             */
+    control.ports[0x2C] = 0xFF; /* Probably right   */
+    control.ports[0x30] = 0xFF; /* Probably right   */
+    control.ports[0x34] = 0x30; /* Probably right   */
+    control.ports[0x35] = 0x03; /* Probably right   */
+    control.ports[0x3A] = 0xFF; /* Probably right   */
+    control.ports[0x3B] = 0xFF; /* Probably right   */
+    control.ports[0x3C] = 0xDF; /* Probably right   */
 
     return device;
 }

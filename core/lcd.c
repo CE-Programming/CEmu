@@ -49,18 +49,18 @@ void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
     }
 
     if (mode == 7) {
-        // 444 format
+        /* 444 format */
         bitfields[0] = 0x000F;
         bitfields[1] = 0x00F0;
         bitfields[2] = 0x0F00;
     } else {
-        // 565 format
+        /* 565 format */
         bitfields[0] = 0x001F;
         bitfields[1] = 0x07E0;
         bitfields[2] = 0xF800;
     }
     if (lcd.control & (1 << 8)) {
-        // BGR format (R high, B low)
+        /* BGR format (R high, B low) */
         dataswap(bitfields[0], bitfields[2]);
     }
 
@@ -107,7 +107,7 @@ void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
         for (row = 0; row < 240; ++row) {
             out = buffer + (row * 320);
             words = (320 / 32) * bpp;
-            // 32bpp mode: Convert 888 to 565
+            /* 32bpp mode: Convert 888 to 565 */
             do {
                 word = *in++;
                 *out++ = (word >> 8 & 0xF800) | (word >> 5 & 0x7E0) | (word >> 3 & 0x1F);
@@ -134,19 +134,22 @@ void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
 static void lcd_event(int index) {
     int pcd = 1;
     int htime, vtime;
+
     if (!(lcd.timing[2] & (1 << 26))) {
         pcd = (lcd.timing[2] >> 27 << 5) + (lcd.timing[2] & 0x1F) + 2;
     }
-    htime =   (lcd.timing[0] >> 24 & 0x0FF) + 1  // Back porch
-            + (lcd.timing[0] >> 16 & 0x0FF) + 1  // Front porch
-            + (lcd.timing[0] >>  8 & 0x0FF) + 1  // Sync pulse
-            + (lcd.timing[2] >> 16 & 0x3FF) + 1; // Active
-    vtime =   (lcd.timing[1] >> 24 & 0x0FF)      // Back porch
-            + (lcd.timing[1] >> 16 & 0x0FF)      // Front porch
-            + (lcd.timing[1] >> 10 & 0x03F) + 1  // Sync pulse
-            + (lcd.timing[1]       & 0x3FF) + 1; // Active
+
+    htime =   (lcd.timing[0] >> 24 & 0x0FF) + 1  /* Back porch    */
+            + (lcd.timing[0] >> 16 & 0x0FF) + 1  /* Front porch   */
+            + (lcd.timing[0] >>  8 & 0x0FF) + 1  /* Sync pulse    */
+            + (lcd.timing[2] >> 16 & 0x3FF) + 1; /* Active        */
+    vtime =   (lcd.timing[1] >> 24 & 0x0FF)      /* Back porch    */
+            + (lcd.timing[1] >> 16 & 0x0FF)      /* Front porch   */
+            + (lcd.timing[1] >> 10 & 0x03F) + 1  /* Sync pulse    */
+            + (lcd.timing[1]       & 0x3FF) + 1; /* Active        */
     event_repeat(index, pcd * htime * vtime);
-    /* for now, assuming vcomp occurs at same time UPBASE is loaded */
+
+    /* For now, assuming vcomp occurs at same time UPBASE is loaded */
     lcd.upcurr = lcd.upbase;
     lcd.ris |= 0xC;
     intrpt_trigger(INT_LCD, (lcd.ris & lcd.mis) ? INTERRUPT_SET : INTERRUPT_CLEAR);
@@ -190,6 +193,7 @@ uint8_t lcd_read(const uint16_t pio) {
 
 void lcd_write(const uint16_t pio, const uint8_t value) {
     uint32_t offset = pio & 0xFFC;
+
     if (offset < 0x200) {
         uint8_t byte_offset = pio & 0b11;
         uint8_t bit_offset = byte_offset << 0b11;

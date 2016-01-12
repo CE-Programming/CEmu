@@ -82,7 +82,7 @@ void throttle_interval_event(int index) {
     static int intervals = 0, prev_intervals = 0;
     intervals += 1;
 
-    // Calculate speed
+    /* Calculate speed */
     auto interval_end = std::chrono::high_resolution_clock::now();
     static auto prev = interval_end;
     static double speed = 1.0;
@@ -122,7 +122,7 @@ bool emu_start() {
                 ti_device_type device_type;
                 uint32_t offset;
 
-                // Get ROM file size
+                /* Get ROM file size */
                 if (fseek(rom, 0L, SEEK_END) < 0) {
                     break;
                 }

@@ -5,9 +5,9 @@
 extern "C" {
 #endif
 
-#include "vat.h"
-
 #include <stdbool.h>
+
+#include "vat.h"
 
 extern volatile bool emu_is_sending;
 extern volatile bool emu_is_recieving;

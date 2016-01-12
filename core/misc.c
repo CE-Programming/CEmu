@@ -8,10 +8,10 @@
 
 watchdog_state_t watchdog;
 protected_state_t protect;
-cxxx_state_t cxxx; // Global CXXX state
-dxxx_state_t dxxx; // Global DXXX state
-exxx_state_t exxx; // Global EXXX state
-fxxx_state_t fxxx; // Global FXXX state
+cxxx_state_t cxxx; /* Global CXXX state */
+dxxx_state_t dxxx; /* Global DXXX state */
+exxx_state_t exxx; /* Global EXXX state */
+fxxx_state_t fxxx; /* Global FXXX state */
 
 static void watchdog_event(int index) {
     (void)index;
@@ -27,7 +27,7 @@ static void watchdog_event(int index) {
         cpu_events |= EVENT_RESET;
         gui_console_printf("Watchdog reset triggered...");
     } else {
-        //intrpt_trigger(INT_WATCHDOG, INTERRUPT_SET);  // TODO
+        /* intrpt_trigger(INT_WATCHDOG, INTERRUPT_SET); */
         event_repeat(SCHED_WATCHDOG, watchdog.load);
     }
 }
@@ -49,7 +49,8 @@ static uint8_t watchdog_read(const uint16_t pio) {
         case 0x010:
             return read8(watchdog.status,bit_offset);
         case 0x018:
-            return read8(watchdog.intrpt_length,bit_offset);    // TODO: Find out what this does
+            /* TODO */
+            return read8(watchdog.intrpt_length,bit_offset);
         case 0x01C: case 0x01D: case 0x01E: case 0x01F:
             return read8(revision, bit_offset);
         default:

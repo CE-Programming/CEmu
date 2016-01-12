@@ -12,10 +12,10 @@ extern "C" {
 #define INT_TIMER2    2
 #define INT_TIMER3    3
 #define INT_OSTMR     4
-#define INT_KEYPAD   10
-#define INT_LCD      11
-#define INT_RTC      12
-#define INT_PWR      15  // Probably power bit. Probably.
+#define INT_KEYPAD    10
+#define INT_LCD       11
+#define INT_RTC       12
+#define INT_PWR       15
 
 typedef struct interrupt_request {
     uint32_t status   : 22;

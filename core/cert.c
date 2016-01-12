@@ -2,13 +2,12 @@
 
 #include "cert.h"
 
-int cert_field_get(const uint8_t *data, uint32_t length, uint16_t *field_type, const uint8_t **contents, uint32_t *field_size)
-{
+int cert_field_get(const uint8_t *data, uint32_t length, uint16_t *field_type, const uint8_t **contents, uint32_t *field_size) {
     uint16_t field_id;
     uint32_t field_len;
     uint32_t additional_len;
 
-    // Initial sanity checks.
+    /* Initial sanity checks. */
     if (data == NULL) {
         fprintf(stderr, "%s: data is NULL\n", __FUNCTION__);
         return 1;
@@ -22,7 +21,7 @@ int cert_field_get(const uint8_t *data, uint32_t length, uint16_t *field_type, c
         return 1;
     }
 
-    // Retrieve field ID and number of additional bytes we need to read for the field's size.
+    /* Retrieve field ID and number of additional bytes we need to read for the field's size. */
     field_id = (((uint16_t)data[0]) << 8) | data[1];
     switch (field_id & 0xF) {
         case 0xD: additional_len = 1; break;
@@ -36,7 +35,7 @@ int cert_field_get(const uint8_t *data, uint32_t length, uint16_t *field_type, c
         return 1;
     }
 
-    // Retrieve data size of field.
+    /* Retrieve data size of field. */
     switch (field_id & 0xF) {
         case 0xD:
             field_len = (uint32_t)data[2];
@@ -61,7 +60,7 @@ int cert_field_get(const uint8_t *data, uint32_t length, uint16_t *field_type, c
     }
 
     if (field_type != NULL) {
-        // Don't mask out the size indication, it may be useful to the user.
+        /* Don't mask out the size indication, it may be useful to the user. */
         *field_type = field_id;
     }
     if (contents != NULL) {
@@ -74,13 +73,12 @@ int cert_field_get(const uint8_t *data, uint32_t length, uint16_t *field_type, c
     return 0;
 }
 
-int cert_field_next(const uint8_t **data, uint32_t *length)
-{
+int cert_field_next(const uint8_t **data, uint32_t *length) {
     int ret;
     const uint8_t * contents;
     uint32_t field_size;
 
-    // Initial sanity checks.
+    /* Initial sanity checks. */
     if (data == NULL) {
         fprintf(stderr, "%s: data is NULL\n", __FUNCTION__);
         return 1;
@@ -99,12 +97,11 @@ int cert_field_next(const uint8_t **data, uint32_t *length)
     return ret;
 }
 
-int cert_field_find(const uint8_t *data, uint32_t length, uint16_t field_type, const uint8_t **contents, uint32_t *field_size)
-{
+int cert_field_find(const uint8_t *data, uint32_t length, uint16_t field_type, const uint8_t **contents, uint32_t *field_size) {
     int ret = 0;
     uint16_t ft;
 
-    // Initial sanity checks.
+    /* Initial sanity checks. */
     if (data == NULL) {
         fprintf(stderr, "%s: data is NULL\n", __FUNCTION__);
         return 1;
@@ -114,7 +111,7 @@ int cert_field_find(const uint8_t *data, uint32_t length, uint16_t field_type, c
         return 1;
     }
 
-    // Mask out the size indication, it is harmful for finding a field.
+    /* Mask out the size indication, it is harmful for finding a field. */
     field_type &= 0xFFF0;
     ft = 0xFFFF;
 
@@ -129,11 +126,10 @@ int cert_field_find(const uint8_t *data, uint32_t length, uint16_t field_type, c
     return ret;
 }
 
-int cert_field_find_path(const uint8_t *data, uint32_t length, const uint16_t *field_path, uint16_t field_path_len, const uint8_t **contents, uint32_t *field_size)
-{
+int cert_field_find_path(const uint8_t *data, uint32_t length, const uint16_t *field_path, uint16_t field_path_len, const uint8_t **contents, uint32_t *field_size) {
     int ret = 0;
 
-    // Initial sanity checks.
+    /* Initial sanity checks. */
     if (data == NULL) {
         fprintf(stderr, "%s: data is NULL\n", __FUNCTION__);
         return 1;

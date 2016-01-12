@@ -104,7 +104,7 @@ static uint8_t sha256_read(uint16_t pio) {
 
     switch (index) {
         case 0x00: case 0x01: case 0x02: case 0x03:
-            return 0; // bit 0 = busy
+            return 0; /* bit 0 = busy */
         case 0x08: case 0x09: case 0x0A: case 0x0B:
             return read8(unknown_value, bit_offset);
     }
@@ -126,9 +126,9 @@ static void sha256_write(uint16_t pio, uint8_t byte) {
             if (byte & 0x10) {
                 memset(sha256.hash_state, 0, sizeof(sha256.hash_state));
             } else {
-                if ((byte & 0xE) == 0xA) // 0A or 0B: first block
+                if ((byte & 0xE) == 0xA) /* 0A or 0B: first block */
                     initialize();
-                if ((byte & 0xA) == 0xA) // 0E or 0F: subsequent blocks
+                if ((byte & 0xA) == 0xA) /* 0E or 0F: subsequent blocks */
                     process_block();
             }
             return;
