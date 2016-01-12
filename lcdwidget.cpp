@@ -22,12 +22,11 @@ LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
     connect(&refresh_timer, SIGNAL(timeout()), this, SLOT(repaint()));
     connect(this, &QWidget::customContextMenuRequested, this, &LCDWidget::drawContext);
 
-    setMaximumWidth(320*2);
-    setMaximumHeight(240*2);
-    setMinimumWidth(320);
-    setMinimumHeight(240);
-
-    resize(320,240);
+    const QSize size(320, 240);
+    setMinimumSize(size);
+    setBaseSize(size);
+    setSizeIncrement(size);
+    resize(size);
 
     // Default rate is 60 FPS
     refreshRate(60);
