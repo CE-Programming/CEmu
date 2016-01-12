@@ -175,7 +175,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     alwaysOnTop(settings->value(QStringLiteral("onTop"), QVariant(0)).toInt());
     ui->textSizeSlider->setValue(settings->value(QStringLiteral("disasmTextSize"), QVariant(9)).toInt());
 
-    ui->rompathView->setText(QString(emu.rom.c_str()));
+    ui->rompathView->setText(QString::fromStdString(emu.rom));
     ui->portView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->emuVarView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->lcdWidget->setFocus();
@@ -235,7 +235,7 @@ void MainWindow::runSetup() {
     emu.rom = romImagePath;
 
     if (!romImagePath.empty()) {
-        settings->setValue(QStringLiteral("romImage"),QVariant(romImagePath.c_str()));
+        settings->setValue(QStringLiteral("romImage"), QVariant(romImagePath.c_str()));
         if(emu.stop()) {
             ui->rompathView->setText(romImagePath.c_str());
             emu.start();

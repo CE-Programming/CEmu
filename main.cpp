@@ -7,8 +7,8 @@
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
 
-    QCoreApplication::setOrganizationName("cemu-dev");
-    QCoreApplication::setApplicationName("CEmu");
+    QCoreApplication::setOrganizationName(QStringLiteral("cemu-dev"));
+    QCoreApplication::setApplicationName(QStringLiteral("CEmu"));
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
 
     // Register QMLBridge for Keypad<->Emu communication
