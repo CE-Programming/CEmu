@@ -9,11 +9,10 @@ static uint8_t backlight_read(const uint16_t pio) {
     uint8_t read_byte = 0;
 
     switch (addr) {
-        case 0x02: //Ports B008-B00B always read 0
-        case 0x03: //Ports B00D-B00F always read 0
-        case 0x04: //Ports B00D-B00F always read 0
-        case 0x07: //Ports B01C-B01F always read 0
-            read_byte = 0;
+        case 0x02: /* Ports B008-B00B always read 0 */
+        case 0x03: /* Ports B00D-B00F always read 0 */
+        case 0x04: /* Ports B00D-B00F always read 0 */
+        case 0x07: /* Ports B01C-B01F always read 0 */
             break;
         case 0x09:
             read_byte = backlight.brightness;

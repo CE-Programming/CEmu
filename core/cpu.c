@@ -25,7 +25,7 @@
 #include "interrupt.h"
 #include "debug/debug.h"
 
-// Global CPU state
+/* Global CPU state */
 eZ80cpu_t cpu;
 
 static void cpu_get_cntrl_data_blocks_format(void) {

@@ -88,8 +88,7 @@ SOURCES +=  utils.cpp \
     core/debug/debug.c \
     qhexedit/chunks.cpp \
     qhexedit/commands.cpp \
-    qhexedit/qhexedit.cpp \
-    keybindings.cpp
+    qhexedit/qhexedit.cpp
 
 linux|macx|ios: SOURCES += os/os-linux.c
 win32: SOURCES += os/os-win32.c
@@ -135,12 +134,10 @@ HEADERS  +=  os/os.h \
     core/debug/disasmc.h \
     qhexedit/chunks.h \
     qhexedit/commands.h \
-    qhexedit/qhexedit.h \
-    keybindings.h
+    qhexedit/qhexedit.h
 
 FORMS    += mainwindow.ui \
-    romselection.ui \
-    keybindings.ui
+    romselection.ui
 
 RESOURCES += \
     resources.qrc

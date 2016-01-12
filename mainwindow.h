@@ -91,7 +91,6 @@ private:
     void changeLCDRefresh(int value);
     void alwaysOnTop(int state);
     void popoutLCD();
-    void changeKeys();
 
     // Linking
     QStringList showVariableFileDialog(QFileDialog::AcceptMode mode);

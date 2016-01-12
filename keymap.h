@@ -18,7 +18,7 @@ struct HostKey {
 KEY2(kenter, Return, Enter);
 KEY2(k2nd, Tab, Semicolon);
 KEY2(kalpha, Control, Apostrophe);
-KEY2(kclear, Backspace, Escape);
+KEY2(kmode, Home, Escape);
 KEY2(kneg, AsciiTilde, Question);
 KEY2(kadd, Plus, QuoteDbl);
 KEY3(kminus, Minus, BracketRight, W);
@@ -33,7 +33,7 @@ KEY2(kmath, Equal, A);
 KEY2(kapps, PageUp, B);
 KEY2(kprgm, PageDown, C);
 KEY1(kstat, End);
-KEY1(kmode, Home);
+KEY1(kclear, Backspace);
 
 KEY2(kvars, Less, Bar);
 KEY2(kxton, Semicolon, Underscore);

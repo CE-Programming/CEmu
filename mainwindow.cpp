@@ -31,7 +31,6 @@
 #include "qmlbridge.h"
 #include "qtframebuffer.h"
 #include "qtkeypadbridge.h"
-#include "keybindings.h"
 
 #include "core/schedule.h"
 #include "core/debug/disasmc.h"
@@ -127,7 +126,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
     connect(ui->refreshSlider, &QSlider::valueChanged, this, &MainWindow::changeLCDRefresh);
     connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::alwaysOnTop);
-    connect(ui->buttonKeys, &QPushButton::clicked, this, &MainWindow::changeKeys);
 
     // Hex Editor
     connect(ui->buttonFlashGoto, &QPushButton::clicked, this, &MainWindow::flashGotoPressed);
@@ -219,12 +217,6 @@ void MainWindow::popoutLCD() {
         detached_lcd.hide();
     }
     ui->actionDetached_LCD->setChecked(detached_state);
-}
-
-void MainWindow::changeKeys() {
-    KeyBindings keys;
-    keys.show();
-    keys.exec();
 }
 
 void MainWindow::runSetup() {
