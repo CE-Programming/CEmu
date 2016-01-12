@@ -287,6 +287,11 @@ void MainWindow::screenshot() {
 }
 
 void MainWindow::screenshotGIF() {
+    if (ui->actionRecord_GIF->isChecked()) {
+        QMessageBox::warning(this, tr("Recording GIF"), tr("Currently recording GIF."));
+        return;
+    }
+
     QString filename = QFileDialog::getSaveFileName(this, tr("Save Screenshot"), QString(), tr("GIF images (*.gif)"));
     if (filename.isEmpty()) {
         return;
@@ -318,7 +323,6 @@ void MainWindow::recordGIF() {
         path = QString();
     }
 
-    ui->buttonGIF_Screenshot->setEnabled(!path.isEmpty());
     ui->actionRecord_GIF->setChecked(!path.isEmpty());
     ui->buttonGIF->setText((!path.isEmpty()) ? QString("Stop Recording") : QString("Record GIF"));
 }
