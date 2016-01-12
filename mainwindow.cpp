@@ -171,25 +171,25 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     restoreGeometry(settings->value(QStringLiteral("windowGeometry")).toByteArray());
     restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
-    changeLCDRefresh(settings->value(QStringLiteral("refreshRate"), QVariant(60)).toInt());
-    alwaysOnTop(settings->value(QStringLiteral("onTop"), QVariant(0)).toInt());
-    ui->textSizeSlider->setValue(settings->value(QStringLiteral("disasmTextSize"), QVariant(9)).toInt());
+    changeLCDRefresh(settings->value(QStringLiteral("refreshRate"), 60).toInt());
+    alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toInt());
+    ui->textSizeSlider->setValue(settings->value(QStringLiteral("disasmTextSize"), 9).toInt());
 
     ui->rompathView->setText(QString::fromStdString(emu.rom));
     ui->portView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->emuVarView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->lcdWidget->setFocus();
+    current_dir = QDir::homePath();
 }
 
 MainWindow::~MainWindow() {
     settings->setValue(QStringLiteral("windowState"), saveState(WindowStateVersion));
     settings->setValue(QStringLiteral("windowGeometry"), saveGeometry());
-    settings->setValue(QStringLiteral("disasmTextSize"), QVariant(ui->textSizeSlider->value()));
+    settings->setValue(QStringLiteral("disasmTextSize"), ui->textSizeSlider->value());
 
+    delete settings;
     delete ui->flashEdit;
     delete ui->ramEdit;
     delete ui->memEdit;
-    delete settings;
     delete ui;
 }
 
@@ -395,12 +395,22 @@ void MainWindow::alwaysOnTop(int state) {
 
 QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode) {
     QFileDialog dialog(this);
+    int good;
+
     dialog.setAcceptMode(mode);
     dialog.setFileMode(mode == QFileDialog::AcceptOpen ? QFileDialog::ExistingFiles : QFileDialog::AnyFile);
-    dialog.setDirectory(QDir::homePath());
+    dialog.setDirectory(current_dir);
     dialog.setNameFilter(tr("TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8ci *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca);;All Files (*.*)"));
     dialog.setDefaultSuffix("8xg");
-    return dialog.exec() ? dialog.selectedFiles() : QStringList();
+    good = dialog.exec();
+
+    current_dir = dialog.directory();
+
+    if (good) {
+        return dialog.selectedFiles();
+    }
+
+    return QStringList();
 }
 
 void MainWindow::selectFiles() {
@@ -1107,7 +1117,9 @@ void MainWindow::memUpdate() {
     QByteArray mem_data;
 
     bool locked = ui->checkLockPosition->isChecked();
-    int start, line;
+    int start;
+    int line = 0;
+
     if (locked) {
         start = (int)ui->memEdit->addressOffset();
         line = ui->memEdit->getLine();
@@ -1268,25 +1280,26 @@ void MainWindow::clearEquateFile() {
 
 void MainWindow::addEquateFile() {
     QFileDialog dialog(this);
+    int good;
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
     dialog.setFileMode(QFileDialog::ExistingFile);
-    dialog.setDirectory(QDir::homePath());
+    dialog.setDirectory(current_dir);
 
     QStringList extFilters;
     extFilters << tr("ASM equates file (*.inc)")
                << tr("Symbol Table File (*.lab)");
     dialog.setNameFilters(extFilters);
 
-    if (!dialog.exec()) {
-        return;
-    }
+    good = dialog.exec();
+    current_dir = dialog.directory();
+
+    if (!good) { return; }
 
     std::string current;
     std::ifstream in;
     in.open(dialog.selectedFiles().at(0).toStdString());
 
-    if (in.good())
-    {
+    if (in.good()) {
         QRegularExpression equatesRegexp("^\\h*([^\\W\\d]\\w*)\\h*(?:=|\\h\\.?equ(?!\\d))\\h*(?|\\$([\\da-f]{6,})|(\\d[\\da-f]{5,})h)\\h*(?:;.*)?$",
                                          QRegularExpression::CaseInsensitiveOption);
         // Reset the map

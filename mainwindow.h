@@ -127,6 +127,7 @@ private:
     int address_pane;
     int mem_hex_size;
 
+    QDir current_dir;
     EmuThread emu;
     LCDWidget detached_lcd;
 

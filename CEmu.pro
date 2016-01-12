@@ -16,12 +16,12 @@ CONFIG += c++11
 # Only add Clang/GCC flags if we're not using MSVC
 if (!win32-msvc*) {
     GLOBAL_FLAGS += -W -Wall -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -Winit-self
-    GLOBAL_FLAGS += -fPIE -ffunction-sections -fdata-sections -fno-strict-overflow
+    GLOBAL_FLAGS += -ffunction-sections -fdata-sections -fno-strict-overflow
     GLOBAL_FLAGS_RELEASE += -O3 -flto
     # Note: On OS X at least, -flto seems to trigger odr-violations that ASAN doesn't like.
 }
 
-macx|linux: GLOBAL_FLAGS += -Wstack-protector \
+macx|linux: GLOBAL_FLAGS += -fPIE -Wstack-protector \
                             -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -fstack-protector-all --param=ssp-buffer-size=1
 
 macx:  QMAKE_LFLAGS += -Wl,-dead_strip
