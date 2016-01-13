@@ -25,7 +25,7 @@ def dlfile(url):
         
         # Open the url
         try:
-            f = urllib2.urlopen(url)
+            f = urlopen(url)
             print("   -> Downloading (attempt %i/%i): %s" % (dl_attempts, DL_MAX_ATTEMPTS, url))
 
             # Open our local file for writing
@@ -36,10 +36,10 @@ def dlfile(url):
             break
             
         # Error handling...
-        except urllib2.HTTPError:
+        except HTTPError:
             _, e, _ = sys.exc_info()
             print("   !! HTTP Error: %i (%s)" % (e.code, url))
-        except urllib2.URLError:
+        except URLError:
             _, e, _ = sys.exc_info()
             print("   !! URL Error: %s (%s)", e.reason, url)
         
