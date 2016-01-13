@@ -14,6 +14,14 @@ except ImportError:
 
 MAX_ATTEMPTS = 5
 
+def truncate_url(url):
+    if len(url) > 70:
+        truncated_url = url[:34] + ".." + url[len(url) - 34:]
+    else:
+        truncated_url = url
+    
+    return truncated_url
+
 def dlfile(url):
     dl_attempts = 0
     
@@ -29,7 +37,7 @@ def dlfile(url):
         try:
             f = urlopen(url)
             print("   -> Downloading (attempt %i/%i):" % (dl_attempts + 1, MAX_ATTEMPTS))
-            print("      %s" % url)
+            print("      %s" % truncate_url(url))
 
             # Open our local file for writing
             with open(os.path.basename(url), "wb") as local_file:
@@ -53,7 +61,8 @@ def dlfile(url):
         print("   !! ERROR: Download failed, exiting!")
         sys.exit(1)
     
-    print("   -> Downloaded successfully: %s" % url)
+    print("   -> Downloaded successfully:")
+    print("      %s" % truncate_url(url))
 
 def extractfile(filename):
     print("   -> Extracting file: %s" % filename)
@@ -213,7 +222,8 @@ def dl_and_validate(url):
             # Wait...
             time.sleep(10)
         
-        print("   -> Downloading + validating (attempt %i/%i): %s" % (validation_attempts + 1, MAX_ATTEMPTS, url))
+        print("   -> Downloading + validating (attempt %i/%i):" % (validation_attempts + 1, MAX_ATTEMPTS))
+        print("      %s" % truncate_url(url))
         
         # Download file...
         dlfile(url)
@@ -229,6 +239,9 @@ def dl_and_validate(url):
     if validation_attempts > MAX_ATTEMPTS:
         print("   !! ERROR: Download and validation failed, exiting!")
         sys.exit(1)
+    
+    print("   -> Downloaded + validated successfully:")
+    print("      %s" % truncate_url(url))
 
 def silent_exec(cmd):
     print("   -> Executing command: %s" % " ".join(cmd))
