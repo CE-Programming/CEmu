@@ -1,6 +1,7 @@
 import os
 import sys
 import hashlib
+import re
 
 try:
     # Python 3
@@ -26,7 +27,7 @@ def dlfile(url):
         # Open the url
         try:
             f = urlopen(url)
-            print("   -> Downloading (attempt %i/%i): %s" % (dl_attempts, MAX_ATTEMPTS, url))
+            print("   -> Downloading (attempt %i/%i): %s" % (dl_attempts + 1, MAX_ATTEMPTS, url))
 
             # Open our local file for writing
             with open(os.path.basename(url), "wb") as local_file:
@@ -209,6 +210,8 @@ def dl_and_validate(url):
             
             # Wait...
             time.sleep(10)
+        
+        print("   -> Downloading + validating (attempt %i/%i): %s" % (validation_attempts + 1, MAX_ATTEMPTS, url))
         
         # Download file...
         dlfile(url)
