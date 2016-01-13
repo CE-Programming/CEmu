@@ -21,3 +21,6 @@ build_script:
   - msbuild CEmu.vcxproj /p:Configuration=Debug /p:Platform="x64"
   - msbuild CEmu.vcxproj /p:Configuration=Release /p:Platform="x64"
   - cd ..
+
+deploy_script:
+  - C:\Python35\python -u appveyor_helper.py deploy
