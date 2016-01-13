@@ -1,8 +1,6 @@
 install:
-  - ps: Start-FileDownload 'https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt56_Beta_Win32_DevDeploy.7z'
-  - ps: Start-FileDownload 'https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt56_Beta_Win64_DevDeploy.7z'
-  - 7z x -oC:\ Qt56_Beta_Win32_DevDeploy.7z > NUL
-  - 7z x -oC:\ Qt56_Beta_Win64_DevDeploy.7z > NUL
+  - dir C:\
+  - C:\Python34\python appveyor_helper.py install
   - md build_32
   - md build_64
 
