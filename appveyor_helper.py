@@ -27,7 +27,7 @@ except ImportError:
     # Python 2
     from urllib2 import urlopen, Request, HTTPError, URLError
 
-INCLUDE_QT_LIBS = "quickwidgets widgets gui qml core"
+INCLUDE_QT_LIBS = "quickwidgets widgets gui qml core quick network"
 BINTRAY_SNAPSHOT_SERVER_PATH = "https://oss.jfrog.org/artifactory/oss-snapshot-local"
 BINTRAY_RELEASE_SERVER_PATH = "https://oss.jfrog.org/artifactory/oss-release-local"
 BINTRAY_MAVEN_GROUP_PATH = "/org/github/alberthdev/cemu/"
