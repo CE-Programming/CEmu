@@ -11,7 +11,7 @@ general_timers_state_t gpt;
 
 static const int ost_ticks[4] = { 74, 154, 218, 314 };
 static void ost_event(int index) {
-    intrpt_trigger(INT_OSTMR, INTERRUPT_PULSE);
+    intrpt_pulse(INT_OSTMR);
     event_repeat(index, ost_ticks[control.ports[0] & 3]);
 }
 
@@ -46,7 +46,7 @@ static uint64_t gpt_next_event(int index) {
             }
         }
         if (status) {
-            intrpt_trigger(INT_TIMER1 + index, INTERRUPT_PULSE);
+            intrpt_pulse(INT_TIMER1 + index);
         }
         gpt.status |= status << index*3;
         timer->counter -= (next - ~invert) ^ invert;
@@ -101,7 +101,7 @@ static void gpt_write(uint16_t address, uint8_t value) {
         ((uint8_t *)&gpt)[address] &= ~value;
         for (timer = 0; timer < 3; timer++) {
             if (!(gpt.status >> timer * 3 & 0b111)) {
-                intrpt_trigger(INT_TIMER1 + timer, INTERRUPT_CLEAR);
+                intrpt_set(INT_TIMER1 + timer, 0);
             }
         }
     } else if (address < 0x3C) {

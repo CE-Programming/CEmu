@@ -16,16 +16,18 @@ static void update() {
     }
 }
 
-void intrpt_trigger(uint32_t int_num, interrupt_mode_t mode) {
-    if (mode) {
+void intrpt_pulse(uint32_t int_num) {
+    intrpt_set(int_num, true);
+    intrpt_set(int_num, false);
+}
+
+void intrpt_set(uint32_t int_num, bool set) {
+    if (set) {
         intrpt.status |= 1 << int_num;
     } else {
         intrpt.status &= ~(1 << int_num);
     }
     update();
-    if (mode == INTERRUPT_PULSE) {
-        intrpt_trigger(int_num, INTERRUPT_CLEAR);
-    }
 }
 
 void intrpt_reset() {

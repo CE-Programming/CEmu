@@ -8,17 +8,15 @@
 keypad_state_t keypad;
 
 void keypad_intrpt_check() {
-    uint8_t status = (keypad.status & keypad.enable) | (keypad.gpio_status & keypad.gpio_enable);
-
-    intrpt_trigger(INT_KEYPAD, status ? INTERRUPT_SET : INTERRUPT_CLEAR);
+    intrpt_set(INT_KEYPAD, (keypad.status & keypad.enable) | (keypad.gpio_status & keypad.gpio_enable));
 }
 
 void keypad_key_event(unsigned int row, unsigned int col, bool press) {
     if (row == 2 && col == 0) {
-        intrpt_trigger(INT_ON, press ? INTERRUPT_SET : INTERRUPT_CLEAR);
+        intrpt_set(INT_ON, press);
         if (press && control.ports[0] & 0x40) {
             control.ports[2] = ~1;
-            intrpt_trigger(19, INTERRUPT_PULSE);
+            intrpt_pulse(19);
         }
     } else {
         if (press) {

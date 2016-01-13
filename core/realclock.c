@@ -26,18 +26,24 @@ static void rtc_event(int index) {
         rtc.prevsec = currsec;
         if (rtc.read_sec > 59) {
             rtc.read_sec = 0;
-            intrpt_trigger(INT_RTC, INTERRUPT_SET);
-            if (rtc.control & 2) { rtc.interrupt |= 2; }
+            if (rtc.control & 2) {
+                rtc.interrupt |= 2;
+                intrpt_pulse(INT_RTC);
+            }
             rtc.read_min++;
             if (rtc.read_min > 59) {
                 rtc.read_min = 0;
-                intrpt_trigger(INT_RTC, INTERRUPT_SET);
-                if (rtc.control & 4) { rtc.interrupt |= 4; }
+                if (rtc.control & 4) {
+                    rtc.interrupt |= 4;
+                    intrpt_pulse(INT_RTC);
+                }
                 rtc.read_hour++;
                 if (rtc.read_hour > 23) {
                     rtc.read_hour = 0;
-                    intrpt_trigger(INT_RTC, INTERRUPT_SET);
-                    if (rtc.control & 8) { rtc.interrupt |= 8; }
+                    if (rtc.control & 8) {
+                        rtc.interrupt |= 8;
+                        intrpt_pulse(INT_RTC);
+                    }
                     rtc.read_day++;
                 }
             }
@@ -47,7 +53,7 @@ static void rtc_event(int index) {
     if ((rtc.control & 16) && (rtc.read_sec == rtc.alarm_sec) &&
         (rtc.read_min == rtc.alarm_min) && (rtc.read_hour == rtc.alarm_hour)) {
             rtc.interrupt |= 16;
-            intrpt_trigger(INT_RTC, INTERRUPT_PULSE);
+            intrpt_pulse(INT_RTC);
     }
 }
 
