@@ -240,7 +240,7 @@ def silent_exec(cmd):
 
 def extract(cmd):
     print("   -> Extracting file: %s" % filename)
-    if not silent_exec(["7z", "x", "-oC:\\", filename):
+    if not silent_exec(["7z", "x", "-oC:\\", filename]):
         print("   !! ERROR: Failed to extract file: " % filename)
         print("   !!        See above output for details.")
         sys.exit(1)

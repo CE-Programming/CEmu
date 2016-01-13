@@ -1,6 +1,6 @@
 install:
-  - dir C:\
-  - C:\Python34\python appveyor_helper.py install
+  - dir C:\Qt
+  - C:\Python35\python appveyor_helper.py install
   - md build_32
   - md build_64
 
