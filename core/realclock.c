@@ -47,7 +47,7 @@ static void rtc_event(int index) {
     if ((rtc.control & 16) && (rtc.read_sec == rtc.alarm_sec) &&
         (rtc.read_min == rtc.alarm_min) && (rtc.read_hour == rtc.alarm_hour)) {
             rtc.interrupt |= 16;
-            intrpt_trigger(INT_RTC, INTERRUPT_SET);
+            intrpt_trigger(INT_RTC, INTERRUPT_PULSE);
     }
 }
 
