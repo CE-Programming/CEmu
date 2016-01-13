@@ -3,6 +3,21 @@ import sys
 import hashlib
 import re
 import subprocess
+import time
+import glob
+import zipfile
+import errno
+import requests
+
+try:
+    import zlib
+    compression = zipfile.ZIP_DEFLATED
+except:
+    compression = zipfile.ZIP_STORED
+
+modes = { zipfile.ZIP_DEFLATED: 'deflated',
+          zipfile.ZIP_STORED:   'stored',
+          }
 
 try:
     # Python 3
@@ -12,6 +27,10 @@ except ImportError:
     # Python 2
     from urllib2 import urlopen, Request, HTTPError, URLError
 
+INCLUDE_QT_LIBS = "quickwidgets widgets gui qml core"
+BINTRAY_SNAPSHOT_SERVER_PATH = "https://oss.jfrog.org/artifactory/oss-snapshot-local"
+BINTRAY_RELEASE_SERVER_PATH = "https://oss.jfrog.org/artifactory/oss-release-local"
+BINTRAY_MAVEN_GROUP_PATH = "/org/github/alberthdev/cemu/"
 MAX_ATTEMPTS = 5
 
 def truncate_url(url):
@@ -256,6 +275,19 @@ def silent_exec(cmd):
     
     return True
 
+def output_exec(cmd):
+    print("   -> Executing command: %s" % " ".join(cmd))
+    
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    out, err = p.communicate()
+    
+    if p.returncode != 0:
+        print("   !! ERROR: Command return %i exit code!" % retcode)
+        print("   !!        Command: %s" % " ".join(cmd))
+        return None
+    
+    return out
+
 def extract(filename):
     print("   -> Extracting file: %s" % filename)
     if not silent_exec(["7z", "x", "-oC:\\", filename]):
@@ -278,6 +310,157 @@ def install_deps():
     
     print(" * Successfully installed build dependencies!")
 
+# wc = wildcard
+def collect_dll_files(arch, vcredist_wc_path, qt_wc_path, build_path):
+    file_list = []
+    
+    print("   -> Searching VCRedist for DLL files to include (%s)..." % (arch))
+    
+    for file in glob.glob(vcredist_wc_path):
+        print("   -> Queuing %s (%s)..." % (os.path.basename(file), arch))
+        file_list.append(file)
+    
+    print("   -> Searching Qt for DLL files to include (%s)..." % (arch))
+    
+    # Hunt for our Qt libraries!
+    include_qt_libs_arr = INCLUDE_QT_LIBS.split(" ")
+    
+    for file in glob.glob(qt_wc_path):
+        dll_file = os.path.basename(file)
+        
+        # Skip debug libraries
+        if dll_file.endswith("d.dll"):
+            continue
+        
+        # Strip file extension
+        dll_file = ".".join(dll_file.split(".")[:-1])
+        
+        # Remove the Qt5 prefix, and convert to all lowercase
+        dll_file = dll_file[3:].lower()
+        
+        # Check to see if our DLL file is included
+        if dll_file in include_qt_libs_arr:
+            print("   -> Queuing %s (%s)..." % (os.path.basename(file), arch))
+            file_list.append(file)
+    
+    # Finally, add our binary!
+    exec_path = os.path.join(build_path, "CEmu.exe")
+    file_list.append(exec_path)
+    
+    return file_list
+
+def make_zip(arch, filename, file_list):
+    print(" * Building ZIP file %s (%s)..." % (filename, arch))
+    
+    zf = zipfile.ZipFile(filename, mode='w')
+    try:
+        for file in file_list:
+            print("   -> Adding %s (compression %s, %s)..." % (os.path.basename(file), modes[compression], arch))
+            zf.write(file, compress_type=compression, arcname=os.path.basename(file))
+    finally:
+        print("   -> Closing ZIP file %s (%s)..." % (filename, arch))
+        zf.close()
+    
+    print(" * Successfully built ZIP file %s (%s)!" % (filename, arch))
+
+# tzot @ StackOverflow:
+# http://stackoverflow.com/a/600612
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
+
+def upload_snapshot(filename, bintray_api_username, bintray_api_key, extra_path = None):
+    full_path = BINTRAY_SNAPSHOT_SERVER_PATH + BINTRAY_MAVEN_GROUP_PATH
+    base_fn = os.path.basename(filename)
+    
+    print(" * Preparing to deploy snapshot: %s" % base_fn)
+    
+    if extra_path:
+        full_path += extra_path
+    
+    # Compute MD5 and SHA1
+    print("   -> Computing checksums before uploading...")
+    file_md5sum = generate_file_md5(filename)
+    file_sha1sum = generate_file_sha1(filename)
+    
+    print("   -> MD5  = %s" % file_md5sum)
+    print("   -> SHA1 = %s" % file_sha1sum)
+    
+    headers = {
+                'X-Checksum-Md5'  : file_md5sum,
+                'X-Checksum-Sha1' : file_sha1sum,
+              }
+    
+    #files = {base_fn: open(filename, 'rb')}
+    fh = open(filename, 'rb')
+    file_data = fh.read()
+    fh.close()
+    
+    print(" * Uploading/deploying snapshot: %s" % base_fn)
+    r = requests.put(full_path + base_fn, headers = headers, data = file_data, \
+                    auth = (bintray_api_username, bintray_api_key))
+    
+    print(" * Resulting status code: %i" % r.status_code)
+    print(" * Resulting response:\n%s" % r.content)
+    
+    if r.status_code != 201:
+        print(" ! ERROR: Upload/deployment of snapshot failed!")
+
+def deploy_snapshots():
+    print(" * Preparing to deploy...")
+    
+    # Check for our needed environment variables!
+    bintray_api_username = os.environ.get("BINTRAY_API_USERNAME")
+    bintray_api_key = os.environ.get("BINTRAY_API_KEY")
+    
+    if (bintray_api_username == None) or (bintray_api_key == None):
+        print(" ! ERROR: Authentication environmental variables not found!")
+        print(" !        BINTRAY_API_KEY defined?      %s" % ("Yes" if bintray_api_key else "No"))
+        print(" !        BINTRAY_API_USERNAME defined? %s" % ("Yes" if bintray_api_username else "No"))
+        sys.exit(1)
+    
+    # Make a directory for our deploy ZIPs
+    mkdir_p("deploy")
+    
+    # git rev-parse --short HEAD
+    git_rev = output_exec(["git", "rev-parse", "--short", "HEAD"])
+    
+    if git_rev == None:
+        sys.exit(1)
+    
+    git_rev = git_rev.decode("utf-8").strip()
+    
+    # Snapshot filename - based on http://zeranoe1.rssing.com/chan-5973786/latest.php
+    snap_base_fn = os.path.join("deploy", "cemu-%s-git%s-" % (time.strftime("%Y%m%d"), git_rev))
+    
+    # Locate files that we need!
+    print(" * Collecting all dependencies for deployment...")
+    
+    file_list_32 = collect_dll_files("x86", r'C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\*.dll',
+                                    r'C:\Qt\Qt5.6.0\5.6\msvc2015\bin\Qt5*.dll',
+                                    os.path.join("build_32", "release"))
+    file_list_64 = collect_dll_files("x64", r'C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x64\Microsoft.VC140.CRT\*.dll',
+                                    r'C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\Qt5*.dll',
+                                    os.path.join("build_64", "release"))
+    
+    # Build our ZIPs!
+    cemu_win32_zip_fn = snap_base_fn + "win32-shared.zip"
+    cemu_win64_zip_fn = snap_base_fn + "win64-shared.zip"
+    
+    make_zip("x86", cemu_win32_zip_fn, file_list_32)
+    make_zip("x64", cemu_win64_zip_fn, file_list_64)
+    
+    # Upload everything!
+    upload_snapshot(cemu_win32_zip_fn, bintray_api_username, bintray_api_key)
+    upload_snapshot(cemu_win64_zip_fn, bintray_api_username, bintray_api_key)
+    
+    print(" * Snapshot deployment complete!")
+    
 def usage(msg = None):
     if msg:
         print(msg)
@@ -294,5 +477,7 @@ if __name__ == "__main__":
         make_checksum()
     elif sys.argv[1] == "install":
         install_deps()
+    elif sys.argv[1] == "deploy":
+        deploy_snapshots()
     else:
         usage("ERROR: Invalid command!")
