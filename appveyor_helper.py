@@ -26,7 +26,7 @@ def dlfile(url):
         # Open the url
         try:
             f = urlopen(url)
-            print("   -> Downloading (attempt %i/%i): %s" % (dl_attempts, DL_MAX_ATTEMPTS, url))
+            print("   -> Downloading (attempt %i/%i): %s" % (dl_attempts, MAX_ATTEMPTS, url))
 
             # Open our local file for writing
             with open(os.path.basename(url), "wb") as local_file:
