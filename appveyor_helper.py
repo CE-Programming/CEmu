@@ -2,6 +2,7 @@ import os
 import sys
 import hashlib
 import re
+import subprocess
 
 try:
     # Python 3
