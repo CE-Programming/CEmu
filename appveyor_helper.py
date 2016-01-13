@@ -154,7 +154,7 @@ def validate_gen(filename, chksum_file, hash_name, hash_regex, hash_func):
             
             # Is this the file we're looking for?
             if filename == hash_fn.strip():
-                found_file = True
+                found_file_hash = True
                 
                 # One more thing - check to make sure the file exists!
                 try:
