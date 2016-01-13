@@ -118,7 +118,7 @@ void watchdog_reset() {
     sched.items[SCHED_WATCHDOG].clock = CLOCK_CPU;
     sched.items[SCHED_WATCHDOG].second = -1;
     sched.items[SCHED_WATCHDOG].proc = watchdog_event;
-    watchdog.revision =
+    watchdog.revision = 0x00010602;
     watchdog.load = 0x03EF1480;   /* (66MHz) */
     watchdog.count = 0x03EF1480;
 
