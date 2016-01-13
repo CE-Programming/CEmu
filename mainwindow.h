@@ -30,7 +30,11 @@ public:
 
 public slots:
     // Misc.
-    void closeEvent(QCloseEvent *) override;
+    void closeEvent(QCloseEvent*) override;
+
+    //Drag & Drop
+    void dropEvent(QDropEvent*) override;
+    void dragEnterEvent(QDragEnterEvent*) override;
 
     // Console
     void consoleStr(QString);
@@ -92,6 +96,7 @@ private:
 
     // Linking
     QStringList showVariableFileDialog(QFileDialog::AcceptMode mode);
+    void sendFiles(QStringList fileNames);
     void selectFiles();
     void refreshVariableList();
     void saveSelected();

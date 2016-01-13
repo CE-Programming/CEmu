@@ -14,7 +14,9 @@ typedef struct watchdog_state {
     uint32_t control;
     uint32_t status;
     uint32_t intrpt_length;
+    uint32_t revision;
 } watchdog_state_t;
+
 typedef struct protected_state {  /* Standard PROTECTED state */
     bool locked;
     uint8_t led_state;

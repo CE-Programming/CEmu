@@ -54,12 +54,8 @@ static const eZ80portrange_t device = {
 
 
 eZ80portrange_t init_flash(void) {
-    int i;
+    memset(flash.ports, 0, sizeof flash.ports);
 
-    /* Initialize device to default state */
-    for(i = 0; i<0x100; i++) {
-        flash.ports[i] = 0;
-    }
     flash.ports[0x00] = 0x01; /* From WikiTI */
     flash.ports[0x07] = 0xFF; /* From WikiTI */
     flash.map = 0x06;         /* From WikiTI */

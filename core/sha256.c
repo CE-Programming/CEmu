@@ -119,9 +119,9 @@ static uint8_t sha256_read(uint16_t pio) {
 
 static void sha256_write(uint16_t pio, uint8_t byte) {
     uint16_t index = pio;
-    uint8_t bit_offset = (index&3)<<3;
+    uint8_t bit_offset = (index & 3) << 3;
 
-    switch ( index ) {
+    switch (index) {
         case 0x00: case 0x01: case 0x02: case 0x03:
             if (byte & 0x10) {
                 memset(sha256.hash_state, 0, sizeof(sha256.hash_state));

@@ -148,6 +148,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
     setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
     setUIMode(true);
+    setAcceptDrops(true);
     debugger_on = false;
 
 #ifdef Q_OS_ANDROID
@@ -187,6 +188,49 @@ MainWindow::~MainWindow() {
     delete ui->ramEdit;
     delete ui->memEdit;
     delete ui;
+}
+
+void MainWindow::dropEvent(QDropEvent *e) {
+    const QMimeData* mime_data = e->mimeData();
+    if(!mime_data->hasUrls()) {
+        return;
+    }
+
+    QStringList files;
+    for(auto &&url : mime_data->urls()) {
+        files.append(url.toLocalFile());
+    }
+    sendFiles(files);
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *e) {
+    if(e->mimeData()->hasUrls() == false) {
+        return e->ignore();
+    }
+
+    for(QUrl &url : e->mimeData()->urls()) {
+        static const QStringList valid_suffixes = { QStringLiteral("8xp"),
+                                                    QStringLiteral("8xv"),
+                                                    QStringLiteral("8xl"),
+                                                    QStringLiteral("8xn"),
+                                                    QStringLiteral("8xm"),
+                                                    QStringLiteral("8xy"),
+                                                    QStringLiteral("8xg"),
+                                                    QStringLiteral("8xs"),
+                                                    QStringLiteral("8xd"),
+                                                    QStringLiteral("8xw"),
+                                                    QStringLiteral("8xc"),
+                                                    QStringLiteral("8xz"),
+                                                    QStringLiteral("8xt"),
+                                                    QStringLiteral("8ca"),
+                                                    QStringLiteral("8ci") };
+
+        QFileInfo file(url.fileName());
+        if(!valid_suffixes.contains(file.suffix().toLower()))
+            return e->ignore();
+    }
+
+    e->accept();
 }
 
 void MainWindow::closeEvent(QCloseEvent *e) {
@@ -406,16 +450,11 @@ QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode) {
     return QStringList();
 }
 
-void MainWindow::selectFiles() {
-    if (debugger_on) {
-       return;
-    }
+void MainWindow::sendFiles(QStringList fileNames) {
+    ui->sendBar->setMaximum(fileNames.size());
 
     setSendState(true);
-
-    QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptOpen);
-
-    ui->sendBar->setMaximum(fileNames.size());
+    QThread::msleep(300);
 
     for (int i = 0; i < fileNames.size(); i++) {
         if(!sendVariableLink(fileNames.at(i).toUtf8())) {
@@ -425,10 +464,21 @@ void MainWindow::selectFiles() {
     }
 
     setSendState(false);
-
     QThread::msleep(300);
     ui->sendBar->setMaximum(1);
     ui->sendBar->setValue(0);
+}
+
+void MainWindow::selectFiles() {
+    if (debugger_on) {
+       return;
+    }
+
+    setSendState(true);
+
+    QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptOpen);
+
+    sendFiles(fileNames);
 }
 
 void MainWindow::refreshVariableList() {
@@ -456,7 +506,7 @@ void MainWindow::refreshVariableList() {
         vat_search_init(&var);
         vars.clear();
         while (vat_search_next(&var)) {
-            if (var.size > 2 && (var.name[0] != '!' && var.name[0] != '#' && var.name[0] != '.' && var.name[0] != '@')) {
+            if (var.size > 2) {
                 vars.append(var);
                 currentRow = ui->emuVarView->rowCount();
                 ui->emuVarView->setRowCount(currentRow + 1);

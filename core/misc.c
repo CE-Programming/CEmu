@@ -35,51 +35,56 @@ static void watchdog_event(int index) {
 /* Watchdog read routine */
 static uint8_t watchdog_read(const uint16_t pio) {
     uint8_t index = pio & 0xFF;
-    uint8_t bit_offset = (index&3)<<3;
+    uint8_t bit_offset = (index & 3) << 3;
 
-    static const uint32_t revision = 0x00010602;
+    uint8_t value = 0;
 
     switch (index) {
         case 0x000: case 0x001: case 0x002: case 0x003:
-            return read8(watchdog.count,bit_offset);
+            value = read8(watchdog.count, bit_offset);
+            break;
         case 0x004: case 0x005: case 0x006: case 0x007:
-            return read8(watchdog.load,bit_offset);
+            value = read8(watchdog.load, bit_offset);
+            break;
         case 0x00C:
-            return read8(watchdog.control,bit_offset);
+            value = read8(watchdog.control, bit_offset);
+            break;
         case 0x010:
-            return read8(watchdog.status,bit_offset);
+            value = read8(watchdog.status, bit_offset);
+            break;
         case 0x018:
-            /* TODO */
-            return read8(watchdog.intrpt_length,bit_offset);
+            value = read8(watchdog.intrpt_length, bit_offset);
+            break;
         case 0x01C: case 0x01D: case 0x01E: case 0x01F:
-            return read8(revision, bit_offset);
+            value = read8(watchdog.revision, bit_offset);
+            break;
         default:
             break;
     }
 
     /* Return 0 if unimplemented */
-    return 0;
+    return value;
 
 }
 
 /* Watchdog write routine */
 static void watchdog_write(const uint16_t pio, const uint8_t byte) {
     uint8_t index = pio & 0xFF;
-    uint8_t bit_offset = (index&3)<<3;
+    uint8_t bit_offset = (index & 3) << 3;
 
     switch (index) {
         case 0x004: case 0x005: case 0x006: case 0x007:
-            write8(watchdog.load,bit_offset,byte);
-            return;
+            write8(watchdog.load, bit_offset, byte);
+            break;
         case 0x008: case 0x009:
-            write8(watchdog.restart,bit_offset,byte);
+            write8(watchdog.restart, bit_offset, byte);
             if(watchdog.restart == 0x5AB9) {
                 event_set(SCHED_WATCHDOG, watchdog.load);
                 watchdog.count = watchdog.load;
             }
-            return;
+            break;
         case 0x00C:
-            write8(watchdog.control,bit_offset,byte);
+            write8(watchdog.control, bit_offset, byte);
             if(watchdog.control & 1) {
                 event_set(SCHED_WATCHDOG, watchdog.load);
             } else {
@@ -90,14 +95,14 @@ static void watchdog_write(const uint16_t pio, const uint8_t byte) {
             } else {
                 sched.items[SCHED_WATCHDOG].clock = CLOCK_CPU;
             }
-            return;
+            break;
         case 0x014:
             if(byte & 1) {
                 watchdog.status = 0;
             }
-            return;
+            break;
         default:
-            return;
+            break;
     }
 }
 
@@ -113,6 +118,7 @@ void watchdog_reset() {
     sched.items[SCHED_WATCHDOG].clock = CLOCK_CPU;
     sched.items[SCHED_WATCHDOG].second = -1;
     sched.items[SCHED_WATCHDOG].proc = watchdog_event;
+    watchdog.revision =
     watchdog.load = 0x03EF1480;   /* (66MHz) */
     watchdog.count = 0x03EF1480;
 

@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "backlight.h"
 
 /* Global BACKLIGHT state */
@@ -58,11 +60,8 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_backlight(void) {
-    int i;
-    /* Initialize device to default state */
-    for(i = 0; i<0x100; i++) {
-        backlight.ports[i] = 0x00;
-    }
+    memset(backlight.ports, 0, sizeof backlight.ports);
+
     backlight.ports[0x00] = 0x64;
     backlight.ports[0x01] = 0x64;
     backlight.ports[0x02] = 0x61;
