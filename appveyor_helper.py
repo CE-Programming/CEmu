@@ -27,7 +27,8 @@ def dlfile(url):
         # Open the url
         try:
             f = urlopen(url)
-            print("   -> Downloading (attempt %i/%i): %s" % (dl_attempts + 1, MAX_ATTEMPTS, url))
+            print("   -> Downloading (attempt %i/%i):" % (dl_attempts + 1, MAX_ATTEMPTS))
+            print("      %s" % url)
 
             # Open our local file for writing
             with open(os.path.basename(url), "wb") as local_file:
@@ -241,7 +242,7 @@ def silent_exec(cmd):
     
     return True
 
-def extract(cmd):
+def extract(filename):
     print("   -> Extracting file: %s" % filename)
     if not silent_exec(["7z", "x", "-oC:\\", filename]):
         print("   !! ERROR: Failed to extract file: " % filename)
