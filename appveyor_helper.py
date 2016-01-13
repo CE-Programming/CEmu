@@ -131,24 +131,24 @@ def validate_gen(filename, chksum_file, hash_name, hash_regex, hash_func):
                 hash_arr = hash_line.split("  ")
             else:
                 print("   !! ERROR: Invalid %s checksum line! (No double-space detected!)" % hash_name)
-                print("   !!        Line: %s" % (hash_line))
+                print("   !!        Line: %s" % (min_hash_line))
                 sys.exit(1)
             
             if len(hash_arr) != 2:
                 print("   !! ERROR: Invalid %s checksum line! (Too many elements!)" % hash_name)
-                print("   !!        Line: %s" % (hash_line))
+                print("   !!        Line: %s" % (min_hash_line))
                 sys.exit(1)
             
             # Extract info
-            hash_chksum = hash_arr[0].strip()
-            hash_fn = hash_arr[1].strip()
+            hash_chksum = hash_arr[1].strip()
+            hash_fn = hash_arr[0].strip()
             
             # Ensure hash is a valid checksum
             hash_match = re.match(hash_regex, hash_chksum)
             
             if not hash_match:
                 print("   !! ERROR: Invalid %s checksum!" % hash_name)
-                print("   !!        Line: %s" % (hash_line))
+                print("   !!        Line: %s" % (min_hash_line))
                 print("   !!        Extracted %s (invalid): %s" % (hash_name, hash_chksum))
                 sys.exit(1)
             
