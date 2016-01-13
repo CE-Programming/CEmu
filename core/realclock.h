@@ -30,6 +30,7 @@ typedef struct rtc_state {
     uint8_t hold_min;
     uint8_t hold_hour;
     uint8_t hold_day;
+    uint32_t revision;
 } rtc_state_t;
 
 /* Global GPT state */

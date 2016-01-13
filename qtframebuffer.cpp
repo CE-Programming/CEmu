@@ -50,13 +50,13 @@ QImage renderFramebuffer() {
 }
 
 void paintFramebuffer(QPainter *p) {
-    if (!(lcd.control & 0x800)) {
+    if (lcd.control & 0x800) {
+        QImage img = renderFramebuffer();
+        p->drawImage(p->window(), img);
+    } else {
         p->fillRect(p->window(), Qt::black);
         p->setPen(Qt::white);
         p->drawText(p->window(), Qt::AlignCenter, QObject::tr("LCD OFF"));
-    } else {
-        QImage img = renderFramebuffer();
-        p->drawImage(p->window(), img);
     }
 }
 

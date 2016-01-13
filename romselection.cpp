@@ -60,13 +60,14 @@ RomSelection::~RomSelection() {
 }
 
 bool RomSelection::flash_open(const char *filename) {
-    long s;
+    size_t s;
 
     FILE* rom_read = fopen_utf8(filename, "r+b");
 
     if (!rom_read) {
-        return 0;
+        return false;
     }
+
     fseek(rom_read, 0, SEEK_END);
     s = ftell(rom_read);
 

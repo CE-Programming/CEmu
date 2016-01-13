@@ -161,8 +161,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     if (fileExists(emu.rom)) {
        emu.start();
-    } else {
-       runSetup();
+    } else if (!runSetup()) {
+        exit(0);
     }
 
     restoreGeometry(settings->value(QStringLiteral("windowGeometry")).toByteArray());
@@ -217,7 +217,7 @@ void MainWindow::popoutLCD() {
     ui->actionDetached_LCD->setChecked(detached_state);
 }
 
-void MainWindow::runSetup() {
+bool MainWindow::runSetup() {
     RomSelection romSelection;
     romSelection.show();
     romSelection.exec();
@@ -231,8 +231,9 @@ void MainWindow::runSetup() {
             emu.start();
         }
     } else {
-        if(emu.rom.empty()) { exit(0); }
+        return false;
     }
+    return true;
 }
 
 void MainWindow::setUIMode(bool docks_enabled) {
@@ -477,6 +478,8 @@ void MainWindow::refreshVariableList() {
 }
 
 void MainWindow::saveSelected() {
+    setReceiveState(true);
+
     QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptSave);
     if (fileNames.size() == 1) {
         QVector<calc_var_t> selectedVars;

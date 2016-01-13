@@ -47,7 +47,7 @@ signals:
 
 private:
     // Actions
-    void runSetup(void);
+    bool runSetup(void);
     void screenshot(void);
     void screenshotGIF();
     void recordGIF();

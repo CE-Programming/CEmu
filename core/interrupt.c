@@ -39,7 +39,7 @@ static uint8_t intrpt_read(uint16_t pio) {
     uint8_t request = pio >> 5 & 1;
     uint8_t bit_offset = (pio & 3) << 3;
 
-    uint8_t value;
+    uint8_t value = 0;
 
     static const uint32_t revision = 0x00010900;
 
@@ -71,7 +71,6 @@ static uint8_t intrpt_read(uint16_t pio) {
             value = (bit_offset & 16) ? 0 : 22;
             break;
         default:
-            value = 0;
             break;
     }
     return value;
