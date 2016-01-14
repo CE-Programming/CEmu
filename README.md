@@ -1,4 +1,5 @@
-# CEmu [![Build Status](https://travis-ci.org/MateoConLechuga/CEmu.svg)](https://travis-ci.org/MateoConLechuga/CEmu)
+# CEmu [![Build Status](https://travis-ci.org/MateoConLechuga/CEmu.svg)](https://travis-ci.org/MateoConLechuga/CEmu) [![Build Status](https://scan.coverity.com/projects/7576/badge.svg)](https://scan.coverity.com/projects/mateoconlechuga-cemu)
+
 CEmu is an open-source third-party TI-84 Plus CE / TI-83 Premium CE calculator emulator.  
 
 With a core made in C and GUI in C++ with Qt, it works natively on many platforms.  
