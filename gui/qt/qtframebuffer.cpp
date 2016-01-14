@@ -17,6 +17,8 @@
 #include "qtframebuffer.h"
 #include "qtkeypadbridge.h"
 #include "../../core/lcd.h"
+#include "../../core/backlight.h"
+#include "../../core/lcd.h"
 
 #define CLAMP(a) ( ((a) > 255) ? 255 : (((a) < 0) ? 0 : (int)(a)) )
 
@@ -46,7 +48,11 @@ QImage renderFramebuffer() {
 
     QImage::Format format = *bitfields == 0x00F ? QImage::Format_RGB444 : QImage::Format_RGB16;
 
-    return QImage(reinterpret_cast<const uchar*>(lcd.framebuffer), 320, 240, 320 * 2, format);
+    QImage image(reinterpret_cast<const uchar*>(lcd.framebuffer), 320, 240, 320 * 2, format);
+
+    float factor = (310-(float)backlight.brightness)/160.0;
+    factor = (factor > 1) ? 1 : factor;
+    return brighten(image, factor);
 }
 
 void paintFramebuffer(QPainter *p) {
