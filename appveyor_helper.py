@@ -243,7 +243,7 @@ def simple_exec(cmd):
     retcode = subprocess.call(cmd)
     
     if retcode != 0:
-        print("   !! ERROR: Command return %i exit code!" % retcode)
+        print("   !! ERROR: Command returned exit code %i!" % retcode)
         print("   !!        Command: %s" % " ".join(cmd))
         return False
     
@@ -256,7 +256,7 @@ def silent_exec(cmd):
     retcode = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
     
     if retcode != 0:
-        print("   !! ERROR: Command return %i exit code!" % retcode)
+        print("   !! ERROR: Command returned exit code %i!" % retcode)
         print("   !!        Command: %s" % " ".join(cmd))
         return False
     
@@ -269,7 +269,7 @@ def output_exec(cmd):
     out, err = p.communicate()
     
     if p.returncode != 0:
-        print("   !! ERROR: Command return %i exit code!" % retcode)
+        print("   !! ERROR: Command returned exit code %i!" % retcode)
         print("   !!        Command: %s" % " ".join(cmd))
         return None
     
