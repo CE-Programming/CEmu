@@ -41,8 +41,8 @@ extern sched_state_t sched;
 
 void sched_reset(void);
 void event_repeat(int index, uint64_t ticks);
-void sched_update_next_event(uint32_t cputick);
-uint32_t sched_process_pending_events(void);
+void sched_update_next_event(void);
+void sched_process_pending_events(void);
 void event_clear(int index);
 void event_set(int index, uint64_t ticks);
 uint32_t event_ticks_remaining(int index);

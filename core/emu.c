@@ -229,7 +229,7 @@ static void emu_reset(void) {
     cpu_reset();
     cpu_events &= EVENT_DEBUG_STEP;
 
-    sched_update_next_event(0);
+    sched_update_next_event();
 }
 
 static void emu_main_loop(void) {
