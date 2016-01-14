@@ -42,10 +42,6 @@
 
 const char *rom_image = NULL;
 
-/* cycle_count_delta is a (usually negative) number telling what the time is relative
- * to the next scheduled event. See sched.c */
-int cycle_count_delta = 0;
-
 int throttle_delay = 10; /* in milliseconds */
 
 uint32_t cpu_events;

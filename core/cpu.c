@@ -990,7 +990,7 @@ void cpu_init(void) {
 
 void cpu_reset(void) {
     memset(&cpu.registers, 0, sizeof cpu.registers);
-    cpu.IEF1 = cpu.IEF2 = cpu.ADL = cpu.MADL = cpu.IM = cpu.IEF_wait = cpu.halted = 0;
+    cpu.IEF1 = cpu.IEF2 = cpu.ADL = cpu.MADL = cpu.IM = cpu.IEF_wait = cpu.halted = cpu.cycles = cpu.next = 0;
     cpu_flush(0, 0);
 }
 
@@ -1028,36 +1028,32 @@ void cpu_execute(void) {
         };
     } context;
 
-    int cycle_offset;
-
-    while (!exiting && cycle_count_delta < 0) {
-        cycle_offset = 0;
+    uint32_t save_next = cpu.next;
+    while (!exiting) {
         if (cpu.IEF_wait) {
             cpu.IEF_wait = 0;
             cpu.IEF1 = cpu.IEF2 = 1;
+            cpu.next = save_next;
         }
         if (cpu.IEF1 && (intrpt.request->status & intrpt.request->enabled)) {
             cpu.IEF1 = cpu.IEF2 = cpu.halted = 0;
-            cycle_count_delta++;
+            cpu.cycles += 1;
             if (cpu.IM != 3) {
                 cpu_call(0x38, cpu.MADL);
             } else {
-                cycle_count_delta++;
+                cpu.cycles += 1;
                 cpu_call(cpu_read_word(r->I << 8 | ~r->R), cpu.MADL);
-                cycle_count_delta += cpu.cycles;
             }
-        } else if (cpu.halted) {
-            cycle_count_delta = 0; // consume all of the cycles
+        } else if (cpu.halted && cpu.cycles < cpu.next) {
+            cpu.cycles = cpu.next; // consume all of the cycles
         }
-
-        while (!exiting && (cpu.PREFIX || cpu.SUFFIX || cycle_count_delta < 0)) {
-            cpu.cycles = 0;
-
+        if (exiting || cpu.cycles >= cpu.next) {
+            return;
+        }
+        do {
             // fetch opcode
             context.opcode = cpu_fetch_byte();
-
             r->R = ((r->R + 1) & 0x7F) | (r->R & 0x80);
-
             switch (context.x) {
                 case 0:
                     switch (context.z) {
@@ -1226,26 +1222,26 @@ void cpu_execute(void) {
                                 cpu.cycles += 1;
                                 cpu.SUFFIX = 1;
                                 cpu.L = 0; cpu.IL = 0;
-                                goto exit_loop;
+                                continue;
                             case 1: // .LIS
                                 cpu.cycles += 1;
                                 cpu.SUFFIX = 1;
                                 cpu.L = 1; cpu.IL = 0;
-                                goto exit_loop;
+                                continue;
                             case 2: // .SIL
                                 cpu.cycles += 1;
                                 cpu.SUFFIX = 1;
                                 cpu.L = 0; cpu.IL = 1;
-                                goto exit_loop;
+                                continue;
                             case 3: // .LIL
                                 cpu.cycles += 1;
                                 cpu.SUFFIX = 1;
                                 cpu.L = 1; cpu.IL = 1;
-                                goto exit_loop;
+                                continue;
                             case 6: // HALT
                                 cpu.halted = 1;
-                                if (cycle_count_delta + cpu.cycles < 0) {
-                                    cpu.cycles = -cycle_count_delta;
+                                if (cpu.cycles < cpu.next) {
+                                    cpu.cycles = cpu.next;
                                 }
                                 break;
                             case 4: // LD H, H
@@ -1367,10 +1363,9 @@ void cpu_execute(void) {
                                     break;
                                 case 7: // EI
                                     cpu.IEF_wait = 1;
-                                    cycle_count_delta += cpu.cycles;
-                                    cycle_offset = cycle_count_delta + 1;
-                                    cycle_count_delta = -1; // execute one more instruction
-                                    continue;
+                                    save_next = cpu.next;
+                                    cpu.next = cpu.cycles + 1; // execute one more instruction
+                                    break;
                             }
                             break;
                         case 4: // CALL cc[y], nn
@@ -1397,7 +1392,7 @@ void cpu_execute(void) {
                                         case 1: // 0xDD prefixed opcodes
                                             cpu.cycles += 1;
                                             cpu.PREFIX = 2;
-                                            goto exit_loop;
+                                            continue;
                                         case 2: // 0xED prefixed opcodes
                                             cpu.cycles += 1;
                                             cpu.PREFIX = 0; // ED cancels effect of DD/FD prefix
@@ -1747,7 +1742,7 @@ void cpu_execute(void) {
                                         case 3: // 0xFD prefixed opcodes
                                             cpu.cycles += 1;
                                             cpu.PREFIX = 3;
-                                            goto exit_loop;
+                                            continue;
                                     }
                                     break;
                             }
@@ -1762,21 +1757,7 @@ void cpu_execute(void) {
                     }
                     break;
             }
-
             cpu_get_cntrl_data_blocks_format();
-
-            if (cpu_events & EVENT_DEBUG_STEP) {
-                // Flush the cycles
-                cycle_count_delta = 0;
-                break;
-            }
-exit_loop:
-            cycle_count_delta += cpu.cycles;
-            if (cpu.cycles == 0) {
-                //logprintf(LOG_CPU, "Error: Unrecognized instruction 0x%02X.", context.opcode);
-                cycle_count_delta++;
-            }
-        }
-        cycle_count_delta += cycle_offset;
+        } while (cpu.PREFIX || cpu.SUFFIX || cpu.cycles < cpu.next);
     }
 }

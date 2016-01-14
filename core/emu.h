@@ -7,7 +7,6 @@ extern "C" {
 
 #include "defines.h"
 
-extern int cycle_count_delta;
 extern int throttle_delay;
 extern uint32_t cpu_events;
 

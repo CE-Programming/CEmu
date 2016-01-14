@@ -111,10 +111,13 @@ bool sendVariableLink(const char *var_name) {
     if (fseek(file, 0x45, 0))                             goto r_err;
     if (fread(&var_arc, 1, 1, file) != 1)                 goto r_err;
 
+    uint32_t save_cycles = cpu.cycles, save_next = cpu.next;
+
     cpu.halted = cpu.IEF_wait = 0;
     memcpy(run_asm_safe, jforcegraph, sizeof(jforcegraph));
     cpu_flush(safe_ram_loc, 1);
-    cycle_count_delta = -5000000;
+    cpu.cycles = 0;
+    cpu.next = 5000000;
     cpu_execute();
 
     if (fseek(file, 0x3B, 0))                            goto r_err;
@@ -128,7 +131,8 @@ bool sendVariableLink(const char *var_name) {
     run_asm_safe[5] = var_type;
     memcpy(&run_asm_safe[6], pgrm_loader, sizeof(pgrm_loader));
     cpu_flush(safe_ram_loc, 1);
-    cycle_count_delta = -10000000;
+    cpu.cycles = 0;
+    cpu.next = 10000000;
     cpu_execute();
 
     var_ptr = phys_mem_ptr((run_asm_safe[0])      |
@@ -144,15 +148,20 @@ bool sendVariableLink(const char *var_name) {
         cpu.halted = cpu.IEF_wait = 0;
         memcpy(run_asm_safe, archivevar, sizeof(archivevar));
         cpu_flush(safe_ram_loc, 1);
-        cycle_count_delta = -1000000;
+        cpu.cycles = 0;
+        cpu.next = 1000000;
         cpu_execute();
     }
 
     cpu.halted = cpu.IEF_wait = 0;
     memcpy(run_asm_safe, jforcehome, sizeof(jforcehome));
     cpu_flush(safe_ram_loc, 1);
-    cycle_count_delta = -5000000;
+    cpu.cycles = 0;
+    cpu.next = 5000000;
     cpu_execute();
+
+    cpu.cycles = save_cycles;
+    cpu.next = save_next;
 
     return !fclose(file);
 

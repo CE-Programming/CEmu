@@ -29,7 +29,7 @@ if (!win32-msvc*) {
 
 if (macx|linux) {
     GLOBAL_FLAGS    += -fPIE -Wstack-protector -fstack-protector-strong --param=ssp-buffer-size=1
-    CONFIG(debug, debug|release): GLOBAL_FLAGS += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error
+    CONFIG(debug, debug|release): GLOBAL_FLAGS += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -O0
 }
 
 macx:  QMAKE_LFLAGS += -Wl,-dead_strip

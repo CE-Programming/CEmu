@@ -49,7 +49,7 @@ typedef struct eZ80cpu {
         uint8_t IEF_wait    : 1;  /* Wait for interrupt                                                                          */
         uint8_t halted      : 1;  /* Have we halted the CPU?                                                                     */
     };
-    int cycles;
+    uint32_t cycles, next;
     uint8_t prefetch, bus;  /* TODO */
     int interrupt;
 } eZ80cpu_t;

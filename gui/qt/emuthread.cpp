@@ -166,12 +166,12 @@ bool EmuThread::stop() {
     if(!isRunning())
         return true;
 
-    exiting = true;
     in_debugger = false;
     emu_is_sending = false;
 
     /* Cause the CPU core to leave the loop and check for events */
-    cycle_count_delta = 0;
+    exiting = true; // exit outer loop
+    cpu.next = 0; // exit inner loop
 
     if(!this->wait(200))
     {

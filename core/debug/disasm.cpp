@@ -118,6 +118,8 @@ static std::string strOffset(uint8_t data) {
         sprintf(tmpbuf,"-$%02X",0x100-data);
     } else if (data) {
         sprintf(tmpbuf,"+$%02X",data);
+    } else {
+        *tmpbuf = '\0';
     }
     return std::string(tmpbuf);
 }

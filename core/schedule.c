@@ -14,6 +14,7 @@
 
 #include <string.h>
 
+#include "cpu.h"
 #include "emu.h"
 #include "schedule.h"
 
@@ -60,11 +61,16 @@ void sched_update_next_event(uint32_t cputick) {
         }
     }
     /* printf("Next event: (%8d,%d)\n", next_cputick, next_index); */
-    cycle_count_delta = cputick - sched.next_cputick;
+    cpu.cycles = cputick;
+    if (cpu_events & EVENT_DEBUG_STEP) {
+        cpu.next = cputick + 1;
+    } else {
+        cpu.next = sched.next_cputick;
+    }
 }
 
 uint32_t sched_process_pending_events(void) {
-    uint32_t cputick = sched.next_cputick + cycle_count_delta;
+    uint32_t cputick = cpu.cycles;
 
     while (cputick >= sched.next_cputick) {
         if (sched.next_index < 0) {
