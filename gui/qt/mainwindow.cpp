@@ -33,7 +33,7 @@
 #include "qtkeypadbridge.h"
 
 #include "../../core/schedule.h"
-#include "../../core/debug/disasmc.h"
+#include "../../core/debug/disasm.h"
 #include "../../core/link.h"
 #include "../../core/capture/gif.h"
 #include "utils.h"
@@ -1008,7 +1008,7 @@ void MainWindow::updateStackView() {
     for(int i=0; i<30; i+=3) {
        formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2</pre>")
                                 .arg(int2hex(cpu.registers.SPL+i, 6).toUpper(),
-                                     int2hex(memory_read_byte(cpu.registers.SPL+i) | memory_read_byte(cpu.registers.SPL+1+i)<<8 | memory_read_byte(cpu.registers.SPL+2+i)<<16,6).toUpper());
+                                     int2hex(debug_read_long(cpu.registers.SPL+i), 6).toUpper());
         ui->stackView->appendHtml(formattedLine);
     }
     ui->stackView->moveCursor(QTextCursor::Start);
@@ -1197,7 +1197,7 @@ void MainWindow::memUpdate() {
     mem_hex_size = end-start;
 
     for (int i=start; i<end; i++) {
-        mem_data.append(memory_read_byte(i));
+        mem_data.append(debug_read_byte(i));
     }
 
     ui->memEdit->setData(mem_data);
@@ -1296,7 +1296,7 @@ void MainWindow::memGotoPressed() {
     mem_hex_size = end-start;
 
     for (int i=start; i<end; i++) {
-        mem_data.append(memory_read_byte(i));
+        mem_data.append(debug_read_byte(i));
     }
 
     ui->memEdit->setData(mem_data);
@@ -1329,7 +1329,7 @@ void MainWindow::memSyncPressed() {
     qint64 posa = ui->memEdit->cursorPosition();
 
     for (int i = 0; i<mem_hex_size; i++) {
-        memory_force_write_byte(i+start, ui->memEdit->dataAt(i, 1).at(0));
+        debug_write_byte(i+start, ui->memEdit->dataAt(i, 1).at(0));
     }
 
     syncHexView(posa, ui->memEdit);

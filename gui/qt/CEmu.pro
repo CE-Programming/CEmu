@@ -127,7 +127,6 @@ HEADERS  +=  utils.h \
     ../../core/capture/giflib.h \
     ../../core/debug/debug.h \
     ../../core/debug/disasm.h \
-    ../../core/debug/disasmc.h \
     ../../core/os/os.h
 
 FORMS    += mainwindow.ui \

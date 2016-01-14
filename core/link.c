@@ -139,9 +139,7 @@ bool sendVariableLink(const char *var_name) {
     cpu.next = 10000000;
     cpu_execute();
 
-    var_ptr = phys_mem_ptr((run_asm_safe[0])      |
-                           (run_asm_safe[1] << 8) |
-                           (run_asm_safe[2] << 16), 1);
+    var_ptr = phys_mem_ptr(debug_read_long(safe_ram_loc), 1);
 
     var_size = (var_size_high << 8) | var_size_low;
 

@@ -11,10 +11,8 @@ extern "C" {
 typedef struct flash_state {
     uint8_t ports[0x100];
     uint8_t added_wait_states;
-    struct {
-        uint8_t mapped : 1;
-        uint8_t map    : 4;
-    };
+    uint8_t mapped : 1;
+    uint8_t map    : 4;
 } flash_state_t;
 
 /* Global flash state */

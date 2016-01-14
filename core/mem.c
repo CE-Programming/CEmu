@@ -4,13 +4,9 @@
 #include "emu.h"
 #include "cpu.h"
 #include "flash.h"
-#include "debug/disasmc.h"
 
 /* Global MEMORY state */
 mem_state_t mem;
-
-/* For Debugging */
-disasm_highlights_state_t disasmHighlight;
 
 /* Standard equates */
 static const uint32_t ram_size = 0x65800;
@@ -296,7 +292,7 @@ static void flash_write_handler(uint32_t address, uint8_t byte) {
     }
 }
 
-uint8_t memory_read_byte(uint32_t address) {
+uint8_t mem_read_byte(uint32_t address) {
     uint8_t value = 0;
     address &= 0xFFFFFF;
     switch((address >> 20) & 0xF) {
@@ -327,23 +323,14 @@ uint8_t memory_read_byte(uint32_t address) {
             break;
     }
 
-    if (debugger.data.block[address]) {
-        disasmHighlight.hit_read_breakpoint = debugger.data.block[address] & DBG_READ_BREAKPOINT;
-        disasmHighlight.hit_write_breakpoint = debugger.data.block[address] & DBG_WRITE_BREAKPOINT;
-        disasmHighlight.hit_exec_breakpoint = debugger.data.block[address] & DBG_EXEC_BREAKPOINT;
-        if (!in_debugger && disasmHighlight.hit_read_breakpoint) {
-            openDebugger(HIT_READ_BREAKPOINT, address);
-        }
-    }
-
-    if (cpu.registers.PC == address) {
-        disasmHighlight.hit_pc = true;
+    if (!in_debugger && debugger.data.block[address] & DBG_READ_BREAKPOINT) {
+        openDebugger(HIT_READ_BREAKPOINT, address);
     }
 
     return value;
 }
 
-void memory_write_byte(uint32_t address, uint8_t byte) {
+void mem_write_byte(uint32_t address, uint8_t byte) {
     address &= 0xFFFFFF;
     switch((address >> 20) & 0xF) {
         /* FLASH */
@@ -377,17 +364,5 @@ void memory_write_byte(uint32_t address, uint8_t byte) {
 
     if (!in_debugger && debugger.data.block[address] & DBG_WRITE_BREAKPOINT) {
         openDebugger(HIT_WRITE_BREAKPOINT, address);
-    }
-}
-
-void memory_force_write_byte(uint32_t address, uint8_t byte) {
-    uint8_t *ptr;
-    address &= 0xFFFFFF;
-    if (address < 0xE00000) {
-        if ((ptr = phys_mem_ptr(address, 1))) {
-            *ptr = byte;
-        }
-    } else {
-        port_write_byte(mmio_range(address)<<12 | addr_range(address), byte);
     }
 }

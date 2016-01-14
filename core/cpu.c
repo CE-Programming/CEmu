@@ -48,7 +48,7 @@ static uint32_t cpu_address_mode(uint32_t address, bool mode) {
 static void cpu_prefetch(uint32_t address, bool mode) {
     cpu.ADL = mode;
     cpu.registers.PC = cpu_address_mode(address, mode);
-    cpu.prefetch = memory_read_byte(cpu.registers.PC);
+    cpu.prefetch = mem_read_byte(cpu.registers.PC);
 }
 static uint8_t cpu_fetch_byte(void) {
     uint8_t value;
@@ -82,10 +82,10 @@ static uint32_t cpu_fetch_word_no_prefetch(void) {
 }
 
 static uint8_t cpu_read_byte(uint32_t address) {
-    return memory_read_byte(cpu_address_mode(address, cpu.L));
+    return mem_read_byte(cpu_address_mode(address, cpu.L));
 }
 static void cpu_write_byte(uint32_t address, uint8_t value) {
-    memory_write_byte(cpu_address_mode(address, cpu.L), value);
+    mem_write_byte(cpu_address_mode(address, cpu.L), value);
 }
 
 static uint32_t cpu_read_word(uint32_t address) {

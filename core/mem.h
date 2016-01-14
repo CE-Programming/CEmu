@@ -59,11 +59,9 @@ void mem_init(void);
 void mem_free(void);
 void mem_reset(void);
 
-uint8_t memory_read_byte(uint32_t address);
-void memory_write_byte(uint32_t address, uint8_t value);
-void memory_force_write_byte(uint32_t address, uint8_t byte);
-
 uint8_t *phys_mem_ptr(uint32_t address, uint32_t size);
+uint8_t mem_read_byte(uint32_t address);
+void mem_write_byte(uint32_t address, uint8_t value);
 
 #ifdef __cplusplus
 }

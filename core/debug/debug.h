@@ -48,8 +48,14 @@ typedef struct {        /* For debugging */
 /* Debugging */
 extern debug_state_t debugger;
 
-uint8_t debug_port_read_byte(const uint32_t addr);
-void openDebugger(int reason, uint32_t addr);
+uint8_t debug_read_byte(uint32_t address);
+uint16_t debug_read_short(uint32_t address);
+uint32_t debug_read_long(uint32_t address);
+uint32_t debug_read_word(uint32_t address, bool mode);
+void debug_write_byte(uint32_t address, uint8_t value);
+uint8_t debug_port_read_byte(uint32_t address);
+void debug_port_write_byte(uint32_t address, uint8_t value);
+void openDebugger(int reason, uint32_t address);
 
 #ifdef __cplusplus
 }

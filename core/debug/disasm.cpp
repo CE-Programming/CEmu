@@ -2,9 +2,9 @@
 #include <unordered_map>
 
 #include "disasm.h"
-#include "disasmc.h"
 #include "../cpu.h"
 
+disasm_highlights_state_t disasmHighlight;
 disasm_state_t disasm;
 
 static char tmpbuf[20];
@@ -125,7 +125,7 @@ static std::string strOffset(uint8_t data) {
 }
 
 static uint8_t disasm_fetch_byte(void) {
-    uint8_t value = memory_read_byte(disasm.new_address++);
+    uint8_t value = debug_read_byte(disasm.new_address++);
     sprintf(tmpbuf,"%02X",value);
     disasm.instruction.data += std::string(tmpbuf);
     disasm.instruction.size++;
