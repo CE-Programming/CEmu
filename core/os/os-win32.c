@@ -1,3 +1,5 @@
+#ifdef _WIN32
+
 #include "os.h"
 #include <stdio.h>
 #include <windows.h>
@@ -10,3 +12,5 @@ FILE *fopen_utf8(const char *filename, const char *mode)
     MultiByteToWideChar(CP_UTF8, 0, mode, -1, mode_w, 5);
     return _wfopen(filename_w, mode_w);
 }
+
+#endif
