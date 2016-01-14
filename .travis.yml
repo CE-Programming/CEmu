@@ -12,5 +12,5 @@ install:
 script:
   - mkdir build
   - cd build
-  - qmake ..
+  - qmake ../gui/qt
   - make -j4 CC=gcc-5 CXX=g++-5 LINK=g++-5
