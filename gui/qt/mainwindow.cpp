@@ -37,7 +37,7 @@
 #include "../../core/link.h"
 #include "../../core/capture/gif.h"
 #include "utils.h"
-#include "os/os.h"
+#include "../../core/os/os.h"
 
 static const constexpr int WindowStateVersion = 0;
 static const int flash_size = 0x400000;

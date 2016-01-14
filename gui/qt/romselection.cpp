@@ -7,7 +7,7 @@
 #include "ui_romselection.h"
 
 #include "utils.h"
-#include "os/os.h"
+#include "../../core/os/os.h"
 
 std::string romImagePath;
 
