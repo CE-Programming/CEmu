@@ -791,9 +791,9 @@ void MainWindow::portMonitorCheckboxToggled(QTableWidgetItem * item) {
             value = DBG_PORT_FREEZE;
         }
         if (item->checkState() != Qt::Checked) {
-            mem.debug.ports[port] &= ~value;
+            debugger.data.ports[port] &= ~value;
         } else {
-            mem.debug.ports[port] |= value;
+            debugger.data.ports[port] |= value;
         }
     }
 }
@@ -855,7 +855,7 @@ void MainWindow::deletePort() {
     const int currentRow = ui->portView->currentRow();
 
     uint16_t port = (uint16_t)ui->portView->item(currentRow, 0)->text().toInt(nullptr,16);
-    mem.debug.ports[port] = DBG_NO_HANDLE;
+    debugger.data.ports[port] = DBG_NO_HANDLE;
 
     ui->portView->removeRow(currentRow);
 }
@@ -880,9 +880,9 @@ void MainWindow::breakpointCheckboxToggled(QTableWidgetItem * item) {
             value = DBG_EXEC_BREAKPOINT;
         }
         if (item->checkState() != Qt::Checked) {
-            mem.debug.block[address] &= ~value;
+            debugger.data.block[address] &= ~value;
         } else {
-            mem.debug.block[address] |= value;
+            debugger.data.block[address] |= value;
         }
     }
 
@@ -945,7 +945,7 @@ void MainWindow::deleteBreakpoint() {
     const int currentRow = ui->breakpointView->currentRow();
 
     uint32_t address = (uint32_t)ui->breakpointView->item(currentRow, 0)->text().toInt(nullptr,16);
-    mem.debug.block[address] = DBG_NO_HANDLE;
+    debugger.data.block[address] = DBG_NO_HANDLE;
 
     ui->breakpointView->removeRow(currentRow);
 }

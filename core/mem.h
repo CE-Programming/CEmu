@@ -50,9 +50,6 @@ typedef struct {
 typedef struct mem_state {
     flash_chip_t flash;
     ram_chip_t ram;
-
-    /* Debugging */
-    debug_state_t debug;
 } mem_state_t;
 
 /* Global MEMORY state */

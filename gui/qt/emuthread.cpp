@@ -114,16 +114,16 @@ void EmuThread::setDebugStepOverMode() {
     disasm.base_address = cpu.registers.PC;
     disasm.adl = cpu.ADL;
     disassembleInstruction();
-    mem.debug.stepOverAddress = disasm.new_address;
-    mem.debug.block[mem.debug.stepOverAddress] |= DBG_STEP_OVER_BREAKPOINT;
+    debugger.stepOverAddress = disasm.new_address;
+    debugger.data.block[debugger.stepOverAddress] |= DBG_STEP_OVER_BREAKPOINT;
     cpu_events |= EVENT_DEBUG_STEP_OVER;
     enter_debugger = false;
     in_debugger = false;
 }
 
 void EmuThread::setDebugStepOutMode() {
-    mem.debug.stepOutSPL = cpu.registers.SPL;
-    mem.debug.stepOutSPS = cpu.registers.SPS;
+    debugger.stepOutSPL = cpu.registers.SPL;
+    debugger.stepOutSPS = cpu.registers.SPS;
     cpu_events |= EVENT_DEBUG_STEP_OUT;
     enter_debugger = false;
     in_debugger = false;
@@ -147,7 +147,7 @@ void EmuThread::doStuff(bool wait_for) {
 
     if (enter_debugger) {
         enter_debugger = false;
-        debugger(DBG_USER, 0);
+        openDebugger(DBG_USER, 0);
     }
 
     last_time += std::chrono::steady_clock::now() - cur_time;

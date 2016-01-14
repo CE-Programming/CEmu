@@ -32,17 +32,24 @@ enum {
 #define DBG_EXEC_BREAKPOINT       4
 #define DBG_STEP_OVER_BREAKPOINT  8
 
-typedef struct {        /* For debugging */
+typedef struct {
     uint8_t *block;
     uint8_t *ports;
+} data_t;
+
+typedef struct {        /* For debugging */
     int cpu_cycles;
     uint32_t stepOverAddress;
     uint32_t stepOutSPL;
     uint16_t stepOutSPS;
+    data_t data;
 } debug_state_t;
 
+/* Debugging */
+extern debug_state_t debugger;
+
 uint8_t debug_port_read_byte(const uint32_t addr);
-void debugger(int reason, uint32_t addr);
+void openDebugger(int reason, uint32_t addr);
 
 #ifdef __cplusplus
 }

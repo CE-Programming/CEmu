@@ -239,7 +239,7 @@ static void emu_main_loop(void) {
         }
         if (!cpu.halted && cpu_events & EVENT_DEBUG_STEP) {
             cpu_events &= ~EVENT_DEBUG_STEP;
-            debugger(DBG_STEP, 0);
+            openDebugger(DBG_STEP, 0);
         }
         sched_process_pending_events();
         cpu_execute();  // execute instructions with available clock cycles

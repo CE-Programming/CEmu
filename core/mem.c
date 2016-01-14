@@ -41,9 +41,9 @@ void mem_init(void) {
 
     mem.ram.block = (uint8_t*)calloc(ram_size, sizeof(uint8_t));      /* Allocate RAM */
 
-    mem.debug.stepOverAddress = -1;
-    mem.debug.block = (uint8_t*)calloc(0x1000000, sizeof(uint8_t));    /* Allocate Debug memory */
-    mem.debug.ports = (uint8_t*)calloc(0x10000, sizeof(uint8_t));      /* Allocate Debug Port Monitor */
+    debugger.stepOverAddress = -1;
+    debugger.data.block = (uint8_t*)calloc(0x1000000, sizeof(uint8_t));    /* Allocate Debug memory */
+    debugger.data.ports = (uint8_t*)calloc(0x10000, sizeof(uint8_t));      /* Allocate Debug Port Monitor */
 
     mem.flash.mapped = false;
     mem.flash.write_index = 0;
@@ -60,13 +60,13 @@ void mem_free(void) {
         free(mem.flash.block);
         mem.flash.block = NULL;
     }
-    if (mem.debug.block) {
-        free(mem.debug.block);
-        mem.debug.block = NULL;
+    if (debugger.data.block) {
+        free(debugger.data.block);
+        debugger.data.block = NULL;
     }
-    if (mem.debug.ports) {
-        free(mem.debug.ports);
-        mem.debug.ports = NULL;
+    if (debugger.data.ports) {
+        free(debugger.data.ports);
+        debugger.data.ports = NULL;
     }
     gui_console_printf("Freed memory...\n");
 }
@@ -325,12 +325,12 @@ uint8_t memory_read_byte(const uint32_t address)
             break;
     }
 
-    if (mem.debug.block[address]) {
-        disasmHighlight.hit_read_breakpoint = mem.debug.block[address] & DBG_READ_BREAKPOINT;
-        disasmHighlight.hit_write_breakpoint = mem.debug.block[address] & DBG_WRITE_BREAKPOINT;
-        disasmHighlight.hit_exec_breakpoint = mem.debug.block[address] & DBG_EXEC_BREAKPOINT;
+    if (debugger.data.block[address]) {
+        disasmHighlight.hit_read_breakpoint = debugger.data.block[address] & DBG_READ_BREAKPOINT;
+        disasmHighlight.hit_write_breakpoint = debugger.data.block[address] & DBG_WRITE_BREAKPOINT;
+        disasmHighlight.hit_exec_breakpoint = debugger.data.block[address] & DBG_EXEC_BREAKPOINT;
         if (!in_debugger && disasmHighlight.hit_read_breakpoint) {
-            debugger(HIT_READ_BREAKPOINT, address);
+            openDebugger(HIT_READ_BREAKPOINT, address);
         }
     }
 
@@ -400,8 +400,8 @@ void memory_write_byte(const uint32_t address, const uint8_t byte) {
             break;
     }
 
-    if (!in_debugger && mem.debug.block[address&0xFFFFFF] & DBG_WRITE_BREAKPOINT) {
-        debugger(HIT_WRITE_BREAKPOINT, address);
+    if (!in_debugger && debugger.data.block[address&0xFFFFFF] & DBG_WRITE_BREAKPOINT) {
+        openDebugger(HIT_WRITE_BREAKPOINT, address);
     }
 
     return;
