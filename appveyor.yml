@@ -4,6 +4,9 @@ environment:
   BINTRAY_API_USERNAME:
     secure: QyZ6LhunNhgW3l/1aiGROg==
 
+init:
+  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
 install:
   - C:\Python35\Scripts\pip install requests
   - C:\Python35\python -u appveyor_helper.py install
