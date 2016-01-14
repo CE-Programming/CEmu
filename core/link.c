@@ -73,6 +73,8 @@ bool sendVariableLink(const char *var_name) {
     FILE *file;
     uint8_t tmp_buf[0x80];
 
+    uint32_t save_cycles;
+
     uint8_t var_size_low,
             var_size_high,
             var_type,
@@ -111,7 +113,7 @@ bool sendVariableLink(const char *var_name) {
     if (fseek(file, 0x45, 0))                             goto r_err;
     if (fread(&var_arc, 1, 1, file) != 1)                 goto r_err;
 
-    uint32_t save_cycles = cpu.cycles, save_next = cpu.next;
+    save_cycles = cpu.cycles, save_next = cpu.next;
 
     cpu.halted = cpu.IEF_wait = 0;
     memcpy(run_asm_safe, jforcegraph, sizeof(jforcegraph));
