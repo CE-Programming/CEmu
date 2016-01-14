@@ -38,6 +38,9 @@ public slots:
     void setSendState(bool state);
     void setReceiveState(bool state);
 
+    // Speed
+    void changeEmuSpeed(int value);
+
 private:
     bool enter_debugger = false;
     bool enter_send_state = false;

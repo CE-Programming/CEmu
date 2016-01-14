@@ -81,6 +81,10 @@ EmuThread::EmuThread(QObject *p) : QThread(p) {
     emu_thread = this;
 }
 
+void EmuThread::changeEmuSpeed(int value) {
+    throttle_delay = value;
+}
+
 void EmuThread::setDebugMode(bool state) {
     enter_debugger = state;
     if(in_debugger && !state) {

@@ -124,6 +124,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
     connect(ui->refreshSlider, &QSlider::valueChanged, this, &MainWindow::changeLCDRefresh);
     connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::alwaysOnTop);
+    connect(ui->emulationSpeed, &QSlider::valueChanged, this, &MainWindow::changeEmulatedSpeed);
+    connect(this, &MainWindow::changedEmuSpeed, &emu, &EmuThread::changeEmuSpeed);
 
     // Hex Editor
     connect(ui->buttonFlashGoto, &QPushButton::clicked, this, &MainWindow::flashGotoPressed);
@@ -169,6 +171,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     restoreGeometry(settings->value(QStringLiteral("windowGeometry")).toByteArray());
     restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
     changeLCDRefresh(settings->value(QStringLiteral("refreshRate"), 60).toInt());
+    changeEmulatedSpeed(settings->value(QStringLiteral("emuRate"), 10).toInt());
     alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toInt());
     ui->textSizeSlider->setValue(settings->value(QStringLiteral("disasmTextSize"), 9).toInt());
 
@@ -412,10 +415,17 @@ void MainWindow::showAbout() {
 }
 
 void MainWindow::changeLCDRefresh(int value) {
-    settings->setValue(QStringLiteral("refreshRate"),QVariant(value));
+    settings->setValue(QStringLiteral("refreshRate"), value);
     ui->refreshLabel->setText(QString::fromStdString(std::to_string(value))+" FPS");
     ui->refreshSlider->setValue(value);
     ui->lcdWidget->refreshRate(value);
+}
+
+void MainWindow::changeEmulatedSpeed(int value) {
+    settings->setValue(QStringLiteral("emuRate"), value);
+    ui->emulationSpeedLabel->setText(QString::fromStdString(std::to_string(value))+" ms");
+    ui->emulationSpeed->setValue(value);
+    emit changedEmuSpeed(value);
 }
 
 void MainWindow::alwaysOnTop(int state) {
@@ -425,7 +435,7 @@ void MainWindow::alwaysOnTop(int state) {
         setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
     }
     show();
-    settings->setValue(QStringLiteral("onTop"),QVariant(state));
+    settings->setValue(QStringLiteral("onTop"), state);
     ui->checkAlwaysOnTop->setCheckState(Qt::CheckState(state));
 }
 

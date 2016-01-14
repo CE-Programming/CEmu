@@ -40,14 +40,19 @@ public slots:
     void consoleStr(QString);
 
 signals:
+    // Debugging
     void debuggerChangedState(bool);
     void triggerEmuSendState();
 
+    // Linking
     void setSendState(bool);
     void sendVariable(std::string);
     void setReceiveState(bool);
     void setDebugStepMode();
     void setDebugStepOverMode();
+
+    // Speed
+    void changedEmuSpeed(int value);
 
 private:
     // Actions
@@ -85,6 +90,9 @@ private:
     void resetCalculator();
     void addEquateFile();
     void clearEquateFile();
+
+    // Speed
+    void changeEmulatedSpeed(int value);
 
     // Console
     void clearConsole(void);
