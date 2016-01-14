@@ -61,9 +61,16 @@ void sched_update_next_event(void) {
         }
     }
     /* printf("Next event: (%8d,%d)\n", next_cputick, next_index); */
+    if (!cpu.halted && cpu_events & EVENT_DEBUG_STEP) {
+        cpu.next = cpu.cycles + 1;
+    } else {
+        cpu.next = sched.next_cputick;
+    }
 }
 
+#include <time.h>
 void sched_process_pending_events(void) {
+    sched_update_next_event();
     while (cpu.cycles >= sched.next_cputick) {
         if (sched.next_index < 0) {
             /* printf("[%8d] New second\n", cputick); */
@@ -80,11 +87,6 @@ void sched_process_pending_events(void) {
             sched.items[sched.next_index].proc(sched.next_index);
         }
         sched_update_next_event();
-    }
-    if (!cpu.halted && cpu_events & EVENT_DEBUG_STEP) {
-        cpu.next = cpu.cycles + 1;
-    } else {
-        cpu.next = sched.next_cputick;
     }
 }
 
