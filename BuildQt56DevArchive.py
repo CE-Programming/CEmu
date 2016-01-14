@@ -116,9 +116,6 @@ found_dlls = [".".join(p.split(".")[:-1]) for p in found_dlls]
 # Filter out Qt5 parts, if any
 found_dlls = [p[3:] if p.lower().startswith("qt5") else p for p in found_dlls]
 
-shutil.rmtree("tmp_devarchive")
-shutil.rmtree("build_32")
-
 print("   -> Stage 2b: Creating Exclusion List")
 
 # First, find all of the DLL files
@@ -184,6 +181,11 @@ prefix_matches = dll_matches + lib_matches + pdb_matches
 # Ensure that qtmain is NOT excluded!
 prefix_matches.remove("qtmain")
 
+# Ensure that XML is NOT excluded!
+# Lconvert requires it
+prefix_matches.remove("Qt5Xml")
+prefix_matches.remove("Qt5XmlPatterns")
+
 # Create exclusion commands!
 dll_excludes_nondebug = ["-xr!" + p + ".dll" for p in prefix_matches]
 dll_excludes_debug = ["-xr!" + p + "d.dll" for p in prefix_matches]
@@ -202,6 +204,9 @@ if (not ("webengine" in qt_lib_include_arr)) and (not ("webenginecore" in qt_lib
 
 #print(all_excludes)
 #input()
+
+shutil.rmtree("tmp_devarchive")
+shutil.rmtree("build_32")
 
 # To preserve path in 7-Zip, you MUST change directory to where the
 # folder is. If you don't, the first part of the path will be lost.
