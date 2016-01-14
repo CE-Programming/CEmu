@@ -176,17 +176,18 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     changeEmulatedSpeed(settings->value(QStringLiteral("emuRate"), 100).toInt());
     alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toInt());
     ui->textSizeSlider->setValue(settings->value(QStringLiteral("disasmTextSize"), 9).toInt());
+    current_dir.setPath((settings->value(QStringLiteral("currDir"), QDir::homePath()).toString()));
 
     ui->rompathView->setText(QString::fromStdString(emu.rom));
     ui->portView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->emuVarView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    current_dir = QDir::homePath();
 }
 
 MainWindow::~MainWindow() {
     settings->setValue(QStringLiteral("windowState"), saveState(WindowStateVersion));
     settings->setValue(QStringLiteral("windowGeometry"), saveGeometry());
     settings->setValue(QStringLiteral("disasmTextSize"), ui->textSizeSlider->value());
+    settings->setValue(QStringLiteral("currDir"), current_dir.absolutePath());
 
     delete settings;
     delete ui->flashEdit;
@@ -206,7 +207,7 @@ void MainWindow::dropEvent(QDropEvent *e) {
         files.append(url.toLocalFile());
     }
     setSendState(true);
-    QThread::usleep(500);
+    QThread::msleep(300);
 
     sendFiles(files);
 }

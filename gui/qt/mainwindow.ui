@@ -627,33 +627,11 @@
           <property name="title">
            <string>General</string>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_8">
+          <layout class="QVBoxLayout" name="verticalLayout_7">
            <item>
             <widget class="QCheckBox" name="checkAlwaysOnTop">
              <property name="text">
               <string>Always show CEmu on top of other windows</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
-         <widget class="QGroupBox" name="startupgroup">
-          <property name="title">
-           <string>Startup</string>
-          </property>
-          <layout class="QVBoxLayout" name="verticalLayout_13">
-           <item>
-            <widget class="QCheckBox" name="checkOnstart">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="text">
-              <string>Turn on calculator on startup</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -663,7 +641,20 @@
               <bool>false</bool>
              </property>
              <property name="text">
-              <string>Automatically load saved ROM image</string>
+              <string>Automatically save calculator image</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="checkLoadrom_2">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Load saved image on start</string>
              </property>
              <property name="checked">
               <bool>true</bool>
