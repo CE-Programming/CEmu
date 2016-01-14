@@ -22,7 +22,7 @@ void debugger(int reason, uint32_t addr) {
     gui_debugger_send_command(reason, addr);
 
     do {
-        emu_sleep();
+        gui_emu_sleep();
     } while(in_debugger);
 
     gui_debugger_entered_or_left(in_debugger = false);

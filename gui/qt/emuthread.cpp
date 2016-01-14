@@ -31,6 +31,14 @@
 
 EmuThread *emu_thread = nullptr;
 
+void gui_emu_yield(void) {
+    QThread::yieldCurrentThread();
+}
+
+void gui_emu_sleep(void) {
+    QThread::usleep(50);
+}
+
 void gui_do_stuff(bool wait) {
     emu_thread->doStuff(wait);
 }

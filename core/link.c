@@ -50,7 +50,7 @@ static const uint8_t pgrm_loader[39] = {
 void enterVariableLink(void) {
     /* Wait for the GUI to finish whatever it needs to do */
     do {
-        emu_sleep();
+        gui_emu_sleep();
     } while(emu_is_sending || emu_is_recieving);
 }
 

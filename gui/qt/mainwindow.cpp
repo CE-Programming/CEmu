@@ -200,6 +200,9 @@ void MainWindow::dropEvent(QDropEvent *e) {
     for(auto &&url : mime_data->urls()) {
         files.append(url.toLocalFile());
     }
+    setSendState(true);
+    QThread::usleep(500);
+
     sendFiles(files);
 }
 
@@ -452,9 +455,6 @@ QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode) {
 
 void MainWindow::sendFiles(QStringList fileNames) {
     ui->sendBar->setMaximum(fileNames.size());
-
-    setSendState(true);
-    QThread::msleep(300);
 
     for (int i = 0; i < fileNames.size(); i++) {
         if(!sendVariableLink(fileNames.at(i).toUtf8())) {

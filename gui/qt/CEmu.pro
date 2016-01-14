@@ -69,7 +69,6 @@ SOURCES +=  utils.cpp \
     ../../core/flash.c \
     ../../core/misc.c \
     ../../core/schedule.c \
-    ../../core/emu.cpp \
     ../../core/timers.c \
     ../../core/usb.c \
     ../../core/sha256.c \
@@ -82,7 +81,8 @@ SOURCES +=  utils.cpp \
     ../../core/vat.c \
     ../../core/capture/gif.cpp \
     ../../core/debug/disasm.cpp \
-    ../../core/debug/debug.c
+    ../../core/debug/debug.c \
+    ../../core/emu.c
 
 linux|macx|ios: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c
