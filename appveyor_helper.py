@@ -325,7 +325,7 @@ def collect_main_files(arch, vcredist_wc_path, build_path, dest):
 def collect_qt_files(arch, deploy_tool, dest, exe_file):
     os.environ.pop("VCINSTALLDIR", None)
     print("   -> Collecting all Qt dependencies (%s)..." % (arch))
-    if not silent_exec([deploy_tool, "--qmldir", "qml", "--dir", dest, exe_file]):
+    if not simple_exec([deploy_tool, "--qmldir", "qml", "--dir", dest, exe_file]):
         print("   !! ERROR: Failed to collect Qt dependencies!")
         print("   !!        See above output for details.")
         sys.exit(1)
