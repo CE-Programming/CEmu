@@ -25,9 +25,6 @@
 
 const char *rom_image = NULL;
 
-/* in milliseconds */
-int throttle_delay = 10;
-
 uint32_t cpu_events;
 volatile bool exiting;
 
@@ -43,6 +40,7 @@ void logprintf(int type, const char *str, ...) {
     }
 }
 
+#include <time.h>
 void throttle_interval_event(int index) {
     event_repeat(index, 27000000 / 60);
 

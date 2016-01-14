@@ -165,7 +165,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     emu.rom = settings->value(QStringLiteral("romImage")).toString().toStdString();
 
     if (fileExists(emu.rom)) {
-       emu.start();
+        emu.start();
     } else if (!runSetup()) {
         exit(0);
     }
@@ -173,7 +173,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     restoreGeometry(settings->value(QStringLiteral("windowGeometry")).toByteArray());
     restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
     changeLCDRefresh(settings->value(QStringLiteral("refreshRate"), 60).toInt());
-    changeEmulatedSpeed(settings->value(QStringLiteral("emuRate"), 10).toInt());
+    changeEmulatedSpeed(settings->value(QStringLiteral("emuRate"), 100).toInt());
     alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toInt());
     ui->textSizeSlider->setValue(settings->value(QStringLiteral("disasmTextSize"), 9).toInt());
 
@@ -425,7 +425,7 @@ void MainWindow::changeLCDRefresh(int value) {
 
 void MainWindow::changeEmulatedSpeed(int value) {
     settings->setValue(QStringLiteral("emuRate"), value);
-    ui->emulationSpeedLabel->setText(QString::fromStdString(std::to_string(value))+" ms");
+    ui->emulationSpeedLabel->setText(QString::fromStdString(std::to_string(value))+"%");
     ui->emulationSpeed->setValue(value);
     emit changedEmuSpeed(value);
 }

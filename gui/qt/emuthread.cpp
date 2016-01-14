@@ -17,7 +17,7 @@
 #include <cassert>
 #include <iostream>
 #include <cstdarg>
-#include <chrono>
+#include <thread>
 
 #include <QtCore/QEventLoop>
 #include <QtCore/QTimer>
@@ -79,10 +79,12 @@ void gui_debugger_entered_or_left(bool entered) {
 EmuThread::EmuThread(QObject *p) : QThread(p) {
     assert(emu_thread == nullptr);
     emu_thread = this;
+    speed = 100;
+    last_time = std::chrono::steady_clock::now();
 }
 
 void EmuThread::changeEmuSpeed(int value) {
-    throttle_delay = value;
+    speed = value;
 }
 
 void EmuThread::setDebugMode(bool state) {
@@ -129,6 +131,8 @@ void EmuThread::setDebugStepOutMode() {
 
 //Called occasionally, only way to do something in the same thread the emulator runs in.
 void EmuThread::doStuff(bool wait_for) {
+    std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
+
     (void)wait_for;
 
     if (enter_send_state) {
@@ -145,14 +149,19 @@ void EmuThread::doStuff(bool wait_for) {
         enter_debugger = false;
         debugger(DBG_USER, 0);
     }
+
+    last_time += std::chrono::steady_clock::now() - cur_time;
 }
 
 void EmuThread::throttleTimerWait() {
-    unsigned int now = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-    unsigned int throttle = throttle_delay * 1000;
-    unsigned int left = throttle - (now % throttle);
-    if (left > 0)
-        QThread::usleep(left);
+    std::chrono::steady_clock::duration interval(std::chrono::duration_cast<std::chrono::steady_clock::duration>
+                                                 (std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(1000000 * 100 / speed)));
+    std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now(), next_time = last_time + interval;
+    if (cur_time < next_time) {
+        std::this_thread::sleep_until(last_time = next_time);
+    } else {
+        last_time = cur_time;
+    }
 }
 
 void EmuThread::run() {

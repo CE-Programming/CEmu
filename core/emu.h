@@ -7,7 +7,6 @@ extern "C" {
 
 #include "defines.h"
 
-extern int throttle_delay;
 extern uint32_t cpu_events;
 
 #define EVENT_NONE            0

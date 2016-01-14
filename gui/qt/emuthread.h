@@ -3,6 +3,8 @@
 
 #include <QtCore/QThread>
 
+#include <chrono>
+
 #include "../../core/asic.h"
 #include "../../core/debug/debug.h"
 
@@ -46,6 +48,8 @@ private:
     bool enter_debugger = false;
     bool enter_send_state = false;
     bool enter_receive_state = false;
+    int speed;
+    std::chrono::steady_clock::time_point last_time;
 };
 
 // For friends
