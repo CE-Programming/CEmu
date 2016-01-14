@@ -396,6 +396,7 @@ static void cpu_return(void) {
     }
     cpu_prefetch(address, mode);
     if (cpu_events & EVENT_DEBUG_STEP_OUT && (r->SPL > mem.debug.stepOutSPL || r->SPS > mem.debug.stepOutSPS)) {
+        cpu_events &= ~EVENT_DEBUG_STEP_OUT;
         debugger(DBG_STEP, 0);
     }
 }

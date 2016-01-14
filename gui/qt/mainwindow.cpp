@@ -649,6 +649,7 @@ void MainWindow::setDebuggerState(bool state) {
     ui->buttonGoto->setEnabled( debugger_on );
     ui->buttonStep->setEnabled( debugger_on );
     ui->buttonStepOver->setEnabled( debugger_on );
+    ui->buttonStepOut->setEnabled( debugger_on );
     ui->groupCPU->setEnabled( debugger_on );
     ui->groupFlags->setEnabled( debugger_on );
     ui->groupDisplay->setEnabled( debugger_on );
