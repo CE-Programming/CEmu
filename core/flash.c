@@ -13,6 +13,9 @@ static uint8_t flash_read(const uint16_t pio) {
     uint8_t read_byte;
 
     switch (addr) {
+        case 0x00:
+            read_byte = flash.mapped;
+            break;
         case 0x02:
             read_byte = flash.map;
             break;
@@ -33,7 +36,7 @@ static void flash_write(const uint16_t pio, const uint8_t byte)
 
     switch (addr) {
         case 0x00:
-            flash.ports[addr] = byte & 1;
+            flash.mapped = byte;
             break;
         case 0x02:
             flash.map = byte;
@@ -58,7 +61,8 @@ eZ80portrange_t init_flash(void) {
 
     flash.ports[0x00] = 0x01; /* From WikiTI */
     flash.ports[0x07] = 0xFF; /* From WikiTI */
-    flash.map = 0x06;         /* From WikiTI */
+    flash.mapped = 1;
+    flash.map = 6;
 
     gui_console_printf("Initialized flash device...\n");
     return device;

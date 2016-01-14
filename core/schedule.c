@@ -68,7 +68,6 @@ void sched_update_next_event(void) {
     }
 }
 
-#include <time.h>
 void sched_process_pending_events(void) {
     sched_update_next_event();
     while (cpu.cycles >= sched.next_cputick) {

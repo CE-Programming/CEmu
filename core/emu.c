@@ -40,7 +40,6 @@ void logprintf(int type, const char *str, ...) {
     }
 }
 
-#include <time.h>
 void throttle_interval_event(int index) {
     event_repeat(index, 27000000 / 60);
 

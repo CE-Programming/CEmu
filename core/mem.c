@@ -45,7 +45,6 @@ void mem_init(void) {
     debugger.data.block = (uint8_t*)calloc(0x1000000, sizeof(uint8_t));    /* Allocate Debug memory */
     debugger.data.ports = (uint8_t*)calloc(0x10000, sizeof(uint8_t));      /* Allocate Debug Port Monitor */
 
-    mem.flash.mapped = false;
     mem.flash.write_index = 0;
     mem.flash.command = NO_COMMAND;
     gui_console_printf("Initialized memory...\n");
@@ -76,12 +75,31 @@ void mem_reset(void) {
     gui_console_printf("RAM reset.\n");
 }
 
-uint8_t* phys_mem_ptr(uint32_t addr, uint32_t size) {
+static uint32_t flash_address(uint32_t address, uint32_t *size) {
+    uint32_t mask = (0x10000 << (flash.map & 0b111)) - 1 & 0x3FFFFF;
+    if (flash.map & 0b1000) {
+        mask = 0xFFFF;
+    }
+    if (size) {
+        *size = mask + 1;
+    }
+    if (address > mask || !flash.mapped)  {
+        address &= mask;
+        if (!size) {
+            cpu.cycles += 258;
+        }
+    } else if (!size) {
+        cpu.cycles += 6 + flash.added_wait_states;
+    }
+    return address;
+}
+
+uint8_t *phys_mem_ptr(uint32_t addr, uint32_t size) {
     uint8_t **block;
     uint32_t block_size, end_addr;
     if (addr < 0xD00000) {
+        addr = flash_address(addr, &block_size);
         block = &mem.flash.block;
-        block_size = flash_size;
     } else {
         addr -= 0xD00000;
         block = &mem.ram.block;
@@ -135,10 +153,10 @@ static void flash_verify_sector_protection(uint32_t address, uint8_t byte) {
     mem.flash.command = FLASH_READ_SECTOR_PROTECTION;
 }
 
-typedef struct flash_write_pattern {
-    int length;
+typedef const struct flash_write_pattern {
+    const int length;
     const flash_write_t pattern[6];
-    void (*handler)(uint32_t address, uint8_t value);
+    void (*const handler)(uint32_t address, uint8_t value);
 } flash_write_pattern_t;
 
 typedef struct flash_status_pattern {
@@ -202,31 +220,34 @@ static uint8_t flash_read_handler(uint32_t address) {
     uint8_t value = 0;
     uint8_t sector;
 
+    address = flash_address(address, NULL);
     if (address < 0x10000) {
         sector = address/flash_sector_size_8K;
     } else {
         sector = (address/flash_sector_size_64K)+7;
     }
 
-    switch(mem.flash.command) {
-        case NO_COMMAND:
-            value = mem.flash.block[address];
-            break;
-        case FLASH_SECTOR_ERASE:
-            value = 0x80;
-            mem.flash.read_index++;
-            if(mem.flash.read_index == 3) {
-                mem.flash.read_index = 0;
+    if (flash.mapped) {
+        switch(mem.flash.command) {
+            case NO_COMMAND:
+                value = mem.flash.block[address];
+                break;
+            case FLASH_SECTOR_ERASE:
+                value = 0x80;
+                mem.flash.read_index++;
+                if(mem.flash.read_index == 3) {
+                    mem.flash.read_index = 0;
+                    mem.flash.command = NO_COMMAND;
+                }
+                break;
+            case FLASH_CHIP_ERASE:
+                value = 0x80;
                 mem.flash.command = NO_COMMAND;
-            }
-            break;
-        case FLASH_CHIP_ERASE:
-            value = 0x80;
-            mem.flash.command = NO_COMMAND;
-            break;
-        case FLASH_READ_SECTOR_PROTECTION:
-            value = (uint8_t)mem.flash.sector[sector].locked;
-            break;
+                break;
+            case FLASH_READ_SECTOR_PROTECTION:
+                value = (uint8_t)mem.flash.sector[sector].locked;
+                break;
+        }
     }
 
     /* Returning 0x00 is enough to emulate for the OS. Set the msb bit for user routines? */
@@ -237,7 +258,12 @@ static void flash_write_handler(uint32_t address, uint8_t byte) {
     int i;
     int partial_match = 0;
     flash_write_t *w;
-    struct flash_write_pattern *pattern;
+    flash_write_pattern_t *pattern;
+
+    address = flash_address(address, NULL);
+    if (!flash.mapped) {
+        return;
+    }
 
     /* See if we can reset to default */
     if (mem.flash.command != NO_COMMAND) {
@@ -270,58 +296,34 @@ static void flash_write_handler(uint32_t address, uint8_t byte) {
     }
 }
 
-/* returns wait cycles */
-uint8_t memory_read_byte(const uint32_t address)
-{
+uint8_t memory_read_byte(uint32_t address) {
     uint8_t value = 0;
-    uint32_t addr = address & 0xFFFFFF;
-
-    switch((addr >> 20) & 0xF) {
+    address &= 0xFFFFFF;
+    switch((address >> 20) & 0xF) {
         /* FLASH */
         case 0x0: case 0x1: case 0x2: case 0x3:
-            cpu.cycles += 5 + flash.added_wait_states;
-            value = flash_read_handler(address);
-            break;
-
-        /* MAYBE FLASH */
         case 0x4: case 0x5: case 0x6: case 0x7:
-            addr -= 0x400000;
-            if (mem.flash.mapped == true) {
-                cpu.cycles += 5 + flash.added_wait_states;
-                value = flash_read_handler(address);
-            }
+            value = flash_read_handler(address);
             break;
 
         /* UNMAPPED */
         case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
-            cpu.cycles += 257;
+            cpu.cycles += 258;
             break;
 
         /* RAM */
         case 0xD:
-            addr -= 0xD00000;
-            if (addr < 0x65800) {
-                cpu.cycles += 3;
-                value = mem.ram.block[addr];
-                break;
+            cpu.cycles += 4;
+            address &= 0x7FFFF;
+            if (address < 0x65800) {
+                value = mem.ram.block[address];
             }
-        /* UNMAPPED */
-            addr -= 0x65800;
-            if (addr < 0x1A800) {
-                cpu.cycles += 3;
-                break;
-            }
-        /* MIRRORED */
-            value = memory_read_byte(address - 0x80000);
-            return value;
-
-        case 0xE: case 0xF:
-            cpu.cycles += 2;
-            value = port_read_byte(mmio_range(addr)<<12 | addr_range(addr));
             break;
 
-        default:
-            cpu.cycles += 1;
+        /* MMIO <-> Advanced Perphrial Bus */
+        case 0xE: case 0xF:
+            cpu.cycles += 2;
+            value = port_read_byte(mmio_range(address)<<12 | addr_range(address));
             break;
     }
 
@@ -341,111 +343,51 @@ uint8_t memory_read_byte(const uint32_t address)
     return value;
 }
 
-void memory_write_byte(const uint32_t address, const uint8_t byte) {
-    uint32_t addr = address & 0xFFFFFF;
-
-    switch((addr >> 20) & 0xF) {
+void memory_write_byte(uint32_t address, uint8_t byte) {
+    address &= 0xFFFFFF;
+    switch((address >> 20) & 0xF) {
         /* FLASH */
         case 0x0: case 0x1: case 0x2: case 0x3:
-            if (mem.flash.locked == false) {
-                flash_write_handler(addr, byte);
-            }
-            cpu.cycles += 5;
-            break;
-
-        /* MAYBE FLASH */
         case 0x4: case 0x5: case 0x6: case 0x7:
-            addr -= 0x400000;
-            if (mem.flash.locked == false) {
-                if (mem.flash.mapped == true) {
-                    cpu.cycles += 5;
-                    flash_write_handler(addr, byte);
-                    break;
-                }
+            if (!mem.flash.locked) {
+                flash_write_handler(address, byte);
             }
-            cpu.cycles += 257;
             break;
 
         /* UNMAPPED */
         case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
-            cpu.cycles += 5;
+            cpu.cycles += 258;
             break;
 
         /* RAM */
         case 0xD:
-            addr -= 0xD00000;
-            if (addr < 0x65800) {
-                cpu.cycles += 2;
-                mem.ram.block[addr] = byte;
-                break;
+            cpu.cycles += 2;
+            address &= 0x7FFFF;
+            if (address < 0x65800) {
+                mem.ram.block[address] = byte;
             }
-            /* UNMAPPED */
-            addr -=  0x65800;
-            if (addr < 0x1A800) {
-                cpu.cycles += 1;
-                break;
-            }
-            /* MIRRORED */
-            memory_write_byte(addr - 0x80000, byte);
-            return;
+            break;
 
         /* MMIO <-> Advanced Perphrial Bus */
         case 0xE: case 0xF:
             cpu.cycles += 2;
-            port_write_byte(mmio_range(addr)<<12 | addr_range(addr), byte);
-            break;
-
-        default:
-            cpu.cycles += 1;
+            port_write_byte(mmio_range(address)<<12 | addr_range(address), byte);
             break;
     }
 
-    if (!in_debugger && debugger.data.block[address&0xFFFFFF] & DBG_WRITE_BREAKPOINT) {
+    if (!in_debugger && debugger.data.block[address] & DBG_WRITE_BREAKPOINT) {
         openDebugger(HIT_WRITE_BREAKPOINT, address);
     }
-
-    return;
 }
 
-void memory_force_write_byte(const uint32_t address, const uint8_t byte) {
-    uint32_t addr = address & 0xFFFFFF;
-
-    switch((addr >> 20) & 0xF) {
-        /* FLASH */
-        case 0x0: case 0x1: case 0x2: case 0x3:
-            mem.flash.block[addr] = byte;
-            break;
-
-        /* MAYBE FLASH */
-        case 0x4: case 0x5: case 0x6: case 0x7:
-            addr -= 0x400000;
-            mem.flash.block[addr] = byte;
-            break;
-
-        /* RAM */
-        case 0xD:
-            addr -= 0xD00000;
-            if (addr < 0x65800) {
-                mem.ram.block[addr] = byte;
-                break;
-            }
-            /* UNMAPPED */
-            addr -=  0x65800;
-            if (addr < 0x1A800) {
-                break;
-            }
-            /* MIRRORED */
-            memory_force_write_byte(addr - 0x80000, byte);
-            return;
-
-        /* MMIO <-> Advanced Perphrial Bus */
-        case 0xE: case 0xF:
-            port_force_write_byte(mmio_range(addr)<<12 | addr_range(addr), byte);
-            break;
-
-        default:
-            break;
+void memory_force_write_byte(uint32_t address, uint8_t byte) {
+    uint8_t *ptr;
+    address &= 0xFFFFFF;
+    if (address < 0xE00000) {
+        if ((ptr = phys_mem_ptr(address, 1))) {
+            *ptr = byte;
+        }
+    } else {
+        port_write_byte(mmio_range(address)<<12 | addr_range(address), byte);
     }
-
-    return;
 }
