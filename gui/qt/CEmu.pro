@@ -56,39 +56,38 @@ SOURCES +=  utils.cpp \
     qtkeypadbridge.cpp \
     qmlbridge.cpp \
     disasmwidget.cpp \
-    core/asic.c \
-    core/cpu.c \
-    core/keypad.c \
-    core/lcd.c \
-    core/registers.c \
-    core/apb.c \
-    core/interrupt.c \
-    core/flash.c \
-    core/misc.c \
-    core/schedule.c \
-    core/emu.cpp \
-    core/timers.c \
-    core/usb.c \
-    core/sha256.c \
-    core/realclock.c \
-    core/backlight.c \
-    core/cert.c \
-    core/control.c \
-    core/mem.c \
-    core/link.c \
-    core/vat.c \
-    core/capture/gif.cpp \
-    core/debug/disasm.cpp \
-    core/debug/debug.c \
     qhexedit/chunks.cpp \
     qhexedit/commands.cpp \
-    qhexedit/qhexedit.cpp
+    qhexedit/qhexedit.cpp \
+    ../../core/asic.c \
+    ../../core/cpu.c \
+    ../../core/keypad.c \
+    ../../core/lcd.c \
+    ../../core/registers.c \
+    ../../core/apb.c \
+    ../../core/interrupt.c \
+    ../../core/flash.c \
+    ../../core/misc.c \
+    ../../core/schedule.c \
+    ../../core/emu.cpp \
+    ../../core/timers.c \
+    ../../core/usb.c \
+    ../../core/sha256.c \
+    ../../core/realclock.c \
+    ../../core/backlight.c \
+    ../../core/cert.c \
+    ../../core/control.c \
+    ../../core/mem.c \
+    ../../core/link.c \
+    ../../core/vat.c \
+    ../../core/capture/gif.cpp \
+    ../../core/debug/disasm.cpp \
+    ../../core/debug/debug.c
 
-linux|macx|ios: SOURCES += os/os-linux.c
-win32: SOURCES += os/os-win32.c
+linux|macx|ios: SOURCES += ../../core/os/os-linux.c
+win32: SOURCES += ../../core/os/os-win32.c
 
-HEADERS  +=  os/os.h \
-    utils.h \
+HEADERS  +=  utils.h \
     mainwindow.h \
     romselection.h \
     qtframebuffer.h \
@@ -98,37 +97,38 @@ HEADERS  +=  os/os.h \
     qtkeypadbridge.h \
     qmlbridge.h \
     keymap.h \
-    core/asic.h \
-    core/cpu.h \
-    core/defines.h \
-    core/keypad.h \
-    core/lcd.h \
-    core/registers.h \
-    core/tidevices.h \
-    core/apb.h \
-    core/interrupt.h \
-    core/emu.h \
-    core/flash.h \
-    core/misc.h \
-    core/schedule.h \
-    core/timers.h \
-    core/usb.h \
-    core/sha256.h \
-    core/realclock.h \
-    core/backlight.h \
-    core/cert.h \
-    core/control.h \
-    core/mem.h \
-    core/link.h \
-    core/vat.h \
-    core/capture/gif.h \
-    core/capture/giflib.h \
-    core/debug/debug.h \
-    core/debug/disasm.h \
-    core/debug/disasmc.h \
     qhexedit/chunks.h \
     qhexedit/commands.h \
-    qhexedit/qhexedit.h
+    qhexedit/qhexedit.h \
+    ../../core/asic.h \
+    ../../core/cpu.h \
+    ../../core/defines.h \
+    ../../core/keypad.h \
+    ../../core/lcd.h \
+    ../../core/registers.h \
+    ../../core/tidevices.h \
+    ../../core/apb.h \
+    ../../core/interrupt.h \
+    ../../core/emu.h \
+    ../../core/flash.h \
+    ../../core/misc.h \
+    ../../core/schedule.h \
+    ../../core/timers.h \
+    ../../core/usb.h \
+    ../../core/sha256.h \
+    ../../core/realclock.h \
+    ../../core/backlight.h \
+    ../../core/cert.h \
+    ../../core/control.h \
+    ../../core/mem.h \
+    ../../core/link.h \
+    ../../core/vat.h \
+    ../../core/capture/gif.h \
+    ../../core/capture/giflib.h \
+    ../../core/debug/debug.h \
+    ../../core/debug/disasm.h \
+    ../../core/debug/disasmc.h \
+    ../../core/os/os.h
 
 FORMS    += mainwindow.ui \
     romselection.ui

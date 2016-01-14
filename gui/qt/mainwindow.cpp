@@ -32,10 +32,10 @@
 #include "qtframebuffer.h"
 #include "qtkeypadbridge.h"
 
-#include "core/schedule.h"
-#include "core/debug/disasmc.h"
-#include "core/link.h"
-#include "core/capture/gif.h"
+#include "../../core/schedule.h"
+#include "../../core/debug/disasmc.h"
+#include "../../core/link.h"
+#include "../../core/capture/gif.h"
 #include "utils.h"
 #include "os/os.h"
 

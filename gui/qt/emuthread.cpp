@@ -24,10 +24,10 @@
 
 #include "mainwindow.h"
 
-#include "core/emu.h"
-#include "core/link.h"
-#include "core/debug/debug.h"
-#include "core/debug/disasm.h"
+#include "../../core/emu.h"
+#include "../../core/link.h"
+#include "../../core/debug/debug.h"
+#include "../../core/debug/disasm.h"
 
 EmuThread *emu_thread = nullptr;
 

@@ -18,7 +18,7 @@
 #include <cassert>
 
 #include "qmlbridge.h"
-#include "core/keypad.h"
+#include "../../core/keypad.h"
 
 QMLBridge::QMLBridge(QObject *p) : QObject(p) {
 }

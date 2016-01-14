@@ -16,7 +16,7 @@
 
 #include "qtframebuffer.h"
 #include "qtkeypadbridge.h"
-#include "core/lcd.h"
+#include "../../core/lcd.h"
 
 #define CLAMP(a) ( ((a) > 255) ? 255 : (((a) < 0) ? 0 : (int)(a)) )
 

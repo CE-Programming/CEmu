@@ -11,9 +11,9 @@
 #include "lcdwidget.h"
 #include "romselection.h"
 #include "emuthread.h"
-#include "core/vat.h"
-#include "core/debug/debug.h"
-#include "core/debug/disasm.h"
+#include "../../core/vat.h"
+#include "../../core/debug/debug.h"
+#include "../../core/debug/disasm.h"
 #include "qhexedit/qhexedit.h"
 
 namespace Ui {

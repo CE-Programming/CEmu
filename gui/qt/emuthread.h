@@ -3,8 +3,8 @@
 
 #include <QtCore/QThread>
 
-#include "core/asic.h"
-#include "core/debug/debug.h"
+#include "../../core/asic.h"
+#include "../../core/debug/debug.h"
 
 class EmuThread : public QThread
 {

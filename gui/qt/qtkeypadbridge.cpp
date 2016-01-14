@@ -15,7 +15,7 @@
 #include "qtkeypadbridge.h"
 #include "qmlbridge.h"
 #include "keymap.h"
-#include "core/keypad.h"
+#include "../../core/keypad.h"
 
 QtKeypadBridge qt_keypad_bridge;
 
