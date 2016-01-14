@@ -27,4 +27,7 @@ void debugger(int reason, uint32_t addr) {
 
     gui_debugger_entered_or_left(in_debugger = false);
     cpu.cycles = mem.debug.cpu_cycles;
+    if (cpu_events & EVENT_DEBUG_STEP) {
+        cpu.next = cpu.cycles + 1;
+    }
 }

@@ -239,7 +239,7 @@ static void emu_main_loop(void) {
             gui_console_printf("CPU Reset triggered...");
             emu_reset();
         }
-        if (cpu_events & EVENT_DEBUG_STEP) {
+        if (!cpu.halted && cpu_events & EVENT_DEBUG_STEP) {
             cpu_events &= ~EVENT_DEBUG_STEP;
             debugger(DBG_STEP, 0);
         }

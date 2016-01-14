@@ -1044,11 +1044,14 @@ void cpu_execute(void) {
                 cpu.cycles += 1;
                 cpu_call(cpu_read_word(r->I << 8 | ~r->R), cpu.MADL);
             }
+            if (cpu_events & EVENT_DEBUG_STEP) {
+                break;
+            }
         } else if (cpu.halted && cpu.cycles < cpu.next) {
             cpu.cycles = cpu.next; // consume all of the cycles
         }
         if (exiting || cpu.cycles >= cpu.next) {
-            return;
+            break;
         }
         do {
             // fetch opcode
@@ -1365,6 +1368,10 @@ void cpu_execute(void) {
                                     cpu.IEF_wait = 1;
                                     save_next = cpu.next;
                                     cpu.next = cpu.cycles + 1; // execute one more instruction
+                                    if (cpu_events & EVENT_DEBUG_STEP) {
+                                        cpu_events &= ~EVENT_DEBUG_STEP;
+                                        debugger(DBG_STEP, 0);
+                                    }
                                     break;
                             }
                             break;

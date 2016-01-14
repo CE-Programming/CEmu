@@ -61,12 +61,6 @@ void sched_update_next_event(uint32_t cputick) {
         }
     }
     /* printf("Next event: (%8d,%d)\n", next_cputick, next_index); */
-    cpu.cycles = cputick;
-    if (cpu_events & EVENT_DEBUG_STEP) {
-        cpu.next = cputick + 1;
-    } else {
-        cpu.next = sched.next_cputick;
-    }
 }
 
 uint32_t sched_process_pending_events(void) {
@@ -88,6 +82,12 @@ uint32_t sched_process_pending_events(void) {
             sched.items[sched.next_index].proc(sched.next_index);
         }
         sched_update_next_event(cputick);
+    }
+    cpu.cycles = cputick;
+    if (!cpu.halted && cpu_events & EVENT_DEBUG_STEP) {
+        cpu.next = cputick + 1;
+    } else {
+        cpu.next = sched.next_cputick;
     }
     return cputick;
 }
