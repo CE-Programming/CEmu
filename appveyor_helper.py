@@ -49,7 +49,8 @@ def dlfile(url):
     while dl_attempts <= MAX_ATTEMPTS:
         # If we aren't on our first download attempt, wait a bit.
         if dl_attempts > 0:
-            print("   !! Download attempt failed, waiting 10s before retry...")
+            print("         !! Download attempt failed, waiting 10s before retry...")
+            print("            (attempt %i/%i)" % (dl_attempts + 1, MAX_ATTEMPTS))
             
             # Wait...
             time.sleep(10)
@@ -57,8 +58,8 @@ def dlfile(url):
         # Open the url
         try:
             f = urlopen(url)
-            print("   -> Downloading (attempt %i/%i):" % (dl_attempts + 1, MAX_ATTEMPTS))
-            print("      %s" % truncate_url(url))
+            print("         -> Downloading:")
+            print("            %s" % truncate_url(url))
 
             # Open our local file for writing
             with open(os.path.basename(url), "wb") as local_file:
@@ -70,20 +71,17 @@ def dlfile(url):
         # Error handling...
         except HTTPError:
             _, e, _ = sys.exc_info()
-            print("   !! HTTP Error: %i (%s)" % (e.code, url))
+            print("         !! HTTP Error: %i (%s)" % (e.code, url))
         except URLError:
             _, e, _ = sys.exc_info()
-            print("   !! URL Error: %s (%s)", e.reason, url)
+            print("         !! URL Error: %s (%s)", e.reason, url)
         
         # Increment attempts
         dl_attempts += 1
         
     if dl_attempts > MAX_ATTEMPTS:
-        print("   !! ERROR: Download failed, exiting!")
+        print("         !! ERROR: Download failed, exiting!")
         sys.exit(1)
-    
-    print("   -> Downloaded successfully:")
-    print("      %s" % truncate_url(url))
 
 def extractfile(filename):
     print("   -> Extracting file: %s" % filename)
@@ -146,86 +144,54 @@ def make_checksum():
 #   hash_regex  - regex to validate the hash format
 #   hash_func   - function to create hash from file
 def validate_gen(filename, chksum_file, hash_name, hash_regex, hash_func):
-    print("   -> Validating file: %s" % filename)
+    print("      -> Validating file with %s: %s" % (hash_name, filename))
     try:
         hash_fh = open(chksum_file)
+        correct_hash = hash_fh.read().strip()
+        hash_fh.close()
     except IOError:
-        print("   !! ERROR: Could not open checksum file '%s' for opening!" % chksum_file)
-        print("   !!        Exact error follows...")
+        print("      !! ERROR: Could not open checksum file '%s' for opening!" % chksum_file)
+        print("      !!        Exact error follows...")
         raise
     
-    found_file_hash = False
-    
-    for hash_line in hash_fh:
-        min_hash_line = hash_line.strip()
-        if min_hash_line != "":
-            if "  " in min_hash_line:
-                hash_arr = hash_line.split("  ")
-            else:
-                print("   !! ERROR: Invalid %s checksum line! (No double-space detected!)" % hash_name)
-                print("   !!        Line: %s" % (min_hash_line))
-                sys.exit(1)
-            
-            if len(hash_arr) != 2:
-                print("   !! ERROR: Invalid %s checksum line! (Too many elements!)" % hash_name)
-                print("   !!        Line: %s" % (min_hash_line))
-                sys.exit(1)
-            
-            # Extract info
-            hash_chksum = hash_arr[1].strip()
-            hash_fn = hash_arr[0].strip()
-            
-            # Ensure hash is a valid checksum
-            hash_match = re.match(hash_regex, hash_chksum)
-            
-            if not hash_match:
-                print("   !! ERROR: Invalid %s checksum!" % hash_name)
-                print("   !!        Line: %s" % (min_hash_line))
-                print("   !!        Extracted %s (invalid): %s" % (hash_name, hash_chksum))
-                sys.exit(1)
-            
-            # Is this the file we're looking for?
-            if filename == hash_fn.strip():
-                found_file_hash = True
-                
-                # One more thing - check to make sure the file exists!
-                try:
-                    test_fh = open(filename, "rb")
-                    test_fh.close()
-                except IOError:
-                    print("   !! ERROR: Can't check %s checksum - could not open file!" % hash_name)
-                    print("   !!        File: %s" % filename)
-                    print("   !! Traceback follows:")
-                    traceback.print_exc()
-                    return False
-                
-                # Alright, let's compute the checksum!
-                cur_hash = hash_func(filename)
-                
-                # Check the checksum...
-                if cur_hash != hash_chksum:
-                    print("   !! ERROR: %s checksums do not match!" % hash_name)
-                    print("   !!        File: %s" % filename)
-                    print("   !!        Current %s: %s" % (hash_name, cur_hash))
-                    print("   !!        Correct %s: %s" % (hash_name, hash_chksum))
-                    return False
-                
-                # We're good! Break out of loop!
-                break
-    
-    if not found_file_hash:
-        print("   !! ERROR: %s checksum for file could not be found!" % hash_name)
-        print("   !!        File: %s" % filename)
+    # Ensure hash is a valid checksum
+    hash_match = re.match(hash_regex, correct_hash)
+
+    if not hash_match:
+        print("      !! ERROR: Invalid %s checksum!" % hash_name)
+        print("      !!        Extracted %s (invalid): %s" % (hash_name, correct_hash))
         sys.exit(1)
+    
+    # One more thing - check to make sure the file exists!
+    try:
+        test_fh = open(filename, "rb")
+        test_fh.close()
+    except IOError:
+        print("      !! ERROR: Can't check %s checksum - could not open file!" % hash_name)
+        print("      !!        File: %s" % filename)
+        print("      !! Traceback follows:")
+        traceback.print_exc()
+        return False
+    
+    # Alright, let's compute the checksum!
+    cur_hash = hash_func(filename)
+    
+    # Check the checksum...
+    if cur_hash != correct_hash:
+        print("      !! ERROR: %s checksums do not match!" % hash_name)
+        print("      !!        File: %s" % filename)
+        print("      !!        Current %s: %s" % (hash_name, cur_hash))
+        print("      !!        Correct %s: %s" % (hash_name, correct_hash))
+        return False
     
     # Otherwise, everything is good!
     return True
 
 def validate(filename):
-    valid_md5 = validate_gen(filename, "Qt56_Beta_MD5SUMS.txt", "MD5", r'^[0-9a-f]{32}$', generate_file_md5)
+    valid_md5 = validate_gen(filename, filename + ".md5", "MD5", r'^[0-9a-f]{32}$', generate_file_md5)
     
     if valid_md5:
-        valid_sha1 = validate_gen(filename, "Qt56_Beta_SHA1SUMS.txt", "SHA1", r'^[0-9a-f]{40}$', generate_file_sha1)
+        valid_sha1 = validate_gen(filename, filename + ".sha1", "SHA1", r'^[0-9a-f]{40}$', generate_file_sha1)
         
         return valid_sha1
     else:
@@ -235,16 +201,23 @@ def dl_and_validate(url):
     validation_attempts = 0
     local_fn = os.path.basename(url)
     
+    print("   -> Downloading + validating:")
+    print("      %s" % truncate_url(url))
+    
+    # Download checksums...
+    print("      -> Downloading checksums for file: %s" % (local_fn))
+    dlfile(url + ".md5")
+    dlfile(url + ".sha1")
+    
     while validation_attempts < MAX_ATTEMPTS:
         # If we aren't on our first download attempt, wait a bit.
         if validation_attempts > 0:
-            print("   !! Download + validation attempt failed, waiting 10s before retry...")
-            
+            print("      !! Download + validation attempt failed, waiting 10s before retry...")
+            print("         (attempt %i/%i)" % (validation_attempts + 1, MAX_ATTEMPTS))
             # Wait...
             time.sleep(10)
         
-        print("   -> Downloading + validating (attempt %i/%i):" % (validation_attempts + 1, MAX_ATTEMPTS))
-        print("      %s" % truncate_url(url))
+        print("      -> Downloading file: %s" % (local_fn))
         
         # Download file...
         dlfile(url)
@@ -258,11 +231,11 @@ def dl_and_validate(url):
         validation_attempts += 1
     
     if validation_attempts > MAX_ATTEMPTS:
-        print("   !! ERROR: Download and validation failed, exiting!")
+        print("      !! ERROR: Download and validation failed, exiting!")
         sys.exit(1)
     
-    print("   -> Downloaded + validated successfully:")
-    print("      %s" % truncate_url(url))
+    print("      -> Downloaded + validated successfully:")
+    print("         %s" % truncate_url(url))
 
 def simple_exec(cmd):
     print("   -> Executing command: %s" % " ".join(cmd))
@@ -310,10 +283,6 @@ def extract(filename):
         sys.exit(1)
 
 def install_deps():
-    print(" * Attempting to download dependency checksums...")
-    dlfile('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt56_Beta_MD5SUMS.txt')
-    dlfile('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt56_Beta_SHA1SUMS.txt')
-    
     print(" * Attempting to download dependencies...")
     dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt56_Beta_Win32_DevDeploy.7z')
     dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt56_Beta_Win64_DevDeploy.7z')
