@@ -574,10 +574,8 @@ void MainWindow::raiseDebugger() {
     }
     ui->tabWidget->setCurrentWidget(ui->tabDebugger);
 
-    /* Set to false because we change it immediately with changeDebuggerState */
-    debugger_on = false;
-    changeDebuggerState();
     populateDebugWindow();
+    setDebuggerState(true);
 }
 
 void MainWindow::updateDebuggerChanges() {
@@ -633,7 +631,6 @@ void MainWindow::setDebuggerState(bool state) {
     if (debugger_on) {
         ui->buttonRun->setText("Run");
         pix.load(":/icons/resources/icons/run.png");
-        populateDebugWindow();
     } else {
         ui->buttonRun->setText("Stop");
         pix.load(":/icons/resources/icons/stop.png");
@@ -679,8 +676,10 @@ void MainWindow::changeDebuggerState() {
         return;
     }
 
-    setDebuggerState(!debugger_on);
-
+    debugger_on = !debugger_on;
+    if (!debugger_on) {
+        setDebuggerState(false);
+    }
     emit debuggerChangedState( debugger_on );
 }
 

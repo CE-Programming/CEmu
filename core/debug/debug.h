@@ -33,6 +33,7 @@ enum {
 #define DBG_STEP_OVER_BREAKPOINT  8
 
 typedef struct {        /* For debugging */
+    int cpu_cycles;
     uint32_t stepOverAddress;
     uint8_t *block;
     uint8_t *ports;
