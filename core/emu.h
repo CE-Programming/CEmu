@@ -14,7 +14,8 @@ extern uint32_t cpu_events;
 #define EVENT_RESET           1
 #define EVENT_DEBUG_STEP      2
 #define EVENT_DEBUG_STEP_OVER 4
-#define EVENT_WAITING         8
+#define EVENT_DEBUG_STEP_OUT  8
+#define EVENT_WAITING         16
 
 /* Settings */
 extern volatile bool exiting;

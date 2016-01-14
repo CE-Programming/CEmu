@@ -395,6 +395,9 @@ static void cpu_return(void) {
         address = cpu_pop_word();
     }
     cpu_prefetch(address, mode);
+    if (cpu_events & EVENT_DEBUG_STEP_OUT && (r->SPL > mem.debug.stepOutSPL || r->SPS > mem.debug.stepOutSPS)) {
+        debugger(DBG_STEP, 0);
+    }
 }
 
 static void cpu_execute_alu(int i, uint8_t v) {

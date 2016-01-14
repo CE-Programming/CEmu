@@ -119,6 +119,14 @@ void EmuThread::setDebugStepOverMode() {
     in_debugger = false;
 }
 
+void EmuThread::setDebugStepOutMode() {
+    mem.debug.stepOutSPL = cpu.registers.SPL;
+    mem.debug.stepOutSPS = cpu.registers.SPS;
+    cpu_events |= EVENT_DEBUG_STEP_OUT;
+    enter_debugger = false;
+    in_debugger = false;
+}
+
 //Called occasionally, only way to do something in the same thread the emulator runs in.
 void EmuThread::doStuff(bool wait_for) {
     (void)wait_for;

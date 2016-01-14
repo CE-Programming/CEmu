@@ -50,6 +50,7 @@ signals:
     void setReceiveState(bool);
     void setDebugStepMode();
     void setDebugStepOverMode();
+    void setDebugStepOutMode();
 
     // Speed
     void changedEmuSpeed(int value);
@@ -79,6 +80,7 @@ private:
     void drawNextDisassembleLine();
     void stepPressed();
     void stepOverPressed();
+    void stepOutPressed();
     void updateStackView();
     void updateDisasmView(const int, const bool);
     void gotoPressed();

@@ -88,6 +88,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(this, &MainWindow::setDebugStepMode, &emu, &EmuThread::setDebugStepMode);
     connect(ui->buttonStepOver, &QPushButton::clicked, this, &MainWindow::stepOverPressed);
     connect(this, &MainWindow::setDebugStepOverMode, &emu, &EmuThread::setDebugStepOverMode);
+    connect(ui->buttonStepOut, &QPushButton::clicked, this, &MainWindow::stepOutPressed);
+    connect(this, &MainWindow::setDebugStepOutMode, &emu, &EmuThread::setDebugStepOutMode);
     connect(ui->buttonBreakpoint, &QPushButton::clicked, this, &MainWindow::breakpointPressed);
     connect(ui->buttonGoto, &QPushButton::clicked, this, &MainWindow::gotoPressed);
     connect(ui->disassemblyView, &QWidget::customContextMenuRequested, this, &MainWindow::setPCaddress);
@@ -1106,6 +1108,11 @@ void MainWindow::stepPressed() {
 void MainWindow::stepOverPressed() {
     setDebuggerState(false);
     emit setDebugStepOverMode();
+}
+
+void MainWindow::stepOutPressed() {
+    setDebuggerState(false);
+    emit setDebugStepOutMode();
 }
 
 void MainWindow::breakpointPressed() {
