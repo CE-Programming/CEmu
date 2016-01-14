@@ -425,7 +425,7 @@ void MainWindow::changeLCDRefresh(int value) {
 
 void MainWindow::changeEmulatedSpeed(int value) {
     settings->setValue(QStringLiteral("emuRate"), value);
-    ui->emulationSpeedLabel->setText(QString::fromStdString(std::to_string(value))+"%");
+    ui->emulationSpeedLabel->setText(QString::fromStdString(std::to_string(value)).rightJustified(3,'0')+"%");
     ui->emulationSpeed->setValue(value);
     emit changedEmuSpeed(value);
 }

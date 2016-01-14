@@ -99,9 +99,10 @@ void event_clear(int index) {
 }
 
 void event_set(int index, uint64_t ticks) {
+    struct sched_item *item;
     sched_process_pending_events();
 
-    struct sched_item *item = &sched.items[index];
+    item = &sched.items[index];
     item->tick = muldiv(cpu.cycles, sched.clock_rates[item->clock], sched.clock_rates[CLOCK_CPU]);
     event_repeat(index, ticks);
 
@@ -109,18 +110,19 @@ void event_set(int index, uint64_t ticks) {
 }
 
 uint32_t event_ticks_remaining(int index) {
+    struct sched_item *item;
     sched_process_pending_events();
 
-    struct sched_item *item = &sched.items[index];
+    item = &sched.items[index];
     return item->second * sched.clock_rates[item->clock]
         + item->tick - muldiv(cpu.cycles, sched.clock_rates[item->clock], sched.clock_rates[CLOCK_CPU]);
 }
 
 void sched_set_clocks(int count, uint32_t *new_rates) {
+    int i;
+    uint32_t remaining[SCHED_NUM_ITEMS];
     sched_process_pending_events();
 
-    uint32_t remaining[SCHED_NUM_ITEMS];
-    int i;
     for (i = 0; i < SCHED_NUM_ITEMS; i++) {
         struct sched_item *item = &sched.items[i];
         if (item->second >= 0) {
