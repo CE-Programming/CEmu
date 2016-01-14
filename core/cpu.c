@@ -129,10 +129,12 @@ static uint32_t cpu_pop_word(void) {
 }
 
 static uint8_t cpu_read_in(uint16_t pio) {
+    cpu.cycles += 2;
     return port_read_byte(pio);
 }
 
 static void cpu_write_out(uint16_t pio, uint8_t value) {
+    cpu.cycles += 3;
     port_write_byte(pio, value);
 }
 
