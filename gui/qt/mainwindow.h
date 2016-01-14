@@ -71,12 +71,13 @@ private:
     void setDebuggerState(bool);
     void changeDebuggerState();
     void processDebugCommand(int, uint32_t);
-    void portMonitorCheckboxToggled(QTableWidgetItem *);
+    void portMonitorCheckboxToggled(QTableWidgetItem*);
     void pollPort();
     void deletePort();
     void updatePortData(int);
+    void changePortData(QTableWidgetItem*);
     void deleteBreakpoint();
-    void breakpointCheckboxToggled(QTableWidgetItem *);
+    void breakpointCheckboxToggled(QTableWidgetItem*);
     void drawNextDisassembleLine();
     void stepPressed();
     void stepOverPressed();

@@ -93,6 +93,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonBreakpoint, &QPushButton::clicked, this, &MainWindow::breakpointPressed);
     connect(ui->buttonGoto, &QPushButton::clicked, this, &MainWindow::gotoPressed);
     connect(ui->disassemblyView, &QWidget::customContextMenuRequested, this, &MainWindow::setPCaddress);
+    connect(ui->portView, &QTableWidget::itemChanged, this, &MainWindow::changePortData);
 
     // Debugger Options
     connect(ui->buttonAddEquateFile, &QPushButton::clicked, this, &MainWindow::addEquateFile);
@@ -179,7 +180,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     current_dir.setPath((settings->value(QStringLiteral("currDir"), QDir::homePath()).toString()));
 
     ui->rompathView->setText(QString::fromStdString(emu.rom));
-    ui->portView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->emuVarView->setSelectionBehavior(QAbstractItemView::SelectRows);
 }
 
@@ -584,25 +584,25 @@ void MainWindow::raiseDebugger() {
 void MainWindow::updateDebuggerChanges() {
   /* Update all the changes in the core */
   if (debugger_on == false) {
-      cpu.registers.AF = (uint16_t)hex2int(ui->afregView->text());
-      cpu.registers.HL = (uint32_t)hex2int(ui->hlregView->text());
-      cpu.registers.DE = (uint32_t)hex2int(ui->deregView->text());
-      cpu.registers.BC = (uint32_t)hex2int(ui->bcregView->text());
-      cpu.registers.IX = (uint32_t)hex2int(ui->ixregView->text());
-      cpu.registers.IY = (uint32_t)hex2int(ui->iyregView->text());
+      cpu.registers.AF = static_cast<uint16_t>(hex2int(ui->afregView->text()));
+      cpu.registers.HL = static_cast<uint32_t>(hex2int(ui->hlregView->text()));
+      cpu.registers.DE = static_cast<uint32_t>(hex2int(ui->deregView->text()));
+      cpu.registers.BC = static_cast<uint32_t>(hex2int(ui->bcregView->text()));
+      cpu.registers.IX = static_cast<uint32_t>(hex2int(ui->ixregView->text()));
+      cpu.registers.IY = static_cast<uint32_t>(hex2int(ui->iyregView->text()));
 
-      cpu.registers._AF = (uint16_t)hex2int(ui->af_regView->text());
-      cpu.registers._HL = (uint32_t)hex2int(ui->hl_regView->text());
-      cpu.registers._DE = (uint32_t)hex2int(ui->de_regView->text());
-      cpu.registers._BC = (uint32_t)hex2int(ui->bc_regView->text());
+      cpu.registers._AF = static_cast<uint16_t>(hex2int(ui->af_regView->text()));
+      cpu.registers._HL = static_cast<uint32_t>(hex2int(ui->hl_regView->text()));
+      cpu.registers._DE = static_cast<uint32_t>(hex2int(ui->de_regView->text()));
+      cpu.registers._BC = static_cast<uint32_t>(hex2int(ui->bc_regView->text()));
 
-      cpu.registers.SPL = (uint32_t)hex2int(ui->splregView->text());
-      cpu.registers.SPS = (uint16_t)hex2int(ui->spsregView->text());
+      cpu.registers.SPL = static_cast<uint32_t>(hex2int(ui->splregView->text()));
+      cpu.registers.SPS = static_cast<uint16_t>(hex2int(ui->spsregView->text()));
 
-      cpu.registers.MBASE = (uint8_t)hex2int(ui->mbregView->text());
-      cpu.registers.I = (uint16_t)hex2int(ui->iregView->text());
-      cpu.registers.R = (uint8_t)hex2int(ui->rregView->text());;
-      cpu.IM = (uint8_t)hex2int(ui->imregView->text());
+      cpu.registers.MBASE = static_cast<uint8_t>(hex2int(ui->mbregView->text()));
+      cpu.registers.I = static_cast<uint16_t>(hex2int(ui->iregView->text()));
+      cpu.registers.R = static_cast<uint8_t>(hex2int(ui->rregView->text()));
+      cpu.IM = static_cast<uint8_t>(hex2int(ui->imregView->text()));
 
       cpu.registers.flags.Z = ui->checkZ->isChecked();
       cpu.registers.flags.C = ui->checkC->isChecked();
@@ -619,9 +619,9 @@ void MainWindow::updateDebuggerChanges() {
       cpu.IEF1 = ui->checkIEF1->isChecked();
       cpu.IEF2 = ui->checkIEF2->isChecked();
 
-      cpu_flush((uint32_t)hex2int(ui->pcregView->text()), ui->checkADL->isChecked());
+      cpu_flush(static_cast<uint32_t>(hex2int(ui->pcregView->text())), ui->checkADL->isChecked());
 
-      backlight.brightness = (uint8_t)ui->brightnessSlider->value();
+      backlight.brightness = static_cast<uint8_t>(ui->brightnessSlider->value());
   }
 }
 
@@ -776,7 +776,7 @@ void MainWindow::portMonitorCheckboxToggled(QTableWidgetItem * item) {
     auto row = item->row();
     uint8_t value = DBG_NO_HANDLE;
 
-    uint16_t port = (uint16_t)ui->portView->item(row, 0)->text().toInt(nullptr,16);
+    uint16_t port = static_cast<uint16_t>(ui->portView->item(row, 0)->text().toInt(nullptr,16));
 
     // Handle R_Break, W_Break, and Freeze
     if (col > 1)
@@ -814,10 +814,10 @@ void MainWindow::pollPort() {
     }
 
     /* Mark the port as read active */
-    port = (uint16_t)hex2int(QString::fromStdString(s));
-    read = (uint8_t)debug_port_read_byte(port);
+    port = static_cast<uint16_t>(hex2int(QString::fromStdString(s)));
+    read = static_cast<uint8_t>(debug_port_read_byte(port));
 
-    QString port_string = int2hex(port,4).toUpper();
+    QString port_string = ui->portRequest->text().toUpper();
 
     /* return if port is already set */
     for (int i=0; i<currentRow; ++i) {
@@ -828,11 +828,15 @@ void MainWindow::pollPort() {
 
     ui->portView->setRowCount(currentRow + 1);
 
-    QTableWidgetItem *port_range = new QTableWidgetItem(port_string.toUpper());
+    QTableWidgetItem *port_range = new QTableWidgetItem(port_string);
     QTableWidgetItem *port_data = new QTableWidgetItem(int2hex(read, 2));
     QTableWidgetItem *port_rBreak = new QTableWidgetItem();
     QTableWidgetItem *port_wBreak = new QTableWidgetItem();
     QTableWidgetItem *port_freeze = new QTableWidgetItem();
+
+    port_rBreak->setFlags(port_rBreak->flags() & ~Qt::ItemIsEditable);
+    port_wBreak->setFlags(port_wBreak->flags() & ~Qt::ItemIsEditable);
+    port_freeze->setFlags(port_freeze->flags() & ~Qt::ItemIsEditable);
 
     port_rBreak->setCheckState(Qt::Unchecked);
     port_wBreak->setCheckState(Qt::Unchecked);
@@ -847,6 +851,24 @@ void MainWindow::pollPort() {
     ui->portRequest->clear();
 }
 
+void MainWindow::changePortData(QTableWidgetItem *curr_item) {
+    if (curr_item->column() != 1) {
+        return;
+    }
+
+    const int currentRow = curr_item->row();
+
+    bool ok;
+    uint8_t pdata = static_cast<uint8_t>(curr_item->text().toInt(&ok,16));
+    uint16_t port = static_cast<uint16_t>(ui->portView->item(currentRow, 0)->text().toInt(nullptr,16));
+    if (!ok) {
+        pdata = 0;
+    }
+
+    debug_port_write_byte(port, pdata);
+    curr_item->setText(int2hex(debug_port_read_byte(port), 2).toUpper());
+}
+
 void MainWindow::deletePort() {
     if(!ui->portView->rowCount() || !ui->portView->currentIndex().isValid()) {
         return;
@@ -854,7 +876,7 @@ void MainWindow::deletePort() {
 
     const int currentRow = ui->portView->currentRow();
 
-    uint16_t port = (uint16_t)ui->portView->item(currentRow, 0)->text().toInt(nullptr,16);
+    uint16_t port = static_cast<uint16_t>(ui->portView->item(currentRow, 0)->text().toInt(nullptr,16));
     debugger.data.ports[port] = DBG_NO_HANDLE;
 
     ui->portView->removeRow(currentRow);
@@ -865,7 +887,7 @@ void MainWindow::breakpointCheckboxToggled(QTableWidgetItem * item) {
     auto row = item->row();
     uint8_t value = DBG_NO_HANDLE;
 
-    uint32_t address = (uint32_t)ui->breakpointView->item(row, 0)->text().toInt(nullptr,16)&0xFFFFFF;
+    uint32_t address = static_cast<uint32_t>(ui->breakpointView->item(row, 0)->text().toInt(nullptr,16)&0xFFFFFF);
 
     // Handle R_Break, W_Break, and E_Break
     if (col > 0)
@@ -903,7 +925,7 @@ bool MainWindow::addBreakpoint() {
         return false;
     }
 
-    address = (uint32_t)hex2int(QString::fromStdString(s));
+    address = static_cast<uint32_t>(hex2int(QString::fromStdString(s)));
 
     QString address_string = int2hex(address,6).toUpper();
 
@@ -944,7 +966,7 @@ void MainWindow::deleteBreakpoint() {
 
     const int currentRow = ui->breakpointView->currentRow();
 
-    uint32_t address = (uint32_t)ui->breakpointView->item(currentRow, 0)->text().toInt(nullptr,16);
+    uint32_t address = static_cast<uint32_t>(ui->breakpointView->item(currentRow, 0)->text().toInt(nullptr,16));
     debugger.data.block[address] = DBG_NO_HANDLE;
 
     ui->breakpointView->removeRow(currentRow);
@@ -964,7 +986,7 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
         ui->tabDebugging->setCurrentIndex(0);
 
         // find the correct entry
-        while( (uint32_t)ui->breakpointView->item(row++, 0)->text().toInt(&ok,16) != input );
+        while( static_cast<uint32_t>(ui->breakpointView->item(row++, 0)->text().toInt(&ok,16)) != input );
         row--;
 
         ui->breakChangeView->setText("Address "+ui->breakpointView->item(row, 0)->text()+" "+((reason == HIT_READ_BREAKPOINT) ? "Read" : (reason == HIT_WRITE_BREAKPOINT) ? "Write" : "Executed"));
@@ -977,7 +999,7 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
     if (reason == HIT_PORT_READ_BREAKPOINT || reason == HIT_PORT_WRITE_BREAKPOINT) {
         ui->tabDebugging->setCurrentIndex(1);
         // find the correct entry
-        while( (uint32_t)ui->portView->item(row++, 0)->text().toInt(&ok,16) != input );
+        while( static_cast<uint32_t>(ui->portView->item(row++, 0)->text().toInt(&ok,16)) != input );
         row--;
 
         ui->portChangeView->setText("Port "+ui->portView->item(row, 0)->text()+" "+((reason == HIT_PORT_READ_BREAKPOINT) ? "Read" : "Write"));
@@ -986,8 +1008,8 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
 }
 
 void MainWindow::updatePortData(int currentRow) {
-    uint16_t port = (uint16_t)ui->portView->item(currentRow, 0)->text().toInt(nullptr,16);
-    uint8_t read = (uint8_t)debug_port_read_byte(port);
+    uint16_t port = static_cast<uint16_t>(ui->portView->item(currentRow, 0)->text().toInt(nullptr,16));
+    uint8_t read = static_cast<uint8_t>(debug_port_read_byte(port));
 
     ui->portView->item(currentRow, 1)->setText(int2hex(read,2).toUpper());
 }
@@ -1092,7 +1114,7 @@ void MainWindow::setPCaddress(const QPoint& posa) {
     if (selectedItem) {
         if (selectedItem->text() == set_pc) {
             ui->pcregView->setText(ui->disassemblyView->getSelectedAddress());
-            cpu_flush((uint32_t)hex2int(ui->pcregView->text()), cpu.ADL);
+            cpu_flush(static_cast<uint32_t>(hex2int(ui->pcregView->text())), cpu.ADL);
             updateDisasmView(cpu.registers.PC, true);
         } else  if (selectedItem->text() == toggle_break) {
             breakpointPressed();
@@ -1314,13 +1336,13 @@ void MainWindow::syncHexView(int posa, QHexEdit *hex_view) {
 
 void MainWindow::flashSyncPressed() {
     qint64 posa = ui->flashEdit->cursorPosition();
-    memcpy(mem.flash.block, (uint8_t*)ui->flashEdit->data().data(), flash_size);
+    memcpy(mem.flash.block, reinterpret_cast<uint8_t*>(ui->flashEdit->data().data()), flash_size);
     syncHexView(posa, ui->flashEdit);
 }
 
 void MainWindow::ramSyncPressed() {
     qint64 posa = ui->ramEdit->cursorPosition();
-    memcpy(mem.ram.block, (uint8_t*)ui->ramEdit->data().data(), ram_size);
+    memcpy(mem.ram.block, reinterpret_cast<uint8_t*>(ui->ramEdit->data().data()), ram_size);
     syncHexView(posa, ui->ramEdit);
 }
 
@@ -1370,7 +1392,7 @@ void MainWindow::addEquateFile() {
         while (std::getline(in, current)) {
             QRegularExpressionMatch matches = equatesRegexp.match(QString::fromStdString(current));
             if (matches.hasMatch()) {
-                uint32_t address = (uint32_t)matches.capturedRef(2).toUInt(0, 16);
+                uint32_t address = static_cast<uint32_t>(matches.capturedRef(2).toUInt(0, 16));
                 std::string &item = disasm.address_map[address];
                 if (item.empty()) {
                     item = matches.captured(1).toStdString();

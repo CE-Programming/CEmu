@@ -72,8 +72,8 @@ void mem_reset(void) {
 }
 
 static uint32_t flash_address(uint32_t address, uint32_t *size) {
-    uint32_t mask = (0x10000 << (flash.map & 0b111)) - 1 & 0x3FFFFF;
-    if (flash.map & 0b1000) {
+    uint32_t mask = ((0x10000 << (flash.map & 7)) - 1) & 0x3FFFFF;
+    if (flash.map & 8) {
         mask = 0xFFFF;
     }
     if (size) {
