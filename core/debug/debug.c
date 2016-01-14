@@ -16,7 +16,7 @@ uint8_t debug_read_byte(uint32_t address) {
             value = *ptr;
         }
     } else {
-        value = port_read_byte(mmio_range(address)<<12 | addr_range(address));
+        value = debug_port_read_byte(mmio_range(address)<<12 | addr_range(address));
     }
 
     if (debugger.data.block[address]) {
@@ -51,7 +51,7 @@ void debug_write_byte(uint32_t address, uint8_t value) {
             *ptr = value;
         }
     } else {
-        port_write_byte(mmio_range(address)<<12 | addr_range(address), value);
+        debug_port_write_byte(mmio_range(address)<<12 | addr_range(address), value);
     }
 }
 

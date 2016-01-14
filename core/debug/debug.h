@@ -35,14 +35,14 @@ enum {
 typedef struct {
     uint8_t *block;
     uint8_t *ports;
-} data_t;
+} debug_data_t;
 
 typedef struct {        /* For debugging */
     int cpu_cycles;
     uint32_t stepOverAddress;
     uint32_t stepOutSPL;
     uint16_t stepOutSPS;
-    data_t data;
+    debug_data_t data;
 } debug_state_t;
 
 /* Debugging */
