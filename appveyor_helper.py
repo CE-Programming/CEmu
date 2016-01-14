@@ -440,6 +440,8 @@ def deploy_snapshots():
     mkdir_p("deploy")
     mkdir_p(os.path.join("deploy", "release32"))
     mkdir_p(os.path.join("deploy", "release64"))
+    mkdir_p(os.path.join("deploy", "release32_debug"))
+    mkdir_p(os.path.join("deploy", "release64_debug"))
     
     # git rev-parse --short HEAD
     git_rev = output_exec(["git", "rev-parse", "--short", "HEAD"])
@@ -463,21 +465,36 @@ def deploy_snapshots():
                      os.path.join("deploy", "release64"))
     
     collect_qt_files("x86", r"C:\Qt\Qt5.6.0\5.6\msvc2015\bin\windeployqt.exe", r"deploy\release32", r'build_32\release\CEmu.exe')
-    collect_qt_files("x86", r"C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\windeployqt.exe", r"deploy\release64", r'build_64\release\CEmu.exe')
+    collect_qt_files("x64", r"C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\windeployqt.exe", r"deploy\release64", r'build_64\release\CEmu.exe')
+    
+    collect_qt_files("x86 Debug", r"C:\Qt\Qt5.6.0\5.6\msvc2015\bin\windeployqt.exe", r"deploy\release32_debug", r'build_32\debug\CEmu.exe')
+    collect_qt_files("x64 Debug", r"C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\windeployqt.exe", r"deploy\release64_debug", r'build_64\debug\CEmu.exe')
     
     file_list_32 = build_file_list("x86", r"deploy\release32")
     file_list_64 = build_file_list("x64", r"deploy\release64")
+    
+    file_list_32_debug = build_file_list("x86 Debug", r"deploy\release32_debug")
+    file_list_64_debug = build_file_list("x64 Debug", r"deploy\release64_debug")
     
     # Build our ZIPs!
     cemu_win32_zip_fn = snap_base_fn + "win32-shared.zip"
     cemu_win64_zip_fn = snap_base_fn + "win64-shared.zip"
     
+    cemu_win32_debug_zip_fn = snap_base_fn + "win32-debug-shared.zip"
+    cemu_win64_debug_zip_fn = snap_base_fn + "win64-debug-shared.zip"
+    
     make_zip("x86", cemu_win32_zip_fn, file_list_32)
     make_zip("x64", cemu_win64_zip_fn, file_list_64)
+    
+    make_zip("x86 Debug", cemu_win32_debug_zip_fn, file_list_32_debug)
+    make_zip("x64 Debug", cemu_win64_debug_zip_fn, file_list_64_debug)
     
     # Upload everything!
     upload_snapshot(cemu_win32_zip_fn, bintray_api_username, bintray_api_key)
     upload_snapshot(cemu_win64_zip_fn, bintray_api_username, bintray_api_key)
+    
+    upload_snapshot(cemu_win32_debug_zip_fn, bintray_api_username, bintray_api_key)
+    upload_snapshot(cemu_win64_debug_zip_fn, bintray_api_username, bintray_api_key)
     
     print(" * Snapshot deployment complete!")
     
