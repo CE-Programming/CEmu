@@ -706,10 +706,7 @@ void MainWindow::setDebuggerState(bool state) {
     if (debugger_on) {
         ui->buttonRun->setText("Run");
         pix.load(":/icons/resources/icons/run.png");
-        if (run_until_set) {
-            debugger.data.block[run_until_address] &= ~DBG_RUN_UNTIL_BREAKPOINT;
-            run_until_set = false;
-        }
+        debug_clear_run_until();
     } else {
         ui->buttonRun->setText("Stop");
         pix.load(":/icons/resources/icons/stop.png");
@@ -904,11 +901,10 @@ void MainWindow::updateDisasmView(const int sentBase, const bool fromPane) {
 void MainWindow::portMonitorCheckboxToggled(QTableWidgetItem * item) {
     auto col = item->column();
     auto row = item->row();
-    uint8_t value = DBG_NO_HANDLE;
 
     uint16_t port = static_cast<uint16_t>(ui->portView->item(row, 0)->text().toInt(nullptr,16));
+    uint8_t value = DBG_NO_HANDLE;
 
-    // Handle R_Break, W_Break, and Freeze
     if (col > 1)
     {
         if (col == 2) { // Break on read
@@ -920,11 +916,7 @@ void MainWindow::portMonitorCheckboxToggled(QTableWidgetItem * item) {
         if (col == 4) { // Freeze
             value = DBG_PORT_FREEZE;
         }
-        if (item->checkState() != Qt::Checked) {
-            debugger.data.ports[port] &= ~value;
-        } else {
-            debugger.data.ports[port] |= value;
-        }
+        debug_pmonitor_set(port, value, item->checkState() == Qt::Checked);
     }
 }
 
@@ -982,46 +974,39 @@ void MainWindow::pollPort() {
 }
 
 void MainWindow::changePortData(QTableWidgetItem *curr_item) {
+    const int currentRow = curr_item->row();
     if (curr_item->column() != 1) {
         return;
     }
 
-    const int currentRow = curr_item->row();
-
-    bool ok;
-    uint8_t pdata = static_cast<uint8_t>(curr_item->text().toInt(&ok,16));
-    uint16_t port = static_cast<uint16_t>(ui->portView->item(currentRow, 0)->text().toInt(nullptr,16));
-    if (!ok) {
-        pdata = 0;
-    }
+    uint8_t pdata = static_cast<uint8_t>(hex2int(curr_item->text()));
+    uint16_t port = static_cast<uint16_t>(hex2int(ui->portView->item(currentRow, 0)->text()));
 
     debug_port_write_byte(port, pdata);
+
     curr_item->setText(int2hex(debug_port_read_byte(port), 2).toUpper());
 }
 
 void MainWindow::deletePort() {
-    if(!ui->portView->rowCount() || !ui->portView->currentIndex().isValid()) {
+    const int currentRow = ui->portView->currentRow();
+    if(!ui->portView->rowCount() || !ui->portView->currentIndex().isValid() || currentRow == -1) {
         return;
     }
-
-    const int currentRow = ui->portView->currentRow();
-
-    uint16_t port = static_cast<uint16_t>(ui->portView->item(currentRow, 0)->text().toInt(nullptr,16));
-    debugger.data.ports[port] = DBG_NO_HANDLE;
-
     ui->portView->removeRow(currentRow);
+
+    uint16_t port = static_cast<uint16_t>(hex2int(ui->portView->item(currentRow, 0)->text()));
+
+    debug_pmonitor_remove(port, DBG_NO_HANDLE);
 }
 
 void MainWindow::breakpointCheckboxToggled(QTableWidgetItem * item) {
     auto col = item->column();
     auto row = item->row();
-    uint8_t value = DBG_NO_HANDLE;
 
     uint32_t address = static_cast<uint32_t>(ui->breakpointView->item(row, 0)->text().toInt(nullptr,16)&0xFFFFFF);
+    unsigned int value = DBG_NO_HANDLE;
 
-    // Handle R_Break, W_Break, and E_Break
-    if (col > 0)
-    {
+    if (col > 0) {
         if (col == 1) { // Break on read
             value = DBG_READ_BREAKPOINT;
         }
@@ -1031,12 +1016,9 @@ void MainWindow::breakpointCheckboxToggled(QTableWidgetItem * item) {
         if (col == 3) { // Break on execution
             value = DBG_EXEC_BREAKPOINT;
         }
-        if (item->checkState() != Qt::Checked) {
-            debugger.data.block[address] &= ~value;
-        } else {
-            debugger.data.block[address] |= value;
-        }
     }
+
+    debug_breakpoint_set(address, value, item->checkState() == Qt::Checked);
 
     updateDisasmView(address, true);
 }
@@ -1097,7 +1079,8 @@ void MainWindow::deleteBreakpoint() {
     const int currentRow = ui->breakpointView->currentRow();
 
     uint32_t address = static_cast<uint32_t>(ui->breakpointView->item(currentRow, 0)->text().toInt(nullptr,16));
-    debugger.data.block[address] = DBG_NO_HANDLE;
+
+    debug_breakpoint_remove(address, DBG_NO_HANDLE);
 
     ui->breakpointView->removeRow(currentRow);
 }
@@ -1251,26 +1234,16 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
     if (selectedItem) {
         if (selectedItem->text() == set_pc) {
             ui->pcregView->setText(ui->disassemblyView->getSelectedAddress());
-            cpu_flush(static_cast<uint32_t>(hex2int(ui->pcregView->text())), cpu.ADL);
+            uint32_t address = static_cast<uint32_t>(hex2int(ui->pcregView->text()));
+            debug_set_pc_address(address);
             updateDisasmView(cpu.registers.PC, true);
             populateDebugWindow();
         } else if (selectedItem->text() == toggle_break) {
             setBreakpointAddress();
             populateDebugWindow();
         } else if (selectedItem->text() == run_until) {
-            uint32_t address = ui->disassemblyView->getSelectedAddress().toInt(nullptr, 16);
-            if (address == run_until_address) {
-                debugger.data.block[address] &= ~DBG_RUN_UNTIL_BREAKPOINT;
-                run_until_address = 0xFFFFFFFF;
-                run_until_set = false;
-            } else {
-                if (run_until_set) {
-                    debugger.data.block[run_until_address] &= ~DBG_RUN_UNTIL_BREAKPOINT;
-                }
-                debugger.data.block[address] |= DBG_RUN_UNTIL_BREAKPOINT;
-                run_until_address = address;
-                run_until_set = true;
-            }
+            uint32_t address = static_cast<uint32_t>(hex2int(ui->disassemblyView->getSelectedAddress()));
+            debug_toggle_run_until(address);
             updateDisasmView(address, true);
             populateDebugWindow();
         }
@@ -1278,7 +1251,6 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
 }
 
 void MainWindow::stepPressed() {
-    // Since we are just stepping, there's no point in disasbling the GUI
     debugger_on = false;
     updateDebuggerChanges();
     emit setDebugStepMode();
@@ -1322,7 +1294,6 @@ QString MainWindow::getAddressString(bool &ok, QString String) {
 }
 
 void MainWindow::gotoPressed() {
-
     bool ok;
     QString address = getAddressString(ok, ui->disassemblyView->getSelectedAddress());
 

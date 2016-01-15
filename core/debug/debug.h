@@ -9,6 +9,7 @@ extern "C" {
 
 extern volatile bool in_debugger;
 
+/* For use in the debugger */
 enum {
         DBG_USER,
         DBG_EXCEPTION,
@@ -44,11 +45,16 @@ typedef struct {        /* For debugging */
     uint32_t stepOverAddress;
     uint32_t stepOutSPL;
     uint16_t stepOutSPS;
+    uint32_t runUntilAddress;
+    bool runUntilSet;
     debug_data_t data;
 } debug_state_t;
 
 /* Debugging */
 extern debug_state_t debugger;
+
+void debugger_init(void);
+void debugger_free(void);
 
 uint8_t debug_read_byte(uint32_t address);
 uint16_t debug_read_short(uint32_t address);
@@ -58,6 +64,18 @@ void debug_write_byte(uint32_t address, uint8_t value);
 uint8_t debug_port_read_byte(uint32_t address);
 void debug_port_write_byte(uint32_t address, uint8_t value);
 void openDebugger(int reason, uint32_t address);
+
+void debug_toggle_run_until(uint32_t address);
+
+void debug_breakpoint_set(uint32_t address, unsigned int type, bool set);
+void debug_breakpoint_remove(uint32_t address, unsigned int type);
+
+void debug_pmonitor_set(uint16_t address, unsigned int type, bool set);
+void debug_pmonitor_remove(uint16_t address, unsigned int type);
+
+void debug_set_pc_address(uint32_t address);
+
+void debug_clear_run_until(void);
 
 #ifdef __cplusplus
 }

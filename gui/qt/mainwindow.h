@@ -143,13 +143,11 @@ private:
     QSettings *settings = nullptr;
     QDockWidget *dock_debugger = nullptr;
     QTextCursor disasm_offset;
-    bool run_until_set = false;
     bool detached_state = false;
     bool disasm_offset_set;
     bool from_pane;
     int address_pane;
     int mem_hex_size;
-    uint32_t run_until_address;
 
     QDir current_dir;
     EmuThread emu;

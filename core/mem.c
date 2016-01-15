@@ -37,10 +37,6 @@ void mem_init(void) {
 
     mem.ram.block = (uint8_t*)calloc(ram_size, sizeof(uint8_t));      /* Allocate RAM */
 
-    debugger.stepOverAddress = -1;
-    debugger.data.block = (uint8_t*)calloc(0x1000000, sizeof(uint8_t));    /* Allocate Debug memory */
-    debugger.data.ports = (uint8_t*)calloc(0x10000, sizeof(uint8_t));      /* Allocate Debug Port Monitor */
-
     mem.flash.write_index = 0;
     mem.flash.command = NO_COMMAND;
     gui_console_printf("Initialized memory...\n");
@@ -49,19 +45,9 @@ void mem_init(void) {
 void mem_free(void) {
     if (mem.ram.block) {
         free(mem.ram.block);
-        mem.ram.block = NULL;
     }
     if (mem.flash.block) {
         free(mem.flash.block);
-        mem.flash.block = NULL;
-    }
-    if (debugger.data.block) {
-        free(debugger.data.block);
-        debugger.data.block = NULL;
-    }
-    if (debugger.data.ports) {
-        free(debugger.data.ports);
-        debugger.data.ports = NULL;
     }
     gui_console_printf("Freed memory...\n");
 }
