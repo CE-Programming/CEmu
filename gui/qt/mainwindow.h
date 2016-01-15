@@ -53,7 +53,8 @@ signals:
     void setDebugStepOutMode();
 
     // Speed
-    void changedEmuSpeed(int value);
+    void changedEmuSpeed(int);
+    void changedThrottleMode(bool);
 
 private:
     // Actions
@@ -95,7 +96,8 @@ private:
     void clearEquateFile();
 
     // Speed
-    void changeEmulatedSpeed(int value);
+    void changeEmulatedSpeed(int);
+    void changeThrottleMode(int);
 
     // Console
     void clearConsole(void);

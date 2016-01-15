@@ -87,6 +87,10 @@ void EmuThread::changeEmuSpeed(int value) {
     speed = value;
 }
 
+void EmuThread::changeThrottleMode(bool mode) {
+    throttle_on = mode;
+}
+
 void EmuThread::setDebugMode(bool state) {
     enter_debugger = state;
     if(in_debugger && !state) {
@@ -157,7 +161,7 @@ void EmuThread::throttleTimerWait() {
     std::chrono::steady_clock::duration interval(std::chrono::duration_cast<std::chrono::steady_clock::duration>
                                                  (std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(1000000 * 100 / speed)));
     std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now(), next_time = last_time + interval;
-    if (cur_time < next_time) {
+    if (throttle_on && cur_time < next_time) {
         std::this_thread::sleep_until(last_time = next_time);
     } else {
         last_time = cur_time;

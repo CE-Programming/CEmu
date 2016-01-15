@@ -128,7 +128,9 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->refreshSlider, &QSlider::valueChanged, this, &MainWindow::changeLCDRefresh);
     connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::alwaysOnTop);
     connect(ui->emulationSpeed, &QSlider::valueChanged, this, &MainWindow::changeEmulatedSpeed);
+    connect(ui->checkThrottle, &QCheckBox::stateChanged, this, &MainWindow::changeThrottleMode);
     connect(this, &MainWindow::changedEmuSpeed, &emu, &EmuThread::changeEmuSpeed);
+    connect(this, &MainWindow::changedThrottleMode, &emu, &EmuThread::changeThrottleMode);
 
     // Hex Editor
     connect(ui->buttonFlashGoto, &QPushButton::clicked, this, &MainWindow::flashGotoPressed);
@@ -176,6 +178,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     changeLCDRefresh(settings->value(QStringLiteral("refreshRate"), 60).toInt());
     changeEmulatedSpeed(settings->value(QStringLiteral("emuRate"), 100).toInt());
     alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toInt());
+    changeThrottleMode(settings->value(QStringLiteral("throttleMode"), Qt::Checked).toInt());
     ui->textSizeSlider->setValue(settings->value(QStringLiteral("disasmTextSize"), 9).toInt());
     current_dir.setPath((settings->value(QStringLiteral("currDir"), QDir::homePath()).toString()));
 
@@ -258,6 +261,12 @@ void MainWindow::closeEvent(QCloseEvent *e) {
 void MainWindow::consoleStr(QString str) {
     ui->console->moveCursor(QTextCursor::End);
     ui->console->insertPlainText(str);
+}
+
+void MainWindow::changeThrottleMode(int mode) {
+    settings->setValue(QStringLiteral("throttleMode"), mode);
+
+    emit changedThrottleMode(mode == Qt::Checked);
 }
 
 void MainWindow::popoutLCD() {

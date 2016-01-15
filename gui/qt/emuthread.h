@@ -22,32 +22,34 @@ public:
 signals:
     // Debugger
     void debuggerEntered();
-    void sendDebugCommand(int reason, uint32_t addr);
+    void sendDebugCommand(int, uint32_t);
 
-    void consoleStr(QString str);
-    void exited(int retcode);
+    void consoleStr(QString);
+    void exited(int);
 
 public slots:
     virtual void run() override;
     bool stop();
 
     // Debugging
-    void setDebugMode(bool state);
+    void setDebugMode(bool);
     void setDebugStepMode();
     void setDebugStepOverMode();
     void setDebugStepOutMode();
 
     // Linking
-    void setSendState(bool state);
-    void setReceiveState(bool state);
+    void setSendState(bool);
+    void setReceiveState(bool);
 
     // Speed
-    void changeEmuSpeed(int value);
+    void changeEmuSpeed(int);
+    void changeThrottleMode(bool);
 
 private:
     bool enter_debugger = false;
     bool enter_send_state = false;
     bool enter_receive_state = false;
+    bool throttle_on = true;
     int speed;
     std::chrono::steady_clock::time_point last_time;
 };
