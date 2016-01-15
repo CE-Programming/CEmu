@@ -174,7 +174,7 @@ static void cpu_write_other_index(uint32_t value) {
 }
 
 static uint32_t cpu_index_address(void) {
-    uint32_t value = cpu_read_index();
+    int32_t value = cpu_read_index();
     if (cpu.PREFIX) {
         value += cpu_fetch_offset();
     }
@@ -579,7 +579,7 @@ static void cpu_execute_bli(int y, int z) {
                 case 2: // INIM
                     cpu.cycles++;
                     cpu_write_byte(r->HL, new = cpu_read_in(r->C));
-                    r->HL++; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
                     r->C++;
                     old = r->B;
                     r->B--;
@@ -590,7 +590,7 @@ static void cpu_execute_bli(int y, int z) {
                 case 3: // OTIM
                     cpu.cycles++;
                     cpu_write_out(r->C, new = cpu_read_byte(r->HL));
-                    r->HL++; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
                     r->C++;
                     old = r->B;
                     r->B--;
@@ -601,7 +601,7 @@ static void cpu_execute_bli(int y, int z) {
                 case 4: // INI2
                     cpu.cycles++;
                     cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
-                    r->HL++; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
                     r->C++;
                     r->B--;
                     r->flags.Z = cpuflag_zero(r->B) != 0;
@@ -614,7 +614,7 @@ static void cpu_execute_bli(int y, int z) {
                 case 2: // INDM
                     cpu.cycles++;
                     cpu_write_byte(r->HL, new = cpu_read_in(r->C));
-                    r->HL--; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
                     r->C--;
                     old = r->B;
                     r->B--;
@@ -625,7 +625,7 @@ static void cpu_execute_bli(int y, int z) {
                 case 3: // OTDM
                     cpu.cycles++;
                     cpu_write_out(r->C, new = cpu_read_byte(r->HL));
-                    r->HL--; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
                     r->C--;
                     old = r->B;
                     r->B--;
@@ -636,7 +636,7 @@ static void cpu_execute_bli(int y, int z) {
                 case 4: // IND2
                     cpu.cycles++;
                     cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
-                    r->HL--; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
                     r->C--;
                     r->B--;
                     r->flags.Z = cpuflag_zero(r->B) != 0;
@@ -649,7 +649,7 @@ static void cpu_execute_bli(int y, int z) {
                 case 2: // INIMR
                     cpu.cycles++;
                     cpu_write_byte(r->HL, new = cpu_read_in(r->C));
-                    r->HL++; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
                     r->C++;
                     r->B--;
                     r->flags.Z = cpuflag_zero(r->B) != 0;
@@ -661,7 +661,7 @@ static void cpu_execute_bli(int y, int z) {
                 case 3: // OTIMR
                     cpu.cycles++;
                     cpu_write_out(r->C, new = cpu_read_byte(r->HL));
-                    r->HL++; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
                     r->C++;
                     old = r->B;
                     r->B--;
@@ -675,8 +675,8 @@ static void cpu_execute_bli(int y, int z) {
                 case 4: // INI2R
                     cpu.cycles++;
                     cpu_write_byte(r->HL, new = cpu_read_in(r->DE));
-                    r->HL++; mask_mode(r->HL, cpu.L);
-                    r->DE++; mask_mode(r->DE, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
+                    r->DE = cpu_mask_mode((int32_t)r->DE + 1, cpu.L);
                     old = cpu_dec_bc_partial_mode(); // Do not mask BC
                     r->flags.Z = cpuflag_zero(old) != 0;
                     r->flags.N = cpuflag_sign_b(new) != 0;
@@ -691,7 +691,7 @@ static void cpu_execute_bli(int y, int z) {
                 case 2: // INDMR
                     cpu.cycles++;
                     cpu_write_byte(r->HL, new = cpu_read_in(r->C));
-                    r->HL--; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
                     r->C--;
                     r->B--;
                     r->flags.Z = cpuflag_zero(r->B) != 0;
@@ -703,7 +703,7 @@ static void cpu_execute_bli(int y, int z) {
                 case 3: // OTDMR
                     cpu.cycles++;
                     cpu_write_out(r->C, new = cpu_read_byte(r->HL));
-                    r->HL--; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
                     r->C--;
                     old = r->B;
                     r->B--;
@@ -717,8 +717,8 @@ static void cpu_execute_bli(int y, int z) {
                 case 4: // IND2R
                     cpu.cycles++;
                     cpu_write_byte(r->HL, new = cpu_read_in(r->DE));
-                    r->HL--; mask_mode(r->HL, cpu.L);
-                    r->DE--; mask_mode(r->DE, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
+                    r->DE = cpu_mask_mode((int32_t)r->DE - 1, cpu.L);
                     old = cpu_dec_bc_partial_mode(); // Do not mask BC
                     r->flags.Z = cpuflag_zero(old) != 0;
                     r->flags.N = cpuflag_sign_b(new) != 0;
@@ -733,18 +733,18 @@ static void cpu_execute_bli(int y, int z) {
                 case 0: // LDI
                     cpu.cycles++;
                     old = cpu_read_byte(r->HL);
-                    r->HL++; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
                     cpu_write_byte(r->DE, old);
-                    r->DE++; mask_mode(r->DE, cpu.L);
-                    r->BC--; mask_mode(r->BC, cpu.L);
+                    r->DE = cpu_mask_mode((int32_t)r->DE + 1, cpu.L);
+                    r->BC = cpu_mask_mode((int32_t)r->BC - 1, cpu.L);
                     new = r->A + old;
                     r->flags.PV = r->BC != 0;
                     r->flags.N = 0;
                     break;
                 case 1: // CPI
                     old = cpu_read_byte(r->HL);
-                    r->HL++; mask_mode(r->HL, cpu.L);
-                    r->BC--; mask_mode(r->BC, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
+                    r->BC = cpu_mask_mode((int32_t)r->BC - 1, cpu.L);
                     new = r->A - old;
                     r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
                         | cpuflag_halfcarry_b_sub(r->A, old, 0) | cpuflag_pv(r->BC)
@@ -754,7 +754,7 @@ static void cpu_execute_bli(int y, int z) {
                 case 2: // INI
                     cpu.cycles++;
                     cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
-                    r->HL++; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
                     r->B--;
                     r->flags.Z = cpuflag_zero(r->B) != 0;
                     r->flags.N = cpuflag_sign_b(new) != 0;
@@ -762,7 +762,7 @@ static void cpu_execute_bli(int y, int z) {
                 case 3: // OUTI
                     cpu.cycles++;
                     cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
-                    r->HL++; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
                     r->B--;
                     r->flags.Z = cpuflag_zero(r->B) != 0;
                     r->flags.N = cpuflag_sign_b(new) != 0;
@@ -770,7 +770,7 @@ static void cpu_execute_bli(int y, int z) {
                 case 4: // OUTI2
                     cpu.cycles++;
                     cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
-                    r->HL++; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
                     r->C++;
                     r->B--;
                     r->flags.Z = cpuflag_zero(r->B) != 0;
@@ -783,18 +783,18 @@ static void cpu_execute_bli(int y, int z) {
                 case 0: // LDD
                     cpu.cycles++;
                     old = cpu_read_byte(r->HL);
-                    r->HL--; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
                     cpu_write_byte(r->DE, old);
-                    r->DE--; mask_mode(r->DE, cpu.L);
-                    r->BC--; mask_mode(r->BC, cpu.L);
+                    r->DE = cpu_mask_mode((int32_t)r->DE - 1, cpu.L);
+                    r->BC = cpu_mask_mode((int32_t)r->BC - 1, cpu.L);
                     new = r->A + old;
                     r->flags.PV = r->BC != 0;
                     r->flags.N = 0;
                     break;
                 case 1: // CPD
                     old = cpu_read_byte(r->HL);
-                    r->HL--; mask_mode(r->HL, cpu.L);
-                    r->BC--; mask_mode(r->BC, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
+                    r->BC = cpu_mask_mode((int32_t)r->BC - 1, cpu.L);
                     new = r->A - old;
                     r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
                         | cpuflag_halfcarry_b_sub(r->A, old, 0)
@@ -805,7 +805,7 @@ static void cpu_execute_bli(int y, int z) {
                 case 2: // IND
                     cpu.cycles++;
                     cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
-                    r->HL--; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
                     r->B--;
                     r->flags.Z = cpuflag_zero(r->B) != 0;
                     r->flags.N = cpuflag_sign_b(new) != 0;
@@ -813,7 +813,7 @@ static void cpu_execute_bli(int y, int z) {
                 case 3: // OUTD
                     cpu.cycles++;
                     cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
-                    r->HL--; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
                     r->B--;
                     r->flags.Z = cpuflag_zero(r->B) != 0;
                     r->flags.N = cpuflag_sign_b(new) != 0;
@@ -821,7 +821,7 @@ static void cpu_execute_bli(int y, int z) {
                 case 4: // OUTD2
                     cpu.cycles++;
                     cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
-                    r->HL--; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
                     r->C--;
                     r->B--;
                     r->flags.Z = cpuflag_zero(r->B) != 0;
@@ -835,9 +835,9 @@ static void cpu_execute_bli(int y, int z) {
                     cpu.cycles++;
                     old = cpu_read_byte(r->HL);
                     cpu_write_byte(r->DE, old);
-                    r->HL++; mask_mode(r->HL, cpu.L);
-                    r->DE++; mask_mode(r->DE, cpu.L);
-                    r->BC--; mask_mode(r->BC, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
+                    r->DE = cpu_mask_mode((int32_t)r->DE + 1, cpu.L);
+                    r->BC = cpu_mask_mode((int32_t)r->BC - 1, cpu.L);
                     new = r->A + old;
                     r->flags.PV = r->BC != 0;
                     r->flags.N = 0;
@@ -848,8 +848,8 @@ static void cpu_execute_bli(int y, int z) {
                 case 1: // CPIR
                     cpu.cycles++;
                     old = cpu_read_byte(r->HL);
-                    r->HL++; mask_mode(r->HL, cpu.L);
-                    r->BC--; mask_mode(r->BC, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
+                    r->BC = cpu_mask_mode((int32_t)r->BC - 1, cpu.L);
                     new = r->A - old;
                     r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
                         | cpuflag_halfcarry_b_sub(r->A, old, 0) | cpuflag_pv(r->BC)
@@ -863,7 +863,7 @@ static void cpu_execute_bli(int y, int z) {
                 case 2: // INIR
                     cpu.cycles++;
                     cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
-                    r->HL++; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
                     r->B--;
                     r->flags.Z = cpuflag_zero(r->B) != 0;
                     r->flags.N = cpuflag_sign_b(new) != 0;
@@ -874,7 +874,7 @@ static void cpu_execute_bli(int y, int z) {
                 case 3: // OTIR
                     cpu.cycles++;
                     cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
-                    r->HL++; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
                     r->B--;
                     r->flags.Z = cpuflag_zero(r->B) != 0;
                     r->flags.N = cpuflag_sign_b(new) != 0;
@@ -885,8 +885,8 @@ static void cpu_execute_bli(int y, int z) {
                 case 4: // OTI2R
                     cpu.cycles++;
                     cpu_write_out(r->DE, new = cpu_read_byte(r->HL));
-                    r->HL++; mask_mode(r->HL, cpu.L);
-                    r->DE++; mask_mode(r->DE, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
+                    r->DE = cpu_mask_mode((int32_t)r->DE + 1, cpu.L);
                     old = cpu_dec_bc_partial_mode(); // Do not mask BC
                     r->flags.Z = cpuflag_zero(old) != 0;
                     r->flags.N = cpuflag_sign_b(new) != 0;
@@ -901,10 +901,10 @@ static void cpu_execute_bli(int y, int z) {
                 case 0: // LDDR
                     cpu.cycles++;
                     old = cpu_read_byte(r->HL);
-                    r->HL--; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
                     cpu_write_byte(r->DE, old);
-                    r->DE--; mask_mode(r->DE, cpu.L);
-                    r->BC--; mask_mode(r->BC, cpu.L);
+                    r->DE = cpu_mask_mode((int32_t)r->DE - 1, cpu.L);
+                    r->BC = cpu_mask_mode((int32_t)r->BC - 1, cpu.L);
                     new = r->A + old;
                     r->flags.PV = r->BC != 0;
                     r->flags.N = 0;
@@ -915,8 +915,8 @@ static void cpu_execute_bli(int y, int z) {
                 case 1: // CPDR
                     cpu.cycles++;
                     old = cpu_read_byte(r->HL);
-                    r->HL--; mask_mode(r->HL, cpu.L);
-                    r->BC--; mask_mode(r->BC, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
+                    r->BC = cpu_mask_mode((int32_t)r->BC - 1, cpu.L);
                     new = r->A - old;
                     r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
                         | cpuflag_halfcarry_b_sub(r->A, old, 0) | cpuflag_pv(r->BC)
@@ -930,7 +930,7 @@ static void cpu_execute_bli(int y, int z) {
                 case 2: // INDR
                     cpu.cycles++;
                     cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
-                    r->HL--; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
                     r->B--;
                     r->flags.Z = cpuflag_zero(r->B) != 0;
                     r->flags.N = cpuflag_sign_b(new) != 0;
@@ -941,7 +941,7 @@ static void cpu_execute_bli(int y, int z) {
                 case 3: // OTDR
                     cpu.cycles++;
                     cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
-                    r->HL--; mask_mode(r->HL, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
                     r->B--;
                     r->flags.Z = cpuflag_zero(r->B) != 0;
                     r->flags.N = cpuflag_sign_b(new) != 0;
@@ -952,8 +952,8 @@ static void cpu_execute_bli(int y, int z) {
                 case 4: // OTD2R
                     cpu.cycles++;
                     cpu_write_out(r->DE, new = cpu_read_byte(r->HL));
-                    r->HL--; mask_mode(r->HL, cpu.L);
-                    r->DE--; mask_mode(r->DE, cpu.L);
+                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
+                    r->DE = cpu_mask_mode((int32_t)r->DE - 1, cpu.L);
                     old = cpu_dec_bc_partial_mode(); // Do not mask BC
                     r->flags.Z = cpuflag_zero(old) != 0;
                     r->flags.N = cpuflag_sign_b(new) != 0;
@@ -985,6 +985,7 @@ void cpu_flush(uint32_t address, bool mode) {
 void cpu_execute(void) {
     // variable declaration
     int8_t s;
+    int32_t sw;
     uint32_t w;
 
     uint8_t old = 0;
@@ -1054,12 +1055,12 @@ void cpu_execute(void) {
                                     s = cpu_fetch_offset();
                                     if (--r->B) {
                                         cpu.cycles++;
-                                        cpu_prefetch(cpu_mask_mode(r->PC + s, cpu.L), cpu.ADL);
+                                        cpu_prefetch(cpu_mask_mode((int32_t)r->PC + s, cpu.L), cpu.ADL);
                                     }
                                     break;
                                 case 3: // JR d
                                     s = cpu_fetch_offset();
-                                    cpu_prefetch(cpu_mask_mode(r->PC + s, cpu.L), cpu.ADL);
+                                    cpu_prefetch(cpu_mask_mode((int32_t)r->PC + s, cpu.L), cpu.ADL);
                                     break;
                                 case 4:
                                 case 5:
@@ -1068,7 +1069,7 @@ void cpu_execute(void) {
                                     s = cpu_fetch_offset();
                                     if (cpu_read_cc(context.y - 4)) {
                                         cpu.cycles++;
-                                        cpu_prefetch(cpu_mask_mode(r->PC + s, cpu.L), cpu.ADL);
+                                        cpu_prefetch(cpu_mask_mode((int32_t)r->PC + s, cpu.L), cpu.ADL);
                                     }
                                     break;
                             }
@@ -1133,10 +1134,10 @@ void cpu_execute(void) {
                         case 3:
                             switch (context.q) {
                                 case 0: // INC rp[p]
-                                    cpu_write_rp(context.p, cpu_read_rp(context.p) + 1);
+                                    cpu_write_rp(context.p, (int32_t)cpu_read_rp(context.p) + 1);
                                     break;
                                 case 1: // DEC rp[p]
-                                    cpu_write_rp(context.p, cpu_read_rp(context.p) - 1);
+                                    cpu_write_rp(context.p, (int32_t)cpu_read_rp(context.p) - 1);
                                     break;
                             }
                             break;
@@ -1416,16 +1417,16 @@ void cpu_execute(void) {
                                                             old_word = cpu_mask_mode(r->HL, cpu.L);
                                                             op_word = cpu_mask_mode(cpu_read_rp(context.p), cpu.L);
                                                             if (context.q == 0) { // SBC HL, rp[p]
-                                                                r->HL = cpu_mask_mode(old_word - op_word - r->flags.C, cpu.L);
+                                                                r->HL = cpu_mask_mode(sw = (int32_t)old_word - (int32_t)op_word - r->flags.C, cpu.L);
                                                                 r->F = cpuflag_sign_w(r->HL, cpu.L) | cpuflag_zero(r->HL)
                                                                     | cpuflag_undef(r->F) | cpuflag_overflow_w_sub(old_word, op_word, r->HL, cpu.L)
-                                                                    | cpuflag_subtract(1) | cpuflag_carry_w(old_word - op_word - r->flags.C, cpu.L)
+                                                                    | cpuflag_subtract(1) | cpuflag_carry_w(sw, cpu.L)
                                                                     | cpuflag_halfcarry_w_sub(old_word, op_word, r->flags.C);
                                                             } else { // ADC HL, rp[p]
-                                                                r->HL = cpu_mask_mode(old_word + op_word + r->flags.C, cpu.L);
-                                                                r->F = cpuflag_sign_w(r->HL, cpu.L) | cpuflag_zero(r->HL)
+                                                                r->HL = cpu_mask_mode(sw = (int32_t)old_word + (int32_t)op_word + r->flags.C, cpu.L);
+                                                                r->F = cpuflag_sign_w(sw, cpu.L) | cpuflag_zero(r->HL)
                                                                     | cpuflag_undef(r->F) | cpuflag_overflow_w_add(old_word, op_word, r->HL, cpu.L)
-                                                                    | cpuflag_subtract(0) | cpuflag_carry_w(old_word + op_word + r->flags.C, cpu.L)
+                                                                    | cpuflag_subtract(0) | cpuflag_carry_w(sw, cpu.L)
                                                                     | cpuflag_halfcarry_w_add(old_word, op_word, r->flags.C);
                                                             }
                                                             break;
@@ -1490,7 +1491,7 @@ void cpu_execute(void) {
                                                                     cpu.IEF_wait = 1;
                                                                     break;
                                                                 case 4: // PEA IX + d
-                                                                    cpu_push_word(r->IX + cpu_fetch_offset());
+                                                                    cpu_push_word((int32_t)r->IX + cpu_fetch_offset());
                                                                     break;
                                                                 case 5: // LD MB, A
                                                                     if (cpu.ADL) {
@@ -1513,7 +1514,7 @@ void cpu_execute(void) {
                                                                     cpu.IEF_wait = 1;
                                                                     break;
                                                                 case 4: // PEA IY + d
-                                                                    cpu_push_word(r->IY + cpu_fetch_offset());
+                                                                    cpu_push_word((int32_t)r->IY + cpu_fetch_offset());
                                                                     break;
                                                                 case 5: // LD A, MB
                                                                     r->A = r->MBASE;
@@ -1586,7 +1587,7 @@ void cpu_execute(void) {
                                                         case 0xC2: // INIRX
                                                             cpu.cycles++;
                                                             cpu_write_byte(r->HL, new = cpu_read_in(r->DE));
-                                                            r->HL++; mask_mode(r->HL, cpu.L);
+                                                            r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
                                                             old = cpu_dec_bc_partial_mode(); // Do not mask BC
                                                             r->flags.Z = cpuflag_zero(old) != 0;
                                                             r->flags.N = cpuflag_sign_b(new) != 0;
@@ -1597,7 +1598,7 @@ void cpu_execute(void) {
                                                         case 0xC3: // OTIRX
                                                             cpu.cycles++;
                                                             cpu_write_out(r->DE, new = cpu_read_byte(r->HL));
-                                                            r->HL++; mask_mode(r->HL, cpu.L);
+                                                            r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
                                                             old = cpu_dec_bc_partial_mode(); // Do not mask BC
                                                             r->flags.Z = cpuflag_zero(old) != 0;
                                                             r->flags.N = cpuflag_sign_b(new) != 0;
@@ -1614,7 +1615,7 @@ void cpu_execute(void) {
                                                         case 0xCA: // INDRX
                                                             cpu.cycles++;
                                                             cpu_write_byte(r->HL, new = cpu_read_in(r->DE));
-                                                            r->HL--; mask_mode(r->HL, cpu.L);
+                                                            r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
                                                             old = cpu_dec_bc_partial_mode(); // Do not mask BC
                                                             r->flags.Z = cpuflag_zero(old) != 0;
                                                             r->flags.N = cpuflag_sign_b(new) != 0;
@@ -1625,7 +1626,7 @@ void cpu_execute(void) {
                                                         case 0xCB: // OTDRX
                                                             cpu.cycles++;
                                                             cpu_write_out(r->DE, new = cpu_read_byte(r->HL));
-                                                            r->HL--; mask_mode(r->HL, cpu.L);
+                                                            r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
                                                             old = cpu_dec_bc_partial_mode(); // Do not mask BC
                                                             r->flags.Z = cpuflag_zero(old) != 0;
                                                             r->flags.N = cpuflag_sign_b(new) != 0;

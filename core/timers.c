@@ -26,14 +26,15 @@ static void gpt_restore(int index) {
 static uint64_t gpt_next_event(int index) {
     struct sched_item *item = &sched.items[index];
     timer_state_t *timer = &gpt.timer[index -= SCHED_TIMER1];
-    uint32_t invert, event, temp = 0, status = 0, next = ~0;
+    int32_t invert, event;
+    uint32_t temp = 0, status = 0, next = ~0;
     if (gpt.control >> index * 3 & 1) {
         invert = (gpt.control >> (9 + index) & 1) ? ~0 : 0;
         if (!timer->counter) {
             timer->counter = timer->reset;
             status = 1 << 2;
         }
-        for (event = 2; (int32_t)event >= 0; event--) {
+        for (event = 2; event >= 0; event--) {
             if (event < 2) {
                 temp = timer->match[event];
             }
@@ -49,7 +50,7 @@ static uint64_t gpt_next_event(int index) {
             intrpt_pulse(INT_TIMER1 + index);
         }
         gpt.status |= status << index*3;
-        timer->counter -= (next - ~invert) ^ invert;
+        timer->counter -= ((int32_t)next - ~invert) ^ invert;
         item->clock = (gpt.control >> index*3 & 2) ? CLOCK_32K : CLOCK_CPU;
         return (uint64_t)next + 1;
     }

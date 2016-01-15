@@ -1322,23 +1322,22 @@ void MainWindow::memUpdate() {
     QByteArray mem_data;
 
     bool locked = ui->checkLockPosition->isChecked();
-    int start;
-    int line = 0;
+    int32_t start, line = 0;
 
     if (locked) {
-        start = (int)ui->memEdit->addressOffset();
+        start = static_cast<int32_t>(ui->memEdit->addressOffset());
         line = ui->memEdit->getLine();
     } else {
-        start = cpu.registers.PC-0x1000;
+        start = static_cast<int32_t>(cpu.registers.PC) - 0x1000;
     }
 
     if (start < 0) { start = 0; }
-    int end = start+0x2000;
+    int32_t end = start+0x2000;
     if (end > 0xFFFFFF) { end = 0xFFFFFF; }
 
     mem_hex_size = end-start;
 
-    for (int i=start; i<end; i++) {
+    for (int32_t i=start; i<end; i++) {
         mem_data.append(debug_read_byte(i));
     }
 

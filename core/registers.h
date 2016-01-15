@@ -182,10 +182,10 @@ int parity(uint8_t x);
 #define cpuflag_overflow_w_add(op1, op2, result, mode) cpuflag_pv(~((op1) ^ (op2)) & ((op1) ^ (result)) & (0x8000 << ((mode) << 3)))
 #define cpuflag_overflow_w_sub(op1, op2, result, mode) cpuflag_pv(((op1) ^ (op2)) & ((op1) ^ (result)) & (0x8000 << ((mode) << 3)))
 
-#define cpuflag_halfcarry_b_add(op1, op2, carry) cpuflag_h(((op1 & 0xf) + (op2 & 0xf) + carry) & 0x10)
-#define cpuflag_halfcarry_b_sub(op1, op2, carry) cpuflag_h(((op1 & 0xf) - (op2 & 0xf) - carry) & 0x10)
-#define cpuflag_halfcarry_w_add(op1, op2, carry) cpuflag_h(((op1 & 0xfff) + (op2 & 0xfff) + carry) & 0x1000)
-#define cpuflag_halfcarry_w_sub(op1, op2, carry) cpuflag_h(((op1 & 0xfff) - (op2 & 0xfff) - carry) & 0x1000)
+#define cpuflag_halfcarry_b_add(op1, op2, carry) cpuflag_h(((int16_t)((op1) & 0x00f) + (int16_t)((op2) & 0x00f) + (carry)) & 0x0010)
+#define cpuflag_halfcarry_b_sub(op1, op2, carry) cpuflag_h(((int16_t)((op1) & 0x00f) - (int16_t)((op2) & 0x00f) - (carry)) & 0x0010)
+#define cpuflag_halfcarry_w_add(op1, op2, carry) cpuflag_h(((int16_t)((op1) & 0xfff) + (int16_t)((op2) & 0xfff) + (carry)) & 0x1000)
+#define cpuflag_halfcarry_w_sub(op1, op2, carry) cpuflag_h(((int16_t)((op1) & 0xfff) - (int16_t)((op2) & 0xfff) - (carry)) & 0x1000)
 
 #define cpuflag_subtract(a)   ((a) ? FLAG_N : 0)
 #define cpuflag_zero(a)       ((a) ? 0 : FLAG_Z)
