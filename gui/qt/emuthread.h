@@ -27,6 +27,8 @@ signals:
     void consoleStr(QString str);
     void exited(int retcode);
 
+    void actualSpeedChanged(int actualSpeed);
+
 public slots:
     virtual void run() override;
     bool stop();
@@ -45,10 +47,13 @@ public slots:
     void changeEmuSpeed(int value);
 
 private:
+    void setActualSpeed(int value);
+
     bool enter_debugger = false;
     bool enter_send_state = false;
     bool enter_receive_state = false;
-    int speed;
+    bool throttle;
+    int speed, actualSpeed;
     std::chrono::steady_clock::time_point last_time;
 };
 
