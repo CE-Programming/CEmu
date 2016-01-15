@@ -146,6 +146,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     // Set up monospace fonts
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    monospace.setPointSize(9);
     ui->console->setFont(monospace);
     ui->disassemblyView->setFont(monospace);
     ui->stackView->setFont(monospace);
@@ -167,6 +168,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     ui->rregView->setFont(monospace);
     ui->imregView->setFont(monospace);
     ui->freqView->setFont(monospace);
+    ui->pcregView->setFont(monospace);
 
     qRegisterMetaType<uint32_t>("uint32_t");
     qRegisterMetaType<std::string>("std::string");

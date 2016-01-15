@@ -2151,6 +2151,7 @@
                     <property name="font">
                      <font>
                       <family>MS Shell Dlg 2</family>
+                      <pointsize>9</pointsize>
                      </font>
                     </property>
                     <property name="inputMask">
@@ -2190,6 +2191,7 @@
                     <property name="font">
                      <font>
                       <family>MS Shell Dlg 2</family>
+                      <pointsize>9</pointsize>
                      </font>
                     </property>
                     <property name="inputMask">
@@ -2229,6 +2231,7 @@
                     <property name="font">
                      <font>
                       <family>MS Shell Dlg 2</family>
+                      <pointsize>9</pointsize>
                      </font>
                     </property>
                     <property name="inputMask">
@@ -2268,6 +2271,7 @@
                     <property name="font">
                      <font>
                       <family>MS Shell Dlg 2</family>
+                      <pointsize>9</pointsize>
                      </font>
                     </property>
                     <property name="inputMask">
@@ -2793,6 +2797,7 @@
                    <property name="font">
                     <font>
                      <family>MS Shell Dlg 2</family>
+                     <pointsize>9</pointsize>
                     </font>
                    </property>
                    <property name="inputMask">
@@ -2832,6 +2837,7 @@
                    <property name="font">
                     <font>
                      <family>MS Shell Dlg 2</family>
+                     <pointsize>9</pointsize>
                     </font>
                    </property>
                    <property name="inputMask">
@@ -2871,6 +2877,7 @@
                    <property name="font">
                     <font>
                      <family>MS Shell Dlg 2</family>
+                     <pointsize>9</pointsize>
                     </font>
                    </property>
                    <property name="inputMask">
@@ -2969,6 +2976,7 @@
                    <property name="font">
                     <font>
                      <family>MS Shell Dlg 2</family>
+                     <pointsize>9</pointsize>
                     </font>
                    </property>
                    <property name="inputMask">
@@ -3126,6 +3134,7 @@
                    <property name="font">
                     <font>
                      <family>MS Shell Dlg 2</family>
+                     <pointsize>9</pointsize>
                     </font>
                    </property>
                    <property name="inputMask">
@@ -3162,6 +3171,7 @@
                    <property name="font">
                     <font>
                      <family>MS Shell Dlg 2</family>
+                     <pointsize>9</pointsize>
                     </font>
                    </property>
                    <property name="inputMask">
@@ -3201,6 +3211,7 @@
                    <property name="font">
                     <font>
                      <family>MS Shell Dlg 2</family>
+                     <pointsize>9</pointsize>
                     </font>
                    </property>
                    <property name="inputMask">
@@ -3240,6 +3251,7 @@
                    <property name="font">
                     <font>
                      <family>MS Shell Dlg 2</family>
+                     <pointsize>9</pointsize>
                     </font>
                    </property>
                    <property name="inputMask">
@@ -3279,6 +3291,7 @@
                    <property name="font">
                     <font>
                      <family>MS Shell Dlg 2</family>
+                     <pointsize>9</pointsize>
                     </font>
                    </property>
                    <property name="inputMask">
@@ -3315,6 +3328,7 @@
                    <property name="font">
                     <font>
                      <family>MS Shell Dlg 2</family>
+                     <pointsize>9</pointsize>
                     </font>
                    </property>
                    <property name="inputMask">
@@ -3907,6 +3921,11 @@
                    <height>20</height>
                   </size>
                  </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>9</pointsize>
+                  </font>
+                 </property>
                  <property name="alignment">
                   <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                  </property>
@@ -4115,6 +4134,11 @@
                    <height>20</height>
                   </size>
                  </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>9</pointsize>
+                  </font>
+                 </property>
                  <property name="inputMask">
                   <string>&gt;HHHH</string>
                  </property>
@@ -4190,6 +4214,11 @@
                    <height>20</height>
                   </size>
                  </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>9</pointsize>
+                  </font>
+                 </property>
                  <property name="inputMask">
                   <string>&gt;HH</string>
                  </property>
@@ -4264,6 +4293,11 @@
                    <width>30</width>
                    <height>20</height>
                   </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>9</pointsize>
+                  </font>
                  </property>
                  <property name="inputMask">
                   <string>&gt;9</string>
