@@ -12,6 +12,7 @@ typedef struct {
   bool hit_read_breakpoint;
   bool hit_write_breakpoint;
   bool hit_exec_breakpoint;
+  bool hit_run_breakpoint;
 } disasm_highlights_state_t;
 
 extern disasm_highlights_state_t disasmHighlight;

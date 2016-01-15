@@ -402,6 +402,7 @@ void disassembleInstruction(void) {
     disasmHighlight.hit_read_breakpoint = false;
     disasmHighlight.hit_write_breakpoint = false;
     disasmHighlight.hit_exec_breakpoint = false;
+    disasmHighlight.hit_run_breakpoint = false;
     disasmHighlight.hit_pc = false;
 
     disasm.instruction.data = "";

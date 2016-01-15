@@ -16,6 +16,7 @@ enum {
         HIT_EXEC_BREAKPOINT,
         HIT_READ_BREAKPOINT,
         HIT_WRITE_BREAKPOINT,
+        HIT_RUN_BREAKPOINT,
         HIT_PORT_WRITE_BREAKPOINT,
         HIT_PORT_READ_BREAKPOINT
 };
@@ -31,6 +32,7 @@ enum {
 #define DBG_WRITE_BREAKPOINT      2
 #define DBG_EXEC_BREAKPOINT       4
 #define DBG_STEP_OVER_BREAKPOINT  8
+#define DBG_RUN_UNTIL_BREAKPOINT  16
 
 typedef struct {
     uint8_t *block;

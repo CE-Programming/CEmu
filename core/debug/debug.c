@@ -23,6 +23,7 @@ uint8_t debug_read_byte(uint32_t address) {
         disasmHighlight.hit_read_breakpoint = debugger.data.block[address] & DBG_READ_BREAKPOINT;
         disasmHighlight.hit_write_breakpoint = debugger.data.block[address] & DBG_WRITE_BREAKPOINT;
         disasmHighlight.hit_exec_breakpoint = debugger.data.block[address] & DBG_EXEC_BREAKPOINT;
+        disasmHighlight.hit_run_breakpoint = debugger.data.block[address] & DBG_RUN_UNTIL_BREAKPOINT;
     }
 
     if (cpu.registers.PC == address) {

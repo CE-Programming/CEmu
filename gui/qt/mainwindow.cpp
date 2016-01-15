@@ -74,8 +74,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     // Debugger
     connect(ui->buttonRun, &QPushButton::clicked, this, &MainWindow::changeDebuggerState);
     connect(this, &MainWindow::debuggerChangedState, &emu, &EmuThread::setDebugMode);
-    connect(&emu, &EmuThread::debuggerEntered, this, &MainWindow::raiseDebugger);
-    connect(&emu, &EmuThread::sendDebugCommand, this, &MainWindow::processDebugCommand);
+    connect(&emu, &EmuThread::debuggerEntered, this, &MainWindow::raiseDebugger, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::sendDebugCommand, this, &MainWindow::processDebugCommand, Qt::QueuedConnection);
     connect(ui->buttonAddPort, &QPushButton::clicked, this, &MainWindow::pollPort);
     connect(ui->portRequest, &QLineEdit::returnPressed, this, &MainWindow::pollPort);
     connect(ui->buttonDeletePort, &QPushButton::clicked, this, &MainWindow::deletePort);
@@ -93,7 +93,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(this, &MainWindow::setDebugStepOutMode, &emu, &EmuThread::setDebugStepOutMode);
     connect(ui->buttonBreakpoint, &QPushButton::clicked, this, &MainWindow::breakpointPressed);
     connect(ui->buttonGoto, &QPushButton::clicked, this, &MainWindow::gotoPressed);
-    connect(ui->disassemblyView, &QWidget::customContextMenuRequested, this, &MainWindow::setPCaddress);
+    connect(ui->disassemblyView, &QWidget::customContextMenuRequested, this, &MainWindow::disasmContextMenu);
     connect(ui->portView, &QTableWidget::itemChanged, this, &MainWindow::changePortData);
 
     // Debugger Options
@@ -654,6 +654,10 @@ void MainWindow::setDebuggerState(bool state) {
     if (debugger_on) {
         ui->buttonRun->setText("Run");
         pix.load(":/icons/resources/icons/run.png");
+        if (run_until_set) {
+            debugger.data.block[run_until_address] &= ~DBG_RUN_UNTIL_BREAKPOINT;
+            run_until_set = false;
+        }
     } else {
         ui->buttonRun->setText("Stop");
         pix.load(":/icons/resources/icons/stop.png");
@@ -1065,6 +1069,7 @@ void MainWindow::drawNextDisassembleLine() {
             disasmHighlight.hit_read_breakpoint = false;
             disasmHighlight.hit_write_breakpoint = false;
             disasmHighlight.hit_exec_breakpoint = false;
+            disasmHighlight.hit_run_breakpoint = false;
             disasmHighlight.hit_pc = false;
 
             disasm.instruction.data = "";
@@ -1116,19 +1121,25 @@ void MainWindow::drawNextDisassembleLine() {
         disasm_offset.movePosition(QTextCursor::StartOfLine);
     }
 
+    if (disasmHighlight.hit_run_breakpoint == true) {
+        ui->disassemblyView->addHighlight(QColor(Qt::blue).lighter(160));
+    }
     if (disasmHighlight.hit_pc == true) {
         ui->disassemblyView->addHighlight(QColor(Qt::red).lighter(160));
     }
 }
 
-void MainWindow::setPCaddress(const QPoint& posa) {
+void MainWindow::disasmContextMenu(const QPoint& posa) {
     QString set_pc = "Set PC to this address";
-    QString toggle_break = "Toggle breakpoint";
+    QString run_until = "Toggle Run Until this address";
+    QString toggle_break = "Toggle Breakpoint at this address";
+    ui->disassemblyView->setTextCursor(ui->disassemblyView->cursorForPosition(posa));
     QPoint globalPos = ui->disassemblyView->mapToGlobal(posa);
 
     QMenu contextMenu;
     contextMenu.addAction(set_pc);
     contextMenu.addAction(toggle_break);
+    contextMenu.addAction(run_until);
 
     QAction* selectedItem = contextMenu.exec(globalPos);
     if (selectedItem) {
@@ -1136,8 +1147,23 @@ void MainWindow::setPCaddress(const QPoint& posa) {
             ui->pcregView->setText(ui->disassemblyView->getSelectedAddress());
             cpu_flush(static_cast<uint32_t>(hex2int(ui->pcregView->text())), cpu.ADL);
             updateDisasmView(cpu.registers.PC, true);
-        } else  if (selectedItem->text() == toggle_break) {
+        } else if (selectedItem->text() == toggle_break) {
             breakpointPressed();
+        } else if (selectedItem->text() == run_until) {
+            uint32_t address = ui->disassemblyView->getSelectedAddress().toInt(nullptr, 16);
+            if (address == run_until_address) {
+                debugger.data.block[address] &= ~DBG_RUN_UNTIL_BREAKPOINT;
+                run_until_address = 0xFFFFFFFF;
+                run_until_set = false;
+            } else {
+                if (run_until_set) {
+                    debugger.data.block[run_until_address] &= ~DBG_RUN_UNTIL_BREAKPOINT;
+                }
+                debugger.data.block[address] |= DBG_RUN_UNTIL_BREAKPOINT;
+                run_until_address = address;
+                run_until_set = true;
+            }
+            updateDisasmView(address, true);
         }
     }
 }

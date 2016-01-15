@@ -52,7 +52,7 @@ static void cpu_prefetch(uint32_t address, bool mode) {
 }
 static uint8_t cpu_fetch_byte(void) {
     uint8_t value;
-    if (!in_debugger && (debugger.data.block[cpu.registers.PC] & (DBG_EXEC_BREAKPOINT | DBG_STEP_OVER_BREAKPOINT))) {
+    if (!in_debugger && (debugger.data.block[cpu.registers.PC] & (DBG_EXEC_BREAKPOINT | DBG_STEP_OVER_BREAKPOINT | DBG_RUN_UNTIL_BREAKPOINT))) {
         openDebugger((debugger.data.block[cpu.registers.PC] & DBG_EXEC_BREAKPOINT) ? HIT_EXEC_BREAKPOINT : DBG_STEP, cpu.registers.PC);
     }
     value = cpu.prefetch;
