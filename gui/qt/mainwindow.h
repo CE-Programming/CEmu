@@ -86,7 +86,7 @@ private:
     void updateStackView();
     void updateDisasmView(const int, const bool);
     void gotoPressed();
-    void breakpointPressed();
+    void setBreakpointAddress();
     void disasmContextMenu(const QPoint&);
     bool addBreakpoint();
 

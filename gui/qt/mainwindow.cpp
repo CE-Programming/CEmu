@@ -91,7 +91,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(this, &MainWindow::setDebugStepOverMode, &emu, &EmuThread::setDebugStepOverMode);
     connect(ui->buttonStepOut, &QPushButton::clicked, this, &MainWindow::stepOutPressed);
     connect(this, &MainWindow::setDebugStepOutMode, &emu, &EmuThread::setDebugStepOutMode);
-    connect(ui->buttonBreakpoint, &QPushButton::clicked, this, &MainWindow::breakpointPressed);
     connect(ui->buttonGoto, &QPushButton::clicked, this, &MainWindow::gotoPressed);
     connect(ui->disassemblyView, &QWidget::customContextMenuRequested, this, &MainWindow::disasmContextMenu);
     connect(ui->portView, &QTableWidget::itemChanged, this, &MainWindow::changePortData);
@@ -150,6 +149,24 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     ui->console->setFont(monospace);
     ui->disassemblyView->setFont(monospace);
     ui->stackView->setFont(monospace);
+
+    ui->afregView->setFont(monospace);
+    ui->hlregView->setFont(monospace);
+    ui->deregView->setFont(monospace);
+    ui->bcregView->setFont(monospace);
+    ui->ixregView->setFont(monospace);
+    ui->iyregView->setFont(monospace);
+    ui->af_regView->setFont(monospace);
+    ui->hl_regView->setFont(monospace);
+    ui->de_regView->setFont(monospace);
+    ui->bc_regView->setFont(monospace);
+    ui->splregView->setFont(monospace);
+    ui->spsregView->setFont(monospace);
+    ui->mbregView->setFont(monospace);
+    ui->iregView->setFont(monospace);
+    ui->rregView->setFont(monospace);
+    ui->imregView->setFont(monospace);
+    ui->freqView->setFont(monospace);
 
     qRegisterMetaType<uint32_t>("uint32_t");
     qRegisterMetaType<std::string>("std::string");
@@ -586,7 +603,7 @@ static int hex2int(QString str) {
 }
 
 static QString int2hex(uint32_t a, uint8_t l) {
-    return QString::number(a, 16).rightJustified(l, '0');
+    return QString::number(a, 16).rightJustified(l, '0').toUpper();
 }
 
 void MainWindow::raiseDebugger() {
@@ -670,7 +687,6 @@ void MainWindow::setDebuggerState(bool state) {
     ui->buttonRun->setIconSize(pix.size());
 
     ui->tabDebugging->setEnabled( debugger_on );
-    ui->buttonBreakpoint->setEnabled( debugger_on );
     ui->buttonGoto->setEnabled( debugger_on );
     ui->buttonStep->setEnabled( debugger_on );
     ui->buttonStepOver->setEnabled( debugger_on );
@@ -712,29 +728,84 @@ void MainWindow::changeDebuggerState() {
 }
 
 void MainWindow::populateDebugWindow() {
-    ui->portRequest->clear();
-    ui->afregView->setText(int2hex(cpu.registers.AF, 4));
-    ui->hlregView->setText(int2hex(cpu.registers.HL, 6));
-    ui->deregView->setText(int2hex(cpu.registers.DE, 6));
-    ui->bcregView->setText(int2hex(cpu.registers.BC, 6));
-    ui->ixregView->setText(int2hex(cpu.registers.IX, 6));
-    ui->iyregView->setText(int2hex(cpu.registers.IY, 6));
+    QPalette colortext, blacktext;
+    QString tmp;
+    colortext.setColor(QPalette::Text, Qt::red);
+    colortext.setColor(QPalette::Disabled, QPalette::Text, Qt::gray);
+    blacktext.setColor(QPalette::Text, Qt::black);
+    blacktext.setColor(QPalette::Disabled, QPalette::Text, Qt::gray);
 
-    ui->af_regView->setText(int2hex(cpu.registers._AF, 4));
-    ui->hl_regView->setText(int2hex(cpu.registers._HL, 6));
-    ui->de_regView->setText(int2hex(cpu.registers._DE, 6));
-    ui->bc_regView->setText(int2hex(cpu.registers._BC, 6));
+    tmp = int2hex(cpu.registers.AF, 4);
+    ui->afregView->setPalette(tmp == ui->afregView->text() ? blacktext : colortext);
+    ui->afregView->setText(tmp);
 
-    ui->spsregView->setText(int2hex(cpu.registers.SPS, 4));
-    ui->splregView->setText(int2hex(cpu.registers.SPL, 6));
+    tmp = int2hex(cpu.registers.HL, 6);
+    ui->hlregView->setPalette(tmp == ui->hlregView->text() ? blacktext : colortext);
+    ui->hlregView->setText(tmp);
 
-    ui->pcregView->setText(int2hex(cpu.registers.PC, 6));
-    ui->mbregView->setText(int2hex(cpu.registers.MBASE, 2));
-    ui->iregView->setText(int2hex(cpu.registers.I,4));
-    ui->rregView->setText(int2hex(cpu.registers.R,2));
-    ui->imregView->setText(int2hex(cpu.IM,1));
+    tmp = int2hex(cpu.registers.DE, 6);
+    ui->deregView->setPalette(tmp == ui->deregView->text() ? blacktext : colortext);
+    ui->deregView->setText(tmp);
 
-    ui->freqView->setText(QString::number(sched.clock_rates[CLOCK_CPU]));
+    tmp = int2hex(cpu.registers.BC, 6);
+    ui->bcregView->setPalette(tmp == ui->bcregView->text() ? blacktext : colortext);
+    ui->bcregView->setText(tmp);
+
+    tmp = int2hex(cpu.registers.IX, 6);
+    ui->ixregView->setPalette(tmp == ui->ixregView->text() ? blacktext : colortext);
+    ui->ixregView->setText(tmp);
+
+    tmp = int2hex(cpu.registers.IY, 6);
+    ui->iyregView->setPalette(tmp == ui->iyregView->text() ? blacktext : colortext);
+    ui->iyregView->setText(tmp);
+
+    tmp = int2hex(cpu.registers._AF, 4);
+    ui->af_regView->setPalette(tmp == ui->af_regView->text() ? blacktext : colortext);
+    ui->af_regView->setText(tmp);
+
+    tmp = int2hex(cpu.registers._HL, 6);
+    ui->hl_regView->setPalette(tmp == ui->hl_regView->text() ? blacktext : colortext);
+    ui->hl_regView->setText(tmp);
+
+    tmp = int2hex(cpu.registers._DE, 6);
+    ui->de_regView->setPalette(tmp == ui->de_regView->text() ? blacktext : colortext);
+    ui->de_regView->setText(tmp);
+
+    tmp = int2hex(cpu.registers._BC, 6);
+    ui->bc_regView->setPalette(tmp == ui->bc_regView->text() ? blacktext : colortext);
+    ui->bc_regView->setText(tmp);
+
+    tmp = int2hex(cpu.registers.SPS, 4);
+    ui->spsregView->setPalette(tmp == ui->spsregView->text() ? blacktext : colortext);
+    ui->spsregView->setText(tmp);
+
+    tmp = int2hex(cpu.registers.SPL, 6);
+    ui->splregView->setPalette(tmp == ui->splregView->text() ? blacktext : colortext);
+    ui->splregView->setText(tmp);
+
+    tmp = int2hex(cpu.registers.MBASE, 2);
+    ui->mbregView->setPalette(tmp == ui->mbregView->text() ? blacktext : colortext);
+    ui->mbregView->setText(tmp);
+
+    tmp = int2hex(cpu.registers.I, 4);
+    ui->iregView->setPalette(tmp == ui->iregView->text() ? blacktext : colortext);
+    ui->iregView->setText(tmp);
+
+    tmp = int2hex(cpu.IM, 1);
+    ui->imregView->setPalette(tmp == ui->imregView->text() ? blacktext : colortext);
+    ui->imregView->setText(tmp);
+
+    tmp = int2hex(cpu.registers.PC, 6);
+    ui->pcregView->setPalette(tmp == ui->pcregView->text() ? blacktext : colortext);
+    ui->pcregView->setText(tmp);
+
+    tmp = int2hex(cpu.registers.R, 2);
+    ui->rregView->setPalette(tmp == ui->rregView->text() ? blacktext : colortext);
+    ui->rregView->setText(tmp);
+
+    tmp = QString::number(sched.clock_rates[CLOCK_CPU]);
+    ui->freqView->setPalette(tmp == ui->freqView->text() ? blacktext : colortext);
+    ui->freqView->setText(tmp);
 
     ui->check3->setChecked(cpu.registers.flags._3);
     ui->check5->setChecked(cpu.registers.flags._5);
@@ -1147,8 +1218,10 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
             ui->pcregView->setText(ui->disassemblyView->getSelectedAddress());
             cpu_flush(static_cast<uint32_t>(hex2int(ui->pcregView->text())), cpu.ADL);
             updateDisasmView(cpu.registers.PC, true);
+            populateDebugWindow();
         } else if (selectedItem->text() == toggle_break) {
-            breakpointPressed();
+            setBreakpointAddress();
+            populateDebugWindow();
         } else if (selectedItem->text() == run_until) {
             uint32_t address = ui->disassemblyView->getSelectedAddress().toInt(nullptr, 16);
             if (address == run_until_address) {
@@ -1164,6 +1237,7 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
                 run_until_set = true;
             }
             updateDisasmView(address, true);
+            populateDebugWindow();
         }
     }
 }
@@ -1185,7 +1259,7 @@ void MainWindow::stepOutPressed() {
     emit setDebugStepOutMode();
 }
 
-void MainWindow::breakpointPressed() {
+void MainWindow::setBreakpointAddress() {
     bool ok;
     QString address = ui->disassemblyView->getSelectedAddress();
 
