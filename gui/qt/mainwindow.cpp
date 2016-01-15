@@ -68,6 +68,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     // Emulator -> GUI
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr);
+
     // Console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, this, &MainWindow::clearConsole);
 
@@ -144,6 +145,11 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonMemSearch, &QPushButton::clicked, this, &MainWindow::memSearchPressed);
     connect(ui->buttonMemSync, &QPushButton::clicked, this, &MainWindow::memSyncPressed);
 
+    // Keybindings
+    connect(ui->radioCEmuKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
+    connect(ui->radioTilEmKeys, &QPushButton::clicked, this, &MainWindow::keymapChanged);
+    connect(ui->radioWabbitEmuKeys, &QPushButton::clicked, this, &MainWindow::keymapChanged);
+
     // Set up monospace fonts
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     monospace.setPointSize(9);
@@ -198,11 +204,22 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
     changeLCDRefresh(settings->value(QStringLiteral("refreshRate"), 60).toInt());
     changeEmulatedSpeed(settings->value(QStringLiteral("emuRate"), 100).toInt());
-    changeKeymap(settings->value(QStringLiteral("keyMap"), "cemu").toString());
     alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toInt());
     changeThrottleMode(settings->value(QStringLiteral("throttleMode"), Qt::Checked).toInt());
     ui->textSizeSlider->setValue(settings->value(QStringLiteral("disasmTextSize"), 9).toInt());
     current_dir.setPath((settings->value(QStringLiteral("currDir"), QDir::homePath()).toString()));
+
+    QString currKeyMap = settings->value(QStringLiteral("keyMap"), "cemu").toString();
+    if (QStringLiteral("cemu").compare(currKeyMap, Qt::CaseInsensitive)) {
+        ui->radioCEmuKeys->setChecked(true);
+    }
+    else if (QStringLiteral("tilem").compare(currKeyMap, Qt::CaseInsensitive)) {
+        ui->radioTilEmKeys->setChecked(true);
+    }
+    else if (QStringLiteral("wabbitemu").compare(currKeyMap, Qt::CaseInsensitive)) {
+        ui->radioWabbitEmuKeys->setChecked(true);
+    }
+    changeKeymap(currKeyMap);
 
     ui->rompathView->setText(QString::fromStdString(emu.rom));
     ui->emuVarView->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -469,6 +486,16 @@ void MainWindow::changeEmulatedSpeed(int value) {
     ui->emulationSpeedLabel->setText(QString::fromStdString(std::to_string(value)).rightJustified(3)+QStringLiteral("%"));
     ui->emulationSpeed->setValue(value);
     emit changedEmuSpeed(value);
+}
+
+void MainWindow::keymapChanged() {
+    if (ui->radioCEmuKeys->isChecked()) {
+        changeKeymap(QStringLiteral("cemu"));
+    } else if (ui->radioTilEmKeys->isChecked()) {
+        changeKeymap(QStringLiteral("tilem"));
+    } else if (ui->radioWabbitEmuKeys->isChecked()) {
+        changeKeymap(QStringLiteral("wabbitemu"));
+    }
 }
 
 void MainWindow::changeKeymap(const QString & value) {

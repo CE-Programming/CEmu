@@ -43,10 +43,10 @@ void asic_init(void);
 void asic_free(void);
 void asic_reset(void);
 
-uint32_t set_cpu_clock_rate(uint32_t new_rate);
+void set_device_type(ti_device_type device);
+ti_device_type get_device_type(void);
 
-uint8_t read_unimplemented_port(const uint16_t addr);
-void write_unimplemented_port(const uint16_t addr, uint8_t value);
+uint32_t set_cpu_clock_rate(uint32_t new_rate);
 
 #ifdef __cplusplus
 }

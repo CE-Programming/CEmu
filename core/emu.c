@@ -187,10 +187,8 @@ bool emu_start(void) {
                     break;
                 }
 
-
                 if (ret) {
-                    control.device_type = device_type;
-                    asic.device_type = device_type;
+                    set_device_type(device_type);
                 }
 
             }

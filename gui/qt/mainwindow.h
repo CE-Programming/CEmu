@@ -72,13 +72,13 @@ private:
     void setDebuggerState(bool);
     void changeDebuggerState();
     void processDebugCommand(int, uint32_t);
-    void portMonitorCheckboxToggled(QTableWidgetItem*);
+    void portMonitorCheckboxToggled(QTableWidgetItem *);
     void pollPort();
     void deletePort();
     void updatePortData(int);
     void changePortData(QTableWidgetItem*);
     void deleteBreakpoint();
-    void breakpointCheckboxToggled(QTableWidgetItem*);
+    void breakpointCheckboxToggled(QTableWidgetItem *);
     void drawNextDisassembleLine();
     void stepPressed();
     void stepOverPressed();
@@ -87,7 +87,7 @@ private:
     void updateDisasmView(const int, const bool);
     void gotoPressed();
     void setBreakpointAddress();
-    void disasmContextMenu(const QPoint&);
+    void disasmContextMenu(const QPoint &);
     bool addBreakpoint();
 
     // Others
@@ -106,7 +106,6 @@ private:
 
     // Settings
     void changeLCDRefresh(int);
-    void changeKeymap(const QString &);
     void alwaysOnTop(int);
     void popoutLCD();
 
@@ -130,11 +129,15 @@ private:
     void memGotoPressed();
     void memSearchPressed();
     void memSyncPressed();
-    void syncHexView(int, QHexEdit*);
-    void searchEdit(QHexEdit*);
+    void syncHexView(int, QHexEdit *);
+    void searchEdit(QHexEdit *);
+
+    // Keypad
+    void keymapChanged();
+    void changeKeymap(const QString &);
 
     QLabel status_label;
-    QString getAddressString(bool&, QString);
+    QString getAddressString(bool &, QString);
 
     Ui::MainWindow *ui = nullptr;
     QSettings *settings = nullptr;

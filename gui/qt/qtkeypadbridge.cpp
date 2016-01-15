@@ -16,24 +16,24 @@
 #include "qmlbridge.h"
 #include "keymap.h"
 #include "../../core/keypad.h"
+#include "../../core/tidevices.h"
 
 QtKeypadBridge qt_keypad_bridge;
 
 bool QtKeypadBridge::setKeymap(const QString & keymapstr)
 {
     bool ret = true;
-    // TODO select 83pce keypads if emulating a 83PCE.
     if (QStringLiteral("cemu").compare(keymapstr, Qt::CaseInsensitive))
     {
-        qt_keypad_bridge.keymap = &keymap_84pce_cemu;
+        qt_keypad_bridge.keymap = (get_device_type() == TI84PCE) ? &keymap_84pce_cemu : &keymap_83pce_cemu;
     }
     else if (QStringLiteral("tilem").compare(keymapstr, Qt::CaseInsensitive))
     {
-        qt_keypad_bridge.keymap = &keymap_84pce_tilem;
+        qt_keypad_bridge.keymap = (get_device_type() == TI84PCE) ? &keymap_84pce_tilem : &keymap_83pce_tilem;
     }
     else if (QStringLiteral("wabbitemu").compare(keymapstr, Qt::CaseInsensitive))
     {
-        qt_keypad_bridge.keymap = &keymap_84pce_wabbitemu;
+        qt_keypad_bridge.keymap = (get_device_type() == TI84PCE) ? &keymap_84pce_wabbitemu : &keymap_83pce_wabbitemu;
     }
     else
     {

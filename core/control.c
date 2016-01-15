@@ -11,37 +11,37 @@ control_state_t control;
 static uint8_t control_read(const uint16_t pio) {
     uint8_t addr = pio & 0x7F;
 
-    uint8_t read_byte;
+    uint8_t value;
 
     switch (addr) {
         case 0x01:
-            return control.cpu_speed & 19;
+            value = control.cpu_speed & 19;
             break;
         case 0x02:
-            read_byte = control.ports[addr] | 1;
+            value = control.ports[addr] | 1;
             break;
         case 0x03:
-            read_byte = control.device_type;
+            value = get_device_type();
             break;
         case 0x0B:
             if( (control.ports[0x0A] & 2) == 0 ) {
                 control.ports[addr] |= 2;
             }
-            read_byte = control.ports[addr];
+            value = control.ports[addr];
             break;
         case 0x0F:
-            read_byte = control.ports[addr];
+            value = control.ports[addr];
             if(control.unknown_g_Xb != 0x00) { addr |= 0x80; }
             if(control.unknown_g_Bd != 0x00) { addr |= 0x40; }
             break;
         case 0x28:
-            read_byte = control.ports[addr] | 0x08;
+            value = control.ports[addr] | 0x08;
             break;
         default:
-            read_byte = control.ports[addr];
+            value = control.ports[addr];
             break;
     }
-    return read_byte;
+    return value;
 }
 
 /* Write to the 0x0XXX range of ports */
