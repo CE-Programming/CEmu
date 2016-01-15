@@ -55,6 +55,7 @@ SOURCES +=  utils.cpp \
     emuthread.cpp \
     qtkeypadbridge.cpp \
     qmlbridge.cpp \
+    keymap.cpp \
     disasmwidget.cpp \
     qhexedit/chunks.cpp \
     qhexedit/commands.cpp \

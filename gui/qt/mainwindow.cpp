@@ -198,6 +198,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
     changeLCDRefresh(settings->value(QStringLiteral("refreshRate"), 60).toInt());
     changeEmulatedSpeed(settings->value(QStringLiteral("emuRate"), 100).toInt());
+    changeKeymap(settings->value(QStringLiteral("keyMap"), "cemu").toString());
     alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toInt());
     changeThrottleMode(settings->value(QStringLiteral("throttleMode"), Qt::Checked).toInt());
     ui->textSizeSlider->setValue(settings->value(QStringLiteral("disasmTextSize"), 9).toInt());
@@ -468,6 +469,11 @@ void MainWindow::changeEmulatedSpeed(int value) {
     ui->emulationSpeedLabel->setText(QString::fromStdString(std::to_string(value)).rightJustified(3)+QStringLiteral("%"));
     ui->emulationSpeed->setValue(value);
     emit changedEmuSpeed(value);
+}
+
+void MainWindow::changeKeymap(const QString & value) {
+    settings->setValue(QStringLiteral("keyMap"), value);
+    qt_keypad_bridge.setKeymap(value);
 }
 
 void MainWindow::alwaysOnTop(int state) {

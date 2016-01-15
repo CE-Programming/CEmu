@@ -106,6 +106,7 @@ private:
 
     // Settings
     void changeLCDRefresh(int);
+    void changeKeymap(const QString &);
     void alwaysOnTop(int);
     void popoutLCD();
 

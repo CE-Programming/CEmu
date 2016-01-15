@@ -204,13 +204,13 @@ void lcd_write(const uint16_t pio, const uint8_t value) {
             if (lcd.upbase & 7) {
                 gui_console_printf("Warning: LCD upper panel base not 8-byte aligned!\n");
             }
-            lcd.upbase &= ~7;
+            lcd.upbase &= ~7U;
         } else if (offset == 0x014) {
             write8(lcd.lpbase, bit_offset, value);
             if (lcd.lpbase & 7) {
                 gui_console_printf("Warning: LCD lower panel base not 8-byte aligned!\n");
             }
-            lcd.lpbase &= ~7;
+            lcd.lpbase &= ~7U;
         } else if (offset == 0x018) {
             if ((((uint32_t)value << bit_offset) ^ lcd.control) & 1) {
                 if (value & 1) { event_set(SCHED_LCD, 0); }

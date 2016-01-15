@@ -19,18 +19,40 @@
 
 QtKeypadBridge qt_keypad_bridge;
 
+bool QtKeypadBridge::setKeymap(const QString & keymapstr)
+{
+    bool ret = true;
+    // TODO select 83pce keypads if emulating a 83PCE.
+    if (QStringLiteral("cemu").compare(keymapstr, Qt::CaseInsensitive))
+    {
+        qt_keypad_bridge.keymap = &keymap_84pce_cemu;
+    }
+    else if (QStringLiteral("tilem").compare(keymapstr, Qt::CaseInsensitive))
+    {
+        qt_keypad_bridge.keymap = &keymap_84pce_tilem;
+    }
+    else if (QStringLiteral("wabbitemu").compare(keymapstr, Qt::CaseInsensitive))
+    {
+        qt_keypad_bridge.keymap = &keymap_84pce_wabbitemu;
+    }
+    else
+    {
+        ret = false;
+    }
+    return ret;
+}
+
 void QtKeypadBridge::keyEvent(QKeyEvent *event, bool press)
 {
     Qt::Key key = static_cast<Qt::Key>(event->key());
 
-    auto& keymap = keymap_tp;
-    for(unsigned int row = 0; row < sizeof(keymap)/sizeof(*keymap); ++row)
+    for(unsigned int row = 0; row < sizeof(*keymap)/sizeof(**keymap); ++row)
     {
-        for(unsigned int col = 0; col < sizeof(*keymap)/sizeof(**keymap); ++col)
+        for(unsigned int col = 0; col < sizeof(**keymap)/sizeof(***keymap); ++col)
         {
-            for(unsigned int index = 0; index < sizeof((**keymap).key)/sizeof(*(**keymap).key); ++index)
+            for(unsigned int index = 0; index < sizeof((***keymap).key)/sizeof(*(***keymap).key); ++index)
             {
-                if(key == keymap[row][col].key[index] && keymap[row][col].alt == (bool(event->modifiers() & Qt::AltModifier) || bool(event->modifiers() & Qt::MetaModifier)))
+                if(key == (*qt_keypad_bridge.keymap)[row][col].key[index] && (*qt_keypad_bridge.keymap)[row][col].alt == (bool(event->modifiers() & Qt::AltModifier) || bool(event->modifiers() & Qt::MetaModifier)))
                 {
                     keypad_key_event(row, col, press);
                     notifyKeypadStateChanged(row, col, press);
