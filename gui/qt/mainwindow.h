@@ -98,13 +98,15 @@ private:
     // Speed
     void changeEmulatedSpeed(int);
     void changeThrottleMode(int);
+    void showActualSpeed(int);
 
     // Console
     void clearConsole(void);
+    void showStatusMsg(QString);
 
     // Settings
-    void changeLCDRefresh(int value);
-    void alwaysOnTop(int state);
+    void changeLCDRefresh(int);
+    void alwaysOnTop(int);
     void popoutLCD();
 
     // Linking
@@ -130,6 +132,7 @@ private:
     void syncHexView(int, QHexEdit*);
     void searchEdit(QHexEdit*);
 
+    QLabel status_label;
     QString getAddressString(bool&, QString);
 
     Ui::MainWindow *ui = nullptr;

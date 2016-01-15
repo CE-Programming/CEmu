@@ -35,7 +35,3 @@ void port_write_byte(const uint16_t addr, const uint8_t value) {
         openDebugger(HIT_PORT_WRITE_BREAKPOINT, port);
     }
 }
-
-void port_force_write_byte(const uint16_t addr, const uint8_t value) {
-    apb_map[port_range(addr)].range->write_out(addr_range(addr), value);
-}

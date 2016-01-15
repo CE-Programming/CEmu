@@ -24,7 +24,6 @@ void apb_set_map(int entry, eZ80portrange_t* range);
 
 uint8_t port_read_byte(const uint16_t addr);
 void port_write_byte(const uint16_t addr, const uint8_t value);
-void port_force_write_byte(const uint16_t addr, const uint8_t value);
 
 #ifdef __cplusplus
 }

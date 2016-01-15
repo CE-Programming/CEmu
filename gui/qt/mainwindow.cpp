@@ -46,6 +46,7 @@ static const uint32_t ram_size = 0x65800;
 MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     // Setup the UI
     ui->setupUi(this);
+    ui->statusBar->addWidget(&status_label);
 
     // Register QtKeypadBridge for the virtual keyboard functionality
     this->installEventFilter(&qt_keypad_bridge);
@@ -131,6 +132,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->checkThrottle, &QCheckBox::stateChanged, this, &MainWindow::changeThrottleMode);
     connect(this, &MainWindow::changedEmuSpeed, &emu, &EmuThread::changeEmuSpeed);
     connect(this, &MainWindow::changedThrottleMode, &emu, &EmuThread::changeThrottleMode);
+    connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showActualSpeed);
 
     // Hex Editor
     connect(ui->buttonFlashGoto, &QPushButton::clicked, this, &MainWindow::flashGotoPressed);
@@ -264,9 +266,18 @@ void MainWindow::consoleStr(QString str) {
 }
 
 void MainWindow::changeThrottleMode(int mode) {
+    ui->checkThrottle->setChecked(mode == Qt::Checked);
     settings->setValue(QStringLiteral("throttleMode"), mode);
 
     emit changedThrottleMode(mode == Qt::Checked);
+}
+
+void MainWindow::showActualSpeed(int speed) {
+    showStatusMsg(tr("Actual Speed: ")+QString::number(speed, 10)+QStringLiteral("%"));
+}
+
+void MainWindow::showStatusMsg(QString str) {
+    status_label.setText(str);
 }
 
 void MainWindow::popoutLCD() {
@@ -435,7 +446,7 @@ void MainWindow::changeLCDRefresh(int value) {
 
 void MainWindow::changeEmulatedSpeed(int value) {
     settings->setValue(QStringLiteral("emuRate"), value);
-    ui->emulationSpeedLabel->setText(QString::fromStdString(std::to_string(value)).rightJustified(3,'0')+"%");
+    ui->emulationSpeedLabel->setText(QString::fromStdString(std::to_string(value)).rightJustified(3)+QStringLiteral("%"));
     ui->emulationSpeed->setValue(value);
     emit changedEmuSpeed(value);
 }
@@ -516,11 +527,11 @@ void MainWindow::refreshVariableList() {
     }
 
     if (in_recieving_mode) {
-        ui->buttonRefreshList->setText("Refresh Emulator Variable List...");
+        ui->buttonRefreshList->setText(tr("Refresh Emulator Variable List..."));
         ui->buttonReceiveFiles->setEnabled(false);
         setReceiveState(false);
     } else {
-        ui->buttonRefreshList->setText("Continue Emulation");
+        ui->buttonRefreshList->setText(tr("Continue Emulation"));
         ui->buttonReceiveFiles->setEnabled(true);
         setReceiveState(true);
         QThread::msleep(500);

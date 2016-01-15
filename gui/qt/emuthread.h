@@ -27,6 +27,8 @@ signals:
     void consoleStr(QString);
     void exited(int);
 
+    void actualSpeedChanged(int actualSpeed);
+
 public slots:
     virtual void run() override;
     bool stop();
@@ -46,11 +48,13 @@ public slots:
     void changeThrottleMode(bool);
 
 private:
+    void setActualSpeed(int value);
+
     bool enter_debugger = false;
     bool enter_send_state = false;
     bool enter_receive_state = false;
     bool throttle_on = true;
-    int speed;
+    int speed, actualSpeed;
     std::chrono::steady_clock::time_point last_time;
 };
 

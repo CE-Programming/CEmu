@@ -31,10 +31,6 @@
 
 EmuThread *emu_thread = nullptr;
 
-void gui_emu_yield(void) {
-    QThread::yieldCurrentThread();
-}
-
 void gui_emu_sleep(void) {
     QThread::usleep(50);
 }
@@ -79,7 +75,7 @@ void gui_debugger_entered_or_left(bool entered) {
 EmuThread::EmuThread(QObject *p) : QThread(p) {
     assert(emu_thread == nullptr);
     emu_thread = this;
-    speed = 100;
+    speed = actualSpeed = 100;
     last_time = std::chrono::steady_clock::now();
 }
 
@@ -157,14 +153,25 @@ void EmuThread::doStuff(bool wait_for) {
     last_time += std::chrono::steady_clock::now() - cur_time;
 }
 
+void EmuThread::setActualSpeed(int value) {
+    if (actualSpeed != value) {
+        emit actualSpeedChanged(actualSpeed = value);
+    }
+}
+
 void EmuThread::throttleTimerWait() {
+    std::chrono::duration<int, std::ratio<100, 60>> unit(1);
     std::chrono::steady_clock::duration interval(std::chrono::duration_cast<std::chrono::steady_clock::duration>
                                                  (std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(1000000 * 100 / speed)));
     std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now(), next_time = last_time + interval;
     if (throttle_on && cur_time < next_time) {
-        std::this_thread::sleep_until(last_time = next_time);
+        setActualSpeed(speed);
+        last_time = next_time;
+        std::this_thread::sleep_until(next_time);
     } else {
+        setActualSpeed(unit / (cur_time - last_time));
         last_time = cur_time;
+        std::this_thread::yield();
     }
 }
 

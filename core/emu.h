@@ -35,7 +35,6 @@ void gui_console_vprintf(const char *, va_list);
 void gui_perror(const char *);
 void gui_debugger_entered_or_left(bool);
 void gui_debugger_send_command(int, uint32_t);
-void gui_emu_yield(void);
 void gui_emu_sleep(void);
 
 bool emu_start(void);
