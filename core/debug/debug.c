@@ -60,7 +60,7 @@ uint8_t debug_port_read_byte(uint32_t address) {
     return apb_map[port_range(address)].range->read_in(addr_range(address));
 }
 void debug_port_write_byte(uint32_t address, uint8_t value) {
-    return apb_map[port_range(address)].range->write_out(addr_range(address), value);
+    apb_map[port_range(address)].range->write_out(addr_range(address), value);
 }
 
 /* okay, so looking at the data inside the asic should be okay when using this function, */
