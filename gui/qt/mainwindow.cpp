@@ -549,10 +549,11 @@ void MainWindow::changeLCDRefresh(int value) {
 }
 
 void MainWindow::changeEmulatedSpeed(int value) {
+    int acutalSpeed = value*10;
     settings->setValue(QStringLiteral("emuRate"), value);
-    ui->emulationSpeedLabel->setText(QString::fromStdString(std::to_string(value)).rightJustified(3)+QStringLiteral("%"));
+    ui->emulationSpeedLabel->setText(QString::fromStdString(std::to_string(acutalSpeed)).rightJustified(3)+QStringLiteral("%"));
     ui->emulationSpeed->setValue(value);
-    emit changedEmuSpeed(value);
+    emit changedEmuSpeed(acutalSpeed);
 }
 
 void MainWindow::keymapChanged() {

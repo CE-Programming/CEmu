@@ -804,16 +804,16 @@
               <number>1</number>
              </property>
              <property name="maximum">
-              <number>500</number>
+              <number>50</number>
              </property>
              <property name="singleStep">
               <number>1</number>
              </property>
              <property name="value">
-              <number>100</number>
+              <number>10</number>
              </property>
              <property name="sliderPosition">
-              <number>100</number>
+              <number>10</number>
              </property>
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
