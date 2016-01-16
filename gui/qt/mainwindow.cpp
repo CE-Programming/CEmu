@@ -154,7 +154,9 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     // Keybindings
     connect(ui->radioCEmuKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
     connect(ui->radioTilEmKeys, &QPushButton::clicked, this, &MainWindow::keymapChanged);
-    connect(ui->radioWabbitEmuKeys, &QPushButton::clicked, this, &MainWindow::keymapChanged);
+    connect(ui->radioWabbitemuKeys, &QPushButton::clicked, this, &MainWindow::keymapChanged);
+    connect(ui->radioPindurTIKeys, &QPushButton::clicked, this, &MainWindow::keymapChanged);
+    connect(ui->radioSmartViewKeys, &QPushButton::clicked, this, &MainWindow::keymapChanged);
 
     // Set up monospace fonts
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
@@ -223,7 +225,13 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
         ui->radioTilEmKeys->setChecked(true);
     }
     else if (QStringLiteral("wabbitemu").compare(currKeyMap, Qt::CaseInsensitive) == 0) {
-        ui->radioWabbitEmuKeys->setChecked(true);
+        ui->radioWabbitemuKeys->setChecked(true);
+    }
+    else if (QStringLiteral("pindurti").compare(currKeyMap, Qt::CaseInsensitive) == 0) {
+        ui->radioPindurTIKeys->setChecked(true);
+    }
+    else if (QStringLiteral("smartview").compare(currKeyMap, Qt::CaseInsensitive) == 0) {
+        ui->radioSmartViewKeys->setChecked(true);
     }
     changeKeymap(currKeyMap);
 
@@ -561,8 +569,12 @@ void MainWindow::keymapChanged() {
         changeKeymap(QStringLiteral("cemu"));
     } else if (ui->radioTilEmKeys->isChecked()) {
         changeKeymap(QStringLiteral("tilem"));
-    } else if (ui->radioWabbitEmuKeys->isChecked()) {
+    } else if (ui->radioWabbitemuKeys->isChecked()) {
         changeKeymap(QStringLiteral("wabbitemu"));
+    } else if (ui->radioPindurTIKeys->isChecked()) {
+        changeKeymap(QStringLiteral("pindurti"));
+    } else if (ui->radioSmartViewKeys->isChecked()) {
+        changeKeymap(QStringLiteral("smartview"));
     }
 }
 

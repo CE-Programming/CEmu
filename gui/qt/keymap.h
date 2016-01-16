@@ -4,17 +4,22 @@
 #include <QtGui/QKeyEvent>
 
 struct HostKey {
-    Qt::Key key[3];
+    Qt::Key code;
+    quint32 nativeCode, nativeMask;
+    Qt::KeyboardModifier modifier, mask;
     QString name;
-    bool alt;
 };
 
-extern const HostKey keymap_83pce_cemu[8][8];
-extern const HostKey keymap_83pce_tilem[8][8];
-extern const HostKey keymap_83pce_wabbitemu[8][8];
+extern const HostKey *cemu_keymap_83pce[8][8];
+extern const HostKey *tilem_keymap_83pce[8][8];
+extern const HostKey *wabbitemu_keymap_83pce[8][8];
+extern const HostKey *pindurti_keymap_83pce[8][8];
+extern const HostKey *smartview_keymap_83pce[8][8];
 
-extern const HostKey keymap_84pce_cemu[8][8];
-extern const HostKey keymap_84pce_tilem[8][8];
-extern const HostKey keymap_84pce_wabbitemu[8][8];
+extern const HostKey *cemu_keymap_84pce[8][8];
+extern const HostKey *tilem_keymap_84pce[8][8];
+extern const HostKey *wabbitemu_keymap_84pce[8][8];
+extern const HostKey *pindurti_keymap_84pce[8][8];
+extern const HostKey *smartview_keymap_84pce[8][8];
 
 #endif

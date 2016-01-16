@@ -16,7 +16,7 @@ public:
     static void keyEvent(QKeyEvent *event, bool press);
     bool eventFilter(QObject *obj, QEvent *e);
 private:
-    const HostKey (* keymap)[8][8] = nullptr;
+    const HostKey *(*keymap)[8][8] = nullptr;
 };
 
 extern QtKeypadBridge qt_keypad_bridge;

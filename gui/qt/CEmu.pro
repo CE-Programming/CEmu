@@ -28,6 +28,9 @@ if (!win32-msvc*) {
 }
 
 if (macx|linux) {
+    QMAKE_CC = clang
+    QMAKE_CXX = clang++
+    QMAKE_LINK = clang++
     GLOBAL_FLAGS    += -fPIE -Wstack-protector -fstack-protector-strong --param=ssp-buffer-size=1
     CONFIG(debug, debug|release): GLOBAL_FLAGS += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -O0
 }

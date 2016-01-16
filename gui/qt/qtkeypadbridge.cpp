@@ -23,17 +23,25 @@ QtKeypadBridge qt_keypad_bridge;
 bool QtKeypadBridge::setKeymap(const QString & keymapstr)
 {
     bool ret = true;
-    if (QStringLiteral("cemu").compare(keymapstr, Qt::CaseInsensitive))
+    if (!QStringLiteral("cemu").compare(keymapstr, Qt::CaseInsensitive))
     {
-        qt_keypad_bridge.keymap = (get_device_type() == TI84PCE) ? &keymap_84pce_cemu : &keymap_83pce_cemu;
+        qt_keypad_bridge.keymap = (get_device_type() == TI84PCE) ? &cemu_keymap_84pce : &cemu_keymap_83pce;
     }
-    else if (QStringLiteral("tilem").compare(keymapstr, Qt::CaseInsensitive))
+    else if (!QStringLiteral("tilem").compare(keymapstr, Qt::CaseInsensitive))
     {
-        qt_keypad_bridge.keymap = (get_device_type() == TI84PCE) ? &keymap_84pce_tilem : &keymap_83pce_tilem;
+        qt_keypad_bridge.keymap = (get_device_type() == TI84PCE) ? &tilem_keymap_84pce : &tilem_keymap_83pce;
     }
-    else if (QStringLiteral("wabbitemu").compare(keymapstr, Qt::CaseInsensitive))
+    else if (!QStringLiteral("wabbitemu").compare(keymapstr, Qt::CaseInsensitive))
     {
-        qt_keypad_bridge.keymap = (get_device_type() == TI84PCE) ? &keymap_84pce_wabbitemu : &keymap_83pce_wabbitemu;
+        qt_keypad_bridge.keymap = (get_device_type() == TI84PCE) ? &wabbitemu_keymap_84pce : &wabbitemu_keymap_83pce;
+    }
+    else if (!QStringLiteral("pindurti").compare(keymapstr, Qt::CaseInsensitive))
+    {
+        qt_keypad_bridge.keymap = (get_device_type() == TI84PCE) ? &pindurti_keymap_84pce : &pindurti_keymap_83pce;
+    }
+    else if (!QStringLiteral("smartview").compare(keymapstr, Qt::CaseInsensitive))
+    {
+        qt_keypad_bridge.keymap = (get_device_type() == TI84PCE) ? &smartview_keymap_84pce : &smartview_keymap_83pce;
     }
     else
     {
@@ -44,15 +52,17 @@ bool QtKeypadBridge::setKeymap(const QString & keymapstr)
 
 void QtKeypadBridge::keyEvent(QKeyEvent *event, bool press)
 {
-    Qt::Key key = static_cast<Qt::Key>(event->key());
+    Qt::Key code = static_cast<Qt::Key>(event->key());
+    quint32 nativeCode = event->nativeScanCode();
+    Qt::KeyboardModifiers modifiers = event->modifiers();
 
     for(unsigned int row = 0; row < sizeof(*keymap)/sizeof(**keymap); ++row)
     {
         for(unsigned int col = 0; col < sizeof(**keymap)/sizeof(***keymap); ++col)
         {
-            for(unsigned int index = 0; index < sizeof((***keymap).key)/sizeof(*(***keymap).key); ++index)
+            for(const HostKey *key = (*qt_keypad_bridge.keymap)[row][col]; key->code; ++key)
             {
-                if(key == (*qt_keypad_bridge.keymap)[row][col].key[index] && (*qt_keypad_bridge.keymap)[row][col].alt == (bool(event->modifiers() & Qt::AltModifier) || bool(event->modifiers() & Qt::MetaModifier)))
+                if(key->code == code && key->modifier == (key->mask & modifiers) && key->nativeCode == (key->nativeMask & nativeCode))
                 {
                     keypad_key_event(row, col, press);
                     notifyKeypadStateChanged(row, col, press);

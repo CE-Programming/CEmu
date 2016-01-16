@@ -992,7 +992,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QRadioButton" name="radioWabbitEmuKeys">
+            <widget class="QRadioButton" name="radioWabbitemuKeys">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -1000,7 +1000,39 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string notr="true">WabbitEmu</string>
+              <string notr="true">Wabbitemu</string>
+             </property>
+             <property name="autoExclusive">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="radioPindurTIKeys">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string notr="true">PindurTI</string>
+             </property>
+             <property name="autoExclusive">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="radioSmartViewKeys">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string notr="true">SmartView</string>
              </property>
              <property name="autoExclusive">
               <bool>true</bool>
