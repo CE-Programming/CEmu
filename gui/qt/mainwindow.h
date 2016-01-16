@@ -60,8 +60,9 @@ private:
     // Actions
     bool runSetup(void);
     void screenshot(void);
-    void screenshotGIF();
-    void recordGIF();
+    void screenshotGIF(void);
+    void recordGIF(void);
+    void checkForUpdates(bool);
     void showAbout(void);
     void setUIMode(bool);
 

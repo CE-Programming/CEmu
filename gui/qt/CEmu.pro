@@ -1,9 +1,9 @@
 lessThan(QT_MAJOR_VERSION, 5) : error("You need at least Qt 5 to build CEmu!")
 
 # Version
-DEFINES += CEMU_VERSION=0.2
+DEFINES += CEMU_VERSION=0.3dev
 
-QT += core gui quick widgets quickwidgets
+QT += core gui quick widgets quickwidgets network
 
 TARGET = CEmu
 TEMPLATE = app

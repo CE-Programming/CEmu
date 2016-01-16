@@ -14,6 +14,7 @@
 
 #include <QtCore/QFileInfo>
 #include <QtCore/QRegularExpression>
+#include <QtNetwork/QNetworkAccessManager>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QDockWidget>
 #include <QtWidgets/QShortcut>
@@ -21,6 +22,7 @@
 #include <QtQuickWidgets/QQuickWidget>
 #include <QtGui/QFont>
 #include <QtGui/QPixmap>
+
 #include <fstream>
 #include <iostream>
 
@@ -58,6 +60,9 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     ui->keypadWidget->setResizeMode(QQuickWidget::ResizeMode::SizeRootObjectToView);
     ui->disassemblyView->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    // Auto-update check, silent mode.
+    checkForUpdates(false);
 
     // View
     detached_lcd.setContextMenuPolicy(Qt::CustomContextMenu);
@@ -121,6 +126,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonGIF_Screenshot, &QPushButton::clicked, this, &MainWindow::screenshotGIF);
 
     // About
+    connect(ui->actionCheck_for_updates, &QAction::triggered, this, [=](){ this->checkForUpdates(true); });
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::showAbout);
     connect(ui->actionAbout_Qt, &QAction::triggered, qApp, &QApplication::aboutQt);
 
@@ -441,6 +447,67 @@ void MainWindow::recordGIF() {
 void MainWindow::clearConsole(void) {
     ui->console->clear();
     consoleStr("Console Cleared.\n");
+}
+
+void MainWindow::checkForUpdates(bool forceInfoBox) {
+    #define STRINGIFYMAGIC(x) #x
+    #define STRINGIFY(x) STRINGIFYMAGIC(x)
+
+    if (QStringLiteral(STRINGIFY(CEMU_VERSION)).endsWith(QStringLiteral("dev")))
+    {
+        if (forceInfoBox)
+        {
+            QMessageBox::warning(this, tr("Update check disabled"), tr("Checking updates is disabled for dev. builds"));
+        }
+        return;
+    }
+
+    static const QString currentVersionReleaseURL = QStringLiteral("https://github.com/MateoConLechuga/CEmu/releases/tag/" STRINGIFY(CEMU_VERSION));
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply) {
+        QString newVersionURL = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString();
+        if (!newVersionURL.isEmpty())
+        {
+            if (newVersionURL.compare(currentVersionReleaseURL) == 0)
+            {
+                if (forceInfoBox)
+                {
+                    QMessageBox::information(this, tr("No update available"), tr("You already have the latest CEmu version (" STRINGIFY(CEMU_VERSION) ")"));
+                }
+            } else {
+                QMessageBox updateInfoBox(this);
+                updateInfoBox.addButton(QMessageBox::Ok);
+                updateInfoBox.setIconPixmap(QPixmap(":/icons/resources/icons/icon.png"));
+                updateInfoBox.setWindowTitle(tr("CEmu update"));
+                updateInfoBox.setText(tr("<b>A new version of CEmu is available!</b>"
+                                         "<br/>"
+                                         "You can <a href='%1'>download it here</a>.")
+                                     .arg(newVersionURL));
+                updateInfoBox.setTextFormat(Qt::RichText);
+                updateInfoBox.show();
+                updateInfoBox.exec();
+            }
+        } else { // No internet connection? GitHub doesn't provide this redirection anymore?
+            if (forceInfoBox)
+            {
+                QMessageBox updateInfoBox(this);
+                updateInfoBox.addButton(QMessageBox::Ok);
+                updateInfoBox.setIcon(QMessageBox::Warning);
+                updateInfoBox.setWindowTitle(tr("Update check failed"));
+                updateInfoBox.setText(tr("<b>An error occurred while checking for CEmu updates.</b>"
+                                         "<br/>"
+                                         "You can however <a href='https://github.com/MateoConLechuga/CEmu/releases/latest'>go here</a> to check yourself."));
+                updateInfoBox.setTextFormat(Qt::RichText);
+                updateInfoBox.show();
+                updateInfoBox.exec();
+            }
+        }
+    });
+
+    manager->get(QNetworkRequest(QUrl(QStringLiteral("https://github.com/MateoConLechuga/CEmu/releases/latest"))));
+
+    #undef STRINGIFY
+    #undef STRINGIFYMAGIC
 }
 
 void MainWindow::showAbout() {
