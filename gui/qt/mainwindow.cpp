@@ -543,7 +543,7 @@ void MainWindow::showAbout() {
 
 void MainWindow::changeLCDRefresh(int value) {
     settings->setValue(QStringLiteral("refreshRate"), value);
-    ui->refreshLabel->setText(QString::fromStdString(std::to_string(value))+" FPS");
+    ui->refreshLabel->setText(QString::number(value)+" FPS");
     ui->refreshSlider->setValue(value);
     ui->lcdWidget->refreshRate(value);
 }
@@ -551,7 +551,7 @@ void MainWindow::changeLCDRefresh(int value) {
 void MainWindow::changeEmulatedSpeed(int value) {
     int acutalSpeed = value*10;
     settings->setValue(QStringLiteral("emuRate"), value);
-    ui->emulationSpeedLabel->setText(QString::fromStdString(std::to_string(acutalSpeed)).rightJustified(3)+QStringLiteral("%"));
+    ui->emulationSpeedLabel->setText(QString::number(acutalSpeed).rightJustified(3, '0')+QStringLiteral("%"));
     ui->emulationSpeed->setValue(value);
     emit changedEmuSpeed(acutalSpeed);
 }

@@ -807,7 +807,7 @@
               <number>50</number>
              </property>
              <property name="singleStep">
-              <number>1</number>
+              <number>10</number>
              </property>
              <property name="value">
               <number>10</number>
@@ -828,7 +828,7 @@
               <enum>QSlider::TicksBelow</enum>
              </property>
              <property name="tickInterval">
-              <number>50</number>
+              <number>1</number>
              </property>
             </widget>
            </item>
