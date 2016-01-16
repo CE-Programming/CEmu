@@ -7,31 +7,32 @@ backlight_state_t backlight;
 
 /* Read from the 0xBXXX range of ports */
 static uint8_t backlight_read(const uint16_t pio) {
-    uint8_t addr = (pio >> 2) & 0xFF;
-    uint8_t read_byte = 0;
+    uint8_t index = (pio >> 2) & 0xFF;
+    uint8_t value;
 
-    switch (addr) {
+    switch (index) {
         case 0x02: /* Ports B008-B00B always read 0 */
         case 0x03: /* Ports B00D-B00F always read 0 */
         case 0x04: /* Ports B00D-B00F always read 0 */
         case 0x07: /* Ports B01C-B01F always read 0 */
+            value = 0;
             break;
         case 0x09:
-            read_byte = backlight.brightness;
+            value = backlight.brightness;
             break;
         default:
-            read_byte = backlight.ports[addr];
+            value = backlight.ports[index];
             break;
     }
-    return read_byte;
+    return value;
 }
 
 /* Write to the 0xBXXX range of ports */
 static void backlight_write(const uint16_t pio, const uint8_t byte)
 {
-    uint8_t addr = pio & 0xFF;
+    uint8_t index = pio & 0xFF;
 
-    switch (addr) {
+    switch (index) {
         case 0x01:
         case 0x02:
         case 0x03:
@@ -42,14 +43,14 @@ static void backlight_write(const uint16_t pio, const uint8_t byte)
         case 0x25:
         case 0x26:
             if(byte != 0) {
-                backlight.brightness = 0x00;
+                backlight.brightness = 0;
             }
             break;
         case 0x24:
             backlight.brightness = byte;
             break;
         default:
-            backlight.ports[addr] = byte;
+            backlight.ports[index] = byte;
             break;
     }
 }

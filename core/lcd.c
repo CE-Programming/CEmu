@@ -167,24 +167,24 @@ void lcd_reset(void) {
 }
 
 uint8_t lcd_read(const uint16_t pio) {
-    uint16_t offset = pio & 0xFFF;
-    uint8_t bit_offset = (offset & 3) << 3;
+    uint16_t index = pio & 0xFFF;
+    uint8_t bit_offset = (index & 3) << 3;
 
-    if (offset < 0x200) {
-        if(offset < 0x010) { return read8(lcd.timing[offset >> 2], bit_offset); }
-        if(offset < 0x014 && offset >= 0x010) { return read8(lcd.upbase, bit_offset); }
-        if(offset < 0x018 && offset >= 0x014) { return read8(lcd.lpbase, bit_offset); }
-        if(offset < 0x01C && offset >= 0x018) { return read8(lcd.control, bit_offset); }
-        if(offset < 0x020 && offset >= 0x01C) { return read8(lcd.imsc, bit_offset); }
-        if(offset < 0x024 && offset >= 0x020) { return read8(lcd.ris, bit_offset); }
-        if(offset < 0x028 && offset >= 0x024) { return read8(lcd.mis & lcd.ris, bit_offset); }
-    } else if (offset < 0x400) {
-        return *((uint8_t *)lcd.palette + offset - 0x200);
-    } else if (offset >= 0xFE0) {
+    if (index < 0x200) {
+        if(index < 0x010) { return read8(lcd.timing[index >> 2], bit_offset); }
+        if(index < 0x014 && index >= 0x010) { return read8(lcd.upbase, bit_offset); }
+        if(index < 0x018 && index >= 0x014) { return read8(lcd.lpbase, bit_offset); }
+        if(index < 0x01C && index >= 0x018) { return read8(lcd.control, bit_offset); }
+        if(index < 0x020 && index >= 0x01C) { return read8(lcd.imsc, bit_offset); }
+        if(index < 0x024 && index >= 0x020) { return read8(lcd.ris, bit_offset); }
+        if(index < 0x028 && index >= 0x024) { return read8(lcd.mis & lcd.ris, bit_offset); }
+    } else if (index < 0x400) {
+        return *((uint8_t *)lcd.palette + index - 0x200);
+    } else if (index >= 0xFE0) {
         static const uint8_t id[1][8] = {
             { 0x11, 0x11, 0x14, 0x00, 0x0D, 0xF0, 0x05, 0xB1 }
         };
-        return read8(id[0][(offset - 0xFE0) >> 2], bit_offset);
+        return read8(id[0][(index - 0xFE0) >> 2], bit_offset);
     }
 
     /* Return 0 if bad read */
@@ -192,40 +192,40 @@ uint8_t lcd_read(const uint16_t pio) {
 }
 
 void lcd_write(const uint16_t pio, const uint8_t value) {
-    uint32_t offset = pio & 0xFFC;
+    uint32_t index = pio & 0xFFC;
 
-    if (offset < 0x200) {
+    if (index < 0x200) {
         uint8_t byte_offset = pio & 3;
         uint8_t bit_offset = byte_offset << 3;
-        if (offset < 0x010) {
-            write8(lcd.timing[offset >> 2], bit_offset, value);
-        } else if (offset == 0x010) {
+        if (index < 0x010) {
+            write8(lcd.timing[index >> 2], bit_offset, value);
+        } else if (index == 0x010) {
             write8(lcd.upbase, bit_offset, value);
             if (lcd.upbase & 7) {
                 gui_console_printf("Warning: LCD upper panel base not 8-byte aligned!\n");
             }
             lcd.upbase &= ~7U;
-        } else if (offset == 0x014) {
+        } else if (index == 0x014) {
             write8(lcd.lpbase, bit_offset, value);
             if (lcd.lpbase & 7) {
                 gui_console_printf("Warning: LCD lower panel base not 8-byte aligned!\n");
             }
             lcd.lpbase &= ~7U;
-        } else if (offset == 0x018) {
+        } else if (index == 0x018) {
             if ((((uint32_t)value << bit_offset) ^ lcd.control) & 1) {
                 if (value & 1) { event_set(SCHED_LCD, 0); }
                 else { event_clear(SCHED_LCD); }
             }
             write8(lcd.control, bit_offset, value);
-        } else if (offset == 0x01C) {
+        } else if (index == 0x01C) {
             write8(lcd.imsc, bit_offset, value);
             lcd.imsc &= 0x1E;
             intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
-        } else if (offset == 0x028) {
+        } else if (index == 0x028) {
             lcd.ris &= ~(value << bit_offset);
             intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
         }
-    } else if (offset < 0x400) {
+    } else if (index < 0x400) {
         write8(lcd.palette[pio >> 1 & 0xFF], (pio & 1) << 3, value);
     }
 }

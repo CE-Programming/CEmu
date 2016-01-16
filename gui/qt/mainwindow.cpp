@@ -208,11 +208,11 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     restoreGeometry(settings->value(QStringLiteral("windowGeometry")).toByteArray());
     restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
-    changeLCDRefresh(settings->value(QStringLiteral("refreshRate"), 60).toInt());
-    changeEmulatedSpeed(settings->value(QStringLiteral("emuRate"), 100).toInt());
-    alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toInt());
-    changeThrottleMode(settings->value(QStringLiteral("throttleMode"), Qt::Checked).toInt());
-    ui->textSizeSlider->setValue(settings->value(QStringLiteral("disasmTextSize"), 9).toInt());
+    changeLCDRefresh(settings->value(QStringLiteral("refreshRate"), 60).toUInt());
+    changeEmulatedSpeed(settings->value(QStringLiteral("emuRate"), 100).toUInt());
+    alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toUInt());
+    changeThrottleMode(settings->value(QStringLiteral("throttleMode"), Qt::Checked).toUInt());
+    ui->textSizeSlider->setValue(settings->value(QStringLiteral("disasmTextSize"), 9).toUInt());
     current_dir.setPath((settings->value(QStringLiteral("currDir"), QDir::homePath()).toString()));
 
     QString currKeyMap = settings->value(QStringLiteral("keyMap"), "cemu").toString();
@@ -969,7 +969,7 @@ void MainWindow::portMonitorCheckboxToggled(QTableWidgetItem * item) {
     auto col = item->column();
     auto row = item->row();
 
-    uint16_t port = static_cast<uint16_t>(ui->portView->item(row, 0)->text().toInt(nullptr,16));
+    uint16_t port = static_cast<uint16_t>(ui->portView->item(row, 0)->text().toUInt(nullptr,16));
     uint8_t value = DBG_NO_HANDLE;
 
     if (col > 1)
@@ -1070,7 +1070,7 @@ void MainWindow::breakpointCheckboxToggled(QTableWidgetItem * item) {
     auto col = item->column();
     auto row = item->row();
 
-    uint32_t address = static_cast<uint32_t>(ui->breakpointView->item(row, 0)->text().toInt(nullptr,16)&0xFFFFFF);
+    uint32_t address = static_cast<uint32_t>(ui->breakpointView->item(row, 0)->text().toUInt(nullptr,16)&0xFFFFFF);
     unsigned int value = DBG_NO_HANDLE;
 
     if (col > 0) {
@@ -1145,7 +1145,7 @@ void MainWindow::deleteBreakpoint() {
 
     const int currentRow = ui->breakpointView->currentRow();
 
-    uint32_t address = static_cast<uint32_t>(ui->breakpointView->item(currentRow, 0)->text().toInt(nullptr,16));
+    uint32_t address = static_cast<uint32_t>(ui->breakpointView->item(currentRow, 0)->text().toUInt(nullptr,16));
 
     debug_breakpoint_remove(address, DBG_NO_HANDLE);
 
@@ -1166,7 +1166,7 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
         ui->tabDebugging->setCurrentIndex(0);
 
         // find the correct entry
-        while( static_cast<uint32_t>(ui->breakpointView->item(row++, 0)->text().toInt(&ok,16)) != input );
+        while( static_cast<uint32_t>(ui->breakpointView->item(row++, 0)->text().toUInt(&ok,16)) != input );
         row--;
 
         ui->breakChangeView->setText("Address "+ui->breakpointView->item(row, 0)->text()+" "+((reason == HIT_READ_BREAKPOINT) ? "Read" : (reason == HIT_WRITE_BREAKPOINT) ? "Write" : "Executed"));
@@ -1179,7 +1179,7 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
     if (reason == HIT_PORT_READ_BREAKPOINT || reason == HIT_PORT_WRITE_BREAKPOINT) {
         ui->tabDebugging->setCurrentIndex(1);
         // find the correct entry
-        while( static_cast<uint32_t>(ui->portView->item(row++, 0)->text().toInt(&ok,16)) != input );
+        while( static_cast<uint32_t>(ui->portView->item(row++, 0)->text().toUInt(&ok,16)) != input );
         row--;
 
         ui->portChangeView->setText("Port "+ui->portView->item(row, 0)->text()+" "+((reason == HIT_PORT_READ_BREAKPOINT) ? "Read" : "Write"));
@@ -1188,7 +1188,7 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
 }
 
 void MainWindow::updatePortData(int currentRow) {
-    uint16_t port = static_cast<uint16_t>(ui->portView->item(currentRow, 0)->text().toInt(nullptr,16));
+    uint16_t port = static_cast<uint16_t>(ui->portView->item(currentRow, 0)->text().toUInt(nullptr,16));
     uint8_t read = static_cast<uint8_t>(debug_port_read_byte(port));
 
     ui->portView->item(currentRow, 1)->setText(int2hex(read,2).toUpper());
@@ -1344,7 +1344,7 @@ void MainWindow::setBreakpointAddress() {
 
     ui->breakRequest->clear();
 
-    updateDisasmView(address.toInt(&ok, 16), true);
+    updateDisasmView(address.toUInt(&ok, 16), true);
 }
 
 QString MainWindow::getAddressString(bool &ok, QString String) {
@@ -1438,7 +1438,7 @@ void MainWindow::searchEdit(QHexEdit *editor) {
     for (int i=0; i<search_string.length(); i+=2) {
         QString a = search_string.at(i);
         a.append(search_string.at(i+1));
-        string_int.append(a.toInt(&ok, 16));
+        string_int.append(a.toUInt(&ok, 16));
     }
     editor->indexOf(string_int, editor->cursorPosition());
 }

@@ -9,32 +9,31 @@ flash_state_t flash;
 
 /* Read from the 0x1000 range of ports */
 static uint8_t flash_read(const uint16_t pio) {
-    uint8_t addr = pio & 0xFF;
-    uint8_t read_byte;
+    uint8_t index = pio & 0xFF;
+    uint8_t value;
 
-    switch (addr) {
+    switch (index) {
         case 0x00:
-            read_byte = flash.mapped;
+            value = flash.mapped;
             break;
         case 0x02:
-            read_byte = flash.map;
+            value = flash.map;
             break;
         case 0x05:
-            read_byte = flash.added_wait_states;
+            value = flash.added_wait_states;
             break;
         default:
-            read_byte = flash.ports[addr];
+            value = flash.ports[index];
             break;
     }
-    return read_byte;
+    return value;
 }
 
 /* Write to the 0x1000 range of ports */
-static void flash_write(const uint16_t pio, const uint8_t byte)
-{
-    uint8_t addr = pio & 0xFF;
+static void flash_write(const uint16_t pio, const uint8_t byte) {
+    uint8_t index = pio & 0xFF;
 
-    switch (addr) {
+    switch (index) {
         case 0x00:
             flash.mapped = byte;
             break;
@@ -45,7 +44,7 @@ static void flash_write(const uint16_t pio, const uint8_t byte)
             flash.added_wait_states = byte;
             break;
         default:
-            flash.ports[addr] = byte;
+            flash.ports[index] = byte;
             break;
     }
 }
@@ -54,7 +53,6 @@ static const eZ80portrange_t device = {
     .read_in    = flash_read,
     .write_out  = flash_write
 };
-
 
 eZ80portrange_t init_flash(void) {
     memset(flash.ports, 0, sizeof flash.ports);

@@ -9,36 +9,36 @@ control_state_t control;
 
 /* Read from the 0x0XXX range of ports */
 static uint8_t control_read(const uint16_t pio) {
-    uint8_t addr = pio & 0x7F;
+    uint8_t index = pio & 0x7F;
 
     uint8_t value;
 
-    switch (addr) {
+    switch (index) {
         case 0x01:
             value = control.cpu_speed & 19;
             break;
         case 0x02:
-            value = control.ports[addr] | 1;
+            value = control.ports[index] | 1;
             break;
         case 0x03:
             value = get_device_type();
             break;
         case 0x0B:
             if( (control.ports[0x0A] & 2) == 0 ) {
-                control.ports[addr] |= 2;
+                control.ports[index] |= 2;
             }
-            value = control.ports[addr];
+            value = control.ports[index];
             break;
         case 0x0F:
-            value = control.ports[addr];
-            if(control.unknown_g_Xb != 0x00) { addr |= 0x80; }
-            if(control.unknown_g_Bd != 0x00) { addr |= 0x40; }
+            value = control.ports[index];
+            if(control.unknown_g_Xb != 0x00) { value |= 0x80; }
+            if(control.unknown_g_Bd != 0x00) { value |= 0x40; }
             break;
         case 0x28:
-            value = control.ports[addr] | 0x08;
+            value = control.ports[index] | 0x08;
             break;
         default:
-            value = control.ports[addr];
+            value = control.ports[index];
             break;
     }
     return value;
@@ -46,11 +46,11 @@ static uint8_t control_read(const uint16_t pio) {
 
 /* Write to the 0x0XXX range of ports */
 static void control_write(const uint16_t pio, const uint8_t byte) {
-    uint8_t addr = pio & 0x7F;
+    uint8_t index = pio & 0x7F;
 
-    switch (addr) {
+    switch (index) {
         case 0x00:
-            control.ports[addr] = byte;
+            control.ports[index] = byte;
 
             switch (control.unknown_flag_0) {
                 case 2:
@@ -88,7 +88,7 @@ static void control_write(const uint16_t pio, const uint8_t byte) {
             gui_console_printf("CPU clock rate set to: %d MHz\n", 6*(1<<(control.cpu_speed & 3)));
             break;
         case 0x02:
-            control.ports[addr] = 0;
+            control.ports[index] = 0;
             break;
         case 0x04:
         case 0x05:
@@ -96,10 +96,10 @@ static void control_write(const uint16_t pio, const uint8_t byte) {
         case 0x1D:
         case 0x1E:
         case 0x1F:
-            control.ports[addr] = byte;
+            control.ports[index] = byte;
             break;
         case 0x06:
-            control.ports[addr] = byte & 7;
+            control.ports[index] = byte & 7;
             break;
         case 0x07:
             if (control.unknown_flag_0 == 0) {
@@ -109,7 +109,7 @@ static void control_write(const uint16_t pio, const uint8_t byte) {
             } else {
                control.unknown_flag_0 = 0;
             }
-            control.ports[addr] = byte;
+            control.ports[index] = byte;
         case 0x09:
             switch (control.unknown_flag_0) {
                 case 1:
@@ -132,21 +132,21 @@ static void control_write(const uint16_t pio, const uint8_t byte) {
             if( control.unknown_flag_0 == 3) {
                 control.unknown_flag_0 = (byte & 1) ? 4 : 0;
             }
-            control.ports[addr] = byte;
+            control.ports[index] = byte;
             break;
         case 0x0B:
         case 0x0C:
             control.unknown_flag_0 = 0;
-            control.ports[addr] = byte;
+            control.ports[index] = byte;
             break;
         case 0x0E:
-            control.ports[addr] = byte;
+            control.ports[index] = byte;
             break;
         case 0x0D:
-            control.ports[addr] = (byte & 0xF) << 4 | (byte & 0xF);
+            control.ports[index] = (byte & 0xF) << 4 | (byte & 0xF);
             break;
         case 0x0F:
-            control.ports[addr] = byte & 3;
+            control.ports[index] = byte & 3;
             break;
         case 0x20:
         case 0x21:
@@ -154,11 +154,11 @@ static void control_write(const uint16_t pio, const uint8_t byte) {
         case 0x23:
         case 0x24:
         case 0x25:
-            control.ports[addr] = byte;
+            control.ports[index] = byte;
             break;
         case 0x28:
             mem.flash.locked = (byte & 4) == 0;
-            control.ports[addr] = byte & 247;
+            control.ports[index] = byte & 247;
             break;
         default:
             break;
@@ -186,7 +186,7 @@ eZ80portrange_t init_control(void) {
     control.ports[0x0E] = 0x0A; /* Good             */
     control.ports[0x0F] = 0x42; /* Good             */
     control.ports[0x1C] = 0x80; /* From WikiTI      */
-    control.ports[0x1F] = 0x01; /* WikiTI's :: 0x42 */
+    control.ports[0x1F] = 0x42; /* WikiTI's :: 0x42 */
     control.ports[0x22] = 0xD0; /* Probably right   */
     control.ports[0x23] = 0xFF; /* Probably right   */
     control.ports[0x24] = 0xFF; /* Probably right   */
