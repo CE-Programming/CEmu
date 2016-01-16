@@ -210,13 +210,13 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     current_dir.setPath((settings->value(QStringLiteral("currDir"), QDir::homePath()).toString()));
 
     QString currKeyMap = settings->value(QStringLiteral("keyMap"), "cemu").toString();
-    if (QStringLiteral("cemu").compare(currKeyMap, Qt::CaseInsensitive)) {
+    if (QStringLiteral("cemu").compare(currKeyMap, Qt::CaseInsensitive) == 0) {
         ui->radioCEmuKeys->setChecked(true);
     }
-    else if (QStringLiteral("tilem").compare(currKeyMap, Qt::CaseInsensitive)) {
+    else if (QStringLiteral("tilem").compare(currKeyMap, Qt::CaseInsensitive) == 0) {
         ui->radioTilEmKeys->setChecked(true);
     }
-    else if (QStringLiteral("wabbitemu").compare(currKeyMap, Qt::CaseInsensitive)) {
+    else if (QStringLiteral("wabbitemu").compare(currKeyMap, Qt::CaseInsensitive) == 0) {
         ui->radioWabbitEmuKeys->setChecked(true);
     }
     changeKeymap(currKeyMap);
