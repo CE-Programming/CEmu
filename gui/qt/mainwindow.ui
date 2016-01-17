@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>993</width>
-    <height>781</height>
+    <width>1012</width>
+    <height>802</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -618,6 +618,12 @@
        </layout>
       </widget>
       <widget class="QWidget" name="settingstab">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <attribute name="title">
         <string>Settings</string>
        </attribute>
@@ -1040,16 +1046,13 @@
             </widget>
            </item>
            <item>
-            <spacer name="horizontalSpacer_4">
+            <spacer name="horizontalSpacer_2">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Minimum</enum>
-             </property>
              <property name="sizeHint" stdset="0">
               <size>
-               <width>138</width>
+               <width>40</width>
                <height>20</height>
               </size>
              </property>
@@ -4692,8 +4695,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>993</width>
-     <height>21</height>
+     <width>1012</width>
+     <height>22</height>
     </rect>
    </property>
    <property name="sizePolicy">

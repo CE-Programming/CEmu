@@ -522,9 +522,15 @@ void MainWindow::showAbout() {
     #define STRINGIFYMAGIC(x) #x
     #define STRINGIFY(x) STRINGIFYMAGIC(x)
     QMessageBox about_box(this);
-    about_box.addButton(QMessageBox::Ok);
     about_box.setIconPixmap(QPixmap(":/icons/resources/icons/icon.png"));
     about_box.setWindowTitle(tr("About CEmu"));
+
+    QAbstractButton* buttonUpdateCheck = about_box.addButton(tr("Check for updates"), QMessageBox::ActionRole);
+    connect(buttonUpdateCheck, &QAbstractButton::clicked, this, [=](){ this->checkForUpdates(true); });
+
+    QAbstractButton* okButton = about_box.addButton(QMessageBox::Ok);
+    okButton->setFocus();
+
     about_box.setText(tr("<h3>CEmu %1</h3>"
                          "<a href='https://github.com/MateoConLechuga/CEmu'>On GitHub</a><br>"
                          "<br>"
