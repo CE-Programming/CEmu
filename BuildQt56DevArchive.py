@@ -14,11 +14,10 @@ ARC_PREFIX = "Qt56_Beta_"
 ARC_SUFFIX_DEV = "_DevDeploy"
 
 # What libraries need to be included?
-# Note that this usually involves more than the libraries specified
-# in your project file - you basically need to specify all of the
-# libraries that you have to copy over in order for your program to
-# run, minus "Qt5" and "dll"!
-QT_LIB_INCLUDE = "core gui quick widgets quickwidgets network qml"
+# You don't have to specify every library necessary to make things run.
+# You can simply specify the libraries in your .pro file, and this script
+# will do the rest. (It detects subdependencies on its own!)
+QT_LIB_INCLUDE = "core gui quick widgets quickwidgets"
 
 def silentremove(filename):
     try:
