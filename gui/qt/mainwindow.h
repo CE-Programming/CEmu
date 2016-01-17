@@ -108,6 +108,7 @@ private:
     // Settings
     void changeLCDRefresh(int);
     void alwaysOnTop(int);
+    void autoCheckForUpdates(int);
     void popoutLCD();
 
     // Linking
@@ -136,6 +137,9 @@ private:
     // Keypad
     void keymapChanged();
     void changeKeymap(const QString &);
+
+    // Font
+    void setFont(int);
 
     QLabel status_label;
     QString getAddressString(bool &, QString);

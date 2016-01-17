@@ -61,9 +61,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     ui->keypadWidget->setResizeMode(QQuickWidget::ResizeMode::SizeRootObjectToView);
     ui->disassemblyView->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    // Auto-update check, silent mode.
-    checkForUpdates(false);
-
     // View
     detached_lcd.setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->actionDetached_LCD, &QAction::triggered, this, &MainWindow::popoutLCD);
@@ -104,6 +101,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     // Debugger Options
     connect(ui->buttonAddEquateFile, &QPushButton::clicked, this, &MainWindow::addEquateFile);
     connect(ui->buttonClearEquates, &QPushButton::clicked, this, &MainWindow::clearEquateFile);
+    connect(ui->textSizeSlider, &QSlider::valueChanged, this, &MainWindow::setFont);
 
     // Linking
     connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::selectFiles);
@@ -158,33 +156,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->radioPindurTIKeys, &QPushButton::clicked, this, &MainWindow::keymapChanged);
     connect(ui->radioSmartViewKeys, &QPushButton::clicked, this, &MainWindow::keymapChanged);
 
-    // Set up monospace fonts
-    QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-    monospace.setPointSize(9);
-    ui->console->setFont(monospace);
-    ui->disassemblyView->setFont(monospace);
-    ui->stackView->setFont(monospace);
-
-    ui->afregView->setFont(monospace);
-    ui->hlregView->setFont(monospace);
-    ui->deregView->setFont(monospace);
-    ui->bcregView->setFont(monospace);
-    ui->ixregView->setFont(monospace);
-    ui->iyregView->setFont(monospace);
-    ui->af_regView->setFont(monospace);
-    ui->hl_regView->setFont(monospace);
-    ui->de_regView->setFont(monospace);
-    ui->bc_regView->setFont(monospace);
-    ui->splregView->setFont(monospace);
-    ui->spsregView->setFont(monospace);
-    ui->mbregView->setFont(monospace);
-    ui->iregView->setFont(monospace);
-    ui->rregView->setFont(monospace);
-    ui->imregView->setFont(monospace);
-    ui->freqView->setFont(monospace);
-    ui->pcregView->setFont(monospace);
-    ui->lcdbaseView->setFont(monospace);
-    ui->lcdcurrView->setFont(monospace);
+    // Auto Updates
+    connect(ui->checkUpdates, &QCheckBox::stateChanged, this, &MainWindow::autoCheckForUpdates);
 
     qRegisterMetaType<uint32_t>("uint32_t");
     qRegisterMetaType<std::string>("std::string");
@@ -195,12 +168,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     setAcceptDrops(true);
     debugger_on = false;
 
-#ifdef Q_OS_ANDROID
-    QString path = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
-    settings = new QSettings(path + QStringLiteral("/cemu.ini"), QSettings::IniFormat);
-#else
     settings = new QSettings();
-#endif
 
     emu.rom = settings->value(QStringLiteral("romImage")).toString().toStdString();
 
@@ -216,7 +184,9 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     changeEmulatedSpeed(settings->value(QStringLiteral("emuRate"), 100).toUInt());
     alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toUInt());
     changeThrottleMode(settings->value(QStringLiteral("throttleMode"), Qt::Checked).toUInt());
-    ui->textSizeSlider->setValue(settings->value(QStringLiteral("disasmTextSize"), 9).toUInt());
+    setFont(settings->value(QStringLiteral("textSize"), 9).toUInt());
+    autoCheckForUpdates(settings->value(QStringLiteral("autoUpdate"), false).toBool());
+
     current_dir.setPath((settings->value(QStringLiteral("currDir"), QDir::homePath()).toString()));
 
     QString currKeyMap = settings->value(QStringLiteral("keyMap"), "cemu").toString();
@@ -244,7 +214,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 MainWindow::~MainWindow() {
     settings->setValue(QStringLiteral("windowState"), saveState(WindowStateVersion));
     settings->setValue(QStringLiteral("windowGeometry"), saveGeometry());
-    settings->setValue(QStringLiteral("disasmTextSize"), ui->textSizeSlider->value());
     settings->setValue(QStringLiteral("currDir"), current_dir.absolutePath());
 
     delete settings;
@@ -461,6 +430,16 @@ void MainWindow::clearConsole(void) {
     consoleStr("Console Cleared.\n");
 }
 
+
+void MainWindow::autoCheckForUpdates(int state) {
+    settings->setValue(QStringLiteral("autoUpdate"), state);
+    ui->checkUpdates->setChecked(state);
+
+    if(state == Qt::Checked) {
+        checkForUpdates(true);
+    }
+}
+
 void MainWindow::checkForUpdates(bool forceInfoBox) {
     #define STRINGIFYMAGIC(x) #x
     #define STRINGIFY(x) STRINGIFYMAGIC(x)
@@ -469,7 +448,7 @@ void MainWindow::checkForUpdates(bool forceInfoBox) {
     {
         if (forceInfoBox)
         {
-            QMessageBox::warning(this, tr("Update check disabled"), tr("Checking updates is disabled for dev. builds"));
+            QMessageBox::warning(this, tr("Update check disabled"), tr("Checking updates is disabled for developer builds"));
         }
         return;
     }
@@ -567,11 +546,11 @@ void MainWindow::changeLCDRefresh(int value) {
 }
 
 void MainWindow::changeEmulatedSpeed(int value) {
-    int acutalSpeed = value*10;
+    int actualSpeed = value*10;
     settings->setValue(QStringLiteral("emuRate"), value);
-    ui->emulationSpeedLabel->setText(QString::number(acutalSpeed).rightJustified(3, '0')+QStringLiteral("%"));
+    ui->emulationSpeedLabel->setText(QString::number(actualSpeed).rightJustified(3, '0')+QStringLiteral("%"));
     ui->emulationSpeed->setValue(value);
-    emit changedEmuSpeed(acutalSpeed);
+    emit changedEmuSpeed(actualSpeed);
 }
 
 void MainWindow::keymapChanged() {
@@ -717,6 +696,42 @@ void MainWindow::saveSelected() {
             QMessageBox::warning(this, tr("Failed Transfer"), tr("A failure occured during transfer of: ")+fileNames.at(0));
         }
     }
+}
+
+void MainWindow::setFont(int fontSize) {
+    ui->textSizeSlider->setValue(fontSize);
+    settings->setValue(QStringLiteral("textSize"), ui->textSizeSlider->value());
+
+    QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+
+    monospace.setPointSize(fontSize);
+    ui->console->setFont(monospace);
+    ui->disassemblyView->setFont(monospace);
+
+    ui->portRequest->setFont(monospace);
+    ui->breakRequest->setFont(monospace);
+    ui->stackView->setFont(monospace);
+
+    ui->afregView->setFont(monospace);
+    ui->hlregView->setFont(monospace);
+    ui->deregView->setFont(monospace);
+    ui->bcregView->setFont(monospace);
+    ui->ixregView->setFont(monospace);
+    ui->iyregView->setFont(monospace);
+    ui->af_regView->setFont(monospace);
+    ui->hl_regView->setFont(monospace);
+    ui->de_regView->setFont(monospace);
+    ui->bc_regView->setFont(monospace);
+    ui->splregView->setFont(monospace);
+    ui->spsregView->setFont(monospace);
+    ui->mbregView->setFont(monospace);
+    ui->iregView->setFont(monospace);
+    ui->rregView->setFont(monospace);
+    ui->imregView->setFont(monospace);
+    ui->freqView->setFont(monospace);
+    ui->pcregView->setFont(monospace);
+    ui->lcdbaseView->setFont(monospace);
+    ui->lcdcurrView->setFont(monospace);
 }
 
 /* ================================================ */
@@ -996,10 +1011,6 @@ void MainWindow::updateDisasmView(const int sentBase, const bool fromPane) {
 
     ui->disassemblyView->updateAllHighlights();
 
-    QFont disasmFont = ui->disassemblyView->font();
-    disasmFont.setPointSize(ui->textSizeSlider->value());
-    ui->disassemblyView->setFont(disasmFont);
-
     ui->disassemblyView->setTextCursor(disasm_offset);
     ui->disassemblyView->centerCursor();
 }
@@ -1045,9 +1056,9 @@ void MainWindow::pollPort() {
     port = static_cast<uint16_t>(hex2int(QString::fromStdString(s)));
     read = static_cast<uint8_t>(debug_port_read_byte(port));
 
-    QString port_string = ui->portRequest->text().toUpper();
+    QString port_string = int2hex(port,4);
 
-    /* return if port is already set */
+    /* Return if port is already set */
     for (int i=0; i<currentRow; ++i) {
         if (ui->portView->item(i, 0)->text() == port_string) {
             return;
