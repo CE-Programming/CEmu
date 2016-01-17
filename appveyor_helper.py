@@ -306,7 +306,9 @@ def overwrite_copy(src, dest):
     dest_fh.close()
 
 # wc = wildcard
-def collect_main_files(arch, vcredist_wc_path, build_path, dest):
+# extra_wc: dictionary of extra wildcard paths to copy in!
+#   example: { "More DLLs" : "C:\MoreDLLs\*.dll"}
+def collect_main_files(arch, vcredist_wc_path, ucrt_wc_path, build_path, dest, extra_wc = None):
     file_list = []
     
     print("   -> Searching VCRedist for DLL files to include (%s)..." % (arch))
@@ -314,6 +316,20 @@ def collect_main_files(arch, vcredist_wc_path, build_path, dest):
     for file in glob.glob(vcredist_wc_path):
         print("   -> Copying %s (%s, VCRedist)..." % (os.path.basename(file), arch))
         overwrite_copy(file, dest)
+    
+    for file in glob.glob(ucrt_wc_path):
+        print("   -> Copying %s (%s, UCRT)..." % (os.path.basename(file), arch))
+        overwrite_copy(file, dest)
+    
+    if extra_wc:
+        for copy_type in extra_wc:
+            print("   -> Copying %s files (%s)..." % (copy_type, arch))
+            copy_wc = extra_wc[copy_type]
+            
+            for file in glob.glob(ucrt_wc_path):
+                print("      -> Copying %s (%s, %s)..." % (os.path.basename(file), arch, copy_type))
+                overwrite_copy(file, dest)
+        
     
     # Finally, add our binary!
     print("   -> Copying main executable (%s)..." % (arch))
@@ -457,12 +473,14 @@ def deploy_snapshots():
     # Locate files that we need!
     print(" * Collecting all dependencies for deployment...")
     
-    collect_main_files("x86", r'C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\*.dll',
-                     os.path.join("build_32", "release"),
-                     os.path.join("deploy", "release32"))
-    collect_main_files("x64", r'C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x64\Microsoft.VC140.CRT\*.dll',
-                     os.path.join("build_64", "release"),
-                     os.path.join("deploy", "release64"))
+    collect_main_files("x86", r"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\*.dll",
+                       r"C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x86\*.dll",
+                       os.path.join("build_32", "release"),
+                       os.path.join("deploy", "release32"))
+    collect_main_files("x64", r"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x64\Microsoft.VC140.CRT\*.dll",
+                       r"C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64\*.dll",
+                       os.path.join("build_64", "release"),
+                       os.path.join("deploy", "release64"))
     
     collect_qt_files("x86", r"C:\Qt\Qt5.6.0\5.6\msvc2015\bin\windeployqt.exe", r"deploy\release32", r'build_32\release\CEmu.exe')
     collect_qt_files("x64", r"C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\windeployqt.exe", r"deploy\release64", r'build_64\release\CEmu.exe')
