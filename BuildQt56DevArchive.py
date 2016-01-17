@@ -113,9 +113,6 @@ found_dlls = [p.split(os.sep)[-1].lower() for p in found_dlls]
 # Get stuff before file extension
 found_dlls = [".".join(p.split(".")[:-1]) for p in found_dlls]
 
-# Filter out Qt5 parts, if any
-found_dlls = [p[3:] if p.lower().startswith("qt5") else p for p in found_dlls]
-
 print("   -> Stage 2b: Creating Exclusion List")
 
 # First, find all of the DLL files
