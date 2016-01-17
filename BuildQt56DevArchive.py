@@ -229,7 +229,7 @@ os.chdir(QTBASEDIR)
 # IMPORTANT NOTE: All paths must be in quotes! Otherwise, 7-Zip will
 # NOT parse the paths correctly, and weird things will happen!
 
-print(" * Stage 2: Building Development Archive (x86)")
+print(" * Stage 3: Building Development Archive (x86)")
 subprocess.call([SEVENZIP, "a", os.path.join(cdir, ARC_PREFIX + "Win32" + ARC_SUFFIX_DEV + ".7z"), QT32,
                 "-t7z", "-m0=lzma2", "-mx9",
                     # Exclude unnecessary files
@@ -254,7 +254,7 @@ subprocess.call([SEVENZIP, "a", os.path.join(cdir, ARC_PREFIX + "Win32" + ARC_SU
 
 # -xr!*d.dll -xr!*d.lib -xr!*.pdb
 
-print(" * Stage 3: Building Development Archive (x64)")
+print(" * Stage 4: Building Development Archive (x64)")
 subprocess.call([SEVENZIP, "a", os.path.join(cdir, ARC_PREFIX + "Win64" + ARC_SUFFIX_DEV + ".7z"), QT64,
                 "-t7z", "-m0=lzma2", "-mx9",
                     # Exclude unnecessary files
