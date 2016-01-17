@@ -159,6 +159,9 @@ lib_matches = [p for p in lib_matches if p != "Info.plist"]
 
 qt_lib_include_arr = [ ("qt5" + lib.lower()) for lib in QT_LIB_INCLUDE.split(" ") ] + found_dlls
 
+# Remove duplicates...
+qt_lib_include_arr = list(set(qt_lib_include_arr))
+
 # Remove the DLLs that are included in the config above, and leave
 # the ones to exclude
 dll_matches = [p for p in dll_matches if not p.lower() in qt_lib_include_arr]
