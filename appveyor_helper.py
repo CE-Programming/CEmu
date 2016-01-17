@@ -477,8 +477,8 @@ def deploy_snapshots():
     file_list_64_debug = build_file_list("x64 Debug", r"deploy\release64_debug")
     
     # Build our ZIPs!
-    cemu_win32_zip_fn = snap_base_fn + "win32-shared.zip"
-    cemu_win64_zip_fn = snap_base_fn + "win64-shared.zip"
+    cemu_win32_zip_fn = snap_base_fn + "win32-release-shared.zip"
+    cemu_win64_zip_fn = snap_base_fn + "win64-release-shared.zip"
     
     cemu_win32_debug_zip_fn = snap_base_fn + "win32-debug-shared.zip"
     cemu_win64_debug_zip_fn = snap_base_fn + "win64-debug-shared.zip"
