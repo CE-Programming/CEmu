@@ -18,12 +18,14 @@ static uint8_t control_read(const uint16_t pio) {
             value = control.cpu_speed & 19;
             break;
         case 0x02:
+            /* bit 1 set (battery stuff) */
             value = control.ports[index] | 1;
             break;
         case 0x03:
             value = get_device_type();
             break;
         case 0x0B:
+            /* bit 2 set if charging */
             if( (control.ports[0x0A] & 2) == 0 ) {
                 control.ports[index] |= 2;
             }
