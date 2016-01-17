@@ -186,6 +186,20 @@ prefix_matches.remove("qtmain")
 prefix_matches.remove("Qt5Xml")
 prefix_matches.remove("Qt5XmlPatterns")
 
+# Ensure EGL/libGLESv2 are NOT excludes... but only if we have
+# QtQuick/OpenGL involved.
+qt_lib_include_arr_quick = [p for p in qt_lib_include_arr if "quick" in p.lower()]
+if len(qt_lib_include_arr_quick) > 0:
+    if "libEGL" in prefix_matches:
+        prefix_matches.remove("libEGL")
+    if "libGLESv2" in prefix_matches:
+        prefix_matches.remove("libGLESv2")
+    if "opengl32sw" in prefix_matches:
+        prefix_matches.remove("opengl32sw")
+    
+    # Do a list comp to remove d3dcompiler_XX
+    prefix_matches = [p for p in prefix_matches if not p.lower().startswith("d3dcompiler_")]
+
 # Create exclusion commands!
 dll_excludes_nondebug = ["-xr!" + p + ".dll" for p in prefix_matches]
 dll_excludes_debug = ["-xr!" + p + "d.dll" for p in prefix_matches]
