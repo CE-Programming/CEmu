@@ -87,7 +87,7 @@ def extractfile(filename):
     print("   -> Extracting file: %s" % filename)
     
     FNULL = open(os.devnull, 'w')
-    retcode = subprocess.call(["7z", "x", "-oC:\\", filename], stdout=FNULL, stderr=subprocess.STDOUT)
+    retcode = subprocess.call(["7z", "x", "-y", "-oC:\\", filename], stdout=FNULL, stderr=subprocess.STDOUT)
     if retcode != 0:
         print("   !! ERROR: Extraction failed, see above messages for details. Exiting!")
     
