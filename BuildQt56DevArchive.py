@@ -171,7 +171,7 @@ pdb_matches = [p for p in pdb_matches if not p.lower() in qt_lib_include_arr]
 # Filter lib files to exclude DLL matches
 lib_matches = [p for p in lib_matches if not p in dll_matches]
 
-# Filter lib files to exclude DLL *and* LIB matches
+# Filter pdb files to exclude DLL *and* LIB matches
 pdb_matches = [p for p in pdb_matches if not p in dll_matches]
 pdb_matches = [p for p in pdb_matches if not p in lib_matches]
 
