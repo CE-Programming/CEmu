@@ -83,16 +83,6 @@ def dlfile(url):
         print("         !! ERROR: Download failed, exiting!")
         sys.exit(1)
 
-def extractfile(filename):
-    print("   -> Extracting file: %s" % filename)
-    
-    FNULL = open(os.devnull, 'w')
-    retcode = subprocess.call(["7z", "x", "-y", "-oC:\\", filename], stdout=FNULL, stderr=subprocess.STDOUT)
-    if retcode != 0:
-        print("   !! ERROR: Extraction failed, see above messages for details. Exiting!")
-    
-    print("   -> Extracted successfully: %s" % filename)
-
 def generate_file_md5(filename, blocksize=2**20):
     m = hashlib.md5()
     with open( filename , "rb" ) as f:
@@ -277,7 +267,7 @@ def output_exec(cmd):
 
 def extract(filename):
     print("   -> Extracting file: %s" % filename)
-    if not silent_exec(["7z", "x", "-oC:\\", filename]):
+    if not silent_exec(["7z", "x", "-y", "-oC:\\", filename]):
         print("   !! ERROR: Failed to extract file: " % filename)
         print("   !!        See above output for details.")
         sys.exit(1)
