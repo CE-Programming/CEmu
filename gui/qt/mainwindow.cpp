@@ -295,7 +295,7 @@ void MainWindow::changeThrottleMode(int mode) {
 }
 
 void MainWindow::showActualSpeed(int speed) {
-    showStatusMsg(tr("Actual Speed: ")+QString::number(speed, 10)+QStringLiteral("%"));
+    showStatusMsg(QStringLiteral(" ") + tr("Actual Speed: ") + QString::number(speed, 10) + QStringLiteral("%"));
 }
 
 void MainWindow::showStatusMsg(QString str) {
@@ -648,11 +648,11 @@ void MainWindow::refreshVariableList() {
     }
 
     if (in_recieving_mode) {
-        ui->buttonRefreshList->setText(tr("Refresh Emulator Variable List..."));
+        ui->buttonRefreshList->setText(tr("Refresh variable list..."));
         ui->buttonReceiveFiles->setEnabled(false);
         setReceiveState(false);
     } else {
-        ui->buttonRefreshList->setText(tr("Continue Emulation"));
+        ui->buttonRefreshList->setText(tr("Resume emulation"));
         ui->buttonReceiveFiles->setEnabled(true);
         setReceiveState(true);
         QThread::msleep(500);
