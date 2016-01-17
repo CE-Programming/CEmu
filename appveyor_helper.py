@@ -452,7 +452,7 @@ def deploy_snapshots():
     git_rev = git_rev.decode("utf-8").strip()
     
     # Snapshot filename - based on http://zeranoe1.rssing.com/chan-5973786/latest.php
-    snap_base_fn = os.path.join("deploy", "cemu-%s-git%s-" % (time.strftime("%Y%m%d"), git_rev))
+    snap_base_fn = os.path.join("deploy", "cemu-%s-git%s-" % (time.strftime("%Y%m%d_%H%M%S"), git_rev))
     
     # Locate files that we need!
     print(" * Collecting all dependencies for deployment...")
