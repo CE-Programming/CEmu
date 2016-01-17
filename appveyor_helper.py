@@ -326,7 +326,7 @@ def collect_main_files(arch, vcredist_wc_path, ucrt_wc_path, build_path, dest, e
             print("   -> Copying %s files (%s)..." % (copy_type, arch))
             copy_wc = extra_wc[copy_type]
             
-            for file in glob.glob(ucrt_wc_path):
+            for file in glob.glob(copy_wc):
                 print("      -> Copying %s (%s, %s)..." % (os.path.basename(file), arch, copy_type))
                 overwrite_copy(file, dest)
         
