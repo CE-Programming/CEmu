@@ -156,6 +156,7 @@ pdb_matches = [".".join(p.split(".")[:-1])[:-1] for p in pdb_matches]
 # Filter libraries that are "Info.plist"
 lib_matches = [p for p in lib_matches if p != "Info.plist"]
 
+# Build include array!
 qt_lib_include_arr = [ ("qt5" + lib.lower()) for lib in QT_LIB_INCLUDE.split(" ") ] + found_dlls
 
 # Remove duplicates...
@@ -215,7 +216,10 @@ all_excludes = dll_excludes_nondebug + dll_excludes_debug + \
 if (not ("webengine" in qt_lib_include_arr)) and (not ("webenginecore" in qt_lib_include_arr)):
     all_excludes.append("-xr!qtwebengine*")
 
+#print(qt_lib_include_arr)
 #print(all_excludes)
+#print(len(prefix_matches))
+#print(len(all_excludes))
 #input()
 
 shutil.rmtree("tmp_devarchive")
