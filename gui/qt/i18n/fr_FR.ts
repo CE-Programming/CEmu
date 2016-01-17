@@ -947,32 +947,32 @@
     <message>
         <location filename="../mainwindow.cpp" line="483"/>
         <source>No update available</source>
-        <translation type="unfinished"></translation>
+        <translation>Pas de mise-à-jour disponible</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="483"/>
         <source>You already have the latest CEmu version (</source>
-        <translation type="unfinished"></translation>
+        <translation>Vous avez déjà la dernière version de CEmu (</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="489"/>
         <source>CEmu update</source>
-        <translation type="unfinished"></translation>
+        <translation>Mise-à-jour de CEmu</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="490"/>
         <source>&lt;b&gt;A new version of CEmu is available!&lt;/b&gt;&lt;br/&gt;You can &lt;a href=&apos;%1&apos;&gt;download it here&lt;/a&gt;.</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;Une nouvelle version de CEmu est disponible !&lt;/b&gt;&lt;br/&gt;Vous pouvez la &lt;a href=&apos;%1&apos;&gt;télécharger ici&lt;/a&gt;.</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="504"/>
         <source>Update check failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur de vérification des mises-à-jour</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="505"/>
         <source>&lt;b&gt;An error occurred while checking for CEmu updates.&lt;/b&gt;&lt;br/&gt;You can however &lt;a href=&apos;https://github.com/MateoConLechuga/CEmu/releases/latest&apos;&gt;go here&lt;/a&gt; to check yourself.</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;Une erreur est survenue lors de la vérification de mises-à-jour de CEmu.&lt;/b&gt;&lt;br/&gt;Vous pouvez cependant aller les vérifier par vous-même&lt;a href=&apos;https://github.com/MateoConLechuga/CEmu/releases/latest&apos;&gt;par ici&lt;/a&gt;.</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="608"/>
@@ -994,7 +994,7 @@
     <message>
         <location filename="../mainwindow.cpp" line="666"/>
         <source>Continue Emulation</source>
-        <translation type="unfinished"></translation>
+        <translation>Reprendre l&apos;émulation</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1364"/>
@@ -1009,7 +1009,7 @@
     <message>
         <location filename="../mainwindow.cpp" line="1444"/>
         <source>Input Hexadecimal Search String:</source>
-        <translation type="unfinished"></translation>
+        <translation>Addresse (en hexadécimal) :</translation>
     </message>
     <message>
         <source>Flash Search</source>
@@ -1076,7 +1076,7 @@
     <message>
         <location filename="../mainwindow.cpp" line="327"/>
         <source>Actual Speed: </source>
-        <translation type="unfinished"></translation>
+        <translation>Vitesse effective:</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="446"/>
