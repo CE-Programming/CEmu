@@ -137,7 +137,7 @@ print(" * Stage 1: Analyzing CEmu")
 mkdir_p("build_32")
 
 os.chdir("build_32")
-if not simple_exec([r'C:\Qt\Qt5.6.0\5.6\msvc2015\bin\qmake', '-spec', 'win32-msvc2015', '-tp', 'vc', r'"..\CEmu.pro"']):
+if not simple_exec([r'C:\Qt\Qt5.6.0-static\bin\qmake', '-spec', 'win32-msvc2015', '-tp', 'vc', r'"..\CEmu.pro"']):
     print(" ! ERROR: Creating project files for x86 failed!")
     sys.exit(1)
 os.chdir("..")
