@@ -174,17 +174,7 @@ static std::string disasm_read_reg(int i) {
 }
 
 static void disasm_write_reg(int i, std::string value) {
-    switch (i) {
-        case 0: disasm.instruction.arguments = "b,"+value; break;
-        case 1: disasm.instruction.arguments = "c,"+value; break;
-        case 2: disasm.instruction.arguments = "d,"+value; break;
-        case 3: disasm.instruction.arguments = "e,"+value; break;
-        case 4: disasm.instruction.arguments = index_h[disasm.prefix]+","+value; break;
-        case 5: disasm.instruction.arguments = index_l[disasm.prefix]+","+value; break;
-        case 6: disasm.instruction.arguments = "("+index_table[disasm.prefix]+ ((disasm.prefix) ? strOffset(disasm_fetch_offset()) : "") +"),"+value; break;
-        case 7: disasm.instruction.arguments = "a,"+value; break;
-        default: break;
-    }
+    disasm.instruction.arguments = disasm_read_reg(i)+","+value;
 }
 
 static void disasm_read_write_reg(uint8_t read, uint8_t write) {
@@ -214,17 +204,7 @@ static std::string disasm_read_reg_prefetched(int i, std::string address) {
 }
 
 static void disasm_write_reg_prefetched(int i, std::string address, std::string value) {
-    switch (i) {
-        case 0: disasm.instruction.arguments = "b,"+value; break;
-        case 1: disasm.instruction.arguments = "c,"+value; break;
-        case 2: disasm.instruction.arguments = "d,"+value; break;
-        case 3: disasm.instruction.arguments = "e,"+value; break;
-        case 4: disasm.instruction.arguments = index_h[disasm.prefix]+","+value; break;
-        case 5: disasm.instruction.arguments = index_l[disasm.prefix]+","+value; break;
-        case 6: disasm.instruction.arguments = address+value; break;
-        case 7: disasm.instruction.arguments = "a,"+value; break;
-        default: abort();
-    }
+    disasm.instruction.arguments = disasm_read_reg_prefetched(i, address)+","+value;
 }
 
 static std::string disasm_read_rp(int i) {
@@ -554,10 +534,7 @@ void disassembleInstruction(void) {
                             break;
                         }
                         disasm.instruction.opcode = "ld";
-                        w = (context.y == 6) ? disasm_index_address() : "0";
-                        if(!disasm.prefix) {
-                            w = "("+w+"),";
-                        }
+                        w = (context.y == 6) ? "("+disasm_index_address()+")" : "";
                         disasm_write_reg_prefetched(context.y, w, strS(disasm_fetch_byte()));
                         break;
                     case 7:

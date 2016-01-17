@@ -183,6 +183,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     ui->imregView->setFont(monospace);
     ui->freqView->setFont(monospace);
     ui->pcregView->setFont(monospace);
+    ui->lcdbaseView->setFont(monospace);
+    ui->lcdcurrView->setFont(monospace);
 
     qRegisterMetaType<uint32_t>("uint32_t");
     qRegisterMetaType<std::string>("std::string");
@@ -722,7 +724,7 @@ void MainWindow::saveSelected() {
 /* ================================================ */
 
 static int hex2int(QString str) {
-    return std::stoi(str.toStdString(),nullptr,16);
+    return std::stoi(str.toStdString(), nullptr, 16);
 }
 
 static QString int2hex(uint32_t a, uint8_t l) {
@@ -782,6 +784,14 @@ void MainWindow::updateDebuggerChanges() {
       cpu_flush(static_cast<uint32_t>(hex2int(ui->pcregView->text())), ui->checkADL->isChecked());
 
       backlight.brightness = static_cast<uint8_t>(ui->brightnessSlider->value());
+
+      lcd.upbase = static_cast<uint32_t>(hex2int(ui->lcdbaseView->text()));
+      lcd.upcurr = static_cast<uint32_t>(hex2int(ui->lcdcurrView->text()));
+      if (ui->checkPowered->isChecked()) {
+          lcd.control |= 0x800;
+      } else {
+          lcd.control &= ~0x800;
+      }
   }
 }
 
@@ -813,7 +823,6 @@ void MainWindow::setDebuggerState(bool state) {
     ui->buttonStepOut->setEnabled( debugger_on );
     ui->groupCPU->setEnabled( debugger_on );
     ui->groupFlags->setEnabled( debugger_on );
-    ui->groupDisplay->setEnabled( debugger_on );
     ui->groupRegisters->setEnabled( debugger_on );
     ui->groupInterrupts->setEnabled( debugger_on );
     ui->groupStack->setEnabled( debugger_on );
@@ -848,84 +857,93 @@ void MainWindow::changeDebuggerState() {
 }
 
 void MainWindow::populateDebugWindow() {
-    QPalette colortext, blacktext;
+    QPalette colorback, nocolorback;
     QString tmp;
-    colortext.setColor(QPalette::Text, Qt::red);
-    colortext.setColor(QPalette::Disabled, QPalette::Text, Qt::gray);
-    blacktext.setColor(QPalette::Text, Qt::black);
-    blacktext.setColor(QPalette::Disabled, QPalette::Text, Qt::gray);
+    colorback.setColor(QPalette::Base, QColor(Qt::yellow).lighter(160));
+    nocolorback.setColor(QPalette::Base, QColor(Qt::white));
 
     tmp = int2hex(cpu.registers.AF, 4);
-    ui->afregView->setPalette(tmp == ui->afregView->text() ? blacktext : colortext);
+    ui->afregView->setPalette(tmp == ui->afregView->text() ? nocolorback : colorback);
     ui->afregView->setText(tmp);
 
     tmp = int2hex(cpu.registers.HL, 6);
-    ui->hlregView->setPalette(tmp == ui->hlregView->text() ? blacktext : colortext);
+    ui->hlregView->setPalette(tmp == ui->hlregView->text() ? nocolorback : colorback);
     ui->hlregView->setText(tmp);
 
     tmp = int2hex(cpu.registers.DE, 6);
-    ui->deregView->setPalette(tmp == ui->deregView->text() ? blacktext : colortext);
+    ui->deregView->setPalette(tmp == ui->deregView->text() ? nocolorback : colorback);
     ui->deregView->setText(tmp);
 
     tmp = int2hex(cpu.registers.BC, 6);
-    ui->bcregView->setPalette(tmp == ui->bcregView->text() ? blacktext : colortext);
+    ui->bcregView->setPalette(tmp == ui->bcregView->text() ? nocolorback : colorback);
     ui->bcregView->setText(tmp);
 
     tmp = int2hex(cpu.registers.IX, 6);
-    ui->ixregView->setPalette(tmp == ui->ixregView->text() ? blacktext : colortext);
+    ui->ixregView->setPalette(tmp == ui->ixregView->text() ? nocolorback : colorback);
     ui->ixregView->setText(tmp);
 
     tmp = int2hex(cpu.registers.IY, 6);
-    ui->iyregView->setPalette(tmp == ui->iyregView->text() ? blacktext : colortext);
+    ui->iyregView->setPalette(tmp == ui->iyregView->text() ? nocolorback : colorback);
     ui->iyregView->setText(tmp);
 
     tmp = int2hex(cpu.registers._AF, 4);
-    ui->af_regView->setPalette(tmp == ui->af_regView->text() ? blacktext : colortext);
+    ui->af_regView->setPalette(tmp == ui->af_regView->text() ? nocolorback : colorback);
     ui->af_regView->setText(tmp);
 
     tmp = int2hex(cpu.registers._HL, 6);
-    ui->hl_regView->setPalette(tmp == ui->hl_regView->text() ? blacktext : colortext);
+    ui->hl_regView->setPalette(tmp == ui->hl_regView->text() ? nocolorback : colorback);
     ui->hl_regView->setText(tmp);
 
     tmp = int2hex(cpu.registers._DE, 6);
-    ui->de_regView->setPalette(tmp == ui->de_regView->text() ? blacktext : colortext);
+    ui->de_regView->setPalette(tmp == ui->de_regView->text() ? nocolorback : colorback);
     ui->de_regView->setText(tmp);
 
     tmp = int2hex(cpu.registers._BC, 6);
-    ui->bc_regView->setPalette(tmp == ui->bc_regView->text() ? blacktext : colortext);
+    ui->bc_regView->setPalette(tmp == ui->bc_regView->text() ? nocolorback : colorback);
     ui->bc_regView->setText(tmp);
 
     tmp = int2hex(cpu.registers.SPS, 4);
-    ui->spsregView->setPalette(tmp == ui->spsregView->text() ? blacktext : colortext);
+    ui->spsregView->setPalette(tmp == ui->spsregView->text() ? nocolorback : colorback);
     ui->spsregView->setText(tmp);
 
     tmp = int2hex(cpu.registers.SPL, 6);
-    ui->splregView->setPalette(tmp == ui->splregView->text() ? blacktext : colortext);
+    ui->splregView->setPalette(tmp == ui->splregView->text() ? nocolorback : colorback);
     ui->splregView->setText(tmp);
 
     tmp = int2hex(cpu.registers.MBASE, 2);
-    ui->mbregView->setPalette(tmp == ui->mbregView->text() ? blacktext : colortext);
+    ui->mbregView->setPalette(tmp == ui->mbregView->text() ? nocolorback : colorback);
     ui->mbregView->setText(tmp);
 
     tmp = int2hex(cpu.registers.I, 4);
-    ui->iregView->setPalette(tmp == ui->iregView->text() ? blacktext : colortext);
+    ui->iregView->setPalette(tmp == ui->iregView->text() ? nocolorback : colorback);
     ui->iregView->setText(tmp);
 
     tmp = int2hex(cpu.IM, 1);
-    ui->imregView->setPalette(tmp == ui->imregView->text() ? blacktext : colortext);
+    ui->imregView->setPalette(tmp == ui->imregView->text() ? nocolorback : colorback);
     ui->imregView->setText(tmp);
 
     tmp = int2hex(cpu.registers.PC, 6);
-    ui->pcregView->setPalette(tmp == ui->pcregView->text() ? blacktext : colortext);
+    ui->pcregView->setPalette(tmp == ui->pcregView->text() ? nocolorback : colorback);
     ui->pcregView->setText(tmp);
 
     tmp = int2hex(cpu.registers.R, 2);
-    ui->rregView->setPalette(tmp == ui->rregView->text() ? blacktext : colortext);
+    ui->rregView->setPalette(tmp == ui->rregView->text() ? nocolorback : colorback);
     ui->rregView->setText(tmp);
 
+    tmp = int2hex(lcd.upbase, 6);
+    ui->lcdbaseView->setPalette(tmp == ui->lcdbaseView->text() ? nocolorback : colorback);
+    ui->lcdbaseView->setText(tmp);
+
+    tmp = int2hex(lcd.upcurr, 6);
+    ui->lcdcurrView->setPalette(tmp == ui->lcdcurrView->text() ? nocolorback : colorback);
+    ui->lcdcurrView->setText(tmp);
+
     tmp = QString::number(sched.clock_rates[CLOCK_CPU]);
-    ui->freqView->setPalette(tmp == ui->freqView->text() ? blacktext : colortext);
+    ui->freqView->setPalette(tmp == ui->freqView->text() ? nocolorback : colorback);
     ui->freqView->setText(tmp);
+
+    /* Mwhahaha */
+    ui->checkSleep->setChecked(false);
 
     ui->check3->setChecked(cpu.registers.flags._3);
     ui->check5->setChecked(cpu.registers.flags._5);
@@ -990,7 +1008,7 @@ void MainWindow::portMonitorCheckboxToggled(QTableWidgetItem * item) {
     auto col = item->column();
     auto row = item->row();
 
-    uint16_t port = static_cast<uint16_t>(ui->portView->item(row, 0)->text().toUInt(nullptr,16));
+    uint16_t port = static_cast<uint16_t>(hex2int(ui->portView->item(row, 0)->text()));
     uint8_t value = DBG_NO_HANDLE;
 
     if (col > 1)
@@ -1072,7 +1090,7 @@ void MainWindow::changePortData(QTableWidgetItem *curr_item) {
 
     debug_port_write_byte(port, pdata);
 
-    curr_item->setText(int2hex(debug_port_read_byte(port), 2).toUpper());
+    curr_item->setText(int2hex(debug_port_read_byte(port), 2));
 }
 
 void MainWindow::deletePort() {
@@ -1091,7 +1109,7 @@ void MainWindow::breakpointCheckboxToggled(QTableWidgetItem * item) {
     auto col = item->column();
     auto row = item->row();
 
-    uint32_t address = static_cast<uint32_t>(ui->breakpointView->item(row, 0)->text().toUInt(nullptr,16)&0xFFFFFF);
+    uint32_t address = static_cast<uint32_t>(hex2int(ui->breakpointView->item(row, 0)->text()));
     unsigned int value = DBG_NO_HANDLE;
 
     if (col > 0) {
@@ -1127,7 +1145,7 @@ bool MainWindow::addBreakpoint() {
 
     address = static_cast<uint32_t>(hex2int(QString::fromStdString(s)));
 
-    QString address_string = int2hex(address,6).toUpper();
+    QString address_string = int2hex(address,6);
 
     /* return if address is already set */
     for (int i=0; i<currentRow; ++i) {
@@ -1166,7 +1184,7 @@ void MainWindow::deleteBreakpoint() {
 
     const int currentRow = ui->breakpointView->currentRow();
 
-    uint32_t address = static_cast<uint32_t>(ui->breakpointView->item(currentRow, 0)->text().toUInt(nullptr,16));
+    uint32_t address = static_cast<uint32_t>(hex2int(ui->breakpointView->item(currentRow, 0)->text()));
 
     debug_breakpoint_remove(address, DBG_NO_HANDLE);
 
@@ -1175,10 +1193,8 @@ void MainWindow::deleteBreakpoint() {
 
 void MainWindow::processDebugCommand(int reason, uint32_t input) {
     int row = 0;
-    bool ok;
 
     if (reason == DBG_STEP || reason == DBG_USER) {
-        if (reason == DBG_STEP) { ui->tabDebugging->setCurrentIndex(0); }
         updateDisasmView(cpu.registers.PC, true);
     }
 
@@ -1187,7 +1203,7 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
         ui->tabDebugging->setCurrentIndex(0);
 
         // find the correct entry
-        while( static_cast<uint32_t>(ui->breakpointView->item(row++, 0)->text().toUInt(&ok,16)) != input );
+        while( static_cast<uint32_t>(hex2int(ui->breakpointView->item(row++, 0)->text())) != input );
         row--;
 
         ui->breakChangeView->setText("Address "+ui->breakpointView->item(row, 0)->text()+" "+((reason == HIT_READ_BREAKPOINT) ? "Read" : (reason == HIT_WRITE_BREAKPOINT) ? "Write" : "Executed"));
@@ -1200,7 +1216,7 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
     if (reason == HIT_PORT_READ_BREAKPOINT || reason == HIT_PORT_WRITE_BREAKPOINT) {
         ui->tabDebugging->setCurrentIndex(1);
         // find the correct entry
-        while( static_cast<uint32_t>(ui->portView->item(row++, 0)->text().toUInt(&ok,16)) != input );
+        while( static_cast<uint32_t>(hex2int(ui->portView->item(row++, 0)->text())) != input );
         row--;
 
         ui->portChangeView->setText("Port "+ui->portView->item(row, 0)->text()+" "+((reason == HIT_PORT_READ_BREAKPOINT) ? "Read" : "Write"));
@@ -1209,10 +1225,10 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
 }
 
 void MainWindow::updatePortData(int currentRow) {
-    uint16_t port = static_cast<uint16_t>(ui->portView->item(currentRow, 0)->text().toUInt(nullptr,16));
+    uint16_t port = static_cast<uint16_t>(hex2int(ui->portView->item(currentRow, 0)->text()));
     uint8_t read = static_cast<uint8_t>(debug_port_read_byte(port));
 
-    ui->portView->item(currentRow, 1)->setText(int2hex(read,2).toUpper());
+    ui->portView->item(currentRow, 1)->setText(int2hex(read,2));
 }
 
 void MainWindow::resetCalculator() {
@@ -1230,8 +1246,8 @@ void MainWindow::updateStackView() {
 
     for(int i=0; i<30; i+=3) {
        formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2</pre>")
-                                .arg(int2hex(cpu.registers.SPL+i, 6).toUpper(),
-                                     int2hex(debug_read_long(cpu.registers.SPL+i), 6).toUpper());
+                                .arg(int2hex(cpu.registers.SPL+i, 6),
+                                     int2hex(debug_read_long(cpu.registers.SPL+i), 6));
         ui->stackView->appendHtml(formattedLine);
     }
     ui->stackView->moveCursor(QTextCursor::Start);
@@ -1280,7 +1296,7 @@ void MainWindow::drawNextDisassembleLine() {
 
     QString formattedLine = QString("<pre><b>%1<font color='#444'>%2</font></b>    %3  <font color='darkblue'>%4%5</font>%6</pre>")
                                .arg(breakpointSymbols,
-                                    int2hex(disasm.base_address, 6).toUpper(),
+                                    int2hex(disasm.base_address, 6),
                                     label ? QString::fromStdString(*label) + ":" : ui->checkDataCol->isChecked() ? QString::fromStdString(disasm.instruction.data).leftJustified(12, ' ') : "",
                                     QString::fromStdString(disasm.instruction.opcode),
                                     QString::fromStdString(disasm.instruction.mode_suffix),
@@ -1355,7 +1371,6 @@ void MainWindow::stepOutPressed() {
 }
 
 void MainWindow::setBreakpointAddress() {
-    bool ok;
     QString address = ui->disassemblyView->getSelectedAddress();
 
     ui->breakRequest->setText(address);
@@ -1365,7 +1380,7 @@ void MainWindow::setBreakpointAddress() {
 
     ui->breakRequest->clear();
 
-    updateDisasmView(address.toUInt(&ok, 16), true);
+    updateDisasmView(hex2int(address), true);
 }
 
 QString MainWindow::getAddressString(bool &ok, QString String) {
@@ -1459,7 +1474,7 @@ void MainWindow::searchEdit(QHexEdit *editor) {
     for (int i=0; i<search_string.length(); i+=2) {
         QString a = search_string.at(i);
         a.append(search_string.at(i+1));
-        string_int.append(a.toUInt(&ok, 16));
+        string_int.append(hex2int(a));
     }
     editor->indexOf(string_int, editor->cursorPosition());
 }
@@ -1605,7 +1620,7 @@ void MainWindow::addEquateFile() {
         while (std::getline(in, current)) {
             QRegularExpressionMatch matches = equatesRegexp.match(QString::fromStdString(current));
             if (matches.hasMatch()) {
-                uint32_t address = static_cast<uint32_t>(matches.capturedRef(2).toUInt(0, 16));
+                uint32_t address = static_cast<uint32_t>(matches.capturedRef(2).toUInt(nullptr, 16));
                 std::string &item = disasm.address_map[address];
                 if (item.empty()) {
                     item = matches.captured(1).toStdString();
