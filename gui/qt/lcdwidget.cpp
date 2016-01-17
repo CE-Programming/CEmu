@@ -23,7 +23,7 @@ LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
     connect(this, &QWidget::customContextMenuRequested, this, &LCDWidget::drawContext);
 
     setFixedSize(320, 240);
-    lcd_size = 1;
+    lcd_size = 2;
 
     // Default rate is 60 FPS
     refreshRate(60);
@@ -31,6 +31,7 @@ LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
 
 void LCDWidget::drawContext(const QPoint& posa) {
     QString open  = "Open...",
+            smal  = "Smallest",
             small = "Small",
             med   = "Medium",
             large = "Large",
@@ -40,14 +41,16 @@ void LCDWidget::drawContext(const QPoint& posa) {
 
     QMenu contextMenu;
     contextMenu.addAction(open);                // 0
-    contextMenu.addAction(small);               // 1
-    contextMenu.addAction(med);                 // 2
-    contextMenu.addAction(large);               // 3
-    contextMenu.addAction(onTop);               // 4
+    contextMenu.addAction(smal);                // 1
+    contextMenu.addAction(small);               // 2
+    contextMenu.addAction(med);                 // 3
+    contextMenu.addAction(large);               // 4
+    contextMenu.addAction(onTop);               // 5
     contextMenu.actions().at(1)->setCheckable(true);
     contextMenu.actions().at(2)->setCheckable(true);
     contextMenu.actions().at(3)->setCheckable(true);
     contextMenu.actions().at(4)->setCheckable(true);
+    contextMenu.actions().at(5)->setCheckable(true);
 
     contextMenu.actions().at(4)->setChecked(state_set);
     contextMenu.actions().at(lcd_size)->setChecked(true);
@@ -61,14 +64,17 @@ void LCDWidget::drawContext(const QPoint& posa) {
             state_set = !state_set;
             setWindowFlags(state_set ? windowFlags() | Qt::WindowStaysOnTopHint : windowFlags() & ~Qt::WindowStaysOnTopHint);
             show();
-        } else if (selectedItem->text() == small) {
+        } else if (selectedItem->text() == smal) {
             lcd_size = 1;
+            setFixedSize(320/2, 240/2);
+        } else if (selectedItem->text() == small) {
+            lcd_size = 2;
             setFixedSize(320*1, 240*1);
         } else if (selectedItem->text() == med) {
-            lcd_size = 2;
+            lcd_size = 3;
             setFixedSize(320*2, 240*2);
         } else if (selectedItem->text() == large) {
-            lcd_size = 3;
+            lcd_size = 4;
             setFixedSize(320*3, 240*3);
         }
     }

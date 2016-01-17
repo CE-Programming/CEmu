@@ -29,7 +29,6 @@ typedef enum {
 typedef struct asic_state {
     ti_device_type device_type;
     battery_state battery;
-    int battery_remove_check;
 
     mem_state_t* mem;
     eZ80cpu_t *cpu;
