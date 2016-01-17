@@ -312,7 +312,7 @@ def collect_main_files(arch, vcredist_wc_path, build_path, dest):
     print("   -> Searching VCRedist for DLL files to include (%s)..." % (arch))
     
     for file in glob.glob(vcredist_wc_path):
-        print("   -> Copying %s (%s)..." % (os.path.basename(file), arch))
+        print("   -> Copying %s (%s, VCRedist)..." % (os.path.basename(file), arch))
         overwrite_copy(file, dest)
     
     # Finally, add our binary!
