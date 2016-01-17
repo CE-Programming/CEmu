@@ -286,10 +286,14 @@ def install_deps():
     print(" * Attempting to download dependencies...")
     dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt56_Beta_Win32_DevDeploy.7z')
     dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt56_Beta_Win64_DevDeploy.7z')
+    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt56_Beta_Static_Win32_DevDeploy.7z')
+    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt56_Beta_Static_Win64_DevDeploy.7z')
     
     print(" * Attempting to install dependencies...")
     extract('Qt56_Beta_Win32_DevDeploy.7z')
     extract('Qt56_Beta_Win64_DevDeploy.7z')
+    extract('Qt56_Beta_Static_Win32_DevDeploy.7z')
+    extract('Qt56_Beta_Static_Win64_DevDeploy.7z')
     
     print(" * Successfully installed build dependencies!")
 
@@ -304,6 +308,26 @@ def overwrite_copy(src, dest):
     
     src_fh.close()
     dest_fh.close()
+
+def collect_static_main_files(arch, build_path, dest, extra_wc = None):
+    file_list = []
+    
+    if extra_wc:
+        for copy_type in extra_wc:
+            print("   -> Copying %s files (%s)..." % (copy_type, arch))
+            copy_wc = extra_wc[copy_type]
+            
+            for file in glob.glob(copy_wc):
+                print("      -> Copying %s (%s, %s)..." % (os.path.basename(file), arch, copy_type))
+                overwrite_copy(file, dest)
+        
+    
+    # Finally, add our binary!
+    print("   -> Copying main executable (%s)..." % (arch))
+    exec_path = os.path.join(build_path, "CEmu.exe")
+    overwrite_copy(exec_path, dest)
+    
+    # No manifest needed - already embedded into exe.
 
 # wc = wildcard
 # extra_wc: dictionary of extra wildcard paths to copy in!
@@ -459,6 +483,11 @@ def deploy_snapshots():
     mkdir_p(os.path.join("deploy", "release32_debug"))
     mkdir_p(os.path.join("deploy", "release64_debug"))
     
+    mkdir_p(os.path.join("deploy_static", "release32"))
+    mkdir_p(os.path.join("deploy_static", "release64"))
+    mkdir_p(os.path.join("deploy_static", "release32_debug"))
+    mkdir_p(os.path.join("deploy_static", "release64_debug"))
+    
     # git rev-parse --short HEAD
     git_rev = output_exec(["git", "rev-parse", "--short", "HEAD"])
     
@@ -501,6 +530,26 @@ def deploy_snapshots():
                                   }
                       )
     
+    # Static builds
+    collect_static_main_files("x86 Static", os.path.join("build_static_32", "release"), os.path.join("deploy_static", "release32"))
+    collect_static_main_files("x64 Static", os.path.join("build_static_64", "release"), os.path.join("deploy_static", "release64"))
+    
+    collect_static_main_files("x86 Static Debug", os.path.join("build_static_32", "debug"), os.path.join("deploy_static", "release32_debug"),
+                       extra_wc = {
+                                    "EGL Library" : r"C:\Qt\Qt5.6.0-static\bin\libEGL.dll",
+                                    "GLESv2 Library" : r"C:\Qt\Qt5.6.0-static\bin\libGLESv2.dll",
+                                    "DirectX Compiler Library" : r"C:\Qt\Qt5.6.0\5.6\msvc2015\bin\d3dcompiler_*.dll",
+                                  }
+                      )
+    collect_static_main_files("x64 Static Debug", os.path.join("build_static_64", "debug"), os.path.join("deploy_static", "release64_debug"),
+                       extra_wc = {
+                                    "EGL Library" : r"C:\Qt\Qt5.6.0x64-static\bin\libEGL.dll",
+                                    "GLESv2 Library" : r"C:\Qt\Qt5.6.0x64-static\bin\libGLESv2.dll",
+                                    "DirectX Compiler Library" : r"C:\Qt\Qt5.6.0\5.6\msvc2015\bin\d3dcompiler_*.dll",
+                                  }
+                      )
+    
+    # Qt files only needed for dynamic builds
     collect_qt_files("x86", r"C:\Qt\Qt5.6.0\5.6\msvc2015\bin\windeployqt.exe", r"deploy\release32", r'build_32\release\CEmu.exe')
     collect_qt_files("x64", r"C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\windeployqt.exe", r"deploy\release64", r'build_64\release\CEmu.exe')
     
@@ -513,6 +562,12 @@ def deploy_snapshots():
     file_list_32_debug = build_file_list("x86 Debug", r"deploy\release32_debug")
     file_list_64_debug = build_file_list("x64 Debug", r"deploy\release64_debug")
     
+    file_list_32_static = build_file_list("x86", r"deploy_static\release32")
+    file_list_64_static = build_file_list("x64", r"deploy_static\release64")
+    
+    file_list_32_static_debug = build_file_list("x86 Debug", r"deploy_static\release32_debug")
+    file_list_64_static_debug = build_file_list("x64 Debug", r"deploy_static\release64_debug")
+    
     # Build our ZIPs!
     cemu_win32_zip_fn = snap_base_fn + "win32-release-shared.zip"
     cemu_win64_zip_fn = snap_base_fn + "win64-release-shared.zip"
@@ -520,11 +575,23 @@ def deploy_snapshots():
     cemu_win32_debug_zip_fn = snap_base_fn + "win32-debug-shared.zip"
     cemu_win64_debug_zip_fn = snap_base_fn + "win64-debug-shared.zip"
     
+    cemu_win32_static_zip_fn = snap_base_fn + "win32-release-static.zip"
+    cemu_win64_static_zip_fn = snap_base_fn + "win64-release-static.zip"
+    
+    cemu_win32_static_debug_zip_fn = snap_base_fn + "win32-debug-static.zip"
+    cemu_win64_static_debug_zip_fn = snap_base_fn + "win64-debug-static.zip"
+    
     make_zip("x86", cemu_win32_zip_fn, file_list_32)
     make_zip("x64", cemu_win64_zip_fn, file_list_64)
     
     make_zip("x86 Debug", cemu_win32_debug_zip_fn, file_list_32_debug)
     make_zip("x64 Debug", cemu_win64_debug_zip_fn, file_list_64_debug)
+    
+    make_zip("x86 Static", cemu_win32_static_zip_fn, file_list_32_static)
+    make_zip("x64 Static", cemu_win64_static_zip_fn, file_list_64_static)
+    
+    make_zip("x86 Static Debug", cemu_win32_static_debug_zip_fn, file_list_32_static_debug)
+    make_zip("x64 Static Debug", cemu_win64_static_debug_zip_fn, file_list_64_static_debug)
     
     # Upload everything!
     upload_snapshot(cemu_win32_zip_fn, bintray_api_username, bintray_api_key)
@@ -532,6 +599,12 @@ def deploy_snapshots():
     
     upload_snapshot(cemu_win32_debug_zip_fn, bintray_api_username, bintray_api_key)
     upload_snapshot(cemu_win64_debug_zip_fn, bintray_api_username, bintray_api_key)
+    
+    upload_snapshot(cemu_win32_static_zip_fn, bintray_api_username, bintray_api_key)
+    upload_snapshot(cemu_win64_static_zip_fn, bintray_api_username, bintray_api_key)
+    
+    upload_snapshot(cemu_win32_static_debug_zip_fn, bintray_api_username, bintray_api_key)
+    upload_snapshot(cemu_win64_static_debug_zip_fn, bintray_api_username, bintray_api_key)
     
     print(" * Snapshot deployment complete!")
     
