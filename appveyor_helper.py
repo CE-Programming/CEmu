@@ -486,16 +486,16 @@ def deploy_snapshots():
     # the specific ucrt debug DLL in the extra copy arg.
     collect_main_files("x86 Debug", r"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\debug_nonredist\x86\Microsoft.VC140.DebugCRT\*.dll",
                        r"C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x86\api*.dll",
-                       os.path.join("build_32", "release"),
-                       os.path.join("deploy", "release32"),
+                       os.path.join("build_32", "debug"),
+                       os.path.join("deploy", "release32_debug"),
                        extra_wc = {
                                     "UCRT Debug" : r"C:\Program Files (x86)\Windows Kits\10\bin\x86\ucrt\*.dll",
                                   }
                       )
     collect_main_files("x64 Debug", r"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\debug_nonredist\x64\Microsoft.VC140.DebugCRT\*.dll",
                        r"C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64\api*.dll",
-                       os.path.join("build_64", "release"),
-                       os.path.join("deploy", "release64"),
+                       os.path.join("build_64", "debug"),
+                       os.path.join("deploy", "release64_debug"),
                        extra_wc = {
                                     "UCRT Debug" : r"C:\Program Files (x86)\Windows Kits\10\bin\x64\ucrt\*.dll",
                                   }
