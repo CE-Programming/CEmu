@@ -482,6 +482,25 @@ def deploy_snapshots():
                        os.path.join("build_64", "release"),
                        os.path.join("deploy", "release64"))
     
+    # For debug builds, only copy api*.dll for UCRT redist, then copy
+    # the specific ucrt debug DLL in the extra copy arg.
+    collect_main_files("x86 Debug", r"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\debug_nonredist\x86\Microsoft.VC140.DebugCRT\*.dll",
+                       r"C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x86\api*.dll",
+                       os.path.join("build_32", "release"),
+                       os.path.join("deploy", "release32"),
+                       extra_wc = {
+                                    "UCRT Debug" : r"C:\Program Files (x86)\Windows Kits\10\bin\x86\ucrt\*.dll",
+                                  }
+                      )
+    collect_main_files("x64 Debug", r"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\debug_nonredist\x64\Microsoft.VC140.DebugCRT\*.dll",
+                       r"C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64\api*.dll",
+                       os.path.join("build_64", "release"),
+                       os.path.join("deploy", "release64"),
+                       extra_wc = {
+                                    "UCRT Debug" : r"C:\Program Files (x86)\Windows Kits\10\bin\x64\ucrt\*.dll",
+                                  }
+                      )
+    
     collect_qt_files("x86", r"C:\Qt\Qt5.6.0\5.6\msvc2015\bin\windeployqt.exe", r"deploy\release32", r'build_32\release\CEmu.exe')
     collect_qt_files("x64", r"C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\windeployqt.exe", r"deploy\release64", r'build_64\release\CEmu.exe')
     
