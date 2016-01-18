@@ -18,10 +18,9 @@ ARC_PREFIX = "Qt56_Beta_Static_"
 ARC_SUFFIX_DEV = "_DevDeploy"
 
 # What libraries need to be included?
-# Note that this usually involves more than the libraries specified
-# in your project file - you basically need to specify all of the
-# libraries that you have to copy over in order for your program to
-# run, minus "Qt5" and "dll"!
+# You don't have to specify every library necessary to make things run.
+# You can simply specify the libraries in your .pro file, and this script
+# will do the rest. (It detects subdependencies on its own!)
 QT_LIB_INCLUDE = "core gui quick widgets quickwidgets network qml"
 
 # Binary excludes
@@ -161,7 +160,7 @@ print(" * Stage 1: Analyzing CEmu")
 mkdir_p("build_32")
 
 os.chdir("build_32")
-if not simple_exec([r'C:\Qt\Qt5.6.0-static\bin\qmake', '-spec', 'win32-msvc2015', '-tp', 'vc', r'"..\CEmu.pro"']):
+if not simple_exec([r'C:\Qt\Qt5.6.0-static\bin\qmake', '-spec', 'win32-msvc2015', '-tp', 'vc', r'"..\..\CEmu.pro"']):
     print(" ! ERROR: Creating project files for x86 failed!")
     sys.exit(1)
 os.chdir("..")
