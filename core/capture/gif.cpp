@@ -19,6 +19,7 @@ static RGB24 buffer[320*240];
 
 bool gif_single_frame(const char *filename) {
     std::lock_guard<std::mutex> lock(gif_mutex);
+
     uint16_t *ptr16 = lcd.framebuffer;
     RGB24 *ptr24 = buffer;
     for(unsigned int i = 0; i < 320*240; ++i) {
@@ -32,7 +33,7 @@ bool gif_single_frame(const char *filename) {
     if (!GifBegin(&writer, filename, 320, 240, 0)) {
         return false;
     }
-    if (!GifWriteFrame(&writer, reinterpret_cast<const uint8_t*>(buffer), 320, 240, true))  {
+    if (!GifWriteFrame(&writer, reinterpret_cast<const uint8_t*>(buffer), 320, 240, 0))  {
         return false;
     }
     if (!GifEnd(&writer)) {

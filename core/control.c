@@ -18,12 +18,14 @@ static uint8_t control_read(const uint16_t pio) {
             value = control.cpu_speed & 19;
             break;
         case 0x02:
+            /* bit 1 set (battery stuff) */
             value = control.ports[index] | 1;
             break;
         case 0x03:
             value = get_device_type();
             break;
         case 0x0B:
+            /* bit 2 set if charging */
             if( (control.ports[0x0A] & 2) == 0 ) {
                 control.ports[index] |= 2;
             }
@@ -31,8 +33,8 @@ static uint8_t control_read(const uint16_t pio) {
             break;
         case 0x0F:
             value = control.ports[index];
-            if(control.unknown_g_Xb != 0x00) { value |= 0x80; }
-            if(control.unknown_g_Bd != 0x00) { value |= 0x40; }
+            if(control.USBConnected) { value |= 0x80; }
+            if(control.noPlugAInserted) { value |= 0x40; }
             break;
         case 0x28:
             value = control.ports[index] | 0x08;
@@ -51,19 +53,18 @@ static void control_write(const uint16_t pio, const uint8_t byte) {
     switch (index) {
         case 0x00:
             control.ports[index] = byte;
-
-            switch (control.unknown_flag_0) {
+            switch (control.unknown) {
                 case 2:
-                    control.unknown_flag_0 = (byte == 0x83 ? 3 : 0);
+                    control.unknown = (byte == 0x83 ? 3 : 0);
                     break;
                 case 6:
-                    control.unknown_flag_0 = (byte == 0x03 ? 7 : 0);
+                    control.unknown = (byte == 0x03 ? 7 : 0);
                     break;
                 case 8:
-                    control.unknown_flag_0 = (byte == 0x83 ? 9 : 0);
+                    control.unknown = (byte == 0x83 ? 9 : 0);
                     break;
                 case 9:
-                    control.unknown_flag_0 = (byte == 0x03 ? 10 : 0);
+                    control.unknown = (byte == 0x03 ? 10 : 0);
                     break;
             }
             break;
@@ -102,41 +103,43 @@ static void control_write(const uint16_t pio, const uint8_t byte) {
             control.ports[index] = byte & 7;
             break;
         case 0x07:
-            if (control.unknown_flag_0 == 0) {
-                if ((byte & 0x90) == 0x90) {
-                    control.unknown_flag_0 = 1;
+            if (control.unknown == 0) {
+                if (byte & 0x90) {
+                    control.unknown = 1;
                 }
             } else {
-               control.unknown_flag_0 = 0;
+               control.unknown = 0;
             }
             control.ports[index] = byte;
+            break;
         case 0x09:
-            switch (control.unknown_flag_0) {
+            switch (control.unknown) {
                 case 1:
-                    control.unknown_flag_0 = ((byte & 0x80) != 0x00) ? 2 : 0;
+                    control.unknown = ((byte & 0x80) != 0x00) ? 2 : 0;
                     break;
                 case 4:
-                    control.unknown_flag_0 = ((byte & 0x90) == 0x90) ? 5 : 0;
+                    control.unknown = ((byte & 0x90) == 0x90) ? 5 : 0;
                     break;
                 case 5:
-                    control.unknown_flag_0 = ((byte & 0x10) == 0x00) ? 6 : 0;
+                    control.unknown = ((byte & 0x10) == 0x00) ? 6 : 0;
                     break;
                 case 7:
-                    control.unknown_flag_0 = ((byte & 0x80) == 0x00) ? 8 : 0;
+                    control.unknown = ((byte & 0x80) == 0x00) ? 8 : 0;
                     break;
                 default:
                     break;
             }
+            control.ports[index] = byte;
             break;
         case 0x0A:
-            if( control.unknown_flag_0 == 3) {
-                control.unknown_flag_0 = (byte & 1) ? 4 : 0;
+            if( control.unknown == 3) {
+                control.unknown = (byte & 1) ? 4 : 0;
             }
             control.ports[index] = byte;
             break;
         case 0x0B:
         case 0x0C:
-            control.unknown_flag_0 = 0;
+            control.unknown = 0;
             control.ports[index] = byte;
             break;
         case 0x0E:
@@ -173,15 +176,16 @@ static const eZ80portrange_t device = {
 eZ80portrange_t init_control(void) {
     memset(control.ports, 0, sizeof control.ports);
 
+    control.unknown = mem.flash.block[0x5E];
+
     control.ports[0x00] = 0x03; /* From WikiTI      */
     control.ports[0x01] = 0x03; /* From WikiTI      */
     control.ports[0x02] = 0x01; /* Probably right   */
     control.ports[0x05] = 0x76; /* From WikiTI      */
     control.ports[0x06] = 0x03; /* From WikiTI      */
     control.ports[0x07] = 0xB7; /* From WikiTI      */
-    control.ports[0x08] = 0xFD; /* WikiTI's :: 0x7F */
-    control.ports[0x0B] = 0x08; /* WikiTI's :: 0xFC */
-    control.ports[0x0C] = 0x00; /* From WikiTI      */
+    control.ports[0x08] = 0x7F; /* WikiTI's :: 0x7F */
+    control.ports[0x0B] = 0xFE; /* WikiTI's :: 0xFC */
     control.ports[0x0D] = 0xFF; /* From WikiTI      */
     control.ports[0x0E] = 0x0A; /* Good             */
     control.ports[0x0F] = 0x42; /* Good             */
@@ -191,7 +195,6 @@ eZ80portrange_t init_control(void) {
     control.ports[0x23] = 0xFF; /* Probably right   */
     control.ports[0x24] = 0xFF; /* Probably right   */
     control.ports[0x25] = 0xD3; /* Probably right   */
-    control.ports[0x29] = 0x00; /* From WikiTI      */
     control.ports[0x2A] = 0x70; /* Good             */
     control.ports[0x2B] = 0xFE; /* Good             */
     control.ports[0x2C] = 0xFF; /* Probably right   */
