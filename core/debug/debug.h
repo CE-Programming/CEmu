@@ -1,4 +1,4 @@
-#ifndef EMBEDED_DEVICE
+#ifdef DEBUG_SUPPORT
 
 #ifndef DEBUG_H
 #define DEBUG_H

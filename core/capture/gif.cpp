@@ -1,4 +1,4 @@
-#ifndef EMBEDED_DEVICE
+#ifdef GIFLIB_SUPPORT
 
 #include <array>
 #include <mutex>

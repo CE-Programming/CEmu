@@ -1,6 +1,6 @@
 lessThan(QT_MAJOR_VERSION, 5) : error("You need at least Qt 5 to build CEmu!")
 
-# Version
+# Version. Don't forget to remove the "dev" suffix for a release/deployment bulid
 DEFINES += CEMU_VERSION=0.3dev
 
 QT += core gui quick widgets quickwidgets network
@@ -12,6 +12,9 @@ TEMPLATE = app
 TRANSLATIONS += i18n/fr_FR.ts
 
 CONFIG += c++11
+
+# Core options
+DEFINES += DEBUG_SUPPORT GIFLIB_SUPPORT
 
 # GCC/clang flags
 if (!win32-msvc*) {

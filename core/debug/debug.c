@@ -1,4 +1,4 @@
-#ifndef EMBEDED_DEVICE
+#ifdef DEBUG_SUPPORT
 
 #include "debug.h"
 #include "disasm.h"

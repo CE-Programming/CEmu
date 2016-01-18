@@ -1,4 +1,4 @@
-#ifndef EMBEDED_DEVICE
+#ifdef DEBUG_SUPPORT
 
 #ifndef DISASM_H
 #define DISASM_H

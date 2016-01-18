@@ -1,4 +1,4 @@
-#ifndef EMBEDED_DEVICE
+#ifdef GIFLIB_SUPPORT
 
 //
 // gif.h

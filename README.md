@@ -46,6 +46,8 @@ After downloading the source (you can clone the repo or just get the zip):
   * Open the .pro file with Qt Creator, set it up (default project settings should be fine), and hit Build
   * In a shell, cd to the project folder and type `qmake -r CEmu.pro; make`
 
+_Note: Some core-related features like debugging and GIF-related support have to be enabled with the `DEBUG_SUPPORT` and `GIFLIB_SUPPORT` defines. For instance, the Qt GUI does this in the .pro file._
+
 You're welcome to [report any bugs](https://github.com/MateoConLechuga/CEmu/issues) you may encounter, and if you want to help, tell us, or send patches / pull requests!
 
 
