@@ -493,7 +493,8 @@ def deploy_snapshots():
     
     # Snapshot filename - based on http://zeranoe1.rssing.com/chan-5973786/latest.php
     cur_timestamp = time.strftime("%Y%m%d_%H%M%S")
-    snap_base_fn = os.path.join("deploy", "cemu-%s-git-%s" % (cur_timestamp, git_rev))
+    snap_base_fn = "cemu-%s-git-%s" % (cur_timestamp, git_rev)
+    snap_base_path = os.path.join("deploy", snap_base_fn)
     
     # Locate files that we need!
     print(" * Collecting all dependencies for deployment...")
@@ -583,17 +584,17 @@ def deploy_snapshots():
     file_list_64_static_debug = build_file_list("x64 Debug", r"deploy_static\release64_debug")
     
     # Build our ZIPs!
-    cemu_win32_zip_fn = snap_base_fn + "-win32-release-shared.zip"
-    cemu_win64_zip_fn = snap_base_fn + "-win64-release-shared.zip"
+    cemu_win32_zip_fn = snap_base_path + "-win32-release-shared.zip"
+    cemu_win64_zip_fn = snap_base_path + "-win64-release-shared.zip"
     
-    cemu_win32_debug_zip_fn = snap_base_fn + "-win32-debug-shared.zip"
-    cemu_win64_debug_zip_fn = snap_base_fn + "-win64-debug-shared.zip"
+    cemu_win32_debug_zip_fn = snap_base_path + "-win32-debug-shared.zip"
+    cemu_win64_debug_zip_fn = snap_base_path + "-win64-debug-shared.zip"
     
-    cemu_win32_static_zip_fn = snap_base_fn + "-win32-release-static.zip"
-    cemu_win64_static_zip_fn = snap_base_fn + "-win64-release-static.zip"
+    cemu_win32_static_zip_fn = snap_base_path + "-win32-release-static.zip"
+    cemu_win64_static_zip_fn = snap_base_path + "-win64-release-static.zip"
     
-    cemu_win32_static_debug_zip_fn = snap_base_fn + "-win32-debug-static.zip"
-    cemu_win64_static_debug_zip_fn = snap_base_fn + "-win64-debug-static.zip"
+    cemu_win32_static_debug_zip_fn = snap_base_path + "-win32-debug-static.zip"
+    cemu_win64_static_debug_zip_fn = snap_base_path + "-win64-debug-static.zip"
     
     make_zip("x86", cemu_win32_zip_fn, file_list_32)
     make_zip("x64", cemu_win64_zip_fn, file_list_64)
