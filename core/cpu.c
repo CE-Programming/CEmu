@@ -52,9 +52,11 @@ static void cpu_prefetch(uint32_t address, bool mode) {
 }
 static uint8_t cpu_fetch_byte(void) {
     uint8_t value;
+#ifndef EMBEDED_DEVICE
     if (!in_debugger && (debugger.data.block[cpu.registers.PC] & (DBG_EXEC_BREAKPOINT | DBG_STEP_OVER_BREAKPOINT | DBG_RUN_UNTIL_BREAKPOINT))) {
         openDebugger((debugger.data.block[cpu.registers.PC] & DBG_EXEC_BREAKPOINT) ? HIT_EXEC_BREAKPOINT : DBG_STEP, cpu.registers.PC);
     }
+#endif
     value = cpu.prefetch;
     cpu_prefetch(cpu.registers.PC + 1, cpu.ADL);
     return value;
@@ -397,10 +399,12 @@ static void cpu_return(void) {
         address = cpu_pop_word();
     }
     cpu_prefetch(address, mode);
+#ifndef EMBEDED_DEVICE
     if (cpu_events & EVENT_DEBUG_STEP_OUT && (r->SPL > debugger.stepOutSPL || r->SPS > debugger.stepOutSPS)) {
         cpu_events &= ~EVENT_DEBUG_STEP_OUT;
         openDebugger(DBG_STEP, 0);
     }
+#endif
 }
 
 static void cpu_execute_alu(int i, uint8_t v) {

@@ -1,3 +1,5 @@
+#ifndef EMBEDED_DEVICE
+
 #include <string.h>
 #include <unordered_map>
 
@@ -108,10 +110,8 @@ static std::string strS(uint8_t data) {
 }
 
 static std::string strSind(uint8_t data) {
-    sprintf(tmpbuf,"($%02X)",data);
-    return std::string(tmpbuf);
+    return "("+strS(data)+")";
 }
-
 
 static std::string strOffset(uint8_t data) {
     if (data & 128) {
@@ -534,7 +534,7 @@ void disassembleInstruction(void) {
                             break;
                         }
                         disasm.instruction.opcode = "ld";
-                        w = (context.y == 6) ? "("+disasm_index_address()+")" : "";
+                        w = (context.y == 6) ? disasm_index_address() : "";
                         disasm_write_reg_prefetched(context.y, w, strS(disasm_fetch_byte()));
                         break;
                     case 7:
@@ -994,3 +994,4 @@ exit_loop:
     } while (disasm.prefix || disasm.suffix);
 }
 
+#endif

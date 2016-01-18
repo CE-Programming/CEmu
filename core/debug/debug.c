@@ -1,3 +1,5 @@
+#ifndef EMBEDED_DEVICE
+
 #include "debug.h"
 #include "disasm.h"
 #include "../mem.h"
@@ -25,7 +27,6 @@ void debugger_free(void) {
     }
     gui_console_printf("Freed Debugger.\n");
 }
-
 uint8_t debug_read_byte(uint32_t address) {
     uint8_t *ptr, value = 0;
 
@@ -156,3 +157,5 @@ void debug_pmonitor_set(uint16_t address, unsigned int type, bool set) {
 void debug_pmonitor_remove(uint16_t address, unsigned int type) {
     debug_pmonitor_set(address, type, false);
 }
+
+#endif

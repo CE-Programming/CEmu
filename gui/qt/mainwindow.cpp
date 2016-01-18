@@ -650,10 +650,12 @@ void MainWindow::refreshVariableList() {
     if (in_recieving_mode) {
         ui->buttonRefreshList->setText(tr("Refresh variable list..."));
         ui->buttonReceiveFiles->setEnabled(false);
+        ui->buttonRun->setEnabled(true);
         setReceiveState(false);
     } else {
         ui->buttonRefreshList->setText(tr("Resume emulation"));
         ui->buttonReceiveFiles->setEnabled(true);
+        ui->buttonRun->setEnabled(false);
         setReceiveState(true);
         QThread::msleep(500);
 
@@ -1245,6 +1247,9 @@ void MainWindow::updatePortData(int currentRow) {
 void MainWindow::resetCalculator() {
     if (emu.stop()) {
         emu.start();
+        if(debugger_on) {
+            emit setDebugStepMode();
+        }
     } else {
         qDebug("Reset Failed.");
     }

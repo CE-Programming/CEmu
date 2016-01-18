@@ -52,7 +52,7 @@ void LCDWidget::drawContext(const QPoint& posa) {
     contextMenu.actions().at(4)->setCheckable(true);
     contextMenu.actions().at(5)->setCheckable(true);
 
-    contextMenu.actions().at(4)->setChecked(state_set);
+    contextMenu.actions().at(5)->setChecked(state_set);
     contextMenu.actions().at(lcd_size)->setChecked(true);
 
     QAction* selectedItem = contextMenu.exec(globalPos);

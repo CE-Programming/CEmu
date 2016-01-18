@@ -1,3 +1,5 @@
+#ifndef EMBEDED_DEVICE
+
 #ifndef DEBUG_H
 #define DEBUG_H
 
@@ -79,6 +81,8 @@ void debug_clear_run_until(void);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

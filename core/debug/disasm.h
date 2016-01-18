@@ -1,3 +1,5 @@
+#ifndef EMBEDED_DEVICE
+
 #ifndef DISASM_H
 #define DISASM_H
 
@@ -46,6 +48,8 @@ typedef struct {
 extern disasm_state_t disasm;
 
 void disassembleInstruction(void);
+
+#endif
 
 #endif
 

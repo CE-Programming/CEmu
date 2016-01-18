@@ -178,10 +178,16 @@ void vat_search_init(calc_var_t *var) {
     var->vat = phys_mem_ptr(0xD3FFFF, 1);
 }
 
+static uint32_t get_ptr(uint32_t address) {
+    return *phys_mem_ptr(address, 1)
+         | *phys_mem_ptr(address + 1, 1) << 8
+         | *phys_mem_ptr(address + 2, 1) << 16;
+}
+
 bool vat_search_next(calc_var_t *var) {
     const uint8_t *userMem  = phys_mem_ptr(0xD1A881, 1),
-                  *pTemp    = phys_mem_ptr(debug_read_long(0xD0259A), 1),
-                  *progPtr  = phys_mem_ptr(debug_read_long(0xD0259D), 1),
+                  *pTemp    = phys_mem_ptr(get_ptr(0xD0259A), 1),
+                  *progPtr  = phys_mem_ptr(get_ptr(0xD0259D), 1),
                   *symTable = phys_mem_ptr(0xD3FFFF, 1);
     uint32_t address;
     uint8_t i;

@@ -1,3 +1,5 @@
+#ifndef EMBEDED_DEVICE
+
 //
 // gif.h
 // by Charlie Tangora
@@ -903,5 +905,7 @@ bool GifEnd( GifWriter* writer )
 
     return true;
 }
+
+#endif
 
 #endif

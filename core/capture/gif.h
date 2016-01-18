@@ -1,3 +1,5 @@
+#ifndef EMBEDED_DEVICE
+
 #ifndef GIF_H
 #define GIF_H
 
@@ -14,6 +16,8 @@ bool gif_stop_recording();
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

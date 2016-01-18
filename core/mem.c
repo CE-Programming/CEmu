@@ -308,11 +308,11 @@ uint8_t mem_read_byte(uint32_t address) {
             value = port_read_byte(mmio_range(address)<<12 | addr_range(address));
             break;
     }
-
+#ifndef EMBEDED_DEVICE
     if (!in_debugger && debugger.data.block[address] & DBG_READ_BREAKPOINT) {
         openDebugger(HIT_READ_BREAKPOINT, address);
     }
-
+#endif
     return value;
 }
 
@@ -347,8 +347,9 @@ void mem_write_byte(uint32_t address, uint8_t byte) {
             port_write_byte(mmio_range(address)<<12 | addr_range(address), byte);
             break;
     }
-
+#ifndef EMBEDED_DEVICE
     if (!in_debugger && debugger.data.block[address] & DBG_WRITE_BREAKPOINT) {
         openDebugger(HIT_WRITE_BREAKPOINT, address);
     }
+#endif
 }

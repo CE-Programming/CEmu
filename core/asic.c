@@ -76,8 +76,9 @@ void asic_init(void) {
     /* First, initilize memory and LCD */
     mem_init();
     cpu_init();
+#ifndef EMBEDED_DEVICE
     debugger_init();
-
+#endif
     asic.mem = &mem;
     asic.cpu = &cpu;
 
@@ -89,7 +90,9 @@ void asic_init(void) {
 
 void asic_free(void) {
     mem_free();
+#ifndef EMBEDED_DEVICE
     debugger_free();
+#endif
     asic.mem = NULL;
     asic.cpu = NULL;
     gui_console_printf("Freed ASIC...\n");

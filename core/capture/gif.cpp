@@ -1,3 +1,5 @@
+#ifndef EMBEDED_DEVICE
+
 #include <array>
 #include <mutex>
 #include <vector>
@@ -96,3 +98,5 @@ bool gif_stop_recording() {
     gui_console_printf("Done recording GIF image.\n");
     return ret;
 }
+
+#endif

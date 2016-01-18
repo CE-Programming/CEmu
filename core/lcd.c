@@ -153,8 +153,9 @@ static void lcd_event(int index) {
     lcd.upcurr = lcd.upbase;
     lcd.ris |= 0xC;
     intrpt_set(INT_LCD, lcd.ris & lcd.mis);
-
+#ifndef EMBEDED_DEVICE
     gif_new_frame();
+#endif
 }
 
 void lcd_reset(void) {
