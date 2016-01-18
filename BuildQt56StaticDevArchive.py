@@ -97,7 +97,8 @@ def collect_qt_static_files(proj_file):
     all_libs = [os.path.basename(p) for p in all_libs if not p.startswith("%")]
     
     # Remove .lib extensions AND filter only Qt libs
-    all_libs = [".".join(p.split(".")[:-1]) for p in all_libs if p.lower().startswith("q")]
+    # Also, make everything lowercase!
+    all_libs = [".".join(p.split(".")[:-1]).lower() for p in all_libs if p.lower().startswith("q")]
     
     # Interesting method - seperate and filter "d" libraries,
     # make sure we're really removing DEBUG libraries. If a library
