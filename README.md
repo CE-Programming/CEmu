@@ -5,8 +5,12 @@ CEmu is an open-source third-party TI-84 Plus CE / TI-83 Premium CE calculator e
 With a core made in C and GUI in C++ with Qt, it works natively on many platforms.  
 In fact, the core has even been succesfully tested on web-browsers (JavaScript via Emscripten), the TI-Nspire CX (Ndless SDK), and the Apple Watch.
 
-Here's what CEmu looks like on Mac OS X:  
-<a href="https://i.imgur.com/9WFnNJd.png"><img src="https://i.imgur.com/NfgJS4n.png" /></div></a>
+CEmu has a customizable user interface to fit the needs of different types of users, like typical students, teachers (who will like the resizable, detached display), developers (who will enjoy the various debugging features)...  
+Here are three setup examples of CEmu running on Mac OS X:
+
+Standard  | Teacher-oriented | Developer-oriented
+------------ | ------------- | -------------
+<a href="https://i.imgur.com/yU8xOqf.png"><img src="https://i.imgur.com/wYlQPgu.png" /></a>|<a href="https://i.imgur.com/cKYRuxM.png"><img src="https://i.imgur.com/edxwq7K.png" /></a>|<a href="https://i.imgur.com/c90lBOq.png"><img src="https://i.imgur.com/7GDppPH.png" /></a>
 
 ## License
 CEmu is licensed under the [GPLv3](LICENSE).  
@@ -59,8 +63,8 @@ You're welcome to [report any bugs](https://github.com/MateoConLechuga/CEmu/issu
 
 ### GUI
 * HD Icon
-* Fix single GIF frame output
-* Implemented 83PCE / 84+CE differences (2 keypad setups, "skins", etc.)
+* Fix single GIF frame output (wrong palette used by the giflib!?)
+* Implement 83PCE/84+CE differences (2 keypad setups, "skins", etc.)
 * More translations (for now, it's available in English and French).
 * ...
 
