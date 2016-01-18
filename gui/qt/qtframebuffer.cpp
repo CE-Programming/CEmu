@@ -20,27 +20,6 @@
 #include "../../core/backlight.h"
 #include "../../core/lcd.h"
 
-#define CLAMP(a) ( ((a) > 255) ? 255 : (((a) < 0) ? 0 : (int)(a)) )
-
-QImage brighten(QImage &img, float factor) {
-    int r,g,b;
-    /* Scale each RGB value by the brightening factor */
-    for(int y = 0; y < img.height(); y++) {
-        for(int x = 0; x < img.width(); x++) {
-            QRgb p = img.pixel(x, y);
-            r = (int)(factor * qRed(p));
-            r = CLAMP(r);
-            g = (int)(factor * qGreen(p));
-            g = CLAMP(g);
-            b = (int)(factor * qBlue(p));
-            b = CLAMP(b);
-            img.setPixel(x, y, qRgb(r, g, b));
-          }
-    }
-
-    return img;
-}
-
 static uint32_t bitfields[3] = { 0x01F, 0x000, 0x000};
 
 QImage renderFramebuffer() {
@@ -48,17 +27,17 @@ QImage renderFramebuffer() {
 
     QImage::Format format = *bitfields == 0x00F ? QImage::Format_RGB444 : QImage::Format_RGB16;
 
-    QImage image(reinterpret_cast<const uchar*>(lcd.framebuffer), 320, 240, 320 * 2, format);
-
-    float factor = (310-(float)backlight.brightness)/160.0;
-    factor = (factor > 1) ? 1 : factor;
-    return brighten(image, factor);
+    return QImage(reinterpret_cast<const uchar*>(lcd.framebuffer), 320, 240, 320 * 2, format);
 }
 
 void paintFramebuffer(QPainter *p) {
     if (lcd.control & 0x800) {
         QImage img = renderFramebuffer();
         p->drawImage(p->window(), img);
+        float factor = (310-(float)backlight.brightness)/160.0;
+        if (factor < 1) {
+            p->fillRect(p->window(), QColor(0, 0, 0, (1 - factor) * 255));
+        }
     } else {
         p->fillRect(p->window(), Qt::black);
         p->setPen(Qt::white);
