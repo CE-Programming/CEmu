@@ -377,7 +377,7 @@ void MainWindow::screenshot() {
         return;
     }
 
-    if (!image.save(filename, "PNG")) {
+    if (!image.save(filename, "PNG", 0)) {
         QMessageBox::critical(this, tr("Screenshot failed"), tr("Failed to save screenshot!"));
     }
 }
