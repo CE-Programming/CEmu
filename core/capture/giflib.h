@@ -114,8 +114,8 @@ int GifIMin(int l, int r);
 int GifIAbs(int i);
 void GifGetClosestPaletteColor(GifPalette* pPal, int r, int g, int b, int& bestInd, int& bestDiff, int treeRoot = 1);
 void GifSwapPixels(uint8_t* image, int pixA, int pixB);
-int GifPartition(uint8_t* image, const int left, const int right, const int elt, int pivotIndex, int &neededCenter);
-void GifPartitionByMedian(uint8_t* image, int left, int right, int com, int &neededCenter);
+void GifPartition(uint8_t* image, int com, int &left, int &right);
+int GifPartitionByMedian(uint8_t* image, int com, int left, int right, int neededCenter);
 void GifSplitPalette(uint8_t* image, int numPixels, int firstElt, int lastElt, int splitElt, int splitDist, int treeNode, bool buildForDither, GifPalette* pal);
 int GifPickChangedPixels( const uint8_t* lastFrame, uint8_t* frame, int numPixels );
 void GifMakePalette( const uint8_t* lastFrame, const uint8_t* nextFrame, uint32_t width, uint32_t height, int bitDepth, bool buildForDither, GifPalette* pPal );
@@ -221,93 +221,74 @@ void GifSwapPixels(uint8_t* image, int pixA, int pixB)
     image[pixB*4+3] = aA;
 }
 
-// just the partition operation from quicksort
-int GifPartition(uint8_t* image, const int left, const int right, const int elt, int pivotIndex, int &neededCenter)
+// just the partition operation from quicksort 3-way
+void GifPartition(uint8_t* image, int com, int &left, int &right)
 {
-    const int pivotValue = image[pivotIndex*4+elt];
-    const int pivotR = image[pivotIndex*4];
-    const int pivotG = image[pivotIndex*4+1];
-    const int pivotB = image[pivotIndex*4+2];
-    int leftIndex = left;
-    int rightIndex = right-1;
+    GifSwapPixels(image, left, left + (right - left) / 2);
+    uint8_t comPivot = image[left*4+com];
+    uint8_t rPivot = image[left*4];
+    uint8_t gPivot = image[left*4+1];
+    uint8_t bPivot = image[left*4+2];
     bool split = false;
-    for(int i1=leftIndex; i1<=rightIndex; ++i1)
+    for(int i1=left; i1<right; ++i1)
     {
-        int arrayVal = image[i1*4+elt];
-        if( arrayVal < pivotValue )
+        uint8_t comArray = image[i1*4+com];
+        if( comArray < comPivot )
         {
-            GifSwapPixels(image, i1, leftIndex);
-            ++leftIndex;
+            GifSwapPixels(image, i1, left);
+            ++left;
         }
-        else if( arrayVal == pivotValue )
+        else if( comArray > comPivot )
         {
-            int arrayR = image[i1*4];
-            int arrayG = image[i1*4+1];
-            int arrayB = image[i1*4+2];
-            if( arrayR == pivotR &&
-                arrayG == pivotG &&
-                arrayB == pivotB )
-            {
-                // move equal pixels to the right
-                GifSwapPixels(image, i1, rightIndex);
-                --i1;
-                --rightIndex;
-            }
-            else
+            --right;
+            GifSwapPixels(image, i1, right);
+            --i1;
+        }
+        else
+        {
+            uint8_t rArray = image[i1*4];
+            uint8_t gArray = image[i1*4+1];
+            uint8_t bArray = image[i1*4+2];
+            if( rArray != rPivot ||
+                gArray != gPivot ||
+                bArray != bPivot )
             {
                 if(split)
                 {
-                    GifSwapPixels(image, i1, leftIndex);
-                    ++leftIndex;
+                    GifSwapPixels(image, i1, left);
+                    ++left;
+                }
+                else
+                {
+                    --right;
+                    GifSwapPixels(image, i1, right);
+                    --i1;
                 }
                 split = !split;
             }
         }
     }
-    // move equal pixels to the center
-    int i2;
-    for(i2=right-1; leftIndex<=rightIndex; --i2)
-    {
-        GifSwapPixels(image, i2, rightIndex);
-        --rightIndex;
-    }
-    rightIndex = i2;
-    // avoid splitting one color between multiple palette entries
-    if( neededCenter <= leftIndex )
-    {
-        return leftIndex;
-    }
-    if( neededCenter >= rightIndex )
-    {
-        return rightIndex;
-    }
-    if( neededCenter - leftIndex < rightIndex - neededCenter )
-    {
-        neededCenter = leftIndex;
-    }
-    else
-    {
-        neededCenter = rightIndex;
-    }
-    return neededCenter;
 }
 
 // Perform an incomplete sort, finding all elements above and below the desired median
-void GifPartitionByMedian(uint8_t* image, int left, int right, int com, int &neededCenter)
+int GifPartitionByMedian(uint8_t* image, int com, int left, int right, int neededCenter)
 {
-    if(left < right-1)
+    while(left < right-1)
     {
-        int pivotIndex = left + (right-left)/2;
+        int centerLeft = left;
+        int centerRight = right;
+        GifPartition(image, com, centerLeft, centerRight);
 
-        pivotIndex = GifPartition(image, left, right, com, pivotIndex, neededCenter);
-
-        // Only "sort" the section of the array that contains the median
-        if(pivotIndex > neededCenter)
-            GifPartitionByMedian(image, left, pivotIndex, com, neededCenter);
-
-        if(pivotIndex < neededCenter)
-            GifPartitionByMedian(image, pivotIndex+1, right, com, neededCenter);
+        if( neededCenter <= centerLeft )
+            right = centerLeft;
+        else if( neededCenter >= centerRight )
+            left = centerRight;
+        else if( neededCenter - centerLeft < centerRight - neededCenter )
+            return centerLeft;
+        else
+            return centerRight;
     }
+    return neededCenter;
 }
 
 // Builds a palette by creating a balanced k-d tree of all pixels in the image
@@ -415,7 +396,7 @@ void GifSplitPalette(uint8_t* image, int numPixels, int firstElt, int lastElt, i
     if(rRange > bRange && rRange > gRange) splitCom = 0;
 
     int subPixelsA = numPixels * (splitElt - firstElt) / (lastElt - firstElt);
-    GifPartitionByMedian(image, 0, numPixels, splitCom, subPixelsA);
+    subPixelsA = GifPartitionByMedian(image, splitCom, 0, numPixels, subPixelsA);
     int subPixelsB = numPixels-subPixelsA;
 
     pal->treeSplitElt[treeNode] = splitCom;
