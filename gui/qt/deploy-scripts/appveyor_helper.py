@@ -417,10 +417,11 @@ def mkdir_p(path):
         else:
             raise
 
-def upload_snapshot(filename, cur_timestamp, bintray_api_username, bintray_api_key, extra_path = None):
+def upload_snapshot(filename, cur_timestamp, snap_base_fn, bintray_api_username, bintray_api_key, extra_path = None):
     cur_date = cur_timestamp.split("_")[0]
+    cur_date_ym = cur_date[:6]
     
-    full_path = BINTRAY_SNAPSHOT_SERVER_PATH + BINTRAY_MAVEN_GROUP_PATH + "git/" + cur_date + "/"
+    full_path = BINTRAY_SNAPSHOT_SERVER_PATH + BINTRAY_MAVEN_GROUP_PATH + "git/" + cur_date_ym + "/" + cur_date + "/" + snap_base_fn + "/"
     
     base_fn = os.path.basename(filename)
     
@@ -492,7 +493,7 @@ def deploy_snapshots():
     
     # Snapshot filename - based on http://zeranoe1.rssing.com/chan-5973786/latest.php
     cur_timestamp = time.strftime("%Y%m%d_%H%M%S")
-    snap_base_fn = os.path.join("deploy", "cemu-%s-git-%s-" % (cur_timestamp, git_rev))
+    snap_base_fn = os.path.join("deploy", "cemu-%s-git-%s" % (cur_timestamp, git_rev))
     
     # Locate files that we need!
     print(" * Collecting all dependencies for deployment...")
@@ -582,17 +583,17 @@ def deploy_snapshots():
     file_list_64_static_debug = build_file_list("x64 Debug", r"deploy_static\release64_debug")
     
     # Build our ZIPs!
-    cemu_win32_zip_fn = snap_base_fn + "win32-release-shared.zip"
-    cemu_win64_zip_fn = snap_base_fn + "win64-release-shared.zip"
+    cemu_win32_zip_fn = snap_base_fn + "-win32-release-shared.zip"
+    cemu_win64_zip_fn = snap_base_fn + "-win64-release-shared.zip"
     
-    cemu_win32_debug_zip_fn = snap_base_fn + "win32-debug-shared.zip"
-    cemu_win64_debug_zip_fn = snap_base_fn + "win64-debug-shared.zip"
+    cemu_win32_debug_zip_fn = snap_base_fn + "-win32-debug-shared.zip"
+    cemu_win64_debug_zip_fn = snap_base_fn + "-win64-debug-shared.zip"
     
-    cemu_win32_static_zip_fn = snap_base_fn + "win32-release-static.zip"
-    cemu_win64_static_zip_fn = snap_base_fn + "win64-release-static.zip"
+    cemu_win32_static_zip_fn = snap_base_fn + "-win32-release-static.zip"
+    cemu_win64_static_zip_fn = snap_base_fn + "-win64-release-static.zip"
     
-    cemu_win32_static_debug_zip_fn = snap_base_fn + "win32-debug-static.zip"
-    cemu_win64_static_debug_zip_fn = snap_base_fn + "win64-debug-static.zip"
+    cemu_win32_static_debug_zip_fn = snap_base_fn + "-win32-debug-static.zip"
+    cemu_win64_static_debug_zip_fn = snap_base_fn + "-win64-debug-static.zip"
     
     make_zip("x86", cemu_win32_zip_fn, file_list_32)
     make_zip("x64", cemu_win64_zip_fn, file_list_64)
@@ -607,17 +608,17 @@ def deploy_snapshots():
     make_zip("x64 Static Debug", cemu_win64_static_debug_zip_fn, file_list_64_static_debug)
     
     # Upload everything!
-    upload_snapshot(cemu_win32_zip_fn, cur_timestamp, bintray_api_username, bintray_api_key)
-    upload_snapshot(cemu_win64_zip_fn, cur_timestamp, bintray_api_username, bintray_api_key)
+    upload_snapshot(cemu_win32_zip_fn, cur_timestamp, snap_base_fn, bintray_api_username, bintray_api_key)
+    upload_snapshot(cemu_win64_zip_fn, cur_timestamp, snap_base_fn, bintray_api_username, bintray_api_key)
     
-    upload_snapshot(cemu_win32_debug_zip_fn, cur_timestamp, bintray_api_username, bintray_api_key)
-    upload_snapshot(cemu_win64_debug_zip_fn, cur_timestamp, bintray_api_username, bintray_api_key)
+    upload_snapshot(cemu_win32_debug_zip_fn, cur_timestamp, snap_base_fn, bintray_api_username, bintray_api_key)
+    upload_snapshot(cemu_win64_debug_zip_fn, cur_timestamp, snap_base_fn, bintray_api_username, bintray_api_key)
     
-    upload_snapshot(cemu_win32_static_zip_fn, cur_timestamp, bintray_api_username, bintray_api_key)
-    upload_snapshot(cemu_win64_static_zip_fn, cur_timestamp, bintray_api_username, bintray_api_key)
+    upload_snapshot(cemu_win32_static_zip_fn, cur_timestamp, snap_base_fn, bintray_api_username, bintray_api_key)
+    upload_snapshot(cemu_win64_static_zip_fn, cur_timestamp, snap_base_fn, bintray_api_username, bintray_api_key)
     
-    upload_snapshot(cemu_win32_static_debug_zip_fn, cur_timestamp, bintray_api_username, bintray_api_key)
-    upload_snapshot(cemu_win64_static_debug_zip_fn, cur_timestamp, bintray_api_username, bintray_api_key)
+    upload_snapshot(cemu_win32_static_debug_zip_fn, cur_timestamp, snap_base_fn, bintray_api_username, bintray_api_key)
+    upload_snapshot(cemu_win64_static_debug_zip_fn, cur_timestamp, snap_base_fn, bintray_api_username, bintray_api_key)
     
     print(" * Snapshot deployment complete!")
     
