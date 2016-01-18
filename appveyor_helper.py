@@ -420,7 +420,7 @@ def mkdir_p(path):
 def upload_snapshot(filename, cur_timestamp, bintray_api_username, bintray_api_key, extra_path = None):
     cur_date = cur_timestamp.split("_")[0]
     
-    full_path = BINTRAY_SNAPSHOT_SERVER_PATH + BINTRAY_MAVEN_GROUP_PATH + "/git/" + cur_date + "/"
+    full_path = BINTRAY_SNAPSHOT_SERVER_PATH + BINTRAY_MAVEN_GROUP_PATH + "git/" + cur_date + "/"
     
     base_fn = os.path.basename(filename)
     
