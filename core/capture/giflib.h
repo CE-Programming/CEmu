@@ -112,8 +112,8 @@ int GifIMin(int l, int r);
 int GifIAbs(int i);
 void GifGetClosestPaletteColor(GifPalette* pPal, int r, int g, int b, int& bestInd, int& bestDiff, int treeRoot = 1);
 void GifSwapPixels(uint8_t* image, int pixA, int pixB);
-int GifPartition(uint8_t* image, const int left, const int right, const int elt, int pivotIndex);
-void GifPartitionByMedian(uint8_t* image, int left, int right, int com, int neededCenter);
+int GifPartition(uint8_t* image, const int left, const int right, const int elt, int pivotIndex, int &neededCenter);
+void GifPartitionByMedian(uint8_t* image, int left, int right, int com, int &neededCenter);
 void GifSplitPalette(uint8_t* image, int numPixels, int firstElt, int lastElt, int splitElt, int splitDist, int treeNode, bool buildForDither, GifPalette* pal);
 int GifPickChangedPixels( const uint8_t* lastFrame, uint8_t* frame, int numPixels );
 void GifMakePalette( const uint8_t* lastFrame, const uint8_t* nextFrame, uint32_t width, uint32_t height, int bitDepth, bool buildForDither, GifPalette* pPal );
@@ -165,6 +165,12 @@ void GifGetClosestPaletteColor(GifPalette* pPal, int r, int g, int b, int& bestI
         return;
     }
 
+    // ignore unused nodes
+    if(pPal->treeSplitElt[treeRoot] >= 3)
+    {
+        return;
+    }
+
     // take the appropriate color (r, g, or b) for this node of the k-d tree
     int comps[3]; comps[0] = r; comps[1] = g; comps[2] = b;
     int splitComp = comps[pPal->treeSplitElt[treeRoot]];
@@ -200,7 +206,7 @@ void GifSwapPixels(uint8_t* image, int pixA, int pixB)
     uint8_t rB = image[pixB*4];
     uint8_t gB = image[pixB*4+1];
     uint8_t bB = image[pixB*4+2];
-    uint8_t aB = image[pixA*4+3];
+    uint8_t aB = image[pixB*4+3];
 
     image[pixA*4] = rB;
     image[pixA*4+1] = gB;
@@ -214,42 +220,84 @@ void GifSwapPixels(uint8_t* image, int pixA, int pixB)
 }
 
 // just the partition operation from quicksort
-int GifPartition(uint8_t* image, const int left, const int right, const int elt, int pivotIndex)
+int GifPartition(uint8_t* image, const int left, const int right, const int elt, int pivotIndex, int &neededCenter)
 {
-    const int pivotValue = image[(pivotIndex)*4+elt];
-    GifSwapPixels(image, pivotIndex, right-1);
-    int storeIndex = left;
-    bool split = 0;
-    for(int ii=left; ii<right-1; ++ii)
+    const int pivotValue = image[pivotIndex*4+elt];
+    const int pivotR = image[pivotIndex*4];
+    const int pivotG = image[pivotIndex*4+1];
+    const int pivotB = image[pivotIndex*4+2];
+    int leftIndex = left;
+    int rightIndex = right-1;
+    bool split = false;
+    for(int i1=leftIndex; i1<=rightIndex; ++i1)
     {
-        int arrayVal = image[ii*4+elt];
+        int arrayVal = image[i1*4+elt];
         if( arrayVal < pivotValue )
         {
-            GifSwapPixels(image, ii, storeIndex);
-            ++storeIndex;
+            GifSwapPixels(image, i1, leftIndex);
+            ++leftIndex;
         }
         else if( arrayVal == pivotValue )
         {
-            if(split)
+            int arrayR = image[i1*4];
+            int arrayG = image[i1*4+1];
+            int arrayB = image[i1*4+2];
+            if( arrayR == pivotR &&
+                arrayG == pivotG &&
+                arrayB == pivotB )
             {
-                GifSwapPixels(image, ii, storeIndex);
-                ++storeIndex;
+                // move equal pixels to the right
+                GifSwapPixels(image, i1, rightIndex);
+                --i1;
+                --rightIndex;
             }
-            split = !split;
+            else
+            {
+                if(split)
+                {
+                    GifSwapPixels(image, i1, leftIndex);
+                    ++leftIndex;
+                }
+                split = !split;
+            }
         }
     }
-    GifSwapPixels(image, storeIndex, right-1);
-    return storeIndex;
+    // move equal pixels to the center
+    int i2;
+    for(i2=right-1; leftIndex<=rightIndex; --i2)
+    {
+        GifSwapPixels(image, i2, rightIndex);
+        --rightIndex;
+    }
+    rightIndex = i2;
+    // avoid splitting one color between multiple palette entries
+    if( neededCenter <= leftIndex )
+    {
+        return leftIndex;
+    }
+    if( neededCenter >= rightIndex )
+    {
+        return rightIndex;
+    }
+    if( neededCenter - leftIndex < rightIndex - neededCenter )
+    {
+        neededCenter = leftIndex;
+    }
+    else
+    {
+        neededCenter = rightIndex;
+    }
+    return neededCenter;
 }
 
 // Perform an incomplete sort, finding all elements above and below the desired median
-void GifPartitionByMedian(uint8_t* image, int left, int right, int com, int neededCenter)
+void GifPartitionByMedian(uint8_t* image, int left, int right, int com, int &neededCenter)
 {
     if(left < right-1)
     {
         int pivotIndex = left + (right-left)/2;
 
-        pivotIndex = GifPartition(image, left, right, com, pivotIndex);
+        pivotIndex = GifPartition(image, left, right, com, pivotIndex, neededCenter);
 
         // Only "sort" the section of the array that contains the median
         if(pivotIndex > neededCenter)
@@ -365,9 +413,8 @@ void GifSplitPalette(uint8_t* image, int numPixels, int firstElt, int lastElt, i
     if(rRange > bRange && rRange > gRange) splitCom = 0;
 
     int subPixelsA = numPixels * (splitElt - firstElt) / (lastElt - firstElt);
-    int subPixelsB = numPixels-subPixelsA;
-
     GifPartitionByMedian(image, 0, numPixels, splitCom, subPixelsA);
+    int subPixelsB = numPixels-subPixelsA;
 
     pal->treeSplitElt[treeNode] = splitCom;
     pal->treeSplit[treeNode] = image[subPixelsA*4+splitCom];
@@ -826,6 +873,8 @@ bool GifWriteFrame( GifWriter* writer, const uint8_t* image, uint32_t width, uin
     writer->firstFrame = false;
 
     GifPalette pal;
+    // mark all nodes unused
+    memset(pal.treeSplitElt, 3, 256);
     GifMakePalette((dither? NULL : oldImage), image, width, height, bitDepth, dither, &pal);
 
     if(dither)
