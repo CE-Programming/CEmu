@@ -65,7 +65,6 @@ You're welcome to [report any bugs](https://github.com/MateoConLechuga/CEmu/issu
 
 ### GUI
 * HD Icon
-* Fix single GIF frame output (wrong palette used by the giflib!?)
 * Implement 83PCE/84+CE differences (2 keypad setups, "skins", etc.)
 * More translations (for now, it's available in English and French).
 * ...
