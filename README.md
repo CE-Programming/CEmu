@@ -50,19 +50,17 @@ You're welcome to [report any bugs](https://github.com/MateoConLechuga/CEmu/issu
 * Implement unknown port range (0xDXXX)
 * Implement USB (0xDXXX appears to be a part of this as well)
 * Add more flash handlers
-* other bug fixes
+* Fix known bugs
 * ...
 
 ### Overall features
 * More robust and complete variable transfer (Calc <-> Computer)
-* Emulation speed setting
 * ...
 
 ### GUI
-* Window for configuring keybindings
 * HD Icon
 * Fix single GIF frame output
-* Plan for 83PCE / 84+CE differences (2 keypad setups, "skins", etc.)
+* Implemented 83PCE / 84+CE differences (2 keypad setups, "skins", etc.)
 * More translations (for now, it's available in English and French).
 * ...
 
