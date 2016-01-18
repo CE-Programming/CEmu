@@ -17,22 +17,22 @@ install:
 
 build_script:
   - cd build_32
-  - C:\Qt\Qt5.6.0\5.6\msvc2015\bin\qmake -spec win32-msvc2015 -tp vc "gui\qt\deploy-scripts\CEmu.pro"
+  - C:\Qt\Qt5.6.0\5.6\msvc2015\bin\qmake -spec win32-msvc2015 -tp vc "..\gui\qt\deploy-scripts\CEmu.pro"
   - msbuild CEmu.vcxproj /p:Configuration=Debug
   - msbuild CEmu.vcxproj /p:Configuration=Release
   - cd ..
   - cd build_64
-  - C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\qmake -spec win32-msvc2015 -tp vc "gui\qt\deploy-scripts\CEmu.pro"
+  - C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\qmake -spec win32-msvc2015 -tp vc "..\gui\qt\deploy-scripts\CEmu.pro"
   - msbuild CEmu.vcxproj /p:Configuration=Debug /p:Platform="x64"
   - msbuild CEmu.vcxproj /p:Configuration=Release /p:Platform="x64"
   - cd ..
   - cd build_static_32
-  - C:\Qt\Qt5.6.0-static\bin\qmake -spec win32-msvc2015 -tp vc "gui\qt\deploy-scripts\CEmu.pro"
+  - C:\Qt\Qt5.6.0-static\bin\qmake -spec win32-msvc2015 -tp vc "..\gui\qt\deploy-scripts\CEmu.pro"
   - msbuild CEmu.vcxproj /p:Configuration=Debug
   - msbuild CEmu.vcxproj /p:Configuration=Release
   - cd ..
   - cd build_static_64
-  - C:\Qt\Qt5.6.0x64-static\bin\qmake -spec win32-msvc2015 -tp vc "gui\qt\deploy-scripts\CEmu.pro"
+  - C:\Qt\Qt5.6.0x64-static\bin\qmake -spec win32-msvc2015 -tp vc "..\gui\qt\deploy-scripts\CEmu.pro"
   - msbuild CEmu.vcxproj /p:Configuration=Debug /p:Platform="x64"
   - msbuild CEmu.vcxproj /p:Configuration=Release /p:Platform="x64"
   - cd ..
