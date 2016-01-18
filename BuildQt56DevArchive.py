@@ -69,9 +69,9 @@ def collect_qt_files(deploy_tool, dest, exe_file):
         print(" !        See above output for details.")
         sys.exit(1)
 
-print("===========================================")
-print("= Building Qt v5.6 development archive... =")
-print("===========================================")
+print("=====================================================")
+print("= Building Qt v5.6 development archive (dynamic)... =")
+print("=====================================================")
 
 cdir = os.getcwd()
 

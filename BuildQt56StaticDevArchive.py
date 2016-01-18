@@ -147,9 +147,9 @@ def silent_remove_wildcard(file_wc):
     for f in glob.glob(file_wc):
         silentremove(f)
 
-print("===========================================")
-print("= Building Qt v5.6 development archive... =")
-print("===========================================")
+print("====================================================")
+print("= Building Qt v5.6 development archive (static)... =")
+print("====================================================")
 
 cdir = os.getcwd()
 
