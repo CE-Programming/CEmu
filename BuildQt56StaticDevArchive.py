@@ -5,6 +5,7 @@ import errno
 import subprocess
 import shutil
 import re
+import glob
 
 SEVENZIP="C:\\Program Files\\7-Zip\\7z.exe"
 QTBASEDIR="C:\\"
@@ -123,6 +124,28 @@ def collect_qt_static_files(proj_file):
     
     return all_libs
 
+# When splitting a 7z file, it will always come with
+# a *.001 extension, even if it never makes the split limit.
+# As such, we want to detect that and rename it to just .7z.
+# This function does exactly that - given ARC.7z, rename
+# ARC.7z.001 to ARC.7z if that's the only file.
+def move_single_7z_file(filename):
+    basename_fn = os.path.basename(filename)
+    file_list = glob.glob(filename + "*")
+    if len(file_list) == 0:
+        print("   -> ERROR: File (prefix) %s doesn't exist!" % filename)
+        sys.exit(1)
+    
+    if len(file_list) == 1:
+        print("   -> Renaming: %s -> %s (only one part detected)" % (os.path.basename(file_list[0]), basename_fn))
+        os.rename(file_list[0], filename)
+    else:
+        print("   -> Not renaming: %s (found %i parts!)" % (os.path.basename(file_list[0]), len(file_list)))
+
+def silent_remove_wildcard(file_wc):
+    for f in glob.glob(file_wc):
+        silentremove(f)
+
 print("===========================================")
 print("= Building Qt v5.6 development archive... =")
 print("===========================================")
@@ -130,8 +153,8 @@ print("===========================================")
 cdir = os.getcwd()
 
 print(" * Stage 0: Removing Old Archives")
-silentremove(os.path.join(cdir, ARC_PREFIX + "Win32" + ARC_SUFFIX_DEV + ".7z"))
-silentremove(os.path.join(cdir, ARC_PREFIX + "Win64" + ARC_SUFFIX_DEV + ".7z"))
+silent_remove_wildcard(os.path.join(cdir, ARC_PREFIX + "Win32" + ARC_SUFFIX_DEV + "*.7z*"))
+silent_remove_wildcard(os.path.join(cdir, ARC_PREFIX + "Win64" + ARC_SUFFIX_DEV + "*.7z*"))
 
 print(" * Stage 1: Analyzing CEmu")
 mkdir_p("build_32")
@@ -247,7 +270,7 @@ os.chdir(QTBASEDIR)
 
 print(" * Stage 3: Building Development Archive (x86)")
 subprocess.call([SEVENZIP, "a", os.path.join(cdir, ARC_PREFIX + "Win32" + ARC_SUFFIX_DEV + ".7z"), SSL32, QT32,
-                "-t7z", "-m0=lzma2", "-mx9",
+                "-t7z", "-m0=lzma2", "-mx9", "-v100m",
                     # Exclude unnecessary files
                     
                     # Installation files
@@ -270,9 +293,11 @@ subprocess.call([SEVENZIP, "a", os.path.join(cdir, ARC_PREFIX + "Win32" + ARC_SU
 
 # -xr!*d.dll -xr!*d.lib -xr!*.pdb
 
+move_single_7z_file(os.path.join(cdir, ARC_PREFIX + "Win32" + ARC_SUFFIX_DEV + ".7z"))
+
 print(" * Stage 4: Building Development Archive (x64)")
 subprocess.call([SEVENZIP, "a", os.path.join(cdir, ARC_PREFIX + "Win64" + ARC_SUFFIX_DEV + ".7z"), SSL64, QT64,
-                "-t7z", "-m0=lzma2", "-mx9",
+                "-t7z", "-m0=lzma2", "-mx9", "-v100m",
                     # Exclude unnecessary files
                     
                     # Installation files
@@ -292,5 +317,7 @@ subprocess.call([SEVENZIP, "a", os.path.join(cdir, ARC_PREFIX + "Win64" + ARC_SU
                     #"-xr!*d.lib",
                     #"-xr!*.pdb",
                 ] + all_excludes)
+
+move_single_7z_file(os.path.join(cdir, ARC_PREFIX + "Win64" + ARC_SUFFIX_DEV + ".7z"))
 
 print(" * All done!")
