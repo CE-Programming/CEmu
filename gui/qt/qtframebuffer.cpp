@@ -16,7 +16,6 @@
 
 #include "qtframebuffer.h"
 #include "qtkeypadbridge.h"
-#include "../../core/lcd.h"
 #include "../../core/backlight.h"
 #include "../../core/lcd.h"
 
