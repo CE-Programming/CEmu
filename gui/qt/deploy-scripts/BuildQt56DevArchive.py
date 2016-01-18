@@ -1,9 +1,10 @@
 import os
 import sys
 import fnmatch
-import errno
 import subprocess
 import shutil
+
+from util import *
 
 SEVENZIP="C:\\Program Files\\7-Zip\\7z.exe"
 QTBASEDIR="C:\\"
@@ -18,49 +19,6 @@ ARC_SUFFIX_DEV = "_DevDeploy"
 # You can simply specify the libraries in your .pro file, and this script
 # will do the rest. (It detects subdependencies on its own!)
 QT_LIB_INCLUDE = "core gui quick widgets quickwidgets"
-
-def silentremove(filename):
-    try:
-        os.remove(filename)
-    except OSError as e: # this would be "except OSError, e:" before Python 2.6
-        if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
-            raise # re-raise exception if a different error occured
-
-def simple_exec(cmd):
-    print("   -> Executing command: %s" % " ".join(cmd))
-    
-    retcode = subprocess.call(cmd)
-    
-    if retcode != 0:
-        print("   !! ERROR: Command returned exit code %i!" % retcode)
-        print("   !!        Command: %s" % " ".join(cmd))
-        return False
-    
-    return True
-
-def silent_exec(cmd):
-    print("   -> Executing command: %s" % " ".join(cmd))
-    
-    FNULL = open(os.devnull, 'w')
-    retcode = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-    
-    if retcode != 0:
-        print("   !! ERROR: Command returned exit code %i!" % retcode)
-        print("   !!        Command: %s" % " ".join(cmd))
-        return False
-    
-    return True
-
-# tzot @ StackOverflow:
-# http://stackoverflow.com/a/600612
-def mkdir_p(path):
-    try:
-        os.makedirs(path)
-    except OSError as exc:  # Python >2.5
-        if exc.errno == errno.EEXIST and os.path.isdir(path):
-            pass
-        else:
-            raise
 
 def collect_qt_files(deploy_tool, dest, exe_file):
     os.environ.pop("VCINSTALLDIR", None)
@@ -83,7 +41,7 @@ print(" * Stage 1: Building CEmu")
 mkdir_p("build_32")
 
 os.chdir("build_32")
-if not simple_exec([r'C:\Qt\Qt5.6.0\5.6\msvc2015\bin\qmake', '-spec', 'win32-msvc2015', '-tp', 'vc', r'"..\..\CEmu.pro"']):
+if not simple_exec([r'C:\Qt\Qt5.6.0\5.6\msvc2015\bin\qmake', '-spec', 'win32-msvc2015', '-tp', 'vc', r'..\..\CEmu.pro']):
     print(" ! ERROR: Creating project files for x86 failed!")
     sys.exit(1)
 if not simple_exec(["msbuild", r'CEmu.vcxproj', r'/p:Configuration=Release']):
@@ -250,12 +208,12 @@ subprocess.call([SEVENZIP, "a", os.path.join(cdir, ARC_PREFIX + "Win32" + ARC_SU
                     "-xr!" + os.path.join(QT32, "vcredist"),
                     "-xr!" + os.path.join(QT32, LIB_DLL_DIR, "doc"),
                     
-                    #"-xr!*d.dll",
-                    #"-xr!*d.lib",
-                    #"-xr!*.pdb",
+                    # Note that we can't just delete all debug DLLs,
+                    # LIBs, or PDBs, since they are required to compile
+                    # debug builds. We have to find the libraries we
+                    # need, then exclude the rest - the technique done
+                    # above.
                 ] + all_excludes)
-
-# -xr!*d.dll -xr!*d.lib -xr!*.pdb
 
 print(" * Stage 4: Building Development Archive (x64)")
 subprocess.call([SEVENZIP, "a", os.path.join(cdir, ARC_PREFIX + "Win64" + ARC_SUFFIX_DEV + ".7z"), QT64,
@@ -275,9 +233,11 @@ subprocess.call([SEVENZIP, "a", os.path.join(cdir, ARC_PREFIX + "Win64" + ARC_SU
                     "-xr!" + os.path.join(QT64, "vcredist"),
                     "-xr!" + os.path.join(QT64, LIB_DLL_DIR, "doc"),
                     
-                    #"-xr!*d.dll",
-                    #"-xr!*d.lib",
-                    #"-xr!*.pdb",
+                    # Note that we can't just delete all debug DLLs,
+                    # LIBs, or PDBs, since they are required to compile
+                    # debug builds. We have to find the libraries we
+                    # need, then exclude the rest - the technique done
+                    # above.
                 ] + all_excludes)
 
 print(" * All done!")

@@ -7,8 +7,9 @@ import time
 import glob
 import zipfile
 import shutil
-import errno
 import requests
+
+from util import *
 
 try:
     import zlib
@@ -28,8 +29,6 @@ except ImportError:
     # Python 2
     from urllib2 import urlopen, Request, HTTPError, URLError
 
-INCLUDE_QT_LIBS =  "quickwidgets widgets gui qml core quick network"
-INCLUDE_QT_LIBS += " qwindows qtquick2plugin qquicklayoutsplugin qdds qgif qicns qico qjpeg qsvg qtga qtiff qwbmp qwebp"
 BINTRAY_SNAPSHOT_SERVER_PATH = "https://oss.jfrog.org/artifactory/oss-snapshot-local"
 BINTRAY_RELEASE_SERVER_PATH = "https://oss.jfrog.org/artifactory/oss-release-local"
 BINTRAY_MAVEN_GROUP_PATH = "/org/github/alberthdev/cemu/"
@@ -112,19 +111,6 @@ def output_sha1(filename):
     sha1_result = "%s  %s" % (filename, generate_file_sha1(filename))
     print(sha1_result)
     return sha1_result
-
-def make_checksum():
-    md5_fh = open("Qt56_Beta_MD5SUMS.txt", "w")
-    md5_fh.write(output_md5('Qt56_Beta_Win32_DevDeploy.7z') + "\n")
-    md5_fh.write(output_md5('Qt56_Beta_Win64_DevDeploy.7z'))
-    md5_fh.close()
-    
-    sha1_fh = open("Qt56_Beta_SHA1SUMS.txt", "w")
-    sha1_fh.write(output_sha1('Qt56_Beta_Win32_DevDeploy.7z') + "\n")
-    sha1_fh.write(output_sha1('Qt56_Beta_Win64_DevDeploy.7z'))
-    sha1_fh.close()
-    
-    print("Saved to Qt56_Beta_MD5SUMS.txt and Qt56_Beta_SHA1SUMS.txt.")
 
 # True if valid, False otherwise
 # Generalized validation function
@@ -226,44 +212,6 @@ def dl_and_validate(url):
     
     print("      -> Downloaded + validated successfully:")
     print("         %s" % truncate_url(url))
-
-def simple_exec(cmd):
-    print("   -> Executing command: %s" % " ".join(cmd))
-    
-    retcode = subprocess.call(cmd)
-    
-    if retcode != 0:
-        print("   !! ERROR: Command returned exit code %i!" % retcode)
-        print("   !!        Command: %s" % " ".join(cmd))
-        return False
-    
-    return True
-
-def silent_exec(cmd):
-    print("   -> Executing command: %s" % " ".join(cmd))
-    
-    FNULL = open(os.devnull, 'w')
-    retcode = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-    
-    if retcode != 0:
-        print("   !! ERROR: Command returned exit code %i!" % retcode)
-        print("   !!        Command: %s" % " ".join(cmd))
-        return False
-    
-    return True
-
-def output_exec(cmd):
-    print("   -> Executing command: %s" % " ".join(cmd))
-    
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    out, err = p.communicate()
-    
-    if p.returncode != 0:
-        print("   !! ERROR: Command returned exit code %i!" % retcode)
-        print("   !!        Command: %s" % " ".join(cmd))
-        return None
-    
-    return out
 
 def extract(filename):
     print("   -> Extracting file: %s" % filename)
@@ -405,17 +353,6 @@ def make_zip(arch, filename, file_list):
         zf.close()
     
     print(" * Successfully built ZIP file %s (%s)!" % (filename, arch))
-
-# tzot @ StackOverflow:
-# http://stackoverflow.com/a/600612
-def mkdir_p(path):
-    try:
-        os.makedirs(path)
-    except OSError as exc:  # Python >2.5
-        if exc.errno == errno.EEXIST and os.path.isdir(path):
-            pass
-        else:
-            raise
 
 def upload_snapshot(filename, cur_timestamp, snap_base_fn, bintray_api_username, bintray_api_key, extra_path = None):
     cur_date = cur_timestamp.split("_")[0]
