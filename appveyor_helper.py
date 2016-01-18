@@ -492,7 +492,7 @@ def deploy_snapshots():
     
     # Snapshot filename - based on http://zeranoe1.rssing.com/chan-5973786/latest.php
     cur_timestamp = time.strftime("%Y%m%d_%H%M%S")
-    snap_base_fn = os.path.join("deploy", "cemu-%s-git%s-" % (cur_timestamp, git_rev))
+    snap_base_fn = os.path.join("deploy", "cemu-%s-git-%s-" % (cur_timestamp, git_rev))
     
     # Locate files that we need!
     print(" * Collecting all dependencies for deployment...")
