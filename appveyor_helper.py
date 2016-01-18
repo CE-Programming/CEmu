@@ -539,8 +539,8 @@ def deploy_snapshots():
                        extra_wc = {
                                     "EGL Library" : r"C:\Qt\Qt5.6.0x64-static\bin\libEGL.dll",
                                     "GLESv2 Library" : r"C:\Qt\Qt5.6.0x64-static\bin\libGLESv2.dll",
-                                    "DirectX Compiler Library" : r"C:\Qt\Qt5.6.0x64\5.6\msvc2015\bin\d3dcompiler_*.dll",
-                                    "Mesa OpenGL Software Rendering Library" : r"C:\Qt\Qt5.6.0x64\5.6\msvc2015\bin\opengl32sw.dll",
+                                    "DirectX Compiler Library" : r"C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\d3dcompiler_*.dll",
+                                    "Mesa OpenGL Software Rendering Library" : r"C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\opengl32sw.dll",
                                   }
                       )
     
@@ -557,8 +557,8 @@ def deploy_snapshots():
                        extra_wc = {
                                     "EGL Library" : r"C:\Qt\Qt5.6.0x64-static\bin\libEGLd.dll",
                                     "GLESv2 Library" : r"C:\Qt\Qt5.6.0x64-static\bin\libGLESv2d.dll",
-                                    "DirectX Compiler Library" : r"C:\Qt\Qt5.6.0x64\5.6\msvc2015\bin\d3dcompiler_*.dll",
-                                    "Mesa OpenGL Software Rendering Library" : r"C:\Qt\Qt5.6.0x64\5.6\msvc2015\bin\opengl32sw.dll",
+                                    "DirectX Compiler Library" : r"C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\d3dcompiler_*.dll",
+                                    "Mesa OpenGL Software Rendering Library" : r"C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\opengl32sw.dll",
                                   }
                       )
     
