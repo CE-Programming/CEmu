@@ -29,6 +29,7 @@
 
 # Qt stuff
 CEmu.pro.user*
+gui/build*
 
 # Other
 *.xcodeproj*
