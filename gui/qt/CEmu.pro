@@ -14,7 +14,7 @@ TRANSLATIONS += i18n/fr_FR.ts
 CONFIG += c++11
 
 # Core options
-DEFINES += DEBUG_SUPPORT GIF_SUPPORT
+DEFINES += DEBUG_SUPPORT
 
 # GCC/clang flags
 if (!win32-msvc*) {

@@ -26,6 +26,7 @@
 
 #include "capture/gif.h"
 #include "../../core/emu.h"
+#include "../../core/lcd.h"
 #include "../../core/link.h"
 #include "../../core/debug/debug.h"
 #include "../../core/debug/disasm.h"
@@ -65,10 +66,6 @@ void gui_debugger_entered_or_left(bool entered) {
     }
 }
 
-void gui_render_gif_frame(void) {
-    emu_thread->renderGIF();
-}
-
 void throttle_timer_wait(void) {
     emu_thread->throttleTimerWait();
 }
@@ -76,12 +73,9 @@ void throttle_timer_wait(void) {
 EmuThread::EmuThread(QObject *p) : QThread(p) {
     assert(emu_thread == nullptr);
     emu_thread = this;
+    lcd_event_gui_callback = gif_new_frame;
     speed = actualSpeed = 100;
     last_time = std::chrono::steady_clock::now();
-}
-
-void EmuThread::renderGIF() {
-    gif_new_frame();
 }
 
 void EmuThread::changeEmuSpeed(int value) {
