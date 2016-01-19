@@ -74,7 +74,7 @@ private:
     void changeDebuggerState();
     void processDebugCommand(int, uint32_t);
     void portMonitorCheckboxToggled(QTableWidgetItem *);
-    void pollPort();
+    void addPort();
     void deletePort();
     void updatePortData(int);
     void changePortData(QTableWidgetItem*);
@@ -140,26 +140,26 @@ private:
 
     // Font
     void setFont(int);
-
-    QLabel status_label;
     QString getAddressString(bool &, QString);
 
     Ui::MainWindow *ui = nullptr;
+    QLabel statusLabel;
     QSettings *settings = nullptr;
-    QDockWidget *dock_debugger = nullptr;
-    QTextCursor disasm_offset;
-    bool detached_state = false;
-    bool disasm_offset_set;
-    bool from_pane;
-    int address_pane;
-    int mem_hex_size;
+    QDockWidget *debuggerDock = nullptr;
+    QTextCursor disasmOffset;
+    bool detachedState = false;
+    bool addingPort = false;
+    bool disasmOffsetSet;
+    bool fromPane;
+    int addressPane;
+    int memSize;
 
-    QDir current_dir;
+    QDir currentDir;
     EmuThread emu;
-    LCDWidget detached_lcd;
+    LCDWidget detachedLCD;
 
-    bool debugger_on = false;
-    bool in_recieving_mode = false;
+    bool debuggerOn = false;
+    bool inReceivingMode = false;
 
     QList<calc_var_t> vars;
 };

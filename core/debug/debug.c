@@ -142,8 +142,8 @@ void debug_set_pc_address(uint32_t address) {
     cpu_flush(address, cpu.ADL);
 }
 
-void debug_breakpoint_remove(uint32_t address, unsigned int type) {
-    debug_breakpoint_set(address, type, false);
+void debug_breakpoint_remove(uint32_t address) {
+    debug_breakpoint_set(address, ~DBG_NO_HANDLE, false);
 }
 
 void debug_pmonitor_set(uint16_t address, unsigned int type, bool set) {
@@ -154,8 +154,8 @@ void debug_pmonitor_set(uint16_t address, unsigned int type, bool set) {
     }
 }
 
-void debug_pmonitor_remove(uint16_t address, unsigned int type) {
-    debug_pmonitor_set(address, type, false);
+void debug_pmonitor_remove(uint16_t address) {
+    debug_pmonitor_set(address, ~DBG_NO_HANDLE, false);
 }
 
 #endif

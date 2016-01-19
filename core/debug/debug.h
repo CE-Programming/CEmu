@@ -70,10 +70,10 @@ void openDebugger(int reason, uint32_t address);
 void debug_toggle_run_until(uint32_t address);
 
 void debug_breakpoint_set(uint32_t address, unsigned int type, bool set);
-void debug_breakpoint_remove(uint32_t address, unsigned int type);
+void debug_breakpoint_remove(uint32_t address);
 
 void debug_pmonitor_set(uint16_t address, unsigned int type, bool set);
-void debug_pmonitor_remove(uint16_t address, unsigned int type);
+void debug_pmonitor_remove(uint16_t address);
 
 void debug_set_pc_address(uint32_t address);
 
