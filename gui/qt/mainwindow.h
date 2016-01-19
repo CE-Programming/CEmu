@@ -62,6 +62,8 @@ private:
     void screenshot(void);
     void screenshotGIF(void);
     void recordGIF(void);
+    void changeFrameskip(int);
+    void changeFramerate(void);
     void checkForUpdates(bool);
     void showAbout(void);
     void setUIMode(bool);

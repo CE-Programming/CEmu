@@ -120,6 +120,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
     connect(ui->buttonGIF, &QPushButton::clicked, this, &MainWindow::recordGIF);
     connect(ui->buttonGIF_Screenshot, &QPushButton::clicked, this, &MainWindow::screenshotGIF);
+    connect(ui->frameskipSlider, &QSlider::valueChanged, this, &MainWindow::changeFrameskip);
 
     // About
     connect(ui->actionCheck_for_updates, &QAction::triggered, this, [=](){ this->checkForUpdates(true); });
@@ -181,6 +182,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     restoreGeometry(settings->value(QStringLiteral("windowGeometry")).toByteArray());
     restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
+    changeFrameskip(settings->value(QStringLiteral("frameskip"), 3).toUInt());
     changeLCDRefresh(settings->value(QStringLiteral("refreshRate"), 60).toUInt());
     changeEmulatedSpeed(settings->value(QStringLiteral("emuRate"), 100).toUInt());
     alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toUInt());
@@ -406,7 +408,7 @@ void MainWindow::recordGIF() {
       // TODO: Use QTemporaryFile?
       path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.gif");
 
-        gif_start_recording(path.toStdString().c_str(), ui->gif_frame_skip_slider->value());
+        gif_start_recording(path.toStdString().c_str(), ui->frameskipSlider->value());
     } else {
         if (gif_stop_recording()) {
             QString filename = QFileDialog::getSaveFileName(this, tr("Save Recording"), QString(), tr("GIF images (*.gif)"));
@@ -422,8 +424,21 @@ void MainWindow::recordGIF() {
         path = QString();
     }
 
+    ui->frameskipSlider->setEnabled(path.isEmpty());
     ui->actionRecord_GIF->setChecked(!path.isEmpty());
     ui->buttonGIF->setText((!path.isEmpty()) ? QString("Stop Recording") : QString("Record GIF"));
+}
+
+void MainWindow::changeFrameskip(int value) {
+    settings->setValue(QStringLiteral("frameskip"), value);
+    ui->frameskipLabel->setText(QString::number(value));
+    ui->frameskipSlider->setValue(value);
+    changeFramerate();
+}
+
+void MainWindow::changeFramerate() {
+    float framerate = ((float) ui->refreshSlider->value()) / (ui->frameskipSlider->value() + 1);
+    ui->framerateLabel->setText(QString::number(framerate).left(4));
 }
 
 void MainWindow::clearConsole(void) {
@@ -544,6 +559,7 @@ void MainWindow::changeLCDRefresh(int value) {
     ui->refreshLabel->setText(QString::number(value)+" FPS");
     ui->refreshSlider->setValue(value);
     ui->lcdWidget->refreshRate(value);
+    changeFramerate();
 }
 
 void MainWindow::changeEmulatedSpeed(int value) {

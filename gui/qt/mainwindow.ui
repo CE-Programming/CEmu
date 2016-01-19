@@ -242,7 +242,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>2</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -558,7 +558,7 @@
              </sizepolicy>
             </property>
             <property name="title">
-             <string>Still screenshot</string>
+             <string>Screenshot</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_8">
              <item>
@@ -570,7 +570,7 @@
                 </sizepolicy>
                </property>
                <property name="text">
-                <string>Screenshot as GIF</string>
+                <string>GIF</string>
                </property>
               </widget>
              </item>
@@ -589,7 +589,7 @@
                 </size>
                </property>
                <property name="text">
-                <string>Screenshot as PNG</string>
+                <string>PNG</string>
                </property>
               </widget>
              </item>
@@ -605,67 +605,60 @@
              </sizepolicy>
             </property>
             <property name="title">
-             <string>Animated GIF</string>
+             <string>Recording</string>
             </property>
             <layout class="QGridLayout" name="gridLayout">
-             <item row="0" column="0">
-              <widget class="QPushButton" name="buttonGIF">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
+             <item row="2" column="4">
+              <spacer name="horizontalSpacer_11">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
                </property>
-               <property name="minimumSize">
+               <property name="sizeHint" stdset="0">
                 <size>
                  <width>0</width>
-                 <height>0</height>
+                 <height>20</height>
                 </size>
                </property>
-               <property name="maximumSize">
-                <size>
-                 <width>160</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>Record GIF</string>
-               </property>
-              </widget>
+              </spacer>
              </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="framelabel">
+             <item row="2" column="0">
+              <widget class="QLabel" name="frameskipTextLabel">
                <property name="text">
                 <string>Frame skip:</string>
                </property>
               </widget>
              </item>
-             <item row="1" column="4">
-              <widget class="QLabel" name="upper">
-               <property name="text">
-                <string>11</string>
+             <item row="2" column="1">
+              <widget class="QLabel" name="frameskipLabel">
+               <property name="minimumSize">
+                <size>
+                 <width>16</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
               </widget>
              </item>
-             <item row="1" column="2">
-              <widget class="QLabel" name="lower">
-               <property name="text">
-                <string>1</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="3">
-              <widget class="QSlider" name="gif_frame_skip_slider">
+             <item row="2" column="3">
+              <widget class="QSlider" name="frameskipSlider">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
+                 <horstretch>1</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
                <property name="minimumSize">
                 <size>
-                 <width>25</width>
+                 <width>50</width>
                  <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>300</width>
+                 <height>16777215</height>
                 </size>
                </property>
                <property name="minimum">
@@ -700,12 +693,49 @@
                </property>
               </widget>
              </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="framerateLabel">
+               <property name="minimumSize">
+                <size>
+                 <width>24</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="3" alignment="Qt::AlignHCenter">
+              <widget class="QPushButton" name="buttonGIF">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>88</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Record GIF</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="framerateTextLabel">
+               <property name="text">
+                <string>Framerate:</string>
+               </property>
+              </widget>
+             </item>
             </layout>
-            <zorder>lower</zorder>
-            <zorder>upper</zorder>
-            <zorder>framelabel</zorder>
-            <zorder>buttonGIF</zorder>
-            <zorder>gif_frame_skip_slider</zorder>
            </widget>
           </item>
          </layout>
