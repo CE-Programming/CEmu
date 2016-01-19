@@ -1359,7 +1359,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>2</number>
           </property>
           <property name="tabsClosable">
            <bool>false</bool>
@@ -1629,11 +1629,17 @@
               <property name="editTriggers">
                <set>QAbstractItemView::NoEditTriggers</set>
               </property>
+              <property name="tabKeyNavigation">
+               <bool>false</bool>
+              </property>
               <property name="showDropIndicator" stdset="0">
                <bool>false</bool>
               </property>
               <property name="dragDropOverwriteMode">
                <bool>false</bool>
+              </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::SingleSelection</enum>
               </property>
               <property name="selectionBehavior">
                <enum>QAbstractItemView::SelectRows</enum>
@@ -1642,7 +1648,7 @@
                <enum>Qt::ElideLeft</enum>
               </property>
               <property name="horizontalScrollMode">
-               <enum>QAbstractItemView::ScrollPerPixel</enum>
+               <enum>QAbstractItemView::ScrollPerItem</enum>
               </property>
               <property name="gridStyle">
                <enum>Qt::SolidLine</enum>
@@ -1675,7 +1681,7 @@
                <bool>false</bool>
               </attribute>
               <attribute name="verticalHeaderDefaultSectionSize">
-               <number>21</number>
+               <number>23</number>
               </attribute>
               <attribute name="verticalHeaderHighlightSections">
                <bool>false</bool>

@@ -148,7 +148,6 @@ private:
     QDockWidget *debuggerDock = nullptr;
     QTextCursor disasmOffset;
     bool detachedState = false;
-    bool addingPort = false;
     bool disasmOffsetSet;
     bool fromPane;
     int addressPane;

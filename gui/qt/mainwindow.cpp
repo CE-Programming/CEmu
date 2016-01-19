@@ -160,6 +160,9 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     qRegisterMetaType<uint32_t>("uint32_t");
     qRegisterMetaType<std::string>("std::string");
 
+    ui->portView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    ui->breakpointView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+
     setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
     setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
     setUIMode(true);
@@ -336,8 +339,8 @@ void MainWindow::setUIMode(bool docks_enabled) {
     }
 
     // Create "Docks" menu to make closing and opening docks more intuitive
-    QMenu *docks_menu = new QMenu(tr("Docks"), this);
-    ui->menubar->insertMenu(ui->menuAbout->menuAction(), docks_menu);
+    QMenu *docksMenu = new QMenu(tr("Docks"), this);
+    ui->menubar->insertMenu(ui->menuAbout->menuAction(), docksMenu);
 
     //Convert the tabs into QDockWidgets
     QDockWidget *last_dock = nullptr;
@@ -349,7 +352,7 @@ void MainWindow::setUIMode(bool docks_enabled) {
         // Fill "Docks" menu
         QAction *action = dw->toggleViewAction();
         action->setIcon(dw->windowIcon());
-        docks_menu->addAction(action);
+        docksMenu->addAction(action);
 
         QWidget *tab = ui->tabWidget->widget(0);
         if(tab == ui->tabDebugger)
@@ -1118,19 +1121,20 @@ void MainWindow::addPort() {
     port = static_cast<uint16_t>(hex2int(QString::fromStdString(s)));
     read = static_cast<uint8_t>(debug_port_read_byte(port));
 
-    QString port_string = int2hex(port,4);
+    QString portString = int2hex(port,4);
 
     /* Return if port is already set */
     for (int i=0; i<currentRow; ++i) {
-        if (ui->portView->item(i, 0)->text() == port_string) {
+        if (ui->portView->item(i, 0)->text() == portString) {
             return;
         }
     }
 
-    addingPort = true;
     ui->portView->setRowCount(currentRow + 1);
+    ui->portView->setUpdatesEnabled(false);
+    ui->portView->blockSignals(true);
 
-    QTableWidgetItem *port_range = new QTableWidgetItem(port_string);
+    QTableWidgetItem *port_range = new QTableWidgetItem(portString);
     QTableWidgetItem *port_data = new QTableWidgetItem(int2hex(read, 2));
     QTableWidgetItem *port_rBreak = new QTableWidgetItem();
     QTableWidgetItem *port_wBreak = new QTableWidgetItem();
@@ -1151,14 +1155,15 @@ void MainWindow::addPort() {
     ui->portView->setItem(currentRow, 4, port_freeze);
 
     ui->portRequest->clear();
-    addingPort = false;
+    ui->portView->setUpdatesEnabled(true);
+    ui->portView->blockSignals(false);
 }
 
 void MainWindow::changePortData(QTableWidgetItem *curr_item) {
     const int currentRow = curr_item->row();
     uint16_t port = static_cast<uint16_t>(hex2int(ui->portView->item(currentRow, 0)->text()));
 
-    if (curr_item->column() == 0 && !addingPort) {
+    if (curr_item->column() == 0) {
         debug_pmonitor_remove(port);
 
         uint16_t newport = static_cast<uint16_t>(hex2int(curr_item->text()));
@@ -1232,19 +1237,22 @@ bool MainWindow::addBreakpoint() {
 
     address = static_cast<uint32_t>(hex2int(QString::fromStdString(s)));
 
-    QString address_string = int2hex(address,6);
+    QString addressString = int2hex(address,6);
 
     /* Return if address is already set */
     for (int i=0; i<currentRow; ++i) {
-        if (ui->breakpointView->item(i, 0)->text() == address_string) {
+        if (ui->breakpointView->item(i, 0)->text() == addressString) {
             ui->breakpointView->selectRow(i);
             return false;
         }
     }
 
+    ui->breakpointView->setUpdatesEnabled(false);
+    ui->breakpointView->blockSignals(true);
+
     ui->breakpointView->setRowCount(currentRow + 1);
 
-    QTableWidgetItem *iaddress = new QTableWidgetItem(address_string);
+    QTableWidgetItem *iaddress = new QTableWidgetItem(addressString);
     QTableWidgetItem *rBreak = new QTableWidgetItem();
     QTableWidgetItem *wBreak = new QTableWidgetItem();
     QTableWidgetItem *eBreak = new QTableWidgetItem();
@@ -1261,6 +1269,11 @@ bool MainWindow::addBreakpoint() {
     ui->breakpointView->selectRow(currentRow);
 
     ui->breakRequest->clear();
+    ui->breakpointView->setUpdatesEnabled(true);
+    ui->breakpointView->blockSignals(false);
+
+    debug_breakpoint_set(address, DBG_EXEC_BREAKPOINT, true);
+    updateDisasmView(address, true);
     return true;
 }
 
@@ -1275,6 +1288,7 @@ void MainWindow::deleteBreakpoint() {
     debug_breakpoint_remove(address);
 
     ui->breakpointView->removeRow(currentRow);
+    updateDisasmView(address, true);
 }
 
 void MainWindow::processDebugCommand(int reason, uint32_t input) {
@@ -1471,8 +1485,6 @@ void MainWindow::setBreakpointAddress() {
     }
 
     ui->breakRequest->clear();
-
-    updateDisasmView(hex2int(address), true);
 }
 
 QString MainWindow::getAddressString(bool &ok, QString String) {
@@ -1555,17 +1567,17 @@ void MainWindow::memUpdate() {
 
 void MainWindow::searchEdit(QHexEdit *editor) {
     bool ok;
-    QString search_string = QInputDialog::getText(this, tr("Search"),
+    QString searchString = QInputDialog::getText(this, tr("Search"),
                                                   tr("Input Hexadecimal Search String:"), QLineEdit::Normal,
                                                   "", &ok).toUpper();
     editor->setFocus();
-    if(!ok || (search_string.length() & 1)) {
+    if(!ok || (searchString.length() & 1)) {
         return;
     }
     QByteArray string_int;
-    for (int i=0; i<search_string.length(); i+=2) {
-        QString a = search_string.at(i);
-        a.append(search_string.at(i+1));
+    for (int i=0; i<searchString.length(); i+=2) {
+        QString a = searchString.at(i);
+        a.append(searchString.at(i+1));
         string_int.append(hex2int(a));
     }
     editor->indexOf(string_int, editor->cursorPosition());
