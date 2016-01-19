@@ -173,6 +173,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     settings = new QSettings();
 
     emu.rom = settings->value(QStringLiteral("romImage")).toString().toStdString();
+    changeThrottleMode(Qt::Checked);
 
     if (fileExists(emu.rom)) {
         emu.start();
@@ -186,7 +187,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     changeLCDRefresh(settings->value(QStringLiteral("refreshRate"), 60).toUInt());
     changeEmulatedSpeed(settings->value(QStringLiteral("emuRate"), 100).toUInt());
     alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toUInt());
-    changeThrottleMode(settings->value(QStringLiteral("throttleMode"), Qt::Checked).toUInt());
     setFont(settings->value(QStringLiteral("textSize"), 9).toUInt());
     autoCheckForUpdates(settings->value(QStringLiteral("autoUpdate"), false).toBool());
 
@@ -292,8 +292,6 @@ void MainWindow::consoleStr(QString str) {
 
 void MainWindow::changeThrottleMode(int mode) {
     ui->checkThrottle->setChecked(mode == Qt::Checked);
-    settings->setValue(QStringLiteral("throttleMode"), mode);
-
     emit changedThrottleMode(mode == Qt::Checked);
 }
 
