@@ -394,11 +394,10 @@ void GifSplitPalette(uint8_t* image, int numPixels, int firstElt, int lastElt, i
     if(rRange > bRange && rRange > gRange) splitCom = 0;
 
     int subPixelsA = numPixels * (splitElt - firstElt) / (lastElt - firstElt);
-    subPixelsA = GifPartitionByMedian(image, splitCom, 0, numPixels, subPixelsA);
-    int subPixelsB = numPixels-subPixelsA;
-
     pal->treeSplitElt[treeNode] = splitCom;
     pal->treeSplit[treeNode] = image[subPixelsA*4+splitCom];
+    subPixelsA = GifPartitionByMedian(image, splitCom, 0, numPixels, subPixelsA);
+    int subPixelsB = numPixels-subPixelsA;
 
     GifSplitPalette(image,              subPixelsA, firstElt, splitElt, splitElt-splitDist, splitDist/2, treeNode*2,   buildForDither, pal);
     GifSplitPalette(image+subPixelsA*4, subPixelsB, splitElt, lastElt,  splitElt+splitDist, splitDist/2, treeNode*2+1, buildForDither, pal);
