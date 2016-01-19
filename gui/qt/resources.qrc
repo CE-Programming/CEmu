@@ -3,7 +3,6 @@
         <file>resources/skin/ti84pce.png</file>
     </qresource>
     <qresource prefix="/icons">
-        <file>resources/icons/break.png</file>
         <file>resources/icons/goto.png</file>
         <file>resources/icons/run.png</file>
         <file>resources/icons/stepover.png</file>
@@ -12,8 +11,8 @@
         <file>resources/icons/step.png</file>
         <file>resources/icons/icon.icns</file>
         <file>resources/icons/icon.ico</file>
-        <file>resources/icons/icon.png</file>
         <file>resources/icons/mem.png</file>
+        <file>resources/icons/icon.png</file>
     </qresource>
     <qresource prefix="/qml">
         <file>qml/Keypad.qml</file>
