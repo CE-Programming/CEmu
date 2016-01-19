@@ -35,3 +35,6 @@ gui/build*
 *.xcodeproj*
 *.autosave
 core/*.autosave
+
+# Windows crap
+Thumbs.db
