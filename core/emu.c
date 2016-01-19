@@ -28,18 +28,6 @@ const char *rom_image = NULL;
 uint32_t cpu_events;
 volatile bool exiting;
 
-const char log_type_tbl[] = LOG_TYPE_TBL;
-int log_enabled[MAX_LOG];
-FILE *log_file[MAX_LOG];
-void logprintf(int type, const char *str, ...) {
-    if (log_enabled[type]) {
-        va_list va;
-        va_start(va, str);
-        vfprintf(log_file[type], str, va);
-        va_end(va);
-    }
-}
-
 void throttle_interval_event(int index) {
     event_repeat(index, 27000000 / 60);
 

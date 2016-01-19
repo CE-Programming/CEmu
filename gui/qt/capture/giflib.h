@@ -1,5 +1,3 @@
-#ifdef GIFLIB_SUPPORT
-
 //
 // gif.h
 // by Charlie Tangora
@@ -27,7 +25,7 @@
 #ifndef GIFLIB_H
 #define GIFLIB_H
 
-#include "../os/os.h"
+#include "../../core/os/os.h"
 
 #include <stdio.h>   // for FILE*
 #include <string.h>  // for memcpy and bzero
@@ -886,7 +884,5 @@ bool GifEnd( GifWriter* writer )
 
     return true;
 }
-
-#endif
 
 #endif

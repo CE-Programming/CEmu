@@ -33,6 +33,9 @@ public slots:
     virtual void run() override;
     bool stop();
 
+    // GIF Rendering
+    void renderGIF();
+
     // Debugging
     void setDebugMode(bool);
     void setDebugStepMode();

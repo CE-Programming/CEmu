@@ -14,7 +14,7 @@ TRANSLATIONS += i18n/fr_FR.ts
 CONFIG += c++11
 
 # Core options
-DEFINES += DEBUG_SUPPORT GIFLIB_SUPPORT
+DEFINES += DEBUG_SUPPORT GIF_SUPPORT
 
 # GCC/clang flags
 if (!win32-msvc*) {
@@ -83,10 +83,10 @@ SOURCES +=  utils.cpp \
     ../../core/mem.c \
     ../../core/link.c \
     ../../core/vat.c \
-    ../../core/capture/gif.cpp \
     ../../core/debug/disasm.cpp \
     ../../core/debug/debug.c \
-    ../../core/emu.c
+    ../../core/emu.c \
+    capture/gif.cpp
 
 linux|macx|ios: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c
@@ -127,11 +127,11 @@ HEADERS  +=  utils.h \
     ../../core/mem.h \
     ../../core/link.h \
     ../../core/vat.h \
-    ../../core/capture/gif.h \
-    ../../core/capture/giflib.h \
     ../../core/debug/debug.h \
     ../../core/debug/disasm.h \
-    ../../core/os/os.h
+    ../../core/os/os.h \
+    capture/gif.h \
+    capture/giflib.h
 
 FORMS    += mainwindow.ui \
     romselection.ui

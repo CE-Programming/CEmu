@@ -24,6 +24,7 @@
 
 #include "mainwindow.h"
 
+#include "capture/gif.h"
 #include "../../core/emu.h"
 #include "../../core/link.h"
 #include "../../core/debug/debug.h"
@@ -39,6 +40,12 @@ void gui_do_stuff(bool wait) {
     emu_thread->doStuff(wait);
 }
 
+static void gui_console_vprintf(const char *fmt, va_list ap) {
+    QString str;
+    str.vsprintf(fmt, ap);
+    emu_thread->consoleStr(str);
+}
+
 void gui_console_printf(const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
@@ -48,22 +55,8 @@ void gui_console_printf(const char *fmt, ...) {
     va_end(ap);
 }
 
-void gui_console_vprintf(const char *fmt, va_list ap) {
-    QString str;
-    str.vsprintf(fmt, ap);
-    emu_thread->consoleStr(str);
-}
-
-void gui_perror(const char *msg) {
-    gui_console_printf("%s: %s\n", msg, strerror(errno));
-}
-
 void gui_debugger_send_command(int reason, uint32_t addr) {
     emu_thread->sendDebugCommand(reason, addr);
-}
-
-void throttle_timer_wait() {
-    emu_thread->throttleTimerWait();
 }
 
 void gui_debugger_entered_or_left(bool entered) {
@@ -72,11 +65,23 @@ void gui_debugger_entered_or_left(bool entered) {
     }
 }
 
+void gui_render_gif_frame(void) {
+    emu_thread->renderGIF();
+}
+
+void throttle_timer_wait(void) {
+    emu_thread->throttleTimerWait();
+}
+
 EmuThread::EmuThread(QObject *p) : QThread(p) {
     assert(emu_thread == nullptr);
     emu_thread = this;
     speed = actualSpeed = 100;
     last_time = std::chrono::steady_clock::now();
+}
+
+void EmuThread::renderGIF() {
+    gif_new_frame();
 }
 
 void EmuThread::changeEmuSpeed(int value) {

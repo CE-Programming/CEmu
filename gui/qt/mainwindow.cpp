@@ -35,10 +35,10 @@
 #include "qtkeypadbridge.h"
 
 #include "utils.h"
+#include "capture/gif.h"
 #include "../../core/schedule.h"
 #include "../../core/debug/disasm.h"
 #include "../../core/link.h"
-#include "../../core/capture/gif.h"
 #include "../../core/os/os.h"
 
 static const constexpr int WindowStateVersion = 0;

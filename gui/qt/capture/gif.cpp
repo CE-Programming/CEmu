@@ -1,12 +1,6 @@
-#ifdef GIFLIB_SUPPORT
-
-#include <array>
 #include <mutex>
-#include <vector>
 #include <QtGui/QImage>
 
-#include "../emu.h"
-#include "../lcd.h"
 #include "gif.h"
 #include "giflib.h"
 #include "qtframebuffer.h"
@@ -16,7 +10,7 @@ static bool recording = false;
 static GifWriter writer;
 static unsigned int framenr = 0, framenrskip = 0, framedelay = 0;
 
-bool gif_write_frame(GifWriter *frameWriter, unsigned int delay) {
+static bool gif_write_frame(GifWriter *frameWriter, unsigned int delay) {
     return GifWriteFrame(frameWriter, renderFramebuffer().convertToFormat(QImage::Format_RGBA8888).bits(), 320, 240, delay);
 }
 
@@ -33,7 +27,6 @@ bool gif_start_recording(const char *filename, unsigned int frameskip) {
 
     if(GifBegin(&writer, filename, 320, 240, framedelay)) {
         recording = true;
-        gui_console_printf("Started recording GIF image.\n");
     }
 
     return recording;
@@ -62,8 +55,5 @@ bool gif_stop_recording() {
 
     GifEnd(&writer);
 
-    gui_console_printf("Done recording GIF image.\n");
     return ret;
 }
-
-#endif
