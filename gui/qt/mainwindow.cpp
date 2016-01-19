@@ -42,8 +42,6 @@
 #include "../../core/os/os.h"
 
 static const constexpr int WindowStateVersion = 0;
-static const int flash_size = 0x400000;
-static const uint32_t ram_size = 0x65800;
 
 MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     // Setup the UI
@@ -804,10 +802,45 @@ void MainWindow::updateDebuggerChanges() {
 
       lcd.upbase = static_cast<uint32_t>(hex2int(ui->lcdbaseView->text()));
       lcd.upcurr = static_cast<uint32_t>(hex2int(ui->lcdcurrView->text()));
+      lcd.control &= ~14;
+
+      uint8_t bpp = 0;
+      switch(ui->bppView->text().toInt()) {
+          case 2:
+              bpp = 1; break;
+          case 4:
+              bpp = 2; break;
+          case 8:
+              bpp = 3; break;
+          case 24:
+              bpp = 5; break;
+          case 16:
+              bpp = 6; break;
+          case 12:
+              bpp = 7; break;
+      }
+
+      lcd.control |= bpp<<1;
+
       if (ui->checkPowered->isChecked()) {
           lcd.control |= 0x800;
       } else {
           lcd.control &= ~0x800;
+      }
+      if (ui->checkBEPO->isChecked()) {
+          lcd.control |= 0x400;
+      } else {
+          lcd.control &= ~0x400;
+      }
+      if (ui->checkBEBO->isChecked()) {
+          lcd.control |= 0x200;
+      } else {
+          lcd.control &= ~0x200;
+      }
+      if (ui->checkBGR->isChecked()) {
+          lcd.control |= 0x100;
+      } else {
+          lcd.control &= ~0x100;
       }
   }
 }
@@ -959,6 +992,28 @@ void MainWindow::populateDebugWindow() {
     ui->freqView->setPalette(tmp == ui->freqView->text() ? nocolorback : colorback);
     ui->freqView->setText(tmp);
 
+    switch((lcd.control>>1)&7) {
+        case 0:
+            tmp = "01"; break;
+        case 1:
+            tmp = "02"; break;
+        case 2:
+            tmp = "04"; break;
+        case 3:
+            tmp = "08"; break;
+        case 4:
+            tmp = "16"; break;
+        case 5:
+            tmp = "24"; break;
+        case 6:
+            tmp = "16"; break;
+        case 7:
+            tmp = "12"; break;
+    }
+
+    ui->bppView->setPalette(tmp == ui->bppView->text() ? nocolorback : colorback);
+    ui->bppView->setText(tmp);
+
     /* Mwhahaha */
     ui->checkSleep->setChecked(false);
 
@@ -971,13 +1026,16 @@ void MainWindow::populateDebugWindow() {
     ui->checkN->setChecked(cpu.registers.flags.N);
     ui->checkS->setChecked(cpu.registers.flags.S);
 
-    ui->checkPowered->setChecked(lcd.control & 0x800);
     ui->checkADL->setChecked(cpu.ADL);
     ui->checkMADL->setChecked(cpu.MADL);
     ui->checkHalted->setChecked(cpu.halted);
     ui->checkIEF1->setChecked(cpu.IEF1);
     ui->checkIEF2->setChecked(cpu.IEF2);
 
+    ui->checkPowered->setChecked(lcd.control & 0x800);
+    ui->checkBEPO->setChecked(lcd.control & 0x400);
+    ui->checkBEBO->setChecked(lcd.control & 0x200);
+    ui->checkBGR->setChecked(lcd.control & 0x100);
     ui->brightnessSlider->setValue(backlight.brightness);
 
     for(int i=0; i<ui->portView->rowCount(); ++i) {
@@ -1580,13 +1638,13 @@ void MainWindow::syncHexView(int posa, QHexEdit *hex_view) {
 
 void MainWindow::flashSyncPressed() {
     qint64 posa = ui->flashEdit->cursorPosition();
-    memcpy(mem.flash.block, reinterpret_cast<uint8_t*>(ui->flashEdit->data().data()), flash_size);
+    memcpy(mem.flash.block, reinterpret_cast<uint8_t*>(ui->flashEdit->data().data()), 0x400000);
     syncHexView(posa, ui->flashEdit);
 }
 
 void MainWindow::ramSyncPressed() {
     qint64 posa = ui->ramEdit->cursorPosition();
-    memcpy(mem.ram.block, reinterpret_cast<uint8_t*>(ui->ramEdit->data().data()), ram_size);
+    memcpy(mem.ram.block, reinterpret_cast<uint8_t*>(ui->ramEdit->data().data()), 0x65800);
     syncHexView(posa, ui->ramEdit);
 }
 
