@@ -51,7 +51,6 @@ typedef struct eZ80cpu {
     };
     uint32_t cycles, next;
     uint8_t prefetch, bus;  /* TODO */
-    int interrupt;
 } eZ80cpu_t;
 
 /* Externals */

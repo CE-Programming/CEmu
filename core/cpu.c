@@ -106,11 +106,17 @@ static void cpu_write_word(uint32_t address, uint32_t value) {
     }
 }
 
+static uint8_t cpu_pop_byte_mode(bool mode) {
+    return cpu_read_byte(cpu_address_mode(cpu.registers.stack[mode].hl++, mode));
+}
 static uint8_t cpu_pop_byte(void) {
-    return cpu_read_byte(cpu.registers.stack[cpu.L].hl++);
+    return cpu_pop_byte_mode(cpu.L);
+}
+static void cpu_push_byte_mode(uint8_t value, bool mode) {
+    cpu_write_byte(cpu_address_mode(--cpu.registers.stack[mode].hl, mode), value);
 }
 static void cpu_push_byte(uint8_t value) {
-    cpu_write_byte(--cpu.registers.stack[cpu.L].hl, value);
+    cpu_push_byte_mode(value, cpu.L);
 }
 
 static void cpu_push_word(uint32_t value) {
@@ -361,17 +367,13 @@ static uint32_t cpu_dec_bc_partial_mode() {
 static void cpu_call(uint32_t address, uint8_t mixed) {
     eZ80registers_t *r = &cpu.registers;
     if (mixed) {
+        bool stack = cpu.IL || (cpu.L && !cpu.ADL);
         if (cpu.ADL) {
-            cpu_write_byte(--r->SPL, r->PCU);
+            cpu_push_byte_mode(r->PCU, true);
         }
-        if (cpu.IL || (cpu.L && !cpu.ADL)) {
-            cpu_write_byte(--r->SPL, r->PCH);
-            cpu_write_byte(--r->SPL, r->PCL);
-        } else {
-            cpu_write_byte(--r->SPS, r->PCH);
-            cpu_write_byte(--r->SPS, r->PCL);
-        }
-        cpu_write_byte(--r->SPL, (cpu.MADL << 1) | cpu.ADL);
+        cpu_push_byte_mode(r->PCH, stack);
+        cpu_push_byte_mode(r->PCL, stack);
+        cpu_push_byte_mode((cpu.MADL << 1) | cpu.ADL, true);
     } else {
         cpu_push_word(r->PC);
     }
@@ -384,16 +386,11 @@ static void cpu_return(void) {
     bool mode = cpu.ADL;
     cpu.cycles++;
     if (cpu.SUFFIX) {
-        mode = cpu_read_byte(r->SPL++) & 1;
-        if (cpu.ADL) {
-            address  = cpu_read_byte(r->SPL++);
-            address |= cpu_read_byte(r->SPL++) << 8;
-        } else {
-            address  = cpu_read_byte(r->SPS++);
-            address |= cpu_read_byte(r->SPS++) << 8;
-        }
+        mode = cpu_pop_byte_mode(true) & 1;
+        address  = cpu_pop_byte_mode(cpu.ADL);
+        address |= cpu_pop_byte_mode(cpu.ADL) << 8;
         if (mode) {
-            address |= cpu_mask_mode(cpu_read_byte(r->SPL++) << 16, cpu.ADL || cpu.L);
+            address |= cpu_mask_mode(cpu_pop_byte_mode(true) << 16, cpu.ADL || cpu.L);
         }
     } else {
         address = cpu_pop_word();
@@ -1309,7 +1306,7 @@ void cpu_execute(void) {
                                     rswap(r->HL, r->DE);
                                     break;
                                 case 6: // DI
-                                    cpu.IEF1 = cpu.IEF2 = 0;
+                                    cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = 0;
                                     break;
                                 case 7: // EI
                                     cpu.IEF_wait = 1;
