@@ -27,7 +27,7 @@ typedef enum {
 } battery_state;
 
 typedef struct asic_state {
-    ti_device_type device_type;
+    ti_device_type deviceType;
     battery_state battery;
 
     mem_state_t* mem;

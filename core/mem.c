@@ -223,7 +223,7 @@ static uint8_t flash_read_handler(uint32_t address) {
                 }
                 break;
             case FLASH_CHIP_ERASE:
-                value = 0x80;
+                value = 0xFF;
                 mem.flash.command = NO_COMMAND;
                 break;
             case FLASH_READ_SECTOR_PROTECTION:
@@ -312,8 +312,8 @@ uint8_t mem_read_byte(uint32_t address) {
             break;
     }
 #ifdef DEBUG_SUPPORT
-    if (!in_debugger && debugger.data.block[address] & DBG_READ_BREAKPOINT) {
-        openDebugger(HIT_READ_BREAKPOINT, address);
+    if (!inDebugger && debugger.data.block[address] & DBG_READ_BREAKPOINT) {
+        open_debugger(HIT_READ_BREAKPOINT, address);
     }
 #endif
     return value;
@@ -353,8 +353,8 @@ void mem_write_byte(uint32_t address, uint8_t byte) {
             break;
     }
 #ifdef DEBUG_SUPPORT
-    if (!in_debugger && debugger.data.block[address] & DBG_WRITE_BREAKPOINT) {
-        openDebugger(HIT_WRITE_BREAKPOINT, address);
+    if (!inDebugger && debugger.data.block[address] & DBG_WRITE_BREAKPOINT) {
+        open_debugger(HIT_WRITE_BREAKPOINT, address);
     }
 #endif
 }

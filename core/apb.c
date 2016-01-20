@@ -18,7 +18,7 @@ uint8_t port_read_byte(const uint16_t addr) {
 
 #ifdef DEBUG_SUPPORT
     if (debugger.data.ports[port] & DBG_PORT_READ) {
-        openDebugger(HIT_PORT_READ_BREAKPOINT, port);
+        open_debugger(HIT_PORT_READ_BREAKPOINT, port);
     }
 #endif
     return value;
@@ -37,7 +37,7 @@ void port_write_byte(const uint16_t addr, const uint8_t value) {
 
 #ifdef DEBUG_SUPPORT
     if (debugger.data.ports[port] & DBG_PORT_WRITE) {
-        openDebugger(HIT_PORT_WRITE_BREAKPOINT, port);
+        open_debugger(HIT_PORT_WRITE_BREAKPOINT, port);
     }
 #endif
 }

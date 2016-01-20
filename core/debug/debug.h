@@ -9,7 +9,7 @@ extern "C" {
 
 #include "../defines.h"
 
-extern volatile bool in_debugger;
+extern volatile bool inDebugger;
 
 /* For use in the debugger */
 enum {
@@ -65,7 +65,7 @@ uint32_t debug_read_word(uint32_t address, bool mode);
 void debug_write_byte(uint32_t address, uint8_t value);
 uint8_t debug_port_read_byte(uint32_t address);
 void debug_port_write_byte(uint32_t address, uint8_t value);
-void openDebugger(int reason, uint32_t address);
+void open_debugger(int reason, uint32_t address);
 
 void debug_toggle_run_until(uint32_t address);
 

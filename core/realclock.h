@@ -10,26 +10,27 @@ extern "C" {
 
 typedef struct rtc_state {
     /* Previos second counter */
-    time_t prevsec;
+    time_t prevSec;
 
     /* Registers */
-    uint8_t read_sec;
-    uint8_t read_min;
-    uint8_t read_hour;
-    uint16_t read_day;
-    uint8_t alarm_sec;
-    uint8_t alarm_min;
-    uint8_t alarm_hour;
-    uint8_t control;
-    uint8_t write_sec;
-    uint8_t write_min;
-    uint8_t write_hour;
-    uint16_t write_day;
-    uint8_t interrupt;
-    uint8_t hold_sec;
-    uint8_t hold_min;
-    uint8_t hold_hour;
-    uint8_t hold_day;
+    uint8_t control, interrupt;
+    uint8_t readSec,
+            readMin,
+            readHour;
+    uint8_t alarmSec,
+            alarmMin,
+            alarmHour;
+    uint8_t writeSec,
+            writeMin,
+            writeHour;
+    uint8_t holdSec,
+            holdMin,
+            holdHour;
+
+    uint16_t readDay,
+             writeDay,
+             holdDay;
+
     uint32_t revision;
 } rtc_state_t;
 

@@ -53,8 +53,8 @@ static void cpu_prefetch(uint32_t address, bool mode) {
 static uint8_t cpu_fetch_byte(void) {
     uint8_t value;
 #ifdef DEBUG_SUPPORT
-    if (!in_debugger && (debugger.data.block[cpu.registers.PC] & (DBG_EXEC_BREAKPOINT | DBG_STEP_OVER_BREAKPOINT | DBG_RUN_UNTIL_BREAKPOINT))) {
-        openDebugger((debugger.data.block[cpu.registers.PC] & DBG_EXEC_BREAKPOINT) ? HIT_EXEC_BREAKPOINT : DBG_STEP, cpu.registers.PC);
+    if (!inDebugger && (debugger.data.block[cpu.registers.PC] & (DBG_EXEC_BREAKPOINT | DBG_STEP_OVER_BREAKPOINT | DBG_RUN_UNTIL_BREAKPOINT))) {
+        open_debugger((debugger.data.block[cpu.registers.PC] & DBG_EXEC_BREAKPOINT) ? HIT_EXEC_BREAKPOINT : DBG_STEP, cpu.registers.PC);
     }
 #endif
     value = cpu.prefetch;
@@ -399,7 +399,7 @@ static void cpu_return(void) {
 #ifdef DEBUG_SUPPORT
     if (cpu_events & EVENT_DEBUG_STEP_OUT && (r->SPL > debugger.stepOutSPL || r->SPS > debugger.stepOutSPS)) {
         cpu_events &= ~EVENT_DEBUG_STEP_OUT;
-        openDebugger(DBG_STEP, 0);
+        open_debugger(DBG_STEP, 0);
     }
 #endif
 }
@@ -1314,7 +1314,7 @@ void cpu_execute(void) {
                                     cpu.next = cpu.cycles + 1; // execute one more instruction
                                     if (cpu_events & EVENT_DEBUG_STEP) {
                                         cpu_events &= ~EVENT_DEBUG_STEP;
-                                        openDebugger(DBG_STEP, 0);
+                                        open_debugger(DBG_STEP, 0);
                                     }
                                     break;
                             }

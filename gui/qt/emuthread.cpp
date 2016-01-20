@@ -88,8 +88,8 @@ void EmuThread::changeThrottleMode(bool mode) {
 
 void EmuThread::setDebugMode(bool state) {
     enter_debugger = state;
-    if(in_debugger && !state) {
-        in_debugger = false;
+    if(inDebugger && !state) {
+        inDebugger = false;
     }
 }
 
@@ -106,7 +106,7 @@ void EmuThread::setReceiveState(bool state) {
 void EmuThread::setDebugStepMode() {
     cpu_events |= EVENT_DEBUG_STEP;
     enter_debugger = false;
-    in_debugger = false;
+    inDebugger = false;
 }
 
 void EmuThread::setDebugStepOverMode() {
@@ -117,7 +117,7 @@ void EmuThread::setDebugStepOverMode() {
     debugger.data.block[debugger.stepOverAddress] |= DBG_STEP_OVER_BREAKPOINT;
     cpu_events |= EVENT_DEBUG_STEP_OVER;
     enter_debugger = false;
-    in_debugger = false;
+    inDebugger = false;
 }
 
 void EmuThread::setDebugStepOutMode() {
@@ -125,7 +125,7 @@ void EmuThread::setDebugStepOutMode() {
     debugger.stepOutSPS = cpu.registers.SPS;
     cpu_events |= EVENT_DEBUG_STEP_OUT;
     enter_debugger = false;
-    in_debugger = false;
+    inDebugger = false;
 }
 
 //Called occasionally, only way to do something in the same thread the emulator runs in.
@@ -146,7 +146,7 @@ void EmuThread::doStuff(bool wait_for) {
 
     if (enter_debugger) {
         enter_debugger = false;
-        openDebugger(DBG_USER, 0);
+        open_debugger(DBG_USER, 0);
     }
 
     last_time += std::chrono::steady_clock::now() - cur_time;
@@ -193,7 +193,7 @@ bool EmuThread::stop() {
     if(!isRunning())
         return true;
 
-    in_debugger = false;
+    inDebugger = false;
     emu_is_sending = false;
 
     /* Cause the CPU core to leave the loop and check for events */

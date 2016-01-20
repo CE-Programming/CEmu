@@ -32,9 +32,9 @@ struct sched_item {
 
 typedef struct sched_state {
     struct sched_item items[SCHED_NUM_ITEMS];
-    uint32_t clock_rates[6];
-    uint32_t next_cputick;
-    int next_index; /* -1 if no more events this second */
+    uint32_t clockRates[6];
+    uint32_t nextCPUtick;
+    int nextIndex; /* -1 if no more events this second */
 } sched_state_t;
 
 extern sched_state_t sched;

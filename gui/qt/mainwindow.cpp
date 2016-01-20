@@ -1007,7 +1007,7 @@ void MainWindow::populateDebugWindow() {
     ui->lcdcurrView->setPalette(tmp == ui->lcdcurrView->text() ? nocolorback : colorback);
     ui->lcdcurrView->setText(tmp);
 
-    tmp = QString::number(sched.clock_rates[CLOCK_CPU]);
+    tmp = QString::number(sched.clockRates[CLOCK_CPU]);
     ui->freqView->setPalette(tmp == ui->freqView->text() ? nocolorback : colorback);
     ui->freqView->setText(tmp);
 

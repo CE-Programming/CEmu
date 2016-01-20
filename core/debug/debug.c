@@ -6,7 +6,7 @@
 #include "../emu.h"
 #include "../asic.h"
 
-volatile bool in_debugger = false;
+volatile bool inDebugger = false;
 debug_state_t debugger;
 
 void debugger_init(void) {
@@ -85,9 +85,9 @@ void debug_port_write_byte(uint32_t address, uint8_t value) {
 
 /* okay, so looking at the data inside the asic should be okay when using this function, */
 /* since it is called outside of cpu_execute(). Which means no read/write errors. */
-void openDebugger(int reason, uint32_t address) {
+void open_debugger(int reason, uint32_t address) {
     debugger.cpu_cycles = cpu.cycles;
-    gui_debugger_entered_or_left(in_debugger = true);
+    gui_debugger_entered_or_left(inDebugger = true);
 
     if (debugger.stepOverAddress < 0x1000000) {
         debugger.data.block[debugger.stepOverAddress] &= ~DBG_STEP_OVER_BREAKPOINT;
@@ -98,9 +98,9 @@ void openDebugger(int reason, uint32_t address) {
 
     do {
         gui_emu_sleep();
-    } while(in_debugger);
+    } while(inDebugger);
 
-    gui_debugger_entered_or_left(in_debugger = false);
+    gui_debugger_entered_or_left(inDebugger = false);
     cpu.cycles = debugger.cpu_cycles;
     if (cpu_events & EVENT_DEBUG_STEP) {
         cpu.next = cpu.cycles + 1;
