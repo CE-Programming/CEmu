@@ -12,7 +12,7 @@ TARGET = CEmu
 TEMPLATE = app
 
 # Localization
-TRANSLATIONS += i18n/fr_FR.ts
+TRANSLATIONS += i18n/fr_FR.ts i18n/es_ES.ts
 
 CONFIG += c++11
 
