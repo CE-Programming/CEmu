@@ -15,7 +15,7 @@ static uint8_t control_read(const uint16_t pio) {
 
     switch (index) {
         case 0x01:
-            value = control.cpuSpeed & 19;
+            value = control.cpuSpeed;
             break;
         case 0x02:
             /* Set bit 1 to set battery state */
