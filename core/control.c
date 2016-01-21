@@ -26,8 +26,7 @@ static uint8_t control_read(const uint16_t pio) {
             break;
         case 0x0B:
             /* bit 2 set if charging */
-            control.ports[index] |= (control.batteryCharging == true)<<1;
-            value = control.ports[index];
+            value = control.ports[index] | (control.batteryCharging == true)<<1;
             break;
         case 0x0F:
             value = control.ports[index];

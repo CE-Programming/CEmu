@@ -725,6 +725,7 @@ void MainWindow::setFont(int fontSize) {
 
     monospace.setPointSize(fontSize);
     ui->console->setFont(monospace);
+    ui->opView->setFont(monospace);
     ui->disassemblyView->setFont(monospace);
 
     ui->portRequest->setFont(monospace);
@@ -882,6 +883,7 @@ void MainWindow::setDebuggerState(bool state) {
         pix.load(":/icons/resources/icons/stop.png");
         ui->portChangeView->clear();
         ui->breakChangeView->clear();
+        ui->opView->clear();
     }
     setReceiveState(false);
     icon.addPixmap(pix);
@@ -1065,6 +1067,36 @@ void MainWindow::populateDebugWindow() {
 
     for(int i=0; i<ui->portView->rowCount(); ++i) {
         updatePortData(i);
+    }
+
+    QString formattedLine;
+    QString opData;
+    QString opType;
+    QString opString;
+    uint8_t gotData[11];
+    uint8_t index;
+
+    ui->opView->clear();
+
+    for(uint32_t i = 0xD005F8; i<0xD005F8+11*6; i+=11) {
+        opData.clear();
+        opType.clear();
+        opString.clear();
+
+        index = 0;
+        for(uint32_t j = i; j < i+11; j++) {
+            gotData[index] = debug_read_byte(j);
+            opData += int2hex(gotData[index], 2)+" ";
+            index++;
+        }
+        if (*gotData < 0x40) {
+            opType = QString(calc_var_type_names[*gotData]);
+        }
+
+        formattedLine = QString("<pre><font color='darkblue'>%2</font><b><font color='#444'>    %1    </font></b>%3 %4 <font color='green'>%5</font></pre>")
+                                       .arg("OP"+QString::number(((i-0xD005F8)/11)+1), int2hex(i, 6), opData, opType.leftJustified(20), opString);
+
+        ui->opView->appendHtml(formattedLine);
     }
 
     updateStackView();
