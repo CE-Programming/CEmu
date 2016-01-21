@@ -1072,7 +1072,6 @@ void MainWindow::populateDebugWindow() {
     QString formattedLine;
     QString opData;
     QString opType;
-    QString opString;
     uint8_t gotData[11];
     uint8_t index;
 
@@ -1081,8 +1080,6 @@ void MainWindow::populateDebugWindow() {
     for(uint32_t i = 0xD005F8; i<0xD005F8+11*6; i+=11) {
         opData.clear();
         opType.clear();
-        opString.clear();
-
         index = 0;
         for(uint32_t j = i; j < i+11; j++) {
             gotData[index] = debug_read_byte(j);
@@ -1093,8 +1090,8 @@ void MainWindow::populateDebugWindow() {
             opType = QString(calc_var_type_names[*gotData]);
         }
 
-        formattedLine = QString("<pre><font color='darkblue'>%2</font><b><font color='#444'>    %1    </font></b>%3 %4 <font color='green'>%5</font></pre>")
-                                       .arg("OP"+QString::number(((i-0xD005F8)/11)+1), int2hex(i, 6), opData, opType.leftJustified(20), opString);
+        formattedLine = QString("<pre><b><font color='#444'>%1</font></b><font color='darkblue'>    %2    </font>%3 <font color='green'>%4</font></pre>")
+                                       .arg(int2hex(i, 6), "OP"+QString::number(((i-0xD005F8)/11)+1), opData, opType);
 
         ui->opView->appendHtml(formattedLine);
     }

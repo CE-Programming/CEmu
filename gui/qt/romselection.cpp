@@ -224,7 +224,6 @@ void RomSelection::on_romsaveBrowse_clicked() {
 
         /* Set the specified flag */
         rom_array[0x7E] = 0xFF;
-        if (ui->toggleFlag->isChecked()) { rom_array[0x7E] = 0xFE; }
         if (ui->toggleFlash->isChecked()) { rom_array[0x7E] = 0x80; }
 
         fwrite(rom_array, 1, rom_size, save_rom);
