@@ -71,7 +71,7 @@ static uint32_t flash_address(uint32_t address, uint32_t *size) {
             cpu.cycles += 258;
         }
     } else if (!size) {
-        cpu.cycles += 6 + flash.added_wait_states;
+        cpu.cycles += 6 + flash.addedWaitStates;
     }
     return address;
 }

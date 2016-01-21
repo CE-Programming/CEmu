@@ -20,7 +20,7 @@ static uint8_t flash_read(const uint16_t pio) {
             value = flash.map;
             break;
         case 0x05:
-            value = flash.added_wait_states;
+            value = flash.addedWaitStates;
             break;
         default:
             value = flash.ports[index];
@@ -41,7 +41,7 @@ static void flash_write(const uint16_t pio, const uint8_t byte) {
             flash.map = byte;
             break;
         case 0x05:
-            flash.added_wait_states = byte;
+            flash.addedWaitStates = byte;
             break;
         default:
             flash.ports[index] = byte;
