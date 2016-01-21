@@ -19,14 +19,14 @@ static uint8_t control_read(const uint16_t pio) {
             break;
         case 0x02:
             /* Set bit 1 to set battery state */
-            value = control.ports[index] | 1;
+            value = control.readBatteryStatus;
             break;
         case 0x03:
             value = get_device_type();
             break;
         case 0x0B:
             /* bit 2 set if charging */
-            control.ports[index] |= !(control.ports[0x0A] & 2)<<1;
+            control.ports[index] |= (control.batteryCharging == true)<<1;
             value = control.ports[index];
             break;
         case 0x0F:
@@ -49,6 +49,23 @@ static void control_write(const uint16_t pio, const uint8_t byte) {
     uint8_t index = pio & 0x7F;
 
     switch (index) {
+        case 0x00:
+            control.ports[index] = byte;
+            switch (control.readBatteryStatus) {
+                case 3: /* Battery Level is 0 */
+                    control.readBatteryStatus = (control.setBatteryStatus == BATTERY_0) ? 0 : (byte == 0x83) ? 5 : 0;
+                    break;
+                case 5: /* Battery Level is 1 */
+                    control.readBatteryStatus = (control.setBatteryStatus == BATTERY_1) ? 0 : (byte == 0x03) ? 7 : 0;
+                    break;
+                case 7: /* Battery Level is 2 */
+                    control.readBatteryStatus = (control.setBatteryStatus == BATTERY_2) ? 0 : (byte == 0x83) ? 9 : 0;
+                    break;
+                case 9: /* Battery Level is 3 (Or 4) */
+                    control.readBatteryStatus = (control.setBatteryStatus == BATTERY_3) ? 0 : (byte == 0x03) ? 11 : 0;
+                    break;
+            }
+            break;
         case 0x01:
             control.cpuSpeed = byte & 19;
             switch(control.cpuSpeed & 3) {
@@ -71,6 +88,25 @@ static void control_write(const uint16_t pio, const uint8_t byte) {
             break;
         case 0x06:
             control.ports[index] = byte & 7;
+            break;
+        case 0x07:
+            control.readBatteryStatus = (byte & 0x90) ? 1 : 0;
+            break;
+        case 0x09:
+            switch (control.readBatteryStatus) {
+                case 1: /* Battery is bad */
+                    control.readBatteryStatus = (control.setBatteryStatus == BATTERY_DISCHARGED) ? 0 : (byte & 0x80) ? 0 : 3;
+                    break;
+            }
+            control.ports[index] = byte;
+            break;
+        case 0x0A:
+            control.readBatteryStatus += (control.readBatteryStatus == 3) ? 1 : 0;
+            control.ports[index] = byte;
+            break;
+        case 0x0B:
+        case 0x0C:
+            control.readBatteryStatus = 0;
             break;
         case 0x0D:
             control.ports[index] = (byte & 0xF) << 4 | (byte & 0xF);
@@ -95,6 +131,10 @@ static const eZ80portrange_t device = {
 
 eZ80portrange_t init_control(void) {
     memset(control.ports, 0, sizeof control.ports);
+
+    /* Set default state to full battery and not charging */
+    control.batteryCharging = false;
+    control.setBatteryStatus = BATTERY_4;
 
     return device;
 }

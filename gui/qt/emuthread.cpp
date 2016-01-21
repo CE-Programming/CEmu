@@ -37,8 +37,8 @@ void gui_emu_sleep(void) {
     QThread::usleep(50);
 }
 
-void gui_do_stuff(bool wait) {
-    emu_thread->doStuff(wait);
+void gui_do_stuff(void) {
+    emu_thread->doStuff();
 }
 
 static void gui_console_vprintf(const char *fmt, va_list ap) {
@@ -75,7 +75,7 @@ EmuThread::EmuThread(QObject *p) : QThread(p) {
     emu_thread = this;
     lcd_event_gui_callback = gif_new_frame;
     speed = actualSpeed = 100;
-    last_time = std::chrono::steady_clock::now();
+    lastTime= std::chrono::steady_clock::now();
 }
 
 void EmuThread::changeEmuSpeed(int value) {
@@ -83,29 +83,29 @@ void EmuThread::changeEmuSpeed(int value) {
 }
 
 void EmuThread::changeThrottleMode(bool mode) {
-    throttle_on = mode;
+    throttleOn = mode;
 }
 
 void EmuThread::setDebugMode(bool state) {
-    enter_debugger = state;
+    enterDebugger = state;
     if(inDebugger && !state) {
         inDebugger = false;
     }
 }
 
 void EmuThread::setSendState(bool state) {
-    enter_send_state = state;
+    enterSendState = state;
     emu_is_sending = state;
 }
 
 void EmuThread::setReceiveState(bool state) {
-    enter_receive_state = state;
+    enterReceiveState = state;
     emu_is_recieving = state;
 }
 
 void EmuThread::setDebugStepMode() {
     cpu_events |= EVENT_DEBUG_STEP;
-    enter_debugger = false;
+    enterDebugger = false;
     inDebugger = false;
 }
 
@@ -116,7 +116,7 @@ void EmuThread::setDebugStepOverMode() {
     debugger.stepOverAddress = disasm.new_address;
     debugger.data.block[debugger.stepOverAddress] |= DBG_STEP_OVER_BREAKPOINT;
     cpu_events |= EVENT_DEBUG_STEP_OVER;
-    enter_debugger = false;
+    enterDebugger = false;
     inDebugger = false;
 }
 
@@ -124,32 +124,25 @@ void EmuThread::setDebugStepOutMode() {
     debugger.stepOutSPL = cpu.registers.SPL;
     debugger.stepOutSPS = cpu.registers.SPS;
     cpu_events |= EVENT_DEBUG_STEP_OUT;
-    enter_debugger = false;
+    enterDebugger = false;
     inDebugger = false;
 }
 
 //Called occasionally, only way to do something in the same thread the emulator runs in.
-void EmuThread::doStuff(bool wait_for) {
+void EmuThread::doStuff() {
     std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
 
-    (void)wait_for;
-
-    if (enter_send_state) {
-        enter_send_state = false;
+    if (enterSendState || enterReceiveState) {
+        enterReceiveState = enterSendState = false;
         enterVariableLink();
     }
 
-    if (enter_receive_state) {
-        enter_receive_state = false;
-        enterVariableLink();
-    }
-
-    if (enter_debugger) {
-        enter_debugger = false;
+    if (enterDebugger) {
+        enterDebugger = false;
         open_debugger(DBG_USER, 0);
     }
 
-    last_time += std::chrono::steady_clock::now() - cur_time;
+    lastTime += std::chrono::steady_clock::now() - cur_time;
 }
 
 void EmuThread::setActualSpeed(int value) {
@@ -162,14 +155,14 @@ void EmuThread::throttleTimerWait() {
     std::chrono::duration<int, std::ratio<100, 60>> unit(1);
     std::chrono::steady_clock::duration interval(std::chrono::duration_cast<std::chrono::steady_clock::duration>
                                                  (std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(1000000 * 100 / speed)));
-    std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now(), next_time = last_time + interval;
-    if (throttle_on && cur_time < next_time) {
+    std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now(), next_time = lastTime + interval;
+    if (throttleOn && cur_time < next_time) {
         setActualSpeed(speed);
-        last_time = next_time;
+        lastTime = next_time;
         std::this_thread::sleep_until(next_time);
     } else {
-        setActualSpeed(unit / (cur_time - last_time));
-        last_time = cur_time;
+        setActualSpeed(unit / (cur_time - lastTime));
+        lastTime = cur_time;
         std::this_thread::yield();
     }
 }

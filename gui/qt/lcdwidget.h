@@ -27,9 +27,9 @@ class LCDWidget : public QWidget
   private:
       void drawContext(const QPoint& posa);
 
-      int lcd_size = 0;
+      int lcdSize = 0;
       bool state_set = false;
-      QTimer refresh_timer;
+      QTimer refreshTimer;
   };
 
 #endif

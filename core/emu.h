@@ -24,7 +24,7 @@ extern volatile bool exiting;
 extern const char *rom_image;
 
 /* Reimplemented GUI callbacks */
-void gui_do_stuff(bool wait);
+void gui_do_stuff(void);
 void gui_console_printf(const char *, ...);
 void gui_debugger_entered_or_left(bool);
 void gui_debugger_send_command(int, uint32_t);

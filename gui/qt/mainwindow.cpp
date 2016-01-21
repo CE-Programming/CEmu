@@ -815,6 +815,9 @@ void MainWindow::updateDebuggerChanges() {
       cpu.IEF1 = ui->checkIEF1->isChecked();
       cpu.IEF2 = ui->checkIEF2->isChecked();
 
+      control.batteryCharging = ui->checkCharging->isChecked();
+      control.setBatteryStatus = static_cast<uint8_t>(ui->sliderBattery->value());
+
       cpu_flush(static_cast<uint32_t>(hex2int(ui->pcregView->text())), ui->checkADL->isChecked());
 
       backlight.brightness = static_cast<uint8_t>(ui->brightnessSlider->value());
@@ -1010,6 +1013,9 @@ void MainWindow::populateDebugWindow() {
     tmp = QString::number(sched.clockRates[CLOCK_CPU]);
     ui->freqView->setPalette(tmp == ui->freqView->text() ? nocolorback : colorback);
     ui->freqView->setText(tmp);
+
+    ui->checkCharging->setChecked(control.batteryCharging);
+    ui->sliderBattery->setValue(control.setBatteryStatus);
 
     switch((lcd.control>>1)&7) {
         case 0:

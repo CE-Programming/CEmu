@@ -14,10 +14,10 @@ class EmuThread : public QThread
 public:
     explicit EmuThread(QObject *p = 0);
 
-    void doStuff(bool);
+    void doStuff();
     void throttleTimerWait();
 
-    std::string rom = "";
+    std::string rom;
 
 signals:
     // Debugger
@@ -50,12 +50,12 @@ public slots:
 private:
     void setActualSpeed(int value);
 
-    bool enter_debugger = false;
-    bool enter_send_state = false;
-    bool enter_receive_state = false;
-    bool throttle_on = true;
+    bool enterDebugger = false;
+    bool enterSendState = false;
+    bool enterReceiveState = false;
+    bool throttleOn = true;
     int speed, actualSpeed;
-    std::chrono::steady_clock::time_point last_time;
+    std::chrono::steady_clock::time_point lastTime;
 };
 
 // For friends

@@ -15,7 +15,7 @@ void keypad_key_event(unsigned int row, unsigned int col, bool press) {
     if (row == 2 && col == 0) {
         intrpt_set(INT_ON, press);
         if (press && control.ports[0] & 0x40) {
-            control.ports[2] = ~1;
+            control.readBatteryStatus = ~(uint8_t)control.batteryCharging;
             intrpt_pulse(19);
         }
     } else {

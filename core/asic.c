@@ -82,8 +82,6 @@ void asic_init(void) {
     asic.mem = &mem;
     asic.cpu = &cpu;
 
-    asic.battery = BATTERIES_GOOD;
-
     plug_devices();
     gui_console_printf("Initialized ASIC...\n");
 }

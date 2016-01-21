@@ -71,25 +71,25 @@ static uint32_t flash_address(uint32_t address, uint32_t *size) {
             cpu.cycles += 258;
         }
     } else if (!size) {
-        cpu.cycles += 6 + flash.added_wait_states;
+        cpu.cycles += 6 + flash.addedWaitStates;
     }
     return address;
 }
 
-uint8_t *phys_mem_ptr(uint32_t addr, uint32_t size) {
+uint8_t *phys_mem_ptr(uint32_t address, uint32_t size) {
     uint8_t **block;
     uint32_t block_size, end_addr;
-    if (addr < 0xD00000) {
-        addr = flash_address(addr, &block_size);
+    if (address < 0xD00000) {
+        address = flash_address(address, &block_size);
         block = &mem.flash.block;
     } else {
-        addr -= 0xD00000;
+        address -= 0xD00000;
         block = &mem.ram.block;
         block_size = ram_size;
     }
-    end_addr = addr + size;
-    if (addr <= end_addr && addr <= block_size && end_addr <= block_size && *block) {
-        return *block + addr;
+    end_addr = address + size;
+    if (address <= end_addr && address <= block_size && end_addr <= block_size && *block) {
+        return *block + address;
     }
     return NULL;
 }

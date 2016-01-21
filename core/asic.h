@@ -20,15 +20,8 @@ extern "C" {
 #include "realclock.h"
 #include "sha256.h"
 
-typedef enum {
-    BATTERIES_REMOVED,
-    BATTERIES_LOW,
-    BATTERIES_GOOD
-} battery_state;
-
 typedef struct asic_state {
     ti_device_type deviceType;
-    battery_state battery;
 
     mem_state_t* mem;
     eZ80cpu_t *cpu;

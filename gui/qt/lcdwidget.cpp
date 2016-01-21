@@ -19,11 +19,11 @@
 #include "qtframebuffer.h"
 
 LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
-    connect(&refresh_timer, SIGNAL(timeout()), this, SLOT(repaint()));
+    connect(&refreshTimer, SIGNAL(timeout()), this, SLOT(repaint()));
     connect(this, &QWidget::customContextMenuRequested, this, &LCDWidget::drawContext);
 
     setFixedSize(320, 240);
-    lcd_size = 2;
+    lcdSize = 2;
 
     // Default rate is 60 FPS
     refreshRate(60);
@@ -53,7 +53,7 @@ void LCDWidget::drawContext(const QPoint& posa) {
     contextMenu.actions().at(5)->setCheckable(true);
 
     contextMenu.actions().at(5)->setChecked(state_set);
-    contextMenu.actions().at(lcd_size)->setChecked(true);
+    contextMenu.actions().at(lcdSize)->setChecked(true);
 
     QAction* selectedItem = contextMenu.exec(globalPos);
     if (selectedItem) {
@@ -65,16 +65,16 @@ void LCDWidget::drawContext(const QPoint& posa) {
             setWindowFlags(state_set ? windowFlags() | Qt::WindowStaysOnTopHint : windowFlags() & ~Qt::WindowStaysOnTopHint);
             show();
         } else if (selectedItem->text() == smal) {
-            lcd_size = 1;
+            lcdSize = 1;
             setFixedSize(320/2, 240/2);
         } else if (selectedItem->text() == small) {
-            lcd_size = 2;
+            lcdSize = 2;
             setFixedSize(320*1, 240*1);
         } else if (selectedItem->text() == med) {
-            lcd_size = 3;
+            lcdSize = 3;
             setFixedSize(320*2, 240*2);
         } else if (selectedItem->text() == large) {
-            lcd_size = 4;
+            lcdSize = 4;
             setFixedSize(320*3, 240*3);
         }
     }
@@ -88,9 +88,9 @@ void LCDWidget::paintEvent(QPaintEvent */*event*/) {
 }
 
 void LCDWidget::refreshRate(int newrate) {
-    refresh_timer.stop();
-    refresh_timer.setInterval(1000 / newrate);
-    refresh_timer.start();
+    refreshTimer.stop();
+    refreshTimer.setInterval(1000 / newrate);
+    refreshTimer.start();
 }
 
 void LCDWidget::showEvent(QShowEvent *e) {
