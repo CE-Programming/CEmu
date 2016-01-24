@@ -62,7 +62,6 @@ SOURCES +=  utils.cpp \
     qtkeypadbridge.cpp \
     qmlbridge.cpp \
     keymap.cpp \
-    disasmwidget.cpp \
     qhexedit/chunks.cpp \
     qhexedit/commands.cpp \
     qhexedit/qhexedit.cpp \
@@ -89,7 +88,8 @@ SOURCES +=  utils.cpp \
     ../../core/debug/disasm.cpp \
     ../../core/debug/debug.c \
     ../../core/emu.c \
-    capture/gif.cpp
+    capture/gif.cpp \
+    datawidget.cpp
 
 linux|macx|ios: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c
@@ -100,7 +100,6 @@ HEADERS  +=  utils.h \
     qtframebuffer.h \
     lcdwidget.h \
     emuthread.h \
-    disasmwidget.h \
     qtkeypadbridge.h \
     qmlbridge.h \
     keymap.h \
@@ -134,7 +133,8 @@ HEADERS  +=  utils.h \
     ../../core/debug/disasm.h \
     ../../core/os/os.h \
     capture/gif.h \
-    capture/giflib.h
+    capture/giflib.h \
+    datawidget.h
 
 FORMS    += mainwindow.ui \
     romselection.ui

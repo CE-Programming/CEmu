@@ -315,18 +315,18 @@ static void cpu_write_rp3(int i, uint32_t value) {
 }
 
 static bool cpu_read_cc(const int i) {
-    eZ80registers_t *r = &cpu.registers;
     switch (i) {
-        case 0: return !r->flags.Z;
-        case 1: return  r->flags.Z;
-        case 2: return !r->flags.C;
-        case 3: return  r->flags.C;
-        case 4: return !r->flags.PV;
-        case 5: return  r->flags.PV;
-        case 6: return !r->flags.S;
-        case 7: return  r->flags.S;
+        case 0: return !cpu.registers.flags.Z;
+        case 1: return  cpu.registers.flags.Z;
+        case 2: return !cpu.registers.flags.C;
+        case 3: return  cpu.registers.flags.C;
+        case 4: return !cpu.registers.flags.PV;
+        case 5: return  cpu.registers.flags.PV;
+        case 6: return !cpu.registers.flags.S;
+        case 7: return  cpu.registers.flags.S;
         default: abort();
     }
+    return true;
 }
 
 static void cpu_execute_daa(void) {

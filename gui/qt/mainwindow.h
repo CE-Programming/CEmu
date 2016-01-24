@@ -86,11 +86,14 @@ private:
     void stepPressed();
     void stepOverPressed();
     void stepOutPressed();
+    void updateTIOSView();
     void updateStackView();
     void updateDisasmView(const int, const bool);
     void gotoPressed();
     void setBreakpointAddress();
     void disasmContextMenu(const QPoint &);
+    void vatContextMenu(const QPoint &);
+    void opContextMenu(const QPoint &);
     bool addBreakpoint();
 
     // Others
@@ -130,6 +133,7 @@ private:
     void ramSearchPressed();
     void ramSyncPressed();
     void memUpdate();
+    void memGoto(QString address);
     void memGotoPressed();
     void memSearchPressed();
     void memSyncPressed();

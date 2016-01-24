@@ -1768,6 +1768,43 @@
                </property>
                <item row="1" column="0">
                 <widget class="QCheckBox" name="checkCharging">
+                 <property name="palette">
+                  <palette>
+                   <active>
+                    <colorrole role="WindowText">
+                     <brush brushstyle="SolidPattern">
+                      <color alpha="255">
+                       <red>0</red>
+                       <green>170</green>
+                       <blue>0</blue>
+                      </color>
+                     </brush>
+                    </colorrole>
+                   </active>
+                   <inactive>
+                    <colorrole role="WindowText">
+                     <brush brushstyle="SolidPattern">
+                      <color alpha="255">
+                       <red>0</red>
+                       <green>170</green>
+                       <blue>0</blue>
+                      </color>
+                     </brush>
+                    </colorrole>
+                   </inactive>
+                   <disabled>
+                    <colorrole role="WindowText">
+                     <brush brushstyle="SolidPattern">
+                      <color alpha="255">
+                       <red>120</red>
+                       <green>120</green>
+                       <blue>120</blue>
+                      </color>
+                     </brush>
+                    </colorrole>
+                   </disabled>
+                  </palette>
+                 </property>
                  <property name="text">
                   <string>Charging</string>
                  </property>
@@ -5037,13 +5074,13 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tabOP">
+      <widget class="QWidget" name="tabOS">
        <attribute name="title">
-        <string>OP Registers</string>
+        <string>TI-OS</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_13">
         <item>
-         <widget class="QPlainTextEdit" name="opView">
+         <widget class="DisasmWidget" name="opView">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
             <horstretch>0</horstretch>
@@ -5063,7 +5100,29 @@
            <string notr="true"/>
           </property>
           <property name="placeholderText">
-           <string notr="true">Open Debugger to view OP Registers</string>
+           <string notr="true">Open Debugger to view OP registers</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="DataWidget" name="vatView">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="undoRedoEnabled">
+           <bool>false</bool>
+          </property>
+          <property name="lineWrapMode">
+           <enum>QPlainTextEdit::NoWrap</enum>
+          </property>
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="placeholderText">
+           <string>Open Debugger to View VAT state</string>
           </property>
          </widget>
         </item>
@@ -5488,6 +5547,11 @@
    <class>DisasmWidget</class>
    <extends>QPlainTextEdit</extends>
    <header>disasmwidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DataWidget</class>
+   <extends>QPlainTextEdit</extends>
+   <header>datawidget.h</header>
   </customwidget>
  </customwidgets>
  <resources>

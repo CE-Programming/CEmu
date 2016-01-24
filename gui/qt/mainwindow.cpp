@@ -57,7 +57,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     }
 
     ui->keypadWidget->setResizeMode(QQuickWidget::ResizeMode::SizeRootObjectToView);
-    ui->disassemblyView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     // View
     detachedLCD.setContextMenuPolicy(Qt::CustomContextMenu);
@@ -94,6 +93,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(this, &MainWindow::setDebugStepOutMode, &emu, &EmuThread::setDebugStepOutMode);
     connect(ui->buttonGoto, &QPushButton::clicked, this, &MainWindow::gotoPressed);
     connect(ui->disassemblyView, &QWidget::customContextMenuRequested, this, &MainWindow::disasmContextMenu);
+    connect(ui->vatView, &QWidget::customContextMenuRequested, this, &MainWindow::vatContextMenu);
+    connect(ui->opView, &QWidget::customContextMenuRequested, this, &MainWindow::opContextMenu);
     connect(ui->portView, &QTableWidget::itemChanged, this, &MainWindow::changePortData);
 
     // Debugger Options
@@ -212,6 +213,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     ui->rompathView->setText(QString::fromStdString(emu.rom));
     ui->emuVarView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->vatView->cursorState(true);
+    ui->opView->cursorState(true);
 }
 
 MainWindow::~MainWindow() {
@@ -726,6 +729,7 @@ void MainWindow::setFont(int fontSize) {
     monospace.setPointSize(fontSize);
     ui->console->setFont(monospace);
     ui->opView->setFont(monospace);
+    ui->vatView->setFont(monospace);
     ui->disassemblyView->setFont(monospace);
 
     ui->portRequest->setFont(monospace);
@@ -884,6 +888,7 @@ void MainWindow::setDebuggerState(bool state) {
         ui->portChangeView->clear();
         ui->breakChangeView->clear();
         ui->opView->clear();
+        ui->vatView->clear();
     }
     setReceiveState(false);
     icon.addPixmap(pix);
@@ -1069,21 +1074,31 @@ void MainWindow::populateDebugWindow() {
         updatePortData(i);
     }
 
+    updateTIOSView();
+    updateStackView();
+    ramUpdate();
+    flashUpdate();
+    memUpdate();
+}
+
+void MainWindow::updateTIOSView() {
+    calc_var_t var;
     QString formattedLine;
-    QString opData;
+    QString calcData,calcData2;
     QString opType;
     uint8_t gotData[11];
     uint8_t index;
 
     ui->opView->clear();
+    ui->vatView->clear();
 
     for(uint32_t i = 0xD005F8; i<0xD005F8+11*6; i+=11) {
-        opData.clear();
+        calcData.clear();
         opType.clear();
         index = 0;
         for(uint32_t j = i; j < i+11; j++) {
             gotData[index] = debug_read_byte(j);
-            opData += int2hex(gotData[index], 2)+" ";
+            calcData += int2hex(gotData[index], 2)+" ";
             index++;
         }
         if (*gotData < 0x40) {
@@ -1091,15 +1106,27 @@ void MainWindow::populateDebugWindow() {
         }
 
         formattedLine = QString("<pre><b><font color='#444'>%1</font></b><font color='darkblue'>    %2    </font>%3 <font color='green'>%4</font></pre>")
-                                       .arg(int2hex(i, 6), "OP"+QString::number(((i-0xD005F8)/11)+1), opData, opType);
+                                       .arg(int2hex(i, 6), "OP"+QString::number(((i-0xD005F8)/11)+1), calcData, opType);
 
         ui->opView->appendHtml(formattedLine);
     }
 
-    updateStackView();
-    ramUpdate();
-    flashUpdate();
-    memUpdate();
+    vat_search_init(&var);
+    while (vat_search_next(&var)) {
+        uint8_t j;
+        calcData.clear();
+        calcData2.clear();
+        for(j = 0; j < var.namelen; j++) {
+            calcData += int2hex(var.name[j], 2)+" ";
+        }
+        for(; j < 8; j++) {
+            calcData2 += "00 ";
+        }
+        formattedLine = QString("<pre><b><font color='#444'>%1</font></b>  <font color='darkblue'>%2</font>  <font color='green'>%3</font>  %4<font color='gray'>%5</font><font color='green'> %6</font></pre>")
+                                        .arg(int2hex(var.dataPtr,6), int2hex(var.vatPtr,6), int2hex(var.size,4), calcData, calcData2, calc_var_type_names[var.type]);
+        ui->vatView->appendHtml(formattedLine);
+    }
+    ui->vatView->moveCursor(QTextCursor::Start);
 }
 
 void MainWindow::updateDisasmView(const int sentBase, const bool newPane) {
@@ -1437,11 +1464,8 @@ void MainWindow::drawNextDisassembleLine() {
         disassembleInstruction();
     }
 
-    // Watch out, maintainers: the (unformatted) line is later "parsed" in DisasmWidget::getSelectedAddress()
-    // with a cursor getting the address from it. Make sure the start position is correct.
-
     // Some round symbol things
-    QString breakpointSymbols = QString("<font color='#A3FFA3'><big>%1</big></font><font color='#A3A3FF'><big>%2</big></font><font color='#FFA3A3'><big>%3</big></font>")
+    QString breakpointSymbols = QString("<font color='#A3FFA3'><big>%1</font><font color='#A3A3FF'>%2</font><font color='#FFA3A3'>%3</big></font>")
                                    .arg(((disasmHighlight.hit_read_breakpoint == true)  ? "&#9679;" : " "),
                                         ((disasmHighlight.hit_write_breakpoint == true) ? "&#9679;" : " "),
                                         ((disasmHighlight.hit_exec_breakpoint == true)  ? "&#9679;" : " "));
@@ -1452,9 +1476,9 @@ void MainWindow::drawNextDisassembleLine() {
                                         .replace(QRegularExpression("(^\\d)"), "<font color='blue'>\\1</font>")             // dec number
                                         .replace(QRegularExpression("([()])"), "<font color='#600'>\\1</font>");            // parentheses
 
-    QString formattedLine = QString("<pre><b>%1<font color='#444'>%2</font></b>    %3  <font color='darkblue'>%4%5</font>%6</pre>")
-                               .arg(breakpointSymbols,
-                                    int2hex(disasm.base_address, 6),
+    QString formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2 %3  <font color='darkblue'>%4%5</font>%6</pre>")
+                               .arg(int2hex(disasm.base_address, 6),
+                                    breakpointSymbols,
                                     label ? QString::fromStdString(*label) + ":" : ui->checkDataCol->isChecked() ? QString::fromStdString(disasm.instruction.data).leftJustified(12, ' ') : "",
                                     QString::fromStdString(disasm.instruction.opcode),
                                     QString::fromStdString(disasm.instruction.mode_suffix),
@@ -1484,6 +1508,7 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
     QString set_pc = "Set PC to this address";
     QString run_until = "Toggle Run Until this address";
     QString toggle_break = "Toggle Breakpoint at this address";
+    QString goto_mem = "Goto Memory View";
     ui->disassemblyView->setTextCursor(ui->disassemblyView->cursorForPosition(posa));
     QPoint globalPos = ui->disassemblyView->mapToGlobal(posa);
 
@@ -1491,6 +1516,7 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
     contextMenu.addAction(set_pc);
     contextMenu.addAction(toggle_break);
     contextMenu.addAction(run_until);
+    contextMenu.addAction(goto_mem);
 
     QAction* selectedItem = contextMenu.exec(globalPos);
     if (selectedItem) {
@@ -1505,6 +1531,40 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
             uint32_t address = static_cast<uint32_t>(hex2int(ui->disassemblyView->getSelectedAddress()));
             debug_toggle_run_until(address);
             updateDisasmView(address, true);
+        } else if (selectedItem->text() == goto_mem) {
+            memGoto(ui->disassemblyView->getSelectedAddress());
+        }
+    }
+}
+
+void MainWindow::vatContextMenu(const QPoint& posa) {
+    QString goto_mem = "Goto Memory View";
+    ui->vatView->setTextCursor(ui->vatView->cursorForPosition(posa));
+    QPoint globalPos = ui->vatView->mapToGlobal(posa);
+
+    QMenu contextMenu;
+    contextMenu.addAction(goto_mem);
+
+    QAction* selectedItem = contextMenu.exec(globalPos);
+    if (selectedItem) {
+        if (selectedItem->text() == goto_mem) {
+            memGoto(ui->vatView->getSelectedAddress());
+        }
+    }
+}
+
+void MainWindow::opContextMenu(const QPoint& posa) {
+    QString goto_mem = "Goto Memory View";
+    ui->opView->setTextCursor(ui->opView->cursorForPosition(posa));
+    QPoint globalPos = ui->opView->mapToGlobal(posa);
+
+    QMenu contextMenu;
+    contextMenu.addAction(goto_mem);
+
+    QAction* selectedItem = contextMenu.exec(globalPos);
+    if (selectedItem) {
+        if (selectedItem->text() == goto_mem) {
+            memGoto(ui->opView->getSelectedAddress());
         }
     }
 }
@@ -1677,14 +1737,8 @@ void MainWindow::memSearchPressed() {
     searchEdit(ui->memEdit);
 }
 
-void MainWindow::memGotoPressed() {
-    bool ok;
-    QString address = getAddressString(ok, "");
-
+void MainWindow::memGoto(QString address) {
     ui->memEdit->setFocus();
-    if (!ok) {
-        return;
-    }
     int int_address = hex2int(address);
     if (int_address > 0xFFFFFF || int_address < 0) {
         return;
@@ -1706,6 +1760,16 @@ void MainWindow::memGotoPressed() {
     ui->memEdit->setAddressOffset(start);
     ui->memEdit->setCursorPosition((int_address-start)<<1);
     ui->memEdit->ensureVisible();
+}
+
+void MainWindow::memGotoPressed() {
+    bool ok;
+    QString address = getAddressString(ok, "");
+
+    if (!ok) {
+        return;
+    }
+    memGoto(address);
 }
 
 void MainWindow::syncHexView(int posa, QHexEdit *hex_view) {

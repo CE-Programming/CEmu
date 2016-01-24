@@ -11,12 +11,12 @@ class QSize;
 class QWidget;
 QT_END_NAMESPACE
 
-class DisasmWidget : public QPlainTextEdit
+class DataWidget : public QPlainTextEdit
 {
     Q_OBJECT
 
 public:
-    DisasmWidget(QWidget *parent = 0);
+    DataWidget(QWidget *parent = 0);
     void clearAllHighlights();
     void updateAllHighlights();
     void addHighlight(QColor);

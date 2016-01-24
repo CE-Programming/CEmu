@@ -175,7 +175,8 @@ const char *calc_var_name_to_utf8(uint8_t name[8]) {
 
 void vat_search_init(calc_var_t *var) {
     memset(var, 0, sizeof *var);
-    var->vat = phys_mem_ptr(0xD3FFFF, 1);
+    var->vatPtr = 0xD3FFFF;
+    var->vat = phys_mem_ptr(var->vatPtr, 1);
 }
 
 static uint32_t get_ptr(uint32_t address) {
@@ -192,6 +193,8 @@ bool vat_search_next(calc_var_t *var) {
     uint32_t address;
     uint8_t i;
     bool prog = var->vat <= progPtr;
+    var->vatPtr = symTable-var->vat;
+    var->vatPtr = 0xD3FFFF-var->vatPtr;
     if (!var->vat || var->vat < userMem || var->vat <= pTemp || var->vat > symTable) {
         return false;
     }
@@ -215,6 +218,7 @@ bool vat_search_next(calc_var_t *var) {
         return false;
     }
     var->data = phys_mem_ptr(address, 2);
+    var->dataPtr = address;
     if (!var->data) {
         return false;
     }
@@ -242,6 +246,7 @@ bool vat_search_next(calc_var_t *var) {
         var->name[i] = *var->vat--;
     }
     memset(var->name + var->namelen, 0, sizeof var->name - var->namelen);
+
     return true;
 }
 

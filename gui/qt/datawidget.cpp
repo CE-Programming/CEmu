@@ -1,14 +1,15 @@
 #include <QtWidgets>
 
-#include "disasmwidget.h"
+#include "datawidget.h"
 
 /* extraHighlights (0) = current line selection */
 
-DisasmWidget::DisasmWidget(QWidget *p) : QPlainTextEdit(p) {
-    connect(this, &QPlainTextEdit::cursorPositionChanged, this, &DisasmWidget::highlightCurrentLine);
+DataWidget::DataWidget(QWidget *p) : QPlainTextEdit(p) {
+    setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(this, &QPlainTextEdit::cursorPositionChanged, this, &DataWidget::highlightCurrentLine);
 }
 
-void DisasmWidget::clearAllHighlights() {
+void DataWidget::clearAllHighlights() {
     while (!extraHighlights.isEmpty()) {
         extraHighlights.removeFirst();
     }
@@ -17,20 +18,19 @@ void DisasmWidget::clearAllHighlights() {
     updateAllHighlights();
 }
 
-void DisasmWidget::updateAllHighlights() {
+void DataWidget::updateAllHighlights() {
     setExtraSelections(extraHighlights);
 }
 
-QString DisasmWidget::getSelectedAddress() {
+QString DataWidget::getSelectedAddress() {
   QTextCursor c = textCursor();
   c.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
-  c.setPosition(c.position()+3, QTextCursor::MoveAnchor); // +3 == 3 debug symbols
   c.setPosition(c.position()+6, QTextCursor::KeepAnchor); // +6 == size of the address
                                                           // See MainWindow::drawNextDisassembleLine() for details
   return c.selectedText();
 }
 
-void DisasmWidget::addHighlight(QColor color) {
+void DataWidget::addHighlight(QColor color) {
     QTextEdit::ExtraSelection selection;
 
     selection.format.setBackground(color);
@@ -41,14 +41,14 @@ void DisasmWidget::addHighlight(QColor color) {
     extraHighlights.append(selection);
 }
 
-void DisasmWidget::cursorState(bool moveable) {
+void DataWidget::cursorState(bool moveable) {
     cursor_state = moveable;
     if (moveable) {
         addHighlight(QColor(Qt::yellow).lighter(160));
     }
 }
 
-void DisasmWidget::highlightCurrentLine() {
+void DataWidget::highlightCurrentLine() {
     if(cursor_state == true) {
         extraHighlights.removeLast();
         addHighlight(QColor(Qt::yellow).lighter(160));
