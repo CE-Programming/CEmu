@@ -1403,7 +1403,7 @@
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_9">
             <item>
-             <widget class="DisasmWidget" name="disassemblyView">
+             <widget class="DataWidget" name="disassemblyView">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                 <horstretch>0</horstretch>
@@ -5080,7 +5080,7 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_13">
         <item>
-         <widget class="DisasmWidget" name="opView">
+         <widget class="DataWidget" name="opView">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
             <horstretch>0</horstretch>
@@ -5542,11 +5542,6 @@
    <extends>QWidget</extends>
    <header>lcdwidget.h</header>
    <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>DisasmWidget</class>
-   <extends>QPlainTextEdit</extends>
-   <header>disasmwidget.h</header>
   </customwidget>
   <customwidget>
    <class>DataWidget</class>
