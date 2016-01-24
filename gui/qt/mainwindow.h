@@ -67,6 +67,8 @@ private:
     void checkForUpdates(bool);
     void showAbout(void);
     void setUIMode(bool);
+    void changeBatteryCharging(bool);
+    void changeBatteryStatus(int);
 
     // Debugger
     void raiseDebugger();

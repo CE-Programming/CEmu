@@ -96,6 +96,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->vatView, &QWidget::customContextMenuRequested, this, &MainWindow::vatContextMenu);
     connect(ui->opView, &QWidget::customContextMenuRequested, this, &MainWindow::opContextMenu);
     connect(ui->portView, &QTableWidget::itemChanged, this, &MainWindow::changePortData);
+    connect(ui->checkCharging, &QCheckBox::toggled, this, &MainWindow::changeBatteryCharging);
+    connect(ui->sliderBattery, &QSlider::valueChanged, this, &MainWindow::changeBatteryStatus);
 
     // Debugger Options
     connect(ui->buttonAddEquateFile, &QPushButton::clicked, this, &MainWindow::addEquateFile);
@@ -820,9 +822,6 @@ void MainWindow::updateDebuggerChanges() {
       cpu.IEF1 = ui->checkIEF1->isChecked();
       cpu.IEF2 = ui->checkIEF2->isChecked();
 
-      control.batteryCharging = ui->checkCharging->isChecked();
-      control.setBatteryStatus = static_cast<uint8_t>(ui->sliderBattery->value());
-
       cpu_flush(static_cast<uint32_t>(hex2int(ui->pcregView->text())), ui->checkADL->isChecked());
 
       backlight.brightness = static_cast<uint8_t>(ui->brightnessSlider->value());
@@ -1021,8 +1020,8 @@ void MainWindow::populateDebugWindow() {
     ui->freqView->setPalette(tmp == ui->freqView->text() ? nocolorback : colorback);
     ui->freqView->setText(tmp);
 
-    ui->checkCharging->setChecked(control.batteryCharging);
-    ui->sliderBattery->setValue(control.setBatteryStatus);
+    changeBatteryCharging(control.batteryCharging);
+    changeBatteryStatus(control.setBatteryStatus);
 
     switch((lcd.control>>1)&7) {
         case 0:
@@ -1618,6 +1617,17 @@ void MainWindow::gotoPressed() {
     }
 
     updateDisasmView(hex2int(address), false);
+}
+
+// TODO: force the OS to detect updates to battery charging/status immediately?
+void MainWindow::changeBatteryCharging(bool checked) {
+    control.batteryCharging = checked;
+}
+
+void MainWindow::changeBatteryStatus(int value) {
+    control.setBatteryStatus = static_cast<uint8_t>(value);
+    ui->sliderBattery->setValue(value);
+    ui->labelBattery->setText(QString::number(value * 20) + "%");
 }
 
 /* ================================================ */
