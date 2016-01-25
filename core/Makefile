@@ -2,7 +2,7 @@ GCC = gcc
 GXX = g++
 
 # If you want no debug/symbols info, remove -g
-# If you need debug support, add -DDEBUG_SUPORT
+# If you need debug support, add -DDEBUG_SUPPORT
 GCCFLAGS = -Wall -W -fPIC -flto -O3 -g -static
 
 OBJS = $(patsubst %.c, %.o, $(shell find . -name \*.c))
