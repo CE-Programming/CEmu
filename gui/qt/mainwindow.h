@@ -113,6 +113,9 @@ private:
     void showStatusMsg(QString);
 
     // Settings
+    void adjustScreen();
+    void changeScale(int);
+    void toggleSkin(bool);
     void changeLCDRefresh(int);
     void alwaysOnTop(int);
     void autoCheckForUpdates(int);

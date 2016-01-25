@@ -46,6 +46,7 @@ static const constexpr int WindowStateVersion = 0;
 MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     // Setup the UI
     ui->setupUi(this);
+    ui->centralWidget->hide();
     ui->statusBar->addWidget(&statusLabel);
 
     // Register QtKeypadBridge for the virtual keyboard functionality
@@ -132,6 +133,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     // Other GUI actions
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
+    connect(ui->scaleSlider, &QSlider::valueChanged, this, &MainWindow::changeScale);
+    connect(ui->checkSkin, &QCheckBox::stateChanged, this, &MainWindow::toggleSkin);
     connect(ui->refreshSlider, &QSlider::valueChanged, this, &MainWindow::changeLCDRefresh);
     connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::alwaysOnTop);
     connect(ui->emulationSpeed, &QSlider::valueChanged, this, &MainWindow::changeEmulatedSpeed);
@@ -187,6 +190,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     restoreGeometry(settings->value(QStringLiteral("windowGeometry")).toByteArray());
     restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
     changeFrameskip(settings->value(QStringLiteral("frameskip"), 3).toUInt());
+    changeScale(settings->value(QStringLiteral("scale"), 1).toUInt());
+    toggleSkin(settings->value(QStringLiteral("skin"), 1).toBool());
     changeLCDRefresh(settings->value(QStringLiteral("refreshRate"), 60).toUInt());
     changeEmulatedSpeed(settings->value(QStringLiteral("emuRate"), 100).toUInt());
     alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toUInt());
@@ -555,6 +560,37 @@ void MainWindow::showAbout() {
     about_box.exec();
     #undef STRINGIFY
     #undef STRINGIFYMAGIC
+}
+
+void MainWindow::adjustScreen() {
+    int scale = ui->scaleSlider->value();
+    bool skin = ui->checkSkin->isChecked();
+    ui->calcSkinTop->setVisible(skin);
+    int w, h;
+    w = 320 * scale;
+    h = 240 * scale;
+    ui->lcdWidget->setMinimumSize(w, h);
+    ui->lcdWidget->setGeometry(skin ? 60 * scale : 0, skin ? 78 * scale : 0, w, h);
+    if (skin) {
+        w = 440 * scale;
+        h = 351 * scale;
+    }
+    ui->calcSkinTop->resize(w, h);
+    ui->screenWidgetContents->setMinimumSize(w, h);
+    ui->screenWidgetContents->setMaximumSize(w, h);
+}
+
+void MainWindow::changeScale(int scale) {
+    settings->setValue(QStringLiteral("scale"), scale);
+    ui->scaleLabel->setText(QString::number(scale) + "x");
+    ui->scaleSlider->setValue(scale);
+    adjustScreen();
+}
+
+void MainWindow::toggleSkin(bool enable) {
+    settings->setValue(QStringLiteral("skin"), enable);
+    ui->checkSkin->setChecked(enable);
+    adjustScreen();
 }
 
 void MainWindow::changeLCDRefresh(int value) {
