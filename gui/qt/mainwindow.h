@@ -115,6 +115,7 @@ private:
 
     // Settings
     void adjustScreen();
+    int reprintScale(int);
     void changeScale(int);
     void toggleSkin(bool);
     void changeLCDRefresh(int);

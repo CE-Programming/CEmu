@@ -126,6 +126,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     // Other GUI actions
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
+    connect(ui->scaleSlider, &QSlider::sliderMoved, this, &MainWindow::reprintScale);
     connect(ui->scaleSlider, &QSlider::valueChanged, this, &MainWindow::changeScale);
     connect(ui->checkSkin, &QCheckBox::stateChanged, this, &MainWindow::toggleSkin);
     connect(ui->refreshSlider, &QSlider::valueChanged, this, &MainWindow::changeLCDRefresh);
@@ -184,7 +185,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     restoreGeometry(settings->value(QStringLiteral("windowGeometry")).toByteArray());
     restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
     changeFrameskip(settings->value(QStringLiteral("frameskip"), 3).toUInt());
-    changeScale(settings->value(QStringLiteral("scale"), 1).toUInt());
+    changeScale(settings->value(QStringLiteral("scale"), 100).toUInt());
     toggleSkin(settings->value(QStringLiteral("skin"), 1).toBool());
     changeLCDRefresh(settings->value(QStringLiteral("refreshRate"), 60).toUInt());
     changeEmulatedSpeed(settings->value(QStringLiteral("emuRate"), 100).toUInt());
@@ -550,30 +551,32 @@ void MainWindow::screenContextMenu(const QPoint &posa) {
 }
 
 void MainWindow::adjustScreen() {
-    float scale = static_cast<float>(ui->scaleSlider->value());
-    if (!scale) {
-        scale = 0.5;
-    }
+    float scale = ui->scaleSlider->value() / 100.0;
     bool skin = ui->checkSkin->isChecked();
     ui->calcSkinTop->setVisible(skin);
     float w, h;
     w = 320 * scale;
     h = 240 * scale;
-    ui->lcdWidget->setMinimumSize(w, h);
-    ui->lcdWidget->setGeometry(skin ? 60 * scale : 0, skin ? 78 * scale : 0, w, h);
+    ui->lcdWidget->setFixedSize(w, h);
+    ui->lcdWidget->move(skin ? 60 * scale : 0, skin ? 78 * scale : 0);
     if (skin) {
         w = 440 * scale;
         h = 351 * scale;
     }
     ui->calcSkinTop->resize(w, h);
-    ui->screenWidgetContents->setMinimumSize(w, h);
-    ui->screenWidgetContents->setMaximumSize(w, h);
+    ui->screenWidgetContents->setFixedSize(w, h);
+}
+
+int MainWindow::reprintScale(int scale) {
+    int roundedScale = round(scale / 50.0) * 50;
+    ui->scaleLabel->setText(QString::number(roundedScale) + "%");
+    return roundedScale;
 }
 
 void MainWindow::changeScale(int scale) {
-    settings->setValue(QStringLiteral("scale"), scale);
-    ui->scaleLabel->setText(QString::number(scale>0?scale:.5) + "x");
-    ui->scaleSlider->setValue(scale);
+    int roundedScale = reprintScale(scale);
+    settings->setValue(QStringLiteral("scale"), roundedScale);
+    ui->scaleSlider->setValue(roundedScale);
     adjustScreen();
 }
 
