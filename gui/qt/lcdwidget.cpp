@@ -20,64 +20,9 @@
 
 LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
     connect(&refreshTimer, SIGNAL(timeout()), this, SLOT(repaint()));
-    connect(this, &QWidget::customContextMenuRequested, this, &LCDWidget::drawContext);
-
-    setFixedSize(320, 240);
-    lcdSize = 2;
 
     // Default rate is 60 FPS
     refreshRate(60);
-}
-
-void LCDWidget::drawContext(const QPoint& posa) {
-    QString open  = "Open...",
-            smal  = "Smallest",
-            small = "Small",
-            med   = "Medium",
-            large = "Large",
-            onTop = "Always on Top";
-
-    QPoint globalPos = this->mapToGlobal(posa);
-
-    QMenu contextMenu;
-    contextMenu.addAction(open);                // 0
-    contextMenu.addAction(smal);                // 1
-    contextMenu.addAction(small);               // 2
-    contextMenu.addAction(med);                 // 3
-    contextMenu.addAction(large);               // 4
-    contextMenu.addAction(onTop);               // 5
-    contextMenu.actions().at(1)->setCheckable(true);
-    contextMenu.actions().at(2)->setCheckable(true);
-    contextMenu.actions().at(3)->setCheckable(true);
-    contextMenu.actions().at(4)->setCheckable(true);
-    contextMenu.actions().at(5)->setCheckable(true);
-
-    contextMenu.actions().at(5)->setChecked(state_set);
-    contextMenu.actions().at(lcdSize)->setChecked(true);
-
-    QAction* selectedItem = contextMenu.exec(globalPos);
-    if (selectedItem) {
-        if (selectedItem->text() == open) {
-            emit lcdOpenRequested();
-            show();
-        } else if (selectedItem->text() == onTop){
-            state_set = !state_set;
-            setWindowFlags(state_set ? windowFlags() | Qt::WindowStaysOnTopHint : windowFlags() & ~Qt::WindowStaysOnTopHint);
-            show();
-        } else if (selectedItem->text() == smal) {
-            lcdSize = 1;
-            setFixedSize(320/2, 240/2);
-        } else if (selectedItem->text() == small) {
-            lcdSize = 2;
-            setFixedSize(320*1, 240*1);
-        } else if (selectedItem->text() == med) {
-            lcdSize = 3;
-            setFixedSize(320*2, 240*2);
-        } else if (selectedItem->text() == large) {
-            lcdSize = 4;
-            setFixedSize(320*3, 240*3);
-        }
-    }
 }
 
 LCDWidget::~LCDWidget(){}
@@ -91,17 +36,4 @@ void LCDWidget::refreshRate(int newrate) {
     refreshTimer.stop();
     refreshTimer.setInterval(1000 / newrate);
     refreshTimer.start();
-}
-
-void LCDWidget::showEvent(QShowEvent *e) {
-    QWidget::showEvent(e);
-}
-
-void LCDWidget::hideEvent(QHideEvent *e) {
-    QWidget::hideEvent(e);
-}
-
-void LCDWidget::closeEvent(QCloseEvent *e) {
-    QWidget::closeEvent(e);
-    emit closed();
 }

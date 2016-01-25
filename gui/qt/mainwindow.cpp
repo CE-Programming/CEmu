@@ -51,15 +51,13 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     // Register QtKeypadBridge for the virtual keyboard functionality
     this->installEventFilter(&qt_keypad_bridge);
+    ui->lcdWidget->installEventFilter(&qt_keypad_bridge);
     // Same for all the tabs/docks (iterate over them instead of harcoding their names)
     for (const auto& tab : ui->tabWidget->children()[0]->children()) {
         tab->installEventFilter(&qt_keypad_bridge);
     }
 
     ui->keypadWidget->setResizeMode(QQuickWidget::ResizeMode::SizeRootObjectToView);
-
-    // View
-    connect(ui->lcdWidget, &LCDWidget::lcdOpenRequested, this, &MainWindow::selectFiles);
 
     // Emulator -> GUI
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr);
@@ -137,6 +135,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(this, &MainWindow::changedEmuSpeed, &emu, &EmuThread::changeEmuSpeed);
     connect(this, &MainWindow::changedThrottleMode, &emu, &EmuThread::changeThrottleMode);
     connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showActualSpeed, Qt::QueuedConnection);
+    connect(ui->lcdWidget, &QWidget::customContextMenuRequested, this, &MainWindow::screenContextMenu);
 
     // Hex Editor
     connect(ui->buttonFlashGoto, &QPushButton::clicked, this, &MainWindow::flashGotoPressed);
@@ -546,11 +545,18 @@ void MainWindow::showAbout() {
     #undef STRINGIFYMAGIC
 }
 
+void MainWindow::screenContextMenu(const QPoint &posa) {
+
+}
+
 void MainWindow::adjustScreen() {
-    int scale = ui->scaleSlider->value();
+    float scale = static_cast<float>(ui->scaleSlider->value());
+    if (!scale) {
+        scale = 0.5;
+    }
     bool skin = ui->checkSkin->isChecked();
     ui->calcSkinTop->setVisible(skin);
-    int w, h;
+    float w, h;
     w = 320 * scale;
     h = 240 * scale;
     ui->lcdWidget->setMinimumSize(w, h);
@@ -566,7 +572,7 @@ void MainWindow::adjustScreen() {
 
 void MainWindow::changeScale(int scale) {
     settings->setValue(QStringLiteral("scale"), scale);
-    ui->scaleLabel->setText(QString::number(scale) + "x");
+    ui->scaleLabel->setText(QString::number(scale>0?scale:.5) + "x");
     ui->scaleSlider->setValue(scale);
     adjustScreen();
 }

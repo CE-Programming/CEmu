@@ -14,19 +14,10 @@ class LCDWidget : public QWidget
       ~LCDWidget();
       void refreshRate(int newrate);
 
-  signals:
-      void lcdOpenRequested();
-      void closed();
-
   protected:
       virtual void paintEvent(QPaintEvent */*event*/) Q_DECL_OVERRIDE;
-      virtual void showEvent(QShowEvent *e) Q_DECL_OVERRIDE;
-      virtual void hideEvent(QHideEvent *e) Q_DECL_OVERRIDE;
-      virtual void closeEvent(QCloseEvent *e) Q_DECL_OVERRIDE;
 
   private:
-      void drawContext(const QPoint& posa);
-
       int lcdSize = 0;
       bool state_set = false;
       QTimer refreshTimer;

@@ -99,6 +99,7 @@ private:
     bool addBreakpoint();
 
     // Others
+    void screenContextMenu(const QPoint &);
     void resetCalculator();
     void addEquateFile();
     void clearEquateFile();
