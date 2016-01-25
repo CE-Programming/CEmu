@@ -119,7 +119,6 @@ private:
     void changeLCDRefresh(int);
     void alwaysOnTop(int);
     void autoCheckForUpdates(int);
-    void popoutLCD();
 
     // Linking
     QStringList showVariableFileDialog(QFileDialog::AcceptMode mode);
@@ -158,7 +157,6 @@ private:
     QSettings *settings = nullptr;
     QDockWidget *debuggerDock = nullptr;
     QTextCursor disasmOffset;
-    bool detachedState = false;
     bool disasmOffsetSet;
     bool fromPane;
     int addressPane;
@@ -166,7 +164,6 @@ private:
 
     QDir currentDir;
     EmuThread emu;
-    LCDWidget detachedLCD;
 
     bool debuggerOn = false;
     bool inReceivingMode = false;

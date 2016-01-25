@@ -51,7 +51,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     // Register QtKeypadBridge for the virtual keyboard functionality
     this->installEventFilter(&qt_keypad_bridge);
-    detachedLCD.installEventFilter(&qt_keypad_bridge);
     // Same for all the tabs/docks (iterate over them instead of harcoding their names)
     for (const auto& tab : ui->tabWidget->children()[0]->children()) {
         tab->installEventFilter(&qt_keypad_bridge);
@@ -60,10 +59,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     ui->keypadWidget->setResizeMode(QQuickWidget::ResizeMode::SizeRootObjectToView);
 
     // View
-    detachedLCD.setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->actionDetached_LCD, &QAction::triggered, this, &MainWindow::popoutLCD);
-    connect(&detachedLCD, &LCDWidget::closed, this, &MainWindow::popoutLCD);
-    connect(&detachedLCD, &LCDWidget::lcdOpenRequested, this, &MainWindow::selectFiles);
     connect(ui->lcdWidget, &LCDWidget::lcdOpenRequested, this, &MainWindow::selectFiles);
 
     // Emulator -> GUI
@@ -291,7 +286,6 @@ void MainWindow::closeEvent(QCloseEvent *e) {
         qDebug("Failed.");
     }
 
-    detachedLCD.close();
     QMainWindow::closeEvent(e);
 }
 
@@ -311,16 +305,6 @@ void MainWindow::showActualSpeed(int speed) {
 
 void MainWindow::showStatusMsg(QString str) {
     statusLabel.setText(str);
-}
-
-void MainWindow::popoutLCD() {
-    detachedState = !detachedState;
-    if (detachedState) {
-        detachedLCD.show();
-    } else {
-        detachedLCD.hide();
-    }
-    ui->actionDetached_LCD->setChecked(detachedState);
 }
 
 bool MainWindow::runSetup() {
