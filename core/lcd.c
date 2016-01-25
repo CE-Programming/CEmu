@@ -19,7 +19,6 @@
 #include "interrupt.h"
 #include "mem.h"
 #include "emu.h"
-#include "capture/gif.h"
 
 /* Global LCD state */
 lcd_cntrl_state_t lcd;

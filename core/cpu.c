@@ -1312,10 +1312,12 @@ void cpu_execute(void) {
                                     cpu.IEF_wait = 1;
                                     save_next = cpu.next;
                                     cpu.next = cpu.cycles + 1; // execute one more instruction
+#ifdef DEBUG_SUPPORT
                                     if (cpu_events & EVENT_DEBUG_STEP) {
                                         cpu_events &= ~EVENT_DEBUG_STEP;
                                         open_debugger(DBG_STEP, 0);
                                     }
+#endif
                                     break;
                             }
                             break;

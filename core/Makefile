@@ -1,7 +1,7 @@
 GCC = gcc
 GXX = g++
 
-GCCFLAGS = -Wall -W
+GCCFLAGS = -Wall -W -fPIC -flto -O3 -g3
 
 OBJS = $(patsubst %.c, %.o, $(shell find . -name \*.c))
 OBJS += $(patsubst %.cpp, %.o, $(shell find . -name \*.cpp))
