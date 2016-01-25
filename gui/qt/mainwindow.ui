@@ -806,8 +806,17 @@
              </item>
              <item>
               <widget class="QLabel" name="scaleLabel">
+               <property name="minimumSize">
+                <size>
+                 <width>30</width>
+                 <height>0</height>
+                </size>
+               </property>
                <property name="text">
-                <string>1x</string>
+                <string>100%</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
               </widget>
              </item>
@@ -819,14 +828,29 @@
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
+               <property name="minimumSize">
+                <size>
+                 <width>60</width>
+                 <height>0</height>
+                </size>
+               </property>
                <property name="minimum">
-                <number>1</number>
+                <number>50</number>
                </property>
                <property name="maximum">
-                <number>4</number>
+                <number>400</number>
+               </property>
+               <property name="singleStep">
+                <number>50</number>
                </property>
                <property name="pageStep">
-                <number>1</number>
+                <number>100</number>
+               </property>
+               <property name="value">
+                <number>100</number>
+               </property>
+               <property name="tracking">
+                <bool>false</bool>
                </property>
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
@@ -835,7 +859,7 @@
                 <enum>QSlider::TicksBelow</enum>
                </property>
                <property name="tickInterval">
-                <number>1</number>
+                <number>50</number>
                </property>
               </widget>
              </item>
@@ -873,6 +897,12 @@
                  <horstretch>2</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>70</width>
+                 <height>0</height>
+                </size>
                </property>
                <property name="toolTip">
                 <string>Change this if your CPU is overloaded.</string>
