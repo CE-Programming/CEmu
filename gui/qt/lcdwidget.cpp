@@ -19,6 +19,7 @@
 #include "qtframebuffer.h"
 
 LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
+    setContextMenuPolicy(Qt::CustomContextMenu);
     connect(&refreshTimer, SIGNAL(timeout()), this, SLOT(repaint()));
 
     // Default rate is 60 FPS

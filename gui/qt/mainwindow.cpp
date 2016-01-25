@@ -547,7 +547,13 @@ void MainWindow::showAbout() {
 }
 
 void MainWindow::screenContextMenu(const QPoint &posa) {
-    ui->menubar->show();
+    QMenu contextMenu;
+    QPoint globalPos = ui->lcdWidget->mapToGlobal(posa);
+    QList<QMenu*> list = ui->menubar->findChildren<QMenu*>();
+    for (int i=0; i<list.size(); i++) {
+        contextMenu.addMenu(list.at(i));
+    }
+    contextMenu.exec(globalPos);
 }
 
 void MainWindow::adjustScreen() {
