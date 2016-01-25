@@ -1,27 +1,49 @@
 # CEmu [![Build Status](https://travis-ci.org/MateoConLechuga/CEmu.svg)](https://travis-ci.org/MateoConLechuga/CEmu) [![Build Status](https://scan.coverity.com/projects/7576/badge.svg)](https://scan.coverity.com/projects/mateoconlechuga-cemu)
 
-CEmu is an open-source third-party TI-84 Plus CE / TI-83 Premium CE calculator emulator.  
+CEmu is an open-source third-party TI-84 Plus CE / TI-83 Premium CE calculator emulator, especially focused on developer features.  
 
-CEmu has a customizable user interface to fit the needs of different types of users, like typical students, teachers (who will like the resizable, detached display), developers (who will enjoy the various debugging features)...  
+It has a very customizable user interface to fit the needs of different use cases.  
 Here are three setup examples of CEmu running on Mac OS X:
 
-Standard  | Teacher-oriented | Developer-oriented
+Minimalistic  | Bigger keypad and screen | With many debugging features
 ------------ | ------------- | -------------
 <a href="https://i.imgur.com/yU8xOqf.png"><img src="https://i.imgur.com/wYlQPgu.png" /></a>|<a href="https://i.imgur.com/cKYRuxM.png"><img src="https://i.imgur.com/edxwq7K.png" /></a>|<a href="https://i.imgur.com/c90lBOq.png"><img src="https://i.imgur.com/7GDppPH.png" /></a>
 
 With a core made in C and GUI in C++ with Qt, it works natively on many platforms.  
-In fact, the core has even been succesfully tested on web-browsers (JavaScript via Emscripten), the TI-Nspire CX (Ndless SDK), and the Apple Watch.
+In fact, the core has even been succesfully [tested](https://github.com/MateoConLechuga/CEmu/tree/master/gui) _(proof-of-concepts)_ on web-browsers (JavaScript via Emscripten), the TI-Nspire CX (Ndless SDK), and the Apple Watch.
 
-## License
-CEmu is licensed under the [GPLv3](LICENSE).  
-_Acknowledgements_: Some CEmu parts are, directly, modified, or inspired, from [z80e](https://github.com/KnightOS/z80e), [Firebird](https://github.com/nspire-emus/firebird), and [QHexEdit2](https://github.com/Simsys/qhexedit2). Their licensing information are available on the [LICENSE](LICENSE) file.
+## Features
+### _Standard features_
+* Built-in ROM dumper wizard - Because CEmu does not rely on downloading an OS from TI's website nor does it have a custom boot/loader, a ROM from your own calculator is required. CEmu makes it very easy to get it. 
+* Accurate and fast emulation (you can also customize the speed and even toggle throttling)
+* Resizable calculator screen
+* "Always-on-top" option
+* Screen capture (PNG, GIF)
+* Screen recording (animated GIF)
+* File sending/receiving _(partial, WIP)_
+
+### _Developer features_
+* Custom display refresh rate
+* Custom emulation speed/throttling
+* Code stepping, jumping...
+* R/W/X breakpoints
+* eZ80 disassembler
+* Port monitor/editor
+* Memory viewer/editor
+* CPU state/registers viewer/editor
+* LCD state/config. viewer/editor
+* Stack viewer
+* OP1-6 viewer
+* VAT viewer
+* Misc. emulation (backlight, battery...)
 
 ## Downloads
 No stable binaries yet as the code keeps changing these days! When available, they'll be here, though: https://github.com/MateoConLechuga/CEmu/releases  
-Nightly win32 binaries available here (hosted by pimathbrainiac): http://pimathbrainiac.me/CEmu/
+Nightly win32 binaries available here (hosted by pimathbrainiac): http://pimathbrainiac.me/CEmu/  
+_Note that Release builds have an update checking feature, which is disabled in development builds._
 
 ## How to build
-After downloading the source (you can clone the repo or just get the zip):
+After downloading the source (you can clone the repo or just [get the zip](https://github.com/MateoConLechuga/CEmu/archive/master.zip)):
 
 1. Get the [latest Qt5 SDK](https://www.qt.io/download-open-source/#section-3) for your OS.
   * On Windows, if you are building with Visual Studio, you must use
@@ -52,24 +74,32 @@ You're welcome to [report any bugs](https://github.com/MateoConLechuga/CEmu/issu
 
 
 ## TODO list
-### Core
+### _Core_
 * Implement unknown port range (0xDXXX)
 * Implement USB (0xDXXX appears to be a part of this as well)
 * Add more flash handlers
-* Fix known bugs
-* ...
+* Implement NMIs
 
-### Overall features
-* More robust and complete variable transfer (Calc <-> Computer)
-* ...
+### _Standard features_
+* More robust and complete variable transfer (Calc <-> Computer). _Related to USB emulation._
+* Integrate some TypeHandlers functions from [tivars_lib_cpp](https://github.com/adriweb/tivars_lib_cpp) to read variables' content.
 
-### GUI
+### _Developer features_
+* .lst parsing
+* Functions profiling (call count, time spent...)
+* Interfacing with bootcode functions such as `printf` (to print to the console)
+
+### _GUI_
 * Implement 83PCE/84+CE differences (2 keypad setups, "skins", etc.)
-* More translations (for now, it's available in English, French, and Spanish).
-* ...
 
-## In the future...
+## WISH list
 * Make a web-based version of CEmu, like there’s a web-based version of z80e for trying out KnightOS. _Compiling the CEmu core to JavaScript (and later WebAssembly), using Emscripten, is already known to work_
 * Think about CEmu's core’s integration on third-party projects, like TI-Planet's Project Builder - for instance, in C projects, in order to directly test the program, and eventually have live source-level debugging!
 * Look at [this gdb-z80](https://github.com/legumbre/gdb-z80) project (code from 2011...) ; try to see if it can be updated for eZ80, and used with a CEmu GDB stub. Mainlining such code is highly preferable.
+* More translations (for now, it's available in English, French, and Spanish). Qt Linguist is a great tool for that (here's [a tutorial](https://doc.qt.io/qt-5.5/linguist-manager.html)). We welcome Pull Requests :)
+* ASM instructions inline/hover help?
 * ...
+
+## License
+CEmu is licensed under the [GPLv3](LICENSE).  
+_Acknowledgements_: Some CEmu parts are, directly, modified, or inspired, from [z80e](https://github.com/KnightOS/z80e), [Firebird](https://github.com/nspire-emus/firebird), and [QHexEdit2](https://github.com/Simsys/qhexedit2). Their licensing information are available on the [LICENSE](LICENSE) file.
