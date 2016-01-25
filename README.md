@@ -1,6 +1,6 @@
 # CEmu [![Build Status](https://travis-ci.org/MateoConLechuga/CEmu.svg)](https://travis-ci.org/MateoConLechuga/CEmu) [![Build Status](https://scan.coverity.com/projects/7576/badge.svg)](https://scan.coverity.com/projects/mateoconlechuga-cemu)
 
-CEmu is an open-source third-party TI-84 Plus CE / TI-83 Premium CE calculator emulator, especially focused on developer features.  
+CEmu is a third-party TI-84 Plus CE / TI-83 Premium CE calculator emulator, especially focused on developer features.  
 
 It has a very customizable user interface to fit the needs of different use cases.  
 Here are three setup examples of CEmu running on Mac OS X:
@@ -14,7 +14,7 @@ In fact, the core has even been succesfully [tested](https://github.com/MateoCon
 
 ## Features
 ### _Standard features_
-* Built-in ROM dumper wizard - Because CEmu does not rely on downloading an OS from TI's website nor does it have a custom boot/loader, a ROM from your own calculator is required. CEmu makes it very easy to get it. 
+* Built-in ROM dumper wizard. CEmu does _not_ rely on downloading an OS from TI's website nor does it have a custom boot/loader, so a ROM from your own calculator is required. CEmu makes it very easy to get it. 
 * Accurate and fast emulation (you can also customize the speed and even toggle throttling)
 * Resizable calculator screen
 * "Always-on-top" option
