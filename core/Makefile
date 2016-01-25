@@ -1,14 +1,20 @@
 GCC = gcc
 GXX = g++
 
-GCCFLAGS = -Wall -W -fPIC -flto -O3 -g3
+# If you want no debug/symbols info, remove -g
+# If you need debug support, add -DDEBUG_SUPORT
+GCCFLAGS = -Wall -W -fPIC -flto -O3 -g -static
 
 OBJS = $(patsubst %.c, %.o, $(shell find . -name \*.c))
 OBJS += $(patsubst %.cpp, %.o, $(shell find . -name \*.cpp))
-EXE = cemu_core
-DISTDIR = .
 
-all: $(OBJS)
+STATICLIB = libcemucore.a
+
+.PHONY: all
+all: lib
+
+lib: $(OBJS)
+	ar rcs $(STATICLIB) $(OBJS)
 
 %.o: %.c
 	$(GCC) $(GCCFLAGS) -std=gnu11 -c $< -o $@
@@ -17,4 +23,4 @@ all: $(OBJS)
 	$(GXX) $(GCCFLAGS) -std=c++11 -c $< -o $@
 
 clean:
-	rm -f $(OBJS) $(DISTDIR)/$(EXE)
+	rm -f $(OBJS) $(STATICLIB)
