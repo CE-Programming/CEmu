@@ -67,6 +67,12 @@ bool listVariablesLink(void) {
     return true;
 }
 
+static uint32_t get_ptr(uint32_t address) {
+    return *phys_mem_ptr(address, 1)
+         | *phys_mem_ptr(address + 1, 1) << 8
+         | *phys_mem_ptr(address + 2, 1) << 16;
+}
+
 /* Really hackish way to send a variable -- Like, on a scale of 1 to hackish, it's like really hackish */
 /* Proper USB emulation should really be a thing at some point :P */
 bool sendVariableLink(const char *var_name) {
@@ -139,7 +145,7 @@ bool sendVariableLink(const char *var_name) {
     cpu.next = 10000000;
     cpu_execute();
 
-    var_ptr = phys_mem_ptr(debug_read_long(safe_ram_loc), 1);
+    var_ptr = phys_mem_ptr(get_ptr(safe_ram_loc), 1);
 
     var_size = (var_size_high << 8) | var_size_low;
 

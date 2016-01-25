@@ -547,7 +547,7 @@ void MainWindow::showAbout() {
 }
 
 void MainWindow::screenContextMenu(const QPoint &posa) {
-
+    ui->menubar->show();
 }
 
 void MainWindow::adjustScreen() {
