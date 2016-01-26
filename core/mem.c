@@ -279,7 +279,11 @@ uint8_t mem_read_byte(uint32_t address) {
     uint32_t ramAddress;
 
     address &= 0xFFFFFF;
-
+#ifdef DEBUG_SUPPORT
+    if (!inDebugger && debugger.data.block[address] & DBG_READ_BREAKPOINT) {
+        open_debugger(HIT_READ_BREAKPOINT, address);
+    }
+#endif
     switch((address >> 20) & 0xF) {
         /* FLASH */
         case 0x0: case 0x1: case 0x2: case 0x3:
@@ -307,11 +311,6 @@ uint8_t mem_read_byte(uint32_t address) {
             value = port_read_byte(mmio_range(address)<<12 | addr_range(address));
             break;
     }
-#ifdef DEBUG_SUPPORT
-    if (!inDebugger && debugger.data.block[address] & DBG_READ_BREAKPOINT) {
-        open_debugger(HIT_READ_BREAKPOINT, address);
-    }
-#endif
     return value;
 }
 
