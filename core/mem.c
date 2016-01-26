@@ -200,12 +200,6 @@ static uint8_t flash_read_handler(uint32_t address) {
     uint8_t sector;
 
     address = flash_address(address, NULL);
-    if (address < 0x10000) {
-        sector = address/flash_sector_size_8K;
-    } else {
-        sector = (address/flash_sector_size_64K)+7;
-    }
-
     if (flash.mapped) {
         switch(mem.flash.command) {
             case NO_COMMAND:
@@ -224,6 +218,11 @@ static uint8_t flash_read_handler(uint32_t address) {
                 mem.flash.command = NO_COMMAND;
                 break;
             case FLASH_READ_SECTOR_PROTECTION:
+                if (address < 0x10000) {
+                    sector = address/flash_sector_size_8K;
+                } else {
+                    sector = (address/flash_sector_size_64K)+7;
+                }
                 value = (uint8_t)mem.flash.sector[sector].locked;
                 break;
         }
