@@ -102,4 +102,4 @@ You're welcome to [report any bugs](https://github.com/MateoConLechuga/CEmu/issu
 
 ## License
 CEmu is licensed under the [GPLv3](LICENSE).  
-_Acknowledgements_: Some CEmu parts are, directly, modified, or inspired, from [z80e](https://github.com/KnightOS/z80e), [Firebird](https://github.com/nspire-emus/firebird), and [QHexEdit2](https://github.com/Simsys/qhexedit2). Their licensing information are available on the [LICENSE](LICENSE) file.
+_Acknowledgements_: Some CEmu parts are, directly, modified, or inspired, from [z80e](https://github.com/KnightOS/z80e), [Firebird](https://github.com/nspire-emus/firebird), and [QHexEdit2](https://github.com/Simsys/qhexedit2). The complete licensing information is available in the [LICENSE](LICENSE) file.
