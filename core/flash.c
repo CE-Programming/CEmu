@@ -7,6 +7,15 @@
 /* Global flash state */
 flash_state_t flash;
 
+static void flash_set_map(uint8_t map) {
+    flash.map = map;
+    if (map & 8) {
+        flash.mask = 0xFFFF;
+    } else {
+        flash.mask = ((0x10000 << (map & 7)) - 1) & 0x3FFFFF;
+    }
+}
+
 /* Read from the 0x1000 range of ports */
 static uint8_t flash_read(const uint16_t pio) {
     uint8_t index = pio & 0xFF;
@@ -38,7 +47,7 @@ static void flash_write(const uint16_t pio, const uint8_t byte) {
             flash.mapped = byte;
             break;
         case 0x02:
-            flash.map = byte;
+            flash_set_map(byte);
             break;
         case 0x05:
             flash.addedWaitStates = byte;
@@ -60,7 +69,7 @@ eZ80portrange_t init_flash(void) {
     flash.ports[0x00] = 0x01; /* From WikiTI */
     flash.ports[0x07] = 0xFF; /* From WikiTI */
     flash.mapped = 1;
-    flash.map = 6;
+    flash_set_map(6);
 
     gui_console_printf("Initialized flash device...\n");
     return device;
