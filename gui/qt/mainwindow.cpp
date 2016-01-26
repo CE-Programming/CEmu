@@ -188,7 +188,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     changeScale(settings->value(QStringLiteral("scale"), 100).toUInt());
     toggleSkin(settings->value(QStringLiteral("skin"), 1).toBool());
     changeLCDRefresh(settings->value(QStringLiteral("refreshRate"), 60).toUInt());
-    changeEmulatedSpeed(settings->value(QStringLiteral("emuRate"), 100).toUInt());
+    changeEmulatedSpeed(settings->value(QStringLiteral("emuRate"), 10).toUInt());
     alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toUInt());
     setFont(settings->value(QStringLiteral("textSize"), 9).toUInt());
     autoCheckForUpdates(settings->value(QStringLiteral("autoUpdate"), false).toBool());
