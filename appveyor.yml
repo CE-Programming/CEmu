@@ -1,3 +1,5 @@
+os: test
+
 environment:
   BINTRAY_API_KEY:
     secure: AGZJlJvqTJR3lySeBoANrPYyWfgLJciSqTZm3/ZEPbUx4dQ9m1fiWGY3RYBGaYOq
