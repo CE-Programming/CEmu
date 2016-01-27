@@ -1041,7 +1041,7 @@ void cpu_execute(void) {
         do {
             // fetch opcode
             context.opcode = cpu_fetch_byte();
-            r->R = ((r->R + 1) & 0x7F) | (r->R & 0x80);
+            r->R += 2;
             switch (context.x) {
                 case 0:
                     switch (context.z) {
@@ -1268,6 +1268,7 @@ void cpu_execute(void) {
                                 case 1: // 0xCB prefixed opcodes
                                     w = cpu_index_address();
                                     context.opcode = cpu_fetch_byte();
+                                    r->R += ~cpu.PREFIX & 2;
                                     old = cpu_read_reg_prefetched(context.z, w);
                                     switch (context.x) {
                                         case 0: // rot[y] r[z]
@@ -1344,6 +1345,7 @@ void cpu_execute(void) {
                                         case 2: // 0xED prefixed opcodes
                                             cpu.PREFIX = 0; // ED cancels effect of DD/FD prefix
                                             context.opcode = cpu_fetch_byte();
+                                            r->R += 2;
                                             switch (context.x) {
                                                 case 0:
                                                     switch (context.z) {
@@ -1535,7 +1537,7 @@ void cpu_execute(void) {
                                                                     r->I = r->A | (r->I & 0xF0);
                                                                     break;
                                                                 case 1: // LD R, A
-                                                                    r->R = r->A;
+                                                                    r->R = r->A << 1 | r->A >> 7;
                                                                     break;
                                                                 case 2: // LD A, I
                                                                     r->A = r->I & 0x0F;
@@ -1544,7 +1546,7 @@ void cpu_execute(void) {
                                                                         | cpuflag_subtract(0) | cpuflag_c(r->flags.C);
                                                                     break;
                                                                 case 3: // LD A, R
-                                                                    r->A = r->R;
+                                                                    r->A = r->R >> 1 | r->R << 7;
                                                                     r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
                                                                         | cpuflag_undef(r->F) | cpuflag_pv(cpu.IEF1)
                                                                         | cpuflag_subtract(0) | cpuflag_c(r->flags.C);

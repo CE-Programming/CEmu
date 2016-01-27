@@ -820,90 +820,92 @@ void MainWindow::raiseDebugger() {
 }
 
 void MainWindow::updateDebuggerChanges() {
-  /* Update all the changes in the core */
-  if (debuggerOn == false) {
-      cpu.registers.AF = static_cast<uint16_t>(hex2int(ui->afregView->text()));
-      cpu.registers.HL = static_cast<uint32_t>(hex2int(ui->hlregView->text()));
-      cpu.registers.DE = static_cast<uint32_t>(hex2int(ui->deregView->text()));
-      cpu.registers.BC = static_cast<uint32_t>(hex2int(ui->bcregView->text()));
-      cpu.registers.IX = static_cast<uint32_t>(hex2int(ui->ixregView->text()));
-      cpu.registers.IY = static_cast<uint32_t>(hex2int(ui->iyregView->text()));
+    /* Update all the changes in the core */
+    if (debuggerOn == false) {
+        cpu.registers.AF = static_cast<uint16_t>(hex2int(ui->afregView->text()));
+        cpu.registers.HL = static_cast<uint32_t>(hex2int(ui->hlregView->text()));
+        cpu.registers.DE = static_cast<uint32_t>(hex2int(ui->deregView->text()));
+        cpu.registers.BC = static_cast<uint32_t>(hex2int(ui->bcregView->text()));
+        cpu.registers.IX = static_cast<uint32_t>(hex2int(ui->ixregView->text()));
+        cpu.registers.IY = static_cast<uint32_t>(hex2int(ui->iyregView->text()));
 
-      cpu.registers._AF = static_cast<uint16_t>(hex2int(ui->af_regView->text()));
-      cpu.registers._HL = static_cast<uint32_t>(hex2int(ui->hl_regView->text()));
-      cpu.registers._DE = static_cast<uint32_t>(hex2int(ui->de_regView->text()));
-      cpu.registers._BC = static_cast<uint32_t>(hex2int(ui->bc_regView->text()));
+        cpu.registers._AF = static_cast<uint16_t>(hex2int(ui->af_regView->text()));
+        cpu.registers._HL = static_cast<uint32_t>(hex2int(ui->hl_regView->text()));
+        cpu.registers._DE = static_cast<uint32_t>(hex2int(ui->de_regView->text()));
+        cpu.registers._BC = static_cast<uint32_t>(hex2int(ui->bc_regView->text()));
 
-      cpu.registers.SPL = static_cast<uint32_t>(hex2int(ui->splregView->text()));
-      cpu.registers.SPS = static_cast<uint16_t>(hex2int(ui->spsregView->text()));
+        cpu.registers.SPL = static_cast<uint32_t>(hex2int(ui->splregView->text()));
+        cpu.registers.SPS = static_cast<uint16_t>(hex2int(ui->spsregView->text()));
 
-      cpu.registers.MBASE = static_cast<uint8_t>(hex2int(ui->mbregView->text()));
-      cpu.registers.I = static_cast<uint16_t>(hex2int(ui->iregView->text()));
-      cpu.registers.R = static_cast<uint8_t>(hex2int(ui->rregView->text()));
-      cpu.IM = static_cast<uint8_t>(hex2int(ui->imregView->text()));
+        cpu.registers.MBASE = static_cast<uint8_t>(hex2int(ui->mbregView->text()));
+        cpu.registers.I = static_cast<uint16_t>(hex2int(ui->iregView->text()));
+        cpu.registers.R = static_cast<uint8_t>(hex2int(ui->rregView->text()));
+        cpu.registers.R = cpu.registers.R << 1 | cpu.registers.R >> 7;
+        cpu.IM = static_cast<uint8_t>(hex2int(ui->imregView->text()));
+        cpu.IM += !!cpu.IM;
 
-      cpu.registers.flags.Z = ui->checkZ->isChecked();
-      cpu.registers.flags.C = ui->checkC->isChecked();
-      cpu.registers.flags.H = ui->checkHC->isChecked();
-      cpu.registers.flags.PV = ui->checkPV->isChecked();
-      cpu.registers.flags.N = ui->checkN->isChecked();
-      cpu.registers.flags.S = ui->checkS->isChecked();
-      cpu.registers.flags._5 = ui->check5->isChecked();
-      cpu.registers.flags._3 = ui->check3->isChecked();
+        cpu.registers.flags.Z = ui->checkZ->isChecked();
+        cpu.registers.flags.C = ui->checkC->isChecked();
+        cpu.registers.flags.H = ui->checkHC->isChecked();
+        cpu.registers.flags.PV = ui->checkPV->isChecked();
+        cpu.registers.flags.N = ui->checkN->isChecked();
+        cpu.registers.flags.S = ui->checkS->isChecked();
+        cpu.registers.flags._5 = ui->check5->isChecked();
+        cpu.registers.flags._3 = ui->check3->isChecked();
 
-      cpu.halted = ui->checkHalted->isChecked();
-      cpu.MADL = ui->checkMADL->isChecked();
-      cpu.halted = ui->checkHalted->isChecked();
-      cpu.IEF1 = ui->checkIEF1->isChecked();
-      cpu.IEF2 = ui->checkIEF2->isChecked();
+        cpu.halted = ui->checkHalted->isChecked();
+        cpu.MADL = ui->checkMADL->isChecked();
+        cpu.halted = ui->checkHalted->isChecked();
+        cpu.IEF1 = ui->checkIEF1->isChecked();
+        cpu.IEF2 = ui->checkIEF2->isChecked();
 
-      cpu_flush(static_cast<uint32_t>(hex2int(ui->pcregView->text())), ui->checkADL->isChecked());
+        cpu_flush(static_cast<uint32_t>(hex2int(ui->pcregView->text())), ui->checkADL->isChecked());
 
-      backlight.brightness = static_cast<uint8_t>(ui->brightnessSlider->value());
+        backlight.brightness = static_cast<uint8_t>(ui->brightnessSlider->value());
 
-      lcd.upbase = static_cast<uint32_t>(hex2int(ui->lcdbaseView->text()));
-      lcd.upcurr = static_cast<uint32_t>(hex2int(ui->lcdcurrView->text()));
-      lcd.control &= ~14;
+        lcd.upbase = static_cast<uint32_t>(hex2int(ui->lcdbaseView->text()));
+        lcd.upcurr = static_cast<uint32_t>(hex2int(ui->lcdcurrView->text()));
+        lcd.control &= ~14;
 
-      uint8_t bpp = 0;
-      switch(ui->bppView->text().toInt()) {
-          case 2:
-              bpp = 1; break;
-          case 4:
-              bpp = 2; break;
-          case 8:
-              bpp = 3; break;
-          case 24:
-              bpp = 5; break;
-          case 16:
-              bpp = 6; break;
-          case 12:
-              bpp = 7; break;
-      }
+        uint8_t bpp = 0;
+        switch(ui->bppView->text().toInt()) {
+            case 2:
+                bpp = 1; break;
+            case 4:
+                bpp = 2; break;
+            case 8:
+                bpp = 3; break;
+            case 24:
+                bpp = 5; break;
+            case 16:
+                bpp = 6; break;
+            case 12:
+                bpp = 7; break;
+        }
 
-      lcd.control |= bpp<<1;
+        lcd.control |= bpp<<1;
 
-      if (ui->checkPowered->isChecked()) {
-          lcd.control |= 0x800;
-      } else {
-          lcd.control &= ~0x800;
-      }
-      if (ui->checkBEPO->isChecked()) {
-          lcd.control |= 0x400;
-      } else {
-          lcd.control &= ~0x400;
-      }
-      if (ui->checkBEBO->isChecked()) {
-          lcd.control |= 0x200;
-      } else {
-          lcd.control &= ~0x200;
-      }
-      if (ui->checkBGR->isChecked()) {
-          lcd.control |= 0x100;
-      } else {
-          lcd.control &= ~0x100;
-      }
-  }
+        if (ui->checkPowered->isChecked()) {
+            lcd.control |= 0x800;
+        } else {
+            lcd.control &= ~0x800;
+        }
+        if (ui->checkBEPO->isChecked()) {
+            lcd.control |= 0x400;
+        } else {
+            lcd.control &= ~0x400;
+        }
+        if (ui->checkBEBO->isChecked()) {
+            lcd.control |= 0x200;
+        } else {
+            lcd.control &= ~0x200;
+        }
+        if (ui->checkBGR->isChecked()) {
+            lcd.control |= 0x100;
+        } else {
+            lcd.control &= ~0x100;
+        }
+    }
 }
 
 void MainWindow::setDebuggerState(bool state) {
@@ -1031,6 +1033,7 @@ void MainWindow::populateDebugWindow() {
     ui->iregView->setPalette(tmp == ui->iregView->text() ? nocolorback : colorback);
     ui->iregView->setText(tmp);
 
+    cpu.IM -= !!cpu.IM;
     tmp = int2hex(cpu.IM, 1);
     ui->imregView->setPalette(tmp == ui->imregView->text() ? nocolorback : colorback);
     ui->imregView->setText(tmp);
@@ -1039,6 +1042,7 @@ void MainWindow::populateDebugWindow() {
     ui->pcregView->setPalette(tmp == ui->pcregView->text() ? nocolorback : colorback);
     ui->pcregView->setText(tmp);
 
+    cpu.registers.R = cpu.registers.R >> 1 | cpu.registers.R << 7;
     tmp = int2hex(cpu.registers.R, 2);
     ui->rregView->setPalette(tmp == ui->rregView->text() ? nocolorback : colorback);
     ui->rregView->setText(tmp);
