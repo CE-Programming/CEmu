@@ -1639,7 +1639,7 @@ QString MainWindow::getAddressString(bool &ok, QString String) {
                                          tr("Input Address (In Hexadecimal):"), QLineEdit::Normal,
                                          String, &ok).toUpper();
 
-    if (!ok || (address.toStdString().find_first_not_of("0123456789ABCDEF") != std::string::npos) || (address.length() > 6)) {
+    if (!ok || (address.toStdString().find_first_not_of("0123456789ABCDEF") != std::string::npos) || (address.length() > 6) || !address.length()) {
         ok = false;
         return QStringLiteral("");
     }
