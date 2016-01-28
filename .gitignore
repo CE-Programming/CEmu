@@ -36,5 +36,6 @@ gui/build*
 *.autosave
 core/*.autosave
 
-# Windows crap
+# Windows and Mac crap
 Thumbs.db
+.DS_Store
