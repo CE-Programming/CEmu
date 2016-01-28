@@ -78,7 +78,6 @@ You're welcome to [report any bugs](https://github.com/MateoConLechuga/CEmu/issu
 * Implement unknown port range (0xDXXX)
 * Implement USB (0xDXXX appears to be a part of this as well)
 * Add more flash handlers
-* Implement NMIs
 
 ### _Standard features_
 * More robust and complete variable transfer (Calc <-> Computer). _Related to USB emulation._

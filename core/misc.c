@@ -1,5 +1,6 @@
 #include <string.h>
 
+#include "cpu.h"
 #include "misc.h"
 #include "schedule.h"
 #include "emu.h"
@@ -20,14 +21,14 @@ static void watchdog_event(int index) {
         if (--watchdog.count == 0) {
             watchdog.status = 1;
             watchdog.count = watchdog.load;
+            if (watchdog.control & 2) {
+                cpu_events |= EVENT_RESET;
+            }
+            if (watchdog.control & 4) {
+                cpu_nmi();
+            }
+            gui_console_printf("Watchdog reset triggered...");
         }
-    }
-
-    if ((watchdog.count == 0) && ((watchdog.control & 2) || (watchdog.control & 1))) {
-        cpu_events |= EVENT_RESET;
-        gui_console_printf("Watchdog reset triggered...");
-    } else {
-        /* intrpt_trigger(INT_WATCHDOG, INTERRUPT_SET); */
         event_repeat(SCHED_WATCHDOG, watchdog.load);
     }
 }
