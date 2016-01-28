@@ -983,6 +983,11 @@ void cpu_flush(uint32_t address, bool mode) {
     cpu_get_cntrl_data_blocks_format();
 }
 
+void cpu_nmi(void) {
+    cpu.NMI = 1;
+    cpu.next = cpu.cycles;
+}
+
 void cpu_execute(void) {
     // variable declaration
     int8_t s;
@@ -1020,10 +1025,14 @@ void cpu_execute(void) {
             cpu.IEF1 = cpu.IEF2 = 1;
             cpu.next = save_next;
         }
-        if (cpu.IEF1 && (intrpt.request->status & intrpt.request->enabled)) {
+        if (cpu.NMI || (cpu.IEF1 && (intrpt.request->status & intrpt.request->enabled))) {
             cpu.IEF1 = cpu.IEF2 = cpu.halted = 0;
             cpu.cycles += 1;
-            if (cpu.IM != 3) {
+            if (cpu.NMI) {
+                cpu.NMI = 0;
+                cpu_call(0x66, cpu.MADL);
+                cpu.next = save_next;
+            } else if (cpu.IM != 3) {
                 cpu_call(0x38, cpu.MADL);
             } else {
                 cpu.cycles += 1;

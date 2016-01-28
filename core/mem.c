@@ -4,6 +4,7 @@
 #include "emu.h"
 #include "cpu.h"
 #include "flash.h"
+#include "control.h"
 
 /* Global MEMORY state */
 mem_state_t mem;
@@ -322,7 +323,9 @@ void mem_write_byte(uint32_t address, uint8_t byte) {
         /* FLASH */
         case 0x0: case 0x1: case 0x2: case 0x3:
         case 0x4: case 0x5: case 0x6: case 0x7:
-            if (!mem.flash.locked) {
+            if (mem.flash.locked && cpu.registers.PC >= control.privileged) {
+                cpu_nmi();
+            } else {
                 flash_write_handler(address, byte);
             }
             break;

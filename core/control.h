@@ -25,6 +25,8 @@ typedef struct control_state {
     uint8_t setBatteryStatus;
     uint8_t readBatteryStatus;
     bool batteryCharging;
+
+    uint32_t privileged;
 } control_state_t;
 
 /* Global CONTROL state */

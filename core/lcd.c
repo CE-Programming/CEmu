@@ -17,7 +17,7 @@
 #include "lcd.h"
 #include "schedule.h"
 #include "interrupt.h"
-#include "mem.h"
+#include "cpu.h"
 #include "emu.h"
 
 /* Global LCD state */

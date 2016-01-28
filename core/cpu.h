@@ -33,11 +33,12 @@ typedef struct eZ80cpu {
     eZ80portrange_t prange[0x10];    /* 0x0-0xF */
     eZ80registers_t registers;
     struct {
-        uint8_t IEF1        : 1;  /* IFlag1                 */
-        uint8_t IEF2        : 1;  /* IFlag2                 */
-        uint8_t ADL         : 1;  /* ADL bit                */
-        uint8_t MADL        : 1;  /* Mixed-Memory modes     */
-        uint8_t IM          : 2;  /* Current interrupt mode */
+        uint8_t NMI         : 1;  /* Non-Maskable interrupt  */
+        uint8_t IEF1        : 1;  /* Interrupt enable flag 1 */
+        uint8_t IEF2        : 1;  /* Interrupt enable flag 2 */
+        uint8_t ADL         : 1;  /* ADL bit                 */
+        uint8_t MADL        : 1;  /* Mixed-Memory modes      */
+        uint8_t IM          : 2;  /* Current interrupt mode  */
 
         /* Internal use: */
         uint8_t PREFIX      : 2;  /* Which index register is in use. 0: hl, 2: ix, 3: iy                                         */
@@ -60,6 +61,7 @@ extern eZ80cpu_t cpu;
 void cpu_init(void);
 void cpu_reset(void);
 void cpu_flush(uint32_t, bool);
+void cpu_nmi(void);
 void cpu_execute(void);
 
 #ifdef __cplusplus

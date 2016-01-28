@@ -33,6 +33,11 @@ static uint8_t control_read(const uint16_t pio) {
             if(control.USBConnected)    { value |= 0x80; }
             if(control.noPlugAInserted) { value |= 0x40; }
             break;
+        case 0x1D:
+        case 0x1E:
+        case 0x1F:
+            value = read8(control.privileged, (index - 0x1D) << 3);
+            break;
         case 0x28:
             value = control.ports[index] | 0x08;
             break;
@@ -113,8 +118,15 @@ static void control_write(const uint16_t pio, const uint8_t byte) {
         case 0x0F:
             control.ports[index] = byte & 3;
             break;
+        case 0x1D:
+        case 0x1E:
+        case 0x1F:
+            write8(control.privileged, (index - 0x1D) << 3, byte);
+            break;
         case 0x28:
-            mem.flash.locked = (byte & 4) == 0;
+            if (cpu.registers.PC < control.privileged) {
+                mem.flash.locked = (byte & 4) == 0;
+            }
             control.ports[index] = byte & 247;
             break;
         default:
@@ -134,6 +146,7 @@ eZ80portrange_t init_control(void) {
     /* Set default state to full battery and not charging */
     control.batteryCharging = false;
     control.setBatteryStatus = BATTERY_4;
+    control.privileged = 0;
 
     return device;
 }
