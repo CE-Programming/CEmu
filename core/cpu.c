@@ -53,7 +53,7 @@ static void cpu_prefetch(uint32_t address, bool mode) {
 static uint8_t cpu_fetch_byte(void) {
     uint8_t value;
 #ifdef DEBUG_SUPPORT
-    if (!inDebugger && (debugger.data.block[cpu.registers.PC] & (DBG_EXEC_BREAKPOINT | DBG_STEP_OVER_BREAKPOINT | DBG_RUN_UNTIL_BREAKPOINT))) {
+    if (debugger.data.block[cpu.registers.PC] & (DBG_EXEC_BREAKPOINT | DBG_STEP_OVER_BREAKPOINT | DBG_RUN_UNTIL_BREAKPOINT)) {
         open_debugger((debugger.data.block[cpu.registers.PC] & DBG_EXEC_BREAKPOINT) ? HIT_EXEC_BREAKPOINT : DBG_STEP, cpu.registers.PC);
     }
 #endif
@@ -1581,7 +1581,7 @@ void cpu_execute(void) {
                                                     }
                                                     break;
                                                 case 2:
-                                                    if (context.y >= 0 && context.z <= 4) { // bli[y,z]
+                                                    if (context.z <= 4) { // bli[y,z]
                                                         cpu_execute_bli(context.y, context.z);
                                                     } else { // OPCODETRAP
                                                         cpu.IEF_wait = 1;

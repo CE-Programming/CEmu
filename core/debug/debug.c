@@ -86,6 +86,9 @@ void debug_port_write_byte(uint32_t address, uint8_t value) {
 /* okay, so looking at the data inside the asic should be okay when using this function, */
 /* since it is called outside of cpu_execute(). Which means no read/write errors. */
 void open_debugger(int reason, uint32_t address) {
+    if (inDebugger) {
+        return; // don't recurse
+    }
     debugger.cpu_cycles = cpu.cycles;
     gui_debugger_entered_or_left(inDebugger = true);
 

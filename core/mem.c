@@ -280,7 +280,7 @@ uint8_t mem_read_byte(uint32_t address) {
 
     address &= 0xFFFFFF;
 #ifdef DEBUG_SUPPORT
-    if (!inDebugger && debugger.data.block[address] & DBG_READ_BREAKPOINT) {
+    if (debugger.data.block[address] & DBG_READ_BREAKPOINT) {
         open_debugger(HIT_READ_BREAKPOINT, address);
     }
 #endif
@@ -348,7 +348,7 @@ void mem_write_byte(uint32_t address, uint8_t byte) {
             break;
     }
 #ifdef DEBUG_SUPPORT
-    if (!inDebugger && debugger.data.block[address] & DBG_WRITE_BREAKPOINT) {
+    if (debugger.data.block[address] & DBG_WRITE_BREAKPOINT) {
         open_debugger(HIT_WRITE_BREAKPOINT, address);
     }
 #endif
