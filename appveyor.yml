@@ -1,13 +1,8 @@
-os: test
-
 environment:
   BINTRAY_API_KEY:
     secure: AGZJlJvqTJR3lySeBoANrPYyWfgLJciSqTZm3/ZEPbUx4dQ9m1fiWGY3RYBGaYOq
   BINTRAY_API_USERNAME:
     secure: QyZ6LhunNhgW3l/1aiGROg==
-
-init:
-  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 install:
   - C:\Python35\Scripts\pip install requests
