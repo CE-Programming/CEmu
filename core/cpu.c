@@ -30,8 +30,7 @@ eZ80cpu_t cpu;
 
 static void cpu_get_cntrl_data_blocks_format(void) {
     cpu.PREFIX = cpu.SUFFIX = 0;
-    cpu.L = cpu.ADL;
-    cpu.IL = cpu.ADL;
+    cpu.L = cpu.IL = cpu.ADL;
 }
 
 static uint32_t cpu_mask_mode(uint32_t value, bool mode) {
@@ -575,6 +574,8 @@ static void cpu_execute_rot_acc(int y)
             break;
     }
 }
+
+
 
 static void cpu_execute_bli(int y, int z) {
     eZ80registers_t *r = &cpu.registers;
@@ -1592,6 +1593,24 @@ void cpu_execute(void) {
                                                                     break;
                                                             }
                                                             break;
+                                                    }
+                                                    break;
+                                                case 2 + 4:
+                                                case 3 + 4:
+                                                    if (context.y <= 4) { // bli[y,z]
+                                                        
+                                                    } else {
+                                                        switch (context.opcode) {
+                                                            case 0xC7: // LD I, HL
+                                                                r->I = r->HL;
+                                                                break;
+                                                            case 0xD7: // LD HL, I
+                                                                r->HL = r->MBASE << 16 | r->I;
+                                                                break;
+                                                            default: // OPCADETRAP
+                                                                cpu_trap();
+                                                                break;
+                                                        }
                                                     }
                                                     break;
                                                 case 2:

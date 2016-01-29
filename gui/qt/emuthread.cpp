@@ -146,6 +146,8 @@ void EmuThread::doStuff() {
 }
 
 void EmuThread::setActualSpeed(int value) {
+    static int max = 0;
+    if (value > max) printf("%d%%\n", max = value);
     if(!calc_is_off()) {
         if (actualSpeed != value) {
             emit actualSpeedChanged(actualSpeed = value);
