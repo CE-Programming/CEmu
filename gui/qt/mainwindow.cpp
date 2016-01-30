@@ -242,7 +242,7 @@ void MainWindow::dropEvent(QDropEvent *e) {
         files.append(url.toLocalFile());
     }
     setSendState(true);
-    QThread::msleep(300);
+    QThread::msleep(50);
 
     sendFiles(files);
 }
@@ -673,7 +673,7 @@ void MainWindow::sendFiles(QStringList fileNames) {
     }
 
     setSendState(false);
-    QThread::msleep(300);
+    QThread::msleep(50);
     ui->sendBar->setMaximum(1);
     ui->sendBar->setValue(0);
 }
@@ -714,7 +714,7 @@ void MainWindow::refreshVariableList() {
         ui->actionReset_Calculator->setEnabled(false);
         ui->buttonRun->setEnabled(false);
         setReceiveState(true);
-        QThread::msleep(500);
+        QThread::msleep(50);
 
         vat_search_init(&var);
         vars.clear();

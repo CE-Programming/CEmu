@@ -123,11 +123,22 @@ bool sendVariableLink(const char *var_name) {
     save_cycles = cpu.cycles;
     save_next = cpu.next;
 
+    if (control.ports[0] & 0x40) {
+        intrpt_set(INT_ON, true);
+        control.readBatteryStatus = ~1;
+        intrpt_pulse(19);
+        cpu.cycles = cpu.IEF_wait = 0;
+        cpu.next = 5000000;
+        cpu_execute();
+        intrpt_set(INT_ON, false);
+        return false;
+    }
+
     cpu.halted = cpu.IEF_wait = 0;
     memcpy(run_asm_safe, jforcegraph, sizeof(jforcegraph));
     cpu_flush(safe_ram_loc, 1);
     cpu.cycles = 0;
-    cpu.next = 5000000;
+    cpu.next = 500000;
     cpu_execute();
 
     if (fseek(file, 0x3B, 0))                            goto r_err;
@@ -165,7 +176,7 @@ bool sendVariableLink(const char *var_name) {
     memcpy(run_asm_safe, jforcehome, sizeof(jforcehome));
     cpu_flush(safe_ram_loc, 1);
     cpu.cycles = 0;
-    cpu.next = 5000000;
+    cpu.next = 500000;
     cpu_execute();
 
     cpu.cycles = save_cycles;
@@ -174,6 +185,8 @@ bool sendVariableLink(const char *var_name) {
     return !fclose(file);
 
 r_err:
+    cpu.cycles = save_cycles;
+    cpu.next = save_next;
     fclose(file);
     return false;
 }
