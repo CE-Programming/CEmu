@@ -115,6 +115,10 @@ ti_device_type get_device_type(void) {
     return asic.deviceType;
 }
 
+bool calc_is_off(void) {
+    return control.ports[0] & 0x40 ? true : false;
+}
+
 uint32_t set_cpu_clock_rate(uint32_t new_rate) {
     uint32_t old_rate = sched.clockRates[CLOCK_CPU];
     uint32_t cpu_new_rate[1] = { new_rate };

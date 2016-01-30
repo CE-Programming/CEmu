@@ -123,7 +123,7 @@ bool sendVariableLink(const char *var_name) {
     save_cycles = cpu.cycles;
     save_next = cpu.next;
 
-    if (control.ports[0] & 0x40) {
+    if (calc_is_off()) {
         intrpt_set(INT_ON, true);
         control.readBatteryStatus = ~1;
         intrpt_pulse(19);

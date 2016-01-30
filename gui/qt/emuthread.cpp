@@ -146,8 +146,10 @@ void EmuThread::doStuff() {
 }
 
 void EmuThread::setActualSpeed(int value) {
-    if (actualSpeed != value) {
-        emit actualSpeedChanged(actualSpeed = value);
+    if(!calc_is_off()) {
+        if (actualSpeed != value) {
+            emit actualSpeedChanged(actualSpeed = value);
+        }
     }
 }
 

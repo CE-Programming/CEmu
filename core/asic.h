@@ -37,6 +37,7 @@ void asic_reset(void);
 
 void set_device_type(ti_device_type device);
 ti_device_type get_device_type(void);
+bool calc_is_off(void);
 
 uint32_t set_cpu_clock_rate(uint32_t new_rate);
 

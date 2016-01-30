@@ -3,6 +3,7 @@
 #include "schedule.h"
 #include "interrupt.h"
 #include "control.h"
+#include "asic.h"
 
 /* Global KEYPAD state */
 keypad_state_t keypad;
@@ -14,7 +15,7 @@ void keypad_intrpt_check() {
 void keypad_key_event(unsigned int row, unsigned int col, bool press) {
     if (row == 2 && col == 0) {
         intrpt_set(INT_ON, press);
-        if (press && control.ports[0] & 0x40) {
+        if (press && calc_is_off()) {
             control.readBatteryStatus = ~1;
             intrpt_pulse(19);
         }
