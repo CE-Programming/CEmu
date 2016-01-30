@@ -101,8 +101,10 @@ private:
     // Others
     void screenContextMenu(const QPoint &);
     void resetCalculator();
-    void addEquateFile();
+    void addEquateFileDialog();
+    void addEquateFile(QString);
     void clearEquateFile();
+    void refreshEquateFile();
 
     // Speed
     void changeEmulatedSpeed(int);
@@ -165,6 +167,7 @@ private:
     int memSize;
 
     QDir currentDir;
+    QString currentEquateFile;
     EmuThread emu;
 
     bool debuggerOn = false;

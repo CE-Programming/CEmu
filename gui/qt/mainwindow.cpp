@@ -94,8 +94,9 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->sliderBattery, &QSlider::valueChanged, this, &MainWindow::changeBatteryStatus);
 
     // Debugger Options
-    connect(ui->buttonAddEquateFile, &QPushButton::clicked, this, &MainWindow::addEquateFile);
+    connect(ui->buttonAddEquateFile, &QPushButton::clicked, this, &MainWindow::addEquateFileDialog);
     connect(ui->buttonClearEquates, &QPushButton::clicked, this, &MainWindow::clearEquateFile);
+    connect(ui->buttonRefreshEquates, &QPushButton::clicked, this, &MainWindow::refreshEquateFile);
     connect(ui->textSizeSlider, &QSlider::valueChanged, this, &MainWindow::setFont);
 
     // Linking
@@ -1853,11 +1854,24 @@ void MainWindow::memSyncPressed() {
 
 void MainWindow::clearEquateFile() {
     // Reset the map
+    currentEquateFile.clear();
     disasm.address_map.clear();
     QMessageBox::warning(this, tr("Equates Cleared"), tr("Cleared disassembly equates."));
+    updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(nullptr,16), true);
 }
 
-void MainWindow::addEquateFile() {
+void MainWindow::refreshEquateFile() {
+    // Reset the map
+    if(fileExists(currentEquateFile.toStdString())) {
+        disasm.address_map.clear();
+        addEquateFile(currentEquateFile);
+        updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(nullptr,16), true);
+    } else {
+        QMessageBox::warning(this, tr("Error Opening"), tr("Couldn't open equates file."));
+    }
+}
+
+void MainWindow::addEquateFileDialog() {
     QFileDialog dialog(this);
     int good;
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
@@ -1876,7 +1890,14 @@ void MainWindow::addEquateFile() {
 
     std::string current;
     std::ifstream in;
-    in.open(dialog.selectedFiles().at(0).toStdString());
+    addEquateFile(dialog.selectedFiles().first());
+}
+
+void MainWindow::addEquateFile(QString fileName) {
+    std::string current;
+    std::ifstream in;
+    currentEquateFile = fileName;
+    in.open(fileName.toStdString());
 
     if (in.good()) {
         QRegularExpression equatesRegexp("^\\h*([^\\W\\d]\\w*)\\h*(?:=|\\h\\.?equ(?!\\d))\\h*(?|\\$([\\da-f]{6,})|(\\d[\\da-f]{5,})h)\\h*(?:;.*)?$",
@@ -1904,7 +1925,7 @@ void MainWindow::addEquateFile() {
             }
         }
         in.close();
-        QMessageBox::information(this, tr("Equates Loaded"), tr("Loaded disassembly equates."));
+        updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(nullptr,16), true);
     } else {
         QMessageBox messageBox;
         messageBox.critical(0, tr("Error"), tr("Couldn't open this file"));
