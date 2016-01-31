@@ -107,6 +107,9 @@ bool sendVariableLink(const char *var_name) {
         return false;
     }
 
+    save_cycles = cpu.cycles;
+    save_next = cpu.next;
+
     if (fread(tmp_buf, 1, h_size, file) != h_size)        goto r_err;
     if (memcmp(tmp_buf, header_data, h_size))             goto r_err;
 
@@ -120,9 +123,6 @@ bool sendVariableLink(const char *var_name) {
     if (fseek(file, 0x45, 0))                             goto r_err;
     if (fread(&var_arc, 1, 1, file) != 1)                 goto r_err;
 
-    save_cycles = cpu.cycles;
-    save_next = cpu.next;
-
     if (calc_is_off()) {
         intrpt_set(INT_ON, true);
         control.readBatteryStatus = ~1;
@@ -131,14 +131,14 @@ bool sendVariableLink(const char *var_name) {
         cpu.next = 5000000;
         cpu_execute();
         intrpt_set(INT_ON, false);
-        return false;
+        goto r_err;
     }
 
     cpu.halted = cpu.IEF_wait = 0;
     memcpy(run_asm_safe, jforcegraph, sizeof(jforcegraph));
     cpu_flush(safe_ram_loc, 1);
     cpu.cycles = 0;
-    cpu.next = 500000;
+    cpu.next = 750000;
     cpu_execute();
 
     if (fseek(file, 0x3B, 0))                            goto r_err;
@@ -176,7 +176,7 @@ bool sendVariableLink(const char *var_name) {
     memcpy(run_asm_safe, jforcehome, sizeof(jforcehome));
     cpu_flush(safe_ram_loc, 1);
     cpu.cycles = 0;
-    cpu.next = 500000;
+    cpu.next = 750000;
     cpu_execute();
 
     cpu.cycles = save_cycles;
