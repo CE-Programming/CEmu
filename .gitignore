@@ -27,14 +27,21 @@
 *.out
 *.app
 
+# Profiling and Coverage
+*.out.*
+*.prof*
+*.supp
+
 # Qt stuff
 CEmu.pro.user*
 gui/build*
+moc_*.cpp
 
 # Other
 *.xcodeproj*
 *.autosave
-core/*.autosave
+*~
+\#*\#
 
 # Windows and Mac crap
 Thumbs.db
