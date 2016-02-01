@@ -148,7 +148,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>3</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -186,8 +186,8 @@
          <widget class="QQuickWidget" name="keypadWidget">
           <property name="minimumSize">
            <size>
-            <width>265</width>
-            <height>370</height>
+            <width>192</width>
+            <height>296</height>
            </size>
           </property>
           <property name="focusPolicy">

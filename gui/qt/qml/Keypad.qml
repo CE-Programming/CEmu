@@ -3,14 +3,15 @@ import QtQuick.Layouts 1.0
 
 Rectangle {
     id: wrapperRectangle
-    width: 265
+    width: 240
     height: 370
     border.width: 0
 
     Rectangle {
 
     id: rectangle1
-    width: 265
+    x: 0
+    width: 240
     height: 370
 
     anchors {
@@ -24,7 +25,7 @@ Rectangle {
     border.width: 0
 
     GridLayout {
-        x: 32
+        x: 20
         y: 132
         rowSpacing: 15
         columns: 5
@@ -364,7 +365,7 @@ Rectangle {
     }
 
     GridLayout {
-        x: 32
+        x: 20
         y: 62
         rowSpacing: 15
         columns: 3
@@ -425,7 +426,7 @@ Rectangle {
     }
 
     RowLayout {
-        x: 32
+        x: 20
         y: 23
         spacing: 5
 
@@ -482,7 +483,7 @@ Rectangle {
 
     Text {
         id: text1
-        x: 82
+        x: 70
         y: 50
         color: "#7b7bdb"
         text: qsTr("quit")
@@ -492,7 +493,7 @@ Rectangle {
 
     Text {
         id: text2
-        x: 126
+        x: 114
         y: 50
         color: "#7b7bdb"
         text: qsTr("ins")
@@ -502,7 +503,7 @@ Rectangle {
 
     Text {
         id: text3
-        x: 83
+        x: 71
         y: 85
         color: "#7b7bdb"
         text: qsTr("link")
@@ -512,7 +513,7 @@ Rectangle {
 
     Text {
         id: text4
-        x: 126
+        x: 114
         y: 85
         color: "#7b7bdb"
         text: qsTr("list")
@@ -522,7 +523,7 @@ Rectangle {
 
     NBigButton {
         id: nBigButton1
-        x: 189
+        x: 177
         y: 62
         width: 20
         color: "#ffffff"
@@ -533,7 +534,7 @@ Rectangle {
 
     NBigButton {
         id: nBigButton2
-        x: 189
+        x: 177
         y: 97
         width: 20
         color: "#ffffff"
@@ -544,7 +545,7 @@ Rectangle {
 
     NBigButton {
         id: nBigButton49
-        x: 163
+        x: 151
         y: 80
         width: 20
         color: "#ffffff"
@@ -555,7 +556,7 @@ Rectangle {
 
     NBigButton {
         id: nBigButton50
-        x: 215
+        x: 203
         y: 80
         width: 20
         height: 20
@@ -567,7 +568,7 @@ Rectangle {
 
     Text {
         id: text5
-        x: 36
+        x: 24
         y: 85
         color: "#7b7bdb"
         text: qsTr("A-lock")
@@ -577,7 +578,7 @@ Rectangle {
 
     Text {
         id: text6
-        x: 32
+        x: 20
         y: 120
         color: "#7b7bdb"
         text: qsTr("test")
@@ -587,7 +588,7 @@ Rectangle {
 
     Text {
         id: text7
-        x: 72
+        x: 60
         y: 120
         color: "#7b7bdb"
         text: qsTr("angle")
@@ -597,7 +598,7 @@ Rectangle {
 
     Text {
         id: text8
-        x: 114
+        x: 102
         y: 120
         color: "#7b7bdb"
         text: qsTr("draw")
@@ -607,7 +608,7 @@ Rectangle {
 
     Text {
         id: text9
-        x: 155
+        x: 143
         y: 120
         color: "#7b7bdb"
         text: qsTr("distr")
@@ -617,7 +618,7 @@ Rectangle {
 
     Text {
         id: text10
-        x: 32
+        x: 20
         y: 156
         color: "#7b7bdb"
         text: qsTr("matrix")
@@ -627,7 +628,7 @@ Rectangle {
 
     Text {
         id: text11
-        x: 32
+        x: 20
         y: 190
         color: "#7b7bdb"
         text: qsTr("√")
@@ -637,7 +638,7 @@ Rectangle {
 
     Text {
         id: text12
-        x: 72
+        x: 60
         y: 156
         color: "#7b7bdb"
         text: qsTr("sin-¹")
@@ -647,7 +648,7 @@ Rectangle {
 
     Text {
         id: text13
-        x: 114
+        x: 102
         y: 156
         color: "#7b7bdb"
         text: qsTr("cos-¹")
@@ -657,7 +658,7 @@ Rectangle {
 
     Text {
         id: text14
-        x: 155
+        x: 143
         y: 156
         color: "#7b7bdb"
         text: qsTr("tan-¹")
@@ -667,7 +668,7 @@ Rectangle {
 
     Text {
         id: text15
-        x: 196
+        x: 184
         y: 156
         color: "#7b7bdb"
         text: qsTr("π")
@@ -677,7 +678,7 @@ Rectangle {
 
     Text {
         id: text16
-        x: 72
+        x: 60
         y: 190
         color: "#7b7bdb"
         text: qsTr("EE")
@@ -687,7 +688,7 @@ Rectangle {
 
     Text {
         id: text17
-        x: 114
+        x: 102
         y: 190
         color: "#7b7bdb"
         text: qsTr("{")
@@ -697,7 +698,7 @@ Rectangle {
 
     Text {
         id: text18
-        x: 155
+        x: 143
         y: 190
         color: "#7b7bdb"
         text: qsTr("}")
@@ -707,7 +708,7 @@ Rectangle {
 
     Text {
         id: text19
-        x: 196
+        x: 184
         y: 190
         color: "#7b7bdb"
         text: qsTr("e")
@@ -717,7 +718,7 @@ Rectangle {
 
     Text {
         id: text20
-        x: 196
+        x: 184
         y: 225
         color: "#7b7bdb"
         text: qsTr("[")
@@ -727,7 +728,7 @@ Rectangle {
 
     Text {
         id: text21
-        x: 196
+        x: 184
         y: 260
         color: "#7b7bdb"
         text: qsTr("]")
@@ -737,7 +738,7 @@ Rectangle {
 
     Text {
         id: text22
-        x: 196
+        x: 184
         y: 296
         color: "#7b7bdb"
         text: qsTr("mem")
@@ -747,7 +748,7 @@ Rectangle {
 
     Text {
         id: text23
-        x: 32
+        x: 20
         y: 225
         color: "#7b7bdb"
         text: qsTr("10×")
@@ -757,7 +758,7 @@ Rectangle {
 
     Text {
         id: text24
-        x: 32
+        x: 20
         y: 260
         width: 7
         height: 11
@@ -769,7 +770,7 @@ Rectangle {
 
     Text {
         id: text25
-        x: 32
+        x: 20
         y: 296
         color: "#7b7bdb"
         text: qsTr("rcl")
@@ -779,7 +780,7 @@ Rectangle {
 
     Text {
         id: text26
-        x: 32
+        x: 20
         y: 330
         color: "#7b7bdb"
         text: qsTr("off")
@@ -789,7 +790,7 @@ Rectangle {
 
     Text {
         id: text27
-        x: 62
+        x: 50
         y: 330
         color: "#7b7bdb"
         text: qsTr("catalog")
@@ -799,7 +800,7 @@ Rectangle {
 
     Text {
         id: text28
-        x: 72
+        x: 60
         y: 225
         color: "#7b7bdb"
         text: qsTr("u")
@@ -809,7 +810,7 @@ Rectangle {
 
     Text {
         id: text29
-        x: 114
+        x: 102
         y: 225
         color: "#7b7bdb"
         text: qsTr("v")
@@ -819,7 +820,7 @@ Rectangle {
 
     Text {
         id: text30
-        x: 155
+        x: 143
         y: 225
         color: "#7b7bdb"
         text: qsTr("w")
@@ -829,7 +830,7 @@ Rectangle {
 
     Text {
         id: text31
-        x: 155
+        x: 143
         y: 260
         color: "#7b7bdb"
         text: qsTr("L6")
@@ -839,7 +840,7 @@ Rectangle {
 
     Text {
         id: text32
-        x: 114
+        x: 102
         y: 260
         color: "#7b7bdb"
         text: qsTr("L5")
@@ -849,7 +850,7 @@ Rectangle {
 
     Text {
         id: text33
-        x: 72
+        x: 60
         y: 260
         color: "#7b7bdb"
         text: qsTr("L4")
@@ -859,7 +860,7 @@ Rectangle {
 
     Text {
         id: text34
-        x: 72
+        x: 60
         y: 296
         color: "#7b7bdb"
         text: qsTr("L1")
@@ -869,7 +870,7 @@ Rectangle {
 
     Text {
         id: text35
-        x: 114
+        x: 102
         y: 296
         color: "#7b7bdb"
         text: qsTr("L2")
@@ -879,7 +880,7 @@ Rectangle {
 
     Text {
         id: text36
-        x: 155
+        x: 143
         y: 296
         color: "#7b7bdb"
         text: qsTr("L3")
@@ -889,7 +890,7 @@ Rectangle {
 
     Text {
         id: text37
-        x: 114
+        x: 102
         y: 330
         color: "#7b7bdb"
         text: qsTr("i")
@@ -899,7 +900,7 @@ Rectangle {
 
     Text {
         id: text38
-        x: 155
+        x: 143
         y: 330
         color: "#7b7bdb"
         text: qsTr("ans")
@@ -909,7 +910,7 @@ Rectangle {
 
     Text {
         id: text39
-        x: 196
+        x: 184
         y: 330
         color: "#7b7bdb"
         text: qsTr("entry")
@@ -919,7 +920,7 @@ Rectangle {
 
     Text {
         id: text40
-        x: 62
+        x: 50
         y: 120
         width: 13
         height: 12
@@ -931,7 +932,7 @@ Rectangle {
 
     Text {
         id: text41
-        x: 103
+        x: 91
         y: 120
         width: 13
         height: 12
@@ -943,7 +944,7 @@ Rectangle {
 
     Text {
         id: text42
-        x: 143
+        x: 131
         y: 120
         width: 13
         height: 12
@@ -955,7 +956,7 @@ Rectangle {
 
     Text {
         id: text43
-        x: 62
+        x: 50
         y: 155
         width: 13
         height: 12
@@ -967,7 +968,7 @@ Rectangle {
 
     Text {
         id: text44
-        x: 103
+        x: 91
         y: 155
         width: 13
         height: 12
@@ -979,7 +980,7 @@ Rectangle {
 
     Text {
         id: text45
-        x: 143
+        x: 131
         y: 155
         width: 13
         height: 12
@@ -991,7 +992,7 @@ Rectangle {
 
     Text {
         id: text46
-        x: 183
+        x: 171
         y: 155
         width: 13
         height: 12
@@ -1003,7 +1004,7 @@ Rectangle {
 
     Text {
         id: text47
-        x: 223
+        x: 211
         y: 155
         width: 13
         height: 12
@@ -1015,7 +1016,7 @@ Rectangle {
 
     Text {
         id: text48
-        x: 62
+        x: 50
         y: 190
         width: 13
         height: 12
@@ -1027,7 +1028,7 @@ Rectangle {
 
     Text {
         id: text49
-        x: 103
+        x: 91
         y: 190
         width: 13
         height: 12
@@ -1039,7 +1040,7 @@ Rectangle {
 
     Text {
         id: text50
-        x: 143
+        x: 131
         y: 190
         width: 13
         height: 12
@@ -1051,7 +1052,7 @@ Rectangle {
 
     Text {
         id: text51
-        x: 183
+        x: 171
         y: 190
         width: 13
         height: 12
@@ -1063,7 +1064,7 @@ Rectangle {
 
     Text {
         id: text52
-        x: 223
+        x: 211
         y: 190
         width: 13
         height: 12
@@ -1075,7 +1076,7 @@ Rectangle {
 
     Text {
         id: text53
-        x: 62
+        x: 50
         y: 225
         width: 13
         height: 12
@@ -1087,7 +1088,7 @@ Rectangle {
 
     Text {
         id: text54
-        x: 103
+        x: 91
         y: 225
         width: 13
         height: 12
@@ -1099,7 +1100,7 @@ Rectangle {
 
     Text {
         id: text55
-        x: 143
+        x: 131
         y: 225
         width: 13
         height: 12
@@ -1111,7 +1112,7 @@ Rectangle {
 
     Text {
         id: text56
-        x: 183
+        x: 171
         y: 225
         width: 13
         height: 12
@@ -1123,7 +1124,7 @@ Rectangle {
 
     Text {
         id: text57
-        x: 223
+        x: 211
         y: 225
         width: 13
         height: 12
@@ -1135,7 +1136,7 @@ Rectangle {
 
     Text {
         id: text58
-        x: 62
+        x: 50
         y: 260
         width: 13
         height: 12
@@ -1147,7 +1148,7 @@ Rectangle {
 
     Text {
         id: text59
-        x: 103
+        x: 91
         y: 260
         width: 13
         height: 12
@@ -1159,7 +1160,7 @@ Rectangle {
 
     Text {
         id: text60
-        x: 143
+        x: 131
         y: 260
         width: 13
         height: 12
@@ -1171,7 +1172,7 @@ Rectangle {
 
     Text {
         id: text61
-        x: 183
+        x: 171
         y: 260
         width: 13
         height: 12
@@ -1183,7 +1184,7 @@ Rectangle {
 
     Text {
         id: text62
-        x: 223
+        x: 211
         y: 260
         width: 13
         height: 12
@@ -1195,7 +1196,7 @@ Rectangle {
 
     Text {
         id: text63
-        x: 62
+        x: 50
         y: 295
         width: 13
         height: 12
@@ -1207,7 +1208,7 @@ Rectangle {
 
     Text {
         id: text64
-        x: 103
+        x: 91
         y: 295
         width: 13
         height: 12
@@ -1219,7 +1220,7 @@ Rectangle {
 
     Text {
         id: text65
-        x: 143
+        x: 131
         y: 295
         width: 13
         height: 12
@@ -1231,7 +1232,7 @@ Rectangle {
 
     Text {
         id: text66
-        x: 183
+        x: 171
         y: 295
         width: 13
         height: 12
@@ -1243,7 +1244,7 @@ Rectangle {
 
     Text {
         id: text67
-        x: 223
+        x: 211
         y: 295
         width: 13
         height: 12
@@ -1255,7 +1256,7 @@ Rectangle {
 
     Text {
         id: text68
-        x: 103
+        x: 91
         y: 330
         width: 13
         height: 12
@@ -1267,7 +1268,7 @@ Rectangle {
 
     Text {
         id: text69
-        x: 143
+        x: 131
         y: 330
         width: 13
         height: 12
@@ -1279,7 +1280,7 @@ Rectangle {
 
     Text {
         id: text70
-        x: 183
+        x: 171
         y: 330
         width: 13
         height: 12
@@ -1291,7 +1292,7 @@ Rectangle {
 
     Text {
         id: text71
-        x: 219
+        x: 207
         y: 330
         width: 24
         height: 12
@@ -1303,7 +1304,7 @@ Rectangle {
 
     Text {
         id: text72
-        x: 20
+        x: 8
         y: 8
         color: "#7b7bdb"
         text: qsTr("stat plot")
@@ -1313,7 +1314,7 @@ Rectangle {
 
     Text {
         id: text73
-        x: 74
+        x: 62
         y: 8
         color: "#7b7bdb"
         text: qsTr("tblset")
@@ -1323,7 +1324,7 @@ Rectangle {
 
     Text {
         id: text74
-        x: 114
+        x: 102
         y: 8
         color: "#7b7bdb"
         text: qsTr("frmt")
@@ -1333,7 +1334,7 @@ Rectangle {
 
     Text {
         id: text75
-        x: 155
+        x: 143
         y: 8
         color: "#7b7bdb"
         text: qsTr("calc")
@@ -1343,7 +1344,7 @@ Rectangle {
 
     Text {
         id: text76
-        x: 196
+        x: 184
         y: 8
         color: "#7b7bdb"
         text: qsTr("table")
@@ -1353,7 +1354,7 @@ Rectangle {
 
     Text {
         id: text77
-        x: 59
+        x: 47
         y: 8
         width: 13
         height: 12
@@ -1365,7 +1366,7 @@ Rectangle {
 
     Text {
         id: text78
-        x: 101
+        x: 89
         y: 8
         width: 13
         height: 12
@@ -1377,7 +1378,7 @@ Rectangle {
 
     Text {
         id: text79
-        x: 141
+        x: 129
         y: 8
         width: 13
         height: 12
@@ -1389,7 +1390,7 @@ Rectangle {
 
     Text {
         id: text80
-        x: 181
+        x: 169
         y: 8
         width: 13
         height: 12
@@ -1401,7 +1402,7 @@ Rectangle {
 
     Text {
         id: text81
-        x: 222
+        x: 210
         y: 8
         width: 13
         height: 12
