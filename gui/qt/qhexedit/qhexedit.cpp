@@ -389,10 +389,10 @@ void QHexEdit::keyPressEvent(QKeyEvent *e) {
     }
 
     /* Edit Commands */
-    if ((QApplication::keyboardModifiers() == Qt::NoModifier) || (QApplication::keyboardModifiers() == Qt::KeypadModifier)) {
+    if (!(e->modifiers() & ~(Qt::ShiftModifier | Qt::KeypadModifier))) {
         /* Hex input */
-        int key = int(e->text()[0].toLatin1());
-        if ((key>='0' && key<='9') || (key>='a' && key <= 'f')) {
+        int key = e->key();
+        if ((key>='0' && key<='9') || (key>='A' && key <= 'F')) {
             if (getSelectionBegin() != getSelectionEnd()) {
                 qint64 len = getSelectionEnd() - getSelectionBegin();
                 replace(getSelectionBegin(), (int)len, QByteArray((int)len, char(0)));
