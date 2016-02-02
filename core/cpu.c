@@ -1041,7 +1041,7 @@ void cpu_execute(void) {
                 cpu_call(0x38, cpu.MADL);
             } else {
                 cpu.cycles += 1;
-                cpu_call(cpu_read_word(r->I << 8 | ~r->R), cpu.MADL);
+                cpu_call(cpu_read_word(r->I << 8 | r->R), cpu.MADL);
             }
             if (cpu_events & EVENT_DEBUG_STEP) {
                 break;
