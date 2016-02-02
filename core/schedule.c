@@ -62,7 +62,7 @@ void sched_update_next_event(void) {
     }
     /* printf("Next event: (%8d,%d)\n", next_cputick, next_index); */
     if (!cpu.halted && cpu_events & EVENT_DEBUG_STEP) {
-        cpu.next = cpu.cycles + 1;
+        cpu.next = debugger.cpu_cycles + 1;
     } else {
         cpu.next = sched.nextCPUtick;
     }
