@@ -805,7 +805,7 @@ static int hex2int(QString str) {
 }
 
 static QString int2hex(uint32_t a, uint8_t l) {
-    return QString::number(a, 16).rightJustified(l, '0').toUpper();
+    return QString::number(a, 16).rightJustified(l, '0', true).toUpper();
 }
 
 void MainWindow::raiseDebugger() {
@@ -1034,8 +1034,7 @@ void MainWindow::populateDebugWindow() {
     ui->iregView->setPalette(tmp == ui->iregView->text() ? nocolorback : colorback);
     ui->iregView->setText(tmp);
 
-    cpu.IM -= !!cpu.IM;
-    tmp = int2hex(cpu.IM, 1);
+    tmp = int2hex(cpu.IM - !!cpu.IM, 1);
     ui->imregView->setPalette(tmp == ui->imregView->text() ? nocolorback : colorback);
     ui->imregView->setText(tmp);
 
@@ -1043,8 +1042,7 @@ void MainWindow::populateDebugWindow() {
     ui->pcregView->setPalette(tmp == ui->pcregView->text() ? nocolorback : colorback);
     ui->pcregView->setText(tmp);
 
-    cpu.registers.R = cpu.registers.R >> 1 | cpu.registers.R << 7;
-    tmp = int2hex(cpu.registers.R, 2);
+    tmp = int2hex(cpu.registers.R >> 1 | cpu.registers.R << 7, 2);
     ui->rregView->setPalette(tmp == ui->rregView->text() ? nocolorback : colorback);
     ui->rregView->setText(tmp);
 
