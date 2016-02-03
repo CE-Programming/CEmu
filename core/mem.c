@@ -308,7 +308,17 @@ uint8_t mem_read_byte(uint32_t address) {
 
         /* MMIO <-> Advanced Perphrial Bus */
         case 0xE: case 0xF:
-            cpu.cycles += 2;
+            switch (address >> 16) {
+                case 0xE2:
+                    cpu.cycles += 1;
+                case 0xE3:
+                case 0xF0 ... 0xFE:
+                    cpu.cycles += 1;
+                case 0xE0 ... 0xE1:
+                case 0xE4 ... 0xEF:
+                case 0xFF:
+                    cpu.cycles += 2;
+            }
             value = port_read_byte(mmio_range(address)<<12 | addr_range(address));
             break;
     }
@@ -346,7 +356,16 @@ void mem_write_byte(uint32_t address, uint8_t byte) {
 
         /* MMIO <-> Advanced Perphrial Bus */
         case 0xE: case 0xF:
-            cpu.cycles += 2;
+            switch (address >> 16) {
+                case 0xE2:
+                    cpu.cycles += 1;
+                case 0xF0 ... 0xFE:
+                    cpu.cycles += 1;
+                case 0xE0 ... 0xE1:
+                case 0xE3 ... 0xEF:
+                case 0xFF:
+                    cpu.cycles += 2;
+            }
             port_write_byte(mmio_range(address)<<12 | addr_range(address), byte);
             break;
     }
