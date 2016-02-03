@@ -216,8 +216,10 @@ void lcd_write(const uint16_t pio, const uint8_t value) {
             lcd.lpbase &= ~7U;
         } else if (index == 0x018) {
             if ((((uint32_t)value << bit_offset) ^ lcd.control) & 1) {
-                if (value & 1) { event_set(SCHED_LCD, 0); }
-                else { event_clear(SCHED_LCD); }
+                if(byte_offset == 0) {
+                    if (value & 1) { event_set(SCHED_LCD, 0); }
+                    else { event_clear(SCHED_LCD); }
+                }
             }
             write8(lcd.control, bit_offset, value);
         } else if (index == 0x01C) {
