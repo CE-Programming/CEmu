@@ -108,18 +108,18 @@ void event_set(int index, uint64_t ticks) {
     sched_update_next_event();
 }
 
-uint32_t event_ticks_remaining(int index) {
+uint64_t event_ticks_remaining(int index) {
     struct sched_item *item;
     sched_process_pending_events();
 
     item = &sched.items[index];
-    return item->second * sched.clockRates[item->clock]
+    return (uint64_t)item->second * sched.clockRates[item->clock]
         + item->tick - muldiv(cpu.cycles, sched.clockRates[item->clock], sched.clockRates[CLOCK_CPU]);
 }
 
 void sched_set_clocks(int count, uint32_t *new_rates) {
     int i;
-    uint32_t remaining[SCHED_NUM_ITEMS];
+    uint64_t remaining[SCHED_NUM_ITEMS];
     sched_process_pending_events();
 
     for (i = 0; i < SCHED_NUM_ITEMS; i++) {

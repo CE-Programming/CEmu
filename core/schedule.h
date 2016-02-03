@@ -45,7 +45,7 @@ void sched_update_next_event(void);
 void sched_process_pending_events(void);
 void event_clear(int index);
 void event_set(int index, uint64_t ticks);
-uint32_t event_ticks_remaining(int index);
+uint64_t event_ticks_remaining(int index);
 void sched_set_clocks(int count, uint32_t *new_rates);
 
 #ifdef __cplusplus
