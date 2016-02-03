@@ -66,11 +66,6 @@ static void gpt_refresh(int index) {
     }
 }
 
-static void gpt_update(int index) {
-    gpt_restore(index);
-    gpt_refresh(index);
-}
-
 static void gpt_event(int index) {
     uint64_t next_event = gpt_next_event(index);
     if (next_event) {
@@ -89,10 +84,11 @@ static void gpt_some(int which, void update(int index)) {
 
 static uint8_t gpt_read(uint16_t address) {
     uint8_t value = 0;
-    gpt_some(address >> 4 & 0b11, gpt_update);
+    gpt_some(address >> 4 & 0b11, gpt_restore);
     if (address < 0x40) {
         value = ((uint8_t *)&gpt)[address];
     }
+    gpt_some(address >> 4 & 0b11, gpt_refresh);
     return value;
 }
 
