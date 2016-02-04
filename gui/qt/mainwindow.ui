@@ -5401,7 +5401,14 @@
             </layout>
            </item>
            <item>
-            <widget class="QHexEdit" name="flashEdit"/>
+            <widget class="QHexEdit" name="flashEdit">
+             <property name="minimumSize">
+              <size>
+               <width>338</width>
+               <height>72</height>
+              </size>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -5457,7 +5464,14 @@
             </layout>
            </item>
            <item>
-            <widget class="QHexEdit" name="ramEdit"/>
+            <widget class="QHexEdit" name="ramEdit">
+             <property name="minimumSize">
+              <size>
+               <width>338</width>
+               <height>72</height>
+              </size>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -5526,7 +5540,14 @@
             </layout>
            </item>
            <item>
-            <widget class="QHexEdit" name="memEdit"/>
+            <widget class="QHexEdit" name="memEdit">
+             <property name="minimumSize">
+              <size>
+               <width>338</width>
+               <height>72</height>
+              </size>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
