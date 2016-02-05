@@ -386,7 +386,6 @@ static void cpu_trap(void) {
 }
 
 static void cpu_return(void) {
-    eZ80registers_t *r = &cpu.registers;
     uint32_t address;
     bool mode = cpu.ADL;
     cpu.cycles++;
@@ -402,7 +401,9 @@ static void cpu_return(void) {
     }
     cpu_prefetch(address, mode);
 #ifdef DEBUG_SUPPORT
-    if (cpu_events & EVENT_DEBUG_STEP_OUT && (r->SPL > debugger.stepOutSPL || r->SPS > debugger.stepOutSPS)) {
+    if (cpu_events & EVENT_DEBUG_STEP_OUT &&
+        (cpu.registers.SPL > debugger.stepOutSPL ||
+         cpu.registers.SPS > debugger.stepOutSPS)) {
         cpu_events &= ~EVENT_DEBUG_STEP_OUT;
         open_debugger(DBG_STEP, 0);
     }
@@ -1043,9 +1044,11 @@ void cpu_execute(void) {
                 cpu.cycles += 1;
                 cpu_call(cpu_read_word(r->I << 8 | r->R), cpu.MADL);
             }
+#ifdef DEBUG_SUPPORT
             if (cpu_events & EVENT_DEBUG_STEP) {
                 break;
             }
+#endif
         } else if (cpu.halted && cpu.cycles < cpu.next) {
             cpu.cycles = cpu.next; // consume all of the cycles
         }

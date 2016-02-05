@@ -213,7 +213,11 @@ static void emu_reset(void) {
 
     /* Drain everything */
     cpu_reset();
+#ifdef DEBUG_SUPPORT
     cpu_events &= EVENT_DEBUG_STEP;
+#else
+    cpu_events = 0;
+#endif
 
     sched_update_next_event();
 }
@@ -221,16 +225,20 @@ static void emu_reset(void) {
 static void emu_main_loop(void) {
     while (!exiting) {
         if (cpu_events & EVENT_RESET) {
+#ifdef DEBUG_SUPPORT
             cpu_events &= EVENT_DEBUG_STEP;
+#else
+            cpu_events = 0;
+#endif
             gui_console_printf("CPU Reset triggered...");
             emu_reset();
         }
+#ifdef DEBUG_SUPPORT
         if (!cpu.halted && cpu_events & EVENT_DEBUG_STEP) {
             cpu_events &= ~EVENT_DEBUG_STEP;
-#ifdef DEBUG_SUPPORT
             open_debugger(DBG_STEP, 0);
-#endif
         }
+#endif
         sched_process_pending_events();
         cpu_execute();  // execute instructions with available clock cycles
     }

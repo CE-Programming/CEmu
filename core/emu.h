@@ -12,9 +12,11 @@ extern uint32_t cpu_events;
 
 #define EVENT_NONE            0
 #define EVENT_RESET           1
+#ifdef DEBUG_SUPPORT
 #define EVENT_DEBUG_STEP      2
 #define EVENT_DEBUG_STEP_OVER 4
 #define EVENT_DEBUG_STEP_OUT  8
+#endif
 #define EVENT_WAITING         16
 
 /* Settings */
