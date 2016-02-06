@@ -261,8 +261,9 @@ eZ80portrange_t init_exxx(void) {
 
 /* ============================================= */
 
-/* Write to the 0xFXXX range of ports -- This is unmapped, so no real point */
+/* Write to the 0xFXXX range of ports */
 static void fxxx_write(const uint16_t pio, const uint8_t value) {
+    gui_console_debug_char((char)value);
 }
 
 /* Read from the 0xFXXX range of ports */

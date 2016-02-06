@@ -1433,11 +1433,12 @@ void MainWindow::deleteBreakpoint() {
 }
 
 void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
-    consoleStr("Debugger remotely entered\n");
-
     switch (command) {
         case 0:
-            // Now we just need to put debug commands here
+            consoleStr("Program Aborted.\n");
+            break;
+        case 1:
+            consoleStr("Program Entered Debugger.\n");
             break;
         default:
             break;
