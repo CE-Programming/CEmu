@@ -14,3 +14,13 @@ script:
   - cd build
   - qmake ../gui/qt
   - make -j4 CC=gcc-5 CXX=g++-5 LINK=g++-5
+  - cd ../core
+  - make -j4 CC=gcc-5 CXX=g++-5 LINK=g++-5 clean all
+
+notifications:
+  irc:
+    channels:
+      - "irc.choopa.net#cemu-dev"
+    on_success: change
+    on_failure: always
+    skip_join: true
