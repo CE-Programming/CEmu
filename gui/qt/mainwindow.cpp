@@ -61,9 +61,12 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     // Emulator -> GUI
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr);
+    connect(&emu, &EmuThread::consoleChar, this, &MainWindow::consoleChar);
 
     // Console actions
-    connect(ui->buttonConsoleclear, &QPushButton::clicked, this, &MainWindow::clearConsole);
+    connect(ui->buttonConsoleclear, &QPushButton::clicked, ui->console, &QPlainTextEdit::clear);
+    connect(ui->buttonDebugCommand, &QPushButton::clicked, this, &MainWindow::debugCommand);
+    connect(ui->debugInput, &QLineEdit::returnPressed, this, &MainWindow::debugCommand);
 
     // Debugger
     connect(ui->buttonRun, &QPushButton::clicked, this, &MainWindow::changeDebuggerState);
@@ -243,7 +246,7 @@ void MainWindow::dropEvent(QDropEvent *e) {
         files.append(url.toLocalFile());
     }
     setSendState(true);
-    QThread::msleep(50);
+    QThread::msleep(100);
 
     sendFiles(files);
 }
@@ -288,6 +291,30 @@ void MainWindow::closeEvent(QCloseEvent *e) {
     }
 
     QMainWindow::closeEvent(e);
+}
+
+void MainWindow::consoleChar(const char c) {
+    ui->console->moveCursor(QTextCursor::End);
+
+    static char previous = 0;
+
+    switch(c) {
+        case 0:
+        case '\r':
+            previous = c;
+            break;
+        case '\b':
+            ui->console->textCursor().deletePreviousChar();
+            break;
+        default:
+            if(previous == '\r' && c != '\n') {
+                ui->console->moveCursor(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
+                ui->console->moveCursor(QTextCursor::End, QTextCursor::KeepAnchor);
+                ui->console->textCursor().removeSelectedText();
+                previous = 0;
+            }
+            ui->console->insertPlainText(QChar::fromLatin1(c));
+    }
 }
 
 void MainWindow::consoleStr(QString str) {
@@ -433,12 +460,6 @@ void MainWindow::changeFramerate() {
     float framerate = ((float) ui->refreshSlider->value()) / (ui->frameskipSlider->value() + 1);
     ui->framerateLabel->setText(QString::number(framerate).left(4));
 }
-
-void MainWindow::clearConsole(void) {
-    ui->console->clear();
-    consoleStr("Console Cleared.\n");
-}
-
 
 void MainWindow::autoCheckForUpdates(int state) {
     settings->setValue(QStringLiteral("autoUpdate"), state);
@@ -674,7 +695,7 @@ void MainWindow::sendFiles(QStringList fileNames) {
     }
 
     setSendState(false);
-    QThread::msleep(50);
+    QThread::msleep(100);
     ui->sendBar->setMaximum(1);
     ui->sendBar->setValue(0);
 }
@@ -715,7 +736,7 @@ void MainWindow::refreshVariableList() {
         ui->actionReset_Calculator->setEnabled(false);
         ui->buttonRun->setEnabled(false);
         setReceiveState(true);
-        QThread::msleep(50);
+        QThread::msleep(100);
 
         vat_search_init(&var);
         vars.clear();
@@ -806,6 +827,11 @@ static int hex2int(QString str) {
 
 static QString int2hex(uint32_t a, uint8_t l) {
     return QString::number(a, 16).rightJustified(l, '0', true).toUpper();
+}
+
+void MainWindow::debugCommand() {
+    emit debuggerCommand(ui->debugInput->text());
+    ui->debugInput->clear();
 }
 
 void MainWindow::raiseDebugger() {
@@ -932,6 +958,8 @@ void MainWindow::setDebuggerState(bool state) {
     ui->buttonRun->setIcon(icon);
     ui->buttonRun->setIconSize(pix.size());
 
+    ui->buttonDebugCommand->setEnabled( debuggerOn );
+    ui->debugInput->setEnabled( debuggerOn );
     ui->tabDebugging->setEnabled( debuggerOn );
     ui->buttonGoto->setEnabled( debuggerOn );
     ui->buttonStep->setEnabled( debuggerOn );
@@ -1404,8 +1432,27 @@ void MainWindow::deleteBreakpoint() {
     updateDisasmView(address, true);
 }
 
+void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
+    consoleStr("Debugger remotely entered\n");
+
+    switch (command) {
+        case 0:
+            // Now we just need to put debug commands here
+            break;
+        default:
+            break;
+    }
+}
+
 void MainWindow::processDebugCommand(int reason, uint32_t input) {
     int row = 0;
+
+    /* This means the program is trying to send us a debug command. Let's see what we can do with that information. */
+    if (reason > NUM_DBG_COMMANDS) {
+       updateDisasmView(cpu.registers.PC, true);
+       executeDebugCommand(static_cast<uint32_t>(reason-DBG_PORT_RANGE), static_cast<uint8_t>(input));
+       return;
+    }
 
     if (reason == DBG_STEP || reason == DBG_USER) {
         updateDisasmView(cpu.registers.PC, true);

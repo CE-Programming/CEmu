@@ -319,13 +319,13 @@ uint8_t mem_read_byte(uint32_t address) {
                 case 0xFF:
                     cpu.cycles += 2;
             }
-            value = port_read_byte(mmio_range(address)<<12 | addr_range(address));
+            value = (address > 0xFAFFFF) ? 0 : port_read_byte(mmio_range(address)<<12 | addr_range(address));
             break;
     }
     return value;
 }
 
-void mem_write_byte(uint32_t address, uint8_t byte) {
+void mem_write_byte(uint32_t address, uint8_t value) {
     uint32_t ramAddress;
     address &= 0xFFFFFF;
 
@@ -336,7 +336,7 @@ void mem_write_byte(uint32_t address, uint8_t byte) {
             if (mem.flash.locked && cpu.registers.PC >= control.privileged) {
                 cpu_nmi();
             } else {
-                flash_write_handler(address, byte);
+                flash_write_handler(address, value);
             }
             break;
 
@@ -350,7 +350,7 @@ void mem_write_byte(uint32_t address, uint8_t byte) {
             cpu.cycles += 2;
             ramAddress = address & 0x7FFFF;
             if (ramAddress < 0x65800) {
-                mem.ram.block[ramAddress] = byte;
+                mem.ram.block[ramAddress] = value;
             }
             break;
 
@@ -366,7 +366,16 @@ void mem_write_byte(uint32_t address, uint8_t byte) {
                 case 0xFF:
                     cpu.cycles += 2;
             }
-            port_write_byte(mmio_range(address)<<12 | addr_range(address), byte);
+#ifdef DEBUG_SUPPORT
+            if (address >= DBG_PORT_RANGE) {
+                open_debugger(address, value);
+                break;
+            } else if (address >= CONSOLE_PORT_RANGE) {
+                gui_console_debug_char((char)value);
+                break;
+            }
+#endif
+            port_write_byte(mmio_range(address)<<12 | addr_range(address), value);
             break;
     }
 #ifdef DEBUG_SUPPORT

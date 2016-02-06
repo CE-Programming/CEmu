@@ -85,11 +85,12 @@ void debug_port_write_byte(uint32_t address, uint8_t value) {
 
 /* okay, so looking at the data inside the asic should be okay when using this function, */
 /* since it is called outside of cpu_execute(). Which means no read/write errors. */
-void open_debugger(int reason, uint32_t address) {
+void open_debugger(int reason, uint32_t data) {
     if (inDebugger) {
         return; // don't recurse
     }
     debugger.cpu_cycles = cpu.cycles;
+    debugger.cpu_next = cpu.next;
     gui_debugger_entered_or_left(inDebugger = true);
 
     if (debugger.stepOverAddress < 0x1000000) {
@@ -97,13 +98,14 @@ void open_debugger(int reason, uint32_t address) {
         debugger.stepOverAddress = UINT32_C(0xFFFFFFFF);
     }
 
-    gui_debugger_send_command(reason, address);
+    gui_debugger_send_command(reason, data);
 
     do {
         gui_emu_sleep();
     } while(inDebugger);
 
     gui_debugger_entered_or_left(inDebugger = false);
+    cpu.next = debugger.cpu_next;
     cpu.cycles = debugger.cpu_cycles;
     if (cpu_events & EVENT_DEBUG_STEP) {
         cpu.next = debugger.cpu_cycles + 1;

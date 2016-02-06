@@ -38,11 +38,14 @@ public slots:
 
     // Console
     void consoleStr(QString);
+    void consoleChar(const char c);
 
 signals:
     // Debugging
     void debuggerChangedState(bool);
     void triggerEmuSendState();
+    void debugInputRequested();
+    void debuggerCommand(QString);
 
     // Linking
     void setSendState(bool);
@@ -71,11 +74,13 @@ private:
     void changeBatteryStatus(int);
 
     // Debugger
+    void debugCommand();
     void raiseDebugger();
     void updateDebuggerChanges();
     void populateDebugWindow();
     void setDebuggerState(bool);
     void changeDebuggerState();
+    void executeDebugCommand(uint32_t, uint8_t);
     void processDebugCommand(int, uint32_t);
     void portMonitorCheckboxToggled(QTableWidgetItem *);
     void addPort();
@@ -112,7 +117,6 @@ private:
     void showActualSpeed(int);
 
     // Console
-    void clearConsole(void);
     void showStatusMsg(QString);
 
     // Settings

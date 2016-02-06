@@ -8,20 +8,23 @@ extern "C" {
 #endif
 
 #include "../defines.h"
+#include "../apb.h"
 
 extern volatile bool inDebugger;
 
+eZ80portrange_t init_debugger_ports(void);
+
 /* For use in the debugger */
 enum {
-        DBG_USER,
-        DBG_EXCEPTION,
-        DBG_STEP,
-        HIT_EXEC_BREAKPOINT,
-        HIT_READ_BREAKPOINT,
-        HIT_WRITE_BREAKPOINT,
-        HIT_RUN_BREAKPOINT,
-        HIT_PORT_WRITE_BREAKPOINT,
-        HIT_PORT_READ_BREAKPOINT
+    DBG_USER,
+    DBG_STEP,
+    HIT_EXEC_BREAKPOINT,
+    HIT_READ_BREAKPOINT,
+    HIT_WRITE_BREAKPOINT,
+    HIT_RUN_BREAKPOINT,
+    HIT_PORT_WRITE_BREAKPOINT,
+    HIT_PORT_READ_BREAKPOINT,
+    NUM_DBG_COMMANDS,
 };
 
 /* For Port Monitoring */
@@ -37,6 +40,9 @@ enum {
 #define DBG_STEP_OVER_BREAKPOINT  8
 #define DBG_RUN_UNTIL_BREAKPOINT  16
 
+#define DBG_PORT_RANGE            0xFFFF00
+#define CONSOLE_PORT_RANGE        0xFB0000
+
 typedef struct {
     uint8_t *block;
     uint8_t *ports;
@@ -44,6 +50,7 @@ typedef struct {
 
 typedef struct {        /* For debugging */
     int cpu_cycles;
+    int cpu_next;
     uint32_t stepOverAddress;
     uint32_t stepOutSPL;
     uint16_t stepOutSPS;

@@ -134,11 +134,11 @@ bool sendVariableLink(const char *var_name) {
         goto r_err;
     }
 
-    cpu.halted = cpu.IEF_wait = 0;
+    cpu.halted = cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = 0;
     memcpy(run_asm_safe, jforcegraph, sizeof(jforcegraph));
     cpu_flush(safe_ram_loc, 1);
     cpu.cycles = 0;
-    cpu.next = 750000;
+    cpu.next = 1000000;
     cpu_execute();
 
     if (fseek(file, 0x3B, 0))                            goto r_err;
@@ -176,7 +176,7 @@ bool sendVariableLink(const char *var_name) {
     memcpy(run_asm_safe, jforcehome, sizeof(jforcehome));
     cpu_flush(safe_ram_loc, 1);
     cpu.cycles = 0;
-    cpu.next = 750000;
+    cpu.next = 1000000;
     cpu_execute();
 
     cpu.cycles = save_cycles;

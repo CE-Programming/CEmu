@@ -56,6 +56,10 @@ void gui_console_printf(const char *fmt, ...) {
     va_end(ap);
 }
 
+void gui_console_debug_char(const char c) {
+    emu_thread->consoleChar(c);
+}
+
 void gui_debugger_send_command(int reason, uint32_t addr) {
     emu_thread->sendDebugCommand(reason, addr);
 }
@@ -64,6 +68,13 @@ void gui_debugger_entered_or_left(bool entered) {
     if (entered == true) {
         emu_thread->debuggerEntered();
     }
+}
+
+static debug_input_cb debugCallback;
+
+void gui_debugger_request_input(debug_input_cb callback) {
+    debugCallback = callback;
+    emu_thread->debugInputRequested(callback != nullptr);
 }
 
 void throttle_timer_wait(void) {
@@ -77,6 +88,12 @@ EmuThread::EmuThread(QObject *p) : QThread(p) {
     speed = actualSpeed = 100;
     lastTime= std::chrono::steady_clock::now();
 }
+
+void EmuThread::debuggerInput(QString str) {
+    debugInput = str.toStdString();
+    debugCallback(debugInput.c_str());
+}
+
 
 void EmuThread::changeEmuSpeed(int value) {
     speed = value;
