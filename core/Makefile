@@ -1,9 +1,9 @@
-GCC = gcc
-GXX = g++
+CC = gcc
+CXX = g++
 
 # If you want no debug/symbols info, remove -g
 # If you need debug support, add -DDEBUG_SUPPORT
-GCCFLAGS = -Wall -W -fPIC -flto -O3 -g -static
+CFLAGS = -Wall -W -fPIC -flto -O3 -g -static
 
 OBJS = $(patsubst %.c, %.o, $(shell find . -name \*.c))
 OBJS += $(patsubst %.cpp, %.o, $(shell find . -name \*.cpp))
@@ -17,10 +17,10 @@ lib: $(OBJS)
 	ar rcs $(STATICLIB) $(OBJS)
 
 %.o: %.c
-	$(GCC) $(GCCFLAGS) -std=gnu11 -c $< -o $@
+	$(CC) $(CFLAGS) -std=gnu11 -c $< -o $@
 
 %.o: %.cpp
-	$(GXX) $(GCCFLAGS) -std=c++11 -c $< -o $@
+	$(CXX) $(CFLAGS) -std=c++11 -c $< -o $@
 
 clean:
 	rm -f $(OBJS) $(STATICLIB)
