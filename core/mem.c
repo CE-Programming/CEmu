@@ -40,7 +40,7 @@ void mem_init(void) {
 
     mem.flash.write_index = 0;
     mem.flash.command = NO_COMMAND;
-    gui_console_printf("Initialized memory...\n");
+    gui_console_printf("[CEmu] Initialized Memory...\n");
 }
 
 void mem_free(void) {
@@ -50,12 +50,12 @@ void mem_free(void) {
     if (mem.flash.block) {
         free(mem.flash.block);
     }
-    gui_console_printf("Freed memory...\n");
+    gui_console_printf("[CEmu] Freed Memory...\n");
 }
 
 void mem_reset(void) {
     memset(mem.ram.block, 0, ram_size);
-    gui_console_printf("RAM reset.\n");
+    gui_console_printf("[CEmu] RAM reset.\n");
 }
 
 static uint32_t flash_address(uint32_t address, uint32_t *size) {
@@ -371,7 +371,7 @@ void mem_write_byte(uint32_t address, uint8_t value) {
                 open_debugger(address, value);
                 break;
             } else if (address >= CONSOLE_PORT_RANGE) {
-                gui_console_debug_char((char)value);
+                gui_console_debug_char((const char)value);
                 break;
             }
 #endif

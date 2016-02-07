@@ -15,7 +15,7 @@ void debugger_init(void) {
     debugger.data.ports = (uint8_t*)calloc(0x10000, sizeof(uint8_t));      /* Allocate Debug Port Monitor */
 
     debugger.runUntilSet = false;
-    gui_console_printf("Initialized Debugger...\n");
+    gui_console_printf("[CEmu] Initialized Debugger...\n");
 }
 
 void debugger_free(void) {
@@ -25,7 +25,7 @@ void debugger_free(void) {
     if (debugger.data.ports) {
         free(debugger.data.ports);
     }
-    gui_console_printf("Freed Debugger.\n");
+    gui_console_printf("[CEmu] Freed Debugger.\n");
 }
 uint8_t debug_read_byte(uint32_t address) {
     uint8_t *ptr, value = 0;

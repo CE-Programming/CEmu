@@ -27,7 +27,7 @@ static void watchdog_event(int index) {
             if (watchdog.control & 4) {
                 cpu_nmi();
             }
-            gui_console_printf("Watchdog reset triggered...");
+            gui_console_printf("[CEmu] Watchdog reset triggered.");
         }
         event_repeat(SCHED_WATCHDOG, watchdog.load);
     }
@@ -123,11 +123,11 @@ void watchdog_reset() {
     watchdog.load = 0x03EF1480;   /* (66MHz) */
     watchdog.count = 0x03EF1480;
 
-    gui_console_printf("Watchdog Timer Reset.\n");
+    gui_console_printf("[CEmu] Watchdog Timer reset.\n");
 }
 
 eZ80portrange_t init_watchdog(void) {
-    gui_console_printf("Initialized watchdog timer...\n");
+    gui_console_printf("[CEmu] Initialized Watchdog Timer...\n");
     return pwatchdog;
 }
 
@@ -172,7 +172,7 @@ static const eZ80portrange_t p9xxx = {
 };
 
 eZ80portrange_t init_protected(void) {
-    gui_console_printf("Initialized protected port range...\n");
+    gui_console_printf("[CEmu] Initialized Protected Ports...\n");
     return p9xxx;
 }
 
@@ -194,12 +194,7 @@ static const eZ80portrange_t pcxxx = {
 };
 
 eZ80portrange_t init_cxxx(void) {
-    unsigned int i;
-    /* Initialize device to default state */
-    for(i = 0; i<sizeof(cxxx.ports) / sizeof(cxxx.ports[0]); i++) {
-        cxxx.ports[i] = 0;
-    }
-
+    memset(&cxxx, 0, sizeof cxxx);
     return pcxxx;
 }
 
@@ -277,5 +272,6 @@ static const eZ80portrange_t pfxxx = {
 };
 
 eZ80portrange_t init_fxxx(void) {
+
     return pfxxx;
 }

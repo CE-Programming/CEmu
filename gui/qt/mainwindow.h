@@ -118,15 +118,16 @@ private:
 
     // Console
     void showStatusMsg(QString);
+    void consoleOutputChanged();
 
     // Settings
     void adjustScreen();
-    int reprintScale(int);
     void changeScale(int);
     void toggleSkin(bool);
     void changeLCDRefresh(int);
     void alwaysOnTop(int);
     void autoCheckForUpdates(int);
+    int reprintScale(int);
 
     // Linking
     QStringList showVariableFileDialog(QFileDialog::AcceptMode mode);
@@ -176,6 +177,7 @@ private:
 
     bool debuggerOn = false;
     bool inReceivingMode = false;
+    bool stdoutConsole = false;
 
     QList<calc_var_t> vars;
 };

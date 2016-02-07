@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "backlight.h"
+#include "emu.h"
 
 /* Global BACKLIGHT state */
 backlight_state_t backlight;
@@ -69,5 +70,6 @@ eZ80portrange_t init_backlight(void) {
     backlight.ports[0x20] = 0xFF; /* backlight scaler? (unimplemented) */
     backlight.brightness = 0xFF;  /* backlight level (PWM)             */
 
+    gui_console_printf("[CEmu] Initialized Backlight Control...\n");
     return device;
 }

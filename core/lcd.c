@@ -166,7 +166,7 @@ void lcd_reset(void) {
     sched.items[SCHED_LCD].clock = CLOCK_12M;
     sched.items[SCHED_LCD].second = -1;
     sched.items[SCHED_LCD].proc = lcd_event;
-    gui_console_printf("LCD reset.\n");
+    gui_console_printf("[CEmu] LCD reset.\n");
 }
 
 uint8_t lcd_read(const uint16_t pio) {
@@ -239,5 +239,6 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_lcd(void) {
+    gui_console_printf("[CEmu] Initialized LCD...\n");
     return device;
 }

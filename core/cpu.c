@@ -975,7 +975,7 @@ static void cpu_execute_bli(int y, int z) {
 
 void cpu_init(void) {
     memset(&cpu, 0, sizeof cpu);
-    gui_console_printf("Initialized CPU...\n");
+    gui_console_printf("[CEmu] Initialized CPU...\n");
 }
 
 void cpu_reset(void) {

@@ -5560,7 +5560,20 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <widget class="QPlainTextEdit" name="console"/>
+         <widget class="QPlainTextEdit" name="console">
+          <property name="undoRedoEnabled">
+           <bool>false</bool>
+          </property>
+          <property name="lineWrapMode">
+           <enum>QPlainTextEdit::NoWrap</enum>
+          </property>
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="plainText">
+           <string notr="true"/>
+          </property>
+         </widget>
         </item>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_6">
@@ -5580,7 +5593,7 @@
              <bool>false</bool>
             </property>
             <property name="text">
-             <string>Send Debug Command</string>
+             <string>Send Command</string>
             </property>
            </widget>
           </item>
@@ -5609,6 +5622,25 @@
             </property>
             <property name="text">
              <string>Clear</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="radioConsole">
+            <property name="text">
+             <string>console</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+            <property name="autoRepeat">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="radioStdout">
+            <property name="text">
             </property>
            </widget>
           </item>

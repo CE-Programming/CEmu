@@ -26,6 +26,6 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_usb(void) {
-    gui_console_printf("Initialized USB...\n");
+    gui_console_printf("[CEmu] Initialized USB...\n");
     return device;
 }

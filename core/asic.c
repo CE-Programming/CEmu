@@ -69,7 +69,7 @@ static void plug_devices(void) {
     add_reset_proc(watchdog_reset);
     add_reset_proc(mem_reset);
 
-    gui_console_printf("Initialized APB...\n");
+    gui_console_printf("[CEmu] Initialized APB...\n");
 }
 
 void asic_init(void) {
@@ -83,7 +83,7 @@ void asic_init(void) {
     asic.cpu = &cpu;
 
     plug_devices();
-    gui_console_printf("Initialized ASIC...\n");
+    gui_console_printf("[CEmu] Initialized ASIC...\n");
 }
 
 void asic_free(void) {
@@ -93,7 +93,7 @@ void asic_free(void) {
 #endif
     asic.mem = NULL;
     asic.cpu = NULL;
-    gui_console_printf("Freed ASIC...\n");
+    gui_console_printf("[CEmu] Freed ASIC...\n");
 }
 
 void asic_reset(void) {

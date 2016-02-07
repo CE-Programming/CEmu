@@ -60,13 +60,15 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     ui->keypadWidget->setResizeMode(QQuickWidget::ResizeMode::SizeRootObjectToView);
 
     // Emulator -> GUI
-    connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr);
-    connect(&emu, &EmuThread::consoleChar, this, &MainWindow::consoleChar);
+    connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::consoleChar, this, &MainWindow::consoleChar, Qt::QueuedConnection);
 
     // Console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, ui->console, &QPlainTextEdit::clear);
     connect(ui->buttonDebugCommand, &QPushButton::clicked, this, &MainWindow::debugCommand);
     connect(ui->debugInput, &QLineEdit::returnPressed, this, &MainWindow::debugCommand);
+    connect(ui->radioConsole, &QRadioButton::clicked, this, &MainWindow::consoleOutputChanged);
+    connect(ui->radioStderr, &QRadioButton::clicked, this, &MainWindow::consoleOutputChanged);
 
     // Debugger
     connect(ui->buttonRun, &QPushButton::clicked, this, &MainWindow::changeDebuggerState);
@@ -155,10 +157,10 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     // Keybindings
     connect(ui->radioCEmuKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
-    connect(ui->radioTilEmKeys, &QPushButton::clicked, this, &MainWindow::keymapChanged);
-    connect(ui->radioWabbitemuKeys, &QPushButton::clicked, this, &MainWindow::keymapChanged);
-    connect(ui->radioPindurTIKeys, &QPushButton::clicked, this, &MainWindow::keymapChanged);
-    connect(ui->radioSmartViewKeys, &QPushButton::clicked, this, &MainWindow::keymapChanged);
+    connect(ui->radioTilEmKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
+    connect(ui->radioWabbitemuKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
+    connect(ui->radioPindurTIKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
+    connect(ui->radioSmartViewKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
 
     // Auto Updates
     connect(ui->checkUpdates, &QCheckBox::stateChanged, this, &MainWindow::autoCheckForUpdates);
@@ -246,7 +248,7 @@ void MainWindow::dropEvent(QDropEvent *e) {
         files.append(url.toLocalFile());
     }
     setSendState(true);
-    QThread::msleep(100);
+    QThread::msleep(105);
 
     sendFiles(files);
 }
@@ -294,26 +296,11 @@ void MainWindow::closeEvent(QCloseEvent *e) {
 }
 
 void MainWindow::consoleChar(const char c) {
-    ui->console->moveCursor(QTextCursor::End);
-
-    static char previous = 0;
-
-    switch(c) {
-        case 0:
-        case '\r':
-            previous = c;
-            break;
-        case '\b':
-            ui->console->textCursor().deletePreviousChar();
-            break;
-        default:
-            if(previous == '\r' && c != '\n') {
-                ui->console->moveCursor(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
-                ui->console->moveCursor(QTextCursor::End, QTextCursor::KeepAnchor);
-                ui->console->textCursor().removeSelectedText();
-                previous = 0;
-            }
-            ui->console->insertPlainText(QChar::fromLatin1(c));
+    if (stderrConsole) {
+        fputc(c, stderr);
+    } else {
+        ui->console->moveCursor(QTextCursor::End);
+        ui->console->insertPlainText(QChar::fromLatin1(c));
     }
 }
 
@@ -630,6 +617,10 @@ void MainWindow::changeEmulatedSpeed(int value) {
     emit changedEmuSpeed(actualSpeed);
 }
 
+void MainWindow::consoleOutputChanged() {
+    stderrConsole = ui->radioStderr->isChecked();
+}
+
 void MainWindow::keymapChanged() {
     if (ui->radioCEmuKeys->isChecked()) {
         changeKeymap(QStringLiteral("cemu"));
@@ -695,7 +686,7 @@ void MainWindow::sendFiles(QStringList fileNames) {
     }
 
     setSendState(false);
-    QThread::msleep(100);
+    QThread::msleep(105);
     ui->sendBar->setMaximum(1);
     ui->sendBar->setValue(0);
 }
@@ -736,7 +727,7 @@ void MainWindow::refreshVariableList() {
         ui->actionReset_Calculator->setEnabled(false);
         ui->buttonRun->setEnabled(false);
         setReceiveState(true);
-        QThread::msleep(100);
+        QThread::msleep(105);
 
         vat_search_init(&var);
         vars.clear();

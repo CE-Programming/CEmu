@@ -119,7 +119,7 @@ void gpt_reset() {
     sched.items[SCHED_OSTIMER].clock = CLOCK_32K;
     sched.items[SCHED_OSTIMER].proc = ost_event;
     event_set(SCHED_OSTIMER, ost_ticks[control.ports[0] & 3]);
-    gui_console_printf("GPT reset.\n");
+    gui_console_printf("[CEmu] GPT reset.\n");
 }
 
 static const eZ80portrange_t device = {
@@ -129,6 +129,6 @@ static const eZ80portrange_t device = {
 
 eZ80portrange_t init_gpt(void) {
     gpt.revision = 0x00010801;
-    gui_console_printf("Initialized general purpose timers...\n");
+    gui_console_printf("[CEmu] Initialized GP timers...\n");
     return device;
 }

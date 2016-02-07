@@ -88,7 +88,7 @@ static void control_write(const uint16_t pio, const uint8_t byte) {
                 default:
                     break;
             }
-            gui_console_printf("CPU clock rate set to: %d MHz\n", 6*(1<<(control.cpuSpeed & 3)));
+            gui_console_printf("[CEmu] CPU clock rate set to: %d MHz\n", 6*(1<<(control.cpuSpeed & 3)));
             break;
         case 0x06:
             control.ports[index] = byte & 7;
@@ -141,7 +141,8 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_control(void) {
-    memset(control.ports, 0, sizeof control.ports);
+    memset(&control, 0, sizeof control);
+    gui_console_printf("[CEmu] Initialized Control Ports...\n");
 
     /* Set default state to full battery and not charging */
     control.batteryCharging = false;

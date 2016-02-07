@@ -174,7 +174,7 @@ void keypad_reset() {
     sched.items[SCHED_KEYPAD].second = -1;
     sched.items[SCHED_KEYPAD].proc = keypad_scan_event;
 
-    gui_console_printf("Keypad reset.\n");
+    gui_console_printf("[CEmu] Keypad reset.\n");
 }
 
 static const eZ80portrange_t device = {
@@ -183,6 +183,6 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_keypad(void) {
-    gui_console_printf("Initialized keypad...\n");
+    gui_console_printf("[CEmu] Initialized keypad...\n");
     return device;
 }

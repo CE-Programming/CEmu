@@ -147,6 +147,6 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_sha256(void) {
-    gui_console_printf("Initialized SHA256 chip...\n");
+    gui_console_printf("[CEmu] Initialized SHA256 Chip...\n");
     return device;
 }

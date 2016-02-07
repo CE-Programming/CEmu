@@ -184,7 +184,7 @@ void rtc_reset() {
     sched.items[SCHED_RTC].second = -1;
     sched.items[SCHED_RTC].proc = rtc_event;
 
-    gui_console_printf("RTC Reset.\n");
+    gui_console_printf("[CEmu] RTC reset.\n");
 }
 
 static const eZ80portrange_t device = {
@@ -193,6 +193,6 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_rtc(void) {
-    gui_console_printf("Initialized real time clock...\n");
+    gui_console_printf("[CEmu] Initialized RTC...\n");
     return device;
 }
