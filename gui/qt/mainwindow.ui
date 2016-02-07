@@ -5639,8 +5639,9 @@
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="radioStdout">
+           <widget class="QRadioButton" name="radioStderr">
             <property name="text">
+             <string>stderr</string>
             </property>
            </widget>
           </item>

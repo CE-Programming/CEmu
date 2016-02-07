@@ -177,7 +177,7 @@ private:
 
     bool debuggerOn = false;
     bool inReceivingMode = false;
-    bool stdoutConsole = false;
+    bool stderrConsole = false;
 
     QList<calc_var_t> vars;
 };
