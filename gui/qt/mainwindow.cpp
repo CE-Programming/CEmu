@@ -306,7 +306,7 @@ void MainWindow::consoleChar(const char c) {
 
 void MainWindow::consoleStr(QString str) {
     if (stderrConsole) {
-        fprintf(stderr, str.toStdString().c_str());
+        fputs(str.toStdString().c_str(), stderr);
     } else {
         ui->console->moveCursor(QTextCursor::End);
         ui->console->insertPlainText(str);
