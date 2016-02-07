@@ -50,7 +50,7 @@ void mem_free(void) {
     if (mem.flash.block) {
         free(mem.flash.block);
     }
-    gui_console_printf("[CEmu] Freed Memory...\n");
+    gui_console_printf("[CEmu] Freed Memory.\n");
 }
 
 void mem_reset(void) {

@@ -93,7 +93,7 @@ void asic_free(void) {
 #endif
     asic.mem = NULL;
     asic.cpu = NULL;
-    gui_console_printf("[CEmu] Freed ASIC...\n");
+    gui_console_printf("[CEmu] Freed ASIC.\n");
 }
 
 void asic_reset(void) {

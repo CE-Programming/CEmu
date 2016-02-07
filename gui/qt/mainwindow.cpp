@@ -305,8 +305,12 @@ void MainWindow::consoleChar(const char c) {
 }
 
 void MainWindow::consoleStr(QString str) {
-    ui->console->moveCursor(QTextCursor::End);
-    ui->console->insertPlainText(str);
+    if (stderrConsole) {
+        fprintf(stderr, str.toStdString().c_str());
+    } else {
+        ui->console->moveCursor(QTextCursor::End);
+        ui->console->insertPlainText(str);
+    }
 }
 
 void MainWindow::changeThrottleMode(int mode) {
