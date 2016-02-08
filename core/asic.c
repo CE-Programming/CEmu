@@ -87,6 +87,8 @@ void asic_init(void) {
 }
 
 void asic_free(void) {
+    /* make sure the LCD doesn't use unalloced mem */
+    lcd.upcurr = lcd.upbase = 0;
     mem_free();
 #ifdef DEBUG_SUPPORT
     debugger_free();
