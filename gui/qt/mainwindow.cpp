@@ -297,7 +297,9 @@ void MainWindow::closeEvent(QCloseEvent *e) {
 
 void MainWindow::consoleChar(const char c) {
     if (stderrConsole) {
-        fputc(c, stderr);
+        if (c) {
+            fputc(c, stderr);
+        }
     } else {
         ui->console->moveCursor(QTextCursor::End);
         ui->console->insertPlainText(QChar::fromLatin1(c));
