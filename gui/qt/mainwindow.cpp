@@ -184,6 +184,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     emu.rom = settings->value(QStringLiteral("romImage")).toString().toStdString();
     changeThrottleMode(Qt::Checked);
 
+    debugger_init();
+
     if (fileExists(emu.rom)) {
         emu.start();
     } else if (!runSetup()) {
@@ -228,6 +230,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 }
 
 MainWindow::~MainWindow() {
+    debugger_free();
+
     settings->setValue(QStringLiteral("windowState"), saveState(WindowStateVersion));
     settings->setValue(QStringLiteral("windowGeometry"), saveGeometry());
     settings->setValue(QStringLiteral("currDir"), currentDir.absolutePath());
@@ -1494,12 +1498,6 @@ void MainWindow::updatePortData(int currentRow) {
 
 void MainWindow::resetCalculator() {
     if (emu.stop()) {
-        while(ui->portView->rowCount() > 0) {
-            ui->portView->removeRow(0);
-        }
-        while(ui->breakpointView->rowCount() > 0) {
-            ui->breakpointView->removeRow(0);
-        }
         emu.start();
         if(debuggerOn) {
             emit setDebugStepInMode();

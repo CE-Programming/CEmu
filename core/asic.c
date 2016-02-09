@@ -76,9 +76,7 @@ void asic_init(void) {
     /* First, initilize memory and LCD */
     mem_init();
     cpu_init();
-#ifdef DEBUG_SUPPORT
-    debugger_init();
-#endif
+
     asic.mem = &mem;
     asic.cpu = &cpu;
 
@@ -90,9 +88,6 @@ void asic_free(void) {
     /* make sure the LCD doesn't use unalloced mem */
     lcd.upcurr = lcd.upbase = 0;
     mem_free();
-#ifdef DEBUG_SUPPORT
-    debugger_free();
-#endif
     asic.mem = NULL;
     asic.cpu = NULL;
     gui_console_printf("[CEmu] Freed ASIC.\n");
