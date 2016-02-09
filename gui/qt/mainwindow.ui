@@ -148,7 +148,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>6</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -5389,6 +5389,10 @@
                <property name="text">
                 <string>Goto</string>
                </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/resources/icons/goto.png</normaloff>:/icons/resources/icons/goto.png</iconset>
+               </property>
               </widget>
              </item>
              <item>
@@ -5452,6 +5456,10 @@
                <property name="text">
                 <string>Goto</string>
                </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/resources/icons/goto.png</normaloff>:/icons/resources/icons/goto.png</iconset>
+               </property>
               </widget>
              </item>
              <item>
@@ -5514,6 +5522,10 @@
               <widget class="QPushButton" name="buttonMemGoto">
                <property name="text">
                 <string>Goto</string>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/resources/icons/goto.png</normaloff>:/icons/resources/icons/goto.png</iconset>
                </property>
               </widget>
              </item>
