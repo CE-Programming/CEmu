@@ -1658,6 +1658,13 @@ void MainWindow::stepPressed() {
 }
 
 void MainWindow::stepOverPressed() {
+    disasm.adl = ui->checkADL->isChecked();
+    disasm.base_address = cpu.registers.PC;
+    disassembleInstruction();
+    if (disasm.instruction.opcode.at(0) == 'j') {
+        stepPressed();
+        return;
+    }
     setDebuggerState(false);
     emit setDebugStepOverMode();
 }
