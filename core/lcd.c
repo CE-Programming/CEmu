@@ -183,6 +183,8 @@ uint8_t lcd_read(const uint16_t pio) {
         if(index < 0x028 && index >= 0x024) { return read8(lcd.mis & lcd.ris, bit_offset); }
     } else if (index < 0x400) {
         return *((uint8_t *)lcd.palette + index - 0x200);
+    } else if (index > 0x7FF && index < 0xBFD) {
+        return *((uint8_t *)lcd.cursorimage + index - 0x800);
     } else if (index >= 0xFE0) {
         static const uint8_t id[1][8] = {
             { 0x11, 0x11, 0x14, 0x00, 0x0D, 0xF0, 0x05, 0xB1 }
@@ -230,6 +232,8 @@ void lcd_write(const uint16_t pio, const uint8_t value) {
         }
     } else if (index < 0x400) {
         write8(lcd.palette[pio >> 1 & 0xFF], (pio & 1) << 3, value);
+    } else if (index > 0x7FF && index < 0xBFD) {
+        write8(lcd.cursorimage[pio >> 1 & 0xFF], (pio & 1) << 3, value);
     }
 }
 
