@@ -3,12 +3,13 @@
         <file>resources/skin/ti84pce.png</file>
     </qresource>
     <qresource prefix="/icons">
-        <file>resources/icons/goto.png</file>
         <file>resources/icons/run.png</file>
-        <file>resources/icons/stepover.png</file>
-        <file>resources/icons/stepout.png</file>
         <file>resources/icons/stop.png</file>
-        <file>resources/icons/step.png</file>
+        <file>resources/icons/stepin.png</file>
+        <file>resources/icons/stepover.png</file>
+        <file>resources/icons/stepnext.png</file>
+        <file>resources/icons/stepout.png</file>
+        <file>resources/icons/goto.png</file>
         <file>resources/icons/icon.icns</file>
         <file>resources/icons/icon.ico</file>
         <file>resources/icons/mem.png</file>

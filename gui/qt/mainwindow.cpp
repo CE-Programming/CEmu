@@ -84,10 +84,12 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonRemoveBreakpoint, &QPushButton::clicked, this, &MainWindow::deleteBreakpoint);
     connect(ui->breakpointView, &QTableWidget::itemChanged, this, &MainWindow::breakpointCheckboxToggled);
     connect(ui->actionReset_Calculator, &QAction::triggered, this, &MainWindow::resetCalculator );
-    connect(ui->buttonStep, &QPushButton::clicked, this, &MainWindow::stepPressed);
-    connect(this, &MainWindow::setDebugStepMode, &emu, &EmuThread::setDebugStepMode);
+    connect(ui->buttonStepIn, &QPushButton::clicked, this, &MainWindow::stepInPressed);
+    connect(this, &MainWindow::setDebugStepInMode, &emu, &EmuThread::setDebugStepInMode);
     connect(ui->buttonStepOver, &QPushButton::clicked, this, &MainWindow::stepOverPressed);
     connect(this, &MainWindow::setDebugStepOverMode, &emu, &EmuThread::setDebugStepOverMode);
+    connect(ui->buttonStepNext, &QPushButton::clicked, this, &MainWindow::stepNextPressed);
+    connect(this, &MainWindow::setDebugStepNextMode, &emu, &EmuThread::setDebugStepNextMode);
     connect(ui->buttonStepOut, &QPushButton::clicked, this, &MainWindow::stepOutPressed);
     connect(this, &MainWindow::setDebugStepOutMode, &emu, &EmuThread::setDebugStepOutMode);
     connect(ui->buttonGoto, &QPushButton::clicked, this, &MainWindow::gotoPressed);
@@ -959,8 +961,9 @@ void MainWindow::setDebuggerState(bool state) {
     ui->debugInput->setEnabled( debuggerOn );
     ui->tabDebugging->setEnabled( debuggerOn );
     ui->buttonGoto->setEnabled( debuggerOn );
-    ui->buttonStep->setEnabled( debuggerOn );
+    ui->buttonStepIn->setEnabled( debuggerOn );
     ui->buttonStepOver->setEnabled( debuggerOn );
+    ui->buttonStepNext->setEnabled( debuggerOn );
     ui->buttonStepOut->setEnabled( debuggerOn );
     ui->groupCPU->setEnabled( debuggerOn );
     ui->groupFlags->setEnabled( debuggerOn );
@@ -1499,7 +1502,7 @@ void MainWindow::resetCalculator() {
         }
         emu.start();
         if(debuggerOn) {
-            emit setDebugStepMode();
+            emit setDebugStepInMode();
         }
     } else {
         qDebug("Reset Failed.");
@@ -1651,22 +1654,27 @@ void MainWindow::opContextMenu(const QPoint& posa) {
     }
 }
 
-void MainWindow::stepPressed() {
+void MainWindow::stepInPressed() {
     debuggerOn = false;
     updateDebuggerChanges();
-    emit setDebugStepMode();
+    emit setDebugStepInMode();
 }
 
 void MainWindow::stepOverPressed() {
-    disasm.adl = ui->checkADL->isChecked();
     disasm.base_address = cpu.registers.PC;
+    disasm.adl = cpu.ADL;
     disassembleInstruction();
-    if (disasm.instruction.opcode.at(0) == 'j') {
-        stepPressed();
-        return;
+    if (disasm.instruction.opcode == "call" || disasm.instruction.opcode == "rst") {
+        setDebuggerState(false);
+        emit setDebugStepOverMode();
+    } else {
+        stepInPressed();
     }
+}
+
+void MainWindow::stepNextPressed() {
     setDebuggerState(false);
-    emit setDebugStepOverMode();
+    emit setDebugStepNextMode();
 }
 
 void MainWindow::stepOutPressed() {

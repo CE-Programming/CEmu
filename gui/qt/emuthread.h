@@ -37,8 +37,9 @@ public slots:
 
     // Debugging
     void setDebugMode(bool);
-    void setDebugStepMode();
+    void setDebugStepInMode();
     void setDebugStepOverMode();
+    void setDebugStepNextMode();
     void setDebugStepOutMode();
     void debuggerInput(QString str);
 

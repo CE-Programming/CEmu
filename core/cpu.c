@@ -402,8 +402,8 @@ static void cpu_return(void) {
     cpu_prefetch(address, mode);
 #ifdef DEBUG_SUPPORT
     if (cpu_events & EVENT_DEBUG_STEP_OUT &&
-        (cpu.registers.SPL > debugger.stepOutSPL ||
-         cpu.registers.SPS > debugger.stepOutSPS)) {
+        (cpu.registers.SPL >= debugger.stepOutSPL ||
+         cpu.registers.SPS >= debugger.stepOutSPS)) {
         cpu_events &= ~EVENT_DEBUG_STEP_OUT;
         open_debugger(DBG_STEP, 0);
     }

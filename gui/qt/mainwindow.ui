@@ -1322,7 +1322,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="buttonStep">
+           <widget class="QPushButton" name="buttonStepIn">
             <property name="enabled">
              <bool>false</bool>
             </property>
@@ -1333,11 +1333,11 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>Step</string>
+             <string>Step In</string>
             </property>
             <property name="icon">
              <iconset resource="resources.qrc">
-              <normaloff>:/icons/resources/icons/step.png</normaloff>:/icons/resources/icons/step.png</iconset>
+              <normaloff>:/icons/resources/icons/stepin.png</normaloff>:/icons/resources/icons/stepin.png</iconset>
             </property>
            </widget>
           </item>
@@ -1358,6 +1358,26 @@
             <property name="icon">
              <iconset resource="resources.qrc">
               <normaloff>:/icons/resources/icons/stepover.png</normaloff>:/icons/resources/icons/stepover.png</iconset>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="buttonStepNext">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Step Next</string>
+            </property>
+            <property name="icon">
+             <iconset resource="resources.qrc">
+              <normaloff>:/icons/resources/icons/stepnext.png</normaloff>:/icons/resources/icons/Stepnext.png</iconset>
             </property>
            </widget>
           </item>

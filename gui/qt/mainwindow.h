@@ -51,8 +51,9 @@ signals:
     void setSendState(bool);
     void sendVariable(std::string);
     void setReceiveState(bool);
-    void setDebugStepMode();
+    void setDebugStepInMode();
     void setDebugStepOverMode();
+    void setDebugStepNextMode();
     void setDebugStepOutMode();
 
     // Speed
@@ -90,8 +91,9 @@ private:
     void deleteBreakpoint();
     void breakpointCheckboxToggled(QTableWidgetItem *);
     void drawNextDisassembleLine();
-    void stepPressed();
+    void stepInPressed();
     void stepOverPressed();
+    void stepNextPressed();
     void stepOutPressed();
     void updateTIOSView();
     void updateStackView();

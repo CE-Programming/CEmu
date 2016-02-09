@@ -120,13 +120,21 @@ void EmuThread::setReceiveState(bool state) {
     emu_is_recieving = state;
 }
 
-void EmuThread::setDebugStepMode() {
+void EmuThread::setDebugStepInMode() {
     cpu_events |= EVENT_DEBUG_STEP;
     enterDebugger = false;
     inDebugger = false;
 }
 
 void EmuThread::setDebugStepOverMode() {
+    debugger.stepOutSPL = cpu.registers.SPL;
+    debugger.stepOutSPS = cpu.registers.SPS;
+    cpu_events |= EVENT_DEBUG_STEP_OUT;
+    enterDebugger = false;
+    inDebugger = false;
+}
+
+void EmuThread::setDebugStepNextMode() {
     disasm.base_address = cpu.registers.PC;
     disasm.adl = cpu.ADL;
     disassembleInstruction();
@@ -138,8 +146,8 @@ void EmuThread::setDebugStepOverMode() {
 }
 
 void EmuThread::setDebugStepOutMode() {
-    debugger.stepOutSPL = cpu.registers.SPL;
-    debugger.stepOutSPS = cpu.registers.SPS;
+    debugger.stepOutSPL = cpu.registers.SPL + 1;
+    debugger.stepOutSPS = cpu.registers.SPS + 1;
     cpu_events |= EVENT_DEBUG_STEP_OUT;
     enterDebugger = false;
     inDebugger = false;
