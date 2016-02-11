@@ -1067,7 +1067,9 @@ void cpu_execute(void) {
                                 case 0:  // NOP
                                     break;
                                 case 1:  // EX af,af'
-                                    rswap(r->AF, r->_AF);
+                                    w = r->AF;
+                                    r->AF = r->_AF;
+                                    r->_AF = w;
                                     break;
                                 case 2: // DJNZ d
                                     s = cpu_fetch_offset();
@@ -1256,7 +1258,15 @@ void cpu_execute(void) {
                                             cpu_return();
                                             break;
                                         case 1: // EXX
-                                            exx(&cpu.registers);
+                                            w = r->BC;
+                                            r->BC = r->_BC;
+                                            r->_BC = w;
+                                            w = r->DE;
+                                            r->DE = r->_DE;
+                                            r->_DE = w;
+                                            w = r->HL;
+                                            r->HL = r->_HL;
+                                            r->_HL = w;
                                             break;
                                         case 2: // JP (rr)
                                             cpu_prefetch(cpu_read_index(), cpu.L);
@@ -1321,7 +1331,9 @@ void cpu_execute(void) {
                                     cpu_write_word(w, new_word);
                                     break;
                                 case 5: // EX DE, HL
-                                    rswap(r->HL, r->DE);
+                                    w = cpu_mask_mode(r->DE, cpu.L);
+                                    r->DE = cpu_mask_mode(r->HL, cpu.L);
+                                    r->HL = w;
                                     break;
                                 case 6: // DI
                                     cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = 0;

@@ -16,6 +16,5 @@
 #define mmio_range(addr) ((((addr<0xF00000) ? ((addr-0xDF0000)>>16) : ((addr-0xEB0000)>>16)))&0xF)
 #define port_range(a) (((a)>>12)&0xF) /* converts an address to a port range 0x0-0xF */
 #define addr_range(a) ((a)&0xFFF)     /* converts an address to a port range value 0x000-0xFFF */
-#define rswap(a, b) do { (a) ^= (b); (b) ^= (a); (a) ^= (b); } while(0)
 
 #endif
