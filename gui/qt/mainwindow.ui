@@ -5802,7 +5802,7 @@
   </action>
   <action name="actionScreenshot">
    <property name="checkable">
-    <bool>true</bool>
+    <bool>false</bool>
    </property>
    <property name="text">
     <string>Take PNG screenshot...</string>

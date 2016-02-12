@@ -389,17 +389,38 @@ void MainWindow::setUIMode(bool docks_enabled) {
     ui->tabWidget->setHidden(true);
 }
 
+void MainWindow::saveScreenshot(QString namefilter, QString defaultsuffix, QString temppath) {
+    QFileDialog dialog(this);
+
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    dialog.setFileMode(QFileDialog::AnyFile);
+    dialog.setDirectory(currentDir);
+    dialog.setNameFilter(namefilter);
+    dialog.setWindowTitle("Save Screen");
+    dialog.setDefaultSuffix(defaultsuffix);
+    dialog.exec();
+
+    if(!(dialog.selectedFiles().isEmpty())) {
+        QString filename = dialog.selectedFiles().at(0);
+        if (filename.isEmpty()) {
+            QFile(temppath).remove();
+        } else {
+            QFile(filename).remove();
+            QFile(temppath).rename(filename);
+        }
+    }
+    currentDir = dialog.directory();
+}
+
 void MainWindow::screenshot() {
     QImage image = renderFramebuffer();
 
-    QString filename = QFileDialog::getSaveFileName(this, tr("Save Screenshot"), QString(), tr("PNG images (*.png)"));
-    if (filename.isEmpty()) {
-        return;
-    }
-
-    if (!image.save(filename, "PNG", 0)) {
+    QString path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.gif");
+    if (!image.save(path, "PNG", 0)) {
         QMessageBox::critical(this, tr("Screenshot failed"), tr("Failed to save screenshot!"));
     }
+
+    saveScreenshot(tr("PNG images (*.png)"), QStringLiteral("png"), path);
 }
 
 void MainWindow::screenshotGIF() {
@@ -408,14 +429,12 @@ void MainWindow::screenshotGIF() {
         return;
     }
 
-    QString filename = QFileDialog::getSaveFileName(this, tr("Save Screenshot"), QString(), tr("GIF images (*.gif)"));
-    if (filename.isEmpty()) {
-        return;
-    }
-
-    if (!gif_single_frame(filename.toStdString().c_str())) {
+    QString path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.gif");
+    if (!gif_single_frame(path.toStdString().c_str())) {
         QMessageBox::critical(this, tr("Screenshot failed"), tr("Failed to save screenshot!"));
     }
+
+    saveScreenshot(tr("GIF images (*.gif)"), QStringLiteral("gif"), path);
 }
 
 void MainWindow::recordGIF() {
@@ -428,13 +447,7 @@ void MainWindow::recordGIF() {
         gif_start_recording(path.toStdString().c_str(), ui->frameskipSlider->value());
     } else {
         if (gif_stop_recording()) {
-            QString filename = QFileDialog::getSaveFileName(this, tr("Save Recording"), QString(), tr("GIF images (*.gif)"));
-            if(filename.isEmpty()) {
-                QFile(path).remove();
-            } else {
-                QFile(filename).remove();
-                QFile(path).rename(filename);
-            }
+            saveScreenshot(tr("GIF images (*.gif)"), QStringLiteral("gif"), path);
         } else {
             QMessageBox::warning(this, tr("Failed recording GIF"), tr("A failure occured during recording"));
         }
