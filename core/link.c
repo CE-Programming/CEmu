@@ -145,6 +145,7 @@ bool sendVariableLink(const char *var_name) {
     if (fseek(file, 0x3B, 0))                            goto r_err;
     if (fread(op1, 1, op_size, file) != op_size)         goto r_err;
     cpu.halted = cpu.IEF_wait = 0;
+    mem_write_byte(0xD008DF,0);
     run_asm_safe[0] = 0x21;
     run_asm_safe[1] = var_size_low;
     run_asm_safe[2] = var_size_high;
@@ -157,8 +158,8 @@ bool sendVariableLink(const char *var_name) {
     cpu.next = 20000000;
     cpu_execute();
 
-    if(mem_read_byte(0xD008DF) == 142) {
-        gui_console_printf("[CEmu] Transfer Error: Memory Full");
+    if(mem_read_byte(0xD008DF)) {
+        gui_console_printf("[CEmu] Variable Transfer Error\n");
         goto r_err;
     }
 

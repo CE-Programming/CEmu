@@ -690,6 +690,7 @@ void MainWindow::sendFiles(QStringList fileNames) {
     const unsigned int fileNum = fileNames.size();
 
     if (fileNum == 0) {
+        setSendState(false);
         return;
     }
 
