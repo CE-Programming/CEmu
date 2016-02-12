@@ -157,6 +157,11 @@ bool sendVariableLink(const char *var_name) {
     cpu.next = 20000000;
     cpu_execute();
 
+    if(mem_read_byte(0xD008DF) == 142) {
+        gui_console_printf("[CEmu] Transfer Error: Memory Full");
+        goto r_err;
+    }
+
     var_ptr = phys_mem_ptr(get_ptr(safe_ram_loc), 1);
 
     var_size = (var_size_high << 8) | var_size_low;
