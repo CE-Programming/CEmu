@@ -27,6 +27,7 @@ extern const char *rom_image;
 
 /* Reimplemented GUI callbacks */
 void gui_do_stuff(void);
+void gui_entered_send_state(bool);
 void gui_console_printf(const char *, ...);
 void gui_console_debug_char(const char);
 void gui_debugger_entered_or_left(bool);

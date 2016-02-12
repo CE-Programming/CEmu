@@ -18,6 +18,7 @@
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QDockWidget>
 #include <QtWidgets/QShortcut>
+#include <QtWidgets/QProgressDialog>
 #include <QtWidgets/QInputDialog>
 #include <QtQuickWidgets/QQuickWidget>
 #include <QtGui/QFont>
@@ -113,7 +114,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonRefreshList, &QPushButton::clicked, this, &MainWindow::refreshVariableList);
     connect(this, &MainWindow::setReceiveState, &emu, &EmuThread::setReceiveState);
     connect(ui->buttonReceiveFiles, &QPushButton::clicked, this, &MainWindow::saveSelected);
-
     // Toolbar Actions
     connect(ui->actionSetup, &QAction::triggered, this, &MainWindow::runSetup);
     connect(ui->actionExit, &QAction::triggered, this, &MainWindow::close);
@@ -253,8 +253,6 @@ void MainWindow::dropEvent(QDropEvent *e) {
     for(auto &&url : mime_data->urls()) {
         files.append(url.toLocalFile());
     }
-    setSendState(true);
-    QThread::msleep(105);
 
     sendFiles(files);
 }
@@ -688,27 +686,45 @@ QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode) {
 }
 
 void MainWindow::sendFiles(QStringList fileNames) {
-    ui->sendBar->setMaximum(fileNames.size());
+    setSendState(true);
+    const unsigned int fileNum = fileNames.size();
 
-    for (int i = 0; i < fileNames.size(); i++) {
+    if (fileNum == 0) {
+        return;
+    }
+
+    /* Wait for an open link */
+    waitForLink = true;
+    do {
+        QThread::msleep(50);
+    } while(waitForLink);
+
+    QProgressDialog progress("Sending Files...", QString(), 0, fileNum, this);
+    progress.setWindowModality(Qt::WindowModal);
+
+    progress.show();
+    QApplication::processEvents();
+
+    for (unsigned int i = 0; i < fileNum; i++) {
         if(!sendVariableLink(fileNames.at(i).toUtf8())) {
             QMessageBox::warning(this, tr("Failed Transfer"), tr("A failure occured during transfer of: ")+fileNames.at(i));
         }
-        ui->sendBar->setValue(ui->sendBar->value()+1);
+        progress.setLabelText(fileNames.at(i).toUtf8());
+        progress.setValue(progress.value()+1);
+        QApplication::processEvents();
     }
 
+    progress.setValue(progress.value()+1);
+    QApplication::processEvents();
+    QThread::msleep(100);
+
     setSendState(false);
-    QThread::msleep(105);
-    ui->sendBar->setMaximum(1);
-    ui->sendBar->setValue(0);
 }
 
 void MainWindow::selectFiles() {
     if (debuggerOn) {
        return;
     }
-
-    setSendState(true);
 
     QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptOpen);
 
@@ -739,7 +755,7 @@ void MainWindow::refreshVariableList() {
         ui->actionReset_Calculator->setEnabled(false);
         ui->buttonRun->setEnabled(false);
         setReceiveState(true);
-        QThread::msleep(105);
+        QThread::msleep(200);
 
         vat_search_init(&var);
         vars.clear();
