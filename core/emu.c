@@ -17,6 +17,10 @@
 #include <stdio.h>
 #include <ctype.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #include "emu.h"
 #include "schedule.h"
 #include "asic.h"
@@ -222,8 +226,7 @@ static void emu_reset(void) {
     sched_update_next_event();
 }
 
-static void emu_main_loop(void) {
-    while (!exiting) {
+static void emu_main_loop_inner(void) {
         if (cpu_events & EVENT_RESET) {
 #ifdef DEBUG_SUPPORT
             cpu_events &= EVENT_DEBUG_STEP;
@@ -241,7 +244,6 @@ static void emu_main_loop(void) {
 #endif
         sched_process_pending_events();
         cpu_execute();  // execute instructions with available clock cycles
-    }
 }
 
 void emu_loop(bool reset) {
@@ -251,6 +253,12 @@ void emu_loop(bool reset) {
 
     exiting = false;
 
-    emu_main_loop();
+#ifdef __EMSCRIPTEN__
+    emscripten_set_main_loop(emu_main_loop_inner, 0, 1);
+#else
+    while (!exiting) {
+        emu_main_loop_inner();
+    }
+#endif
     emu_cleanup();
 }
