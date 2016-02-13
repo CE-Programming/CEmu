@@ -183,8 +183,17 @@ uint8_t lcd_read(const uint16_t pio) {
         if(index < 0x028 && index >= 0x024) { return read8(lcd.mis & lcd.ris, bit_offset); }
     } else if (index < 0x400) {
         return *((uint8_t *)lcd.palette + index - 0x200);
-    } else if (index > 0x7FF && index < 0xBFD) {
-        return read8(lcd.cursorimage[((pio-0x800) >> 1) & 0xFF], bit_offset);
+    } else if (index < 0xC30) {
+        if(index < 0xC00 && index >= 0x800) { return read8(lcd.crsrImage[((pio-0x800) & 0x3FF) >> 2], bit_offset); }
+        if(index == 0xC00) { return read8(lcd.crsrControl, bit_offset); }
+        if(index == 0xC04) { return read8(lcd.crsrConfig, bit_offset); }
+        if(index < 0xC0C && index >= 0xC08) { return read8(lcd.crsrPalette0, bit_offset); }
+        if(index < 0xC10 && index >= 0xC0C) { return read8(lcd.crsrPalette1, bit_offset); }
+        if(index < 0xC14 && index >= 0xC10) { return read8(lcd.crsrXY, bit_offset); }
+        if(index < 0xC16 && index >= 0xC14) { return read8(lcd.crsrClip, bit_offset); }
+        if(index == 0xC20) { return read8(lcd.crsrImsc, bit_offset); }
+        if(index == 0xC28) { return read8(lcd.crsrRis, bit_offset); }
+        if(index == 0xC2C) { return read8(lcd.crsrRis & lcd.crsrImsc, bit_offset); }
     } else if (index >= 0xFE0) {
         static const uint8_t id[1][8] = {
             { 0x11, 0x11, 0x14, 0x00, 0x0D, 0xF0, 0x05, 0xB1 }
@@ -205,13 +214,13 @@ void lcd_write(const uint16_t pio, const uint8_t value) {
     if (index < 0x200) {
         if (index < 0x010) {
             write8(lcd.timing[index >> 2], bit_offset, value);
-        } else if (index == 0x010) {
+        } else if (index < 0x014 && index >= 0x010) {
             write8(lcd.upbase, bit_offset, value);
             if (lcd.upbase & 7) {
                 gui_console_printf("Warning: LCD upper panel base not 8-byte aligned!\n");
             }
             lcd.upbase &= ~7U;
-        } else if (index == 0x014) {
+        } else if (index < 0x018 && index >= 0x014) {
             write8(lcd.lpbase, bit_offset, value);
             if (lcd.lpbase & 7) {
                 gui_console_printf("Warning: LCD lower panel base not 8-byte aligned!\n");
@@ -233,8 +242,35 @@ void lcd_write(const uint16_t pio, const uint8_t value) {
         }
     } else if (index < 0x400) {
         write8(lcd.palette[pio >> 1 & 0xFF], (pio & 1) << 3, value);
-    } else if (index > 0x7FF && index < 0xBFD) {
-        write8(lcd.cursorimage[((pio-0x800) >> 1) & 0xFF], bit_offset, value);
+    } else if (index < 0xC30) {
+        if(index < 0xC00 && index >= 0x800) {
+            write8(lcd.crsrImage[((pio-0x800) & 0x3FF) >> 2], bit_offset, value);
+        }
+        if(index == 0xC00) {
+            write8(lcd.crsrControl, bit_offset, value);
+        }
+        if(index == 0xC04) {
+            write8(lcd.crsrConfig, bit_offset, value);
+            lcd.crsrConfig &= 0xF;
+        }
+        if(index < 0xC0C && index >= 0xC08) {
+            write8(lcd.crsrPalette0, bit_offset, value);
+        }
+        if(index < 0xC10 && index >= 0xC0C) {
+            write8(lcd.crsrPalette1, bit_offset, value);
+        }
+        if(index < 0xC14 && index >= 0xC10) {
+            write8(lcd.crsrXY, bit_offset, value);
+        }
+        if(index < 0xC16 && index >= 0xC14) {
+            write8(lcd.crsrClip, bit_offset, value);
+        }
+        if(index == 0xC20) {
+            write8(lcd.crsrImsc, bit_offset, value);
+        }
+        if(index == 0xC24) {
+            lcd.crsrRis &= ~(value << bit_offset);
+        }
     }
 }
 

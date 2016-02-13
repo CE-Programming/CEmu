@@ -28,17 +28,17 @@ typedef struct lcd_cntrl_state {
 
     /* Cursor image RAM registers (TODO) */
     /* 256-word wide values defining images overlaid by the hw cursor mechanism (+1 for sanitization) */
-    uint32_t cursorimage[0x101];
-    uint32_t crsrCtrl;           /* Cursor control register */
+    uint32_t crsrImage[0x101];
+    uint32_t crsrControl;           /* Cursor control register */
     uint32_t crsrConfig;         /* Cursor configuration register */
     uint32_t crsrPalette0;       /* Cursor palette registers */
     uint32_t crsrPalette1;
     uint32_t crsrXY;             /* Cursor XY position register */
     uint32_t crsrClip;           /* Cursor clip position register */
-    uint32_t crsrimsc;           /* Cursor interrupt mask set/clear register */
-    uint32_t crsricr;            /* Cursor interrupt clear register */
-    uint32_t crsrris;            /* Cursor raw interrupt status register - const */
-    uint32_t crsrmis;            /* Cursor masked interrupt status register - const */
+    uint32_t crsrImsc;           /* Cursor interrupt mask set/clear register */
+    uint32_t crsrIcr;            /* Cursor interrupt clear register */
+    uint32_t crsrRis;            /* Cursor raw interrupt status register - const */
+    uint32_t crsrMis;            /* Cursor masked interrupt status register - const */
 
     /* Internal Use */
     uint16_t framebuffer[320*240];
