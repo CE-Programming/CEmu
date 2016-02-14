@@ -84,19 +84,16 @@ static const std::string im_table[] = {
 };
 
 static std::string strW(uint32_t data) {
-    if (!disasm.l) {
-        data += cpu.registers.MBASE << 16;
+    if (disasm.l) {
+        data &= 0xFFFFFF;
+    } else {
+        data = cpu.registers.MBASE << 16 | data & 0xFFFF;
     }
     addressMap_t::const_iterator item = disasm.address_map.find(data);
-    if (item == disasm.address_map.end()) {
-        if(disasm.il) {
-            sprintf(tmpbuf,"$%06X",data);
-        } else {
-            sprintf(tmpbuf,"$%04X",data);
-        }
-    } else {
+    if (item != disasm.address_map.end()) {
         return item->second;
     }
+    sprintf(tmpbuf,"$%06X",data);
     return std::string(tmpbuf);
 }
 
