@@ -107,13 +107,13 @@ static void cpu_write_word(uint32_t address, uint32_t value) {
 }
 
 static uint8_t cpu_pop_byte_mode(bool mode) {
-    return cpu_read_byte(cpu_address_mode(cpu.registers.stack[mode].hl++, mode));
+    return mem_read_byte(cpu_address_mode(cpu.registers.stack[mode].hl++, mode));
 }
 static uint8_t cpu_pop_byte(void) {
     return cpu_pop_byte_mode(cpu.L);
 }
 static void cpu_push_byte_mode(uint8_t value, bool mode) {
-    cpu_write_byte(cpu_address_mode(--cpu.registers.stack[mode].hl, mode), value);
+    mem_write_byte(cpu_address_mode(--cpu.registers.stack[mode].hl, mode), value);
 }
 static void cpu_push_byte(uint8_t value) {
     cpu_push_byte_mode(value, cpu.L);
