@@ -446,7 +446,7 @@ void disassembleInstruction(void) {
                             case 0: // LD rr, Mmn
                                 if (context.p == 3 && disasm.prefix) { // LD IY/IX, (IX/IY + d)
                                     disasm.instruction.opcode = "ld";
-                                    disasm.instruction.arguments = index_table[disasm.prefix] + ",(" + index_table[disasm.prefix ^ 1] + strOffset(disasm_fetch_offset()) + ")" ;
+                                    disasm.instruction.arguments = index_table[disasm.prefix ^ 1] + ",(" + index_table[disasm.prefix] + strOffset(disasm_fetch_offset()) + ")" ;
                                     break;
                                 }
                                 disasm.instruction.opcode = "ld";
