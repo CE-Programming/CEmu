@@ -311,6 +311,7 @@ static void flash_write_handler(uint32_t address, uint8_t byte) {
 }
 
 uint8_t mem_read_byte(uint32_t address) {
+    static const uint8_t mmio_readcycles[0x20] = {2,2,4,3,2,2,2,2,2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2};
     uint8_t value = 0;
     uint32_t ramAddress;
 
@@ -343,17 +344,7 @@ uint8_t mem_read_byte(uint32_t address) {
 
         /* MMIO <-> Advanced Perphrial Bus */
         case 0xE: case 0xF:
-            switch (address >> 16) {
-                case 0xE2:
-                    cpu.cycles += 1;
-                case 0xE3:
-                case 0xF0 ... 0xFE:
-                    cpu.cycles += 1;
-                case 0xE0 ... 0xE1:
-                case 0xE4 ... 0xEF:
-                case 0xFF:
-                    cpu.cycles += 2;
-            }
+            cpu.cycles += mmio_readcycles[(address >> 16) & 0x1F];
             value = (address > 0xFAFFFF) ? 0 : port_read_byte(mmio_range(address)<<12 | addr_range(address));
             break;
     }
@@ -361,6 +352,7 @@ uint8_t mem_read_byte(uint32_t address) {
 }
 
 void mem_write_byte(uint32_t address, uint8_t value) {
+    static const uint8_t mmio_writecycles[0x20] = {2,2,4,2,2,2,2,2,2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2};
     uint32_t ramAddress;
     address &= 0xFFFFFF;
 
@@ -391,16 +383,7 @@ void mem_write_byte(uint32_t address, uint8_t value) {
 
         /* MMIO <-> Advanced Perphrial Bus */
         case 0xE: case 0xF:
-            switch (address >> 16) {
-                case 0xE2:
-                    cpu.cycles += 1;
-                case 0xF0 ... 0xFE:
-                    cpu.cycles += 1;
-                case 0xE0 ... 0xE1:
-                case 0xE3 ... 0xEF:
-                case 0xFF:
-                    cpu.cycles += 2;
-            }
+            cpu.cycles += mmio_writecycles[(address >> 16) & 0x1F];
 #ifdef DEBUG_SUPPORT
             if (address >= DBG_PORT_RANGE) {
                 open_debugger(address, value);
