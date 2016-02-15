@@ -13,6 +13,7 @@
 */
 
 #include <string.h>
+#include <stdio.h>
 
 #include "lcd.h"
 #include "schedule.h"
@@ -23,11 +24,29 @@
 /* Global LCD state */
 lcd_cntrl_state_t lcd;
 
+static const uint32_t vram_size = 320 * 240 * 2;
+static const uint32_t lcd_dma_size = 0x80000;
+
 void (*lcd_event_gui_callback)(void) = NULL;
 
 #define dataswap(a, b) do { (a) ^= (b); (b) ^= (a); (a) ^= (b); } while(0)
 
-/* Draw the current screen into a 16bpp upside-down bitmap. */
+uint32_t lcd_nextword(uint32_t **in) {
+    uint8_t *inb = (uint8_t *) *in;
+    if (inb <= (mem.ram.block + ram_size - 4)) {
+        return *(*in)++;
+    }
+    if (inb <= (mem.ram.block + ram_size)) {
+        return *((uint32_t *) mem.ram.block + ram_size - 4) >> (((int) (*in)++ & 3) << 3);
+    }
+    if (inb <= (mem.ram.block + lcd_dma_size - 4)) {
+        (*in)++;
+        return 0;
+    }
+    return *((uint32_t *) mem.ram.block) << (((int) (*in = (uint32_t *) (inb + 4 - lcd_dma_size)) & 3) << 3);
+}
+
+/* Draw the current screen into a 16bpp bitmap. */
 void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
     uint32_t mode = lcd.control >> 1 & 7;
     uint32_t bpp;
@@ -65,11 +84,7 @@ void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
         dataswap(bitfields[0], bitfields[2]);
     }
 
-    in = (uint32_t *)(intptr_t)phys_mem_ptr(lcd.upcurr, (320 * 240) / 8 * bpp);
-    if (!in || !lcd.upcurr) {
-        memset(buffer, 0, 320 * 240 * 2);
-        return;
-    }
+    in = (uint32_t *) (mem.ram.block + ((uint32_t) lcd.upcurr & (lcd_dma_size - 1)));
 
     if (bpp < 16) {
         for (row = 0; row < 240; ++row) {
@@ -82,7 +97,7 @@ void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
             }
             do {
                 int bitpos = 32;
-                word = *in++;
+                word = lcd_nextword(&in);
                 do {
                     color = lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask];
                     *out++ = color + (color & 0xFFE0) + (color >> 10 & 0x20);
@@ -94,15 +109,19 @@ void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
             out = buffer + (row * 320);
             words = (320 / 32) * bpp;
             bi = lcd.control >> 9 & 1;
-            for (i = 0; i < 320; i++) {
-                color = ((uint16_t *)in)[i ^ bi];
-                r = color & 0x1F;
-                g = (color >> 5) & 0x1F;
-                b = (color >> 10) & 0x1F;
-
-                out[i] = (r << 11) | (g << 6) | b | (color >> 10 & 0x20);
-            }
-            in += 160;
+            do {
+                word = lcd_nextword(&in);
+                if (bi) {
+                    word = word << 16 | word >> 16;
+                }
+                for (i = 0; i < 2; i++) {
+                    r = word & 0x1F;
+                    g = (word >> 5) & 0x1F;
+                    b = (word >> 10) & 0x1F;
+                    *out++ = (r << 11) | (g << 6) | b | (word >> 10 & 0x20);
+                    word >>= 16;
+                }
+            } while (--words != 0);
        }
     } else if (mode == 5) {
         for (row = 0; row < 240; ++row) {
@@ -110,21 +129,28 @@ void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
             words = (320 / 32) * bpp;
             /* 32bpp mode: Convert 888 to 565 */
             do {
-                word = *in++;
+                word = lcd_nextword(&in);
                 *out++ = (word >> 8 & 0xF800) | (word >> 5 & 0x7E0) | (word >> 3 & 0x1F);
             } while (--words != 0);
         }
     } else {
         for (row = 0; row < 240; ++row) {
             out = buffer + (row * 320);
+            outw = (uint32_t *)out;
             words = (320 / 32) * bpp;
             if (!(lcd.control & (1 << 9))) {
-                memcpy(out, in, 640);
-                in += 160;
+                if ((lcd.upcurr & (lcd_dma_size - 1)) + vram_size <= ram_size) {
+                    memcpy(out, in, 640);
+                    in += 160;
+                } else {
+                    do {
+                        word = lcd_nextword(&in);
+                        *outw++ = word;
+                    } while (--words != 0);
+                }
             } else {
-                outw = (uint32_t *)out;
                 do {
-                    word = *in++;
+                    word = lcd_nextword(&in);
                     *outw++ = word << 16 | word >> 16;
                 } while (--words != 0);
             }

@@ -53,6 +53,7 @@ eZ80portrange_t init_lcd(void);
 
 void lcd_write(const uint16_t, const uint8_t);
 uint8_t lcd_read(const uint16_t);
+uint32_t lcd_nextword(uint32_t **in);
 void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields);
 
 /* Set this callback function pointer from the GUI. Called in lcd_event() */
