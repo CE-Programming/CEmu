@@ -60,7 +60,7 @@ inline void lcd_bgr16out(uint_fast32_t bgr16, bool rgb, uint32_t **out) {
     b |= b >> 5;
     b = c6_to_c8(b);
 
-    *(*out)++ = r | (g << 8) | (b << 16) | (0xFF << 24);
+    *(*out)++ = r | (g << 8) | (b << 16) | (0xFFu << 24);
 }
 
 /* Draw the current screen into a 320*240*4-byte RGBA8888 buffer. Alpha is always 255. */
