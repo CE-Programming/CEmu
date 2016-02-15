@@ -13,7 +13,6 @@
 */
 
 #include <string.h>
-#include <stdio.h>
 
 #include "lcd.h"
 #include "schedule.h"
@@ -29,9 +28,7 @@ static const uint32_t lcd_dma_size = 0x80000;
 
 void (*lcd_event_gui_callback)(void) = NULL;
 
-#define dataswap(a, b) do { (a) ^= (b); (b) ^= (a); (a) ^= (b); } while(0)
-
-uint32_t lcd_nextword(uint32_t **in) {
+uint_fast32_t lcd_nextword(uint32_t **in) {
     uint8_t *inb = (uint8_t *) *in;
     if (inb <= (mem.ram.block + ram_size - 4)) {
         return *(*in)++;
@@ -46,115 +43,102 @@ uint32_t lcd_nextword(uint32_t **in) {
     return *((uint32_t *) mem.ram.block) << (((int) (*in = (uint32_t *) (inb + 4 - lcd_dma_size)) & 3) << 3);
 }
 
-/* Draw the current screen into a 16bpp bitmap. */
-void lcd_drawframe(uint16_t *buffer, uint32_t *bitfields) {
-    uint32_t mode = lcd.control >> 1 & 7;
-    uint32_t bpp;
-    uint32_t words,word;
-    uint32_t i,bi,color,mask;
-    uint32_t *outw;
-    uint32_t *in;
-    uint16_t *out;
-    uint8_t r,
-            g,
-            b;
+// #define c6_to_c8(c) ((c * 0xFF + 0x1F) / 0x3F)
+#define c6_to_c8(c) ((c << 2) | (c >> 4))
 
-    int row;
+inline void lcd_bgr16out(uint_fast32_t bgr16, bool rgb, uint32_t **out) {
+    uint_fast32_t r, g, b;
 
-    if (mode <= 5) {
-        bpp = 1 << mode;
-    }
-    else {
-        bpp = 16;
-    }
+    r = (rgb ? bgr16 >> 10 : bgr16 << 1) & 0x3E;
+    r |= r >> 5;
+    r = c6_to_c8(r);
 
-    if (mode == 7) {
-        /* 444 format */
-        bitfields[0] = 0x000F;
-        bitfields[1] = 0x00F0;
-        bitfields[2] = 0x0F00;
-    } else {
-        /* 565 format */
-        bitfields[0] = 0x001F;
-        bitfields[1] = 0x07E0;
-        bitfields[2] = 0xF800;
-    }
-    if (lcd.control & (1 << 8)) {
-        /* BGR format (R high, B low) */
-        dataswap(bitfields[0], bitfields[2]);
-    }
+    g = bgr16 >> 5 & 0x3F;
+    g = c6_to_c8(g);
 
-    in = (uint32_t *) (mem.ram.block + ((uint32_t) lcd.upcurr & (lcd_dma_size - 1)));
+    b = (rgb ? bgr16 << 1 : bgr16 >> 10) & 0x3E;
+    b |= b >> 5;
+    b = c6_to_c8(b);
 
-    if (bpp < 16) {
-        for (row = 0; row < 240; ++row) {
-            out = buffer + (row * 320);
-            words = (320 / 32) * bpp;
-            mask = (1 << bpp) - 1;
-            bi = (lcd.control & (1 << 9)) ? 0 : 24;
-            if (!(lcd.control & (1 << 10))) {
-                bi ^= (8 - bpp);
-            }
-            do {
-                int bitpos = 32;
-                word = lcd_nextword(&in);
-                do {
-                    color = lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask];
-                    *out++ = color + (color & 0xFFE0) + (color >> 10 & 0x20);
-                } while (bitpos != 0);
-            } while (--words != 0);
+    *(*out)++ = r | (g << 8) | (b << 16) | (0xFF << 24);
+}
+
+/* Draw the current screen into a 320*240*4-byte RGBA8888 buffer. Alpha is always 255. */
+void lcd_drawframe(uint32_t *out) {
+    uint_fast8_t mode = lcd.control >> 1 & 7;
+    bool rgb = lcd.control & (1 << 8);
+    uint_fast8_t bebo = lcd.control & (1 << 9);
+    uint_fast32_t words = 320 * 240;
+    uint_fast32_t word, color;
+    uint32_t *in = (uint32_t *) (mem.ram.block + ((uint32_t) lcd.upcurr & (lcd_dma_size - 1)));
+
+    if (mode < 4) {
+        uint_fast8_t bpp = 1 << mode;
+        uint_fast32_t mask = (1 << bpp) - 1;
+        uint_fast8_t bi = bebo ? 0 : 24;
+        uint_fast8_t bepo = lcd.control & (1 << 10);
+        if (!bepo) {
+            bi ^= (8 - bpp);
         }
+        do {
+            uint_fast8_t bitpos = 32;
+            word = lcd_nextword(&in);
+            do {
+                color = lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask];
+                lcd_bgr16out(color + (color & 0xFFE0) + (color >> 10 & 0x20), rgb, &out);
+                words--;
+            } while (bitpos != 0);
+        } while (words != 0);
+
     } else if (mode == 4) {
-        for (row = 0; row < 240; ++row) {
-            out = buffer + (row * 320);
-            words = (320 / 32) * bpp;
-            bi = lcd.control >> 9 & 1;
-            do {
-                word = lcd_nextword(&in);
-                if (bi) {
-                    word = word << 16 | word >> 16;
-                }
-                for (i = 0; i < 2; i++) {
-                    r = word & 0x1F;
-                    g = (word >> 5) & 0x1F;
-                    b = (word >> 10) & 0x1F;
-                    *out++ = (r << 11) | (g << 6) | b | (word >> 10 & 0x20);
-                    word >>= 16;
-                }
-            } while (--words != 0);
-       }
-    } else if (mode == 5) {
-        for (row = 0; row < 240; ++row) {
-            out = buffer + (row * 320);
-            words = (320 / 32) * bpp;
-            /* 32bpp mode: Convert 888 to 565 */
-            do {
-                word = lcd_nextword(&in);
-                *out++ = (word >> 8 & 0xF800) | (word >> 5 & 0x7E0) | (word >> 3 & 0x1F);
-            } while (--words != 0);
-        }
-    } else {
-        for (row = 0; row < 240; ++row) {
-            out = buffer + (row * 320);
-            outw = (uint32_t *)out;
-            words = (320 / 32) * bpp;
-            if (!(lcd.control & (1 << 9))) {
-                if ((lcd.upcurr & (lcd_dma_size - 1)) + vram_size <= ram_size) {
-                    memcpy(out, in, 640);
-                    in += 160;
-                } else {
-                    do {
-                        word = lcd_nextword(&in);
-                        *outw++ = word;
-                    } while (--words != 0);
-                }
-            } else {
-                do {
-                    word = lcd_nextword(&in);
-                    *outw++ = word << 16 | word >> 16;
-                } while (--words != 0);
+        do {
+            uint_fast8_t i = 2;
+            word = lcd_nextword(&in);
+            if (bebo) {
+                word = word << 16 | word >> 16;
             }
-        }
+            do {
+                color = word;
+                lcd_bgr16out(color + (color & 0xFFE0) + (color >> 10 & 0x20), rgb, &out);
+                word >>= 16;
+                words--;
+            } while (--i != 0);
+        } while (words != 0);
+
+    } else if (mode == 5) {
+        do {
+            word = lcd_nextword(&in);
+            lcd_bgr16out((word >> 8 & 0xF800) | (word >> 5 & 0x7E0) | (word >> 3 & 0x1F), rgb, &out);
+            words--;
+        } while (words != 0);
+
+    } else if (mode == 6) {
+        do {
+            uint_fast8_t i = 2;
+            word = lcd_nextword(&in);
+            if (bebo) {
+                word = word << 16 | word >> 16;
+            }
+            do {
+                lcd_bgr16out(word, rgb, &out);
+                word >>= 16;
+                words--;
+            } while (--i != 0);
+        } while (words != 0);
+
+    } else {
+        do {
+            uint_fast8_t i = 2;
+            word = lcd_nextword(&in);
+            if (bebo) {
+                word = word << 16 | word >> 16;
+            }
+            do {
+                lcd_bgr16out((word << 4 & 0xF000) | (word << 3 & 0x780) | (word << 1 & 0x1E), rgb, &out);
+                word >>= 16;
+                words--;
+            } while (--i != 0);
+        } while (words != 0);
     }
 }
 

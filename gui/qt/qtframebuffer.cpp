@@ -19,14 +19,9 @@
 #include "../../core/backlight.h"
 #include "../../core/lcd.h"
 
-static uint32_t bitfields[3] = { 0x01F, 0x000, 0x000};
-
 QImage renderFramebuffer() {
-    lcd_drawframe(lcd.framebuffer, bitfields);
-
-    QImage::Format format = *bitfields == 0x00F ? QImage::Format_RGB444 : QImage::Format_RGB16;
-
-    return QImage(reinterpret_cast<const uchar*>(lcd.framebuffer), 320, 240, 320 * 2, format);
+    lcd_drawframe(lcd.framebuffer);
+    return QImage(reinterpret_cast<const uchar*>(lcd.framebuffer), 320, 240, QImage::Format_RGBA8888);
 }
 
 void paintFramebuffer(QPainter *p) {
