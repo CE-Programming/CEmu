@@ -77,7 +77,7 @@ void lcd_drawframe(uint32_t *out) {
         uint_fast32_t mask = (1 << bpp) - 1;
         uint_fast8_t bi = bebo ? 0 : 24;
         uint_fast8_t bepo = lcd.control & (1 << 10);
-        if (!bepo) {
+        if (bepo) {
             bi ^= (8 - bpp);
         }
         do {
