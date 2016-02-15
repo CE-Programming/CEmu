@@ -65,6 +65,7 @@ private:
     bool runSetup(void);
     void screenshot(void);
     void screenshotGIF(void);
+    void saveScreenshot(QString,QString,QString);
     void recordGIF(void);
     void changeFrameskip(int);
     void changeFramerate(void);

@@ -107,13 +107,13 @@ static void cpu_write_word(uint32_t address, uint32_t value) {
 }
 
 static uint8_t cpu_pop_byte_mode(bool mode) {
-    return cpu_read_byte(cpu_address_mode(cpu.registers.stack[mode].hl++, mode));
+    return mem_read_byte(cpu_address_mode(cpu.registers.stack[mode].hl++, mode));
 }
 static uint8_t cpu_pop_byte(void) {
     return cpu_pop_byte_mode(cpu.L);
 }
 static void cpu_push_byte_mode(uint8_t value, bool mode) {
-    cpu_write_byte(cpu_address_mode(--cpu.registers.stack[mode].hl, mode), value);
+    mem_write_byte(cpu_address_mode(--cpu.registers.stack[mode].hl, mode), value);
 }
 static void cpu_push_byte(uint8_t value) {
     cpu_push_byte_mode(value, cpu.L);
@@ -743,18 +743,16 @@ static void cpu_execute_bli(int y, int z) {
                     r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
                     cpu_write_byte(r->DE, old);
                     r->DE = cpu_mask_mode((int32_t)r->DE + 1, cpu.L);
-                    r->BC = cpu_mask_mode((int32_t)r->BC - 1, cpu.L);
-                    new = r->A + old;
-                    r->flags.PV = r->BC != 0;
+                    r->flags.PV = cpu_dec_bc_partial_mode() != 0; // Do not mask BC
                     r->flags.N = 0;
                     break;
                 case 1: // CPI
                     old = cpu_read_byte(r->HL);
                     r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
-                    r->BC = cpu_mask_mode((int32_t)r->BC - 1, cpu.L);
                     new = r->A - old;
                     r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
-                        | cpuflag_halfcarry_b_sub(r->A, old, 0) | cpuflag_pv(r->BC)
+                        | cpuflag_halfcarry_b_sub(r->A, old, 0)
+                        | cpuflag_pv(cpu_dec_bc_partial_mode()) // Do not mask BC
                         | cpuflag_subtract(1) | cpuflag_c(r->flags.C)
                         | cpuflag_undef(r->F);
                     break;
@@ -793,19 +791,16 @@ static void cpu_execute_bli(int y, int z) {
                     r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
                     cpu_write_byte(r->DE, old);
                     r->DE = cpu_mask_mode((int32_t)r->DE - 1, cpu.L);
-                    r->BC = cpu_mask_mode((int32_t)r->BC - 1, cpu.L);
-                    new = r->A + old;
-                    r->flags.PV = r->BC != 0;
+                    r->flags.PV = cpu_dec_bc_partial_mode() != 0; // Do not mask BC
                     r->flags.N = 0;
                     break;
                 case 1: // CPD
                     old = cpu_read_byte(r->HL);
                     r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
-                    r->BC = cpu_mask_mode((int32_t)r->BC - 1, cpu.L);
                     new = r->A - old;
                     r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
                         | cpuflag_halfcarry_b_sub(r->A, old, 0)
-                        | cpuflag_pv(r->BC)
+                        | cpuflag_pv(cpu_dec_bc_partial_mode()) // Do not mask BC
                         | cpuflag_subtract(1) | cpuflag_c(r->flags.C)
                         | cpuflag_undef(r->F);
                     break;
@@ -844,9 +839,7 @@ static void cpu_execute_bli(int y, int z) {
                     cpu_write_byte(r->DE, old);
                     r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
                     r->DE = cpu_mask_mode((int32_t)r->DE + 1, cpu.L);
-                    r->BC = cpu_mask_mode((int32_t)r->BC - 1, cpu.L);
-                    new = r->A + old;
-                    r->flags.PV = r->BC != 0;
+                    r->flags.PV = cpu_dec_bc_partial_mode() != 0; // Do not mask BC
                     r->flags.N = 0;
                     if (r->BC) {
                         cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
@@ -856,10 +849,10 @@ static void cpu_execute_bli(int y, int z) {
                     cpu.cycles++;
                     old = cpu_read_byte(r->HL);
                     r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
-                    r->BC = cpu_mask_mode((int32_t)r->BC - 1, cpu.L);
                     new = r->A - old;
                     r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
-                        | cpuflag_halfcarry_b_sub(r->A, old, 0) | cpuflag_pv(r->BC)
+                        | cpuflag_halfcarry_b_sub(r->A, old, 0)
+                        | cpuflag_pv(cpu_dec_bc_partial_mode()) // Do not mask BC
                         | cpuflag_subtract(1) | cpuflag_c(r->flags.C)
                         | cpuflag_undef(r->F);
                     if (r->BC && !r->flags.Z) {
@@ -911,9 +904,7 @@ static void cpu_execute_bli(int y, int z) {
                     r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
                     cpu_write_byte(r->DE, old);
                     r->DE = cpu_mask_mode((int32_t)r->DE - 1, cpu.L);
-                    r->BC = cpu_mask_mode((int32_t)r->BC - 1, cpu.L);
-                    new = r->A + old;
-                    r->flags.PV = r->BC != 0;
+                    r->flags.PV = cpu_dec_bc_partial_mode() != 0; // Do not mask BC
                     r->flags.N = 0;
                     if (r->BC) {
                         cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
@@ -923,10 +914,10 @@ static void cpu_execute_bli(int y, int z) {
                     cpu.cycles++;
                     old = cpu_read_byte(r->HL);
                     r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
-                    r->BC = cpu_mask_mode((int32_t)r->BC - 1, cpu.L);
                     new = r->A - old;
                     r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
-                        | cpuflag_halfcarry_b_sub(r->A, old, 0) | cpuflag_pv(r->BC)
+                        | cpuflag_halfcarry_b_sub(r->A, old, 0)
+                        | cpuflag_pv(cpu_dec_bc_partial_mode()) // Do not mask BC
                         | cpuflag_subtract(1) | cpuflag_c(r->flags.C)
                         | cpuflag_undef(r->F);
                     if (r->BC && !r->flags.Z) {

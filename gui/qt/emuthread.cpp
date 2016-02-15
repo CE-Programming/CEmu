@@ -32,6 +32,7 @@
 #include "../../core/debug/disasm.h"
 
 EmuThread *emu_thread = nullptr;
+volatile bool waitForLink;
 
 void gui_emu_sleep(void) {
     QThread::usleep(50);
@@ -79,6 +80,12 @@ void gui_debugger_request_input(debug_input_cb callback) {
 
 void throttle_timer_wait(void) {
     emu_thread->throttleTimerWait();
+}
+
+void gui_entered_send_state(bool entered) {
+    if(entered) {
+        waitForLink = false;
+    }
 }
 
 EmuThread::EmuThread(QObject *p) : QThread(p) {

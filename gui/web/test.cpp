@@ -1,19 +1,40 @@
+#include <emscripten.h>
+
 #include <cstdarg>
 #include <cstdio>
 #include <cassert>
 #include <chrono>
 #include <unistd.h>
 #include <iostream>
-#include "core/asic.h"
-#include "core/emu.h"
-#include "core/debug/debug.h"
+#include <thread>
+
+#include "../../core/emu.h"
+#include "../../core/lcd.h"
 
 extern "C" {
 
+bool throttleOn = true;
+int speed, actualSpeed;
+std::chrono::steady_clock::time_point lastTime;
 
-void gui_do_stuff(bool wait)
+uint16_t tmp_buff_lcd[240*320];
+uint32_t bitfields[] = { 0x01F, 0x000, 0x000 };
+
+void gui_emu_sleep(void) {
+    usleep(50);
+}
+
+void gui_do_stuff(void)
 {
-    // std::cerr << "gui_do_stuff, wait = " << wait << std::endl;
+    // std::cerr << "gui_do_stuff" << std::endl;
+    std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
+    lastTime += std::chrono::steady_clock::now() - cur_time;
+}
+
+void gui_console_vprintf(const char *fmt, va_list ap)
+{
+    vfprintf(stdout, fmt, ap);
+    fflush(stdout);
 }
 
 void gui_console_printf(const char *fmt, ...)
@@ -26,10 +47,8 @@ void gui_console_printf(const char *fmt, ...)
     va_end(ap);
 }
 
-void gui_console_vprintf(const char *fmt, va_list ap)
-{
-    vfprintf(stdout, fmt, ap);
-    fflush(stdout);
+void gui_console_debug_char(const char c) {
+    // std::cerr << "gui_console_debug_char" << std::endl;
 }
 
 void gui_perror(const char *msg)
@@ -50,42 +69,54 @@ void throttle_timer_on()
 void throttle_timer_wait()
 {
     // std::cerr << "throttle_timer_wait" << std::endl;
-    unsigned int now = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-    unsigned int throttle = throttle_delay * 1000;
-    unsigned int left = throttle - (now % throttle);
-    if (left > 0) {
-        std::cerr << " usleep " << std::endl;
-        usleep(left);
+    return;
+
+    std::chrono::duration<int, std::ratio<100, 60>> unit(1);
+    std::chrono::steady_clock::duration interval(std::chrono::duration_cast<std::chrono::steady_clock::duration>
+                                                 (std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(1000000 * 100 / speed)));
+    std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now(), next_time = lastTime + interval;
+    if (throttleOn && cur_time < next_time) {
+        lastTime = next_time;
+        std::this_thread::sleep_until(next_time);
+    } else {
+        lastTime = cur_time;
+        std::this_thread::yield();
     }
 }
 
 void gui_debugger_entered_or_left(bool entered)
 {
-    if(entered != 0) {
-        std::cerr << "emu_thread->debuggerEntered(entered); entered = " << entered << std::endl;
-    }
+    // std::cerr << "gui_debugger_entered_or_left" << std::endl;
 }
 
-void getScreenshot(void)
+void EMSCRIPTEN_KEEPALIVE paintLCD(uint32_t *dest)
 {
-    uint16_t *framebuffer = reinterpret_cast<uint16_t*>(malloc(320 * 240 * 2));
-    uint32_t bitfields[] = { 0x01F, 0x000, 0x000 };
+    lcd_drawframe((uint16_t*)tmp_buff_lcd, bitfields);
 
-    lcd_drawframe(framebuffer, bitfields);
+    int x, y;
+    uint32_t tmp, R, G, B;
 
-    char buf[5] = {0};
-    for (uint32_t i = 0; i < 320 * 240 * 2; i++)
+    for (y=0; y < 240; y++)
     {
-        sprintf(buf, "%04X", framebuffer[i]);
-        std::cerr << buf << "\t";
+        for (x=0; x < 320; x++)
+        {
+            tmp = *(tmp_buff_lcd+y*320+x);
+            R = tmp & 0x1f;
+            G = (tmp >> 5) & 0x3f;
+            B = (tmp >> 11) & 0x1f;
+
+            *(dest+y*320+x) = (R << 8) | (G << 16) | (B << 24);
+        }
     }
-    std::cerr << std::endl;
-    free(framebuffer);
+
 }
 
 int main(int argc, char* argv[])
 {
     std::cout << "Hello" << std::endl;
+
+    speed = actualSpeed = 100;
+    lastTime = std::chrono::steady_clock::now();
 
     rom_image = strdup("84pce_51.rom");
 
@@ -94,7 +125,9 @@ int main(int argc, char* argv[])
 
     std::cout << "started" << std::endl;
 
-    if(success) { emu_loop(reset_true); }
+    if (success) {
+        emu_loop(reset_true);
+    }
 
     std::cout << "finished" << std::endl;
 

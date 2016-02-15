@@ -65,5 +65,6 @@ private:
 
 // For friends
 extern EmuThread *emu_thread;
+extern volatile bool waitForLink;
 
 #endif

@@ -84,24 +84,23 @@ static const std::string im_table[] = {
 };
 
 static std::string strW(uint32_t data) {
-    if (!disasm.l) {
-        data += cpu.registers.MBASE << 16;
-    }
     addressMap_t::const_iterator item = disasm.address_map.find(data);
-    if (item == disasm.address_map.end()) {
-        if(disasm.il) {
-            sprintf(tmpbuf,"$%06X",data);
-        } else {
-            sprintf(tmpbuf,"$%04X",data);
-        }
-    } else {
+    if (item != disasm.address_map.end()) {
         return item->second;
     }
+    sprintf(tmpbuf,"$%06X",data);
     return std::string(tmpbuf);
 }
 
+static std::string strA(uint32_t data) {
+    if (!disasm.l) {
+        data = cpu.registers.MBASE << 16 | (data & 0xFFFF);
+    }
+    return strW(data);
+}
+
 static std::string strWind(uint32_t data) {
-    return "("+strW(data)+")";
+    return "("+strA(data)+")";
 }
 
 static std::string strS(uint8_t data) {
@@ -433,14 +432,14 @@ void disassembleInstruction(void) {
                                 break;
                             case 3: // JR d
                                 disasm.instruction.opcode = "jr";
-                                disasm.instruction.arguments = strW(disasm.new_address+1+disasm_fetch_offset());
+                                disasm.instruction.arguments = strA(disasm.new_address+1+disasm_fetch_offset());
                                 break;
                             case 4:
                             case 5:
                             case 6:
                             case 7: // JR cc[y-4], d
                                 disasm.instruction.opcode = "jr";
-                                disasm.instruction.arguments = cc_table[context.y-4]+","+ strW(disasm.new_address+1+disasm_fetch_offset());
+                                disasm.instruction.arguments = cc_table[context.y-4]+","+ strA(disasm.new_address+1+disasm_fetch_offset());
                                 break;
                         }
                         break;
@@ -449,7 +448,7 @@ void disassembleInstruction(void) {
                             case 0: // LD rr, Mmn
                                 if (context.p == 3 && disasm.prefix) { // LD IY/IX, (IX/IY + d)
                                     disasm.instruction.opcode = "ld";
-                                    disasm.instruction.arguments = index_table[disasm.prefix] + ",(" + index_table[disasm.prefix ^ 1] + strOffset(disasm_fetch_offset()) + ")" ;
+                                    disasm.instruction.arguments = index_table[disasm.prefix ^ 1] + ",(" + index_table[disasm.prefix] + strOffset(disasm_fetch_offset()) + ")" ;
                                     break;
                                 }
                                 disasm.instruction.opcode = "ld";
@@ -639,13 +638,13 @@ void disassembleInstruction(void) {
                         break;
                     case 2: // JP cc[y], nn
                         disasm.instruction.opcode = "jp";
-                        disasm.instruction.arguments = cc_table[context.y]+","+strW(disasm_fetch_word());
+                        disasm.instruction.arguments = cc_table[context.y]+","+strA(disasm_fetch_word());
                         break;
                     case 3:
                         switch (context.y) {
                             case 0: // JP nn
                                 disasm.instruction.opcode = "jp";
-                                disasm.instruction.arguments = strW(disasm_fetch_word());
+                                disasm.instruction.arguments = strA(disasm_fetch_word());
                                 break;
                             case 1: // 0xCB prefixed opcodes
                                 w = disasm_index_address();
@@ -696,7 +695,7 @@ void disassembleInstruction(void) {
                         break;
                     case 4: // CALL cc[y], nn
                         disasm.instruction.opcode = "call";
-                        disasm.instruction.arguments = cc_table[context.y]+","+strW(disasm_fetch_word());
+                        disasm.instruction.arguments = cc_table[context.y]+","+strA(disasm_fetch_word());
                         break;
                     case 5:
                         switch (context.q) {
@@ -708,7 +707,7 @@ void disassembleInstruction(void) {
                                 switch (context.p) {
                                     case 0: // CALL nn
                                         disasm.instruction.opcode = "call";
-                                        disasm.instruction.arguments = strW(disasm_fetch_word());
+                                        disasm.instruction.arguments = strA(disasm_fetch_word());
                                         break;
                                     case 1: // 0xDD prefixed opcodes
                                         disasm.prefix = 2;
@@ -983,7 +982,7 @@ void disassembleInstruction(void) {
                         break;
                     case 7: // RST y*8
                         disasm.instruction.opcode = "rst";
-                        disasm.instruction.arguments = strS(context.y << 3);
+                        disasm.instruction.arguments = strA(context.y << 3);
                         break;
                 }
                 break;
