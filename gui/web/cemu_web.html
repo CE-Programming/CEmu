@@ -151,6 +151,7 @@
     </div>
 
     <button onclick="initLCD()">Init LCD</button>
+    <button onclick="sendKey(1, 4, 0); sendKey(1, 4, 1);">press Y=</button>
 
     <div class="emscripten_border">
         <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
@@ -284,6 +285,9 @@
                 window.requestAnimationFrame(repaint);
             };
             repaint();
+
+            sendKey = Module.cwrap('keypad_key_event', 'void', ['number', 'number', 'number']);
+
         };
     </script>
 

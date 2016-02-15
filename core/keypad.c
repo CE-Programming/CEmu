@@ -1,3 +1,9 @@
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#else
+#define EMSCRIPTEN_KEEPALIVE
+#endif
+
 #include "keypad.h"
 #include "emu.h"
 #include "schedule.h"
@@ -12,7 +18,7 @@ void keypad_intrpt_check() {
     intrpt_set(INT_KEYPAD, (keypad.status & keypad.enable) | (keypad.gpio_status & keypad.gpio_enable));
 }
 
-void keypad_key_event(unsigned int row, unsigned int col, bool press) {
+void EMSCRIPTEN_KEEPALIVE keypad_key_event(unsigned int row, unsigned int col, bool press) {
     if (row == 2 && col == 0) {
         intrpt_set(INT_ON, press);
         if (press && calc_is_off()) {
