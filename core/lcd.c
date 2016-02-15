@@ -67,7 +67,7 @@ inline void lcd_bgr16out(uint_fast32_t bgr16, bool rgb, uint32_t **out) {
 void lcd_drawframe(uint32_t *out) {
     uint_fast8_t mode = lcd.control >> 1 & 7;
     bool rgb = lcd.control & (1 << 8);
-    uint_fast8_t bebo = lcd.control & (1 << 9);
+    bool bebo = lcd.control & (1 << 9);
     uint_fast32_t words = 320 * 240;
     uint_fast32_t word, color;
     uint32_t *in = (uint32_t *) (mem.ram.block + ((uint32_t) lcd.upcurr & (lcd_dma_size - 1)));
@@ -76,8 +76,8 @@ void lcd_drawframe(uint32_t *out) {
         uint_fast8_t bpp = 1 << mode;
         uint_fast32_t mask = (1 << bpp) - 1;
         uint_fast8_t bi = bebo ? 0 : 24;
-        uint_fast8_t bepo = lcd.control & (1 << 10);
-        if (bepo) {
+        bool bepo = lcd.control & (1 << 10);
+        if (!bepo) {
             bi ^= (8 - bpp);
         }
         do {
