@@ -591,7 +591,7 @@ void disassembleInstruction(void) {
                             break;
                         case 7: // LD A, A
                             disasm.instruction.opcode = "ld";
-                            disasm.instruction.opcode = "a,a";
+                            disasm.instruction.arguments = "a,a";
                             break;
                         default:
                             abort();
