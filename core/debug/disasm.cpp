@@ -88,14 +88,11 @@ static std::string strW(uint32_t data) {
     if (item != disasm.address_map.end()) {
         return item->second;
     }
-    sprintf(tmpbuf,"$%06X",data);
+    sprintf(tmpbuf,"$%0*X", (disasm.il ? 6 : 4), data);
     return std::string(tmpbuf);
 }
 
 static std::string strA(uint32_t data) {
-    if (!disasm.l) {
-        data = cpu.registers.MBASE << 16 | (data & 0xFFFF);
-    }
     return strW(data);
 }
 
