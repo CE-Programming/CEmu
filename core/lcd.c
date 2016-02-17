@@ -70,7 +70,7 @@ void lcd_drawframe(uint32_t *out) {
     bool bebo = lcd.control & (1 << 9);
     uint_fast32_t words = 320 * 240;
     uint_fast32_t word, color;
-    uint32_t *in = (uint32_t *) (mem.ram.block + ((uint32_t) lcd.upcurr & (lcd_dma_size - 1)));
+    uint32_t *in = (uint32_t *) (mem.ram.block + ((uint32_t) lcd.upbase & (lcd_dma_size - 1)));
 
     if(!mem.ram.block) {
         memset(out, 0, 320 * 240 * 4);
