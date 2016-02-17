@@ -2113,7 +2113,7 @@ void MainWindow::addEquateFile(QString fileName) {
     in.open(fileName.toStdString());
 
     if (in.good()) {
-        QRegularExpression equatesRegexp("^\\h*([^\\W\\d]\\w*)\\h*(?:=|\\h\\.?equ(?!\\d))\\h*(?|\\$([\\da-f]{6,})|(\\d[\\da-f]{5,})h)\\h*(?:;.*)?$",
+        QRegularExpression equatesRegexp("^\\h*([^\\W\\d]\\w*)\\h*(?:=|\\h\\.?equ(?!\\d))\\h*(?|\\$([\\da-f]{4,})|(\\d[\\da-f]{3,})h)\\h*(?:;.*)?$",
                                          QRegularExpression::CaseInsensitiveOption);
         // Reset the map
         disasm.address_map.clear();
