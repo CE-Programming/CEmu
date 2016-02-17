@@ -37,26 +37,26 @@ static void plug_devices(void) {
     unsigned int i;
 
     /* Port ranges 0x0 -> 0xF*/
-    asic.cpu->prange[0x0] = init_control();
-    asic.cpu->prange[0x1] = init_flash();
-    asic.cpu->prange[0x2] = init_sha256();
-    asic.cpu->prange[0x3] = init_usb();
-    asic.cpu->prange[0x4] = init_lcd();
-    asic.cpu->prange[0x5] = init_intrpt();
-    asic.cpu->prange[0x6] = init_watchdog();
-    asic.cpu->prange[0x7] = init_gpt();
-    asic.cpu->prange[0x8] = init_rtc();
-    asic.cpu->prange[0x9] = init_protected();
-    asic.cpu->prange[0xA] = init_keypad();
-    asic.cpu->prange[0xB] = init_backlight();
-    asic.cpu->prange[0xC] = init_cxxx();
-    asic.cpu->prange[0xD] = init_dxxx();
-    asic.cpu->prange[0xE] = init_exxx();
-    asic.cpu->prange[0xF] = init_fxxx();
+    asic.portRange[0x0] = init_control();
+    asic.portRange[0x1] = init_flash();
+    asic.portRange[0x2] = init_sha256();
+    asic.portRange[0x3] = init_usb();
+    asic.portRange[0x4] = init_lcd();
+    asic.portRange[0x5] = init_intrpt();
+    asic.portRange[0x6] = init_watchdog();
+    asic.portRange[0x7] = init_gpt();
+    asic.portRange[0x8] = init_rtc();
+    asic.portRange[0x9] = init_protected();
+    asic.portRange[0xA] = init_keypad();
+    asic.portRange[0xB] = init_backlight();
+    asic.portRange[0xC] = init_cxxx();
+    asic.portRange[0xD] = init_dxxx();
+    asic.portRange[0xE] = init_exxx();
+    asic.portRange[0xF] = init_fxxx();
 
     /* Populate APB ports */
     for(i=0; i<=0xF; i++) {
-        apb_set_map(i, &asic.cpu->prange[i]);
+        apb_set_map(i, &asic.portRange[i]);
     }
 
     reset_proc_count = 0;
