@@ -162,6 +162,10 @@ void EmuThread::setDebugStepOutMode() {
     inDebugger = false;
 }
 
+void gui_set_busy(bool busy) {
+    emit emu_thread->isBusy(busy);
+}
+
 //Called occasionally, only way to do something in the same thread the emulator runs in.
 void EmuThread::doStuff() {
     std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
@@ -169,6 +173,12 @@ void EmuThread::doStuff() {
     if(saveImage) {
         bool success = emu_save(imagePath.c_str());
         saveImage = false;
+        emit saved(success);
+    }
+
+    if(saveRom) {
+        bool success = emu_save_rom(exportRomPath.c_str());
+        saveRom = false;
         emit saved(success);
     }
 
@@ -210,17 +220,23 @@ void EmuThread::throttleTimerWait() {
 }
 
 void EmuThread::run() {
-    rom_image = rom.c_str();
+    setTerminationEnabled();
 
-    bool reset_true = true;
-    bool success = emu_start();
+    bool doReset = !doRestore;
+    bool success = emu_start(rom.c_str(), doRestore ? imagePath.c_str() : nullptr);
 
-    if (success) {
-        emu_loop(reset_true);
-        emit exited(0);
+    if(doRestore) {
+        emit restored(success);
     } else {
-        emit exited(-1);
+        emit started(success);
     }
+
+    doRestore = false;
+
+    if(success) {
+        emu_loop(doReset);
+    }
+    emit stopped();
 }
 
 bool EmuThread::stop() {
@@ -249,7 +265,7 @@ bool EmuThread::stop() {
 
 bool EmuThread::restore(QString path) {
     imagePath = QDir::toNativeSeparators(path).toStdString();
-    doResume = true;
+    doRestore = true;
     if(!stop()) {
         return false;
     }
@@ -261,4 +277,9 @@ bool EmuThread::restore(QString path) {
 void EmuThread::save(QString path) {
     imagePath = QDir::toNativeSeparators(path).toStdString();
     saveImage = true;
+}
+
+void EmuThread::saveRomImage(QString path) {
+    exportRomPath = QDir::toNativeSeparators(path).toStdString();
+    saveRom = true;
 }

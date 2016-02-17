@@ -148,7 +148,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -242,7 +242,7 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>Send files to calcultor...</string>
+             <string>Send files to calcualtor...</string>
             </property>
            </widget>
           </item>

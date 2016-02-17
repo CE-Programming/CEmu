@@ -56,9 +56,10 @@ typedef struct mem_state {
 /* Global MEMORY state */
 extern mem_state_t mem;
 
-/* Standard equates */
-static const uint32_t ram_size = 0x65800;
-static const uint32_t flash_size = 0x400000;
+/* Standard definitions */
+#define ram_size   0x65800
+#define flash_size 0x400000
+
 static const uint32_t flash_sector_size_8K = 0x2000;
 static const uint32_t flash_sector_size_64K = 0x10000;
 

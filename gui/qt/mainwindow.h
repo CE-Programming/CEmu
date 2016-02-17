@@ -40,13 +40,17 @@ public slots:
     void consoleStr(QString);
     void consoleChar(const char);
 
+    // Saved/Restored State
     void saved(bool);
     void restored(bool);
 
+    // Other
+    void isBusy(bool busy);
     bool restoreEmuState();
     void saveEmuState();
     void restoreFromFile();
     void saveToFile();
+    void exportRom();
 
 signals:
     // Debugging

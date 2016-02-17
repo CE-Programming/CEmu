@@ -1,4 +1,5 @@
 #include <string.h>
+#include <assert.h>
 
 #include "mem.h"
 #include "emu.h"
@@ -40,16 +41,19 @@ void mem_init(void) {
 void mem_free(void) {
     if (mem.ram.block) {
         free(mem.ram.block);
+        mem.ram.block = NULL;
     }
     if (mem.flash.block) {
         free(mem.flash.block);
+        mem.flash.block = NULL;
     }
     gui_console_printf("[CEmu] Freed Memory.\n");
 }
 
 void mem_reset(void) {
     memset(mem.ram.block, 0, ram_size);
-    gui_console_printf("[CEmu] RAM reset.\n");
+    memset(mem.flash.block, 0, flash_size);
+    gui_console_printf("[CEmu] Memory Reset.\n");
 }
 
 static uint32_t flash_address(uint32_t address, uint32_t *size) {
@@ -398,11 +402,39 @@ void mem_write_byte(uint32_t address, uint8_t value) {
 }
 
 bool mem_save(emu_image *s) {
+    assert(mem.flash.block);
+    assert(mem.ram.block);
+
+    memcpy(s->mem_flash, mem.flash.block, flash_size);
+    memcpy(s->mem_ram, mem.ram.block, ram_size);
+
     s->mem = mem;
     return true;
 }
 
 bool mem_restore(const emu_image *s) {
+    unsigned int i;
+    uint8_t *tmp_flash_ptr;
+    uint8_t *tmp_ram_ptr;
+
+    tmp_flash_ptr = mem.flash.block;
+    tmp_ram_ptr = mem.ram.block;
+
     mem = s->mem;
+
+    mem.flash.block = tmp_flash_ptr;
+    mem.ram.block = tmp_ram_ptr;
+
+    memcpy(mem.flash.block, s->mem_flash, flash_size);
+    memcpy(mem.ram.block, s->mem_ram, ram_size);
+
+    for (i = 0; i < 8; i++) {
+        mem.flash.sector[i].ptr = mem.flash.block + (i*flash_sector_size_8K);
+        mem.flash.sector[i].locked = true;
+    }
+    for (i = 8; i < 8+63; i++) {
+        mem.flash.sector[i].ptr = mem.flash.block + (i*flash_sector_size_64K);
+        mem.flash.sector[i].locked = false;
+    }
     return true;
 }

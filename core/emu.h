@@ -26,7 +26,6 @@ typedef struct emu_image {
     uint32_t version; // 0xCECEXXXX - XXXX is version number if the core is changed
     ti_device_type deviceType;
     eZ80cpu_t cpu;
-    mem_state_t mem;
     usb_state_t usb;
     flash_state_t flash;
     interrupt_state_t intrpt;
@@ -44,6 +43,9 @@ typedef struct emu_image {
     backlight_state_t backlight;
     control_state_t control;
     lcd_state_t lcd;
+    mem_state_t mem;
+    uint8_t mem_flash[flash_size];
+    uint8_t mem_ram[ram_size];
 } __attribute__((packed)) emu_image_t;
 
 /* CPU events */
@@ -61,9 +63,6 @@ extern uint32_t cpuEvents;
 /* Settings */
 extern volatile bool exiting;
 
-/* ROM image */
-extern const char *rom_image;
-
 /* Reimplemented GUI callbacks */
 void gui_do_stuff(void);
 void gui_entered_send_state(bool);
@@ -72,6 +71,7 @@ void gui_console_debug_char(const char);
 void gui_debugger_entered_or_left(bool);
 void gui_debugger_send_command(int, uint32_t);
 void gui_render_gif_frame(void);
+void gui_set_busy(bool);
 void gui_emu_sleep(void);
 
 /* callback == 0: Stop requesting input
@@ -79,10 +79,11 @@ void gui_emu_sleep(void);
 typedef void (*debug_input_cb)(const char *input);
 void gui_debugger_request_input(debug_input_cb callback);
 
-bool emu_start(void);
+bool emu_start(const char*,const char*);
 void emu_loop(bool);
 void emu_cleanup(void);
 bool emu_save(const char*);
+bool emu_save_rom(const char*);
 
 void throttle_interval_event(int index);
 void throttle_timer_wait(void);

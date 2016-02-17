@@ -150,6 +150,17 @@ bool sched_save(emu_image *s) {
 }
 
 bool sched_restore(const emu_image *s) {
-    sched = s->sched;
+    for(int i = 0; i < SCHED_NUM_ITEMS; i++) {
+        struct sched_item j = s->sched.items[i];
+        j.proc = sched.items[i].proc;
+        if(!j.proc) {
+            abort();
+        }
+        sched.items[i] = j;
+    }
+    memcpy(sched.clockRates, s->sched.clockRates, sizeof(sched.clockRates));
+    sched.nextCPUtick = s->sched.nextCPUtick;
+    sched.nextIndex = s->sched.nextIndex;
+    sched_update_next_event();
     return true;
 }

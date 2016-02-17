@@ -966,14 +966,15 @@ static void cpu_execute_bli(int y, int z) {
 }
 
 void cpu_init(void) {
-    cpu_reset();
+    memset(&cpu, 0, sizeof(eZ80cpu_t));
     gui_console_printf("[CEmu] Initialized CPU...\n");
 }
 
 void cpu_reset(void) {
-    memset(&cpu.registers, 0, sizeof cpu.registers);
+    memset(&cpu.registers, 0, sizeof(cpu.registers));
     cpu.IEF1 = cpu.IEF2 = cpu.ADL = cpu.MADL = cpu.IM = cpu.IEF_wait = cpu.halted = cpu.cycles = cpu.next = 0;
     cpu_flush(0, 0);
+    gui_console_printf("[CEmu] CPU Reset.\n");
 }
 
 void cpu_flush(uint32_t address, bool mode) {
@@ -987,7 +988,7 @@ void cpu_nmi(void) {
 }
 
 void cpu_execute(void) {
-    // variable declaration
+    /* variable declarations */
     int8_t s;
     int32_t sw;
     uint32_t w;

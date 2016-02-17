@@ -65,6 +65,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(&emu, &EmuThread::consoleChar, this, &MainWindow::consoleChar, Qt::QueuedConnection);
     connect(&emu, &EmuThread::restored, this, &MainWindow::restored, Qt::QueuedConnection);
     connect(&emu, &EmuThread::saved, this, &MainWindow::saved, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::isBusy, this, &MainWindow::isBusy, Qt::QueuedConnection);
 
     // Console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, ui->console, &QPlainTextEdit::clear);
@@ -125,6 +126,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->actionRestoreState, &QAction::triggered, this, &MainWindow::restoreEmuState);
     connect(ui->actionSaveState, &QAction::triggered, this, &MainWindow::saveEmuState);
     connect(ui->actionExportCalculatorState, &QAction::triggered, this, &MainWindow::saveToFile);
+    connect(ui->actionExportRomImage, &QAction::triggered, this, &MainWindow::exportRom);
     connect(ui->actionImportCalculatorState, &QAction::triggered, this, &MainWindow::restoreFromFile);
     connect(ui->actionReloadROM, &QAction::triggered, this, &MainWindow::reloadROM);
     connect(ui->actionResetCalculator, &QAction::triggered, &emu, &EmuThread::asicReset);
@@ -308,6 +310,12 @@ void MainWindow::saveToFile() {
     QString savedImage = QFileDialog::getSaveFileName(this, tr("Set image to save to"));
     if(!savedImage.isEmpty()) {
         saveToPath(savedImage);
+    }
+}
+void MainWindow::exportRom() {
+    QString savedImage = QFileDialog::getSaveFileName(this, tr("Set image to save to"));
+    if(!savedImage.isEmpty()) {
+        emu_thread->saveRomImage(savedImage);
     }
 }
 
@@ -739,6 +747,14 @@ void MainWindow::changeEmulatedSpeed(int value) {
 
 void MainWindow::consoleOutputChanged() {
     stderrConsole = ui->radioStderr->isChecked();
+}
+
+void MainWindow::isBusy(bool busy) {
+    if(busy) {
+        QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+    } else {
+        QApplication::restoreOverrideCursor();
+    }
 }
 
 void MainWindow::keymapChanged() {

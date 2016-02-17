@@ -25,15 +25,22 @@ signals:
     void sendDebugCommand(int, uint32_t);
     void debugInputRequested(bool);
 
+    // I/O
     void consoleChar(char);
     void consoleStr(QString);
     void exited(int);
 
+    // Status
     void actualSpeedChanged(int);
+    void isBusy(bool busy);
 
     // Save/Restore state
     void saved(bool);
     void restored(bool);
+
+    // Stopped/Started
+    void started(bool);
+    void stopped();
 
 public slots:
     virtual void run() override;
@@ -59,6 +66,7 @@ public slots:
     // Save/Restore
     bool restore(QString);
     void save(QString);
+    void saveRomImage(QString);
 
 private:
     void setActualSpeed(int);
@@ -69,8 +77,8 @@ private:
     bool enterReceiveState = false;
     bool throttleOn = true;
     std::chrono::steady_clock::time_point lastTime;
-    std::string debugInput,imagePath;
-    volatile bool saveImage = false, doResume = false;
+    std::string debugInput,imagePath,exportRomPath;
+    volatile bool saveImage = false,saveRom = false,doRestore = false;
 };
 
 // For friends
