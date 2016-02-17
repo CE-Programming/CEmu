@@ -51,6 +51,7 @@ public slots:
     void restoreFromFile();
     void saveToFile();
     void exportRom();
+    void changeImagePath();
 
 signals:
     // Debugging
@@ -205,7 +206,7 @@ private:
     bool debuggerOn = false;
     bool inReceivingMode = false;
     bool stderrConsole = false;
-    bool closeAfterSuspend = false;
+    bool closeAfterSave = false;
     bool isResumed = false;
 
     QList<calc_var_t> vars;

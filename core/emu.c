@@ -68,12 +68,14 @@ bool emu_save(const char *file) {
 
     if (!image) {
         fclose(savedImage);
+        gui_set_busy(false);
         return false;
     }
 
     if (!asic_save(image)) {
         free(image);
         fclose(savedImage);
+        gui_set_busy(false);
         return false;
     }
 
@@ -125,7 +127,7 @@ bool emu_start(const char *romImage, const char *savedImage) {
             if(fread(image, lSize, 1, imageFile) != 1) {
                 fclose(imageFile);
                 free(image);
-                return false;
+                break;
             }
             fclose(imageFile);
 
