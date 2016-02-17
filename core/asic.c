@@ -36,7 +36,7 @@ static void add_reset_proc(void (*proc)(void)) {
 static void plug_devices(void) {
     unsigned int i;
 
-    /* Port ranges 0x0 -> 0xF*/
+    /* Port ranges 0x0 -> 0xF */
     asic.portRange[0x0] = init_control();
     asic.portRange[0x1] = init_flash();
     asic.portRange[0x2] = init_sha256();

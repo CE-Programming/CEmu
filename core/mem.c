@@ -409,6 +409,8 @@ bool mem_save(emu_image *s) {
     memcpy(s->mem_ram, mem.ram.block, ram_size);
 
     s->mem = mem;
+    s->mem.flash.block = NULL;
+    s->mem.ram.block = NULL;
     return true;
 }
 

@@ -145,12 +145,19 @@ void sched_set_clocks(int count, uint32_t *new_rates) {
 }
 
 bool sched_save(emu_image *s) {
+    unsigned int i;
     s->sched = sched;
+
+    for(i = 0; i < SCHED_NUM_ITEMS; i++) {
+        s->sched.items[i].proc = NULL;
+    }
+
     return true;
 }
 
 bool sched_restore(const emu_image *s) {
-    for(int i = 0; i < SCHED_NUM_ITEMS; i++) {
+    unsigned int i;
+    for(i = 0; i < SCHED_NUM_ITEMS; i++) {
         struct sched_item j = s->sched.items[i];
         j.proc = sched.items[i].proc;
         if(!j.proc) {
