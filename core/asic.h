@@ -26,7 +26,7 @@ typedef struct asic_state {
 
     mem_state_t* mem;
     eZ80cpu_t *cpu;
-} __attribute__((packed)) asic_state_t;
+} asic_state_t;
 
 /* External Global ASIC state */
 extern asic_state_t asic;

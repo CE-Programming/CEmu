@@ -51,7 +51,7 @@ typedef struct eZ80cpu {
     uint32_t cycles, next;
     uint8_t prefetch, bus;
     uint32_t cpuEventsState;
-} __attribute__((packed)) eZ80cpu_t;
+} __attribute__((packed, aligned(4))) eZ80cpu_t;
 
 /* Externals */
 extern eZ80cpu_t cpu;
