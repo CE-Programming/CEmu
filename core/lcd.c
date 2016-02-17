@@ -34,7 +34,7 @@ uint_fast32_t lcd_nextword(uint32_t **in) {
         return *(*in)++;
     }
     if (inb <= (mem.ram.block + ram_size)) {
-        return *((uint32_t *) mem.ram.block + ram_size - 4) >> (((int) (*in)++ & 3) << 3);
+        return *((uint32_t *) (mem.ram.block + ram_size - 4)) >> (((int) (*in)++ & 3) << 3);
     }
     if (inb <= (mem.ram.block + lcd_dma_size - 4)) {
         (*in)++;
