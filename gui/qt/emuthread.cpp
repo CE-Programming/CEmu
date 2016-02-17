@@ -166,10 +166,10 @@ void EmuThread::setDebugStepOutMode() {
 void EmuThread::doStuff() {
     std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
 
-    if(doSuspend) {
-        bool success = emu_save(snapshotPath.c_str());
-        doSuspend = false;
-        emit restored(success);
+    if(saveImage) {
+        bool success = emu_save(imagePath.c_str());
+        saveImage = false;
+        emit saved(success);
     }
 
     if (enterSendState || enterReceiveState) {
@@ -248,7 +248,7 @@ bool EmuThread::stop() {
 }
 
 bool EmuThread::restore(QString path) {
-    snapshotPath = QDir::toNativeSeparators(path).toStdString();
+    imagePath = QDir::toNativeSeparators(path).toStdString();
     doResume = true;
     if(!stop()) {
         return false;
@@ -259,6 +259,6 @@ bool EmuThread::restore(QString path) {
 }
 
 void EmuThread::save(QString path) {
-    snapshotPath = QDir::toNativeSeparators(path).toStdString();
-    doSuspend = true;
+    imagePath = QDir::toNativeSeparators(path).toStdString();
+    saveImage = true;
 }

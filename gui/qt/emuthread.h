@@ -32,7 +32,7 @@ signals:
     void actualSpeedChanged(int);
 
     // Save/Restore state
-    void resumed(bool);
+    void saved(bool);
     void restored(bool);
 
 public slots:
@@ -69,8 +69,8 @@ private:
     bool enterReceiveState = false;
     bool throttleOn = true;
     std::chrono::steady_clock::time_point lastTime;
-    std::string debugInput,snapshotPath;
-    volatile bool doSuspend = false, doResume = false;
+    std::string debugInput,imagePath;
+    volatile bool saveImage = false, doResume = false;
 };
 
 // For friends

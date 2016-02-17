@@ -64,6 +64,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr, Qt::QueuedConnection);
     connect(&emu, &EmuThread::consoleChar, this, &MainWindow::consoleChar, Qt::QueuedConnection);
     connect(&emu, &EmuThread::restored, this, &MainWindow::restored, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::saved, this, &MainWindow::saved, Qt::QueuedConnection);
 
     // Console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, ui->console, &QPlainTextEdit::clear);
@@ -310,7 +311,7 @@ void MainWindow::saveToFile() {
     }
 }
 
-void MainWindow::resumed(bool success) {
+void MainWindow::restored(bool success) {
     if(success) {
         showStatusMsg(tr("Emulation restored from image."));
     } else {
@@ -318,7 +319,7 @@ void MainWindow::resumed(bool success) {
     }
 }
 
-void MainWindow::restored(bool success) {
+void MainWindow::saved(bool success) {
     if(success) {
         showStatusMsg(tr("Image saved."));
     } else {

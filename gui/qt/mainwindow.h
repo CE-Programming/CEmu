@@ -38,10 +38,10 @@ public slots:
 
     // Console
     void consoleStr(QString);
-    void consoleChar(const char c);
+    void consoleChar(const char);
 
-    void resumed(bool success);
-    void restored(bool success);
+    void saved(bool);
+    void restored(bool);
 
     bool restoreEmuState();
     void saveEmuState();

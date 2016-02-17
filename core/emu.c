@@ -45,8 +45,6 @@ bool emu_save(const char *file) {
 
     size_t size = sizeof(emu_image_t);
     emu_image_t* image = (emu_image_t*)malloc(size);
-    fprintf(stderr,"%Ix",size);
-    fflush(stderr);
 
     if (!image) {
         fclose(savedImage);
@@ -61,8 +59,9 @@ bool emu_save(const char *file) {
 
     image->version = 0xCECE0001;
 
-    bool success = (size_t)fwrite(image, size, 1, savedImage) == size;
+    bool success = ((size_t)fwrite(image, size, 1, savedImage) == size);
 
+    success = true;
     free(image);
     fclose(savedImage);
     return success;
