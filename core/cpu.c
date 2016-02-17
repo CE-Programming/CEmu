@@ -386,6 +386,16 @@ static void cpu_trap(void) {
     cpu_call(0x00, cpu.MADL);
 }
 
+static void cpu_check_step_out(void) {
+#ifdef DEBUG_SUPPORT
+    if (cpuEvents & EVENT_DEBUG_STEP_OUT
+            && (cpu.ADL ? cpu.registers.SPL >= debugger.stepOutSPL : cpu.registers.SPS >= debugger.stepOutSPS)) {
+        cpuEvents &= ~EVENT_DEBUG_STEP_OUT;
+        open_debugger(DBG_STEP, 0);
+    }
+#endif
+}
+
 static void cpu_return(void) {
     uint32_t address;
     bool mode = cpu.ADL;
@@ -401,14 +411,7 @@ static void cpu_return(void) {
         address = cpu_pop_word();
     }
     cpu_prefetch(address, mode);
-#ifdef DEBUG_SUPPORT
-    if (cpuEvents & EVENT_DEBUG_STEP_OUT &&
-        (cpu.registers.SPL >= debugger.stepOutSPL ||
-         cpu.registers.SPS >= debugger.stepOutSPS)) {
-        cpuEvents &= ~EVENT_DEBUG_STEP_OUT;
-        open_debugger(DBG_STEP, 0);
-    }
-#endif
+    cpu_check_step_out();
 }
 
 static void cpu_execute_alu(int i, uint8_t v) {
@@ -1263,6 +1266,7 @@ void cpu_execute(void) {
                                             break;
                                         case 2: // JP (rr)
                                             cpu_prefetch(cpu_read_index(), cpu.L);
+                                            cpu_check_step_out();
                                             break;
                                         case 3: // LD SP, HL
                                             cpu_write_sp(cpu_read_index());
