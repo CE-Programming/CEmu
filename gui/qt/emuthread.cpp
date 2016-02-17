@@ -32,7 +32,6 @@
 #include "../../core/debug/disasm.h"
 
 EmuThread *emu_thread = nullptr;
-volatile bool waitForLink;
 
 void gui_emu_sleep(void) {
     QThread::usleep(50);
@@ -84,7 +83,7 @@ void throttle_timer_wait(void) {
 
 void gui_entered_send_state(bool entered) {
     if(entered) {
-        waitForLink = false;
+        emu_thread->waitForLink = false;
     }
 }
 
@@ -101,6 +100,9 @@ void EmuThread::debuggerInput(QString str) {
     debugCallback(debugInput.c_str());
 }
 
+void EmuThread::asicReset() {
+    cpuEvents |= EVENT_RESET;
+}
 
 void EmuThread::changeEmuSpeed(int value) {
     speed = value;
@@ -128,7 +130,7 @@ void EmuThread::setReceiveState(bool state) {
 }
 
 void EmuThread::setDebugStepInMode() {
-    cpu_events |= EVENT_DEBUG_STEP;
+    cpuEvents |= EVENT_DEBUG_STEP;
     enterDebugger = false;
     inDebugger = false;
 }
@@ -136,7 +138,7 @@ void EmuThread::setDebugStepInMode() {
 void EmuThread::setDebugStepOverMode() {
     debugger.stepOutSPL = cpu.registers.SPL;
     debugger.stepOutSPS = cpu.registers.SPS;
-    cpu_events |= EVENT_DEBUG_STEP_OUT;
+    cpuEvents |= EVENT_DEBUG_STEP_OUT;
     enterDebugger = false;
     inDebugger = false;
 }
@@ -147,7 +149,7 @@ void EmuThread::setDebugStepNextMode() {
     disassembleInstruction();
     debugger.stepOverAddress = disasm.new_address;
     debugger.data.block[debugger.stepOverAddress] |= DBG_STEP_OVER_BREAKPOINT;
-    cpu_events |= EVENT_DEBUG_STEP_OVER;
+    cpuEvents |= EVENT_DEBUG_STEP_OVER;
     enterDebugger = false;
     inDebugger = false;
 }
@@ -155,7 +157,7 @@ void EmuThread::setDebugStepNextMode() {
 void EmuThread::setDebugStepOutMode() {
     debugger.stepOutSPL = cpu.registers.SPL + 1;
     debugger.stepOutSPS = cpu.registers.SPS + 1;
-    cpu_events |= EVENT_DEBUG_STEP_OUT;
+    cpuEvents |= EVENT_DEBUG_STEP_OUT;
     enterDebugger = false;
     inDebugger = false;
 }
@@ -163,6 +165,12 @@ void EmuThread::setDebugStepOutMode() {
 //Called occasionally, only way to do something in the same thread the emulator runs in.
 void EmuThread::doStuff() {
     std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
+
+    if(doSuspend) {
+        bool success = emu_save(snapshotPath.c_str());
+        doSuspend = false;
+        emit restored(success);
+    }
 
     if (enterSendState || enterReceiveState) {
         enterReceiveState = enterSendState = false;
@@ -237,4 +245,20 @@ bool EmuThread::stop() {
     }
 
     return true;
+}
+
+bool EmuThread::restore(QString path) {
+    snapshotPath = QDir::toNativeSeparators(path).toStdString();
+    doResume = true;
+    if(!stop()) {
+        return false;
+    }
+
+    start();
+    return true;
+}
+
+void EmuThread::save(QString path) {
+    snapshotPath = QDir::toNativeSeparators(path).toStdString();
+    doSuspend = true;
 }

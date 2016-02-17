@@ -396,3 +396,13 @@ void mem_write_byte(uint32_t address, uint8_t value) {
     }
 #endif
 }
+
+bool mem_save(emu_image *s) {
+    s->mem = mem;
+    return true;
+}
+
+bool mem_restore(const emu_image *s) {
+    mem = s->mem;
+    return true;
+}

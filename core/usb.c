@@ -29,3 +29,13 @@ eZ80portrange_t init_usb(void) {
     gui_console_printf("[CEmu] Initialized USB...\n");
     return device;
 }
+
+bool usb_save(emu_image *s) {
+    s->usb = usb;
+    return true;
+}
+
+bool usb_restore(const emu_image *s) {
+    usb = s->usb;
+    return true;
+}

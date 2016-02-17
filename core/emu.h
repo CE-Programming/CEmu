@@ -6,9 +6,48 @@ extern "C" {
 #endif
 
 #include "defines.h"
+#include "cpu.h"
+#include "flash.h"
+#include "mem.h"
+#include "lcd.h"
+#include "schedule.h"
+#include "usb.h"
+#include "interrupt.h"
+#include "misc.h"
+#include "keypad.h"
+#include "realclock.h"
+#include "sha256.h"
+#include "tidevices.h"
+#include "backlight.h"
+#include "timers.h"
+#include "control.h"
+
+typedef struct emu_image {
+    uint32_t version; // 0xCECEXXXX - XXXX is version number if the core is changed
+    ti_device_type deviceType;
+    eZ80cpu_t cpu;
+    mem_state_t mem;
+    usb_state_t usb;
+    flash_state_t flash;
+    interrupt_state_t intrpt;
+    watchdog_state_t watchdog;
+    protected_state_t protect;
+    cxxx_state_t cxxx;
+    dxxx_state_t dxxx;
+    exxx_state_t exxx;
+    fxxx_state_t fxxx;
+    keypad_state_t keypad;
+    sched_state_t sched;
+    rtc_state_t rtc;
+    sha256_state_t sha256;
+    general_timers_state_t gpt;
+    backlight_state_t backlight;
+    control_state_t control;
+    lcd_state_t lcd;
+} __attribute__((packed)) emu_image_t;
 
 /* CPU events */
-extern uint32_t cpu_events;
+extern uint32_t cpuEvents;
 
 #define EVENT_NONE            0
 #define EVENT_RESET           1
@@ -41,8 +80,9 @@ typedef void (*debug_input_cb)(const char *input);
 void gui_debugger_request_input(debug_input_cb callback);
 
 bool emu_start(void);
-void emu_loop(bool reset);
+void emu_loop(bool);
 void emu_cleanup(void);
+bool emu_save(const char*);
 
 void throttle_interval_event(int index);
 void throttle_timer_wait(void);

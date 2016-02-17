@@ -151,3 +151,13 @@ eZ80portrange_t init_control(void) {
 
     return device;
 }
+
+bool control_save(emu_image *s) {
+    s->control = control;
+    return true;
+}
+
+bool control_restore(const emu_image *s) {
+    control = s->control;
+    return true;
+}

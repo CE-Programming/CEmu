@@ -32,7 +32,7 @@ typedef struct rtc_state {
              holdDay;
 
     uint32_t revision;
-} rtc_state_t;
+} __attribute__((packed)) rtc_state_t;
 
 /* Global GPT state */
 extern rtc_state_t rtc;
@@ -40,6 +40,11 @@ extern rtc_state_t rtc;
 /* Available Functions */
 eZ80portrange_t init_rtc(void);
 void rtc_reset(void);
+
+/* Save/Restore */
+typedef struct emu_image emu_image;
+bool rtc_restore(const emu_image*);
+bool rtc_save(emu_image*);
 
 #ifdef __cplusplus
 }

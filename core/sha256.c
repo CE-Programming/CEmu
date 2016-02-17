@@ -150,3 +150,13 @@ eZ80portrange_t init_sha256(void) {
     gui_console_printf("[CEmu] Initialized SHA256 Chip...\n");
     return device;
 }
+
+bool sha256_save(emu_image *s) {
+    s->sha256 = sha256;
+    return true;
+}
+
+bool sha256_restore(const emu_image *s) {
+    sha256 = s->sha256;
+    return true;
+}

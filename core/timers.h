@@ -15,7 +15,7 @@ typedef struct timer_state {
 typedef struct general_timers_state {
     timer_state_t timer[3];
     uint32_t control, status, mask, revision;
-} general_timers_state_t;
+} __attribute__((packed)) general_timers_state_t;
 
 /* Global GPT state */
 extern general_timers_state_t gpt;
@@ -23,6 +23,11 @@ extern general_timers_state_t gpt;
 /* Available Functions */
 eZ80portrange_t init_gpt(void);
 void gpt_reset(void);
+
+/* Save/Restore */
+typedef struct emu_image emu_image;
+bool gpt_restore(const emu_image*);
+bool gpt_save(emu_image*);
 
 #ifdef __cplusplus
 }

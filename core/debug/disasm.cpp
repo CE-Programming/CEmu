@@ -4,6 +4,7 @@
 #include <unordered_map>
 
 #include "disasm.h"
+#include "debug.h"
 #include "../cpu.h"
 
 disasm_highlights_state_t disasmHighlight;

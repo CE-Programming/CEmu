@@ -30,7 +30,7 @@ typedef struct keypad_state {
     uint16_t key_map[16];
     uint32_t gpio_status;
     uint32_t gpio_enable;
-} keypad_state_t;
+} __attribute__((packed)) keypad_state_t;
 
 /* Global KEYPAD state */
 extern keypad_state_t keypad;
@@ -40,6 +40,11 @@ eZ80portrange_t init_keypad(void);
 void keypad_intrpt_check(void);
 void keypad_reset(void);
 void keypad_key_event(unsigned int row, unsigned int col, bool press);
+
+/* Save/Restore */
+typedef struct emu_image emu_image;
+bool keypad_restore(const emu_image*);
+bool keypad_save(emu_image*);
 
 #ifdef __cplusplus
 }

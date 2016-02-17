@@ -63,6 +63,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     // Emulator -> GUI
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr, Qt::QueuedConnection);
     connect(&emu, &EmuThread::consoleChar, this, &MainWindow::consoleChar, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::restored, this, &MainWindow::restored, Qt::QueuedConnection);
 
     // Console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, ui->console, &QPlainTextEdit::clear);
@@ -84,7 +85,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->breakRequest, &QLineEdit::returnPressed, this, &MainWindow::addBreakpoint);
     connect(ui->buttonRemoveBreakpoint, &QPushButton::clicked, this, &MainWindow::deleteBreakpoint);
     connect(ui->breakpointView, &QTableWidget::itemChanged, this, &MainWindow::breakpointCheckboxToggled);
-    connect(ui->actionReset_Calculator, &QAction::triggered, this, &MainWindow::resetCalculator );
     connect(ui->buttonStepIn, &QPushButton::clicked, this, &MainWindow::stepInPressed);
     connect(this, &MainWindow::setDebugStepInMode, &emu, &EmuThread::setDebugStepInMode);
     connect(ui->buttonStepOver, &QPushButton::clicked, this, &MainWindow::stepOverPressed);
@@ -114,23 +114,30 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonRefreshList, &QPushButton::clicked, this, &MainWindow::refreshVariableList);
     connect(this, &MainWindow::setReceiveState, &emu, &EmuThread::setReceiveState);
     connect(ui->buttonReceiveFiles, &QPushButton::clicked, this, &MainWindow::saveSelected);
+
     // Toolbar Actions
     connect(ui->actionSetup, &QAction::triggered, this, &MainWindow::runSetup);
     connect(ui->actionExit, &QAction::triggered, this, &MainWindow::close);
     connect(ui->actionScreenshot, &QAction::triggered, this, &MainWindow::screenshot);
-    connect(ui->actionRecord_GIF, &QAction::triggered, this, &MainWindow::recordGIF);
-    connect(ui->actionTake_GIF_Screenshot, &QAction::triggered, this, &MainWindow::screenshotGIF);
+    connect(ui->actionRecordGIF, &QAction::triggered, this, &MainWindow::recordGIF);
+    connect(ui->actionTakeGIFScreenshot, &QAction::triggered, this, &MainWindow::screenshotGIF);
+    connect(ui->actionRestoreState, &QAction::triggered, this, &MainWindow::restoreEmuState);
+    connect(ui->actionSaveState, &QAction::triggered, this, &MainWindow::saveEmuState);
+    connect(ui->actionExportCalculatorState, &QAction::triggered, this, &MainWindow::saveToFile);
+    connect(ui->actionImportCalculatorState, &QAction::triggered, this, &MainWindow::restoreFromFile);
+    connect(ui->actionReloadROM, &QAction::triggered, this, &MainWindow::reloadROM);
+    connect(ui->actionResetCalculator, &QAction::triggered, &emu, &EmuThread::asicReset);
 
     // Capture
     connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
     connect(ui->buttonGIF, &QPushButton::clicked, this, &MainWindow::recordGIF);
-    connect(ui->buttonGIF_Screenshot, &QPushButton::clicked, this, &MainWindow::screenshotGIF);
+    connect(ui->buttonGIFScreenshot, &QPushButton::clicked, this, &MainWindow::screenshotGIF);
     connect(ui->frameskipSlider, &QSlider::valueChanged, this, &MainWindow::changeFrameskip);
 
     // About
-    connect(ui->actionCheck_for_updates, &QAction::triggered, this, [=](){ this->checkForUpdates(true); });
+    connect(ui->actionCheckForUpdates, &QAction::triggered, this, [=](){ this->checkForUpdates(true); });
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::showAbout);
-    connect(ui->actionAbout_Qt, &QAction::triggered, qApp, &QApplication::aboutQt);
+    connect(ui->actionAboutQt, &QAction::triggered, qApp, &QApplication::aboutQt);
 
     // Other GUI actions
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
@@ -141,10 +148,10 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::alwaysOnTop);
     connect(ui->emulationSpeed, &QSlider::valueChanged, this, &MainWindow::changeEmulatedSpeed);
     connect(ui->checkThrottle, &QCheckBox::stateChanged, this, &MainWindow::changeThrottleMode);
+    connect(ui->lcdWidget, &QWidget::customContextMenuRequested, this, &MainWindow::screenContextMenu);
     connect(this, &MainWindow::changedEmuSpeed, &emu, &EmuThread::changeEmuSpeed);
     connect(this, &MainWindow::changedThrottleMode, &emu, &EmuThread::changeThrottleMode);
     connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showActualSpeed, Qt::QueuedConnection);
-    connect(ui->lcdWidget, &QWidget::customContextMenuRequested, this, &MainWindow::screenContextMenu);
 
     // Hex Editor
     connect(ui->buttonFlashGoto, &QPushButton::clicked, this, &MainWindow::flashGotoPressed);
@@ -183,15 +190,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     emu.rom = settings->value(QStringLiteral("romImage")).toString().toStdString();
     changeThrottleMode(Qt::Checked);
-
-    debugger_init();
-
-    if (fileExists(emu.rom)) {
-        emu.start();
-    } else if (!runSetup()) {
-        exit(0);
-    }
-
     restoreGeometry(settings->value(QStringLiteral("windowGeometry")).toByteArray());
     restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
     changeFrameskip(settings->value(QStringLiteral("frameskip"), 3).toUInt());
@@ -202,8 +200,24 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toUInt());
     setFont(settings->value(QStringLiteral("textSize"), 9).toUInt());
     autoCheckForUpdates(settings->value(QStringLiteral("autoUpdate"), false).toBool());
+    ui->checkSave->setChecked(settings->value(QStringLiteral("saveOnClose"), false).toBool());
+    ui->checkRestore->setChecked(settings->value(QStringLiteral("restoreOnOpen"), false).toBool());
 
     currentDir.setPath((settings->value(QStringLiteral("currDir"), QDir::homePath()).toString()));
+    if(!settings->value(QStringLiteral("savedImagePath")).toString().isEmpty()) {
+        ui->savedImagePath->setText(settings->value(QStringLiteral("savedImagePath")).toString());
+    }
+
+    debugger_init();
+    if(settings->value(QStringLiteral("restoreOnOpen")).toBool()) {
+        isResumed = restoreEmuState();
+    }
+
+    if (fileExists(emu.rom) && !isResumed) {
+        emu.start();
+    } else if (!runSetup()) {
+        exit(0);
+    }
 
     QString currKeyMap = settings->value(QStringLiteral("keyMap"), "cemu").toString();
     if (QStringLiteral("cemu").compare(currKeyMap, Qt::CaseInsensitive) == 0) {
@@ -241,6 +255,83 @@ MainWindow::~MainWindow() {
     delete ui->ramEdit;
     delete ui->memEdit;
     delete ui;
+}
+
+bool MainWindow::restoreEmuState() {
+    QString default_savedImage = settings->value(QStringLiteral("savedImagePath")).toString();
+    if(!default_savedImage.isEmpty()) {
+        return restoreFromPath(default_savedImage);
+    } else {
+        QMessageBox::warning(this, tr("Can't restore state"), tr("No saved image path in settings"));
+        return false;
+    }
+}
+
+void MainWindow::saveToPath(QString path) {
+    emu_thread->save(path);
+}
+
+bool MainWindow::restoreFromPath(QString path) {
+    if(!emu_thread->restore(path)) {
+        QMessageBox::warning(this, tr("Could not restore"), tr("Try restarting"));
+        return false;
+    }
+
+    return true;
+}
+
+void MainWindow::setSaveOnClose(bool b) {
+    settings->setValue(QStringLiteral("suspendOnClose"), b);
+}
+
+void MainWindow::setRestoreOnOpen(bool b) {
+    settings->setValue(QStringLiteral("resumeOnOpen"), b);
+}
+
+void MainWindow::saveEmuState() {
+    QString default_savedImage = settings->value(QStringLiteral("savedImagePath")).toString();
+    if(!default_savedImage.isEmpty())
+        saveToPath(default_savedImage);
+    else
+        QMessageBox::warning(this, tr("Can't save image"), tr("No saved image path in settings given"));
+}
+
+void MainWindow::restoreFromFile() {
+    QString savedImage = QFileDialog::getOpenFileName(this, tr("Select saved image to restore from"));
+    if(!savedImage.isEmpty()) {
+        restoreFromPath(savedImage);
+    }
+}
+
+void MainWindow::saveToFile() {
+    QString savedImage = QFileDialog::getSaveFileName(this, tr("Set image to save to"));
+    if(!savedImage.isEmpty()) {
+        saveToPath(savedImage);
+    }
+}
+
+void MainWindow::resumed(bool success) {
+    if(success) {
+        showStatusMsg(tr("Emulation restored from image."));
+    } else {
+        QMessageBox::warning(this, tr("Could not restore"), tr("Resuming failed.\nFix it."));
+    }
+}
+
+void MainWindow::restored(bool success) {
+    if(success) {
+        showStatusMsg(tr("Image saved."));
+    } else {
+        QMessageBox::warning(this, tr("Could not save"), tr("Saving failed.\nFix it."));
+    }
+
+    if(closeAfterSuspend) {
+        if(!success) {
+            closeAfterSuspend = false;
+        } else {
+            this->close();
+        }
+    }
 }
 
 void MainWindow::dropEvent(QDropEvent *e) {
@@ -288,12 +379,17 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *e) {
 }
 
 void MainWindow::closeEvent(QCloseEvent *e) {
-    qDebug("Terminating emulator thread...");
 
-    if (emu.stop()) {
-        qDebug("Successful!");
-    } else {
-        qDebug("Failed.");
+    if (!closeAfterSuspend && settings->value(QStringLiteral("saveOnClose")).toBool()) {
+            closeAfterSuspend = true;
+            qDebug("Saving...");
+            saveEmuState();
+            e->ignore();
+            return;
+    }
+
+    if (!emu.stop()) {
+        qDebug("Thread Termmination Failed.");
     }
 
     QMainWindow::closeEvent(e);
@@ -424,7 +520,7 @@ void MainWindow::screenshot() {
 }
 
 void MainWindow::screenshotGIF() {
-    if (ui->actionRecord_GIF->isChecked()) {
+    if (ui->actionRecordGIF->isChecked()) {
         QMessageBox::warning(this, tr("Recording GIF"), tr("Currently recording GIF."));
         return;
     }
@@ -455,7 +551,7 @@ void MainWindow::recordGIF() {
     }
 
     ui->frameskipSlider->setEnabled(path.isEmpty());
-    ui->actionRecord_GIF->setChecked(!path.isEmpty());
+    ui->actionRecordGIF->setChecked(!path.isEmpty());
     ui->buttonGIF->setText((!path.isEmpty()) ? QString("Stop Recording") : QString("Record GIF"));
 }
 
@@ -708,10 +804,10 @@ void MainWindow::sendFiles(QStringList fileNames) {
     }
 
     /* Wait for an open link */
-    waitForLink = true;
+    emu_thread->waitForLink = true;
     do {
         QThread::msleep(50);
-    } while(waitForLink);
+    } while(emu_thread->waitForLink);
 
     QProgressDialog progress("Sending Files...", QString(), 0, fileNum, this);
     progress.setWindowModality(Qt::WindowModal);
@@ -761,12 +857,12 @@ void MainWindow::refreshVariableList() {
         ui->buttonRefreshList->setText(tr("Refresh variable list..."));
         ui->buttonReceiveFiles->setEnabled(false);
         ui->buttonRun->setEnabled(true);
-        ui->actionReset_Calculator->setEnabled(true);
+        ui->actionResetCalculator->setEnabled(true);
         setReceiveState(false);
     } else {
         ui->buttonRefreshList->setText(tr("Resume emulation"));
         ui->buttonReceiveFiles->setEnabled(true);
-        ui->actionReset_Calculator->setEnabled(false);
+        ui->actionResetCalculator->setEnabled(false);
         ui->buttonRun->setEnabled(false);
         setReceiveState(true);
         QThread::msleep(200);
@@ -1526,12 +1622,13 @@ void MainWindow::updatePortData(int currentRow) {
     ui->portView->item(currentRow, 1)->setText(int2hex(read,2));
 }
 
-void MainWindow::resetCalculator() {
+void MainWindow::reloadROM() {
     if (emu.stop()) {
         emu.start();
         if(debuggerOn) {
             emit setDebugStepInMode();
         }
+        qDebug("Reset Successful.");
     } else {
         qDebug("Reset Failed.");
     }

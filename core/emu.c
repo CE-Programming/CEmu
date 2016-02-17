@@ -29,7 +29,7 @@
 
 const char *rom_image = NULL;
 
-uint32_t cpu_events;
+uint32_t cpuEvents;
 volatile bool exiting;
 
 void throttle_interval_event(int index) {
@@ -38,6 +38,34 @@ void throttle_interval_event(int index) {
     gui_do_stuff();
 
     throttle_timer_wait();
+}
+
+bool emu_save(const char *file) {
+    FILE *savedImage = fopen(file, "wb");
+
+    size_t size = sizeof(emu_image_t);
+    emu_image_t* image = (emu_image_t*)malloc(size);
+    fprintf(stderr,"%Ix",size);
+    fflush(stderr);
+
+    if (!image) {
+        fclose(savedImage);
+        return false;
+    }
+
+    if (!asic_save(image)) {
+        free(image);
+        fclose(savedImage);
+        return false;
+    }
+
+    image->version = 0xCECE0001;
+
+    bool success = (size_t)fwrite(image, size, 1, savedImage) == size;
+
+    free(image);
+    fclose(savedImage);
+    return success;
 }
 
 bool emu_start(void) {
@@ -218,7 +246,7 @@ static void emu_reset(void) {
     /* Drain everything */
     cpu_reset();
 #ifdef DEBUG_SUPPORT
-    cpu_events &= EVENT_DEBUG_STEP;
+    cpuEvents &= EVENT_DEBUG_STEP;
 #else
     cpu_events = 0;
 #endif
@@ -227,23 +255,23 @@ static void emu_reset(void) {
 }
 
 static void emu_main_loop_inner(void) {
-        if (cpu_events & EVENT_RESET) {
+        if (cpuEvents & EVENT_RESET) {
 #ifdef DEBUG_SUPPORT
-            cpu_events &= EVENT_DEBUG_STEP;
+            cpuEvents &= EVENT_DEBUG_STEP;
 #else
             cpu_events = 0;
 #endif
-            gui_console_printf("CPU Reset triggered...");
-            emu_reset();
+            gui_console_printf("[CEmu] Calculator reset triggered...");
+            asic_reset();
         }
 #ifdef DEBUG_SUPPORT
-        if (!cpu.halted && cpu_events & EVENT_DEBUG_STEP) {
-            cpu_events &= ~EVENT_DEBUG_STEP;
+        if (!cpu.halted && cpuEvents & EVENT_DEBUG_STEP) {
+            cpuEvents &= ~EVENT_DEBUG_STEP;
             open_debugger(DBG_STEP, 0);
         }
 #endif
         sched_process_pending_events();
-        cpu_execute();  // execute instructions with available clock cycles
+        cpu_execute();
 }
 
 void emu_loop(bool reset) {

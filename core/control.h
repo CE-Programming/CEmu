@@ -27,7 +27,7 @@ typedef struct control_state {
     bool batteryCharging;
 
     uint32_t privileged;
-} control_state_t;
+} __attribute__((packed)) control_state_t;
 
 /* Global CONTROL state */
 extern control_state_t control;
@@ -35,6 +35,11 @@ extern control_state_t control;
 /* Available Functions */
 void free_control(void *_state);
 eZ80portrange_t init_control(void);
+
+/* Save/Restore */
+typedef struct emu_image emu_image;
+bool control_restore(const emu_image*);
+bool control_save(emu_image*);
 
 #ifdef __cplusplus
 }

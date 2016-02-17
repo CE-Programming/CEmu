@@ -51,7 +51,7 @@ typedef struct {
 typedef struct mem_state {
     flash_chip_t flash;
     ram_chip_t ram;
-} mem_state_t;
+} __attribute__((packed)) mem_state_t;
 
 /* Global MEMORY state */
 extern mem_state_t mem;
@@ -70,6 +70,11 @@ void mem_reset(void);
 uint8_t *phys_mem_ptr(uint32_t address, uint32_t size);
 uint8_t mem_read_byte(uint32_t address);
 void mem_write_byte(uint32_t address, uint8_t value);
+
+/* Save/Restore */
+typedef struct emu_image emu_image;
+bool mem_restore(const emu_image*);
+bool mem_save(emu_image*);
 
 #ifdef __cplusplus
 }

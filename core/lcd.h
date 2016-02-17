@@ -42,10 +42,10 @@ typedef struct lcd_cntrl_state {
 
     /* Internal Use */
     uint32_t framebuffer[320*240];
-} lcd_cntrl_state_t;
+} __attribute__((packed)) lcd_state_t;
 
 /* Global LCD state */
-extern lcd_cntrl_state_t lcd;
+extern lcd_state_t lcd;
 
 /* Available Functions */
 void lcd_reset(void);
@@ -59,6 +59,11 @@ void lcd_drawframe(uint32_t *out);
 
 /* Set this callback function pointer from the GUI. Called in lcd_event() */
 extern void (*lcd_event_gui_callback)(void);
+
+/* Save/Restore */
+typedef struct emu_image emu_image;
+bool lcd_restore(const emu_image*);
+bool lcd_save(emu_image*);
 
 #ifdef __cplusplus
 }

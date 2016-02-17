@@ -10,10 +10,15 @@ extern "C" {
 typedef struct sha256_state {
     uint32_t hash_state[8];
     uint32_t hash_block[16];
-} sha256_state_t;
+} __attribute__((packed)) sha256_state_t;
 
 eZ80portrange_t init_sha256(void);
 void sha256_reset(void);
+
+/* Save/Restore */
+typedef struct emu_image emu_image;
+bool sha256_restore(const emu_image*);
+bool sha256_save(emu_image*);
 
 #ifdef __cplusplus
 }

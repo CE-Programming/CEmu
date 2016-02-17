@@ -22,7 +22,7 @@ static void watchdog_event(int index) {
             watchdog.status = 1;
             watchdog.count = watchdog.load;
             if (watchdog.control & 2) {
-                cpu_events |= EVENT_RESET;
+                cpuEvents |= EVENT_RESET;
             }
             if (watchdog.control & 4) {
                 cpu_nmi();
@@ -131,6 +131,16 @@ eZ80portrange_t init_watchdog(void) {
     return pwatchdog;
 }
 
+bool watchdog_save(emu_image *s) {
+    s->watchdog = watchdog;
+    return true;
+}
+
+bool watchdog_restore(const emu_image *s) {
+    watchdog = s->watchdog;
+    return true;
+}
+
 /* ============================================= */
 
 /* TODO: Is the (0x9XXX) range complete enough? */
@@ -176,6 +186,16 @@ eZ80portrange_t init_protected(void) {
     return p9xxx;
 }
 
+bool protect_save(emu_image *s) {
+    s->protect = protect;
+    return true;
+}
+
+bool protect_restore(const emu_image *s) {
+    protect = s->protect;
+    return true;
+}
+
 /* ============================================= */
 
 /* Read from the 0xCXXX range of ports */
@@ -196,6 +216,16 @@ static const eZ80portrange_t pcxxx = {
 eZ80portrange_t init_cxxx(void) {
     memset(&cxxx, 0, sizeof cxxx);
     return pcxxx;
+}
+
+bool cxxx_save(emu_image *s) {
+    s->cxxx = cxxx;
+    return true;
+}
+
+bool cxxx_restore(const emu_image *s) {
+    cxxx = s->cxxx;
+    return true;
 }
 
 /* ============================================= */
@@ -219,6 +249,16 @@ static const eZ80portrange_t pdxxx = {
 
 eZ80portrange_t init_dxxx(void) {
     return pdxxx;
+}
+
+bool dxxx_save(emu_image *s) {
+    s->dxxx = dxxx;
+    return true;
+}
+
+bool dxxx_restore(const emu_image *s) {
+    dxxx = s->dxxx;
+    return true;
 }
 
 /* ============================================= */
@@ -254,6 +294,16 @@ eZ80portrange_t init_exxx(void) {
     return pexxx;
 }
 
+bool exxx_save(emu_image *s) {
+    s->exxx = exxx;
+    return true;
+}
+
+bool exxx_restore(const emu_image *s) {
+    exxx = s->exxx;
+    return true;
+}
+
 /* ============================================= */
 
 /* Write to the 0xFXXX range of ports */
@@ -272,6 +322,5 @@ static const eZ80portrange_t pfxxx = {
 };
 
 eZ80portrange_t init_fxxx(void) {
-
     return pfxxx;
 }

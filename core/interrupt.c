@@ -110,3 +110,13 @@ eZ80portrange_t init_intrpt(void) {
     gui_console_printf("[CEmu] Initialized Interrupt Contoller...\n");
     return device;
 }
+
+bool intrpt_save(emu_image *s) {
+    s->intrpt = intrpt;
+    return true;
+}
+
+bool intrpt_restore(const emu_image *s) {
+    intrpt = s->intrpt;
+    return true;
+}

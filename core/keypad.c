@@ -192,3 +192,13 @@ eZ80portrange_t init_keypad(void) {
     gui_console_printf("[CEmu] Initialized keypad...\n");
     return device;
 }
+
+bool keypad_save(emu_image *s) {
+    s->keypad = keypad;
+    return true;
+}
+
+bool keypad_restore(const emu_image *s) {
+    keypad = s->keypad;
+    return true;
+}

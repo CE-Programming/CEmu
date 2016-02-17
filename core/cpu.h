@@ -25,7 +25,6 @@ extern "C" {
 #endif
 
 #include "registers.h"
-#include "mem.h"
 #include "apb.h"
 
 /* eZ80 CPU State */
@@ -51,8 +50,9 @@ typedef struct eZ80cpu {
         uint8_t halted      : 1;  /* Have we halted the CPU?                                                                     */
     };
     uint32_t cycles, next;
-    uint8_t prefetch, bus;  /* TODO */
-} eZ80cpu_t;
+    uint8_t prefetch, bus;
+    uint32_t cpuEventsState;
+} __attribute__((packed)) eZ80cpu_t;
 
 /* Externals */
 extern eZ80cpu_t cpu;
@@ -63,6 +63,11 @@ void cpu_reset(void);
 void cpu_flush(uint32_t, bool);
 void cpu_nmi(void);
 void cpu_execute(void);
+
+/* Save/Restore */
+typedef struct emu_image emu_image;
+bool cpu_restore(const emu_image*);
+bool cpu_save(emu_image*);
 
 #ifdef __cplusplus
 }

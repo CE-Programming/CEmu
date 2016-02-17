@@ -8,8 +8,7 @@
 #include "../../core/asic.h"
 #include "../../core/debug/debug.h"
 
-class EmuThread : public QThread
-{
+class EmuThread : public QThread {
     Q_OBJECT
 public:
     explicit EmuThread(QObject *p = 0);
@@ -18,6 +17,7 @@ public:
     void throttleTimerWait();
 
     std::string rom;
+    volatile bool waitForLink;
 
 signals:
     // Debugger
@@ -29,11 +29,16 @@ signals:
     void consoleStr(QString);
     void exited(int);
 
-    void actualSpeedChanged(int actualSpeed);
+    void actualSpeedChanged(int);
+
+    // Save/Restore state
+    void resumed(bool);
+    void restored(bool);
 
 public slots:
     virtual void run() override;
     bool stop();
+    void asicReset();
 
     // Debugging
     void setDebugMode(bool);
@@ -41,7 +46,7 @@ public slots:
     void setDebugStepOverMode();
     void setDebugStepNextMode();
     void setDebugStepOutMode();
-    void debuggerInput(QString str);
+    void debuggerInput(QString);
 
     // Linking
     void setSendState(bool);
@@ -51,20 +56,24 @@ public slots:
     void changeEmuSpeed(int);
     void changeThrottleMode(bool);
 
-private:
-    void setActualSpeed(int value);
+    // Save/Restore
+    bool restore(QString);
+    void save(QString);
 
+private:
+    void setActualSpeed(int);
+
+    int speed, actualSpeed;
     bool enterDebugger = false;
     bool enterSendState = false;
     bool enterReceiveState = false;
     bool throttleOn = true;
-    int speed, actualSpeed;
     std::chrono::steady_clock::time_point lastTime;
-    std::string debugInput;
+    std::string debugInput,snapshotPath;
+    volatile bool doSuspend = false, doResume = false;
 };
 
 // For friends
 extern EmuThread *emu_thread;
-extern volatile bool waitForLink;
 
 #endif

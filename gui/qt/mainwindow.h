@@ -40,6 +40,14 @@ public slots:
     void consoleStr(QString);
     void consoleChar(const char c);
 
+    void resumed(bool success);
+    void restored(bool success);
+
+    bool restoreEmuState();
+    void saveEmuState();
+    void restoreFromFile();
+    void saveToFile();
+
 signals:
     // Debugging
     void debuggerChangedState(bool);
@@ -61,6 +69,10 @@ signals:
     void changedThrottleMode(bool);
 
 private:
+    // Save/Restore
+    void saveToPath(QString path);
+    bool restoreFromPath(QString path);
+
     // Actions
     bool runSetup(void);
     void screenshot(void);
@@ -74,6 +86,9 @@ private:
     void setUIMode(bool);
     void changeBatteryCharging(bool);
     void changeBatteryStatus(int);
+    void setSaveOnClose(bool b);
+    void setRestoreOnOpen(bool b);
+    void changeSnapshotPath();
 
     // Debugger
     void debugCommand();
@@ -162,6 +177,11 @@ private:
 
     // Font
     void setFont(int);
+
+    // Reset
+    void reloadROM();
+
+    // Members
     QString getAddressString(bool &, QString);
 
     Ui::MainWindow *ui = nullptr;
@@ -181,6 +201,8 @@ private:
     bool debuggerOn = false;
     bool inReceivingMode = false;
     bool stderrConsole = false;
+    bool closeAfterSuspend = false;
+    bool isResumed = false;
 
     QList<calc_var_t> vars;
 };

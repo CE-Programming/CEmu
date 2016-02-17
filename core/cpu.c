@@ -21,6 +21,7 @@
 
 #include "cpu.h"
 #include "emu.h"
+#include "mem.h"
 #include "registers.h"
 #include "interrupt.h"
 #include "debug/debug.h"
@@ -401,10 +402,10 @@ static void cpu_return(void) {
     }
     cpu_prefetch(address, mode);
 #ifdef DEBUG_SUPPORT
-    if (cpu_events & EVENT_DEBUG_STEP_OUT &&
+    if (cpuEvents & EVENT_DEBUG_STEP_OUT &&
         (cpu.registers.SPL >= debugger.stepOutSPL ||
          cpu.registers.SPS >= debugger.stepOutSPS)) {
-        cpu_events &= ~EVENT_DEBUG_STEP_OUT;
+        cpuEvents &= ~EVENT_DEBUG_STEP_OUT;
         open_debugger(DBG_STEP, 0);
     }
 #endif
@@ -965,7 +966,7 @@ static void cpu_execute_bli(int y, int z) {
 }
 
 void cpu_init(void) {
-    memset(&cpu, 0, sizeof cpu);
+    cpu_reset();
     gui_console_printf("[CEmu] Initialized CPU...\n");
 }
 
@@ -1036,7 +1037,7 @@ void cpu_execute(void) {
                 cpu_call(cpu_read_word(r->I << 8 | r->R), cpu.MADL);
             }
 #ifdef DEBUG_SUPPORT
-            if (cpu_events & EVENT_DEBUG_STEP) {
+            if (cpuEvents & EVENT_DEBUG_STEP) {
                 break;
             }
 #endif
@@ -1334,8 +1335,8 @@ void cpu_execute(void) {
                                     save_next = cpu.next;
                                     cpu.next = cpu.cycles + 1; // execute one more instruction
 #ifdef DEBUG_SUPPORT
-                                    if (cpu_events & EVENT_DEBUG_STEP) {
-                                        cpu_events &= ~EVENT_DEBUG_STEP;
+                                    if (cpuEvents & EVENT_DEBUG_STEP) {
+                                        cpuEvents &= ~EVENT_DEBUG_STEP;
                                         open_debugger(DBG_STEP, 0);
                                     }
 #endif
@@ -1692,4 +1693,16 @@ void cpu_execute(void) {
             cpu_get_cntrl_data_blocks_format();
         } while (cpu.PREFIX || cpu.SUFFIX || cpu.cycles < cpu.next);
     }
+}
+
+bool cpu_restore(const emu_image *s) {
+    cpu = s->cpu;
+    cpuEvents = s->cpu.cpuEventsState;
+    return true;
+}
+
+bool cpu_save(emu_image *s) {
+    s->cpu = cpu;
+    s->cpu.cpuEventsState = cpuEvents;
+    return true;
 }

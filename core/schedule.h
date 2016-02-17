@@ -35,18 +35,25 @@ typedef struct sched_state {
     uint32_t clockRates[6];
     uint32_t nextCPUtick;
     int nextIndex; /* -1 if no more events this second */
-} sched_state_t;
+} __attribute__((packed)) sched_state_t;
 
+/* Global SCHED state */
 extern sched_state_t sched;
 
+/* Available Functions */
 void sched_reset(void);
 void event_repeat(int index, uint64_t ticks);
 void sched_update_next_event(void);
 void sched_process_pending_events(void);
 void event_clear(int index);
 void event_set(int index, uint64_t ticks);
-uint64_t event_ticks_remaining(int index);
 void sched_set_clocks(int count, uint32_t *new_rates);
+uint64_t event_ticks_remaining(int index);
+
+/* Save/Restore */
+typedef struct emu_image emu_image;
+bool sched_restore(const emu_image*);
+bool sched_save(emu_image*);
 
 #ifdef __cplusplus
 }

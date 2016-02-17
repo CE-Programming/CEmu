@@ -15,7 +15,7 @@ static void ost_event(int index) {
     event_repeat(index, ost_ticks[control.ports[0] & 3]);
 }
 
-static void gpt_restore(int index) {
+static void gpt_restore_state(int index) {
     timer_state_t *timer = &gpt.timer[index -= SCHED_TIMER1];
     uint32_t invert = (gpt.control >> (9 + index) & 1) ? ~0 : 0;
     if (gpt.control >> index * 3 & 1) {
@@ -84,7 +84,7 @@ static void gpt_some(int which, void update(int index)) {
 
 static uint8_t gpt_read(uint16_t address) {
     uint8_t value = 0;
-    gpt_some(address >> 4 & 0b11, gpt_restore);
+    gpt_some(address >> 4 & 0b11, gpt_restore_state);
     if (address < 0x40) {
         value = ((uint8_t *)&gpt)[address];
     }
@@ -103,7 +103,7 @@ static void gpt_write(uint16_t address, uint8_t value) {
         }
     } else if (address < 0x3C) {
         timer = address >> 4 & 0b11;
-        gpt_some(timer, gpt_restore);
+        gpt_some(timer, gpt_restore_state);
         ((uint8_t *)&gpt)[address] = value;
         gpt_some(timer, gpt_refresh);
     }
@@ -131,4 +131,14 @@ eZ80portrange_t init_gpt(void) {
     gpt.revision = 0x00010801;
     gui_console_printf("[CEmu] Initialized GP timers...\n");
     return device;
+}
+
+bool gpt_save(emu_image *s) {
+    s->gpt = gpt;
+    return true;
+}
+
+bool gpt_restore(const emu_image *s) {
+    gpt = s->gpt;
+    return true;
 }

@@ -74,3 +74,13 @@ eZ80portrange_t init_flash(void) {
     gui_console_printf("[CEmu] Initialized Flash Chip...\n");
     return device;
 }
+
+bool flash_save(emu_image *s) {
+    s->flash = flash;
+    return true;
+}
+
+bool flash_restore(const emu_image *s) {
+    flash = s->flash;
+    return true;
+}

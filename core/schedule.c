@@ -63,7 +63,7 @@ void sched_update_next_event(void) {
     /* printf("Next event: (%8d,%d)\n", next_cputick, next_index); */
     cpu.next = sched.nextCPUtick;
 #ifdef DEBUG_SUPPORT
-    if (!cpu.halted && cpu_events & EVENT_DEBUG_STEP) {
+    if (!cpu.halted && cpuEvents & EVENT_DEBUG_STEP) {
         cpu.next = debugger.cpu_cycles + 1;
     }
 #endif
@@ -142,4 +142,14 @@ void sched_set_clocks(int count, uint32_t *new_rates) {
     }
 
     sched_update_next_event();
+}
+
+bool sched_save(emu_image *s) {
+    s->sched = sched;
+    return true;
+}
+
+bool sched_restore(const emu_image *s) {
+    sched = s->sched;
+    return true;
 }

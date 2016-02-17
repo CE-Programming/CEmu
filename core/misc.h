@@ -15,25 +15,26 @@ typedef struct watchdog_state {
     uint32_t status;
     uint32_t intrpt_length;
     uint32_t revision;
-} watchdog_state_t;
+} __attribute__((packed)) watchdog_state_t;
 
 typedef struct protected_state {  /* Standard PROTECTED state */
     bool locked;
     uint8_t led_state;
     uint8_t unknown_ports[0x100];
-} protected_state_t;
+} __attribute__((packed)) protected_state_t;
+
 typedef struct cxxx_state {
     uint8_t ports[0x100];         /* Standard CXXX state */
-} cxxx_state_t;
+} __attribute__((packed)) cxxx_state_t;
 typedef struct dxxx_state {       /* Standard DXXX state */
     uint8_t dummy;                /* Silence warning, remove if other fields are added. */
-} dxxx_state_t;
+} __attribute__((packed)) dxxx_state_t;
 typedef struct exxx_state {
     uint8_t ports[0x80];          /* Standard EXXX state */
-} exxx_state_t;
+} __attribute__((packed)) exxx_state_t;
 typedef struct fxxx_state {       /* Standard FXXX state */
     uint8_t dummy;                /* Silence warning, remove if other fields are added. */
-} fxxx_state_t;
+} __attribute__((packed)) fxxx_state_t;
 
 extern watchdog_state_t watchdog;   /* Global WATCHDOG state */
 extern protected_state_t protect;   /* Global PROTECT state */
@@ -50,6 +51,19 @@ eZ80portrange_t init_cxxx(void);
 eZ80portrange_t init_dxxx(void);
 eZ80portrange_t init_exxx(void);
 eZ80portrange_t init_fxxx(void);
+
+/* Save/Restore */
+typedef struct emu_image emu_image;
+bool watchdog_restore(const emu_image*);
+bool watchdog_save(emu_image*);
+bool protect_restore(const emu_image*);
+bool protect_save(emu_image*);
+bool cxxx_restore(const emu_image*);
+bool cxxx_save(emu_image*);
+bool dxxx_restore(const emu_image*);
+bool dxxx_save(emu_image*);
+bool exxx_restore(const emu_image*);
+bool exxx_save(emu_image*);
 
 #ifdef __cplusplus
 }

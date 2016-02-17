@@ -196,3 +196,13 @@ eZ80portrange_t init_rtc(void) {
     gui_console_printf("[CEmu] Initialized RTC...\n");
     return device;
 }
+
+bool rtc_save(emu_image *s) {
+    s->rtc = rtc;
+    return true;
+}
+
+bool rtc_restore(const emu_image *s) {
+    rtc = s->rtc;
+    return true;
+}

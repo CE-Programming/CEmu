@@ -73,3 +73,13 @@ eZ80portrange_t init_backlight(void) {
     gui_console_printf("[CEmu] Initialized Backlight Control...\n");
     return device;
 }
+
+bool backlight_save(emu_image *s) {
+    s->backlight = backlight;
+    return true;
+}
+
+bool backlight_restore(const emu_image *s) {
+    backlight = s->backlight;
+    return true;
+}

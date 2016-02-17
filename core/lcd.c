@@ -21,7 +21,7 @@
 #include "emu.h"
 
 /* Global LCD state */
-lcd_cntrl_state_t lcd;
+lcd_state_t lcd;
 
 static const uint32_t vram_size = 320 * 240 * 2;
 static const uint32_t lcd_dma_size = 0x80000;
@@ -292,4 +292,14 @@ static const eZ80portrange_t device = {
 eZ80portrange_t init_lcd(void) {
     gui_console_printf("[CEmu] Initialized LCD...\n");
     return device;
+}
+
+bool lcd_save(emu_image *s) {
+    s->lcd = lcd;
+    return true;
+}
+
+bool lcd_restore(const emu_image *s) {
+    lcd = s->lcd;
+    return true;
 }

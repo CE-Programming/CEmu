@@ -107,7 +107,7 @@ void open_debugger(int reason, uint32_t data) {
     gui_debugger_entered_or_left(inDebugger = false);
     cpu.next = debugger.cpu_next;
     cpu.cycles = debugger.cpu_cycles;
-    if (cpu_events & EVENT_DEBUG_STEP) {
+    if (cpuEvents & EVENT_DEBUG_STEP) {
         cpu.next = debugger.cpu_cycles + 1;
     }
 }

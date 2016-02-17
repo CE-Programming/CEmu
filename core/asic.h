@@ -25,7 +25,7 @@ typedef struct asic_state {
 
     mem_state_t* mem;
     eZ80cpu_t *cpu;
-} asic_state_t;
+} __attribute__((packed)) asic_state_t;
 
 /* External Global ASIC state */
 extern asic_state_t asic;
@@ -40,6 +40,11 @@ ti_device_type get_device_type(void);
 bool calc_is_off(void);
 
 uint32_t set_cpu_clock_rate(uint32_t new_rate);
+
+/* Save/Restore */
+typedef struct emu_image emu_image;
+bool asic_restore(const emu_image*);
+bool asic_save(emu_image*);
 
 #ifdef __cplusplus
 }

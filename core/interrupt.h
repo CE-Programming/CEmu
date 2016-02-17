@@ -31,7 +31,7 @@ typedef struct interrupt_request {
 typedef struct interrupt_state {
     uint32_t status;
     interrupt_request_t request[2];
-} interrupt_state_t;
+} __attribute__((packed)) interrupt_state_t;
 
 /* External INTERRUPT state */
 extern interrupt_state_t intrpt;
@@ -41,6 +41,11 @@ eZ80portrange_t init_intrpt(void);
 void intrpt_reset(void);
 void intrpt_pulse(uint32_t int_num);
 void intrpt_set(uint32_t int_num, bool set);
+
+/* Save/Restore */
+typedef struct emu_image emu_image;
+bool intrpt_restore(const emu_image*);
+bool intrpt_save(emu_image*);
 
 #ifdef __cplusplus
 }
