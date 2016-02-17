@@ -152,9 +152,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->emulationSpeed, &QSlider::valueChanged, this, &MainWindow::changeEmulatedSpeed);
     connect(ui->checkThrottle, &QCheckBox::stateChanged, this, &MainWindow::changeThrottleMode);
     connect(ui->lcdWidget, &QWidget::customContextMenuRequested, this, &MainWindow::screenContextMenu);
-    connect(ui->checkRestore, &QCheckBox::stateChanged, this, &MainWindow::setRestoreOnOpen);
-    connect(ui->checkSave, &QCheckBox::stateChanged, this, &MainWindow::setSaveOnClose);
-    connect(ui->buttonChangeSavedImagePath, &QPushButton::clicked, this, &MainWindow::changeImagePath);
     connect(this, &MainWindow::changedEmuSpeed, &emu, &EmuThread::changeEmuSpeed);
     connect(this, &MainWindow::changedThrottleMode, &emu, &EmuThread::changeThrottleMode);
     connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showActualSpeed, Qt::QueuedConnection);
@@ -205,9 +202,9 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     changeEmulatedSpeed(settings->value(QStringLiteral("emuRate"), 10).toUInt());
     alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toUInt());
     setFont(settings->value(QStringLiteral("textSize"), 9).toUInt());
-    autoCheckForUpdates(settings->value(QStringLiteral("autoUpdate"), 0).toBool());
-    setSaveOnClose(settings->value(QStringLiteral("saveOnClose"), 0).toBool());
-    setRestoreOnOpen(settings->value(QStringLiteral("restoreOnOpen"), 0).toBool());
+    autoCheckForUpdates(settings->value(QStringLiteral("autoUpdate"), false).toBool());
+    ui->checkSave->setChecked(settings->value(QStringLiteral("saveOnClose"), false).toBool());
+    ui->checkRestore->setChecked(settings->value(QStringLiteral("restoreOnOpen"), false).toBool());
 
     currentDir.setPath((settings->value(QStringLiteral("currDir"), QDir::homePath()).toString()));
     if(!settings->value(QStringLiteral("savedImagePath")).toString().isEmpty()) {
@@ -219,12 +216,10 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
         isResumed = restoreEmuState();
     }
 
-    if (!isResumed) {
-        if (fileExists(emu.rom)) {
-            emu.start();
-        } else if (!runSetup()) {
-            exit(0);
-        }
+    if (fileExists(emu.rom) && !isResumed) {
+        emu.start();
+    } else if (!runSetup()) {
+        exit(0);
     }
 
     QString currKeyMap = settings->value(QStringLiteral("keyMap"), "cemu").toString();
@@ -265,12 +260,6 @@ MainWindow::~MainWindow() {
     delete ui;
 }
 
-void MainWindow::changeImagePath() {
-    QString saveImagePath = QFileDialog::getSaveFileName(this, tr("Select saved image to restore from"));
-    settings->setValue(QStringLiteral("savedImagePath"), QVariant(saveImagePath.toStdString().c_str()));
-    ui->savedImagePath->setText(saveImagePath);
-}
-
 bool MainWindow::restoreEmuState() {
     QString default_savedImage = settings->value(QStringLiteral("savedImagePath")).toString();
     if(!default_savedImage.isEmpty()) {
@@ -295,13 +284,11 @@ bool MainWindow::restoreFromPath(QString path) {
 }
 
 void MainWindow::setSaveOnClose(bool b) {
-    ui->checkSave->setChecked(b);
-    settings->setValue(QStringLiteral("saveOnClose"), b);
+    settings->setValue(QStringLiteral("suspendOnClose"), b);
 }
 
 void MainWindow::setRestoreOnOpen(bool b) {
-    ui->checkRestore->setChecked(b);
-    settings->setValue(QStringLiteral("restoreOnOpen"), b);
+    settings->setValue(QStringLiteral("resumeOnOpen"), b);
 }
 
 void MainWindow::saveEmuState() {
@@ -347,9 +334,9 @@ void MainWindow::saved(bool success) {
         QMessageBox::warning(this, tr("Could not save"), tr("Saving failed.\nFix it."));
     }
 
-    if(closeAfterSave) {
+    if(closeAfterSuspend) {
         if(!success) {
-            closeAfterSave = false;
+            closeAfterSuspend = false;
         } else {
             this->close();
         }
@@ -402,8 +389,8 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *e) {
 
 void MainWindow::closeEvent(QCloseEvent *e) {
 
-    if (!closeAfterSave && settings->value(QStringLiteral("saveOnClose")).toBool()) {
-            closeAfterSave = true;
+    if (!closeAfterSuspend && settings->value(QStringLiteral("saveOnClose")).toBool()) {
+            closeAfterSuspend = true;
             qDebug("Saving...");
             saveEmuState();
             e->ignore();
