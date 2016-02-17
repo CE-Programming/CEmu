@@ -28,19 +28,15 @@ static const uint32_t lcd_dma_size = 0x80000;
 
 void (*lcd_event_gui_callback)(void) = NULL;
 
-uint_fast32_t lcd_nextword(uint32_t **in) {
-    uint8_t *inb = (uint8_t *) *in;
-    if (inb <= (mem.ram.block + ram_size - 4)) {
-        return *(*in)++;
+inline uint_fast32_t lcd_nextword(uint32_t **ofs) {
+    uint_fast32_t _ofs = (uint_fast32_t) ((*ofs)++);
+    if (_ofs < ram_size) {
+        return *(uint32_t *) (mem.ram.block + _ofs);
     }
-    if (inb <= (mem.ram.block + ram_size)) {
-        return *((uint32_t *) (mem.ram.block + ram_size - 4)) >> (((int) (*in)++ & 3) << 3);
+    if (_ofs == lcd_dma_size) {
+        *ofs = 0;
     }
-    if (inb <= (mem.ram.block + lcd_dma_size - 4)) {
-        (*in)++;
-        return 0;
-    }
-    return *((uint32_t *) mem.ram.block) << (((int) (*in = (uint32_t *) (inb + 4 - lcd_dma_size)) & 3) << 3);
+    return 0;
 }
 
 // #define c6_to_c8(c) ((c * 0xFF + 0x1F) / 0x3F)
@@ -70,7 +66,7 @@ void lcd_drawframe(uint32_t *out) {
     bool bebo = lcd.control & (1 << 9);
     uint_fast32_t words = 320 * 240;
     uint_fast32_t word, color;
-    uint32_t *in = (uint32_t *) (mem.ram.block + ((uint32_t) lcd.upbase & (lcd_dma_size - 1)));
+    uint32_t *ofs = (uint32_t *) ((uint32_t) lcd.upbase & (lcd_dma_size - 8));
 
     if(!mem.ram.block) {
         memset(out, 0, 320 * 240 * 4);
@@ -87,7 +83,7 @@ void lcd_drawframe(uint32_t *out) {
         }
         do {
             uint_fast8_t bitpos = 32;
-            word = lcd_nextword(&in);
+            word = lcd_nextword(&ofs);
             do {
                 color = lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask];
                 lcd_bgr16out(color + (color & 0xFFE0) + (color >> 10 & 0x20), rgb, &out);
@@ -98,7 +94,7 @@ void lcd_drawframe(uint32_t *out) {
     } else if (mode == 4) {
         do {
             uint_fast8_t i = 2;
-            word = lcd_nextword(&in);
+            word = lcd_nextword(&ofs);
             if (bebo) {
                 word = word << 16 | word >> 16;
             }
@@ -112,7 +108,7 @@ void lcd_drawframe(uint32_t *out) {
 
     } else if (mode == 5) {
         do {
-            word = lcd_nextword(&in);
+            word = lcd_nextword(&ofs);
             lcd_bgr16out((word >> 8 & 0xF800) | (word >> 5 & 0x7E0) | (word >> 3 & 0x1F), rgb, &out);
             words--;
         } while (words != 0);
@@ -120,7 +116,7 @@ void lcd_drawframe(uint32_t *out) {
     } else if (mode == 6) {
         do {
             uint_fast8_t i = 2;
-            word = lcd_nextword(&in);
+            word = lcd_nextword(&ofs);
             if (bebo) {
                 word = word << 16 | word >> 16;
             }
@@ -134,7 +130,7 @@ void lcd_drawframe(uint32_t *out) {
     } else {
         do {
             uint_fast8_t i = 2;
-            word = lcd_nextword(&in);
+            word = lcd_nextword(&ofs);
             if (bebo) {
                 word = word << 16 | word >> 16;
             }
