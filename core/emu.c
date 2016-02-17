@@ -131,11 +131,7 @@ bool emu_start(const char *romImage, const char *savedImage) {
             }
             fclose(imageFile);
 
-            sched.items[SCHED_THROTTLE].clock = CLOCK_27M;
-            sched.items[SCHED_THROTTLE].proc = throttle_interval_event;
-
             asic_init();
-            asic_reset();
 
             if(image->version != imageVersion || !asic_restore(image)) {
                 emu_cleanup();
