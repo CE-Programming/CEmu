@@ -269,8 +269,11 @@ void MainWindow::changeImagePath() {
     QString saveImagePath = QFileDialog::getSaveFileName(this, tr("Select saved image to restore from"),
                                                          currentDir.absolutePath(),
                                                          tr("CEmu images (*.ce);;All files (*.*)"));
-    settings->setValue(QStringLiteral("savedImagePath"), QVariant(saveImagePath.toStdString().c_str()));
-    ui->savedImagePath->setText(saveImagePath);
+    if(!saveImagePath.isEmpty()) {
+        currentDir = QFileInfo(saveImagePath).absoluteDir();
+        settings->setValue(QStringLiteral("savedImagePath"), QVariant(saveImagePath.toStdString().c_str()));
+        ui->savedImagePath->setText(saveImagePath);
+    }
 }
 
 bool MainWindow::restoreEmuState() {
@@ -320,6 +323,7 @@ void MainWindow::restoreFromFile() {
                                                       currentDir.absolutePath(),
                                                       tr("CEmu images (*.ce);;All files (*.*)"));
     if(!savedImage.isEmpty()) {
+        currentDir = QFileInfo(savedImage).absoluteDir();
         restoreFromPath(savedImage);
     }
 }
@@ -329,15 +333,17 @@ void MainWindow::saveToFile() {
                                                       currentDir.absolutePath(),
                                                       tr("CEmu images (*.ce);;All files (*.*)"));
     if(!savedImage.isEmpty()) {
+        currentDir = QFileInfo(savedImage).absoluteDir();
         saveToPath(savedImage);
     }
 }
 void MainWindow::exportRom() {
-    QString savedImage = QFileDialog::getSaveFileName(this, tr("Set Rom image to save to"),
+    QString saveRom = QFileDialog::getSaveFileName(this, tr("Set Rom image to save to"),
                                                       currentDir.absolutePath(),
                                                       tr("ROM images (*.rom);;All files (*.*)"));
-    if(!savedImage.isEmpty()) {
-        emu_thread->saveRomImage(savedImage);
+    if(!saveRom.isEmpty()) {
+        currentDir = QFileInfo(saveRom).absoluteDir();
+        emu_thread->saveRomImage(saveRom);
     }
 }
 
