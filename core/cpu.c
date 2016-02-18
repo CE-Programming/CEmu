@@ -690,7 +690,7 @@ static void cpu_execute_bli(int y, int z) {
                     r->DE = cpu_mask_mode((int32_t)r->DE + 1, cpu.L);
                     r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
                     r->flags.N = cpuflag_sign_b(new) != 0;
-                    if (old) {
+                    if (!r->flags.Z) {
                         cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
                     break;
@@ -731,7 +731,7 @@ static void cpu_execute_bli(int y, int z) {
                     r->DE = cpu_mask_mode((int32_t)r->DE - 1, cpu.L);
                     r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
                     r->flags.N = cpuflag_sign_b(new) != 0;
-                    if (old) {
+                    if (!r->flags.Z) {
                         cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
                     break;
@@ -891,7 +891,7 @@ static void cpu_execute_bli(int y, int z) {
                     r->DE = cpu_mask_mode((int32_t)r->DE + 1, cpu.L);
                     r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
                     r->flags.N = cpuflag_sign_b(new) != 0;
-                    if (old) {
+                    if (!r->flags.Z) {
                         cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
                     break;
@@ -955,7 +955,7 @@ static void cpu_execute_bli(int y, int z) {
                     r->DE = cpu_mask_mode((int32_t)r->DE - 1, cpu.L);
                     r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
                     r->flags.N = cpuflag_sign_b(new) != 0;
-                    if (old) {
+                    if (!r->flags.Z) {
                         cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                     }
                     break;
@@ -1617,7 +1617,7 @@ void cpu_execute(void) {
                                                             r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
                                                             r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
                                                             r->flags.N = cpuflag_sign_b(new) != 0;
-                                                            if (old) {
+                                                            if (!r->flags.Z) {
                                                                 cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                                                             }
                                                             break;
@@ -1627,7 +1627,7 @@ void cpu_execute(void) {
                                                             r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
                                                             r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
                                                             r->flags.N = cpuflag_sign_b(new) != 0;
-                                                            if (old) {
+                                                            if (!r->flags.Z) {
                                                                 cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                                                             }
                                                             break;
@@ -1643,7 +1643,7 @@ void cpu_execute(void) {
                                                             r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
                                                             r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
                                                             r->flags.N = cpuflag_sign_b(new) != 0;
-                                                            if (old) {
+                                                            if (!r->flags.Z) {
                                                                 cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                                                             }
                                                             break;
@@ -1653,7 +1653,7 @@ void cpu_execute(void) {
                                                             r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
                                                             r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
                                                             r->flags.N = cpuflag_sign_b(new) != 0;
-                                                            if (old) {
+                                                            if (!r->flags.Z) {
                                                                 cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
                                                             }
                                                             break;
