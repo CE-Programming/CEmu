@@ -59,6 +59,9 @@ static uint8_t cpu_fetch_byte(void) {
     if ((debugger.data.block[cpu.registers.PC] & (DBG_EXEC_BREAKPOINT | DBG_RUN_UNTIL_BREAKPOINT))
             || ((debugger.data.block[cpu.registers.PC] & DBG_STEP_OVER_BREAKPOINT)
                 && (cpu.ADL ? cpu.registers.SPL >= debugger.stepOutSPL : cpu.registers.SPS >= debugger.stepOutSPS))) {
+        if ((debugger.data.block[cpu.registers.PC] & DBG_STEP_OVER_BREAKPOINT)) {
+            debug_clear_step_over();
+        }
         open_debugger((debugger.data.block[cpu.registers.PC] & DBG_EXEC_BREAKPOINT) ? HIT_EXEC_BREAKPOINT : DBG_STEP,
                       cpu.registers.PC);
     }
