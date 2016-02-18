@@ -1675,7 +1675,7 @@ void MainWindow::reloadROM() {
     if (emu.stop()) {
         emu.start();
         if(debuggerOn) {
-            emit setDebugStepInMode();
+            changeDebuggerState();
         }
         qDebug("Reset Successful.");
     } else {
