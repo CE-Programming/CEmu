@@ -253,10 +253,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     debugger_init();
 
     alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toUInt());
-    settings->beginGroup("Window State");
     restoreGeometry(settings->value(QStringLiteral("windowGeometry")).toByteArray());
     restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
-    settings->endGroup();
 }
 
 MainWindow::~MainWindow() {
