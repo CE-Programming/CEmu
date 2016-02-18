@@ -330,9 +330,7 @@ static void emu_main_loop_inner(void) {
         if (cpuEvents & EVENT_RESET) {
             gui_console_printf("[CEmu] Calculator reset triggered...");
             asic_reset();
-            if (!inDebugger) {
-                cpuEvents = EVENT_NONE;
-            }
+            cpuEvents = EVENT_NONE;
         }
 #ifdef DEBUG_SUPPORT
         if (!cpu.halted && (cpuEvents & (EVENT_DEBUG_STEP| EVENT_RESET))) {
