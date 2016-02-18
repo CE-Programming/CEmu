@@ -1,5 +1,7 @@
 #ifdef DEBUG_SUPPORT
 
+#include <stdio.h>
+
 #include "debug.h"
 #include "disasm.h"
 #include "../mem.h"
@@ -147,6 +149,7 @@ void debug_clear_step_over(void) {
             debugger.data.block[i & 0xFFFF] &= ~DBG_STEP_OVER_BREAKPOINT;
         }
         debugger.stepOverInstrEnd = -1;
+        fprintf(stderr, "[debug_clear_step_over] Cleared step over\n");
     }
 }
 
