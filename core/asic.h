@@ -21,7 +21,7 @@ extern "C" {
 #include "sha256.h"
 
 typedef struct asic_state {
-    ti_device_type deviceType;
+    ti_device_t deviceType;
     eZ80portrange_t portRange[0x10];    /* 0x0-0xF */
 
     mem_state_t* mem;
@@ -36,8 +36,8 @@ void asic_init(void);
 void asic_free(void);
 void asic_reset(void);
 
-void set_device_type(ti_device_type device);
-ti_device_type get_device_type(void);
+void set_device_type(ti_device_t device);
+ti_device_t get_device_type(void);
 bool calc_is_off(void);
 
 uint32_t set_cpu_clock_rate(uint32_t new_rate);

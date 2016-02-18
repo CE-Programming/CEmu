@@ -24,7 +24,7 @@ extern "C" {
 
 typedef struct emu_image {
     uint32_t version; // 0xCECEXXXX - XXXX is version number if the core is changed
-    ti_device_type deviceType;
+    ti_device_t deviceType;
     eZ80cpu_t cpu;
     usb_state_t usb;
     flash_state_t flash;

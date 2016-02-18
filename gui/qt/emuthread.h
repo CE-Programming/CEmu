@@ -78,7 +78,9 @@ private:
     bool throttleOn = true;
     std::chrono::steady_clock::time_point lastTime;
     std::string debugInput,imagePath,exportRomPath;
-    volatile bool saveImage = false,saveRom = false,doRestore = false;
+    volatile bool saveImage = false;
+    volatile bool saveRom = false;
+    volatile bool doRestore = false;
 };
 
 // For friends

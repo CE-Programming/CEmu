@@ -242,7 +242,7 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>Send files to calcualtor...</string>
+             <string>Send files to calculator...</string>
             </property>
            </widget>
           </item>
@@ -1176,7 +1176,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QRadioButton" name="radioPindurTIKeys">
+            <widget class="QRadioButton" name="radiojsTIfiedKeys">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -1184,23 +1184,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string notr="true">PindurTI</string>
-             </property>
-             <property name="autoExclusive">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QRadioButton" name="radioSmartViewKeys">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string notr="true">SmartView</string>
+              <string notr="true">jsTIfied</string>
              </property>
              <property name="autoExclusive">
               <bool>true</bool>
@@ -1387,7 +1371,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>2</number>
           </property>
           <property name="tabsClosable">
            <bool>false</bool>
@@ -1589,6 +1573,9 @@
               <property name="focusPolicy">
                <enum>Qt::NoFocus</enum>
               </property>
+              <property name="sizeAdjustPolicy">
+               <enum>QAbstractScrollArea::AdjustIgnored</enum>
+              </property>
               <property name="editTriggers">
                <set>QAbstractItemView::AllEditTriggers</set>
               </property>
@@ -1610,6 +1597,9 @@
               <property name="cornerButtonEnabled">
                <bool>false</bool>
               </property>
+              <attribute name="horizontalHeaderCascadingSectionResizes">
+               <bool>true</bool>
+              </attribute>
               <attribute name="horizontalHeaderDefaultSectionSize">
                <number>75</number>
               </attribute>
@@ -1626,6 +1616,9 @@
                <bool>false</bool>
               </attribute>
               <attribute name="verticalHeaderVisible">
+               <bool>false</bool>
+              </attribute>
+              <attribute name="verticalHeaderCascadingSectionResizes">
                <bool>false</bool>
               </attribute>
               <attribute name="verticalHeaderDefaultSectionSize">
@@ -1749,7 +1742,7 @@
                <enum>Qt::NoFocus</enum>
               </property>
               <property name="horizontalScrollBarPolicy">
-               <enum>Qt::ScrollBarAlwaysOff</enum>
+               <enum>Qt::ScrollBarAsNeeded</enum>
               </property>
               <property name="sizeAdjustPolicy">
                <enum>QAbstractScrollArea::AdjustIgnored</enum>
@@ -1793,6 +1786,9 @@
               <property name="cornerButtonEnabled">
                <bool>false</bool>
               </property>
+              <attribute name="horizontalHeaderCascadingSectionResizes">
+               <bool>true</bool>
+              </attribute>
               <attribute name="horizontalHeaderDefaultSectionSize">
                <number>75</number>
               </attribute>
@@ -1809,6 +1805,9 @@
                <bool>false</bool>
               </attribute>
               <attribute name="verticalHeaderVisible">
+               <bool>false</bool>
+              </attribute>
+              <attribute name="verticalHeaderCascadingSectionResizes">
                <bool>false</bool>
               </attribute>
               <attribute name="verticalHeaderDefaultSectionSize">

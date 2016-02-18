@@ -80,6 +80,9 @@ void asic_init(void) {
     asic.mem = &mem;
     asic.cpu = &cpu;
 
+    sched.clockRates[CLOCK_CPU] = 6000000;
+    sched.clockRates[CLOCK_APB] = 50000000;
+
     plug_devices();
     gui_console_printf("[CEmu] Initialized ASIC...\n");
 }
@@ -96,19 +99,19 @@ void asic_free(void) {
 void asic_reset(void) {
     unsigned int i;
 
-    sched.clockRates[CLOCK_CPU] = 48000000;
-    sched.clockRates[CLOCK_APB] = 48000000;
+    sched.clockRates[CLOCK_CPU] = 6000000;
+    sched.clockRates[CLOCK_APB] = 50000000;
 
     for(i = 0; i < reset_proc_count; i++) {
         reset_procs[i]();
     }
 }
 
-void set_device_type(ti_device_type device) {
+void set_device_type(ti_device_t device) {
     asic.deviceType = device;
 }
 
-ti_device_type get_device_type(void) {
+ti_device_t get_device_type(void) {
     return asic.deviceType;
 }
 
@@ -138,13 +141,13 @@ bool asic_restore(const emu_image *s) {
            && watchdog_restore(s)
            && protect_restore(s)
            && rtc_restore(s)
-           && sched_restore(s)
            && sha256_restore(s)
            && gpt_restore(s)
            && usb_restore(s)
            && cxxx_restore(s)
            && dxxx_restore(s)
-           && exxx_restore(s);
+           && exxx_restore(s)
+           && sched_restore(s);
 }
 
 bool asic_save(emu_image *s) {
@@ -161,11 +164,11 @@ bool asic_save(emu_image *s) {
            && watchdog_save(s)
            && protect_save(s)
            && rtc_save(s)
-           && sched_save(s)
            && sha256_save(s)
            && gpt_save(s)
            && usb_save(s)
            && cxxx_save(s)
            && dxxx_save(s)
-           && exxx_save(s);
+           && exxx_save(s)
+           && sched_save(s);
 }
