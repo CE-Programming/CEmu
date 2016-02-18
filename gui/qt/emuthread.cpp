@@ -168,7 +168,7 @@ void EmuThread::setDebugStepNextMode() {
 }
 
 void EmuThread::setDebugStepOutMode() {
-    debugger.stepOverInstrEnd = -1;
+    debug_clear_step_over();
     debugger.stepOutSPL = cpu.registers.SPL + 1;
     debugger.stepOutSPS = cpu.registers.SPS + 1;
     fprintf(stderr, "[setDebugStepOutMode] stepOverInstrEnd=0x%08x\n", debugger.stepOverInstrEnd);
