@@ -111,8 +111,8 @@ static void gpt_write(uint16_t address, uint8_t value) {
 
 void gpt_reset() {
     int timer;
-    memset(&gpt, 0, sizeof gpt - sizeof gpt.revision);
-    for (timer = SCHED_TIMER1; timer <= SCHED_TIMER3; timer++) {
+    memset(&gpt, 0, sizeof(gpt) - sizeof(gpt.revision));
+    for(timer = SCHED_TIMER1; timer <= SCHED_TIMER3; timer++) {
         gpt_refresh(timer);
         sched.items[timer].proc = gpt_event;
     }

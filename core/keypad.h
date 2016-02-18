@@ -8,7 +8,7 @@ extern "C" {
 #include "apb.h"
 
 /* Standard KEYPAD state */
-typedef struct keypad_state {
+PACK(typedef struct keypad_state {
     union {
         struct {
             uint8_t  mode     : 2;
@@ -30,7 +30,7 @@ typedef struct keypad_state {
     uint16_t key_map[16];
     uint32_t gpio_status;
     uint32_t gpio_enable;
-} __attribute__((packed)) keypad_state_t;
+}) keypad_state_t;
 
 /* Global KEYPAD state */
 extern keypad_state_t keypad;

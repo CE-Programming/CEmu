@@ -7,7 +7,7 @@ extern "C" {
 
 #include "apb.h"
 
-typedef struct watchdog_state {
+PACK(typedef struct watchdog_state {
     uint32_t count;              /* Standard WATCHDOG state */
     uint32_t load;
     uint16_t restart;
@@ -15,26 +15,26 @@ typedef struct watchdog_state {
     uint32_t status;
     uint32_t intrpt_length;
     uint32_t revision;
-} __attribute__((packed)) watchdog_state_t;
+}) watchdog_state_t;
 
-typedef struct protected_state {  /* Standard PROTECTED state */
+PACK(typedef struct protected_state {  /* Standard PROTECTED state */
     bool locked;
     uint8_t led_state;
     uint8_t unknown_ports[0x100];
-} __attribute__((packed)) protected_state_t;
+}) protected_state_t;
 
-typedef struct cxxx_state {
+PACK(typedef struct cxxx_state {
     uint8_t ports[0x100];         /* Standard CXXX state */
-} __attribute__((packed)) cxxx_state_t;
-typedef struct dxxx_state {       /* Standard DXXX state */
+}) cxxx_state_t;
+PACK(typedef struct dxxx_state {       /* Standard DXXX state */
     uint8_t dummy;                /* Silence warning, remove if other fields are added. */
-} __attribute__((packed)) dxxx_state_t;
-typedef struct exxx_state {
+}) dxxx_state_t;
+PACK(typedef struct exxx_state {
     uint8_t ports[0x80];          /* Standard EXXX state */
-} __attribute__((packed)) exxx_state_t;
-typedef struct fxxx_state {       /* Standard FXXX state */
+}) exxx_state_t;
+PACK(typedef struct fxxx_state {       /* Standard FXXX state */
     uint8_t dummy;                /* Silence warning, remove if other fields are added. */
-} __attribute__((packed)) fxxx_state_t;
+}) fxxx_state_t;
 
 extern watchdog_state_t watchdog;   /* Global WATCHDOG state */
 extern protected_state_t protect;   /* Global PROTECT state */

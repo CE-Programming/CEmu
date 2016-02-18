@@ -22,9 +22,9 @@ extern "C" {
 #include "timers.h"
 #include "control.h"
 
-typedef struct emu_image {
+PACK(typedef struct emu_image {
     uint32_t version; // 0xCECEXXXX - XXXX is version number if the core is changed
-    ti_device_type deviceType;
+    ti_device_t deviceType;
     eZ80cpu_t cpu;
     usb_state_t usb;
     flash_state_t flash;
@@ -46,7 +46,7 @@ typedef struct emu_image {
     mem_state_t mem;
     uint8_t mem_flash[flash_size];
     uint8_t mem_ram[ram_size];
-} __attribute__((packed)) emu_image_t;
+}) emu_image_t;
 
 /* CPU events */
 extern uint32_t cpuEvents;

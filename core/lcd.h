@@ -8,7 +8,7 @@ extern "C" {
 #include "apb.h"
 
 /* Standard LCD state */
-typedef struct lcd_cntrl_state {
+PACK(typedef struct lcd_cntrl_state {
     uint32_t timing[4];
 
     uint32_t control;     /* Control register */
@@ -22,12 +22,12 @@ typedef struct lcd_cntrl_state {
     uint32_t lpcurr;        /* Lower panel current frame address register */
 
     /* 256x16-bit color palette registers */
-    /* 256 palette entries organized as 128 locations of two entries per word (+1 for sanitization) */
+    /* 256 palette entries organized as 128 locations of two entries per word */
     uint16_t palette[0x100];
 
 
     /* Cursor image RAM registers (TODO) */
-    /* 256-word wide values defining images overlaid by the hw cursor mechanism (+1 for sanitization) */
+    /* 256-word wide values defining images overlaid by the hw cursor mechanism */
     uint32_t crsrImage[0x100];
     uint32_t crsrControl;           /* Cursor control register */
     uint32_t crsrConfig;         /* Cursor configuration register */
@@ -42,7 +42,7 @@ typedef struct lcd_cntrl_state {
 
     /* Internal Use */
     uint32_t framebuffer[320*240];
-} __attribute__((packed)) lcd_state_t;
+}) lcd_state_t;
 
 /* Global LCD state */
 extern lcd_state_t lcd;

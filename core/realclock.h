@@ -8,7 +8,7 @@ extern "C" {
 #include <time.h>
 #include "apb.h"
 
-typedef struct rtc_state {
+PACK(typedef struct rtc_state {
     /* Previos second counter */
     time_t prevSec;
 
@@ -32,7 +32,7 @@ typedef struct rtc_state {
              holdDay;
 
     uint32_t revision;
-} __attribute__((packed)) rtc_state_t;
+}) rtc_state_t;
 
 /* Global GPT state */
 extern rtc_state_t rtc;

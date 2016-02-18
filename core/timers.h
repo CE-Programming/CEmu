@@ -12,10 +12,10 @@ typedef struct timer_state {
 } timer_state_t;
 
 /* Standard GPT state */
-typedef struct general_timers_state {
+PACK(typedef struct general_timers_state {
     timer_state_t timer[3];
     uint32_t control, status, mask, revision;
-} __attribute__((packed)) general_timers_state_t;
+}) general_timers_state_t;
 
 /* Global GPT state */
 extern general_timers_state_t gpt;

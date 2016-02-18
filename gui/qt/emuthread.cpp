@@ -100,7 +100,7 @@ void EmuThread::debuggerInput(QString str) {
     debugCallback(debugInput.c_str());
 }
 
-void EmuThread::asicReset() {
+void EmuThread::resetTriggered() {
     cpuEvents |= EVENT_RESET;
 }
 
@@ -170,13 +170,13 @@ void gui_set_busy(bool busy) {
 void EmuThread::doStuff() {
     std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
 
-    if(saveImage) {
+    if (saveImage) {
         bool success = emu_save(imagePath.c_str());
         saveImage = false;
         emit saved(success);
     }
 
-    if(saveRom) {
+    if (saveRom) {
         bool success = emu_save_rom(exportRomPath.c_str());
         saveRom = false;
         emit saved(success);

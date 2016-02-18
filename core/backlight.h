@@ -7,10 +7,10 @@ extern "C" {
 
 #include "apb.h"
 
-typedef struct backlight_state {
+PACK(typedef struct backlight_state {
     uint8_t ports[0x100];
     uint8_t brightness;
-} __attribute__((packed)) backlight_state_t;
+}) backlight_state_t;
 
 /* Global BACKLIGHT state */
 extern backlight_state_t backlight;

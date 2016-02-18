@@ -16,7 +16,7 @@ enum {
     BATTERY_4
 };
 
-typedef struct control_state {
+PACK(typedef struct control_state {
     uint8_t ports[0x80];
     uint8_t cpuSpeed;
     bool noPlugAInserted;
@@ -27,7 +27,7 @@ typedef struct control_state {
     bool batteryCharging;
 
     uint32_t privileged;
-} __attribute__((packed)) control_state_t;
+}) control_state_t;
 
 /* Global CONTROL state */
 extern control_state_t control;

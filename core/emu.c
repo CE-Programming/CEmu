@@ -60,30 +60,32 @@ bool emu_save_rom(const char *file) {
 }
 
 bool emu_save(const char *file) {
-    FILE *savedImage = fopen(file, "wb");
+    FILE *savedImage = fopen_utf8(file, "wb");
     size_t size = sizeof(emu_image_t);
     emu_image_t* image = (emu_image_t*)malloc(size);
+    bool success = false;
 
     gui_set_busy(true);
 
-    if (!image) {
-        fclose(savedImage);
-        return false;
-    }
+    do {
+        if (!image) {
+            fclose(savedImage);
+            break;
+        }
 
-    if (!asic_save(image)) {
-        free(image);
-        fclose(savedImage);
-        return false;
-    }
+        if (!asic_save(image)) {
+            free(image);
+            fclose(savedImage);
+            break;
+        }
 
-    image->version = imageVersion;
+        image->version = imageVersion;
 
-    bool success = ((size_t)fwrite(image, size, 1, savedImage) == 1);
+        success = ((size_t)fwrite(image, 1, size, savedImage) == size);
+    } while(0);
 
     free(image);
     fclose(savedImage);
-
     gui_set_busy(false);
 
     return success;
@@ -96,7 +98,7 @@ bool emu_start(const char *romImage, const char *savedImage) {
     gui_set_busy(true);
 
     do {
-        if(savedImage) {
+        if(savedImage != NULL) {
             FILE *imageFile = fopen_utf8(savedImage, "rb");
             emu_image_t *image;
 
@@ -125,11 +127,16 @@ bool emu_start(const char *romImage, const char *savedImage) {
             if(fread(image, lSize, 1, imageFile) != 1) {
                 fclose(imageFile);
                 free(image);
-                return false;
+                break;
             }
             fclose(imageFile);
 
+            sched_reset();
+            sched.items[SCHED_THROTTLE].clock = CLOCK_27M;
+            sched.items[SCHED_THROTTLE].proc = throttle_interval_event;
+
             asic_init();
+            asic_reset();
 
             if(image->version != imageVersion || !asic_restore(image)) {
                 emu_cleanup();
@@ -140,7 +147,7 @@ bool emu_start(const char *romImage, const char *savedImage) {
             ret = true;
         } else {
             asic_init();
-            if (!romImage) {
+            if (romImage == NULL) {
                 gui_console_printf("[CEmu] No ROM image specified.");
                 break;
             } else {
@@ -153,19 +160,17 @@ bool emu_start(const char *romImage, const char *savedImage) {
                         const uint8_t *data;
                         uint32_t outer_field_size;
                         uint32_t data_field_size;
-                        ti_device_type device_type;
+                        ti_device_t device_type;
                         uint32_t offset;
 
                         /* Get ROM file size */
                         if (fseek(romFile, 0L, SEEK_END) < 0) {
                             break;
                         }
-
                         lSize = ftell(romFile);
                         if (lSize < 0) {
                             break;
                         }
-
                         if (fseek(romFile, 0L, SEEK_SET) < 0) {
                             break;
                         }
@@ -270,7 +275,7 @@ bool emu_start(const char *romImage, const char *savedImage) {
                             if (data[1] != 0 && data[1] != 1) {
                                 break;
                             }
-                            device_type = (ti_device_type)(data[1]);
+                            device_type = (ti_device_t)(data[1]);
 
                             /* If we come here, we've found something. */
                             ret = true;
@@ -285,9 +290,6 @@ bool emu_start(const char *romImage, const char *savedImage) {
 
                 if (romFile) {
                     fclose(romFile);
-                }
-                if (!ret) {
-                    emu_cleanup();
                 }
             }
         }
@@ -320,7 +322,6 @@ static void emu_reset(void) {
 
     /* Drain everything */
     cpuEvents = EVENT_NONE;
-    cpu_reset();
 
     sched_update_next_event();
 }
@@ -332,8 +333,8 @@ static void emu_main_loop_inner(void) {
             cpuEvents = EVENT_NONE;
         }
 #ifdef DEBUG_SUPPORT
-        if (!cpu.halted && (cpuEvents & EVENT_DEBUG_STEP)) {
-            cpuEvents &= ~EVENT_DEBUG_STEP;
+        if (!cpu.halted && (cpuEvents & (EVENT_DEBUG_STEP| EVENT_RESET))) {
+            cpuEvents &= ~(EVENT_DEBUG_STEP | EVENT_RESET);
             open_debugger(DBG_STEP, 0);
         }
 #endif
@@ -346,7 +347,7 @@ void emu_loop(bool reset) {
         emu_reset();
     }
 
-  exiting = false;
+    exiting = false;
 
 #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(emu_main_loop_inner, 0, 1);

@@ -51,6 +51,7 @@ public slots:
     void restoreFromFile();
     void saveToFile();
     void exportRom();
+    void changeImagePath();
 
 signals:
     // Debugging
@@ -71,6 +72,9 @@ signals:
     // Speed
     void changedEmuSpeed(int);
     void changedThrottleMode(bool);
+
+    // Reset
+    void resetTriggered();
 
 private:
     // Save/Restore
@@ -127,7 +131,6 @@ private:
 
     // Others
     void screenContextMenu(const QPoint &);
-    void resetCalculator();
     void addEquateFileDialog();
     void addEquateFile(QString);
     void clearEquateFile();
@@ -184,6 +187,7 @@ private:
 
     // Reset
     void reloadROM();
+    void resetCalculator();
 
     // Members
     QString getAddressString(bool &, QString);
@@ -205,7 +209,7 @@ private:
     bool debuggerOn = false;
     bool inReceivingMode = false;
     bool stderrConsole = false;
-    bool closeAfterSuspend = false;
+    bool closeAfterSave = false;
     bool isResumed = false;
 
     QList<calc_var_t> vars;
