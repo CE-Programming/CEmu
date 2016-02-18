@@ -80,9 +80,6 @@ void asic_init(void) {
     asic.mem = &mem;
     asic.cpu = &cpu;
 
-    sched.clockRates[CLOCK_CPU] = 6000000;
-    sched.clockRates[CLOCK_APB] = 50000000;
-
     plug_devices();
     gui_console_printf("[CEmu] Initialized ASIC...\n");
 }
@@ -99,8 +96,8 @@ void asic_free(void) {
 void asic_reset(void) {
     unsigned int i;
 
-    sched.clockRates[CLOCK_CPU] = 6000000;
-    sched.clockRates[CLOCK_APB] = 50000000;
+    sched.clockRates[CLOCK_CPU] = 48000000;
+    sched.clockRates[CLOCK_APB] = 78000000;
 
     for(i = 0; i < reset_proc_count; i++) {
         reset_procs[i]();

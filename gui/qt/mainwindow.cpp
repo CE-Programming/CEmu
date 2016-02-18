@@ -129,7 +129,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->actionExportRomImage, &QAction::triggered, this, &MainWindow::exportRom);
     connect(ui->actionImportCalculatorState, &QAction::triggered, this, &MainWindow::restoreFromFile);
     connect(ui->actionReloadROM, &QAction::triggered, this, &MainWindow::reloadROM);
-    connect(ui->actionResetCalculator, &QAction::triggered, &emu, &EmuThread::asicReset);
+    connect(ui->actionResetCalculator, &QAction::triggered, this, &MainWindow::resetCalculator);
+    connect(this, &MainWindow::resetTriggered, &emu, &EmuThread::resetTriggered);
 
     // Capture
     connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
@@ -2157,4 +2158,11 @@ void MainWindow::addEquateFile(QString fileName) {
         messageBox.critical(0, tr("Error"), tr("Couldn't open this file"));
         messageBox.setFixedSize(500,200);
     }
+}
+
+void MainWindow::resetCalculator() {
+    if(debuggerOn) {
+        changeDebuggerState();
+    }
+    emit resetTriggered();
 }

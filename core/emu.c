@@ -322,7 +322,6 @@ static void emu_reset(void) {
 
     /* Drain everything */
     cpuEvents = EVENT_NONE;
-    cpu_reset();
 
     sched_update_next_event();
 }
@@ -331,11 +330,13 @@ static void emu_main_loop_inner(void) {
         if (cpuEvents & EVENT_RESET) {
             gui_console_printf("[CEmu] Calculator reset triggered...");
             asic_reset();
-            cpuEvents = EVENT_NONE;
+            if (!inDebugger) {
+                cpuEvents = EVENT_NONE;
+            }
         }
 #ifdef DEBUG_SUPPORT
-        if (!cpu.halted && (cpuEvents & EVENT_DEBUG_STEP)) {
-            cpuEvents &= ~EVENT_DEBUG_STEP;
+        if (!cpu.halted && (cpuEvents & (EVENT_DEBUG_STEP| EVENT_RESET))) {
+            cpuEvents &= ~(EVENT_DEBUG_STEP | EVENT_RESET);
             open_debugger(DBG_STEP, 0);
         }
 #endif
@@ -348,7 +349,7 @@ void emu_loop(bool reset) {
         emu_reset();
     }
 
-  exiting = false;
+    exiting = false;
 
 #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(emu_main_loop_inner, 0, 1);

@@ -45,7 +45,7 @@ signals:
 public slots:
     virtual void run() override;
     bool stop();
-    void asicReset();
+    void resetTriggered();
 
     // Debugging
     void setDebugMode(bool);

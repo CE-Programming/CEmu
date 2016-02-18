@@ -73,6 +73,9 @@ signals:
     void changedEmuSpeed(int);
     void changedThrottleMode(bool);
 
+    // Reset
+    void resetTriggered();
+
 private:
     // Save/Restore
     void saveToPath(QString path);
@@ -128,7 +131,6 @@ private:
 
     // Others
     void screenContextMenu(const QPoint &);
-    void resetCalculator();
     void addEquateFileDialog();
     void addEquateFile(QString);
     void clearEquateFile();
@@ -185,6 +187,7 @@ private:
 
     // Reset
     void reloadROM();
+    void resetCalculator();
 
     // Members
     QString getAddressString(bool &, QString);
