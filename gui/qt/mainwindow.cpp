@@ -192,7 +192,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     setAcceptDrops(true);
     debuggerOn = false;
 
-    settings = new QSettings();
+    settings = new QSettings(QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + QStringLiteral("/CEmu/cemu_config.ini"), QSettings::IniFormat);
 
     changeThrottleMode(Qt::Checked);
     emu.rom = settings->value(QStringLiteral("romImage")).toString().toStdString();
@@ -208,16 +208,11 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     currentDir.setPath((settings->value(QStringLiteral("currDir"), QDir::homePath()).toString()));
     if(settings->value(QStringLiteral("savedImagePath")).toString().isEmpty()) {
-        QString path = QDir::cleanPath(QDir::tempPath() + QDir::separator() + QStringLiteral("CEmuImage.ce"));
+        QString path = QDir::cleanPath(QFileInfo(settings->fileName()).absoluteDir().absolutePath() + QStringLiteral("/cemu_image.ce"));
         settings->setValue(QStringLiteral("savedImagePath"),path);
     }
     ui->savedImagePath->setText(settings->value(QStringLiteral("savedImagePath")).toString());
-
-    debugger_init();
-    isResumed = false;
-    if(settings->value(QStringLiteral("restoreOnOpen")).toBool()) {
-        isResumed = restoreEmuState();
-    }
+    emu.imagePath = ui->savedImagePath->text().toStdString();
 
     QString currKeyMap = settings->value(QStringLiteral("keyMap"), "cemu").toString();
     if (QStringLiteral("cemu").compare(currKeyMap, Qt::CaseInsensitive) == 0) {
@@ -239,17 +234,29 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     ui->vatView->cursorState(true);
     ui->opView->cursorState(true);
 
-    if (!isResumed) {
-        if (fileExists(emu.rom)) {
-            emu.start();
-        } else if (!runSetup()) {
+    if (!fileExists(emu.rom)) {
+        if (!runSetup()) {
             exit(0);
         }
     }
 
+    if(settings->value(QStringLiteral("restoreOnOpen")).toBool()) {
+        if (fileExists(emu.imagePath)) {
+            restoreEmuState();
+        } else {
+           emu.start();
+        }
+    } else {
+        emu.start();
+    }
+
+    debugger_init();
+
+    alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toUInt());
+    settings->beginGroup("Window State");
     restoreGeometry(settings->value(QStringLiteral("windowGeometry")).toByteArray());
     restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
-    alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toUInt());
+    settings->endGroup();
 }
 
 MainWindow::~MainWindow() {

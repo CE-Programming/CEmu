@@ -973,7 +973,7 @@ void cpu_reset(void) {
     memset(&cpu.registers, 0, sizeof(eZ80registers_t));
     cpu.IEF1 = cpu.IEF2 = cpu.ADL = cpu.MADL = cpu.IM = cpu.IEF_wait = cpu.halted = cpu.cycles = cpu.next = 0;
     cpu_flush(0, 0);
-    gui_console_printf("[CEmu] CPU Reset.\n");
+    gui_console_printf("[CEmu] CPU reset.\n");
 }
 
 void cpu_flush(uint32_t address, bool mode) {

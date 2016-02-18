@@ -16,7 +16,7 @@ public:
     void doStuff();
     void throttleTimerWait();
 
-    std::string rom;
+    std::string rom, imagePath;
     volatile bool waitForLink;
 
 signals:
@@ -77,7 +77,7 @@ private:
     bool enterReceiveState = false;
     bool throttleOn = true;
     std::chrono::steady_clock::time_point lastTime;
-    std::string debugInput,imagePath,exportRomPath;
+    std::string debugInput,exportRomPath;
     volatile bool saveImage = false;
     volatile bool saveRom = false;
     volatile bool doRestore = false;
