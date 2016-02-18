@@ -10,7 +10,7 @@ volatile bool inDebugger = false;
 debug_state_t debugger;
 
 void debugger_init(void) {
-    debugger.stepOverAddress = -1;
+    debugger.stepOverInstrEnd = -1;
     debugger.data.block = (uint8_t*)calloc(0x1000000, sizeof(uint8_t));    /* Allocate Debug memory */
     debugger.data.ports = (uint8_t*)calloc(0x10000, sizeof(uint8_t));      /* Allocate Debug Port Monitor */
 
@@ -93,11 +93,6 @@ void open_debugger(int reason, uint32_t data) {
     debugger.cpu_next = cpu.next;
     gui_debugger_entered_or_left(inDebugger = true);
 
-    if (debugger.stepOverAddress < 0x1000000) {
-        debugger.data.block[debugger.stepOverAddress] &= ~DBG_STEP_OVER_BREAKPOINT;
-        debugger.stepOverAddress = UINT32_C(0xFFFFFFFF);
-    }
-
     gui_debugger_send_command(reason, data);
 
     do {
@@ -140,6 +135,18 @@ void debug_clear_run_until(void) {
         debugger.data.block[debugger.runUntilAddress] &= ~DBG_RUN_UNTIL_BREAKPOINT;
         debugger.runUntilAddress = 0xFFFFFFFF;
         debugger.runUntilSet = false;
+    }
+}
+
+void debug_clear_step_over(void) {
+    cpuEvents &= ~(EVENT_DEBUG_STEP_OVER | EVENT_DEBUG_STEP_NEXT);
+    if (debugger.stepOverInstrEnd < 0x1000000) {
+        for (int i = debugger.stepOverInstrEnd - debugger.stepOverInstrSize;
+                i <= (int)(debugger.stepOverInstrEnd + debugger.stepOverExtendSize); i++) {
+            debugger.data.block[i & 0xFFFFFF] &= ~DBG_STEP_OVER_BREAKPOINT;
+            debugger.data.block[i & 0xFFFF] &= ~DBG_STEP_OVER_BREAKPOINT;
+        }
+        debugger.stepOverInstrEnd = -1;
     }
 }
 

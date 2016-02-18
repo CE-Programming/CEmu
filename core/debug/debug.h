@@ -51,7 +51,10 @@ typedef struct {
 typedef struct {        /* For debugging */
     int cpu_cycles;
     int cpu_next;
-    uint32_t stepOverAddress;
+    uint32_t stepOverInstrEnd;
+    uint32_t stepOverInstrSize;
+    uint32_t stepOverExtendSize;
+    uint8_t stepOverMode;
     uint32_t stepOutSPL;
     uint16_t stepOutSPS;
     uint32_t runUntilAddress;
@@ -85,6 +88,7 @@ void debug_pmonitor_remove(uint16_t address);
 void debug_set_pc_address(uint32_t address);
 
 void debug_clear_run_until(void);
+void debug_clear_step_over(void);
 
 #ifdef __cplusplus
 }
