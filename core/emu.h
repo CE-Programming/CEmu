@@ -56,9 +56,10 @@ extern uint32_t cpuEvents;
 #ifdef DEBUG_SUPPORT
 #define EVENT_DEBUG_STEP      2
 #define EVENT_DEBUG_STEP_OVER 4
-#define EVENT_DEBUG_STEP_OUT  8
+#define EVENT_DEBUG_STEP_NEXT 8
+#define EVENT_DEBUG_STEP_OUT  16
 #endif
-#define EVENT_WAITING         16
+#define EVENT_WAITING         32
 
 /* Settings */
 extern volatile bool exiting;

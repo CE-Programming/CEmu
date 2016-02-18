@@ -58,15 +58,16 @@ signals:
     void debuggerChangedState(bool);
     void triggerEmuSendState();
     void debugInputRequested();
+    void debuggerCommand(QString);
+    void setDebugStepInMode();
+    void setDebugStepOverMode();
+    void setDebugStepNextMode();
+    void setDebugStepOutMode();
 
     // Linking
     void setSendState(bool);
     void sendVariable(std::string);
     void setReceiveState(bool);
-    void setDebugStepInMode();
-    void setDebugStepOverMode();
-    void setDebugStepNextMode();
-    void setDebugStepOutMode();
 
     // Speed
     void changedEmuSpeed(int);

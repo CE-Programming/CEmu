@@ -19,6 +19,8 @@
 
 #include <string.h>
 
+#include <stdio.h>
+
 #include "cpu.h"
 #include "emu.h"
 #include "mem.h"
@@ -60,8 +62,11 @@ static void cpu_prefetch(uint32_t address, bool mode) {
 static uint8_t cpu_fetch_byte(void) {
     uint8_t value;
 #ifdef DEBUG_SUPPORT
-    if (debugger.data.block[cpu.registers.PC] & (DBG_EXEC_BREAKPOINT | DBG_STEP_OVER_BREAKPOINT | DBG_RUN_UNTIL_BREAKPOINT)) {
-        open_debugger((debugger.data.block[cpu.registers.PC] & DBG_EXEC_BREAKPOINT) ? HIT_EXEC_BREAKPOINT : DBG_STEP, cpu.registers.PC);
+    if ((debugger.data.block[cpu.registers.PC] & (DBG_EXEC_BREAKPOINT | DBG_RUN_UNTIL_BREAKPOINT))
+            || ((debugger.data.block[cpu.registers.PC] & DBG_STEP_OVER_BREAKPOINT)
+                && (cpu.ADL ? cpu.registers.SPL >= debugger.stepOutSPL : cpu.registers.SPS >= debugger.stepOutSPS))) {
+        open_debugger((debugger.data.block[cpu.registers.PC] & DBG_EXEC_BREAKPOINT) ? HIT_EXEC_BREAKPOINT : DBG_STEP,
+                      cpu.registers.PC);
     }
 #endif
     value = cpu.prefetch;
@@ -91,10 +96,36 @@ static uint32_t cpu_fetch_word_no_prefetch(void) {
 }
 
 static uint8_t cpu_read_byte(uint32_t address) {
-    return mem_read_byte(cpu_address_mode(address, cpu.L));
+    uint32_t cpuAddress = cpu_address_mode(address, cpu.L);
+#ifdef DEBUG_SUPPORT
+    if (cpuEvents & EVENT_DEBUG_STEP_OVER) {
+        uint32_t stepOverDist = cpu_mask_mode(cpuAddress - debugger.stepOverInstrEnd, debugger.stepOverMode);
+        if ((stepOverDist < debugger.stepOverExtendSize) && (debugger.stepOverMode
+                || ((cpuAddress & 0xFF0000) == (debugger.stepOverInstrEnd & 0xFF0000)))) {
+            uint32_t stepOverAddress = cpu_mask_mode(cpuAddress + 1, debugger.stepOverMode);
+            debugger.data.block[stepOverAddress] |= DBG_STEP_OVER_BREAKPOINT;
+            fprintf(stderr, "[cpu_read_byte] Added breakpoint at 0x%08x\n", stepOverAddress);
+            if (stepOverDist + 1 == debugger.stepOverExtendSize) {
+                debugger.stepOverExtendSize++;
+            }
+        }
+    }
+#endif
+    return mem_read_byte(cpuAddress);
 }
 static void cpu_write_byte(uint32_t address, uint8_t value) {
-    mem_write_byte(cpu_address_mode(address, cpu.L), value);
+    uint32_t cpuAddress = cpu_address_mode(address, cpu.L);
+#ifdef DEBUG_SUPPORT
+    if (cpuEvents & EVENT_DEBUG_STEP_OVER) {
+        uint32_t stepOverDist = cpu_mask_mode(cpuAddress - (debugger.stepOverInstrEnd - 1), debugger.stepOverMode);
+        if ((stepOverDist <= debugger.stepOverInstrSize) && (debugger.stepOverMode
+                || ((cpuAddress & 0xFF0000) == (debugger.stepOverInstrEnd & 0xFF0000)))) {
+            debugger.data.block[cpuAddress] |= DBG_STEP_OVER_BREAKPOINT;
+            fprintf(stderr, "[cpu_read_byte] Added breakpoint at 0x%08x\n", cpuAddress);
+        }
+    }
+#endif
+    mem_write_byte(cpuAddress, value);
 }
 
 static uint32_t cpu_read_word(uint32_t address) {
@@ -373,6 +404,18 @@ static uint32_t cpu_dec_bc_partial_mode() {
 
 static void cpu_call(uint32_t address, bool mixed) {
     eZ80registers_t *r = &cpu.registers;
+#ifdef DEBUG_SUPPORT
+    if ((cpuEvents & (EVENT_DEBUG_STEP_OVER | EVENT_DEBUG_STEP_OUT)) && (r->PC != debugger.stepOverInstrEnd)) {
+        if (r->SPL >= debugger.stepOutSPL) {
+            debugger.stepOutSPL = r->SPL + 1;
+            fprintf(stderr, "[cpu_call] stepOutSPL=0x%08x\n", debugger.stepOutSPL);
+        }
+        if (r->SPS >= debugger.stepOutSPS) {
+            debugger.stepOutSPS = r->SPS + 1;
+            fprintf(stderr, "[cpu_call] stepOutSPS=0x%08x\n", debugger.stepOutSPS);
+        }
+    }
+#endif
     if (mixed) {
         bool stack = cpu.IL || (cpu.L && !cpu.ADL);
         if (cpu.ADL) {
@@ -402,7 +445,7 @@ static void cpu_trap(void) {
 
 static void cpu_check_step_out(void) {
 #ifdef DEBUG_SUPPORT
-    if (cpuEvents & EVENT_DEBUG_STEP_OUT
+    if ((cpuEvents & EVENT_DEBUG_STEP_OUT)
             && (cpu.ADL ? cpu.registers.SPL >= debugger.stepOutSPL : cpu.registers.SPS >= debugger.stepOutSPS)) {
         cpuEvents &= ~EVENT_DEBUG_STEP_OUT;
         open_debugger(DBG_STEP, 0);
@@ -781,9 +824,17 @@ void cpu_execute(void) {
     while (!exiting) {
     cpu_execute_continue:
         if (cpu.IEF_wait) {
-            cpu.IEF_wait = 0;
-            cpu.IEF1 = cpu.IEF2 = 1;
-            cpu.next = save_next;
+            if (cpu.IEF_wait > 1) {
+                if (cpu.cycles < cpu.next) {
+                    cpu.IEF_wait = 1;
+                    save_next = cpu.next;
+                    cpu.next = cpu.cycles + 1; // execute one more instruction
+                }
+            } else {
+                cpu.IEF_wait = 0;
+                cpu.IEF1 = cpu.IEF2 = 1;
+                cpu.next = save_next;
+            }
         }
         if (cpu.NMI || (cpu.IEF1 && (intrpt.request->status & intrpt.request->enabled))) {
             cpu_clear_mode();
@@ -1099,15 +1150,13 @@ void cpu_execute(void) {
                                     cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = 0;
                                     break;
                                 case 7: // EI
-                                    cpu.IEF_wait = 1;
-                                    save_next = cpu.next;
-                                    cpu.next = cpu.cycles + 1; // execute one more instruction
-#ifdef DEBUG_SUPPORT
-                                    if (cpuEvents & EVENT_DEBUG_STEP) {
-                                        cpuEvents &= ~EVENT_DEBUG_STEP;
-                                        open_debugger(DBG_STEP, 0);
+                                    if (cpu.cycles < cpu.next) {
+                                        cpu.IEF_wait = 1;
+                                        save_next = cpu.next;
+                                        cpu.next = cpu.cycles + 1; // execute one more instruction
+                                    } else {
+                                        cpu.IEF_wait = 2;
                                     }
-#endif
                                     break;
                             }
                             break;

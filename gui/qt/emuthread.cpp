@@ -19,6 +19,8 @@
 #include <cstdarg>
 #include <thread>
 
+#include <stdio.h>
+
 #include <QtCore/QEventLoop>
 #include <QtCore/QTimer>
 
@@ -122,27 +124,56 @@ void EmuThread::setDebugStepInMode() {
 }
 
 void EmuThread::setDebugStepOverMode() {
-    debugger.stepOutSPL = cpu.registers.SPL;
-    debugger.stepOutSPS = cpu.registers.SPS;
-    cpuEvents |= EVENT_DEBUG_STEP_OUT;
-    enterDebugger = false;
-    inDebugger = false;
+    disasm.base_address = cpu.registers.PC;
+    disasm.adl = cpu.ADL;
+    disassembleInstruction();
+    if (disasm.instruction.opcode == "call" || disasm.instruction.opcode == "rst") {
+        debug_clear_step_over();
+        debugger.stepOverInstrEnd = disasm.new_address;
+        debugger.data.block[debugger.stepOverInstrEnd] |= DBG_STEP_OVER_BREAKPOINT;
+        debugger.stepOverMode = cpu.ADL;
+        debugger.stepOutSPL = cpu.registers.SPL;
+        debugger.stepOutSPS = cpu.registers.SPS;
+        fprintf(stderr, "[setDebugStepOverMode] stepOverInstrEnd=0x%08x\n", debugger.stepOverInstrEnd);
+        fprintf(stderr, "[setDebugStepOverMode] Added breakpoint at 0x%08x\n", debugger.stepOverInstrEnd);
+        fprintf(stderr, "[setDebugStepOverMode] stepOverMode=%i\n", debugger.stepOverMode);
+        fprintf(stderr, "[setDebugStepNextMode] stepOutSPL=0x%08x\n", debugger.stepOutSPL);
+        fprintf(stderr, "[setDebugStepNextMode] stepOutSPS=0x%08x\n", debugger.stepOutSPS);
+        cpuEvents |= EVENT_DEBUG_STEP_OVER;
+        enterDebugger = false;
+        inDebugger = false;
+    } else {
+        setDebugStepInMode();
+    }
 }
 
 void EmuThread::setDebugStepNextMode() {
     disasm.base_address = cpu.registers.PC;
     disasm.adl = cpu.ADL;
     disassembleInstruction();
-    debugger.stepOverAddress = disasm.new_address;
-    debugger.data.block[debugger.stepOverAddress] |= DBG_STEP_OVER_BREAKPOINT;
-    cpuEvents |= EVENT_DEBUG_STEP_OVER;
+    debug_clear_step_over();
+    debugger.stepOverInstrEnd = disasm.new_address;
+    debugger.data.block[debugger.stepOverInstrEnd] |= DBG_STEP_OVER_BREAKPOINT;
+    debugger.stepOverMode = cpu.ADL;
+    debugger.stepOutSPL = 0;
+    debugger.stepOutSPS = 0;
+    fprintf(stderr, "[setDebugStepNextMode] stepOverInstrEnd=0x%08x\n", debugger.stepOverInstrEnd);
+    fprintf(stderr, "[setDebugStepNextMode] Added breakpoint at 0x%08x\n", debugger.stepOverInstrEnd);
+    fprintf(stderr, "[setDebugStepNextMode] stepOverMode=%i\n", debugger.stepOverMode);
+    fprintf(stderr, "[setDebugStepNextMode] stepOutSPL=0x%08x\n", debugger.stepOutSPL);
+    fprintf(stderr, "[setDebugStepNextMode] stepOutSPS=0x%08x\n", debugger.stepOutSPS);
+    cpuEvents |= EVENT_DEBUG_STEP_NEXT;
     enterDebugger = false;
     inDebugger = false;
 }
 
 void EmuThread::setDebugStepOutMode() {
+    debugger.stepOverInstrEnd = -1;
     debugger.stepOutSPL = cpu.registers.SPL + 1;
     debugger.stepOutSPS = cpu.registers.SPS + 1;
+    fprintf(stderr, "[setDebugStepOutMode] stepOverInstrEnd=0x%08x\n", debugger.stepOverInstrEnd);
+    fprintf(stderr, "[setDebugStepOutMode] stepOutSPL=0x%08x\n", debugger.stepOutSPL);
+    fprintf(stderr, "[setDebugStepOutMode] stepOutSPS=0x%08x\n", debugger.stepOutSPS);
     cpuEvents |= EVENT_DEBUG_STEP_OUT;
     enterDebugger = false;
     inDebugger = false;
