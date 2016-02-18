@@ -1,0 +1,54 @@
+.nolist
+#include "ti84pce.inc"
+.list
+
+
+.db tExtTok,tAsm84CeCmp
+.org userMem
+
+
+Start:
+	call _RunIndicOff
+	call __ClearVRam
+	ld a,lcdBpp24
+	ld (mpLcdCtrl),a
+	ld ix,vRam
+	ld de,$010000
+	call DrawShades
+	ex de,hl
+	ld d,1				; ld de,$000100
+	call DrawShades
+	ld e,d
+	ld d,l				; ld de,$000001
+	call DrawShades
+	ld de,$010101
+	call DrawShades
+Wait:
+	call _GetCSC
+	or a
+	jr z,Wait
+	jp _DrawStatusBar
+
+DrawShades:
+	ld c,240/2/4
+DrawShades_RowLoop:
+	or a
+	sbc hl,hl
+	ld b,l
+DrawShades_PixelLoop:
+	push hl
+	ld a,b
+	or c
+	and 15
+	jr nz,DrawShades_SkipMark
+	sbc hl,hl
+DrawShades_SkipMark:
+	ld (ix),hl
+	pop hl
+	lea ix,ix+4
+	add hl,de
+	djnz DrawShades_PixelLoop
+	inc ixh				; add ix,(320-64)*4
+	dec c
+	jr nz,DrawShades_RowLoop
+	ret

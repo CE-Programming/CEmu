@@ -1,0 +1,54 @@
+Listing for file "rgb888.ez80"
+    3 00:0000 -  -  -  -  .list
+    4 00:0000 -  -  -  -  
+    5 00:0000 -  -  -  -  
+    6 00:0000 EF 7B -  -  .db tExtTok,tAsm84CeCmp
+    7 00:0002 -  -  -  -  .org userMem
+    8 D1:A881 -  -  -  -  
+    9 D1:A881 -  -  -  -  
+   10 D1:A881 -  -  -  -  Start:
+   11 D1:A881 CD 48 08 02 	call _RunIndicOff
+   12 D1:A885 CD 74 03 00 	call __ClearVRam
+   13 D1:A889 3E 2B -  -  	ld a,lcdBpp24
+   14 D1:A88B 32 18 00 E3 	ld (mpLcdCtrl),a
+   15 D1:A88F DD 21 00 00 
+              D4 -  -  -  	ld ix,vRam
+   16 D1:A894 11 00 00 01 	ld de,$010000
+   17 D1:A898 CD BC A8 D1 	call DrawShades
+   18 D1:A89C EB -  -  -  	ex de,hl
+   19 D1:A89D 16 01 -  -  	ld d,1				; ld de,$000100
+   20 D1:A89F CD BC A8 D1 	call DrawShades
+   21 D1:A8A3 5A -  -  -  	ld e,d
+   22 D1:A8A4 55 -  -  -  	ld d,l				; ld de,$000001
+   23 D1:A8A5 CD BC A8 D1 	call DrawShades
+   24 D1:A8A9 11 01 01 01 	ld de,$010101
+   25 D1:A8AD CD BC A8 D1 	call DrawShades
+   26 D1:A8B1 -  -  -  -  Wait:
+   27 D1:A8B1 CD 4C 01 02 	call _GetCSC
+   28 D1:A8B5 B7 -  -  -  	or a
+   29 D1:A8B6 28 F9 -  -  	jr z,Wait
+   30 D1:A8B8 C3 3C 1A 02 	jp _DrawStatusBar
+   31 D1:A8BC -  -  -  -  
+   32 D1:A8BC -  -  -  -  DrawShades:
+   33 D1:A8BC 0E 1E -  -  	ld c,240/2/4
+   34 D1:A8BE -  -  -  -  DrawShades_RowLoop:
+   35 D1:A8BE B7 -  -  -  	or a
+   36 D1:A8BF ED 62 -  -  	sbc hl,hl
+   37 D1:A8C1 45 -  -  -  	ld b,l
+   38 D1:A8C2 -  -  -  -  DrawShades_PixelLoop:
+   39 D1:A8C2 E5 -  -  -  	push hl
+   40 D1:A8C3 78 -  -  -  	ld a,b
+   41 D1:A8C4 B1 -  -  -  	or c
+   42 D1:A8C5 E6 0F -  -  	and 15
+   43 D1:A8C7 20 02 -  -  	jr nz,DrawShades_SkipMark
+   44 D1:A8C9 ED 62 -  -  	sbc hl,hl
+   45 D1:A8CB -  -  -  -  DrawShades_SkipMark:
+   46 D1:A8CB DD 2F 00 -  	ld (ix),hl
+   47 D1:A8CE E1 -  -  -  	pop hl
+   48 D1:A8CF ED 32 04 -  	lea ix,ix+4
+   49 D1:A8D2 19 -  -  -  	add hl,de
+   50 D1:A8D3 10 ED -  -  	djnz DrawShades_PixelLoop
+   51 D1:A8D5 DD 24 -  -  	inc ixh				; add ix,(320-64)*4
+   52 D1:A8D7 0D -  -  -  	dec c
+   53 D1:A8D8 20 E4 -  -  	jr nz,DrawShades_RowLoop
+   54 D1:A8DA C9 -  -  -  	ret

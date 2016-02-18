@@ -1,0 +1,18 @@
+Pass:
+ - Four vertically stacked red, green, blue, and gray (in that order) 256*30
+   spectrums, originating at (0, 0).
+ - In each spectrum:
+    - Minimum component value of 0x00 on the left, maximum of 0xFF on the right.
+    - Red and blue components should be truncated to 5 bits, then scaled back up
+      to 6 bits, where LSB = MSB. The difference between neighboring 8-pixel-
+      wide stripes should be 2/63, except for 3/63 between the middle two.
+    - Green component should be truncated to 6 bits. The difference between
+      neighboring 4-pixel-wide stripes should be 1/63.
+    - A black pixel in roughly the center of every 16th column.
+ - White filling the 64*120 area to the right of the spectums.
+ - RAM (0xD00000) viewed starting at (256, 204).
+
+Fail:
+ - Somewhat noisy 16-pixel-wide columns, cycling in color through roughly blue,
+   brown, purple, and sandy, from (0, 120) to (319, 203) and (0, 204) to
+   (255, 204). Side effect of DMA..?
