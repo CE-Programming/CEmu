@@ -8,7 +8,7 @@ extern "C" {
 #include "apb.h"
 
 /* Standard LCD state */
-typedef struct lcd_cntrl_state {
+PACK(typedef struct lcd_cntrl_state {
     uint32_t timing[4];
 
     uint32_t control;     /* Control register */
@@ -42,7 +42,7 @@ typedef struct lcd_cntrl_state {
 
     /* Internal Use */
     uint32_t framebuffer[320*240];
-} __attribute__((packed)) lcd_state_t;
+}) lcd_state_t;
 
 /* Global LCD state */
 extern lcd_state_t lcd;

@@ -30,12 +30,12 @@ struct sched_item {
     void (*proc)(int index);
 };
 
-typedef struct sched_state {
+PACK(typedef struct sched_state {
     struct sched_item items[SCHED_NUM_ITEMS];
     uint32_t clockRates[6];
     uint32_t nextCPUtick;
     int nextIndex; /* -1 if no more events this second */
-} __attribute__((packed)) sched_state_t;
+}) sched_state_t;
 
 /* Global SCHED state */
 extern sched_state_t sched;

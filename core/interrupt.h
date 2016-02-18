@@ -28,10 +28,10 @@ typedef struct interrupt_request {
     uint32_t          :  2;
 } interrupt_request_t;
 
-typedef struct interrupt_state {
+PACK(typedef struct interrupt_state {
     uint32_t status;
     interrupt_request_t request[2];
-} __attribute__((packed)) interrupt_state_t;
+}) interrupt_state_t;
 
 /* External INTERRUPT state */
 extern interrupt_state_t intrpt;

@@ -28,7 +28,7 @@ extern "C" {
 #include "apb.h"
 
 /* eZ80 CPU State */
-typedef struct eZ80cpu {
+PACK(typedef ALIGNED_(4) struct eZ80cpu {
     eZ80registers_t registers;
     struct {
         uint8_t NMI         : 1;  /* Non-Maskable interrupt  */
@@ -51,7 +51,7 @@ typedef struct eZ80cpu {
     uint32_t cycles, next;
     uint8_t prefetch, bus;
     uint32_t cpuEventsState;
-} __attribute__((packed, aligned(4))) eZ80cpu_t;
+}) eZ80cpu_t;
 
 /* Externals */
 extern eZ80cpu_t cpu;

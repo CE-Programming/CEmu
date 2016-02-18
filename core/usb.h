@@ -8,9 +8,9 @@ extern "C" {
 #include "apb.h"
 
 /* Standard USB state */
-typedef struct usb_state {
+PACK(typedef struct usb_state {
     uint8_t dummy;
-} __attribute__((packed)) usb_state_t;
+}) usb_state_t;
 
 /* Global GPT state */
 extern usb_state_t usb;
