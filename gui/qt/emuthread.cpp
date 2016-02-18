@@ -138,11 +138,11 @@ void EmuThread::setDebugStepInMode() {
 }
 
 void EmuThread::setDebugStepOverMode() {
+    debug_clear_step_over();
     disasm.base_address = cpu.registers.PC;
     disasm.adl = cpu.ADL;
     disassembleInstruction();
     if (disasm.instruction.opcode == "call" || disasm.instruction.opcode == "rst") {
-        debug_clear_step_over();
         debugger.stepOverInstrEnd = disasm.new_address;
         debugger.data.block[debugger.stepOverInstrEnd] |= DBG_STEP_OVER_BREAKPOINT;
         debugger.stepOverMode = cpu.ADL;
@@ -162,10 +162,10 @@ void EmuThread::setDebugStepOverMode() {
 }
 
 void EmuThread::setDebugStepNextMode() {
+    debug_clear_step_over();
     disasm.base_address = cpu.registers.PC;
     disasm.adl = cpu.ADL;
     disassembleInstruction();
-    debug_clear_step_over();
     debugger.stepOverInstrEnd = disasm.new_address;
     debugger.data.block[debugger.stepOverInstrEnd] |= DBG_STEP_OVER_BREAKPOINT;
     debugger.stepOverMode = cpu.ADL;
