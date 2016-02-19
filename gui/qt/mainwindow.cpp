@@ -1413,15 +1413,16 @@ void MainWindow::updateDisasmView(const int sentBase, const bool newPane) {
     disasm.base_address = -1;
     disasm.new_address = addressPane - ((newPane) ? 0x80 : 0);
     if(disasm.new_address < 0) disasm.new_address = 0;
+    int32_t last_address = disasm.new_address + 0x100;
+    if(last_address > 0xFFFFFF) last_address = 0xFFFFFF;
 
     ui->disassemblyView->clear();
     ui->disassemblyView->clearAllHighlights();
 
     ui->disassemblyView->cursorState(false);
 
-    for(int i=0; i<0x80; i++) {
+    while (disasm.new_address < last_address) {
         drawNextDisassembleLine();
-        if (disasm.new_address > 0xFFFFFF) break;
     }
 
     ui->disassemblyView->cursorState(true);
