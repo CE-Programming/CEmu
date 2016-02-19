@@ -1110,6 +1110,8 @@ void MainWindow::updateDebuggerChanges() {
 
         uint8_t bpp = 0;
         switch(ui->bppView->text().toInt()) {
+            case 1:
+                bpp = 0; break;
             case 2:
                 bpp = 1; break;
             case 4:

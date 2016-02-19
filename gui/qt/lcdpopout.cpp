@@ -6,6 +6,7 @@ LCDPopout::LCDPopout(QWidget *p) : QDialog(p),ui(new Ui::LCDPopout) {
     ui->setupUi(this);
 
     setFixedSize(width(), height());
+    setWindowTitle("LCD Popout");
 
     connect(ui->lineAddress, &QLineEdit::returnPressed, this, &LCDPopout::changeAddress);
     connect(ui->lineBPP, &QLineEdit::returnPressed, this, &LCDPopout::changeBPP);
@@ -69,6 +70,8 @@ void LCDPopout::changeBPP() {
 
     lcdState.control &= ~14;
     switch(ui->lineBPP->text().toInt()) {
+        case 1:
+            bpp = 0; break;
         case 2:
             bpp = 1; break;
         case 4:
