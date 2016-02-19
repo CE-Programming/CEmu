@@ -59,6 +59,7 @@ typedef struct {        /* For debugging */
     uint8_t stepOverMode;
     uint32_t stepOutSPL;
     uint16_t stepOutSPS;
+    int8_t stepOutWait;
     uint32_t runUntilAddress;
     bool runUntilSet;
     debug_data_t data;
