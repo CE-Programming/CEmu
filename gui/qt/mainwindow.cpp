@@ -183,6 +183,22 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     // Auto Updates
     connect(ui->checkUpdates, &QCheckBox::stateChanged, this, &MainWindow::autoCheckForUpdates);
 
+    // Shortcut Connections
+    QShortcut *stepInShortcut = new QShortcut(QKeySequence(Qt::Key_F6), this);
+    QShortcut *stepOverShortcut = new QShortcut(QKeySequence(Qt::Key_F7), this);
+    QShortcut *stepNextShortcut = new QShortcut(QKeySequence(Qt::Key_F8), this);
+    QShortcut *stepOutShortcut = new QShortcut(QKeySequence(Qt::Key_F9), this);
+    QShortcut *DebuggerShortcut = new QShortcut(QKeySequence(Qt::Key_F10), this);
+
+    DebuggerShortcut->setAutoRepeat(false);
+
+    connect(DebuggerShortcut, &QShortcut::activated, this, &MainWindow::changeDebuggerState);
+    connect(stepInShortcut, &QShortcut::activated, this, &MainWindow::stepInPressed);
+    connect(stepOverShortcut, &QShortcut::activated, this, &MainWindow::stepOverPressed);
+    connect(stepNextShortcut, &QShortcut::activated, this, &MainWindow::stepNextPressed);
+    connect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOutPressed);
+
+    // Meta Types
     qRegisterMetaType<uint32_t>("uint32_t");
     qRegisterMetaType<std::string>("std::string");
 
@@ -1750,7 +1766,9 @@ void MainWindow::drawNextDisassembleLine() {
                                     QString::fromStdString(disasm.instruction.mode_suffix),
                                     instructionArgsHighlighted);
 
+    ui->disassemblyView->blockSignals(true);
     ui->disassemblyView->appendHtml(formattedLine);
+    ui->disassemblyView->blockSignals(false);
 
     if (addressPane == disasm.base_address) {
         disasmOffsetSet = true;
@@ -1836,12 +1854,18 @@ void MainWindow::opContextMenu(const QPoint& posa) {
 }
 
 void MainWindow::stepInPressed() {
+    if(!inDebugger) {
+        return;
+    }
     debuggerOn = false;
     updateDebuggerChanges();
     emit setDebugStepInMode();
 }
 
 void MainWindow::stepOverPressed() {
+    if(!inDebugger) {
+        return;
+    }
     disasm.base_address = cpu.registers.PC;
     disasm.adl = cpu.ADL;
     disassembleInstruction();
@@ -1854,11 +1878,17 @@ void MainWindow::stepOverPressed() {
 }
 
 void MainWindow::stepNextPressed() {
+    if(!inDebugger) {
+        return;
+    }
     setDebuggerState(false);
     emit setDebugStepNextMode();
 }
 
 void MainWindow::stepOutPressed() {
+    if(!inDebugger) {
+        return;
+    }
     setDebuggerState(false);
     emit setDebugStepOutMode();
 }
