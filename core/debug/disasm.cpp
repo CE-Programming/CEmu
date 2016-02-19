@@ -557,25 +557,25 @@ void disassembleInstruction(void) {
                             disasm.instruction.mode_suffix = ".sis ";
                             disasm.l = false;
                             disasm.il = false;
-                            goto exit_loop;
+                            continue;
                         case 1: // .LIS
                             disasm.suffix = 1;
                             disasm.instruction.mode_suffix = ".lis ";
                             disasm.l = true;
                             disasm.il = false;
-                            goto exit_loop;
+                            continue;
                         case 2: // .SIL
                             disasm.suffix = 1;
                             disasm.instruction.mode_suffix = ".sil ";
                             disasm.l = false;
                             disasm.il = true;
-                            goto exit_loop;
+                            continue;
                         case 3: // .LIL
                             disasm.suffix = 1;
                             disasm.instruction.mode_suffix = ".lil ";
                             disasm.l = true;
                             disasm.il = true;
-                            goto exit_loop;
+                            continue;
                         case 6: // HALT
                             disasm.instruction.opcode = "halt";
                             break;
@@ -709,7 +709,7 @@ void disassembleInstruction(void) {
                                         break;
                                     case 1: // 0xDD prefixed opcodes
                                         disasm.prefix = 2;
-                                        goto exit_loop;
+                                        continue;
                                     case 2: // 0xED prefixed opcodes
                                         disasm.prefix = 0; // ED cancels effect of DD/FD prefix
                                         context.opcode = disasm_fetch_byte();
@@ -969,7 +969,7 @@ void disassembleInstruction(void) {
                                         break;
                                     case 3: // 0xFD prefixed opcodes
                                         disasm.prefix = 3;
-                                        goto exit_loop;
+                                        continue;
                                 }
                                 break;
                         }
@@ -986,8 +986,6 @@ void disassembleInstruction(void) {
                 break;
         }
         disasm.suffix = disasm.prefix = 0;
-exit_loop:
-      continue;
     } while (disasm.prefix || disasm.suffix);
 }
 
