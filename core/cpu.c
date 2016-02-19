@@ -409,14 +409,23 @@ static uint32_t cpu_dec_bc_partial_mode() {
 static void cpu_call(uint32_t address, bool mixed) {
     eZ80registers_t *r = &cpu.registers;
 #ifdef DEBUG_SUPPORT
-    if ((cpuEvents & (EVENT_DEBUG_STEP_OVER | EVENT_DEBUG_STEP_OUT)) && (r->PC != debugger.stepOverInstrEnd)) {
-        if (r->SPL > debugger.stepOutSPL) {
-            debugger.stepOutSPL = r->SPL;
-            fprintf(stderr, "[cpu_call] stepOutSPL=0x%08x\n", debugger.stepOutSPL);
+    if (cpuEvents & (EVENT_DEBUG_STEP_OVER | EVENT_DEBUG_STEP_OUT)) {
+        bool addWait = false;
+        if (cpu.ADL) {
+            if (r->SPL >= debugger.stepOutSPL) {
+                addWait = true;
+                debugger.stepOutSPL = r->SPL;
+                fprintf(stderr, "[cpu_call] stepOutSPL=0x%08x\n", debugger.stepOutSPL);
+            }
+        } else {
+            if (r->SPS >= debugger.stepOutSPS) {
+                addWait = true;
+                debugger.stepOutSPS = r->SPS;
+                fprintf(stderr, "[cpu_call] stepOutSPS=0x%08x\n", debugger.stepOutSPS);
+            }
         }
-        if (r->SPS > debugger.stepOutSPS) {
-            debugger.stepOutSPS = r->SPS;
-            fprintf(stderr, "[cpu_call] stepOutSPS=0x%08x\n", debugger.stepOutSPS);
+        if (addWait && (debugger.stepOutWait < 1)) {
+            debugger.stepOutWait++;
         }
     }
 #endif
@@ -452,7 +461,7 @@ static void cpu_check_step_out(void) {
     if (cpuEvents & EVENT_DEBUG_STEP_OUT) {
         int32_t spDelta = cpu.ADL ? (int32_t) cpu.registers.SPL - (int32_t) debugger.stepOutSPL :
                           (int32_t) cpu.registers.SPS - (int32_t) debugger.stepOutSPS;
-        if (spDelta >= 0) {
+        if ((spDelta >= 0) && (!debugger.stepOutWait--)) {
             cpuEvents &= ~EVENT_DEBUG_STEP_OUT;
             open_debugger(DBG_STEP, 0);
         }
