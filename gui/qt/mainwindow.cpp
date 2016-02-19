@@ -81,6 +81,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonRun, &QPushButton::clicked, this, &MainWindow::changeDebuggerState);
     connect(this, &MainWindow::debuggerChangedState, &emu, &EmuThread::setDebugMode);
     connect(&emu, &EmuThread::debuggerEntered, this, &MainWindow::raiseDebugger, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::debuggerLeft, this, &MainWindow::leaveDebugger, Qt::QueuedConnection);
     connect(&emu, &EmuThread::sendDebugCommand, this, &MainWindow::processDebugCommand, Qt::QueuedConnection);
     connect(ui->buttonAddPort, &QPushButton::clicked, this, &MainWindow::addPort);
     connect(ui->portRequest, &QLineEdit::returnPressed, this, &MainWindow::addPort);
@@ -1060,6 +1061,10 @@ void MainWindow::raiseDebugger() {
     setDebuggerState(true);
 }
 
+void MainWindow::leaveDebugger() {
+    setDebuggerState(false);
+}
+
 void MainWindow::updateDebuggerChanges() {
     /* Update all the changes in the core */
     if (debuggerOn == false) {
@@ -1874,22 +1879,17 @@ void MainWindow::stepOverPressed() {
     if(!inDebugger) {
         return;
     }
-    disasm.base_address = cpu.registers.PC;
-    disasm.adl = cpu.ADL;
-    disassembleInstruction();
-    if (disasm.instruction.opcode == "call" || disasm.instruction.opcode == "rst") {
-        setDebuggerState(false);
-        emit setDebugStepOverMode();
-    } else {
-        stepInPressed();
-    }
+    debuggerOn = false;
+    updateDebuggerChanges();
+    emit setDebugStepOverMode();
 }
 
 void MainWindow::stepNextPressed() {
     if(!inDebugger) {
         return;
     }
-    setDebuggerState(false);
+    debuggerOn = false;
+    updateDebuggerChanges();
     emit setDebugStepNextMode();
 }
 
@@ -1897,7 +1897,8 @@ void MainWindow::stepOutPressed() {
     if(!inDebugger) {
         return;
     }
-    setDebuggerState(false);
+    debuggerOn = false;
+    updateDebuggerChanges();
     emit setDebugStepOutMode();
 }
 

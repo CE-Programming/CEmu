@@ -94,6 +94,17 @@ void open_debugger(int reason, uint32_t data) {
     if (inDebugger) {
         return; // don't recurse
     }
+
+    if ((reason == DBG_STEP) && debugger.stepOverFirstStep && (cpuEvents & EVENT_DEBUG_STEP_OVER)) {
+        if (debugger.stepOverCall) {
+            debugger.stepOverFirstStep = false;
+            fprintf(stderr, "[open_debugger] stepOverFirstStep=false\n");
+            gui_debugger_entered_or_left(inDebugger = false);
+            return;
+        }
+        debug_clear_step_over();
+    }
+
     debugger.cpu_cycles = cpu.cycles;
     debugger.cpu_next = cpu.next;
     gui_debugger_entered_or_left(inDebugger = true);
@@ -107,6 +118,7 @@ void open_debugger(int reason, uint32_t data) {
     gui_debugger_entered_or_left(inDebugger = false);
     cpu.next = debugger.cpu_next;
     cpu.cycles = debugger.cpu_cycles;
+
     if (cpuEvents & EVENT_DEBUG_STEP) {
         cpu.next = debugger.cpu_cycles + 1;
     }

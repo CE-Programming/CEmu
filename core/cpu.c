@@ -410,6 +410,7 @@ static void cpu_call(uint32_t address, bool mixed) {
     eZ80registers_t *r = &cpu.registers;
 #ifdef DEBUG_SUPPORT
     if (cpuEvents & (EVENT_DEBUG_STEP_OVER | EVENT_DEBUG_STEP_OUT)) {
+        debugger.stepOverCall = true;
         bool addWait = false;
         if (cpu.ADL) {
             if (r->SPL >= debugger.stepOutSPL) {
@@ -454,7 +455,7 @@ static void cpu_check_step_out(void) {
         int32_t spDelta = cpu.ADL ? (int32_t) cpu.registers.SPL - (int32_t) debugger.stepOutSPL :
                           (int32_t) cpu.registers.SPS - (int32_t) debugger.stepOutSPS;
         if ((spDelta >= 0) && (!debugger.stepOutWait--)) {
-            cpuEvents &= ~EVENT_DEBUG_STEP_OUT;
+            cpuEvents &= ~(EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OUT);
             open_debugger(DBG_STEP, 0);
         }
     }
