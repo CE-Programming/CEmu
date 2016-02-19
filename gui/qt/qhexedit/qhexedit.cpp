@@ -225,9 +225,9 @@ void QHexEdit::setBytesPerLine(int bytes) {
 }
 
 qint64 QHexEdit::indexOf(const QByteArray &ba, qint64 from) {
-    qint64 posa = _chunks->indexOf(ba, from);
+    qint64 posa = _chunks->indexOf(ba, from/2);
     if (posa > -1) {
-        qint64 curPos = posa;
+        qint64 curPos = posa*2;
         setCursorPosition(curPos + ba.length()*2);
         resetSelection(curPos);
         setSelection(curPos + ba.length()*2);
