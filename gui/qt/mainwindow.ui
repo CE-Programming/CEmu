@@ -5410,6 +5410,16 @@
                </property>
               </widget>
              </item>
+             <item>
+              <widget class="QSpinBox" name="flashBytes">
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>32</number>
+               </property>
+              </widget>
+             </item>
             </layout>
            </item>
            <item>
@@ -5474,6 +5484,16 @@
               <widget class="QPushButton" name="buttonRamSync">
                <property name="text">
                 <string>Sync changes</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="ramBytes">
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>32</number>
                </property>
               </widget>
              </item>
@@ -5554,6 +5574,16 @@
               <widget class="QPushButton" name="buttonMemSync">
                <property name="text">
                 <string>Sync changes</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="memBytes">
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>32</number>
                </property>
               </widget>
              </item>
@@ -5720,9 +5750,6 @@
      <string>C&amp;alculator</string>
     </property>
     <addaction name="actionSetup"/>
-    <addaction name="actionReloadROM"/>
-    <addaction name="separator"/>
-    <addaction name="actionResetCalculator"/>
     <addaction name="separator"/>
     <addaction name="actionSaveState"/>
     <addaction name="actionRestoreState"/>
@@ -5737,9 +5764,20 @@
     <addaction name="actionAboutQt"/>
     <addaction name="separator"/>
    </widget>
+   <widget class="QMenu" name="menuDebug">
+    <property name="title">
+     <string>Debug</string>
+    </property>
+    <addaction name="actionResetCalculator"/>
+    <addaction name="actionReloadROM"/>
+    <addaction name="separator"/>
+    <addaction name="actionDump_IO"/>
+    <addaction name="actionDump_Memory"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuHelp"/>
    <addaction name="menuAbout"/>
+   <addaction name="menuDebug"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="screenWidget">
@@ -5946,6 +5984,16 @@
   <action name="actionExportCalculatorState">
    <property name="text">
     <string>Calculator image</string>
+   </property>
+  </action>
+  <action name="actionDump_IO">
+   <property name="text">
+    <string>Dump IO State</string>
+   </property>
+  </action>
+  <action name="actionDump_Memory">
+   <property name="text">
+    <string>Dump Memory State</string>
    </property>
   </action>
  </widget>

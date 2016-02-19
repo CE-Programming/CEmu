@@ -222,6 +222,8 @@ void QHexEdit::ensureVisible() {
 
 void QHexEdit::setBytesPerLine(int bytes) {
     bytesPerLine = bytes;
+    adjust();
+    ensureVisible();
 }
 
 qint64 QHexEdit::indexOf(const QByteArray &ba, qint64 from) {
@@ -241,7 +243,7 @@ bool QHexEdit::isModified() {
 }
 
 qint64 QHexEdit::lastIndexOf(const QByteArray &ba, qint64 from) {
-    qint64 posa = _chunks->lastIndexOf(ba, from);
+    qint64 posa = _chunks->lastIndexOf(ba, from/2);
 
     if (posa > -1) {
         qint64 curPos = posa*2;
@@ -677,7 +679,7 @@ void QHexEdit::adjust() {
         _pxPosHexX = _pxGapAdrHex;
     }
     _pxPosAdrX = _pxGapAdr;
-    _pxPosAsciiX = _pxPosHexX + ((bytesPerLine*2)+(bytesPerLine/2)+2) * _pxCharWidth + _pxGapHexAscii + _pxCharWidth/2;
+    _pxPosAsciiX = (bytesPerLine * 2 * _pxCharWidth) + (bytesPerLine * _pxGapHexAscii) + _pxPosHexX - _pxGapAdr;
 
     // set horizontalScrollBar()
     int pxWidth = _pxPosAsciiX;
@@ -711,7 +713,7 @@ void QHexEdit::setLine(int line) {
 }
 
 void QHexEdit::dataChangedPrivate(int) {
-    _modified = _undoStack->index() != 0;
+     _modified = _undoStack->index() != 0;
     adjust();
     emit dataChanged();
 }

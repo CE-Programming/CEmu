@@ -159,6 +159,9 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(this, &MainWindow::changedEmuSpeed, &emu, &EmuThread::changeEmuSpeed);
     connect(this, &MainWindow::changedThrottleMode, &emu, &EmuThread::changeThrottleMode);
     connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showActualSpeed, Qt::QueuedConnection);
+    connect(ui->flashBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->flashEdit, &QHexEdit::setBytesPerLine);
+    connect(ui->ramBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->ramEdit, &QHexEdit::setBytesPerLine);
+    connect(ui->memBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->memEdit, &QHexEdit::setBytesPerLine);
 
     // Hex Editor
     connect(ui->buttonFlashGoto, &QPushButton::clicked, this, &MainWindow::flashGotoPressed);
@@ -205,9 +208,9 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     autoCheckForUpdates(settings->value(QStringLiteral("autoUpdate"), false).toBool());
     setSaveOnClose(settings->value(QStringLiteral("saveOnClose"), true).toBool());
     setRestoreOnOpen(settings->value(QStringLiteral("restoreOnOpen"), true).toBool());
-    ui->memEdit->setBytesPerLine(settings->value(QStringLiteral("bytesPerLine"), 8).toInt());
-    ui->ramEdit->setBytesPerLine(settings->value(QStringLiteral("bytesPerLine"), 8).toInt());
-    ui->flashEdit->setBytesPerLine(settings->value(QStringLiteral("bytesPerLine"), 8).toInt());
+    ui->flashBytes->setValue(settings->value(QStringLiteral("flashBytesPerLine"), 8).toInt());
+    ui->ramBytes->setValue(settings->value(QStringLiteral("ramBytesPerLine"), 8).toInt());
+    ui->memBytes->setValue(settings->value(QStringLiteral("memBytesPerLine"), 8).toInt());
 
     currentDir.setPath((settings->value(QStringLiteral("currDir"), QDir::homePath()).toString()));
     if(settings->value(QStringLiteral("savedImagePath")).toString().isEmpty()) {
@@ -266,6 +269,9 @@ MainWindow::~MainWindow() {
     settings->setValue(QStringLiteral("windowState"), saveState(WindowStateVersion));
     settings->setValue(QStringLiteral("windowGeometry"), saveGeometry());
     settings->setValue(QStringLiteral("currDir"), currentDir.absolutePath());
+    settings->setValue(QStringLiteral("flashBytesPerLine"), ui->flashBytes->value());
+    settings->setValue(QStringLiteral("ramBytesPerLine"), ui->ramBytes->value());
+    settings->setValue(QStringLiteral("memBytesPerLine"), ui->memBytes->value());
 
     delete settings;
     delete ui->flashEdit;
