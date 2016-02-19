@@ -1777,11 +1777,7 @@ void MainWindow::drawNextDisassembleLine() {
     ui->disassemblyView->appendHtml(formattedLine);
     ui->disassemblyView->blockSignals(false);
 
-    if (addressPane == disasm.base_address) {
-        disasmOffsetSet = true;
-        disasmOffset = ui->disassemblyView->textCursor();
-        disasmOffset.movePosition(QTextCursor::StartOfLine);
-    } else if (disasmOffsetSet == false && addressPane <= disasm.base_address+8) {
+    if (!disasmOffsetSet && disasm.new_address > addressPane) {
         disasmOffsetSet = true;
         disasmOffset = ui->disassemblyView->textCursor();
         disasmOffset.movePosition(QTextCursor::StartOfLine);
