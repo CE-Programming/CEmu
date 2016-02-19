@@ -30,6 +30,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "lcdpopout.h"
 #include "emuthread.h"
 #include "qmlbridge.h"
 #include "qtframebuffer.h"
@@ -37,6 +38,7 @@
 
 #include "utils.h"
 #include "capture/gif.h"
+
 #include "../../core/schedule.h"
 #include "../../core/debug/disasm.h"
 #include "../../core/link.h"
@@ -49,6 +51,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     ui->setupUi(this);
     ui->centralWidget->hide();
     ui->statusBar->addWidget(&statusLabel);
+    ui->lcdWidget->setLCD(&lcd);
 
     // Register QtKeypadBridge for the virtual keyboard functionality
     this->installEventFilter(&qt_keypad_bridge);
@@ -130,6 +133,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->actionImportCalculatorState, &QAction::triggered, this, &MainWindow::restoreFromFile);
     connect(ui->actionReloadROM, &QAction::triggered, this, &MainWindow::reloadROM);
     connect(ui->actionResetCalculator, &QAction::triggered, this, &MainWindow::resetCalculator);
+    connect(ui->actionPopoutLCD, &QAction::triggered, this, &MainWindow::createLCD);
     connect(this, &MainWindow::resetTriggered, &emu, &EmuThread::resetTriggered);
 
     // Capture
@@ -159,6 +163,9 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(this, &MainWindow::changedEmuSpeed, &emu, &EmuThread::changeEmuSpeed);
     connect(this, &MainWindow::changedThrottleMode, &emu, &EmuThread::changeThrottleMode);
     connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showActualSpeed, Qt::QueuedConnection);
+    connect(ui->flashBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->flashEdit, &QHexEdit::setBytesPerLine);
+    connect(ui->ramBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->ramEdit, &QHexEdit::setBytesPerLine);
+    connect(ui->memBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->memEdit, &QHexEdit::setBytesPerLine);
 
     // Hex Editor
     connect(ui->buttonFlashGoto, &QPushButton::clicked, this, &MainWindow::flashGotoPressed);
@@ -180,6 +187,22 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     // Auto Updates
     connect(ui->checkUpdates, &QCheckBox::stateChanged, this, &MainWindow::autoCheckForUpdates);
 
+    // Shortcut Connections
+    QShortcut *stepInShortcut = new QShortcut(QKeySequence(Qt::Key_F6), this);
+    QShortcut *stepOverShortcut = new QShortcut(QKeySequence(Qt::Key_F7), this);
+    QShortcut *stepNextShortcut = new QShortcut(QKeySequence(Qt::Key_F8), this);
+    QShortcut *stepOutShortcut = new QShortcut(QKeySequence(Qt::Key_F9), this);
+    QShortcut *DebuggerShortcut = new QShortcut(QKeySequence(Qt::Key_F10), this);
+
+    DebuggerShortcut->setAutoRepeat(false);
+
+    connect(DebuggerShortcut, &QShortcut::activated, this, &MainWindow::changeDebuggerState);
+    connect(stepInShortcut, &QShortcut::activated, this, &MainWindow::stepInPressed);
+    connect(stepOverShortcut, &QShortcut::activated, this, &MainWindow::stepOverPressed);
+    connect(stepNextShortcut, &QShortcut::activated, this, &MainWindow::stepNextPressed);
+    connect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOutPressed);
+
+    // Meta Types
     qRegisterMetaType<uint32_t>("uint32_t");
     qRegisterMetaType<std::string>("std::string");
 
@@ -205,6 +228,9 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     autoCheckForUpdates(settings->value(QStringLiteral("autoUpdate"), false).toBool());
     setSaveOnClose(settings->value(QStringLiteral("saveOnClose"), true).toBool());
     setRestoreOnOpen(settings->value(QStringLiteral("restoreOnOpen"), true).toBool());
+    ui->flashBytes->setValue(settings->value(QStringLiteral("flashBytesPerLine"), 8).toInt());
+    ui->ramBytes->setValue(settings->value(QStringLiteral("ramBytesPerLine"), 8).toInt());
+    ui->memBytes->setValue(settings->value(QStringLiteral("memBytesPerLine"), 8).toInt());
 
     currentDir.setPath((settings->value(QStringLiteral("currDir"), QDir::homePath()).toString()));
     if(settings->value(QStringLiteral("savedImagePath")).toString().isEmpty()) {
@@ -263,6 +289,9 @@ MainWindow::~MainWindow() {
     settings->setValue(QStringLiteral("windowState"), saveState(WindowStateVersion));
     settings->setValue(QStringLiteral("windowGeometry"), saveGeometry());
     settings->setValue(QStringLiteral("currDir"), currentDir.absolutePath());
+    settings->setValue(QStringLiteral("flashBytesPerLine"), ui->flashBytes->value());
+    settings->setValue(QStringLiteral("ramBytesPerLine"), ui->ramBytes->value());
+    settings->setValue(QStringLiteral("memBytesPerLine"), ui->memBytes->value());
 
     delete settings;
     delete ui->flashEdit;
@@ -357,7 +386,7 @@ void MainWindow::restored(bool success) {
     if(success) {
         showStatusMsg(tr("Emulation restored from image."));
     } else {
-        QMessageBox::warning(this, tr("Could not restore"), tr("Resuming failed.\nFix it."));
+        QMessageBox::warning(this, tr("Could not restore"), tr("Resuming failed.\nPlease Reload your ROM."));
     }
 }
 
@@ -365,7 +394,7 @@ void MainWindow::saved(bool success) {
     if(success) {
         showStatusMsg(tr("Image saved."));
     } else {
-        QMessageBox::warning(this, tr("Could not save"), tr("Saving failed.\nFix it."));
+        QMessageBox::warning(this, tr("Could not save"), tr("Saving failed.\nSaving failed, go tell someone."));
     }
 
     if(closeAfterSave) {
@@ -422,6 +451,9 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *e) {
 }
 
 void MainWindow::closeEvent(QCloseEvent *e) {
+    if (inDebugger) {
+        changeDebuggerState();
+    }
 
     if (!closeAfterSave && settings->value(QStringLiteral("saveOnClose")).toBool()) {
             closeAfterSave = true;
@@ -552,7 +584,7 @@ void MainWindow::saveScreenshot(QString namefilter, QString defaultsuffix, QStri
 }
 
 void MainWindow::screenshot() {
-    QImage image = renderFramebuffer();
+    QImage image = renderFramebuffer(&lcd);
 
     QString path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.gif");
     if (!image.save(path, "PNG", 0)) {
@@ -844,6 +876,10 @@ QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode) {
 }
 
 void MainWindow::sendFiles(QStringList fileNames) {
+    if (inDebugger) {
+        return;
+    }
+
     setSendState(true);
     const unsigned int fileNum = fileNames.size();
 
@@ -1074,6 +1110,8 @@ void MainWindow::updateDebuggerChanges() {
 
         uint8_t bpp = 0;
         switch(ui->bppView->text().toInt()) {
+            case 1:
+                bpp = 0; break;
             case 2:
                 bpp = 1; break;
             case 4:
@@ -1322,7 +1360,7 @@ void MainWindow::populateDebugWindow() {
     updateStackView();
     ramUpdate();
     flashUpdate();
-    memUpdate();
+    memUpdate(cpu.registers.PC);
 }
 
 void MainWindow::updateTIOSView() {
@@ -1381,15 +1419,16 @@ void MainWindow::updateDisasmView(const int sentBase, const bool newPane) {
     disasm.base_address = -1;
     disasm.new_address = addressPane - ((newPane) ? 0x80 : 0);
     if(disasm.new_address < 0) disasm.new_address = 0;
+    int32_t last_address = disasm.new_address + 0x100;
+    if(last_address > 0xFFFFFF) last_address = 0xFFFFFF;
 
     ui->disassemblyView->clear();
     ui->disassemblyView->clearAllHighlights();
 
     ui->disassemblyView->cursorState(false);
 
-    for(int i=0; i<0x80; i++) {
+    while (disasm.new_address < last_address) {
         drawNextDisassembleLine();
-        if (disasm.new_address > 0xFFFFFF) break;
     }
 
     ui->disassemblyView->cursorState(true);
@@ -1407,8 +1446,7 @@ void MainWindow::portMonitorCheckboxToggled(QTableWidgetItem * item) {
     uint16_t port = static_cast<uint16_t>(hex2int(ui->portView->item(row, 0)->text()));
     uint8_t value = DBG_NO_HANDLE;
 
-    if (col > 1)
-    {
+    if (col > 1) {
         if (col == 2) { // Break on read
             value = DBG_PORT_READ;
         }
@@ -1533,12 +1571,11 @@ void MainWindow::breakpointCheckboxToggled(QTableWidgetItem * item) {
         }
         if (col == 3) { // Break on execution
             value = DBG_EXEC_BREAKPOINT;
+            updateDisasmView(address, true);
         }
     }
 
     debug_breakpoint_set(address, value, item->checkState() == Qt::Checked);
-
-    updateDisasmView(address, true);
 }
 
 bool MainWindow::addBreakpoint() {
@@ -1629,39 +1666,32 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
 
     /* This means the program is trying to send us a debug command. Let's see what we can do with that information. */
     if (reason > NUM_DBG_COMMANDS) {
-       updateDisasmView(cpu.registers.PC, true);
        executeDebugCommand(static_cast<uint32_t>(reason-DBG_PORT_RANGE), static_cast<uint8_t>(input));
        return;
     }
 
-    if (reason == DBG_STEP || reason == DBG_USER) {
-        updateDisasmView(cpu.registers.PC, true);
-    }
-
     // We hit a normal breakpoint; raise the correct entry in the port monitor table
     if (reason == HIT_READ_BREAKPOINT || reason == HIT_WRITE_BREAKPOINT || reason == HIT_EXEC_BREAKPOINT) {
-        ui->tabDebugging->setCurrentIndex(0);
-
         // find the correct entry
         while( static_cast<uint32_t>(hex2int(ui->breakpointView->item(row++, 0)->text())) != input );
         row--;
 
         ui->breakChangeView->setText("Address "+ui->breakpointView->item(row, 0)->text()+" "+((reason == HIT_READ_BREAKPOINT) ? "Read" : (reason == HIT_WRITE_BREAKPOINT) ? "Write" : "Executed"));
         ui->breakpointView->selectRow(row);
-
-        updateDisasmView(input, true);
+        if (reason != HIT_EXEC_BREAKPOINT) {
+            memUpdate(input);
+        }
     }
 
     // We hit a port read or write; raise the correct entry in the port monitor table
     if (reason == HIT_PORT_READ_BREAKPOINT || reason == HIT_PORT_WRITE_BREAKPOINT) {
-        ui->tabDebugging->setCurrentIndex(1);
-        // find the correct entry
         while( static_cast<uint32_t>(hex2int(ui->portView->item(row++, 0)->text())) != input );
         row--;
 
         ui->portChangeView->setText("Port "+ui->portView->item(row, 0)->text()+" "+((reason == HIT_PORT_READ_BREAKPOINT) ? "Read" : "Write"));
         ui->portView->selectRow(row);
     }
+    updateDisasmView(cpu.registers.PC, true);
 }
 
 void MainWindow::updatePortData(int currentRow) {
@@ -1675,7 +1705,7 @@ void MainWindow::reloadROM() {
     if (emu.stop()) {
         emu.start();
         if(debuggerOn) {
-            emit setDebugStepInMode();
+            changeDebuggerState();
         }
         qDebug("Reset Successful.");
     } else {
@@ -1743,13 +1773,11 @@ void MainWindow::drawNextDisassembleLine() {
                                     QString::fromStdString(disasm.instruction.mode_suffix),
                                     instructionArgsHighlighted);
 
+    ui->disassemblyView->blockSignals(true);
     ui->disassemblyView->appendHtml(formattedLine);
+    ui->disassemblyView->blockSignals(false);
 
-    if (addressPane == disasm.base_address) {
-        disasmOffsetSet = true;
-        disasmOffset = ui->disassemblyView->textCursor();
-        disasmOffset.movePosition(QTextCursor::StartOfLine);
-    } else if (disasmOffsetSet == false && addressPane <= disasm.base_address+7) {
+    if (!disasmOffsetSet && disasm.new_address > addressPane) {
         disasmOffsetSet = true;
         disasmOffset = ui->disassemblyView->textCursor();
         disasmOffset.movePosition(QTextCursor::StartOfLine);
@@ -1829,12 +1857,23 @@ void MainWindow::opContextMenu(const QPoint& posa) {
 }
 
 void MainWindow::stepInPressed() {
+    if(!inDebugger) {
+        return;
+    }
     debuggerOn = false;
     updateDebuggerChanges();
     emit setDebugStepInMode();
 }
 
+void MainWindow::createLCD() {
+    LCDPopout *p = new LCDPopout();
+    p->show();
+}
+
 void MainWindow::stepOverPressed() {
+    if(!inDebugger) {
+        return;
+    }
     disasm.base_address = cpu.registers.PC;
     disasm.adl = cpu.ADL;
     disassembleInstruction();
@@ -1847,11 +1886,17 @@ void MainWindow::stepOverPressed() {
 }
 
 void MainWindow::stepNextPressed() {
+    if(!inDebugger) {
+        return;
+    }
     setDebuggerState(false);
     emit setDebugStepNextMode();
 }
 
 void MainWindow::stepOutPressed() {
+    if(!inDebugger) {
+        return;
+    }
     setDebuggerState(false);
     emit setDebugStepOutMode();
 }
@@ -1921,7 +1966,7 @@ void MainWindow::ramUpdate() {
     ui->ramEdit->setLine(line);
 }
 
-void MainWindow::memUpdate() {
+void MainWindow::memUpdate(uint32_t addressBegin) {
     ui->memEdit->setFocus();
     QByteArray mem_data;
 
@@ -1932,7 +1977,7 @@ void MainWindow::memUpdate() {
         start = static_cast<int32_t>(ui->memEdit->addressOffset());
         line = ui->memEdit->getLine();
     } else {
-        start = static_cast<int32_t>(cpu.registers.PC) - 0x1000;
+        start = static_cast<int32_t>(addressBegin) - 0x1000;
     }
 
     if (start < 0) { start = 0; }
@@ -1951,7 +1996,7 @@ void MainWindow::memUpdate() {
     if (locked) {
         ui->memEdit->setLine(line);
     } else {
-        ui->memEdit->setCursorPosition((cpu.registers.PC-start)<<1);
+        ui->memEdit->setCursorPosition((addressBegin-start)<<1);
         ui->memEdit->ensureVisible();
     }
 }
@@ -1960,18 +2005,22 @@ void MainWindow::searchEdit(QHexEdit *editor) {
     bool ok;
     QString searchString = QInputDialog::getText(this, tr("Search"),
                                                   tr("Input Hexadecimal Search String:"), QLineEdit::Normal,
-                                                  "", &ok).toUpper();
+                                                  searchingString, &ok).toUpper();
     editor->setFocus();
     if(!ok || (searchString.length() & 1)) {
+        QMessageBox::warning(this,"Error", "Error when reading input string");
         return;
     }
+    searchingString = searchString;
     QByteArray string_int;
     for (int i=0; i<searchString.length(); i+=2) {
         QString a = searchString.at(i);
         a.append(searchString.at(i+1));
         string_int.append(hex2int(a));
     }
-    editor->indexOf(string_int, editor->cursorPosition());
+    if(editor->indexOf(string_int, editor->cursorPosition()) == -1) {
+        QMessageBox::warning(this,"Not Found","Hex string not found.");
+    }
 }
 
 void MainWindow::flashSearchPressed() {

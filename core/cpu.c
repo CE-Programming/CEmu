@@ -32,6 +32,9 @@
 eZ80cpu_t cpu;
 
 static void cpu_get_cntrl_data_blocks_format(void) {
+#ifdef DEBUG_SUPPORT
+    debugger.data.block[cpu.registers.PC] |= DBG_INST_START_MARKER;
+#endif
     cpu.PREFIX = cpu.SUFFIX = 0;
     cpu.L = cpu.ADL;
     cpu.IL = cpu.ADL;
@@ -52,6 +55,9 @@ static void cpu_prefetch(uint32_t address, bool mode) {
     cpu.ADL = mode;
     cpu.registers.PC = cpu_address_mode(address, mode);
     cpu.prefetch = mem_read_byte(cpu.registers.PC);
+#ifdef DEBUG_SUPPORT
+    debugger.data.block[cpu.registers.PC] |= DBG_INST_MARKER;
+#endif
 }
 static uint8_t cpu_fetch_byte(void) {
     uint8_t value;
@@ -400,7 +406,7 @@ static uint32_t cpu_dec_bc_partial_mode() {
     return value;
 }
 
-static void cpu_call(uint32_t address, uint8_t mixed) {
+static void cpu_call(uint32_t address, bool mixed) {
     eZ80registers_t *r = &cpu.registers;
 #ifdef DEBUG_SUPPORT
     if ((cpuEvents & (EVENT_DEBUG_STEP_OVER | EVENT_DEBUG_STEP_OUT)) && (r->PC != debugger.stepOverInstrEnd)) {

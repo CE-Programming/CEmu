@@ -1,7 +1,7 @@
 lessThan(QT_MAJOR_VERSION, 5) : error("You need at least Qt 5 to build CEmu!")
 
 # Version. Don't forget to remove the "dev" suffix for a release/deployment bulid
-DEFINES += CEMU_VERSION=0.3dev
+DEFINES += CEMU_VERSION=0.4dev
 
 # Code beautifying
 DISTFILES += ../../.astylerc
@@ -89,7 +89,8 @@ SOURCES +=  utils.cpp \
     ../../core/debug/debug.c \
     ../../core/emu.c \
     capture/gif.cpp \
-    datawidget.cpp
+    datawidget.cpp \
+    lcdpopout.cpp
 
 linux|macx|ios: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c
@@ -134,10 +135,12 @@ HEADERS  +=  utils.h \
     ../../core/os/os.h \
     capture/gif.h \
     capture/giflib.h \
-    datawidget.h
+    datawidget.h \
+    lcdpopout.h
 
 FORMS    += mainwindow.ui \
-    romselection.ui
+    romselection.ui \
+    lcdpopout.ui
 
 RESOURCES += \
     resources.qrc

@@ -5,6 +5,7 @@
 #include <QtCore/QTimer>
 
 #include "qtframebuffer.h"
+#include "../../core/lcd.h"
 
 class LCDWidget : public QWidget
 {
@@ -13,6 +14,7 @@ class LCDWidget : public QWidget
       LCDWidget(QWidget *p = 0);
       ~LCDWidget();
       void refreshRate(int newrate);
+      void setLCD(lcd_state_t*);
 
   protected:
       virtual void paintEvent(QPaintEvent */*event*/) Q_DECL_OVERRIDE;
@@ -21,6 +23,7 @@ class LCDWidget : public QWidget
       int lcdSize = 0;
       bool state_set = false;
       QTimer refreshTimer;
+      lcd_state_t *lcdState;
   };
 
 #endif

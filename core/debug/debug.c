@@ -30,7 +30,7 @@ void debugger_free(void) {
     gui_console_printf("[CEmu] Freed Debugger.\n");
 }
 uint8_t debug_read_byte(uint32_t address) {
-    uint8_t *ptr, value = 0;
+    uint8_t *ptr, value = 0, debugData;
 
     address &= 0xFFFFFF;
     if (address < 0xE00000) {
@@ -41,11 +41,14 @@ uint8_t debug_read_byte(uint32_t address) {
         value = debug_port_read_byte(mmio_range(address)<<12 | addr_range(address));
     }
 
-    if (debugger.data.block[address]) {
-        disasmHighlight.hit_read_breakpoint = debugger.data.block[address] & DBG_READ_BREAKPOINT;
-        disasmHighlight.hit_write_breakpoint = debugger.data.block[address] & DBG_WRITE_BREAKPOINT;
-        disasmHighlight.hit_exec_breakpoint = debugger.data.block[address] & DBG_EXEC_BREAKPOINT;
-        disasmHighlight.hit_run_breakpoint = debugger.data.block[address] & DBG_RUN_UNTIL_BREAKPOINT;
+    if ((debugData = debugger.data.block[address])) {
+        disasmHighlight.hit_read_breakpoint = debugData & DBG_READ_BREAKPOINT;
+        disasmHighlight.hit_write_breakpoint = debugData & DBG_WRITE_BREAKPOINT;
+        disasmHighlight.hit_exec_breakpoint = debugData & DBG_EXEC_BREAKPOINT;
+        disasmHighlight.hit_run_breakpoint = debugData & DBG_RUN_UNTIL_BREAKPOINT;
+        if (debugData & DBG_INST_START_MARKER && disasmHighlight.inst_address < 0) {
+            disasmHighlight.inst_address = address;
+        }
     }
 
     if (cpu.registers.PC == address) {

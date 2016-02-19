@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>478</width>
-    <height>314</height>
+    <height>298</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -121,7 +121,7 @@
    <item row="0" column="0">
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="page_3">
       <property name="minimumSize">
@@ -141,6 +141,9 @@
         <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Maximum</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>

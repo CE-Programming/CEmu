@@ -135,9 +135,11 @@ static int8_t disasm_fetch_offset(void) {
 
 static uint32_t disasm_fetch_word(void) {
     uint32_t value = disasm_fetch_byte();
-    value |= disasm_fetch_byte() << 8;
-    if (disasm.il) {
-        value |= disasm_fetch_byte() << 16;
+    if (disasm.iw) {
+        value |= disasm_fetch_byte() << 8;
+        if (disasm.il) {
+            value |= disasm_fetch_byte() << 16;
+        }
     }
     return value;
 }
@@ -381,6 +383,7 @@ void disassembleInstruction(void) {
     disasmHighlight.hit_exec_breakpoint = false;
     disasmHighlight.hit_run_breakpoint = false;
     disasmHighlight.hit_pc = false;
+    disasmHighlight.inst_address = -1;
 
     disasm.instruction.data = "";
     disasm.instruction.opcode = "";
@@ -388,6 +391,7 @@ void disassembleInstruction(void) {
     disasm.instruction.arguments = "";
     disasm.instruction.size = 0;
 
+    disasm.iw = true;
     disasm.il = disasm.adl;
     disasm.l = disasm.adl;
     disasm.prefix = false;
@@ -408,7 +412,7 @@ void disassembleInstruction(void) {
         };
     } context;
 
-    do {
+    while (true) {
         // fetch opcode
         context.opcode = disasm_fetch_byte();
 
@@ -557,25 +561,25 @@ void disassembleInstruction(void) {
                             disasm.instruction.mode_suffix = ".sis ";
                             disasm.l = false;
                             disasm.il = false;
-                            goto exit_loop;
+                            continue;
                         case 1: // .LIS
                             disasm.suffix = 1;
                             disasm.instruction.mode_suffix = ".lis ";
                             disasm.l = true;
                             disasm.il = false;
-                            goto exit_loop;
+                            continue;
                         case 2: // .SIL
                             disasm.suffix = 1;
                             disasm.instruction.mode_suffix = ".sil ";
                             disasm.l = false;
                             disasm.il = true;
-                            goto exit_loop;
+                            continue;
                         case 3: // .LIL
                             disasm.suffix = 1;
                             disasm.instruction.mode_suffix = ".lil ";
                             disasm.l = true;
                             disasm.il = true;
-                            goto exit_loop;
+                            continue;
                         case 6: // HALT
                             disasm.instruction.opcode = "halt";
                             break;
@@ -709,7 +713,7 @@ void disassembleInstruction(void) {
                                         break;
                                     case 1: // 0xDD prefixed opcodes
                                         disasm.prefix = 2;
-                                        goto exit_loop;
+                                        continue;
                                     case 2: // 0xED prefixed opcodes
                                         disasm.prefix = 0; // ED cancels effect of DD/FD prefix
                                         context.opcode = disasm_fetch_byte();
@@ -969,7 +973,7 @@ void disassembleInstruction(void) {
                                         break;
                                     case 3: // 0xFD prefixed opcodes
                                         disasm.prefix = 3;
-                                        goto exit_loop;
+                                        continue;
                                 }
                                 break;
                         }
@@ -985,10 +989,48 @@ void disassembleInstruction(void) {
                 }
                 break;
         }
-        disasm.suffix = disasm.prefix = 0;
-exit_loop:
-      continue;
-    } while (disasm.prefix || disasm.suffix);
+        break;
+    }
+    int32_t size = disasmHighlight.inst_address - disasm.base_address;
+    if (size > 0) {
+        int precision;
+        disasm.new_address = disasm.base_address;
+
+        disasmHighlight.hit_read_breakpoint = false;
+        disasmHighlight.hit_write_breakpoint = false;
+        disasmHighlight.hit_exec_breakpoint = false;
+        disasmHighlight.hit_run_breakpoint = false;
+        disasmHighlight.hit_pc = false;
+        disasmHighlight.inst_address = -1;
+
+        disasm.instruction.data = "";
+        if (size % 3 == 0) {
+            size /= 3;
+            precision = 6;
+            disasm.instruction.opcode = ".dl";
+            disasm.il = true;
+        } else if (size % 2 == 0) {
+            size /= 2;
+            precision = 4;
+            disasm.instruction.opcode = ".dw";
+            disasm.il = false;
+        } else {
+            precision = 2;
+            disasm.instruction.opcode = ".db";
+            disasm.iw = false;
+        }
+        disasm.instruction.mode_suffix = " ";
+        disasm.instruction.arguments = "";
+        disasm.instruction.size = 0;
+
+        do {
+            sprintf(tmpbuf,"$%0*X", precision, disasm_fetch_word());
+            disasm.instruction.arguments += tmpbuf;
+            if (--size) {
+                disasm.instruction.arguments += ',';
+            }
+        } while (size);
+    }
 }
 
 #endif

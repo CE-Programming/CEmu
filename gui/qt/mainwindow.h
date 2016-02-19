@@ -130,6 +130,7 @@ private:
     bool addBreakpoint();
 
     // Others
+    void createLCD();
     void screenContextMenu(const QPoint &);
     void addEquateFileDialog();
     void addEquateFile(QString);
@@ -170,7 +171,7 @@ private:
     void ramGotoPressed();
     void ramSearchPressed();
     void ramSyncPressed();
-    void memUpdate();
+    void memUpdate(uint32_t);
     void memGoto(QString address);
     void memGotoPressed();
     void memSearchPressed();
@@ -191,6 +192,7 @@ private:
 
     // Members
     QString getAddressString(bool &, QString);
+    QString searchingString;
 
     Ui::MainWindow *ui = nullptr;
     QLabel statusLabel;

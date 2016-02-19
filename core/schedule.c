@@ -32,7 +32,7 @@ static uint32_t muldiv(uint32_t a, uint32_t b, uint32_t c) {
 }
 
 void sched_reset(void) {
-    const uint32_t def_rates[] = { 0, 0, 27000000, 12000000, 32768 };
+    const uint32_t def_rates[] = { 48000000, 78000000, 27000000, 12000000, 32768 };
     memcpy(sched.clockRates, def_rates, sizeof(def_rates));
     memset(sched.items, 0, sizeof sched.items);
     sched.nextIndex = 0;

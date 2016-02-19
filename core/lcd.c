@@ -23,6 +23,8 @@
 /* Global LCD state */
 lcd_state_t lcd;
 
+uint32_t lcd_framebuffer[320*240];
+
 static const uint32_t vram_size = 320 * 240 * 2;
 static const uint32_t lcd_dma_size = 0x80000;
 
@@ -60,16 +62,16 @@ inline void lcd_bgr16out(uint_fast32_t bgr16, bool rgb, uint32_t **out) {
 }
 
 /* Draw the current screen into a 320*240*4-byte RGBA8888 buffer. Alpha is always 255. */
-void lcd_drawframe(uint32_t *out) {
-    uint_fast8_t mode = lcd.control >> 1 & 7;
-    bool rgb = lcd.control & (1 << 8);
-    bool bebo = lcd.control & (1 << 9);
+void lcd_drawframe(uint32_t *out, lcd_state_t *lcd_state) {
+    uint_fast8_t mode = lcd_state->control >> 1 & 7;
+    bool rgb = lcd_state->control & (1 << 8);
+    bool bebo = lcd_state->control & (1 << 9);
     uint_fast32_t words = 320 * 240;
     uint_fast32_t word, color;
-    uint32_t *ofs = (uint32_t *) ((uint32_t) lcd.upcurr & (lcd_dma_size - 8));
+    uint32_t *ofs = (uint32_t *) ((uint32_t) lcd_state->upcurr & (lcd_dma_size - 8));
 
     if(!mem.ram.block) {
-        memset(out, 0, 320 * 240 * 4);
+        memset(out, 0, vram_size << 1);
         return;
     }
 
@@ -77,7 +79,7 @@ void lcd_drawframe(uint32_t *out) {
         uint_fast8_t bpp = 1 << mode;
         uint_fast32_t mask = (1 << bpp) - 1;
         uint_fast8_t bi = bebo ? 0 : 24;
-        bool bepo = lcd.control & (1 << 10);
+        bool bepo = lcd_state->control & (1 << 10);
         if (!bepo) {
             bi ^= (8 - bpp);
         }

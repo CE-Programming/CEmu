@@ -34,11 +34,13 @@ enum {
 #define DBG_PORT_FREEZE           4
 
 /* For Memory Brakpoints */
-#define DBG_READ_BREAKPOINT       1
-#define DBG_WRITE_BREAKPOINT      2
-#define DBG_EXEC_BREAKPOINT       4
-#define DBG_STEP_OVER_BREAKPOINT  8
-#define DBG_RUN_UNTIL_BREAKPOINT  16
+#define DBG_READ_BREAKPOINT       (1 << 0)
+#define DBG_WRITE_BREAKPOINT      (1 << 1)
+#define DBG_EXEC_BREAKPOINT       (1 << 2)
+#define DBG_STEP_OVER_BREAKPOINT  (1 << 3)
+#define DBG_RUN_UNTIL_BREAKPOINT  (1 << 4)
+#define DBG_INST_START_MARKER     (1 << 5)
+#define DBG_INST_MARKER           (1 << 6)
 
 #define DBG_PORT_RANGE            0xFFFF00
 #define CONSOLE_PORT_RANGE        0xFB0000
