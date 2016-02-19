@@ -1,0 +1,346 @@
+Listing for file "step.ez80"
+    3 00:0000 -  -  -  -  .list
+    4 00:0000 -  -  -  -  
+    5 00:0000 -  -  -  -  
+    6 00:0000 -  -  -  -  #define TEST_EASY
+    7 00:0000 -  -  -  -  #define TEST_MEDIUM
+    8 00:0000 -  -  -  -  #define TEST_HARD
+    9 00:0000 -  -  -  -  
+   10 00:0000 -  -  -  -  
+   11 00:0000 EF 7B -  -  .db tExtTok,tAsm84CeCmp
+   12 00:0002 -  -  -  -  .org userMem
+   13 D1:A881 -  -  -  -  
+   14 D1:A881 -  -  -  -  
+   15 D1:A881 -  -  -  -  ; Initialization
+   16 D1:A881 -  -  -  -  ;----------------
+   17 D1:A881 -  -  -  -  
+   18 D1:A881 -  -  -  -  Start:
+   19 D1:A881 CD 10 08 02 	call _ClrScrnFull
+   20 D1:A885 CD 28 08 02 	call _HomeUp
+   21 D1:A889 21 2E AA D1 	ld hl,InfoStr
+   22 D1:A88D CD 28 AA D1 	call PutS
+   23 D1:A891 CD 8C 0D 02 	call _GetKey
+   24 D1:A895 -  -  -  -  
+   25 D1:A895 -  -  -  -  
+   26 D1:A895 -  -  -  -  ; Step over tests
+   27 D1:A895 -  -  -  -  ;-----------------
+   28 D1:A895 -  -  -  -  
+   29 D1:A895 -  -  -  -  Tests:
+   30 D1:A895 -  -  -  -  
+   31 D1:A895 -  -  -  -  #ifdef TEST_EASY
+   32 D1:A895 -  -  -  -  StepOver_Simple:
+   33 D1:A895 CD BA A9 D1 	call Simple
+   34 D1:A899 CD AF A9 D1 	call AssertHasStopped
+   35 D1:A89D -  -  -  -  
+   36 D1:A89D -  -  -  -  StepOver_Hello:
+   37 D1:A89D CD B0 A9 D1 	call Hello
+   38 D1:A8A1 CD AF A9 D1 	call AssertHasStopped
+   39 D1:A8A5 -  -  -  -  
+   40 D1:A8A5 06 02 -  -  	ld b,2
+   41 D1:A8A7 18 06 -  -  	jr StepOver_Loop
+   42 D1:A8A9 -  -  -  -  StepOver_Loop_:
+   43 D1:A8A9 CD AF A9 D1 	call AssertHasStopped
+   44 D1:A8AD 18 06 -  -  	jr StepOver_Loop_End
+   45 D1:A8AF -  -  -  -  StepOver_Loop:
+   46 D1:A8AF 10 F8 -  -  	djnz StepOver_Loop_
+   47 D1:A8B1 CD BC A9 D1 	call AssertHasNotStopped
+   48 D1:A8B5 -  -  -  -  StepOver_Loop_End:
+   49 D1:A8B5 -  -  -  -  
+   50 D1:A8B5 21 00 00 D4 	ld hl,vRam
+   51 D1:A8B9 E5 -  -  -  	push hl
+   52 D1:A8BA D1 -  -  -  	pop de
+   53 D1:A8BB 01 02 00 00 	ld bc,2
+   54 D1:A8BF -  -  -  -  StepOver_Ldir:
+   55 D1:A8BF ED B0 -  -  	ldir
+   56 D1:A8C1 -  -  -  -  #endif
+   57 D1:A8C1 -  -  -  -  
+   58 D1:A8C1 -  -  -  -  #ifdef TEST_MEDIUM
+   59 D1:A8C1 B7 -  -  -  	or a
+   60 D1:A8C2 -  -  -  -  StepOver_SelfCall:
+   61 D1:A8C2 CD C6 A8 D1 	call StepOver_SelfCall_
+   62 D1:A8C6 -  -  -  -  StepOver_SelfCall_
+   63 D1:A8C6 3F -  -  -  	ccf
+   64 D1:A8C7 DC BC A9 D1 	call c,AssertHasNotStopped
+   65 D1:A8CB D8 -  -  -  	ret c
+   66 D1:A8CC CD AF A9 D1 	call AssertHasStopped
+   67 D1:A8D0 -  -  -  -  
+   68 D1:A8D0 E5 -  -  -  	push hl
+   69 D1:A8D1 E5 -  -  -  	push hl
+   70 D1:A8D2 E5 -  -  -  	push hl
+   71 D1:A8D3 -  -  -  -  StepOver_PushedArgs:
+   72 D1:A8D3 CD BD A9 D1 	call PushedArgs
+   73 D1:A8D7 CD AF A9 D1 	call AssertHasStopped
+   74 D1:A8DB -  -  -  -  
+   75 D1:A8DB E5 -  -  -  	push hl
+   76 D1:A8DC E5 -  -  -  	push hl
+   77 D1:A8DD E5 -  -  -  	push hl
+   78 D1:A8DE -  -  -  -  StepOver_PushedArgs_JpHL:
+   79 D1:A8DE CD C6 A9 D1 	call PushedArgs_JpHL
+   80 D1:A8E2 CD AF A9 D1 	call AssertHasStopped
+   81 D1:A8E6 -  -  -  -  
+   82 D1:A8E6 E5 -  -  -  	push hl
+   83 D1:A8E7 E5 -  -  -  	push hl
+   84 D1:A8E8 E5 -  -  -  	push hl
+   85 D1:A8E9 -  -  -  -  StepOver_PushedArgs_JpIX:
+   86 D1:A8E9 CD CF A9 D1 	call PushedArgs_JpIX
+   87 D1:A8ED CD AF A9 D1 	call AssertHasStopped
+   88 D1:A8F1 -  -  -  -  #endif
+   89 D1:A8F1 -  -  -  -  
+   90 D1:A8F1 -  -  -  -  #ifdef TEST_HARD
+   91 D1:A8F1 E5 -  -  -  	push hl
+   92 D1:A8F2 E5 -  -  -  	push hl
+   93 D1:A8F3 E5 -  -  -  	push hl
+   94 D1:A8F4 -  -  -  -  StepOver_PushedArgsHello:
+   95 D1:A8F4 CD DA A9 D1 	call PushedArgsHello
+   96 D1:A8F8 CD AF A9 D1 	call AssertHasStopped
+   97 D1:A8FC -  -  -  -  
+   98 D1:A8FC E5 -  -  -  	push hl
+   99 D1:A8FD E5 -  -  -  	push hl
+  100 D1:A8FE E5 -  -  -  	push hl
+  101 D1:A8FF -  -  -  -  StepOver_PushedArgsHello_JpHL:
+  102 D1:A8FF CD E3 A9 D1 	call PushedArgsHello_JpHL
+  103 D1:A903 CD AF A9 D1 	call AssertHasStopped
+  104 D1:A907 -  -  -  -  
+  105 D1:A907 E5 -  -  -  	push hl
+  106 D1:A908 E5 -  -  -  	push hl
+  107 D1:A909 E5 -  -  -  	push hl
+  108 D1:A90A -  -  -  -  StepOver_PushedArgsHello_JpIX:
+  109 D1:A90A CD EC A9 D1 	call PushedArgsHello_JpIX
+  110 D1:A90E CD AF A9 D1 	call AssertHasStopped
+  111 D1:A912 -  -  -  -  
+  112 D1:A912 -  -  -  -  StepOver_InlineArg:
+  113 D1:A912 CD F7 A9 D1 	call InlineArg
+  114 D1:A916 00 00 00 -  	.dl 0
+  115 D1:A919 CD AF A9 D1 	call AssertHasStopped
+  116 D1:A91D -  -  -  -  
+  117 D1:A91D -  -  -  -  StepOver_SMCCall:
+  118 D1:A91D CD 05 AA D1 	call SMCCall
+  119 D1:A921 AF A9 D1 -  	.dl AssertHasStopped
+  120 D1:A924 -  -  -  -  #endif
+  121 D1:A924 -  -  -  -  
+  122 D1:A924 -  -  -  -  
+  123 D1:A924 -  -  -  -  ; Step next tests
+  124 D1:A924 -  -  -  -  ;-----------------
+  125 D1:A924 -  -  -  -  
+  126 D1:A924 -  -  -  -  #ifdef TEST_EASY
+  127 D1:A924 -  -  -  -  StepNext_Simple:
+  128 D1:A924 CD BA A9 D1 	call Simple
+  129 D1:A928 CD AF A9 D1 	call AssertHasStopped
+  130 D1:A92C -  -  -  -  
+  131 D1:A92C -  -  -  -  StepNext_Hello:
+  132 D1:A92C CD B0 A9 D1 	call Hello
+  133 D1:A930 CD AF A9 D1 	call AssertHasStopped
+  134 D1:A934 -  -  -  -  
+  135 D1:A934 06 02 -  -  	ld b,2
+  136 D1:A936 18 04 -  -  	jr StepNext_Loop
+  137 D1:A938 -  -  -  -  StepNext_Loop_:
+  138 D1:A938 CD BC A9 D1 	call AssertHasNotStopped
+  139 D1:A93C -  -  -  -  StepNext_Loop:
+  140 D1:A93C 10 FA -  -  	djnz StepNext_Loop_
+  141 D1:A93E CD AF A9 D1 	call AssertHasStopped
+  142 D1:A942 -  -  -  -  
+  143 D1:A942 21 00 00 D4 	ld hl,vRam
+  144 D1:A946 E5 -  -  -  	push hl
+  145 D1:A947 D1 -  -  -  	pop de
+  146 D1:A948 01 02 00 00 	ld bc,2
+  147 D1:A94C -  -  -  -  StepNext_Ldir:
+  148 D1:A94C ED B0 -  -  	ldir
+  149 D1:A94E -  -  -  -  #endif
+  150 D1:A94E -  -  -  -  
+  151 D1:A94E -  -  -  -  #ifdef TEST_MEDIUM
+  152 D1:A94E -  -  -  -  StepNext_SelfCall:
+  153 D1:A94E CD 52 A9 D1 	call StepNext_SelfCall_
+  154 D1:A952 -  -  -  -  StepNext_SelfCall_
+  155 D1:A952 CD AF A9 D1 	call AssertHasStopped
+  156 D1:A956 E1 -  -  -  	pop hl
+  157 D1:A957 -  -  -  -  
+  158 D1:A957 E5 -  -  -  	push hl
+  159 D1:A958 E5 -  -  -  	push hl
+  160 D1:A959 E5 -  -  -  	push hl
+  161 D1:A95A -  -  -  -  StepNext_PushedArgs:
+  162 D1:A95A CD BD A9 D1 	call PushedArgs
+  163 D1:A95E CD AF A9 D1 	call AssertHasStopped
+  164 D1:A962 -  -  -  -  
+  165 D1:A962 E5 -  -  -  	push hl
+  166 D1:A963 E5 -  -  -  	push hl
+  167 D1:A964 E5 -  -  -  	push hl
+  168 D1:A965 -  -  -  -  StepNext_PushedArgs_JpHL:
+  169 D1:A965 CD C6 A9 D1 	call PushedArgs_JpHL
+  170 D1:A969 CD AF A9 D1 	call AssertHasStopped
+  171 D1:A96D -  -  -  -  
+  172 D1:A96D E5 -  -  -  	push hl
+  173 D1:A96E E5 -  -  -  	push hl
+  174 D1:A96F E5 -  -  -  	push hl
+  175 D1:A970 -  -  -  -  StepNext_PushedArgs_JpIX:
+  176 D1:A970 CD CF A9 D1 	call PushedArgs_JpIX
+  177 D1:A974 CD AF A9 D1 	call AssertHasStopped
+  178 D1:A978 -  -  -  -  #endif
+  179 D1:A978 -  -  -  -  
+  180 D1:A978 -  -  -  -  #ifdef TEST_HARD
+  181 D1:A978 E5 -  -  -  	push hl
+  182 D1:A979 E5 -  -  -  	push hl
+  183 D1:A97A E5 -  -  -  	push hl
+  184 D1:A97B -  -  -  -  StepNext_PushedArgsHello:
+  185 D1:A97B CD DA A9 D1 	call PushedArgsHello
+  186 D1:A97F CD AF A9 D1 	call AssertHasStopped
+  187 D1:A983 -  -  -  -  
+  188 D1:A983 E5 -  -  -  	push hl
+  189 D1:A984 E5 -  -  -  	push hl
+  190 D1:A985 E5 -  -  -  	push hl
+  191 D1:A986 -  -  -  -  StepNext_PushedArgsHello_JpHL:
+  192 D1:A986 CD E3 A9 D1 	call PushedArgsHello_JpHL
+  193 D1:A98A CD AF A9 D1 	call AssertHasStopped
+  194 D1:A98E -  -  -  -  
+  195 D1:A98E E5 -  -  -  	push hl
+  196 D1:A98F E5 -  -  -  	push hl
+  197 D1:A990 E5 -  -  -  	push hl
+  198 D1:A991 -  -  -  -  StepNext_PushedArgsHello_JpIX:
+  199 D1:A991 CD EC A9 D1 	call PushedArgsHello_JpIX
+  200 D1:A995 CD AF A9 D1 	call AssertHasStopped
+  201 D1:A999 -  -  -  -  
+  202 D1:A999 -  -  -  -  StepNext_InlineArg:
+  203 D1:A999 CD F7 A9 D1 	call InlineArg
+  204 D1:A99D 00 00 00 -  	.dl 0
+  205 D1:A9A0 CD AF A9 D1 	call AssertHasStopped
+  206 D1:A9A4 -  -  -  -  
+  207 D1:A9A4 -  -  -  -  StepNext_SMCCall:
+  208 D1:A9A4 CD 05 AA D1 	call SMCCall
+  209 D1:A9A8 BC A9 D1 -  	.dl AssertHasNotStopped
+  210 D1:A9AB CD AF A9 D1 	call AssertHasStopped
+  211 D1:A9AF -  -  -  -  #endif
+  212 D1:A9AF -  -  -  -  
+  213 D1:A9AF -  -  -  -  ; Test routines
+  214 D1:A9AF -  -  -  -  ;---------------
+  215 D1:A9AF -  -  -  -  
+  216 D1:A9AF -  -  -  -  AssertHasStopped:
+  217 D1:A9AF C9 -  -  -  	ret
+  218 D1:A9B0 -  -  -  -  
+  219 D1:A9B0 -  -  -  -  Hello:
+  220 D1:A9B0 E5 -  -  -  	push hl
+  221 D1:A9B1 21 85 AA D1 	ld hl,HelloStr
+  222 D1:A9B5 CD 28 AA D1 	call PutS
+  223 D1:A9B9 E1 -  -  -  	pop hl
+  224 D1:A9BA -  -  -  -  ;	jr AssertHasNotStopped
+  225 D1:A9BA -  -  -  -  
+  226 D1:A9BA -  -  -  -  Simple:
+  227 D1:A9BA 00 -  -  -  	nop
+  228 D1:A9BB 00 -  -  -  	nop
+  229 D1:A9BC -  -  -  -  AssertHasNotStopped:
+  230 D1:A9BC C9 -  -  -  	ret
+  231 D1:A9BD -  -  -  -  
+  232 D1:A9BD -  -  -  -  PushedArgs:
+  233 D1:A9BD E1 -  -  -  	pop hl
+  234 D1:A9BE D1 -  -  -  	pop de
+  235 D1:A9BF C1 -  -  -  	pop bc
+  236 D1:A9C0 E3 -  -  -  	ex (sp),hl
+  237 D1:A9C1 CD BC A9 D1 	call AssertHasNotStopped
+  238 D1:A9C5 C9 -  -  -  	ret
+  239 D1:A9C6 -  -  -  -  
+  240 D1:A9C6 -  -  -  -  PushedArgs_JpHL:
+  241 D1:A9C6 E1 -  -  -  	pop hl
+  242 D1:A9C7 D1 -  -  -  	pop de
+  243 D1:A9C8 C1 -  -  -  	pop bc
+  244 D1:A9C9 F1 -  -  -  	pop af
+  245 D1:A9CA CD BC A9 D1 	call AssertHasNotStopped
+  246 D1:A9CE E9 -  -  -  	jp (hl)
+  247 D1:A9CF -  -  -  -  
+  248 D1:A9CF -  -  -  -  PushedArgs_JpIX:
+  249 D1:A9CF DD E1 -  -  	pop ix
+  250 D1:A9D1 E1 -  -  -  	pop hl
+  251 D1:A9D2 D1 -  -  -  	pop de
+  252 D1:A9D3 C1 -  -  -  	pop bc
+  253 D1:A9D4 CD BC A9 D1 	call AssertHasNotStopped
+  254 D1:A9D8 DD E9 -  -  	jp (ix)
+  255 D1:A9DA -  -  -  -  
+  256 D1:A9DA -  -  -  -  PushedArgsHello:
+  257 D1:A9DA E1 -  -  -  	pop hl
+  258 D1:A9DB D1 -  -  -  	pop de
+  259 D1:A9DC C1 -  -  -  	pop bc
+  260 D1:A9DD E3 -  -  -  	ex (sp),hl
+  261 D1:A9DE CD B0 A9 D1 	call Hello
+  262 D1:A9E2 C9 -  -  -  	ret
+  263 D1:A9E3 -  -  -  -  
+  264 D1:A9E3 -  -  -  -  PushedArgsHello_JpHL:
+  265 D1:A9E3 E1 -  -  -  	pop hl
+  266 D1:A9E4 D1 -  -  -  	pop de
+  267 D1:A9E5 C1 -  -  -  	pop bc
+  268 D1:A9E6 F1 -  -  -  	pop af
+  269 D1:A9E7 CD B0 A9 D1 	call Hello
+  270 D1:A9EB E9 -  -  -  	jp (hl)
+  271 D1:A9EC -  -  -  -  
+  272 D1:A9EC -  -  -  -  PushedArgsHello_JpIX:
+  273 D1:A9EC DD E1 -  -  	pop ix
+  274 D1:A9EE E1 -  -  -  	pop hl
+  275 D1:A9EF D1 -  -  -  	pop de
+  276 D1:A9F0 C1 -  -  -  	pop bc
+  277 D1:A9F1 CD B0 A9 D1 	call Hello
+  278 D1:A9F5 DD E9 -  -  	jp (ix)
+  279 D1:A9F7 -  -  -  -  
+  280 D1:A9F7 -  -  -  -  InlineArg:
+  281 D1:A9F7 DD E1 -  -  	pop ix
+  282 D1:A9F9 DD 27 00 -  	ld hl,(ix)
+  283 D1:A9FC ED 32 03 -  	lea ix,ix+3
+  284 D1:A9FF CD BC A9 D1 	call AssertHasNotStopped
+  285 D1:AA03 DD E9 -  -  	jp (ix)
+  286 D1:AA05 -  -  -  -  
+  287 D1:AA05 -  -  -  -  SMCCall:
+  288 D1:AA05 DD E1 -  -  	pop ix
+  289 D1:AA07 ED 32 FC -  	lea ix,ix-4
+  290 D1:AA0A DD 27 04 -  	ld hl,(ix+4)
+  291 D1:AA0D DD 2F 01 -  	ld (ix+1),hl
+  292 D1:AA10 B7 -  -  -  	or a
+  293 D1:AA11 ED 62 -  -  	sbc hl,hl
+  294 D1:AA13 DD 2F 04 -  	ld (ix+4),hl
+  295 D1:AA16 CD BC A9 D1 	call AssertHasNotStopped
+  296 D1:AA1A DD E9 -  -  	jp (ix)
+  297 D1:AA1C -  -  -  -  
+  298 D1:AA1C -  -  -  -  
+  299 D1:AA1C -  -  -  -  ; Utility routines
+  300 D1:AA1C -  -  -  -  ;------------------
+  301 D1:AA1C -  -  -  -  
+  302 D1:AA1C -  -  -  -  PutS_Loop:
+  303 D1:AA1C FE 0A -  -  	cp '\n'
+  304 D1:AA1E C4 B8 07 02 	call nz,_PutC
+  305 D1:AA22 E5 -  -  -  	push hl
+  306 D1:AA23 CC F0 07 02 	call z,_NewLine
+  307 D1:AA27 E1 -  -  -  	pop hl
+  308 D1:AA28 -  -  -  -  PutS:
+  309 D1:AA28 7E -  -  -  	ld a,(hl)
+  310 D1:AA29 23 -  -  -  	inc hl
+  311 D1:AA2A B7 -  -  -  	or a,a
+  312 D1:AA2B 20 EF -  -  	jr nz,PutS_Loop
+  313 D1:AA2D C9 -  -  -  	ret
+  314 D1:AA2E -  -  -  -  
+  315 D1:AA2E -  -  -  -  
+  316 D1:AA2E -  -  -  -  ; Data
+  317 D1:AA2E -  -  -  -  ;------
+  318 D1:AA2E -  -  -  -  
+  319 D1:AA2E -  -  -  -  InfoStr:
+  320 D1:AA2E 50 75 74 20 
+              62 72 65 61 
+              6B 70 6F 69 
+              6E 74 73 20 
+              61 74 0A -  	.db "Put breakpoints at\n"
+  321 D1:AA41 54 65 73 74 
+              73 2C 20 41 
+              73 73 65 72 
+              74 48 61 73 
+              53 74 6F 70 
+              70 65 64 2C 	.db "Tests, AssertHasStopped,"
+  322 D1:AA59 61 6E 64 20 
+              41 73 73 65 
+              72 74 48 61 
+              73 4E 6F 74 
+              53 74 6F 70 
+              70 65 64 0A 	.db "and AssertHasNotStopped\n"
+  323 D1:AA71 62 65 66 6F 
+              72 65 20 63 
+              6F 6E 74 69 
+              6E 75 69 6E 
+              67 2E 0A 00 	.db "before continuing.\n",0
+  324 D1:AA85 -  -  -  -  
+  325 D1:AA85 -  -  -  -  HelloStr:
+  326 D1:AA85 48 65 6C 6C 
+              6F 2C 20 77 
+              6F 72 6C 64 
+              21 0A 00 -  	.db "Hello, world!\n",0
