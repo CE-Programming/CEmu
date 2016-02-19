@@ -150,6 +150,7 @@ void debug_clear_run_until(void) {
 }
 
 void debug_clear_step_over(void) {
+    fprintf(stderr, "[debug_clear_step_over] Clearing step over(?) at 0x%08x\n", debugger.stepOverInstrEnd);
     cpuEvents &= ~(EVENT_DEBUG_STEP_OVER | EVENT_DEBUG_STEP_NEXT);
     if (debugger.stepOverInstrEnd < 0x1000000) {
         for (int i = debugger.stepOverInstrEnd - debugger.stepOverInstrSize;
@@ -157,8 +158,8 @@ void debug_clear_step_over(void) {
             debugger.data.block[i & 0xFFFFFF] &= ~DBG_STEP_OVER_BREAKPOINT;
             debugger.data.block[i & 0xFFFF] &= ~DBG_STEP_OVER_BREAKPOINT;
         }
+        fprintf(stderr, "[debug_clear_step_over] Cleared step over at 0x%08x\n", debugger.stepOverInstrEnd);
         debugger.stepOverInstrEnd = -1;
-        fprintf(stderr, "[debug_clear_step_over] Cleared step over\n");
     }
 }
 
