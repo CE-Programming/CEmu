@@ -44,7 +44,7 @@ uint8_t debug_read_byte(uint32_t address) {
         disasmHighlight.hit_write_breakpoint = debugData & DBG_WRITE_BREAKPOINT;
         disasmHighlight.hit_exec_breakpoint = debugData & DBG_EXEC_BREAKPOINT;
         disasmHighlight.hit_run_breakpoint = debugData & DBG_RUN_UNTIL_BREAKPOINT;
-        if (debugData & DBG_INST_MARKER && disasmHighlight.inst_address > address) {
+        if (debugData & DBG_INST_MARKER && disasmHighlight.inst_address < 0) {
             disasmHighlight.inst_address = address;
         }
     }
