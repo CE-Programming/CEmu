@@ -50,7 +50,6 @@ public:
     virtual void setFont(const QFont &font);
     QString toReadableString();
 
-
 public slots:
     void redo();
     void undo();
@@ -63,6 +62,8 @@ signals:
 
 public:
     ~QHexEdit();
+
+    void setBytesPerLine(int bytes);
 
     // Properties
     bool addressArea();
@@ -172,6 +173,7 @@ private:
     bool _modified;                             // Is any data in editor modified?
     int _rowsShown;                             // lines of text shown
     UndoStack * _undoStack;                     // Stack to store edit actions for undo/redo
+    int bytesPerLine = 8;
 };
 
 #endif

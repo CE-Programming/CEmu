@@ -205,6 +205,9 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     autoCheckForUpdates(settings->value(QStringLiteral("autoUpdate"), false).toBool());
     setSaveOnClose(settings->value(QStringLiteral("saveOnClose"), true).toBool());
     setRestoreOnOpen(settings->value(QStringLiteral("restoreOnOpen"), true).toBool());
+    ui->memEdit->setBytesPerLine(settings->value(QStringLiteral("bytesPerLine"), 8).toInt());
+    ui->ramEdit->setBytesPerLine(settings->value(QStringLiteral("bytesPerLine"), 8).toInt());
+    ui->flashEdit->setBytesPerLine(settings->value(QStringLiteral("bytesPerLine"), 8).toInt());
 
     currentDir.setPath((settings->value(QStringLiteral("currDir"), QDir::homePath()).toString()));
     if(settings->value(QStringLiteral("savedImagePath")).toString().isEmpty()) {
