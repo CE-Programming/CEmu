@@ -20,6 +20,12 @@ Start:
 	call _HomeUp
 	ld hl,InfoStr
 	call PutS
+	ld hl,Tests
+	call PutHex
+	ld hl,AssertHasStopped
+	call PutHex
+	ld hl,AssertHasNotStopped
+	call PutHex
 	call _GetKey
 
 
@@ -68,29 +74,6 @@ StepOver_SelfCall_
 	push hl
 	push hl
 	push hl
-StepOver_PushedArgs:
-	call PushedArgs
-	call AssertHasStopped
-
-	push hl
-	push hl
-	push hl
-StepOver_PushedArgs_JpHL:
-	call PushedArgs_JpHL
-	call AssertHasStopped
-
-	push hl
-	push hl
-	push hl
-StepOver_PushedArgs_JpIX:
-	call PushedArgs_JpIX
-	call AssertHasStopped
-#endif
-
-#ifdef TEST_HARD
-	push hl
-	push hl
-	push hl
 StepOver_PushedArgsHello:
 	call PushedArgsHello
 	call AssertHasStopped
@@ -108,7 +91,9 @@ StepOver_PushedArgsHello_JpHL:
 StepOver_PushedArgsHello_JpIX:
 	call PushedArgsHello_JpIX
 	call AssertHasStopped
+#endif
 
+#ifdef TEST_HARD
 StepOver_InlineArg:
 	call InlineArg
 	.dl 0
@@ -153,31 +138,8 @@ StepNext_SelfCall:
 	call StepNext_SelfCall_
 StepNext_SelfCall_
 	call AssertHasStopped
+
 	pop hl
-
-	push hl
-	push hl
-	push hl
-StepNext_PushedArgs:
-	call PushedArgs
-	call AssertHasStopped
-
-	push hl
-	push hl
-	push hl
-StepNext_PushedArgs_JpHL:
-	call PushedArgs_JpHL
-	call AssertHasStopped
-
-	push hl
-	push hl
-	push hl
-StepNext_PushedArgs_JpIX:
-	call PushedArgs_JpIX
-	call AssertHasStopped
-#endif
-
-#ifdef TEST_HARD
 	push hl
 	push hl
 	push hl
@@ -198,7 +160,9 @@ StepNext_PushedArgsHello_JpHL:
 StepNext_PushedArgsHello_JpIX:
 	call PushedArgsHello_JpIX
 	call AssertHasStopped
+#endif
 
+#ifdef TEST_HARD
 StepNext_InlineArg:
 	call InlineArg
 	.dl 0
@@ -209,6 +173,54 @@ StepNext_SMCCall:
 	.dl AssertHasNotStopped
 	call AssertHasStopped
 #endif
+
+
+; Step out tests
+;-----------------
+
+#ifdef TEST_EASY
+StepOut_Simple:
+	call Simple
+	call AssertHasStopped
+
+StepOut_Hello:
+	call Hello
+	call AssertHasStopped
+#endif
+
+#ifdef TEST_MEDIUM
+	push hl
+	push hl
+	push hl
+StepOut_PushedArgsHello:
+	call PushedArgsHello
+	call AssertHasStopped
+
+	push hl
+	push hl
+	push hl
+StepOut_PushedArgsHello_JpHL:
+	call PushedArgsHello_JpHL
+	call AssertHasStopped
+
+	push hl
+	push hl
+	push hl
+StepOut_PushedArgsHello_JpIX:
+	call PushedArgsHello_JpIX
+	call AssertHasStopped
+#endif
+
+#ifdef TEST_HARD
+#endif
+
+
+; Cleanup
+;---------
+
+	call _ClrScrnFull
+	jp _HomeUp
+
 
 ; Test routines
 ;---------------
@@ -228,30 +240,6 @@ Simple:
 	nop
 AssertHasNotStopped:
 	ret
-
-PushedArgs:
-	pop hl
-	pop de
-	pop bc
-	ex (sp),hl
-	call AssertHasNotStopped
-	ret
-
-PushedArgs_JpHL:
-	pop hl
-	pop de
-	pop bc
-	pop af
-	call AssertHasNotStopped
-	jp (hl)
-
-PushedArgs_JpIX:
-	pop ix
-	pop hl
-	pop de
-	pop bc
-	call AssertHasNotStopped
-	jp (ix)
 
 PushedArgsHello:
 	pop hl
@@ -312,15 +300,29 @@ PutS:
 	jr nz,PutS_Loop
 	ret
 
+PutHex:
+	ld bc,$06E1
+PutHex_Loop:
+	ld a,c
+PutHex_Shift:
+	add hl,hl
+	rla
+	jr c,PutHex_Shift
+	daa
+	add a,c
+	adc a,$3F
+	call _PutC
+	djnz PutHex_Loop
+	jp _NewLine
+
 
 ; Data
 ;------
 
 InfoStr:
-	.db "Put breakpoints at\n"
-	.db "Tests, AssertHasStopped,"
-	.db "and AssertHasNotStopped\n"
-	.db "before continuing.\n",0
+	.db "Put breakpoints at the\n"
+	.db "following locations before"
+	.db "continuing:\n",0
 
 HelloStr:
 	.db "Hello, world!\n",0
