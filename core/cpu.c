@@ -46,7 +46,7 @@ static uint32_t cpu_address_mode(uint32_t address, bool mode) {
     return (cpu.registers.MBASE << 16) | (address & 0xFFFF);
 }
 
-static void cpu_prefetch(uint32_t address, bool mode) {
+static void cpu_fetch(uint32_t address, bool mode) {
     cpu.ADL = mode;
     cpu.registers.PC = cpu_address_mode(address, mode);
     cpu.prefetch = mem_read_byte(cpu.registers.PC);
@@ -59,7 +59,7 @@ static uint8_t cpu_fetch_byte(void) {
     }
 #endif
     value = cpu.prefetch;
-    cpu_prefetch(cpu.registers.PC + 1, cpu.ADL);
+    cpu_fetch(cpu.registers.PC + 1, cpu.ADL);
     return value;
 }
 static int8_t cpu_fetch_offset(void) {
@@ -365,7 +365,14 @@ static uint32_t cpu_dec_bc_partial_mode() {
     return value;
 }
 
-static void cpu_call(uint32_t address, uint8_t mixed) {
+static void cpu_prefetch(uint32_t address, bool mode) {
+    cpu_fetch(address, mode);
+#ifdef DEBUG_SUPPORT
+    debugger.data.block[cpu.registers.PC] |= DBG_INST_MARKER;
+#endif
+}
+
+static void cpu_call(uint32_t address, bool mixed) {
     eZ80registers_t *r = &cpu.registers;
     if (mixed) {
         bool stack = cpu.IL || (cpu.L && !cpu.ADL);

@@ -395,7 +395,7 @@ void mem_write_byte(uint32_t address, uint8_t value) {
             break;
     }
 #ifdef DEBUG_SUPPORT
-    if (debugger.data.block[address] & DBG_WRITE_BREAKPOINT) {
+    if ((debugger.data.block[address] &= ~DBG_INST_MARKER) & DBG_WRITE_BREAKPOINT) {
         open_debugger(HIT_WRITE_BREAKPOINT, address);
     }
 #endif
