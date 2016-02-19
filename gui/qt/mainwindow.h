@@ -130,6 +130,7 @@ private:
     bool addBreakpoint();
 
     // Others
+    void createLCD();
     void screenContextMenu(const QPoint &);
     void addEquateFileDialog();
     void addEquateFile(QString);

@@ -30,6 +30,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "lcdpopout.h"
 #include "emuthread.h"
 #include "qmlbridge.h"
 #include "qtframebuffer.h"
@@ -37,6 +38,7 @@
 
 #include "utils.h"
 #include "capture/gif.h"
+
 #include "../../core/schedule.h"
 #include "../../core/debug/disasm.h"
 #include "../../core/link.h"
@@ -49,6 +51,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     ui->setupUi(this);
     ui->centralWidget->hide();
     ui->statusBar->addWidget(&statusLabel);
+    ui->lcdWidget->setLCD(&lcd);
 
     // Register QtKeypadBridge for the virtual keyboard functionality
     this->installEventFilter(&qt_keypad_bridge);
@@ -130,6 +133,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->actionImportCalculatorState, &QAction::triggered, this, &MainWindow::restoreFromFile);
     connect(ui->actionReloadROM, &QAction::triggered, this, &MainWindow::reloadROM);
     connect(ui->actionResetCalculator, &QAction::triggered, this, &MainWindow::resetCalculator);
+    connect(ui->actionPopoutLCD, &QAction::triggered, this, &MainWindow::createLCD);
     connect(this, &MainWindow::resetTriggered, &emu, &EmuThread::resetTriggered);
 
     // Capture
@@ -382,7 +386,7 @@ void MainWindow::restored(bool success) {
     if(success) {
         showStatusMsg(tr("Emulation restored from image."));
     } else {
-        QMessageBox::warning(this, tr("Could not restore"), tr("Resuming failed.\nFix it."));
+        QMessageBox::warning(this, tr("Could not restore"), tr("Resuming failed.\nPlease Reload your ROM."));
     }
 }
 
@@ -390,7 +394,7 @@ void MainWindow::saved(bool success) {
     if(success) {
         showStatusMsg(tr("Image saved."));
     } else {
-        QMessageBox::warning(this, tr("Could not save"), tr("Saving failed.\nFix it."));
+        QMessageBox::warning(this, tr("Could not save"), tr("Saving failed.\nSaving failed, go tell someone."));
     }
 
     if(closeAfterSave) {
@@ -580,7 +584,7 @@ void MainWindow::saveScreenshot(QString namefilter, QString defaultsuffix, QStri
 }
 
 void MainWindow::screenshot() {
-    QImage image = renderFramebuffer();
+    QImage image = renderFramebuffer(&lcd);
 
     QString path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.gif");
     if (!image.save(path, "PNG", 0)) {
@@ -1861,6 +1865,11 @@ void MainWindow::stepInPressed() {
     debuggerOn = false;
     updateDebuggerChanges();
     emit setDebugStepInMode();
+}
+
+void MainWindow::createLCD() {
+    LCDPopout *p = new LCDPopout();
+    p->show();
 }
 
 void MainWindow::stepOverPressed() {

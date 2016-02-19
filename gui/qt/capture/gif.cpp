@@ -11,7 +11,7 @@ static GifWriter writer;
 static unsigned int frame, frameskip, gifTime;
 
 static bool gif_write_frame(GifWriter *frameWriter, unsigned int delay) {
-    return GifWriteFrame(frameWriter, renderFramebuffer().convertToFormat(QImage::Format_RGBA8888).bits(), 320, 240, delay);
+    return GifWriteFrame(frameWriter, renderFramebuffer(&lcd).convertToFormat(QImage::Format_RGBA8888).bits(), 320, 240, delay);
 }
 
 bool gif_single_frame(const char *filename) {

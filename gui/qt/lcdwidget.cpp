@@ -17,6 +17,7 @@
 
 #include "lcdwidget.h"
 #include "qtframebuffer.h"
+#include "../../core/lcd.h"
 
 LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
     setContextMenuPolicy(Qt::CustomContextMenu);
@@ -30,11 +31,15 @@ LCDWidget::~LCDWidget(){}
 
 void LCDWidget::paintEvent(QPaintEvent */*event*/) {
     QPainter painter(this);
-    paintFramebuffer(&painter);
+    paintFramebuffer(&painter, lcdState);
 }
 
 void LCDWidget::refreshRate(int newrate) {
     refreshTimer.stop();
     refreshTimer.setInterval(1000 / newrate);
     refreshTimer.start();
+}
+
+void LCDWidget::setLCD(lcd_state_t *lcdS) {
+    lcdState = lcdS;
 }

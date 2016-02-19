@@ -148,7 +148,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>6</number>
+       <number>4</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -1244,7 +1244,7 @@
              <string>Stop</string>
             </property>
             <property name="icon">
-             <iconset resource="resources.qrc">
+             <iconset>
               <normaloff>:/icons/resources/icons/stop.png</normaloff>:/icons/resources/icons/stop.png</iconset>
             </property>
            </widget>
@@ -1264,7 +1264,7 @@
              <string>Step In</string>
             </property>
             <property name="icon">
-             <iconset resource="resources.qrc">
+             <iconset>
               <normaloff>:/icons/resources/icons/stepin.png</normaloff>:/icons/resources/icons/stepin.png</iconset>
             </property>
            </widget>
@@ -1284,7 +1284,7 @@
              <string>Step Over</string>
             </property>
             <property name="icon">
-             <iconset resource="resources.qrc">
+             <iconset>
               <normaloff>:/icons/resources/icons/stepover.png</normaloff>:/icons/resources/icons/stepover.png</iconset>
             </property>
            </widget>
@@ -1304,7 +1304,7 @@
              <string>Step Next</string>
             </property>
             <property name="icon">
-             <iconset resource="resources.qrc">
+             <iconset>
               <normaloff>:/icons/resources/icons/stepnext.png</normaloff>:/icons/resources/icons/stepnext.png</iconset>
             </property>
            </widget>
@@ -1324,7 +1324,7 @@
              <string>Step Out</string>
             </property>
             <property name="icon">
-             <iconset resource="resources.qrc">
+             <iconset>
               <normaloff>:/icons/resources/icons/stepout.png</normaloff>:/icons/resources/icons/stepout.png</iconset>
             </property>
            </widget>
@@ -1371,7 +1371,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>2</number>
+           <number>3</number>
           </property>
           <property name="tabsClosable">
            <bool>false</bool>
@@ -1404,7 +1404,7 @@
                  <string>Goto</string>
                 </property>
                 <property name="icon">
-                 <iconset resource="resources.qrc">
+                 <iconset>
                   <normaloff>:/icons/resources/icons/goto.png</normaloff>:/icons/resources/icons/goto.png</iconset>
                 </property>
                </widget>
@@ -5378,7 +5378,7 @@
                 <string>Goto</string>
                </property>
                <property name="icon">
-                <iconset resource="resources.qrc">
+                <iconset>
                  <normaloff>:/icons/resources/icons/goto.png</normaloff>:/icons/resources/icons/goto.png</iconset>
                </property>
               </widget>
@@ -5455,7 +5455,7 @@
                 <string>Goto</string>
                </property>
                <property name="icon">
-                <iconset resource="resources.qrc">
+                <iconset>
                  <normaloff>:/icons/resources/icons/goto.png</normaloff>:/icons/resources/icons/goto.png</iconset>
                </property>
               </widget>
@@ -5532,7 +5532,7 @@
                 <string>Goto</string>
                </property>
                <property name="icon">
-                <iconset resource="resources.qrc">
+                <iconset>
                  <normaloff>:/icons/resources/icons/goto.png</normaloff>:/icons/resources/icons/goto.png</iconset>
                </property>
               </widget>
@@ -5771,8 +5771,10 @@
     <addaction name="actionResetCalculator"/>
     <addaction name="actionReloadROM"/>
     <addaction name="separator"/>
-    <addaction name="actionDump_IO"/>
-    <addaction name="actionDump_Memory"/>
+    <addaction name="actionDumpIO"/>
+    <addaction name="actionDumpMemory"/>
+    <addaction name="separator"/>
+    <addaction name="actionPopoutLCD"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuHelp"/>
@@ -5986,14 +5988,19 @@
     <string>Calculator image</string>
    </property>
   </action>
-  <action name="actionDump_IO">
+  <action name="actionDumpIO">
    <property name="text">
     <string>Dump IO State</string>
    </property>
   </action>
-  <action name="actionDump_Memory">
+  <action name="actionDumpMemory">
    <property name="text">
     <string>Dump Memory State</string>
+   </property>
+  </action>
+  <action name="actionPopoutLCD">
+   <property name="text">
+    <string>Popout LCD</string>
    </property>
   </action>
  </widget>
@@ -6021,8 +6028,6 @@
    <header>datawidget.h</header>
   </customwidget>
  </customwidgets>
- <resources>
-  <include location="resources.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

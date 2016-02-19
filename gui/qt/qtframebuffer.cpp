@@ -19,14 +19,14 @@
 #include "../../core/backlight.h"
 #include "../../core/lcd.h"
 
-QImage renderFramebuffer() {
-    lcd_drawframe(lcd.framebuffer);
-    return QImage(reinterpret_cast<const uchar*>(lcd.framebuffer), 320, 240, QImage::Format_RGBA8888);
+QImage renderFramebuffer(lcd_state_t *lcds) {
+    lcd_drawframe(lcd_framebuffer, lcds);
+    return QImage(reinterpret_cast<const uchar*>(lcd_framebuffer), 320, 240, QImage::Format_RGBA8888);
 }
 
-void paintFramebuffer(QPainter *p) {
-    if (lcd.control & 0x800) {
-        QImage img = renderFramebuffer();
+void paintFramebuffer(QPainter *p, lcd_state_t *lcds) {
+    if (lcds && (lcd.control & 0x800)) {
+        QImage img = renderFramebuffer(lcds);
         p->drawImage(p->window(), img);
         float factor = (310-(float)backlight.brightness)/160.0;
         if (factor < 1) {
@@ -37,8 +37,4 @@ void paintFramebuffer(QPainter *p) {
         p->setPen(Qt::white);
         p->drawText(p->window(), Qt::AlignCenter, QObject::tr("LCD OFF"));
     }
-}
-
-void QMLFramebuffer::paint(QPainter *p) {
-    paintFramebuffer(p);
 }
