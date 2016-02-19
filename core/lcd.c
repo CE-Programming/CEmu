@@ -87,7 +87,7 @@ void lcd_drawframe(uint32_t *out, lcd_state_t *lcd_state) {
             uint_fast8_t bitpos = 32;
             word = lcd_nextword(&ofs);
             do {
-                color = lcd_state->palette[word >> ((bitpos -= bpp) ^ bi) & mask];
+                color = lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask];
                 lcd_bgr16out(color + (color & 0xFFE0) + (color >> 10 & 0x20), rgb, &out);
                 words--;
             } while (bitpos != 0);
