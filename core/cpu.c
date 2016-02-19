@@ -95,15 +95,16 @@ static uint32_t cpu_fetch_word_no_prefetch(void) {
 static uint8_t cpu_read_byte(uint32_t address) {
     uint32_t cpuAddress = cpu_address_mode(address, cpu.L);
 #ifdef DEBUG_SUPPORT
-    if (cpuEvents & EVENT_DEBUG_STEP_OVER) {
+    if (cpuEvents & (EVENT_DEBUG_STEP_OVER | EVENT_DEBUG_STEP_NEXT)) {
         uint32_t stepOverDist = cpu_mask_mode(cpuAddress - debugger.stepOverInstrEnd, debugger.stepOverMode);
-        if ((stepOverDist < debugger.stepOverExtendSize) && (debugger.stepOverMode
+        if ((stepOverDist <= debugger.stepOverExtendSize) && (debugger.stepOverMode
                 || ((cpuAddress & 0xFF0000) == (debugger.stepOverInstrEnd & 0xFF0000)))) {
             uint32_t stepOverAddress = cpu_mask_mode(cpuAddress + 1, debugger.stepOverMode);
             debugger.data.block[stepOverAddress] |= DBG_STEP_OVER_BREAKPOINT;
             fprintf(stderr, "[cpu_read_byte] Added breakpoint at 0x%08x\n", stepOverAddress);
-            if (stepOverDist + 1 == debugger.stepOverExtendSize) {
+            if (stepOverDist == debugger.stepOverExtendSize) {
                 debugger.stepOverExtendSize++;
+                fprintf(stderr, "[cpu_read_byte] stepOverExtendSize=%i\n", debugger.stepOverExtendSize);
             }
         }
     }
@@ -114,7 +115,7 @@ static void cpu_write_byte(uint32_t address, uint8_t value) {
     uint32_t cpuAddress = cpu_address_mode(address, cpu.L);
 #ifdef DEBUG_SUPPORT
     if (cpuEvents & EVENT_DEBUG_STEP_OVER) {
-        uint32_t stepOverDist = cpu_mask_mode(cpuAddress - (debugger.stepOverInstrEnd - 1), debugger.stepOverMode);
+        uint32_t stepOverDist = cpu_mask_mode(debugger.stepOverInstrEnd - cpuAddress, debugger.stepOverMode);
         if ((stepOverDist <= debugger.stepOverInstrSize) && (debugger.stepOverMode
                 || ((cpuAddress & 0xFF0000) == (debugger.stepOverInstrEnd & 0xFF0000)))) {
             debugger.data.block[cpuAddress] |= DBG_STEP_OVER_BREAKPOINT;
@@ -403,12 +404,12 @@ static void cpu_call(uint32_t address, uint8_t mixed) {
     eZ80registers_t *r = &cpu.registers;
 #ifdef DEBUG_SUPPORT
     if ((cpuEvents & (EVENT_DEBUG_STEP_OVER | EVENT_DEBUG_STEP_OUT)) && (r->PC != debugger.stepOverInstrEnd)) {
-        if (r->SPL >= debugger.stepOutSPL) {
-            debugger.stepOutSPL = r->SPL + 1;
+        if (r->SPL > debugger.stepOutSPL) {
+            debugger.stepOutSPL = r->SPL;
             fprintf(stderr, "[cpu_call] stepOutSPL=0x%08x\n", debugger.stepOutSPL);
         }
-        if (r->SPS >= debugger.stepOutSPS) {
-            debugger.stepOutSPS = r->SPS + 1;
+        if (r->SPS > debugger.stepOutSPS) {
+            debugger.stepOutSPS = r->SPS;
             fprintf(stderr, "[cpu_call] stepOutSPS=0x%08x\n", debugger.stepOutSPS);
         }
     }
@@ -434,10 +435,13 @@ static void cpu_trap(void) {
 
 static void cpu_check_step_out(void) {
 #ifdef DEBUG_SUPPORT
-    if ((cpuEvents & EVENT_DEBUG_STEP_OUT)
-            && (cpu.ADL ? cpu.registers.SPL >= debugger.stepOutSPL : cpu.registers.SPS >= debugger.stepOutSPS)) {
-        cpuEvents &= ~EVENT_DEBUG_STEP_OUT;
-        open_debugger(DBG_STEP, 0);
+    if (cpuEvents & EVENT_DEBUG_STEP_OUT) {
+        int32_t spDelta = cpu.ADL ? (int32_t) cpu.registers.SPL - (int32_t) debugger.stepOutSPL :
+                          (int32_t) cpu.registers.SPS - (int32_t) debugger.stepOutSPS;
+        if (spDelta >= 0) {
+            cpuEvents &= ~EVENT_DEBUG_STEP_OUT;
+            open_debugger(DBG_STEP, 0);
+        }
     }
 #endif
 }

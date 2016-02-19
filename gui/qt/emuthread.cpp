@@ -144,11 +144,15 @@ void EmuThread::setDebugStepOverMode() {
     disassembleInstruction();
     if (disasm.instruction.opcode == "call" || disasm.instruction.opcode == "rst") {
         debugger.stepOverInstrEnd = disasm.new_address;
+        debugger.stepOverInstrSize = disasm.instruction.size;
+        debugger.stepOverExtendSize = 5;
         debugger.data.block[debugger.stepOverInstrEnd] |= DBG_STEP_OVER_BREAKPOINT;
         debugger.stepOverMode = cpu.ADL;
         debugger.stepOutSPL = cpu.registers.SPL;
         debugger.stepOutSPS = cpu.registers.SPS;
         fprintf(stderr, "[setDebugStepOverMode] stepOverInstrEnd=0x%08x\n", debugger.stepOverInstrEnd);
+        fprintf(stderr, "[setDebugStepOverMode] stepOverInstrSize=0x%08x\n", debugger.stepOverInstrSize);
+        fprintf(stderr, "[setDebugStepOverMode] stepOverExtendSize=0x%08x\n", debugger.stepOverExtendSize);
         fprintf(stderr, "[setDebugStepOverMode] Added breakpoint at 0x%08x\n", debugger.stepOverInstrEnd);
         fprintf(stderr, "[setDebugStepOverMode] stepOverMode=%i\n", debugger.stepOverMode);
         fprintf(stderr, "[setDebugStepNextMode] stepOutSPL=0x%08x\n", debugger.stepOutSPL);
