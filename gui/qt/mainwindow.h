@@ -101,6 +101,7 @@ private:
     // Debugger
     void debugCommand();
     void raiseDebugger();
+    void leaveDebugger();
     void updateDebuggerChanges();
     void populateDebugWindow();
     void setDebuggerState(bool);
