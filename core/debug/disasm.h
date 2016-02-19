@@ -10,11 +10,12 @@ extern "C" {
 #endif
 
 typedef struct {
-  bool hit_pc;
-  bool hit_read_breakpoint;
-  bool hit_write_breakpoint;
-  bool hit_exec_breakpoint;
-  bool hit_run_breakpoint;
+    bool hit_pc;
+    bool hit_read_breakpoint;
+    bool hit_write_breakpoint;
+    bool hit_exec_breakpoint;
+    bool hit_run_breakpoint;
+    int32_t inst_address;
 } disasm_highlights_state_t;
 
 extern disasm_highlights_state_t disasmHighlight;
@@ -41,7 +42,7 @@ typedef struct {
     int32_t base_address;
     int32_t new_address;
     uint8_t prefix, suffix;
-    bool adl, il, l;
+    bool adl, iw, il, l;
     addressMap_t address_map;
 } disasm_state_t;
 
