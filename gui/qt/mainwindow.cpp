@@ -425,6 +425,9 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *e) {
 }
 
 void MainWindow::closeEvent(QCloseEvent *e) {
+    if (inDebugger) {
+        changeDebuggerState();
+    }
 
     if (!closeAfterSave && settings->value(QStringLiteral("saveOnClose")).toBool()) {
             closeAfterSave = true;
@@ -1958,18 +1961,22 @@ void MainWindow::searchEdit(QHexEdit *editor) {
     bool ok;
     QString searchString = QInputDialog::getText(this, tr("Search"),
                                                   tr("Input Hexadecimal Search String:"), QLineEdit::Normal,
-                                                  "", &ok).toUpper();
+                                                  searchingString, &ok).toUpper();
     editor->setFocus();
     if(!ok || (searchString.length() & 1)) {
+        QMessageBox::warning(this,"Error", "Error when reading input string");
         return;
     }
+    searchingString = searchString;
     QByteArray string_int;
     for (int i=0; i<searchString.length(); i+=2) {
         QString a = searchString.at(i);
         a.append(searchString.at(i+1));
         string_int.append(hex2int(a));
     }
-    editor->indexOf(string_int, editor->cursorPosition());
+    if(editor->indexOf(string_int, editor->cursorPosition()) == -1) {
+        QMessageBox::warning(this,"Not Found","Hex string not found.");
+    }
 }
 
 void MainWindow::flashSearchPressed() {

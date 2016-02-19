@@ -191,6 +191,7 @@ private:
 
     // Members
     QString getAddressString(bool &, QString);
+    QString searchingString;
 
     Ui::MainWindow *ui = nullptr;
     QLabel statusLabel;

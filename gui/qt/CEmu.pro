@@ -1,7 +1,7 @@
 lessThan(QT_MAJOR_VERSION, 5) : error("You need at least Qt 5 to build CEmu!")
 
 # Version. Don't forget to remove the "dev" suffix for a release/deployment bulid
-DEFINES += CEMU_VERSION=0.3dev
+DEFINES += CEMU_VERSION=0.4dev
 
 # Code beautifying
 DISTFILES += ../../.astylerc
