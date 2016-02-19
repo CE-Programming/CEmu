@@ -1326,7 +1326,7 @@ void MainWindow::populateDebugWindow() {
     updateStackView();
     ramUpdate();
     flashUpdate();
-    memUpdate();
+    memUpdate(cpu.registers.PC);
 }
 
 void MainWindow::updateTIOSView() {
@@ -1643,6 +1643,9 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
 
         ui->breakChangeView->setText("Address "+ui->breakpointView->item(row, 0)->text()+" "+((reason == HIT_READ_BREAKPOINT) ? "Read" : (reason == HIT_WRITE_BREAKPOINT) ? "Write" : "Executed"));
         ui->breakpointView->selectRow(row);
+        if (reason != HIT_EXEC_BREAKPOINT) {
+            memUpdate(input);
+        }
     }
 
     // We hit a port read or write; raise the correct entry in the port monitor table
@@ -1913,7 +1916,7 @@ void MainWindow::ramUpdate() {
     ui->ramEdit->setLine(line);
 }
 
-void MainWindow::memUpdate() {
+void MainWindow::memUpdate(uint32_t addressBegin) {
     ui->memEdit->setFocus();
     QByteArray mem_data;
 
@@ -1924,7 +1927,7 @@ void MainWindow::memUpdate() {
         start = static_cast<int32_t>(ui->memEdit->addressOffset());
         line = ui->memEdit->getLine();
     } else {
-        start = static_cast<int32_t>(cpu.registers.PC) - 0x1000;
+        start = static_cast<int32_t>(addressBegin) - 0x1000;
     }
 
     if (start < 0) { start = 0; }
@@ -1943,7 +1946,7 @@ void MainWindow::memUpdate() {
     if (locked) {
         ui->memEdit->setLine(line);
     } else {
-        ui->memEdit->setCursorPosition((cpu.registers.PC-start)<<1);
+        ui->memEdit->setCursorPosition((addressBegin-start)<<1);
         ui->memEdit->ensureVisible();
     }
 }

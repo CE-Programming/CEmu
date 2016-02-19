@@ -170,7 +170,7 @@ private:
     void ramGotoPressed();
     void ramSearchPressed();
     void ramSyncPressed();
-    void memUpdate();
+    void memUpdate(uint32_t);
     void memGoto(QString address);
     void memGotoPressed();
     void memSearchPressed();
