@@ -844,6 +844,10 @@ QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode) {
 }
 
 void MainWindow::sendFiles(QStringList fileNames) {
+    if (inDebugger) {
+        return;
+    }
+
     setSendState(true);
     const unsigned int fileNum = fileNames.size();
 
@@ -1407,8 +1411,7 @@ void MainWindow::portMonitorCheckboxToggled(QTableWidgetItem * item) {
     uint16_t port = static_cast<uint16_t>(hex2int(ui->portView->item(row, 0)->text()));
     uint8_t value = DBG_NO_HANDLE;
 
-    if (col > 1)
-    {
+    if (col > 1) {
         if (col == 2) { // Break on read
             value = DBG_PORT_READ;
         }
@@ -1533,12 +1536,11 @@ void MainWindow::breakpointCheckboxToggled(QTableWidgetItem * item) {
         }
         if (col == 3) { // Break on execution
             value = DBG_EXEC_BREAKPOINT;
+            updateDisasmView(address, true);
         }
     }
 
     debug_breakpoint_set(address, value, item->checkState() == Qt::Checked);
-
-    updateDisasmView(address, true);
 }
 
 bool MainWindow::addBreakpoint() {
@@ -1629,39 +1631,29 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
 
     /* This means the program is trying to send us a debug command. Let's see what we can do with that information. */
     if (reason > NUM_DBG_COMMANDS) {
-       updateDisasmView(cpu.registers.PC, true);
        executeDebugCommand(static_cast<uint32_t>(reason-DBG_PORT_RANGE), static_cast<uint8_t>(input));
        return;
     }
 
-    if (reason == DBG_STEP || reason == DBG_USER) {
-        updateDisasmView(cpu.registers.PC, true);
-    }
-
     // We hit a normal breakpoint; raise the correct entry in the port monitor table
     if (reason == HIT_READ_BREAKPOINT || reason == HIT_WRITE_BREAKPOINT || reason == HIT_EXEC_BREAKPOINT) {
-        ui->tabDebugging->setCurrentIndex(0);
-
         // find the correct entry
         while( static_cast<uint32_t>(hex2int(ui->breakpointView->item(row++, 0)->text())) != input );
         row--;
 
         ui->breakChangeView->setText("Address "+ui->breakpointView->item(row, 0)->text()+" "+((reason == HIT_READ_BREAKPOINT) ? "Read" : (reason == HIT_WRITE_BREAKPOINT) ? "Write" : "Executed"));
         ui->breakpointView->selectRow(row);
-
-        updateDisasmView(input, true);
     }
 
     // We hit a port read or write; raise the correct entry in the port monitor table
     if (reason == HIT_PORT_READ_BREAKPOINT || reason == HIT_PORT_WRITE_BREAKPOINT) {
-        ui->tabDebugging->setCurrentIndex(1);
-        // find the correct entry
         while( static_cast<uint32_t>(hex2int(ui->portView->item(row++, 0)->text())) != input );
         row--;
 
         ui->portChangeView->setText("Port "+ui->portView->item(row, 0)->text()+" "+((reason == HIT_PORT_READ_BREAKPOINT) ? "Read" : "Write"));
         ui->portView->selectRow(row);
     }
+    updateDisasmView(cpu.registers.PC, true);
 }
 
 void MainWindow::updatePortData(int currentRow) {
@@ -1749,7 +1741,7 @@ void MainWindow::drawNextDisassembleLine() {
         disasmOffsetSet = true;
         disasmOffset = ui->disassemblyView->textCursor();
         disasmOffset.movePosition(QTextCursor::StartOfLine);
-    } else if (disasmOffsetSet == false && addressPane <= disasm.base_address+7) {
+    } else if (disasmOffsetSet == false && addressPane <= disasm.base_address+8) {
         disasmOffsetSet = true;
         disasmOffset = ui->disassemblyView->textCursor();
         disasmOffset.movePosition(QTextCursor::StartOfLine);
