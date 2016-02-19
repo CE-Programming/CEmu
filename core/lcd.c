@@ -71,7 +71,7 @@ void lcd_drawframe(uint32_t *out, lcd_state_t *lcd_state) {
     uint32_t *ofs = (uint32_t *) ((uint32_t) lcd_state->upcurr & (lcd_dma_size - 8));
 
     if(!mem.ram.block) {
-        memset(out, 0, vram_size);
+        memset(out, 0, vram_size << 1);
         return;
     }
 
