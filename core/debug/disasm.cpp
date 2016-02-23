@@ -692,7 +692,7 @@ void disassembleInstruction(void) {
                                 break;
                             case 7: // EI
                                 disasm.instruction.opcode = "ei";
-                                continue;
+                                break;
                         }
                         break;
                     case 4: // CALL cc[y], nn
