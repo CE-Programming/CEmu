@@ -9,9 +9,6 @@ extern "C" {
 #include "apb.h"
 
 PACK(typedef struct rtc_state {
-    /* Previos second counter */
-    time_t prevSec;
-
     /* Registers */
     uint8_t control, interrupt;
     uint8_t readSec,

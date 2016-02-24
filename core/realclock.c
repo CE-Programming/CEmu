@@ -1,4 +1,3 @@
-#include <time.h>
 #include <string.h>
 
 #include "realclock.h"
@@ -10,39 +9,33 @@
 rtc_state_t rtc;
 
 static void rtc_event(int index) {
-    time_t currsec;
-    /* Update 3 or so times a second just so we don't miss a step */
-    event_repeat(index, 27000000 / 3);
-
-    currsec = time(NULL);
+    /* Update exactly once a second */
+    event_repeat(index, 32768);
 
     /* TODO -- these events need to trigger interrupts */
-    if (currsec > rtc.prevSec) {
-        if (rtc.control & 1) { rtc.interrupt |= 1; }
-        rtc.readSec++;
-        rtc.prevSec = currsec;
-        if (rtc.readSec > 59) {
-            rtc.readSec = 0;
-            if (rtc.control & 2) {
-                rtc.interrupt |= 2;
+    if (rtc.control & 1) { rtc.interrupt |= 1; }
+    rtc.readSec++;
+    if (rtc.readSec > 59) {
+        rtc.readSec = 0;
+        if (rtc.control & 2) {
+            rtc.interrupt |= 2;
+            intrpt_set(INT_RTC, true);
+        }
+        rtc.readMin++;
+        if (rtc.readMin > 59) {
+            rtc.readMin = 0;
+            if (rtc.control & 4) {
+                rtc.interrupt |= 4;
                 intrpt_set(INT_RTC, true);
             }
-            rtc.readMin++;
-            if (rtc.readMin > 59) {
-                rtc.readMin = 0;
-                if (rtc.control & 4) {
-                    rtc.interrupt |= 4;
+            rtc.readHour++;
+            if (rtc.readHour > 23) {
+                rtc.readHour = 0;
+                if (rtc.control & 8) {
+                    rtc.interrupt |= 8;
                     intrpt_set(INT_RTC, true);
                 }
-                rtc.readHour++;
-                if (rtc.readHour > 23) {
-                    rtc.readHour = 0;
-                    if (rtc.control & 8) {
-                        rtc.interrupt |= 8;
-                        intrpt_set(INT_RTC, true);
-                    }
-                    rtc.readDay++;
-                }
+                rtc.readDay++;
             }
         }
     }
@@ -178,9 +171,8 @@ static void rtc_write(const uint16_t pio, const uint8_t byte) {
 void rtc_reset() {
     memset(&rtc, 0, sizeof rtc);
     rtc.revision = 0x00010500;
-    rtc.prevSec = time(NULL);
 
-    sched.items[SCHED_RTC].clock = CLOCK_12M;
+    sched.items[SCHED_RTC].clock = CLOCK_32K;
     sched.items[SCHED_RTC].second = -1;
     sched.items[SCHED_RTC].proc = rtc_event;
 
