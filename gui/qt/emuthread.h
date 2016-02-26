@@ -2,11 +2,14 @@
 #define EMUTHREAD_H
 
 #include <QtCore/QThread>
+#include <QtCore/QTimer>
 
 #include <chrono>
 
 #include "../../core/asic.h"
 #include "../../core/debug/debug.h"
+
+extern QTimer speedUpdateTimer;
 
 class EmuThread : public QThread {
     Q_OBJECT
@@ -67,6 +70,9 @@ public slots:
     bool restore(QString);
     void save(QString);
     void saveRomImage(QString);
+
+    // Speed
+    void sendActualSpeed();
 
 private:
     void setActualSpeed(int);

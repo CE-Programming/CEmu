@@ -276,6 +276,9 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
         emu.start();
     }
 
+    speedUpdateTimer.start();
+    speedUpdateTimer.setInterval(1000 / 4);
+
     debugger_init();
 
     alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toUInt());
@@ -467,6 +470,8 @@ void MainWindow::closeEvent(QCloseEvent *e) {
         qDebug("Thread Termmination Failed.");
     }
 
+    speedUpdateTimer.stop();
+
     QMainWindow::closeEvent(e);
 }
 
@@ -513,8 +518,11 @@ bool MainWindow::runSetup() {
     if (!romImagePath.empty()) {
         settings->setValue(QStringLiteral("romImage"), QVariant(romImagePath.c_str()));
         if(emu.stop()) {
+            speedUpdateTimer.stop();
             ui->rompathView->setText(romImagePath.c_str());
             emu.start();
+            speedUpdateTimer.start();
+            speedUpdateTimer.setInterval(1000 / 2);
         }
     } else {
         return false;

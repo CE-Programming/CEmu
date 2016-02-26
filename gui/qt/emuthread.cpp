@@ -32,6 +32,7 @@
 #include "../../core/debug/disasm.h"
 
 EmuThread *emu_thread = nullptr;
+QTimer speedUpdateTimer;
 
 void gui_emu_sleep(void) {
     QThread::usleep(50);
@@ -93,6 +94,7 @@ EmuThread::EmuThread(QObject *p) : QThread(p) {
     lcd_event_gui_callback = gif_new_frame;
     speed = actualSpeed = 100;
     lastTime= std::chrono::steady_clock::now();
+    connect(&speedUpdateTimer, SIGNAL(timeout()), this, SLOT(sendActualSpeed()));
 }
 
 void EmuThread::debuggerInput(QString str) {
@@ -195,10 +197,16 @@ void EmuThread::doStuff() {
     lastTime += std::chrono::steady_clock::now() - cur_time;
 }
 
+void EmuThread::sendActualSpeed() {
+    if(!calc_is_off()) {
+        emit actualSpeedChanged(actualSpeed);
+    }
+}
+
 void EmuThread::setActualSpeed(int value) {
     if(!calc_is_off()) {
         if (actualSpeed != value) {
-            emit actualSpeedChanged(actualSpeed = value);
+            actualSpeed = value;
         }
     }
 }
