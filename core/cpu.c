@@ -1377,7 +1377,7 @@ void cpu_execute(void) {
                                                             r->I = r->HL & 0xFFFF;
                                                             break;
                                                         case 0xD7: // LD HL, I
-                                                            r->HL = r->I | (r->MBASE << 16);
+                                                            r->HL = cpu_mask_mode(r->I | (r->MBASE << 16), cpu.L);
                                                             break;
                                                         case 0xEE: // flash erase
                                                             memset(mem.flash.block + (r->HL & ~0x3FFF), 0xFF, 0x4000);
