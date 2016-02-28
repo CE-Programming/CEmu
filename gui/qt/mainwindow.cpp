@@ -2015,7 +2015,8 @@ void MainWindow::searchEdit(QHexEdit *editor) {
                                                   tr("Input Hexadecimal Search String:"), QLineEdit::Normal,
                                                   searchingString, &ok).toUpper();
     editor->setFocus();
-    if(!ok || (searchString.length() & 1)) {
+    std::string s = searchString.toUpper().toStdString();
+    if(!ok || (searchString.length() & 1) || s.find_first_not_of("0123456789ABCDEF") != std::string::npos) {
         QMessageBox::warning(this,"Error", "Error when reading input string");
         return;
     }
