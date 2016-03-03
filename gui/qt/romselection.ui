@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>478</width>
+    <width>477</width>
     <height>298</height>
    </rect>
   </property>
@@ -46,9 +46,9 @@
      <colorrole role="Window">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>255</red>
-        <green>255</green>
-        <blue>255</blue>
+        <red>227</red>
+        <green>227</green>
+        <blue>227</blue>
        </color>
       </brush>
      </colorrole>
@@ -66,9 +66,9 @@
      <colorrole role="Window">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>255</red>
-        <green>255</green>
-        <blue>255</blue>
+        <red>227</red>
+        <green>227</green>
+        <blue>227</blue>
        </color>
       </brush>
      </colorrole>
@@ -77,18 +77,18 @@
      <colorrole role="Base">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>255</red>
-        <green>255</green>
-        <blue>255</blue>
+        <red>227</red>
+        <green>227</green>
+        <blue>227</blue>
        </color>
       </brush>
      </colorrole>
      <colorrole role="Window">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>255</red>
-        <green>255</green>
-        <blue>255</blue>
+        <red>227</red>
+        <green>227</green>
+        <blue>227</blue>
        </color>
       </brush>
      </colorrole>
@@ -120,6 +120,54 @@
    </property>
    <item row="0" column="0">
     <widget class="QStackedWidget" name="stackedWidget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="palette">
+      <palette>
+       <active>
+        <colorrole role="WindowText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>70</red>
+           <green>70</green>
+           <blue>70</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </active>
+       <inactive>
+        <colorrole role="WindowText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>70</red>
+           <green>70</green>
+           <blue>70</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </inactive>
+       <disabled>
+        <colorrole role="WindowText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>120</red>
+           <green>120</green>
+           <blue>120</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </disabled>
+      </palette>
+     </property>
+     <property name="font">
+      <font>
+       <family>Gulim</family>
+      </font>
+     </property>
      <property name="currentIndex">
       <number>0</number>
      </property>
@@ -137,28 +185,77 @@
        </size>
       </property>
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="7" column="0">
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+       <item row="5" column="0">
+        <widget class="QRadioButton" name="radioCreate">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
          </property>
-         <property name="sizeType">
-          <enum>QSizePolicy::Maximum</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item row="10" column="0">
-        <widget class="QLabel" name="versionLabel">
          <property name="text">
-          <string>CEmu Version: </string>
+          <string>Create a ROM image from a real calculator</string>
          </property>
         </widget>
+       </item>
+       <item row="8" column="0">
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="10" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Note: In most countries, it is illegal to share or download ROM images for devices you do not own. </string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0">
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QPushButton" name="buttonCancel">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Cancel</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonNext">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Finish</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item row="4" column="0">
         <layout class="QHBoxLayout" name="horizontalLayout">
@@ -179,7 +276,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="browse">
+          <widget class="QPushButton" name="buttonBrowseROM">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
              <horstretch>0</horstretch>
@@ -198,56 +295,19 @@
        </item>
        <item row="2" column="0">
         <widget class="QLabel" name="line1_7">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
-          <string>Welcome to CEmu! In order to get started, you will need to provide what is known as a ROM image. This is simply a file that contains the necessary instructions to start the calculator. You can either create one here; or select an already saved one from your computer.</string>
+          <string>Welcome to CEmu! In order to get started, you will need to provide what is known as a ROM image. This is simply a file that contains the necessary instructions to load the emulator. You can either create one here; or select an already saved one from your computer.</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
          </property>
         </widget>
-       </item>
-       <item row="9" column="0">
-        <widget class="Line" name="line">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
-         <item>
-          <widget class="QPushButton" name="cancel">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>Cancel</string>
-           </property>
-           <property name="autoDefault">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="next">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>Finish</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
        </item>
        <item row="1" column="0">
         <widget class="QLabel" name="line0">
@@ -257,9 +317,9 @@
             <colorrole role="WindowText">
              <brush brushstyle="SolidPattern">
               <color alpha="255">
-               <red>85</red>
+               <red>0</red>
                <green>85</green>
-               <blue>255</blue>
+               <blue>127</blue>
               </color>
              </brush>
             </colorrole>
@@ -268,9 +328,9 @@
             <colorrole role="WindowText">
              <brush brushstyle="SolidPattern">
               <color alpha="255">
-               <red>116</red>
-               <green>129</green>
-               <blue>212</blue>
+               <red>0</red>
+               <green>85</green>
+               <blue>127</blue>
               </color>
              </brush>
             </colorrole>
@@ -301,8 +361,15 @@
          </property>
         </widget>
        </item>
+       <item row="9" column="0">
+        <widget class="QLabel" name="versionLabel">
+         <property name="text">
+          <string>CEmu Version: </string>
+         </property>
+        </widget>
+       </item>
        <item row="3" column="0">
-        <widget class="QRadioButton" name="browse_sel">
+        <widget class="QRadioButton" name="radioBrowse">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
            <horstretch>0</horstretch>
@@ -317,34 +384,18 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="0">
-        <widget class="QRadioButton" name="create_sel">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
+       <item row="7" column="0">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
          </property>
-         <property name="text">
-          <string>Create a ROM image from a real calculator</string>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>1</height>
+          </size>
          </property>
-        </widget>
-       </item>
-       <item row="11" column="0">
-        <widget class="QLabel" name="label_2">
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>Note: In most countries, it is illegal to share or download ROM images for devices you do not own. </string>
-         </property>
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-        </widget>
+        </spacer>
        </item>
       </layout>
      </widget>
@@ -353,7 +404,7 @@
        <item>
         <widget class="QLabel" name="line1_2">
          <property name="text">
-          <string>Click the this button to save the dumper program to your computer.</string>
+          <string>Click this button to save the dumper program to your computer:</string>
          </property>
          <property name="wordWrap">
           <bool>false</bool>
@@ -361,7 +412,14 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="dumpButton">
+        <widget class="Line" name="line_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buttonDump">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
            <horstretch>0</horstretch>
@@ -395,6 +453,12 @@
        </item>
        <item>
         <widget class="QLabel" name="label">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -417,7 +481,14 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="nextButton_2">
+        <widget class="Line" name="line_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buttonNext2">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
            <horstretch>0</horstretch>
@@ -429,12 +500,41 @@
          </property>
         </widget>
        </item>
+       <item>
+        <spacer name="verticalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>1</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="page_5">
       <layout class="QGridLayout" name="gridLayout_2">
+       <item row="1" column="0">
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>1</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
        <item row="0" column="0">
         <layout class="QVBoxLayout" name="verticalLayout_3">
+         <property name="spacing">
+          <number>5</number>
+         </property>
          <item>
           <widget class="QLabel" name="line1_6">
            <property name="sizePolicy">
@@ -450,7 +550,7 @@
             </size>
            </property>
            <property name="text">
-            <string>The ROM dump program has now created segments of your ROM, each stored in a single variable. Using your computer's calculator connectivity software, copy all the variables prefixes with &quot;ROMData&quot; to your computer.</string>
+            <string>Using your computer's calculator connectivity software, copy all the variables prefixes with &quot;ROMData&quot; to your computer.</string>
            </property>
            <property name="textFormat">
             <enum>Qt::AutoText</enum>
@@ -462,16 +562,55 @@
          </item>
          <item>
           <widget class="QLabel" name="line1_9">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text">
-            <string>Select all of them with the &quot;Open Segments&quot; button below.</string>
+            <string>Use the below button to open the file called 'RomData0' first.</string>
            </property>
            <property name="wordWrap">
             <bool>true</bool>
            </property>
           </widget>
          </item>
-         <item alignment="Qt::AlignHCenter">
-          <widget class="QPushButton" name="mergeButton">
+         <item>
+          <widget class="QPushButton" name="buttonOpenRomData0">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Open RomData0</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="Line" name="line_4">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>Now, select  the remaining segments (starting with 'RomDataA') using the below button. You can select them all at once if you wish.</string>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonOpenSegments">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="sizePolicy">
             <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
              <horstretch>0</horstretch>
@@ -484,7 +623,17 @@
           </widget>
          </item>
          <item>
+          <widget class="Line" name="line_5">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QProgressBar" name="progressBar">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
              <horstretch>0</horstretch>
@@ -505,56 +654,9 @@
          <item>
           <layout class="QHBoxLayout" name="afterMergeBox">
            <item>
-            <widget class="QGroupBox" name="groupBox">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="title">
-              <string>Expert Option</string>
-             </property>
-             <layout class="QVBoxLayout" name="verticalLayout_4">
-              <item>
-               <widget class="QRadioButton" name="toggleDefault">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Use default state</string>
-                </property>
-                <property name="checked">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QRadioButton" name="toggleFlash">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Ignore Flash commands</string>
-                </property>
-                <property name="checked">
-                 <bool>false</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item>
             <layout class="QFormLayout" name="formLayout">
              <item row="1" column="0">
-              <widget class="QPushButton" name="romsaveBrowse">
+              <widget class="QPushButton" name="buttonBrowseSave">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
                  <horstretch>0</horstretch>
@@ -567,7 +669,7 @@
               </widget>
              </item>
              <item row="0" column="0" colspan="2">
-              <widget class="QLabel" name="hiddenLabel_1">
+              <widget class="QLabel" name="labelHidden">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                  <horstretch>0</horstretch>

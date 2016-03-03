@@ -148,7 +148,7 @@ bool emu_start(const char *romImage, const char *savedImage) {
         } else {
             asic_init();
             if (romImage == NULL) {
-                gui_console_printf("[CEmu] No ROM image specified.");
+                gui_console_printf("[CEmu] No ROM image specified.\n");
                 break;
             } else {
                 FILE *romFile = fopen_utf8(romImage, "rb");
@@ -296,7 +296,7 @@ bool emu_start(const char *romImage, const char *savedImage) {
     } while(0);
 
     if (!ret) {
-        gui_console_printf("[CEmu] Error opening image.\n");
+        gui_console_printf("[CEmu] Error opening image (Corrupted certificate?)\n");
         emu_cleanup();
     }
 
@@ -328,7 +328,7 @@ static void emu_reset(void) {
 
 static void emu_main_loop_inner(void) {
         if (cpuEvents & EVENT_RESET) {
-            gui_console_printf("[CEmu] Calculator reset triggered...");
+            gui_console_printf("[CEmu] Calculator reset triggered...\n");
             asic_reset();
             cpuEvents = EVENT_NONE;
         }
