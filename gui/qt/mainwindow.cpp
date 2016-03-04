@@ -669,7 +669,7 @@ void MainWindow::checkForUpdates(bool forceInfoBox) {
         return;
     }
 
-    static const QString currentVersionReleaseURL = QStringLiteral("https://github.com/MateoConLechuga/CEmu/releases/tag/" CEMU_VERSION);
+    static const QString currentVersionReleaseURL = QStringLiteral("https://github.com/CE-Programming/CEmu/releases/tag/" CEMU_VERSION);
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
     connect(manager, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply) {
         QString newVersionURL = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toString();
@@ -703,7 +703,7 @@ void MainWindow::checkForUpdates(bool forceInfoBox) {
                 updateInfoBox.setWindowTitle(tr("Update check failed"));
                 updateInfoBox.setText(tr("<b>An error occurred while checking for CEmu updates.</b>"
                                          "<br/>"
-                                         "You can however <a href='https://github.com/MateoConLechuga/CEmu/releases/latest'>go here</a> to check yourself."));
+                                         "You can however <a href='https://github.com/CE-Programming/CEmu/releases/latest'>go here</a> to check yourself."));
                 updateInfoBox.setTextFormat(Qt::RichText);
                 updateInfoBox.show();
                 updateInfoBox.exec();
@@ -711,7 +711,7 @@ void MainWindow::checkForUpdates(bool forceInfoBox) {
         }
     });
 
-    manager->get(QNetworkRequest(QUrl(QStringLiteral("https://github.com/MateoConLechuga/CEmu/releases/latest"))));
+    manager->get(QNetworkRequest(QUrl(QStringLiteral("https://github.com/CE-Programming/CEmu/releases/latest"))));
 }
 
 void MainWindow::showAbout() {
@@ -726,7 +726,7 @@ void MainWindow::showAbout() {
     okButton->setFocus();
 
     about_box.setText(tr("<h3>CEmu %1</h3>"
-                         "<a href='https://github.com/MateoConLechuga/CEmu'>On GitHub</a><br>"
+                         "<a href='https://github.com/CE-Programming/CEmu'>On GitHub</a><br>"
                          "<br>"
                          "Main authors:<br>"
                          "Matt Waltz (<a href='https://github.com/MateoConLechuga'>MateoConLechuga</a>)<br>"
