@@ -46,3 +46,8 @@ moc_*.cpp
 # Windows and Mac crap
 Thumbs.db
 .DS_Store
+
+# Stuff used in the Emscripten version
+*.rom
+*.data
+*.bc

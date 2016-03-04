@@ -1,7 +1,12 @@
 lessThan(QT_MAJOR_VERSION, 5) : error("You need at least Qt 5 to build CEmu!")
 
-# Version. Don't forget to remove the "dev" suffix for a release/deployment bulid
-DEFINES += CEMU_VERSION=0.4dev
+# CEmu version
+if (0) { # GitHub release/deployment build. Has to correspond to the git tag.
+    DEFINES += CEMU_VERSION=\\\"1.0\\\"
+} else { # Development build. Used in the about screen
+    GIT_VERSION = $$system(git describe --abbrev=7 --dirty --always --tags)
+    DEFINES += CEMU_VERSION=\\\"0.4dev_$$GIT_VERSION\\\"
+}
 
 # Code beautifying
 DISTFILES += ../../.astylerc
