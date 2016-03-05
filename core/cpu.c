@@ -603,6 +603,7 @@ static void cpu_execute_bli() {
                         break;
                     default:
                         cpu_trap();
+                        return;
                 }
                 // LDI, LDD, LDIR, LDDR
                 cpu_write_byte(r->DE, cpu_read_byte(r->HL));
@@ -621,6 +622,7 @@ static void cpu_execute_bli() {
                         break;
                     default:
                         cpu_trap();
+                        return;
                 }
                 // CPI, CPD, CPIR, CPDR
                 old = cpu_read_byte(r->HL);
@@ -660,6 +662,7 @@ static void cpu_execute_bli() {
                         break;
                     default:
                         cpu_trap();
+                        return;
                 }
                 // INIM, INDM, INIMR, INDMR, INI, IND, INIR, INDR, INIRX, INDRX
                 repeat &= !r->flags.Z;
@@ -689,6 +692,7 @@ static void cpu_execute_bli() {
                         break;
                     default:
                         cpu_trap();
+                        return;
                 }
                 // OTIM, OTDM, OTIMR, OTDMR, OUTI, OUTD, OTIR, OTDR, OTIRX, OTDRX
                 repeat &= !r->flags.Z;
@@ -705,6 +709,7 @@ static void cpu_execute_bli() {
                         break;
                     default:
                         cpu_trap();
+                        return;
                 }
                 // INI2, IND2, INI2R, IND2R, OUTI, OUTD, OTIR, OTDR
                 r->C += delta;
@@ -715,6 +720,7 @@ static void cpu_execute_bli() {
                 break;
             default:
                 cpu_trap();
+                return;
         }
         // All block instructions
         r->HL = cpu_mask_mode(r->HL + delta, cpu.L);
