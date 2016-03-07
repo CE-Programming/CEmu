@@ -1025,6 +1025,7 @@ void cpu_execute(void) {
                                             r->_HL = w;
                                             break;
                                         case 2: // JP (rr)
+                                            cpu_fetch_byte();
                                             cpu_prefetch(cpu_read_index(), cpu.L);
                                             cpu_check_step_out();
                                             break;
