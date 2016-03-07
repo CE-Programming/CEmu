@@ -45,10 +45,9 @@ _Note that Release builds have an update checking feature, which is disabled in 
 ## How to build
 After downloading the source (you can clone the repo or just [get the zip](https://github.com/MateoConLechuga/CEmu/archive/master.zip)):
 
-1. Get the [latest Qt5 SDK](https://www.qt.io/download-open-source/#section-3) for your OS.
-  * On Windows, if you are building with Visual Studio, you must use
-    Visual Studio 2015 or newer. You also must download a Qt build that
-    is compatible with Visual Studio 2015 or newer.
+1. Get the [latest Qt5 SDK](https://www.qt.io/download-open-source/#section-3) for your OS (and read on before downloading)
+  * On Windows, the MinGW variation of the Qt SDK is preferred (v5.6+, too).  
+    However, if you are building with Visual Studio, you must use Visual Studio 2015 or newer. You also must download a Qt build that is compatible with Visual Studio 2015 or newer.
     * If you don't have Visual Studio 2015 installed, we recommend
       installing [Visual Studio 2015 Community](https://go.microsoft.com/fwlink/?LinkId=691978&clcid=0x409).
     * Qt v5.6 is the only version of Qt (at the moment) that supports
