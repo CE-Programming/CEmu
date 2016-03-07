@@ -391,7 +391,7 @@ static void cpu_trap_rewind(uint_fast8_t rewind) {
     eZ80registers_t *r = &cpu.registers;
     cpu_fetch_byte();
     cpu.cycles++;
-    r->PC = cpu_mask_mode(r->PC - rewind, cpu.ADL);
+    r->PC = cpu_mask_mode(r->PC - 1 - rewind, cpu.ADL);
     cpu_clear_mode();
     cpu_call(0x00, cpu.MADL);
 }
