@@ -75,7 +75,7 @@ static void gpt_refresh(int index) {
 }
 
 static void gpt_event(int index) {
-    uint64_t next_event = gpt_next_event(index);
+    uint32_t next_event = gpt_next_event(index);
     if (next_event) {
         event_repeat(index, next_event);
     } else {
