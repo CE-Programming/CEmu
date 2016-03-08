@@ -27,7 +27,7 @@
 #include "cert.h"
 #include "os/os.h"
 
-#define imageVersion 0xCECE0002
+#define imageVersion 0xCECE0003
 
 uint32_t cpuEvents;
 volatile bool exiting;
