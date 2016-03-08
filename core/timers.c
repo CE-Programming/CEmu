@@ -52,9 +52,7 @@ static uint32_t gpt_next_event(int index) {
                 next = temp;
             }
         }
-        if (status & ~gpt.raw_status[index]) {
-            gpt.status |= (status & ~gpt.raw_status[index]) << index * 3;
-        }
+        gpt.status |= (status & ~gpt.raw_status[index]) << index * 3;
         intrpt_set(INT_TIMER1 + index, status);
         gpt.raw_status[index] = next ? 0 : status;
         intrpt_set(INT_TIMER1 + index, gpt.raw_status[index]);
