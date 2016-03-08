@@ -23,11 +23,12 @@ static void gpt_restore_state(int index) {
     }
 }
 
-static uint32_t gpt_next_event(int index) {
+static uint64_t gpt_next_event(int index) {
     struct sched_item *item = &sched.items[index];
     timer_state_t *timer = &gpt.timer[index -= SCHED_TIMER1];
     int32_t invert, event;
-    uint32_t status = 0, next, temp;
+    uint32_t status = 0, temp;
+    uint64_t next;
     if (gpt.control >> index * 3 & 1) {
         invert = (gpt.control >> (9 + index) & 1) ? ~0 : 0;
         if (!timer->counter) {
@@ -35,14 +36,16 @@ static uint32_t gpt_next_event(int index) {
             if (gpt.control >> index * 3 & 4) {
                 status = 1 << 2;
             }
-            if (!timer->match[1]) {
-                status |= 1 << 1;
-            }
-            if (!timer->match[0]) {
-                status |= 1 << 0;
+            if (!invert) {
+                if (!timer->match[1]) {
+                    status |= 1 << 1;
+                }
+                if (!timer->match[0]) {
+                    status |= 1 << 0;
+                }
             }
         }
-        next = (timer->counter + invert) ^ invert;
+        next = (uint64_t)(timer->counter ^ invert) - invert;
         for (event = 1; event >= 0; event--) {
             temp = (timer->counter - timer->match[event] + invert) ^ invert;
             if (!temp) {
@@ -56,7 +59,7 @@ static uint32_t gpt_next_event(int index) {
         intrpt_set(INT_TIMER1 + index, status);
         gpt.raw_status[index] = next ? 0 : status;
         intrpt_set(INT_TIMER1 + index, gpt.raw_status[index]);
-        timer->counter -= (next + invert) ^ invert;
+        timer->counter -= ((uint32_t)next + invert) ^ invert;
         item->clock = (gpt.control >> index*3 & 2) ? CLOCK_32K : CLOCK_CPU;
         return next;
     }
@@ -66,7 +69,7 @@ static uint32_t gpt_next_event(int index) {
 }
 
 static void gpt_refresh(int index) {
-    uint32_t next_event = gpt_next_event(index);
+    uint64_t next_event = gpt_next_event(index);
     if (next_event) {
         event_set(index, next_event);
     } else {
@@ -75,7 +78,7 @@ static void gpt_refresh(int index) {
 }
 
 static void gpt_event(int index) {
-    uint32_t next_event = gpt_next_event(index);
+    uint64_t next_event = gpt_next_event(index);
     if (next_event) {
         event_repeat(index, next_event);
     } else {
