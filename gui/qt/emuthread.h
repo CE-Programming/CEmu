@@ -56,7 +56,6 @@ public slots:
     void setDebugStepOverMode();
     void setDebugStepNextMode();
     void setDebugStepOutMode();
-    void debuggerInput(QString);
 
     // Linking
     void setSendState(bool);
@@ -83,7 +82,7 @@ private:
     bool enterReceiveState = false;
     bool throttleOn = true;
     std::chrono::steady_clock::time_point lastTime;
-    std::string debugInput,exportRomPath;
+    std::string exportRomPath;
     volatile bool saveImage = false;
     volatile bool saveRom = false;
     volatile bool doRestore = false;

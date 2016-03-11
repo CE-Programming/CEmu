@@ -58,7 +58,6 @@ signals:
     void debuggerChangedState(bool);
     void triggerEmuSendState();
     void debugInputRequested();
-    void debuggerCommand(QString);
 
     // Linking
     void setSendState(bool);

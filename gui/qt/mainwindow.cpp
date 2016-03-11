@@ -72,8 +72,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     // Console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, ui->console, &QPlainTextEdit::clear);
-    connect(ui->buttonDebugCommand, &QPushButton::clicked, this, &MainWindow::debugCommand);
-    connect(ui->debugInput, &QLineEdit::returnPressed, this, &MainWindow::debugCommand);
     connect(ui->radioConsole, &QRadioButton::clicked, this, &MainWindow::consoleOutputChanged);
     connect(ui->radioStderr, &QRadioButton::clicked, this, &MainWindow::consoleOutputChanged);
 
@@ -195,6 +193,10 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     QShortcut *DebuggerShortcut = new QShortcut(QKeySequence(Qt::Key_F10), this);
 
     DebuggerShortcut->setAutoRepeat(false);
+    stepInShortcut->setAutoRepeat(false);
+    stepOverShortcut->setAutoRepeat(false);
+    stepNextShortcut->setAutoRepeat(false);
+    stepOutShortcut->setAutoRepeat(false);
 
     connect(DebuggerShortcut, &QShortcut::activated, this, &MainWindow::changeDebuggerState);
     connect(stepInShortcut, &QShortcut::activated, this, &MainWindow::stepInPressed);
@@ -1041,11 +1043,6 @@ static QString int2hex(uint32_t a, uint8_t l) {
     return QString::number(a, 16).rightJustified(l, '0', true).toUpper();
 }
 
-void MainWindow::debugCommand() {
-    emit debuggerCommand(ui->debugInput->text());
-    ui->debugInput->clear();
-}
-
 void MainWindow::raiseDebugger() {
     // make sure we are set on the debug window, just in case
     if (debuggerDock) {
@@ -1172,8 +1169,6 @@ void MainWindow::setDebuggerState(bool state) {
     ui->buttonRun->setIcon(icon);
     ui->buttonRun->setIconSize(pix.size());
 
-    ui->buttonDebugCommand->setEnabled( debuggerOn );
-    ui->debugInput->setEnabled( debuggerOn );
     ui->tabDebugging->setEnabled( debuggerOn );
     ui->buttonGoto->setEnabled( debuggerOn );
     ui->buttonStepIn->setEnabled( debuggerOn );

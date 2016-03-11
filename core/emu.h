@@ -74,11 +74,6 @@ void gui_render_gif_frame(void);
 void gui_set_busy(bool);
 void gui_emu_sleep(void);
 
-/* callback == 0: Stop requesting input
- * callback != 0: Call callback with input, then stop requesting */
-typedef void (*debug_input_cb)(const char *input);
-void gui_debugger_request_input(debug_input_cb callback);
-
 bool emu_start(const char*,const char*);
 void emu_loop(bool);
 void emu_cleanup(void);

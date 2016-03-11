@@ -71,13 +71,6 @@ void gui_debugger_entered_or_left(bool entered) {
     }
 }
 
-static debug_input_cb debugCallback;
-
-void gui_debugger_request_input(debug_input_cb callback) {
-    debugCallback = callback;
-    emu_thread->debugInputRequested(callback != nullptr);
-}
-
 void throttle_timer_wait(void) {
     emu_thread->throttleTimerWait();
 }
@@ -95,11 +88,6 @@ EmuThread::EmuThread(QObject *p) : QThread(p) {
     speed = actualSpeed = 100;
     lastTime= std::chrono::steady_clock::now();
     connect(&speedUpdateTimer, SIGNAL(timeout()), this, SLOT(sendActualSpeed()));
-}
-
-void EmuThread::debuggerInput(QString str) {
-    debugInput = str.toStdString();
-    debugCallback(debugInput.c_str());
 }
 
 void EmuThread::resetTriggered() {
