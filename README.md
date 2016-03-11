@@ -73,7 +73,7 @@ You're welcome to [report any bugs](https://github.com/MateoConLechuga/CEmu/issu
 
 
 ## TODO list
-_(Take a look at [the current issues](https://github.com/CE-Programming/CEmu/issues)._
+_(Take a look at [the current issues](https://github.com/CE-Programming/CEmu/issues))._
 
 ## WISH list
 _(Take a look at [the issues](https://github.com/CE-Programming/CEmu/issues), too, since not everything here has been migrated there yet)_
