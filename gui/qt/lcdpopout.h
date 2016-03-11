@@ -4,9 +4,7 @@
 #include <QDialog>
 #include "../../core/lcd.h"
 
-namespace Ui {
-class LCDPopout;
-}
+namespace Ui { class LCDPopout; }
 
 class LCDPopout : public QDialog {
     Q_OBJECT

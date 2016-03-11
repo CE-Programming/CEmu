@@ -43,7 +43,7 @@ typedef struct {
     int32_t new_address;
     uint8_t prefix, suffix;
     bool adl, iw, il, l;
-    addressMap_t address_map;
+    addressMap_t addressMap;
 } disasm_state_t;
 
 extern disasm_state_t disasm;

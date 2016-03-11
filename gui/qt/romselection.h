@@ -6,8 +6,6 @@
 
 class QString;
 
-bool fileExists(const QString &path);
-
 namespace Ui { class RomSelection; }
 
 class RomSelection : public QDialog {

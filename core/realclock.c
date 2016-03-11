@@ -12,7 +12,6 @@ static void rtc_event(int index) {
     /* Update exactly once a second */
     event_repeat(index, 32768);
 
-    /* TODO -- these events need to trigger interrupts */
     if (rtc.control & 1) { rtc.interrupt |= 1; }
     rtc.readSec++;
     if (rtc.readSec > 59) {
