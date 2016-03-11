@@ -16,6 +16,7 @@ class RomSelection : public QDialog {
 public:
     explicit RomSelection(QWidget *parent = 0);
     ~RomSelection();
+    std::string getROMImage();
 
 private slots:
     bool checkImageSize(const char *filename);
@@ -36,6 +37,7 @@ private:
     QDir currentDir;
     uint8_t *romArray = nullptr;
     uint32_t imageSize;
+    std::string romImagePath;
     bool segmentFilledStatus[30] = {0};
     int numROMSegments;
 };

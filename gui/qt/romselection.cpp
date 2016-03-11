@@ -276,6 +276,11 @@ void RomSelection::saveROMImage() {
     close();
 }
 
+std::string RomSelection::getROMImage() {
+    return romImagePath;
+}
+
+
 /**
  * ROM dumping program
  */

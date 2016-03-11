@@ -515,7 +515,7 @@ bool MainWindow::runSetup() {
     romSelection.show();
     romSelection.exec();
 
-    emu.rom = romSelection.romImagePath;
+    emu.rom = romSelection.getROMImage();
 
     if (emu.rom.empty()) {
         return false;
