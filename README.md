@@ -73,22 +73,7 @@ You're welcome to [report any bugs](https://github.com/MateoConLechuga/CEmu/issu
 
 
 ## TODO list
-_(Take a look at [the issues](https://github.com/CE-Programming/CEmu/issues), too, since not everything here has been migrated there yet)_
-### _Core_
-* Implement unknown port range (0xDXXX)
-* Implement USB (0xDXXX appears to be a part of this as well)
-* Add more flash handlers
-
-### _Standard features_
-* More robust and complete variable transfer (Calc <-> Computer). _Related to USB emulation._
-* Integrate some TypeHandlers functions from [tivars_lib_cpp](https://github.com/adriweb/tivars_lib_cpp) to read variables' content.
-
-### _Developer features_
-* .lst parsing
-* Functions profiling (call count, time spent...)
-
-### _GUI_
-* Implement 83PCE/84+CE differences (2 keypad setups, "skins", etc.)
+_(Take a look at [the current issues](https://github.com/CE-Programming/CEmu/issues)._
 
 ## WISH list
 _(Take a look at [the issues](https://github.com/CE-Programming/CEmu/issues), too, since not everything here has been migrated there yet)_
@@ -96,7 +81,6 @@ _(Take a look at [the issues](https://github.com/CE-Programming/CEmu/issues), to
 * Think about CEmu's core’s integration on third-party projects, like TI-Planet's Project Builder - for instance, in C projects, in order to directly test the program, and eventually have live source-level debugging!
 * Look at [this gdb-z80](https://github.com/legumbre/gdb-z80) project (code from 2011...) ; try to see if it can be updated for eZ80, and used with a CEmu GDB stub. Mainlining such code is highly preferable.
 * More translations (for now, it's available in English, French, and Spanish). Qt Linguist is a great tool for that (here's [a tutorial](https://doc.qt.io/qt-5.5/linguist-manager.html)). We welcome Pull Requests :)
-* ASM instructions inline/hover help?
 * ...
 
 ## License
