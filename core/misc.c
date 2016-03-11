@@ -27,9 +27,9 @@ static void watchdog_event(int index) {
             if (watchdog.control & 4) {
                 cpu_nmi();
             }
-            gui_console_printf("[CEmu] Watchdog reset triggered.");
+            gui_console_printf("[CEmu] Watchdog reset triggered.\n");
         }
-        event_repeat(SCHED_WATCHDOG, watchdog.load);
+        event_repeat(SCHED_WATCHDOG, watchdog.count);
     }
 }
 
@@ -82,6 +82,7 @@ static void watchdog_write(const uint16_t pio, const uint8_t byte) {
             if(watchdog.restart == 0x5AB9) {
                 event_set(SCHED_WATCHDOG, watchdog.load);
                 watchdog.count = watchdog.load;
+                watchdog.restart = 0;
             }
             break;
         case 0x00C:
