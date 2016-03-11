@@ -124,7 +124,7 @@ void watchdog_reset() {
     watchdog.load = 0x03EF1480;   /* (66MHz) */
     watchdog.count = 0x03EF1480;
 
-    gui_console_printf("[CEmu] Watchdog Timer reset.\n");
+    gui_console_printf("[CEmu] Watchdog timer reset.\n");
 }
 
 eZ80portrange_t init_watchdog(void) {

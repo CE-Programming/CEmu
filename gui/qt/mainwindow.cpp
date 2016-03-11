@@ -515,20 +515,21 @@ bool MainWindow::runSetup() {
     romSelection.show();
     romSelection.exec();
 
-    emu.rom = romImagePath;
+    emu.rom = romSelection.romImagePath;
 
-    if (!romImagePath.empty()) {
-        settings->setValue(QStringLiteral("romImage"), QVariant(romImagePath.c_str()));
+    if (emu.rom.empty()) {
+        return false;
+    } else {
+        settings->setValue(QStringLiteral("romImage"), QVariant(emu.rom.c_str()));
         if(emu.stop()) {
             speedUpdateTimer.stop();
-            ui->rompathView->setText(romImagePath.c_str());
+            ui->rompathView->setText(emu.rom.c_str());
             emu.start();
             speedUpdateTimer.start();
             speedUpdateTimer.setInterval(1000 / 2);
         }
-    } else {
-        return false;
     }
+
     return true;
 }
 

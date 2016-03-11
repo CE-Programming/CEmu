@@ -386,7 +386,7 @@ void mem_write_byte(uint32_t address, uint8_t value) {
             if (address >= DBG_PORT_RANGE) {
                 open_debugger(address, value);
                 break;
-            } else if (address >= CONSOLE_PORT_RANGE) {
+            } else if (address >= CONSOLE_PORT_RANGE && address <= CONSOLE_PORT_RANGE+384) {
                 gui_console_debug_char((const char)value);
                 break;
             }
