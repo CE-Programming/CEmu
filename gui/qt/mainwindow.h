@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QtWidgets/QShortcut>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QTableWidgetItem>
@@ -212,6 +213,12 @@ private:
     bool stderrConsole = false;
     bool closeAfterSave = false;
     bool isResumed = false;
+
+    QShortcut *stepInShortcut;
+    QShortcut *stepOverShortcut;
+    QShortcut *stepNextShortcut;
+    QShortcut *stepOutShortcut;
+    QShortcut *debuggerShortcut;
 
     QList<calc_var_t> vars;
 };

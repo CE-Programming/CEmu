@@ -186,19 +186,19 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->checkUpdates, &QCheckBox::stateChanged, this, &MainWindow::autoCheckForUpdates);
 
     // Shortcut Connections
-    QShortcut *stepInShortcut = new QShortcut(QKeySequence(Qt::Key_F6), this);
-    QShortcut *stepOverShortcut = new QShortcut(QKeySequence(Qt::Key_F7), this);
-    QShortcut *stepNextShortcut = new QShortcut(QKeySequence(Qt::Key_F8), this);
-    QShortcut *stepOutShortcut = new QShortcut(QKeySequence(Qt::Key_F9), this);
-    QShortcut *DebuggerShortcut = new QShortcut(QKeySequence(Qt::Key_F10), this);
+    stepInShortcut = new QShortcut(QKeySequence(Qt::Key_F6), this);
+    stepOverShortcut = new QShortcut(QKeySequence(Qt::Key_F7), this);
+    stepNextShortcut = new QShortcut(QKeySequence(Qt::Key_F8), this);
+    stepOutShortcut = new QShortcut(QKeySequence(Qt::Key_F9), this);
+    debuggerShortcut = new QShortcut(QKeySequence(Qt::Key_F10), this);
 
-    DebuggerShortcut->setAutoRepeat(false);
+    debuggerShortcut->setAutoRepeat(false);
     stepInShortcut->setAutoRepeat(false);
     stepOverShortcut->setAutoRepeat(false);
     stepNextShortcut->setAutoRepeat(false);
     stepOutShortcut->setAutoRepeat(false);
 
-    connect(DebuggerShortcut, &QShortcut::activated, this, &MainWindow::changeDebuggerState);
+    connect(debuggerShortcut, &QShortcut::activated, this, &MainWindow::changeDebuggerState);
     connect(stepInShortcut, &QShortcut::activated, this, &MainWindow::stepInPressed);
     connect(stepOverShortcut, &QShortcut::activated, this, &MainWindow::stepOverPressed);
     connect(stepNextShortcut, &QShortcut::activated, this, &MainWindow::stepNextPressed);
@@ -1054,6 +1054,10 @@ void MainWindow::raiseDebugger() {
 
     populateDebugWindow();
     setDebuggerState(true);
+    connect(stepInShortcut, &QShortcut::activated, this, &MainWindow::stepInPressed);
+    connect(stepOverShortcut, &QShortcut::activated, this, &MainWindow::stepOverPressed);
+    connect(stepNextShortcut, &QShortcut::activated, this, &MainWindow::stepNextPressed);
+    connect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOutPressed);
 }
 
 void MainWindow::updateDebuggerChanges() {
@@ -1411,7 +1415,7 @@ void MainWindow::updateDisasmView(const int sentBase, const bool newPane) {
     disasmOffsetSet = false;
     disasm.adl = ui->checkADL->isChecked();
     disasm.base_address = -1;
-    disasm.new_address = addressPane - ((newPane) ? 0x80 : 0);
+    disasm.new_address = addressPane - ((newPane) ? 0x90 : 0);
     if(disasm.new_address < 0) disasm.new_address = 0;
     int32_t last_address = disasm.new_address + 0x100;
     if(last_address > 0xFFFFFF) last_address = 0xFFFFFF;
@@ -1733,10 +1737,10 @@ void MainWindow::drawNextDisassembleLine() {
             disasmHighlight.hit_run_breakpoint = false;
             disasmHighlight.hit_pc = false;
 
-            disasm.instruction.data = "";
-            disasm.instruction.opcode = "";
-            disasm.instruction.mode_suffix = " ";
-            disasm.instruction.arguments = "";
+            disasm.instruction.data.clear();
+            disasm.instruction.opcode.clear();
+            disasm.instruction.mode_suffix.clear();
+            disasm.instruction.arguments.clear();
             disasm.instruction.size = 0;
 
             label = &item->second;
@@ -1769,7 +1773,6 @@ void MainWindow::drawNextDisassembleLine() {
 
     ui->disassemblyView->blockSignals(true);
     ui->disassemblyView->appendHtml(formattedLine);
-    ui->disassemblyView->blockSignals(false);
 
     if (!disasmOffsetSet && disasm.new_address > addressPane) {
         disasmOffsetSet = true;
@@ -1783,6 +1786,7 @@ void MainWindow::drawNextDisassembleLine() {
     if (disasmHighlight.hit_pc == true) {
         ui->disassemblyView->addHighlight(QColor(Qt::red).lighter(160));
     }
+    ui->disassemblyView->blockSignals(false);
 }
 
 void MainWindow::disasmContextMenu(const QPoint& posa) {
@@ -1854,6 +1858,8 @@ void MainWindow::stepInPressed() {
     if(!inDebugger) {
         return;
     }
+
+    disconnect(stepInShortcut, &QShortcut::activated, this, &MainWindow::stepInPressed);
     debuggerOn = false;
     updateDebuggerChanges();
     emit setDebugStepInMode();
@@ -1868,6 +1874,8 @@ void MainWindow::stepOverPressed() {
     if(!inDebugger) {
         return;
     }
+
+    disconnect(stepOverShortcut, &QShortcut::activated, this, &MainWindow::stepOverPressed);
     disasm.base_address = cpu.registers.PC;
     disasm.adl = cpu.ADL;
     disassembleInstruction();
@@ -1883,6 +1891,8 @@ void MainWindow::stepNextPressed() {
     if(!inDebugger) {
         return;
     }
+
+    disconnect(stepNextShortcut, &QShortcut::activated, this, &MainWindow::stepNextPressed);
     setDebuggerState(false);
     emit setDebugStepNextMode();
 }
@@ -1891,6 +1901,7 @@ void MainWindow::stepOutPressed() {
     if(!inDebugger) {
         return;
     }
+    disconnect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOutPressed);
     setDebuggerState(false);
     emit setDebugStepOutMode();
 }
