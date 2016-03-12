@@ -1590,7 +1590,6 @@ void MainWindow::changeBreakpointAddress(QTableWidgetItem *item) {
         }
         if (col == 3) { // Break on execution
             value = DBG_EXEC_BREAKPOINT;
-            updateDisasmView(address, true);
         }
         debug_breakpoint_set(address, value, item->checkState() == Qt::Checked);
     } else {
@@ -1622,6 +1621,7 @@ void MainWindow::changeBreakpointAddress(QTableWidgetItem *item) {
         debug_breakpoint_set(address, value, true);
         ui->breakpointView->blockSignals(false);
     }
+    updateDisasmView(address, true);
 }
 
 void MainWindow::deletePort() {
