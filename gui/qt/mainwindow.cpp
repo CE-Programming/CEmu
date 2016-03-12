@@ -1783,11 +1783,20 @@ void MainWindow::updateStackView() {
 
     QString formattedLine;
 
-    for(int i=0; i<30; i+=3) {
-       formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2</pre>")
-                                .arg(int2hex(cpu.registers.SPL+i, 6),
-                                     int2hex(debug_read_long(cpu.registers.SPL+i), 6));
-        ui->stackView->appendHtml(formattedLine);
+    if (cpu.ADL) {
+        for(int i=0; i<30; i+=3) {
+            formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2</pre>")
+                                    .arg(int2hex(cpu.registers.SPL+i, 6),
+                                         int2hex(debug_read_long(cpu.registers.SPL+i), 6));
+            ui->stackView->appendHtml(formattedLine);
+        }
+    } else {
+        for(int i=0; i<20; i+=2) {
+            formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2</pre>")
+                                    .arg(int2hex(cpu.registers.SPS+i, 4),
+                                         int2hex(debug_read_short(cpu.registers.SPS+i), 4));
+            ui->stackView->appendHtml(formattedLine);
+        }
     }
     ui->stackView->moveCursor(QTextCursor::Start);
 }
