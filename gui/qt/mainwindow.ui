@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>946</width>
-    <height>588</height>
+    <height>591</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -148,7 +148,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>5</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -165,7 +165,11 @@
       <property name="tabBarAutoHide">
        <bool>false</bool>
       </property>
-      <widget class="QWidget" name="keypadtab">
+      <widget class="QWidget" name="tabKeypad">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/keypad.png</normaloff>:/icons/resources/icons/keypad.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>Keypad</string>
        </attribute>
@@ -205,7 +209,11 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="filetab">
+      <widget class="QWidget" name="tabVariables">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/variables.png</normaloff>:/icons/resources/icons/variables.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>Variables</string>
        </attribute>
@@ -356,7 +364,11 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="screenshottab">
+      <widget class="QWidget" name="tabCapture">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/capture.png</normaloff>:/icons/resources/icons/capture.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>Capture</string>
        </attribute>
@@ -569,7 +581,11 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="settingstab">
+      <widget class="QWidget" name="tabSettings">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/settings.png</normaloff>:/icons/resources/icons/settings.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>Settings</string>
        </attribute>
@@ -1210,6 +1226,10 @@
        </layout>
       </widget>
       <widget class="QWidget" name="tabDebugger">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/debugger.png</normaloff>:/icons/resources/icons/debugger.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>Debug</string>
        </attribute>
@@ -5284,7 +5304,11 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tabOS">
+      <widget class="QWidget" name="tabTIOS">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/tios.png</normaloff>:/icons/resources/icons/tios.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>TI-OS</string>
        </attribute>
@@ -5351,7 +5375,11 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab">
+      <widget class="QWidget" name="tabMemory">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/mem.png</normaloff>:/icons/resources/icons/mem.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>Memory</string>
        </attribute>
@@ -5366,7 +5394,19 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_11">
            <property name="spacing">
-            <number>0</number>
+            <number>2</number>
+           </property>
+           <property name="leftMargin">
+            <number>8</number>
+           </property>
+           <property name="topMargin">
+            <number>8</number>
+           </property>
+           <property name="rightMargin">
+            <number>8</number>
+           </property>
+           <property name="bottomMargin">
+            <number>8</number>
            </property>
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -5385,6 +5425,10 @@
               <widget class="QPushButton" name="buttonFlashSearch">
                <property name="text">
                 <string>Search</string>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/resources/icons/search.png</normaloff>:/icons/resources/icons/search.png</iconset>
                </property>
               </widget>
              </item>
@@ -5443,7 +5487,19 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_15">
            <property name="spacing">
-            <number>0</number>
+            <number>2</number>
+           </property>
+           <property name="leftMargin">
+            <number>8</number>
+           </property>
+           <property name="topMargin">
+            <number>8</number>
+           </property>
+           <property name="rightMargin">
+            <number>8</number>
+           </property>
+           <property name="bottomMargin">
+            <number>8</number>
            </property>
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_15">
@@ -5462,6 +5518,10 @@
               <widget class="QPushButton" name="buttonRamSearch">
                <property name="text">
                 <string>Search</string>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/resources/icons/search.png</normaloff>:/icons/resources/icons/search.png</iconset>
                </property>
               </widget>
              </item>
@@ -5520,7 +5580,19 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_16">
            <property name="spacing">
-            <number>0</number>
+            <number>2</number>
+           </property>
+           <property name="leftMargin">
+            <number>8</number>
+           </property>
+           <property name="topMargin">
+            <number>8</number>
+           </property>
+           <property name="rightMargin">
+            <number>8</number>
+           </property>
+           <property name="bottomMargin">
+            <number>8</number>
            </property>
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_16">
@@ -5539,6 +5611,10 @@
               <widget class="QPushButton" name="buttonMemSearch">
                <property name="text">
                 <string>Search</string>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/resources/icons/search.png</normaloff>:/icons/resources/icons/search.png</iconset>
                </property>
               </widget>
              </item>
@@ -5602,7 +5678,11 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="consoletab">
+      <widget class="QWidget" name="tabConsole">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/console.png</normaloff>:/icons/resources/icons/console.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>Console</string>
        </attribute>
@@ -5744,6 +5824,7 @@
      <string>C&amp;alculator</string>
     </property>
     <addaction name="actionSetup"/>
+    <addaction name="separator"/>
     <addaction name="actionResetCalculator"/>
     <addaction name="actionReloadROM"/>
     <addaction name="separator"/>
@@ -5768,6 +5849,9 @@
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="screenWidget">
+   <property name="floating">
+    <bool>false</bool>
+   </property>
    <property name="features">
     <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
    </property>
@@ -5846,16 +5930,19 @@
    </widget>
   </widget>
   <action name="actionOpen">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/open.png</normaloff>:/icons/resources/icons/open.png</iconset>
+   </property>
    <property name="text">
     <string>Open...</string>
    </property>
   </action>
-  <action name="actionSave">
-   <property name="text">
-    <string>Save...</string>
-   </property>
-  </action>
   <action name="actionExit">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/exit.png</normaloff>:/icons/resources/icons/exit.png</iconset>
+   </property>
    <property name="text">
     <string>Exit</string>
    </property>
@@ -5864,6 +5951,10 @@
    </property>
   </action>
   <action name="actionSetup">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/wizard.png</normaloff>:/icons/resources/icons/wizard.png</iconset>
+   </property>
    <property name="text">
     <string>Rom setup wizard...</string>
    </property>
@@ -5872,6 +5963,10 @@
    </property>
   </action>
   <action name="actionAbout">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/info.png</normaloff>:/icons/resources/icons/info.png</iconset>
+   </property>
    <property name="text">
     <string>About CEmu</string>
    </property>
@@ -5882,6 +5977,10 @@
   <action name="actionScreenshot">
    <property name="checkable">
     <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/pngpng.png</normaloff>:/icons/resources/icons/pngpng.png</iconset>
    </property>
    <property name="text">
     <string>Take PNG screenshot...</string>
@@ -5897,6 +5996,10 @@
    <property name="enabled">
     <bool>true</bool>
    </property>
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/gif.png</normaloff>:/icons/resources/icons/gif.png</iconset>
+   </property>
    <property name="text">
     <string>Record animated GIF...</string>
    </property>
@@ -5905,6 +6008,10 @@
    </property>
   </action>
   <action name="actionAboutQt">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/info.png</normaloff>:/icons/resources/icons/info.png</iconset>
+   </property>
    <property name="text">
     <string>About Qt</string>
    </property>
@@ -5913,11 +6020,19 @@
    </property>
   </action>
   <action name="actionResetCalculator">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/reset.png</normaloff>:/icons/resources/icons/reset.png</iconset>
+   </property>
    <property name="text">
     <string>Reset Calculator</string>
    </property>
   </action>
   <action name="actionTakeGIFScreenshot">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/screenshotgif.png</normaloff>:/icons/resources/icons/screenshotgif.png</iconset>
+   </property>
    <property name="text">
     <string>Take GIF screenshot...</string>
    </property>
@@ -5926,6 +6041,10 @@
    </property>
   </action>
   <action name="actionCheckForUpdates">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/rom.png</normaloff>:/icons/resources/icons/rom.png</iconset>
+   </property>
    <property name="text">
     <string>Check for updates...</string>
    </property>
@@ -5934,56 +6053,64 @@
    </property>
   </action>
   <action name="actionSaveState">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/export.png</normaloff>:/icons/resources/icons/export.png</iconset>
+   </property>
    <property name="text">
     <string>Save State</string>
    </property>
   </action>
   <action name="actionRestoreState">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/import.png</normaloff>:/icons/resources/icons/import.png</iconset>
+   </property>
    <property name="text">
     <string>Restore State</string>
    </property>
   </action>
-  <action name="actionSuspendToFile">
-   <property name="text">
-    <string>Save to file...</string>
-   </property>
-  </action>
-  <action name="actionResumeFromFile">
-   <property name="text">
-    <string>Restore from file...</string>
-   </property>
-  </action>
   <action name="actionReloadROM">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/reload.png</normaloff>:/icons/resources/icons/reload.png</iconset>
+   </property>
    <property name="text">
     <string>Reload Rom</string>
    </property>
   </action>
   <action name="actionExportRomImage">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/export.png</normaloff>:/icons/resources/icons/export.png</iconset>
+   </property>
    <property name="text">
     <string>Rom image</string>
    </property>
   </action>
   <action name="actionImportCalculatorState">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/import.png</normaloff>:/icons/resources/icons/import.png</iconset>
+   </property>
    <property name="text">
     <string>Calculator image</string>
    </property>
   </action>
   <action name="actionExportCalculatorState">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/export.png</normaloff>:/icons/resources/icons/export.png</iconset>
+   </property>
    <property name="text">
     <string>Calculator image</string>
    </property>
   </action>
-  <action name="actionDumpIO">
-   <property name="text">
-    <string>Dump IO State</string>
-   </property>
-  </action>
-  <action name="actionDumpMemory">
-   <property name="text">
-    <string>Dump Memory State</string>
-   </property>
-  </action>
   <action name="actionPopoutLCD">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/lcd.png</normaloff>:/icons/resources/icons/lcd.png</iconset>
+   </property>
    <property name="text">
     <string>Popout LCD</string>
    </property>
