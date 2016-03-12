@@ -362,7 +362,7 @@ static void cpu_execute_daa(void) {
 }
 
 static uint32_t cpu_dec_bc_partial_mode() {
-    uint32_t value = cpu_mask_mode(cpu.registers.BC - 1, cpu.L);
+    uint32_t value = cpu_mask_mode((int32_t)cpu.registers.BC - 1, cpu.L);
     if (cpu.L) {
         cpu.registers.BC = value;
     } else {
@@ -615,7 +615,7 @@ static void cpu_execute_bli() {
                 }
                 // LDI, LDD, LDIR, LDDR
                 cpu_write_byte(r->DE, cpu_read_byte(r->HL));
-                r->DE = cpu_mask_mode(r->DE + delta, cpu.L);
+                r->DE = cpu_mask_mode((int32_t)r->DE + delta, cpu.L);
                 r->flags.H = 0;
                 r->flags.PV = cpu_dec_bc_partial_mode() != 0; // Do not mask BC
                 r->flags.N = 0;
@@ -731,7 +731,7 @@ static void cpu_execute_bli() {
                 return;
         }
         // All block instructions
-        r->HL = cpu_mask_mode(r->HL + delta, cpu.L);
+        r->HL = cpu_mask_mode((int32_t)r->HL + delta, cpu.L);
         cpu.cycles += internalCycles;
     } while (repeat && (cpu.cycles < cpu.next));
     cpu.inBlock = repeat;
