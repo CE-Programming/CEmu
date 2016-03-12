@@ -127,6 +127,7 @@ private:
     void disasmContextMenu(const QPoint &);
     void vatContextMenu(const QPoint &);
     void opContextMenu(const QPoint &);
+    void scrollDisasmView(int);
     bool addBreakpoint();
 
     // Others
@@ -219,6 +220,8 @@ private:
     QShortcut *stepNextShortcut;
     QShortcut *stepOutShortcut;
     QShortcut *debuggerShortcut;
+
+    int currentDisasmScroll;
 
     QList<calc_var_t> vars;
 };

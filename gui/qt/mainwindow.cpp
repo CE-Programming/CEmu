@@ -21,6 +21,7 @@
 #include <QtWidgets/QProgressDialog>
 #include <QtWidgets/QInputDialog>
 #include <QtQuickWidgets/QQuickWidget>
+#include <QtWidgets/QScrollBar>
 #include <QtGui/QFont>
 #include <QtGui/QPixmap>
 
@@ -103,6 +104,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->portView, &QTableWidget::itemChanged, this, &MainWindow::changePortData);
     connect(ui->checkCharging, &QCheckBox::toggled, this, &MainWindow::changeBatteryCharging);
     connect(ui->sliderBattery, &QSlider::valueChanged, this, &MainWindow::changeBatteryStatus);
+    connect(ui->disassemblyView->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::scrollDisasmView);
 
     // Debugger Options
     connect(ui->buttonAddEquateFile, &QPushButton::clicked, this, &MainWindow::addEquateFileDialog);
@@ -1429,6 +1431,8 @@ void MainWindow::updateDisasmView(const int sentBase, const bool newPane) {
         drawNextDisassembleLine();
     }
 
+    currentDisasmScroll = ui->disassemblyView->verticalScrollBar()->maximum();
+
     ui->disassemblyView->cursorState(true);
 
     ui->disassemblyView->updateAllHighlights();
@@ -2217,6 +2221,19 @@ void MainWindow::addEquateFile(QString fileName) {
         QMessageBox messageBox;
         messageBox.critical(0, tr("Error"), tr("Couldn't open this file"));
         messageBox.setFixedSize(500,200);
+    }
+}
+
+void MainWindow::scrollDisasmView(int value) {
+    if (value >= ui->disassemblyView->verticalScrollBar()->value()) {
+        if (value >= ui->disassemblyView->verticalScrollBar()->maximum()) {
+            ui->disassemblyView->verticalScrollBar()->blockSignals(true);
+            disconnect(ui->disassemblyView->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::scrollDisasmView);
+            drawNextDisassembleLine();
+            ui->disassemblyView->verticalScrollBar()->setValue(ui->disassemblyView->verticalScrollBar()->maximum()-1);
+            connect(ui->disassemblyView->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::scrollDisasmView);
+            ui->disassemblyView->verticalScrollBar()->blockSignals(false);
+        }
     }
 }
 
