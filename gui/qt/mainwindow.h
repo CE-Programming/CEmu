@@ -221,8 +221,6 @@ private:
     QShortcut *stepOutShortcut;
     QShortcut *debuggerShortcut;
 
-    int currentDisasmScroll;
-
     QList<calc_var_t> vars;
 };
 

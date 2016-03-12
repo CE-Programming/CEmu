@@ -1431,8 +1431,6 @@ void MainWindow::updateDisasmView(const int sentBase, const bool newPane) {
         drawNextDisassembleLine();
     }
 
-    currentDisasmScroll = ui->disassemblyView->verticalScrollBar()->maximum();
-
     ui->disassemblyView->cursorState(true);
 
     ui->disassemblyView->updateAllHighlights();
