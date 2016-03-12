@@ -107,14 +107,14 @@ private:
     void changeDebuggerState();
     void executeDebugCommand(uint32_t, uint8_t);
     void processDebugCommand(int, uint32_t);
-    void portMonitorCheckboxToggled(QTableWidgetItem *);
     void addPort();
     void deletePort();
     void updatePortData(int);
-    void changePortData(QTableWidgetItem*);
+    void changePortValues(QTableWidgetItem*);
     void changeBreakpointAddress(QTableWidgetItem*);
+    void setPreviousBreakpointAddress(QTableWidgetItem*);
+    void setPreviousPortValues(QTableWidgetItem*);
     void deleteBreakpoint();
-    void breakpointCheckboxToggled(QTableWidgetItem *);
     void drawNextDisassembleLine();
     void stepInPressed();
     void stepOverPressed();
@@ -215,6 +215,10 @@ private:
     bool stderrConsole = false;
     bool closeAfterSave = false;
     bool isResumed = false;
+
+    uint16_t prevPortAddress;
+    uint32_t prevBreakpointAddress;
+    QString currBreakpointAddress, currPortAddress;
 
     QShortcut *stepInShortcut;
     QShortcut *stepOverShortcut;
