@@ -1426,13 +1426,11 @@ void MainWindow::updateDisasmView(const int sentBase, const bool newPane) {
     ui->disassemblyView->verticalScrollBar()->blockSignals(true);
     ui->disassemblyView->clear();
     ui->disassemblyView->clearAllHighlights();
-
     ui->disassemblyView->cursorState(false);
-
+    ui->disassemblyView->verticalScrollBar()->blockSignals(false);
     while (disasm.new_address < last_address) {
         drawNextDisassembleLine();
     }
-    ui->disassemblyView->verticalScrollBar()->blockSignals(false);
 
     ui->disassemblyView->cursorState(true);
 
