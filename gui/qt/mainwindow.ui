@@ -148,7 +148,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>7</number>
+       <number>4</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -1371,7 +1371,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>0</number>
           </property>
           <property name="tabsClosable">
            <bool>false</bool>
@@ -1751,7 +1751,7 @@
                <bool>true</bool>
               </property>
               <property name="editTriggers">
-               <set>QAbstractItemView::NoEditTriggers</set>
+               <set>QAbstractItemView::AllEditTriggers</set>
               </property>
               <property name="tabKeyNavigation">
                <bool>false</bool>

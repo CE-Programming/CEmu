@@ -102,6 +102,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->vatView, &QWidget::customContextMenuRequested, this, &MainWindow::vatContextMenu);
     connect(ui->opView, &QWidget::customContextMenuRequested, this, &MainWindow::opContextMenu);
     connect(ui->portView, &QTableWidget::itemChanged, this, &MainWindow::changePortData);
+    connect(ui->breakpointView, &QTableWidget::itemChanged, this, &MainWindow::changeBreakpointAddress);
     connect(ui->checkCharging, &QCheckBox::toggled, this, &MainWindow::changeBatteryCharging);
     connect(ui->sliderBattery, &QSlider::valueChanged, this, &MainWindow::changeBatteryStatus);
     connect(ui->disassemblyView->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::scrollDisasmView);
@@ -1422,6 +1423,7 @@ void MainWindow::updateDisasmView(const int sentBase, const bool newPane) {
     int32_t last_address = disasm.new_address + 0x120;
     if (last_address > 0xFFFFFF) last_address = 0xFFFFFF;
 
+    ui->disassemblyView->verticalScrollBar()->blockSignals(true);
     ui->disassemblyView->clear();
     ui->disassemblyView->clearAllHighlights();
 
@@ -1430,6 +1432,7 @@ void MainWindow::updateDisasmView(const int sentBase, const bool newPane) {
     while (disasm.new_address < last_address) {
         drawNextDisassembleLine();
     }
+    ui->disassemblyView->verticalScrollBar()->blockSignals(false);
 
     ui->disassemblyView->cursorState(true);
 
@@ -1540,6 +1543,15 @@ void MainWindow::changePortData(QTableWidgetItem *curr_item) {
         debug_port_write_byte(port, pdata);
 
         curr_item->setText(int2hex(debug_port_read_byte(port), 2));
+    }
+}
+
+void MainWindow::changeBreakpointAddress(QTableWidgetItem *curr_item) {
+    const int currentRow = curr_item->row();
+    uint16_t port = static_cast<uint16_t>(hex2int(ui->portView->item(currentRow, 0)->text()));
+
+    if (curr_item->column() == 0) {
+
     }
 }
 
@@ -1862,6 +1874,7 @@ void MainWindow::stepInPressed() {
     }
 
     disconnect(stepInShortcut, &QShortcut::activated, this, &MainWindow::stepInPressed);
+    ui->disassemblyView->verticalScrollBar()->blockSignals(true);
     debuggerOn = false;
     updateDebuggerChanges();
     emit setDebugStepInMode();
@@ -1877,6 +1890,7 @@ void MainWindow::stepOverPressed() {
         return;
     }
 
+    ui->disassemblyView->verticalScrollBar()->blockSignals(true);
     disconnect(stepOverShortcut, &QShortcut::activated, this, &MainWindow::stepOverPressed);
     disasm.base_address = cpu.registers.PC;
     disasm.adl = cpu.ADL;
@@ -1894,6 +1908,7 @@ void MainWindow::stepNextPressed() {
         return;
     }
 
+    ui->disassemblyView->verticalScrollBar()->blockSignals(true);
     disconnect(stepNextShortcut, &QShortcut::activated, this, &MainWindow::stepNextPressed);
     setDebuggerState(false);
     emit setDebugStepNextMode();
@@ -1903,6 +1918,8 @@ void MainWindow::stepOutPressed() {
     if(!inDebugger) {
         return;
     }
+
+    ui->disassemblyView->verticalScrollBar()->blockSignals(true);
     disconnect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOutPressed);
     setDebuggerState(false);
     emit setDebugStepOutMode();
