@@ -16,6 +16,7 @@
         <file>resources/icons/icon.png</file>
         <file>resources/icons/plus.png</file>
         <file>resources/icons/minus.png</file>
+        <file>resources/icons/search.png</file>
     </qresource>
     <qresource prefix="/qml">
         <file>qml/Keypad.qml</file>

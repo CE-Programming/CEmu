@@ -1495,6 +1495,8 @@ void MainWindow::addPort() {
 
     ui->portView->selectRow(currentRow);
     ui->portView->setUpdatesEnabled(true);
+    prevPortAddress = port;
+    currPortAddress.clear();
     ui->portView->blockSignals(false);
 }
 
@@ -1689,6 +1691,7 @@ bool MainWindow::addBreakpoint() {
 
     debug_breakpoint_set(address, DBG_EXEC_BREAKPOINT, true);
     prevBreakpointAddress = address;
+    currBreakpointAddress.clear();
     updateDisasmView(address, true);
     ui->breakpointView->blockSignals(false);
     return true;
