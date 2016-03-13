@@ -57,10 +57,6 @@ void gui_console_printf(const char *fmt, ...) {
     va_end(ap);
 }
 
-void gui_console_debug_char(const char c) {
-    emu_thread->consoleChar(c);
-}
-
 void gui_debugger_send_command(int reason, uint32_t addr) {
     emu_thread->sendDebugCommand(reason, addr);
 }
@@ -156,7 +152,7 @@ void gui_set_busy(bool busy) {
     emit emu_thread->isBusy(busy);
 }
 
-//Called occasionally, only way to do something in the same thread the emulator runs in.
+// Called occasionally, only way to do something in the same thread the emulator runs in.
 void EmuThread::doStuff() {
     std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
 

@@ -9,11 +9,15 @@
 volatile bool inDebugger = false;
 debug_state_t debugger;
 
+
 void debugger_init(void) {
     debugger.stepOverAddress = -1;
     debugger.data.block = (uint8_t*)calloc(0x1000000, sizeof(uint8_t));    /* Allocate Debug memory */
     debugger.data.ports = (uint8_t*)calloc(0x10000, sizeof(uint8_t));      /* Allocate Debug Port Monitor */
+    debugger.buffer = (char*)calloc(SIZEOF_DEBUG_BUFFER, sizeof(char));    /* Used for printing to the console */
+    debugger.currentBuffPos = 0;
 
+    debugger.writeBuffer = false;
     debugger.runUntilSet = false;
     gui_console_printf("[CEmu] Initialized Debugger...\n");
 }
@@ -24,6 +28,9 @@ void debugger_free(void) {
     }
     if (debugger.data.ports) {
         free(debugger.data.ports);
+    }
+    if (debugger.buffer) {
+        free(debugger.buffer);
     }
     gui_console_printf("[CEmu] Freed Debugger.\n");
 }

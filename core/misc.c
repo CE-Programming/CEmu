@@ -309,7 +309,15 @@ bool exxx_restore(const emu_image *s) {
 
 /* Write to the 0xFXXX range of ports */
 static void fxxx_write(const uint16_t pio, const uint8_t value) {
-    gui_console_debug_char((char)value);
+    (void)pio;
+
+#ifdef DEBUG_SUPPORT
+    debugger.buffer[debugger.currentBuffPos] = (char)value;
+    debugger.currentBuffPos = (debugger.currentBuffPos + 1) % (SIZEOF_DEBUG_BUFFER);
+    if (value == 0) {
+        debugger.writeBuffer = true;
+    }
+#endif
 }
 
 /* Read from the 0xFXXX range of ports */

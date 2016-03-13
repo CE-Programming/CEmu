@@ -54,6 +54,9 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     ui->statusBar->addWidget(&statusLabel);
     ui->lcdWidget->setLCD(&lcd);
 
+    // Allow for 2000 lines of logging
+    ui->console->setMaximumBlockCount(2000);
+
     // Register QtKeypadBridge for the virtual keyboard functionality
     this->installEventFilter(&qt_keypad_bridge);
     ui->lcdWidget->installEventFilter(&qt_keypad_bridge);
@@ -65,8 +68,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     ui->keypadWidget->setResizeMode(QQuickWidget::ResizeMode::SizeRootObjectToView);
 
     // Emulator -> GUI
-    connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr, Qt::QueuedConnection);
-    connect(&emu, &EmuThread::consoleChar, this, &MainWindow::consoleChar, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr);
     connect(&emu, &EmuThread::restored, this, &MainWindow::restored, Qt::QueuedConnection);
     connect(&emu, &EmuThread::saved, this, &MainWindow::saved, Qt::QueuedConnection);
     connect(&emu, &EmuThread::isBusy, this, &MainWindow::isBusy, Qt::QueuedConnection);
@@ -478,23 +480,13 @@ void MainWindow::closeEvent(QCloseEvent *e) {
     QMainWindow::closeEvent(e);
 }
 
-void MainWindow::consoleChar(const char c) {
-    if (stderrConsole) {
-        if (c) {
-            fputc(c, stderr);
-        }
-    } else {
-        ui->console->moveCursor(QTextCursor::End);
-        ui->console->insertPlainText(QChar::fromLatin1(c));
-    }
-}
-
 void MainWindow::consoleStr(QString str) {
     if (stderrConsole) {
         fputs(str.toStdString().c_str(), stderr);
     } else {
         ui->console->moveCursor(QTextCursor::End);
         ui->console->insertPlainText(str);
+        ui->console->moveCursor(QTextCursor::End);
     }
 }
 

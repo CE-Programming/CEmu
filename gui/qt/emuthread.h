@@ -29,7 +29,6 @@ signals:
     void debugInputRequested(bool);
 
     // I/O
-    void consoleChar(char);
     void consoleStr(QString);
     void exited(int);
 
