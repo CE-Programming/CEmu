@@ -2094,7 +2094,7 @@ void MainWindow::searchEdit(QHexEdit *editor) {
     if(hexSearch == true) {
         searchString = searchingString;
     } else {
-        searchString = QString::fromStdString(searchingString.toLatin1().toHex().to.toStdString());
+        searchString = QString::fromStdString(searchingString.toLatin1().toHex().toStdString());
     }
 
     editor->setFocus();
