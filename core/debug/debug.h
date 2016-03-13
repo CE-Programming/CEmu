@@ -44,7 +44,7 @@ enum {
 
 #define DBG_PORT_RANGE            0xFFFF00
 #define CONSOLE_PORT_RANGE        0xFB0000
-#define SIZEOF_DEBUG_BUFFER       0x300
+#define SIZEOF_DEBUG_BUFFER       0x500
 
 typedef struct {
     uint8_t *block;
@@ -62,7 +62,6 @@ typedef struct {        /* For debugging */
     debug_data_t data;
     char *buffer;
     uint32_t currentBuffPos;
-    bool writeBuffer;
 } debug_state_t;
 
 /* Debugging */

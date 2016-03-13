@@ -393,12 +393,9 @@ void mem_write_byte(uint32_t address, uint8_t value) {
                     unsigned x;
                     debugger.currentBuffPos = 0;
                     gui_console_printf("%s",debugger.buffer);
-                    gui_emu_sleep();
-                    gui_emu_sleep();
-                    gui_emu_sleep();
-                    gui_emu_sleep();
-                    gui_emu_sleep();
-                    gui_emu_sleep();
+                    for(x=0; x<6; x++) {
+                        gui_emu_sleep();
+                    }
                 }
                 break;
             }

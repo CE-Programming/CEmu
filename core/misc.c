@@ -315,7 +315,12 @@ static void fxxx_write(const uint16_t pio, const uint8_t value) {
     debugger.buffer[debugger.currentBuffPos] = (char)value;
     debugger.currentBuffPos = (debugger.currentBuffPos + 1) % (SIZEOF_DEBUG_BUFFER);
     if (value == 0) {
-        debugger.writeBuffer = true;
+        unsigned x;
+        debugger.currentBuffPos = 0;
+        gui_console_printf("%s",debugger.buffer);
+        for(x=0; x<6; x++) {
+            gui_emu_sleep();
+        }
     }
 #endif
 }

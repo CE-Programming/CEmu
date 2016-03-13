@@ -17,7 +17,6 @@ void debugger_init(void) {
     debugger.buffer = (char*)calloc(SIZEOF_DEBUG_BUFFER, sizeof(char));    /* Used for printing to the console */
     debugger.currentBuffPos = 0;
 
-    debugger.writeBuffer = false;
     debugger.runUntilSet = false;
     gui_console_printf("[CEmu] Initialized Debugger...\n");
 }
