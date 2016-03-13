@@ -82,7 +82,8 @@ EmuThread::EmuThread(QObject *p) : QThread(p) {
     emu_thread = this;
     lcd_event_gui_callback = gif_new_frame;
     speed = actualSpeed = 100;
-    lastTime= std::chrono::steady_clock::now();
+    updateTimer.start();
+    lastTime= updateTimer.elapsed();
     connect(&speedUpdateTimer, SIGNAL(timeout()), this, SLOT(sendActualSpeed()));
 }
 
@@ -154,7 +155,7 @@ void gui_set_busy(bool busy) {
 
 // Called occasionally, only way to do something in the same thread the emulator runs in.
 void EmuThread::doStuff() {
-    std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
+    qint64 cur_time = updateTimer.elapsed();
 
     if (saveImage) {
         bool success = emu_save(imagePath.c_str());
@@ -178,7 +179,7 @@ void EmuThread::doStuff() {
         open_debugger(DBG_USER, 0);
     }
 
-    lastTime += std::chrono::steady_clock::now() - cur_time;
+    lastTime += updateTimer.elapsed() - cur_time;
 }
 
 void EmuThread::sendActualSpeed() {
@@ -196,18 +197,17 @@ void EmuThread::setActualSpeed(int value) {
 }
 
 void EmuThread::throttleTimerWait() {
-    std::chrono::duration<int, std::ratio<100, 60>> unit(1);
-    std::chrono::steady_clock::duration interval(std::chrono::duration_cast<std::chrono::steady_clock::duration>
-                                                 (std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(1000000 * 100 / speed)));
-    std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now(), next_time = lastTime + interval;
+    qint64 interval = 100000 / (60 * speed);
+    qint64 cur_time = updateTimer.elapsed(), next_time = lastTime + interval;
     if (throttleOn && cur_time < next_time) {
         setActualSpeed(speed);
         lastTime = next_time;
-        std::this_thread::sleep_until(next_time);
+        QThread::msleep(interval);
     } else {
-        setActualSpeed(unit / (cur_time - lastTime));
+        if ((cur_time - lastTime) == 0) cur_time++;
+        setActualSpeed(100 * (interval / (cur_time - lastTime)));
         lastTime = cur_time;
-        std::this_thread::yield();
+        QThread::yieldCurrentThread();
     }
 }
 
