@@ -1183,6 +1183,8 @@ void MainWindow::setDebuggerState(bool state) {
     ui->groupRAM->setEnabled( debuggerOn );
     ui->groupMem->setEnabled( debuggerOn );
 
+    ui->actionRestoreState->setEnabled( !debuggerOn );
+    ui->actionImportCalculatorState->setEnabled( !debuggerOn );
     ui->buttonSend->setEnabled( !debuggerOn );
     ui->buttonRefreshList->setEnabled( !debuggerOn );
     ui->emuVarView->setEnabled( !debuggerOn );
