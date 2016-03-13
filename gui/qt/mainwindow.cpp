@@ -1,5 +1,5 @@
-/* Copyright (C) 2015  Fabian Vogt
- * Modified for the CE calculator by CEmu developers
+/* Copyright (C) 2015
+ * Parts derived from Firebird by Fabian Vogt
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@
 #include <QtGui/QPixmap>
 
 #include <fstream>
-#include <iostream>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -36,6 +35,7 @@
 #include "qmlbridge.h"
 #include "qtframebuffer.h"
 #include "qtkeypadbridge.h"
+#include "searchwidget.h"
 
 #include "utils.h"
 #include "capture/gif.h"
@@ -2076,17 +2076,37 @@ void MainWindow::memUpdate(uint32_t addressBegin) {
 }
 
 void MainWindow::searchEdit(QHexEdit *editor) {
-    bool ok;
-    QString searchString = QInputDialog::getText(this, tr("Search"),
-                                                  tr("Input Hexadecimal Search String:"), QLineEdit::Normal,
-                                                  searchingString, &ok).toUpper();
+    SearchWidget search;
+    search.setSearchString(searchingString);
+    search.setInputMode(hexSearch);
+
+    search.show();
+    search.exec();
+
+    hexSearch = search.getInputMode();
+    searchingString = search.getSearchString();
+
+    if(!search.getStatus()) {
+        return;
+    }
+
+    QString searchString;
+    if(hexSearch == true) {
+        searchString = searchingString;
+    } else {
+        searchString = QString::fromStdString(searchingString.toLatin1().toHex().to.toStdString());
+    }
+
     editor->setFocus();
     std::string s = searchString.toUpper().toStdString();
-    if(!ok || (searchString.length() & 1) || s.find_first_not_of("0123456789ABCDEF") != std::string::npos) {
+    if(searchString.isEmpty()) {
+        return;
+    }
+    if((searchString.length() & 1) || s.find_first_not_of("0123456789ABCDEF") != std::string::npos) {
         QMessageBox::warning(this,"Error", "Error when reading input string");
         return;
     }
-    searchingString = searchString;
+
     QByteArray string_int;
     for (int i=0; i<searchString.length(); i+=2) {
         QString a = searchString.at(i);

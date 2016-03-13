@@ -214,6 +214,7 @@ private:
     bool stderrConsole = false;
     bool closeAfterSave = false;
     bool isResumed = false;
+    bool hexSearch = true;
 
     uint16_t prevPortAddress;
     uint32_t prevBreakpointAddress;

@@ -95,7 +95,8 @@ SOURCES +=  utils.cpp \
     ../../core/emu.c \
     capture/gif.cpp \
     datawidget.cpp \
-    lcdpopout.cpp
+    lcdpopout.cpp \
+    searchwidget.cpp
 
 linux|macx|ios: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c
@@ -141,11 +142,13 @@ HEADERS  +=  utils.h \
     capture/gif.h \
     capture/giflib.h \
     datawidget.h \
-    lcdpopout.h
+    lcdpopout.h \
+    searchwidget.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \
-    lcdpopout.ui
+    lcdpopout.ui \
+    searchwidget.ui
 
 RESOURCES += \
     resources.qrc
