@@ -11,10 +11,13 @@
 volatile bool inDebugger = false;
 debug_state_t debugger;
 
+
 void debugger_init(void) {
     debugger.stepOverInstrEnd = -1;
     debugger.data.block = (uint8_t*)calloc(0x1000000, sizeof(uint8_t));    /* Allocate Debug memory */
     debugger.data.ports = (uint8_t*)calloc(0x10000, sizeof(uint8_t));      /* Allocate Debug Port Monitor */
+    debugger.buffer = (char*)calloc(SIZEOF_DEBUG_BUFFER, sizeof(char));    /* Used for printing to the console */
+    debugger.currentBuffPos = 0;
 
     debugger.runUntilSet = false;
     gui_console_printf("[CEmu] Initialized Debugger...\n");
@@ -26,6 +29,9 @@ void debugger_free(void) {
     }
     if (debugger.data.ports) {
         free(debugger.data.ports);
+    }
+    if (debugger.buffer) {
+        free(debugger.buffer);
     }
     gui_console_printf("[CEmu] Freed Debugger.\n");
 }
@@ -42,10 +48,10 @@ uint8_t debug_read_byte(uint32_t address) {
     }
 
     if ((debugData = debugger.data.block[address])) {
-        disasmHighlight.hit_read_breakpoint = debugData & DBG_READ_BREAKPOINT;
-        disasmHighlight.hit_write_breakpoint = debugData & DBG_WRITE_BREAKPOINT;
-        disasmHighlight.hit_exec_breakpoint = debugData & DBG_EXEC_BREAKPOINT;
-        disasmHighlight.hit_run_breakpoint = debugData & DBG_RUN_UNTIL_BREAKPOINT;
+        disasmHighlight.hit_read_breakpoint |= debugData & DBG_READ_BREAKPOINT;
+        disasmHighlight.hit_write_breakpoint |= debugData & DBG_WRITE_BREAKPOINT;
+        disasmHighlight.hit_exec_breakpoint |= debugData & DBG_EXEC_BREAKPOINT;
+        disasmHighlight.hit_run_breakpoint |= debugData & DBG_RUN_UNTIL_BREAKPOINT;
         if (debugData & DBG_INST_START_MARKER && disasmHighlight.inst_address < 0) {
             disasmHighlight.inst_address = address;
         }

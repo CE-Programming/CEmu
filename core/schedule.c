@@ -46,6 +46,8 @@ void event_repeat(int index, uint64_t ticks) {
     item->tick = ticks % sched.clockRates[item->clock];
 
     item->cputick = muldiv(item->tick, sched.clockRates[CLOCK_CPU], sched.clockRates[item->clock]);
+
+    sched_update_next_event();
 }
 
 void sched_update_next_event(void) {
@@ -105,8 +107,6 @@ void event_set(int index, uint64_t ticks) {
     item = &sched.items[index];
     item->tick = muldiv(cpu.cycles, sched.clockRates[item->clock], sched.clockRates[CLOCK_CPU]);
     event_repeat(index, ticks);
-
-    sched_update_next_event();
 }
 
 uint64_t event_ticks_remaining(int index) {

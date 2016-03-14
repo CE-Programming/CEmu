@@ -27,6 +27,22 @@ extern "C" {
 #include "registers.h"
 #include "apb.h"
 
+/* eZ80 CPU Opcode Context */
+typedef union eZ80context {
+    uint8_t opcode;
+    struct {
+        uint8_t z : 3;
+        uint8_t y : 3;
+        uint8_t x : 2;
+    };
+    struct {
+        uint8_t r : 1;
+        uint8_t   : 2;
+        uint8_t q : 1;
+        uint8_t p : 2;
+    };
+} eZ80context_t;
+
 /* eZ80 CPU State */
 PACK(typedef ALIGNED_(4) struct eZ80cpu {
     eZ80registers_t registers;
@@ -47,7 +63,9 @@ PACK(typedef ALIGNED_(4) struct eZ80cpu {
         uint8_t IL          : 1;  /* The CPU control block operates in ADL mode.                                                 */
         uint8_t IEF_wait    : 2;  /* Wait for interrupt                                                                          */
         uint8_t halted      : 1;  /* Have we halted the CPU?                                                                     */
+        uint8_t inBlock     : 1;  /* Are we processing a block instruction?                                                      */
     };
+    eZ80context_t context;
     uint32_t cycles, next;
     uint8_t prefetch, bus;
     uint32_t cpuEventsState;

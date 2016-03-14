@@ -34,6 +34,7 @@
 #include "../../core/debug/disasm.h"
 
 EmuThread *emu_thread = nullptr;
+QTimer speedUpdateTimer;
 
 void gui_emu_sleep(void) {
     QThread::usleep(50);
@@ -58,10 +59,6 @@ void gui_console_printf(const char *fmt, ...) {
     va_end(ap);
 }
 
-void gui_console_debug_char(const char c) {
-    emu_thread->consoleChar(c);
-}
-
 void gui_debugger_send_command(int reason, uint32_t addr) {
     emu_thread->sendDebugCommand(reason, addr);
 }
@@ -72,13 +69,6 @@ void gui_debugger_entered_or_left(bool entered) {
     } else {
         emu_thread->debuggerLeft();
     }
-}
-
-static debug_input_cb debugCallback;
-
-void gui_debugger_request_input(debug_input_cb callback) {
-    debugCallback = callback;
-    emu_thread->debugInputRequested(callback != nullptr);
 }
 
 void throttle_timer_wait(void) {
@@ -97,11 +87,7 @@ EmuThread::EmuThread(QObject *p) : QThread(p) {
     lcd_event_gui_callback = gif_new_frame;
     speed = actualSpeed = 100;
     lastTime= std::chrono::steady_clock::now();
-}
-
-void EmuThread::debuggerInput(QString str) {
-    debugInput = str.toStdString();
-    debugCallback(debugInput.c_str());
+    connect(&speedUpdateTimer, SIGNAL(timeout()), this, SLOT(sendActualSpeed()));
 }
 
 void EmuThread::resetTriggered() {
@@ -218,7 +204,7 @@ void gui_set_busy(bool busy) {
     emit emu_thread->isBusy(busy);
 }
 
-//Called occasionally, only way to do something in the same thread the emulator runs in.
+// Called occasionally, only way to do something in the same thread the emulator runs in.
 void EmuThread::doStuff() {
     std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
 
@@ -247,10 +233,16 @@ void EmuThread::doStuff() {
     lastTime += std::chrono::steady_clock::now() - cur_time;
 }
 
+void EmuThread::sendActualSpeed() {
+    if(!calc_is_off()) {
+        emit actualSpeedChanged(actualSpeed);
+    }
+}
+
 void EmuThread::setActualSpeed(int value) {
     if(!calc_is_off()) {
         if (actualSpeed != value) {
-            emit actualSpeedChanged(actualSpeed = value);
+            actualSpeed = value;
         }
     }
 }

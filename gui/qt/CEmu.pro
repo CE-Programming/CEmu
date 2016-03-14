@@ -1,7 +1,12 @@
 lessThan(QT_MAJOR_VERSION, 5) : error("You need at least Qt 5 to build CEmu!")
 
-# Version. Don't forget to remove the "dev" suffix for a release/deployment bulid
-DEFINES += CEMU_VERSION=0.4dev
+# CEmu version
+if (0) { # GitHub release/deployment build. Has to correspond to the git tag.
+    DEFINES += CEMU_VERSION=\\\"1.0\\\"
+} else { # Development build. Used in the about screen
+    GIT_VERSION = $$system(git describe --abbrev=7 --dirty --always --tags)
+    DEFINES += CEMU_VERSION=\\\"0.4dev_$$GIT_VERSION\\\"
+}
 
 # Code beautifying
 DISTFILES += ../../.astylerc
@@ -14,7 +19,7 @@ TEMPLATE = app
 # Localization
 TRANSLATIONS += i18n/fr_FR.ts i18n/es_ES.ts
 
-CONFIG += c++11 console
+CONFIG += c++11
 
 # Core options
 DEFINES += DEBUG_SUPPORT
@@ -90,7 +95,8 @@ SOURCES +=  utils.cpp \
     ../../core/emu.c \
     capture/gif.cpp \
     datawidget.cpp \
-    lcdpopout.cpp
+    lcdpopout.cpp \
+    searchwidget.cpp
 
 linux|macx|ios: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c
@@ -136,11 +142,13 @@ HEADERS  +=  utils.h \
     capture/gif.h \
     capture/giflib.h \
     datawidget.h \
-    lcdpopout.h
+    lcdpopout.h \
+    searchwidget.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \
-    lcdpopout.ui
+    lcdpopout.ui \
+    searchwidget.ui
 
 RESOURCES += \
     resources.qrc

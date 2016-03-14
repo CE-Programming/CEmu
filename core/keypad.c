@@ -33,7 +33,9 @@ void EMSCRIPTEN_KEEPALIVE keypad_key_event(unsigned int row, unsigned int col, b
                 keypad_intrpt_check();
             }
         } else {
-            keypad.key_map[row] &= ~(1 << col);
+            keypad.data[row] = keypad.key_map[row] &= ~(1 << col);
+            keypad.status |= 2;
+            keypad_intrpt_check();
         }
     }
 }

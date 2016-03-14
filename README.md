@@ -45,10 +45,9 @@ _Note that Release builds have an update checking feature, which is disabled in 
 ## How to build
 After downloading the source (you can clone the repo or just [get the zip](https://github.com/MateoConLechuga/CEmu/archive/master.zip)):
 
-1. Get the [latest Qt5 SDK](https://www.qt.io/download-open-source/#section-3) for your OS.
-  * On Windows, if you are building with Visual Studio, you must use
-    Visual Studio 2015 or newer. You also must download a Qt build that
-    is compatible with Visual Studio 2015 or newer.
+1. Get the [latest Qt5 SDK](https://www.qt.io/download-open-source/#section-3) for your OS (and read on before downloading)
+  * On Windows, the MinGW variation of the Qt SDK is preferred (v5.6+, too).  
+    However, if you are building with Visual Studio, you must use Visual Studio 2015 or newer. You also must download a Qt build that is compatible with Visual Studio 2015 or newer.
     * If you don't have Visual Studio 2015 installed, we recommend
       installing [Visual Studio 2015 Community](https://go.microsoft.com/fwlink/?LinkId=691978&clcid=0x409).
     * Qt v5.6 is the only version of Qt (at the moment) that supports
@@ -74,22 +73,7 @@ You're welcome to [report any bugs](https://github.com/MateoConLechuga/CEmu/issu
 
 
 ## TODO list
-_(Take a look at [the issues](https://github.com/CE-Programming/CEmu/issues), too, since not everything here has been migrated there yet)_
-### _Core_
-* Implement unknown port range (0xDXXX)
-* Implement USB (0xDXXX appears to be a part of this as well)
-* Add more flash handlers
-
-### _Standard features_
-* More robust and complete variable transfer (Calc <-> Computer). _Related to USB emulation._
-* Integrate some TypeHandlers functions from [tivars_lib_cpp](https://github.com/adriweb/tivars_lib_cpp) to read variables' content.
-
-### _Developer features_
-* .lst parsing
-* Functions profiling (call count, time spent...)
-
-### _GUI_
-* Implement 83PCE/84+CE differences (2 keypad setups, "skins", etc.)
+_(Take a look at [the current issues](https://github.com/CE-Programming/CEmu/issues))._
 
 ## WISH list
 _(Take a look at [the issues](https://github.com/CE-Programming/CEmu/issues), too, since not everything here has been migrated there yet)_
@@ -97,7 +81,6 @@ _(Take a look at [the issues](https://github.com/CE-Programming/CEmu/issues), to
 * Think about CEmu's core’s integration on third-party projects, like TI-Planet's Project Builder - for instance, in C projects, in order to directly test the program, and eventually have live source-level debugging!
 * Look at [this gdb-z80](https://github.com/legumbre/gdb-z80) project (code from 2011...) ; try to see if it can be updated for eZ80, and used with a CEmu GDB stub. Mainlining such code is highly preferable.
 * More translations (for now, it's available in English, French, and Spanish). Qt Linguist is a great tool for that (here's [a tutorial](https://doc.qt.io/qt-5.5/linguist-manager.html)). We welcome Pull Requests :)
-* ASM instructions inline/hover help?
 * ...
 
 ## License

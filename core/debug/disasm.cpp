@@ -85,8 +85,8 @@ static const std::string im_table[] = {
 };
 
 static std::string strW(uint32_t data) {
-    addressMap_t::const_iterator item = disasm.address_map.find(data);
-    if (item != disasm.address_map.end()) {
+    addressMap_t::const_iterator item = disasm.addressMap.find(data);
+    if (item != disasm.addressMap.end()) {
         return item->second;
     }
     sprintf(tmpbuf,"$%0*X", (disasm.il ? 6 : 4), data);
@@ -692,7 +692,7 @@ void disassembleInstruction(void) {
                                 break;
                             case 7: // EI
                                 disasm.instruction.opcode = "ei";
-                                continue;
+                                break;
                         }
                         break;
                     case 4: // CALL cc[y], nn

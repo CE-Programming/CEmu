@@ -27,9 +27,9 @@ static void watchdog_event(int index) {
             if (watchdog.control & 4) {
                 cpu_nmi();
             }
-            gui_console_printf("[CEmu] Watchdog reset triggered.");
+            gui_console_printf("[CEmu] Watchdog reset triggered.\n");
         }
-        event_repeat(SCHED_WATCHDOG, watchdog.load);
+        event_repeat(SCHED_WATCHDOG, watchdog.count);
     }
 }
 
@@ -82,6 +82,7 @@ static void watchdog_write(const uint16_t pio, const uint8_t byte) {
             if(watchdog.restart == 0x5AB9) {
                 event_set(SCHED_WATCHDOG, watchdog.load);
                 watchdog.count = watchdog.load;
+                watchdog.restart = 0;
             }
             break;
         case 0x00C:
@@ -123,7 +124,7 @@ void watchdog_reset() {
     watchdog.load = 0x03EF1480;   /* (66MHz) */
     watchdog.count = 0x03EF1480;
 
-    gui_console_printf("[CEmu] Watchdog Timer reset.\n");
+    gui_console_printf("[CEmu] Watchdog timer reset.\n");
 }
 
 eZ80portrange_t init_watchdog(void) {
@@ -308,7 +309,24 @@ bool exxx_restore(const emu_image *s) {
 
 /* Write to the 0xFXXX range of ports */
 static void fxxx_write(const uint16_t pio, const uint8_t value) {
-    gui_console_debug_char((char)value);
+    /* 0xFFE appears to dump the contents of flash. Probably not a good thing to print to a console :) */
+
+    if (pio != 0xFFF) {
+        return;
+    }
+
+#ifdef DEBUG_SUPPORT
+    debugger.buffer[debugger.currentBuffPos] = (char)value;
+    debugger.currentBuffPos = (debugger.currentBuffPos + 1) % (SIZEOF_DEBUG_BUFFER);
+    if (value == 0) {
+        unsigned x;
+        debugger.currentBuffPos = 0;
+        gui_console_printf("%s",debugger.buffer);
+        for(x=0; x<6; x++) {
+            gui_emu_sleep();
+        }
+    }
+#endif
 }
 
 /* Read from the 0xFXXX range of ports */

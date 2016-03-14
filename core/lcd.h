@@ -32,7 +32,7 @@ PACK(typedef struct lcd_cntrl_state {
     /* Cursor image RAM registers (TODO) */
     /* 256-word wide values defining images overlaid by the hw cursor mechanism */
     uint32_t crsrImage[0x100];
-    uint32_t crsrControl;           /* Cursor control register */
+    uint32_t crsrControl;        /* Cursor control register */
     uint32_t crsrConfig;         /* Cursor configuration register */
     uint32_t crsrPalette0;       /* Cursor palette registers */
     uint32_t crsrPalette1;

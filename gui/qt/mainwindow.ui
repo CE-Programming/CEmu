@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>946</width>
-    <height>588</height>
+    <height>591</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -148,7 +148,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>7</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -165,7 +165,11 @@
       <property name="tabBarAutoHide">
        <bool>false</bool>
       </property>
-      <widget class="QWidget" name="keypadtab">
+      <widget class="QWidget" name="tabKeypad">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/keypad.png</normaloff>:/icons/resources/icons/keypad.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>Keypad</string>
        </attribute>
@@ -205,7 +209,11 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="filetab">
+      <widget class="QWidget" name="tabVariables">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/variables.png</normaloff>:/icons/resources/icons/variables.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>Variables</string>
        </attribute>
@@ -356,7 +364,11 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="screenshottab">
+      <widget class="QWidget" name="tabCapture">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/capture.png</normaloff>:/icons/resources/icons/capture.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>Capture</string>
        </attribute>
@@ -569,7 +581,11 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="settingstab">
+      <widget class="QWidget" name="tabSettings">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/settings.png</normaloff>:/icons/resources/icons/settings.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>Settings</string>
        </attribute>
@@ -1210,6 +1226,10 @@
        </layout>
       </widget>
       <widget class="QWidget" name="tabDebugger">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/debugger.png</normaloff>:/icons/resources/icons/debugger.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>Debug</string>
        </attribute>
@@ -1244,7 +1264,7 @@
              <string>Stop</string>
             </property>
             <property name="icon">
-             <iconset>
+             <iconset resource="resources.qrc">
               <normaloff>:/icons/resources/icons/stop.png</normaloff>:/icons/resources/icons/stop.png</iconset>
             </property>
            </widget>
@@ -1264,7 +1284,7 @@
              <string>Step In</string>
             </property>
             <property name="icon">
-             <iconset>
+             <iconset resource="resources.qrc">
               <normaloff>:/icons/resources/icons/stepin.png</normaloff>:/icons/resources/icons/stepin.png</iconset>
             </property>
            </widget>
@@ -1284,7 +1304,7 @@
              <string>Step Over</string>
             </property>
             <property name="icon">
-             <iconset>
+             <iconset resource="resources.qrc">
               <normaloff>:/icons/resources/icons/stepover.png</normaloff>:/icons/resources/icons/stepover.png</iconset>
             </property>
            </widget>
@@ -1304,7 +1324,7 @@
              <string>Step Next</string>
             </property>
             <property name="icon">
-             <iconset>
+             <iconset resource="resources.qrc">
               <normaloff>:/icons/resources/icons/stepnext.png</normaloff>:/icons/resources/icons/stepnext.png</iconset>
             </property>
            </widget>
@@ -1324,7 +1344,7 @@
              <string>Step Out</string>
             </property>
             <property name="icon">
-             <iconset>
+             <iconset resource="resources.qrc">
               <normaloff>:/icons/resources/icons/stepout.png</normaloff>:/icons/resources/icons/stepout.png</iconset>
             </property>
            </widget>
@@ -1371,7 +1391,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>1</number>
           </property>
           <property name="tabsClosable">
            <bool>false</bool>
@@ -1404,7 +1424,7 @@
                  <string>Goto</string>
                 </property>
                 <property name="icon">
-                 <iconset>
+                 <iconset resource="resources.qrc">
                   <normaloff>:/icons/resources/icons/goto.png</normaloff>:/icons/resources/icons/goto.png</iconset>
                 </property>
                </widget>
@@ -1493,82 +1513,7 @@
             <string>Port Monitor</string>
            </attribute>
            <layout class="QGridLayout" name="gridLayout_11">
-            <item row="0" column="0">
-             <layout class="QHBoxLayout" name="horizontalLayout_7">
-              <property name="spacing">
-               <number>5</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="QLineEdit" name="portRequest">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="inputMask">
-                 <string notr="true"/>
-                </property>
-                <property name="text">
-                 <string notr="true"/>
-                </property>
-                <property name="maxLength">
-                 <number>4</number>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="buttonAddPort">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Add</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="buttonDeletePort">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Remove</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="portChangeView">
-                <property name="text">
-                 <string/>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_17">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-             </layout>
-            </item>
-            <item row="1" column="0">
+            <item row="0" column="1">
              <widget class="QTableWidget" name="portView">
               <property name="focusPolicy">
                <enum>Qt::NoFocus</enum>
@@ -1585,8 +1530,11 @@
               <property name="dragDropOverwriteMode">
                <bool>false</bool>
               </property>
+              <property name="selectionMode">
+               <enum>QAbstractItemView::SingleSelection</enum>
+              </property>
               <property name="selectionBehavior">
-               <enum>QAbstractItemView::SelectItems</enum>
+               <enum>QAbstractItemView::SelectRows</enum>
               </property>
               <property name="sortingEnabled">
                <bool>true</bool>
@@ -1601,7 +1549,7 @@
                <bool>true</bool>
               </attribute>
               <attribute name="horizontalHeaderDefaultSectionSize">
-               <number>75</number>
+               <number>70</number>
               </attribute>
               <attribute name="horizontalHeaderHighlightSections">
                <bool>false</bool>
@@ -1654,42 +1602,19 @@
               </column>
              </widget>
             </item>
-           </layout>
-          </widget>
-          <widget class="QWidget" name="breaktab">
-           <attribute name="title">
-            <string>Breakpoints</string>
-           </attribute>
-           <layout class="QGridLayout" name="gridLayout_13">
             <item row="0" column="0">
-             <layout class="QHBoxLayout" name="horizontalLayout_9">
+             <layout class="QVBoxLayout" name="verticalLayout_18">
               <property name="spacing">
                <number>5</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
               </property>
               <property name="bottomMargin">
                <number>0</number>
               </property>
               <item>
-               <widget class="QLineEdit" name="breakRequest">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="inputMask">
-                 <string notr="true"/>
-                </property>
-                <property name="text">
-                 <string notr="true"/>
-                </property>
-                <property name="maxLength">
-                 <number>6</number>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="buttonAddBreakpoint">
+               <widget class="QPushButton" name="buttonAddPort">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -1699,10 +1624,14 @@
                 <property name="text">
                  <string>Add</string>
                 </property>
+                <property name="icon">
+                 <iconset resource="resources.qrc">
+                  <normaloff>:/icons/resources/icons/plus.png</normaloff>:/icons/resources/icons/plus.png</iconset>
+                </property>
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="buttonRemoveBreakpoint">
+               <widget class="QPushButton" name="buttonDeletePort">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                   <horstretch>0</horstretch>
@@ -1712,31 +1641,49 @@
                 <property name="text">
                  <string>Remove</string>
                 </property>
+                <property name="icon">
+                 <iconset resource="resources.qrc">
+                  <normaloff>:/icons/resources/icons/minus.png</normaloff>:/icons/resources/icons/minus.png</iconset>
+                </property>
                </widget>
               </item>
               <item>
-               <widget class="QLabel" name="breakChangeView">
+               <widget class="QLabel" name="portTypeLabel">
                 <property name="text">
                  <string/>
                 </property>
                </widget>
               </item>
               <item>
-               <spacer name="horizontalSpacer_16">
+               <widget class="QLabel" name="portChangeLabel">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="verticalSpacer_6">
                 <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
+                 <enum>Qt::Vertical</enum>
                 </property>
                 <property name="sizeHint" stdset="0">
                  <size>
-                  <width>40</width>
-                  <height>20</height>
+                  <width>20</width>
+                  <height>40</height>
                  </size>
                 </property>
                </spacer>
               </item>
              </layout>
             </item>
-            <item row="1" column="0">
+           </layout>
+          </widget>
+          <widget class="QWidget" name="breaktab">
+           <attribute name="title">
+            <string>Breakpoints</string>
+           </attribute>
+           <layout class="QGridLayout" name="gridLayout_13">
+            <item row="0" column="1">
              <widget class="QTableWidget" name="breakpointView">
               <property name="focusPolicy">
                <enum>Qt::NoFocus</enum>
@@ -1751,7 +1698,7 @@
                <bool>true</bool>
               </property>
               <property name="editTriggers">
-               <set>QAbstractItemView::NoEditTriggers</set>
+               <set>QAbstractItemView::AllEditTriggers</set>
               </property>
               <property name="tabKeyNavigation">
                <bool>false</bool>
@@ -1837,6 +1784,77 @@
                </property>
               </column>
              </widget>
+            </item>
+            <item row="0" column="0">
+             <layout class="QVBoxLayout" name="verticalLayout_9">
+              <property name="spacing">
+               <number>5</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QPushButton" name="buttonAddBreakpoint">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Add</string>
+                </property>
+                <property name="icon">
+                 <iconset resource="resources.qrc">
+                  <normaloff>:/icons/resources/icons/plus.png</normaloff>:/icons/resources/icons/plus.png</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="buttonRemoveBreakpoint">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Remove</string>
+                </property>
+                <property name="icon">
+                 <iconset resource="resources.qrc">
+                  <normaloff>:/icons/resources/icons/minus.png</normaloff>:/icons/resources/icons/minus.png</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="breakTypeLabel">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="breakChangeLabel">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="verticalSpacer_3">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
             </item>
            </layout>
           </widget>
@@ -4626,6 +4644,9 @@
                  </item>
                  <item row="3" column="0">
                   <widget class="QLineEdit" name="freqView">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -4649,11 +4670,17 @@
                      <pointsize>9</pointsize>
                     </font>
                    </property>
+                   <property name="inputMask">
+                    <string notr="true"/>
+                   </property>
                    <property name="text">
                     <string notr="true"/>
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                   </property>
+                   <property name="readOnly">
+                    <bool>true</bool>
                    </property>
                   </widget>
                  </item>
@@ -5286,7 +5313,11 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tabOS">
+      <widget class="QWidget" name="tabTIOS">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/tios.png</normaloff>:/icons/resources/icons/tios.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>TI-OS</string>
        </attribute>
@@ -5353,7 +5384,11 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab">
+      <widget class="QWidget" name="tabMemory">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/mem.png</normaloff>:/icons/resources/icons/mem.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>Memory</string>
        </attribute>
@@ -5368,7 +5403,19 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_11">
            <property name="spacing">
-            <number>0</number>
+            <number>2</number>
+           </property>
+           <property name="leftMargin">
+            <number>8</number>
+           </property>
+           <property name="topMargin">
+            <number>8</number>
+           </property>
+           <property name="rightMargin">
+            <number>8</number>
+           </property>
+           <property name="bottomMargin">
+            <number>8</number>
            </property>
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -5378,7 +5425,7 @@
                 <string>Goto</string>
                </property>
                <property name="icon">
-                <iconset>
+                <iconset resource="resources.qrc">
                  <normaloff>:/icons/resources/icons/goto.png</normaloff>:/icons/resources/icons/goto.png</iconset>
                </property>
               </widget>
@@ -5387,6 +5434,10 @@
               <widget class="QPushButton" name="buttonFlashSearch">
                <property name="text">
                 <string>Search</string>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/resources/icons/search.png</normaloff>:/icons/resources/icons/search.png</iconset>
                </property>
               </widget>
              </item>
@@ -5445,7 +5496,19 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_15">
            <property name="spacing">
-            <number>0</number>
+            <number>2</number>
+           </property>
+           <property name="leftMargin">
+            <number>8</number>
+           </property>
+           <property name="topMargin">
+            <number>8</number>
+           </property>
+           <property name="rightMargin">
+            <number>8</number>
+           </property>
+           <property name="bottomMargin">
+            <number>8</number>
            </property>
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_15">
@@ -5455,7 +5518,7 @@
                 <string>Goto</string>
                </property>
                <property name="icon">
-                <iconset>
+                <iconset resource="resources.qrc">
                  <normaloff>:/icons/resources/icons/goto.png</normaloff>:/icons/resources/icons/goto.png</iconset>
                </property>
               </widget>
@@ -5464,6 +5527,10 @@
               <widget class="QPushButton" name="buttonRamSearch">
                <property name="text">
                 <string>Search</string>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/resources/icons/search.png</normaloff>:/icons/resources/icons/search.png</iconset>
                </property>
               </widget>
              </item>
@@ -5522,7 +5589,19 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_16">
            <property name="spacing">
-            <number>0</number>
+            <number>2</number>
+           </property>
+           <property name="leftMargin">
+            <number>8</number>
+           </property>
+           <property name="topMargin">
+            <number>8</number>
+           </property>
+           <property name="rightMargin">
+            <number>8</number>
+           </property>
+           <property name="bottomMargin">
+            <number>8</number>
            </property>
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_16">
@@ -5532,7 +5611,7 @@
                 <string>Goto</string>
                </property>
                <property name="icon">
-                <iconset>
+                <iconset resource="resources.qrc">
                  <normaloff>:/icons/resources/icons/goto.png</normaloff>:/icons/resources/icons/goto.png</iconset>
                </property>
               </widget>
@@ -5541,6 +5620,10 @@
               <widget class="QPushButton" name="buttonMemSearch">
                <property name="text">
                 <string>Search</string>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/resources/icons/search.png</normaloff>:/icons/resources/icons/search.png</iconset>
                </property>
               </widget>
              </item>
@@ -5604,7 +5687,11 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="consoletab">
+      <widget class="QWidget" name="tabConsole">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/console.png</normaloff>:/icons/resources/icons/console.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>Console</string>
        </attribute>
@@ -5630,23 +5717,6 @@
           <property name="bottomMargin">
            <number>0</number>
           </property>
-          <item>
-           <widget class="QLineEdit" name="debugInput">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="buttonDebugCommand">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="text">
-             <string>Send Command</string>
-            </property>
-           </widget>
-          </item>
           <item>
            <widget class="QPushButton" name="buttonConsoleclear">
             <property name="sizePolicy">
@@ -5694,6 +5764,19 @@
              <string>stderr</string>
             </property>
            </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_18">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </item>
@@ -5751,8 +5834,13 @@
     </property>
     <addaction name="actionSetup"/>
     <addaction name="separator"/>
+    <addaction name="actionResetCalculator"/>
+    <addaction name="actionReloadROM"/>
+    <addaction name="separator"/>
     <addaction name="actionSaveState"/>
     <addaction name="actionRestoreState"/>
+    <addaction name="separator"/>
+    <addaction name="actionPopoutLCD"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
@@ -5764,25 +5852,15 @@
     <addaction name="actionAboutQt"/>
     <addaction name="separator"/>
    </widget>
-   <widget class="QMenu" name="menuDebug">
-    <property name="title">
-     <string>Debug</string>
-    </property>
-    <addaction name="actionResetCalculator"/>
-    <addaction name="actionReloadROM"/>
-    <addaction name="separator"/>
-    <addaction name="actionDumpIO"/>
-    <addaction name="actionDumpMemory"/>
-    <addaction name="separator"/>
-    <addaction name="actionPopoutLCD"/>
-   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuHelp"/>
-   <addaction name="menuDebug"/>
    <addaction name="menuAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="screenWidget">
+   <property name="floating">
+    <bool>false</bool>
+   </property>
    <property name="features">
     <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
    </property>
@@ -5861,16 +5939,19 @@
    </widget>
   </widget>
   <action name="actionOpen">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/open.png</normaloff>:/icons/resources/icons/open.png</iconset>
+   </property>
    <property name="text">
     <string>Open...</string>
    </property>
   </action>
-  <action name="actionSave">
-   <property name="text">
-    <string>Save...</string>
-   </property>
-  </action>
   <action name="actionExit">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/exit.png</normaloff>:/icons/resources/icons/exit.png</iconset>
+   </property>
    <property name="text">
     <string>Exit</string>
    </property>
@@ -5879,6 +5960,10 @@
    </property>
   </action>
   <action name="actionSetup">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/wizard.png</normaloff>:/icons/resources/icons/wizard.png</iconset>
+   </property>
    <property name="text">
     <string>Rom setup wizard...</string>
    </property>
@@ -5887,6 +5972,10 @@
    </property>
   </action>
   <action name="actionAbout">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/info.png</normaloff>:/icons/resources/icons/info.png</iconset>
+   </property>
    <property name="text">
     <string>About CEmu</string>
    </property>
@@ -5897,6 +5986,10 @@
   <action name="actionScreenshot">
    <property name="checkable">
     <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/pngpng.png</normaloff>:/icons/resources/icons/pngpng.png</iconset>
    </property>
    <property name="text">
     <string>Take PNG screenshot...</string>
@@ -5912,6 +6005,10 @@
    <property name="enabled">
     <bool>true</bool>
    </property>
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/gif.png</normaloff>:/icons/resources/icons/gif.png</iconset>
+   </property>
    <property name="text">
     <string>Record animated GIF...</string>
    </property>
@@ -5920,6 +6017,10 @@
    </property>
   </action>
   <action name="actionAboutQt">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/info.png</normaloff>:/icons/resources/icons/info.png</iconset>
+   </property>
    <property name="text">
     <string>About Qt</string>
    </property>
@@ -5928,11 +6029,19 @@
    </property>
   </action>
   <action name="actionResetCalculator">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/reset.png</normaloff>:/icons/resources/icons/reset.png</iconset>
+   </property>
    <property name="text">
     <string>Reset Calculator</string>
    </property>
   </action>
   <action name="actionTakeGIFScreenshot">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/screenshotgif.png</normaloff>:/icons/resources/icons/screenshotgif.png</iconset>
+   </property>
    <property name="text">
     <string>Take GIF screenshot...</string>
    </property>
@@ -5941,6 +6050,10 @@
    </property>
   </action>
   <action name="actionCheckForUpdates">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/rom.png</normaloff>:/icons/resources/icons/rom.png</iconset>
+   </property>
    <property name="text">
     <string>Check for updates...</string>
    </property>
@@ -5949,56 +6062,64 @@
    </property>
   </action>
   <action name="actionSaveState">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/export.png</normaloff>:/icons/resources/icons/export.png</iconset>
+   </property>
    <property name="text">
     <string>Save State</string>
    </property>
   </action>
   <action name="actionRestoreState">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/import.png</normaloff>:/icons/resources/icons/import.png</iconset>
+   </property>
    <property name="text">
     <string>Restore State</string>
    </property>
   </action>
-  <action name="actionSuspendToFile">
-   <property name="text">
-    <string>Save to file...</string>
-   </property>
-  </action>
-  <action name="actionResumeFromFile">
-   <property name="text">
-    <string>Restore from file...</string>
-   </property>
-  </action>
   <action name="actionReloadROM">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/reload.png</normaloff>:/icons/resources/icons/reload.png</iconset>
+   </property>
    <property name="text">
     <string>Reload Rom</string>
    </property>
   </action>
   <action name="actionExportRomImage">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/export.png</normaloff>:/icons/resources/icons/export.png</iconset>
+   </property>
    <property name="text">
     <string>Rom image</string>
    </property>
   </action>
   <action name="actionImportCalculatorState">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/import.png</normaloff>:/icons/resources/icons/import.png</iconset>
+   </property>
    <property name="text">
     <string>Calculator image</string>
    </property>
   </action>
   <action name="actionExportCalculatorState">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/export.png</normaloff>:/icons/resources/icons/export.png</iconset>
+   </property>
    <property name="text">
     <string>Calculator image</string>
    </property>
   </action>
-  <action name="actionDumpIO">
-   <property name="text">
-    <string>Dump IO State</string>
-   </property>
-  </action>
-  <action name="actionDumpMemory">
-   <property name="text">
-    <string>Dump Memory State</string>
-   </property>
-  </action>
   <action name="actionPopoutLCD">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/lcd.png</normaloff>:/icons/resources/icons/lcd.png</iconset>
+   </property>
    <property name="text">
     <string>Popout LCD</string>
    </property>
@@ -6028,6 +6149,8 @@
    <header>datawidget.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

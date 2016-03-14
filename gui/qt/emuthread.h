@@ -2,11 +2,14 @@
 #define EMUTHREAD_H
 
 #include <QtCore/QThread>
+#include <QtCore/QTimer>
 
 #include <chrono>
 
 #include "../../core/asic.h"
 #include "../../core/debug/debug.h"
+
+extern QTimer speedUpdateTimer;
 
 class EmuThread : public QThread {
     Q_OBJECT
@@ -27,7 +30,6 @@ signals:
     void debugInputRequested(bool);
 
     // I/O
-    void consoleChar(char);
     void consoleStr(QString);
     void exited(int);
 
@@ -54,7 +56,6 @@ public slots:
     void setDebugStepOverMode();
     void setDebugStepNextMode();
     void setDebugStepOutMode();
-    void debuggerInput(QString);
 
     // Linking
     void setSendState(bool);
@@ -69,6 +70,9 @@ public slots:
     void save(QString);
     void saveRomImage(QString);
 
+    // Speed
+    void sendActualSpeed();
+
 private:
     void setActualSpeed(int);
 
@@ -78,7 +82,7 @@ private:
     bool enterReceiveState = false;
     bool throttleOn = true;
     std::chrono::steady_clock::time_point lastTime;
-    std::string debugInput,exportRomPath;
+    std::string exportRomPath;
     volatile bool saveImage = false;
     volatile bool saveRom = false;
     volatile bool doRestore = false;

@@ -1,8 +1,7 @@
 #include "utils.h"
 #include "../../core/os/os.h"
 
-bool fileExists(const std::string& path)
-{
+bool fileExists(const std::string& path) {
     if (path.empty()) {
         return false;
     }

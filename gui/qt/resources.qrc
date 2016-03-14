@@ -2,19 +2,6 @@
     <qresource prefix="/skin">
         <file>resources/skin/ti84pce.png</file>
     </qresource>
-    <qresource prefix="/icons">
-        <file>resources/icons/run.png</file>
-        <file>resources/icons/stop.png</file>
-        <file>resources/icons/stepin.png</file>
-        <file>resources/icons/stepover.png</file>
-        <file>resources/icons/stepnext.png</file>
-        <file>resources/icons/stepout.png</file>
-        <file>resources/icons/goto.png</file>
-        <file>resources/icons/icon.icns</file>
-        <file>resources/icons/icon.ico</file>
-        <file>resources/icons/mem.png</file>
-        <file>resources/icons/icon.png</file>
-    </qresource>
     <qresource prefix="/qml">
         <file>qml/Keypad.qml</file>
         <file>qml/NBigButton.qml</file>
@@ -22,5 +9,40 @@
     </qresource>
     <qresource prefix="/setup">
         <file>resources/setup/home.png</file>
+    </qresource>
+    <qresource prefix="/icons">
+        <file>resources/icons/capture.png</file>
+        <file>resources/icons/console.png</file>
+        <file>resources/icons/debugger.png</file>
+        <file>resources/icons/gif.png</file>
+        <file>resources/icons/goto.png</file>
+        <file>resources/icons/icon.ico</file>
+        <file>resources/icons/icon.png</file>
+        <file>resources/icons/info.png</file>
+        <file>resources/icons/keypad.png</file>
+        <file>resources/icons/mem.png</file>
+        <file>resources/icons/minus.png</file>
+        <file>resources/icons/open.png</file>
+        <file>resources/icons/plus.png</file>
+        <file>resources/icons/pngpng.png</file>
+        <file>resources/icons/run.png</file>
+        <file>resources/icons/screenshotgif.png</file>
+        <file>resources/icons/search.png</file>
+        <file>resources/icons/settings.png</file>
+        <file>resources/icons/stepin.png</file>
+        <file>resources/icons/stepnext.png</file>
+        <file>resources/icons/stepout.png</file>
+        <file>resources/icons/stepover.png</file>
+        <file>resources/icons/stop.png</file>
+        <file>resources/icons/tios.png</file>
+        <file>resources/icons/variables.png</file>
+        <file>resources/icons/exit.png</file>
+        <file>resources/icons/export.png</file>
+        <file>resources/icons/import.png</file>
+        <file>resources/icons/lcd.png</file>
+        <file>resources/icons/reload.png</file>
+        <file>resources/icons/reset.png</file>
+        <file>resources/icons/rom.png</file>
+        <file>resources/icons/wizard.png</file>
     </qresource>
 </RCC>

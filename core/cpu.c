@@ -31,7 +31,7 @@
 /* Global CPU state */
 eZ80cpu_t cpu;
 
-static void cpu_get_cntrl_data_blocks_format(void) {
+static void cpu_clear_mode(void) {
 #ifdef DEBUG_SUPPORT
     debugger.data.block[cpu.registers.PC] |= DBG_INST_START_MARKER;
 #endif
@@ -397,7 +397,7 @@ static void cpu_execute_daa(void) {
 }
 
 static uint32_t cpu_dec_bc_partial_mode() {
-    uint32_t value = cpu_mask_mode(cpu.registers.BC - 1, cpu.L);
+    uint32_t value = cpu_mask_mode((int32_t)cpu.registers.BC - 1, cpu.L);
     if (cpu.L) {
         cpu.registers.BC = value;
     } else {
@@ -444,9 +444,17 @@ static void cpu_call(uint32_t address, bool mixed) {
     cpu_prefetch(address, cpu.IL);
 }
 
-static void cpu_trap(void) {
-    cpu_get_cntrl_data_blocks_format();
+static void cpu_trap_rewind(uint_fast8_t rewind) {
+    eZ80registers_t *r = &cpu.registers;
+    cpu_fetch_byte();
+    cpu.cycles++;
+    r->PC = cpu_mask_mode(r->PC - 1 - rewind, cpu.ADL);
+    cpu_clear_mode();
     cpu_call(0x00, cpu.MADL);
+}
+
+static void cpu_trap(void) {
+    cpu_trap_rewind(1);
 }
 
 static void cpu_check_step_out(void) {
@@ -580,7 +588,7 @@ static void cpu_execute_rot(int y, int z, uint32_t address, uint8_t value) {
             new_c = old_0;
             break;
         case 6: // OPCODETRAP
-            cpu_trap();
+            cpu_trap_rewind(1 + (cpu.PREFIX != 0));
             return;
         case 7: // SRL value[z]
             value >>= 1;
@@ -647,387 +655,146 @@ static void cpu_execute_rot_acc(int y)
     }
 }
 
-static void cpu_execute_bli(int y, int z) {
+static void cpu_execute_bli() {
     eZ80registers_t *r = &cpu.registers;
-    uint8_t old = 0, new = 0;
-    switch (y) {
-        case 0:
-            switch (z) {
-                case 2: // INIM
-                    cpu.cycles++;
-                    cpu_write_byte(r->HL, new = cpu_read_in(r->C));
-                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
-                    r->C++;
-                    old = r->B;
-                    r->B--;
-                    r->F = cpuflag_sign_b(r->B) | cpuflag_zero(r->B)
-                        | cpuflag_halfcarry_b_sub(old, 0, 1)
-                        | cpuflag_subtract(cpuflag_sign_b(new)) | cpuflag_undef(r->F);
-                    break;
-                case 3: // OTIM
-                    cpu.cycles++;
-                    cpu_write_out(r->C, new = cpu_read_byte(r->HL));
-                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
-                    r->C++;
-                    old = r->B;
-                    r->B--;
-                    r->F = cpuflag_sign_b(r->B) | cpuflag_zero(r->B)
-                        | cpuflag_halfcarry_b_sub(old, 0, 1)
-                        | cpuflag_subtract(cpuflag_sign_b(new)) | cpuflag_undef(r->F);
-                    break;
-                case 4: // INI2
-                    cpu.cycles++;
-                    cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
-                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
-                    r->C++;
-                    r->B--;
-                    r->flags.Z = cpuflag_zero(r->B) != 0;
-                    r->flags.N = cpuflag_sign_b(new) != 0;
-                    break;
-            }
-            break;
-        case 1:
-            switch (z) {
-                case 2: // INDM
-                    cpu.cycles++;
-                    cpu_write_byte(r->HL, new = cpu_read_in(r->C));
-                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
-                    r->C--;
-                    old = r->B;
-                    r->B--;
-                    r->F = cpuflag_sign_b(r->B) | cpuflag_zero(r->B)
-                        | cpuflag_halfcarry_b_sub(old, 0, 1)
-                        | cpuflag_subtract(cpuflag_sign_b(new)) | cpuflag_undef(r->F);
-                    break;
-                case 3: // OTDM
-                    cpu.cycles++;
-                    cpu_write_out(r->C, new = cpu_read_byte(r->HL));
-                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
-                    r->C--;
-                    old = r->B;
-                    r->B--;
-                    r->F = cpuflag_sign_b(r->B) | cpuflag_zero(r->B)
-                        | cpuflag_halfcarry_b_sub(old, 0, 1)
-                        | cpuflag_subtract(cpuflag_sign_b(new)) | cpuflag_undef(r->F);
-                    break;
-                case 4: // IND2
-                    cpu.cycles++;
-                    cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
-                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
-                    r->C--;
-                    r->B--;
-                    r->flags.Z = cpuflag_zero(r->B) != 0;
-                    r->flags.N = cpuflag_sign_b(new) != 0;
-                    break;
-            }
-            break;
-        case 2:
-            switch (z) {
-                case 2: // INIMR
-                    cpu.cycles++;
-                    cpu_write_byte(r->HL, new = cpu_read_in(r->C));
-                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
-                    r->C++;
-                    r->B--;
-                    r->flags.Z = cpuflag_zero(r->B) != 0;
-                    r->flags.N = cpuflag_sign_b(new) != 0;
-                    if (r->B) {
-                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
-                    }
-                    break;
-                case 3: // OTIMR
-                    cpu.cycles++;
-                    cpu_write_out(r->C, new = cpu_read_byte(r->HL));
-                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
-                    r->C++;
-                    old = r->B;
-                    r->B--;
-                    r->F = cpuflag_sign_b(r->B) | cpuflag_zero(r->B)
-                        | cpuflag_halfcarry_b_sub(old, 0, 1)
-                        | cpuflag_subtract(cpuflag_sign_b(new)) | cpuflag_undef(r->F);
-                    if (r->B) {
-                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
-                    }
-                    break;
-                case 4: // INI2R
-                    cpu.cycles++;
-                    cpu_write_byte(r->HL, new = cpu_read_in(r->DE));
-                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
-                    r->DE = cpu_mask_mode((int32_t)r->DE + 1, cpu.L);
-                    r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
-                    r->flags.N = cpuflag_sign_b(new) != 0;
-                    if (!r->flags.Z) {
-                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
-                    }
-                    break;
-            }
-            break;
-        case 3:
-            switch (z) {
-                case 2: // INDMR
-                    cpu.cycles++;
-                    cpu_write_byte(r->HL, new = cpu_read_in(r->C));
-                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
-                    r->C--;
-                    r->B--;
-                    r->flags.Z = cpuflag_zero(r->B) != 0;
-                    r->flags.N = cpuflag_sign_b(new) != 0;
-                    if (r->B) {
-                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
-                    }
-                    break;
-                case 3: // OTDMR
-                    cpu.cycles++;
-                    cpu_write_out(r->C, new = cpu_read_byte(r->HL));
-                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
-                    r->C--;
-                    old = r->B;
-                    r->B--;
-                    r->F = cpuflag_sign_b(r->B) | cpuflag_zero(r->B)
-                        | cpuflag_halfcarry_b_sub(old, 0, 1)
-                        | cpuflag_subtract(cpuflag_sign_b(new)) | cpuflag_undef(r->F);
-                    if (r->B) {
-                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
-                    }
-                    break;
-                case 4: // IND2R
-                    cpu.cycles++;
-                    cpu_write_byte(r->HL, new = cpu_read_in(r->DE));
-                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
-                    r->DE = cpu_mask_mode((int32_t)r->DE - 1, cpu.L);
-                    r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
-                    r->flags.N = cpuflag_sign_b(new) != 0;
-                    if (!r->flags.Z) {
-                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
-                    }
-                    break;
-            }
-            break;
-        case 4:
-            switch (z) {
-                case 0: // LDI
-                    cpu.cycles++;
-                    old = cpu_read_byte(r->HL);
-                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
-                    cpu_write_byte(r->DE, old);
-                    r->DE = cpu_mask_mode((int32_t)r->DE + 1, cpu.L);
-                    r->flags.PV = cpu_dec_bc_partial_mode() != 0; // Do not mask BC
-                    r->flags.N = 0;
-                    break;
-                case 1: // CPI
-                    old = cpu_read_byte(r->HL);
-                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
-                    new = r->A - old;
-                    r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
-                        | cpuflag_halfcarry_b_sub(r->A, old, 0)
-                        | cpuflag_pv(cpu_dec_bc_partial_mode()) // Do not mask BC
-                        | cpuflag_subtract(1) | cpuflag_c(r->flags.C)
-                        | cpuflag_undef(r->F);
-                    break;
-                case 2: // INI
-                    cpu.cycles++;
-                    cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
-                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
-                    r->B--;
-                    r->flags.Z = cpuflag_zero(r->B) != 0;
-                    r->flags.N = cpuflag_sign_b(new) != 0;
-                    break;
-                case 3: // OUTI
-                    cpu.cycles++;
-                    cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
-                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
-                    r->B--;
-                    r->flags.Z = cpuflag_zero(r->B) != 0;
-                    r->flags.N = cpuflag_sign_b(new) != 0;
-                    break;
-                case 4: // OUTI2
-                    cpu.cycles++;
-                    cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
-                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
-                    r->C++;
-                    r->B--;
-                    r->flags.Z = cpuflag_zero(r->B) != 0;
-                    r->flags.N = cpuflag_sign_b(new) != 0;
-                    break;
-            }
-            break;
-        case 5:
-            switch (z) {
-                case 0: // LDD
-                    cpu.cycles++;
-                    old = cpu_read_byte(r->HL);
-                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
-                    cpu_write_byte(r->DE, old);
-                    r->DE = cpu_mask_mode((int32_t)r->DE - 1, cpu.L);
-                    r->flags.PV = cpu_dec_bc_partial_mode() != 0; // Do not mask BC
-                    r->flags.N = 0;
-                    break;
-                case 1: // CPD
-                    old = cpu_read_byte(r->HL);
-                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
-                    new = r->A - old;
-                    r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
-                        | cpuflag_halfcarry_b_sub(r->A, old, 0)
-                        | cpuflag_pv(cpu_dec_bc_partial_mode()) // Do not mask BC
-                        | cpuflag_subtract(1) | cpuflag_c(r->flags.C)
-                        | cpuflag_undef(r->F);
-                    break;
-                case 2: // IND
-                    cpu.cycles++;
-                    cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
-                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
-                    r->B--;
-                    r->flags.Z = cpuflag_zero(r->B) != 0;
-                    r->flags.N = cpuflag_sign_b(new) != 0;
-                    break;
-                case 3: // OUTD
-                    cpu.cycles++;
-                    cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
-                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
-                    r->B--;
-                    r->flags.Z = cpuflag_zero(r->B) != 0;
-                    r->flags.N = cpuflag_sign_b(new) != 0;
-                    break;
-                case 4: // OUTD2
-                    cpu.cycles++;
-                    cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
-                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
-                    r->C--;
-                    r->B--;
-                    r->flags.Z = cpuflag_zero(r->B) != 0;
-                    r->flags.N = cpuflag_sign_b(new) != 0;
-                    break;
-            }
-            break;
-        case 6:
-            switch (z) {
-                case 0: // LDIR
-                    cpu.cycles++;
-                    old = cpu_read_byte(r->HL);
-                    cpu_write_byte(r->DE, old);
-                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
-                    r->DE = cpu_mask_mode((int32_t)r->DE + 1, cpu.L);
-                    r->flags.PV = cpu_dec_bc_partial_mode() != 0; // Do not mask BC
-                    r->flags.N = 0;
-                    if (r->BC) {
-                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
-                    }
-                    break;
-                case 1: // CPIR
-                    cpu.cycles++;
-                    old = cpu_read_byte(r->HL);
-                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
-                    new = r->A - old;
-                    r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
-                        | cpuflag_halfcarry_b_sub(r->A, old, 0)
-                        | cpuflag_pv(cpu_dec_bc_partial_mode()) // Do not mask BC
-                        | cpuflag_subtract(1) | cpuflag_c(r->flags.C)
-                        | cpuflag_undef(r->F);
-                    if (r->BC && !r->flags.Z) {
-                        cpu.cycles++;
-                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
-                    }
-                    break;
-                case 2: // INIR
-                    cpu.cycles++;
-                    cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
-                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
-                    r->B--;
-                    r->flags.Z = cpuflag_zero(r->B) != 0;
-                    r->flags.N = cpuflag_sign_b(new) != 0;
-                    if (r->B) {
-                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
-                    }
-                    break;
-                case 3: // OTIR
-                    cpu.cycles++;
-                    cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
-                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
-                    r->B--;
-                    r->flags.Z = cpuflag_zero(r->B) != 0;
-                    r->flags.N = cpuflag_sign_b(new) != 0;
-                    if (r->B) {
-                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
-                    }
-                    break;
-                case 4: // OTI2R
-                    cpu.cycles++;
-                    cpu_write_out(r->DE, new = cpu_read_byte(r->HL));
-                    r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
-                    r->DE = cpu_mask_mode((int32_t)r->DE + 1, cpu.L);
-                    r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
-                    r->flags.N = cpuflag_sign_b(new) != 0;
-                    if (!r->flags.Z) {
-                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
-                    }
-                    break;
-            }
-            break;
-        case 7:
-            switch (z) {
-                case 0: // LDDR
-                    cpu.cycles++;
-                    old = cpu_read_byte(r->HL);
-                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
-                    cpu_write_byte(r->DE, old);
-                    r->DE = cpu_mask_mode((int32_t)r->DE - 1, cpu.L);
-                    r->flags.PV = cpu_dec_bc_partial_mode() != 0; // Do not mask BC
-                    r->flags.N = 0;
-                    if (r->BC) {
-                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
-                    }
-                    break;
-                case 1: // CPDR
-                    cpu.cycles++;
-                    old = cpu_read_byte(r->HL);
-                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
-                    new = r->A - old;
-                    r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
-                        | cpuflag_halfcarry_b_sub(r->A, old, 0)
-                        | cpuflag_pv(cpu_dec_bc_partial_mode()) // Do not mask BC
-                        | cpuflag_subtract(1) | cpuflag_c(r->flags.C)
-                        | cpuflag_undef(r->F);
-                    if (r->BC && !r->flags.Z) {
-                        cpu.cycles++;
-                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
-                    }
-                    break;
-                case 2: // INDR
-                    cpu.cycles++;
-                    cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
-                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
-                    r->B--;
-                    r->flags.Z = cpuflag_zero(r->B) != 0;
-                    r->flags.N = cpuflag_sign_b(new) != 0;
-                    if (r->B) {
-                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
-                    }
-                    break;
-                case 3: // OTDR
-                    cpu.cycles++;
-                    cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
-                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
-                    r->B--;
-                    r->flags.Z = cpuflag_zero(r->B) != 0;
-                    r->flags.N = cpuflag_sign_b(new) != 0;
-                    if (r->B) {
-                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
-                    }
-                    break;
-                case 4: // OTD2R
-                    cpu.cycles++;
-                    cpu_write_out(r->DE, new = cpu_read_byte(r->HL));
-                    r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
-                    r->DE = cpu_mask_mode((int32_t)r->DE - 1, cpu.L);
-                    r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
-                    r->flags.N = cpuflag_sign_b(new) != 0;
-                    if (!r->flags.Z) {
-                        cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
-                    }
-                    break;
-            }
-            break;
-    }
+    uint8_t old, new = 0;
+    uint_fast8_t internalCycles = 1;
+    uint_fast8_t xp = cpu.context.x << 2 | cpu.context.y >> 1;
+    int_fast8_t delta = cpu.context.q ? -1 : 1;
+    bool repeat = (cpu.context.x | cpu.context.p) & 1;
+    do {
+        switch (cpu.context.z) {
+            case 0:
+                switch (xp) {
+                    case 0xA: // LDI, LDD
+                    case 0xB: // LDIR, LDDR
+                        break;
+                    default:
+                        cpu_trap();
+                        return;
+                }
+                // LDI, LDD, LDIR, LDDR
+                cpu_write_byte(r->DE, cpu_read_byte(r->HL));
+                r->DE = cpu_mask_mode((int32_t)r->DE + delta, cpu.L);
+                r->flags.H = 0;
+                r->flags.PV = cpu_dec_bc_partial_mode() != 0; // Do not mask BC
+                r->flags.N = 0;
+                repeat &= r->flags.PV;
+                break;
+            case 1:
+                switch (xp) {
+                    case 0xA: // CPI, CPD
+                        break;
+                    case 0xB: // CPIR, CPDR
+                        internalCycles = 2;
+                        break;
+                    default:
+                        cpu_trap();
+                        return;
+                }
+                // CPI, CPD, CPIR, CPDR
+                old = cpu_read_byte(r->HL);
+                new = r->A - old;
+                r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
+                    | cpuflag_halfcarry_b_sub(r->A, old, 0)
+                    | cpuflag_pv(cpu_dec_bc_partial_mode()) // Do not mask BC
+                    | cpuflag_subtract(1) | cpuflag_c(r->flags.C)
+                    | cpuflag_undef(r->F);
+                repeat &= !r->flags.Z && r->flags.PV;
+                if (!repeat) {
+                    internalCycles--;
+                }
+                break;
+            case 2:
+                switch (xp) {
+                    case 0x8: // INIM, INDM
+                    case 0x9: // INIMR, INDMR
+                        cpu_write_byte(r->HL, new = cpu_read_in(r->C));
+                        r->C += delta;
+                        old = r->B--;
+                        r->F = cpuflag_sign_b(r->B) | cpuflag_zero(r->B)
+                            | cpuflag_halfcarry_b_sub(old, 0, 1)
+                            | cpuflag_subtract(cpuflag_sign_b(new)) | cpuflag_undef(r->F);
+                        break;
+                    case 0xA: // INI, IND
+                    case 0xB: // INIR, INDR
+                        cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
+                        r->B--;
+                        r->flags.Z = r->B == 0;
+                        r->flags.N = cpuflag_sign_b(new) != 0;
+                        break;
+                    case 0xC: // INIRX, INDRX
+                        cpu_write_byte(r->HL, new = cpu_read_in(r->DE));
+                        r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
+                        r->flags.N = cpuflag_sign_b(new) != 0;
+                        break;
+                    default:
+                        cpu_trap();
+                        return;
+                }
+                // INIM, INDM, INIMR, INDMR, INI, IND, INIR, INDR, INIRX, INDRX
+                repeat &= !r->flags.Z;
+                break;
+            case 3:
+                switch (xp) {
+                    case 0x8: // OTIM, OTDM
+                    case 0x9: // OTIMR, OTDMR
+                        cpu_write_out(r->C, new = cpu_read_byte(r->HL));
+                        r->C += delta;
+                        old = r->B--;
+                        r->F = cpuflag_sign_b(r->B) | cpuflag_zero(r->B)
+                            | cpuflag_halfcarry_b_sub(old, 0, 1)
+                            | cpuflag_subtract(cpuflag_sign_b(new)) | cpuflag_undef(r->F);
+                        break;
+                    case 0xA: // OUTI, OUTD
+                    case 0xB: // OTIR, OTDR
+                        cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
+                        r->B--;
+                        r->flags.Z = r->B == 0;
+                        r->flags.N = cpuflag_sign_b(new) != 0;
+                        break;
+                    case 0xC: // OTIRX, OTDRX
+                        cpu_write_out(r->DE, new = cpu_read_byte(r->HL));
+                        r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
+                        r->flags.N = cpuflag_sign_b(new) != 0;
+                        break;
+                    default:
+                        cpu_trap();
+                        return;
+                }
+                // OTIM, OTDM, OTIMR, OTDMR, OUTI, OUTD, OTIR, OTDR, OTIRX, OTDRX
+                repeat &= !r->flags.Z;
+                break;
+            case 4:
+                switch (xp) {
+                    case 0x8: // INI2, IND2
+                    case 0x9: // INI2R, IND2R
+                        cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
+                        break;
+                    case 0xA: // OUTI, OUTD
+                    case 0xB: // OTIR, OTDR
+                        cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
+                        break;
+                    default:
+                        cpu_trap();
+                        return;
+                }
+                // INI2, IND2, INI2R, IND2R, OUTI, OUTD, OTIR, OTDR
+                r->C += delta;
+                r->B--;
+                r->flags.Z = r->B == 0;
+                r->flags.N = cpuflag_sign_b(new) != 0;
+                repeat &= !r->flags.Z;
+                break;
+            default:
+                cpu_trap();
+                return;
+        }
+        // All block instructions
+        r->HL = cpu_mask_mode((int32_t)r->HL + delta, cpu.L);
+        cpu.cycles += internalCycles;
+    } while (repeat && (cpu.cycles < cpu.next));
+    cpu.inBlock = repeat;
 }
 
 void cpu_init(void) {
@@ -1044,7 +811,8 @@ void cpu_reset(void) {
 
 void cpu_flush(uint32_t address, bool mode) {
     cpu_prefetch(address, mode);
-    cpu_get_cntrl_data_blocks_format();
+    cpu_clear_mode();
+    cpu.inBlock = 0;
 }
 
 void cpu_nmi(void) {
@@ -1067,23 +835,11 @@ void cpu_execute(void) {
     uint32_t op_word;
 
     eZ80registers_t *r = &cpu.registers;
-    union {
-        uint8_t opcode;
-        struct {
-            uint8_t z : 3;
-            uint8_t y : 3;
-            uint8_t x : 2;
-        };
-        struct {
-            uint8_t r : 1;
-            uint8_t   : 2;
-            uint8_t q : 1;
-            uint8_t p : 2;
-        };
-    } context;
+    eZ80context_t context;
 
     uint32_t save_next = cpu.next;
     while (!exiting) {
+    cpu_execute_continue:
         if (cpu.IEF_wait) {
             if (cpu.IEF_wait > 1) {
                 if (cpu.cycles < cpu.next) {
@@ -1098,7 +854,8 @@ void cpu_execute(void) {
             }
         }
         if (cpu.NMI || (cpu.IEF1 && (intrpt.request->status & intrpt.request->enabled))) {
-            cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = cpu.halted = 0;
+            cpu_clear_mode();
+            cpu.IEF1 = cpu.IEF2 = cpu.halted = cpu.inBlock = 0;
             cpu.cycles += 1;
             if (cpu.NMI) {
                 cpu.NMI = 0;
@@ -1120,6 +877,9 @@ void cpu_execute(void) {
         }
         if (exiting || cpu.cycles >= cpu.next) {
             break;
+        }
+        if (cpu.inBlock) {
+            goto cpu_execute_bli_continue;
         }
         do {
             // fetch opcode
@@ -1335,6 +1095,7 @@ void cpu_execute(void) {
                                             r->_HL = w;
                                             break;
                                         case 2: // JP (rr)
+                                            cpu_fetch_byte();
                                             cpu_prefetch(cpu_read_index(), cpu.L);
                                             cpu_check_step_out();
                                             break;
@@ -1675,59 +1436,29 @@ void cpu_execute(void) {
                                                     }
                                                     break;
                                                 case 2:
-                                                    if (context.z <= 4) { // bli[y,z]
-                                                        cpu_execute_bli(context.y, context.z);
-                                                    } else { // OPCODETRAP
-                                                        cpu_trap();
+                                                cpu_execute_bli_start:
+                                                    r->PC = cpu_address_mode(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
+                                                    cpu.context = context;
+                                                cpu_execute_bli_continue:
+                                                    cpu_execute_bli();
+                                                    if (cpu.inBlock) {
+                                                        goto cpu_execute_continue;
+                                                    } else {
+                                                        r->PC = cpu_address_mode(r->PC + 2 + cpu.SUFFIX, cpu.ADL);
                                                     }
                                                     break;
                                                 case 3:  // There are only a few of these, so a simple switch for these shouldn't matter too much
                                                     switch(context.opcode) {
                                                         case 0xC2: // INIRX
-                                                            cpu.cycles++;
-                                                            cpu_write_byte(r->HL, new = cpu_read_in(r->DE));
-                                                            r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
-                                                            r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
-                                                            r->flags.N = cpuflag_sign_b(new) != 0;
-                                                            if (!r->flags.Z) {
-                                                                cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
-                                                            }
-                                                            break;
                                                         case 0xC3: // OTIRX
-                                                            cpu.cycles++;
-                                                            cpu_write_out(r->DE, new = cpu_read_byte(r->HL));
-                                                            r->HL = cpu_mask_mode((int32_t)r->HL + 1, cpu.L);
-                                                            r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
-                                                            r->flags.N = cpuflag_sign_b(new) != 0;
-                                                            if (!r->flags.Z) {
-                                                                cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
-                                                            }
-                                                            break;
+                                                        case 0xCA: // INDRX
+                                                        case 0xCB: // OTDRX
+                                                            goto cpu_execute_bli_start;
                                                         case 0xC7: // LD I, HL
                                                             r->I = r->HL & 0xFFFF;
                                                             break;
                                                         case 0xD7: // LD HL, I
-                                                            r->HL = r->I | (r->MBASE << 16);
-                                                            break;
-                                                        case 0xCA: // INDRX
-                                                            cpu.cycles++;
-                                                            cpu_write_byte(r->HL, new = cpu_read_in(r->DE));
-                                                            r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
-                                                            r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
-                                                            r->flags.N = cpuflag_sign_b(new) != 0;
-                                                            if (!r->flags.Z) {
-                                                                cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
-                                                            }
-                                                            break;
-                                                        case 0xCB: // OTDRX
-                                                            cpu.cycles++;
-                                                            cpu_write_out(r->DE, new = cpu_read_byte(r->HL));
-                                                            r->HL = cpu_mask_mode((int32_t)r->HL - 1, cpu.L);
-                                                            r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
-                                                            r->flags.N = cpuflag_sign_b(new) != 0;
-                                                            if (!r->flags.Z) {
-                                                                cpu_prefetch(r->PC - 2 - cpu.SUFFIX, cpu.ADL);
-                                                            }
+                                                            r->HL = cpu_mask_mode(r->I | (r->MBASE << 16), cpu.L);
                                                             break;
                                                         case 0xEE: // flash erase
                                                             memset(mem.flash.block + (r->HL & ~0x3FFF), 0xFF, 0x4000);
@@ -1759,7 +1490,7 @@ void cpu_execute(void) {
                     }
                     break;
             }
-            cpu_get_cntrl_data_blocks_format();
+            cpu_clear_mode();
         } while (cpu.PREFIX || cpu.SUFFIX || cpu.cycles < cpu.next);
     }
 }
