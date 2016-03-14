@@ -54,8 +54,6 @@ typedef struct {
 typedef struct {        /* For debugging */
     int cpu_cycles;
     int cpu_next;
-    bool stepOverFirstStep;
-    bool stepOverCall;
     uint32_t stepOverInstrEnd;
     uint32_t stepOverInstrSize;
     uint32_t stepOverExtendSize;
@@ -67,6 +65,7 @@ typedef struct {        /* For debugging */
     debug_data_t data;
     char *buffer;
     uint32_t currentBuffPos;
+    int8_t stepOutWait;
 } debug_state_t;
 
 /* Debugging */

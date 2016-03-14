@@ -25,7 +25,6 @@ public:
 signals:
     // Debugger
     void debuggerEntered();
-    void debuggerLeft();
     void sendDebugCommand(int, uint32_t);
     void debugInputRequested(bool);
 

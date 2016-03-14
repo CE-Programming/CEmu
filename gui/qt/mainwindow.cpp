@@ -82,7 +82,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonRun, &QPushButton::clicked, this, &MainWindow::changeDebuggerState);
     connect(this, &MainWindow::debuggerChangedState, &emu, &EmuThread::setDebugMode);
     connect(&emu, &EmuThread::debuggerEntered, this, &MainWindow::raiseDebugger, Qt::QueuedConnection);
-    connect(&emu, &EmuThread::debuggerLeft, this, &MainWindow::leaveDebugger, Qt::QueuedConnection);
     connect(&emu, &EmuThread::sendDebugCommand, this, &MainWindow::processDebugCommand, Qt::QueuedConnection);
     connect(ui->buttonAddPort, &QPushButton::clicked, this, &MainWindow::addPort);
     connect(ui->buttonDeletePort, &QPushButton::clicked, this, &MainWindow::deletePort);
@@ -1052,10 +1051,6 @@ void MainWindow::raiseDebugger() {
     connect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOutPressed);
 }
 
-void MainWindow::leaveDebugger() {
-    setDebuggerState(false);
-}
-
 void MainWindow::updateDebuggerChanges() {
     if (debuggerOn == true) {
         return;
@@ -1952,6 +1947,7 @@ void MainWindow::stepOverPressed() {
     }
     ui->disassemblyView->verticalScrollBar()->blockSignals(true);
     disconnect(stepOverShortcut, &QShortcut::activated, this, &MainWindow::stepOverPressed);
+
     disasm.base_address = cpu.registers.PC;
     disasm.adl = cpu.ADL;
     disassembleInstruction();
@@ -1967,8 +1963,10 @@ void MainWindow::stepNextPressed() {
     if(!inDebugger) {
         return;
     }
+
     ui->disassemblyView->verticalScrollBar()->blockSignals(true);
     disconnect(stepNextShortcut, &QShortcut::activated, this, &MainWindow::stepNextPressed);
+
     setDebuggerState(false);
     emit setDebugStepNextMode();
 }
@@ -1980,6 +1978,7 @@ void MainWindow::stepOutPressed() {
 
     ui->disassemblyView->verticalScrollBar()->blockSignals(true);
     disconnect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOutPressed);
+
     setDebuggerState(false);
     emit setDebugStepOutMode();
 }
