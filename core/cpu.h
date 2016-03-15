@@ -61,7 +61,7 @@ PACK(typedef ALIGNED_(4) struct eZ80cpu {
         uint8_t L           : 1;  /* The CPU data block operates in ADL mode using 24-bit registers. Addresses do not use MBASE. */
       /*uint8_t IS          : 1;*//* The CPU control block operates in Z80 mode.                                                 */
         uint8_t IL          : 1;  /* The CPU control block operates in ADL mode.                                                 */
-        uint8_t IEF_wait    : 1;  /* Wait for interrupt                                                                          */
+        uint8_t IEF_wait    : 2;  /* Wait for interrupt                                                                          */
         uint8_t halted      : 1;  /* Have we halted the CPU?                                                                     */
         uint8_t inBlock     : 1;  /* Are we processing a block instruction?                                                      */
     };
