@@ -111,11 +111,10 @@ void open_debugger(int reason, uint32_t data) {
         debug_clear_step_over();
     }
 
-    gui_debugger_raise_or_disable(inDebugger = true);
-    gui_debugger_send_command(reason, data);
-
     debugger.cpu_cycles = cpu.cycles;
     debugger.cpu_next = cpu.next;
+    gui_debugger_raise_or_disable(inDebugger = true);
+    gui_debugger_send_command(reason, data);
 
     do {
         gui_emu_sleep();
