@@ -52,6 +52,7 @@ public slots:
     void saveToFile();
     void exportRom();
     void changeImagePath();
+    void disableDebugger();
 
 signals:
     // Debugging
@@ -229,6 +230,7 @@ private:
     QShortcut *debuggerShortcut;
 
     QList<calc_var_t> vars;
+    QIcon runIcon, stopIcon; // help speed up stepping
 };
 
 // Used as global instance by EmuThread and Debugger class

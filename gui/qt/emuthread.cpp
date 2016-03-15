@@ -63,11 +63,11 @@ void gui_debugger_send_command(int reason, uint32_t addr) {
     emu_thread->sendDebugCommand(reason, addr);
 }
 
-void gui_debugger_entered_or_left(bool entered) {
+void gui_debugger_raise_or_disable(bool entered) {
     if (entered) {
-        emu_thread->debuggerEntered();
+        emu_thread->raiseDebugger();
     } else {
-        emu_thread->debuggerLeft();
+        emu_thread->disableDebugger();
     }
 }
 
