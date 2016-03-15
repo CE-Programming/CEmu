@@ -101,8 +101,13 @@ void open_debugger(int reason, uint32_t data) {
         return; // don't recurse
     }
 
-    if ((reason == DBG_STEP) && debugger.stepOverFirstStep && (cpuEvents & (EVENT_DEBUG_STEP_OVER | EVENT_DEBUG_STEP_NEXT))) {
-        if (debugger.stepOverCall) {
+    fprintf(stderr,
+            "[open_debugger] Opening debugger for reason %i, cpuEvents=0x%02x, stepOverFirstStep=%i, stepOverCall=%i\n",
+            reason, cpuEvents, debugger.stepOverFirstStep, debugger.stepOverCall);
+
+    if ((reason == DBG_STEP) && debugger.stepOverFirstStep) {
+        if (((cpuEvents & EVENT_DEBUG_STEP_OVER) && debugger.stepOverCall) || ((cpuEvents & EVENT_DEBUG_STEP_NEXT)
+                && !(debugger.data.block[cpu.registers.PC] & DBG_STEP_OVER_BREAKPOINT)) || (cpuEvents && EVENT_DEBUG_STEP_OUT)) {
             debugger.stepOverFirstStep = false;
             fprintf(stderr, "[open_debugger] stepOverFirstStep=false\n");
             gui_debugger_raise_or_disable(inDebugger = false);

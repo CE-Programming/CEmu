@@ -427,6 +427,7 @@ static void cpu_call(uint32_t address, bool mixed) {
         }
         if (addWait && (debugger.stepOutWait < 1)) {
             debugger.stepOutWait++;
+            fprintf(stderr, "[cpu_call] debugger.stepOutWait=%i\n", debugger.stepOutWait);
         }
     }
 #endif
@@ -462,9 +463,14 @@ static void cpu_check_step_out(void) {
     if (cpuEvents & EVENT_DEBUG_STEP_OUT) {
         int32_t spDelta = cpu.ADL ? (int32_t) cpu.registers.SPL - (int32_t) debugger.stepOutSPL :
                           (int32_t) cpu.registers.SPS - (int32_t) debugger.stepOutSPS;
-        if ((spDelta >= 0) && (!debugger.stepOutWait--)) {
-            cpuEvents &= ~(EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OUT);
-            open_debugger(DBG_STEP, 0);
+        if (spDelta >= 0) {
+            fprintf(stderr, "[cpu_check_step_out] debugger.stepOutWait=%i\n", debugger.stepOutWait - 1);
+            if (!debugger.stepOutWait--) {
+                debug_clear_step_over();
+                cpu_clear_mode();
+                cpuEvents &= ~(EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OUT);
+                open_debugger(DBG_STEP, 0);
+            }
         }
     }
 #endif

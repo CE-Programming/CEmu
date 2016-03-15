@@ -1105,7 +1105,10 @@ void MainWindow::updateDebuggerChanges() {
     cpu.IEF1 = ui->checkIEF1->isChecked();
     cpu.IEF2 = ui->checkIEF2->isChecked();
 
-    cpu_flush(static_cast<uint32_t>(hex2int(ui->pcregView->text())), ui->checkADL->isChecked());
+    uint32_t uiPC = static_cast<uint32_t>(hex2int(ui->pcregView->text()));
+    if (cpu.registers.PC != uiPC) {
+        cpu_flush(uiPC, ui->checkADL->isChecked());
+    }
 
     backlight.brightness = static_cast<uint8_t>(ui->brightnessSlider->value());
 
