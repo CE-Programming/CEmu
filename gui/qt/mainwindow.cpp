@@ -81,8 +81,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     // Debugger
     connect(ui->buttonRun, &QPushButton::clicked, this, &MainWindow::changeDebuggerState);
     connect(this, &MainWindow::debuggerChangedState, &emu, &EmuThread::setDebugMode);
-    connect(&emu, &EmuThread::raiseDebugger, this, &MainWindow::raiseDebugger, Qt::QueuedConnection);
-    connect(&emu, &EmuThread::disableDebugger, this, &MainWindow::disableDebugger, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::debuggerEntered, this, &MainWindow::raiseDebugger, Qt::QueuedConnection);
     connect(&emu, &EmuThread::sendDebugCommand, this, &MainWindow::processDebugCommand, Qt::QueuedConnection);
     connect(ui->buttonAddPort, &QPushButton::clicked, this, &MainWindow::addPort);
     connect(ui->buttonDeletePort, &QPushButton::clicked, this, &MainWindow::deletePort);
@@ -290,13 +289,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toUInt());
     restoreGeometry(settings->value(QStringLiteral("windowGeometry")).toByteArray());
     restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
-
-    QPixmap pix;
-
-    pix.load(":/icons/resources/icons/stop.png");
-    stopIcon.addPixmap(pix);
-    pix.load(":/icons/resources/icons/run.png");
-    runIcon.addPixmap(pix);
 }
 
 MainWindow::~MainWindow() {
@@ -1152,15 +1144,18 @@ void MainWindow::updateDebuggerChanges() {
 }
 
 void MainWindow::setDebuggerState(bool state) {
+    QPixmap pix;
+    QIcon icon;
+
     debuggerOn = state;
 
     if (debuggerOn) {
         ui->buttonRun->setText("Run");
-        ui->buttonRun->setIcon(runIcon);
+        pix.load(":/icons/resources/icons/run.png");
         debug_clear_run_until();
     } else {
         ui->buttonRun->setText("Stop");
-        ui->buttonRun->setIcon(stopIcon);
+        pix.load(":/icons/resources/icons/stop.png");
         ui->portChangeLabel->clear();
         ui->portTypeLabel->clear();
         ui->breakChangeLabel->clear();
@@ -1169,6 +1164,9 @@ void MainWindow::setDebuggerState(bool state) {
         ui->vatView->clear();
     }
     setReceiveState(false);
+    icon.addPixmap(pix);
+    ui->buttonRun->setIcon(icon);
+    ui->buttonRun->setIconSize(pix.size());
 
     ui->tabDebugging->setEnabled( debuggerOn );
     ui->buttonGoto->setEnabled( debuggerOn );
@@ -1191,6 +1189,14 @@ void MainWindow::setDebuggerState(bool state) {
     ui->buttonRefreshList->setEnabled( !debuggerOn );
     ui->emuVarView->setEnabled( !debuggerOn );
     ui->buttonReceiveFiles->setEnabled( !debuggerOn && inReceivingMode);
+
+    if (!debuggerOn) {
+        updateDebuggerChanges();
+        if (inReceivingMode) {
+            inReceivingMode = false;
+            refreshVariableList();
+        }
+    }
 }
 
 void MainWindow::changeDebuggerState() {
@@ -1201,11 +1207,6 @@ void MainWindow::changeDebuggerState() {
     debuggerOn = !debuggerOn;
     if (!debuggerOn) {
         setDebuggerState(false);
-        updateDebuggerChanges();
-        if (inReceivingMode) {
-            inReceivingMode = false;
-            refreshVariableList();
-        }
     }
     emit debuggerChangedState( debuggerOn );
 }
@@ -1930,7 +1931,6 @@ void MainWindow::stepInPressed() {
 
     disconnect(stepInShortcut, &QShortcut::activated, this, &MainWindow::stepInPressed);
     ui->disassemblyView->verticalScrollBar()->blockSignals(true);
-
     debuggerOn = false;
     updateDebuggerChanges();
     emit setDebugStepInMode();
@@ -1948,10 +1948,15 @@ void MainWindow::stepOverPressed() {
 
     ui->disassemblyView->verticalScrollBar()->blockSignals(true);
     disconnect(stepOverShortcut, &QShortcut::activated, this, &MainWindow::stepOverPressed);
-
-    debuggerOn = false;
-    updateDebuggerChanges();
-    emit setDebugStepOverMode();
+    disasm.base_address = cpu.registers.PC;
+    disasm.adl = cpu.ADL;
+    disassembleInstruction();
+    if (disasm.instruction.opcode == "call" || disasm.instruction.opcode == "rst") {
+        setDebuggerState(false);
+        emit setDebugStepOverMode();
+    } else {
+        stepInPressed();
+    }
 }
 
 void MainWindow::stepNextPressed() {
@@ -1961,9 +1966,7 @@ void MainWindow::stepNextPressed() {
 
     ui->disassemblyView->verticalScrollBar()->blockSignals(true);
     disconnect(stepNextShortcut, &QShortcut::activated, this, &MainWindow::stepNextPressed);
-
-    debuggerOn = false;
-    updateDebuggerChanges();
+    setDebuggerState(false);
     emit setDebugStepNextMode();
 }
 
@@ -1974,14 +1977,8 @@ void MainWindow::stepOutPressed() {
 
     ui->disassemblyView->verticalScrollBar()->blockSignals(true);
     disconnect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOutPressed);
-
-    debuggerOn = false;
-    updateDebuggerChanges();
-    emit setDebugStepOutMode();
-}
-
-void MainWindow::disableDebugger() {
     setDebuggerState(false);
+    emit setDebugStepOutMode();
 }
 
 void MainWindow::setBreakpointAddress() {

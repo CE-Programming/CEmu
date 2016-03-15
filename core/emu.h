@@ -56,10 +56,9 @@ extern uint32_t cpuEvents;
 #ifdef DEBUG_SUPPORT
 #define EVENT_DEBUG_STEP      2
 #define EVENT_DEBUG_STEP_OVER 4
-#define EVENT_DEBUG_STEP_NEXT 8
-#define EVENT_DEBUG_STEP_OUT  16
+#define EVENT_DEBUG_STEP_OUT  8
 #endif
-#define EVENT_WAITING         32
+#define EVENT_WAITING         16
 
 /* Settings */
 extern volatile bool exiting;
@@ -68,7 +67,7 @@ extern volatile bool exiting;
 void gui_do_stuff(void);
 void gui_entered_send_state(bool);
 void gui_console_printf(const char *, ...);
-void gui_debugger_raise_or_disable(bool);
+void gui_debugger_entered_or_left(bool);
 void gui_debugger_send_command(int, uint32_t);
 void gui_render_gif_frame(void);
 void gui_set_busy(bool);

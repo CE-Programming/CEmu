@@ -1,7 +1,5 @@
 #ifdef DEBUG_SUPPORT
 
-#include <stdio.h>
-
 #include "debug.h"
 #include "disasm.h"
 #include "../mem.h"
@@ -13,7 +11,7 @@ debug_state_t debugger;
 
 
 void debugger_init(void) {
-    debugger.stepOverInstrEnd = -1;
+    debugger.stepOverAddress = -1;
     debugger.data.block = (uint8_t*)calloc(0x1000000, sizeof(uint8_t));    /* Allocate Debug memory */
     debugger.data.ports = (uint8_t*)calloc(0x10000, sizeof(uint8_t));      /* Allocate Debug Port Monitor */
     debugger.buffer = (char*)calloc(SIZEOF_DEBUG_BUFFER, sizeof(char));    /* Used for printing to the console */
@@ -100,36 +98,24 @@ void open_debugger(int reason, uint32_t data) {
     if (inDebugger) {
         return; // don't recurse
     }
-
-    if ((reason == DBG_STEP) && debugger.stepOverFirstStep) {
-        if ((cpuEvents & (EVENT_DEBUG_STEP_NEXT | EVENT_DEBUG_STEP_OUT))) {
-            goto disable_debugger;
-        }
-        if ((cpuEvents & EVENT_DEBUG_STEP_OVER)) {
-            if (debugger.stepOverCall) {
-disable_debugger:
-                debugger.stepOverFirstStep = false;
-                fprintf(stderr, "[disable_debugger] stepOverFirstStep=false\n");
-                gui_debugger_raise_or_disable(inDebugger = false);
-                return;
-            }
-            debug_clear_step_over();
-        }
-    }
-
     debugger.cpu_cycles = cpu.cycles;
     debugger.cpu_next = cpu.next;
-    gui_debugger_raise_or_disable(inDebugger = true);
+    gui_debugger_entered_or_left(inDebugger = true);
+
+    if (debugger.stepOverAddress < 0x1000000) {
+        debugger.data.block[debugger.stepOverAddress] &= ~DBG_STEP_OVER_BREAKPOINT;
+        debugger.stepOverAddress = UINT32_C(0xFFFFFFFF);
+    }
+
     gui_debugger_send_command(reason, data);
 
     do {
         gui_emu_sleep();
     } while(inDebugger);
 
-
+    gui_debugger_entered_or_left(inDebugger = false);
     cpu.next = debugger.cpu_next;
     cpu.cycles = debugger.cpu_cycles;
-
     if (cpuEvents & EVENT_DEBUG_STEP) {
         cpu.next = debugger.cpu_cycles + 1;
     }
@@ -163,20 +149,6 @@ void debug_clear_run_until(void) {
         debugger.data.block[debugger.runUntilAddress] &= ~DBG_RUN_UNTIL_BREAKPOINT;
         debugger.runUntilAddress = 0xFFFFFFFF;
         debugger.runUntilSet = false;
-    }
-}
-
-void debug_clear_step_over(void) {
-    fprintf(stderr, "[debug_clear_step_over] Clearing step over(?) at 0x%08x\n", debugger.stepOverInstrEnd);
-    cpuEvents &= ~(EVENT_DEBUG_STEP_OVER | EVENT_DEBUG_STEP_NEXT);
-    if (debugger.stepOverInstrEnd < 0x1000000) {
-        for (int i = debugger.stepOverInstrEnd - debugger.stepOverInstrSize;
-                i <= (int)(debugger.stepOverInstrEnd + debugger.stepOverExtendSize); i++) {
-            debugger.data.block[i & 0xFFFFFF] &= ~DBG_STEP_OVER_BREAKPOINT;
-            debugger.data.block[i & 0xFFFF] &= ~DBG_STEP_OVER_BREAKPOINT;
-        }
-        fprintf(stderr, "[debug_clear_step_over] Cleared step over at 0x%08x\n", debugger.stepOverInstrEnd);
-        debugger.stepOverInstrEnd = -1;
     }
 }
 

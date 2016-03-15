@@ -52,22 +52,21 @@ public slots:
     void saveToFile();
     void exportRom();
     void changeImagePath();
-    void disableDebugger();
 
 signals:
     // Debugging
     void debuggerChangedState(bool);
     void triggerEmuSendState();
     void debugInputRequested();
-    void setDebugStepInMode();
-    void setDebugStepOverMode();
-    void setDebugStepNextMode();
-    void setDebugStepOutMode();
 
     // Linking
     void setSendState(bool);
     void sendVariable(std::string);
     void setReceiveState(bool);
+    void setDebugStepInMode();
+    void setDebugStepOverMode();
+    void setDebugStepNextMode();
+    void setDebugStepOutMode();
 
     // Speed
     void changedEmuSpeed(int);
@@ -228,7 +227,6 @@ private:
     QShortcut *debuggerShortcut;
 
     QList<calc_var_t> vars;
-    QIcon runIcon, stopIcon; // help speed up stepping
 };
 
 // Used as global instance by EmuThread and Debugger class
