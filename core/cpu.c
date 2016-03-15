@@ -125,7 +125,7 @@ static void cpu_write_byte(uint32_t address, uint8_t value) {
         if ((stepOverDist <= debugger.stepOverInstrSize) && (debugger.stepOverMode
                 || ((cpuAddress & 0xFF0000) == (debugger.stepOverInstrEnd & 0xFF0000)))) {
             debugger.data.block[cpuAddress] |= DBG_STEP_OVER_BREAKPOINT;
-            fprintf(stderr, "[cpu_read_byte] Added breakpoint at 0x%08x\n", cpuAddress);
+            fprintf(stderr, "[cpu_write_byte] Added breakpoint at 0x%08x\n", cpuAddress);
         }
     }
 #endif
