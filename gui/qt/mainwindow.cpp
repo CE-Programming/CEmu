@@ -711,17 +711,17 @@ void MainWindow::checkForUpdates(bool forceInfoBox) {
 }
 
 void MainWindow::showAbout() {
-    QMessageBox about_box(this);
-    about_box.setIconPixmap(QPixmap(":/icons/resources/icons/icon.png"));
-    about_box.setWindowTitle(tr("About CEmu"));
+    QMessageBox aboutBox(this);
+    aboutBox.setIconPixmap(QPixmap(":/icons/resources/icons/icon.png"));
+    aboutBox.setWindowTitle(tr("About CEmu"));
 
-    QAbstractButton* buttonUpdateCheck = about_box.addButton(tr("Check for updates"), QMessageBox::ActionRole);
+    QAbstractButton* buttonUpdateCheck = aboutBox.addButton(tr("Check for updates"), QMessageBox::ActionRole);
     connect(buttonUpdateCheck, &QAbstractButton::clicked, this, [=](){ this->checkForUpdates(true); });
 
-    QAbstractButton* okButton = about_box.addButton(QMessageBox::Ok);
+    QAbstractButton* okButton = aboutBox.addButton(QMessageBox::Ok);
     okButton->setFocus();
 
-    about_box.setText(tr("<h3>CEmu %1</h3>"
+    aboutBox.setText(tr("<h3>CEmu %1</h3>"
                          "<a href='https://github.com/CE-Programming/CEmu'>On GitHub</a><br>"
                          "<br>"
                          "Main authors:<br>"
@@ -733,14 +733,14 @@ void MainWindow::showAbout() {
                          "Lionel Debroux (<a href='https://github.com/debrouxl'>debrouxl</a>)<br>"
                          "Fabian Vogt (<a href='https://github.com/Vogtinator'>Vogtinator</a>)<br>"
                          "<br>"
-                         "Many thanks to the <a href='https://github.com/KnightOS/z80e'>z80e</a> (MIT license <a href='https://github.com/KnightOS/z80e/blob/master/LICENSE'>here</a>) and <a href='https://github.com/nspire-emus/firebird'>Firebird</a> (GPLv3 license <a href='https://github.com/nspire-emus/firebird/blob/master/LICENSE'>here</a>) projects<br>"
+                         "Many thanks to the <a href='https://github.com/KnightOS/z80e'>z80e</a> (MIT license <a href='https://github.com/KnightOS/z80e/blob/master/LICENSE'>here</a>) and <a href='https://github.com/nspire-emus/firebird'>Firebird</a> (GPLv3 license <a href='https://github.com/nspire-emus/firebird/blob/master/LICENSE'>here</a>) projects.<br>In-program icons are courtesy of the <a href='http://www.famfamfam.com/lab/icons/silk/'>Silk iconset</a>.<br>"
                          "<br>"
                          "This work is licensed under the GPLv3.<br>"
                          "To view a copy of this license, visit <a href='https://www.gnu.org/licenses/gpl-3.0.html'>https://www.gnu.org/licenses/gpl-3.0.html</a>")
                          .arg(QStringLiteral(CEMU_VERSION)));
-    about_box.setTextFormat(Qt::RichText);
-    about_box.show();
-    about_box.exec();
+    aboutBox.setTextFormat(Qt::RichText);
+    aboutBox.show();
+    aboutBox.exec();
 }
 
 void MainWindow::screenContextMenu(const QPoint &posa) {
