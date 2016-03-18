@@ -145,6 +145,13 @@ static void flash_enter_deep_power_down(uint32_t address, uint8_t byte) {
     mem.flash.command = FLASH_DEEP_POWER_DOWN;
 }
 
+static void flash_enter_IPB(uint32_t address, uint8_t byte) {
+    (void)address;
+    (void)byte;
+
+    mem.flash.command = FLASH_IPB_MODE;
+}
+
 typedef const struct flash_write_pattern {
     const int length;
     const flash_write_t pattern[6];
@@ -217,10 +224,17 @@ static flash_write_pattern_t patterns[] = {
         .handler = flash_enter_deep_power_down
     },
     {
+        .length = 3,
+        .pattern = {
+            { .address = 0xAAA, .address_mask = 0xFFF, .value = 0xAA, .value_mask = 0xFF },
+            { .address = 0x555, .address_mask = 0xFFF, .value = 0x55, .value_mask = 0xFF },
+            { .address = 0xAAA, .address_mask = 0xFFF, .value = 0xC0, .value_mask = 0xFF },
+        },
+        .handler = flash_enter_IPB
+    },
+    {
         .length = 0
     }
-
-    /* TODO: More flash patterns */
 
 };
 
@@ -250,13 +264,29 @@ static uint8_t flash_read_handler(uint32_t address) {
                 if (address < 0x10000) {
                     sector = address/flash_sector_size_8K;
                 } else {
-                    sector = (address/flash_sector_size_64K)+7;
+                    sector = (address/flash_sector_size_64K)+6;
                 }
-                value = (uint8_t)mem.flash.sector[sector].locked;
+                value = mem.flash.sector[sector].locked ? 1 : 0;
                 break;
             case FLASH_READ_CFI:
+                if (address >= 0x20 && address <= 0x2A) {
+                    static const uint8_t id[7] = { 0x51, 0x52, 0x59, 0x02, 0x00, 0x40, 0x00 };
+                    value = id[(address - 0x20)/2];
+                } else if (address >= 0x36 && address <= 0x50) {
+                    static const uint8_t id[] = { 0x27, 0x36, 0x00, 0x00, 0x03, 0x04, 0x08,
+                                                  0x0E, 0x03, 0x05, 0x03, 0x03, 0x16, 0x02,
+                                                  0x00, 0x05, 0x00, 0x01, 0x08, 0x00, 0x00,
+                                                  0x3F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                                  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50,
+                                                  0x52, 0x49, 0x31, 0x33, 0x0C, 0x02, 0x01,
+                                                  0x00, 0x08, 0x00, 0x00, 0x02, 0x95, 0xA5,
+                                                  0x02, 0x01 };
+                    value = id[(address - 0x36)/2];
+                }
                 break;
             case FLASH_DEEP_POWER_DOWN:
+                break;
+            case FLASH_IPB_MODE:
                 break;
         }
     }
