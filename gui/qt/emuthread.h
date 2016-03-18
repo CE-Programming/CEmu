@@ -3,6 +3,7 @@
 
 #include <QtCore/QThread>
 #include <QtCore/QTimer>
+#include <QtCore/QElapsedTimer>
 
 #include <chrono>
 
@@ -80,7 +81,8 @@ private:
     bool enterSendState = false;
     bool enterReceiveState = false;
     bool throttleOn = true;
-    std::chrono::steady_clock::time_point lastTime;
+    QElapsedTimer updateTimer;
+    qint64 lastTime;
     std::string exportRomPath;
     volatile bool saveImage = false;
     volatile bool saveRom = false;
