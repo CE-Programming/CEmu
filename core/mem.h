@@ -14,7 +14,8 @@ enum flash_commands {
     FLASH_CHIP_ERASE,
     FLASH_READ_SECTOR_PROTECTION,
     FLASH_DEEP_POWER_DOWN,
-    FLASH_READ_CFI
+    FLASH_READ_CFI,
+    FLASH_IPB_MODE
 };
 
 typedef struct {
