@@ -18,6 +18,7 @@
 #include "qtkeypadbridge.h"
 #include "../../core/backlight.h"
 #include "../../core/lcd.h"
+#include "../../core/asic.h"
 
 QImage renderFramebuffer(lcd_state_t *lcds) {
     lcd_drawframe(lcd_framebuffer, lcds);
@@ -25,7 +26,7 @@ QImage renderFramebuffer(lcd_state_t *lcds) {
 }
 
 void paintFramebuffer(QPainter *p, lcd_state_t *lcds) {
-    if (lcds && (lcd.control & 0x800)) {
+    if (lcds && (lcd.control & 0x800) && !asic.ship_mode_enabled) {
         QImage img = renderFramebuffer(lcds);
         p->drawImage(p->window(), img);
         float factor = (310-(float)backlight.brightness)/160.0;

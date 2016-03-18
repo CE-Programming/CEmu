@@ -338,8 +338,10 @@ static void emu_main_loop_inner(void) {
             open_debugger(DBG_STEP, 0);
         }
 #endif
-        sched_process_pending_events();
-        cpu_execute();
+        if (!asic.ship_mode_enabled) {
+            sched_process_pending_events();
+            cpu_execute();
+        }
 }
 
 void emu_loop(bool reset) {
