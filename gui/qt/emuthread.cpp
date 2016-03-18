@@ -233,8 +233,9 @@ void EmuThread::run() {
 
 bool EmuThread::stop() {
 
-    if(!isRunning())
+    if(!isRunning()) {
         return true;
+    }
 
     inDebugger = false;
     emu_is_sending = false;

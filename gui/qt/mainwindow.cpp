@@ -936,10 +936,12 @@ void MainWindow::refreshVariableList() {
         ui->buttonRefreshList->setText(tr("Refresh variable list..."));
         ui->buttonReceiveFiles->setEnabled(false);
         ui->buttonRun->setEnabled(true);
+        ui->buttonSend->setEnabled(true);
         ui->actionResetCalculator->setEnabled(true);
         setReceiveState(false);
     } else {
         ui->buttonRefreshList->setText(tr("Resume emulation"));
+        ui->buttonSend->setEnabled(false);
         ui->buttonReceiveFiles->setEnabled(true);
         ui->actionResetCalculator->setEnabled(false);
         ui->buttonRun->setEnabled(false);
