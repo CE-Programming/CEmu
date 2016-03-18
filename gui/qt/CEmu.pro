@@ -19,7 +19,7 @@ TEMPLATE = app
 # Localization
 TRANSLATIONS += i18n/fr_FR.ts i18n/es_ES.ts
 
-CONFIG += c++11
+CONFIG += c++11 console
 
 # Core options
 DEFINES += DEBUG_SUPPORT
