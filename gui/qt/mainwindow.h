@@ -190,6 +190,12 @@ private:
     // Reset
     void reloadROM();
     void resetCalculator();
+    
+#ifdef _WIN32
+    // Win32 Console Toggle
+    void toggleConsole();
+    void installToggleConsole();
+#endif
 
     // Members
     QString getAddressString(bool &, QString);
