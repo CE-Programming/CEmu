@@ -147,7 +147,11 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->actionCheckForUpdates, &QAction::triggered, this, [=](){ this->checkForUpdates(true); });
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::showAbout);
     connect(ui->actionAboutQt, &QAction::triggered, qApp, &QApplication::aboutQt);
-
+    
+#ifdef _WIN32
+    installToggleConsole();
+#endif
+    
     // Other GUI actions
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
     connect(ui->scaleSlider, &QSlider::sliderMoved, this, &MainWindow::reprintScale);

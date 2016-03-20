@@ -99,7 +99,7 @@ SOURCES +=  utils.cpp \
     searchwidget.cpp
 
 linux|macx|ios: SOURCES += ../../core/os/os-linux.c
-win32: SOURCES += ../../core/os/os-win32.c
+win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
 
 HEADERS  +=  utils.h \
     mainwindow.h \
