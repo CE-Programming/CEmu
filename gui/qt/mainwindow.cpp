@@ -148,10 +148,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::showAbout);
     connect(ui->actionAboutQt, &QAction::triggered, qApp, &QApplication::aboutQt);
     
-#ifdef _WIN32
-    installToggleConsole();
-#endif
-    
     // Other GUI actions
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
     connect(ui->scaleSlider, &QSlider::sliderMoved, this, &MainWindow::reprintScale);
@@ -225,6 +221,10 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     debuggerOn = false;
 
     settings = new QSettings(QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + QStringLiteral("/CEmu/cemu_config.ini"), QSettings::IniFormat);
+
+#ifdef _WIN32
+    installToggleConsole();
+#endif
 
     changeThrottleMode(Qt::Checked);
     emu.rom = settings->value(QStringLiteral("romImage")).toString().toStdString();

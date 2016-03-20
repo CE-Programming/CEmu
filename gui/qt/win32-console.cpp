@@ -25,6 +25,8 @@ void MainWindow::toggleConsole() {
             QMessageBox::critical(this, "Error", "Unable to close console. If you are running directly from a console, you may not be able to close it.");
         }
     }
+    
+    settings->setValue(QStringLiteral("enableWin32Console"), actionToggleConsole->isChecked());
 }
 
 void MainWindow::installToggleConsole() {
@@ -39,5 +41,11 @@ void MainWindow::installToggleConsole() {
     
     // Connect menu action to function
     connect(actionToggleConsole, &QAction::triggered, this, &MainWindow::toggleConsole);
+    
+    // Check if we opted to not show a window
+    if (!settings->value(QStringLiteral("enableWin32Console"), true).toBool()) {
+        actionToggleConsole->setChecked(false);
+        toggleConsole();
+    }
 }
 #endif
