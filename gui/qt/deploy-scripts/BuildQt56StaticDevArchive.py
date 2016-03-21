@@ -108,6 +108,13 @@ print("====================================================")
 print("= Building Qt v5.6 development archive (static)... =")
 print("====================================================")
 
+# Modify PATH if needed
+entire_path = os.environ["PATH"]
+entire_path = entire_path.split(os.pathsep)
+entire_path = [p for p in entire_path if "PyQt4" not in p]
+entire_path = os.pathsep.join(entire_path)
+os.environ["PATH"] = entire_path
+
 cdir = os.getcwd()
 
 print(" * Stage 0: Removing Old Archives")
@@ -115,6 +122,7 @@ silent_remove_wildcard(os.path.join(cdir, ARC_PREFIX + "Win32" + ARC_SUFFIX_DEV 
 silent_remove_wildcard(os.path.join(cdir, ARC_PREFIX + "Win64" + ARC_SUFFIX_DEV + "*.7z*"))
 
 print(" * Stage 1: Analyzing CEmu")
+os.chdir(os.path.dirname(os.path.realpath(__file__)))
 mkdir_p("build_32")
 
 os.chdir("build_32")
