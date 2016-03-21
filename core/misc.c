@@ -317,7 +317,7 @@ static void fxxx_write(const uint16_t pio, const uint8_t value) {
 
 #ifdef DEBUG_SUPPORT
     debugger.buffer[debugger.currentBuffPos] = (char)value;
-    debugger.currentBuffPos = (debugger.currentBuffPos + 1) % (SIZEOF_DEBUG_BUFFER);
+    debugger.currentBuffPos = (debugger.currentBuffPos + 1) % (SIZEOF_DBG_BUFFER);
     if (value == 0) {
         unsigned x;
         debugger.currentBuffPos = 0;

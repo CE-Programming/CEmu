@@ -43,8 +43,9 @@ enum {
 #define DBG_INST_MARKER           (1 << 6)
 
 #define DBG_PORT_RANGE            0xFFFF00
-#define CONSOLE_PORT_RANGE        0xFB0000
-#define SIZEOF_DEBUG_BUFFER       0x500
+#define DBGOUT_PORT_RANGE         0xFB0000
+#define DBGERR_PORT_RANGE         0xFC0000
+#define SIZEOF_DBG_BUFFER         0x500
 
 typedef struct {
     uint8_t *block;

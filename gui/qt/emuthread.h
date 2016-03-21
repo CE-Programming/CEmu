@@ -31,6 +31,7 @@ signals:
 
     // I/O
     void consoleStr(QString);
+    void errConsoleStr(QString);
     void exited(int);
 
     // Status

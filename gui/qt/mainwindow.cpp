@@ -69,6 +69,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     // Emulator -> GUI
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr);
+    connect(&emu, &EmuThread::errConsoleStr, this, &MainWindow::errConsoleStr);
     connect(&emu, &EmuThread::restored, this, &MainWindow::restored, Qt::QueuedConnection);
     connect(&emu, &EmuThread::saved, this, &MainWindow::saved, Qt::QueuedConnection);
     connect(&emu, &EmuThread::isBusy, this, &MainWindow::isBusy, Qt::QueuedConnection);
@@ -486,10 +487,20 @@ void MainWindow::closeEvent(QCloseEvent *e) {
 
 void MainWindow::consoleStr(QString str) {
     if (stderrConsole) {
-        fputs(str.toStdString().c_str(), stderr);
+        fputs(str.toStdString().c_str(), stdout);
     } else {
         ui->console->moveCursor(QTextCursor::End);
         ui->console->insertPlainText(str);
+        ui->console->moveCursor(QTextCursor::End);
+    }
+}
+
+void MainWindow::errConsoleStr(QString str) {
+    if (stderrConsole) {
+        fputs(str.toStdString().c_str(), stderr);
+    } else {
+        ui->console->moveCursor(QTextCursor::End);
+        ui->console->insertPlainText("[ERROR] "+str);
         ui->console->moveCursor(QTextCursor::End);
     }
 }

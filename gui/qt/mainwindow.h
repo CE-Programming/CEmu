@@ -39,6 +39,7 @@ public slots:
 
     // Console
     void consoleStr(QString);
+    void errConsoleStr(QString);
 
     // Saved/Restored State
     void saved(bool);

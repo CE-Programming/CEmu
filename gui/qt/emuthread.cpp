@@ -57,6 +57,21 @@ void gui_console_printf(const char *fmt, ...) {
     va_end(ap);
 }
 
+static void gui_console_err_vprintf(const char *fmt, va_list ap) {
+    QString str;
+    str.vsprintf(fmt, ap);
+    emu_thread->errConsoleStr(str);
+}
+
+void gui_console_err_printf(const char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+
+    gui_console_err_vprintf(fmt, ap);
+
+    va_end(ap);
+}
+
 void gui_debugger_send_command(int reason, uint32_t addr) {
     emu_thread->sendDebugCommand(reason, addr);
 }

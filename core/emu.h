@@ -67,6 +67,7 @@ extern volatile bool exiting;
 void gui_do_stuff(void);
 void gui_entered_send_state(bool);
 void gui_console_printf(const char *, ...);
+void gui_console_err_printf(const char *, ...);
 void gui_debugger_entered_or_left(bool);
 void gui_debugger_send_command(int, uint32_t);
 void gui_render_gif_frame(void);
