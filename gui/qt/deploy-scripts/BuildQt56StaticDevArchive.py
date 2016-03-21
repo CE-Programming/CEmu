@@ -15,7 +15,7 @@ SSL32 = "OpenSSL-win32"
 SSL64 = "OpenSSL-win64"
 QT64 = "Qt\\Qt5.6.0x64-static"
 LIB_DLL_DIR = ""
-ARC_PREFIX = "Qt56_Beta_Static_"
+ARC_PREFIX = "Qt560_Rel_Static_"
 ARC_SUFFIX_DEV = "_DevDeploy"
 
 # What libraries need to be included?

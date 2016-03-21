@@ -222,17 +222,17 @@ def extract(filename):
 
 def install_deps():
     print(" * Attempting to download dependencies...")
-    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt56_Beta_Win32_DevDeploy.7z')
-    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt56_Beta_Win64_DevDeploy.7z')
-    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt56_Beta_Static_Win32_DevDeploy.7z')
-    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt56_Beta_Static_Win64_DevDeploy.7z.001')
-    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt56_Beta_Static_Win64_DevDeploy.7z.002')
+    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt560_Rel_Win32_DevDeploy.7z')
+    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt560_Rel_Win64_DevDeploy.7z')
+    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt560_Rel_Static_Win32_DevDeploy.7z')
+    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt560_Rel_Static_Win64_DevDeploy.7z.001')
+    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt560_Rel_Static_Win64_DevDeploy.7z.002')
     
     print(" * Attempting to install dependencies...")
-    extract('Qt56_Beta_Win32_DevDeploy.7z')
-    extract('Qt56_Beta_Win64_DevDeploy.7z')
-    extract('Qt56_Beta_Static_Win32_DevDeploy.7z')
-    extract('Qt56_Beta_Static_Win64_DevDeploy.7z.001')
+    extract('Qt560_Rel_Win32_DevDeploy.7z')
+    extract('Qt560_Rel_Win64_DevDeploy.7z')
+    extract('Qt560_Rel_Static_Win32_DevDeploy.7z')
+    extract('Qt560_Rel_Static_Win64_DevDeploy.7z.001')
     
     print(" * Successfully installed build dependencies!")
 

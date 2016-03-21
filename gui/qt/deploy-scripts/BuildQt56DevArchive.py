@@ -11,7 +11,7 @@ QTBASEDIR="C:\\"
 QT32 = "Qt\\Qt5.6.0"
 QT64 = "Qt\\Qt5.6.0x64"
 LIB_DLL_DIR = "5.6\\msvc2015"
-ARC_PREFIX = "Qt56_Beta_"
+ARC_PREFIX = "Qt560_Rel_"
 ARC_SUFFIX_DEV = "_DevDeploy"
 
 # What libraries need to be included?
