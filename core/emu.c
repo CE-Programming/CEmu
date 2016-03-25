@@ -341,6 +341,8 @@ static void emu_main_loop_inner(void) {
         if (!asic.ship_mode_enabled) {
             sched_process_pending_events();
             cpu_execute();
+        } else {
+            gui_emu_sleep();
         }
 }
 
