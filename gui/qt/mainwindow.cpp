@@ -990,16 +990,21 @@ void MainWindow::refreshVariableList() {
 void MainWindow::saveSelected() {
     setReceiveState(true);
 
-    QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptSave);
-    if (fileNames.size() == 1) {
-        QVector<calc_var_t> selectedVars;
-        for (int currentRow = 0; currentRow < ui->emuVarView->rowCount(); currentRow++) {
-            if (ui->emuVarView->item(currentRow, 0)->checkState()) {
-                selectedVars.append(vars[currentRow]);
-            }
+    QVector<calc_var_t> selectedVars;
+    for (int currentRow = 0; currentRow < ui->emuVarView->rowCount(); currentRow++) {
+        if (ui->emuVarView->item(currentRow, 0)->checkState()) {
+            selectedVars.append(vars[currentRow]);
         }
-        if (!receiveVariableLink(selectedVars.size(), selectedVars.constData(), fileNames.at(0).toUtf8())) {
-            QMessageBox::warning(this, tr("Failed Transfer"), tr("A failure occured during transfer of: ")+fileNames.at(0));
+    }
+    if (selectedVars.size() < 1)
+    {
+        QMessageBox::warning(this, tr("No transfer to do"), tr("Select at least one file to transfer"));
+    } else {
+        QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptSave);
+        if (fileNames.size() == 1) {
+            if (!receiveVariableLink(selectedVars.size(), selectedVars.constData(), fileNames.at(0).toUtf8())) {
+                QMessageBox::warning(this, tr("Failed Transfer"), tr("A failure occured during transfer of: ")+fileNames.at(0));
+            }
         }
     }
 }

@@ -198,11 +198,7 @@ r_err:
     return false;
 }
 
-#define STRINGIFYMAGIC(x) #x
-#define STRINGIFY(x) STRINGIFYMAGIC(x)
-static char header[] = "**TI83F*\x1A\x0A\0File dumped from CEmu " STRINGIFY(CEMU_VERSION);
-#undef STRIGIFY
-#undef STRIGIFYMAGIC
+static char header[] = "**TI83F*\x1A\x0A\0File dumped from CEmu ";
 bool receiveVariableLink(int count, const calc_var_t *vars, const char *file_name) {
     FILE *file;
     calc_var_t var;
