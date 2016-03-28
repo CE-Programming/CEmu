@@ -76,7 +76,8 @@ const char *calc_var_name_to_utf8(uint8_t name[8]) {
     static char buffer[17];
     char *dest = buffer;
     uint8_t i;
-    for (i = 0; i < 8 && name[i] >= 'A' && name[i] <= 'z' + 1; i++) {
+    for (i = 0; i < 8 && (name[i] >= 'A' && name[i] <= 'Z' + 1) ||
+             (i && name[i] >= 'a' && name[i] <= 'z'); i++) {
         if (name[i] == 'Z' + 1) {
             *dest++ = '\xCE';
             *dest++ = '\xB8';
