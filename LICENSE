@@ -2,6 +2,7 @@ Portions of this program use code, directly or modified, from:
 * z80e, a z80 emulator developed by KnightOS Group
 * Firebird, a TI-Nspire emulator developed by Fabian Vogt
 * QHexEdit2, developed by Simsys
+* tivars_lib_cpp, developed by Adrien "Adriweb" Bertrand
 * Silk iconset, created by Mark James from famfamfam.com
 
 ________________________________________________________
@@ -31,6 +32,20 @@ QHexEdit2 license:
 
 GNU LESSER GENERAL PUBLIC LICENSE, Version 2.1, February 1999
 As per https://github.com/Simsys/qhexedit2/blob/f1e342cd342efd0dc71ee6625fd8b28cf44f26b1/src/license.txt
+
+
+________________________________________________________
+tivars_lib_cpp license:
+
+The MIT License (MIT)
+Copyright (c) 2015 Adrien Bertrand
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 
 ________________________________________________________
 Silk iconset license:

@@ -36,6 +36,7 @@
 #include "qtframebuffer.h"
 #include "qtkeypadbridge.h"
 #include "searchwidget.h"
+#include "basiccodeviewerwindow.h"
 
 #include "utils.h"
 #include "capture/gif.h"
@@ -971,17 +972,28 @@ void MainWindow::refreshVariableList() {
                 currentRow = ui->emuVarView->rowCount();
                 ui->emuVarView->setRowCount(currentRow + 1);
 
+                QString var_value = QString::fromStdString(calc_var_content_string(var));
+
                 QTableWidgetItem *var_name = new QTableWidgetItem(calc_var_name_to_utf8(var.name));
                 QTableWidgetItem *var_type = new QTableWidgetItem(calc_var_type_names[var.type]);
                 QTableWidgetItem *var_size = new QTableWidgetItem(QString::number(var.size));
+                QTableWidgetItem *var_preview = new QTableWidgetItem(var_value);
 
                 var_name->setCheckState(Qt::Unchecked);
 
                 ui->emuVarView->setItem(currentRow, 0, var_name);
                 ui->emuVarView->setItem(currentRow, 1, var_type);
                 ui->emuVarView->setItem(currentRow, 2, var_size);
+                ui->emuVarView->setItem(currentRow, 3, var_preview);
             }
         }
+        connect(ui->emuVarView, &QTableWidget::itemDoubleClicked, this, [&](QTableWidgetItem* item) {
+            BasicCodeViewerWindow codePopup;
+            codePopup.setOriginalCode(item->text());
+            codePopup.setVariableName(ui->emuVarView->item(item->row(), 0)->text());
+            codePopup.show();
+            codePopup.exec();
+        });
     }
 
     inReceivingMode = !inReceivingMode;
