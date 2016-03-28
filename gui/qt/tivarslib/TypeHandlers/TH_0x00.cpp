@@ -6,6 +6,10 @@
  */
 
 #include "../autoloader.h"
+#include <cmath>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
 
 // TODO : check if the models have different exponent offsets
 
