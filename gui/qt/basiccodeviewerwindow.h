@@ -5,16 +5,13 @@
 #include <QString>
 #include "tivarslib/autoloader.h"
 
-namespace Ui {
-class BasicCodeViewerWindow;
-}
+namespace Ui { class BasicCodeViewerWindow; }
 
-class BasicCodeViewerWindow : public QDialog
-{
+class BasicCodeViewerWindow : public QDialog {
     Q_OBJECT
 
 public:
-    explicit BasicCodeViewerWindow(QWidget *parent = 0);
+    explicit BasicCodeViewerWindow(QWidget *p = 0);
     void setVariableName(const QString& name);
     void setOriginalCode(const QString& code) {
         originalCode = code;
