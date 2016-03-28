@@ -19,5 +19,5 @@ bool fileExists(const std::string& path) {
 std::string calc_var_content_string(const calc_var_t& var)
 {
     auto func = tivars::TypeHandlerFuncGetter::getStringFromDataFunc((int)var.type);
-    return func(data_t(var.data, var.data + var.size), {});
+    return func(data_t(var.data, var.data + var.size), options_t());
 }
