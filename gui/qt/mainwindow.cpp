@@ -340,6 +340,9 @@ void MainWindow::saveToPath(QString path) {
 }
 
 bool MainWindow::restoreFromPath(QString path) {
+    if (inReceivingMode) {
+        refreshVariableList();
+    }
     if(!emu_thread->restore(path)) {
         QMessageBox::warning(this, tr("Could not restore"), tr("Try restarting"));
         return false;
@@ -467,6 +470,9 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *e) {
 void MainWindow::closeEvent(QCloseEvent *e) {
     if (inDebugger) {
         changeDebuggerState();
+    }
+    if (inReceivingMode) {
+        refreshVariableList();
     }
 
     if (!closeAfterSave && settings->value(QStringLiteral("saveOnClose")).toBool()) {
@@ -953,13 +959,11 @@ void MainWindow::refreshVariableList() {
         ui->buttonReceiveFiles->setEnabled(false);
         ui->buttonRun->setEnabled(true);
         ui->buttonSend->setEnabled(true);
-        ui->actionResetCalculator->setEnabled(true);
         setReceiveState(false);
     } else {
         ui->buttonRefreshList->setText(tr("Resume emulation"));
         ui->buttonSend->setEnabled(false);
         ui->buttonReceiveFiles->setEnabled(true);
-        ui->actionResetCalculator->setEnabled(false);
         ui->buttonRun->setEnabled(false);
         setReceiveState(true);
         QThread::msleep(200);
@@ -993,7 +997,6 @@ void MainWindow::refreshVariableList() {
             const calc_var_t& var_tmp = vars[item->row()];
             codePopup.setOriginalCode((var_tmp.size <= 500) ? item->text() : QString::fromStdString(calc_var_content_string(var_tmp)));
             codePopup.setVariableName(ui->emuVarView->item(item->row(), 0)->text());
-            codePopup.show();
             codePopup.exec();
         });
     }
@@ -1797,6 +1800,10 @@ void MainWindow::updatePortData(int currentRow) {
 }
 
 void MainWindow::reloadROM() {
+    if (inReceivingMode) {
+        refreshVariableList();
+    }
+
     if (emu.stop()) {
         emu.start();
         if(debuggerOn) {
@@ -2361,6 +2368,9 @@ void MainWindow::scrollDisasmView(int value) {
 }
 
 void MainWindow::resetCalculator() {
+    if (inReceivingMode) {
+        refreshVariableList();
+    }
     if(debuggerOn) {
         changeDebuggerState();
     }
