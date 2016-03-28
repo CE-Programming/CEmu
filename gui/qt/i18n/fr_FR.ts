@@ -5,7 +5,7 @@
     <name>AboutWindow</name>
     <message>
         <source>About</source>
-        <translation type="vanished">A propos</translation>
+        <translation type="vanished">À propos</translation>
     </message>
 </context>
 <context>
@@ -60,15 +60,15 @@
     </message>
     <message>
         <source>Autosave</source>
-        <translation type="vanished">Auto-sauvegarde</translation>
+        <translation type="vanished">Sauvegarde automatique</translation>
     </message>
     <message>
         <source>Autosave Path:</source>
-        <translation type="vanished">Emplacement d&apos;auto-sauvegarde :</translation>
+        <translation type="vanished">Emplacement de sauvegarde automatique :</translation>
     </message>
     <message>
         <source>Enable Autosave</source>
-        <translation type="vanished">Activer l&apos;auto-sauvegarde</translation>
+        <translation type="vanished">Activer la sauvegarde automatique</translation>
     </message>
     <message>
         <source>Browse..</source>
@@ -85,7 +85,8 @@
     <message>
         <source>Output Framerate:</source>
         <translatorcomment>TODO: trouver mieux...</translatorcomment>
-        <translation type="vanished">Framerate en sortie :</translation>
+        <translatorcomment>[zdimension] c'est fait</translatorcomment>
+        <translation type="vanished">Fréquence d'images en sortie :</translation>
     </message>
     <message>
         <source>Double Size</source>
@@ -108,7 +109,7 @@
     <message>
         <location filename="../mainwindow.ui" line="778"/>
         <source>Always show CEmu on top of other windows</source>
-        <translation>Toumonrs afficher CEmu par dessus d&apos;autres fenêtres</translation>
+        <translation>Toujours afficher CEmu par dessus d&apos;autres fenêtres</translation>
     </message>
     <message>
         <source>Show status bar</source>
@@ -128,7 +129,7 @@
     </message>
     <message>
         <source>Check for updates on startup</source>
-        <translation type="vanished">Vérifier les mises-à-jour lors du démarrage</translation>
+        <translation type="vanished">Vérifier les mises à jour lors du démarrage</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="824"/>
@@ -141,7 +142,7 @@
     </message>
     <message>
         <source>Flash Size:</source>
-        <translation type="vanished">Taille de la Flash :</translation>
+        <translation type="vanished">Taille de la mémoire Flash :</translation>
     </message>
     <message>
         <source>Model:</source>
@@ -154,7 +155,7 @@
     <message>
         <location filename="../mainwindow.ui" line="1232"/>
         <source>Debug</source>
-        <translation>Debug</translation>
+        <translation>Débogage</translation>
     </message>
     <message>
         <source>Run</source>
@@ -163,12 +164,12 @@
     <message>
         <location filename="../mainwindow.ui" line="1282"/>
         <source>Step</source>
-        <translation></translation>
+        <translation>Pas à pas</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1302"/>
         <source>Step Over</source>
-        <translation></translation>
+        <translation>Pas à pas principal</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1342"/>
@@ -191,17 +192,17 @@
     <message>
         <location filename="../mainwindow.ui" line="1826"/>
         <source>LCD Base Address</source>
-        <translation type="unfinished"></translation>
+        <translation>Adresse de base</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1870"/>
         <source>LCD Current Address</source>
-        <translation type="unfinished"></translation>
+        <translation>Adresse actuelle</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1914"/>
         <source>BPP mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Mode BPP</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1921"/>
@@ -211,32 +212,32 @@
     <message>
         <location filename="../mainwindow.ui" line="1931"/>
         <source>LCD State</source>
-        <translation type="unfinished"></translation>
+        <translation>État LCD</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2021"/>
         <source>PWR</source>
-        <translation type="unfinished"></translation>
+        <translation>PWR</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2090"/>
         <source>BEPO</source>
-        <translation type="unfinished"></translation>
+        <translation>BEPO</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2134"/>
         <source>BGR</source>
-        <translation type="unfinished"></translation>
+        <translation>BGR</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2178"/>
         <source>BEBO</source>
-        <translation type="unfinished"></translation>
+        <translation>BEBO</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4488"/>
         <source>Sleep</source>
-        <translation type="unfinished"></translation>
+        <translation>Veille</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5002"/>
@@ -251,37 +252,37 @@
     <message>
         <location filename="../mainwindow.ui" line="357"/>
         <source>Send files:</source>
-        <translation type="unfinished"></translation>
+        <translation>Envoyer des fichiers :</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="450"/>
         <source>Receive files:</source>
-        <translation type="unfinished"></translation>
+        <translation>Recevoir des fichiers :</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="573"/>
         <source>GIF</source>
-        <translation type="unfinished"></translation>
+        <translation>GIF</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="592"/>
         <source>PNG</source>
-        <translation type="unfinished"></translation>
+        <translation>PNG</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="608"/>
         <source>Recording</source>
-        <translation type="unfinished"></translation>
+        <translation>Enregistrement</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="734"/>
         <source>Framerate:</source>
-        <translation type="unfinished"></translation>
+        <translation>Images par seconde :</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="785"/>
         <source>Automatically check for updates</source>
-        <translation type="unfinished"></translation>
+        <translation>Vérifier les mises à jour automatiquement</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1580"/>
@@ -297,7 +298,7 @@
     <message>
         <location filename="../mainwindow.ui" line="2249"/>
         <source>Flags</source>
-        <translation></translation>
+        <translation>Drapeaux</translation>
     </message>
     <message>
         <source>Send</source>
@@ -463,7 +464,7 @@
     <message>
         <location filename="../mainwindow.ui" line="1322"/>
         <source>Step Out</source>
-        <translation type="unfinished"></translation>
+        <translation>Pas à pas sortant</translation>
     </message>
     <message>
         <source>5</source>
@@ -484,7 +485,7 @@
     <message>
         <location filename="../mainwindow.ui" line="5167"/>
         <source>Lock position</source>
-        <translation>Vérouiller la position</translation>
+        <translation>Vérrouiller la position</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5220"/>
@@ -543,7 +544,7 @@
     <message>
         <location filename="../mainwindow.ui" line="5348"/>
         <source>About Qt</source>
-        <translation>A propos de Qt</translation>
+        <translation>À propos de Qt</translation>
     </message>
     <message>
         <source>Bus</source>
@@ -575,7 +576,7 @@
     </message>
     <message>
         <source>Debug Console</source>
-        <translation type="vanished">Console de débug</translation>
+        <translation type="vanished">Console de débogage</translation>
     </message>
     <message>
         <source>Clear Console</source>
@@ -681,12 +682,12 @@
     <message>
         <location filename="../mainwindow.ui" line="2609"/>
         <source>h</source>
-        <translation></translation>
+        <translation>h</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2673"/>
         <source>PC/SP</source>
-        <translation></translation>
+        <translation>PC/SP</translation>
     </message>
     <message>
         <source>Freq.</source>
@@ -695,12 +696,12 @@
     <message>
         <location filename="../mainwindow.ui" line="4519"/>
         <source>Stack</source>
-        <translation></translation>
+        <translation>Pile</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5011"/>
         <source>Flash</source>
-        <translation></translation>
+        <translation>Mémoire Flash</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5029"/>
@@ -717,7 +718,7 @@
     <message>
         <location filename="../mainwindow.ui" line="5067"/>
         <source>RAM</source>
-        <translation></translation>
+        <translation>Mémoire RAM</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5123"/>
@@ -726,7 +727,7 @@
     </message>
     <message>
         <source>Lock Position</source>
-        <translation type="vanished">Vérouiller la position</translation>
+        <translation type="vanished">Vérrouiller la position</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5247"/>
@@ -741,7 +742,7 @@
     <message>
         <location filename="../mainwindow.ui" line="5277"/>
         <source>View</source>
-        <translation type="unfinished"></translation>
+        <translation>Affichage</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5289"/>
@@ -751,7 +752,7 @@
     <message>
         <location filename="../mainwindow.ui" line="5294"/>
         <source>Save...</source>
-        <translation>Sauver...</translation>
+        <translation>Enregistrer...</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5299"/>
@@ -769,7 +770,7 @@
     <message>
         <location filename="../mainwindow.ui" line="5356"/>
         <source>Reset Calculator</source>
-        <translation>Reseter la calculatrice</translation>
+        <translation>Réinitialiser la calculatrice</translation>
     </message>
     <message>
         <source>Take GIF Screenshot...</source>
@@ -778,7 +779,7 @@
     <message>
         <location filename="../mainwindow.ui" line="5267"/>
         <source>About</source>
-        <translation>A propos</translation>
+        <translation>À propos</translation>
     </message>
     <message>
         <source>Setup...</source>
@@ -792,7 +793,7 @@
         <location filename="../mainwindow.ui" line="5315"/>
         <location filename="../mainwindow.cpp" line="523"/>
         <source>About CEmu</source>
-        <translation>A propos de CEmu</translation>
+        <translation>À propos de CEmu</translation>
     </message>
     <message>
         <source>Take Screenshot...</source>
@@ -857,7 +858,7 @@
     <message>
         <location filename="../mainwindow.cpp" line="480"/>
         <source>No update available</source>
-        <translation>Pas de mise-à-jour disponible</translation>
+        <translation>Pas de mise à jour disponible</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="480"/>
@@ -867,7 +868,7 @@
     <message>
         <location filename="../mainwindow.cpp" line="486"/>
         <source>CEmu update</source>
-        <translation>Mise-à-jour de CEmu</translation>
+        <translation>Mise à jour de CEmu</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="487"/>
@@ -877,17 +878,17 @@
     <message>
         <location filename="../mainwindow.cpp" line="501"/>
         <source>Update check failed</source>
-        <translation>Erreur de vérification des mises-à-jour</translation>
+        <translation>Erreur de vérification des mises à jour</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="502"/>
         <source>&lt;b&gt;An error occurred while checking for CEmu updates.&lt;/b&gt;&lt;br/&gt;You can however &lt;a href=&apos;https://github.com/MateoConLechuga/CEmu/releases/latest&apos;&gt;go here&lt;/a&gt; to check yourself.</source>
-        <translation>&lt;b&gt;Une erreur est survenue lors de la vérification de mises-à-jour de CEmu.&lt;/b&gt;&lt;br/&gt;Vous pouvez cependant aller les vérifier par vous-même&lt;a href=&apos;https://github.com/MateoConLechuga/CEmu/releases/latest&apos;&gt;par ici&lt;/a&gt;.</translation>
+        <translation>&lt;b&gt;Une erreur est survenue lors de la vérification de mises à jour de CEmu.&lt;/b&gt;&lt;br/&gt;Vous pouvez cependant aller les vérifier par vous-même&lt;a href=&apos;https://github.com/MateoConLechuga/CEmu/releases/latest&apos;&gt;par ici&lt;/a&gt;.</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="525"/>
         <source>Check for updates</source>
-        <translation type="unfinished"></translation>
+        <translation>Vérifier les mises à jour</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="612"/>
@@ -918,21 +919,21 @@
     <message>
         <location filename="../mainwindow.cpp" line="1505"/>
         <source>Goto Address</source>
-        <translation>Aller à l&apos;addresse</translation>
+        <translation>Aller à l&apos;adresse</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1506"/>
         <source>Input Address (In Hexadecimal):</source>
-        <translation>Addresse (en hexadécimal) :</translation>
+        <translation>Adresse (en hexadécimal) :</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1585"/>
         <source>Input Hexadecimal Search String:</source>
-        <translation>Addresse (en hexadécimal) :</translation>
+        <translation>Adresse (en hexadécimal) :</translation>
     </message>
     <message>
         <source>Flash Search</source>
-        <translation type="vanished">Recherche dans la Flash</translation>
+        <translation type="vanished">Recherche dans la mémoire Flash</translation>
     </message>
     <message>
         <source>Input Search String:</source>
@@ -995,7 +996,7 @@
     <message>
         <location filename="../mainwindow.cpp" line="299"/>
         <source>Actual Speed: </source>
-        <translation>Vitesse effective:</translation>
+        <translation>Vitesse effective :</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="420"/>
@@ -1010,7 +1011,7 @@
     <message>
         <location filename="../mainwindow.cpp" line="465"/>
         <source>Checking updates is disabled for developer builds</source>
-        <translation type="unfinished"></translation>
+        <translation>La vérification de mises à jour est désactivée pour les versions de développement</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="531"/>
@@ -1176,7 +1177,7 @@
     <message>
         <location filename="../romselection.cpp" line="105"/>
         <source>Known Types (*.rom *.sav);;ROM Image (*.rom);;Saved Image (*.sav);;All Files (*.*)</source>
-        <translation>Types connus (*&gt;rom, *.sav);;Image ROM (*.rom);;Images sauvées (*.sav);;Tous les fichiers (*.*)</translation>
+        <translation>Types connus (*.rom, *.sav);;Image ROM (*.rom);;Images sauvées (*.sav);;Tous les fichiers (*.*)</translation>
     </message>
     <message>
         <location filename="../romselection.cpp" line="111"/>
@@ -1191,7 +1192,7 @@
     <message>
         <location filename="../romselection.cpp" line="131"/>
         <source>ROMData (*.8xv)</source>
-        <translation></translation>
+        <translation>ROMData (*.8xv)</translation>
     </message>
     <message>
         <location filename="../romselection.cpp" line="169"/>
@@ -1235,17 +1236,17 @@
     <message>
         <location filename="../qhexedit/commands.cpp" line="100"/>
         <source>Inserting %1 bytes</source>
-        <translation></translation>
+        <translation>Insertion de %11 octets</translation>
     </message>
     <message>
         <location filename="../qhexedit/commands.cpp" line="119"/>
         <source>Delete %1 chars</source>
-        <translation></translation>
+        <translation>Supprimer %1 caractères</translation>
     </message>
     <message>
         <location filename="../qhexedit/commands.cpp" line="141"/>
         <source>Overwrite %1 chars</source>
-        <translation></translation>
+        <translation>Remplacer %1 caractères</translation>
     </message>
 </context>
 </TS>
