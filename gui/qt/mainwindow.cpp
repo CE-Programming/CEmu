@@ -992,7 +992,7 @@ void MainWindow::refreshVariableList() {
                 ui->emuVarView->setItem(currentRow, 3, var_preview);
             }
         }
-        connect(ui->emuVarView, &QTableWidget::itemDoubleClicked, this, [&](QTableWidgetItem* item) {
+        connect(ui->emuVarView, &QTableWidget::itemDoubleClicked, this, [this](QTableWidgetItem* item) {
             BasicCodeViewerWindow codePopup;
             const calc_var_t& var_tmp = vars[item->row()];
             codePopup.setOriginalCode((var_tmp.size <= 500) ? item->text() : QString::fromStdString(calc_var_content_string(var_tmp)));
