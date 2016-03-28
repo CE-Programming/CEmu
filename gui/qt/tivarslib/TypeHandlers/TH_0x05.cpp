@@ -25,6 +25,7 @@ namespace tivars
 
     data_t TH_0x05::makeDataFromString(const string& str, const options_t options)
     {
+        (void)options;
         data_t data;
 
         if (tokens_BytesToName.empty()) {

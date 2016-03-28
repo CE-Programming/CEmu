@@ -972,7 +972,8 @@ void MainWindow::refreshVariableList() {
                 currentRow = ui->emuVarView->rowCount();
                 ui->emuVarView->setRowCount(currentRow + 1);
 
-                QString var_value = QString::fromStdString(calc_var_content_string(var));
+                QString var_value = (var.size <= 500) ? QString::fromStdString(calc_var_content_string(var))
+                                                      : tr("Double-click to view...");
 
                 QTableWidgetItem *var_name = new QTableWidgetItem(calc_var_name_to_utf8(var.name));
                 QTableWidgetItem *var_type = new QTableWidgetItem(calc_var_type_names[var.type]);
@@ -989,7 +990,8 @@ void MainWindow::refreshVariableList() {
         }
         connect(ui->emuVarView, &QTableWidget::itemDoubleClicked, this, [&](QTableWidgetItem* item) {
             BasicCodeViewerWindow codePopup;
-            codePopup.setOriginalCode(item->text());
+            const calc_var_t& var_tmp = vars[item->row()];
+            codePopup.setOriginalCode((var_tmp.size <= 500) ? item->text() : QString::fromStdString(calc_var_content_string(var_tmp)));
             codePopup.setVariableName(ui->emuVarView->item(item->row(), 0)->text());
             codePopup.show();
             codePopup.exec();

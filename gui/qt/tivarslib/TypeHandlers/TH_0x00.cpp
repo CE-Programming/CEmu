@@ -52,6 +52,8 @@ namespace tivars
 
     string TH_0x00::makeStringFromData(const data_t& data, const options_t options)
     {
+        (void)options;
+
         if (data.size() != 9)
         {
             std::cerr << "Invalid data array. Needs to contain 9 bytes" << endl;
