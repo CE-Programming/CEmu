@@ -132,7 +132,7 @@ namespace tivars
         string output_text;
         sregex_token_iterator begin(str.begin(), str.end(), eolRegex, {-1, 0});
         sregex_token_iterator end;
-        for_each(begin, end, [&](const string& m) { output_text += (m == ":") ? "\n" : m; });
+        for_each(begin, end, [&output_text](const string& m) { output_text += (m == ":") ? "\n" : m; });
         str = output_text;
 
         str = regex_replace(str, regex("([^\\s])(Del|Eff)Var "), "$1\n$2Var");
@@ -149,19 +149,19 @@ namespace tivars
         string oldFirstCommand = "", firstCommand = "";
         for (uint key=0; key<lines.size(); key++)
         {
-            auto lineData = lines[key];
+            pair<uint, string> lineData = lines[key];
             oldFirstCommand = firstCommand;
 
             string trimmedLine = trim(lineData.second);
             if (trimmedLine.length() > 0) {
                 char* trimmedLine_c = (char*) trimmedLine.c_str();
-                firstCommand = strtok(trimmedLine_c, " ");
+                char* tmptok = strtok(trimmedLine_c, " ");
+                firstCommand = tmptok ? tmptok : "";
                 firstCommand = trim(firstCommand);
-                trimmedLine = string(trimmedLine_c);
-                trimmedLine_c = (char*) trimmedLine.c_str();
                 if (firstCommand == trimmedLine)
                 {
-                    firstCommand = strtok(trimmedLine_c, "(");
+                    tmptok = strtok(trimmedLine_c, "(");
+                    firstCommand = tmptok ? tmptok : "";
                     firstCommand = trim(firstCommand);
                 }
             } else {
