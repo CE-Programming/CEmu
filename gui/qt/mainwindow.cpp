@@ -169,6 +169,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->flashBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->flashEdit, &QHexEdit::setBytesPerLine);
     connect(ui->ramBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->ramEdit, &QHexEdit::setBytesPerLine);
     connect(ui->memBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->memEdit, &QHexEdit::setBytesPerLine);
+    connect(ui->emuVarView, &QTableWidget::itemDoubleClicked, this, &MainWindow::variableClicked);
 
     // Hex Editor
     connect(ui->buttonFlashGoto, &QPushButton::clicked, this, &MainWindow::flashGotoPressed);
@@ -292,6 +293,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
 
     debugger_init();
 
+    colorback.setColor(QPalette::Base, QColor(Qt::yellow).lighter(160));
+    nocolorback.setColor(QPalette::Base, QColor(Qt::white));
     alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toUInt());
     restoreGeometry(settings->value(QStringLiteral("windowGeometry")).toByteArray());
     restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
@@ -942,6 +945,18 @@ void MainWindow::selectFiles() {
     sendFiles(fileNames);
 }
 
+void MainWindow::variableClicked(QTableWidgetItem *item) {
+    // TODO: find the correct one according to name+type (needed when the table is sortable)
+    const calc_var_t& var_tmp = vars[item->row()];
+    if (!calc_var_is_asmprog(&var_tmp) && !calc_var_is_internal(&var_tmp)) {
+        BasicCodeViewerWindow codePopup;
+        codePopup.setOriginalCode((var_tmp.size <= 500) ? ui->emuVarView->item(item->row(), 3)->text() : QString::fromStdString(calc_var_content_string(var_tmp)));
+        codePopup.setVariableName(ui->emuVarView->item(item->row(), 0)->text());
+        codePopup.show();
+        codePopup.exec();
+    }
+}
+
 void MainWindow::refreshVariableList() {
     int currentRow;
     calc_var_t var;
@@ -966,6 +981,7 @@ void MainWindow::refreshVariableList() {
         ui->buttonReceiveFiles->setEnabled(true);
         ui->buttonRun->setEnabled(false);
         setReceiveState(true);
+        ui->emuVarView->blockSignals(true);
         QThread::msleep(200);
 
         vat_search_init(&var);
@@ -1012,19 +1028,9 @@ void MainWindow::refreshVariableList() {
                 ui->emuVarView->setItem(currentRow, 3, var_preview);
             }
         }
-        connect(ui->emuVarView, &QTableWidget::itemDoubleClicked, this, [this](QTableWidgetItem* item) {
-            // TODO: find the correct one according to name+type (needed when the table is sortable)
-            const calc_var_t& var_tmp = vars[item->row()];
-            if (!calc_var_is_asmprog(&var_tmp) && !calc_var_is_internal(&var_tmp))
-            {
-                BasicCodeViewerWindow codePopup;
-                codePopup.setOriginalCode((var_tmp.size <= 500) ? item->text() : QString::fromStdString(calc_var_content_string(var_tmp)));
-                codePopup.setVariableName(ui->emuVarView->item(item->row(), 0)->text());
-                codePopup.exec();
-            }
-        });
     }
 
+    ui->emuVarView->blockSignals(false);
     inReceivingMode = !inReceivingMode;
 }
 
@@ -1275,10 +1281,7 @@ void MainWindow::changeDebuggerState() {
 }
 
 void MainWindow::populateDebugWindow() {
-    QPalette colorback, nocolorback;
     QString tmp;
-    colorback.setColor(QPalette::Base, QColor(Qt::yellow).lighter(160));
-    nocolorback.setColor(QPalette::Base, QColor(Qt::white));
 
     tmp = int2hex(cpu.registers.AF, 4);
     ui->afregView->setPalette(tmp == ui->afregView->text() ? nocolorback : colorback);

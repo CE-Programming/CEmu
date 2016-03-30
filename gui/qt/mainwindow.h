@@ -158,10 +158,11 @@ private:
     int reprintScale(int);
 
     // Linking
-    QStringList showVariableFileDialog(QFileDialog::AcceptMode mode);
-    void sendFiles(QStringList fileNames);
+    QStringList showVariableFileDialog(QFileDialog::AcceptMode);
+    void sendFiles(QStringList);
     void selectFiles();
     void refreshVariableList();
+    void variableClicked(QTableWidgetItem*);
     void saveSelected();
 
     // Hex Editor
@@ -226,6 +227,7 @@ private:
     uint16_t prevPortAddress;
     uint32_t prevBreakpointAddress;
     QString currBreakpointAddress, currPortAddress;
+    QPalette colorback, nocolorback;
 
     QShortcut *stepInShortcut;
     QShortcut *stepOverShortcut;
