@@ -322,7 +322,10 @@
            <enum>QAbstractItemView::SelectRows</enum>
           </property>
           <property name="textElideMode">
-           <enum>Qt::ElideMiddle</enum>
+           <enum>Qt::ElideRight</enum>
+          </property>
+          <property name="sortingEnabled">
+           <bool>false</bool>
           </property>
           <attribute name="horizontalHeaderDefaultSectionSize">
            <number>100</number>
@@ -334,7 +337,7 @@
            <number>40</number>
           </attribute>
           <attribute name="horizontalHeaderStretchLastSection">
-           <bool>false</bool>
+           <bool>true</bool>
           </attribute>
           <attribute name="verticalHeaderVisible">
            <bool>false</bool>
@@ -344,6 +347,9 @@
           </attribute>
           <attribute name="verticalHeaderHighlightSections">
            <bool>false</bool>
+          </attribute>
+          <attribute name="verticalHeaderShowSortIndicator" stdset="0">
+           <bool>true</bool>
           </attribute>
           <column>
            <property name="text">

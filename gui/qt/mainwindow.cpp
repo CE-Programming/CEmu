@@ -976,15 +976,35 @@ void MainWindow::refreshVariableList() {
                 currentRow = ui->emuVarView->rowCount();
                 ui->emuVarView->setRowCount(currentRow + 1);
 
-                QString var_value = (var.size <= 500) ? QString::fromStdString(calc_var_content_string(var))
-                                                      : tr("Double-click to view...");
+                bool var_preview_needs_gray = false;
+                QString var_value;
+                if (calc_var_is_asmprog(&var)) {
+                    var_value = tr("Can't preview ASM");
+                    var_preview_needs_gray = true;
+                } else if (calc_var_is_internal(&var)) {
+                    var_value = tr("Can't preview internal OS variables");
+                    var_preview_needs_gray = true;
+                } else if (var.size > 500) {
+                    var_value = tr("[Double-click to view...]");
+                } else {
+                    var_value = QString::fromStdString(calc_var_content_string(var));
+                }
+
+                QString var_type_str = calc_var_type_names[var.type];
+                if (calc_var_is_asmprog(&var)) {
+                    var_type_str += " (ASM)";
+                }
 
                 QTableWidgetItem *var_name = new QTableWidgetItem(calc_var_name_to_utf8(var.name));
-                QTableWidgetItem *var_type = new QTableWidgetItem(calc_var_type_names[var.type]);
+                QTableWidgetItem *var_type = new QTableWidgetItem(var_type_str);
                 QTableWidgetItem *var_size = new QTableWidgetItem(QString::number(var.size));
                 QTableWidgetItem *var_preview = new QTableWidgetItem(var_value);
 
                 var_name->setCheckState(Qt::Unchecked);
+
+                if (var_preview_needs_gray) {
+                    var_preview->setForeground(Qt::gray);
+                }
 
                 ui->emuVarView->setItem(currentRow, 0, var_name);
                 ui->emuVarView->setItem(currentRow, 1, var_type);
@@ -993,11 +1013,15 @@ void MainWindow::refreshVariableList() {
             }
         }
         connect(ui->emuVarView, &QTableWidget::itemDoubleClicked, this, [this](QTableWidgetItem* item) {
-            BasicCodeViewerWindow codePopup;
+            // TODO: find the correct one according to name+type (needed when the table is sortable)
             const calc_var_t& var_tmp = vars[item->row()];
-            codePopup.setOriginalCode((var_tmp.size <= 500) ? item->text() : QString::fromStdString(calc_var_content_string(var_tmp)));
-            codePopup.setVariableName(ui->emuVarView->item(item->row(), 0)->text());
-            codePopup.exec();
+            if (!calc_var_is_asmprog(&var_tmp) && !calc_var_is_internal(&var_tmp))
+            {
+                BasicCodeViewerWindow codePopup;
+                codePopup.setOriginalCode((var_tmp.size <= 500) ? item->text() : QString::fromStdString(calc_var_content_string(var_tmp)));
+                codePopup.setVariableName(ui->emuVarView->item(item->row(), 0)->text());
+                codePopup.exec();
+            }
         });
     }
 

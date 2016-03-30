@@ -81,6 +81,10 @@ namespace tivars
         {
             while (str.back() == '0') str.pop_back();
         }
+        if (str.back() == '.')
+        {
+            str.pop_back();
+        }
 
         str = (isNegative ? "-" : "") + str;
 
