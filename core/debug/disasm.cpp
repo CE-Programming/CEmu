@@ -930,7 +930,7 @@ void disassembleInstruction(void) {
                                                 }
                                                 break;
                                             case 2:
-                                                if (context.y >= 0 && context.z <= 4) { // bli[y,z]
+                                                if (context.z <= 4) { // bli[y,z]
                                                     disasm_bli(context.y, context.z);
                                                 } else { // OPCODETRAP
                                                     disasm.instruction.opcode = "OPCODETRAP";

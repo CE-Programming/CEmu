@@ -21,7 +21,7 @@ public:
     void throttleTimerWait();
 
     std::string rom, imagePath;
-    volatile bool waitForLink;
+    volatile bool waitForLink = false;
 
 signals:
     // Debugger

@@ -24,6 +24,7 @@
 #include "../../core/lcd.h"
 
 LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
+    lcdState = &lcd;
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(&refreshTimer, SIGNAL(timeout()), this, SLOT(repaint()));
 

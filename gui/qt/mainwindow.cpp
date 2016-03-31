@@ -615,7 +615,7 @@ void MainWindow::saveScreenshot(QString namefilter, QString defaultsuffix, QStri
 void MainWindow::screenshot() {
     QImage image = renderFramebuffer(&lcd);
 
-    QString path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.gif");
+    QString path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.img");
     if (!image.save(path, "PNG", 0)) {
         QMessageBox::critical(this, tr("Screenshot failed"), tr("Failed to save screenshot!"));
     }
@@ -629,7 +629,7 @@ void MainWindow::screenshotGIF() {
         return;
     }
 
-    QString path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.gif");
+    QString path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.img");
     if (!gif_single_frame(path.toStdString().c_str())) {
         QMessageBox::critical(this, tr("Screenshot failed"), tr("Failed to save screenshot!"));
     }

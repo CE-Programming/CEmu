@@ -46,7 +46,6 @@ bool emu_save_rom(const char *file) {
     gui_set_busy(true);
 
     if (!savedRom) {
-        fclose(savedRom);
         return false;
     }
 
@@ -69,19 +68,16 @@ bool emu_save(const char *file) {
 
     do {
         if (!image) {
-            fclose(savedImage);
             break;
         }
 
         if (!asic_save(image)) {
-            free(image);
-            fclose(savedImage);
             break;
         }
 
         image->version = imageVersion;
 
-        success = ((size_t)fwrite(image, 1, size, savedImage) == size);
+        success = (fwrite(image, 1, size, savedImage) == size);
     } while(0);
 
     free(image);
@@ -94,13 +90,14 @@ bool emu_save(const char *file) {
 bool emu_start(const char *romImage, const char *savedImage) {
     bool ret = false;
     long lSize;
+    FILE *imageFile;
 
     gui_set_busy(true);
 
     do {
         if(savedImage != NULL) {
-            FILE *imageFile = fopen_utf8(savedImage, "rb");
             emu_image_t *image;
+            imageFile = fopen_utf8(savedImage, "rb");
 
             if (!imageFile) {
                 break;
@@ -121,15 +118,12 @@ bool emu_start(const char *romImage, const char *savedImage) {
 
             image = (emu_image_t*)malloc(lSize);
             if(!image) {
-                fclose(imageFile);
                 break;
             }
             if(fread(image, lSize, 1, imageFile) != 1) {
-                fclose(imageFile);
                 free(image);
                 break;
             }
-            fclose(imageFile);
 
             sched_reset();
             sched.items[SCHED_THROTTLE].clock = CLOCK_27M;
@@ -294,6 +288,10 @@ bool emu_start(const char *romImage, const char *savedImage) {
             }
         }
     } while(0);
+
+    if(imageFile) {
+        fclose(imageFile);
+    }
 
     if (!ret) {
         gui_console_printf("[CEmu] Error opening image (Corrupted certificate?)\n");
