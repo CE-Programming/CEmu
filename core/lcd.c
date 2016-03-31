@@ -36,7 +36,7 @@ static uint_fast32_t lcd_nextword(uint32_t *ofs) {
     if (*ofs >= ram_size) {
         return 0;
     }
-    return *(uint32_t *) (mem.ram.block + *ofs);
+    return *(uint32_t *) (mem.ram.block + *ofs - 4);
 }
 
 // #define c6_to_c8(c) ((c * 0xFF + 0x1F) / 0x3F)
