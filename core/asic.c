@@ -80,6 +80,8 @@ void asic_init(void) {
     asic.mem = &mem;
     asic.cpu = &cpu;
 
+    asic.ship_mode_enabled = false;
+
     plug_devices();
     gui_console_printf("[CEmu] Initialized ASIC...\n");
 }

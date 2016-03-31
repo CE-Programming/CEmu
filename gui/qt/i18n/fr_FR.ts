@@ -191,47 +191,47 @@
     <message>
         <location filename="../mainwindow.ui" line="1826"/>
         <source>LCD Base Address</source>
-        <translation type="unfinished"></translation>
+        <translation>Adresse de base du LCD</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1870"/>
         <source>LCD Current Address</source>
-        <translation type="unfinished"></translation>
+        <translation>Adresse actuelle du LCD</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1914"/>
         <source>BPP mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Mode BPP</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1921"/>
         <source>&gt;99</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1931"/>
         <source>LCD State</source>
-        <translation type="unfinished"></translation>
+        <translation>Etat du LCD</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2021"/>
         <source>PWR</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2090"/>
         <source>BEPO</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2134"/>
         <source>BGR</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2178"/>
         <source>BEBO</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4488"/>
@@ -251,37 +251,37 @@
     <message>
         <location filename="../mainwindow.ui" line="357"/>
         <source>Send files:</source>
-        <translation type="unfinished"></translation>
+        <translation>Envoi de fichiers:</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="450"/>
         <source>Receive files:</source>
-        <translation type="unfinished"></translation>
+        <translation>Réception de fichiers:</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="573"/>
         <source>GIF</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="592"/>
         <source>PNG</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="608"/>
         <source>Recording</source>
-        <translation type="unfinished"></translation>
+        <translation>Enregistrement</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="734"/>
         <source>Framerate:</source>
-        <translation type="unfinished"></translation>
+        <translation>Images/s:</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="785"/>
         <source>Automatically check for updates</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Vérifier les mises-à-jour automatiquement</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1580"/>
@@ -326,7 +326,7 @@
     <message>
         <location filename="../mainwindow.ui" line="627"/>
         <source>Frame skip:</source>
-        <translation>Saut d&apos;image</translation>
+        <translation>Saut d&apos;image:</translation>
     </message>
     <message>
         <source>1</source>
@@ -453,7 +453,7 @@
     <message>
         <location filename="../mainwindow.ui" line="1013"/>
         <source>Text size:</source>
-        <translation>Taille du texte</translation>
+        <translation>Taille du texte:</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1110"/>
@@ -534,7 +534,7 @@
     <message>
         <location filename="../mainwindow.ui" line="5377"/>
         <source>Check for updates...</source>
-        <translation>Vérifier les mises-à-jour</translation>
+        <translation>Vérifier les mises-à-jour...</translation>
     </message>
     <message>
         <source>Freq</source>
@@ -676,7 +676,7 @@
     <message>
         <location filename="../mainwindow.ui" line="1736"/>
         <source>Break Exec</source>
-        <translation type="unfinished"></translation>
+        <translation>Arrêt exécution</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2609"/>
@@ -741,7 +741,7 @@
     <message>
         <location filename="../mainwindow.ui" line="5277"/>
         <source>View</source>
-        <translation type="unfinished"></translation>
+        <translation>Vue</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5289"/>
@@ -838,7 +838,7 @@
     <message>
         <location filename="../mainwindow.cpp" line="388"/>
         <source>Currently recording GIF.</source>
-        <translation>Enregistrement GIF en cours</translation>
+        <translation>Enregistrement GIF en cours.</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="412"/>
@@ -887,7 +887,7 @@
     <message>
         <location filename="../mainwindow.cpp" line="525"/>
         <source>Check for updates</source>
-        <translation type="unfinished"></translation>
+        <translation>Vérifier les mises-à-jour</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="612"/>

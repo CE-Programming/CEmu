@@ -39,6 +39,7 @@ public slots:
 
     // Console
     void consoleStr(QString);
+    void errConsoleStr(QString);
 
     // Saved/Restored State
     void saved(bool);
@@ -160,10 +161,11 @@ private:
     int reprintScale(int);
 
     // Linking
-    QStringList showVariableFileDialog(QFileDialog::AcceptMode mode);
-    void sendFiles(QStringList fileNames);
+    QStringList showVariableFileDialog(QFileDialog::AcceptMode);
+    void sendFiles(QStringList);
     void selectFiles();
     void refreshVariableList();
+    void variableClicked(QTableWidgetItem*);
     void saveSelected();
 
     // Hex Editor
@@ -193,6 +195,12 @@ private:
     // Reset
     void reloadROM();
     void resetCalculator();
+    
+#ifdef _WIN32
+    // Win32 Console Toggle
+    void toggleConsole();
+    void installToggleConsole();
+#endif
 
     // Members
     QString getAddressString(bool &, QString);
@@ -222,6 +230,7 @@ private:
     uint16_t prevPortAddress;
     uint32_t prevBreakpointAddress;
     QString currBreakpointAddress, currPortAddress;
+    QPalette colorback, nocolorback;
 
     QShortcut *stepInShortcut;
     QShortcut *stepOverShortcut;

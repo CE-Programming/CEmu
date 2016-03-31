@@ -15,21 +15,18 @@ exxx_state_t exxx; /* Global EXXX state */
 fxxx_state_t fxxx; /* Global FXXX state */
 
 static void watchdog_event(int index) {
-    (void)index;
 
     if (watchdog.control & 1) {
-        if (--watchdog.count == 0) {
-            watchdog.status = 1;
-            watchdog.count = watchdog.load;
-            if (watchdog.control & 2) {
-                cpuEvents |= EVENT_RESET;
-            }
-            if (watchdog.control & 4) {
-                cpu_nmi();
-            }
+        watchdog.status = 1;
+        if (watchdog.control & 2) {
             gui_console_printf("[CEmu] Watchdog reset triggered.\n");
+            cpuEvents |= EVENT_RESET;
         }
-        event_repeat(SCHED_WATCHDOG, watchdog.count);
+        if (watchdog.control & 4) {
+            cpu_nmi();
+            gui_console_printf("[CEmu] Watchdog NMI triggered.\n");
+        }
+        event_repeat(index, watchdog.load);
     }
 }
 
@@ -37,12 +34,15 @@ static void watchdog_event(int index) {
 static uint8_t watchdog_read(const uint16_t pio) {
     uint8_t index = pio & 0xFF;
     uint8_t bit_offset = (index & 3) << 3;
-
     uint8_t value = 0;
 
     switch (index) {
         case 0x000: case 0x001: case 0x002: case 0x003:
-            value = read8(watchdog.count, bit_offset);
+            if (watchdog.control & 1) {
+                value = read8(event_ticks_remaining(SCHED_WATCHDOG), bit_offset);
+            } else {
+                value = watchdog.count;
+            }
             break;
         case 0x004: case 0x005: case 0x006: case 0x007:
             value = read8(watchdog.load, bit_offset);
@@ -65,7 +65,6 @@ static uint8_t watchdog_read(const uint16_t pio) {
 
     /* Return 0 if unimplemented */
     return value;
-
 }
 
 /* Watchdog write routine */
@@ -86,10 +85,11 @@ static void watchdog_write(const uint16_t pio, const uint8_t byte) {
             }
             break;
         case 0x00C:
-            write8(watchdog.control, bit_offset, byte);
+            write8(watchdog.control, bit_offset, byte);                    
             if(watchdog.control & 1) {
                 event_set(SCHED_WATCHDOG, watchdog.load);
             } else {
+                watchdog.count = event_ticks_remaining(SCHED_WATCHDOG);
                 event_clear(SCHED_WATCHDOG);
             }
             if(watchdog.control & 16) {
@@ -117,7 +117,7 @@ void watchdog_reset() {
     /* Initialize device to default state */
     memset(&watchdog, 0, sizeof watchdog);
 
-    sched.items[SCHED_WATCHDOG].clock = CLOCK_CPU;
+    sched.items[SCHED_WATCHDOG].clock = CLOCK_APB;
     sched.items[SCHED_WATCHDOG].second = -1;
     sched.items[SCHED_WATCHDOG].proc = watchdog_event;
     watchdog.revision = 0x00010602;
@@ -235,11 +235,14 @@ bool cxxx_restore(const emu_image *s) {
 
 /* Read from the 0xDXXX range of ports */
 static uint8_t dxxx_read(const uint16_t pio) {
+    (void)pio; /* Uncomment me when needed */
     return 0;
 }
 
 /* Write to the 0xDXXX range of ports */
 static void dxxx_write(const uint16_t pio, const uint8_t byte) {
+    (void)pio;  /* Uncomment me when needed */
+    (void)byte; /* Uncomment me when needed */
     return;
 }
 
@@ -317,7 +320,7 @@ static void fxxx_write(const uint16_t pio, const uint8_t value) {
 
 #ifdef DEBUG_SUPPORT
     debugger.buffer[debugger.currentBuffPos] = (char)value;
-    debugger.currentBuffPos = (debugger.currentBuffPos + 1) % (SIZEOF_DEBUG_BUFFER);
+    debugger.currentBuffPos = (debugger.currentBuffPos + 1) % (SIZEOF_DBG_BUFFER);
     if (value == 0) {
         unsigned x;
         debugger.currentBuffPos = 0;
@@ -331,6 +334,7 @@ static void fxxx_write(const uint16_t pio, const uint8_t value) {
 
 /* Read from the 0xFXXX range of ports */
 static uint8_t fxxx_read(const uint16_t pio) {
+    (void)pio; /* Uncomment me when needed */
     return 0;
 }
 

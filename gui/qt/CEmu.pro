@@ -77,6 +77,9 @@ SOURCES +=  utils.cpp \
     qhexedit/chunks.cpp \
     qhexedit/commands.cpp \
     qhexedit/qhexedit.cpp \
+    tivarslib/utils_tivarslib.cpp \
+    tivarslib/TypeHandlers/TH_0x00.cpp \
+    tivarslib/TypeHandlers/TH_0x05.cpp \
     ../../core/asic.c \
     ../../core/cpu.c \
     ../../core/keypad.c \
@@ -103,10 +106,11 @@ SOURCES +=  utils.cpp \
     capture/gif.cpp \
     datawidget.cpp \
     lcdpopout.cpp \
-    searchwidget.cpp
+    searchwidget.cpp \
+    basiccodeviewerwindow.cpp
 
 linux|macx|ios: SOURCES += ../../core/os/os-linux.c
-win32: SOURCES += ../../core/os/os-win32.c
+win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
 
 HEADERS  +=  utils.h \
     mainwindow.h \
@@ -120,6 +124,15 @@ HEADERS  +=  utils.h \
     qhexedit/chunks.h \
     qhexedit/commands.h \
     qhexedit/qhexedit.h \
+    tivarslib/autoloader.h \
+    tivarslib/utils_tivarslib.h \
+    tivarslib/TypeHandlers/TypeHandlerFuncGetter.h \
+    tivarslib/TypeHandlers/ITIVarTypeHandler.h \
+    tivarslib/TypeHandlers/TH_0x00.h \
+    tivarslib/TypeHandlers/TH_0x03.h \
+    tivarslib/TypeHandlers/TH_0x04.h \
+    tivarslib/TypeHandlers/TH_0x05.h \
+    tivarslib/TypeHandlers/TH_0x06.h \
     ../../core/asic.h \
     ../../core/cpu.h \
     ../../core/defines.h \
@@ -150,12 +163,14 @@ HEADERS  +=  utils.h \
     capture/giflib.h \
     datawidget.h \
     lcdpopout.h \
-    searchwidget.h
+    searchwidget.h \
+    basiccodeviewerwindow.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \
     lcdpopout.ui \
-    searchwidget.ui
+    searchwidget.ui \
+    basiccodeviewerwindow.ui
 
 RESOURCES += \
     resources.qrc

@@ -3,6 +3,7 @@
 
 #include <QtCore/QThread>
 #include <QtCore/QTimer>
+#include <QtCore/QElapsedTimer>
 
 #include <chrono>
 
@@ -20,7 +21,7 @@ public:
     void throttleTimerWait();
 
     std::string rom, imagePath;
-    volatile bool waitForLink;
+    volatile bool waitForLink = false;
 
 signals:
     // Debugger
@@ -31,6 +32,7 @@ signals:
 
     // I/O
     void consoleStr(QString);
+    void errConsoleStr(QString);
     void exited(int);
 
     // Status
@@ -81,7 +83,8 @@ private:
     bool enterSendState = false;
     bool enterReceiveState = false;
     bool throttleOn = true;
-    std::chrono::steady_clock::time_point lastTime;
+    QElapsedTimer updateTimer;
+    qint64 lastTime;
     std::string exportRomPath;
     volatile bool saveImage = false;
     volatile bool saveRom = false;

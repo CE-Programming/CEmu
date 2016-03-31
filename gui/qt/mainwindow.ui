@@ -148,7 +148,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>7</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -322,7 +322,10 @@
            <enum>QAbstractItemView::SelectRows</enum>
           </property>
           <property name="textElideMode">
-           <enum>Qt::ElideMiddle</enum>
+           <enum>Qt::ElideRight</enum>
+          </property>
+          <property name="sortingEnabled">
+           <bool>false</bool>
           </property>
           <attribute name="horizontalHeaderDefaultSectionSize">
            <number>100</number>
@@ -334,7 +337,7 @@
            <number>40</number>
           </attribute>
           <attribute name="horizontalHeaderStretchLastSection">
-           <bool>false</bool>
+           <bool>true</bool>
           </attribute>
           <attribute name="verticalHeaderVisible">
            <bool>false</bool>
@@ -344,6 +347,9 @@
           </attribute>
           <attribute name="verticalHeaderHighlightSections">
            <bool>false</bool>
+          </attribute>
+          <attribute name="verticalHeaderShowSortIndicator" stdset="0">
+           <bool>true</bool>
           </attribute>
           <column>
            <property name="text">
@@ -358,6 +364,11 @@
           <column>
            <property name="text">
             <string>Size</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Preview</string>
            </property>
           </column>
          </widget>

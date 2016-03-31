@@ -85,4 +85,4 @@ _(Take a look at [the issues](https://github.com/CE-Programming/CEmu/issues), to
 
 ## License
 CEmu is licensed under the [GPLv3](LICENSE).  
-_Acknowledgements_: Some CEmu parts are, directly, modified, or inspired, from [z80e](https://github.com/KnightOS/z80e), [Firebird](https://github.com/nspire-emus/firebird), [QHexEdit2](https://github.com/Simsys/qhexedit2), and the [Silk iconset](http://www.famfamfam.com/lab/icons/silk/). The complete licensing information is available in the [LICENSE](LICENSE) file.
+_Acknowledgements_: Some CEmu parts are, directly, modified, or inspired, from [z80e](https://github.com/KnightOS/z80e), [Firebird](https://github.com/nspire-emus/firebird), [QHexEdit2](https://github.com/Simsys/qhexedit2), [tivars_lib_cpp](https://github.com/adriweb/tivars_lib_cpp), and the [Silk iconset](http://www.famfamfam.com/lab/icons/silk/). The complete licensing information is available in the [LICENSE](LICENSE) file.

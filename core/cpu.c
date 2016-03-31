@@ -1142,10 +1142,12 @@ void cpu_execute(void) {
                                                | FLAG_H;
                                             break;
                                         case 2: // RES y, r[z]
+                                            cpu.cycles += context.z == 6;
                                             old &= ~(1 << context.y);
                                             cpu_write_reg_prefetched(context.z, w, old);
                                             break;
                                         case 3: // SET y, r[z]
+                                            cpu.cycles += context.z == 6;
                                             old |= 1 << context.y;
                                             cpu_write_reg_prefetched(context.z, w, old);
                                             break;

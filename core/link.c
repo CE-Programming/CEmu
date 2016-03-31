@@ -9,7 +9,7 @@
 volatile bool emu_is_sending = false;
 volatile bool emu_is_recieving = false;
 
-static const int ram_start = 0xD00000;
+/* static const int ram_start = 0xD00000; */
 static const int safe_ram_loc = 0xD052C6;
 
 static const uint8_t jforcegraph[8] = {
@@ -74,8 +74,11 @@ static uint32_t get_ptr(uint32_t address) {
          | *phys_mem_ptr(address + 2, 1) << 16;
 }
 
-/* Really hackish way to send a variable -- Like, on a scale of 1 to hackish, it's like really hackish */
-/* Proper USB emulation should really be a thing at some point :P */
+/*
+ * Really hackish way to send a variable -- Like, on a scale of 1 to hackish, it's like really hackish
+ * Proper USB emulation should really be a thing at some point :P
+ * See GitHub issue #25
+ */
 bool sendVariableLink(const char *var_name) {
     FILE *file;
     uint8_t tmp_buf[0x80];
@@ -165,7 +168,7 @@ bool sendVariableLink(const char *var_name) {
 
     var_ptr = phys_mem_ptr(get_ptr(safe_ram_loc), 1);
 
-    var_size = (var_size_high << 8) | var_size_low;
+    var_size = ((uint16_t)var_size_high << 8u) | (uint16_t)var_size_low;
 
     if (fseek(file, 0x48, 0))                           goto r_err;
     if (fread(var_ptr, 1, var_size, file) != var_size)  goto r_err;
@@ -175,7 +178,7 @@ bool sendVariableLink(const char *var_name) {
         memcpy(run_asm_safe, archivevar, sizeof(archivevar));
         cpu_flush(safe_ram_loc, 1);
         cpu.cycles = 0;
-        cpu.next = 2000000;
+        cpu.next = 20000000;
         cpu_execute();
     }
 
@@ -198,11 +201,7 @@ r_err:
     return false;
 }
 
-#define STRINGIFYMAGIC(x) #x
-#define STRINGIFY(x) STRINGIFYMAGIC(x)
-static char header[] = "**TI83F*\x1A\x0A\0File dumped from CEmu " STRINGIFY(CEMU_VERSION);
-#undef STRIGIFY
-#undef STRIGIFYMAGIC
+static char header[] = "**TI83F*\x1A\x0A\0File dumped from CEmu ";
 bool receiveVariableLink(int count, const calc_var_t *vars, const char *file_name) {
     FILE *file;
     calc_var_t var;
@@ -241,6 +240,8 @@ bool receiveVariableLink(int count, const calc_var_t *vars, const char *file_nam
 
 w_err:
     fclose(file);
-    remove(file_name);
+    if(remove(file_name)) {
+        gui_console_printf("[CEmu] Link error occured. Please contact the developers.\n");
+    }
     return false;
 }

@@ -416,13 +416,18 @@ void mem_write_byte(uint32_t address, uint8_t value) {
             if (address >= DBG_PORT_RANGE) {
                 open_debugger(address, value);
                 break;
-            } else if (address >= CONSOLE_PORT_RANGE && address < CONSOLE_PORT_RANGE+SIZEOF_DEBUG_BUFFER-1) {
+            } else if ((address >= DBGOUT_PORT_RANGE && address < DBGOUT_PORT_RANGE+SIZEOF_DBG_BUFFER-1) ||
+                       (address >= DBGERR_PORT_RANGE && address < DBGERR_PORT_RANGE+SIZEOF_DBG_BUFFER-1)) {
                 debugger.buffer[debugger.currentBuffPos] = (char)value;
-                debugger.currentBuffPos = (debugger.currentBuffPos + 1) % (SIZEOF_DEBUG_BUFFER);
+                debugger.currentBuffPos = (debugger.currentBuffPos + 1) % (SIZEOF_DBG_BUFFER);
                 if (value == 0) {
                     unsigned x;
                     debugger.currentBuffPos = 0;
-                    gui_console_printf("%s",debugger.buffer);
+                    if (address >= DBGERR_PORT_RANGE) {
+                        gui_console_err_printf("%s",debugger.buffer);
+                    } else {
+                        gui_console_printf("%s",debugger.buffer);
+                    }
                     for(x=0; x<6; x++) {
                         gui_emu_sleep();
                     }

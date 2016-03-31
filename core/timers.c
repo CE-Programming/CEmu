@@ -50,8 +50,7 @@ static uint64_t gpt_next_event(int index) {
             temp = (timer->counter - timer->match[event] + invert) ^ invert;
             if (!temp) {
                 status |= 1 << event;
-            }
-            else if (temp < next) {
+            } else if (temp < next) {
                 next = temp;
             }
         }

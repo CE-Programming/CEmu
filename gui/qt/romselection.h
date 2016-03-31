@@ -34,10 +34,10 @@ private:
 
     QDir currentDir;
     uint8_t *romArray = nullptr;
-    uint32_t imageSize;
-    std::string romImagePath;
+    uint32_t imageSize = 0;
+    std::string romImagePath = "";
     bool segmentFilledStatus[30] = {0};
-    int numROMSegments;
+    int numROMSegments = 0;
 };
 
 /* External path for mainwindow */

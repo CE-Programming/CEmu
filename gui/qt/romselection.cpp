@@ -58,11 +58,7 @@ RomSelection::RomSelection(QWidget *p) : QDialog(p), ui(new Ui::RomSelection) {
 
     ui->stackedWidget->setCurrentIndex(0);
 
-#define STRINGIFYMAGIC(x) #x
-#define STRINGIFY(x) STRINGIFYMAGIC(x)
-    ui->versionLabel->setText(ui->versionLabel->text()+QStringLiteral(STRINGIFY(CEMU_VERSION)));
-#undef STRIGIFY
-#undef STRIGIFYMAGIC
+    ui->versionLabel->setText(ui->versionLabel->text()+QStringLiteral(CEMU_VERSION));
 }
 
 RomSelection::~RomSelection() {

@@ -3,6 +3,7 @@ language: cpp
 branches:
   only:
     - master
+    - coverity_scan
 
 before_install:
 - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y

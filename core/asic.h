@@ -26,6 +26,8 @@ typedef struct asic_state {
 
     mem_state_t* mem;
     eZ80cpu_t *cpu;
+
+    bool ship_mode_enabled;
 } asic_state_t;
 
 /* External Global ASIC state */
