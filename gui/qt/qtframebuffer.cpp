@@ -22,7 +22,8 @@
 
 QImage renderFramebuffer(lcd_state_t *lcds) {
     lcd_drawframe(lcd_framebuffer, lcds);
-    return QImage(reinterpret_cast<const uchar*>(lcd_framebuffer), 320, 240, QImage::Format_RGBA8888);
+    QImage img = QImage(reinterpret_cast<const uchar*>(lcd_framebuffer), 320, 240, QImage::Format_RGBA8888);
+    return !(lcd.control & 0x100) ? img.rgbSwapped() : img;
 }
 
 void paintFramebuffer(QPainter *p, lcd_state_t *lcds) {
