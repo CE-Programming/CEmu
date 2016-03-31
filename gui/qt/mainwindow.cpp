@@ -1772,6 +1772,7 @@ void MainWindow::deleteBreakpoint() {
 }
 
 void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
+    (void)debugAddress; /* Uncomment me when needed */
     switch (command) {
         case 1:
             consoleStr("Program Aborted.\n");

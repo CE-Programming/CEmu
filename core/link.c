@@ -9,7 +9,7 @@
 volatile bool emu_is_sending = false;
 volatile bool emu_is_recieving = false;
 
-static const int ram_start = 0xD00000;
+/* static const int ram_start = 0xD00000; */
 static const int safe_ram_loc = 0xD052C6;
 
 static const uint8_t jforcegraph[8] = {
@@ -74,8 +74,11 @@ static uint32_t get_ptr(uint32_t address) {
          | *phys_mem_ptr(address + 2, 1) << 16;
 }
 
-/* Really hackish way to send a variable -- Like, on a scale of 1 to hackish, it's like really hackish */
-/* Proper USB emulation should really be a thing at some point :P */
+/*
+ * Really hackish way to send a variable -- Like, on a scale of 1 to hackish, it's like really hackish
+ * Proper USB emulation should really be a thing at some point :P
+ * See GitHub issue #25
+ */
 bool sendVariableLink(const char *var_name) {
     FILE *file;
     uint8_t tmp_buf[0x80];

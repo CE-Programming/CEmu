@@ -235,11 +235,14 @@ bool cxxx_restore(const emu_image *s) {
 
 /* Read from the 0xDXXX range of ports */
 static uint8_t dxxx_read(const uint16_t pio) {
+    (void)pio; /* Uncomment me when needed */
     return 0;
 }
 
 /* Write to the 0xDXXX range of ports */
 static void dxxx_write(const uint16_t pio, const uint8_t byte) {
+    (void)pio;  /* Uncomment me when needed */
+    (void)byte; /* Uncomment me when needed */
     return;
 }
 
@@ -331,6 +334,7 @@ static void fxxx_write(const uint16_t pio, const uint8_t value) {
 
 /* Read from the 0xFXXX range of ports */
 static uint8_t fxxx_read(const uint16_t pio) {
+    (void)pio; /* Uncomment me when needed */
     return 0;
 }
 
