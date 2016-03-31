@@ -30,21 +30,19 @@ static const uint32_t lcd_dma_size = 0x80000;
 
 void (*lcd_event_gui_callback)(void) = NULL;
 
-inline uint_fast32_t lcd_nextword(uint32_t **ofs) {
-    uint_fast32_t _ofs = (uint_fast32_t) ((*ofs)++);
-    if (_ofs < ram_size) {
-        return *(uint32_t *) (mem.ram.block + _ofs);
+static uint_fast32_t lcd_nextword(uint32_t *ofs) {
+    *ofs += 4;
+    *ofs &= lcd_dma_size - 1;
+    if (*ofs >= ram_size) {
+        return 0;
     }
-    if (_ofs == lcd_dma_size) {
-        *ofs = 0;
-    }
-    return 0;
+    return *(uint32_t *) (mem.ram.block + *ofs);
 }
 
 // #define c6_to_c8(c) ((c * 0xFF + 0x1F) / 0x3F)
 #define c6_to_c8(c) ((c << 2) | (c >> 4))
 
-inline void lcd_bgr16out(uint_fast32_t bgr16, bool rgb, uint32_t **out) {
+static void lcd_bgr16out(uint_fast32_t bgr16, bool rgb, uint32_t **out) {
     uint_fast32_t r, g, b;
 
     r = (rgb ? bgr16 >> 10 : bgr16 << 1) & 0x3E;
@@ -68,7 +66,7 @@ void lcd_drawframe(uint32_t *out, lcd_state_t *lcd_state) {
     bool bebo = lcd_state->control & (1 << 9);
     uint_fast32_t words = 320 * 240;
     uint_fast32_t word, color;
-    uint32_t *ofs = (uint32_t *) ((uint32_t) lcd_state->upcurr & (lcd_dma_size - 8));
+    uint32_t ofs = lcd_state->upcurr & ~7;
 
     if(!mem.ram.block) {
         memset(out, 0, vram_size << 1);
