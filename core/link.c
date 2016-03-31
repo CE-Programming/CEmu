@@ -168,7 +168,7 @@ bool sendVariableLink(const char *var_name) {
 
     var_ptr = phys_mem_ptr(get_ptr(safe_ram_loc), 1);
 
-    var_size = ((uint16_t)var_size_high << 8) | (uint16_t)var_size_low;
+    var_size = ((uint16_t)var_size_high << 8u) | (uint16_t)var_size_low;
 
     if (fseek(file, 0x48, 0))                           goto r_err;
     if (fread(var_ptr, 1, var_size, file) != var_size)  goto r_err;
