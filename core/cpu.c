@@ -599,7 +599,7 @@ static void cpu_execute_bli() {
     eZ80registers_t *r = &cpu.registers;
     uint8_t old, new = 0;
     uint_fast8_t internalCycles = 1;
-    uint_fast8_t xp = cpu.context.x << 2 | cpu.context.y >> 1;
+    uint_fast8_t xp = cpu.context.x << 2 | cpu.context.p;
     int_fast8_t delta = cpu.context.q ? -1 : 1;
     bool repeat = (cpu.context.x | cpu.context.p) & 1;
     do {
@@ -659,8 +659,7 @@ static void cpu_execute_bli() {
                     case 0xA: // INI, IND
                     case 0xB: // INIR, INDR
                         cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
-                        r->B--;
-                        r->flags.Z = r->B == 0;
+                        r->flags.Z = --r->B == 0;
                         r->flags.N = cpuflag_sign_b(new) != 0;
                         break;
                     case 0xC: // INIRX, INDRX
@@ -689,8 +688,7 @@ static void cpu_execute_bli() {
                     case 0xA: // OUTI, OUTD
                     case 0xB: // OTIR, OTDR
                         cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
-                        r->B--;
-                        r->flags.Z = r->B == 0;
+                        r->flags.Z = --r->B == 0;
                         r->flags.N = cpuflag_sign_b(new) != 0;
                         break;
                     case 0xC: // OTIRX, OTDRX
@@ -706,25 +704,28 @@ static void cpu_execute_bli() {
                 repeat &= !r->flags.Z;
                 break;
             case 4:
-                switch (xp) {
-                    case 0x8: // INI2, IND2
-                    case 0x9: // INI2R, IND2R
-                        cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
-                        break;
-                    case 0xA: // OUTI, OUTD
-                    case 0xB: // OTIR, OTDR
+                if (xp & 1) {
+                    if (xp & 2) { // OTI2R, OTD2R
+                        cpu_write_out(r->DE, new = cpu_read_byte(r->HL));
+                    } else {      // INI2R, IND2R
+                        cpu_write_byte(r->HL, new = cpu_read_in(r->DE));
+                    }
+                    // INI2R, IND2R, OTI2R, OTD2R
+                    r->DE = cpu_mask_mode((int32_t)r->DE + delta, cpu.L);
+                    r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
+                    r->flags.N = cpuflag_sign_b(new) != 0;
+                    repeat &= !r->flags.Z;
+                } else {
+                    if (xp & 2) { // OUTI2, OUTD2
                         cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
-                        break;
-                    default:
-                        cpu_trap();
-                        return;
+                    } else {      // INI2, IND2
+                        cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
+                    }
+                    // INI2, IND2, OUTI2, OUTD2
+                    r->C += delta;
+                    r->flags.Z = --r->B == 0;
+                    r->flags.N = cpuflag_sign_b(new);
                 }
-                // INI2, IND2, INI2R, IND2R, OUTI, OUTD, OTIR, OTDR
-                r->C += delta;
-                r->B--;
-                r->flags.Z = r->B == 0;
-                r->flags.N = cpuflag_sign_b(new) != 0;
-                repeat &= !r->flags.Z;
                 break;
             default:
                 cpu_trap();
