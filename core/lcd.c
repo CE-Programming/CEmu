@@ -31,12 +31,13 @@ static const uint32_t lcd_dma_size = 0x80000;
 void (*lcd_event_gui_callback)(void) = NULL;
 
 static uint_fast32_t lcd_nextword(uint32_t *ofs) {
-    *ofs += 4;
+    uint_fast32_t word = 0;
     *ofs &= lcd_dma_size - 1;
-    if (*ofs >= ram_size) {
-        return 0;
+    if (*ofs < ram_size) {
+        word = *(uint32_t *) (mem.ram.block + *ofs);
     }
-    return *(uint32_t *) (mem.ram.block + *ofs - 4);
+    *ofs += 4;
+    return word;
 }
 
 // #define c6_to_c8(c) ((c * 0xFF + 0x1F) / 0x3F)
