@@ -2,15 +2,14 @@
 
 #include <stdio.h>
 
-#include "debug.h"
 #include "disasm.h"
+#include "debug.h"
 #include "../mem.h"
 #include "../emu.h"
 #include "../asic.h"
 
 volatile bool inDebugger = false;
 debug_state_t debugger;
-
 
 void debugger_init(void) {
     debugger.stepOverInstrEnd = -1;
@@ -106,8 +105,8 @@ void open_debugger(int reason, uint32_t data) {
             reason, cpuEvents, debugger.stepOverFirstStep, debugger.stepOverCall);
 
     if ((reason == DBG_STEP) && debugger.stepOverFirstStep) {
-        if (((cpuEvents & EVENT_DEBUG_STEP_OVER) && debugger.stepOverCall) || ((cpuEvents & EVENT_DEBUG_STEP_NEXT)
-                && !(debugger.data.block[cpu.registers.PC] & DBG_STEP_OVER_BREAKPOINT)) || (cpuEvents && EVENT_DEBUG_STEP_OUT)) {
+        if (((cpuEvents & EVENT_DEBUG_STEP_NEXT)
+                && !(debugger.data.block[cpu.registers.PC] & DBG_STEP_OVER_BREAKPOINT)) || (cpuEvents & EVENT_DEBUG_STEP_OUT)) {
             debugger.stepOverFirstStep = false;
             fprintf(stderr, "[open_debugger] stepOverFirstStep=false\n");
             gui_debugger_raise_or_disable(inDebugger = false);
@@ -125,12 +124,31 @@ void open_debugger(int reason, uint32_t data) {
         gui_emu_sleep();
     } while(inDebugger);
 
+    if (debugger.stepOverRequested) {
+        debug_clear_step_over();
+    }
 
     cpu.next = debugger.cpu_next;
     cpu.cycles = debugger.cpu_cycles;
 
     if (cpuEvents & EVENT_DEBUG_STEP) {
         cpu.next = debugger.cpu_cycles + 1;
+    }
+}
+
+void debug_switch_step_mode(void) {
+    if (cpuEvents & EVENT_DEBUG_STEP_OVER) {
+        debugger.stepOverFirstStep = true;
+        debugger.stepOutSPL = cpu.registers.SPL + 1;
+        debugger.stepOutSPS = cpu.registers.SPS + 1;
+        debugger.stepOutWait = 0;
+        fprintf(stderr, "[setDebugStepOutMode] stepOverFirstStep=true\n");
+        fprintf(stderr, "[setDebugStepOutMode] stepOverInstrEnd=0x%08x\n", debugger.stepOverInstrEnd);
+        fprintf(stderr, "[setDebugStepOutMode] stepOutSPL=0x%08x\n", debugger.stepOutSPL);
+        fprintf(stderr, "[setDebugStepOutMode] stepOutSPS=0x%08x\n", debugger.stepOutSPS);
+        fprintf(stderr, "[setDebugStepOutMode] stepOutWait=%i\n", debugger.stepOutWait);
+        cpuEvents &= ~EVENT_DEBUG_STEP_OVER;
+        cpuEvents |= EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OUT;
     }
 }
 

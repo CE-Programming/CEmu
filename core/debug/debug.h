@@ -68,6 +68,7 @@ typedef struct {        /* For debugging */
     bool runUntilSet;
     bool stepOverFirstStep;
     bool stepOverCall;
+    bool stepOverRequested;
     debug_data_t data;
 } debug_state_t;
 
@@ -85,6 +86,7 @@ void debug_write_byte(uint32_t address, uint8_t value);
 uint8_t debug_port_read_byte(uint32_t address);
 void debug_port_write_byte(uint32_t address, uint8_t value);
 void open_debugger(int reason, uint32_t address);
+void debug_switch_step_mode(void);
 
 void debug_toggle_run_until(uint32_t address);
 

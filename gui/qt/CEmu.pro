@@ -107,7 +107,8 @@ SOURCES +=  utils.cpp \
     datawidget.cpp \
     lcdpopout.cpp \
     searchwidget.cpp \
-    basiccodeviewerwindow.cpp
+    basiccodeviewerwindow.cpp \
+    ../../core/debug/stepping.cpp
 
 linux|macx|ios: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
@@ -164,7 +165,8 @@ HEADERS  +=  utils.h \
     datawidget.h \
     lcdpopout.h \
     searchwidget.h \
-    basiccodeviewerwindow.h
+    basiccodeviewerwindow.h \
+    ../../core/debug/stepping.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \

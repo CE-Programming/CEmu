@@ -119,16 +119,6 @@ static uint8_t cpu_read_byte(uint32_t address) {
 }
 static void cpu_write_byte(uint32_t address, uint8_t value) {
     uint32_t cpuAddress = cpu_address_mode(address, cpu.L);
-#ifdef DEBUG_SUPPORT
-    if (cpuEvents & EVENT_DEBUG_STEP_OVER) {
-        uint32_t stepOverDist = cpu_mask_mode(debugger.stepOverInstrEnd - cpuAddress, debugger.stepOverMode);
-        if ((stepOverDist <= debugger.stepOverInstrSize) && (debugger.stepOverMode
-                || ((cpuAddress & 0xFF0000) == (debugger.stepOverInstrEnd & 0xFF0000)))) {
-            debugger.data.block[cpuAddress] |= DBG_STEP_OVER_BREAKPOINT;
-            fprintf(stderr, "[cpu_write_byte] Added breakpoint at 0x%08x\n", cpuAddress);
-        }
-    }
-#endif
     mem_write_byte(cpuAddress, value);
 }
 
@@ -409,7 +399,7 @@ static uint32_t cpu_dec_bc_partial_mode() {
 static void cpu_call(uint32_t address, bool mixed) {
     eZ80registers_t *r = &cpu.registers;
 #ifdef DEBUG_SUPPORT
-    if (cpuEvents & (EVENT_DEBUG_STEP_OVER | EVENT_DEBUG_STEP_OUT)) {
+    if (cpuEvents & EVENT_DEBUG_STEP_OUT) {
         debugger.stepOverCall = true;
         bool addWait = false;
         if (cpu.ADL) {
@@ -1188,6 +1178,9 @@ void cpu_execute(void) {
                         case 4: // CALL cc[y], nn
                             if (cpu_read_cc(context.y)) {
                                 cpu_call(cpu_fetch_word_no_prefetch(), cpu.SUFFIX);
+#ifdef DEBUG_SUPPORT
+                                debug_switch_step_mode();
+#endif
                             } else {
                                 cpu_fetch_word();
                             }
@@ -1201,6 +1194,9 @@ void cpu_execute(void) {
                                     switch (context.p) {
                                         case 0: // CALL nn
                                             cpu_call(cpu_fetch_word_no_prefetch(), cpu.SUFFIX);
+#ifdef DEBUG_SUPPORT
+                                            debug_switch_step_mode();
+#endif
                                             break;
                                         case 1: // 0xDD prefixed opcodes
                                             cpu.PREFIX = 2;
@@ -1450,9 +1446,20 @@ void cpu_execute(void) {
                                                 cpu_execute_bli_continue:
                                                     cpu_execute_bli();
                                                     if (cpu.inBlock) {
+#ifdef DEBUG_SUPPORT
+                                                        if (cpuEvents & EVENT_DEBUG_STEP_OVER) {
+                                                            cpuEvents &= ~EVENT_DEBUG_STEP;
+                                                            debugger.data.block[r->PC + 2 + cpu.SUFFIX] |= DBG_STEP_OVER_BREAKPOINT;
+                                                        }
+#endif
                                                         goto cpu_execute_continue;
                                                     } else {
                                                         r->PC = cpu_address_mode(r->PC + 2 + cpu.SUFFIX, cpu.ADL);
+#ifdef DEBUG_SUPPORT
+                                                        if (cpuEvents & EVENT_DEBUG_STEP_OVER) {
+                                                            debugger.data.block[r->PC + 2 + cpu.SUFFIX] &= ~DBG_STEP_OVER_BREAKPOINT;
+                                                        }
+#endif
                                                     }
                                                     break;
                                                 case 3:  // There are only a few of these, so a simple switch for these shouldn't matter too much
