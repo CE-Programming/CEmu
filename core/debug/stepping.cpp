@@ -1,6 +1,7 @@
 #ifdef DEBUG_SUPPORT
 
 #include "debug.h"
+#include "stepping.h"
 #include "disasm.h"
 #include "../mem.h"
 #include "../emu.h"
