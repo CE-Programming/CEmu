@@ -19,6 +19,8 @@
 #include <cstdarg>
 #include <thread>
 
+#include <stdio.h>
+
 #include <QtCore/QEventLoop>
 #include <QtCore/QTimer>
 
@@ -30,6 +32,7 @@
 #include "../../core/link.h"
 #include "../../core/debug/debug.h"
 #include "../../core/debug/disasm.h"
+#include "../../core/debug/stepping.h"
 
 EmuThread *emu_thread = nullptr;
 QTimer speedUpdateTimer;
@@ -76,9 +79,11 @@ void gui_debugger_send_command(int reason, uint32_t addr) {
     emu_thread->sendDebugCommand(reason, addr);
 }
 
-void gui_debugger_entered_or_left(bool entered) {
-    if (entered == true) {
-        emu_thread->debuggerEntered();
+void gui_debugger_raise_or_disable(bool entered) {
+    if (entered) {
+        emu_thread->raiseDebugger();
+    } else {
+        emu_thread->disableDebugger();
     }
 }
 
@@ -119,6 +124,7 @@ void EmuThread::setDebugMode(bool state) {
     if(inDebugger && !state) {
         inDebugger = false;
     }
+    debug_clear_step_over();
 }
 
 void EmuThread::setSendState(bool state) {
@@ -132,34 +138,25 @@ void EmuThread::setReceiveState(bool state) {
 }
 
 void EmuThread::setDebugStepInMode() {
-    cpuEvents |= EVENT_DEBUG_STEP;
+    debug_set_step_in();
     enterDebugger = false;
     inDebugger = false;
 }
 
 void EmuThread::setDebugStepOverMode() {
-    debugger.stepOutSPL = cpu.registers.SPL;
-    debugger.stepOutSPS = cpu.registers.SPS;
-    cpuEvents |= EVENT_DEBUG_STEP_OUT;
+    debug_set_step_over();
     enterDebugger = false;
     inDebugger = false;
 }
 
 void EmuThread::setDebugStepNextMode() {
-    disasm.base_address = cpu.registers.PC;
-    disasm.adl = cpu.ADL;
-    disassembleInstruction();
-    debugger.stepOverAddress = disasm.new_address;
-    debugger.data.block[debugger.stepOverAddress] |= DBG_STEP_OVER_BREAKPOINT;
-    cpuEvents |= EVENT_DEBUG_STEP_OVER;
+    debug_set_step_next();
     enterDebugger = false;
     inDebugger = false;
 }
 
 void EmuThread::setDebugStepOutMode() {
-    debugger.stepOutSPL = cpu.registers.SPL + 1;
-    debugger.stepOutSPS = cpu.registers.SPS + 1;
-    cpuEvents |= EVENT_DEBUG_STEP_OUT;
+    debug_set_step_out();
     enterDebugger = false;
     inDebugger = false;
 }

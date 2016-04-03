@@ -24,6 +24,13 @@ CONFIG += c++11 console
 # Core options
 DEFINES += DEBUG_SUPPORT
 
+CONFIG(release, debug|release) {
+    #This is a release build
+    DEFINES += QT_NO_DEBUG_OUTPUT
+} else {
+    #This is a debug build
+}
+
 # GCC/clang flags
 if (!win32-msvc*) {
     GLOBAL_FLAGS    += -g3 -W -Wall -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=declaration-after-statement -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -Winit-self
@@ -100,7 +107,8 @@ SOURCES +=  utils.cpp \
     datawidget.cpp \
     lcdpopout.cpp \
     searchwidget.cpp \
-    basiccodeviewerwindow.cpp
+    basiccodeviewerwindow.cpp \
+    ../../core/debug/stepping.cpp
 
 linux|macx|ios: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
@@ -157,7 +165,8 @@ HEADERS  +=  utils.h \
     datawidget.h \
     lcdpopout.h \
     searchwidget.h \
-    basiccodeviewerwindow.h
+    basiccodeviewerwindow.h \
+    ../../core/debug/stepping.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \

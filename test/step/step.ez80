@@ -1,0 +1,328 @@
+.nolist
+#include "ti84pce.inc"
+.list
+
+
+#define TEST_EASY
+#define TEST_MEDIUM
+#define TEST_HARD
+
+
+.db tExtTok,tAsm84CeCmp
+.org userMem
+
+
+; Initialization
+;----------------
+
+Start:
+	call _ClrScrnFull
+	call _HomeUp
+	ld hl,InfoStr
+	call PutS
+	ld hl,Tests
+	call PutHex
+	ld hl,AssertHasStopped
+	call PutHex
+	ld hl,AssertHasNotStopped
+	call PutHex
+	call _GetKey
+
+
+; Step over tests
+;-----------------
+
+Tests:
+
+#ifdef TEST_EASY
+StepOver_Simple:
+	call Simple
+	call AssertHasStopped
+
+StepOver_Hello:
+	call Hello
+	call AssertHasStopped
+
+	ld b,2
+	jr StepOver_Loop
+StepOver_Loop_:
+	call AssertHasStopped
+	jr StepOver_Loop_End
+StepOver_Loop:
+	djnz StepOver_Loop_
+	call AssertHasNotStopped
+StepOver_Loop_End:
+
+	ld hl,vRam
+	push hl
+	pop de
+	ld bc,2
+StepOver_Ldir:
+	ldir
+#endif
+
+#ifdef TEST_MEDIUM
+	or a
+StepOver_SelfCall:
+	call StepOver_SelfCall_
+StepOver_SelfCall_
+	ccf
+	call c,AssertHasNotStopped
+	ret c
+	call AssertHasStopped
+
+	push hl
+	push hl
+	push hl
+StepOver_PushedArgsHello:
+	call PushedArgsHello
+	call AssertHasStopped
+
+	push hl
+	push hl
+	push hl
+StepOver_PushedArgsHello_JpHL:
+	call PushedArgsHello_JpHL
+	call AssertHasStopped
+
+	push hl
+	push hl
+	push hl
+StepOver_PushedArgsHello_JpIX:
+	call PushedArgsHello_JpIX
+	call AssertHasStopped
+#endif
+
+#ifdef TEST_HARD
+StepOver_InlineArg:
+	call InlineArg
+	.dl 0
+	call AssertHasStopped
+
+StepOver_SMCCall:
+	call SMCCall
+	.dl AssertHasStopped
+#endif
+
+
+; Step next tests
+;-----------------
+
+#ifdef TEST_EASY
+StepNext_Simple:
+	call Simple
+	call AssertHasStopped
+
+StepNext_Hello:
+	call Hello
+	call AssertHasStopped
+
+	ld b,2
+	jr StepNext_Loop
+StepNext_Loop_:
+	call AssertHasNotStopped
+StepNext_Loop:
+	djnz StepNext_Loop_
+	call AssertHasStopped
+
+	ld hl,vRam
+	push hl
+	pop de
+	ld bc,2
+StepNext_Ldir:
+	ldir
+#endif
+
+#ifdef TEST_MEDIUM
+StepNext_SelfCall:
+	call StepNext_SelfCall_
+StepNext_SelfCall_
+	call AssertHasStopped
+
+	pop hl
+	push hl
+	push hl
+	push hl
+StepNext_PushedArgsHello:
+	call PushedArgsHello
+	call AssertHasStopped
+
+	push hl
+	push hl
+	push hl
+StepNext_PushedArgsHello_JpHL:
+	call PushedArgsHello_JpHL
+	call AssertHasStopped
+
+	push hl
+	push hl
+	push hl
+StepNext_PushedArgsHello_JpIX:
+	call PushedArgsHello_JpIX
+	call AssertHasStopped
+#endif
+
+#ifdef TEST_HARD
+StepNext_InlineArg:
+	call InlineArg
+	.dl 0
+	call AssertHasStopped
+
+StepNext_SMCCall:
+	call SMCCall
+	.dl AssertHasNotStopped
+	call AssertHasStopped
+#endif
+
+
+; Step out tests
+;-----------------
+
+#ifdef TEST_EASY
+StepOut_Simple:
+	call Simple
+	call AssertHasStopped
+
+StepOut_Hello:
+	call Hello
+	call AssertHasStopped
+#endif
+
+#ifdef TEST_MEDIUM
+	push hl
+	push hl
+	push hl
+StepOut_PushedArgsHello:
+	call PushedArgsHello
+	call AssertHasStopped
+
+	push hl
+	push hl
+	push hl
+StepOut_PushedArgsHello_JpHL:
+	call PushedArgsHello_JpHL
+	call AssertHasStopped
+
+	push hl
+	push hl
+	push hl
+StepOut_PushedArgsHello_JpIX:
+	call PushedArgsHello_JpIX
+	call AssertHasStopped
+#endif
+
+#ifdef TEST_HARD
+#endif
+
+
+; Cleanup
+;---------
+
+	call _ClrScrnFull
+	jp _HomeUp
+
+
+; Test routines
+;---------------
+
+AssertHasStopped:
+	ret
+
+Hello:
+	push hl
+	ld hl,HelloStr
+	call PutS
+	pop hl
+;	jr AssertHasNotStopped
+
+Simple:
+	nop
+	nop
+AssertHasNotStopped:
+	ret
+
+PushedArgsHello:
+	pop hl
+	pop de
+	pop bc
+	ex (sp),hl
+	call Hello
+	ret
+
+PushedArgsHello_JpHL:
+	pop hl
+	pop de
+	pop bc
+	pop af
+	call Hello
+	jp (hl)
+
+PushedArgsHello_JpIX:
+	pop ix
+	pop hl
+	pop de
+	pop bc
+	call Hello
+	jp (ix)
+
+InlineArg:
+	pop ix
+	ld hl,(ix)
+	lea ix,ix+3
+	call AssertHasNotStopped
+	jp (ix)
+
+SMCCall:
+	pop ix
+	lea ix,ix-4
+	ld hl,(ix+4)
+	ld (ix+1),hl
+	or a
+	sbc hl,hl
+	ld (ix+4),hl
+	call AssertHasNotStopped
+	jp (ix)
+
+
+; Utility routines
+;------------------
+
+PutS_Loop:
+	cp '\n'
+	call nz,_PutC
+	push hl
+	call z,_NewLine
+	pop hl
+PutS:
+	ld a,(hl)
+	inc hl
+	or a,a
+	jr nz,PutS_Loop
+	ret
+
+PutHex:
+	ld bc,$06E1
+PutHex_Loop:
+	ld a,c
+PutHex_Shift:
+	add hl,hl
+	rla
+	jr c,PutHex_Shift
+	daa
+	add a,c
+	adc a,$3F
+	call _PutC
+	djnz PutHex_Loop
+	jp _NewLine
+
+
+; Data
+;------
+
+InfoStr:
+	.db "Put breakpoints at the\n"
+	.db "following locations before"
+	.db "continuing:\n",0
+
+HelloStr:
+	.db "Hello, world!\n",0
