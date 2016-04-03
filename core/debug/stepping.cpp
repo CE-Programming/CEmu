@@ -1,3 +1,5 @@
+#ifdef DEBUG_SUPPORT
+
 #include "debug.h"
 #include "disasm.h"
 #include "../mem.h"
@@ -52,3 +54,5 @@ void debug_set_step_out(void) {
     //fprintf(stderr, "[setDebugStepOutMode] stepOutWait=%i\n", debugger.stepOutWait);
     cpuEvents |= EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OUT;
 }
+
+#endif
