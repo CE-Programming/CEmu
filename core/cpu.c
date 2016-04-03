@@ -107,10 +107,10 @@ static uint8_t cpu_read_byte(uint32_t address) {
                 || ((cpuAddress & 0xFF0000) == (debugger.stepOverInstrEnd & 0xFF0000)))) {
             uint32_t stepOverAddress = cpu_mask_mode(cpuAddress + 1, debugger.stepOverMode);
             debugger.data.block[stepOverAddress] |= DBG_STEP_OVER_BREAKPOINT;
-            fprintf(stderr, "[cpu_read_byte] Added breakpoint at 0x%08x\n", stepOverAddress);
+            //fprintf(stderr, "[cpu_read_byte] Added breakpoint at 0x%08x\n", stepOverAddress);
             if (stepOverDist == debugger.stepOverExtendSize) {
                 debugger.stepOverExtendSize++;
-                fprintf(stderr, "[cpu_read_byte] stepOverExtendSize=%i\n", debugger.stepOverExtendSize);
+                //fprintf(stderr, "[cpu_read_byte] stepOverExtendSize=%i\n", debugger.stepOverExtendSize);
             }
         }
     }
@@ -406,18 +406,18 @@ static void cpu_call(uint32_t address, bool mixed) {
             if (r->SPL >= debugger.stepOutSPL) {
                 addWait = true;
                 debugger.stepOutSPL = r->SPL;
-                fprintf(stderr, "[cpu_call] stepOutSPL=0x%08x\n", debugger.stepOutSPL);
+                //fprintf(stderr, "[cpu_call] stepOutSPL=0x%08x\n", debugger.stepOutSPL);
             }
         } else {
             if (r->SPS >= debugger.stepOutSPS) {
                 addWait = true;
                 debugger.stepOutSPS = r->SPS;
-                fprintf(stderr, "[cpu_call] stepOutSPS=0x%08x\n", debugger.stepOutSPS);
+                //fprintf(stderr, "[cpu_call] stepOutSPS=0x%08x\n", debugger.stepOutSPS);
             }
         }
         if (addWait && (debugger.stepOutWait < 1)) {
             debugger.stepOutWait++;
-            fprintf(stderr, "[cpu_call] debugger.stepOutWait=%i\n", debugger.stepOutWait);
+            //fprintf(stderr, "[cpu_call] debugger.stepOutWait=%i\n", debugger.stepOutWait);
         }
     }
 #endif
@@ -454,7 +454,7 @@ static void cpu_check_step_out(void) {
         int32_t spDelta = cpu.ADL ? (int32_t) cpu.registers.SPL - (int32_t) debugger.stepOutSPL :
                           (int32_t) cpu.registers.SPS - (int32_t) debugger.stepOutSPS;
         if (spDelta >= 0) {
-            fprintf(stderr, "[cpu_check_step_out] debugger.stepOutWait=%i\n", debugger.stepOutWait - 1);
+            //fprintf(stderr, "[cpu_check_step_out] debugger.stepOutWait=%i\n", debugger.stepOutWait - 1);
             if (!debugger.stepOutWait--) {
                 debug_clear_step_over();
                 cpu_clear_mode();
@@ -798,7 +798,7 @@ static void cpu_execute_bli() {
         uint32_t breakpooint = (r->PC + 2 + cpu.SUFFIX)&0xFFFFFF;
         if (cpu.inBlock && !(debugger.data.block[breakpooint] & DBG_STEP_OVER_BREAKPOINT)) {
             cpuEvents &= ~EVENT_DEBUG_STEP;
-            fprintf(stderr,"[stepOver] set breakpoint at 0x%08X\n",breakpooint);
+            //fprintf(stderr,"[stepOver] set breakpoint at 0x%08X\n",breakpooint);
             debugger.data.block[breakpooint] |= DBG_STEP_OVER_BREAKPOINT;
         }
     }
