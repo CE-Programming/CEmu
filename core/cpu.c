@@ -64,7 +64,7 @@ static uint8_t cpu_fetch_byte(void) {
 #ifdef DEBUG_SUPPORT
     if ((debugger.data.block[cpu.registers.PC] & (DBG_EXEC_BREAKPOINT | DBG_RUN_UNTIL_BREAKPOINT))
             || ((debugger.data.block[cpu.registers.PC] & DBG_STEP_OVER_BREAKPOINT)
-                && (cpu.ADL ? cpu.registers.SPL >= debugger.stepOutSPL : cpu.registers.SPS >= debugger.stepOutSPS))) {
+                && ((cpu.ADL ? cpu.registers.SPL >= debugger.stepOutSPL : cpu.registers.SPS >= debugger.stepOutSPS) || (cpuEvents & EVENT_DEBUG_STEP_OVER)))) {
         if ((debugger.data.block[cpu.registers.PC] & DBG_STEP_OVER_BREAKPOINT)) {
             debug_clear_step_over();
         }
@@ -791,6 +791,17 @@ static void cpu_execute_bli() {
         cpu.cycles += internalCycles;
     } while (repeat && (cpu.cycles < cpu.next));
     cpu.inBlock = repeat;
+
+#ifdef DEBUG_SUPPORT
+    if (cpuEvents & EVENT_DEBUG_STEP_OVER) {
+        uint32_t breakpooint = (r->PC + 2 + cpu.SUFFIX)&0xFFFFFF;
+        if (cpu.inBlock && !(debugger.data.block[breakpooint] & DBG_STEP_OVER_BREAKPOINT)) {
+            cpuEvents &= ~EVENT_DEBUG_STEP;
+            fprintf(stderr,"[stepOver] set breakpoint at 0x%08X\n",breakpooint);
+            debugger.data.block[breakpooint] |= DBG_STEP_OVER_BREAKPOINT;
+        }
+    }
+#endif
 }
 
 void cpu_init(void) {
@@ -1446,20 +1457,9 @@ void cpu_execute(void) {
                                                 cpu_execute_bli_continue:
                                                     cpu_execute_bli();
                                                     if (cpu.inBlock) {
-#ifdef DEBUG_SUPPORT
-                                                        if (cpuEvents & EVENT_DEBUG_STEP_OVER) {
-                                                            cpuEvents &= ~EVENT_DEBUG_STEP;
-                                                            debugger.data.block[r->PC + 2 + cpu.SUFFIX] |= DBG_STEP_OVER_BREAKPOINT;
-                                                        }
-#endif
                                                         goto cpu_execute_continue;
                                                     } else {
                                                         r->PC = cpu_address_mode(r->PC + 2 + cpu.SUFFIX, cpu.ADL);
-#ifdef DEBUG_SUPPORT
-                                                        if (cpuEvents & EVENT_DEBUG_STEP_OVER) {
-                                                            debugger.data.block[r->PC + 2 + cpu.SUFFIX] &= ~DBG_STEP_OVER_BREAKPOINT;
-                                                        }
-#endif
                                                     }
                                                     break;
                                                 case 3:  // There are only a few of these, so a simple switch for these shouldn't matter too much

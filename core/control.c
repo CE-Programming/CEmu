@@ -89,6 +89,12 @@ static void control_write(const uint16_t pio, const uint8_t byte) {
                     break;
             }
             gui_console_printf("[CEmu] CPU clock rate set to: %d MHz\n", 6*(1<<(control.cpuSpeed & 3)));
+#ifdef DEBUG_SUPPORT
+            if (cpuEvents & EVENT_DEBUG_STEP) {
+                cpuEvents &= ~EVENT_DEBUG_STEP;
+                open_debugger(DBG_STEP, 0);
+            }
+#endif
             break;
         case 0x06:
             control.ports[index] = byte & 7;
