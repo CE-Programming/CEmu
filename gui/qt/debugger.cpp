@@ -18,7 +18,7 @@
 #include "../../core/spi.h"
 #include "../../core/backlight.h"
 #include "../../core/timers.h"
-#include "../../core/usb.h"
+#include "../../core/usb/usb.h"
 #include "../../core/realclock.h"
 #include "../../core/sha256.h"
 #include "../../core/schedule.h"
