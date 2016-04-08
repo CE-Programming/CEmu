@@ -4,7 +4,7 @@
 #include "mem.h"
 #include "lcd.h"
 #include "spi.h"
-#include "usb.h"
+#include "usb/usb.h"
 #include "bus.h"
 #include "emu.h"
 #include "flash.h"
