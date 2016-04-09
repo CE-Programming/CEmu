@@ -1,6 +1,0 @@
-Pass:
- - Displays the number of timming states needed to process a particular istruction using the general purpose timers.
-   Takes into account wait states as well (Needs to be tested too)
-
-Fail:
- - Prints the wrong value
