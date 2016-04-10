@@ -13,17 +13,23 @@ static uint8_t usb_read(uint16_t pio, bool peek) {
     uint8_t byte = 0;
     (void)peek;
     if (pio < sizeof usb.regs)
-        byte = ((uint8_t *)&usb.regs)[pio & 0x1FF];
+        byte = ((uint8_t *)&usb.regs)[pio];
     return byte;
 }
 
 static void usb_write(uint16_t pio, uint8_t byte, bool poke) {
     uint8_t index = (pio >> 2) & 0xFF;
-    uint8_t bit_offset = (index & 3) << 3;
+    uint8_t bit_offset = (pio & 3) << 3;
     (void)poke;
     switch (index) {
         case 0x04: // USBCMD - USB Command Register
             write8(usb.regs.hcor.data[0], bit_offset, byte &   0xFF0BFF >> bit_offset); // W mask (V or RO)
+            usb.regs.hcor.data[1] = usb.regs.hcor.data[1] & ~0xD000;
+            usb.regs.hcor.data[1] |= ~usb.regs.hcor.data[0] << 12 & 0x1000;
+            usb.regs.hcor.data[1] |= usb.regs.hcor.data[0] << 10 & 0xC000;
+            if ((uint32_t)byte << bit_offset & 2) {
+                usb_reset();
+            }
             break;
         case 0x05: // USBSTS - USB Status Register
             usb.regs.hcor.data[1] &= ~((uint32_t)byte << bit_offset & 0x3F);           // WC mask (V or RO)
@@ -40,7 +46,8 @@ static void usb_write(uint16_t pio, uint8_t byte, bool poke) {
         case 0x0A: // ASYNCLISTADDR - Current Asynchronous List Address Register
             write8(usb.regs.hcor.data[6], bit_offset, byte &      ~0x1F >> bit_offset); // V mask (W)
             break;
-        case 0x0C: // unknown
+        case 0x0C: // PORTSC - Port Status and Control Register
+            usb.regs.hcor.data[8] &= ~((uint32_t)byte << bit_offset & 0x2A);           // WC mask (V or RO or W)
             write8(usb.regs.hcor.data[8], bit_offset, byte &   0x1F0000 >> bit_offset); // W mask (RO)
             break;
         case 0x10: // Miscellaneous Register
@@ -113,7 +120,7 @@ static void usb_write(uint16_t pio, uint8_t byte, bool poke) {
             usb.regs.gisr1 &= ~((uint32_t)byte << bit_offset & 0xF00FF);               // WC mask (V)
             break;
         case 0x53: // Group Interrupt Status Register 2
-            usb.regs.gisr2 &= ~((uint32_t)byte << bit_offset & 0x7FF);                 // WC mask (V)
+            usb.regs.gisr2 &= ~((uint32_t)byte << bit_offset & 0x7FF & ~0x600);        // WC mask (V) [const mask]
             break;
         case 0x54: // Receive Zero-Length-Packet Register
             write8(usb.regs.rxzlp,        bit_offset, byte &       0xFF >> bit_offset); // W mask (V)
@@ -138,7 +145,7 @@ static void usb_write(uint16_t pio, uint8_t byte, bool poke) {
             break;
         case 0x6A: // FIFO Map Register
         case 0x6B: // FIFO Configuration Register
-            ((uint8_t *)&usb.regs)[pio & 0x1FF] = byte & 0x3F;                          // W
+            ((uint8_t *)&usb.regs)[pio & 0x1FF] = byte & 0x3F;                          // W mask (V)
             break;
         case 0x6C: // DMA Target FIFO Register
             write8(usb.regs.dma_fifo,     bit_offset, byte &       0x1F >> bit_offset); // W mask (V)
@@ -155,7 +162,7 @@ void usb_reset(void) {
     usb.regs.hcor.data[2] = 0x00000000;
     usb.regs.hcor.data[3] = 0x00000000;
     usb.regs.hcor.data[4] = 0x00000000;
-    usb.regs.hcor.data[8] = 0x00000800;
+    usb.regs.hcor.data[8] = 0x00000000;
 }
 
 static const eZ80portrange_t device = {
@@ -172,6 +179,10 @@ eZ80portrange_t init_usb(void) {
         1 << 2 | // async sched park (supported)
         1 << 1 | // prog frame list (supported)
         0 << 0;  // interface (32-bit)
+    usb.regs.miscr        = 0x00000181;
+    usb.regs.otgcsr       = 0x00310F20;
+    usb.regs.dev_ctrl     = 0x000002A4;
+    usb.regs.gisr2        = 0x00000200;
     usb_reset();
     gui_console_printf("[CEmu] Initialized USB...\n");
     return device;
