@@ -223,7 +223,7 @@ bool vat_search_next(calc_var_t *var) {
     if (!var->data) {
         return false;
     }
-    switch (var->type = var->type1 & 0x3F) {
+    switch (var->type = (calc_var_type_t)(var->type1 & 0x3F)) {
         case CALC_VAR_TYPE_REAL:
             var->size = 9;
             break;

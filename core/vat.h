@@ -9,7 +9,7 @@ extern "C" {
 #include <stdint.h>
 
 typedef enum calc_var_type {
-    CALC_VAR_TYPE_REAL,
+    CALC_VAR_TYPE_REAL = 0,
     CALC_VAR_TYPE_REAL_LIST,
     CALC_VAR_TYPE_MATRIX,
     CALC_VAR_TYPE_EQU,
