@@ -72,7 +72,7 @@ static uint32_t flash_address(uint32_t address, uint32_t *size) {
     return address;
 }
 
-uint8_t *phys_mem_ptr(uint32_t address, uint32_t size) {
+uint8_t *phys_mem_ptr(uint32_t address, int32_t size) {
     uint8_t **block;
     uint32_t block_size, end_addr;
     if (address < 0xD00000) {
@@ -82,6 +82,10 @@ uint8_t *phys_mem_ptr(uint32_t address, uint32_t size) {
         address -= 0xD00000;
         block = &mem.ram.block;
         block_size = ram_size;
+    }
+    if (size < 0) {
+        address += size;
+        size = -size;
     }
     end_addr = address + size;
     if (address <= end_addr && address <= block_size && end_addr <= block_size && *block) {
