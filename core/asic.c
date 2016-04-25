@@ -34,30 +34,23 @@ static void add_reset_proc(void (*proc)(void)) {
 }
 
 static void plug_devices(void) {
-    unsigned int i;
-
     /* Port ranges 0x0 -> 0xF */
-    asic.portRange[0x0] = init_control();
-    asic.portRange[0x1] = init_flash();
-    asic.portRange[0x2] = init_sha256();
-    asic.portRange[0x3] = init_usb();
-    asic.portRange[0x4] = init_lcd();
-    asic.portRange[0x5] = init_intrpt();
-    asic.portRange[0x6] = init_watchdog();
-    asic.portRange[0x7] = init_gpt();
-    asic.portRange[0x8] = init_rtc();
-    asic.portRange[0x9] = init_protected();
-    asic.portRange[0xA] = init_keypad();
-    asic.portRange[0xB] = init_backlight();
-    asic.portRange[0xC] = init_cxxx();
-    asic.portRange[0xD] = init_dxxx();
-    asic.portRange[0xE] = init_exxx();
-    asic.portRange[0xF] = init_fxxx();
-
-    /* Populate APB ports */
-    for(i=0; i<=0xF; i++) {
-        apb_set_map(i, &asic.portRange[i]);
-    }
+    apb_map[0x0] = init_control();
+    apb_map[0x1] = init_flash();
+    apb_map[0x2] = init_sha256();
+    apb_map[0x3] = init_usb();
+    apb_map[0x4] = init_lcd();
+    apb_map[0x5] = init_intrpt();
+    apb_map[0x6] = init_watchdog();
+    apb_map[0x7] = init_gpt();
+    apb_map[0x8] = init_rtc();
+    apb_map[0x9] = init_protected();
+    apb_map[0xA] = init_keypad();
+    apb_map[0xB] = init_backlight();
+    apb_map[0xC] = init_cxxx();
+    apb_map[0xD] = init_dxxx();
+    apb_map[0xE] = init_exxx();
+    apb_map[0xF] = init_fxxx();
 
     reset_proc_count = 0;
 
@@ -73,12 +66,9 @@ static void plug_devices(void) {
 }
 
 void asic_init(void) {
-    /* First, initilize memory and LCD */
+    /* First, initilize memory and CPU */
     mem_init();
     cpu_init();
-
-    asic.mem = &mem;
-    asic.cpu = &cpu;
 
     asic.ship_mode_enabled = false;
 
@@ -90,8 +80,6 @@ void asic_free(void) {
     /* make sure the LCD doesn't use unalloced mem */
     lcd.upcurr = lcd.upbase = 0;
     mem_free();
-    asic.mem = NULL;
-    asic.cpu = NULL;
     gui_console_printf("[CEmu] Freed ASIC.\n");
 }
 

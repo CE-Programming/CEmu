@@ -6,7 +6,7 @@
 #include "debug.h"
 #include "../mem.h"
 #include "../emu.h"
-#include "../asic.h"
+#include "../apb.h"
 
 volatile bool inDebugger = false;
 debug_state_t debugger;
@@ -86,11 +86,11 @@ void debug_write_byte(uint32_t address, uint8_t value) {
     }
 }
 
-uint8_t debug_port_read_byte(uint32_t address) {
-    return apb_map[port_range(address)].range->read_in(addr_range(address));
+uint8_t debug_port_read_byte(uint32_t port) {
+    return apb_map[port_range(port)].read_in(addr_range(port));
 }
-void debug_port_write_byte(uint32_t address, uint8_t value) {
-    apb_map[port_range(address)].range->write_out(addr_range(address), value);
+void debug_port_write_byte(uint32_t port, uint8_t value) {
+    apb_map[port_range(port)].write_out(addr_range(port), value);
 }
 
 /* okay, so looking at the data inside the asic should be okay when using this function, */

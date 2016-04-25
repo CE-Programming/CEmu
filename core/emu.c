@@ -173,11 +173,11 @@ bool emu_start(const char *romImage, const char *savedImage) {
                         }
 
                         /* Read whole ROM. */
-                        if (fread(asic.mem->flash.block, 1, lSize, romFile) < (size_t)lSize) {
+                        if (fread(mem.flash.block, 1, lSize, romFile) < (size_t)lSize) {
                             break;
                         }
 
-                        if (asic.mem->flash.block[0x7E] == 0xFE) {
+                        if (mem.flash.block[0x7E] == 0xFE) {
                             break;
                         }
 
@@ -185,9 +185,9 @@ bool emu_start(const char *romImage, const char *savedImage) {
                         /* device_type = (ti_device_type)(asic.mem->flash.block[0x20017]);         */
                         /* We've heard of the OS base being at 0x30000 on at least one calculator. */
                         for (offset = 0x20000U; offset < 0x40000U; offset += 0x10000U) {
-                            outer = asic.mem->flash.block;
+                            outer = mem.flash.block;
                             /* Outer 0x800(0) field. */
-                            if (cert_field_get(outer + offset, asic.mem->flash.size - offset, &field_type, &outer, &outer_field_size)) {
+                            if (cert_field_get(outer + offset, mem.flash.size - offset, &field_type, &outer, &outer_field_size)) {
                                 break;
                             }
                             if (field_type != 0x800F /*|| field_type == 0x800D || field_type == 0x800E*/) {
