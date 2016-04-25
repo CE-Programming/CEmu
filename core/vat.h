@@ -80,10 +80,10 @@ const char *calc_var_name_to_utf8(uint8_t name[8]);
 const char *calc_var_name_to_ascii(uint8_t name[8]);
 
 typedef struct calc_var {
-    uint8_t *vat, type1, type2, version, namelen, name[9], *data;
+    uint32_t vat, address;
+    uint8_t type1, type2, version, namelen, name[9], *data;
     calc_var_type_t type;
     uint16_t size;
-    uint32_t dataPtr, vatPtr;
     bool archived;
 } calc_var_t;
 

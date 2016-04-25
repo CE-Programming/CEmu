@@ -176,77 +176,65 @@ const char *calc_var_name_to_utf8(uint8_t name[8]) {
 
 void vat_search_init(calc_var_t *var) {
     memset(var, 0, sizeof *var);
-    var->vatPtr = 0xD3FFFF;
-    var->vat = phys_mem_ptr(var->vatPtr, 1);
-}
-
-static uint32_t get_ptr(uint32_t address) {
-    return *phys_mem_ptr(address, 1)
-         | *phys_mem_ptr(address + 1, 1) << 8
-         | *phys_mem_ptr(address + 2, 1) << 16;
+    var->vat = 0xD3FFFF;
 }
 
 bool vat_search_next(calc_var_t *var) {
-    const uint8_t *userMem  = phys_mem_ptr(0xD1A881, 1),
-                  *pTemp    = phys_mem_ptr(get_ptr(0xD0259A), 1),
-                  *progPtr  = phys_mem_ptr(get_ptr(0xD0259D), 1),
-                  *symTable = phys_mem_ptr(0xD3FFFF, 1);
-    uint32_t address;
+    const uint32_t userMem  = 0xD1A881,
+                   pTemp    = debug_read_long(0xD0259A),
+                   progPtr  = debug_read_long(0xD0259D),
+                   symTable = 0xD3FFFF;
     uint8_t i;
     bool prog = var->vat <= progPtr;
-    var->vatPtr = symTable-var->vat;
-    var->vatPtr = 0xD3FFFF-var->vatPtr;
     if (!var->vat || var->vat < userMem || var->vat <= pTemp || var->vat > symTable) {
-        return false;
+        return false; // Some sanity check failed
     }
-    var->type1   = *var->vat--;
-    var->type2   = *var->vat--;
-    var->version = *var->vat--;
-    address      = *var->vat--;
-    address     |= *var->vat-- << 8;
-    address     |= *var->vat-- << 16;
+    var->type1   = debug_read_byte(var->vat--);
+    var->type2   = debug_read_byte(var->vat--);
+    var->version = debug_read_byte(var->vat--);
+    var->address = debug_read_long(var->vat);
+    var->vat -= 3;
     if (prog) {
-        var->namelen = *var->vat--;
+        var->namelen = debug_read_byte(var->vat--);
         if (!var->namelen || var->namelen > 8) {
-            return false;
+            return false; // Invalid name length
         }
     } else {
         var->namelen = 3;
     }
-    if ((var->archived = address > 0xC0000 && address < 0x400000)) {
-        address += 9 + prog + var->namelen;
-    } else if (!(address >= 0xD1A881 && address < 0xD40000)) {
+    var->archived = var->address > 0xC0000 && var->address < 0x400000;
+    if (var->archived) {
+        var->address += 9 + prog + var->namelen;
+    } else if (var->address < 0xD1A881 || var->address >= 0xD40000) {
         return false;
     }
-    var->data = phys_mem_ptr(address, 2);
-    var->dataPtr = address;
-    if (!var->data) {
-        return false;
-    }
-    switch (var->type = (calc_var_type_t)(var->type1 & 0x3F)) {
+    var->type = (calc_var_type_t)(var->type1 & 0x3F);
+    switch (var->type) {
         case CALC_VAR_TYPE_REAL:
             var->size = 9;
             break;
         case CALC_VAR_TYPE_REAL_LIST:
-            var->size = 2 + (var->data[0] | var->data[1] << 8) * 9;
+            var->size = 2 + debug_read_short(var->address) * 9;
             break;
         case CALC_VAR_TYPE_MATRIX:
-            var->size = 2 + (var->data[0] * var->data[1]) * 9;
+            var->size = 2 + debug_read_byte(var->address)
+                          * debug_read_byte(var->address + 1) * 9;
             break;
         case CALC_VAR_TYPE_CPLX:
             var->size = 18;
             break;
         case CALC_VAR_TYPE_CPLX_LIST:
-            var->size = 2 + (var->data[0] | var->data[1] << 8) * 18;
+            var->size = 2 + debug_read_short(var->address) * 18;
             break;
         default:
-            var->size = 2 + (var->data[0] | var->data[1] << 8);
+            var->size = 2 + debug_read_short(var->address);
             break;
     }
-    for (i = 0; i < var->namelen; i++) {
-        var->name[i] = *var->vat--;
+    var->data = phys_mem_ptr(var->address, var->size);
+    for (i = 0; i != var->namelen; i++) {
+        var->name[i] = debug_read_byte(var->vat--);
     }
-    memset(var->name + var->namelen, 0, sizeof var->name - var->namelen);
+    memset(&var->name[i], 0, sizeof var->name - i);
 
     return true;
 }

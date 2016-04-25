@@ -68,18 +68,15 @@ bool listVariablesLink(void) {
     return true;
 }
 
-static uint32_t get_ptr(uint32_t address) {
-    return *phys_mem_ptr(address, 1)
-         | *phys_mem_ptr(address + 1, 1) << 8
-         | *phys_mem_ptr(address + 2, 1) << 16;
-}
-
 /*
  * Really hackish way to send a variable -- Like, on a scale of 1 to hackish, it's like really hackish
  * Proper USB emulation should really be a thing at some point :P
  * See GitHub issue #25
  */
 bool sendVariableLink(const char *var_name) {
+    const size_t h_size = sizeof(header_data);
+    const size_t op_size = 9;
+
     FILE *file;
     uint8_t tmp_buf[0x80];
 
@@ -91,15 +88,12 @@ bool sendVariableLink(const char *var_name) {
             var_type,
             var_arc;
 
-    uint8_t *run_asm_safe = phys_mem_ptr(safe_ram_loc, 1),
+    uint8_t *run_asm_safe = phys_mem_ptr(safe_ram_loc, 8400),
             *cxCurApp     = phys_mem_ptr(0xD007E0, 1),
-            *op1          = phys_mem_ptr(0xD005F8, 1),
+            *op1          = phys_mem_ptr(0xD005F8, op_size),
             *var_ptr;
 
     uint16_t var_size;
-
-    const size_t h_size = sizeof(header_data);
-    const size_t op_size = 9;
 
     /* Return if we are at an error menu */
     if(*cxCurApp == 0x52) {
@@ -166,9 +160,8 @@ bool sendVariableLink(const char *var_name) {
         goto r_err;
     }
 
-    var_ptr = phys_mem_ptr(get_ptr(safe_ram_loc), 1);
-
     var_size = ((uint16_t)var_size_high << 8u) | (uint16_t)var_size_low;
+    var_ptr = phys_mem_ptr(debug_read_long(safe_ram_loc), var_size);
 
     if (fseek(file, 0x48, 0))                           goto r_err;
     if (fread(var_ptr, 1, var_size, file) != var_size)  goto r_err;

@@ -1471,7 +1471,7 @@ void MainWindow::updateTIOSView() {
             calcData2 += "00 ";
         }
         formattedLine = QString("<pre><b><font color='#444'>%1</font></b>  <font color='darkblue'>%2</font>  <font color='green'>%3</font>  %4<font color='gray'>%5</font><font color='green'> %6</font></pre>")
-                                        .arg(int2hex(var.dataPtr,6), int2hex(var.vatPtr,6), int2hex(var.size,4), calcData, calcData2, calc_var_type_names[var.type]);
+                                        .arg(int2hex(var.address,6), int2hex(var.vat,6), int2hex(var.size,4), calcData, calcData2, calc_var_type_names[var.type]);
         ui->vatView->appendHtml(formattedLine);
     }
     ui->vatView->moveCursor(QTextCursor::Start);
