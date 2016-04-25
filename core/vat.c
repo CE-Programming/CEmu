@@ -189,11 +189,12 @@ bool vat_search_next(calc_var_t *var) {
     if (!var->vat || var->vat < userMem || var->vat <= pTemp || var->vat > symTable) {
         return false; // Some sanity check failed
     }
-    var->type1   = debug_read_byte(var->vat--);
-    var->type2   = debug_read_byte(var->vat--);
-    var->version = debug_read_byte(var->vat--);
-    var->address = debug_read_long(var->vat);
-    var->vat -= 3;
+    var->type1    = debug_read_byte(var->vat--);
+    var->type2    = debug_read_byte(var->vat--);
+    var->version  = debug_read_byte(var->vat--);
+    var->address  = debug_read_byte(var->vat--);
+    var->address |= debug_read_byte(var->vat--) << 8;
+    var->address |= debug_read_byte(var->vat--) << 16;
     if (prog) {
         var->namelen = debug_read_byte(var->vat--);
         if (!var->namelen || var->namelen > 8) {
