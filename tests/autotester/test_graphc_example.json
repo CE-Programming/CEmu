@@ -1,0 +1,23 @@
+{
+  "rom": "84pce_515.rom",
+  "transfer_files": [
+    "graphc_v3.2.8xv",
+    "libload_v1.0.8xv",
+    "graphc_demo0.8xp",
+    "graphc_demo0_launcher.8xp"
+  ],
+  "setup_sequence": [
+    "key|prgm",
+    "key|enter",
+    "key|enter",
+    "delay|1000"
+  ],
+  "hashes": [
+    {
+      "description": "What it displayed on the screen",
+      "start": "vram_start",
+      "size": "vram_size",
+      "expected_CRCs": [ "47C32AFD" ]
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+"rom":
+    string
+    path of the ROM to be loaded for testing
+
+"transfer_files"
+    array of strings
+    paths of the files to be transferred when emulation has started 
+
+"setup_sequence"
+    array of strings
+    actions to be done before computing hashes. Format: "type|value", with type being either 'key' or 'delay', and value being the short name of a key (TODO: list) or the amount of milliseconds to wait for.
+
+"hashes":
+    array of objects
+    each object has 4 properties:
+        - "description" (string to explain what this hash is for),
+        - "start" (number in base 10: pointer/address, or string of a few common locations),
+        - "size" (number in base 10: amount of bytes, or string of a few common sizes),
+        - "expected_CRCs" (one or several expected/valid CRCs)
