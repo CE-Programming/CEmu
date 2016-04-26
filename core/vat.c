@@ -181,22 +181,22 @@ void vat_search_init(calc_var_t *var) {
 
 bool vat_search_next(calc_var_t *var) {
     const uint32_t userMem  = 0xD1A881,
-                   pTemp    = debug_read_long(0xD0259A),
-                   progPtr  = debug_read_long(0xD0259D),
+                   pTemp    = mem_peek_long(0xD0259A),
+                   progPtr  = mem_peek_long(0xD0259D),
                    symTable = 0xD3FFFF;
     uint8_t i;
     bool prog = var->vat <= progPtr;
     if (!var->vat || var->vat < userMem || var->vat <= pTemp || var->vat > symTable) {
         return false; // Some sanity check failed
     }
-    var->type1    = debug_read_byte(var->vat--);
-    var->type2    = debug_read_byte(var->vat--);
-    var->version  = debug_read_byte(var->vat--);
-    var->address  = debug_read_byte(var->vat--);
-    var->address |= debug_read_byte(var->vat--) << 8;
-    var->address |= debug_read_byte(var->vat--) << 16;
+    var->type1    = mem_peek_byte(var->vat--);
+    var->type2    = mem_peek_byte(var->vat--);
+    var->version  = mem_peek_byte(var->vat--);
+    var->address  = mem_peek_byte(var->vat--);
+    var->address |= mem_peek_byte(var->vat--) << 8;
+    var->address |= mem_peek_byte(var->vat--) << 16;
     if (prog) {
-        var->namelen = debug_read_byte(var->vat--);
+        var->namelen = mem_peek_byte(var->vat--);
         if (!var->namelen || var->namelen > 8) {
             return false; // Invalid name length
         }
@@ -215,25 +215,25 @@ bool vat_search_next(calc_var_t *var) {
             var->size = 9;
             break;
         case CALC_VAR_TYPE_REAL_LIST:
-            var->size = 2 + debug_read_short(var->address) * 9;
+            var->size = 2 + mem_peek_short(var->address) * 9;
             break;
         case CALC_VAR_TYPE_MATRIX:
-            var->size = 2 + debug_read_byte(var->address)
-                          * debug_read_byte(var->address + 1) * 9;
+            var->size = 2 + mem_peek_byte(var->address)
+                          * mem_peek_byte(var->address + 1) * 9;
             break;
         case CALC_VAR_TYPE_CPLX:
             var->size = 18;
             break;
         case CALC_VAR_TYPE_CPLX_LIST:
-            var->size = 2 + debug_read_short(var->address) * 18;
+            var->size = 2 + mem_peek_short(var->address) * 18;
             break;
         default:
-            var->size = 2 + debug_read_short(var->address);
+            var->size = 2 + mem_peek_short(var->address);
             break;
     }
     var->data = phys_mem_ptr(var->address, var->size);
     for (i = 0; i != var->namelen; i++) {
-        var->name[i] = debug_read_byte(var->vat--);
+        var->name[i] = mem_peek_byte(var->vat--);
     }
     memset(&var->name[i], 0, sizeof var->name - i);
 

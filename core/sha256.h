@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "apb.h"
+#include "port.h"
 
 PACK(typedef struct sha256_state {
     uint32_t hash_state[8];

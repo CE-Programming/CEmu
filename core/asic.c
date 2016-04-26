@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -35,22 +36,22 @@ static void add_reset_proc(void (*proc)(void)) {
 
 static void plug_devices(void) {
     /* Port ranges 0x0 -> 0xF */
-    apb_map[0x0] = init_control();
-    apb_map[0x1] = init_flash();
-    apb_map[0x2] = init_sha256();
-    apb_map[0x3] = init_usb();
-    apb_map[0x4] = init_lcd();
-    apb_map[0x5] = init_intrpt();
-    apb_map[0x6] = init_watchdog();
-    apb_map[0x7] = init_gpt();
-    apb_map[0x8] = init_rtc();
-    apb_map[0x9] = init_protected();
-    apb_map[0xA] = init_keypad();
-    apb_map[0xB] = init_backlight();
-    apb_map[0xC] = init_cxxx();
-    apb_map[0xD] = init_dxxx();
-    apb_map[0xE] = init_exxx();
-    apb_map[0xF] = init_fxxx();
+    port_map[0x0] = init_control();
+    port_map[0x1] = init_flash();
+    port_map[0x2] = init_sha256();
+    port_map[0x3] = init_usb();
+    port_map[0x4] = init_lcd();
+    port_map[0x5] = init_intrpt();
+    port_map[0x6] = init_watchdog();
+    port_map[0x7] = init_gpt();
+    port_map[0x8] = init_rtc();
+    port_map[0x9] = init_protected();
+    port_map[0xA] = init_keypad();
+    port_map[0xB] = init_backlight();
+    port_map[0xC] = init_cxxx();
+    port_map[0xD] = init_dxxx();
+    port_map[0xE] = init_exxx();
+    port_map[0xF] = init_fxxx();
 
     reset_proc_count = 0;
 

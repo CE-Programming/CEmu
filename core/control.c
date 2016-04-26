@@ -3,6 +3,7 @@
 #include "control.h"
 #include "asic.h"
 #include "emu.h"
+#include "debug/debug.h"
 
 /* Global CONTROL state */
 control_state_t control;

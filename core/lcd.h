@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "apb.h"
+#include "port.h"
 
 /* Internal Use */
 extern uint32_t lcd_framebuffer[320*240];

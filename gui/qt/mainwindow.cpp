@@ -1445,7 +1445,7 @@ void MainWindow::updateTIOSView() {
         opType.clear();
         index = 0;
         for(uint32_t j = i; j < i+11; j++) {
-            gotData[index] = debug_read_byte(j);
+            gotData[index] = mem_peek_byte(j);
             calcData += int2hex(gotData[index], 2)+" ";
             index++;
         }
@@ -1522,7 +1522,7 @@ void MainWindow::addPort() {
 
     /* Mark the port as read active */
     port = static_cast<uint16_t>(hex2int(QString::fromStdString(s)));
-    read = static_cast<uint8_t>(debug_port_read_byte(port));
+    read = static_cast<uint8_t>(port_peek_byte(port));
 
     QString portString = int2hex(port,4);
 
@@ -1612,14 +1612,14 @@ void MainWindow::changePortValues(QTableWidgetItem *item) {
 
         debug_pmonitor_set(port, value, true);
         item->setText(portString);
-        ui->portView->item(row, 1)->setText(int2hex(debug_port_read_byte(port), 2));
+        ui->portView->item(row, 1)->setText(int2hex(port_peek_byte(port), 2));
     } else if (col == 1) {
         uint8_t pdata = static_cast<uint8_t>(hex2int(item->text()));
         uint16_t port = static_cast<uint16_t>(hex2int(ui->portView->item(row, 0)->text()));
 
-        debug_port_write_byte(port, pdata);
+        port_poke_byte(port, pdata);
 
-        item->setText(int2hex(debug_port_read_byte(port), 2));
+        item->setText(int2hex(port_peek_byte(port), 2));
     }
     ui->portView->blockSignals(false);
 }
@@ -1828,7 +1828,7 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
 
 void MainWindow::updatePortData(int currentRow) {
     uint16_t port = static_cast<uint16_t>(hex2int(ui->portView->item(currentRow, 0)->text()));
-    uint8_t read = static_cast<uint8_t>(debug_port_read_byte(port));
+    uint8_t read = static_cast<uint8_t>(port_peek_byte(port));
 
     ui->portView->item(currentRow, 1)->setText(int2hex(read,2));
 }
@@ -1858,14 +1858,14 @@ void MainWindow::updateStackView() {
         for(int i=0; i<30; i+=3) {
             formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2</pre>")
                                     .arg(int2hex(cpu.registers.SPL+i, 6),
-                                         int2hex(debug_read_long(cpu.registers.SPL+i), 6));
+                                         int2hex(mem_peek_long(cpu.registers.SPL+i), 6));
             ui->stackView->appendHtml(formattedLine);
         }
     } else {
         for(int i=0; i<20; i+=2) {
             formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2</pre>")
                                     .arg(int2hex(cpu.registers.SPS+i, 4),
-                                         int2hex(debug_read_short(cpu.registers.SPS+i), 4));
+                                         int2hex(mem_peek_short(cpu.registers.SPS+i), 4));
             ui->stackView->appendHtml(formattedLine);
         }
     }
@@ -2144,7 +2144,7 @@ void MainWindow::memUpdate(uint32_t addressBegin) {
     memSize = end-start;
 
     for (int32_t i=start; i<end; i++) {
-        mem_data.append(debug_read_byte(i));
+        mem_data.append(mem_peek_byte(i));
     }
 
     ui->memEdit->setData(mem_data);
@@ -2262,7 +2262,7 @@ void MainWindow::memGoto(QString address) {
     memSize = end-start;
 
     for (int i=start; i<end; i++) {
-        mem_data.append(debug_read_byte(i));
+        mem_data.append(mem_peek_byte(i));
     }
 
     ui->memEdit->setData(mem_data);
@@ -2305,7 +2305,7 @@ void MainWindow::memSyncPressed() {
     qint64 posa = ui->memEdit->cursorPosition();
 
     for (int i = 0; i<memSize; i++) {
-        debug_write_byte(i+start, ui->memEdit->dataAt(i, 1).at(0));
+        mem_poke_byte(i+start, ui->memEdit->dataAt(i, 1).at(0));
     }
 
     syncHexView(posa, ui->memEdit);

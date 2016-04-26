@@ -8,7 +8,7 @@ extern "C" {
 #endif
 
 #include "../defines.h"
-#include "../apb.h"
+#include "../port.h"
 
 extern volatile bool inDebugger;
 
@@ -78,13 +78,7 @@ extern debug_state_t debugger;
 void debugger_init(void);
 void debugger_free(void);
 
-uint8_t debug_read_byte(uint32_t address);
-uint16_t debug_read_short(uint32_t address);
-uint32_t debug_read_long(uint32_t address);
-uint32_t debug_read_word(uint32_t address, bool mode);
-void debug_write_byte(uint32_t address, uint8_t value);
-uint8_t debug_port_read_byte(uint32_t address);
-void debug_port_write_byte(uint32_t address, uint8_t value);
+uint8_t debug_peek_byte(uint32_t address);
 void open_debugger(int reason, uint32_t address);
 void debug_switch_step_mode(void);
 

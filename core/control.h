@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "apb.h"
+#include "port.h"
 
 enum {
     BATTERY_DISCHARGED,

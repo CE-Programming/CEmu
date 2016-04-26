@@ -6,6 +6,7 @@
 #include "emu.h"
 #include "defines.h"
 #include "interrupt.h"
+#include "debug/debug.h"
 
 watchdog_state_t watchdog;
 protected_state_t protect;

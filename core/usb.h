@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "apb.h"
+#include "port.h"
 
 /* Standard USB state */
 PACK(typedef struct usb_state {

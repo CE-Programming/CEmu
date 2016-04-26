@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "apb.h"
+#include "port.h"
 
 #define INT_ON        0
 #define INT_TIMER1    1

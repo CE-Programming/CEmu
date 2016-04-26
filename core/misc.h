@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "apb.h"
+#include "port.h"
 
 PACK(typedef struct watchdog_state {
     uint32_t count;              /* Standard WATCHDOG state */

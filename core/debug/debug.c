@@ -6,7 +6,6 @@
 #include "debug.h"
 #include "../mem.h"
 #include "../emu.h"
-#include "../apb.h"
 
 volatile bool inDebugger = false;
 debug_state_t debugger;
@@ -34,17 +33,8 @@ void debugger_free(void) {
     }
     gui_console_printf("[CEmu] Freed Debugger.\n");
 }
-uint8_t debug_read_byte(uint32_t address) {
-    uint8_t *ptr, value = 0, debugData;
-
-    address &= 0xFFFFFF;
-    if (address < 0xE00000) {
-        if ((ptr = phys_mem_ptr(address, 1))) {
-            value = *ptr;
-        }
-    } else {
-        value = debug_port_read_byte(mmio_range(address)<<12 | addr_range(address));
-    }
+uint8_t debug_peek_byte(uint32_t address) {
+    uint8_t value = mem_peek_byte(address), debugData;
 
     if ((debugData = debugger.data.block[address])) {
         disasmHighlight.hit_read_breakpoint |= debugData & DBG_READ_BREAKPOINT;
@@ -61,36 +51,6 @@ uint8_t debug_read_byte(uint32_t address) {
     }
 
     return value;
-}
-uint16_t debug_read_short(uint32_t address) {
-    return debug_read_byte(address)
-         | debug_read_byte(address + 1) << 8;
-}
-uint32_t debug_read_long(uint32_t address) {
-    return debug_read_byte(address)
-         | debug_read_byte(address + 1) << 8
-         | debug_read_byte(address + 2) << 16;
-}
-uint32_t debug_read_word(uint32_t address, bool mode) {
-    return mode ? debug_read_long(address) : debug_read_short(address);
-}
-void debug_write_byte(uint32_t address, uint8_t value) {
-    uint8_t *ptr;
-    address &= 0xFFFFFF;
-    if (address < 0xE00000) {
-        if ((ptr = phys_mem_ptr(address, 1))) {
-            *ptr = value;
-        }
-    } else {
-        debug_port_write_byte(mmio_range(address)<<12 | addr_range(address), value);
-    }
-}
-
-uint8_t debug_port_read_byte(uint32_t port) {
-    return apb_map[port_range(port)].read_in(addr_range(port));
-}
-void debug_port_write_byte(uint32_t port, uint8_t value) {
-    apb_map[port_range(port)].write_out(addr_range(port), value);
 }
 
 /* okay, so looking at the data inside the asic should be okay when using this function, */

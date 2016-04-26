@@ -5,8 +5,9 @@
 extern "C" {
 #endif
 
+#include "port.h"
+
 #include <time.h>
-#include "apb.h"
 
 PACK(typedef struct rtc_state {
     /* Registers */

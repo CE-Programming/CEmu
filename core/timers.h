@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "apb.h"
+#include "port.h"
 
 typedef struct timer_state {
     uint32_t counter, reset, match[2];

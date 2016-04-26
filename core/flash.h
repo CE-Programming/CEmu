@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "apb.h"
+#include "port.h"
 
 /* Standard FLASH state */
 PACK(typedef struct flash_state {

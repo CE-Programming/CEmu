@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "apb.h"
+#include "port.h"
 
 /* Standard KEYPAD state */
 PACK(typedef struct keypad_state {

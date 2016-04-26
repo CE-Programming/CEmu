@@ -17,6 +17,7 @@
 #include "cpu.h"
 #include "emu.h"
 #include "schedule.h"
+#include "debug/debug.h"
 
 sched_state_t sched;
 

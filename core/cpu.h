@@ -25,7 +25,6 @@ extern "C" {
 #endif
 
 #include "registers.h"
-#include "apb.h"
 
 /* eZ80 CPU Opcode Context */
 typedef union eZ80context {

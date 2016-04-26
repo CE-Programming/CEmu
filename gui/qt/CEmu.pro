@@ -85,7 +85,7 @@ SOURCES +=  utils.cpp \
     ../../core/keypad.c \
     ../../core/lcd.c \
     ../../core/registers.c \
-    ../../core/apb.c \
+    ../../core/port.c \
     ../../core/interrupt.c \
     ../../core/flash.c \
     ../../core/misc.c \
@@ -141,7 +141,7 @@ HEADERS  +=  utils.h \
     ../../core/lcd.h \
     ../../core/registers.h \
     ../../core/tidevices.h \
-    ../../core/apb.h \
+    ../../core/port.h \
     ../../core/interrupt.h \
     ../../core/emu.h \
     ../../core/flash.h \

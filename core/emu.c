@@ -24,6 +24,7 @@
 #include "emu.h"
 #include "schedule.h"
 #include "asic.h"
+#include "debug/debug.h"
 #include "cert.h"
 #include "os/os.h"
 

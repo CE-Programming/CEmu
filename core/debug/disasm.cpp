@@ -122,7 +122,7 @@ static std::string strOffset(uint8_t data) {
 }
 
 static uint8_t disasm_fetch_byte(void) {
-    uint8_t value = debug_read_byte(disasm.new_address++);
+    uint8_t value = debug_peek_byte(disasm.new_address++);
     sprintf(tmpbuf,"%02X",value);
     disasm.instruction.data += std::string(tmpbuf);
     disasm.instruction.size++;
