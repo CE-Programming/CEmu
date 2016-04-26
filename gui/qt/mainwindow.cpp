@@ -59,7 +59,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     ui->console->setMaximumBlockCount(2000);
 
     // Register QtKeypadBridge for the virtual keyboard functionality
-    this->installEventFilter(&qt_keypad_bridge);
+    installEventFilter(&qt_keypad_bridge);
     ui->lcdWidget->installEventFilter(&qt_keypad_bridge);
     // Same for all the tabs/docks (iterate over them instead of harcoding their names)
     for (const auto& tab : ui->tabWidget->children()[0]->children()) {

@@ -17,7 +17,6 @@ class LCDWidget : public QWidget
       void setLCD(lcd_state_t*);
 
   protected:
-      virtual void mousePressEvent(QMouseEvent */*event*/) Q_DECL_OVERRIDE;
       virtual void paintEvent(QPaintEvent */*event*/) Q_DECL_OVERRIDE;
 
   private:
