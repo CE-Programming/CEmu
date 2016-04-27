@@ -3,21 +3,34 @@
   "transfer_files": [
     "graphc_v3.2.8xv",
     "libload_v1.0.8xv",
-    "graphc_demo0.8xp",
-    "graphc_demo0_launcher.8xp"
+    "graphc_demo1.8xp"
   ],
+  "target": {
+    "name": "DEMO1",
+    "isASM": true
+  },
   "setup_sequence": [
-    "key|prgm",
+    "action|launch",
+    "delay|500",
+    "hash|1",
     "key|enter",
-    "key|enter",
-    "delay|1000"
+    "delay|500",
+    "hash|2"
   ],
   "hashes": [
     {
-      "description": "What it displayed on the screen",
+      "id": 1,
+      "description": "Make sure the graph lib functions worked as expected in this demo",
       "start": "vram_start",
       "size": "vram_size",
-      "expected_CRCs": [ "47C32AFD" ]
+      "expected_CRCs": [ "TODO! PUT HEX STRING HERE" ]
+    },
+    {
+      "id": 2,
+      "description": "Make sure we can quit back to the home screen properly",
+      "start": "vram_start",
+      "size": "vram_size",
+      "expected_CRCs": [ "TODO! PUT HEX STRING HERE" ]
     }
   ]
 }
