@@ -1220,15 +1220,14 @@ void cpu_execute(void) {
                                             switch (context.x) {
                                                 case 0:
                                                     switch (context.z) {
-                                                        case 0:
-                                                            if (context.y == 6) { // OPCODETRAP
-                                                                cpu_trap();
-                                                            } else { // IN0 r[y], (n)
-                                                                cpu_write_reg(context.y, new = cpu_read_in(cpu_fetch_byte()));
-                                                                r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
-                                                                    | cpuflag_undef(r->F) | cpuflag_parity(new)
-                                                                    | cpuflag_c(r->flags.C);
+                                                        case 0: // IN0 r[y], (n)
+                                                            new = cpu_read_in(cpu_fetch_byte());
+                                                            if (context.y != 6) {
+                                                                cpu_write_reg(context.y, new);
                                                             }
+                                                            r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
+                                                                | cpuflag_undef(r->F) | cpuflag_parity(new)
+                                                                | cpuflag_c(r->flags.C);
                                                             break;
                                                          case 1:
                                                             if (context.y == 6) { // LD IY, (HL)
@@ -1272,15 +1271,14 @@ void cpu_execute(void) {
                                                     break;
                                                 case 1:
                                                     switch (context.z) {
-                                                        case 0:
-                                                            if (context.y == 6) { // OPCODETRAP (ADL)
-                                                                cpu_trap();
-                                                            } else { // IN r[y], (BC)
-                                                                cpu_write_reg(context.y, new = cpu_read_in(r->BC));
-                                                                r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
-                                                                    | cpuflag_undef(r->F) | cpuflag_parity(new)
-                                                                    | cpuflag_c(r->flags.C);
+                                                        case 0: // IN r[y], (BC)
+                                                            new = cpu_read_in(r->BC);
+                                                            if (context.y != 6) {
+                                                                cpu_write_reg(context.y, new);
                                                             }
+                                                            r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
+                                                                | cpuflag_undef(r->F) | cpuflag_parity(new)
+                                                                | cpuflag_c(r->flags.C);
                                                             break;
                                                         case 1:
                                                             if (context.y == 6) { // OPCODETRAP (ADL)
@@ -1475,9 +1473,6 @@ void cpu_execute(void) {
                                                             break;
                                                         case 0xD7: // LD HL, I
                                                             r->HL = cpu_mask_mode(r->I | (r->MBASE << 16), cpu.L);
-                                                            break;
-                                                        case 0xEE: // flash erase
-                                                            memset(mem.flash.block + (r->HL & ~0x3FFF), 0xFF, 0x4000);
                                                             break;
                                                         default:   // OPCODETRAP
                                                             cpu_trap();
