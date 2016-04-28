@@ -1132,27 +1132,31 @@ void cpu_execute(void) {
                                     w = cpu_index_address();
                                     context.opcode = cpu_fetch_byte();
                                     r->R += ~cpu.PREFIX & 2;
-                                    old = cpu_read_reg_prefetched(context.z, w);
-                                    switch (context.x) {
-                                        case 0: // rot[y] r[z]
-                                            cpu_execute_rot(context.y, context.z, w, old);
-                                            break;
-                                        case 1: // BIT y, r[z]
-                                            old &= (1 << context.y);
-                                            r->F = cpuflag_sign_b(old) | cpuflag_zero(old) | cpuflag_undef(r->F)
-                                               | cpuflag_parity(old) | cpuflag_c(r->flags.C)
-                                               | FLAG_H;
-                                            break;
-                                        case 2: // RES y, r[z]
-                                            cpu.cycles += context.z == 6;
-                                            old &= ~(1 << context.y);
-                                            cpu_write_reg_prefetched(context.z, w, old);
-                                            break;
-                                        case 3: // SET y, r[z]
-                                            cpu.cycles += context.z == 6;
-                                            old |= 1 << context.y;
-                                            cpu_write_reg_prefetched(context.z, w, old);
-                                            break;
+                                    if (cpu.PREFIX && context.z != 6) { // OPCODETRAP
+                                        cpu_trap_rewind(2);
+                                    } else {
+                                        old = cpu_read_reg_prefetched(context.z, w);
+                                        switch (context.x) {
+                                            case 0: // rot[y] r[z]
+                                                cpu_execute_rot(context.y, context.z, w, old);
+                                                break;
+                                            case 1: // BIT y, r[z]
+                                                old &= (1 << context.y);
+                                                r->F = cpuflag_sign_b(old) | cpuflag_zero(old) | cpuflag_undef(r->F)
+                                                    | cpuflag_parity(old) | cpuflag_c(r->flags.C)
+                                                    | FLAG_H;
+                                                break;
+                                            case 2: // RES y, r[z]
+                                                cpu.cycles += context.z == 6;
+                                                old &= ~(1 << context.y);
+                                                cpu_write_reg_prefetched(context.z, w, old);
+                                                break;
+                                            case 3: // SET y, r[z]
+                                                cpu.cycles += context.z == 6;
+                                                old |= 1 << context.y;
+                                                cpu_write_reg_prefetched(context.z, w, old);
+                                                break;
+                                        }
                                     }
                                     break;
                                 case 2: // OUT (n), A
