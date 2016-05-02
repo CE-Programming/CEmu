@@ -9,6 +9,7 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 #include <unordered_map>
 
 #include "crc32.hpp"
@@ -18,8 +19,10 @@ using namespace json11;
 
 
 static const std::vector<std::string> seq_valid_keys = { "action", "delay", "hash", "key" };
+enum seq_valid_keys_enum { DO_ACTION, DO_DELAY, DO_HASH, DO_KEY };
 
 static const std::vector<std::string> valid_actions = { "launch", "reset" };
+enum valid_actions_enum { ACTION_LAUNCH, ACTION_RESET };
 
 /* TODO */
 struct coord2d { uint8_t y; uint8_t x; };
@@ -32,6 +35,7 @@ static const std::unordered_map<std::string, coord2d> valid_keys = {
     { "enter",  { 3 , 4 } }
     /* ... */
 };
+
 
 struct hash_params_t {
     std::string description;
@@ -63,7 +67,7 @@ inline bool file_exists(const std::string& name)
 template<typename T>
 inline bool is_in_vector(const T& element, const std::vector<T>& v)
 {
-    return find(v.begin(), v.end(), element) != v.end();
+    return std::find(v.begin(), v.end(), element) != v.end();
 }
 
 /*******************************/
@@ -143,7 +147,21 @@ bool loadConfig(config_t& config, const Json& configJson)
                 size_t sep_pos = tmpSeqItem.string_value().find('|');
                 if (sep_pos > 2 && sep_pos < tmpSeqItem_str.length()-1)
                 {
-                    config.setup_sequence.push_back(std::make_pair(tmpSeqItem_str.substr(0, sep_pos), tmpSeqItem_str.substr(sep_pos+1)));
+                    std::string key = tmpSeqItem_str.substr(0, sep_pos);
+                    std::string value = tmpSeqItem_str.substr(sep_pos+1);
+                    if (is_in_vector(key, seq_valid_keys))
+                    {
+                        if (key != "action" || (key == "action" && is_in_vector(value, valid_actions)))
+                        {
+                            config.setup_sequence.push_back(std::make_pair(key, value));
+                        } else {
+                            std::cerr << "[Error] bad value for action: '" << value << "'" << std::endl;
+                            return false;
+                        }
+                    } else {
+                        std::cerr << "[Error] unknown action in pair: '" << tmpSeqItem_str << "'" << std::endl;
+                        return false;
+                    }
                 } else {
                     std::cerr << "[Error] an item in \"setup_sequence\" was malformed: '" << tmpSeqItem_str << "'" << std::endl;
                     return false;
