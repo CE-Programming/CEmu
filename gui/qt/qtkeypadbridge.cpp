@@ -35,7 +35,7 @@ bool QtKeypadBridge::setKeymap(const QString & keymapstr)
     {
         qt_keypad_bridge.keymap = (get_device_type() == TI84PCE) ? &wabbitemu_keymap_84pce : &wabbitemu_keymap_83pce;
     }
-    else if (!QStringLiteral("pindurti").compare(keymapstr, Qt::CaseInsensitive))
+    else if (!QStringLiteral("jsTIfied").compare(keymapstr, Qt::CaseInsensitive))
     {
         qt_keypad_bridge.keymap = (get_device_type() == TI84PCE) ? &pindurti_keymap_84pce : &pindurti_keymap_83pce;
     }
