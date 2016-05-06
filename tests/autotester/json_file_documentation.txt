@@ -1,19 +1,27 @@
-"rom":
-    string
-    path of the ROM to be loaded for testing
+Structure of the JSON object for the test config files:
+-------------------------------------------------------
 
-"transfer_files"
-    array of strings
-    paths of the files to be transferred when emulation has started 
+"rom" (string)
+    Path of the ROM to be loaded for testing
 
-"setup_sequence"
-    array of strings
-    actions to be done before computing hashes. Format: "type|value", with type being either 'key' or 'delay', and value being the short name of a key (TODO: list) or the amount of milliseconds to wait for.
+"transfer_files" (array of strings)
+    Path(s) of the file(s) to be transferred after emulation has started
 
-"hashes":
-    array of objects
+"sequence" (array of strings)
+    Sequential list of commands.
+    Format: "command|arg", with commands and arguments being:
+        action|x (with x being one of: launch (to launch the target program), reset (to reset the emulation), useClassic (to use CLASSIC and not MathPrint)
+        delay|num (with num being a number of milliseconds to wait for)
+        hash|hashName (the hash param's key (string), as defined later in your JSON)
+        key|keyName (with keyName being one of: ***TODO***)
+
+"hashes" (array of objects)
+    each object's key corresponds to the name of the hash (params).
     each object has 4 properties:
-        - "description" (string to explain what this hash is for),
-        - "start" (number in base 10: pointer/address, or string of a few common locations),
-        - "size" (number in base 10: amount of bytes, or string of a few common sizes),
-        - "expected_CRCs" (one or several expected/valid CRCs)
+        - "description" (string)
+            Just to explain what this hash is for
+        - "start" (string of number in decimal or hexadecimal if prefixed by 0x)
+            The pointer/address, or the name of a few common locations: "vram_start", "vram2_start", "ram_start", "textShadow", "cmdShadow", "pixelShadow", "pixelShadow2", "cmdPixelShadow "plotSScreen", "saveSScreen", "UserMem", "CursorImage"
+        - "size" (number (decimal only), or string of number in decimal or hexadecimal if prefixed by 0x)
+            The length of the area that will be hashed. The number itself or string of a few common sizes: "vram_8_size", "vram_16_size", "ram_size"
+        - "expected_CRCs" (array of strings (in hex, without a prefix)): one or several expected/valid CRCs
