@@ -6,6 +6,9 @@
 #include <cstddef>
 #include <cstdint>
 
+uint32_t crc32_append(uint32_t crc, const uint8_t* buf, size_t size);
+inline uint32_t crc32(const uint8_t* buf, size_t size);
+
 static const uint32_t crc32c_tab[256] =
 {
     0x00000000, 0xF26B8303, 0xE13B70F7, 0x1350F3F4,
