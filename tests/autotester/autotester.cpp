@@ -34,11 +34,9 @@ namespace cemucore
         std::this_thread::sleep_for(std::chrono::microseconds(50));
     }
 
-    void gui_do_stuff(void)
-    { }
+    void gui_do_stuff(void) { }
 
-    void gui_set_busy(bool)
-    { }
+    void gui_set_busy(bool) { }
 
     void gui_console_vprintf(const char* fmt, va_list ap)
     {
@@ -53,20 +51,18 @@ namespace cemucore
         va_end(ap);
     }
 
-    void gui_perror(const char *msg)
-    { }
-
     void throttle_timer_wait()
     {
-        std::chrono::steady_clock::duration interval(std::chrono::duration_cast<std::chrono::steady_clock::duration>
-                                                             (std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(1000000)));
-        std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now(), next_time = lastTime + interval;
+        auto interval  = std::chrono::duration_cast<std::chrono::steady_clock::duration>
+                            (std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(1000000));
+        auto cur_time  = std::chrono::steady_clock::now(),
+             next_time = lastTime + interval;
+
         if (throttleOn && cur_time < next_time)
         {
             lastTime = next_time;
             std::this_thread::sleep_until(next_time);
-        } else
-        {
+        } else {
             lastTime = cur_time;
             std::this_thread::yield();
         }
@@ -186,7 +182,7 @@ static const std::unordered_map<std::string, seq_cmd_action_func_t> valid_action
             if (config.target.isASM) {
                 sendTokenKeyPress(0x9C, 0xFC, false); // Insert Asm(
             }
-            sendTokenKeyPress(0x9C, 0xFC, false); // Insert prgm
+            sendTokenKeyPress(0xDA, 0, false); // Insert prgm
             for (const char& c : config.target.name) {
                 sendLetterKeyPress(c); // type program name
             }
@@ -374,9 +370,9 @@ bool loadConfig(const json11::Json& configJson)
                     std::cerr << "[Error] hash #" << tmpHashName << " config's start was not a string or was empty" << std::endl;
                     return false;
                 }
-                if (tmpHash["size"].is_string() && !tmpHash["size"].string_value().empty())
+                if (tmpHash["size"].is_number() || (tmpHash["size"].is_string() && !tmpHash["size"].string_value().empty()))
                 {
-                    std::string size_tmp = tmpHash["size"].string_value();
+                    std::string size_tmp = tmpHash["size"].is_number() ? std::to_string(tmpHash["size"].int_value()) : tmpHash["size"].string_value();
                     const auto& size_tmp_const = hash_consts.find(size_tmp);
                     if (size_tmp_const != hash_consts.end())
                     {
@@ -491,7 +487,7 @@ int main(int argc, char* argv[])
             retVal = -1;
             goto cleanExit;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
     /* Follow sequence */
@@ -507,11 +503,12 @@ int main(int argc, char* argv[])
     }
 
 cleanExit:
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
     cemucore::exiting = true; // exit outer emu loop
     cemucore::cpu.next = 0; // exit inner emu loop
-    cemucore::emu_cleanup();
+
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+    cemucore::emu_cleanup();
 
     coreThread.join();
 
