@@ -184,7 +184,7 @@ static const std::unordered_map<std::string, seq_cmd_action_func_t> valid_action
         "launch", [] {
             sendTokenKeyPress(0x09, 0, true); // Back to the Home Screen, then Clear.
             if (config.target.isASM) {
-                sendTokenKeyPress(0x9C, 0xFC, false); // Insert Asm(
+                sendTokenKeyPress(0xFC, 0x9C, false); // Insert Asm(
             }
             sendTokenKeyPress(0xDA, 0, false); // Insert prgm
             for (const char& c : config.target.name) {
