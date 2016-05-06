@@ -7,7 +7,7 @@
 #include "os/os.h"
 
 volatile bool emu_is_sending = false;
-volatile bool emu_is_recieving = false;
+volatile bool emu_is_receiving = false;
 
 /* static const int ram_start = 0xD00000; */
 static const int safe_ram_loc = 0xD052C6;
@@ -52,7 +52,7 @@ void enterVariableLink(void) {
     gui_entered_send_state(true);
     do {
         gui_emu_sleep();
-    } while(emu_is_sending || emu_is_recieving);
+    } while(emu_is_sending || emu_is_receiving);
 }
 
 bool listVariablesLink(void) {
