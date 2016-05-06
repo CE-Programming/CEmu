@@ -156,29 +156,6 @@ void sendLetterKeyPress(char letter)
 typedef std::function<void(const std::string&)> seq_cmd_func_t;
 typedef std::function<void(void)> seq_cmd_action_func_t;
 
-static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands = {
-    {
-        "action", [](const std::string &which_action) {
-            valid_actions.at(which_action)();
-        }
-    },
-    {
-        "delay", [](const std::string& delay_str) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(std::stoul(delay_str)));
-        }
-    },
-    {
-        "hash", [](const std::string& which_hash) {
-            std::cerr << "[Error] 'hash' command not implemented yet " << std::endl;
-        }
-    },
-    {
-        "key", [](const std::string& which_key) {
-            std::cerr << "[Error] 'key' command not implemented yet " << std::endl;
-        }
-    }
-};
-
 static const std::unordered_map<std::string, seq_cmd_action_func_t> valid_actions = {
     {
         "launch", [] {
@@ -204,6 +181,29 @@ static const std::unordered_map<std::string, seq_cmd_action_func_t> valid_action
             sendTokenKeyPress(0xFB, 0xD3, true); // CLASSIC token
             sendTokenKeyPress(0x05, 0, false);   // Enter
             std::this_thread::sleep_for(std::chrono::milliseconds(125));
+        }
+    }
+};
+
+static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands = {
+    {
+        "action", [](const std::string &which_action) {
+            valid_actions.at(which_action)();
+        }
+    },
+    {
+        "delay", [](const std::string& delay_str) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(std::stoul(delay_str)));
+        }
+    },
+    {
+        "hash", [](const std::string& which_hash) {
+            std::cerr << "[Error] 'hash' command not implemented yet " << std::endl;
+        }
+    },
+    {
+        "key", [](const std::string& which_key) {
+            std::cerr << "[Error] 'key' command not implemented yet " << std::endl;
         }
     }
 };
