@@ -50,6 +50,9 @@ namespace cemucore
         gui_console_vprintf(fmt, ap);
         va_end(ap);
     }
+    void gui_entered_send_state(bool)
+    {
+    }
 
     void throttle_timer_wait()
     {
@@ -440,10 +443,15 @@ int main(int argc, char* argv[])
 
     const std::string jsonPath(argv[1]);
     std::string jsonContents;
-    if (file_exists(jsonPath))
+    std::ifstream ifs(jsonPath);
+    if (ifs.good())
     {
-        std::ifstream ifs(jsonPath);
-        jsonContents = std::string(std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>());
+        std::getline(ifs, jsonContents, '\0');
+        //jsonContents = std::string(std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>());
+        if (!ifs.eof()) {
+            std::cerr << "[Error] Couldn't read JSON file" << std::endl;
+            return -1;
+        }
     } else {
         std::cerr << "[Error] Couldn't open JSON file at provided path" << std::endl;
         return -1;
