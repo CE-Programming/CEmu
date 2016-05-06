@@ -157,7 +157,11 @@ typedef std::function<void(const std::string&)> seq_cmd_func_t;
 typedef std::function<void(void)> seq_cmd_action_func_t;
 
 static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands = {
-    { "action", nullptr },  // Handled elsewhere
+    {
+        "action", [](const std::string &which_action) {
+            valid_actions.at(which_action)();
+        }
+    },
     {
         "delay", [](const std::string& delay_str) {
             std::this_thread::sleep_for(std::chrono::milliseconds(std::stoul(delay_str)));
@@ -494,11 +498,7 @@ int main(int argc, char* argv[])
     for (const auto& command : config.sequence)
     {
         std::cout << "Launching command " << command.first << " | " << command.second << std::endl;
-        if (command.first != "action") {
-            valid_seq_commands.at(command.first)(command.second);
-        } else {
-            valid_actions.at(command.second)();
-        }
+        valid_seq_commands.at(command.first)(command.second);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
