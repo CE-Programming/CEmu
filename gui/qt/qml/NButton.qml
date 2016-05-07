@@ -10,7 +10,7 @@ Rectangle {
     property int keymap_id: 1
 
     border.width: active ? 2 : 1
-    border.color: "#888"
+    border.color: active ? "#A22" : "#888"
     radius: 4
     color: active ? active_color : back_color
 
