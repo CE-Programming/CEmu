@@ -50,14 +50,12 @@ namespace cemucore
         gui_console_vprintf(fmt, ap);
         va_end(ap);
     }
-    void gui_entered_send_state(bool)
-    {
-    }
+    void gui_entered_send_state(bool) { }
 
     void throttle_timer_wait()
     {
         auto interval  = std::chrono::duration_cast<std::chrono::steady_clock::duration>
-                            (std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(1000000));
+                            (std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(800000)); // a bit faster than normal
         auto cur_time  = std::chrono::steady_clock::now(),
              next_time = lastTime + interval;
 
@@ -77,7 +75,7 @@ namespace cemucore
 
 struct hash_params_t {
     std::string description;
-    uint32_t start;
+    uint32_t start; /* Actually a pointer, for the CE */
     uint32_t size;
     std::vector<std::string> expected_CRCs;
 };
@@ -127,33 +125,38 @@ static const std::unordered_map<std::string, coord2d> valid_keys = {
     { "enter",  { 3 , 4 } }
     /* ... */
 };
+// Those probably have to be refactored in the map above? ^
+#define CE_KEY_Enter    0x05
+#define CE_KEY_Clear    0x09
+#define CE_KEY_prgm     0xDA
+#define CE_KEY_Asm      0x9CFC
+#define CE_KEY_Classic  0x9CFC
 
-// Some equates
-#define CE_keyExtend  0xD0058E
-#define CE_SendKPress 0x02015C
-#define CE_JForceCmd  0x020164
-// I'm not sure we need that one, actually
-#define CE_JForceCmdNoChar 0x020160
-
-void sendTokenKeyPress(uint8_t val, uint8_t ext, bool clearFirst)
+// A few needed locations
+#define CE_kbdKey       0xD0058C
+#define CE_keyExtend    0xD0058E
+void sendKey(uint16_t key)
 {
-    cemucore::emulationPaused = true;
-    cemucore::mem_poke_byte(CE_keyExtend, ext);
-    cemucore::cpu.registers.A = val;
-    cemucore::cpu.registers.PC = clearFirst ? CE_JForceCmd : CE_SendKPress;
-    cemucore::emulationPaused = false;
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    while (cemucore::mem_peek_byte(CE_keyExtend)) {
+        std::this_thread::sleep_for(std::chrono::microseconds(50));
+    }
+    cemucore::mem_poke_byte(CE_keyExtend, (uint8_t)(key >> 8 | (key < 0x100)));
+    cemucore::mem_poke_byte(CE_kbdKey, (uint8_t)(key & 0xFF));
+    // Magic value here - will have to find a name for it (it's flags+graphFlags2 == 0xD00080+0x1F)
+    cemucore::mem_poke_byte(0xD0009F, (uint8_t)(cemucore::mem_peek_byte(0xD0009F) | 0x20));
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
 void sendLetterKeyPress(char letter)
 {
-    uint8_t val;
+    uint16_t val;
     if (letter != '@') { // @ is actually theta (replaced earlier)
-        val = (uint8_t)(0x9A + letter - 'A');
+        val = (uint16_t)(0x9A + letter - 'A');
     } else {
         val = 0xCC; // theta
     }
-    sendTokenKeyPress(val, 0, false);
+    sendKey(val);
 }
 
 typedef std::function<void(const std::string&)> seq_cmd_func_t;
@@ -162,27 +165,30 @@ typedef std::function<void(void)> seq_cmd_action_func_t;
 static const std::unordered_map<std::string, seq_cmd_action_func_t> valid_actions = {
     {
         "launch", [] {
-            sendTokenKeyPress(0x09, 0, true); // Back to the Home Screen, then Clear.
+            // Assuming we're in the home screen...
+            sendKey(CE_KEY_Clear);
             if (config.target.isASM) {
-                sendTokenKeyPress(0xFC, 0x9C, false); // Insert Asm(
+                sendKey(CE_KEY_Asm);
             }
-            sendTokenKeyPress(0xDA, 0, false); // Insert prgm
+            sendKey(CE_KEY_prgm);
             for (const char& c : config.target.name) {
                 sendLetterKeyPress(c); // type program name
             }
-            sendTokenKeyPress(0x05, 0, false); // Enter
+            sendKey(CE_KEY_Enter);
         }
     },
     {
         "reset", [] {
             cemucore::cpuEvents |= EVENT_RESET;
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
     },
     {
         "useClassic", [] {
-            sendTokenKeyPress(0x09, 0, true);    // Back to the Home Screen, then Clear.
-            sendTokenKeyPress(0xFB, 0xD3, true); // CLASSIC token
-            sendTokenKeyPress(0x05, 0, false);   // Enter
+            // Assuming we're in the home screen...
+            sendKey(CE_KEY_Clear);
+            sendKey(CE_KEY_Classic);
+            sendKey(CE_KEY_Enter);
             std::this_thread::sleep_for(std::chrono::milliseconds(125));
         }
     }
@@ -216,8 +222,7 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
 
 inline bool file_exists(const std::string& name)
 {
-    std::ifstream f(name.c_str());
-    return f.good();
+    return std::ifstream(name.c_str()).good();
 }
 
 std::string str_replace_all(std::string str, const std::string& from, const std::string& to)
@@ -489,6 +494,9 @@ int main(int argc, char* argv[])
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
+    /* Clear home screen */
+    sendKey(CE_KEY_Clear);
+
     /* Send files */
     for (const auto& file : config.transfer_files)
     {
@@ -499,7 +507,7 @@ int main(int argc, char* argv[])
             retVal = -1;
             goto cleanExit;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 
     /* Follow sequence */

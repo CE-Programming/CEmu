@@ -11,17 +11,17 @@
   },
   "sequence": [
     "action|launch",
-    "delay|50",
+    "delay|500",
     "hash|1",
     "key|enter",
-    "delay|50",
+    "delay|500",
     "hash|2"
   ],
   "hashes": {
     "1": {
       "description": "Make sure the graph lib functions worked as expected in this demo",
       "start": "vram_start",
-      "size": 10,
+      "size": "vram_8_size",
       "expected_CRCs": [ "A99AE348" ]
     },
     "2": {
