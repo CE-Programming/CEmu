@@ -130,20 +130,16 @@ static const std::unordered_map<std::string, coord2d> valid_keys = {
 #define CE_KEY_Clear    0x09
 #define CE_KEY_prgm     0xDA
 #define CE_KEY_Asm      0x9CFC
-#define CE_KEY_Classic  0x9CFC
+#define CE_KEY_Classic  0xD3FB
 
 // A few needed locations
 #define CE_kbdKey       0xD0058C
 #define CE_keyExtend    0xD0058E
 void sendKey(uint16_t key)
 {
-    while (cemucore::mem_peek_byte(CE_keyExtend)) {
-        std::this_thread::sleep_for(std::chrono::microseconds(50));
-    }
-    cemucore::mem_poke_byte(CE_keyExtend, (uint8_t)(key >> 8 | (key < 0x100)));
     cemucore::mem_poke_byte(CE_kbdKey, (uint8_t)(key & 0xFF));
-    // Magic value here - will have to find a name for it (it's flags+graphFlags2 == 0xD00080+0x1F)
-    cemucore::mem_poke_byte(0xD0009F, (uint8_t)(cemucore::mem_peek_byte(0xD0009F) | 0x20));
+    cemucore::mem_poke_byte(CE_keyExtend, (uint8_t)(key >> 8 | (key < 0x100)));
+    cemucore::mem_poke_byte(0xD0009F, (uint8_t)(cemucore::mem_peek_byte(0xD0009F) | 0x20)); // TODO: name 0xD0009F (= flags+graphFlags2 = 0xD00080+0x1F)
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
