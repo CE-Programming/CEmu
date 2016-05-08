@@ -19,13 +19,13 @@
   ],
   "hashes": {
     "1": {
-      "description": "Make sure the graph lib functions worked as expected in this demo",
+      "description": "Fill screen in red",
       "start": "vram_start",
       "size": "vram_8_size",
       "expected_CRCs": [ "A99AE348" ]
     },
     "2": {
-      "description": "Make sure we can quit back to the home screen properly",
+      "description": "Back to the home screen (exit check)",
       "start": "vram_start",
       "size": "vram_16_size",
       "expected_CRCs": [ "6EF61DFC", "97807FAA" ]

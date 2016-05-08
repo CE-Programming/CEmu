@@ -77,7 +77,7 @@ struct hash_params_t {
     std::string description;
     uint32_t start; /* Actually a pointer, for the CE */
     uint32_t size;
-    std::vector<std::string> expected_CRCs;
+    std::vector<uint32_t> expected_CRCs;
 };
 
 struct config_t {
@@ -93,6 +93,9 @@ struct config_t {
 
 /* The global config variable */
 config_t config;
+
+/* Will be incremented in case of non-matching CRC, and used as the return value */
+unsigned int hashFailCount = 0;
 
 
 /*
@@ -203,12 +206,27 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
     },
     {
         "hash", [](const std::string& which_hash) {
-            std::cerr << "[Error] 'hash' command not implemented yet " << std::endl;
+            const auto& tmp = config.hashes.find(which_hash);
+            if (tmp != config.hashes.end())
+            {
+                const hash_params_t& param = tmp->second;
+                const uint32_t real_hash = crc32(cemucore::phys_mem_ptr(param.start, param.size), param.size);
+                if (std::find(param.expected_CRCs.begin(), param.expected_CRCs.end(), real_hash) != param.expected_CRCs.end()) {
+                    std::cout << "\t[Test passed!] Hash #" << which_hash << " had a matching CRC.";
+                } else {
+                    std::cout << "\t[Test failed!] Hash #" << which_hash << " (\"" << param.description << "\") did not match ";
+                    std::cout << (param.expected_CRCs.size() > 1 ? "any of the expected CRCs." : "the expected CRC.") << std::endl;
+                    hashFailCount++;
+                }
+            } else {
+                std::cerr << "\t[Error] hash #" << which_hash << " was not declared in the JSON file." << std::endl;
+                hashFailCount++;
+            }
         }
     },
     {
         "key", [](const std::string& which_key) {
-            std::cerr << "[Error] 'key' command not implemented yet " << std::endl;
+            std::cerr << "\t[Error] 'key' command not implemented yet " << std::endl;
         }
     }
 };
@@ -400,9 +418,9 @@ bool loadConfig(const json11::Json& configJson)
                     for (const auto& tmpHashCRC : tmpHash["expected_CRCs"].array_items())
                     {
                         if (tmpHashCRC.is_string() && !tmpHashCRC.string_value().empty()) {
-                            std::string crc_tmp = tmpHashCRC.string_value();
+                            const std::string crc_tmp = tmpHashCRC.string_value();
                             if (std::regex_match(crc_tmp, std::regex("^[0-9a-fA-F]+$"))) {
-                                hash_param.expected_CRCs.push_back(crc_tmp);
+                                hash_param.expected_CRCs.push_back((uint32_t)std::stoul(crc_tmp, nullptr, 16));
                             } else {
                                 std::cerr << "[Error] the CRC '" << crc_tmp << "' from hash #" << tmpHashName << "'s config is not a valid hex string" << std::endl;
                                 return false;
@@ -485,7 +503,7 @@ int main(int argc, char* argv[])
         coreThread = std::thread(&cemucore::emu_loop, true);
     } else {
         std::cerr << "[Error] Couldn't start emulation!" << std::endl;
-        return false;
+        return -1;
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -503,7 +521,7 @@ int main(int argc, char* argv[])
             retVal = -1;
             goto cleanExit;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(150));
     }
 
     /* Follow sequence */
@@ -523,6 +541,14 @@ cleanExit:
     cemucore::emu_cleanup();
 
     coreThread.join();
+
+    // If no JSON/program/misc. error, return the hash failure count.
+    if (retVal == 0)
+    {
+        std::cout << "\n*** Final results: out of " << config.hashes.size() << " tests, ";
+        std::cout << (config.hashes.size() - hashFailCount) << " passed, and " << hashFailCount << " failed. ***" << std::endl;
+        return hashFailCount;
+    }
 
     return retVal;
 }
