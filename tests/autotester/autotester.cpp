@@ -128,8 +128,9 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
                 if (std::find(param.expected_CRCs.begin(), param.expected_CRCs.end(), real_hash) != param.expected_CRCs.end()) {
                     std::cout << "\t[Test passed!] Hash #" << which_hash << " had a matching CRC.";
                 } else {
-                    std::cout << "\t[Test failed!] Hash #" << which_hash << " (\"" << param.description << "\") did not match ";
-                    std::cout << (param.expected_CRCs.size() > 1 ? "any of the expected CRCs." : "the expected CRC.") << std::endl;
+                    std::cout << "\t[Test failed!] Hash #" << which_hash << " (\"" << param.description << "\") did not match "
+                              << (param.expected_CRCs.size() > 1 ? "any of the expected CRCs" : "the expected CRC")
+                              << " (got " << std::uppercase << std::hex << real_hash << std::dec << ")." << std::endl;
                     hashFailCount++;
                 }
             } else {
