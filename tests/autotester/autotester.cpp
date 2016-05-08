@@ -19,77 +19,10 @@
 #include "crc32.hpp"
 #include "json11.hpp"
 
-namespace cemucore
+#include "autotester.h"
+
+namespace autotester
 {
-    extern "C" {
-
-#include "../../core/emu.h"
-#include "../../core/link.h"
-
-    bool throttleOn = true;
-    auto lastTime = std::chrono::steady_clock::now();
-
-    void gui_emu_sleep(void)
-    {
-        std::this_thread::sleep_for(std::chrono::microseconds(50));
-    }
-
-    void gui_do_stuff(void) { }
-
-    void gui_set_busy(bool) { }
-
-    void gui_console_vprintf(const char* fmt, va_list ap)
-    {
-        //vfprintf(stdout, fmt, ap);
-        //fflush(stdout);
-    }
-    void gui_console_printf(const char* fmt, ...)
-    {
-        va_list ap;
-        va_start(ap, fmt);
-        gui_console_vprintf(fmt, ap);
-        va_end(ap);
-    }
-    void gui_entered_send_state(bool) { }
-
-    void throttle_timer_wait()
-    {
-        auto interval  = std::chrono::duration_cast<std::chrono::steady_clock::duration>
-                            (std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(800000)); // a bit faster than normal
-        auto cur_time  = std::chrono::steady_clock::now(),
-             next_time = lastTime + interval;
-
-        if (throttleOn && cur_time < next_time)
-        {
-            lastTime = next_time;
-            std::this_thread::sleep_until(next_time);
-        } else {
-            lastTime = cur_time;
-            std::this_thread::yield();
-        }
-    }
-
-    }
-}
-
-
-struct hash_params_t {
-    std::string description;
-    uint32_t start; /* Actually a pointer, for the CE */
-    uint32_t size;
-    std::vector<uint32_t> expected_CRCs;
-};
-
-struct config_t {
-    std::string rom;
-    std::vector<std::string> transfer_files;
-    struct {
-        std::string name;
-        bool isASM;
-    } target;
-    std::vector<std::pair<std::string, std::string>> sequence;
-    std::unordered_map<std::string, hash_params_t> hashes;
-};
 
 /* The global config variable */
 config_t config;
@@ -97,25 +30,6 @@ config_t config;
 /* Will be incremented in case of non-matching CRC, and used as the return value */
 unsigned int hashFailCount = 0;
 
-
-/*
- * Constants usable in the "start" and "size" parameters of the JSON config for the hash params
- * See http://wikiti.brandonw.net/index.php?title=Category:84PCE:RAM:By_Address
- */
-static const std::unordered_map<std::string, unsigned int> hash_consts = {
-    { "vram_start",     0xD40000 }, { "vram_8_size",     320*240 },
-    { "vram2_start",    0xD52C00 }, { "vram_16_size",  2*320*240 },
-    { "ram_start",      0xD00000 }, { "ram_size",       0x040000 },
-    { "textShadow",     0xD006C0 },
-    { "cmdShadow",      0xD0232D },
-    { "pixelShadow",    0xD031F6 },
-    { "pixelShadow2",   0xD052C6 },
-    { "cmdPixelShadow", 0xD07396 },
-    { "plotSScreen",    0xD09466 },
-    { "saveSScreen",    0xD0EA1F },
-    { "UserMem",        0xD1A881 },
-    { "CursorImage",    0xE30800 }
-};
 
 /* TODO */
 struct coord2d { uint8_t y; uint8_t x; };
@@ -226,13 +140,27 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
     },
     {
         "key", [](const std::string& which_key) {
-            std::cerr << "\t[Error] 'key' command not implemented yet " << std::endl;
+            (void)which_key;
+            std::cout << "\t[Warning] 'key' command not implemented yet ; skipping..." << std::endl;
         }
     }
 };
 
+bool launchCommand(const std::pair<std::string, std::string>& command)
+{
+    const auto& func_it = valid_seq_commands.find(command.first);
+    if (func_it != valid_seq_commands.end()) {
+        (func_it->second)(command.second);
+    } else {
+        std::cerr << "\t[Error] invalid command \"" << command.first << "\"" << std::endl;
+        return false;
+    }
+    return true;
+}
 
 /****** Utility functions ******/
+inline bool file_exists(const std::string& name);
+std::string str_replace_all(std::string str, const std::string& from, const std::string& to);
 
 inline bool file_exists(const std::string& name)
 {
@@ -252,8 +180,18 @@ std::string str_replace_all(std::string str, const std::string& from, const std:
 
 /*******************************/
 
-bool loadConfig(const json11::Json& configJson)
+bool loadJSONConfig(const std::string& jsonContents)
 {
+    std::string jsonError;
+    json11::Json configJson = json11::Json::parse(jsonContents, jsonError);
+    if (jsonError.empty())
+    {
+        std::cout << "[OK] JSON parsed" << std::endl;
+    } else {
+        std::cerr << "[Error] JSON parse error: " << jsonError << std::endl;
+        return -1;
+    }
+
     json11::Json tmp, tmp2;
 
     tmp = configJson["rom"];
@@ -449,106 +387,32 @@ bool loadConfig(const json11::Json& configJson)
     return true;
 }
 
-int main(int argc, char* argv[])
+bool sendFilesForTest()
 {
-    // Used if the coreThread has been started (need to exit properly ; uses gotos)
-    int retVal = 0;
-
-    if (argc != 2)
-    {
-        std::cerr << "[Error] Needs one argument: path to the test config JSON file" << std::endl;
-        return -1;
-    }
-
-    const std::string jsonPath(argv[1]);
-    std::string jsonContents;
-    std::ifstream ifs(jsonPath);
-    if (ifs.good())
-    {
-        std::getline(ifs, jsonContents, '\0');
-        //jsonContents = std::string(std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>());
-        if (!ifs.eof()) {
-            std::cerr << "[Error] Couldn't read JSON file" << std::endl;
-            return -1;
-        }
-    } else {
-        std::cerr << "[Error] Couldn't open JSON file at provided path" << std::endl;
-        return -1;
-    }
-
-    std::string jsonError;
-    json11::Json configJson = json11::Json::parse(jsonContents, jsonError);
-    if (jsonError.empty())
-    {
-        std::cout << "[OK] JSON parsed" << std::endl;
-    } else {
-        std::cerr << "[Error] JSON parse error: " << jsonError << std::endl;
-        return -1;
-    }
-
-    if (loadConfig(configJson))
-    {
-        std::cout << "[OK] Test config loaded and verified" << std::endl;
-    } else {
-        std::cerr << "[Error] -> See the test config file format and make sure values are correct." << std::endl;
-        return -1;
-    }
-
-    /* Someone with better multithreading coding experience should probaly re-do this stuff correctly,
-     * i.e. actually wait until the core is ready to do stuff, instead of blinding doing sleeps, etc.
-     * Things like std::condition_variable should help, IIRC */
-    std::thread coreThread;
-    if (cemucore::emu_start(config.rom.c_str(), NULL))
-    {
-        coreThread = std::thread(&cemucore::emu_loop, true);
-    } else {
-        std::cerr << "[Error] Couldn't start emulation!" << std::endl;
-        return -1;
-    }
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-    /* Clear home screen */
-    sendKey(CE_KEY_Clear);
-
-    /* Send files */
     for (const auto& file : config.transfer_files)
     {
         std::cout << "- Sending file " << file << "... " << std::endl;
         if (!cemucore::sendVariableLink(file.c_str()))
         {
             std::cerr << "[Error] File couldn't be sent" << std::endl;
-            retVal = -1;
-            goto cleanExit;
+            return false;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(150));
     }
+    return true;
+}
 
-    /* Follow sequence */
+bool doTestSequence()
+{
     for (const auto& command : config.sequence)
     {
         std::cout << "Launching command " << command.first << " | " << command.second << std::endl;
-        valid_seq_commands.at(command.first)(command.second);
+        if (!launchCommand(command)) {
+            return false;
+        }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-
-cleanExit:
-    cemucore::exiting = true; // exit outer emu loop
-    cemucore::cpu.next = 0; // exit inner emu loop
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-
-    cemucore::emu_cleanup();
-
-    coreThread.join();
-
-    // If no JSON/program/misc. error, return the hash failure count.
-    if (retVal == 0)
-    {
-        std::cout << "\n*** Final results: out of " << config.hashes.size() << " tests, ";
-        std::cout << (config.hashes.size() - hashFailCount) << " passed, and " << hashFailCount << " failed. ***" << std::endl;
-        return hashFailCount;
-    }
-
-    return retVal;
+    return true;
 }
+
+} // namespace autotester
