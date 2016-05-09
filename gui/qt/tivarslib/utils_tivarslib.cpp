@@ -9,7 +9,7 @@
 #include <sstream>
 #include <iomanip>
 #include <regex>
-#include <unistd.h>
+#include <functional>
 
 using namespace std;
 
