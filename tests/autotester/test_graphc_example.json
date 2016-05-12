@@ -19,13 +19,13 @@
   ],
   "hashes": {
     "1": {
-      "description": "Fill screen in red",
+      "description": "Fill screen in red (TODO: find real hash)",
       "start": "vram_start",
       "size": "vram_8_size",
       "expected_CRCs": [ "A99AE348" ]
     },
     "2": {
-      "description": "Back to the home screen (exit check)",
+      "description": "Back to the home screen (exit check) (TODO: find real hash)",
       "start": "vram_start",
       "size": "vram_16_size",
       "expected_CRCs": [ "6EF61DFC", "97807FAA" ]

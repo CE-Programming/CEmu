@@ -31,18 +31,18 @@ config_t config;
 unsigned int hashFailCount = 0;
 
 
-/* TODO */
-struct coord2d { uint8_t y; uint8_t x; };
+struct coord2d { uint8_t x; uint8_t y; };
 static const std::unordered_map<std::string, coord2d> valid_keys = {
-    { "2nd",    { 3 , 4 } },
-    { "alpha",  { 3 , 4 } },
-    { "mode",   { 3 , 4 } },
-    { "del",    { 3 , 4 } },
-    { "clear",  { 3 , 4 } },
-    { "enter",  { 3 , 4 } }
-    /* ... */
+    { "2nd",    { 5 , 1 } },
+    { "alpha",  { 7 , 2 } },
+    { "mode",   { 6 , 1 } },
+    { "del",    { 7 , 1 } },
+    { "clear",  { 6 , 6 } },
+    { "enter",  { 0 , 6 } }
+    /* TODO: more keys, see KEYMAP_84PCE in keypad.cpp */
 };
-// Those probably have to be refactored in the map above? ^
+
+// Those aren't related to physical keys - they're keycodes for the OS.
 #define CE_KEY_Enter    0x05
 #define CE_KEY_Clear    0x09
 #define CE_KEY_prgm     0xDA
@@ -141,8 +141,16 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
     },
     {
         "key", [](const std::string& which_key) {
-            (void)which_key;
-            std::cout << "\t[Warning] 'key' command not implemented yet ; skipping..." << std::endl;
+            const auto& tmp = valid_keys.find(which_key);
+            if (tmp != valid_keys.end())
+            {
+                const coord2d& key_coords = tmp->second;
+                cemucore::keypad_key_event(key_coords.y, key_coords.x, true);
+                std::this_thread::sleep_for(std::chrono::milliseconds(80));
+                cemucore::keypad_key_event(key_coords.y, key_coords.x, false);
+            } else {
+                std::cerr << "\t[Error] unknown key \"" << which_key << "\" was not pressed." << std::endl;
+            };
         }
     }
 };
