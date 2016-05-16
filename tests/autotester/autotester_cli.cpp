@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 
     if (autotester::loadJSONConfig(jsonContents))
     {
-        std::cout << "[OK] Test config loaded and verified" << std::endl;
+        std::cout << "[OK] Test config loaded and verified. " << autotester::config.hashes.size() << " unique tests found." << std::endl;
     } else {
         std::cerr << "[Error] -> See the test config file format and make sure values are correct." << std::endl;
         return -1;
@@ -126,10 +126,9 @@ cleanExit:
     // If no JSON/program/misc. error, return the hash failure count.
     if (retVal == 0)
     {
-        std::cout << "\n*** Final results: out of " << autotester::config.hashes.size() << " tests, "
-                  << (autotester::config.hashes.size() - autotester::hashFailCount) << " passed, and "
-                  << autotester::hashFailCount << " failed. ***" << std::endl;
-        return autotester::hashFailCount;
+        std::cout << "\n*** Final results: out of " << autotester::hashesTested << " tests attempted, "
+                  << autotester::hashesPassed << " passed, and " << autotester::hashesFailed << " failed. ***" << std::endl;
+        return autotester::hashesFailed;
     }
 
     return retVal;

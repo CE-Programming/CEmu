@@ -5,6 +5,9 @@
  * License: GPLv3
  */
 
+#ifndef AUTOTESTER_H
+#define AUTOTESTER_H
+
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -69,6 +72,13 @@ namespace autotester
 
     /* The global config variable */
     extern config_t config;
+
+    /* Will be incremented in case of matching CRC */
+    extern unsigned int hashesPassed;
     /* Will be incremented in case of non-matching CRC, and used as the return value */
-    extern unsigned int hashFailCount;
+    extern unsigned int hashesFailed;
+    /* Will be incremented at each `hash` command */
+    extern unsigned int hashesTested;
 }
+
+#endif

@@ -27,9 +27,12 @@ namespace autotester
 /* The global config variable */
 config_t config;
 
+/* Will be incremented in case of matching CRC */
+unsigned int hashesPassed = 0;
 /* Will be incremented in case of non-matching CRC, and used as the return value */
-unsigned int hashFailCount = 0;
-
+unsigned int hashesFailed = 0;
+/* Will be incremented at each `hash` command */
+unsigned int hashesTested = 0;
 
 struct coord2d { uint8_t x; uint8_t y; };
 // Note: we could just store the string in a char*[8][8], then search for it and calculate its row/col at runtime, but meh.
@@ -132,11 +135,11 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
                     std::cout << "\t[Test failed!] Hash #" << which_hash << " (\"" << param.description << "\") did not match "
                               << (param.expected_CRCs.size() > 1 ? "any of the expected CRCs" : "the expected CRC")
                               << " (got " << std::uppercase << std::hex << real_hash << std::dec << ")." << std::endl;
-                    hashFailCount++;
+                    hashesFailed++;
                 }
+                hashesTested++;
             } else {
-                std::cerr << "\t[Error] hash #" << which_hash << " was not declared in the JSON file." << std::endl;
-                hashFailCount++;
+                std::cerr << "\t[Error] hash #" << which_hash << " was not declared in the JSON file. Ignoring." << std::endl;
             }
         }
     },
