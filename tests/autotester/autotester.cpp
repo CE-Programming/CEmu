@@ -32,14 +32,15 @@ unsigned int hashFailCount = 0;
 
 
 struct coord2d { uint8_t x; uint8_t y; };
+// Note: we could just store the string in a char*[8][8], then search for it and calculate its row/col at runtime, but meh.
 static const std::unordered_map<std::string, coord2d> valid_keys = {
-    { "2nd",    { 5 , 1 } },
-    { "alpha",  { 7 , 2 } },
-    { "mode",   { 6 , 1 } },
-    { "del",    { 7 , 1 } },
-    { "clear",  { 6 , 6 } },
-    { "enter",  { 0 , 6 } }
-    /* TODO: more keys, see KEYMAP_84PCE in keypad.cpp */
+    {"graph", {0,1}}, {"trace", {1,1}}, { "zoom", {2,1}}, {"window", {3,1}}, {"y=", {4,1}}, {"2nd", {5,1}}, { "mode", {6,1}}, { "del", {7,1}}
+    {   "on", {0,2}}, {  "sto", {1,2}}, {   "ln", {2,2}}, {   "log", {3,2}}, {"^2", {4,2}}, { "-1", {5,2}}, { "math", {6,2}}, {"xton", {7,2}}
+    {    "0", {0,3}}, {    "1", {1,3}}, {    "4", {2,3}}, {     "7", {3,3}}, { ",", {4,3}}, {"sin", {5,3}}, {  "2nd", {6,3}}, { "2nd", {7,3}}
+    {  "(-)", {0,4}}, {    "2", {1,4}}, {    "5", {2,4}}, {     "8", {3,4}}, { "(", {4,4}}, {"cos", {5,4}}, { "prgm", {6,4}}, {"stat", {7,4}}
+    {    ".", {0,5}}, {    "3", {1,5}}, {    "6", {2,5}}, {     "9", {3,5}}, { ")", {4,5}}, {"tan", {5,5}}, { "vars", {6,5}},
+    {"enter", {0,6}}, {    "+", {1,6}}, {    "-", {2,6}}, {     "*", {3,6}}, { "/", {4,6}}, {  "^", {5,6}}, {"clear", {6,6}},
+    { "down", {0,7}}, { "left", {1,7}}, {"right", {2,7}}, {    "up", {3,7}}
 };
 
 // Those aren't related to physical keys - they're keycodes for the OS.
