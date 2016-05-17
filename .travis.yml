@@ -6,8 +6,8 @@ branches:
     - coverity_scan
 
 before_install:
-- sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-- sudo add-apt-repository ppa:beineri/opt-qt551 -y
+- sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y --force-yes
+- sudo add-apt-repository ppa:beineri/opt-qt551 -y --force-yes
 - sudo apt-get update -qq
 
 install:
