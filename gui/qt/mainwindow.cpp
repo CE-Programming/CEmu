@@ -1,4 +1,4 @@
-/* Copyright (C) 2015
+/* Copyright (C) 2015-2016
  * Parts derived from Firebird by Fabian Vogt
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,6 +26,7 @@
 #include <QtGui/QPixmap>
 
 #include <fstream>
+#include <unistd.h>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -45,6 +46,10 @@
 #include "../../core/debug/disasm.h"
 #include "../../core/link.h"
 #include "../../core/os/os.h"
+
+#include "../../tests/autotester/autotester.h"
+#include "autotesterthread.h"
+
 
 static const constexpr int WindowStateVersion = 0;
 
@@ -123,6 +128,12 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonRefreshList, &QPushButton::clicked, this, &MainWindow::refreshVariableList);
     connect(this, &MainWindow::setReceiveState, &emu, &EmuThread::setReceiveState);
     connect(ui->buttonReceiveFiles, &QPushButton::clicked, this, &MainWindow::saveSelected);
+
+    // Autotester
+    connect(&tester, &AutotesterThread::testError, this, &MainWindow::dispAutotesterError, Qt::QueuedConnection);
+    connect(ui->buttonOpenJSONconfig, &QPushButton::clicked, this, &MainWindow::prepareAndOpenJSONConfig);
+    connect(ui->buttonReloadJSONconfig, &QPushButton::clicked, this, &MainWindow::reloadJSONConfig);
+    connect(ui->buttonLaunchTest, &QPushButton::clicked, this, &MainWindow::launchTest);
 
     // Toolbar Actions
     connect(ui->actionSetup, &QAction::triggered, this, &MainWindow::runSetup);
@@ -223,6 +234,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     setUIMode(true);
     setAcceptDrops(true);
     debuggerOn = false;
+
+    autotester::stepCallback = []() { QApplication::processEvents(); };
 
     settings = new QSettings(QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + QStringLiteral("/CEmu/cemu_config.ini"), QSettings::IniFormat);
 
@@ -1064,6 +1077,105 @@ void MainWindow::saveSelected() {
     }
 }
 
+/* ================================================ */
+/* Autotester Things                                */
+/* ================================================ */
+
+void MainWindow::dispAutotesterError(int errCode) {
+    QString errMsg;
+    switch (errCode) {
+        case -1:
+            errMsg = tr("Error. No config loaded");
+            break;
+        case 1:
+            errMsg = tr("Error. Couldn't follow the test sequence defined in the configuration");
+            break;
+        default:
+            errMsg = tr("Error. Unknown one - wat?");
+            break;
+    }
+    QMessageBox::warning(this, tr("Autotester error"), errMsg);
+}
+
+
+void MainWindow::openJSONConfig(const QString& jsonPath) {
+    std::string jsonContents;
+    std::ifstream ifs(jsonPath.toStdString());
+    if (ifs.good())
+    {
+        ui->buttonReloadJSONconfig->setEnabled(true);
+        chdir(QDir::toNativeSeparators(QFileInfo(jsonPath).absoluteDir().path()).toStdString().c_str());
+        std::getline(ifs, jsonContents, '\0');
+        if (!ifs.eof()) {
+            QMessageBox::warning(this, tr("File error"), tr("Couldn't read JSON file."));
+            return;
+        }
+    } else {
+        ui->buttonReloadJSONconfig->setEnabled(false);
+        QMessageBox::warning(this, tr("Opening error"), tr("Unable to open the file."));
+        return;
+    }
+
+    if (autotester::loadJSONConfig(jsonContents))
+    {
+        ui->JSONconfigPath->setText(jsonPath);
+        ui->buttonLaunchTest->setEnabled(true);
+        std::cout << "[OK] Test config loaded and verified. " << autotester::config.hashes.size() << " unique tests found." << std::endl;
+    } else {
+        QMessageBox::warning(this, tr("JSON format error"), tr("Error. See the test config file format and make sure values are correct and referenced files are there."));
+        return;
+    }
+}
+
+void MainWindow::prepareAndOpenJSONConfig() {
+    QFileDialog dialog(this);
+
+    ui->buttonLaunchTest->setEnabled(false);
+
+    dialog.setDirectory(QDir::homePath());
+    dialog.setFileMode(QFileDialog::ExistingFile);
+    dialog.setNameFilter(QStringLiteral("JSON config (*.json)"));
+    if (!dialog.exec()) {
+        return;
+    }
+
+    openJSONConfig(dialog.selectedFiles().at(0));
+}
+
+void MainWindow::reloadJSONConfig() {
+    openJSONConfig(ui->JSONconfigPath->text());
+}
+
+void MainWindow::launchTest() {
+    if (!autotester::configLoaded) {
+        dispAutotesterError(-1);
+        return;
+    }
+
+    if (ui->checkBoxTestReset->isChecked()) {
+        resetCalculator();
+        QThread::msleep(1000);
+    }
+
+    if (ui->checkBoxTestClear->isChecked()) {
+        // Clear home screen
+        autotester::sendKey(0x09);
+    }
+
+    QStringList filesList;
+    for (const auto& file : autotester::config.transfer_files) {
+        filesList << QString::fromStdString(file);
+    }
+    sendFiles(filesList);
+    QThread::msleep(200);
+
+    autotester_thread->launchActualTest();
+}
+
+/* ================================================ */
+/* Debugger Things                                  */
+/* ================================================ */
+
 void MainWindow::setFont(int fontSize) {
     ui->textSizeSlider->setValue(fontSize);
     settings->setValue(QStringLiteral("textSize"), ui->textSizeSlider->value());
@@ -1099,10 +1211,6 @@ void MainWindow::setFont(int fontSize) {
     ui->lcdbaseView->setFont(monospace);
     ui->lcdcurrView->setFont(monospace);
 }
-
-/* ================================================ */
-/* Debugger Things                                  */
-/* ================================================ */
 
 static int hex2int(QString str) {
     return std::stoi(str.toStdString(), nullptr, 16);
