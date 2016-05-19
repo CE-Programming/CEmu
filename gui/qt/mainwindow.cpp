@@ -48,7 +48,6 @@
 #include "../../core/os/os.h"
 
 #include "../../tests/autotester/autotester.h"
-#include "autotesterthread.h"
 
 
 static const constexpr int WindowStateVersion = 0;
@@ -130,7 +129,6 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonReceiveFiles, &QPushButton::clicked, this, &MainWindow::saveSelected);
 
     // Autotester
-    connect(&tester, &AutotesterThread::testError, this, &MainWindow::dispAutotesterError, Qt::QueuedConnection);
     connect(ui->buttonOpenJSONconfig, &QPushButton::clicked, this, &MainWindow::prepareAndOpenJSONConfig);
     connect(ui->buttonReloadJSONconfig, &QPushButton::clicked, this, &MainWindow::reloadJSONConfig);
     connect(ui->buttonLaunchTest, &QPushButton::clicked, this, &MainWindow::launchTest);
@@ -1169,7 +1167,11 @@ void MainWindow::launchTest() {
     sendFiles(filesList);
     QThread::msleep(200);
 
-    autotester_thread->launchActualTest();
+    // Follow the sequence
+    if (!autotester::doTestSequence()) {
+        dispAutotesterError(1);
+        return;
+    }
 }
 
 /* ================================================ */

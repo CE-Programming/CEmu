@@ -5,7 +5,7 @@ if (0) { # GitHub release/deployment build. Has to correspond to the git tag.
     DEFINES += CEMU_VERSION=\\\"1.0\\\"
 } else { # Development build. Used in the about screen
     GIT_VERSION = $$system(git describe --abbrev=7 --dirty --always --tags)
-    DEFINES += CEMU_VERSION=\\\"0.4dev_$$GIT_VERSION\\\"
+    DEFINES += CEMU_VERSION=\\\"0.5dev_$$GIT_VERSION\\\"
 }
 
 # Code beautifying
@@ -85,7 +85,6 @@ SOURCES +=  utils.cpp \
     tivarslib/utils_tivarslib.cpp \
     tivarslib/TypeHandlers/TH_0x00.cpp \
     tivarslib/TypeHandlers/TH_0x05.cpp \
-    autotesterthread.cpp \
     ../../tests/autotester/autotester.cpp \
     ../../core/asic.c \
     ../../core/cpu.c \
@@ -142,7 +141,6 @@ HEADERS  +=  utils.h \
     tivarslib/TypeHandlers/TH_0x04.h \
     tivarslib/TypeHandlers/TH_0x05.h \
     tivarslib/TypeHandlers/TH_0x06.h \
-    autotesterthread.h \
     ../../tests/autotester/autotester.h \
     ../../core/asic.h \
     ../../core/cpu.h \

@@ -12,7 +12,6 @@
 #include "lcdwidget.h"
 #include "romselection.h"
 #include "emuthread.h"
-#include "autotesterthread.h"
 #include "../../core/vat.h"
 #include "../../core/debug/debug.h"
 #include "../../core/debug/disasm.h"
@@ -227,7 +226,6 @@ private:
     QDir currentDir;
     QString currentEquateFile;
     EmuThread emu;
-    AutotesterThread tester;
 
     bool debuggerOn = false;
     bool inReceivingMode = false;
