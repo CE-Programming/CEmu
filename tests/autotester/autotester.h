@@ -70,8 +70,13 @@ namespace autotester
 
     bool doTestSequence();
 
+    /* Optional callback function called after each step (useful for GUIs) */
+    extern void (*stepCallback)(void);
+
     /* The global config variable */
     extern config_t config;
+
+    extern bool configLoaded;
 
     /* Will be incremented in case of matching CRC */
     extern unsigned int hashesPassed;

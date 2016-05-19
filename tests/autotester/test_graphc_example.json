@@ -6,7 +6,7 @@
     "demo1.8xp"
   ],
   "target": {
-    "name": "DEMO1",
+    "name": "PROG01",
     "isASM": false
   },
   "sequence": [

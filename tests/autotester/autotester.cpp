@@ -27,6 +27,11 @@ namespace autotester
 /* The global config variable */
 config_t config;
 
+bool configLoaded = false;
+void (*stepCallback)(void) = nullptr;
+
+#define DO_STEP_CALLBACK()  if (stepCallback) { stepCallback(); }
+
 /* Will be incremented in case of matching CRC */
 unsigned int hashesPassed = 0;
 /* Will be incremented in case of non-matching CRC, and used as the return value */
@@ -63,13 +68,15 @@ void sendKey(uint16_t key)
     cemucore::mem_poke_byte(0xD0009F, (uint8_t)(cemucore::mem_peek_byte(0xD0009F) | 0x20)); // TODO: name 0xD0009F (= flags+graphFlags2 = 0xD00080+0x1F)
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    DO_STEP_CALLBACK();
 }
 
 void sendLetterKeyPress(char letter)
 {
     uint16_t val;
     if (letter != '@') { // @ is actually theta (replaced earlier)
-        val = (uint16_t)(0x9A + letter - 'A');
+        // Handles A-Z and 0-9
+        val = (uint16_t)((letter >= 'A' && letter <= 'Z') ? (0x9A + letter - 'A') : (0x8E + letter - '0'));
     } else {
         val = 0xCC; // theta
     }
@@ -204,6 +211,8 @@ bool loadJSONConfig(const std::string& jsonContents)
         std::cerr << "[Error] JSON parse error: " << jsonError << std::endl;
         return -1;
     }
+
+    config = config_t();
 
     json11::Json tmp, tmp2;
 
@@ -397,6 +406,7 @@ bool loadJSONConfig(const std::string& jsonContents)
         return false;
     }
 
+    configLoaded = true;
     return true;
 }
 
@@ -410,6 +420,7 @@ bool sendFilesForTest()
             std::cerr << "[Error] File couldn't be sent" << std::endl;
             return false;
         }
+        DO_STEP_CALLBACK();
         std::this_thread::sleep_for(std::chrono::milliseconds(150));
     }
     return true;
@@ -423,6 +434,7 @@ bool doTestSequence()
         if (!launchCommand(command)) {
             return false;
         }
+        DO_STEP_CALLBACK();
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     return true;
