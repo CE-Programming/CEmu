@@ -26,7 +26,13 @@
 #include <QtGui/QPixmap>
 
 #include <fstream>
-#include <unistd.h>
+
+#ifdef _MSC_VER
+    #include <direct.h>
+    #define chdir _chdir
+#else
+    #include <unistd.h>
+#endif
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
