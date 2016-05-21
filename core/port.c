@@ -4,6 +4,9 @@
 /* Global APB state */
 eZ80portrange_t port_map[0x10];
 
+#define port_range(a) (((a)>>12)&0xF) /* converts an address to a port range 0x0-0xF */
+#define addr_range(a) ((a)&0xFFF)     /* converts an address to a port range value 0x000-0xFFF */
+
 uint8_t port_peek_byte(uint16_t address) {
     return port_map[port_range(address)].read_in(addr_range(address));
 }
