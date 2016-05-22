@@ -249,6 +249,9 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="focusPolicy">
+             <enum>Qt::TabFocus</enum>
+            </property>
             <property name="text">
              <string>Send files to calculator...</string>
             </property>
@@ -278,6 +281,9 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="focusPolicy">
+             <enum>Qt::TabFocus</enum>
+            </property>
             <property name="text">
              <string>Refresh variable list...</string>
             </property>
@@ -293,6 +299,9 @@
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
+            </property>
+            <property name="focusPolicy">
+             <enum>Qt::TabFocus</enum>
             </property>
             <property name="text">
              <string>Save selected</string>
@@ -1316,7 +1325,7 @@
              </sizepolicy>
             </property>
             <property name="text">
-             <string>Step In</string>
+             <string>Step</string>
             </property>
             <property name="icon">
              <iconset resource="resources.qrc">
@@ -1426,7 +1435,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>0</number>
           </property>
           <property name="tabsClosable">
            <bool>false</bool>
@@ -5824,6 +5833,10 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/rom.png</normaloff>:/icons/resources/icons/rom.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>Autotester</string>
        </attribute>
@@ -6202,7 +6215,7 @@
      <x>0</x>
      <y>0</y>
      <width>1288</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="sizePolicy">
