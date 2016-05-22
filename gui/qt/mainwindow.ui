@@ -148,7 +148,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>7</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideNone</enum>
@@ -5792,7 +5792,7 @@
           <item>
            <widget class="QRadioButton" name="radioConsole">
             <property name="text">
-             <string>console</string>
+             <string>dock</string>
             </property>
             <property name="checked">
              <bool>true</bool>
@@ -5805,7 +5805,17 @@
           <item>
            <widget class="QRadioButton" name="radioStderr">
             <property name="text">
-             <string>stderr</string>
+             <string>console</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkAutoScroll">
+            <property name="text">
+             <string>Auto scroll</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
           </item>

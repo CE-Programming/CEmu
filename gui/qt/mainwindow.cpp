@@ -316,6 +316,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     alwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toUInt());
     restoreGeometry(settings->value(QStringLiteral("windowGeometry")).toByteArray());
     restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
+    console_format = ui->console->currentCharFormat();
 
     QPixmap pix;
 
@@ -520,13 +521,21 @@ void MainWindow::closeEvent(QCloseEvent *e) {
     QMainWindow::closeEvent(e);
 }
 
+void MainWindow::appendToConsole(QString str, QColor color) {
+    QTextCursor cur(ui->console->document());
+    cur.movePosition(QTextCursor::End);
+    console_format.setForeground(color);
+    cur.insertText(str, console_format);
+    if (ui->checkAutoScroll->isChecked()) {
+        ui->console->setTextCursor(cur);
+    }
+}
+
 void MainWindow::consoleStr(QString str) {
     if (stderrConsole) {
         fputs(str.toStdString().c_str(), stdout);
     } else {
-        ui->console->moveCursor(QTextCursor::End);
-        ui->console->insertPlainText(str);
-        ui->console->moveCursor(QTextCursor::End);
+        appendToConsole(str);
     }
 }
 
@@ -534,9 +543,7 @@ void MainWindow::errConsoleStr(QString str) {
     if (stderrConsole) {
         fputs(str.toStdString().c_str(), stderr);
     } else {
-        str.replace("\n","<br/>");
-        ui->console->textCursor().movePosition(QTextCursor::End);
-        ui->console->textCursor().insertHtml(QString("<font color='#c00'>%1</font>").arg(str));
+        appendToConsole(str, Qt::red);
     }
 }
 

@@ -150,6 +150,7 @@ private:
     // Console
     void showStatusMsg(QString);
     void consoleOutputChanged();
+    void appendToConsole(QString str, QColor color = Qt::black);
 
     // Settings
     void adjustScreen();
@@ -247,6 +248,7 @@ private:
 
     QList<calc_var_t> vars;
     QIcon runIcon, stopIcon; // help speed up stepping
+    QTextCharFormat console_format;
 };
 
 // Used as global instance by EmuThread and Debugger class
