@@ -534,9 +534,9 @@ void MainWindow::errConsoleStr(QString str) {
     if (stderrConsole) {
         fputs(str.toStdString().c_str(), stderr);
     } else {
-        ui->console->moveCursor(QTextCursor::End);
-        ui->console->insertPlainText("[ERROR] "+str);
-        ui->console->moveCursor(QTextCursor::End);
+        str.replace("\n","<br/>");
+        ui->console->textCursor().movePosition(QTextCursor::End);
+        ui->console->textCursor().insertHtml(QString("<font color='#c00'>%1</font>").arg(str));
     }
 }
 

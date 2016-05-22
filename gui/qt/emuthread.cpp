@@ -196,6 +196,12 @@ void EmuThread::doStuff() {
         debugger.currentBuffPos = 0;
     }
 
+    if(debugger.currentErrBuffPos) {
+        debugger.errBuffer[debugger.currentErrBuffPos] = '\0';
+        emu_thread->errConsoleStr(QString(debugger.errBuffer));
+        debugger.currentErrBuffPos = 0;
+    }
+
     lastTime += std::chrono::steady_clock::now() - cur_time;
 }
 

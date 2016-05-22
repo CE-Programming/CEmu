@@ -14,8 +14,9 @@ void debugger_init(void) {
     debugger.stepOverInstrEnd = -1;
     debugger.data.block = (uint8_t*)calloc(0x1000000, sizeof(uint8_t));    /* Allocate Debug memory */
     debugger.data.ports = (uint8_t*)calloc(0x10000, sizeof(uint8_t));      /* Allocate Debug Port Monitor */
-    debugger.buffer = (char*)calloc(SIZEOF_DBG_BUFFER, sizeof(char));    /* Used for printing to the console */
-    debugger.currentBuffPos = 0;
+    debugger.buffer = (char*)malloc(SIZEOF_DBG_BUFFER * sizeof(char));     /* Used for printing to the console */
+    debugger.errBuffer = (char*)malloc(SIZEOF_DBG_BUFFER * sizeof(char));  /* Used for printing to the console */
+    debugger.currentBuffPos = debugger.currentErrBuffPos = 0;
 
     debugger.runUntilSet = false;
     gui_console_printf("[CEmu] Initialized Debugger...\n");
