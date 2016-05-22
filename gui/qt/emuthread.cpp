@@ -102,7 +102,7 @@ EmuThread::EmuThread(QObject *p) : QThread(p) {
     emu_thread = this;
     lcd_event_gui_callback = gif_new_frame;
     speed = actualSpeed = 100;
-    lastTime= std::chrono::steady_clock::now();
+    lastTime = std::chrono::steady_clock::now();
     connect(&speedUpdateTimer, SIGNAL(timeout()), this, SLOT(sendActualSpeed()));
 }
 
@@ -133,7 +133,7 @@ void EmuThread::setSendState(bool state) {
 
 void EmuThread::setReceiveState(bool state) {
     enterReceiveState = state;
-    emu_is_recieving = state;
+    emu_is_receiving = state;
 }
 
 void EmuThread::setDebugStepInMode() {
@@ -188,6 +188,12 @@ void EmuThread::doStuff() {
     if (enterDebugger) {
         enterDebugger = false;
         open_debugger(DBG_USER, 0);
+    }
+
+    if(debugger.currentBuffPos) {
+        debugger.buffer[debugger.currentBuffPos] = '\0';
+        emu_thread->consoleStr(QString(debugger.buffer));
+        debugger.currentBuffPos = 0;
     }
 
     lastTime += std::chrono::steady_clock::now() - cur_time;

@@ -10,7 +10,7 @@ extern "C" {
 #include "vat.h"
 
 extern volatile bool emu_is_sending;
-extern volatile bool emu_is_recieving;
+extern volatile bool emu_is_receiving;
 
 void enterVariableLink(void);
 bool listVariablesLink(void);

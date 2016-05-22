@@ -5,7 +5,7 @@ if (0) { # GitHub release/deployment build. Has to correspond to the git tag.
     DEFINES += CEMU_VERSION=\\\"1.0\\\"
 } else { # Development build. Used in the about screen
     GIT_VERSION = $$system(git describe --abbrev=7 --dirty --always --tags)
-    DEFINES += CEMU_VERSION=\\\"0.4dev_$$GIT_VERSION\\\"
+    DEFINES += CEMU_VERSION=\\\"0.5dev_$$GIT_VERSION\\\"
 }
 
 # Code beautifying
@@ -74,12 +74,18 @@ SOURCES +=  utils.cpp \
     qtkeypadbridge.cpp \
     qmlbridge.cpp \
     keymap.cpp \
+    datawidget.cpp \
+    lcdpopout.cpp \
+    searchwidget.cpp \
+    basiccodeviewerwindow.cpp \
     qhexedit/chunks.cpp \
     qhexedit/commands.cpp \
     qhexedit/qhexedit.cpp \
+    capture/gif.cpp \
     tivarslib/utils_tivarslib.cpp \
     tivarslib/TypeHandlers/TH_0x00.cpp \
     tivarslib/TypeHandlers/TH_0x05.cpp \
+    ../../tests/autotester/autotester.cpp \
     ../../core/asic.c \
     ../../core/cpu.c \
     ../../core/keypad.c \
@@ -100,14 +106,9 @@ SOURCES +=  utils.cpp \
     ../../core/mem.c \
     ../../core/link.c \
     ../../core/vat.c \
+    ../../core/emu.c \
     ../../core/debug/disasm.cpp \
     ../../core/debug/debug.c \
-    ../../core/emu.c \
-    capture/gif.cpp \
-    datawidget.cpp \
-    lcdpopout.cpp \
-    searchwidget.cpp \
-    basiccodeviewerwindow.cpp \
     ../../core/debug/stepping.cpp
 
 linux|macx|ios: SOURCES += ../../core/os/os-linux.c
@@ -122,9 +123,15 @@ HEADERS  +=  utils.h \
     qtkeypadbridge.h \
     qmlbridge.h \
     keymap.h \
+    datawidget.h \
+    lcdpopout.h \
+    searchwidget.h \
+    basiccodeviewerwindow.h \
     qhexedit/chunks.h \
     qhexedit/commands.h \
     qhexedit/qhexedit.h \
+    capture/gif.h \
+    capture/giflib.h \
     tivarslib/autoloader.h \
     tivarslib/utils_tivarslib.h \
     tivarslib/TypeHandlers/TypeHandlerFuncGetter.h \
@@ -134,6 +141,7 @@ HEADERS  +=  utils.h \
     tivarslib/TypeHandlers/TH_0x04.h \
     tivarslib/TypeHandlers/TH_0x05.h \
     tivarslib/TypeHandlers/TH_0x06.h \
+    ../../tests/autotester/autotester.h \
     ../../core/asic.h \
     ../../core/cpu.h \
     ../../core/defines.h \
@@ -157,15 +165,9 @@ HEADERS  +=  utils.h \
     ../../core/mem.h \
     ../../core/link.h \
     ../../core/vat.h \
+    ../../core/os/os.h \
     ../../core/debug/debug.h \
     ../../core/debug/disasm.h \
-    ../../core/os/os.h \
-    capture/gif.h \
-    capture/giflib.h \
-    datawidget.h \
-    lcdpopout.h \
-    searchwidget.h \
-    basiccodeviewerwindow.h \
     ../../core/debug/stepping.h
 
 FORMS    += mainwindow.ui \

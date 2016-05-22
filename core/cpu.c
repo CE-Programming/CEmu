@@ -795,14 +795,10 @@ static void cpu_execute_bli() {
 
 #ifdef DEBUG_SUPPORT
     if (cpuEvents & EVENT_DEBUG_STEP_OVER) {
-        uint32_t breakpooint = (r->PC + 2 + cpu.SUFFIX)&0xFFFFFF;
-        if (cpu.inBlock && !(debugger.data.block[breakpooint] & DBG_STEP_OVER_BREAKPOINT)) {
-            cpuEvents &= ~EVENT_DEBUG_STEP;
-            //fprintf(stderr,"[stepOver] set breakpoint at 0x%08X\n",breakpooint);
-            debugger.data.block[breakpooint] |= DBG_STEP_OVER_BREAKPOINT;
-        }
+        cpuEvents &= ~EVENT_DEBUG_STEP;
     }
 #endif
+
 }
 
 void cpu_init(void) {
@@ -1132,27 +1128,31 @@ void cpu_execute(void) {
                                     w = cpu_index_address();
                                     context.opcode = cpu_fetch_byte();
                                     r->R += ~cpu.PREFIX & 2;
-                                    old = cpu_read_reg_prefetched(context.z, w);
-                                    switch (context.x) {
-                                        case 0: // rot[y] r[z]
-                                            cpu_execute_rot(context.y, context.z, w, old);
-                                            break;
-                                        case 1: // BIT y, r[z]
-                                            old &= (1 << context.y);
-                                            r->F = cpuflag_sign_b(old) | cpuflag_zero(old) | cpuflag_undef(r->F)
-                                               | cpuflag_parity(old) | cpuflag_c(r->flags.C)
-                                               | FLAG_H;
-                                            break;
-                                        case 2: // RES y, r[z]
-                                            cpu.cycles += context.z == 6;
-                                            old &= ~(1 << context.y);
-                                            cpu_write_reg_prefetched(context.z, w, old);
-                                            break;
-                                        case 3: // SET y, r[z]
-                                            cpu.cycles += context.z == 6;
-                                            old |= 1 << context.y;
-                                            cpu_write_reg_prefetched(context.z, w, old);
-                                            break;
+                                    if (cpu.PREFIX && context.z != 6) { // OPCODETRAP
+                                        cpu_trap_rewind(2);
+                                    } else {
+                                        old = cpu_read_reg_prefetched(context.z, w);
+                                        switch (context.x) {
+                                            case 0: // rot[y] r[z]
+                                                cpu_execute_rot(context.y, context.z, w, old);
+                                                break;
+                                            case 1: // BIT y, r[z]
+                                                old &= (1 << context.y);
+                                                r->F = cpuflag_sign_b(old) | cpuflag_zero(old) | cpuflag_undef(r->F)
+                                                    | cpuflag_parity(old) | cpuflag_c(r->flags.C)
+                                                    | FLAG_H;
+                                                break;
+                                            case 2: // RES y, r[z]
+                                                cpu.cycles += context.z == 6;
+                                                old &= ~(1 << context.y);
+                                                cpu_write_reg_prefetched(context.z, w, old);
+                                                break;
+                                            case 3: // SET y, r[z]
+                                                cpu.cycles += context.z == 6;
+                                                old |= 1 << context.y;
+                                                cpu_write_reg_prefetched(context.z, w, old);
+                                                break;
+                                        }
                                     }
                                     break;
                                 case 2: // OUT (n), A
@@ -1220,15 +1220,14 @@ void cpu_execute(void) {
                                             switch (context.x) {
                                                 case 0:
                                                     switch (context.z) {
-                                                        case 0:
-                                                            if (context.y == 6) { // OPCODETRAP
-                                                                cpu_trap();
-                                                            } else { // IN0 r[y], (n)
-                                                                cpu_write_reg(context.y, new = cpu_read_in(cpu_fetch_byte()));
-                                                                r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
-                                                                    | cpuflag_undef(r->F) | cpuflag_parity(new)
-                                                                    | cpuflag_c(r->flags.C);
+                                                        case 0: // IN0 r[y], (n)
+                                                            new = cpu_read_in(cpu_fetch_byte());
+                                                            if (context.y != 6) {
+                                                                cpu_write_reg(context.y, new);
                                                             }
+                                                            r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
+                                                                | cpuflag_undef(r->F) | cpuflag_parity(new)
+                                                                | cpuflag_c(r->flags.C);
                                                             break;
                                                          case 1:
                                                             if (context.y == 6) { // LD IY, (HL)
@@ -1272,15 +1271,14 @@ void cpu_execute(void) {
                                                     break;
                                                 case 1:
                                                     switch (context.z) {
-                                                        case 0:
-                                                            if (context.y == 6) { // OPCODETRAP (ADL)
-                                                                cpu_trap();
-                                                            } else { // IN r[y], (BC)
-                                                                cpu_write_reg(context.y, new = cpu_read_in(r->BC));
-                                                                r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
-                                                                    | cpuflag_undef(r->F) | cpuflag_parity(new)
-                                                                    | cpuflag_c(r->flags.C);
+                                                        case 0: // IN r[y], (BC)
+                                                            new = cpu_read_in(r->BC);
+                                                            if (context.y != 6) {
+                                                                cpu_write_reg(context.y, new);
                                                             }
+                                                            r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
+                                                                | cpuflag_undef(r->F) | cpuflag_parity(new)
+                                                                | cpuflag_c(r->flags.C);
                                                             break;
                                                         case 1:
                                                             if (context.y == 6) { // OPCODETRAP (ADL)
@@ -1475,9 +1473,6 @@ void cpu_execute(void) {
                                                             break;
                                                         case 0xD7: // LD HL, I
                                                             r->HL = cpu_mask_mode(r->I | (r->MBASE << 16), cpu.L);
-                                                            break;
-                                                        case 0xEE: // flash erase
-                                                            memset(mem.flash.block + (r->HL & ~0x3FFF), 0xFF, 0x4000);
                                                             break;
                                                         default:   // OPCODETRAP
                                                             cpu_trap();

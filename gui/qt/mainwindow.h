@@ -168,6 +168,13 @@ private:
     void variableClicked(QTableWidgetItem*);
     void saveSelected();
 
+    // Autotester
+    void dispAutotesterError(int errCode);
+    void openJSONConfig(const QString& jsonPath);
+    void prepareAndOpenJSONConfig();
+    void reloadJSONConfig();
+    void launchTest();
+
     // Hex Editor
     void flashUpdate();
     void flashGotoPressed();

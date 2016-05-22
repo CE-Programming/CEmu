@@ -50,7 +50,8 @@
  * will be exact for +/- 275 years.)
  */
 
-#pragma once
+#ifndef JSON11_HPP
+#define JSON11_HPP
 
 #include <string>
 #include <vector>
@@ -959,3 +960,5 @@ bool Json::has_shape(const shape & types, string & err) const {
 }
 
 } // namespace json11
+
+#endif

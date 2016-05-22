@@ -63,6 +63,7 @@ extern uint32_t cpuEvents;
 
 /* Settings */
 extern volatile bool exiting;
+extern volatile bool emulationPaused;
 
 /* Reimplemented GUI callbacks */
 void gui_do_stuff(void);

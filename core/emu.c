@@ -32,6 +32,7 @@
 
 uint32_t cpuEvents;
 volatile bool exiting;
+volatile bool emulationPaused;
 
 void throttle_interval_event(int index) {
     event_repeat(index, 27000000 / 60);
@@ -325,6 +326,7 @@ static void emu_reset(void) {
 }
 
 static void emu_main_loop_inner(void) {
+    if (!emulationPaused) {
         if (cpuEvents & EVENT_RESET) {
             gui_console_printf("[CEmu] Calculator reset triggered...\n");
             cpu_reset();
@@ -342,6 +344,9 @@ static void emu_main_loop_inner(void) {
         } else {
             gui_emu_sleep();
         }
+    } else {
+        gui_emu_sleep();
+    }
 }
 
 void emu_loop(bool reset) {
@@ -350,6 +355,7 @@ void emu_loop(bool reset) {
     }
 
     exiting = false;
+    emulationPaused = false;
 
 #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(emu_main_loop_inner, 0, 1);

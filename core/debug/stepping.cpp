@@ -9,7 +9,6 @@
 
 void debug_set_step_next(void) {
     debug_clear_step_over();
-    debugger.stepOverRequested = false;
     disasm.base_address = cpu.registers.PC;
     //fprintf(stderr, "[setDebugStepNextMode] disasm.base_address=0x%08x\n", disasm.base_address);
     disasm.adl = cpu.ADL;
@@ -28,22 +27,27 @@ void debug_set_step_next(void) {
 void debug_set_step_in(void) {
     debug_clear_step_over();
     debugger.stepOverFirstStep = false;
-    debugger.stepOverRequested = true;
     //fprintf(stderr, "[setDebugStepInMode] stepOverFirstStep=false\n");
     cpuEvents |= EVENT_DEBUG_STEP;
 }
 
 void debug_set_step_over(void) {
     debug_clear_step_over();
+    disasm.base_address = cpu.registers.PC;
+    //fprintf(stderr, "[setDebugStepNextMode] disasm.base_address=0x%08x\n", disasm.base_address);
+    disasm.adl = cpu.ADL;
+    disassembleInstruction();
+    debugger.stepOverInstrEnd = disasm.new_address;
+    debugger.data.block[debugger.stepOverInstrEnd] |= DBG_STEP_OVER_BREAKPOINT;
+    debugger.stepOverMode = cpu.ADL;
     debugger.stepOverFirstStep = false;
-    debugger.stepOverRequested = false;
+    debugger.stepOverCall = true;
     //fprintf(stderr, "[setDebugStepOverMode] stepOverFirstStep=false\n");
     cpuEvents |= EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OVER;
 }
 
 void debug_set_step_out(void) {
     debug_clear_step_over();
-    debugger.stepOverRequested = false;
     debugger.stepOverFirstStep = true;
     debugger.stepOutSPL = cpu.registers.SPL + 1;
     debugger.stepOutSPS = cpu.registers.SPS + 1;

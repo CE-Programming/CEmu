@@ -11,8 +11,8 @@ before_install:
 - sudo apt-get update -qq
 
 install:
-- sudo apt-get install -qq g++-5 gcc-5; export CXX="g++-5" CC="gcc-5"; $CXX --version
-- sudo apt-get install -qq qt55base qt55declarative; source /opt/qt55/bin/qt55-env.sh
+- sudo apt-get install -y --force-yes -qq g++-5 gcc-5; export CXX="g++-5" CC="gcc-5"; $CXX --version
+- sudo apt-get install -y --force-yes -qq qt55base qt55declarative; source /opt/qt55/bin/qt55-env.sh
 
 script:
   - mkdir build

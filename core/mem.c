@@ -8,6 +8,10 @@
 #include "control.h"
 #include "debug/debug.h"
 
+#define mmio_mapped(address, select) ((address) < (((select) = (address) >> 6 & 0x4000) ? 0xFB0000 : 0xE40000))
+#define mmio_port(address, select) (0x1000 + (select) + ((address) >> 4 & 0xf000) + ((address) & 0xfff))
+
+
 /* Global MEMORY state */
 mem_state_t mem;
 
@@ -346,7 +350,7 @@ static void flash_write_handler(uint32_t address, uint8_t byte) {
 uint8_t mem_read_byte(uint32_t address) {
     static const uint8_t mmio_readcycles[0x20] = {2,2,4,3,2,2,2,2,2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2};
     uint8_t value = 0;
-    uint32_t ramAddress;
+    uint32_t ramAddress, select;
 
     address &= 0xFFFFFF;
 #ifdef DEBUG_SUPPORT
@@ -378,7 +382,9 @@ uint8_t mem_read_byte(uint32_t address) {
         /* MMIO <-> Advanced Perphrial Bus */
         case 0xE: case 0xF:
             cpu.cycles += mmio_readcycles[(address >> 16) & 0x1F];
-            value = (address > 0xFAFFFF) ? 0 : port_read_byte(mmio_range(address)<<12 | addr_range(address));
+            if (mmio_mapped(address, select)) {
+                value = port_read_byte(mmio_port(address, select));
+            }
             break;
     }
     return value;
@@ -386,7 +392,7 @@ uint8_t mem_read_byte(uint32_t address) {
 
 void mem_write_byte(uint32_t address, uint8_t value) {
     static const uint8_t mmio_writecycles[0x20] = {2,2,4,2,2,2,2,2,2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2};
-    uint32_t ramAddress;
+    uint32_t ramAddress, select;
     address &= 0xFFFFFF;
 
     switch((address >> 20) & 0xF) {
@@ -423,24 +429,16 @@ void mem_write_byte(uint32_t address, uint8_t value) {
                 break;
             } else if ((address >= DBGOUT_PORT_RANGE && address < DBGOUT_PORT_RANGE+SIZEOF_DBG_BUFFER-1) ||
                        (address >= DBGERR_PORT_RANGE && address < DBGERR_PORT_RANGE+SIZEOF_DBG_BUFFER-1)) {
-                debugger.buffer[debugger.currentBuffPos] = (char)value;
-                debugger.currentBuffPos = (debugger.currentBuffPos + 1) % (SIZEOF_DBG_BUFFER);
-                if (value == 0) {
-                    unsigned x;
-                    debugger.currentBuffPos = 0;
-                    if (address >= DBGERR_PORT_RANGE) {
-                        gui_console_err_printf("%s",debugger.buffer);
-                    } else {
-                        gui_console_printf("%s",debugger.buffer);
-                    }
-                    for(x=0; x<6; x++) {
-                        gui_emu_sleep();
-                    }
+                if (value != 0) {
+                    debugger.buffer[debugger.currentBuffPos] = (char)value;
+                    debugger.currentBuffPos = (debugger.currentBuffPos + 1) % (SIZEOF_DBG_BUFFER);
                 }
                 break;
             }
 #endif
-            port_write_byte(mmio_range(address)<<12 | addr_range(address), value);
+            if (mmio_mapped(address, select)) {
+                port_write_byte(mmio_port(address, select), value);
+            }
             break;
     }
 #ifdef DEBUG_SUPPORT
@@ -452,13 +450,14 @@ void mem_write_byte(uint32_t address, uint8_t value) {
 
 uint8_t mem_peek_byte(uint32_t address) {
     uint8_t *ptr, value = 0;
+    uint32_t select;
     address &= 0xFFFFFF;
     if (address < 0xE00000) {
         if ((ptr = phys_mem_ptr(address, 1))) {
             value = *ptr;
         }
-    } else {
-        value = port_peek_byte(mmio_range(address)<<12 | addr_range(address));
+    } else if (mmio_mapped(address, select)) {
+        value = port_peek_byte(mmio_port(address, select));
     }
     return value;
 }
@@ -477,13 +476,14 @@ uint32_t mem_peek_word(uint32_t address, bool mode) {
 
 void mem_poke_byte(uint32_t address, uint8_t value) {
     uint8_t *ptr;
+    uint32_t select;
     address &= 0xFFFFFF;
     if (address < 0xE00000) {
         if ((ptr = phys_mem_ptr(address, 1))) {
             *ptr = value;
         }
-    } else {
-        port_poke_byte(mmio_range(address)<<12 | addr_range(address), value);
+    } else if (mmio_mapped(address, select)) {
+        port_poke_byte(mmio_port(address, select), value);
     }
 }
 

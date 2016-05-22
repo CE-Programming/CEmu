@@ -1,9 +1,9 @@
 CC = gcc
 CXX = g++
 
-# If you want no debug/symbols info, remove -g
+# If you want no debug/symbols info, remove -g3
 # If you need debug support, add -DDEBUG_SUPPORT
-CFLAGS = -Wall -W -fPIC -flto -O3 -g -static
+CFLAGS = -Wall -W -fPIC -flto -O3 -g3 -static
 
 OBJS = $(patsubst %.c, %.o, $(shell find . -name \*.c))
 OBJS += $(patsubst %.cpp, %.o, $(shell find . -name \*.cpp))

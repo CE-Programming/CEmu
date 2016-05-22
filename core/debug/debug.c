@@ -82,10 +82,6 @@ void open_debugger(int reason, uint32_t data) {
         gui_emu_sleep();
     } while(inDebugger);
 
-    if (debugger.stepOverRequested) {
-        debug_clear_step_over();
-    }
-
     cpu.next = debugger.cpu_next;
     cpu.cycles = debugger.cpu_cycles;
 
@@ -148,7 +144,6 @@ void debug_clear_step_over(void) {
         for (int i = debugger.stepOverInstrEnd - debugger.stepOverInstrSize;
                 i <= (int)(debugger.stepOverInstrEnd + debugger.stepOverExtendSize); i++) {
             debugger.data.block[i & 0xFFFFFF] &= ~DBG_STEP_OVER_BREAKPOINT;
-            debugger.data.block[i & 0xFFFF] &= ~DBG_STEP_OVER_BREAKPOINT;
         }
         //fprintf(stderr, "[debug_clear_step_over] Cleared step over at 0x%08x\n", debugger.stepOverInstrEnd);
         debugger.stepOverInstrEnd = -1;
