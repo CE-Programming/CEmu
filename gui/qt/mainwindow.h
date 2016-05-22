@@ -162,7 +162,7 @@ private:
     int reprintScale(int);
 
     // Linking
-    QStringList showVariableFileDialog(QFileDialog::AcceptMode);
+    QStringList showVariableFileDialog(QFileDialog::AcceptMode, QString name_filter);
     void sendFiles(QStringList);
     void selectFiles();
     void refreshVariableList();
@@ -230,7 +230,7 @@ private:
 
     bool debuggerOn = false;
     bool inReceivingMode = false;
-    bool stderrConsole = false;
+    bool native_console = false;
     bool closeAfterSave = false;
     bool isResumed = false;
     bool hexSearch = true;

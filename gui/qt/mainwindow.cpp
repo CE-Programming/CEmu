@@ -532,7 +532,7 @@ void MainWindow::appendToConsole(QString str, QColor color) {
 }
 
 void MainWindow::consoleStr(QString str) {
-    if (stderrConsole) {
+    if (native_console) {
         fputs(str.toStdString().c_str(), stdout);
     } else {
         appendToConsole(str);
@@ -540,7 +540,7 @@ void MainWindow::consoleStr(QString str) {
 }
 
 void MainWindow::errConsoleStr(QString str) {
-    if (stderrConsole) {
+    if (native_console) {
         fputs(str.toStdString().c_str(), stderr);
     } else {
         appendToConsole(str, Qt::red);
@@ -863,7 +863,7 @@ void MainWindow::changeEmulatedSpeed(int value) {
 }
 
 void MainWindow::consoleOutputChanged() {
-    stderrConsole = ui->radioStderr->isChecked();
+    native_console = ui->radioStderr->isChecked();
 }
 
 void MainWindow::isBusy(bool busy) {
@@ -906,14 +906,14 @@ void MainWindow::alwaysOnTop(int state) {
 /* Linking Things                                   */
 /* ================================================ */
 
-QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode) {
+QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode, QString name_filter) {
     QFileDialog dialog(this);
     int good;
 
     dialog.setAcceptMode(mode);
     dialog.setFileMode(mode == QFileDialog::AcceptOpen ? QFileDialog::ExistingFiles : QFileDialog::AnyFile);
     dialog.setDirectory(currentDir);
-    dialog.setNameFilter(tr("TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8ci *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca);;All Files (*.*)"));
+    dialog.setNameFilter(name_filter);
     dialog.setDefaultSuffix("8xg");
     good = dialog.exec();
 
@@ -972,7 +972,7 @@ void MainWindow::selectFiles() {
        return;
     }
 
-    QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptOpen);
+    QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptOpen, tr("TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca, *.8cg, *.8ci, *.8ek);;All Files (*.*)"));
 
     sendFiles(fileNames);
 }
@@ -1067,19 +1067,64 @@ void MainWindow::refreshVariableList() {
 }
 
 void MainWindow::saveSelected() {
+    uint8_t i;
+    const static QString var_extension[] = {
+        "8xn",
+        "8xl",
+        "8xm",
+        "8xy",
+        "8xs",
+        "8xp",
+        "8ci",
+        "8xd",
+        "",
+        "8xw",
+        "8xc",
+        "8xl",
+        "8xw",
+        "8xz",
+        "8xt",
+        "",
+        "8xv",
+        "",
+        "8cg",
+        "8xn",
+        "",
+        "8ca",
+        "8xc",
+        "8xn",
+        "8xc",
+        "8xc",
+        "8xc",
+        "8xn",
+        "8xn",
+        "",
+        "8pu",
+        "8ek",
+        "",
+        "",
+        "",
+        "",
+    };
+
     setReceiveState(true);
 
     QVector<calc_var_t> selectedVars;
+    QStringList fileNames;
     for (int currentRow = 0; currentRow < ui->emuVarView->rowCount(); currentRow++) {
         if (ui->emuVarView->item(currentRow, 0)->checkState()) {
             selectedVars.append(vars[currentRow]);
         }
     }
-    if (selectedVars.size() < 1)
-    {
+    if (selectedVars.size() < 1) {
         QMessageBox::warning(this, tr("No transfer to do"), tr("Select at least one file to transfer"));
     } else {
-        QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptSave);
+        if (selectedVars.size() == 1) {
+            i = selectedVars.at(0).type1;
+            fileNames = showVariableFileDialog(QFileDialog::AcceptSave, "TI "+QString(calc_var_type_names[i])+" (*."+var_extension[i]+");;All Files (*.*)");
+        } else {
+            fileNames = showVariableFileDialog(QFileDialog::AcceptSave, tr("TI Group (*.8cg);;All Files (*.*)"));
+        }
         if (fileNames.size() == 1) {
             if (!receiveVariableLink(selectedVars.size(), selectedVars.constData(), fileNames.at(0).toUtf8())) {
                 QMessageBox::warning(this, tr("Failed Transfer"), tr("A failure occured during transfer of: ")+fileNames.at(0));
@@ -1957,13 +2002,13 @@ void MainWindow::reloadROM() {
         changeDebuggerState();
     }
 
-    remove(emu.imagePath.c_str());
+    QFile(emu.imagePath.c_str()).remove();
 
     if (emu.stop()) {
         emu.start();
-        qDebug("Reset Successful.");
+        qDebug("Reload Successful.");
     } else {
-        qDebug("Reset Failed.");
+        qDebug("Reload Failed.");
     }
 }
 
