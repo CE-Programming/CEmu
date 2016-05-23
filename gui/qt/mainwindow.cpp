@@ -1068,39 +1068,44 @@ void MainWindow::refreshVariableList() {
 
 void MainWindow::saveSelected() {
     uint8_t i;
-    const static QString var_extension[] = {
-        "8xn",
+    constexpr const char* var_extension[] = {
+        "8xn",  // 00
         "8xl",
         "8xm",
         "8xy",
         "8xs",
         "8xp",
+        "8xp",
         "8ci",
-        "8xd",
+        "8xd",  // 08
         "",
-        "8xw",
+        "",
+        "8xw",  // 0B
         "8xc",
-        "8xl",
-        "8xw",
-        "8xz",
-        "8xt",
+        "8xl",  // 0D
         "",
-        "8xv",
+        "8xw",  // 0F
+        "8xz",  // 10
+        "8xt",  // 11
         "",
-        "8cg",
+        "",
+        "",
+        "8xv",  // 15
+        "",
+        "8cg",  // 17
+        "8xn",  // 18
+        "",
+        "8ca",  // 1A
+        "8xc",
         "8xn",
+        "8xc",
+        "8xc",
+        "8xc",
+        "8xn",
+        "8xn",  // 21
         "",
-        "8ca",
-        "8xc",
-        "8xn",
-        "8xc",
-        "8xc",
-        "8xc",
-        "8xn",
-        "8xn",
-        "",
-        "8pu",
-        "8ek",
+        "8pu",  // 23
+        "8ek",  // 24
         "",
         "",
         "",
