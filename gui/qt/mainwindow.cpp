@@ -454,7 +454,7 @@ void MainWindow::saved(bool success) {
 
 void MainWindow::dropEvent(QDropEvent *e) {
     const QMimeData* mime_data = e->mimeData();
-    if(!mime_data->hasUrls()) {
+    if (!mime_data->hasUrls()) {
         return;
     }
 
@@ -467,7 +467,7 @@ void MainWindow::dropEvent(QDropEvent *e) {
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent *e) {
-    if(e->mimeData()->hasUrls() == false) {
+    if (e->mimeData()->hasUrls() == false || inReceivingMode) {
         return e->ignore();
     }
 
