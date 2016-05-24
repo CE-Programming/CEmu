@@ -281,7 +281,7 @@
     <message>
         <location filename="../mainwindow.ui" line="785"/>
         <source>Automatically check for updates</source>
-        <translation type="unfinished">Vérifier les mises-à-jour automatiquement</translation>
+        <translation>Vérifier les mises-à-jour automatiquement</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1580"/>
@@ -909,7 +909,7 @@
     <message>
         <location filename="../mainwindow.cpp" line="672"/>
         <source>Resume emulation</source>
-        <translation type="unfinished"></translation>
+        <translation>Reprendre l&apos;émulation</translation>
     </message>
     <message>
         <source>Continue Emulation</source>
@@ -1010,7 +1010,7 @@
     <message>
         <location filename="../mainwindow.cpp" line="465"/>
         <source>Checking updates is disabled for developer builds</source>
-        <translation type="unfinished"></translation>
+        <translation>La vérification de mises-à-jour est désactivée pour les builds de dev</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="531"/>
