@@ -151,7 +151,7 @@
        <number>7</number>
       </property>
       <property name="elideMode">
-       <enum>Qt::ElideNone</enum>
+       <enum>Qt::ElideLeft</enum>
       </property>
       <property name="documentMode">
        <bool>false</bool>
@@ -160,7 +160,7 @@
        <bool>false</bool>
       </property>
       <property name="movable">
-       <bool>false</bool>
+       <bool>true</bool>
       </property>
       <property name="tabBarAutoHide">
        <bool>false</bool>

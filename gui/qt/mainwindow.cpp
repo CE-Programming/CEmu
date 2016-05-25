@@ -570,6 +570,12 @@ bool MainWindow::runSetup() {
     if (emu.rom.empty()) {
         return false;
     } else {
+        if (inReceivingMode) {
+            refreshVariableList();
+        }
+        if(debuggerOn) {
+            changeDebuggerState();
+        }
         settings->setValue(QStringLiteral("romImage"), QVariant(emu.rom.c_str()));
         if(emu.stop()) {
             speedUpdateTimer.stop();
@@ -1335,6 +1341,7 @@ void MainWindow::updateDebuggerChanges() {
     cpu.registers.flags._3 = ui->check3->isChecked();
 
     cpu.halted = ui->checkHalted->isChecked();
+    cpu.ADL = ui->checkADL->isChecked();
     cpu.MADL = ui->checkMADL->isChecked();
     cpu.halted = ui->checkHalted->isChecked();
     cpu.IEF1 = ui->checkIEF1->isChecked();
@@ -1654,15 +1661,18 @@ void MainWindow::updateDisasmView(const int sentBase, const bool newPane) {
     int32_t last_address = disasm.new_address + 0x120;
     if (last_address > 0xFFFFFF) last_address = 0xFFFFFF;
 
+    ui->disassemblyView->blockSignals(true);
     ui->disassemblyView->verticalScrollBar()->blockSignals(true);
     ui->disassemblyView->clear();
     ui->disassemblyView->clearAllHighlights();
     ui->disassemblyView->cursorState(false);
-    ui->disassemblyView->verticalScrollBar()->blockSignals(false);
+
     while (disasm.new_address < last_address) {
         drawNextDisassembleLine();
     }
 
+    ui->disassemblyView->verticalScrollBar()->blockSignals(false);
+    ui->disassemblyView->blockSignals(false);
     ui->disassemblyView->cursorState(true);
 
     ui->disassemblyView->updateAllHighlights();
@@ -2018,26 +2028,29 @@ void MainWindow::reloadROM() {
 }
 
 void MainWindow::updateStackView() {
-    ui->stackView->clear();
-
     QString formattedLine;
 
+    ui->stackView->blockSignals(true);
+    ui->stackView->clear();
+
     if (cpu.ADL) {
-        for(int i=0; i<30; i+=3) {
+        for(int i=0; i<60; i+=3) {
             formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2</pre>")
                                     .arg(int2hex(cpu.registers.SPL+i, 6),
                                          int2hex(mem_peek_long(cpu.registers.SPL+i), 6));
             ui->stackView->appendHtml(formattedLine);
         }
     } else {
-        for(int i=0; i<20; i+=2) {
+        for(int i=0; i<40; i+=2) {
             formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2</pre>")
                                     .arg(int2hex(cpu.registers.SPS+i, 4),
                                          int2hex(mem_peek_short(cpu.registers.SPS+i), 4));
             ui->stackView->appendHtml(formattedLine);
         }
     }
+
     ui->stackView->moveCursor(QTextCursor::Start);
+    ui->stackView->blockSignals(false);
 }
 
 void MainWindow::drawNextDisassembleLine() {
@@ -2086,7 +2099,6 @@ void MainWindow::drawNextDisassembleLine() {
                                     QString::fromStdString(disasm.instruction.mode_suffix),
                                     instructionArgsHighlighted);
 
-    ui->disassemblyView->blockSignals(true);
     ui->disassemblyView->appendHtml(formattedLine);
 
     if (!disasmOffsetSet && disasm.new_address > addressPane) {
@@ -2101,7 +2113,6 @@ void MainWindow::drawNextDisassembleLine() {
     if (disasmHighlight.hit_pc == true) {
         ui->disassemblyView->addHighlight(QColor(Qt::red).lighter(160));
     }
-    ui->disassemblyView->blockSignals(false);
 }
 
 void MainWindow::disasmContextMenu(const QPoint& posa) {
@@ -2565,7 +2576,9 @@ void MainWindow::scrollDisasmView(int value) {
         if (value >= ui->disassemblyView->verticalScrollBar()->maximum()) {
             ui->disassemblyView->verticalScrollBar()->blockSignals(true);
             disconnect(ui->disassemblyView->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::scrollDisasmView);
+            ui->disassemblyView->blockSignals(true);
             drawNextDisassembleLine();
+            ui->disassemblyView->blockSignals(false);
             ui->disassemblyView->verticalScrollBar()->setValue(ui->disassemblyView->verticalScrollBar()->maximum()-1);
             connect(ui->disassemblyView->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::scrollDisasmView);
             ui->disassemblyView->verticalScrollBar()->blockSignals(false);

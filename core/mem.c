@@ -457,6 +457,9 @@ uint8_t mem_peek_byte(uint32_t address) {
     uint8_t *ptr, value = 0;
     uint32_t select;
     address &= 0xFFFFFF;
+    if(!cpu.ADL) {
+        address = (address & 0xFFFF) | (cpu.registers.MBASE << 16);
+    }
     if (address < 0xE00000) {
         if ((ptr = phys_mem_ptr(address, 1))) {
             value = *ptr;
