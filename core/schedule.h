@@ -7,7 +7,8 @@ extern "C" {
 
 #include <stdint.h>
 
-enum clock_id { CLOCK_CPU, CLOCK_APB, CLOCK_27M, CLOCK_12M, CLOCK_32K };
+enum clock_id { CLOCK_CPU, CLOCK_APB, CLOCK_27M, CLOCK_12M, CLOCK_32K,
+                CLOCK_NUM_ITEMS };
 
 enum sched_item_index {
     SCHED_THROTTLE,
@@ -32,7 +33,7 @@ struct sched_item {
 
 PACK(typedef struct sched_state {
     struct sched_item items[SCHED_NUM_ITEMS];
-    uint32_t clockRates[6];
+    uint32_t clockRates[CLOCK_NUM_ITEMS];
     uint32_t nextCPUtick;
     int nextIndex; /* -1 if no more events this second */
 }) sched_state_t;
