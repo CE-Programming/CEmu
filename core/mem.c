@@ -447,8 +447,8 @@ void mem_write_byte(uint32_t address, uint8_t value) {
             break;
     }
 
-    if (control.stackLimit == address) {
-        cpu_nmi();
+    if (cpu.registers.PC >= control.privileged && address == control.stackLimit) {
+            cpu_nmi();
     }
 
 #ifdef DEBUG_SUPPORT
