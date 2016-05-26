@@ -20,6 +20,7 @@
 #include <QtWidgets/QShortcut>
 #include <QtWidgets/QProgressDialog>
 #include <QtWidgets/QInputDialog>
+#include <QtWidgets/QComboBox>
 #include <QtQuickWidgets/QQuickWidget>
 #include <QtWidgets/QScrollBar>
 #include <QtGui/QFont>
@@ -53,6 +54,7 @@
 #include "../../core/link.h"
 #include "../../core/os/os.h"
 
+#include "../../tests/autotester/crc32.hpp"
 #include "../../tests/autotester/autotester.h"
 
 
@@ -138,6 +140,9 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonOpenJSONconfig, &QPushButton::clicked, this, &MainWindow::prepareAndOpenJSONConfig);
     connect(ui->buttonReloadJSONconfig, &QPushButton::clicked, this, &MainWindow::reloadJSONConfig);
     connect(ui->buttonLaunchTest, &QPushButton::clicked, this, &MainWindow::launchTest);
+    connect(ui->comboBoxPresetCRC, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::updateCRCParamsFromPreset);
+
+    connect(ui->buttonRefreshCRC, &QPushButton::clicked, this, &MainWindow::refreshCRC);
 
     // Toolbar Actions
     connect(ui->actionSetup, &QAction::triggered, this, &MainWindow::runSetup);
@@ -1242,6 +1247,71 @@ void MainWindow::launchTest() {
         return;
     }
 }
+
+void MainWindow::updateCRCParamsFromPreset(int comboBoxIndex) {
+    // The order matters, here! (See the combobox in the GUI)
+    static const std::pair<unsigned int, unsigned int> mapIdConsts[] = {
+        std::make_pair(autotester::hash_consts.at("vram_start"),     autotester::hash_consts.at("vram_16_size")),
+        std::make_pair(autotester::hash_consts.at("vram_start"),     autotester::hash_consts.at("vram_8_size")),
+        std::make_pair(autotester::hash_consts.at("vram2_start"),    autotester::hash_consts.at("vram_8_size")),
+        std::make_pair(autotester::hash_consts.at("textShadow"),     autotester::hash_consts.at("textShadow_size")),
+        std::make_pair(autotester::hash_consts.at("cmdShadow"),      autotester::hash_consts.at("cmdShadow_size")),
+        std::make_pair(autotester::hash_consts.at("pixelShadow"),    autotester::hash_consts.at("pixelShadow_size")),
+        std::make_pair(autotester::hash_consts.at("pixelShadow2"),   autotester::hash_consts.at("pixelShadow2_size")),
+        std::make_pair(autotester::hash_consts.at("cmdPixelShadow"), autotester::hash_consts.at("cmdPixelShadow_size")),
+        std::make_pair(autotester::hash_consts.at("plotSScreen"),    autotester::hash_consts.at("plotSScreen_size")),
+        std::make_pair(autotester::hash_consts.at("saveSScreen"),    autotester::hash_consts.at("saveSScreen_size")),
+        std::make_pair(autotester::hash_consts.at("cursorImage"),    autotester::hash_consts.at("cursorImage_size")),
+        std::make_pair(autotester::hash_consts.at("ram_start"),      autotester::hash_consts.at("ram_size"))
+    };
+    if (comboBoxIndex >= 1 && comboBoxIndex <= (int)(sizeof(mapIdConsts)/sizeof(mapIdConsts[0]))) {
+        char buf[10] = {0};
+        sprintf(buf, "0x%X", mapIdConsts[comboBoxIndex-1].first);
+        ui->startCRC->setText(buf);
+        sprintf(buf, "0x%X", mapIdConsts[comboBoxIndex-1].second);
+        ui->sizeCRC->setText(buf);
+        refreshCRC();
+    }
+}
+
+void MainWindow::refreshCRC() {
+    uint32_t tmp_start = 0;
+    size_t size = 0;
+    uint8_t* start;
+    char *endptr1, *endptr2; // catch strtoul issues
+
+    ui->startCRC->setText(ui->startCRC->text().trimmed());
+    ui->sizeCRC->setText(ui->sizeCRC->text().trimmed());
+
+    if (ui->startCRC->text().isEmpty() || ui->sizeCRC->text().isEmpty()) {
+        goto errCRCret;
+    }
+
+    // Get GUI values
+    tmp_start = (uint32_t)strtoul(ui->startCRC->text().toStdString().c_str(), &endptr1, 0);
+    size = (size_t)strtoul(ui->sizeCRC->text().toStdString().c_str(), &endptr2, 0);
+    if (*endptr1 || *endptr2) {
+        goto errCRCret;
+    }
+
+    // Get real start pointer
+    start = phys_mem_ptr(tmp_start, size);
+
+    // Compute and display CRC
+    if (start != NULL) {
+        char buf[10] = {0};
+        sprintf(buf, "%X", crc32(start, size));
+        ui->valueCRC->setText(buf);
+        return;
+    } else {
+        goto errCRCret;
+    }
+
+errCRCret:
+    QMessageBox::warning(this, tr("CRC Error"), tr("Error. Make sure you have entered a valid start/size pair or preset."));
+    return;
+}
+
 
 /* ================================================ */
 /* Debugger Things                                  */

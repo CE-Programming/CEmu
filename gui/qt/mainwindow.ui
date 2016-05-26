@@ -148,7 +148,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>7</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -6072,7 +6072,7 @@
         <item>
          <widget class="QGroupBox" name="screenshotgroup_4">
           <property name="enabled">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
@@ -6098,15 +6098,12 @@
            </property>
            <item>
             <layout class="QVBoxLayout" name="verticalLayout_19">
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_7">
                <item>
                 <widget class="QLabel" name="label_11">
                  <property name="text">
-                  <string>Start:</string>
+                  <string>Start (address):</string>
                  </property>
                 </widget>
                </item>
@@ -6140,6 +6137,96 @@
               </layout>
              </item>
              <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_23">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="label_14">
+                 <property name="text">
+                  <string>... or choose a preset:</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="comboBoxPresetCRC">
+                 <item>
+                  <property name="text">
+                   <string>(no preset)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>All VRAM (LCD set in 16bpp)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>1st half of the VRAM (8bpp)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>2nd half of the VRAM (8bpp)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>textShadow</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>cmdShadow</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>pixelShadow</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>pixelShadow2</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>cmdPixelShadow2</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>plotSScreen</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>saveSScreen</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>cursorImage</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>All the RAM</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="Line" name="line">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item>
               <layout class="QHBoxLayout" name="horizontalLayout_19">
                <property name="leftMargin">
                 <number>0</number>
@@ -6164,7 +6251,7 @@
                <item>
                 <widget class="QPushButton" name="buttonRefreshCRC">
                  <property name="enabled">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </property>
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
@@ -6225,7 +6312,7 @@
      <x>0</x>
      <y>0</y>
      <width>1288</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="sizePolicy">

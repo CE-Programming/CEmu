@@ -175,6 +175,8 @@ private:
     void prepareAndOpenJSONConfig();
     void reloadJSONConfig();
     void launchTest();
+    void updateCRCParamsFromPreset(int comboBoxIndex);
+    void refreshCRC();
 
     // Hex Editor
     void flashUpdate();
