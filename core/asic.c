@@ -71,7 +71,7 @@ void asic_init(void) {
     mem_init();
     cpu_init();
 
-    asic.ship_mode_enabled = false;
+    asic.shipModeEnabled = false;
 
     plug_devices();
     gui_console_printf("[CEmu] Initialized ASIC...\n");

@@ -19,14 +19,15 @@ enum {
 PACK(typedef struct control_state {
     uint8_t ports[0x80];
     uint8_t cpuSpeed;
-    bool noPlugAInserted;
-    bool USBConnected;
+    bool USBSelfPowered;
+    bool USBBusPowered;
 
     uint8_t setBatteryStatus;
     uint8_t readBatteryStatus;
     bool batteryCharging;
 
     uint32_t privileged;
+    uint32_t stackLimit;
 }) control_state_t;
 
 /* Global CONTROL state */

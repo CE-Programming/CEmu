@@ -22,7 +22,7 @@ extern "C" {
 
 typedef struct asic_state {
     ti_device_t deviceType;
-    bool ship_mode_enabled;
+    bool shipModeEnabled;
 } asic_state_t;
 
 /* External Global ASIC state */

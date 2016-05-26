@@ -22,7 +22,7 @@ void EMSCRIPTEN_KEEPALIVE keypad_key_event(unsigned int row, unsigned int col, b
     if (row == 2 && col == 0) {
         intrpt_set(INT_ON, press);
         if (press && calc_is_off()) {
-            asic.ship_mode_enabled = false;
+            asic.shipModeEnabled = false;
             control.readBatteryStatus = ~1;
             intrpt_pulse(19);
         }

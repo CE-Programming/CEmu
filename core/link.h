@@ -17,7 +17,6 @@ bool listVariablesLink(void);
 bool sendVariableLink(const char *var_name);
 bool receiveVariableLink(int count, const calc_var_t *vars, const char *file_name);
 
-
 #ifdef __cplusplus
 }
 #endif

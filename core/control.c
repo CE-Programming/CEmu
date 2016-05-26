@@ -31,8 +31,8 @@ static uint8_t control_read(const uint16_t pio) {
             break;
         case 0x0F:
             value = control.ports[index];
-            if(control.USBConnected)    { value |= 0x80; }
-            if(control.noPlugAInserted) { value |= 0x40; }
+            if(control.USBBusPowered)    { value |= 0x80; }
+            if(control.USBSelfPowered) { value |= 0x40; }
             break;
         case 0x1D:
         case 0x1E:
@@ -41,6 +41,11 @@ static uint8_t control_read(const uint16_t pio) {
             break;
         case 0x28:
             value = control.ports[index] | 0x08;
+            break;
+        case 0x3A:
+        case 0x3B:
+        case 0x3C:
+            value = read8(control.stackLimit, (index - 0x3A) << 3);
             break;
         default:
             value = control.ports[index];
@@ -56,6 +61,9 @@ static void control_write(const uint16_t pio, const uint8_t byte) {
     switch (index) {
         case 0x00:
             control.ports[index] = byte;
+            if(byte & 0x10) {
+                cpuEvents |= EVENT_RESET;
+            }
             switch (control.readBatteryStatus) {
                 case 3: /* Battery Level is 0 */
                     control.readBatteryStatus = (control.setBatteryStatus == BATTERY_0) ? 0 : (byte == 0x83) ? 5 : 0;
@@ -113,7 +121,7 @@ static void control_write(const uint16_t pio, const uint8_t byte) {
 
             /* Appears to enter low-power mode (For now; this will be fine) */
             if (byte == 0xD4) {
-                asic.ship_mode_enabled = true;
+                asic.shipModeEnabled = true;
                 control.ports[0] |= 0x40; // Turn calc off
                 cpuEvents |= EVENT_RESET;
             }
@@ -142,6 +150,11 @@ static void control_write(const uint16_t pio, const uint8_t byte) {
                 mem.flash.locked = (byte & 4) == 0;
             }
             control.ports[index] = byte & 247;
+            break;
+        case 0x3A:
+        case 0x3B:
+        case 0x3C:
+            write8(control.stackLimit, (index - 0x3A) << 3, byte);
             break;
         default:
             control.ports[index] = byte;

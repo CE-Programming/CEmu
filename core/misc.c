@@ -55,7 +55,7 @@ static uint8_t watchdog_read(const uint16_t pio) {
             value = read8(watchdog.status, bit_offset);
             break;
         case 0x018:
-            value = read8(watchdog.intrpt_length, bit_offset);
+            value = read8(watchdog.intrptLength, bit_offset);
             break;
         case 0x01C: case 0x01D: case 0x01E: case 0x01F:
             value = read8(watchdog.revision, bit_offset);
@@ -154,7 +154,7 @@ static uint8_t protected_read(const uint16_t pio) {
 
     switch (pio) {
         case 0xB00:
-            value = protect.led_state;
+            value = protect.ledState;
             break;
         default:
             value = protect.unknown_ports[pio & 0xFF];
@@ -168,7 +168,7 @@ static void protected_write(const uint16_t pio, const uint8_t byte) {
 
     switch (pio) {
         case 0xB00:
-            protect.led_state = byte;
+            protect.ledState = byte;
             break;
         default:
             protect.unknown_ports[pio & 0xFF] = byte;
