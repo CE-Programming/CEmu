@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 
-uint32_t crc32_append(uint32_t crc, const uint8_t* buf, size_t size);
+inline uint32_t crc32_append(uint32_t crc, const uint8_t* buf, size_t size);
 inline uint32_t crc32(const uint8_t* buf, size_t size);
 
 static const uint32_t crc32c_tab[256] =
@@ -77,7 +77,7 @@ static const uint32_t crc32c_tab[256] =
     0xBE2DA0A5, 0x4C4623A6, 0x5F16D052, 0xAD7D5351
 };
 
-uint32_t crc32_append(uint32_t crc, const uint8_t* buf, size_t size)
+inline uint32_t crc32_append(uint32_t crc, const uint8_t* buf, size_t size)
 {
     uint8_t* p = (uint8_t*)buf;
     crc ^= ~0U;
