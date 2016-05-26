@@ -78,23 +78,29 @@ static uint32_t flash_address(uint32_t address, uint32_t *size) {
 }
 
 uint8_t *phys_mem_ptr(uint32_t address, int32_t size) {
-    uint8_t **block;
+    void *block;
     uint32_t block_size, end_addr;
+
     if (address < 0xD00000) {
         address = flash_address(address, &block_size);
-        block = &mem.flash.block;
-    } else {
+        block = mem.flash.block;
+    } else if (address < 0xE00000) {
         address -= 0xD00000;
-        block = &mem.ram.block;
+        block = mem.ram.block;
         block_size = ram_size;
+    } else {
+        address -= 0xE30800;
+        // TODO: Handle some other MMIO things
+        block = lcd.crsrImage;
+        block_size = sizeof(lcd.crsrImage);
     }
     if (size < 0) {
         address += size;
         size = -size;
     }
     end_addr = address + size;
-    if (address <= end_addr && address <= block_size && end_addr <= block_size && *block) {
-        return *block + address;
+    if (address <= end_addr && address <= block_size && end_addr <= block_size && block) {
+        return (uint8_t *)block + address;
     }
     return NULL;
 }
