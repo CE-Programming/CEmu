@@ -9,7 +9,7 @@
 /* Global GPT state */
 general_timers_state_t gpt;
 
-static const int ost_ticks[4] = { 74, 154, 218, 314 };
+static const int ost_ticks[4] = { 37, 77, 109, 157 };
 static void ost_event(int index) {
     intrpt_pulse(INT_OSTMR);
     event_repeat(index, ost_ticks[control.ports[0] & 3]);
