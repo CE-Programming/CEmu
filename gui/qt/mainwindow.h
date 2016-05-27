@@ -111,13 +111,17 @@ private:
     void executeDebugCommand(uint32_t, uint8_t);
     void processDebugCommand(int, uint32_t);
     void addPort();
-    void deletePort();
+    void removePort();
     void updatePortData(int);
+    void updateWatchpointData(int);
     void changePortValues(QTableWidgetItem*);
     void changeBreakpointAddress(QTableWidgetItem*);
     void setPreviousBreakpointAddress(QTableWidgetItem*);
+    void changeWatchpointAddress(QTableWidgetItem*);
+    void setPreviousWatchpointAddress(QTableWidgetItem*);
     void setPreviousPortValues(QTableWidgetItem*);
-    void deleteBreakpoint();
+    void removeBreakpoint();
+    void removeWatchpoint();
     void drawNextDisassembleLine();
     void stepInPressed();
     void stepOverPressed();
@@ -128,11 +132,13 @@ private:
     void updateDisasmView(const int, const bool);
     void gotoPressed();
     void setBreakpointAddress();
+    void setWatchpointAddress();
     void disasmContextMenu(const QPoint &);
     void vatContextMenu(const QPoint &);
     void opContextMenu(const QPoint &);
     void scrollDisasmView(int);
     bool addBreakpoint();
+    bool addWatchpoint();
 
     // Others
     void createLCD();
@@ -239,7 +245,8 @@ private:
 
     uint16_t prevPortAddress;
     uint32_t prevBreakpointAddress;
-    QString currBreakpointAddress, currPortAddress;
+    uint32_t prevWatchpointAddress;
+    QString currAddress, currPortAddress;
     QPalette colorback, nocolorback;
 
     QShortcut *stepInShortcut;

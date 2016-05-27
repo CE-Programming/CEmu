@@ -34,8 +34,8 @@ enum {
 #define DBG_PORT_FREEZE           4
 
 /* For Memory Brakpoints */
-#define DBG_READ_BREAKPOINT       (1 << 0)
-#define DBG_WRITE_BREAKPOINT      (1 << 1)
+#define DBG_READ_WATCHPOINT       (1 << 0)
+#define DBG_WRITE_WATCHPOINT      (1 << 1)
 #define DBG_EXEC_BREAKPOINT       (1 << 2)
 #define DBG_STEP_OVER_BREAKPOINT  (1 << 3)
 #define DBG_RUN_UNTIL_BREAKPOINT  (1 << 4)
@@ -85,7 +85,7 @@ void debug_switch_step_mode(void);
 
 void debug_toggle_run_until(uint32_t address);
 
-void debug_breakpoint_set(uint32_t address, unsigned int type, bool set);
+void debug_breakwatch(uint32_t address, unsigned int type, bool set);
 void debug_breakpoint_remove(uint32_t address);
 
 void debug_pmonitor_set(uint16_t address, unsigned int type, bool set);

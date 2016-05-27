@@ -360,7 +360,7 @@ uint8_t mem_read_byte(uint32_t address) {
 
     address &= 0xFFFFFF;
 #ifdef DEBUG_SUPPORT
-    if (debugger.data.block[address] & DBG_READ_BREAKPOINT) {
+    if (debugger.data.block[address] & DBG_READ_WATCHPOINT) {
         open_debugger(HIT_READ_BREAKPOINT, address);
     }
 #endif
@@ -458,7 +458,7 @@ void mem_write_byte(uint32_t address, uint8_t value) {
     }
 
 #ifdef DEBUG_SUPPORT
-    if ((debugger.data.block[address] &= ~(DBG_INST_START_MARKER | DBG_INST_MARKER)) & DBG_WRITE_BREAKPOINT) {
+    if ((debugger.data.block[address] &= ~(DBG_INST_START_MARKER | DBG_INST_MARKER)) & DBG_WRITE_WATCHPOINT) {
         open_debugger(HIT_WRITE_BREAKPOINT, address);
     }
 #endif
@@ -468,9 +468,6 @@ uint8_t mem_peek_byte(uint32_t address) {
     uint8_t *ptr, value = 0;
     uint32_t select;
     address &= 0xFFFFFF;
-    if(!cpu.ADL) {
-        address = (address & 0xFFFF) | (cpu.registers.MBASE << 16);
-    }
     if (address < 0xE00000) {
         if ((ptr = phys_mem_ptr(address, 1))) {
             value = *ptr;
@@ -490,7 +487,11 @@ uint32_t mem_peek_long(uint32_t address) {
          | mem_peek_byte(address + 2) << 16;
 }
 uint32_t mem_peek_word(uint32_t address, bool mode) {
-    return mode ? mem_peek_long(address) : mem_peek_short(address);
+    if(mode) {
+        return mem_peek_long(address);
+    } else {
+        return (uint32_t)mem_peek_short((address & 0xFFFF) | (cpu.registers.MBASE << 16));
+    }
 }
 
 void mem_poke_byte(uint32_t address, uint8_t value) {

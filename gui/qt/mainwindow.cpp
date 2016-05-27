@@ -99,9 +99,11 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(&emu, &EmuThread::disableDebugger, this, &MainWindow::disableDebugger, Qt::QueuedConnection);
     connect(&emu, &EmuThread::sendDebugCommand, this, &MainWindow::processDebugCommand, Qt::QueuedConnection);
     connect(ui->buttonAddPort, &QPushButton::clicked, this, &MainWindow::addPort);
-    connect(ui->buttonDeletePort, &QPushButton::clicked, this, &MainWindow::deletePort);
+    connect(ui->buttonRemovePort, &QPushButton::clicked, this, &MainWindow::removePort);
     connect(ui->buttonAddBreakpoint, &QPushButton::clicked, this, &MainWindow::addBreakpoint);
-    connect(ui->buttonRemoveBreakpoint, &QPushButton::clicked, this, &MainWindow::deleteBreakpoint);
+    connect(ui->buttonRemoveBreakpoint, &QPushButton::clicked, this, &MainWindow::removeBreakpoint);
+    connect(ui->buttonAddWatchpoint, &QPushButton::clicked, this, &MainWindow::addWatchpoint);
+    connect(ui->buttonRemoveWatchpoint, &QPushButton::clicked, this, &MainWindow::removeWatchpoint);
     connect(ui->buttonStepIn, &QPushButton::clicked, this, &MainWindow::stepInPressed);
     connect(this, &MainWindow::setDebugStepInMode, &emu, &EmuThread::setDebugStepInMode);
     connect(ui->buttonStepOver, &QPushButton::clicked, this, &MainWindow::stepOverPressed);
@@ -118,6 +120,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->portView, &QTableWidget::itemPressed, this, &MainWindow::setPreviousPortValues);
     connect(ui->breakpointView, &QTableWidget::itemChanged, this, &MainWindow::changeBreakpointAddress);
     connect(ui->breakpointView, &QTableWidget::itemPressed, this, &MainWindow::setPreviousBreakpointAddress);
+    connect(ui->watchpointView, &QTableWidget::itemChanged, this, &MainWindow::changeWatchpointAddress);
+    connect(ui->watchpointView, &QTableWidget::itemPressed, this, &MainWindow::setPreviousWatchpointAddress);
     connect(ui->checkCharging, &QCheckBox::toggled, this, &MainWindow::changeBatteryCharging);
     connect(ui->sliderBattery, &QSlider::valueChanged, this, &MainWindow::changeBatteryStatus);
     connect(ui->disassemblyView->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::scrollDisasmView);
@@ -1276,7 +1280,7 @@ void MainWindow::updateCRCParamsFromPreset(int comboBoxIndex) {
 
 void MainWindow::refreshCRC() {
     uint32_t tmp_start = 0;
-    size_t size = 0;
+    size_t crc_size = 0;
     uint8_t* start;
     char *endptr1, *endptr2; // catch strtoul issues
 
@@ -1289,18 +1293,18 @@ void MainWindow::refreshCRC() {
 
     // Get GUI values
     tmp_start = (uint32_t)strtoul(ui->startCRC->text().toStdString().c_str(), &endptr1, 0);
-    size = (size_t)strtoul(ui->sizeCRC->text().toStdString().c_str(), &endptr2, 0);
+    crc_size = (size_t)strtoul(ui->sizeCRC->text().toStdString().c_str(), &endptr2, 0);
     if (*endptr1 || *endptr2) {
         goto errCRCret;
     }
 
     // Get real start pointer
-    start = phys_mem_ptr(tmp_start, size);
+    start = phys_mem_ptr(tmp_start, crc_size);
 
     // Compute and display CRC
     if (start != NULL) {
         char buf[10] = {0};
-        sprintf(buf, "%X", crc32(start, size));
+        sprintf(buf, "%X", crc32(start, crc_size));
         ui->valueCRC->setText(buf);
         return;
     } else {
@@ -1665,6 +1669,10 @@ void MainWindow::populateDebugWindow() {
         updatePortData(i);
     }
 
+    for(int i=0; i<ui->watchpointView->rowCount(); ++i) {
+        updateWatchpointData(i);
+    }
+
     updateTIOSView();
     updateStackView();
     ramUpdate();
@@ -1870,6 +1878,18 @@ void MainWindow::changePortValues(QTableWidgetItem *item) {
     ui->portView->blockSignals(false);
 }
 
+void MainWindow::removePort() {
+    if (!ui->portView->rowCount() || !ui->portView->selectionModel()->isSelected(ui->portView->currentIndex())) {
+        return;
+    }
+
+    const int currentRow = ui->portView->currentRow();
+    uint16_t port = static_cast<uint16_t>(hex2int(ui->portView->item(currentRow, 0)->text()));
+
+    debug_pmonitor_remove(port);
+    ui->portView->removeRow(currentRow);
+}
+
 void MainWindow::setPreviousPortValues(QTableWidgetItem *curr_item) {
     if (curr_item->text().isEmpty()) {
         return;
@@ -1884,6 +1904,13 @@ void MainWindow::setPreviousBreakpointAddress(QTableWidgetItem *curr_item) {
     prevBreakpointAddress = static_cast<uint32_t>(hex2int(ui->breakpointView->item(curr_item->row(), 0)->text()));
 }
 
+void MainWindow::setPreviousWatchpointAddress(QTableWidgetItem *curr_item) {
+    if (curr_item->text().isEmpty()) {
+        return;
+    }
+    prevWatchpointAddress = static_cast<uint32_t>(hex2int(ui->watchpointView->item(curr_item->row(), 0)->text()));
+}
+
 void MainWindow::changeBreakpointAddress(QTableWidgetItem *item) {
     auto row = item->row();
     auto col = item->column();
@@ -1894,16 +1921,10 @@ void MainWindow::changeBreakpointAddress(QTableWidgetItem *item) {
         address = static_cast<uint32_t>(hex2int(ui->breakpointView->item(row, 0)->text()));
         unsigned int value = DBG_NO_HANDLE;
 
-        if (col == 1) { // Break on read
-            value = DBG_READ_BREAKPOINT;
-        }
-        if (col == 2) { // Break on write
-            value = DBG_WRITE_BREAKPOINT;
-        }
-        if (col == 3) { // Break on execution
+        if (col == 1) { // Break on execution
             value = DBG_EXEC_BREAKPOINT;
         }
-        debug_breakpoint_set(address, value, item->checkState() == Qt::Checked);
+        debug_breakwatch(address, value, item->checkState() == Qt::Checked);
     } else {
         std::string s = item->text().toUpper().toStdString();
         if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty()) {
@@ -1924,28 +1945,99 @@ void MainWindow::changeBreakpointAddress(QTableWidgetItem *item) {
             }
         }
 
-        unsigned int value = ((ui->breakpointView->item(row, 1)->checkState() == Qt::Checked) ? DBG_READ_BREAKPOINT : DBG_NO_HANDLE)  |
-                             ((ui->breakpointView->item(row, 2)->checkState() == Qt::Checked) ? DBG_WRITE_BREAKPOINT : DBG_NO_HANDLE) |
-                             ((ui->breakpointView->item(row, 3)->checkState() == Qt::Checked) ? DBG_EXEC_BREAKPOINT : DBG_NO_HANDLE);
+        unsigned int value = ((ui->breakpointView->item(row, 1)->checkState() == Qt::Checked) ? DBG_EXEC_BREAKPOINT : DBG_NO_HANDLE);
 
-        debug_breakpoint_remove(prevBreakpointAddress);
+        debug_breakwatch(prevBreakpointAddress, DBG_EXEC_BREAKPOINT, false);
         item->setText(addressString);
-        debug_breakpoint_set(address, value, true);
+        debug_breakwatch(address, value, true);
         ui->breakpointView->blockSignals(false);
     }
-    updateDisasmView(address, true);
+    //updateDisasmView(address, true);
 }
 
-void MainWindow::deletePort() {
-    if (!ui->portView->rowCount() || !ui->portView->selectionModel()->isSelected(ui->portView->currentIndex())) {
-        return;
+void MainWindow::changeWatchpointAddress(QTableWidgetItem *item) {
+    auto row = item->row();
+    auto col = item->column();
+    QString newString;
+    uint32_t address;
+
+    ui->watchpointView->blockSignals(true);
+
+    if (col == 2) { // update the data located at this address
+        uint8_t i,wLength = ui->watchpointView->item(row, 1)->text().toUInt();
+        uint32_t wData;
+
+        address = static_cast<uint32_t>(ui->watchpointView->item(row, 0)->text().toUInt());
+
+        std::string s = item->text().toUpper().toStdString();
+        if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty()) {
+            item->setText(int2hex(0, wLength << 1));
+            ui->watchpointView->blockSignals(false);
+            return;
+        }
+
+        wData = static_cast<uint32_t>(item->text().toUpper().toUInt(nullptr, 16));
+        newString = int2hex(wData, wLength << 1);
+
+        item->setText(newString);
+
+        for(i=0; i<wLength; i++) {
+            mem_poke_byte(address+i, (wData >> ((wLength-i-1) << 3))&0xFF);
+        }
+
+        ramUpdate();
+        flashUpdate();
+        memUpdate(address);
+    } else if (col == 1) { // length of data we wish to read
+        unsigned int data_length = item->text().toUInt();
+        if (data_length > 4) {
+            data_length = 4;
+        } else if (data_length < 1) {
+            data_length = 1;
+        }
+        item->setText(QString::number(data_length));
+        updateWatchpointData(row);
+    } else if (col > 2) {
+        address = static_cast<uint32_t>(hex2int(ui->watchpointView->item(row, 0)->text()));
+        unsigned int value = DBG_NO_HANDLE;
+
+        if (col == 3) { // Break on read
+            value = DBG_READ_WATCHPOINT;
+        } else
+        if (col == 4) { // Break on write
+            value = DBG_WRITE_WATCHPOINT;
+        }
+        debug_breakwatch(address, value, item->checkState() == Qt::Checked);
+    } else {
+        std::string s = item->text().toUpper().toStdString();
+        if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty()) {
+            item->setText(int2hex(prevWatchpointAddress, 6));
+            ui->watchpointView->blockSignals(false);
+            return;
+        }
+
+        address = static_cast<uint32_t>(hex2int(item->text().toUpper()));
+        newString = int2hex(address,6);
+
+        /* Return if address is already set */
+        for (int i=0; i<ui->watchpointView->rowCount(); i++) {
+            if (ui->watchpointView->item(i, 0)->text() == newString && i != row) {
+                item->setText(int2hex(prevWatchpointAddress, 6));
+                ui->watchpointView->blockSignals(false);
+                return;
+            }
+        }
+
+        unsigned int value = ((ui->watchpointView->item(row, 3)->checkState() == Qt::Checked) ? DBG_READ_WATCHPOINT : DBG_NO_HANDLE)|
+                             ((ui->watchpointView->item(row, 4)->checkState() == Qt::Checked) ? DBG_WRITE_WATCHPOINT : DBG_NO_HANDLE);
+
+        debug_breakwatch(prevWatchpointAddress, DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT, false);
+        item->setText(newString);
+        debug_breakwatch(address, value, true);
+        updateWatchpointData(row);
     }
-
-    const int currentRow = ui->portView->currentRow();
-    uint16_t port = static_cast<uint16_t>(hex2int(ui->portView->item(currentRow, 0)->text()));
-
-    debug_pmonitor_remove(port);
-    ui->portView->removeRow(currentRow);
+    //updateDisasmView(address, true);
+    ui->watchpointView->blockSignals(false);
 }
 
 bool MainWindow::addBreakpoint() {
@@ -1953,11 +2045,11 @@ bool MainWindow::addBreakpoint() {
 
     const int currentRow = ui->breakpointView->rowCount();
 
-    if (currBreakpointAddress.isEmpty()) {
-        currBreakpointAddress = "000000";
+    if (currAddress.isEmpty()) {
+        currAddress = "000000";
     }
 
-    std::string s = currBreakpointAddress.toUpper().toStdString();
+    std::string s = currAddress.toUpper().toStdString();
     if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos) {
         return false;
     }
@@ -1980,36 +2072,28 @@ bool MainWindow::addBreakpoint() {
 
     ui->breakpointView->setRowCount(currentRow + 1);
 
-    QTableWidgetItem *iaddress = new QTableWidgetItem(currBreakpointAddress);
-    QTableWidgetItem *rBreak = new QTableWidgetItem();
-    QTableWidgetItem *wBreak = new QTableWidgetItem();
+    QTableWidgetItem *iaddress = new QTableWidgetItem(currAddress);
     QTableWidgetItem *eBreak = new QTableWidgetItem();
 
-    rBreak->setCheckState(Qt::Unchecked);
-    wBreak->setCheckState(Qt::Unchecked);
     eBreak->setCheckState(Qt::Checked);
-
-    rBreak->setFlags(rBreak->flags() & ~Qt::ItemIsEditable);
-    wBreak->setFlags(wBreak->flags() & ~Qt::ItemIsEditable);
     eBreak->setFlags(eBreak->flags() & ~Qt::ItemIsEditable);
 
     ui->breakpointView->setItem(currentRow, 0, iaddress);
-    ui->breakpointView->setItem(currentRow, 1, rBreak);
-    ui->breakpointView->setItem(currentRow, 2, wBreak);
-    ui->breakpointView->setItem(currentRow, 3, eBreak);
+    ui->breakpointView->setItem(currentRow, 1, eBreak);
 
     ui->breakpointView->selectRow(currentRow);
     ui->breakpointView->setUpdatesEnabled(true);
 
-    debug_breakpoint_set(address, DBG_EXEC_BREAKPOINT, true);
+    debug_breakwatch(address, DBG_EXEC_BREAKPOINT, true);
+
     prevBreakpointAddress = address;
-    currBreakpointAddress.clear();
+    currAddress.clear();
     updateDisasmView(address, true);
     ui->breakpointView->blockSignals(false);
     return true;
 }
 
-void MainWindow::deleteBreakpoint() {
+void MainWindow::removeBreakpoint() {
     if(!ui->breakpointView->rowCount() || !ui->breakpointView->selectionModel()->isSelected(ui->breakpointView->currentIndex())) {
         return;
     }
@@ -2017,9 +2101,86 @@ void MainWindow::deleteBreakpoint() {
     const int currentRow = ui->breakpointView->currentRow();
     uint32_t address = static_cast<uint32_t>(hex2int(ui->breakpointView->item(currentRow, 0)->text()));
 
-    debug_breakpoint_remove(address);
+    debug_breakwatch(address, DBG_EXEC_BREAKPOINT, false);
 
     ui->breakpointView->removeRow(currentRow);
+    updateDisasmView(address, true);
+}
+
+bool MainWindow::addWatchpoint() {
+    uint32_t address;
+    int wData;
+
+    const int currentRow = ui->watchpointView->rowCount();
+
+    if (currAddress.isEmpty()) {
+        currAddress = "000000";
+    }
+
+    std::string s = currAddress.toUpper().toStdString();
+    if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos) {
+        return false;
+    }
+
+    address = static_cast<uint32_t>(hex2int(QString::fromStdString(s)));
+    wData = static_cast<uint32_t>(mem_peek_byte(address));
+    QString addressString = int2hex(address, 6);
+
+    /* Return if address is already set */
+    for (int i=0; i<currentRow; ++i) {
+        if (ui->watchpointView->item(i, 0)->text() == addressString) {
+            if(addressString != "000000") {
+                ui->watchpointView->selectRow(i);
+                return false;
+            }
+        }
+    }
+
+    ui->watchpointView->setUpdatesEnabled(false);
+    ui->watchpointView->blockSignals(true);
+
+    ui->watchpointView->setRowCount(currentRow + 1);
+
+    QTableWidgetItem *iaddress = new QTableWidgetItem(currAddress);
+    QTableWidgetItem *length = new QTableWidgetItem("1");
+    QTableWidgetItem *dWatch = new QTableWidgetItem(int2hex(wData, 2));
+    QTableWidgetItem *rWatch = new QTableWidgetItem();
+    QTableWidgetItem *wWatch = new QTableWidgetItem();
+
+    wWatch->setCheckState(Qt::Checked);
+    rWatch->setCheckState(Qt::Checked);
+    wWatch->setFlags(wWatch->flags() & ~Qt::ItemIsEditable);
+    rWatch->setFlags(rWatch->flags() & ~Qt::ItemIsEditable);
+
+    ui->watchpointView->setItem(currentRow, 0, iaddress);
+    ui->watchpointView->setItem(currentRow, 1, length);
+    ui->watchpointView->setItem(currentRow, 2, dWatch);
+    ui->watchpointView->setItem(currentRow, 3, rWatch);
+    ui->watchpointView->setItem(currentRow, 4, wWatch);
+
+    ui->watchpointView->selectRow(currentRow);
+    ui->watchpointView->setUpdatesEnabled(true);
+
+    debug_breakwatch(address, DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT, true);
+
+    prevWatchpointAddress = address;
+    currAddress.clear();
+    updateDisasmView(address, true);
+    ui->watchpointView->blockSignals(false);
+    return true;
+}
+
+void MainWindow::removeWatchpoint() {
+    if(!ui->watchpointView->rowCount() || !ui->watchpointView->selectionModel()->isSelected(ui->watchpointView->currentIndex())) {
+        return;
+    }
+
+    const int currentRow = ui->watchpointView->currentRow();
+    uint32_t address = static_cast<uint32_t>(hex2int(ui->watchpointView->item(currentRow, 0)->text()));
+
+    debug_breakwatch(address, DBG_READ_WATCHPOINT | DBG_WRITE_WATCHPOINT, false);
+
+    ui->watchpointView->removeRow(currentRow);
     updateDisasmView(address, true);
 }
 
@@ -2047,21 +2208,29 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
     }
 
     // We hit a normal breakpoint; raise the correct entry in the port monitor table
-    if (reason == HIT_READ_BREAKPOINT || reason == HIT_WRITE_BREAKPOINT || reason == HIT_EXEC_BREAKPOINT) {
+    if (reason == HIT_EXEC_BREAKPOINT) {
         // find the correct entry
         while( static_cast<uint32_t>(hex2int(ui->breakpointView->item(row++, 0)->text())) != input );
         row--;
 
         ui->breakChangeLabel->setText(ui->breakpointView->item(row, 0)->text());
-        ui->breakTypeLabel->setText((reason == HIT_READ_BREAKPOINT) ? "Read" : (reason == HIT_WRITE_BREAKPOINT) ? "Write" : "Executed");
+        ui->breakTypeLabel->setText("Executed");
         ui->breakpointView->selectRow(row);
-        if (reason != HIT_EXEC_BREAKPOINT) {
-            memUpdate(input);
-        }
+    }
+
+    else if (reason == HIT_READ_BREAKPOINT || reason == HIT_WRITE_BREAKPOINT) {
+        // find the correct entry
+        while( static_cast<uint32_t>(hex2int(ui->watchpointView->item(row++, 0)->text())) != input );
+        row--;
+
+        ui->watchChangeLabel->setText(ui->watchpointView->item(row, 0)->text());
+        ui->watchTypeLabel->setText((reason == HIT_READ_BREAKPOINT) ? "Read" : "Write");
+        ui->watchpointView->selectRow(row);
+        memUpdate(input);
     }
 
     // We hit a port read or write; raise the correct entry in the port monitor table
-    if (reason == HIT_PORT_READ_BREAKPOINT || reason == HIT_PORT_WRITE_BREAKPOINT) {
+    else if (reason == HIT_PORT_READ_BREAKPOINT || reason == HIT_PORT_WRITE_BREAKPOINT) {
         while( static_cast<uint32_t>(hex2int(ui->portView->item(row++, 0)->text())) != input );
         row--;
 
@@ -2069,6 +2238,7 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
         ui->portTypeLabel->setText((reason == HIT_PORT_READ_BREAKPOINT) ? "Read" : "Write");
         ui->portView->selectRow(row);
     }
+
     updateDisasmView(cpu.registers.PC, true);
 }
 
@@ -2077,6 +2247,18 @@ void MainWindow::updatePortData(int currentRow) {
     uint8_t read = static_cast<uint8_t>(port_peek_byte(port));
 
     ui->portView->item(currentRow, 1)->setText(int2hex(read,2));
+}
+
+void MainWindow::updateWatchpointData(int currentRow) {
+    uint8_t i,length = ui->watchpointView->item(currentRow, 1)->text().toUInt();
+    uint32_t address = static_cast<uint32_t>(hex2int(ui->watchpointView->item(currentRow, 0)->text())+length-1);
+    uint32_t read = 0;
+
+    for(i=0; i<length; i++) {
+        read |= mem_peek_byte(address-i) << (i << 3);
+    }
+
+    ui->watchpointView->item(currentRow, 2)->setText(int2hex(read, length << 1));
 }
 
 void MainWindow::reloadROM() {
@@ -2107,14 +2289,14 @@ void MainWindow::updateStackView() {
         for(int i=0; i<60; i+=3) {
             formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2</pre>")
                                     .arg(int2hex(cpu.registers.SPL+i, 6),
-                                         int2hex(mem_peek_long(cpu.registers.SPL+i), 6));
+                                         int2hex(mem_peek_word(cpu.registers.SPL+i, 1), 6));
             ui->stackView->appendHtml(formattedLine);
         }
     } else {
         for(int i=0; i<40; i+=2) {
             formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2</pre>")
                                     .arg(int2hex(cpu.registers.SPS+i, 4),
-                                         int2hex(mem_peek_short(cpu.registers.SPS+i), 4));
+                                         int2hex(mem_peek_word(cpu.registers.SPS+i, 0), 4));
             ui->stackView->appendHtml(formattedLine);
         }
     }
@@ -2186,9 +2368,10 @@ void MainWindow::drawNextDisassembleLine() {
 }
 
 void MainWindow::disasmContextMenu(const QPoint& posa) {
-    QString set_pc = "Set PC to this address";
-    QString run_until = "Toggle Run Until this address";
-    QString toggle_break = "Toggle Breakpoint at this address";
+    QString set_pc = "Set PC";
+    QString toggle_break = "Toggle Breakpoint";
+    QString toggle_watch = "Toggle Watchpoint";
+    QString run_until = "Toggle Run Until";
     QString goto_mem = "Goto Memory View";
     ui->disassemblyView->setTextCursor(ui->disassemblyView->cursorForPosition(posa));
     QPoint globalPos = ui->disassemblyView->mapToGlobal(posa);
@@ -2196,6 +2379,7 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
     QMenu contextMenu;
     contextMenu.addAction(set_pc);
     contextMenu.addAction(toggle_break);
+    contextMenu.addAction(toggle_watch);
     contextMenu.addAction(run_until);
     contextMenu.addAction(goto_mem);
 
@@ -2208,6 +2392,8 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
             updateDisasmView(cpu.registers.PC, true);
         } else if (selectedItem->text() == toggle_break) {
             setBreakpointAddress();
+        } else if (selectedItem->text() == toggle_watch) {
+            setWatchpointAddress();
         } else if (selectedItem->text() == run_until) {
             uint32_t address = static_cast<uint32_t>(hex2int(ui->disassemblyView->getSelectedAddress()));
             debug_toggle_run_until(address);
@@ -2312,10 +2498,18 @@ void MainWindow::disableDebugger() {
 }
 
 void MainWindow::setBreakpointAddress() {
-    currBreakpointAddress = ui->disassemblyView->getSelectedAddress();
+    currAddress = ui->disassemblyView->getSelectedAddress();
 
     if(!addBreakpoint()) {
-        deleteBreakpoint();
+        removeBreakpoint();
+    }
+}
+
+void MainWindow::setWatchpointAddress() {
+    currAddress = ui->disassemblyView->getSelectedAddress();
+
+    if(!addWatchpoint()) {
+        removeWatchpoint();
     }
 }
 
