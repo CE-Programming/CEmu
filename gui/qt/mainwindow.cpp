@@ -506,9 +506,12 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *e) {
 }
 
 void MainWindow::closeEvent(QCloseEvent *e) {
-    debuggerOn = false;
-    inDebugger = false;
-    inReceivingMode = false;
+    if (inDebugger) {
+        changeDebuggerState();
+    }
+    if (inReceivingMode) {
+        refreshVariableList();
+    }
 
     if (!closeAfterSave && settings->value(QStringLiteral("saveOnClose")).toBool()) {
             closeAfterSave = true;
@@ -2611,15 +2614,24 @@ void MainWindow::setBreakpointAddress() {
 
     QTextCursor c = ui->disassemblyView->textCursor();
     c.setCharFormat(ui->disassemblyView->currentCharFormat());
+
+    if (!addBreakpoint()) {
+        removeBreakpoint();
+    }
+
+    disasm.base_address = currAddress;
+    disasmHighlight.hit_exec_breakpoint = false;
+    disassembleInstruction();
+
     c.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
     c.setPosition(c.position()+9, QTextCursor::MoveAnchor);
+    c.deleteChar();
 
-    if (addBreakpoint()) {
-        c.deleteChar();
+    // Add the red dot
+    if (disasmHighlight.hit_exec_breakpoint) {
         c.insertHtml("<font color='#FFA3A3'>&#9679;</font>");
-    } else if (removeBreakpoint()) {
-            c.deleteChar();
-            c.insertText(" ");
+    } else {
+        c.insertText(" ");
     }
 }
 
@@ -2629,17 +2641,36 @@ void MainWindow::setWatchpointAddress() {
 
     QTextCursor c = ui->disassemblyView->textCursor();
     c.setCharFormat(ui->disassemblyView->currentCharFormat());
+
+    if (!addWatchpoint()) {
+        removeWatchpoint();
+    }
+
+    disasm.base_address = currAddress;
+    disasmHighlight.hit_read_breakpoint = false;
+    disasmHighlight.hit_write_breakpoint = false;
+    disassembleInstruction();
+
     c.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
     c.setPosition(c.position()+7, QTextCursor::MoveAnchor);
+    c.deleteChar();
 
-    if (addWatchpoint()) {
-        c.deleteChar();
-        c.deleteChar();
-        c.insertHtml("<font color='#A3FFA3'>&#9679;</font><font color='#A3A3FF'>&#9679;</font>");
-    } else if (removeWatchpoint()) {
-            c.deleteChar();
-            c.deleteChar();
-            c.insertText("  ");
+    // Add the green dot
+    if (disasmHighlight.hit_read_breakpoint) {
+        c.insertHtml("<font color='#A3FFA3'>&#9679;</font>");
+    } else {
+        c.insertText(" ");
+    }
+
+    c.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
+    c.setPosition(c.position()+8, QTextCursor::MoveAnchor);
+    c.deleteChar();
+
+    // Add the blue dot
+    if (disasmHighlight.hit_write_breakpoint) {
+        c.insertHtml("<font color='#A3A3FF'>&#9679;</font>");
+    } else {
+        c.insertText(" ");
     }
 }
 
