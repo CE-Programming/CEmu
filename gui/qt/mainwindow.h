@@ -120,8 +120,6 @@ private:
     void changeWatchpointAddress(QTableWidgetItem*);
     void setPreviousWatchpointAddress(QTableWidgetItem*);
     void setPreviousPortValues(QTableWidgetItem*);
-    void removeBreakpoint();
-    void removeWatchpoint();
     void drawNextDisassembleLine();
     void stepInPressed();
     void stepOverPressed();
@@ -140,6 +138,8 @@ private:
     void removeBreakpointAddress(QString);
     void removeWatchpointAddress(QString);
     void updateDisassembly(int);
+    bool removeBreakpoint();
+    bool removeWatchpoint();
     bool addBreakpoint();
     bool addWatchpoint();
 

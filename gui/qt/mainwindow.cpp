@@ -506,6 +506,7 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *e) {
 }
 
 void MainWindow::closeEvent(QCloseEvent *e) {
+    debuggerOn = false;
     inDebugger = false;
     inReceivingMode = false;
 
@@ -1679,7 +1680,7 @@ void MainWindow::populateDebugWindow() {
     memUpdate(cpu.registers.PC);
     prevDisasmAddress = cpu.registers.PC;
     if(ui->tabDebugging->currentIndex() == 0) {
-        updateDisasmView(cpu.registers.PC, true);
+        updateDisasmView(prevDisasmAddress, true);
     }
 }
 
@@ -1732,10 +1733,13 @@ void MainWindow::updateTIOSView() {
 }
 
 void MainWindow::updateDisassembly(int tab) {
-    // only update the disassmbly if we switch to the tab
+    ui->disassemblyView->verticalScrollBar()->blockSignals(true);
     if (tab == 0) {
         updateDisasmView(prevDisasmAddress, true);
     } else {
+        ui->portView->clearSelection();
+        ui->breakpointView->clearSelection();
+        ui->watchpointView->clearSelection();
         prevDisasmAddress = ui->disassemblyView->getSelectedAddress().toUInt(nullptr,16);
     }
 }
@@ -1750,8 +1754,6 @@ void MainWindow::updateDisasmView(const int sentBase, const bool newPane) {
     if (disasm.new_address < 0) { disasm.new_address = 0; }
     int32_t last_address = disasm.new_address + 0x120;
     if (last_address > 0xFFFFFF) { last_address = 0xFFFFFF; }
-
-    ui->disassemblyView->verticalScrollBar()->blockSignals(true);
 
     ui->disassemblyView->cursorState(false);
     ui->disassemblyView->blockSignals(true);
@@ -2100,9 +2102,9 @@ bool MainWindow::addBreakpoint() {
     return true;
 }
 
-void MainWindow::removeBreakpoint() {
+bool MainWindow::removeBreakpoint() {
     if(!ui->breakpointView->rowCount() || !ui->breakpointView->selectionModel()->isSelected(ui->breakpointView->currentIndex())) {
-        return;
+        return false;
     }
 
     const int currentRow = ui->breakpointView->currentRow();
@@ -2111,6 +2113,7 @@ void MainWindow::removeBreakpoint() {
     debug_breakwatch(address, DBG_EXEC_BREAKPOINT, false);
 
     ui->breakpointView->removeRow(currentRow);
+    return true;
 }
 
 bool MainWindow::addWatchpoint() {
@@ -2186,9 +2189,9 @@ bool MainWindow::addWatchpoint() {
     return true;
 }
 
-void MainWindow::removeWatchpoint() {
+bool MainWindow::removeWatchpoint() {
     if(!ui->watchpointView->rowCount() || !ui->watchpointView->selectionModel()->isSelected(ui->watchpointView->currentIndex())) {
-        return;
+        return false;
     }
 
     const int currentRow = ui->watchpointView->currentRow();
@@ -2197,6 +2200,7 @@ void MainWindow::removeWatchpoint() {
     debug_breakwatch(address, DBG_READ_WATCHPOINT | DBG_WRITE_WATCHPOINT, false);
 
     ui->watchpointView->removeRow(currentRow);
+    return true;
 }
 
 void MainWindow::removeWatchpointAddress(QString address) {
@@ -2438,7 +2442,7 @@ void MainWindow::drawNextDisassembleLine() {
     }
 
     // Some round symbol things
-    QString breakpointSymbols = QString("<font color='#A3FFA3'><big>%1</font><font color='#A3A3FF'>%2</font><font color='#FFA3A3'>%3</big></font>")
+    QString breakpointSymbols = QString("<font color='#A3FFA3'>%1</font><font color='#A3A3FF'>%2</font><font color='#FFA3A3'>%3</font>")
                                    .arg(((disasmHighlight.hit_read_breakpoint == true)  ? "&#9679;" : " "),
                                         ((disasmHighlight.hit_write_breakpoint == true) ? "&#9679;" : " "),
                                         ((disasmHighlight.hit_exec_breakpoint == true)  ? "&#9679;" : " "));
@@ -2495,6 +2499,7 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
             ui->pcregView->setText(ui->disassemblyView->getSelectedAddress());
             uint32_t address = static_cast<uint32_t>(hex2int(ui->pcregView->text()));
             debug_set_pc_address(address);
+            ui->disassemblyView->verticalScrollBar()->blockSignals(true);
             updateDisasmView(cpu.registers.PC, true);
         } else if (selectedItem->text() == toggle_break) {
             setBreakpointAddress();
@@ -2503,6 +2508,7 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
         } else if (selectedItem->text() == run_until) {
             uint32_t address = static_cast<uint32_t>(hex2int(ui->disassemblyView->getSelectedAddress()));
             debug_toggle_run_until(address);
+            ui->disassemblyView->verticalScrollBar()->blockSignals(true);
             updateDisasmView(address, true);
         } else if (selectedItem->text() == goto_mem) {
             memGoto(ui->disassemblyView->getSelectedAddress());
@@ -2603,20 +2609,38 @@ void MainWindow::setBreakpointAddress() {
     currAddressString = ui->disassemblyView->getSelectedAddress();
     currAddress = static_cast<uint32_t>(hex2int(currAddressString));
 
-    if(!addBreakpoint()) {
-        removeBreakpoint();
+    QTextCursor c = ui->disassemblyView->textCursor();
+    c.setCharFormat(ui->disassemblyView->currentCharFormat());
+    c.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
+    c.setPosition(c.position()+9, QTextCursor::MoveAnchor);
+
+    if (addBreakpoint()) {
+        c.deleteChar();
+        c.insertHtml("<font color='#FFA3A3'>&#9679;</font>");
+    } else if (removeBreakpoint()) {
+            c.deleteChar();
+            c.insertText(" ");
     }
-    updateDisasmView(currAddress, true);
 }
 
 void MainWindow::setWatchpointAddress() {
     currAddressString = ui->disassemblyView->getSelectedAddress();
     currAddress = static_cast<uint32_t>(hex2int(currAddressString));
 
-    if(!addWatchpoint()) {
-        removeWatchpoint();
+    QTextCursor c = ui->disassemblyView->textCursor();
+    c.setCharFormat(ui->disassemblyView->currentCharFormat());
+    c.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
+    c.setPosition(c.position()+7, QTextCursor::MoveAnchor);
+
+    if (addWatchpoint()) {
+        c.deleteChar();
+        c.deleteChar();
+        c.insertHtml("<font color='#A3FFA3'>&#9679;</font><font color='#A3A3FF'>&#9679;</font>");
+    } else if (removeWatchpoint()) {
+            c.deleteChar();
+            c.deleteChar();
+            c.insertText("  ");
     }
-    updateDisasmView(currAddress, true);
 }
 
 QString MainWindow::getAddressString(bool &ok, QString String) {
@@ -2942,7 +2966,7 @@ void MainWindow::addEquateFile(QString fileName) {
 }
 
 void MainWindow::scrollDisasmView(int value) {
-    if (value >= ui->disassemblyView->verticalScrollBar()->maximum()) {
+    if (value >= ui->disassemblyView->verticalScrollBar()->maximum() && value > 0x100) {
         ui->disassemblyView->verticalScrollBar()->blockSignals(true);
         drawNextDisassembleLine();
         ui->disassemblyView->verticalScrollBar()->setValue(ui->disassemblyView->verticalScrollBar()->maximum()-1);

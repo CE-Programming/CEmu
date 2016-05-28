@@ -27,7 +27,7 @@ QString DataWidget::getSelectedAddress() {
     QTextCursor c = textCursor();
     c.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
     c.setPosition(c.position()+6, QTextCursor::KeepAnchor); // +6 == size of the address
-                                                          // See MainWindow::drawNextDisassembleLine() for details
+                                                            // See MainWindow::drawNextDisassembleLine() for details
     return c.selectedText();
 }
 
