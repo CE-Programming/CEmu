@@ -6,10 +6,10 @@
 
 DataWidget::DataWidget(QWidget *p) : QPlainTextEdit(p) {
     setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(this, &QPlainTextEdit::cursorPositionChanged, this, &DataWidget::highlightCurrentLine);
 }
 
 void DataWidget::clearAllHighlights() {
+    disconnect(this, &QPlainTextEdit::cursorPositionChanged, this, &DataWidget::highlightCurrentLine);
     while (!extraHighlights.isEmpty()) {
         extraHighlights.removeFirst();
     }
@@ -20,14 +20,22 @@ void DataWidget::clearAllHighlights() {
 
 void DataWidget::updateAllHighlights() {
     setExtraSelections(extraHighlights);
+    connect(this, &QPlainTextEdit::cursorPositionChanged, this, &DataWidget::highlightCurrentLine);
 }
 
 QString DataWidget::getSelectedAddress() {
-  QTextCursor c = textCursor();
-  c.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
-  c.setPosition(c.position()+6, QTextCursor::KeepAnchor); // +6 == size of the address
+    QTextCursor c = textCursor();
+    c.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
+    c.setPosition(c.position()+6, QTextCursor::KeepAnchor); // +6 == size of the address
                                                           // See MainWindow::drawNextDisassembleLine() for details
-  return c.selectedText();
+    return c.selectedText();
+}
+
+void DataWidget::cursorState(bool moveable) {
+    cursor_moveable = moveable;
+    if (moveable) {
+        addHighlight(QColor(Qt::yellow).lighter(160));
+    }
 }
 
 void DataWidget::addHighlight(QColor color) {
@@ -41,17 +49,12 @@ void DataWidget::addHighlight(QColor color) {
     extraHighlights.append(selection);
 }
 
-void DataWidget::cursorState(bool moveable) {
-    cursor_state = moveable;
-    if (moveable) {
-        addHighlight(QColor(Qt::yellow).lighter(160));
-    }
-}
-
 void DataWidget::highlightCurrentLine() {
-    if(cursor_state == true) {
-        extraHighlights.removeLast();
+    if(cursor_moveable == true) {
+        if (!extraHighlights.isEmpty()) {
+            extraHighlights.removeLast();
+        }
         addHighlight(QColor(Qt::yellow).lighter(160));
-        updateAllHighlights();
+        setExtraSelections(extraHighlights);
     }
 }

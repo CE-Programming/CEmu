@@ -137,6 +137,9 @@ private:
     void vatContextMenu(const QPoint &);
     void opContextMenu(const QPoint &);
     void scrollDisasmView(int);
+    void removeBreakpointAddress(QString);
+    void removeWatchpointAddress(QString);
+    void updateDisassembly(int);
     bool addBreakpoint();
     bool addWatchpoint();
 
@@ -229,7 +232,7 @@ private:
     QTextCursor disasmOffset;
     bool disasmOffsetSet;
     bool fromPane;
-    int addressPane;
+    int32_t addressPane;
     int memSize;
 
     QDir currentDir;
@@ -242,11 +245,14 @@ private:
     bool closeAfterSave = false;
     bool isResumed = false;
     bool hexSearch = true;
+    bool canScroll = false;
 
     uint16_t prevPortAddress;
     uint32_t prevBreakpointAddress;
     uint32_t prevWatchpointAddress;
-    QString currAddress, currPortAddress;
+    uint32_t prevDisasmAddress;
+    uint8_t watchpointType = 0;
+    QString currAddress, currPortAddress, watchLength;
     QPalette colorback, nocolorback;
 
     QShortcut *stepInShortcut;
@@ -258,6 +264,9 @@ private:
     QList<calc_var_t> vars;
     QIcon runIcon, stopIcon; // help speed up stepping
     QTextCharFormat console_format;
+
+    int pc_line;
+    int curr_line;
 };
 
 // Used as global instance by EmuThread and Debugger class

@@ -1435,7 +1435,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>0</number>
           </property>
           <property name="tabsClosable">
            <bool>false</bool>
@@ -1545,8 +1545,14 @@
               <property name="plainText">
                <string notr="true"/>
               </property>
+              <property name="textInteractionFlags">
+               <set>Qt::TextSelectableByMouse</set>
+              </property>
+              <property name="centerOnScroll">
+               <bool>false</bool>
+              </property>
               <property name="placeholderText">
-               <string notr="true"/>
+               <string>Open debugger to view disassembly...</string>
               </property>
              </widget>
             </item>
@@ -1569,7 +1575,7 @@
                <enum>QAbstractScrollArea::AdjustIgnored</enum>
               </property>
               <property name="autoScroll">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
               <property name="editTriggers">
                <set>QAbstractItemView::AllEditTriggers</set>
@@ -1810,7 +1816,7 @@
                <enum>QAbstractScrollArea::AdjustIgnored</enum>
               </property>
               <property name="autoScroll">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
               <property name="editTriggers">
                <set>QAbstractItemView::AllEditTriggers</set>
@@ -1993,6 +1999,9 @@
               </property>
               <property name="sizeAdjustPolicy">
                <enum>QAbstractScrollArea::AdjustIgnored</enum>
+              </property>
+              <property name="autoScroll">
+               <bool>false</bool>
               </property>
               <property name="editTriggers">
                <set>QAbstractItemView::AllEditTriggers</set>

@@ -57,7 +57,6 @@
 #include "../../tests/autotester/crc32.hpp"
 #include "../../tests/autotester/autotester.h"
 
-
 static const constexpr int WindowStateVersion = 0;
 
 MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
@@ -93,11 +92,16 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->radioStderr, &QRadioButton::clicked, this, &MainWindow::consoleOutputChanged);
 
     // Debugger
-    connect(ui->buttonRun, &QPushButton::clicked, this, &MainWindow::changeDebuggerState);
-    connect(this, &MainWindow::debuggerChangedState, &emu, &EmuThread::setDebugMode);
     connect(&emu, &EmuThread::raiseDebugger, this, &MainWindow::raiseDebugger, Qt::QueuedConnection);
     connect(&emu, &EmuThread::disableDebugger, this, &MainWindow::disableDebugger, Qt::QueuedConnection);
     connect(&emu, &EmuThread::sendDebugCommand, this, &MainWindow::processDebugCommand, Qt::QueuedConnection);
+    connect(this, &MainWindow::debuggerChangedState, &emu, &EmuThread::setDebugMode);
+    connect(this, &MainWindow::setDebugStepInMode, &emu, &EmuThread::setDebugStepInMode);
+    connect(this, &MainWindow::setDebugStepOverMode, &emu, &EmuThread::setDebugStepOverMode);
+    connect(this, &MainWindow::setDebugStepNextMode, &emu, &EmuThread::setDebugStepNextMode);
+    connect(this, &MainWindow::setDebugStepOutMode, &emu, &EmuThread::setDebugStepOutMode);
+    connect(ui->buttonRun, &QPushButton::clicked, this, &MainWindow::changeDebuggerState);
+    connect(ui->tabDebugging, &QTabWidget::currentChanged, this, &MainWindow::updateDisassembly);
     connect(ui->buttonAddPort, &QPushButton::clicked, this, &MainWindow::addPort);
     connect(ui->buttonRemovePort, &QPushButton::clicked, this, &MainWindow::removePort);
     connect(ui->buttonAddBreakpoint, &QPushButton::clicked, this, &MainWindow::addBreakpoint);
@@ -105,13 +109,9 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->buttonAddWatchpoint, &QPushButton::clicked, this, &MainWindow::addWatchpoint);
     connect(ui->buttonRemoveWatchpoint, &QPushButton::clicked, this, &MainWindow::removeWatchpoint);
     connect(ui->buttonStepIn, &QPushButton::clicked, this, &MainWindow::stepInPressed);
-    connect(this, &MainWindow::setDebugStepInMode, &emu, &EmuThread::setDebugStepInMode);
     connect(ui->buttonStepOver, &QPushButton::clicked, this, &MainWindow::stepOverPressed);
-    connect(this, &MainWindow::setDebugStepOverMode, &emu, &EmuThread::setDebugStepOverMode);
     connect(ui->buttonStepNext, &QPushButton::clicked, this, &MainWindow::stepNextPressed);
-    connect(this, &MainWindow::setDebugStepNextMode, &emu, &EmuThread::setDebugStepNextMode);
     connect(ui->buttonStepOut, &QPushButton::clicked, this, &MainWindow::stepOutPressed);
-    connect(this, &MainWindow::setDebugStepOutMode, &emu, &EmuThread::setDebugStepOutMode);
     connect(ui->buttonGoto, &QPushButton::clicked, this, &MainWindow::gotoPressed);
     connect(ui->disassemblyView, &QWidget::customContextMenuRequested, this, &MainWindow::disasmContextMenu);
     connect(ui->vatView, &QWidget::customContextMenuRequested, this, &MainWindow::vatContextMenu);
@@ -1382,6 +1382,9 @@ void MainWindow::updateDebuggerChanges() {
     if (debuggerOn == true) {
         return;
     }
+
+    ui->disassemblyView->verticalScrollBar()->blockSignals(true);
+
     /* Update all the changes in the core */
     cpu.registers.AF = static_cast<uint16_t>(hex2int(ui->afregView->text()));
     cpu.registers.HL = static_cast<uint32_t>(hex2int(ui->hlregView->text()));
@@ -1678,6 +1681,10 @@ void MainWindow::populateDebugWindow() {
     ramUpdate();
     flashUpdate();
     memUpdate(cpu.registers.PC);
+    prevDisasmAddress = cpu.registers.PC;
+    if(ui->tabDebugging->currentIndex() == 0) {
+        updateDisasmView(prevDisasmAddress, true);
+    }
 }
 
 void MainWindow::updateTIOSView() {
@@ -1728,6 +1735,15 @@ void MainWindow::updateTIOSView() {
     ui->vatView->moveCursor(QTextCursor::Start);
 }
 
+void MainWindow::updateDisassembly(int tab) {
+    // only update the disassmbly if we switch to the tab
+    if (tab == 0) {
+        updateDisasmView(prevDisasmAddress, true);
+    } else {
+        prevDisasmAddress = ui->disassemblyView->getSelectedAddress().toUInt(nullptr,16);
+    }
+}
+
 void MainWindow::updateDisasmView(const int sentBase, const bool newPane) {
     addressPane = sentBase;
     fromPane = newPane;
@@ -1735,27 +1751,26 @@ void MainWindow::updateDisasmView(const int sentBase, const bool newPane) {
     disasm.adl = ui->checkADL->isChecked();
     disasm.base_address = -1;
     disasm.new_address = addressPane - ((newPane) ? 0x40 : 0);
-    if (disasm.new_address < 0) disasm.new_address = 0;
+    if (disasm.new_address < 0) { disasm.new_address = 0; }
     int32_t last_address = disasm.new_address + 0x120;
-    if (last_address > 0xFFFFFF) last_address = 0xFFFFFF;
+    if (last_address > 0xFFFFFF) { last_address = 0xFFFFFF; }
 
+    ui->disassemblyView->cursorState(false);
     ui->disassemblyView->blockSignals(true);
-    ui->disassemblyView->verticalScrollBar()->blockSignals(true);
     ui->disassemblyView->clear();
     ui->disassemblyView->clearAllHighlights();
-    ui->disassemblyView->cursorState(false);
 
     while (disasm.new_address < last_address) {
         drawNextDisassembleLine();
     }
 
-    ui->disassemblyView->verticalScrollBar()->blockSignals(false);
     ui->disassemblyView->blockSignals(false);
-    ui->disassemblyView->cursorState(true);
-
-    ui->disassemblyView->updateAllHighlights();
+    ui->disassemblyView->verticalScrollBar()->blockSignals(false);
 
     ui->disassemblyView->setTextCursor(disasmOffset);
+
+    ui->disassemblyView->cursorState(true);
+    ui->disassemblyView->updateAllHighlights();
     ui->disassemblyView->centerCursor();
 }
 
@@ -1952,7 +1967,6 @@ void MainWindow::changeBreakpointAddress(QTableWidgetItem *item) {
         debug_breakwatch(address, value, true);
         ui->breakpointView->blockSignals(false);
     }
-    //updateDisasmView(address, true);
 }
 
 void MainWindow::changeWatchpointAddress(QTableWidgetItem *item) {
@@ -2036,7 +2050,6 @@ void MainWindow::changeWatchpointAddress(QTableWidgetItem *item) {
         debug_breakwatch(address, value, true);
         updateWatchpointData(row);
     }
-    //updateDisasmView(address, true);
     ui->watchpointView->blockSignals(false);
 }
 
@@ -2088,8 +2101,8 @@ bool MainWindow::addBreakpoint() {
 
     prevBreakpointAddress = address;
     currAddress.clear();
-    updateDisasmView(address, true);
     ui->breakpointView->blockSignals(false);
+    updateDisasmView(address, true);
     return true;
 }
 
@@ -2109,12 +2122,19 @@ void MainWindow::removeBreakpoint() {
 
 bool MainWindow::addWatchpoint() {
     uint32_t address;
-    int wData;
 
     const int currentRow = ui->watchpointView->rowCount();
 
     if (currAddress.isEmpty()) {
         currAddress = "000000";
+    }
+
+    if (watchLength.isEmpty()) {
+        watchLength = "1";
+    }
+
+    if (watchpointType == DBG_NO_HANDLE) {
+        watchpointType = DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT;
     }
 
     std::string s = currAddress.toUpper().toStdString();
@@ -2123,7 +2143,6 @@ bool MainWindow::addWatchpoint() {
     }
 
     address = static_cast<uint32_t>(hex2int(QString::fromStdString(s)));
-    wData = static_cast<uint32_t>(mem_peek_byte(address));
     QString addressString = int2hex(address, 6);
 
     /* Return if address is already set */
@@ -2142,13 +2161,14 @@ bool MainWindow::addWatchpoint() {
     ui->watchpointView->setRowCount(currentRow + 1);
 
     QTableWidgetItem *iaddress = new QTableWidgetItem(currAddress);
-    QTableWidgetItem *length = new QTableWidgetItem("1");
-    QTableWidgetItem *dWatch = new QTableWidgetItem(int2hex(wData, 2));
+    QTableWidgetItem *length = new QTableWidgetItem(watchLength);
+    QTableWidgetItem *dWatch = new QTableWidgetItem();
     QTableWidgetItem *rWatch = new QTableWidgetItem();
     QTableWidgetItem *wWatch = new QTableWidgetItem();
 
-    wWatch->setCheckState(Qt::Checked);
-    rWatch->setCheckState(Qt::Checked);
+    rWatch->setCheckState((watchpointType & DBG_READ_WATCHPOINT) ? Qt::Checked : Qt::Unchecked);
+    wWatch->setCheckState((watchpointType & DBG_WRITE_WATCHPOINT) ? Qt::Checked : Qt::Unchecked);
+
     wWatch->setFlags(wWatch->flags() & ~Qt::ItemIsEditable);
     rWatch->setFlags(rWatch->flags() & ~Qt::ItemIsEditable);
 
@@ -2158,15 +2178,22 @@ bool MainWindow::addWatchpoint() {
     ui->watchpointView->setItem(currentRow, 3, rWatch);
     ui->watchpointView->setItem(currentRow, 4, wWatch);
 
+    updateWatchpointData(currentRow);
+
     ui->watchpointView->selectRow(currentRow);
     ui->watchpointView->setUpdatesEnabled(true);
 
     debug_breakwatch(address, DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT, true);
 
     prevWatchpointAddress = address;
+
+    /* reset these for the next one */
     currAddress.clear();
-    updateDisasmView(address, true);
+    watchLength.clear();
+    watchpointType = DBG_NO_HANDLE;
+
     ui->watchpointView->blockSignals(false);
+    updateDisasmView(address, true);
     return true;
 }
 
@@ -2184,17 +2211,107 @@ void MainWindow::removeWatchpoint() {
     updateDisasmView(address, true);
 }
 
+void MainWindow::removeWatchpointAddress(QString address) {
+    for (int i=0; i<ui->watchpointView->rowCount(); i++) {
+        if (ui->watchpointView->item(i, 0)->text() == address) {
+            ui->watchpointView->selectRow(i);
+            removeWatchpoint();
+            break;
+        }
+    }
+}
+
+void MainWindow::removeBreakpointAddress(QString address) {
+    for (int i=0; i<ui->breakpointView->rowCount(); i++) {
+        if (ui->breakpointView->item(i, 0)->text() == address) {
+            ui->breakpointView->selectRow(i);
+            removeBreakpoint();
+            break;
+        }
+    }
+}
+
 void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
-    (void)debugAddress; /* Uncomment me when needed */
-    switch (command) {
-        case 1:
-            consoleStr("Program Aborted.\n");
-            break;
-        case 2:
-            consoleStr("Program Entered Debugger.\n");
-            break;
-        default:
-            break;
+
+    if (debugAddress == 0xFF) {
+        uint8_t wLength;
+        int tmp;
+        switch (command) {
+            case 1: // abort() routine hit
+                consoleStr("[CEmu] Program Aborted.\n");
+                raiseDebugger();
+                break;
+            case 2: // debugger() routine hit
+                consoleStr("[CEmu] Program Entered Debugger.\n");
+                raiseDebugger();
+                break;
+            case 3: // set a breakpoint with the value in HL
+                currAddress = int2hex(cpu.registers.HL,6);
+                addBreakpoint();
+                inDebugger = false; // continue emulation; we don't need to raise the debugger
+                break;
+            case 4: // remove a breakpoint with the value in HL
+                removeBreakpointAddress(int2hex(cpu.registers.HL,6));
+                inDebugger = false;
+                break;
+            case 5: // set a read watchpoint with the value in HL; length in C
+                wLength = cpu.registers.bc.l;
+                if (wLength > 4) {
+                    wLength = 4;
+                }
+                currAddress = int2hex(cpu.registers.HL,6);
+                watchLength = QString::number(wLength);
+                watchpointType = DBG_READ_WATCHPOINT;
+                addWatchpoint();
+                inDebugger = false;
+                break;
+            case 6: // set a write watchpoint with the value in HL; length in C
+                wLength = cpu.registers.bc.l;
+                if (wLength > 4) {
+                    wLength = 4;
+                }
+                currAddress = int2hex(cpu.registers.HL,6);
+                watchLength = QString::number(wLength);
+                watchpointType = DBG_WRITE_WATCHPOINT;
+                removeWatchpointAddress(currAddress);
+                addWatchpoint();
+                inDebugger = false;
+                break;
+            case 7: // set a read/write watchpoint with the value in HL; length in C
+                wLength = cpu.registers.bc.l;
+                if (wLength > 4) {
+                    wLength = 4;
+                }
+                currAddress = int2hex(cpu.registers.HL,6);
+                watchLength = QString::number(wLength);
+                watchpointType = DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT;
+                removeWatchpointAddress(currAddress);
+                addWatchpoint();
+                inDebugger = false;
+                break;
+            case 8: // we need to remove a watchpoint with the value in HL
+                removeWatchpointAddress(int2hex(cpu.registers.HL,6));
+                inDebugger = false;
+                break;
+            case 9: // we need to remove all breakpoints
+                tmp = ui->breakpointView->rowCount();
+                for (int i=0; i<tmp; i++) {
+                    ui->breakpointView->selectRow(0);
+                    removeBreakpoint();
+                }
+                inDebugger = false;
+                break;
+            case 10: // we need to remove all watchpoints
+                tmp = ui->watchpointView->rowCount();
+                for (int i=0; i<tmp; i++) {
+                    ui->watchpointView->selectRow(0);
+                    removeWatchpoint();
+                }
+                inDebugger = false;
+                break;
+            default:
+                break;
+        }
     }
 }
 
@@ -2206,6 +2323,8 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
        executeDebugCommand(static_cast<uint32_t>(reason-DBG_PORT_RANGE), static_cast<uint8_t>(input));
        return;
     }
+
+    raiseDebugger();
 
     // We hit a normal breakpoint; raise the correct entry in the port monitor table
     if (reason == HIT_EXEC_BREAKPOINT) {
@@ -2238,8 +2357,6 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
         ui->portTypeLabel->setText((reason == HIT_PORT_READ_BREAKPOINT) ? "Read" : "Write");
         ui->portView->selectRow(row);
     }
-
-    updateDisasmView(cpu.registers.PC, true);
 }
 
 void MainWindow::updatePortData(int currentRow) {
@@ -2307,6 +2424,7 @@ void MainWindow::updateStackView() {
 
 void MainWindow::drawNextDisassembleLine() {
     std::string *label = 0;
+
     if (disasm.base_address != disasm.new_address) {
         disasm.base_address = disasm.new_address;
         addressMap_t::iterator item = disasm.addressMap.find(disasm.new_address);
@@ -2436,22 +2554,21 @@ void MainWindow::opContextMenu(const QPoint& posa) {
     }
 }
 
+void MainWindow::createLCD() {
+    LCDPopout *p = new LCDPopout();
+    p->show();
+}
+
 void MainWindow::stepInPressed() {
     if(!inDebugger) {
         return;
     }
 
     disconnect(stepInShortcut, &QShortcut::activated, this, &MainWindow::stepInPressed);
-    ui->disassemblyView->verticalScrollBar()->blockSignals(true);
 
     debuggerOn = false;
     updateDebuggerChanges();
     emit setDebugStepInMode();
-}
-
-void MainWindow::createLCD() {
-    LCDPopout *p = new LCDPopout();
-    p->show();
 }
 
 void MainWindow::stepOverPressed() {
@@ -2459,7 +2576,6 @@ void MainWindow::stepOverPressed() {
         return;
     }
 
-    ui->disassemblyView->verticalScrollBar()->blockSignals(true);
     disconnect(stepOverShortcut, &QShortcut::activated, this, &MainWindow::stepOverPressed);
 
     debuggerOn = false;
@@ -2472,7 +2588,6 @@ void MainWindow::stepNextPressed() {
         return;
     }
 
-    ui->disassemblyView->verticalScrollBar()->blockSignals(true);
     disconnect(stepNextShortcut, &QShortcut::activated, this, &MainWindow::stepNextPressed);
 
     debuggerOn = false;
@@ -2485,7 +2600,6 @@ void MainWindow::stepOutPressed() {
         return;
     }
 
-    ui->disassemblyView->verticalScrollBar()->blockSignals(true);
     disconnect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOutPressed);
 
     debuggerOn = false;
@@ -2836,17 +2950,11 @@ void MainWindow::addEquateFile(QString fileName) {
 }
 
 void MainWindow::scrollDisasmView(int value) {
-    if (value >= ui->disassemblyView->verticalScrollBar()->value()) {
-        if (value >= ui->disassemblyView->verticalScrollBar()->maximum()) {
-            ui->disassemblyView->verticalScrollBar()->blockSignals(true);
-            disconnect(ui->disassemblyView->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::scrollDisasmView);
-            ui->disassemblyView->blockSignals(true);
-            drawNextDisassembleLine();
-            ui->disassemblyView->blockSignals(false);
-            ui->disassemblyView->verticalScrollBar()->setValue(ui->disassemblyView->verticalScrollBar()->maximum()-1);
-            connect(ui->disassemblyView->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::scrollDisasmView);
-            ui->disassemblyView->verticalScrollBar()->blockSignals(false);
-        }
+    if (value >= ui->disassemblyView->verticalScrollBar()->maximum()) {
+        ui->disassemblyView->verticalScrollBar()->blockSignals(true);
+        drawNextDisassembleLine();
+        ui->disassemblyView->verticalScrollBar()->setValue(ui->disassemblyView->verticalScrollBar()->maximum()-1);
+        ui->disassemblyView->verticalScrollBar()->blockSignals(false);
     }
 }
 

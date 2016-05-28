@@ -11,8 +11,7 @@ class QSize;
 class QWidget;
 QT_END_NAMESPACE
 
-class DataWidget : public QPlainTextEdit
-{
+class DataWidget : public QPlainTextEdit {
     Q_OBJECT
 
 public:
@@ -20,13 +19,12 @@ public:
     void clearAllHighlights();
     void updateAllHighlights();
     void addHighlight(QColor);
+    void highlightCurrentLine();
     void cursorState(bool movable);
     QString getSelectedAddress();
 
 private:
-    void highlightCurrentLine();
-
-    bool cursor_state = false;
+    bool cursor_moveable;
     QList<QTextEdit::ExtraSelection> extraHighlights;
 };
 

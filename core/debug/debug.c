@@ -76,12 +76,13 @@ void open_debugger(int reason, uint32_t data) {
 
     debugger.cpu_cycles = cpu.cycles;
     debugger.cpu_next = cpu.next;
-    gui_debugger_raise_or_disable(inDebugger = true);
+
+    inDebugger = true;
     gui_debugger_send_command(reason, data);
 
-    do {
+    while(inDebugger) {
         gui_emu_sleep();
-    } while(inDebugger);
+    }
 
     cpu.next = debugger.cpu_next;
     cpu.cycles = debugger.cpu_cycles;
