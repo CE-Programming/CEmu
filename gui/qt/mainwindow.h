@@ -251,8 +251,9 @@ private:
     uint32_t prevBreakpointAddress;
     uint32_t prevWatchpointAddress;
     uint32_t prevDisasmAddress;
+    uint32_t currAddress;
     uint8_t watchpointType = 0;
-    QString currAddress, currPortAddress, watchLength;
+    QString currAddressString, currPortAddress, watchLength;
     QPalette colorback, nocolorback;
 
     QShortcut *stepInShortcut;

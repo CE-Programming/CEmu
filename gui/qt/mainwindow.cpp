@@ -506,12 +506,8 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *e) {
 }
 
 void MainWindow::closeEvent(QCloseEvent *e) {
-    if (inDebugger) {
-        changeDebuggerState();
-    }
-    if (inReceivingMode) {
-        refreshVariableList();
-    }
+    inDebugger = false;
+    inReceivingMode = false;
 
     if (!closeAfterSave && settings->value(QStringLiteral("saveOnClose")).toBool()) {
             closeAfterSave = true;
@@ -1683,7 +1679,7 @@ void MainWindow::populateDebugWindow() {
     memUpdate(cpu.registers.PC);
     prevDisasmAddress = cpu.registers.PC;
     if(ui->tabDebugging->currentIndex() == 0) {
-        updateDisasmView(prevDisasmAddress, true);
+        updateDisasmView(cpu.registers.PC, true);
     }
 }
 
@@ -1754,6 +1750,8 @@ void MainWindow::updateDisasmView(const int sentBase, const bool newPane) {
     if (disasm.new_address < 0) { disasm.new_address = 0; }
     int32_t last_address = disasm.new_address + 0x120;
     if (last_address > 0xFFFFFF) { last_address = 0xFFFFFF; }
+
+    ui->disassemblyView->verticalScrollBar()->blockSignals(true);
 
     ui->disassemblyView->cursorState(false);
     ui->disassemblyView->blockSignals(true);
@@ -1996,7 +1994,7 @@ void MainWindow::changeWatchpointAddress(QTableWidgetItem *item) {
         item->setText(newString);
 
         for(i=0; i<wLength; i++) {
-            mem_poke_byte(address+i, (wData >> ((wLength-i-1) << 3))&0xFF);
+            mem_poke_byte(address+i, (wData >> ((i << 3))&0xFF));
         }
 
         ramUpdate();
@@ -2054,26 +2052,23 @@ void MainWindow::changeWatchpointAddress(QTableWidgetItem *item) {
 }
 
 bool MainWindow::addBreakpoint() {
-    uint32_t address;
-
     const int currentRow = ui->breakpointView->rowCount();
 
-    if (currAddress.isEmpty()) {
-        currAddress = "000000";
+    currAddressString = currAddressString.toUpper();
+
+    if (currAddressString.isEmpty()) {
+        currAddressString = "000000";
     }
 
-    std::string s = currAddress.toUpper().toStdString();
+    std::string s = currAddressString.toStdString();
     if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos) {
         return false;
     }
 
-    address = static_cast<uint32_t>(hex2int(QString::fromStdString(s)));
-    QString addressString = int2hex(address, 6);
-
     /* Return if address is already set */
     for (int i=0; i<currentRow; ++i) {
-        if (ui->breakpointView->item(i, 0)->text() == addressString) {
-            if(addressString != "000000") {
+        if (ui->breakpointView->item(i, 0)->text() == currAddressString) {
+            if(currAddressString != "000000") {
                 ui->breakpointView->selectRow(i);
                 return false;
             }
@@ -2085,7 +2080,7 @@ bool MainWindow::addBreakpoint() {
 
     ui->breakpointView->setRowCount(currentRow + 1);
 
-    QTableWidgetItem *iaddress = new QTableWidgetItem(currAddress);
+    QTableWidgetItem *iaddress = new QTableWidgetItem(currAddressString);
     QTableWidgetItem *eBreak = new QTableWidgetItem();
 
     eBreak->setCheckState(Qt::Checked);
@@ -2097,12 +2092,11 @@ bool MainWindow::addBreakpoint() {
     ui->breakpointView->selectRow(currentRow);
     ui->breakpointView->setUpdatesEnabled(true);
 
-    debug_breakwatch(address, DBG_EXEC_BREAKPOINT, true);
+    debug_breakwatch(currAddress, DBG_EXEC_BREAKPOINT, true);
 
-    prevBreakpointAddress = address;
-    currAddress.clear();
+    prevBreakpointAddress = currAddress;
+    currAddressString.clear();
     ui->breakpointView->blockSignals(false);
-    updateDisasmView(address, true);
     return true;
 }
 
@@ -2117,17 +2111,16 @@ void MainWindow::removeBreakpoint() {
     debug_breakwatch(address, DBG_EXEC_BREAKPOINT, false);
 
     ui->breakpointView->removeRow(currentRow);
-    updateDisasmView(address, true);
 }
 
 bool MainWindow::addWatchpoint() {
-    uint32_t address;
-
     const int currentRow = ui->watchpointView->rowCount();
 
-    if (currAddress.isEmpty()) {
-        currAddress = "000000";
+    if (currAddressString.isEmpty()) {
+        currAddressString = "000000";
     }
+
+    currAddressString = currAddressString.toUpper();
 
     if (watchLength.isEmpty()) {
         watchLength = "1";
@@ -2137,18 +2130,15 @@ bool MainWindow::addWatchpoint() {
         watchpointType = DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT;
     }
 
-    std::string s = currAddress.toUpper().toStdString();
+    std::string s = currAddressString.toStdString();
     if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos) {
         return false;
     }
 
-    address = static_cast<uint32_t>(hex2int(QString::fromStdString(s)));
-    QString addressString = int2hex(address, 6);
-
     /* Return if address is already set */
     for (int i=0; i<currentRow; ++i) {
-        if (ui->watchpointView->item(i, 0)->text() == addressString) {
-            if(addressString != "000000") {
+        if (ui->watchpointView->item(i, 0)->text() == currAddressString) {
+            if(currAddressString != "000000") {
                 ui->watchpointView->selectRow(i);
                 return false;
             }
@@ -2160,7 +2150,7 @@ bool MainWindow::addWatchpoint() {
 
     ui->watchpointView->setRowCount(currentRow + 1);
 
-    QTableWidgetItem *iaddress = new QTableWidgetItem(currAddress);
+    QTableWidgetItem *iaddress = new QTableWidgetItem(currAddressString);
     QTableWidgetItem *length = new QTableWidgetItem(watchLength);
     QTableWidgetItem *dWatch = new QTableWidgetItem();
     QTableWidgetItem *rWatch = new QTableWidgetItem();
@@ -2183,17 +2173,16 @@ bool MainWindow::addWatchpoint() {
     ui->watchpointView->selectRow(currentRow);
     ui->watchpointView->setUpdatesEnabled(true);
 
-    debug_breakwatch(address, DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT, true);
+    debug_breakwatch(currAddress, DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT, true);
 
-    prevWatchpointAddress = address;
+    prevWatchpointAddress = currAddress;
 
     /* reset these for the next one */
-    currAddress.clear();
+    currAddressString.clear();
     watchLength.clear();
     watchpointType = DBG_NO_HANDLE;
 
     ui->watchpointView->blockSignals(false);
-    updateDisasmView(address, true);
     return true;
 }
 
@@ -2208,7 +2197,6 @@ void MainWindow::removeWatchpoint() {
     debug_breakwatch(address, DBG_READ_WATCHPOINT | DBG_WRITE_WATCHPOINT, false);
 
     ui->watchpointView->removeRow(currentRow);
-    updateDisasmView(address, true);
 }
 
 void MainWindow::removeWatchpointAddress(QString address) {
@@ -2246,7 +2234,7 @@ void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
                 raiseDebugger();
                 break;
             case 3: // set a breakpoint with the value in HL
-                currAddress = int2hex(cpu.registers.HL,6);
+                currAddressString = int2hex(cpu.registers.HL,6);
                 addBreakpoint();
                 inDebugger = false; // continue emulation; we don't need to raise the debugger
                 break;
@@ -2259,7 +2247,7 @@ void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
                 if (wLength > 4) {
                     wLength = 4;
                 }
-                currAddress = int2hex(cpu.registers.HL,6);
+                currAddressString = int2hex(cpu.registers.HL,6);
                 watchLength = QString::number(wLength);
                 watchpointType = DBG_READ_WATCHPOINT;
                 addWatchpoint();
@@ -2270,10 +2258,10 @@ void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
                 if (wLength > 4) {
                     wLength = 4;
                 }
-                currAddress = int2hex(cpu.registers.HL,6);
+                currAddressString = int2hex(cpu.registers.HL,6);
                 watchLength = QString::number(wLength);
                 watchpointType = DBG_WRITE_WATCHPOINT;
-                removeWatchpointAddress(currAddress);
+                removeWatchpointAddress(currAddressString);
                 addWatchpoint();
                 inDebugger = false;
                 break;
@@ -2282,10 +2270,10 @@ void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
                 if (wLength > 4) {
                     wLength = 4;
                 }
-                currAddress = int2hex(cpu.registers.HL,6);
+                currAddressString = int2hex(cpu.registers.HL,6);
                 watchLength = QString::number(wLength);
                 watchpointType = DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT;
-                removeWatchpointAddress(currAddress);
+                removeWatchpointAddress(currAddressString);
                 addWatchpoint();
                 inDebugger = false;
                 break;
@@ -2368,11 +2356,11 @@ void MainWindow::updatePortData(int currentRow) {
 
 void MainWindow::updateWatchpointData(int currentRow) {
     uint8_t i,length = ui->watchpointView->item(currentRow, 1)->text().toUInt();
-    uint32_t address = static_cast<uint32_t>(hex2int(ui->watchpointView->item(currentRow, 0)->text())+length-1);
+    uint32_t address = static_cast<uint32_t>(hex2int(ui->watchpointView->item(currentRow, 0)->text()));
     uint32_t read = 0;
 
     for(i=0; i<length; i++) {
-        read |= mem_peek_byte(address-i) << (i << 3);
+        read |= mem_peek_byte(address+i) << (i << 3);
     }
 
     ui->watchpointView->item(currentRow, 2)->setText(int2hex(read, length << 1));
@@ -2612,19 +2600,23 @@ void MainWindow::disableDebugger() {
 }
 
 void MainWindow::setBreakpointAddress() {
-    currAddress = ui->disassemblyView->getSelectedAddress();
+    currAddressString = ui->disassemblyView->getSelectedAddress();
+    currAddress = static_cast<uint32_t>(hex2int(currAddressString));
 
     if(!addBreakpoint()) {
         removeBreakpoint();
     }
+    updateDisasmView(currAddress, true);
 }
 
 void MainWindow::setWatchpointAddress() {
-    currAddress = ui->disassemblyView->getSelectedAddress();
+    currAddressString = ui->disassemblyView->getSelectedAddress();
+    currAddress = static_cast<uint32_t>(hex2int(currAddressString));
 
     if(!addWatchpoint()) {
         removeWatchpoint();
     }
+    updateDisasmView(currAddress, true);
 }
 
 QString MainWindow::getAddressString(bool &ok, QString String) {

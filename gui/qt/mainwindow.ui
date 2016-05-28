@@ -1896,7 +1896,7 @@
               </column>
               <column>
                <property name="text">
-                <string>Data</string>
+                <string>Value</string>
                </property>
               </column>
               <column>
