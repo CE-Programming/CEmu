@@ -2143,6 +2143,10 @@ bool MainWindow::addWatchpoint() {
         watchpointType = DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT;
     }
 
+    if (watchpointType == DBG_EMPTY_WATCHPOINT) {
+        watchpointType = DBG_NO_HANDLE;
+    }
+
     std::string s = currAddressString.toStdString();
     if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos) {
         return false;
@@ -2314,6 +2318,19 @@ void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
                     ui->watchpointView->selectRow(0);
                     removeWatchpoint();
                 }
+                inDebugger = false;
+                break;
+            case 11: // set an empty watchpoint with the value in DE; length in C
+                wLength = cpu.registers.bc.l;
+                if (wLength > 4) {
+                    wLength = 4;
+                }
+                currAddress = cpu.registers.DE;
+                currAddressString = int2hex(currAddress,6);
+                watchLength = QString::number(wLength);
+                watchpointType = DBG_EMPTY_WATCHPOINT;
+                removeWatchpointAddress(currAddressString);
+                addWatchpoint();
                 inDebugger = false;
                 break;
             default:

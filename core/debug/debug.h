@@ -36,11 +36,12 @@ enum {
 /* For Memory Brakpoints */
 #define DBG_READ_WATCHPOINT       (1 << 0)
 #define DBG_WRITE_WATCHPOINT      (1 << 1)
-#define DBG_EXEC_BREAKPOINT       (1 << 2)
-#define DBG_STEP_OVER_BREAKPOINT  (1 << 3)
-#define DBG_RUN_UNTIL_BREAKPOINT  (1 << 4)
-#define DBG_INST_START_MARKER     (1 << 5)
-#define DBG_INST_MARKER           (1 << 6)
+#define DBG_EMPTY_WATCHPOINT      (1 << 2)
+#define DBG_EXEC_BREAKPOINT       (1 << 3)
+#define DBG_STEP_OVER_BREAKPOINT  (1 << 4)
+#define DBG_RUN_UNTIL_BREAKPOINT  (1 << 5)
+#define DBG_INST_START_MARKER     (1 << 6)
+#define DBG_INST_MARKER           (1 << 7)
 
 #define DBG_PORT_RANGE            0xFFFF00
 #define DBGOUT_PORT_RANGE         0xFB0000
