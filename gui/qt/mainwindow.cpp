@@ -298,6 +298,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     ui->emuVarView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->vatView->cursorState(true);
     ui->opView->cursorState(true);
+    ui->opView->updateAllHighlights();
+    ui->vatView->updateAllHighlights();
 
     if (!fileExists(emu.rom)) {
         if (!runSetup()) {
@@ -1493,6 +1495,12 @@ void MainWindow::setDebuggerState(bool state) {
         ui->breakTypeLabel->clear();
         ui->opView->clear();
         ui->vatView->clear();
+        ui->portChangeLabel->clear();
+        ui->portTypeLabel->clear();
+        ui->breakChangeLabel->clear();
+        ui->breakTypeLabel->clear();
+        ui->watchChangeLabel->clear();
+        ui->watchTypeLabel->clear();
     }
     setReceiveState(false);
 
@@ -1678,13 +1686,12 @@ void MainWindow::populateDebugWindow() {
 
     updateTIOSView();
     updateStackView();
+    prevDisasmAddress = cpu.registers.PC;
+    updateDisasmView(prevDisasmAddress, true);
+
     ramUpdate();
     flashUpdate();
-    memUpdate(cpu.registers.PC);
-    prevDisasmAddress = cpu.registers.PC;
-    if(ui->tabDebugging->currentIndex() == 0) {
-        updateDisasmView(prevDisasmAddress, true);
-    }
+    memUpdate(prevDisasmAddress);
 }
 
 void MainWindow::updateTIOSView() {
@@ -2209,7 +2216,7 @@ bool MainWindow::removeWatchpoint() {
 void MainWindow::removeWatchpointAddress(QString address) {
     for (int i=0; i<ui->watchpointView->rowCount(); i++) {
         if (ui->watchpointView->item(i, 0)->text() == address) {
-            ui->watchpointView->selectRow(i);
+            ui->watchpointView->setCurrentCell(i,0);
             removeWatchpoint();
             break;
         }
@@ -2219,7 +2226,7 @@ void MainWindow::removeWatchpointAddress(QString address) {
 void MainWindow::removeBreakpointAddress(QString address) {
     for (int i=0; i<ui->breakpointView->rowCount(); i++) {
         if (ui->breakpointView->item(i, 0)->text() == address) {
-            ui->breakpointView->selectRow(i);
+            ui->breakpointView->setCurrentCell(i,0);
             removeBreakpoint();
             break;
         }
@@ -2240,52 +2247,57 @@ void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
                 consoleStr("[CEmu] Program Entered Debugger.\n");
                 raiseDebugger();
                 break;
-            case 3: // set a breakpoint with the value in HL
-                currAddressString = int2hex(cpu.registers.HL,6);
+            case 3: // set a breakpoint with the value in DE
+                currAddress = cpu.registers.DE;
+                currAddressString = int2hex(currAddress, 6);
                 addBreakpoint();
                 inDebugger = false; // continue emulation; we don't need to raise the debugger
                 break;
-            case 4: // remove a breakpoint with the value in HL
-                removeBreakpointAddress(int2hex(cpu.registers.HL,6));
+            case 4: // remove a breakpoint with the value in DE
+                currAddress = cpu.registers.DE;
+                removeBreakpointAddress(int2hex(currAddress, 6));
                 inDebugger = false;
                 break;
-            case 5: // set a read watchpoint with the value in HL; length in C
+            case 5: // set a read watchpoint with the value in DE; length in C
                 wLength = cpu.registers.bc.l;
                 if (wLength > 4) {
                     wLength = 4;
                 }
-                currAddressString = int2hex(cpu.registers.HL,6);
+                currAddress = cpu.registers.DE;
+                currAddressString = int2hex(currAddress, 6);
                 watchLength = QString::number(wLength);
                 watchpointType = DBG_READ_WATCHPOINT;
                 addWatchpoint();
                 inDebugger = false;
                 break;
-            case 6: // set a write watchpoint with the value in HL; length in C
+            case 6: // set a write watchpoint with the value in DE; length in C
                 wLength = cpu.registers.bc.l;
                 if (wLength > 4) {
                     wLength = 4;
                 }
-                currAddressString = int2hex(cpu.registers.HL,6);
+                currAddress = cpu.registers.DE;
+                currAddressString = int2hex(currAddress, 6);
                 watchLength = QString::number(wLength);
                 watchpointType = DBG_WRITE_WATCHPOINT;
                 removeWatchpointAddress(currAddressString);
                 addWatchpoint();
                 inDebugger = false;
                 break;
-            case 7: // set a read/write watchpoint with the value in HL; length in C
+            case 7: // set a read/write watchpoint with the value in DE; length in C
                 wLength = cpu.registers.bc.l;
                 if (wLength > 4) {
                     wLength = 4;
                 }
-                currAddressString = int2hex(cpu.registers.HL,6);
+                currAddress = cpu.registers.DE;
+                currAddressString = int2hex(currAddress,6);
                 watchLength = QString::number(wLength);
                 watchpointType = DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT;
                 removeWatchpointAddress(currAddressString);
                 addWatchpoint();
                 inDebugger = false;
                 break;
-            case 8: // we need to remove a watchpoint with the value in HL
-                removeWatchpointAddress(int2hex(cpu.registers.HL,6));
+            case 8: // we need to remove a watchpoint with the value in DE
+                removeWatchpointAddress(int2hex(cpu.registers.DE, 6));
                 inDebugger = false;
                 break;
             case 9: // we need to remove all breakpoints

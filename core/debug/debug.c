@@ -77,6 +77,18 @@ void open_debugger(int reason, uint32_t data) {
     debugger.cpu_cycles = cpu.cycles;
     debugger.cpu_next = cpu.next;
 
+    if(debugger.currentBuffPos) {
+        debugger.buffer[debugger.currentBuffPos] = '\0';
+        gui_console_printf("%s",debugger.buffer);
+        debugger.currentBuffPos = 0;
+    }
+
+    if(debugger.currentErrBuffPos) {
+        debugger.errBuffer[debugger.currentErrBuffPos] = '\0';
+        gui_console_err_printf("%s",debugger.errBuffer);
+        debugger.currentErrBuffPos = 0;
+    }
+
     inDebugger = true;
     gui_debugger_send_command(reason, data);
 
