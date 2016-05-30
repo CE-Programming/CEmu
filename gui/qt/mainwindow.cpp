@@ -2325,7 +2325,7 @@ void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
                 break;
         }
     }
-    consoleStr("[CEmu] Unknown debug Command: 0x"+QString::number(command,16).rightJustified(2,'0')+",0x"+QString::number((debugAddress<<16)+0xFFFF,16)+"\n");
+    consoleStr("[CEmu] Unknown debug Command: 0x"+QString::number(command,16).rightJustified(2,'0')+",0x"+QString::number(debugAddress+0xFFFF00,16)+"\n");
     inDebugger = false;
 }
 
