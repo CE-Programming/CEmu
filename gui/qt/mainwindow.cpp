@@ -1360,7 +1360,7 @@ void MainWindow::setFont(int fontSize) {
 }
 
 static int hex2int(QString str) {
-    return std::stoi(str.toStdString(), nullptr, 16);
+    return (int)strtol(str.toStdString().c_str(), nullptr, 16);
 }
 
 static QString int2hex(uint32_t a, uint8_t l) {
