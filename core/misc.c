@@ -314,7 +314,6 @@ bool exxx_restore(const emu_image *s) {
 /* Write to the 0xFXXX range of ports */
 static void fxxx_write(const uint16_t pio, const uint8_t value) {
     /* 0xFFE appears to dump the contents of flash. Probably not a good thing to print to a console :) */
-
     if (pio != 0xFFF) {
         return;
     }
@@ -324,6 +323,8 @@ static void fxxx_write(const uint16_t pio, const uint8_t value) {
         debugger.buffer[debugger.currentBuffPos] = (char)value;
         debugger.currentBuffPos = (debugger.currentBuffPos + 1) % (SIZEOF_DBG_BUFFER);
     }
+#else
+    (void)value; /* Uncomment me when needed */
 #endif
 }
 
