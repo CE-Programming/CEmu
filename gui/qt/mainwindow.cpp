@@ -2246,39 +2246,33 @@ void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
             case 1: // abort() routine hit
                 consoleStr("[CEmu] Program Aborted.\n");
                 raiseDebugger();
-                break;
+                return;
             case 2: // debugger() routine hit
                 consoleStr("[CEmu] Program Entered Debugger.\n");
                 raiseDebugger();
-                break;
+                return;
             case 3: // set a breakpoint with the value in DE
                 currAddress = cpu.registers.DE;
                 currAddressString = int2hex(currAddress, 6);
                 addBreakpoint();
                 inDebugger = false; // continue emulation; we don't need to raise the debugger
-                break;
+                return;
             case 4: // remove a breakpoint with the value in DE
                 currAddress = cpu.registers.DE;
                 removeBreakpointAddress(int2hex(currAddress, 6));
                 inDebugger = false;
-                break;
+                return;
             case 5: // set a read watchpoint with the value in DE; length in C
-                wLength = cpu.registers.bc.l;
-                if (wLength > 4) {
-                    wLength = 4;
-                }
+                wLength = (cpu.registers.bc.l > 4) ? 4 : cpu.registers.bc.l;
                 currAddress = cpu.registers.DE;
                 currAddressString = int2hex(currAddress, 6);
                 watchLength = QString::number(wLength);
                 watchpointType = DBG_READ_WATCHPOINT;
                 addWatchpoint();
                 inDebugger = false;
-                break;
+                return;
             case 6: // set a write watchpoint with the value in DE; length in C
-                wLength = cpu.registers.bc.l;
-                if (wLength > 4) {
-                    wLength = 4;
-                }
+                wLength = (cpu.registers.bc.l > 4) ? 4 : cpu.registers.bc.l;
                 currAddress = cpu.registers.DE;
                 currAddressString = int2hex(currAddress, 6);
                 watchLength = QString::number(wLength);
@@ -2286,12 +2280,9 @@ void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
                 removeWatchpointAddress(currAddressString);
                 addWatchpoint();
                 inDebugger = false;
-                break;
+                return;
             case 7: // set a read/write watchpoint with the value in DE; length in C
-                wLength = cpu.registers.bc.l;
-                if (wLength > 4) {
-                    wLength = 4;
-                }
+                wLength = (cpu.registers.bc.l > 4) ? 4 : cpu.registers.bc.l;
                 currAddress = cpu.registers.DE;
                 currAddressString = int2hex(currAddress,6);
                 watchLength = QString::number(wLength);
@@ -2299,11 +2290,11 @@ void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
                 removeWatchpointAddress(currAddressString);
                 addWatchpoint();
                 inDebugger = false;
-                break;
+                return;
             case 8: // we need to remove a watchpoint with the value in DE
                 removeWatchpointAddress(int2hex(cpu.registers.DE, 6));
                 inDebugger = false;
-                break;
+                return;
             case 9: // we need to remove all breakpoints
                 tmp = ui->breakpointView->rowCount();
                 for (int i=0; i<tmp; i++) {
@@ -2311,7 +2302,7 @@ void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
                     removeBreakpoint();
                 }
                 inDebugger = false;
-                break;
+                return;
             case 10: // we need to remove all watchpoints
                 tmp = ui->watchpointView->rowCount();
                 for (int i=0; i<tmp; i++) {
@@ -2319,12 +2310,9 @@ void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
                     removeWatchpoint();
                 }
                 inDebugger = false;
-                break;
+                return;
             case 11: // set an empty watchpoint with the value in DE; length in C
-                wLength = cpu.registers.bc.l;
-                if (wLength > 4) {
-                    wLength = 4;
-                }
+                wLength = (cpu.registers.bc.l > 4) ? 4 : cpu.registers.bc.l;
                 currAddress = cpu.registers.DE;
                 currAddressString = int2hex(currAddress,6);
                 watchLength = QString::number(wLength);
@@ -2332,11 +2320,13 @@ void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
                 removeWatchpointAddress(currAddressString);
                 addWatchpoint();
                 inDebugger = false;
-                break;
+                return;
             default:
                 break;
         }
     }
+    consoleStr("[CEmu] Unknown debug Command: 0x"+QString::number(command,16).rightJustified(2,'0')+",0x"+QString::number((debugAddress<<16)+0xFFFF,16)+"\n");
+    inDebugger = false;
 }
 
 void MainWindow::processDebugCommand(int reason, uint32_t input) {
