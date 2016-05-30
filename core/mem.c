@@ -407,6 +407,7 @@ void mem_write_byte(uint32_t address, uint8_t value) {
         case 0x4: case 0x5: case 0x6: case 0x7:
             if (mem.flash.locked && cpu.registers.PC >= control.privileged) {
                 cpu_nmi();
+                gui_console_printf("[CEmu] NMI triggered (cannot execute here)\n");
             } else {
                 flash_write_handler(address, value);
             }
@@ -455,6 +456,7 @@ void mem_write_byte(uint32_t address, uint8_t value) {
 
     if (cpu.registers.PC >= control.privileged && address == control.stackLimit) {
         cpu_nmi();
+        gui_console_printf("[CEmu] NMI triggered (tried to write on the stack limit)\n");
     }
 
 #ifdef DEBUG_SUPPORT
