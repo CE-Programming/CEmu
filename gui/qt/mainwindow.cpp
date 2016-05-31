@@ -1194,6 +1194,7 @@ void MainWindow::openJSONConfig(const QString& jsonPath) {
         return;
     }
 
+    autotester::ignoreROMfield = true;
     if (autotester::loadJSONConfig(jsonContents))
     {
         ui->JSONconfigPath->setText(jsonPath);

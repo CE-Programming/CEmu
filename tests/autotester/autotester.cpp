@@ -27,6 +27,7 @@ namespace autotester
 /* The global config variable */
 config_t config;
 
+bool ignoreROMfield = false;
 bool configLoaded = false;
 void (*stepCallback)(void) = nullptr;
 
@@ -216,18 +217,21 @@ bool loadJSONConfig(const std::string& jsonContents)
 
     json11::Json tmp, tmp2;
 
-    tmp = configJson["rom"];
-    if (tmp.is_string() && !tmp.string_value().empty())
+    if (!ignoreROMfield)
     {
-        config.rom = tmp.string_value();
-        if (!file_exists(config.rom))
+        tmp = configJson["rom"];
+        if (tmp.is_string() && !tmp.string_value().empty())
         {
-            std::cerr << "[Error] The ROM file '" << config.rom << "' doesn't seem to exist (or requires higher permissions?)" << std::endl;
+            config.rom = tmp.string_value();
+            if (!file_exists(config.rom))
+            {
+                std::cerr << "[Error] The ROM file '" << config.rom << "' doesn't seem to exist (or requires higher permissions?)" << std::endl;
+                return false;
+            }
+        } else {
+            std::cerr << "[Error] \"rom\" parameter not given or invalid" << std::endl;
             return false;
         }
-    } else {
-        std::cerr << "[Error] \"rom\" parameter not given or invalid" << std::endl;
-        return false;
     }
 
     tmp = configJson["transfer_files"];

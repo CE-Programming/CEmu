@@ -148,7 +148,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -6156,11 +6156,14 @@
                </item>
                <item>
                 <widget class="QCheckBox" name="checkBoxTestReset">
+                 <property name="enabled">
+                  <bool>true</bool>
+                 </property>
                  <property name="text">
                   <string>Reset before test</string>
                  </property>
                  <property name="checked">
-                  <bool>true</bool>
+                  <bool>false</bool>
                  </property>
                 </widget>
                </item>
@@ -6496,7 +6499,7 @@
      <x>0</x>
      <y>0</y>
      <width>1288</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="sizePolicy">
