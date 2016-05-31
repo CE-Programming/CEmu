@@ -176,7 +176,7 @@ void keypad_reset() {
 
     keypad.current_row = 0;
     for(i=0; i<sizeof(keypad.data) / sizeof(keypad.data[0]); i++) {
-        keypad.data[i] = 0;
+        keypad.data[i] = keypad.key_map[i] = 0;
     }
 
     sched.items[SCHED_KEYPAD].clock = CLOCK_APB;
