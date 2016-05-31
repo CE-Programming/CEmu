@@ -76,6 +76,7 @@ namespace autotester
     /* The global config variable */
     extern config_t config;
 
+    extern bool debugLogs;
     extern bool ignoreROMfield;
     extern bool configLoaded;
 

@@ -27,6 +27,7 @@ namespace autotester
 /* The global config variable */
 config_t config;
 
+bool debugLogs = true;
 bool ignoreROMfield = false;
 bool configLoaded = false;
 void (*stepCallback)(void) = nullptr;
@@ -139,12 +140,16 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
                 const uint32_t real_hash = crc32(cemucore::phys_mem_ptr(param.start, param.size), param.size);
                 if (std::find(param.expected_CRCs.begin(), param.expected_CRCs.end(), real_hash) != param.expected_CRCs.end())
                 {
-                    std::cout << "\t[Test passed!] Hash #" << which_hash << " had a matching CRC." << std::endl;
+                    if (debugLogs) {
+                        std::cout << "\t[Test passed!] Hash #" << which_hash << " had a matching CRC." << std::endl;
+                    }
                     hashesPassed++;
                 } else {
-                    std::cout << "\t[Test failed!] Hash #" << which_hash << " (\"" << param.description << "\") did not match "
-                              << (param.expected_CRCs.size() > 1 ? "any of the expected CRCs" : "the expected CRC")
-                              << " (got " << std::uppercase << std::hex << real_hash << std::dec << ")." << std::endl;
+                    if (debugLogs) {
+                        std::cout << "\t[Test failed!] Hash #" << which_hash << " (\"" << param.description << "\") did not match "
+                                  << (param.expected_CRCs.size() > 1 ? "any of the expected CRCs" : "the expected CRC")
+                                  << " (got " << std::uppercase << std::hex << real_hash << std::dec << ")." << std::endl;
+                    }
                     hashesFailed++;
                 }
                 hashesTested++;
@@ -209,7 +214,9 @@ bool loadJSONConfig(const std::string& jsonContents)
     json11::Json configJson = json11::Json::parse(jsonContents, jsonError);
     if (jsonError.empty())
     {
-        std::cout << "[OK] JSON parsed" << std::endl;
+        if (debugLogs) {
+            std::cout << "[OK] JSON parsed" << std::endl;
+        }
     } else {
         std::cerr << "[Error] JSON parse error: " << jsonError << std::endl;
         return -1;
@@ -420,7 +427,9 @@ bool sendFilesForTest()
 {
     for (const auto& file : config.transfer_files)
     {
-        std::cout << "- Sending file " << file << "... " << std::endl;
+        if (debugLogs) {
+            std::cout << "- Sending file " << file << "... " << std::endl;
+        }
         if (!cemucore::sendVariableLink(file.c_str()))
         {
             std::cerr << "[Error] File couldn't be sent" << std::endl;
@@ -434,9 +443,14 @@ bool sendFilesForTest()
 
 bool doTestSequence()
 {
+    hashesPassed = hashesFailed = hashesTested = 0;
+    cemucore::keypad_reset();
+
     for (const auto& command : config.sequence)
     {
-        std::cout << "Launching command " << command.first << " | " << command.second << std::endl;
+        if (debugLogs) {
+            std::cout << "Launching command " << command.first << " | " << command.second << std::endl;
+        }
         if (!launchCommand(command)) {
             return false;
         }
