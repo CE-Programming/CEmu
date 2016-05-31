@@ -1253,6 +1253,8 @@ void MainWindow::launchTest() {
         dispAutotesterError(1);
         return;
     }
+
+    QMessageBox::information(this, tr("Test results"), QString(tr("Out of %2 tests attempted:\n%4 passed\n%6 failed")).arg(QString::number(autotester::hashesTested), QString::number(autotester::hashesPassed), QString::number(autotester::hashesFailed)));
 }
 
 void MainWindow::updateCRCParamsFromPreset(int comboBoxIndex) {
