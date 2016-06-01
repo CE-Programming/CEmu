@@ -54,7 +54,7 @@ static void hold_read(void) {
 }
 
 static uint8_t rtc_read(const uint16_t pio) {
-    uint16_t index = pio & 0xFF;
+    uint8_t index = pio & 0xFF;
     uint8_t bit_offset = (index & 3) << 3;
 
     uint8_t value = 0;

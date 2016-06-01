@@ -182,7 +182,7 @@ void lcd_reset(void) {
 }
 
 uint8_t lcd_read(const uint16_t pio) {
-    uint16_t index = pio & 0xFFF;
+    uint16_t index = pio;
     uint8_t bit_offset = (index & 3) << 3;
 
     if (index < 0x200) {
@@ -218,7 +218,7 @@ uint8_t lcd_read(const uint16_t pio) {
 }
 
 void lcd_write(const uint16_t pio, const uint8_t value) {
-    uint32_t index = pio & 0xFFC;
+    uint16_t index = pio;
 
     uint8_t byte_offset = pio & 3;
     uint8_t bit_offset = byte_offset << 3;

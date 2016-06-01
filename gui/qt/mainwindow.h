@@ -247,11 +247,11 @@ private:
     bool hexSearch = true;
     bool canScroll = false;
 
-    uint16_t prevPortAddress;
-    uint32_t prevBreakpointAddress;
-    uint32_t prevWatchpointAddress;
-    uint32_t prevDisasmAddress;
-    uint32_t currAddress;
+    uint16_t prevPortAddress = 0;
+    uint32_t prevBreakpointAddress = 0;
+    uint32_t prevWatchpointAddress = 0;
+    uint32_t prevDisasmAddress = 0;
+    uint32_t currAddress = 0;
     uint8_t watchpointType = 0;
     QString currAddressString, currPortAddress, watchLength;
     QPalette colorback, nocolorback;

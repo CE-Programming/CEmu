@@ -2070,14 +2070,10 @@ void MainWindow::changeWatchpointAddress(QTableWidgetItem *item) {
 bool MainWindow::addBreakpoint() {
     const int currentRow = ui->breakpointView->rowCount();
 
-    currAddressString = currAddressString.toUpper();
+    currAddress %= 0xFFFFFF;
+    currAddressString = int2hex(currAddress, 6).toUpper();
 
-    if (currAddressString.isEmpty()) {
-        currAddressString = "000000";
-    }
-
-    std::string s = currAddressString.toStdString();
-    if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos) {
+    if (currAddressString.toStdString().find_first_not_of("0123456789ABCDEF") != std::string::npos) {
         return false;
     }
 
@@ -2133,11 +2129,8 @@ bool MainWindow::removeBreakpoint() {
 bool MainWindow::addWatchpoint() {
     const int currentRow = ui->watchpointView->rowCount();
 
-    if (currAddressString.isEmpty()) {
-        currAddressString = "000000";
-    }
-
-    currAddressString = currAddressString.toUpper();
+    currAddress %= 0xFFFFFF;
+    currAddressString = int2hex(currAddress, 6).toUpper();
 
     if (watchLength.isEmpty()) {
         watchLength = "1";
@@ -2151,8 +2144,7 @@ bool MainWindow::addWatchpoint() {
         watchpointType = DBG_NO_HANDLE;
     }
 
-    std::string s = currAddressString.toStdString();
-    if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos) {
+    if (currAddressString.toStdString().find_first_not_of("0123456789ABCDEF") != std::string::npos) {
         return false;
     }
 
@@ -2169,8 +2161,6 @@ bool MainWindow::addWatchpoint() {
     ui->watchpointView->setUpdatesEnabled(false);
     ui->watchpointView->blockSignals(true);
 
-    ui->watchpointView->setRowCount(currentRow + 1);
-
     QTableWidgetItem *iaddress = new QTableWidgetItem(currAddressString);
     QTableWidgetItem *length = new QTableWidgetItem(watchLength);
     QTableWidgetItem *dWatch = new QTableWidgetItem();
@@ -2182,6 +2172,8 @@ bool MainWindow::addWatchpoint() {
 
     wWatch->setFlags(wWatch->flags() & ~Qt::ItemIsEditable);
     rWatch->setFlags(rWatch->flags() & ~Qt::ItemIsEditable);
+
+    ui->watchpointView->setRowCount(currentRow + 1);
 
     ui->watchpointView->setItem(currentRow, 0, iaddress);
     ui->watchpointView->setItem(currentRow, 1, length);
@@ -2257,7 +2249,6 @@ void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
                 return;
             case 3: // set a breakpoint with the value in DE
                 currAddress = cpu.registers.DE;
-                currAddressString = int2hex(currAddress, 6);
                 addBreakpoint();
                 inDebugger = false; // continue emulation; we don't need to raise the debugger
                 return;
@@ -2269,7 +2260,6 @@ void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
             case 5: // set a read watchpoint with the value in DE; length in C
                 wLength = (cpu.registers.bc.l > 4) ? 4 : cpu.registers.bc.l;
                 currAddress = cpu.registers.DE;
-                currAddressString = int2hex(currAddress, 6);
                 watchLength = QString::number(wLength);
                 watchpointType = DBG_READ_WATCHPOINT;
                 addWatchpoint();
@@ -2278,20 +2268,18 @@ void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
             case 6: // set a write watchpoint with the value in DE; length in C
                 wLength = (cpu.registers.bc.l > 4) ? 4 : cpu.registers.bc.l;
                 currAddress = cpu.registers.DE;
-                currAddressString = int2hex(currAddress, 6);
                 watchLength = QString::number(wLength);
                 watchpointType = DBG_WRITE_WATCHPOINT;
-                removeWatchpointAddress(currAddressString);
+                removeWatchpointAddress(int2hex(currAddress, 6));
                 addWatchpoint();
                 inDebugger = false;
                 return;
             case 7: // set a read/write watchpoint with the value in DE; length in C
                 wLength = (cpu.registers.bc.l > 4) ? 4 : cpu.registers.bc.l;
                 currAddress = cpu.registers.DE;
-                currAddressString = int2hex(currAddress,6);
                 watchLength = QString::number(wLength);
                 watchpointType = DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT;
-                removeWatchpointAddress(currAddressString);
+                removeWatchpointAddress(int2hex(currAddress, 6));
                 addWatchpoint();
                 inDebugger = false;
                 return;
@@ -2318,10 +2306,9 @@ void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
             case 11: // set an empty watchpoint with the value in DE; length in C
                 wLength = (cpu.registers.bc.l > 4) ? 4 : cpu.registers.bc.l;
                 currAddress = cpu.registers.DE;
-                currAddressString = int2hex(currAddress,6);
                 watchLength = QString::number(wLength);
                 watchpointType = DBG_EMPTY_WATCHPOINT;
-                removeWatchpointAddress(currAddressString);
+                removeWatchpointAddress(int2hex(currAddress, 6));
                 addWatchpoint();
                 inDebugger = false;
                 return;
@@ -2632,8 +2619,7 @@ void MainWindow::disableDebugger() {
 }
 
 void MainWindow::setBreakpointAddress() {
-    currAddressString = ui->disassemblyView->getSelectedAddress();
-    currAddress = static_cast<uint32_t>(hex2int(currAddressString));
+    currAddress = static_cast<uint32_t>(hex2int(ui->disassemblyView->getSelectedAddress()));
 
     QTextCursor c = ui->disassemblyView->textCursor();
     c.setCharFormat(ui->disassemblyView->currentCharFormat());
@@ -2659,8 +2645,7 @@ void MainWindow::setBreakpointAddress() {
 }
 
 void MainWindow::setWatchpointAddress() {
-    currAddressString = ui->disassemblyView->getSelectedAddress();
-    currAddress = static_cast<uint32_t>(hex2int(currAddressString));
+    currAddress = static_cast<uint32_t>(hex2int(ui->disassemblyView->getSelectedAddress()));
 
     QTextCursor c = ui->disassemblyView->textCursor();
     c.setCharFormat(ui->disassemblyView->currentCharFormat());

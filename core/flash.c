@@ -18,7 +18,7 @@ static void flash_set_map(uint8_t map) {
 
 /* Read from the 0x1000 range of ports */
 static uint8_t flash_read(const uint16_t pio) {
-    uint8_t index = pio & 0xFF;
+    uint8_t index = (uint8_t)pio;
     uint8_t value;
 
     switch (index) {
@@ -40,7 +40,7 @@ static uint8_t flash_read(const uint16_t pio) {
 
 /* Write to the 0x1000 range of ports */
 static void flash_write(const uint16_t pio, const uint8_t byte) {
-    uint8_t index = pio & 0xFF;
+    uint8_t index = (uint8_t)pio;
 
     switch (index) {
         case 0x00:

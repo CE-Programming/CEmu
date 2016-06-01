@@ -10,7 +10,7 @@ control_state_t control;
 
 /* Read from the 0x0XXX range of ports */
 static uint8_t control_read(const uint16_t pio) {
-    uint8_t index = pio & 0x7F;
+    uint8_t index = (uint8_t)pio;
 
     uint8_t value;
 
@@ -56,7 +56,7 @@ static uint8_t control_read(const uint16_t pio) {
 
 /* Write to the 0x0XXX range of ports */
 static void control_write(const uint16_t pio, const uint8_t byte) {
-    uint8_t index = pio & 0x7F;
+    uint8_t index = (uint8_t)pio;
 
     switch (index) {
         case 0x00:

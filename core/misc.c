@@ -33,7 +33,7 @@ static void watchdog_event(int index) {
 
 /* Watchdog read routine */
 static uint8_t watchdog_read(const uint16_t pio) {
-    uint8_t index = pio & 0xFF;
+    uint8_t index = pio;
     uint8_t bit_offset = (index & 3) << 3;
     uint8_t value = 0;
 
@@ -70,7 +70,7 @@ static uint8_t watchdog_read(const uint16_t pio) {
 
 /* Watchdog write routine */
 static void watchdog_write(const uint16_t pio, const uint8_t byte) {
-    uint8_t index = pio & 0xFF;
+    uint8_t index = pio;
     uint8_t bit_offset = (index & 3) << 3;
 
     switch (index) {
@@ -171,7 +171,7 @@ static void protected_write(const uint16_t pio, const uint8_t byte) {
             protect.ledState = byte;
             break;
         default:
-            protect.unknown_ports[pio & 0xFF] = byte;
+            protect.unknown_ports[pio] = byte;
             break;
     }
 
@@ -202,12 +202,12 @@ bool protect_restore(const emu_image *s) {
 
 /* Read from the 0xCXXX range of ports */
 static uint8_t cxxx_read(const uint16_t pio) {
-    return cxxx.ports[pio & 0xFF];
+    return cxxx.ports[pio];
 }
 
 /* Write to the 0xCXXX range of ports */
 static void cxxx_write(const uint16_t pio, const uint8_t byte) {
-    cxxx.ports[pio & 0xFF] = byte;
+    cxxx.ports[pio] = byte;
 }
 
 static const eZ80portrange_t pcxxx = {
