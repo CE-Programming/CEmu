@@ -195,6 +195,8 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     connect(ui->ramBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->ramEdit, &QHexEdit::setBytesPerLine);
     connect(ui->memBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->memEdit, &QHexEdit::setBytesPerLine);
     connect(ui->emuVarView, &QTableWidget::itemDoubleClicked, this, &MainWindow::variableClicked);
+    ui->emuVarView->setContextMenuPolicy(Qt::CustomContextMenu); // To handle right-clicks
+    connect(ui->emuVarView, &QWidget::customContextMenuRequested, this, &MainWindow::variablesContextMenu);
 
     // Hex Editor
     connect(ui->buttonFlashGoto, &QPushButton::clicked, this, &MainWindow::flashGotoPressed);
@@ -1055,6 +1057,7 @@ void MainWindow::refreshVariableList() {
                     var_value = QString::fromStdString(calc_var_content_string(var));
                 }
 
+                // Do not translate - things rely on those names.
                 QString var_type_str = calc_var_type_names[var.type];
                 if (calc_var_is_asmprog(&var)) {
                     var_type_str += " (ASM)";
@@ -2529,8 +2532,53 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
     }
 }
 
+void MainWindow::variablesContextMenu(const QPoint& posa) {
+    int itemRow = ui->emuVarView->rowAt(posa.y());
+    if (itemRow == -1) {
+        return;
+    }
+    if (!ui->emuVarView->item(itemRow, 1)->text().contains("Program")) {
+        return;
+    }
+    QString prgmName = ui->emuVarView->item(itemRow, 0)->text();
+    if (prgmName == "#" || prgmName == "!") { // system things
+        return;
+    }
+
+    QString launch_prgm = tr("Launch program");
+
+    QMenu contextMenu;
+    contextMenu.addAction(launch_prgm);
+
+    QPoint globalPos = ui->emuVarView->mapToGlobal(posa);
+    QAction* selectedItem = contextMenu.exec(globalPos);
+    if (selectedItem) {
+        if (selectedItem->text() == launch_prgm) {
+            bool isASM = ui->emuVarView->item(itemRow, 1)->text().contains("ASM");
+
+            // Reset keypad state and resume emulation
+            keypad_reset();
+            refreshVariableList();
+
+            // Launch the program, assuming we're at the home screen...
+            autotester::sendKey(0x09); // Clear
+            if (isASM) {
+                autotester::sendKey(0x9CFC); // Asm(
+            }
+            autotester::sendKey(0xDA); // prgm
+            for (const char& c : prgmName.toStdString()) {
+                autotester::sendLetterKeyPress(c); // type program name
+            }
+            autotester::sendKey(0x05); // Enter
+
+            // Restore focus to catch keypresses.
+            ui->lcdWidget->setFocus();
+        }
+    }
+}
+
 void MainWindow::vatContextMenu(const QPoint& posa) {
-    QString goto_mem = "Goto Memory View";
+    QString goto_mem = tr("Goto Memory View");
     ui->vatView->setTextCursor(ui->vatView->cursorForPosition(posa));
     QPoint globalPos = ui->vatView->mapToGlobal(posa);
 
@@ -2546,7 +2594,7 @@ void MainWindow::vatContextMenu(const QPoint& posa) {
 }
 
 void MainWindow::opContextMenu(const QPoint& posa) {
-    QString goto_mem = "Goto Memory View";
+    QString goto_mem = tr("Goto Memory View");
     ui->opView->setTextCursor(ui->opView->cursorForPosition(posa));
     QPoint globalPos = ui->opView->mapToGlobal(posa);
 
