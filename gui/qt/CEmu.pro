@@ -37,7 +37,10 @@ if (!win32-msvc*) {
     GLOBAL_FLAGS    += -ffunction-sections -fdata-sections -fno-strict-overflow
     QMAKE_CFLAGS    += -std=gnu11
     QMAKE_CXXFLAGS  += -fno-exceptions
-    CONFIG(release, debug|release): GLOBAL_FLAGS += -O3 -flto
+    equals($$(CI), "") {
+        # Only enable opts and LTO for non-CI release builds
+        CONFIG(release, debug|release): GLOBAL_FLAGS += -O3 -flto
+    }
 } else {
     # TODO: add equivalent flags
     # Example for -Werror=shadow: /weC4456 /weC4457 /weC4458 /weC4459
