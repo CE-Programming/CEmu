@@ -252,9 +252,12 @@ bool vat_search_find(const calc_var_t *target, calc_var_t *result) {
     return false;
 }
 
+bool calc_var_is_prog(const calc_var_t *var) {
+    return var && (var->type == CALC_VAR_TYPE_PROG || var->type == CALC_VAR_TYPE_PROT_PROG);
+}
+
 bool calc_var_is_asmprog(const calc_var_t *var) {
-    return var && ((var->type == CALC_VAR_TYPE_PROG || var->type == CALC_VAR_TYPE_PROT_PROG)
-                    && var->size >= 2 && var->data[2] == 0xEF && var->data[3] == 0x7B);
+    return var && (calc_var_is_prog(var) && var->size >= 2 && var->data[2] == 0xEF && var->data[3] == 0x7B);
 }
 
 bool calc_var_is_internal(const calc_var_t *var) {

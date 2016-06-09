@@ -91,6 +91,7 @@ void vat_search_init(calc_var_t *);
 bool vat_search_next(calc_var_t *);
 bool vat_search_find(const calc_var_t *, calc_var_t *);
 
+bool calc_var_is_prog(const calc_var_t *);
 bool calc_var_is_asmprog(const calc_var_t *);
 bool calc_var_is_internal(const calc_var_t *);
 
