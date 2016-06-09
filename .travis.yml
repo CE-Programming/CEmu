@@ -11,16 +11,16 @@ before_install:
 - sudo apt-get update -qq
 
 install:
-- sudo apt-get install -y --force-yes -qq g++-5 gcc-5; export CXX="g++-5" CC="gcc-5"; $CXX --version
+- sudo apt-get install -y --force-yes -qq g++-6 gcc-6; export CXX="g++-6" CC="gcc-6"; $CXX --version
 - sudo apt-get install -y --force-yes -qq qt55base qt55declarative; source /opt/qt55/bin/qt55-env.sh
 
 script:
   - mkdir build
   - cd build
   - qmake ../gui/qt
-  - make -j4 CC=gcc-5 CXX=g++-5 LINK=g++-5
+  - make -j4 CC=gcc-6 CXX=g++-6 LINK=g++-6
   - cd ../core
-  - make -j4 CC=gcc-5 CXX=g++-5 LINK=g++-5 clean all
+  - make -j4 CC=gcc-6 CXX=g++-6 LINK=g++-6 clean all
 
 notifications:
   irc:
