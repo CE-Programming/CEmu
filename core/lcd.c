@@ -218,7 +218,7 @@ uint8_t lcd_read(const uint16_t pio) {
 }
 
 void lcd_write(const uint16_t pio, const uint8_t value) {
-    uint16_t index = pio;
+    uint16_t index = pio & 0xFFC;
 
     uint8_t byte_offset = pio & 3;
     uint8_t bit_offset = byte_offset << 3;
