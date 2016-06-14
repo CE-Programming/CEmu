@@ -303,26 +303,22 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     ui->opView->updateAllHighlights();
     ui->vatView->updateAllHighlights();
 
+    debugger_init();
+
     if (!fileExists(emu.rom)) {
         if (!runSetup()) {
             exit(0);
         }
-    }
-
-    if(settings->value(QStringLiteral("restoreOnOpen")).toBool()) {
-        if (fileExists(emu.imagePath)) {
+    } else {
+        if(settings->value(QStringLiteral("restoreOnOpen")).toBool() && fileExists(emu.imagePath)) {
             restoreEmuState();
         } else {
-           emu.start();
+            emu.start();
         }
-    } else {
-        emu.start();
     }
 
     speedUpdateTimer.start();
     speedUpdateTimer.setInterval(1000 / 4);
-
-    debugger_init();
 
     colorback.setColor(QPalette::Base, QColor(Qt::yellow).lighter(160));
     nocolorback.setColor(QPalette::Base, QColor(Qt::white));
