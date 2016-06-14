@@ -995,7 +995,7 @@ void MainWindow::selectFiles() {
 void MainWindow::variableClicked(QTableWidgetItem *item) {
     // TODO: find the correct one according to name+type (needed when the table is sortable)
     const calc_var_t& var_tmp = vars[item->row()];
-    if (!calc_var_is_asmprog(&var_tmp) && !calc_var_is_internal(&var_tmp)) {
+    if (!calc_var_is_asmprog(&var_tmp) && !calc_var_is_internal(&var_tmp) && (var_tmp.type != CALC_VAR_TYPE_APP_VAR)) {
         BasicCodeViewerWindow codePopup;
         codePopup.setOriginalCode((var_tmp.size <= 500) ? ui->emuVarView->item(item->row(), 3)->text() : QString::fromStdString(calc_var_content_string(var_tmp)));
         codePopup.setVariableName(ui->emuVarView->item(item->row(), 0)->text());
@@ -1046,6 +1046,9 @@ void MainWindow::refreshVariableList() {
                     var_preview_needs_gray = true;
                 } else if (calc_var_is_internal(&var)) {
                     var_value = tr("Can't preview internal OS variables");
+                    var_preview_needs_gray = true;
+                } else if (var.type == CALC_VAR_TYPE_APP_VAR) {
+                    var_value = tr("Can't preview Appvars");
                     var_preview_needs_gray = true;
                 } else if (var.size > 500) {
                     var_value = tr("[Double-click to view...]");
