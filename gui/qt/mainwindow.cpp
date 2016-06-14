@@ -1047,10 +1047,7 @@ void MainWindow::refreshVariableList() {
                 } else if (calc_var_is_internal(&var)) {
                     var_value = tr("Can't preview internal OS variables");
                     var_preview_needs_gray = true;
-                } else if (var.type == CALC_VAR_TYPE_APP_VAR) {
-                    var_value = tr("Can't preview Appvars");
-                    var_preview_needs_gray = true;
-                } else if (var.size > 500) {
+                } else if (var.type == CALC_VAR_TYPE_APP_VAR || var.size > 500) {
                     var_value = tr("[Double-click to view...]");
                 } else {
                     var_value = QString::fromStdString(calc_var_content_string(var));
@@ -1066,6 +1063,9 @@ void MainWindow::refreshVariableList() {
                 QTableWidgetItem *var_type = new QTableWidgetItem(var_type_str);
                 QTableWidgetItem *var_size = new QTableWidgetItem(QString::number(var.size));
                 QTableWidgetItem *var_preview = new QTableWidgetItem(var_value);
+
+                // Attach address (hidden) to the name. Read for right-click > goto mem
+                var_name->setData(Qt::UserRole, var.address);
 
                 var_name->setCheckState(Qt::Unchecked);
 
@@ -2536,21 +2536,19 @@ void MainWindow::variablesContextMenu(const QPoint& posa) {
     if (itemRow == -1) {
         return;
     }
-    if (!ui->emuVarView->item(itemRow, 1)->text().contains("Program")) {
-        return;
-    }
-    QString prgmName = ui->emuVarView->item(itemRow, 0)->text();
-    if (prgmName == "#" || prgmName == "!") { // system things
-        return;
-    }
 
-    QString launch_prgm = tr("Launch program");
+    QString prgmName = ui->emuVarView->item(itemRow, 0)->text();
+
+    QString launch_prgm = tr("Launch program"),
+            goto_mem    = tr("Goto Memory View");
 
     QMenu contextMenu;
-    contextMenu.addAction(launch_prgm);
+    if (ui->emuVarView->item(itemRow, 1)->text().contains("Prog") && !(prgmName == "#" || prgmName == "!")) {
+        contextMenu.addAction(launch_prgm);
+    }
+    contextMenu.addAction(goto_mem);
 
-    QPoint globalPos = ui->emuVarView->mapToGlobal(posa);
-    QAction* selectedItem = contextMenu.exec(globalPos);
+    QAction* selectedItem = contextMenu.exec(ui->emuVarView->mapToGlobal(posa));
     if (selectedItem) {
         if (selectedItem->text() == launch_prgm) {
             bool isASM = ui->emuVarView->item(itemRow, 1)->text().contains("ASM");
@@ -2572,6 +2570,14 @@ void MainWindow::variablesContextMenu(const QPoint& posa) {
 
             // Restore focus to catch keypresses.
             ui->lcdWidget->setFocus();
+        } else if (selectedItem->text() == goto_mem) {
+            QString var_addr = int2hex(ui->emuVarView->item(itemRow, 0)->data(Qt::UserRole).toInt(), 6);
+            refreshVariableList();
+            ui->checkLockPosition->setChecked(true); // TODO: find better than that to prevent the debugger's PC to take over
+            if (!debuggerOn) {
+                changeDebuggerState();
+            }
+            memGoto(var_addr);
         }
     }
 }
