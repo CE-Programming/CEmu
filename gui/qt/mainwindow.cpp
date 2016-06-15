@@ -993,9 +993,8 @@ void MainWindow::selectFiles() {
 }
 
 void MainWindow::variableClicked(QTableWidgetItem *item) {
-    // TODO: find the correct one according to name+type (needed when the table is sortable)
-    const calc_var_t& var_tmp = vars[item->row()];
-    if (!calc_var_is_asmprog(&var_tmp) && !calc_var_is_internal(&var_tmp) && (var_tmp.type != CALC_VAR_TYPE_APP_VAR)) {
+    const calc_var_t& var_tmp = vars[ui->emuVarView->item(item->row(), 0)->data(Qt::UserRole).toInt()];
+    if (!calc_var_is_asmprog(&var_tmp) && (!calc_var_is_internal(&var_tmp) || var_tmp.name[0] == '#')) {
         BasicCodeViewerWindow codePopup;
         codePopup.setOriginalCode((var_tmp.size <= 500) ? ui->emuVarView->item(item->row(), 3)->text() : QString::fromStdString(calc_var_content_string(var_tmp)));
         codePopup.setVariableName(ui->emuVarView->item(item->row(), 0)->text());
@@ -1044,8 +1043,8 @@ void MainWindow::refreshVariableList() {
                 if (calc_var_is_asmprog(&var)) {
                     var_value = tr("Can't preview ASM");
                     var_preview_needs_gray = true;
-                } else if (calc_var_is_internal(&var)) {
-                    var_value = tr("Can't preview internal OS variables");
+                } else if (calc_var_is_internal(&var) && var.name[0] != '#') { // # is previewable
+                    var_value = tr("Can't preview this OS variable");
                     var_preview_needs_gray = true;
                 } else if (var.type == CALC_VAR_TYPE_APP_VAR || var.size > 500) {
                     var_value = tr("[Double-click to view...]");
@@ -1064,8 +1063,8 @@ void MainWindow::refreshVariableList() {
                 QTableWidgetItem *var_size = new QTableWidgetItem(QString::number(var.size));
                 QTableWidgetItem *var_preview = new QTableWidgetItem(var_value);
 
-                // Attach address (hidden) to the name. Read for right-click > goto mem
-                var_name->setData(Qt::UserRole, var.address);
+                // Attach var index (hidden) to the name. Needed elsewhere
+                var_name->setData(Qt::UserRole, currentRow);
 
                 var_name->setCheckState(Qt::Unchecked);
 
@@ -1079,6 +1078,10 @@ void MainWindow::refreshVariableList() {
                 ui->emuVarView->setItem(currentRow, 3, var_preview);
             }
         }
+        ui->emuVarView->resizeColumnsToContents();
+        ui->emuVarView->horizontalHeader()->setStretchLastSection(true);
+        ui->emuVarView->setVisible(false);  // This is needed
+        ui->emuVarView->setVisible(true);   // to refresh
     }
 
     ui->emuVarView->blockSignals(false);
@@ -2537,13 +2540,13 @@ void MainWindow::variablesContextMenu(const QPoint& posa) {
         return;
     }
 
-    QString prgmName = ui->emuVarView->item(itemRow, 0)->text();
+    const calc_var_t& selected_var = vars[ui->emuVarView->item(itemRow, 0)->data(Qt::UserRole).toInt()];
 
     QString launch_prgm = tr("Launch program"),
             goto_mem    = tr("Goto Memory View");
 
     QMenu contextMenu;
-    if (ui->emuVarView->item(itemRow, 1)->text().contains("Prog") && !(prgmName == "#" || prgmName == "!")) {
+    if (calc_var_is_prog(&selected_var) && !calc_var_is_internal(&selected_var)) {
         contextMenu.addAction(launch_prgm);
     }
     contextMenu.addAction(goto_mem);
@@ -2551,19 +2554,18 @@ void MainWindow::variablesContextMenu(const QPoint& posa) {
     QAction* selectedItem = contextMenu.exec(ui->emuVarView->mapToGlobal(posa));
     if (selectedItem) {
         if (selectedItem->text() == launch_prgm) {
-            bool isASM = ui->emuVarView->item(itemRow, 1)->text().contains("ASM");
-
             // Reset keypad state and resume emulation
             keypad_reset();
             refreshVariableList();
 
             // Launch the program, assuming we're at the home screen...
             autotester::sendKey(0x09); // Clear
-            if (isASM) {
+            if (calc_var_is_asmprog(&selected_var)) {
                 autotester::sendKey(0x9CFC); // Asm(
             }
             autotester::sendKey(0xDA); // prgm
-            for (const char& c : prgmName.toStdString()) {
+            for (const char& c : selected_var.name) {
+                if (!c) { break; }
                 autotester::sendLetterKeyPress(c); // type program name
             }
             autotester::sendKey(0x05); // Enter
@@ -2571,13 +2573,12 @@ void MainWindow::variablesContextMenu(const QPoint& posa) {
             // Restore focus to catch keypresses.
             ui->lcdWidget->setFocus();
         } else if (selectedItem->text() == goto_mem) {
-            QString var_addr = int2hex(ui->emuVarView->item(itemRow, 0)->data(Qt::UserRole).toInt(), 6);
             refreshVariableList();
             ui->checkLockPosition->setChecked(true); // TODO: find better than that to prevent the debugger's PC to take over
             if (!debuggerOn) {
                 changeDebuggerState();
             }
-            memGoto(var_addr);
+            memGoto(int2hex(selected_var.address, 6));
         }
     }
 }

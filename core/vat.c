@@ -262,6 +262,7 @@ bool calc_var_is_asmprog(const calc_var_t *var) {
 }
 
 bool calc_var_is_internal(const calc_var_t *var) {
-    return var && ((var->type == CALC_VAR_TYPE_EQU  && !strcmp((const char*)var->name, "."))
+    return var && (!strcmp((const char*)var->name, "#")
+                || (var->type == CALC_VAR_TYPE_EQU  && !strcmp((const char*)var->name, "."))
                 || (var->type == CALC_VAR_TYPE_PROG && !strcmp((const char*)var->name, "!")));
 }
