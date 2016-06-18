@@ -8,6 +8,12 @@
 #ifndef AUTOTESTER_H
 #define AUTOTESTER_H
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#else
+#define EMSCRIPTEN_KEEPALIVE
+#endif
+
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -59,8 +65,8 @@ namespace autotester
         { "cursorImage",    0xE30800 },  { "cursorImage_size",     1024 }
     };
 
-    void sendKey(uint16_t key);
-    void sendLetterKeyPress(char letter);
+    extern "C" void EMSCRIPTEN_KEEPALIVE sendKey(uint16_t key);
+    extern "C" void EMSCRIPTEN_KEEPALIVE sendLetterKeyPress(char letter);
 
     bool launchCommand(const std::pair<std::string, std::string>& command);
 

@@ -63,7 +63,7 @@ static const std::unordered_map<std::string, coord2d> valid_keys = {
 // A few needed locations
 #define CE_kbdKey       0xD0058C
 #define CE_keyExtend    0xD0058E
-void sendKey(uint16_t key)
+extern "C" void EMSCRIPTEN_KEEPALIVE sendKey(uint16_t key)
 {
     cemucore::mem_poke_byte(CE_kbdKey, (uint8_t)(key & 0xFF));
     cemucore::mem_poke_byte(CE_keyExtend, (uint8_t)(key >> 8 | (key < 0x100)));
@@ -73,7 +73,7 @@ void sendKey(uint16_t key)
     DO_STEP_CALLBACK();
 }
 
-void sendLetterKeyPress(char letter)
+extern "C" void EMSCRIPTEN_KEEPALIVE sendLetterKeyPress(char letter)
 {
     uint16_t val;
     if (letter != '@') { // @ is actually theta (replaced earlier)
