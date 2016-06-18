@@ -107,7 +107,7 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_intrpt(void) {
-    gui_console_printf("[CEmu] Initialized Interrupt Contoller...\n");
+    gui_console_printf("[CEmu] Initialized Interrupt Controller...\n");
     return device;
 }
 
