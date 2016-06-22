@@ -113,6 +113,7 @@ SOURCES +=  utils.cpp \
     ../../core/link.c \
     ../../core/vat.c \
     ../../core/emu.c \
+    ../../core/extras.c \
     ../../core/debug/disasm.cpp \
     ../../core/debug/debug.c \
     ../../core/debug/stepping.cpp
@@ -171,6 +172,7 @@ HEADERS  +=  utils.h \
     ../../core/mem.h \
     ../../core/link.h \
     ../../core/vat.h \
+    ../../core/extras.h \
     ../../core/os/os.h \
     ../../core/debug/debug.h \
     ../../core/debug/disasm.h \
