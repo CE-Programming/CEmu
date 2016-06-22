@@ -1,3 +1,5 @@
+#ifdef __EMSCRIPTEN__
+
 #include <emscripten.h>
 
 #define _BSD_SOURCE
@@ -71,3 +73,5 @@ int main(int argc, char* argv[])
 
     return 0;
 }
+
+#endif
