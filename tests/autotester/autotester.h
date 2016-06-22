@@ -8,12 +8,6 @@
 #ifndef AUTOTESTER_H
 #define AUTOTESTER_H
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#else
-#define EMSCRIPTEN_KEEPALIVE
-#endif
-
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -23,6 +17,7 @@ namespace cemucore
     extern "C" {
         #include "../../core/emu.h"
         #include "../../core/link.h"
+        #include "../../core/extras.h"
     }
 }
 
@@ -65,8 +60,8 @@ namespace autotester
         { "cursorImage",    0xE30800 },  { "cursorImage_size",     1024 }
     };
 
-    extern "C" void EMSCRIPTEN_KEEPALIVE sendKey(uint16_t key);
-    extern "C" void EMSCRIPTEN_KEEPALIVE sendLetterKeyPress(char letter);
+    void sendKey(uint16_t key);
+    void sendLetterKeyPress(char letter);
 
     bool launchCommand(const std::pair<std::string, std::string>& command);
 
