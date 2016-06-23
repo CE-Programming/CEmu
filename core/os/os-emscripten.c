@@ -50,10 +50,10 @@ void gui_perror(const char *msg)
 
 void EMSCRIPTEN_KEEPALIVE paintLCD(uint32_t *dest)
 {
-    if (lcd.control & 0x800) {
+    if (lcd.control & 0x800) { // LCD on
         lcd_drawframe(dest, &lcd);
-    } else {
-        //puts("paintLCD (off)");
+    } else { // LCD off
+        EM_ASM(drawLCDOff());
     }
 }
 
@@ -62,10 +62,13 @@ int main(int argc, char* argv[])
     bool success = emu_start("CE.rom", NULL);
 
     if (success) {
+        EM_ASM(initFuncs());
         EM_ASM(initLCD());
+        EM_ASM(enableGUI());
         emu_loop(true);
     } else {
-        puts("Error: Couldn't start emulation");
+        EM_ASM(disableGUI());
+        EM_ASM(alert("Error: Couldn't start emulation ; bad ROM?"));
         return 1;
     }
 
