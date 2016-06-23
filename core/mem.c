@@ -407,7 +407,7 @@ void mem_write_byte(uint32_t address, uint8_t value) {
         case 0x4: case 0x5: case 0x6: case 0x7:
             if (mem.flash.locked && cpu.registers.PC >= control.privileged) {
                 cpu_nmi();
-                gui_console_printf("[CEmu] NMI triggered (cannot execute here)\n");
+                gui_console_printf("[CEmu] NMI triggered (write to flash using unprivileged region)\n");
             } else {
                 flash_write_handler(address, value);
             }
