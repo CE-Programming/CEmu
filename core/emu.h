@@ -81,6 +81,7 @@ void emu_loop(bool);
 void emu_cleanup(void);
 bool emu_save(const char*);
 bool emu_save_rom(const char*);
+void emu_set_emulation_paused(bool);
 
 void throttle_interval_event(int index);
 void throttle_timer_wait(void);

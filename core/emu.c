@@ -365,3 +365,7 @@ void emu_loop(bool reset) {
 #endif
     emu_cleanup();
 }
+
+void EMSCRIPTEN_KEEPALIVE emu_set_emulation_paused(bool paused) {
+    emulationPaused = paused;
+}
