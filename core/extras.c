@@ -4,14 +4,14 @@
 // A few needed locations
 #define CE_kbdKey       0xD0058C
 #define CE_keyExtend    0xD0058E
-void sendKey(uint16_t key)
+void EMSCRIPTEN_KEEPALIVE sendKey(uint16_t key)
 {
     mem_poke_byte(CE_kbdKey, (uint8_t)(key & 0xFF));
     mem_poke_byte(CE_keyExtend, (uint8_t)(key >> 8 | (key < 0x100)));
     mem_poke_byte(0xD0009F, (uint8_t)(mem_peek_byte(0xD0009F) | 0x20)); // TODO: name 0xD0009F (= flags+graphFlags2 = 0xD00080+0x1F)
 }
 
-void sendLetterKeyPress(char letter)
+void EMSCRIPTEN_KEEPALIVE sendLetterKeyPress(char letter)
 {
     uint16_t val;
     if (letter != '@') { // @ for theta (caller should replace it)

@@ -2,19 +2,14 @@
 #define EXTRAS_H
 
 #include <stdint.h>
-
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#else
-#define EMSCRIPTEN_KEEPALIVE
-#endif
+#include "defines.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void EMSCRIPTEN_KEEPALIVE sendKey(uint16_t key);
-void EMSCRIPTEN_KEEPALIVE sendLetterKeyPress(char letter);
+void sendKey(uint16_t key);
+void sendLetterKeyPress(char letter);
 
 #ifdef __cplusplus
 }

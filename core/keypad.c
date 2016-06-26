@@ -1,9 +1,4 @@
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#else
-#define EMSCRIPTEN_KEEPALIVE
-#endif
-
+#include "defines.h"
 #include "keypad.h"
 #include "emu.h"
 #include "schedule.h"

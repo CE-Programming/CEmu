@@ -73,7 +73,7 @@ bool listVariablesLink(void) {
  * Proper USB emulation should really be a thing at some point :P
  * See GitHub issue #25
  */
-bool sendVariableLink(const char *var_name) {
+bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name) {
     const size_t h_size = sizeof(header_data);
     const size_t op_size = 9;
 
