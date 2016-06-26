@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <unistd.h>
 #include <errno.h>
 #include <string.h>
 #include "os.h"
@@ -25,7 +26,7 @@ void throttle_timer_off() {}
 void throttle_timer_on() {}
 void throttle_timer_wait() {}
 
-void gui_emu_sleep() {}
+void gui_emu_sleep() { usleep(500); }
 void gui_do_stuff() {}
 void gui_set_busy(bool busy) {}
 
@@ -59,16 +60,26 @@ void EMSCRIPTEN_KEEPALIVE paintLCD(uint32_t *dest)
 
 int main(int argc, char* argv[])
 {
-    bool success = emu_start("CE.rom", NULL);
+    bool success;
+    emulationPaused = false;
+
+    success = emu_start("CE.rom", NULL);
 
     if (success) {
-        EM_ASM(initFuncs());
-        EM_ASM(initLCD());
-        EM_ASM(enableGUI());
+        EM_ASM(
+            emul_is_inited = true;
+            emul_is_paused = false;
+            initFuncs();
+            initLCD();
+            enableGUI();
+        );
         emu_loop(true);
     } else {
-        EM_ASM(disableGUI());
-        EM_ASM(alert("Error: Couldn't start emulation ; bad ROM?"));
+        EM_ASM(
+            emul_is_inited = false;
+            disableGUI();
+            alert("Error: Couldn't start emulation ; bad ROM?");
+        );
         return 1;
     }
 
