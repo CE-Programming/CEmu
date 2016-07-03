@@ -58,9 +58,10 @@
 #include "../../tests/autotester/autotester.h"
 
 static const constexpr int WindowStateVersion = 0;
-bool restoreOnOpen;
+
 MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) :QMainWindow(p), ui(new Ui::MainWindow) {
     opts = cliOpts;
+
     // Setup the UI1
     ui->setupUi(this);
     ui->centralWidget->hide();
