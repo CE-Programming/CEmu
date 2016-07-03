@@ -58,9 +58,10 @@
 #include "../../tests/autotester/autotester.h"
 
 static const constexpr int WindowStateVersion = 0;
-bool restoreOnOpen;
+
 MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) :QMainWindow(p), ui(new Ui::MainWindow) {
     opts = cliOpts;
+
     // Setup the UI1
     ui->setupUi(this);
     ui->centralWidget->hide();
@@ -1274,7 +1275,7 @@ void MainWindow::launchTest() {
         return;
     }
     if(!opts.suppressTestDialog) {
-    QMessageBox::information(this, tr("Test results"), QString(tr("Out of %2 tests attempted:\n%4 passed\n%6 failed")).arg(QString::number(autotester::hashesTested), QString::number(autotester::hashesPassed), QString::number(autotester::hashesFailed)));
+        QMessageBox::information(this, tr("Test results"), QString(tr("Out of %2 tests attempted:\n%4 passed\n%6 failed")).arg(QString::number(autotester::hashesTested), QString::number(autotester::hashesPassed), QString::number(autotester::hashesFailed)));
     }
 }
 

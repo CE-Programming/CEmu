@@ -35,7 +35,9 @@ int main(int argc, char *argv[]) {
     CEmuOpts opts;
     opts.restoreOnOpen = parser.isSet(stateOption)?false:true;
     opts.suppressTestDialog = parser.isSet(suppressTestDialog);
-    opts.AutotesterFile =  QDir::currentPath() + "/" +parser.value(loadTestFile);
+    if (parser.isSet(loadTestFile)){
+        opts.AutotesterFile =  QDir::currentPath() + "/" +parser.value(loadTestFile);
+    }
     opts.RomFile = parser.value(loadRomFile);
 
     QCoreApplication::setOrganizationName(QStringLiteral("cemu-dev"));
