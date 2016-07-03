@@ -176,7 +176,8 @@ HEADERS  +=  utils.h \
     ../../core/os/os.h \
     ../../core/debug/debug.h \
     ../../core/debug/disasm.h \
-    ../../core/debug/stepping.h
+    ../../core/debug/stepping.h \
+    cemuopts.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \
