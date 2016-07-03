@@ -1,11 +1,11 @@
 #ifndef CEMUOPTS_H
 #define CEMUOPTS_H
-#include "QString"
-struct CEMUOpts{
+#include <QString>
+struct CEmuOpts{
     bool restoreOnOpen;
     bool suppressTestDialog;
     QString RomFile;
-    QString TestFile;
+    QString AutotesterFile;
 };
 
 #endif // CEMUOPTS_H

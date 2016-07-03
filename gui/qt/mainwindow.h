@@ -27,13 +27,12 @@ class MainWindow : public QMainWindow
 
 public:
 
-    explicit MainWindow(CEMUOpts opts,QWidget *p = 0);
+    explicit MainWindow(CEmuOpts opts,QWidget *p = 0);
     ~MainWindow();
 
 public slots:
     // Misc.
     void closeEvent(QCloseEvent*) override;
-
 
     //Drag & Drop
     void dropEvent(QDropEvent*) override;
@@ -250,7 +249,7 @@ private:
     bool hexSearch = true;
     bool canScroll = false;
 
-    CEMUOpts opts;
+    CEmuOpts opts;
 
     uint16_t prevPortAddress = 0;
     uint32_t prevBreakpointAddress = 0;

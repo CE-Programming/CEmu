@@ -59,7 +59,7 @@
 
 static const constexpr int WindowStateVersion = 0;
 bool restoreOnOpen;
-MainWindow::MainWindow(CEMUOpts cliOpts,QWidget *p) :QMainWindow(p), ui(new Ui::MainWindow) {
+MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) :QMainWindow(p), ui(new Ui::MainWindow) {
     opts = cliOpts;
     // Setup the UI1
     ui->setupUi(this);
@@ -335,12 +335,12 @@ MainWindow::MainWindow(CEMUOpts cliOpts,QWidget *p) :QMainWindow(p), ui(new Ui::
     pix.load(":/icons/resources/icons/run.png");
     runIcon.addPixmap(pix);
 
-    if (opts.TestFile != ""){
-        if(openJSONConfig(opts.TestFile)==0)
+    if (opts.AutotesterFile != ""){
+        if(openJSONConfig(opts.AutotesterFile)==0)
         {
            resetCalculator();
            //Race condition requires this. Else We hand onsending files.
-           sleep(1);
+           QThread::msleep(500);
            launchTest();
         }
    }
@@ -362,7 +362,6 @@ MainWindow::~MainWindow() {
     delete ui->ramEdit;
     delete ui->memEdit;
     delete ui;
-
 }
 
 void MainWindow::changeImagePath() {
@@ -3092,4 +3091,3 @@ void MainWindow::resetCalculator() {
     }
     emit resetTriggered();
 }
-

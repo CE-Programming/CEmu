@@ -1,6 +1,5 @@
 #include <QtWidgets/QApplication>
 #include <QtQml/QtQml>
-//#include <qdir.h>
 #include "mainwindow.h"
 #include "qmlbridge.h"
 #include "cemuopts.h"
@@ -28,12 +27,15 @@ int main(int argc, char *argv[]) {
                 QCoreApplication::translate("main", "run <Testfile> on startup"),
                 QCoreApplication::translate("main", "TestFile"));
     parser.addOption(loadTestFile);
+    QCommandLineOption suppressTestDialog(QStringList() << "suppress-test-dialog",
+                QCoreApplication::translate("main", "Hides test complete dialog"));
+    parser.addOption(suppressTestDialog);
     parser.process(app);
     //Take commandline args and move to CEMUOpts Struct
-    CEMUOpts opts;
+    CEmuOpts opts;
     opts.restoreOnOpen = parser.isSet(stateOption)?false:true;
-    opts.suppressTestDialog = parser.isSet(loadTestFile)?true:false;
-    opts.TestFile =  QDir::currentPath() + "/" +parser.value(loadTestFile);
+    opts.suppressTestDialog = parser.isSet(suppressTestDialog);
+    opts.AutotesterFile =  QDir::currentPath() + "/" +parser.value(loadTestFile);
     opts.RomFile = parser.value(loadRomFile);
 
     QCoreApplication::setOrganizationName(QStringLiteral("cemu-dev"));
@@ -45,7 +47,6 @@ int main(int argc, char *argv[]) {
 
     MainWindow EmuWin(opts);
     EmuWin.show();
-
 
     return app.exec();
 }
