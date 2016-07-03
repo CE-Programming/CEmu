@@ -8,7 +8,7 @@
 #include <QtWidgets/QFileDialog>
 #include <QtCore/QSettings>
 #include <QTextCursor>
-
+#include "cemuopts.h"
 #include "lcdwidget.h"
 #include "romselection.h"
 #include "emuthread.h"
@@ -26,7 +26,8 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *p = 0);
+
+    explicit MainWindow(CEmuOpts opts,QWidget *p = 0);
     ~MainWindow();
 
 public slots:
@@ -181,7 +182,7 @@ private:
 
     // Autotester
     void dispAutotesterError(int errCode);
-    void openJSONConfig(const QString& jsonPath);
+    int openJSONConfig(const QString& jsonPath);
     void prepareAndOpenJSONConfig();
     void reloadJSONConfig();
     void launchTest();
@@ -247,6 +248,8 @@ private:
     bool isResumed = false;
     bool hexSearch = true;
     bool canScroll = false;
+
+    CEmuOpts opts;
 
     uint16_t prevPortAddress = 0;
     uint32_t prevBreakpointAddress = 0;

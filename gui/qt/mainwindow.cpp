@@ -45,7 +45,7 @@
 #include "qtkeypadbridge.h"
 #include "searchwidget.h"
 #include "basiccodeviewerwindow.h"
-
+#include "cemuopts.h"
 #include "utils.h"
 #include "capture/gif.h"
 
@@ -58,9 +58,10 @@
 #include "../../tests/autotester/autotester.h"
 
 static const constexpr int WindowStateVersion = 0;
-
-MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
-    // Setup the UI
+bool restoreOnOpen;
+MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) :QMainWindow(p), ui(new Ui::MainWindow) {
+    opts = cliOpts;
+    // Setup the UI1
     ui->setupUi(this);
     ui->centralWidget->hide();
     ui->statusBar->addWidget(&statusLabel);
@@ -310,7 +311,7 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
             exit(0);
         }
     } else {
-        if(settings->value(QStringLiteral("restoreOnOpen")).toBool() && fileExists(emu.imagePath)) {
+        if(settings->value(QStringLiteral("restoreOnOpen")).toBool() && fileExists(emu.imagePath) && opts.restoreOnOpen ) {
             restoreEmuState();
         } else {
             emu.start();
@@ -333,6 +334,17 @@ MainWindow::MainWindow(QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow) {
     stopIcon.addPixmap(pix);
     pix.load(":/icons/resources/icons/run.png");
     runIcon.addPixmap(pix);
+
+    if (opts.AutotesterFile != ""){
+        if(openJSONConfig(opts.AutotesterFile)==0)
+        {
+           resetCalculator();
+           //Race condition requires this. Else We hand onsending files.
+           QThread::msleep(500);
+           launchTest();
+        }
+   }
+
 }
 
 MainWindow::~MainWindow() {
@@ -513,7 +525,7 @@ void MainWindow::closeEvent(QCloseEvent *e) {
         refreshVariableList();
     }
 
-    if (!closeAfterSave && settings->value(QStringLiteral("saveOnClose")).toBool()) {
+    if (!closeAfterSave && settings->value(QStringLiteral("saveOnClose")).toBool() && opts.restoreOnOpen) {
             closeAfterSave = true;
             qDebug("Saving...");
             saveEmuState();
@@ -1181,9 +1193,10 @@ void MainWindow::dispAutotesterError(int errCode) {
 }
 
 
-void MainWindow::openJSONConfig(const QString& jsonPath) {
+int MainWindow::openJSONConfig(const QString& jsonPath) {
     std::string jsonContents;
     std::ifstream ifs(jsonPath.toStdString());
+
     if (ifs.good())
     {
         ui->buttonReloadJSONconfig->setEnabled(true);
@@ -1191,12 +1204,12 @@ void MainWindow::openJSONConfig(const QString& jsonPath) {
         std::getline(ifs, jsonContents, '\0');
         if (!ifs.eof()) {
             QMessageBox::warning(this, tr("File error"), tr("Couldn't read JSON file."));
-            return;
+            return 0;
         }
     } else {
         ui->buttonReloadJSONconfig->setEnabled(false);
         QMessageBox::warning(this, tr("Opening error"), tr("Unable to open the file."));
-        return;
+        return 1;
     }
 
     autotester::ignoreROMfield = true;
@@ -1208,8 +1221,9 @@ void MainWindow::openJSONConfig(const QString& jsonPath) {
         std::cout << "[OK] Test config loaded and verified. " << autotester::config.hashes.size() << " unique tests found." << std::endl;
     } else {
         QMessageBox::warning(this, tr("JSON format error"), tr("Error. See the test config file format and make sure values are correct and referenced files are there."));
-        return;
+        return 1;
     }
+    return 0;
 }
 
 void MainWindow::prepareAndOpenJSONConfig() {
@@ -1259,8 +1273,9 @@ void MainWindow::launchTest() {
         dispAutotesterError(1);
         return;
     }
-
+    if(!opts.suppressTestDialog) {
     QMessageBox::information(this, tr("Test results"), QString(tr("Out of %2 tests attempted:\n%4 passed\n%6 failed")).arg(QString::number(autotester::hashesTested), QString::number(autotester::hashesPassed), QString::number(autotester::hashesFailed)));
+    }
 }
 
 void MainWindow::updateCRCParamsFromPreset(int comboBoxIndex) {
