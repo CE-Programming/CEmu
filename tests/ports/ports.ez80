@@ -1,0 +1,68 @@
+#include "ti84pce.inc"
+heapTop                 equ 0D1987Ch
+
+	.db	tExtTok, tAsm84CeCmp
+	.org	userMem
+
+	di
+	ld	a, $d1
+	ld	mb, a
+	ld.sis	sp, heapTop - $d10000
+	jp.sis	loop
+	.assume	adl = 0
+	.org	$ - $d10000
+loop:	call.il	rand
+	ld	c, l
+	ld	b, h
+	out	(bc), e
+	jr	loop
+	.org	$ + $d10000
+	.assume	adl = 1
+; euhl = rand
+rand:	push	af
+	push	bc
+	ld	ix, seed
+	lea	hl, ix + x
+	lea	de, ix + t
+	ld	bc, 4 * 4
+	ldir
+	ld	hl, (ix + t)
+	add	hl, hl
+	add	hl, hl
+	add	hl, hl
+	ld	bc, (ix + t + 1)
+	call	__ixor
+	ld	(ix + t + 1), hl
+	ld	bc, (ix + t)
+	call	__ixor
+	ld	(ix + t), hl
+	ld	de, (ix + w + 2)
+	ld	a, e
+	ld	e, d
+	srl	d
+	rra
+	srl	d
+	rra
+	srl	d
+	rra
+	ld	bc, (ix + w)
+	xor	a, c
+	ld	c, a
+	ld	a, d
+	xor	a, b
+	ld	b, a
+	ld	a, (ix + t + 3)
+	call	__lxor
+	ld	(ix + w), hl
+	ld	(ix + w + 3), e
+	pop	bc
+	pop	af
+	ret.l
+
+seed:	.org	0
+s:	.block	3
+t:	.block	4
+x:	.db	$6c, $d6, $21, $fb
+y:	.db	$f2, $a3, $85, $6b
+z:	.db	$4d, $0e, $df, $b2
+w:	.db	$73, $eb, $e1, $1c

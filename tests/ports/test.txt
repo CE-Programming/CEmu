@@ -1,0 +1,1 @@
+This is meant to be run on a CEmu compiled with sanitizers (especially bounds san).
