@@ -23,60 +23,61 @@ Listing for file "ports.ez80"
    11 D1:A88A 40 C3 8E A8 	jp.sis	loop
    12 D1:A88E -  -  -  -  	.assume	adl = 0
    13 D1:A88E -  -  -  -  	.org	$ - $d10000
-   14 00:A88E 52 CD 99 A8 
+   14 00:A88E 52 CD 9B A8 
               D1 -  -  -  loop:	call.il	rand
    15 00:A893 4D -  -  -  	ld	c, l
    16 00:A894 44 -  -  -  	ld	b, h
-   17 00:A895 ED 59 -  -  	out	(bc), e
-   18 00:A897 18 F5 -  -  	jr	loop
-   19 00:A899 -  -  -  -  	.org	$ + $d10000
-   20 D1:A899 -  -  -  -  	.assume	adl = 1
-   21 D1:A899 -  -  -  -  ; euhl = rand
-   22 D1:A899 F5 -  -  -  rand:	push	af
-   23 D1:A89A C5 -  -  -  	push	bc
-   24 D1:A89B DD 21 ED A8 
+   17 00:A895 ED 78 -  -          in      a, (bc)
+   18 00:A897 ED 79 -  -          out     (bc), a
+   19 00:A899 18 F3 -  -  	jr	loop
+   20 00:A89B -  -  -  -  	.org	$ + $d10000
+   21 D1:A89B -  -  -  -  	.assume	adl = 1
+   22 D1:A89B -  -  -  -  ; euhl = rand
+   23 D1:A89B F5 -  -  -  rand:	push	af
+   24 D1:A89C C5 -  -  -  	push	bc
+   25 D1:A89D DD 21 EF A8 
               D1 -  -  -  	ld	ix, seed
-   25 D1:A8A0 ED 22 07 -  	lea	hl, ix + x
-   26 D1:A8A3 ED 12 03 -  	lea	de, ix + t
-   27 D1:A8A6 01 10 00 00 	ld	bc, 4 * 4
-   28 D1:A8AA ED B0 -  -  	ldir
-   29 D1:A8AC DD 27 03 -  	ld	hl, (ix + t)
-   30 D1:A8AF 29 -  -  -  	add	hl, hl
-   31 D1:A8B0 29 -  -  -  	add	hl, hl
-   32 D1:A8B1 29 -  -  -  	add	hl, hl
-   33 D1:A8B2 DD 07 04 -  	ld	bc, (ix + t + 1)
-   34 D1:A8B5 CD 98 01 00 	call	__ixor
-   35 D1:A8B9 DD 2F 04 -  	ld	(ix + t + 1), hl
-   36 D1:A8BC DD 07 03 -  	ld	bc, (ix + t)
-   37 D1:A8BF CD 98 01 00 	call	__ixor
-   38 D1:A8C3 DD 2F 03 -  	ld	(ix + t), hl
-   39 D1:A8C6 DD 17 15 -  	ld	de, (ix + w + 2)
-   40 D1:A8C9 7B -  -  -  	ld	a, e
-   41 D1:A8CA 5A -  -  -  	ld	e, d
-   42 D1:A8CB CB 3A -  -  	srl	d
-   43 D1:A8CD 1F -  -  -  	rra
-   44 D1:A8CE CB 3A -  -  	srl	d
-   45 D1:A8D0 1F -  -  -  	rra
-   46 D1:A8D1 CB 3A -  -  	srl	d
-   47 D1:A8D3 1F -  -  -  	rra
-   48 D1:A8D4 DD 07 13 -  	ld	bc, (ix + w)
-   49 D1:A8D7 A9 -  -  -  	xor	a, c
-   50 D1:A8D8 4F -  -  -  	ld	c, a
-   51 D1:A8D9 7A -  -  -  	ld	a, d
-   52 D1:A8DA A8 -  -  -  	xor	a, b
-   53 D1:A8DB 47 -  -  -  	ld	b, a
-   54 D1:A8DC DD 7E 06 -  	ld	a, (ix + t + 3)
-   55 D1:A8DF CD FC 01 00 	call	__lxor
-   56 D1:A8E3 DD 2F 13 -  	ld	(ix + w), hl
-   57 D1:A8E6 DD 73 16 -  	ld	(ix + w + 3), e
-   58 D1:A8E9 C1 -  -  -  	pop	bc
-   59 D1:A8EA F1 -  -  -  	pop	af
-   60 D1:A8EB 5B C9 -  -  	ret.l
-   61 D1:A8ED -  -  -  -  
-   62 D1:A8ED -  -  -  -  seed:	.org	0
-   63 00:0000 00 00 00 -  s:	.block	3
-   64 00:0003 00 00 00 00 t:	.block	4
-   65 00:0007 6C D6 21 FB x:	.db	$6c, $d6, $21, $fb
-   66 00:000B F2 A3 85 6B y:	.db	$f2, $a3, $85, $6b
-   67 00:000F 4D 0E DF B2 z:	.db	$4d, $0e, $df, $b2
-   68 00:0013 73 EB E1 1C w:	.db	$73, $eb, $e1, $1c
+   26 D1:A8A2 ED 22 07 -  	lea	hl, ix + x
+   27 D1:A8A5 ED 12 03 -  	lea	de, ix + t
+   28 D1:A8A8 01 10 00 00 	ld	bc, 4 * 4
+   29 D1:A8AC ED B0 -  -  	ldir
+   30 D1:A8AE DD 27 03 -  	ld	hl, (ix + t)
+   31 D1:A8B1 29 -  -  -  	add	hl, hl
+   32 D1:A8B2 29 -  -  -  	add	hl, hl
+   33 D1:A8B3 29 -  -  -  	add	hl, hl
+   34 D1:A8B4 DD 07 04 -  	ld	bc, (ix + t + 1)
+   35 D1:A8B7 CD 98 01 00 	call	__ixor
+   36 D1:A8BB DD 2F 04 -  	ld	(ix + t + 1), hl
+   37 D1:A8BE DD 07 03 -  	ld	bc, (ix + t)
+   38 D1:A8C1 CD 98 01 00 	call	__ixor
+   39 D1:A8C5 DD 2F 03 -  	ld	(ix + t), hl
+   40 D1:A8C8 DD 17 15 -  	ld	de, (ix + w + 2)
+   41 D1:A8CB 7B -  -  -  	ld	a, e
+   42 D1:A8CC 5A -  -  -  	ld	e, d
+   43 D1:A8CD CB 3A -  -  	srl	d
+   44 D1:A8CF 1F -  -  -  	rra
+   45 D1:A8D0 CB 3A -  -  	srl	d
+   46 D1:A8D2 1F -  -  -  	rra
+   47 D1:A8D3 CB 3A -  -  	srl	d
+   48 D1:A8D5 1F -  -  -  	rra
+   49 D1:A8D6 DD 07 13 -  	ld	bc, (ix + w)
+   50 D1:A8D9 A9 -  -  -  	xor	a, c
+   51 D1:A8DA 4F -  -  -  	ld	c, a
+   52 D1:A8DB 7A -  -  -  	ld	a, d
+   53 D1:A8DC A8 -  -  -  	xor	a, b
+   54 D1:A8DD 47 -  -  -  	ld	b, a
+   55 D1:A8DE DD 7E 06 -  	ld	a, (ix + t + 3)
+   56 D1:A8E1 CD FC 01 00 	call	__lxor
+   57 D1:A8E5 DD 2F 13 -  	ld	(ix + w), hl
+   58 D1:A8E8 DD 73 16 -  	ld	(ix + w + 3), e
+   59 D1:A8EB C1 -  -  -  	pop	bc
+   60 D1:A8EC F1 -  -  -  	pop	af
+   61 D1:A8ED 5B C9 -  -  	ret.l
+   62 D1:A8EF -  -  -  -  
+   63 D1:A8EF -  -  -  -  seed:	.org	0
+   64 00:0000 00 00 00 -  s:	.block	3
+   65 00:0003 00 00 00 00 t:	.block	4
+   66 00:0007 6C D6 21 FB x:	.db	$6c, $d6, $21, $fb
+   67 00:000B F2 A3 85 6B y:	.db	$f2, $a3, $85, $6b
+   68 00:000F 4D 0E DF B2 z:	.db	$4d, $0e, $df, $b2
+   69 00:0013 73 EB E1 1C w:	.db	$73, $eb, $e1, $1c

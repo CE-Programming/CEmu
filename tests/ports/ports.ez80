@@ -14,7 +14,8 @@ heapTop                 equ 0D1987Ch
 loop:	call.il	rand
 	ld	c, l
 	ld	b, h
-	out	(bc), e
+        in      a, (bc)
+        out     (bc), a
 	jr	loop
 	.org	$ + $d10000
 	.assume	adl = 1
