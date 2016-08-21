@@ -129,26 +129,26 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name) {
 
     /* parse each varaible individually until the entire file is compelete. */
 
+    cpu.halted = cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = 0;
+    memcpy(run_asm_safe, jforcegraph, sizeof(jforcegraph));
+    cpu_flush(safe_ram_loc, 1);
+    cpu.cycles = 0;
+    cpu.next = 2300000;
+    cpu_execute();
+
     do {
-        if (fseek(file, var_offset + 2, 0))                goto r_err;
-        if (fread(&var_size_low, 1, 1, file) != 1)         goto r_err;
-        if (fread(&var_size_high, 1, 1, file) != 1)        goto r_err;
+        if (fseek(file, var_offset + 2, 0))                  goto r_err;
+        if (fread(&var_size_low, 1, 1, file) != 1)           goto r_err;
+        if (fread(&var_size_high, 1, 1, file) != 1)          goto r_err;
 
-        if (fseek(file, var_offset + 4, 0))                goto r_err;
-        if (fread(&var_type, 1, 1, file) != 1)             goto r_err;
+        if (fseek(file, var_offset + 4, 0))                  goto r_err;
+        if (fread(&var_type, 1, 1, file) != 1)               goto r_err;
 
-        if (fseek(file, var_offset + 14, 0))               goto r_err;
-        if (fread(&var_arc, 1, 1, file) != 1)              goto r_err;
+        if (fseek(file, var_offset + 14, 0))                 goto r_err;
+        if (fread(&var_arc, 1, 1, file) != 1)                goto r_err;
 
-        if (fseek(file, var_offset + 4, 0))                goto r_err;
-        if (fread(op1, 1, op_size, file) != op_size)       goto r_err;
-
-        cpu.halted = cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = 0;
-        memcpy(run_asm_safe, jforcegraph, sizeof(jforcegraph));
-        cpu_flush(safe_ram_loc, 1);
-        cpu.cycles = 0;
-        cpu.next = 2500000;
-        cpu_execute();
+        if (fseek(file, var_offset + 4, 0))                  goto r_err;
+        if (fread(op1, 1, op_size, file) != op_size)         goto r_err;
 
         cpu.halted = cpu.IEF_wait = 0;
         mem_write_byte(0xD008DF,0);
@@ -161,7 +161,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name) {
         memcpy(&run_asm_safe[6], pgrm_loader, sizeof(pgrm_loader));
         cpu_flush(safe_ram_loc, 1);
         cpu.cycles = 0;
-        cpu.next = 25000000;
+        cpu.next = 23000000;
         cpu_execute();
 
         if(mem_read_byte(0xD008DF)) {
@@ -180,7 +180,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name) {
             memcpy(run_asm_safe, archivevar, sizeof(archivevar));
             cpu_flush(safe_ram_loc, 1);
             cpu.cycles = 0;
-            cpu.next = 25000000;
+            cpu.next = 23000000;
             cpu_execute();
         }
 
@@ -188,7 +188,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name) {
         memcpy(run_asm_safe, jforcehome, sizeof(jforcehome));
         cpu_flush(safe_ram_loc, 1);
         cpu.cycles = 0;
-        cpu.next = 2500000;
+        cpu.next = 2300000;
         cpu_execute();
 
         var_offset += var_size + 17;
