@@ -75,7 +75,8 @@ bool listVariablesLink(void) {
  */
 bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name) {
     const size_t h_size = sizeof(header_data);
-    const size_t op_size = 9;
+    const size_t op_size = 0x09;
+    const uint16_t data_start = 0x37;
 
     FILE *file;
     uint8_t tmp_buf[0x80];
@@ -85,6 +86,8 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name) {
 
     uint8_t var_size_low,
             var_size_high,
+            data_size_low,
+            data_size_high,
             var_type,
             var_arc;
 
@@ -93,94 +96,105 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name) {
             *op1          = phys_mem_ptr(0xD005F8, op_size),
             *var_ptr;
 
-    uint16_t var_size;
+    uint16_t var_size,
+             data_size,
+             var_offset = data_start;
 
     /* Return if we are at an error menu */
-    if(*cxCurApp == 0x52) {
-        return false;
-    }
-
-    file = fopen_utf8(var_name,"rb");
-    if (!file) {
+    if (*cxCurApp == 0x52 || !(file = fopen_utf8(var_name,"rb"))) {
         return false;
     }
 
     save_cycles = cpu.cycles;
     save_next = cpu.next;
 
-    if (fread(tmp_buf, 1, h_size, file) != h_size)        goto r_err;
-    if (memcmp(tmp_buf, header_data, h_size))             goto r_err;
-
-    if (fseek(file, 0x39, 0))                             goto r_err;
-    if (fread(&var_size_low, 1, 1, file) != 1)            goto r_err;
-    if (fread(&var_size_high, 1, 1, file) != 1)           goto r_err;
-
-    if (fseek(file, 0x3B, 0))                             goto r_err;
-    if (fread(&var_type, 1, 1, file) != 1)                goto r_err;
-
-    if (fseek(file, 0x45, 0))                             goto r_err;
-    if (fread(&var_arc, 1, 1, file) != 1)                 goto r_err;
-
     if (calc_is_off()) {
         intrpt_set(INT_ON, true);
         control.readBatteryStatus = ~1;
         intrpt_pulse(19);
         cpu.cycles = cpu.IEF_wait = 0;
-        cpu.next = 5300000;
+        cpu.next = 10000000;
         cpu_execute();
         intrpt_set(INT_ON, false);
         goto r_err;
     }
 
-    cpu.halted = cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = 0;
-    memcpy(run_asm_safe, jforcegraph, sizeof(jforcegraph));
-    cpu_flush(safe_ram_loc, 1);
-    cpu.cycles = 0;
-    cpu.next = 2300000;
-    cpu_execute();
+    if (fread(tmp_buf, 1, h_size, file) != h_size)        goto r_err;
+    if (memcmp(tmp_buf, header_data, h_size))             goto r_err;
 
-    if (fseek(file, 0x3B, 0))                            goto r_err;
-    if (fread(op1, 1, op_size, file) != op_size)         goto r_err;
-    cpu.halted = cpu.IEF_wait = 0;
-    mem_write_byte(0xD008DF,0);
-    run_asm_safe[0] = 0x21;
-    run_asm_safe[1] = var_size_low;
-    run_asm_safe[2] = var_size_high;
-    run_asm_safe[3] = 0x00;
-    run_asm_safe[4] = 0x3E;
-    run_asm_safe[5] = var_type;
-    memcpy(&run_asm_safe[6], pgrm_loader, sizeof(pgrm_loader));
-    cpu_flush(safe_ram_loc, 1);
-    cpu.cycles = 0;
-    cpu.next = 23000000;
-    cpu_execute();
+    if (fseek(file, 0x35, 0))                             goto r_err;
+    if (fread(&data_size_low, 1, 1, file) != 1)           goto r_err;
+    if (fread(&data_size_high, 1, 1, file) != 1)          goto r_err;
+    data_size = ((uint16_t)data_size_high << 8u) | (uint16_t)data_size_low;
 
-    if(mem_read_byte(0xD008DF)) {
-        gui_console_printf("[CEmu] Variable Transfer Error\n");
-        goto r_err;
-    }
+    /* parse each varaible individually until the entire file is compelete. */
 
-    var_size = ((uint16_t)var_size_high << 8u) | (uint16_t)var_size_low;
-    var_ptr = phys_mem_ptr(mem_peek_long(safe_ram_loc), var_size);
+    do {
+        if (fseek(file, var_offset + 2, 0))                goto r_err;
+        if (fread(&var_size_low, 1, 1, file) != 1)         goto r_err;
+        if (fread(&var_size_high, 1, 1, file) != 1)        goto r_err;
 
-    if (fseek(file, 0x48, 0))                           goto r_err;
-    if (fread(var_ptr, 1, var_size, file) != var_size)  goto r_err;
+        if (fseek(file, var_offset + 4, 0))                goto r_err;
+        if (fread(&var_type, 1, 1, file) != 1)             goto r_err;
 
-    if (var_arc == 0x80) {
-        cpu.halted = cpu.IEF_wait = 0;
-        memcpy(run_asm_safe, archivevar, sizeof(archivevar));
+        if (fseek(file, var_offset + 14, 0))               goto r_err;
+        if (fread(&var_arc, 1, 1, file) != 1)              goto r_err;
+
+        if (fseek(file, var_offset + 4, 0))                goto r_err;
+        if (fread(op1, 1, op_size, file) != op_size)       goto r_err;
+
+        cpu.halted = cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = 0;
+        memcpy(run_asm_safe, jforcegraph, sizeof(jforcegraph));
         cpu_flush(safe_ram_loc, 1);
         cpu.cycles = 0;
-        cpu.next = 23000000;
+        cpu.next = 2500000;
         cpu_execute();
-    }
 
-    cpu.halted = cpu.IEF_wait = 0;
-    memcpy(run_asm_safe, jforcehome, sizeof(jforcehome));
-    cpu_flush(safe_ram_loc, 1);
-    cpu.cycles = 0;
-    cpu.next = 2300000;
-    cpu_execute();
+        cpu.halted = cpu.IEF_wait = 0;
+        mem_write_byte(0xD008DF,0);
+        run_asm_safe[0] = 0x21;
+        run_asm_safe[1] = var_size_low;
+        run_asm_safe[2] = var_size_high;
+        run_asm_safe[3] = 0x00;
+        run_asm_safe[4] = 0x3E;
+        run_asm_safe[5] = var_type;
+        memcpy(&run_asm_safe[6], pgrm_loader, sizeof(pgrm_loader));
+        cpu_flush(safe_ram_loc, 1);
+        cpu.cycles = 0;
+        cpu.next = 25000000;
+        cpu_execute();
+
+        if(mem_read_byte(0xD008DF)) {
+            gui_console_printf("[CEmu] Variable Transfer Error\n");
+            goto r_err;
+        }
+
+        var_size = ((uint16_t)var_size_high << 8u) | (uint16_t)var_size_low;
+        var_ptr = phys_mem_ptr(mem_peek_long(safe_ram_loc), var_size);
+
+        if (fseek(file, 0x48, 0))                           goto r_err;
+        if (fread(var_ptr, 1, var_size, file) != var_size)  goto r_err;
+
+        if (var_arc == 0x80) {
+            cpu.halted = cpu.IEF_wait = 0;
+            memcpy(run_asm_safe, archivevar, sizeof(archivevar));
+            cpu_flush(safe_ram_loc, 1);
+            cpu.cycles = 0;
+            cpu.next = 25000000;
+            cpu_execute();
+        }
+
+        cpu.halted = cpu.IEF_wait = 0;
+        memcpy(run_asm_safe, jforcehome, sizeof(jforcehome));
+        cpu_flush(safe_ram_loc, 1);
+        cpu.cycles = 0;
+        cpu.next = 2500000;
+        cpu_execute();
+
+        var_offset += var_size + 17;
+
+        gui_console_printf("%d -- %d\n", data_size, var_offset);
+    } while(var_offset != data_size + data_start);
 
     cpu.cycles = save_cycles;
     cpu.next = save_next;
@@ -194,7 +208,7 @@ r_err:
     return false;
 }
 
-static char header[] = "**TI83F*\x1A\x0A\0File dumped from CEmu ";
+static char header[] = "**TI83F*\x1A\x0A\0Exported via CEmu ";
 bool receiveVariableLink(int count, const calc_var_t *vars, const char *file_name) {
     FILE *file;
     calc_var_t var;
