@@ -193,7 +193,6 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name) {
 
         var_offset += var_size + 17;
 
-        gui_console_printf("%d -- %d\n", data_size, var_offset);
     } while(var_offset != data_size + data_start);
 
     cpu.cycles = save_cycles;
