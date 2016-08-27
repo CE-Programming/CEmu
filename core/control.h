@@ -44,7 +44,7 @@ eZ80portrange_t init_control(void);
 typedef struct emu_image emu_image;
 bool control_restore(const emu_image*);
 bool control_save(emu_image*);
-bool code_is_privileged(void);
+bool unprivileged_code(void);
 
 #ifdef __cplusplus
 }

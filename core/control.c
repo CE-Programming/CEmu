@@ -155,7 +155,7 @@ static void control_write(const uint16_t pio, const uint8_t byte) {
             write8(control.protectedEnd, (index - 0x23) << 3, byte);
             break;
         case 0x28:
-            if (code_is_privileged()) {
+            if (!unprivileged_code()) {
                 mem.flash.locked = (byte & 4) == 0;
             }
             control.ports[index] = byte & 247;
@@ -201,6 +201,6 @@ bool control_restore(const emu_image *s) {
     return true;
 }
 
-bool code_is_privileged() {
-    return cpu.registers.rawPC < control.privileged;
+bool unprivileged_code(void) {
+    return cpu.registers.rawPC >= control.privileged;
 }

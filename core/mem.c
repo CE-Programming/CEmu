@@ -365,7 +365,7 @@ uint8_t mem_read_byte(uint32_t address) {
     }
 #endif
     // reads from protected memory return 0
-    if (!(address >= control.protectedStart && address <= control.protectedEnd && code_is_privileged())) {
+    if (!(address >= control.protectedStart && address <= control.protectedEnd && unprivileged_code())) {
         switch((address >> 20) & 0xF) {
             /* FLASH */
             case 0x0: case 0x1: case 0x2: case 0x3:
@@ -410,7 +410,7 @@ void mem_write_byte(uint32_t address, uint8_t value) {
         gui_console_printf("[CEmu] NMI reset caused by writing to the stack limit at address %#06x. Hint: Probably a stack overflow (aka too much recursion).\n", address);
     } // writes to stack limit succeed
 
-    if (address >= control.protectedStart && address <= control.protectedEnd && code_is_privileged()) {
+    if (address >= control.protectedStart && address <= control.protectedEnd && unprivileged_code()) {
         control.protectionStatus |= 2;
         cpu_nmi();
         gui_console_printf("[CEmu] NMI reset caused by writing to protected memory (%#06x through %#06x) at address %#06x from unprivileged code.\n", control.protectedStart, control.protectedEnd, address);
@@ -419,7 +419,7 @@ void mem_write_byte(uint32_t address, uint8_t value) {
             /* FLASH */
             case 0x0: case 0x1: case 0x2: case 0x3:
             case 0x4: case 0x5: case 0x6: case 0x7:
-                if (mem.flash.locked && code_is_privileged()) {
+                if (mem.flash.locked && unprivileged_code()) {
                     control.protectionStatus |= 2;
                     cpu_nmi();
                     gui_console_printf("[CEmu] NMI reset cause by write to flash at address %#06x from unprivileged code. Hint: Possibly a null pointer dereference.\n", address);
