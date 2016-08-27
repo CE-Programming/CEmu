@@ -155,9 +155,7 @@ static void control_write(const uint16_t pio, const uint8_t byte) {
             write8(control.protectedEnd, (index - 0x23) << 3, byte);
             break;
         case 0x28:
-            if (!unprivileged_code()) {
-                mem.flash.locked = (byte & 4) == 0;
-            }
+            mem.flash.locked = (byte & 4) == 0;
             control.ports[index] = byte & 247;
             break;
         case 0x3A: case 0x3B: case 0x3C:
