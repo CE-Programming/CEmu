@@ -364,34 +364,37 @@ uint8_t mem_read_byte(uint32_t address) {
         open_debugger(HIT_READ_BREAKPOINT, address);
     }
 #endif
-    switch((address >> 20) & 0xF) {
-        /* FLASH */
-        case 0x0: case 0x1: case 0x2: case 0x3:
-        case 0x4: case 0x5: case 0x6: case 0x7:
-            value = flash_read_handler(address);
-            break;
+    // reads from protected memory return 0
+    if (!(address >= control.protectedStart && address <= control.protectedEnd && code_is_privileged())) {
+        switch((address >> 20) & 0xF) {
+            /* FLASH */
+            case 0x0: case 0x1: case 0x2: case 0x3:
+            case 0x4: case 0x5: case 0x6: case 0x7:
+                value = flash_read_handler(address);
+                break;
 
-        /* UNMAPPED */
-        case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
-            cpu.cycles += 258;
-            break;
+                /* UNMAPPED */
+            case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
+                cpu.cycles += 258;
+                break;
 
-        /* RAM */
-        case 0xD:
-            cpu.cycles += 4;
-            ramAddress = address & 0x7FFFF;
-            if (ramAddress < 0x65800) {
-                value = mem.ram.block[ramAddress];
-            }
-            break;
+                /* RAM */
+            case 0xD:
+                cpu.cycles += 4;
+                ramAddress = address & 0x7FFFF;
+                if (ramAddress < 0x65800) {
+                    value = mem.ram.block[ramAddress];
+                }
+                break;
 
-        /* MMIO <-> Advanced Perphrial Bus */
-        case 0xE: case 0xF:
-            cpu.cycles += mmio_readcycles[(address >> 16) & 0x1F];
-            if (mmio_mapped(address, select)) {
-                value = port_read_byte(mmio_port(address, select));
-            }
-            break;
+                /* MMIO <-> Advanced Perphrial Bus */
+            case 0xE: case 0xF:
+                cpu.cycles += mmio_readcycles[(address >> 16) & 0x1F];
+                if (mmio_mapped(address, select)) {
+                    value = port_read_byte(mmio_port(address, select));
+                }
+                break;
+        }
     }
     return value;
 }
@@ -401,62 +404,70 @@ void mem_write_byte(uint32_t address, uint8_t value) {
     uint32_t ramAddress, select;
     address &= 0xFFFFFF;
 
-    switch((address >> 20) & 0xF) {
-        /* FLASH */
-        case 0x0: case 0x1: case 0x2: case 0x3:
-        case 0x4: case 0x5: case 0x6: case 0x7:
-            if (mem.flash.locked && cpu.registers.PC >= control.privileged) {
-                cpu_nmi();
-                gui_console_printf("[CEmu] NMI triggered (write to flash using unprivileged region)\n");
-            } else {
-                flash_write_handler(address, value);
-            }
-            break;
-
-        /* UNMAPPED */
-        case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
-            cpu.cycles += 258;
-            break;
-
-        /* RAM */
-        case 0xD:
-            cpu.cycles += 2;
-            ramAddress = address & 0x7FFFF;
-            if (ramAddress < 0x65800) {
-                mem.ram.block[ramAddress] = value;
-            }
-            break;
-
-        /* MMIO <-> Advanced Perphrial Bus */
-        case 0xE: case 0xF:
-            cpu.cycles += mmio_writecycles[(address >> 16) & 0x1F];
-#ifdef DEBUG_SUPPORT
-            if (address >= DBG_PORT_RANGE) {
-                open_debugger(address, value);
-                break;
-            } else if ((address >= DBGOUT_PORT_RANGE && address < DBGOUT_PORT_RANGE+SIZEOF_DBG_BUFFER-1)) {
-                if (value != 0) {
-                    debugger.buffer[debugger.currentBuffPos] = (char)value;
-                    debugger.currentBuffPos = (debugger.currentBuffPos + 1) % (SIZEOF_DBG_BUFFER);
-                }
-                break;
-            } else if ((address >= DBGERR_PORT_RANGE && address < DBGERR_PORT_RANGE+SIZEOF_DBG_BUFFER-1)) {
-                if (value != 0) {
-                    debugger.errBuffer[debugger.currentErrBuffPos] = (char)value;
-                    debugger.currentErrBuffPos = (debugger.currentErrBuffPos + 1) % (SIZEOF_DBG_BUFFER);
-                }
-                break;
-            }
-#endif
-            if (mmio_mapped(address, select)) {
-                port_write_byte(mmio_port(address, select), value);
-            }
-            break;
-    }
-
-    if (cpu.registers.PC >= control.privileged && address == control.stackLimit) {
+    if (address == control.stackLimit) {
+        control.protectionStatus |= 1;
         cpu_nmi();
-        gui_console_printf("[CEmu] NMI triggered (tried to write on the stack limit)\n");
+        gui_console_printf("[CEmu] NMI reset caused by writing to the stack limit at address %#06x. Hint: Probably a stack overflow (aka too much recursion).\n", address);
+    } // writes to stack limit succeed
+
+    if (address >= control.protectedStart && address <= control.protectedEnd && code_is_privileged()) {
+        control.protectionStatus |= 2;
+        cpu_nmi();
+        gui_console_printf("[CEmu] NMI reset caused by writing to protected memory (%#06x through %#06x) at address %#06x from unprivileged code.\n", control.protectedStart, control.protectedEnd, address);
+    } else { // writes to protected memory are ignored
+        switch((address >> 20) & 0xF) {
+            /* FLASH */
+            case 0x0: case 0x1: case 0x2: case 0x3:
+            case 0x4: case 0x5: case 0x6: case 0x7:
+                if (mem.flash.locked && code_is_privileged()) {
+                    control.protectionStatus |= 2;
+                    cpu_nmi();
+                    gui_console_printf("[CEmu] NMI reset cause by write to flash at address %#06x from unprivileged code. Hint: Possibly a null pointer dereference.\n", address);
+                } else {
+                    flash_write_handler(address, value);
+                }
+                break;
+
+                /* UNMAPPED */
+            case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
+                cpu.cycles += 258;
+                break;
+
+                /* RAM */
+            case 0xD:
+                cpu.cycles += 2;
+                ramAddress = address & 0x7FFFF;
+                if (ramAddress < 0x65800) {
+                    mem.ram.block[ramAddress] = value;
+                }
+                break;
+
+                /* MMIO <-> Advanced Perphrial Bus */
+            case 0xE: case 0xF:
+                cpu.cycles += mmio_writecycles[(address >> 16) & 0x1F];
+#ifdef DEBUG_SUPPORT
+                if (address >= DBG_PORT_RANGE) {
+                    open_debugger(address, value);
+                    break;
+                } else if ((address >= DBGOUT_PORT_RANGE && address < DBGOUT_PORT_RANGE+SIZEOF_DBG_BUFFER-1)) {
+                    if (value != 0) {
+                        debugger.buffer[debugger.currentBuffPos] = (char)value;
+                        debugger.currentBuffPos = (debugger.currentBuffPos + 1) % (SIZEOF_DBG_BUFFER);
+                    }
+                    break;
+                } else if ((address >= DBGERR_PORT_RANGE && address < DBGERR_PORT_RANGE+SIZEOF_DBG_BUFFER-1)) {
+                    if (value != 0) {
+                        debugger.errBuffer[debugger.currentErrBuffPos] = (char)value;
+                        debugger.currentErrBuffPos = (debugger.currentErrBuffPos + 1) % (SIZEOF_DBG_BUFFER);
+                    }
+                    break;
+                }
+#endif
+                if (mmio_mapped(address, select)) {
+                    port_write_byte(mmio_port(address, select), value);
+                }
+                break;
+        }
     }
 
 #ifdef DEBUG_SUPPORT

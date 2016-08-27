@@ -53,6 +53,7 @@ static uint32_t cpu_address_mode(uint32_t address, bool mode) {
 
 static void cpu_prefetch(uint32_t address, bool mode) {
     cpu.ADL = mode;
+    cpu.registers.rawPC = cpu_mask_mode(address, mode);
     cpu.registers.PC = cpu_address_mode(address, mode);
     cpu.prefetch = mem_read_byte(cpu.registers.PC);
 #ifdef DEBUG_SUPPORT
@@ -170,11 +171,18 @@ static uint32_t cpu_pop_word(void) {
 
 static uint8_t cpu_read_in(uint16_t pio) {
     cpu.cycles += 2;
+    if (code_is_privileged())
+        return 0; // in returns 0 in unprivileged code
     return port_read_byte(pio);
 }
 
 static void cpu_write_out(uint16_t pio, uint8_t value) {
     cpu.cycles += 3;
+    if (code_is_privileged()) {
+        control.protectionStatus |= 2;
+        cpu_nmi();
+        gui_console_printf("[CEmu] NMI reset cause by an out instruction in unpriviledged code.\n");
+    }
     port_write_byte(pio, value);
 }
 

@@ -34,18 +34,23 @@ static uint8_t control_read(const uint16_t pio) {
             if(control.USBBusPowered)    { value |= 0x80; }
             if(control.USBSelfPowered) { value |= 0x40; }
             break;
-        case 0x1D:
-        case 0x1E:
-        case 0x1F:
+        case 0x1D: case 0x1E: case 0x1F:
             value = read8(control.privileged, (index - 0x1D) << 3);
+            break;
+        case 0x20: case 0x21: case 0x22:
+            value = read8(control.protectedStart, (index - 0x20) << 3);
+            break;
+        case 0x23: case 0x24: case 0x25:
+            value = read8(control.protectedEnd, (index - 0x23) << 3);
             break;
         case 0x28:
             value = control.ports[index] | 0x08;
             break;
-        case 0x3A:
-        case 0x3B:
-        case 0x3C:
+        case 0x3A: case 0x3B: case 0x3C:
             value = read8(control.stackLimit, (index - 0x3A) << 3);
+            break;
+        case 0x3D:
+            value = control.protectionStatus;
             break;
         default:
             value = control.ports[index];
@@ -140,21 +145,26 @@ static void control_write(const uint16_t pio, const uint8_t byte) {
         case 0x0F:
             control.ports[index] = byte & 3;
             break;
-        case 0x1D:
-        case 0x1E:
-        case 0x1F:
+        case 0x1D: case 0x1E: case 0x1F:
             write8(control.privileged, (index - 0x1D) << 3, byte);
             break;
+        case 0x20: case 0x21: case 0x22:
+            write8(control.protectedStart, (index - 0x20) << 3, byte);
+            break;
+        case 0x23: case 0x24: case 0x25:
+            write8(control.protectedEnd, (index - 0x23) << 3, byte);
+            break;
         case 0x28:
-            if (cpu.registers.PC < control.privileged) {
+            if (code_is_privileged()) {
                 mem.flash.locked = (byte & 4) == 0;
             }
             control.ports[index] = byte & 247;
             break;
-        case 0x3A:
-        case 0x3B:
-        case 0x3C:
+        case 0x3A: case 0x3B: case 0x3C:
             write8(control.stackLimit, (index - 0x3A) << 3, byte);
+            break;
+        case 0x3E:
+            control.protectionStatus &= ~byte;
             break;
         default:
             control.ports[index] = byte;
@@ -174,7 +184,9 @@ eZ80portrange_t init_control(void) {
     /* Set default state to full battery and not charging */
     control.batteryCharging = false;
     control.setBatteryStatus = BATTERY_4;
-    control.privileged = 0;
+    control.privileged = 0xFFFFFF;
+    control.protectedStart = control.protectedEnd = 0xD1887C;
+    control.protectionStatus = 0;
 
     return device;
 }
@@ -187,4 +199,8 @@ bool control_save(emu_image *s) {
 bool control_restore(const emu_image *s) {
     control = s->control;
     return true;
+}
+
+bool code_is_privileged() {
+    return cpu.registers.rawPC < control.privileged;
 }

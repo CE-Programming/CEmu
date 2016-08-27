@@ -28,6 +28,9 @@ PACK(typedef struct control_state {
 
     uint32_t privileged;
     uint32_t stackLimit;
+    uint32_t protectedStart;
+    uint32_t protectedEnd;
+    uint8_t protectionStatus;
 }) control_state_t;
 
 /* Global CONTROL state */
@@ -41,6 +44,7 @@ eZ80portrange_t init_control(void);
 typedef struct emu_image emu_image;
 bool control_restore(const emu_image*);
 bool control_save(emu_image*);
+bool code_is_privileged(void);
 
 #ifdef __cplusplus
 }
