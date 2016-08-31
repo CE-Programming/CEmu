@@ -55,7 +55,7 @@ static void cpu_prefetch(uint32_t address, bool mode) {
     cpu.ADL = mode;
     cpu.registers.rawPC = cpu_mask_mode(address, mode);
     cpu.registers.PC = cpu_address_mode(address, mode);
-    cpu.prefetch = mem_read_byte(cpu.registers.PC);
+    cpu.prefetch = mem_read_cpu(cpu.registers.PC, true);
 #ifdef DEBUG_SUPPORT
     debugger.data.block[cpu.registers.PC] |= DBG_INST_MARKER;
 #endif
@@ -116,11 +116,11 @@ static uint8_t cpu_read_byte(uint32_t address) {
         }
     }
 #endif
-    return mem_read_byte(cpuAddress);
+    return mem_read_cpu(cpuAddress, false);
 }
 static void cpu_write_byte(uint32_t address, uint8_t value) {
     uint32_t cpuAddress = cpu_address_mode(address, cpu.L);
-    mem_write_byte(cpuAddress, value);
+    mem_write_cpu(cpuAddress, value);
 }
 
 static uint32_t cpu_read_word(uint32_t address) {
@@ -140,13 +140,13 @@ static void cpu_write_word(uint32_t address, uint32_t value) {
 }
 
 static uint8_t cpu_pop_byte_mode(bool mode) {
-    return mem_read_byte(cpu_address_mode(cpu.registers.stack[mode].hl++, mode));
+    return mem_read_cpu(cpu_address_mode(cpu.registers.stack[mode].hl++, mode), false);
 }
 static uint8_t cpu_pop_byte(void) {
     return cpu_pop_byte_mode(cpu.L);
 }
 static void cpu_push_byte_mode(uint8_t value, bool mode) {
-    mem_write_byte(cpu_address_mode(--cpu.registers.stack[mode].hl, mode), value);
+    mem_write_cpu(cpu_address_mode(--cpu.registers.stack[mode].hl, mode), value);
 }
 static void cpu_push_byte(uint8_t value) {
     cpu_push_byte_mode(value, cpu.L);

@@ -77,8 +77,10 @@ uint16_t mem_peek_short(uint32_t address);
 uint32_t mem_peek_long(uint32_t address);
 uint32_t mem_peek_word(uint32_t address, bool mode);
 void mem_poke_byte(uint32_t address, uint8_t value);
-uint8_t mem_read_byte(uint32_t address);
-void mem_write_byte(uint32_t address, uint8_t value);
+
+/* Mateo, do not use! Use the ones above. */
+uint8_t mem_read_cpu(uint32_t address, bool fetch);
+void mem_write_cpu(uint32_t address, uint8_t value);
 
 /* Save/Restore */
 typedef struct emu_image emu_image;

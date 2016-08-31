@@ -151,7 +151,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name) {
         if (fread(op1, 1, op_size, file) != op_size)         goto r_err;
 
         cpu.halted = cpu.IEF_wait = 0;
-        mem_write_byte(0xD008DF,0);
+        mem_poke_byte(0xD008DF,0);
         run_asm_safe[0] = 0x21;
         run_asm_safe[1] = var_size_low;
         run_asm_safe[2] = var_size_high;
@@ -164,7 +164,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name) {
         cpu.next = 23000000;
         cpu_execute();
 
-        if(mem_read_byte(0xD008DF)) {
+        if(mem_peek_byte(0xD008DF)) {
             gui_console_printf("[CEmu] Variable Transfer Error\n");
             goto r_err;
         }

@@ -353,7 +353,7 @@ static void flash_write_handler(uint32_t address, uint8_t byte) {
     }
 }
 
-uint8_t mem_read_byte(uint32_t address) {
+uint8_t mem_read_cpu(uint32_t address, bool fetch) {
     static const uint8_t mmio_readcycles[0x20] = {2,2,4,3,2,2,2,2,2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2};
     uint8_t value = 0;
     uint32_t ramAddress, select;
@@ -365,7 +365,7 @@ uint8_t mem_read_byte(uint32_t address) {
     }
 #endif
     // reads from protected memory return 0
-    if (!(address >= control.protectedStart && address <= control.protectedEnd && unprivileged_code())) {
+    if (!(!fetch && address >= control.protectedStart && address <= control.protectedEnd && unprivileged_code())) {
         switch((address >> 20) & 0xF) {
             /* FLASH */
             case 0x0: case 0x1: case 0x2: case 0x3:
@@ -399,7 +399,7 @@ uint8_t mem_read_byte(uint32_t address) {
     return value;
 }
 
-void mem_write_byte(uint32_t address, uint8_t value) {
+void mem_write_cpu(uint32_t address, uint8_t value) {
     static const uint8_t mmio_writecycles[0x20] = {2,2,4,2,2,2,2,2,2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2};
     uint32_t ramAddress, select;
     address &= 0xFFFFFF;
