@@ -45,6 +45,7 @@ typedef struct {
     uint8_t prefix, suffix;
     bool adl, iw, il, l;
     addressMap_t addressMap;
+    std::string spacing_string;
 } disasm_state_t;
 
 extern disasm_state_t disasm;

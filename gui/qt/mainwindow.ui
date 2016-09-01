@@ -148,7 +148,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -1097,10 +1097,17 @@
              <item>
               <widget class="QCheckBox" name="checkDataCol">
                <property name="text">
-                <string>Show Data column in disassembly</string>
+                <string>Data column</string>
                </property>
                <property name="checked">
                 <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="checkAddSpace">
+               <property name="text">
+                <string>Opcode/Operand space</string>
                </property>
               </widget>
              </item>
@@ -1111,7 +1118,7 @@
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
-                 <width>40</width>
+                 <width>20</width>
                  <height>20</height>
                 </size>
                </property>
@@ -6499,7 +6506,7 @@
      <x>0</x>
      <y>0</y>
      <width>1288</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="sizePolicy">

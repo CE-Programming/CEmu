@@ -140,6 +140,7 @@ private:
     void removeBreakpointAddress(QString);
     void removeWatchpointAddress(QString);
     void updateDisassembly(int);
+    void addSpaceDisasm(bool);
     bool removeBreakpoint();
     bool removeWatchpoint();
     bool addBreakpoint();
@@ -216,7 +217,7 @@ private:
     // Reset
     void reloadROM();
     void resetCalculator();
-    
+
 #ifdef _WIN32
     // Win32 Console Toggle
     void toggleConsole();

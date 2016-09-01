@@ -127,6 +127,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) :QMainWindow(p), ui(new Ui::
     connect(ui->checkCharging, &QCheckBox::toggled, this, &MainWindow::changeBatteryCharging);
     connect(ui->sliderBattery, &QSlider::valueChanged, this, &MainWindow::changeBatteryStatus);
     connect(ui->disassemblyView->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::scrollDisasmView);
+    connect(ui->checkAddSpace, &QCheckBox::stateChanged, this, &MainWindow::addSpaceDisasm);
 
     // Debugger Options
     connect(ui->buttonAddEquateFile, &QPushButton::clicked, this, &MainWindow::addEquateFileDialog);
@@ -271,6 +272,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) :QMainWindow(p), ui(new Ui::
     autoCheckForUpdates(settings->value(QStringLiteral("autoUpdate"), false).toBool());
     setSaveOnClose(settings->value(QStringLiteral("saveOnClose"), true).toBool());
     setRestoreOnOpen(settings->value(QStringLiteral("restoreOnOpen"), true).toBool());
+    addSpaceDisasm(settings->value(QStringLiteral("addDisasmSpace"), false).toBool());
     ui->flashBytes->setValue(settings->value(QStringLiteral("flashBytesPerLine"), 8).toInt());
     ui->ramBytes->setValue(settings->value(QStringLiteral("ramBytesPerLine"), 8).toInt());
     ui->memBytes->setValue(settings->value(QStringLiteral("memBytesPerLine"), 8).toInt());
@@ -2402,6 +2404,12 @@ void MainWindow::updateWatchpointData(int currentRow) {
     }
 
     ui->watchpointView->item(currentRow, 2)->setText(int2hex(read, length << 1));
+}
+
+void MainWindow::addSpaceDisasm(bool b) {
+    ui->checkAddSpace->setChecked(b);
+    settings->setValue(QStringLiteral("addDisasmSpace"), b);
+    disasm.spacing_string = b ? ", " : ",";
 }
 
 void MainWindow::reloadROM() {
