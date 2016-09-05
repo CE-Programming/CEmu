@@ -49,7 +49,7 @@ After downloading the source (you can clone the repo or just [get the zip](https
 
 2. Now you have two options:
   * Open the .pro file with Qt Creator, set it up (default project settings should be fine), and hit Build. *(Note: you can tell make to use -j4 in the project settings)*
-  * In a shell, `cd` to the project folder and type `qmake -r CEmu.pro; make`
+  * In a shell, `cd` to the project's *./gui/qt/* folder and type `qmake -r CEmu.pro; make`
 
 _Note: Debugging support is somewhat core-related but is only built conditionally (since embedded targets probably won't need it). To enable it, define `DEBUG_SUPPORT`. The Qt GUI does this in the .pro file._
 
