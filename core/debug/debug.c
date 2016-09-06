@@ -54,8 +54,6 @@ uint8_t debug_peek_byte(uint32_t address) {
     return value;
 }
 
-/* okay, so looking at the data inside the asic should be okay when using this function, */
-/* since it is called outside of cpu_execute(). Which means no read/write errors. */
 void open_debugger(int reason, uint32_t data) {
     if (inDebugger) {
         return; // don't recurse

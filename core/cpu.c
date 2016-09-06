@@ -850,6 +850,7 @@ void cpu_execute(void) {
     eZ80context_t context;
 
     uint32_t save_next = cpu.next;
+
     while (!exiting) {
     cpu_execute_continue:
         if (cpu.IEF_wait) {

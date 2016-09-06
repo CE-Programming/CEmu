@@ -63,7 +63,6 @@ void sched_update_next_event(void) {
             sched.nextIndex = i;
         }
     }
-    /* printf("Next event: (%8d,%d)\n", next_cputick, next_index); */
     cpu.next = sched.nextCPUtick;
 #ifdef DEBUG_SUPPORT
     if (!cpu.halted && cpuEvents & EVENT_DEBUG_STEP) {
@@ -76,7 +75,6 @@ void sched_process_pending_events(void) {
     sched_update_next_event();
     while (cpu.cycles >= sched.nextCPUtick) {
         if (sched.nextIndex < 0) {
-            /* printf("[%8d] New second\n", cputick); */
             int i;
             for (i = 0; i < SCHED_NUM_ITEMS; i++) {
                 if (sched.items[i].second >= 0) {
@@ -85,7 +83,6 @@ void sched_process_pending_events(void) {
             }
             cpu.cycles -= sched.clockRates[CLOCK_CPU];
         } else {
-            /* printf("[%8d/%8d] Event %d\n", cputick, sched.next_cputick, sched.next_index); */
             sched.items[sched.nextIndex].second = -1;
             sched.items[sched.nextIndex].proc(sched.nextIndex);
         }
