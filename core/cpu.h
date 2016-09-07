@@ -66,6 +66,7 @@ PACK(typedef ALIGNED_(4) struct eZ80cpu {
     };
     eZ80context_t context;
     uint32_t cycles, next;
+    uint64_t total_cpu_cycles;
     uint8_t prefetch, bus;
     uint32_t cpuEventsState;
 }) eZ80cpu_t;

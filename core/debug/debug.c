@@ -72,6 +72,7 @@ void open_debugger(int reason, uint32_t data) {
         debug_clear_step_over();
     }
 
+    debugger.displayed_cpu_cycles = cpu.cycles + cpu.total_cpu_cycles;
     debugger.cpu_cycles = cpu.cycles;
     debugger.cpu_next = cpu.next;
 
@@ -96,9 +97,10 @@ void open_debugger(int reason, uint32_t data) {
 
     cpu.next = debugger.cpu_next;
     cpu.cycles = debugger.cpu_cycles;
+    cpu.total_cpu_cycles = debugger.displayed_cpu_cycles - cpu.cycles;
 
     if (cpuEvents & EVENT_DEBUG_STEP) {
-        cpu.next = debugger.cpu_cycles + 1;
+        cpu.next = cpu.cycles + 1;
     }
 }
 
