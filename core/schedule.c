@@ -82,6 +82,7 @@ void sched_process_pending_events(void) {
                 }
             }
             cpu.cycles -= sched.clockRates[CLOCK_CPU];
+            cpu.cycles_offset += sched.clockRates[CLOCK_CPU];
         } else {
             sched.items[sched.nextIndex].second = -1;
             sched.items[sched.nextIndex].proc(sched.nextIndex);
@@ -128,7 +129,9 @@ void sched_set_clocks(int count, uint32_t *new_rates) {
         }
     }
 
+    cpu.cycles_offset += cpu.cycles;
     cpu.cycles = muldiv(cpu.cycles, new_rates[CLOCK_CPU], sched.clockRates[CLOCK_CPU]);
+    cpu.cycles_offset -= cpu.cycles;
     memcpy(sched.clockRates, new_rates, sizeof(uint32_t) * count);
 
     for (i = 0; i < SCHED_NUM_ITEMS; i++) {

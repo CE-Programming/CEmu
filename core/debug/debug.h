@@ -72,7 +72,7 @@ typedef struct {        /* For debugging */
     debug_data_t data;
     volatile uint32_t currentBuffPos;
     volatile uint32_t currentErrBuffPos;
-    uint64_t displayed_cpu_cycles;
+    uint64_t total_cycles;
 } debug_state_t;
 
 /* Debugging */

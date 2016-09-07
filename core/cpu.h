@@ -43,7 +43,7 @@ typedef union eZ80context {
 } eZ80context_t;
 
 /* eZ80 CPU State */
-PACK(typedef ALIGNED_(4) struct eZ80cpu {
+PACK(typedef ALIGNED_(8) struct eZ80cpu {
     eZ80registers_t registers;
     struct {
         uint8_t NMI         : 1;  /* Non-Maskable interrupt  */
@@ -66,7 +66,7 @@ PACK(typedef ALIGNED_(4) struct eZ80cpu {
     };
     eZ80context_t context;
     uint32_t cycles, next;
-    uint64_t total_cpu_cycles;
+    int64_t cycles_offset;
     uint8_t prefetch, bus;
     uint32_t cpuEventsState;
 }) eZ80cpu_t;
