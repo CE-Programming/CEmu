@@ -175,7 +175,7 @@ static void lcd_event(int index) {
 void lcd_reset(void) {
     /* Palette is unchanged on a reset */
     memset(&lcd, 0, (char *)&lcd.palette - (char *)&lcd);
-    sched.items[SCHED_LCD].clock = CLOCK_12M;
+    sched.items[SCHED_LCD].clock = CLOCK_24M;
     sched.items[SCHED_LCD].second = -1;
     sched.items[SCHED_LCD].proc = lcd_event;
     gui_console_printf("[CEmu] LCD reset.\n");

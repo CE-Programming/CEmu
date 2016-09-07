@@ -7,7 +7,7 @@ extern "C" {
 
 #include <stdint.h>
 
-enum clock_id { CLOCK_CPU, CLOCK_APB, CLOCK_27M, CLOCK_12M, CLOCK_32K,
+enum clock_id { CLOCK_CPU, CLOCK_APB, CLOCK_27M, CLOCK_12M, CLOCK_24M, CLOCK_32K,
                 CLOCK_NUM_ITEMS };
 
 enum sched_item_index {
