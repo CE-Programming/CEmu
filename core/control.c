@@ -200,5 +200,7 @@ bool control_restore(const emu_image *s) {
 }
 
 bool unprivileged_code(void) {
-    return cpu.registers.rawPC >= control.privileged;
+    return cpu.registers.rawPC > control.privileged &&
+        (cpu.registers.rawPC < control.protectedStart ||
+         cpu.registers.rawPC > control.protectedEnd);
 }
