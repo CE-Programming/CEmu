@@ -58,6 +58,19 @@ void EMSCRIPTEN_KEEPALIVE paintLCD(uint32_t *dest)
     }
 }
 
+void EMSCRIPTEN_KEEPALIVE emsc_pause_main_loop() {
+    emscripten_pause_main_loop();
+}
+
+void EMSCRIPTEN_KEEPALIVE emsc_resume_main_loop() {
+    emscripten_resume_main_loop();
+}
+
+void EMSCRIPTEN_KEEPALIVE emsc_cancel_main_loop() {
+    emu_cleanup();
+    emscripten_cancel_main_loop();
+}
+
 int main(int argc, char* argv[])
 {
     bool success;
@@ -84,6 +97,11 @@ int main(int argc, char* argv[])
     }
 
     puts("Finished");
+
+    EM_ASM(
+        emul_is_inited = false;
+        disableGUI();
+    );
 
     return 0;
 }
