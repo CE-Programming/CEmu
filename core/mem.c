@@ -419,13 +419,13 @@ void mem_write_cpu(uint32_t address, uint8_t value) {
             /* FLASH */
             case 0x0: case 0x1: case 0x2: case 0x3:
             case 0x4: case 0x5: case 0x6: case 0x7:
-                if (mem.flash.locked && unprivileged_code()) {
+                if (unprivileged_code()) {
                     control.protectionStatus |= 2;
                     cpu_nmi();
                     gui_console_printf("[CEmu] NMI reset cause by write to flash at address %#06x from unprivileged code. Hint: Possibly a null pointer dereference.\n", address);
-                } else {
+                } else if (!mem.flash.locked) {
                     flash_write_handler(address, value);
-                }
+                } // privileged writes with flash locked are probably ignored
                 break;
 
                 /* UNMAPPED */
