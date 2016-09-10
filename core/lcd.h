@@ -16,7 +16,6 @@ PACK(typedef struct lcd_cntrl_state {
 
     uint32_t control;     /* Control register */
     uint32_t imsc;        /* Interrupt mask set/clear register */
-    uint32_t mis;
     uint32_t ris;
 
     uint32_t upbase;        /* Upper panel frame base address register */
@@ -41,7 +40,6 @@ PACK(typedef struct lcd_cntrl_state {
     uint32_t crsrImsc;           /* Cursor interrupt mask set/clear register */
     uint32_t crsrIcr;            /* Cursor interrupt clear register */
     uint32_t crsrRis;            /* Cursor raw interrupt status register - const */
-    uint32_t crsrMis;            /* Cursor masked interrupt status register - const */
 }) lcd_state_t;
 
 /* Global LCD state */

@@ -165,7 +165,7 @@ static void lcd_event(int index) {
     /* For now, assuming vcomp occurs at same time UPBASE is loaded */
     lcd.upcurr = lcd.upbase;
     lcd.ris |= 0xC;
-    intrpt_set(INT_LCD, lcd.ris & lcd.mis);
+    intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
 
     if (lcd_event_gui_callback) {
         lcd_event_gui_callback();
@@ -192,7 +192,7 @@ uint8_t lcd_read(const uint16_t pio) {
         if(index < 0x01C && index >= 0x018) { return read8(lcd.control, bit_offset); }
         if(index < 0x020 && index >= 0x01C) { return read8(lcd.imsc, bit_offset); }
         if(index < 0x024 && index >= 0x020) { return read8(lcd.ris, bit_offset); }
-        if(index < 0x028 && index >= 0x024) { return read8(lcd.mis & lcd.ris, bit_offset); }
+        if(index < 0x028 && index >= 0x024) { return read8(lcd.imsc & lcd.ris, bit_offset); }
     } else if (index < 0x400) {
         return *((uint8_t *)lcd.palette + index - 0x200);
     } else if (index < 0xC30) {
