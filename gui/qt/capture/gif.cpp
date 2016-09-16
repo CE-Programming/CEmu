@@ -41,7 +41,7 @@ void gif_new_frame() {
     }
 
     int lastGifTime = gifTime;
-    gifTime = (frame * 100 + 15) / 30;
+    gifTime = (frame * 100 + 32) / 64;
 
     if (!gif_write_frame(&writer, gifTime - lastGifTime)) {
         recording = false;
