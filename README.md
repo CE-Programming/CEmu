@@ -39,7 +39,7 @@ Minimalistic  | Bigger keypad and screen | With many debugging features
 
 ## Downloads
 No stable binaries yet as the code keeps changing these days! When available, they'll be here, though: https://github.com/CE-Programming/CEmu/releases  
-Nightly win32 binaries available here (hosted by pimathbrainiac): http://pimathbrainiac.me/CEmu/  
+Recent Windows binaries available here (credits to alberthro): https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/git/
 _Note that Release builds have an update checking feature, which is disabled in development builds._
 
 ## How to build

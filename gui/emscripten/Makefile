@@ -1,0 +1,22 @@
+CC := emcc
+
+# Add -g3 and disable some opts if needed
+FLAGS := -O3 --llvm-lto 3 -Wall -I.. --closure 1 -s INVOKE_RUN=0 -s NO_EXIT_RUNTIME=1 -s ASSERTIONS=0 --pre-js cemu_web_utils.js
+CFLAGS := -std=c11 $(FLAGS)
+
+CSOURCES := $(wildcard ../../core/*.c) ../../core/os/os-emscripten.c
+
+OBJS = $(patsubst %.c, %.bc, $(CSOURCES))
+
+OUTPUT := cemu_web
+
+all: $(OUTPUT).js
+
+%.bc: %.c Makefile
+	$(CC) $(CFLAGS) $< -o $@
+
+$(OUTPUT).js: $(OBJS)
+	$(CC) $(CFLAGS) $(LFLAGS) $^ -o $@
+
+clean:
+	rm -f $(OBJS) $(OUTPUT).js $(OUTPUT).data $(OUTPUT).js.mem

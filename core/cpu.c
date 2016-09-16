@@ -53,7 +53,8 @@ static uint32_t cpu_address_mode(uint32_t address, bool mode) {
 
 static void cpu_prefetch(uint32_t address, bool mode) {
     cpu.ADL = mode;
-    cpu.registers.rawPC = cpu_mask_mode(address, mode);
+    // rawPC the PC after the next prefetch (which we do late), before adding MBASE.
+    cpu.registers.rawPC = cpu_mask_mode(address + 1, mode);
     cpu.registers.PC = cpu_address_mode(address, mode);
     cpu.prefetch = mem_read_cpu(cpu.registers.PC, true);
 #ifdef DEBUG_SUPPORT
@@ -712,13 +713,18 @@ static void cpu_execute_bli() {
             case 2:
                 switch (xp) {
                     case 0x8: // INIM, INDM
-                    case 0x9: // INIMR, INDMR
                         cpu_write_byte(r->HL, new = cpu_read_in(r->C));
                         r->C += delta;
                         old = r->B--;
                         r->F = cpuflag_sign_b(r->B) | cpuflag_zero(r->B)
                             | cpuflag_halfcarry_b_sub(old, 0, 1)
                             | cpuflag_subtract(cpuflag_sign_b(new)) | cpuflag_undef(r->F);
+                        break;
+                    case 0x9: // INIMR, INDMR
+                        cpu_write_byte(r->HL, new = cpu_read_in(r->C));
+                        r->C += delta;
+                        r->flags.Z = --r->B == 0;
+                        r->flags.N = cpuflag_sign_b(new) != 0;
                         break;
                     case 0xA: // INI, IND
                     case 0xB: // INIR, INDR
@@ -777,7 +783,6 @@ static void cpu_execute_bli() {
                     // INI2R, IND2R, OTI2R, OTD2R
                     r->DE = cpu_mask_mode((int32_t)r->DE + delta, cpu.L);
                     r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
-                    r->flags.N = cpuflag_sign_b(new) != 0;
                     repeat &= !r->flags.Z;
                 } else {
                     if (xp & 2) { // OUTI2, OUTD2
@@ -788,8 +793,8 @@ static void cpu_execute_bli() {
                     // INI2, IND2, OUTI2, OUTD2
                     r->C += delta;
                     r->flags.Z = --r->B == 0;
-                    r->flags.N = cpuflag_sign_b(new);
                 }
+                r->flags.N = cpuflag_sign_b(new) != 0;
                 break;
             default:
                 cpu_trap();
