@@ -93,7 +93,7 @@ static void process_block() {
 void sha256_reset(void) {
     memset(sha256.hash_state, 0, sizeof(sha256.hash_state));
     memset(sha256.hash_block, 0, sizeof(sha256.hash_block));
-    gui_console_printf("[CEmu] SHA256 chip reset.");
+    gui_console_printf("[CEmu] SHA256 chip reset.\n");
 }
 
 static uint8_t sha256_read(uint16_t pio) {
