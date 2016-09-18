@@ -71,6 +71,7 @@ namespace tivars
             initTokens();
         }
 
+        enum { LANG_EN = 0, LANG_FR };
         uint langIdx = (has_option(options, "lang") && options.at("lang") == LANG_FR) ? LANG_FR : LANG_EN;
 
         uint howManyBytes = (data[0] & 0xFF) + ((data[1] << 8) & 0xFF00);

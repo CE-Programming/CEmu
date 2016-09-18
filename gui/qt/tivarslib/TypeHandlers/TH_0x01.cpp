@@ -81,7 +81,7 @@ namespace tivars
         }
 
         str += "}";
-        
+
         return str;
     }
 }

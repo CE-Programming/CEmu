@@ -89,6 +89,7 @@ SOURCES +=  utils.cpp \
     qhexedit/qhexedit.cpp \
     capture/gif.cpp \
     tivarslib/utils_tivarslib.cpp \
+    tivarslib/TypeHandlers/DummyHandler.cpp \
     tivarslib/TypeHandlers/TH_0x00.cpp \
     tivarslib/TypeHandlers/TH_0x01.cpp \
     tivarslib/TypeHandlers/TH_0x05.cpp \
@@ -143,13 +144,7 @@ HEADERS  +=  utils.h \
     tivarslib/autoloader.h \
     tivarslib/utils_tivarslib.h \
     tivarslib/TypeHandlers/TypeHandlerFuncGetter.h \
-    tivarslib/TypeHandlers/ITIVarTypeHandler.h \
-    tivarslib/TypeHandlers/TH_0x00.h \
-    tivarslib/TypeHandlers/TH_0x01.h \
-    tivarslib/TypeHandlers/TH_0x03.h \
-    tivarslib/TypeHandlers/TH_0x04.h \
-    tivarslib/TypeHandlers/TH_0x05.h \
-    tivarslib/TypeHandlers/TH_0x06.h \
+    tivarslib/TypeHandlers/TypeHandlers.h \
     ../../tests/autotester/autotester.h \
     ../../core/asic.h \
     ../../core/cpu.h \

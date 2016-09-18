@@ -43,6 +43,7 @@ bool has_option(const unordered_map<string, unsigned char>& m, const string elem
     return m.find(element) != m.end();
 }
 
+
 unsigned char hexdec(const string& str)
 {
     return (unsigned char) stoul(str, nullptr, 16);
@@ -55,17 +56,25 @@ std::string dechex(unsigned char i)
     return stream.str();
 }
 
-vector<string> explode(const string& str, char delim)
+vector<string> explode(const string& str, const string& delim)
 {
     vector<string> result;
-    istringstream iss(str);
 
-    for (string token; getline(iss, token, delim);)
+    size_t last = 0;
+    size_t next = 0;
+    while ((next = str.find(delim, last)) != string::npos)
     {
-        result.push_back(move(token));
+        result.push_back(str.substr(last, next - last));
+        last = next + delim.length();
     }
+    result.push_back(str.substr(last));
 
     return result;
+}
+
+vector<string> explode(const string& str, char delim)
+{
+    return explode(str, string(1, delim));
 }
 
 // trim from start

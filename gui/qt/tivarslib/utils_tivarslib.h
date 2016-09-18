@@ -8,9 +8,13 @@
 #ifndef TIVARSLIB_UTILS_H
 #define TIVARSLIB_UTILS_H
 
-#include <unordered_map>
-#include <vector>
+#include <iostream>
+#include <cstdio>
+#include <cstdint>
+#include <cstdlib>
 #include <string>
+#include <vector>
+#include <unordered_map>
 
 typedef unsigned int    uint;
 typedef unsigned char   uchar;
@@ -30,6 +34,7 @@ unsigned char hexdec(const std::string& str);
 
 std::string dechex(unsigned char i);
 
+std::vector<std::string> explode(const std::string& str, const std::string& delim);
 std::vector<std::string> explode(const std::string& str, char delim);
 
 std::string ltrim(std::string s, const char* t = " \t\n\r\f\v");

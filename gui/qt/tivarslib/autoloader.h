@@ -17,13 +17,8 @@
 #include <unordered_map>
 
 #include "utils_tivarslib.h"
+
+#include "TypeHandlers/TypeHandlers.h"
 #include "TypeHandlers/TypeHandlerFuncGetter.h"
-#include "TypeHandlers/ITIVarTypeHandler.h"
-#include "TypeHandlers/TH_0x00.h"
-#include "TypeHandlers/TH_0x01.h"
-#include "TypeHandlers/TH_0x03.h"
-#include "TypeHandlers/TH_0x04.h"
-#include "TypeHandlers/TH_0x05.h"
-#include "TypeHandlers/TH_0x06.h"
 
 #endif

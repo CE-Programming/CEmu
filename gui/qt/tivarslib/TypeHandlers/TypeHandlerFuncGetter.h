@@ -5,13 +5,7 @@
  * License: MIT
  */
 
-#include "ITIVarTypeHandler.h"
-#include "TH_0x00.h"
-#include "TH_0x01.h"
-#include "TH_0x03.h"
-#include "TH_0x04.h"
-#include "TH_0x05.h"
-#include "TH_0x06.h"
+#include "TypeHandlers.h"
 
 #ifndef TIVARS_LIB_CPP_TYPEHANDLERFUNCGETTER_H
 #define TIVARS_LIB_CPP_TYPEHANDLERFUNCGETTER_H
@@ -24,9 +18,9 @@ namespace tivars
 
     public:
 
-        static decltype(&ITIVarTypeHandler::makeStringFromData) getStringFromDataFunc(int type)
+        static decltype(&DummyHandler::makeStringFromData) getStringFromDataFunc(int type)
         {
-            auto func = &ITIVarTypeHandler::makeStringFromData;
+            auto func = &DummyHandler::makeStringFromData;
             switch (type)
             {
                 case 0x00:
@@ -56,9 +50,9 @@ namespace tivars
             return func;
         }
 
-        static decltype(&ITIVarTypeHandler::makeDataFromString) getDataFromStringFunc(int type)
+        static decltype(&DummyHandler::makeDataFromString) getDataFromStringFunc(int type)
         {
-            auto func = &ITIVarTypeHandler::makeDataFromString;
+            auto func = &DummyHandler::makeDataFromString;
             switch (type)
             {
                 case 0x00:
