@@ -90,6 +90,7 @@ SOURCES +=  utils.cpp \
     capture/gif.cpp \
     tivarslib/utils_tivarslib.cpp \
     tivarslib/TypeHandlers/TH_0x00.cpp \
+    tivarslib/TypeHandlers/TH_0x01.cpp \
     tivarslib/TypeHandlers/TH_0x05.cpp \
     ../../tests/autotester/autotester.cpp \
     ../../core/asic.c \
@@ -144,6 +145,7 @@ HEADERS  +=  utils.h \
     tivarslib/TypeHandlers/TypeHandlerFuncGetter.h \
     tivarslib/TypeHandlers/ITIVarTypeHandler.h \
     tivarslib/TypeHandlers/TH_0x00.h \
+    tivarslib/TypeHandlers/TH_0x01.h \
     tivarslib/TypeHandlers/TH_0x03.h \
     tivarslib/TypeHandlers/TH_0x04.h \
     tivarslib/TypeHandlers/TH_0x05.h \
