@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <unordered_map>
 
 typedef unsigned int    uint;

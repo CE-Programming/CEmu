@@ -187,7 +187,8 @@ void ParseCSV(const string& csvSource, vector<vector<string>>& lines)
 bool is_numeric(const std::string& str)
 {
     char* p;
-    (void)::strtod(str.c_str(), &p);
+    double ignored = ::strtod(str.c_str(), &p);
+    (void)ignored;
     return (bool)!*p;
 }
 
