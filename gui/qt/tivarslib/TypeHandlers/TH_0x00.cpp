@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <cfloat>
 
 // TODO : check if the models have different exponent offsets
 
@@ -66,12 +67,12 @@ namespace tivars
         string number   = "";
         for (uint i = 2; i < TH_0x00::dataByteCount; i++)
         {
-            number += dechex(data[i]);
+            number += (data[i] < 0x10 ? "0" : "") + dechex(data[i]); // zero left pad
         }
         number = number.substr(0, 1) + "." + number.substr(1);
 
-        char buf[20] = {0};
-        sprintf(buf, "%g", pow(10, exponent) * atof(number.c_str()));
+        char buf[35] = {0};
+        sprintf(buf, "%.*f", DECIMAL_DIG, pow(10, exponent) * atof(number.c_str()));
         string str(buf);
 
         // Cleanup

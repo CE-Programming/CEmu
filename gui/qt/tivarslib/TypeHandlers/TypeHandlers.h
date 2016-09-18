@@ -27,6 +27,9 @@ namespace tivars
     namespace TH_0x01   // Real list
     { th(); }
 
+    namespace TH_0x02   // Matrix
+    { th(); }
+
     namespace TH_0x05   // Program
     {
         th();
