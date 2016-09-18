@@ -69,23 +69,23 @@ vector<string> explode(const string& str, char delim)
 }
 
 // trim from start
-string& ltrim(string& s)
+std::string ltrim(std::string s, const char* t)
 {
-    s.erase(s.begin(), find_if(s.begin(), s.end(), not1(ptr_fun<int, int>(isspace))));
+    s.erase(0, s.find_first_not_of(t));
     return s;
 }
 
 // trim from end
-string& rtrim(string& s)
+std::string rtrim(std::string s, const char* t)
 {
-    s.erase(find_if(s.rbegin(), s.rend(), not1(ptr_fun<int, int>(isspace))).base(), s.end());
+    s.erase(s.find_last_not_of(t) + 1);
     return s;
 }
 
 // trim from both ends
-string& trim(string& s)
+std::string trim(std::string s, const char* t)
 {
-    return ltrim(rtrim(s));
+    return ltrim(rtrim(s, t), t);
 }
 
 string str_repeat(const string& str, unsigned int times)
@@ -177,7 +177,9 @@ void ParseCSV(const string& csvSource, vector<vector<string>>& lines)
 
 bool is_numeric(const std::string& str)
 {
-    return std::regex_match(str, std::regex("[(-|+)|][0-9]*\\.?[0-9]+"));
+    char* p;
+    (void)::strtod(str.c_str(), &p);
+    return (bool)!*p;
 }
 
 // From http://rosettacode.org/wiki/Strip_a_set_of_characters_from_a_string#C.2B.2B

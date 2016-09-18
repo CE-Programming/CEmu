@@ -32,11 +32,11 @@ std::string dechex(unsigned char i);
 
 std::vector<std::string> explode(const std::string& str, char delim);
 
-std::string& ltrim(std::string& s);
+std::string ltrim(std::string s, const char* t = " \t\n\r\f\v");
 
-std::string& rtrim(std::string& s);
+std::string rtrim(std::string s, const char* t = " \t\n\r\f\v");
 
-std::string& trim(std::string& s);
+std::string trim(std::string s, const char* t = " \t\n\r\f\v");
 
 std::string str_repeat(const std::string& str, unsigned int times);
 

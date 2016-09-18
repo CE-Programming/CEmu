@@ -18,10 +18,11 @@ namespace tivars
     {
     public:
 
-        static data_t makeDataFromString(const std::string& str, const options_t options);
+        static data_t makeDataFromString(const std::string& str, const options_t options = {});
 
-        static std::string makeStringFromData(const data_t& data, const options_t options);
+        static std::string makeStringFromData(const data_t& data, const options_t options = {});
 
+        static const constexpr size_t dataByteCount = 9;
     };
 }
 
