@@ -31,6 +31,10 @@ namespace tivars
                     func = &TH_0x01::makeStringFromData;
                     break;
 
+                case 0x02:
+                    func = &TH_0x02::makeStringFromData;
+                    break;
+
                 case 0x03:
                     func = &TH_0x03::makeStringFromData; // We could actually directly use TH_0x05 here, but that might be confusing.
                     break;
@@ -61,6 +65,10 @@ namespace tivars
 
                 case 0x01:
                     func = &TH_0x01::makeDataFromString;
+                    break;
+
+                case 0x02:
+                    func = &TH_0x02::makeDataFromString;
                     break;
 
                 case 0x03:

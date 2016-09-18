@@ -92,6 +92,7 @@ SOURCES +=  utils.cpp \
     tivarslib/TypeHandlers/DummyHandler.cpp \
     tivarslib/TypeHandlers/TH_0x00.cpp \
     tivarslib/TypeHandlers/TH_0x01.cpp \
+    tivarslib/TypeHandlers/TH_0x02.cpp \
     tivarslib/TypeHandlers/TH_0x05.cpp \
     ../../tests/autotester/autotester.cpp \
     ../../core/asic.c \
