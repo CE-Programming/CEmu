@@ -19,10 +19,7 @@ namespace tivars
     { th(); }
 
     namespace TH_0x00   // Real
-    {
-        th();
-        const constexpr size_t dataByteCount = 9;
-    }
+    { th(); }
 
     namespace TH_0x01   // Real list
     { th(); }
@@ -31,18 +28,32 @@ namespace tivars
     { th(); }
 
     namespace TH_0x05   // Program
-    {
-        th();
-        std::string reindentCodeString(const std::string& str_orig);
-        void initTokens();
-    }
+    { th(); }
 
     /* The following ones use the same handlers as 0x05 */
     namespace TH_0x03 = TH_0x05; // Y-Variable
     namespace TH_0x04 = TH_0x05; // String
     namespace TH_0x06 = TH_0x05; // Protected Program
 
+    namespace TH_0x0C   // Complex
+    { th(); }
+
 #undef th
+
+
+    /* Additional things */
+
+    namespace TH_0x00
+    {
+        const constexpr size_t dataByteCount = 9;
+        const std::string validPattern = "([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]{1,2})?)";
+    }
+
+    namespace TH_0x05   // Program
+    {
+        std::string reindentCodeString(const std::string& str_orig);
+        void initTokens();
+    }
 
 
 typedef decltype(&DummyHandler::makeDataFromString) dataFromString_handler_t;

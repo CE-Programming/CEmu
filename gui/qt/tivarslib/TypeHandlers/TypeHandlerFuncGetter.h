@@ -48,6 +48,10 @@ namespace tivars
                     func = &TH_0x05::makeStringFromData;
                     break;
 
+                case 0x0C:
+                    func = &TH_0x0C::makeStringFromData;
+                    break;
+
                 default:
                     break;
             }
@@ -82,6 +86,10 @@ namespace tivars
                 case 0x05:
                 case 0x06:
                     func = &TH_0x05::makeDataFromString;
+                    break;
+
+                case 0x0C:
+                    func = &TH_0x0C::makeDataFromString;
                     break;
 
                 default:
