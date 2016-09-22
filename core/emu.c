@@ -28,18 +28,31 @@
 #include "cert.h"
 #include "os/os.h"
 
-#define imageVersion 0xCECE0006
+#define imageVersion 0xCECE0007
 
 uint32_t cpuEvents;
 volatile bool exiting;
 volatile bool emulationPaused;
 
-void throttle_interval_event(int index) {
+static void throttle_interval_event(int index) {
     event_repeat(index, 27000000 / 60);
 
     gui_do_stuff();
 
     throttle_timer_wait();
+}
+static void flash_bus_decay_event(int index) {
+    if ((cpu.flash_bus |= 1 << (rand() & 7)) != 0xFFu)
+        event_repeat(index, 7500 + rand() % 30000);
+    else
+        event_clear(index);
+}
+static void emu_init_sched(void) {
+    sched_reset();
+    sched.items[SCHED_THROTTLE].clock = CLOCK_27M;
+    sched.items[SCHED_THROTTLE].proc = throttle_interval_event;
+    sched.items[SCHED_BUS_DECAY].clock = CLOCK_CPU;
+    sched.items[SCHED_BUS_DECAY].proc = flash_bus_decay_event;
 }
 
 bool emu_save_rom(const char *file) {
@@ -127,10 +140,7 @@ bool emu_start(const char *romImage, const char *savedImage) {
                 break;
             }
 
-            sched_reset();
-            sched.items[SCHED_THROTTLE].clock = CLOCK_27M;
-            sched.items[SCHED_THROTTLE].proc = throttle_interval_event;
-
+            emu_init_sched();
             asic_init();
             asic_reset();
 
@@ -310,10 +320,7 @@ void emu_cleanup(void) {
 
 static void EMSCRIPTEN_KEEPALIVE emu_reset(void) {
     /* Reset the scheduler */
-    sched_reset();
-
-    sched.items[SCHED_THROTTLE].clock = CLOCK_27M;
-    sched.items[SCHED_THROTTLE].proc = throttle_interval_event;
+    emu_init_sched();
 
     /* Reset the ASIC */
     asic_reset();
