@@ -68,14 +68,25 @@ void QtKeypadBridge::keyEvent(QKeyEvent *event, bool press) {
     keypad_intrpt_check();
 }
 
+void QtKeypadBridge::releaseAll() {
+    for (auto i = pressed.begin(), e = pressed.end(); i != e; i = pressed.erase(i)) {
+        if (i->valid()) {
+            keypad_key_event(i->row(), i->col(), false);
+            keyStateChanged(*i, false);
+        }
+    }
+}
+
 bool QtKeypadBridge::eventFilter(QObject *obj, QEvent *e)
 {
     Q_UNUSED(obj);
 
-    if(e->type() == QEvent::KeyPress) {
+    if (e->type() == QEvent::KeyPress) {
         keyEvent(static_cast<QKeyEvent*>(e), true);
-    } else if(e->type() == QEvent::KeyRelease) {
+    } else if (e->type() == QEvent::KeyRelease) {
         keyEvent(static_cast<QKeyEvent*>(e), false);
+    } else if (e->type() == QEvent::WindowDeactivate) {
+        releaseAll();
     } else {
         return false;
     }

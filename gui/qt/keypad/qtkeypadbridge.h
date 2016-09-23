@@ -18,6 +18,7 @@ public:
 
     bool setKeymap(const QString & keymapstr);
     void keyEvent(QKeyEvent *event, bool press);
+    void releaseAll();
     bool eventFilter(QObject *obj, QEvent *e);
 
 signals:
@@ -27,5 +28,9 @@ private:
     QHash<quint32, KeyCode> pressed;
     const HostKey *(*keymap)[8][8] = nullptr;
 };
+
+inline uint qHash(KeyCode key, uint seed) {
+    return key.code() ^ seed;
+}
 
 #endif
