@@ -12,7 +12,6 @@ enum clock_id { CLOCK_CPU, CLOCK_APB, CLOCK_27M, CLOCK_12M, CLOCK_24M, CLOCK_32K
 
 enum sched_item_index {
     SCHED_THROTTLE,
-    SCHED_BUS_DECAY,
     SCHED_KEYPAD,
     SCHED_LCD,
     SCHED_RTC,

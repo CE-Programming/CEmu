@@ -67,8 +67,8 @@ PACK(typedef ALIGNED_(8) struct eZ80cpu {
     eZ80context_t context;
     uint32_t cycles, next;
     int64_t cycles_offset;
+    uint8_t prefetch, bus;
     uint32_t cpuEventsState;
-    uint8_t prefetch, flash_bus, ram_bus;
 }) eZ80cpu_t;
 
 /* Externals */

@@ -61,18 +61,12 @@ void mem_reset(void) {
     gui_console_printf("[CEmu] Memory Reset.\n");
 }
 
-static uint8_t flash_set_bus(uint8_t value) {
-    cpu.flash_bus = value;
-    event_set(SCHED_BUS_DECAY, 8000000 + rand() % 1000000);
-    return value;
-}
-
 static uint32_t flash_address(uint32_t address, uint32_t *size) {
     uint32_t mask = flash.mask;
     if (size) {
         *size = mask + 1;
     }
-    if (address > mask)  {
+    if (address > mask || !flash.mapped)  {
         address &= mask;
         if (!size) {
             cpu.cycles += 258;
@@ -264,50 +258,52 @@ static uint8_t flash_read_handler(uint32_t address) {
     uint8_t sector;
 
     address = flash_address(address, NULL);
-    switch(mem.flash.command) {
-        case NO_COMMAND:
-            value = mem.flash.block[address];
-            break;
-        case FLASH_SECTOR_ERASE:
-            value = 0x80;
-            mem.flash.read_index++;
-            if(mem.flash.read_index == 3) {
-                mem.flash.read_index = 0;
+    if (flash.mapped) {
+        switch(mem.flash.command) {
+            case NO_COMMAND:
+                value = mem.flash.block[address];
+                break;
+            case FLASH_SECTOR_ERASE:
+                value = 0x80;
+                mem.flash.read_index++;
+                if(mem.flash.read_index == 3) {
+                    mem.flash.read_index = 0;
+                    mem.flash.command = NO_COMMAND;
+                }
+                break;
+            case FLASH_CHIP_ERASE:
+                value = 0xFF;
                 mem.flash.command = NO_COMMAND;
-            }
-            break;
-        case FLASH_CHIP_ERASE:
-            value = 0xFF;
-            mem.flash.command = NO_COMMAND;
-            break;
-        case FLASH_READ_SECTOR_PROTECTION:
-            if (address < 0x10000) {
-                sector = address/flash_sector_size_8K;
-            } else {
-                sector = (address/flash_sector_size_64K)+6;
-            }
-            value = mem.flash.sector[sector].locked ? 1 : 0;
-            break;
-        case FLASH_READ_CFI:
-            if (address >= 0x20 && address <= 0x2A) {
-                static const uint8_t id[7] = { 0x51, 0x52, 0x59, 0x02, 0x00, 0x40, 0x00 };
-                value = id[(address - 0x20)/2];
-            } else if (address >= 0x36 && address <= 0x50) {
-                static const uint8_t id[] = { 0x27, 0x36, 0x00, 0x00, 0x03, 0x04, 0x08,
-                                              0x0E, 0x03, 0x05, 0x03, 0x03, 0x16, 0x02,
-                                              0x00, 0x05, 0x00, 0x01, 0x08, 0x00, 0x00,
-                                              0x3F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50,
-                                              0x52, 0x49, 0x31, 0x33, 0x0C, 0x02, 0x01,
-                                              0x00, 0x08, 0x00, 0x00, 0x02, 0x95, 0xA5,
-                                              0x02, 0x01 };
-                value = id[(address - 0x36)/2];
-            }
-            break;
-        case FLASH_DEEP_POWER_DOWN:
-            break;
-        case FLASH_IPB_MODE:
-            break;
+                break;
+            case FLASH_READ_SECTOR_PROTECTION:
+                if (address < 0x10000) {
+                    sector = address/flash_sector_size_8K;
+                } else {
+                    sector = (address/flash_sector_size_64K)+6;
+                }
+                value = mem.flash.sector[sector].locked ? 1 : 0;
+                break;
+            case FLASH_READ_CFI:
+                if (address >= 0x20 && address <= 0x2A) {
+                    static const uint8_t id[7] = { 0x51, 0x52, 0x59, 0x02, 0x00, 0x40, 0x00 };
+                    value = id[(address - 0x20)/2];
+                } else if (address >= 0x36 && address <= 0x50) {
+                    static const uint8_t id[] = { 0x27, 0x36, 0x00, 0x00, 0x03, 0x04, 0x08,
+                                                  0x0E, 0x03, 0x05, 0x03, 0x03, 0x16, 0x02,
+                                                  0x00, 0x05, 0x00, 0x01, 0x08, 0x00, 0x00,
+                                                  0x3F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                                                  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50,
+                                                  0x52, 0x49, 0x31, 0x33, 0x0C, 0x02, 0x01,
+                                                  0x00, 0x08, 0x00, 0x00, 0x02, 0x95, 0xA5,
+                                                  0x02, 0x01 };
+                    value = id[(address - 0x36)/2];
+                }
+                break;
+            case FLASH_DEEP_POWER_DOWN:
+                break;
+            case FLASH_IPB_MODE:
+                break;
+        }
     }
 
     /* Returning 0x00 is enough to emulate for the OS. Set the msb bit for user routines? */
@@ -321,8 +317,8 @@ static void flash_write_handler(uint32_t address, uint8_t byte) {
     flash_write_pattern_t *pattern;
 
     address = flash_address(address, NULL);
-    if (mem.flash.locked) {
-        return; // privileged writes with flash locked are probably ignored
+    if (!flash.mapped) {
+        return;
     }
 
     /* See if we can reset to default */
@@ -373,15 +369,13 @@ uint8_t mem_read_cpu(uint32_t address, bool fetch) {
         switch((address >> 20) & 0xF) {
             /* FLASH */
             case 0x0: case 0x1: case 0x2: case 0x3:
-                if (flash.mapped) {
-                    value = flash_set_bus(flash_read_handler(address));
-                    break;
-                }
-
             case 0x4: case 0x5: case 0x6: case 0x7:
+                value = flash_read_handler(address);
+                break;
+
+                /* UNMAPPED */
             case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
                 cpu.cycles += 258;
-                value = cpu.flash_bus;
                 break;
 
                 /* RAM */
@@ -424,19 +418,17 @@ void mem_write_cpu(uint32_t address, uint8_t value) {
         switch((address >> 20) & 0xF) {
             /* FLASH */
             case 0x0: case 0x1: case 0x2: case 0x3:
-                if (flash.mapped) {
-                    if (unprivileged_code()) {
-                        control.protectionStatus |= 2;
-                        cpu_nmi();
-                        gui_console_printf("[CEmu] NMI reset cause by write to flash at address %#06x from unprivileged code. Hint: Possibly a null pointer dereference.\n", address);
-                    } else {
-                        flash_write_handler(address, flash_set_bus(value));
-                    }
-                    break;
-                }
+            case 0x4: case 0x5: case 0x6: case 0x7:
+                if (unprivileged_code()) {
+                    control.protectionStatus |= 2;
+                    cpu_nmi();
+                    gui_console_printf("[CEmu] NMI reset cause by write to flash at address %#06x from unprivileged code. Hint: Possibly a null pointer dereference.\n", address);
+                } else if (!mem.flash.locked) {
+                    flash_write_handler(address, value);
+                } // privileged writes with flash locked are probably ignored
+                break;
 
                 /* UNMAPPED */
-            case 0x4: case 0x5: case 0x6: case 0x7:
             case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
                 cpu.cycles += 258;
                 break;
