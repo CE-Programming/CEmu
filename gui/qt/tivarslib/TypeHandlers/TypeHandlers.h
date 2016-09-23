@@ -12,8 +12,8 @@
 
 namespace tivars
 {
-#define th()    data_t      makeDataFromString(const std::string& str,  const options_t options = {}); \
-                std::string makeStringFromData(const data_t& data,      const options_t options = {})
+#define th()    data_t      makeDataFromString(const std::string& str,  const options_t options = options_t()); \
+                std::string makeStringFromData(const data_t& data,      const options_t options = options_t())
 
     namespace DummyHandler
     { th(); }
