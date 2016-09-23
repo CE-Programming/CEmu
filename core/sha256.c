@@ -91,55 +91,50 @@ static void process_block() {
 }
 
 void sha256_reset(void) {
-    memset(sha256.hash_state, 0, sizeof(sha256.hash_state));
-    memset(sha256.hash_block, 0, sizeof(sha256.hash_block));
+    memset(&sha256, 0, sizeof(sha256));
     gui_console_printf("[CEmu] SHA256 chip reset.\n");
 }
 
 static uint8_t sha256_read(uint16_t pio) {
-    uint16_t index = pio;
-    uint8_t bit_offset = (index&3)<<3;
+    uint16_t index = pio >> 2;
+    uint8_t bit_offset = (pio & 3) << 3;
+    static const uint32_t unknown_value = 0x3CA2D5EE; // Unknown function
 
-    /* Unknown function */
-    static const uint32_t unknown_value = 0x500;
-
-    switch (index) {
-        case 0x00: case 0x01: case 0x02: case 0x03:
-            return 0; /* bit 0 = busy */
-        case 0x08: case 0x09: case 0x0A: case 0x0B:
-            return read8(unknown_value, bit_offset);
+    if (mem.flash.locked) {
+        index = sha256.last_index;
     }
 
-    if((index > 0x5F) && (index < 0x80)) {
-        return read8(sha256.hash_state[index >> 2 & 7], bit_offset);
+    if (index == 0x0C >> 2) {
+        return read8(unknown_value, bit_offset);
+    } else if (index >= 0x10 >> 2 && index < 0x50 >> 2) {
+        return read8(sha256.hash_block[index & 0xF], bit_offset);
+    } else if (index >= 0x60 >> 2 && index < 0x80 >> 2) {
+        return read8(sha256.hash_state[index & 0x7], bit_offset);
     }
-
     /* Return 0 if invalid */
     return 0;
 }
 
 static void sha256_write(uint16_t pio, uint8_t byte) {
-    uint16_t index = pio;
-    uint8_t bit_offset = (index & 3) << 3;
+    uint16_t index = pio >> 2;
+    uint8_t bit_offset = (pio & 3) << 3;
 
-    switch (index) {
-        case 0x00: case 0x01: case 0x02: case 0x03:
-            if (byte & 0x10) {
-                memset(sha256.hash_state, 0, sizeof(sha256.hash_state));
-            } else {
-                if ((byte & 0xE) == 0xA) /* 0A or 0B: first block */
-                    initialize();
-                if ((byte & 0xA) == 0xA) /* 0E or 0F: subsequent blocks */
-                    process_block();
-            }
-            return;
-        default:
-            break;
+    if (mem.flash.locked) {
+        return; // writes are ignored when flash is locked
     }
-    if((index > 0x0F) && (index < 0x50)) {
-        write8(sha256.hash_block[(index - 0x10) >> 2 & 15], bit_offset, byte);
+
+    if (!pio) {
+        if (byte & 0x10) {
+            memset(sha256.hash_state, 0, sizeof(sha256.hash_state));
+        } else {
+            if ((byte & 0xE) == 0xA) /* 0A or 0B: first block */
+                initialize();
+            if ((byte & 0xA) == 0xA) /* 0E or 0F: subsequent blocks */
+                process_block();
+        }
+    } else if (index >= 0x10 >> 2 && index < 0x50 >> 2) {
+        write8(sha256.hash_block[index & 0xF], bit_offset, byte);
     }
-    return;
 }
 
 static const eZ80portrange_t device = {

@@ -111,6 +111,7 @@ static void control_write(const uint16_t pio, const uint8_t byte) {
 #endif
             break;
         case 0x06:
+            mem.flash.locked = (byte & 4) == 0;
             control.ports[index] = byte & 7;
             break;
         case 0x07:
@@ -155,7 +156,6 @@ static void control_write(const uint16_t pio, const uint8_t byte) {
             write8(control.protectedEnd, (index - 0x23) << 3, byte);
             break;
         case 0x28:
-            mem.flash.locked = (byte & 4) == 0;
             control.ports[index] = byte & 247;
             break;
         case 0x3A: case 0x3B: case 0x3C:
