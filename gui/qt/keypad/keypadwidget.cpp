@@ -196,7 +196,7 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
     addKey(new OtherKey{m_config, 2, Label(","), Label("EE"), Label("J"), is83 * 2, 1 + is83});
     addKey(new OtherKey{m_config, 8 + is83, LabelFrEn("trig", "sin"), LabelFrEn("π", "sin⁻¹"), Label("E"), is83 * 2, 1});
 #ifdef Q_OS_MACX
-    addKey(new OtherKey{m_config, 14 + is83, LabelFrEn("matrice ", "apps"), LabelFrEn("x⁻¹", "angle"), Label("B"), is83 * 2, 1});
+    addKey(new OtherKey{m_config, 14 + is83, LabelFrEn("matrice ", "  apps"), LabelFrEn("x⁻¹", "angle"), Label("B"), is83 * 2, 1});
 #else
     addKey(new OtherKey{m_config, 14 + is83, LabelFrEn("matrice", "apps"), LabelFrEn("x⁻¹", "angle"), Label("B"), is83 * 2, 1});
 #endif
@@ -216,13 +216,18 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
     addKey(new NumKey{m_config, Label("8"), LabelFrEn("vₙ", "v"), Label("P"), is83 * 2, is83 * 2});
 #endif
     addKey(new OtherKey{m_config, 3, Label("("), Label("{"), Label("K"), is83 * 2, is83});
+#ifdef Q_OS_MACX
     addKey(new OtherKey{m_config, is83 ? 12 : 9, LabelFrEn("résol", "cos"), LabelFrEn("apps", "cos⁻¹"), Label("F"), is83 * 2, is83 * 2});
+#else
+    addKey(new OtherKey{m_config, is83 ? 12 : 9, LabelFrEn("résol", "cos"), LabelFrEn("apps", "cos⁻¹"), Label("F"), is83 * 2, is83 * 2});
+#endif
 #ifdef Q_OS_MACX
     addKey(new OtherKey{m_config, 14, Label(" prgm"), LabelFrEn("dessin", "draw"), Label("C"), is83 * 2, is83 * 2});
+    addKey(new OtherKey{m_config, 11 + is83, LabelFrEn("stats", " stat"), LabelFrEn("listes", "list")});
 #else
     addKey(new OtherKey{m_config, 14, Label("prgm"), LabelFrEn("dessin", "draw"), Label("C"), is83 * 2, is83 * 2});
-#endif
     addKey(new OtherKey{m_config, 11 + is83, LabelFrEn("stats", "stat"), LabelFrEn("listes", "list")});
+#endif
 
     addKey(new NumKey{m_config, Label("(-)"), LabelFrEn("rép", "ans"), Label("?"), is83 * 2, is83 * 3, 11});
     addKey(new NumKey{m_config, Label("3"), Label("L3"), Label("θ"), is83 * 2, is83 * 3});
@@ -237,14 +242,15 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
     addKey(new OtherKey{m_config, 9, LabelFrEn("▫/▫", "tan"), LabelFrEn("∫⸋|⸋d▫‣", "tan⁻¹"), Label("G"), is83 * 2, is83 * 2});
 #elif defined(Q_OS_MACX)
     addKey(new OtherKey{m_config, 9, LabelFrEn("▫/▫", "tan"), LabelFrEn("∫⸋d▫‣", "tan⁻¹"), Label("G"), is83 * 2, is83 * 2});
+    addKey(new OtherKey{m_config, is83 ? 9 : 12, LabelFrEn("var", " vars"), LabelFrEn("distrib", "distr"), Label(""), 0, is83});
 #else
     addKey(new OtherKey{m_config, 9, LabelFrEn("▫/▫", "tan"), LabelFrEn("∫⸋̻◻d▫‣", "tan⁻¹"), Label("G"), is83 * 2, is83 * 2});
-#endif
     addKey(new OtherKey{m_config, is83 ? 9 : 12, LabelFrEn("var", "vars"), LabelFrEn("distrib", "distr"), Label(""), 0, is83});
+#endif
 
     m_config.next();
 #ifdef Q_OS_MACX
-    addKey(new OperKey{m_config, LabelFrEn(" entrer", "enter"), LabelFrEn("précéd", "entry"), is83 ? QString{} : Label("solve"), 6, is83 ? 0 : 5, {16, 5}});
+    addKey(new OperKey{m_config, LabelFrEn("  entrer", "  enter"), LabelFrEn("précéd", "entry"), is83 ? QString{} : Label("solve"), 6, is83 ? 0 : 5, {16, 5}});
 #else
     addKey(new OperKey{m_config, LabelFrEn("entrer", "enter"), LabelFrEn("précéd", "entry"), is83 ? QString{} : Label("solve"), 6, is83 ? 0 : 5, {16, 5}});
 #endif
@@ -255,7 +261,7 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
 
     addKey(new OtherKey{m_config, is83 ? QString{} : Label("π"), is83 * 2});
 #ifdef Q_OS_MACX
-    addKey(new OtherKey{m_config, 15, LabelFrEn(" annul", "clear")});
+    addKey(new OtherKey{m_config, 15, LabelFrEn(" annul", "  clear")});
 #else
     addKey(new OtherKey{m_config, 15, LabelFrEn("annul", "clear")});
 #endif
