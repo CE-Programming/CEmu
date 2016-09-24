@@ -11,7 +11,6 @@
 #include <QtGui/QFont>
 #include <QtGui/QPixmap>
 #include <QtNetwork/QNetworkReply>
-
 #include <fstream>
 
 #ifdef _MSC_VER
@@ -203,6 +202,18 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) :QMainWindow(p), ui(new Ui::
     connect(ui->radioWabbitemuKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
     connect(ui->radiojsTIfiedKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
 
+    // Keypad Coloring
+    connect(ui->buttonTrueBlue,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonDenim,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonPink,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonPlum,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonRed,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonLightning,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonGolden,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonWhite,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonBlack,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonSilver,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+
     // Auto Updates
     connect(ui->checkUpdates, &QCheckBox::stateChanged, this, &MainWindow::autoCheckForUpdates);
 
@@ -344,12 +355,36 @@ MainWindow::~MainWindow() {
     settings->setValue(QStringLiteral("flashBytesPerLine"), ui->flashBytes->value());
     settings->setValue(QStringLiteral("ramBytesPerLine"), ui->ramBytes->value());
     settings->setValue(QStringLiteral("memBytesPerLine"), ui->memBytes->value());
+    settings->setValue(QStringLiteral("keypadColor"), ui->keypadWidget->getCurrColor());
 
     delete settings;
     delete ui->flashEdit;
     delete ui->ramEdit;
     delete ui->memEdit;
     delete ui;
+}
+
+void MainWindow::selectKeypadColor() {
+    QObject *senderObj = sender();
+    QString senderObjName = senderObj->objectName();
+    unsigned keypad_color;
+
+    if(senderObjName == "buttonWhite") keypad_color = KEYPAD_WHITE;
+    if(senderObjName == "buttonBlack") keypad_color = KEYPAD_BLACK;
+    if(senderObjName == "buttonGolden") keypad_color = KEYPAD_GOLDEN;
+    if(senderObjName == "buttonPlum") keypad_color = KEYPAD_PLUM;
+    if(senderObjName == "buttonPink") keypad_color = KEYPAD_PINK;
+    if(senderObjName == "buttonRed") keypad_color = KEYPAD_RED;
+    if(senderObjName == "buttonLightning") keypad_color = KEYPAD_LIGHTNING;
+    if(senderObjName == "buttonTrueBlue") keypad_color = KEYPAD_TRUE_BLUE;
+    if(senderObjName == "buttonDenim") keypad_color = KEYPAD_DENIM;
+    if(senderObjName == "buttonSilver") keypad_color = KEYPAD_SILVER;
+
+    setKeypadColor(keypad_color);
+}
+
+void MainWindow::setKeypadColor(unsigned color) {
+    ui->keypadWidget->setType(get_device_type(), color);
 }
 
 void MainWindow::changeImagePath() {
@@ -439,7 +474,7 @@ void MainWindow::exportRom() {
 
 void MainWindow::started(bool success) {
     if(success) {
-        ui->keypadWidget->setType(get_device_type());
+        setKeypadColor(settings->value(QStringLiteral("keypadColor"), true).toUInt());
     }
 }
 void MainWindow::restored(bool success) {

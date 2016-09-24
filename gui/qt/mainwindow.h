@@ -155,6 +155,8 @@ private:
     void addEquateFile(QString);
     void clearEquateFile();
     void refreshEquateFile();
+    void selectKeypadColor();
+    void setKeypadColor(unsigned color);
 
     // Speed
     void changeEmulatedSpeed(int);

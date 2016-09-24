@@ -40,5 +40,5 @@ bool ArrowKey::canAccept(const QPointF &point) {
     qreal outerRadius = m_outer.width() * .7,
         radiusSquared = QPointF::dotProduct(norm, norm);
     return radiusSquared <= outerRadius * outerRadius &&
-        (static_cast<int>(2 * M_2_PI * std::atan2(norm.y(), norm.x()) + 9.5) + m_offset & 7) < 3;
+        (static_cast<int>((2 * M_2_PI * std::atan2(norm.y(), norm.x()) + 9.5) + m_offset) & 7) < 3;
 }

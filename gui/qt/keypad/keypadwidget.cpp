@@ -13,22 +13,94 @@
 #include <QtGui/QPaintEvent>
 #include <QtGui/QPainter>
 #include <QtGui/QScreen>
-
-const QRect KeypadWidget::s_baseRect{{}, QSize{162, 248}};
+const QRect KeypadWidget::s_baseRect{{}, QSize{162, 235}};
 
 void KeypadWidget::addKey(Key *key) {
     delete m_keys[key->keycode().row()][key->keycode().col()];
     m_keys[key->keycode().row()][key->keycode().col()] = key;
 }
 
-void KeypadWidget::setType(bool type) {
+unsigned KeypadWidget::getCurrColor(void) {
+    return curr_color;
+}
+
+void KeypadWidget::setType(bool type, unsigned color_scheme) {
     m_type = type;
+    QColor c_center;
+    QColor c_sides;
+    QColor c_num, c_text, c_other, c_graph;
+
+    curr_color = color_scheme;
+
+    c_num = QColor::fromRgb(0xeeeeee);
+    c_text = QColor::fromRgb(0xeeeeee);
+    c_other = QColor::fromRgb(0x1d1d1d);
+    c_graph = QColor::fromRgb(0xeeeeee);
+    switch(color_scheme) {
+        case KEYPAD_BLACK:
+            c_center = QColor::fromRgb(0x191919);
+            c_sides = QColor::fromRgb(0x3b3b3b);
+            break;
+        case KEYPAD_WHITE:
+            c_center = QColor::fromRgb(0xe8e8e8);
+            c_sides = QColor::fromRgb(0xc4c4c4);
+            c_num = QColor::fromRgb(0x707880);
+            c_text = QColor::fromRgb(0x222222);
+            c_other = QColor::fromRgb(0xc0c0c0);
+            break;
+        case KEYPAD_TRUE_BLUE:
+            c_center = QColor::fromRgb(0x385E9D);
+            c_sides = c_center.lighter(130);
+            c_other = QColor::fromRgb(0x274F91);
+            c_num = QColor::fromRgb(0xdedede);
+            break;
+        case KEYPAD_DENIM:
+            c_center = QColor::fromRgb(0x003C71);
+            c_sides = c_center.lighter(130);
+            c_other = QColor::fromRgb(0x013766);
+            break;
+        case KEYPAD_SILVER:
+            c_center = QColor::fromRgb(0x7C878E);
+            c_sides = c_center.lighter(130);
+            c_other = QColor::fromRgb(0x191919);
+            c_graph = QColor::fromRgb(0xD0D3D4);
+            break;
+        case KEYPAD_PINK:
+            c_center = QColor::fromRgb(0xDF1995);
+            c_sides = c_center.lighter(130);
+            c_other = QColor::fromRgb(0xAA0061);
+            break;
+        case KEYPAD_PLUM:
+            c_center = QColor::fromRgb(0x830065);
+            c_sides = c_center.lighter(130);
+            c_other = QColor::fromRgb(0x5E2751);
+            break;
+        case KEYPAD_RED:
+            c_center = QColor::fromRgb(0xAB2328);
+            c_sides = c_center.lighter(130);
+            c_other = QColor::fromRgb(0x8A2A2B);
+            break;
+        case KEYPAD_LIGHTNING:
+            c_center = QColor::fromRgb(0x0077C8);
+            c_sides = c_center.lighter(130);
+            c_other = QColor::fromRgb(0x0077C8);
+            break;
+        case KEYPAD_GOLDEN:
+            c_center = QColor::fromRgb(0xD8D3B6);
+            c_sides = c_center.lighter(130);
+            c_other = QColor::fromRgb(0xD8D3B6);
+            break;
+        default:
+            c_center = QColor::fromRgb(0x191919);
+            c_sides = QColor::fromRgb(0x3b3b3b);
+            break;
+    }
 
     m_background = {s_baseRect.topLeft(), s_baseRect.topRight()};
-    m_background.setColorAt(0.00, QColor::fromRgb(type ? 0xc4c4c4 : 0x3b3b3b));
-    m_background.setColorAt(0.18, QColor::fromRgb(type ? 0xe8e8e8 : 0x191919));
-    m_background.setColorAt(0.82, QColor::fromRgb(type ? 0xe8e8e8 : 0x191919));
-    m_background.setColorAt(1.00, QColor::fromRgb(type ? 0xc4c4c4 : 0x3b3b3b));
+    m_background.setColorAt(0.00, c_sides);
+    m_background.setColorAt(0.18, c_center);
+    m_background.setColorAt(0.82, c_center);
+    m_background.setColorAt(1.00, c_sides);
 
     QFont font;
     font.setStyleHint(QFont::SansSerif, QFont::PreferOutline);
@@ -56,12 +128,12 @@ void KeypadWidget::setType(bool type) {
           .alphaFont = font,
         .secondColor = QColor::fromRgb(0x93c3f3),
          .alphaColor = QColor::fromRgb(0xa0ca1e),
-         .graphColor = QColor::fromRgb(0xeeeeee),
-           .numColor = QColor::fromRgb(type ? 0x707880 : 0xeeeeee),
-         .otherColor = QColor::fromRgb(type ? 0xc0c0c0 : 0x1d1d1d),
+         .graphColor = c_graph,
+           .numColor = c_num,
+         .otherColor = c_other,
          .blackColor = QColor::fromRgb(0x222222),
          .whiteColor = QColor::fromRgb(0xeeeeee),
-          .textColor = QColor::fromRgb(type ? 0x222222 : 0xeeeeee),
+          .textColor = c_text,
                 .key = {1, 0}
     };
     if (type) {
