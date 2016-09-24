@@ -19,15 +19,23 @@
 
 #include <QtGui/QPainter>
 
+static const constexpr int imgWidth  = 320;
+static const constexpr int imgHeight = 240;
+
 QImage renderFramebuffer(lcd_state_t *lcds) {
     lcd_drawframe(lcd_framebuffer, lcds);
-    return QImage(reinterpret_cast<const uchar*>(lcd_framebuffer), 320, 240, QImage::Format_RGBA8888);
+    return QImage(reinterpret_cast<const uchar*>(lcd_framebuffer), imgWidth, imgHeight, QImage::Format_RGBA8888);
 }
 
 void paintFramebuffer(QPainter *p, lcd_state_t *lcds) {
     if (lcds && (lcd.control & 0x800) && !asic.shipModeEnabled) {
         QImage img = renderFramebuffer(lcds);
-        p->setRenderHint(QPainter::SmoothPixmapTransform);
+
+        // Interpolation only for < 100% scale
+        if (p->window().size().width() < imgWidth) {
+            p->setRenderHint(QPainter::SmoothPixmapTransform);
+        }
+
         p->drawImage(p->window(), img);
         float factor = (310-(float)backlight.brightness)/160.0;
         if (factor < 1) {

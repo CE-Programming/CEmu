@@ -257,7 +257,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) :QMainWindow(p), ui(new Ui::
     installToggleConsole();
 #endif
 
-    changeThrottleMode(Qt::Checked);
+    changeThrottleMode(opts.useUnthrottled ? Qt::Unchecked : Qt::Checked);
     if(opts.RomFile.isEmpty()) {
         emu.rom = settings->value(QStringLiteral("romImage")).toString().toStdString();
     } else {
