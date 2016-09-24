@@ -43,6 +43,7 @@ bool has_option(const unordered_map<string, unsigned char>& m, const string elem
     return m.find(element) != m.end();
 }
 
+
 unsigned char hexdec(const string& str)
 {
     return (unsigned char) stoul(str, nullptr, 16);
@@ -55,37 +56,45 @@ std::string dechex(unsigned char i)
     return stream.str();
 }
 
-vector<string> explode(const string& str, char delim)
+vector<string> explode(const string& str, const string& delim)
 {
     vector<string> result;
-    istringstream iss(str);
 
-    for (string token; getline(iss, token, delim);)
+    size_t last = 0;
+    size_t next = 0;
+    while ((next = str.find(delim, last)) != string::npos)
     {
-        result.push_back(move(token));
+        result.push_back(str.substr(last, next - last));
+        last = next + delim.length();
     }
+    result.push_back(str.substr(last));
 
     return result;
 }
 
-// trim from start
-string& ltrim(string& s)
+vector<string> explode(const string& str, char delim)
 {
-    s.erase(s.begin(), find_if(s.begin(), s.end(), not1(ptr_fun<int, int>(isspace))));
+    return explode(str, string(1, delim));
+}
+
+// trim from start
+std::string ltrim(std::string s, const char* t)
+{
+    s.erase(0, s.find_first_not_of(t));
     return s;
 }
 
 // trim from end
-string& rtrim(string& s)
+std::string rtrim(std::string s, const char* t)
 {
-    s.erase(find_if(s.rbegin(), s.rend(), not1(ptr_fun<int, int>(isspace))).base(), s.end());
+    s.erase(s.find_last_not_of(t) + 1);
     return s;
 }
 
 // trim from both ends
-string& trim(string& s)
+std::string trim(std::string s, const char* t)
 {
-    return ltrim(rtrim(s));
+    return ltrim(rtrim(s, t), t);
 }
 
 string str_repeat(const string& str, unsigned int times)
@@ -177,7 +186,10 @@ void ParseCSV(const string& csvSource, vector<vector<string>>& lines)
 
 bool is_numeric(const std::string& str)
 {
-    return std::regex_match(str, std::regex("[(-|+)|][0-9]*\\.?[0-9]+"));
+    char* p;
+    double ignored = ::strtod(str.c_str(), &p);
+    (void)ignored;
+    return (bool)!*p;
 }
 
 // From http://rosettacode.org/wiki/Strip_a_set_of_characters_from_a_string#C.2B.2B

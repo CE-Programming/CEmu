@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <cfloat>
 
 // TODO : check if the models have different exponent offsets
 
@@ -20,7 +21,7 @@ namespace tivars
     
     data_t TH_0x00::makeDataFromString(const string& str, const options_t options)
     {
-        data_t data(9);
+        data_t data(TH_0x00::dataByteCount);
 
         if (str == "" || !is_numeric(str))
         {
@@ -42,7 +43,7 @@ namespace tivars
 
         data[0] = flags;
         data[1] = (uchar)(exponent + 0x80);
-        for (uint i = 2; i < 9; i++)
+        for (uint i = 2; i < TH_0x00::dataByteCount; i++)
         {
             data[i] = (uchar)(hexdec(newStr.substr(2*(i-2), 2)) & 0xFF);
         }
@@ -54,23 +55,25 @@ namespace tivars
     {
         (void)options;
 
-        if (data.size() != 9)
+        if (data.size() != TH_0x00::dataByteCount)
         {
-            std::cerr << "Invalid data array. Needs to contain 9 bytes" << endl;
+            std::cerr << "Invalid data array. Needs to contain " + to_string(TH_0x00::dataByteCount) + " bytes" << endl;
             return "";
         }
         uint flags      = data[0];
         bool isNegative = (flags >> 7 == 1);
 //      bool isSeqInit  = (flags  & 1 == 1); // if true, "used for initial sequence values"
-        uint exponent   = (uint)(data[1] - 0x80);
+        int exponent    = data[1] - 0x80;
         string number   = "";
-        for (uint i = 2; i < 9; i++)
+        for (uint i = 2; i < TH_0x00::dataByteCount; i++)
         {
-            number += dechex(data[i]);
+            number += (data[i] < 0x10 ? "0" : "") + dechex(data[i]); // zero left pad
         }
         number = number.substr(0, 1) + "." + number.substr(1);
 
-        string str = to_string(pow(10, exponent) * std::stod(number));
+        char buf[35] = {0};
+        sprintf(buf, "%.*f", DECIMAL_DIG, pow(10, exponent) * atof(number.c_str()));
+        string str(buf);
 
         // Cleanup
         if (str.length() > 12)

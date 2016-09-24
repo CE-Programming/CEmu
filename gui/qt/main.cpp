@@ -1,5 +1,4 @@
 #include <QtWidgets/QApplication>
-#include <QtQml/QtQml>
 #include "mainwindow.h"
 #include "cemuopts.h"
 
