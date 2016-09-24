@@ -32,9 +32,7 @@ void paintFramebuffer(QPainter *p, lcd_state_t *lcds) {
         QImage img = renderFramebuffer(lcds);
 
         // Interpolation only for < 100% scale
-        if (p->window().size().width() < imgWidth) {
-            p->setRenderHint(QPainter::SmoothPixmapTransform);
-        }
+        p->setRenderHint(QPainter::SmoothPixmapTransform, (p->window().size().width() < imgWidth));
 
         p->drawImage(p->window(), img);
         float factor = (310-(float)backlight.brightness)/160.0;
