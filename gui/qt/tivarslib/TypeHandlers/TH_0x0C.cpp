@@ -29,12 +29,9 @@ namespace tivars
 
         smatch matches;
 
-        // Handle real only, real+imag, image only.
-        bool isCplx = regex_match(newStr, matches, regex("^"   + TH_0x00::validPattern + "()$"))
-                   || regex_match(newStr, matches, regex("^"   + TH_0x00::validPattern + TH_0x00::validPattern + "i$"))
-                   || regex_match(newStr, matches, regex("^()" + TH_0x00::validPattern + "i$"));
+        bool isValid = checkValidStringAndGetMatches(str, matches);
 
-        if (!isCplx)
+        if (!isValid || matches.size() != 3)
         {
             std::cerr << "Invalid input string. Needs to be a valid complex number (a+bi)" << endl;
             return data_t();
@@ -42,7 +39,11 @@ namespace tivars
 
         for (int i=0; i<2; i++)
         {
-            const string& coeff = matches[i+1];
+            string coeff = matches[i+1];
+            if (coeff.empty())
+            {
+                coeff = "0";
+            }
 
             const auto& tmp = TH_0x00::makeDataFromString(coeff);
             data.insert(data.end(), tmp.begin(), tmp.end());
@@ -75,5 +76,26 @@ namespace tivars
         str = regex_replace(str, regex("\\+\\-"), "-");
 
         return str;
+    }
+
+    bool TH_0x0C::checkValidString(const string& str)
+    {
+        smatch matches;
+        return checkValidStringAndGetMatches(str, matches);
+    }
+
+    bool TH_0x0C::checkValidStringAndGetMatches(const string& str, smatch& matches)
+    {
+        if (str.empty())
+        {
+            return false;
+        }
+
+        // Handle real only, real+imag, image only.
+        bool isValid = regex_match(str, matches, regex("^"   + TH_0x00::validPattern + "()$"))
+                    || regex_match(str, matches, regex("^"   + TH_0x00::validPattern + TH_0x00::validPattern + "i$"))
+                    || regex_match(str, matches, regex("^()" + TH_0x00::validPattern + "i$"));
+
+        return isValid;
     }
 }

@@ -55,6 +55,12 @@ namespace tivars
         void initTokens();
     }
 
+    namespace TH_0x0C
+    {
+        const constexpr size_t dataByteCount = 2 * TH_0x00::dataByteCount;
+        bool checkValidString(const std::string& str);
+        bool checkValidStringAndGetMatches(const std::string& str, std::smatch& matches);
+    }
 
 typedef decltype(&DummyHandler::makeDataFromString) dataFromString_handler_t;
 typedef decltype(&DummyHandler::makeStringFromData) stringFromData_handler_t;
