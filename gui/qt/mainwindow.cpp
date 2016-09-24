@@ -884,7 +884,7 @@ void MainWindow::adjustScreen() {
 }
 
 int MainWindow::reprintScale(int scale) {
-    int roundedScale = round(scale / 50.0) * 50;
+    int roundedScale = round(scale / 25.0) * 25;
     ui->scaleLabel->setText(QString::number(roundedScale) + "%");
     return roundedScale;
 }

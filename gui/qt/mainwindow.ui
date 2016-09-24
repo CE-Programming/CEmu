@@ -882,7 +882,7 @@
               <number>400</number>
              </property>
              <property name="singleStep">
-              <number>50</number>
+              <number>25</number>
              </property>
              <property name="pageStep">
               <number>100</number>

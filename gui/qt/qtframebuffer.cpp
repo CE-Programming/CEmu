@@ -27,6 +27,7 @@ QImage renderFramebuffer(lcd_state_t *lcds) {
 void paintFramebuffer(QPainter *p, lcd_state_t *lcds) {
     if (lcds && (lcd.control & 0x800) && !asic.shipModeEnabled) {
         QImage img = renderFramebuffer(lcds);
+        p->setRenderHint(QPainter::SmoothPixmapTransform);
         p->drawImage(p->window(), img);
         float factor = (310-(float)backlight.brightness)/160.0;
         if (factor < 1) {
