@@ -48,8 +48,6 @@ void LCDWidget::setLCD(lcd_state_t *lcdS) {
 
 void LCDWidget::dropEvent(QDropEvent *e) {
     in_drag = false;
-    fprintf(stdout, "%u\n", e->pos().x());
-    fprintf(stdout, "%u\n", this->width()/2);
     sending_handler.dropOccured(e, (e->pos().x() < this->width()/2) ? LINK_ARCH : LINK_RAM);
 }
 
