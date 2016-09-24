@@ -239,15 +239,13 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
 #endif
     addKey(new OtherKey{m_config, 3, Label(")"), Label("}"), Label("L"), is83 * 2, is83});
 #ifdef _WIN32
-    addKey(new OtherKey{m_config, 9, LabelFrEn("▫/▫", "tan"), LabelFrEn("∫⸋|⸋d▫‣", "tan⁻¹"), Label("G"), is83 * 2, is83 * 2});
+    addKey(new OtherKey{m_config, 9, LabelFrEn("⸋|⸋", "tan"), LabelFrEn("∫⸋|⸋d▫‣", "tan⁻¹"), Label("G"), is83 * 2, is83 * 2});
 #elif defined(Q_OS_MACX)
     addKey(new OtherKey{m_config, 9, LabelFrEn("▫/▫", "tan"), LabelFrEn("∫⸋d▫‣", "tan⁻¹"), Label("G"), is83 * 2, is83 * 2});
-    addKey(new OtherKey{m_config, is83 ? 9 : 12, LabelFrEn("var", " vars"), LabelFrEn("distrib", "distr"), Label(""), 0, is83});
 #else
     addKey(new OtherKey{m_config, 9, LabelFrEn("▫/▫", "tan"), LabelFrEn("∫⸋̻◻d▫‣", "tan⁻¹"), Label("G"), is83 * 2, is83 * 2});
-    addKey(new OtherKey{m_config, is83 ? 9 : 12, LabelFrEn("var", "vars"), LabelFrEn("distrib", "distr"), Label(""), 0, is83});
 #endif
-
+    addKey(new OtherKey{m_config, is83 ? 9 : 12, LabelFrEn("var", "vars"), LabelFrEn("distrib", "distr"), Label(""), 0, is83});
     m_config.next();
 #ifdef Q_OS_MACX
     addKey(new OperKey{m_config, LabelFrEn("  entrer", "  enter"), LabelFrEn("précéd", "entry"), is83 ? QString{} : Label("solve"), 6, is83 ? 0 : 5, {16, 5}});
