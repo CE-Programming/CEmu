@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
+#include <regex>
 #include <algorithm>
 #include <unordered_map>
 

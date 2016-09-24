@@ -179,7 +179,6 @@ private:
 
     // Linking
     QStringList showVariableFileDialog(QFileDialog::AcceptMode, QString name_filter);
-    void sendFiles(QStringList);
     void selectFiles();
     void refreshVariableList();
     void variableClicked(QTableWidgetItem*);
@@ -279,8 +278,5 @@ private:
     int pc_line;
     int curr_line;
 };
-
-// Used as global instance by EmuThread and Debugger class
-extern MainWindow *main_window;
 
 #endif

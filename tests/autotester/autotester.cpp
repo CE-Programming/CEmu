@@ -422,7 +422,7 @@ bool sendFilesForTest()
         if (debugLogs) {
             std::cout << "- Sending file " << file << "... " << std::endl;
         }
-        if (!cemucore::sendVariableLink(file.c_str()))
+        if (!cemucore::sendVariableLink(file.c_str(), cemucore::LINK_FILE))
         {
             std::cerr << "[Error] File couldn't be sent" << std::endl;
             return false;

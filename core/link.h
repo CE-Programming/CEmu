@@ -10,12 +10,14 @@ extern "C" {
 #include "defines.h"
 #include "vat.h"
 
+enum dest_location { LINK_RAM=0, LINK_ARCH, LINK_FILE };
+
 extern volatile bool emu_is_sending;
 extern volatile bool emu_is_receiving;
 
 void enterVariableLink(void);
 bool listVariablesLink(void);
-bool sendVariableLink(const char *var_name);
+bool sendVariableLink(const char *var_name, unsigned location);
 bool receiveVariableLink(int count, const calc_var_t *vars, const char *file_name);
 
 #ifdef __cplusplus

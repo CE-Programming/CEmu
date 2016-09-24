@@ -5,8 +5,7 @@
 
 #include <QtWidgets/QWidget>
 
-class QtFramebuffer : public QWidget
-{
+class QtFramebuffer : public QWidget {
 public:
     QtFramebuffer(QWidget *parent = 0);
     virtual void paintEvent(QPaintEvent *) Q_DECL_OVERRIDE;

@@ -22,6 +22,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "sendinghandler.h"
 #include "lcdpopout.h"
 #include "dockwidget.h"
 #include "emuthread.h"
@@ -122,7 +123,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) :QMainWindow(p), ui(new Ui::
     // Linking
     connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::selectFiles);
     connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::selectFiles);
-    connect(this, &MainWindow::setSendState, &emu, &EmuThread::setSendState);
     connect(ui->buttonRefreshList, &QPushButton::clicked, this, &MainWindow::refreshVariableList);
     connect(this, &MainWindow::setReceiveState, &emu, &EmuThread::setReceiveState);
     connect(ui->buttonReceiveFiles, &QPushButton::clicked, this, &MainWindow::saveSelected);
@@ -507,47 +507,17 @@ void MainWindow::saved(bool success) {
 }
 
 void MainWindow::dropEvent(QDropEvent *e) {
-    const QMimeData* mime_data = e->mimeData();
-    if (!mime_data->hasUrls()) {
-        return;
+    if(inReceivingMode) {
+        return e->ignore();
     }
-
-    QStringList files;
-    for(auto &&url : mime_data->urls()) {
-        files.append(url.toLocalFile());
-    }
-
-    sendFiles(files);
+    sending_handler.dropOccured(e, LINK_FILE);
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent *e) {
-    if (e->mimeData()->hasUrls() == false || inReceivingMode) {
+    if(inReceivingMode) {
         return e->ignore();
     }
-
-    for(QUrl &url : e->mimeData()->urls()) {
-        static const QStringList valid_suffixes = { QStringLiteral("8xp"),
-                                                    QStringLiteral("8xv"),
-                                                    QStringLiteral("8xl"),
-                                                    QStringLiteral("8xn"),
-                                                    QStringLiteral("8xm"),
-                                                    QStringLiteral("8xy"),
-                                                    QStringLiteral("8xg"),
-                                                    QStringLiteral("8xs"),
-                                                    QStringLiteral("8xd"),
-                                                    QStringLiteral("8xw"),
-                                                    QStringLiteral("8xc"),
-                                                    QStringLiteral("8xz"),
-                                                    QStringLiteral("8xt"),
-                                                    QStringLiteral("8ca"),
-                                                    QStringLiteral("8ci") };
-
-        QFileInfo file(url.fileName());
-        if(!valid_suffixes.contains(file.suffix().toLower()))
-            return e->ignore();
-    }
-
-    e->accept();
+    sending_handler.dragOccured(e);
 }
 
 void MainWindow::closeEvent(QCloseEvent *e) {
@@ -982,47 +952,6 @@ QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode, QSt
     return QStringList();
 }
 
-void MainWindow::sendFiles(QStringList fileNames) {
-    if (inDebugger) {
-        return;
-    }
-
-    setSendState(true);
-    const unsigned int fileNum = fileNames.size();
-
-    if (fileNum == 0) {
-        setSendState(false);
-        return;
-    }
-
-    /* Wait for an open link */
-    emu_thread->waitForLink = true;
-    do {
-        QThread::msleep(50);
-    } while(emu_thread->waitForLink);
-
-    QProgressDialog progress("Sending Files...", QString(), 0, fileNum, this);
-    progress.setWindowModality(Qt::WindowModal);
-
-    progress.show();
-    QApplication::processEvents();
-
-    for (unsigned int i = 0; i < fileNum; i++) {
-        if(!sendVariableLink(fileNames.at(i).toUtf8())) {
-            QMessageBox::warning(this, tr("Failed Transfer"), tr("A failure occured during transfer of: ")+fileNames.at(i));
-        }
-        progress.setLabelText(fileNames.at(i).toUtf8());
-        progress.setValue(progress.value()+1);
-        QApplication::processEvents();
-    }
-
-    progress.setValue(progress.value()+1);
-    QApplication::processEvents();
-    QThread::msleep(100);
-
-    setSendState(false);
-}
-
 void MainWindow::selectFiles() {
     if (debuggerOn) {
        return;
@@ -1030,7 +959,7 @@ void MainWindow::selectFiles() {
 
     QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptOpen, tr("TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca, *.8cg, *.8ci, *.8ek);;All Files (*.*)"));
 
-    sendFiles(fileNames);
+    sending_handler.sendFiles(fileNames, LINK_FILE);
 }
 
 void MainWindow::variableClicked(QTableWidgetItem *item) {
@@ -1294,7 +1223,7 @@ void MainWindow::launchTest() {
     for (const auto& file : autotester::config.transfer_files) {
         filesList << QString::fromStdString(file);
     }
-    sendFiles(filesList);
+    sending_handler.sendFiles(filesList, LINK_FILE);
     QThread::msleep(200);
 
     // Follow the sequence

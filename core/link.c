@@ -70,10 +70,10 @@ bool listVariablesLink(void) {
 
 /*
  * Really hackish way to send a variable -- Like, on a scale of 1 to hackish, it's like really hackish
- * Proper USB emulation should really be a thing at some point :P
+ * Proper USB emulation should really be a thing
  * See GitHub issue #25
  */
-bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name) {
+bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned location) {
     const size_t h_size = sizeof(header_data);
     const size_t op_size = 0x09;
     const uint16_t data_start = 0x37;
@@ -175,13 +175,19 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name) {
         if (fseek(file, 0x48, 0))                           goto r_err;
         if (fread(var_ptr, 1, var_size, file) != var_size)  goto r_err;
 
-        if (var_arc == 0x80) {
-            cpu.halted = cpu.IEF_wait = 0;
-            memcpy(run_asm_safe, archivevar, sizeof(archivevar));
-            cpu_flush(safe_ram_loc, 1);
-            cpu.cycles = 0;
-            cpu.next = 23000000;
-            cpu_execute();
+        switch(location) {
+            case LINK_FILE:
+                if (var_arc != 0x80) break;
+            case LINK_ARCH:
+                cpu.halted = cpu.IEF_wait = 0;
+                memcpy(run_asm_safe, archivevar, sizeof(archivevar));
+                cpu_flush(safe_ram_loc, 1);
+                cpu.cycles = 0;
+                cpu.next = 23000000;
+                cpu_execute();
+                break;
+            default:
+                break;
         }
 
         cpu.halted = cpu.IEF_wait = 0;

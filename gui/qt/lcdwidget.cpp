@@ -1,28 +1,14 @@
-/* Copyright (C) 2015  Fabian Vogt
- * Modified for the CE calculator by CEmu developers
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
-*/
-
 #include <QtGui/QPainter>
 #include <QtGui/QMouseEvent>
 #include <QMenu>
 #include <QDrag>
-#include <QMimeData>
-#include <QClipboard>
 #include <QApplication>
 
 #include "lcdwidget.h"
 #include "qtframebuffer.h"
+#include "sendinghandler.h"
 #include "../../core/lcd.h"
+#include "../../core/link.h"
 
 LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
     lcdState = &lcd;
@@ -30,15 +16,24 @@ LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
     connect(&refreshTimer, SIGNAL(timeout()), this, SLOT(repaint()));
 
     setAcceptDrops(true);
-    // Default rate is 60 FPS
-    refreshRate(60);
+    refreshRate(60);    // Default rate is 60 FPS
 }
 
 LCDWidget::~LCDWidget(){}
 
-void LCDWidget::paintEvent(QPaintEvent */*event*/) {
+void LCDWidget::paintEvent(QPaintEvent*) {
     QPainter painter(this);
     paintFramebuffer(&painter, lcdState);
+    if(in_drag) {
+        QRect left = painter.window();
+        QRect right = painter.window();
+        left.setRight(left.right()/2);
+        right.setLeft(left.right());
+        painter.fillRect(left, QColor(200, 0, 0, 128));
+        painter.fillRect(right, QColor(0, 200, 0, 128));
+        painter.setPen(Qt::white);
+        painter.drawText(painter.window(), Qt::AlignCenter, QObject::tr("Archive     RAM     "));
+    }
 }
 
 void LCDWidget::refreshRate(int newrate) {
@@ -49,4 +44,20 @@ void LCDWidget::refreshRate(int newrate) {
 
 void LCDWidget::setLCD(lcd_state_t *lcdS) {
     lcdState = lcdS;
+}
+
+void LCDWidget::dropEvent(QDropEvent *e) {
+    in_drag = false;
+    fprintf(stdout, "%u\n", e->pos().x());
+    fprintf(stdout, "%u\n", this->width()/2);
+    sending_handler.dropOccured(e, (e->pos().x() < this->width()/2) ? LINK_ARCH : LINK_RAM);
+}
+
+void LCDWidget::dragEnterEvent(QDragEnterEvent *e) {
+    in_drag = true;
+    sending_handler.dragOccured(e);
+}
+
+void LCDWidget::dragLeaveEvent(QDragLeaveEvent *e) {
+    in_drag = false;
 }
