@@ -5,7 +5,7 @@ if (0) { # GitHub release/deployment build. Has to correspond to the git tag.
     DEFINES += CEMU_VERSION=\\\"1.0\\\"
 } else { # Development build. Used in the about screen
     GIT_VERSION = $$system(git describe --abbrev=7 --dirty --always --tags)
-    DEFINES += CEMU_VERSION=\\\"0.5dev_$$GIT_VERSION\\\"
+    DEFINES += CEMU_VERSION=\\\"0.9dev_$$GIT_VERSION\\\"
 }
 
 # Continuous Integration (variable checked later)

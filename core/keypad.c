@@ -187,7 +187,7 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_keypad(void) {
-    gui_console_printf("[CEmu] Initialized keypad...\n");
+    gui_console_printf("[CEmu] Initialized Keypad...\n");
     return device;
 }
 
