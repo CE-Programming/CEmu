@@ -52,6 +52,10 @@ namespace tivars
                     func = &TH_0x0C::makeStringFromData;
                     break;
 
+                case 0x0D:
+                    func = &TH_0x0D::makeStringFromData;
+                    break;
+
                 default:
                     break;
             }
@@ -90,6 +94,10 @@ namespace tivars
 
                 case 0x0C:
                     func = &TH_0x0C::makeDataFromString;
+                    break;
+
+                case 0x0D:
+                    func = &TH_0x0D::makeDataFromString;
                     break;
 
                 default:

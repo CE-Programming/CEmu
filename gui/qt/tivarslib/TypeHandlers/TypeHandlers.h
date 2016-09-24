@@ -38,6 +38,9 @@ namespace tivars
     namespace TH_0x0C   // Complex
     { th(); }
 
+    namespace TH_0x0D   // Complex list
+    { th(); }
+
 #undef th
 
 
