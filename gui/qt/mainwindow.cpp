@@ -258,7 +258,11 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) :QMainWindow(p), ui(new Ui::
 #endif
 
     changeThrottleMode(Qt::Checked);
-    emu.rom = settings->value(QStringLiteral("romImage")).toString().toStdString();
+    if(opts.RomFile.isEmpty()) {
+        emu.rom = settings->value(QStringLiteral("romImage")).toString().toStdString();
+    } else {
+        emu.rom = opts.RomFile.toStdString();
+    }
     changeFrameskip(settings->value(QStringLiteral("frameskip"), 3).toUInt());
     changeScale(settings->value(QStringLiteral("scale"), 100).toUInt());
     toggleSkin(settings->value(QStringLiteral("skin"), 1).toBool());
