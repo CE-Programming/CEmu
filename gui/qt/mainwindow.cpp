@@ -3116,7 +3116,7 @@ void MainWindow::addEquateFile(QString fileName) {
 }
 
 void MainWindow::scrollDisasmView(int value) {
-    if (value >= ui->disassemblyView->verticalScrollBar()->maximum() && value > 0x100) {
+    if (value >= ui->disassemblyView->verticalScrollBar()->maximum()) {
         ui->disassemblyView->verticalScrollBar()->blockSignals(true);
         drawNextDisassembleLine();
         ui->disassemblyView->verticalScrollBar()->setValue(ui->disassemblyView->verticalScrollBar()->maximum()-1);
