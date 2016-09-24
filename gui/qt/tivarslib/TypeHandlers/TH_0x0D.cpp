@@ -45,7 +45,7 @@ namespace tivars
         data[0] = (uchar) (numCount & 0xFF);
         data[1] = (uchar) ((numCount >> 8) & 0xFF);
 
-        for (auto& numStr : arr)
+        for (const auto& numStr : arr)
         {
             const auto& tmp = TH_0x0C::makeDataFromString(numStr);
             data.insert(data.end(), tmp.begin(), tmp.end());
