@@ -154,7 +154,7 @@
      <enum>QTabWidget::Rounded</enum>
     </property>
     <property name="currentIndex">
-     <number>3</number>
+     <number>0</number>
     </property>
     <property name="elideMode">
      <enum>Qt::ElideLeft</enum>
@@ -228,7 +228,7 @@
          <number>0</number>
         </property>
         <property name="topMargin">
-         <number>0</number>
+         <number>7</number>
         </property>
         <property name="bottomMargin">
          <number>0</number>
@@ -6889,7 +6889,7 @@ QPushButton:pressed {
      <x>0</x>
      <y>0</y>
      <width>1023</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -7228,6 +7228,7 @@ QPushButton:pressed {
    <class>DockWidget</class>
    <extends>QDockWidget</extends>
    <header>dockwidget.h</header>
+   <container>1</container>
   </customwidget>
   <customwidget>
    <class>QHexEdit</class>

@@ -19,7 +19,7 @@ DockWidget::DockWidget(const QString &title, QWidget *parent)
 bool DockWidget::event(QEvent *event) {
     switch (event->type()) {
         case QEvent::HoverMove:
-            emit changeTitleState(static_cast<QHoverEvent *>(event)->pos().y() <= m_title_height);
+            emit changeTitleState(static_cast<QHoverEvent *>(event)->pos().y() <= m_title_height*.75);
             break;
         case QEvent::HoverLeave:
             emit changeTitleState(false);
