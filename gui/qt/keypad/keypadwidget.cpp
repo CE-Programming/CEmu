@@ -13,6 +13,7 @@
 #include <QtGui/QPaintEvent>
 #include <QtGui/QPainter>
 #include <QtGui/QScreen>
+
 const QRect KeypadWidget::s_baseRect{{}, QSize{162, 235}};
 
 void KeypadWidget::addKey(Key *key) {
@@ -24,75 +25,73 @@ unsigned KeypadWidget::getCurrColor(void) {
     return curr_color;
 }
 
-void KeypadWidget::setType(bool type, unsigned color_scheme) {
-    m_type = type;
+void KeypadWidget::setType(bool is83, unsigned color_scheme) {
+    m_type = is83;
     QColor c_center;
     QColor c_sides;
     QColor c_num, c_text, c_other, c_graph;
 
     curr_color = color_scheme;
 
-    c_num = QColor::fromRgb(0xeeeeee);
-    c_text = QColor::fromRgb(0xeeeeee);
+    c_num   = QColor::fromRgb(0xeeeeee);
+    c_text  = QColor::fromRgb(0xeeeeee);
     c_other = QColor::fromRgb(0x1d1d1d);
     c_graph = QColor::fromRgb(0xeeeeee);
+
     switch(color_scheme) {
+        default:
         case KEYPAD_BLACK:
             c_center = QColor::fromRgb(0x191919);
-            c_sides = QColor::fromRgb(0x3b3b3b);
+            c_sides  = QColor::fromRgb(0x3b3b3b);
             break;
         case KEYPAD_WHITE:
             c_center = QColor::fromRgb(0xe8e8e8);
-            c_sides = QColor::fromRgb(0xc4c4c4);
-            c_num = QColor::fromRgb(0x707880);
-            c_text = QColor::fromRgb(0x222222);
-            c_other = QColor::fromRgb(0xc0c0c0);
+            c_sides  = QColor::fromRgb(0xc4c4c4);
+            c_num    = QColor::fromRgb(0x707880);
+            c_text   = QColor::fromRgb(0x222222);
+            c_other  = QColor::fromRgb(0xc0c0c0);
             break;
         case KEYPAD_TRUE_BLUE:
             c_center = QColor::fromRgb(0x385E9D);
-            c_sides = c_center.lighter(130);
-            c_other = QColor::fromRgb(0x274F91);
-            c_num = QColor::fromRgb(0xdedede);
+            c_sides  = c_center.lighter(130);
+            c_num    = QColor::fromRgb(0xdedede);
+            c_other  = QColor::fromRgb(0x274F91);
             break;
         case KEYPAD_DENIM:
             c_center = QColor::fromRgb(0x003C71);
-            c_sides = c_center.lighter(130);
-            c_other = QColor::fromRgb(0x013766);
+            c_sides  = c_center.lighter(130);
+            c_other  = QColor::fromRgb(0x013766);
             break;
         case KEYPAD_SILVER:
             c_center = QColor::fromRgb(0x7C878E);
-            c_sides = c_center.lighter(130);
-            c_other = QColor::fromRgb(0x191919);
-            c_graph = QColor::fromRgb(0xD0D3D4);
+            c_sides  = c_center.lighter(130);
+            c_other  = QColor::fromRgb(0x191919);
+            c_graph  = QColor::fromRgb(0xD0D3D4);
             break;
         case KEYPAD_PINK:
             c_center = QColor::fromRgb(0xDF1995);
-            c_sides = c_center.lighter(130);
-            c_other = QColor::fromRgb(0xAA0061);
+            c_sides  = c_center.lighter(130);
+            c_other  = QColor::fromRgb(0xAA0061);
             break;
         case KEYPAD_PLUM:
             c_center = QColor::fromRgb(0x830065);
-            c_sides = c_center.lighter(130);
-            c_other = QColor::fromRgb(0x5E2751);
+            c_sides  = c_center.lighter(130);
+            c_other  = QColor::fromRgb(0x5E2751);
             break;
         case KEYPAD_RED:
             c_center = QColor::fromRgb(0xAB2328);
-            c_sides = c_center.lighter(130);
-            c_other = QColor::fromRgb(0x8A2A2B);
+            c_sides  = c_center.lighter(130);
+            c_other  = QColor::fromRgb(0x8A2A2B);
             break;
         case KEYPAD_LIGHTNING:
             c_center = QColor::fromRgb(0x0077C8);
-            c_sides = c_center.lighter(130);
-            c_other = QColor::fromRgb(0x0077C8);
+            c_sides  = c_center.lighter(130);
+            c_other  = QColor::fromRgb(0x0077C8);
             break;
         case KEYPAD_GOLDEN:
             c_center = QColor::fromRgb(0xD8D3B6);
-            c_sides = c_center.lighter(130);
-            c_other = QColor::fromRgb(0xD8D3B6);
-            break;
-        default:
-            c_center = QColor::fromRgb(0x191919);
-            c_sides = QColor::fromRgb(0x3b3b3b);
+            c_sides  = c_center.lighter(130);
+            c_other  = QColor::fromRgb(0xD8D3B6);
             break;
     }
 
@@ -136,114 +135,97 @@ void KeypadWidget::setType(bool type, unsigned color_scheme) {
           .textColor = c_text,
                 .key = {1, 0}
     };
-    if (type) {
+    if (is83) {
 #ifndef _WIN32
         m_config.secondFont.setStretch(QFont::Condensed);
 #endif
     }
 
+#define Label(str)          QStringLiteral(str)
+#define LabelFrEn(fr, en)   (is83 ? Label(fr) : Label(en))
+
     QString quart_space = QChar(0x2005);
-    addKey(new GraphKey{m_config, type ? QStringLiteral("graphe") : QStringLiteral("graph"),
-                        QStringLiteral("table"), QStringLiteral("f5"), 15, 2, 2 - type});
-    addKey(new GraphKey{m_config, QStringLiteral("trace"),
-                        type ? QStringLiteral("calculs") : QStringLiteral("calc"),
-                        QStringLiteral("f4"), type ? 10 : 12, 2 + type * 2, 1});
-    addKey(new GraphKey{m_config, QStringLiteral("zoom"), QStringLiteral("format"),
-                        QStringLiteral("f3"), type ? 11 : 13, 2 + type * 2, type ? 1 : 5});
-    addKey(new GraphKey{m_config, type ? QStringLiteral("fenêtre") : QStringLiteral("window"),
-                        type ? QStringLiteral("déf")+quart_space+QStringLiteral("table") : QStringLiteral("tblset"),
-                        QStringLiteral("f2"), 15 - type, type ? 6 : 2, 4 - type});
-    addKey(new GraphKey{m_config, type ? QStringLiteral("f(x)") : QStringLiteral("y="),
-                        type ? QStringLiteral("graph")+quart_space+QStringLiteral("stats") : QStringLiteral("stat")+quart_space+QStringLiteral("plot"),
-                        QStringLiteral("f1"), 6 + type, type ? 6 : 2, type ? 10 : 8});
-    addKey(new SecondKey{m_config, type ? QStringLiteral("2nde") : QStringLiteral("2nd")});
-    addKey(new OtherKey{m_config, 16 - type * 2, 45, 37, QStringLiteral("mode"),
-                        type ? QStringLiteral("quitter") : QStringLiteral("quit")});
-    addKey(new OtherKey{m_config, type ? 14 : 8, 72, 37, type ? QStringLiteral("suppr") : QStringLiteral("del"),
-                        type ? QStringLiteral("insérer") : QStringLiteral("ins")});
-    addKey(new OtherKey{m_config, 7, QStringLiteral("on"), QStringLiteral("off")});
-    addKey(new OtherKey{m_config, 13, QStringLiteral("sto→"), type ? QStringLiteral("rappel") :
-                        QStringLiteral("rcl"), QStringLiteral("X"), type * 2, type * 3});
-    addKey(new OtherKey{m_config, 7, QStringLiteral("ln"), QStringLiteral("eˣ"), QStringLiteral("S"), type * 2, type * 2});
-    addKey(new OtherKey{m_config, 9, QStringLiteral("log"), QStringLiteral("10ˣ"), QStringLiteral("N"), type * 2, type * 3});
-    addKey(new OtherKey{m_config, 6, QStringLiteral("x²"), QStringLiteral("√‾‾"), QStringLiteral("I"), type, type * 3});
-    addKey(new OtherKey{m_config, type ? 6 : 8, type ? QStringLiteral("◀ ▶") : QStringLiteral("x⁻¹"), type ?
-                        QStringLiteral("angle") : QStringLiteral("matrix"), QStringLiteral("D"), type * 2, type ? 2 : 4});
-    addKey(new OtherKey{m_config, 14, QStringLiteral("math"), type ? QStringLiteral("tests") :
-                        QStringLiteral("test"), QStringLiteral("A"), type * 2, type * 2});
-    addKey(new AlphaKey{m_config, type ? QStringLiteral("verr A") : QStringLiteral("A-lock")});
-    addKey(new NumKey{m_config, QStringLiteral("0"), QStringLiteral("catalog"), QStringLiteral("⎵"), type * 2, 6});
-    addKey(new NumKey{m_config, QStringLiteral("1"), QStringLiteral("L1"), QStringLiteral("Y"), type * 2, type ? 3 : 1});
-    addKey(new NumKey{m_config, QStringLiteral("4"), QStringLiteral("L4"), QStringLiteral("T"), type * 2, type ? 3 : 1});
+    addKey(new GraphKey{m_config, LabelFrEn("graphe", "graph"), Label("table"), Label("f5"), 15, 2, 2 - is83});
+    addKey(new GraphKey{m_config, Label("trace"), LabelFrEn("calculs", "calc"), Label("f4"), is83 ? 10 : 12, 2 + is83 * 2, 1});
+    addKey(new GraphKey{m_config, Label("zoom"), Label("format"), Label("f3"), is83 ? 11 : 13, 2 + is83 * 2, is83 ? 1 : 5});
+    addKey(new GraphKey{m_config, LabelFrEn("fenêtre", "window"), is83 ? Label("déf")+quart_space+Label("table") : Label("tblset"),
+                        Label("f2"), 15 - is83, is83 ? 6 : 2, 4 - is83});
+    addKey(new GraphKey{m_config, is83 ? Label("f(x)") : Label("y="), is83 ? Label("graph")+quart_space+Label("stats") : Label("stat")+quart_space+Label("plot"),
+                        Label("f1"), 6 + is83, is83 ? 6 : 2, is83 ? 10 : 8});
+
+    addKey(new SecondKey{m_config, LabelFrEn("2nde", "2nd")});
+
+    addKey(new OtherKey{m_config, 16 - is83 * 2, 45, 37, Label("mode"), LabelFrEn("quitter", "quit")});
+    addKey(new OtherKey{m_config, is83 ? 14 : 8, 72, 37, LabelFrEn("suppr", "del"), LabelFrEn("insérer", "ins")});
+    addKey(new OtherKey{m_config, 7, Label("on"), Label("off")});
+    addKey(new OtherKey{m_config, 13, Label("sto→"), LabelFrEn("rappel", "rcl"), Label("X"), is83 * 2, is83 * 3});
+    addKey(new OtherKey{m_config, 7, Label("ln"), Label("eˣ"), Label("S"), is83 * 2, is83 * 2});
+    addKey(new OtherKey{m_config, 9, Label("log"), Label("10ˣ"), Label("N"), is83 * 2, is83 * 3});
+    addKey(new OtherKey{m_config, 6, Label("x²"), Label("√‾‾"), Label("I"), is83, is83 * 3});
+    addKey(new OtherKey{m_config, is83 ? 6 : 8, LabelFrEn("◀ ▶", "x⁻¹"), LabelFrEn("angle", "matrix"), Label("D"), is83 * 2, is83 ? 2 : 4});
+    addKey(new OtherKey{m_config, 14, Label("math"), LabelFrEn("tests", "test"), Label("A"), is83 * 2, is83 * 2});
+
+    addKey(new AlphaKey{m_config, LabelFrEn("verr A", "A-lock")});
+
+    addKey(new NumKey{m_config, Label("0"), Label("catalog"), Label("⎵"), is83 * 2, 6});
+    addKey(new NumKey{m_config, Label("1"), Label("L1"), Label("Y"), is83 * 2, is83 ? 3 : 1});
+    addKey(new NumKey{m_config, Label("4"), Label("L4"), Label("T"), is83 * 2, is83 ? 3 : 1});
 
 #ifdef _WIN32
-    addKey(new NumKey{m_config, QStringLiteral("7"), type ? QStringLiteral("un") : QStringLiteral("u"),
-                      QStringLiteral("O"), type * 2, 1 + type});
+    addKey(new NumKey{m_config, Label("7"), LabelFrEn("un", "u"), Label("O"), is83 * 2, 1 + is83});
 #else
-    addKey(new NumKey{m_config, QStringLiteral("7"), type ? QStringLiteral("uₙ") : QStringLiteral("u"),
-                      QStringLiteral("O"), type * 2, 1 + type});
+    addKey(new NumKey{m_config, Label("7"), LabelFrEn("uₙ", "u"), Label("O"), is83 * 2, 1 + is83});
 #endif
-    addKey(new OtherKey{m_config, 2, QStringLiteral(","), QStringLiteral("EE"), QStringLiteral("J"), type * 2, 1 + type});
-    addKey(new OtherKey{m_config, 8 + type, type ? QStringLiteral("trig") : QStringLiteral("sin"), type ?
-                        QStringLiteral("π") : QStringLiteral("sin⁻¹"), QStringLiteral("E"), type * 2, 1});
-    addKey(new OtherKey{m_config, 14 + type, type ? QStringLiteral("matrice") : QStringLiteral("apps"), type ?
-                        QStringLiteral("x⁻¹") : QStringLiteral("angle"), QStringLiteral("B"), type * 2, 1});
+    addKey(new OtherKey{m_config, 2, Label(","), Label("EE"), Label("J"), is83 * 2, 1 + is83});
+    addKey(new OtherKey{m_config, 8 + is83, LabelFrEn("trig", "sin"), LabelFrEn("π", "sin⁻¹"), Label("E"), is83 * 2, 1});
+    addKey(new OtherKey{m_config, 14 + is83, LabelFrEn("matrice", "apps"), LabelFrEn("x⁻¹", "angle"), Label("B"), is83 * 2, 1});
 #ifdef _WIN32
-    addKey(new OtherKey{m_config, 15 + type, QStringLiteral("X,T,θ,n"),
-                        type ? QStringLiteral("échanger") : QStringLiteral("link"), QString{}, type * 2, type * 3});
+    addKey(new OtherKey{m_config, 15 + is83, Label("X,T,θ,n"), LabelFrEn("échanger", "link"), QString{}, is83 * 2, is83 * 3});
 #else
-    addKey(new OtherKey{m_config, 15 + type, QStringLiteral("X,T,θ,n"),
-                        type ? QStringLiteral("échanger") : QStringLiteral("link"), QString{}, 1, 1});
+    addKey(new OtherKey{m_config, 15 + is83, Label("X,T,θ,n"), LabelFrEn("échanger", "link"), QString{}, 1, 1});
 #endif
-    addKey(new NumKey{m_config, type * 2});
-    addKey(new NumKey{m_config, QStringLiteral("2"), QStringLiteral("L2"), QStringLiteral("Z"), type * 2, type * 3});
-    addKey(new NumKey{m_config, QStringLiteral("5"), QStringLiteral("L5"), QStringLiteral("U"), type * 2, type * 3});
+    addKey(new NumKey{m_config, is83 * 2});
+    addKey(new NumKey{m_config, Label("2"), Label("L2"), Label("Z"), is83 * 2, is83 * 3});
+    addKey(new NumKey{m_config, Label("5"), Label("L5"), Label("U"), is83 * 2, is83 * 3});
 #ifdef _WIN32
-    addKey(new NumKey{m_config, QStringLiteral("8"), type ? QStringLiteral("vn") : QStringLiteral("v"),
-                      QStringLiteral("P"), type * 2, type * 2});
+    addKey(new NumKey{m_config, Label("8"), LabelFrEn("vn", "v"), Label("P"), is83 * 2, is83 * 2});
 #else
-    addKey(new NumKey{m_config, QStringLiteral("8"), type ? QStringLiteral("vₙ") : QStringLiteral("v"),
-                      QStringLiteral("P"), type * 2, type * 2});
+    addKey(new NumKey{m_config, Label("8"), LabelFrEn("vₙ", "v"), Label("P"), is83 * 2, is83 * 2});
 #endif
-    addKey(new OtherKey{m_config, 3, QStringLiteral("("), QStringLiteral("{"), QStringLiteral("K"), type * 2, type});
-    addKey(new OtherKey{m_config, type ? 12 : 9, type ? QStringLiteral("résol") : QStringLiteral("cos"), type ?
-                        QStringLiteral("apps") : QStringLiteral("cos⁻¹"), QStringLiteral("F"), type * 2, type * 2});
-    addKey(new OtherKey{m_config, 14, QStringLiteral("prgm"), type ? QStringLiteral("dessin") :
-                        QStringLiteral("draw"), QStringLiteral("C"), type * 2, type * 2});
-    addKey(new OtherKey{m_config, 11 + type, type ? QStringLiteral("stats") : QStringLiteral("stat"),
-                        type ? QStringLiteral("listes") : QStringLiteral("list")});
-    addKey(new NumKey{m_config, QStringLiteral("(-)"), type ? QStringLiteral("rép") :
-                      QStringLiteral("ans"), QStringLiteral("?"), type * 2, type * 3, 11});
-    addKey(new NumKey{m_config, QStringLiteral("3"), QStringLiteral("L3"), QStringLiteral("θ"), type * 2, type * 3});
-    addKey(new NumKey{m_config, QStringLiteral("6"), QStringLiteral("L6"), QStringLiteral("V"), type * 2, type * 3});
+    addKey(new OtherKey{m_config, 3, Label("("), Label("{"), Label("K"), is83 * 2, is83});
+    addKey(new OtherKey{m_config, is83 ? 12 : 9, LabelFrEn("résol", "cos"), LabelFrEn("apps", "cos⁻¹"), Label("F"), is83 * 2, is83 * 2});
+    addKey(new OtherKey{m_config, 14, Label("prgm"), LabelFrEn("dessin", "draw"), Label("C"), is83 * 2, is83 * 2});
+    addKey(new OtherKey{m_config, 11 + is83, LabelFrEn("stats", "stat"), LabelFrEn("listes", "list")});
+
+    addKey(new NumKey{m_config, Label("(-)"), LabelFrEn("rép", "ans"), Label("?"), is83 * 2, is83 * 3, 11});
+    addKey(new NumKey{m_config, Label("3"), Label("L3"), Label("θ"), is83 * 2, is83 * 3});
+    addKey(new NumKey{m_config, Label("6"), Label("L6"), Label("V"), is83 * 2, is83 * 3});
 #ifdef _WIN32
-    addKey(new NumKey{m_config, QStringLiteral("9"), type ? QStringLiteral("wn") : QStringLiteral("w"),
-                      QStringLiteral("Q"), type * 2, type * 3});
+    addKey(new NumKey{m_config, Label("9"), LabelFrEn("wn", "w"), Label("Q"), is83 * 2, is83 * 3});
 #else
-    addKey(new NumKey{m_config, QStringLiteral("9"), type ? QStringLiteral("wₙ") : QStringLiteral("w"),
-                      QStringLiteral("Q"), type * 2, type * 3});
+    addKey(new NumKey{m_config, Label("9"), LabelFrEn("wₙ", "w"), Label("Q"), is83 * 2, is83 * 3});
 #endif
-    addKey(new OtherKey{m_config, 3, QStringLiteral(")"), QStringLiteral("}"), QStringLiteral("L"), type * 2, type});
+    addKey(new OtherKey{m_config, 3, Label(")"), Label("}"), Label("L"), is83 * 2, is83});
 #ifdef _WIN32
-    addKey(new OtherKey{m_config, 9, type ? QStringLiteral("⸋|⸋") : QStringLiteral("tan"), type ?
-                        QStringLiteral("∫⸋|⸋d▫‣") : QStringLiteral("tan⁻¹"), QStringLiteral("G"), type * 2, type * 2});
+    addKey(new OtherKey{m_config, 9, LabelFrEn("⸋|⸋", "tan"), LabelFrEn("∫⸋|⸋d▫‣", "tan⁻¹"), Label("G"), is83 * 2, is83 * 2});
 #else
-    addKey(new OtherKey{m_config, 9, type ? QStringLiteral("  ⸋ ̵̻ ") : QStringLiteral("tan"), type ?
-                        QStringLiteral("∫⸋̻◻d▫‣") : QStringLiteral("tan⁻¹"), QStringLiteral("G"), type * 2, type * 2});
+    addKey(new OtherKey{m_config, 9, LabelFrEn("  ⸋ ̵̻ ", "tan"), LabelFrEn("∫⸋̻◻d▫‣", "tan⁻¹"), Label("G"), is83 * 2, is83 * 2});
 #endif
-    addKey(new OtherKey{m_config, type ? 9 : 12, type ? QStringLiteral("var") : QStringLiteral("vars"), type ?
-                        QStringLiteral("distrib") : QStringLiteral("distr"), QStringLiteral(""), 0, type});
+    addKey(new OtherKey{m_config, is83 ? 9 : 12, LabelFrEn("var", "vars"), LabelFrEn("distrib", "distr"), Label(""), 0, is83});
+
     m_config.next();
-    addKey(new OperKey{m_config, type ? QStringLiteral("entrer") : QStringLiteral("enter"),
-                        type ? QStringLiteral("précéd") : QStringLiteral("entry"),
-                        type ? QString{} : QStringLiteral("solve"), 6, type ? 0 : 5, {16, 5}});
-    addKey(new OperKey{m_config, QStringLiteral("+"), type ? QStringLiteral("mém") :
-                       QStringLiteral("mem"), QStringLiteral("“"), type * 2, type * 5});
-    addKey(new OperKey{m_config, QStringLiteral("–"), QStringLiteral("]"), QStringLiteral("W"), type * 2, type * 2});
-    addKey(new OperKey{m_config, QStringLiteral("×"), QStringLiteral("["), QStringLiteral("R"), type * 2, type * 2});
-    addKey(new OperKey{m_config, QStringLiteral("÷"), QStringLiteral("e"), QStringLiteral("M"), type * 2, type * 2});
-    addKey(new OtherKey{m_config, type ? QString{} : QStringLiteral("π"), type * 2});
-    addKey(new OtherKey{m_config, 15, type ? QStringLiteral("annul") : QStringLiteral("clear")});
+    addKey(new OperKey{m_config, LabelFrEn("entrer", "enter"), LabelFrEn("précéd", "entry"), is83 ? QString{} : Label("solve"), 6, is83 ? 0 : 5, {16, 5}});
+    addKey(new OperKey{m_config, Label("+"), LabelFrEn("mém", "mem"), Label("“"), is83 * 2, is83 * 5});
+    addKey(new OperKey{m_config, Label("–"), Label("]"), Label("W"), is83 * 2, is83 * 2});
+    addKey(new OperKey{m_config, Label("×"), Label("["), Label("R"), is83 * 2, is83 * 2});
+    addKey(new OperKey{m_config, Label("÷"), Label("e"), Label("M"), is83 * 2, is83 * 2});
+
+    addKey(new OtherKey{m_config, is83 ? QString{} : Label("π"), is83 * 2});
+    addKey(new OtherKey{m_config, 15, LabelFrEn("annul", "clear")});
+
+#undef Label
+#undef LabelFrEn
+
     m_config.next();
     QPoint center{121, 53};
     QRect outer, inner;
