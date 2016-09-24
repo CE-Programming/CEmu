@@ -6954,7 +6954,7 @@ QPushButton:pressed {
    <addaction name="menuAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
-  <widget class="QDockWidget" name="screenWidget">
+  <widget class="DockWidget" name="screenWidget">
    <property name="floating">
     <bool>false</bool>
    </property>
@@ -7224,6 +7224,11 @@ QPushButton:pressed {
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
+  <customwidget>
+   <class>DockWidget</class>
+   <extends>QDockWidget</extends>
+   <header>dockwidget.h</header>
+  </customwidget>
   <customwidget>
    <class>QHexEdit</class>
    <extends>QPlainTextEdit</extends>

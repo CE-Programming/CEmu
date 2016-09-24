@@ -2,7 +2,6 @@
 #include <QtCore/QRegularExpression>
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtWidgets/QMessageBox>
-#include <QtWidgets/QDockWidget>
 #include <QtWidgets/QShortcut>
 #include <QtWidgets/QProgressDialog>
 #include <QtWidgets/QInputDialog>
@@ -24,6 +23,7 @@
 #include "ui_mainwindow.h"
 
 #include "lcdpopout.h"
+#include "dockwidget.h"
 #include "emuthread.h"
 #include "qtframebuffer.h"
 #include "searchwidget.h"
@@ -563,7 +563,7 @@ void MainWindow::closeEvent(QCloseEvent *e) {
     }
 
     if (!emu.stop()) {
-        qDebug("Thread Termmination Failed.");
+        qDebug("Thread Termination Failed.");
     }
 
     speedUpdateTimer.stop();
@@ -650,22 +650,18 @@ void MainWindow::setUIMode(bool docks_enabled) {
     ui->menubar->insertMenu(ui->menuAbout->menuAction(), docksMenu);
 
     //Convert the tabs into QDockWidgets
-    QDockWidget *last_dock = nullptr;
+    DockWidget *last_dock = nullptr;
     while(ui->tabWidget->count()) {
-        QDockWidget *dw = new QDockWidget(ui->tabWidget->tabText(0));
-        dw->setWindowIcon(ui->tabWidget->tabIcon(0));
-        dw->setObjectName(dw->windowTitle());
+        DockWidget *dw = new DockWidget(ui->tabWidget, this);
 
         // Fill "Docks" menu
         QAction *action = dw->toggleViewAction();
         action->setIcon(dw->windowIcon());
         docksMenu->addAction(action);
 
-        QWidget *tab = ui->tabWidget->widget(0);
-        if(tab == ui->tabDebugger)
+        QWidget *tab = dw->widget();
+        if (tab == ui->tabDebugger)
             debuggerDock = dw;
-
-        dw->setWidget(tab);
 
         addDockWidget(Qt::RightDockWidgetArea, dw);
         if(last_dock != nullptr)
@@ -2461,9 +2457,9 @@ void MainWindow::reloadROM() {
 
     if (emu.stop()) {
         emu.start();
-        qDebug("Reload Successful.");
+        consoleStr("[CEmu] Reload Successful.\n");
     } else {
-        qDebug("Reload Failed.");
+        consoleStr("[CEmu] Reload Failed.\n");
     }
 }
 

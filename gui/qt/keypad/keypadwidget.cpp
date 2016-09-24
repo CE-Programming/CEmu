@@ -271,7 +271,7 @@ void KeypadWidget::resizeEvent(QResizeEvent *event) {
         origin{(event->size() - size) / 2};
     m_transform.setMatrix((qreal)size.width() / s_baseRect.width(), 0, 0, 0,
                           (qreal)size.height() / s_baseRect.height(), 0,
-                          origin.width(), origin.height(), 1);
+                          origin.width(), 0, 1);
     m_inverseTransform = m_transform.inverted();
 }
 

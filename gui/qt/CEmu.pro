@@ -78,6 +78,7 @@ SOURCES +=  utils.cpp \
     lcdwidget.cpp \
     emuthread.cpp \
     datawidget.cpp \
+    dockwidget.cpp \
     lcdpopout.cpp \
     searchwidget.cpp \
     basiccodeviewerwindow.cpp \
@@ -130,6 +131,7 @@ HEADERS  +=  utils.h \
     lcdwidget.h \
     emuthread.h \
     datawidget.h \
+    dockwidget.h \
     lcdpopout.h \
     searchwidget.h \
     basiccodeviewerwindow.h \
