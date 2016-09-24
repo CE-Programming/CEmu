@@ -3,6 +3,7 @@
 #include <QString>
 struct CEmuOpts{
     bool restoreOnOpen;
+    bool useUnthrottled;
     bool suppressTestDialog;
     QString RomFile;
     QString AutotesterFile;

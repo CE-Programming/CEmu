@@ -11,6 +11,11 @@ int main(int argc, char *argv[]) {
     parser.addHelpOption();
     parser.addVersionOption();
 
+    // Disable emulation speed throttling
+    QCommandLineOption unthrottledOption(QStringList() << "u" << "unthrottled",
+                QCoreApplication::translate("main", "Disable emulation speed throttling."));
+    parser.addOption(unthrottledOption);
+
     // Disable loading a saved state and disables saving to one on application Close
     QCommandLineOption stateOption(QStringList() << "s" << "no-state",
                 QCoreApplication::translate("main", "Do not load state from disk."));
@@ -35,7 +40,8 @@ int main(int argc, char *argv[]) {
 
     // Take commandline args and move to CEmuOpts struct
     CEmuOpts opts;
-    opts.restoreOnOpen = parser.isSet(stateOption)?false:true;
+    opts.restoreOnOpen = parser.isSet(stateOption) ? false : true;
+    opts.useUnthrottled = parser.isSet(unthrottledOption);
     opts.suppressTestDialog = parser.isSet(suppressTestDialog);
     if (parser.isSet(loadTestFile)){
         opts.AutotesterFile =  QDir::currentPath() + "/" +parser.value(loadTestFile);
