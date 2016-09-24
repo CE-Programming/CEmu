@@ -12,7 +12,13 @@ class NumKey : public RectKey {
                   config.numColor, config.blackColor, labelText, secondText, alphaText} { }
 public:
     NumKey(KeyConfig &config, int right)
-        : NumKey{config, QStringLiteral("."), QStringLiteral("i"), QStringLiteral(":"),
+        : NumKey{config,
+             #ifdef Q_OS_MACX
+                 QStringLiteral(" ."),
+             #else
+                 QStringLiteral("."),
+             #endif
+                 QStringLiteral("i"), QStringLiteral(":"),
                  right, 0, 4} {
         m_secondFont.setStyle(QFont::StyleItalic);
     }
