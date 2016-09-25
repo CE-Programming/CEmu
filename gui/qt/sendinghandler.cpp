@@ -32,9 +32,10 @@ void SendingHandler::dropOccured(QDropEvent *e, unsigned location) {
     sendFiles(files, location);
 }
 
-void SendingHandler::dragOccured(QDragEnterEvent *e) {
+bool SendingHandler::dragOccured(QDragEnterEvent *e) {
     if (e->mimeData()->hasUrls() == false) {
-        return e->ignore();
+        e->ignore();
+        return false;
     }
 
     for(QUrl &url : e->mimeData()->urls()) {
@@ -55,11 +56,14 @@ void SendingHandler::dragOccured(QDragEnterEvent *e) {
                                                     QStringLiteral("8ci") };
 
         QFileInfo file(url.fileName());
-        if(!valid_suffixes.contains(file.suffix().toLower()))
-            return e->ignore();
+        if(!valid_suffixes.contains(file.suffix().toLower())) {
+            e->ignore();
+            return false;
+        }
     }
 
     e->accept();
+    return true;
 }
 
 void SendingHandler::sendFiles(QStringList fileNames, unsigned location) {

@@ -47,13 +47,12 @@ void LCDWidget::setLCD(lcd_state_t *lcdS) {
 }
 
 void LCDWidget::dropEvent(QDropEvent *e) {
-    in_drag = false;
     sending_handler.dropOccured(e, (e->pos().x() < this->width()/2) ? LINK_ARCH : LINK_RAM);
+    in_drag = false;
 }
 
 void LCDWidget::dragEnterEvent(QDragEnterEvent *e) {
-    in_drag = true;
-    sending_handler.dragOccured(e);
+    in_drag = sending_handler.dragOccured(e);
 }
 
 void LCDWidget::dragLeaveEvent(QDragLeaveEvent *e) {
