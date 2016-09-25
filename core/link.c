@@ -84,11 +84,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned locati
     uint32_t save_cycles,
              save_next;
 
-    uint8_t var_size_low,
-            var_size_high,
-            data_size_low,
-            data_size_high,
-            var_type,
+    uint8_t var_type,
             var_arc;
 
     uint8_t *run_asm_safe = phys_mem_ptr(safe_ram_loc, 8400),
@@ -123,9 +119,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned locati
     if (memcmp(tmp_buf, header_data, h_size))             goto r_err;
 
     if (fseek(file, 0x35, 0))                             goto r_err;
-    if (fread(&data_size_low, 1, 1, file) != 1)           goto r_err;
-    if (fread(&data_size_high, 1, 1, file) != 1)          goto r_err;
-    data_size = ((uint16_t)data_size_high << 8u) | (uint16_t)data_size_low;
+    if (fread(&data_size, 2, 1, file) != 1)               goto r_err;
 
     /* parse each varaible individually until the entire file is compelete. */
 
@@ -138,8 +132,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned locati
 
     do {
         if (fseek(file, var_offset + 2, 0))                  goto r_err;
-        if (fread(&var_size_low, 1, 1, file) != 1)           goto r_err;
-        if (fread(&var_size_high, 1, 1, file) != 1)          goto r_err;
+        if (fread(&var_size, 2, 1, file) != 1)               goto r_err;
 
         if (fseek(file, var_offset + 4, 0))                  goto r_err;
         if (fread(&var_type, 1, 1, file) != 1)               goto r_err;
@@ -152,13 +145,9 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned locati
 
         cpu.halted = cpu.IEF_wait = 0;
         mem_poke_byte(0xD008DF,0);
-        run_asm_safe[0] = 0x21;
-        run_asm_safe[1] = var_size_low;
-        run_asm_safe[2] = var_size_high;
-        run_asm_safe[3] = 0x00;
-        run_asm_safe[4] = 0x3E;
-        run_asm_safe[5] = var_type;
-        memcpy(&run_asm_safe[6], pgrm_loader, sizeof(pgrm_loader));
+        cpu.registers.HL = var_size - 2;
+        cpu.registers.A = var_type;
+        memcpy(run_asm_safe, pgrm_loader, sizeof(pgrm_loader));
         cpu_flush(safe_ram_loc, 1);
         cpu.cycles = 0;
         cpu.next = 23000000;
@@ -169,7 +158,6 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned locati
             goto r_err;
         }
 
-        var_size = ((uint16_t)var_size_high << 8u) | (uint16_t)var_size_low;
         var_ptr = phys_mem_ptr(mem_peek_long(safe_ram_loc), var_size);
 
         if (fseek(file, 0x48, 0))                           goto r_err;
