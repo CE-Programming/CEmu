@@ -32,7 +32,7 @@ bool DockWidget::event(QEvent *event) {
 
 void DockWidget::titleStateChanged(bool visible) {
     visible |= isWindow();
-    if (visible ^ (titleBarWidget() == Q_NULLPTR)) {
+    if ((visible) ^ (titleBarWidget() == Q_NULLPTR)) {
         if (!visible) {
             m_title_height = widget()->y();
         }

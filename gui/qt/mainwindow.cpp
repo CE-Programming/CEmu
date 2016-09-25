@@ -43,8 +43,7 @@
 
 static const constexpr int WindowStateVersion = 0;
 
-MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) :QMainWindow(p), ui(new Ui::MainWindow) {
-    opts = cliOpts;
+MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow), opts(cliOpts) {
 
     // Setup the UI1
     ui->setupUi(this);
@@ -974,7 +973,6 @@ void MainWindow::variableClicked(QTableWidgetItem *item) {
 }
 
 void MainWindow::refreshVariableList() {
-    int currentRow;
     calc_var_t var;
 
     while(ui->emuVarView->rowCount() > 0) {
@@ -1004,6 +1002,8 @@ void MainWindow::refreshVariableList() {
         vars.clear();
         while (vat_search_next(&var)) {
             if (var.size > 2) {
+                int currentRow;
+
                 vars.append(var);
                 currentRow = ui->emuVarView->rowCount();
                 ui->emuVarView->setRowCount(currentRow + 1);
@@ -1059,7 +1059,6 @@ void MainWindow::refreshVariableList() {
 }
 
 void MainWindow::saveSelected() {
-    uint8_t i;
     constexpr const char* var_extension[] = {
         "8xn",  // 00
         "8xl",
@@ -1117,7 +1116,7 @@ void MainWindow::saveSelected() {
         QMessageBox::warning(this, tr("No transfer to do"), tr("Select at least one file to transfer"));
     } else {
         if (selectedVars.size() == 1) {
-            i = selectedVars.at(0).type1;
+            uint8_t i = selectedVars.at(0).type1;
             fileNames = showVariableFileDialog(QFileDialog::AcceptSave, "TI "+QString(calc_var_type_names[i])+" (*."+var_extension[i]+");;All Files (*.*)");
         } else {
             fileNames = showVariableFileDialog(QFileDialog::AcceptSave, tr("TI Group (*.8cg);;All Files (*.*)"));
@@ -1157,8 +1156,12 @@ int MainWindow::openJSONConfig(const QString& jsonPath) {
 
     if (ifs.good())
     {
+        int ok = chdir(QDir::toNativeSeparators(QFileInfo(jsonPath).absoluteDir().path()).toStdString().c_str());
         ui->buttonReloadJSONconfig->setEnabled(true);
-        chdir(QDir::toNativeSeparators(QFileInfo(jsonPath).absoluteDir().path()).toStdString().c_str());
+        if (ok != 0) {
+            QMessageBox::warning(this, tr("Internal Autotester error"), tr("Couldn't go to where the JSON file is."));
+            return 0;
+        }
         std::getline(ifs, jsonContents, '\0');
         if (!ifs.eof()) {
             QMessageBox::warning(this, tr("File error"), tr("Couldn't read JSON file."));
@@ -1693,15 +1696,14 @@ void MainWindow::updateTIOSView() {
     QString calcData,calcData2;
     QString opType;
     uint8_t gotData[11];
-    uint8_t index;
 
     ui->opView->clear();
     ui->vatView->clear();
 
     for(uint32_t i = 0xD005F8; i<0xD005F8+11*6; i+=11) {
+        uint8_t index = 0;
         calcData.clear();
         opType.clear();
-        index = 0;
         for(uint32_t j = i; j < i+11; j++) {
             gotData[index] = mem_peek_byte(j);
             calcData += int2hex(gotData[index], 2)+" ";

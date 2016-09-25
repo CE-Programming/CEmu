@@ -34,7 +34,6 @@ private:
     unsigned curr_color = KEYPAD_BLACK;
     static const size_t s_rows{8}, s_cols{8};
     static const QRect s_baseRect;
-    bool m_type;
     KeyConfig m_config;
     QLinearGradient m_background;
     QTransform m_transform, m_inverseTransform;

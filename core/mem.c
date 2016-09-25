@@ -478,10 +478,11 @@ void mem_write_cpu(uint32_t address, uint8_t value) {
 }
 
 uint8_t mem_peek_byte(uint32_t address) {
-    uint8_t *ptr, value = 0;
+    uint8_t value = 0;
     uint32_t select;
     address &= 0xFFFFFF;
     if (address < 0xE00000) {
+        uint8_t *ptr;
         if ((ptr = phys_mem_ptr(address, 1))) {
             value = *ptr;
         }
@@ -508,10 +509,10 @@ uint32_t mem_peek_word(uint32_t address, bool mode) {
 }
 
 void mem_poke_byte(uint32_t address, uint8_t value) {
-    uint8_t *ptr;
     uint32_t select;
     address &= 0xFFFFFF;
     if (address < 0xE00000) {
+        uint8_t *ptr;
         if ((ptr = phys_mem_ptr(address, 1))) {
             *ptr = value;
         }

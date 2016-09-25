@@ -26,7 +26,6 @@ unsigned KeypadWidget::getCurrColor(void) {
 }
 
 void KeypadWidget::setType(bool is83, unsigned color_scheme) {
-    m_type = is83;
     QColor c_center;
     QColor c_sides;
     QColor c_num, c_text, c_other, c_graph;

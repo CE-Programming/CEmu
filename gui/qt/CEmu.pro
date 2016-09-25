@@ -36,7 +36,7 @@ CONFIG(release, debug|release) {
 
 # GCC/clang flags
 if (!win32-msvc*) {
-    GLOBAL_FLAGS    += -g3 -W -Wall -Wno-unused-parameter -Werror=write-strings -Werror=redundant-decls -Werror=shadow -Werror=format -Werror=format-security -Werror=declaration-after-statement -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -Winit-self
+    GLOBAL_FLAGS    += -g3 -W -Wall -Wno-unused-parameter -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=declaration-after-statement -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -Winit-self
     GLOBAL_FLAGS    += -ffunction-sections -fdata-sections -fno-strict-overflow
     QMAKE_CFLAGS    += -std=gnu11
     QMAKE_CXXFLAGS  += -fno-exceptions

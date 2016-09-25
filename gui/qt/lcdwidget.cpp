@@ -56,5 +56,6 @@ void LCDWidget::dragEnterEvent(QDragEnterEvent *e) {
 }
 
 void LCDWidget::dragLeaveEvent(QDragLeaveEvent *e) {
+    (void)e;
     in_drag = false;
 }
