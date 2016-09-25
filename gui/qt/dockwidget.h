@@ -11,7 +11,7 @@ class DockWidget : public QDockWidget {
   Q_OBJECT
 
 public:
-  DockWidget(QWidget *parent = Q_NULLPTR);
+  explicit DockWidget(QWidget *parent = Q_NULLPTR);
   DockWidget(QTabWidget *tabs, QWidget *parent = Q_NULLPTR);
   DockWidget(const QString &title, QWidget *parent = Q_NULLPTR);
 

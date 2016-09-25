@@ -707,7 +707,7 @@ void GifWriteLzwImage(FILE* f, uint8_t* image, uint32_t left, uint32_t top,  uin
 
     fputc(minCodeSize, f); // min code size 8 bits
 
-    GifLzwNode* codetree = (GifLzwNode*)GIF_TEMP_MALLOC(sizeof(GifLzwNode)*4096);
+    GifLzwNode* codetree = static_cast<GifLzwNode*>(GIF_TEMP_MALLOC(sizeof(GifLzwNode)*4096));
 
     memset(codetree, 0, sizeof(GifLzwNode)*4096);
     int32_t curCode = -1;

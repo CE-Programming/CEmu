@@ -14,7 +14,7 @@ extern QTimer speedUpdateTimer;
 class EmuThread : public QThread {
     Q_OBJECT
 public:
-    explicit EmuThread(QObject *p = 0);
+    explicit EmuThread(QObject *p = Q_NULLPTR);
 
     void doStuff();
     void throttleTimerWait();

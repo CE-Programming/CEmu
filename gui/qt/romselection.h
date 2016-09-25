@@ -12,7 +12,7 @@ class RomSelection : public QDialog {
     Q_OBJECT
 
 public:
-    explicit RomSelection(QWidget *parent = 0);
+    explicit RomSelection(QWidget *parent = Q_NULLPTR);
     ~RomSelection();
     std::string getROMImage();
 

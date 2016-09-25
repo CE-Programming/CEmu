@@ -23,7 +23,7 @@ class QHexEdit : public QAbstractScrollArea {
 
 public:
 
-    QHexEdit(QWidget *parent=0);
+    explicit QHexEdit(QWidget *parent = Q_NULLPTR);
 
     bool setData(QIODevice &iODevice);
     QByteArray dataAt(qint64 pos, qint64 count=-1);

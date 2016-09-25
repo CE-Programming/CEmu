@@ -7,10 +7,9 @@
 interrupt_state_t intrpt;
 
 static void update() {
-    uint32_t status;
     size_t request;
     for (request = 0; request < sizeof(intrpt.request) / sizeof(*intrpt.request); request++) {
-        status = intrpt.status ^ intrpt.request[request].inverted;
+        uint32_t status = intrpt.status ^ intrpt.request[request].inverted;
         intrpt.request[request].status = (status & ~intrpt.request[request].latched) |
             ((intrpt.request[request].status | status) & intrpt.request[request].latched);
     }

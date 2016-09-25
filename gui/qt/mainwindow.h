@@ -18,16 +18,14 @@
 #include "../../core/debug/disasm.h"
 #include "qhexedit/qhexedit.h"
 
-namespace Ui {
-    class MainWindow;
-}
+namespace Ui { class MainWindow; }
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
 
-    explicit MainWindow(CEmuOpts opts,QWidget *p = 0);
+    explicit MainWindow(CEmuOpts opts,QWidget *p = Q_NULLPTR);
     ~MainWindow();
 
 public slots:

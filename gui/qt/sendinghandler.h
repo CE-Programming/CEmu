@@ -7,7 +7,7 @@
 
 class SendingHandler {
 public:
-    SendingHandler();
+    explicit SendingHandler();
     void sendFiles(QStringList fileNames, unsigned location);
     bool dragOccured(QDragEnterEvent *e);
     void dropOccured(QDropEvent *e, unsigned location);

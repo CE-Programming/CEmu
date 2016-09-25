@@ -172,7 +172,7 @@ static std::string disasm_read_reg(int i) {
     return value;
 }
 
-static void disasm_write_reg(int i, std::string value) {
+static void disasm_write_reg(int i, std::string const& value) {
     disasm.instruction.arguments = disasm_read_reg(i)+disasm.spacing_string+value;
 }
 
@@ -186,7 +186,7 @@ static void disasm_read_write_reg(uint8_t read, uint8_t write) {
     disasm.instruction.opcode = "ld";
 }
 
-static std::string disasm_read_reg_prefetched(int i, std::string address) {
+static std::string disasm_read_reg_prefetched(int i, std::string const& address) {
     std::string value;
     switch (i) {
         case 0: value = "b"; break;
@@ -202,7 +202,7 @@ static std::string disasm_read_reg_prefetched(int i, std::string address) {
     return value;
 }
 
-static void disasm_write_reg_prefetched(int i, std::string address, std::string value) {
+static void disasm_write_reg_prefetched(int i, std::string const& address, std::string const& value) {
     disasm.instruction.arguments = disasm_read_reg_prefetched(i, address)+disasm.spacing_string+value;
 }
 
@@ -372,7 +372,6 @@ static void disasm_bli(int y, int z) {
 }
 
 void disassembleInstruction(void) {
-    std::string tmpstr;
     std::string old;
     std::string w;
 

@@ -3003,8 +3003,6 @@ void MainWindow::addEquateFileDialog() {
 
     if (!good) { return; }
 
-    std::string current;
-    std::ifstream in;
     addEquateFile(dialog.selectedFiles().first());
 }
 

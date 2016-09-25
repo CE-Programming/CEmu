@@ -12,7 +12,7 @@ class KeypadWidget : public QWidget {
     Q_OBJECT
 
 public:
-    KeypadWidget(QWidget *parent = nullptr) : QWidget{parent}, m_keys{} { }
+    explicit KeypadWidget(QWidget *parent = Q_NULLPTR) : QWidget{parent}, m_keys{} { }
     virtual ~KeypadWidget();
 
     void setType(bool, unsigned);

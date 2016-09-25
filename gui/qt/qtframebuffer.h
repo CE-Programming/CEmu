@@ -7,7 +7,7 @@
 
 class QtFramebuffer : public QWidget {
 public:
-    QtFramebuffer(QWidget *parent = 0);
+    explicit QtFramebuffer(QWidget *parent = Q_NULLPTR);
     virtual void paintEvent(QPaintEvent *) Q_DECL_OVERRIDE;
 };
 

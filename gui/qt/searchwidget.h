@@ -3,16 +3,13 @@
 
 #include <QDialog>
 
-namespace Ui {
-class searchwidget;
-}
+namespace Ui { class searchwidget; }
 
-class SearchWidget : public QDialog
-{
+class SearchWidget : public QDialog {
     Q_OBJECT
 
 public:
-    explicit SearchWidget(QWidget *p = 0);
+    explicit SearchWidget(QWidget *p = Q_NULLPTR);
     ~SearchWidget();
 
     void setSearchString(QString);

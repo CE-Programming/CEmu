@@ -14,7 +14,7 @@ class QtKeypadBridge : public QObject {
     Q_OBJECT
 
 public:
-    QtKeypadBridge(QObject *parent = nullptr) : QObject(parent) {}
+    explicit QtKeypadBridge(QObject *parent = Q_NULLPTR) : QObject(parent) {}
 
     bool setKeymap(const QString & keymapstr);
     void keyEvent(QKeyEvent *event, bool press);

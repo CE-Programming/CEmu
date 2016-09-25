@@ -641,7 +641,6 @@ static void cpu_execute_rot_acc(int y)
             r->flags.N = r->flags.H = 0;
             break;
         case 4: // DAA
-            old = r->A;
             cpu_execute_daa();
             break;
         case 5: // CPL

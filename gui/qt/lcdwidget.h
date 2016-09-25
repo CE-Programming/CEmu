@@ -11,7 +11,7 @@ class LCDWidget : public QWidget
 {
   Q_OBJECT
   public:
-      LCDWidget(QWidget *p = 0);
+      explicit LCDWidget(QWidget *p = Q_NULLPTR);
       ~LCDWidget();
       void refreshRate(int newrate);
       void setLCD(lcd_state_t*);

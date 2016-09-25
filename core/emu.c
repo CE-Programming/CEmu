@@ -140,9 +140,7 @@ bool emu_start(const char *romImage, const char *savedImage) {
                 break;
             }
             free(image);
-            if(imageFile) {
-                fclose(imageFile);
-            }
+            fclose(imageFile);
             ret = true;
         } else {
             asic_init();

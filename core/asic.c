@@ -24,11 +24,13 @@
 /* Global ASIC state */
 asic_state_t asic;
 
-void (*reset_procs[20])(void);
+#define MAX_RESET_PROCS 20
+
+void (*reset_procs[MAX_RESET_PROCS])(void);
 unsigned int reset_proc_count;
 
 static void add_reset_proc(void (*proc)(void)) {
-    if (reset_proc_count == sizeof(reset_procs)/sizeof(*reset_procs)) {
+    if (reset_proc_count == MAX_RESET_PROCS) {
         abort();
     }
     reset_procs[reset_proc_count++] = proc;
@@ -107,7 +109,7 @@ ti_device_t get_device_type(void) {
 }
 
 bool calc_is_off(void) {
-    return control.ports[0] & 0x40 ? true : false;
+    return (control.ports[0] & 0x40) ? true : false;
 }
 
 uint32_t set_cpu_clock_rate(uint32_t new_rate) {
