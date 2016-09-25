@@ -18,11 +18,11 @@ static uint8_t usb_read(uint16_t pio, bool peek) {
 }
 
 static void usb_write(uint16_t pio, uint8_t byte, bool poke) {
-    uint8_t index = (pio >> 2) & 0xFF;
+    uint8_t index = pio >> 2;
     uint8_t bit_offset = (pio & 3) << 3;
     (void)poke;
     switch (index) {
-        case 0x04: // USBCMD - USB Command Register
+        case 0x010 >> 2: // USBCMD - USB Command Register
             write8(usb.regs.hcor.data[0], bit_offset, byte &   0xFF0BFF >> bit_offset); // W mask (V or RO)
             usb.regs.hcor.data[1] = usb.regs.hcor.data[1] & ~0xD000;
             usb.regs.hcor.data[1] |= ~usb.regs.hcor.data[0] << 12 & 0x1000;
@@ -31,127 +31,129 @@ static void usb_write(uint16_t pio, uint8_t byte, bool poke) {
                 usb_reset();
             }
             break;
-        case 0x05: // USBSTS - USB Status Register
+        case 0x014 >> 2: // USBSTS - USB Status Register
             usb.regs.hcor.data[1] &= ~((uint32_t)byte << bit_offset & 0x3F);           // WC mask (V or RO)
             break;
-        case 0x06: // USBINTR - USB Interrupt Enable Register
+        case 0x018 >> 2: // USBINTR - USB Interrupt Enable Register
             write8(usb.regs.hcor.data[2], bit_offset, byte &       0x3F >> bit_offset); // W mask (V)
             break;
-        case 0x07: // FRINDEX - Frame Index Register
+        case 0x01C >> 2: // FRINDEX - Frame Index Register
             write8(usb.regs.hcor.data[3], bit_offset, byte &     0x3FFF >> bit_offset); // W mask (V)
             break;
-        case 0x09: // PERIODICLISTBASE - Periodic Frame List Base Address Register
+        case 0x024 >> 2: // PERIODICLISTBASE - Periodic Frame List Base Address Register
             write8(usb.regs.hcor.data[5], bit_offset, byte &     ~0xFFF >> bit_offset); // V mask (W)
             break;
-        case 0x0A: // ASYNCLISTADDR - Current Asynchronous List Address Register
+        case 0x028 >> 2: // ASYNCLISTADDR - Current Asynchronous List Address Register
             write8(usb.regs.hcor.data[6], bit_offset, byte &      ~0x1F >> bit_offset); // V mask (W)
             break;
-        case 0x0C: // PORTSC - Port Status and Control Register
+        case 0x030 >> 2: // PORTSC - Port Status and Control Register
             usb.regs.hcor.data[8] &= ~((uint32_t)byte << bit_offset & 0x2A);           // WC mask (V or RO or W)
             write8(usb.regs.hcor.data[8], bit_offset, byte &   0x1F0000 >> bit_offset); // W mask (RO)
             break;
-        case 0x10: // Miscellaneous Register
+        case 0x040 >> 2: // Miscellaneous Register
             write8(usb.regs.miscr,        bit_offset, byte &      0xFFF >> bit_offset); // W mask (V)
             break;
-        case 0x11: // unknown
+        case 0x044 >> 2: // unknown
             write8(usb.regs.rsvd2[0],     bit_offset, byte &     0x7FFF >> bit_offset); // W mask (V)
             break;
-        case 0x12: // unknown
+        case 0x048 >> 2: // unknown
             write8(usb.regs.rsvd2[1],     bit_offset, byte &      0xFFF >> bit_offset); // W mask (V)
             break;
-        case 0x20: // OTG Control Status Register
+        case 0x080 >> 2: // OTG Control Status Register
             write8(usb.regs.otgcsr,       bit_offset, byte & 0x1A00FFF7 >> bit_offset); // W mask (V)
             break;
-        case 0x21: // OTG Interrupt Status Register
+        case 0x084 >> 2: // OTG Interrupt Status Register
             usb.regs.otgisr &= ~((uint32_t)byte << bit_offset & 0x1F71);               // WC mask (V)
             break;
-        case 0x22: // OTG Interrupt Enable Register
+        case 0x088 >> 2: // OTG Interrupt Enable Register
             write8(usb.regs.otgier,       bit_offset, byte &     0x1F71 >> bit_offset); // W mask (V)
             break;
-        case 0x30: // Global Interrupt Status Register
+        case 0x0C0 >> 2: // Global Interrupt Status Register
             usb.regs.isr &= ~((uint32_t)byte << bit_offset & 0xF);                     // WC mask (V)
             break;
-        case 0x31: // Global Interrupt Mask Register
+        case 0x0C4 >> 2: // Global Interrupt Mask Register
             write8(usb.regs.imr,          bit_offset, byte &        0xF >> bit_offset); // W mask (V)
             break;
-        case 0x40: // Device Control Register
+        case 0x100 >> 2: // Device Control Register
             write8(usb.regs.dev_ctrl,     bit_offset, byte &      0x2AF >> bit_offset); // W mask (V or RO)
             break;
-        case 0x41: // Device Address Register
+        case 0x104 >> 2: // Device Address Register
             write8(usb.regs.dev_addr,     bit_offset, byte &       0xFF >> bit_offset); // W mask (V)
             break;
-        case 0x42: // Device Test Register
+        case 0x108 >> 2: // Device Test Register
             write8(usb.regs.dev_test,     bit_offset, byte &       0x7A >> bit_offset); // W mask (V)
             break;
-        case 0x44: // SOF Mask Timer Register
+        case 0x110 >> 2: // SOF Mask Timer Register
             write8(usb.regs.sof_mtr,      bit_offset, byte &     0xFFFF >> bit_offset); // W mask (V)
             break;
-        case 0x45: // PHY Test Mode Selector Register
+        case 0x114 >> 2: // PHY Test Mode Selector Register
             write8(usb.regs.phy_tmsr,     bit_offset, byte &       0x1F >> bit_offset); // W mask (V)
             break;
-        case 0x46: // unknown
+        case 0x118 >> 2: // unknown
             write8(usb.regs.rsvd5[0],     bit_offset, byte &       0x3F >> bit_offset); // W mask (V)
             break;
-        case 0x48: // CX FIFO Register
+        case 0x120 >> 2: // CX FIFO Register
             write8(usb.regs.cxfifo,       bit_offset, byte &        0x7 >> bit_offset); // W mask (V or RO)
             break;
-        case 0x49: // IDLE Counter Register
+        case 0x124 >> 2: // IDLE Counter Register
             write8(usb.regs.idle,         bit_offset, byte &        0x7 >> bit_offset); // W mask (V)
             break;
-        case 0x4C: // Group Interrupt Mask Register
+        case 0x130 >> 2: // Group Interrupt Mask Register
             write8(usb.regs.gimr,         bit_offset, byte &        0x7 >> bit_offset); // W mask (V)
             break;
-        case 0x4D: // Group Interrupt Mask Register 0
+        case 0x134 >> 2: // Group Interrupt Mask Register 0
             write8(usb.regs.gimr0,        bit_offset, byte &       0x3F >> bit_offset); // W mask (V)
             break;
-        case 0x4E: // Group Interrupt Mask Register 1
+        case 0x138 >> 2: // Group Interrupt Mask Register 1
             write8(usb.regs.gimr1,        bit_offset, byte &    0xF00FF >> bit_offset); // W mask (V)
             break;
-        case 0x4F: // Group Interrupt Mask Register 2
+        case 0x13C >> 2: // Group Interrupt Mask Register 2
             write8(usb.regs.gimr2,        bit_offset, byte &      0x7FF >> bit_offset); // W mask (V)
             break;
-        case 0x50: // Group Interrupt Status Register
+        case 0x140 >> 2: // Group Interrupt Status Register
             usb.regs.gisr &= ~((uint32_t)byte << bit_offset & 0x7);                    // WC mask (V)
             break;
-        case 0x51: // Group Interrupt Status Register 0
+        case 0x144 >> 2: // Group Interrupt Status Register 0
             usb.regs.gisr0 &= ~((uint32_t)byte << bit_offset & 0x3F);                  // WC mask (V)
             break;
-        case 0x52: // Group Interrupt Status Register 1
+        case 0x148 >> 2: // Group Interrupt Status Register 1
             usb.regs.gisr1 &= ~((uint32_t)byte << bit_offset & 0xF00FF);               // WC mask (V)
             break;
-        case 0x53: // Group Interrupt Status Register 2
+        case 0x14C >> 2: // Group Interrupt Status Register 2
             usb.regs.gisr2 &= ~((uint32_t)byte << bit_offset & 0x7FF & ~0x600);        // WC mask (V) [const mask]
             break;
-        case 0x54: // Receive Zero-Length-Packet Register
+        case 0x150 >> 2: // Receive Zero-Length-Packet Register
             write8(usb.regs.rxzlp,        bit_offset, byte &       0xFF >> bit_offset); // W mask (V)
             break;
-        case 0x55: // Transfer Zero-Length-Packet Register
+        case 0x154 >> 2: // Transfer Zero-Length-Packet Register
             write8(usb.regs.txzlp,        bit_offset, byte &       0xFF >> bit_offset); // W mask (V)
             break;
-        case 0x56: // ISOC Error/Abort Status Register
+        case 0x158 >> 2: // ISOC Error/Abort Status Register
             write8(usb.regs.isoeasr,      bit_offset, byte &   0xFF00FF >> bit_offset); // W mask (V)
             break;
-        case 0x58: case 0x59: case 0x5A: case 0x5B:
-        case 0x5C: case 0x5D: case 0x5E: case 0x5F: // IN Endpoint Register
+        case 0x160 >> 2: case 0x164 >> 2: case 0x168 >> 2: case 0x16C >> 2:
+        case 0x170 >> 2: case 0x174 >> 2: case 0x178 >> 2: case 0x17C >> 2: // IN Endpoint Register
             write8(usb.regs.iep[index&7], bit_offset, byte &     0xFFFF >> bit_offset); // W mask (V)
-        case 0x60: case 0x61: case 0x62: case 0x63:
-        case 0x64: case 0x65: case 0x66: case 0x67: // OUT Endpoint Register
+        case 0x180 >> 2: case 0x184 >> 2: case 0x188 >> 2: case 0x18C >> 2:
+        case 0x190 >> 2: case 0x194 >> 2: case 0x198 >> 2: case 0x19C >> 2: // OUT Endpoint Register
             write8(usb.regs.oep[index&7], bit_offset, byte &     0x1FFF >> bit_offset); // W mask (V)
             break;
-        case 0x68: // Endpoint Map Register (EP1 ~ 4)
-        case 0x69: // Endpoint Map Register (EP5 ~ 8)
-        case 0x6F: // DMA Address Register
-            ((uint8_t *)&usb.regs)[pio & 0x1FF] = byte;                                 // W
+        case 0x1A0 >> 2: case 0x1A4 >> 2: // Endpoint Map Register
+        case 0x1CC >> 2: // DMA Address Register
+            ((uint8_t *)&usb.regs)[pio] = byte;                                         // W
             break;
-        case 0x6A: // FIFO Map Register
-        case 0x6B: // FIFO Configuration Register
-            ((uint8_t *)&usb.regs)[pio & 0x1FF] = byte & 0x3F;                          // W mask (V)
+        case 0x1A8 >> 2: // FIFO Map Register
+        case 0x1AC >> 2: // FIFO Configuration Register
+            ((uint8_t *)&usb.regs)[pio] = byte & 0x3F;                                  // W mask (V)
             break;
-        case 0x6C: // DMA Target FIFO Register
+        case 0x1C0 >> 2: // DMA Target FIFO Register
             write8(usb.regs.dma_fifo,     bit_offset, byte &       0x1F >> bit_offset); // W mask (V)
             break;
-        case 0x6E: // DMA Control Register
+        case 0x1C8 >> 2: // DMA Control Register
             write8(usb.regs.dma_ctrl,     bit_offset, byte & 0x81FFFF17 >> bit_offset); // W mask (V)
+            break;
+        case 0x1D0 >> 2: // EP0 Setup Packet PIO Register
+            write8(usb.regs.ep0_data,     bit_offset, byte &    0x10900 >> bit_offset); // W mask (V)
             break;
     }
 }
