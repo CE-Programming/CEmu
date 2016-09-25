@@ -77,6 +77,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned locati
     const size_t h_size = sizeof(header_data);
     const size_t op_size = 0x09;
     const uint16_t data_start = 0x37;
+    const uint8_t tVarLst = 0x5D, tAns = 0x72;
 
     FILE *file;
     uint8_t tmp_buf[0x80];
@@ -142,6 +143,14 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned locati
 
         if (fseek(file, var_offset + 4, 0))                  goto r_err;
         if (fread(op1, 1, op_size, file) != op_size)         goto r_err;
+
+        // Hack for TI Connect CE bug
+        if ((op1[0] & ~(CALC_VAR_TYPE_REAL_LIST ^ CALC_VAR_TYPE_CPLX_LIST)) ==
+                       (CALC_VAR_TYPE_REAL_LIST & CALC_VAR_TYPE_CPLX_LIST) &&
+            op1[1] != tVarLst && op1[1] != tAns) {
+            memmove(&op1[2], &op1[1], 6);
+            op1[1] = tVarLst;
+        }
 
         cpu.halted = cpu.IEF_wait = 0;
         mem_poke_byte(0xD008DF,0);
