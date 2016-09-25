@@ -36,13 +36,15 @@ CONFIG(release, debug|release) {
 
 # GCC/clang flags
 if (!win32-msvc*) {
-    GLOBAL_FLAGS    += -g3 -W -Wall -Wno-unused-parameter -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=declaration-after-statement -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -Winit-self
+    GLOBAL_FLAGS    += -g3 -W -Wall -Wno-unused-parameter -Werror=write-strings -Werror=redundant-decls -Werror=shadow -Werror=format -Werror=format-security -Werror=declaration-after-statement -Werror=implicit-function-declaration -Werror=date-time -Werror=missing-prototypes -Werror=return-type -Werror=pointer-arith -Winit-self
     GLOBAL_FLAGS    += -ffunction-sections -fdata-sections -fno-strict-overflow
     QMAKE_CFLAGS    += -std=gnu11
     QMAKE_CXXFLAGS  += -fno-exceptions
     isEmpty(CI) {
-        # Only enable opts and LTO for non-CI release builds
-        CONFIG(release, debug|release): GLOBAL_FLAGS += -O3 -flto
+        # Only enable opts for non-CI release builds
+        CONFIG(release, debug|release): GLOBAL_FLAGS += -O3
+        # -flto causes an internal compiler error on GCC... But is there a check for clang instead of just macx?
+        macx: GLOBAL_FLAGS += -flto
     }
 } else {
     # TODO: add equivalent flags
@@ -52,7 +54,9 @@ if (!win32-msvc*) {
 }
 
 if (macx|linux) {
+    # Be more secure by default...
     GLOBAL_FLAGS    += -fPIE -Wstack-protector -fstack-protector-strong --param=ssp-buffer-size=1
+    # Use ASAN on debug builds
     CONFIG(debug, debug|release): GLOBAL_FLAGS += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -O0
 }
 
