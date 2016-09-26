@@ -120,20 +120,18 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
     font.setStretch(QFont::SemiCondensed);
 #endif
 
-    m_config = {
-          .labelFont = font,
-         .secondFont = font,
-          .alphaFont = font,
-        .secondColor = QColor::fromRgb(0x93c3f3),
-         .alphaColor = QColor::fromRgb(0xa0ca1e),
-         .graphColor = c_graph,
-           .numColor = c_num,
-         .otherColor = c_other,
-         .blackColor = QColor::fromRgb(0x222222),
-         .whiteColor = QColor::fromRgb(0xeeeeee),
-          .textColor = c_text,
-                .key = {1, 0}
-    };
+    m_config.labelFont   = font,
+    m_config.secondFont  = font,
+    m_config.alphaFont   = font,
+    m_config.secondColor = QColor::fromRgb(0x93c3f3),
+    m_config.alphaColor  = QColor::fromRgb(0xa0ca1e),
+    m_config.graphColor  = c_graph,
+    m_config.numColor    = c_num,
+    m_config.otherColor  = c_other,
+    m_config.blackColor  = QColor::fromRgb(0x222222),
+    m_config.whiteColor  = QColor::fromRgb(0xeeeeee),
+    m_config.textColor   = c_text,
+    m_config.key         = {1, 0};
 
     if (is83) {
 #ifndef _WIN32
