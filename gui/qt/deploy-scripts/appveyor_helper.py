@@ -25,9 +25,11 @@ try:
     # Python 3
     from urllib.request import urlopen, Request
     from urllib.error import HTTPError, URLError
+    from http.client import HTTPException
 except ImportError:
     # Python 2
     from urllib2 import urlopen, Request, HTTPError, URLError
+    from httplib import HTTPException
 
 BINTRAY_SNAPSHOT_SERVER_PATH = "https://oss.jfrog.org/artifactory/oss-snapshot-local"
 BINTRAY_RELEASE_SERVER_PATH = "https://oss.jfrog.org/artifactory/oss-release-local"
@@ -74,6 +76,9 @@ def dlfile(url):
         except URLError:
             _, e, _ = sys.exc_info()
             print("         !! URL Error: %s (%s)", e.reason, url)
+        except HTTPException:
+            _, e, _ = sys.exc_info()
+            print("         !! HTTP Exception: %s (%s)", e.reason, url)
         
         # Increment attempts
         dl_attempts += 1
