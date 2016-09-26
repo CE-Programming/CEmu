@@ -86,7 +86,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned locati
              save_next,
              save_cycles_offset;
 
-    uint8_t var_type,
+    uint8_t var_ver,
             var_arc;
 
     uint8_t *run_asm_safe = phys_mem_ptr(safe_ram_loc, 8400),
@@ -95,8 +95,10 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned locati
             *var_ptr;
 
     uint16_t var_size,
+             var_size2,
              data_size,
-             var_offset = data_start;
+             var_offset = data_start,
+             header_size;
 
     /* Return if we are at an error menu */
     if (*cxCurApp == 0x52 || !(file = fopen_utf8(var_name,"rb"))) {
@@ -134,20 +136,22 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned locati
     cpu_execute();
 
     do {
-        if (fseek(file, var_offset + 2, 0))                  goto r_err;
+        if (fseek(file, var_offset, 0))                      goto r_err;
+        if (fread(&header_size, 2, 1, file) != 1)            goto r_err;
         if (fread(&var_size, 2, 1, file) != 1)               goto r_err;
-
-        if (fseek(file, var_offset + 4, 0))                  goto r_err;
-        if (fread(&var_type, 1, 1, file) != 1)               goto r_err;
-
-        if (fseek(file, var_offset + 14, 0))                 goto r_err;
-        if (fread(&var_arc, 1, 1, file) != 1)                goto r_err;
-
-        if (fseek(file, var_offset + 4, 0))                  goto r_err;
         if (fread(op1, 1, op_size, file) != op_size)         goto r_err;
+        if (header_size == 11) {
+            var_ver = var_arc = 0;
+        } else if (header_size == 13) {
+            if (fread(&var_ver, 1, 1, file) != 1)            goto r_err;
+            if (fread(&var_arc, 1, 1, file) != 1)            goto r_err;
+        } else                                               goto r_err;
+        if (fread(&var_size2, 2, 1, file) != 1)              goto r_err;
+        if (var_size != var_size2)                           goto r_err;
 
         // Hack for TI Connect CE bug
-        if (var_type == CALC_VAR_TYPE_CPLX_LIST && op1[1] != tVarLst && op1[1] != tAns) {
+        if ((*op1 == CALC_VAR_TYPE_REAL_LIST || *op1 == CALC_VAR_TYPE_CPLX_LIST) &&
+            !(op1[1] == tVarLst || op1[1] == tAns)) {
             memmove(&op1[2], &op1[1], 6);
             op1[1] = tVarLst;
         }
@@ -155,21 +159,20 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned locati
         cpu.halted = cpu.IEF_wait = 0;
         mem_poke_byte(0xD008DF,0);
         cpu.registers.HL = var_size - 2;
-        cpu.registers.A = var_type;
+        cpu.registers.A = *op1;
         memcpy(run_asm_safe, pgrm_loader, sizeof(pgrm_loader));
         cpu_flush(safe_ram_loc, 1);
         cpu.cycles = 0;
         cpu.next = 23000000;
         cpu_execute();
 
-        if(mem_peek_byte(0xD008DF)) {
+        if (mem_peek_byte(0xD008DF)) {
             gui_console_printf("[CEmu] Variable Transfer Error\n");
             goto r_err;
         }
 
         var_ptr = phys_mem_ptr(mem_peek_long(safe_ram_loc), var_size);
 
-        if (fseek(file, 0x48, 0))                           goto r_err;
         if (fread(var_ptr, 1, var_size, file) != var_size)  goto r_err;
 
         switch(location) {
