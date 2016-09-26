@@ -326,7 +326,7 @@
          <enum>Qt::ElideRight</enum>
         </property>
         <property name="sortingEnabled">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
         <attribute name="horizontalHeaderDefaultSectionSize">
          <number>100</number>
@@ -346,11 +346,8 @@
         <attribute name="verticalHeaderDefaultSectionSize">
          <number>21</number>
         </attribute>
-        <attribute name="verticalHeaderHighlightSections">
-         <bool>false</bool>
-        </attribute>
         <attribute name="verticalHeaderShowSortIndicator" stdset="0">
-         <bool>true</bool>
+         <bool>false</bool>
         </attribute>
         <column>
          <property name="text">
@@ -6889,7 +6886,7 @@ QPushButton:pressed {
      <x>0</x>
      <y>0</y>
      <width>1023</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="sizePolicy">
