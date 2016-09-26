@@ -147,9 +147,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned locati
         if (fread(op1, 1, op_size, file) != op_size)         goto r_err;
 
         // Hack for TI Connect CE bug
-        if ((op1[0] & ~(CALC_VAR_TYPE_REAL_LIST ^ CALC_VAR_TYPE_CPLX_LIST)) ==
-                       (CALC_VAR_TYPE_REAL_LIST & CALC_VAR_TYPE_CPLX_LIST) &&
-            op1[1] != tVarLst && op1[1] != tAns) {
+        if (var_type == CALC_VAR_TYPE_CPLX_LIST && op1[1] != tVarLst && op1[1] != tAns) {
             memmove(&op1[2], &op1[1], 6);
             op1[1] = tVarLst;
         }
