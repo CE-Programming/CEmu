@@ -141,7 +141,7 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
 
 #ifdef _MSC_VER
 /* Temporary hack... QStringLiteral mangles the UTF-8 string on MSVC for some reason */
-#define Label(str)          str
+#define Label(str)          QString::fromUtf8(str)
 #else
 #define Label(str)          QStringLiteral(str)
 #endif
