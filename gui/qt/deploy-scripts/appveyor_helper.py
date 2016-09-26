@@ -472,38 +472,38 @@ def deploy_snapshots():
     # Static builds
     # Release
     collect_static_main_files("x86 Static", os.path.join("build_static_32", "release"), os.path.join("deploy_static", "release32"),
-                       extra_wc = {
-                                    "EGL Library" : r"C:\Qt\Qt5.6.0-static\bin\libEGL.dll",
-                                    "GLESv2 Library" : r"C:\Qt\Qt5.6.0-static\bin\libGLESv2.dll",
-                                    "DirectX Compiler Library" : r"C:\Qt\Qt5.6.0\5.6\msvc2015\bin\d3dcompiler_*.dll",
-                                    "Mesa OpenGL Software Rendering Library" : r"C:\Qt\Qt5.6.0\5.6\msvc2015\bin\opengl32sw.dll",
-                                  }
+                       #extra_wc = {
+                       #             "EGL Library" : r"C:\Qt\Qt5.6.0-static\bin\libEGL.dll",
+                       #             "GLESv2 Library" : r"C:\Qt\Qt5.6.0-static\bin\libGLESv2.dll",
+                       #             "DirectX Compiler Library" : r"C:\Qt\Qt5.6.0\5.6\msvc2015\bin\d3dcompiler_*.dll",
+                       #             "Mesa OpenGL Software Rendering Library" : r"C:\Qt\Qt5.6.0\5.6\msvc2015\bin\opengl32sw.dll",
+                       #           }
                       )
     collect_static_main_files("x64 Static", os.path.join("build_static_64", "release"), os.path.join("deploy_static", "release64"),
-                       extra_wc = {
-                                    "EGL Library" : r"C:\Qt\Qt5.6.0x64-static\bin\libEGL.dll",
-                                    "GLESv2 Library" : r"C:\Qt\Qt5.6.0x64-static\bin\libGLESv2.dll",
-                                    "DirectX Compiler Library" : r"C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\d3dcompiler_*.dll",
-                                    "Mesa OpenGL Software Rendering Library" : r"C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\opengl32sw.dll",
-                                  }
+                       #extra_wc = {
+                       #             "EGL Library" : r"C:\Qt\Qt5.6.0x64-static\bin\libEGL.dll",
+                       #             "GLESv2 Library" : r"C:\Qt\Qt5.6.0x64-static\bin\libGLESv2.dll",
+                       #             "DirectX Compiler Library" : r"C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\d3dcompiler_*.dll",
+                       #             "Mesa OpenGL Software Rendering Library" : r"C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\opengl32sw.dll",
+                       #           }
                       )
     
     # Debug
     collect_static_main_files("x86 Static Debug", os.path.join("build_static_32", "debug"), os.path.join("deploy_static", "release32_debug"),
-                       extra_wc = {
-                                    "EGL Library" : r"C:\Qt\Qt5.6.0-static\bin\libEGLd.dll",
-                                    "GLESv2 Library" : r"C:\Qt\Qt5.6.0-static\bin\libGLESv2d.dll",
-                                    "DirectX Compiler Library" : r"C:\Qt\Qt5.6.0\5.6\msvc2015\bin\d3dcompiler_*.dll",
-                                    "Mesa OpenGL Software Rendering Library" : r"C:\Qt\Qt5.6.0\5.6\msvc2015\bin\opengl32sw.dll",
-                                  }
+                       #extra_wc = {
+                       #             "EGL Library" : r"C:\Qt\Qt5.6.0-static\bin\libEGLd.dll",
+                       #             "GLESv2 Library" : r"C:\Qt\Qt5.6.0-static\bin\libGLESv2d.dll",
+                       #             "DirectX Compiler Library" : r"C:\Qt\Qt5.6.0\5.6\msvc2015\bin\d3dcompiler_*.dll",
+                       #             "Mesa OpenGL Software Rendering Library" : r"C:\Qt\Qt5.6.0\5.6\msvc2015\bin\opengl32sw.dll",
+                       #           }
                       )
     collect_static_main_files("x64 Static Debug", os.path.join("build_static_64", "debug"), os.path.join("deploy_static", "release64_debug"),
-                       extra_wc = {
-                                    "EGL Library" : r"C:\Qt\Qt5.6.0x64-static\bin\libEGLd.dll",
-                                    "GLESv2 Library" : r"C:\Qt\Qt5.6.0x64-static\bin\libGLESv2d.dll",
-                                    "DirectX Compiler Library" : r"C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\d3dcompiler_*.dll",
-                                    "Mesa OpenGL Software Rendering Library" : r"C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\opengl32sw.dll",
-                                  }
+                       #extra_wc = {
+                       #             "EGL Library" : r"C:\Qt\Qt5.6.0x64-static\bin\libEGLd.dll",
+                       #             "GLESv2 Library" : r"C:\Qt\Qt5.6.0x64-static\bin\libGLESv2d.dll",
+                       #             "DirectX Compiler Library" : r"C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\d3dcompiler_*.dll",
+                       #             "Mesa OpenGL Software Rendering Library" : r"C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\opengl32sw.dll",
+                       #           }
                       )
     
     # Qt files only needed for dynamic builds
