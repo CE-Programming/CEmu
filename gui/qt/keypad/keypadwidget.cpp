@@ -139,7 +139,13 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
 #endif
     }
 
+#ifdef _MSC_VER
+/* Temporary hack... QStringLiteral mangles the UTF-8 string on MSVC for some reason */
+#define Label(str)          str
+#else
 #define Label(str)          QStringLiteral(str)
+#endif
+
 #define LabelFrEn(fr, en)   (is83 ? Label(fr) : Label(en))
 
     addKey(new GraphKey{m_config, LabelFrEn("graphe", "graph"), Label("table"), Label("f5"), 15, 2, 2 - is83});
