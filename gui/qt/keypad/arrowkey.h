@@ -1,6 +1,11 @@
 #ifndef ARROWKEY_H
 #define ARROWKEY_H
 
+/* Enable math constants on MSVC */
+#ifdef _MSC_VER
+#define _USE_MATH_DEFINES
+#endif
+
 #include "key.h"
 #include "keyconfig.h"
 
