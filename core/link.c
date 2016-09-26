@@ -73,10 +73,10 @@ bool listVariablesLink(void) {
  * Proper USB emulation should really be a thing
  * See GitHub issue #25
  */
-bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned location) {
+bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned location) {
     const size_t h_size = sizeof(header_data);
-    const size_t op_size = 0x09;
-    const uint16_t data_start = 0x37;
+    const size_t name_size = 8;
+    const uint16_t data_start = 0x35;
     const uint8_t tVarLst = 0x5D, tAns = 0x72;
 
     FILE *file;
@@ -86,22 +86,24 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned locati
              save_next,
              save_cycles_offset;
 
-    uint8_t var_ver,
+    uint8_t var_type,
+            var_ver,
             var_arc;
 
     uint8_t *run_asm_safe = phys_mem_ptr(safe_ram_loc, 8400),
             *cxCurApp     = phys_mem_ptr(0xD007E0, 1),
-            *op1          = phys_mem_ptr(0xD005F8, op_size),
+            *var_name     = phys_mem_ptr(0xD005F9, name_size),
             *var_ptr;
 
     uint16_t var_size,
              var_size2,
              data_size,
-             var_offset = data_start,
              header_size;
 
+    int remaining;
+
     /* Return if we are at an error menu */
-    if (*cxCurApp == 0x52 || !(file = fopen_utf8(var_name,"rb"))) {
+    if (*cxCurApp == 0x52 || !(file = fopen_utf8(file_name, "rb"))) {
         return false;
     }
 
@@ -120,11 +122,11 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned locati
         goto r_err;
     }
 
-    if (fread(tmp_buf, 1, h_size, file) != h_size)        goto r_err;
-    if (memcmp(tmp_buf, header_data, h_size))             goto r_err;
+    if (fread(tmp_buf, 1, h_size, file) != h_size)            goto r_err;
+    if (memcmp(tmp_buf, header_data, h_size))                 goto r_err;
 
-    if (fseek(file, 0x35, 0))                             goto r_err;
-    if (fread(&data_size, 2, 1, file) != 1)               goto r_err;
+    if (fseek(file, data_start, 0))                           goto r_err;
+    if (fread(&data_size, 2, 1, file) != 1)                   goto r_err;
 
     /* parse each varaible individually until the entire file is compelete. */
 
@@ -135,31 +137,32 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned locati
     cpu.next = 2300000;
     cpu_execute();
 
-    do {
-        if (fseek(file, var_offset, 0))                      goto r_err;
-        if (fread(&header_size, 2, 1, file) != 1)            goto r_err;
-        if (fread(&var_size, 2, 1, file) != 1)               goto r_err;
-        if (fread(op1, 1, op_size, file) != op_size)         goto r_err;
+    remaining = data_size;
+    while (remaining > 0) {
+        if (fread(&header_size, 2, 1, file) != 1)             goto r_err;
+        if (fread(&var_size, 2, 1, file) != 1)                goto r_err;
+        if (fread(&var_type, 1, 1, file) != 1)                goto r_err;
+        if (fread(var_name, 1, name_size, file) != name_size) goto r_err;
         if (header_size == 11) {
             var_ver = var_arc = 0;
         } else if (header_size == 13) {
-            if (fread(&var_ver, 1, 1, file) != 1)            goto r_err;
-            if (fread(&var_arc, 1, 1, file) != 1)            goto r_err;
-        } else                                               goto r_err;
-        if (fread(&var_size2, 2, 1, file) != 1)              goto r_err;
-        if (var_size != var_size2)                           goto r_err;
+            if (fread(&var_ver, 1, 1, file) != 1)             goto r_err;
+            if (fread(&var_arc, 1, 1, file) != 1)             goto r_err;
+        } else                                                goto r_err;
+        if (fread(&var_size2, 2, 1, file) != 1)               goto r_err;
+        if (var_size != var_size2)                            goto r_err;
 
         // Hack for TI Connect CE bug
-        if ((*op1 == CALC_VAR_TYPE_REAL_LIST || *op1 == CALC_VAR_TYPE_CPLX_LIST) &&
-            !(op1[1] == tVarLst || op1[1] == tAns)) {
-            memmove(&op1[2], &op1[1], 6);
-            op1[1] = tVarLst;
+        if ((var_type == CALC_VAR_TYPE_REAL_LIST || var_type == CALC_VAR_TYPE_CPLX_LIST) &&
+            !(*var_name == tVarLst || *var_name == tAns)) {
+            memmove(var_name + 1, var_name, name_size - 1);
+            *var_name = tVarLst;
         }
 
         cpu.halted = cpu.IEF_wait = 0;
         mem_poke_byte(0xD008DF,0);
         cpu.registers.HL = var_size - 2;
-        cpu.registers.A = *op1;
+        cpu.registers.A = var_type;
         memcpy(run_asm_safe, pgrm_loader, sizeof(pgrm_loader));
         cpu_flush(safe_ram_loc, 1);
         cpu.cycles = 0;
@@ -173,9 +176,9 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned locati
 
         var_ptr = phys_mem_ptr(mem_peek_long(safe_ram_loc), var_size);
 
-        if (fread(var_ptr, 1, var_size, file) != var_size)  goto r_err;
+        if (fread(var_ptr, 1, var_size, file) != var_size)    goto r_err;
 
-        switch(location) {
+        switch (location) {
             case LINK_FILE:
                 if (var_arc != 0x80) break;
             case LINK_ARCH:
@@ -186,7 +189,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned locati
                 cpu.next = 23000000;
                 cpu_execute();
                 break;
-            default:
+            case LINK_RAM:
                 break;
         }
 
@@ -197,9 +200,8 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned locati
         cpu.next = 2300000;
         cpu_execute();
 
-        var_offset += var_size + 17;
-
-    } while(var_offset != data_size + data_start);
+        remaining -= 2 + header_size + 2 + var_size;
+    }
 
     cpu.cycles = save_cycles;
     cpu.next = save_next;
