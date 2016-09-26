@@ -939,7 +939,6 @@ QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode, QSt
     dialog.setFileMode(mode == QFileDialog::AcceptOpen ? QFileDialog::ExistingFiles : QFileDialog::AnyFile);
     dialog.setDirectory(currentDir);
     dialog.setNameFilter(name_filter);
-    dialog.setDefaultSuffix("8xg");
     good = dialog.exec();
 
     currentDir = dialog.directory();
