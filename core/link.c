@@ -83,7 +83,8 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned locati
     uint8_t tmp_buf[0x80];
 
     uint32_t save_cycles,
-             save_next;
+             save_next,
+             save_cycles_offset;
 
     uint8_t var_type,
             var_arc;
@@ -104,6 +105,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned locati
 
     save_cycles = cpu.cycles;
     save_next = cpu.next;
+    save_cycles_offset = cpu.cycles_offset;
 
     if (calc_is_off()) {
         intrpt_set(INT_ON, true);
@@ -200,6 +202,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *var_name, unsigned locati
 
     cpu.cycles = save_cycles;
     cpu.next = save_next;
+    cpu.cycles_offset = save_cycles_offset;
 
     return !fclose(file);
 
