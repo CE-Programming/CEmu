@@ -305,11 +305,19 @@ def collect_main_files(arch, vcredist_wc_path, ucrt_wc_path, build_path, dest, e
     overwrite_copy(exec_path, dest)
     
     # No manifest needed - already embedded into exe.
-    
+
+def collect_qt_files_with_qml(arch, deploy_tool, dest, exe_file, qmldir = "qml"):
+    os.environ.pop("VCINSTALLDIR", None)
+    print("   -> Collecting all Qt dependencies (%s)..." % (arch))
+    if not simple_exec([deploy_tool, "--qmldir", qmldir, "--dir", dest, exe_file]):
+        print("   !! ERROR: Failed to collect Qt dependencies!")
+        print("   !!        See above output for details.")
+        sys.exit(1)
+
 def collect_qt_files(arch, deploy_tool, dest, exe_file):
     os.environ.pop("VCINSTALLDIR", None)
     print("   -> Collecting all Qt dependencies (%s)..." % (arch))
-    if not simple_exec([deploy_tool, "--qmldir", "qml", "--dir", dest, exe_file]):
+    if not simple_exec([deploy_tool, "--dir", dest, exe_file]):
         print("   !! ERROR: Failed to collect Qt dependencies!")
         print("   !!        See above output for details.")
         sys.exit(1)
