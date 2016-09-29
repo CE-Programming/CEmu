@@ -107,9 +107,9 @@ static uint8_t sha256_read(uint16_t pio) {
     if (index == 0x0C >> 2) {
         return read8(unknown_value, bit_offset);
     } else if (index >= 0x10 >> 2 && index < 0x50 >> 2) {
-        return read8(sha256.hash_block[index & 0xF], bit_offset);
+        return read8(sha256.hash_block[index - (0x10 >> 2)], bit_offset);
     } else if (index >= 0x60 >> 2 && index < 0x80 >> 2) {
-        return read8(sha256.hash_state[index & 0x7], bit_offset);
+        return read8(sha256.hash_state[index - (0x60 >> 2)], bit_offset);
     }
     /* Return 0 if invalid */
     return 0;
@@ -133,7 +133,7 @@ static void sha256_write(uint16_t pio, uint8_t byte) {
                 process_block();
         }
     } else if (index >= 0x10 >> 2 && index < 0x50 >> 2) {
-        write8(sha256.hash_block[index & 0xF], bit_offset, byte);
+        write8(sha256.hash_block[index - (0x10 >> 2)], bit_offset, byte);
     }
 }
 
