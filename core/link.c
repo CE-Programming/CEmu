@@ -93,6 +93,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
     uint8_t *run_asm_safe = phys_mem_ptr(safe_ram_loc, 8400),
             *cxCurApp     = phys_mem_ptr(0xD007E0, 1),
             *var_name     = phys_mem_ptr(0xD005F9, name_size),
+            *var_type_ptr = phys_mem_ptr(0xD005F8, 1),
             *var_ptr;
 
     uint16_t var_size,
@@ -158,11 +159,11 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
             memmove(var_name + 1, var_name, name_size - 1);
             *var_name = tVarLst;
         }
-
         cpu.halted = cpu.IEF_wait = 0;
         mem_poke_byte(0xD008DF,0);
         cpu.registers.HL = var_size - 2;
         cpu.registers.A = var_type;
+        *var_type_ptr = var_type;
         memcpy(run_asm_safe, pgrm_loader, sizeof(pgrm_loader));
         cpu_flush(safe_ram_loc, 1);
         cpu.cycles = 0;

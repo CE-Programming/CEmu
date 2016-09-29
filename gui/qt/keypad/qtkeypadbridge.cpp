@@ -26,8 +26,8 @@ bool QtKeypadBridge::setKeymap(const QString & keymapstr) {
         keymap = (get_device_type() == TI84PCE) ? &tilem_keymap_84pce : &tilem_keymap_83pce;
     } else if (!QStringLiteral("wabbitemu").compare(keymapstr, Qt::CaseInsensitive)) {
         keymap = (get_device_type() == TI84PCE) ? &wabbitemu_keymap_84pce : &wabbitemu_keymap_83pce;
-    } else if (!QStringLiteral("pindurti").compare(keymapstr, Qt::CaseInsensitive)) {
-        keymap = (get_device_type() == TI84PCE) ? &pindurti_keymap_84pce : &pindurti_keymap_83pce;
+    } else if (!QStringLiteral("jstified").compare(keymapstr, Qt::CaseInsensitive)) {
+        keymap = (get_device_type() == TI84PCE) ? &jstified_keymap_84pce : &jstified_keymap_83pce;
     } else {
         ret = false;
     }

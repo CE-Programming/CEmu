@@ -233,9 +233,9 @@ KEYMAP_84PCE;
 #undef KEY
 
 // ----------------
-// PindurTI section
+// jsTIfied section
 // ----------------
-#define KEY(key) pindurti_k##key
+#define KEY(key) jstified_k##key
 
 static const HostKey KEY(enter)[] = { NRM(Return), NRM(Enter), none };
 static const HostKey KEY(2nd)[] = { NRM(Shift), NRM(AsciiTilde), none };
@@ -292,7 +292,7 @@ static const HostKey KEY(wind)[] = { NRM(F2), none };
 static const HostKey KEY(zoom)[] = { NRM(F3), none };
 static const HostKey KEY(trace)[] = { NRM(F4), none };
 static const HostKey KEY(graph)[] = { NRM(F5), none };
-static const HostKey KEY(on)[] = { none };
+static const HostKey KEY(on)[] = { NRM(F12), none };
 
 KEYMAP_83PCE;
 KEYMAP_84PCE;

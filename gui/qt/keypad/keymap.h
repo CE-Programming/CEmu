@@ -13,11 +13,11 @@ struct HostKey {
 extern const HostKey *cemu_keymap_83pce[8][8];
 extern const HostKey *tilem_keymap_83pce[8][8];
 extern const HostKey *wabbitemu_keymap_83pce[8][8];
-extern const HostKey *pindurti_keymap_83pce[8][8];
+extern const HostKey *jstified_keymap_83pce[8][8];
 
 extern const HostKey *cemu_keymap_84pce[8][8];
 extern const HostKey *tilem_keymap_84pce[8][8];
 extern const HostKey *wabbitemu_keymap_84pce[8][8];
-extern const HostKey *pindurti_keymap_84pce[8][8];
+extern const HostKey *jstified_keymap_84pce[8][8];
 
 #endif
