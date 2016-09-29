@@ -102,6 +102,8 @@ static uint8_t sha256_read(uint16_t pio) {
 
     if (mem.flash.locked) {
         index = sha256.last_index;
+    } else {
+        sha256.last_index = index;
     }
 
     if (index == 0x0C >> 2) {
@@ -121,6 +123,8 @@ static void sha256_write(uint16_t pio, uint8_t byte) {
 
     if (mem.flash.locked) {
         return; // writes are ignored when flash is locked
+    } else {
+        sha256.last_index = index;
     }
 
     if (!pio) {
