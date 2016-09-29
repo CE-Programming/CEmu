@@ -33,15 +33,12 @@ static const uint8_t header_data[10] = {
     0x2A, 0x2A, 0x54, 0x49, 0x38, 0x33, 0x46, 0x2A, 0x1A, 0x0A
 };
 
-static const uint8_t pgrm_loader[39] = {
-  0xF5,                         /* push af              */
+static const uint8_t pgrm_loader[33] = {
   0xE5,                         /* push hl              */
-  0xCD, 0x28, 0x06, 0x02,       /* call _pushop1        */
   0xCD, 0x0C, 0x05, 0x02,       /* call _chkfindsym     */
   0xD4, 0x34, 0x14, 0x02,       /* call nc,_delvararc   */
-  0xCD, 0xC4, 0x05, 0x02,       /* call _popop1         */
   0xE1,                         /* pop hl               */
-  0xF1,                         /* pop af               */
+  0x3A, 0xF8, 0x05, 0xD0,       /* ld a,(OP1)           */
   0xCD, 0x38, 0x13, 0x02,       /* call _createvar      */
   0xED, 0x53, 0xC6, 0x52, 0xD0, /* ld (safe_ram_loc),de */
   0x18, 0xFE                    /* _sink: jr _sink      */
@@ -75,7 +72,6 @@ bool listVariablesLink(void) {
  */
 bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned location) {
     const size_t h_size = sizeof(header_data);
-    const size_t name_size = 8;
     const uint16_t data_start = 0x35;
     const uint8_t tVarLst = 0x5D, tAns = 0x72;
 
@@ -86,14 +82,12 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
              save_next,
              save_cycles_offset;
 
-    uint8_t var_type,
-            var_ver,
+    uint8_t var_ver,
             var_arc;
 
     uint8_t *run_asm_safe = phys_mem_ptr(safe_ram_loc, 8400),
             *cxCurApp     = phys_mem_ptr(0xD007E0, 1),
-            *var_name     = phys_mem_ptr(0xD005F9, name_size),
-            *var_type_ptr = phys_mem_ptr(0xD005F8, 1),
+            *op1          = phys_mem_ptr(0xD005F8, 9),
             *var_ptr;
 
     uint16_t var_size,
@@ -123,11 +117,11 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
         goto r_err;
     }
 
-    if (fread(tmp_buf, 1, h_size, file) != h_size)            goto r_err;
-    if (memcmp(tmp_buf, header_data, h_size))                 goto r_err;
+    if (fread(tmp_buf, 1, h_size, file) != h_size)         goto r_err;
+    if (memcmp(tmp_buf, header_data, h_size))              goto r_err;
 
-    if (fseek(file, data_start, 0))                           goto r_err;
-    if (fread(&data_size, 2, 1, file) != 1)                   goto r_err;
+    if (fseek(file, data_start, 0))                        goto r_err;
+    if (fread(&data_size, 2, 1, file) != 1)                goto r_err;
 
     /* parse each varaible individually until the entire file is compelete. */
 
@@ -140,30 +134,27 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
 
     remaining = data_size;
     while (remaining > 0) {
-        if (fread(&header_size, 2, 1, file) != 1)             goto r_err;
-        if (fread(&var_size, 2, 1, file) != 1)                goto r_err;
-        if (fread(&var_type, 1, 1, file) != 1)                goto r_err;
-        if (fread(var_name, 1, name_size, file) != name_size) goto r_err;
+        if (fread(&header_size, 2, 1, file) != 1)          goto r_err;
+        if (fread(&var_size, 2, 1, file) != 1)             goto r_err;
+        if (fread(op1, 1, 9, file) != 9)                   goto r_err;
         if (header_size == 11) {
             var_ver = var_arc = 0;
         } else if (header_size == 13) {
-            if (fread(&var_ver, 1, 1, file) != 1)             goto r_err;
-            if (fread(&var_arc, 1, 1, file) != 1)             goto r_err;
-        } else                                                goto r_err;
-        if (fread(&var_size2, 2, 1, file) != 1)               goto r_err;
-        if (var_size != var_size2)                            goto r_err;
+            if (fread(&var_ver, 1, 1, file) != 1)          goto r_err;
+            if (fread(&var_arc, 1, 1, file) != 1)          goto r_err;
+        } else                                             goto r_err;
+        if (fread(&var_size2, 2, 1, file) != 1)            goto r_err;
+        if (var_size != var_size2)                         goto r_err;
 
         // Hack for TI Connect CE bug
-        if ((var_type == CALC_VAR_TYPE_REAL_LIST || var_type == CALC_VAR_TYPE_CPLX_LIST) &&
-            !(*var_name == tVarLst || *var_name == tAns)) {
-            memmove(var_name + 1, var_name, name_size - 1);
-            *var_name = tVarLst;
+        if ((*op1 == CALC_VAR_TYPE_REAL_LIST || *op1 == CALC_VAR_TYPE_CPLX_LIST) &&
+            !(op1[1] == tVarLst || op1[1] == tAns)) {
+            *op1 = tVarLst;
+            memmove(op1 + 2, op1 + 1, 7);
         }
         cpu.halted = cpu.IEF_wait = 0;
-        mem_poke_byte(0xD008DF,0);
+        mem_poke_byte(0xD008DF, 0);
         cpu.registers.HL = var_size - 2;
-        cpu.registers.A = var_type;
-        *var_type_ptr = var_type;
         memcpy(run_asm_safe, pgrm_loader, sizeof(pgrm_loader));
         cpu_flush(safe_ram_loc, 1);
         cpu.cycles = 0;
@@ -177,7 +168,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
 
         var_ptr = phys_mem_ptr(mem_peek_long(safe_ram_loc), var_size);
 
-        if (fread(var_ptr, 1, var_size, file) != var_size)    goto r_err;
+        if (fread(var_ptr, 1, var_size, file) != var_size) goto r_err;
 
         switch (location) {
             case LINK_FILE:
