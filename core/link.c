@@ -149,8 +149,8 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
         // Hack for TI Connect CE bug
         if ((*op1 == CALC_VAR_TYPE_REAL_LIST || *op1 == CALC_VAR_TYPE_CPLX_LIST) &&
             !(op1[1] == tVarLst || op1[1] == tAns)) {
-            *op1 = tVarLst;
             memmove(op1 + 2, op1 + 1, 7);
+            op1[1] = tVarLst;
         }
         cpu.halted = cpu.IEF_wait = 0;
         mem_poke_byte(0xD008DF, 0);
