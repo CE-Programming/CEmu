@@ -8,8 +8,8 @@ extern "C" {
 #include "defines.h"
 
 typedef struct eZ80portrange {
-    uint8_t (*read_in)(uint16_t);
-    void (*write_out)(uint16_t, uint8_t);
+    uint8_t (*read_in)(uint16_t, bool);
+    void (*write_out)(uint16_t, uint8_t, bool);
 } eZ80portrange_t;
 
 extern eZ80portrange_t port_map[0x10];
