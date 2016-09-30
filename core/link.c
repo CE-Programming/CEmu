@@ -9,39 +9,42 @@
 volatile bool emu_is_sending = false;
 volatile bool emu_is_receiving = false;
 
-/* static const int ram_start = 0xD00000; */
 static const int safe_ram_loc = 0xD052C6;
 
-static const uint8_t jforcegraph[8] = {
-    0xFD, 0xCB, 0x03, 0x86,   /* res graphdraw,(iy+graphflags) */
-    0xC3, 0x7C, 0x14, 0x02    /* jp _jforcegraphnokey          */
+static const uint8_t jforcegraph[9] = {
+    0xF3,                         /* di            */
+    0xFD, 0xCB, 0x03, 0x86,       /* res graphdraw,(iy+graphflags) */
+    0xC3, 0x7C, 0x14, 0x02        /* jp _jforcegraphnokey          */
 };
 
-static const uint8_t jforcehome[6] = {
-    0x3E, 0x09,                /* ld a,kclear   */
-    0xC3, 0x64, 0x01, 0x02     /* jp _jforcecmd */
+static const uint8_t jforcehome[7] = {
+    0xF3,                         /* di            */
+    0x3E, 0x09,                   /* ld a,kclear   */
+    0xC3, 0x64, 0x01, 0x02        /* jp _jforcecmd */
 };
 
-static const uint8_t archivevar[14] = {
-    0xCD, 0xC8, 0x02, 0x02,     /* call _op4toop1   */
-    0xCD, 0x0C, 0x05, 0x02,     /* call _chkfindsym */
-    0xCD, 0x4C, 0x14, 0x02,     /* call _archivevar */
-    0x18, 0xFE                  /* _sink: jr _sink  */
+static const uint8_t archivevar[15] = {
+    0xF3,                         /* di               */
+    0xCD, 0xC8, 0x02, 0x02,       /* call _op4toop1   */
+    0xCD, 0x0C, 0x05, 0x02,       /* call _chkfindsym */
+    0xCD, 0x4C, 0x14, 0x02,       /* call _archivevar */
+    0x18, 0xFE                    /* _sink: jr _sink  */
 };
 
 static const uint8_t header_data[10] = {
     0x2A, 0x2A, 0x54, 0x49, 0x38, 0x33, 0x46, 0x2A, 0x1A, 0x0A
 };
 
-static const uint8_t pgrm_loader[33] = {
-  0xE5,                         /* push hl              */
-  0xCD, 0x0C, 0x05, 0x02,       /* call _chkfindsym     */
-  0xD4, 0x34, 0x14, 0x02,       /* call nc,_delvararc   */
-  0xE1,                         /* pop hl               */
-  0x3A, 0xF8, 0x05, 0xD0,       /* ld a,(OP1)           */
-  0xCD, 0x38, 0x13, 0x02,       /* call _createvar      */
-  0xED, 0x53, 0xC6, 0x52, 0xD0, /* ld (safe_ram_loc),de */
-  0x18, 0xFE                    /* _sink: jr _sink      */
+static const uint8_t pgrm_loader[34] = {
+    0xF3,                         /* di                   */
+    0xE5,                         /* push hl              */
+    0xCD, 0x0C, 0x05, 0x02,       /* call _chkfindsym     */
+    0xD4, 0x34, 0x14, 0x02,       /* call nc,_delvararc   */
+    0xE1,                         /* pop hl               */
+    0x3A, 0xF8, 0x05, 0xD0,       /* ld a,(OP1)           */
+    0xCD, 0x38, 0x13, 0x02,       /* call _createvar      */
+    0xED, 0x53, 0xC6, 0x52, 0xD0, /* ld (safe_ram_loc),de */
+    0x18, 0xFE                    /* _sink: jr _sink      */
 };
 
 void enterVariableLink(void) {
@@ -106,17 +109,6 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
     save_next = cpu.next;
     save_cycles_offset = cpu.cycles_offset;
 
-    if (calc_is_off()) {
-        intrpt_set(INT_ON, true);
-        control.readBatteryStatus = ~1;
-        intrpt_pulse(19);
-        cpu.cycles = cpu.IEF_wait = 0;
-        cpu.next = 10000000;
-        cpu_execute();
-        intrpt_set(INT_ON, false);
-        goto r_err;
-    }
-
     if (fread(tmp_buf, 1, h_size, file) != h_size)         goto r_err;
     if (memcmp(tmp_buf, header_data, h_size))              goto r_err;
 
@@ -134,6 +126,18 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
 
     remaining = data_size;
     while (remaining > 0) {
+
+        if (calc_is_off()) {
+            intrpt_set(INT_ON, true);
+            control.readBatteryStatus = ~1;
+            intrpt_pulse(19);
+            cpu.cycles = cpu.IEF_wait = 0;
+            cpu.next = 10000000;
+            cpu_execute();
+            intrpt_set(INT_ON, false);
+            goto r_err;
+        }
+
         if (fread(&header_size, 2, 1, file) != 1)          goto r_err;
         if (fread(&var_size, 2, 1, file) != 1)             goto r_err;
         if (fread(op1, 1, 9, file) != 9)                   goto r_err;
