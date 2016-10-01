@@ -4,11 +4,19 @@
 #include "gif.h"
 #include "giflib.h"
 #include "qtframebuffer.h"
+#include "gifsicle.h"
 
 static std::mutex gif_mutex;
 static bool recording = false;
 static GifWriter writer;
 static unsigned int frame, frameskip, gifTime;
+
+Gt_OutputData active_output_data;
+Gif_CompressInfo gif_write_info;
+Gt_Frame def_frame;
+
+int nested_mode = 0;
+int verbosing = 0;
 
 static bool gif_write_frame(GifWriter *frameWriter, unsigned int delay) {
     return GifWriteFrame(frameWriter, renderFramebuffer(&lcd).convertToFormat(QImage::Format_RGBA8888).bits(), 320, 240, delay);
@@ -49,10 +57,45 @@ void gif_new_frame() {
     }
 }
 
-bool gif_stop_recording() {
+bool gif_stop_recording(void) {
     std::lock_guard<std::mutex> lock(gif_mutex);
 
     bool wasRecording = recording;
     recording = false;
     return wasRecording && GifEnd(&writer);
+}
+
+bool gif_optimize(const char *in_name, const char *out_name) {
+    bool ret = true;
+    FILE *in;
+    FILE *out;
+    Gif_Stream *gfs;
+
+    if(!(in = fopen(in_name, "rb"))){
+        return false;
+    }
+
+    if(!(out = fopen(out_name, "wb"))){
+        fclose(in);
+        return false;
+    }
+
+    gfs = Gif_FullReadFile(in, GIF_READ_COMPRESSED, 0, 0);
+    Gif_InitCompressInfo(&gif_write_info);
+
+    if (!gfs || (Gif_ImageCount(gfs) == 0 && gfs->errors > 0)) {
+      fprintf(stdout,"open error");
+      Gif_DeleteStream(gfs);
+      ret = false;
+      goto err;
+    }
+
+    optimize_fragments(gfs, GT_OPT_MASK, 0);
+    Gif_FullWriteFile(gfs, &gif_write_info, out);
+    Gif_DeleteStream(gfs);
+
+err:
+    fclose(in);
+    fclose(out);
+    return ret;
 }

@@ -370,7 +370,7 @@ MainWindow::~MainWindow() {
 void MainWindow::selectKeypadColor() {
     QObject *senderObj = sender();
     QString senderObjName = senderObj->objectName();
-    unsigned keypad_color;
+    unsigned keypad_color = KEYPAD_BLACK;
 
     if(senderObjName == "buttonWhite") keypad_color = KEYPAD_WHITE;
     if(senderObjName == "buttonBlack") keypad_color = KEYPAD_BLACK;
@@ -696,19 +696,27 @@ void MainWindow::screenshotGIF() {
 
 void MainWindow::recordGIF() {
   static QString path;
+  static QString opt_path;
 
   if (path.isEmpty()) {
       // TODO: Use QTemporaryFile?
-      path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.gif");
-
+        path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.gif");
+        opt_path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_opt_tmp.gif");
         gif_start_recording(path.toStdString().c_str(), ui->frameskipSlider->value());
     } else {
         if (gif_stop_recording()) {
-            saveScreenshot(tr("GIF images (*.gif)"), QStringLiteral("gif"), path);
+            if(!(gif_optimize(path.toStdString().c_str(), opt_path.toStdString().c_str()))) {
+                QFile(path).remove();
+                QMessageBox::warning(this, tr("GIF Optimization Failed"), tr("A failure occured during recording"));
+            } else {
+                QFile(path).remove();
+                saveScreenshot(tr("GIF images (*.gif)"), QStringLiteral("gif"), opt_path);
+            }
         } else {
             QMessageBox::warning(this, tr("Failed recording GIF"), tr("A failure occured during recording"));
         }
         path = QString();
+        opt_path = QString();
     }
 
     ui->frameskipSlider->setEnabled(path.isEmpty());

@@ -130,7 +130,14 @@ SOURCES +=  utils.cpp \
     ../../core/debug/disasm.cpp \
     ../../core/debug/debug.c \
     ../../core/debug/stepping.cpp \
-    sendinghandler.cpp
+    sendinghandler.cpp \
+    capture/optimize.c \
+    capture/opttemplate.c \
+    capture/gifread.c \
+    capture/gifwrite.c \
+    capture/quantize.c \
+    capture/giffunc.c \
+    capture/xform.c
 
 linux|macx|ios: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
@@ -198,7 +205,14 @@ HEADERS  +=  utils.h \
     ../../core/debug/disasm.h \
     ../../core/debug/stepping.h \
     cemuopts.h \
-    sendinghandler.h
+    sendinghandler.h \
+    capture/kcolor.h \
+    capture/gifsicle.h \
+    capture/lcdf/clp.h \
+    capture/lcdf/inttypes.h \
+    capture/lcdfgif/gif.h \
+    capture/lcdfgif/gifx.h \
+    keypad/keycode.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \
