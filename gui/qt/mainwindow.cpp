@@ -337,6 +337,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     pix.load(":/icons/resources/icons/run.png");
     runIcon.addPixmap(pix);
 
+    ui->lcdWidget->setFocus();
+
     if (opts.AutotesterFile != ""){
         if(openJSONConfig(opts.AutotesterFile)==0)
         {
@@ -345,7 +347,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
            QThread::msleep(500);
            launchTest();
         }
-   }
+    }
 
 }
 
