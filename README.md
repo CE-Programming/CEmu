@@ -42,13 +42,14 @@ Minimalistic  | Bigger keypad and screen | With many debugging features
 
 ## Downloads
 No stable binaries yet as the code keeps changing these days! When available, they'll be here, though: https://github.com/CE-Programming/CEmu/releases  
-Recent Windows binaries available here (credits to alberthro): https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/git/
+Recent Windows binaries [available here](https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/git/) (credits to alberthro).  
 _Note that Release builds have an update checking feature, which is disabled in development builds._
 
 ## How to build
 After downloading the source (you can clone the repo or just [get the zip](https://github.com/CE-Programming/CEmu/archive/master.zip)):
 
-1. Get the [latest Qt5 SDK](https://www.qt.io/download-open-source/#section-3) for your OS *(Note: on Windows, the MinGW variation of the Qt SDK is preferred)*.
+1. Get the [latest Qt5 SDK](https://www.qt.io/download-open-source/#section-3) for your OS *(Note: on Windows, the MinGW variation of the Qt SDK is preferred)*.  
+If you're on Ubuntu, you may need to run this command afterwards, too: `sudo apt-get install git qt5-default`
 
 2. Now you have two options:
   * Open the .pro file with Qt Creator, set it up (default project settings should be fine), and hit Build. *(Note: you can tell make to use -j4 in the project settings)*
