@@ -1,7 +1,7 @@
 #ifndef SEARCHWIDGET_H
 #define SEARCHWIDGET_H
 
-#include <QDialog>
+#include <QtWidgets/QDialog>
 
 namespace Ui { class searchwidget; }
 

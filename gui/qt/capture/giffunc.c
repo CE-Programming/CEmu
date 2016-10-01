@@ -25,13 +25,14 @@ int error_count = 0;
 int no_warnings = 0;
 
 static void
-verror(const char* landmark, int need_file,
-       int seriousness, const char *fmt, va_list val)
+verror(const char* landmark, int need_file, int seriousness, const char *fmt, va_list val)
 {
     char pbuf[256], buf[BUFSIZ], xbuf[BUFSIZ];
     const char* xfmt;
     int n, i, p;
     size_t xi;
+
+    (void)need_file;
 
     if (!fmt || !*fmt)
         return;

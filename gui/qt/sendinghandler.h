@@ -1,9 +1,9 @@
 #ifndef SENDINGHANDLER_H
 #define SENDINGHANDLER_H
 
-#include <QDragEnterEvent>
-#include <QDropEvent>
-#include <QObject>
+#include <QtGui/QDragEnterEvent>
+#include <QtGui/QDropEvent>
+#include <QtCore/QObject>
 
 class SendingHandler {
 public:

@@ -1,7 +1,7 @@
 #include "searchwidget.h"
 #include "ui_searchwidget.h"
 
-#include <QDebug>
+#include <QtCore/QDebug>
 
 SearchWidget::SearchWidget(QWidget *p) : QDialog(p), ui(new Ui::searchwidget) {
     ui->setupUi(this);

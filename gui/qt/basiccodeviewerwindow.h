@@ -1,8 +1,8 @@
 #ifndef BASICCODEVIEWERWINDOW_H
 #define BASICCODEVIEWERWINDOW_H
 
-#include <QDialog>
-#include <QString>
+#include <QtWidgets/QDialog>
+#include <QtCore/QString>
 #include "tivarslib/autoloader.h"
 
 namespace Ui { class BasicCodeViewerWindow; }

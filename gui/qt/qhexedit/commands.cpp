@@ -1,5 +1,5 @@
 #include "commands.h"
-#include <QUndoCommand>
+#include <QtWidgets/QUndoCommand>
 
 
 // Helper class to store single byte commands

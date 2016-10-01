@@ -7,7 +7,7 @@
 #include <QtWidgets/QTableWidgetItem>
 #include <QtWidgets/QFileDialog>
 #include <QtCore/QSettings>
-#include <QTextCursor>
+#include <QtGui/QTextCursor>
 #include "cemuopts.h"
 #include "lcdwidget.h"
 #include "romselection.h"

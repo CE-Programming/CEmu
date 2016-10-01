@@ -1,9 +1,9 @@
 #ifndef QHEXEDIT_H
 #define QHEXEDIT_H
 
-#include <QAbstractScrollArea>
-#include <QPen>
-#include <QBrush>
+#include <QtWidgets/QAbstractScrollArea>
+#include <QtGui/QPen>
+#include <QtGui/QBrush>
 
 #include "chunks.h"
 #include "commands.h"

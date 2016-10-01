@@ -1,7 +1,7 @@
 #ifndef LCDPOPOUT_H
 #define LCDPOPOUT_H
 
-#include <QDialog>
+#include <QtWidgets/QDialog>
 
 #include "../../core/lcd.h"
 #include "keypad/qtkeypadbridge.h"

@@ -1,8 +1,8 @@
-#include <QApplication>
-#include <QClipboard>
-#include <QKeyEvent>
-#include <QPainter>
-#include <QScrollBar>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QScrollBar>
+#include <QtGui/QClipboard>
+#include <QtGui/QKeyEvent>
+#include <QtGui/QPainter>
 
 #include "qhexedit.h"
 

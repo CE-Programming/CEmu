@@ -1,8 +1,8 @@
 #include <QtGui/QPainter>
 #include <QtGui/QMouseEvent>
-#include <QMenu>
-#include <QDrag>
-#include <QApplication>
+#include <QtGui/QDrag>
+#include <QtWidgets/QMenu>
+#include <QtWidgets/QApplication>
 
 #include "lcdwidget.h"
 #include "qtframebuffer.h"

@@ -1,5 +1,3 @@
-#include <QtWidgets>
-
 #include "datawidget.h"
 
 /* extraHighlights (0) = current line selection */
