@@ -32,10 +32,11 @@ static void watchdog_event(int index) {
 }
 
 /* Watchdog read routine */
-static uint8_t watchdog_read(const uint16_t pio) {
+static uint8_t watchdog_read(const uint16_t pio, bool peek) {
     uint8_t index = pio;
     uint8_t bit_offset = (index & 3) << 3;
     uint8_t value = 0;
+    (void)peek;
 
     switch (index) {
         case 0x000: case 0x001: case 0x002: case 0x003:
@@ -69,9 +70,11 @@ static uint8_t watchdog_read(const uint16_t pio) {
 }
 
 /* Watchdog write routine */
-static void watchdog_write(const uint16_t pio, const uint8_t byte) {
+static void watchdog_write(const uint16_t pio, const uint8_t byte, bool peek) {
     uint8_t index = pio;
     uint8_t bit_offset = (index & 3) << 3;
+
+    (void)peek;
 
     switch (index) {
         case 0x004: case 0x005: case 0x006: case 0x007:
@@ -148,9 +151,9 @@ bool watchdog_restore(const emu_image *s) {
 /* TODO: Is the (0x9XXX) range complete enough? */
 
 /* Read from the 0x9XXX range of ports */
-static uint8_t protected_read(const uint16_t pio) {
-
+static uint8_t protected_read(const uint16_t pio, bool peek) {
     uint8_t value = 0;
+    (void)peek;
 
     switch (pio) {
         case 0xB00:
@@ -164,7 +167,8 @@ static uint8_t protected_read(const uint16_t pio) {
 }
 
 /* Write to the 0x9XXX range of ports */
-static void protected_write(const uint16_t pio, const uint8_t byte) {
+static void protected_write(const uint16_t pio, const uint8_t byte, bool peek) {
+    (void)peek;
 
     switch (pio) {
         case 0xB00:
@@ -201,12 +205,14 @@ bool protect_restore(const emu_image *s) {
 /* ============================================= */
 
 /* Read from the 0xCXXX range of ports */
-static uint8_t cxxx_read(const uint16_t pio) {
+static uint8_t cxxx_read(const uint16_t pio, bool peek) {
+    (void)peek;
     return cxxx.ports[pio];
 }
 
 /* Write to the 0xCXXX range of ports */
-static void cxxx_write(const uint16_t pio, const uint8_t byte) {
+static void cxxx_write(const uint16_t pio, const uint8_t byte, bool peek) {
+    (void)peek;
     cxxx.ports[pio] = byte;
 }
 
@@ -235,13 +241,15 @@ bool cxxx_restore(const emu_image *s) {
 /* TODO: Implement DXXX range -- USB related? */
 
 /* Read from the 0xDXXX range of ports */
-static uint8_t dxxx_read(const uint16_t pio) {
+static uint8_t dxxx_read(const uint16_t pio, bool peek) {
+    (void)peek;
     (void)pio; /* Uncomment me when needed */
     return 0;
 }
 
 /* Write to the 0xDXXX range of ports */
-static void dxxx_write(const uint16_t pio, const uint8_t byte) {
+static void dxxx_write(const uint16_t pio, const uint8_t byte, bool peek) {
+    (void)peek;
     (void)pio;  /* Uncomment me when needed */
     (void)byte; /* Uncomment me when needed */
     return;
@@ -269,9 +277,10 @@ bool dxxx_restore(const emu_image *s) {
 /* ============================================= */
 
 /* Read from the 0xEXXX range of ports */
-static uint8_t exxx_read(const uint16_t pio) {
+static uint8_t exxx_read(const uint16_t pio, bool peek) {
     uint8_t index = pio & 0x7F;
     uint8_t read_byte;
+    (void)peek;
 
     switch (index) {
         case 0x14:
@@ -285,7 +294,8 @@ static uint8_t exxx_read(const uint16_t pio) {
 }
 
 /* Write to the 0xEXXX range of ports */
-static void exxx_write(const uint16_t pio, const uint8_t byte) {
+static void exxx_write(const uint16_t pio, const uint8_t byte, bool peek) {
+    (void)peek;
     exxx.ports[pio & 0x7F] = byte;
 }
 
@@ -312,7 +322,8 @@ bool exxx_restore(const emu_image *s) {
 /* ============================================= */
 
 /* Write to the 0xFXXX range of ports */
-static void fxxx_write(const uint16_t pio, const uint8_t value) {
+static void fxxx_write(const uint16_t pio, const uint8_t value, bool peek) {
+    (void)peek;
     /* 0xFFE appears to dump the contents of flash. Probably not a good thing to print to a console :) */
     if (pio != 0xFFF) {
         return;
@@ -329,7 +340,8 @@ static void fxxx_write(const uint16_t pio, const uint8_t value) {
 }
 
 /* Read from the 0xFXXX range of ports */
-static uint8_t fxxx_read(const uint16_t pio) {
+static uint8_t fxxx_read(const uint16_t pio, bool peek) {
+    (void)peek;
     (void)pio; /* Uncomment me when needed */
     return 0;
 }

@@ -36,8 +36,7 @@ void EMSCRIPTEN_KEEPALIVE keypad_key_event(unsigned int row, unsigned int col, b
     }
 }
 
-static uint8_t keypad_read(const uint16_t pio)
-{
+static uint8_t keypad_read(const uint16_t pio, bool peek) {
     uint16_t index = (pio >> 2) & 0x7F;
     uint8_t bit_offset = (pio & 3) << 3;
 
@@ -45,6 +44,8 @@ static uint8_t keypad_read(const uint16_t pio)
     uint8_t lower_index = pio & 0xF;
 
     uint8_t value = 0;
+
+    (void)peek;
 
     if (upper_index == 0x1 || upper_index == 0x2) {
         return read8(keypad.data[lower_index>>1],(lower_index&1)<<3);
@@ -109,11 +110,12 @@ static void keypad_scan_event(int index) {
     keypad_intrpt_check();
 }
 
-static void keypad_write(const uint16_t pio, const uint8_t byte)
-{
+static void keypad_write(const uint16_t pio, const uint8_t byte, bool peek) {
     int row;
     uint16_t index = (pio >> 2) & 0x7F;
     uint8_t bit_offset = (pio & 3) << 3;
+
+    (void)peek;
 
     switch (index) {
         case 0x00:

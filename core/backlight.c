@@ -7,9 +7,10 @@
 backlight_state_t backlight;
 
 /* Read from the 0xBXXX range of ports */
-static uint8_t backlight_read(const uint16_t pio) {
+static uint8_t backlight_read(const uint16_t pio, bool peek) {
     uint8_t index = (pio >> 2) & 0xFF;
     uint8_t value;
+    (void)peek;
 
     switch (index) {
         case 0x02: /* Ports B008-B00B always read 0 */
@@ -29,8 +30,9 @@ static uint8_t backlight_read(const uint16_t pio) {
 }
 
 /* Write to the 0xBXXX range of ports */
-static void backlight_write(const uint16_t pio, const uint8_t byte) {
+static void backlight_write(const uint16_t pio, const uint8_t byte, bool peek) {
     uint8_t index = (uint8_t)pio;
+    (void)peek;
 
     switch (index) {
         case 0x01:

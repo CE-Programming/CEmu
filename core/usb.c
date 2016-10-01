@@ -6,12 +6,14 @@
 /* Global GPT state */
 usb_state_t usb;
 
-static uint8_t usb_read(const uint16_t pio) {
+static uint8_t usb_read(const uint16_t pio, bool peek) {
+    (void)peek;
     (void)pio;
     return 0xFF;
 }
 
-static void usb_write(const uint16_t pio, const uint8_t byte) {
+static void usb_write(const uint16_t pio, const uint8_t byte, bool peek) {
+    (void)peek;
     (void)pio;
     (void)byte;
 }

@@ -53,11 +53,12 @@ static void hold_read(void) {
     rtc.holdDay = rtc.readDay;
 }
 
-static uint8_t rtc_read(const uint16_t pio) {
+static uint8_t rtc_read(const uint16_t pio, bool peek) {
     uint8_t index = pio & 0xFF;
     uint8_t bit_offset = (index & 3) << 3;
 
     uint8_t value = 0;
+    (void)peek;
 
     switch (index) {
         case 0x00:
@@ -112,9 +113,10 @@ static uint8_t rtc_read(const uint16_t pio) {
     return value;
 }
 
-static void rtc_write(const uint16_t pio, const uint8_t byte) {
+static void rtc_write(const uint16_t pio, const uint8_t byte, bool peek) {
     uint16_t index = pio & 0xFF;
     uint8_t bit_offset = (index & 3) << 3;
+    (void)peek;
 
     switch (index) {
         case 0x10:

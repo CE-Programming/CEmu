@@ -93,8 +93,10 @@ static void gpt_some(int which, void update(int index)) {
     } while (++index < which);
 }
 
-static uint8_t gpt_read(uint16_t address) {
+static uint8_t gpt_read(uint16_t address, bool peek) {
     uint8_t value = 0;
+    (void)peek;
+
     gpt_some(address >> 4 & 0b11, gpt_restore_state);
     if (address < 0x40) {
         value = ((uint8_t *)&gpt)[address];
@@ -103,8 +105,10 @@ static uint8_t gpt_read(uint16_t address) {
     return value;
 }
 
-static void gpt_write(uint16_t address, uint8_t value) {
+static void gpt_write(uint16_t address, uint8_t value, bool peek) {
     int timer;
+    (void)peek;
+
     if (address >= 0x34 && address < 0x38) {
         ((uint8_t *)&gpt)[address] &= ~value;
     } else if (address < 0x3C) {

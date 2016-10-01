@@ -9,10 +9,11 @@
 control_state_t control;
 
 /* Read from the 0x0XXX range of ports */
-static uint8_t control_read(const uint16_t pio) {
+static uint8_t control_read(const uint16_t pio, bool peek) {
     uint8_t index = (uint8_t)pio;
 
     uint8_t value;
+    (void)peek;
 
     switch (index) {
         case 0x01:
@@ -60,8 +61,9 @@ static uint8_t control_read(const uint16_t pio) {
 }
 
 /* Write to the 0x0XXX range of ports */
-static void control_write(const uint16_t pio, const uint8_t byte) {
+static void control_write(const uint16_t pio, const uint8_t byte, bool peek) {
     uint8_t index = (uint8_t)pio;
+    (void)peek;
 
     switch (index) {
         case 0x00:

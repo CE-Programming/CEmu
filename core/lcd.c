@@ -1,17 +1,3 @@
-/* Copyright (C) 2015  Fabian Vogt
- * Modified for the CE calculator by CEmu developers
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
-*/
-
 #include <string.h>
 
 #include "lcd.h"
@@ -181,9 +167,11 @@ void lcd_reset(void) {
     gui_console_printf("[CEmu] LCD reset.\n");
 }
 
-uint8_t lcd_read(const uint16_t pio) {
+static uint8_t lcd_read(const uint16_t pio, bool peek) {
     uint16_t index = pio;
     uint8_t bit_offset = (index & 3) << 3;
+
+    (void)peek;
 
     if (index < 0x200) {
         if(index < 0x010) { return read8(lcd.timing[index >> 2], bit_offset); }
@@ -217,11 +205,13 @@ uint8_t lcd_read(const uint16_t pio) {
     return 0;
 }
 
-void lcd_write(const uint16_t pio, const uint8_t value) {
+static void lcd_write(const uint16_t pio, const uint8_t value, bool peek) {
     uint16_t index = pio & 0xFFC;
 
     uint8_t byte_offset = pio & 3;
     uint8_t bit_offset = byte_offset << 3;
+
+    (void)peek;
 
     if (index < 0x200) {
         if (index < 0x010) {
