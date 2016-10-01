@@ -680,7 +680,7 @@ void disassembleInstruction(void) {
                                 break;
                             case 4: // EX (SP), HL/I
                                 disasm.instruction.opcode = "ex";
-                                disasm.instruction.arguments = "(sp,"+disasm.spacing_string+index_table[disasm.prefix];
+                                disasm.instruction.arguments = "(sp)"+disasm.spacing_string+index_table[disasm.prefix];
                                 break;
                             case 5: // EX DE, HL
                                 disasm.instruction.opcode = "ex";
