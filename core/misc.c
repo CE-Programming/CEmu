@@ -175,7 +175,7 @@ static void protected_write(const uint16_t pio, const uint8_t byte, bool peek) {
             protect.ledState = byte;
             break;
         default:
-            protect.unknown_ports[pio] = byte;
+            protect.unknown_ports[pio & 0xFF] = byte;
             break;
     }
 
