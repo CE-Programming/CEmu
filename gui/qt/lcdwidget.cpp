@@ -5,9 +5,7 @@
 #include <QtWidgets/QApplication>
 
 #include "lcdwidget.h"
-#include "qtframebuffer.h"
 #include "sendinghandler.h"
-#include "../../core/lcd.h"
 #include "../../core/link.h"
 
 LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {

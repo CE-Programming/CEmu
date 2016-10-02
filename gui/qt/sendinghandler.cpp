@@ -1,17 +1,13 @@
 #include <QtWidgets/QProgressDialog>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QApplication>
-#include <QtCore/QObject>
 #include <QtCore/QFileInfo>
 #include <QtCore/QMimeData>
 #include <QtGui/QDragEnterEvent>
-#include <QtGui/QDropEvent>
 #include "sendinghandler.h"
 
 #include "emuthread.h"
-#include "../../core/emu.h"
 #include "../../core/link.h"
-#include "../../core/os/os.h"
 
 SendingHandler sending_handler;
 

@@ -8,16 +8,7 @@
 #ifndef AUTOLOADER_H
 #define AUTOLOADER_H
 
-#include <iostream>
-#include <cstdio>
-#include <cstdint>
-#include <cstdlib>
-#include <string>
-#include <vector>
-#include <unordered_map>
-
 #include "utils_tivarslib.h"
-
 #include "TypeHandlers/TypeHandlers.h"
 #include "TypeHandlers/TypeHandlerFuncGetter.h"
 

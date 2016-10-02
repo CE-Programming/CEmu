@@ -7,8 +7,6 @@
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QScrollBar>
-#include <QtGui/QFont>
-#include <QtGui/QPixmap>
 #include <QtNetwork/QNetworkReply>
 #include <fstream>
 
@@ -25,18 +23,13 @@
 #include "sendinghandler.h"
 #include "lcdpopout.h"
 #include "dockwidget.h"
-#include "emuthread.h"
-#include "qtframebuffer.h"
 #include "searchwidget.h"
 #include "basiccodeviewerwindow.h"
-#include "cemuopts.h"
 #include "utils.h"
 #include "capture/gif.h"
 
 #include "../../core/schedule.h"
-#include "../../core/debug/disasm.h"
 #include "../../core/link.h"
-#include "../../core/os/os.h"
 
 #include "../../tests/autotester/crc32.hpp"
 #include "../../tests/autotester/autotester.h"

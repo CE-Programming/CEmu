@@ -11,6 +11,7 @@ extern "C" {
 #include "mem.h"
 #include "lcd.h"
 #include "schedule.h"
+#include "link.h"
 #include "usb.h"
 #include "interrupt.h"
 #include "misc.h"

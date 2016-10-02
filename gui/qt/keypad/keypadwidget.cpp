@@ -7,11 +7,9 @@
 #include "numkey.h"
 #include "arrowkey.h"
 #include "../../../core/asic.h"
-#include "../../../core/keypad.h"
 
 #include <QtWidgets/QApplication>
 #include <QtGui/QPaintEvent>
-#include <QtGui/QPainter>
 #include <QtGui/QScreen>
 
 const QRect KeypadWidget::s_baseRect{{}, QSize{162, 235}};

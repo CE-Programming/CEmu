@@ -6,10 +6,6 @@
  */
 
 #include "utils_tivarslib.h"
-#include <sstream>
-#include <iomanip>
-#include <regex>
-#include <functional>
 
 using namespace std;
 

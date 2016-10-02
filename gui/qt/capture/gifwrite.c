@@ -9,7 +9,6 @@
    available. There is no warranty, express or implied. */
 
 #include "lcdfgif/gif.h"
-#include <stdarg.h>
 #include <string.h>
 #include <assert.h>
 #include <limits.h>

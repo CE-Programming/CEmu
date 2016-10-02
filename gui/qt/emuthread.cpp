@@ -19,19 +19,10 @@
 #include <cstdarg>
 #include <thread>
 
-#include <stdio.h>
-
-#include <QtCore/QEventLoop>
-#include <QtCore/QTimer>
-
 #include "mainwindow.h"
 
 #include "capture/gif.h"
 #include "../../core/emu.h"
-#include "../../core/lcd.h"
-#include "../../core/link.h"
-#include "../../core/debug/debug.h"
-#include "../../core/debug/disasm.h"
 #include "../../core/debug/stepping.h"
 
 EmuThread *emu_thread = nullptr;

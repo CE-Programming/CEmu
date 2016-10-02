@@ -13,10 +13,7 @@
 */
 
 #include "qtkeypadbridge.h"
-#include "emuthread.h"
-#include "keymap.h"
-#include "../../../core/keypad.h"
-#include "../../../core/tidevices.h"
+#include "../../../core/asic.h"
 
 bool QtKeypadBridge::setKeymap(const QString & keymapstr) {
     bool ret = true;

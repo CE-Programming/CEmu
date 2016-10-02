@@ -3,8 +3,7 @@
 
 #include "gif.h"
 #include "giflib.h"
-#include "qtframebuffer.h"
-#include "gifsicle.h"
+#include "../qtframebuffer.h"
 
 static std::mutex gif_mutex;
 static bool recording = false;

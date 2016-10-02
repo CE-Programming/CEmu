@@ -1,6 +1,5 @@
 #include "utils.h"
 #include "../../core/os/os.h"
-#include "../../core/vat.h"
 #include "tivarslib/autoloader.h"
 
 bool fileExists(const std::string& path) {

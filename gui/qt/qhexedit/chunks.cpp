@@ -1,5 +1,4 @@
 #include "chunks.h"
-#include <limits.h>
 
 #define NORMAL 0
 #define HIGHLIGHTED 1

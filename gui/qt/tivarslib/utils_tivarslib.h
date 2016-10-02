@@ -9,9 +9,12 @@
 #define TIVARSLIB_UTILS_H
 
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 #include <cstdio>
 #include <cstdint>
 #include <cstdlib>
+#include <cfloat>
 #include <string>
 #include <vector>
 #include <regex>

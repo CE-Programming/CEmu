@@ -8,14 +8,8 @@
    is no warranty, express or implied. */
 
 #include "gifsicle.h"
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <assert.h>
-#include <errno.h>
 #include <math.h>
-#include <limits.h>
-#include "kcolor.h"
+
 #if HAVE_UNISTD_H
 # include <unistd.h>
 #endif

@@ -1,6 +1,5 @@
 #include <QtWidgets/QApplication>
 #include "mainwindow.h"
-#include "cemuopts.h"
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);

@@ -8,8 +8,6 @@
    available. There is no warranty, express or implied. */
 
 #include "lcdfgif/gif.h"
-#include <stdarg.h>
-#include <assert.h>
 #include <string.h>
 #ifdef __cplusplus
 extern "C" {

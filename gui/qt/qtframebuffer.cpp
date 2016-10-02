@@ -14,7 +14,6 @@
 
 #include "qtframebuffer.h"
 #include "../../core/backlight.h"
-#include "../../core/lcd.h"
 #include "../../core/asic.h"
 
 #include <QtGui/QPainter>

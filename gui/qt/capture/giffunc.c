@@ -10,11 +10,7 @@
 #include "lcdfgif/gif.h"
 #include "gifsicle.h"
 #include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <assert.h>
-#include <errno.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
