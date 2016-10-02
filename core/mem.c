@@ -462,6 +462,10 @@ void mem_write_cpu(uint32_t address, uint8_t value) {
                     }
                     break;
                 }
+
+                if ((debugger.data.block[address] &= ~(DBG_INST_START_MARKER | DBG_INST_MARKER)) & DBG_WRITE_WATCHPOINT) {
+                    open_debugger(HIT_WRITE_BREAKPOINT, address);
+                }
 #endif
                 if (mmio_mapped(address, select)) {
                     port_write_byte(mmio_port(address, select), value);
@@ -469,12 +473,6 @@ void mem_write_cpu(uint32_t address, uint8_t value) {
                 break;
         }
     }
-
-#ifdef DEBUG_SUPPORT
-    if ((debugger.data.block[address] &= ~(DBG_INST_START_MARKER | DBG_INST_MARKER)) & DBG_WRITE_WATCHPOINT) {
-        open_debugger(HIT_WRITE_BREAKPOINT, address);
-    }
-#endif
 }
 
 uint8_t mem_peek_byte(uint32_t address) {
