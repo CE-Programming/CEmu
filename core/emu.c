@@ -50,10 +50,6 @@ bool emu_save_rom(const char *file) {
 
     gui_set_busy(true);
 
-    if (!savedRom) {
-        return false;
-    }
-
     bool success = (fwrite(mem.flash.block, 1, flash_size, savedRom) == flash_size);
 
     fclose(savedRom);
@@ -65,6 +61,10 @@ bool emu_save_rom(const char *file) {
 
 bool emu_save(const char *file) {
     FILE *savedImage = fopen_utf8(file, "wb");
+    if (!savedImage) {
+        return false;
+    }
+
     size_t size = sizeof(emu_image_t);
     emu_image_t* image = (emu_image_t*)malloc(size);
     bool success = false;
@@ -87,6 +87,7 @@ bool emu_save(const char *file) {
 
     free(image);
     fclose(savedImage);
+
     gui_set_busy(false);
 
     return success;
