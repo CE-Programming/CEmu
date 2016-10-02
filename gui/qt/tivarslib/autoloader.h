@@ -1,6 +1,6 @@
 /*
  * Part of tivars_lib_cpp
- * (C) 2015 Adrien 'Adriweb' Bertrand
+ * (C) 2015-2016 Adrien 'Adriweb' Bertrand
  * https://github.com/adriweb/tivars_lib_cpp
  * License: MIT
  */
