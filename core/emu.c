@@ -95,7 +95,7 @@ bool emu_save(const char *file) {
 bool emu_start(const char *romImage, const char *savedImage) {
     bool ret = false;
     long lSize;
-    FILE *imageFile;
+    FILE *imageFile = NULL;
 
     gui_set_busy(true);
 
@@ -143,7 +143,6 @@ bool emu_start(const char *romImage, const char *savedImage) {
                 break;
             }
             free(image);
-            fclose(imageFile);
             ret = true;
         } else {
             asic_init();
@@ -294,6 +293,10 @@ bool emu_start(const char *romImage, const char *savedImage) {
             }
         }
     } while(0);
+
+    if (imageFile) {
+        fclose(imageFile);
+    }
 
     if (!ret) {
         gui_console_printf("[CEmu] Error opening image (Corrupted certificate?)\n");
