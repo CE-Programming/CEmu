@@ -124,7 +124,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
     cpu.next = 2300000;
     cpu_execute();
 
-    remaining = data_size;
+    remaining = (int)data_size;
     while (remaining > 0) {
 
         if (calc_is_off()) {
