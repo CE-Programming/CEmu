@@ -44,6 +44,9 @@ void throttle_interval_event(int index) {
 
 bool emu_save_rom(const char *file) {
     FILE *savedRom = fopen(file, "wb");
+    if (!savedRom) {
+        return false;
+    }
 
     gui_set_busy(true);
 
