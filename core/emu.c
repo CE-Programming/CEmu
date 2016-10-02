@@ -43,6 +43,7 @@ void throttle_interval_event(int index) {
 }
 
 bool emu_save_rom(const char *file) {
+    bool success = false;
     FILE *savedRom = fopen(file, "wb");
     if (!savedRom) {
         return false;
@@ -50,7 +51,7 @@ bool emu_save_rom(const char *file) {
 
     gui_set_busy(true);
 
-    bool success = (fwrite(mem.flash.block, 1, flash_size, savedRom) == flash_size);
+    success = (fwrite(mem.flash.block, 1, flash_size, savedRom) == flash_size);
 
     fclose(savedRom);
 
@@ -60,14 +61,17 @@ bool emu_save_rom(const char *file) {
 }
 
 bool emu_save(const char *file) {
-    FILE *savedImage = fopen_utf8(file, "wb");
+    FILE *savedImage = NULL;
+    emu_image_t *image = NULL;
+    size_t size = sizeof(emu_image_t);
+    bool success = false;
+
+    savedImage = fopen_utf8(file, "wb");
     if (!savedImage) {
         return false;
     }
 
-    size_t size = sizeof(emu_image_t);
-    emu_image_t* image = (emu_image_t*)malloc(size);
-    bool success = false;
+    image = (emu_image_t*)malloc(size);
 
     gui_set_busy(true);
 
