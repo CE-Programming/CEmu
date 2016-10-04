@@ -115,6 +115,17 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
     if (fseek(file, data_start, 0))                        goto r_err;
     if (fread(&data_size, 2, 1, file) != 1)                goto r_err;
 
+    if (calc_is_off()) {
+        intrpt_set(INT_ON, true);
+        control.readBatteryStatus = ~1;
+        intrpt_pulse(19);
+        cpu.cycles = cpu.IEF_wait = 0;
+        cpu.next = 100000000;
+        cpu_execute();
+        intrpt_set(INT_ON, false);
+        goto r_err;
+    }
+
     /* parse each varaible individually until the entire file is compelete. */
 
     cpu.halted = cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = 0;
@@ -126,17 +137,6 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
 
     remaining = (int)data_size;
     while (remaining > 0) {
-
-        if (calc_is_off()) {
-            intrpt_set(INT_ON, true);
-            control.readBatteryStatus = ~1;
-            intrpt_pulse(19);
-            cpu.cycles = cpu.IEF_wait = 0;
-            cpu.next = 10000000;
-            cpu_execute();
-            intrpt_set(INT_ON, false);
-            goto r_err;
-        }
 
         if (fread(&header_size, 2, 1, file) != 1)          goto r_err;
         if (fread(&var_size, 2, 1, file) != 1)             goto r_err;
