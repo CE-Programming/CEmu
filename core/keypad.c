@@ -15,7 +15,7 @@ void keypad_intrpt_check() {
 
 void EMSCRIPTEN_KEEPALIVE keypad_key_event(unsigned int row, unsigned int col, bool press) {
     if (row == 2 && col == 0) {
-        intrpt_set(INT_ON, press);
+        if(press) { intrpt_pulse(INT_ON); }
         if (press && calc_is_off()) {
             asic.shipModeEnabled = false;
             control.readBatteryStatus = ~1;
