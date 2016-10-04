@@ -251,7 +251,7 @@ private:
     bool isResumed = false;
     bool hexSearch = true;
     bool canScroll = false;
-
+    bool usingLoadedImage = false;
     CEmuOpts opts;
 
     uint16_t prevPortAddress = 0;
