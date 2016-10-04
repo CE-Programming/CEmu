@@ -446,9 +446,10 @@ void MainWindow::restoreFromFile() {
                                                       currentDir.absolutePath(),
                                                       tr("CEmu images (*.ce);;All files (*.*)"));
     if(!savedImage.isEmpty()) {
-        usingLoadedImage = true;
         currentDir = QFileInfo(savedImage).absoluteDir();
-        restoreFromPath(savedImage);
+        if(restoreFromPath(savedImage)) {
+            usingLoadedImage = true;
+        }
     }
 }
 
