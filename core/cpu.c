@@ -64,6 +64,7 @@ static void cpu_prefetch(uint32_t address, bool mode) {
 static uint8_t cpu_fetch_byte(void) {
     uint8_t value;
 #ifdef DEBUG_SUPPORT
+    uint_fast32_t curr;
     if ((debugger.data.block[cpu.registers.PC] & (DBG_EXEC_BREAKPOINT | DBG_RUN_UNTIL_BREAKPOINT))
             || ((debugger.data.block[cpu.registers.PC] & DBG_STEP_OVER_BREAKPOINT)
                 && ((cpu.ADL ? cpu.registers.SPL >= debugger.stepOutSPL : cpu.registers.SPS >= debugger.stepOutSPS) || (cpuEvents & EVENT_DEBUG_STEP_OVER)))) {
@@ -72,6 +73,11 @@ static uint8_t cpu_fetch_byte(void) {
         }
         open_debugger((debugger.data.block[cpu.registers.PC] & DBG_EXEC_BREAKPOINT) ? HIT_EXEC_BREAKPOINT : DBG_STEP,
                       cpu.registers.PC);
+    }
+    for(curr=0; curr<profiler.num_blocks; curr++) {
+        if(cpu.registers.PC >= profiler.blocks[curr]->address_start && cpu.registers.PC <= profiler.blocks[curr]->address_end) {
+            profiler.blocks[curr]->cycles = cpu.cycles;
+        }
     }
 #endif
     value = cpu.prefetch;

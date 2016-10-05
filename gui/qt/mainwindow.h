@@ -16,6 +16,7 @@
 #include "../../core/vat.h"
 #include "../../core/debug/debug.h"
 #include "../../core/debug/disasm.h"
+#include "../../core/debug/profiler.h"
 #include "qhexedit/qhexedit.h"
 
 namespace Ui { class MainWindow; }
@@ -114,12 +115,14 @@ private:
     void removePort();
     void updatePortData(int);
     void updateWatchpointData(int);
+    void updateProfilerData(int);
     void changePortValues(QTableWidgetItem*);
     void changeBreakpointAddress(QTableWidgetItem*);
     void setPreviousBreakpointAddress(QTableWidgetItem*);
     void changeWatchpointAddress(QTableWidgetItem*);
     void setPreviousWatchpointAddress(QTableWidgetItem*);
     void setPreviousPortValues(QTableWidgetItem*);
+    void changeProfiler(QTableWidgetItem*);
     void drawNextDisassembleLine();
     void stepInPressed();
     void stepOverPressed();
@@ -141,10 +144,14 @@ private:
     void zeroClockCounter();
     void updateDisassembly(int);
     void addSpaceDisasm(bool);
+    void zeroProfiler();
+    void exportProfiler();
     bool removeBreakpoint();
     bool removeWatchpoint();
     bool addBreakpoint();
     bool addWatchpoint();
+    bool addProfilerBlock();
+    bool removeProfilerBlock();
 
     // Others
     void createLCD();
@@ -254,11 +261,12 @@ private:
     bool usingLoadedImage = false;
     CEmuOpts opts;
 
-    uint16_t prevPortAddress = 0;
     uint32_t prevBreakpointAddress = 0;
     uint32_t prevWatchpointAddress = 0;
+    uint32_t prevProfilerAddress = 0;
     uint32_t prevDisasmAddress = 0;
     uint32_t currAddress = 0;
+    uint16_t prevPortAddress = 0;
     uint8_t watchpointType = 0;
     QString currAddressString, currPortAddress, watchLength;
     QPalette colorback, nocolorback;

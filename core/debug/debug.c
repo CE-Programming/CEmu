@@ -4,6 +4,7 @@
 
 #include "disasm.h"
 #include "debug.h"
+#include "profiler.h"
 #include "../mem.h"
 #include "../emu.h"
 
@@ -19,6 +20,7 @@ void debugger_init(void) {
     debugger.currentBuffPos = debugger.currentErrBuffPos = 0;
 
     debugger.runUntilSet = false;
+    init_profiler();
     gui_console_printf("[CEmu] Initialized Debugger...\n");
 }
 
