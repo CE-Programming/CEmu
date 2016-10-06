@@ -1,0 +1,35 @@
+#ifdef DEBUG_SUPPORT
+
+#ifndef PROFILER_H
+#define PROFILER_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "../defines.h"
+#include "../port.h"
+
+typedef struct {
+    uint32_t address_start;
+    uint32_t address_end;
+    uint64_t cycles;
+} profiler_block_t;
+
+typedef struct {
+    uint32_t num_blocks;
+    profiler_block_t **blocks;
+} profiler_t;
+
+extern profiler_t profiler;
+profiler_block_t *add_profile_block(void);
+void remove_profile_block(uint32_t block_entry);
+void init_profiler(void);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+#endif
