@@ -128,11 +128,13 @@ void debug_init_run_until(uint32_t address) {
 
 void debug_clear_temp_break(void) {
     cpuEvents &= ~(EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OUT | EVENT_DEBUG_STEP_OVER);
-    do {
-        debugger.data.block[debugger.stepOverInstrEnd] &= ~DBG_TEMP_EXEC_BREAKPOINT;
-        if(!debugger.stepOverInstrEnd) { break; }
-        debugger.stepOverInstrEnd = cpu_mask_mode(debugger.stepOverInstrEnd - 1, debugger.stepOverMode);
-    } while(debugger.data.block[debugger.stepOverInstrEnd] & DBG_TEMP_EXEC_BREAKPOINT);
+    if (debugger.stepOverInstrEnd != 0xFFFFFFFFU) {
+        do {
+            debugger.data.block[debugger.stepOverInstrEnd] &= ~DBG_TEMP_EXEC_BREAKPOINT;
+            debugger.stepOverInstrEnd = cpu_mask_mode(debugger.stepOverInstrEnd - 1, debugger.stepOverMode);
+        } while(debugger.data.block[debugger.stepOverInstrEnd] & DBG_TEMP_EXEC_BREAKPOINT);
+    }
+    debugger.stepOverInstrEnd = 0xFFFFFFFFU;
 }
 
 void debug_set_pc_address(uint32_t address) {
