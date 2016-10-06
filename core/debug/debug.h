@@ -7,7 +7,6 @@
 extern "C" {
 #endif
 
-#include "profiler.h"
 #include "../defines.h"
 #include "../port.h"
 

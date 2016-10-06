@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1038</width>
+    <width>1023</width>
     <height>667</height>
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
@@ -154,7 +154,7 @@
      <enum>QTabWidget::Rounded</enum>
     </property>
     <property name="currentIndex">
-     <number>4</number>
+     <number>3</number>
     </property>
     <property name="elideMode">
      <enum>Qt::ElideLeft</enum>
@@ -2376,7 +2376,7 @@ QPushButton:pressed {
              <enum>QAbstractItemView::SelectRows</enum>
             </property>
             <property name="sortingEnabled">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
             <property name="wordWrap">
              <bool>false</bool>
@@ -2513,7 +2513,7 @@ QPushButton:pressed {
             <item>
              <widget class="QPushButton" name="buttonResetProfiler">
               <property name="text">
-               <string>Zero All</string>
+               <string>Clear All</string>
               </property>
              </widget>
             </item>
@@ -2566,7 +2566,7 @@ QPushButton:pressed {
              <enum>QAbstractItemView::SelectRows</enum>
             </property>
             <property name="sortingEnabled">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
             <property name="wordWrap">
              <bool>false</bool>
@@ -2578,7 +2578,7 @@ QPushButton:pressed {
              <bool>false</bool>
             </attribute>
             <attribute name="horizontalHeaderDefaultSectionSize">
-             <number>80</number>
+             <number>70</number>
             </attribute>
             <attribute name="horizontalHeaderHighlightSections">
              <bool>false</bool>
@@ -2611,17 +2611,17 @@ QPushButton:pressed {
             </column>
             <column>
              <property name="text">
-              <string>End Address</string>
-             </property>
-            </column>
-            <column>
-             <property name="text">
               <string>Block Size</string>
              </property>
             </column>
             <column>
              <property name="text">
               <string>Cycles</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Enabled</string>
              </property>
             </column>
            </widget>
@@ -7070,7 +7070,7 @@ QPushButton:pressed {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1038</width>
+     <width>1023</width>
      <height>21</height>
     </rect>
    </property>

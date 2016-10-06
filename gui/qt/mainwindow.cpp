@@ -33,7 +33,6 @@
 
 #include "../../tests/autotester/crc32.hpp"
 #include "../../tests/autotester/autotester.h"
-#include "../../tests/autotester/autotester.h"
 
 static const constexpr int WindowStateVersion = 0;
 
@@ -102,16 +101,11 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     connect(ui->breakpointView, &QTableWidget::itemPressed, this, &MainWindow::setPreviousBreakpointAddress);
     connect(ui->watchpointView, &QTableWidget::itemChanged, this, &MainWindow::changeWatchpointAddress);
     connect(ui->watchpointView, &QTableWidget::itemPressed, this, &MainWindow::setPreviousWatchpointAddress);
-    connect(ui->profilerView, &QTableWidget::itemChanged, this, &MainWindow::changeProfiler);
     connect(ui->checkCharging, &QCheckBox::toggled, this, &MainWindow::changeBatteryCharging);
     connect(ui->sliderBattery, &QSlider::valueChanged, this, &MainWindow::changeBatteryStatus);
     connect(ui->disassemblyView->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::scrollDisasmView);
     connect(ui->checkAddSpace, &QCheckBox::stateChanged, this, &MainWindow::addSpaceDisasm);
     connect(ui->buttonZero, &QPushButton::clicked, this, &MainWindow::zeroClockCounter);
-    connect(ui->buttonAddProfiler, &QPushButton::clicked, this, &MainWindow::addProfilerBlock);
-    connect(ui->buttonRemoveProfiler, &QPushButton::clicked, this, &MainWindow::removeProfilerBlock);
-    connect(ui->buttonResetProfiler, &QPushButton::clicked, this, &MainWindow::zeroProfiler);
-    connect(ui->buttonExportProfiler, &QPushButton::clicked, this, &MainWindow::exportProfiler);
 
     // Debugger Options
     connect(ui->buttonAddEquateFile, &QPushButton::clicked, this, &MainWindow::addEquateFileDialog);
@@ -1319,141 +1313,6 @@ errCRCret:
 /* Debugger Things                                  */
 /* ================================================ */
 
-static int hex2int(QString str) {
-    return (int)strtol(str.toStdString().c_str(), nullptr, 16);
-}
-
-static QString int2hex(uint32_t a, uint8_t l) {
-    return QString::number(a, 16).rightJustified(l, '0', true).toUpper();
-}
-
-bool MainWindow::addProfilerBlock(void) {
-    const int currentRow = ui->profilerView->rowCount();
-
-    currAddress %= 0xFFFFFF;
-    currAddressString = int2hex(currAddress, 6).toUpper();
-
-    if (currAddressString.toStdString().find_first_not_of("0123456789ABCDEF") != std::string::npos) {
-        return false;
-    }
-
-    ui->profilerView->setUpdatesEnabled(false);
-    ui->profilerView->blockSignals(true);
-
-    ui->profilerView->setRowCount(currentRow + 1);
-
-    QTableWidgetItem *saddress = new QTableWidgetItem(currAddressString);
-    QTableWidgetItem *eaddress = new QTableWidgetItem(currAddressString);
-    QTableWidgetItem *block_size = new QTableWidgetItem("1");
-    QTableWidgetItem *cycle_count = new QTableWidgetItem("0");
-    block_size->setFlags(block_size->flags() & ~Qt::ItemIsEditable);
-
-    ui->profilerView->setItem(currentRow, 0, saddress);
-    ui->profilerView->setItem(currentRow, 1, eaddress);
-    ui->profilerView->setItem(currentRow, 2, block_size);
-    ui->profilerView->setItem(currentRow, 3, cycle_count);
-
-    ui->profilerView->selectRow(currentRow);
-    ui->profilerView->setUpdatesEnabled(true);
-
-    add_profile_block();
-
-    prevProfilerAddress = currAddress;
-    currAddressString.clear();
-    ui->profilerView->blockSignals(false);
-    return true;
-}
-
-void MainWindow::zeroProfiler(void) {
-    uint32_t count;
-    for(count=0; count<profiler.num_blocks; count++) {
-        profiler.blocks[count]->cycles = 0;
-    }
-}
-
-void MainWindow::exportProfiler(void) {
-    uint64_t total_cycles = 0;
-    uint32_t count;
-    for(count=0; count<profiler.num_blocks; count++) {
-        total_cycles += profiler.blocks[count]->cycles;
-    }
-    QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptSave, tr("Profiler Data (*.txt);;All Files (*.*)"));
-    QString write_file = fileNames.at(0);
-
-    std::ofstream out;
-    out.open(write_file.toStdString());
-
-    if (out.good()) {
-        out.precision(6);
-        out << "[CEmu Profiler Data]" << std::endl << std::endl;
-        out << "Total Cycles: " << total_cycles << std::endl << std::endl;
-        for(count=0; count<profiler.num_blocks; count++) {
-            long double output = (profiler.blocks[count]->cycles) ?  (static_cast<long double>(profiler.blocks[count]->cycles)/static_cast<long double>(total_cycles))*100.0 : 0;
-            out << '[' << int2hex(profiler.blocks[count]->address_start, 6).toStdString() << ':' << int2hex(profiler.blocks[count]->address_end, 6).toStdString() << "] ";
-            out << output << "% " << profiler.blocks[count]->cycles << " cycles" << std::endl;
-        }
-        out.close();
-    } else {
-        QMessageBox::warning(this, tr("Error"), tr("Error exporting profiler data"));
-    }
-}
-
-bool MainWindow::removeProfilerBlock(void) {
-    if(!ui->profilerView->rowCount() || !ui->profilerView->selectionModel()->isSelected(ui->profilerView->currentIndex())) {
-        return false;
-    }
-
-    const uint32_t currentRow = static_cast<uint32_t>(ui->profilerView->currentRow());
-
-    remove_profile_block(currentRow);
-    ui->profilerView->removeRow(currentRow);
-    return true;
-}
-
-void MainWindow::updateProfilerData(int currentRow) {
-    uint32_t curr = static_cast<uint32_t>(currentRow);
-
-    ui->profilerView->item(currentRow, 3)->setText(QString::number(profiler.blocks[curr]->cycles));
-}
-
-void MainWindow::changeProfiler(QTableWidgetItem *item) {
-    uint32_t row = static_cast<uint32_t>(item->row());
-    auto col = item->column();
-    QString string;
-    uint32_t value;
-
-    ui->profilerView->blockSignals(true);
-    if(col == 3) {
-        uint64_t cycles = item->text().toLongLong(NULL, 10);
-        string = QString::number(cycles);
-        profiler.blocks[row]->cycles = cycles;
-    } else {
-        std::string s = item->text().toUpper().toStdString();
-        if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty()) {
-            item->setText(int2hex(0, 6));
-            s = "00";
-        }
-
-        value = static_cast<uint32_t>(hex2int(QString::fromStdString(s)));
-
-        if (col == 0) {
-            uint32_t end_address = static_cast<uint32_t>(hex2int(ui->profilerView->item(row, 1)->text()));
-            value = (value>end_address) ? end_address : value;
-            profiler.blocks[row]->address_start = value;
-            string = int2hex(value, 6);
-            ui->profilerView->item(row, 2)->setText(QString::number(end_address-value+1));
-        } else if (col == 1) {
-            uint32_t start_address = static_cast<uint32_t>(hex2int(ui->profilerView->item(row, 1)->text()));
-            value = (value<start_address) ? start_address : value;
-            profiler.blocks[row]->address_end = value;
-            string = int2hex(value, 6);
-            ui->profilerView->item(row, 2)->setText(QString::number(value-start_address+1));
-        }
-    }
-    item->setText(string);
-    ui->profilerView->blockSignals(false);
-}
-
 void MainWindow::setFont(int fontSize) {
     ui->textSizeSlider->setValue(fontSize);
     settings->setValue(QStringLiteral("textSize"), ui->textSizeSlider->value());
@@ -1489,6 +1348,14 @@ void MainWindow::setFont(int fontSize) {
     ui->lcdbaseView->setFont(monospace);
     ui->lcdcurrView->setFont(monospace);
     ui->cycleView->setFont(monospace);
+}
+
+static int hex2int(QString str) {
+    return (int)strtol(str.toStdString().c_str(), nullptr, 16);
+}
+
+static QString int2hex(uint32_t a, uint8_t l) {
+    return QString::number(a, 16).rightJustified(l, '0', true).toUpper();
 }
 
 void MainWindow::raiseDebugger() {
@@ -1809,20 +1676,12 @@ void MainWindow::populateDebugWindow() {
     ui->checkBGR->setChecked(lcd.control & 0x100);
     ui->brightnessSlider->setValue(backlight.brightness);
 
-    ui->profilerView->blockSignals(true);
-    ui->portView->blockSignals(true);
-    ui->watchpointView->blockSignals(true);
-
     for(int i=0; i<ui->portView->rowCount(); ++i) {
         updatePortData(i);
     }
 
     for(int i=0; i<ui->watchpointView->rowCount(); ++i) {
         updateWatchpointData(i);
-    }
-
-    for(int i=0; i<ui->profilerView->rowCount(); ++i) {
-        updateProfilerData(i);
     }
 
     updateTIOSView();
@@ -1833,9 +1692,6 @@ void MainWindow::populateDebugWindow() {
     ramUpdate();
     flashUpdate();
     memUpdate(prevDisasmAddress);
-    ui->profilerView->blockSignals(false);
-    ui->portView->blockSignals(false);
-    ui->watchpointView->blockSignals(false);
 }
 
 void MainWindow::updateTIOSView() {
@@ -2991,7 +2847,7 @@ void MainWindow::searchEdit(QHexEdit *editor) {
         return;
     }
     if((searchString.length() & 1) || s.find_first_not_of("0123456789ABCDEF") != std::string::npos) {
-        QMessageBox::warning(this, tr("Error"), tr("Error when reading input string"));
+        QMessageBox::warning(this,"Error", "Error when reading input string");
         return;
     }
 
@@ -3002,7 +2858,7 @@ void MainWindow::searchEdit(QHexEdit *editor) {
         string_int.append(hex2int(a));
     }
     if(editor->indexOf(string_int, editor->cursorPosition()) == -1) {
-        QMessageBox::warning(this, tr("Not Found"), tr("Hex string not found."));
+        QMessageBox::warning(this,"Not Found","Hex string not found.");
     }
 }
 
