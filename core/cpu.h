@@ -86,7 +86,7 @@ typedef struct emu_image emu_image;
 bool cpu_restore(const emu_image*);
 bool cpu_save(emu_image*);
 
-#define cpu_mask_mode(address, mode) ((address) & ((mode) ? 0xFFFFFF : 0xFFFF))
+#define cpu_mask_mode(address, mode) ((uint32_t)((address) & ((mode) ? 0xFFFFFF : 0xFFFF)))
 
 #ifdef __cplusplus
 }

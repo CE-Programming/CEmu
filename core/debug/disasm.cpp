@@ -380,7 +380,6 @@ void disassembleInstruction(void) {
     disasmHighlight.hit_read_breakpoint = false;
     disasmHighlight.hit_write_breakpoint = false;
     disasmHighlight.hit_exec_breakpoint = false;
-    disasmHighlight.hit_run_breakpoint = false;
     disasmHighlight.hit_pc = false;
     disasmHighlight.inst_address = -1;
 
@@ -998,7 +997,6 @@ void disassembleInstruction(void) {
         disasmHighlight.hit_read_breakpoint = false;
         disasmHighlight.hit_write_breakpoint = false;
         disasmHighlight.hit_exec_breakpoint = false;
-        disasmHighlight.hit_run_breakpoint = false;
         disasmHighlight.hit_pc = false;
         disasmHighlight.inst_address = -1;
 

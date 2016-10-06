@@ -15,7 +15,6 @@ typedef struct {
     bool hit_read_breakpoint;
     bool hit_write_breakpoint;
     bool hit_exec_breakpoint;
-    bool hit_run_breakpoint;
     int32_t inst_address;
 } disasm_highlights_state_t;
 

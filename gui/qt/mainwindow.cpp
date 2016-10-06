@@ -2585,7 +2585,6 @@ void MainWindow::drawNextDisassembleLine() {
             disasmHighlight.hit_read_breakpoint = false;
             disasmHighlight.hit_write_breakpoint = false;
             disasmHighlight.hit_exec_breakpoint = false;
-            disasmHighlight.hit_run_breakpoint = false;
             disasmHighlight.hit_pc = false;
 
             disasm.instruction.data.clear();
@@ -2630,9 +2629,6 @@ void MainWindow::drawNextDisassembleLine() {
         disasmOffset.movePosition(QTextCursor::StartOfLine);
     }
 
-    if (disasmHighlight.hit_run_breakpoint == true) {
-        ui->disassemblyView->addHighlight(QColor(Qt::blue).lighter(160));
-    }
     if (disasmHighlight.hit_pc == true) {
         ui->disassemblyView->addHighlight(QColor(Qt::red).lighter(160));
     }
