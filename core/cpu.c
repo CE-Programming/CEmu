@@ -848,7 +848,7 @@ void cpu_execute(void) {
             }
         }
         if (cpu.NMI || (cpu.IEF1 && (intrpt.request->status & intrpt.request->enabled))) {
-            cpu_clear_mode();
+            cpu.L = cpu.IL = cpu.ADL || cpu.MADL;
             cpu.IEF1 = cpu.IEF2 = cpu.halted = cpu.inBlock = 0;
             cpu.cycles += 1;
             if (cpu.NMI) {
