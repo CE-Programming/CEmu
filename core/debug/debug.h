@@ -34,15 +34,15 @@ enum {
 #define DBG_PORT_WRITE            2
 #define DBG_PORT_FREEZE           4
 
+#define DBG_EMPTY_WATCHPOINT      3
+
 /* For Memory Brakpoints */
 #define DBG_READ_WATCHPOINT       (1 << 0)
 #define DBG_WRITE_WATCHPOINT      (1 << 1)
-#define DBG_EMPTY_WATCHPOINT      (1 << 2)
 #define DBG_EXEC_BREAKPOINT       (1 << 3)
-#define DBG_STEP_OVER_BREAKPOINT  (1 << 4)
-#define DBG_RUN_UNTIL_BREAKPOINT  (1 << 5)
-#define DBG_INST_START_MARKER     (1 << 6)
-#define DBG_INST_MARKER           (1 << 7)
+#define DBG_TEMP_EXEC_BREAKPOINT  (1 << 4)
+#define DBG_INST_START_MARKER     (1 << 5)
+#define DBG_INST_MARKER           (1 << 6)
 
 #define DBG_PORT_RANGE            0xFFFF00
 #define DBGOUT_PORT_RANGE         0xFB0000
@@ -59,15 +59,15 @@ typedef struct {        /* For debugging */
     int cpu_next;
     char *buffer;
     char *errBuffer;
-    uint32_t stepOverInstrEnd;
     uint32_t stepOverInstrSize;
     uint32_t stepOverExtendSize;
     uint8_t stepOverMode;
     uint32_t stepOutSPL;
+    uint32_t stoAddress;
     uint16_t stepOutSPS;
-    int8_t stepOutWait;
+    uint32_t stepOverInstrEnd;
     uint32_t runUntilAddress;
-    bool runUntilSet;
+    int8_t stepOutWait;
     bool stepOverFirstStep;
     bool stepOverCall;
     debug_data_t data;
@@ -86,7 +86,7 @@ uint8_t debug_peek_byte(uint32_t address);
 void open_debugger(int reason, uint32_t address);
 void debug_switch_step_mode(void);
 
-void debug_toggle_run_until(uint32_t address);
+void debug_init_run_until(uint32_t address);
 
 void debug_breakwatch(uint32_t address, unsigned int type, bool set);
 void debug_breakpoint_remove(uint32_t address);
@@ -96,8 +96,7 @@ void debug_pmonitor_remove(uint16_t address);
 
 void debug_set_pc_address(uint32_t address);
 
-void debug_clear_run_until(void);
-void debug_clear_step_over(void);
+void debug_clear_temp_break(void);
 
 #ifdef __cplusplus
 }

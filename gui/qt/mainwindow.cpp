@@ -76,6 +76,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     connect(&emu, &EmuThread::sendDebugCommand, this, &MainWindow::processDebugCommand, Qt::QueuedConnection);
     connect(this, &MainWindow::debuggerChangedState, &emu, &EmuThread::setDebugMode);
     connect(this, &MainWindow::setDebugStepInMode, &emu, &EmuThread::setDebugStepInMode);
+    connect(this, &MainWindow::setRunUntilMode, &emu, &EmuThread::setRunUntilMode);
     connect(this, &MainWindow::setDebugStepOverMode, &emu, &EmuThread::setDebugStepOverMode);
     connect(this, &MainWindow::setDebugStepNextMode, &emu, &EmuThread::setDebugStepNextMode);
     connect(this, &MainWindow::setDebugStepOutMode, &emu, &EmuThread::setDebugStepOutMode);
@@ -1610,7 +1611,6 @@ void MainWindow::setDebuggerState(bool state) {
     if (debuggerOn) {
         ui->buttonRun->setText("Run");
         ui->buttonRun->setIcon(runIcon);
-        debug_clear_run_until();
     } else {
         ui->buttonRun->setText("Stop");
         ui->buttonRun->setIcon(stopIcon);
@@ -2642,17 +2642,17 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
     QString set_pc = "Set PC";
     QString toggle_break = "Toggle Breakpoint";
     QString toggle_watch = "Toggle Watchpoint";
-    QString run_until = "Toggle Run Until";
+    QString run_until = "Run Until";
     QString goto_mem = "Goto Memory View";
     ui->disassemblyView->setTextCursor(ui->disassemblyView->cursorForPosition(posa));
     QPoint globalPos = ui->disassemblyView->mapToGlobal(posa);
 
     QMenu contextMenu;
-    contextMenu.addAction(set_pc);
+    contextMenu.addAction(run_until);
     contextMenu.addAction(toggle_break);
     contextMenu.addAction(toggle_watch);
-    contextMenu.addAction(run_until);
     contextMenu.addAction(goto_mem);
+    contextMenu.addAction(set_pc);
 
     QAction* selectedItem = contextMenu.exec(globalPos);
     if (selectedItem) {
@@ -2668,9 +2668,9 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
             setWatchpointAddress();
         } else if (selectedItem->text() == run_until) {
             uint32_t address = static_cast<uint32_t>(hex2int(ui->disassemblyView->getSelectedAddress()));
-            debug_toggle_run_until(address);
-            ui->disassemblyView->verticalScrollBar()->blockSignals(true);
-            updateDisasmView(address, true);
+            debug_init_run_until(address);
+            changeDebuggerState();
+            emit setRunUntilMode();
         } else if (selectedItem->text() == goto_mem) {
             memGoto(ui->disassemblyView->getSelectedAddress());
         }

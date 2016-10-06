@@ -40,10 +40,6 @@ static void cpu_clear_mode(void) {
     cpu.IL = cpu.ADL;
 }
 
-static uint32_t cpu_mask_mode(uint32_t value, bool mode) {
-    return value & (mode ? 0xFFFFFF : 0xFFFF);
-}
-
 static uint32_t cpu_address_mode(uint32_t address, bool mode) {
     if (mode) {
         return address & 0xFFFFFF;
@@ -64,20 +60,9 @@ static void cpu_prefetch(uint32_t address, bool mode) {
 static uint8_t cpu_fetch_byte(void) {
     uint8_t value;
 #ifdef DEBUG_SUPPORT
-    uint_fast32_t curr;
-    if ((debugger.data.block[cpu.registers.PC] & (DBG_EXEC_BREAKPOINT | DBG_RUN_UNTIL_BREAKPOINT))
-            || ((debugger.data.block[cpu.registers.PC] & DBG_STEP_OVER_BREAKPOINT)
-                && ((cpu.ADL ? cpu.registers.SPL >= debugger.stepOutSPL : cpu.registers.SPS >= debugger.stepOutSPS) || (cpuEvents & EVENT_DEBUG_STEP_OVER)))) {
-        if ((debugger.data.block[cpu.registers.PC] & DBG_STEP_OVER_BREAKPOINT)) {
-            debug_clear_step_over();
-        }
+    if (debugger.data.block[cpu.registers.PC] & (DBG_EXEC_BREAKPOINT | DBG_TEMP_EXEC_BREAKPOINT)) {
         open_debugger((debugger.data.block[cpu.registers.PC] & DBG_EXEC_BREAKPOINT) ? HIT_EXEC_BREAKPOINT : DBG_STEP,
                       cpu.registers.PC);
-    }
-    for(curr=0; curr<profiler.num_blocks; curr++) {
-        if(cpu.registers.PC >= profiler.blocks[curr]->address_start && cpu.registers.PC <= profiler.blocks[curr]->address_end) {
-            profiler.blocks[curr]->cycles = cpu.cycles;
-        }
     }
 #endif
     value = cpu.prefetch;
@@ -109,18 +94,8 @@ static uint32_t cpu_fetch_word_no_prefetch(void) {
 static uint8_t cpu_read_byte(uint32_t address) {
     uint32_t cpuAddress = cpu_address_mode(address, cpu.L);
 #ifdef DEBUG_SUPPORT
-    if (cpuEvents & (EVENT_DEBUG_STEP_OVER | EVENT_DEBUG_STEP_NEXT)) {
-        uint32_t stepOverDist = cpu_mask_mode(cpuAddress - debugger.stepOverInstrEnd, debugger.stepOverMode);
-        if ((stepOverDist <= debugger.stepOverExtendSize) && (debugger.stepOverMode
-                || ((cpuAddress & 0xFF0000) == (debugger.stepOverInstrEnd & 0xFF0000)))) {
-            uint32_t stepOverAddress = cpu_mask_mode(cpuAddress + 1, debugger.stepOverMode);
-            debugger.data.block[stepOverAddress] |= DBG_STEP_OVER_BREAKPOINT;
-            //fprintf(stderr, "[cpu_read_byte] Added breakpoint at 0x%08x\n", stepOverAddress);
-            if (stepOverDist == debugger.stepOverExtendSize) {
-                debugger.stepOverExtendSize++;
-                //fprintf(stderr, "[cpu_read_byte] stepOverExtendSize=%i\n", debugger.stepOverExtendSize);
-            }
-        }
+    if (cpuAddress == debugger.stepOverInstrEnd) {
+        debugger.data.block[debugger.stepOverInstrEnd = cpu_mask_mode(address + 1, debugger.stepOverMode)] |= DBG_TEMP_EXEC_BREAKPOINT;
     }
 #endif
     return mem_read_cpu(cpuAddress, false);
@@ -421,18 +396,15 @@ static void cpu_call(uint32_t address, bool mixed) {
             if (r->SPL >= debugger.stepOutSPL) {
                 addWait = true;
                 debugger.stepOutSPL = r->SPL;
-                //fprintf(stderr, "[cpu_call] stepOutSPL=0x%08x\n", debugger.stepOutSPL);
             }
         } else {
             if (r->SPS >= debugger.stepOutSPS) {
                 addWait = true;
                 debugger.stepOutSPS = r->SPS;
-                //fprintf(stderr, "[cpu_call] stepOutSPS=0x%08x\n", debugger.stepOutSPS);
             }
         }
         if (addWait && (debugger.stepOutWait < 1)) {
             debugger.stepOutWait++;
-            //fprintf(stderr, "[cpu_call] debugger.stepOutWait=%i\n", debugger.stepOutWait);
         }
     }
 #endif
@@ -469,9 +441,8 @@ static void cpu_check_step_out(void) {
         int32_t spDelta = cpu.ADL ? (int32_t) cpu.registers.SPL - (int32_t) debugger.stepOutSPL :
                           (int32_t) cpu.registers.SPS - (int32_t) debugger.stepOutSPS;
         if (spDelta >= 0) {
-            //fprintf(stderr, "[cpu_check_step_out] debugger.stepOutWait=%i\n", debugger.stepOutWait - 1);
             if (!debugger.stepOutWait--) {
-                debug_clear_step_over();
+                debug_clear_temp_break();
                 cpu_clear_mode();
                 cpuEvents &= ~(EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OUT);
                 open_debugger(DBG_STEP, 0);

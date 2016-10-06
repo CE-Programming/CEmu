@@ -114,7 +114,7 @@ void EmuThread::setDebugMode(bool state) {
     if(inDebugger && !state) {
         inDebugger = false;
     }
-    debug_clear_step_over();
+    debug_clear_temp_break();
 }
 
 void EmuThread::setSendState(bool state) {
@@ -125,6 +125,12 @@ void EmuThread::setSendState(bool state) {
 void EmuThread::setReceiveState(bool state) {
     enterReceiveState = state;
     emu_is_receiving = state;
+}
+
+void EmuThread::setRunUntilMode() {
+    debug_set_run_until();
+    enterDebugger = false;
+    inDebugger = false;
 }
 
 void EmuThread::setDebugStepInMode() {

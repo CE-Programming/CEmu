@@ -66,6 +66,7 @@ signals:
     void setDebugStepOverMode();
     void setDebugStepNextMode();
     void setDebugStepOutMode();
+    void setRunUntilMode();
 
     // Linking
     void setSendState(bool);
