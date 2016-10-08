@@ -14,7 +14,7 @@ using namespace std;
 namespace tivars
 {
     
-    data_t TH_0x00::makeDataFromString(const string& str, const options_t options)
+    data_t TH_0x00::makeDataFromString(const string& str, const options_t& options)
     {
         data_t data(TH_0x00::dataByteCount);
 
@@ -46,7 +46,7 @@ namespace tivars
         return data;
     }
 
-    string TH_0x00::makeStringFromData(const data_t& data, const options_t options)
+    string TH_0x00::makeStringFromData(const data_t& data, const options_t& options)
     {
         (void)options;
 

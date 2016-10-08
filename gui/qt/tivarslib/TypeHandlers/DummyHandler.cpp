@@ -10,7 +10,7 @@
 namespace tivars
 {
 
-    data_t DummyHandler::makeDataFromString(const std::string& str, const options_t options)
+    data_t DummyHandler::makeDataFromString(const std::string& str, const options_t& options)
     {
         (void)str;
         (void)options;
@@ -19,7 +19,7 @@ namespace tivars
         return data_t();
     }
 
-    std::string DummyHandler::makeStringFromData(const data_t& data, const options_t options)
+    std::string DummyHandler::makeStringFromData(const data_t& data, const options_t& options)
     {
         (void)data;
         (void)options;

@@ -17,7 +17,7 @@ using namespace std;
 
 namespace tivars
 {
-    data_t TH_0x0C::makeDataFromString(const string& str, const options_t options)
+    data_t TH_0x0C::makeDataFromString(const string& str, const options_t& options)
     {
         (void)options;
         data_t data;
@@ -59,7 +59,7 @@ namespace tivars
         return data;
     }
 
-    string TH_0x0C::makeStringFromData(const data_t& data, const options_t options)
+    string TH_0x0C::makeStringFromData(const data_t& data, const options_t& options)
     {
         (void)options;
 
