@@ -58,4 +58,6 @@ std::string stripchars(std::string str, const std::string& chars);
 
 std::string str_pad(const std::string& str, unsigned long pad_length, std::string pad_string = " ");
 
+std::string dec2frac(double num, double err = 0.001);
+
 #endif

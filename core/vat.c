@@ -213,6 +213,9 @@ bool vat_search_next(calc_var_t *var) {
     var->type = (calc_var_type_t)(var->type1 & 0x3F);
     switch (var->type) {
         case CALC_VAR_TYPE_REAL:
+        case CALC_VAR_TYPE_REAL_RADICAL:
+        case CALC_VAR_TYPE_REAL_PI:
+        case CALC_VAR_TYPE_REAL_PI_FRAC:
             var->size = 9;
             break;
         case CALC_VAR_TYPE_REAL_LIST:
@@ -223,6 +226,10 @@ bool vat_search_next(calc_var_t *var) {
                           * mem_peek_byte(var->address + 1) * 9;
             break;
         case CALC_VAR_TYPE_CPLX:
+        case CALC_VAR_TYPE_CPLX_FRAC:
+        case CALC_VAR_TYPE_CPLX_RADICAL:
+        case CALC_VAR_TYPE_CPLX_PI:
+        case CALC_VAR_TYPE_CPLX_PI_FRAC:
             var->size = 18;
             break;
         case CALC_VAR_TYPE_CPLX_LIST:

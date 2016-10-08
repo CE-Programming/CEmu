@@ -103,6 +103,13 @@ SOURCES +=  utils.cpp \
     tivarslib/TypeHandlers/TH_0x05.cpp \
     tivarslib/TypeHandlers/TH_0x0C.cpp \
     tivarslib/TypeHandlers/TH_0x0D.cpp \
+    tivarslib/TypeHandlers/TH_0x1B.cpp \
+    tivarslib/TypeHandlers/TH_0x1C.cpp \
+    tivarslib/TypeHandlers/TH_0x1D.cpp \
+    tivarslib/TypeHandlers/TH_0x1E.cpp \
+    tivarslib/TypeHandlers/TH_0x1F.cpp \
+    tivarslib/TypeHandlers/TH_0x20.cpp \
+    tivarslib/TypeHandlers/TH_0x21.cpp \
     ../../tests/autotester/autotester.cpp \
     ../../core/asic.c \
     ../../core/cpu.c \
