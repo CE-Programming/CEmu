@@ -24,21 +24,10 @@ bool is_in_vector_string(const std::vector<std::string>& v, std::string element)
     return find(v.begin(), v.end(), element) != v.end();
 }
 
-bool is_in_umap_string_uchar(const unordered_map<string, unsigned char>& m, const string element)
-{
-    return m.find(element) != m.end();
-}
-
-bool is_in_umap_string_uint(const unordered_map<string, unsigned int>& m, const string element)
-{
-    return m.find(element) != m.end();
-}
-
 bool has_option(const unordered_map<string, unsigned char>& m, const string element)
 {
     return m.find(element) != m.end();
 }
-
 
 unsigned char hexdec(const string& str)
 {

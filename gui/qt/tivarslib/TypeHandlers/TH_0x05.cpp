@@ -40,7 +40,7 @@ namespace tivars
             for (uint currentLength = lengthOfLongestTokenName; currentLength > 0; currentLength--)
             {
                 string currentSubString = str.substr(strCursorPos, currentLength);
-                if (is_in_umap_string_uint(tokens_NameToBytes, currentSubString))
+                if (tokens_NameToBytes.count(currentSubString))
                 {
                     uint tokenValue = tokens_NameToBytes[currentSubString];
                     if (tokenValue > 0xFF)
