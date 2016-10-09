@@ -78,7 +78,7 @@ def dlfile(url):
             print("         !! URL Error: %s (%s)", e.reason, url)
         except HTTPException:
             _, e, _ = sys.exc_info()
-            print("         !! HTTP Exception: %s (%s)", e.reason, url)
+            print("         !! HTTP Exception: %s (%s)", str(e), url)
         
         # Increment attempts
         dl_attempts += 1
