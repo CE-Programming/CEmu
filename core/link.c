@@ -51,7 +51,7 @@ void enterVariableLink(void) {
     /* Wait for the GUI to finish whatever it needs to do */
     gui_entered_send_state(true);
     do {
-        gui_emu_sleep();
+        gui_emu_sleep(50);
     } while(emu_is_sending || emu_is_receiving);
 }
 

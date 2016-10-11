@@ -28,7 +28,7 @@
 #include "cert.h"
 #include "os/os.h"
 
-#define imageVersion 0xCECE0008
+#define imageVersion 0xCECE0009
 
 uint32_t cpuEvents;
 volatile bool exiting;
@@ -350,10 +350,10 @@ static void emu_main_loop_inner(void) {
             sched_process_pending_events();
             cpu_execute();
         } else {
-            gui_emu_sleep();
+            gui_emu_sleep(50);
         }
     } else {
-        gui_emu_sleep();
+        gui_emu_sleep(50);
     }
 }
 

@@ -11,8 +11,8 @@ lcd_state_t lcd;
 
 uint32_t lcd_framebuffer[320*240];
 
-static const uint32_t vram_size = 320 * 240 * 2;
-static const uint32_t lcd_dma_size = 0x80000;
+#define vram_size (320 * 240 * 2)
+#define lcd_dma_size 0x80000
 
 void (*lcd_event_gui_callback)(void) = NULL;
 
@@ -255,23 +255,27 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool peek) {
             write8(lcd.crsrConfig, bit_offset, value);
             lcd.crsrConfig &= 0xF;
         }
-        if(index < 0xC0C && index >= 0xC08) {
+        if(index < 0xC0B && index >= 0xC08) {
             write8(lcd.crsrPalette0, bit_offset, value);
         }
-        if(index < 0xC10 && index >= 0xC0C) {
+        if(index < 0xC0F && index >= 0xC0C) {
             write8(lcd.crsrPalette1, bit_offset, value);
         }
         if(index < 0xC14 && index >= 0xC10) {
             write8(lcd.crsrXY, bit_offset, value);
+            lcd.crsrXY &= (0xFFF | (0xFFF << 16));
         }
         if(index < 0xC16 && index >= 0xC14) {
             write8(lcd.crsrClip, bit_offset, value);
+            lcd.crsrClip &= (0x3F | (0x3F << 8));
         }
         if(index == 0xC20) {
             write8(lcd.crsrImsc, bit_offset, value);
+            lcd.crsrImsc &= 0xF;
         }
         if(index == 0xC24) {
             lcd.crsrRis &= ~(value << bit_offset);
+            lcd.crsrRis &= 0xF;
         }
     }
 }

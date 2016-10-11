@@ -11,23 +11,23 @@
 #define mmio_mapped(address, select) ((address) < (((select) = (address) >> 6 & 0x4000) ? 0xFB0000 : 0xE40000))
 #define mmio_port(address, select) (0x1000 + (select) + ((address) >> 4 & 0xf000) + ((address) & 0xfff))
 
-
 /* Global MEMORY state */
 mem_state_t mem;
 
 void mem_init(void) {
     unsigned int i;
 
-    mem.flash.block = (uint8_t*)malloc(flash_size);               /* allocate Flash memory */
+    /* Allocate FLASH memory */
+    mem.flash.block = (uint8_t*)malloc(flash_size);
     memset(mem.flash.block, 0xFF, flash_size);
     mem.flash.size = flash_size;
 
     for (i = 0; i < 8; i++) {
-        mem.flash.sector[i].ptr = mem.flash.block + (i*flash_sector_size_8K);
-        mem.flash.sector[i].locked = true;
+        mem.flash.sector_8k[i].ptr = mem.flash.block + (i*flash_sector_size_8K);
+        mem.flash.sector_8k[i].locked = true;
     }
 
-    for (i = 8; i < 8+63; i++) {
+    for (i = 0; i < 64; i++) {
         mem.flash.sector[i].ptr = mem.flash.block + (i*flash_sector_size_64K);
         mem.flash.sector[i].locked = false;
     }
@@ -36,7 +36,8 @@ void mem_init(void) {
     mem.flash.sector[8].locked = true;
     mem.flash.locked = true;
 
-    mem.ram.block = (uint8_t*)calloc(ram_size, sizeof(uint8_t));      /* Allocate RAM */
+    /* Allocate RAM */
+    mem.ram.block = (uint8_t*)calloc(ram_size, sizeof(uint8_t));
 
     mem.flash.write_index = 0;
     mem.flash.command = NO_COMMAND;
@@ -53,12 +54,6 @@ void mem_free(void) {
         mem.flash.block = NULL;
     }
     gui_console_printf("[CEmu] Freed Memory.\n");
-}
-
-void mem_reset(void) {
-    memset(mem.ram.block, 0, ram_size);
-    memset(mem.flash.block, 0, flash_size);
-    gui_console_printf("[CEmu] Memory Reset.\n");
 }
 
 static uint32_t flash_address(uint32_t address, uint32_t *size) {
@@ -122,20 +117,18 @@ static void flash_erase(uint32_t address, uint8_t byte) {
     mem.flash.command = FLASH_CHIP_ERASE;
 
     memset(mem.flash.block, 0xFF, flash_size);
-    gui_console_printf("Erased entire Flash chip.\n");
+    gui_console_printf("[CEmu] Erased Flash chip.\n");
 }
 
 static void flash_erase_sector(uint32_t address, uint8_t byte) {
-    uint8_t sector;
-
+    uint8_t selected;
     (void)byte;
 
     mem.flash.command = FLASH_SECTOR_ERASE;
+    selected = address/flash_sector_size_64K;
 
-    /* Reset sector */
-    sector = address/flash_sector_size_64K;
-    if(mem.flash.sector[sector].locked == false) {
-        memset(mem.flash.sector[sector].ptr, 0xFF, flash_sector_size_64K);
+    if(!mem.flash.sector[selected].locked) {
+        memset(mem.flash.sector[selected].ptr, 0xFF, flash_sector_size_64K);
     }
 }
 
@@ -255,7 +248,7 @@ static flash_write_pattern_t patterns[] = {
 
 static uint8_t flash_read_handler(uint32_t address) {
     uint8_t value = 0;
-    uint8_t sector;
+    uint8_t selected;
 
     address = flash_address(address, NULL);
     if (flash.mapped) {
@@ -267,6 +260,8 @@ static uint8_t flash_read_handler(uint32_t address) {
                 value = 0x80;
                 mem.flash.read_index++;
                 if(mem.flash.read_index == 3) {
+                    /* Simulate erase delay */
+                    gui_emu_sleep(1.5e4);
                     mem.flash.read_index = 0;
                     mem.flash.command = NO_COMMAND;
                 }
@@ -277,11 +272,12 @@ static uint8_t flash_read_handler(uint32_t address) {
                 break;
             case FLASH_READ_SECTOR_PROTECTION:
                 if (address < 0x10000) {
-                    sector = address/flash_sector_size_8K;
+                    selected = address/flash_sector_size_8K;
+                    value = mem.flash.sector_8k[selected].locked ? 1 : 0;
                 } else {
-                    sector = (address/flash_sector_size_64K)+6;
+                    selected = address/flash_sector_size_64K;
+                    value = mem.flash.sector[selected].locked ? 1 : 0;
                 }
-                value = mem.flash.sector[sector].locked ? 1 : 0;
                 break;
             case FLASH_READ_CFI:
                 if (address >= 0x20 && address <= 0x2A) {
@@ -536,11 +532,8 @@ bool mem_save(emu_image *s) {
 
 bool mem_restore(const emu_image *s) {
     unsigned int i;
-    uint8_t *tmp_flash_ptr;
-    uint8_t *tmp_ram_ptr;
-
-    tmp_flash_ptr = mem.flash.block;
-    tmp_ram_ptr = mem.ram.block;
+    uint8_t *tmp_flash_ptr = mem.flash.block;
+    uint8_t *tmp_ram_ptr = mem.ram.block;
 
     mem = s->mem;
 
@@ -552,11 +545,9 @@ bool mem_restore(const emu_image *s) {
 
     for (i = 0; i < 8; i++) {
         mem.flash.sector[i].ptr = mem.flash.block + (i*flash_sector_size_8K);
-        mem.flash.sector[i].locked = true;
     }
-    for (i = 8; i < 8+63; i++) {
+    for (i = 0; i < 64; i++) {
         mem.flash.sector[i].ptr = mem.flash.block + (i*flash_sector_size_64K);
-        mem.flash.sector[i].locked = false;
     }
     return true;
 }

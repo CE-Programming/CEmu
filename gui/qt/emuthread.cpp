@@ -28,8 +28,8 @@
 EmuThread *emu_thread = nullptr;
 QTimer speedUpdateTimer;
 
-void gui_emu_sleep(void) {
-    QThread::usleep(50);
+void gui_emu_sleep(unsigned long microseconds) {
+    QThread::usleep(microseconds);
 }
 
 void gui_do_stuff(void) {

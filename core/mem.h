@@ -38,7 +38,8 @@ typedef struct {
     bool locked;
     uint8_t write_index;
     uint8_t read_index;
-    flash_sector_state_t sector[8+63];
+    flash_sector_state_t sector_8k[8];
+    flash_sector_state_t sector[64];
     uint8_t *block;     /* Flash mem */
     uint32_t size;
 
@@ -69,7 +70,6 @@ static const uint32_t flash_sector_size_64K = 0x10000;
 /* Available Functions */
 void mem_init(void);
 void mem_free(void);
-void mem_reset(void);
 
 uint8_t *phys_mem_ptr(uint32_t address, int32_t size);
 uint8_t mem_peek_byte(uint32_t address);
