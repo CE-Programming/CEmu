@@ -691,9 +691,11 @@ void MainWindow::screenshotGIF() {
     }
 
     QString path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.img");
+    lcd_event_gui_callback = gif_new_frame;
     if (!gif_single_frame(path.toStdString().c_str())) {
         QMessageBox::critical(this, tr("Screenshot failed"), tr("Failed to save screenshot!"));
     }
+    lcd_event_gui_callback = NULL;
 
     saveScreenshot(tr("GIF images (*.gif)"), QStringLiteral("gif"), path);
 }
@@ -703,9 +705,9 @@ void MainWindow::recordGIF() {
   static QString opt_path;
 
   if (path.isEmpty()) {
-      // TODO: Use QTemporaryFile?
         path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.gif");
         opt_path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_opt_tmp.gif");
+        lcd_event_gui_callback = gif_new_frame;
         gif_start_recording(path.toStdString().c_str(), ui->frameskipSlider->value());
     } else {
         if (gif_stop_recording()) {
@@ -719,6 +721,7 @@ void MainWindow::recordGIF() {
         } else {
             QMessageBox::warning(this, tr("Failed recording GIF"), tr("A failure occured during recording"));
         }
+        lcd_event_gui_callback = NULL;
         path = QString();
         opt_path = QString();
     }

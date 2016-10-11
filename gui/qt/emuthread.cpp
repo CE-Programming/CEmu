@@ -91,7 +91,6 @@ void gui_entered_send_state(bool entered) {
 EmuThread::EmuThread(QObject *p) : QThread(p) {
     assert(emu_thread == nullptr);
     emu_thread = this;
-    lcd_event_gui_callback = gif_new_frame;
     speed = actualSpeed = 100;
     lastTime = std::chrono::steady_clock::now();
     connect(&speedUpdateTimer, SIGNAL(timeout()), this, SLOT(sendActualSpeed()));
