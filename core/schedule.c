@@ -65,7 +65,7 @@ void sched_update_next_event(void) {
     }
     cpu.next = sched.nextCPUtick;
 #ifdef DEBUG_SUPPORT
-    if (!cpu.halted && cpuEvents & EVENT_DEBUG_STEP) {
+    if (!cpu.halted && (cpuEvents & EVENT_DEBUG_STEP)) {
         cpu.next = debugger.cpu_cycles + 1;
     }
 #endif

@@ -36,6 +36,7 @@ void debugger_free(void) {
     }
     gui_console_printf("[CEmu] Freed Debugger.\n");
 }
+
 uint8_t debug_peek_byte(uint32_t address) {
     uint8_t value = mem_peek_byte(address), debugData;
 

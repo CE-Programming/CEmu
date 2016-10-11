@@ -444,7 +444,6 @@ static void cpu_check_step_out(void) {
             if (!debugger.stepOutWait--) {
                 debug_clear_temp_break();
                 cpu_clear_mode();
-                cpuEvents &= ~(EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OUT);
                 open_debugger(DBG_STEP, 0);
             }
         }

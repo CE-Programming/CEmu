@@ -25,7 +25,9 @@ void debug_set_step_next(void) {
 
 void debug_set_step_in(void) {
     debug_clear_temp_break();
+    debugger.stepOverMode = cpu.ADL;
     debugger.stepOverFirstStep = false;
+    debugger.stepOverCall = false;
     cpuEvents |= EVENT_DEBUG_STEP;
 }
 

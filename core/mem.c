@@ -32,8 +32,8 @@ void mem_init(void) {
         mem.flash.sector[i].locked = false;
     }
 
-    /* Sector 9 is locked */
-    mem.flash.sector[8].locked = true;
+    /* Sector 2 is locked */
+    mem.flash.sector[1].locked = true;
     mem.flash.locked = true;
 
     /* Allocate RAM */
