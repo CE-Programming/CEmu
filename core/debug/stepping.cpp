@@ -13,7 +13,6 @@ void debug_set_step_next(void) {
     disasm.adl = cpu.ADL;
     disassembleInstruction();
     debugger.stepOverFirstStep = true;
-    debugger.stepOverCall = false;
     debugger.stepOverInstrEnd = disasm.new_address;
     debugger.data.block[debugger.stepOverInstrEnd] |= DBG_TEMP_EXEC_BREAKPOINT;
     debugger.stepOverMode = cpu.ADL;
@@ -25,9 +24,13 @@ void debug_set_step_next(void) {
 
 void debug_set_step_in(void) {
     debug_clear_temp_break();
+    disasm.base_address = cpu.registers.PC;
+    disasm.adl = cpu.ADL;
+    disassembleInstruction();
+    debugger.stepOverInstrEnd = disasm.new_address;
+    debugger.data.block[debugger.stepOverInstrEnd] |= DBG_TEMP_EXEC_BREAKPOINT;
     debugger.stepOverMode = cpu.ADL;
     debugger.stepOverFirstStep = false;
-    debugger.stepOverCall = false;
     cpuEvents |= EVENT_DEBUG_STEP;
 }
 
@@ -40,7 +43,6 @@ void debug_set_step_over(void) {
     debugger.data.block[debugger.stepOverInstrEnd] |= DBG_TEMP_EXEC_BREAKPOINT;
     debugger.stepOverMode = cpu.ADL;
     debugger.stepOverFirstStep = false;
-    debugger.stepOverCall = true;
     cpuEvents |= EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OVER;
 }
 
@@ -50,7 +52,6 @@ void debug_set_run_until(void) {
     debugger.data.block[debugger.stepOverInstrEnd] |= DBG_TEMP_EXEC_BREAKPOINT;
     debugger.stepOverMode = cpu.ADL;
     debugger.stepOverFirstStep = false;
-    debugger.stepOverCall = true;
 }
 
 void debug_set_step_out(void) {

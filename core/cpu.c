@@ -390,7 +390,6 @@ static void cpu_call(uint32_t address, bool mixed) {
     eZ80registers_t *r = &cpu.registers;
 #ifdef DEBUG_SUPPORT
     if (cpuEvents & EVENT_DEBUG_STEP_OUT) {
-        debugger.stepOverCall = true;
         bool addWait = false;
         if (cpu.ADL) {
             if (r->SPL >= debugger.stepOutSPL) {
