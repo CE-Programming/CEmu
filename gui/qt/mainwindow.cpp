@@ -1844,27 +1844,26 @@ void MainWindow::populateDebugWindow() {
 void MainWindow::updateTIOSView() {
     calc_var_t var;
     QString formattedLine;
-    QString calcData,calcData2;
+    QString calcData, varName;
     QString opType;
     uint8_t gotData[11];
 
     ui->opView->clear();
     ui->vatView->clear();
 
-    for(uint32_t i = 0xD005F8; i<0xD005F8+11*6; i+=11) {
+    for(uint32_t i = 0xD005F8; i<0xD005F8+77; i+=11) {
         uint8_t index = 0;
         calcData.clear();
         opType.clear();
         for(uint32_t j = i; j < i+11; j++) {
             gotData[index] = mem_peek_byte(j);
-            calcData += int2hex(gotData[index], 2)+" ";
-            index++;
+            calcData += int2hex(gotData[index++], 2);
         }
         if (*gotData < 0x40) {
             opType = QString(calc_var_type_names[*gotData]);
         }
 
-        formattedLine = QString("<pre><b><font color='#444'>%1</font></b><font color='darkblue'>    %2    </font>%3 <font color='green'>%4</font></pre>")
+        formattedLine = QString("<pre><b><font color='#444'>%1</font></b><font color='darkblue'>  %2  </font>%3 <font color='green'>%4</font></pre>")
                                        .arg(int2hex(i, 6), "OP"+QString::number(((i-0xD005F8)/11)+1), calcData, opType);
 
         ui->opView->appendHtml(formattedLine);
@@ -1872,17 +1871,8 @@ void MainWindow::updateTIOSView() {
 
     vat_search_init(&var);
     while (vat_search_next(&var)) {
-        uint8_t j;
-        calcData.clear();
-        calcData2.clear();
-        for(j = 0; j < var.namelen; j++) {
-            calcData += int2hex(var.name[j], 2)+" ";
-        }
-        for(; j < 8; j++) {
-            calcData2 += "00 ";
-        }
-        formattedLine = QString("<pre><b><font color='#444'>%1</font></b>  <font color='darkblue'>%2</font>  <font color='green'>%3</font>  %4<font color='gray'>%5</font><font color='green'> %6</font></pre>")
-                                        .arg(int2hex(var.address,6), int2hex(var.vat,6), int2hex(var.size,4), calcData, calcData2, calc_var_type_names[var.type]);
+        formattedLine = QString("<pre><b><font color='#444'>%1</font></b>  <font color='darkblue'>%2</font> <font color='green'>%3</font> <font color='green'>%4</font>%5</pre>")
+                                        .arg(int2hex(var.address,6), int2hex(var.vat,6), int2hex(var.size,4), QString(calc_var_type_names[var.type]).leftJustified(19, ' '), QString(calc_var_name_to_utf8(var.name)));
         ui->vatView->appendHtml(formattedLine);
     }
     ui->vatView->moveCursor(QTextCursor::Start);

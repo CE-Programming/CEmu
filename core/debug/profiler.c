@@ -8,6 +8,7 @@ profiler_t profiler;
 void init_profiler(void) {
     profiler.blocks = NULL;
     profiler.num_blocks = 0;
+    profiler.profile_counters = calloc(0x1000000 >> PROFILE_GRANULARITY, sizeof(uint64_t));
 }
 
 profiler_block_t *add_profile_block(void) {

@@ -10,6 +10,8 @@ extern "C" {
 #include "../defines.h"
 #include "../port.h"
 
+#define PROFILE_GRANULARITY 0
+
 typedef struct {
     uint32_t address_start;
     uint32_t address_end;
@@ -17,6 +19,7 @@ typedef struct {
 } profiler_block_t;
 
 typedef struct {
+    uint64_t *profile_counters;
     uint32_t num_blocks;
     profiler_block_t **blocks;
 } profiler_t;
