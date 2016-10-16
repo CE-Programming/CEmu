@@ -1,21 +1,20 @@
 # CEmu [![Build Status](https://travis-ci.org/CE-Programming/CEmu.svg)](https://travis-ci.org/CE-Programming/CEmu) [![Build Status](https://scan.coverity.com/projects/7576/badge.svg)](https://scan.coverity.com/projects/ce-programming-cemu) [![IRC badge](https://img.shields.io/badge/IRC%20channel-%23cemu--dev%20on%20EFNet-blue.svg)](http://chat.efnet.org/irc.cgi?adv=1&nick=cemu-user&chan=%23cemu-dev)
 
-CEmu is a third-party TI-84 Plus CE / TI-83 Premium CE calculator emulator, especially focused on developer features.  
-The core is made in C and the GUI in C++ with Qt, for performance and portability reasons. CEmu works as-is on Windows, macOS, and Linux.
+CEmu is a third-party TI-84 Plus CE / TI-83 Premium CE calculator emulator, focused on developer features.  
+The core is programmed in C and the GUI in C++ with Qt, for performance and portability reasons. CEmu works natively on Windows, macOS, and Linux.
 
-CEmu has a very customizable user interface to fit the needs of different use cases.  
-Here are three setup examples of CEmu running on macOS:
+Here are some screenshots showcasing some of the features:
 
-Minimalistic  | Bigger keypad and screen | With many debugging features
+Windows | macOS | Linux
 ------------ | ------------- | -------------
-<a href="https://i.imgur.com/yU8xOqf.png"><img src="https://i.imgur.com/wYlQPgu.png" /></a>|<a href="https://i.imgur.com/cKYRuxM.png"><img src="https://i.imgur.com/edxwq7K.png" /></a>|<a href="https://i.imgur.com/c90lBOq.png"><img src="https://i.imgur.com/7GDppPH.png" /></a>
+<a href="https://i.imgur.com/0GZRIck.png"><img src="https://i.imgur.com/xZBkG65.png" /></a>|<a href="https://i.imgur.com/LznBl5u.png"><img src="https://i.imgur.com/DvZb3Zx.png" /></a>|<a href="https://i.imgur.com/26sioCw.png"><img src="https://i.imgur.com/y4ObHtQ.png" /></a>
 
 ## Features
 ### _Standard features_
-* Built-in ROM dump wizard. CEmu does _not_ rely on downloading an OS from TI's website nor does it have a custom boot/loader, so a ROM from your own calculator is required. CEmu makes it very easy to get it. 
+* Built-in ROM dump wizard. CEmu does _not_ rely on downloading an OS from TI's website nor does it have a custom boot/loader: a ROM from your own calculator is required. CEmu makes it very easy to get it. 
 * Accurate and fast emulation (you can also customize the speed and even toggle throttling)
 * Resizable calculator screen
-* "Always-on-top" option
+* "Always-on-top" window option
 * Screen capture (PNG, GIF)
 * Screen recording (animated GIF)
 * File sending/receiving _(partial, WIP)_
@@ -63,8 +62,7 @@ You're welcome to [report any bugs](https://github.com/CE-Programming/CEmu/issue
 If you'd like to contribute code, please consider using [Artistic Style](http://astyle.sourceforge.net/) with the settings specified in the `.astylerc` file to format your code. Qt Creator can [format code with Artistic Style](http://doc.qt.io/qtcreator/creator-beautifier.html) with minimal setup.  
 We also welcome more translations (for now, it's available in English, French, and Spanish). Qt Linguist is a great tool for that (here's [a tutorial](https://doc.qt.io/qt-5/linguist-manager.html)).
 
-
-## TODO and WISH list
+## Caveats and TODO/WISH list
 _Take a look at [the current issues](https://github.com/CE-Programming/CEmu/issues), since these things are organized there._
 
 ## License
