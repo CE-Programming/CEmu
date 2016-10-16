@@ -76,10 +76,17 @@ void SendingHandler::sendFiles(QStringList fileNames, unsigned location) {
     }
 
     /* Wait for an open link */
+    unsigned int tries_cnt = 0;
     emu_thread->waitForLink = true;
     do {
         QThread::msleep(50);
-    } while(emu_thread->waitForLink);
+        tries_cnt++;
+    } while(emu_thread->waitForLink && tries_cnt <= 50);
+    if (tries_cnt >= 50) {
+        emu_thread->setSendState(false);
+        QMessageBox::warning(nullptr, QObject::tr("Failed Transfer"), QObject::tr("Couldn't start the transfer. Make sure the calc is ready (at the home screen, for instance)."));
+        return;
+    }
 
     QProgressDialog progress("Sending Files...", QString(), 0, fileNum, nullptr);
     progress.setWindowModality(Qt::WindowModal);
