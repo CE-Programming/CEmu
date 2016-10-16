@@ -32,6 +32,9 @@ bool QtKeypadBridge::setKeymap(const QString & keymapstr) {
 }
 
 void QtKeypadBridge::keyEvent(QKeyEvent *event, bool press) {
+    if (event->isAutoRepeat())
+        return;
+
     Qt::Key code = static_cast<Qt::Key>(event->key());
     quint32 nativeCode = event->nativeScanCode();
     Qt::KeyboardModifiers modifiers = event->modifiers();
