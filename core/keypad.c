@@ -29,8 +29,7 @@ void EMSCRIPTEN_KEEPALIVE keypad_key_event(unsigned int row, unsigned int col, b
                 keypad_intrpt_check();
             }
         } else {
-            keypad.data[row] = keypad.key_map[row] &= ~(1 << col);
-            keypad.status |= 2;
+            keypad.key_map[row] &= ~(1 << col);
             keypad_intrpt_check();
         }
     }
@@ -86,12 +85,13 @@ static void keypad_scan_event(int index) {
         return; /* too many keypad rows */
     }
 
+    /* scan each data row */
     row = keypad.key_map[keypad.current_row];
-    row |= 0x80000 >> keypad.current_row;      /* Emulate weird diagonal glitch */
-    row &= (1 << keypad.cols) - 1;   /* Unused columns read as 0 */
+    row &= (1 << keypad.cols) - 1;
 
+    /* if mode 3 or 2, generate data change interrupt */
     if (keypad.data[keypad.current_row] != row) {
-        keypad.status |= 2; /* if mode 3 or 2, generate data change interrupt */
+        keypad.status |= 2;
         keypad.data[keypad.current_row] = row;
     }
 

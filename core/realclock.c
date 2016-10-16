@@ -12,25 +12,25 @@ static void rtc_event(int index) {
     /* Update exactly once a second */
     event_repeat(index, 32768);
 
-    if (rtc.control & 1) { rtc.interrupt |= 1; }
+    if (rtc.control & 2) { rtc.interrupt |= 1; }
     rtc.readSec++;
     if (rtc.readSec > 59) {
         rtc.readSec = 0;
-        if (rtc.control & 2) {
+        if (rtc.control & 4) {
             rtc.interrupt |= 2;
             intrpt_set(INT_RTC, true);
         }
         rtc.readMin++;
         if (rtc.readMin > 59) {
             rtc.readMin = 0;
-            if (rtc.control & 4) {
+            if (rtc.control & 8) {
                 rtc.interrupt |= 4;
                 intrpt_set(INT_RTC, true);
             }
             rtc.readHour++;
             if (rtc.readHour > 23) {
                 rtc.readHour = 0;
-                if (rtc.control & 8) {
+                if (rtc.control & 16) {
                     rtc.interrupt |= 8;
                     intrpt_set(INT_RTC, true);
                 }
@@ -39,7 +39,7 @@ static void rtc_event(int index) {
         }
     }
 
-    if ((rtc.control & 16) && (rtc.readSec == rtc.alarmSec) &&
+    if ((rtc.control & 32) && (rtc.readSec == rtc.alarmSec) &&
         (rtc.readMin == rtc.alarmMin) && (rtc.readHour == rtc.alarmHour)) {
             rtc.interrupt |= 16;
             intrpt_set(INT_RTC, true);
