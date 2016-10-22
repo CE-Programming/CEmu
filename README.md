@@ -11,7 +11,7 @@ Windows | macOS | Linux
 
 ## Features
 ### _Standard features_
-* Built-in ROM dump wizard. CEmu does _not_ rely on downloading an OS from TI's website nor does it have a custom boot/loader: a ROM from your own calculator is required. CEmu makes it very easy to get it. 
+* Built-in ROM dump wizard. CEmu does _not_ rely on downloading an OS from TI's website nor does it have a custom boot/loader: a ROM from your own calculator is required. CEmu makes it very easy to get it.
 * Accurate and fast emulation (you can also customize the speed and even toggle throttling)
 * Resizable calculator screen
 * "Always-on-top" window option
@@ -27,6 +27,7 @@ Windows | macOS | Linux
 * Code stepping, jumping...
 * R/W/X breakpoints
 * eZ80 disassembler
+* Profiler
 * Port monitor/editor
 * Memory viewer/editor
 * CPU state/registers viewer/editor
