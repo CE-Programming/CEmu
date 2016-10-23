@@ -52,7 +52,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     connect(&keypadBridge, &QtKeypadBridge::keyStateChanged, ui->keypadWidget, &KeypadWidget::changeKeyState);
     installEventFilter(&keypadBridge);
     ui->lcdWidget->installEventFilter(&keypadBridge);
-    // Same for all the tabs/docks (iterate over them instead of harcoding their names)
+    // Same for all the tabs/docks (iterate over them instead of hardcoding their names)
     for (const auto& tab : ui->tabWidget->children()[0]->children()) {
         tab->installEventFilter(&keypadBridge);
     }
@@ -148,6 +148,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     connect(ui->actionReloadROM, &QAction::triggered, this, &MainWindow::reloadROM);
     connect(ui->actionResetCalculator, &QAction::triggered, this, &MainWindow::resetCalculator);
     connect(ui->actionPopoutLCD, &QAction::triggered, this, &MainWindow::createLCD);
+    connect(ui->actionToggleUIEditMode, &QAction::triggered, this, &MainWindow::toggleUIEditMode);
     connect(this, &MainWindow::resetTriggered, &emu, &EmuThread::resetTriggered);
 
     // Capture
@@ -336,6 +337,10 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     stopIcon.addPixmap(pix);
     pix.load(":/icons/resources/icons/run.png");
     runIcon.addPixmap(pix);
+
+    // Disable UI Edit Mode by default
+    uiEditMode = !uiEditMode;   // true temporarily before the call
+    toggleUIEditMode();         // ... which will turn it back to false
 
     ui->lcdWidget->setFocus();
 
@@ -648,6 +653,13 @@ void MainWindow::setUIMode(bool docks_enabled) {
     }
 
     ui->tabWidget->setHidden(true);
+}
+
+void MainWindow::toggleUIEditMode() {
+    uiEditMode = !uiEditMode;
+    for (const auto& dock : findChildren<DockWidget *>()) {
+        dock->toggleState(uiEditMode);
+    }
 }
 
 void MainWindow::saveScreenshot(QString namefilter, QString defaultsuffix, QString temppath) {

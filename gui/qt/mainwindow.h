@@ -96,6 +96,7 @@ private:
     void checkForUpdates(bool);
     void showAbout(void);
     void setUIMode(bool);
+    void toggleUIEditMode(void);
     void changeBatteryCharging(bool);
     void changeBatteryStatus(int);
     void setSaveOnClose(bool b);
@@ -252,6 +253,7 @@ private:
     QString currentEquateFile;
     EmuThread emu;
 
+    bool uiEditMode = false;
     bool debuggerOn = false;
     bool inReceivingMode = false;
     bool native_console = false;
