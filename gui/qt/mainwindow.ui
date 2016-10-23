@@ -6156,9 +6156,6 @@ QPushButton:pressed {
           </widget>
          </item>
         </layout>
-        <zorder>opView</zorder>
-        <zorder>opView</zorder>
-        <zorder>opView</zorder>
        </widget>
       </item>
       <item>
@@ -7126,8 +7123,6 @@ QPushButton:pressed {
     <addaction name="actionTakeGIFScreenshot"/>
     <addaction name="actionScreenshot"/>
     <addaction name="separator"/>
-    <addaction name="actionToggleUIEditMode"/>
-    <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -7424,15 +7419,6 @@ QPushButton:pressed {
    </property>
    <property name="text">
     <string>Popout LCD</string>
-   </property>
-  </action>
-  <action name="actionToggleUIEditMode">
-   <property name="icon">
-    <iconset resource="resources.qrc">
-     <normaloff>:/icons/resources/icons/settings.png</normaloff>:/icons/resources/icons/settings.png</iconset>
-   </property>
-   <property name="text">
-    <string>Toggle UI edit mode</string>
    </property>
   </action>
  </widget>

@@ -148,7 +148,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     connect(ui->actionReloadROM, &QAction::triggered, this, &MainWindow::reloadROM);
     connect(ui->actionResetCalculator, &QAction::triggered, this, &MainWindow::resetCalculator);
     connect(ui->actionPopoutLCD, &QAction::triggered, this, &MainWindow::createLCD);
-    connect(ui->actionToggleUIEditMode, &QAction::triggered, this, &MainWindow::toggleUIEditMode);
     connect(this, &MainWindow::resetTriggered, &emu, &EmuThread::resetTriggered);
 
     // Capture
@@ -651,6 +650,11 @@ void MainWindow::setUIMode(bool docks_enabled) {
 
         last_dock = dw;
     }
+
+    docksMenu->addSeparator();
+    QAction *toggleAction = new QAction(tr("Toggle UI edit mode"), this);
+    docksMenu->addAction(toggleAction);
+    connect(toggleAction, &QAction::triggered, this, &MainWindow::toggleUIEditMode);
 
     ui->tabWidget->setHidden(true);
 }
