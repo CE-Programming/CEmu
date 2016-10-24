@@ -105,16 +105,11 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
         font.setFamily("Open Sans Bold");
     }
 
-#ifdef _WIN32
-    font.setWeight(QFont::Black);
-    qreal screenDPI  = QApplication::primaryScreen()->physicalDotsPerInch();
-    qreal RENDER_DPI = 96;
-
-    int pixelSize = (int)((qreal)7 * screenDPI / RENDER_DPI);
-    font.setPixelSize(pixelSize);
-#else
     font.setBold(true);
     font.setPixelSize(5);
+#ifdef _WIN32
+    font.setWeight(QFont::Black);
+#else
     font.setStretch(QFont::SemiCondensed);
 #endif
 
