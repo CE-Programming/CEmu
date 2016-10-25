@@ -2,7 +2,7 @@
 #include "mainwindow.h"
 
 int main(int argc, char *argv[]) {
-#ifdef _WIN32
+#ifdef Q_OS_WIN
     // DPI scaling fix must be applied at the very beginning before QApplication init
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif

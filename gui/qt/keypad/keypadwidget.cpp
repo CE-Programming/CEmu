@@ -107,9 +107,7 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
 
     font.setBold(true);
     font.setPixelSize(5);
-#ifdef _WIN32
-    font.setWeight(QFont::Black);
-#else
+#ifndef Q_OS_WIN
     font.setStretch(QFont::SemiCondensed);
 #endif
 
@@ -125,12 +123,6 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
     m_config.whiteColor  = QColor::fromRgb(0xeeeeee),
     m_config.textColor   = c_text,
     m_config.key         = {1, 0};
-
-    if (is83) {
-#ifndef _WIN32
-        m_config.secondFont.setStretch(QFont::Condensed);
-#endif
-    }
 
 #ifdef _MSC_VER
 /* Temporary hack... QStringLiteral mangles the UTF-8 string on MSVC for some reason */
