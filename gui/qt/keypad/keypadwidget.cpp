@@ -107,7 +107,9 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
 
     font.setBold(true);
     font.setPixelSize(5);
-#ifndef Q_OS_WIN
+#ifdef Q_OS_WIN
+    font.setWeight(QFont::Black);
+#else
     font.setStretch(QFont::SemiCondensed);
 #endif
 
