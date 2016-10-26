@@ -2,6 +2,11 @@
 #include "mainwindow.h"
 
 int main(int argc, char *argv[]) {
+#ifdef Q_OS_WIN
+    // DPI scaling fix must be applied at the very beginning before QApplication init
+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+#endif
+
     QApplication app(argc, argv);
 
     // Setup QCommandParser with Our command line parameters
@@ -49,6 +54,7 @@ int main(int argc, char *argv[]) {
 
     QCoreApplication::setOrganizationName(QStringLiteral("cemu-dev"));
     QCoreApplication::setApplicationName(QStringLiteral("CEmu"));
+
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
 
     MainWindow EmuWin(opts);
