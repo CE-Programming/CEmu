@@ -40,6 +40,9 @@
         <file>resources/icons/rom.png</file>
         <file>resources/icons/wizard.png</file>
     </qresource>
+    <qresource prefix="/fonts">
+        <file>resources/fonts/LiberationSansNarrow-Bold.ttf</file>
+    </qresource>
     <qresource prefix="/other">
         <file>tivarslib/TypeHandlers/programs_tokens.csv</file>
     </qresource>
