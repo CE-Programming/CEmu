@@ -160,10 +160,7 @@ static void lcd_event(int index) {
 
 void lcd_reset(void) {
     /* Palette is unchanged on a reset */
-    memset(&lcd, 0, (char *)&lcd.palette - (char *)&lcd);
-    sched.items[SCHED_LCD].clock = CLOCK_24M;
-    sched.items[SCHED_LCD].second = -1;
-    sched.items[SCHED_LCD].proc = lcd_event;
+    memset(&lcd, 0, sizeof(lcd_state_t));
     gui_console_printf("[CEmu] LCD reset.\n");
 }
 
@@ -234,6 +231,8 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool peek) {
                 else { event_clear(SCHED_LCD); }
             }
             write8(lcd.control, bit_offset, value);
+            /* Simple power down of lcd -- Needs to be correctly emulated in future */
+            if(!(lcd.control & 0x800)) { lcd_reset(); }
         } else if (index == 0x01C) {
             write8(lcd.imsc, bit_offset, value);
             lcd.imsc &= 0x1E;
@@ -287,6 +286,9 @@ static const eZ80portrange_t device = {
 
 eZ80portrange_t init_lcd(void) {
     gui_console_printf("[CEmu] Initialized LCD...\n");
+    sched.items[SCHED_LCD].proc = lcd_event;
+    sched.items[SCHED_LCD].clock = CLOCK_24M;
+    sched.items[SCHED_LCD].second = -1;
     return device;
 }
 
