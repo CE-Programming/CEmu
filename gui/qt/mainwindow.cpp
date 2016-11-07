@@ -118,6 +118,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     connect(ui->buttonClearEquates, &QPushButton::clicked, this, &MainWindow::clearEquateFile);
     connect(ui->buttonRefreshEquates, &QPushButton::clicked, this, &MainWindow::refreshEquateFile);
     connect(ui->textSizeSlider, &QSlider::valueChanged, this, &MainWindow::setFont);
+    connect(ui->granularitySpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::changeProfilerGranularity);
 
     // Linking
     connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::selectFiles);
@@ -307,6 +308,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     ui->vatView->updateAllHighlights();
 
     debugger_init();
+    profiler_init();
 
     if (!fileExists(emu.rom)) {
         if (!runSetup()) {
@@ -353,6 +355,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
 
 MainWindow::~MainWindow() {
     debugger_free();
+    profiler_free();
 
     settings->setValue(QStringLiteral("windowState"), saveState(WindowStateVersion));
     settings->setValue(QStringLiteral("windowGeometry"), saveGeometry());
@@ -1328,6 +1331,17 @@ static int hex2int(QString str) {
 
 static QString int2hex(uint32_t a, uint8_t l) {
     return QString::number(a, 16).rightJustified(l, '0', true).toUpper();
+}
+
+void MainWindow::removeAllProfilers(void) {
+    for(int i = 0; i < ui->profilerView->rowCount(); i++) {
+        ui->profilerView->removeRow(i);
+    }
+}
+
+void MainWindow::changeProfilerGranularity(int in) {
+    removeAllProfilers();
+    //set_profiler_granularity(static_cast<unsigned>(in));
 }
 
 bool MainWindow::addProfilerBlock(void) {

@@ -1792,7 +1792,7 @@ QPushButton:pressed {
          </size>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>4</number>
         </property>
         <property name="tabsClosable">
          <bool>false</bool>
@@ -2059,12 +2059,18 @@ QPushButton:pressed {
               <property name="text">
                <string/>
               </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
              </widget>
             </item>
             <item>
              <widget class="QLabel" name="breakChangeLabel">
               <property name="text">
                <string/>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -2137,12 +2143,18 @@ QPushButton:pressed {
               <property name="text">
                <string/>
               </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
              </widget>
             </item>
             <item>
              <widget class="QLabel" name="watchChangeLabel">
               <property name="text">
                <string/>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -2325,12 +2337,18 @@ QPushButton:pressed {
               <property name="text">
                <string/>
               </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
              </widget>
             </item>
             <item>
              <widget class="QLabel" name="portChangeLabel">
               <property name="text">
                <string/>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>
@@ -2522,6 +2540,9 @@ QPushButton:pressed {
               <property name="text">
                <string/>
               </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
              </widget>
             </item>
             <item>
@@ -2536,6 +2557,32 @@ QPushButton:pressed {
                </size>
               </property>
              </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_3">
+              <property name="text">
+               <string>Granularity</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="granularitySpin">
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+              <property name="suffix">
+               <string> bytes</string>
+              </property>
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>16</number>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -6156,9 +6203,6 @@ QPushButton:pressed {
           </widget>
          </item>
         </layout>
-        <zorder>opView</zorder>
-        <zorder>opView</zorder>
-        <zorder>opView</zorder>
        </widget>
       </item>
       <item>

@@ -20,7 +20,6 @@ void debugger_init(void) {
     debugger.errBuffer = (char*)malloc(SIZEOF_DBG_BUFFER * sizeof(char));  /* Used for printing to the console */
     debugger.currentBuffPos = debugger.currentErrBuffPos = 0;
 
-    init_profiler();
     gui_console_printf("[CEmu] Initialized Debugger...\n");
 }
 

@@ -5,10 +5,29 @@
 
 profiler_t profiler;
 
-void init_profiler(void) {
+void profiler_init(void) {
+    profiler.granularity = 0;
     profiler.blocks = NULL;
     profiler.num_blocks = 0;
-    profiler.profile_counters = calloc(0x1000000 >> PROFILE_GRANULARITY, sizeof(uint64_t));
+    profiler.profile_counters = calloc(0x1000000 >> profiler.granularity, sizeof(uint64_t));
+}
+
+void set_profiler_granularity(unsigned gran) {
+    profiler_free();
+    profiler.granularity = gran;
+    profiler.profile_counters = calloc(0x1000000 >> profiler.granularity, sizeof(uint64_t));
+}
+
+void profiler_free(void) {
+    unsigned i = 0;
+    while(profiler.blocks[i++]) {
+        free(profiler.blocks[i]);
+        profiler.blocks[i] = NULL;
+    }
+    free(profiler.profile_counters);
+    free(profiler.blocks);
+    profiler.blocks = NULL;
+    profiler.num_blocks = 0;
 }
 
 profiler_block_t *add_profile_block(void) {

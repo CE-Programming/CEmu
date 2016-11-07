@@ -22,12 +22,15 @@ typedef struct {
     uint64_t *profile_counters;
     uint32_t num_blocks;
     profiler_block_t **blocks;
+    unsigned granularity;
 } profiler_t;
 
 extern profiler_t profiler;
 profiler_block_t *add_profile_block(void);
 void remove_profile_block(uint32_t block_entry);
-void init_profiler(void);
+void set_profiler_granularity(unsigned gran);
+void profiler_init(void);
+void profiler_free(void);
 
 #ifdef __cplusplus
 }

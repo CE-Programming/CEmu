@@ -153,6 +153,8 @@ private:
     bool addWatchpoint();
     bool addProfilerBlock();
     bool removeProfilerBlock();
+    void removeAllProfilers();
+    void changeProfilerGranularity(int);
 
     // Others
     void createLCD();
