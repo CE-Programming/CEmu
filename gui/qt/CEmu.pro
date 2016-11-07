@@ -67,11 +67,6 @@ QMAKE_CFLAGS    += $$GLOBAL_FLAGS
 QMAKE_CXXFLAGS  += $$GLOBAL_FLAGS
 QMAKE_LFLAGS    += $$GLOBAL_FLAGS
 
-ios {
-    DEFINES += IS_IOS_BUILD
-    QMAKE_INFO_PLIST = Info.plist
-}
-
 macx: ICON = resources/icons/icon.icns
 
 SOURCES +=  utils.cpp \
@@ -146,7 +141,7 @@ SOURCES +=  utils.cpp \
     capture/giffunc.c \
     capture/xform.c
 
-linux|macx|ios: SOURCES += ../../core/os/os-linux.c
+linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
 
 HEADERS  +=  utils.h \

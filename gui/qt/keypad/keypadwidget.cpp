@@ -105,16 +105,11 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
         font.setFamily("Open Sans Bold");
     }
 
-#ifdef _WIN32
-    font.setWeight(QFont::Black);
-    qreal screenDPI  = QApplication::primaryScreen()->physicalDotsPerInch();
-    qreal RENDER_DPI = 96;
-
-    int pixelSize = (int)((qreal)7 * screenDPI / RENDER_DPI);
-    font.setPixelSize(pixelSize);
-#else
     font.setBold(true);
     font.setPixelSize(5);
+#ifdef Q_OS_WIN
+    font.setWeight(QFont::Black);
+#else
     font.setStretch(QFont::SemiCondensed);
 #endif
 
@@ -130,12 +125,6 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
     m_config.whiteColor  = QColor::fromRgb(0xeeeeee),
     m_config.textColor   = c_text,
     m_config.key         = {1, 0};
-
-    if (is83) {
-#ifndef _WIN32
-        m_config.secondFont.setStretch(QFont::Condensed);
-#endif
-    }
 
 #ifdef _MSC_VER
 /* Temporary hack... QStringLiteral mangles the UTF-8 string on MSVC for some reason */

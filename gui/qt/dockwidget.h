@@ -15,14 +15,7 @@ public:
   DockWidget(QTabWidget *tabs, QWidget *parent = Q_NULLPTR);
   DockWidget(const QString &title, QWidget *parent = Q_NULLPTR);
 
-protected:
-  bool event(QEvent *event) Q_DECL_OVERRIDE;
-
-signals:
-  void changeTitleState(bool visible, QPrivateSignal = {});
-
-private slots:
-  void titleStateChanged(bool visible);
+  void toggleState(bool visible);
 
 private:
   QWidget *m_hide_title;
