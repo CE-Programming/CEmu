@@ -184,7 +184,8 @@ bool emu_start(const char *romImage, const char *savedImage) {
                             break;
                         }
 
-                        if (mem.flash.block[0x7E] == 0xFE) {
+                        /* Ensure it is a hardware ROM image */
+                        if (mem.flash.block[0x7E] != 0xFF) {
                             break;
                         }
 
