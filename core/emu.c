@@ -184,12 +184,6 @@ bool emu_start(const char *romImage, const char *savedImage) {
                             break;
                         }
 
-                        /* Ensure it is a hardware ROM image */
-                        if (mem.flash.block[0x7E] != 0xFF) {
-                            gui_console_printf("[CEmu] Error: ROM not configured as a hardware ROM image");
-                            break;
-                        }
-
                         /* Parse certificate fields to determine model.                            */
                         /* device_type = (ti_device_type)(asic.mem->flash.block[0x20017]);         */
                         /* We've heard of the OS base being at 0x30000 on at least one calculator. */
