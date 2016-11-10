@@ -186,6 +186,7 @@ bool emu_start(const char *romImage, const char *savedImage) {
 
                         /* Ensure it is a hardware ROM image */
                         if (mem.flash.block[0x7E] != 0xFF) {
+                            gui_console_printf("[CEmu] Error: ROM not configured as a hardware ROM image");
                             break;
                         }
 
