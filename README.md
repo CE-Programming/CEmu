@@ -27,7 +27,7 @@ Windows | macOS | Linux
 * Code stepping, jumping...
 * R/W/X breakpoints
 * eZ80 disassembler
-* Profiler
+* Profiler (WIP-branch)
 * Port monitor/editor
 * Memory viewer/editor
 * CPU state/registers viewer/editor
