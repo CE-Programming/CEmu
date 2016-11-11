@@ -52,6 +52,7 @@ void debug_set_run_until(void) {
     debugger.data.block[debugger.stepOverInstrEnd] |= DBG_TEMP_EXEC_BREAKPOINT;
     debugger.stepOverMode = cpu.ADL;
     debugger.stepOverFirstStep = false;
+    cpuEvents &= ~(EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OVER | EVENT_DEBUG_STEP_OUT | EVENT_DEBUG_STEP_NEXT);
 }
 
 void debug_set_step_out(void) {

@@ -1356,27 +1356,20 @@ void MainWindow::removeAllProfilers(void) {
 
 void MainWindow::changeProfilerGranularity(int in) {
     ui->profilerView->setRowCount(0);
-    set_profiler_granularity(static_cast<unsigned>(in));
+    set_profiler_granularity(static_cast<unsigned>(in-1));
 }
 
-bool MainWindow::addProfilerBlock(void) {
+void MainWindow::addProfilerBlock(void) {
     const int currentRow = ui->profilerView->rowCount();
-
-    currAddress %= 0xFFFFFF;
-    currAddressString = int2hex(currAddress, 6).toUpper();
-
-    if (currAddressString.toStdString().find_first_not_of("0123456789ABCDEF") != std::string::npos) {
-        return false;
-    }
 
     ui->profilerView->setUpdatesEnabled(false);
     ui->profilerView->blockSignals(true);
 
     ui->profilerView->setRowCount(currentRow + 1);
 
-    QTableWidgetItem *saddress = new QTableWidgetItem(currAddressString);
-    QTableWidgetItem *eaddress = new QTableWidgetItem(currAddressString);
-    QTableWidgetItem *block_size = new QTableWidgetItem("1");
+    QTableWidgetItem *saddress = new QTableWidgetItem("000000");
+    QTableWidgetItem *eaddress = new QTableWidgetItem(int2hex(profiler.granularity, 6).toUpper());
+    QTableWidgetItem *block_size = new QTableWidgetItem(QString::number(profiler.granularity+1));
     QTableWidgetItem *cycle_count = new QTableWidgetItem("0");
     block_size->setFlags(block_size->flags() & ~Qt::ItemIsEditable);
 
@@ -1393,7 +1386,6 @@ bool MainWindow::addProfilerBlock(void) {
     prevProfilerAddress = currAddress;
     currAddressString.clear();
     ui->profilerView->blockSignals(false);
-    return true;
 }
 
 void MainWindow::zeroProfiler(void) {
@@ -1445,6 +1437,7 @@ bool MainWindow::removeProfilerBlock(void) {
 void MainWindow::updateProfilerData(int currentRow) {
     uint32_t curr = static_cast<uint32_t>(currentRow);
 
+    update_profiler_cycles();
     ui->profilerView->item(currentRow, 3)->setText(QString::number(profiler.blocks[curr]->cycles));
 }
 
@@ -1461,23 +1454,25 @@ void MainWindow::changeProfiler(QTableWidgetItem *item) {
         profiler.blocks[row]->cycles = cycles;
     } else {
         std::string s = item->text().toUpper().toStdString();
+        uint32_t gran = profiler.granularity+1;
         if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty()) {
             item->setText(int2hex(0, 6));
             s = "00";
         }
 
-        value = static_cast<uint32_t>(hex2int(QString::fromStdString(s)));
+        value = static_cast<uint32_t>(hex2int(QString::fromStdString(s))) + 1;
+        value = (((value + gran - 1) / gran) * gran) - 1;
 
         if (col == 0) {
             uint32_t end_address = static_cast<uint32_t>(hex2int(ui->profilerView->item(row, 1)->text()));
-            value = (value>end_address) ? end_address : value;
-            profiler.blocks[row]->address_start = value;
+            value = (value > end_address) ? end_address : value;
+            update_profiler_block(value, end_address, profiler.blocks[row]->address_start, end_address);
             string = int2hex(value, 6);
             ui->profilerView->item(row, 2)->setText(QString::number(end_address-value+1));
         } else if (col == 1) {
-            uint32_t start_address = static_cast<uint32_t>(hex2int(ui->profilerView->item(row, 1)->text()));
-            value = (value<start_address) ? start_address : value;
-            profiler.blocks[row]->address_end = value;
+            uint32_t start_address = static_cast<uint32_t>(hex2int(ui->profilerView->item(row, 0)->text()));
+            value = (value < start_address) ? start_address : value;
+            update_profiler_block(start_address, value, start_address, profiler.blocks[row]->address_end);
             string = int2hex(value, 6);
             ui->profilerView->item(row, 2)->setText(QString::number(value-start_address+1));
         }

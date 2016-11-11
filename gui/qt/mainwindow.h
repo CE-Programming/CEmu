@@ -152,8 +152,8 @@ private:
     bool removeWatchpoint();
     bool addBreakpoint();
     bool addWatchpoint();
-    bool addProfilerBlock();
     bool removeProfilerBlock();
+    void addProfilerBlock();
     void removeAllProfilers();
     void changeProfilerGranularity(int);
 

@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include "profiler.h"
+#include "debug.h"
 
 profiler_t profiler;
 
@@ -42,7 +43,7 @@ profiler_block_t *add_profile_block(void) {
         profiler.blocks[num] = malloc(sizeof(profiler_block_t));
         if(profiler.blocks[num]) {
             profiler.blocks[num]->address_start = 0;
-            profiler.blocks[num]->address_end = 0;
+            profiler.blocks[num]->address_end = profiler.granularity;
             profiler.blocks[num]->cycles = 0;
         } else {
             /* Just die if we get here */
@@ -55,6 +56,26 @@ profiler_block_t *add_profile_block(void) {
     profiler.num_blocks++;
     profiler.blocks[profiler.num_blocks] = NULL;
     return profiler.blocks[num];
+}
+
+void update_profiler_block(uint32_t start_addr, uint32_t end_addr, uint32_t prev_start_addr, uint32_t prev_end_addr) {
+    uint32_t i;
+    for(i = prev_start_addr; i <= prev_end_addr; i++) {
+        debugger.data.block[i] &= ~DBG_IS_PROFILED;
+        profiler.profile_counters[i] = 0;
+    }
+    for(i = start_addr; i <= end_addr; i++) {
+        debugger.data.block[i] |= DBG_IS_PROFILED;
+    }
+}
+
+void update_profiler_cycles(void) {
+    unsigned i, j;
+    for(i = 0; i < profiler.num_blocks; i++) {
+        for(j = profiler.blocks[i]->address_start; j <= profiler.blocks[i]->address_end; j++) {
+            profiler.blocks[i]->cycles += profiler.profile_counters[j];
+        }
+    }
 }
 
 void remove_profile_block(uint32_t block_entry) {

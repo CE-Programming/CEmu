@@ -31,6 +31,9 @@ void remove_profile_block(uint32_t block_entry);
 void set_profiler_granularity(unsigned gran);
 void profiler_init(void);
 void profiler_free(void);
+void update_profiler_cycles(void);
+
+void update_profiler_block(uint32_t start_addr, uint32_t end_addr, uint32_t prev_start_addr, uint32_t prev_end_addr);
 
 #ifdef __cplusplus
 }
