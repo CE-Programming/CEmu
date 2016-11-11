@@ -19,38 +19,42 @@ void set_profiler_granularity(unsigned gran) {
 }
 
 void profiler_free(void) {
-    unsigned i = 0;
-    while(profiler.blocks[i++]) {
-        free(profiler.blocks[i]);
-        profiler.blocks[i] = NULL;
+    if(profiler.blocks) {
+        unsigned i = 0;
+        while(profiler.blocks[i]) {
+            free(profiler.blocks[i]);
+            profiler.blocks[i] = NULL;
+            i++;
+        }
     }
     free(profiler.profile_counters);
     free(profiler.blocks);
+    profiler.profile_counters = NULL;
     profiler.blocks = NULL;
     profiler.num_blocks = 0;
 }
 
 profiler_block_t *add_profile_block(void) {
-    profiler.blocks = (profiler_block_t**)realloc(profiler.blocks, (profiler.num_blocks+2)*(sizeof(profiler_block_t*)));
+    unsigned num = profiler.num_blocks;
+
+    profiler.blocks = realloc(profiler.blocks, (num+2)*(sizeof(profiler_block_t*)));
     if(profiler.blocks) {
-        profiler.blocks[profiler.num_blocks] = (profiler_block_t*)malloc(sizeof(profiler_block_t));
-        if(profiler.blocks[profiler.num_blocks]) {
-            profiler.blocks[profiler.num_blocks]->address_start = 0;
-            profiler.blocks[profiler.num_blocks]->address_end = 0;
-            profiler.blocks[profiler.num_blocks]->cycles = 0;
+        profiler.blocks[num] = malloc(sizeof(profiler_block_t));
+        if(profiler.blocks[num]) {
+            profiler.blocks[num]->address_start = 0;
+            profiler.blocks[num]->address_end = 0;
+            profiler.blocks[num]->cycles = 0;
         } else {
             /* Just die if we get here */
-            free(profiler.blocks[profiler.num_blocks]);
             abort();
         }
     } else {
         /* Just die if we get here too */
-        free(profiler.blocks);
         abort();
     }
     profiler.num_blocks++;
     profiler.blocks[profiler.num_blocks] = NULL;
-    return profiler.blocks[profiler.num_blocks-1];
+    return profiler.blocks[num];
 }
 
 void remove_profile_block(uint32_t block_entry) {
@@ -65,6 +69,10 @@ void remove_profile_block(uint32_t block_entry) {
         pos++;
     }
     profiler.blocks[profiler.num_blocks] = NULL;
+    profiler.blocks = realloc(profiler.blocks, (profiler.num_blocks+1)*(sizeof(profiler_block_t*)));
+    if(!profiler.blocks) {
+        abort();
+    }
     profiler.num_blocks--;
 }
 

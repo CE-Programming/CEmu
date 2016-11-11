@@ -1350,14 +1350,13 @@ static QString int2hex(uint32_t a, uint8_t l) {
 }
 
 void MainWindow::removeAllProfilers(void) {
-    for(int i = 0; i < ui->profilerView->rowCount(); i++) {
-        ui->profilerView->removeRow(i);
-    }
+    ui->profilerView->setRowCount(0);
+    set_profiler_granularity(profiler.granularity);
 }
 
 void MainWindow::changeProfilerGranularity(int in) {
-    removeAllProfilers();
-    //set_profiler_granularity(static_cast<unsigned>(in));
+    ui->profilerView->setRowCount(0);
+    set_profiler_granularity(static_cast<unsigned>(in));
 }
 
 bool MainWindow::addProfilerBlock(void) {
