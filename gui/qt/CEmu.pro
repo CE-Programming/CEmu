@@ -76,7 +76,7 @@ DEFINES += DEBUG_SUPPORT
 
 # These options can be disabled / enabled depending on
 # compiler / library support for your toolchain
-DEFINES += LIB_ARCHIVE_SUPPORT PNG_SUPPORT GLOB_SUPPORT
+DEFINES += LUA_SUPPORT LIB_ARCHIVE_SUPPORT PNG_SUPPORT GLOB_SUPPORT
 
 CONFIG(release, debug|release) {
     #This is a release build
@@ -95,6 +95,10 @@ if (!win32-msvc*) {
     # -flto might cause an internal compiler error on GCC in some circumstances (with -g3?)... Comment it if needed.
     CONFIG(release, debug|release): GLOBAL_FLAGS += -O3 -flto
 
+    if (contains(DEFINES, LUA_SUPPORT)) {
+        CONFIG += link_pkgconfig
+        PKGCONFIG += lua sol2
+    }
     if (contains(DEFINES, LIB_ARCHIVE_SUPPORT)) {
         CONFIG += link_pkgconfig
         PKGCONFIG += zlib libarchive
@@ -138,12 +142,12 @@ if (!win32-msvc*) {
 		# This is a bad hack, but MOC kinda needs it to work correctly...
 		QMAKE_MOC_OPTIONS += -DPNG_WRITE_APNG_SUPPORTED
 	}
-	
+
 	# Otherwise...
     !equals(LIBPNG_APNG_FROM_VCPKG, 1) {
         # If we're not using vcpkg, we rely on manual variables to find needed
         # libpng-apng components.
-        # 
+        #
         # Note that libpng/zlib LIBS/INCLUDES should be specified in the envrionment.
         # We will use LIBPNG_APNG_LIB, ZLIB_LIB, and LIBPNG_APNG_INCLUDE.
         # The logic below accounts for both specifying in the real shell environment,
@@ -238,6 +242,8 @@ SOURCES += \
     sendinghandler.cpp \
     debugger.cpp \
     settings.cpp \
+    luascripting.cpp \
+    luaeditor.cpp \
     capture/animated-png.c \
     keypad/qtkeypadbridge.cpp \
     keypad/keymap.cpp \
@@ -342,6 +348,7 @@ HEADERS  += \
     dockwidget.h \
     searchwidget.h \
     basiccodeviewerwindow.h \
+    luaeditor.h \
     sendinghandler.h \
     keypad/qtkeypadbridge.h \
     keypad/keymap.h \

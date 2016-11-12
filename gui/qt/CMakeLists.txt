@@ -68,7 +68,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "G
     # sane defaults + hardening
     set(GLOBAL_COMPILE_FLAGS "-W -Wall -Wextra -Wno-unused-parameter -Werror=write-strings -Wredundant-decls -Werror=date-time -Werror=return-type -Werror=pointer-arith")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${GLOBAL_COMPILE_FLAGS} -Werror=implicit-function-declaration -Werror=missing-prototypes")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GLOBAL_COMPILE_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GLOBAL_COMPILE_FLAGS} ")
     # useful flags for debugging
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address,bounds -fsanitize-undefined-trap-on-error ")
     set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address,bounds -fsanitize-undefined-trap-on-error ")
@@ -163,6 +163,8 @@ set(CEmu_Sources
     keypad/rectkey.cpp keypad/rectkey.h
     keypad/secondkey.h
     lcdwidget.cpp lcdwidget.h
+    luascripting.cpp
+    luaeditor.cpp luaeditor.h
     main.cpp
     mainwindow.cpp mainwindow.h mainwindow.ui
     memorywidget.cpp
@@ -266,6 +268,16 @@ if(PNG_FOUND)
     target_link_libraries(CEmu PRIVATE PNG::PNG)
 else()
     message(WARNING "No LibPNG found! APNG capture will not be available")
+endif()
+
+find_package(Lua QUIET)
+if(LUA_FOUND)
+    find_package(sol2 CONFIG REQUIRED)
+    target_compile_definitions(CEmu PRIVATE "LUA_SUPPORT")
+    target_include_directories(CEmu PRIVATE ${LUA_INCLUDE_DIR})
+    target_link_libraries(CEmu PRIVATE ${LUA_LIBRARIES})
+else()
+    message(FATAL_ERROR "Lua (+Sol2) not found! Lua scripting features will not be available")
 endif()
 
 target_link_libraries(CEmu PRIVATE

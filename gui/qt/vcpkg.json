@@ -6,6 +6,8 @@
   "dependencies": [
     "pkgconf",
     "libiconv",
+    "lua",
+    "sol2",
     {
       "name": "libarchive",
       "default-features": false

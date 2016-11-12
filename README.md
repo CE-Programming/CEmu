@@ -60,6 +60,7 @@ _Note that Release builds have an update checking feature, which is disabled in 
 * Emulation of DMA and SPI (for optimal accuracy)
 * Misc. emulation (backlight, battery...)
 * "Autotester" (automated unit testing, light scripting)
+* Scripting through Lua (WIP)
 
 ## How to build
 
@@ -83,5 +84,5 @@ We also welcome more translations. Qt Linguist is a great tool for that (here's 
 
 ## License
 CEmu is licensed under the [GPLv3](LICENSE).  
-_Acknowledgements_: Some CEmu parts are, directly, modified, or inspired, from [z80e](https://github.com/KnightOS/z80e), [Firebird](https://github.com/nspire-emus/firebird), [libtifiles](https://github.com/debrouxl/tilibs), [tivars_lib_cpp](https://github.com/adriweb/tivars_lib_cpp), [KDMacTouchBar](https://github.com/KDAB/KDMacTouchBar), and FatCow's ["Farm-Fresh Web Icons"](http://www.fatcow.com/free-icons).  
+_Acknowledgements_: Some CEmu parts are, directly, modified, or inspired, from [z80e](https://github.com/KnightOS/z80e), [Firebird](https://github.com/nspire-emus/firebird), [libtifiles](https://github.com/debrouxl/tilibs), [tivars_lib_cpp](https://github.com/adriweb/tivars_lib_cpp), [Sol 2](https://github.com/ThePhD/sol2), [KDMacTouchBar](https://github.com/KDAB/KDMacTouchBar), and FatCow's ["Farm-Fresh Web Icons"](http://www.fatcow.com/free-icons).  
 The complete licensing information is available in the [LICENSE](LICENSE) file.
