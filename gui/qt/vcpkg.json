@@ -7,6 +7,11 @@
     "pkgconf",
     "libiconv",
     "libusb",
+    "lua",
+    {
+      "name": "sol2",
+      "version>=": "3.5.0#1"
+    },
     {
       "name": "libarchive",
       "default-features": false
@@ -34,5 +39,5 @@
       "platform": "linux"
     }
   ],
-  "builtin-baseline": "a62ce77d56ee07513b4b67de1ec2daeaebfae51a"
+  "builtin-baseline": "127402f1c75bb3d5ff6bce04b285faa4930a5aca"
 }

@@ -74,7 +74,7 @@ DEFINES += DEBUG_SUPPORT
 
 # These options can be disabled / enabled depending on
 # compiler / library support for your toolchain
-DEFINES += GLOB_SUPPORT LIB_ARCHIVE_SUPPORT LIBUSB_SUPPORT PNG_SUPPORT
+DEFINES += GLOB_SUPPORT LIB_ARCHIVE_SUPPORT LIBUSB_SUPPORT LUA_SUPPORT PNG_SUPPORT
 
 CONFIG(release, debug|release) {
     #This is a release build

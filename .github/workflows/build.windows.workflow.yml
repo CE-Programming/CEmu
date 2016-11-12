@@ -64,7 +64,7 @@ jobs:
           ${{ runner.os }}-vcpkg-downloads-
 
     - name: Restore artifacts, or setup vcpkg (do not install any package)
-      uses: lukka/run-vcpkg@b3dd708d38df5c856fe1c18dc0d59ab771f93921 # latest as of 2025-10-04
+      uses: lukka/run-vcpkg@5ad8bfa6267ef808f7d48cf4004c879bed752401 # latest as of 2026-08-22
       with:
         vcpkgJsonGlob: '**/gui/qt/vcpkg.json'
 
@@ -80,7 +80,7 @@ jobs:
       uses: mozilla-actions/sccache-action@v0.0.9
 
     - name: Build CEmu ${{ matrix.config }} on Windows ${{ matrix.arch }}
-      uses: lukka/run-cmake@67c73a83a46f86c4e0b96b741ac37ff495478c38 # latest as of 2025-10-04
+      uses: lukka/run-cmake@c575fbf7e977dee9e825cfea913263f7c4377960 # latest as of 2026-08-22
       with:
         cmakeListsTxtPath: '${{ github.workspace }}/gui/qt/CMakeLists.txt'
         configurePreset: 'Win-${{ matrix.arch }}'

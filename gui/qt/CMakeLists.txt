@@ -157,6 +157,8 @@ set(CEmu_Sources
     keypad/secondkey.h
     lcdwidget.cpp lcdwidget.h
     lcddebugwidget.cpp lcddebugwidget.h
+    luascripting.cpp
+    luaeditor.cpp luaeditor.h
     main.cpp
     mainwindow.cpp mainwindow.h mainwindow.ui
     memorywidget.cpp
@@ -260,6 +262,12 @@ else()
         message(WARNING "No LibPNG found! APNG capture will not be available")
     endif()
 endif()
+
+find_package(Lua 5.4 REQUIRED)
+find_package(sol2 CONFIG REQUIRED)
+target_compile_definitions(CEmu PRIVATE "LUA_SUPPORT")
+target_include_directories(CEmu PRIVATE ${LUA_INCLUDE_DIR})
+target_link_libraries(CEmu PRIVATE ${LUA_LIBRARIES} sol2::sol2)
 
 target_link_libraries(CEmu PRIVATE
     Qt::Core
