@@ -118,7 +118,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     connect(ui->buttonClearEquates, &QPushButton::clicked, this, &MainWindow::clearEquateFile);
     connect(ui->buttonRefreshEquates, &QPushButton::clicked, this, &MainWindow::refreshEquateFile);
     connect(ui->textSizeSlider, &QSlider::valueChanged, this, &MainWindow::setFont);
-    connect(ui->granularitySpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::changeProfilerGranularity);
+    connect(ui->comboGranularity, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::changeProfilerGranularity);
 
     // Linking
     connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::selectFiles);
@@ -223,18 +223,21 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     stepNextShortcut = new QShortcut(QKeySequence(Qt::Key_F8), this);
     stepOutShortcut = new QShortcut(QKeySequence(Qt::Key_F9), this);
     debuggerShortcut = new QShortcut(QKeySequence(Qt::Key_F10), this);
+    asmShortcut = new QShortcut(QKeySequence(Qt::Key_F11), this);
 
     debuggerShortcut->setAutoRepeat(false);
     stepInShortcut->setAutoRepeat(false);
     stepOverShortcut->setAutoRepeat(false);
     stepNextShortcut->setAutoRepeat(false);
     stepOutShortcut->setAutoRepeat(false);
+    asmShortcut->setAutoRepeat(false);
 
     connect(debuggerShortcut, &QShortcut::activated, this, &MainWindow::changeDebuggerState);
     connect(stepInShortcut, &QShortcut::activated, this, &MainWindow::stepInPressed);
     connect(stepOverShortcut, &QShortcut::activated, this, &MainWindow::stepOverPressed);
     connect(stepNextShortcut, &QShortcut::activated, this, &MainWindow::stepNextPressed);
     connect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOutPressed);
+    connect(asmShortcut, &QShortcut::activated, this, &MainWindow::sendASMKey);
 
     // Meta Types
     qRegisterMetaType<uint32_t>("uint32_t");
@@ -258,7 +261,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
 #endif
 
     changeThrottleMode(opts.useUnthrottled ? Qt::Unchecked : Qt::Checked);
-    if(opts.RomFile.isEmpty()) {
+    if (opts.RomFile.isEmpty()) {
         emu.rom = settings->value(QStringLiteral("romImage")).toString().toStdString();
     } else {
         emu.rom = opts.RomFile.toStdString();
@@ -278,7 +281,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     ui->memBytes->setValue(settings->value(QStringLiteral("memBytesPerLine"), 8).toInt());
 
     currentDir.setPath((settings->value(QStringLiteral("currDir"), QDir::homePath()).toString()));
-    if(settings->value(QStringLiteral("savedImagePath")).toString().isEmpty()) {
+    if (settings->value(QStringLiteral("savedImagePath")).toString().isEmpty()) {
         QString path = QDir::cleanPath(QFileInfo(settings->fileName()).absoluteDir().absolutePath() + QStringLiteral("/cemu_image.ce"));
         settings->setValue(QStringLiteral("savedImagePath"),path);
     }
@@ -315,7 +318,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
             exit(0);
         }
     } else {
-        if(settings->value(QStringLiteral("restoreOnOpen")).toBool() && fileExists(emu.imagePath) && opts.restoreOnOpen ) {
+        if (settings->value(QStringLiteral("restoreOnOpen")).toBool() && fileExists(emu.imagePath) && opts.restoreOnOpen ) {
             restoreEmuState();
         } else {
             emu.start();
@@ -346,7 +349,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     ui->lcdWidget->setFocus();
 
     if (opts.AutotesterFile != ""){
-        if(openJSONConfig(opts.AutotesterFile)==0)
+        if (openJSONConfig(opts.AutotesterFile)==0)
         {
            resetCalculator();
            //Race condition requires this. Else We hand onsending files.
@@ -376,21 +379,25 @@ MainWindow::~MainWindow() {
     delete ui;
 }
 
+void MainWindow::sendASMKey() {
+    autotester::sendKey(0x9CFC); // Asm(
+}
+
 void MainWindow::selectKeypadColor() {
     QObject *senderObj = sender();
     QString senderObjName = senderObj->objectName();
     unsigned keypad_color = KEYPAD_BLACK;
 
-    if(senderObjName == "buttonWhite") keypad_color = KEYPAD_WHITE;
-    if(senderObjName == "buttonBlack") keypad_color = KEYPAD_BLACK;
-    if(senderObjName == "buttonGolden") keypad_color = KEYPAD_GOLDEN;
-    if(senderObjName == "buttonPlum") keypad_color = KEYPAD_PLUM;
-    if(senderObjName == "buttonPink") keypad_color = KEYPAD_PINK;
-    if(senderObjName == "buttonRed") keypad_color = KEYPAD_RED;
-    if(senderObjName == "buttonLightning") keypad_color = KEYPAD_LIGHTNING;
-    if(senderObjName == "buttonTrueBlue") keypad_color = KEYPAD_TRUE_BLUE;
-    if(senderObjName == "buttonDenim") keypad_color = KEYPAD_DENIM;
-    if(senderObjName == "buttonSilver") keypad_color = KEYPAD_SILVER;
+    if (senderObjName == "buttonWhite") keypad_color = KEYPAD_WHITE;
+    if (senderObjName == "buttonBlack") keypad_color = KEYPAD_BLACK;
+    if (senderObjName == "buttonGolden") keypad_color = KEYPAD_GOLDEN;
+    if (senderObjName == "buttonPlum") keypad_color = KEYPAD_PLUM;
+    if (senderObjName == "buttonPink") keypad_color = KEYPAD_PINK;
+    if (senderObjName == "buttonRed") keypad_color = KEYPAD_RED;
+    if (senderObjName == "buttonLightning") keypad_color = KEYPAD_LIGHTNING;
+    if (senderObjName == "buttonTrueBlue") keypad_color = KEYPAD_TRUE_BLUE;
+    if (senderObjName == "buttonDenim") keypad_color = KEYPAD_DENIM;
+    if (senderObjName == "buttonSilver") keypad_color = KEYPAD_SILVER;
 
     setKeypadColor(keypad_color);
 }
@@ -403,7 +410,7 @@ void MainWindow::changeImagePath() {
     QString saveImagePath = QFileDialog::getSaveFileName(this, tr("Select saved image to restore from"),
                                                          currentDir.absolutePath(),
                                                          tr("CEmu images (*.ce);;All files (*.*)"));
-    if(!saveImagePath.isEmpty()) {
+    if (!saveImagePath.isEmpty()) {
         currentDir = QFileInfo(saveImagePath).absoluteDir();
         settings->setValue(QStringLiteral("savedImagePath"), QVariant(saveImagePath.toStdString().c_str()));
         ui->savedImagePath->setText(saveImagePath);
@@ -412,7 +419,7 @@ void MainWindow::changeImagePath() {
 
 bool MainWindow::restoreEmuState() {
     QString default_savedImage = settings->value(QStringLiteral("savedImagePath")).toString();
-    if(!default_savedImage.isEmpty()) {
+    if (!default_savedImage.isEmpty()) {
         return restoreFromPath(default_savedImage);
     } else {
         QMessageBox::warning(this, tr("Can't restore state"), tr("No saved image path in settings"));
@@ -428,7 +435,7 @@ bool MainWindow::restoreFromPath(QString path) {
     if (inReceivingMode) {
         refreshVariableList();
     }
-    if(!emu_thread->restore(path)) {
+    if (!emu_thread->restore(path)) {
         QMessageBox::warning(this, tr("Could not restore"), tr("Try restarting"));
         return false;
     }
@@ -448,7 +455,7 @@ void MainWindow::setRestoreOnOpen(bool b) {
 
 void MainWindow::saveEmuState() {
     QString default_savedImage = settings->value(QStringLiteral("savedImagePath")).toString();
-    if(!default_savedImage.isEmpty()) {
+    if (!default_savedImage.isEmpty()) {
         saveToPath(default_savedImage);
     } else {
         QMessageBox::warning(this, tr("Can't save image"), tr("No saved image path in settings given"));
@@ -459,9 +466,9 @@ void MainWindow::restoreFromFile() {
     QString savedImage = QFileDialog::getOpenFileName(this, tr("Select saved image to restore from"),
                                                       currentDir.absolutePath(),
                                                       tr("CEmu images (*.ce);;All files (*.*)"));
-    if(!savedImage.isEmpty()) {
+    if (!savedImage.isEmpty()) {
         currentDir = QFileInfo(savedImage).absoluteDir();
-        if(restoreFromPath(savedImage)) {
+        if (restoreFromPath(savedImage)) {
             usingLoadedImage = true;
         }
     }
@@ -471,7 +478,7 @@ void MainWindow::saveToFile() {
     QString savedImage = QFileDialog::getSaveFileName(this, tr("Set image to save to"),
                                                       currentDir.absolutePath(),
                                                       tr("CEmu images (*.ce);;All files (*.*)"));
-    if(!savedImage.isEmpty()) {
+    if (!savedImage.isEmpty()) {
         currentDir = QFileInfo(savedImage).absoluteDir();
         saveToPath(savedImage);
     }
@@ -480,20 +487,20 @@ void MainWindow::exportRom() {
     QString saveRom = QFileDialog::getSaveFileName(this, tr("Set Rom image to save to"),
                                                       currentDir.absolutePath(),
                                                       tr("ROM images (*.rom);;All files (*.*)"));
-    if(!saveRom.isEmpty()) {
+    if (!saveRom.isEmpty()) {
         currentDir = QFileInfo(saveRom).absoluteDir();
         emu_thread->saveRomImage(saveRom);
     }
 }
 
 void MainWindow::started(bool success) {
-    if(success) {
+    if (success) {
         setKeypadColor(settings->value(QStringLiteral("keypadColor"), true).toUInt());
     }
 }
 void MainWindow::restored(bool success) {
     started(success);
-    if(success) {
+    if (success) {
         showStatusMsg(tr("Emulation restored from image."));
     } else {
         QMessageBox::warning(this, tr("Could not restore"), tr("Resuming failed.\nPlease Reload your ROM."));
@@ -501,14 +508,14 @@ void MainWindow::restored(bool success) {
 }
 
 void MainWindow::saved(bool success) {
-    if(success) {
+    if (success) {
         showStatusMsg(tr("Image saved."));
     } else {
         QMessageBox::warning(this, tr("Could not save"), tr("Saving failed.\nSaving failed, go tell someone."));
     }
 
-    if(closeAfterSave) {
-        if(!success) {
+    if (closeAfterSave) {
+        if (!success) {
             closeAfterSave = false;
         } else {
             this->close();
@@ -517,14 +524,14 @@ void MainWindow::saved(bool success) {
 }
 
 void MainWindow::dropEvent(QDropEvent *e) {
-    if(inReceivingMode) {
+    if (inReceivingMode) {
         return e->ignore();
     }
     sending_handler.dropOccured(e, LINK_FILE);
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent *e) {
-    if(inReceivingMode) {
+    if (inReceivingMode) {
         return e->ignore();
     }
     sending_handler.dragOccured(e);
@@ -607,11 +614,11 @@ bool MainWindow::runSetup() {
         if (inReceivingMode) {
             refreshVariableList();
         }
-        if(debuggerOn) {
+        if (debuggerOn) {
             changeDebuggerState();
         }
         settings->setValue(QStringLiteral("romImage"), QVariant(emu.rom.c_str()));
-        if(emu.stop()) {
+        if (emu.stop()) {
             speedUpdateTimer.stop();
             ui->rompathView->setText(emu.rom.c_str());
             emu.start();
@@ -648,7 +655,7 @@ void MainWindow::setUIMode(bool docks_enabled) {
             debuggerDock = dw;
 
         addDockWidget(Qt::RightDockWidgetArea, dw);
-        if(last_dock != nullptr)
+        if (last_dock != nullptr)
             tabifyDockWidget(last_dock, dw);
 
         last_dock = dw;
@@ -680,7 +687,7 @@ void MainWindow::saveScreenshot(QString namefilter, QString defaultsuffix, QStri
     dialog.setDefaultSuffix(defaultsuffix);
     dialog.exec();
 
-    if(!(dialog.selectedFiles().isEmpty())) {
+    if (!(dialog.selectedFiles().isEmpty())) {
         QString filename = dialog.selectedFiles().at(0);
         if (filename.isEmpty()) {
             QFile(temppath).remove();
@@ -730,7 +737,7 @@ void MainWindow::recordGIF() {
         gif_start_recording(path.toStdString().c_str(), ui->frameskipSlider->value());
     } else {
         if (gif_stop_recording()) {
-            if(!(gif_optimize(path.toStdString().c_str(), opt_path.toStdString().c_str()))) {
+            if (!(gif_optimize(path.toStdString().c_str(), opt_path.toStdString().c_str()))) {
                 QFile(path).remove();
                 QMessageBox::warning(this, tr("GIF Optimization Failed"), tr("A failure occured during recording"));
             } else {
@@ -766,7 +773,7 @@ void MainWindow::autoCheckForUpdates(int state) {
     settings->setValue(QStringLiteral("autoUpdate"), state);
     ui->checkUpdates->setChecked(state);
 
-    if(state == Qt::Checked) {
+    if (state == Qt::Checked) {
         checkForUpdates(true);
     }
 }
@@ -926,7 +933,7 @@ void MainWindow::consoleOutputChanged() {
 }
 
 void MainWindow::isBusy(bool busy) {
-    if(busy) {
+    if (busy) {
         QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
     } else {
         QApplication::restoreOverrideCursor();
@@ -1267,7 +1274,7 @@ void MainWindow::launchTest() {
         dispAutotesterError(1);
         return;
     }
-    if(!opts.suppressTestDialog) {
+    if (!opts.suppressTestDialog) {
         QMessageBox::information(this, tr("Test results"), QString(tr("Out of %2 tests attempted:\n%4 passed\n%6 failed")).arg(QString::number(autotester::hashesTested), QString::number(autotester::hashesPassed), QString::number(autotester::hashesFailed)));
     }
 }
@@ -1355,8 +1362,9 @@ void MainWindow::removeAllProfilers(void) {
 }
 
 void MainWindow::changeProfilerGranularity(int in) {
+    unsigned granularity = log2(ui->comboGranularity->itemText(in).toUInt());
     ui->profilerView->setRowCount(0);
-    set_profiler_granularity(static_cast<unsigned>(in-1));
+    set_profiler_granularity(granularity);
 }
 
 void MainWindow::addProfilerBlock(void) {
@@ -1367,18 +1375,17 @@ void MainWindow::addProfilerBlock(void) {
 
     ui->profilerView->setRowCount(currentRow + 1);
 
+    QTableWidgetItem *label = new QTableWidgetItem("Label"+QString::number(currentRow));
     QTableWidgetItem *saddress = new QTableWidgetItem("000000");
-    QTableWidgetItem *eaddress = new QTableWidgetItem(int2hex(profiler.granularity, 6).toUpper());
-    QTableWidgetItem *block_size = new QTableWidgetItem(QString::number(profiler.granularity+1));
+    QTableWidgetItem *size = new QTableWidgetItem(QString::number(1 << profiler.granularity));
     QTableWidgetItem *cycle_count = new QTableWidgetItem("0");
-    block_size->setFlags(block_size->flags() & ~Qt::ItemIsEditable);
 
-    ui->profilerView->setItem(currentRow, 0, saddress);
-    ui->profilerView->setItem(currentRow, 1, eaddress);
-    ui->profilerView->setItem(currentRow, 2, block_size);
-    ui->profilerView->setItem(currentRow, 3, cycle_count);
+    ui->profilerView->setItem(currentRow, PROFILE_LABEL_LOC, label);
+    ui->profilerView->setItem(currentRow, PROFILE_ADDR_LOC, saddress);
+    ui->profilerView->setItem(currentRow, PROFILE_SIZE_LOC, size);
+    ui->profilerView->setItem(currentRow, PROFILE_CYCLE_LOC, cycle_count);
 
-    ui->profilerView->selectRow(currentRow);
+    ui->profilerView->setCurrentCell(currentRow, PROFILE_ADDR_LOC);
     ui->profilerView->setUpdatesEnabled(true);
 
     add_profile_block();
@@ -1389,16 +1396,21 @@ void MainWindow::addProfilerBlock(void) {
 }
 
 void MainWindow::zeroProfiler(void) {
-    uint32_t count;
-    for(count=0; count<profiler.num_blocks; count++) {
+    auto count = 0;
+    unsigned j;
+    for (; count < ui->profilerView->rowCount(); count++) {
+        for(j = profiler.blocks[count]->start_addr; j < profiler.blocks[count]->end_addr; j++) {
+            profiler.profile_counters[j] = 0;
+        }
         profiler.blocks[count]->cycles = 0;
+        ui->profilerView->item(count, PROFILE_CYCLE_LOC)->setText("0");
     }
 }
 
 void MainWindow::exportProfiler(void) {
     uint64_t total_cycles = 0;
     uint32_t count;
-    for(count=0; count<profiler.num_blocks; count++) {
+    for (count = 0; count < profiler.num_blocks; count++) {
         total_cycles += profiler.blocks[count]->cycles;
     }
     QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptSave, tr("Profiler Data (*.txt);;All Files (*.*)"));
@@ -1411,10 +1423,10 @@ void MainWindow::exportProfiler(void) {
         out.precision(6);
         out << "[CEmu Profiler Data]" << std::endl << std::endl;
         out << "Total Cycles: " << total_cycles << std::endl << std::endl;
-        for(count=0; count<profiler.num_blocks; count++) {
+        for (count = 0; count < profiler.num_blocks; count++) {
             long double output = (profiler.blocks[count]->cycles) ?  (static_cast<long double>(profiler.blocks[count]->cycles)/static_cast<long double>(total_cycles))*100.0 : 0;
-            out << '[' << int2hex(profiler.blocks[count]->address_start, 6).toStdString() << ':' << int2hex(profiler.blocks[count]->address_end, 6).toStdString() << "] ";
-            out << output << "% " << profiler.blocks[count]->cycles << " cycles" << std::endl;
+            out << '[' << int2hex(profiler.blocks[count]->start_addr, 6).toStdString() << ':' << int2hex(profiler.blocks[count]->end_addr, 6).toStdString() << "] ";
+            out << output << "% " << profiler.blocks[count]->cycles << " cycles (" << ui->profilerView->item(count, PROFILE_LABEL_LOC)->text().toStdString() << ')' << std::endl;
         }
         out.close();
     } else {
@@ -1423,7 +1435,7 @@ void MainWindow::exportProfiler(void) {
 }
 
 bool MainWindow::removeProfilerBlock(void) {
-    if(!ui->profilerView->rowCount() || !ui->profilerView->selectionModel()->isSelected(ui->profilerView->currentIndex())) {
+    if (!ui->profilerView->rowCount() || !ui->profilerView->selectionModel()->isSelected(ui->profilerView->currentIndex())) {
         return false;
     }
 
@@ -1434,50 +1446,40 @@ bool MainWindow::removeProfilerBlock(void) {
     return true;
 }
 
-void MainWindow::updateProfilerData(int currentRow) {
-    uint32_t curr = static_cast<uint32_t>(currentRow);
-
+void MainWindow::updateProfilerCycles(int currentRow) {
     update_profiler_cycles();
-    ui->profilerView->item(currentRow, 3)->setText(QString::number(profiler.blocks[curr]->cycles));
+    ui->profilerView->item(currentRow, PROFILE_CYCLE_LOC)->setText(QString::number(profiler.blocks[currentRow]->cycles));
 }
 
 void MainWindow::changeProfiler(QTableWidgetItem *item) {
     uint32_t row = static_cast<uint32_t>(item->row());
     auto col = item->column();
-    QString string;
-    uint32_t value;
+    uint32_t start_addr, size, value;
 
     ui->profilerView->blockSignals(true);
-    if(col == 3) {
-        uint64_t cycles = item->text().toLongLong(NULL, 10);
-        string = QString::number(cycles);
+    if (col == PROFILE_CYCLE_LOC) {
+        uint64_t cycles = static_cast<uint64_t>(item->text().toLongLong());
+        item->setText(QString::number(cycles));
         profiler.blocks[row]->cycles = cycles;
     } else {
-        std::string s = item->text().toUpper().toStdString();
-        uint32_t gran = profiler.granularity+1;
-        if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty()) {
-            item->setText(int2hex(0, 6));
-            s = "00";
-        }
+        bool good;
 
-        value = static_cast<uint32_t>(hex2int(QString::fromStdString(s))) + 1;
-        value = (((value + gran - 1) / gran) * gran) - 1;
+        size = ui->profilerView->item(row, PROFILE_SIZE_LOC)->text().toUInt();
 
-        if (col == 0) {
-            uint32_t end_address = static_cast<uint32_t>(hex2int(ui->profilerView->item(row, 1)->text()));
-            value = (value > end_address) ? end_address : value;
-            update_profiler_block(value, end_address, profiler.blocks[row]->address_start, end_address);
-            string = int2hex(value, 6);
-            ui->profilerView->item(row, 2)->setText(QString::number(end_address-value+1));
-        } else if (col == 1) {
-            uint32_t start_address = static_cast<uint32_t>(hex2int(ui->profilerView->item(row, 0)->text()));
-            value = (value < start_address) ? start_address : value;
-            update_profiler_block(start_address, value, start_address, profiler.blocks[row]->address_end);
-            string = int2hex(value, 6);
-            ui->profilerView->item(row, 2)->setText(QString::number(value-start_address+1));
+        if (col == PROFILE_ADDR_LOC) {
+            value = item->text().toUInt(&good, 16);
+            start_addr = value & ~((1 << profiler.granularity) - 1);
+        } else if (col == PROFILE_SIZE_LOC) {
+            value = item->text().toUInt();
+            size = value / (1 << profiler.granularity);
+            if(!size) { size = 1 << profiler.granularity; }
+            start_addr = ui->profilerView->item(row, PROFILE_ADDR_LOC)->text().toUInt(&good, 16);
         }
+        ui->profilerView->item(row, PROFILE_ADDR_LOC)->setText(int2hex(start_addr, 6));
+        ui->profilerView->item(row, PROFILE_SIZE_LOC)->setText(QString::number(size));
+        update_profiler_block(row, start_addr, start_addr+size-1);
     }
-    item->setText(string);
+
     ui->profilerView->blockSignals(false);
 }
 
@@ -1840,16 +1842,16 @@ void MainWindow::populateDebugWindow() {
     ui->portView->blockSignals(true);
     ui->watchpointView->blockSignals(true);
 
-    for(int i=0; i<ui->portView->rowCount(); ++i) {
+    for (int i=0; i<ui->portView->rowCount(); ++i) {
         updatePortData(i);
     }
 
-    for(int i=0; i<ui->watchpointView->rowCount(); ++i) {
+    for (int i=0; i<ui->watchpointView->rowCount(); ++i) {
         updateWatchpointData(i);
     }
 
-    for(int i=0; i<ui->profilerView->rowCount(); ++i) {
-        updateProfilerData(i);
+    for (int i=0; i<ui->profilerView->rowCount(); ++i) {
+        updateProfilerCycles(i);
     }
 
     updateTIOSView();
@@ -1875,11 +1877,11 @@ void MainWindow::updateTIOSView() {
     ui->opView->clear();
     ui->vatView->clear();
 
-    for(uint32_t i = 0xD005F8; i<0xD005F8+77; i+=11) {
+    for (uint32_t i = 0xD005F8; i<0xD005F8+77; i+=11) {
         uint8_t index = 0;
         calcData.clear();
         opType.clear();
-        for(uint32_t j = i; j < i+11; j++) {
+        for (uint32_t j = i; j < i+11; j++) {
             gotData[index] = mem_peek_byte(j);
             calcData += int2hex(gotData[index++], 2);
         }
@@ -2086,14 +2088,14 @@ void MainWindow::setPreviousBreakpointAddress(QTableWidgetItem *curr_item) {
     if (curr_item->text().isEmpty()) {
         return;
     }
-    prevBreakpointAddress = static_cast<uint32_t>(hex2int(ui->breakpointView->item(curr_item->row(), 0)->text()));
+    prevBreakpointAddress = static_cast<uint32_t>(hex2int(ui->breakpointView->item(curr_item->row(), BREAK_ADDR_LOC)->text()));
 }
 
 void MainWindow::setPreviousWatchpointAddress(QTableWidgetItem *curr_item) {
     if (curr_item->text().isEmpty()) {
         return;
     }
-    prevWatchpointAddress = static_cast<uint32_t>(hex2int(ui->watchpointView->item(curr_item->row(), 0)->text()));
+    prevWatchpointAddress = static_cast<uint32_t>(hex2int(ui->watchpointView->item(curr_item->row(), WATCH_ADDR_LOC)->text()));
 }
 
 void MainWindow::changeBreakpointAddress(QTableWidgetItem *item) {
@@ -2102,15 +2104,10 @@ void MainWindow::changeBreakpointAddress(QTableWidgetItem *item) {
     QString addressString;
     uint32_t address;
 
-    if (col > 0) {
-        address = static_cast<uint32_t>(hex2int(ui->breakpointView->item(row, 0)->text()));
-        unsigned int value = DBG_NO_HANDLE;
-
-        if (col == 1) { // Break on execution
-            value = DBG_EXEC_BREAKPOINT;
-        }
-        debug_breakwatch(address, value, item->checkState() == Qt::Checked);
-    } else {
+    if (col == BREAK_ENABLE_LOC) {
+        address = static_cast<uint32_t>(hex2int(ui->breakpointView->item(row, BREAK_ADDR_LOC)->text()));
+        debug_breakwatch(address, DBG_EXEC_BREAKPOINT, item->checkState() == Qt::Checked);
+    } else if (col == BREAK_ADDR_LOC){
         std::string s = item->text().toUpper().toStdString();
         if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty()) {
             item->setText(int2hex(prevBreakpointAddress, 6));
@@ -2118,19 +2115,19 @@ void MainWindow::changeBreakpointAddress(QTableWidgetItem *item) {
         }
 
         address = static_cast<uint32_t>(hex2int(QString::fromStdString(s)));
-        addressString = int2hex(address,6);
+        addressString = int2hex(address, 6);
 
         ui->breakpointView->blockSignals(true);
         /* Return if address is already set */
         for (int i=0; i<ui->breakpointView->rowCount(); i++) {
-            if (ui->breakpointView->item(i, 0)->text() == addressString && i != row) {
+            if (ui->breakpointView->item(i, BREAK_ADDR_LOC)->text() == addressString && i != row) {
                 item->setText(int2hex(prevBreakpointAddress, 6));
                 ui->breakpointView->blockSignals(false);
                 return;
             }
         }
 
-        unsigned int value = ((ui->breakpointView->item(row, 1)->checkState() == Qt::Checked) ? DBG_EXEC_BREAKPOINT : DBG_NO_HANDLE);
+        unsigned int value = ((ui->breakpointView->item(row, BREAK_ENABLE_LOC)->checkState() == Qt::Checked) ? DBG_EXEC_BREAKPOINT : DBG_NO_HANDLE);
 
         debug_breakwatch(prevBreakpointAddress, DBG_EXEC_BREAKPOINT, false);
         item->setText(addressString);
@@ -2147,32 +2144,32 @@ void MainWindow::changeWatchpointAddress(QTableWidgetItem *item) {
 
     ui->watchpointView->blockSignals(true);
 
-    if (col == 2) { // update the data located at this address
-        uint8_t i,wLength = ui->watchpointView->item(row, 1)->text().toUInt();
+    if (col == WATCH_VALUE_LOC) { // update the data located at this address
+        uint8_t i,wSize = ui->watchpointView->item(row, WATCH_SIZE_LOC)->text().toUInt();
         uint32_t wData;
 
-        address = static_cast<uint32_t>(ui->watchpointView->item(row, 0)->text().toUInt());
+        address = static_cast<uint32_t>(ui->watchpointView->item(row, WATCH_ADDR_LOC)->text().toUInt());
 
         std::string s = item->text().toUpper().toStdString();
         if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty()) {
-            item->setText(int2hex(0, wLength << 1));
+            item->setText(int2hex(0, wSize << 1));
             ui->watchpointView->blockSignals(false);
             return;
         }
 
         wData = static_cast<uint32_t>(item->text().toUpper().toUInt(nullptr, 16));
-        newString = int2hex(wData, wLength << 1);
+        newString = int2hex(wData, wSize << 1);
 
         item->setText(newString);
 
-        for(i=0; i<wLength; i++) {
+        for (i=0; i<wSize; i++) {
             mem_poke_byte(address+i, (wData >> ((i << 3))&0xFF));
         }
 
         ramUpdate();
         flashUpdate();
         memUpdate(address);
-    } else if (col == 1) { // length of data we wish to read
+    } else if (col == WATCH_SIZE_LOC) { // length of data we wish to read
         unsigned int data_length = item->text().toUInt();
         if (data_length > 4) {
             data_length = 4;
@@ -2181,18 +2178,18 @@ void MainWindow::changeWatchpointAddress(QTableWidgetItem *item) {
         }
         item->setText(QString::number(data_length));
         updateWatchpointData(row);
-    } else if (col > 2) {
+    } else if (col == WATCH_READ_LOC || col == WATCH_WRITE_LOC) {
         address = static_cast<uint32_t>(hex2int(ui->watchpointView->item(row, 0)->text()));
         unsigned int value = DBG_NO_HANDLE;
 
-        if (col == 3) { // Break on read
+        if (col == WATCH_READ_LOC) { // Break on read
             value = DBG_READ_WATCHPOINT;
         } else
-        if (col == 4) { // Break on write
+        if (col == WATCH_WRITE_LOC) { // Break on write
             value = DBG_WRITE_WATCHPOINT;
         }
         debug_breakwatch(address, value, item->checkState() == Qt::Checked);
-    } else {
+    } else if (col == WATCH_ADDR_LOC){
         std::string s = item->text().toUpper().toStdString();
         if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty()) {
             item->setText(int2hex(prevWatchpointAddress, 6));
@@ -2205,15 +2202,15 @@ void MainWindow::changeWatchpointAddress(QTableWidgetItem *item) {
 
         /* Return if address is already set */
         for (int i=0; i<ui->watchpointView->rowCount(); i++) {
-            if (ui->watchpointView->item(i, 0)->text() == newString && i != row) {
+            if (ui->watchpointView->item(i, WATCH_ADDR_LOC)->text() == newString && i != row) {
                 item->setText(int2hex(prevWatchpointAddress, 6));
                 ui->watchpointView->blockSignals(false);
                 return;
             }
         }
 
-        unsigned int value = ((ui->watchpointView->item(row, 3)->checkState() == Qt::Checked) ? DBG_READ_WATCHPOINT : DBG_NO_HANDLE)|
-                             ((ui->watchpointView->item(row, 4)->checkState() == Qt::Checked) ? DBG_WRITE_WATCHPOINT : DBG_NO_HANDLE);
+        unsigned int value = ((ui->watchpointView->item(row, WATCH_READ_LOC)->checkState() == Qt::Checked) ? DBG_READ_WATCHPOINT : DBG_NO_HANDLE)|
+                             ((ui->watchpointView->item(row, WATCH_WRITE_LOC)->checkState() == Qt::Checked) ? DBG_WRITE_WATCHPOINT : DBG_NO_HANDLE);
 
         debug_breakwatch(prevWatchpointAddress, DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT, false);
         item->setText(newString);
@@ -2235,8 +2232,8 @@ bool MainWindow::addBreakpoint() {
 
     /* Return if address is already set */
     for (int i=0; i<currentRow; ++i) {
-        if (ui->breakpointView->item(i, 0)->text() == currAddressString) {
-            if(currAddressString != "000000") {
+        if (ui->breakpointView->item(i, BREAK_ADDR_LOC)->text() == currAddressString) {
+            if (currAddressString != "000000") {
                 ui->breakpointView->selectRow(i);
                 return false;
             }
@@ -2248,16 +2245,18 @@ bool MainWindow::addBreakpoint() {
 
     ui->breakpointView->setRowCount(currentRow + 1);
 
+    QTableWidgetItem *newlabel = new QTableWidgetItem("Label"+QString::number(currentRow));
     QTableWidgetItem *iaddress = new QTableWidgetItem(currAddressString);
     QTableWidgetItem *eBreak = new QTableWidgetItem();
 
     eBreak->setCheckState(Qt::Checked);
     eBreak->setFlags(eBreak->flags() & ~Qt::ItemIsEditable);
 
-    ui->breakpointView->setItem(currentRow, 0, iaddress);
-    ui->breakpointView->setItem(currentRow, 1, eBreak);
+    ui->breakpointView->setItem(currentRow, BREAK_LABEL_LOC, newlabel);
+    ui->breakpointView->setItem(currentRow, BREAK_ADDR_LOC, iaddress);
+    ui->breakpointView->setItem(currentRow, BREAK_ENABLE_LOC, eBreak);
 
-    ui->breakpointView->selectRow(currentRow);
+    ui->breakpointView->setCurrentCell(currentRow, BREAK_ADDR_LOC);
     ui->breakpointView->setUpdatesEnabled(true);
 
     debug_breakwatch(currAddress, DBG_EXEC_BREAKPOINT, true);
@@ -2269,12 +2268,12 @@ bool MainWindow::addBreakpoint() {
 }
 
 bool MainWindow::removeBreakpoint() {
-    if(!ui->breakpointView->rowCount() || !ui->breakpointView->selectionModel()->isSelected(ui->breakpointView->currentIndex())) {
+    if (!ui->breakpointView->rowCount() || !ui->breakpointView->selectionModel()->isSelected(ui->breakpointView->currentIndex())) {
         return false;
     }
 
     const int currentRow = ui->breakpointView->currentRow();
-    uint32_t address = static_cast<uint32_t>(hex2int(ui->breakpointView->item(currentRow, 0)->text()));
+    uint32_t address = static_cast<uint32_t>(hex2int(ui->breakpointView->item(currentRow, BREAK_ADDR_LOC)->text()));
 
     debug_breakwatch(address, DBG_EXEC_BREAKPOINT, false);
 
@@ -2306,8 +2305,8 @@ bool MainWindow::addWatchpoint() {
 
     /* Return if address is already set */
     for (int i=0; i<currentRow; ++i) {
-        if (ui->watchpointView->item(i, 0)->text() == currAddressString) {
-            if(currAddressString != "000000") {
+        if (ui->watchpointView->item(i, WATCH_ADDR_LOC)->text() == currAddressString) {
+            if (currAddressString != "000000") {
                 ui->watchpointView->selectRow(i);
                 return false;
             }
@@ -2317,6 +2316,7 @@ bool MainWindow::addWatchpoint() {
     ui->watchpointView->setUpdatesEnabled(false);
     ui->watchpointView->blockSignals(true);
 
+    QTableWidgetItem *newlabel = new QTableWidgetItem("Label"+QString::number(currentRow));
     QTableWidgetItem *iaddress = new QTableWidgetItem(currAddressString);
     QTableWidgetItem *length = new QTableWidgetItem(watchLength);
     QTableWidgetItem *dWatch = new QTableWidgetItem();
@@ -2331,15 +2331,16 @@ bool MainWindow::addWatchpoint() {
 
     ui->watchpointView->setRowCount(currentRow + 1);
 
-    ui->watchpointView->setItem(currentRow, 0, iaddress);
-    ui->watchpointView->setItem(currentRow, 1, length);
-    ui->watchpointView->setItem(currentRow, 2, dWatch);
-    ui->watchpointView->setItem(currentRow, 3, rWatch);
-    ui->watchpointView->setItem(currentRow, 4, wWatch);
+    ui->watchpointView->setItem(currentRow, WATCH_LABEL_LOC, newlabel);
+    ui->watchpointView->setItem(currentRow, WATCH_ADDR_LOC, iaddress);
+    ui->watchpointView->setItem(currentRow, WATCH_SIZE_LOC, length);
+    ui->watchpointView->setItem(currentRow, WATCH_VALUE_LOC, dWatch);
+    ui->watchpointView->setItem(currentRow, WATCH_READ_LOC, rWatch);
+    ui->watchpointView->setItem(currentRow, WATCH_WRITE_LOC, wWatch);
 
     updateWatchpointData(currentRow);
 
-    ui->watchpointView->selectRow(currentRow);
+    ui->watchpointView->setCurrentCell(currentRow, WATCH_ADDR_LOC);
     ui->watchpointView->setUpdatesEnabled(true);
 
     debug_breakwatch(currAddress, DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT, true);
@@ -2356,12 +2357,12 @@ bool MainWindow::addWatchpoint() {
 }
 
 bool MainWindow::removeWatchpoint() {
-    if(!ui->watchpointView->rowCount() || !ui->watchpointView->selectionModel()->isSelected(ui->watchpointView->currentIndex())) {
+    if (!ui->watchpointView->rowCount() || !ui->watchpointView->selectionModel()->isSelected(ui->watchpointView->currentIndex())) {
         return false;
     }
 
     const int currentRow = ui->watchpointView->currentRow();
-    uint32_t address = static_cast<uint32_t>(hex2int(ui->watchpointView->item(currentRow, 0)->text()));
+    uint32_t address = static_cast<uint32_t>(hex2int(ui->watchpointView->item(currentRow, WATCH_ADDR_LOC)->text()));
 
     debug_breakwatch(address, DBG_READ_WATCHPOINT | DBG_WRITE_WATCHPOINT, false);
 
@@ -2369,20 +2370,20 @@ bool MainWindow::removeWatchpoint() {
     return true;
 }
 
-void MainWindow::removeWatchpointAddress(QString address) {
-    for (int i=0; i<ui->watchpointView->rowCount(); i++) {
-        if (ui->watchpointView->item(i, 0)->text() == address) {
-            ui->watchpointView->setCurrentCell(i,0);
+void MainWindow::removeWatchpointAddress(uint32_t address) {
+    for (int i = 0; i < ui->watchpointView->rowCount(); i++) {
+        if (ui->watchpointView->item(i, WATCH_ADDR_LOC)->text().toUInt() == address) {
+            ui->watchpointView->selectRow(i);
             removeWatchpoint();
             break;
         }
     }
 }
 
-void MainWindow::removeBreakpointAddress(QString address) {
-    for (int i=0; i<ui->breakpointView->rowCount(); i++) {
-        if (ui->breakpointView->item(i, 0)->text() == address) {
-            ui->breakpointView->setCurrentCell(i,0);
+void MainWindow::removeBreakpointAddress(uint32_t address) {
+    for (int i = 0; i < ui->breakpointView->rowCount(); i++) {
+        if (ui->breakpointView->item(i, BREAK_ADDR_LOC)->text().toUInt() == address) {
+            ui->breakpointView->selectRow(i);
             removeBreakpoint();
             break;
         }
@@ -2409,8 +2410,7 @@ void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
                 inDebugger = false; // continue emulation; we don't need to raise the debugger
                 return;
             case 4: // remove a breakpoint with the value in DE
-                currAddress = cpu.registers.DE;
-                removeBreakpointAddress(int2hex(currAddress, 6));
+                removeBreakpointAddress(currAddress = cpu.registers.DE);
                 inDebugger = false;
                 return;
             case 5: // set a read watchpoint with the value in DE; length in C
@@ -2426,7 +2426,7 @@ void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
                 currAddress = cpu.registers.DE;
                 watchLength = QString::number(wLength);
                 watchpointType = DBG_WRITE_WATCHPOINT;
-                removeWatchpointAddress(int2hex(currAddress, 6));
+                removeWatchpointAddress(currAddress);
                 addWatchpoint();
                 inDebugger = false;
                 return;
@@ -2435,12 +2435,12 @@ void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
                 currAddress = cpu.registers.DE;
                 watchLength = QString::number(wLength);
                 watchpointType = DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT;
-                removeWatchpointAddress(int2hex(currAddress, 6));
+                removeWatchpointAddress(currAddress);
                 addWatchpoint();
                 inDebugger = false;
                 return;
             case 8: // we need to remove a watchpoint with the value in DE
-                removeWatchpointAddress(int2hex(cpu.registers.DE, 6));
+                removeWatchpointAddress(cpu.registers.DE);
                 inDebugger = false;
                 return;
             case 9: // we need to remove all breakpoints
@@ -2464,7 +2464,7 @@ void MainWindow::executeDebugCommand(uint32_t debugAddress, uint8_t command) {
                 currAddress = cpu.registers.DE;
                 watchLength = QString::number(wLength);
                 watchpointType = DBG_EMPTY_WATCHPOINT;
-                removeWatchpointAddress(int2hex(currAddress, 6));
+                removeWatchpointAddress(currAddress);
                 addWatchpoint();
                 inDebugger = false;
                 return;
@@ -2490,20 +2490,20 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
     // We hit a normal breakpoint; raise the correct entry in the port monitor table
     if (reason == HIT_EXEC_BREAKPOINT) {
         // find the correct entry
-        while( static_cast<uint32_t>(hex2int(ui->breakpointView->item(row++, 0)->text())) != input );
+        while( static_cast<uint32_t>(hex2int(ui->breakpointView->item(row++, BREAK_ADDR_LOC)->text())) != input );
         row--;
 
-        ui->breakChangeLabel->setText(ui->breakpointView->item(row, 0)->text());
+        ui->breakChangeLabel->setText(ui->breakpointView->item(row, BREAK_ADDR_LOC)->text());
         ui->breakTypeLabel->setText("Executed");
         ui->breakpointView->selectRow(row);
     }
 
     else if (reason == HIT_READ_BREAKPOINT || reason == HIT_WRITE_BREAKPOINT) {
         // find the correct entry
-        while( static_cast<uint32_t>(hex2int(ui->watchpointView->item(row++, 0)->text())) != input );
+        while( static_cast<uint32_t>(hex2int(ui->watchpointView->item(row++, BREAK_ADDR_LOC)->text())) != input );
         row--;
 
-        ui->watchChangeLabel->setText(ui->watchpointView->item(row, 0)->text());
+        ui->watchChangeLabel->setText(ui->watchpointView->item(row, BREAK_ADDR_LOC)->text());
         ui->watchTypeLabel->setText((reason == HIT_READ_BREAKPOINT) ? "Read" : "Write");
         ui->watchpointView->selectRow(row);
         memUpdate(input);
@@ -2511,10 +2511,10 @@ void MainWindow::processDebugCommand(int reason, uint32_t input) {
 
     // We hit a port read or write; raise the correct entry in the port monitor table
     else if (reason == HIT_PORT_READ_BREAKPOINT || reason == HIT_PORT_WRITE_BREAKPOINT) {
-        while( static_cast<uint32_t>(hex2int(ui->portView->item(row++, 0)->text())) != input );
+        while( static_cast<uint32_t>(hex2int(ui->portView->item(row++, BREAK_ADDR_LOC)->text())) != input );
         row--;
 
-        ui->portChangeLabel->setText(ui->portView->item(row, 0)->text());
+        ui->portChangeLabel->setText(ui->portView->item(row, BREAK_ADDR_LOC)->text());
         ui->portTypeLabel->setText((reason == HIT_PORT_READ_BREAKPOINT) ? "Read" : "Write");
         ui->portView->selectRow(row);
     }
@@ -2528,15 +2528,15 @@ void MainWindow::updatePortData(int currentRow) {
 }
 
 void MainWindow::updateWatchpointData(int currentRow) {
-    uint8_t i,length = ui->watchpointView->item(currentRow, 1)->text().toUInt();
-    uint32_t address = static_cast<uint32_t>(hex2int(ui->watchpointView->item(currentRow, 0)->text()));
+    uint8_t i,size = ui->watchpointView->item(currentRow, WATCH_SIZE_LOC)->text().toUInt();
+    uint32_t address = static_cast<uint32_t>(hex2int(ui->watchpointView->item(currentRow, WATCH_ADDR_LOC)->text()));
     uint32_t read = 0;
 
-    for(i=0; i<length; i++) {
+    for (i=0; i<size; i++) {
         read |= mem_peek_byte(address+i) << (i << 3);
     }
 
-    ui->watchpointView->item(currentRow, 2)->setText(int2hex(read, length << 1));
+    ui->watchpointView->item(currentRow, WATCH_VALUE_LOC)->setText(int2hex(read, size << 1));
 }
 
 void MainWindow::addSpaceDisasm(bool b) {
@@ -2549,11 +2549,11 @@ void MainWindow::reloadROM() {
     if (inReceivingMode) {
         refreshVariableList();
     }
-    if(debuggerOn) {
+    if (debuggerOn) {
         changeDebuggerState();
     }
 
-    if(!usingLoadedImage) {
+    if (!usingLoadedImage) {
         QFile(emu.imagePath.c_str()).remove();
     }
 
@@ -2573,14 +2573,14 @@ void MainWindow::updateStackView() {
     ui->stackView->clear();
 
     if (cpu.ADL) {
-        for(int i=0; i<60; i+=3) {
+        for (int i=0; i<60; i+=3) {
             formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2</pre>")
                                     .arg(int2hex(cpu.registers.SPL+i, 6),
                                          int2hex(mem_peek_word(cpu.registers.SPL+i, 1), 6));
             ui->stackView->appendHtml(formattedLine);
         }
     } else {
-        for(int i=0; i<40; i+=2) {
+        for (int i=0; i<40; i+=2) {
             formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2</pre>")
                                     .arg(int2hex(cpu.registers.SPS+i, 4),
                                          int2hex(mem_peek_word(cpu.registers.SPS+i, 0), 4));
@@ -2777,7 +2777,7 @@ void MainWindow::createLCD() {
 }
 
 void MainWindow::stepInPressed() {
-    if(!inDebugger) {
+    if (!inDebugger) {
         return;
     }
 
@@ -2789,7 +2789,7 @@ void MainWindow::stepInPressed() {
 }
 
 void MainWindow::stepOverPressed() {
-    if(!inDebugger) {
+    if (!inDebugger) {
         return;
     }
 
@@ -2801,7 +2801,7 @@ void MainWindow::stepOverPressed() {
 }
 
 void MainWindow::stepNextPressed() {
-    if(!inDebugger) {
+    if (!inDebugger) {
         return;
     }
 
@@ -2813,7 +2813,7 @@ void MainWindow::stepNextPressed() {
 }
 
 void MainWindow::stepOutPressed() {
-    if(!inDebugger) {
+    if (!inDebugger) {
         return;
     }
 
@@ -2905,16 +2905,9 @@ QString MainWindow::getAddressString(bool &ok, QString String) {
     return address;
 }
 
-void MainWindow::gotoPressed() {
-    bool ok;
-    QString address = getAddressString(ok, ui->disassemblyView->getSelectedAddress());
-
-    if (!ok) {
-        return;
-    }
-
-    updateDisasmView(hex2int(address), false);
-}
+/* ================================================ */
+/* Battery Status                                   */
+/* ================================================ */
 
 void MainWindow::changeBatteryCharging(bool checked) {
     control.batteryCharging = checked;
@@ -2929,6 +2922,16 @@ void MainWindow::changeBatteryStatus(int value) {
 /* ================================================ */
 /* Hex Editor Things                                */
 /* ================================================ */
+
+void MainWindow::gotoPressed() {
+    bool ok;
+    QString address = getAddressString(ok, ui->disassemblyView->getSelectedAddress());
+
+    if (!ok) { return; }
+
+    updateDisasmView(hex2int(address), false);
+}
+
 
 void MainWindow::flashUpdate() {
     ui->flashEdit->setFocus();
@@ -2991,12 +2994,12 @@ void MainWindow::searchEdit(QHexEdit *editor) {
     hexSearch = search.getInputMode();
     searchingString = search.getSearchString();
 
-    if(!search.getStatus()) {
+    if (!search.getStatus()) {
         return;
     }
 
     QString searchString;
-    if(hexSearch == true) {
+    if (hexSearch == true) {
         searchString = searchingString;
     } else {
         searchString = QString::fromStdString(searchingString.toLatin1().toHex().toStdString());
@@ -3004,10 +3007,10 @@ void MainWindow::searchEdit(QHexEdit *editor) {
 
     editor->setFocus();
     std::string s = searchString.toUpper().toStdString();
-    if(searchString.isEmpty()) {
+    if (searchString.isEmpty()) {
         return;
     }
-    if((searchString.length() & 1) || s.find_first_not_of("0123456789ABCDEF") != std::string::npos) {
+    if ((searchString.length() & 1) || s.find_first_not_of("0123456789ABCDEF") != std::string::npos) {
         QMessageBox::warning(this, tr("Error"), tr("Error when reading input string"));
         return;
     }
@@ -3018,7 +3021,7 @@ void MainWindow::searchEdit(QHexEdit *editor) {
         a.append(searchString.at(i+1));
         string_int.append(hex2int(a));
     }
-    if(editor->indexOf(string_int, editor->cursorPosition()) == -1) {
+    if (editor->indexOf(string_int, editor->cursorPosition()) == -1) {
         QMessageBox::warning(this, tr("Not Found"), tr("Hex string not found."));
     }
 }
@@ -3143,7 +3146,7 @@ void MainWindow::clearEquateFile() {
 
 void MainWindow::refreshEquateFile() {
     // Reset the map
-    if(fileExists(currentEquateFile.toStdString())) {
+    if (fileExists(currentEquateFile.toStdString())) {
         disasm.addressMap.clear();
         addEquateFile(currentEquateFile);
         updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(nullptr,16), true);
@@ -3225,7 +3228,7 @@ void MainWindow::resetCalculator() {
     if (inReceivingMode) {
         refreshVariableList();
     }
-    if(debuggerOn) {
+    if (debuggerOn) {
         changeDebuggerState();
     }
     emit resetTriggered();

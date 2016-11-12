@@ -13,8 +13,8 @@ extern "C" {
 #define PROFILE_GRANULARITY 0
 
 typedef struct {
-    uint32_t address_start;
-    uint32_t address_end;
+    uint32_t start_addr;
+    uint32_t end_addr;
     uint64_t cycles;
 } profiler_block_t;
 
@@ -33,7 +33,7 @@ void profiler_init(void);
 void profiler_free(void);
 void update_profiler_cycles(void);
 
-void update_profiler_block(uint32_t start_addr, uint32_t end_addr, uint32_t prev_start_addr, uint32_t prev_end_addr);
+void update_profiler_block(unsigned block, uint32_t start_addr, uint32_t end_addr);
 
 #ifdef __cplusplus
 }

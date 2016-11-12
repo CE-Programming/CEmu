@@ -21,8 +21,12 @@ void set_profiler_granularity(unsigned gran) {
 
 void profiler_free(void) {
     if(profiler.blocks) {
-        unsigned i = 0;
+        unsigned i = 0, j;
         while(profiler.blocks[i]) {
+            /* clear it from the debugging block */
+            for(j = profiler.blocks[i]->start_addr; j < profiler.blocks[i]->end_addr; j++) {
+                debugger.data.block[j] &= ~DBG_IS_PROFILED;
+            }
             free(profiler.blocks[i]);
             profiler.blocks[i] = NULL;
             i++;
@@ -42,8 +46,8 @@ profiler_block_t *add_profile_block(void) {
     if(profiler.blocks) {
         profiler.blocks[num] = malloc(sizeof(profiler_block_t));
         if(profiler.blocks[num]) {
-            profiler.blocks[num]->address_start = 0;
-            profiler.blocks[num]->address_end = profiler.granularity;
+            profiler.blocks[num]->start_addr = 0;
+            profiler.blocks[num]->end_addr = profiler.granularity;
             profiler.blocks[num]->cycles = 0;
         } else {
             /* Just die if we get here */
@@ -58,30 +62,36 @@ profiler_block_t *add_profile_block(void) {
     return profiler.blocks[num];
 }
 
-void update_profiler_block(uint32_t start_addr, uint32_t end_addr, uint32_t prev_start_addr, uint32_t prev_end_addr) {
+void update_profiler_block(unsigned block, uint32_t start_addr, uint32_t end_addr) {
     uint32_t i;
-    for(i = prev_start_addr; i <= prev_end_addr; i++) {
+    for(i = profiler.blocks[block]->start_addr; i < profiler.blocks[block]->end_addr; i++) {
         debugger.data.block[i] &= ~DBG_IS_PROFILED;
         profiler.profile_counters[i] = 0;
     }
-    for(i = start_addr; i <= end_addr; i++) {
+    for(i = start_addr; i < end_addr; i++) {
         debugger.data.block[i] |= DBG_IS_PROFILED;
     }
+    profiler.blocks[block]->start_addr = start_addr;
+    profiler.blocks[block]->end_addr = end_addr;
 }
 
 void update_profiler_cycles(void) {
     unsigned i, j;
     for(i = 0; i < profiler.num_blocks; i++) {
-        for(j = profiler.blocks[i]->address_start; j <= profiler.blocks[i]->address_end; j++) {
+        for(j = profiler.blocks[i]->start_addr; j < profiler.blocks[i]->end_addr; j++) {
             profiler.blocks[i]->cycles += profiler.profile_counters[j];
         }
     }
 }
 
 void remove_profile_block(uint32_t block_entry) {
-    uint32_t pos = block_entry+1;
+    uint32_t pos = block_entry+1, i;
     if(!profiler.num_blocks) {
         return;
+    }
+    /* clear it from the debugging block */
+    for(i = profiler.blocks[block_entry]->start_addr; i < profiler.blocks[block_entry]->end_addr; i++) {
+        debugger.data.block[i] &= ~DBG_IS_PROFILED;
     }
     free(profiler.blocks[block_entry]);
     profiler.blocks[block_entry] = NULL;

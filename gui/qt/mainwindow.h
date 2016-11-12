@@ -19,6 +19,22 @@
 #include "../../core/debug/profiler.h"
 #include "qhexedit/qhexedit.h"
 
+#define BREAK_LABEL_LOC   0
+#define BREAK_ADDR_LOC    1
+#define BREAK_ENABLE_LOC  2
+
+#define WATCH_LABEL_LOC   0
+#define WATCH_ADDR_LOC    1
+#define WATCH_SIZE_LOC    2
+#define WATCH_VALUE_LOC   3
+#define WATCH_READ_LOC    4
+#define WATCH_WRITE_LOC   5
+
+#define PROFILE_LABEL_LOC 0
+#define PROFILE_ADDR_LOC  1
+#define PROFILE_SIZE_LOC  2
+#define PROFILE_CYCLE_LOC 3
+
 namespace Ui { class MainWindow; }
 
 class MainWindow : public QMainWindow {
@@ -85,6 +101,9 @@ private:
     void saveToPath(QString path);
     bool restoreFromPath(QString path);
 
+    // Sending keys
+    void sendASMKey();
+
     // Actions
     bool runSetup(void);
     void screenshot(void);
@@ -117,7 +136,7 @@ private:
     void removePort();
     void updatePortData(int);
     void updateWatchpointData(int);
-    void updateProfilerData(int);
+    void updateProfilerCycles(int);
     void changePortValues(QTableWidgetItem*);
     void changeBreakpointAddress(QTableWidgetItem*);
     void setPreviousBreakpointAddress(QTableWidgetItem*);
@@ -141,8 +160,8 @@ private:
     void vatContextMenu(const QPoint &);
     void opContextMenu(const QPoint &);
     void scrollDisasmView(int);
-    void removeBreakpointAddress(QString);
-    void removeWatchpointAddress(QString);
+    void removeBreakpointAddress(uint32_t);
+    void removeWatchpointAddress(uint32_t);
     void zeroClockCounter();
     void updateDisassembly(int);
     void addSpaceDisasm(bool);
@@ -281,6 +300,7 @@ private:
     QShortcut *stepNextShortcut;
     QShortcut *stepOutShortcut;
     QShortcut *debuggerShortcut;
+    QShortcut *asmShortcut;
 
     QList<calc_var_t> vars;
     QIcon runIcon, stopIcon; // help speed up stepping

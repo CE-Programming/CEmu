@@ -200,6 +200,7 @@
      <attribute name="title">
       <string>Keypad</string>
      </attribute>
+     <layout class="QHBoxLayout" name="horizontalLayout_27"/>
     </widget>
     <widget class="QWidget" name="tabVariables">
      <attribute name="icon">
@@ -1792,7 +1793,7 @@ QPushButton:pressed {
          </size>
         </property>
         <property name="currentIndex">
-         <number>4</number>
+         <number>0</number>
         </property>
         <property name="tabsClosable">
          <bool>false</bool>
@@ -2000,6 +2001,11 @@ QPushButton:pressed {
             <attribute name="verticalHeaderHighlightSections">
              <bool>false</bool>
             </attribute>
+            <column>
+             <property name="text">
+              <string>Label</string>
+             </property>
+            </column>
             <column>
              <property name="text">
               <string>Address</string>
@@ -2233,7 +2239,7 @@ QPushButton:pressed {
              <bool>false</bool>
             </attribute>
             <attribute name="horizontalHeaderMinimumSectionSize">
-             <number>70</number>
+             <number>10</number>
             </attribute>
             <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
              <bool>false</bool>
@@ -2255,12 +2261,17 @@ QPushButton:pressed {
             </attribute>
             <column>
              <property name="text">
+              <string>Label</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
               <string>Address</string>
              </property>
             </column>
             <column>
              <property name="text">
-              <string>Length</string>
+              <string>Size</string>
              </property>
             </column>
             <column>
@@ -2439,7 +2450,7 @@ QPushButton:pressed {
             </column>
             <column>
              <property name="text">
-              <string>Data</string>
+              <string>Value</string>
              </property>
             </column>
             <column>
@@ -2569,19 +2580,38 @@ QPushButton:pressed {
              </widget>
             </item>
             <item>
-             <widget class="QSpinBox" name="granularitySpin">
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
+             <widget class="QComboBox" name="comboGranularity">
+              <property name="currentText">
+               <string notr="true">1</string>
               </property>
-              <property name="suffix">
-               <string> bytes</string>
+              <property name="currentIndex">
+               <number>0</number>
               </property>
-              <property name="minimum">
-               <number>1</number>
-              </property>
-              <property name="maximum">
-               <number>16</number>
-              </property>
+              <item>
+               <property name="text">
+                <string>1</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>2</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>4</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>8</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>16</string>
+               </property>
+              </item>
              </widget>
             </item>
            </layout>
@@ -2653,17 +2683,17 @@ QPushButton:pressed {
             </attribute>
             <column>
              <property name="text">
+              <string>Label</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
               <string>Address</string>
              </property>
             </column>
             <column>
              <property name="text">
-              <string>End Address</string>
-             </property>
-            </column>
-            <column>
-             <property name="text">
-              <string>Block Size</string>
+              <string>Size</string>
              </property>
             </column>
             <column>
@@ -7136,7 +7166,7 @@ QPushButton:pressed {
      <x>0</x>
      <y>0</y>
      <width>1053</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="sizePolicy">
