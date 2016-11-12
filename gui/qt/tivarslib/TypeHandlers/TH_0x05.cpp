@@ -227,7 +227,7 @@ namespace tivars
                 }
             }
 
-            inputFile.close();
+            (inputFile.*(&QFile::close))(); // Compiler/Linker weirdness when in LTO (undefined symbol).
         } else {
             std::cerr << "Could not open the tokens csv file" << std::endl;
         }
