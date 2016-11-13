@@ -67,6 +67,8 @@ private:
 };
 #endif
 
+#include <sol/sol.hpp>
+
 #ifdef PNG_WRITE_APNG_SUPPORTED
 class RecordingThread : public QThread {
     Q_OBJECT
@@ -666,6 +668,12 @@ private:
     void contextMem(const QPoint &posa);
     void contextMemWidget(const QPoint &posa, uint32_t addr);
 
+    // Lua
+    void initLuaThings();
+    void loadLuaScript();
+    void saveLuaScript();
+    void runLuaScript();
+
 #ifdef _WIN32
     // Win32 Console Toggle
     void toggleConsole();
@@ -792,6 +800,8 @@ private:
 
     KeyHistoryWidget *m_windowKeys = nullptr;
     LcdDebugWidget *m_lcdDebug = nullptr;
+
+    sol::state lua;
 
     bool m_isSendingRom = false;
     QString m_dragRom;

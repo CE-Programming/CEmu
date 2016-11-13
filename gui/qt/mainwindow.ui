@@ -78,7 +78,7 @@
       </property>
       <property name="currentIndex">
        <number>0</number>
-      </property>
+               </property>
       <widget class="QWidget" name="tab_tibasic_debugger">
        <attribute name="title">
         <string>TI-Basic Debug</string>
@@ -6225,7 +6225,55 @@
          </widget>
         </item>
         <item>
-         <widget class="QGroupBox" name="groupBattery">
+         <widget class="QGroupBox" name="tabScripting">
+     <attribute name="title">
+      <string>Scripting</string>
+     </attribute>
+     <layout class="QVBoxLayout" name="verticalLayout_26">
+      <item>
+       <widget class="QPlainTextEdit" name="luaScriptEditor"/>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_27">
+        <item>
+         <widget class="QPushButton" name="buttonLoadLuaScript">
+          <property name="text">
+           <string>Load...</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="buttonSaveLuaScript">
+          <property name="text">
+           <string>Save...</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_23">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="buttonRunLuaScript">
+          <property name="text">
+           <string>Run</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="groupBattery">
           <property name="enabled">
            <bool>false</bool>
           </property>
