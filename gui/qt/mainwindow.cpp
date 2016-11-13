@@ -1461,7 +1461,7 @@ void MainWindow::changeProfiler(QTableWidgetItem *item) {
         uint64_t cycles = static_cast<uint64_t>(item->text().toLongLong());
         item->setText(QString::number(cycles));
         profiler.blocks[row]->cycles = cycles;
-    } else {
+    } else if (col == PROFILE_ADDR_LOC || col == PROFILE_SIZE_LOC) {
         bool good;
 
         size = ui->profilerView->item(row, PROFILE_SIZE_LOC)->text().toUInt();
@@ -1469,7 +1469,7 @@ void MainWindow::changeProfiler(QTableWidgetItem *item) {
         if (col == PROFILE_ADDR_LOC) {
             value = item->text().toUInt(&good, 16);
             start_addr = value & ~((1 << profiler.granularity) - 1);
-        } else if (col == PROFILE_SIZE_LOC) {
+        } else {
             value = item->text().toUInt();
             size = value / (1 << profiler.granularity);
             if(!size) { size = 1 << profiler.granularity; }
