@@ -2913,6 +2913,23 @@ void MainWindow::initLuaThings() {
 
         lua.open_libraries(sol::lib::base, sol::lib::package);
 
+        const auto& consolePrint = [&](const sol::this_state& s, bool isErr) {
+            const auto logFunc = isErr ? &MainWindow::errConsoleStr : &MainWindow::consoleStr;
+            lua_State* L = s; // current state
+            int nargs = lua_gettop(L);
+            consoleStr("[Lua] ");
+            for (int i=1; i <= nargs; ++i) {
+                (this->*logFunc)(lua_tostring(L, i));
+                if (i != nargs) {
+                    (this->*logFunc)("\t");
+                }
+            }
+            (this->*logFunc)("\n");
+        };
+
+        lua.set_function("consoleLog",   [&](const sol::this_state& s) { consolePrint(s, false); });
+        lua.set_function("consoleError", [&](const sol::this_state& s) { consolePrint(s, true);  });
+
         isInited = true;
     }
 }
