@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "utils.h"
 #include "sendinghandler.h"
@@ -518,6 +518,16 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(m_shortcutStepOver, &QShortcut::activated, this, &MainWindow::stepOver);
     connect(m_shortcutStepNext, &QShortcut::activated, this, &MainWindow::stepNext);
     connect(m_shortcutStepOut, &QShortcut::activated, this, &MainWindow::stepOut);
+
+    m_ports->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    m_breakpoints->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    m_watchpoints->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+
+    // Lua
+    connect(ui->buttonRunLuaScript, &QPushButton::clicked, this, &MainWindow::runLuaScript);
+    connect(ui->buttonLoadLuaScript, &QPushButton::clicked, this, &MainWindow::loadLuaScript);
+    connect(ui->buttonSaveLuaScript, &QPushButton::clicked, this, &MainWindow::saveLuaScript);
+    initLuaThings();
 
     setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
     setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
@@ -2884,3 +2894,36 @@ const char *MainWindow::m_varExtensions[] = {
         "",
         "",
     };
+
+// ------------------------------------------------
+// Lua things
+// ------------------------------------------------
+
+void MainWindow::initLuaThings() {
+    static bool isInited = false;
+    if (!isInited) {
+        lua.set_panic( [](lua_State* L) {
+            const char* message = lua_tostring(L, -1);
+            if (message) {
+                lua_pop(L, 1);
+                fprintf(stderr, "[Lua Panic] %s", message);
+            }
+            return -1;
+        });
+
+        lua.open_libraries(sol::lib::base, sol::lib::package);
+
+        isInited = true;
+    }
+}
+
+void MainWindow::loadLuaScript() {
+
+}
+
+void MainWindow::saveLuaScript() {
+
+}
+
+void MainWindow::runLuaScript() {
+}
