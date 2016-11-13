@@ -2926,4 +2926,11 @@ void MainWindow::saveLuaScript() {
 }
 
 void MainWindow::runLuaScript() {
+    const std::string& code = ui->luaScriptEditor->toPlainText().toStdString();
+    const sol::protected_function_result& stringresult = lua.do_string(code.c_str());
+    if (!stringresult.valid())
+    {
+        const sol::error& err = stringresult;
+        errConsoleStr("[Lua-Error] " + QString::fromStdString(err.what()) + "\n");
+    }
 }
