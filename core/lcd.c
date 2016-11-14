@@ -161,6 +161,9 @@ static void lcd_event(int index) {
 void lcd_reset(void) {
     /* Palette is unchanged on a reset */
     memset(&lcd, 0, sizeof(lcd_state_t));
+    sched.items[SCHED_LCD].proc = lcd_event;
+    sched.items[SCHED_LCD].clock = CLOCK_24M;
+    sched.items[SCHED_LCD].second = -1;
     gui_console_printf("[CEmu] LCD reset.\n");
 }
 
@@ -286,9 +289,6 @@ static const eZ80portrange_t device = {
 
 eZ80portrange_t init_lcd(void) {
     gui_console_printf("[CEmu] Initialized LCD...\n");
-    sched.items[SCHED_LCD].proc = lcd_event;
-    sched.items[SCHED_LCD].clock = CLOCK_24M;
-    sched.items[SCHED_LCD].second = -1;
     return device;
 }
 
