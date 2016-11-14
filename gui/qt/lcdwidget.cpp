@@ -7,6 +7,7 @@
 #include "lcdwidget.h"
 #include "sendinghandler.h"
 #include "../../core/link.h"
+#include "../../core/debug/debug.h"
 
 LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
     lcdState = &lcd;
@@ -45,15 +46,23 @@ void LCDWidget::setLCD(lcd_state_t *lcdS) {
 }
 
 void LCDWidget::dropEvent(QDropEvent *e) {
+    if (emu_is_sending || emu_is_receiving || inDebugger) {
+        return e->ignore();
+    }
     sending_handler.dropOccured(e, (e->pos().x() < this->width()/2) ? LINK_ARCH : LINK_RAM);
     in_drag = false;
 }
 
 void LCDWidget::dragEnterEvent(QDragEnterEvent *e) {
+    if (emu_is_sending || emu_is_receiving || inDebugger) {
+        return e->ignore();
+    }
     in_drag = sending_handler.dragOccured(e);
 }
 
 void LCDWidget::dragLeaveEvent(QDragLeaveEvent *e) {
-    (void)e;
+    if (emu_is_sending || emu_is_receiving || inDebugger) {
+        return e->ignore();
+    }
     in_drag = false;
 }

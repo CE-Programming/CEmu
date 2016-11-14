@@ -139,7 +139,9 @@ SOURCES +=  utils.cpp \
     capture/gifwrite.c \
     capture/quantize.c \
     capture/giffunc.c \
-    capture/xform.c
+    capture/xform.c \
+    mainwindow_debugger.cpp \
+    mainwindow_hex.cpp
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp

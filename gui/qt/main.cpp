@@ -35,8 +35,10 @@ int main(int argc, char *argv[]) {
     QCommandLineOption loadTestFile(QStringList() << "t" << "auto-test",
                 QCoreApplication::translate("main", "run <Testfile> on startup"),
                                     QCoreApplication::translate("main", "TestFile"));
-                        parser.addOption(loadTestFile);
-                        QCommandLineOption suppressTestDialog(QStringList() << "suppress-test-dialog",
+    parser.addOption(loadTestFile);
+
+    // Suppresses the output of an autotester file
+    QCommandLineOption suppressTestDialog(QStringList() << "suppress-test-dialog",
                 QCoreApplication::translate("main", "Hides test complete dialog"));
     parser.addOption(suppressTestDialog);
 

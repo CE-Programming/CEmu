@@ -8,16 +8,18 @@
 #include <QtWidgets/QFileDialog>
 #include <QtCore/QSettings>
 #include <QtGui/QTextCursor>
+
 #include "cemuopts.h"
 #include "lcdwidget.h"
 #include "romselection.h"
 #include "emuthread.h"
 #include "keypad/qtkeypadbridge.h"
+#include "qhexedit/qhexedit.h"
+
 #include "../../core/vat.h"
 #include "../../core/debug/debug.h"
 #include "../../core/debug/disasm.h"
 #include "../../core/debug/profiler.h"
-#include "qhexedit/qhexedit.h"
 
 #define BREAK_LABEL_LOC   0
 #define BREAK_ADDR_LOC    1
@@ -72,6 +74,9 @@ public slots:
     void changeImagePath();
     void disableDebugger();
 
+    // Sending keys
+    void sendASMKey();
+
 signals:
     // Debugging
     void debuggerChangedState(bool);
@@ -100,9 +105,6 @@ private:
     // Save/Restore
     void saveToPath(QString path);
     bool restoreFromPath(QString path);
-
-    // Sending keys
-    void sendASMKey();
 
     // Actions
     bool runSetup(void);
