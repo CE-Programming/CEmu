@@ -2917,22 +2917,22 @@ void MainWindow::initLuaThings() {
     lua.set_function("cLog", [&](const sol::this_state& s) {
         lua_State* L = s;
         int nargs = lua_gettop(L);
-        appendToConsole("[Lua] ");
+        consoleAppend("[Lua] ");
         for (int i=1; i <= nargs; ++i) {
-            appendToConsole(lua_tostring(L, i));
-            if (i != nargs) { appendToConsole("\t"); }
+            consoleAppend(lua_tostring(L, i));
+            if (i != nargs) { consoleAppend("\t"); }
         }
-        appendToConsole("\n");
+        consoleAppend("\n");
     });
     lua.set_function("cErr", [&](const sol::this_state& s) {
         lua_State* L = s;
         int nargs = lua_gettop(L);
-        appendToConsole("[Lua] ", Qt::red);
+        consoleAppend("[Lua] ", Qt::red);
         for (int i=1; i <= nargs; ++i) {
-            appendToConsole(lua_tostring(L, i), Qt::red);
-            if (i != nargs) { appendToConsole("\t"); }
+            consoleAppend(lua_tostring(L, i), Qt::red);
+            if (i != nargs) { consoleAppend("\t"); }
         }
-        appendToConsole("\n");
+        consoleAppend("\n");
     });
 
     lua.set_function("mem_peek_byte",  [](uint32_t addr) { return mem_peek_byte(addr); });
@@ -2944,18 +2944,9 @@ void MainWindow::initLuaThings() {
     // Bind core stuff
     lua["cpu"] = &cpu;
 
-
-    // TODO: make getters/setters for bitfields...
     /*
-    lua.new_usertype<eZ80flags_t>("flags_t",
-        "C",    &eZ80flags_t::C,
-        "N",    &eZ80flags_t::N,
-        "PV",   &eZ80flags_t::PV,
-        "_3",   &eZ80flags_t::_3,
-        "H",    &eZ80flags_t::H,
-        "_5",   &eZ80flags_t::_5,
-        "Z",    &eZ80flags_t::Z,
-        "S",    &eZ80flags_t::S,
+    lua.new_usertype<eZ80flags_t>("eZ80flags_t",
+
     );
     */
 
@@ -2973,7 +2964,7 @@ void MainWindow::initLuaThings() {
     lua.new_usertype<eZ80cpu_t>("eZ80cpu_t",
         "registers", &eZ80cpu_t::registers,
 
-        "halted",   &eZ80cpu_t::halted,
+        "halted", &eZ80cpu_t::halted,
         "ADL", &eZ80cpu_t::ADL, "MADL", &eZ80cpu_t::MADL,
         "IEF1", &eZ80cpu_t::IEF1, "IEF2",&eZ80cpu_t::IEF2,
 
@@ -3001,6 +2992,6 @@ void MainWindow::runLuaScript() {
     if (!stringresult.valid())
     {
         const sol::error& err = stringresult;
-        errConsoleStr("[Lua-Error] " + QString::fromStdString(err.what()) + "\n");
+        consoleErrStr("[Lua-Error] " + QString::fromStdString(err.what()) + "\n");
     }
 }
