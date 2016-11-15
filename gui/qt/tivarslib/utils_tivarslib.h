@@ -60,4 +60,6 @@ std::string str_pad(const std::string& str, unsigned long pad_length, std::strin
 
 std::string dec2frac(double num, double err = 0.001);
 
+std::string trimZeros(const std::string& str);
+
 #endif

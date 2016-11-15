@@ -55,12 +55,12 @@ namespace tivars
             return "";
         }
 
-        vector<string> parts = {
-            (subtype == 1 || subtype == 3 ? "-" : "") + ltrim(dataStr.substr(9, 3), "0"),
-            ltrim(dataStr.substr(15, 3), "0"),
-            (subtype == 2 || subtype == 3 ? "-" : "+") + ltrim(dataStr.substr(6, 3), "0"),
-            ltrim(dataStr.substr(12, 3), "0"),
-            ltrim(dataStr.substr(3, 3), "0")
+        const vector<string> parts = {
+            (subtype == 1 || subtype == 3 ? "-" : "") + trimZeros(dataStr.substr(9, 3)),
+            trimZeros(dataStr.substr(15, 3)),
+            (subtype == 2 || subtype == 3 ? "-" : "+") + trimZeros(dataStr.substr(6, 3)),
+            trimZeros(dataStr.substr(12, 3)),
+            trimZeros(dataStr.substr(3, 3))
         };
 
         string str = "(" + parts[0] + "*√(" + parts[1] + ")" + parts[2] + "*√(" + parts[3]  + "))/" + parts[4];
