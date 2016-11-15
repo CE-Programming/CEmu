@@ -62,7 +62,7 @@ RomSelection::RomSelection(QWidget *p) : QDialog(p), ui(new Ui::RomSelection) {
 }
 
 RomSelection::~RomSelection() {
-    if (romArray != nullptr) { free(romArray); }
+    free(romArray);
     delete ui;
 }
 
@@ -145,7 +145,7 @@ void RomSelection::openROMConfig() {
 
     romInfo = fopen_utf8(fileName.toStdString().c_str(), "rb");
 
-    if(!romInfo) {
+    if (!romInfo) {
         QMessageBox::warning(this, tr("Opening Error"), tr("Unable to open the file."));
         return;
     }
@@ -277,7 +277,7 @@ std::string RomSelection::getROMImage() {
 }
 
 
-/**
+/*!
  * ROM dumping program
  */
 /*

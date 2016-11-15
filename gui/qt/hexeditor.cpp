@@ -24,15 +24,25 @@
 #include "../../core/schedule.h"
 #include "../../core/link.h"
 
-// ================================================
+// ------------------------------------------------
 // Hex Editor Things
-// ================================================
+// ------------------------------------------------
+
+QString MainWindow::getAddressString(QString String) {
+    bool ok;
+    QString address = QInputDialog::getText(this, tr("Goto Address"),
+                                         tr("Input Address (In Hexadecimal):"), QLineEdit::Normal,
+                                         String, &ok).toUpper();
+
+    if (!ok || (address.toStdString().find_first_not_of("0123456789ABCDEF") != std::string::npos) || (address.length() > 6) || !address.length()) {
+        return QStringLiteral("000000");
+    }
+
+    return address;
+}
 
 void MainWindow::gotoPressed() {
-    bool ok;
-    QString address = getAddressString(ok, ui->disassemblyView->getSelectedAddress());
-
-    if (!ok) { return; }
+    QString address = getAddressString(ui->disassemblyView->getSelectedAddress());
 
     updateDisasmView(hex2int(address), false);
 }
@@ -121,7 +131,7 @@ void MainWindow::searchEdit(QHexEdit *editor) {
     }
 
     QByteArray string_int;
-    for (int i=0; i<searchString.length(); i+=2) {
+    for (int i = 0; i<searchString.length(); i += 2) {
         QString a = searchString.at(i);
         a.append(searchString.at(i+1));
         string_int.append(hex2int(a));
@@ -136,13 +146,9 @@ void MainWindow::flashSearchPressed() {
 }
 
 void MainWindow::flashGotoPressed() {
-    bool ok;
-    QString address = getAddressString(ok, "");
+    QString address = getAddressString("");
 
     ui->flashEdit->setFocus();
-    if (!ok) {
-        return;
-    }
     int int_address = hex2int(address);
     if (int_address > 0x3FFFFF) {
         return;
@@ -157,13 +163,9 @@ void MainWindow::ramSearchPressed() {
 }
 
 void MainWindow::ramGotoPressed() {
-    bool ok;
-    QString address = getAddressString(ok, "");
+    QString address = getAddressString("");
 
     ui->ramEdit->setFocus();
-    if (!ok) {
-        return;
-    }
     int int_address = hex2int(address)-0xD00000;
     if (int_address > 0x657FF || address < 0) {
         return;
@@ -181,6 +183,11 @@ void MainWindow::memGoto(QString address) {
     int int_address = hex2int(address);
     if (int_address > 0xFFFFFF || int_address < 0) {
         return;
+    }
+
+    if (!inDebugger) {
+        debuggerRaise();
+        guiDelay(100);
     }
 
     QByteArray mem_data;
@@ -202,17 +209,13 @@ void MainWindow::memGoto(QString address) {
 }
 
 void MainWindow::memGotoPressed() {
-    bool ok;
-    QString address = getAddressString(ok, "");
+    QString address = getAddressString("");
 
-    if (!ok) {
-        return;
-    }
     memGoto(address);
 }
 
 void MainWindow::syncHexView(int posa, QHexEdit *hex_view) {
-    populateDebugWindow();
+    debuggerGUIPopulate();
     updateDisasmView(addressPane, fromPane);
     hex_view->setFocus();
     hex_view->setCursorPosition(posa);
@@ -234,7 +237,7 @@ void MainWindow::memSyncPressed() {
     int start = ui->memEdit->addressOffset();
     qint64 posa = ui->memEdit->cursorPosition();
 
-    for (int i = 0; i<memSize; i++) {
+    for (int i = 0; i < memSize; i++) {
         mem_poke_byte(i+start, ui->memEdit->dataAt(i, 1).at(0));
     }
 

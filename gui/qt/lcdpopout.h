@@ -15,6 +15,9 @@ public:
     explicit LCDPopout(QtKeypadBridge *bridge, QWidget *p = Q_NULLPTR);
     ~LCDPopout();
 
+    // Misc.
+    virtual void closeEvent(QCloseEvent*) Q_DECL_OVERRIDE;
+
     void changeAddress();
     void changeBPP();
     void changeChecked();

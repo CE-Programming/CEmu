@@ -82,7 +82,7 @@ static void watchdog_write(const uint16_t pio, const uint8_t byte, bool peek) {
             break;
         case 0x008: case 0x009:
             write8(watchdog.restart, bit_offset, byte);
-            if(watchdog.restart == 0x5AB9) {
+            if (watchdog.restart == 0x5AB9) {
                 event_set(SCHED_WATCHDOG, watchdog.load);
                 watchdog.count = watchdog.load;
                 watchdog.restart = 0;
@@ -90,20 +90,20 @@ static void watchdog_write(const uint16_t pio, const uint8_t byte, bool peek) {
             break;
         case 0x00C:
             write8(watchdog.control, bit_offset, byte);                    
-            if(watchdog.control & 1) {
+            if (watchdog.control & 1) {
                 event_set(SCHED_WATCHDOG, watchdog.load);
             } else {
                 watchdog.count = event_ticks_remaining(SCHED_WATCHDOG);
                 event_clear(SCHED_WATCHDOG);
             }
-            if(watchdog.control & 16) {
+            if (watchdog.control & 16) {
                 sched.items[SCHED_WATCHDOG].clock = CLOCK_32K;
             } else {
                 sched.items[SCHED_WATCHDOG].clock = CLOCK_CPU;
             }
             break;
         case 0x014:
-            if(byte & 1) {
+            if (byte & 1) {
                 watchdog.status = 0;
             }
             break;

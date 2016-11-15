@@ -127,7 +127,7 @@ static void flash_erase_sector(uint32_t address, uint8_t byte) {
     mem.flash.command = FLASH_SECTOR_ERASE;
     selected = address/flash_sector_size_64K;
 
-    if(!mem.flash.sector[selected].locked) {
+    if (!mem.flash.sector[selected].locked) {
         memset(mem.flash.sector[selected].ptr, 0xFF, flash_sector_size_64K);
     }
 }
@@ -259,7 +259,7 @@ static uint8_t flash_read_handler(uint32_t address) {
             case FLASH_SECTOR_ERASE:
                 value = 0x80;
                 mem.flash.read_index++;
-                if(mem.flash.read_index == 3) {
+                if (mem.flash.read_index == 3) {
                     /* Simulate erase delay */
                     gui_emu_sleep(1.5e4);
                     mem.flash.read_index = 0;
@@ -497,7 +497,7 @@ uint32_t mem_peek_long(uint32_t address) {
          | mem_peek_byte(address + 2) << 16;
 }
 uint32_t mem_peek_word(uint32_t address, bool mode) {
-    if(mode) {
+    if (mode) {
         return mem_peek_long(address);
     } else {
         return (uint32_t)mem_peek_short((address & 0xFFFF) | (cpu.registers.MBASE << 16));

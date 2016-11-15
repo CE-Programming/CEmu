@@ -145,10 +145,10 @@ int GifIAbs(int i) { return i<0?-i:i; }
 void GifGetClosestPaletteColor(GifPalette* pPal, int r, int g, int b, int& bestInd, int& bestDiff, int treeRoot)
 {
     // base case, reached the bottom of the tree
-    if(treeRoot > (1<<pPal->bitDepth)-1)
+    if (treeRoot > (1<<pPal->bitDepth)-1)
     {
         int ind = treeRoot-(1<<pPal->bitDepth);
-        if(ind == kGifTransIndex) return;
+        if (ind == kGifTransIndex) return;
 
         // check whether this color is better than the current winner
         int r_err = r - ((int32_t)pPal->r[ind]);
@@ -156,7 +156,7 @@ void GifGetClosestPaletteColor(GifPalette* pPal, int r, int g, int b, int& bestI
         int b_err = b - ((int32_t)pPal->b[ind]);
         int diff = GifIAbs(r_err)+GifIAbs(g_err)+GifIAbs(b_err);
 
-        if(diff < bestDiff)
+        if (diff < bestDiff)
         {
             bestInd = ind;
             bestDiff = diff;
@@ -166,7 +166,7 @@ void GifGetClosestPaletteColor(GifPalette* pPal, int r, int g, int b, int& bestI
     }
 
     // ignore unused nodes
-    if(pPal->treeSplitElt[treeRoot] >= 3)
+    if (pPal->treeSplitElt[treeRoot] >= 3)
     {
         return;
     }
@@ -176,11 +176,11 @@ void GifGetClosestPaletteColor(GifPalette* pPal, int r, int g, int b, int& bestI
     int splitComp = comps[pPal->treeSplitElt[treeRoot]];
 
     int splitPos = pPal->treeSplit[treeRoot];
-    if(splitPos > splitComp)
+    if (splitPos > splitComp)
     {
         // check the left subtree
         GifGetClosestPaletteColor(pPal, r, g, b, bestInd, bestDiff, treeRoot*2);
-        if( bestDiff > splitPos - splitComp )
+        if ( bestDiff > splitPos - splitComp )
         {
             // cannot prove there's not a better value in the right subtree, check that too
             GifGetClosestPaletteColor(pPal, r, g, b, bestInd, bestDiff, treeRoot*2+1);
@@ -189,7 +189,7 @@ void GifGetClosestPaletteColor(GifPalette* pPal, int r, int g, int b, int& bestI
     else
     {
         GifGetClosestPaletteColor(pPal, r, g, b, bestInd, bestDiff, treeRoot*2+1);
-        if( bestDiff > splitComp - splitPos )
+        if ( bestDiff > splitComp - splitPos )
         {
             GifGetClosestPaletteColor(pPal, r, g, b, bestInd, bestDiff, treeRoot*2);
         }
@@ -231,12 +231,12 @@ void GifPartition(uint8_t* image, int com, int &left, int &right)
     for(int i1=left; i1<right; ++i1)
     {
         uint8_t comArray = image[i1*4+com];
-        if( comArray < comPivot )
+        if ( comArray < comPivot )
         {
             GifSwapPixels(image, i1, left);
             ++left;
         }
-        else if( comArray > comPivot )
+        else if ( comArray > comPivot )
         {
             --right;
             GifSwapPixels(image, i1, right);
@@ -247,11 +247,11 @@ void GifPartition(uint8_t* image, int com, int &left, int &right)
             uint8_t rArray = image[i1*4];
             uint8_t gArray = image[i1*4+1];
             uint8_t bArray = image[i1*4+2];
-            if( rArray != rPivot ||
+            if ( rArray != rPivot ||
                 gArray != gPivot ||
                 bArray != bPivot )
             {
-                if(split)
+                if (split)
                 {
                     GifSwapPixels(image, i1, left);
                     ++left;
@@ -271,17 +271,17 @@ void GifPartition(uint8_t* image, int com, int &left, int &right)
 // Perform an incomplete sort, finding all elements above and below the desired median
 int GifPartitionByMedian(uint8_t* image, int com, int left, int right, int neededCenter)
 {
-    while(left < right-1)
+    while (left < right-1)
     {
         int centerLeft = left;
         int centerRight = right;
         GifPartition(image, com, centerLeft, centerRight);
 
-        if( neededCenter <= centerLeft )
+        if ( neededCenter <= centerLeft )
             right = centerLeft;
-        else if( neededCenter >= centerRight )
+        else if ( neededCenter >= centerRight )
             left = centerRight;
-        else if( neededCenter - centerLeft < centerRight - neededCenter )
+        else if ( neededCenter - centerLeft < centerRight - neededCenter )
             return centerLeft;
         else
             return centerRight;
@@ -292,18 +292,18 @@ int GifPartitionByMedian(uint8_t* image, int com, int left, int right, int neede
 // Builds a palette by creating a balanced k-d tree of all pixels in the image
 void GifSplitPalette(uint8_t* image, int numPixels, int firstElt, int lastElt, int splitElt, int splitDist, int treeNode, bool buildForDither, GifPalette* pal)
 {
-    if(lastElt <= firstElt || numPixels == 0)
+    if (lastElt <= firstElt || numPixels == 0)
         return;
 
     // base case, bottom of the tree
-    if(lastElt == firstElt+1)
+    if (lastElt == firstElt+1)
     {
-        if(buildForDither)
+        if (buildForDither)
         {
             // Dithering needs at least one color as dark as anything
             // in the image and at least one brightest color -
             // otherwise it builds up error and produces strange artifacts
-            if( firstElt == 1 )
+            if ( firstElt == 1 )
             {
                 // special case: the darkest color in the image
                 uint32_t r=255, g=255, b=255;
@@ -321,7 +321,7 @@ void GifSplitPalette(uint8_t* image, int numPixels, int firstElt, int lastElt, i
                 return;
             }
 
-            if( firstElt == (1 << pal->bitDepth)-1 )
+            if ( firstElt == (1 << pal->bitDepth)-1 )
             {
                 // special case: the lightest color in the image
                 uint32_t r=0, g=0, b=0;
@@ -374,14 +374,14 @@ void GifSplitPalette(uint8_t* image, int numPixels, int firstElt, int lastElt, i
         int g = image[ii*4+1];
         int b = image[ii*4+2];
 
-        if(r > maxR) maxR = r;
-        if(r < minR) minR = r;
+        if (r > maxR) maxR = r;
+        if (r < minR) minR = r;
 
-        if(g > maxG) maxG = g;
-        if(g < minG) minG = g;
+        if (g > maxG) maxG = g;
+        if (g < minG) minG = g;
 
-        if(b > maxB) maxB = b;
-        if(b < minB) minB = b;
+        if (b > maxB) maxB = b;
+        if (b < minB) minB = b;
     }
 
     int rRange = maxR - minR;
@@ -390,8 +390,8 @@ void GifSplitPalette(uint8_t* image, int numPixels, int firstElt, int lastElt, i
 
     // and split along that axis. (incidentally, this means this isn't a "proper" k-d tree but I don't know what else to call it)
     int splitCom = 1;
-    if(bRange > gRange) splitCom = 2;
-    if(rRange > bRange && rRange > gRange) splitCom = 0;
+    if (bRange > gRange) splitCom = 2;
+    if (rRange > bRange && rRange > gRange) splitCom = 0;
 
     int subPixelsA = numPixels * (splitElt - firstElt) / (lastElt - firstElt);
     pal->treeSplitElt[treeNode] = splitCom;
@@ -414,7 +414,7 @@ int GifPickChangedPixels( const uint8_t* lastFrame, uint8_t* frame, int numPixel
 
     for (int ii=0; ii<numPixels; ++ii)
     {
-        if(lastFrame[0] != frame[0] ||
+        if (lastFrame[0] != frame[0] ||
            lastFrame[1] != frame[1] ||
            lastFrame[2] != frame[2])
         {
@@ -444,7 +444,7 @@ void GifMakePalette( const uint8_t* lastFrame, const uint8_t* nextFrame, uint32_
     memcpy(destroyableImage, nextFrame, imageSize);
 
     int numPixels = width*height;
-    if(lastFrame)
+    if (lastFrame)
         numPixels = GifPickChangedPixels(lastFrame, destroyableImage, numPixels);
 
     const int lastElt = 1 << bitDepth;
@@ -493,7 +493,7 @@ void GifDitherImage( const uint8_t* lastFrame, const uint8_t* nextFrame, uint8_t
 
             // if it happens that we want the color from last frame, then just write out
             // a transparent pixel
-            if( lastFrame &&
+            if ( lastFrame &&
                lastPix[0] == rr &&
                lastPix[1] == gg &&
                lastPix[2] == bb )
@@ -528,7 +528,7 @@ void GifDitherImage( const uint8_t* lastFrame, const uint8_t* nextFrame, uint8_t
             int quantloc_5 = (yy*width+width+xx);
             int quantloc_1 = (yy*width+width+xx+1);
 
-            if(quantloc_7 < numPixels)
+            if (quantloc_7 < numPixels)
             {
                 int32_t* pix7 = quantPixels+4*quantloc_7;
                 pix7[0] += GifIMax( -pix7[0], r_err * 7 / 16 );
@@ -536,7 +536,7 @@ void GifDitherImage( const uint8_t* lastFrame, const uint8_t* nextFrame, uint8_t
                 pix7[2] += GifIMax( -pix7[2], b_err * 7 / 16 );
             }
 
-            if(quantloc_3 < numPixels)
+            if (quantloc_3 < numPixels)
             {
                 int32_t* pix3 = quantPixels+4*quantloc_3;
                 pix3[0] += GifIMax( -pix3[0], r_err * 3 / 16 );
@@ -544,7 +544,7 @@ void GifDitherImage( const uint8_t* lastFrame, const uint8_t* nextFrame, uint8_t
                 pix3[2] += GifIMax( -pix3[2], b_err * 3 / 16 );
             }
 
-            if(quantloc_5 < numPixels)
+            if (quantloc_5 < numPixels)
             {
                 int32_t* pix5 = quantPixels+4*quantloc_5;
                 pix5[0] += GifIMax( -pix5[0], r_err * 5 / 16 );
@@ -552,7 +552,7 @@ void GifDitherImage( const uint8_t* lastFrame, const uint8_t* nextFrame, uint8_t
                 pix5[2] += GifIMax( -pix5[2], b_err * 5 / 16 );
             }
 
-            if(quantloc_1 < numPixels)
+            if (quantloc_1 < numPixels)
             {
                 int32_t* pix1 = quantPixels+4*quantloc_1;
                 pix1[0] += GifIMax( -pix1[0], r_err / 16 );
@@ -579,7 +579,7 @@ void GifThresholdImage( const uint8_t* lastFrame, const uint8_t* nextFrame, uint
     {
         // if a previous color is available, and it matches the current color,
         // set the pixel to transparent
-        if(lastFrame &&
+        if (lastFrame &&
            lastFrame[0] == nextFrame[0] &&
            lastFrame[1] == nextFrame[1] &&
            lastFrame[2] == nextFrame[2])
@@ -603,7 +603,7 @@ void GifThresholdImage( const uint8_t* lastFrame, const uint8_t* nextFrame, uint
             outFrame[3] = bestInd;
         }
 
-        if(lastFrame) lastFrame += 4;
+        if (lastFrame) lastFrame += 4;
         outFrame += 4;
         nextFrame += 4;
     }
@@ -617,7 +617,7 @@ void GifWriteBit( GifBitStatus& stat, uint32_t bit )
     stat.byte |= bit;
 
     ++stat.bitIndex;
-    if( stat.bitIndex > 7 )
+    if ( stat.bitIndex > 7 )
     {
         // move the newly-finished byte to the chunk buffer
         stat.chunk[stat.chunkIndex++] = stat.byte;
@@ -645,7 +645,7 @@ void GifWriteCode( FILE* f, GifBitStatus& stat, uint32_t code, uint32_t length )
         GifWriteBit(stat, code);
         code = code >> 1;
 
-        if( stat.chunkIndex == 255 )
+        if ( stat.chunkIndex == 255 )
         {
             GifWriteChunk(f, stat);
         }
@@ -731,12 +731,12 @@ void GifWriteLzwImage(FILE* f, uint8_t* image, uint32_t left, uint32_t top,  uin
             //WriteCode( f, stat, nextValue, codeSize );
             //WriteCode( f, stat, 256, codeSize );
 
-            if( curCode < 0 )
+            if ( curCode < 0 )
             {
                 // first value in a new run
                 curCode = nextValue;
             }
-            else if( codetree[curCode].m_next[nextValue] )
+            else if ( codetree[curCode].m_next[nextValue] )
             {
                 // current run already in the dictionary
                 curCode = codetree[curCode].m_next[nextValue];
@@ -749,13 +749,13 @@ void GifWriteLzwImage(FILE* f, uint8_t* image, uint32_t left, uint32_t top,  uin
                 // insert the new run into the dictionary
                 codetree[curCode].m_next[nextValue] = ++maxCode;
 
-                if( maxCode >= (1ul << codeSize) )
+                if ( maxCode >= (1ul << codeSize) )
                 {
                     // dictionary entry count has broken a size barrier,
                     // we need more bits for codes
                     codeSize++;
                 }
-                if( maxCode == 4095 )
+                if ( maxCode == 4095 )
                 {
                     // the dictionary is full, clear it out and begin anew
                     GifWriteCode(f, stat, clearCode, codeSize); // clear tree
@@ -777,8 +777,8 @@ void GifWriteLzwImage(FILE* f, uint8_t* image, uint32_t left, uint32_t top,  uin
     GifWriteCode( f, stat, clearCode+1, minCodeSize+1 );
 
     // write out the last partial chunk
-    while( stat.bitIndex ) GifWriteBit(stat, 0);
-    if( stat.chunkIndex ) GifWriteChunk(f, stat);
+    while ( stat.bitIndex ) GifWriteBit(stat, 0);
+    if ( stat.chunkIndex ) GifWriteChunk(f, stat);
 
     fputc(0, f); // image block terminator
 
@@ -793,7 +793,7 @@ bool GifBegin( GifWriter* writer, const char* filename, uint32_t width, uint32_t
 
     writer->f = fopen_utf8(filename, "wb");
 
-    if(!writer->f) return false;
+    if (!writer->f) return false;
 
     writer->firstFrame = true;
 
@@ -822,7 +822,7 @@ bool GifBegin( GifWriter* writer, const char* filename, uint32_t width, uint32_t
     fputc(0, writer->f);
     fputc(0, writer->f);
 
-    if( delay != 0 )
+    if ( delay != 0 )
     {
         // animation header
         fputc(0x21, writer->f); // extension
@@ -847,7 +847,7 @@ bool GifBegin( GifWriter* writer, const char* filename, uint32_t width, uint32_t
 // this may be handy to save bits in animations that don't change much.
 bool GifWriteFrame( GifWriter* writer, const uint8_t* image, uint32_t width, uint32_t height, uint32_t delay, int bitDepth, bool dither )
 {
-    if(!writer->f) return false;
+    if (!writer->f) return false;
 
     const uint8_t* oldImage = writer->firstFrame? NULL : writer->oldImage;
     writer->firstFrame = false;
@@ -857,7 +857,7 @@ bool GifWriteFrame( GifWriter* writer, const uint8_t* image, uint32_t width, uin
     memset(pal.treeSplitElt, 3, 256);
     GifMakePalette((dither? NULL : oldImage), image, width, height, bitDepth, dither, &pal);
 
-    if(dither)
+    if (dither)
         GifDitherImage(oldImage, image, writer->oldImage, width, height, &pal);
     else
         GifThresholdImage(oldImage, image, writer->oldImage, width, height, &pal);
@@ -872,7 +872,7 @@ bool GifWriteFrame( GifWriter* writer, const uint8_t* image, uint32_t width, uin
 // but it's still a good idea to write it out.
 bool GifEnd( GifWriter* writer )
 {
-    if(!writer->f) return false;
+    if (!writer->f) return false;
 
     fputc(0x3b, writer->f); // end of file
     fclose(writer->f);

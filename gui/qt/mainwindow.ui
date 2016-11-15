@@ -7094,14 +7094,14 @@ QPushButton:pressed {
      </property>
      <addaction name="actionExportRomImage"/>
      <addaction name="actionExportCalculatorState"/>
-     <addaction name="actionDebugging_Status"/>
+     <addaction name="actionExportDebugger"/>
     </widget>
     <widget class="QMenu" name="menuImport">
      <property name="title">
       <string>Import...</string>
      </property>
      <addaction name="actionImportCalculatorState"/>
-     <addaction name="actionDebugging_status"/>
+     <addaction name="actionImportDebugger"/>
     </widget>
     <addaction name="actionOpen"/>
     <addaction name="menuExport"/>
@@ -7409,7 +7409,7 @@ QPushButton:pressed {
     <string>Popout LCD</string>
    </property>
   </action>
-  <action name="actionDebugging_Status">
+  <action name="actionExportDebugger">
    <property name="icon">
     <iconset resource="resources.qrc">
      <normaloff>:/icons/resources/icons/debugger.png</normaloff>:/icons/resources/icons/debugger.png</iconset>
@@ -7418,7 +7418,7 @@ QPushButton:pressed {
     <string>Debugging status</string>
    </property>
   </action>
-  <action name="actionDebugging_status">
+  <action name="actionImportDebugger">
    <property name="icon">
     <iconset resource="resources.qrc">
      <normaloff>:/icons/resources/icons/debugger.png</normaloff>:/icons/resources/icons/debugger.png</iconset>

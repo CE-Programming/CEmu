@@ -70,11 +70,11 @@ bool gif_optimize(const char *in_name, const char *out_name) {
     FILE *out;
     Gif_Stream *gfs;
 
-    if(!(in = fopen(in_name, "rb"))){
+    if (!(in = fopen(in_name, "rb"))){
         return false;
     }
 
-    if(!(out = fopen(out_name, "wb"))){
+    if (!(out = fopen(out_name, "wb"))){
         fclose(in);
         return false;
     }

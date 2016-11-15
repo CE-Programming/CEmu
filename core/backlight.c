@@ -44,7 +44,7 @@ static void backlight_write(const uint16_t pio, const uint8_t byte, bool peek) {
         case 0x22:
         case 0x25:
         case 0x26:
-            if(byte != 0) {
+            if (byte) {
                 backlight.brightness = 0;
             }
             break;

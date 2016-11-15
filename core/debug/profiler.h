@@ -26,7 +26,7 @@ typedef struct {
 } profiler_t;
 
 extern profiler_t profiler;
-profiler_block_t *add_profile_block(void);
+profiler_block_t *add_profile_block(uint32_t start_addr, uint32_t end_addr, uint64_t cycles);
 void remove_profile_block(uint32_t block_entry);
 void set_profiler_granularity(unsigned gran);
 void profiler_init(void);

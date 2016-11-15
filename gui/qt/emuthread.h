@@ -31,7 +31,7 @@ signals:
 
     // I/O
     void consoleStr(QString);
-    void errConsoleStr(QString);
+    void consoleErrStr(QString);
     void exited(int);
 
     // Status
@@ -64,7 +64,7 @@ public slots:
     void setReceiveState(bool);
 
     // Speed
-    void changeEmuSpeed(int);
+    void setEmuSpeed(int);
     void changeThrottleMode(bool);
 
     // Save/Restore

@@ -818,7 +818,7 @@ write_generic_extension(Gif_Extension *gfex, Gif_Writer *grr)
 }
 
 static int
-write_gif(Gif_Stream *gfs, Gif_Writer *grr)
+write_gif (Gif_Stream *gfs, Gif_Writer *grr)
 {
   Gif_Extension* gfex;
   int ok = 0;
@@ -868,7 +868,7 @@ Gif_FullWriteFile(Gif_Stream *gfs, const Gif_CompressInfo *gcinfo,
 {
   Gif_Writer grr;
   int ok = gif_writer_init(&grr, f, gcinfo)
-           && write_gif(gfs, &grr);
+           && write_gif (gfs, &grr);
   gif_writer_cleanup(&grr);
   return ok;
 }

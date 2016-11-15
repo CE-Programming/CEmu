@@ -34,13 +34,13 @@ enum {
 #define DBG_PORT_WRITE            2
 #define DBG_PORT_FREEZE           4
 
-#define DBG_EMPTY_WATCHPOINT      3
-
 /* For Memory Brakpoints */
 #define DBG_READ_WATCHPOINT       (1 << 0)
 #define DBG_WRITE_WATCHPOINT      (1 << 1)
 #define DBG_EXEC_BREAKPOINT       (1 << 2)
 #define DBG_TEMP_EXEC_BREAKPOINT  (1 << 3)
+
+#define DBG_RW_WATCHPOINT         ((DBG_WRITE_WATCHPOINT) | (DBG_READ_WATCHPOINT))
 
 /* For other things */
 #define DBG_INST_START_MARKER     (1 << 4)

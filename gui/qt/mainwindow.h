@@ -13,6 +13,7 @@
 #include "lcdwidget.h"
 #include "romselection.h"
 #include "emuthread.h"
+#include "lcdpopout.h"
 #include "keypad/qtkeypadbridge.h"
 #include "qhexedit/qhexedit.h"
 
@@ -21,21 +22,35 @@
 #include "../../core/debug/disasm.h"
 #include "../../core/debug/profiler.h"
 
-#define BREAK_LABEL_LOC   0
-#define BREAK_ADDR_LOC    1
-#define BREAK_ENABLE_LOC  2
+enum breakpointIndex {
+    BREAK_LABEL_LOC=0,
+    BREAK_ADDR_LOC,
+    BREAK_ENABLE_LOC
+};
 
-#define WATCH_LABEL_LOC   0
-#define WATCH_ADDR_LOC    1
-#define WATCH_SIZE_LOC    2
-#define WATCH_VALUE_LOC   3
-#define WATCH_READ_LOC    4
-#define WATCH_WRITE_LOC   5
+enum watchpointIndex {
+    WATCH_LABEL_LOC=0,
+    WATCH_ADDR_LOC,
+    WATCH_SIZE_LOC,
+    WATCH_VALUE_LOC,
+    WATCH_READ_LOC,
+    WATCH_WRITE_LOC
+};
 
-#define PROFILE_LABEL_LOC 0
-#define PROFILE_ADDR_LOC  1
-#define PROFILE_SIZE_LOC  2
-#define PROFILE_CYCLE_LOC 3
+enum profilerIndex {
+    PROFILE_LABEL_LOC=0,
+    PROFILE_ADDR_LOC,
+    PROFILE_SIZE_LOC,
+    PROFILE_CYCLE_LOC
+};
+
+enum portIndex {
+    PORT_ADDR_LOC=0,
+    PORT_VALUE_LOC,
+    PORT_READ_LOC,
+    PORT_WRITE_LOC,
+    PORT_FREEZE_LOC
+};
 
 namespace Ui { class MainWindow; }
 
@@ -43,21 +58,20 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-
     explicit MainWindow(CEmuOpts opts,QWidget *p = Q_NULLPTR);
     ~MainWindow();
 
 public slots:
     // Misc.
-    void closeEvent(QCloseEvent*) override;
+    virtual void closeEvent(QCloseEvent*) Q_DECL_OVERRIDE;
 
-    //Drag & Drop
-    void dropEvent(QDropEvent*) override;
-    void dragEnterEvent(QDragEnterEvent*) override;
+    // Drag & Drop
+    virtual void dropEvent(QDropEvent*) Q_DECL_OVERRIDE;
+    virtual void dragEnterEvent(QDragEnterEvent*) Q_DECL_OVERRIDE;
 
     // Console
     void consoleStr(QString);
-    void errConsoleStr(QString);
+    void consoleErrStr(QString);
 
     // Saved/Restored State
     void saved(bool);
@@ -71,15 +85,21 @@ public slots:
     void restoreFromFile();
     void saveToFile();
     void exportRom();
-    void changeImagePath();
-    void disableDebugger();
+    void setImagePath();
+
+    // Debugging
+    void debuggerGUIDisable();
+    void debuggerGUIEnable();
 
     // Sending keys
     void sendASMKey();
 
+    // LCD Popouts
+    void createLCD();
+
 signals:
     // Debugging
-    void debuggerChangedState(bool);
+    void debuggerSendNewState(bool);
     void triggerEmuSendState();
     void debugInputRequested();
     void debuggerCommand(QString);
@@ -95,7 +115,7 @@ signals:
     void setReceiveState(bool);
 
     // Speed
-    void changedEmuSpeed(int);
+    void setEmuSpeed(int);
     void changedThrottleMode(bool);
 
     // Reset
@@ -110,102 +130,137 @@ private:
     bool runSetup(void);
     void screenshot(void);
     void screenshotGIF(void);
-    void saveScreenshot(QString,QString,QString);
+    void screenshotSave(QString, QString, QString);
     void recordGIF(void);
     void changeFrameskip(int);
     void changeFramerate(void);
     void checkForUpdates(bool);
     void showAbout(void);
-    void setUIMode(bool);
-    void toggleUIEditMode(void);
-    void changeBatteryCharging(bool);
-    void changeBatteryStatus(int);
+    void batteryIsCharging(bool);
+    void batteryChangeStatus(int);
     void setSaveOnClose(bool b);
     void setRestoreOnOpen(bool b);
     void changeSnapshotPath();
 
     // Debugger
+    void breakpointGUIAdd();
+    void watchpointGUIAdd();
+    void debuggerGUIPopulate();
+    void debuggerGUISetState(bool);
+
     void debugCommand();
-    void raiseDebugger();
-    void leaveDebugger();
-    void updateDebuggerChanges();
-    void populateDebugWindow();
-    void setDebuggerState(bool);
-    void changeDebuggerState();
-    void executeDebugCommand(uint32_t, uint8_t);
-    void processDebugCommand(int, uint32_t);
-    void addPort();
-    void removePort();
-    void updatePortData(int);
-    void updateWatchpointData(int);
-    void updateProfilerCycles(int);
-    void changePortValues(QTableWidgetItem*);
-    void changeBreakpointAddress(QTableWidgetItem*);
-    void setPreviousBreakpointAddress(QTableWidgetItem*);
-    void changeWatchpointAddress(QTableWidgetItem*);
-    void setPreviousWatchpointAddress(QTableWidgetItem*);
-    void setPreviousPortValues(QTableWidgetItem*);
-    void changeProfiler(QTableWidgetItem*);
+    void debuggerRaise();
+    void debuggerLeave();
+    void debuggerUpdateChanges();
+    void debuggerChangeState();
+    void debuggerExecuteCommand(uint32_t, uint8_t);
+    void debuggerProcessCommand(int, uint32_t);
+
+    void portRemoveSelected();
+
+    void portUpdate(int);
+    void watchpointUpdate(int);
+    void profilerUpdate(int);
+
+    void portSetPreviousAddress(QTableWidgetItem*);
+    void breakpointSetPreviousAddress(QTableWidgetItem*);
+    void watchpointSetPreviousAddress(QTableWidgetItem*);
+
+    void portDataChanged(QTableWidgetItem*);
+    void breakpointDataChanged(QTableWidgetItem*);
+    void watchpointDataChanged(QTableWidgetItem*);
+    void profilerDataChange(QTableWidgetItem*);
+
+    void updateDisasmView(const int, const bool);
     void drawNextDisassembleLine();
+    void scrollDisasmView(int);
+
     void stepInPressed();
     void stepOverPressed();
     void stepNextPressed();
     void stepOutPressed();
+
     void updateTIOSView();
     void updateStackView();
-    void updateDisasmView(const int, const bool);
+
     void gotoPressed();
-    void setBreakpointAddress();
-    void setWatchpointAddress();
+
     void disasmContextMenu(const QPoint &);
     void variablesContextMenu(const QPoint&);
     void vatContextMenu(const QPoint &);
     void opContextMenu(const QPoint &);
-    void scrollDisasmView(int);
-    void removeBreakpointAddress(uint32_t);
-    void removeWatchpointAddress(uint32_t);
-    void zeroClockCounter();
-    void updateDisassembly(int);
-    void addSpaceDisasm(bool);
-    void zeroProfiler();
-    void exportProfiler();
-    bool removeBreakpoint();
-    bool removeWatchpoint();
-    bool addBreakpoint();
-    bool addWatchpoint();
-    bool removeProfilerBlock();
-    void addProfilerBlock();
-    void removeAllProfilers();
-    void changeProfilerGranularity(int);
 
-    // Others
-    void createLCD();
+    void breakpointRemoveAddress(uint32_t);
+    void watchpointRemoveAddress(uint32_t);
+
+    void debuggerZeroClockCounter();
+    void debuggerTabSwitched(int);
+
+    void profilerZero();
+    void profilerExport();
+    void profilerRemoveAll();
+    void profilerChangeGranularity(int);
+
+    // For linking to the buttons
+    void breakpointSlotAdd();
+    void watchpointSlotAdd();
+    void profilerSlotAdd();
+    void portSlotAdd();
+
+    // Removal from widgets
+    bool profilerRemoveSelected();
+    bool breakpointRemoveSelectedRow();
+    bool watchpointRemoveSelectedRow();
+
+    // Get labels
+    QString watchpointNextLabel();
+    QString breakpointNextLabel();
+    QString profilerNextLabel();
+
+    // Adding watchpoints from disassembly
+    void watchpointReadGUIAdd();
+    void watchpointWriteGUIAdd();
+    void watchpointReadWriteGUIAdd();
+
+    // Debugging files
+    void debuggerImportFile();
+    void debuggerExportFile();
+
+    // MAIN IMPLEMENTATION ROUTINES
+    bool portAdd(uint16_t, unsigned);
+    bool breakpointAdd(QString, uint32_t, bool);
+    bool watchpointAdd(QString, uint32_t, uint8_t, unsigned);
+    bool profilerAdd(QString, uint32_t, uint32_t, uint64_t);
+
     void screenContextMenu(const QPoint &);
-    void addEquateFileDialog();
-    void addEquateFile(QString);
-    void clearEquateFile();
-    void refreshEquateFile();
+    void equatesAddDialog();
+    void equatesAddFile(QString);
+    void equatesClear();
+    void equatesRefresh();
     void selectKeypadColor();
     void setKeypadColor(unsigned color);
 
     // Speed
-    void changeEmulatedSpeed(int);
-    void changeThrottleMode(int);
+    void setEmulatedSpeed(int);
+    void setThrottleMode(int);
     void showActualSpeed(int);
 
     // Console
     void showStatusMsg(QString);
     void consoleOutputChanged();
-    void appendToConsole(QString str, QColor color = Qt::black);
+    void consoleAppend(QString str, QColor color = Qt::black);
 
     // Settings
     void adjustScreen();
-    void changeScale(int);
-    void toggleSkin(bool);
-    void changeLCDRefresh(int);
-    void alwaysOnTop(int);
-    void autoCheckForUpdates(int);
-    int reprintScale(int);
+    void setSkinToggle(bool);
+    void setLCDScale(int);
+    void setLCDRefresh(int);
+    void setAlwaysOnTop(int);
+    void setAutoCheckForUpdates(int);
+    void setSpaceDisasm(bool);
+    void setUIMode(bool);
+    void toggleUIEditMode(void);
+    int setReprintScale(int);
 
     // Linking
     QStringList showVariableFileDialog(QFileDialog::AcceptMode, QString name_filter);
@@ -237,12 +292,13 @@ private:
     void memGotoPressed();
     void memSearchPressed();
     void memSyncPressed();
+    // Others
     void syncHexView(int, QHexEdit *);
     void searchEdit(QHexEdit *);
 
     // Keypad
     void keymapChanged();
-    void changeKeymap(const QString &);
+    void setKeymap(const QString &);
 
     // Font
     void setFont(int);
@@ -258,7 +314,9 @@ private:
 #endif
 
     // Members
-    QString getAddressString(bool &, QString);
+    unsigned watchpointGUIMask = DBG_NO_HANDLE;
+
+    QString getAddressString(QString);
     QString searchingString;
 
     Ui::MainWindow *ui = nullptr;
@@ -277,9 +335,7 @@ private:
     EmuThread emu;
 
     bool uiEditMode = false;
-    bool debuggerOn = false;
-    bool inReceivingMode = false;
-    bool native_console = false;
+    bool nativeConsole = false;
     bool closeAfterSave = false;
     bool isResumed = false;
     bool hexSearch = true;
@@ -289,12 +345,8 @@ private:
 
     uint32_t prevBreakpointAddress = 0;
     uint32_t prevWatchpointAddress = 0;
-    uint32_t prevProfilerAddress = 0;
     uint32_t prevDisasmAddress = 0;
-    uint32_t currAddress = 0;
     uint16_t prevPortAddress = 0;
-    uint8_t watchpointType = 0;
-    QString currAddressString, currPortAddress, watchLength;
     QPalette colorback, nocolorback;
 
     QShortcut *stepInShortcut;
@@ -306,10 +358,7 @@ private:
 
     QList<calc_var_t> vars;
     QIcon runIcon, stopIcon; // help speed up stepping
-    QTextCharFormat console_format;
-
-    int pc_line;
-    int curr_line;
+    QTextCharFormat consoleFormat;
 };
 
 #endif

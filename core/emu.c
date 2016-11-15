@@ -1,17 +1,3 @@
-/* Copyright (C) 2015  Fabian Vogt
- * Modified for the CE calculator by CEmu developers
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
-*/
-
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -87,7 +73,7 @@ bool emu_save(const char *file) {
         image->version = imageVersion;
 
         success = (fwrite(image, 1, size, savedImage) == size);
-    } while(0);
+    } while (0);
 
     free(image);
     fclose(savedImage);
@@ -105,7 +91,7 @@ bool emu_start(const char *romImage, const char *savedImage) {
     gui_set_busy(true);
 
     do {
-        if(savedImage != NULL) {
+        if (savedImage != NULL) {
             emu_image_t *image;
             imageFile = fopen_utf8(savedImage, "rb");
 
@@ -122,15 +108,15 @@ bool emu_start(const char *romImage, const char *savedImage) {
             if (fseek(imageFile, 0L, SEEK_SET) < 0) {
                 break;
             }
-            if((size_t)lSize < sizeof(emu_image_t)) {
+            if ((size_t)lSize < sizeof(emu_image_t)) {
                 break;
             }
 
             image = (emu_image_t*)malloc(lSize);
-            if(!image) {
+            if (!image) {
                 break;
             }
-            if(fread(image, lSize, 1, imageFile) != 1) {
+            if (fread(image, lSize, 1, imageFile) != 1) {
                 free(image);
                 break;
             }
@@ -142,7 +128,7 @@ bool emu_start(const char *romImage, const char *savedImage) {
             asic_init();
             asic_reset();
 
-            if(image->version != imageVersion || !asic_restore(image)) {
+            if (image->version != imageVersion || !asic_restore(image)) {
                 emu_cleanup();
                 free(image);
                 break;
@@ -286,14 +272,14 @@ bool emu_start(const char *romImage, const char *savedImage) {
                             set_device_type(device_type);
                         }
                     }
-                } while(0);
+                } while (0);
 
                 if (romFile) {
                     fclose(romFile);
                 }
             }
         }
-    } while(0);
+    } while (0);
 
     if (imageFile) {
         fclose(imageFile);

@@ -377,8 +377,8 @@ void disassembleInstruction(void) {
 
     disasm.new_address = disasm.base_address;
 
-    disasmHighlight.hit_read_breakpoint = false;
-    disasmHighlight.hit_write_breakpoint = false;
+    disasmHighlight.hit_read_watchpoint = false;
+    disasmHighlight.hit_write_watchpoint = false;
     disasmHighlight.hit_exec_breakpoint = false;
     disasmHighlight.hit_pc = false;
     disasmHighlight.inst_address = -1;
@@ -994,8 +994,8 @@ void disassembleInstruction(void) {
         int precision;
         disasm.new_address = disasm.base_address;
 
-        disasmHighlight.hit_read_breakpoint = false;
-        disasmHighlight.hit_write_breakpoint = false;
+        disasmHighlight.hit_read_watchpoint = false;
+        disasmHighlight.hit_write_watchpoint = false;
         disasmHighlight.hit_exec_breakpoint = false;
         disasmHighlight.hit_pc = false;
         disasmHighlight.inst_address = -1;

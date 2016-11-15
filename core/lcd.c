@@ -55,7 +55,7 @@ void lcd_drawframe(uint32_t *out, lcd_state_t *lcd_state) {
     uint_fast32_t word, color;
     uint32_t ofs = lcd_state->upcurr & ~7;
 
-    if(!mem.ram.block) {
+    if (!mem.ram.block) {
         memset(out, 0, vram_size << 1);
         return;
     }
@@ -174,26 +174,26 @@ static uint8_t lcd_read(const uint16_t pio, bool peek) {
     (void)peek;
 
     if (index < 0x200) {
-        if(index < 0x010) { return read8(lcd.timing[index >> 2], bit_offset); }
-        if(index < 0x014 && index >= 0x010) { return read8(lcd.upbase, bit_offset); }
-        if(index < 0x018 && index >= 0x014) { return read8(lcd.lpbase, bit_offset); }
-        if(index < 0x01C && index >= 0x018) { return read8(lcd.control, bit_offset); }
-        if(index < 0x020 && index >= 0x01C) { return read8(lcd.imsc, bit_offset); }
-        if(index < 0x024 && index >= 0x020) { return read8(lcd.ris, bit_offset); }
-        if(index < 0x028 && index >= 0x024) { return read8(lcd.imsc & lcd.ris, bit_offset); }
+        if (index < 0x010) { return read8(lcd.timing[index >> 2], bit_offset); }
+        if (index < 0x014 && index >= 0x010) { return read8(lcd.upbase, bit_offset); }
+        if (index < 0x018 && index >= 0x014) { return read8(lcd.lpbase, bit_offset); }
+        if (index < 0x01C && index >= 0x018) { return read8(lcd.control, bit_offset); }
+        if (index < 0x020 && index >= 0x01C) { return read8(lcd.imsc, bit_offset); }
+        if (index < 0x024 && index >= 0x020) { return read8(lcd.ris, bit_offset); }
+        if (index < 0x028 && index >= 0x024) { return read8(lcd.imsc & lcd.ris, bit_offset); }
     } else if (index < 0x400) {
         return *((uint8_t *)lcd.palette + index - 0x200);
     } else if (index < 0xC30) {
-        if(index < 0xC00 && index >= 0x800) { return read8(lcd.crsrImage[((pio-0x800) & 0x3FF) >> 2], bit_offset); }
-        if(index == 0xC00) { return read8(lcd.crsrControl, bit_offset); }
-        if(index == 0xC04) { return read8(lcd.crsrConfig, bit_offset); }
-        if(index < 0xC0C && index >= 0xC08) { return read8(lcd.crsrPalette0, bit_offset); }
-        if(index < 0xC10 && index >= 0xC0C) { return read8(lcd.crsrPalette1, bit_offset); }
-        if(index < 0xC14 && index >= 0xC10) { return read8(lcd.crsrXY, bit_offset); }
-        if(index < 0xC16 && index >= 0xC14) { return read8(lcd.crsrClip, bit_offset); }
-        if(index == 0xC20) { return read8(lcd.crsrImsc, bit_offset); }
-        if(index == 0xC28) { return read8(lcd.crsrRis, bit_offset); }
-        if(index == 0xC2C) { return read8(lcd.crsrRis & lcd.crsrImsc, bit_offset); }
+        if (index < 0xC00 && index >= 0x800) { return read8(lcd.crsrImage[((pio-0x800) & 0x3FF) >> 2], bit_offset); }
+        if (index == 0xC00) { return read8(lcd.crsrControl, bit_offset); }
+        if (index == 0xC04) { return read8(lcd.crsrConfig, bit_offset); }
+        if (index < 0xC0C && index >= 0xC08) { return read8(lcd.crsrPalette0, bit_offset); }
+        if (index < 0xC10 && index >= 0xC0C) { return read8(lcd.crsrPalette1, bit_offset); }
+        if (index < 0xC14 && index >= 0xC10) { return read8(lcd.crsrXY, bit_offset); }
+        if (index < 0xC16 && index >= 0xC14) { return read8(lcd.crsrClip, bit_offset); }
+        if (index == 0xC20) { return read8(lcd.crsrImsc, bit_offset); }
+        if (index == 0xC28) { return read8(lcd.crsrRis, bit_offset); }
+        if (index == 0xC2C) { return read8(lcd.crsrRis & lcd.crsrImsc, bit_offset); }
     } else if (index >= 0xFE0) {
         static const uint8_t id[1][8] = {
             { 0x11, 0x11, 0x14, 0x00, 0x0D, 0xF0, 0x05, 0xB1 }
@@ -229,13 +229,13 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool peek) {
             }
             lcd.lpbase &= ~7U;
         } else if (index == 0x018) {
-            if(byte_offset == 0) {
+            if (byte_offset == 0) {
                 if (value & 1) { event_set(SCHED_LCD, 0); }
                 else { event_clear(SCHED_LCD); }
             }
             write8(lcd.control, bit_offset, value);
             /* Simple power down of lcd -- Needs to be correctly emulated in future */
-            if(!(lcd.control & 0x800)) { lcd_reset(); }
+            if (!(lcd.control & 0x800)) { lcd_reset(); }
         } else if (index == 0x01C) {
             write8(lcd.imsc, bit_offset, value);
             lcd.imsc &= 0x1E;
@@ -247,35 +247,35 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool peek) {
     } else if (index < 0x400) {
         write8(lcd.palette[pio >> 1 & 0xFF], (pio & 1) << 3, value);
     } else if (index < 0xC30) {
-        if(index < 0xC00 && index >= 0x800) {
+        if (index < 0xC00 && index >= 0x800) {
             write8(lcd.crsrImage[((pio-0x800) & 0x3FF) >> 2], bit_offset, value);
         }
-        if(index == 0xC00) {
+        if (index == 0xC00) {
             write8(lcd.crsrControl, bit_offset, value);
         }
-        if(index == 0xC04) {
+        if (index == 0xC04) {
             write8(lcd.crsrConfig, bit_offset, value);
             lcd.crsrConfig &= 0xF;
         }
-        if(index < 0xC0B && index >= 0xC08) {
+        if (index < 0xC0B && index >= 0xC08) {
             write8(lcd.crsrPalette0, bit_offset, value);
         }
-        if(index < 0xC0F && index >= 0xC0C) {
+        if (index < 0xC0F && index >= 0xC0C) {
             write8(lcd.crsrPalette1, bit_offset, value);
         }
-        if(index < 0xC14 && index >= 0xC10) {
+        if (index < 0xC14 && index >= 0xC10) {
             write8(lcd.crsrXY, bit_offset, value);
             lcd.crsrXY &= (0xFFF | (0xFFF << 16));
         }
-        if(index < 0xC16 && index >= 0xC14) {
+        if (index < 0xC16 && index >= 0xC14) {
             write8(lcd.crsrClip, bit_offset, value);
             lcd.crsrClip &= (0x3F | (0x3F << 8));
         }
-        if(index == 0xC20) {
+        if (index == 0xC20) {
             write8(lcd.crsrImsc, bit_offset, value);
             lcd.crsrImsc &= 0xF;
         }
-        if(index == 0xC24) {
+        if (index == 0xC24) {
             lcd.crsrRis &= ~(value << bit_offset);
             lcd.crsrRis &= 0xF;
         }

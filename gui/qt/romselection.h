@@ -33,7 +33,7 @@ private:
     Ui::RomSelection *ui;
 
     QDir currentDir;
-    uint8_t *romArray = nullptr;
+    uint8_t *romArray = Q_NULLPTR;
     uint32_t imageSize = 0;
     std::string romImagePath = "";
     bool segmentFilledStatus[30] = {0};

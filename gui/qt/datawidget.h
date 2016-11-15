@@ -24,7 +24,7 @@ public:
     QString getSelectedAddress();
 
 private:
-    bool cursor_moveable;
+    bool cursorMoveable;
     QList<QTextEdit::ExtraSelection> extraHighlights;
 };
 

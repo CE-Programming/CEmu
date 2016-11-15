@@ -40,8 +40,8 @@ uint8_t debug_peek_byte(uint32_t address) {
     uint8_t value = mem_peek_byte(address), debugData;
 
     if ((debugData = debugger.data.block[address])) {
-        disasmHighlight.hit_read_breakpoint |= debugData & DBG_READ_WATCHPOINT;
-        disasmHighlight.hit_write_breakpoint |= debugData & DBG_WRITE_WATCHPOINT;
+        disasmHighlight.hit_read_watchpoint |= debugData & DBG_READ_WATCHPOINT;
+        disasmHighlight.hit_write_watchpoint |= debugData & DBG_WRITE_WATCHPOINT;
         disasmHighlight.hit_exec_breakpoint |= debugData & DBG_EXEC_BREAKPOINT;
         if (debugData & DBG_INST_START_MARKER && disasmHighlight.inst_address < 0) {
             disasmHighlight.inst_address = address;
@@ -75,22 +75,22 @@ void open_debugger(int reason, uint32_t data) {
     debugger.cpu_next = cpu.next;
     debugger.total_cycles = cpu.cycles + cpu.cycles_offset;
 
-    if(debugger.currentBuffPos) {
+    if (debugger.currentBuffPos) {
         debugger.buffer[debugger.currentBuffPos] = '\0';
-        gui_console_printf("%s",debugger.buffer);
+        gui_console_printf("%s", debugger.buffer);
         debugger.currentBuffPos = 0;
     }
 
-    if(debugger.currentErrBuffPos) {
+    if (debugger.currentErrBuffPos) {
         debugger.errBuffer[debugger.currentErrBuffPos] = '\0';
-        gui_console_err_printf("%s",debugger.errBuffer);
+        gui_console_err_printf("%s", debugger.errBuffer);
         debugger.currentErrBuffPos = 0;
     }
 
     inDebugger = true;
     gui_debugger_send_command(reason, data);
 
-    while(inDebugger) {
+    while (inDebugger) {
         gui_emu_sleep(50);
     }
 
@@ -132,7 +132,7 @@ void debug_clear_temp_break(void) {
         do {
             debugger.data.block[debugger.stepOverInstrEnd] &= ~DBG_TEMP_EXEC_BREAKPOINT;
             debugger.stepOverInstrEnd = cpu_mask_mode(debugger.stepOverInstrEnd - 1, debugger.stepOverMode);
-        } while(debugger.data.block[debugger.stepOverInstrEnd] & DBG_TEMP_EXEC_BREAKPOINT);
+        } while (debugger.data.block[debugger.stepOverInstrEnd] & DBG_TEMP_EXEC_BREAKPOINT);
     }
     debugger.stepOverInstrEnd = 0xFFFFFFFFU;
 }

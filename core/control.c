@@ -32,8 +32,8 @@ static uint8_t control_read(const uint16_t pio, bool peek) {
             break;
         case 0x0F:
             value = control.ports[index];
-            if(control.USBBusPowered)    { value |= 0x80; }
-            if(control.USBSelfPowered) { value |= 0x40; }
+            if (control.USBBusPowered)    { value |= 0x80; }
+            if (control.USBSelfPowered) { value |= 0x40; }
             break;
         case 0x1D: case 0x1E: case 0x1F:
             value = read8(control.privileged, (index - 0x1D) << 3);
@@ -68,7 +68,7 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool peek) {
     switch (index) {
         case 0x00:
             control.ports[index] = byte;
-            if(byte & 0x10) {
+            if (byte & 0x10) {
                 cpuEvents |= EVENT_RESET;
             }
             switch (control.readBatteryStatus) {

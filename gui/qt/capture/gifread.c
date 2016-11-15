@@ -762,7 +762,7 @@ read_comment_extension(Gif_Image *gfi, Gif_Reader *grr)
 
 
 static Gif_Stream *
-read_gif(Gif_Reader *grr, int read_flags,
+read_gif (Gif_Reader *grr, int read_flags,
 	 const char* landmark, Gif_ReadErrorHandler handler)
 {
   Gif_Stream *gfs;
@@ -911,7 +911,7 @@ Gif_FullReadFile(FILE *f, int read_flags,
   grr.byte_getter = file_byte_getter;
   grr.block_getter = file_block_getter;
   grr.eofer = file_eofer;
-  return read_gif(&grr, read_flags, landmark, h);
+  return read_gif (&grr, read_flags, landmark, h);
 }
 
 Gif_Stream *
@@ -923,7 +923,7 @@ Gif_FullReadRecord(const Gif_Record *gifrec, int read_flags,
   make_data_reader(&grr, gifrec->data, gifrec->length);
   if (read_flags & GIF_READ_CONST_RECORD)
     read_flags |= GIF_READ_COMPRESSED;
-  return read_gif(&grr, read_flags, landmark, h);
+  return read_gif (&grr, read_flags, landmark, h);
 }
 
 

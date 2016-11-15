@@ -6,10 +6,10 @@
 #include "emu.h"
 #include "os/os.h"
 
-volatile bool emu_is_sending = false;
-volatile bool emu_is_receiving = false;
+volatile bool isSending = false;
+volatile bool isReceiving = false;
 
-static const int safe_ram_loc = 0xD052C6;
+#define SAFE_RAM 0xD052C6
 
 static const uint8_t jforcegraph[9] = {
     0xF3,                         /* di            */
@@ -43,7 +43,10 @@ static const uint8_t pgrm_loader[34] = {
     0xE1,                         /* pop hl               */
     0x3A, 0xF8, 0x05, 0xD0,       /* ld a,(OP1)           */
     0xCD, 0x38, 0x13, 0x02,       /* call _createvar      */
-    0xED, 0x53, 0xC6, 0x52, 0xD0, /* ld (safe_ram_loc),de */
+    0xED, 0x53,
+    (SAFE_RAM>>0)&255,
+    (SAFE_RAM>>8)&255,
+    (SAFE_RAM>>16)&255,           /* ld (SAFE_RAM),de     */
     0x18, 0xFE                    /* _sink: jr _sink      */
 };
 
@@ -52,7 +55,7 @@ void enterVariableLink(void) {
     gui_entered_send_state(true);
     do {
         gui_emu_sleep(50);
-    } while(emu_is_sending || emu_is_receiving);
+    } while (isSending || isReceiving);
 }
 
 bool listVariablesLink(void) {
@@ -88,7 +91,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
     uint8_t var_ver,
             var_arc;
 
-    uint8_t *run_asm_safe = phys_mem_ptr(safe_ram_loc, 8400),
+    uint8_t *run_asm_safe = phys_mem_ptr(SAFE_RAM, 8400),
             *cxCurApp     = phys_mem_ptr(0xD007E0, 1),
             *op1          = phys_mem_ptr(0xD005F8, 9),
             *var_ptr;
@@ -130,7 +133,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
 
     cpu.halted = cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = 0;
     memcpy(run_asm_safe, jforcegraph, sizeof(jforcegraph));
-    cpu_flush(safe_ram_loc, 1);
+    cpu_flush(SAFE_RAM, 1);
     cpu.cycles = 0;
     cpu.next = 2300000;
     cpu_execute();
@@ -160,7 +163,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
         mem_poke_byte(0xD008DF, 0);
         cpu.registers.HL = var_size - 2;
         memcpy(run_asm_safe, pgrm_loader, sizeof(pgrm_loader));
-        cpu_flush(safe_ram_loc, 1);
+        cpu_flush(SAFE_RAM, 1);
         cpu.cycles = 0;
         cpu.next = 23000000;
         cpu_execute();
@@ -170,7 +173,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
             goto r_err;
         }
 
-        var_ptr = phys_mem_ptr(mem_peek_long(safe_ram_loc), var_size);
+        var_ptr = phys_mem_ptr(mem_peek_long(SAFE_RAM), var_size);
 
         if (fread(var_ptr, 1, var_size, file) != var_size) goto r_err;
 
@@ -180,7 +183,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
             case LINK_ARCH:
                 cpu.halted = cpu.IEF_wait = 0;
                 memcpy(run_asm_safe, archivevar, sizeof(archivevar));
-                cpu_flush(safe_ram_loc, 1);
+                cpu_flush(SAFE_RAM, 1);
                 cpu.cycles = 0;
                 cpu.next = 23000000;
                 cpu_execute();
@@ -191,7 +194,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
 
         cpu.halted = cpu.IEF_wait = 0;
         memcpy(run_asm_safe, jforcehome, sizeof(jforcehome));
-        cpu_flush(safe_ram_loc, 1);
+        cpu_flush(SAFE_RAM, 1);
         cpu.cycles = 0;
         cpu.next = 2300000;
         cpu_execute();

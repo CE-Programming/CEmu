@@ -12,8 +12,8 @@ extern "C" {
 
 enum dest_location { LINK_RAM=0, LINK_ARCH, LINK_FILE };
 
-extern volatile bool emu_is_sending;
-extern volatile bool emu_is_receiving;
+extern volatile bool isSending;
+extern volatile bool isReceiving;
 
 void enterVariableLink(void);
 bool listVariablesLink(void);

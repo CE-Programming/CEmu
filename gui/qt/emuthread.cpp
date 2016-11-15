@@ -54,7 +54,7 @@ void gui_console_printf(const char *fmt, ...) {
 static void gui_console_err_vprintf(const char *fmt, va_list ap) {
     QString str;
     str.vsprintf(fmt, ap);
-    emu_thread->errConsoleStr(str);
+    emu_thread->consoleErrStr(str);
 }
 
 void gui_console_err_printf(const char *fmt, ...) {
@@ -83,7 +83,7 @@ void throttle_timer_wait(void) {
 }
 
 void gui_entered_send_state(bool entered) {
-    if(entered) {
+    if (entered) {
         emu_thread->waitForLink = false;
     }
 }
@@ -100,7 +100,7 @@ void EmuThread::resetTriggered() {
     cpuEvents |= EVENT_RESET;
 }
 
-void EmuThread::changeEmuSpeed(int value) {
+void EmuThread::setEmuSpeed(int value) {
     speed = value;
 }
 
@@ -110,7 +110,7 @@ void EmuThread::changeThrottleMode(bool mode) {
 
 void EmuThread::setDebugMode(bool state) {
     enterDebugger = state;
-    if(inDebugger && !state) {
+    if (inDebugger && !state) {
         inDebugger = false;
     }
     debug_clear_temp_break();
@@ -118,12 +118,12 @@ void EmuThread::setDebugMode(bool state) {
 
 void EmuThread::setSendState(bool state) {
     enterSendState = state;
-    emu_is_sending = state;
+    isSending = state;
 }
 
 void EmuThread::setReceiveState(bool state) {
     enterReceiveState = state;
-    emu_is_receiving = state;
+    isReceiving = state;
 }
 
 void EmuThread::setRunUntilMode() {
@@ -176,15 +176,15 @@ void EmuThread::doStuff() {
         emit saved(success);
     }
 
-    if(debugger.currentBuffPos) {
+    if (debugger.currentBuffPos) {
         debugger.buffer[debugger.currentBuffPos] = '\0';
         emu_thread->consoleStr(QString(debugger.buffer));
         debugger.currentBuffPos = 0;
     }
 
-    if(debugger.currentErrBuffPos) {
+    if (debugger.currentErrBuffPos) {
         debugger.errBuffer[debugger.currentErrBuffPos] = '\0';
-        emu_thread->errConsoleStr(QString(debugger.errBuffer));
+        emu_thread->consoleErrStr(QString(debugger.errBuffer));
         debugger.currentErrBuffPos = 0;
     }
 
@@ -202,13 +202,13 @@ void EmuThread::doStuff() {
 }
 
 void EmuThread::sendActualSpeed() {
-    if(!calc_is_off()) {
+    if (!calc_is_off()) {
         emit actualSpeedChanged(actualSpeed);
     }
 }
 
 void EmuThread::setActualSpeed(int value) {
-    if(!calc_is_off() && actualSpeed != value) {
+    if (!calc_is_off() && actualSpeed != value) {
         actualSpeed = value;
     }
 }
@@ -235,7 +235,7 @@ void EmuThread::run() {
     bool doReset = !doRestore;
     bool success = emu_start(rom.c_str(), doRestore ? imagePath.c_str() : nullptr);
 
-    if(doRestore) {
+    if (doRestore) {
         emit restored(success);
     } else {
         emit started(success);
@@ -243,7 +243,7 @@ void EmuThread::run() {
 
     doRestore = false;
 
-    if(success) {
+    if (success) {
         emu_loop(doReset);
     }
     emit stopped();
@@ -251,21 +251,21 @@ void EmuThread::run() {
 
 bool EmuThread::stop() {
 
-    if(!isRunning()) {
+    if (!isRunning()) {
         return true;
     }
 
     inDebugger = false;
-    emu_is_sending = false;
+    isSending = false;
 
     /* Cause the CPU core to leave the loop and check for events */
     exiting = true; // exit outer loop
     cpu.next = 0; // exit inner loop
 
-    if(!this->wait(200))
+    if (!this->wait(200))
     {
         terminate();
-        if(!this->wait(200))
+        if (!this->wait(200))
         {
             return false;
         }
@@ -277,7 +277,7 @@ bool EmuThread::stop() {
 bool EmuThread::restore(QString path) {
     imagePath = QDir::toNativeSeparators(path).toStdString();
     doRestore = true;
-    if(!stop()) {
+    if (!stop()) {
         return false;
     }
 

@@ -14,6 +14,6 @@ public:
 };
 
 // Used as global
-extern SendingHandler sending_handler;
+extern SendingHandler sendingHandler;
 
 #endif

@@ -161,7 +161,7 @@ bool sched_restore(const emu_image *s) {
     for(i = 0; i < SCHED_NUM_ITEMS; i++) {
         struct sched_item j = s->sched.items[i];
         j.proc = sched.items[i].proc;
-        if(!j.proc) {
+        if (!j.proc) {
             abort();
         }
         sched.items[i] = j;

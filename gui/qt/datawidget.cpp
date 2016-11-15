@@ -2,7 +2,7 @@
 
 /* extraHighlights (0) = current line selection */
 
-DataWidget::DataWidget(QWidget *p) : QPlainTextEdit(p), cursor_moveable(false) {
+DataWidget::DataWidget(QWidget *p) : QPlainTextEdit(p), cursorMoveable(false) {
     setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
@@ -30,7 +30,7 @@ QString DataWidget::getSelectedAddress() {
 }
 
 void DataWidget::cursorState(bool moveable) {
-    cursor_moveable = moveable;
+    cursorMoveable = moveable;
     if (moveable) {
         addHighlight(QColor(Qt::yellow).lighter(160));
     }
@@ -48,7 +48,7 @@ void DataWidget::addHighlight(QColor color) {
 }
 
 void DataWidget::highlightCurrentLine() {
-    if(cursor_moveable == true) {
+    if (cursorMoveable == true) {
         if (!extraHighlights.isEmpty()) {
             extraHighlights.removeLast();
         }
