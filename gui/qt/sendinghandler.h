@@ -8,9 +8,10 @@
 class SendingHandler {
 public:
     explicit SendingHandler();
-    void sendFiles(QStringList fileNames, unsigned location);
-    bool dragOccured(QDragEnterEvent *e);
-    void dropOccured(QDropEvent *e, unsigned location);
+
+    void sendFiles(QStringList, unsigned);
+    bool dragOccured(QDragEnterEvent*);
+    void dropOccured(QDropEvent*, unsigned);
 };
 
 // Used as global

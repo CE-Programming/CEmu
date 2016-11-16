@@ -73,7 +73,7 @@ void SendingHandler::sendFiles(QStringList fileNames, unsigned location) {
     }
 
     emu_thread->setSendState(true);
-    const unsigned int fileNum = fileNames.size();
+    const int fileNum = fileNames.size();
 
     if (fileNames.isEmpty()) {
         emu_thread->setSendState(false);
@@ -94,21 +94,23 @@ void SendingHandler::sendFiles(QStringList fileNames, unsigned location) {
         return;
     }
 
-    QProgressDialog progress("Sending Files...", QString(), 0, fileNum, Q_NULLPTR);
-    progress.setWindowModality(Qt::WindowModal);
+    QProgressDialog *progress = new QProgressDialog("Sending Files...", QString(), 0, fileNum, Q_NULLPTR);
+    progress->setWindowModality(Qt::WindowModal);
 
-    progress.show();
+    progress->show();
 
-    for (unsigned int i = 0; i < fileNum; i++) {
+    for (int i = 0; i < fileNum; i++) {
         if (!sendVariableLink(fileNames.at(i).toUtf8(), location)) {
-            QMessageBox::warning(nullptr, QObject::tr("Failed Transfer"), QObject::tr("A failure occured during transfer of: ")+fileNames.at(i));
+            QMessageBox::warning(Q_NULLPTR, QObject::tr("Failed Transfer"), QObject::tr("A failure occured during transfer of: ")+fileNames.at(i));
         }
-        progress.setLabelText(fileNames.at(i).toUtf8());
-        progress.setValue(progress.value()+1);
+        progress->setLabelText(fileNames.at(i).toUtf8());
+        progress->setValue(progress->value() + 1);
         QApplication::processEvents();
     }
 
-    progress.setValue(progress.value()+1);
+    progress->setValue(progress->value() + 1);
     emu_thread->setSendState(false);
     guiDelay(200);
+
+    delete progress;
 }

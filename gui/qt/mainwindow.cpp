@@ -341,10 +341,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
             exit(0);
         }
     } else {
-        if (opts.reloadROM) {
-            emu.start();
-            guiDelay(400);
-        } else if (settings->value(QStringLiteral("restoreOnOpen")).toBool()&& fileExists(emu.imagePath) && opts.restoreOnOpen) {
+        if (settings->value(QStringLiteral("restoreOnOpen")).toBool() && fileExists(emu.imagePath) && opts.restoreOnOpen) {
             restoreEmuState();
         } else {
             emu.start();
@@ -1080,8 +1077,9 @@ void MainWindow::launchTest() {
     for (const auto& file : autotester::config.transfer_files) {
         filesList << QString::fromStdString(file);
     }
+
     sendingHandler.sendFiles(filesList, LINK_FILE);
-    guiDelay(200);
+    guiDelay(100);
 
     // Follow the sequence
     if (!autotester::doTestSequence()) {
