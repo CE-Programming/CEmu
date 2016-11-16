@@ -17,25 +17,12 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "debugger.h"
 #include "dockwidget.h"
 #include "utils.h"
 
 #include "../../core/schedule.h"
 #include "../../core/link.h"
-
-enum debugCMDS {
-    CMD_ABORT=1,           // abort() routine hit
-    CMD_DEBUG,             // debugger() routine hit
-    CMD_SET_BREAKPOINT,    // set a breakpoint with the value in DE; enabled
-    CMD_REM_BREAKPOINT,    // remove a breakpoint with the value in DE
-    CMD_SET_R_WATCHPOINT,  // set a read watchpoint with the value in DE; length in C
-    CMD_SET_W_WATCHPOINT,  // set a write watchpoint with the value in DE; length in C
-    CMD_SET_RW_WATCHPOINT, // set a read/write watchpoint with the value in DE; length in C
-    CMD_REM_WATCHPOINT,    // we need to remove a watchpoint with the value in DE
-    CMD_REM_ALL_BREAK,     // we need to remove all breakpoints
-    CMD_REM_ALL_WATCH,     // we need to remove all watchpoints
-    CMD_SET_E_WATCHPOINT   // set an empty watchpoint with the value in DE; length in C
-};
 
 // ------------------------------------------------
 // Main Debugger things
@@ -53,12 +40,171 @@ void MainWindow::debuggerLeave(void) {
     debuggerGUIDisable();
 }
 
-void MainWindow::debuggerImportFile(void) {
-    QMessageBox::warning(this, tr("Not Implemented"), tr("Importing debug information not yet supported."));
+void MainWindow::debuggerImport(void) {
+    debuggerImportFile(debuggerGetFile(DBG_OPEN));
 }
 
-void MainWindow::debuggerExportFile(void) {
-    QMessageBox::warning(this, tr("Not Implemented"), tr("Exporting debug information not yet supported."));
+void MainWindow::debuggerExport(void) {
+    debuggerExportFile(debuggerGetFile(DBG_SAVE));
+}
+
+void MainWindow::debuggerImportFile(QString filename) {
+    if (filename.isEmpty()) {
+        return;
+    }
+    int i;
+
+    QSettings debugInfo(filename, QSettings::IniFormat);
+    if (debugInfo.value(QStringLiteral("version")) != DBG_VERSION) {
+        QMessageBox::critical(this, tr("Invalid Version"), tr("This debugging information is incompatible with this version of CEmu"));
+        return;
+    }
+
+    // Load the breakpoint information
+    QStringList breakpointLabel = debugInfo.value(QStringLiteral("breakpoints/label")).toStringList();
+    QStringList breakpointAddress = debugInfo.value(QStringLiteral("breakpoints/address")).toStringList();
+    QStringList breakpointEnabled = debugInfo.value(QStringLiteral("breakpoints/enable")).toStringList();
+    for (i = 0; i < breakpointLabel.size(); i++) {
+        breakpointAdd(breakpointLabel.at(i), hex2int(breakpointAddress.at(i)), breakpointEnabled.at(i) == "y");
+    }
+
+    // Load the watchpoint information
+    QStringList watchpointLabel = debugInfo.value(QStringLiteral("watchpoints/label")).toStringList();
+    QStringList watchpointAddress = debugInfo.value(QStringLiteral("watchpoints/address")).toStringList();
+    QStringList watchpointSize = debugInfo.value(QStringLiteral("watchpoints/size")).toStringList();
+    QStringList watchpointREnabled = debugInfo.value(QStringLiteral("watchpoints/read")).toStringList();
+    QStringList watchpointWEnabled = debugInfo.value(QStringLiteral("watchpoints/write")).toStringList();
+    for (i = 0; i < watchpointLabel.size(); i++) {
+        unsigned mask = (watchpointREnabled.at(i) == "y" ? DBG_READ_WATCHPOINT : DBG_NO_HANDLE) |
+                        (watchpointWEnabled.at(i) == "y" ? DBG_WRITE_WATCHPOINT : DBG_NO_HANDLE);
+        watchpointAdd(watchpointLabel.at(i), hex2int(watchpointAddress.at(i)), hex2int(watchpointSize.at(i)), mask);
+    }
+
+    // Load the port monitor information
+    QStringList portAddress = debugInfo.value(QStringLiteral("portmonitor/address")).toStringList();
+    QStringList portREnabled = debugInfo.value(QStringLiteral("portmonitor/read")).toStringList();
+    QStringList portWEnabled = debugInfo.value(QStringLiteral("portmonitor/write")).toStringList();
+    QStringList portFEnabled = debugInfo.value(QStringLiteral("portmonitor/freeze")).toStringList();
+    for (i = 0; i < portAddress.size(); i++) {
+        unsigned mask = (portREnabled.at(i) == "y" ? DBG_PORT_READ : DBG_NO_HANDLE)  |
+                        (portWEnabled.at(i) == "y" ? DBG_PORT_WRITE : DBG_NO_HANDLE) |
+                        (portFEnabled.at(i) == "y" ? DBG_PORT_FREEZE : DBG_NO_HANDLE);
+        portAdd(hex2int(portAddress.at(i)), mask);
+    }
+
+    // Load the profiler information
+    QStringList profilerLabel = debugInfo.value(QStringLiteral("profiler/label")).toStringList();
+    QStringList profilerAddress = debugInfo.value(QStringLiteral("profiler/address")).toStringList();
+    QStringList profilerSize = debugInfo.value(QStringLiteral("profiler/size")).toStringList();
+    QStringList profilerCycles = debugInfo.value(QStringLiteral("profiler/cycles")).toStringList();
+    for (i = 0; i < profilerLabel.size(); i++) {
+        QString cyclesStr = profilerCycles.at(i);
+        uint64_t cycles = cyclesStr.toLongLong();
+        profilerAdd(profilerLabel.at(i), hex2int(profilerAddress.at(i)), hex2int(profilerSize.at(i)), cycles);
+    }
+}
+
+void MainWindow::debuggerExportFile(QString filename) {
+    if (filename.isEmpty()) {
+        return;
+    }
+    int i;
+
+    QSettings debugInfo(filename, QSettings::IniFormat);
+
+    // Set the file format version
+    debugInfo.setValue(QStringLiteral("version"), DBG_VERSION);
+
+    // Save the breakpoint information
+    QStringList breakpointLabel;
+    QStringList breakpointAddress;
+    QStringList breakpointEnabled;
+    for(i = 0; i < ui->breakpointView->rowCount(); i++) {
+        breakpointLabel.append(ui->breakpointView->item(i, BREAK_LABEL_LOC)->text());
+        breakpointAddress.append(ui->breakpointView->item(i, BREAK_ADDR_LOC)->text());
+        breakpointEnabled.append((ui->breakpointView->item(i, BREAK_ENABLE_LOC)->checkState() == Qt::Checked) ? "y" : "n");
+    }
+
+    debugInfo.setValue(QStringLiteral("breakpoints/label"), breakpointLabel);
+    debugInfo.setValue(QStringLiteral("breakpoints/address"), breakpointAddress);
+    debugInfo.setValue(QStringLiteral("breakpoints/enable"), breakpointEnabled);
+
+    // Save watchpoint information
+    QStringList watchpointLabel;
+    QStringList watchpointAddress;
+    QStringList watchpointSize;
+    QStringList watchpointREnabled;
+    QStringList watchpointWEnabled;
+    for(i = 0; i < ui->watchpointView->rowCount(); i++) {
+        watchpointLabel.append(ui->watchpointView->item(i, WATCH_LABEL_LOC)->text());
+        watchpointAddress.append(ui->watchpointView->item(i, WATCH_ADDR_LOC)->text());
+        watchpointSize.append(ui->watchpointView->item(i, WATCH_SIZE_LOC)->text());
+        watchpointREnabled.append((ui->watchpointView->item(i, WATCH_READ_LOC)->checkState() == Qt::Checked) ? "y" : "n");
+        watchpointWEnabled.append((ui->watchpointView->item(i, WATCH_WRITE_LOC)->checkState() == Qt::Checked) ? "y" : "n");
+    }
+
+    debugInfo.setValue(QStringLiteral("watchpoints/label"), watchpointLabel);
+    debugInfo.setValue(QStringLiteral("watchpoints/address"), watchpointAddress);
+    debugInfo.setValue(QStringLiteral("watchpoints/size"), watchpointSize);
+    debugInfo.setValue(QStringLiteral("watchpoints/read"), watchpointREnabled);
+    debugInfo.setValue(QStringLiteral("watchpoints/write"), watchpointWEnabled);
+
+    // Save port monitor information
+    QStringList portAddress;
+    QStringList portREnabled;
+    QStringList portWEnabled;
+    QStringList portFEnabled;
+    for(i = 0; i < ui->portView->rowCount(); i++) {
+        portAddress.append(ui->portView->item(i, PORT_ADDR_LOC)->text());
+        portREnabled.append((ui->portView->item(i, PORT_READ_LOC)->checkState() == Qt::Checked) ? "y" : "n");
+        portWEnabled.append((ui->portView->item(i, PORT_WRITE_LOC)->checkState() == Qt::Checked) ? "y" : "n");
+        portFEnabled.append((ui->portView->item(i, PORT_FREEZE_LOC)->checkState() == Qt::Checked) ? "y" : "n");
+    }
+
+    debugInfo.setValue(QStringLiteral("portmonitor/address"), portAddress);
+    debugInfo.setValue(QStringLiteral("portmonitor/read"), portREnabled);
+    debugInfo.setValue(QStringLiteral("portmonitor/write"), portWEnabled);
+    debugInfo.setValue(QStringLiteral("portmonitor/freeze"), portFEnabled);
+
+    // Save profiler information
+    QStringList profilerLabel;
+    QStringList profilerAddress;
+    QStringList profilerSize;
+    QStringList profilerCycles;
+    for(i = 0; i < ui->profilerView->rowCount(); i++) {
+        profilerLabel.append(ui->profilerView->item(i, PROFILE_LABEL_LOC)->text());
+        profilerAddress.append(ui->profilerView->item(i, PROFILE_ADDR_LOC)->text());
+        profilerSize.append(ui->profilerView->item(i, PROFILE_SIZE_LOC)->text());
+        profilerCycles.append(ui->profilerView->item(i, PROFILE_CYCLE_LOC)->text());
+    }
+
+    debugInfo.setValue(QStringLiteral("profiler/label"), profilerLabel);
+    debugInfo.setValue(QStringLiteral("profiler/address"), profilerAddress);
+    debugInfo.setValue(QStringLiteral("profiler/size"), profilerSize);
+    debugInfo.setValue(QStringLiteral("profiler/cycles"), profilerCycles);
+
+    // Make sure we write the settings
+    debugInfo.sync();
+}
+
+QString MainWindow::debuggerGetFile(int mode) {
+    QString filename;
+    QFileDialog dialog(this);
+
+    dialog.setAcceptMode(mode ? QFileDialog::AcceptSave : QFileDialog::AcceptOpen);
+    dialog.setFileMode(QFileDialog::AnyFile);
+    dialog.setDirectory(currentDir);
+    dialog.setNameFilter(tr("Debugging Info (*.ini)"));
+    dialog.setWindowTitle(mode ? tr("Debugger Import") : tr("Debugger Export"));
+    dialog.setDefaultSuffix(QStringLiteral("ini"));
+    dialog.exec();
+
+    if (!dialog.selectedFiles().isEmpty()) {
+        filename = dialog.selectedFiles().first();
+    }
+
+    currentDir = dialog.directory();
+    return filename;
 }
 
 void MainWindow::debuggerRaise(void) {
@@ -560,16 +706,16 @@ bool MainWindow::profilerRemoveSelected(void) {
         return false;
     }
 
-    const uint32_t currentRow = static_cast<uint32_t>(ui->profilerView->currentRow());
+    const uint32_t currRow = static_cast<uint32_t>(ui->profilerView->currentRow());
 
-    remove_profile_block(currentRow);
-    ui->profilerView->removeRow(currentRow);
+    remove_profile_block(currRow);
+    ui->profilerView->removeRow(currRow);
     return true;
 }
 
-void MainWindow::profilerUpdate(int currentRow) {
+void MainWindow::profilerUpdate(int currRow) {
     update_profiler_cycles();
-    ui->profilerView->item(currentRow, PROFILE_CYCLE_LOC)->setText(QString::number(profiler.blocks[currentRow]->cycles));
+    ui->profilerView->item(currRow, PROFILE_CYCLE_LOC)->setText(QString::number(profiler.blocks[currRow]->cycles));
 }
 
 void MainWindow::profilerDataChange(QTableWidgetItem *item) {
@@ -618,12 +764,12 @@ bool MainWindow::breakpointRemoveSelectedRow() {
         return false;
     }
 
-    const int currentRow = ui->breakpointView->currentRow();
-    uint32_t address = static_cast<uint32_t>(hex2int(ui->breakpointView->item(currentRow, BREAK_ADDR_LOC)->text()));
+    const int currRow = ui->breakpointView->currentRow();
+    uint32_t address = static_cast<uint32_t>(hex2int(ui->breakpointView->item(currRow, BREAK_ADDR_LOC)->text()));
 
     debug_breakwatch(address, DBG_EXEC_BREAKPOINT, false);
 
-    ui->breakpointView->removeRow(currentRow);
+    ui->breakpointView->removeRow(currRow);
     return true;
 }
 
@@ -717,12 +863,12 @@ void MainWindow::breakpointGUIAdd() {
     }
 }
 
-bool MainWindow::breakpointAdd(QString label, uint32_t address, bool enabeled) {
-    const int currentRow = ui->breakpointView->rowCount();
+bool MainWindow::breakpointAdd(QString label, uint32_t address, bool enabled) {
+    const int currRow = ui->breakpointView->rowCount();
     QString addressStr = int2hex((address &= 0xFFFFFF), 6).toUpper();
 
     // Return if address is already set
-    for (int i = 0; i < currentRow; i++) {
+    for (int i = 0; i < currRow; i++) {
         if (ui->breakpointView->item(i, BREAK_ADDR_LOC)->text() == addressStr) {
             if (addressStr != "000000") {
                 ui->breakpointView->selectRow(i);
@@ -734,23 +880,23 @@ bool MainWindow::breakpointAdd(QString label, uint32_t address, bool enabeled) {
     ui->breakpointView->setUpdatesEnabled(false);
     ui->breakpointView->blockSignals(true);
 
-    ui->breakpointView->setRowCount(currentRow + 1);
+    ui->breakpointView->setRowCount(currRow + 1);
 
     QTableWidgetItem *itemLabel   = new QTableWidgetItem(label);
     QTableWidgetItem *itemAddress = new QTableWidgetItem(addressStr);
     QTableWidgetItem *itemBreak   = new QTableWidgetItem();
 
-    itemBreak->setCheckState(enabeled ? Qt::Checked : Qt::Unchecked);
+    itemBreak->setCheckState(enabled ? Qt::Checked : Qt::Unchecked);
     itemBreak->setFlags(itemBreak->flags() & ~Qt::ItemIsEditable);
 
-    ui->breakpointView->setItem(currentRow, BREAK_LABEL_LOC, itemLabel);
-    ui->breakpointView->setItem(currentRow, BREAK_ADDR_LOC, itemAddress);
-    ui->breakpointView->setItem(currentRow, BREAK_ENABLE_LOC, itemBreak);
+    ui->breakpointView->setItem(currRow, BREAK_LABEL_LOC, itemLabel);
+    ui->breakpointView->setItem(currRow, BREAK_ADDR_LOC, itemAddress);
+    ui->breakpointView->setItem(currRow, BREAK_ENABLE_LOC, itemBreak);
 
-    ui->breakpointView->setCurrentCell(currentRow, BREAK_ADDR_LOC);
+    ui->breakpointView->setCurrentCell(currRow, BREAK_ADDR_LOC);
     ui->breakpointView->setUpdatesEnabled(true);
 
-    debug_breakwatch(address, DBG_EXEC_BREAKPOINT, true);
+    debug_breakwatch(address, DBG_EXEC_BREAKPOINT, enabled);
 
     prevBreakpointAddress = address;
     ui->breakpointView->blockSignals(false);
@@ -773,19 +919,19 @@ void MainWindow::portRemoveSelected() {
         return;
     }
 
-    const int currentRow = ui->portView->currentRow();
-    uint16_t port = static_cast<uint16_t>(hex2int(ui->portView->item(currentRow, PORT_ADDR_LOC)->text()));
+    const int currRow = ui->portView->currentRow();
+    uint16_t port = static_cast<uint16_t>(hex2int(ui->portView->item(currRow, PORT_ADDR_LOC)->text()));
 
     debug_pmonitor_remove(port);
-    ui->portView->removeRow(currentRow);
+    ui->portView->removeRow(currRow);
 }
 
 
-void MainWindow::portUpdate(int currentRow) {
-    uint16_t port = static_cast<uint16_t>(hex2int(ui->portView->item(currentRow, PORT_ADDR_LOC)->text()));
+void MainWindow::portUpdate(int currRow) {
+    uint16_t port = static_cast<uint16_t>(hex2int(ui->portView->item(currRow, PORT_ADDR_LOC)->text()));
     uint8_t read = static_cast<uint8_t>(port_peek_byte(port));
 
-    ui->portView->item(currentRow, PORT_VALUE_LOC)->setText(int2hex(read, 2));
+    ui->portView->item(currRow, PORT_VALUE_LOC)->setText(int2hex(read, 2));
 }
 
 void MainWindow::portSlotAdd(void) {
@@ -919,12 +1065,12 @@ bool MainWindow::watchpointRemoveSelectedRow() {
         return false;
     }
 
-    const int currentRow = ui->watchpointView->currentRow();
-    uint32_t address = static_cast<uint32_t>(hex2int(ui->watchpointView->item(currentRow, WATCH_ADDR_LOC)->text()));
+    const int currRow = ui->watchpointView->currentRow();
+    uint32_t address = static_cast<uint32_t>(hex2int(ui->watchpointView->item(currRow, WATCH_ADDR_LOC)->text()));
 
     debug_breakwatch(address, DBG_READ_WATCHPOINT | DBG_WRITE_WATCHPOINT, false);
 
-    ui->watchpointView->removeRow(currentRow);
+    ui->watchpointView->removeRow(currRow);
     return true;
 }
 
@@ -938,16 +1084,16 @@ void MainWindow::watchpointRemoveAddress(uint32_t address) {
     }
 }
 
-void MainWindow::watchpointUpdate(int currentRow) {
-    uint8_t i,size = ui->watchpointView->item(currentRow, WATCH_SIZE_LOC)->text().toUInt();
-    uint32_t address = static_cast<uint32_t>(hex2int(ui->watchpointView->item(currentRow, WATCH_ADDR_LOC)->text()));
+void MainWindow::watchpointUpdate(int currRow) {
+    uint8_t i,size = ui->watchpointView->item(currRow, WATCH_SIZE_LOC)->text().toUInt();
+    uint32_t address = static_cast<uint32_t>(hex2int(ui->watchpointView->item(currRow, WATCH_ADDR_LOC)->text()));
     uint32_t read = 0;
 
     for (i=0; i<size; i++) {
         read |= mem_peek_byte(address+i) << (i << 3);
     }
 
-    ui->watchpointView->item(currentRow, WATCH_VALUE_LOC)->setText(int2hex(read, size << 1));
+    ui->watchpointView->item(currRow, WATCH_VALUE_LOC)->setText(int2hex(read, size << 1));
 }
 
 void MainWindow::watchpointReadGUIAdd() {
@@ -1009,7 +1155,7 @@ void MainWindow::watchpointSlotAdd(void) {
 }
 
 bool MainWindow::watchpointAdd(QString label, uint32_t address, uint8_t len, unsigned mask) {
-    const int currentRow = ui->watchpointView->rowCount();
+    const int currRow = ui->watchpointView->rowCount();
     QString addressStr = int2hex((address &= 0xFFFFFF), 6).toUpper();
     QString watchLen;
 
@@ -1018,7 +1164,7 @@ bool MainWindow::watchpointAdd(QString label, uint32_t address, uint8_t len, uns
     watchLen = QString::number(len);
 
     // Return if address is already set
-    for (int i = 0; i < currentRow; i++) {
+    for (int i = 0; i < currRow; i++) {
         if (ui->watchpointView->item(i, WATCH_ADDR_LOC)->text() == addressStr) {
             if (addressStr != "000000") {
                 ui->watchpointView->selectRow(i);
@@ -1030,31 +1176,31 @@ bool MainWindow::watchpointAdd(QString label, uint32_t address, uint8_t len, uns
     ui->watchpointView->setUpdatesEnabled(false);
     ui->watchpointView->blockSignals(true);
 
-    QTableWidgetItem *itemlabel = new QTableWidgetItem(label);
-    QTableWidgetItem *iaddress = new QTableWidgetItem(addressStr);
-    QTableWidgetItem *length = new QTableWidgetItem(watchLen);
-    QTableWidgetItem *dWatch = new QTableWidgetItem();
-    QTableWidgetItem *rWatch = new QTableWidgetItem();
-    QTableWidgetItem *wWatch = new QTableWidgetItem();
+    QTableWidgetItem *itemLabel   = new QTableWidgetItem(label);
+    QTableWidgetItem *itemAddress = new QTableWidgetItem(addressStr);
+    QTableWidgetItem *itemSize    = new QTableWidgetItem(watchLen);
+    QTableWidgetItem *itemData    = new QTableWidgetItem();
+    QTableWidgetItem *itemRWatch  = new QTableWidgetItem();
+    QTableWidgetItem *itemWWatch  = new QTableWidgetItem();
 
-    wWatch->setFlags(wWatch->flags() & ~Qt::ItemIsEditable);
-    rWatch->setFlags(rWatch->flags() & ~Qt::ItemIsEditable);
+    itemWWatch->setFlags(itemWWatch->flags() & ~Qt::ItemIsEditable);
+    itemRWatch->setFlags(itemRWatch->flags() & ~Qt::ItemIsEditable);
 
-    rWatch->setCheckState((mask & DBG_READ_WATCHPOINT) ? Qt::Checked : Qt::Unchecked);
-    wWatch->setCheckState((mask & DBG_WRITE_WATCHPOINT) ? Qt::Checked : Qt::Unchecked);
+    itemRWatch->setCheckState((mask & DBG_READ_WATCHPOINT) ? Qt::Checked : Qt::Unchecked);
+    itemWWatch->setCheckState((mask & DBG_WRITE_WATCHPOINT) ? Qt::Checked : Qt::Unchecked);
 
-    ui->watchpointView->setRowCount(currentRow + 1);
+    ui->watchpointView->setRowCount(currRow + 1);
 
-    ui->watchpointView->setItem(currentRow, WATCH_LABEL_LOC, itemlabel);
-    ui->watchpointView->setItem(currentRow, WATCH_ADDR_LOC, iaddress);
-    ui->watchpointView->setItem(currentRow, WATCH_SIZE_LOC, length);
-    ui->watchpointView->setItem(currentRow, WATCH_VALUE_LOC, dWatch);
-    ui->watchpointView->setItem(currentRow, WATCH_READ_LOC, rWatch);
-    ui->watchpointView->setItem(currentRow, WATCH_WRITE_LOC, wWatch);
+    ui->watchpointView->setItem(currRow, WATCH_LABEL_LOC, itemLabel);
+    ui->watchpointView->setItem(currRow, WATCH_ADDR_LOC,  itemAddress);
+    ui->watchpointView->setItem(currRow, WATCH_SIZE_LOC,  itemSize);
+    ui->watchpointView->setItem(currRow, WATCH_VALUE_LOC, itemData);
+    ui->watchpointView->setItem(currRow, WATCH_READ_LOC,  itemRWatch);
+    ui->watchpointView->setItem(currRow, WATCH_WRITE_LOC, itemWWatch);
 
-    watchpointUpdate(currentRow);
+    watchpointUpdate(currRow);
 
-    ui->watchpointView->setCurrentCell(currentRow, WATCH_ADDR_LOC);
+    ui->watchpointView->setCurrentCell(currRow, WATCH_ADDR_LOC);
     ui->watchpointView->setUpdatesEnabled(true);
 
     // actually set it in the debugger core

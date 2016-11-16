@@ -223,8 +223,11 @@ private:
     void watchpointReadWriteGUIAdd();
 
     // Debugging files
-    void debuggerImportFile();
-    void debuggerExportFile();
+    void debuggerImportFile(QString);
+    void debuggerExportFile(QString);
+    QString debuggerGetFile(int);
+    void debuggerImport();
+    void debuggerExport();
 
     // MAIN IMPLEMENTATION ROUTINES
     bool portAdd(uint16_t, unsigned);
@@ -238,7 +241,7 @@ private:
     void equatesClear();
     void equatesRefresh();
     void selectKeypadColor();
-    void setKeypadColor(unsigned color);
+    void setKeypadColor(unsigned);
 
     // Speed
     void setEmulatedSpeed(int);
@@ -248,34 +251,39 @@ private:
     // Console
     void showStatusMsg(QString);
     void consoleOutputChanged();
-    void consoleAppend(QString str, QColor color = Qt::black);
+    void consoleAppend(QString, QColor color = Qt::black);
 
     // Settings
     void adjustScreen();
+    void setDebugPath();
     void setSkinToggle(bool);
     void setLCDScale(int);
     void setLCDRefresh(int);
     void setAlwaysOnTop(int);
     void setAutoCheckForUpdates(int);
     void setSpaceDisasm(bool);
-    void setUIMode(bool);
+    void setUIStyle(bool);
+    void setUIEditMode(bool);
     void toggleUIEditMode(void);
+    void setLoadDebugOnOpen(bool);
+    void setSaveDebugOnClose(bool);
+
     int setReprintScale(int);
 
     // Linking
-    QStringList showVariableFileDialog(QFileDialog::AcceptMode, QString name_filter);
+    QStringList showVariableFileDialog(QFileDialog::AcceptMode, QString);
     void selectFiles();
     void refreshVariableList();
     void variableClicked(QTableWidgetItem*);
     void saveSelected();
 
     // Autotester
-    void dispAutotesterError(int errCode);
-    int openJSONConfig(const QString& jsonPath);
+    void dispAutotesterError(int);
+    int openJSONConfig(const QString&);
     void prepareAndOpenJSONConfig();
     void reloadJSONConfig();
     void launchTest();
-    void updateCRCParamsFromPreset(int comboBoxIndex);
+    void updateCRCParamsFromPreset(int);
     void refreshCRC();
 
     // Hex Editor
@@ -288,17 +296,17 @@ private:
     void ramSearchPressed();
     void ramSyncPressed();
     void memUpdate(uint32_t);
-    void memGoto(QString address);
+    void memGoto(QString);
     void memGotoPressed();
     void memSearchPressed();
     void memSyncPressed();
     // Others
-    void syncHexView(int, QHexEdit *);
-    void searchEdit(QHexEdit *);
+    void syncHexView(int, QHexEdit*);
+    void searchEdit(QHexEdit*);
 
     // Keypad
     void keymapChanged();
-    void setKeymap(const QString &);
+    void setKeymap(const QString&);
 
     // Font
     void setFont(int);
@@ -306,6 +314,9 @@ private:
     // Reset
     void reloadROM();
     void resetCalculator();
+
+    // Misc
+    QString getAddressString(QString);
 
 #ifdef _WIN32
     // Win32 Console Toggle
@@ -315,15 +326,13 @@ private:
 
     // Members
     unsigned watchpointGUIMask = DBG_NO_HANDLE;
-
-    QString getAddressString(QString);
     QString searchingString;
 
-    Ui::MainWindow *ui = nullptr;
+    Ui::MainWindow *ui = Q_NULLPTR;
     QtKeypadBridge keypadBridge{this};
     QLabel statusLabel;
-    QSettings *settings = nullptr;
-    QDockWidget *debuggerDock = nullptr;
+    QSettings *settings = Q_NULLPTR;
+    QDockWidget *debuggerDock = Q_NULLPTR;
     QTextCursor disasmOffset;
     bool disasmOffsetSet;
     bool fromPane;
@@ -334,7 +343,7 @@ private:
     QString currentEquateFile;
     EmuThread emu;
 
-    bool uiEditMode = false;
+    bool uiEditMode;
     bool nativeConsole = false;
     bool closeAfterSave = false;
     bool isResumed = false;
@@ -355,6 +364,8 @@ private:
     QShortcut *stepOutShortcut;
     QShortcut *debuggerShortcut;
     QShortcut *asmShortcut;
+
+    QAction *toggleAction;
 
     QList<calc_var_t> vars;
     QIcon runIcon, stopIcon; // help speed up stepping

@@ -9,6 +9,9 @@ struct CEmuOpts{
     bool suppressTestDialog;
     QString romFile;
     QString autotesterFile;
+    QString settingsFile;
+    QString imageFile;
+    QString debugFile;
     QStringList sendFiles;
     QStringList sendArchFiles;
     QStringList sendRAMFiles;

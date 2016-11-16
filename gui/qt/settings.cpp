@@ -33,6 +33,16 @@ void MainWindow::setRestoreOnOpen(bool state) {
     settings->setValue(QStringLiteral("restoreOnOpen"), state);
 }
 
+void MainWindow::setSaveDebugOnClose(bool state) {
+    ui->checkSaveDebugClose->setChecked(state);
+    settings->setValue(QStringLiteral("saveDebugOnClose"), state);
+}
+
+void MainWindow::setLoadDebugOnOpen(bool state) {
+    ui->checkLoadDebugOnOpen->setChecked(state);
+    settings->setValue(QStringLiteral("loadDebugOnOpen"), state);
+}
+
 void MainWindow::setSpaceDisasm(bool state) {
     ui->checkAddSpace->setChecked(state);
     settings->setValue(QStringLiteral("addDisasmSpace"), state);
@@ -81,17 +91,28 @@ void MainWindow::setKeypadColor(unsigned color) {
 }
 
 void MainWindow::setImagePath() {
-    QString save_image_path = QFileDialog::getSaveFileName(this, tr("Select saved image to restore from"),
+    QString saveImagePath = QFileDialog::getSaveFileName(this, tr("Set saved image to restore from"),
                                                            currentDir.absolutePath(),
                                                            tr("CEmu images (*.ce);;All files (*.*)"));
-    if (!save_image_path.isEmpty()) {
-        currentDir = QFileInfo(save_image_path).absoluteDir();
-        settings->setValue(QStringLiteral("savedImagePath"), QVariant(save_image_path.toStdString().c_str()));
-        ui->savedImagePath->setText(save_image_path);
+    if (!saveImagePath.isEmpty()) {
+        currentDir = QFileInfo(saveImagePath).absoluteDir();
+        settings->setValue(QStringLiteral("savedImagePath"), QVariant(saveImagePath.toStdString().c_str()));
+        ui->savedImagePath->setText(saveImagePath);
     }
 }
 
-void MainWindow::setUIMode(bool docks_enabled) {
+void MainWindow::setDebugPath() {
+    QString savePath = QFileDialog::getSaveFileName(this, tr("Set debugging information path"),
+                                                           currentDir.absolutePath(),
+                                                           tr("Debugging information (*.ini);;All files (*.*)"));
+    if (!savePath.isEmpty()) {
+        currentDir = QFileInfo(savePath).absoluteDir();
+        settings->setValue(QStringLiteral("savedDebugPath"), QVariant(savePath.toStdString().c_str()));
+        ui->savedDebugPath->setText(savePath);
+    }
+}
+
+void MainWindow::setUIStyle(bool docks_enabled) {
     // Already in this mode?
     if (docks_enabled == ui->tabWidget->isHidden()) {
         return;
@@ -123,15 +144,22 @@ void MainWindow::setUIMode(bool docks_enabled) {
     }
 
     docksMenu->addSeparator();
-    QAction *toggleAction = new QAction(tr("Toggle UI edit mode"), this);
+    toggleAction = new QAction(tr("Enable UI edit mode"), this);
+    toggleAction->setCheckable(true);
     docksMenu->addAction(toggleAction);
     connect(toggleAction, &QAction::triggered, this, &MainWindow::toggleUIEditMode);
 
     ui->tabWidget->setHidden(true);
 }
 
-void MainWindow::toggleUIEditMode() {
-    uiEditMode = !uiEditMode;
+void MainWindow::toggleUIEditMode(void) {
+    setUIEditMode(!uiEditMode);
+}
+
+void MainWindow::setUIEditMode(bool mode) {
+    uiEditMode = mode;
+    settings->setValue(QStringLiteral("uiMode"), uiEditMode);
+    toggleAction->setChecked(uiEditMode);
     for (const auto& dock : findChildren<DockWidget *>()) {
         dock->toggleState(uiEditMode);
     }

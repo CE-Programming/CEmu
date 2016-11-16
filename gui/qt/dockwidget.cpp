@@ -8,6 +8,7 @@ DockWidget::DockWidget(QTabWidget *tabs, QWidget *parent) : DockWidget{tabs->tab
     setWindowIcon(tabs->tabIcon(0));
     setWidget(tabs->widget(0));
 }
+
 DockWidget::DockWidget(const QString &title, QWidget *parent)
     : QDockWidget{title, parent}, m_hide_title{new QWidget{this}}, m_title_height{-1} {
     setObjectName(windowTitle());

@@ -218,7 +218,8 @@ HEADERS  +=  utils.h \
     capture/lcdf/inttypes.h \
     capture/lcdfgif/gif.h \
     capture/lcdfgif/gifx.h \
-    keypad/keycode.h
+    keypad/keycode.h \
+    debugger.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \

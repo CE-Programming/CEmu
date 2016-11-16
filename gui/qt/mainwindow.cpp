@@ -39,7 +39,7 @@ static const constexpr int WindowStateVersion = 0;
 
 MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow), opts(cliOpts) {
 
-    // Setup the UI1
+    // Setup the UI
     ui->setupUi(this);
     ui->centralWidget->hide();
     ui->statusBar->addWidget(&statusLabel);
@@ -121,8 +121,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     connect(ui->comboGranularity, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::profilerChangeGranularity);
 
     // Debugging files
-    connect(ui->actionImportDebugger, &QAction::triggered, this, &MainWindow::debuggerImportFile);
-    connect(ui->actionExportDebugger, &QAction::triggered, this, &MainWindow::debuggerExportFile);
+    connect(ui->actionImportDebugger, &QAction::triggered, this, &MainWindow::debuggerImport);
+    connect(ui->actionExportDebugger, &QAction::triggered, this, &MainWindow::debuggerExport);
 
     // Linking
     connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::selectFiles);
@@ -177,7 +177,10 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     connect(ui->lcdWidget, &QWidget::customContextMenuRequested, this, &MainWindow::screenContextMenu);
     connect(ui->checkRestore, &QCheckBox::stateChanged, this, &MainWindow::setRestoreOnOpen);
     connect(ui->checkSave, &QCheckBox::stateChanged, this, &MainWindow::setSaveOnClose);
+    connect(ui->checkLoadDebugOnOpen, &QCheckBox::stateChanged, this, &MainWindow::setLoadDebugOnOpen);
+    connect(ui->checkSaveDebugClose, &QCheckBox::stateChanged, this, &MainWindow::setSaveDebugOnClose);
     connect(ui->buttonChangeSavedImagePath, &QPushButton::clicked, this, &MainWindow::setImagePath);
+    connect(ui->buttonChangeSavedDebugPath, &QPushButton::clicked, this, &MainWindow::setDebugPath);
     connect(this, &MainWindow::setEmuSpeed, &emu, &EmuThread::setEmuSpeed);
     connect(this, &MainWindow::changedThrottleMode, &emu, &EmuThread::changeThrottleMode);
     connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showActualSpeed, Qt::QueuedConnection);
@@ -251,12 +254,16 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
 
     setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
     setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
-    setUIMode(true);
+    setUIStyle(true);
     setAcceptDrops(true);
 
     autotester::stepCallback = []() { QApplication::processEvents(); };
 
-    settings = new QSettings(QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + QStringLiteral("/CEmu/cemu_config.ini"), QSettings::IniFormat);
+    if (opts.settingsFile.isEmpty()) {
+        settings = new QSettings(QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + QStringLiteral("/CEmu/cemu_config.ini"), QSettings::IniFormat);
+    } else {
+        settings = new QSettings(opts.settingsFile, QSettings::IniFormat);
+    }
 
 #ifdef _WIN32
     installToggleConsole();
@@ -276,7 +283,10 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     setAutoCheckForUpdates(settings->value(QStringLiteral("autoUpdate"), false).toBool());
     setSaveOnClose(settings->value(QStringLiteral("saveOnClose"), true).toBool());
     setRestoreOnOpen(settings->value(QStringLiteral("restoreOnOpen"), true).toBool());
+    setSaveDebugOnClose(settings->value(QStringLiteral("saveDebugOnClose"), false).toBool());
+    setLoadDebugOnOpen(settings->value(QStringLiteral("loadDebugOnOpen"), false).toBool());
     setSpaceDisasm(settings->value(QStringLiteral("addDisasmSpace"), false).toBool());
+    setUIEditMode(settings->value(QStringLiteral("uiMode"), true).toBool());
     ui->flashBytes->setValue(settings->value(QStringLiteral("flashBytesPerLine"), 8).toInt());
     ui->ramBytes->setValue(settings->value(QStringLiteral("ramBytesPerLine"), 8).toInt());
     ui->memBytes->setValue(settings->value(QStringLiteral("memBytesPerLine"), 8).toInt());
@@ -288,6 +298,12 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     }
     ui->savedImagePath->setText(settings->value(QStringLiteral("savedImagePath")).toString());
     emu.imagePath = ui->savedImagePath->text().toStdString();
+
+    if (settings->value(QStringLiteral("savedDebugPath")).toString().isEmpty()) {
+        QString path = QDir::cleanPath(QFileInfo(settings->fileName()).absoluteDir().absolutePath() + QStringLiteral("/cemu_debug.ini"));
+        settings->setValue(QStringLiteral("savedDebugPath"),path);
+    }
+    ui->savedDebugPath->setText(settings->value(QStringLiteral("savedDebugPath")).toString());
 
     QString currKeyMap = settings->value(QStringLiteral("keyMap"), "cemu").toString();
     if (QStringLiteral("cemu").compare(currKeyMap, Qt::CaseInsensitive) == 0) {
@@ -314,12 +330,18 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     debugger_init();
     profiler_init();
 
+    if (!opts.imageFile.isEmpty()) {
+        if (fileExists(opts.imageFile.toStdString())) {
+            emu.imagePath = opts.imageFile.toStdString();
+        }
+    }
+
     if (!fileExists(emu.rom)) {
         if (!runSetup()) {
             exit(0);
         }
     } else {
-        if (settings->value(QStringLiteral("restoreOnOpen")).toBool() && fileExists(emu.imagePath) && opts.restoreOnOpen ) {
+        if ((settings->value(QStringLiteral("restoreOnOpen")).toBool() || opts.restoreOnOpen) && fileExists(emu.imagePath)) {
             restoreEmuState();
         } else {
             emu.start();
@@ -342,8 +364,13 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     pix.load(":/icons/resources/icons/run.png");
     runIcon.addPixmap(pix);
 
-    // Enable UI Edit Mode by default
-    toggleUIEditMode();
+    if (settings->value(QStringLiteral("loadDebugOnOpen"), false).toBool()) {
+        if (!opts.debugFile.isEmpty()) {
+            debuggerImportFile(opts.debugFile);
+        } else {
+            debuggerImportFile(settings->value(QStringLiteral("savedDebugPath")).toString());
+        }
+    }
 
     if (!opts.autotesterFile.isEmpty()){
         if (!openJSONConfig(opts.autotesterFile)) {
@@ -381,14 +408,7 @@ MainWindow::~MainWindow() {
     debugger_free();
     profiler_free();
 
-    settings->setValue(QStringLiteral("windowState"),       saveState(WindowStateVersion));
-    settings->setValue(QStringLiteral("windowGeometry"),    saveGeometry());
-    settings->setValue(QStringLiteral("currDir"),           currentDir.absolutePath());
-    settings->setValue(QStringLiteral("flashBytesPerLine"), ui->flashBytes->value());
-    settings->setValue(QStringLiteral("ramBytesPerLine"),   ui->ramBytes->value());
-    settings->setValue(QStringLiteral("memBytesPerLine"),   ui->memBytes->value());
-    settings->setValue(QStringLiteral("keypadColor"),       ui->keypadWidget->getCurrColor());
-
+    delete toggleAction;
     delete debuggerShortcut;
     delete stepInShortcut;
     delete stepOverShortcut;
@@ -519,9 +539,20 @@ void MainWindow::closeEvent(QCloseEvent *e) {
         refreshVariableList();
     }
 
-    if (!closeAfterSave && settings->value(QStringLiteral("saveOnClose")).toBool() && opts.restoreOnOpen) {
+    settings->setValue(QStringLiteral("windowState"),       saveState(WindowStateVersion));
+    settings->setValue(QStringLiteral("windowGeometry"),    saveGeometry());
+    settings->setValue(QStringLiteral("currDir"),           currentDir.absolutePath());
+    settings->setValue(QStringLiteral("flashBytesPerLine"), ui->flashBytes->value());
+    settings->setValue(QStringLiteral("ramBytesPerLine"),   ui->ramBytes->value());
+    settings->setValue(QStringLiteral("memBytesPerLine"),   ui->memBytes->value());
+    settings->setValue(QStringLiteral("keypadColor"),       ui->keypadWidget->getCurrColor());
+
+    if (settings->value(QStringLiteral("saveDebugOnClose"), false).toBool()) {
+        debuggerExportFile(settings->value(QStringLiteral("savedDebugPath")).toString());
+    }
+
+    if (!closeAfterSave && settings->value(QStringLiteral("saveOnClose")).toBool()) {
             closeAfterSave = true;
-            qDebug("Saving...");
             saveEmuState();
             e->ignore();
             return;
@@ -611,7 +642,7 @@ void MainWindow::screenshotSave(QString nameFilter, QString defaultSuffix, QStri
     dialog.exec();
 
     if (!(dialog.selectedFiles().isEmpty())) {
-        QString filename = dialog.selectedFiles().at(0);
+        QString filename = dialog.selectedFiles().first();
         if (filename.isEmpty()) {
             QFile(temppath).remove();
         } else {
@@ -821,11 +852,11 @@ void MainWindow::refreshVariableList() {
         vars.clear();
         while (vat_search_next(&var)) {
             if (var.size > 2) {
-                int currentRow;
+                int currRow;
 
                 vars.append(var);
-                currentRow = ui->emuVarView->rowCount();
-                ui->emuVarView->setRowCount(currentRow + 1);
+                currRow = ui->emuVarView->rowCount();
+                ui->emuVarView->setRowCount(currRow + 1);
 
                 bool var_preview_needs_gray = false;
                 QString var_value;
@@ -853,7 +884,7 @@ void MainWindow::refreshVariableList() {
                 QTableWidgetItem *var_preview = new QTableWidgetItem(var_value);
 
                 // Attach var index (hidden) to the name. Needed elsewhere
-                var_name->setData(Qt::UserRole, currentRow);
+                var_name->setData(Qt::UserRole, currRow);
 
                 var_name->setCheckState(Qt::Unchecked);
 
@@ -861,10 +892,10 @@ void MainWindow::refreshVariableList() {
                     var_preview->setForeground(Qt::gray);
                 }
 
-                ui->emuVarView->setItem(currentRow, 0, var_name);
-                ui->emuVarView->setItem(currentRow, 1, var_type);
-                ui->emuVarView->setItem(currentRow, 2, var_size);
-                ui->emuVarView->setItem(currentRow, 3, var_preview);
+                ui->emuVarView->setItem(currRow, 0, var_name);
+                ui->emuVarView->setItem(currRow, 1, var_type);
+                ui->emuVarView->setItem(currRow, 2, var_size);
+                ui->emuVarView->setItem(currRow, 3, var_preview);
             }
         }
         ui->emuVarView->resizeColumnsToContents();
@@ -925,9 +956,9 @@ void MainWindow::saveSelected() {
 
     QVector<calc_var_t> selectedVars;
     QStringList fileNames;
-    for (int currentRow = 0; currentRow < ui->emuVarView->rowCount(); currentRow++) {
-        if (ui->emuVarView->item(currentRow, 0)->checkState()) {
-            selectedVars.append(vars[currentRow]);
+    for (int currRow = 0; currRow < ui->emuVarView->rowCount(); currRow++) {
+        if (ui->emuVarView->item(currRow, 0)->checkState()) {
+            selectedVars.append(vars[currRow]);
         }
     }
     if (selectedVars.size() < 1) {
@@ -935,7 +966,9 @@ void MainWindow::saveSelected() {
     } else {
         if (selectedVars.size() == 1) {
             uint8_t i = selectedVars.at(0).type1;
-            fileNames = showVariableFileDialog(QFileDialog::AcceptSave, "TI "+QString(calc_var_type_names[i])+" (*."+var_extension[i]+");;All Files (*.*)");
+            fileNames = showVariableFileDialog(QFileDialog::AcceptSave, QStringLiteral("TI ") +
+                                               QString(calc_var_type_names[i]) +
+                                               " (*." + var_extension[i] + tr(");;All Files (*.*)"));
         } else {
             fileNames = showVariableFileDialog(QFileDialog::AcceptSave, tr("TI Group (*.8cg);;All Files (*.*)"));
         }

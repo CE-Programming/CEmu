@@ -554,13 +554,30 @@
          <property name="spacing">
           <number>5</number>
          </property>
+         <item row="1" column="1">
+          <widget class="QCheckBox" name="checkUpdates">
+           <property name="text">
+            <string>Automatically check for updates</string>
+           </property>
+           <property name="checked">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QCheckBox" name="checkAlwaysOnTop">
+           <property name="text">
+            <string>Always show on top of other windows</string>
+           </property>
+          </widget>
+         </item>
          <item row="0" column="0">
           <widget class="QCheckBox" name="checkSave">
            <property name="enabled">
             <bool>true</bool>
            </property>
            <property name="text">
-            <string>Save calculator image on exit</string>
+            <string>Save calculator image on close</string>
            </property>
            <property name="checked">
             <bool>false</bool>
@@ -580,20 +597,17 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
-          <widget class="QCheckBox" name="checkAlwaysOnTop">
+         <item row="0" column="2">
+          <widget class="QCheckBox" name="checkSaveDebugClose">
            <property name="text">
-            <string>Always show on top of other windows</string>
+            <string>Save debug info on close</string>
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
-          <widget class="QCheckBox" name="checkUpdates">
+         <item row="1" column="2">
+          <widget class="QCheckBox" name="checkLoadDebugOnOpen">
            <property name="text">
-            <string>Automatically check for updates</string>
-           </property>
-           <property name="checked">
-            <bool>false</bool>
+            <string>Load debug info on start</string>
            </property>
           </widget>
          </item>
@@ -618,52 +632,10 @@
          <property name="bottomMargin">
           <number>8</number>
          </property>
-         <item row="0" column="1">
-          <widget class="QLineEdit" name="rompathView">
-           <property name="frame">
-            <bool>false</bool>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QPushButton" name="buttonRunSetup">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Setup wizard...</string>
-           </property>
-           <property name="flat">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
          <item row="0" column="0">
           <widget class="QLabel" name="label">
            <property name="text">
             <string>ROM Image</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLineEdit" name="savedImagePath">
-           <property name="frame">
-            <bool>false</bool>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -689,10 +661,91 @@
            </property>
           </widget>
          </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="savedImagePath">
+           <property name="frame">
+            <bool>false</bool>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
          <item row="1" column="0">
           <widget class="QLabel" name="label_6">
            <property name="text">
             <string>Saved Image</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QPushButton" name="buttonRunSetup">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Setup wizard...</string>
+           </property>
+           <property name="flat">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="rompathView">
+           <property name="frame">
+            <bool>false</bool>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_15">
+           <property name="text">
+            <string>Debug Info</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="savedDebugPath">
+           <property name="frame">
+            <bool>false</bool>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QPushButton" name="buttonChangeSavedDebugPath">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Change path...</string>
+           </property>
+           <property name="flat">
+            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -1171,8 +1224,8 @@
         <property name="title">
          <string>Keypad Skin Color</string>
         </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_3">
-         <item>
+        <layout class="QGridLayout" name="gridLayout_12">
+         <item row="0" column="0">
           <spacer name="horizontalSpacer_22">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -1185,7 +1238,7 @@
            </property>
           </spacer>
          </item>
-         <item>
+         <item row="0" column="1">
           <widget class="QPushButton" name="buttonBlack">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1217,7 +1270,7 @@ QPushButton:pressed {
            </property>
           </widget>
          </item>
-         <item>
+         <item row="0" column="2">
           <widget class="QPushButton" name="buttonSilver">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1249,7 +1302,7 @@ QPushButton:pressed {
            </property>
           </widget>
          </item>
-         <item>
+         <item row="0" column="3">
           <widget class="QPushButton" name="buttonWhite">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1281,7 +1334,7 @@ QPushButton:pressed {
            </property>
           </widget>
          </item>
-         <item>
+         <item row="0" column="4">
           <widget class="QPushButton" name="buttonGolden">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1313,7 +1366,7 @@ QPushButton:pressed {
            </property>
           </widget>
          </item>
-         <item>
+         <item row="0" column="5">
           <widget class="QPushButton" name="buttonDenim">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1345,7 +1398,7 @@ QPushButton:pressed {
            </property>
           </widget>
          </item>
-         <item>
+         <item row="0" column="6">
           <widget class="QPushButton" name="buttonTrueBlue">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1377,7 +1430,7 @@ QPushButton:pressed {
            </property>
           </widget>
          </item>
-         <item>
+         <item row="0" column="7">
           <widget class="QPushButton" name="buttonLightning">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1409,7 +1462,7 @@ QPushButton:pressed {
            </property>
           </widget>
          </item>
-         <item>
+         <item row="0" column="8">
           <widget class="QPushButton" name="buttonPlum">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1441,7 +1494,7 @@ QPushButton:pressed {
            </property>
           </widget>
          </item>
-         <item>
+         <item row="0" column="9">
           <widget class="QPushButton" name="buttonRed">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1473,7 +1526,7 @@ QPushButton:pressed {
            </property>
           </widget>
          </item>
-         <item>
+         <item row="0" column="10">
           <widget class="QPushButton" name="buttonPink">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1505,7 +1558,7 @@ QPushButton:pressed {
            </property>
           </widget>
          </item>
-         <item>
+         <item row="0" column="11">
           <spacer name="horizontalSpacer_21">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -7419,6 +7472,9 @@ QPushButton:pressed {
    </property>
   </action>
   <action name="actionImportDebugger">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="resources.qrc">
      <normaloff>:/icons/resources/icons/debugger.png</normaloff>:/icons/resources/icons/debugger.png</iconset>

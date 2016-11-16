@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
 
     // Loads a json into the autotester and runs on application startup
     QCommandLineOption loadTestFile(QStringList() << "t" << "auto-test",
-                QCoreApplication::translate("main", "run <Testfile> on startup"),
+                QCoreApplication::translate("main", "Run <Testfile> on startup"),
                 QCoreApplication::translate("main", "TestFile"));
     parser.addOption(loadTestFile);
 
@@ -64,6 +64,24 @@ int main(int argc, char *argv[]) {
     QCommandLineOption suppressTestDialog(QStringList() << "no-test-dialog",
                 QCoreApplication::translate("main", "Hides test complete dialog"));
     parser.addOption(suppressTestDialog);
+
+    // Loads a CEmu settings file on start
+    QCommandLineOption settingsFile(QStringList() << "g" << "settings",
+                QCoreApplication::translate("main", "Load <SettingsFile> as the setup"),
+                QCoreApplication::translate("main", "SettingsFile"));
+    parser.addOption(settingsFile);
+
+    // Loads a CEmu image file on start
+    QCommandLineOption imageFile(QStringList() << "i" << "image",
+                QCoreApplication::translate("main", "Load <Image> on start"),
+                QCoreApplication::translate("main", "Image"));
+    parser.addOption(imageFile);
+
+    // Loads a CEmu debugging file on start
+    QCommandLineOption debugFile(QStringList() << "d" << "debug-info",
+                QCoreApplication::translate("main", "Load <DebugInfo> as the setup"),
+                QCoreApplication::translate("main", "DebugInfo"));
+    parser.addOption(debugFile);
 
     parser.process(app);
 
@@ -76,6 +94,9 @@ int main(int argc, char *argv[]) {
         opts.autotesterFile =  QDir::currentPath() + QDir::separator() + parser.value(loadTestFile);
     }
     opts.romFile = parser.value(loadRomFile);
+    opts.settingsFile = parser.value(settingsFile);
+    opts.imageFile = parser.value(imageFile);
+    opts.debugFile = parser.value(debugFile);
     opts.sendFiles = parser.values(sendFiles);
     opts.sendArchFiles = parser.values(sendArchFiles);
     opts.sendRAMFiles = parser.values(sendRAMFiles);
