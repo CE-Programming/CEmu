@@ -316,7 +316,7 @@ private:
     void resetCalculator();
 
     // Misc
-    QString getAddressString(QString);
+    QString getAddressString(QString, bool*);
 
 #ifdef _WIN32
     // Win32 Console Toggle
@@ -370,6 +370,11 @@ private:
     QList<calc_var_t> vars;
     QIcon runIcon, stopIcon; // help speed up stepping
     QTextCharFormat consoleFormat;
+
+    QString prevGotoAddress;
+    QString prevFlashAddress;
+    QString prevRAMAddress;
+    QString prevMemAddress;
 };
 
 #endif

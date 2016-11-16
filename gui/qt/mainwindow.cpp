@@ -341,7 +341,10 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
             exit(0);
         }
     } else {
-        if ((settings->value(QStringLiteral("restoreOnOpen")).toBool() || opts.restoreOnOpen) && fileExists(emu.imagePath)) {
+        if (opts.reloadROM) {
+            emu.start();
+            guiDelay(400);
+        } else if (settings->value(QStringLiteral("restoreOnOpen")).toBool()&& fileExists(emu.imagePath) && opts.restoreOnOpen) {
             restoreEmuState();
         } else {
             emu.start();
@@ -374,21 +377,21 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
 
     if (!opts.autotesterFile.isEmpty()){
         if (!openJSONConfig(opts.autotesterFile)) {
-           reloadROM();
+           resetCalculator();
            setEmuSpeed(100);
 
            // Race condition requires this
-           guiDelay(1500);
+           guiDelay(1000);
            launchTest();
         }
     }
 
     if (!opts.sendFiles.isEmpty() || !opts.sendArchFiles.isEmpty() || !opts.sendRAMFiles.isEmpty()) {
-        reloadROM();
+        resetCalculator();
         setEmuSpeed(100);
 
         // Race condition requires this
-        guiDelay(1500);
+        guiDelay(1000);
         if (!opts.sendFiles.isEmpty()) {
             sendingHandler.sendFiles(opts.sendFiles, LINK_FILE);
         }

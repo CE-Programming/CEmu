@@ -63,7 +63,7 @@
      <enum>QTabWidget::Rounded</enum>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>8</number>
     </property>
     <property name="elideMode">
      <enum>Qt::ElideLeft</enum>
@@ -80,37 +80,6 @@
     <property name="tabBarAutoHide">
      <bool>false</bool>
     </property>
-    <widget class="KeypadWidget" name="keypadWidget">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="minimumSize">
-      <size>
-       <width>196</width>
-       <height>300</height>
-      </size>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>16777215</width>
-       <height>16777215</height>
-      </size>
-     </property>
-     <property name="focusPolicy">
-      <enum>Qt::NoFocus</enum>
-     </property>
-     <attribute name="icon">
-      <iconset resource="resources.qrc">
-       <normaloff>:/icons/resources/icons/keypad.png</normaloff>:/icons/resources/icons/keypad.png</iconset>
-     </attribute>
-     <attribute name="title">
-      <string>Keypad</string>
-     </attribute>
-     <layout class="QHBoxLayout" name="horizontalLayout_27"/>
-    </widget>
     <widget class="QWidget" name="tabVariables">
      <attribute name="icon">
       <iconset resource="resources.qrc">
@@ -1754,6 +1723,12 @@ QPushButton:pressed {
           <height>16777215</height>
          </size>
         </property>
+        <property name="tabPosition">
+         <enum>QTabWidget::North</enum>
+        </property>
+        <property name="tabShape">
+         <enum>QTabWidget::Rounded</enum>
+        </property>
         <property name="currentIndex">
          <number>0</number>
         </property>
@@ -1761,6 +1736,9 @@ QPushButton:pressed {
          <bool>false</bool>
         </property>
         <property name="movable">
+         <bool>false</bool>
+        </property>
+        <property name="tabBarAutoHide">
          <bool>true</bool>
         </property>
         <widget class="QWidget" name="disassemblytab">
@@ -7120,6 +7098,37 @@ QPushButton:pressed {
       </item>
      </layout>
     </widget>
+    <widget class="KeypadWidget" name="keypadWidget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>196</width>
+       <height>300</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="focusPolicy">
+      <enum>Qt::NoFocus</enum>
+     </property>
+     <attribute name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/icons/resources/icons/keypad.png</normaloff>:/icons/resources/icons/keypad.png</iconset>
+     </attribute>
+     <attribute name="title">
+      <string>Keypad</string>
+     </attribute>
+     <layout class="QHBoxLayout" name="horizontalLayout_27"/>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -7473,7 +7482,7 @@ QPushButton:pressed {
   </action>
   <action name="actionImportDebugger">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="icon">
     <iconset resource="resources.qrc">

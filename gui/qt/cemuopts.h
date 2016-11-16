@@ -7,6 +7,7 @@ struct CEmuOpts{
     bool restoreOnOpen;
     bool useUnthrottled;
     bool suppressTestDialog;
+    bool reloadROM;
     QString romFile;
     QString autotesterFile;
     QString settingsFile;

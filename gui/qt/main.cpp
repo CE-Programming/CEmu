@@ -83,6 +83,11 @@ int main(int argc, char *argv[]) {
                 QCoreApplication::translate("main", "DebugInfo"));
     parser.addOption(debugFile);
 
+    // Reload the ROM file
+    QCommandLineOption reloadROM(QStringList() << "o" << "rom-reload",
+                QCoreApplication::translate("main", "Reloads ROM on start"));
+    parser.addOption(reloadROM);
+
     parser.process(app);
 
     // Take commandline args and move to CEmuOpts struct
@@ -90,6 +95,7 @@ int main(int argc, char *argv[]) {
     opts.restoreOnOpen = parser.isSet(stateOption) ? false : true;
     opts.useUnthrottled = parser.isSet(unthrottledOption);
     opts.suppressTestDialog = parser.isSet(suppressTestDialog);
+    opts.reloadROM = parser.isSet(reloadROM);
     if (parser.isSet(loadTestFile)){
         opts.autotesterFile =  QDir::currentPath() + QDir::separator() + parser.value(loadTestFile);
     }

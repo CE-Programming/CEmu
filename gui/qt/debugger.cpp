@@ -1443,3 +1443,17 @@ void MainWindow::debuggerTabSwitched(int tab) {
         prevDisasmAddress = ui->disassemblyView->getSelectedAddress().toUInt(Q_NULLPTR, 16);
     }
 }
+
+void MainWindow::gotoPressed() {
+    bool accept;
+
+    if (prevGotoAddress.isEmpty()) {
+        prevGotoAddress = ui->disassemblyView->getSelectedAddress();
+    }
+
+    QString address = getAddressString(prevGotoAddress, &accept);
+
+    if (accept) {
+        updateDisasmView(hex2int(prevGotoAddress = address), false);
+    }
+}

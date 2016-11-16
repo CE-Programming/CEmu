@@ -28,25 +28,13 @@
 // Hex Editor Things
 // ------------------------------------------------
 
-QString MainWindow::getAddressString(QString String) {
-    bool ok;
+QString MainWindow::getAddressString(QString string, bool *ok) {
     QString address = QInputDialog::getText(this, tr("Goto Address"),
                                          tr("Input Address (In Hexadecimal):"), QLineEdit::Normal,
-                                         String, &ok).toUpper();
+                                         string, ok).toUpper();
 
-    if (!ok || (address.toStdString().find_first_not_of("0123456789ABCDEF") != std::string::npos) || (address.length() > 6) || !address.length()) {
-        return QStringLiteral("000000");
-    }
-
-    return address;
+   return int2hex(hex2int(address), 6);
 }
-
-void MainWindow::gotoPressed() {
-    QString address = getAddressString(ui->disassemblyView->getSelectedAddress());
-
-    updateDisasmView(hex2int(address), false);
-}
-
 
 void MainWindow::flashUpdate() {
     ui->flashEdit->setFocus();
@@ -146,16 +134,22 @@ void MainWindow::flashSearchPressed() {
 }
 
 void MainWindow::flashGotoPressed() {
-    QString address = getAddressString("");
+    bool accept;
+    QString addressStr = getAddressString(prevFlashAddress, &accept);
 
-    ui->flashEdit->setFocus();
-    int int_address = hex2int(address);
-    if (int_address > 0x3FFFFF) {
-        return;
+    if (accept) {
+
+        ui->flashEdit->setFocus();
+        int address = hex2int(addressStr);
+        if (address > 0x3FFFFF) {
+            return;
+        }
+
+        prevFlashAddress = addressStr;
+
+        ui->flashEdit->setCursorPosition(address * 2);
+        ui->flashEdit->ensureVisible();
     }
-
-    ui->flashEdit->setCursorPosition(int_address<<1);
-    ui->flashEdit->ensureVisible();
 }
 
 void MainWindow::ramSearchPressed() {
@@ -163,25 +157,32 @@ void MainWindow::ramSearchPressed() {
 }
 
 void MainWindow::ramGotoPressed() {
-    QString address = getAddressString("");
+    bool accept;
+    QString addressStr = getAddressString(prevRAMAddress, &accept);
 
-    ui->ramEdit->setFocus();
-    int int_address = hex2int(address)-0xD00000;
-    if (int_address > 0x657FF || address < 0) {
-        return;
+    if (accept) {
+
+        ui->ramEdit->setFocus();
+        int address = hex2int(addressStr)-0xD00000;
+        if (address >= 0x65800 || address < 0) {
+            return;
+        }
+
+        prevRAMAddress = addressStr;
+
+        ui->ramEdit->setCursorPosition(address * 2);
+        ui->ramEdit->ensureVisible();
     }
-
-    ui->ramEdit->setCursorPosition(int_address<<1);
-    ui->ramEdit->ensureVisible();
 }
+
 void MainWindow::memSearchPressed() {
     searchEdit(ui->memEdit);
 }
 
-void MainWindow::memGoto(QString address) {
+void MainWindow::memGoto(QString addressStr) {
     ui->memEdit->setFocus();
-    int int_address = hex2int(address);
-    if (int_address > 0xFFFFFF || int_address < 0) {
+    int address = hex2int(addressStr);
+    if (address > 0xFFFFFF || address < 0) {
         return;
     }
 
@@ -191,7 +192,7 @@ void MainWindow::memGoto(QString address) {
     }
 
     QByteArray mem_data;
-    int start = int_address-0x500;
+    int start = address-0x500;
     if (start < 0) { start = 0; }
     int end = start+0x1000;
     if (end > 0xFFFFFF) { end = 0xFFFFFF; }
@@ -204,14 +205,17 @@ void MainWindow::memGoto(QString address) {
 
     ui->memEdit->setData(mem_data);
     ui->memEdit->setAddressOffset(start);
-    ui->memEdit->setCursorPosition((int_address-start)<<1);
+    ui->memEdit->setCursorPosition((address-start) * 2);
     ui->memEdit->ensureVisible();
 }
 
 void MainWindow::memGotoPressed() {
-    QString address = getAddressString("");
+    bool accept;
+    QString address = getAddressString(prevMemAddress, &accept);
 
-    memGoto(address);
+    if (accept) {
+        memGoto(prevMemAddress = address);
+    }
 }
 
 void MainWindow::syncHexView(int posa, QHexEdit *hex_view) {
@@ -223,13 +227,13 @@ void MainWindow::syncHexView(int posa, QHexEdit *hex_view) {
 
 void MainWindow::flashSyncPressed() {
     qint64 posa = ui->flashEdit->cursorPosition();
-    memcpy(mem.flash.block, reinterpret_cast<uint8_t*>(ui->flashEdit->data().data()), 0x400000);
+    memcpy(mem.flash.block, ui->flashEdit->data().data(), 0x400000);
     syncHexView(posa, ui->flashEdit);
 }
 
 void MainWindow::ramSyncPressed() {
     qint64 posa = ui->ramEdit->cursorPosition();
-    memcpy(mem.ram.block, reinterpret_cast<uint8_t*>(ui->ramEdit->data().data()), 0x65800);
+    memcpy(mem.ram.block, ui->ramEdit->data().data(), 0x65800);
     syncHexView(posa, ui->ramEdit);
 }
 
@@ -238,7 +242,7 @@ void MainWindow::memSyncPressed() {
     qint64 posa = ui->memEdit->cursorPosition();
 
     for (int i = 0; i < memSize; i++) {
-        mem_poke_byte(i+start, ui->memEdit->dataAt(i, 1).at(0));
+        mem_poke_byte(i+start, ui->memEdit->data().at(i));
     }
 
     syncHexView(posa, ui->memEdit);
