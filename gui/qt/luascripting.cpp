@@ -51,34 +51,36 @@ void MainWindow::initLuaThings() {
     lua.set_function("mem_poke_byte",  [](uint32_t addr, uint8_t val) { return mem_poke_byte(addr, val); });
 
     // Bind core stuff
-    lua["cpu"] = &cpu;
+    lua["cpu"] = std::cref(cpu);
 
-    // TODO: find out what to do for bitfields (like the flags)
-    /*
-    lua.new_usertype<eZ80flags_t>("eZ80flags_t",
-
+    lua.new_usertype<decltype(cpu.registers.flags)>("eZ80flags_t",
+#define FLAG(f) (#f), (sol::property([](decltype(cpu.registers.flags)& flags) -> bool { return flags.f; }, \
+                                     [](decltype(cpu.registers.flags)& flags, bool val) -> void { flags.f = val; }))
+        FLAG(C), FLAG(N), FLAG(PV), FLAG(_3), FLAG(H), FLAG(_5), FLAG(Z), FLAG(S)
+#undef FLAG
     );
-    */
 
     lua.new_usertype<eZ80registers_t>("eZ80registers_t",
-        // "flags", &eZ80registers_t::flags,
+        "flags", sol::readonly(&eZ80registers_t::flags),
 #define RP(reg) (#reg), (&eZ80registers_t::reg)
-        RP(af), RP(AF), RP(F), RP(A), RP(bc), RP(BC), RP(BCS), RP(C), RP(B), RP(BCU), RP(de), RP(DE),
-        RP(DES), RP(E), RP(D), RP(DEU), RP(hl), RP(HL), RP(HLS), RP(L), RP(H), RP(HLU), RP(_HL), RP(ix),
-        RP(IX), RP(IXS), RP(IXL), RP(IXH), RP(IXU), RP(iy), RP(IY), RP(IYS), RP(IYL), RP(IYH), RP(IYU),
-        RP(_AF), RP(_BC), RP(_DE), RP(SPS), RP(SPSU), RP(SPL), RP(pc), RP(PC), RP(PCS), RP(PCL), RP(PCH),
-        RP(PCU), RP(rawPC), RP(I), RP(R), RP(MBASE)
+        RP(AF), RP(F), RP(A), RP(BC), RP(BCS), RP(C), RP(B), RP(BCU), RP(DE),
+        RP(DES), RP(E), RP(D), RP(DEU), RP(HL), RP(HLS), RP(L), RP(H), RP(HLU), RP(_HL),
+        RP(IX), RP(IXS), RP(IXL), RP(IXH), RP(IXU), RP(IY), RP(IYS), RP(IYL), RP(IYH), RP(IYU),
+        RP(_AF), RP(_BC), RP(_DE), RP(SPS), RP(SPL), RP(PC), RP(PCS), RP(PCL), RP(PCH),
+        RP(PCU), RP(I), RP(R), RP(MBASE)
 #undef RP
     );
 
     lua.new_usertype<eZ80cpu_t>("eZ80cpu_t",
-        "registers", &eZ80cpu_t::registers,
+        "registers", sol::readonly(&eZ80cpu_t::registers),
 
-        "halted", &eZ80cpu_t::halted,
-        "ADL", &eZ80cpu_t::ADL, "MADL", &eZ80cpu_t::MADL,
-        "IEF1", &eZ80cpu_t::IEF1, "IEF2",&eZ80cpu_t::IEF2,
+#define FLAG(f) (#f), (sol::property([](eZ80cpu_t &cpu) -> bool { return cpu.f; }, [](eZ80cpu_t &cpu, bool val) -> void { cpu.f = val; }))
+        FLAG(halted),
+        FLAG(ADL), FLAG(MADL),
+        FLAG(IEF1), FLAG(IEF2),
+#undef FLAG
 
-        "inBlock",  sol::readonly(&eZ80cpu_t::inBlock),
+        "inBlock",  sol::property([](eZ80cpu_t &cpu) -> bool { return cpu.inBlock; }, [](eZ80cpu_t &, bool) -> void { /* RO */ }),
         "cycles",   sol::readonly(&eZ80cpu_t::cycles),
         "next",     sol::readonly(&eZ80cpu_t::next),
         "prefetch", sol::readonly(&eZ80cpu_t::prefetch)
