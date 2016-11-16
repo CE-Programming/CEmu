@@ -19,8 +19,9 @@ void MainWindow::initLuaThings() {
         return -1;
     });
 
-    // TODO: How to secure things?
-    lua.open_libraries();
+    lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::coroutine, sol::lib::math, sol::lib::string, sol::lib::table, sol::lib::utf8);
+    lua.script("require, loadfile, dofile = nil, nil, nil"); // More?
+    // TODO: io.*, os.*, debug.*, require(), etc. => opt-in via settings.
 
     // Logging helpers (Note: print() goes to stdout)
     lua.set_function("cLog", [&](const sol::this_state& s) {
