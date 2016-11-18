@@ -2,6 +2,7 @@
 #include <QtCore/QRegularExpression>
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtWidgets/QMessageBox>
+#include <QtCore/QFile>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -91,11 +92,44 @@ void MainWindow::initLuaThings() {
 }
 
 void MainWindow::loadLuaScript() {
-    // TODO
+    QFileDialog dialog(this);
+
+    dialog.setDirectory(QDir::homePath());
+    dialog.setFileMode(QFileDialog::ExistingFile);
+    dialog.setNameFilter(QStringLiteral("Lua script (*.lua)"));
+    if (!dialog.exec()) {
+        return;
+    }
+
+    const QString path = dialog.selectedFiles().at(0);
+    QFile file(path);
+    if (!file.open(QFile::ReadOnly | QFile::Text)) {
+        QMessageBox::warning(this, tr("File loading error"), tr("Error. Could not load/read that file."));
+        return;
+    }
+    ui->luaScriptEditor->document()->setPlainText(file.readAll());
+    file.close();
 }
 
 void MainWindow::saveLuaScript() {
-    // TODO
+    QFileDialog dialog(this);
+
+    dialog.setDirectory(QDir::homePath());
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    dialog.setFileMode(QFileDialog::AnyFile);
+    dialog.setNameFilter(QStringLiteral("Lua script (*.lua)"));
+    if (!dialog.exec()) {
+        return;
+    }
+
+    QFile file(dialog.selectedFiles().at(0));
+    if(!file.open(QIODevice::WriteOnly | QFile::Text)) {
+        QMessageBox::warning(this, tr("File writing error"), tr("Error. Could not write to that file."));
+        return;
+    }
+    QTextStream outStream(&file);
+    outStream << ui->luaScriptEditor->document()->toPlainText();
+    file.close();
 }
 
 void MainWindow::runLuaScript() {
