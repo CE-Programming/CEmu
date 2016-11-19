@@ -120,7 +120,8 @@ static void gpt_write(uint16_t address, uint8_t value, bool peek) {
 
 void gpt_reset() {
     int timer;
-    memset(&gpt, 0, sizeof(gpt) - sizeof(gpt.revision));
+    memset(&gpt, 0, sizeof(gpt));
+    gpt.revision = 0x00010801;
     for(timer = SCHED_TIMER1; timer <= SCHED_TIMER3; timer++) {
         gpt_refresh(timer);
         sched.items[timer].proc = gpt_event;
@@ -137,7 +138,6 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_gpt(void) {
-    gpt.revision = 0x00010801;
     gui_console_printf("[CEmu] Initialized GP timers...\n");
     return device;
 }
