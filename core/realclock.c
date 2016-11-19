@@ -29,6 +29,10 @@ static void rtc_event(int index) {
     }
     if (rtc.readSec > 59) {
         rtc.readSec = 0;
+        if (rtc.control & 4) {
+            rtc.interrupt |= 2;
+            intrpt_set(INT_RTC, true);
+        }
         rtc.readMin++;
         if (rtc.readMin > 59) {
             rtc.readMin = 0;
