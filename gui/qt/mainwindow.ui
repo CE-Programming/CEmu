@@ -6210,10 +6210,17 @@
      </attribute>
      <layout class="QVBoxLayout" name="verticalLayout_26">
       <item>
-       <widget class="QPlainTextEdit" name="luaScriptEditor"/>
+       <widget class="QPlainTextEdit" name="luaScriptEditor">
+        <property name="backgroundVisible">
+         <bool>false</bool>
+        </property>
+        <property name="placeholderText">
+         <string>[Write your Lua script here]</string>
+        </property>
+       </widget>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_27">
+       <layout class="QHBoxLayout" name="horizontalLayout_lua">
         <item>
          <widget class="QPushButton" name="buttonLoadLuaScript">
           <property name="text">

@@ -11,6 +11,8 @@
 
 void MainWindow::initLuaThings() {
 
+    lua = sol::state();
+
     lua.set_panic( [](lua_State* L) {
         const char* message = lua_tostring(L, -1);
         if (message) {
@@ -101,10 +103,9 @@ void MainWindow::loadLuaScript() {
         return;
     }
 
-    const QString path = dialog.selectedFiles().at(0);
-    QFile file(path);
+    QFile file(dialog.selectedFiles().at(0));
     if (!file.open(QFile::ReadOnly | QFile::Text)) {
-        QMessageBox::warning(this, tr("File loading error"), tr("Error. Could not load/read that file."));
+        QMessageBox::warning(this, tr("File loading error"), tr("Error. Could not load that file."));
         return;
     }
     ui->luaScriptEditor->document()->setPlainText(file.readAll());
@@ -133,6 +134,8 @@ void MainWindow::saveLuaScript() {
 }
 
 void MainWindow::runLuaScript() {
+    // Reset Lua engine and bindings
+    this->initLuaThings();
     // TODO: maybe have a separate thread for Lua (because of infinite loops...)
     const std::string& code = ui->luaScriptEditor->toPlainText().toStdString();
     const sol::protected_function_result& stringresult = lua.do_string(code.c_str());
