@@ -121,7 +121,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
     if (calc_is_off()) {
         intrpt_set(INT_ON, true);
         control.readBatteryStatus = ~1;
-        intrpt_pulse(19);
+        intrpt_pulse(INT_WAKE);
         cpu.cycles = cpu.IEF_wait = 0;
         cpu.next = 100000000;
         cpu_execute();

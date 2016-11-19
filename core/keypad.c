@@ -19,7 +19,7 @@ void EMSCRIPTEN_KEEPALIVE keypad_key_event(unsigned int row, unsigned int col, b
         if (press && calc_is_off()) {
             asic.shipModeEnabled = false;
             control.readBatteryStatus = ~1;
-            intrpt_pulse(19);
+            intrpt_pulse(INT_WAKE);
         }
     } else {
         if (press) {

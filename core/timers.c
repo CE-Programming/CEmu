@@ -56,15 +56,15 @@ static uint64_t gpt_next_event(int index) {
             }
         }
         gpt.status |= (status & ~gpt.raw_status[index]) << index * 3;
-        intrpt_set(INT_TIMER1 + index, status);
+        intrpt_set(INT_TIMER1 << index, status);
         gpt.raw_status[index] = next ? 0 : status;
-        intrpt_set(INT_TIMER1 + index, gpt.raw_status[index]);
+        intrpt_set(INT_TIMER1 << index, gpt.raw_status[index]);
         timer->counter -= ((uint32_t)next + invert) ^ invert;
         item->clock = (gpt.control >> index*3 & 2) ? CLOCK_32K : CLOCK_CPU;
         return next;
     }
     gpt.raw_status[index] = 0;
-    intrpt_set(INT_TIMER1 + index, 0);
+    intrpt_set(INT_TIMER1 << index, 0);
     return 0;
 }
 

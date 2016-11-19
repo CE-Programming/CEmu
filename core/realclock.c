@@ -166,7 +166,7 @@ static void rtc_write(const uint16_t pio, const uint8_t byte, bool peek) {
             break;
         case 0x34:
             rtc.interrupt &= ~byte;
-            intrpt_set(INT_RTC, (rtc.interrupt & rtc.control & 15) ? true : false);
+            intrpt_set(INT_RTC, rtc.interrupt & rtc.control & 15);
             break;
         default:
             break;

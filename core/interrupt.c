@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <string.h>
 
 #include "interrupt.h"
@@ -6,27 +7,22 @@
 
 interrupt_state_t intrpt;
 
-static void update() {
+void intrpt_pulse(uint32_t mask) {
+    intrpt_set(mask, true);
+    intrpt_set(mask, false);
+}
+
+void intrpt_set(uint32_t mask, bool set) {
     size_t request;
+    assert(!(mask & mask - 1) && "Expected no more than one bit set");
+    mask &= 0x3FFFFF;
     for (request = 0; request < sizeof(intrpt.request) / sizeof(*intrpt.request); request++) {
-        uint32_t status = intrpt.status ^ intrpt.request[request].inverted;
-        intrpt.request[request].status = (status & ~intrpt.request[request].latched) |
-            ((intrpt.request[request].status | status) & intrpt.request[request].latched);
+        if (set ^ (intrpt.request[request].inverted & mask)) {
+            intrpt.request[request].status |= mask;
+        } else {
+            intrpt.request[request].status &= ~mask | intrpt.request[request].latched;
+        }
     }
-}
-
-void intrpt_pulse(uint32_t int_num) {
-    intrpt_set(int_num, true);
-    intrpt_set(int_num, false);
-}
-
-void intrpt_set(uint32_t int_num, bool set) {
-    if (set) {
-        intrpt.status |= 1 << int_num;
-    } else {
-        intrpt.status &= ~(1 << int_num);
-    }
-    update();
 }
 
 void intrpt_reset() {
