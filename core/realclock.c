@@ -12,14 +12,23 @@ static void rtc_event(int index) {
     /* Update exactly once a second */
     event_repeat(index, 32768);
 
-    if (rtc.control & 2) { rtc.interrupt |= 1; }
+    if (rtc.control & 64) { /* (Bit 6) -- Load time */
+        rtc.readSec = rtc.writeSec;
+        rtc.readMin = rtc.writeMin;
+        rtc.readHour = rtc.writeHour;
+        rtc.readDay = rtc.writeDay;
+        rtc.control &= ~64;
+        rtc.interrupt |= 32;  /* Load operation complete */
+        intrpt_set(INT_RTC, true);
+    }
+
     rtc.readSec++;
+    if (rtc.control & 2) {
+        rtc.interrupt |= 1;
+        intrpt_set(INT_RTC, true);
+    }
     if (rtc.readSec > 59) {
         rtc.readSec = 0;
-        if (rtc.control & 4) {
-            rtc.interrupt |= 2;
-            intrpt_set(INT_RTC, true);
-        }
         rtc.readMin++;
         if (rtc.readMin > 59) {
             rtc.readMin = 0;
@@ -134,15 +143,6 @@ static void rtc_write(const uint16_t pio, const uint8_t byte, bool peek) {
                 event_set(SCHED_RTC, 0);
             } else {
                 event_clear(SCHED_RTC);
-            }
-            if (rtc.control & 64) { /* (Bit 6) -- Load time */
-                rtc.readSec = rtc.writeSec;
-                rtc.readMin = rtc.writeMin;
-                rtc.readHour = rtc.writeHour;
-                rtc.readDay = rtc.writeDay;
-                rtc.control &= ~64;
-                rtc.interrupt |= 32;  /* Load operation complete */
-                intrpt_set(INT_RTC, (rtc.interrupt & rtc.control & 15) ? true : false);
             }
             if (!(rtc.control & 128)) {
                 hold_read();
