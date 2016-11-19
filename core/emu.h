@@ -29,7 +29,7 @@ PACK(typedef struct emu_image {
     eZ80cpu_t cpu;
     usb_state_t usb;
     flash_state_t flash;
-    interrupt_state_t intrpt;
+    interrupt_state_t intrpt[2];
     watchdog_state_t watchdog;
     protected_state_t protect;
     cxxx_state_t cxxx;

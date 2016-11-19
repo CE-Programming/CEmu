@@ -849,7 +849,7 @@ void cpu_execute(void) {
                 cpu.next = save_next;
             }
         }
-        if (cpu.NMI || (cpu.IEF1 && (intrpt.request->status & intrpt.request->enabled))) {
+        if (cpu.NMI || (cpu.IEF1 && (intrpt->status & intrpt->enabled))) {
             cpu.L = cpu.IL = cpu.ADL || cpu.MADL;
             cpu.IEF1 = cpu.IEF2 = cpu.halted = cpu.inBlock = 0;
             cpu.cycles += 1;

@@ -5,7 +5,7 @@
 #include "emu.h"
 #include "cpu.h"
 
-interrupt_state_t intrpt;
+interrupt_state_t intrpt[2];
 
 void intrpt_pulse(uint32_t mask) {
     intrpt_set(mask, true);
@@ -16,11 +16,11 @@ void intrpt_set(uint32_t mask, bool set) {
     size_t request;
     assert(!(mask & mask - 1) && "Expected no more than one bit set");
     mask &= 0x3FFFFF;
-    for (request = 0; request < sizeof(intrpt.request) / sizeof(*intrpt.request); request++) {
-        if (set ^ (intrpt.request[request].inverted & mask)) {
-            intrpt.request[request].status |= mask;
+    for (request = 0; request < sizeof(intrpt) / sizeof(*intrpt); request++) {
+        if (set ^ (intrpt[request].inverted & mask)) {
+            intrpt[request].status |= mask;
         } else {
-            intrpt.request[request].status &= ~mask | intrpt.request[request].latched;
+            intrpt[request].status &= ~mask | intrpt[request].latched;
         }
     }
 }
@@ -42,23 +42,23 @@ static uint8_t intrpt_read(uint16_t pio, bool peek) {
     switch(index) {
         case 0:
         case 8:
-            value = read8(intrpt.request[request].status, bit_offset);
+            value = read8(intrpt[request].status, bit_offset);
             break;
         case 1:
         case 9:
-            value = read8(intrpt.request[request].enabled, bit_offset);
+            value = read8(intrpt[request].enabled, bit_offset);
             break;
         case 3:
         case 11:
-            value = read8(intrpt.request[request].latched, bit_offset);
+            value = read8(intrpt[request].latched, bit_offset);
             break;
         case 4:
         case 12:
-            value = read8(intrpt.request[request].inverted, bit_offset);
+            value = read8(intrpt[request].inverted, bit_offset);
             break;
         case 5:
         case 13:
-            value = read8(intrpt.request[request].status & intrpt.request[request].enabled, bit_offset);
+            value = read8(intrpt[request].status & intrpt[request].enabled, bit_offset);
             break;
         case 20:
             value = read8(revision, bit_offset);
@@ -82,19 +82,19 @@ static void intrpt_write(uint16_t pio, uint8_t value, bool peek) {
     switch(index) {
         case 1:
         case 9:
-            write8(intrpt.request[request].enabled, bit_offset, value);
+            write8(intrpt[request].enabled, bit_offset, value);
             break;
         case 2:
         case 10:
-            intrpt.request[request].status &= ~(((uint32_t)value << bit_offset) & intrpt.request[request].latched);
+            intrpt[request].status &= ~(((uint32_t)value << bit_offset) & intrpt[request].latched);
             break;
         case 3:
         case 11:
-            write8(intrpt.request[request].latched, bit_offset, value);
+            write8(intrpt[request].latched, bit_offset, value);
             break;
         case 4:
         case 12:
-            write8(intrpt.request[request].inverted, bit_offset, value);
+            write8(intrpt[request].inverted, bit_offset, value);
             break;
     }
 }
@@ -110,11 +110,17 @@ eZ80portrange_t init_intrpt(void) {
 }
 
 bool intrpt_save(emu_image *s) {
-    s->intrpt = intrpt;
+    size_t request;
+    for (request = 0; request < sizeof(intrpt) / sizeof(*intrpt); request++) {
+        s->intrpt[request] = intrpt[request];
+    }
     return true;
 }
 
 bool intrpt_restore(const emu_image *s) {
-    intrpt = s->intrpt;
+    size_t request;
+    for (request = 0; request < sizeof(intrpt) / sizeof(*intrpt); request++) {
+        intrpt[request] = s->intrpt[request];
+    }
     return true;
 }
