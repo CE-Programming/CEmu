@@ -57,6 +57,9 @@ static void cpu_prefetch(uint32_t address, bool mode) {
     debugger.data.block[cpu.registers.PC] |= DBG_INST_MARKER;
 #endif
 }
+static void cpu_prefetch_next(void) {
+    cpu_prefetch(cpu.registers.PC + 1, cpu.ADL);
+}
 static uint8_t cpu_fetch_byte(void) {
     uint8_t value;
 #ifdef DEBUG_SUPPORT
@@ -70,7 +73,7 @@ static uint8_t cpu_fetch_byte(void) {
     }
 #endif
     value = cpu.prefetch;
-    cpu_prefetch(cpu.registers.PC + 1, cpu.ADL);
+    cpu_prefetch_next();
     return value;
 }
 static int8_t cpu_fetch_offset(void) {
@@ -1092,7 +1095,7 @@ void cpu_execute(void) {
                                             r->_HL = w;
                                             break;
                                         case 2: // JP (rr)
-                                            cpu_fetch_byte();
+                                            cpu_prefetch_next();
                                             cpu_prefetch(cpu_read_index(), cpu.L);
                                             cpu_check_step_out();
                                             break;
