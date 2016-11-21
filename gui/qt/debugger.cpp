@@ -444,7 +444,7 @@ void MainWindow::debuggerGUISetState(bool state) {
 }
 
 void MainWindow::debuggerChangeState() {
-    if (emu.rom.empty()) {
+    if (emu.rom.isEmpty()) {
         return;
     }
 

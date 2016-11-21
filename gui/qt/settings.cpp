@@ -28,6 +28,50 @@ void MainWindow::setSaveOnClose(bool state) {
     settings->setValue(QStringLiteral("saveOnClose"), state);
 }
 
+void MainWindow::setPortableConfig(bool state) {
+    ui->checkPortable->setChecked(state);
+    QString debugPath;
+    QString imagePath;
+    QString setPath;
+    QString romPath;
+    QDir dir = qApp->applicationDirPath();
+
+    if (state) {
+        setPath = qApp->applicationDirPath() + QStringLiteral("/cemu_config.ini");
+        QFile::copy(pathSettings, setPath);
+    } else {
+        setPath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + QStringLiteral("/CEmu/cemu_config.ini");
+        QFile(pathSettings).remove();
+    }
+    debugPath = QDir::cleanPath(QFileInfo(setPath).absoluteDir().absolutePath() + QStringLiteral("/cemu_debug.ini"));
+    imagePath =  QDir::cleanPath(QFileInfo(setPath).absoluteDir().absolutePath() + QStringLiteral("/cemu_image.ce"));
+
+    if(state) {
+        debugPath = dir.relativeFilePath(debugPath);
+        imagePath = dir.relativeFilePath(imagePath);
+        romPath = dir.relativeFilePath(settings->value(QStringLiteral("romImage")).toString());
+        settings->setValue(QStringLiteral("romImage"), romPath);
+        ui->rompathView->setText(romPath);
+        ui->settingsPath->setText(dir.relativeFilePath(setPath));
+    } else {
+        ui->settingsPath->setText(setPath);
+    }
+
+    delete settings;
+    settings = new QSettings(setPath, QSettings::IniFormat);
+    settings->setValue(QStringLiteral("savedDebugPath"), debugPath);
+    settings->setValue(QStringLiteral("savedImagePath"), imagePath);
+
+    ui->savedImagePath->setText(imagePath);
+    ui->savedDebugPath->setText(debugPath);
+    emu.image = imagePath;
+    pathSettings = setPath;
+    settings->sync();
+    portable = state;
+    ui->buttonChangeSavedDebugPath->setEnabled(!portable);
+    ui->buttonChangeSavedImagePath->setEnabled(!portable);
+}
+
 void MainWindow::setRestoreOnOpen(bool state) {
     ui->checkRestore->setChecked(state);
     settings->setValue(QStringLiteral("restoreOnOpen"), state);

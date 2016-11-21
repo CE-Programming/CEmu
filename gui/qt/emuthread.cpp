@@ -165,13 +165,13 @@ void EmuThread::doStuff() {
     std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
 
     if (saveImage) {
-        bool success = emu_save(imagePath.c_str());
+        bool success = emu_save(image.toStdString().c_str());
         saveImage = false;
         emit saved(success);
     }
 
     if (saveRom) {
-        bool success = emu_save_rom(exportRomPath.c_str());
+        bool success = emu_save_rom(romExportPath.toStdString().c_str());
         saveRom = false;
         emit saved(success);
     }
@@ -233,7 +233,7 @@ void EmuThread::run() {
     setTerminationEnabled();
 
     bool doReset = !doRestore;
-    bool success = emu_start(rom.c_str(), doRestore ? imagePath.c_str() : nullptr);
+    bool success = emu_start(rom.toStdString().c_str(), doRestore ? image.toStdString().c_str() : NULL);
 
     if (doRestore) {
         emit restored(success);
@@ -257,16 +257,15 @@ bool EmuThread::stop() {
 
     inDebugger = false;
     isSending = false;
+    isReceiving = false;
 
     /* Cause the CPU core to leave the loop and check for events */
     exiting = true; // exit outer loop
-    cpu.next = 0; // exit inner loop
+    cpu.next = 0;   // exit inner loop
 
-    if (!this->wait(200))
-    {
+    if (!this->wait(200)) {
         terminate();
-        if (!this->wait(200))
-        {
+        if (!this->wait(200)) {
             return false;
         }
     }
@@ -275,7 +274,7 @@ bool EmuThread::stop() {
 }
 
 bool EmuThread::restore(QString path) {
-    imagePath = QDir::toNativeSeparators(path).toStdString();
+    image = QDir::toNativeSeparators(path);
     doRestore = true;
     if (!stop()) {
         return false;
@@ -286,11 +285,11 @@ bool EmuThread::restore(QString path) {
 }
 
 void EmuThread::save(QString path) {
-    imagePath = QDir::toNativeSeparators(path).toStdString();
+    image = QDir::toNativeSeparators(path);
     saveImage = true;
 }
 
 void EmuThread::saveRomImage(QString path) {
-    exportRomPath = QDir::toNativeSeparators(path).toStdString();
+    romExportPath = QDir::toNativeSeparators(path);
     saveRom = true;
 }

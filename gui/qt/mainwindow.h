@@ -22,36 +22,6 @@
 #include "../../core/debug/disasm.h"
 #include "../../core/debug/profiler.h"
 
-enum breakpointIndex {
-    BREAK_LABEL_LOC=0,
-    BREAK_ADDR_LOC,
-    BREAK_ENABLE_LOC
-};
-
-enum watchpointIndex {
-    WATCH_LABEL_LOC=0,
-    WATCH_ADDR_LOC,
-    WATCH_SIZE_LOC,
-    WATCH_VALUE_LOC,
-    WATCH_READ_LOC,
-    WATCH_WRITE_LOC
-};
-
-enum profilerIndex {
-    PROFILE_LABEL_LOC=0,
-    PROFILE_ADDR_LOC,
-    PROFILE_SIZE_LOC,
-    PROFILE_CYCLE_LOC
-};
-
-enum portIndex {
-    PORT_ADDR_LOC=0,
-    PORT_VALUE_LOC,
-    PORT_READ_LOC,
-    PORT_WRITE_LOC,
-    PORT_FREEZE_LOC
-};
-
 namespace Ui { class MainWindow; }
 
 class MainWindow : public QMainWindow {
@@ -122,6 +92,36 @@ signals:
     void resetTriggered();
 
 private:
+    enum breakpointIndex {
+        BREAK_LABEL_LOC=0,
+        BREAK_ADDR_LOC,
+        BREAK_ENABLE_LOC
+    };
+
+    enum watchpointIndex {
+        WATCH_LABEL_LOC=0,
+        WATCH_ADDR_LOC,
+        WATCH_SIZE_LOC,
+        WATCH_VALUE_LOC,
+        WATCH_READ_LOC,
+        WATCH_WRITE_LOC
+    };
+
+    enum profilerIndex {
+        PROFILE_LABEL_LOC=0,
+        PROFILE_ADDR_LOC,
+        PROFILE_SIZE_LOC,
+        PROFILE_CYCLE_LOC
+    };
+
+    enum portIndex {
+        PORT_ADDR_LOC=0,
+        PORT_VALUE_LOC,
+        PORT_READ_LOC,
+        PORT_WRITE_LOC,
+        PORT_FREEZE_LOC
+    };
+
     // Save/Restore
     void saveToPath(QString path);
     bool restoreFromPath(QString path);
@@ -138,8 +138,9 @@ private:
     void showAbout(void);
     void batteryIsCharging(bool);
     void batteryChangeStatus(int);
-    void setSaveOnClose(bool b);
-    void setRestoreOnOpen(bool b);
+    void setSaveOnClose(bool);
+    void setPortableConfig(bool);
+    void setRestoreOnOpen(bool);
     void changeSnapshotPath();
 
     // Debugger
@@ -344,6 +345,7 @@ private:
     EmuThread emu;
 
     bool uiEditMode;
+    bool portable = false;
     bool nativeConsole = false;
     bool closeAfterSave = false;
     bool isResumed = false;
@@ -375,6 +377,8 @@ private:
     QString prevFlashAddress;
     QString prevRAMAddress;
     QString prevMemAddress;
+
+    QString pathSettings;
 };
 
 #endif

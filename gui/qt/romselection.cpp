@@ -9,8 +9,8 @@
 #include "utils.h"
 #include "../../core/os/os.h"
 
-static const size_t totalROMSize = 0x400000;
-static const uint32_t segmentROMSize = 0xFFE9;
+#define ROM_SIZE 0x400000
+#define SEG_SIZE 0xFFE9
 
 static const uint8_t dumper_program[288] = {
     0x2A, 0x2A, 0x54, 0x49, 0x38, 0x33, 0x46, 0x2A, 0x1A, 0x0A, 0x00, 0x46,
@@ -41,6 +41,8 @@ static const uint8_t dumper_program[288] = {
 
 RomSelection::RomSelection(QWidget *p) : QDialog(p), ui(new Ui::RomSelection) {
     ui->setupUi(this);
+
+    setFixedSize(width(), height());
     setWindowModality(Qt::ApplicationModal);
     setWindowFlags(Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint );
 
@@ -51,14 +53,15 @@ RomSelection::RomSelection(QWidget *p) : QDialog(p), ui(new Ui::RomSelection) {
     connect(ui->buttonDump, &QPushButton::clicked, this, &RomSelection::saveDumpProgram);
     connect(ui->buttonBrowseROM, &QPushButton::clicked, this, &RomSelection::browseForROM);
     connect(ui->buttonBrowseSave, &QPushButton::clicked, this, &RomSelection::saveROMImage);
-    connect(ui->buttonOpenRomData0, &QPushButton::clicked, this, &RomSelection::openROMConfig);
     connect(ui->radioBrowse, &QRadioButton::clicked, this, &RomSelection::openROMImageSelected);
     connect(ui->buttonOpenSegments, &QPushButton::clicked, this, &RomSelection::openROMSegments);
     connect(ui->radioCreate, &QRadioButton::clicked, this, &RomSelection::createROMImageSelected);
+    connect(ui->buttonBack1, &QRadioButton::clicked, this, &RomSelection::backPage);
+    connect(ui->buttonBack2, &QRadioButton::clicked, this, &RomSelection::backPage);
 
     ui->stackedWidget->setCurrentIndex(0);
 
-    ui->versionLabel->setText(ui->versionLabel->text()+QStringLiteral(CEMU_VERSION));
+    ui->versionLabel->setText(ui->versionLabel->text() + QStringLiteral(CEMU_VERSION));
 }
 
 RomSelection::~RomSelection() {
@@ -69,18 +72,18 @@ RomSelection::~RomSelection() {
 bool RomSelection::checkImageSize(const char *filename) {
     size_t s;
 
-    FILE* rom_read = fopen_utf8(filename, "r+b");
+    FILE* romfile = fopen_utf8(filename, "r+b");
 
-    if (!rom_read) {
+    if (!romfile) {
         return false;
     }
 
-    fseek(rom_read, 0, SEEK_END);
-    s = ftell(rom_read);
+    fseek(romfile, 0, SEEK_END);
+    s = ftell(romfile);
 
-    fclose(rom_read);
+    fclose(romfile);
 
-    return s == totalROMSize;
+    return s == ROM_SIZE;
 }
 
 void RomSelection::checkInput(const QString &path) {
@@ -109,129 +112,95 @@ void RomSelection::browseForROM() {
 
 void RomSelection::nextPageOne() {
     if (ui->radioBrowse->isChecked()) {
-        if (checkImageSize(ui->rompath->text().toLatin1()) == false) {
+        if (checkImageSize(ui->rompath->text().toStdString().c_str()) == false) {
             QMessageBox::critical(this, tr("Invalid ROM image"), tr("You have selected an invalid ROM image."));
             return;
         }
-        romImagePath = ui->rompath->text().toLatin1().toStdString();
+        rom = ui->rompath->text();
         close();
     } else {
-        ui->stackedWidget->setCurrentIndex(ui->stackedWidget->currentIndex()+1);
+        ui->stackedWidget->setCurrentIndex(ui->stackedWidget->currentIndex() + 1);
     }
 }
 
 void RomSelection::nextPageTwo() {
-    romArray = reinterpret_cast<uint8_t*>(malloc(totalROMSize));
-    ui->labelHidden->setVisible(false);
-    ui->buttonBrowseSave->setVisible(false);
-    ui->stackedWidget->setCurrentIndex(ui->stackedWidget->currentIndex()+1);
+    romArray = reinterpret_cast<uint8_t*>(malloc(ROM_SIZE));
+    ui->stackedWidget->setCurrentIndex(ui->stackedWidget->currentIndex() + 1);
 }
 
-void RomSelection::openROMConfig() {
-    FILE* romInfo;
-    QFileDialog dialog(this);
-    QString fileName;
-
-    uint8_t tmpBuf[10];
-
-    dialog.setDirectory(QDir::homePath());
-    dialog.setFileMode(QFileDialog::ExistingFile);
-    dialog.setNameFilter(QStringLiteral("ROMData0 (*.8xv)"));
-    if (!dialog.exec()) {
-        return;
-    }
-    fileName = dialog.selectedFiles().at(0);
-    currentDir = dialog.directory();
-
-    romInfo = fopen_utf8(fileName.toStdString().c_str(), "rb");
-
-    if (!romInfo) {
-        QMessageBox::warning(this, tr("Opening Error"), tr("Unable to open the file."));
-        return;
-    }
-
-    if (fseek(romInfo,0x3C,0))          goto _rerr;
-    if (fread(tmpBuf,1,8,romInfo) != 8) goto _rerr;
-
-    if (memcmp(tmpBuf,"ROMData0",8)) {
-_rerr:
-        QMessageBox::warning(this, tr("Invalid"), tr("Invalid ROM data configuration."));
-        fclose(romInfo);
-        return;
-    }
-
-    if (fseek(romInfo,0x4A,0))          goto _rerr;
-    if (fread(tmpBuf,1,3,romInfo) != 3) goto _rerr;
-    imageSize = static_cast<uint32_t>(tmpBuf[0])    |
-                static_cast<uint32_t>(tmpBuf[1]<<8) |
-                static_cast<uint32_t>(tmpBuf[2]<<16);
-
-    numROMSegments = (imageSize/segmentROMSize)+1;
-
-    ui->buttonOpenSegments->setEnabled(true);
-    ui->progressBar->setMaximum(numROMSegments);
-    ui->buttonOpenRomData0->setEnabled(false);
-    fclose(romInfo);
+void RomSelection::backPage() {
+    ui->stackedWidget->setCurrentIndex(ui->stackedWidget->currentIndex() - 1);
 }
 
 void RomSelection::openROMSegments() {
-    FILE* readSegment;
+    FILE* seg;
     QFileDialog dialog(this);
     QStringList fileNames;
 
-    uint8_t tmpBuf[10];
-    uint16_t tmp16;
-    int tmpint;
+    uint8_t buf[10];
+    uint16_t u16 = 0;
+
+    bool config = false;
+    int i, segint;
 
     dialog.setDirectory(currentDir);
     dialog.setFileMode(QFileDialog::ExistingFiles);
     dialog.setNameFilter(QStringLiteral("ROMData (*.8xv)"));
+
     if (!dialog.exec()) {
         return;
     }
+
     fileNames = dialog.selectedFiles();
+    ui->progressBar->setEnabled(false);
 
-    for (int i = 0; i < fileNames.size(); i++) {
-        readSegment = fopen_utf8(fileNames.at(i).toStdString().c_str(), "rb");
-        if (readSegment) {
-            /* make sure the name is right... */
-            if (fseek(readSegment,0x3C,0))              goto _someerror;
-            if (fread(tmpBuf,1,8,readSegment) != 8)     goto _someerror;
+    for (i = 0; i < fileNames.size(); i++) {
+        seg = fopen_utf8(fileNames.at(i).toStdString().c_str(), "rb");
+        if (!seg)                                             goto _err;
+        if (fseek(seg, 0x3C, SEEK_SET))                       goto _err;
+        if (fread(buf, 1, 8, seg) != 8)                       goto _err;
 
-            if (!memcmp(tmpBuf, "ROMData",7)) {
+        if (memcmp(buf, "ROMData", 7)) {
+            goto _err;
+        } else {
+            if (buf[7] == '0') {
+                if (fseek(seg, 0x4A, 0))                       goto _err;
+                if (fread(buf, 1, 3, seg) != 3)                goto _err;
 
-                tmp16 = 0;
-                if (fseek(readSegment,0x48,0))          goto _someerror;
-                if (fread(&tmp16,2,1,readSegment) != 1) goto _someerror;
-                if (segmentROMSize == tmp16) {
+                imageSize = static_cast<uint32_t>(buf[0] << 0) |
+                            static_cast<uint32_t>(buf[1] << 8) |
+                            static_cast<uint32_t>(buf[2] << 16);
 
-                    /* first one is 'A' */
-                    tmpint = tmpBuf[7]-'A';
-                    if (segmentFilledStatus[tmpint] == false) {
-                        segmentFilledStatus[tmpint] = true;
-
-                        if (fread(romArray+(segmentROMSize*tmpint),1,segmentROMSize,readSegment) != segmentROMSize) goto _someerror;
-                        ui->progressBar->setValue(ui->progressBar->value()+1);
-                    }
-                } else {
-                    QMessageBox::warning(this, tr("Invalid"), tr("Invalid ROM segment size: ")+fileNames.at(i));
-                    fclose(readSegment);
-                    return;
-                }
+                numROMSegments = (imageSize/SEG_SIZE) + 1;
+                ui->progressBar->setMaximum(numROMSegments);
+                ui->progressBar->setEnabled((config = true));
             } else {
-_someerror:
-                QMessageBox::warning(this, tr("Invalid"), tr("Invalid ROM segment: ")+fileNames.at(i));
-                fclose(readSegment);
-                return;
+                if (fseek(seg,0x48,0))                          goto _err;
+                if (fread(&u16, sizeof(u16), 1,seg) != 1)   goto _err;
+                if (SEG_SIZE == u16) {
+                    segint = buf[7] - 'A';
+                    if (segmentFilledStatus[segint] == false) {
+                        segmentFilledStatus[segint] = true;
+                        if (fread(romArray + (SEG_SIZE * segint), SEG_SIZE, 1, seg) != 1) {
+                            goto _err;
+                        }
+                        ui->progressBar->setValue(ui->progressBar->value() + 1);
+                    }
+                }
             }
-
-            fclose(readSegment);
         }
+
+        fclose(seg);
     }
-    if (ui->progressBar->value() == numROMSegments) {
-        ui->labelHidden->setVisible(true);
-        ui->buttonBrowseSave->setVisible(true);
+    if (ui->progressBar->value() == numROMSegments && config) {
+        ui->buttonBrowseSave->setEnabled(true);
     }
+    return;
+
+_err:
+    QMessageBox::warning(this, tr("Invalid"), tr("Invalid ROM segment: ") + fileNames.at(i));
+    fclose(seg);
+    return;
 }
 
 void RomSelection::saveDumpProgram() {
@@ -244,7 +213,7 @@ void RomSelection::saveDumpProgram() {
     save_program = fopen_utf8(filename.toStdString().c_str(), "w+b");
 
     if (save_program) {
-        fwrite(dumper_program,1,sizeof(dumper_program),save_program);
+        fwrite(dumper_program, 1, sizeof(dumper_program), save_program);
         fclose(save_program);
     }
 }
@@ -256,15 +225,14 @@ void RomSelection::saveROMImage() {
         return;
     }
 
-    romImagePath = filename.toStdString();
-
-    saveRom = fopen_utf8(romImagePath.c_str(), "w+b");
+    rom = filename;
+    saveRom = fopen_utf8(rom.toStdString().c_str(), "w+b");
 
     if (saveRom) {
         /* Make sure the only thing in the rom is the boot+os */
-        memset(&romArray[imageSize],0xFF,totalROMSize-imageSize-1);
+        memset(&romArray[imageSize], 0xFF, ROM_SIZE - imageSize - 1);
 
-        fwrite(romArray,1,totalROMSize,saveRom);
+        fwrite(romArray, 1, ROM_SIZE, saveRom);
 
         fclose(saveRom);
     }
@@ -272,15 +240,14 @@ void RomSelection::saveROMImage() {
     close();
 }
 
-std::string RomSelection::getROMImage() {
-    return romImagePath;
+QString RomSelection::romPath() {
+    return rom;
 }
 
 
 /*!
  * ROM dumping program
- */
-/*
+ *
 #include "ti84pce.inc"
 
 .assume ADL=1
@@ -359,5 +326,5 @@ _data_num:
 
 _dump_string:
  .db "Dumping Segment ",0
-
-*/
+ *
+ */

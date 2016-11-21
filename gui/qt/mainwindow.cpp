@@ -177,6 +177,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     connect(ui->lcdWidget, &QWidget::customContextMenuRequested, this, &MainWindow::screenContextMenu);
     connect(ui->checkRestore, &QCheckBox::stateChanged, this, &MainWindow::setRestoreOnOpen);
     connect(ui->checkSave, &QCheckBox::stateChanged, this, &MainWindow::setSaveOnClose);
+    connect(ui->checkPortable, &QCheckBox::stateChanged, this, &MainWindow::setPortableConfig);
     connect(ui->checkLoadDebugOnOpen, &QCheckBox::stateChanged, this, &MainWindow::setLoadDebugOnOpen);
     connect(ui->checkSaveDebugClose, &QCheckBox::stateChanged, this, &MainWindow::setSaveDebugOnClose);
     connect(ui->buttonChangeSavedImagePath, &QPushButton::clicked, this, &MainWindow::setImagePath);
@@ -251,6 +252,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
 
     ui->portView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     ui->breakpointView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    ui->profilerView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    ui->watchpointView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 
     setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
     setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
@@ -259,10 +262,24 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
 
     autotester::stepCallback = []() { QApplication::processEvents(); };
 
-    if (opts.settingsFile.isEmpty()) {
-        settings = new QSettings(QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + QStringLiteral("/CEmu/cemu_config.ini"), QSettings::IniFormat);
+    if (fileExists(QDir::toNativeSeparators(qApp->applicationDirPath() + "/cemu_config.ini").toStdString())) {
+        pathSettings = qApp->applicationDirPath() + "/cemu_config.ini";
+        portable = true;
+    } else if (opts.settingsFile.isEmpty()) {
+        pathSettings = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + QStringLiteral("/CEmu/cemu_config.ini");
     } else {
-        settings = new QSettings(opts.settingsFile, QSettings::IniFormat);
+        pathSettings = opts.settingsFile;
+    }
+
+    settings = new QSettings(pathSettings, QSettings::IniFormat);
+
+    if (portable) {
+        ui->checkPortable->setChecked(true);
+        ui->buttonChangeSavedDebugPath->setEnabled(false);
+        ui->buttonChangeSavedImagePath->setEnabled(false);
+        ui->settingsPath->setText(QFile(pathSettings).fileName());
+    } else {
+        ui->settingsPath->setText(pathSettings);
     }
 
 #ifdef _WIN32
@@ -270,9 +287,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
 #endif
 
     if (opts.romFile.isEmpty()) {
-        emu.rom = settings->value(QStringLiteral("romImage")).toString().toStdString();
+        emu.rom = settings->value(QStringLiteral("romImage")).toString();
     } else {
-        emu.rom = opts.romFile.toStdString();
+        emu.rom = opts.romFile;
     }
     changeFrameskip(settings->value(QStringLiteral("frameskip"), 3).toUInt());
     setLCDScale(settings->value(QStringLiteral("scale"), 100).toUInt());
@@ -292,16 +309,16 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     ui->memBytes->setValue(settings->value(QStringLiteral("memBytesPerLine"), 8).toInt());
 
     currentDir.setPath((settings->value(QStringLiteral("currDir"), QDir::homePath()).toString()));
-    if (settings->value(QStringLiteral("savedImagePath")).toString().isEmpty()) {
+    if (settings->value(QStringLiteral("savedImagePath")).toString().isEmpty() || portable) {
         QString path = QDir::cleanPath(QFileInfo(settings->fileName()).absoluteDir().absolutePath() + QStringLiteral("/cemu_image.ce"));
-        settings->setValue(QStringLiteral("savedImagePath"),path);
+        settings->setValue(QStringLiteral("savedImagePath"), path);
     }
     ui->savedImagePath->setText(settings->value(QStringLiteral("savedImagePath")).toString());
-    emu.imagePath = ui->savedImagePath->text().toStdString();
+    emu.image = ui->savedImagePath->text();
 
-    if (settings->value(QStringLiteral("savedDebugPath")).toString().isEmpty()) {
+    if (settings->value(QStringLiteral("savedDebugPath")).toString().isEmpty() || portable) {
         QString path = QDir::cleanPath(QFileInfo(settings->fileName()).absoluteDir().absolutePath() + QStringLiteral("/cemu_debug.ini"));
-        settings->setValue(QStringLiteral("savedDebugPath"),path);
+        settings->setValue(QStringLiteral("savedDebugPath"), path);
     }
     ui->savedDebugPath->setText(settings->value(QStringLiteral("savedDebugPath")).toString());
 
@@ -320,7 +337,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     }
     setKeymap(currKeyMap);
 
-    ui->rompathView->setText(QString::fromStdString(emu.rom));
+    ui->rompathView->setText(emu.rom);
     ui->emuVarView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->vatView->cursorState(true);
     ui->opView->cursorState(true);
@@ -332,16 +349,18 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
 
     if (!opts.imageFile.isEmpty()) {
         if (fileExists(opts.imageFile.toStdString())) {
-            emu.imagePath = opts.imageFile.toStdString();
+            emu.image = opts.imageFile;
         }
     }
 
-    if (!fileExists(emu.rom)) {
+    if (!fileExists(QDir::toNativeSeparators(emu.rom).toStdString())) {
         if (!runSetup()) {
             exit(0);
         }
     } else {
-        if (settings->value(QStringLiteral("restoreOnOpen")).toBool() && fileExists(emu.imagePath) && opts.restoreOnOpen) {
+        if (settings->value(QStringLiteral("restoreOnOpen")).toBool()
+                && fileExists(emu.image.toStdString())
+                && opts.restoreOnOpen) {
             restoreEmuState();
         } else {
             emu.start();
@@ -349,7 +368,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     }
 
     speedUpdateTimer.start();
-    speedUpdateTimer.setInterval(1000 / 3);
+    speedUpdateTimer.setInterval(1000 / 2);
 
     colorback.setColor(QPalette::Base, QColor(Qt::yellow).lighter(160));
     setAlwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toUInt());
@@ -602,13 +621,11 @@ void MainWindow::showStatusMsg(QString str) {
 }
 
 bool MainWindow::runSetup() {
-    RomSelection romSelection;
-    romSelection.show();
-    romSelection.exec();
+    RomSelection romWizard;
+    romWizard.show();
+    romWizard.exec();
 
-    emu.rom = romSelection.getROMImage();
-
-    if (emu.rom.empty()) {
+    if (romWizard.romPath().isEmpty()) {
         return false;
     } else {
         if (isReceiving || isSending) {
@@ -617,14 +634,20 @@ bool MainWindow::runSetup() {
         if (inDebugger) {
             debuggerChangeState();
         }
-        settings->setValue(QStringLiteral("romImage"), QVariant(emu.rom.c_str()));
+        guiDelay(300);
+        emu.rom = romWizard.romPath();
+        if (portable) {
+            QDir dir(qApp->applicationDirPath());
+            emu.rom = dir.relativeFilePath(emu.rom);
+        }
         if (emu.stop()) {
             speedUpdateTimer.stop();
-            ui->rompathView->setText(emu.rom.c_str());
+            ui->rompathView->setText(emu.rom);
             emu.start();
             speedUpdateTimer.start();
             speedUpdateTimer.setInterval(1000 / 2);
         }
+        settings->setValue(QStringLiteral("romImage"), emu.rom);
     }
 
     return true;
@@ -1211,7 +1234,7 @@ void MainWindow::reloadROM() {
     }
 
     if (!usingLoadedImage) {
-        QFile(emu.imagePath.c_str()).remove();
+        QFile(emu.image).remove();
     }
 
     usingLoadedImage = false;
