@@ -101,7 +101,9 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
              data_size,
              header_size;
 
+    size_t   temp_size;
     int remaining;
+    long lSize;
 
     /* Return if we are at an error menu */
     if (*cxCurApp == 0x52 || !(file = fopen_utf8(file_name, "rb"))) {
@@ -117,6 +119,13 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
 
     if (fseek(file, data_start, 0))                        goto r_err;
     if (fread(&data_size, 2, 1, file) != 1)                goto r_err;
+
+
+    if (fseek(file, 0L, SEEK_END))                         goto r_err;
+    if ((lSize = ftell(file)) < 0)                         goto r_err;
+    temp_size = 4 + (size_t)data_size + (size_t)data_start;
+    if ((size_t)lSize != temp_size)                        goto r_err;
+    if (fseek(file, data_start + 2, SEEK_SET))             goto r_err;
 
     if (calc_is_off()) {
         intrpt_set(INT_ON, true);
