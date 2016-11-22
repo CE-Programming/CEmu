@@ -138,9 +138,8 @@ private:
     void showAbout(void);
     void batteryIsCharging(bool);
     void batteryChangeStatus(int);
-    void setSaveOnClose(bool);
     void setPortableConfig(bool);
-    void setRestoreOnOpen(bool);
+    void setAutoSaveState(bool);
     void changeSnapshotPath();
 
     // Debugger
@@ -266,8 +265,7 @@ private:
     void setUIStyle(bool);
     void setUIEditMode(bool);
     void toggleUIEditMode(void);
-    void setLoadDebugOnOpen(bool);
-    void setSaveDebugOnClose(bool);
+    void setSaveDebug(bool);
 
     int setReprintScale(int);
 

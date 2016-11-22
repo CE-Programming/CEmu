@@ -395,21 +395,27 @@ static uint32_t cpu_dec_bc_partial_mode() {
 static void cpu_call(uint32_t address, bool mixed) {
     eZ80registers_t *r = &cpu.registers;
 #ifdef DEBUG_SUPPORT
-    if (cpuEvents & EVENT_DEBUG_STEP_OUT) {
-        bool addWait = false;
-        if (cpu.ADL) {
-            if (r->SPL >= debugger.stepOutSPL) {
-                addWait = true;
-                debugger.stepOutSPL = r->SPL;
+    if (cpuEvents & (EVENT_DEBUG_STEP_OUT | EVENT_DEBUG_STEP_OVER)) {
+        if(cpuEvents & EVENT_DEBUG_STEP_OUT) {
+            bool addWait = false;
+            if (cpu.ADL) {
+                if (r->SPL >= debugger.stepOutSPL) {
+                    addWait = true;
+                    debugger.stepOutSPL = r->SPL;
+                }
+            } else {
+                if (r->SPS >= debugger.stepOutSPS) {
+                    addWait = true;
+                    debugger.stepOutSPS = r->SPS;
+                }
             }
-        } else {
-            if (r->SPS >= debugger.stepOutSPS) {
-                addWait = true;
-                debugger.stepOutSPS = r->SPS;
+            if (addWait && (debugger.stepOutWait < 1)) {
+                debugger.stepOutWait++;
             }
-        }
-        if (addWait && (debugger.stepOutWait < 1)) {
-            debugger.stepOutWait++;
+        } else if (cpuEvents & EVENT_DEBUG_STEP_OVER) {
+            if (r->PC == debugger.stepOverInstrEnd) {
+                debugger.data.block[debugger.stepOverInstrEnd] &= ~DBG_TEMP_EXEC_BREAKPOINT;
+            }
         }
     }
 #endif

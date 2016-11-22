@@ -23,11 +23,6 @@
 #include "../../core/schedule.h"
 #include "../../core/link.h"
 
-void MainWindow::setSaveOnClose(bool state) {
-    ui->checkSave->setChecked(state);
-    settings->setValue(QStringLiteral("saveOnClose"), state);
-}
-
 void MainWindow::setPortableConfig(bool state) {
     ui->checkPortable->setChecked(state);
     QString debugPath;
@@ -72,18 +67,15 @@ void MainWindow::setPortableConfig(bool state) {
     ui->buttonChangeSavedImagePath->setEnabled(!portable);
 }
 
-void MainWindow::setRestoreOnOpen(bool state) {
-    ui->checkRestore->setChecked(state);
+void MainWindow::setAutoSaveState(bool state) {
+    ui->checkSaveRestore->setChecked(state);
     settings->setValue(QStringLiteral("restoreOnOpen"), state);
+    settings->setValue(QStringLiteral("saveOnClose"), state);
 }
 
-void MainWindow::setSaveDebugOnClose(bool state) {
-    ui->checkSaveDebugClose->setChecked(state);
+void MainWindow::setSaveDebug(bool state) {
+    ui->checkSaveLoadDebug->setChecked(state);
     settings->setValue(QStringLiteral("saveDebugOnClose"), state);
-}
-
-void MainWindow::setLoadDebugOnOpen(bool state) {
-    ui->checkLoadDebugOnOpen->setChecked(state);
     settings->setValue(QStringLiteral("loadDebugOnOpen"), state);
 }
 

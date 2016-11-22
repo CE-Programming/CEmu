@@ -14,7 +14,7 @@ SendingHandler sendingHandler;
 
 SendingHandler::SendingHandler() {}
 
-void SendingHandler::dropOccured(QDropEvent *e, unsigned location) {
+void SendingHandler::dropOccured(QDropEvent *e, unsigned int location) {
     if (isSending || isReceiving || inDebugger) {
         return e->ignore();
     }

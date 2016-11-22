@@ -12,7 +12,7 @@ volatile bool isReceiving = false;
 #define SAFE_RAM 0xD052C6
 
 static const uint8_t jforcegraph[9] = {
-    0xF3,                         /* di            */
+    0xF3,                         /* di                            */
     0xFD, 0xCB, 0x03, 0x86,       /* res graphdraw,(iy+graphflags) */
     0xC3, 0x7C, 0x14, 0x02        /* jp _jforcegraphnokey          */
 };

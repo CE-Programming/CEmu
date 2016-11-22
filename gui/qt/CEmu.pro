@@ -130,7 +130,6 @@ SOURCES +=  utils.cpp \
     ../../core/extras.c \
     ../../core/debug/disasm.cpp \
     ../../core/debug/debug.c \
-    ../../core/debug/stepping.cpp \
     ../../core/debug/profiler.c \
     sendinghandler.cpp \
     capture/optimize.c \
@@ -142,7 +141,8 @@ SOURCES +=  utils.cpp \
     capture/xform.c \
     debugger.cpp \
     hexeditor.cpp \
-    settings.cpp
+    settings.cpp \
+    ../../core/debug/stepping.cpp
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp

@@ -21,9 +21,16 @@ protected:
     virtual void dropEvent(QDropEvent*) Q_DECL_OVERRIDE;
     virtual void dragEnterEvent(QDragEnterEvent*) Q_DECL_OVERRIDE;
     virtual void dragLeaveEvent(QDragLeaveEvent*) Q_DECL_OVERRIDE;
+    virtual void dragMoveEvent(QDragMoveEvent*) Q_DECL_OVERRIDE;
 
 private:
+    enum lcd_side {
+        LCD_LEFT=0,
+        LCD_RIGHT
+    };
+
     int lcdSize = 0;
+    unsigned int side_drag;
     bool state_set = false;
     bool in_drag = false;
     QTimer *refreshTimer;

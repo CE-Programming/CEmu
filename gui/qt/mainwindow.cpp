@@ -52,6 +52,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     connect(&keypadBridge, &QtKeypadBridge::keyStateChanged, ui->keypadWidget, &KeypadWidget::changeKeyState);
     installEventFilter(&keypadBridge);
     ui->lcdWidget->installEventFilter(&keypadBridge);
+
     // Same for all the tabs/docks (iterate over them instead of hardcoding their names)
     for (const auto& tab : ui->tabWidget->children()[0]->children()) {
         tab->installEventFilter(&keypadBridge);
@@ -175,11 +176,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     connect(ui->emulationSpeed, &QSlider::valueChanged, this, &MainWindow::setEmulatedSpeed);
     connect(ui->checkThrottle, &QCheckBox::stateChanged, this, &MainWindow::setThrottleMode);
     connect(ui->lcdWidget, &QWidget::customContextMenuRequested, this, &MainWindow::screenContextMenu);
-    connect(ui->checkRestore, &QCheckBox::stateChanged, this, &MainWindow::setRestoreOnOpen);
-    connect(ui->checkSave, &QCheckBox::stateChanged, this, &MainWindow::setSaveOnClose);
+    connect(ui->checkSaveRestore, &QCheckBox::stateChanged, this, &MainWindow::setAutoSaveState);
     connect(ui->checkPortable, &QCheckBox::stateChanged, this, &MainWindow::setPortableConfig);
-    connect(ui->checkLoadDebugOnOpen, &QCheckBox::stateChanged, this, &MainWindow::setLoadDebugOnOpen);
-    connect(ui->checkSaveDebugClose, &QCheckBox::stateChanged, this, &MainWindow::setSaveDebugOnClose);
+    connect(ui->checkSaveLoadDebug, &QCheckBox::stateChanged, this, &MainWindow::setSaveDebug);
     connect(ui->buttonChangeSavedImagePath, &QPushButton::clicked, this, &MainWindow::setImagePath);
     connect(ui->buttonChangeSavedDebugPath, &QPushButton::clicked, this, &MainWindow::setDebugPath);
     connect(this, &MainWindow::setEmuSpeed, &emu, &EmuThread::setEmuSpeed);
@@ -258,7 +257,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
     setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
     setUIStyle(true);
-    setAcceptDrops(true);
 
     autotester::stepCallback = []() { QApplication::processEvents(); };
 
@@ -298,10 +296,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     setEmulatedSpeed(settings->value(QStringLiteral("emuRate"), 10).toUInt());
     setFont(settings->value(QStringLiteral("textSize"), 9).toUInt());
     setAutoCheckForUpdates(settings->value(QStringLiteral("autoUpdate"), false).toBool());
-    setSaveOnClose(settings->value(QStringLiteral("saveOnClose"), true).toBool());
-    setRestoreOnOpen(settings->value(QStringLiteral("restoreOnOpen"), true).toBool());
-    setSaveDebugOnClose(settings->value(QStringLiteral("saveDebugOnClose"), false).toBool());
-    setLoadDebugOnOpen(settings->value(QStringLiteral("loadDebugOnOpen"), false).toBool());
+    setAutoSaveState(settings->value(QStringLiteral("restoreOnOpen"), true).toBool());
+    setSaveDebug(settings->value(QStringLiteral("loadDebugOnOpen"), false).toBool());
     setSpaceDisasm(settings->value(QStringLiteral("addDisasmSpace"), false).toBool());
     setUIEditMode(settings->value(QStringLiteral("uiMode"), true).toBool());
     ui->flashBytes->setValue(settings->value(QStringLiteral("flashBytesPerLine"), 8).toInt());
@@ -731,7 +727,8 @@ void MainWindow::recordGIF() {
 
     ui->frameskipSlider->setEnabled(path.isEmpty());
     ui->actionRecordGIF->setChecked(!path.isEmpty());
-    ui->buttonGIF->setText((!path.isEmpty()) ? QString("Stop Recording") : QString("Record GIF"));
+    ui->buttonGIF->setText((!path.isEmpty()) ? tr("Stop Recording") : tr("Record GIF"));
+    ui->actionRecordGIF->setText((!path.isEmpty()) ? tr("Stop GIF Recording...") : tr("Record animated GIF..."));
 }
 
 void MainWindow::changeFrameskip(int value) {
@@ -852,9 +849,7 @@ void MainWindow::refreshVariableList() {
         return;
     }
 
-    while (ui->emuVarView->rowCount() > 0) {
-        ui->emuVarView->removeRow(0);
-    }
+    ui->emuVarView->setRowCount(0);
 
     if (isReceiving || isSending) {
         ui->buttonRefreshList->setText(tr("Refresh variable list..."));
@@ -1327,7 +1322,7 @@ void MainWindow::drawNextDisassembleLine() {
     }
 
     if (disasmHighlight.hit_pc == true) {
-        ui->disassemblyView->addHighlight(QColor(Qt::gray));
+        ui->disassemblyView->addHighlight(QColor(Qt::blue).lighter(160));
     }
 }
 

@@ -434,6 +434,8 @@ void MainWindow::debuggerGUISetState(bool state) {
     ui->groupMem->setEnabled(state);
     ui->cycleView->setEnabled(state);
     ui->freqView->setEnabled(state);
+    ui->opView->setEnabled(state);
+    ui->vatView->setEnabled(state);
 
     ui->actionRestoreState->setEnabled(!state);
     ui->actionImportCalculatorState->setEnabled(!state);

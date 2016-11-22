@@ -1,8 +1,9 @@
 #include "datawidget.h"
 
-/* extraHighlights (0) = current line selection */
+/* extraHighlights[0] = current line selection */
 
-DataWidget::DataWidget(QWidget *p) : QPlainTextEdit(p), cursorMoveable(false) {
+DataWidget::DataWidget(QWidget *p) : QPlainTextEdit(p) {
+    cursorMoveable = false;
     setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
