@@ -71,6 +71,15 @@ bool listVariablesLink(void) {
     return true;
 }
 
+static void run_asm(const uint8_t *data, const size_t data_size, const uint32_t cycles) {
+    cpu.halted = cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = 0;
+    memcpy(phys_mem_ptr(SAFE_RAM, 8400), data, data_size);
+    cpu_flush(SAFE_RAM, 1);
+    cpu.cycles = 0;
+    cpu.next = cycles;
+    cpu_execute();
+}
+
 /*
  * Really hackish way to send a variable -- Like, on a scale of 1 to hackish, it's like really hackish
  * Proper USB emulation should really be a thing
@@ -91,8 +100,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
     uint8_t var_ver,
             var_arc;
 
-    uint8_t *run_asm_safe = phys_mem_ptr(SAFE_RAM, 8400),
-            *cxCurApp     = phys_mem_ptr(0xD007E0, 1),
+    uint8_t *cxCurApp     = phys_mem_ptr(0xD007E0, 1),
             *op1          = phys_mem_ptr(0xD005F8, 9),
             *var_ptr;
 
@@ -102,8 +110,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
              header_size;
 
     size_t   temp_size;
-    int remaining;
-    long lSize;
+    long     lSize;
 
     /* Return if we are at an error menu */
     if (*cxCurApp == 0x52 || !(file = fopen_utf8(file_name, "rb"))) {
@@ -140,15 +147,9 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
 
     /* parse each varaible individually until the entire file is compelete. */
 
-    cpu.halted = cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = 0;
-    memcpy(run_asm_safe, jforcegraph, sizeof(jforcegraph));
-    cpu_flush(SAFE_RAM, 1);
-    cpu.cycles = 0;
-    cpu.next = 2300000;
-    cpu_execute();
+    run_asm(jforcegraph, sizeof(jforcegraph), 2500000);
 
-    remaining = (int)data_size;
-    while (remaining > 0) {
+    while (data_size) {
 
         if (fread(&header_size, 2, 1, file) != 1)          goto r_err;
         if (fread(&var_size, 2, 1, file) != 1)             goto r_err;
@@ -162,20 +163,19 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
         if (fread(&var_size2, 2, 1, file) != 1)            goto r_err;
         if (var_size != var_size2)                         goto r_err;
 
-        // Hack for TI Connect CE bug
+        /* Hack for TI Connect CE bug */
         if ((*op1 == CALC_VAR_TYPE_REAL_LIST || *op1 == CALC_VAR_TYPE_CPLX_LIST) &&
             !(op1[1] == tVarLst || op1[1] == tAns)) {
             memmove(op1 + 2, op1 + 1, 7);
             op1[1] = tVarLst;
         }
-        cpu.halted = cpu.IEF_wait = 0;
+
         mem_poke_byte(0xD008DF, 0);
         cpu.registers.HL = var_size - 2;
-        memcpy(run_asm_safe, pgrm_loader, sizeof(pgrm_loader));
-        cpu_flush(SAFE_RAM, 1);
-        cpu.cycles = 0;
-        cpu.next = 23000000;
-        cpu_execute();
+
+        /* copy the program into the emulator */
+
+        run_asm(pgrm_loader, sizeof(pgrm_loader), 23000000);
 
         if (mem_peek_byte(0xD008DF)) {
             gui_console_printf("[CEmu] Variable Transfer Error\n");
@@ -190,27 +190,17 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
             case LINK_FILE:
                 if (var_arc != 0x80) break;
             case LINK_ARCH:
-                cpu.halted = cpu.IEF_wait = 0;
-                memcpy(run_asm_safe, archivevar, sizeof(archivevar));
-                cpu_flush(SAFE_RAM, 1);
-                cpu.cycles = 0;
-                cpu.next = 23000000;
-                cpu_execute();
+                run_asm(archivevar, sizeof(archivevar), 23000000);
                 break;
             case LINK_RAM:
                 break;
         }
 
-        cpu.halted = cpu.IEF_wait = 0;
-        memcpy(run_asm_safe, jforcehome, sizeof(jforcehome));
-        cpu_flush(SAFE_RAM, 1);
-        cpu.cycles = 0;
-        cpu.next = 2300000;
-        cpu_execute();
-
-        remaining -= 2 + header_size + 2 + var_size;
+        data_size -= 2 + header_size + 2 + var_size;
+        gui_console_err_printf("remaining: %d\n", data_size);
     }
 
+    run_asm(jforcehome, sizeof(jforcehome), 23000000);
     cpu.cycles = save_cycles;
     cpu.next = save_next;
     cpu.cycles_offset = save_cycles_offset;
@@ -220,6 +210,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
 r_err:
     cpu.cycles = save_cycles;
     cpu.next = save_next;
+    cpu.cycles_offset = save_cycles_offset;
     fclose(file);
     return false;
 }

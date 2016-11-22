@@ -43,7 +43,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     ui->setupUi(this);
     ui->centralWidget->hide();
     ui->statusBar->addWidget(&statusLabel);
-    ui->lcdWidget->setLCD(&lcd);
 
     // Allow for 2000 lines of logging
     ui->console->setMaximumBlockCount(2000);
@@ -104,22 +103,16 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     connect(ui->breakpointView, &QTableWidget::itemPressed, this, &MainWindow::breakpointSetPreviousAddress);
     connect(ui->watchpointView, &QTableWidget::itemChanged, this, &MainWindow::watchpointDataChanged);
     connect(ui->watchpointView, &QTableWidget::itemPressed, this, &MainWindow::watchpointSetPreviousAddress);
-    connect(ui->profilerView, &QTableWidget::itemChanged, this, &MainWindow::profilerDataChange);
     connect(ui->checkCharging, &QCheckBox::toggled, this, &MainWindow::batteryIsCharging);
     connect(ui->sliderBattery, &QSlider::valueChanged, this, &MainWindow::batteryChangeStatus);
     connect(ui->checkAddSpace, &QCheckBox::stateChanged, this, &MainWindow::setSpaceDisasm);
     connect(ui->buttonZero, &QPushButton::clicked, this, &MainWindow::debuggerZeroClockCounter);
-    connect(ui->buttonAddProfiler, &QPushButton::clicked, this, &MainWindow::profilerSlotAdd);
-    connect(ui->buttonRemoveProfiler, &QPushButton::clicked, this, &MainWindow::profilerRemoveSelected);
-    connect(ui->buttonResetProfiler, &QPushButton::clicked, this, &MainWindow::profilerZero);
-    connect(ui->buttonExportProfiler, &QPushButton::clicked, this, &MainWindow::profilerExport);
 
     // Debugger Options
     connect(ui->buttonAddEquateFile, &QPushButton::clicked, this, &MainWindow::equatesAddDialog);
     connect(ui->buttonClearEquates, &QPushButton::clicked, this, &MainWindow::equatesClear);
     connect(ui->buttonRefreshEquates, &QPushButton::clicked, this, &MainWindow::equatesRefresh);
     connect(ui->textSizeSlider, &QSlider::valueChanged, this, &MainWindow::setFont);
-    connect(ui->comboGranularity, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::profilerChangeGranularity);
 
     // Debugging files
     connect(ui->actionImportDebugger, &QAction::triggered, this, &MainWindow::debuggerImport);
@@ -251,7 +244,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
 
     ui->portView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     ui->breakpointView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    ui->profilerView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     ui->watchpointView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 
     setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
@@ -341,7 +333,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     ui->vatView->updateAllHighlights();
 
     debugger_init();
-    profiler_init();
 
     if (!opts.imageFile.isEmpty()) {
         if (fileExists(opts.imageFile.toStdString())) {
@@ -421,7 +412,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
 
 MainWindow::~MainWindow() {
     debugger_free();
-    profiler_free();
 
     delete toggleAction;
     delete debuggerShortcut;

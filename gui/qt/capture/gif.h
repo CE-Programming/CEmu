@@ -8,6 +8,5 @@ bool gif_start_recording(const char *filename, unsigned int frameskip);
 void gif_new_frame();
 bool gif_stop_recording();
 bool gif_optimize(const char *in_name, const char *out_name);
-//void optimize_fragments(Gif_Stream *, int optimizeness, int huge_stream);
 
 #endif

@@ -148,7 +148,7 @@ static void lcd_event(int index) {
             + (lcd.timing[1]       & 0x3FF) + 1; /* Active        */
     event_repeat(index, pcd * htime * vtime);
 
-    /* For now, assuming vcomp occurs at same time UPBASE is loaded */
+    /* For now, assuming vsync occurs at same time UPBASE is loaded */
     lcd.upcurr = lcd.upbase;
     lcd.ris |= 0xC;
     intrpt_set(INT_LCD, lcd.ris & lcd.imsc);

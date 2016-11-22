@@ -20,7 +20,6 @@
 #include "../../core/vat.h"
 #include "../../core/debug/debug.h"
 #include "../../core/debug/disasm.h"
-#include "../../core/debug/profiler.h"
 
 namespace Ui { class MainWindow; }
 
@@ -107,13 +106,6 @@ private:
         WATCH_WRITE_LOC
     };
 
-    enum profilerIndex {
-        PROFILE_LABEL_LOC=0,
-        PROFILE_ADDR_LOC,
-        PROFILE_SIZE_LOC,
-        PROFILE_CYCLE_LOC
-    };
-
     enum portIndex {
         PORT_ADDR_LOC=0,
         PORT_VALUE_LOC,
@@ -160,7 +152,6 @@ private:
 
     void portUpdate(int);
     void watchpointUpdate(int);
-    void profilerUpdate(int);
 
     void portSetPreviousAddress(QTableWidgetItem*);
     void breakpointSetPreviousAddress(QTableWidgetItem*);
@@ -169,7 +160,6 @@ private:
     void portDataChanged(QTableWidgetItem*);
     void breakpointDataChanged(QTableWidgetItem*);
     void watchpointDataChanged(QTableWidgetItem*);
-    void profilerDataChange(QTableWidgetItem*);
 
     void updateDisasmView(const int, const bool);
     void drawNextDisassembleLine();
@@ -196,26 +186,18 @@ private:
     void debuggerZeroClockCounter();
     void debuggerTabSwitched(int);
 
-    void profilerZero();
-    void profilerExport();
-    void profilerRemoveAll();
-    void profilerChangeGranularity(int);
-
     // For linking to the buttons
     void breakpointSlotAdd();
     void watchpointSlotAdd();
-    void profilerSlotAdd();
     void portSlotAdd();
 
     // Removal from widgets
-    bool profilerRemoveSelected();
     bool breakpointRemoveSelectedRow();
     bool watchpointRemoveSelectedRow();
 
     // Get labels
     QString watchpointNextLabel();
     QString breakpointNextLabel();
-    QString profilerNextLabel();
 
     // Adding watchpoints from disassembly
     void watchpointReadGUIAdd();
@@ -233,7 +215,6 @@ private:
     bool portAdd(uint16_t, unsigned);
     bool breakpointAdd(QString, uint32_t, bool);
     bool watchpointAdd(QString, uint32_t, uint8_t, unsigned);
-    bool profilerAdd(QString, uint32_t, uint32_t, uint64_t);
 
     void screenContextMenu(const QPoint &);
     void equatesAddDialog();

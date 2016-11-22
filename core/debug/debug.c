@@ -4,7 +4,6 @@
 
 #include "disasm.h"
 #include "debug.h"
-#include "profiler.h"
 #include "../mem.h"
 #include "../emu.h"
 #include "../cpu.h"

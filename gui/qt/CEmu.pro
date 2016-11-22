@@ -130,7 +130,6 @@ SOURCES +=  utils.cpp \
     ../../core/extras.c \
     ../../core/debug/disasm.cpp \
     ../../core/debug/debug.c \
-    ../../core/debug/profiler.c \
     sendinghandler.cpp \
     capture/optimize.c \
     capture/opttemplate.c \
@@ -209,7 +208,6 @@ HEADERS  +=  utils.h \
     ../../core/debug/debug.h \
     ../../core/debug/disasm.h \
     ../../core/debug/stepping.h \
-    ../../core/debug/profiler.h \
     cemuopts.h \
     sendinghandler.h \
     capture/kcolor.h \

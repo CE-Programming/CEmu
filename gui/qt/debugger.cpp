@@ -91,17 +91,6 @@ void MainWindow::debuggerImportFile(QString filename) {
                         (portFEnabled.at(i) == "y" ? DBG_PORT_FREEZE : DBG_NO_HANDLE);
         portAdd(hex2int(portAddress.at(i)), mask);
     }
-
-    // Load the profiler information
-    QStringList profilerLabel = debugInfo.value(QStringLiteral("profiler/label")).toStringList();
-    QStringList profilerAddress = debugInfo.value(QStringLiteral("profiler/address")).toStringList();
-    QStringList profilerSize = debugInfo.value(QStringLiteral("profiler/size")).toStringList();
-    QStringList profilerCycles = debugInfo.value(QStringLiteral("profiler/cycles")).toStringList();
-    for (i = 0; i < profilerLabel.size(); i++) {
-        QString cyclesStr = profilerCycles.at(i);
-        uint64_t cycles = cyclesStr.toLongLong();
-        profilerAdd(profilerLabel.at(i), hex2int(profilerAddress.at(i)), hex2int(profilerSize.at(i)), cycles);
-    }
 }
 
 void MainWindow::debuggerExportFile(QString filename) {
@@ -165,23 +154,6 @@ void MainWindow::debuggerExportFile(QString filename) {
     debugInfo.setValue(QStringLiteral("portmonitor/read"), portREnabled);
     debugInfo.setValue(QStringLiteral("portmonitor/write"), portWEnabled);
     debugInfo.setValue(QStringLiteral("portmonitor/freeze"), portFEnabled);
-
-    // Save profiler information
-    QStringList profilerLabel;
-    QStringList profilerAddress;
-    QStringList profilerSize;
-    QStringList profilerCycles;
-    for(i = 0; i < ui->profilerView->rowCount(); i++) {
-        profilerLabel.append(ui->profilerView->item(i, PROFILE_LABEL_LOC)->text());
-        profilerAddress.append(ui->profilerView->item(i, PROFILE_ADDR_LOC)->text());
-        profilerSize.append(ui->profilerView->item(i, PROFILE_SIZE_LOC)->text());
-        profilerCycles.append(ui->profilerView->item(i, PROFILE_CYCLE_LOC)->text());
-    }
-
-    debugInfo.setValue(QStringLiteral("profiler/label"), profilerLabel);
-    debugInfo.setValue(QStringLiteral("profiler/address"), profilerAddress);
-    debugInfo.setValue(QStringLiteral("profiler/size"), profilerSize);
-    debugInfo.setValue(QStringLiteral("profiler/cycles"), profilerCycles);
 
     // Make sure we write the settings
     debugInfo.sync();
@@ -575,7 +547,6 @@ void MainWindow::debuggerGUIPopulate() {
     ui->checkBGR->setChecked(lcd.control & 0x100);
     ui->brightnessSlider->setValue(backlight.brightness);
 
-    ui->profilerView->blockSignals(true);
     ui->portView->blockSignals(true);
     ui->watchpointView->blockSignals(true);
 
@@ -587,10 +558,6 @@ void MainWindow::debuggerGUIPopulate() {
         watchpointUpdate(i);
     }
 
-    for (int i = 0; i < ui->profilerView->rowCount(); i++) {
-        profilerUpdate(i);
-    }
-
     updateTIOSView();
     updateStackView();
     prevDisasmAddress = cpu.registers.PC;
@@ -599,7 +566,6 @@ void MainWindow::debuggerGUIPopulate() {
     ramUpdate();
     flashUpdate();
     memUpdate(prevDisasmAddress);
-    ui->profilerView->blockSignals(false);
     ui->portView->blockSignals(false);
     ui->watchpointView->blockSignals(false);
 }
@@ -611,145 +577,6 @@ void MainWindow::debuggerGUIPopulate() {
 void MainWindow::debuggerZeroClockCounter() {
     debugger.total_cycles = 0;
     ui->cycleView->setText("0");
-}
-
-// ------------------------------------------------
-// Profiler
-// ------------------------------------------------
-
-void MainWindow::profilerRemoveAll(void) {
-    ui->profilerView->setRowCount(0);
-    set_profiler_granularity(profiler.granularity);
-}
-
-void MainWindow::profilerChangeGranularity(int in) {
-    unsigned granularity = log2(ui->comboGranularity->itemText(in).toUInt());
-    ui->profilerView->setRowCount(0);
-    set_profiler_granularity(granularity);
-}
-
-QString MainWindow::profilerNextLabel(void) {
-    return QStringLiteral("Label") + QString::number(ui->profilerView->rowCount());
-}
-
-void MainWindow::profilerSlotAdd(void) {
-    profilerAdd(profilerNextLabel(), 0, 1 << profiler.granularity, 0);
-}
-
-bool MainWindow::profilerAdd(QString label, uint32_t address, uint32_t size, uint64_t cycles) {
-    const int currRow = ui->profilerView->rowCount();
-    QString addressStr = int2hex((address &= 0xFFFFFF), 6).toUpper();
-
-    ui->profilerView->setUpdatesEnabled(false);
-    ui->profilerView->blockSignals(true);
-
-    ui->profilerView->setRowCount(currRow + 1);
-
-    QTableWidgetItem *itemLabel   = new QTableWidgetItem(label);
-    QTableWidgetItem *itemAddress = new QTableWidgetItem(addressStr);
-    QTableWidgetItem *itemSize    = new QTableWidgetItem(QString::number(size &= 0xFFFFFF));
-    QTableWidgetItem *itemCycles  = new QTableWidgetItem(QString::number(cycles));
-
-    itemSize->setFlags(itemSize->flags() & ~Qt::ItemIsEditable);
-
-    ui->profilerView->setItem(currRow, PROFILE_LABEL_LOC, itemLabel);
-    ui->profilerView->setItem(currRow, PROFILE_ADDR_LOC, itemAddress);
-    ui->profilerView->setItem(currRow, PROFILE_SIZE_LOC, itemSize);
-    ui->profilerView->setItem(currRow, PROFILE_CYCLE_LOC, itemCycles);
-
-    ui->profilerView->setCurrentCell(currRow, PROFILE_ADDR_LOC);
-    ui->profilerView->setUpdatesEnabled(true);
-
-    add_profile_block(address, address+size-1, cycles);
-
-    ui->profilerView->blockSignals(false);
-    return true;
-}
-
-void MainWindow::profilerZero(void) {
-    auto count = 0;
-    unsigned j;
-    for (; count < ui->profilerView->rowCount(); count++) {
-        for(j = profiler.blocks[count]->start_addr; j < profiler.blocks[count]->end_addr; j++) {
-            profiler.profile_counters[j] = 0;
-        }
-        profiler.blocks[count]->cycles = 0;
-        ui->profilerView->item(count, PROFILE_CYCLE_LOC)->setText("0");
-    }
-}
-
-void MainWindow::profilerExport(void) {
-    uint64_t total_cycles = 0;
-    uint32_t count;
-    for (count = 0; count < profiler.num_blocks; count++) {
-        total_cycles += profiler.blocks[count]->cycles;
-    }
-    QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptSave, tr("Profiler Data (*.txt);;All Files (*.*)"));
-    QString write_file = fileNames.at(0);
-
-    std::ofstream out;
-    out.open(write_file.toStdString());
-
-    if (out.good()) {
-        out.precision(6);
-        out << "[CEmu Profiler Data]" << std::endl << std::endl;
-        out << "Total Cycles: " << total_cycles << std::endl << std::endl;
-        for (count = 0; count < profiler.num_blocks; count++) {
-            long double output = (profiler.blocks[count]->cycles) ?  (static_cast<long double>(profiler.blocks[count]->cycles)/static_cast<long double>(total_cycles))*100.0 : 0;
-            out << '[' << int2hex(profiler.blocks[count]->start_addr, 6).toStdString() << ':' << int2hex(profiler.blocks[count]->end_addr, 6).toStdString() << "] ";
-            out << output << "% " << profiler.blocks[count]->cycles << " cycles (" << ui->profilerView->item(count, PROFILE_LABEL_LOC)->text().toStdString() << ')' << std::endl;
-        }
-        out.close();
-    } else {
-        QMessageBox::warning(this, tr("Error"), tr("Error exporting profiler data"));
-    }
-}
-
-bool MainWindow::profilerRemoveSelected(void) {
-    if (!ui->profilerView->rowCount() || !ui->profilerView->selectionModel()->isSelected(ui->profilerView->currentIndex())) {
-        return false;
-    }
-
-    const uint32_t currRow = static_cast<uint32_t>(ui->profilerView->currentRow());
-
-    remove_profile_block(currRow);
-    ui->profilerView->removeRow(currRow);
-    return true;
-}
-
-void MainWindow::profilerUpdate(int currRow) {
-    update_profiler_cycles();
-    ui->profilerView->item(currRow, PROFILE_CYCLE_LOC)->setText(QString::number(profiler.blocks[currRow]->cycles));
-}
-
-void MainWindow::profilerDataChange(QTableWidgetItem *item) {
-    uint32_t row = static_cast<uint32_t>(item->row());
-    auto col = item->column();
-    uint32_t start_addr, size, value;
-
-    ui->profilerView->blockSignals(true);
-    if (col == PROFILE_CYCLE_LOC) {
-        uint64_t cycles = static_cast<uint64_t>(item->text().toLongLong());
-        item->setText(QString::number(cycles));
-        profiler.blocks[row]->cycles = cycles;
-    } else if (col == PROFILE_ADDR_LOC || col == PROFILE_SIZE_LOC) {
-        size = ui->profilerView->item(row, PROFILE_SIZE_LOC)->text().toUInt();
-
-        if (col == PROFILE_ADDR_LOC) {
-            value = item->text().toUInt(Q_NULLPTR, 16);
-            start_addr = value & ~((1 << profiler.granularity) - 1);
-        } else {
-            value = item->text().toUInt();
-            size = value / (1 << profiler.granularity);
-            if (!size) { size = 1 << profiler.granularity; }
-            start_addr = ui->profilerView->item(row, PROFILE_ADDR_LOC)->text().toUInt(Q_NULLPTR, 16);
-        }
-        ui->profilerView->item(row, PROFILE_ADDR_LOC)->setText(int2hex(start_addr, 6));
-        ui->profilerView->item(row, PROFILE_SIZE_LOC)->setText(QString::number(size));
-        update_profiler_block(row, start_addr, start_addr+size-1);
-    }
-
-    ui->profilerView->blockSignals(false);
 }
 
 // ------------------------------------------------

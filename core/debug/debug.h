@@ -7,7 +7,6 @@
 extern "C" {
 #endif
 
-#include "profiler.h"
 #include "../defines.h"
 #include "../port.h"
 
@@ -45,7 +44,6 @@ enum {
 /* For other things */
 #define DBG_INST_START_MARKER     (1 << 4)
 #define DBG_INST_MARKER           (1 << 5)
-#define DBG_IS_PROFILED           (1 << 6)
 
 #define DBG_PORT_RANGE            0xFFFF00
 #define DBGOUT_PORT_RANGE         0xFB0000
