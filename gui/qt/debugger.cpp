@@ -648,6 +648,8 @@ bool MainWindow::profilerAdd(QString label, uint32_t address, uint32_t size, uin
     QTableWidgetItem *itemSize    = new QTableWidgetItem(QString::number(size &= 0xFFFFFF));
     QTableWidgetItem *itemCycles  = new QTableWidgetItem(QString::number(cycles));
 
+    itemSize->setFlags(itemSize->flags() & ~Qt::ItemIsEditable);
+
     ui->profilerView->setItem(currRow, PROFILE_LABEL_LOC, itemLabel);
     ui->profilerView->setItem(currRow, PROFILE_ADDR_LOC, itemAddress);
     ui->profilerView->setItem(currRow, PROFILE_SIZE_LOC, itemSize);
@@ -796,7 +798,7 @@ void MainWindow::breakpointDataChanged(QTableWidgetItem *item) {
         std::string s = item->text().toUpper().toStdString();
         unsigned mask;
 
-        if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty()) {
+        if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty() || s.length() > 6) {
             item->setText(int2hex(prevBreakpointAddress, 6));
             return;
         }
@@ -1008,7 +1010,7 @@ void MainWindow::portDataChanged(QTableWidgetItem *item) {
         std::string s = item->text().toUpper().toStdString();
         unsigned mask;
 
-        if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty()) {
+        if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty() || s.length() > 4) {
             item->setText(int2hex(prevPortAddress, 4));
             return;
         }
@@ -1236,9 +1238,10 @@ void MainWindow::watchpointDataChanged(QTableWidgetItem *item) {
         newString = int2hex(wData, wSize << 1);
 
         item->setText(newString);
+        wData = static_cast<uint32_t>(newString.toUInt(Q_NULLPTR, 16));
 
-        for (i=0; i<wSize; i++) {
-            mem_poke_byte(address+i, (wData >> ((i << 3))&0xFF));
+        for (i = 0; i < wSize; i++) {
+            mem_poke_byte(address + i, (wData >> ((i << 3)) & 255));
         }
 
         ramUpdate();
@@ -1268,17 +1271,17 @@ void MainWindow::watchpointDataChanged(QTableWidgetItem *item) {
         std::string s = item->text().toUpper().toStdString();
         unsigned mask;
 
-        if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty()) {
+        if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty() || s.length() > 6) {
             item->setText(int2hex(prevWatchpointAddress, 6));
             ui->watchpointView->blockSignals(false);
             return;
         }
 
         address = static_cast<uint32_t>(hex2int(item->text().toUpper()));
-        newString = int2hex(address,6);
+        newString = int2hex(address, 6);
 
         /* Return if address is already set */
-        for (int i=0; i<ui->watchpointView->rowCount(); i++) {
+        for (int i = 0; i < ui->watchpointView->rowCount(); i++) {
             if (ui->watchpointView->item(i, WATCH_ADDR_LOC)->text() == newString && i != row) {
                 item->setText(int2hex(prevWatchpointAddress, 6));
                 ui->watchpointView->blockSignals(false);
@@ -1352,8 +1355,8 @@ void MainWindow::equatesAddDialog() {
     dialog.setDirectory(currentDir);
 
     QStringList extFilters;
-    extFilters << tr("ASM equates file (*.inc)")
-               << tr("Symbol Table File (*.lab)");
+    extFilters << tr("Equate files (*.inc *.lab)")
+               << tr("All Files (*.*)");
     dialog.setNameFilters(extFilters);
 
     good = dialog.exec();

@@ -14,7 +14,7 @@ void intrpt_pulse(uint32_t mask) {
 
 void intrpt_set(uint32_t mask, bool set) {
     size_t request;
-    assert(!(mask & mask - 1) && "Expected no more than one bit set");
+    assert(!(mask & (mask - 1)) && "Expected no more than one bit set");
     mask &= 0x3FFFFF;
     for (request = 0; request < sizeof(intrpt) / sizeof(*intrpt); request++) {
         if (set ^ (intrpt[request].inverted & mask)) {

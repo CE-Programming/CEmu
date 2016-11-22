@@ -46,7 +46,6 @@ static uint32_t cpu_address_mode(uint32_t address, bool mode) {
     }
     return (cpu.registers.MBASE << 16) | (address & 0xFFFF);
 }
-
 static void cpu_prefetch(uint32_t address, bool mode) {
     cpu.ADL = mode;
     // rawPC the PC after the next prefetch (which we do late), before adding MBASE.
@@ -56,9 +55,6 @@ static void cpu_prefetch(uint32_t address, bool mode) {
 #ifdef DEBUG_SUPPORT
     debugger.data.block[cpu.registers.PC] |= DBG_INST_MARKER;
 #endif
-}
-static void cpu_prefetch_next(void) {
-    cpu_prefetch(cpu.registers.PC + 1, cpu.ADL);
 }
 static uint8_t cpu_fetch_byte(void) {
     uint8_t value;
@@ -73,8 +69,11 @@ static uint8_t cpu_fetch_byte(void) {
     }
 #endif
     value = cpu.prefetch;
-    cpu_prefetch_next();
+    cpu_prefetch(cpu.registers.PC + 1, cpu.ADL);
     return value;
+}
+static void cpu_prefetch_next(void) {
+    cpu_prefetch(cpu.registers.PC + 1, cpu.ADL);
 }
 static int8_t cpu_fetch_offset(void) {
     return (int8_t)cpu_fetch_byte();

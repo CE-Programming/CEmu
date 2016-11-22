@@ -1327,7 +1327,7 @@ void MainWindow::drawNextDisassembleLine() {
     }
 
     if (disasmHighlight.hit_pc == true) {
-        ui->disassemblyView->addHighlight(QColor(Qt::red).lighter(160));
+        ui->disassemblyView->addHighlight(QColor(Qt::gray));
     }
 }
 

@@ -14,7 +14,6 @@ class Chunks {
 public:
     // Constructors and file settings
     Chunks();
-    ~Chunks();
     explicit Chunks(QIODevice &ioDevice);
     bool setIODevice(QIODevice &ioDevice);
 
