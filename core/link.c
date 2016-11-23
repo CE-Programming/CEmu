@@ -197,7 +197,6 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
         }
 
         data_size -= 2 + header_size + 2 + var_size;
-        gui_console_err_printf("remaining: %d\n", data_size);
     }
 
     run_asm(jforcehome, sizeof(jforcehome), 23000000);
