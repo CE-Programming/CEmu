@@ -56,7 +56,7 @@ static uint8_t keypad_read(const uint16_t pio, bool peek) {
             break;
         case 0x04: case 0x05: case 0x06: case 0x07:
         case 0x08: case 0x09: case 0x0A: case 0x0B:
-            value = read8(keypad.data[pio >> 1 & 15], pio << 3 & 8);
+            value = read8(keypad.data[(pio - 0x10) >> 1 & 15], pio << 3 & 8);
             break;
         case 0x10:
             value = read8(keypad.gpio_enable, bit_offset);
@@ -151,7 +151,7 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
         case 0x04: case 0x05: case 0x06: case 0x07:
         case 0x08: case 0x09: case 0x0A: case 0x0B:
             if (poke) {
-                write8(keypad.data[pio >> 1 & 15], pio << 3 & 8, byte);
+                write8(keypad.data[(pio - 0x10) >> 1 & 15], pio << 3 & 8, byte);
                 write8(keypad.key_map[pio >> 1 & 15], pio << 3 & 8, byte);
             }
             break;
