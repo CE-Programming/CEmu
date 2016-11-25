@@ -16,7 +16,15 @@ struct fotg210_regs {
 		uint32_t data[4];
 	} hccr;			/* 0x00 - 0x0f: hccr */
 	struct {
-		uint32_t data[9];
+		uint32_t usbcmd;           /* 0x10: USB Command */
+		uint32_t usbsts;           /* 0x14: USB Status */
+		uint32_t usbintr;          /* 0x18: USB Interrupt Enable */
+		uint32_t frindex;          /* 0x1C: USB Frame Index */
+		uint32_t ctrldssegment;    /* 0x20: 4GB Segment Selector (Reserved) */
+		uint32_t periodiclistbase; /* 0x24: Frame List Base Address */
+		uint32_t asynclistaddr;    /* 0x28: Next Asynchronous List Address */
+		uint32_t rsvd0[1];         /* 0x2C: Reserved */
+		uint32_t portsc[1];        /* 0x30: USBCMD */
 	} hcor;			/* 0x10 - 0x33: hcor */
 	uint32_t rsvd1[3];
 	uint32_t miscr;	/* 0x40: Miscellaneous Register */
@@ -113,6 +121,7 @@ struct fotg210_regs {
 #define OTGISR_AVBUSERR     (1 << 5)  /* A-device VBUS Error */
 #define OTGISR_ASRP         (1 << 4)  /* A-device SRP detected */
 #define OTGISR_BSRP         (1 << 0)  /* B-device SRP complete */
+#define OTGISR_MASK         0x1F71
 
 /* OTG Interrupt Enable Register */
 #define OTGIER_APRM         (1 << 12) /* Mini-A plug removed */
