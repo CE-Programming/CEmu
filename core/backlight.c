@@ -30,9 +30,9 @@ static uint8_t backlight_read(const uint16_t pio, bool peek) {
 }
 
 /* Write to the 0xBXXX range of ports */
-static void backlight_write(const uint16_t pio, const uint8_t byte, bool peek) {
+static void backlight_write(const uint16_t pio, const uint8_t byte, bool poke) {
     uint8_t index = (uint8_t)pio;
-    (void)peek;
+    (void)poke;
 
     switch (index) {
         case 0x01:

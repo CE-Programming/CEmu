@@ -7,15 +7,15 @@
 usb_state_t usb;
 
 static uint8_t usb_read(const uint16_t pio, bool peek) {
-    (void)peek;
     (void)pio;
+    (void)peek;
     return 0xFF;
 }
 
-static void usb_write(const uint16_t pio, const uint8_t byte, bool peek) {
-    (void)peek;
+static void usb_write(const uint16_t pio, const uint8_t byte, bool poke) {
     (void)pio;
     (void)byte;
+    (void)poke;
 }
 
 void usb_reset(void) {

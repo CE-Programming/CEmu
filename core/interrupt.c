@@ -72,14 +72,18 @@ static uint8_t intrpt_read(uint16_t pio, bool peek) {
     return value;
 }
 
-static void intrpt_write(uint16_t pio, uint8_t value, bool peek) {
+static void intrpt_write(uint16_t pio, uint8_t value, bool poke) {
     uint16_t index = pio >> 2 & 0x3F;
     uint8_t request = pio >> 5 & 1;
     uint8_t bit_offset = (pio & 3) << 3;
 
-    (void)peek;
-
     switch(index) {
+        case 0:
+        case 8:
+            if (poke) {
+                write8(intrpt[request].status, bit_offset, value);
+            }
+            break;
         case 1:
         case 9:
             write8(intrpt[request].enabled, bit_offset, value);
@@ -95,6 +99,13 @@ static void intrpt_write(uint16_t pio, uint8_t value, bool peek) {
         case 4:
         case 12:
             write8(intrpt[request].inverted, bit_offset, value);
+            break;
+        case 5:
+        case 13:
+            if (poke) {
+                intrpt[request].enabled |= value << bit_offset;
+                intrpt[request].status |= value << bit_offset;
+            }
             break;
     }
 }

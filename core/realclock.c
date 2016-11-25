@@ -126,10 +126,10 @@ static uint8_t rtc_read(const uint16_t pio, bool peek) {
     return value;
 }
 
-static void rtc_write(const uint16_t pio, const uint8_t byte, bool peek) {
+static void rtc_write(const uint16_t pio, const uint8_t byte, bool poke) {
     uint16_t index = pio & 0xFF;
     uint8_t bit_offset = (index & 3) << 3;
-    (void)peek;
+    (void)poke;
 
     switch (index) {
         case 0x10:

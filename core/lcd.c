@@ -205,13 +205,13 @@ static uint8_t lcd_read(const uint16_t pio, bool peek) {
     return 0;
 }
 
-static void lcd_write(const uint16_t pio, const uint8_t value, bool peek) {
+static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
     uint16_t index = pio & 0xFFC;
 
     uint8_t byte_offset = pio & 3;
     uint8_t bit_offset = byte_offset << 3;
 
-    (void)peek;
+    (void)poke;
 
     if (index < 0x200) {
         if (index < 0x010) {

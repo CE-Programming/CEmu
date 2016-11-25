@@ -104,9 +104,9 @@ static uint8_t gpt_read(uint16_t address, bool peek) {
     return value;
 }
 
-static void gpt_write(uint16_t address, uint8_t value, bool peek) {
+static void gpt_write(uint16_t address, uint8_t value, bool poke) {
     int timer;
-    (void)peek;
+    (void)poke;
 
     if (address >= 0x34 && address < 0x38) {
         ((uint8_t *)&gpt)[address] &= ~value;

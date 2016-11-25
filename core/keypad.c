@@ -38,17 +38,8 @@ void EMSCRIPTEN_KEEPALIVE keypad_key_event(unsigned int row, unsigned int col, b
 static uint8_t keypad_read(const uint16_t pio, bool peek) {
     uint16_t index = (pio >> 2) & 0x7F;
     uint8_t bit_offset = (pio & 3) << 3;
-
-    uint8_t upper_index = (pio >> 4) & 0xF;
-    uint8_t lower_index = pio & 0xF;
-
     uint8_t value = 0;
-
     (void)peek;
-
-    if (upper_index == 0x1 || upper_index == 0x2) {
-        return read8(keypad.data[lower_index>>1],(lower_index&1)<<3);
-    }
 
     switch(index) {
         case 0x00:
@@ -62,6 +53,10 @@ static uint8_t keypad_read(const uint16_t pio, bool peek) {
             break;
         case 0x03:
             value = read8(keypad.enable, bit_offset);
+            break;
+        case 0x04: case 0x05: case 0x06: case 0x07:
+        case 0x08: case 0x09: case 0x0A: case 0x0B:
+            value = read8(keypad.data[pio >> 1 & 15], pio << 3 & 8);
             break;
         case 0x10:
             value = read8(keypad.gpio_enable, bit_offset);
@@ -110,12 +105,10 @@ static void keypad_scan_event(int index) {
     keypad_intrpt_check();
 }
 
-static void keypad_write(const uint16_t pio, const uint8_t byte, bool peek) {
+static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
     int row;
     uint16_t index = (pio >> 2) & 0x7F;
     uint8_t bit_offset = (pio & 3) << 3;
-
-    (void)peek;
 
     switch (index) {
         case 0x00:
@@ -154,6 +147,13 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool peek) {
         case 0x03:
             write8(keypad.enable, bit_offset, byte & 7);
             keypad_intrpt_check();
+            break;
+        case 0x04: case 0x05: case 0x06: case 0x07:
+        case 0x08: case 0x09: case 0x0A: case 0x0B:
+            if (poke) {
+                write8(keypad.data[pio >> 1 & 15], pio << 3 & 8, byte);
+                write8(keypad.key_map[pio >> 1 & 15], pio << 3 & 8, byte);
+            }
             break;
         case 0x10:
             write8(keypad.gpio_enable, bit_offset, byte);
