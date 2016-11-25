@@ -22,6 +22,12 @@ void usb_reset(void);
 bool usb_restore(FILE *image);
 bool usb_save(FILE *image);
 
+void usb_host_int(uint8_t);
+void usb_otg_int(uint16_t);
+void usb_grp0_int(uint8_t);
+void usb_grp1_int(uint32_t);
+void usb_grp2_int(uint16_t);
+
 #ifdef __cplusplus
 }
 #endif
