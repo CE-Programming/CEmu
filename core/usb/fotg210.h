@@ -24,7 +24,7 @@ struct fotg210_regs {
 		uint32_t periodiclistbase; /* 0x24: Frame List Base Address */
 		uint32_t asynclistaddr;    /* 0x28: Next Asynchronous List Address */
 		uint32_t rsvd0[1];         /* 0x2C: Reserved */
-		uint32_t portsc[1];        /* 0x30: USBCMD */
+		uint32_t portsc[1];        /* 0x30: Port Status/Control */
 	} hcor;			/* 0x10 - 0x33: hcor */
 	uint32_t rsvd1[3];
 	uint32_t miscr;	/* 0x40: Miscellaneous Register */
@@ -71,7 +71,6 @@ struct fotg210_regs {
 	uint32_t rsvd8[1];
 	uint32_t dma_ctrl; /* 0x1c8: DMA Control Register */
 	uint32_t dma_addr; /* 0x1cc: DMA Address Register */
-	uint32_t ep0_data; /* 0x1d0: EP0 Setup Packet PIO Register */
 };
 
 /* Miscellaneous Register */

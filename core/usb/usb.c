@@ -11,12 +11,13 @@ usb_state_t usb;
 
 static void usb_update(void) {
     intrpt_set(INT_USB, (usb.regs.isr =
-                         ( (usb.regs.gisr = (usb.regs.gimr2 & usb.regs.gimr2 ? GISR_GRP2 : 0) |
-                                            (usb.regs.gimr1 & usb.regs.gimr1 ? GISR_GRP1 : 0) |
-                                            (usb.regs.gimr0 & usb.regs.gimr0 ? GISR_GRP0 : 0) )
-                                               & usb.regs.gimr         ? ISR_DEV  : 0) |
+                         ( (usb.regs.gisr = (usb.regs.gisr2 & ~usb.regs.gimr2 ? GISR_GRP2 : 0) |
+                                            (usb.regs.gisr1 & ~usb.regs.gimr1 ? GISR_GRP1 : 0) |
+                                            (usb.regs.gisr0 & ~usb.regs.gimr0 ? GISR_GRP0 : 0) )
+                                               & ~usb.regs.gimr        ? ISR_DEV  : 0) |
                          (usb.regs.otgisr      & usb.regs.otgier       ? ISR_OTG  : 0) |
-                         (usb.regs.hcor.usbsts & usb.regs.hcor.usbintr ? ISR_HOST : 0) ) & usb.regs.imr);
+                         (usb.regs.hcor.usbsts & usb.regs.hcor.usbintr ? ISR_HOST : 0) ) & ~usb.regs.imr
+               && usb.regs.dev_ctrl & DEVCTRL_GIRQ_EN);
 }
 void usb_host_int(uint8_t which) {
     usb.regs.hcor.usbsts |= which & 0x3F;
@@ -39,11 +40,47 @@ void usb_grp2_int(uint16_t which) {
     usb_update();
 }
 
+// Plug A:
+//  plug:
+//   OTGCSR_DEV_B -> OTGCSR_DEV_A
+//   OTGCSR_ROLE_D -> OTGCSR_ROLE_H
+//  unplug:
+//   OTGCSR_DEV_A -> OTGCSR_DEV_B
+//   OTGCSR_ROLE_H -> OTGCSR_ROLE_D
+
+// Connected Plug B:
+//  plug:
+//   0 -> 1 OTGCSR_A_VBUS_VLD
+//   0 -> 1 OTGCSR_A_SESS_VLD
+//   0 -> 1 OTGCSR_B_SESS_VLD
+//   1 -> 0 OTGCSR_B_SESS_END
+//   0 -> 1 GISR2_RESUME
+//  unplug:
+//   1 -> 0 OTGCSR_A_VBUS_VLD
+//   1 -> 0 GISR2_RESUME
+//   .
+//   1 -> 0 OTGCSR_A_SESS_VLD
+//   1 -> 0 OTGCSR_B_SESS_VLD
+//   ...
+//   0 -> 1 OTGCSR_B_SESS_END
+void usb_plug(void) {
+    usb.regs.otgcsr |= OTGCSR_A_VBUS_VLD | OTGCSR_A_SESS_VLD | OTGCSR_B_SESS_VLD;
+    usb.regs.otgcsr &= ~OTGCSR_B_SESS_END;
+    usb_grp2_int(GISR2_RESUME);
+}
+
+uint8_t usb_status(void) {
+    return (usb.regs.otgcsr & (OTGCSR_A_VBUS_VLD | OTGCSR_A_SESS_VLD | OTGCSR_B_SESS_VLD) ? 0x80 : 0) |
+        (usb.regs.otgcsr & (OTGCSR_DEV_B | OTGCSR_ROLE_D) ? 0x40 : 0);
+}
+
 static uint8_t usb_read(uint16_t pio, bool peek) {
     uint8_t value = 0;
     (void)peek;
     if (pio < sizeof usb.regs)
         value = ((uint8_t *)&usb.regs)[pio];
+    else if (pio < 0x1d4)
+        value = usb.ep0_data[(usb.ep0_idx++ & 4) | (pio & 3)];
     return value;
 }
 
@@ -94,6 +131,7 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             break;
         case 0x084 >> 2: // OTG Interrupt Status Register
             usb.regs.otgisr &= ~((uint32_t)value << bit_offset & OTGISR_MASK);                    // WC mask (V)
+            usb_plug();
             break;
         case 0x088 >> 2: // OTG Interrupt Enable Register
             write8(usb.regs.otgier,                bit_offset, value & OTGISR_MASK >> bit_offset); // W mask (V)
@@ -106,6 +144,12 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             break;
         case 0x100 >> 2: // Device Control Register
             write8(usb.regs.dev_ctrl,              bit_offset, value &       0x2AF >> bit_offset); // W mask (V or RO)
+            if (value & 0x80) {
+                static uint8_t ep0_init[] = { 0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x40, 0x00 };
+                memcpy(usb.ep0_data, ep0_init, sizeof ep0_init);
+                usb_grp0_int(GISR0_CXSETUP);
+                usb_grp2_int(GISR2_RESET);
+            }
             break;
         case 0x104 >> 2: // Device Address Register
             write8(usb.regs.dev_addr,              bit_offset, value &        0xFF >> bit_offset); // W mask (V)
@@ -182,21 +226,68 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
         case 0x1C8 >> 2: // DMA Control Register
             write8(usb.regs.dma_ctrl,              bit_offset, value & 0x81FFFF17 >> bit_offset); // W mask (V)
             break;
-        case 0x1D0 >> 2: // EP0 Setup Packet PIO Register
-            write8(usb.regs.ep0_data,              bit_offset, value &    0x10900 >> bit_offset); // W mask (V)
-            break;
     }
     usb_update();
 }
 
 void usb_reset(void) {
-    usb.regs.hccr.data[0] = sizeof usb.regs.hccr |
-        0x0100 << 16; // v1.0
+    int i;
+#define clear(array) memset(array, 0, sizeof array)
+    usb.regs.hcor.usbcmd                = 0x00080B00;
+    usb.regs.hcor.usbsts                = 0x00001000;
+    usb.regs.hcor.usbintr               = 0;
+    usb.regs.hcor.frindex               = 0;
+    usb.regs.hcor.ctrldssegment         = 0;
+    clear(usb.regs.hcor.rsvd0);
+    clear(usb.regs.hcor.portsc);
+    clear(usb.regs.rsvd1);
+    usb.regs.miscr                      = 0x00000181;
+    clear(usb.regs.rsvd2);
+    usb.regs.otgcsr                     = 0x00310E20;
+    usb.regs.otgisr                     = 0;
+    clear(usb.regs.rsvd3);
+    usb.regs.isr                        = 0;
+    clear(usb.regs.rsvd4);
+    usb.regs.dev_ctrl                   = 0x00000020;
+    usb.regs.dev_addr                   = 0;
+    usb.regs.dev_test                   = 0;
+    usb.regs.sof_fnr                    = 0;
+    usb.regs.sof_mtr                    = 0;
+    usb.regs.rsvd5[1]                   = 0;
+    usb.regs.cxfifo                     = 0x00000F20;
+    usb.regs.idle                       = 0;
+    clear(usb.regs.rsvd6);
+    usb.regs.gisr                       = 0;
+    usb.regs.gisr0                      = 0;
+    usb.regs.gisr1                      = 0;
+    usb.regs.gisr2                      = 0;
+    usb.regs.rxzlp                      = 0;
+    usb.regs.txzlp                      = 0;
+    usb.regs.isoeasr                    = 0;
+    clear(usb.regs.rsvd7);
+    for (i = 0; i != 8; ++i)
+    usb.regs.iep[i] = usb.regs.oep[i]   = 0x00000200;
+    usb.regs.epmap14 = usb.regs.epmap58 = 0xFFFFFFFF;
+    usb.regs.fifomap                    = 0x0F0F0F0F;
+    usb.regs.fifocfg                    = 0;
+    clear(usb.regs.fifocsr);
+    usb.regs.dma_fifo                   = 0;
+    clear(usb.regs.rsvd8);
+    usb.regs.dma_ctrl                   = 0;
+    clear(usb.ep0_data);
+    usb.ep0_idx                         = 0;
+    usb_otg_int(OTGISR_BSESSEND); // because otgcsr & OTGCSR_B_SESS_END
+    usb_grp2_int(GISR2_IDLE);     // because idle == 0 ms
+#undef clear
+}
+
+static void usb_init_hccr(void) {
+    usb.regs.hccr.data[0] = sizeof usb.regs.hccr | 0x0100 << 16; // v1.0
     usb.regs.hccr.data[1] = 1; // 1 port
-    usb.regs.hccr.data[2] =
-        1 << 2 | // async sched park (supported)
-        1 << 1 | // prog frame list (supported)
-        0 << 0;  // interface (32-bit)
+    usb.regs.hccr.data[2] = 1 << 2 | // async sched park (supported)
+                            1 << 1 | // prog frame list (supported)
+                            0 << 0 ; // interface (32-bit)
+    usb.regs.hccr.data[3] = 0; // No Port Routing Rules
 }
 
 static const eZ80portrange_t device = {
@@ -206,10 +297,7 @@ static const eZ80portrange_t device = {
 
 eZ80portrange_t init_usb(void) {
     memset(&usb, 0, sizeof usb);
-//    usb.regs.miscr        = 0x00000181;
-//    usb.regs.otgcsr       = 0x00310F20;
-//    usb.regs.dev_ctrl     = 0x000002A4;
-//    usb.regs.gisr2        = 0x00000200;
+    usb_init_hccr();
     usb_reset();
     gui_console_printf("[CEmu] Initialized USB...\n");
     return device;
@@ -220,5 +308,18 @@ bool usb_save(FILE *image) {
 }
 
 bool usb_restore(FILE *image) {
-    return fread(&usb, sizeof(usb), 1, image) == 1;
+    bool success = fread(&usb, sizeof(usb), 1, image) == 1;
+    usb_init_hccr(); // hccor is read only
+    // these bits are raz
+    usb.regs.hcor.periodiclistbase &= 0xFFFFF000;
+    usb.regs.hcor.asynclistaddr    &= 0xFFFFFFE0;
+    usb.regs.otgier                &= OTGISR_MASK;
+    usb.regs.imr                   &= IMR_MASK;
+    usb.regs.phy_tmsr              &= 0x1F;
+    usb.regs.rsvd5[0]              &= 0x3F;
+    usb.regs.gimr                  &= GIMR_MASK;
+    usb.regs.gimr0                 &= GIMR0_MASK;
+    usb.regs.gimr1                 &= GIMR1_MASK;
+    usb.regs.gimr2                 &= GIMR2_MASK;
+    return success;
 }
