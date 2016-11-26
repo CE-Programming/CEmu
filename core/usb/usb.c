@@ -1,10 +1,15 @@
 #include "usb.h"
+#include "../cpu.h"
+#include "../debug/debug.h"
 #include "../emu.h"
-#include "../schedule.h"
 #include "../interrupt.h"
+#include "../mem.h"
+#include "../schedule.h"
 
 #include <string.h>
 #include <stdio.h>
+
+extern void debugInstruction(void);
 
 /* Global GPT state */
 usb_state_t usb;
@@ -63,10 +68,64 @@ void usb_grp2_int(uint16_t which) {
 //   1 -> 0 OTGCSR_B_SESS_VLD
 //   ...
 //   0 -> 1 OTGCSR_B_SESS_END
-void usb_plug(void) {
+static void usb_plug(void) {
     usb.regs.otgcsr |= OTGCSR_A_VBUS_VLD | OTGCSR_A_SESS_VLD | OTGCSR_B_SESS_VLD;
     usb.regs.otgcsr &= ~OTGCSR_B_SESS_END;
     usb_grp2_int(GISR2_RESUME);
+}
+
+static void usb_setup(uint8_t *setup) {
+    memcpy(usb.ep0_data, setup, sizeof usb.ep0_data);
+    usb_grp0_int(GISR0_CXSETUP);
+}
+
+//static uint8_t ep0_init[] = { 0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x40, 0x00 };
+//static uint8_t ep0_init[] = { 0x80, 0x06, 0x02, 0x02, 0x00, 0x00, 0x40, 0x00 };
+//static uint8_t ep0_init[] = { 0x80, 0x06, 0x03, 0x03, 0x09, 0x04, 0x40, 0x00 };
+//static uint8_t ep0_init[] = { 0x00, 0x05, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 };
+static void usb_event(enum sched_item_id event) {
+    static uint8_t set_addr[] = { 0x00, 0x05, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    static uint8_t set_config[] = { 0x00, 0x09, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    static uint8_t test_packet[] = { 0x05, 0x23, 0x68, 0x00, 0x00 };
+    switch (usb.state) {
+        case 0: // plug
+            if (!usb.regs.otgisr) {
+                usb_plug();
+                usb.state++;
+            }
+            break;
+        case 1: // reset
+            if (usb.regs.dev_ctrl & 0x80) {
+                usb_grp2_int(GISR2_RESET);
+                usb.state++;
+            }
+            break;
+        case 2: // set addr
+            if (!(usb.regs.gisr2 & GISR2_RESET)) {
+                usb_setup(set_addr);
+                usb.state++;
+            }
+            break;
+        case 3: // set config
+            if (!(usb.regs.gisr0 & GISR0_CXSETUP)) {
+                usb_setup(set_config);
+                usb.state++;
+            }
+            break;
+        case 4: // packet test
+            if (!(usb.regs.gisr0 & GISR0_CXSETUP)) {
+                usb.data = test_packet;
+                usb.len = sizeof test_packet;
+                usb.regs.cxfifo &= ~CXFIFO_FIFOE_FIFO0;
+                usb.regs.fifocsr[0] = usb.len;
+                usb_grp1_int(GISR1_SPK_FIFO(0));
+                usb.state++;
+            }
+            break;
+        default: // ready
+            return;
+    }
+    sched_repeat(event, 33);
 }
 
 uint8_t usb_status(void) {
@@ -76,11 +135,17 @@ uint8_t usb_status(void) {
 
 static uint8_t usb_read(uint16_t pio, bool peek) {
     uint8_t value = 0;
-    (void)peek;
-    if (pio < sizeof usb.regs)
+    if (pio < sizeof usb.regs) {
         value = ((uint8_t *)&usb.regs)[pio];
-    else if (pio < 0x1d4)
-        value = usb.ep0_data[(usb.ep0_idx++ & 4) | (pio & 3)];
+    } else if (pio < (peek ? 0x1d8 : 0x1d4)) {
+        value = usb.ep0_data[peek ? (usb.ep0_idx & 4) ^ (pio & 7) : (usb.ep0_idx++ & 4) | (pio & 3)];
+    }
+    if (pio != 0x82) {
+        fprintf(stderr, "%06x: %3hx -> %02hhx\n", cpu.registers.PC, pio, value);
+        //if (pio == 0x88 || pio == 0x89)
+        //    fprintf(stderr, "\tahl = %02hhx%04hx\n", cpu.registers.A, cpu.registers.HLs);
+        debugInstruction();
+    }
     return value;
 }
 
@@ -88,6 +153,7 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
     uint8_t index = pio >> 2;
     uint8_t bit_offset = (pio & 3) << 3;
     (void)poke;
+    fprintf(stderr, "%06x: %3hx <- %02hhx\n", cpu.registers.PC, pio, value);
     switch (index) {
         case 0x010 >> 2: // USBCMD - USB Command Register
             write8(usb.regs.hcor.usbcmd, bit_offset, value &   0xFF0BFF >> bit_offset); // W mask (V or RO)
@@ -131,7 +197,6 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             break;
         case 0x084 >> 2: // OTG Interrupt Status Register
             usb.regs.otgisr &= ~((uint32_t)value << bit_offset & OTGISR_MASK);                    // WC mask (V)
-            usb_plug();
             break;
         case 0x088 >> 2: // OTG Interrupt Enable Register
             write8(usb.regs.otgier,                bit_offset, value & OTGISR_MASK >> bit_offset); // W mask (V)
@@ -144,12 +209,6 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             break;
         case 0x100 >> 2: // Device Control Register
             write8(usb.regs.dev_ctrl,              bit_offset, value &       0x2AF >> bit_offset); // W mask (V or RO)
-            if (value & 0x80) {
-                static uint8_t ep0_init[] = { 0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x40, 0x00 };
-                memcpy(usb.ep0_data, ep0_init, sizeof ep0_init);
-                usb_grp0_int(GISR0_CXSETUP);
-                usb_grp2_int(GISR2_RESET);
-            }
             break;
         case 0x104 >> 2: // Device Address Register
             write8(usb.regs.dev_addr,              bit_offset, value &        0xFF >> bit_offset); // W mask (V)
@@ -168,6 +227,9 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             break;
         case 0x120 >> 2: // CX FIFO Register
             write8(usb.regs.cxfifo,                bit_offset, value &         0x7 >> bit_offset); // W mask (V or RO)
+            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
+                usb.regs.gisr0 &= ~GISR0_CXSETUP;
+            }
             break;
         case 0x124 >> 2: // IDLE Counter Register
             write8(usb.regs.idle,                  bit_offset, value &         0x7 >> bit_offset); // W mask (V)
@@ -225,6 +287,32 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             break;
         case 0x1C8 >> 2: // DMA Control Register
             write8(usb.regs.dma_ctrl,              bit_offset, value & 0x81FFFF17 >> bit_offset); // W mask (V)
+            if (usb.regs.dma_ctrl & DMACTRL_START) {
+                uint32_t len = usb.regs.dma_ctrl >> 8 & 0x1ffff;
+                uint8_t *mem = phys_mem_ptr(usb.regs.dma_addr, len);
+                if (mem) {
+                    if (usb.regs.dma_ctrl & DMACTRL_MEM2FIFO) {
+                        gui_console_printf("[USB] ");
+                        while (len--)
+                            gui_console_printf("%02X", *mem++);
+                        gui_console_printf("\n");
+                        usb_grp2_int(GISR2_DMAFIN);
+                        break;
+                    } else if (usb.data && usb.len) {
+                        if (len > usb.len) {
+                            len = usb.len;
+                        }
+                        memcpy(mem, usb.data, len);
+                        usb.regs.dma_ctrl &= ~DMACTRL_START;
+                        usb.regs.gisr1 &= ~GISR1_RX_FIFO(0);
+                        usb.data += len;
+                        usb.len -= len;
+                        usb_grp2_int(GISR2_DMAFIN);
+                        break;
+                    }
+                }
+                usb_grp2_int(GISR2_DMAERR);
+            }
             break;
     }
     usb_update();
@@ -279,6 +367,8 @@ void usb_reset(void) {
     usb_otg_int(OTGISR_BSESSEND); // because otgcsr & OTGCSR_B_SESS_END
     usb_grp2_int(GISR2_IDLE);     // because idle == 0 ms
 #undef clear
+    sched.items[SCHED_USB].callback.event = usb_event;
+    sched.items[SCHED_USB].clock = CLOCK_32K;
 }
 
 static void usb_init_hccr(void) {
@@ -309,7 +399,7 @@ bool usb_save(FILE *image) {
 
 bool usb_restore(FILE *image) {
     bool success = fread(&usb, sizeof(usb), 1, image) == 1;
-    usb_init_hccr(); // hccor is read only
+    usb_init_hccr(); // hccr is read only
     // these bits are raz
     usb.regs.hcor.periodiclistbase &= 0xFFFFF000;
     usb.regs.hcor.asynclistaddr    &= 0xFFFFFFE0;

@@ -45,5 +45,7 @@ extern disasm_state_t disasm;
 void disasmInit();
 void disasmGet();
 
+extern "C" void debugInstruction(void);
+
 #endif
 

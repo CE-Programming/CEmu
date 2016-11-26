@@ -248,3 +248,13 @@ void disasmGet() {
 
     disasm.instr.size = static_cast<unsigned int>(disasm.next) - static_cast<unsigned int>(disasm.base);
 }
+
+#include <iostream>
+extern "C" {
+__attribute__((used)) void debugInstruction(void) {
+    disasm.ctx.zdis_end_addr = cpu.registers.PC;
+    disasm.ctx.zdis_adl = cpu.ADL;
+    zdis_put_inst(&disasm.ctx);
+    std::cerr << disasm.instr.opcode << '\t' << disasm.instr.operands << std::endl;
+}
+}
