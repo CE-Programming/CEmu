@@ -19,11 +19,11 @@ struct fotg210_regs {
 		uint32_t usbcmd;           /* 0x10: USB Command */
 		uint32_t usbsts;           /* 0x14: USB Status */
 		uint32_t usbintr;          /* 0x18: USB Interrupt Enable */
-		uint32_t frindex;          /* 0x1C: USB Frame Index */
+		uint32_t frindex;          /* 0x1c: USB Frame Index */
 		uint32_t ctrldssegment;    /* 0x20: 4GB Segment Selector (Reserved) */
 		uint32_t periodiclistbase; /* 0x24: Frame List Base Address */
 		uint32_t asynclistaddr;    /* 0x28: Next Asynchronous List Address */
-		uint32_t rsvd0[1];         /* 0x2C: Reserved */
+		uint32_t rsvd0[1];         /* 0x2c: Reserved */
 		uint32_t portsc[1];        /* 0x30: Port Status/Control */
 	} hcor;			/* 0x10 - 0x33: hcor */
 	uint32_t rsvd1[3];
@@ -34,8 +34,8 @@ struct fotg210_regs {
 	uint32_t otgisr;/* 0x84: OTG Interrupt Status Register */
 	uint32_t otgier;/* 0x88: OTG Interrupt Enable Register */
 	uint32_t rsvd3[13];
-	uint32_t isr;	/* 0xC0: Global Interrupt Status Register */
-	uint32_t imr;	/* 0xC4: Global Interrupt Mask Register */
+	uint32_t isr;	/* 0xc0: Global Interrupt Status Register */
+	uint32_t imr;	/* 0xc4: Global Interrupt Mask Register */
 	uint32_t rsvd4[14];
 	/* USB Device Controller */
 	uint32_t dev_ctrl;/* 0x100: Device Control Register */
