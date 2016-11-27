@@ -198,6 +198,7 @@ void disasmGet() {
     disasm.ctx.zdis_lowercase = !disasm.uppercase;
     disasm.ctx.zdis_implicit = !disasm.implicit;
     disasm.ctx.zdis_end_addr = static_cast<uint32_t>(disasm.base);
+    disasm.ctx.zdis_adl = cpu.ADL;
     disasm.cur = &disasm.instr.opcode;
 
     disasm.highlight.watchR = false;
@@ -246,4 +247,11 @@ void disasmGet() {
     }
 
     disasm.instr.size = static_cast<unsigned int>(disasm.next) - static_cast<unsigned int>(disasm.base);
+}
+
+#include <iostream>
+void debugInstruction(void) {
+    disasm.base = cpu.registers.PC;
+    disasmGet();
+    std::cerr << disasm.instr.opcode << '\t' << disasm.instr.operands << std::endl;
 }

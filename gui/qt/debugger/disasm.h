@@ -45,5 +45,6 @@ extern disasm_state_t disasm;
 void disasmInit();
 void disasmGet();
 
-#endif
+extern "C" [[gnu::used]] void debugInstruction(void);
 
+#endif
