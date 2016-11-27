@@ -9,7 +9,7 @@
 
 #include "../../core/cpu.h"
 
-void MainWindow::initLuaThings() {
+void MainWindow::initLuaThings(sol::state& lua, bool isREPL) {
 
     lua = sol::state();
 
@@ -27,26 +27,47 @@ void MainWindow::initLuaThings() {
     // TODO: io.*, os.*, debug.*, require(), etc. => opt-in via settings.
 
     // Logging helpers (Note: print() goes to stdout)
-    lua.set_function("cLog", [&](const sol::this_state& s) {
-        lua_State* L = s;
-        int nargs = lua_gettop(L);
-        consoleAppend("[Lua] ");
-        for (int i=1; i <= nargs; ++i) {
-            consoleAppend(lua_tostring(L, i));
-            if (i != nargs) { consoleAppend("\t"); }
-        }
-        consoleAppend("\n");
-    });
-    lua.set_function("cErr", [&](const sol::this_state& s) {
-        lua_State* L = s;
-        int nargs = lua_gettop(L);
-        consoleAppend("[Lua] ", Qt::red);
-        for (int i=1; i <= nargs; ++i) {
-            consoleAppend(lua_tostring(L, i), Qt::red);
-            if (i != nargs) { consoleAppend("\t"); }
-        }
-        consoleAppend("\n");
-    });
+    if (isREPL) {
+        lua.set_function("cLog", [&](const sol::this_state& s) {
+            lua_State* L = s;
+            int nargs = lua_gettop(L);
+            for (int i=1; i <= nargs; ++i) {
+                ui->REPLConsole->appendPlainText(lua_tostring(L, i));
+                if (i != nargs) { ui->REPLConsole->appendPlainText("\t"); }
+            }
+        });
+        lua.set_function("cErr", [&](const sol::this_state& s) {
+            lua_State* L = s;
+            int nargs = lua_gettop(L);
+            ui->REPLConsole->appendPlainText("[Error] ");
+            for (int i=1; i <= nargs; ++i) {
+                ui->REPLConsole->appendPlainText(lua_tostring(L, i));
+                if (i != nargs) { ui->REPLConsole->appendPlainText("\t"); }
+            }
+        });
+        lua.script("print = function(...) local a={...}; for _,v in pairs(a) do cLog(tostring(v)) end end");
+    } else {
+        lua.set_function("cLog", [&](const sol::this_state& s) {
+            lua_State* L = s;
+            int nargs = lua_gettop(L);
+            consoleAppend("[Lua] ");
+            for (int i=1; i <= nargs; ++i) {
+                consoleAppend(lua_tostring(L, i));
+                if (i != nargs) { consoleAppend("\t"); }
+            }
+            consoleAppend("\n");
+        });
+        lua.set_function("cErr", [&](const sol::this_state& s) {
+            lua_State* L = s;
+            int nargs = lua_gettop(L);
+            consoleAppend("[Lua] ", Qt::red);
+            for (int i=1; i <= nargs; ++i) {
+                consoleAppend(lua_tostring(L, i), Qt::red);
+                if (i != nargs) { consoleAppend("\t"); }
+            }
+            consoleAppend("\n");
+        });
+    }
 
     lua.set_function("mem_peek_byte",  [](uint32_t addr) { return mem_peek_byte(addr); });
     lua.set_function("mem_peek_short", [](uint32_t addr) { return mem_peek_short(addr); });
@@ -91,6 +112,10 @@ void MainWindow::initLuaThings() {
     );
 
     // TODO: bind devices and other stuff.
+
+    if (isREPL) {
+        lua.script("R, F = cpu.registers, cpu.registers.flags");
+    }
 }
 
 void MainWindow::loadLuaScript() {
@@ -135,13 +160,39 @@ void MainWindow::saveLuaScript() {
 
 void MainWindow::runLuaScript() {
     // Reset Lua engine and bindings
-    this->initLuaThings();
+    this->initLuaThings(ed_lua, false);
     // TODO: maybe have a separate thread for Lua (because of infinite loops...)
     const std::string& code = ui->luaScriptEditor->toPlainText().toStdString();
-    const sol::protected_function_result& stringresult = lua.do_string(code.c_str());
+    const sol::protected_function_result& stringresult = ed_lua.do_string(code.c_str());
     if (!stringresult.valid())
     {
         const sol::error& err = stringresult;
-        consoleErrStr("[Lua-Error] " + QString::fromStdString(err.what()) + "\n");
+        consoleAppend("[Lua-Error] " + QString::fromStdString(err.what()) + "\n", Qt::darkRed);
+    }
+}
+
+void MainWindow::LuaREPLeval() {
+    // TODO: maybe have a separate thread for Lua (because of infinite loops...)
+    std::string code = ui->REPLInput->text().toStdString();
+    if (code.empty()) {
+        return;
+    }
+    ui->REPLConsole->appendPlainText(QString::fromStdString("▶ " + code));
+    if (code.substr(0, 2) == "==") {
+        if (code.length() == 2) {
+            return;
+        }
+        code = "print(string.format('hex: %X', " + code.substr(2) + "))";
+    } else if (code.substr(0, 1) == "=") {
+        if (code.length() == 1) {
+            return;
+        }
+        code = "print(" + code.substr(1) + ")";
+    }
+    const sol::protected_function_result& stringresult = repl_lua.do_string(code);
+    if (!stringresult.valid())
+    {
+        const sol::error& err = stringresult;
+        ui->REPLConsole->appendPlainText("[Lua-Error] " + QString::fromStdString(err.what()));
     }
 }
