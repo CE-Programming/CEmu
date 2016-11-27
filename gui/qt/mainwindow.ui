@@ -6205,61 +6205,61 @@
         </item>
         <item>
          <widget class="QGroupBox" name="tabScripting">
-     <attribute name="title">
-      <string>Scripting</string>
-     </attribute>
-     <layout class="QVBoxLayout" name="verticalLayout_26">
-      <item>
-       <widget class="QPlainTextEdit" name="luaScriptEditor">
-        <property name="backgroundVisible">
-         <bool>false</bool>
-        </property>
-        <property name="placeholderText">
-         <string>[Write your Lua script here]</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_lua">
+       <attribute name="title">
+        <string>Scripting</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_26">
         <item>
-         <widget class="QPushButton" name="buttonLoadLuaScript">
-          <property name="text">
-           <string>Load...</string>
+         <widget class="LuaEditor" name="luaScriptEditor">
+          <property name="backgroundVisible">
+           <bool>false</bool>
+          </property>
+          <property name="placeholderText">
+           <string>[Write your Lua script here]</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="buttonSaveLuaScript">
-          <property name="text">
-           <string>Save...</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_23">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QPushButton" name="buttonRunLuaScript">
-          <property name="text">
-           <string>Run</string>
-          </property>
-         </widget>
+         <layout class="QHBoxLayout" name="horizontalLayout_lua">
+          <item>
+           <widget class="QPushButton" name="buttonLoadLuaScript">
+            <property name="text">
+             <string>Load...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="buttonSaveLuaScript">
+            <property name="text">
+             <string>Save...</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_23">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="buttonRunLuaScript">
+            <property name="text">
+             <string>Run</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
-      </item>
-     </layout>
-    </widget>
-    <widget class="QWidget" name="groupBattery">
+      </widget>
+      <widget class="QWidget" name="groupBattery">
           <property name="enabled">
            <bool>false</bool>
           </property>
@@ -8710,9 +8710,9 @@ QPushButton:pressed {
                  </property>
                  <property name="styleSheet">
                   <string notr="true">QPushButton {  background-color: #AF867C; border-radius:6px; }
-QPushButton:pressed { 
+QPushButton:pressed {
 	border: 3px solid gray;
-	border-radius: 8px; 
+	border-radius: 8px;
 }</string>
                  </property>
                  <property name="text">
@@ -10915,6 +10915,11 @@ QPushButton:pressed {
    <class>DataWidget</class>
    <extends>QPlainTextEdit</extends>
    <header>datawidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>LuaEditor</class>
+   <extends>QPlainTextEdit</extends>
+   <header>luaeditor.h</header>
   </customwidget>
   <customwidget>
    <class>HexWidget</class>

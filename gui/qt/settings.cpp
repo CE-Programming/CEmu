@@ -460,6 +460,7 @@ void MainWindow::setFont(int fontSize) {
     monospace.setStyleHint(QFont::Monospace);
 
     monospace.setPointSize(fontSize);
+    ui->luaScriptEditor->setFont(monospace);
     ui->console->setFont(monospace);
     m_disasm->setFont(monospace);
 
