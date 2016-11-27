@@ -1230,6 +1230,7 @@ void MainWindow::darkModeSwitch(bool darkMode) {
     }
     ui->disasm->updateDarkMode();
     debugBasicUpdateDarkMode();
+    ui->luaScriptEditor->updateDarkMode();
 }
 
 void MainWindow::changeEvent(QEvent* event) {
