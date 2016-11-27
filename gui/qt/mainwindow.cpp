@@ -116,7 +116,17 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(keypadBridge, &QtKeypadBridge::keyStateChanged, ui->keypadWidget, &KeypadWidget::changeKeyState);
     connect(keypadBridge, &QtKeypadBridge::sendKeys, &emu, &EmuThread::enqueueKeys);
     installEventFilter(keypadBridge);
+
+    ui->centralWidget->installEventFilter(keypadBridge);
+    ui->screenWidget->installEventFilter(keypadBridge);
+    ui->tabWidget->installEventFilter(keypadBridge);
+
+    // Same for all the tabs/docks (iterate over them instead of hardcoding their names)
+    // ... except the Lua scripting one, which has things that can be used while emulation isn't paused
     for (const auto &tab : ui->tabWidget->children()[0]->children()) {
+        if (tab == ui->scriptingWidget) {
+            continue;
+        }
         tab->installEventFilter(keypadBridge);
     }
 
@@ -590,6 +600,9 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonRunLuaScript, &QPushButton::clicked, this, &MainWindow::runLuaScript);
     connect(ui->buttonLoadLuaScript, &QPushButton::clicked, this, &MainWindow::loadLuaScript);
     connect(ui->buttonSaveLuaScript, &QPushButton::clicked, this, &MainWindow::saveLuaScript);
+    connect(ui->resetREPLLuaState, &QPushButton::clicked, this, [&](){ this->initLuaThings(repl_lua, true); });
+    connect(ui->clearREPLConsole, &QPushButton::clicked, ui->REPLConsole, &QPlainTextEdit::clear);
+    connect(ui->REPLInput, &QLineEdit::returnPressed, this, &MainWindow::LuaREPLeval);
 
     setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
     setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
@@ -1001,6 +1014,7 @@ void MainWindow::translateExtras(int init) {
     QString __TXT_OS_STACKS = tr("OS Stacks");
     QString __TXT_MISC = tr("Miscellaneous");
     QString __TXT_AUTOTESTER = tr("AutoTester");
+    QString __TXT_SCRIPTING = tr("Scripting");
 
     setWindowTitle(QStringLiteral("CEmu | ") + opts.idString);
 
@@ -1083,6 +1097,9 @@ void MainWindow::translateExtras(int init) {
             if (dock->windowTitle() == TXT_AUTOTESTER) {
                 dock->setWindowTitle(__TXT_AUTOTESTER);
             }
+            if (dock->windowTitle() == TXT_SCRIPTING) {
+                dock->setWindowTitle(__TXT_SCRIPTING);
+            }
         }
 
         m_varTableModel->retranslate();
@@ -1116,6 +1133,7 @@ void MainWindow::translateExtras(int init) {
     TXT_OS_STACKS = __TXT_OS_STACKS;
     TXT_MISC = __TXT_MISC;
     TXT_AUTOTESTER = __TXT_AUTOTESTER;
+    TXT_SCRIPTING = __TXT_SCRIPTING;
 
 #ifdef _WIN32
     TXT_TOGGLE_CONSOLE = tr("Toggle Windows Console");
@@ -1140,6 +1158,8 @@ void MainWindow::translateExtras(int init) {
         action->setText(TXT_STATE);
         action = m_menuDocks->actions().at(5);
         action->setText(TXT_KEYPAD);
+        action = m_menuDocks->actions().at(6);
+        action->setText(TXT_SCRIPTING);
 
         action = m_menuDebug->actions().at(0);
         action->setText(TXT_TI_BASIC_DEBUG);
@@ -1491,6 +1511,8 @@ void MainWindow::optSend(CEmuOpts &o) {
             sendingHandler->sendFiles(o.sendRAMFiles, LINK_RAM);
         }
     }
+
+    initLuaThings(repl_lua, true);
 
     setThrottle(o.useUnthrottled ? Qt::Unchecked : Qt::Checked);
     setEmuSpeed(speed);
