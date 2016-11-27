@@ -6211,11 +6211,22 @@
        <layout class="QVBoxLayout" name="verticalLayout_26">
         <item>
          <widget class="LuaEditor" name="luaScriptEditor">
+          <property name="font">
+           <font>
+            <family>Courier</family>
+           </font>
+          </property>
+          <property name="plainText">
+           <string>---------------------------------------------------------------
+-- Some useful local vars, also providing REPL compatibility --
+local R = cpu.registers
+local F = cpu.registers.flags
+---------------------------------------------------------------
+
+</string>
+          </property>
           <property name="backgroundVisible">
            <bool>false</bool>
-          </property>
-          <property name="placeholderText">
-           <string>[Write your Lua script here]</string>
           </property>
          </widget>
         </item>
