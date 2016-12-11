@@ -141,6 +141,23 @@ static const std::unordered_map<std::string, seq_cmd_action_func_t> valid_action
     }
 };
 
+const seq_cmd_func_t pressKeyFromName = [](const std::string& which_key) {
+    const auto& tmp = valid_keys.find(which_key);
+    if (tmp != valid_keys.end())
+    {
+        const coord2d& key_coords = tmp->second;
+        cemucore::emu_keypad_event(key_coords.y, key_coords.x, true);
+        cemucore::emu_run(80);
+        cemucore::emu_keypad_event(key_coords.y, key_coords.x, false);
+        if (config.delay_after_key > 0)
+        {
+            cemucore::emu_run(config.delay_after_key);
+        }
+    } else {
+        std::cerr << "\t[Error] unknown key \"" << which_key << "\" was not pressed." << std::endl;
+    };
+};
+
 static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands = {
     {
         "action", [](const std::string &which_action) {
@@ -240,22 +257,7 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
         }
     },
     {
-        "key", [](const std::string& which_key) {
-            const auto& tmp = valid_keys.find(which_key);
-            if (tmp != valid_keys.end())
-            {
-                const coord2d& key_coords = tmp->second;
-                cemucore::emu_keypad_event(key_coords.y, key_coords.x, true);
-                cemucore::emu_run(80);
-                cemucore::emu_keypad_event(key_coords.y, key_coords.x, false);
-                if (config.delay_after_key > 0)
-                {
-                    cemucore::emu_run(config.delay_after_key);
-                }
-            } else {
-                std::cerr << "\t[Error] unknown key \"" << which_key << "\" was not pressed." << std::endl;
-            };
-        }
+        "key", pressKeyFromName
     },
     {
         "sendCSC", [](const std::string& str) {
