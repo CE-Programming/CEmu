@@ -34,6 +34,9 @@ void usb_grp1_int(uint32_t);
 void usb_grp2_int(uint16_t);
 uint8_t usb_status(void);
 
+void usb_setup(uint8_t *);
+void usb_send_pkt(void *, uint32_t);
+
 #ifdef __cplusplus
 }
 #endif
