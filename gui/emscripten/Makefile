@@ -1,8 +1,11 @@
-CC := emcc
+CC      = emcc
 
 # Add -g3 and disable some opts if needed
-FLAGS := -O3 --llvm-lto 3 -Wall -I.. --closure 1 -s INVOKE_RUN=0 -s NO_EXIT_RUNTIME=1 -s ASSERTIONS=0 --pre-js cemu_web_utils.js
-CFLAGS := -std=c11 $(FLAGS)
+CFLAGS  = -O3 -Wall -I.. -std=c11 $(FLAGS)
+CFLAGS += --llvm-lto 3  -s INVOKE_RUN=0 -s NO_EXIT_RUNTIME=1 -s ASSERTIONS=0 --pre-js cemu_web_utils.js
+
+asmjs: CFLAGS += --closure 1 -s WASM=0
+wasm:  CFLAGS += --closure 0 -s WASM=1 -s "BINARYEN_METHOD='native-wasm,asmjs'"
 
 CSOURCES := $(wildcard ../../core/*.c) ../../core/os/os-emscripten.c
 
@@ -10,13 +13,18 @@ OBJS = $(patsubst %.c, %.bc, $(CSOURCES))
 
 OUTPUT := cemu_web
 
-all: $(OUTPUT).js
+asmjs: $(OUTPUT).js
+wasm: $(OUTPUT).js
 
-%.bc: %.c Makefile
+all: asmjs
+
+%.bc: %.c
 	$(CC) $(CFLAGS) $< -o $@
 
 $(OUTPUT).js: $(OBJS)
 	$(CC) $(CFLAGS) $(LFLAGS) $^ -o $@
 
 clean:
-	rm -f $(OBJS) $(OUTPUT).js $(OUTPUT).data $(OUTPUT).js.mem
+	$(RM) -f $(OBJS) $(OUTPUT).js* $(OUTPUT).data $(OUTPUT).asm.js $(OUTPUT).was*
+
+.PHONY: all clean asmjs wasm
