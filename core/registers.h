@@ -178,9 +178,9 @@ int parity(uint8_t x);
 
 #define cpuflag_undef(a) (a & (FLAG_3 | FLAG_5))
 
-#define cpuflag_overflow_b_add(op1, op2, result) cpuflag_pv(~((op1) ^ (op2)) & ((op1) ^ (result)) & 0x80)
+#define cpuflag_overflow_b_add(op1, op2, result) cpuflag_pv(((op1) ^ (result)) & ((op2) ^ (result)) & 0x80)
 #define cpuflag_overflow_b_sub(op1, op2, result) cpuflag_pv(((op1) ^ (op2)) & ((op1) ^ (result)) & 0x80)
-#define cpuflag_overflow_w_add(op1, op2, result, mode) cpuflag_pv(~((op1) ^ (op2)) & ((op1) ^ (result)) & (0x8000 << ((mode) << 3)))
+#define cpuflag_overflow_w_add(op1, op2, result, mode) cpuflag_pv(((op1) ^ (result)) & ((op2) ^ (result)) & (0x8000 << ((mode) << 3)))
 #define cpuflag_overflow_w_sub(op1, op2, result, mode) cpuflag_pv(((op1) ^ (op2)) & ((op1) ^ (result)) & (0x8000 << ((mode) << 3)))
 
 #define cpuflag_halfcarry_b_add(op1, op2, carry) cpuflag_h(((int16_t)((op1) & 0x00f) + (int16_t)((op2) & 0x00f) + (carry)) & 0x0010)
