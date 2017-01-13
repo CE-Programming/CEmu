@@ -180,6 +180,8 @@ private:
     void vatContextMenu(const QPoint &);
     void opContextMenu(const QPoint &);
 
+    void setDebugResetTrigger(bool);
+
     void breakpointRemoveAddress(uint32_t);
     void watchpointRemoveAddress(uint32_t);
 

@@ -20,12 +20,17 @@ static void watchdog_event(int index) {
     if (watchdog.control & 1) {
         watchdog.status = 1;
         if (watchdog.control & 2) {
-            gui_console_printf("[CEmu] Watchdog reset triggered.\n");
+            gui_console_printf("[CEmu] Reset triggered by watchdog timer.\n");
             cpuEvents |= EVENT_RESET;
+#ifdef DEBUG_SUPPORT
+            if (debugger.resetOpensDebugger) {
+                open_debugger(DBG_USER, cpu.registers.PC);
+            }
+#endif
         }
         if (watchdog.control & 4) {
-            cpu_nmi();
             gui_console_printf("[CEmu] Watchdog NMI triggered.\n");
+            cpu_nmi();
         }
         event_repeat(index, watchdog.load);
     }

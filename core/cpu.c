@@ -163,8 +163,8 @@ static void cpu_write_out(uint16_t pio, uint8_t value) {
     cpu.cycles += 3;
     if (unprivileged_code()) {
         control.protectionStatus |= 2;
-        cpu_nmi();
         gui_console_printf("[CEmu] NMI reset cause by an out instruction in unpriviledged code.\n");
+        cpu_nmi();
     }
     port_write_byte(pio, value);
 }
@@ -816,6 +816,11 @@ void cpu_flush(uint32_t address, bool mode) {
 void cpu_nmi(void) {
     cpu.NMI = 1;
     cpu.next = cpu.cycles;
+#ifdef DEBUG_SUPPORT
+    if (debugger.resetOpensDebugger) {
+        open_debugger(DBG_USER, cpu.registers.PC);
+    }
+#endif
 }
 
 void cpu_execute(void) {

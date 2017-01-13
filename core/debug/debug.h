@@ -60,6 +60,7 @@ typedef struct {        /* For debugging */
     int cpu_next;
     char *buffer;
     char *errBuffer;
+    bool resetOpensDebugger;
     uint32_t stepOverInstrSize;
     uint32_t stepOverExtendSize;
     uint8_t stepOverMode;

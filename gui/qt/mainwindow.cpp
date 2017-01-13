@@ -105,7 +105,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     connect(ui->watchpointView, &QTableWidget::itemPressed, this, &MainWindow::watchpointSetPreviousAddress);
     connect(ui->checkCharging, &QCheckBox::toggled, this, &MainWindow::batteryIsCharging);
     connect(ui->sliderBattery, &QSlider::valueChanged, this, &MainWindow::batteryChangeStatus);
-    connect(ui->checkAddSpace, &QCheckBox::stateChanged, this, &MainWindow::setSpaceDisasm);
+    connect(ui->checkAddSpace, &QCheckBox::toggled, this, &MainWindow::setSpaceDisasm);
     connect(ui->buttonZero, &QPushButton::clicked, this, &MainWindow::debuggerZeroClockCounter);
 
     // Debugger Options
@@ -113,6 +113,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     connect(ui->buttonClearEquates, &QPushButton::clicked, this, &MainWindow::equatesClear);
     connect(ui->buttonRefreshEquates, &QPushButton::clicked, this, &MainWindow::equatesRefresh);
     connect(ui->textSizeSlider, &QSlider::valueChanged, this, &MainWindow::setFont);
+    connect(ui->checkDebugResetTrigger, &QCheckBox::toggled, this, &MainWindow::setDebugResetTrigger);
 
     // Debugging files
     connect(ui->actionImportDebugger, &QAction::triggered, this, &MainWindow::debuggerImport);
@@ -292,6 +293,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     setSaveDebug(settings->value(QStringLiteral("loadDebugOnOpen"), false).toBool());
     setSpaceDisasm(settings->value(QStringLiteral("addDisasmSpace"), false).toBool());
     setUIEditMode(settings->value(QStringLiteral("uiMode"), true).toBool());
+    setDebugResetTrigger(settings->value(QStringLiteral("resetOpensDebugger"), false).toBool());
     ui->flashBytes->setValue(settings->value(QStringLiteral("flashBytesPerLine"), 8).toInt());
     ui->ramBytes->setValue(settings->value(QStringLiteral("ramBytesPerLine"), 8).toInt());
     ui->memBytes->setValue(settings->value(QStringLiteral("memBytesPerLine"), 8).toInt());

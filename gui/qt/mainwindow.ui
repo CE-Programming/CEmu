@@ -60,7 +60,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>8</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -1022,6 +1022,13 @@
                </property>
               </widget>
              </item>
+             <item>
+              <widget class="QCheckBox" name="checkDebugResetTrigger">
+               <property name="text">
+                <string>Open debugger on reset or nmi</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </item>
            <item>
@@ -1750,7 +1757,7 @@ QPushButton:pressed {
            <enum>QTabWidget::Rounded</enum>
           </property>
           <property name="currentIndex">
-           <number>4</number>
+           <number>0</number>
           </property>
           <property name="tabsClosable">
            <bool>false</bool>
