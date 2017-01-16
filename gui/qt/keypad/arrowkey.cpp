@@ -36,9 +36,5 @@ void ArrowKey::paint(QPainter &painter) const {
 }
 
 bool ArrowKey::canAccept(const QPointF &point) {
-    QPointF norm{point - m_outer.center()};
-    qreal innerRadius = m_inner.width() * .5, outerRadius = m_outer.width() * .5,
-        radiusSquared = QPointF::dotProduct(norm, norm);
-    return innerRadius * innerRadius <= radiusSquared && radiusSquared <= outerRadius * outerRadius &&
-        (static_cast<int>((2 * M_2_PI * std::atan2(norm.y(), norm.x()) + 9.5) + m_offset) & 7) < 3;
+    return m_keyShape.contains(point);
 }
