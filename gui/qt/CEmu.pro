@@ -141,7 +141,8 @@ SOURCES +=  utils.cpp \
     debugger.cpp \
     hexeditor.cpp \
     settings.cpp \
-    ../../core/debug/stepping.cpp
+    ../../core/debug/stepping.cpp \
+    ../../core/dma.c
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
@@ -217,7 +218,8 @@ HEADERS  +=  utils.h \
     capture/lcdfgif/gif.h \
     capture/lcdfgif/gifx.h \
     keypad/keycode.h \
-    debugger.h
+    debugger.h \
+    ../../core/dma.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \

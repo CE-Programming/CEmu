@@ -1,10 +1,11 @@
 #include <string.h>
 
+#include "cpu.h"
+#include "emu.h"
+#include "dma.h"
 #include "lcd.h"
 #include "schedule.h"
 #include "interrupt.h"
-#include "cpu.h"
-#include "emu.h"
 
 /* Global LCD state */
 lcd_state_t lcd;
@@ -172,6 +173,8 @@ static uint8_t lcd_read(const uint16_t pio, bool peek) {
     uint8_t bit_offset = (index & 3) << 3;
 
     (void)peek;
+
+    dma.lcd++;
 
     if (index < 0x200) {
         if (index < 0x010) { return read8(lcd.timing[index >> 2], bit_offset); }

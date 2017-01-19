@@ -4,6 +4,7 @@
 #include "mem.h"
 #include "emu.h"
 #include "cpu.h"
+#include "dma.h"
 #include "flash.h"
 #include "control.h"
 #include "debug/debug.h"
@@ -377,6 +378,7 @@ uint8_t mem_read_cpu(uint32_t address, bool fetch) {
                 /* RAM */
             case 0xD:
                 cpu.cycles += 4;
+                dma.ram++;
                 ramAddress = address & 0x7FFFF;
                 if (ramAddress < 0x65800) {
                     value = mem.ram.block[ramAddress];
@@ -438,6 +440,7 @@ void mem_write_cpu(uint32_t address, uint8_t value) {
                 /* RAM */
             case 0xD:
                 cpu.cycles += 2;
+                dma.ram++;
                 ramAddress = address & 0x7FFFF;
                 if (ramAddress < 0x65800) {
                     mem.ram.block[ramAddress] = value;

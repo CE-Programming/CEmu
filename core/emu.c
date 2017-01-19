@@ -8,11 +8,12 @@
 #endif
 
 #include "emu.h"
-#include "schedule.h"
+#include "dma.h"
 #include "asic.h"
-#include "debug/debug.h"
 #include "cert.h"
 #include "os/os.h"
+#include "schedule.h"
+#include "debug/debug.h"
 
 #define imageVersion 0xCECE000A
 
