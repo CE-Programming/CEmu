@@ -185,7 +185,7 @@ appveyor_env = {
     "commit_hash"                           : os.environ.get("APPVEYOR_REPO_COMMIT"),                        # commit ID (SHA);
     "author_name"                           : os.environ.get("APPVEYOR_REPO_COMMIT_AUTHOR"),                 # commit author’s name;
     "author_email"                          : os.environ.get("APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL"),           # commit author’s email address;
-    "commit_timestamp"                      : os.environ.get("APPVEYOR_REPO_COMMIT_TIMESTAMP"),              # commit date/time;
+    "commit_timestamp"                      : os.environ.get("APPVEYOR_REPO_COMMIT_TIMESTAMP")[:19],         # commit date/time;
     "commit_msg"                            : os.environ.get("APPVEYOR_REPO_COMMIT_MESSAGE"),                # commit message;
     "commit_msg_long"                       : os.environ.get("APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED"),       # the rest of commit message after line break (if exists);
     "is_scheduled_build"                    : os.environ.get("APPVEYOR_SCHEDULED_BUILD"),                    # True if the build runs by scheduler;
@@ -222,16 +222,16 @@ extra_env["repo_url"]                       = "%s" % (
                                                             appveyor_env["repo_provider"],                   # Example:
                                                             appveyor_env["name"],                            #   https://github.com/CE-Programming/CEmu/commit/4603aec71f9e1163e545beff10122ef40ec9007a
                                                             "commit" if (
-                                                                appveyor_env["repo_provider"] in [
+                                                                appveyor_env["repo_provider"].lower() in [
                                                                     "github", "gitlab"
                                                                 ]
                                                             ) else "commits",
                                                             extra_env["commit_hash_short"]
                                                         ) if (
-                                                            appveyor_env["repo_provider"] in [
+                                                            appveyor_env["repo_provider"].lower() in [
                                                                 "github", "gitlab", "bitbucket"
                                                             ]
-                                                        ) else ""
+                                                        ) else "(none)"
                                                     )
 
 bool_vars = [
@@ -308,13 +308,13 @@ def main():
     
     if cmd == "SUCCESS":
         print(" * Sending successful build IRC notification...")
-        send_build_status(True, process = async)
+        send_build_status(True)
     elif cmd == "FAILURE":
         print(" * Sending failed build IRC notification...")
-        send_build_status(False, process = async)
+        send_build_status(False)
     elif cmd == "STARTED":
         print(" * Sending build start IRC notification...")
-        start_build_status(process = async)
+        start_build_status()
     else:
         print("ERROR: Invalid command.")
         sys.exit(1)
