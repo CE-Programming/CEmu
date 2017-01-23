@@ -5,7 +5,8 @@ environment:
     secure: QyZ6LhunNhgW3l/1aiGROg==
 
 install:
-  - C:\Python35\Scripts\pip install requests
+  - C:\Python35\Scripts\pip install requests jinja2 irc
+  - C:\Python35\python -u gui\qt\deploy-scripts\build_status.py STARTED yes
   - C:\Python35\python -u gui\qt\deploy-scripts\appveyor_helper.py install
   - md build_32
   - md build_64
@@ -36,3 +37,9 @@ build_script:
 
 deploy_script:
   - C:\Python35\python -u gui\qt\deploy-scripts\appveyor_helper.py deploy
+
+on_success:
+  - C:\Python35\python -u gui\qt\deploy-scripts\build_status.py SUCCESS
+
+on_failure:
+  - C:\Python35\python -u gui\qt\deploy-scripts\build_status.py FAILURE
