@@ -120,7 +120,13 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
     },
     {
         "delay", [](const std::string& delay_str) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(std::stoul(delay_str)));
+            unsigned long delay = std::stoul(delay_str);
+            auto until = std::chrono::steady_clock::now() + std::chrono::milliseconds(delay);
+            while (std::chrono::steady_clock::now() < until)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(delay % 10));
+                DO_STEP_CALLBACK();
+            }
         }
     },
     {

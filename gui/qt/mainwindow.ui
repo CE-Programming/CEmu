@@ -6480,14 +6480,7 @@ QPushButton:pressed {
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="JSONconfigPath">
-                 <property name="frame">
-                  <bool>false</bool>
-                 </property>
-                 <property name="readOnly">
-                  <bool>true</bool>
-                 </property>
-                </widget>
+                <widget class="QLineEdit" name="JSONconfigPath"/>
                </item>
                <item>
                 <widget class="QPushButton" name="buttonOpenJSONconfig">
@@ -6498,15 +6491,12 @@ QPushButton:pressed {
                   </sizepolicy>
                  </property>
                  <property name="text">
-                  <string>Open...</string>
+                  <string>Browse...</string>
                  </property>
                 </widget>
                </item>
                <item>
                 <widget class="QPushButton" name="buttonReloadJSONconfig">
-                 <property name="enabled">
-                  <bool>false</bool>
-                 </property>
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                    <horstretch>0</horstretch>
@@ -6514,7 +6504,7 @@ QPushButton:pressed {
                   </sizepolicy>
                  </property>
                  <property name="text">
-                  <string>Reload</string>
+                  <string>(Re)Load</string>
                  </property>
                 </widget>
                </item>

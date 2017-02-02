@@ -1012,13 +1012,16 @@ void MainWindow::dispAutotesterError(int errCode) {
 
 
 int MainWindow::openJSONConfig(const QString& jsonPath) {
+    if (jsonPath.length() == 0) {
+        QMessageBox::warning(this, tr("Path error"), tr("Please choose a json file or type its path."));
+        return 1;
+    }
     std::string jsonContents;
     std::ifstream ifs(jsonPath.toStdString());
 
     if (ifs.good())
     {
         int ok = chdir(QDir::toNativeSeparators(QFileInfo(jsonPath).absoluteDir().path()).toStdString().c_str());
-        ui->buttonReloadJSONconfig->setEnabled(true);
         if (ok != 0) {
             QMessageBox::warning(this, tr("Internal Autotester error"), tr("Couldn't go to where the JSON file is."));
             return 0;
@@ -1029,7 +1032,6 @@ int MainWindow::openJSONConfig(const QString& jsonPath) {
             return 0;
         }
     } else {
-        ui->buttonReloadJSONconfig->setEnabled(false);
         QMessageBox::warning(this, tr("Opening error"), tr("Unable to open the file."));
         return 1;
     }
