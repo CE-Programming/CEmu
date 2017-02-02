@@ -6793,6 +6793,11 @@ QPushButton:pressed {
                  </item>
                  <item>
                   <property name="text">
+                   <string>lcdPalette</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
                    <string>cursorImage</string>
                   </property>
                  </item>

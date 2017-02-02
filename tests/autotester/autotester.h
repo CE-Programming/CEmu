@@ -57,6 +57,7 @@ namespace autotester
         { "plotSScreen",    0xD09466 },  { "plotSScreen_size",    21945 },
         { "saveSScreen",    0xD0EA1F },  { "saveSScreen_size",    21945 },
         { "userMem",        0xD1A881 },
+        { "lcdPalette",     0xE30200 },  { "lcdPalette_size",       512 },
         { "cursorImage",    0xE30800 },  { "cursorImage_size",     1024 }
     };
 

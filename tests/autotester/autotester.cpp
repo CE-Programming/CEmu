@@ -135,7 +135,9 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
             if (tmp != config.hashes.end())
             {
                 const hash_params_t& param = tmp->second;
-                const uint32_t real_hash = crc32(cemucore::phys_mem_ptr(param.start, param.size), param.size);
+                uint8_t *temp_buffer = cemucore::virt_mem_dup(param.start, param.size);
+                const uint32_t real_hash = crc32(temp_buffer, param.size);
+                ::free(temp_buffer);
                 if (std::find(param.expected_CRCs.begin(), param.expected_CRCs.end(), real_hash) != param.expected_CRCs.end())
                 {
                     if (debugLogs) {

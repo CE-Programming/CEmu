@@ -21,8 +21,8 @@ enum flash_commands {
 };
 
 typedef struct {
-    uint32_t address;
-    uint32_t address_mask;
+    uint32_t addr;
+    uint32_t addr_mask;
     uint8_t value;
     uint8_t value_mask;
 } flash_write_t;
@@ -71,12 +71,14 @@ static const uint32_t flash_sector_size_64K = 0x10000;
 void mem_init(void);
 void mem_free(void);
 
-uint8_t *phys_mem_ptr(uint32_t address, int32_t size);
-uint8_t mem_peek_byte(uint32_t address);
-uint16_t mem_peek_short(uint32_t address);
-uint32_t mem_peek_long(uint32_t address);
-uint32_t mem_peek_word(uint32_t address, bool mode);
-void mem_poke_byte(uint32_t address, uint8_t value);
+uint8_t *phys_mem_ptr(uint32_t addr, int32_t size);
+uint8_t *virt_mem_cpy(uint8_t *buf, uint32_t addr, int32_t size);
+uint8_t *virt_mem_dup(uint32_t addr, int32_t size);
+uint8_t mem_peek_byte(uint32_t addr);
+uint16_t mem_peek_short(uint32_t addr);
+uint32_t mem_peek_long(uint32_t addr);
+uint32_t mem_peek_word(uint32_t addr, bool mode);
+void mem_poke_byte(uint32_t addr, uint8_t value);
 
 /* Mateo, do not use! Use the ones above. */
 uint8_t mem_read_cpu(uint32_t address, bool fetch);

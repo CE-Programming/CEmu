@@ -1116,6 +1116,7 @@ void MainWindow::updateCRCParamsFromPreset(int comboBoxIndex) {
         std::make_pair(autotester::hash_consts.at("cmdPixelShadow"), autotester::hash_consts.at("cmdPixelShadow_size")),
         std::make_pair(autotester::hash_consts.at("plotSScreen"),    autotester::hash_consts.at("plotSScreen_size")),
         std::make_pair(autotester::hash_consts.at("saveSScreen"),    autotester::hash_consts.at("saveSScreen_size")),
+        std::make_pair(autotester::hash_consts.at("lcdPalette"),     autotester::hash_consts.at("lcdPalette_size")),
         std::make_pair(autotester::hash_consts.at("cursorImage"),    autotester::hash_consts.at("cursorImage_size")),
         std::make_pair(autotester::hash_consts.at("ram_start"),      autotester::hash_consts.at("ram_size"))
     };
@@ -1150,17 +1151,14 @@ void MainWindow::refreshCRC() {
     }
 
     // Get real start pointer
-    start = phys_mem_ptr(tmp_start, crc_size);
+    start = virt_mem_dup(tmp_start, crc_size);
 
     // Compute and display CRC
-    if (start != NULL) {
-        char buf[10] = {0};
-        sprintf(buf, "%X", crc32(start, crc_size));
-        ui->valueCRC->setText(buf);
-        return;
-    } else {
-        goto errCRCret;
-    }
+    char buf[10];
+    sprintf(buf, "%X", crc32(start, crc_size));
+    free(start);
+    ui->valueCRC->setText(buf);
+    return;
 
 errCRCret:
     QMessageBox::warning(this, tr("CRC Error"), tr("Error. Make sure you have entered a valid start/size pair or preset."));
