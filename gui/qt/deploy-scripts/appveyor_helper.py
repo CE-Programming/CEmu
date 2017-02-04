@@ -9,6 +9,11 @@ import zipfile
 import shutil
 import requests
 
+# Timeout socket handling
+import socket
+import threading
+import errno
+
 from util import *
 
 try:
@@ -35,6 +40,18 @@ BINTRAY_SNAPSHOT_SERVER_PATH = "https://oss.jfrog.org/artifactory/oss-snapshot-l
 BINTRAY_RELEASE_SERVER_PATH = "https://oss.jfrog.org/artifactory/oss-release-local"
 BINTRAY_MAVEN_GROUP_PATH = "/org/github/alberthdev/cemu/"
 MAX_ATTEMPTS = 5
+
+def timeout_http_body_read_to_file(response, fh, timeout = 60):
+    def murha(resp):
+        os.close(resp.fileno())
+        resp.close()
+
+    # set a timer to yank the carpet underneath the blocking read() by closing the os file descriptor
+    t = threading.Timer(timeout, murha, (response,))
+    
+    t.start()
+    fh.write(response.read())
+    t.cancel()
 
 def truncate_url(url):
     if len(url) > 70:
@@ -64,7 +81,8 @@ def dlfile(url):
 
             # Open our local file for writing
             with open(os.path.basename(url), "wb") as local_file:
-                local_file.write(f.read())
+                timeout_http_body_read_to_file(f, local_file, timeout = 300)
+                #local_file.write(f.read())
             
             # Everything good!
             break
@@ -75,10 +93,16 @@ def dlfile(url):
             print("         !! HTTP Error: %i (%s)" % (e.code, url))
         except URLError:
             _, e, _ = sys.exc_info()
-            print("         !! URL Error: %s (%s)", e.reason, url)
+            print("         !! URL Error: %s (%s)" % (e.reason, url))
         except HTTPException:
             _, e, _ = sys.exc_info()
-            print("         !! HTTP Exception: %s (%s)", str(e), url)
+            print("         !! HTTP Exception: %s (%s)" % (str(e), url))
+        except socket.error:
+            _, e, _ = sys.exc_info()
+            if e.errno == errno.EBADF:
+                print("         !! Timeout reached: %s (%s)" % (str(e), url))
+            else:
+                print("         !! Socket Exception: %s (%s)" % (str(e), url))
         
         # Increment attempts
         dl_attempts += 1
