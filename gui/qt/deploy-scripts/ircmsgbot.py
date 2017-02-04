@@ -11,8 +11,8 @@ import multiprocessing
 import logging
 import ssl
 
-global msg_ayncs
-msg_ayncs = []
+global msg_asyncs
+msg_asyncs = []
 
 class LoggingHandler:
     def __init__(self, *args, **kwargs):
@@ -220,29 +220,29 @@ def send_irc_message(server, port, nick, target, message, use_ssl=False,
 # call async_wait_all OR async_stop_all in order to properly
 # clean up!
 def async_send_irc_message(*args, process = False, **kwargs):
-    global msg_ayncs
+    global msg_asyncs
     if process:
         t = IRCMsgProcess(*args, **kwargs)
     else:
         t = IRCMsgThread(*args, **kwargs)
-    msg_ayncs.append(t)
+    msg_asyncs.append(t)
     t.start()
 
 def async_wait_all():
-    global msg_ayncs
+    global msg_asyncs
     
-    for t in msg_ayncs:
+    for t in msg_asyncs:
         if t.is_alive():
             t.join()
 
 def async_check_alive():
-    for t in msg_ayncs:
+    for t in msg_asyncs:
         if t.is_alive():
             return True
     return False
 
 def async_stop_all(timeout = 180):
-    global msg_ayncs
+    global msg_asyncs
     
     count = 0
     
@@ -252,7 +252,7 @@ def async_stop_all(timeout = 180):
         count += 1
     
     if async_check_alive():
-        for t in msg_ayncs:
+        for t in msg_asyncs:
             if t.is_alive():
                 t.stop()
     
@@ -271,12 +271,13 @@ def main():
     
     s = sys.argv[1].split(":", 1)
     server = s[0]
+    use_ssl = False
+    
     if len(s) == 2:
         if s[1].startswith("+"):
             use_ssl = True
             s[1] = s[1][1:]
-        else:
-            use_ssl = False
+        
         try:
             port = int(s[1])
         except ValueError:
@@ -289,7 +290,7 @@ def main():
     message = " ".join(sys.argv[4:])
     
     send_irc_message(server, port, nickname, target, message,
-        use_ssl = ssl)
+        use_ssl = use_ssl)
 
 if __name__ == "__main__":
     main()
