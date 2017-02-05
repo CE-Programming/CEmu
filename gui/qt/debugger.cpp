@@ -1184,7 +1184,7 @@ void MainWindow::equatesAddDialog() {
     dialog.setDirectory(currentDir);
 
     QStringList extFilters;
-    extFilters << tr("Equate files (*.inc *.lab)")
+    extFilters << tr("Equate files (*.inc *.lab *.map)")
                << tr("All Files (*.*)");
     dialog.setNameFilters(extFilters);
 
@@ -1197,40 +1197,63 @@ void MainWindow::equatesAddDialog() {
 }
 
 void MainWindow::equatesAddFile(QString fileName) {
-    std::string current;
-    std::ifstream in;
-    currentEquateFile = fileName;
-    in.open(fileName.toStdString());
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QMessageBox::critical(this, tr("Error"), tr("Couldn't open this file"));
+        return;
+    }
+    // Reset the map
+    disasm.addressMap.clear();
 
-    if (in.good()) {
+    QTextStream in(&file);
+    QString line;
+    if (in.readLineInto(&line) && line.isEmpty() &&
+        in.readLineInto(&line) && line.startsWith("IEEE 695 OMF Linker ")) {
+        while ((in.readLineInto(&line) && line != "\f") ||
+               (in.readLineInto(&line) && line != "EXTERNAL DEFINITIONS:"));
+        if (!in.readLineInto(&line) ||
+            !in.readLineInto(&line) ||
+            !in.readLineInto(&line) ||
+            !in.readLineInto(&line)) {
+            QMessageBox::critical(this, tr("Error"), tr("Looks like a map file, but no definitions found"));
+            return;
+        }
+        while (in.readLineInto(&line) && !line.isEmpty()) {
+            QStringList split = line.split(' ', QString::SkipEmptyParts);
+            if (split.size() != 4) {
+                break;
+            }
+            equatesAddEquate(split[1].right(6), split[0]);
+        }
+    } else {
         QRegularExpression equatesRegexp("^\\h*([^\\W\\d]\\w*)\\h*(?:=|\\h\\.?equ(?!\\d))\\h*(?|\\$([\\da-f]{4,})|(\\d[\\da-f]{3,})h)\\h*(?:;.*)?$",
                                          QRegularExpression::CaseInsensitiveOption);
-        // Reset the map
-        disasm.addressMap.clear();
-        while (std::getline(in, current)) {
-            QRegularExpressionMatch matches = equatesRegexp.match(QString::fromStdString(current));
+        do {
+            QRegularExpressionMatch matches = equatesRegexp.match(line);
             if (matches.hasMatch()) {
-                uint32_t address = static_cast<uint32_t>(matches.capturedRef(2).toUInt(Q_NULLPTR, 16));
-                std::string &item = disasm.addressMap[address];
-                if (item.empty()) {
-                    item = matches.captured(1).toStdString();
-                    uint8_t *ptr = phys_mem_ptr(address - 4, 9);
-                    if (ptr && ptr[4] == 0xC3 && (ptr[0] == 0xC3 || ptr[8] == 0xC3)) { // jump table?
-                        uint32_t address2  = ptr[5] | ptr[6] << 8 | ptr[7] << 16;
-                        if (phys_mem_ptr(address2, 1)) {
-                            std::string &item2 = disasm.addressMap[address2];
-                            if (item2.empty()) {
-                                item2 = "_" + item;
-                            }
-                        }
-                    }
+                equatesAddEquate(matches.captured(1), matches.captured(2));
+            }
+        } while (in.readLineInto(&line));
+    }
+
+    updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(Q_NULLPTR, 16), true);
+}
+
+void MainWindow::equatesAddEquate(QString addrStr, QString name) {
+    uint32_t address = addrStr.toUInt(Q_NULLPTR, 16);
+    std::string &item = disasm.addressMap[address];
+    if (item.empty()) {
+        item = name.toStdString();
+        uint8_t *ptr = phys_mem_ptr(address - 4, 9);
+        if (ptr && ptr[4] == 0xC3 && (ptr[0] == 0xC3 || ptr[8] == 0xC3)) { // jump table?
+            uint32_t address2  = ptr[5] | ptr[6] << 8 | ptr[7] << 16;
+            if (phys_mem_ptr(address2, 1)) {
+                std::string &item2 = disasm.addressMap[address2];
+                if (item2.empty()) {
+                    item2 = "_" + item;
                 }
             }
         }
-        in.close();
-        updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(Q_NULLPTR, 16), true);
-    } else {
-        QMessageBox::critical(this, tr("Error"), tr("Couldn't open this file"));
     }
 }
 

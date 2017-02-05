@@ -221,6 +221,7 @@ private:
     void screenContextMenu(const QPoint &);
     void equatesAddDialog();
     void equatesAddFile(QString);
+    void equatesAddEquate(QString, QString);
     void equatesClear();
     void equatesRefresh();
     void selectKeypadColor();
