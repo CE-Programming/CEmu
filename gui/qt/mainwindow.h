@@ -312,7 +312,8 @@ private:
 
     Ui::MainWindow *ui = Q_NULLPTR;
     QtKeypadBridge keypadBridge{this};
-    QLabel statusLabel;
+    QLabel speedLabel;
+    QLabel msgLabel;
     QSettings *settings = Q_NULLPTR;
     QDockWidget *debuggerDock = Q_NULLPTR;
     QTextCursor disasmOffset;
@@ -333,6 +334,8 @@ private:
     bool hexSearch = true;
     bool canScroll = false;
     bool usingLoadedImage = false;
+    bool recordingGif = false;
+
     CEmuOpts opts;
 
     uint32_t prevBreakpointAddress = 0;
@@ -347,6 +350,7 @@ private:
     QShortcut *stepOutShortcut;
     QShortcut *debuggerShortcut;
     QShortcut *asmShortcut;
+    QShortcut *gifShortcut;
 
     QAction *toggleAction;
 

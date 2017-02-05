@@ -37,15 +37,16 @@
 
 static const constexpr int WindowStateVersion = 0;
 
-MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow), opts(cliOpts) {
+MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow), opts(cliOpts) {
 
     // Setup the UI
     ui->setupUi(this);
     ui->centralWidget->hide();
-    ui->statusBar->addWidget(&statusLabel);
+    ui->statusBar->addWidget(&speedLabel);
+    ui->statusBar->addPermanentWidget(&msgLabel);
 
-    // Allow for 2000 lines of logging
-    ui->console->setMaximumBlockCount(2000);
+    // Allow for 2001 lines of logging
+    ui->console->setMaximumBlockCount(2001);
 
     // Register QtKeypadBridge for the virtual keyboard functionality
     connect(&keypadBridge, &QtKeypadBridge::keyStateChanged, ui->keypadWidget, &KeypadWidget::changeKeyState);
@@ -223,7 +224,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     stepNextShortcut = new QShortcut(QKeySequence(Qt::Key_F8), this);
     stepOutShortcut = new QShortcut(QKeySequence(Qt::Key_F9), this);
     debuggerShortcut = new QShortcut(QKeySequence(Qt::Key_F10), this);
-    asmShortcut = new QShortcut(QKeySequence(Qt::Key_F11), this);
+    asmShortcut = new QShortcut(QKeySequence(Qt::Key_Pause), this);
+    gifShortcut = new QShortcut(QKeySequence(Qt::Key_F11), this);
 
     debuggerShortcut->setAutoRepeat(false);
     stepInShortcut->setAutoRepeat(false);
@@ -231,13 +233,15 @@ MainWindow::MainWindow(CEmuOpts cliOpts,QWidget *p) : QMainWindow(p), ui(new Ui:
     stepNextShortcut->setAutoRepeat(false);
     stepOutShortcut->setAutoRepeat(false);
     asmShortcut->setAutoRepeat(false);
+    gifShortcut->setAutoRepeat(false);
 
+    connect(asmShortcut, &QShortcut::activated, this, &MainWindow::sendASMKey);
     connect(debuggerShortcut, &QShortcut::activated, this, &MainWindow::debuggerChangeState);
     connect(stepInShortcut, &QShortcut::activated, this, &MainWindow::stepInPressed);
     connect(stepOverShortcut, &QShortcut::activated, this, &MainWindow::stepOverPressed);
     connect(stepNextShortcut, &QShortcut::activated, this, &MainWindow::stepNextPressed);
     connect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOutPressed);
-    connect(asmShortcut, &QShortcut::activated, this, &MainWindow::sendASMKey);
+    connect(gifShortcut, &QShortcut::activated, this, &MainWindow::recordGIF);
 
     // Meta Types
     qRegisterMetaType<uint32_t>("uint32_t");
@@ -507,17 +511,13 @@ void MainWindow::started(bool success) {
 
 void MainWindow::restored(bool success) {
     started(success);
-    if (success) {
-        showStatusMsg(tr("Emulation restored from image."));
-    } else {
+    if (!success) {
         QMessageBox::warning(this, tr("Could not restore"), tr("Resuming failed.\nPlease Reload your ROM."));
     }
 }
 
 void MainWindow::saved(bool success) {
-    if (success) {
-        showStatusMsg(tr("Image saved."));
-    } else {
+    if (!success) {
         QMessageBox::warning(this, tr("Could not save"), tr("Saving failed.\nSaving failed, go tell someone."));
     }
 
@@ -601,11 +601,11 @@ void MainWindow::consoleErrStr(QString str) {
 }
 
 void MainWindow::showActualSpeed(int speed) {
-    showStatusMsg(QStringLiteral(" ") + tr("Actual Speed: ") + QString::number(speed, 10) + QStringLiteral("%"));
+    speedLabel.setText(QStringLiteral(" ") + tr("Emulated Speed: ") + QString::number(speed, 10) + QStringLiteral("%"));
 }
 
 void MainWindow::showStatusMsg(QString str) {
-    statusLabel.setText(str);
+    msgLabel.setText(str);
 }
 
 bool MainWindow::runSetup() {
@@ -692,16 +692,22 @@ void MainWindow::screenshotGIF() {
 }
 
 void MainWindow::recordGIF() {
-  static QString path;
-  static QString opt_path;
+    static QString path;
+    static QString opt_path;
 
-  if (path.isEmpty()) {
+    if (inDebugger || isReceiving || isSending) {
+        return;
+    }
+
+    if (path.isEmpty()) {
         path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.gif");
         opt_path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_opt_tmp.gif");
         lcd_event_gui_callback = gif_new_frame;
         gif_start_recording(path.toStdString().c_str(), ui->frameskipSlider->value());
+        showStatusMsg(tr("Recording..."));
     } else {
         if (gif_stop_recording()) {
+            showStatusMsg(QStringLiteral(""));
             if (!(gif_optimize(path.toStdString().c_str(), opt_path.toStdString().c_str()))) {
                 QFile(path).remove();
                 QMessageBox::warning(this, tr("GIF Optimization Failed"), tr("A failure occured during recording"));
@@ -717,10 +723,11 @@ void MainWindow::recordGIF() {
         opt_path = QString();
     }
 
-    ui->frameskipSlider->setEnabled(path.isEmpty());
-    ui->actionRecordGIF->setChecked(!path.isEmpty());
-    ui->buttonGIF->setText((!path.isEmpty()) ? tr("Stop Recording") : tr("Record GIF"));
-    ui->actionRecordGIF->setText((!path.isEmpty()) ? tr("Stop GIF Recording...") : tr("Record animated GIF..."));
+    recordingGif = !path.isEmpty();
+    ui->frameskipSlider->setEnabled(!recordingGif);
+    ui->actionRecordGIF->setChecked(recordingGif);
+    ui->buttonGIF->setText(recordingGif ? tr("Stop Recording") : tr("Record GIF"));
+    ui->actionRecordGIF->setText(recordingGif ? tr("Stop GIF Recording...") : tr("Record animated GIF..."));
 }
 
 void MainWindow::changeFrameskip(int value) {
