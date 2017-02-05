@@ -48,29 +48,7 @@ irc_build_msgs = """
  
 {{ commit_msg }}
 )
-
-[
-{{ color }}{{ purple }}
-{{ name }}/{{ branch }}
- 
-(
-{{ scm }}
- 
-{{ commit_hash_short }}, 
-{{ commit_timestamp }}
-{% if is_tag %}
-, tag {{ tag_name }}
-{% endif %}
-)
-{{ endcolor }}
-]
- 
-{% if build_passed %}
-{{ color }}{{ green }}{{ build_pass_symbol }} Build log:{{ endcolor }}
-{% else %}
-{{ color }}{{ red }}{{ build_fail_symbol }} Build log:{{ endcolor }}
-{% endif %}
- 
+ | Build log: 
 {{ appveyor_build_url }}
  | Repo: 
 {{ repo_url }}
@@ -109,25 +87,7 @@ Build started!
  
 {{ commit_msg }}
 )
-
-[
-{{ color }}{{ purple }}
-{{ name }}/{{ branch }}
- 
-(
-{{ scm }}
- 
-{{ commit_hash_short }}, 
-{{ commit_timestamp }}
-{% if is_tag %}
-, tag {{ tag_name }}
-{% endif %}
-)
-{{ endcolor }}
-]
- 
-{{ color }}{{ orange }}Live build log:{{ endcolor }}
- 
+ | Live build log: 
 {{ appveyor_build_url }}
  | Repo: 
 {{ repo_url }}

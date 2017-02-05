@@ -41,6 +41,8 @@ BINTRAY_RELEASE_SERVER_PATH = "https://oss.jfrog.org/artifactory/oss-release-loc
 BINTRAY_MAVEN_GROUP_PATH = "/org/github/alberthdev/cemu/"
 MAX_ATTEMPTS = 5
 
+# Solution from Anppa @ StackOverflow
+# http://stackoverflow.com/a/18468750/1094484
 def timeout_http_body_read_to_file(response, fh, timeout = 60):
     def murha(resp):
         os.close(resp.fileno())
