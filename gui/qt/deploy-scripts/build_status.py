@@ -21,7 +21,7 @@ except ImportError:
 IRC_SERVER = "irc.efnet.org"
 IRC_PORT   = 6667
 IRC_NICK   = "CEmuMSVC"
-IRC_TARGET = '#thebot'
+IRC_TARGET = '#cemu-dev'
 IRC_USESSL = False
 
 # Add a blank line to indicate a new message.
@@ -84,7 +84,7 @@ started_build_msgs = """
 {{ endcolor }}
 ]
  
-{{ color }}{{ orange }}
+{{ color }}{{ yellow }}
 {{ build_run_symbol }} 
 {% if is_scheduled_build %}
 Scheduled build
