@@ -295,7 +295,7 @@ extra_env["repo_url_long"]                  = "https://%s.com/%s/%s/%s" % (     
                                                           "github", "gitlab"
                                                       ]
                                                   ) else "commits",
-                                                  extra_env["commit_hash"]
+                                                  appveyor_env["commit_hash"]
                                               ) if (
                                                   appveyor_env["repo_provider"] and
                                                   appveyor_env["repo_provider"].lower() in [
