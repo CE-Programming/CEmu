@@ -161,7 +161,7 @@ def shorten_url_google(url, alt = None):
         req = Request(api_url, form_data, headers = headers)
         out = urlopen(req)
         res = out.read()
-        short_url = json.loads(out.read()).get("id")
+        short_url = json.loads(out.read().decode("utf-8")).get("id")
         if short_url == None:
             return alt
         return short_url
