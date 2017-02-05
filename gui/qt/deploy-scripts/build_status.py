@@ -161,7 +161,7 @@ def shorten_url_google(url, alt = None):
         req = Request(api_url, form_data, headers = headers)
         out = urlopen(req)
         res = out.read()
-        short_url = json.loads(out.read().decode("utf-8")).get("id")
+        short_url = json.loads(res.decode("utf-8")).get("id")
         if short_url == None:
             return alt
         return short_url
@@ -182,6 +182,9 @@ def shorten_url_google(url, alt = None):
     except ValueError:
         _, e, _ = sys.exc_info()
         print(" ! JSON Exception: %s (%s)" % (str(e), url))
+        print(" ! JSON input:")
+        input_json = " !   " + "\n !   ".join(res.split("\n")).strip()
+        print(input_json)
     
     return alt
 
