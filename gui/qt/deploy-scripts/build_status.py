@@ -26,7 +26,6 @@ IRC_USESSL = False
 
 # Add a blank line to indicate a new message.
 irc_build_msgs = """
-[
 {{ color }}{{ purple }}
 {{ repo_name }}/{{ branch }}
  
@@ -38,7 +37,6 @@ irc_build_msgs = """
 {% endif %}
 )
 {{ endcolor }}
-]
  
 {% if build_passed %}
 {{ color }}{{ green }}{{ build_pass_symbol }} 
@@ -70,7 +68,6 @@ Build
 """
 
 started_build_msgs = """
-[
 {{ color }}{{ purple }}
 {{ repo_name }}/{{ branch }}
  
@@ -82,7 +79,6 @@ started_build_msgs = """
 {% endif %}
 )
 {{ endcolor }}
-]
  
 {{ color }}{{ yellow }}
 {{ build_run_symbol }} 
@@ -281,7 +277,7 @@ extra_env = {
                                                 ),
     "build_pass_symbol"                     : "✓",
     "build_fail_symbol"                     : "✗",
-    "build_run_symbol"                      : "⚙",
+    "build_run_symbol"                      : "⚒",
     "commit_hash_short"                     : appveyor_env["commit_hash"][:7] if (
                                                 appveyor_env["commit_hash"]) else "--",
     "repo_name"                             : appveyor_env["name"].split("/")[-1] if (
