@@ -3,6 +3,8 @@ environment:
     secure: AGZJlJvqTJR3lySeBoANrPYyWfgLJciSqTZm3/ZEPbUx4dQ9m1fiWGY3RYBGaYOq
   BINTRAY_API_USERNAME:
     secure: QyZ6LhunNhgW3l/1aiGROg==
+  GOOGLE_URL_SHORTENER_API_KEY:
+    secure: yPv9WtzW+27giJAicFEXGV0KENiee+3+BG2CIOLarbu5wsm7q/h0Ixqsq70CITPi
 
 install:
   - C:\Python35\Scripts\pip install requests jinja2 irc

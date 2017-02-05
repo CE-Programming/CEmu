@@ -6,23 +6,32 @@ import subprocess
 from jinja2 import Template
 import logging
 
+try:
+    # Python 3
+    from urllib.request import urlopen, Request
+    from urllib.parse import urlencode
+    from urllib.error import HTTPError, URLError
+    from http.client import HTTPException
+except ImportError:
+    # Python 2
+    from urllib2 import urlopen, urlencode, Request, HTTPError, URLError
+    from httplib import HTTPException
+
 IRC_SERVER = "irc.efnet.org"
 IRC_PORT   = 6667
 IRC_NICK   = "CEmuMSVC"
-IRC_TARGET = '#cemu-dev'
+IRC_TARGET = '#thebot'
 IRC_USESSL = False
 
 # Add a blank line to indicate a new message.
 irc_build_msgs = """
 [
 {{ color }}{{ purple }}
-{{ name }}/{{ branch }}
+{{ repo_name }}/{{ branch }}
  
 (
-{{ scm }}
- 
 {{ commit_hash_short }}, 
-{{ commit_timestamp }}
+{{ repo_url_tiny }}
 {% if is_tag %}
 , tag {{ tag_name }}
 {% endif %}
@@ -35,6 +44,7 @@ irc_build_msgs = """
 {% else %}
 {{ color }}{{ red }}{{ build_fail_symbol }} Build failed!{{ endcolor }}
 {% endif %}
+ {{ appveyor_build_url_tiny }}
 {% if is_scheduled_build %}
  (Scheduled Build)
 {% elif is_forced_build %}
@@ -48,22 +58,16 @@ irc_build_msgs = """
  
 {{ commit_msg }}
 )
- | Build log: 
-{{ appveyor_build_url }}
- | Repo: 
-{{ repo_url }}
 """
 
 started_build_msgs = """
 [
 {{ color }}{{ purple }}
-{{ name }}/{{ branch }}
+{{ repo_name }}/{{ branch }}
  
 (
-{{ scm }}
- 
 {{ commit_hash_short }}, 
-{{ commit_timestamp }}
+{{ repo_url_tiny }}
 {% if is_tag %}
 , tag {{ tag_name }}
 {% endif %}
@@ -72,7 +76,7 @@ started_build_msgs = """
 ]
  
 {{ color }}{{ orange }}
-Build started!
+Build started @ {{ appveyor_build_url_tiny }}!
 {{ endcolor }}
 {% if is_scheduled_build %}
  (Scheduled Build)
@@ -87,11 +91,98 @@ Build started!
  
 {{ commit_msg }}
 )
- | Live build log: 
-{{ appveyor_build_url }}
- | Repo: 
-{{ repo_url }}
 """
+
+# Prefunctions
+def shorten_url_gitio(url, alt = None):
+    data = { 'url' : url }
+    form_data = urlencode(data).encode("utf-8")
+    
+    try:
+        out = urlopen("https://git.io", form_data)
+        res = dict(out.info()).get('Location')
+        if res == None:
+            return alt
+        return res
+    # Error handling...
+    except HTTPError:
+        _, e, _ = sys.exc_info()
+        print(" ! HTTP Error: %i (%s)" % (e.code, url))
+        print(" ! Server said:")
+        err = e.read().decode("utf-8")
+        err = " !   " + "\n !   ".join(err.split("\n")).strip()
+        print(err)
+    except URLError:
+        _, e, _ = sys.exc_info()
+        print(" ! URL Error: %s (%s)" % (e.reason, url))
+    except HTTPException:
+        _, e, _ = sys.exc_info()
+        print(" ! HTTP Exception: %s (%s)" % (str(e), url))
+    
+    return alt
+
+def shorten_url_google(url, alt = None):
+    # A Google API key is necessary to make this function work reliably.
+    # 
+    # You can fetch one via the Google Developer Console:
+    # https://console.developers.google.com/
+    # 
+    # First, enable the URL shortener API. Then, add a new API key to
+    # use. For maximum security, you MUST restrict the API key by
+    # AppVeyor IPs. Those IPs can be found here:
+    # https://www.appveyor.com/docs/build-configuration/#ip-addresses
+    # 
+    # Finally, you will need to encrypt your API key with AppVeyor, and
+    # add it to your appveyor.yml. You can encrypt it here:
+    # https://ci.appveyor.com/tools/encrypt
+    # 
+    # Add the encrypted API key as environment variable
+    # GOOGLE_URL_SHORTENER_API_KEY to your appveyor.yml, and you should
+    # be set!
+    
+    # Attempt to locate API key
+    google_url_shortener_api_key = os.environ.get("GOOGLE_URL_SHORTENER_API_KEY")
+    if google_url_shortener_api_key:
+        api_url = "https://www.googleapis.com/urlshortener/v1/url?key=%s" % google_url_shortener_api_key
+    else:
+        print(" ! WARNING: No Google API key found. You should strongly consider")
+        print(" !          adding one - read shorten_url_google() documentation")
+        print(" !          for more information.")
+        api_url = "https://www.googleapis.com/urlshortener/v1/url"
+    
+    headers = { "Content-Type": "application/json" }
+    data = '{"longUrl": "%s"}' % url
+    form_data = data.encode("utf-8")
+    
+    res = None
+    
+    try:
+        req = Request(api_url, form_data, headers = headers)
+        out = urlopen(req)
+        res = out.read()
+        short_url = json.loads(out.read()).get("id")
+        if short_url == None:
+            return alt
+        return short_url
+    # Error handling...
+    except HTTPError:
+        _, e, _ = sys.exc_info()
+        print(" ! HTTP Error: %i (%s)" % (e.code, url))
+        print(" ! Server said:")
+        err = e.read().decode("utf-8")
+        err = " !   " + "\n !   ".join(err.split("\n")).strip()
+        print(err)
+    except URLError:
+        _, e, _ = sys.exc_info()
+        print(" ! URL Error: %s (%s)" % (e.reason, url))
+    except HTTPException:
+        _, e, _ = sys.exc_info()
+        print(" ! HTTP Exception: %s (%s)" % (str(e), url))
+    except ValueError:
+        _, e, _ = sys.exc_info()
+        print(" ! JSON Exception: %s (%s)" % (str(e), url))
+    
+    return alt
 
 irc_format_table = {
     "white"       : "00",
@@ -145,7 +236,8 @@ appveyor_env = {
     "commit_hash"                           : os.environ.get("APPVEYOR_REPO_COMMIT"),                        # commit ID (SHA);
     "author_name"                           : os.environ.get("APPVEYOR_REPO_COMMIT_AUTHOR"),                 # commit author’s name;
     "author_email"                          : os.environ.get("APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL"),           # commit author’s email address;
-    "commit_timestamp"                      : os.environ.get("APPVEYOR_REPO_COMMIT_TIMESTAMP")[:19],         # commit date/time;
+    "commit_timestamp"                      : os.environ.get("APPVEYOR_REPO_COMMIT_TIMESTAMP")[:19] if (     # commit date/time;
+                                                os.environ.get("APPVEYOR_REPO_COMMIT_TIMESTAMP")) else "--", # 
     "commit_msg"                            : os.environ.get("APPVEYOR_REPO_COMMIT_MESSAGE"),                # commit message;
     "commit_msg_long"                       : os.environ.get("APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED"),       # the rest of commit message after line break (if exists);
     "is_scheduled_build"                    : os.environ.get("APPVEYOR_SCHEDULED_BUILD"),                    # True if the build runs by scheduler;
@@ -174,25 +266,45 @@ extra_env = {
                                                 ),
     "build_pass_symbol"                     : "✓",
     "build_fail_symbol"                     : "✗",
-    "commit_hash_short"                     : appveyor_env["commit_hash"][:7],
+    "commit_hash_short"                     : appveyor_env["commit_hash"][:7] if (
+                                                appveyor_env["commit_hash"]) else "--",
+    "repo_name"                             : appveyor_env["name"].split("/")[-1] if (
+                                                appveyor_env["name"]) else "--",
 }
 
-extra_env["repo_url"]                       = "%s" % (
-                                                        "https://%s.com/%s/%s/%s" % (                        # Repository URL
-                                                            appveyor_env["repo_provider"],                   # Example:
-                                                            appveyor_env["name"],                            #   https://github.com/CE-Programming/CEmu/commit/4603aec71f9e1163e545beff10122ef40ec9007a
-                                                            "commit" if (
-                                                                appveyor_env["repo_provider"].lower() in [
-                                                                    "github", "gitlab"
-                                                                ]
-                                                            ) else "commits",
-                                                            extra_env["commit_hash_short"]
-                                                        ) if (
-                                                            appveyor_env["repo_provider"].lower() in [
-                                                                "github", "gitlab", "bitbucket"
-                                                            ]
-                                                        ) else "(none)"
-                                                    )
+extra_env["repo_url"]                       = "https://%s.com/%s/%s/%s" % (                        # Repository URL
+                                                  appveyor_env["repo_provider"],                   # Example:
+                                                  appveyor_env["name"],                            #   https://github.com/CE-Programming/CEmu/commit/4603aec71f9e1163e545beff10122ef40ec9007a
+                                                  "commit" if (
+                                                      appveyor_env["repo_provider"].lower() in [
+                                                          "github", "gitlab"
+                                                      ]
+                                                  ) else "commits",
+                                                  extra_env["commit_hash_short"]
+                                              ) if (
+                                                  appveyor_env["repo_provider"] and
+                                                  appveyor_env["repo_provider"].lower() in [
+                                                      "github", "gitlab", "bitbucket"
+                                                  ]
+                                              ) else "(none)"
+extra_env["repo_url_long"]                  = "https://%s.com/%s/%s/%s" % (                        # Repository URL
+                                                  appveyor_env["repo_provider"],                   # Example:
+                                                  appveyor_env["name"],                            #   https://github.com/CE-Programming/CEmu/commit/4603aec71f9e1163e545beff10122ef40ec9007a
+                                                  "commit" if (
+                                                      appveyor_env["repo_provider"].lower() in [
+                                                          "github", "gitlab"
+                                                      ]
+                                                  ) else "commits",
+                                                  extra_env["commit_hash"]
+                                              ) if (
+                                                  appveyor_env["repo_provider"] and
+                                                  appveyor_env["repo_provider"].lower() in [
+                                                      "github", "gitlab", "bitbucket"
+                                                  ]
+                                              ) else "(none)"
+extra_env["repo_url_tiny"]                  = shorten_url_gitio(extra_env["repo_url_long"], alt = "(none)") if (
+                                                  extra_env["repo_url_long"] != "(none)") else "(none)"
+extra_env["appveyor_build_url_tiny"]        = shorten_url_google(extra_env["appveyor_build_url"], alt = "(none)")
 
 bool_vars = [
     "appveyor_enabled",

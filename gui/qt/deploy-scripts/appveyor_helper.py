@@ -93,6 +93,10 @@ def dlfile(url):
         except HTTPError:
             _, e, _ = sys.exc_info()
             print("         !! HTTP Error: %i (%s)" % (e.code, url))
+            print("         !! Server said:")
+            err = e.read().decode("utf-8")
+            err = "         !! " + "\n         !! ".join(err.split("\n")).strip()
+            print(err)
         except URLError:
             _, e, _ = sys.exc_info()
             print("         !! URL Error: %s (%s)" % (e.reason, url))
