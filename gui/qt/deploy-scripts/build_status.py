@@ -5,6 +5,7 @@ import sys
 import subprocess
 from jinja2 import Template
 import logging
+import json
 
 try:
     # Python 3
@@ -273,7 +274,7 @@ extra_env = {
 }
 
 extra_env["repo_url"]                       = "https://%s.com/%s/%s/%s" % (                        # Repository URL
-                                                  appveyor_env["repo_provider"],                   # Example:
+                                                  appveyor_env["repo_provider"].lower(),           # Example:
                                                   appveyor_env["name"],                            #   https://github.com/CE-Programming/CEmu/commit/4603aec71f9e1163e545beff10122ef40ec9007a
                                                   "commit" if (
                                                       appveyor_env["repo_provider"].lower() in [
@@ -288,7 +289,7 @@ extra_env["repo_url"]                       = "https://%s.com/%s/%s/%s" % (     
                                                   ]
                                               ) else "(none)"
 extra_env["repo_url_long"]                  = "https://%s.com/%s/%s/%s" % (                        # Repository URL
-                                                  appveyor_env["repo_provider"],                   # Example:
+                                                  appveyor_env["repo_provider"].lower(),           # Example:
                                                   appveyor_env["name"],                            #   https://github.com/CE-Programming/CEmu/commit/4603aec71f9e1163e545beff10122ef40ec9007a
                                                   "commit" if (
                                                       appveyor_env["repo_provider"].lower() in [
