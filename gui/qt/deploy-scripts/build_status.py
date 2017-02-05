@@ -41,18 +41,26 @@ irc_build_msgs = """
 ]
  
 {% if build_passed %}
-{{ color }}{{ green }}{{ build_pass_symbol }} Build passed!{{ endcolor }}
+{{ color }}{{ green }}{{ build_pass_symbol }} 
 {% else %}
-{{ color }}{{ red }}{{ build_fail_symbol }} Build failed!{{ endcolor }}
+{{ color }}{{ red }}{{ build_fail_symbol }} 
 {% endif %}
- {{ appveyor_build_url_tiny }}
 {% if is_scheduled_build %}
- (Scheduled Build)
+Scheduled build
 {% elif is_forced_build %}
- (Forced Build)
+Forced build
 {% elif is_rebuild %}
- (Rebuild)
+Rebuild
+{% else %}
+Build
 {% endif %}
+{% if build_passed %}
+ passed
+{% else %}
+ failed
+{% endif %}
+ @ {{ appveyor_build_url_tiny }}!
+{{ endcolor }}
  
 (
 {{ author_name }},
@@ -77,15 +85,18 @@ started_build_msgs = """
 ]
  
 {{ color }}{{ orange }}
-Build started @ {{ appveyor_build_url_tiny }}!
-{{ endcolor }}
+{{ build_run_symbol }} 
 {% if is_scheduled_build %}
- (Scheduled Build)
+Scheduled build
 {% elif is_forced_build %}
- (Forced Build)
+Forced build
 {% elif is_rebuild %}
- (Rebuild)
+Rebuild
+{% else %}
+Build
 {% endif %}
+ started @ {{ appveyor_build_url_tiny }}!
+{{ endcolor }}
  
 (
 {{ author_name }},
@@ -270,6 +281,7 @@ extra_env = {
                                                 ),
     "build_pass_symbol"                     : "✓",
     "build_fail_symbol"                     : "✗",
+    "build_run_symbol"                      : "⚙",
     "commit_hash_short"                     : appveyor_env["commit_hash"][:7] if (
                                                 appveyor_env["commit_hash"]) else "--",
     "repo_name"                             : appveyor_env["name"].split("/")[-1] if (
