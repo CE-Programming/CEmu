@@ -1158,21 +1158,17 @@ void MainWindow::scrollDisasmView(int value) {
 
 void MainWindow::equatesClear() {
     // Reset the map
-    currentEquateFile.clear();
+    currentEquateFiles.clear();
     disasm.addressMap.clear();
-    QMessageBox::warning(this, tr("Equates Cleared"), tr("Cleared disassembly equates."));
     updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(Q_NULLPTR, 16), true);
 }
 
 void MainWindow::equatesRefresh() {
     // Reset the map
-    if (fileExists(currentEquateFile.toStdString())) {
-        disasm.addressMap.clear();
-        equatesAddFile(currentEquateFile);
-        updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(Q_NULLPTR, 16), true);
-    } else {
-        QMessageBox::warning(this, tr("Error Opening"), tr("Couldn't open equates file."));
-    }
+    disasm.addressMap.clear();
+    for (QString file : currentEquateFiles)
+        equatesAddFile(file);
+    updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(Q_NULLPTR, 16), true);
 }
 
 void MainWindow::equatesAddDialog() {
@@ -1191,19 +1187,18 @@ void MainWindow::equatesAddDialog() {
     good = dialog.exec();
     currentDir = dialog.directory();
 
-    if (!good) { return; }
-
-    equatesAddFile(dialog.selectedFiles().first());
+    if (good) {
+        currentEquateFiles = dialog.selectedFiles();
+        equatesRefresh();
+    }
 }
 
 void MainWindow::equatesAddFile(QString fileName) {
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        QMessageBox::critical(this, tr("Error"), tr("Couldn't open this file"));
+        QMessageBox::critical(this, tr("Error"), tr("Couldn't open this file: ") + fileName);
         return;
     }
-    // Reset the map
-    disasm.addressMap.clear();
 
     QTextStream in(&file);
     QString line;
@@ -1223,7 +1218,7 @@ void MainWindow::equatesAddFile(QString fileName) {
             if (split.size() != 4) {
                 break;
             }
-            equatesAddEquate(split[1].right(6), split[0]);
+            equatesAddEquate(split[0], split[1].right(6));
         }
     } else {
         QRegularExpression equatesRegexp("^\\h*([^\\W\\d]\\w*)\\h*(?:=|\\h\\.?equ(?!\\d))\\h*(?|\\$([\\da-f]{4,})|(\\d[\\da-f]{3,})h)\\h*(?:;.*)?$",
@@ -1239,7 +1234,7 @@ void MainWindow::equatesAddFile(QString fileName) {
     updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(Q_NULLPTR, 16), true);
 }
 
-void MainWindow::equatesAddEquate(QString addrStr, QString name) {
+void MainWindow::equatesAddEquate(QString name, QString addrStr) {
     uint32_t address = addrStr.toUInt(Q_NULLPTR, 16);
     std::string &item = disasm.addressMap[address];
     if (item.empty()) {

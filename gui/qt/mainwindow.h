@@ -324,7 +324,7 @@ private:
     int memSize;
 
     QDir currentDir;
-    QString currentEquateFile;
+    QStringList currentEquateFiles;
     EmuThread emu;
 
     bool uiEditMode;
