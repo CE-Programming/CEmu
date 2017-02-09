@@ -74,331 +74,63 @@ static void usb_plug(void) {
     usb_grp2_int(GISR2_RESUME);
 }
 
-static void usb_setup(const uint8_t *setup) {
+void usb_setup(const uint8_t *setup) {
     usb.regs.cxfifo &= ~0x3F;
     memcpy(usb.ep0_data, setup, sizeof usb.ep0_data);
     usb.ep0_idx = 0;
     usb_grp0_int(GISR0_CXSETUP);
 }
 
+void usb_send_pkt(const void *data, uint32_t size) {
+    usb.data = data;
+    usb.len = size;
+    usb.regs.fifocsr[0] = (usb.regs.fifocsr[0] & FIFOCSR_RESET) | size;
+    usb.regs.cxfifo &= ~CXFIFO_FIFOE_FIFO0;
+    usb_grp1_int(GISR1_RX_FIFO(0));
+}
+
 //static uint8_t ep0_init[] = { 0x80, 0x06, 0x02, 0x02, 0x00, 0x00, 0x40, 0x00 };
 //static uint8_t ep0_init[] = { 0x80, 0x06, 0x03, 0x03, 0x09, 0x04, 0x40, 0x00 };
 //static uint8_t ep0_init[] = { 0x00, 0x05, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 };
 static void usb_event(enum sched_item_id event) {
-    static uint8_t get_dev_desc_40[]   = { 0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x40, 0x00 };
-    static uint8_t set_addr[]          = { 0x00, 0x05, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    static uint8_t get_dev_desc_12[]   = { 0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x12, 0x00 };
-    static uint8_t get_dev_qual_desc[] = { 0x80, 0x06, 0x00, 0x06, 0x00, 0x00, 0x0A, 0x00 };
-    static uint8_t get_config_00_09[]  = { 0x80, 0x06, 0x00, 0x02, 0x00, 0x00, 0x09, 0x00 };
-    static uint8_t get_config_00_23[]  = { 0x80, 0x06, 0x00, 0x02, 0x00, 0x00, 0x23, 0x00 };
-    static uint8_t get_config_01_09[]  = { 0x80, 0x06, 0x01, 0x02, 0x00, 0x00, 0x09, 0x00 };
-    static uint8_t get_config_01_23[]  = { 0x80, 0x06, 0x01, 0x02, 0x00, 0x00, 0x23, 0x00 };
-    static uint8_t get_config_02_09[]  = { 0x80, 0x06, 0x02, 0x02, 0x00, 0x00, 0x09, 0x00 };
-    static uint8_t get_config_02_23[]  = { 0x80, 0x06, 0x02, 0x02, 0x00, 0x00, 0x23, 0x00 };
-    static uint8_t get_langids[]       = { 0x80, 0x06, 0x00, 0x03, 0x00, 0x00, 0xFF, 0x00 };
-    static uint8_t get_str_02[]        = { 0x80, 0x06, 0x02, 0x03, 0x09, 0x04, 0xFF, 0x00 };
-    static uint8_t get_str_01[]        = { 0x80, 0x06, 0x01, 0x03, 0x09, 0x04, 0xFF, 0x00 };
-    static uint8_t set_config[]        = { 0x00, 0x09, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    static uint8_t clr_feat_02[]       = { 0x02, 0x01, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00 };
-    static uint8_t clr_feat_81[]       = { 0x02, 0x01, 0x00, 0x00, 0x81, 0x00, 0x00, 0x00 };
-    static uint8_t rdy_pkt_00[]        = { 0x00, 0x00, 0x00, 0x04, 0x01, 0x00, 0x00, 0x04, 0x00 };
-    static uint8_t rdy_pkt_01[]        = { 0x00, 0x00, 0x00, 0x10, 0x04, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x01, 0x00, 0x03, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x07, 0xd0 };
+    static const uint8_t set_addr[]   = { 0x00, 0x05, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    static const uint8_t set_config[] = { 0x00, 0x09, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    static const uint8_t rdy_pkt_00[] = { 0x00, 0x00, 0x00, 0x04, 0x01, 0x00, 0x00, 0x04, 0x00 };
+    static const uint8_t rdy_pkt_01[] = { 0x00, 0x00, 0x00, 0x10, 0x04, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x01, 0x00, 0x03, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x07, 0xd0 };
     switch (usb.state) {
-        case 0: // plug
-            if (!usb.regs.otgisr) {
-                usb_plug();
-                usb.state++;
-            }
-            break;
-        case 1: // reset
+        case 0: // reset
             if (usb.regs.dev_ctrl & 0x80) {
                 usb_grp2_int(GISR2_RESET);
                 usb.state++;
             }
             break;
-        case 2: // get_dev_desc_40
+        case 1: // set addr
             if (!(usb.regs.gisr2 & GISR2_RESET)) {
-                usb_setup(get_dev_desc_40);
-                usb.state++;
-            }
-            break;
-        case 3: // reset
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_grp2_int(GISR2_RESET);
-                usb.state++;
-            }
-            break;
-        case 4: // set addr
-            if (!(usb.regs.gisr2 & GISR2_RESET)) {
-                usb_grp0_int(GISR0_CXEND);
                 usb_setup(set_addr);
                 usb.state++;
             }
             break;
-        case 5: // get_dev_desc_12
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(get_dev_desc_12);
-                usb.state++;
-            }
-            break;
-        case 6: // get_config_00_23
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb.regs.cxfifo &= ~CXFIFO_CXFIN;
-                usb_setup(get_config_00_23);
-                usb.state++;
-            }
-            break;
-        case 7: // get_config_01_23
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(get_config_01_23);
-                usb.state++;
-            }
-            break;
-        case 8: // get_config_02_23
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(get_config_02_23);
-                usb.state++;
-            }
-            break;
-        case 9: // set_config
+        case 2: // set config
             if (usb.regs.cxfifo & CXFIFO_CXFIN) {
                 usb_setup(set_config);
                 usb.state++;
             }
             break;
-        case 10: // get_langids
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(get_langids);
-                usb.state++;
-            }
-            break;
-        case 11: // get_str_02
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(get_str_02);
-                usb.state++;
-            }
-            break;
-        case 12: // set_config
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(set_config);
-                usb.state++;
-            }
-            break;
-        case 13: // rdy_pkt_00
+        case 3: // rdy_pkt_00
             if (usb.regs.cxfifo & CXFIFO_CXFIN) {
                 usb.regs.cxfifo &= ~CXFIFO_CXFIN;
-                usb.data = rdy_pkt_00;
-                usb.len = sizeof rdy_pkt_00;
-                usb.regs.fifocsr[0] = (usb.regs.fifocsr[0] & FIFOCSR_RESET) | usb.len;
-                usb.regs.cxfifo &= ~CXFIFO_FIFOE_FIFO0;
-                usb_grp1_int(GISR1_RX_FIFO(0));
+                usb_send_pkt(rdy_pkt_00, sizeof rdy_pkt_00);
                 usb.state++;
             }
             break;
-        case 14: // rdy_pkt_01
+        case 4: // rdy_pkt_01
             if (!(usb.regs.gisr1 & GISR1_RX_FIFO(0))) {
-                usb.data = rdy_pkt_01;
-                usb.len = sizeof rdy_pkt_01;
-                usb.regs.fifocsr[0] = (usb.regs.fifocsr[0] & FIFOCSR_RESET) | usb.len;
-                usb.regs.cxfifo &= ~CXFIFO_FIFOE_FIFO0;
-                usb_grp1_int(GISR1_RX_FIFO(0));
+                usb_send_pkt(rdy_pkt_01, sizeof rdy_pkt_01);
                 usb.state++;
             }
             break;
-#if 0
-        case 2: // get_dev_desc_40
-            if (!(usb.regs.gisr2 & GISR2_RESET)) {
-                usb_setup(get_dev_desc_40);
-                usb.state++;
-            }
-            break;
-        case 3: // reset
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_grp2_int(GISR2_RESET);
-                usb.state++;
-            }
-            break;
-        case 4: // set addr
-            if (!(usb.regs.gisr2 & GISR2_RESET)) {
-                usb_grp0_int(GISR0_CXEND);
-                usb_setup(set_addr);
-                usb.state++;
-            }
-            break;
-        case 5: // get_dev_desc_12
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb.regs.cxfifo &= ~CXFIFO_CXFIN;
-                usb_setup(get_dev_desc_12);
-                usb.state++;
-            }
-            break;
-        case 6: // get_dev_qual_desc
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(get_dev_qual_desc);
-                usb.state++;
-            }
-            break;
-        case 7: // get_dev_qual_desc
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(get_dev_qual_desc);
-                usb.state++;
-            }
-            break;
-        case 8: // get_dev_qual_desc
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(get_dev_qual_desc);
-                usb.state++;
-            }
-            break;
-        case 9: // get_config_00_09
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(get_config_00_09);
-                usb.state++;
-            }
-            break;
-        case 10: // get_config_00_23
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(get_config_00_23);
-                usb.state++;
-            }
-            break;
-        case 11: // get_config_01_09
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(get_config_01_09);
-                usb.state++;
-            }
-            break;
-        case 12: // get_config_01_23
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(get_config_01_23);
-                usb.state++;
-            }
-            break;
-        case 13: // get_config_02_09
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(get_config_02_09);
-                usb.state++;
-            }
-            break;
-        case 14: // get_config_02_23
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(get_config_02_23);
-                usb.state++;
-            }
-            break;
-        case 15: // get_langids
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(get_langids);
-                usb.state++;
-            }
-            break;
-        case 16: // get_str_02
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(get_str_02);
-                usb.state++;
-            }
-            break;
-        case 17: // get_str_01
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(get_str_01);
-                usb.state++;
-            }
-            break;
-        case 18: // set_config
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(set_config);
-                usb.state++;
-            }
-            break;
-        case 19: // get_langids
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(get_langids);
-                usb.state++;
-            }
-            break;
-        case 20: // get_str_02
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(get_str_02);
-                usb.state++;
-            }
-            break;
-        case 21: // get_langids
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(get_langids);
-                usb.state++;
-            }
-            break;
-        case 22: // get_str_02
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(get_str_02);
-                usb.state++;
-            }
-            break;
-        case 23: // set_config
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(set_config);
-                usb.state++;
-            }
-            break;
-        case 24: // clr_feat_02
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(clr_feat_02);
-                usb.state++;
-            }
-            break;
-        case 25: // clr_feat_81
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(clr_feat_81);
-                usb.state++;
-            }
-            break;
-        case 26: // reset
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb.regs.cxfifo &= ~CXFIFO_CXFIN;
-                usb_grp2_int(GISR2_RESET);
-                usb.state++;
-            }
-            break;
-        case 27: // get_dev_desc_40
-            if (!(usb.regs.gisr2 & GISR2_RESET)) {
-                usb_setup(get_dev_desc_40);
-                usb.state++;
-            }
-            break;
-        case 28: // reset
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb.regs.cxfifo &= ~CXFIFO_CXFIN;
-                usb_grp2_int(GISR2_RESET);
-                usb.state++;
-            }
-            break;
-        case 29: // set addr
-            if (!(usb.regs.gisr2 & GISR2_RESET)) {
-                usb_setup(set_addr);
-                usb.state++;
-            }
-            break;
-#endif
-        /* case 3: // set config */
-        /*     if (!(usb.regs.gisr0 & GISR0_CXSETUP)) { */
-        /*         usb_setup(set_config); */
-        /*         usb.state++; */
-        /*     } */
-        /*     break; */
-        /* case 4: // packet test */
-        /*     if (!(usb.regs.gisr0 & GISR0_CXSETUP)) { */
-        /*         usb.data = test_packet; */
-        /*         usb.len = sizeof test_packet; */
-        /*         usb.regs.cxfifo &= ~CXFIFO_FIFOE_FIFO0; */
-        /*         usb.regs.fifocsr[0] = usb.len; */
-        /*         usb_grp1_int(GISR1_SPK_FIFO(0)); */
-        /*         usb.state++; */
-        /*     } */
-        /*     break; */
-        /* default: // ready */
-        /*     return; */
     }
-    sched_repeat(event, 33);
+    sched_repeat(event, 5000);
 }
 
 uint8_t usb_status(void) {
@@ -566,23 +298,20 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
                         while (len--)
                             gui_console_printf("%02X", *mem++);
                         gui_console_printf("\n");
-                        usb.regs.dma_ctrl &= ~DMACTRL_START;
-                        usb_grp2_int(GISR2_DMAFIN);
-                        break;
                     } else if (usb.data && usb.len) {
-                        if (len > usb.len) {
-                            len = usb.len;
+                        uint32_t rem = FIFOCSR_BYTES(usb.regs.fifocsr[0]);
+                        uint32_t amt = len < rem ? len : rem;
+                        memcpy(mem, usb.data, amt);
+                        usb.regs.fifocsr[0] -= amt;
+                        if (amt == rem) {
+                            usb.regs.cxfifo |= CXFIFO_FIFOE_MASK;
+                            usb.regs.gisr1 &= ~0xff;
                         }
-                        memcpy(mem, usb.data, len);
-                        usb.regs.dma_ctrl &= ~DMACTRL_START;
-                        usb.regs.fifocsr[0] &= FIFOCSR_RESET;
-                        usb.regs.cxfifo |= CXFIFO_FIFOE_MASK;
-                        usb.regs.gisr1 &= ~0xff;
-                        usb.data += len;
-                        usb.len -= len;
-                        usb_grp2_int(GISR2_DMAFIN);
-                        break;
+                        usb.data += amt;
                     }
+                    usb.regs.dma_ctrl &= ~DMACTRL_START;
+                    usb_grp2_int(GISR2_DMAFIN);
+                    break;
                 }
                 usb_grp2_int(GISR2_DMAERR);
             }
@@ -642,6 +371,7 @@ void usb_reset(void) {
     usb.len                             = 0;
     usb_otg_int(OTGISR_BSESSEND); // because otgcsr & OTGCSR_B_SESS_END
     usb_grp2_int(GISR2_IDLE);     // because idle == 0 ms
+    usb_plug();
 #undef clear
     sched.items[SCHED_USB].callback.event = usb_event;
     sched.items[SCHED_USB].clock = CLOCK_32K;

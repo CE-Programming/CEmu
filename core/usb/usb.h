@@ -17,7 +17,7 @@ typedef struct usb_state {
     uint8_t ep0_data[8]; /* 0x1d0: EP0 Setup Packet PIO Register */
     uint8_t ep0_idx;
     uint8_t state;
-    uint8_t *data;
+    const uint8_t *data;
     uint8_t len;
 } usb_state_t;
 
@@ -34,6 +34,8 @@ void usb_grp0_int(uint8_t);
 void usb_grp1_int(uint32_t);
 void usb_grp2_int(uint16_t);
 uint8_t usb_status(void);
+void usb_setup(const uint8_t *);
+void usb_send_pkt(const void *, uint32_t);
 
 #ifdef __cplusplus
 }
