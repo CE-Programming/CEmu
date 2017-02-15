@@ -138,16 +138,20 @@ uint8_t usb_status(void) {
         (usb.regs.otgcsr & (OTGCSR_DEV_B | OTGCSR_ROLE_D) ? 0x40 : 0);
 }
 
+static uint8_t usb_ep0_idx_update(void) {
+    if (usb.regs.dma_fifo & DMAFIFO_CX) {
+        usb.regs.gisr0 &= ~GISR0_CXSETUP;
+        return usb.ep0_idx++;
+    }
+    return usb.ep0_idx;
+}
+
 static uint8_t usb_read(uint16_t pio, bool peek) {
     uint8_t value = 0;
     if (pio < sizeof usb.regs) {
         value = ((uint8_t *)&usb.regs)[pio];
     } else if (pio < (peek ? 0x1d8 : 0x1d4)) {
-        value = usb.ep0_data[peek ? (usb.ep0_idx & 4) ^ (pio & 7) : (usb.ep0_idx & 4) | (pio & 3)];
-        if (!peek && usb.regs.dma_fifo == 0x10) {
-            ++usb.ep0_idx;
-            usb.regs.gisr0 &= ~GISR0_CXSETUP;
-        }
+        value = usb.ep0_data[peek ? (usb.ep0_idx & 4) ^ (pio & 7) : (usb_ep0_idx_update() & 4) | (pio & 3)];
     }
     return value;
 }
@@ -314,6 +318,11 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
                     break;
                 }
                 usb_grp2_int(GISR2_DMAERR);
+            }
+            break;
+        case 0x1D0 >> 2: // EP0 Data Register
+            if (!poke) {
+                usb_ep0_idx_update();
             }
             break;
     }
