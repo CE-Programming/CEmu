@@ -73,6 +73,35 @@ struct fotg210_regs {
 	uint32_t dma_addr; /* 0x1cc: DMA Address Register */
 };
 
+/* USB Command */
+#define USBCMD_ASYNC_SCHED     (1 << 5)
+#define USBCMD_PERIOD_SCHED    (1 << 4)
+#define USBCMD_FRLIST_SIZE(x)  (((x) >> 2) & 0x03)
+#define USBCMD_FRLIST_ELTS(x)  (1 << (10 - USBCMD_FRLIST_SIZE(x)))
+#define USBCMD_FRLIST_BYTES(x) (USBCMD_FRLIST_ELTS(x) << 3)
+#define USBCMD_HCRESET         (1 << 1)
+#define USBCMD_RUN             (1 << 0)
+
+/* USB Status */
+#define USBSTS_ASYNC_SCHED     (1 << 15)
+#define USBSTS_PERIOD_SCHED    (1 << 14)
+#define USBSTS_RECLAMATION     (1 << 13)
+#define USBSTS_HCHALTED        (1 << 12)
+#define USBSTS_HOST_SYS_ERR    (1 << 4)
+#define USBSTS_PORT_CHANGE     (1 << 2)
+#define USBSTS_USBERRINT       (1 << 1)
+#define USBSTS_USBINT          (1 << 0)
+
+/* Port Status and Control */
+#define PORTSC_J_STATE         (2 << 10)
+#define PORTSC_K_STATE         (1 << 10)
+#define PORTSC_SE0_STATE       (0 << 10)
+#define PORTSC_RESET           (1 << 8)
+#define PORTSC_EN_CHANGE       (1 << 3)
+#define PORTSC_EN_STATUS       (1 << 2)
+#define PORTSC_CONN_CHANGE     (1 << 1)
+#define PORTSC_CONN_STATUS     (1 << 0)
+
 /* Miscellaneous Register */
 #define MISCR_SUSPEND  (1 << 6) /* Put transceiver in suspend mode */
 #define MISCR_EOF2(x)  (((x) & 0x3) << 4) /* EOF 2 Timing */

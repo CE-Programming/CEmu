@@ -6,23 +6,46 @@
 #include "../mem.h"
 #include "../schedule.h"
 
-#include <string.h>
+#include <assert.h>
+#include <stddef.h>
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 extern void debugInstruction(void);
 
 /* Global GPT state */
 usb_state_t usb;
+static struct timeval zero_tv = {};
+
+static void usb_set_bits(uint32_t *reg, uint32_t bits, bool val) {
+    *reg = val ? *reg | bits : *reg & ~bits;
+}
+
+static bool usb_update_status_change(uint32_t *reg, uint32_t status, uint32_t change, bool val) {
+    uint32_t old = *reg, new = old;
+    bool changed;
+    usb_set_bits(&new, status, val);
+    if ((changed = (old ^ new) & status)) {
+        new |= change;
+    }
+    *reg = new;
+    return changed;
+}
+
+uint8_t usb_status(void) {
+    return (usb.regs.otgcsr & OTGCSR_A_VBUS_VLD ? 0x80 : 0) | (usb.regs.otgcsr & OTGCSR_DEV_B ? 0x40 : 0);
+//  return ((usb.regs.otgcsr & OTGCSR_DEV_B ? OTGCSR_A_BUSREQ : (usb.regs.otgcsr & (OTGCSR_A_BUSDROP | OTGCSR_A_BUSREQ)) == OTGCSR_A_BUSREQ) ? 0x80 : 0) | (usb.regs.otgcsr & (OTGCSR_DEV_B | OTGCSR_ROLE_D) ? 0x40 : 0);
+}
 
 static void usb_update(void) {
     intrpt_set(INT_USB, (usb.regs.isr =
-                         ( (usb.regs.gisr = (usb.regs.gisr2 & ~usb.regs.gimr2 ? GISR_GRP2 : 0) |
-                                            (usb.regs.gisr1 & ~usb.regs.gimr1 ? GISR_GRP1 : 0) |
-                                            (usb.regs.gisr0 & ~usb.regs.gimr0 ? GISR_GRP0 : 0) )
-                                               & ~usb.regs.gimr        ? ISR_DEV  : 0) |
-                         (usb.regs.otgisr      & usb.regs.otgier       ? ISR_OTG  : 0) |
-                         (usb.regs.hcor.usbsts & usb.regs.hcor.usbintr ? ISR_HOST : 0) ) & ~usb.regs.imr
-               && usb.regs.dev_ctrl & DEVCTRL_GIRQ_EN);
+                         ((usb.regs.gisr = (usb.regs.gisr2 & ~usb.regs.gimr2 ? GISR_GRP2 : 0) |
+                                           (usb.regs.gisr1 & ~usb.regs.gimr1 ? GISR_GRP1 : 0) |
+                                           (usb.regs.gisr0 & ~usb.regs.gimr0 ? GISR_GRP0 : 0))
+                          & ~usb.regs.gimr && usb.regs.dev_ctrl & DEVCTRL_GIRQ_EN ? ISR_DEV : 0) |
+                         (usb.regs.otgisr      & usb.regs.otgier ? ISR_OTG : 0) |
+                         (usb.regs.hcor.usbsts & usb.regs.hcor.usbintr ? ISR_HOST : 0)) & ~usb.regs.imr);
 }
 void usb_host_int(uint8_t which) {
     usb.regs.hcor.usbsts |= which & 0x3F;
@@ -45,14 +68,6 @@ void usb_grp2_int(uint16_t which) {
     usb_update();
 }
 
-// Plug A:
-//  plug:
-//   OTGCSR_DEV_B -> OTGCSR_DEV_A
-//   OTGCSR_ROLE_D -> OTGCSR_ROLE_H
-//  unplug:
-//   OTGCSR_DEV_A -> OTGCSR_DEV_B
-//   OTGCSR_ROLE_H -> OTGCSR_ROLE_D
-
 // Connected Plug B:
 //  plug:
 //   0 -> 1 OTGCSR_A_VBUS_VLD
@@ -68,21 +83,53 @@ void usb_grp2_int(uint16_t which) {
 //   1 -> 0 OTGCSR_B_SESS_VLD
 //   ...
 //   0 -> 1 OTGCSR_B_SESS_END
-static void usb_plug(void) {
+static void usb_plug_b(void) {
     usb.regs.otgcsr |= OTGCSR_A_VBUS_VLD | OTGCSR_A_SESS_VLD | OTGCSR_B_SESS_VLD;
     usb.regs.otgcsr &= ~OTGCSR_B_SESS_END;
+    usb.regs.sof_fnr = 0;
     usb_grp2_int(GISR2_RESUME);
 }
+static void usb_unplug_b(void) {
+    usb.regs.otgcsr &= ~(OTGCSR_A_VBUS_VLD | OTGCSR_A_SESS_VLD | OTGCSR_B_SESS_VLD);
+    usb.regs.otgcsr |= OTGCSR_B_SESS_END;
+}
 
-void usb_setup(uint8_t *setup) {
+// Plug A:
+//  plug:
+//   OTGCSR_DEV_B -> OTGCSR_DEV_A
+//   OTGCSR_ROLE_D -> OTGCSR_ROLE_H
+//   ? -> 1 OTGISR_IDCHG
+//   ? -> 1 OTGISR_RLCHG
+//  unplug:
+//   OTGCSR_DEV_A -> OTGCSR_DEV_B
+//   OTGCSR_ROLE_H -> OTGCSR_ROLE_D
+//   ? -> 1 OTGISR_APRM
+//   ? -> 1 OTGISR_IDCHG
+//   ? -> 1 OTGISR_RLCHG
+static void usb_plug_a(void) {
+    usb_unplug_b();
+    usb.regs.otgcsr &= ~(OTGCSR_DEV_B | OTGCSR_ROLE_D);
+    usb.regs.sof_fnr = 0;
+    usb_otg_int(OTGISR_IDCHG | OTGISR_RLCHG);
+}
+static void usb_unplug_a(void) {
+    if (usb_update_status_change(usb.regs.hcor.portsc, PORTSC_J_STATE | PORTSC_CONN_STATUS, PORTSC_CONN_CHANGE, false)) {
+        usb_host_int(USBSTS_PORT_CHANGE);
+    }
+    usb.regs.otgcsr |= OTGCSR_DEV_B | OTGCSR_ROLE_D;
+    usb_otg_int(OTGISR_APRM | OTGISR_IDCHG | OTGISR_RLCHG);
+    usb_plug_b();
+}
+
+void usb_setup(const uint8_t *setup) {
     usb.regs.cxfifo &= ~0x3F;
     memcpy(usb.ep0_data, setup, sizeof usb.ep0_data);
     usb.ep0_idx = 0;
     usb_grp0_int(GISR0_CXSETUP);
 }
 
-void usb_send_pkt(void *data, uint32_t size) {
-    usb.data = data;
+void usb_send_pkt(const void *data, uint32_t size) {
+    usb.data = (void *)data;
     usb.len = size;
     usb.regs.fifocsr[0] = (usb.regs.fifocsr[0] & FIFOCSR_RESET) | size;
     usb.regs.cxfifo &= ~CXFIFO_FIFOE_FIFO0;
@@ -92,7 +139,7 @@ void usb_send_pkt(void *data, uint32_t size) {
 //static uint8_t ep0_init[] = { 0x80, 0x06, 0x02, 0x02, 0x00, 0x00, 0x40, 0x00 };
 //static uint8_t ep0_init[] = { 0x80, 0x06, 0x03, 0x03, 0x09, 0x04, 0x40, 0x00 };
 //static uint8_t ep0_init[] = { 0x00, 0x05, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 };
-static void usb_event(enum sched_item_id event) {
+static void usb_event_old(enum sched_item_id event) {
     static const uint8_t set_addr[]   = { 0x00, 0x05, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 };
     static const uint8_t set_config[] = { 0x00, 0x09, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 };
     static const uint8_t rdy_pkt_00[] = { 0x00, 0x00, 0x00, 0x04, 0x01, 0x00, 0x00, 0x04, 0x00 };
@@ -130,12 +177,557 @@ static void usb_event(enum sched_item_id event) {
             }
             break;
     }
-    sched_repeat(event, 5000);
+    sched_repeat(event, 8);
 }
 
-uint8_t usb_status(void) {
-    return (usb.regs.otgcsr & (OTGCSR_A_VBUS_VLD | OTGCSR_A_SESS_VLD | OTGCSR_B_SESS_VLD) ? 0x80 : 0) |
-        (usb.regs.otgcsr & (OTGCSR_DEV_B | OTGCSR_ROLE_D) ? 0x40 : 0);
+static void usb_host_sys_err(void) {
+    asm("int3");
+    usb.regs.hcor.usbcmd &= ~USBCMD_RUN;
+    usb.regs.hcor.usbsts |= USBSTS_HCHALTED;
+    usb_host_int(USBSTS_HOST_SYS_ERR);
+    gui_console_printf("[USB] Warning: Fatal host controller error!\n");
+}
+
+#define ASYNC_ITER_CAP 64
+static void usb_process_async(void) {
+    usb_qh_t *qh;
+    usb_qlink_t link;
+    usb_qtd_t *qtd;
+    enum { WAIT_FOR_LIST_QH, DO_RELOAD, WAIT_FOR_START_EVENT } nak_state = WAIT_FOR_LIST_QH;
+    enum { FETCH_QH, ADVANCE_QUEUE, EXECUTE_TRANSACTION, WRITE_BACK_QTD, FOLLOW_QH_HORIZONTAL_POINTER } host_state = FETCH_QH;
+    uint8_t qh_transaction_counter;
+    bool consider;
+    usb.regs.hcor.usbsts |= USBSTS_RECLAMATION;
+    for (int i = 0; i < ASYNC_ITER_CAP; i++) {
+        switch (host_state) {
+            case FETCH_QH:
+                if (!(qh = ram_dma_ptr(usb.regs.hcor.asynclistaddr, sizeof *qh))) {
+                    return usb_host_sys_err();
+                } if (qh->h) {
+                    if (nak_state != WAIT_FOR_START_EVENT) {
+                        nak_state++;
+                    } if (!qh->s_mask) {
+                        if (!(usb.regs.hcor.usbsts & USBSTS_RECLAMATION)) {
+                            return;
+                        }
+                        usb.regs.hcor.usbsts &= ~USBSTS_RECLAMATION;
+                    }
+                } if (qh->overlay.halted) {
+                    host_state = FOLLOW_QH_HORIZONTAL_POINTER;
+                } else if (qh->overlay.active) {
+                    host_state = EXECUTE_TRANSACTION;
+                } else if (qh->i) {
+                    host_state = FOLLOW_QH_HORIZONTAL_POINTER;
+                } else {
+                    host_state = ADVANCE_QUEUE;
+                }
+                break;
+            case ADVANCE_QUEUE:
+                link.term = true;
+                if (qh->overlay.total_bytes) {
+                    link = qh->overlay.alt;
+                } if (link.term) {
+                    link = qh->overlay.next;
+                } if (link.term) {
+                    host_state = FOLLOW_QH_HORIZONTAL_POINTER;
+                } else if (!(qtd = ram_dma_ptr(link.ptr << 5, sizeof *qtd))) {
+                    return usb_host_sys_err();
+                } else if (qtd->active) {
+                    bool dt = qh->dtc ? qtd->dt : qh->overlay.dt;
+                    bool ping = qh->eps != 2 ? qtd->ping : qh->overlay.ping;
+                    qh->cur = link;
+                    qh->overlay = *qtd;
+                    qh->overlay.alt.nak_cnt = qh->nak_rl;
+                    qh->overlay.ping = ping;
+                    qh->overlay.dt = dt;
+                    qh->overlay.bufs[1].c_prog_mask = 0;
+                    qh->overlay.bufs[2].frame_tag = 0;
+                    host_state = EXECUTE_TRANSACTION;
+                } else {
+                    host_state = FOLLOW_QH_HORIZONTAL_POINTER;
+                }
+                break;
+            case EXECUTE_TRANSACTION:
+                if (qh->s_mask) {
+                    consider = qh->s_mask >> (usb.regs.hcor.frindex & 7) & 1;
+                } else {
+                    if (nak_state == DO_RELOAD && qh->nak_rl) {
+                        qh->overlay.alt.nak_cnt = qh->nak_rl;
+                    }
+                    consider = qh->overlay.alt.nak_cnt || !qh->nak_rl;
+                }
+                qh_transaction_counter = qh->mult;
+                if (!qh->s_mask && !qh_transaction_counter) {
+                    consider = false;
+                }
+                if (consider) {
+                    usb.regs.hcor.usbsts |= USBSTS_RECLAMATION;
+
+                }
+                break;
+            case WRITE_BACK_QTD:
+                break;
+            case FOLLOW_QH_HORIZONTAL_POINTER:
+                usb.regs.hcor.asynclistaddr = qh->horiz.ptr << 5;
+                return;
+        }
+    }
+}
+static void usb_process_period(void) {
+    uint32_t entry = mem_peek(usb.regs.hcor.periodiclistbase + (usb.regs.hcor.frindex & (USBCMD_FRLIST_BYTES(usb.regs.hcor.usbcmd) - 1) << 3), 4);
+}
+
+static bool usb_gather_qtd(uint8_t *dst, usb_qtd_t *qtd, int *len) {
+    void *src;
+    uint16_t block_len;
+    if (qtd->total_bytes > 0x5000) {
+        return true;
+    }
+    if (qtd->pid & 1) {
+        *len += qtd->total_bytes;
+        return false;
+    }
+    while (qtd->total_bytes) {
+        if (qtd->c_page >= 5) {
+            return true;
+        }
+        if ((block_len = (1 << 12) - qtd->bufs[0].off) > qtd->total_bytes) {
+            block_len = qtd->total_bytes;
+        }
+        src = ram_dma_ptr(qtd->bufs[qtd->c_page].ptr << 12 | qtd->bufs[0].off, block_len);
+        if (!src) {
+            return true;
+        }
+        memcpy(dst, src, block_len);
+        dst += block_len;
+        qtd->c_page += !(qtd->bufs[0].off += block_len);
+        *len += block_len;
+        qtd->total_bytes -= block_len;
+    }
+    return false;
+}
+
+static bool usb_scatter_qtd(usb_qtd_t *qtd, const uint8_t *src, uint16_t len) {
+    void *dst;
+    uint16_t block_len;
+    if (qtd->total_bytes > 0x5000) {
+        return true;
+    }
+    if (!(qtd->pid & 1)) {
+        return false;
+    }
+    while (len) {
+        if (qtd->c_page >= 5) {
+            return true;
+        }
+        if ((block_len = (1 << 12) - qtd->bufs[0].off) > len) {
+            block_len = len;
+        }
+        dst = ram_dma_ptr(qtd->bufs[qtd->c_page].ptr << 12 | qtd->bufs[0].off, block_len);
+        if (!dst) {
+            return true;
+        }
+        memcpy(dst, src, block_len);
+        qtd->c_page += !(qtd->bufs[0].off += block_len);
+        src += block_len;
+        qtd->total_bytes -= block_len;
+        len -= block_len;
+    }
+    return false;
+}
+
+static void usb_xfer_append_data(struct libusb_transfer *xfer, const void *src, size_t len) {
+    if (len) {
+        memcpy((xfer->type == LIBUSB_TRANSFER_TYPE_CONTROL ? libusb_control_transfer_get_data(xfer) : xfer->buffer) + xfer->actual_length, src, len);
+        xfer->actual_length += len;
+    }
+}
+
+static void usb_write_back_qtd(usb_qh_t *qh) {
+    usb_qtd_t *qtd;
+    if (!(qtd = ram_dma_ptr(qh->cur.ptr << 5, sizeof *qtd))) {
+        usb_host_sys_err();
+        return;
+    }
+    qtd->ping = qh->overlay.ping;
+    qtd->split = qh->overlay.split;
+    qtd->missed = qh->overlay.missed;
+    qtd->xact_err = qh->overlay.xact_err;
+    qtd->babble = qh->overlay.babble;
+    qtd->buf_err = qh->overlay.buf_err;
+    qtd->halted = qh->overlay.halted;
+    qtd->active = qh->overlay.active;
+    qtd->cerr = qh->overlay.cerr;
+    qtd->total_bytes = qh->overlay.total_bytes;
+    if (qh->overlay.halted) {
+        usb_host_int(USBSTS_USBERRINT);
+    }
+    if (qh->overlay.ioc) {
+        usb_host_int(USBSTS_USBINT);
+    }
+}
+static void usb_qh_completed(usb_qh_t *qh) {
+    qh->overlay.active = false;
+    usb_write_back_qtd(qh);
+}
+static void usb_qh_halted(usb_qh_t *qh) {
+    qh->overlay.halted = true;
+    usb_qh_completed(qh);
+}
+
+static void LIBUSB_CALL usb_process_xfer(struct libusb_transfer *xfer) {
+    usb_qh_t *qh;
+    uint8_t *buf = usb.xfer->buffer;
+    usb.xfer->length = 0;
+    usb.wait = false;
+    if (usb.process) {
+        usb.process = false;
+        gui_console_printf("[USB] Callback called: %d\n", xfer->status);
+        switch (xfer->type) {
+            case LIBUSB_TRANSFER_TYPE_CONTROL:
+                buf = libusb_control_transfer_get_data(usb.xfer);
+                // FALLTHROUGH
+            case LIBUSB_TRANSFER_TYPE_BULK:
+                qh = xfer->user_data;
+                switch (xfer->status) {
+                    case LIBUSB_TRANSFER_COMPLETED:
+                        if (usb_scatter_qtd(&qh->overlay, buf, xfer->actual_length)) {
+                            usb_host_sys_err();
+                            return;
+                        }
+                        usb_qh_completed(qh);
+                        break;
+                    default:
+                        usb_qh_halted(qh);
+                        asm("int3");
+                        gui_console_printf("[USB] Error: Callback called with unknown status %d!\n", xfer->status);
+                        break;
+                }
+                break;
+            default:
+                asm("int3");
+                gui_console_printf("[USB] Error: Callback called with unknown type %d!\n", xfer->type);
+                return;
+        }
+    }
+}
+
+static void usb_execute_qh_old(usb_qh_t *qh) {
+    usb_qtd_t *qtd = &qh->overlay;
+    usb.xfer->type = qtd->pid == 2 ? LIBUSB_TRANSFER_TYPE_CONTROL : LIBUSB_TRANSFER_TYPE_BULK;
+    usb.xfer->length = 0;
+    usb.xfer->user_data = qh;
+    if (qtd->pid > 2 || usb_gather_qtd(usb.xfer->buffer, qtd, &usb.xfer->length) ||
+        (qtd->pid == 2 && (usb.xfer->length != LIBUSB_CONTROL_SETUP_SIZE || qtd->next.term ||
+                           !(qtd = ram_dma_ptr(qtd->next.ptr << 5, sizeof *qtd)) ||
+                           usb_gather_qtd(libusb_control_transfer_get_data(usb.xfer), qtd, &usb.xfer->length)))) {
+        usb_host_sys_err();
+        return;
+    }
+    usb.xfer->endpoint = qtd->pid << 7 | qh->endpt;
+    libusb_submit_transfer(usb.xfer);
+    usb.wait = usb.process = true;
+    return;
+}
+
+static enum libusb_transfer_status libusb_status_from_error(enum libusb_error error) {
+    switch (error) {
+        case LIBUSB_SUCCESS:
+            return LIBUSB_TRANSFER_COMPLETED;
+        case LIBUSB_ERROR_IO:
+        case LIBUSB_ERROR_INVALID_PARAM:
+        case LIBUSB_ERROR_ACCESS:
+        case LIBUSB_ERROR_BUSY:
+        case LIBUSB_ERROR_PIPE:
+        case LIBUSB_ERROR_INTERRUPTED:
+        case LIBUSB_ERROR_NO_MEM:
+        case LIBUSB_ERROR_NOT_SUPPORTED:
+        case LIBUSB_ERROR_OTHER:
+            return LIBUSB_TRANSFER_ERROR;
+        case LIBUSB_ERROR_TIMEOUT:
+            return LIBUSB_TRANSFER_TIMED_OUT;
+        case LIBUSB_ERROR_NOT_FOUND:
+            return LIBUSB_TRANSFER_STALL;
+        case LIBUSB_ERROR_NO_DEVICE:
+            return LIBUSB_TRANSFER_NO_DEVICE;
+        case LIBUSB_ERROR_OVERFLOW:
+            return LIBUSB_TRANSFER_OVERFLOW;
+    }
+}
+
+static bool usb_execute_setup(struct libusb_transfer *xfer) {
+    struct libusb_control_setup *setup = libusb_control_transfer_get_setup(xfer);
+    void *data = libusb_control_transfer_get_data(xfer);
+    uint8_t type = setup->wValue >> 8, index = setup->wValue, iface, alt, endpt;
+    struct libusb_config_descriptor *config = NULL;
+    xfer->status = LIBUSB_TRANSFER_STALL;
+    xfer->actual_length = 0;
+    switch (setup->bRequest) {
+        case LIBUSB_REQUEST_SET_ADDRESS:
+            if (setup->bmRequestType == (LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE) && setup->wValue && setup->wValue < 0x80) {
+                xfer->status = LIBUSB_TRANSFER_COMPLETED;
+            }
+            break;
+        case LIBUSB_REQUEST_GET_DESCRIPTOR:
+            switch (type) {
+                case LIBUSB_DT_DEVICE:
+                    if (setup->bmRequestType == (LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE) && !index && !setup->wIndex &&
+                        (xfer->status = libusb_status_from_error(libusb_get_device_descriptor(libusb_get_device(xfer->dev_handle), data))) == LIBUSB_TRANSFER_COMPLETED) {
+                        xfer->actual_length = sizeof(struct libusb_device_descriptor);
+                    }
+                    break;
+                case LIBUSB_DT_CONFIG:
+                    if (setup->bmRequestType == (LIBUSB_ENDPOINT_IN | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE) && !setup->wIndex &&
+                        (xfer->status = libusb_status_from_error(libusb_get_config_descriptor(libusb_get_device(xfer->dev_handle), index, &config))) == LIBUSB_TRANSFER_COMPLETED) {
+                        usb_xfer_append_data(xfer, config, config->bLength);
+                        usb_xfer_append_data(xfer, config->extra, config->extra_length);
+                        for (iface = 0; iface != config->bNumInterfaces; ++iface) {
+                            for (alt = 0; alt != config->interface[iface].num_altsetting; ++alt) {
+                                usb_xfer_append_data(xfer, &config->interface[iface].altsetting[alt], config->interface[iface].altsetting[alt].bLength);
+                                usb_xfer_append_data(xfer, config->interface[iface].altsetting[alt].extra, config->interface[iface].altsetting[alt].extra_length);
+                                for (endpt = 0; endpt != config->interface[iface].altsetting[alt].bNumEndpoints; ++endpt) {
+                                    usb_xfer_append_data(xfer, &config->interface[iface].altsetting[alt].endpoint[endpt], config->interface[iface].altsetting[alt].endpoint[endpt].bLength);
+                                    usb_xfer_append_data(xfer, config->interface[iface].altsetting[alt].endpoint[endpt].extra, config->interface[iface].altsetting[alt].endpoint[endpt].extra_length);
+                                }
+                            }
+                        }
+                        libusb_free_config_descriptor(config);
+                    }
+                    break;
+                case LIBUSB_DT_STRING:
+                case LIBUSB_DT_INTERFACE:
+                case LIBUSB_DT_ENDPOINT:
+                case LIBUSB_DT_BOS:
+                case LIBUSB_DT_DEVICE_CAPABILITY:
+                case LIBUSB_DT_HID:
+                case LIBUSB_DT_REPORT:
+                case LIBUSB_DT_PHYSICAL:
+                case LIBUSB_DT_HUB:
+                case LIBUSB_DT_SUPERSPEED_HUB:
+                case LIBUSB_DT_SS_ENDPOINT_COMPANION:
+                    break;
+            }
+            break;
+        case LIBUSB_REQUEST_SET_DESCRIPTOR:
+        case LIBUSB_REQUEST_GET_CONFIGURATION:
+            break;
+        case LIBUSB_REQUEST_SET_CONFIGURATION:
+            if (setup->bmRequestType == (LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE) && !type && !setup->wIndex) {
+                libusb_release_interface(xfer->dev_handle, 0);
+                xfer->status = libusb_status_from_error(libusb_set_configuration(xfer->dev_handle, index));
+                libusb_claim_interface(xfer->dev_handle, 0);
+            }
+            break;
+        case LIBUSB_REQUEST_GET_INTERFACE:
+        case LIBUSB_REQUEST_SET_INTERFACE:
+        case LIBUSB_REQUEST_SYNCH_FRAME:
+        case LIBUSB_REQUEST_SET_SEL:
+        case LIBUSB_SET_ISOCH_DELAY:
+            break;
+        default:
+            return false;
+    }
+    if (xfer->actual_length > setup->wLength) {
+        xfer->actual_length = setup->wLength;
+    }
+    if (xfer->status != LIBUSB_TRANSFER_COMPLETED) {
+        asm("int3");
+    }
+    return true;
+}
+
+static void usb_execute_qh(usb_qh_t *qh) {
+    usb_qtd_t *qtd = &qh->overlay;
+    int err;
+    usb.xfer->user_data = qh;
+    usb.xfer->endpoint = qtd->pid << 7 | qh->endpt;
+    if (qh->c && qtd->pid < 2) {
+        if (!qtd->total_bytes && !usb.xfer->length) { // Status Stage
+            usb.xfer->length = 0;
+            return usb_qh_completed(qh);
+        } // Data Stage (or Status Stage with no Data)
+        if (usb.xfer->length != 8 || usb_gather_qtd(libusb_control_transfer_get_data(usb.xfer), qtd, &usb.xfer->length)) {
+            return usb_host_sys_err();
+        }
+        usb.xfer->type = LIBUSB_TRANSFER_TYPE_CONTROL;
+        if (usb_execute_setup(usb.xfer)) {
+            usb.wait = usb.process = true;
+            return usb_process_xfer(usb.xfer);
+        }
+    } else {
+        if (qtd->pid > 2 || usb_gather_qtd(usb.xfer->buffer, qtd, &usb.xfer->length)) {
+            return usb_host_sys_err();
+        }
+        if (qtd->pid == 2) { // Setup Stage
+            return usb_qh_completed(qh);
+        }
+        usb.xfer->type = LIBUSB_TRANSFER_TYPE_BULK;
+    }
+    usb.wait = usb.process = true;
+    err = libusb_submit_transfer(usb.xfer);
+    gui_console_printf("[USB] Error: Submit transfer failed: %s!\n", libusb_strerror(err));
+    return;
+    if (usb.xfer->type == LIBUSB_TRANSFER_TYPE_CONTROL) {
+        struct libusb_control_setup *setup = libusb_control_transfer_get_setup(usb.xfer);
+        switch (setup->bRequest) {
+            case LIBUSB_REQUEST_GET_CONFIGURATION:
+                switch (setup->wValue >> 8) {
+                    case LIBUSB_DT_DEVICE:
+                        break;
+                }
+                break;
+        }
+        asm("int3");
+        usb_process_xfer(usb.xfer);
+    }
+    asm("int3");
+    if (usb.xfer->type == LIBUSB_TRANSFER_TYPE_CONTROL &&
+        libusb_control_transfer_get_setup(usb.xfer)->bRequest == LIBUSB_REQUEST_SET_ADDRESS) {
+        usb.xfer->status = LIBUSB_TRANSFER_COMPLETED;
+        usb.xfer->actual_length = 0;
+        usb_process_xfer(usb.xfer);
+    } else if (usb.xfer->type == LIBUSB_TRANSFER_TYPE_CONTROL) {
+        
+    } else {
+        libusb_submit_transfer(usb.xfer);
+    }
+}
+
+static bool usb_process_qh(usb_qh_t *qh) {
+    usb_qlink_t link;
+    usb_qtd_t *qtd;
+    // Fetch QH
+    if (!qh) {
+        usb_host_sys_err();
+        return true;
+    }
+    if (qh->h && !qh->s_mask) {
+        if (!(usb.regs.hcor.usbsts & USBSTS_RECLAMATION)) {
+            usb.regs.hcor.usbsts |= USBSTS_RECLAMATION;
+            return true;
+        }
+        usb.regs.hcor.usbsts &= ~USBSTS_RECLAMATION;
+    }
+    if (qh->overlay.halted) {
+        return false;
+    }
+    if (!qh->overlay.active) {
+        if (qh->i) {
+            return false;
+        }
+        // Advance Queue
+        link.term = true;
+        if (qh->overlay.total_bytes) {
+            link = qh->overlay.alt;
+        }
+        if (link.term) {
+            link = qh->overlay.next;
+        }
+        if (link.term) {
+            return false;
+        }
+        if (!(qtd = ram_dma_ptr(link.ptr << 5, sizeof *qtd))) {
+            usb_host_sys_err();
+            return true;
+        }
+        if (!qtd->active) {
+            return false;
+        }
+        bool dt = qh->dtc ? qtd->dt : qh->overlay.dt;
+        bool ping = qh->eps != 2 ? qtd->ping : qh->overlay.ping;
+        qh->cur = link;
+        qh->overlay = *qtd;
+        qh->overlay.alt.nak_cnt = qh->nak_rl;
+        qh->overlay.ping = ping;
+        qh->overlay.dt = dt;
+        qh->overlay.bufs[1].c_prog_mask = 0;
+        qh->overlay.bufs[2].frame_tag = 0;
+    }
+    usb_execute_qh(qh);
+    return true;
+}
+
+static void usb_event(enum sched_item_id event) {
+    bool high_speed = false;
+    usb_qh_t *qh, *fake_recl_head = NULL;
+    uint8_t i = 0;
+    enum libusb_error err;
+    if (usb.dev && !usb.xfer->dev_handle && ++usb.delay > 100) {
+        if ((err = libusb_open(usb.dev, &usb.xfer->dev_handle))) {
+            gui_console_printf("[USB] Error: Open device: %s!\n", libusb_strerror(err));
+            usb.xfer->dev_handle = NULL;
+#if 1
+        } else if ((err = libusb_claim_interface(usb.xfer->dev_handle, 0))) {
+            gui_console_printf("[USB] Error: Claim interface: %s!\n", libusb_strerror(err));
+            usb.xfer->dev_handle = NULL;
+#endif
+        } else {
+            usb_plug_a();
+        }
+        usb.delay = 0;
+    }
+    libusb_handle_events_timeout(usb.ctx, &zero_tv);
+    if (!usb.wait && usb.regs.otgcsr & OTGCSR_A_VBUS_VLD) {
+        if (usb.regs.otgcsr & OTGCSR_DEV_B) {
+            if ((high_speed = usb.regs.dev_ctrl & DEVCTRL_HS)) {
+                usb.regs.sof_fnr += 1 << 11;
+                usb.regs.sof_fnr &= (1 << 14) - 1;
+            }
+            if (!SOFFNR_UFN(usb.regs.sof_fnr)) {
+                usb.regs.sof_fnr = SOFFNR_FNR(usb.regs.sof_fnr + 1);
+            }
+        } else {
+            high_speed = usb.regs.otgcsr & OTGCSR_SPD_HIGH;
+#if 0
+            if (usb.regs.hcor.usbcmd & USBCMD_RUN && usb.regs.hcor.usbsts & USBSTS_PERIOD_SCHED) {
+                usb_process_period();
+                usb.regs.hcor.frindex++;
+                usb.regs.hcor.frindex &= USBCMD_FRLIST_BYTES(usb.regs.hcor.usbcmd) - 1;
+            }
+            if (usb.regs.hcor.usbcmd & USBCMD_RUN && usb.regs.hcor.usbsts & USBSTS_ASYNC_SCHED) {
+                usb_process_async();
+            }
+#endif
+            if (usb.regs.hcor.usbcmd & USBCMD_RUN) {
+                switch (usb.hc_state) {
+                    case USB_HC_STATE_PERIOD:
+                        if (!(usb.regs.hcor.usbsts & USBSTS_PERIOD_SCHED)) {
+                            usb.hc_state = USB_HC_STATE_ASYNC;
+                            break;
+                        }
+                        asm("int3");
+                        usb_host_sys_err();
+                        break;
+                    case USB_HC_STATE_ASYNC:
+                        usb.hc_state = USB_HC_STATE_PERIOD;
+                        if (!(usb.regs.hcor.usbsts & USBSTS_ASYNC_SCHED)) {
+                            break;
+                        }
+                        while (true) {
+                            qh = ram_dma_ptr(usb.regs.hcor.asynclistaddr, sizeof *qh);
+                            if (usb_process_qh(qh)) {
+                                break;
+                            }
+                            if (qh == fake_recl_head) {
+                                //gui_console_printf("[USB] Warning: No reclamation head!\n");
+                                break;
+                            }
+                            if (!++i) {
+                                gui_console_printf("[USB] Warning: Very long asynchronous list!\n");
+                                break;
+                            }
+                            if (!fake_recl_head) {
+                                fake_recl_head = qh;
+                            }
+                            // Follow QH Horizontal Pointer
+                            usb.regs.hcor.asynclistaddr = qh->horiz.ptr << 5;
+                        }
+                        break;
+                }
+            }
+        }
+    }
+    sched_repeat(event, high_speed ? 1 : 8);
 }
 
 static uint8_t usb_ep0_idx_update(void) {
@@ -156,101 +748,135 @@ static uint8_t usb_read(uint16_t pio, bool peek) {
     return value;
 }
 
+static uint32_t usb_write_reg_masked(uint32_t *reg, uint32_t mask, uint8_t value, uint8_t bit_offset) {
+    uint32_t old = *reg;
+    mask &= 0xFF << bit_offset;
+    return old ^ (*reg = (old & ~mask) | ((uint32_t)value << bit_offset & mask));
+}
+
 static void usb_write(uint16_t pio, uint8_t value, bool poke) {
     uint8_t index = pio >> 2;
     uint8_t bit_offset = (pio & 3) << 3;
+    uint32_t old, changed;
+    int err;
     (void)poke;
     switch (index) {
         case 0x010 >> 2: // USBCMD - USB Command Register
-            write8(usb.regs.hcor.usbcmd, bit_offset, value &   0xFF0BFF >> bit_offset); // W mask (V or RO)
-            usb.regs.hcor.usbsts &= ~0xD000;
-            usb.regs.hcor.usbsts |= ~usb.regs.hcor.usbcmd << 12 & 0x1000;
-            usb.regs.hcor.usbsts |= usb.regs.hcor.usbcmd << 10 & 0xC000;
-            if ((uint32_t)value << bit_offset & 2) {
-                usb_reset();
+            changed = usb_write_reg_masked(&usb.regs.hcor.usbcmd, 0xFF0BFF, value, bit_offset);
+            usb.regs.hcor.usbsts &= ~(USBSTS_ASYNC_SCHED | USBSTS_PERIOD_SCHED | USBSTS_HCHALTED);
+            usb.regs.hcor.usbsts |=
+                (usb.regs.hcor.usbcmd & USBCMD_ASYNC_SCHED ? USBSTS_ASYNC_SCHED : 0) |
+                (usb.regs.hcor.usbcmd & USBCMD_PERIOD_SCHED ? USBSTS_PERIOD_SCHED : 0) |
+                (usb.regs.hcor.usbcmd & USBCMD_RUN ? 0 : USBSTS_HCHALTED);
+            if (usb.regs.hcor.usbcmd & USBCMD_RUN & changed) {
+                usb.process = false;
+            }
+            if (usb.regs.hcor.usbcmd & USBCMD_HCRESET & changed) {
+                usb_reset_core();
             }
             break;
         case 0x014 >> 2: // USBSTS - USB Status Register
             usb.regs.hcor.usbsts &= ~((uint32_t)value << bit_offset & 0x3F);                      // WC mask (V or RO)
             break;
         case 0x018 >> 2: // USBINTR - USB Interrupt Enable Register
-            write8(usb.regs.hcor.usbintr,          bit_offset, value &        0x3F >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.hcor.usbintr, 0x3F, value, bit_offset);
             break;
         case 0x01C >> 2: // FRINDEX - Frame Index Register
-            write8(usb.regs.hcor.frindex,          bit_offset, value &      0x3FFF >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.hcor.frindex, 0x3FFF, value, bit_offset);
             break;
         case 0x024 >> 2: // PERIODICLISTBASE - Periodic Frame List Base Address Register
-            write8(usb.regs.hcor.periodiclistbase, bit_offset, value &      ~0xFFF >> bit_offset); // V mask (W)
+            usb_write_reg_masked(&usb.regs.hcor.periodiclistbase, ~0xFFF, value, bit_offset);
             break;
         case 0x028 >> 2: // ASYNCLISTADDR - Current Asynchronous List Address Register
-            write8(usb.regs.hcor.asynclistaddr,    bit_offset, value &       ~0x1F >> bit_offset); // V mask (W)
+            usb_write_reg_masked(&usb.regs.hcor.asynclistaddr, ~0x1F, value, bit_offset);
             break;
         case 0x030 >> 2: // PORTSC - Port Status and Control Register
-            usb.regs.hcor.portsc[0] &= ~((uint32_t)value << bit_offset & 0x2A);                  // WC mask (V or RO or W)
-            write8(usb.regs.hcor.portsc[0],        bit_offset, value &    0x1F0000 >> bit_offset); // W mask (RO)
+            old = usb.regs.hcor.portsc[0];
+            usb.regs.hcor.portsc[0] &= ~(((uint32_t)value << bit_offset & 0x2E) | 0x1F0100) ^ PORTSC_EN_STATUS; // W[0/1]C mask (V or RO or W)
+            usb.regs.hcor.portsc[0] |= (uint32_t)value << bit_offset & 0x1F0100; // W mask (RO)
+            if (usb.xfer->dev_handle && old & ~usb.regs.hcor.portsc[0] & PORTSC_RESET) {
+                err = libusb_reset_device(usb.xfer->dev_handle);
+                gui_console_printf("[USB] Error: Reset device failed: %s!\n", libusb_strerror(err));
+                if (!err) {
+                if (usb_update_status_change(usb.regs.hcor.portsc, PORTSC_EN_STATUS, PORTSC_EN_CHANGE, true)) {
+                    usb_host_int(USBSTS_PORT_CHANGE);
+                }
+                usb.regs.otgcsr |= OTGCSR_A_VBUS_VLD | OTGCSR_A_SESS_VLD | OTGCSR_B_SESS_VLD;
+                usb.regs.otgcsr &= ~OTGCSR_SPD_MASK;
+                switch (libusb_get_device_speed(libusb_get_device(usb.xfer->dev_handle))) {
+                    case LIBUSB_SPEED_LOW:  usb.regs.otgcsr |= OTGCSR_SPD_LOW;  break;
+                    case LIBUSB_SPEED_FULL: usb.regs.otgcsr |= OTGCSR_SPD_FULL; break;
+                    case LIBUSB_SPEED_HIGH: usb.regs.otgcsr |= OTGCSR_SPD_HIGH; break;
+                }
+                }
+            }
             break;
         case 0x040 >> 2: // Miscellaneous Register
-            write8(usb.regs.miscr,                 bit_offset, value &       0xFFF >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.miscr, 0xFFF, value, bit_offset);
             break;
         case 0x044 >> 2: // unknown
-            write8(usb.regs.rsvd2[0],              bit_offset, value &      0x7FFF >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.rsvd2[0], 0x7FFF, value, bit_offset);
             break;
         case 0x048 >> 2: // unknown
-            write8(usb.regs.rsvd2[1],              bit_offset, value &       0xFFF >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.rsvd2[1], 0xFFF, value, bit_offset);
             break;
         case 0x080 >> 2: // OTG Control Status Register
-            write8(usb.regs.otgcsr,                bit_offset, value &  0x1A00FFF7 >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.otgcsr, 0x1A00FFF7, value, bit_offset);
+            if (usb_update_status_change(usb.regs.hcor.portsc, PORTSC_J_STATE | PORTSC_CONN_STATUS, PORTSC_CONN_CHANGE,
+                                         (usb.regs.otgcsr & (OTGCSR_A_BUSDROP | OTGCSR_A_BUSREQ)) == OTGCSR_A_BUSREQ)) {
+                usb_host_int(USBSTS_PORT_CHANGE);
+            }
             break;
         case 0x084 >> 2: // OTG Interrupt Status Register
             usb.regs.otgisr &= ~((uint32_t)value << bit_offset & OTGISR_MASK);                    // WC mask (V)
             break;
         case 0x088 >> 2: // OTG Interrupt Enable Register
-            write8(usb.regs.otgier,                bit_offset, value & OTGISR_MASK >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.otgier, OTGISR_MASK, value, bit_offset);
             break;
         case 0x0C0 >> 2: // Global Interrupt Status Register
             usb.regs.isr &= ~((uint32_t)value << bit_offset & ISR_MASK);                          // WC mask (V)
             break;
         case 0x0C4 >> 2: // Global Interrupt Mask Register
-            write8(usb.regs.imr,                   bit_offset, value &   IMR_MASK >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.imr, IMR_MASK, value, bit_offset);
             break;
         case 0x100 >> 2: // Device Control Register
-            write8(usb.regs.dev_ctrl,              bit_offset, value &       0x2AF >> bit_offset); // W mask (V or RO)
+            usb_write_reg_masked(&usb.regs.dev_ctrl, 0x2AF, value, bit_offset);
             break;
         case 0x104 >> 2: // Device Address Register
-            write8(usb.regs.dev_addr,              bit_offset, value &        0xFF >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.dev_addr, 0xFF, value, bit_offset);
             break;
         case 0x108 >> 2: // Device Test Register
-            write8(usb.regs.dev_test,              bit_offset, value &        0x7A >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.dev_test, 0x7A, value, bit_offset);
             break;
         case 0x110 >> 2: // SOF Mask Timer Register
-            write8(usb.regs.sof_mtr,               bit_offset, value &      0xFFFF >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.sof_mtr, 0xFFFF, value, bit_offset);
             break;
         case 0x114 >> 2: // PHY Test Mode Selector Register
-            write8(usb.regs.phy_tmsr,              bit_offset, value &        0x1F >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.phy_tmsr, 0x1F, value, bit_offset);
             break;
         case 0x118 >> 2: // unknown
-            write8(usb.regs.rsvd5[0],              bit_offset, value &        0x3F >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.rsvd5[0], 0x3F, value, bit_offset);
             break;
         case 0x120 >> 2: // CX FIFO Register
-            write8(usb.regs.cxfifo,                bit_offset, value &         0x7 >> bit_offset); // W mask (V or RO)
+            usb_write_reg_masked(&usb.regs.cxfifo, 7, value, bit_offset);
             if (usb.regs.cxfifo & CXFIFO_CXFIN) {
                 usb.regs.gisr0 &= ~GISR0_CXEND;
             }
             break;
         case 0x124 >> 2: // IDLE Counter Register
-            write8(usb.regs.idle,                  bit_offset, value &         0x7 >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.idle, 7, value, bit_offset);
             break;
         case 0x130 >> 2: // Group Interrupt Mask Register
-            write8(usb.regs.gimr,                  bit_offset, value &   GIMR_MASK >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.gimr, GIMR_MASK, value, bit_offset);
             break;
         case 0x134 >> 2: // Group Interrupt Mask Register 0
-            write8(usb.regs.gimr0,                 bit_offset, value &  GIMR0_MASK >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.gimr0, GIMR0_MASK, value, bit_offset);
             break;
         case 0x138 >> 2: // Group Interrupt Mask Register 1
-            write8(usb.regs.gimr1,                 bit_offset, value &  GIMR1_MASK >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.gimr1, GIMR1_MASK, value, bit_offset);
             break;
         case 0x13C >> 2: // Group Interrupt Mask Register 2
-            write8(usb.regs.gimr2,                 bit_offset, value &  GIMR2_MASK >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.gimr2, GIMR2_MASK, value, bit_offset);
             break;
         case 0x140 >> 2: // Group Interrupt Status Register
             usb.regs.gisr &= ~((uint32_t)value << bit_offset & GIMR_MASK);                       // WC mask (V)
@@ -265,20 +891,20 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             usb.regs.gisr2 &= ~((uint32_t)value << bit_offset & GIMR2_MASK);                     // WC mask (V) [const mask]
             break;
         case 0x150 >> 2: // Receive Zero-Length-Packet Register
-            write8(usb.regs.rxzlp,                 bit_offset, value &       0xFF >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.rxzlp, 0xFF, value, bit_offset);
             break;
         case 0x154 >> 2: // Transfer Zero-Length-Packet Register
-            write8(usb.regs.txzlp,                 bit_offset, value &       0xFF >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.txzlp, 0xFF, value, bit_offset);
             break;
         case 0x158 >> 2: // ISOC Error/Abort Status Register
-            write8(usb.regs.isoeasr,               bit_offset, value &   0xFF00FF >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.isoeasr, 0xFF00FF, value, bit_offset);
             break;
         case 0x160 >> 2: case 0x164 >> 2: case 0x168 >> 2: case 0x16C >> 2:
         case 0x170 >> 2: case 0x174 >> 2: case 0x178 >> 2: case 0x17C >> 2: // IN Endpoint Register
-            write8(usb.regs.iep[index & 7],        bit_offset, value &     0xFFFF >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.iep[index & 7], 0xFFFF, value, bit_offset);
         case 0x180 >> 2: case 0x184 >> 2: case 0x188 >> 2: case 0x18C >> 2:
         case 0x190 >> 2: case 0x194 >> 2: case 0x198 >> 2: case 0x19C >> 2: // OUT Endpoint Register
-            write8(usb.regs.oep[index & 7],        bit_offset, value &     0x1FFF >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.oep[index & 7], 0x1FFF, value, bit_offset);
             break;
         case 0x1A0 >> 2: case 0x1A4 >> 2: // Endpoint Map Register
         case 0x1CC >> 2: // DMA Address Register
@@ -289,10 +915,10 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             ((uint8_t *)&usb.regs)[pio] = value & 0x3F;                                           // W mask (V)
             break;
         case 0x1C0 >> 2: // DMA Target FIFO Register
-            write8(usb.regs.dma_fifo,              bit_offset, value &       0x1F >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.dma_fifo, 0x1F, value, bit_offset);
             break;
         case 0x1C8 >> 2: // DMA Control Register
-            write8(usb.regs.dma_ctrl,              bit_offset, value & 0x81FFFF17 >> bit_offset); // W mask (V)
+            usb_write_reg_masked(&usb.regs.dma_ctrl, 0x81FFFF17, value, bit_offset);
             if (usb.regs.dma_ctrl & DMACTRL_START) {
                 uint32_t len = usb.regs.dma_ctrl >> 8 & 0x1ffff;
                 uint8_t *mem = phys_mem_ptr(usb.regs.dma_addr, len);
@@ -329,16 +955,23 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
     usb_update();
 }
 
-void usb_reset(void) {
-    int i;
+void usb_reset_core(void) {
 #define clear(array) memset(array, 0, sizeof array)
     usb.regs.hcor.usbcmd                = 0x00080B00;
     usb.regs.hcor.usbsts                = 0x00001000;
     usb.regs.hcor.usbintr               = 0;
     usb.regs.hcor.frindex               = 0;
     usb.regs.hcor.ctrldssegment         = 0;
+}
+
+void usb_reset_aux(void) {
+    usb.regs.hcor.rsvd0[0] = usb.regs.hcor.portsc[0] = 0;
     clear(usb.regs.hcor.rsvd0);
     clear(usb.regs.hcor.portsc);
+}
+
+void usb_reset_otg(void) {
+    int i;
     clear(usb.regs.rsvd1);
     usb.regs.miscr                      = 0x00000181;
     clear(usb.regs.rsvd2);
@@ -375,15 +1008,21 @@ void usb_reset(void) {
     usb.regs.dma_ctrl                   = 0;
     clear(usb.ep0_data);
     usb.ep0_idx                         = 0;
-    usb.state                           = 0;
-    usb.data                            = NULL;
-    usb.len                             = 0;
     usb_otg_int(OTGISR_BSESSEND); // because otgcsr & OTGCSR_B_SESS_END
     usb_grp2_int(GISR2_IDLE);     // because idle == 0 ms
-    usb_plug();
 #undef clear
+}
+
+void usb_reset(void) {
+    usb_reset_core();
+    usb_reset_aux();
+    usb_reset_otg();
+    usb.state = 0;
+    usb.data  = NULL;
+    usb.len   = 0;
+    usb_plug_b();
     sched.items[SCHED_USB].callback.event = usb_event;
-    sched.items[SCHED_USB].clock = CLOCK_32K;
+    sched.items[SCHED_USB].clock = CLOCK_USB;
 }
 
 static void usb_init_hccr(void) {
@@ -395,17 +1034,92 @@ static void usb_init_hccr(void) {
     usb.regs.hccr.data[3] = 0; // No Port Routing Rules
 }
 
+static int LIBUSB_CALL usb_hotplug(libusb_context *ctx, libusb_device *dev, libusb_hotplug_event evt, void *data) {
+    struct libusb_device_descriptor desc;
+    uint16_t langid[2], manu[129], prod[129];
+    int len;
+    bool wasopen = usb.xfer->dev_handle;
+    enum libusb_error err;
+    switch (evt) {
+        case LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED:
+            usb.dev = dev;
+            libusb_close(usb.xfer->dev_handle);
+            usb.xfer->dev_handle = NULL;
+            gui_console_printf("[USB] Device plugged.\n");
+            break;
+            while ((err = libusb_open(dev, &usb.xfer->dev_handle))); {
+                gui_console_printf("[USB] Error: Open device failed: %s!\n", libusb_strerror(err));
+                //} else {
+                usb_plug_a();
+            }
+            break;
+            if (!libusb_get_device_descriptor(dev, &desc) &&
+                !libusb_open(dev, &usb.xfer->dev_handle)) {
+                len = libusb_get_string_descriptor(usb.xfer->dev_handle, 0, 0, (unsigned char *)langid, sizeof langid);
+                if (len < (int)sizeof langid) break;
+                len = libusb_get_string_descriptor(usb.xfer->dev_handle, desc.iManufacturer, langid[1], (unsigned char *)manu, sizeof manu - sizeof *manu);
+                if (len < (int)sizeof *manu) break;
+                manu[len >> 1] = 0;
+                len = libusb_get_string_descriptor(usb.xfer->dev_handle, desc.iProduct, langid[1], (unsigned char *)prod, sizeof prod - sizeof *prod);
+                if (len < (int)sizeof *prod) break;
+                prod[len >> 1] = 0;
+                gui_console_printf("[USB] %ls %ls connected.\n", &manu[1], &prod[1]);
+                if (!wasopen) {
+                    libusb_reset_device(usb.xfer->dev_handle);
+                }
+            }
+            break;
+        case LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT:
+            if (dev == usb.dev) {
+                usb_unplug_a();
+                usb.dev = NULL;
+                libusb_close(usb.xfer->dev_handle);
+                usb.xfer->dev_handle = NULL;
+                gui_console_printf("[USB] Device unplugged.\n");
+            }
+            break;
+        default:
+            gui_console_printf("Unhandled hotplug event: %d\n", evt);
+            break;
+    }
+    return false;
+}
+
 static const eZ80portrange_t device = {
     .read  = usb_read,
     .write = usb_write
 };
+
+static void init_libusb(void) {
+    if (!libusb_init(&usb.ctx)) {
+        if ((usb.xfer = libusb_alloc_transfer(3))) {
+            usb.xfer->callback = usb_process_xfer;
+            usb.xfer->buffer = malloc(0x5008);
+            libusb_set_option(usb.ctx, LIBUSB_OPTION_LOG_LEVEL, LIBUSB_LOG_LEVEL_DEBUG);
+            libusb_hotplug_register_callback(usb.ctx, LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT, LIBUSB_HOTPLUG_ENUMERATE, 0x0451, 0xE008, 0, usb_hotplug, NULL, NULL);
+        } else {
+            usb_free();
+        }
+    }
+}
 
 eZ80portrange_t init_usb(void) {
     memset(&usb, 0, sizeof usb);
     usb_init_hccr();
     usb_reset();
     gui_console_printf("[CEmu] Initialized USB...\n");
+    init_libusb();
     return device;
+}
+
+void usb_free(void) {
+    free(usb.xfer->buffer);
+    libusb_close(usb.xfer->dev_handle);
+    usb.xfer->dev_handle = NULL;
+    if (usb.ctx) {
+        libusb_exit(usb.ctx);
+        usb.ctx = NULL;
+    }
 }
 
 bool usb_save(FILE *image) {
@@ -426,5 +1140,10 @@ bool usb_restore(FILE *image) {
     usb.regs.gimr0                 &= GIMR0_MASK;
     usb.regs.gimr1                 &= GIMR1_MASK;
     usb.regs.gimr2                 &= GIMR2_MASK;
+    usb.data                        = NULL;
+    usb.len                         = 0;
+    usb.ctx                         = NULL;
+    usb.xfer                        = NULL;
+    init_libusb();
     return success;
 }

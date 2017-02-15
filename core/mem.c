@@ -116,22 +116,26 @@ void *phys_mem_ptr(uint32_t addr, int32_t size) {
     return NULL;
 }
 
+void *ram_dma_ptr(uint32_t addr, uint32_t size) {
+    return phys_mem_ptr(RAM_START + (addr & 0x7FFFF), size);
+}
+
 void *virt_mem_cpy(void *buf, uint32_t addr, int32_t size) {
-    uint8_t *dest = buf, *save_dest;
+    uint8_t *dest;
     void *block;
     uint32_t temp_addr, block_size, end_addr;
     fix_size(&addr, &size);
-    if (!dest) {
-        dest = malloc((unsigned long)size);
+    if (!buf) {
+        buf = malloc((size_t)size);
     }
-    save_dest = dest;
+    dest = buf;
     while (size) {
         temp_addr = addr;
         end_addr = addr_block(&temp_addr, size, &block, &block_size);
         if (temp_addr <= end_addr && temp_addr < block_size && block) {
             uint32_t temp_size = (end_addr <= block_size ? end_addr : block_size) - temp_addr;
             memcpy(dest, (uint8_t *)block + temp_addr, temp_size);
-            dest += temp_size;
+            dest  += temp_size;
             addr += temp_size;
             size -= temp_size;
         } else {
@@ -139,7 +143,7 @@ void *virt_mem_cpy(void *buf, uint32_t addr, int32_t size) {
             size--;
         }
     }
-    return save_dest;
+    return buf;
 }
 
 void *virt_mem_dup(uint32_t addr, int32_t size) {
@@ -147,12 +151,12 @@ void *virt_mem_dup(uint32_t addr, int32_t size) {
 }
 
 void *mem_dma_cpy(void *buf, uint32_t addr, int32_t size) {
-    uint8_t *dest = buf, *save_dest;
+    uint8_t *dest;
     fix_size(&addr, &size);
-    if (!dest) {
-        dest = malloc((unsigned long)size);
+    if (!buf) {
+        buf = malloc((size_t)size);
     }
-    save_dest = dest;
+    dest = buf;
     while (size) {
         addr &= 0x07FFFF;
         if (addr + (unsigned int)size > addr && addr + (unsigned int)size <= SIZE_RAM) {
@@ -170,7 +174,7 @@ void *mem_dma_cpy(void *buf, uint32_t addr, int32_t size) {
             size--;
         }
     }
-    return save_dest;
+    return buf;
 }
 
 static void flash_reset_write_index(uint32_t addr, uint8_t byte) {
@@ -788,22 +792,20 @@ uint8_t mem_peek_byte(uint32_t addr) {
     }
     return value;
 }
+uint32_t mem_peek(uint32_t addr, uint8_t size) {
+    uint32_t value = 0;
+    assert(size <= 4);
+    virt_mem_cpy(&value, addr, size);
+    return value;
+}
 uint16_t mem_peek_short(uint32_t addr) {
-    return mem_peek_byte(addr)
-    | mem_peek_byte(addr + 1) << 8;
+    return mem_peek(addr, 2);
 }
 uint32_t mem_peek_long(uint32_t addr) {
-    return mem_peek_byte(addr)
-    | mem_peek_byte(addr + 1) << 8
-    | mem_peek_byte(addr + 2) << 16;
+    return mem_peek(addr, 3);
 }
 uint32_t mem_peek_word(uint32_t addr, bool mode) {
-    addr = cpu_address_mode(addr, mode);
-    if (mode) {
-        return mem_peek_long(addr);
-    } else {
-        return mem_peek_short(addr);
-    }
+    return mem_peek(cpu_address_mode(addr, mode), 2 + mode);
 }
 
 void mem_poke_byte(uint32_t addr, uint8_t value) {

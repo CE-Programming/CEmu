@@ -9,6 +9,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
+#define RAM_START             0xD00000
 #define SIZE_RAM              0x65800
 #define SIZE_FLASH            0x400000
 #define SIZE_FLASH_SECTOR_8K  0x2000
@@ -72,9 +73,11 @@ bool mem_restore(FILE *image);
 bool mem_save(FILE *image);
 
 void *phys_mem_ptr(uint32_t addr, int32_t size);
+void *ram_dma_ptr(uint32_t addr, uint32_t size);
 void *virt_mem_cpy(void *buf, uint32_t addr, int32_t size);
 void *virt_mem_dup(uint32_t addr, int32_t size);
 void *mem_dma_cpy(void *buf, uint32_t addr, int32_t size);
+uint32_t mem_peek(uint32_t addr, uint8_t size);
 uint8_t mem_peek_byte(uint32_t addr);
 uint16_t mem_peek_short(uint32_t addr);
 uint32_t mem_peek_long(uint32_t addr);

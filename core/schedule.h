@@ -10,7 +10,7 @@ extern "C" {
 #include <stdio.h>
 
 enum clock_id { CLOCK_CPU, CLOCK_RUN, CLOCK_48M, CLOCK_24M, CLOCK_12M, CLOCK_6M, CLOCK_32K,
-                CLOCK_1, CLOCK_NUM_ITEMS };
+                CLOCK_USB, CLOCK_1, CLOCK_NUM_ITEMS };
 
 enum sched_item_id {
     SCHED_SECOND,
