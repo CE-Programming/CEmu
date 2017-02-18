@@ -38,10 +38,13 @@ build_script:
   - cd ..
 
 deploy_script:
+  - cd %APPVEYOR_BUILD_FOLDER%
   - C:\Python35\python -u gui\qt\deploy-scripts\appveyor_helper.py deploy
 
 on_success:
+  - cd %APPVEYOR_BUILD_FOLDER%
   - C:\Python35\python -u gui\qt\deploy-scripts\build_status.py SUCCESS
 
 on_failure:
+  - cd %APPVEYOR_BUILD_FOLDER%
   - C:\Python35\python -u gui\qt\deploy-scripts\build_status.py FAILURE
