@@ -23,7 +23,7 @@
    <bool>true</bool>
   </property>
   <property name="windowTitle">
-   <string>CEmu</string>
+   <string/>
   </property>
   <property name="styleSheet">
    <string notr="true"/>
@@ -6425,6 +6425,13 @@ QPushButton:pressed {
             </property>
            </spacer>
           </item>
+          <item>
+           <widget class="QPushButton" name="buttonChangeID">
+            <property name="text">
+             <string>Change ID</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
        </layout>
@@ -6970,6 +6977,7 @@ QPushButton:pressed {
     <addaction name="actionTakeGIFScreenshot"/>
     <addaction name="actionScreenshot"/>
     <addaction name="separator"/>
+    <addaction name="actionNew"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -7286,6 +7294,11 @@ QPushButton:pressed {
    </property>
    <property name="text">
     <string>Debugging status</string>
+   </property>
+  </action>
+  <action name="actionNew">
+   <property name="text">
+    <string>New...</string>
    </property>
   </action>
  </widget>

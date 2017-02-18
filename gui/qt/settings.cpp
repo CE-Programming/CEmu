@@ -35,7 +35,7 @@ void MainWindow::setPortableConfig(bool state) {
         setPath = qApp->applicationDirPath() + QStringLiteral("/cemu_config.ini");
         QFile::copy(pathSettings, setPath);
     } else {
-        setPath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + QStringLiteral("/CEmu/cemu_config.ini");
+        setPath = configPath + QStringLiteral("cemu_config.ini");
         QFile(pathSettings).remove();
     }
     debugPath = QDir::cleanPath(QFileInfo(setPath).absoluteDir().absolutePath() + QStringLiteral("/cemu_debug.ini"));

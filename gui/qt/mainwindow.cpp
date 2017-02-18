@@ -39,6 +39,9 @@ static const constexpr int WindowStateVersion = 0;
 
 MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow), opts(cliOpts) {
 
+    // start up ipc
+    com = new ipc(this);
+
     // Setup the UI
     ui->setupUi(this);
     ui->centralWidget->hide();
@@ -47,6 +50,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     // Allow for 2001 lines of logging
     ui->console->setMaximumBlockCount(2001);
+
+    setWindowTitle(QStringLiteral("CEmu | ") + opts.idString);
 
     // Register QtKeypadBridge for the virtual keyboard functionality
     connect(&keypadBridge, &QtKeypadBridge::keyStateChanged, ui->keypadWidget, &KeypadWidget::changeKeyState);
@@ -218,6 +223,11 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     // Auto Updates
     connect(ui->checkUpdates, &QCheckBox::stateChanged, this, &MainWindow::setAutoCheckForUpdates);
 
+    // IPC
+    connect(ui->actionNew, &QAction::triggered, this, &MainWindow::ipcSpawnRandom);
+    connect(com, &ipc::readDone, this, &MainWindow::ipcReceived);
+    connect(ui->buttonChangeID, &QPushButton::clicked, this, &MainWindow::ipcChangeID);
+
     // Shortcut Connections
     stepInShortcut = new QShortcut(QKeySequence(Qt::Key_F6), this);
     stepOverShortcut = new QShortcut(QKeySequence(Qt::Key_F7), this);
@@ -255,13 +265,19 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
     setUIStyle(true);
 
+    // init IPC
+    if (!ipcSetup()) {
+        initPassed = false;
+        return;
+    }
+
     autotester::stepCallback = []() { QApplication::processEvents(); };
 
     if (fileExists(QDir::toNativeSeparators(qApp->applicationDirPath() + "/cemu_config.ini").toStdString())) {
         pathSettings = qApp->applicationDirPath() + "/cemu_config.ini";
         portable = true;
     } else if (opts.settingsFile.isEmpty()) {
-        pathSettings = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + QStringLiteral("/CEmu/cemu_config.ini");
+        pathSettings = configPath + QStringLiteral("cemu_config.ini");
     } else {
         pathSettings = opts.settingsFile;
     }
@@ -281,11 +297,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     installToggleConsole();
 #endif
 
-    if (opts.romFile.isEmpty()) {
-        emu.rom = settings->value(QStringLiteral("romImage")).toString();
-    } else {
-        emu.rom = opts.romFile;
-    }
+    optLoadFiles(opts);
     changeFrameskip(settings->value(QStringLiteral("frameskip"), 3).toUInt());
     setLCDScale(settings->value(QStringLiteral("scale"), 100).toUInt());
     setSkinToggle(settings->value(QStringLiteral("skin"), 1).toBool());
@@ -340,15 +352,10 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     debugger_init();
 
-    if (!opts.imageFile.isEmpty()) {
-        if (fileExists(opts.imageFile.toStdString())) {
-            emu.image = opts.imageFile;
-        }
-    }
-
     if (!fileExists(QDir::toNativeSeparators(emu.rom).toStdString())) {
         if (!runSetup()) {
-            exit(0);
+            initPassed = false;
+            return;
         }
     } else {
         if (settings->value(QStringLiteral("restoreOnOpen")).toBool()
@@ -357,6 +364,10 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
             restoreEmuState();
         } else {
             emu.start();
+            if (opts.forceReloadRom) {
+                reloadROM();
+                guiDelay(500);
+            }
         }
     }
 
@@ -384,9 +395,16 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
         }
     }
 
-    if (!opts.autotesterFile.isEmpty()){
-        if (!openJSONConfig(opts.autotesterFile)) {
-           resetCalculator();
+    optCheckSend(opts);
+    ui->lcdWidget->setFocus();
+}
+
+void MainWindow::optCheckSend(CEmuOpts &o) {
+    setThrottleMode(true);
+
+    if (!o.autotesterFile.isEmpty()){
+        if (!openJSONConfig(o.autotesterFile)) {
+           if (!o.deforceReset) { resetCalculator(); }
            setEmuSpeed(100);
 
            // Race condition requires this
@@ -395,30 +413,62 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
         }
     }
 
-    if (!opts.sendFiles.isEmpty() || !opts.sendArchFiles.isEmpty() || !opts.sendRAMFiles.isEmpty()) {
-        resetCalculator();
+    if (!o.sendFiles.isEmpty() || !o.sendArchFiles.isEmpty() || !o.sendRAMFiles.isEmpty()) {
+        if (!o.deforceReset) { resetCalculator(); }
         setEmuSpeed(100);
 
         // Race condition requires this
         guiDelay(1000);
-        if (!opts.sendFiles.isEmpty()) {
-            sendingHandler.sendFiles(opts.sendFiles, LINK_FILE);
+        if (!o.sendFiles.isEmpty()) {
+            sendingHandler.sendFiles(o.sendFiles, LINK_FILE);
         }
-        if (!opts.sendArchFiles.isEmpty()) {
-            sendingHandler.sendFiles(opts.sendArchFiles, LINK_ARCH);
+        if (!o.sendArchFiles.isEmpty()) {
+            sendingHandler.sendFiles(o.sendArchFiles, LINK_ARCH);
         }
-        if (!opts.sendRAMFiles.isEmpty()) {
-            sendingHandler.sendFiles(opts.sendRAMFiles, LINK_RAM);
+        if (!o.sendRAMFiles.isEmpty()) {
+            sendingHandler.sendFiles(o.sendRAMFiles, LINK_RAM);
         }
     }
 
-    setThrottleMode(opts.useUnthrottled ? Qt::Unchecked : Qt::Checked);
-    ui->lcdWidget->setFocus();
+    setThrottleMode(o.useUnthrottled ? Qt::Unchecked : Qt::Checked);
+}
+
+void MainWindow::optLoadFiles(CEmuOpts &o) {
+    if (o.romFile.isEmpty()) {
+        emu.rom = settings->value(QStringLiteral("romImage")).toString();
+    } else {
+        emu.rom = o.romFile;
+    }
+
+    if (!o.imageFile.isEmpty()) {
+        if (fileExists(o.imageFile.toStdString())) {
+            emu.image = o.imageFile;
+        }
+    }
+}
+
+void MainWindow::optAttemptLoad(CEmuOpts &o) {
+    if (!fileExists(QDir::toNativeSeparators(emu.rom).toStdString())) {
+        if (!runSetup()) {
+            initPassed = false;
+            this->close();
+        }
+    } else {
+        if (o.restoreOnOpen && !o.imageFile.isEmpty() && fileExists(emu.image.toStdString())) {
+            restoreEmuState();
+        } else {
+            if (o.forceReloadRom) {
+                reloadROM();
+                guiDelay(500);
+            }
+        }
+    }
 }
 
 MainWindow::~MainWindow() {
     debugger_free();
 
+    delete com;
     delete toggleAction;
     delete debuggerShortcut;
     delete stepInShortcut;
@@ -431,6 +481,10 @@ MainWindow::~MainWindow() {
     delete ui->ramEdit;
     delete ui->memEdit;
     delete ui;
+}
+
+bool MainWindow::IsInitialized() {
+    return initPassed;
 }
 
 void MainWindow::sendASMKey() {
@@ -539,6 +593,13 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *e) {
 }
 
 void MainWindow::closeEvent(QCloseEvent *e) {
+    // shut down ipc server
+    com->idClose();
+
+    if (!initPassed) {
+        QMainWindow::closeEvent(e);
+        return;
+    }
     if (inDebugger) {
         debuggerChangeState();
     }
@@ -1497,4 +1558,100 @@ void MainWindow::stepOutPressed() {
     debuggerUpdateChanges();
     disconnect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOutPressed);
     emit setDebugStepOutMode();
+}
+
+// ------------------------------------------------
+// GUI IPC things
+// ------------------------------------------------
+
+bool MainWindow::ipcSetup() {
+    // start the main communictions
+    if (com->ipcSetup(opts.idString, opts.pidString)) {
+        consoleStr(QStringLiteral("[CEmu] Initialized Server [") + opts.idString + QStringLiteral(" | ") + com->getServerName() + QStringLiteral("]\n"));
+        return true;
+    }
+
+    // if failure, then send a command to the other process with the command options
+    QByteArray byteArray;
+    QDataStream stream(&byteArray, QIODevice::WriteOnly);
+    stream.setVersion(QDataStream::Qt_5_6);
+    unsigned int type = IPC_COMMANDLINEOPTIONS;
+
+    stream << type
+           << opts.useUnthrottled
+           << opts.suppressTestDialog
+           << opts.deforceReset
+           << opts.forceReloadRom
+           << opts.romFile
+           << opts.autotesterFile
+           << opts.imageFile
+           << opts.sendFiles
+           << opts.sendArchFiles
+           << opts.sendRAMFiles
+           << opts.restoreOnOpen;
+
+    // blocking call
+    com->send(byteArray);
+    return false;
+}
+
+void MainWindow::ipcHandleCommandlineReceive(QDataStream &stream) {
+    consoleStr("[CEmu] Received command line options\n");
+    CEmuOpts o;
+
+    stream >> o.useUnthrottled
+           >> o.suppressTestDialog
+           >> o.deforceReset
+           >> o.forceReloadRom
+           >> o.romFile
+           >> o.autotesterFile
+           >> o.imageFile
+           >> o.sendFiles
+           >> o.sendArchFiles
+           >> o.sendRAMFiles
+           >> o.restoreOnOpen;
+
+    optLoadFiles(o);
+    optAttemptLoad(o);
+    optCheckSend(o);
+}
+
+void MainWindow::ipcReceived() {
+    QByteArray byteArray(com->getData());
+
+    QDataStream stream(byteArray);
+    stream.setVersion(QDataStream::Qt_5_6);
+    unsigned int type;
+
+    stream >> type;
+
+    switch (type) {
+        case IPC_COMMANDLINEOPTIONS:
+           ipcHandleCommandlineReceive(stream);
+           break;
+        default:
+           consoleStr("[CEmu] IPC Unknown\n");
+           break;
+    }
+}
+
+void MainWindow::ipcChangeID() {
+    bool ok;
+    QString text = QInputDialog::getText(this, tr("CEmu Change ID"), tr("New ID:"), QLineEdit::Normal, opts.idString, &ok);
+    if (ok && !text.isEmpty() && text != opts.idString) {
+        if (!ipc::idOpen(text)) {
+            com->idClose();
+            com->ipcSetup(opts.idString = text, opts.pidString);
+            consoleStr(QStringLiteral("[CEmu] Initialized Server [") + opts.idString + QStringLiteral(" | ") + com->getServerName() + QStringLiteral("]\n"));
+            setWindowTitle(QStringLiteral("CEmu | ") + opts.idString);
+        }
+    }
+}
+
+void MainWindow::ipcSpawnRandom() {
+    QStringList arguments;
+    arguments << "--id" << randomString(15);
+
+    QProcess *myProcess = new QProcess(this);
+    myProcess->startDetached(execPath, arguments);
 }

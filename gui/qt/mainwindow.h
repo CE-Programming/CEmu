@@ -9,6 +9,7 @@
 #include <QtCore/QSettings>
 #include <QtGui/QTextCursor>
 
+#include "ipc.h"
 #include "cemuopts.h"
 #include "lcdwidget.h"
 #include "romselection.h"
@@ -29,6 +30,7 @@ class MainWindow : public QMainWindow {
 public:
     explicit MainWindow(CEmuOpts opts,QWidget *p = Q_NULLPTR);
     ~MainWindow();
+    bool IsInitialized();
 
 public slots:
     // Misc.
@@ -300,6 +302,16 @@ private:
 
     // Misc
     QString getAddressString(QString, bool*);
+    void optCheckSend(CEmuOpts&);
+    void optLoadFiles(CEmuOpts&);
+    void optAttemptLoad(CEmuOpts&);
+
+    // IPC
+    void ipcSpawnRandom();
+    bool ipcSetup();
+    void ipcReceived();
+    void ipcChangeID();
+    void ipcHandleCommandlineReceive(QDataStream &);
 
 #ifdef _WIN32
     // Win32 Console Toggle
@@ -365,6 +377,10 @@ private:
     QString prevMemAddress;
 
     QString pathSettings;
+
+    ipc *com;
+
+    bool initPassed = true;
 };
 
 #endif

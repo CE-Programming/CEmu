@@ -142,10 +142,12 @@ SOURCES +=  utils.cpp \
     hexeditor.cpp \
     settings.cpp \
     ../../core/debug/stepping.cpp \
-    ../../core/dma.c
+    ../../core/dma.c \
+    ipc.cpp
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
+win32: LIBS += -lpsapi
 
 HEADERS  +=  utils.h \
     mainwindow.h \
@@ -219,7 +221,8 @@ HEADERS  +=  utils.h \
     capture/lcdfgif/gifx.h \
     keypad/keycode.h \
     debugger.h \
-    ../../core/dma.h
+    ../../core/dma.h \
+    ipc.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \
