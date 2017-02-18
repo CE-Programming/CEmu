@@ -3,6 +3,14 @@
 
 #include <string>
 
+#ifdef _MSC_VER
+// Define a custom version of pid_t for MSVC (DWORD native type)
+#include <windows.h>
+#define pid_t DWORD
+#else
+#include <unistd.h>
+#endif
+
 #include "ipc.h"
 #include "../../core/vat.h"
 

@@ -4,7 +4,6 @@
 
 #include "ipc.h"
 #include "utils.h"
-#include "unistd.h"
 #include "../../core/os/os.h"
 #include "tivarslib/autoloader.h"
 
