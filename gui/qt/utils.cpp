@@ -94,7 +94,7 @@ void guiDelay(int ms) {
 #ifdef _WIN32
 #include <windows.h>
 #include <tchar.h>
-#include <Psapi.h>
+#include <psapi.h>
 static bool checkProc(DWORD processID) {
     QString processName;
 
