@@ -1,6 +1,5 @@
 #include <QtCore/QDir>
 #include <sys/types.h>
-#include <unistd.h>
 
 #include "ipc.h"
 #include "utils.h"

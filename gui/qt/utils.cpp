@@ -4,7 +4,6 @@
 
 #include "ipc.h"
 #include "utils.h"
-#include "unistd.h"
 #include "../../core/os/os.h"
 #include "tivarslib/autoloader.h"
 
@@ -94,7 +93,7 @@ void guiDelay(int ms) {
 #ifdef _WIN32
 #include <windows.h>
 #include <tchar.h>
-#include <Psapi.h>
+#include <psapi.h>
 static bool checkProc(DWORD processID) {
     QString processName;
 
