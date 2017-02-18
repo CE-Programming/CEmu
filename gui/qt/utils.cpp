@@ -134,7 +134,6 @@ bool IsProcRunning(pid_t procID) {
 #ifdef _WIN32
     return checkProc(static_cast<DWORD>(procID));
 #else
-    (void)procName;
     return checkProc(procID);
 #endif
 }
