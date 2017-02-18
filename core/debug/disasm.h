@@ -27,7 +27,8 @@ extern disasm_highlights_state_t disasmHighlight;
 #include <unordered_map>
 #include <stdint.h>
 
-typedef std::unordered_map<uint32_t, std::string> addressMap_t;
+typedef std::unordered_map<uint32_t, std::string> map_t;
+typedef std::unordered_map<std::string, uint32_t> map_value_t;
 
 typedef struct {
     std::string opcode;
@@ -43,7 +44,8 @@ typedef struct {
     int32_t new_address;
     uint8_t prefix, suffix;
     bool adl, iw, il, l;
-    addressMap_t addressMap;
+    map_t map;
+    map_value_t reverseMap;
     std::string spacing_string;
 } disasm_state_t;
 

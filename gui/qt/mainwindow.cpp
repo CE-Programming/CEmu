@@ -1332,8 +1332,8 @@ void MainWindow::drawNextDisassembleLine() {
 
     if (disasm.base_address != disasm.new_address) {
         disasm.base_address = disasm.new_address;
-        addressMap_t::iterator item = disasm.addressMap.find(disasm.new_address);
-        if (item != disasm.addressMap.end()) {
+        map_t::iterator item = disasm.map.find(disasm.new_address);
+        if (item != disasm.map.end()) {
             disasmHighlight.hit_read_watchpoint = false;
             disasmHighlight.hit_write_watchpoint = false;
             disasmHighlight.hit_exec_breakpoint = false;

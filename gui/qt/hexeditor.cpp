@@ -30,10 +30,24 @@
 
 QString MainWindow::getAddressString(QString string, bool *ok) {
     QString address = QInputDialog::getText(this, tr("Goto Address"),
-                                         tr("Input Address (In Hexadecimal):"), QLineEdit::Normal,
+                                         tr("Input Address:"), QLineEdit::Normal,
                                          string, ok).toUpper();
 
+    QString exists = getAddressEquate(address.toStdString());
+    if (!exists.isEmpty()) {
+        return exists;
+    }
+
    return int2hex(hex2int(address), 6);
+}
+
+QString MainWindow::getAddressEquate(std::string in) {
+    QString value;
+    map_value_t::const_iterator item = disasm.reverseMap.find(in);
+    if (item != disasm.reverseMap.end()) {
+        value = int2hex(item->second, 6);
+    }
+    return value;
 }
 
 void MainWindow::flashUpdate() {
@@ -243,6 +257,7 @@ void MainWindow::memSyncPressed() {
 
     for (int i = 0; i < memSize; i++) {
         mem_poke_byte(i+start, ui->memEdit->data().at(i));
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
     }
 
     syncHexView(posa, ui->memEdit);

@@ -625,7 +625,18 @@ void MainWindow::breakpointDataChanged(QTableWidgetItem *item) {
         debug_breakwatch(address, DBG_EXEC_BREAKPOINT, item->checkState() == Qt::Checked);
     } else if (col == BREAK_ADDR_LOC){
         std::string s = item->text().toUpper().toStdString();
+        QString equate;
         unsigned mask;
+
+        equate = getAddressEquate(s);
+        if (!equate.isEmpty()) {
+            s = equate.toStdString();
+            ui->breakpointView->blockSignals(true);
+            if (ui->breakpointView->item(row, BREAK_LABEL_LOC)->text() == (QStringLiteral("Label") + QString::number(row))) {
+                ui->breakpointView->item(row, BREAK_LABEL_LOC)->setText(item->text());
+            }
+            ui->breakpointView->blockSignals(false);
+        }
 
         if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty() || s.length() > 6) {
             item->setText(int2hex(prevBreakpointAddress, 6));
@@ -657,11 +668,11 @@ void MainWindow::breakpointDataChanged(QTableWidgetItem *item) {
 }
 
 QString MainWindow::breakpointNextLabel() {
-    return QStringLiteral("Label")+QString::number(ui->breakpointView->rowCount());
+    return QStringLiteral("Label") + QString::number(ui->breakpointView->rowCount());
 }
 
 QString MainWindow::watchpointNextLabel() {
-    return QStringLiteral("Label")+QString::number(ui->watchpointView->rowCount());
+    return QStringLiteral("Label") + QString::number(ui->watchpointView->rowCount());
 }
 
 void MainWindow::breakpointSlotAdd(void) {
@@ -1098,7 +1109,18 @@ void MainWindow::watchpointDataChanged(QTableWidgetItem *item) {
         debug_breakwatch(address, value, item->checkState() == Qt::Checked);
     } else if (col == WATCH_ADDR_LOC){
         std::string s = item->text().toUpper().toStdString();
+        QString equate;
         unsigned mask;
+
+        equate = getAddressEquate(s);
+        if (!equate.isEmpty()) {
+            s = equate.toStdString();
+            ui->watchpointView->blockSignals(true);
+            if (ui->watchpointView->item(row, WATCH_LABEL_LOC)->text() == (QStringLiteral("Label") + QString::number(row))) {
+                ui->watchpointView->item(row, WATCH_LABEL_LOC)->setText(item->text());
+            }
+            ui->watchpointView->blockSignals(false);
+        }
 
         if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty() || s.length() > 6) {
             item->setText(int2hex(prevWatchpointAddress, 6));
@@ -1106,7 +1128,7 @@ void MainWindow::watchpointDataChanged(QTableWidgetItem *item) {
             return;
         }
 
-        address = static_cast<uint32_t>(hex2int(item->text().toUpper()));
+        address = static_cast<uint32_t>(hex2int(QString::fromStdString(s)));
         newString = int2hex(address, 6);
 
         /* Return if address is already set */
@@ -1159,13 +1181,15 @@ void MainWindow::scrollDisasmView(int value) {
 void MainWindow::equatesClear() {
     // Reset the map
     currentEquateFiles.clear();
-    disasm.addressMap.clear();
+    disasm.map.clear();
+    disasm.reverseMap.clear();
     updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(Q_NULLPTR, 16), true);
 }
 
 void MainWindow::equatesRefresh() {
     // Reset the map
-    disasm.addressMap.clear();
+    disasm.map.clear();
+    disasm.reverseMap.clear();
     for (QString file : currentEquateFiles)
         equatesAddFile(file);
     updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(Q_NULLPTR, 16), true);
@@ -1173,7 +1197,6 @@ void MainWindow::equatesRefresh() {
 
 void MainWindow::equatesAddDialog() {
     QFileDialog dialog(this);
-    int good;
 
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
     dialog.setFileMode(QFileDialog::ExistingFile);
@@ -1184,13 +1207,11 @@ void MainWindow::equatesAddDialog() {
                << tr("All Files (*.*)");
     dialog.setNameFilters(extFilters);
 
-    good = dialog.exec();
-    currentDir = dialog.directory();
-
-    if (good) {
-        currentEquateFiles = dialog.selectedFiles();
+    if (dialog.exec()) {
+        currentEquateFiles.append(dialog.selectedFiles());
         equatesRefresh();
     }
+    currentDir = dialog.directory();
 }
 
 void MainWindow::equatesAddFile(QString fileName) {
@@ -1236,16 +1257,20 @@ void MainWindow::equatesAddFile(QString fileName) {
 
 void MainWindow::equatesAddEquate(QString name, QString addrStr) {
     uint32_t address = addrStr.toUInt(Q_NULLPTR, 16);
-    std::string &item = disasm.addressMap[address];
+    std::string &item = disasm.map[address];
+    uint32_t &itemReverse = disasm.reverseMap[name.toUpper().toStdString()];
     if (item.empty()) {
+        itemReverse = address;
         item = name.toStdString();
         uint8_t *ptr = phys_mem_ptr(address - 4, 9);
         if (ptr && ptr[4] == 0xC3 && (ptr[0] == 0xC3 || ptr[8] == 0xC3)) { // jump table?
             uint32_t address2  = ptr[5] | ptr[6] << 8 | ptr[7] << 16;
             if (phys_mem_ptr(address2, 1)) {
-                std::string &item2 = disasm.addressMap[address2];
+                std::string &item2 = disasm.map[address2];
                 if (item2.empty()) {
                     item2 = "_" + item;
+                    uint32_t &itemReverse2 = disasm.reverseMap["_" + name.toUpper().toStdString()];
+                    itemReverse2 = address2;
                 }
             }
         }

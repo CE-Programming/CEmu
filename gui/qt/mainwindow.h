@@ -285,9 +285,11 @@ private:
     void memGotoPressed();
     void memSearchPressed();
     void memSyncPressed();
+
     // Others
     void syncHexView(int, QHexEdit*);
     void searchEdit(QHexEdit*);
+    QString getAddressEquate(std::string in);
 
     // Keypad
     void keymapChanged();
