@@ -143,7 +143,8 @@ SOURCES +=  utils.cpp \
     settings.cpp \
     ../../core/debug/stepping.cpp \
     ../../core/dma.c \
-    ipc.cpp
+    ipc.cpp \
+    keyhistory.cpp
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
@@ -222,13 +223,15 @@ HEADERS  +=  utils.h \
     keypad/keycode.h \
     debugger.h \
     ../../core/dma.h \
-    ipc.h
+    ipc.h \
+    keyhistory.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \
     lcdpopout.ui \
     searchwidget.ui \
-    basiccodeviewerwindow.ui
+    basiccodeviewerwindow.ui \
+    keyhistory.ui
 
 RESOURCES += \
     resources.qrc

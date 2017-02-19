@@ -33,4 +33,4 @@ private:
     bool showingFormatted = false;
 };
 
-#endif // BASICCODEVIEWERWINDOW_H
+#endif

@@ -220,6 +220,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->buttonBlack,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
     connect(ui->buttonSilver,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
 
+    // Key History Window
+    connect(ui->actionKeyHistory, &QAction::triggered, this, &MainWindow::toggleKeyHistory);
+
     // Auto Updates
     connect(ui->checkUpdates, &QCheckBox::stateChanged, this, &MainWindow::setAutoCheckForUpdates);
 
@@ -399,6 +402,21 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     ui->lcdWidget->setFocus();
 }
 
+void MainWindow::toggleKeyHistory() {
+    if (!keyHistoryWindow) {
+        keyHistoryWindow = new KeyHistory();
+        connect(ui->keypadWidget, &KeypadWidget::keyPressed, keyHistoryWindow, &KeyHistory::addEntry);
+        keyHistoryWindow->show();
+        ui->actionKeyHistory->setChecked(true);
+    } else {
+        disconnect(ui->keypadWidget, &KeypadWidget::keyPressed, keyHistoryWindow, &KeyHistory::addEntry);
+        keyHistoryWindow->close();
+        delete keyHistoryWindow;
+        keyHistoryWindow = Q_NULLPTR;
+        ui->actionKeyHistory->setChecked(false);
+    }
+}
+
 void MainWindow::optCheckSend(CEmuOpts &o) {
     setThrottleMode(true);
 
@@ -469,14 +487,15 @@ MainWindow::~MainWindow() {
     debugger_free();
 
     delete com;
+    delete settings;
+    delete asmShortcut;
     delete toggleAction;
-    delete debuggerShortcut;
     delete stepInShortcut;
+    delete stepOutShortcut;
+    delete keyHistoryWindow;
+    delete debuggerShortcut;
     delete stepOverShortcut;
     delete stepNextShortcut;
-    delete stepOutShortcut;
-    delete asmShortcut;
-    delete settings;
     delete ui->flashEdit;
     delete ui->ramEdit;
     delete ui->memEdit;

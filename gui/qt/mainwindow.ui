@@ -6956,7 +6956,7 @@ QPushButton:pressed {
     </property>
     <widget class="QMenu" name="menuExport">
      <property name="title">
-      <string>Export...</string>
+      <string>Export</string>
      </property>
      <addaction name="actionExportRomImage"/>
      <addaction name="actionExportCalculatorState"/>
@@ -6964,7 +6964,7 @@ QPushButton:pressed {
     </widget>
     <widget class="QMenu" name="menuImport">
      <property name="title">
-      <string>Import...</string>
+      <string>Import</string>
      </property>
      <addaction name="actionImportCalculatorState"/>
      <addaction name="actionImportDebugger"/>
@@ -6977,12 +6977,13 @@ QPushButton:pressed {
     <addaction name="actionTakeGIFScreenshot"/>
     <addaction name="actionScreenshot"/>
     <addaction name="separator"/>
+    <addaction name="actionKeyHistory"/>
     <addaction name="actionNew"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
-     <string>C&amp;alculator</string>
+     <string>&amp;Calculator</string>
     </property>
     <addaction name="actionSetup"/>
     <addaction name="separator"/>
@@ -6996,7 +6997,7 @@ QPushButton:pressed {
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
-     <string>About</string>
+     <string>&amp;About</string>
     </property>
     <addaction name="actionCheckForUpdates"/>
     <addaction name="separator"/>
@@ -7143,7 +7144,7 @@ QPushButton:pressed {
      <normaloff>:/icons/resources/icons/pngpng.png</normaloff>:/icons/resources/icons/pngpng.png</iconset>
    </property>
    <property name="text">
-    <string>Take PNG screenshot...</string>
+    <string>Take PNG screenshot</string>
    </property>
    <property name="toolTip">
     <string>Take PNG screenshot</string>
@@ -7161,7 +7162,7 @@ QPushButton:pressed {
      <normaloff>:/icons/resources/icons/gif.png</normaloff>:/icons/resources/icons/gif.png</iconset>
    </property>
    <property name="text">
-    <string>Record animated GIF...</string>
+    <string>Record animated GIF</string>
    </property>
    <property name="toolTip">
     <string>Record animated GIF</string>
@@ -7194,7 +7195,7 @@ QPushButton:pressed {
      <normaloff>:/icons/resources/icons/screenshotgif.png</normaloff>:/icons/resources/icons/screenshotgif.png</iconset>
    </property>
    <property name="text">
-    <string>Take GIF screenshot...</string>
+    <string>Take GIF screenshot</string>
    </property>
    <property name="toolTip">
     <string>Take GIF screenshot</string>
@@ -7298,7 +7299,15 @@ QPushButton:pressed {
   </action>
   <action name="actionNew">
    <property name="text">
-    <string>New...</string>
+    <string>New</string>
+   </property>
+  </action>
+  <action name="actionKeyHistory">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Key History</string>
    </property>
   </action>
  </widget>

@@ -316,6 +316,9 @@ void KeypadWidget::changeKeyState(KeyCode keycode, bool press, bool toggleHold) 
         if (selected != wasSelected) {
             update(m_transform.mapRect(key->keyGeometry()));
             keypad_key_event(keycode.row(), keycode.col(), selected);
+            if (selected) {
+                emit keyPressed(QStringLiteral("key pressed."));
+            }
         }
     }
 }

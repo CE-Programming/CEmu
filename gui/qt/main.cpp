@@ -99,6 +99,8 @@ int main(int argc, char *argv[]) {
                 QCoreApplication::translate("main", "Forces a rom reload"));
     parser.addOption(forceRomReload);
 
+    // IPC hooks (can only use on an already running process)
+
     parser.process(app);
 
     // Take command line args and move to CEmuOpts struct

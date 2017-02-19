@@ -15,6 +15,7 @@
 #include "romselection.h"
 #include "emuthread.h"
 #include "lcdpopout.h"
+#include "keyhistory.h"
 #include "keypad/qtkeypadbridge.h"
 #include "qhexedit/qhexedit.h"
 
@@ -308,6 +309,9 @@ private:
     void optLoadFiles(CEmuOpts&);
     void optAttemptLoad(CEmuOpts&);
 
+    // Key History
+    void toggleKeyHistory();
+
     // IPC
     void ipcSpawnRandom();
     bool ipcSetup();
@@ -379,6 +383,8 @@ private:
     QString prevMemAddress;
 
     QString pathSettings;
+
+    KeyHistory *keyHistoryWindow = Q_NULLPTR;
 
     ipc *com;
 
