@@ -333,6 +333,9 @@ void MainWindow::selectKeypadColor() {
     if (sender_obj_name == "buttonTrueBlue")  keypad_color = KEYPAD_TRUE_BLUE;
     if (sender_obj_name == "buttonDenim")     keypad_color = KEYPAD_DENIM;
     if (sender_obj_name == "buttonSilver")    keypad_color = KEYPAD_SILVER;
+    if (sender_obj_name == "buttonSpaceGrey") keypad_color = KEYPAD_SPACEGREY;
+    if (sender_obj_name == "buttonCoral")     keypad_color = KEYPAD_CORAL;
+    if (sender_obj_name == "buttonMint")      keypad_color = KEYPAD_MINT;
 
     setKeypadColor(keypad_color);
 }

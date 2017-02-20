@@ -90,7 +90,7 @@ void guiDelay(int ms) {
     }
 }
 
-#ifdef _WIN32
+#ifdef Q_OS_WIN
 #include <windows.h>
 #include <tchar.h>
 #include <psapi.h>
@@ -132,7 +132,7 @@ static bool checkProc(pid_t pid) {
 #endif
 
 bool IsProcRunning(pid_t procID) {
-#ifdef _WIN32
+#ifdef Q_OS_WIN
     return checkProc(static_cast<DWORD>(procID));
 #else
     return checkProc(procID);

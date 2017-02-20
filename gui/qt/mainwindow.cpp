@@ -218,6 +218,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->buttonWhite,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
     connect(ui->buttonBlack,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
     connect(ui->buttonSilver,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonSpaceGrey,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonCoral,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonMint,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
 
     // Key History Window
     connect(ui->actionKeyHistory, &QAction::triggered, this, &MainWindow::toggleKeyHistory);
@@ -295,7 +298,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
         ui->settingsPath->setText(pathSettings);
     }
 
-#ifdef _WIN32
+#ifdef Q_OS_WIN
     installToggleConsole();
 #endif
 

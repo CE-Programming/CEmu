@@ -1,3 +1,8 @@
+#include <QtWidgets/QApplication>
+#include <QtGui/QPaintEvent>
+#include <QtGui/QScreen>
+#include <QFontDatabase>
+
 #include "keypadwidget.h"
 #include "graphkey.h"
 #include "secondkey.h"
@@ -7,10 +12,6 @@
 #include "numkey.h"
 #include "arrowkey.h"
 #include "../../../core/asic.h"
-
-#include <QtWidgets/QApplication>
-#include <QtGui/QPaintEvent>
-#include <QtGui/QScreen>
 
 const QRect KeypadWidget::s_baseRect{{}, QSize{162, 235}};
 
@@ -89,6 +90,24 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
             c_center = QColor::fromRgb(0xD8D3B6);
             c_sides  = c_center.lighter(130);
             c_other  = QColor::fromRgb(0xD8D3B6);
+            break;
+        case KEYPAD_SPACEGREY:
+            c_center = QColor::fromRgb(0xDBDBDB);
+            c_sides  = c_center.darker(130);
+            c_other  = QColor::fromRgb(53, 53, 53);
+            c_graph  = QColor::fromRgb(0xD0D3D4);
+            break;
+        case KEYPAD_CORAL:
+            c_center = QColor::fromRgb(0xFD6D99);
+            c_sides  = c_center.lighter(120);
+            c_other  = QColor::fromRgb(53, 53, 53);
+            c_graph  = QColor::fromRgb(0xD0D3D4);
+            break;
+        case KEYPAD_MINT:
+            c_center = QColor::fromRgb(0xD2EBE8);
+            c_sides  = c_center.darker(115);
+            c_other  = QColor::fromRgb(53, 53, 53);
+            c_graph  = QColor::fromRgb(0xD0D3D4);
             break;
     }
 
@@ -173,12 +192,12 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
 #ifdef Q_OS_MACX
     addKey(new NumKey{m_config, Label("0"), Label("catalog"), Label("_"), is83 * 2, 6});
 #else
-    addKey(new NumKey{m_config, Label("0"), Label("catalog"), Label("⎵"), is83 * 2, 6});
+    addKey(new NumKey{m_config, Label("0"), Label("catalog"), Label("_"), is83 * 2, 6});
 #endif
     addKey(new NumKey{m_config, Label("1"), Label("L1"), Label("Y"), is83 * 2, is83 ? 3 : 1});
     addKey(new NumKey{m_config, Label("4"), Label("L4"), Label("T"), is83 * 2, is83 ? 3 : 1});
 
-#if defined(_WIN32) || defined(Q_OS_MACX)
+#if defined(Q_OS_WIN) || defined(Q_OS_MACX)
     addKey(new NumKey{m_config, Label("7"), LabelFrEn("un", "u"), Label("O"), is83 * 2, 1 + is83});
 #else
     addKey(new NumKey{m_config, Label("7"), LabelFrEn("uₙ", "u"), Label("O"), is83 * 2, 1 + is83});
@@ -190,7 +209,7 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
 #else
     addKey(new OtherKey{m_config, 14 + is83, LabelFrEn("matrice", "apps"), LabelFrEn("x⁻¹", "angle"), Label("B"), is83 * 2, 1});
 #endif
-#ifdef _WIN32
+#ifdef Q_OS_WIN
     addKey(new OtherKey{m_config, 15 + is83, Label("X,T,θ,n"), LabelFrEn("échanger", "link"), QString{}, is83 * 2, is83 * 3});
 #elif defined(Q_OS_MACX)
     addKey(new OtherKey{m_config, 15 + is83, Label(" X,T,θ,n "), LabelFrEn("échanger", "link"), QString{}, 1, 1});
@@ -200,7 +219,7 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
     addKey(new NumKey{m_config, is83 * 2});
     addKey(new NumKey{m_config, Label("2"), Label("L2"), Label("Z"), is83 * 2, is83 * 3});
     addKey(new NumKey{m_config, Label("5"), Label("L5"), Label("U"), is83 * 2, is83 * 3});
-#if defined(_WIN32) || defined(Q_OS_MACX)
+#if defined(Q_OS_WIN) || defined(Q_OS_MACX)
     addKey(new NumKey{m_config, Label("8"), LabelFrEn("vn", "v"), Label("P"), is83 * 2, is83 * 2});
 #else
     addKey(new NumKey{m_config, Label("8"), LabelFrEn("vₙ", "v"), Label("P"), is83 * 2, is83 * 2});
@@ -222,14 +241,14 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
     addKey(new NumKey{m_config, Label("(-)"), LabelFrEn("rép", "ans"), Label("?"), is83 * 2, is83 * 3, 11});
     addKey(new NumKey{m_config, Label("3"), Label("L3"), Label("θ"), is83 * 2, is83 * 3});
     addKey(new NumKey{m_config, Label("6"), Label("L6"), Label("V"), is83 * 2, is83 * 3});
-#if defined(_WIN32) || defined(Q_OS_MACX)
+#if defined(Q_OS_WIN) || defined(Q_OS_MACX)
     addKey(new NumKey{m_config, Label("9"), LabelFrEn("wn", "w"), Label("Q"), is83 * 2, is83 * 3});
 #else
     addKey(new NumKey{m_config, Label("9"), LabelFrEn("wₙ", "w"), Label("Q"), is83 * 2, is83 * 3});
 #endif
     addKey(new OtherKey{m_config, 3, Label(")"), Label("}"), Label("L"), is83 * 2, is83});
-#ifdef _WIN32
-    addKey(new OtherKey{m_config, 9, LabelFrEn("⸋|⸋", "tan"), LabelFrEn("∫⸋|⸋d▫‣", "tan⁻¹"), Label("G"), is83 * 2, is83 * 2});
+#ifdef Q_OS_WIN
+    addKey(new OtherKey{m_config, 9, LabelFrEn("▫/▫", "tan"), LabelFrEn("∫⸋|⸋d▫‣", "tan⁻¹"), Label("G"), is83 * 2, is83 * 2});
 #elif defined(Q_OS_MACX)
     addKey(new OtherKey{m_config, 9, LabelFrEn("▫/▫", "tan"), LabelFrEn("∫⸋d▫‣", "tan⁻¹"), Label("G"), is83 * 2, is83 * 2});
 #else
@@ -308,7 +327,6 @@ void KeypadWidget::paintEvent(QPaintEvent *event) {
 void KeypadWidget::changeKeyState(KeyCode keycode, bool press, bool toggleHold) {
     if (Key *key = m_keys[keycode.row()][keycode.col()]) {
         bool wasSelected = key->isSelected();
-        bool wasHeld = key->isHeld();
         key->setPressed(press);
         if (toggleHold) {
             key->toggleHeld();

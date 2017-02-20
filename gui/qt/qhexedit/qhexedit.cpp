@@ -11,7 +11,7 @@ QHexEdit::QHexEdit(QWidget *par) : QAbstractScrollArea(par) {
     _chunks = new Chunks();
     _undoStack = new UndoStack(_chunks, this);
 
-#ifdef Q_OS_WIN32
+#ifdef Q_OS_WIN
     setFont(QFont("Courier", 10));
 #else
     setFont(QFont("Monospace", 10));

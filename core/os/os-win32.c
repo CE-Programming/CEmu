@@ -1,5 +1,4 @@
 #ifdef _WIN32
-
 #include "os.h"
 #include <stdio.h>
 #include <windows.h>
