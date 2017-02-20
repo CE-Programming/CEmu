@@ -6,14 +6,12 @@
 
 KeyHistory::KeyHistory(QWidget *parent) : QWidget(parent), ui(new Ui::KeyHistory) {
     ui->setupUi(this);
-
-    setTop(true);
-    setFont(9);
-
     setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint);
     connect(ui->buttonClear, &QPushButton::clicked, ui->historyView, &QPlainTextEdit::clear);
     connect(ui->textSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &KeyHistory::setFont);
     connect(ui->checkOnTop, &QCheckBox::clicked, this, &KeyHistory::setTop);
+    setTop(true);
+    setFont(9);
 }
 
 KeyHistory::~KeyHistory() {

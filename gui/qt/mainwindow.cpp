@@ -168,10 +168,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     
     // Other GUI actions
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
-    connect(ui->scaleSlider, &QSlider::sliderMoved, this, &MainWindow::setReprintScale);
-    connect(ui->scaleSlider, &QSlider::valueChanged, this, &MainWindow::setLCDScale);
+    connect(ui->scaleLCD, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setLCDScale);
+    connect(ui->refreshLCD, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setLCDRefresh);
     connect(ui->checkSkin, &QCheckBox::stateChanged, this, &MainWindow::setSkinToggle);
-    connect(ui->refreshSlider, &QSlider::valueChanged, this, &MainWindow::setLCDRefresh);
     connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::setAlwaysOnTop);
     connect(ui->emulationSpeed, &QSlider::valueChanged, this, &MainWindow::setEmulatedSpeed);
     connect(ui->checkThrottle, &QCheckBox::stateChanged, this, &MainWindow::setThrottleMode);
@@ -825,7 +824,7 @@ void MainWindow::changeFrameskip(int value) {
 }
 
 void MainWindow::changeFramerate() {
-    float framerate = ((float) ui->refreshSlider->value()) / (ui->frameskipSlider->value() + 1);
+    float framerate = ((float) ui->refreshLCD->value()) / (ui->frameskipSlider->value() + 1);
     ui->framerateLabel->setText(QString::number(framerate).left(4));
 }
 

@@ -596,7 +596,7 @@
               </size>
              </property>
              <property name="text">
-              <string>Change path...</string>
+              <string>Change path</string>
              </property>
              <property name="flat">
               <bool>false</bool>
@@ -642,7 +642,7 @@
               </size>
              </property>
              <property name="text">
-              <string>Change path...</string>
+              <string>Change path</string>
              </property>
              <property name="flat">
               <bool>false</bool>
@@ -711,7 +711,7 @@
               </size>
              </property>
              <property name="text">
-              <string>Setup wizard...</string>
+              <string>Setup wizard</string>
              </property>
              <property name="flat">
               <bool>false</bool>
@@ -755,19 +755,6 @@
               </widget>
              </item>
              <item>
-              <spacer name="horizontalSpacer_2">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
               <widget class="QLabel" name="label_5">
                <property name="text">
                 <string>Scale:</string>
@@ -775,61 +762,47 @@
               </widget>
              </item>
              <item>
-              <widget class="QLabel" name="scaleLabel">
-               <property name="minimumSize">
-                <size>
-                 <width>30</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>100%</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QSlider" name="scaleSlider">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                 <horstretch>1</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>60</width>
-                 <height>0</height>
-                </size>
+              <widget class="QSpinBox" name="scaleLCD">
+               <property name="suffix">
+                <string>%</string>
                </property>
                <property name="minimum">
                 <number>50</number>
                </property>
                <property name="maximum">
-                <number>400</number>
+                <number>410</number>
                </property>
                <property name="singleStep">
                 <number>25</number>
                </property>
-               <property name="pageStep">
-                <number>100</number>
-               </property>
                <property name="value">
                 <number>100</number>
                </property>
-               <property name="tracking">
-                <bool>false</bool>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_2">
+               <property name="text">
+                <string>Refresh rate:</string>
                </property>
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="refreshLCD">
+               <property name="suffix">
+                <string> fps</string>
                </property>
-               <property name="tickPosition">
-                <enum>QSlider::TicksBelow</enum>
+               <property name="minimum">
+                <number>5</number>
                </property>
-               <property name="tickInterval">
-                <number>50</number>
+               <property name="maximum">
+                <number>120</number>
+               </property>
+               <property name="value">
+                <number>60</number>
+               </property>
+               <property name="displayIntegerBase">
+                <number>10</number>
                </property>
               </widget>
              </item>
@@ -845,63 +818,6 @@
                 </size>
                </property>
               </spacer>
-             </item>
-             <item>
-              <widget class="QLabel" name="label_2">
-               <property name="text">
-                <string>Refresh rate:</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="refreshLabel">
-               <property name="text">
-                <string>60 FPS</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QSlider" name="refreshSlider">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                 <horstretch>2</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>70</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="toolTip">
-                <string>Change this if your CPU is overloaded.</string>
-               </property>
-               <property name="whatsThis">
-                <string/>
-               </property>
-               <property name="minimum">
-                <number>10</number>
-               </property>
-               <property name="maximum">
-                <number>70</number>
-               </property>
-               <property name="singleStep">
-                <number>1</number>
-               </property>
-               <property name="value">
-                <number>60</number>
-               </property>
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="tickPosition">
-                <enum>QSlider::TicksBelow</enum>
-               </property>
-               <property name="tickInterval">
-                <number>10</number>
-               </property>
-              </widget>
              </item>
             </layout>
            </item>
@@ -1029,6 +945,19 @@
                </property>
               </widget>
              </item>
+             <item>
+              <spacer name="horizontalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>1</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
             </layout>
            </item>
            <item>
@@ -1051,19 +980,6 @@
               </widget>
              </item>
              <item>
-              <spacer name="horizontalSpacer_14">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
               <widget class="QLabel" name="label_4">
                <property name="text">
                 <string>Text size:</string>
@@ -1082,6 +998,19 @@
                 <number>7</number>
                </property>
               </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_14">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>1</height>
+                </size>
+               </property>
+              </spacer>
              </item>
             </layout>
            </item>

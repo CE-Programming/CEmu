@@ -271,7 +271,7 @@ void MainWindow::checkForUpdates(bool forceInfoBox) {
 }
 
 void MainWindow::adjustScreen() {
-    float scale = ui->scaleSlider->value() / 100.0;
+    float scale = ui->scaleLCD->value() / 100.0;
     bool skin = ui->checkSkin->isChecked();
     ui->calcSkinTop->setVisible(skin);
     float w, h;
@@ -288,15 +288,13 @@ void MainWindow::adjustScreen() {
 }
 
 int MainWindow::setReprintScale(int scale) {
-    int roundedScale = round(scale / 25.0) * 25;
-    ui->scaleLabel->setText(QString::number(roundedScale) + "%");
-    return roundedScale;
+    return round(scale / 25.0) * 25;
 }
 
 void MainWindow::setLCDScale(int scale) {
     int roundedScale = setReprintScale(scale);
     settings->setValue(QStringLiteral("scale"), roundedScale);
-    ui->scaleSlider->setValue(roundedScale);
+    ui->scaleLCD->setValue(roundedScale);
     adjustScreen();
 }
 
@@ -308,8 +306,7 @@ void MainWindow::setSkinToggle(bool enable) {
 
 void MainWindow::setLCDRefresh(int value) {
     settings->setValue(QStringLiteral("refreshRate"), value);
-    ui->refreshLabel->setText(QString::number(value)+" FPS");
-    ui->refreshSlider->setValue(value);
+    ui->refreshLCD->setValue(value);
     ui->lcdWidget->refreshRate(value);
     changeFramerate();
 }
