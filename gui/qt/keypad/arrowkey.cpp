@@ -13,12 +13,13 @@ QPointF ArrowKey::rotatePoint(QPointF point, int offset) {
 }
 
 ArrowKey::ArrowKey(KeyConfig &config, const QRect &outer, const QRect &inner,
-                   int offset, qreal gap)
+                   int offset, const QString labelText, qreal gap)
     : Key{config.next(), inner, outer, config.graphColor}, m_labelColor{config.blackColor},
       m_outer{outer}, m_inner{inner}, m_offset{2 * offset} {
     qreal innerAngle = computeAngle(inner, gap),
           outerAngle = computeAngle(outer, gap);
     int offsetAngle = 90 * offset;
+    m_labelText = labelText;
     m_keyShape.arcMoveTo(inner, offsetAngle + innerAngle);
     m_keyShape.arcTo(outer, offsetAngle + outerAngle, -2 * outerAngle);
     m_keyShape.arcTo(inner, offsetAngle - innerAngle,  2 * innerAngle);

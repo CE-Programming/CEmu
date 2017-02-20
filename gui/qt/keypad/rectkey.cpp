@@ -12,8 +12,9 @@ RectKey::RectKey(KeyCode keycode, const QRect &textGeometry, const QRect &keyGeo
       m_labelAlign{labelAlign}, m_secondAlign{secondAlign}, m_alphaAlign{alphaAlign},
       m_labelFont{labelFont}, m_secondFont{secondFont.resolve(labelFont)},
                               m_alphaFont{alphaFont.resolve(labelFont)},
-      m_labelText{labelText}, m_secondText{secondText}, m_alphaText{alphaText} {
+      m_secondText{secondText}, m_alphaText{alphaText} {
     QRect corner;
+    m_labelText = labelText;
     m_keyShape.moveTo(keyGeometry.topLeft() + QPointF{0, topLeft * .5});
     corner.setSize({bottomLeft, bottomLeft});
     corner.moveBottomLeft(keyGeometry.bottomLeft());

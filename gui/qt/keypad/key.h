@@ -15,6 +15,7 @@ public:
 	m_keycode{keycode}, m_pressed{}, m_held{}, m_accepted{} {}
     virtual ~Key() {}
 
+    const QString getLabel() const { return m_labelText; }
     const QRect &textGeometry() const { return m_textGeometry; }
     const QRect &keyGeometry() const { return m_keyGeometry; }
     const KeyCode keycode() const { return m_keycode; }
@@ -47,7 +48,7 @@ public:
 
 protected:
     virtual bool canAccept(const QPointF &) = 0;
-
+    QString m_labelText;
     QPainterPath m_keyShape;
 
 private:

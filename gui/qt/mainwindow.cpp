@@ -118,7 +118,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->buttonAddEquateFile, &QPushButton::clicked, this, &MainWindow::equatesAddDialog);
     connect(ui->buttonClearEquates, &QPushButton::clicked, this, &MainWindow::equatesClear);
     connect(ui->buttonRefreshEquates, &QPushButton::clicked, this, &MainWindow::equatesRefresh);
-    connect(ui->textSizeSlider, &QSlider::valueChanged, this, &MainWindow::setFont);
+    connect(ui->textSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setFont);
     connect(ui->checkDebugResetTrigger, &QCheckBox::toggled, this, &MainWindow::setDebugResetTrigger);
 
     // Debugging files
@@ -616,6 +616,11 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *e) {
 void MainWindow::closeEvent(QCloseEvent *e) {
     // shut down ipc server
     com->idClose();
+
+    // close key history window
+    if (keyHistoryWindow) {
+        keyHistoryWindow->close();
+    }
 
     if (!initPassed) {
         QMainWindow::closeEvent(e);

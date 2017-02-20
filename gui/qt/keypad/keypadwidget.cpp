@@ -264,10 +264,10 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
     inner.setSize({16, 16});
     outer.moveCenter(center);
     inner.moveCenter(center);
-    addKey(new ArrowKey{m_config, outer, inner, 3});
-    addKey(new ArrowKey{m_config, outer, inner, 2});
-    addKey(new ArrowKey{m_config, outer, inner, 0});
-    addKey(new ArrowKey{m_config, outer, inner, 1});
+    addKey(new ArrowKey{m_config, outer, inner, 3, QStringLiteral("down")});
+    addKey(new ArrowKey{m_config, outer, inner, 2, QStringLiteral("left")});
+    addKey(new ArrowKey{m_config, outer, inner, 0, QStringLiteral("right")});
+    addKey(new ArrowKey{m_config, outer, inner, 1, QStringLiteral("up")});
 
     update();
 }
@@ -308,6 +308,7 @@ void KeypadWidget::paintEvent(QPaintEvent *event) {
 void KeypadWidget::changeKeyState(KeyCode keycode, bool press, bool toggleHold) {
     if (Key *key = m_keys[keycode.row()][keycode.col()]) {
         bool wasSelected = key->isSelected();
+        bool wasHeld = key->isHeld();
         key->setPressed(press);
         if (toggleHold) {
             key->toggleHeld();
@@ -317,7 +318,8 @@ void KeypadWidget::changeKeyState(KeyCode keycode, bool press, bool toggleHold) 
             update(m_transform.mapRect(key->keyGeometry()));
             keypad_key_event(keycode.row(), keycode.col(), selected);
             if (selected) {
-                emit keyPressed(QStringLiteral("key pressed."));
+                QString out = QStringLiteral("[") + key->getLabel() + QStringLiteral("]");
+                emit keyPressed(out.simplified());
             }
         }
     }

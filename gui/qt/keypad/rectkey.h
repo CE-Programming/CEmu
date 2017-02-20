@@ -61,7 +61,7 @@ protected:
     QColor m_textColor, m_secondColor, m_alphaColor;
     Qt::Alignment m_labelAlign, m_secondAlign, m_alphaAlign;
     QFont m_labelFont, m_secondFont, m_alphaFont;
-    const QString m_labelText, m_secondText, m_alphaText;
+    const QString m_secondText, m_alphaText;
 };
 
 #endif

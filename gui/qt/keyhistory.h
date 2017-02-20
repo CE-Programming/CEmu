@@ -16,6 +16,9 @@ public slots:
     void addEntry(QString entry);
 
 private:
+    void setFont(int size);
+    void setTop(bool state);
+
     Ui::KeyHistory *ui;
 };
 

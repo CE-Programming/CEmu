@@ -92,8 +92,8 @@ void MainWindow::setSpaceDisasm(bool state) {
 }
 
 void MainWindow::setFont(int fontSize) {
-    ui->textSizeSlider->setValue(fontSize);
-    settings->setValue(QStringLiteral("textSize"), ui->textSizeSlider->value());
+    ui->textSize->setValue(fontSize);
+    settings->setValue(QStringLiteral("textSize"), ui->textSize->value());
 
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
