@@ -99,6 +99,11 @@ int main(int argc, char *argv[]) {
                 QCoreApplication::translate("main", "Forces a rom reload"));
     parser.addOption(forceRomReload);
 
+    QCommandLineOption emuSpeed(QStringList() << "speed",
+                QCoreApplication::translate("main", "Set emulation speed percentage (value 0-500; step 10)"),
+                QCoreApplication::translate("main", "speed"));
+    parser.addOption(emuSpeed);
+
     // IPC hooks (can only use on an already running process)
 
     parser.process(app);
@@ -117,6 +122,13 @@ int main(int argc, char *argv[]) {
     opts.sendFiles          = parser.values(sendFiles);
     opts.sendArchFiles      = parser.values(sendArchFiles);
     opts.sendRAMFiles       = parser.values(sendRAMFiles);
+    if (parser.isSet(emuSpeed)) {
+        opts.speed          = parser.value(emuSpeed).toInt();
+        if (opts.speed < 0)   { opts.speed = 0; }
+        if (opts.speed > 500) { opts.speed = 500; }
+    } else {
+        opts.speed = -1;
+    }
     if (parser.isSet(loadTestFile)) {
         opts.autotesterFile = QDir::currentPath() + QDir::separator() + parser.value(loadTestFile);
     }

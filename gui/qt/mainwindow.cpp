@@ -399,6 +399,10 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     }
 
     optCheckSend(opts);
+
+    if (opts.speed != -1) {
+        setEmulatedSpeed(opts.speed/10);
+    }
     ui->lcdWidget->setFocus();
 }
 
@@ -418,8 +422,6 @@ void MainWindow::toggleKeyHistory() {
 }
 
 void MainWindow::optCheckSend(CEmuOpts &o) {
-    setThrottleMode(true);
-
     if (!o.autotesterFile.isEmpty()){
         if (!openJSONConfig(o.autotesterFile)) {
            if (!o.deforceReset) { resetCalculator(); }
@@ -1607,7 +1609,8 @@ bool MainWindow::ipcSetup() {
            << opts.sendFiles
            << opts.sendArchFiles
            << opts.sendRAMFiles
-           << opts.restoreOnOpen;
+           << opts.restoreOnOpen
+           << opts.speed;
 
     // blocking call
     com->send(byteArray);
@@ -1628,11 +1631,15 @@ void MainWindow::ipcHandleCommandlineReceive(QDataStream &stream) {
            >> o.sendFiles
            >> o.sendArchFiles
            >> o.sendRAMFiles
-           >> o.restoreOnOpen;
+           >> o.restoreOnOpen
+           >> o.speed;
 
     optLoadFiles(o);
     optAttemptLoad(o);
     optCheckSend(o);
+    if (o.speed != -1) {
+        setEmulatedSpeed(o.speed/10);
+    }
 }
 
 void MainWindow::ipcReceived() {

@@ -4,6 +4,7 @@
 #include <QtCore/QString>
 
 struct CEmuOpts {
+    int speed;
     bool restoreOnOpen;
     bool useUnthrottled;
     bool suppressTestDialog;

@@ -200,9 +200,16 @@ void EmuThread::setActualSpeed(int value) {
 }
 
 void EmuThread::throttleTimerWait() {
+    if (!speed) {
+        setActualSpeed(0);
+        while(!speed) {
+            QThread::usleep(10000);
+        }
+        return;
+    }
     std::chrono::duration<int, std::ratio<100, 60>> unit(1);
     std::chrono::steady_clock::duration interval(std::chrono::duration_cast<std::chrono::steady_clock::duration>
-                                                 (std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(1000000 * 100 / speed)));
+                                                (std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(1000000 * 100 / speed)));
     std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now(), next_time = lastTime + interval;
     if (throttleOn && cur_time < next_time) {
         setActualSpeed(speed);
