@@ -67,6 +67,14 @@ void MainWindow::setPortableConfig(bool state) {
     ui->buttonChangeSavedImagePath->setEnabled(!portable);
 }
 
+void MainWindow::setEnableSoftCommands(bool state) {
+    ui->checkDisableSoftCommands->blockSignals(true);
+    ui->checkDisableSoftCommands->setChecked(state);
+    ui->checkDisableSoftCommands->blockSignals(false);
+    settings->setValue(QStringLiteral("enableSoftCommands"), state);
+    enabledSoftCommands = state;
+}
+
 void MainWindow::setDebugResetTrigger(bool state) {
     ui->checkDebugResetTrigger->setChecked(state);
     settings->setValue(QStringLiteral("resetOpensDebugger"), state);

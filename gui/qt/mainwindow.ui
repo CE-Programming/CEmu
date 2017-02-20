@@ -930,87 +930,84 @@
             <number>8</number>
            </property>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_3">
-             <item>
-              <widget class="QCheckBox" name="checkSaveLoadDebug">
-               <property name="text">
-                <string>Automatically save and restore debug state</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="checkDebugResetTrigger">
-               <property name="text">
-                <string>Open debugger on reset or nmi</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer_2">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>1</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_12">
-             <item>
+            <layout class="QGridLayout" name="gridLayout_19">
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item row="1" column="0">
               <widget class="QCheckBox" name="checkDataCol">
                <property name="text">
-                <string>Data column</string>
+                <string>Show Data column</string>
                </property>
                <property name="checked">
                 <bool>true</bool>
                </property>
               </widget>
              </item>
-             <item>
+             <item row="1" column="1">
               <widget class="QCheckBox" name="checkAddSpace">
                <property name="text">
-                <string>Opcode/Operand space</string>
+                <string>Opcode / Operand space</string>
                </property>
               </widget>
              </item>
-             <item>
-              <widget class="QLabel" name="label_4">
+             <item row="2" column="0">
+              <widget class="QCheckBox" name="checkDisableSoftCommands">
                <property name="text">
-                <string>Text size:</string>
+                <string>Enable software commands</string>
                </property>
               </widget>
              </item>
-             <item>
-              <widget class="QSpinBox" name="textSize">
-               <property name="minimum">
-                <number>5</number>
-               </property>
-               <property name="maximum">
-                <number>15</number>
-               </property>
-               <property name="value">
-                <number>7</number>
+             <item row="0" column="0">
+              <widget class="QCheckBox" name="checkSaveLoadDebug">
+               <property name="text">
+                <string>Automatically save and restore debug state</string>
                </property>
               </widget>
              </item>
-             <item>
-              <spacer name="horizontalSpacer_14">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
+             <item row="0" column="1">
+              <widget class="QCheckBox" name="checkDebugResetTrigger">
+               <property name="text">
+                <string>Open debugger on reset or nmi</string>
                </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>1</height>
-                </size>
-               </property>
-              </spacer>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <layout class="QHBoxLayout" name="horizontalLayout_26">
+               <item>
+                <widget class="QLabel" name="label_4">
+                 <property name="text">
+                  <string>Text size:</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="textSize">
+                 <property name="minimum">
+                  <number>5</number>
+                 </property>
+                 <property name="maximum">
+                  <number>15</number>
+                 </property>
+                 <property name="value">
+                  <number>7</number>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_2">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
              </item>
             </layout>
            </item>

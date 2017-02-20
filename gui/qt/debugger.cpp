@@ -259,8 +259,10 @@ void MainWindow::debuggerProcessCommand(int reason, uint32_t input) {
 
     // This means the program is trying to send us a debug command. Let's see what we can do with that information
     if (reason > NUM_DBG_COMMANDS) {
-       debuggerExecuteCommand(static_cast<uint32_t>(reason-DBG_PORT_RANGE), static_cast<uint8_t>(input));
-       return;
+        if (enabledSoftCommands) {
+            debuggerExecuteCommand(static_cast<uint32_t>(reason-DBG_PORT_RANGE), static_cast<uint8_t>(input));
+        }
+        return;
     }
 
     // We hit a normal breakpoint; raise the correct entry in the port monitor table

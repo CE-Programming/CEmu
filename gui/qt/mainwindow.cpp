@@ -112,6 +112,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->checkCharging, &QCheckBox::toggled, this, &MainWindow::batteryIsCharging);
     connect(ui->sliderBattery, &QSlider::valueChanged, this, &MainWindow::batteryChangeStatus);
     connect(ui->checkAddSpace, &QCheckBox::toggled, this, &MainWindow::setSpaceDisasm);
+    connect(ui->checkDisableSoftCommands, &QCheckBox::toggled, this, &MainWindow::setEnableSoftCommands);
     connect(ui->buttonZero, &QPushButton::clicked, this, &MainWindow::debuggerZeroClockCounter);
 
     // Debugger Options
@@ -315,6 +316,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     setSpaceDisasm(settings->value(QStringLiteral("addDisasmSpace"), false).toBool());
     setUIEditMode(settings->value(QStringLiteral("uiMode"), true).toBool());
     setDebugResetTrigger(settings->value(QStringLiteral("resetOpensDebugger"), false).toBool());
+    setEnableSoftCommands(settings->value(QStringLiteral("enableSoftCommands"), true).toBool());
     ui->flashBytes->setValue(settings->value(QStringLiteral("flashBytesPerLine"), 8).toInt());
     ui->ramBytes->setValue(settings->value(QStringLiteral("ramBytesPerLine"), 8).toInt());
     ui->memBytes->setValue(settings->value(QStringLiteral("memBytesPerLine"), 8).toInt());
@@ -1228,7 +1230,7 @@ void MainWindow::updateCRCParamsFromPreset(int comboBoxIndex) {
 
 void MainWindow::refreshCRC() {
     uint32_t tmp_start = 0;
-    size_t crc_size = 0;
+    int32_t crc_size = 0;
     uint8_t* start;
     char *endptr1, *endptr2; // catch strtoul issues
 
