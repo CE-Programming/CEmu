@@ -99,7 +99,7 @@ static std::string strW(uint32_t data) {
         }
         item = disasm.map.find(cpu.registers.MBASE<<16|data);
         if (item != disasm.map.end()) {
-            return item->second + " & 0FFFFh";
+            return item->second + " & $FFFF";
         }
         sprintf(tmpbuf,"$%04X", data);
     }
