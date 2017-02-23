@@ -85,11 +85,24 @@ static const std::string im_table[] = {
 };
 
 static std::string strW(uint32_t data) {
-    map_t::const_iterator item = disasm.map.find(data);
-    if (item != disasm.map.end()) {
-        return item->second;
+    map_t::const_iterator item;
+    if (disasm.il) {
+        item = disasm.map.find(data);
+        if (item != disasm.map.end()) {
+            return item->second;
+        }
+        sprintf(tmpbuf,"$%06X", data);
+    } else {
+        item = disasm.map.find(data);
+        if (item != disasm.map.end()) {
+            return item->second;
+        }
+        item = disasm.map.find(cpu.registers.MBASE<<16|data);
+        if (item != disasm.map.end()) {
+            return item->second + " & 0FFFFh";
+        }
+        sprintf(tmpbuf,"$%04X", data);
     }
-    sprintf(tmpbuf,"$%0*X", (disasm.il ? 6 : 4), data);
     return std::string(tmpbuf);
 }
 
