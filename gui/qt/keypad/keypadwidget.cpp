@@ -224,7 +224,11 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
 #else
     addKey(new NumKey{m_config, Label("8"), LabelFrEn("vₙ", "v"), Label("P"), is83 * 2, is83 * 2});
 #endif
+#ifdef Q_OS_MACX
+    addKey(new OtherKey{m_config, 3, Label(" ("), Label("{"), Label("K"), is83 * 2, is83});
+#else
     addKey(new OtherKey{m_config, 3, Label("("), Label("{"), Label("K"), is83 * 2, is83});
+#endif
 #ifdef Q_OS_MACX
     addKey(new OtherKey{m_config, is83 ? 12 : 9, LabelFrEn("résol", "cos"), LabelFrEn("apps", "cos⁻¹"), Label("F"), is83 * 2, is83 * 2});
 #else
@@ -246,7 +250,11 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
 #else
     addKey(new NumKey{m_config, Label("9"), LabelFrEn("wₙ", "w"), Label("Q"), is83 * 2, is83 * 3});
 #endif
+#ifdef Q_OS_MACX
+    addKey(new OtherKey{m_config, 3, Label(" )"), Label("}"), Label("L"), is83 * 2, is83});
+#else
     addKey(new OtherKey{m_config, 3, Label(")"), Label("}"), Label("L"), is83 * 2, is83});
+#endif
 #ifdef Q_OS_WIN
     addKey(new OtherKey{m_config, 9, LabelFrEn("▫/▫", "tan"), LabelFrEn("∫⸋|⸋d▫‣", "tan⁻¹"), Label("G"), is83 * 2, is83 * 2});
 #elif defined(Q_OS_MACX)

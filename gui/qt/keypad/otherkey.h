@@ -6,7 +6,13 @@
 class OtherKey : public RectKey {
 public:
     OtherKey(KeyConfig &config, QString secondText, int right)
-        : OtherKey{config, 13, QStringLiteral("^"), secondText, QStringLiteral("H"), right, 0, 12} {
+        : OtherKey{config, 13,
+#ifdef Q_OS_MACX
+    QStringLiteral("  ^"),
+#else
+    QStringLiteral("^"),
+#endif
+        secondText, QStringLiteral("H"), right, 0, 12} {
         m_labelFont.setBold(false);
     }
     OtherKey(KeyConfig &config, int labelWidth,
