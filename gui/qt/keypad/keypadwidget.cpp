@@ -166,134 +166,77 @@ void KeypadWidget::setType(bool is83, unsigned color_scheme) {
 #define Label(str)          QStringLiteral(str)
 #endif
 
+#ifdef Q_OS_MACX
+    bool isMac = true;
+#else
+    bool isMac = false;
+#endif
+#ifdef Q_OS_WIN
+    bool isWin = true;
+#else
+    bool isWin = false;
+#endif
+
 #define LabelFrEn(fr, en)   (is83 ? Label(fr) : Label(en))
 
     addKey(new GraphKey{m_config, LabelFrEn("graphe", "graph"), Label("table"), Label("f5"), 15, 2, 2 - is83});
-    addKey(new GraphKey{m_config, Label("trace"), LabelFrEn("calculs", "calc"), Label("f4"), is83 ? 10 : 12, 2 + is83 * 2, 1});
-    addKey(new GraphKey{m_config, Label("zoom"), Label("format"), Label("f3"), is83 ? 11 : 13, 2 + is83 * 2, is83 ? 1 : 5});
-    addKey(new GraphKey{m_config, LabelFrEn("fenêtre", "window"), LabelFrEn("déf table", "tblset"),
-                        Label("f2"), 15 - is83, is83 ? 6 : 2, 4 - is83});
-    addKey(new GraphKey{m_config, is83 ? Label("f(x)") : Label("y="), LabelFrEn("graph stats", "stat plot"),
-                        Label("f1"), 6 + is83, is83 ? 6 : 2, is83 ? 10 : 8});
+    addKey(new GraphKey{m_config, Label("trace"), LabelFrEn("calculs", "calc"), Label("f4"), 12, 2 + is83 * 2, 1});
+    addKey(new GraphKey{m_config, Label("zoom"), Label("format"), Label("f3"), 13, 2 + is83 * 2, is83 ? 1 : 5});
+    addKey(new GraphKey{m_config, LabelFrEn("fenêtre", "window"), LabelFrEn("déf table", "tblset"), Label("f2"), 17 - is83, is83 ? 8 : 2, 4 - is83});
+    addKey(new GraphKey{m_config, is83 ? Label("f(x)") : Label("y="), LabelFrEn("graph stats", "stat plot"), Label("f1"), 6 + is83, is83 ? 6 : 2, is83 ? 10 : 8});
 
     addKey(new SecondKey{m_config, LabelFrEn("2nde", "2nd")});
 
-#ifdef Q_OS_MACX
-    addKey(new OtherKey{m_config, 16 - is83 * 2, 45, 37, Label(" mode"), LabelFrEn("quitter", "quit")});
-#else
-    addKey(new OtherKey{m_config, 16 - is83 * 2, 45, 37, Label("mode"), LabelFrEn("quitter", "quit")});
-#endif
+    addKey(new OtherKey{m_config, 16 - is83 * 2, 45, 37, isMac ? Label(" mode") : Label("mode"), LabelFrEn("quitter", "quit")});
     addKey(new OtherKey{m_config, is83 ? 14 : 8, 72, 37, LabelFrEn("suppr", "del"), LabelFrEn("insérer", "ins")});
     addKey(new OtherKey{m_config, 7, Label("on"), Label("off")});
     addKey(new OtherKey{m_config, 13, Label("sto→"), LabelFrEn("rappel", "rcl"), Label("X"), is83 * 2, is83 * 3});
-#ifdef Q_OS_MACX
-    addKey(new OtherKey{m_config, 7, Label(" ln"), Label("eˣ"), Label("S"), is83 * 2, is83 * 2});
-    addKey(new OtherKey{m_config, 9, Label(" log"), Label("10ˣ"), Label("N"), is83 * 2, is83 * 3});
-#else
-    addKey(new OtherKey{m_config, 7, Label("ln"), Label("eˣ"), Label("S"), is83 * 2, is83 * 2});
-    addKey(new OtherKey{m_config, 9, Label("log"), Label("10ˣ"), Label("N"), is83 * 2, is83 * 3});
-#endif
+    addKey(new OtherKey{m_config, 7, isMac ? Label(" ln") : Label("ln"), Label("eˣ"), Label("S"), is83 * 2, is83 * 2});
+    addKey(new OtherKey{m_config, 9, isMac ? Label(" log") : Label("log"), Label("10ˣ"), Label("N"), is83 * 2, is83 * 3});
     addKey(new OtherKey{m_config, 6, Label("x²"), Label("√‾‾"), Label("I"), is83, is83 * 3});
     addKey(new OtherKey{m_config, is83 ? 6 : 8, LabelFrEn("◀ ▶", "x⁻¹"), LabelFrEn("angle", "matrix"), Label("D"), is83 * 2, is83 ? 2 : 4});
-#ifdef Q_OS_MACX
-    addKey(new OtherKey{m_config, 14, Label(" math"), LabelFrEn("tests", "test"), Label("A"), is83 * 2, is83 * 2});
-#else
-    addKey(new OtherKey{m_config, 14, Label("math"), LabelFrEn("tests", "test"), Label("A"), is83 * 2, is83 * 2});
-#endif
+    addKey(new OtherKey{m_config, 14, isMac ? Label(" math") : Label("math"), LabelFrEn("tests", "test"), Label("A"), is83 * 2, is83 * 2});
 
     addKey(new AlphaKey{m_config, LabelFrEn("verr A", "A-lock")});
 
-#ifdef Q_OS_MACX
     addKey(new NumKey{m_config, Label("0"), Label("catalog"), Label("_"), is83 * 2, 6});
-#else
-    addKey(new NumKey{m_config, Label("0"), Label("catalog"), Label("_"), is83 * 2, 6});
-#endif
     addKey(new NumKey{m_config, Label("1"), Label("L1"), Label("Y"), is83 * 2, is83 ? 3 : 1});
     addKey(new NumKey{m_config, Label("4"), Label("L4"), Label("T"), is83 * 2, is83 ? 3 : 1});
 
-#if defined(Q_OS_WIN) || defined(Q_OS_MACX)
-    addKey(new NumKey{m_config, Label("7"), LabelFrEn("un", "u"), Label("O"), is83 * 2, 1 + is83});
-#else
-    addKey(new NumKey{m_config, Label("7"), LabelFrEn("uₙ", "u"), Label("O"), is83 * 2, 1 + is83});
-#endif
+    addKey(new NumKey{m_config, Label("7"), (isMac || isWin) ? LabelFrEn("un", "u") : LabelFrEn("uₙ", "u"), Label("O"), is83 * 2, 1 + is83});
     addKey(new OtherKey{m_config, 2, Label(","), Label("EE"), Label("J"), is83 * 2, 1 + is83});
     addKey(new OtherKey{m_config, 8 + is83, LabelFrEn("trig", "sin"), LabelFrEn("π", "sin⁻¹"), Label("E"), is83 * 2, 1});
-#ifdef Q_OS_MACX
-    addKey(new OtherKey{m_config, 14 + is83, LabelFrEn("matrice ", "  apps"), LabelFrEn("x⁻¹", "angle"), Label("B"), is83 * 2, 1});
-#else
-    addKey(new OtherKey{m_config, 14 + is83, LabelFrEn("matrice", "apps"), LabelFrEn("x⁻¹", "angle"), Label("B"), is83 * 2, 1});
-#endif
-#ifdef Q_OS_WIN
-    addKey(new OtherKey{m_config, 15 + is83, Label("X,T,θ,n"), LabelFrEn("échanger", "link"), QString{}, is83 * 2, is83 * 3});
-#elif defined(Q_OS_MACX)
-    addKey(new OtherKey{m_config, 15 + is83, Label(" X,T,θ,n "), LabelFrEn("échanger", "link"), QString{}, 1, 1});
-#else
-    addKey(new OtherKey{m_config, 15 + is83, Label("X,T,θ,n"), LabelFrEn("échanger", "link"), QString{}, 1, 1});
-#endif
+    addKey(new OtherKey{m_config, 14 + is83*5, isMac ? LabelFrEn("matrice ", "  apps") : LabelFrEn("matrice", "apps"), LabelFrEn("x⁻¹", "angle"), Label("B"), is83 * 2, 1});
+
+    addKey(new OtherKey{m_config, 15, (isWin || isMac) ? Label("X,T,θ,n") : Label(" X,T,θ,n "), LabelFrEn("échanger", "link"), QString{}, (isWin || isMac) ? is83*2 : 1, (isWin || isMac) ? is83*3 : 1});
     addKey(new NumKey{m_config, is83 * 2});
     addKey(new NumKey{m_config, Label("2"), Label("L2"), Label("Z"), is83 * 2, is83 * 3});
     addKey(new NumKey{m_config, Label("5"), Label("L5"), Label("U"), is83 * 2, is83 * 3});
-#if defined(Q_OS_WIN) || defined(Q_OS_MACX)
-    addKey(new NumKey{m_config, Label("8"), LabelFrEn("vn", "v"), Label("P"), is83 * 2, is83 * 2});
-#else
-    addKey(new NumKey{m_config, Label("8"), LabelFrEn("vₙ", "v"), Label("P"), is83 * 2, is83 * 2});
-#endif
-#ifdef Q_OS_MACX
-    addKey(new OtherKey{m_config, 3, Label(" ("), Label("{"), Label("K"), is83 * 2, is83});
-#else
-    addKey(new OtherKey{m_config, 3, Label("("), Label("{"), Label("K"), is83 * 2, is83});
-#endif
-#ifdef Q_OS_MACX
+    addKey(new NumKey{m_config, Label("8"), (isMac || isWin) ? LabelFrEn("vn", "v") : LabelFrEn("vₙ", "v"), Label("P"), is83 * 2, is83 * 2});
+
+    addKey(new OtherKey{m_config, 3, isMac ? Label(" (") : Label("("), Label("{"), Label("K"), is83 * 2, is83});
     addKey(new OtherKey{m_config, is83 ? 12 : 9, LabelFrEn("résol", "cos"), LabelFrEn("apps", "cos⁻¹"), Label("F"), is83 * 2, is83 * 2});
-#else
-    addKey(new OtherKey{m_config, is83 ? 12 : 9, LabelFrEn("résol", "cos"), LabelFrEn("apps", "cos⁻¹"), Label("F"), is83 * 2, is83 * 2});
-#endif
-#ifdef Q_OS_MACX
-    addKey(new OtherKey{m_config, 14, Label(" prgm"), LabelFrEn("dessin", "draw"), Label("C"), is83 * 2, is83 * 2});
-    addKey(new OtherKey{m_config, 11 + is83, LabelFrEn("stats", " stat"), LabelFrEn("listes", "list")});
-#else
-    addKey(new OtherKey{m_config, 14, Label("prgm"), LabelFrEn("dessin", "draw"), Label("C"), is83 * 2, is83 * 2});
-    addKey(new OtherKey{m_config, 11 + is83, LabelFrEn("stats", "stat"), LabelFrEn("listes", "list")});
-#endif
+    addKey(new OtherKey{m_config, 14, isMac ? Label(" prgm") : Label("prgm"), LabelFrEn("dessin", "draw"), Label("C"), is83 * 2, is83 * 2});
+    addKey(new OtherKey{m_config, 11 + is83, isMac ? LabelFrEn("stats", " stat") : LabelFrEn("stats", "stat"), LabelFrEn("listes", "list")});
 
     addKey(new NumKey{m_config, Label("(-)"), LabelFrEn("rép", "ans"), Label("?"), is83 * 2, is83 * 3, 11});
     addKey(new NumKey{m_config, Label("3"), Label("L3"), Label("θ"), is83 * 2, is83 * 3});
     addKey(new NumKey{m_config, Label("6"), Label("L6"), Label("V"), is83 * 2, is83 * 3});
-#if defined(Q_OS_WIN) || defined(Q_OS_MACX)
-    addKey(new NumKey{m_config, Label("9"), LabelFrEn("wn", "w"), Label("Q"), is83 * 2, is83 * 3});
-#else
-    addKey(new NumKey{m_config, Label("9"), LabelFrEn("wₙ", "w"), Label("Q"), is83 * 2, is83 * 3});
-#endif
-#ifdef Q_OS_MACX
-    addKey(new OtherKey{m_config, 3, Label(" )"), Label("}"), Label("L"), is83 * 2, is83});
-#else
-    addKey(new OtherKey{m_config, 3, Label(")"), Label("}"), Label("L"), is83 * 2, is83});
-#endif
-#ifdef Q_OS_WIN
-    addKey(new OtherKey{m_config, 9, LabelFrEn("▫/▫", "tan"), LabelFrEn("∫⸋|⸋d▫‣", "tan⁻¹"), Label("G"), is83 * 2, is83 * 2});
-#elif defined(Q_OS_MACX)
+    addKey(new NumKey{m_config, Label("9"), (isMac || isWin) ? LabelFrEn("wn", "w") : LabelFrEn("wₙ", "w"), Label("Q"), is83 * 2, is83 * 3});
+
+    addKey(new OtherKey{m_config, 3, isMac ? Label(" )") : Label(")"), Label("}"), Label("L"), is83 * 2, is83});
+
     addKey(new OtherKey{m_config, 9, LabelFrEn("▫/▫", "tan"), LabelFrEn("∫⸋d▫‣", "tan⁻¹"), Label("G"), is83 * 2, is83 * 2});
-#else
-    addKey(new OtherKey{m_config, 9, LabelFrEn("▫/▫", "tan"), LabelFrEn("∫⸋̻◻d▫‣", "tan⁻¹"), Label("G"), is83 * 2, is83 * 2});
-#endif
-    addKey(new OtherKey{m_config, is83 ? 9 : 12, LabelFrEn("var", "vars"), LabelFrEn("distrib", "distr"), Label(""), 0, is83});
+    addKey(new OtherKey{m_config, is83 ? 8 : 12, LabelFrEn("var", "vars"), LabelFrEn("distrib", "distr"), Label(""), 0, is83});
     m_config.next();
-#ifdef Q_OS_MACX
-    addKey(new OperKey{m_config, LabelFrEn("  entrer", "  enter"), LabelFrEn("précéd", "entry"), is83 ? QString{} : Label("solve"), 6, is83 ? 0 : 5, {16, 5}});
-#else
-    addKey(new OperKey{m_config, LabelFrEn("entrer", "enter"), LabelFrEn("précéd", "entry"), is83 ? QString{} : Label("solve"), 6, is83 ? 0 : 5, {16, 5}});
-#endif
-    addKey(new OperKey{m_config, Label("+"), LabelFrEn("mém", "mem"), Label("“"), is83 * 2, is83 * 5});
+    addKey(new OperKey{m_config, isMac ? LabelFrEn("  entrer", "  enter") : LabelFrEn("entrer", "enter"), LabelFrEn("précéd", "entry"), is83 ? QString{} : Label("solve"), 6, is83 ? 0 : 5, {16, 5}});
+    addKey(new OperKey{m_config, isMac ? Label(" + ") : Label("+"), LabelFrEn("mém", "mem"), Label("“"), is83 * 2, is83 * 5});
     addKey(new OperKey{m_config, Label("—"), Label("]"), Label("W"), is83 * 2, is83 * 2});
-    addKey(new OperKey{m_config, Label("×"), Label("["), Label("R"), is83 * 2, is83 * 2});
+    addKey(new OperKey{m_config, isMac ? Label(" × ") : Label("×"), Label("["), Label("R"), is83 * 2, is83 * 2});
     addKey(new OperKey{m_config, Label("÷"), Label("e"), Label("M"), is83 * 2, is83 * 2});
 
     addKey(new OtherKey{m_config, is83 ? QString{} : Label("π"), is83 * 2});
-#ifdef Q_OS_MACX
-    addKey(new OtherKey{m_config, 15, LabelFrEn(" annul", "  clear")});
-#else
-    addKey(new OtherKey{m_config, 15, LabelFrEn("annul", "clear")});
-#endif
+    addKey(new OtherKey{m_config, 15, isMac ? LabelFrEn(" annul", "  clear") : LabelFrEn("annul", "clear")});
 
 #undef Label
 #undef LabelFrEn

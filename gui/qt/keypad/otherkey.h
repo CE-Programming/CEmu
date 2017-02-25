@@ -8,7 +8,7 @@ public:
     OtherKey(KeyConfig &config, QString secondText, int right)
         : OtherKey{config, 13,
 #ifdef Q_OS_MACX
-    QStringLiteral("  ^"),
+    QStringLiteral("  ^ "),
 #else
     QStringLiteral("^"),
 #endif
@@ -27,7 +27,7 @@ public:
         : RectKey{config, {x - left, y - 9, left + 18 + right, 9}, {x, y, 18, 12},
                   {labelWidth, labelHeight}, 4, 4, 4, 4,
                   config.otherColor, config.textColor, labelText, secondText, alphaText,
-                  Qt::AlignHCenter | ((labelText == "^" || labelText == "  ^") ? Qt::AlignTop : Qt::AlignVCenter),
+                  Qt::AlignHCenter | (labelText.contains("^") ? Qt::AlignTop : Qt::AlignVCenter),
                   Qt::AlignVCenter | (alphaText.isNull() ? labelText == "on" ?
                   Qt::AlignRight : Qt::AlignHCenter : Qt::AlignLeft)} { }
 };
