@@ -60,7 +60,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>3</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -4719,6 +4719,9 @@ QPushButton:pressed {
                      <family>MS Shell Dlg 2</family>
                      <pointsize>9</pointsize>
                     </font>
+                   </property>
+                   <property name="toolTip">
+                    <string/>
                    </property>
                    <property name="inputMask">
                     <string notr="true">&gt;HHHH</string>

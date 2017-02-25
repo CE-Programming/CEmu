@@ -36,6 +36,7 @@ public:
 public slots:
     // Misc.
     virtual void closeEvent(QCloseEvent*) Q_DECL_OVERRIDE;
+    virtual bool eventFilter(QObject*, QEvent*) Q_DECL_OVERRIDE;
 
     // Drag & Drop
     virtual void dropEvent(QDropEvent*) Q_DECL_OVERRIDE;
@@ -223,6 +224,7 @@ private:
     bool watchpointAdd(QString, uint32_t, uint8_t, unsigned);
 
     void screenContextMenu(const QPoint &);
+    void updateLabels();
     void equatesAddDialog();
     void equatesAddFile(QString);
     void equatesAddEquate(QString, QString);

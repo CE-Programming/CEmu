@@ -611,6 +611,7 @@ void MainWindow::saved(bool success) {
 
 void MainWindow::dropEvent(QDropEvent *e) {
     sendingHandler.dropOccured(e, LINK_FILE);
+    equatesRefresh();
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent *e) {
@@ -919,6 +920,7 @@ void MainWindow::selectFiles() {
     QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptOpen, tr("TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca *.8cg *.8ci *.8ek);;All Files (*.*)"));
 
     sendingHandler.sendFiles(fileNames, LINK_FILE);
+    equatesRefresh();
 }
 
 void MainWindow::variableClicked(QTableWidgetItem *item) {
@@ -1189,6 +1191,7 @@ void MainWindow::launchTest() {
     }
 
     sendingHandler.sendFiles(filesList, LINK_FILE);
+    equatesRefresh();
     guiDelay(100);
 
     // Follow the sequence
