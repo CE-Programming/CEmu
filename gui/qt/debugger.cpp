@@ -1381,9 +1381,25 @@ void MainWindow::gotoPressed() {
 // ------------------------------------------------
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
-    (void)(obj);
-    if(e->type() == QEvent::MouseMove) {
-
+    if(e->type() == QEvent::MouseMove && inDebugger) {
+        QString obj_name = obj->objectName();
+        if (obj_name == "afregView") ui->afregView->setToolTip(QStringLiteral("a: ") +
+                                                               QString::number(ui->afregView->text().toUInt(Q_NULLPTR, 16)>>8) +
+                                                               QStringLiteral(" f: ") +
+                                                               QString::number(ui->afregView->text().toUInt(Q_NULLPTR, 16)&255));
+        if (obj_name == "hlregView") ui->hlregView->setToolTip(QString::number(ui->hlregView->text().toUInt(Q_NULLPTR, 16)));
+        if (obj_name == "deregView") ui->deregView->setToolTip(QString::number(ui->deregView->text().toUInt(Q_NULLPTR, 16)));
+        if (obj_name == "bcregView") ui->bcregView->setToolTip(QString::number(ui->bcregView->text().toUInt(Q_NULLPTR, 16)));
+        if (obj_name == "ixregView") ui->ixregView->setToolTip(QString::number(ui->ixregView->text().toUInt(Q_NULLPTR, 16)));
+        if (obj_name == "iyregView") ui->iyregView->setToolTip(QString::number(ui->iyregView->text().toUInt(Q_NULLPTR, 16)));
+        if (obj_name == "af_regView") ui->af_regView->setToolTip(QStringLiteral("a': ") +
+                                                                 QString::number(ui->af_regView->text().toUInt(Q_NULLPTR, 16)>>8) +
+                                                                 QStringLiteral(" f': ") +
+                                                                 QString::number(ui->af_regView->text().toUInt(Q_NULLPTR, 16)&255));
+        if (obj_name == "hl_regView") ui->hl_regView->setToolTip(QString::number(ui->hl_regView->text().toUInt(Q_NULLPTR, 16)));
+        if (obj_name == "de_regView") ui->de_regView->setToolTip(QString::number(ui->de_regView->text().toUInt(Q_NULLPTR, 16)));
+        if (obj_name == "bc_regView") ui->bc_regView->setToolTip(QString::number(ui->bc_regView->text().toUInt(Q_NULLPTR, 16)));
+        if (obj_name == "rregView") ui->rregView->setToolTip(QString::number(ui->rregView->text().toUInt(Q_NULLPTR, 16)));
     }
     return false;
 }
