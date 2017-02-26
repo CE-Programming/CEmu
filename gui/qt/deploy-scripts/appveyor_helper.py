@@ -552,7 +552,7 @@ def upload_snapshot(filename, cur_timestamp, snap_base_fn, bintray_api_username,
     print("   -> Computing checksums before uploading...")
     file_md5sum = generate_file_md5(filename)
     file_sha1sum = generate_file_sha1(filename)
-    file_sha256sum = generate_file_sha1(filename)
+    file_sha256sum = generate_file_sha256(filename)
     
     print("   -> MD5    = %s" % file_md5sum)
     print("   -> SHA1   = %s" % file_sha1sum)
