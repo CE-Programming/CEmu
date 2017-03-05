@@ -166,7 +166,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->actionCheckForUpdates, &QAction::triggered, this, [=](){ this->checkForUpdates(true); });
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::showAbout);
     connect(ui->actionAboutQt, &QAction::triggered, qApp, &QApplication::aboutQt);
-    
+
     // Other GUI actions
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
     connect(ui->scaleLCD, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setLCDScale);
@@ -419,6 +419,14 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     ui->de_regView->installEventFilter(this);
     ui->rregView->installEventFilter(this);
     ui->lcdWidget->setFocus();
+    if (!settings->value(QStringLiteral("firstrun"), false).toBool()) {
+        QMessageBox::information(this, tr("Information"), tr("Welcome!\nCEmu uses a customizable dock-style interface. "
+                                                             "Drag and drop to move tabs and windows around on the screen, "
+                                                             "and choose which docks are available in the 'Docks' menu in the topmost bar. "
+                                                             "Be sure that 'Enable UI edit mode' is selected when laying out your interface. "
+                                                             "Enjoy!"));
+        settings->setValue(QStringLiteral("firstrun"), true);
+    }
 }
 
 void MainWindow::toggleKeyHistory() {

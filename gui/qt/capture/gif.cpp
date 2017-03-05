@@ -47,7 +47,7 @@ void gif_new_frame() {
         return;
     }
 
-    int lastGifTime = gifTime;
+    unsigned int lastGifTime = gifTime;
     gifTime = (frame * 100 + 32) / 64;
 
     if (!gif_write_frame(&writer, gifTime - lastGifTime)) {
@@ -82,7 +82,7 @@ bool gif_optimize(const char *in_name, const char *out_name) {
     gfs = Gif_FullReadFile(in, GIF_READ_COMPRESSED, 0, 0);
     Gif_InitCompressInfo(&gif_write_info);
 
-    if (!gfs || (Gif_ImageCount(gfs) == 0 && gfs->errors > 0)) {
+    if (!gfs || (!Gif_ImageCount(gfs) && gfs->errors > 0)) {
       fprintf(stdout,"open error");
       Gif_DeleteStream(gfs);
       ret = false;

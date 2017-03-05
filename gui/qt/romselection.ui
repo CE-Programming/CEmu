@@ -38,6 +38,9 @@
    <iconset resource="resources.qrc">
     <normaloff>:/icons/resources/icons/icon.png</normaloff>:/icons/resources/icons/icon.png</iconset>
   </property>
+  <property name="sizeGripEnabled">
+   <bool>false</bool>
+  </property>
   <property name="modal">
    <bool>true</bool>
   </property>
