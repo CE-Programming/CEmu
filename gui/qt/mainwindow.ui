@@ -2254,7 +2254,7 @@ QPushButton:pressed {
               </column>
               <column>
                <property name="text">
-                <string>Break Exec</string>
+                <string>Enabled</string>
                </property>
               </column>
              </widget>

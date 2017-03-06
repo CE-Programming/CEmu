@@ -973,10 +973,16 @@ void MainWindow::watchpointGUIAdd() {
         watchpointRemoveSelectedRow();
     }
 
+    int32_t base_address = disasm.base_address;
+    int32_t new_address = disasm.new_address;
+
     disasm.base_address = address;
     disasmHighlight.hit_read_watchpoint = false;
     disasmHighlight.hit_write_watchpoint = false;
     disassembleInstruction();
+
+    disasm.base_address = base_address;
+    disasm.new_address = new_address;
 
     c.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
     c.setPosition(c.position()+7, QTextCursor::MoveAnchor);
