@@ -394,7 +394,7 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
     addr &= 0xFFFFFF;
 #ifdef DEBUG_SUPPORT
     if (debugger.data.block[addr] & DBG_READ_WATCHPOINT) {
-        open_debugger(HIT_READ_BREAKPOINT, addr);
+        open_debugger(HIT_READ_WATCHPOINT, addr);
     }
 #endif
     // reads from protected memory return 0
@@ -440,7 +440,7 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
 
 #ifdef DEBUG_SUPPORT
     if ((debugger.data.block[addr] &= ~(DBG_INST_START_MARKER | DBG_INST_MARKER)) & DBG_WRITE_WATCHPOINT) {
-        open_debugger(HIT_WRITE_BREAKPOINT, addr);
+        open_debugger(HIT_WRITE_WATCHPOINT, addr);
     }
 #endif
 

@@ -818,7 +818,7 @@ void cpu_nmi(void) {
     cpu.next = cpu.cycles;
 #ifdef DEBUG_SUPPORT
     if (debugger.resetOpensDebugger) {
-        open_debugger(DBG_USER, cpu.registers.PC);
+        open_debugger(DBG_NMI_TRIGGERED, cpu.registers.PC);
     }
 #endif
 }

@@ -258,50 +258,55 @@ void MainWindow::debuggerProcessCommand(int reason, uint32_t input) {
     int row = 0;
 
     // This means the program is trying to send us a debug command. Let's see what we can do with that information
-    if (reason > NUM_DBG_COMMANDS) {
+    if (reason >= NUM_DBG_COMMANDS) {
         if (enabledSoftCommands) {
             debuggerExecuteCommand(static_cast<uint32_t>(reason-DBG_PORT_RANGE), static_cast<uint8_t>(input));
         }
         return;
     }
 
-    // We hit a normal breakpoint; raise the correct entry in the port monitor table
-    if (reason == HIT_EXEC_BREAKPOINT) {
-        QString input3String = int2hex(input, 6);
+    QString inputString, type, text = QStringLiteral("");
 
-        // find the correct entry
-        while (ui->breakpointView->item(row++, BREAK_ADDR_LOC)->text() != input3String);
+    switch (reason) {
+        case HIT_EXEC_BREAKPOINT:
+            inputString = int2hex(input, 6);
 
-        ui->breakChangeLabel->setText(input3String);
-        ui->breakTypeLabel->setText(tr("Executed"));
-        ui->breakpointView->selectRow(row-1);
-    }
+            while (ui->breakpointView->item(row++, BREAK_ADDR_LOC)->text() != inputString);
 
-    else if (reason == HIT_READ_BREAKPOINT || reason == HIT_WRITE_BREAKPOINT) {
-        QString input3String = int2hex(input, 6);
+            text = tr("Hit breakpoint ") + inputString + QStringLiteral(" (") +
+                    ui->breakpointView->item(row-1, BREAK_LABEL_LOC)->text() + QStringLiteral(")");
+            break;
+        case HIT_READ_WATCHPOINT:
+        case HIT_WRITE_WATCHPOINT:
+            inputString = int2hex(input, 6);
+            type = (reason == HIT_READ_WATCHPOINT) ? tr("read") : tr("write");
+            text = tr("Hit ") + type + tr(" watchpoint ") + inputString;
 
-        // find the correct entry
-        while (ui->watchpointView->item(row++, BREAK_ADDR_LOC)->text() != input3String);
+            while (ui->watchpointView->item(row++, WATCH_ADDR_LOC)->text() != inputString);
 
-        ui->watchChangeLabel->setText(input3String);
-        ui->watchTypeLabel->setText((reason == HIT_READ_BREAKPOINT) ? tr("Read") : tr("Write"));
-        ui->watchpointView->selectRow(row-1);
-        memUpdate(input);
-    }
-
-    // We hit a port read or write; raise the correct entry in the port monitor table
-    else if (reason == HIT_PORT_READ_BREAKPOINT || reason == HIT_PORT_WRITE_BREAKPOINT) {
-        QString input2String = int2hex(input, 4);
-
-        // find the correct entry
-        while (ui->portView->item(row++, 0)->text() != input2String);
-
-        ui->portChangeLabel->setText(input2String);
-        ui->portTypeLabel->setText((reason == HIT_PORT_READ_BREAKPOINT) ? tr("Read") : tr("Write"));
-        ui->portView->selectRow(row-1);
+            text = tr("Hit ") + type + tr(" watchpoint ") + inputString + QStringLiteral(" (") +
+                    ui->watchpointView->item(row-1, WATCH_LABEL_LOC)->text() + QStringLiteral(")");
+            memUpdate(input);
+            break;
+        case HIT_PORT_READ_WATCHPOINT:
+        case HIT_PORT_WRITE_WATCHPOINT:
+            inputString = int2hex(input, 4);
+            type = (reason == HIT_READ_WATCHPOINT) ? tr("Read") : tr("Wrote");
+            text = type + tr(" port ") + inputString;
+            break;
+        case DBG_NMI_TRIGGERED:
+            text = tr("NMI triggered");
+            break;
+        case DBG_WATCHDOG_TIMEOUT:
+            text = tr("Watchdog timer caused reset");
+            break;
+        default:
+            debuggerRaise();
+            return;
     }
 
     // Checked everything, now we should raise the debugger
+    ui->debuggerLabel->setText(text);
     debuggerRaise();
 }
 
@@ -310,7 +315,7 @@ void MainWindow::debuggerUpdateChanges() {
         return;
     }
 
-    /* Update all the changes in the core */
+    // Update all the changes in the core
     cpu.registers.AF = static_cast<uint16_t>(hex2int(ui->afregView->text()));
     cpu.registers.HL = static_cast<uint32_t>(hex2int(ui->hlregView->text()));
     cpu.registers.DE = static_cast<uint32_t>(hex2int(ui->deregView->text()));
@@ -368,6 +373,8 @@ void MainWindow::debuggerUpdateChanges() {
     set_reset(ui->checkBEPO->isChecked(), 0x400, lcd.control);
     set_reset(ui->checkBEBO->isChecked(), 0x200, lcd.control);
     set_reset(ui->checkBGR->isChecked(), 0x100, lcd.control);
+
+    ui->debuggerLabel->clear();
 }
 
 void MainWindow::debuggerGUISetState(bool state) {
@@ -377,18 +384,9 @@ void MainWindow::debuggerGUISetState(bool state) {
     } else {
         ui->buttonRun->setText(tr("Stop"));
         ui->buttonRun->setIcon(stopIcon);
-        ui->portChangeLabel->clear();
-        ui->portTypeLabel->clear();
-        ui->breakChangeLabel->clear();
-        ui->breakTypeLabel->clear();
+        ui->debuggerLabel->clear();
         ui->opView->clear();
         ui->vatView->clear();
-        ui->portChangeLabel->clear();
-        ui->portTypeLabel->clear();
-        ui->breakChangeLabel->clear();
-        ui->breakTypeLabel->clear();
-        ui->watchChangeLabel->clear();
-        ui->watchTypeLabel->clear();
     }
     setReceiveState(false);
 

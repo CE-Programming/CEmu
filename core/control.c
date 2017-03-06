@@ -73,7 +73,7 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
                 cpuEvents |= EVENT_RESET;
 #ifdef DEBUG_SUPPORT
                 if (debugger.resetOpensDebugger) {
-                    open_debugger(DBG_USER, cpu.registers.PC);
+                    open_debugger(DBG_MISC_RESET, cpu.registers.PC);
                 }
 #endif
             }
@@ -135,7 +135,7 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
                 gui_console_printf("[CEmu] Reset caused by entering sleep mode.\n", cpu.registers.PC);
 #ifdef DEBUG_SUPPORT
                 if (debugger.resetOpensDebugger) {
-                    open_debugger(DBG_USER, cpu.registers.PC);
+                    open_debugger(DBG_MISC_RESET, cpu.registers.PC);
                 }
 #endif
             }

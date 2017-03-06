@@ -24,7 +24,7 @@ static void watchdog_event(int index) {
             cpuEvents |= EVENT_RESET;
 #ifdef DEBUG_SUPPORT
             if (debugger.resetOpensDebugger) {
-                open_debugger(DBG_USER, cpu.registers.PC);
+                open_debugger(DBG_WATCHDOG_TIMEOUT, cpu.registers.PC);
             }
 #endif
         }

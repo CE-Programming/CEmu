@@ -18,7 +18,7 @@ uint8_t port_peek_byte(uint16_t address) {
 uint8_t port_read_byte(uint16_t address) {
 #ifdef DEBUG_SUPPORT
     if (debugger.data.ports[address] & DBG_PORT_READ) {
-        open_debugger(HIT_PORT_READ_BREAKPOINT, address);
+        open_debugger(HIT_PORT_READ_WATCHPOINT, address);
     }
 #endif
     return port_read(address, false);
@@ -37,7 +37,7 @@ void port_write_byte(uint16_t address, uint8_t value) {
         return;
     }
     if (debugger.data.ports[address] & DBG_PORT_WRITE) {
-        open_debugger(HIT_PORT_WRITE_BREAKPOINT, address);
+        open_debugger(HIT_PORT_WRITE_WATCHPOINT, address);
     }
 #endif
     port_write(address, value, false);

@@ -1380,7 +1380,7 @@ void MainWindow::updateStackView() {
 }
 
 void MainWindow::drawNextDisassembleLine() {
-    std::string *label = 0;
+    std::string *label = Q_NULLPTR;
 
     if (disasm.base_address != disasm.new_address) {
         disasm.base_address = disasm.new_address;
