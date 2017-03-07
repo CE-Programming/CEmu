@@ -42,7 +42,6 @@ static const uint8_t dumper_program[288] = {
 RomSelection::RomSelection(QWidget *p) : QDialog(p), ui(new Ui::RomSelection) {
     ui->setupUi(this);
 
-    setFixedSize(width(), height());
     setWindowModality(Qt::ApplicationModal);
     setWindowFlags(Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint );
 

@@ -182,12 +182,8 @@ void MainWindow::setUIStyle(bool docks_enabled) {
         action->setIcon(dw->windowIcon());
         docksMenu->addAction(action);
 
-        QWidget *tab = dw->widget();
-        if (tab == ui->tabDebugger)
-            debuggerDock = dw;
-
         addDockWidget(Qt::RightDockWidgetArea, dw);
-        if (last_dock != nullptr)
+        if (last_dock != Q_NULLPTR)
             tabifyDockWidget(last_dock, dw);
 
         last_dock = dw;

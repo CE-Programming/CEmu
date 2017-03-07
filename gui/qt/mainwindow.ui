@@ -7298,7 +7298,7 @@ QPushButton:pressed {
     <widget class="QFrame" name="calcSkinTop">
      <property name="geometry">
       <rect>
-       <x>10</x>
+       <x>0</x>
        <y>0</y>
        <width>440</width>
        <height>351</height>

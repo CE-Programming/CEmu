@@ -34,14 +34,6 @@ public:
     bool IsInitialized();
 
 public slots:
-    // Misc.
-    virtual void closeEvent(QCloseEvent*) Q_DECL_OVERRIDE;
-    virtual bool eventFilter(QObject*, QEvent*) Q_DECL_OVERRIDE;
-
-    // Drag & Drop
-    virtual void dropEvent(QDropEvent*) Q_DECL_OVERRIDE;
-    virtual void dragEnterEvent(QDragEnterEvent*) Q_DECL_OVERRIDE;
-
     // Console
     void consoleStr(QString);
     void consoleErrStr(QString);
@@ -93,6 +85,16 @@ signals:
 
     // Reset
     void resetTriggered();
+
+protected:
+    // Misc.
+    virtual void closeEvent(QCloseEvent*) Q_DECL_OVERRIDE;
+    virtual bool eventFilter(QObject*, QEvent*) Q_DECL_OVERRIDE;
+
+    // Drag & Drop
+    virtual void dropEvent(QDropEvent*) Q_DECL_OVERRIDE;
+    virtual void dragEnterEvent(QDragEnterEvent*) Q_DECL_OVERRIDE;
+    virtual void showEvent(QShowEvent*) Q_DECL_OVERRIDE;
 
 private:
     enum breakpointIndex {
@@ -337,7 +339,6 @@ private:
     QLabel speedLabel;
     QLabel msgLabel;
     QSettings *settings = Q_NULLPTR;
-    QDockWidget *debuggerDock = Q_NULLPTR;
     QTextCursor disasmOffset;
     bool disasmOffsetSet;
     bool fromPane;
@@ -357,6 +358,8 @@ private:
     bool canScroll = false;
     bool usingLoadedImage = false;
     bool recordingGif = false;
+
+    bool firstTimeShown = false;
 
     CEmuOpts opts;
 

@@ -8,18 +8,18 @@ class QTabWidget;
 QT_END_NAMESPACE
 
 class DockWidget : public QDockWidget {
-  Q_OBJECT
+    Q_OBJECT
 
 public:
-  explicit DockWidget(QWidget *parent = Q_NULLPTR);
-  DockWidget(QTabWidget *tabs, QWidget *parent = Q_NULLPTR);
-  DockWidget(const QString &title, QWidget *parent = Q_NULLPTR);
+    explicit DockWidget(QWidget *p = Q_NULLPTR);
+    DockWidget(QTabWidget *tabs, QWidget *p = Q_NULLPTR);
+    DockWidget(const QString &title, QWidget *p = Q_NULLPTR);
 
-  void toggleState(bool visible);
+    void toggleState(bool visible);
 
 private:
-  QWidget *m_hide_title;
-  int m_title_height;
+    QWidget *m_hide_title;
+    int m_title_height;
 };
 
 #endif
