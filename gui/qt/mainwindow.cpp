@@ -49,8 +49,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     ui->statusBar->addWidget(&speedLabel);
     ui->statusBar->addPermanentWidget(&msgLabel);
 
-    layout()->setContentsMargins(0,0,0,0);
-    centralWidget()->layout()->setContentsMargins(0,0,0,0);
+    setStyleSheet("QMainWindow::separator{ width: 0px; height: 0px; }");
 
     // Allow for 2001 lines of logging
     ui->console->setMaximumBlockCount(2001);
