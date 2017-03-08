@@ -37,7 +37,7 @@ void DataWidget::cursorState(bool moveable) {
     }
 }
 
-void DataWidget::addHighlight(QColor color) {
+void DataWidget::addHighlight(const QColor &color) {
     QTextEdit::ExtraSelection selection;
 
     selection.format.setBackground(color);

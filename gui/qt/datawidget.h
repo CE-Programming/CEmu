@@ -18,7 +18,7 @@ public:
     explicit DataWidget(QWidget *parent = Q_NULLPTR);
     void clearAllHighlights();
     void updateAllHighlights();
-    void addHighlight(QColor);
+    void addHighlight(const QColor&);
     void highlightCurrentLine();
     void cursorState(bool movable);
     QString getSelectedAddress();

@@ -18,7 +18,7 @@ static void ost_event(int index) {
 static void gpt_restore_state(int index) {
     timer_state_t *timer = &gpt.timer[index -= SCHED_TIMER1];
     uint32_t invert = (gpt.control >> (9 + index) & 1) ? ~0 : 0;
-    if (gpt.control >> index * 3 & 1 && sched.items[SCHED_TIMER1 + index].second >= 0) {
+    if (gpt.control >> (index * 3) & 1 && sched.items[SCHED_TIMER1 + index].second >= 0) {
         timer->counter += (event_ticks_remaining(SCHED_TIMER1 + index) + invert) ^ invert;
     }
 }
@@ -26,14 +26,14 @@ static void gpt_restore_state(int index) {
 static uint64_t gpt_next_event(int index) {
     struct sched_item *item = &sched.items[index];
     timer_state_t *timer = &gpt.timer[index -= SCHED_TIMER1];
-    if (gpt.control >> index * 3 & 1) {
+    if (gpt.control >> (index * 3) & 1) {
         int32_t invert, event;
         uint32_t status = 0;
         uint64_t next;
         invert = (gpt.control >> (9 + index) & 1) ? ~0 : 0;
         if (!timer->counter) {
             timer->counter = timer->reset;
-            if (gpt.control >> index * 3 & 4) {
+            if (gpt.control >> (index * 3) & 4) {
                 status = 1 << 2;
             }
             if (!invert) {
@@ -54,7 +54,7 @@ static uint64_t gpt_next_event(int index) {
                 next = temp;
             }
         }
-        gpt.status |= (status & ~gpt.raw_status[index]) << index * 3;
+        gpt.status |= (status & ~gpt.raw_status[index]) << (index * 3);
         intrpt_set(INT_TIMER1 << index, status);
         gpt.raw_status[index] = next ? 0 : status;
         intrpt_set(INT_TIMER1 << index, gpt.raw_status[index]);

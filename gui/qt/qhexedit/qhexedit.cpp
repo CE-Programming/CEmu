@@ -527,6 +527,7 @@ void QHexEdit::mousePressEvent(QMouseEvent *e) {
 
 void QHexEdit::paintEvent(QPaintEvent *e) {
     QPainter painter(viewport());
+    const QPalette *pal = &viewport()->palette();
 
     /* Process some useful calculations */
     int pxOfsX = horizontalScrollBar()->value();
@@ -534,14 +535,14 @@ void QHexEdit::paintEvent(QPaintEvent *e) {
 
     if (e->rect() != _cursorRect) {
         /* Draw some patterns if needed */
-        painter.fillRect(e->rect(), viewport()->palette().color(QPalette::Base));
+        painter.fillRect(e->rect(), pal->color(QPalette::Base));
         if (_asciiArea) {
             int linePos = _pxPosAsciiX;
             painter.setPen(Qt::gray);
             painter.drawLine(linePos - pxOfsX, e->rect().top(), linePos - pxOfsX, height());
         }
 
-        painter.setPen(viewport()->palette().color(QPalette::WindowText));
+        painter.setPen(pal->color(QPalette::WindowText));
 
         /* Paint address area */
         QString address;
@@ -554,7 +555,7 @@ void QHexEdit::paintEvent(QPaintEvent *e) {
         painter.drawLine(address_line, e->rect().top(), address_line, height());
 
         /* Paint hex and ASCII area */
-        QPen colStandard = QPen(viewport()->palette().color(QPalette::WindowText));
+        QPen colStandard = QPen(pal->color(QPalette::WindowText));
 
         painter.setBackgroundMode(Qt::TransparentMode);
 
@@ -564,7 +565,7 @@ void QHexEdit::paintEvent(QPaintEvent *e) {
             int pxPosAsciiX2 = _pxPosAsciiX - pxOfsX + _pxCharWidth/2;
             qint64 bPosLine = static_cast<qint64>(row) * static_cast<qint64>(bytesPerLine);
             for (int colIdx = 0; ((bPosLine + colIdx) < _dataShown.size() && (colIdx < bytesPerLine)); colIdx++) {
-                QColor c = viewport()->palette().color(QPalette::Base);
+                QColor c = pal->color(QPalette::Base);
                 painter.setPen(colStandard);
 
                 qint64 posBa = _bPosFirst + bPosLine + colIdx;
@@ -606,7 +607,7 @@ void QHexEdit::paintEvent(QPaintEvent *e) {
             }
         }
         painter.setBackgroundMode(Qt::TransparentMode);
-        painter.setPen(viewport()->palette().color(QPalette::WindowText));
+        painter.setPen(pal->color(QPalette::WindowText));
     }
 
     // paint cursor

@@ -19,7 +19,7 @@ public:
     void clientSetup(QString);
     void serverListen();
     void idClose();
-    void send(QByteArray);
+    void send(const QByteArray&);
 
     QString getServerName();
     QString getHostName();

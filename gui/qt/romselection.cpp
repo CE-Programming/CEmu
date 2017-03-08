@@ -159,9 +159,7 @@ void RomSelection::openROMSegments() {
         if (fseek(seg, 0x3C, SEEK_SET))                       goto _err;
         if (fread(buf, 1, 8, seg) != 8)                       goto _err;
 
-        if (memcmp(buf, "ROMData", 7)) {
-            goto _err;
-        } else {
+        if (!memcmp(buf, "ROMData", 7)) {
             if (buf[7] == '0') {
                 if (fseek(seg, 0x4A, 0))                       goto _err;
                 if (fread(buf, 1, 3, seg) != 3)                goto _err;
@@ -187,6 +185,8 @@ void RomSelection::openROMSegments() {
                     }
                 }
             }
+        } else {
+            goto _err;
         }
 
         fclose(seg);

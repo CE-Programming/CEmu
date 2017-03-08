@@ -243,7 +243,7 @@ private:
     // Console
     void showStatusMsg(QString);
     void consoleOutputChanged();
-    void consoleAppend(QString, QColor color = Qt::black);
+    void consoleAppend(QString, const QColor &color = Qt::black);
 
     // Settings
     void adjustScreen();
@@ -295,7 +295,7 @@ private:
     // Others
     void syncHexView(int, QHexEdit*);
     void searchEdit(QHexEdit*);
-    QString getAddressEquate(std::string in);
+    QString getAddressEquate(const std::string&);
 
     // Keypad
     void keymapChanged();

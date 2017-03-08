@@ -13,7 +13,7 @@ QPointF ArrowKey::rotatePoint(QPointF point, int offset) {
 }
 
 ArrowKey::ArrowKey(KeyConfig &config, const QRect &outer, const QRect &inner,
-                   int offset, const QString labelText, qreal gap)
+                   int offset, const QString &labelText, qreal gap)
     : Key{config.next(), inner, outer, config.graphColor}, m_labelColor{config.blackColor},
       m_outer{outer}, m_inner{inner}, m_offset{2 * offset} {
     qreal innerAngle = computeAngle(inner, gap),

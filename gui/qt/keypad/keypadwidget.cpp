@@ -16,8 +16,11 @@
 const QRect KeypadWidget::s_baseRect{{}, QSize{162, 235}};
 
 void KeypadWidget::addKey(Key *key) {
-    delete m_keys[key->keycode().row()][key->keycode().col()];
-    m_keys[key->keycode().row()][key->keycode().col()] = key;
+    const KeyCode code = key->keycode();
+    unsigned char row = code.row();
+    unsigned char col = code.col();
+    delete m_keys[row][col];
+    m_keys[row][col] = key;
 }
 
 unsigned KeypadWidget::getCurrColor(void) {
@@ -25,14 +28,10 @@ unsigned KeypadWidget::getCurrColor(void) {
 }
 
 void KeypadWidget::setType(bool is83, unsigned color_scheme) {
-    QColor c_center;
-    QColor c_sides;
-    QColor c_num, c_text, c_other, c_graph;
-
     curr_color = color_scheme;
 
     c_num   = QColor::fromRgb(0xeeeeee);
-    c_text  = QColor::fromRgb(0xeeeeee);
+    c_text  = c_num;
     c_other = QColor::fromRgb(0x1d1d1d);
     c_graph = QColor::fromRgb(0xeeeeee);
 

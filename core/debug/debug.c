@@ -23,15 +23,9 @@ void debugger_init(void) {
 }
 
 void debugger_free(void) {
-    if (debugger.data.block) {
-        free(debugger.data.block);
-    }
-    if (debugger.data.ports) {
-        free(debugger.data.ports);
-    }
-    if (debugger.buffer) {
-        free(debugger.buffer);
-    }
+    free(debugger.data.block);
+    free(debugger.data.ports);
+    free(debugger.buffer);
     gui_console_printf("[CEmu] Freed Debugger.\n");
 }
 

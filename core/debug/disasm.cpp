@@ -400,8 +400,8 @@ void disassembleInstruction(void) {
     disasm.iw = true;
     disasm.il = disasm.adl;
     disasm.l = disasm.adl;
-    disasm.prefix = false;
-    disasm.suffix = false;
+    disasm.prefix = 0;
+    disasm.suffix = 0;
 
     union {
         uint8_t opcode;

@@ -19,12 +19,12 @@ bool is_in_vector_uint(const std::vector<unsigned int>& v, unsigned int element)
     return find(v.begin(), v.end(), element) != v.end();
 }
 
-bool is_in_vector_string(const std::vector<std::string>& v, std::string element)
+bool is_in_vector_string(const std::vector<std::string>& v, const std::string &element)
 {
     return find(v.begin(), v.end(), element) != v.end();
 }
 
-bool has_option(const unordered_map<string, unsigned char>& m, const string element)
+bool has_option(const unordered_map<string, unsigned char>& m, const string &element)
 {
     return m.find(element) != m.end();
 }
@@ -159,7 +159,7 @@ void ParseCSV(const string& csvSource, vector<vector<string>>& lines)
                 break;
         }
 
-        aChar++;
+        ++aChar;
     }
 
     if (field.size())

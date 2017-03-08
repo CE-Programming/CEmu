@@ -712,7 +712,7 @@ void MainWindow::closeEvent(QCloseEvent *e) {
     QMainWindow::closeEvent(e);
 }
 
-void MainWindow::consoleAppend(QString str, QColor color) {
+void MainWindow::consoleAppend(QString str, const QColor &color) {
     QTextCursor cur(ui->console->document());
     cur.movePosition(QTextCursor::End);
     consoleFormat.setForeground(color);
@@ -857,8 +857,8 @@ void MainWindow::recordGIF() {
             QMessageBox::warning(this, tr("Failed recording GIF"), tr("A failure occured during recording"));
         }
         lcd_event_gui_callback = NULL;
-        path = QString();
-        opt_path = QString();
+        path.clear();
+        opt_path.clear();
     }
 
     recordingGif = !path.isEmpty();
@@ -1113,7 +1113,7 @@ void MainWindow::saveSelected() {
     QVector<calc_var_t> selectedVars;
     QStringList fileNames;
     for (int currRow = 0; currRow < ui->emuVarView->rowCount(); currRow++) {
-        if (ui->emuVarView->item(currRow, 0)->checkState()) {
+        if (ui->emuVarView->item(currRow, 0)->checkState() == Qt::Checked) {
             selectedVars.append(vars[currRow]);
         }
     }
@@ -1282,17 +1282,19 @@ void MainWindow::refreshCRC() {
     int32_t crc_size = 0;
     uint8_t* start;
     char *endptr1, *endptr2; // catch strtoul issues
+    QLineEdit *startCRC = ui->startCRC;
+    QLineEdit *sizeCRC = ui->sizeCRC;
 
-    ui->startCRC->setText(ui->startCRC->text().trimmed());
-    ui->sizeCRC->setText(ui->sizeCRC->text().trimmed());
+    startCRC->setText(startCRC->text().trimmed());
+    sizeCRC->setText(sizeCRC->text().trimmed());
 
-    if (ui->startCRC->text().isEmpty() || ui->sizeCRC->text().isEmpty()) {
+    if (startCRC->text().isEmpty() || sizeCRC->text().isEmpty()) {
         goto errCRCret;
     }
 
     // Get GUI values
-    tmp_start = (uint32_t)strtoul(ui->startCRC->text().toStdString().c_str(), &endptr1, 0);
-    crc_size = (size_t)strtoul(ui->sizeCRC->text().toStdString().c_str(), &endptr2, 0);
+    tmp_start = (uint32_t)strtoul(startCRC->text().toStdString().c_str(), &endptr1, 0);
+    crc_size = (size_t)strtoul(sizeCRC->text().toStdString().c_str(), &endptr2, 0);
     if (*endptr1 || *endptr2) {
         goto errCRCret;
     }
@@ -1315,7 +1317,7 @@ errCRCret:
 void MainWindow::updateTIOSView() {
     calc_var_t var;
     QString formattedLine;
-    QString calcData, varName;
+    QString calcData;
     QString opType;
     uint8_t gotData[11];
 

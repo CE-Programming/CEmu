@@ -36,6 +36,7 @@ private:
     QTimer *refreshTimer;
     QPainter *painter;
     lcd_state_t *lcdState;
+    QRect left, right;
 };
 
 #endif

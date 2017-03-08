@@ -42,14 +42,14 @@ QByteArray ipc::getData() {
     return data;
 }
 
-void ipc::send(QByteArray data) {
+void ipc::send(const QByteArray &pkt) {
     if (!clientSet) {
         return;
     }
     socket->abort();
     socket->connectToServer(hostName);
     if (socket->waitForConnected()) {
-        socket->write(data);
+        socket->write(pkt);
         if (!socket->waitForDisconnected()) {
             qDebug() << "err: sending packet";
         }

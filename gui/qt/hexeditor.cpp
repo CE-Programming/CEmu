@@ -41,7 +41,7 @@ QString MainWindow::getAddressString(QString string, bool *ok) {
    return int2hex(hex2int(address), 6);
 }
 
-QString MainWindow::getAddressEquate(std::string in) {
+QString MainWindow::getAddressEquate(const std::string &in) {
     QString value;
     map_value_t::const_iterator item = disasm.reverseMap.find(in);
     if (item != disasm.reverseMap.end()) {
@@ -148,7 +148,7 @@ void MainWindow::flashSearchPressed() {
 }
 
 void MainWindow::flashGotoPressed() {
-    bool accept;
+    bool accept = false;
     QString addressStr = getAddressString(prevFlashAddress, &accept);
 
     if (accept) {
@@ -171,7 +171,7 @@ void MainWindow::ramSearchPressed() {
 }
 
 void MainWindow::ramGotoPressed() {
-    bool accept;
+    bool accept = false;
     QString addressStr = getAddressString(prevRAMAddress, &accept);
 
     if (accept) {
@@ -224,7 +224,7 @@ void MainWindow::memGoto(QString addressStr) {
 }
 
 void MainWindow::memGotoPressed() {
-    bool accept;
+    bool accept = false;
     QString address = getAddressString(prevMemAddress, &accept);
 
     if (accept) {

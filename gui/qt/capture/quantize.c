@@ -1232,8 +1232,8 @@ static int kc_line_closest(const kcolor* p0, const kcolor* p1,
        denominator in unsigned arithmetic, but the numerator might
        be negative, or it might be so large that it is unsigned.
        Calculate the numerator as a double. */
-    *t = ((double) p01.a[0]*p0ref.a[0] + p01.a[1]*p0ref.a[1]
-          + p01.a[2]*p0ref.a[2]) / den;
+    *t = ((double) p01.a[0]*p0ref.a[0] + (double) p01.a[1]*p0ref.a[1]
+          + (double) p01.a[2]*p0ref.a[2]) / den;
     if (*t < 0 || *t > 1)
         return 0;
     for (d = 0; d != 3; ++d) {
@@ -1258,9 +1258,9 @@ static int kc_plane_closest(const kcolor* p0, const kcolor* p1,
         p01.a[d] = p1->a[d] - p0->a[d];
         p02.a[d] = p2->a[d] - p0->a[d];
     }
-    n[0] = p01.a[1]*p02.a[2] - p01.a[2]*p02.a[1];
-    n[1] = p01.a[2]*p02.a[0] - p01.a[0]*p02.a[2];
-    n[2] = p01.a[0]*p02.a[1] - p01.a[1]*p02.a[0];
+    n[0] = (double) p01.a[1]*p02.a[2] - (double) p01.a[2]*p02.a[1];
+    n[1] = (double) p01.a[2]*p02.a[0] - (double) p01.a[0]*p02.a[2];
+    n[2] = (double) p01.a[0]*p02.a[1] - (double) p01.a[1]*p02.a[0];
 
     /* Moeller-Trumbore ray tracing algorithm: trace a ray from `ref` along
        normal `n`; convert to barycentric coordinates to see if the ray
@@ -1278,9 +1278,9 @@ static int kc_plane_closest(const kcolor* p0, const kcolor* p1,
     if (u < 0 || u > 1)
         return 0;
 
-    qvec[0] = p0ref.a[1]*p01.a[2] - p0ref.a[2]*p01.a[1];
-    qvec[1] = p0ref.a[2]*p01.a[0] - p0ref.a[0]*p01.a[2];
-    qvec[2] = p0ref.a[0]*p01.a[1] - p0ref.a[1]*p01.a[0];
+    qvec[0] = (double) p0ref.a[1]*p01.a[2] - (double) p0ref.a[2]*p01.a[1];
+    qvec[1] = (double) p0ref.a[2]*p01.a[0] - (double) p0ref.a[0]*p01.a[2];
+    qvec[2] = (double) p0ref.a[0]*p01.a[1] - (double) p0ref.a[1]*p01.a[0];
 
     v = (n[0]*qvec[0] + n[1]*qvec[1] + n[2]*qvec[2]) * det;
     if (v < 0 || v > 1 || u + v > 1)
@@ -1909,7 +1909,7 @@ static uint8_t* halftone_pixel_matrix(halftone_pixelinfo* hp,
     m[1] = h;
     m[3] = nc;
     if (w * h > 255) {
-        double s = 255. / (w * h);
+        double s = 255. / ((double)w * (double)h);
         m[2] = 255;
         for (i = 0; i != w * h; ++i)
             m[4 + hp[i].x + hp[i].y*w] = (int) (i * s);

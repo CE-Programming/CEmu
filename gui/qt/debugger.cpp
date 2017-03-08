@@ -1185,11 +1185,12 @@ void MainWindow::batteryChangeStatus(int value) {
 // ------------------------------------------------
 
 void MainWindow::scrollDisasmView(int value) {
-    if (value >= ui->disassemblyView->verticalScrollBar()->maximum()) {
-        ui->disassemblyView->verticalScrollBar()->blockSignals(true);
+    QScrollBar *v = ui->disassemblyView->verticalScrollBar();
+    if (value >= v->maximum()) {
+        v->blockSignals(true);
         drawNextDisassembleLine();
-        ui->disassemblyView->verticalScrollBar()->setValue(ui->disassemblyView->verticalScrollBar()->maximum()-1);
-        ui->disassemblyView->verticalScrollBar()->blockSignals(false);
+        v->setValue(ui->disassemblyView->verticalScrollBar()->maximum()-1);
+        v->blockSignals(false);
     }
 }
 

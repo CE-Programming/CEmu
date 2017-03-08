@@ -27,18 +27,18 @@ LCDWidget::~LCDWidget() {
 }
 
 void LCDWidget::paintEvent(QPaintEvent*) {
-    QPainter painter(this);
-    paintFramebuffer(&painter, lcdState);
+    QPainter canvas(this);
+    paintFramebuffer(&canvas, lcdState);
     if (in_drag) {
-        QRect left = painter.window();
-        QRect right = painter.window();
+        left = canvas.window();
+        right = left;
         left.setRight(left.right() >> 1);
         right.setLeft(left.right());
-        painter.fillRect(left, QColor(0, 0, side_drag == LCD_LEFT ? 245 : 200, 128));
-        painter.fillRect(right, QColor(0, side_drag == LCD_RIGHT ? 245 : 200, 0, 128));
-        painter.setPen(Qt::white);
-        painter.drawText(left, Qt::AlignCenter, QObject::tr("Archive"));
-        painter.drawText(right, Qt::AlignCenter, QObject::tr("RAM"));
+        canvas.fillRect(left, QColor(0, 0, side_drag == LCD_LEFT ? 245 : 200, 128));
+        canvas.fillRect(right, QColor(0, side_drag == LCD_RIGHT ? 245 : 200, 0, 128));
+        canvas.setPen(Qt::white);
+        canvas.drawText(left, Qt::AlignCenter, QObject::tr("Archive"));
+        canvas.drawText(right, Qt::AlignCenter, QObject::tr("RAM"));
     }
 }
 

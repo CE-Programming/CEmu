@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>946</width>
-    <height>672</height>
+    <height>693</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -24,6 +24,9 @@
   </property>
   <property name="windowTitle">
    <string/>
+  </property>
+  <property name="layoutDirection">
+   <enum>Qt::LeftToRight</enum>
   </property>
   <property name="styleSheet">
    <string notr="true"/>
@@ -44,8 +47,8 @@
      <height>16777215</height>
     </size>
    </property>
-   <layout class="QGridLayout" name="gridLayout_12">
-    <item row="0" column="0">
+   <layout class="QVBoxLayout" name="verticalLayout_18">
+    <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="focusPolicy">
        <enum>Qt::ClickFocus</enum>
@@ -60,7 +63,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>8</number>
+       <number>2</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -520,10 +523,13 @@
            <property name="spacing">
             <number>5</number>
            </property>
-           <item row="1" column="0">
-            <widget class="QCheckBox" name="checkAlwaysOnTop">
+           <item row="0" column="1">
+            <widget class="QCheckBox" name="checkUpdates">
              <property name="text">
-              <string>Always show on top of other windows</string>
+              <string>Automatically check for updates</string>
+             </property>
+             <property name="checked">
+              <bool>false</bool>
              </property>
             </widget>
            </item>
@@ -540,15 +546,35 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="1">
-            <widget class="QCheckBox" name="checkUpdates">
-             <property name="text">
-              <string>Automatically check for updates</string>
+           <item row="1" column="0">
+            <layout class="QHBoxLayout" name="horizontalLayout_12">
+             <property name="bottomMargin">
+              <number>0</number>
              </property>
-             <property name="checked">
-              <bool>false</bool>
-             </property>
-            </widget>
+             <item>
+              <widget class="QCheckBox" name="checkAlwaysOnTop">
+               <property name="text">
+                <string>Always show on top of other windows</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_24">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Expanding</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>10</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
            </item>
            <item row="1" column="1">
             <widget class="QCheckBox" name="checkPortable">
@@ -561,11 +587,11 @@
          </widget>
         </item>
         <item>
-         <widget class="QGroupBox" name="romgroup">
+         <widget class="QGroupBox" name="groupBox_3">
           <property name="title">
-           <string>File Locations</string>
+           <string>Debugger</string>
           </property>
-          <layout class="QGridLayout" name="gridLayout_9">
+          <layout class="QGridLayout" name="gridLayout_12">
            <property name="leftMargin">
             <number>8</number>
            </property>
@@ -578,145 +604,111 @@
            <property name="bottomMargin">
             <number>8</number>
            </property>
-           <property name="horizontalSpacing">
-            <number>5</number>
-           </property>
-           <item row="4" column="2">
-            <widget class="QPushButton" name="buttonChangeSavedImagePath">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>0</height>
-              </size>
-             </property>
+           <item row="0" column="0">
+            <widget class="QCheckBox" name="checkSaveLoadDebug">
              <property name="text">
-              <string>Change path</string>
-             </property>
-             <property name="flat">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="0">
-            <widget class="QLabel" name="label_15">
-             <property name="text">
-              <string>Saved Debug</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="0">
-            <widget class="QLabel" name="label_6">
-             <property name="text">
-              <string>Saved Image</string>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="1">
-            <widget class="QLineEdit" name="savedImagePath">
-             <property name="frame">
-              <bool>false</bool>
-             </property>
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="2">
-            <widget class="QPushButton" name="buttonChangeSavedDebugPath">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Change path</string>
-             </property>
-             <property name="flat">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="1">
-            <widget class="QLineEdit" name="savedDebugPath">
-             <property name="frame">
-              <bool>false</bool>
-             </property>
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QLineEdit" name="settingsPath">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="frame">
-              <bool>false</bool>
-             </property>
-             <property name="readOnly">
-              <bool>true</bool>
+              <string>Automatically save and restore debug state</string>
              </property>
             </widget>
            </item>
            <item row="1" column="0">
-            <widget class="QLabel" name="label_16">
+            <widget class="QCheckBox" name="checkDataCol">
              <property name="text">
-              <string>Settings</string>
+              <string>Show Data column</string>
+             </property>
+             <property name="checked">
+              <bool>false</bool>
              </property>
             </widget>
            </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label">
+           <item row="1" column="1">
+            <widget class="QCheckBox" name="checkAddSpace">
              <property name="text">
-              <string>ROM Image</string>
+              <string>Opcode / Operand space</string>
              </property>
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QLineEdit" name="rompathView">
-             <property name="frame">
-              <bool>false</bool>
-             </property>
-             <property name="readOnly">
-              <bool>true</bool>
+            <widget class="QCheckBox" name="checkDebugResetTrigger">
+             <property name="text">
+              <string>Open debugger on reset or nmi</string>
              </property>
             </widget>
            </item>
-           <item row="0" column="2">
-            <widget class="QPushButton" name="buttonRunSetup">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>0</height>
-              </size>
-             </property>
+           <item row="2" column="0">
+            <widget class="QCheckBox" name="checkBox">
              <property name="text">
-              <string>Setup wizard</string>
-             </property>
-             <property name="flat">
-              <bool>false</bool>
+              <string>Add DMA cycles to cycle counters</string>
              </property>
             </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QCheckBox" name="checkDisableSoftCommands">
+             <property name="text">
+              <string>Enable software commands</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <layout class="QGridLayout" name="gridLayout_19">
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <property name="horizontalSpacing">
+              <number>6</number>
+             </property>
+             <property name="verticalSpacing">
+              <number>0</number>
+             </property>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_4">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Text size:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QSpinBox" name="textSize">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimum">
+                <number>5</number>
+               </property>
+               <property name="maximum">
+                <number>15</number>
+               </property>
+               <property name="value">
+                <number>7</number>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <spacer name="horizontalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Expanding</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>10</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
            </item>
           </layout>
          </widget>
@@ -909,112 +901,6 @@
          </widget>
         </item>
         <item>
-         <widget class="QGroupBox" name="groupBox_3">
-          <property name="title">
-           <string>Debugger</string>
-          </property>
-          <layout class="QVBoxLayout" name="verticalLayout_17">
-           <property name="spacing">
-            <number>5</number>
-           </property>
-           <property name="leftMargin">
-            <number>8</number>
-           </property>
-           <property name="topMargin">
-            <number>8</number>
-           </property>
-           <property name="rightMargin">
-            <number>8</number>
-           </property>
-           <property name="bottomMargin">
-            <number>8</number>
-           </property>
-           <item>
-            <layout class="QGridLayout" name="gridLayout_19">
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item row="1" column="0">
-              <widget class="QCheckBox" name="checkDataCol">
-               <property name="text">
-                <string>Show Data column</string>
-               </property>
-               <property name="checked">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QCheckBox" name="checkAddSpace">
-               <property name="text">
-                <string>Opcode / Operand space</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QCheckBox" name="checkDisableSoftCommands">
-               <property name="text">
-                <string>Enable software commands</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QCheckBox" name="checkSaveLoadDebug">
-               <property name="text">
-                <string>Automatically save and restore debug state</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QCheckBox" name="checkDebugResetTrigger">
-               <property name="text">
-                <string>Open debugger on reset or nmi</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="1">
-              <layout class="QHBoxLayout" name="horizontalLayout_26">
-               <item>
-                <widget class="QLabel" name="label_4">
-                 <property name="text">
-                  <string>Text size:</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QSpinBox" name="textSize">
-                 <property name="minimum">
-                  <number>5</number>
-                 </property>
-                 <property name="maximum">
-                  <number>15</number>
-                 </property>
-                 <property name="value">
-                  <number>7</number>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer_2">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-              </layout>
-             </item>
-            </layout>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
          <widget class="QGroupBox" name="groupKeys">
           <property name="title">
            <string>Key bindings</string>
@@ -1099,6 +985,167 @@
              </property>
              <property name="autoExclusive">
               <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="romgroup">
+          <property name="title">
+           <string>File Locations</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_9">
+           <property name="leftMargin">
+            <number>8</number>
+           </property>
+           <property name="topMargin">
+            <number>8</number>
+           </property>
+           <property name="rightMargin">
+            <number>8</number>
+           </property>
+           <property name="bottomMargin">
+            <number>8</number>
+           </property>
+           <property name="horizontalSpacing">
+            <number>5</number>
+           </property>
+           <item row="4" column="2">
+            <widget class="QPushButton" name="buttonChangeSavedImagePath">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Change path</string>
+             </property>
+             <property name="flat">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0">
+            <widget class="QLabel" name="label_15">
+             <property name="text">
+              <string>Saved Debug</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_6">
+             <property name="text">
+              <string>Saved Image</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QLineEdit" name="savedImagePath">
+             <property name="frame">
+              <bool>false</bool>
+             </property>
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="2">
+            <widget class="QPushButton" name="buttonChangeSavedDebugPath">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Change path</string>
+             </property>
+             <property name="flat">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <widget class="QLineEdit" name="savedDebugPath">
+             <property name="frame">
+              <bool>false</bool>
+             </property>
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="settingsPath">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="frame">
+              <bool>false</bool>
+             </property>
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_16">
+             <property name="text">
+              <string>Settings</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>ROM Image</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLineEdit" name="rompathView">
+             <property name="frame">
+              <bool>false</bool>
+             </property>
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QPushButton" name="buttonRunSetup">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Setup wizard</string>
+             </property>
+             <property name="flat">
+              <bool>false</bool>
              </property>
             </widget>
            </item>

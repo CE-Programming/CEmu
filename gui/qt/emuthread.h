@@ -77,7 +77,7 @@ public slots:
 private:
     void setActualSpeed(int);
 
-    int speed, actualSpeed;
+    volatile int speed, actualSpeed;
     bool enterDebugger = false;
     bool enterSendState = false;
     bool enterReceiveState = false;

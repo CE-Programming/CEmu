@@ -42,6 +42,7 @@ private:
     QTransform m_transform, m_inverseTransform;
     Key *m_keys[s_rows][s_cols];
     int embed_font_id = -2;
+    QColor c_center, c_sides, c_num, c_text, c_other, c_graph;
 };
 
 #endif
