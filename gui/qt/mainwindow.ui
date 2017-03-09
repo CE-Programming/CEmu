@@ -7320,6 +7320,8 @@ QPushButton:pressed {
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
     <addaction name="actionAboutQt"/>
+    <addaction name="separator"/>
+    <addaction name="actionDisableMenuBar"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuHelp"/>
@@ -7646,6 +7648,14 @@ QPushButton:pressed {
    </property>
    <property name="text">
     <string>Bootable CEmu image</string>
+   </property>
+  </action>
+  <action name="actionDisableMenuBar">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Hide menu bar</string>
    </property>
   </action>
  </widget>

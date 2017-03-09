@@ -164,6 +164,12 @@ void MainWindow::saveMiscSettings() {
     settings->setValue(QStringLiteral("keypadColor"),       ui->keypadWidget->getCurrColor());
 }
 
+void MainWindow::setMenuBarState(bool state) {
+    ui->menubar->setHidden(state);
+    ui->actionDisableMenuBar->setChecked(state);
+    settings->setValue(QStringLiteral("disableMenubar"), state);
+}
+
 void MainWindow::resetSettingsIfLoadedCEmuBootableImage() {
     if (loadedCEmuBootImage) {
         settings->setValue(QStringLiteral("firstrun"), false);
@@ -265,7 +271,7 @@ void MainWindow::setUIStyle(bool docks_enabled) {
     }
 
     // Create "Docks" menu to make closing and opening docks more intuitive
-    QMenu *docksMenu = new QMenu(tr("Docks"), this);
+    docksMenu = new QMenu(tr("Docks"), this);
     ui->menubar->insertMenu(ui->menuAbout->menuAction(), docksMenu);
 
     //Convert the tabs into QDockWidgets

@@ -196,6 +196,7 @@ private:
     void debuggerTabSwitched(int);
 
     void setDataCol(bool state);
+    void setMenuBarState(bool state);
 
     // For linking to the buttons
     void breakpointSlotAdd();
@@ -398,6 +399,7 @@ private:
     QString prevMemAddress;
 
     QString pathSettings;
+    QMenu *docksMenu;
 
     KeyHistory *keyHistoryWindow = Q_NULLPTR;
 

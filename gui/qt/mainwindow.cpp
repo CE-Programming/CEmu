@@ -142,7 +142,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->comboBoxPresetCRC, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::updateCRCParamsFromPreset);
     connect(ui->buttonRefreshCRC, &QPushButton::clicked, this, &MainWindow::refreshCRC);
 
-    // Toolbar Actions
+    // Menubar Actions
     connect(ui->actionSetup, &QAction::triggered, this, &MainWindow::runSetup);
     connect(ui->actionExit, &QAction::triggered, this, &MainWindow::close);
     connect(ui->actionScreenshot, &QAction::triggered, this, &MainWindow::screenshot);
@@ -156,6 +156,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->actionReloadROM, &QAction::triggered, this, &MainWindow::reloadROM);
     connect(ui->actionResetCalculator, &QAction::triggered, this, &MainWindow::resetCalculator);
     connect(ui->actionPopoutLCD, &QAction::triggered, this, &MainWindow::createLCD);
+    connect(ui->actionDisableMenuBar, &QAction::triggered, this, &MainWindow::setMenuBarState);
     connect(this, &MainWindow::resetTriggered, &emu, &EmuThread::resetTriggered);
 
     // Capture
@@ -422,8 +423,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     ui->rregView->installEventFilter(this);
     ui->lcdWidget->setFocus();
     setLCDScale(settings->value(QStringLiteral("scale"), 100).toUInt());
-    setSkinToggle(settings->value(QStringLiteral("skin"), 1).toBool());
-    setAlwaysOnTop(settings->value(QStringLiteral("onTop"), 0).toUInt());
+    setSkinToggle(settings->value(QStringLiteral("skin"), true).toBool());
+    setAlwaysOnTop(settings->value(QStringLiteral("onTop"), false).toBool());
+    setMenuBarState(settings->value(QStringLiteral("disableMenubar"), false).toBool());
     if (!settings->value(QStringLiteral("firstrun"), false).toBool()) {
         QMessageBox::information(this, tr("Information"), tr("Welcome!\nCEmu uses a customizable dock-style interface. "
                                                              "Drag and drop to move tabs and windows around on the screen, "
@@ -910,13 +912,14 @@ void MainWindow::showAbout() {
 }
 
 void MainWindow::screenContextMenu(const QPoint &posa) {
-    QMenu contextMenu;
+    QMenu menu;
     QPoint globalPos = ui->lcdWidget->mapToGlobal(posa);
-    QList<QMenu*> list = ui->menubar->findChildren<QMenu*>();
-    for (int i=0; i<list.size(); i++) {
-        contextMenu.addMenu(list.at(i));
+    QList<QMenu*> list = ui->menubar->findChildren<QMenu*>(QString(), Qt::FindDirectChildrenOnly);
+    for (int i=0; i<(list.size()-1); i++) {
+        menu.addMenu(list.at(i));
     }
-    contextMenu.exec(globalPos);
+    menu.addMenu(docksMenu);
+    menu.exec(globalPos);
 }
 
 void MainWindow::consoleOutputChanged() {
