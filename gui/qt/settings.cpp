@@ -67,12 +67,108 @@ void MainWindow::setPortableConfig(bool state) {
     ui->buttonChangeSavedImagePath->setEnabled(!portable);
 }
 
+bool MainWindow::checkForCEmuBootImage() {
+    QDirIterator dirIt(qApp->applicationDirPath(), QDirIterator::NoIteratorFlags);
+    while (dirIt.hasNext()) {
+        dirIt.next();
+        QString dirItFile = dirIt.filePath();
+        if (QFileInfo(dirItFile).isFile()) {
+            if (QFileInfo(dirItFile).suffix() == QStringLiteral("cemu")) {
+                if (!loadedCEmuBootImage) {
+                    loadedCEmuBootImage = loadCEmuBootImage(dirItFile);
+                }
+                QFile(dirItFile).remove();
+            }
+        }
+    }
+    return loadedCEmuBootImage;
+}
+
+bool MainWindow::loadCEmuBootImage(const QString &bootImagePath) {
+    QString newSettingsPath = configPath + QStringLiteral("cemu_config.ini");
+    QFile bootFile(bootImagePath);
+    QFile romFile(configPath + QStringLiteral("cemu_rom.rom"));
+    romFile.remove();
+    if (!romFile.open(QIODevice::WriteOnly)) { return false; }
+    QFile settingsFile(newSettingsPath);
+    settingsFile.remove();
+    if (!settingsFile.open(QIODevice::WriteOnly)) { return false; }
+    bootFile.open(QIODevice::ReadOnly);
+    QByteArray romData = bootFile.read(0x400000);
+    QByteArray settingsData = bootFile.readAll();
+    romFile.write(romData);
+    settingsFile.write(settingsData);
+    romFile.close();
+    settingsFile.close();
+    bootFile.close();
+    pathSettings = newSettingsPath;
+    return true;
+}
+
+void MainWindow::exportCEmuBootImage() {
+    if (!settings->value(QStringLiteral("exportedFirstBootImage"), false).toBool()) {
+        QMessageBox::information(this, tr("Information"), tr("A bootable image can be used to start CEmu with predefined configurations, without the need for any extra setup."
+                                                             "\n\nOnce done, a bootable image should be placed in the same directory as the CEmu executable. When CEmu is then started,"
+                                                             "the boot image will be loaded automatically and then removed for convience."));
+        settings->setValue(QStringLiteral("exportedFirstBootImage"), true);
+    }
+
+    QString saveImage = QFileDialog::getSaveFileName(this, tr("Save bootable CEmu image"),
+                                                      currentDir.absolutePath(),
+                                                      tr("Bootable CEmu images (*.cemu);"));
+    saveMiscSettings();
+    settings->sync();
+
+    if (!saveImage.isEmpty()) {
+        currentDir = QFileInfo(saveImage).absoluteDir();
+        QFile romFile(emu.rom);
+        if (!romFile.open(QIODevice::ReadOnly)) return;
+        QByteArray romData = romFile.readAll();
+
+        QFile settingsFile(pathSettings);
+        if (!settingsFile.open(QIODevice::ReadOnly)) return;
+        QByteArray settingsData = settingsFile.readAll();
+
+        QFile writter(saveImage);
+        writter.open(QIODevice::WriteOnly);
+        writter.write(romData);
+        writter.write(settingsData);
+        romFile.close();
+        settingsFile.close();
+        writter.close();
+    }
+}
+
 void MainWindow::setEnableSoftCommands(bool state) {
     ui->checkDisableSoftCommands->blockSignals(true);
     ui->checkDisableSoftCommands->setChecked(state);
     ui->checkDisableSoftCommands->blockSignals(false);
     settings->setValue(QStringLiteral("enableSoftCommands"), state);
     enabledSoftCommands = state;
+}
+
+void MainWindow::setDataCol(bool state) {
+    ui->checkDataCol->setChecked(state);
+    settings->setValue(QStringLiteral("dataCol"), state);
+    useDataCol = state;
+}
+
+void MainWindow::saveMiscSettings() {
+    settings->setValue(QStringLiteral("windowState"),       saveState(WindowStateVersion));
+    settings->setValue(QStringLiteral("windowGeometry"),    saveGeometry());
+    settings->setValue(QStringLiteral("windowSize"),        size());
+    settings->setValue(QStringLiteral("currDir"),           currentDir.absolutePath());
+    settings->setValue(QStringLiteral("flashBytesPerLine"), ui->flashBytes->value());
+    settings->setValue(QStringLiteral("ramBytesPerLine"),   ui->ramBytes->value());
+    settings->setValue(QStringLiteral("memBytesPerLine"),   ui->memBytes->value());
+    settings->setValue(QStringLiteral("keypadColor"),       ui->keypadWidget->getCurrColor());
+}
+
+void MainWindow::resetSettingsIfLoadedCEmuBootableImage() {
+    if (loadedCEmuBootImage) {
+        settings->setValue(QStringLiteral("firstrun"), false);
+        settings->setValue(QStringLiteral("exportedFirstBootImage"), false);
+    }
 }
 
 void MainWindow::setDebugResetTrigger(bool state) {

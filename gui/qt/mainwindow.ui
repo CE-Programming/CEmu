@@ -63,7 +63,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>8</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -7263,6 +7263,9 @@ QPushButton:pressed {
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
+   <property name="defaultUp">
+    <bool>false</bool>
+   </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>&amp;File</string>
@@ -7274,6 +7277,7 @@ QPushButton:pressed {
      <addaction name="actionExportRomImage"/>
      <addaction name="actionExportCalculatorState"/>
      <addaction name="actionExportDebugger"/>
+     <addaction name="actionExportCEmuImage"/>
     </widget>
     <widget class="QMenu" name="menuImport">
      <property name="title">
@@ -7480,6 +7484,18 @@ QPushButton:pressed {
    <property name="toolTip">
     <string>Record animated GIF</string>
    </property>
+   <property name="shortcut">
+    <string>F11</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::ApplicationShortcut</enum>
+   </property>
+   <property name="autoRepeat">
+    <bool>false</bool>
+   </property>
+   <property name="priority">
+    <enum>QAction::HighPriority</enum>
+   </property>
   </action>
   <action name="actionAboutQt">
    <property name="icon">
@@ -7621,6 +7637,15 @@ QPushButton:pressed {
    </property>
    <property name="text">
     <string>Key History</string>
+   </property>
+  </action>
+  <action name="actionExportCEmuImage">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/icon.png</normaloff>:/icons/resources/icons/icon.png</iconset>
+   </property>
+   <property name="text">
+    <string>Bootable CEmu image</string>
    </property>
   </action>
  </widget>

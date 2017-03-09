@@ -195,6 +195,8 @@ private:
     void debuggerZeroClockCounter();
     void debuggerTabSwitched(int);
 
+    void setDataCol(bool state);
+
     // For linking to the buttons
     void breakpointSlotAdd();
     void watchpointSlotAdd();
@@ -220,12 +222,18 @@ private:
     void debuggerImport();
     void debuggerExport();
 
+    // Creating bootable images
+    bool checkForCEmuBootImage();
+    void exportCEmuBootImage();
+    bool loadCEmuBootImage(const QString&);
+    void resetSettingsIfLoadedCEmuBootableImage();
+
     // MAIN IMPLEMENTATION ROUTINES
     bool portAdd(uint16_t, unsigned);
     bool breakpointAdd(QString, uint32_t, bool);
     bool watchpointAdd(QString, uint32_t, uint8_t, unsigned);
 
-    void screenContextMenu(const QPoint &);
+    void screenContextMenu(const QPoint&);
     void updateLabels();
     void equatesAddDialog();
     void equatesAddFile(QString);
@@ -258,6 +266,7 @@ private:
     void setUIEditMode(bool);
     void toggleUIEditMode(void);
     void setSaveDebug(bool);
+    void saveMiscSettings();
 
     int setReprintScale(int);
 
@@ -396,6 +405,10 @@ private:
 
     bool initPassed = true;
     bool enabledSoftCommands;
+
+    bool useDataCol;
+    bool loadedCEmuBootImage = false;
+    static const int WindowStateVersion = 0;
 };
 
 #endif

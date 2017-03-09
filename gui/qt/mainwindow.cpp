@@ -36,8 +36,6 @@
 #include "../../tests/autotester/autotester.h"
 #include "../../tests/autotester/autotester.h"
 
-static const constexpr int WindowStateVersion = 0;
-
 MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow), opts(cliOpts) {
 
     // start up ipc
@@ -122,8 +120,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->buttonAddEquateFile, &QPushButton::clicked, this, &MainWindow::equatesAddDialog);
     connect(ui->buttonClearEquates, &QPushButton::clicked, this, &MainWindow::equatesClear);
     connect(ui->buttonRefreshEquates, &QPushButton::clicked, this, &MainWindow::equatesRefresh);
-    connect(ui->textSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setFont);
     connect(ui->checkDebugResetTrigger, &QCheckBox::toggled, this, &MainWindow::setDebugResetTrigger);
+    connect(ui->checkDataCol, &QCheckBox::toggled, this, &MainWindow::setDataCol);
+    connect(ui->textSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setFont);
 
     // Debugging files
     connect(ui->actionImportDebugger, &QAction::triggered, this, &MainWindow::debuggerImport);
@@ -191,8 +190,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->ramBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->ramEdit, &QHexEdit::setBytesPerLine);
     connect(ui->memBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->memEdit, &QHexEdit::setBytesPerLine);
     connect(ui->emuVarView, &QTableWidget::itemDoubleClicked, this, &MainWindow::variableClicked);
-    ui->emuVarView->setContextMenuPolicy(Qt::CustomContextMenu); // To handle right-clicks
     connect(ui->emuVarView, &QWidget::customContextMenuRequested, this, &MainWindow::variablesContextMenu);
+    connect(ui->actionExportCEmuImage, &QAction::triggered, this, &MainWindow::exportCEmuBootImage);
+    ui->emuVarView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     // Hex Editor
     connect(ui->buttonFlashGoto, &QPushButton::clicked, this, &MainWindow::flashGotoPressed);
@@ -282,16 +282,19 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     autotester::stepCallback = []() { QApplication::processEvents(); };
 
-    if (fileExists(QDir::toNativeSeparators(qApp->applicationDirPath() + "/cemu_config.ini").toStdString())) {
-        pathSettings = qApp->applicationDirPath() + "/cemu_config.ini";
-        portable = true;
-    } else if (opts.settingsFile.isEmpty()) {
-        pathSettings = configPath + QStringLiteral("cemu_config.ini");
+    if (opts.settingsFile.isEmpty()) {
+        if (fileExists(QDir::toNativeSeparators(qApp->applicationDirPath() + QStringLiteral("/cemu_config.ini")).toStdString())) {
+            pathSettings = qApp->applicationDirPath() + QStringLiteral("/cemu_config.ini");
+            portable = true;
+        } else if (!checkForCEmuBootImage()) {
+            pathSettings = configPath + QStringLiteral("cemu_config.ini");
+        }
     } else {
         pathSettings = opts.settingsFile;
     }
 
     settings = new QSettings(pathSettings, QSettings::IniFormat);
+    resetSettingsIfLoadedCEmuBootableImage();
 
     if (portable) {
         ui->checkPortable->setChecked(true);
@@ -318,6 +321,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     setUIEditMode(settings->value(QStringLiteral("uiMode"), true).toBool());
     setDebugResetTrigger(settings->value(QStringLiteral("resetOpensDebugger"), false).toBool());
     setEnableSoftCommands(settings->value(QStringLiteral("enableSoftCommands"), true).toBool());
+    setDataCol(settings->value(QStringLiteral("dataCol"), true).toBool());
     ui->flashBytes->setValue(settings->value(QStringLiteral("flashBytesPerLine"), 8).toInt());
     ui->ramBytes->setValue(settings->value(QStringLiteral("ramBytesPerLine"), 8).toInt());
     ui->memBytes->setValue(settings->value(QStringLiteral("memBytesPerLine"), 8).toInt());
@@ -699,14 +703,7 @@ void MainWindow::closeEvent(QCloseEvent *e) {
         qDebug("Thread Termination Failed.");
     }
 
-    settings->setValue(QStringLiteral("windowState"),       saveState(WindowStateVersion));
-    settings->setValue(QStringLiteral("windowGeometry"),    saveGeometry());
-    settings->setValue(QStringLiteral("windowSize"),        size());
-    settings->setValue(QStringLiteral("currDir"),           currentDir.absolutePath());
-    settings->setValue(QStringLiteral("flashBytesPerLine"), ui->flashBytes->value());
-    settings->setValue(QStringLiteral("ramBytesPerLine"),   ui->ramBytes->value());
-    settings->setValue(QStringLiteral("memBytesPerLine"),   ui->memBytes->value());
-    settings->setValue(QStringLiteral("keypadColor"),       ui->keypadWidget->getCurrColor());
+    saveMiscSettings();
 
     QMainWindow::closeEvent(e);
 }
@@ -1448,7 +1445,7 @@ void MainWindow::drawNextDisassembleLine() {
     QString formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2 %3  <font color='darkblue'>%4%5</font>%6</pre>")
                                .arg(int2hex(disasm.base_address, 6),
                                     breakpointSymbols,
-                                    label ? QString::fromStdString(*label) + ":" : ui->checkDataCol->isChecked() ? QString::fromStdString(disasm.instruction.data).leftJustified(12, ' ') : "",
+                                    label ? QString::fromStdString(*label) + ":" : useDataCol ? QString::fromStdString(disasm.instruction.data).leftJustified(12, ' ') : "",
                                     QString::fromStdString(disasm.instruction.opcode),
                                     QString::fromStdString(disasm.instruction.mode_suffix),
                                     instructionArgsHighlighted);
@@ -1467,13 +1464,13 @@ void MainWindow::drawNextDisassembleLine() {
 }
 
 void MainWindow::disasmContextMenu(const QPoint& posa) {
-    QString set_pc = "Set PC";
-    QString toggle_break = "Toggle Breakpoint";
-    QString toggle_write_watch = "Toggle Write Watchpoint";
-    QString toggle_read_watch = "Toggle Read Watchpoint";
-    QString toggle_rw_watch = "Toggle Read/Write Watchpoint";
-    QString run_until = "Run Until";
-    QString goto_mem = "Goto Memory View";
+    QString set_pc = tr("Set PC");
+    QString toggle_break = tr("Toggle Breakpoint");
+    QString toggle_write_watch = tr("Toggle Write Watchpoint");
+    QString toggle_read_watch = tr("Toggle Read Watchpoint");
+    QString toggle_rw_watch = tr("Toggle Read/Write Watchpoint");
+    QString run_until = tr("Run Until");
+    QString goto_mem = tr("Goto Memory View");
     ui->disassemblyView->setTextCursor(ui->disassemblyView->cursorForPosition(posa));
     QPoint globalPos = ui->disassemblyView->mapToGlobal(posa);
 
