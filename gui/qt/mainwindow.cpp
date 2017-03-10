@@ -362,7 +362,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     debugger_init();
 
-    if (!fileExists(QDir::toNativeSeparators(emu.rom).toStdString())) {
+    if (!fileExists(emu.rom.toStdString())) {
         if (!runSetup()) {
             initPassed = false;
             return;
@@ -419,10 +419,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     ui->de_regView->installEventFilter(this);
     ui->rregView->installEventFilter(this);
     ui->lcdWidget->setFocus();
-    setLCDScale(settings->value(QStringLiteral("scale"), 100).toUInt());
-    setSkinToggle(settings->value(QStringLiteral("skin"), true).toBool());
-    setAlwaysOnTop(settings->value(QStringLiteral("onTop"), false).toBool());
-    setMenuBarState(settings->value(QStringLiteral("disableMenubar"), false).toBool());
     if (!settings->value(QStringLiteral("firstrun"), false).toBool()) {
         QMessageBox::information(this, tr("Information"), tr("Welcome!\nCEmu uses a customizable dock-style interface. "
                                                              "Drag and drop to move tabs and windows around on the screen, "
@@ -431,24 +427,36 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
                                                              "Enjoy!"));
         settings->setValue(QStringLiteral("firstrun"), true);
     }
-    const QByteArray geometry = settings->value("windowGeometry", QByteArray()).toByteArray();
-    if (geometry.isEmpty()) {
-        const QRect availableGeometry = QApplication::desktop()->availableGeometry(this);
-        resize(availableGeometry.width() / 2, availableGeometry.height() / 2);
-        move((availableGeometry.width() - width()) / 2,
-             (availableGeometry.height() - height()) / 2);
-    } else {
-        restoreGeometry(geometry);
-        restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
-        if (!isMaximized()) {
-            QSize newSize = settings->value(QStringLiteral("windowSize")).toSize();
+}
 
-            setMinimumSize(QSize(0, 0));
-            setMaximumSize(QSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX));
+void MainWindow::showEvent(QShowEvent *e) {
+    QMainWindow::showEvent(e);
+    if (!firstShow) {
+        setLCDScale(settings->value(QStringLiteral("scale"), 100).toUInt());
+        setSkinToggle(settings->value(QStringLiteral("skin"), true).toBool());
+        const QByteArray geometry = settings->value("windowGeometry", QByteArray()).toByteArray();
+        if (geometry.isEmpty()) {
+            const QRect availableGeometry = QApplication::desktop()->availableGeometry(this);
+            resize(availableGeometry.width() / 2, availableGeometry.height() / 2);
+            move((availableGeometry.width() - width()) / 2,
+                 (availableGeometry.height() - height()) / 2);
+        } else {
+            restoreGeometry(geometry);
+            restoreState(settings->value(QStringLiteral("windowState")).toByteArray(), WindowStateVersion);
+            if (!isMaximized()) {
+                QSize newSize = settings->value(QStringLiteral("windowSize")).toSize();
 
-            resize(newSize);
+                setMinimumSize(QSize(0, 0));
+                setMaximumSize(QSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX));
+
+                resize(newSize);
+            }
         }
+        setAlwaysOnTop(settings->value(QStringLiteral("onTop"), false).toBool());
+        setMenuBarState(settings->value(QStringLiteral("disableMenubar"), false).toBool());
+        firstShow = true;
     }
+    e->accept();
 }
 
 void MainWindow::toggleKeyHistory() {

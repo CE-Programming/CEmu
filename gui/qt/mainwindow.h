@@ -90,6 +90,7 @@ protected:
     // Misc.
     virtual void closeEvent(QCloseEvent*) Q_DECL_OVERRIDE;
     virtual bool eventFilter(QObject*, QEvent*) Q_DECL_OVERRIDE;
+    virtual void showEvent(QShowEvent *event) Q_DECL_OVERRIDE;
 
     // Drag & Drop
     virtual void dropEvent(QDropEvent*) Q_DECL_OVERRIDE;
@@ -407,6 +408,7 @@ private:
     bool initPassed = true;
     bool enabledSoftCommands;
 
+    bool firstShow = false;
     bool useDataCol;
     bool loadedCEmuBootImage = false;
     static const int WindowStateVersion = 0;
