@@ -280,12 +280,17 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     autotester::stepCallback = []() { QApplication::processEvents(); };
 
+    QString portableSettings = qApp->applicationDirPath() + QStringLiteral("/cemu_config.ini");
+    QString localSettings = configPath + QStringLiteral("cemu_config.ini");
+
     if (opts.settingsFile.isEmpty()) {
-        if (fileExists(QDir::toNativeSeparators(qApp->applicationDirPath() + QStringLiteral("/cemu_config.ini")).toStdString())) {
-            pathSettings = qApp->applicationDirPath() + QStringLiteral("/cemu_config.ini");
+        if (checkForCEmuBootImage()) {
+            pathSettings = localSettings;
+        } else if (fileExists(portableSettings)) {
+            pathSettings = portableSettings;
             portable = true;
-        } else if (!checkForCEmuBootImage()) {
-            pathSettings = configPath + QStringLiteral("cemu_config.ini");
+        } else {
+            pathSettings = localSettings;
         }
     } else {
         pathSettings = opts.settingsFile;
@@ -362,14 +367,14 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     debugger_init();
 
-    if (!fileExists(emu.rom.toStdString())) {
+    if (!fileExists(emu.rom)) {
         if (!runSetup()) {
             initPassed = false;
             return;
         }
     } else {
         if (settings->value(QStringLiteral("restoreOnOpen")).toBool()
-                && fileExists(emu.image.toStdString())
+                && fileExists(emu.image)
                 && opts.restoreOnOpen) {
             restoreEmuState();
         } else {
@@ -514,20 +519,20 @@ void MainWindow::optLoadFiles(CEmuOpts &o) {
     }
 
     if (!o.imageFile.isEmpty()) {
-        if (fileExists(o.imageFile.toStdString())) {
+        if (fileExists(o.imageFile)) {
             emu.image = o.imageFile;
         }
     }
 }
 
 void MainWindow::optAttemptLoad(CEmuOpts &o) {
-    if (!fileExists(QDir::toNativeSeparators(emu.rom).toStdString())) {
+    if (!fileExists(emu.rom)) {
         if (!runSetup()) {
             initPassed = false;
             this->close();
         }
     } else {
-        if (o.restoreOnOpen && !o.imageFile.isEmpty() && fileExists(emu.image.toStdString())) {
+        if (o.restoreOnOpen && !o.imageFile.isEmpty() && fileExists(emu.image)) {
             restoreEmuState();
         } else {
             if (o.forceReloadRom) {

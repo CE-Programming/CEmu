@@ -16,7 +16,7 @@
 
 #define set_reset(in, out, var) ((var) = (bool)(in) ? ((var) | (out)) : ((var) & ~(out)))
 
-bool fileExists(const std::string& path);
+bool fileExists(const QString& path);
 std::string calc_var_content_string(const calc_var_t& var);
 
 // Qt Specific

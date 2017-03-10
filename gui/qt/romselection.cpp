@@ -86,7 +86,7 @@ bool RomSelection::checkImageSize(const char *filename) {
 }
 
 void RomSelection::checkInput(const QString &path) {
-    ui->buttonNext->setEnabled(fileExists(path.toStdString()));
+    ui->buttonNext->setEnabled(fileExists(path));
 }
 
 void RomSelection::createROMImageSelected() {

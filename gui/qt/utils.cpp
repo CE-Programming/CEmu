@@ -1,3 +1,4 @@
+#include <QDir>
 #include <QtCore/QString>
 #include <QtCore/QTime>
 #include <QtCore/QCoreApplication>
@@ -10,11 +11,15 @@
 QString execPath;
 QString configPath;
 
-bool fileExists(const std::string& path) {
-    if (path.empty()) {
+bool fileExists(const QString& ptath) {
+    QString path(ptath);
+    path = QDir::toNativeSeparators(path);
+
+    if (path.isEmpty()) {
         return false;
     }
-    if (FILE *file = fopen_utf8(path.c_str(), "r")) {
+
+    if (FILE *file = fopen_utf8(path.toStdString().c_str(), "r")) {
         fclose(file);
         return true;
     } else {
