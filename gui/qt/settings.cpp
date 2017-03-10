@@ -381,8 +381,8 @@ void MainWindow::adjustScreen() {
     bool skin = ui->checkSkin->isChecked();
     ui->calcSkinTop->setVisible(skin);
     float w, h;
-    w = 320 * scale;
-    h = 240 * scale;
+    w = LCD_WIDTH * scale;
+    h = LCD_HEIGHT * scale;
     ui->lcdWidget->setFixedSize(w, h);
     ui->lcdWidget->move(skin ? 60 * scale : 0, skin ? 78 * scale : 0);
     if (skin) {

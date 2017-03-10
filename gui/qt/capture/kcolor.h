@@ -42,7 +42,7 @@ typedef union kacolor {
 
 /* gamma_tables[0]: array of 256 gamma-conversion values
    gamma_tables[1]: array of 256 reverse gamma-conversion values */
-extern uint16_t* gamma_tables[2];
+extern const uint16_t* gamma_tables[2];
 
 
 /* set `*kc` to the gamma transformation of `a0/a1/a2` [RGB] */

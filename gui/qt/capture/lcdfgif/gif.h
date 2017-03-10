@@ -11,7 +11,7 @@
 #define LCDF_GIF_H
 #include <stdio.h>
 #include <stdlib.h>
-#include "../lcdf/inttypes.h"
+#include <stdint.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -62,9 +62,6 @@ struct Gif_Stream {
 
 Gif_Stream *    Gif_NewStream(void);
 void            Gif_DeleteStream(Gif_Stream *);
-
-Gif_Stream *    Gif_CopyStreamSkeleton(Gif_Stream *);
-Gif_Stream *    Gif_CopyStreamImages(Gif_Stream *);
 
 #define         Gif_ScreenWidth(gfs)            ((gfs)->screen_width)
 #define         Gif_ScreenHeight(gfs)           ((gfs)->screen_height)
@@ -125,19 +122,16 @@ void            Gif_DeleteImage(Gif_Image *gfi);
 
 int             Gif_AddImage(Gif_Stream *gfs, Gif_Image *gfi);
 void            Gif_RemoveImage(Gif_Stream *gfs, int i);
-Gif_Image *     Gif_CopyImage(Gif_Image *gfi);
 void            Gif_MakeImageEmpty(Gif_Image* gfi);
 
 Gif_Image *     Gif_GetImage(Gif_Stream *gfs, int i);
 Gif_Image *     Gif_GetNamedImage(Gif_Stream *gfs, const char *name);
-int             Gif_ImageNumber(Gif_Stream *gfs, Gif_Image *gfi);
 
 #define         Gif_ImageWidth(gfi)             ((gfi)->width)
 #define         Gif_ImageHeight(gfi)            ((gfi)->height)
 #define         Gif_ImageDelay(gfi)             ((gfi)->delay)
 #define         Gif_ImageUserData(gfi)          ((gfi)->userdata)
 #define         Gif_SetImageUserData(gfi, v)    ((gfi)->userdata = v)
-int             Gif_ImageColorBound(const Gif_Image* gfi);
 
 typedef         void (*Gif_ReadErrorHandler)(Gif_Stream* gfs,
                                              Gif_Image* gfi,
@@ -162,8 +156,6 @@ int             Gif_SetUncompressedImage(Gif_Image *gfi, uint8_t *data,
 int             Gif_CreateUncompressedImage(Gif_Image* gfi, int data_interlaced);
 
 int             Gif_ClipImage(Gif_Image *gfi, int l, int t, int w, int h);
-
-void            Gif_InitCompressInfo(Gif_CompressInfo *gcinfo);
 
 
 /** GIF_COLORMAP **/
@@ -257,11 +249,8 @@ struct Gif_Record {
 #define GIF_WRITE_OPTIMIZE              4
 #define GIF_WRITE_SHRINK                8
 
-void            Gif_SetErrorHandler(Gif_ReadErrorHandler handler);
-Gif_Stream*     Gif_ReadFile(FILE* f);
 Gif_Stream*     Gif_FullReadFile(FILE* f, int flags, const char* landmark,
                                  Gif_ReadErrorHandler handler);
-Gif_Stream*     Gif_ReadRecord(const Gif_Record* record);
 Gif_Stream*     Gif_FullReadRecord(const Gif_Record* record, int flags,
                                    const char* landmark,
                                    Gif_ReadErrorHandler handler);
@@ -289,8 +278,6 @@ char *          Gif_CopyString(const char *);
 #define GIF_T_IMAGE                     (1)
 #define GIF_T_COLORMAP                  (2)
 typedef void    (*Gif_DeletionHookFunc)(int, void *, void *);
-int             Gif_AddDeletionHook(int, Gif_DeletionHookFunc, void *);
-void            Gif_RemoveDeletionHook(int, Gif_DeletionHookFunc, void *);
 
 #ifdef GIF_DEBUGGING
 #define         GIF_DEBUG(x)                    Gif_Debug x

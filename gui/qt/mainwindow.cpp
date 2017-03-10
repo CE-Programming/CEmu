@@ -245,7 +245,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     stepOutShortcut = new QShortcut(QKeySequence(Qt::Key_F9), this);
     debuggerShortcut = new QShortcut(QKeySequence(Qt::Key_F10), this);
     asmShortcut = new QShortcut(QKeySequence(Qt::Key_Pause), this);
-    gifShortcut = new QShortcut(QKeySequence(Qt::Key_F11), this);
 
     debuggerShortcut->setAutoRepeat(false);
     stepInShortcut->setAutoRepeat(false);
@@ -253,7 +252,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     stepNextShortcut->setAutoRepeat(false);
     stepOutShortcut->setAutoRepeat(false);
     asmShortcut->setAutoRepeat(false);
-    gifShortcut->setAutoRepeat(false);
 
     connect(asmShortcut, &QShortcut::activated, this, &MainWindow::sendASMKey);
     connect(debuggerShortcut, &QShortcut::activated, this, &MainWindow::debuggerChangeState);
@@ -261,7 +259,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(stepOverShortcut, &QShortcut::activated, this, &MainWindow::stepOverPressed);
     connect(stepNextShortcut, &QShortcut::activated, this, &MainWindow::stepNextPressed);
     connect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOutPressed);
-    connect(gifShortcut, &QShortcut::activated, this, &MainWindow::recordGIF);
 
     // Meta Types
     qRegisterMetaType<uint32_t>("uint32_t");
@@ -434,9 +431,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
                                                              "Enjoy!"));
         settings->setValue(QStringLiteral("firstrun"), true);
     }
-}
-
-void MainWindow::showEvent(QShowEvent *e) {
     const QByteArray geometry = settings->value("windowGeometry", QByteArray()).toByteArray();
     if (geometry.isEmpty()) {
         const QRect availableGeometry = QApplication::desktop()->availableGeometry(this);
@@ -455,9 +449,6 @@ void MainWindow::showEvent(QShowEvent *e) {
             resize(newSize);
         }
     }
-    QMainWindow::show();
-    QApplication::processEvents();
-    e->accept();
 }
 
 void MainWindow::toggleKeyHistory() {
@@ -842,19 +833,40 @@ void MainWindow::recordGIF() {
         gif_start_recording(path.toStdString().c_str(), ui->frameskipSlider->value());
         showStatusMsg(tr("Recording..."));
     } else {
+        lcd_event_gui_callback = NULL;
+        showStatusMsg(QStringLiteral(""));
         if (gif_stop_recording()) {
-            showStatusMsg(QStringLiteral(""));
-            if (!(gif_optimize(path.toStdString().c_str(), opt_path.toStdString().c_str()))) {
-                QFile(path).remove();
-                QMessageBox::warning(this, tr("GIF Optimization Failed"), tr("A failure occured during recording"));
+            QFileDialog dialog(this);
+
+            dialog.setAcceptMode(QFileDialog::AcceptSave);
+            dialog.setFileMode(QFileDialog::AnyFile);
+            dialog.setDirectory(currentDir);
+            dialog.setNameFilter(tr("GIF images (*.gif)"));
+            dialog.setWindowTitle(tr("Save Recorded GIF"));
+            dialog.setDefaultSuffix(QStringLiteral("gif"));
+            dialog.exec();
+
+            if (!dialog.selectedFiles().isEmpty()) {
+                QString filename = dialog.selectedFiles().first();
+                QFile(filename).remove();
+                if (gif_optimize(path, opt_path)) {
+                    QFile(opt_path).rename(filename);
+                    QFile(path).remove();
+                } else {
+                    QMessageBox::warning(this, tr("GIF Optimization Failed"), tr("Optimizing GIF failed; output is still valid."));
+                    QFile(path).rename(filename);
+                    QFile(opt_path).remove();
+                }
             } else {
                 QFile(path).remove();
-                screenshotSave(tr("GIF images (*.gif)"), QStringLiteral("gif"), opt_path);
+                QFile(opt_path).remove();
             }
+
+            currentDir = dialog.directory();
+
         } else {
             QMessageBox::warning(this, tr("Failed recording GIF"), tr("A failure occured during recording"));
         }
-        lcd_event_gui_callback = NULL;
         path.clear();
         opt_path.clear();
     }

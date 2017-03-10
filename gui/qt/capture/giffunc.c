@@ -15,135 +15,6 @@
 extern "C" {
 #endif
 
-const char *program_name = "gifsicle";
-static int verbose_pos = 0;
-int error_count = 0;
-int no_warnings = 0;
-
-static void
-verror(const char* landmark, int need_file, int seriousness, const char *fmt, va_list val)
-{
-    char pbuf[256], buf[BUFSIZ], xbuf[BUFSIZ];
-    const char* xfmt;
-    int n, i, p;
-    size_t xi;
-
-    (void)need_file;
-
-    if (!fmt || !*fmt)
-        return;
-
-    if (!landmark)
-        landmark = "";
-
-    if (seriousness > 2)
-        xfmt = "%s:%s%s fatal error: ";
-    else if (seriousness == 1)
-        xfmt = "%s:%s%s warning: ";
-    else
-        xfmt = "%s:%s%s ";
-    snprintf(pbuf, sizeof(pbuf), xfmt, program_name, landmark, *landmark ? ":" : "");
-    p = strlen(pbuf);
-
-    vsnprintf(buf, sizeof(buf), fmt, val);
-    n = strlen(buf);
-    if ((size_t) n + 1 < sizeof(buf) && (n == 0 || buf[n - 1] != '\n')) {
-        buf[n++] = '\n';
-        buf[n] = 0;
-    }
-
-    xi = 0;
-    for (i = 0; i != n; ) {
-        /* char* pos = (char*) memchr(&buf[i], '\n', n - i);
-           int l = (pos ? &pos[1] - &buf[i] : n - i); */
-        int l = n - i;
-        int xd = snprintf(&xbuf[xi], sizeof(xbuf) - xi, "%.*s%.*s",
-                          (int) p, pbuf, (int) l, &buf[i]);
-        i += l;
-        xi = (xi + xd > sizeof(xbuf) ? sizeof(xbuf) : xi + xd);
-    }
-
-    if (seriousness == 1 && no_warnings)
-        return;
-    else if (seriousness > 1)
-        error_count++;
-
-    verbose_endline();
-    fwrite(xbuf, 1, xi, stderr);
-}
-
-void fatal_error(const char* format, ...) {
-    va_list val;
-    va_start(val, format);
-    verror((const char*) 0, 0, 3, format, val);
-    va_end(val);
-    exit(EXIT_USER_ERR);
-}
-
-void lerror(const char* landmark, const char* format, ...) {
-    va_list val;
-    va_start(val, format);
-    verror(landmark, 2, 2, format, val);
-    va_end(val);
-}
-
-void error(int need_file, const char* format, ...) {
-    va_list val;
-    va_start(val, format);
-    verror((const char*) 0, need_file, 2, format, val);
-    va_end(val);
-}
-
-void lwarning(const char* landmark, const char* format, ...) {
-    va_list val;
-    va_start(val, format);
-    verror(landmark, 2, 1, format, val);
-    va_end(val);
-}
-
-void warning(int need_file, const char* format, ...) {
-    va_list val;
-    va_start(val, format);
-    verror((const char*) 0, need_file, 1, format, val);
-    va_end(val);
-}
-
-void
-verbose_open(char open, const char *name)
-{
-  int l = strlen(name);
-  if (verbose_pos && verbose_pos + 3 + l > 79) {
-    fputc('\n', stderr);
-    verbose_pos = 0;
-  }
-  if (verbose_pos) {
-    fputc(' ', stderr);
-    verbose_pos++;
-  }
-  fputc(open, stderr);
-  fputs(name, stderr);
-  verbose_pos += 1 + l;
-}
-
-
-void
-verbose_close(char close)
-{
-  fputc(close, stderr);
-  verbose_pos++;
-}
-
-
-void
-verbose_endline(void)
-{
-  if (verbose_pos) {
-    fputc('\n', stderr);
-    fflush(stderr);
-    verbose_pos = 0;
-  }
-}
-
 Gif_Stream *
 Gif_NewStream(void)
 {
@@ -334,7 +205,6 @@ Gif_AddImage(Gif_Stream *gfs, Gif_Image *gfi)
   return 1;
 }
 
-
 void
 Gif_RemoveImage(Gif_Stream *gfs, int inum)
 {
@@ -346,17 +216,6 @@ Gif_RemoveImage(Gif_Stream *gfs, int inum)
     gfs->images[j] = gfs->images[j+1];
   gfs->nimages--;
 }
-
-
-int
-Gif_ImageColorBound(const Gif_Image* gfi)
-{
-    if (gfi->compressed)
-        return 1 << gfi->compressed[0];
-    else
-        return 256;
-}
-
 
 int
 Gif_AddCommentTake(Gif_Comment *gfcom, char *x, int xlen)
@@ -415,18 +274,6 @@ Gif_AddExtension(Gif_Stream* gfs, Gif_Image* gfi, Gif_Extension* gfex)
 }
 
 
-int
-Gif_ImageNumber(Gif_Stream *gfs, Gif_Image *gfi)
-{
-    int i;
-    if (gfs && gfi)
-        for (i = 0; i != gfs->nimages; ++i)
-            if (gfs->images[i] == gfi)
-                return i;
-    return -1;
-}
-
-
 void
 Gif_CalculateScreenSize(Gif_Stream *gfs, int force)
 {
@@ -458,43 +305,6 @@ Gif_CalculateScreenSize(Gif_Stream *gfs, int force)
 }
 
 
-Gif_Stream *
-Gif_CopyStreamSkeleton(Gif_Stream *gfs)
-{
-  Gif_Stream *ngfs = Gif_NewStream();
-  if (!ngfs)
-    return 0;
-  ngfs->global = Gif_CopyColormap(gfs->global);
-  ngfs->background = gfs->background;
-  ngfs->screen_width = gfs->screen_width;
-  ngfs->screen_height = gfs->screen_height;
-  ngfs->loopcount = gfs->loopcount;
-  if (gfs->global && !ngfs->global) {
-    Gif_DeleteStream(ngfs);
-    return 0;
-  } else
-    return ngfs;
-}
-
-
-Gif_Stream *
-Gif_CopyStreamImages(Gif_Stream *gfs)
-{
-  Gif_Stream *ngfs = Gif_CopyStreamSkeleton(gfs);
-  int i;
-  if (!ngfs)
-    return 0;
-  for (i = 0; i < gfs->nimages; i++) {
-    Gif_Image *gfi = Gif_CopyImage(gfs->images[i]);
-    if (!gfi || !Gif_AddImage(ngfs, gfi)) {
-      Gif_DeleteStream(ngfs);
-      return 0;
-    }
-  }
-  return ngfs;
-}
-
-
 Gif_Colormap *
 Gif_CopyColormap(Gif_Colormap *src)
 {
@@ -510,89 +320,6 @@ Gif_CopyColormap(Gif_Colormap *src)
   return dest;
 }
 
-
-Gif_Image *
-Gif_CopyImage(Gif_Image *src)
-{
-  Gif_Image *dest;
-  uint8_t *data;
-  int i;
-  if (!src)
-    return 0;
-
-  dest = Gif_NewImage();
-  if (!dest)
-    return 0;
-
-  dest->identifier = Gif_CopyString(src->identifier);
-  if (!dest->identifier && src->identifier)
-      goto failure;
-  if (src->comment) {
-      dest->comment = Gif_NewComment();
-      if (!dest->comment)
-        goto failure;
-      for (i = 0; i < src->comment->count; i++)
-        if (!Gif_AddComment(dest->comment, src->comment->str[i],
-                            src->comment->len[i]))
-          goto failure;
-  }
-  if (src->extension_list) {
-      Gif_Extension* gfex = src->extension_list;
-      while (gfex) {
-          Gif_Extension* dstex = Gif_CopyExtension(gfex);
-          if (!dstex)
-              goto failure;
-          Gif_AddExtension(NULL, dest, dstex);
-          gfex = gfex->next;
-      }
-  }
-
-  dest->local = Gif_CopyColormap(src->local);
-  if (!dest->local && src->local)
-    goto failure;
-  dest->transparent = src->transparent;
-
-  dest->delay = src->delay;
-  dest->disposal = src->disposal;
-  dest->left = src->left;
-  dest->top = src->top;
-
-  dest->width = src->width;
-  dest->height = src->height;
-
-  dest->interlace = src->interlace;
-  if (src->img) {
-    dest->img = Gif_NewArray(uint8_t *, dest->height + 1);
-    dest->image_data = Gif_NewArray(uint8_t, (size_t) dest->width * (size_t) dest->height);
-    dest->free_image_data = Gif_Free;
-    if (!dest->img || !dest->image_data)
-      goto failure;
-    for (i = 0, data = dest->image_data; i < dest->height; i++) {
-      memcpy(data, src->img[i], dest->width);
-      dest->img[i] = data;
-      data += dest->width;
-    }
-    dest->img[dest->height] = 0;
-  }
-  if (src->compressed) {
-    if (src->free_compressed == 0)
-      dest->compressed = src->compressed;
-    else {
-      dest->compressed = Gif_NewArray(uint8_t, src->compressed_len);
-      dest->free_compressed = Gif_Free;
-      memcpy(dest->compressed, src->compressed, src->compressed_len);
-    }
-    dest->compressed_len = src->compressed_len;
-  }
-
-  return dest;
-
- failure:
-  Gif_DeleteImage(dest);
-  return 0;
-}
-
-
 void Gif_MakeImageEmpty(Gif_Image* gfi) {
     Gif_ReleaseUncompressedImage(gfi);
     Gif_ReleaseCompressedImage(gfi);
@@ -605,19 +332,9 @@ void Gif_MakeImageEmpty(Gif_Image* gfi) {
 
 /** DELETION **/
 
-typedef struct Gif_DeletionHook {
-  int kind;
-  Gif_DeletionHookFunc func;
-  void *callback_data;
-  struct Gif_DeletionHook *next;
-} Gif_DeletionHook;
-
-static Gif_DeletionHook *all_hooks;
-
 void
 Gif_DeleteStream(Gif_Stream *gfs)
 {
-  Gif_DeletionHook *hook;
   int i;
   if (!gfs || --gfs->refcount > 0)
     return;
@@ -632,9 +349,6 @@ Gif_DeleteStream(Gif_Stream *gfs)
   while (gfs->end_extension_list)
       Gif_DeleteExtension(gfs->end_extension_list);
 
-  for (hook = all_hooks; hook; hook = hook->next)
-    if (hook->kind == GIF_T_STREAM)
-      (*hook->func)(GIF_T_STREAM, gfs, hook->callback_data);
   Gif_Delete(gfs);
 }
 
@@ -642,13 +356,8 @@ Gif_DeleteStream(Gif_Stream *gfs)
 void
 Gif_DeleteImage(Gif_Image *gfi)
 {
-  Gif_DeletionHook *hook;
   if (!gfi || --gfi->refcount > 0)
     return;
-
-  for (hook = all_hooks; hook; hook = hook->next)
-    if (hook->kind == GIF_T_IMAGE)
-      (*hook->func)(GIF_T_IMAGE, gfi, hook->callback_data);
 
   Gif_DeleteArray(gfi->identifier);
   Gif_DeleteComment(gfi->comment);
@@ -669,13 +378,8 @@ Gif_DeleteImage(Gif_Image *gfi)
 void
 Gif_DeleteColormap(Gif_Colormap *gfcm)
 {
-  Gif_DeletionHook *hook;
   if (!gfcm || --gfcm->refcount > 0)
     return;
-
-  for (hook = all_hooks; hook; hook = hook->next)
-    if (hook->kind == GIF_T_COLORMAP)
-      (*hook->func)(GIF_T_COLORMAP, gfcm, hook->callback_data);
 
   Gif_DeleteArray(gfcm->col);
   Gif_Delete(gfcm);
@@ -717,44 +421,6 @@ Gif_DeleteExtension(Gif_Extension *gfex)
   }
   Gif_Delete(gfex);
 }
-
-
-/** DELETION HOOKS **/
-
-int
-Gif_AddDeletionHook(int kind, void (*func)(int, void *, void *), void *cb)
-{
-  Gif_DeletionHook *hook = Gif_New(Gif_DeletionHook);
-  if (!hook)
-    return 0;
-  Gif_RemoveDeletionHook(kind, func, cb);
-  hook->kind = kind;
-  hook->func = func;
-  hook->callback_data = cb;
-  hook->next = all_hooks;
-  all_hooks = hook;
-  return 1;
-}
-
-void
-Gif_RemoveDeletionHook(int kind, void (*func)(int, void *, void *), void *cb)
-{
-  Gif_DeletionHook *hook = all_hooks, *prev = 0;
-  while (hook) {
-    if (hook->kind == kind && hook->func == func
-        && hook->callback_data == cb) {
-      if (prev)
-        prev->next = hook->next;
-      else
-        all_hooks = hook->next;
-      Gif_Delete(hook);
-      return;
-    }
-    prev = hook;
-    hook = hook->next;
-  }
-}
-
 
 int
 Gif_ColorEq(Gif_Color *c1, Gif_Color *c2)
@@ -939,13 +605,6 @@ Gif_CreateUncompressedImage(Gif_Image *gfi, int data_interlaced)
     uint8_t *data = Gif_NewArray(uint8_t, sz ? sz : 1);
     return Gif_SetUncompressedImage(gfi, data, Gif_Free, data_interlaced);
 }
-
-void
-Gif_InitCompressInfo(Gif_CompressInfo *gcinfo)
-{
-    gcinfo->flags = 0;
-}
-
 
 #if !GIF_ALLOCATOR_DEFINED
 void* Gif_Realloc(void* p, size_t s, size_t n, const char* file, int line) {

@@ -46,16 +46,16 @@ namespace autotester
      * See http://wikiti.brandonw.net/index.php?title=Category:84PCE:RAM:By_Address
      */
     static const std::unordered_map<std::string, unsigned int> hash_consts = {
-        { "vram_start",     0xD40000 },  { "vram_16_size",    2*320*240 },
-        { "vram2_start",    0xD52C00 },  { "vram_8_size",       320*240 },
-        { "ram_start",      0xD00000 },  { "ram_size",          0x40000 },
-        { "textShadow",     0xD006C0 },  { "textShadow_size",       260 },
-        { "cmdShadow",      0xD0232D },  { "cmdShadow_size",        260 },
-        { "pixelShadow",    0xD031F6 },  { "pixelShadow_size",     8400 },
-        { "pixelShadow2",   0xD052C6 },  { "pixelShadow2_size",    8400 },
-        { "cmdPixelShadow", 0xD07396 },  { "cmdPixelShadow_size",  8400 },
-        { "plotSScreen",    0xD09466 },  { "plotSScreen_size",    21945 },
-        { "saveSScreen",    0xD0EA1F },  { "saveSScreen_size",    21945 },
+        { "vram_start",     0xD40000 },  { "vram_16_size",    2*LCD_SIZE },
+        { "vram2_start",    0xD52C00 },  { "vram_8_size",       LCD_SIZE },
+        { "ram_start",      0xD00000 },  { "ram_size",           0x40000 },
+        { "textShadow",     0xD006C0 },  { "textShadow_size",        260 },
+        { "cmdShadow",      0xD0232D },  { "cmdShadow_size",         260 },
+        { "pixelShadow",    0xD031F6 },  { "pixelShadow_size",      8400 },
+        { "pixelShadow2",   0xD052C6 },  { "pixelShadow2_size",     8400 },
+        { "cmdPixelShadow", 0xD07396 },  { "cmdPixelShadow_size",   8400 },
+        { "plotSScreen",    0xD09466 },  { "plotSScreen_size",     21945 },
+        { "saveSScreen",    0xD0EA1F },  { "saveSScreen_size",     21945 },
         { "userMem",        0xD1A881 },
         { "lcdPalette",     0xE30200 },  { "lcdPalette_size",       512 },
         { "cursorImage",    0xE30800 },  { "cursorImage_size",     1024 }

@@ -86,15 +86,10 @@ static const uint16_t srgb_revgamma_table_256[256] = {
     32313, 32370, 32427, 32484, 32541, 32598, 32654, 32711
 };
 
-uint16_t* gamma_tables[2] = {
+const uint16_t* gamma_tables[2] = {
     (uint16_t*) srgb_gamma_table_256,
     (uint16_t*) srgb_revgamma_table_256
 };
-
-#if ENABLE_THREADS
-pthread_mutex_t kd3_sort_lock;
-#endif
-
 
 const char* kc_debug_str(kcolor x) {
     static int whichbuf = 0;
@@ -398,9 +393,9 @@ Gif_Colormap* colormap_median_cut(kchist* kch, Gt_OutputData* od)
        part of the pbmplus package. */
 
     if (adapt_size < 2 || adapt_size > 256)
-        fatal_error("adaptive palette size must be between 2 and 256");
+        exit(1);
     if (adapt_size >= kch->n && !od->colormap_fixed)
-        warning(1, "trivial adaptive palette (only %d %s in source)",
+        fprintf(stderr, "trivial adaptive palette (only %d %s in source)",
                 kch->n, kch->n == 1 ? "color" : "colors");
     if (adapt_size >= kch->n)
         adapt_size = kch->n;
@@ -651,9 +646,9 @@ colormap_diversity(kchist* kch, Gt_OutputData* od, int blend)
        <bradley@cis.upenn.edu> and Tom Lane <Tom.Lane@g.gp.cs.cmu.edu>. */
 
     if (adapt_size < 2 || adapt_size > 256)
-        fatal_error("adaptive palette size must be between 2 and 256");
+        abort();
     if (adapt_size > kch->n && !od->colormap_fixed)
-        warning(1, "trivial adaptive palette (only %d colors in source)", kch->n);
+        fprintf(stderr, "trivial adaptive palette (only %d colors in source)", kch->n);
     if (adapt_size > kch->n)
         adapt_size = kch->n;
 
@@ -840,56 +835,6 @@ static int kd3_build_range(int* perm, int nperm, int n, int depth) {
     return 1+nl+nr;
 }
 
-#if 0
-static void kd3_print_depth(kd3_tree* kd3, int depth, kd3_treepos* p,
-                            int* a, int* b) {
-    int i;
-    char x[6][10];
-    for (i = 0; i != 3; ++i) {
-        if (a[i] == INT_MIN)
-            sprintf(x[2*i], "*");
-        else
-            sprintf(x[2*i], "%d", a[i]);
-        if (b[i] == INT_MAX)
-            sprintf(x[2*i+1], "*");
-        else
-            sprintf(x[2*i+1], "%d", b[i]);
-    }
-    printf("%*s<%s:%s,%s:%s,%s:%s>", depth*3, "",
-           x[0], x[1], x[2], x[3], x[4], x[5]);
-    if (p->offset < 0) {
-        if (p->pivot >= 0) {
-            assert(kd3->ks[p->pivot].a[0] >= a[0]);
-            assert(kd3->ks[p->pivot].a[1] >= a[1]);
-            assert(kd3->ks[p->pivot].a[2] >= a[2]);
-            assert(kd3->ks[p->pivot].a[0] < b[0]);
-            assert(kd3->ks[p->pivot].a[1] < b[1]);
-            assert(kd3->ks[p->pivot].a[2] < b[2]);
-            printf(" ** @%d: <%d,%d,%d>\n", p->pivot, kd3->ks[p->pivot].a[0], kd3->ks[p->pivot].a[1], kd3->ks[p->pivot].a[2]);
-        }
-    } else {
-        int aindex = depth % 3, x[3];
-        assert(p->pivot >= a[aindex]);
-        assert(p->pivot < b[aindex]);
-        printf((aindex == 0 ? " | <%d,_,_>\n" :
-                aindex == 1 ? " | <_,%d,_>\n" : " | <_,_,%d>\n"), p->pivot);
-        memcpy(x, b, sizeof(int) * 3);
-        x[aindex] = p->pivot;
-        kd3_print_depth(kd3, depth + 1, p + 1, a, x);
-        memcpy(x, a, sizeof(int) * 3);
-        x[aindex] = p->pivot;
-        kd3_print_depth(kd3, depth + 1, p + p->offset, x, b);
-    }
-}
-
-static void kd3_print(kd3_tree* kd3) {
-    int a[3], b[3];
-    a[0] = a[1] = a[2] = INT_MIN;
-    b[0] = b[1] = b[2] = INT_MAX;
-    kd3_print_depth(kd3, 0, kd3->tree, a, b);
-}
-#endif
-
 void kd3_build_xradius(kd3_tree* kd3) {
     int i, j;
     /* create xradius */
@@ -922,14 +867,6 @@ void kd3_build(kd3_tree* kd3) {
     perm = Gif_NewArray(int, kd3->nitems);
     for (i = 0; i != kd3->nitems; ++i)
         perm[i] = i;
-#if ENABLE_THREADS
-    /*
-     * Because kd3_sorter is a static global used in some
-     * sorting comparators, put a mutex around this
-     * code block to avoid an utter catastrophe.
-     */
-    pthread_mutex_lock(&kd3_sort_lock);
-#endif
 
     kd3_sorter = kd3;
     qsort(perm, kd3->nitems, sizeof(int), kd3_item_all_compar);
@@ -942,10 +879,6 @@ void kd3_build(kd3_tree* kd3) {
 
     kd3_build_range(perm, kd3->nitems - (delta - 1), 0, 0);
     assert(kd3->maxdepth < 32);
-
-#if ENABLE_THREADS
-    pthread_mutex_unlock(&kd3_sort_lock);
-#endif
     Gif_DeleteArray(perm);
 }
 
@@ -1564,16 +1497,6 @@ unmark_colors(Gif_Colormap *gfcm)
   if (gfcm)
     for (i = 0; i < gfcm->ncol; i++)
       gfcm->col[i].haspixel = 0;
-}
-
-void
-unmark_colors_2(Gif_Colormap *gfcm)
-{
-    int i;
-    for (i = 0; i < gfcm->ncol; i++) {
-        gfcm->col[i].pixel = 256;
-        gfcm->col[i].haspixel = 0;
-    }
 }
 
 void

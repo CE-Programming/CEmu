@@ -7,8 +7,12 @@ extern "C" {
 
 #include "port.h"
 
+#define LCD_WIDTH  320
+#define LCD_HEIGHT 240
+#define LCD_SIZE   (LCD_WIDTH*LCD_HEIGHT)
+
 /* Internal Use */
-extern uint32_t lcd_framebuffer[320*240];
+extern uint32_t lcd_framebuffer[LCD_SIZE];
 
 /* Standard LCD state */
 PACK(typedef struct lcd_cntrl_state {

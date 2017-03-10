@@ -550,8 +550,7 @@ X(create_subimages)(Gif_Stream *gfs, int optimize_flags, int save_uncompressed)
                   goto retry_frame;
               }
           }
-          fatal_error("%d colors required in a frame (256 is max)",
-                      subimage->required_color_count);
+          exit(1);
       }
     }
 

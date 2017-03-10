@@ -94,7 +94,6 @@ protected:
     // Drag & Drop
     virtual void dropEvent(QDropEvent*) Q_DECL_OVERRIDE;
     virtual void dragEnterEvent(QDragEnterEvent*) Q_DECL_OVERRIDE;
-    virtual void showEvent(QShowEvent*) Q_DECL_OVERRIDE;
 
 private:
     enum breakpointIndex {

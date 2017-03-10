@@ -140,7 +140,7 @@ gif_writer_init(Gif_Writer* grr, FILE* f, const Gif_CompressInfo* gcinfo)
   if (gcinfo)
     grr->gcinfo = *gcinfo;
   else
-    Gif_InitCompressInfo(&grr->gcinfo);
+    grr->gcinfo.flags = 0;
   grr->errors = 0;
   grr->cleared = 0;
   grr->code_table.nodes = Gif_NewArray(Gif_Node, NODES_SIZE);

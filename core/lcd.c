@@ -10,9 +10,9 @@
 /* Global LCD state */
 lcd_state_t lcd;
 
-uint32_t lcd_framebuffer[320*240];
+uint32_t lcd_framebuffer[LCD_SIZE];
 
-#define vram_size (320 * 240 * 2)
+#define vram_size (LCD_SIZE * 2)
 #define lcd_dma_size 0x80000
 
 void (*lcd_event_gui_callback)(void) = NULL;
@@ -52,7 +52,7 @@ void lcd_drawframe(uint32_t *out, lcd_state_t *lcd_state) {
     uint_fast8_t mode = lcd_state->control >> 1 & 7;
     bool rgb = lcd_state->control & (1 << 8);
     bool bebo = lcd_state->control & (1 << 9);
-    uint_fast32_t words = 320 * 240;
+    uint_fast32_t words = LCD_SIZE;
     uint_fast32_t word, color;
     uint32_t ofs = lcd_state->upcurr & ~7;
 

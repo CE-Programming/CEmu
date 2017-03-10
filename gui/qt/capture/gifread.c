@@ -930,23 +930,6 @@ Gif_FullReadRecord(const Gif_Record *gifrec, int read_flags,
 #undef Gif_ReadFile
 #undef Gif_ReadRecord
 
-Gif_Stream *
-Gif_ReadFile(FILE *f)
-{
-  return Gif_FullReadFile(f, GIF_READ_UNCOMPRESSED, 0, 0);
-}
-
-Gif_Stream *
-Gif_ReadRecord(const Gif_Record *gifrec)
-{
-  return Gif_FullReadRecord(gifrec, GIF_READ_UNCOMPRESSED, 0, 0);
-}
-
-void
-Gif_SetErrorHandler(Gif_ReadErrorHandler handler) {
-    default_error_handler = handler;
-}
-
 #ifdef __cplusplus
 }
 #endif

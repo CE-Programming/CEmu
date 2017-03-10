@@ -132,19 +132,18 @@ SOURCES +=  utils.cpp \
     ../../core/debug/debug.c \
     sendinghandler.cpp \
     capture/optimize.c \
-    capture/opttemplate.c \
     capture/gifread.c \
     capture/gifwrite.c \
-    capture/quantize.c \
     capture/giffunc.c \
-    capture/xform.c \
     debugger.cpp \
     hexeditor.cpp \
     settings.cpp \
     ../../core/debug/stepping.cpp \
     ../../core/dma.c \
     ipc.cpp \
-    keyhistory.cpp
+    keyhistory.cpp \
+    capture/opttemplate.c \
+    capture/quantize.c
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
@@ -214,17 +213,14 @@ HEADERS  +=  utils.h \
     ../../core/debug/stepping.h \
     cemuopts.h \
     sendinghandler.h \
-    capture/kcolor.h \
     capture/gifsicle.h \
-    capture/lcdf/clp.h \
-    capture/lcdf/inttypes.h \
     capture/lcdfgif/gif.h \
-    capture/lcdfgif/gifx.h \
     keypad/keycode.h \
     debugger.h \
     ../../core/dma.h \
     ipc.h \
-    keyhistory.h
+    keyhistory.h \
+    capture/kcolor.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \

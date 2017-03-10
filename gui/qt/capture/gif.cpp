@@ -1,5 +1,6 @@
 #include <mutex>
 #include <QtGui/QImage>
+#include <QtCore/QString>
 
 #include "gif.h"
 #include "giflib.h"
@@ -12,25 +13,21 @@ static unsigned int frame, frameskip, gifTime;
 
 Gt_OutputData active_output_data;
 Gif_CompressInfo gif_write_info;
-Gt_Frame def_frame;
-
-int nested_mode = 0;
-int verbosing = 0;
 
 static bool gif_write_frame(GifWriter *frameWriter, unsigned int delay) {
-    return GifWriteFrame(frameWriter, renderFramebuffer(&lcd).bits(), 320, 240, delay);
+    return GifWriteFrame(frameWriter, renderFramebuffer(&lcd).bits(), LCD_WIDTH, LCD_HEIGHT, delay);
 }
 
 bool gif_single_frame(const char *filename) {
     GifWriter frameWriter;
 
-    return GifBegin(&frameWriter, filename, 320, 240, 0) && gif_write_frame(&frameWriter, 0) && GifEnd(&frameWriter);
+    return GifBegin(&frameWriter, filename, LCD_WIDTH, LCD_HEIGHT, 0) && gif_write_frame(&frameWriter, 0) && GifEnd(&frameWriter);
 }
 
 bool gif_start_recording(const char *filename, unsigned int frameskip_) {
     std::lock_guard<std::mutex> lock(gif_mutex);
 
-    if (GifBegin(&writer, filename, 320, 240, 1)) {
+    if (GifBegin(&writer, filename, LCD_WIDTH, LCD_HEIGHT, 1)) {
         recording = true;
         frame = 0;
         frameskip = frameskip_;
@@ -64,36 +61,26 @@ bool gif_stop_recording(void) {
     return wasRecording && GifEnd(&writer);
 }
 
-bool gif_optimize(const char *in_name, const char *out_name) {
-    bool ret = true;
-    FILE *in;
-    FILE *out;
-    Gif_Stream *gfs;
+bool gif_optimize(const QString &in_name, const QString &out_name) {
+    bool ret = false;
+    FILE *in = NULL;
+    FILE *out = NULL;
+    Gif_Stream *gfs = NULL;
 
-    if (!(in = fopen(in_name, "rb"))){
-        return false;
-    }
+    if (!(in = fopen(in_name.toStdString().c_str(), "rb")))   goto err;
+    if (!(out = fopen(out_name.toStdString().c_str(), "wb"))) goto err;
 
-    if (!(out = fopen(out_name, "wb"))){
-        fclose(in);
-        return false;
-    }
+    gfs = Gif_ReadFile(in);
 
-    gfs = Gif_FullReadFile(in, GIF_READ_COMPRESSED, 0, 0);
-    Gif_InitCompressInfo(&gif_write_info);
+    if (!gfs || !Gif_ImageCount(gfs) || gfs->errors > 0)      goto err;
 
-    if (!gfs || (!Gif_ImageCount(gfs) && gfs->errors > 0)) {
-      fprintf(stdout,"open error");
-      Gif_DeleteStream(gfs);
-      ret = false;
-      goto err;
-    }
+    Gif_Optimize(gfs);
+    Gif_WriteFile(gfs, out);
 
-    optimize_fragments(gfs, GT_OPT_MASK, 0);
-    Gif_FullWriteFile(gfs, &gif_write_info, out);
-    Gif_DeleteStream(gfs);
+    ret = true;
 
 err:
+    Gif_DeleteStream(gfs);
     fclose(in);
     fclose(out);
     return ret;
