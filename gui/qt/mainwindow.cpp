@@ -513,7 +513,12 @@ void MainWindow::optCheckSend(CEmuOpts &o) {
 
 void MainWindow::optLoadFiles(CEmuOpts &o) {
     if (o.romFile.isEmpty()) {
-        emu.rom = settings->value(QStringLiteral("romImage")).toString();
+        if (loadedCEmuBootImage) {
+            emu.rom = configPath + QStringLiteral("cemu_config.ini");
+            settings->setValue(QStringLiteral("romImage"), emu.rom);
+        } else {
+            emu.rom = settings->value(QStringLiteral("romImage")).toString();
+        }
     } else {
         emu.rom = o.romFile;
     }

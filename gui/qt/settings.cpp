@@ -86,8 +86,9 @@ bool MainWindow::checkForCEmuBootImage() {
 
 bool MainWindow::loadCEmuBootImage(const QString &bootImagePath) {
     QString newSettingsPath = configPath + QStringLiteral("cemu_config.ini");
+    QString romPath = configPath + QStringLiteral("cemu_rom.rom");
     QFile bootFile(bootImagePath);
-    QFile romFile(configPath + QStringLiteral("cemu_rom.rom"));
+    QFile romFile(romPath);
     romFile.remove();
     if (!romFile.open(QIODevice::WriteOnly)) { return false; }
     QFile settingsFile(newSettingsPath);
