@@ -424,14 +424,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     ui->de_regView->installEventFilter(this);
     ui->rregView->installEventFilter(this);
     ui->lcdWidget->setFocus();
-    if (!settings->value(QStringLiteral("firstrun"), false).toBool()) {
-        QMessageBox::information(this, tr("Information"), tr("Welcome!\nCEmu uses a customizable dock-style interface. "
-                                                             "Drag and drop to move tabs and windows around on the screen, "
-                                                             "and choose which docks are available in the 'Docks' menu in the topmost bar. "
-                                                             "Be sure that 'Enable UI edit mode' is selected when laying out your interface. "
-                                                             "Enjoy!"));
-        settings->setValue(QStringLiteral("firstrun"), true);
-    }
 }
 
 void MainWindow::showEvent(QShowEvent *e) {
@@ -439,6 +431,8 @@ void MainWindow::showEvent(QShowEvent *e) {
     if (!firstShow) {
         setLCDScale(settings->value(QStringLiteral("scale"), 100).toUInt());
         setSkinToggle(settings->value(QStringLiteral("skin"), true).toBool());
+        setAlwaysOnTop(settings->value(QStringLiteral("onTop"), false).toBool());
+        setMenuBarState(settings->value(QStringLiteral("disableMenubar"), false).toBool());
         const QByteArray geometry = settings->value("windowGeometry", QByteArray()).toByteArray();
         if (geometry.isEmpty()) {
             const QRect availableGeometry = QApplication::desktop()->availableGeometry(this);
@@ -457,8 +451,14 @@ void MainWindow::showEvent(QShowEvent *e) {
                 resize(newSize);
             }
         }
-        setAlwaysOnTop(settings->value(QStringLiteral("onTop"), false).toBool());
-        setMenuBarState(settings->value(QStringLiteral("disableMenubar"), false).toBool());
+        if (!settings->value(QStringLiteral("firstrun"), false).toBool()) {
+            QMessageBox::information(this, tr("Information"), tr("Welcome!\nCEmu uses a customizable dock-style interface. "
+                                                                 "Drag and drop to move tabs and windows around on the screen, "
+                                                                 "and choose which docks are available in the 'Docks' menu in the topmost bar. "
+                                                                 "Be sure that 'Enable UI edit mode' is selected when laying out your interface. "
+                                                                 "Enjoy!"));
+            settings->setValue(QStringLiteral("firstrun"), true);
+        }
         firstShow = true;
     }
     e->accept();
