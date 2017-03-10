@@ -72,7 +72,7 @@ bool gif_optimize(const QString &in_name, const QString &out_name) {
 
     gfs = Gif_ReadFile(in);
 
-    if (!gfs || !Gif_ImageCount(gfs) || gfs->errors > 0)      goto err;
+    if (!gfs || !Gif_ImageCount(gfs))                         goto err;
 
     Gif_Optimize(gfs);
     Gif_WriteFile(gfs, out);

@@ -398,7 +398,7 @@ void GifMakePalette( const uint8_t* lastFrame, const uint8_t* nextFrame, uint32_
 
     // SplitPalette is destructive (it sorts the pixels by color) so
     // we must create a copy of the image for it to destroy
-    int imageSize = width*height*4;
+    int imageSize = width*height*4*sizeof(uint8_t);
     uint8_t* destroyableImage = (uint8_t*)GIF_TEMP_MALLOC(imageSize);
     memcpy(destroyableImage, nextFrame, imageSize);
 
@@ -443,7 +443,7 @@ void GifThresholdImage( const uint8_t* lastFrame, const uint8_t* nextFrame, uint
         {
             // palettize the pixel
             int32_t bestDiff = 1000000;
-            int32_t bestInd = 1;
+            int32_t bestInd = kGifTransIndex;
             GifGetClosestPaletteColor(pPal, nextFrame[0], nextFrame[1], nextFrame[2], bestInd, bestDiff);
 
             // Write the resulting color to the output buffer
