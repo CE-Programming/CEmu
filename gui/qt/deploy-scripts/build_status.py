@@ -6,6 +6,8 @@ import subprocess
 from jinja2 import Template
 import logging
 import json
+import time
+import traceback
 
 try:
     # Python 3
@@ -101,6 +103,39 @@ Build
 )
 """
 
+#######################################################################
+# DO NOT CHANGE THESE DEFINITIONS
+#######################################################################
+irc_format_table = {
+    "white"       : "00",
+    "black"       : "01",
+    "blue"        : "02",
+    "green"       : "03",
+    "red"         : "04",
+    "brown"       : "05",
+    "purple"      : "06",
+    "orange"      : "07",
+    "yellow"      : "08",
+    "light_green" : "09",
+    "teal"        : "10",
+    "light_cyan"  : "11",
+    "light_blue"  : "12",
+    "pink"        : "13",
+    "grey"        : "14",
+    "light_grey"  : "15",
+    "default"     : "99",
+    "color"       : "\x03",
+    "endcolor"    : "\x03",
+    "bold"        : "\x02",
+    "italic"      : "\x1D",
+    "underline"   : "\x1F",
+    "invert"      : "\x16",
+    "reset"       : "\x0F",
+}
+
+global format_dict
+format_dict = {}
+
 # Supporting functions
 def get_last_build_status():
     # Get the last build status for AppVeyor.
@@ -124,8 +159,9 @@ def get_last_build_status():
     except IOError:
         _, e, _ = sys.exc_info()
         print(" ! Failed to read build status! Assuming failure.")
+        print(" ! Exception: %s" % str(e))
         print(" ! IOError details:")
-        err = e.read().decode("utf-8")
+        print(" !   " + "\n !   ".join(traceback.format_exc().splitlines()))
         return False
 
 def set_last_build_status(build_state):
@@ -148,8 +184,9 @@ def set_last_build_status(build_state):
     except IOError:
         _, e, _ = sys.exc_info()
         print(" ! Failed to write build status!")
+        print(" ! Exception: %s" % str(e))
         print(" ! IOError details:")
-        err = e.read().decode("utf-8")
+        print(" !   " + "\n !   ".join(traceback.format_exc().splitlines()))
         return False
 
 # Prefunctions
@@ -208,6 +245,10 @@ def shorten_url_google(url, alt = None):
         print(" !          adding one - read shorten_url_google() documentation")
         print(" !          for more information.")
         api_url = "https://www.googleapis.com/urlshortener/v1/url"
+        
+        # Note - if this fails, and we don't have an API key, just
+        # return "(none)"
+        alt = "(none)"
     
     headers = { "Content-Type": "application/json" }
     data = '{"longUrl": "%s"}' % url
@@ -256,143 +297,118 @@ def shorten_retry(func, url, alt = None, retries = 5):
         time.sleep(5)
     return short_url or alt
 
-irc_format_table = {
-    "white"       : "00",
-    "black"       : "01",
-    "blue"        : "02",
-    "green"       : "03",
-    "red"         : "04",
-    "brown"       : "05",
-    "purple"      : "06",
-    "orange"      : "07",
-    "yellow"      : "08",
-    "light_green" : "09",
-    "teal"        : "10",
-    "light_cyan"  : "11",
-    "light_blue"  : "12",
-    "pink"        : "13",
-    "grey"        : "14",
-    "light_grey"  : "15",
-    "default"     : "99",
-    "color"       : "\x03",
-    "endcolor"    : "\x03",
-    "bold"        : "\x02",
-    "italic"      : "\x1D",
-    "underline"   : "\x1F",
-    "invert"      : "\x16",
-    "reset"       : "\x0F",
-}
+def build_format_dict():
+    global format_dict
+    appveyor_env = {
+        "appveyor_enabled"                      : os.environ.get("APPVEYOR"),                                    # True if build runs in AppVeyor environment;
+        "ci_enabled"                            : os.environ.get("CI"),                                          # True if build runs in AppVeyor environment;
+        "appveyor_api_url"                      : os.environ.get("APPVEYOR_API_URL"),                            # AppVeyor Build Agent API URL;
+        "appveyor_acct_name"                    : os.environ.get("APPVEYOR_ACCOUNT_NAME"),                       # account name;
+        "appveyor_proj_id"                      : os.environ.get("APPVEYOR_PROJECT_ID"),                         # AppVeyor unique project ID;
+        "appveyor_proj_name"                    : os.environ.get("APPVEYOR_PROJECT_NAME"),                       # project name;
+        "appveyor_proj_slug"                    : os.environ.get("APPVEYOR_PROJECT_SLUG"),                       # project slug (as seen in project details URL);
+        "build_folder"                          : os.environ.get("APPVEYOR_BUILD_FOLDER"),                       # path to clone directory;
+        "build_id"                              : os.environ.get("APPVEYOR_BUILD_ID"),                           # AppVeyor unique build ID;
+        "build_num"                             : os.environ.get("APPVEYOR_BUILD_NUMBER"),                       # build number;
+        "build_ver"                             : os.environ.get("APPVEYOR_BUILD_VERSION"),                      # build version;
+        "pr_num"                                : os.environ.get("APPVEYOR_PULL_REQUEST_NUMBER"),                # GitHub Pull Request number;
+        "pr_title"                              : os.environ.get("APPVEYOR_PULL_REQUEST_TITLE"),                 # GitHub Pull Request title
+        "job_id"                                : os.environ.get("APPVEYOR_JOB_ID"),                             # AppVeyor unique job ID;
+        "job_name"                              : os.environ.get("APPVEYOR_JOB_NAME"),                           # job name;
+        "repo_provider"                         : os.environ.get("APPVEYOR_REPO_PROVIDER"),                      # github, bitbucket, kiln, vso or gitlab;
+        "scm"                                   : os.environ.get("APPVEYOR_REPO_SCM"),                           # git or mercurial;
+        "name"                                  : os.environ.get("APPVEYOR_REPO_NAME"),                          # repository name in format owner-name/repo-name;
+        "branch"                                : os.environ.get("APPVEYOR_REPO_BRANCH"),                        # build branch. For Pull Request commits it is base branch PR is merging into;
+        "is_tag"                                : os.environ.get("APPVEYOR_REPO_TAG"),                           # true if build has started by pushed tag; otherwise false;
+        "tag_name"                              : os.environ.get("APPVEYOR_REPO_TAG_NAME"),                      # contains tag name for builds started by tag; otherwise this variable is undefined;
+        "commit_hash"                           : os.environ.get("APPVEYOR_REPO_COMMIT"),                        # commit ID (SHA);
+        "author_name"                           : os.environ.get("APPVEYOR_REPO_COMMIT_AUTHOR"),                 # commit author’s name;
+        "author_email"                          : os.environ.get("APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL"),           # commit author’s email address;
+        "commit_timestamp"                      : os.environ.get("APPVEYOR_REPO_COMMIT_TIMESTAMP")[:19] if (     # commit date/time;
+                                                    os.environ.get("APPVEYOR_REPO_COMMIT_TIMESTAMP")) else "--", # 
+        "commit_msg"                            : os.environ.get("APPVEYOR_REPO_COMMIT_MESSAGE"),                # commit message;
+        "commit_msg_long"                       : os.environ.get("APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED"),       # the rest of commit message after line break (if exists);
+        "is_scheduled_build"                    : os.environ.get("APPVEYOR_SCHEDULED_BUILD"),                    # True if the build runs by scheduler;
+        "is_forced_build"                       : os.environ.get("APPVEYOR_FORCED_BUILD"),                       # (True or undefined) - builds started by “New build” button or from the same API;
+        "is_rebuild"                            : os.environ.get("APPVEYOR_RE_BUILD"),                           # (True or undefined) - build started by “Re-build commit/PR” button of from the same API;
+        "appveyor_url"                          : os.environ.get("APPVEYOR_URL"),                                # AppVeyor base URL - undocumented
+        "platform_name"                         : os.environ.get("PLATFORM"),                                    # platform name set on Build tab of project settings (or through platform parameter in appveyor.yml);
+        "config_name"                           : os.environ.get("CONFIGURATION"),                               # configuration name set on Build tab of project settings (or through configuration parameter in appveyor.yml);
+        "artifact_upload_timeout"               : os.environ.get("APPVEYOR_ARTIFACT_UPLOAD_TIMEOUT"),            # artifact upload timeout in seconds. Default is 600 (10 minutes);
+        "file_download_timeout"                 : os.environ.get("APPVEYOR_FILE_DOWNLOAD_TIMEOUT"),              # timeout in seconds to download arbirtary files using appveyor DownloadFile command. Default is 300 (5 minutes); 
+        "repo_shallow_clone_timeout"            : os.environ.get("APPVEYOR_REPOSITORY_SHALLOW_CLONE_TIMEOUT"),   # timeout in seconds to download repository (GitHub, Bitbucket or VSTS) as zip file (shallow clone). Default is 1800 (30 minutes);
+        "cache_entry_upload_download_timeout"   : os.environ.get("APPVEYOR_CACHE_ENTRY_UPLOAD_DOWNLOAD_TIMEOUT"),# timeout in seconds to download or upload each cache entry. Default is 300 (5 minutes);
+    }
 
-appveyor_env = {
-    "appveyor_enabled"                      : os.environ.get("APPVEYOR"),                                    # True if build runs in AppVeyor environment;
-    "ci_enabled"                            : os.environ.get("CI"),                                          # True if build runs in AppVeyor environment;
-    "appveyor_api_url"                      : os.environ.get("APPVEYOR_API_URL"),                            # AppVeyor Build Agent API URL;
-    "appveyor_acct_name"                    : os.environ.get("APPVEYOR_ACCOUNT_NAME"),                       # account name;
-    "appveyor_proj_id"                      : os.environ.get("APPVEYOR_PROJECT_ID"),                         # AppVeyor unique project ID;
-    "appveyor_proj_name"                    : os.environ.get("APPVEYOR_PROJECT_NAME"),                       # project name;
-    "appveyor_proj_slug"                    : os.environ.get("APPVEYOR_PROJECT_SLUG"),                       # project slug (as seen in project details URL);
-    "build_folder"                          : os.environ.get("APPVEYOR_BUILD_FOLDER"),                       # path to clone directory;
-    "build_id"                              : os.environ.get("APPVEYOR_BUILD_ID"),                           # AppVeyor unique build ID;
-    "build_num"                             : os.environ.get("APPVEYOR_BUILD_NUMBER"),                       # build number;
-    "build_ver"                             : os.environ.get("APPVEYOR_BUILD_VERSION"),                      # build version;
-    "pr_num"                                : os.environ.get("APPVEYOR_PULL_REQUEST_NUMBER"),                # GitHub Pull Request number;
-    "pr_title"                              : os.environ.get("APPVEYOR_PULL_REQUEST_TITLE"),                 # GitHub Pull Request title
-    "job_id"                                : os.environ.get("APPVEYOR_JOB_ID"),                             # AppVeyor unique job ID;
-    "job_name"                              : os.environ.get("APPVEYOR_JOB_NAME"),                           # job name;
-    "repo_provider"                         : os.environ.get("APPVEYOR_REPO_PROVIDER"),                      # github, bitbucket, kiln, vso or gitlab;
-    "scm"                                   : os.environ.get("APPVEYOR_REPO_SCM"),                           # git or mercurial;
-    "name"                                  : os.environ.get("APPVEYOR_REPO_NAME"),                          # repository name in format owner-name/repo-name;
-    "branch"                                : os.environ.get("APPVEYOR_REPO_BRANCH"),                        # build branch. For Pull Request commits it is base branch PR is merging into;
-    "is_tag"                                : os.environ.get("APPVEYOR_REPO_TAG"),                           # true if build has started by pushed tag; otherwise false;
-    "tag_name"                              : os.environ.get("APPVEYOR_REPO_TAG_NAME"),                      # contains tag name for builds started by tag; otherwise this variable is undefined;
-    "commit_hash"                           : os.environ.get("APPVEYOR_REPO_COMMIT"),                        # commit ID (SHA);
-    "author_name"                           : os.environ.get("APPVEYOR_REPO_COMMIT_AUTHOR"),                 # commit author’s name;
-    "author_email"                          : os.environ.get("APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL"),           # commit author’s email address;
-    "commit_timestamp"                      : os.environ.get("APPVEYOR_REPO_COMMIT_TIMESTAMP")[:19] if (     # commit date/time;
-                                                os.environ.get("APPVEYOR_REPO_COMMIT_TIMESTAMP")) else "--", # 
-    "commit_msg"                            : os.environ.get("APPVEYOR_REPO_COMMIT_MESSAGE"),                # commit message;
-    "commit_msg_long"                       : os.environ.get("APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED"),       # the rest of commit message after line break (if exists);
-    "is_scheduled_build"                    : os.environ.get("APPVEYOR_SCHEDULED_BUILD"),                    # True if the build runs by scheduler;
-    "is_forced_build"                       : os.environ.get("APPVEYOR_FORCED_BUILD"),                       # (True or undefined) - builds started by “New build” button or from the same API;
-    "is_rebuild"                            : os.environ.get("APPVEYOR_RE_BUILD"),                           # (True or undefined) - build started by “Re-build commit/PR” button of from the same API;
-    "appveyor_url"                          : os.environ.get("APPVEYOR_URL"),                                # AppVeyor base URL - undocumented
-    "platform_name"                         : os.environ.get("PLATFORM"),                                    # platform name set on Build tab of project settings (or through platform parameter in appveyor.yml);
-    "config_name"                           : os.environ.get("CONFIGURATION"),                               # configuration name set on Build tab of project settings (or through configuration parameter in appveyor.yml);
-    "artifact_upload_timeout"               : os.environ.get("APPVEYOR_ARTIFACT_UPLOAD_TIMEOUT"),            # artifact upload timeout in seconds. Default is 600 (10 minutes);
-    "file_download_timeout"                 : os.environ.get("APPVEYOR_FILE_DOWNLOAD_TIMEOUT"),              # timeout in seconds to download arbirtary files using appveyor DownloadFile command. Default is 300 (5 minutes); 
-    "repo_shallow_clone_timeout"            : os.environ.get("APPVEYOR_REPOSITORY_SHALLOW_CLONE_TIMEOUT"),   # timeout in seconds to download repository (GitHub, Bitbucket or VSTS) as zip file (shallow clone). Default is 1800 (30 minutes);
-    "cache_entry_upload_download_timeout"   : os.environ.get("APPVEYOR_CACHE_ENTRY_UPLOAD_DOWNLOAD_TIMEOUT"),# timeout in seconds to download or upload each cache entry. Default is 300 (5 minutes);
-}
+    extra_env = {
+        "appveyor_proj_url"                     : "%s/project/%s/%s" % (                                         # AppVeyor project URL
+                                                        appveyor_env["appveyor_url"],                            # Example:
+                                                        appveyor_env["appveyor_acct_name"],                      #   https://ci.appveyor.com/project/alberthdev/cemu-q0nl8
+                                                        appveyor_env["appveyor_proj_slug"],
+                                                    ),
+        "appveyor_build_url"                    : "%s/project/%s/%s/build/%s" % (                                # AppVeyor build URL
+                                                        appveyor_env["appveyor_url"],                            # Example:
+                                                        appveyor_env["appveyor_acct_name"],                      #   https://ci.appveyor.com/project/alberthdev/cemu-q0nl8/build/1.0.1
+                                                        appveyor_env["appveyor_proj_slug"],
+                                                        appveyor_env["build_ver"],
+                                                    ),
+        "build_pass_symbol"                     : "✓",
+        "build_fail_symbol"                     : "✗",
+        "build_run_symbol"                      : "⚒",
+        "commit_hash_short"                     : appveyor_env["commit_hash"][:7] if (
+                                                    appveyor_env["commit_hash"]) else "--",
+        "repo_name"                             : appveyor_env["name"].split("/")[-1] if (
+                                                    appveyor_env["name"]) else "--",
+    }
 
-extra_env = {
-    "appveyor_proj_url"                     : "%s/project/%s/%s" % (                                         # AppVeyor project URL
-                                                    appveyor_env["appveyor_url"],                            # Example:
-                                                    appveyor_env["appveyor_acct_name"],                      #   https://ci.appveyor.com/project/alberthdev/cemu-q0nl8
-                                                    appveyor_env["appveyor_proj_slug"],
-                                                ),
-    "appveyor_build_url"                    : "%s/project/%s/%s/build/%s" % (                                # AppVeyor build URL
-                                                    appveyor_env["appveyor_url"],                            # Example:
-                                                    appveyor_env["appveyor_acct_name"],                      #   https://ci.appveyor.com/project/alberthdev/cemu-q0nl8/build/1.0.1
-                                                    appveyor_env["appveyor_proj_slug"],
-                                                    appveyor_env["build_ver"],
-                                                ),
-    "build_pass_symbol"                     : "✓",
-    "build_fail_symbol"                     : "✗",
-    "build_run_symbol"                      : "⚒",
-    "commit_hash_short"                     : appveyor_env["commit_hash"][:7] if (
-                                                appveyor_env["commit_hash"]) else "--",
-    "repo_name"                             : appveyor_env["name"].split("/")[-1] if (
-                                                appveyor_env["name"]) else "--",
-}
-
-extra_env["repo_url"]                       = "https://%s.com/%s/%s/%s" % (                        # Repository URL
-                                                  appveyor_env["repo_provider"].lower(),           # Example:
-                                                  appveyor_env["name"],                            #   https://github.com/CE-Programming/CEmu/commit/4603aec71f9e1163e545beff10122ef40ec9007a
-                                                  "commit" if (
+    extra_env["repo_url"]                       = "https://%s.com/%s/%s/%s" % (                        # Repository URL
+                                                      appveyor_env["repo_provider"].lower(),           # Example:
+                                                      appveyor_env["name"],                            #   https://github.com/CE-Programming/CEmu/commit/4603aec71f9e1163e545beff10122ef40ec9007a
+                                                      "commit" if (
+                                                          appveyor_env["repo_provider"].lower() in [
+                                                              "github", "gitlab"
+                                                          ]
+                                                      ) else "commits",
+                                                      extra_env["commit_hash_short"]
+                                                  ) if (
+                                                      appveyor_env["repo_provider"] and
                                                       appveyor_env["repo_provider"].lower() in [
-                                                          "github", "gitlab"
+                                                          "github", "gitlab", "bitbucket"
                                                       ]
-                                                  ) else "commits",
-                                                  extra_env["commit_hash_short"]
-                                              ) if (
-                                                  appveyor_env["repo_provider"] and
-                                                  appveyor_env["repo_provider"].lower() in [
-                                                      "github", "gitlab", "bitbucket"
-                                                  ]
-                                              ) else "(none)"
-extra_env["repo_url_long"]                  = "https://%s.com/%s/%s/%s" % (                        # Repository URL
-                                                  appveyor_env["repo_provider"].lower(),           # Example:
-                                                  appveyor_env["name"],                            #   https://github.com/CE-Programming/CEmu/commit/4603aec71f9e1163e545beff10122ef40ec9007a
-                                                  "commit" if (
+                                                  ) else "(none)"
+    extra_env["repo_url_long"]                  = "https://%s.com/%s/%s/%s" % (                        # Repository URL
+                                                      appveyor_env["repo_provider"].lower(),           # Example:
+                                                      appveyor_env["name"],                            #   https://github.com/CE-Programming/CEmu/commit/4603aec71f9e1163e545beff10122ef40ec9007a
+                                                      "commit" if (
+                                                          appveyor_env["repo_provider"].lower() in [
+                                                              "github", "gitlab"
+                                                          ]
+                                                      ) else "commits",
+                                                      appveyor_env["commit_hash"]
+                                                  ) if (
+                                                      appveyor_env["repo_provider"] and
                                                       appveyor_env["repo_provider"].lower() in [
-                                                          "github", "gitlab"
+                                                          "github", "gitlab", "bitbucket"
                                                       ]
-                                                  ) else "commits",
-                                                  appveyor_env["commit_hash"]
-                                              ) if (
-                                                  appveyor_env["repo_provider"] and
-                                                  appveyor_env["repo_provider"].lower() in [
-                                                      "github", "gitlab", "bitbucket"
-                                                  ]
-                                              ) else "(none)"
-extra_env["repo_url_tiny"]                  = shorten_retry(shorten_url_gitio, extra_env["repo_url_long"], alt = "(none)") if (
-                                                  extra_env["repo_url_long"] != "(none)") else "(none)"
-extra_env["appveyor_build_url_tiny"]        = shorten_retry(shorten_url_google, extra_env["appveyor_build_url"], alt = "(none)")
+                                                  ) else "(none)"
+    extra_env["repo_url_tiny"]                  = shorten_retry(shorten_url_gitio, extra_env["repo_url_long"], alt = "(none)") if (
+                                                      extra_env["repo_url_long"] != "(none)") else "(none)"
+    extra_env["appveyor_build_url_tiny"]        = shorten_retry(shorten_url_google, extra_env["appveyor_build_url"], alt = "(none)")
 
-bool_vars = [
-    "appveyor_enabled",
-    "ci_enabled",
-    "is_tag",
-    "is_scheduled_build",
-    "is_forced_build",
-    "is_rebuild",
-]
+    bool_vars = [
+        "appveyor_enabled",
+        "ci_enabled",
+        "is_tag",
+        "is_scheduled_build",
+        "is_forced_build",
+        "is_rebuild",
+    ]
 
-for bool_var in bool_vars:
-    appveyor_env[bool_var] = True if appveyor_env[bool_var] == "True" else False
+    for bool_var in bool_vars:
+        appveyor_env[bool_var] = True if appveyor_env[bool_var] == "True" else False
 
-# Create final dict
-format_dict = { **irc_format_table, **appveyor_env, **extra_env }
+    # Create final dict
+    format_dict = { **irc_format_table, **appveyor_env, **extra_env }
 
 def render_status(build_passed = None, msgs = irc_build_msgs, addl_vars = None):
     # Rule:
@@ -400,9 +416,14 @@ def render_status(build_passed = None, msgs = irc_build_msgs, addl_vars = None):
     # Blank lines = start a new message
     # Otherwise every new line will be joined together, without anything
     # in between.
+    global format_dict
+    
     msgs_split = msgs.strip("\n").split("\n")
     msgs_split = [ "\n" if (msg == "") else msg for msg in msgs_split ]
     final_msgs = "".join(msgs_split)
+    
+    if len(format_dict.keys()) == 0:
+        build_format_dict()
     
     template = Template(final_msgs)
     return template.render(build_passed = build_passed, **format_dict)
@@ -426,6 +447,8 @@ def send_build_status(build_passed, msgs = irc_build_msgs, addl_vars = None, pro
         ircmsgbot.async_send_irc_message(IRC_SERVER, IRC_PORT, IRC_NICK,
             IRC_TARGET, irc_rendered_msg, use_ssl=IRC_USESSL,
             process = process)
+    else:
+        print(" * Current and last build succeeded, not sending notification.")
     
     # Set the last build status
     if not set_last_build_status(build_passed):
@@ -439,7 +462,7 @@ def start_build_status(msgs = started_build_msgs, addl_vars = None, process = Fa
         IRC_TARGET, irc_rendered_msg, use_ssl=IRC_USESSL,
         process = process)
 
-def finish_build_status(timeout = 180):
+def finish_build_status(timeout = 300):
     ircmsgbot.async_stop_all(timeout = timeout)
 
 def restart_without_async():
@@ -482,7 +505,7 @@ def main():
         print("ERROR: Invalid command.")
         sys.exit(1)
     
-    print(" * Waiting for IRC notification to send...")
+    print(" * Waiting for IRC notification to send (if any)...")
     finish_build_status()
     
     print(" * IRC notification sent!")
