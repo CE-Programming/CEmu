@@ -1000,7 +1000,10 @@ void MainWindow::selectFiles() {
 
 void MainWindow::variableClicked(QTableWidgetItem *item) {
     const calc_var_t& var_tmp = vars[ui->emuVarView->item(item->row(), 0)->data(Qt::UserRole).toInt()];
-    if (!calc_var_is_asmprog(&var_tmp) && (!calc_var_is_internal(&var_tmp) || var_tmp.name[0] == '#')) {
+    if (calc_var_is_asmprog(&var_tmp)) {
+        updateDisasmView(var_tmp.address + 4, false);  // This is
+        if (!inDebugger) { debuggerChangeState(); }    // semi-broken
+    } else if (!calc_var_is_internal(&var_tmp) || var_tmp.name[0] == '#') {
         BasicCodeViewerWindow codePopup;
         codePopup.setOriginalCode((var_tmp.size <= 500) ? ui->emuVarView->item(item->row(), 3)->text() : QString::fromStdString(calc_var_content_string(var_tmp)));
         codePopup.setVariableName(ui->emuVarView->item(item->row(), 0)->text());
@@ -1046,7 +1049,7 @@ void MainWindow::refreshVariableList() {
                 bool var_preview_needs_gray = false;
                 QString var_value;
                 if (calc_var_is_asmprog(&var)) {
-                    var_value = tr("Can't preview ASM");
+                    var_value = tr("View in debugger...");
                     var_preview_needs_gray = true;
                 } else if (calc_var_is_internal(&var) && var.name[0] != '#') { // # is previewable
                     var_value = tr("Can't preview this OS variable");
@@ -1594,17 +1597,21 @@ void MainWindow::variablesContextMenu(const QPoint& posa) {
 }
 
 void MainWindow::vatContextMenu(const QPoint& posa) {
-    QString goto_mem = tr("Goto Memory View");
+    QString goto_mem    = tr("Goto Memory View");
+    QString goto_disasm = tr("Goto Disasm View");
     ui->vatView->setTextCursor(ui->vatView->cursorForPosition(posa));
     QPoint globalPos = ui->vatView->mapToGlobal(posa);
 
     QMenu contextMenu;
     contextMenu.addAction(goto_mem);
+    contextMenu.addAction(goto_disasm);
 
     QAction* selectedItem = contextMenu.exec(globalPos);
     if (selectedItem) {
         if (selectedItem->text() == goto_mem) {
             memGoto(ui->vatView->getSelectedAddress());
+        } else if (selectedItem->text() == goto_disasm) {
+            updateDisasmView(hex2int(ui->vatView->getSelectedAddress()) + 4, false);
         }
     }
 }
