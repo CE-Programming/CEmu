@@ -8,7 +8,7 @@ environment:
 
 install:
   - C:\Python35\Scripts\pip install requests jinja2 irc
-  - C:\Python35\python -u gui\qt\deploy-scripts\build_status.py STARTED yes
+#  - C:\Python35\python -u gui\qt\deploy-scripts\build_status.py STARTED yes
   - C:\Python35\python -u gui\qt\deploy-scripts\appveyor_helper.py install
   - md build_32
   - md build_64
@@ -41,9 +41,10 @@ deploy_script:
   - cd %APPVEYOR_BUILD_FOLDER%
   - C:\Python35\python -u gui\qt\deploy-scripts\appveyor_helper.py deploy
 
-on_success:
-  - cd %APPVEYOR_BUILD_FOLDER%
-  - C:\Python35\python -u gui\qt\deploy-scripts\build_status.py SUCCESS
+#Until "on_change" is implemented, disable that
+#on_success:
+#  - cd %APPVEYOR_BUILD_FOLDER%
+#  - C:\Python35\python -u gui\qt\deploy-scripts\build_status.py SUCCESS
 
 on_failure:
   - cd %APPVEYOR_BUILD_FOLDER%
