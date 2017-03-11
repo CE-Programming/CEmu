@@ -195,6 +195,16 @@ def shorten_url_google(url, alt = None):
     
     return alt
 
+def shorten_retry(func, url, alt = None, retries = 5):
+    # Retry a few times before giving up.
+    short_url = None
+    for i in range(0, retries):
+        short_url = func(url)
+        if short_url:
+            break
+        time.sleep(5)
+    return short_url or alt
+
 irc_format_table = {
     "white"       : "00",
     "black"       : "01",
@@ -314,9 +324,9 @@ extra_env["repo_url_long"]                  = "https://%s.com/%s/%s/%s" % (     
                                                       "github", "gitlab", "bitbucket"
                                                   ]
                                               ) else "(none)"
-extra_env["repo_url_tiny"]                  = shorten_url_gitio(extra_env["repo_url_long"], alt = "(none)") if (
+extra_env["repo_url_tiny"]                  = shorten_retry(shorten_url_gitio, extra_env["repo_url_long"], alt = "(none)") if (
                                                   extra_env["repo_url_long"] != "(none)") else "(none)"
-extra_env["appveyor_build_url_tiny"]        = shorten_url_google(extra_env["appveyor_build_url"], alt = "(none)")
+extra_env["appveyor_build_url_tiny"]        = shorten_retry(shorten_url_google, extra_env["appveyor_build_url"], alt = "(none)")
 
 bool_vars = [
     "appveyor_enabled",
