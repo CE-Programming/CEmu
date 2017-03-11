@@ -20,7 +20,6 @@ struct CEmuOpts {
     QStringList sendFiles;
     QStringList sendArchFiles;
     QStringList sendRAMFiles;
-    qint64 pid;
 };
 
 #endif

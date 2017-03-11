@@ -135,8 +135,7 @@ int main(int argc, char *argv[]) {
     }
 
     // get application pid and tie it to the id
-    opts.pid = QCoreApplication::applicationPid();
-    opts.pidString = QString::number(opts.pid);
+    opts.pidString = QString::number(QCoreApplication::applicationPid());
     opts.idString = parser.value(procID);
     if (opts.idString.isEmpty()) {
         opts.idString = "Calculator";
