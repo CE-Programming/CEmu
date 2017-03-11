@@ -1,0 +1,50 @@
+environment:
+  BINTRAY_API_KEY:
+    secure: AGZJlJvqTJR3lySeBoANrPYyWfgLJciSqTZm3/ZEPbUx4dQ9m1fiWGY3RYBGaYOq
+  BINTRAY_API_USERNAME:
+    secure: QyZ6LhunNhgW3l/1aiGROg==
+  GOOGLE_URL_SHORTENER_API_KEY:
+    secure: yPv9WtzW+27giJAicFEXGV0KENiee+3+BG2CIOLarbu5wsm7q/h0Ixqsq70CITPi
+
+install:
+  - C:\Python35\Scripts\pip install requests jinja2 irc
+  - C:\Python35\python -u gui\qt\deploy-scripts\build_status.py STARTED yes
+  - C:\Python35\python -u gui\qt\deploy-scripts\appveyor_helper.py install
+  - md build_32
+  - md build_64
+  - md build_static_32
+  - md build_static_64
+
+build_script:
+  - cd build_32
+  - C:\Qt\Qt5.6.0\5.6\msvc2015\bin\qmake -spec win32-msvc2015 -tp vc "..\gui\qt\CEmu.pro"
+  - msbuild CEmu.vcxproj /p:Configuration=Debug
+  - msbuild CEmu.vcxproj /p:Configuration=Release
+  - cd ..
+  - cd build_64
+  - C:\Qt\Qt5.6.0x64\5.6\msvc2015_64\bin\qmake -spec win32-msvc2015 -tp vc "..\gui\qt\CEmu.pro"
+  - msbuild CEmu.vcxproj /p:Configuration=Debug /p:Platform="x64"
+  - msbuild CEmu.vcxproj /p:Configuration=Release /p:Platform="x64"
+  - cd ..
+  - cd build_static_32
+  - C:\Qt\Qt5.6.0-static\bin\qmake -spec win32-msvc2015 -tp vc "..\gui\qt\CEmu.pro"
+  - msbuild CEmu.vcxproj /p:Configuration=Debug
+  - msbuild CEmu.vcxproj /p:Configuration=Release
+  - cd ..
+  - cd build_static_64
+  - C:\Qt\Qt5.6.0x64-static\bin\qmake -spec win32-msvc2015 -tp vc "..\gui\qt\CEmu.pro"
+  - msbuild CEmu.vcxproj /p:Configuration=Debug /p:Platform="x64"
+  - msbuild CEmu.vcxproj /p:Configuration=Release /p:Platform="x64"
+  - cd ..
+
+deploy_script:
+  - cd %APPVEYOR_BUILD_FOLDER%
+  - C:\Python35\python -u gui\qt\deploy-scripts\appveyor_helper.py deploy
+
+on_success:
+  - cd %APPVEYOR_BUILD_FOLDER%
+  - C:\Python35\python -u gui\qt\deploy-scripts\build_status.py SUCCESS
+
+on_failure:
+  - cd %APPVEYOR_BUILD_FOLDER%
+  - C:\Python35\python -u gui\qt\deploy-scripts\build_status.py FAILURE
