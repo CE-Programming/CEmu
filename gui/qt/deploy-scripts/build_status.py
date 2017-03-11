@@ -53,7 +53,7 @@ Rebuild
 Build
 {% endif %}
 {% if build_passed %}
- passed
+ fixed
 {% else %}
  failed
 {% endif %}
@@ -100,6 +100,57 @@ Build
 {{ commit_msg }}
 )
 """
+
+# Supporting functions
+def get_last_build_status():
+    # Get the last build status for AppVeyor.
+    # For this function to work, the AppVeyor build cache feature must
+    # be enabled - specifically on the build_state file.
+    # 
+    # Return values: True if last build status passed, False otherwise
+    #   (this includes an undefined state)
+    try:
+        fh = open("build_state", "r")
+        last_build_state = fh.read().strip()
+        fh.close()
+        
+        if last_build_state == "success":
+            print(" * Read last build status: %s (success)" % last_build_state)
+            return True
+        else:
+            # Unknown state or last failed
+            print(" * Read last build status: %s (failed)" % str(last_build_state))
+            return False
+    except IOError:
+        _, e, _ = sys.exc_info()
+        print(" ! Failed to read build status! Assuming failure.")
+        print(" ! IOError details:")
+        err = e.read().decode("utf-8")
+        return False
+
+def set_last_build_status(build_state):
+    # Set the last build status for AppVeyor.
+    # For this function to work, the AppVeyor build cache feature must
+    # be enabled - specifically on the build_state file.
+    # 
+    # Argument(s):
+    #   build_state: True if this build succeeded, False otherwise
+    # Return values: True if saving state succeeded, False otherwise
+    build_state_txt = "success" if build_state else "fail"
+    print(" * Setting build status to: %s" % build_state_txt)
+    
+    try:
+        fh = open("build_state", "w")
+        fh.write(build_state_txt)
+        fh.close()
+        
+        return True
+    except IOError:
+        _, e, _ = sys.exc_info()
+        print(" ! Failed to write build status!")
+        print(" ! IOError details:")
+        err = e.read().decode("utf-8")
+        return False
 
 # Prefunctions
 def shorten_url_gitio(url, alt = None):
@@ -357,11 +408,29 @@ def render_status(build_passed = None, msgs = irc_build_msgs, addl_vars = None):
     return template.render(build_passed = build_passed, **format_dict)
 
 def send_build_status(build_passed, msgs = irc_build_msgs, addl_vars = None, process = False):
-    irc_rendered_msg = render_status(build_passed, msgs = msgs, addl_vars = addl_vars)
+    # Check build status
+    last_build_status = get_last_build_status()
     
-    ircmsgbot.async_send_irc_message(IRC_SERVER, IRC_PORT, IRC_NICK,
-        IRC_TARGET, irc_rendered_msg, use_ssl=IRC_USESSL,
-        process = process)
+    # Logic:
+    # 
+    # Last Build Status | Current Build Status | Result
+    # ------------------|----------------------|--------
+    # 0 - False         | 0 - False            | Show (Failed)
+    # 0 - False         | 1 - True             | Show (Fixed)
+    # 1 - True          | 0 - False            | Show (Failed)
+    # 1 - True          | 1 - True             | Hide (Success)
+    
+    if not(last_build_status and build_passed):
+        irc_rendered_msg = render_status(build_passed, msgs = msgs, addl_vars = addl_vars)
+        
+        ircmsgbot.async_send_irc_message(IRC_SERVER, IRC_PORT, IRC_NICK,
+            IRC_TARGET, irc_rendered_msg, use_ssl=IRC_USESSL,
+            process = process)
+    
+    # Set the last build status
+    if not set_last_build_status(build_passed):
+        print(" ! WARNING: Build status was not recorded to cache.")
+        print(" !          A \"fixed\" message will likely appear in next build.")
 
 def start_build_status(msgs = started_build_msgs, addl_vars = None, process = False):
     irc_rendered_msg = render_status(msgs = msgs, addl_vars = addl_vars)
