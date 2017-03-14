@@ -8,6 +8,7 @@
 #include <QtWidgets/QFileDialog>
 #include <QtCore/QSettings>
 #include <QtGui/QTextCursor>
+#include <QtWidgets/QMessageBox>
 
 #include "ipc.h"
 #include "cemuopts.h"
@@ -230,9 +231,9 @@ private:
     void resetSettingsIfLoadedCEmuBootableImage();
 
     // MAIN IMPLEMENTATION ROUTINES
-    bool portAdd(uint16_t, unsigned);
+    bool portAdd(uint16_t, unsigned int);
     bool breakpointAdd(QString, uint32_t, bool);
-    bool watchpointAdd(QString, uint32_t, uint8_t, unsigned);
+    bool watchpointAdd(QString, uint32_t, uint8_t, unsigned int);
 
     void screenContextMenu(const QPoint&);
     void updateLabels();
@@ -242,7 +243,7 @@ private:
     void equatesClear();
     void equatesRefresh();
     void selectKeypadColor();
-    void setKeypadColor(unsigned);
+    void setKeypadColor(unsigned int);
 
     // Speed
     void setEmulatedSpeed(int);
@@ -268,8 +269,6 @@ private:
     void toggleUIEditMode(void);
     void setSaveDebug(bool);
     void saveMiscSettings();
-
-    int setReprintScale(int);
 
     // Linking
     QStringList showVariableFileDialog(QFileDialog::AcceptMode, QString);
@@ -341,7 +340,7 @@ private:
 #endif
 
     // Members
-    unsigned watchpointGUIMask = DBG_NO_HANDLE;
+    unsigned int watchpointGUIMask = DBG_NO_HANDLE;
     QString searchingString;
 
     Ui::MainWindow *ui = Q_NULLPTR;
@@ -412,6 +411,53 @@ private:
     bool useDataCol;
     bool loadedCEmuBootImage = false;
     static const int WindowStateVersion = 0;
+
+    // Settings definitions
+
+    static const QString SETTING_DEBUGGER_TEXT_SIZE;
+    static const QString SETTING_DEBUGGER_ADD_DISASM_SPACE;
+    static const QString SETTING_DEBUGGER_RESTORE_ON_OPEN;
+    static const QString SETTING_DEBUGGER_SAVE_ON_CLOSE;
+    static const QString SETTING_DEBUGGER_RESET_OPENS;
+    static const QString SETTING_DEBUGGER_ENABLE_SOFT;
+    static const QString SETTING_DEBUGGER_DATA_COL;
+    static const QString SETTING_DEBUGGER_IMAGE_PATH;
+    static const QString SETTING_DEBUGGER_FLASH_BYTES;
+    static const QString SETTING_DEBUGGER_RAM_BYTES;
+    static const QString SETTING_DEBUGGER_MEM_BYTES;
+    static const QString SETTING_SCREEN_REFRESH_RATE;
+    static const QString SETTING_SCREEN_SCALE;
+    static const QString SETTING_SCREEN_SKIN;
+    static const QString SETTING_KEYPAD_KEYMAP;
+    static const QString SETTING_KEYPAD_COLOR;
+    static const QString SETTING_WINDOW_SIZE;
+    static const QString SETTING_WINDOW_STATE;
+    static const QString SETTING_WINDOW_GEOMETRY;
+    static const QString SETTING_CAPTURE_FRAMESKIP;
+    static const QString SETTING_IMAGE_PATH;
+    static const QString SETTING_ROM_PATH;
+    static const QString SETTING_FIRST_RUN;
+    static const QString SETTING_UI_EDIT_MODE;
+    static const QString SETTING_SAVE_ON_CLOSE;
+    static const QString SETTING_RESTORE_ON_OPEN;
+    static const QString SETTING_EMUSPEED;
+    static const QString SETTING_AUTOUPDATE;
+    static const QString SETTING_DISABLE_MENUBAR;
+    static const QString SETTING_ALWAYS_ON_TOP;
+    static const QString SETTING_CURRENT_DIR;
+    static const QString SETTING_ENABLE_WIN_CONSOLE;
+
+    static const QString SETTING_KEYPAD_CEMU;
+    static const QString SETTING_KEYPAD_TILEM;
+    static const QString SETTING_KEYPAD_WABBITEMU;
+    static const QString SETTING_KEYPAD_JSTIFIED;
+
+    static const QString SETTING_DEFAULT_FILE;
+    static const QString SETTING_DEFAULT_ROM_FILE;
+    static const QString SETTING_DEFAULT_IMAGE_FILE;
+    static const QString SETTING_DEFAULT_DEBUG_FILE;
+
+    QMessageBox *infoBox = Q_NULLPTR;
 };
 
 #endif

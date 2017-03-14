@@ -27,7 +27,7 @@ unsigned KeypadWidget::getCurrColor(void) {
     return curr_color;
 }
 
-void KeypadWidget::setType(bool is83, unsigned color_scheme) {
+void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
     curr_color = color_scheme;
 
     c_num   = QColor::fromRgb(0xeeeeee);

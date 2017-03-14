@@ -77,7 +77,7 @@ QString ipc::getServerName() {
 }
 
 bool ipc::idOpen(QString name) {
-    QString idPath = configPath + QStringLiteral("id/");
+    QString idPath = configPath + QStringLiteral("/id/");
     QString idFile = idPath + name;
 
     QFile testFile(idFile);
@@ -92,7 +92,7 @@ bool ipc::ipcSetup(QString id, QString pid) {
     bool ret = true;
 
     // find the default configuration path
-    QString idPath = configPath + QStringLiteral("id/");
+    QString idPath = configPath + QStringLiteral("/id/");
     QString idFile = idPath + id;
 
     QDir config;

@@ -15,7 +15,7 @@ public:
     explicit KeypadWidget(QWidget *parent = Q_NULLPTR) : QWidget{parent}, m_keys{} { }
     virtual ~KeypadWidget();
 
-    void setType(bool, unsigned);
+    void setType(bool, unsigned int);
     unsigned getCurrColor(void);
 
 signals:

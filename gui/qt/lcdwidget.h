@@ -37,6 +37,7 @@ private:
     QPainter *painter;
     lcd_state_t *lcdState;
     QRect left, right;
+    uint32_t framebuffer[LCD_SIZE];
 };
 
 #endif
