@@ -1472,9 +1472,8 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
                                           QStringLiteral("\nixh: ") + val1 +
                                           QStringLiteral("\nixl: ") + val0;
         if (obj_name == "iyregView")  t = QStringLiteral("iy: ") + val +
-                                          QStringLiteral("\nuhl: ") + val2 +
-                                          QStringLiteral("\nh: ") + val1 +
-                                          QStringLiteral("\nl: ") + val0;
+                                          QStringLiteral("\niyh: ") + val1 +
+                                          QStringLiteral("\niyl: ") + val0;
         if (obj_name == "af_regView") t = QStringLiteral("a': ") + val1 +
                                           QStringLiteral("\nf': ") + val0;
         if (obj_name == "hl_regView") t = QStringLiteral("hl': ") + val +
