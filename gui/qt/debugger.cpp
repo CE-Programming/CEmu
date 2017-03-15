@@ -1,3 +1,4 @@
+#include <QtWidgets/QToolTip>
 #include <QtCore/QFileInfo>
 #include <QtCore/QRegularExpression>
 #include <QtNetwork/QNetworkAccessManager>
@@ -23,6 +24,34 @@
 
 #include "../../core/schedule.h"
 #include "../../core/link.h"
+
+// -----------------------------------------------
+// Debugger Init
+// -----------------------------------------------
+
+void MainWindow::debuggerInstall() {
+    ui->afregView->installEventFilter(this);
+    ui->hlregView->installEventFilter(this);
+    ui->bcregView->installEventFilter(this);
+    ui->deregView->installEventFilter(this);
+    ui->ixregView->installEventFilter(this);
+    ui->iyregView->installEventFilter(this);
+    ui->af_regView->installEventFilter(this);
+    ui->hl_regView->installEventFilter(this);
+    ui->bc_regView->installEventFilter(this);
+    ui->de_regView->installEventFilter(this);
+    ui->rregView->installEventFilter(this);
+    ui->hl->installEventFilter(this);
+    ui->bc->installEventFilter(this);
+    ui->de->installEventFilter(this);
+    ui->ix->installEventFilter(this);
+    ui->iy->installEventFilter(this);
+    ui->hl_->installEventFilter(this);
+    ui->bc_->installEventFilter(this);
+    ui->de_->installEventFilter(this);
+    ui->pc->installEventFilter(this);
+    ui->spl->installEventFilter(this);
+}
 
 // ------------------------------------------------
 // Main Debugger things
@@ -1391,25 +1420,79 @@ void MainWindow::gotoPressed() {
 // ------------------------------------------------
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
-    if(e->type() == QEvent::MouseMove && inDebugger) {
+    if (!inDebugger) {
+        return false;
+    }
+    if (e->type() == QEvent::MouseButtonPress) {
         QString obj_name = obj->objectName();
-        if (obj_name == "afregView") ui->afregView->setToolTip(QStringLiteral("a: ") +
-                                                               QString::number(ui->afregView->text().toUInt(Q_NULLPTR, 16)>>8) +
-                                                               QStringLiteral(" f: ") +
-                                                               QString::number(ui->afregView->text().toUInt(Q_NULLPTR, 16)&255));
-        if (obj_name == "hlregView") ui->hlregView->setToolTip(QString::number(ui->hlregView->text().toUInt(Q_NULLPTR, 16)));
-        if (obj_name == "deregView") ui->deregView->setToolTip(QString::number(ui->deregView->text().toUInt(Q_NULLPTR, 16)));
-        if (obj_name == "bcregView") ui->bcregView->setToolTip(QString::number(ui->bcregView->text().toUInt(Q_NULLPTR, 16)));
-        if (obj_name == "ixregView") ui->ixregView->setToolTip(QString::number(ui->ixregView->text().toUInt(Q_NULLPTR, 16)));
-        if (obj_name == "iyregView") ui->iyregView->setToolTip(QString::number(ui->iyregView->text().toUInt(Q_NULLPTR, 16)));
-        if (obj_name == "af_regView") ui->af_regView->setToolTip(QStringLiteral("a': ") +
-                                                                 QString::number(ui->af_regView->text().toUInt(Q_NULLPTR, 16)>>8) +
-                                                                 QStringLiteral(" f': ") +
-                                                                 QString::number(ui->af_regView->text().toUInt(Q_NULLPTR, 16)&255));
-        if (obj_name == "hl_regView") ui->hl_regView->setToolTip(QString::number(ui->hl_regView->text().toUInt(Q_NULLPTR, 16)));
-        if (obj_name == "de_regView") ui->de_regView->setToolTip(QString::number(ui->de_regView->text().toUInt(Q_NULLPTR, 16)));
-        if (obj_name == "bc_regView") ui->bc_regView->setToolTip(QString::number(ui->bc_regView->text().toUInt(Q_NULLPTR, 16)));
-        if (obj_name == "rregView") ui->rregView->setToolTip(QString::number(ui->rregView->text().toUInt(Q_NULLPTR, 16)));
+
+        if (obj_name.length() > 3) return false;
+
+        if (obj_name == "hl")  memGoto(ui->hlregView->text());
+        if (obj_name == "de")  memGoto(ui->deregView->text());
+        if (obj_name == "bc")  memGoto(ui->bcregView->text());
+        if (obj_name == "ix")  memGoto(ui->ixregView->text());
+        if (obj_name == "iy")  memGoto(ui->iyregView->text());
+        if (obj_name == "hl_") memGoto(ui->hl_regView->text());
+        if (obj_name == "de_") memGoto(ui->de_regView->text());
+        if (obj_name == "bc_") memGoto(ui->bc_regView->text());
+        if (obj_name == "spl") memGoto(ui->splregView->text());
+        if (obj_name == "pc")  memGoto(ui->pcregView->text());
+        return true;
+    } else if (e->type() == QEvent::MouseMove) {
+        QString obj_name = obj->objectName();
+
+        if (obj_name.length() < 4) return false;
+
+        QLineEdit *widget = static_cast<QLineEdit*>(obj);
+
+        unsigned int num = widget->text().toUInt(Q_NULLPTR, 16);
+
+        QString t;
+        QString val  = QString::number(num);
+        QString val0 = QString::number(num & 255);
+        QString val1 = QString::number((num >> 8) & 255);
+        QString val2 = QString::number((num >> 16) & 255);
+
+        if (obj_name == "afregView")  t = QStringLiteral("a: ") + val1 +
+                                          QStringLiteral("\nf: ") + val0;
+        if (obj_name == "hlregView")  t = QStringLiteral("hl: ") + val +
+                                          QStringLiteral("\nu: ") + val2 +
+                                          QStringLiteral("\nh: ") + val1 +
+                                          QStringLiteral("\nl: ") + val0;
+        if (obj_name == "deregView")  t = QStringLiteral("de: ") + val +
+                                          QStringLiteral("\nu: ") + val2 +
+                                          QStringLiteral("\nd: ") + val1 +
+                                          QStringLiteral("\ne: ") + val0;
+        if (obj_name == "bcregView")  t = QStringLiteral("bc: ") + val +
+                                          QStringLiteral("\nu: ") + val2 +
+                                          QStringLiteral("\nb: ") + val1 +
+                                          QStringLiteral("\nc: ") + val0;
+        if (obj_name == "ixregView")  t = QStringLiteral("ix: ") + val +
+                                          QStringLiteral("\nixh: ") + val1 +
+                                          QStringLiteral("\nixl: ") + val0;
+        if (obj_name == "iyregView")  t = QStringLiteral("iy: ") + val +
+                                          QStringLiteral("\nuhl: ") + val2 +
+                                          QStringLiteral("\nh: ") + val1 +
+                                          QStringLiteral("\nl: ") + val0;
+        if (obj_name == "af_regView") t = QStringLiteral("a': ") + val1 +
+                                          QStringLiteral("\nf': ") + val0;
+        if (obj_name == "hl_regView") t = QStringLiteral("hl': ") + val +
+                                          QStringLiteral("\nu': ") + val2 +
+                                          QStringLiteral("\nh': ") + val1 +
+                                          QStringLiteral("\nl': ") + val0;
+        if (obj_name == "de_regView") t = QStringLiteral("de': ") + val +
+                                          QStringLiteral("\nu': ") + val2 +
+                                          QStringLiteral("\nd': ") + val1 +
+                                          QStringLiteral("\ne': ") + val0;
+        if (obj_name == "bc_regView") t = QStringLiteral("bc': ") + val +
+                                          QStringLiteral("\nu': ") + val2 +
+                                          QStringLiteral("\nb': ") + val1 +
+                                          QStringLiteral("\nc': ") + val0;
+        if (obj_name == "rregView")   t = QStringLiteral("r: ") + val;
+
+        QToolTip::showText(static_cast<QMouseEvent*>(e)->globalPos(), t, widget, widget->rect());
+        return true;
     }
     return false;
 }

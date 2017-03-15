@@ -202,7 +202,7 @@ void MainWindow::memGoto(QString addressStr) {
 
     if (!inDebugger) {
         debuggerRaise();
-        guiDelay(100);
+        guiDelay(200);
     }
 
     QByteArray mem_data;

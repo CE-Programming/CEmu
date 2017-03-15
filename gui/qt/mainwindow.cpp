@@ -411,17 +411,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     if (opts.speed != -1) {
         setEmulatedSpeed(opts.speed/10);
     }
-    ui->afregView->installEventFilter(this);
-    ui->hlregView->installEventFilter(this);
-    ui->bcregView->installEventFilter(this);
-    ui->deregView->installEventFilter(this);
-    ui->ixregView->installEventFilter(this);
-    ui->iyregView->installEventFilter(this);
-    ui->af_regView->installEventFilter(this);
-    ui->hl_regView->installEventFilter(this);
-    ui->bc_regView->installEventFilter(this);
-    ui->de_regView->installEventFilter(this);
-    ui->rregView->installEventFilter(this);
+    debuggerInstall();
     ui->lcdWidget->setFocus();
     if (!settings->value(SETTING_FIRST_RUN, false).toBool()) {
         infoBox = new QMessageBox;

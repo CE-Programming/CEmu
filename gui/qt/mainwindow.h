@@ -142,6 +142,7 @@ private:
     void changeSnapshotPath();
 
     // Debugger
+    void debuggerInstall();
     void breakpointGUIAdd();
     void watchpointGUIAdd();
     void debuggerGUIPopulate();

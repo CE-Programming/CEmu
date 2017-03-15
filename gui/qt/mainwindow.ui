@@ -63,7 +63,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>3</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -3887,7 +3887,7 @@ QPushButton:pressed {
                    <number>5</number>
                   </property>
                   <item row="1" column="0">
-                   <widget class="QLabel" name="z3">
+                   <widget class="QLabel" name="mb">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                       <horstretch>0</horstretch>
@@ -3936,6 +3936,9 @@ QPushButton:pressed {
                        </colorrole>
                       </disabled>
                      </palette>
+                    </property>
+                    <property name="mouseTracking">
+                     <bool>true</bool>
                     </property>
                     <property name="text">
                      <string notr="true">mb</string>
@@ -3946,7 +3949,7 @@ QPushButton:pressed {
                    </widget>
                   </item>
                   <item row="0" column="0">
-                   <widget class="QLabel" name="z1">
+                   <widget class="QLabel" name="pc">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                       <horstretch>0</horstretch>
@@ -3995,6 +3998,9 @@ QPushButton:pressed {
                        </colorrole>
                       </disabled>
                      </palette>
+                    </property>
+                    <property name="mouseTracking">
+                     <bool>true</bool>
                     </property>
                     <property name="text">
                      <string notr="true">pc</string>
@@ -4165,7 +4171,7 @@ QPushButton:pressed {
                    </widget>
                   </item>
                   <item row="2" column="0">
-                   <widget class="QLabel" name="zD">
+                   <widget class="QLabel" name="spl">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                       <horstretch>0</horstretch>
@@ -4214,6 +4220,9 @@ QPushButton:pressed {
                        </colorrole>
                       </disabled>
                      </palette>
+                    </property>
+                    <property name="mouseTracking">
+                     <bool>true</bool>
                     </property>
                     <property name="text">
                      <string notr="true">spl</string>
@@ -4224,7 +4233,7 @@ QPushButton:pressed {
                    </widget>
                   </item>
                   <item row="3" column="0">
-                   <widget class="QLabel" name="z0">
+                   <widget class="QLabel" name="sps">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                       <horstretch>0</horstretch>
@@ -4273,6 +4282,9 @@ QPushButton:pressed {
                        </colorrole>
                       </disabled>
                      </palette>
+                    </property>
+                    <property name="mouseTracking">
+                     <bool>true</bool>
                     </property>
                     <property name="text">
                      <string notr="true">sps</string>
@@ -4297,7 +4309,7 @@ QPushButton:pressed {
                   <number>4</number>
                  </property>
                  <item row="1" column="2">
-                  <widget class="QLabel" name="z8">
+                  <widget class="QLabel" name="bc_">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                      <horstretch>0</horstretch>
@@ -4346,6 +4358,9 @@ QPushButton:pressed {
                       </colorrole>
                      </disabled>
                     </palette>
+                   </property>
+                   <property name="mouseTracking">
+                    <bool>true</bool>
                    </property>
                    <property name="text">
                     <string notr="true">bc'</string>
@@ -4356,7 +4371,7 @@ QPushButton:pressed {
                   </widget>
                  </item>
                  <item row="3" column="2">
-                  <widget class="QLabel" name="z9">
+                  <widget class="QLabel" name="hl_">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                      <horstretch>0</horstretch>
@@ -4405,6 +4420,9 @@ QPushButton:pressed {
                       </colorrole>
                      </disabled>
                     </palette>
+                   </property>
+                   <property name="mouseTracking">
+                    <bool>true</bool>
                    </property>
                    <property name="text">
                     <string notr="true">hl'</string>
@@ -4415,7 +4433,7 @@ QPushButton:pressed {
                   </widget>
                  </item>
                  <item row="4" column="0">
-                  <widget class="QLabel" name="zC">
+                  <widget class="QLabel" name="ix">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                      <horstretch>0</horstretch>
@@ -4464,6 +4482,9 @@ QPushButton:pressed {
                       </colorrole>
                      </disabled>
                     </palette>
+                   </property>
+                   <property name="mouseTracking">
+                    <bool>true</bool>
                    </property>
                    <property name="text">
                     <string notr="true">ix</string>
@@ -4474,7 +4495,7 @@ QPushButton:pressed {
                   </widget>
                  </item>
                  <item row="0" column="2">
-                  <widget class="QLabel" name="z6">
+                  <widget class="QLabel" name="af_">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                      <horstretch>0</horstretch>
@@ -4523,6 +4544,9 @@ QPushButton:pressed {
                       </colorrole>
                      </disabled>
                     </palette>
+                   </property>
+                   <property name="mouseTracking">
+                    <bool>true</bool>
                    </property>
                    <property name="text">
                     <string notr="true">af'</string>
@@ -4533,7 +4557,7 @@ QPushButton:pressed {
                   </widget>
                  </item>
                  <item row="3" column="0">
-                  <widget class="QLabel" name="z5">
+                  <widget class="QLabel" name="hl">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                      <horstretch>0</horstretch>
@@ -4582,6 +4606,9 @@ QPushButton:pressed {
                       </colorrole>
                      </disabled>
                     </palette>
+                   </property>
+                   <property name="mouseTracking">
+                    <bool>true</bool>
                    </property>
                    <property name="text">
                     <string notr="true">hl</string>
@@ -4592,7 +4619,7 @@ QPushButton:pressed {
                   </widget>
                  </item>
                  <item row="2" column="2">
-                  <widget class="QLabel" name="zF">
+                  <widget class="QLabel" name="de_">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                      <horstretch>0</horstretch>
@@ -4641,6 +4668,9 @@ QPushButton:pressed {
                       </colorrole>
                      </disabled>
                     </palette>
+                   </property>
+                   <property name="mouseTracking">
+                    <bool>true</bool>
                    </property>
                    <property name="text">
                     <string notr="true">de'</string>
@@ -4774,7 +4804,7 @@ QPushButton:pressed {
                   </widget>
                  </item>
                  <item row="2" column="0">
-                  <widget class="QLabel" name="z2">
+                  <widget class="QLabel" name="de">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                      <horstretch>0</horstretch>
@@ -4823,6 +4853,9 @@ QPushButton:pressed {
                       </colorrole>
                      </disabled>
                     </palette>
+                   </property>
+                   <property name="mouseTracking">
+                    <bool>true</bool>
                    </property>
                    <property name="text">
                     <string notr="true">de</string>
@@ -4873,7 +4906,7 @@ QPushButton:pressed {
                   </widget>
                  </item>
                  <item row="0" column="0">
-                  <widget class="QLabel" name="z4">
+                  <widget class="QLabel" name="af">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                      <horstretch>0</horstretch>
@@ -4922,6 +4955,9 @@ QPushButton:pressed {
                       </colorrole>
                      </disabled>
                     </palette>
+                   </property>
+                   <property name="mouseTracking">
+                    <bool>true</bool>
                    </property>
                    <property name="text">
                     <string notr="true">af</string>
@@ -4932,7 +4968,7 @@ QPushButton:pressed {
                   </widget>
                  </item>
                  <item row="1" column="0">
-                  <widget class="QLabel" name="zE">
+                  <widget class="QLabel" name="bc">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                      <horstretch>0</horstretch>
@@ -4981,6 +5017,9 @@ QPushButton:pressed {
                       </colorrole>
                      </disabled>
                     </palette>
+                   </property>
+                   <property name="mouseTracking">
+                    <bool>true</bool>
                    </property>
                    <property name="text">
                     <string notr="true">bc</string>
@@ -5231,7 +5270,7 @@ QPushButton:pressed {
                   </widget>
                  </item>
                  <item row="4" column="2">
-                  <widget class="QLabel" name="zA">
+                  <widget class="QLabel" name="iy">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
                      <horstretch>0</horstretch>
@@ -5280,6 +5319,9 @@ QPushButton:pressed {
                       </colorrole>
                      </disabled>
                     </palette>
+                   </property>
+                   <property name="mouseTracking">
+                    <bool>true</bool>
                    </property>
                    <property name="text">
                     <string notr="true">iy</string>
