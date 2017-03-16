@@ -166,8 +166,20 @@ const char *calc_var_name_to_utf8(uint8_t name[8]) {
                 *dest++ = '0' + (name[1] + 1) % 10;
                 break;
             default:
-                for (i = 0; i < 8 && name[i]; i++) {
-                    dest += snprintf(dest, 3, "%02" PRIX8, name[i]);
+                for (i = 0; i < 8 && ((name[i] >= 'A' && name[i] <= 'Z' + 1)  ||
+                                      (name[i] >= 'a' && name[i] <= 'z') ||
+                                      (name[i] >= '0' && name[i] <= '9')); i++) {
+                    if (name[i] == 'Z' + 1) {
+                        *dest++ = '\xCE';
+                        *dest++ = '\xB8';
+                    } else {
+                        *dest++ = name[i];
+                    }
+                }
+                if (!i) {
+                    for (; i < 8 && name[i]; i++) {
+                        dest += snprintf(dest, 3, "%02" PRIX8, name[i]);
+                    }
                 }
                 break;
         }
