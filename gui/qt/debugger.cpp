@@ -1446,49 +1446,65 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
 
         QLineEdit *widget = static_cast<QLineEdit*>(obj);
 
-        unsigned int num = widget->text().toUInt(Q_NULLPTR, 16);
+        unsigned int num  = widget->text().toUInt(Q_NULLPTR, 16);
+        unsigned int num0 = num & 255;
+        unsigned int num1 = (num >> 8) & 255;
+        unsigned int num2 = (num >> 16) & 255;
 
         QString t;
         QString val  = QString::number(num);
-        QString val0 = QString::number(num & 255);
-        QString val1 = QString::number((num >> 8) & 255);
-        QString val2 = QString::number((num >> 16) & 255);
+        QString val0 = QString::number(num0);
+        QString val1 = QString::number(num1);
+        QString val2 = QString::number(num2);
 
-        if (obj_name == "afregView")  t = QStringLiteral("a: ") + val1 +
-                                          QStringLiteral("\nf: ") + val0;
-        if (obj_name == "hlregView")  t = QStringLiteral("hl: ") + val +
-                                          QStringLiteral("\nu: ") + val2 +
-                                          QStringLiteral("\nh: ") + val1 +
-                                          QStringLiteral("\nl: ") + val0;
-        if (obj_name == "deregView")  t = QStringLiteral("de: ") + val +
-                                          QStringLiteral("\nu: ") + val2 +
-                                          QStringLiteral("\nd: ") + val1 +
-                                          QStringLiteral("\ne: ") + val0;
-        if (obj_name == "bcregView")  t = QStringLiteral("bc: ") + val +
-                                          QStringLiteral("\nu: ") + val2 +
-                                          QStringLiteral("\nb: ") + val1 +
-                                          QStringLiteral("\nc: ") + val0;
-        if (obj_name == "ixregView")  t = QStringLiteral("ix: ") + val +
-                                          QStringLiteral("\nixh: ") + val1 +
-                                          QStringLiteral("\nixl: ") + val0;
-        if (obj_name == "iyregView")  t = QStringLiteral("iy: ") + val +
-                                          QStringLiteral("\niyh: ") + val1 +
-                                          QStringLiteral("\niyl: ") + val0;
-        if (obj_name == "af_regView") t = QStringLiteral("a': ") + val1 +
-                                          QStringLiteral("\nf': ") + val0;
-        if (obj_name == "hl_regView") t = QStringLiteral("hl': ") + val +
-                                          QStringLiteral("\nu': ") + val2 +
-                                          QStringLiteral("\nh': ") + val1 +
-                                          QStringLiteral("\nl': ") + val0;
-        if (obj_name == "de_regView") t = QStringLiteral("de': ") + val +
-                                          QStringLiteral("\nu': ") + val2 +
-                                          QStringLiteral("\nd': ") + val1 +
-                                          QStringLiteral("\ne': ") + val0;
-        if (obj_name == "bc_regView") t = QStringLiteral("bc': ") + val +
-                                          QStringLiteral("\nu': ") + val2 +
-                                          QStringLiteral("\nb': ") + val1 +
-                                          QStringLiteral("\nc': ") + val0;
-        if (obj_name == "rregView")   t = QStringLiteral("r: ") + val;
+        if (num  > 0x7FFFFF) {
+            val  += QStringLiteral("\n\t") + QString::number(static_cast<int32_t>(num | 0xff000000u));
+        }
+        if (num0 > 0x7F) {
+            val0 += QStringLiteral("\t") + QString::number(static_cast<int8_t>(num0));
+        }
+        if (num1 > 0x7F) {
+            val1 += QStringLiteral("\t") + QString::number(static_cast<int8_t>(num1));
+        }
+        if (num2 > 0x7F) {
+            val2 += QStringLiteral("\t") + QString::number(static_cast<int8_t>(num2));
+        }
+
+        if (obj_name == "afregView")  t = QStringLiteral("a:\t") + val1 +
+                                          QStringLiteral("\nf:\t") + val0;
+        if (obj_name == "hlregView")  t = QStringLiteral("hl:\t") + val +
+                                          QStringLiteral("\nu:\t") + val2 +
+                                          QStringLiteral("\nh:\t") + val1 +
+                                          QStringLiteral("\nl:\t") + val0;
+        if (obj_name == "deregView")  t = QStringLiteral("de:\t") + val +
+                                          QStringLiteral("\nu:\t") + val2 +
+                                          QStringLiteral("\nd:\t") + val1 +
+                                          QStringLiteral("\ne:\t") + val0;
+        if (obj_name == "bcregView")  t = QStringLiteral("bc:\t") + val +
+                                          QStringLiteral("\nu:\t") + val2 +
+                                          QStringLiteral("\nb:\t") + val1 +
+                                          QStringLiteral("\nc:\t") + val0;
+        if (obj_name == "ixregView")  t = QStringLiteral("ix:\t") + val +
+                                          QStringLiteral("\nixh:\t") + val1 +
+                                          QStringLiteral("\nixl:\t") + val0;
+        if (obj_name == "iyregView")  t = QStringLiteral("iy:\t") + val +
+                                          QStringLiteral("\niyh:\t") + val1 +
+                                          QStringLiteral("\niyl:\t") + val0;
+        if (obj_name == "af_regView") t = QStringLiteral("a':\t") + val1 +
+                                          QStringLiteral("\nf':\t") + val0;
+        if (obj_name == "hl_regView") t = QStringLiteral("hl':\t") + val +
+                                          QStringLiteral("\nu':\t") + val2 +
+                                          QStringLiteral("\nh':\t") + val1 +
+                                          QStringLiteral("\nl':\t") + val0;
+        if (obj_name == "de_regView") t = QStringLiteral("de':\t") + val +
+                                          QStringLiteral("\nu':\t") + val2 +
+                                          QStringLiteral("\nd':\t") + val1 +
+                                          QStringLiteral("\ne':\t") + val0;
+        if (obj_name == "bc_regView") t = QStringLiteral("bc':\t") + val +
+                                          QStringLiteral("\nu':\t") + val2 +
+                                          QStringLiteral("\nb':\t") + val1 +
+                                          QStringLiteral("\nc':\t") + val0;
+        if (obj_name == "rregView")   t = QStringLiteral("r:\t") + val;
 
         QToolTip::showText(static_cast<QMouseEvent*>(e)->globalPos(), t, widget, widget->rect());
         return true;
