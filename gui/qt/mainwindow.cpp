@@ -1012,7 +1012,7 @@ void MainWindow::variableClicked(QTableWidgetItem *item) {
     if (calc_var_is_asmprog(&var_tmp)) {
         updateDisasmView(var_tmp.address + 4, false);  // This is
         if (!inDebugger) { debuggerChangeState(); }    // semi-broken
-    } else if (!calc_var_is_internal(&var_tmp) || var_tmp.name[0] == '#') {
+    } else if (var_tmp.type != CALC_VAR_TYPE_APP_VAR && (!calc_var_is_internal(&var_tmp) || var_tmp.name[0] == '#')) {
         BasicCodeViewerWindow *codePopup = new BasicCodeViewerWindow(this);
         codePopup->setOriginalCode((var_tmp.size <= 500) ? ui->emuVarView->item(item->row(), 3)->text() : QString::fromStdString(calc_var_content_string(var_tmp)));
         codePopup->setVariableName(ui->emuVarView->item(item->row(), 0)->text());
@@ -1064,7 +1064,10 @@ void MainWindow::refreshVariableList() {
                 } else if (calc_var_is_internal(&var) && var.name[0] != '#') { // # is previewable
                     var_value = tr("Can't preview this OS variable");
                     var_preview_needs_gray = true;
-                } else if (var.type == CALC_VAR_TYPE_APP_VAR || var.size > 500) {
+                }  else if (var.type == CALC_VAR_TYPE_APP_VAR) { // nothing to do for now
+                    var_value = tr("Can't preview this");
+                    var_preview_needs_gray = true;
+                } else if (var.size > 500) {
                     var_value = tr("[Double-click to view...]");
                 } else {
                     var_value = QString::fromStdString(calc_var_content_string(var));
