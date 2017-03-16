@@ -432,7 +432,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
                             "and choose which docks are available in the 'Docks' menu in the topmost bar. "
                             "Be sure that 'Enable UI edit mode' is selected when laying out your interface. "
                             "Enjoy!"));
-        infoBox->setWindowModality(Qt::ApplicationModal);
+        infoBox->setWindowModality(Qt::NonModal);
+        infoBox->setWindowFlags(infoBox->windowFlags() | Qt::WindowStaysOnTopHint);
         infoBox->setAttribute(Qt::WA_DeleteOnClose);
         infoBox->show();
         settings->setValue(SETTING_FIRST_RUN, true);
@@ -1645,6 +1646,7 @@ void MainWindow::opContextMenu(const QPoint& posa) {
 
 void MainWindow::createLCD() {
     LCDPopout *p = new LCDPopout(&keypadBridge, this);
+    p->setAttribute(Qt::WA_DeleteOnClose);
     p->show();
 }
 
