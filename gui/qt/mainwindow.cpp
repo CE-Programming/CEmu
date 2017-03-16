@@ -1012,11 +1012,12 @@ void MainWindow::variableClicked(QTableWidgetItem *item) {
         updateDisasmView(var_tmp.address + 4, false);  // This is
         if (!inDebugger) { debuggerChangeState(); }    // semi-broken
     } else if (!calc_var_is_internal(&var_tmp) || var_tmp.name[0] == '#') {
-        BasicCodeViewerWindow codePopup(this);
-        codePopup.setOriginalCode((var_tmp.size <= 500) ? ui->emuVarView->item(item->row(), 3)->text() : QString::fromStdString(calc_var_content_string(var_tmp)));
-        codePopup.setVariableName(ui->emuVarView->item(item->row(), 0)->text());
-        codePopup.show();
-        codePopup.exec();
+        BasicCodeViewerWindow *codePopup = new BasicCodeViewerWindow(this);
+        codePopup->setOriginalCode((var_tmp.size <= 500) ? ui->emuVarView->item(item->row(), 3)->text() : QString::fromStdString(calc_var_content_string(var_tmp)));
+        codePopup->setVariableName(ui->emuVarView->item(item->row(), 0)->text());
+        codePopup->setWindowModality(Qt::NonModal);
+        codePopup->setAttribute(Qt::WA_DeleteOnClose);
+        codePopup->show();
     }
 }
 
