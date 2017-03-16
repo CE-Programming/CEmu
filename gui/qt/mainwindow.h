@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QtWidgets/QProgressBar>
 #include <QtWidgets/QShortcut>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QLabel>
@@ -459,6 +460,7 @@ private:
     static const QString SETTING_DEFAULT_DEBUG_FILE;
 
     QMessageBox *infoBox = Q_NULLPTR;
+    QProgressBar *progressBar;
 };
 
 #endif

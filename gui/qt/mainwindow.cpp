@@ -63,6 +63,17 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
         tab->installEventFilter(&keypadBridge);
     }
 
+    // Setup the file sending handler
+    progressBar = new QProgressBar(this);
+    progressBar->setMinimum(0);
+    progressBar->setMinimumWidth(0);
+    progressBar->setMaximumWidth(200);
+    progressBar->setTextVisible(false);
+    progressBar->setValue(0);
+    ui->statusBar->addWidget(progressBar);
+    sendingHandler = new SendingHandler(progressBar);
+    progressBar->setVisible(false);
+
     // Emulator -> GUI
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr);
     connect(&emu, &EmuThread::consoleErrStr, this, &MainWindow::consoleErrStr);
@@ -431,6 +442,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 void MainWindow::showEvent(QShowEvent *e) {
     QMainWindow::showEvent(e);
     if (!firstShow) {
+        progressBar->setMaximumHeight(ui->statusBar->height()/2);
         setLCDScale(settings->value(SETTING_SCREEN_SCALE, 100).toUInt());
         setSkinToggle(settings->value(SETTING_SCREEN_SKIN, true).toBool());
         setAlwaysOnTop(settings->value(SETTING_ALWAYS_ON_TOP, false).toBool());
@@ -492,13 +504,13 @@ void MainWindow::optCheckSend(CEmuOpts &o) {
         // Race condition requires this
         guiDelay(1000);
         if (!o.sendFiles.isEmpty()) {
-            sendingHandler.sendFiles(o.sendFiles, LINK_FILE);
+            sendingHandler->sendFiles(o.sendFiles, LINK_FILE);
         }
         if (!o.sendArchFiles.isEmpty()) {
-            sendingHandler.sendFiles(o.sendArchFiles, LINK_ARCH);
+            sendingHandler->sendFiles(o.sendArchFiles, LINK_ARCH);
         }
         if (!o.sendRAMFiles.isEmpty()) {
-            sendingHandler.sendFiles(o.sendRAMFiles, LINK_RAM);
+            sendingHandler->sendFiles(o.sendRAMFiles, LINK_RAM);
         }
     }
 
@@ -547,6 +559,7 @@ MainWindow::~MainWindow() {
 
     delete com;
     delete settings;
+    delete progressBar;
     delete asmShortcut;
     delete toggleAction;
     delete stepInShortcut;
@@ -559,6 +572,7 @@ MainWindow::~MainWindow() {
     delete ui->ramEdit;
     delete ui->memEdit;
     delete ui;
+    delete sendingHandler;
 }
 
 bool MainWindow::IsInitialized() {
@@ -663,12 +677,12 @@ void MainWindow::saved(bool success) {
 }
 
 void MainWindow::dropEvent(QDropEvent *e) {
-    sendingHandler.dropOccured(e, LINK_FILE);
+    sendingHandler->dropOccured(e, LINK_FILE);
     equatesRefresh();
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent *e) {
-    sendingHandler.dragOccured(e);
+    sendingHandler->dragOccured(e);
 }
 
 void MainWindow::closeEvent(QCloseEvent *e) {
@@ -988,7 +1002,7 @@ void MainWindow::selectFiles() {
 
     QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptOpen, tr("TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca *.8cg *.8ci *.8ek);;All Files (*.*)"));
 
-    sendingHandler.sendFiles(fileNames, LINK_FILE);
+    sendingHandler->sendFiles(fileNames, LINK_FILE);
     equatesRefresh();
 }
 
@@ -1262,7 +1276,7 @@ void MainWindow::launchTest() {
         filesList << QString::fromStdString(file);
     }
 
-    sendingHandler.sendFiles(filesList, LINK_FILE);
+    sendingHandler->sendFiles(filesList, LINK_FILE);
     equatesRefresh();
     guiDelay(100);
 

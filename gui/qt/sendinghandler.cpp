@@ -1,4 +1,3 @@
-#include <QtWidgets/QProgressDialog>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QApplication>
 #include <QtCore/QFileInfo>
@@ -10,9 +9,11 @@
 #include "emuthread.h"
 #include "../../core/link.h"
 
-SendingHandler sendingHandler;
+SendingHandler *sendingHandler = Q_NULLPTR;
 
-SendingHandler::SendingHandler() {}
+SendingHandler::SendingHandler(QProgressBar *bar) {
+    progress = bar;
+}
 
 void SendingHandler::dropOccured(QDropEvent *e, unsigned int location) {
     if (isSending || isReceiving || inDebugger) {
@@ -67,6 +68,8 @@ bool SendingHandler::dragOccured(QDragEnterEvent *e) {
 }
 
 void SendingHandler::sendFiles(QStringList fileNames, unsigned location) {
+    int i;
+
     if (isSending || isReceiving || inDebugger) {
         QMessageBox::warning(nullptr, QObject::tr("Failed Transfer"), QObject::tr("Transfer failed: Emulation Paused"));
         return;
@@ -84,7 +87,7 @@ void SendingHandler::sendFiles(QStringList fileNames, unsigned location) {
     unsigned int tries_cnt = 0;
     emu_thread->waitForLink = true;
     do {
-        guiDelay(50);
+        guiDelay(100);
         tries_cnt++;
     } while (emu_thread->waitForLink && tries_cnt < 50);
 
@@ -94,23 +97,21 @@ void SendingHandler::sendFiles(QStringList fileNames, unsigned location) {
         return;
     }
 
-    QProgressDialog *progress = new QProgressDialog("Sending Files...", QString(), 0, fileNum, Q_NULLPTR);
-    progress->setWindowModality(Qt::WindowModal);
+    if (progress) {
+        progress->setVisible(true);
+        progress->setMaximum(fileNum);
+    }
 
-    progress->show();
-
-    for (int i = 0; i < fileNum; i++) {
+    for (i = 0; i < fileNum; i++) {
         if (!sendVariableLink(fileNames.at(i).toUtf8(), location)) {
             QMessageBox::warning(Q_NULLPTR, QObject::tr("Failed Transfer"), QObject::tr("A failure occured during transfer of: ")+fileNames.at(i));
         }
-        progress->setLabelText(fileNames.at(i).toUtf8());
-        progress->setValue(progress->value() + 1);
+        if (progress) { progress->setValue(i); }
         QApplication::processEvents();
     }
 
-    progress->setValue(progress->value() + 1);
     emu_thread->setSendState(false);
-    guiDelay(200);
-
-    delete progress;
+    if (progress) { progress->setValue(i); }
+    while (isSending);
+    if (progress) { progress->setVisible(false); }
 }

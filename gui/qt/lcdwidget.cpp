@@ -53,7 +53,7 @@ void LCDWidget::setLCD(lcd_state_t *lcdS) {
 }
 
 void LCDWidget::dropEvent(QDropEvent *e) {
-    sendingHandler.dropOccured(e, (e->pos().x() < width() / 2) ? LINK_ARCH : LINK_RAM);
+    sendingHandler->dropOccured(e, (e->pos().x() < width() / 2) ? LINK_ARCH : LINK_RAM);
     in_drag = false;
 }
 
@@ -62,7 +62,7 @@ void LCDWidget::dragMoveEvent(QDragMoveEvent *e) {
 }
 
 void LCDWidget::dragEnterEvent(QDragEnterEvent *e) {
-    in_drag = sendingHandler.dragOccured(e);
+    in_drag = sendingHandler->dragOccured(e);
     side_drag = (e->pos().x() < width() / 2) ? LCD_LEFT : LCD_RIGHT;
 }
 
