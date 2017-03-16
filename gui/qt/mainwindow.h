@@ -240,7 +240,7 @@ private:
     void screenContextMenu(const QPoint&);
     void updateLabels();
     void equatesAddDialog();
-    void equatesAddFile(QString);
+    void equatesAddFile(const QString&);
     void equatesAddEquate(QString, QString);
     void equatesClear();
     void equatesRefresh();
@@ -460,6 +460,7 @@ private:
     static const QString SETTING_DEFAULT_DEBUG_FILE;
 
     QMessageBox *infoBox = Q_NULLPTR;
+    QMessageBox *warnBox = Q_NULLPTR;
     QProgressBar *progressBar;
 };
 

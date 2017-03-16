@@ -85,7 +85,12 @@ void MainWindow::debuggerImportFile(QString filename) {
 
     QSettings debugInfo(filename, QSettings::IniFormat);
     if (debugInfo.value(QStringLiteral("version")) != DBG_VERSION) {
-        QMessageBox::critical(this, tr("Invalid Version"), tr("This debugging information is incompatible with this version of CEmu"));
+        warnBox = new QMessageBox;
+        warnBox->setWindowTitle(tr("Invalid Version"));
+        warnBox->setText(tr("This debugging information is incompatible with this version of CEmu"));
+        warnBox->setWindowModality(Qt::ApplicationModal);
+        warnBox->setAttribute(Qt::WA_DeleteOnClose);
+        warnBox->show();
         return;
     }
 
@@ -119,6 +124,15 @@ void MainWindow::debuggerImportFile(QString filename) {
                             (portWEnabled.at(i) == "y" ? DBG_PORT_WRITE : DBG_NO_HANDLE) |
                             (portFEnabled.at(i) == "y" ? DBG_PORT_FREEZE : DBG_NO_HANDLE);
         portAdd(hex2int(portAddress.at(i)), mask);
+    }
+
+    // Add all the equate files and load them in
+    currentEquateFiles = debugInfo.value(QStringLiteral("equates/files")).toStringList();
+
+    disasm.map.clear();
+    disasm.reverseMap.clear();
+    for (QString file : currentEquateFiles) {
+        equatesAddFile(file);
     }
 }
 
@@ -183,6 +197,8 @@ void MainWindow::debuggerExportFile(QString filename) {
     debugInfo.setValue(QStringLiteral("portmonitor/read"), portREnabled);
     debugInfo.setValue(QStringLiteral("portmonitor/write"), portWEnabled);
     debugInfo.setValue(QStringLiteral("portmonitor/freeze"), portFEnabled);
+
+    debugInfo.setValue(QStringLiteral("equates/files"), currentEquateFiles);
 
     // Make sure we write the settings
     debugInfo.sync();
@@ -1269,8 +1285,9 @@ void MainWindow::equatesRefresh() {
     // reset the map
     disasm.map.clear();
     disasm.reverseMap.clear();
-    for (QString file : currentEquateFiles)
+    for (QString file : currentEquateFiles) {
         equatesAddFile(file);
+    }
     updateLabels();
     updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(Q_NULLPTR, 16), true);
 }
@@ -1294,10 +1311,11 @@ void MainWindow::equatesAddDialog() {
     currentDir = dialog.directory();
 }
 
-void MainWindow::equatesAddFile(QString fileName) {
+void MainWindow::equatesAddFile(const QString &fileName) {
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        QMessageBox::critical(this, tr("Error"), tr("Couldn't open this file: ") + fileName);
+        currentEquateFiles.removeAll(fileName);
+        consoleErrStr(tr("[CEmu] Debugger couldn't open this equate file (removed): ") + fileName);
         return;
     }
 

@@ -20,6 +20,6 @@ enum openDebuggerMode {
     DBG_SAVE
 };
 
-#define DBG_VERSION 1
+#define DBG_VERSION 2
 
 #endif
