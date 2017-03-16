@@ -33,11 +33,11 @@ private:
     unsigned int side_drag;
     bool state_set = false;
     bool in_drag = false;
+    bool in_send = false;
     QTimer *refreshTimer;
     QPainter *painter;
     lcd_state_t *lcdState;
     QRect left, right;
-    uint32_t framebuffer[LCD_SIZE];
 };
 
 #endif
