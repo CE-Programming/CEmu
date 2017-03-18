@@ -239,11 +239,11 @@ void MainWindow::debuggerExecuteCommand(uint32_t debugAddress, uint8_t command) 
         int tmp;
         switch (command) {
             case CMD_ABORT:
-                consoleStr(QStringLiteral("[CEmu] Program Aborted.\n"));
+                ui->debuggerLabel->setText(QStringLiteral("Program Aborted"));
                 debuggerRaise();
                 return; // don't exit the debugger
             case CMD_DEBUG:
-                consoleStr(QStringLiteral("[CEmu] Program Entered Debugger.\n"));
+                ui->debuggerLabel->setText(QStringLiteral("Program Entered Debugger"));
                 debuggerRaise();
                 return; // don't exit the debugger
             case CMD_SET_BREAKPOINT:
@@ -306,6 +306,8 @@ void MainWindow::debuggerProcessCommand(int reason, uint32_t input) {
     if (reason >= NUM_DBG_COMMANDS) {
         if (enabledSoftCommands) {
             debuggerExecuteCommand(static_cast<uint32_t>(reason-DBG_PORT_RANGE), static_cast<uint8_t>(input));
+        } else {
+            inDebugger = false;
         }
         return;
     }

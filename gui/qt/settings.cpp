@@ -202,7 +202,6 @@ void MainWindow::saveMiscSettings() {
     settings->setValue(SETTING_DEBUGGER_FLASH_BYTES,        ui->flashBytes->value());
     settings->setValue(SETTING_DEBUGGER_RAM_BYTES,          ui->ramBytes->value());
     settings->setValue(SETTING_DEBUGGER_MEM_BYTES,          ui->memBytes->value());
-    settings->setValue(SETTING_KEYPAD_COLOR,                ui->keypadWidget->getCurrColor());
 }
 
 void MainWindow::setMenuBarState(bool state) {
@@ -280,6 +279,7 @@ void MainWindow::setFont(int fontSize) {
 
 void MainWindow::setKeypadColor(unsigned int color) {
     ui->keypadWidget->setType(get_device_type(), color);
+    settings->setValue(SETTING_KEYPAD_COLOR, color);
 }
 
 void MainWindow::setImagePath() {
