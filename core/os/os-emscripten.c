@@ -14,6 +14,7 @@
 
 #include "../../core/emu.h"
 #include "../../core/lcd.h"
+#include "../../core/debug/debug.h"
 
 extern lcd_state_t lcd;
 
@@ -26,14 +27,48 @@ void throttle_timer_off() {}
 void throttle_timer_on() {}
 void throttle_timer_wait() {}
 
-void gui_emu_sleep() { usleep(500); }
-void gui_do_stuff() {}
+void gui_emu_sleep() { usleep(50); }
+void gui_do_stuff()
+{
+    if (debugger.currentBuffPos) {
+        debugger.buffer[debugger.currentBuffPos] = '\0';
+        fprintf(stdout, "[CEmu DbgOutPrint] %s\n", debugger.buffer);
+        fflush(stdout);
+        debugger.currentBuffPos = 0;
+    }
+
+    if (debugger.currentErrBuffPos) {
+        debugger.errBuffer[debugger.currentErrBuffPos] = '\0';
+        fprintf(stderr, "[CEmu DbgErrPrint] %s\n", debugger.errBuffer);
+        fflush(stderr);
+        debugger.currentErrBuffPos = 0;
+    }
+}
+
 void gui_set_busy(bool busy) {}
+
+void gui_debugger_raise_or_disable(bool entered)
+{
+    inDebugger = false;
+}
+
+void gui_debugger_send_command(int reason, uint32_t addr)
+{
+    printf("[CEmu Debugger] Got software command (r=%d, addr=0x%X)\n", reason, addr);
+    fflush(stdout);
+    inDebugger = false;
+}
 
 void gui_console_vprintf(const char *fmt, va_list ap)
 {
     vfprintf(stdout, fmt, ap);
     fflush(stdout);
+}
+
+void gui_console_err_vprintf(const char *fmt, va_list ap)
+{
+    vfprintf(stderr, fmt, ap);
+    fflush(stderr);
 }
 
 void gui_console_printf(const char *fmt, ...)
@@ -44,9 +79,20 @@ void gui_console_printf(const char *fmt, ...)
     va_end(ap);
 }
 
+void gui_console_err_printf(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+
+    gui_console_err_vprintf(fmt, ap);
+
+    va_end(ap);
+}
+
 void gui_perror(const char *msg)
 {
-    gui_console_printf("[Error] %s: %s\n", msg, strerror(errno));
+    printf("[Error] %s: %s\n", msg, strerror(errno));
+    fflush(stdout);
 }
 
 void EMSCRIPTEN_KEEPALIVE paintLCD(uint32_t *dest)
@@ -79,6 +125,7 @@ int main(int argc, char* argv[])
     success = emu_start("CE.rom", NULL);
 
     if (success) {
+        debugger_init();
         EM_ASM(
             emul_is_inited = true;
             emul_is_paused = false;
