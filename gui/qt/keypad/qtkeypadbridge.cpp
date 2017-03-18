@@ -89,9 +89,7 @@ bool QtKeypadBridge::eventFilter(QObject *obj, QEvent *e)
         keyEvent(static_cast<QKeyEvent*>(e), false);
     } else if (e->type() == QEvent::WindowDeactivate) {
         releaseAll();
-    } else {
-        return false;
     }
 
-    return true;
+    return false;
 }

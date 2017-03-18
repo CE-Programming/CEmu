@@ -124,12 +124,7 @@ void MainWindow::searchEdit(QHexEdit *editor) {
         return;
     }
 
-    QByteArray string_int;
-    for (int i = 0; i<searchString.length(); i += 2) {
-        QString a = searchString.at(i);
-        a.append(searchString.at(i+1));
-        string_int.append(hex2int(a));
-    }
+    QByteArray string_int = QByteArray::fromHex(searchString.toLatin1());
 
     switch (searchMode) {
         case SEARCH_NEXT_NOT:
