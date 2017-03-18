@@ -101,22 +101,17 @@ void MainWindow::memUpdate(uint32_t addressBegin) {
 }
 
 void MainWindow::searchEdit(QHexEdit *editor) {
-    SearchWidget search;
-    search.setSearchString(searchingString);
-    search.setInputMode(hexSearch);
-
+    SearchWidget search(searchingString, hexSearch);
+    int searchMode, err = 0;
     search.show();
-    search.exec();
 
-    hexSearch = search.getInputMode();
+    if (!((searchMode = search.exec()) > SEARCH_CANCEL)) { return; }
+
+    hexSearch = search.getType();
     searchingString = search.getSearchString();
 
-    if (!search.getStatus()) {
-        return;
-    }
-
     QString searchString;
-    if (hexSearch == true) {
+    if (hexSearch == SEARCH_MODE_HEX) {
         searchString = searchingString;
     } else {
         searchString = QString::fromStdString(searchingString.toLatin1().toHex().toStdString());
@@ -124,10 +119,7 @@ void MainWindow::searchEdit(QHexEdit *editor) {
 
     editor->setFocus();
     std::string s = searchString.toUpper().toStdString();
-    if (searchString.isEmpty()) {
-        return;
-    }
-    if ((searchString.length() & 1) || s.find_first_not_of("0123456789ABCDEF") != std::string::npos) {
+    if (searchString.isEmpty() || (searchString.length() & 1) || s.find_first_not_of("0123456789ABCDEF") != std::string::npos) {
         QMessageBox::warning(this, tr("Error"), tr("Error when reading input string"));
         return;
     }
@@ -138,8 +130,25 @@ void MainWindow::searchEdit(QHexEdit *editor) {
         a.append(searchString.at(i+1));
         string_int.append(hex2int(a));
     }
-    if (editor->indexOf(string_int, editor->cursorPosition()) == -1) {
-        QMessageBox::warning(this, tr("Not Found"), tr("Hex string not found."));
+
+    switch (searchMode) {
+        case SEARCH_NEXT_NOT:
+            err = editor->indexNotOf(string_int, editor->cursorPosition());
+            break;
+        case SEARCH_PREV:
+            err = editor->indexPrevOf(string_int, editor->cursorPosition());
+            break;
+        case SEARCH_PREV_NOT:
+            err = editor->indexPrevNotOf(string_int, editor->cursorPosition());
+            break;
+        case SEARCH_NEXT:
+        default:
+            err = editor->indexOf(string_int, editor->cursorPosition());
+            break;
+    }
+
+    if (err == -1) {
+         QMessageBox::warning(this, tr("Not Found"), tr("String not found."));
     }
 }
 

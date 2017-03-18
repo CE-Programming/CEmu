@@ -226,16 +226,36 @@ void QHexEdit::setBytesPerLine(int bytes) {
     ensureVisible();
 }
 
-qint64 QHexEdit::indexOf(const QByteArray &ba, qint64 from) {
-    qint64 posa = _chunks->indexOf(ba, from/2);
+qint64 QHexEdit::computePos(qint64 posa, int len) {
     if (posa > -1) {
+        len = len*2;
         qint64 curPos = posa*2;
-        setCursorPosition(curPos + ba.length()*2);
+        setCursorPosition(curPos + len);
         resetSelection(curPos);
-        setSelection(curPos + ba.length()*2);
+        setSelection(curPos + len);
         ensureVisible();
     }
     return posa;
+}
+
+qint64 QHexEdit::indexOf(const QByteArray &ba, qint64 from) {
+    qint64 posa = _chunks->indexOf(ba, from/2);
+    return computePos(posa, ba.length());
+}
+
+qint64 QHexEdit::indexPrevOf(const QByteArray &ba, qint64 to) {
+    qint64 posa = _chunks->indexPrevOf(ba, to/2);
+    return computePos(posa, ba.length());
+}
+
+qint64 QHexEdit::indexPrevNotOf(const QByteArray &ba, qint64 to) {
+    qint64 posa = _chunks->indexPrevNotOf(ba, to/2);
+    return computePos(posa, ba.length());
+}
+
+qint64 QHexEdit::indexNotOf(const QByteArray &ba, qint64 from) {
+    qint64 posa = _chunks->indexNotOf(ba, from/2);
+    return computePos(posa, ba.length());
 }
 
 bool QHexEdit::isModified() {

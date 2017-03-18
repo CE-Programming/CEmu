@@ -12,6 +12,7 @@
 #include <QtWidgets/QMessageBox>
 
 #include "ipc.h"
+#include "searchwidget.h"
 #include "cemuopts.h"
 #include "lcdwidget.h"
 #include "romselection.h"
@@ -355,6 +356,7 @@ private:
     bool fromPane;
     int32_t addressPane;
     int memSize;
+    int hexSearch = SEARCH_MODE_HEX;
 
     QDir currentDir;
     QStringList currentEquateFiles;
@@ -365,7 +367,6 @@ private:
     bool nativeConsole = false;
     bool closeAfterSave = false;
     bool isResumed = false;
-    bool hexSearch = true;
     bool canScroll = false;
     bool usingLoadedImage = false;
     bool recordingGif = false;

@@ -45,8 +45,12 @@ public:
     void ensureVisible();
     qint64 indexOf(const QByteArray &ba, qint64 from);
     bool isModified();
+    qint64 indexNotOf(const QByteArray &ba, qint64 from);
+    qint64 indexPrevOf(const QByteArray &ba, qint64 to);
+    qint64 indexPrevNotOf(const QByteArray &ba, qint64 to);
     qint64 lastIndexOf(const QByteArray &ba, qint64 from);
     QString selectionToReadableString();
+    qint64 computePos(qint64 posa, int len);
     virtual void setFont(const QFont &font);
     QString toReadableString();
 

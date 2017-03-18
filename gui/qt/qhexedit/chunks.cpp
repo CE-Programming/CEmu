@@ -178,6 +178,44 @@ qint64 Chunks::indexOf(const QByteArray &ba, qint64 from) {
     return result;
 }
 
+qint64 Chunks::indexPrevOf(const QByteArray &ba, qint64 to) {
+    qint64 result = -1;
+    QByteArray buffer;
+
+    buffer = data(0, to - 1);
+    int findposa = buffer.lastIndexOf(ba);
+    if (findposa >= 0) {
+        result = (qint64)findposa;
+    }
+    return result;
+}
+
+qint64 Chunks::indexNotOf(const QByteArray &ba, qint64 from) {
+    qint64 result = -1;
+    QByteArray buffer;
+
+    for (qint64 posa=from; (posa < _size) && (result < 0); posa += BUFFER_SIZE) {
+        buffer = data(posa, BUFFER_SIZE + ba.size() - 1);
+        int findposa = buffer.toStdString().find_first_not_of(ba.toStdString());
+        if (findposa >= 0) {
+            result = posa + (qint64)findposa;
+        }
+    }
+    return result;
+}
+
+qint64 Chunks::indexPrevNotOf(const QByteArray &ba, qint64 to) {
+    qint64 result = -1;
+    QByteArray buffer;
+
+    buffer = data(0, to - 1);
+    int findposa = buffer.toStdString().find_last_not_of(ba.toStdString());
+    if (findposa >= 0) {
+        result = (qint64)findposa;
+    }
+    return result;
+}
+
 qint64 Chunks::lastIndexOf(const QByteArray &ba, qint64 from) {
     qint64 result = -1;
     QByteArray buffer;

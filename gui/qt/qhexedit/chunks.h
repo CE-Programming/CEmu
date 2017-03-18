@@ -27,6 +27,9 @@ public:
 
     // Search API
     qint64 indexOf(const QByteArray &ba, qint64 from);
+    qint64 indexNotOf(const QByteArray &ba, qint64 from);
+    qint64 indexPrevOf(const QByteArray &ba, qint64 from);
+    qint64 indexPrevNotOf(const QByteArray &ba, qint64 from);
     qint64 lastIndexOf(const QByteArray &ba, qint64 from);
 
     // Char manipulations
