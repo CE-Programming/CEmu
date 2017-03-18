@@ -33,4 +33,7 @@ inline uint qHash(KeyCode key, uint seed) {
     return key.code() ^ seed;
 }
 
+// global event filter
+extern QtKeypadBridge *keypadBridge;
+
 #endif

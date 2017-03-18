@@ -347,7 +347,6 @@ private:
     QString searchingString;
 
     Ui::MainWindow *ui = Q_NULLPTR;
-    QtKeypadBridge keypadBridge{this};
     QLabel speedLabel;
     QLabel msgLabel;
     QSettings *settings = Q_NULLPTR;

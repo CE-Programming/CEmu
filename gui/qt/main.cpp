@@ -1,6 +1,7 @@
 #include <QtWidgets/QApplication>
 
 #include "mainwindow.h"
+#include "keypad/qtkeypadbridge.h"
 #include "utils.h"
 
 int main(int argc, char *argv[]) {
@@ -147,6 +148,8 @@ int main(int argc, char *argv[]) {
     if (!EmuWin.IsInitialized()) {
         return 0;
     }
+
+    app.installEventFilter(keypadBridge);
 
     EmuWin.show();
     return app.exec();

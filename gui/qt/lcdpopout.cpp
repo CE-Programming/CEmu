@@ -2,10 +2,9 @@
 #include "lcdpopout.h"
 #include "ui_lcdpopout.h"
 
-LCDPopout::LCDPopout(QtKeypadBridge *keypadBridge, QWidget *p) : QDialog(p), ui(new Ui::LCDPopout) {
+LCDPopout::LCDPopout(QWidget *p) : QDialog(p), ui(new Ui::LCDPopout) {
     ui->setupUi(this);
 
-    setFixedSize(width(), height());
     setWindowTitle("LCD Popout");
 
     connect(ui->lineAddress, &QLineEdit::returnPressed, this, &LCDPopout::changeAddress);
@@ -13,8 +12,6 @@ LCDPopout::LCDPopout(QtKeypadBridge *keypadBridge, QWidget *p) : QDialog(p), ui(
     connect(ui->checkBEBO, &QCheckBox::toggled, this, &LCDPopout::changeChecked);
     connect(ui->checkBEPO, &QCheckBox::toggled, this, &LCDPopout::changeChecked);
     connect(ui->checkBGR, &QCheckBox::toggled, this, &LCDPopout::changeChecked);
-
-    ui->lcdWidget->installEventFilter(keypadBridge);
 
     ui->lcdWidget->setLCD(&(lcdState = lcd));
     ui->lcdWidget->setFocus();

@@ -12,7 +12,7 @@ class LCDPopout : public QDialog {
     Q_OBJECT
 
 public:
-    explicit LCDPopout(QtKeypadBridge *bridge, QWidget *p = Q_NULLPTR);
+    explicit LCDPopout(QWidget *p = Q_NULLPTR);
     ~LCDPopout();
 
     // Misc.

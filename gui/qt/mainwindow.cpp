@@ -54,14 +54,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     setWindowTitle(QStringLiteral("CEmu | ") + opts.idString);
 
     // Register QtKeypadBridge for the virtual keyboard functionality
-    connect(&keypadBridge, &QtKeypadBridge::keyStateChanged, ui->keypadWidget, &KeypadWidget::changeKeyState);
-    installEventFilter(&keypadBridge);
-    ui->lcdWidget->installEventFilter(&keypadBridge);
-
-    // Same for all the tabs/docks (iterate over them instead of hardcoding their names)
-    for (const auto& tab : ui->tabWidget->children()[0]->children()) {
-        tab->installEventFilter(&keypadBridge);
-    }
+    keypadBridge = new QtKeypadBridge(this);
+    connect(keypadBridge, &QtKeypadBridge::keyStateChanged, ui->keypadWidget, &KeypadWidget::changeKeyState);
 
     // Setup the file sending handler
     progressBar = new QProgressBar(this);
@@ -1648,7 +1642,7 @@ void MainWindow::opContextMenu(const QPoint& posa) {
 }
 
 void MainWindow::createLCD() {
-    LCDPopout *p = new LCDPopout(&keypadBridge, this);
+    LCDPopout *p = new LCDPopout(this);
     p->setAttribute(Qt::WA_DeleteOnClose);
     p->show();
 }

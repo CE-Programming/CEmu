@@ -15,6 +15,8 @@
 #include "qtkeypadbridge.h"
 #include "../../../core/asic.h"
 
+QtKeypadBridge *keypadBridge = Q_NULLPTR;
+
 bool QtKeypadBridge::setKeymap(const QString & keymapstr) {
     bool ret = true;
     if (!QStringLiteral("cemu").compare(keymapstr, Qt::CaseInsensitive)) {

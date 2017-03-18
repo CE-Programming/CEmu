@@ -496,7 +496,7 @@ void MainWindow::keymapChanged() {
 
 void MainWindow::setKeymap(const QString & value) {
     settings->setValue(SETTING_KEYPAD_KEYMAP, value);
-    keypadBridge.setKeymap(value);
+    keypadBridge->setKeymap(value);
 }
 
 void MainWindow::setAlwaysOnTop(int state) {
