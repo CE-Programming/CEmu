@@ -316,6 +316,10 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     installToggleConsole();
 #endif
 
+#ifdef Q_OS_MACX
+    ui->actionDisableMenuBar->setVisible(false);
+#endif
+
     optLoadFiles(opts);
     changeFrameskip(settings->value(SETTING_CAPTURE_FRAMESKIP, 3).toUInt());
     setLCDRefresh(settings->value(SETTING_SCREEN_REFRESH_RATE, 60).toUInt());
