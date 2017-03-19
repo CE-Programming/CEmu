@@ -7,8 +7,8 @@ environment:
     secure: yPv9WtzW+27giJAicFEXGV0KENiee+3+BG2CIOLarbu5wsm7q/h0Ixqsq70CITPi
 
 install:
+  - git submodule update --init --recursive
   - C:\Python35\Scripts\pip install requests jinja2 irc
-#  - C:\Python35\python -u gui\qt\deploy-scripts\build_status.py STARTED yes
   - C:\Python35\python -u gui\qt\deploy-scripts\appveyor_helper.py install
   - md build_32
   - md build_64
