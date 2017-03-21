@@ -214,7 +214,7 @@ r_err:
     return false;
 }
 
-static char header[] = "**TI83F*\x1A\x0A\0Exported via CEmu ";
+static const char header[] = "**TI83F*\x1A\x0A\0Exported via CEmu ";
 bool receiveVariableLink(int count, const calc_var_t *vars, const char *file_name) {
     FILE *file;
     calc_var_t var;

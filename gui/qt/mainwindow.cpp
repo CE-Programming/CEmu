@@ -995,10 +995,11 @@ void MainWindow::isBusy(bool busy) {
 //  Linking things
 // ------------------------------------------------
 
-QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode, QString name_filter) {
+QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode, const QString &name_filter, const QString &defaultSuffix) {
     QFileDialog dialog(this);
     int good;
 
+    dialog.setDefaultSuffix(defaultSuffix);
     dialog.setAcceptMode(mode);
     dialog.setFileMode(mode == QFileDialog::AcceptOpen ? QFileDialog::ExistingFiles : QFileDialog::AnyFile);
     dialog.setDirectory(currentDir);
@@ -1019,21 +1020,21 @@ void MainWindow::selectFiles() {
        return;
     }
 
-    QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptOpen, tr("TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca *.8cg *.8ci *.8ek);;All Files (*.*)"));
+    QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptOpen, tr("TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca *.8cg *.8ci *.8ek);;All Files (*.*)"), Q_NULLPTR);
 
     sendingHandler->sendFiles(fileNames, LINK_FILE);
     equatesRefresh();
 }
 
 void MainWindow::variableClicked(QTableWidgetItem *item) {
-    const calc_var_t& var_tmp = vars[ui->emuVarView->item(item->row(), 0)->data(Qt::UserRole).toInt()];
-    if (calc_var_is_asmprog(&var_tmp)) {
-        updateDisasmView(var_tmp.address + 4, false);  // This is
+    const calc_var_t *var_tmp = reinterpret_cast<calc_var_t*>(ui->emuVarView->item(item->row(), VAR_NAME)->data(Qt::UserRole).toByteArray().data());
+    if (calc_var_is_asmprog(var_tmp)) {
+        updateDisasmView(var_tmp->address + 4, false);  // This is
         if (!inDebugger) { debuggerChangeState(); }    // semi-broken
-    } else if (var_tmp.type != CALC_VAR_TYPE_APP_VAR && (!calc_var_is_internal(&var_tmp) || var_tmp.name[0] == '#')) {
+    } else if (var_tmp->type != CALC_VAR_TYPE_APP_VAR && (!calc_var_is_internal(var_tmp) || var_tmp->name[0] == '#')) {
         BasicCodeViewerWindow *codePopup = new BasicCodeViewerWindow(this);
-        codePopup->setOriginalCode((var_tmp.size <= 500) ? ui->emuVarView->item(item->row(), 3)->text() : QString::fromStdString(calc_var_content_string(var_tmp)));
-        codePopup->setVariableName(ui->emuVarView->item(item->row(), 0)->text());
+        codePopup->setOriginalCode((var_tmp->size <= 500) ? ui->emuVarView->item(item->row(), VAR_PREVIEW)->text() : QString::fromStdString(calc_var_content_string(*var_tmp)));
+        codePopup->setVariableName(ui->emuVarView->item(item->row(), VAR_NAME)->text());
         codePopup->setWindowModality(Qt::NonModal);
         codePopup->setAttribute(Qt::WA_DeleteOnClose);
         codePopup->show();
@@ -1048,6 +1049,7 @@ void MainWindow::refreshVariableList() {
     }
 
     ui->emuVarView->setRowCount(0);
+    ui->emuVarView->setSortingEnabled(false);
 
     if (isReceiving || isSending) {
         ui->buttonRefreshList->setText(tr("Refresh variable list..."));
@@ -1055,6 +1057,9 @@ void MainWindow::refreshVariableList() {
         ui->buttonRun->setEnabled(true);
         ui->buttonSend->setEnabled(true);
         setReceiveState(false);
+        while (isReceiving || isSending) {
+            QApplication::processEvents();
+        }
     } else {
         ui->buttonRefreshList->setText(tr("Resume emulation"));
         ui->buttonSend->setEnabled(false);
@@ -1063,12 +1068,10 @@ void MainWindow::refreshVariableList() {
         setReceiveState(true);
 
         vat_search_init(&var);
-        vars.clear();
         while (vat_search_next(&var)) {
             if (var.size > 2) {
                 int currRow;
 
-                vars.append(var);
                 currRow = ui->emuVarView->rowCount();
                 ui->emuVarView->setRowCount(currRow + 1);
 
@@ -1101,7 +1104,7 @@ void MainWindow::refreshVariableList() {
                 QTableWidgetItem *var_preview = new QTableWidgetItem(var_value);
 
                 // Attach var index (hidden) to the name. Needed elsewhere
-                var_name->setData(Qt::UserRole, currRow);
+                var_name->setData(Qt::UserRole, QByteArray(reinterpret_cast<char*>(&var), sizeof(calc_var_t)));
 
                 var_name->setCheckState(Qt::Unchecked);
 
@@ -1109,21 +1112,18 @@ void MainWindow::refreshVariableList() {
                     var_preview->setForeground(Qt::gray);
                 }
 
-                ui->emuVarView->setItem(currRow, 0, var_name);
-                ui->emuVarView->setItem(currRow, 1, var_type);
-                ui->emuVarView->setItem(currRow, 2, var_size);
-                ui->emuVarView->setItem(currRow, 3, var_preview);
+                ui->emuVarView->setItem(currRow, VAR_NAME, var_name);
+                ui->emuVarView->setItem(currRow, VAR_TYPE, var_type);
+                ui->emuVarView->setItem(currRow, VAR_SIZE, var_size);
+                ui->emuVarView->setItem(currRow, VAR_PREVIEW, var_preview);
             }
         }
-        ui->emuVarView->resizeColumnToContents(0);
-        ui->emuVarView->resizeColumnToContents(1);
-        ui->emuVarView->resizeColumnToContents(2);
+        ui->emuVarView->resizeColumnToContents(VAR_NAME);
+        ui->emuVarView->resizeColumnToContents(VAR_TYPE);
+        ui->emuVarView->resizeColumnToContents(VAR_SIZE);
     }
 
-    // wait for the emu to restart
-    while (isReceiving || isSending) {
-        QApplication::processEvents();
-    }
+    ui->emuVarView->setSortingEnabled(true);
 }
 
 void MainWindow::saveSelected() {
@@ -1173,27 +1173,28 @@ void MainWindow::saveSelected() {
 
     setReceiveState(true);
 
-    QVector<calc_var_t> selectedVars;
+    QVector<const calc_var_t*> selectedVars;
     QStringList fileNames;
     for (int currRow = 0; currRow < ui->emuVarView->rowCount(); currRow++) {
-        if (ui->emuVarView->item(currRow, 0)->checkState() == Qt::Checked) {
-            selectedVars.append(vars[currRow]);
+        if (ui->emuVarView->item(currRow, VAR_NAME)->checkState() == Qt::Checked) {
+            selectedVars.append(reinterpret_cast<const calc_var_t*>(ui->emuVarView->item(currRow, VAR_NAME)->data(Qt::UserRole).toByteArray().constData()));
         }
     }
     if (selectedVars.size() < 1) {
         QMessageBox::warning(this, tr("No transfer to do"), tr("Select at least one file to transfer"));
     } else {
         if (selectedVars.size() == 1) {
-            uint8_t i = selectedVars.at(0).type1;
+            uint8_t i = selectedVars.first()->type1;
+            QString defaultSuffix = var_extension[i];
             fileNames = showVariableFileDialog(QFileDialog::AcceptSave, QStringLiteral("TI ") +
                                                QString(calc_var_type_names[i]) +
-                                               " (*." + var_extension[i] + tr(");;All Files (*.*)"));
+                                               " (*." + defaultSuffix + tr(");;All Files (*.*)"), defaultSuffix);
         } else {
-            fileNames = showVariableFileDialog(QFileDialog::AcceptSave, tr("TI Group (*.8cg);;All Files (*.*)"));
+            fileNames = showVariableFileDialog(QFileDialog::AcceptSave, tr("TI Group (*.8cg);;All Files (*.*)"), QStringLiteral("8cg"));
         }
         if (fileNames.size() == 1) {
-            if (!receiveVariableLink(selectedVars.size(), selectedVars.constData(), fileNames.at(0).toUtf8())) {
-                QMessageBox::warning(this, tr("Failed Transfer"), tr("A failure occured during transfer of: ")+fileNames.at(0));
+            if (!receiveVariableLink(selectedVars.size(), *selectedVars.constData(),  fileNames.first().toUtf8())) {
+                QMessageBox::warning(this, tr("Failed Transfer"), tr("A failure occured during transfer of: ")+fileNames.first());
             }
         }
     }
@@ -1584,18 +1585,18 @@ void MainWindow::variablesContextMenu(const QPoint& posa) {
         return;
     }
 
-    const calc_var_t& selected_var = vars[ui->emuVarView->item(itemRow, 0)->data(Qt::UserRole).toInt()];
+    const calc_var_t *selected_var = reinterpret_cast<calc_var_t*>(ui->emuVarView->item(itemRow, VAR_NAME)->data(Qt::UserRole).toByteArray().data());
 
     QString launch_prgm = tr("Launch program"),
             goto_mem    = tr("Goto Memory View");
 
     QMenu contextMenu;
-    if (calc_var_is_prog(&selected_var) && !calc_var_is_internal(&selected_var)) {
+    if (calc_var_is_prog(selected_var) && !calc_var_is_internal(selected_var)) {
         contextMenu.addAction(launch_prgm);
     }
     contextMenu.addAction(goto_mem);
 
-    QAction* selectedItem = contextMenu.exec(ui->emuVarView->mapToGlobal(posa));
+    QAction *selectedItem = contextMenu.exec(ui->emuVarView->mapToGlobal(posa));
     if (selectedItem) {
         if (selectedItem->text() == launch_prgm) {
             // Reset keypad state and resume emulation
@@ -1604,11 +1605,11 @@ void MainWindow::variablesContextMenu(const QPoint& posa) {
 
             // Launch the program, assuming we're at the home screen...
             autotester::sendKey(0x09); // Clear
-            if (calc_var_is_asmprog(&selected_var)) {
+            if (calc_var_is_asmprog(selected_var)) {
                 autotester::sendKey(0x9CFC); // Asm(
             }
             autotester::sendKey(0xDA); // prgm
-            for (const char& c : selected_var.name) {
+            for (const char& c : selected_var->name) {
                 if (!c) { break; }
                 autotester::sendLetterKeyPress(c); // type program name
             }
@@ -1622,7 +1623,7 @@ void MainWindow::variablesContextMenu(const QPoint& posa) {
             if (!inDebugger) {
                 debuggerChangeState();
             }
-            memGoto(int2hex(selected_var.address, 6));
+            memGoto(int2hex(selected_var->address, 6));
         }
     }
 }

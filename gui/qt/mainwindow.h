@@ -126,6 +126,13 @@ private:
         PORT_FREEZE_LOC
     };
 
+    enum varIndex {
+        VAR_NAME=0,
+        VAR_TYPE,
+        VAR_SIZE,
+        VAR_PREVIEW
+    };
+
     // Save/Restore
     void saveToPath(QString path);
     bool restoreFromPath(QString path);
@@ -277,7 +284,7 @@ private:
     void saveMiscSettings();
 
     // Linking
-    QStringList showVariableFileDialog(QFileDialog::AcceptMode, QString);
+    QStringList showVariableFileDialog(QFileDialog::AcceptMode, const QString&, const QString&);
     void selectFiles();
     void refreshVariableList();
     void variableClicked(QTableWidgetItem*);
@@ -393,7 +400,6 @@ private:
 
     QAction *toggleAction;
 
-    QList<calc_var_t> vars;
     QIcon runIcon, stopIcon; // help speed up stepping
     QTextCharFormat consoleFormat;
 
