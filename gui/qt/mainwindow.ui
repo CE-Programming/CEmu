@@ -7360,7 +7360,7 @@ QPushButton:pressed {
     <addaction name="actionNew"/>
     <addaction name="actionExit"/>
    </widget>
-   <widget class="QMenu" name="menuHelp">
+   <widget class="QMenu" name="menuCalculator">
     <property name="title">
      <string>&amp;Calculator</string>
     </property>
@@ -7386,7 +7386,7 @@ QPushButton:pressed {
     <addaction name="actionDisableMenuBar"/>
    </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuHelp"/>
+   <addaction name="menuCalculator"/>
    <addaction name="menuAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>

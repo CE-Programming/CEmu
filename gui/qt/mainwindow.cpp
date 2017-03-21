@@ -916,17 +916,17 @@ void MainWindow::changeFramerate() {
 }
 
 void MainWindow::showAbout() {
-    QMessageBox aboutBox(this);
-    aboutBox.setIconPixmap(QPixmap(":/icons/resources/icons/icon.png"));
-    aboutBox.setWindowTitle(tr("About CEmu"));
+    QMessageBox *aboutBox = new QMessageBox(this);
+    aboutBox->setIconPixmap(QPixmap(":/icons/resources/icons/icon.png"));
+    aboutBox->setWindowTitle(tr("About CEmu"));
 
-    QAbstractButton* buttonUpdateCheck = aboutBox.addButton(tr("Check for updates"), QMessageBox::ActionRole);
+    QAbstractButton *buttonUpdateCheck = aboutBox->addButton(tr("Check for updates"), QMessageBox::ActionRole);
     connect(buttonUpdateCheck, &QAbstractButton::clicked, this, [=](){ this->checkForUpdates(true); });
 
-    QAbstractButton* okButton = aboutBox.addButton(QMessageBox::Ok);
+    QAbstractButton *okButton = aboutBox->addButton(QMessageBox::Ok);
     okButton->setFocus();
 
-    aboutBox.setText(tr("<h3>CEmu %1</h3>"
+    aboutBox->setText(tr("<h3>CEmu %1</h3>"
                          "<a href='https://github.com/CE-Programming/CEmu'>On GitHub</a><br>"
                          "<br>"
                          "Main authors:<br>"
@@ -943,19 +943,19 @@ void MainWindow::showAbout() {
                          "This work is licensed under the GPLv3.<br>"
                          "To view a copy of this license, visit <a href='https://www.gnu.org/licenses/gpl-3.0.html'>https://www.gnu.org/licenses/gpl-3.0.html</a>")
                          .arg(QStringLiteral(CEMU_VERSION)));
-    aboutBox.setTextFormat(Qt::RichText);
-    aboutBox.show();
-    aboutBox.exec();
+    aboutBox->setTextFormat(Qt::RichText);
+    aboutBox->setWindowModality(Qt::NonModal);
+    aboutBox->setAttribute(Qt::WA_DeleteOnClose);
+    aboutBox->show();
 }
 
 void MainWindow::screenContextMenu(const QPoint &posa) {
     QMenu menu;
     QPoint globalPos = ui->lcdWidget->mapToGlobal(posa);
-    QList<QMenu*> list = ui->menubar->findChildren<QMenu*>(QString(), Qt::FindDirectChildrenOnly);
-    for (int i=0; i<(list.size()-1); i++) {
-        menu.addMenu(list.at(i));
-    }
+    menu.addMenu(ui->menuFile);
+    menu.addMenu(ui->menuCalculator);
     menu.addMenu(docksMenu);
+    menu.addMenu(ui->menuAbout);
     menu.exec(globalPos);
 }
 

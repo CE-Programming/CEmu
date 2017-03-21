@@ -39,7 +39,7 @@ bool SendingHandler::dragOccured(QDragEnterEvent *e) {
         return false;
     }
 
-    for(QUrl &url : e->mimeData()->urls()) {
+    for (QUrl &url : e->mimeData()->urls()) {
         static const QStringList valid_suffixes = { QStringLiteral("8xp"),
                                                     QStringLiteral("8xv"),
                                                     QStringLiteral("8xl"),
