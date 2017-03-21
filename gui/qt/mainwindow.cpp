@@ -175,6 +175,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->actionAboutQt, &QAction::triggered, qApp, &QApplication::aboutQt);
 
     // Other GUI actions
+    ui->emuVarView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
     connect(ui->scaleLCD, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setLCDScale);
     connect(ui->refreshLCD, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setLCDRefresh);
@@ -195,10 +196,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->ramBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->ramEdit, &QHexEdit::setBytesPerLine);
     connect(ui->memBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->memEdit, &QHexEdit::setBytesPerLine);
     connect(ui->emuVarView, &QTableWidget::itemDoubleClicked, this, &MainWindow::variableClicked);
-    connect(ui->emuVarView, &QWidget::customContextMenuRequested, this, &MainWindow::variablesContextMenu);
+    connect(ui->emuVarView, &QTableWidget::customContextMenuRequested, this, &MainWindow::variablesContextMenu);
     connect(ui->actionExportCEmuImage, &QAction::triggered, this, &MainWindow::exportCEmuBootImage);
     connect(ui->lcdWidget, &LCDWidget::sendROM, this, &MainWindow::setRom);
-    ui->emuVarView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     // Hex Editor
     connect(ui->buttonFlashGoto, &QPushButton::clicked, this, &MainWindow::flashGotoPressed);
@@ -1061,8 +1061,6 @@ void MainWindow::refreshVariableList() {
         ui->buttonReceiveFiles->setEnabled(true);
         ui->buttonRun->setEnabled(false);
         setReceiveState(true);
-        ui->emuVarView->blockSignals(true);
-        guiDelay(200);
 
         vat_search_init(&var);
         vars.clear();
@@ -1118,17 +1116,12 @@ void MainWindow::refreshVariableList() {
             }
         }
         ui->emuVarView->resizeColumnsToContents();
-        ui->emuVarView->horizontalHeader()->setStretchLastSection(true);
-        ui->emuVarView->setVisible(false);  // This is needed
-        ui->emuVarView->setVisible(true);   // to refresh
     }
 
     // wait for the emu to restart
     while (isReceiving || isSending) {
         QApplication::processEvents();
     }
-
-    ui->emuVarView->blockSignals(false);
 }
 
 void MainWindow::saveSelected() {

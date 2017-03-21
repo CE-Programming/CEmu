@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>982</width>
+    <width>1004</width>
     <height>831</height>
    </rect>
   </property>
@@ -63,7 +63,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>8</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -189,6 +189,12 @@
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
+          <property name="contextMenuPolicy">
+           <enum>Qt::CustomContextMenu</enum>
+          </property>
+          <property name="acceptDrops">
+           <bool>false</bool>
+          </property>
           <property name="editTriggers">
            <set>QAbstractItemView::NoEditTriggers</set>
           </property>
@@ -205,7 +211,7 @@
            <enum>Qt::ElideRight</enum>
           </property>
           <property name="sortingEnabled">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
           <attribute name="horizontalHeaderDefaultSectionSize">
            <number>100</number>
@@ -215,6 +221,9 @@
           </attribute>
           <attribute name="horizontalHeaderMinimumSectionSize">
            <number>40</number>
+          </attribute>
+          <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+           <bool>true</bool>
           </attribute>
           <attribute name="horizontalHeaderStretchLastSection">
            <bool>true</bool>
@@ -7315,7 +7324,7 @@ QPushButton:pressed {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>982</width>
+     <width>1004</width>
      <height>22</height>
     </rect>
    </property>
