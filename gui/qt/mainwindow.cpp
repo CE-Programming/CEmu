@@ -197,6 +197,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->emuVarView, &QTableWidget::itemDoubleClicked, this, &MainWindow::variableClicked);
     connect(ui->emuVarView, &QWidget::customContextMenuRequested, this, &MainWindow::variablesContextMenu);
     connect(ui->actionExportCEmuImage, &QAction::triggered, this, &MainWindow::exportCEmuBootImage);
+    connect(ui->lcdWidget, &LCDWidget::sendROM, this, &MainWindow::setRom);
     ui->emuVarView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     // Hex Editor
@@ -471,7 +472,7 @@ void MainWindow::showEvent(QShowEvent *e) {
 
 void MainWindow::toggleKeyHistory() {
     if (!keyHistoryWindow) {
-        keyHistoryWindow = new KeyHistory();
+        keyHistoryWindow = new KeyHistory(this);
         connect(ui->keypadWidget, &KeypadWidget::keyPressed, keyHistoryWindow, &KeyHistory::addEntry);
         keyHistoryWindow->show();
         ui->actionKeyHistory->setChecked(true);
@@ -676,12 +677,22 @@ void MainWindow::saved(bool success) {
 }
 
 void MainWindow::dropEvent(QDropEvent *e) {
-    sendingHandler->dropOccured(e, LINK_FILE);
+    if (isSendingROM) {
+        setRom(dragROM);
+    } else {
+        sendingHandler->dropOccured(e, LINK_FILE);
+    }
     equatesRefresh();
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent *e) {
-    sendingHandler->dragOccured(e);
+
+    // check if we are dragging a rom file
+    dragROM = sendingROM(e, &isSendingROM);
+
+    if (!isSendingROM) {
+        sendingHandler->dragOccured(e);
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *e) {
@@ -726,7 +737,7 @@ void MainWindow::closeEvent(QCloseEvent *e) {
     QMainWindow::closeEvent(e);
 }
 
-void MainWindow::consoleAppend(QString str, const QColor &color) {
+void MainWindow::consoleAppend(const QString &str, const QColor &color) {
     QTextCursor cur(ui->console->document());
     cur.movePosition(QTextCursor::End);
     consoleFormat.setForeground(color);
@@ -736,7 +747,7 @@ void MainWindow::consoleAppend(QString str, const QColor &color) {
     }
 }
 
-void MainWindow::consoleStr(QString str) {
+void MainWindow::consoleStr(const QString &str) {
     if (nativeConsole) {
         fputs(str.toStdString().c_str(), stdout);
     } else {
@@ -744,7 +755,7 @@ void MainWindow::consoleStr(QString str) {
     }
 }
 
-void MainWindow::consoleErrStr(QString str) {
+void MainWindow::consoleErrStr(const QString &str) {
     if (nativeConsole) {
         fputs(str.toStdString().c_str(), stderr);
     } else {
@@ -756,38 +767,47 @@ void MainWindow::showActualSpeed(int speed) {
     speedLabel.setText(QStringLiteral(" ") + tr("Emulated Speed: ") + QString::number(speed, 10) + QStringLiteral("%"));
 }
 
-void MainWindow::showStatusMsg(QString str) {
+void MainWindow::showStatusMsg(const QString &str) {
     msgLabel.setText(str);
 }
 
-bool MainWindow::runSetup() {
-    RomSelection romWizard;
-    romWizard.show();
-    romWizard.exec();
+void MainWindow::setRom(const QString &newRom) {
+    if (isReceiving || isSending) {
+        refreshVariableList();
+    }
+    if (inDebugger) {
+        debuggerChangeState();
+    }
+    emu.rom = newRom;
+    if (portable) {
+        QDir dir(qApp->applicationDirPath());
+        emu.rom = dir.relativeFilePath(emu.rom);
+    }
+    if (emu.stop()) {
+        speedUpdateTimer.stop();
+        ui->rompathView->setText(emu.rom);
+        emu.start();
+        speedUpdateTimer.start();
+        speedUpdateTimer.setInterval(1000 / 2);
+    } else {
+        QMessageBox::critical(this, tr("ROM Load Failed"), tr("Failed to load new ROM image!"));
+    }
+    settings->setValue(SETTING_ROM_PATH, emu.rom);
+}
 
-    if (romWizard.romPath().isEmpty()) {
+bool MainWindow::runSetup() {
+    RomSelection *romWizard = new RomSelection();
+    romWizard->setWindowModality(Qt::NonModal);
+    romWizard->exec();
+
+    const QString romPath = romWizard->romPath();
+
+    delete romWizard;
+
+    if (romPath.isEmpty()) {
         return false;
     } else {
-        if (isReceiving || isSending) {
-            refreshVariableList();
-        }
-        if (inDebugger) {
-            debuggerChangeState();
-        }
-        guiDelay(300);
-        emu.rom = romWizard.romPath();
-        if (portable) {
-            QDir dir(qApp->applicationDirPath());
-            emu.rom = dir.relativeFilePath(emu.rom);
-        }
-        if (emu.stop()) {
-            speedUpdateTimer.stop();
-            ui->rompathView->setText(emu.rom);
-            emu.start();
-            speedUpdateTimer.start();
-            speedUpdateTimer.setInterval(1000 / 2);
-        }
-        settings->setValue(SETTING_ROM_PATH, emu.rom);
+        setRom(romPath);
     }
 
     return true;
@@ -1103,6 +1123,11 @@ void MainWindow::refreshVariableList() {
         ui->emuVarView->setVisible(true);   // to refresh
     }
 
+    // wait for the emu to restart
+    while (isReceiving || isSending) {
+        QApplication::processEvents();
+    }
+
     ui->emuVarView->blockSignals(false);
 }
 
@@ -1411,8 +1436,6 @@ void MainWindow::reloadROM() {
     if (inDebugger) {
         debuggerChangeState();
     }
-
-    guiDelay(500);
 
     if (!usingLoadedImage) {
         QFile(emu.image).remove();

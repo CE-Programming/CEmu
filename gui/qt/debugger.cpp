@@ -469,14 +469,23 @@ void MainWindow::debuggerChangeState() {
         return;
     }
 
+    bool previousState = inDebugger;
+
+    if (isReceiving || isSending) {
+        refreshVariableList();
+    }
+
     if (inDebugger) {
         debuggerGUIDisable();
         debuggerUpdateChanges();
-        if (isReceiving || isSending) {
-            refreshVariableList();
-        }
     }
+
     emit debuggerSendNewState(!inDebugger);
+
+    // wait for the signal to be processed
+    while (inDebugger == previousState) {
+        QApplication::processEvents();
+    }
 }
 
 void MainWindow::debuggerGUIPopulate() {

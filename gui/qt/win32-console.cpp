@@ -37,7 +37,7 @@ void MainWindow::installToggleConsole() {
     actionToggleConsole->setCheckable(true);
     actionToggleConsole->setChecked(true);
     actionToggleConsole->setEnabled(true);
-    ui->menuHelp->addAction(actionToggleConsole);
+    ui->menuCalculator->addAction(actionToggleConsole);
     
     // Connect menu action to function
     connect(actionToggleConsole, &QAction::triggered, this, &MainWindow::toggleConsole);

@@ -2,6 +2,9 @@
 #define UTILS_H
 
 #include <string>
+#include <QtCore/QMimeData>
+#include <QtGui/QDrag>
+#include <QtGui/QDragEnterEvent>
 
 #ifdef _MSC_VER
 // Define a custom version of pid_t for MSVC (DWORD native type)
@@ -28,6 +31,7 @@ extern QByteArray *bppArray;
 // bpp conversions
 uint8_t int2Bpp(int in);
 QString bpp2Str(uint8_t bpp);
+QString sendingROM(QDragEnterEvent *e, bool *value);
 
 // integer to hex strings and vice versa
 int hex2int(QString str);
@@ -38,7 +42,7 @@ void guiDelay(int ms);
 extern QString configPath;
 extern QString execPath;
 
-bool IsProcRunning(pid_t procID);
+bool isProcRunning(pid_t procID);
 
 QString randomString(const int length);
 

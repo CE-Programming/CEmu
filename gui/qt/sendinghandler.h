@@ -7,6 +7,7 @@
 #include <QtCore/QObject>
 
 class SendingHandler {
+
 public:
     explicit SendingHandler(QProgressBar *bar = Q_NULLPTR);
 

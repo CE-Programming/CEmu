@@ -104,7 +104,7 @@ bool ipc::ipcSetup(QString id, QString pid) {
         if (file.open(QIODevice::ReadOnly)) {
             QTextStream stream(&file);
             QString pidtest = stream.readLine();
-            if (!IsProcRunning(static_cast<pid_t>(pidtest.toLongLong()))) {
+            if (!isProcRunning(static_cast<pid_t>(pidtest.toLongLong()))) {
                 file.close();
                 file.remove();
                 goto create_id;

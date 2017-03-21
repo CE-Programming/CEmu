@@ -4,6 +4,7 @@
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QApplication>
 
+#include "utils.h"
 #include "lcdwidget.h"
 #include "sendinghandler.h"
 #include "../../core/link.h"
@@ -53,18 +54,28 @@ void LCDWidget::setLCD(lcd_state_t *lcdS) {
 }
 
 void LCDWidget::dropEvent(QDropEvent *e) {
-    in_send = true;
-    in_drag = false;
-    sendingHandler->dropOccured(e, (e->pos().x() < width() / 2) ? LINK_ARCH : LINK_RAM);
-    in_send = false;
-}
-
-void LCDWidget::dragMoveEvent(QDragMoveEvent *e) {
-    side_drag = (e->pos().x() < width() / 2) ? LCD_LEFT : LCD_RIGHT;
+    if (isSendingROM) {
+        emit sendROM(dragROM);
+    } else {
+        in_send = true;
+        in_drag = false;
+        sendingHandler->dropOccured(e, (e->pos().x() < width() / 2) ? LINK_ARCH : LINK_RAM);
+        in_send = false;
+    }
 }
 
 void LCDWidget::dragEnterEvent(QDragEnterEvent *e) {
-    in_drag = sendingHandler->dragOccured(e);
+
+    // check if we are dragging a rom file
+    dragROM = sendingROM(e, &isSendingROM);
+
+    if (!isSendingROM) {
+        in_drag = sendingHandler->dragOccured(e);
+        side_drag = (e->pos().x() < width() / 2) ? LCD_LEFT : LCD_RIGHT;
+    }
+}
+
+void LCDWidget::dragMoveEvent(QDragMoveEvent *e) {
     side_drag = (e->pos().x() < width() / 2) ? LCD_LEFT : LCD_RIGHT;
 }
 

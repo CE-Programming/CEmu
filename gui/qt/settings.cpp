@@ -151,7 +151,7 @@ bool MainWindow::loadCEmuBootImage(const QString &bootImagePath) {
 
 void MainWindow::exportCEmuBootImage() {
     QMessageBox::information(this, tr("Information"), tr("A bootable image can be used to start CEmu with predefined configurations, without the need for any extra setup."
-                                                         "\n\nOnce done, a bootable image should be placed in the same directory as the CEmu executable. When CEmu is then started,"
+                                                         "\n\nOnce done, a bootable image should be placed in the same directory as the CEmu executable. When CEmu is then started, "
                                                          "the boot image will be loaded automatically and then removed for convience."));
 
     QString saveImage = QFileDialog::getSaveFileName(this, tr("Save bootable CEmu image"),

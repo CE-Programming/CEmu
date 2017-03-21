@@ -38,13 +38,16 @@ public:
 
 public slots:
     // Console
-    void consoleStr(QString);
-    void consoleErrStr(QString);
+    void consoleStr(const QString&);
+    void consoleErrStr(const QString&);
 
     // Saved/Restored State
     void saved(bool);
     void started(bool);
     void restored(bool);
+
+    // ROM Image setting
+    void setRom(const QString&);
 
     // Other
     void isBusy(bool busy);
@@ -254,9 +257,9 @@ private:
     void showActualSpeed(int);
 
     // Console
-    void showStatusMsg(QString);
+    void showStatusMsg(const QString&);
     void consoleOutputChanged();
-    void consoleAppend(QString, const QColor &color = Qt::black);
+    void consoleAppend(const QString&, const QColor &color = Qt::black);
 
     // Settings
     void adjustScreen();
@@ -405,6 +408,10 @@ private:
     KeyHistory *keyHistoryWindow = Q_NULLPTR;
 
     ipc *com;
+
+    // for drag and drop of rom files
+    bool isSendingROM = false;
+    QString dragROM;
 
     bool initPassed = true;
     bool enabledSoftCommands;

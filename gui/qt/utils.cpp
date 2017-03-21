@@ -45,8 +45,7 @@ uint8_t int2Bpp(int in) {
         case 12:
             bpp = 7; break;
         default:
-            bpp = 6;
-            break;
+            bpp = 6; break;
     }
     return bpp;
 }
@@ -82,8 +81,7 @@ QString int2hex(uint32_t a, uint8_t l) {
     return QString::number(a, 16).rightJustified(l, '0', true).toUpper();
 }
 
-std::string calc_var_content_string(const calc_var_t& var)
-{
+std::string calc_var_content_string(const calc_var_t& var) {
     auto func = tivars::TypeHandlerFuncGetter::getStringFromDataFunc((int)var.type);
     return func(data_t(var.data, var.data + var.size), options_t());
 }
@@ -93,6 +91,19 @@ void guiDelay(int ms) {
     while (QTime::currentTime() < dt) {
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
     }
+}
+
+QString sendingROM(QDragEnterEvent *e, bool *value) {
+    QString ret;
+    if (value) { *value = false; }
+    if (e->mimeData()->urls().size() == 1) {
+        ret = e->mimeData()->urls().at(0).toLocalFile();
+        if (ret.endsWith(QStringLiteral("rom"), Qt::CaseInsensitive)) {
+            e->accept();
+            if (value) { *value = true; }
+        }
+    }
+    return ret;
 }
 
 #ifdef Q_OS_WIN
@@ -136,7 +147,7 @@ static bool checkProc(pid_t pid) {
 }
 #endif
 
-bool IsProcRunning(pid_t procID) {
+bool isProcRunning(pid_t procID) {
 #ifdef Q_OS_WIN
     return checkProc(static_cast<DWORD>(procID));
 #else
