@@ -1115,7 +1115,9 @@ void MainWindow::refreshVariableList() {
                 ui->emuVarView->setItem(currRow, 3, var_preview);
             }
         }
-        ui->emuVarView->resizeColumnsToContents();
+        ui->emuVarView->resizeColumnToContents(0);
+        ui->emuVarView->resizeColumnToContents(1);
+        ui->emuVarView->resizeColumnToContents(2);
     }
 
     // wait for the emu to restart
