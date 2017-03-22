@@ -15,6 +15,12 @@ CI = $$(CI)
 # Code beautifying
 DISTFILES += ../../.astylerc
 
+# Linux desktop files
+if (linux) {
+    desktop.path = /usr/share/applications
+    desktop.files += resources/linux/CEmu.desktop
+}
+
 QT += core gui widgets network
 
 TARGET = CEmu

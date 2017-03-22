@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=CEmu
+Comment=Emulator for the eZ80-based TI-84 Plus CE / TI-83 Premium CE calculators
+Type=Application
+Icon=cemu-icon
+StartupNotify=true
+Terminal=false
+Exec=CEmu %F
+Categories=Education;Science;Math;System;Emulator;
