@@ -177,13 +177,13 @@ void RomSelection::saveDumpProgram() {
     dialog.setFileMode(QFileDialog::AnyFile);
     QString filename = dialog.getSaveFileName(this, tr("Save ROM Dumper Program"), currentDir.absolutePath(), tr("ROM Dumper (*.8xp)"));
 
-    if (!filename.endsWith(QLatin1Literal(".8xp"), Qt::CaseInsensitive)) {
-        filename += QLatin1Literal(".8xp");
-    }
-
     currentDir = dialog.directory();
 
     if (filename.isEmpty()) { return; }
+
+    if (!filename.endsWith(QLatin1Literal(".8xp"), Qt::CaseInsensitive)) {
+        filename += QLatin1Literal(".8xp");
+    }
 
     save_program = fopen_utf8(filename.toStdString().c_str(), "wb");
 
@@ -201,13 +201,13 @@ void RomSelection::saveROMImage() {
     dialog.setFileMode(QFileDialog::AnyFile);
     QString filename = dialog.getSaveFileName(this, tr("Save ROM"), currentDir.absolutePath(), tr("ROM Image (*.rom)"));
 
-    if (!filename.endsWith(QLatin1Literal(".rom"), Qt::CaseInsensitive)) {
-        filename += QLatin1Literal(".rom");
-    }
-
     currentDir = dialog.directory();
 
     if  (filename.isEmpty()) { return; }
+
+    if (!filename.endsWith(QLatin1Literal(".rom"), Qt::CaseInsensitive)) {
+        filename += QLatin1Literal(".rom");
+    }
 
     saveRom = fopen_utf8(filename.toStdString().c_str(), "wb");
 

@@ -500,7 +500,7 @@
           <bool>true</bool>
          </property>
          <property name="format">
-          <string notr="true">Loaded %v segments</string>
+          <string notr="true"/>
          </property>
         </widget>
        </item>
