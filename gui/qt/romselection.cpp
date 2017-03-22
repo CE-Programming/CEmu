@@ -45,9 +45,9 @@ RomSelection::RomSelection(QWidget *p) : QDialog(p), ui(new Ui::RomSelection) {
     setWindowModality(Qt::NonModal);
     setWindowFlags(Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint );
 
-    connect(ui->radioButton, &QRadioButton::clicked, this, &RomSelection::close);
-    connect(ui->radioBrowse, &QRadioButton::clicked, this, &RomSelection::browseForROM);
-    connect(ui->radioCreate, &QRadioButton::clicked, this, &RomSelection::nextPage);
+    connect(ui->buttonClose, &QToolButton::clicked, this, &RomSelection::close);
+    connect(ui->buttonOpen, &QToolButton::clicked, this, &RomSelection::browseForROM);
+    connect(ui->buttonCreate, &QToolButton::clicked, this, &RomSelection::nextPage);
     connect(ui->buttonNext2, &QPushButton::clicked, this, &RomSelection::nextPage);
     connect(ui->buttonBack1, &QPushButton::clicked, this, &RomSelection::prevPage);
     connect(ui->buttonBack2, &QPushButton::clicked, this, &RomSelection::prevPage);
@@ -63,10 +63,11 @@ RomSelection::RomSelection(QWidget *p) : QDialog(p), ui(new Ui::RomSelection) {
     connect(ui->dropArea, &DropArea::processDrop, this, &RomSelection::processDrop);
 
     ui->versionLabel->setText(ui->versionLabel->text() + QStringLiteral(CEMU_VERSION));
+    ui->progressBar->setEnabled(false);
 }
 
 RomSelection::~RomSelection() {
-    free(romArray);
+    delete romArray;
     delete ui;
 }
 
@@ -74,14 +75,10 @@ void RomSelection::browseForROM() {
     QFileDialog dialog(this);
     dialog.setFileMode(QFileDialog::AnyFile);
     dialog.setWindowTitle(tr("Select ROM file"));
-    dialog.setNameFilter(tr("ROM Image (*.rom);;All Files (*.*)"));
+    dialog.setNameFilter(tr("ROM Image (*.rom *.Rom *.ROM);;All Files (*.*)"));
     if (dialog.exec()) {
         rom = dialog.selectedFiles().first();
         close();
-    } else {
-        ui->radioBrowse->blockSignals(true);
-        ui->radioBrowse->setChecked(false);
-        ui->radioBrowse->blockSignals(false);
     }
 }
 
@@ -91,23 +88,21 @@ void RomSelection::nextPage() {
 
 void RomSelection::prevPage() {
     ui->stackedWidget->setCurrentIndex(ui->stackedWidget->currentIndex() - 1);
-    ui->radioCreate->blockSignals(true);
-    ui->radioCreate->setChecked(false);
-    ui->radioCreate->blockSignals(false);
 }
 
 void RomSelection::openROMSegments() {
     QFileDialog dialog(this);
 
+
     dialog.setDirectory(currentDir);
     dialog.setFileMode(QFileDialog::ExistingFiles);
-    dialog.setNameFilter(QStringLiteral("ROMData (*.8xv)"));
+    dialog.setNameFilter(QStringLiteral("ROMData (*.8xv *.8Xv *.8xV .8XV)"));
 
     if (!dialog.exec()) {
         return;
     }
 
-    currentDir = dialog.directory().absolutePath();
+    currentDir = dialog.directory();
 
     segmentFileList = dialog.selectedFiles();
     parseROMSegments();
@@ -118,11 +113,14 @@ void RomSelection::parseROMSegments() {
     int i, segint;
     uint8_t buf[10];
     uint16_t u16 = 0;
-    static bool config = false;
 
-    ui->progressBar->setEnabled(false);
+    if (!allocedmem) {
+        romArray = new uint8_t[ROM_SIZE];
+        allocedmem = true;
+    }
 
     for (i = 0; i < segmentFileList.size(); i++) {
+        ui->progressBar->setEnabled(true);
         seg = fopen_utf8(segmentFileList.at(i).toStdString().c_str(), "rb");
         if (!seg)                                             goto _err;
         if (fseek(seg, 0x3C, SEEK_SET))                       goto _err;
@@ -139,7 +137,7 @@ void RomSelection::parseROMSegments() {
 
                 numROMSegments = (imageSize/SEG_SIZE) + 1;
                 ui->progressBar->setMaximum(numROMSegments);
-                ui->progressBar->setEnabled(config = true);
+                config = true;
             } else {
                 if (fseek(seg, 0x48, 0))                    goto _err;
                 if (fread(&u16, sizeof(u16), 1,seg) != 1)   goto _err;
@@ -176,17 +174,14 @@ void RomSelection::saveDumpProgram() {
     FILE* save_program;
     QFileDialog dialog(this);
 
-    dialog.setDirectory(currentDir);
     dialog.setFileMode(QFileDialog::AnyFile);
-    dialog.setDefaultSuffix(QStringLiteral("8xp"));
-    dialog.setWindowTitle(tr("Save ROM Dumper Program"));
-    dialog.setNameFilter(tr("ROM Dumper (*.8xp)"));
+    QString filename = dialog.getSaveFileName(this, tr("Save ROM Dumper Program"), currentDir.absolutePath(), tr("ROM Dumper (*.8xp)"));
 
-    if (!dialog.exec()) { return; }
+    if (!filename.endsWith(QLatin1Literal(".8xp"), Qt::CaseInsensitive)) {
+        filename += QLatin1Literal(".8xp");
+    }
 
-    currentDir = dialog.directory().absolutePath();
-
-    QString filename = dialog.selectedFiles().first();
+    currentDir = dialog.directory();
 
     if (filename.isEmpty()) { return; }
 
@@ -203,21 +198,18 @@ void RomSelection::saveROMImage() {
 
     QFileDialog dialog(this);
 
-    dialog.setDirectory(currentDir);
     dialog.setFileMode(QFileDialog::AnyFile);
-    dialog.setDefaultSuffix(QStringLiteral("rom"));
-    dialog.setWindowTitle(tr("Save ROM"));
-    dialog.setNameFilter(tr("ROM Image (*.rom)"));
+    QString filename = dialog.getSaveFileName(this, tr("Save ROM"), currentDir.absolutePath(), tr("ROM Image (*.rom)"));
 
-    if (!dialog.exec()) { return; }
+    if (!filename.endsWith(QLatin1Literal(".rom"), Qt::CaseInsensitive)) {
+        filename += QLatin1Literal(".rom");
+    }
 
-    currentDir = dialog.directory().absolutePath();
-
-    QString filename = dialog.selectedFiles().first();
+    currentDir = dialog.directory();
 
     if  (filename.isEmpty()) { return; }
 
-    saveRom = fopen_utf8(rom.toStdString().c_str(), "wb");
+    saveRom = fopen_utf8(filename.toStdString().c_str(), "wb");
 
     if (saveRom) {
         memset(&romArray[imageSize], 255, ROM_SIZE - 1 - imageSize);
@@ -280,8 +272,9 @@ void RomSelection::processDrop(QDropEvent *e) {
     segmentFileList.clear();
 
     if (mimeData->hasUrls()) {
-        for (int i = 0; i < mimeData->urls().size(); i++) {
-            segmentFileList.append(mimeData->urls().at(i).toLocalFile());
+        const QList<QUrl> urlList = mimeData->urls();
+        foreach (const QUrl &url, urlList) {
+            segmentFileList.append(url.toLocalFile());
         }
     }
 

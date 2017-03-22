@@ -68,6 +68,9 @@ private:
     bool segmentFilledStatus[30] = {0};
     int numROMSegments = 0;
     QStringList segmentFileList;
+
+    bool config = false;
+    bool allocedmem = false;
 };
 
 #endif
