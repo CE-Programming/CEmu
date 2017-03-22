@@ -174,8 +174,6 @@ static uint8_t lcd_read(const uint16_t pio, bool peek) {
 
     (void)peek;
 
-    dma.lcd++;
-
     if (index < 0x200) {
         if (index < 0x010) { return read8(lcd.timing[index >> 2], bit_offset); }
         if (index < 0x014 && index >= 0x010) { return read8(lcd.upbase, bit_offset); }

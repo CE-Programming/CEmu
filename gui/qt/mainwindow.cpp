@@ -1102,8 +1102,10 @@ void MainWindow::refreshVariableList() {
 
                 QTableWidgetItem *var_name = new QTableWidgetItem(calc_var_name_to_utf8(var.name));
                 QTableWidgetItem *var_type = new QTableWidgetItem(var_type_str);
-                QTableWidgetItem *var_size = new QTableWidgetItem(QString::number(var.size));
                 QTableWidgetItem *var_preview = new QTableWidgetItem(var_value);
+                QTableWidgetItem *var_size = new QTableWidgetItem();
+
+                var_size->setData(Qt::DisplayRole, var.size);
 
                 // Attach var index (hidden) to the name. Needed elsewhere
                 var_name->setData(Qt::UserRole, QByteArray(reinterpret_cast<char*>(&var), sizeof(calc_var_t)));
