@@ -652,6 +652,8 @@ void MainWindow::exportRom() {
 void MainWindow::started(bool success) {
     if (success) {
         setKeypadColor(settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
+    } else {
+        QMessageBox::critical(this, tr("Error"), tr("Could not load ROM image. Please see console for more information."));
     }
 }
 
@@ -800,7 +802,7 @@ bool MainWindow::runSetup() {
     romWizard->setWindowModality(Qt::NonModal);
     romWizard->exec();
 
-    const QString romPath = romWizard->romPath();
+    const QString romPath = romWizard->getRomPath();
 
     delete romWizard;
 
@@ -833,7 +835,7 @@ void MainWindow::screenshotSave(QString nameFilter, QString defaultSuffix, QStri
             QFile(temppath).rename(filename);
         }
     }
-    currentDir = dialog.directory();
+    currentDir = dialog.directory().absolutePath();
 }
 
 void MainWindow::screenshot() {
@@ -1006,7 +1008,7 @@ QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode, con
     dialog.setNameFilter(name_filter);
     good = dialog.exec();
 
-    currentDir = dialog.directory();
+    currentDir = dialog.directory().absolutePath();
 
     if (good) {
         return dialog.selectedFiles();

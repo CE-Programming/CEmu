@@ -42,23 +42,25 @@ static const uint8_t dumper_program[288] = {
 RomSelection::RomSelection(QWidget *p) : QDialog(p), ui(new Ui::RomSelection) {
     ui->setupUi(this);
 
-    setWindowModality(Qt::ApplicationModal);
+    setWindowModality(Qt::NonModal);
     setWindowFlags(Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint );
 
-    connect(ui->buttonCancel, &QPushButton::clicked, this, &RomSelection::close);
-    connect(ui->rompath, &QLineEdit::textChanged, this, &RomSelection::checkInput);
-    connect(ui->buttonNext, &QPushButton::clicked, this, &RomSelection::nextPageOne);
-    connect(ui->buttonNext2, &QPushButton::clicked, this, &RomSelection::nextPageTwo);
+    connect(ui->radioButton, &QRadioButton::clicked, this, &RomSelection::close);
+    connect(ui->radioBrowse, &QRadioButton::clicked, this, &RomSelection::browseForROM);
+    connect(ui->radioCreate, &QRadioButton::clicked, this, &RomSelection::nextPage);
+    connect(ui->buttonNext2, &QPushButton::clicked, this, &RomSelection::nextPage);
+    connect(ui->buttonBack1, &QPushButton::clicked, this, &RomSelection::prevPage);
+    connect(ui->buttonBack2, &QPushButton::clicked, this, &RomSelection::prevPage);
     connect(ui->buttonDump, &QPushButton::clicked, this, &RomSelection::saveDumpProgram);
-    connect(ui->buttonBrowseROM, &QPushButton::clicked, this, &RomSelection::browseForROM);
     connect(ui->buttonBrowseSave, &QPushButton::clicked, this, &RomSelection::saveROMImage);
-    connect(ui->radioBrowse, &QRadioButton::clicked, this, &RomSelection::openROMImageSelected);
-    connect(ui->buttonOpenSegments, &QPushButton::clicked, this, &RomSelection::openROMSegments);
-    connect(ui->radioCreate, &QRadioButton::clicked, this, &RomSelection::createROMImageSelected);
-    connect(ui->buttonBack1, &QRadioButton::clicked, this, &RomSelection::backPage);
-    connect(ui->buttonBack2, &QRadioButton::clicked, this, &RomSelection::backPage);
+    connect(ui->dropArea, &DropArea::clicked, this, &RomSelection::openROMSegments);
 
+    // ensure we are on the correct page
     ui->stackedWidget->setCurrentIndex(0);
+
+    // drop stuff
+    ui->dropArea->clear();
+    connect(ui->dropArea, &DropArea::processDrop, this, &RomSelection::processDrop);
 
     ui->versionLabel->setText(ui->versionLabel->text() + QStringLiteral(CEMU_VERSION));
 }
@@ -68,79 +70,34 @@ RomSelection::~RomSelection() {
     delete ui;
 }
 
-bool RomSelection::checkImageSize(const char *filename) {
-    size_t s;
-
-    FILE* romfile = fopen_utf8(filename, "r+b");
-
-    if (!romfile) {
-        return false;
-    }
-
-    fseek(romfile, 0, SEEK_END);
-    s = ftell(romfile);
-
-    fclose(romfile);
-
-    return s == ROM_SIZE;
-}
-
-void RomSelection::checkInput(const QString &path) {
-    ui->buttonNext->setEnabled(fileExists(path));
-}
-
-void RomSelection::createROMImageSelected() {
-    this->ui->rompath->setEnabled(false);
-    this->ui->buttonBrowseROM->setEnabled(false);
-    this->ui->buttonNext->setEnabled(true);
-    this->ui->buttonNext->setText(tr("Continue"));
-}
-
-void RomSelection::openROMImageSelected() {
-    ui->rompath->setEnabled(true);
-    ui->buttonBrowseROM->setEnabled(true);
-    ui->buttonNext->setText(tr("Finish"));
-    checkInput(ui->rompath->text());
-}
-
 void RomSelection::browseForROM() {
-  ui->rompath->setText(
-      QFileDialog::getOpenFileName(this, tr("Open ROM file"),"",
-      tr("Known Types (*.rom *.sav);;ROM Image (*.rom);;Saved Image (*.sav);;All Files (*.*)")));
-}
-
-void RomSelection::nextPageOne() {
-    if (ui->radioBrowse->isChecked()) {
-        if (checkImageSize(ui->rompath->text().toStdString().c_str()) == false) {
-            QMessageBox::critical(this, tr("Invalid ROM image"), tr("You have selected an invalid ROM image."));
-            return;
-        }
-        rom = ui->rompath->text();
+    QFileDialog dialog(this);
+    dialog.setFileMode(QFileDialog::AnyFile);
+    dialog.setWindowTitle(tr("Select ROM file"));
+    dialog.setNameFilter(tr("ROM Image (*.rom);;All Files (*.*)"));
+    if (dialog.exec()) {
+        rom = dialog.selectedFiles().first();
         close();
     } else {
-        ui->stackedWidget->setCurrentIndex(ui->stackedWidget->currentIndex() + 1);
+        ui->radioBrowse->blockSignals(true);
+        ui->radioBrowse->setChecked(false);
+        ui->radioBrowse->blockSignals(false);
     }
 }
 
-void RomSelection::nextPageTwo() {
-    romArray = reinterpret_cast<uint8_t*>(malloc(ROM_SIZE));
+void RomSelection::nextPage() {
     ui->stackedWidget->setCurrentIndex(ui->stackedWidget->currentIndex() + 1);
 }
 
-void RomSelection::backPage() {
+void RomSelection::prevPage() {
     ui->stackedWidget->setCurrentIndex(ui->stackedWidget->currentIndex() - 1);
+    ui->radioCreate->blockSignals(true);
+    ui->radioCreate->setChecked(false);
+    ui->radioCreate->blockSignals(false);
 }
 
 void RomSelection::openROMSegments() {
-    FILE* seg;
     QFileDialog dialog(this);
-    QStringList fileNames;
-
-    uint8_t buf[10];
-    uint16_t u16 = 0;
-
-    bool config = false;
-    int i, segint;
 
     dialog.setDirectory(currentDir);
     dialog.setFileMode(QFileDialog::ExistingFiles);
@@ -150,11 +107,23 @@ void RomSelection::openROMSegments() {
         return;
     }
 
-    fileNames = dialog.selectedFiles();
+    currentDir = dialog.directory().absolutePath();
+
+    segmentFileList = dialog.selectedFiles();
+    parseROMSegments();
+}
+
+void RomSelection::parseROMSegments() {
+    FILE* seg;
+    int i, segint;
+    uint8_t buf[10];
+    uint16_t u16 = 0;
+    static bool config = false;
+
     ui->progressBar->setEnabled(false);
 
-    for (i = 0; i < fileNames.size(); i++) {
-        seg = fopen_utf8(fileNames.at(i).toStdString().c_str(), "rb");
+    for (i = 0; i < segmentFileList.size(); i++) {
+        seg = fopen_utf8(segmentFileList.at(i).toStdString().c_str(), "rb");
         if (!seg)                                             goto _err;
         if (fseek(seg, 0x3C, SEEK_SET))                       goto _err;
         if (fread(buf, 1, 8, seg) != 8)                       goto _err;
@@ -170,9 +139,9 @@ void RomSelection::openROMSegments() {
 
                 numROMSegments = (imageSize/SEG_SIZE) + 1;
                 ui->progressBar->setMaximum(numROMSegments);
-                ui->progressBar->setEnabled((config = true));
+                ui->progressBar->setEnabled(config = true);
             } else {
-                if (fseek(seg,0x48,0))                          goto _err;
+                if (fseek(seg, 0x48, 0))                    goto _err;
                 if (fread(&u16, sizeof(u16), 1,seg) != 1)   goto _err;
                 if (SEG_SIZE == u16) {
                     segint = buf[7] - 'A';
@@ -191,58 +160,134 @@ void RomSelection::openROMSegments() {
 
         fclose(seg);
     }
-    if (ui->progressBar->value() == numROMSegments && config) {
+    segmentFileList.clear();
+    if (config && ui->progressBar->value() == numROMSegments) {
         ui->buttonBrowseSave->setEnabled(true);
     }
     return;
 
 _err:
-    QMessageBox::warning(this, tr("Invalid"), tr("Invalid ROM segment: ") + fileNames.at(i));
+    QMessageBox::critical(this, tr("Invalid"), tr("Invalid ROM segment\n") + segmentFileList.at(i));
     fclose(seg);
     return;
 }
 
 void RomSelection::saveDumpProgram() {
     FILE* save_program;
-    QString filename = QFileDialog::getSaveFileName(this, tr("Save ROM Dumper Program"), QString(), tr("ROM Dumper (*.8xp)"));
-    if (filename.isEmpty()) {
-        return;
-    }
+    QFileDialog dialog(this);
 
-    save_program = fopen_utf8(filename.toStdString().c_str(), "w+b");
+    dialog.setDirectory(currentDir);
+    dialog.setFileMode(QFileDialog::AnyFile);
+    dialog.setDefaultSuffix(QStringLiteral("8xp"));
+    dialog.setWindowTitle(tr("Save ROM Dumper Program"));
+    dialog.setNameFilter(tr("ROM Dumper (*.8xp)"));
+
+    if (!dialog.exec()) { return; }
+
+    currentDir = dialog.directory().absolutePath();
+
+    QString filename = dialog.selectedFiles().first();
+
+    if (filename.isEmpty()) { return; }
+
+    save_program = fopen_utf8(filename.toStdString().c_str(), "wb");
 
     if (save_program) {
-        fwrite(dumper_program, 1, sizeof(dumper_program), save_program);
+        fwrite(dumper_program, 1, sizeof dumper_program, save_program);
         fclose(save_program);
     }
 }
 
 void RomSelection::saveROMImage() {
     FILE* saveRom;
-    QString filename = QFileDialog::getSaveFileName(this, tr("Save ROM Image"), QString(), tr("ROM Image (*.rom)"));
-    if  (filename.isEmpty()) {
-        return;
-    }
 
-    rom = filename;
-    saveRom = fopen_utf8(rom.toStdString().c_str(), "w+b");
+    QFileDialog dialog(this);
+
+    dialog.setDirectory(currentDir);
+    dialog.setFileMode(QFileDialog::AnyFile);
+    dialog.setDefaultSuffix(QStringLiteral("rom"));
+    dialog.setWindowTitle(tr("Save ROM"));
+    dialog.setNameFilter(tr("ROM Image (*.rom)"));
+
+    if (!dialog.exec()) { return; }
+
+    currentDir = dialog.directory().absolutePath();
+
+    QString filename = dialog.selectedFiles().first();
+
+    if  (filename.isEmpty()) { return; }
+
+    saveRom = fopen_utf8(rom.toStdString().c_str(), "wb");
 
     if (saveRom) {
-        /* Make sure the only thing in the rom is the boot+os */
-        memset(&romArray[imageSize], 0xFF, ROM_SIZE - imageSize - 1);
-
+        memset(&romArray[imageSize], 255, ROM_SIZE - 1 - imageSize);
         fwrite(romArray, 1, ROM_SIZE, saveRom);
-
         fclose(saveRom);
+        rom = filename;
+        close();
     }
-
-    close();
 }
 
-QString RomSelection::romPath() {
+QString RomSelection::getRomPath() {
     return rom;
 }
 
+/*!
+ * DropArea
+ */
+
+DropArea::DropArea(QWidget *p) : QLabel(p) {
+    setFrameStyle(QFrame::Sunken | QFrame::StyledPanel);
+    setAlignment(Qt::AlignCenter);
+    setAcceptDrops(true);
+    setAutoFillBackground(true);
+    clear();
+}
+
+void DropArea::dragEnterEvent(QDragEnterEvent *e) {
+    setBackgroundRole(QPalette::Highlight);
+
+    e->acceptProposedAction();
+    emit changed(e->mimeData());
+}
+
+void DropArea::dragMoveEvent(QDragMoveEvent *e) {
+    e->acceptProposedAction();
+}
+
+void DropArea::dragLeaveEvent(QDragLeaveEvent *e) {
+    clear();
+    e->accept();
+}
+
+void DropArea::clear() {
+    setBackgroundRole(QPalette::Dark);
+    emit changed();
+}
+
+void DropArea::dropEvent(QDropEvent *e) {
+    setBackgroundRole(QPalette::Dark);
+    emit processDrop(e);
+}
+
+void DropArea::mousePressEvent(QMouseEvent *e) {
+    emit clicked(e->pos());
+}
+
+void RomSelection::processDrop(QDropEvent *e) {
+    const QMimeData *mimeData = e->mimeData();
+
+    segmentFileList.clear();
+
+    if (mimeData->hasUrls()) {
+        for (int i = 0; i < mimeData->urls().size(); i++) {
+            segmentFileList.append(mimeData->urls().at(i).toLocalFile());
+        }
+    }
+
+    e->acceptProposedAction();
+    parseROMSegments();
+}
 
 /*!
  * ROM dumping program

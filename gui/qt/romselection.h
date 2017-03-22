@@ -3,10 +3,39 @@
 
 #include <QtWidgets/QDialog>
 #include <QtCore/QDir>
+#include <QtGui/QDrag>
+#include <QtWidgets/QLabel>
+#include <QtCore/QMimeData>
+#include <QtCore/QPoint>
 
 class QString;
 
 namespace Ui { class RomSelection; }
+
+class DropArea : public QLabel {
+    Q_OBJECT
+
+public:
+    DropArea(QWidget *p = Q_NULLPTR);
+
+public slots:
+    void clear();
+
+signals:
+    void changed(const QMimeData *mimeData = Q_NULLPTR);
+    void processDrop(QDropEvent*);
+    void clicked(const QPoint&);
+
+protected:
+    virtual void dragEnterEvent(QDragEnterEvent*) Q_DECL_OVERRIDE;
+    virtual void dragMoveEvent(QDragMoveEvent*) Q_DECL_OVERRIDE;
+    virtual void dragLeaveEvent(QDragLeaveEvent*) Q_DECL_OVERRIDE;
+    virtual void dropEvent(QDropEvent*) Q_DECL_OVERRIDE;
+    virtual void mousePressEvent(QMouseEvent *e) Q_DECL_OVERRIDE;
+
+private:
+    QLabel *label;
+};
 
 class RomSelection : public QDialog {
     Q_OBJECT
@@ -14,22 +43,22 @@ class RomSelection : public QDialog {
 public:
     explicit RomSelection(QWidget *parent = Q_NULLPTR);
     ~RomSelection();
-    QString romPath();
+    QString getRomPath();
+
+public slots:
+    void processDrop(QDropEvent*);
 
 private slots:
-    bool checkImageSize(const char *filename);
-    void checkInput(const QString &path);
-    void createROMImageSelected();
-    void openROMImageSelected();
-    void browseForROM();
-    void nextPageOne();
-    void nextPageTwo();
-    void openROMSegments();
     void saveROMImage();
+    void browseForROM();
     void saveDumpProgram();
-    void backPage();
+    void openROMSegments();
 
 private:
+    void parseROMSegments();
+    void nextPage();
+    void prevPage();
+
     Ui::RomSelection *ui;
 
     QDir currentDir;
@@ -38,6 +67,7 @@ private:
     QString rom;
     bool segmentFilledStatus[30] = {0};
     int numROMSegments = 0;
+    QStringList segmentFileList;
 };
 
 #endif

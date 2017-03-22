@@ -97,6 +97,7 @@ bool emu_start(const char *romImage, const char *savedImage) {
             imageFile = fopen_utf8(savedImage, "rb");
 
             if (!imageFile) {
+                gui_console_printf("[CEmu] Could not located image file\n");
                 break;
             }
             if (fseek(imageFile, 0L, SEEK_END) < 0) {
@@ -145,6 +146,7 @@ bool emu_start(const char *romImage, const char *savedImage) {
                 FILE *romFile = fopen_utf8(romImage, "rb");
                 do {
                     if (romFile) {
+                        bool gotType = false;
                         uint16_t field_type;
                         const uint8_t *outer;
                         const uint8_t *current;
@@ -265,13 +267,18 @@ bool emu_start(const char *romImage, const char *savedImage) {
                             device_type = (ti_device_t)(data[1]);
 
                             /* If we come here, we've found something. */
-                            ret = true;
+                            gotType = true;
                             break;
                         }
 
-                        if (ret) {
+                        if (gotType) {
                             set_device_type(device_type);
+                        } else {
+                            set_device_type(TI84PCE);
+                            gui_console_printf("[CEmu] Could not determine device type\n");
                         }
+
+                        ret = true;
                     }
                 } while (0);
 
@@ -287,7 +294,6 @@ bool emu_start(const char *romImage, const char *savedImage) {
     }
 
     if (!ret) {
-        gui_console_printf("[CEmu] Error opening image (Corrupted certificate?)\n");
         emu_cleanup();
     }
 
