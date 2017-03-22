@@ -17,8 +17,13 @@ DISTFILES += ../../.astylerc
 
 # Linux desktop files
 if (linux) {
+    isEmpty(PREFIX) {
+        PREFIX = /usr
+    }
+    target.path = $$PREFIX/bin
     desktop.path = /usr/share/applications
     desktop.files += resources/linux/CEmu.desktop
+    INSTALLS += target desktop
 }
 
 QT += core gui widgets network
