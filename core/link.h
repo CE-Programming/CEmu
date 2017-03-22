@@ -10,7 +10,8 @@ extern "C" {
 #include "defines.h"
 #include "vat.h"
 
-enum dest_location { LINK_RAM=0, LINK_ARCH, LINK_FILE };
+enum { LINK_RAM=0, LINK_ARCH, LINK_FILE };
+enum { FILE_DATA=0x35, FILE_DATA_START=0x37 };
 
 extern volatile bool isSending;
 extern volatile bool isReceiving;

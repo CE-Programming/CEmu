@@ -86,9 +86,9 @@ static void run_asm(const uint8_t *data, const size_t data_size, const uint32_t 
  * See GitHub issue #25
  */
 bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned location) {
-    const size_t h_size = sizeof(header_data);
-    const uint16_t data_start = 0x35;
+    const size_t h_size = sizeof header_data;
     const uint8_t tVarLst = 0x5D, tAns = 0x72;
+    unsigned int i;
 
     FILE *file;
     uint8_t tmp_buf[0x80];
@@ -107,6 +107,8 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
     uint16_t var_size,
              var_size2,
              data_size,
+             checksum,
+             cchecksum,
              header_size;
 
     size_t   temp_size;
@@ -124,15 +126,36 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
     if (fread(tmp_buf, 1, h_size, file) != h_size)         goto r_err;
     if (memcmp(tmp_buf, header_data, h_size))              goto r_err;
 
-    if (fseek(file, data_start, 0))                        goto r_err;
+    if (fseek(file, FILE_DATA, SEEK_SET))                  goto r_err;
     if (fread(&data_size, 2, 1, file) != 1)                goto r_err;
 
 
     if (fseek(file, 0L, SEEK_END))                         goto r_err;
-    if ((lSize = ftell(file)) < 0)                         goto r_err;
-    temp_size = 4 + (size_t)data_size + (size_t)data_start;
-    if ((size_t)lSize != temp_size)                        goto r_err;
-    if (fseek(file, data_start + 2, SEEK_SET))             goto r_err;
+    if ((lSize = ftell(file)) <= 0)                        goto r_err;
+
+    temp_size = (size_t)data_size + FILE_DATA + 4;
+
+    if ((size_t)lSize != temp_size) {
+        gui_console_printf("[CEmu] File data section size incorrect.\n");
+        goto r_err;
+    }
+
+    if (fseek(file, FILE_DATA_START, SEEK_SET))            goto r_err;
+
+    // make sure the checksum is correct
+    checksum = 0;
+    for (i = 0x37; i<lSize-2; i++) {
+        checksum = (checksum + fgetc(file)) & 0xffff;
+    }
+
+    if (fread(&cchecksum, 2, 1, file) != 1)                goto r_err;
+
+    if (cchecksum != checksum) {
+        gui_console_printf("[CEmu] File checksum invalid.\n");
+        goto r_err;
+    }
+
+    if (fseek(file, FILE_DATA_START, SEEK_SET))            goto r_err;
 
     if (calc_is_off()) {
         intrpt_set(INT_ON, true);
@@ -147,7 +170,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
 
     /* parse each varaible individually until the entire file is compelete. */
 
-    run_asm(jforcegraph, sizeof(jforcegraph), 2500000);
+    run_asm(jforcegraph, sizeof jforcegraph, 2500000);
 
     while (data_size) {
 
@@ -175,7 +198,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
 
         /* copy the program into the emulator */
 
-        run_asm(pgrm_loader, sizeof(pgrm_loader), 23000000);
+        run_asm(pgrm_loader, sizeof pgrm_loader, 23000000);
 
         if (mem_peek_byte(0xD008DF)) {
             gui_console_printf("[CEmu] Variable Transfer Error\n");
@@ -190,7 +213,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
             case LINK_FILE:
                 if (var_arc != 0x80) break;
             case LINK_ARCH:
-                run_asm(archivevar, sizeof(archivevar), 23000000);
+                run_asm(archivevar, sizeof archivevar, 23000000);
                 break;
             case LINK_RAM:
                 break;
@@ -199,7 +222,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
         data_size -= 2 + header_size + 2 + var_size;
     }
 
-    run_asm(jforcehome, sizeof(jforcehome), 23000000);
+    run_asm(jforcehome, sizeof jforcehome, 23000000);
     cpu.cycles = save_cycles;
     cpu.next = save_next;
     cpu.cycles_offset = save_cycles_offset;
