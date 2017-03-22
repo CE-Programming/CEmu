@@ -1340,7 +1340,7 @@ void MainWindow::equatesAddFile(const QString &fileName) {
             !in.readLineInto(&line) ||
             !in.readLineInto(&line) ||
             !in.readLineInto(&line)) {
-            QMessageBox::critical(this, tr("Error"), tr("Looks like a map file, but no definitions found"));
+            QMessageBox::critical(this, MSG_ERROR, tr("Looks like a map file, but no definitions found"));
             return;
         }
         while (in.readLineInto(&line) && !line.isEmpty()) {

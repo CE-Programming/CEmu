@@ -15,7 +15,7 @@
 #include "schedule.h"
 #include "debug/debug.h"
 
-#define imageVersion 0xCECE000A
+#define imageVersion 0xCECE000B
 
 uint32_t cpuEvents;
 volatile bool exiting;
@@ -38,7 +38,7 @@ bool emu_save_rom(const char *file) {
 
     gui_set_busy(true);
 
-    success = (fwrite(mem.flash.block, 1, flash_size, savedRom) == flash_size);
+    success = (fwrite(mem.flash.block, 1, SIZE_FLASH, savedRom) == SIZE_FLASH);
 
     fclose(savedRom);
 

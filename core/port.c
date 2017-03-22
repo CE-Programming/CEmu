@@ -33,11 +33,13 @@ void port_poke_byte(uint16_t address, uint8_t value) {
 }
 void port_write_byte(uint16_t address, uint8_t value) {
 #ifdef DEBUG_SUPPORT
-    if (debugger.data.ports[address] & DBG_PORT_FREEZE) {
-        return;
-    }
-    if (debugger.data.ports[address] & DBG_PORT_WRITE) {
-        open_debugger(HIT_PORT_WRITE_WATCHPOINT, address);
+    if (debugger.data.ports[address] & (DBG_PORT_FREEZE | DBG_PORT_WRITE)) {
+        if (debugger.data.ports[address] & DBG_PORT_WRITE) {
+            open_debugger(HIT_PORT_WRITE_WATCHPOINT, address);
+        }
+        if (debugger.data.ports[address] & DBG_PORT_FREEZE) {
+            return;
+        }
     }
 #endif
     port_write(address, value, false);

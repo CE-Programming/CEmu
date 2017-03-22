@@ -147,6 +147,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->buttonRefreshCRC, &QPushButton::clicked, this, &MainWindow::refreshCRC);
 
     // Menubar Actions
+    ui->actionPopoutLCD->setVisible(false);
     connect(ui->actionSetup, &QAction::triggered, this, &MainWindow::runSetup);
     connect(ui->actionExit, &QAction::triggered, this, &MainWindow::close);
     connect(ui->actionScreenshot, &QAction::triggered, this, &MainWindow::screenshot);
@@ -588,7 +589,7 @@ bool MainWindow::restoreEmuState() {
     if (!default_saved_image.isEmpty()) {
         return restoreFromPath(default_saved_image);
     } else {
-        QMessageBox::warning(this, tr("Can't restore state"), tr("No saved image path in settings"));
+        QMessageBox::critical(this, MSG_ERROR, tr("No saved image path in settings."));
         return false;
     }
 }
@@ -602,7 +603,7 @@ bool MainWindow::restoreFromPath(QString path) {
         refreshVariableList();
     }
     if (!emu_thread->restore(path)) {
-        QMessageBox::warning(this, tr("Could not restore"), tr("Try restarting"));
+        QMessageBox::critical(this, MSG_ERROR, tr("Could not resume; try restarting CEmu"));
         return false;
     }
 
@@ -614,7 +615,7 @@ void MainWindow::saveEmuState() {
     if (!default_savedImage.isEmpty()) {
         saveToPath(default_savedImage);
     } else {
-        QMessageBox::warning(this, tr("Can't save image"), tr("No saved image path in settings given"));
+        QMessageBox::warning(this, MSG_WARNING, tr("No saved image path in settings given."));
     }
 }
 
@@ -653,20 +654,21 @@ void MainWindow::started(bool success) {
     if (success) {
         setKeypadColor(settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
     } else {
-        QMessageBox::critical(this, tr("Error"), tr("Could not load ROM image. Please see console for more information."));
+        QMessageBox::critical(this, MSG_ERROR, tr("Could not load ROM image. Please see console for more information."));
     }
 }
 
 void MainWindow::restored(bool success) {
-    started(success);
-    if (!success) {
-        QMessageBox::warning(this, tr("Could not restore"), tr("Resuming failed.\nPlease Reload your ROM."));
+    if (success) {
+        setKeypadColor(settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
+    } else {
+        QMessageBox::critical(this, MSG_ERROR, tr("Resuming failed.\nPlease reload the ROM from the 'Calculator' menu."));
     }
 }
 
 void MainWindow::saved(bool success) {
     if (!success) {
-        QMessageBox::warning(this, tr("Could not save"), tr("Saving failed.\nSaving failed, go tell someone."));
+        QMessageBox::warning(this, MSG_WARNING, tr("Saving failed.\nSaving failed! Please let someone who maintains this know."));
     }
 
     if (closeAfterSave) {
@@ -792,7 +794,7 @@ void MainWindow::setRom(const QString &newRom) {
         speedUpdateTimer.start();
         speedUpdateTimer.setInterval(1000 / 2);
     } else {
-        QMessageBox::critical(this, tr("ROM Load Failed"), tr("Failed to load new ROM image!"));
+        QMessageBox::critical(this, MSG_ERROR, tr("Failed to load new ROM image!"));
     }
     settings->setValue(SETTING_ROM_PATH, emu.rom);
 }
@@ -843,7 +845,7 @@ void MainWindow::screenshot() {
 
     QString path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.img");
     if (!image.save(path, "PNG", 0)) {
-        QMessageBox::critical(this, tr("Screenshot failed"), tr("Failed to save screenshot!"));
+        QMessageBox::critical(this, MSG_ERROR, tr("Failed to save screenshot."));
     }
 
     screenshotSave(tr("PNG images (*.png)"), QStringLiteral("png"), path);
@@ -851,14 +853,14 @@ void MainWindow::screenshot() {
 
 void MainWindow::screenshotGIF() {
     if (ui->actionRecordGIF->isChecked()) {
-        QMessageBox::warning(this, tr("Recording GIF"), tr("Currently recording GIF."));
+        QMessageBox::warning(this, MSG_WARNING, tr("Currently recording GIF."));
         return;
     }
 
     QString path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.img");
     lcd_event_gui_callback = gif_new_frame;
     if (!gif_single_frame(path.toStdString().c_str())) {
-        QMessageBox::critical(this, tr("Screenshot failed"), tr("Failed to save screenshot!"));
+        QMessageBox::critical(this, MSG_ERROR, tr("Failed to save screenshot."));
     }
     lcd_event_gui_callback = NULL;
 
@@ -900,7 +902,7 @@ void MainWindow::recordGIF() {
                     QFile(opt_path).rename(filename);
                     QFile(path).remove();
                 } else {
-                    QMessageBox::warning(this, tr("GIF Optimization Failed"), tr("Optimizing GIF failed; output is still valid."));
+                    QMessageBox::warning(this, MSG_WARNING, tr("Optimizing GIF failed; output is still valid."));
                     QFile(path).rename(filename);
                     QFile(opt_path).remove();
                 }
@@ -912,7 +914,7 @@ void MainWindow::recordGIF() {
             currentDir = dialog.directory();
 
         } else {
-            QMessageBox::warning(this, tr("Failed recording GIF"), tr("A failure occured during recording"));
+            QMessageBox::critical(this, MSG_ERROR, tr("A failure occured during GIF recording."));
         }
         path.clear();
         opt_path.clear();
@@ -1185,7 +1187,7 @@ void MainWindow::saveSelected() {
         }
     }
     if (selectedVars.size() < 1) {
-        QMessageBox::warning(this, tr("No transfer to do"), tr("Select at least one file to transfer"));
+        QMessageBox::warning(this, MSG_WARNING, tr("Select at least one file to transfer"));
     } else {
         if (selectedVars.size() == 1) {
             uint8_t i = selectedVars.first()->type1;
@@ -1198,7 +1200,7 @@ void MainWindow::saveSelected() {
         }
         if (fileNames.size() == 1) {
             if (!receiveVariableLink(selectedVars.size(), *selectedVars.constData(),  fileNames.first().toUtf8())) {
-                QMessageBox::warning(this, tr("Failed Transfer"), tr("A failure occured during transfer of: ")+fileNames.first());
+                QMessageBox::critical(this, MSG_ERROR, tr("A failure occured during transfer of: ") + fileNames.first());
             }
         }
     }
@@ -1221,13 +1223,13 @@ void MainWindow::dispAutotesterError(int errCode) {
             errMsg = tr("Error. Unknown one - wat?");
             break;
     }
-    QMessageBox::warning(this, tr("Autotester error"), errMsg);
+    QMessageBox::warning(this, MSG_ERROR, errMsg);
 }
 
 
 int MainWindow::openJSONConfig(const QString& jsonPath) {
     if (jsonPath.length() == 0) {
-        QMessageBox::warning(this, tr("Path error"), tr("Please choose a json file or type its path."));
+        QMessageBox::warning(this, MSG_ERROR, tr("Please choose a json file or type its path."));
         return 1;
     }
     std::string jsonContents;
@@ -1237,16 +1239,16 @@ int MainWindow::openJSONConfig(const QString& jsonPath) {
     {
         int ok = chdir(QDir::toNativeSeparators(QFileInfo(jsonPath).absoluteDir().path()).toStdString().c_str());
         if (ok != 0) {
-            QMessageBox::warning(this, tr("Internal Autotester error"), tr("Couldn't go to where the JSON file is."));
+            QMessageBox::warning(this, MSG_ERROR, tr("Couldn't go to where the JSON file is."));
             return 0;
         }
         std::getline(ifs, jsonContents, '\0');
         if (!ifs.eof()) {
-            QMessageBox::warning(this, tr("File error"), tr("Couldn't read JSON file."));
+            QMessageBox::critical(this, MSG_ERROR, tr("Couldn't read JSON file."));
             return 0;
         }
     } else {
-        QMessageBox::warning(this, tr("Opening error"), tr("Unable to open the file."));
+        QMessageBox::critical(this, MSG_ERROR, tr("Unable to open the file."));
         return 1;
     }
 
@@ -1258,7 +1260,7 @@ int MainWindow::openJSONConfig(const QString& jsonPath) {
         ui->buttonLaunchTest->setEnabled(true);
         std::cout << "[OK] Test config loaded and verified. " << autotester::config.hashes.size() << " unique tests found." << std::endl;
     } else {
-        QMessageBox::warning(this, tr("JSON format error"), tr("Error. See the test config file format and make sure values are correct and referenced files are there."));
+        QMessageBox::critical(this, MSG_ERROR, tr("See the test config file format and make sure values are correct and referenced files are there."));
         return 1;
     }
     return 0;
@@ -1378,7 +1380,7 @@ void MainWindow::refreshCRC() {
     return;
 
 errCRCret:
-    QMessageBox::warning(this, tr("CRC Error"), tr("Error. Make sure you have entered a valid start/size pair or preset."));
+    QMessageBox::critical(this, MSG_ERROR, tr("Make sure you have entered a valid start/size pair or preset."));
     return;
 }
 

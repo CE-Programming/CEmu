@@ -165,7 +165,7 @@ void RomSelection::parseROMSegments() {
     return;
 
 _err:
-    QMessageBox::critical(this, tr("Invalid"), tr("Invalid ROM segment\n") + segmentFileList.at(i));
+    QMessageBox::critical(this, tr("Error"), tr("Invalid ROM segment\n") + segmentFileList.at(i));
     fclose(seg);
     return;
 }

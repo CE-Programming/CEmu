@@ -45,8 +45,8 @@ PACK(typedef struct emu_image {
     control_state_t control;
     lcd_state_t lcd;
     mem_state_t mem;
-    uint8_t mem_flash[flash_size];
-    uint8_t mem_ram[ram_size];
+    uint8_t mem_flash[SIZE_FLASH];
+    uint8_t mem_ram[SIZE_RAM];
 }) emu_image_t;
 
 /* CPU events */

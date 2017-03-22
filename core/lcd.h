@@ -18,21 +18,20 @@ extern uint32_t lcd_framebuffer[LCD_SIZE];
 PACK(typedef struct lcd_cntrl_state {
     uint32_t timing[4];
 
-    uint32_t control;     /* Control register */
-    uint32_t imsc;        /* Interrupt mask set/clear register */
+    uint32_t control;           /* Control register */
+    uint32_t imsc;              /* Interrupt mask set/clear register */
     uint32_t ris;
 
-    uint32_t upbase;        /* Upper panel frame base address register */
-    uint32_t lpbase;        /* Lower panel frame base address register */
-    uint32_t upcurr;        /* Upper panel current frame address register */
-    uint32_t lpcurr;        /* Lower panel current frame address register */
+    uint32_t upbase;             /* Upper panel frame base address register */
+    uint32_t lpbase;             /* Lower panel frame base address register */
+    uint32_t upcurr;             /* Upper panel current frame address register */
+    uint32_t lpcurr;             /* Lower panel current frame address register */
 
     /* 256x16-bit color palette registers */
     /* 256 palette entries organized as 128 locations of two entries per word */
     uint16_t palette[0x100];
 
-
-    /* Cursor image RAM registers (TODO) */
+    /* Cursor image RAM registers */
     /* 256-word wide values defining images overlaid by the hw cursor mechanism */
     uint32_t crsrImage[0x100];
     uint32_t crsrControl;        /* Cursor control register */
@@ -44,6 +43,11 @@ PACK(typedef struct lcd_cntrl_state {
     uint32_t crsrImsc;           /* Cursor interrupt mask set/clear register */
     uint32_t crsrIcr;            /* Cursor interrupt clear register */
     uint32_t crsrRis;            /* Cursor raw interrupt status register - const */
+
+    /* Internal registers */
+    uint32_t width;
+    uint32_t height;
+    uint32_t size;
 }) lcd_state_t;
 
 /* Global LCD state */

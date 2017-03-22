@@ -120,7 +120,7 @@ void MainWindow::searchEdit(QHexEdit *editor) {
     editor->setFocus();
     std::string s = searchString.toUpper().toStdString();
     if (searchString.isEmpty() || (searchString.length() & 1) || s.find_first_not_of("0123456789ABCDEF") != std::string::npos) {
-        QMessageBox::warning(this, tr("Error"), tr("Error when reading input string"));
+        QMessageBox::critical(this, MSG_ERROR, tr("Error when reading input string"));
         return;
     }
 
@@ -143,7 +143,7 @@ void MainWindow::searchEdit(QHexEdit *editor) {
     }
 
     if (err == -1) {
-         QMessageBox::warning(this, tr("Not Found"), tr("String not found."));
+         QMessageBox::warning(this, MSG_WARNING, tr("String not found."));
     }
 }
 

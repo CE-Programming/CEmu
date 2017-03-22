@@ -12,15 +12,14 @@ lcd_state_t lcd;
 
 uint32_t lcd_framebuffer[LCD_SIZE];
 
-#define vram_size (LCD_SIZE * 2)
-#define lcd_dma_size 0x80000
+#define SIZE_LCD_DMA 0x80000
 
 void (*lcd_event_gui_callback)(void) = NULL;
 
 static uint_fast32_t lcd_nextword(uint32_t *ofs) {
     uint_fast32_t word = 0;
-    *ofs &= lcd_dma_size - 1;
-    if (*ofs < ram_size) {
+    *ofs &= SIZE_LCD_DMA - 1;
+    if (*ofs < SIZE_RAM) {
         word = *(uint32_t *) (mem.ram.block + *ofs);
     }
     *ofs += 4;
@@ -48,16 +47,16 @@ static void lcd_bgr16out(uint_fast32_t bgr16, bool rgb, uint32_t **out) {
 }
 
 /* Draw the current screen into a 320*240*4-byte RGBA8888 buffer. Alpha is always 255. */
-void lcd_drawframe(uint32_t *out, lcd_state_t *lcd_state) {
-    uint_fast8_t mode = lcd_state->control >> 1 & 7;
-    bool rgb = lcd_state->control & (1 << 8);
-    bool bebo = lcd_state->control & (1 << 9);
-    uint_fast32_t words = LCD_SIZE;
+void lcd_drawframe(uint32_t *out, lcd_state_t *buffer) {
+    uint_fast8_t mode = buffer->control >> 1 & 7;
+    bool rgb = buffer->control & (1 << 8);
+    bool bebo = buffer->control & (1 << 9);
+    uint_fast32_t words = buffer->size;
     uint_fast32_t word, color;
-    uint32_t ofs = lcd_state->upcurr & ~7;
+    uint32_t ofs = buffer->upcurr;
 
-    if (!mem.ram.block) {
-        memset(out, 0, vram_size << 1);
+    if (!words || !mem.ram.block) {
+        memset(out, 0, words * 4);
         return;
     }
 
@@ -65,7 +64,7 @@ void lcd_drawframe(uint32_t *out, lcd_state_t *lcd_state) {
         uint_fast8_t bpp = 1 << mode;
         uint_fast32_t mask = (1 << bpp) - 1;
         uint_fast8_t bi = bebo ? 0 : 24;
-        bool bepo = lcd_state->control & (1 << 10);
+        bool bepo = buffer->control & (1 << 10);
         if (!bepo) {
             bi ^= (8 - bpp);
         }
@@ -160,11 +159,13 @@ static void lcd_event(int index) {
 }
 
 void lcd_reset(void) {
-    /* Palette is unchanged on a reset */
     memset(&lcd, 0, sizeof(lcd_state_t));
     sched.items[SCHED_LCD].proc = lcd_event;
     sched.items[SCHED_LCD].clock = CLOCK_24M;
     sched.items[SCHED_LCD].second = -1;
+    lcd.width = LCD_WIDTH;
+    lcd.height = LCD_HEIGHT;
+    lcd.size = LCD_SIZE;
     gui_console_printf("[CEmu] LCD reset.\n");
 }
 
@@ -220,13 +221,13 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
         } else if (index < 0x014 && index >= 0x010) {
             write8(lcd.upbase, bit_offset, value);
             if (lcd.upbase & 7) {
-                gui_console_printf("[CEmu] Warning: LCD upper panel base not 8-byte aligned\n");
+                gui_console_printf("[CEmu] Warning: Aligning LCD upper panel\n");
             }
             lcd.upbase &= ~7U;
         } else if (index < 0x018 && index >= 0x014) {
             write8(lcd.lpbase, bit_offset, value);
             if (lcd.lpbase & 7) {
-                gui_console_printf("[CEmu] Warning: LCD lower panel base not 8-byte aligned\n");
+                gui_console_printf("[CEmu] Warning: Aligning LCD lower panel\n");
             }
             lcd.lpbase &= ~7U;
         } else if (index == 0x018) {

@@ -429,6 +429,9 @@ private:
 
     // Settings definitions
 
+    static const QString MSG_WARNING;
+    static const QString MSG_ERROR;
+
     static const QString SETTING_DEBUGGER_TEXT_SIZE;
     static const QString SETTING_DEBUGGER_ADD_DISASM_SPACE;
     static const QString SETTING_DEBUGGER_RESTORE_ON_OPEN;

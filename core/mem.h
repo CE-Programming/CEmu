@@ -61,11 +61,10 @@ PACK(typedef struct mem_state {
 extern mem_state_t mem;
 
 /* Standard definitions */
-#define ram_size   0x65800
-#define flash_size 0x400000
-
-static const uint32_t flash_sector_size_8K = 0x2000;
-static const uint32_t flash_sector_size_64K = 0x10000;
+#define SIZE_RAM              0x65800
+#define SIZE_FLASH            0x400000
+#define SIZE_FLASH_SECTOR_8K  0x2000
+#define SIZE_FLASH_SECTOR_64K 0x10000
 
 /* Available Functions */
 void mem_init(void);

@@ -66,6 +66,9 @@ const QString MainWindow::SETTING_DEFAULT_ROM_FILE          = QStringLiteral("/c
 const QString MainWindow::SETTING_DEFAULT_DEBUG_FILE        = QStringLiteral("/cemu_debug.ini");
 const QString MainWindow::SETTING_DEFAULT_IMAGE_FILE        = QStringLiteral("/cemu_image.ce");
 
+const QString MainWindow::MSG_WARNING                       = tr("Warning");
+const QString MainWindow::MSG_ERROR                         = tr("Error");
+
 void MainWindow::setPortableConfig(bool state) {
     ui->checkPortable->setChecked(state);
     QString debugPath;
@@ -370,7 +373,7 @@ void MainWindow::setAutoCheckForUpdates(int state) {
 void MainWindow::checkForUpdates(bool forceInfoBox) {
     if (QStringLiteral(CEMU_VERSION).contains(QStringLiteral("dev"))) {
         if (forceInfoBox) {
-            QMessageBox::warning(this, tr("Update check disabled"), tr("Checking updates is disabled for development builds"));
+            QMessageBox::warning(this, MSG_WARNING, tr("Checking updates is disabled for development builds"));
         }
         return;
     }
