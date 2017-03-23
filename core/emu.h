@@ -77,7 +77,7 @@ void gui_render_gif_frame(void);
 void gui_set_busy(bool);
 void gui_emu_sleep(unsigned long);
 
-bool emu_start(const char*,const char*);
+bool emu_load(const char*,const char*);
 void emu_loop(bool);
 void emu_cleanup(void);
 bool emu_save(const char*);

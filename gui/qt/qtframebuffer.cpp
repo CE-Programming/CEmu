@@ -1,36 +1,23 @@
-/* Copyright (C) 2015  Fabian Vogt
- * Modified for the CE calculator by CEmu developers
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
-*/
-
 #include "qtframebuffer.h"
 #include "../../core/backlight.h"
 #include "../../core/asic.h"
+#include "../../core/emu.h"
 
 #include <QtGui/QPainter>
 
 QImage renderFramebuffer(lcd_state_t *lcds) {
-    lcd_drawframe(lcd_framebuffer, lcds);
-    return QImage(reinterpret_cast<const uint8_t*>(lcd_framebuffer), LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGBA8888);
+    lcd_drawframe(lcds->framebuffer, lcds);
+    return QImage(reinterpret_cast<const uint8_t*>(lcds->framebuffer), lcds->width, lcds->height, QImage::Format_RGBA8888);
 }
 
 void paintFramebuffer(QPainter *p, lcd_state_t *lcds) {
-    if (lcds && (lcd.control & 0x800) && !asic.shipModeEnabled) {
+    if (lcds && lcds->control & 0x800 && !exiting) {
         QImage img = renderFramebuffer(lcds);
 
         // Interpolation only for < 100% scale
-        p->setRenderHint(QPainter::SmoothPixmapTransform, (p->window().size().width() < LCD_WIDTH));
-
+        p->setRenderHint(QPainter::SmoothPixmapTransform, (p->window().width() < static_cast<int>(lcds->width)));
         p->drawImage(p->window(), img);
+
         float factor = (310-(float)backlight.brightness)/160.0;
         if (factor < 1) {
             p->fillRect(p->window(), QColor(0, 0, 0, (1 - factor) * 255));

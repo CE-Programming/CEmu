@@ -58,7 +58,7 @@ if (macx|linux) {
     # Be more secure by default...
     GLOBAL_FLAGS    += -fPIE -Wstack-protector -fstack-protector-strong --param=ssp-buffer-size=1
     # Use ASAN on debug builds. Watch out about ODR crashes when built with -flto. detect_odr_violation=0 as an env var may help.
-    #CONFIG(debug, debug|release): GLOBAL_FLAGS += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -O0
+    CONFIG(debug, debug|release): GLOBAL_FLAGS += -fsanitize=address,bounds -fsanitize-undefined-trap-on-error -O0
 }
 
 macx:  QMAKE_LFLAGS += -Wl,-dead_strip
@@ -79,7 +79,6 @@ SOURCES +=  utils.cpp \
     emuthread.cpp \
     datawidget.cpp \
     dockwidget.cpp \
-    lcdpopout.cpp \
     searchwidget.cpp \
     basiccodeviewerwindow.cpp \
     keypad/qtkeypadbridge.cpp \
@@ -144,7 +143,8 @@ SOURCES +=  utils.cpp \
     ipc.cpp \
     keyhistory.cpp \
     capture/opttemplate.c \
-    capture/quantize.c
+    capture/quantize.c \
+    memoryvisualizer.cpp
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
@@ -158,7 +158,6 @@ HEADERS  +=  utils.h \
     emuthread.h \
     datawidget.h \
     dockwidget.h \
-    lcdpopout.h \
     searchwidget.h \
     basiccodeviewerwindow.h \
     keypad/qtkeypadbridge.h \
@@ -221,14 +220,15 @@ HEADERS  +=  utils.h \
     ../../core/dma.h \
     ipc.h \
     keyhistory.h \
-    capture/kcolor.h
+    capture/kcolor.h \
+    memoryvisualizer.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \
-    lcdpopout.ui \
     searchwidget.ui \
     basiccodeviewerwindow.ui \
-    keyhistory.ui
+    keyhistory.ui \
+    memoryvisualizer.ui
 
 RESOURCES += \
     resources.qrc

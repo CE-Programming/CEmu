@@ -7,20 +7,22 @@
 #include "utils.h"
 #include "lcdwidget.h"
 #include "sendinghandler.h"
+#include "keypad/qtkeypadbridge.h"
 #include "../../core/link.h"
 #include "../../core/debug/debug.h"
 
 LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
-    lcdState = &lcd;
     refreshTimer = new QTimer(this);
     setContextMenuPolicy(Qt::CustomContextMenu);
+
+    installEventFilter(keypadBridge);
 
     connect(refreshTimer, SIGNAL(timeout()), this, SLOT(repaint()));
 
     setAcceptDrops(true);
 
-    // Default rate is 60 FPS
-    refreshRate(60);
+    // Default rate is 30 FPS
+    refreshRate(30);
 }
 
 LCDWidget::~LCDWidget() {
@@ -49,8 +51,8 @@ void LCDWidget::refreshRate(int newrate) {
     refreshTimer->start();
 }
 
-void LCDWidget::setLCD(lcd_state_t *lcdS) {
-    lcdState = lcdS;
+void LCDWidget::setLCD(lcd_state_t *x) {
+    lcdState = x;
 }
 
 void LCDWidget::dropEvent(QDropEvent *e) {

@@ -82,6 +82,7 @@ private:
     bool enterSendState = false;
     bool enterReceiveState = false;
     bool throttleOn = true;
+    bool emuStopped = false;
     std::chrono::steady_clock::time_point lastTime;
     QString romExportPath;
     volatile bool saveImage = false;

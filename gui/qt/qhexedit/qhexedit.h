@@ -101,11 +101,11 @@ public:
 
 protected:
     // Handle events
-    void keyPressEvent(QKeyEvent *event);
-    void mouseMoveEvent(QMouseEvent * event);
-    void mousePressEvent(QMouseEvent * event);
-    void paintEvent(QPaintEvent *event);
-    void resizeEvent(QResizeEvent *);
+    virtual void keyPressEvent(QKeyEvent*) Q_DECL_OVERRIDE;
+    virtual void mouseMoveEvent(QMouseEvent*) Q_DECL_OVERRIDE;
+    virtual void mousePressEvent(QMouseEvent*) Q_DECL_OVERRIDE;
+    virtual void paintEvent(QPaintEvent*) Q_DECL_OVERRIDE;
+    virtual void resizeEvent(QResizeEvent*) Q_DECL_OVERRIDE;
 
 private:
     // Handle selections

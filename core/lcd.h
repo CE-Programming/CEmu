@@ -48,6 +48,10 @@ PACK(typedef struct lcd_cntrl_state {
     uint32_t width;
     uint32_t height;
     uint32_t size;
+    uint32_t *ofs;                /* Pointer to start of data to start extracting from */
+    uint32_t *ofs_end;            /* End pointer that is allowed access */
+    uint32_t *zero;               /* number of bytes to zero at the end of the line display */
+    uint32_t framebuffer[LCD_SIZE]; /* Location on which to draw the data */
 }) lcd_state_t;
 
 /* Global LCD state */
@@ -58,6 +62,7 @@ void lcd_reset(void);
 eZ80portrange_t init_lcd(void);
 
 void lcd_drawframe(uint32_t *out, lcd_state_t*);
+void lcd_setptrs(lcd_state_t*);
 
 /* Set this callback function pointer from the GUI. Called in lcd_event() */
 extern void (*lcd_event_gui_callback)(void);

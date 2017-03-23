@@ -39,7 +39,7 @@ private:
     bool in_send = false;
     QTimer *refreshTimer;
     QPainter *painter;
-    lcd_state_t *lcdState;
+    lcd_state_t *lcdState = Q_NULLPTR;
     QRect left, right;
 
     // for dragable roms

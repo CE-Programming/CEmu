@@ -15,7 +15,7 @@ Gt_OutputData active_output_data;
 Gif_CompressInfo gif_write_info;
 
 static bool gif_write_frame(GifWriter *frameWriter, unsigned int delay) {
-    return GifWriteFrame(frameWriter, reinterpret_cast<const uint8_t*>(lcd_framebuffer), LCD_WIDTH, LCD_HEIGHT, delay);
+    return GifWriteFrame(frameWriter, reinterpret_cast<const uint8_t*>(lcd.framebuffer), LCD_WIDTH, LCD_HEIGHT, delay);
 }
 
 bool gif_single_frame(const char *filename) {

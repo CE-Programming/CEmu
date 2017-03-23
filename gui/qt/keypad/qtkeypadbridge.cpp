@@ -79,8 +79,7 @@ void QtKeypadBridge::releaseAll() {
     }
 }
 
-bool QtKeypadBridge::eventFilter(QObject *obj, QEvent *e)
-{
+bool QtKeypadBridge::eventFilter(QObject *obj, QEvent *e){
     Q_UNUSED(obj);
 
     if (e->type() == QEvent::KeyPress) {

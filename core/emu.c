@@ -15,7 +15,7 @@
 #include "schedule.h"
 #include "debug/debug.h"
 
-#define imageVersion 0xCECE000B
+#define imageVersion 0xCECE000D
 
 uint32_t cpuEvents;
 volatile bool exiting;
@@ -84,12 +84,13 @@ bool emu_save(const char *file) {
     return success;
 }
 
-bool emu_start(const char *romImage, const char *savedImage) {
+bool emu_load(const char *romImage, const char *savedImage) {
     bool ret = false;
     long lSize;
     FILE *imageFile = NULL;
 
     gui_set_busy(true);
+    emu_cleanup();
 
     do {
         if (savedImage != NULL) {
@@ -179,7 +180,7 @@ bool emu_start(const char *romImage, const char *savedImage) {
                         for (offset = 0x20000U; offset < 0x40000U; offset += 0x10000U) {
                             outer = mem.flash.block;
                             /* Outer 0x800(0) field. */
-                            if (cert_field_get(outer + offset, mem.flash.size - offset, &field_type, &outer, &outer_field_size)) {
+                            if (cert_field_get(outer + offset, SIZE_FLASH - offset, &field_type, &outer, &outer_field_size)) {
                                 break;
                             }
                             if (field_type != 0x800F /*|| field_type == 0x800D || field_type == 0x800E*/) {
@@ -326,7 +327,7 @@ static void emu_main_loop_inner(void) {
     if (!emulationPaused) {
         if (cpuEvents & EVENT_RESET) {
             gui_console_printf("[CEmu] Calculator reset triggered...\n");
-            cpu_reset();
+            asic_reset();
             cpuEvents &= ~EVENT_RESET;
         }
 #ifdef DEBUG_SUPPORT
@@ -339,6 +340,7 @@ static void emu_main_loop_inner(void) {
             sched_process_pending_events();
             cpu_execute();
         } else {
+            lcd.control &= ~0x800;
             gui_emu_sleep(50);
         }
     } else {

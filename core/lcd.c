@@ -1,133 +1,117 @@
 #include <string.h>
+#include <stdio.h>
 
 #include "cpu.h"
 #include "emu.h"
+#include "mem.h"
 #include "dma.h"
 #include "lcd.h"
+#include "asic.h"
 #include "schedule.h"
 #include "interrupt.h"
 
 /* Global LCD state */
 lcd_state_t lcd;
 
-uint32_t lcd_framebuffer[LCD_SIZE];
-
-#define SIZE_LCD_DMA 0x80000
-
 void (*lcd_event_gui_callback)(void) = NULL;
 
-static uint_fast32_t lcd_nextword(uint32_t *ofs) {
-    uint_fast32_t word = 0;
-    *ofs &= SIZE_LCD_DMA - 1;
-    if (*ofs < SIZE_RAM) {
-        word = *(uint32_t *) (mem.ram.block + *ofs);
-    }
-    *ofs += 4;
-    return word;
-}
+#define c6_to_c8(c) (((c) << 2) | ((c) >> 4))
 
-// #define c6_to_c8(c) ((c * 0xFF + 0x1F) / 0x3F)
-#define c6_to_c8(c) ((c << 2) | (c >> 4))
+static bool _rgb;
 
-static void lcd_bgr16out(uint_fast32_t bgr16, bool rgb, uint32_t **out) {
+/* This is an intensive function. Any effort to speed it up would be much appreciated */
+static uint_fast32_t lcd_bgr16out(uint_fast32_t bgr16) {
     uint_fast32_t r, g, b;
 
-    r = (rgb ? bgr16 >> 10 : bgr16 << 1) & 0x3E;
+    r = (bgr16 >> 10) & 0x3E;
     r |= r >> 5;
     r = c6_to_c8(r);
 
     g = bgr16 >> 5 & 0x3F;
     g = c6_to_c8(g);
 
-    b = (rgb ? bgr16 << 1 : bgr16 >> 10) & 0x3E;
+    b = (bgr16 << 1) & 0x3E;
     b |= b >> 5;
     b = c6_to_c8(b);
 
-    *(*out)++ = r | (g << 8) | (b << 16) | (0xFFu << 24);
+    if (_rgb) {
+        return r | (g << 8) | (b << 16) | (255 << 24);
+    } else {
+        return b | (g << 8) | (r << 16) | (255 << 24);
+    }
 }
 
-/* Draw the current screen into a 320*240*4-byte RGBA8888 buffer. Alpha is always 255. */
+#define c1555(w) ((w) + ((w) & 0xFFE0) + ((w) >> 10 & 0x20))
+#define c565(w)  (((w) >> 8 & 0xF800) | ((w) >> 5 & 0x7E0) | ((w) >> 3 & 0x1F))
+#define c12(w)   (((w) << 4 & 0xF000) | ((w) << 3 & 0x780) | ((w) << 1 & 0x1E))
+
+/* Draw the lcd onto an RGBA8888 buffer. Alpha is always 255. */
 void lcd_drawframe(uint32_t *out, lcd_state_t *buffer) {
     uint_fast8_t mode = buffer->control >> 1 & 7;
-    bool rgb = buffer->control & (1 << 8);
+    _rgb = buffer->control & (1 << 8);
     bool bebo = buffer->control & (1 << 9);
-    uint_fast32_t words = buffer->size;
     uint_fast32_t word, color;
-    uint32_t ofs = buffer->upcurr;
+    uint32_t *ofs = buffer->ofs;
+    uint32_t *ofs_end = buffer->ofs_end;
+    uint32_t *out_end = out + buffer->size;
 
-    if (!words || !mem.ram.block) {
-        memset(out, 0, words * 4);
-        return;
-    }
+    if (!asic.valid || !buffer->size) { return; }
+    if (!ofs) { goto draw_black; }
 
     if (mode < 4) {
         uint_fast8_t bpp = 1 << mode;
         uint_fast32_t mask = (1 << bpp) - 1;
         uint_fast8_t bi = bebo ? 0 : 24;
         bool bepo = buffer->control & (1 << 10);
-        if (!bepo) {
-            bi ^= (8 - bpp);
-        }
+        if (!bepo) { bi ^= 8 - bpp; }
         do {
             uint_fast8_t bitpos = 32;
-            word = lcd_nextword(&ofs);
+            word = *ofs++;
             do {
                 color = lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask];
-                lcd_bgr16out(color + (color & 0xFFE0) + (color >> 10 & 0x20), rgb, &out);
-                words--;
-            } while (bitpos != 0);
-        } while (words != 0);
+                *out++ = lcd_bgr16out(c1555(color));
+            } while (bitpos && out != out_end);
+        } while (ofs < ofs_end);
 
     } else if (mode == 4) {
         do {
-            uint_fast8_t i = 2;
-            word = lcd_nextword(&ofs);
-            if (bebo) {
-                word = word << 16 | word >> 16;
-            }
-            do {
-                color = word;
-                lcd_bgr16out(color + (color & 0xFFE0) + (color >> 10 & 0x20), rgb, &out);
-                word >>= 16;
-                words--;
-            } while (--i != 0);
-        } while (words != 0);
+            word = *ofs++;
+            if (bebo) { word = word << 16 | word >> 16; }
+            *out++ = lcd_bgr16out(c1555(word));
+            if (out == out_end) break;
+            word >>= 16;
+            *out++ = lcd_bgr16out(c1555(word));
+        } while (ofs < ofs_end);
 
     } else if (mode == 5) {
         do {
-            word = lcd_nextword(&ofs);
-            lcd_bgr16out((word >> 8 & 0xF800) | (word >> 5 & 0x7E0) | (word >> 3 & 0x1F), rgb, &out);
-            words--;
-        } while (words != 0);
+            word = *ofs++;
+            *out++ = lcd_bgr16out(c565(word));
+        } while (ofs < ofs_end);
 
     } else if (mode == 6) {
         do {
-            uint_fast8_t i = 2;
-            word = lcd_nextword(&ofs);
-            if (bebo) {
-                word = word << 16 | word >> 16;
-            }
-            do {
-                lcd_bgr16out(word, rgb, &out);
-                word >>= 16;
-                words--;
-            } while (--i != 0);
-        } while (words != 0);
+            word = *ofs++;
+            if (bebo) { word = word << 16 | word >> 16; }
+            *out++ = lcd_bgr16out(word);
+            if (out == out_end) break;
+            word >>= 16;
+            *out++ = lcd_bgr16out(word);
+        } while (ofs < ofs_end);
 
-    } else {
+    } else { /* mode == 7 */
         do {
-            uint_fast8_t i = 2;
-            word = lcd_nextword(&ofs);
-            if (bebo) {
-                word = word << 16 | word >> 16;
-            }
-            do {
-                lcd_bgr16out((word << 4 & 0xF000) | (word << 3 & 0x780) | (word << 1 & 0x1E), rgb, &out);
-                word >>= 16;
-                words--;
-            } while (--i != 0);
-        } while (words != 0);
+            word = *ofs++;
+            if (bebo) { word = word << 16 | word >> 16; }
+            *out++ = lcd_bgr16out(c12(word));
+            if (out == out_end) break;
+            word >>= 16;
+            *out++ = lcd_bgr16out(c12(word));
+        } while (ofs < ofs_end);
     }
+
+draw_black:
+    while (out < out_end) { *out++ = 0xFF000000; }
 }
 
 static void lcd_event(int index) {
@@ -165,7 +149,7 @@ void lcd_reset(void) {
     sched.items[SCHED_LCD].second = -1;
     lcd.width = LCD_WIDTH;
     lcd.height = LCD_HEIGHT;
-    lcd.size = LCD_SIZE;
+    lcd_setptrs(&lcd);
     gui_console_printf("[CEmu] LCD reset.\n");
 }
 
@@ -207,6 +191,55 @@ static uint8_t lcd_read(const uint16_t pio, bool peek) {
     return 0;
 }
 
+void lcd_setptrs(lcd_state_t *x) {
+    uint8_t mode = x->control >> 1 & 7;
+    uint8_t *ofs_start, *ofs_end, *mem_end, *zero;
+    uint32_t dma_length;
+    uint32_t addr = x->upbase;
+
+    x->ofs = NULL;
+    x->zero = NULL;
+    x->ofs_end = NULL;
+    x->size = x->width * x->height;
+
+    if (!x->size) { return; }
+
+    if (addr < 0xD00000) {
+        mem_end = mem.flash.block + SIZE_FLASH;
+        ofs_start = mem.flash.block + addr;
+    } else if (addr < 0xE00000){
+        mem_end = mem.ram.block + SIZE_RAM;
+        ofs_start = mem.ram.block + addr - 0xD00000;
+    } else if (addr < 0xE30800) {
+        mem_end = (uint8_t *)lcd.palette + sizeof lcd.palette;
+        ofs_start = (uint8_t *)lcd.palette + addr - 0xE30200;
+    } else if (addr < 0xE30C00){
+        mem_end = (uint8_t *)lcd.crsrImage + sizeof lcd.crsrImage;
+        ofs_start = (uint8_t *)lcd.crsrImage + addr - 0xE30800;
+    } else {
+        return;
+    }
+
+    switch (mode) {
+        case 0: dma_length = x->size >> 3; break;
+        case 1: dma_length = x->size >> 2; break;
+        case 2: dma_length = x->size >> 1; break;
+        case 3: dma_length = x->size >> 0; break;
+        case 4: dma_length = x->size << 1; break;
+        case 5: dma_length = x->size << 2; break;
+        case 6: dma_length = x->size << 1; break;
+        case 7: dma_length = (x->size >> 1) + x->size; break;
+    }
+
+    if (ofs_start > mem_end) { return; }
+    ofs_end = ofs_start + dma_length;
+    if (ofs_end > mem_end) { zero = ofs_end; ofs_end = mem_end; }
+
+    x->ofs     = (uint32_t *)ofs_start;
+    x->ofs_end = (uint32_t *)ofs_end;
+    x->zero    = (uint32_t *)zero;
+}
+
 static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
     uint16_t index = pio & 0xFFC;
 
@@ -221,14 +254,12 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
         } else if (index < 0x014 && index >= 0x010) {
             write8(lcd.upbase, bit_offset, value);
             if (lcd.upbase & 7) {
-                gui_console_printf("[CEmu] Warning: Aligning LCD upper panel\n");
+                gui_console_printf("[CEmu] Warning: Aligning LCD panel\n");
             }
             lcd.upbase &= ~7U;
+            lcd_setptrs(&lcd);
         } else if (index < 0x018 && index >= 0x014) {
             write8(lcd.lpbase, bit_offset, value);
-            if (lcd.lpbase & 7) {
-                gui_console_printf("[CEmu] Warning: Aligning LCD lower panel\n");
-            }
             lcd.lpbase &= ~7U;
         } else if (index == 0x018) {
             if (byte_offset == 0) {
@@ -246,6 +277,7 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
             lcd.ris &= ~(value << bit_offset);
             intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
         }
+        lcd_setptrs(&lcd);
     } else if (index < 0x400) {
         write8(lcd.palette[pio >> 1 & 0xFF], (pio & 1) << 3, value);
     } else if (index < 0xC30) {
@@ -296,10 +328,12 @@ eZ80portrange_t init_lcd(void) {
 
 bool lcd_save(emu_image *s) {
     s->lcd = lcd;
+    s->lcd.ofs_end = s->lcd.ofs = NULL;
     return true;
 }
 
 bool lcd_restore(const emu_image *s) {
     lcd = s->lcd;
+    lcd_setptrs(&lcd);
     return true;
 }

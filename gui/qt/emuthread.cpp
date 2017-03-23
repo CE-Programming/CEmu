@@ -226,7 +226,7 @@ void EmuThread::run() {
     setTerminationEnabled();
 
     bool doReset = !doRestore;
-    bool success = emu_start(rom.toStdString().c_str(), doRestore ? image.toStdString().c_str() : NULL);
+    bool success = emu_load(rom.toStdString().c_str(), doRestore ? image.toStdString().c_str() : NULL);
 
     if (doRestore) {
         emit restored(success);

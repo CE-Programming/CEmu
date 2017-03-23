@@ -21,7 +21,7 @@
 #include "ui_mainwindow.h"
 
 #include "sendinghandler.h"
-#include "lcdpopout.h"
+#include "memoryvisualizer.h"
 #include "dockwidget.h"
 #include "searchwidget.h"
 #include "basiccodeviewerwindow.h"
@@ -48,14 +48,19 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     setStyleSheet("QMainWindow::separator{ width: 0px; height: 0px; }");
 
-    // Allow for 2001 lines of logging
-    ui->console->setMaximumBlockCount(2001);
+    // Allow for 2017 lines of logging
+    ui->console->setMaximumBlockCount(2017);
 
     setWindowTitle(QStringLiteral("CEmu | ") + opts.idString);
 
     // Register QtKeypadBridge for the virtual keyboard functionality
     keypadBridge = new QtKeypadBridge(this);
     connect(keypadBridge, &QtKeypadBridge::keyStateChanged, ui->keypadWidget, &KeypadWidget::changeKeyState);
+
+    installEventFilter(keypadBridge);
+    for (const auto &tab : ui->tabWidget->children()[0]->children()) {
+        tab->installEventFilter(keypadBridge);
+    }
 
     // Setup the file sending handler
     progressBar = new QProgressBar(this);
@@ -72,6 +77,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr);
     connect(&emu, &EmuThread::consoleErrStr, this, &MainWindow::consoleErrStr);
     connect(&emu, &EmuThread::started, this, &MainWindow::started, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::stopped, this, &MainWindow::emuStopped, Qt::QueuedConnection);
     connect(&emu, &EmuThread::restored, this, &MainWindow::restored, Qt::QueuedConnection);
     connect(&emu, &EmuThread::saved, this, &MainWindow::saved, Qt::QueuedConnection);
     connect(&emu, &EmuThread::isBusy, this, &MainWindow::isBusy, Qt::QueuedConnection);
@@ -147,7 +153,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->buttonRefreshCRC, &QPushButton::clicked, this, &MainWindow::refreshCRC);
 
     // Menubar Actions
-    ui->actionPopoutLCD->setVisible(false);
     connect(ui->actionSetup, &QAction::triggered, this, &MainWindow::runSetup);
     connect(ui->actionExit, &QAction::triggered, this, &MainWindow::close);
     connect(ui->actionScreenshot, &QAction::triggered, this, &MainWindow::screenshot);
@@ -324,7 +329,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     optLoadFiles(opts);
     changeFrameskip(settings->value(SETTING_CAPTURE_FRAMESKIP, 3).toUInt());
-    setLCDRefresh(settings->value(SETTING_SCREEN_REFRESH_RATE, 60).toUInt());
+    setLCDRefresh(settings->value(SETTING_SCREEN_REFRESH_RATE, 30).toUInt());
     setEmulatedSpeed(settings->value(SETTING_EMUSPEED, 10).toUInt());
     setFont(settings->value(SETTING_DEBUGGER_TEXT_SIZE, 9).toUInt());
     setAutoCheckForUpdates(settings->value(SETTING_AUTOUPDATE, false).toBool());
@@ -652,6 +657,7 @@ void MainWindow::exportRom() {
 
 void MainWindow::started(bool success) {
     if (success) {
+        ui->lcdWidget->setLCD(&lcd);
         setKeypadColor(settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
     } else {
         QMessageBox::critical(this, MSG_ERROR, tr("Could not load ROM image. Please see console for more information."));
@@ -660,6 +666,7 @@ void MainWindow::started(bool success) {
 
 void MainWindow::restored(bool success) {
     if (success) {
+        ui->lcdWidget->setLCD(&lcd);
         setKeypadColor(settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
     } else {
         QMessageBox::critical(this, MSG_ERROR, tr("Resuming failed.\nPlease reload the ROM from the 'Calculator' menu."));
@@ -732,9 +739,7 @@ void MainWindow::closeEvent(QCloseEvent *e) {
 
     speedUpdateTimer.stop();
 
-    if (!emu.stop()) {
-        qDebug("Thread Termination Failed.");
-    }
+    emu.stop();
 
     saveMiscSettings();
 
@@ -1421,6 +1426,10 @@ void MainWindow::updateTIOSView() {
     ui->vatView->moveCursor(QTextCursor::Start);
 }
 
+void MainWindow::emuStopped() {
+    stoppedEmu = true;
+}
+
 void MainWindow::resetCalculator() {
     if (isReceiving || isSending) {
         refreshVariableList();
@@ -1444,11 +1453,11 @@ void MainWindow::reloadROM() {
     }
 
     usingLoadedImage = false;
+
     if (emu.stop()) {
         emu.start();
-        consoleStr("[CEmu] Reload Successful.\n");
     } else {
-        consoleStr("[CEmu] Reload Failed.\n");
+        QMessageBox::critical(this, MSG_ERROR, "Could not stop");
     }
 }
 
@@ -1671,7 +1680,7 @@ void MainWindow::opContextMenu(const QPoint& posa) {
 }
 
 void MainWindow::createLCD() {
-    LCDPopout *p = new LCDPopout(this);
+    MemoryVisualizer *p = new MemoryVisualizer(this);
     p->setAttribute(Qt::WA_DeleteOnClose);
     p->show();
 }

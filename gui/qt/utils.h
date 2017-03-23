@@ -29,8 +29,6 @@ extern QString bppModeStr[];
 extern QByteArray *bppArray;
 
 // bpp conversions
-uint8_t int2Bpp(int in);
-QString bpp2Str(uint8_t bpp);
 QString sendingROM(QDragEnterEvent *e, bool *value);
 
 // integer to hex strings and vice versa

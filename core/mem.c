@@ -21,15 +21,14 @@ void mem_init(void) {
     /* Allocate FLASH memory */
     mem.flash.block = (uint8_t*)malloc(SIZE_FLASH);
     memset(mem.flash.block, 0xFF, SIZE_FLASH);
-    mem.flash.size = SIZE_FLASH;
 
     for (i = 0; i < 8; i++) {
-        mem.flash.sector_8k[i].ptr = mem.flash.block + (i*SIZE_FLASH_SECTOR_8K);
+        mem.flash.sector_8k[i].ptr = mem.flash.block + i * SIZE_FLASH_SECTOR_8K;
         mem.flash.sector_8k[i].locked = true;
     }
 
     for (i = 0; i < 64; i++) {
-        mem.flash.sector[i].ptr = mem.flash.block + (i*SIZE_FLASH_SECTOR_64K);
+        mem.flash.sector[i].ptr = mem.flash.block + i * SIZE_FLASH_SECTOR_64K;
         mem.flash.sector[i].locked = false;
     }
 
@@ -38,7 +37,7 @@ void mem_init(void) {
     mem.flash.locked = true;
 
     /* Allocate RAM */
-    mem.ram.block = (uint8_t*)calloc(SIZE_RAM, sizeof(uint8_t));
+    mem.ram.block = (uint8_t*)calloc(SIZE_RAM, 1);
 
     mem.flash.write_index = 0;
     mem.flash.command = NO_COMMAND;
@@ -46,15 +45,16 @@ void mem_init(void) {
 }
 
 void mem_free(void) {
-    if (mem.ram.block) {
-        free(mem.ram.block);
-        mem.ram.block = NULL;
-    }
-    if (mem.flash.block) {
-        free(mem.flash.block);
-        mem.flash.block = NULL;
-    }
+    free(mem.ram.block);
+    mem.ram.block = NULL;
+    free(mem.flash.block);
+    mem.flash.block = NULL;
     gui_console_printf("[CEmu] Freed Memory.\n");
+}
+
+void mem_reset(void) {
+    memset(mem.ram.block, 0, SIZE_RAM);
+    gui_console_printf("[CEmu] Memory Reset.\n");
 }
 
 static uint32_t flash_block(uint32_t *addr, uint32_t *size) {
@@ -80,6 +80,7 @@ static uint32_t addr_block(uint32_t *addr, int32_t size, void **block, uint32_t 
     if (*addr < 0xD00000) {
         flash_block(addr, block_size);
         *block = mem.flash.block;
+        *block_size = SIZE_FLASH;
     } else if (*addr < 0xE00000) {
         *addr -= 0xD00000;
         *block = mem.ram.block;

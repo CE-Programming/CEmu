@@ -40,8 +40,7 @@ typedef struct {
     uint8_t read_index;
     flash_sector_state_t sector_8k[8];
     flash_sector_state_t sector[64];
-    uint8_t *block;     /* Flash mem */
-    uint32_t size;
+    uint8_t *block;       /* Flash mem */
 
     /* Internal */
     uint8_t command;
@@ -69,6 +68,7 @@ extern mem_state_t mem;
 /* Available Functions */
 void mem_init(void);
 void mem_free(void);
+void mem_reset(void);
 
 uint8_t *phys_mem_ptr(uint32_t addr, int32_t size);
 uint8_t *virt_mem_cpy(uint8_t *buf, uint32_t addr, int32_t size);

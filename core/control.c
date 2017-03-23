@@ -110,7 +110,7 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
                 default:
                     break;
             }
-            gui_console_printf("[CEmu] CPU clock rate set to: %d MHz\n", 6*(1<<(control.cpuSpeed & 3)));
+            gui_console_printf("[CEmu] CPU clock rate: %d MHz\n", 6 * (1 << (control.cpuSpeed & 3)));
             break;
         case 0x06:
             mem.flash.locked = (byte & 4) == 0;

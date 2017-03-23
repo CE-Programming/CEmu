@@ -27,52 +27,6 @@ bool fileExists(const QString& ptath) {
     }
 }
 
-uint8_t int2Bpp(int in) {
-    uint8_t bpp;
-    switch(in) {
-        case 1:
-            bpp = 0; break;
-        case 2:
-            bpp = 1; break;
-        case 4:
-            bpp = 2; break;
-        case 8:
-            bpp = 3; break;
-        case 24:
-            bpp = 5; break;
-        case 16:
-            bpp = 6; break;
-        case 12:
-            bpp = 7; break;
-        default:
-            bpp = 6; break;
-    }
-    return bpp;
-}
-
-QString bpp2Str(uint8_t bpp) {
-    QString str;
-    switch(bpp) {
-        case 0:
-            str = "01"; break;
-        case 1:
-            str = "02"; break;
-        case 2:
-            str = "04"; break;
-        case 3:
-            str = "08"; break;
-        case 4:
-            str = "16"; break;
-        case 5:
-            str = "24"; break;
-        case 6:
-            str = "16"; break;
-        case 7:
-            str = "12"; break;
-    }
-    return str;
-}
-
 int hex2int(QString str) {
     return (int)strtol(str.toStdString().c_str(), nullptr, 16);
 }

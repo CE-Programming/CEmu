@@ -308,6 +308,9 @@
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
+               </property>
                <property name="text">
                 <string>GIF</string>
                </property>
@@ -326,6 +329,9 @@
                  <width>160</width>
                  <height>16777215</height>
                 </size>
+               </property>
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
                </property>
                <property name="text">
                 <string>PNG</string>
@@ -412,6 +418,9 @@
                  <height>16777215</height>
                 </size>
                </property>
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
+               </property>
                <property name="minimum">
                 <number>1</number>
                </property>
@@ -473,6 +482,9 @@
                  <width>88</width>
                  <height>0</height>
                 </size>
+               </property>
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
                </property>
                <property name="text">
                 <string>Record GIF</string>
@@ -538,6 +550,9 @@
            </property>
            <item row="0" column="1">
             <widget class="QCheckBox" name="checkUpdates">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="text">
               <string>Automatically check for updates</string>
              </property>
@@ -550,6 +565,9 @@
             <widget class="QCheckBox" name="checkSaveRestore">
              <property name="enabled">
               <bool>true</bool>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
              </property>
              <property name="text">
               <string>Automatically save and restore state</string>
@@ -566,6 +584,9 @@
              </property>
              <item>
               <widget class="QCheckBox" name="checkAlwaysOnTop">
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
+               </property>
                <property name="text">
                 <string>Always show on top of other windows</string>
                </property>
@@ -591,6 +612,9 @@
            </item>
            <item row="1" column="1">
             <widget class="QCheckBox" name="checkPortable">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="text">
               <string>Use portable configuration</string>
              </property>
@@ -624,6 +648,9 @@
             <layout class="QHBoxLayout" name="horizontalLayout_21">
              <item>
               <widget class="QCheckBox" name="checkSkin">
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
+               </property>
                <property name="text">
                 <string>Skin</string>
                </property>
@@ -671,13 +698,13 @@
                 <string> fps</string>
                </property>
                <property name="minimum">
-                <number>5</number>
+                <number>1</number>
                </property>
                <property name="maximum">
                 <number>120</number>
                </property>
                <property name="value">
-                <number>60</number>
+                <number>30</number>
                </property>
                <property name="displayIntegerBase">
                 <number>10</number>
@@ -731,6 +758,9 @@
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="text">
               <string>Throttle:</string>
              </property>
@@ -751,6 +781,9 @@
            </item>
            <item>
             <widget class="QSlider" name="emulationSpeed">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="minimum">
               <number>0</number>
              </property>
@@ -815,6 +848,9 @@
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="text">
               <string notr="true">CEmu</string>
              </property>
@@ -834,6 +870,9 @@
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="text">
               <string notr="true">TilEm</string>
              </property>
@@ -850,6 +889,9 @@
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="text">
               <string notr="true">Wabbitemu</string>
              </property>
@@ -865,6 +907,9 @@
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
              </property>
              <property name="text">
               <string notr="true">jsTIfied</string>
@@ -900,6 +945,9 @@
            </property>
            <item row="5" column="1">
             <widget class="QLineEdit" name="savedDebugPath">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="frame">
               <bool>false</bool>
              </property>
@@ -910,6 +958,9 @@
            </item>
            <item row="4" column="1">
             <widget class="QLineEdit" name="savedImagePath">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="frame">
               <bool>false</bool>
              </property>
@@ -939,6 +990,9 @@
                <height>0</height>
               </size>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="text">
               <string>Change path</string>
              </property>
@@ -961,6 +1015,9 @@
                <height>0</height>
               </size>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="text">
               <string>Setup wizard</string>
              </property>
@@ -973,6 +1030,9 @@
             <widget class="QLineEdit" name="settingsPath">
              <property name="enabled">
               <bool>true</bool>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
              </property>
              <property name="frame">
               <bool>false</bool>
@@ -1017,6 +1077,9 @@
                <height>0</height>
               </size>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="text">
               <string>Change path</string>
              </property>
@@ -1027,6 +1090,9 @@
            </item>
            <item row="0" column="1">
             <widget class="QLineEdit" name="rompathView">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="frame">
               <bool>false</bool>
              </property>
@@ -1092,6 +1158,9 @@
                <height>27</height>
               </size>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="styleSheet">
               <string notr="true">QPushButton {  background-color: rgb(25, 25, 25); border-radius:6px; }
 QPushButton:pressed { 
@@ -1123,6 +1192,9 @@ QPushButton:pressed {
                <width>27</width>
                <height>27</height>
               </size>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
              </property>
              <property name="styleSheet">
               <string notr="true">QPushButton {  background-color: rgb(124, 135, 142); border-radius:6px; }
@@ -1247,6 +1319,9 @@ QPushButton:pressed {
                </disabled>
               </palette>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="styleSheet">
               <string notr="true">QPushButton {  background-color: rgb(219, 219, 219); border-radius:6px; }
 QPushButton:pressed { 
@@ -1278,6 +1353,9 @@ QPushButton:pressed {
                <width>27</width>
                <height>27</height>
               </size>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
              </property>
              <property name="styleSheet">
               <string notr="true">QPushButton {  background-color: rgb(237, 237, 237); border-radius:6px; }
@@ -1402,6 +1480,9 @@ QPushButton:pressed {
                </disabled>
               </palette>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="styleSheet">
               <string notr="true">QPushButton {  background-color: rgb(210, 235, 232); border-radius:6px; }
 QPushButton:pressed { 
@@ -1433,6 +1514,9 @@ QPushButton:pressed {
                <width>27</width>
                <height>27</height>
               </size>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
              </property>
              <property name="styleSheet">
               <string notr="true">QPushButton {  background-color: rgb(216, 211, 182); border-radius:6px; }
@@ -1466,6 +1550,9 @@ QPushButton:pressed {
                <height>27</height>
               </size>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="styleSheet">
               <string notr="true">QPushButton {  background-color: rgb(0, 60, 113); border-radius:6px; }QPushButton:pressed { 
 	border: 3px solid gray;
@@ -1497,6 +1584,9 @@ QPushButton:pressed {
                <width>27</width>
                <height>27</height>
               </size>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
              </property>
              <property name="styleSheet">
               <string notr="true">QPushButton { background-color: rgb(56, 94, 157); border-radius:6px; }
@@ -1530,6 +1620,9 @@ QPushButton:pressed {
                <height>27</height>
               </size>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="styleSheet">
               <string notr="true">QPushButton {  background-color: rgb(0, 119, 200); border-radius:6px; }
 QPushButton:pressed { 
@@ -1561,6 +1654,9 @@ QPushButton:pressed {
                <width>27</width>
                <height>27</height>
               </size>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
              </property>
              <property name="styleSheet">
               <string notr="true">QPushButton {  background-color: rgb(131, 0, 101); border-radius:6px; }
@@ -1594,6 +1690,9 @@ QPushButton:pressed {
                <height>27</height>
               </size>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="styleSheet">
               <string notr="true">QPushButton {  background-color: rgb(171, 35, 40); border-radius:6px; }
 QPushButton:pressed { 
@@ -1625,6 +1724,9 @@ QPushButton:pressed {
                <width>27</width>
                <height>27</height>
               </size>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
              </property>
              <property name="styleSheet">
               <string notr="true">QPushButton {  background-color: rgb(223, 25, 149); border-radius:6px; }
@@ -1749,6 +1851,9 @@ QPushButton:pressed {
                </disabled>
               </palette>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="styleSheet">
               <string notr="true">QPushButton {  background-color: rgb(253, 109, 153); border-radius:6px; }
 QPushButton:pressed { 
@@ -1827,6 +1932,9 @@ QPushButton:pressed {
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="focusPolicy">
+             <enum>Qt::NoFocus</enum>
+            </property>
             <property name="text">
              <string>Stop</string>
             </property>
@@ -1846,6 +1954,9 @@ QPushButton:pressed {
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
+            </property>
+            <property name="focusPolicy">
+             <enum>Qt::NoFocus</enum>
             </property>
             <property name="text">
              <string>Step</string>
@@ -1867,6 +1978,9 @@ QPushButton:pressed {
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="focusPolicy">
+             <enum>Qt::NoFocus</enum>
+            </property>
             <property name="text">
              <string>Step Over</string>
             </property>
@@ -1887,6 +2001,9 @@ QPushButton:pressed {
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="focusPolicy">
+             <enum>Qt::NoFocus</enum>
+            </property>
             <property name="text">
              <string>Step Next</string>
             </property>
@@ -1906,6 +2023,9 @@ QPushButton:pressed {
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
+            </property>
+            <property name="focusPolicy">
+             <enum>Qt::NoFocus</enum>
             </property>
             <property name="text">
              <string>Step Out</string>
@@ -2045,6 +2165,9 @@ QPushButton:pressed {
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
+                </property>
                 <property name="text">
                  <string>Goto</string>
                 </property>
@@ -2085,6 +2208,9 @@ QPushButton:pressed {
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
+                </property>
                 <property name="text">
                  <string>Load...</string>
                 </property>
@@ -2092,6 +2218,9 @@ QPushButton:pressed {
               </item>
               <item>
                <widget class="QPushButton" name="buttonRefreshEquates">
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
+                </property>
                 <property name="text">
                  <string>Refresh</string>
                 </property>
@@ -2104,6 +2233,9 @@ QPushButton:pressed {
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
+                </property>
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
                 </property>
                 <property name="text">
                  <string>Clear</string>
@@ -2257,6 +2389,9 @@ QPushButton:pressed {
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
+                </property>
                 <property name="text">
                  <string>Add</string>
                 </property>
@@ -2273,6 +2408,9 @@ QPushButton:pressed {
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
+                </property>
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
                 </property>
                 <property name="text">
                  <string>Remove</string>
@@ -2321,6 +2459,9 @@ QPushButton:pressed {
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
+                </property>
                 <property name="text">
                  <string>Add</string>
                 </property>
@@ -2337,6 +2478,9 @@ QPushButton:pressed {
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
+                </property>
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
                 </property>
                 <property name="text">
                  <string>Remove</string>
@@ -2500,6 +2644,9 @@ QPushButton:pressed {
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
+                </property>
                 <property name="text">
                  <string>Add</string>
                 </property>
@@ -2516,6 +2663,9 @@ QPushButton:pressed {
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
+                </property>
+                <property name="focusPolicy">
+                 <enum>Qt::NoFocus</enum>
                 </property>
                 <property name="text">
                  <string>Remove</string>
@@ -2669,6 +2819,9 @@ QPushButton:pressed {
                </property>
                <item row="2" column="1">
                 <widget class="QSlider" name="sliderBattery">
+                 <property name="focusPolicy">
+                  <enum>Qt::ClickFocus</enum>
+                 </property>
                  <property name="minimum">
                   <number>0</number>
                  </property>
@@ -2727,6 +2880,9 @@ QPushButton:pressed {
                     </colorrole>
                    </disabled>
                   </palette>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
                  </property>
                  <property name="text">
                   <string>Charging</string>
@@ -2800,6 +2956,9 @@ QPushButton:pressed {
                    <height>16777215</height>
                   </size>
                  </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::ClickFocus</enum>
+                 </property>
                  <property name="inputMask">
                   <string notr="true">&gt;HHHHHH</string>
                  </property>
@@ -2827,6 +2986,9 @@ QPushButton:pressed {
                    <width>80</width>
                    <height>16777215</height>
                   </size>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::ClickFocus</enum>
                  </property>
                  <property name="inputMask">
                   <string notr="true">&gt;HHHHHH</string>
@@ -2964,33 +3126,52 @@ QPushButton:pressed {
                   </palette>
                  </property>
                  <property name="text">
-                  <string>BPP mode</string>
+                  <string>BPP</string>
                  </property>
                 </widget>
                </item>
                <item row="3" column="1">
-                <widget class="QLineEdit" name="bppView">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>60</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>80</width>
-                   <height>16777215</height>
-                  </size>
-                 </property>
-                 <property name="inputMask">
-                  <string>&gt;99</string>
-                 </property>
+                <widget class="QComboBox" name="bppView">
+                 <item>
+                  <property name="text">
+                   <string>1</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>2</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>4</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>8</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>16</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>24</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>16 (5:6:5)</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>12 (4:4:4)</string>
+                  </property>
+                 </item>
                 </widget>
                </item>
               </layout>
@@ -3047,6 +3228,9 @@ QPushButton:pressed {
                    </disabled>
                   </palette>
                  </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
                  <property name="text">
                   <string>PWR</string>
                  </property>
@@ -3097,6 +3281,9 @@ QPushButton:pressed {
                    </disabled>
                   </palette>
                  </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
                  <property name="text">
                   <string>BEPO</string>
                  </property>
@@ -3141,6 +3328,9 @@ QPushButton:pressed {
                    </disabled>
                   </palette>
                  </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
                  <property name="text">
                   <string>BGR</string>
                  </property>
@@ -3184,6 +3374,9 @@ QPushButton:pressed {
                     </colorrole>
                    </disabled>
                   </palette>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
                  </property>
                  <property name="text">
                   <string>BEBO</string>
@@ -3247,6 +3440,9 @@ QPushButton:pressed {
                      <verstretch>0</verstretch>
                     </sizepolicy>
                    </property>
+                   <property name="focusPolicy">
+                    <enum>Qt::ClickFocus</enum>
+                   </property>
                    <property name="maximum">
                     <number>255</number>
                    </property>
@@ -3306,6 +3502,9 @@ QPushButton:pressed {
                </property>
                <item row="0" column="0">
                 <widget class="QCheckBox" name="checkSaveLoadDebug">
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
                  <property name="text">
                   <string>Automatically save and restore debug state</string>
                  </property>
@@ -3313,6 +3512,9 @@ QPushButton:pressed {
                </item>
                <item row="1" column="0">
                 <widget class="QCheckBox" name="checkDataCol">
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
                  <property name="text">
                   <string>Show Data column</string>
                  </property>
@@ -3323,6 +3525,9 @@ QPushButton:pressed {
                </item>
                <item row="1" column="1">
                 <widget class="QCheckBox" name="checkAddSpace">
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
                  <property name="text">
                   <string>Opcode / Operand space</string>
                  </property>
@@ -3330,6 +3535,9 @@ QPushButton:pressed {
                </item>
                <item row="0" column="1">
                 <widget class="QCheckBox" name="checkDebugResetTrigger">
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
                  <property name="text">
                   <string>Open debugger on reset or nmi</string>
                  </property>
@@ -3337,6 +3545,9 @@ QPushButton:pressed {
                </item>
                <item row="2" column="0">
                 <widget class="QCheckBox" name="checkBox">
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
                  <property name="text">
                   <string>Add DMA cycles to cycle counters</string>
                  </property>
@@ -3344,6 +3555,9 @@ QPushButton:pressed {
                </item>
                <item row="2" column="1">
                 <widget class="QCheckBox" name="checkDisableSoftCommands">
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
                  <property name="text">
                   <string>Enable software commands</string>
                  </property>
@@ -3522,6 +3736,9 @@ QPushButton:pressed {
                    </disabled>
                   </palette>
                  </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
                  <property name="text">
                   <string notr="true">3</string>
                  </property>
@@ -3565,6 +3782,9 @@ QPushButton:pressed {
                     </colorrole>
                    </disabled>
                   </palette>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
                  </property>
                  <property name="text">
                   <string notr="true">n</string>
@@ -3616,6 +3836,9 @@ QPushButton:pressed {
                    </disabled>
                   </palette>
                  </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
                  <property name="text">
                   <string notr="true">5</string>
                  </property>
@@ -3659,6 +3882,9 @@ QPushButton:pressed {
                     </colorrole>
                    </disabled>
                   </palette>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
                  </property>
                  <property name="text">
                   <string notr="true">s</string>
@@ -3704,6 +3930,9 @@ QPushButton:pressed {
                    </disabled>
                   </palette>
                  </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
                  <property name="text">
                   <string notr="true">z</string>
                  </property>
@@ -3747,6 +3976,9 @@ QPushButton:pressed {
                     </colorrole>
                    </disabled>
                   </palette>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
                  </property>
                  <property name="text">
                   <string notr="true">p/v</string>
@@ -3792,6 +4024,9 @@ QPushButton:pressed {
                    </disabled>
                   </palette>
                  </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
                  <property name="text">
                   <string notr="true">c</string>
                  </property>
@@ -3835,6 +4070,9 @@ QPushButton:pressed {
                     </colorrole>
                    </disabled>
                   </palette>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
                  </property>
                  <property name="text">
                   <string>h</string>
@@ -5498,6 +5736,9 @@ QPushButton:pressed {
                  </item>
                  <item row="1" column="2">
                   <widget class="QPushButton" name="buttonZero">
+                   <property name="focusPolicy">
+                    <enum>Qt::NoFocus</enum>
+                   </property>
                    <property name="text">
                     <string>Zero Cycles</string>
                    </property>
@@ -6340,6 +6581,9 @@ QPushButton:pressed {
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
              <property name="undoRedoEnabled">
               <bool>false</bool>
              </property>
@@ -6376,6 +6620,9 @@ QPushButton:pressed {
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
              </property>
              <property name="undoRedoEnabled">
               <bool>false</bool>
@@ -7679,7 +7926,7 @@ QPushButton:pressed {
      <normaloff>:/icons/resources/icons/lcd.png</normaloff>:/icons/resources/icons/lcd.png</iconset>
    </property>
    <property name="text">
-    <string>Popout LCD</string>
+    <string>Memory Visualizer</string>
    </property>
   </action>
   <action name="actionExportDebugger">

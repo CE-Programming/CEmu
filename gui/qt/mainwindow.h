@@ -17,7 +17,6 @@
 #include "lcdwidget.h"
 #include "romselection.h"
 #include "emuthread.h"
-#include "lcdpopout.h"
 #include "keyhistory.h"
 #include "keypad/qtkeypadbridge.h"
 #include "qhexedit/qhexedit.h"
@@ -44,6 +43,7 @@ public slots:
     // Saved/Restored State
     void saved(bool);
     void started(bool);
+    void emuStopped();
     void restored(bool);
 
     // ROM Image setting
@@ -425,6 +425,7 @@ private:
     bool firstShow = false;
     bool useDataCol;
     bool loadedCEmuBootImage = false;
+    bool stoppedEmu = false;
     static const int WindowStateVersion = 0;
 
     // Settings definitions

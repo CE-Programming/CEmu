@@ -26,8 +26,8 @@ asic_state_t asic;
 
 #define MAX_RESET_PROCS 20
 
-void (*reset_procs[MAX_RESET_PROCS])(void);
-unsigned int reset_proc_count;
+static void (*reset_procs[MAX_RESET_PROCS])(void);
+static unsigned int reset_proc_count;
 
 static void add_reset_proc(void (*proc)(void)) {
     if (reset_proc_count == MAX_RESET_PROCS) {
@@ -58,6 +58,7 @@ static void plug_devices(void) {
     reset_proc_count = 0;
 
     /* Populate reset callbacks */
+    add_reset_proc(mem_reset);
     add_reset_proc(lcd_reset);
     add_reset_proc(keypad_reset);
     add_reset_proc(gpt_reset);
@@ -79,12 +80,12 @@ void asic_init(void) {
     asic.shipModeEnabled = false;
 
     plug_devices();
+    asic.valid = true;
     gui_console_printf("[CEmu] Initialized ASIC...\n");
 }
 
 void asic_free(void) {
-    /* make sure the LCD doesn't use unalloced mem */
-    lcd.upcurr = lcd.upbase = 0;
+    asic.valid = false;
     mem_free();
     gui_console_printf("[CEmu] Freed ASIC.\n");
 }
