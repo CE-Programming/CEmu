@@ -139,11 +139,7 @@ void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
 
     font.setBold(true);
     font.setPixelSize(5);
-#ifdef Q_OS_WIN
-    font.setWeight(QFont::Black);
-#else
     font.setStretch(QFont::SemiCondensed);
-#endif
 
     mConfig.labelFont   = font,
     mConfig.secondFont  = font,
