@@ -231,7 +231,7 @@ void lcd_setptrs(lcd_state_t *x) {
         case 7: dma_length = (x->size >> 1) + x->size; break;
     }
 
-    if (ofs_start > mem_end) { return; }
+    if (ofs_start >= mem_end) { return; }
     ofs_end = ofs_start + dma_length;
     if (ofs_end > mem_end) { zero = ofs_end; ofs_end = mem_end; }
 
