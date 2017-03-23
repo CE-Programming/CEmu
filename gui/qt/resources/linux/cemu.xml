@@ -31,7 +31,6 @@
     <!-- NEW types start here -->
     <glob pattern="*.8ca" /><!-- TI-84 Plus CE Image Var -->
     <glob pattern="*.8ci" /><!-- TI-84 Plus CE Pic Var -->
-    <glob pattern="*.8ci" /><!-- TI-84 Plus CE Pic Var -->
     <!-- TI-84 Plus CE App (8ek) located below -->
     <magic>
       <match type="string" offset="0" value="**TI83F*\x1a\x0a\x00">
@@ -68,7 +67,7 @@
   </mime-type>
   <mime-type type="application/x-tice-os">
     <comment>TI-84 Plus CE / TI-83 Premium CE operating system</comment>
-    <glob pattern="*.8cu" />
+    <glob pattern="*.8eu" />
     <magic>
       <match type="string" offset="0" value="**TIFL**">
         <match type="big16" offset="48" value="0x7323" />
