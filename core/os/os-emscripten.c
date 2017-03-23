@@ -101,11 +101,11 @@ void EMSCRIPTEN_KEEPALIVE set_lcd_js_ptr(uint32_t * ptr) {
     buf_lcd_js = ptr;
 }
 
-void paint_LCD_to_JS()
+void EMSCRIPTEN_KEEPALIVE paint_LCD_to_JS()
 {
     if (lcd.control & 0x800) { // LCD on
         lcd_drawframe(buf_lcd_js, &lcd);
-        EM_ASM(repaint());
+        //EM_ASM(repaint());
     } else { // LCD off
         EM_ASM(drawLCDOff());
     }
@@ -140,11 +140,11 @@ int main(int argc, char* argv[])
             initLCD();
             enableGUI();
         );
-        lcd_event_gui_callback = paint_LCD_to_JS;
+        //lcd_event_gui_callback = paint_LCD_to_JS;
         emu_loop(true);
     } else {
         EM_ASM(
-            lcd_event_gui_callback = NULL;
+            //lcd_event_gui_callback = NULL;
             emul_is_inited = false;
             disableGUI();
             alert("Error: Couldn't start emulation ; bad ROM?");
@@ -155,7 +155,7 @@ int main(int argc, char* argv[])
     puts("Finished");
 
     EM_ASM(
-        lcd_event_gui_callback = NULL;
+        //lcd_event_gui_callback = NULL;
         emul_is_inited = false;
         disableGUI();
     );
