@@ -26,13 +26,13 @@ Windows | macOS | Linux
 * Custom emulation speed/throttling
 * Code stepping, jumping...
 * R/W/X breakpoints
-* eZ80 disassembler
+* eZ80 disassembler (with equates support)
 * Profiler (WIP-branch)
 * Port monitor/editor
 * Memory viewer/editor
 * CPU state/registers viewer/editor
 * LCD state/parameters viewer/editor
-* Multiple virtual LCDs with custom parameters
+* Memory visualizer (as fully customizable virtual LCDs)
 * Stack viewer
 * OP1-6 viewer
 * VAT viewer
@@ -42,20 +42,20 @@ Windows | macOS | Linux
 
 ## Downloads
 No stable binaries yet as the code keeps changing these days! When available, they'll be here, though: https://github.com/CE-Programming/CEmu/releases  
-Recent Windows binaries [available here](https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/git/) (credits to alberthro).  
+Recent Windows binaries available [here](https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/git/) or [here](https://jacobly.com/CEmu/) (credits to alberthro and jacobly).  
 _Note that Release builds have an update checking feature, which is disabled in development builds._
 
 ## How to build
 After downloading the source (you can clone the repo or just [get the zip](https://github.com/CE-Programming/CEmu/archive/master.zip)):
 
 1. Get the [latest Qt5 SDK](https://www.qt.io/download-open-source/#section-3) for your OS *(Note: on Windows, the MinGW variation of the Qt SDK is preferred)*.  
-If you're on Ubuntu, you may need to run this command afterwards, too: `sudo apt-get install git qt5-default`
+If you're on Ubuntu, you may need to force update your PATH to have Qt's `bin/` folder prepended. (You might need to run this command, too: `sudo apt-get install git qt5-default`)
 
 2. Now you have two options:
   * Open the .pro file with Qt Creator, set it up (default project settings should be fine), and hit Build. *(Note: you can tell make to use -j4 in the project settings)*
-  * In a shell, `cd` to the project's *./gui/qt/* folder and type `qmake -r CEmu.pro; make`
+  * In a shell, `cd` to the project's `/gui/qt/` folder and type `qmake -r CEmu.pro && make`
 
-_Note: Debugging support is somewhat core-related but is only built conditionally (since embedded targets probably won't need it). To enable it, define `DEBUG_SUPPORT`. The Qt GUI does this in the .pro file._  
+_Note: Debugging support is somewhat core-related but is only built when `DEBUG_SUPPORT` is defined. The Qt GUI does this in the .pro file._  
 _Note 2: If you encounter a build error with something like `lto-wrapper failed`, try removing the -flto option in the .pro file and rebuild (`qmake` etc.). We're not quite sure why this is happening._
 
 You're welcome to [report any bugs](https://github.com/CE-Programming/CEmu/issues) you may encounter, and if you want to help, tell us, or send patches / pull requests!
