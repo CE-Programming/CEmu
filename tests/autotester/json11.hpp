@@ -347,9 +347,7 @@ protected:
         return m_value == static_cast<const Value<tag, T> *>(other)->m_value;
     }
     bool less(const JsonValue * other) const override {
-        if constexpr (tag != Json::NUL)
-            return m_value < static_cast<const Value<tag, T> *>(other)->m_value;
-        return false;
+        return m_value < static_cast<const Value<tag, T> *>(other)->m_value;
     }
 
     const T m_value;
@@ -401,6 +399,31 @@ class JsonObject final : public Value<Json::OBJECT, Json::object> {
 public:
     explicit JsonObject(const Json::object &value) : Value(value) {}
     explicit JsonObject(Json::object &&value)      : Value(move(value)) {}
+};
+
+template <>
+class Value<Json::NUL, std::nullptr_t> : public JsonValue {
+protected:
+
+    // Constructors
+    explicit Value(const std::nullptr_t &value) : m_value(value) {}
+    explicit Value(std::nullptr_t &&value)      : m_value(move(value)) {}
+
+    // Get type tag
+    Json::Type type() const override {
+        return Json::NUL;
+    }
+
+    // Comparisons
+    bool equals(const JsonValue * other) const override {
+        return m_value == static_cast<const Value *>(other)->m_value;
+    }
+    bool less(const JsonValue *) const override {
+        return false;
+    }
+
+    const std::nullptr_t m_value;
+    void dump(string &out) const override { json11::dump(m_value, out); }
 };
 
 class JsonNull final : public Value<Json::NUL, std::nullptr_t> {
