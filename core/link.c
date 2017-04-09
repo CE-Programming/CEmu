@@ -144,7 +144,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
 
     // make sure the checksum is correct
     checksum = 0;
-    for (i = 0x37; i<lSize-2; i++) {
+    for (i = 0x37; i<(unsigned int)lSize-2; i++) {
         checksum = (checksum + fgetc(file)) & 0xffff;
     }
 

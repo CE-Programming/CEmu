@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
     bool success;
     emulationPaused = false;
 
-    success = emu_start("CE.rom", NULL);
+    success = emu_load("CE.rom", NULL);
 
     if (success) {
         debugger_init();
