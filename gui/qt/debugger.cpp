@@ -1389,6 +1389,9 @@ void MainWindow::equatesAddEquate(QString name, QString addrStr) {
 }
 
 void MainWindow::updateDisasmView(const int sentBase, const bool newPane) {
+    if (!inDebugger) {
+        return;
+    }
     addressPane = sentBase;
     fromPane = newPane;
     disasmOffsetSet = false;
