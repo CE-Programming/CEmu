@@ -142,10 +142,6 @@ void EmuThread::setDebugStepOutMode() {
     inDebugger = false;
 }
 
-void gui_set_busy(bool busy) {
-    emit emu_thread->isBusy(busy);
-}
-
 // Called occasionally, only way to do something in the same thread the emulator runs in.
 void EmuThread::doStuff() {
     std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();

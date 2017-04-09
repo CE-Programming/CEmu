@@ -54,26 +54,26 @@ static const std::unordered_map<std::string, coord2d> valid_keys = {
 };
 
 // Those aren't related to physical keys - they're keycodes for the OS.
-#define CE_KEY_Enter    0x05
-#define CE_KEY_Clear    0x09
-#define CE_KEY_prgm     0xDA
-#define CE_KEY_Asm      0x9CFC
-#define CE_KEY_Classic  0xD3FB
+#define CE_KEY_ENTER    0x05
+#define CE_KEY_CLEAR    0x09
+#define CE_KEY_PRGM     0xDA
+#define CE_KEY_ASM      0x9CFC
+#define CE_KEY_CLASSIC  0xD3FB
 
 // A few needed locations
-#define CE_kbdKey       0xD0058C
-#define CE_keyExtend    0xD0058E
+#define CE_KBDKEY       0xD0058C
+#define CE_KEYEXTEND    0xD0058E
 void sendKey(uint16_t key)
 {
     cemucore::sendKey(key);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(90));
     DO_STEP_CALLBACK();
 }
 
 void sendLetterKeyPress(char letter)
 {
     cemucore::sendLetterKeyPress(letter);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(90));
     DO_STEP_CALLBACK();
 }
 
@@ -84,15 +84,15 @@ static const std::unordered_map<std::string, seq_cmd_action_func_t> valid_action
     {
         "launch", [] {
             // Assuming we're in the home screen...
-            sendKey(CE_KEY_Clear);
+            sendKey(CE_KEY_CLEAR);
             if (config.target.isASM) {
-                sendKey(CE_KEY_Asm);
+                sendKey(CE_KEY_ASM);
             }
-            sendKey(CE_KEY_prgm);
+            sendKey(CE_KEY_PRGM);
             for (const char& c : config.target.name) {
                 sendLetterKeyPress(c); // type program name
             }
-            sendKey(CE_KEY_Enter);
+            sendKey(CE_KEY_ENTER);
         }
     },
     {
@@ -104,9 +104,9 @@ static const std::unordered_map<std::string, seq_cmd_action_func_t> valid_action
     {
         "useClassic", [] {
             // Assuming we're in the home screen...
-            sendKey(CE_KEY_Clear);
-            sendKey(CE_KEY_Classic);
-            sendKey(CE_KEY_Enter);
+            sendKey(CE_KEY_CLEAR);
+            sendKey(CE_KEY_CLASSIC);
+            sendKey(CE_KEY_ENTER);
             std::this_thread::sleep_for(std::chrono::milliseconds(125));
         }
     }

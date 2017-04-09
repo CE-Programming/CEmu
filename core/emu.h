@@ -74,7 +74,6 @@ void gui_debugger_raise_or_disable(bool);
 void gui_console_err_printf(const char *, ...);
 void gui_debugger_send_command(int, uint32_t);
 void gui_render_gif_frame(void);
-void gui_set_busy(bool);
 void gui_emu_sleep(unsigned long);
 
 bool emu_load(const char*,const char*);

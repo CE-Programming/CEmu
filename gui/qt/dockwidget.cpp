@@ -10,7 +10,7 @@ DockWidget::DockWidget(QTabWidget *tabs, QWidget *parent) : DockWidget{tabs->tab
 }
 
 DockWidget::DockWidget(const QString &title, QWidget *parent)
-    : QDockWidget{title, parent}, m_hide_title{new QWidget{this}}, m_title_height{-1} {
+    : QDockWidget{title, parent}, titleHide{new QWidget{this}}, titleHeight{-1} {
     setObjectName(windowTitle());
 }
 
@@ -18,8 +18,8 @@ void DockWidget::toggleState(bool visible) {
     visible |= isWindow();
     if ((visible) ^ (titleBarWidget() == Q_NULLPTR)) {
         if (!visible) {
-            m_title_height = widget()->y();
+            titleHeight = widget()->y();
         }
-        setTitleBarWidget(visible ? Q_NULLPTR : m_hide_title);
+        setTitleBarWidget(visible ? Q_NULLPTR : titleHide);
     }
 }

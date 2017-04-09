@@ -32,13 +32,13 @@ LCDWidget::~LCDWidget() {
 void LCDWidget::paintEvent(QPaintEvent*) {
     QPainter canvas(this);
     paintFramebuffer(&canvas, lcdState);
-    if (in_drag) {
+    if (inDrag) {
         left = canvas.window();
         right = left;
         left.setRight(left.right() >> 1);
         right.setLeft(left.right());
-        canvas.fillRect(left, QColor(0, 0, side_drag == LCD_LEFT ? 245 : 200, 128));
-        canvas.fillRect(right, QColor(0, side_drag == LCD_RIGHT ? 245 : 200, 0, 128));
+        canvas.fillRect(left, QColor(0, 0, sideDrag == LCD_LEFT ? 245 : 200, 128));
+        canvas.fillRect(right, QColor(0, sideDrag == LCD_RIGHT ? 245 : 200, 0, 128));
         canvas.setPen(Qt::white);
         canvas.drawText(left, Qt::AlignCenter, QObject::tr("Archive"));
         canvas.drawText(right, Qt::AlignCenter, QObject::tr("RAM"));
@@ -59,10 +59,10 @@ void LCDWidget::dropEvent(QDropEvent *e) {
     if (isSendingROM) {
         emit sendROM(dragROM);
     } else {
-        in_send = true;
-        in_drag = false;
+        inSend = true;
+        inDrag = false;
         sendingHandler->dropOccured(e, (e->pos().x() < width() / 2) ? LINK_ARCH : LINK_RAM);
-        in_send = false;
+        inSend = false;
     }
 }
 
@@ -72,16 +72,16 @@ void LCDWidget::dragEnterEvent(QDragEnterEvent *e) {
     dragROM = sendingROM(e, &isSendingROM);
 
     if (!isSendingROM) {
-        in_drag = sendingHandler->dragOccured(e);
-        side_drag = (e->pos().x() < width() / 2) ? LCD_LEFT : LCD_RIGHT;
+        inDrag = sendingHandler->dragOccured(e);
+        sideDrag = (e->pos().x() < width() / 2) ? LCD_LEFT : LCD_RIGHT;
     }
 }
 
 void LCDWidget::dragMoveEvent(QDragMoveEvent *e) {
-    side_drag = (e->pos().x() < width() / 2) ? LCD_LEFT : LCD_RIGHT;
+    sideDrag = (e->pos().x() < width() / 2) ? LCD_LEFT : LCD_RIGHT;
 }
 
 void LCDWidget::dragLeaveEvent(QDragLeaveEvent *e) {
     e->accept();
-    in_drag = false;
+    inDrag = false;
 }

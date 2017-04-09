@@ -50,7 +50,6 @@ public slots:
     void setRom(const QString&);
 
     // Other
-    void isBusy(bool busy);
     bool restoreEmuState();
     void saveEmuState();
     void restoreFromFile();
@@ -167,6 +166,7 @@ private:
     void debuggerChangeState();
     void debuggerExecuteCommand(uint32_t, uint8_t);
     void debuggerProcessCommand(int, uint32_t);
+    void disasmToggleAdl(int);
 
     void portRemoveSelected();
 
@@ -199,6 +199,7 @@ private:
     void variablesContextMenu(const QPoint&);
     void vatContextMenu(const QPoint &);
     void opContextMenu(const QPoint &);
+    void resendContextMenu(const QPoint &);
 
     void setDebugResetTrigger(bool);
     void setEnableSoftCommands(bool);
@@ -287,8 +288,10 @@ private:
     QStringList showVariableFileDialog(QFileDialog::AcceptMode, const QString&, const QString&);
     void selectFiles();
     void refreshVariableList();
-    void variableClicked(QTableWidgetItem*);
+    void variableDoubleClicked(QTableWidgetItem*);
+    void launchPrgm(const calc_var_t *prgm);
     void saveSelected();
+    void resendFiles();
 
     // Autotester
     void dispAutotesterError(int);
@@ -396,7 +399,7 @@ private:
     QShortcut *stepOutShortcut;
     QShortcut *debuggerShortcut;
     QShortcut *asmShortcut;
-    QShortcut *gifShortcut;
+    QShortcut *resendshortcut;
 
     QAction *toggleAction;
 

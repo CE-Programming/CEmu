@@ -35,7 +35,6 @@ signals:
 
     // Status
     void actualSpeedChanged(int);
-    void isBusy(bool busy);
 
     // Save/Restore state
     void saved(bool);

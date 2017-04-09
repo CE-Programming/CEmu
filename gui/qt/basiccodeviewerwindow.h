@@ -21,7 +21,7 @@ public:
     ~BasicCodeViewerWindow();
 
 private slots:
-    void on_pushButton_clicked();
+    void toggleFormat();
 
 private:
     void showCode();

@@ -33,10 +33,10 @@ private:
     };
 
     int lcdSize = 0;
-    unsigned int side_drag;
-    bool state_set = false;
-    bool in_drag = false;
-    bool in_send = false;
+    unsigned int sideDrag;
+    bool stateSet = false;
+    bool inDrag = false;
+    bool inSend = false;
     QTimer *refreshTimer;
     QPainter *painter;
     lcd_state_t *lcdState = Q_NULLPTR;

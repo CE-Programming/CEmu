@@ -30,23 +30,30 @@ extern disasm_highlights_state_t disasmHighlight;
 typedef std::unordered_map<uint32_t, std::string> map_t;
 typedef std::unordered_map<std::string, uint32_t> map_value_t;
 
+enum forceTypes {
+    FORCE_NONE,
+    FORCE_ADL,
+    FORCE_NONADL
+};
+
 typedef struct {
     std::string opcode;
     std::string arguments;
-    std::string mode_suffix;
+    std::string modeSuffix;
     std::string data;
     unsigned int size;
 } eZ80_instuction_t;
 
 typedef struct {
     eZ80_instuction_t instruction;
-    int32_t base_address;
-    int32_t new_address;
+    int32_t baseAddress;
+    int32_t newAddress;
     uint8_t prefix, suffix;
     bool adl, iw, il, l;
+    int forceAdl;
     map_t map;
     map_value_t reverseMap;
-    std::string spacing_string;
+    std::string space;
 } disasm_state_t;
 
 extern disasm_state_t disasm;

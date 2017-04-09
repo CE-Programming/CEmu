@@ -3,17 +3,17 @@
 
 BasicCodeViewerWindow::BasicCodeViewerWindow(QWidget *p) : QDialog(p), ui(new Ui::BasicCodeViewerWindow) {
     ui->setupUi(this);
-    setWindowTitle(tr("Variable viewer"));
     ui->plainTextEdit->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    connect(ui->pushButton, &QPushButton::clicked, this, &BasicCodeViewerWindow::toggleFormat);
 }
 
 void BasicCodeViewerWindow::setVariableName(const QString &name) {
     variableName = name;
-    setWindowTitle(tr("Variable viewer") + " | " + variableName);
+    setWindowTitle(tr("Variable viewer") + QStringLiteral(" | ") + variableName);
 }
 
-void BasicCodeViewerWindow::on_pushButton_clicked() {
-    showingFormatted = !showingFormatted;
+void BasicCodeViewerWindow::toggleFormat() {
+    showingFormatted ^= true;
     showCode();
 }
 

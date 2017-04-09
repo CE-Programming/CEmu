@@ -37,6 +37,8 @@ void sched_reset(void) {
     memcpy(sched.clockRates, def_rates, sizeof(def_rates));
     memset(sched.items, 0, sizeof sched.items);
     sched.nextIndex = 0;
+    sched.items[SCHED_THROTTLE].clock = CLOCK_27M;
+    sched.items[SCHED_THROTTLE].proc = throttle_interval_event;
 }
 
 void event_repeat(int index, uint64_t ticks) {

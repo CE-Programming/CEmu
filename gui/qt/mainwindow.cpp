@@ -70,7 +70,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     progressBar->setTextVisible(false);
     progressBar->setValue(0);
     ui->statusBar->addWidget(progressBar);
-    sendingHandler = new SendingHandler(progressBar);
+    sendingHandler = new SendingHandler(progressBar, ui->varLoadedView);
     progressBar->setVisible(false);
 
     // Emulator -> GUI
@@ -80,7 +80,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(&emu, &EmuThread::stopped, this, &MainWindow::emuStopped, Qt::QueuedConnection);
     connect(&emu, &EmuThread::restored, this, &MainWindow::restored, Qt::QueuedConnection);
     connect(&emu, &EmuThread::saved, this, &MainWindow::saved, Qt::QueuedConnection);
-    connect(&emu, &EmuThread::isBusy, this, &MainWindow::isBusy, Qt::QueuedConnection);
 
     // Console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, ui->console, &QPlainTextEdit::clear);
@@ -98,6 +97,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(this, &MainWindow::setDebugStepNextMode, &emu, &EmuThread::setDebugStepNextMode);
     connect(this, &MainWindow::setDebugStepOutMode, &emu, &EmuThread::setDebugStepOutMode);
     connect(ui->buttonRun, &QPushButton::clicked, this, &MainWindow::debuggerChangeState);
+    connect(ui->checkADLDisasm, &QCheckBox::stateChanged, this, &MainWindow::disasmToggleAdl);
 
     connect(ui->tabDebugging, &QTabWidget::currentChanged, this, &MainWindow::debuggerTabSwitched);
     connect(ui->buttonAddPort, &QPushButton::clicked, this, &MainWindow::portSlotAdd);
@@ -144,6 +144,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->buttonRefreshList, &QPushButton::clicked, this, &MainWindow::refreshVariableList);
     connect(this, &MainWindow::setReceiveState, &emu, &EmuThread::setReceiveState);
     connect(ui->buttonReceiveFiles, &QPushButton::clicked, this, &MainWindow::saveSelected);
+    connect(ui->buttonResendFiles, &QPushButton::clicked, this, &MainWindow::resendFiles);
+    connect(ui->varLoadedView, &QWidget::customContextMenuRequested, this, &MainWindow::resendContextMenu);
+    ui->varLoadedView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     // Autotester
     connect(ui->buttonOpenJSONconfig, &QPushButton::clicked, this, &MainWindow::prepareAndOpenJSONConfig);
@@ -201,7 +204,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->flashBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->flashEdit, &QHexEdit::setBytesPerLine);
     connect(ui->ramBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->ramEdit, &QHexEdit::setBytesPerLine);
     connect(ui->memBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->memEdit, &QHexEdit::setBytesPerLine);
-    connect(ui->emuVarView, &QTableWidget::itemDoubleClicked, this, &MainWindow::variableClicked);
+    connect(ui->emuVarView, &QTableWidget::itemDoubleClicked, this, &MainWindow::variableDoubleClicked);
     connect(ui->emuVarView, &QTableWidget::customContextMenuRequested, this, &MainWindow::variablesContextMenu);
     connect(ui->actionExportCEmuImage, &QAction::triggered, this, &MainWindow::exportCEmuBootImage);
     connect(ui->lcdWidget, &LCDWidget::sendROM, this, &MainWindow::setRom);
@@ -224,19 +227,19 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->radiojsTIfiedKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
 
     // Keypad Coloring
-    connect(ui->buttonTrueBlue,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonDenim,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonPink,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonPlum,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonRed,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonLightning,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonGolden,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonWhite,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonBlack,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonSilver,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonSpaceGrey,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonCoral,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonMint,  &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonTrueBlue, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonDenim, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonPink, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonPlum, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonRed, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonLightning, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonGolden, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonWhite, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonBlack, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonSilver, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonSpaceGrey, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonCoral, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonMint, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
 
     // Key History Window
     connect(ui->actionKeyHistory, &QAction::triggered, this, &MainWindow::toggleKeyHistory);
@@ -246,8 +249,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     // IPC
     connect(ui->actionNew, &QAction::triggered, this, &MainWindow::ipcSpawnRandom);
-    connect(com, &ipc::readDone, this, &MainWindow::ipcReceived);
     connect(ui->buttonChangeID, &QPushButton::clicked, this, &MainWindow::ipcChangeID);
+    connect(com, &ipc::readDone, this, &MainWindow::ipcReceived);
 
     // Shortcut Connections
     stepInShortcut = new QShortcut(QKeySequence(Qt::Key_F6), this);
@@ -256,6 +259,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     stepOutShortcut = new QShortcut(QKeySequence(Qt::Key_F9), this);
     debuggerShortcut = new QShortcut(QKeySequence(Qt::Key_F10), this);
     asmShortcut = new QShortcut(QKeySequence(Qt::Key_Pause), this);
+    resendshortcut = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_X), this);
 
     debuggerShortcut->setAutoRepeat(false);
     stepInShortcut->setAutoRepeat(false);
@@ -263,17 +267,15 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     stepNextShortcut->setAutoRepeat(false);
     stepOutShortcut->setAutoRepeat(false);
     asmShortcut->setAutoRepeat(false);
+    resendshortcut->setAutoRepeat(false);
 
+    connect(resendshortcut, &QShortcut::activated, this, &MainWindow::resendFiles);
     connect(asmShortcut, &QShortcut::activated, this, &MainWindow::sendASMKey);
     connect(debuggerShortcut, &QShortcut::activated, this, &MainWindow::debuggerChangeState);
     connect(stepInShortcut, &QShortcut::activated, this, &MainWindow::stepInPressed);
     connect(stepOverShortcut, &QShortcut::activated, this, &MainWindow::stepOverPressed);
     connect(stepNextShortcut, &QShortcut::activated, this, &MainWindow::stepNextPressed);
     connect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOutPressed);
-
-    // Meta Types
-    qRegisterMetaType<uint32_t>("uint32_t");
-    qRegisterMetaType<std::string>("std::string");
 
     ui->portView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     ui->breakpointView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
@@ -382,6 +384,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     debugger_init();
 
+    ui->checkADLDisasm->setTristate();
+    ui->checkADLDisasm->setCheckState(Qt::PartiallyChecked);
+
     if (!fileExists(emu.rom)) {
         if (!runSetup()) {
             initPassed = false;
@@ -396,23 +401,15 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
             emu.start();
             if (opts.forceReloadRom) {
                 reloadROM();
-                guiDelay(500);
             }
         }
     }
 
-    speedUpdateTimer.start();
-    speedUpdateTimer.setInterval(1000 / 2);
-
     colorback.setColor(QPalette::Base, QColor(Qt::yellow).lighter(160));
     consoleFormat = ui->console->currentCharFormat();
 
-    QPixmap pix;
-
-    pix.load(":/icons/resources/icons/stop.png");
-    stopIcon.addPixmap(pix);
-    pix.load(":/icons/resources/icons/run.png");
-    runIcon.addPixmap(pix);
+    stopIcon.addPixmap(QPixmap(":/icons/resources/icons/stop.png"));
+    runIcon.addPixmap(QPixmap(":/icons/resources/icons/run.png"));
 
     if (settings->value(SETTING_DEBUGGER_RESTORE_ON_OPEN, false).toBool()) {
         if (!opts.debugFile.isEmpty()) {
@@ -427,8 +424,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     if (opts.speed != -1) {
         setEmulatedSpeed(opts.speed/10);
     }
+
     debuggerInstall();
-    ui->lcdWidget->setFocus();
+
     if (!settings->value(SETTING_FIRST_RUN, false).toBool()) {
         infoBox = new QMessageBox;
         infoBox->setWindowTitle(tr("Information"));
@@ -443,6 +441,10 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
         infoBox->show();
         settings->setValue(SETTING_FIRST_RUN, true);
     }
+
+    speedUpdateTimer.start();
+    speedUpdateTimer.setInterval(1000 / 2);
+    ui->lcdWidget->setFocus();
 }
 
 void MainWindow::showEvent(QShowEvent *e) {
@@ -992,14 +994,6 @@ void MainWindow::consoleOutputChanged() {
     nativeConsole = ui->radioStderr->isChecked();
 }
 
-void MainWindow::isBusy(bool busy) {
-    if (busy) {
-        QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
-    } else {
-        QApplication::restoreOverrideCursor();
-    }
-}
-
 // ------------------------------------------------
 //  Linking things
 // ------------------------------------------------
@@ -1035,17 +1029,16 @@ void MainWindow::selectFiles() {
     equatesRefresh();
 }
 
-void MainWindow::variableClicked(QTableWidgetItem *item) {
-    const calc_var_t *var_tmp = reinterpret_cast<calc_var_t*>(ui->emuVarView->item(item->row(), VAR_NAME)->data(Qt::UserRole).toByteArray().data());
-    if (calc_var_is_asmprog(var_tmp)) {
-        updateDisasmView(var_tmp->address + 4, false);  // This is
-        if (!inDebugger) { debuggerChangeState(); }    // semi-broken
-    } else if (var_tmp->type != CALC_VAR_TYPE_APP_VAR && (!calc_var_is_internal(var_tmp) || var_tmp->name[0] == '#')) {
+void MainWindow::variableDoubleClicked(QTableWidgetItem *item) {
+    const calc_var_t var = *reinterpret_cast<const calc_var_t*>(ui->emuVarView->item(item->row(), VAR_NAME)->data(Qt::UserRole).toByteArray().data());
+    if (calc_var_is_asmprog(&var)) {
+        return;
+    } else if (var.type != CALC_VAR_TYPE_APP_VAR && (!calc_var_is_internal(&var) || var.name[0] == '#')) {
         BasicCodeViewerWindow *codePopup = new BasicCodeViewerWindow(this);
-        codePopup->setOriginalCode((var_tmp->size <= 500) ? ui->emuVarView->item(item->row(), VAR_PREVIEW)->text() : QString::fromStdString(calc_var_content_string(*var_tmp)));
         codePopup->setVariableName(ui->emuVarView->item(item->row(), VAR_NAME)->text());
         codePopup->setWindowModality(Qt::NonModal);
         codePopup->setAttribute(Qt::WA_DeleteOnClose);
+        codePopup->setOriginalCode(QString::fromStdString(calc_var_content_string(var)));
         codePopup->show();
     }
 }
@@ -1061,7 +1054,7 @@ void MainWindow::refreshVariableList() {
     ui->emuVarView->setSortingEnabled(false);
 
     if (isReceiving || isSending) {
-        ui->buttonRefreshList->setText(tr("Refresh variable list..."));
+        ui->buttonRefreshList->setText(tr("Show variables"));
         ui->buttonReceiveFiles->setEnabled(false);
         ui->buttonRun->setEnabled(true);
         ui->buttonSend->setEnabled(true);
@@ -1087,12 +1080,12 @@ void MainWindow::refreshVariableList() {
                 bool var_preview_needs_gray = false;
                 QString var_value;
                 if (calc_var_is_asmprog(&var)) {
-                    var_value = tr("View in debugger...");
+                    var_value = tr("Can't preview this");
                     var_preview_needs_gray = true;
                 } else if (calc_var_is_internal(&var) && var.name[0] != '#') { // # is previewable
                     var_value = tr("Can't preview this OS variable");
                     var_preview_needs_gray = true;
-                }  else if (var.type == CALC_VAR_TYPE_APP_VAR) { // nothing to do for now
+                }  else if (var.type == CALC_VAR_TYPE_APP_VAR) { // nothing to do for now (or ever)
                     var_value = tr("Can't preview this");
                     var_preview_needs_gray = true;
                 } else if (var.size > 500) {
@@ -1211,6 +1204,19 @@ void MainWindow::saveSelected() {
     }
 }
 
+void MainWindow::resendFiles() {
+    sendingHandler->resendSelected();
+}
+
+void MainWindow::resendContextMenu(const QPoint& posa) {
+    int row = ui->varLoadedView->rowAt(posa.y());
+    if (row == -1) {
+        return;
+    }
+
+    ui->varLoadedView->removeRow(row);
+}
+
 // ------------------------------------------------
 // Autotester things
 // ------------------------------------------------
@@ -1307,7 +1313,7 @@ void MainWindow::launchTest() {
     }
 
     QStringList filesList;
-    for (const auto& file : autotester::config.transfer_files) {
+    for (const auto &file : autotester::config.transfer_files) {
         filesList << QString::fromStdString(file);
     }
 
@@ -1490,9 +1496,9 @@ void MainWindow::updateStackView() {
 void MainWindow::drawNextDisassembleLine() {
     std::string *label = Q_NULLPTR;
 
-    if (disasm.base_address != disasm.new_address) {
-        disasm.base_address = disasm.new_address;
-        map_t::iterator item = disasm.map.find(disasm.new_address);
+    if (disasm.baseAddress != disasm.newAddress) {
+        disasm.baseAddress = disasm.newAddress;
+        map_t::iterator item = disasm.map.find(disasm.newAddress);
         if (item != disasm.map.end()) {
             disasmHighlight.hit_read_watchpoint = false;
             disasmHighlight.hit_write_watchpoint = false;
@@ -1501,7 +1507,7 @@ void MainWindow::drawNextDisassembleLine() {
 
             disasm.instruction.data.clear();
             disasm.instruction.opcode.clear();
-            disasm.instruction.mode_suffix.clear();
+            disasm.instruction.modeSuffix.clear();
             disasm.instruction.arguments.clear();
             disasm.instruction.size = 0;
 
@@ -1526,16 +1532,16 @@ void MainWindow::drawNextDisassembleLine() {
                                         .replace(QRegularExpression("([()])"), "<font color='#600'>\\1</font>");            // parentheses
 
     QString formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2 %3  <font color='darkblue'>%4%5</font>%6</pre>")
-                               .arg(int2hex(disasm.base_address, 6),
+                               .arg(int2hex(disasm.baseAddress, 6),
                                     breakpointSymbols,
                                     label ? QString::fromStdString(*label) + ":" : useDataCol ? QString::fromStdString(disasm.instruction.data).leftJustified(12, ' ') : "",
                                     QString::fromStdString(disasm.instruction.opcode),
-                                    QString::fromStdString(disasm.instruction.mode_suffix),
+                                    QString::fromStdString(disasm.instruction.modeSuffix),
                                     instructionArgsHighlighted);
 
     ui->disassemblyView->appendHtml(formattedLine);
 
-    if (!disasmOffsetSet && disasm.new_address > addressPane) {
+    if (!disasmOffsetSet && disasm.newAddress > addressPane) {
         disasmOffsetSet = true;
         disasmOffset = ui->disassemblyView->textCursor();
         disasmOffset.movePosition(QTextCursor::StartOfLine);
@@ -1594,51 +1600,51 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
     }
 }
 
+void MainWindow::launchPrgm(const calc_var_t *prgm) {
+    // Reset keypad state
+    keypad_reset();
+
+    // Restore focus to catch keypresses.
+    ui->lcdWidget->setFocus();
+    guiDelay(100);
+
+    // Launch the program, assuming we're at the home screen...
+    autotester::sendKey(0x09); // Clear
+    if (calc_var_is_asmprog(prgm)) {
+        autotester::sendKey(0x9CFC); // Asm(
+    }
+    autotester::sendKey(0xDA); // prgm
+    for (const char& c : prgm->name) {
+        if (!c) { break; }
+        autotester::sendLetterKeyPress(c); // type program name
+    }
+    autotester::sendKey(0x05); // Enter
+
+    // Restore focus to catch keypresses.
+    ui->lcdWidget->setFocus();
+}
+
 void MainWindow::variablesContextMenu(const QPoint& posa) {
     int itemRow = ui->emuVarView->rowAt(posa.y());
     if (itemRow == -1) {
         return;
     }
 
-    const calc_var_t *selected_var = reinterpret_cast<calc_var_t*>(ui->emuVarView->item(itemRow, VAR_NAME)->data(Qt::UserRole).toByteArray().data());
+    const calc_var_t var = *reinterpret_cast<const calc_var_t*>(ui->emuVarView->item(itemRow, VAR_NAME)->data(Qt::UserRole).toByteArray().constData());
 
-    QString launch_prgm = tr("Launch program"),
-            goto_mem    = tr("Goto Memory View");
+    QString launch = tr("Launch program");
 
     QMenu contextMenu;
-    if (calc_var_is_prog(selected_var) && !calc_var_is_internal(selected_var)) {
-        contextMenu.addAction(launch_prgm);
+    if (calc_var_is_prog(&var) && !calc_var_is_internal(&var)) {
+        contextMenu.addAction(launch);
     }
-    contextMenu.addAction(goto_mem);
 
     QAction *selectedItem = contextMenu.exec(ui->emuVarView->mapToGlobal(posa));
     if (selectedItem) {
-        if (selectedItem->text() == launch_prgm) {
-            // Reset keypad state and resume emulation
-            keypad_reset();
+        if (selectedItem->text() == launch) {
+            // resume emulation and launch
             refreshVariableList();
-
-            // Launch the program, assuming we're at the home screen...
-            autotester::sendKey(0x09); // Clear
-            if (calc_var_is_asmprog(selected_var)) {
-                autotester::sendKey(0x9CFC); // Asm(
-            }
-            autotester::sendKey(0xDA); // prgm
-            for (const char& c : selected_var->name) {
-                if (!c) { break; }
-                autotester::sendLetterKeyPress(c); // type program name
-            }
-            autotester::sendKey(0x05); // Enter
-
-            // Restore focus to catch keypresses.
-            ui->lcdWidget->setFocus();
-        } else if (selectedItem->text() == goto_mem) {
-            refreshVariableList();
-            ui->checkLockPosition->setChecked(true); // TODO: find better than that to prevent the debugger's PC to take over
-            if (!inDebugger) {
-                debuggerChangeState();
-            }
-            memGoto(int2hex(selected_var->address, 6));
+            launchPrgm(&var);
         }
     }
 }

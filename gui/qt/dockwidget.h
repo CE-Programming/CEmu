@@ -18,8 +18,8 @@ public:
     void toggleState(bool visible);
 
 private:
-    QWidget *m_hide_title;
-    int m_title_height;
+    QWidget *titleHide;
+    int titleHeight;
 };
 
 #endif

@@ -36,13 +36,9 @@ bool emu_save_rom(const char *file) {
         return false;
     }
 
-    gui_set_busy(true);
-
     success = (fwrite(mem.flash.block, 1, SIZE_FLASH, savedRom) == SIZE_FLASH);
 
     fclose(savedRom);
-
-    gui_set_busy(false);
 
     return success;
 }
@@ -59,8 +55,6 @@ bool emu_save(const char *file) {
     }
 
     image = (emu_image_t*)malloc(size);
-
-    gui_set_busy(true);
 
     do {
         if (!image) {
@@ -79,8 +73,6 @@ bool emu_save(const char *file) {
     free(image);
     fclose(savedImage);
 
-    gui_set_busy(false);
-
     return success;
 }
 
@@ -89,7 +81,6 @@ bool emu_load(const char *romImage, const char *savedImage) {
     long lSize;
     FILE *imageFile = NULL;
 
-    gui_set_busy(true);
     emu_cleanup();
 
     do {
@@ -98,7 +89,7 @@ bool emu_load(const char *romImage, const char *savedImage) {
             imageFile = fopen_utf8(savedImage, "rb");
 
             if (!imageFile) {
-                gui_console_printf("[CEmu] Could not located image file\n");
+                gui_console_printf("[CEmu] Could not open image file\n");
                 break;
             }
             if (fseek(imageFile, 0L, SEEK_END) < 0) {
@@ -298,8 +289,6 @@ bool emu_load(const char *romImage, const char *savedImage) {
         emu_cleanup();
     }
 
-    gui_set_busy(false);
-
     return ret;
 }
 
@@ -308,16 +297,9 @@ void emu_cleanup(void) {
 }
 
 static void EMSCRIPTEN_KEEPALIVE emu_reset(void) {
-    /* Reset the scheduler */
     sched_reset();
-
-    sched.items[SCHED_THROTTLE].clock = CLOCK_27M;
-    sched.items[SCHED_THROTTLE].proc = throttle_interval_event;
-
-    /* Reset the ASIC */
     asic_reset();
 
-    /* Drain everything */
     cpuEvents = EVENT_NONE;
 
     sched_update_next_event();
@@ -326,7 +308,7 @@ static void EMSCRIPTEN_KEEPALIVE emu_reset(void) {
 static void emu_main_loop_inner(void) {
     if (!emulationPaused) {
         if (cpuEvents & EVENT_RESET) {
-            gui_console_printf("[CEmu] Calculator reset triggered...\n");
+            gui_console_printf("[CEmu] Reset triggered.\n");
             asic_reset();
             cpuEvents &= ~EVENT_RESET;
         }

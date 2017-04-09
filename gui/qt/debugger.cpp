@@ -51,6 +51,7 @@ void MainWindow::debuggerInstall() {
     ui->de_->installEventFilter(this);
     ui->pc->installEventFilter(this);
     ui->spl->installEventFilter(this);
+    disasm.forceAdl = FORCE_NONE;
 }
 
 // ------------------------------------------------
@@ -747,14 +748,14 @@ void MainWindow::breakpointGUIAdd() {
         breakpointRemoveSelectedRow();
     }
 
-    int32_t base_address = disasm.base_address;
-    int32_t new_address = disasm.new_address;
+    int32_t base_address = disasm.baseAddress;
+    int32_t new_address = disasm.newAddress;
 
-    disasm.base_address = address;
+    disasm.baseAddress = address;
     disasmHighlight.hit_exec_breakpoint = false;
     disassembleInstruction();
-    disasm.base_address = base_address;
-    disasm.new_address = new_address;
+    disasm.baseAddress = base_address;
+    disasm.newAddress = new_address;
 
     c.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
     c.setPosition(c.position()+9, QTextCursor::MoveAnchor);
@@ -1027,16 +1028,16 @@ void MainWindow::watchpointGUIAdd() {
         watchpointRemoveSelectedRow();
     }
 
-    int32_t base_address = disasm.base_address;
-    int32_t new_address = disasm.new_address;
+    int32_t base_address = disasm.baseAddress;
+    int32_t new_address = disasm.newAddress;
 
-    disasm.base_address = address;
+    disasm.baseAddress = address;
     disasmHighlight.hit_read_watchpoint = false;
     disasmHighlight.hit_write_watchpoint = false;
     disassembleInstruction();
 
-    disasm.base_address = base_address;
-    disasm.new_address = new_address;
+    disasm.baseAddress = base_address;
+    disasm.newAddress = new_address;
 
     c.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
     c.setPosition(c.position()+7, QTextCursor::MoveAnchor);
@@ -1392,10 +1393,10 @@ void MainWindow::updateDisasmView(const int sentBase, const bool newPane) {
     fromPane = newPane;
     disasmOffsetSet = false;
     disasm.adl = ui->checkADL->isChecked();
-    disasm.base_address = -1;
-    disasm.new_address = addressPane - ((newPane) ? 0x40 : 0);
-    if (disasm.new_address < 0) { disasm.new_address = 0; }
-    int32_t last_address = disasm.new_address + 0x120;
+    disasm.baseAddress = -1;
+    disasm.newAddress = addressPane - ((newPane) ? 0x40 : 0);
+    if (disasm.newAddress < 0) { disasm.newAddress = 0; }
+    int32_t last_address = disasm.newAddress + 0x120;
     if (last_address > 0xFFFFFF) { last_address = 0xFFFFFF; }
 
     disconnect(ui->disassemblyView->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::scrollDisasmView);
@@ -1403,7 +1404,7 @@ void MainWindow::updateDisasmView(const int sentBase, const bool newPane) {
     ui->disassemblyView->cursorState(false);
     ui->disassemblyView->clearAllHighlights();
 
-    while (disasm.new_address < last_address) {
+    while (disasm.newAddress < last_address) {
         drawNextDisassembleLine();
     }
 
@@ -1417,6 +1418,23 @@ void MainWindow::updateDisasmView(const int sentBase, const bool newPane) {
 // ------------------------------------------------
 // Misc
 // ------------------------------------------------
+
+void MainWindow::disasmToggleAdl(int state) {
+    switch (state) {
+        default:
+        case Qt::PartiallyChecked:
+            disasm.forceAdl = FORCE_NONE;
+            break;
+        case Qt::Checked:
+            disasm.forceAdl = FORCE_ADL;
+            break;
+        case Qt::Unchecked:
+            disasm.forceAdl = FORCE_NONADL;
+            break;
+    }
+    prevDisasmAddress = ui->disassemblyView->getSelectedAddress().toUInt(Q_NULLPTR, 16);
+    updateDisasmView(prevDisasmAddress, true);
+}
 
 void MainWindow::debuggerTabSwitched(int tab) {
     if (tab == 0) {

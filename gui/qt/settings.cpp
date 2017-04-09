@@ -240,7 +240,7 @@ void MainWindow::setSaveDebug(bool state) {
 void MainWindow::setSpaceDisasm(bool state) {
     ui->checkAddSpace->setChecked(state);
     settings->setValue(SETTING_DEBUGGER_ADD_DISASM_SPACE, state);
-    disasm.spacing_string = state ? ", " : ",";
+    disasm.space = state ? ", " : ",";
 }
 
 void MainWindow::setFont(int fontSize) {

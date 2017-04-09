@@ -11,8 +11,9 @@
 
 SendingHandler *sendingHandler = Q_NULLPTR;
 
-SendingHandler::SendingHandler(QProgressBar *bar) {
+SendingHandler::SendingHandler(QProgressBar *bar, QTableWidget *t) {
     progress = bar;
+    table = t;
 }
 
 void SendingHandler::dropOccured(QDropEvent *e, unsigned int location) {
@@ -31,6 +32,18 @@ void SendingHandler::dropOccured(QDropEvent *e, unsigned int location) {
     }
 
     sendFiles(files, location);
+}
+
+void SendingHandler::resendSelected() {
+    QStringList files;
+
+    for (int i = 0; i < table->rowCount(); i++) {
+        if (table->item(i, 0)->checkState() == Qt::Checked) {
+            files.append(table->item(i, 0)->text());
+        }
+    }
+
+    sendFiles(files, LINK_FILE);
 }
 
 bool SendingHandler::dragOccured(QDragEnterEvent *e) {
@@ -67,11 +80,12 @@ bool SendingHandler::dragOccured(QDragEnterEvent *e) {
     return true;
 }
 
-void SendingHandler::sendFiles(QStringList fileNames, unsigned location) {
-    int i;
+void SendingHandler::sendFiles(QStringList fileNames, unsigned int location) {
+    if (progress) { progress->setVisible(true); }
 
     if (isSending || isReceiving || inDebugger) {
         QMessageBox::warning(nullptr, QObject::tr("Failed Transfer"), QObject::tr("Transfer failed: Emulation Paused"));
+        if (progress) { progress->setVisible(false); }
         return;
     }
 
@@ -80,6 +94,7 @@ void SendingHandler::sendFiles(QStringList fileNames, unsigned location) {
 
     if (fileNames.isEmpty()) {
         emu_thread->setSendState(false);
+        if (progress) { progress->setVisible(false); }
         return;
     }
 
@@ -93,25 +108,42 @@ void SendingHandler::sendFiles(QStringList fileNames, unsigned location) {
 
     if (emu_thread->waitForLink) {
         emu_thread->setSendState(false);
-        QMessageBox::warning(nullptr, QObject::tr("Failed Transfer"), QObject::tr("Couldn't start the transfer. Make sure the calc is ready (at the home screen, for instance)."));
+        QMessageBox::warning(Q_NULLPTR, QObject::tr("Failed Transfer"), QObject::tr("Couldn't start the transfer. Make sure the calc is ready (at the home screen, for instance)."));
+        if (progress) { progress->setVisible(false); }
         return;
     }
 
-    if (progress) {
-        progress->setVisible(true);
-        progress->setMaximum(fileNum);
-    }
+    if (progress) { progress->setMaximum(fileNum); }
 
-    for (i = 0; i < fileNum; i++) {
+
+    for (int i = 0; i < fileNum; i++) {
+        int currRow = table->rowCount();
+        bool add = true;
+
         if (!sendVariableLink(fileNames.at(i).toUtf8(), location)) {
             QMessageBox::warning(Q_NULLPTR, QObject::tr("Failed Transfer"), QObject::tr("A failure occured during transfer of: ")+fileNames.at(i));
         }
+
+        for (int j = 0; j < currRow; j++) {
+            if (!table->item(j, 0)->text().compare(fileNames.at(i))) {
+                add = false;
+            }
+        }
+
+        if (add) {
+            table->setRowCount(currRow + 1);
+            QTableWidgetItem *path = new QTableWidgetItem(fileNames.at(i));
+            table->setItem(currRow, 0, path);
+
+            path->setCheckState(Qt::Checked);
+        }
+
         if (progress) { progress->setValue(i); }
         QApplication::processEvents();
     }
 
     emu_thread->setSendState(false);
-    if (progress) { progress->setValue(i); }
+    if (progress) { progress->setValue(fileNum); }
     while (isSending);
-    if (progress) { progress->setVisible(false); }
+    if (progress) { progress->setVisible(false); progress->setValue(0); }
 }
