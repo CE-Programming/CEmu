@@ -382,6 +382,7 @@ static void disasm_bli(int y, int z) {
 void disassembleInstruction(void) {
     std::string old;
     std::string w;
+    int32_t o;
 
     disasm.newAddress = disasm.baseAddress;
 
@@ -444,19 +445,22 @@ void disassembleInstruction(void) {
                                 disasm.instruction.arguments = "af"+disasm.space+"af'";
                                 break;
                             case 2: // DJNZ d
+                                o = static_cast<int32_t>(disasm_fetch_offset());
                                 disasm.instruction.opcode = "djnz";
-                                disasm.instruction.arguments = strW(disasm.newAddress+1+disasm_fetch_offset());
+                                disasm.instruction.arguments = strA(disasm.newAddress+o);
                                 break;
                             case 3: // JR d
+                                o = static_cast<int32_t>(disasm_fetch_offset());
                                 disasm.instruction.opcode = "jr";
-                                disasm.instruction.arguments = strA(disasm.newAddress+1+disasm_fetch_offset());
+                                disasm.instruction.arguments = strA(disasm.newAddress+o);
                                 break;
                             case 4:
                             case 5:
                             case 6:
                             case 7: // JR cc[y-4], d
+                                o = static_cast<int32_t>(disasm_fetch_offset());
                                 disasm.instruction.opcode = "jr";
-                                disasm.instruction.arguments = cc_table[context.y-4]+disasm.space+ strA(disasm.newAddress+1+disasm_fetch_offset());
+                                disasm.instruction.arguments = cc_table[context.y-4]+disasm.space+strA(disasm.newAddress+o);
                                 break;
                         }
                         break;

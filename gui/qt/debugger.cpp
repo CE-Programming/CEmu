@@ -1366,7 +1366,7 @@ void MainWindow::equatesAddFile(const QString &fileName) {
     updateLabels();
 }
 
-void MainWindow::equatesAddEquate(QString name, QString addrStr) {
+void MainWindow::equatesAddEquate(const QString &name, const QString &addrStr) {
     uint32_t address = addrStr.toUInt(Q_NULLPTR, 16);
     std::string &item = disasm.map[address];
     uint32_t &itemReverse = disasm.reverseMap[name.toUpper().toStdString()];
