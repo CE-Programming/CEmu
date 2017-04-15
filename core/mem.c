@@ -4,7 +4,6 @@
 #include "mem.h"
 #include "emu.h"
 #include "cpu.h"
-#include "dma.h"
 #include "flash.h"
 #include "control.h"
 #include "debug/debug.h"

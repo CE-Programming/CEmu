@@ -139,7 +139,6 @@ SOURCES +=  utils.cpp \
     hexeditor.cpp \
     settings.cpp \
     ../../core/debug/stepping.cpp \
-    ../../core/dma.c \
     ipc.cpp \
     keyhistory.cpp \
     capture/opttemplate.c \
@@ -217,7 +216,6 @@ HEADERS  +=  utils.h \
     capture/lcdfgif/gif.h \
     keypad/keycode.h \
     debugger.h \
-    ../../core/dma.h \
     ipc.h \
     keyhistory.h \
     capture/kcolor.h \

@@ -4,7 +4,6 @@
 #include "cpu.h"
 #include "emu.h"
 #include "mem.h"
-#include "dma.h"
 #include "lcd.h"
 #include "asic.h"
 #include "schedule.h"

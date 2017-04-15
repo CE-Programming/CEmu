@@ -17,6 +17,10 @@ Chunks::Chunks(QIODevice &ioDevice) {
     setIODevice(ioDevice);
 }
 
+Chunks::~Chunks() {
+    delete _ioDevice;
+}
+
 bool Chunks::setIODevice(QIODevice &ioDevice) {
     _ioDevice = &ioDevice;
 

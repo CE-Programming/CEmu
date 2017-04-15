@@ -8,7 +8,6 @@
 #endif
 
 #include "emu.h"
-#include "dma.h"
 #include "asic.h"
 #include "cert.h"
 #include "os/os.h"
