@@ -36,13 +36,13 @@ void debugger_free(void) {
 }
 
 uint8_t debug_peek_byte(uint32_t addr) {
-    uint8_t value = mem_peek_byte(addr), debugData;
+    uint8_t value = mem_peek_byte(addr), data;
 
-    if ((debugData = debugger.data.block[addr])) {
-        disasmHighlight.rWatch |= debugData & DBG_READ_WATCHPOINT;
-        disasmHighlight.wWatch |= debugData & DBG_WRITE_WATCHPOINT;
-        disasmHighlight.xBreak |= debugData & DBG_EXEC_BREAKPOINT;
-        if (debugData & DBG_INST_START_MARKER && disasmHighlight.addr < 0) {
+    if ((data = debugger.data.block[addr])) {
+        disasmHighlight.rWatch |= data & DBG_READ_WATCHPOINT ? true : false;
+        disasmHighlight.wWatch |= data & DBG_WRITE_WATCHPOINT ? true : false;
+        disasmHighlight.xBreak |= data & DBG_EXEC_BREAKPOINT ? true : false;
+        if (data & DBG_INST_START_MARKER && disasmHighlight.addr < 0) {
             disasmHighlight.addr = addr;
         }
     }

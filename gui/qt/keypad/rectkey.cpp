@@ -30,9 +30,9 @@ RectKey::RectKey(KeyCode keycode, const QRect &textGeometry, const QRect &keyGeo
     mKeyShape.arcTo(corner, 90 * 1, 90);
 
 #ifdef _WIN32
-    m_labelFont.setPixelSize(labelSize.height());
-    m_labelFont.setStretch(1+(labelSize.width() /
-                           QFontMetricsF(m_labelFont).size(Qt::TextSingleLine, m_labelText).width()));
+    mLabelFont.setPixelSize(labelSize.height());
+    mLabelFont.setStretch(1+(labelSize.width() /
+                           QFontMetricsF(mLabelFont).size(Qt::TextSingleLine, mLabelText).width()));
 #else
     mLabelFont.setPixelSize(labelSize.height());
     mLabelFont.setStretch(labelSize.width() * mLabelFont.stretch() /
