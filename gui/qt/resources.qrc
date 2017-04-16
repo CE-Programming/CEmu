@@ -39,6 +39,7 @@
         <file>resources/icons/reset.png</file>
         <file>resources/icons/rom.png</file>
         <file>resources/icons/wizard.png</file>
+        <file>resources/icons/clock.png</file>
     </qresource>
     <qresource prefix="/fonts">
         <file>resources/fonts/LiberationSansNarrow-Bold.ttf</file>

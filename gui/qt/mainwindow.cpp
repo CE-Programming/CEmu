@@ -384,11 +384,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     debugger_init();
 
-    ui->checkADLDisasm->blockSignals(true);
-    ui->checkADLDisasm->setTristate();
-    ui->checkADLDisasm->setCheckState(Qt::PartiallyChecked);
-    ui->checkADLDisasm->blockSignals(false);
-
     if (!fileExists(emu.rom)) {
         if (!runSetup()) {
             initPassed = false;

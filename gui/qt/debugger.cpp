@@ -51,7 +51,11 @@ void MainWindow::debuggerInstall() {
     ui->de_->installEventFilter(this);
     ui->pc->installEventFilter(this);
     ui->spl->installEventFilter(this);
+
     disasm.forceAdl = FORCE_NONE;
+    ui->checkADLDisasm->blockSignals(true);
+    ui->checkADLDisasm->setCheckState(Qt::PartiallyChecked);
+    ui->checkADLDisasm->blockSignals(false);
 }
 
 // ------------------------------------------------
@@ -459,6 +463,8 @@ void MainWindow::debuggerGUISetState(bool state) {
     ui->freqView->setEnabled(state);
     ui->opView->setEnabled(state);
     ui->vatView->setEnabled(state);
+    ui->groupRTC->setEnabled(state);
+    ui->groupGPT->setEnabled(state);
 
     ui->actionRestoreState->setEnabled(!state);
     ui->actionImportCalculatorState->setEnabled(!state);
@@ -573,6 +579,46 @@ void MainWindow::debuggerGUIPopulate() {
     tmp = QString::number(debugger.totalCycles);
     ui->cycleView->setPalette(tmp == ui->cycleView->text() ? nocolorback : colorback);
     ui->cycleView->setText(tmp);
+
+    tmp = QString::number(rtc.readSec);
+    ui->seconds->setPalette(tmp == ui->seconds->text() ? nocolorback : colorback);
+    ui->seconds->setText(tmp);
+
+    tmp = QString::number(rtc.readMin);
+    ui->minutes->setPalette(tmp == ui->minutes->text() ? nocolorback : colorback);
+    ui->minutes->setText(tmp);
+
+    tmp = QString::number(rtc.readHour);
+    ui->hours->setPalette(tmp == ui->hours->text() ? nocolorback : colorback);
+    ui->hours->setText(tmp);
+
+    tmp = QString::number(rtc.readDay);
+    ui->days->setPalette(tmp == ui->days->text() ? nocolorback : colorback);
+    ui->days->setText(tmp);
+
+    tmp = QString::number(gpt.timer[0].counter);
+    ui->timer1->setPalette(tmp == ui->timer1->text() ? nocolorback : colorback);
+    ui->timer1->setText(tmp);
+
+    tmp = QString::number(gpt.timer[0].reset);
+    ui->timer1r->setPalette(tmp == ui->timer1r->text() ? nocolorback : colorback);
+    ui->timer1r->setText(tmp);
+
+    tmp = QString::number(gpt.timer[1].counter);
+    ui->timer2->setPalette(tmp == ui->timer2->text() ? nocolorback : colorback);
+    ui->timer2->setText(tmp);
+
+    tmp = QString::number(gpt.timer[1].reset);
+    ui->timer2r->setPalette(tmp == ui->timer2r->text() ? nocolorback : colorback);
+    ui->timer2r->setText(tmp);
+
+    tmp = QString::number(gpt.timer[2].counter);
+    ui->timer3->setPalette(tmp == ui->timer3->text() ? nocolorback : colorback);
+    ui->timer3->setText(tmp);
+
+    tmp = QString::number(gpt.timer[2].reset);
+    ui->timer3r->setPalette(tmp == ui->timer3r->text() ? nocolorback : colorback);
+    ui->timer3r->setText(tmp);
 
     batteryIsCharging(control.batteryCharging);
     batteryChangeStatus(control.setBatteryStatus);

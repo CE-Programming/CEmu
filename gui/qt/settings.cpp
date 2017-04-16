@@ -317,7 +317,7 @@ void MainWindow::setUIStyle(bool docks_enabled) {
     docksMenu = new QMenu(tr("Docks"), this);
     ui->menubar->insertMenu(ui->menuAbout->menuAction(), docksMenu);
 
-    //Convert the tabs into QDockWidgets
+    // Convert the tabs into QDockWidgets
     DockWidget *last_dock = nullptr;
     while (ui->tabWidget->count()) {
         DockWidget *dw = new DockWidget(ui->tabWidget, this);
