@@ -17,19 +17,21 @@ void EMSCRIPTEN_KEEPALIVE keypad_key_event(unsigned int row, unsigned int col, b
     if (row == 2 && col == 0) {
         intrpt_set(INT_ON, press);
         if (press && calc_is_off()) {
-            asic.shipModeEnabled = false;
+            if (asic.resetOnWake) {
+                cpuEvents |= EVENT_RESET;
+            }
             control.readBatteryStatus = ~1;
             intrpt_pulse(INT_WAKE);
         }
     } else {
         if (press) {
-            keypad.key_map[row] |= 1 << col;
+            keypad.keyMap[row] |= 1 << col;
             if (keypad.mode == 1) {
                 keypad.status |= 4;
                 keypad_intrpt_check();
             }
         } else {
-            keypad.key_map[row] &= ~(1 << col);
+            keypad.keyMap[row] &= ~(1 << col);
             keypad_intrpt_check();
         }
     }
@@ -81,7 +83,7 @@ static void keypad_scan_event(int index) {
     }
 
     /* scan each data row */
-    row = keypad.key_map[keypad.current_row];
+    row = keypad.keyMap[keypad.current_row];
     row &= (1 << keypad.cols) - 1;
 
     /* if mode 3 or 2, generate data change interrupt */
@@ -120,7 +122,7 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
                 event_clear(SCHED_KEYPAD);
                 if (keypad.mode == 1) {
                     for (row = 0; row < keypad.rows; row++) {
-                        if (keypad.key_map[row] & ((1 << keypad.cols) - 1)) {
+                        if (keypad.keyMap[row] & ((1 << keypad.cols) - 1)) {
                             keypad.status |= 4;
                             keypad_intrpt_check();
                             break;
@@ -136,7 +138,7 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
             write8(keypad.status, bit_offset, keypad.status & ~byte);
             if (keypad.mode == 1) {
                 for (row = 0; row < keypad.rows; row++) {
-                    if (keypad.key_map[row] & ((1 << keypad.cols) - 1)) {
+                    if (keypad.keyMap[row] & ((1 << keypad.cols) - 1)) {
                         keypad.status |= 4;
                         break;
                     }
@@ -152,7 +154,7 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
         case 0x08: case 0x09: case 0x0A: case 0x0B:
             if (poke) {
                 write8(keypad.data[(pio - 0x10) >> 1 & 15], pio << 3 & 8, byte);
-                write8(keypad.key_map[pio >> 1 & 15], pio << 3 & 8, byte);
+                write8(keypad.keyMap[pio >> 1 & 15], pio << 3 & 8, byte);
             }
             break;
         case 0x10:
@@ -173,7 +175,7 @@ void keypad_reset() {
 
     keypad.current_row = 0;
     for(i=0; i<sizeof(keypad.data) / sizeof(keypad.data[0]); i++) {
-        keypad.data[i] = keypad.key_map[i] = 0;
+        keypad.data[i] = keypad.keyMap[i] = 0;
     }
 
     sched.items[SCHED_KEYPAD].clock = CLOCK_APB;

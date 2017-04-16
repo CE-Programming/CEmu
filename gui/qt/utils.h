@@ -44,4 +44,8 @@ bool isProcRunning(pid_t procID);
 
 QString randomString(const int length);
 
+extern bool guiDebug;
+extern bool guiSend;
+extern bool guiReceive;
+
 #endif

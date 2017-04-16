@@ -67,7 +67,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>8</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -288,6 +288,9 @@
              </property>
              <property name="focusPolicy">
               <enum>Qt::ClickFocus</enum>
+             </property>
+             <property name="contextMenuPolicy">
+              <enum>Qt::CustomContextMenu</enum>
              </property>
              <property name="showDropIndicator" stdset="0">
               <bool>false</bool>
@@ -7745,7 +7748,7 @@ QPushButton:pressed {
     <addaction name="actionSaveState"/>
     <addaction name="actionRestoreState"/>
     <addaction name="separator"/>
-    <addaction name="actionPopoutLCD"/>
+    <addaction name="actionMemoryVisualizer"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
@@ -8033,7 +8036,7 @@ QPushButton:pressed {
     <string>Calculator image</string>
    </property>
   </action>
-  <action name="actionPopoutLCD">
+  <action name="actionMemoryVisualizer">
    <property name="icon">
     <iconset resource="resources.qrc">
      <normaloff>:/icons/resources/icons/lcd.png</normaloff>:/icons/resources/icons/lcd.png</iconset>

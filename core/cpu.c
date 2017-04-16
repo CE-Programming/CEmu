@@ -877,7 +877,7 @@ void cpu_execute(void) {
             }
 #endif
         } else if (cpu.halted && cpu.cycles < cpu.next) {
-            cpu.cycles_offset -= cpu.next - cpu.cycles;
+            cpu.cyclesOffset -= cpu.next - cpu.cycles;
             cpu.cycles = cpu.next; // consume all of the cycles
         }
         if (exiting || cpu.cycles >= cpu.next) {

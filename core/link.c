@@ -6,9 +6,6 @@
 #include "emu.h"
 #include "os/os.h"
 
-volatile bool isSending = false;
-volatile bool isReceiving = false;
-
 #define SAFE_RAM 0xD052C6
 
 static const uint8_t jforcegraph[9] = {
@@ -49,14 +46,6 @@ static const uint8_t pgrm_loader[34] = {
     (SAFE_RAM>>16)&255,           /* ld (SAFE_RAM),de     */
     0x18, 0xFE                    /* _sink: jr _sink      */
 };
-
-void enterVariableLink(void) {
-    /* Wait for the GUI to finish whatever it needs to do */
-    gui_entered_send_state(true);
-    do {
-        gui_emu_sleep(50);
-    } while (isSending || isReceiving);
-}
 
 bool listVariablesLink(void) {
     calc_var_t var;
@@ -121,7 +110,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
 
     save_cycles = cpu.cycles;
     save_next = cpu.next;
-    save_cycles_offset = cpu.cycles_offset;
+    save_cycles_offset = cpu.cyclesOffset;
 
     if (fread(tmp_buf, 1, h_size, file) != h_size)         goto r_err;
     if (memcmp(tmp_buf, header_data, h_size))              goto r_err;
@@ -225,14 +214,14 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned locat
     run_asm(jforcehome, sizeof jforcehome, 23000000);
     cpu.cycles = save_cycles;
     cpu.next = save_next;
-    cpu.cycles_offset = save_cycles_offset;
+    cpu.cyclesOffset = save_cycles_offset;
 
     return !fclose(file);
 
 r_err:
     cpu.cycles = save_cycles;
     cpu.next = save_next;
-    cpu.cycles_offset = save_cycles_offset;
+    cpu.cyclesOffset = save_cycles_offset;
     fclose(file);
     return false;
 }

@@ -77,15 +77,13 @@ void asic_init(void) {
     mem_init();
     cpu_init();
 
-    asic.shipModeEnabled = false;
+    asic.resetOnWake = false;
 
     plug_devices();
-    asic.valid = true;
     gui_console_printf("[CEmu] Initialized ASIC...\n");
 }
 
 void asic_free(void) {
-    asic.valid = false;
     mem_free();
     gui_console_printf("[CEmu] Freed ASIC.\n");
 }

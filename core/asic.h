@@ -22,8 +22,7 @@ extern "C" {
 
 typedef struct asic_state {
     ti_device_t deviceType;
-    bool shipModeEnabled;
-    volatile bool valid;
+    bool resetOnWake;
 } asic_state_t;
 
 /* External Global ASIC state */

@@ -58,10 +58,10 @@ public:
 protected:
     virtual bool canAccept(const QPointF &);
 
-    QColor m_textColor, m_secondColor, m_alphaColor;
-    Qt::Alignment m_labelAlign, m_secondAlign, m_alphaAlign;
-    QFont m_labelFont, m_secondFont, m_alphaFont;
-    const QString m_secondText, m_alphaText;
+    QColor mTextColor, mSecondColor, mAlphaColor;
+    Qt::Alignment mLabelAlign, mSecondAlign, mAlphaAlign;
+    QFont mLabelFont, mSecondFont, mAlphaFont;
+    const QString mSecondText, mAlphaText;
 };
 
 #endif

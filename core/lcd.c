@@ -54,8 +54,8 @@ void lcd_drawframe(uint32_t *out, lcd_state_t *buffer) {
     uint32_t *ofs_end = buffer->ofs_end;
     uint32_t *out_end = out + buffer->size;
 
-    if (!asic.valid || !buffer->size) { return; }
-    if (!ofs) { goto draw_black; }
+    if (!buffer->size) { return; }
+    if (!mem.flash.block || !mem.ram.block || !ofs) { goto draw_black; }
 
     if (mode < 4) {
         uint_fast8_t bpp = 1 << mode;

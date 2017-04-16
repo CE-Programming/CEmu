@@ -14,11 +14,10 @@
 #include "schedule.h"
 #include "debug/debug.h"
 
-#define imageVersion 0xCECE000D
+#define IMAGE_VERSION 0xCECE000D
 
 uint32_t cpuEvents;
 volatile bool exiting;
-volatile bool emulationPaused;
 
 void throttle_interval_event(int index) {
     event_repeat(index, 27000000 / 60);
@@ -28,28 +27,28 @@ void throttle_interval_event(int index) {
     throttle_timer_wait();
 }
 
-bool emu_save_rom(const char *file) {
+bool emu_save_rom(const char *name) {
     bool success = false;
-    FILE *savedRom = fopen(file, "wb");
-    if (!savedRom) {
+    FILE *file = fopen(name, "wb");
+    if (!file) {
         return false;
     }
 
-    success = (fwrite(mem.flash.block, 1, SIZE_FLASH, savedRom) == SIZE_FLASH);
+    success = (fwrite(mem.flash.block, 1, SIZE_FLASH, file) == SIZE_FLASH);
 
-    fclose(savedRom);
+    fclose(file);
 
     return success;
 }
 
-bool emu_save(const char *file) {
-    FILE *savedImage = NULL;
+bool emu_save(const char *name) {
+    FILE *file = NULL;
     emu_image_t *image = NULL;
     size_t size = sizeof(emu_image_t);
     bool success = false;
 
-    savedImage = fopen_utf8(file, "wb");
-    if (!savedImage) {
+    file = fopen_utf8(name, "wb");
+    if (!file) {
         return false;
     }
 
@@ -64,13 +63,13 @@ bool emu_save(const char *file) {
             break;
         }
 
-        image->version = imageVersion;
+        image->version = IMAGE_VERSION;
 
-        success = (fwrite(image, 1, size, savedImage) == size);
+        success = (fwrite(image, 1, size, file) == size);
     } while (0);
 
     free(image);
-    fclose(savedImage);
+    fclose(file);
 
     return success;
 }
@@ -121,7 +120,7 @@ bool emu_load(const char *romImage, const char *savedImage) {
             asic_init();
             asic_reset();
 
-            if (image->version != imageVersion || !asic_restore(image)) {
+            if (image->version != IMAGE_VERSION || !asic_restore(image)) {
                 emu_cleanup();
                 free(image);
                 break;
@@ -305,28 +304,22 @@ static void EMSCRIPTEN_KEEPALIVE emu_reset(void) {
 }
 
 static void emu_main_loop_inner(void) {
-    if (!emulationPaused) {
+    if (cpuEvents & (EVENT_RESET | EVENT_DEBUG_STEP)) {
+#ifdef DEBUG_SUPPORT
+        if (!cpu.halted && cpuEvents & EVENT_DEBUG_STEP) {
+            cpuEvents &= ~EVENT_DEBUG_STEP;
+            open_debugger(DBG_STEP, 0);
+        }
+#endif
         if (cpuEvents & EVENT_RESET) {
             gui_console_printf("[CEmu] Reset triggered.\n");
             asic_reset();
             cpuEvents &= ~EVENT_RESET;
         }
-#ifdef DEBUG_SUPPORT
-        if (!cpu.halted && (cpuEvents & EVENT_DEBUG_STEP)) {
-            cpuEvents &= ~EVENT_DEBUG_STEP;
-            open_debugger(DBG_STEP, 0);
-        }
-#endif
-        if (!asic.shipModeEnabled) {
-            sched_process_pending_events();
-            cpu_execute();
-        } else {
-            lcd.control &= ~0x800;
-            gui_emu_sleep(50);
-        }
-    } else {
-        gui_emu_sleep(50);
     }
+
+    sched_process_pending_events();
+    cpu_execute();
 }
 
 void emu_loop(bool reset) {
@@ -335,7 +328,6 @@ void emu_loop(bool reset) {
     }
 
     exiting = false;
-    emulationPaused = false;
 
 #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(emu_main_loop_inner, 0, 1);
@@ -345,8 +337,4 @@ void emu_loop(bool reset) {
     }
 #endif
     emu_cleanup();
-}
-
-void EMSCRIPTEN_KEEPALIVE emu_set_emulation_paused(bool paused) {
-    emulationPaused = paused;
 }

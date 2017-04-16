@@ -20,7 +20,7 @@ public:
              #endif
                  QStringLiteral("i"), QStringLiteral(":"),
                  right, 0, 4} {
-        m_secondFont.setStyle(QFont::StyleItalic);
+        mSecondFont.setStyle(QFont::StyleItalic);
     }
     NumKey(KeyConfig &config, QString labelText, QString secondText, QString alphaText,
            int right = 0, int left = 0, int width = 6, int height = 10)

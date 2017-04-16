@@ -8,55 +8,55 @@ RectKey::RectKey(KeyCode keycode, const QRect &textGeometry, const QRect &keyGeo
                  const QFont &labelFont, const QFont &secondFont, const QFont &alphaFont,
                  Qt::Alignment labelAlign, Qt::Alignment secondAlign, Qt::Alignment alphaAlign)
     : Key{keycode, textGeometry, keyGeometry, keyColor},
-      m_textColor{textColor}, m_secondColor{secondColor}, m_alphaColor{alphaColor},
-      m_labelAlign{labelAlign}, m_secondAlign{secondAlign}, m_alphaAlign{alphaAlign},
-      m_labelFont{labelFont}, m_secondFont{secondFont.resolve(labelFont)},
-                              m_alphaFont{alphaFont.resolve(labelFont)},
-      m_secondText{secondText}, m_alphaText{alphaText} {
+      mTextColor{textColor}, mSecondColor{secondColor}, mAlphaColor{alphaColor},
+      mLabelAlign{labelAlign}, mSecondAlign{secondAlign}, mAlphaAlign{alphaAlign},
+      mLabelFont{labelFont}, mSecondFont{secondFont.resolve(labelFont)},
+                              mAlphaFont{alphaFont.resolve(labelFont)},
+      mSecondText{secondText}, mAlphaText{alphaText} {
     QRect corner;
-    m_labelText = labelText;
-    m_keyShape.moveTo(keyGeometry.topLeft() + QPointF{0, topLeft * .5});
+    mLabelText = labelText;
+    mKeyShape.moveTo(keyGeometry.topLeft() + QPointF{0, topLeft * .5});
     corner.setSize({bottomLeft, bottomLeft});
     corner.moveBottomLeft(keyGeometry.bottomLeft());
-    m_keyShape.arcTo(corner, 90 * 2, 90);
+    mKeyShape.arcTo(corner, 90 * 2, 90);
     corner.setSize({bottomRight, bottomRight});
     corner.moveBottomRight(keyGeometry.bottomRight());
-    m_keyShape.arcTo(corner, 90 * 3, 90);
+    mKeyShape.arcTo(corner, 90 * 3, 90);
     corner.setSize({topRight, topRight});
     corner.moveTopRight(keyGeometry.topRight());
-    m_keyShape.arcTo(corner, 90 * 0, 90);
+    mKeyShape.arcTo(corner, 90 * 0, 90);
     corner.setSize({topLeft, topLeft});
     corner.moveTopLeft(keyGeometry.topLeft());
-    m_keyShape.arcTo(corner, 90 * 1, 90);
+    mKeyShape.arcTo(corner, 90 * 1, 90);
 
 #ifdef _WIN32
     m_labelFont.setPixelSize(labelSize.height());
     m_labelFont.setStretch(1+(labelSize.width() /
                            QFontMetricsF(m_labelFont).size(Qt::TextSingleLine, m_labelText).width()));
 #else
-    m_labelFont.setPixelSize(labelSize.height());
-    m_labelFont.setStretch(labelSize.width() * m_labelFont.stretch() /
-                           QFontMetricsF(m_labelFont).size(Qt::TextSingleLine, m_labelText).width());
+    mLabelFont.setPixelSize(labelSize.height());
+    mLabelFont.setStretch(labelSize.width() * mLabelFont.stretch() /
+                           QFontMetricsF(mLabelFont).size(Qt::TextSingleLine, mLabelText).width());
 #endif
 }
 
 void RectKey::paint(QPainter &painter) const {
     Key::paint(painter);
-    painter.setFont(m_labelFont);
-    painter.setPen(m_textColor);
-    painter.drawText(keyGeometry(), m_labelAlign, m_labelText);
-    if (!m_secondText.isEmpty()) {
-        painter.setPen(m_secondColor);
-        painter.setFont(m_secondFont);
-        painter.drawText(textGeometry(), m_secondAlign, m_secondText);
+    painter.setFont(mLabelFont);
+    painter.setPen(mTextColor);
+    painter.drawText(keyGeometry(), mLabelAlign, mLabelText);
+    if (!mSecondText.isEmpty()) {
+        painter.setPen(mSecondColor);
+        painter.setFont(mSecondFont);
+        painter.drawText(textGeometry(), mSecondAlign, mSecondText);
     }
-    if (!m_alphaText.isEmpty()) {
-        painter.setPen(m_alphaColor);
-        painter.setFont(m_alphaFont);
-        painter.drawText(textGeometry(), m_alphaAlign, m_alphaText);
+    if (!mAlphaText.isEmpty()) {
+        painter.setPen(mAlphaColor);
+        painter.setFont(mAlphaFont);
+        painter.drawText(textGeometry(), mAlphaAlign, mAlphaText);
     }
 }
 
 bool RectKey::canAccept(const QPointF &point) {
-    return m_keyShape.contains(point);
+    return mKeyShape.contains(point);
 }

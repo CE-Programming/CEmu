@@ -127,11 +127,11 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
             }
             control.ports[index] = byte;
 
-            /* Appears to enter low-power mode (For now; this will be fine) */
+            /* Appears to enter low-power mode (this will be fine for now) */
             if (byte == 0xD4) {
-                asic.shipModeEnabled = true;
-                control.ports[0] |= 0x40; // Turn calc off
-                cpuEvents |= EVENT_RESET;
+                control.ports[0] |= 0x40;
+                lcd.control &= ~0x800;
+                asic.resetOnWake = true;
                 gui_console_printf("[CEmu] Reset caused by entering sleep mode.\n", cpu.registers.PC);
 #ifdef DEBUG_SUPPORT
                 if (debugger.resetOpensDebugger) {

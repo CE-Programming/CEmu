@@ -11,13 +11,18 @@
 volatile bool inDebugger = false;
 debug_state_t debugger;
 
+#include <condition_variable>
+static std::mutex debugM;
+static std::condition_variable debugCV;
+
 void debugger_init(void) {
     debugger.stepOverInstrEnd = -1;
-    debugger.data.block = (uint8_t*)calloc(0x1000000, sizeof(uint8_t));    /* Allocate Debug memory */
-    debugger.data.ports = (uint8_t*)calloc(0x10000, sizeof(uint8_t));      /* Allocate Debug Port Monitor */
-    debugger.buffer = (char*)malloc(SIZEOF_DBG_BUFFER * sizeof(char));     /* Used for printing to the console */
-    debugger.errBuffer = (char*)malloc(SIZEOF_DBG_BUFFER * sizeof(char));  /* Used for printing to the console */
-    debugger.currentBuffPos = debugger.currentErrBuffPos = 0;
+    debugger.data.block = (uint8_t*)calloc(0x1000000, 1);    /* Allocate Debug memory */
+    debugger.data.ports = (uint8_t*)calloc(0x10000, 1);      /* Allocate Debug Port Monitor */
+    debugger.buffer = (char*)malloc(SIZEOF_DBG_BUFFER);      /* Used for printing to the console */
+    debugger.bufferErr = (char*)malloc(SIZEOF_DBG_BUFFER);   /* Used for printing to the console */
+    debugger.bufferPos = 0;
+    debugger.bufferErrPos = 0;
 
     gui_console_printf("[CEmu] Initialized Debugger...\n");
 }
@@ -26,31 +31,37 @@ void debugger_free(void) {
     free(debugger.data.block);
     free(debugger.data.ports);
     free(debugger.buffer);
+    free(debugger.bufferErr);
     gui_console_printf("[CEmu] Freed Debugger.\n");
 }
 
-uint8_t debug_peek_byte(uint32_t address) {
-    uint8_t value = mem_peek_byte(address), debugData;
+uint8_t debug_peek_byte(uint32_t addr) {
+    uint8_t value = mem_peek_byte(addr), debugData;
 
-    if ((debugData = debugger.data.block[address])) {
-        disasmHighlight.hit_read_watchpoint |= debugData & DBG_READ_WATCHPOINT;
-        disasmHighlight.hit_write_watchpoint |= debugData & DBG_WRITE_WATCHPOINT;
-        disasmHighlight.hit_exec_breakpoint |= debugData & DBG_EXEC_BREAKPOINT;
-        if (debugData & DBG_INST_START_MARKER && disasmHighlight.inst_address < 0) {
-            disasmHighlight.inst_address = address;
+    if ((debugData = debugger.data.block[addr])) {
+        disasmHighlight.rWatch |= debugData & DBG_READ_WATCHPOINT;
+        disasmHighlight.wWatch |= debugData & DBG_WRITE_WATCHPOINT;
+        disasmHighlight.xBreak |= debugData & DBG_EXEC_BREAKPOINT;
+        if (debugData & DBG_INST_START_MARKER && disasmHighlight.addr < 0) {
+            disasmHighlight.addr = addr;
         }
     }
 
-    if (cpu.registers.PC == address) {
-        disasmHighlight.hit_pc = true;
+    if (cpu.registers.PC == addr) {
+        disasmHighlight.pc = true;
     }
 
     return value;
 }
 
+void close_debugger(void) {
+    std::unique_lock<std::mutex> lock(debugM);
+    debugCV.notify_all();
+    inDebugger = false;
+}
+
 void open_debugger(int reason, uint32_t data) {
     if (inDebugger) {
-        /* Prevent recurse */
         return;
     }
 
@@ -58,38 +69,37 @@ void open_debugger(int reason, uint32_t data) {
         if (((cpuEvents & EVENT_DEBUG_STEP_NEXT)
                 && !(debugger.data.block[cpu.registers.PC] & DBG_TEMP_EXEC_BREAKPOINT)) || (cpuEvents & EVENT_DEBUG_STEP_OUT)) {
             debugger.stepOverFirstStep = false;
-            gui_debugger_raise_or_disable(inDebugger = false);
+            gui_debugger_raise_or_disable(false);
             return;
         }
         debug_clear_temp_break();
     }
 
-    debugger.cpu_cycles = cpu.cycles;
-    debugger.cpu_next = cpu.next;
-    debugger.total_cycles = cpu.cycles + cpu.cycles_offset;
+    debugger.cpuCycles = cpu.cycles;
+    debugger.cpuNext = cpu.next;
+    debugger.totalCycles = cpu.cycles + cpu.cyclesOffset;
 
-    if (debugger.currentBuffPos) {
-        debugger.buffer[debugger.currentBuffPos] = '\0';
+    if (debugger.bufferPos) {
+        debugger.buffer[debugger.bufferPos] = '\0';
         gui_console_printf("%s", debugger.buffer);
-        debugger.currentBuffPos = 0;
+        debugger.bufferPos = 0;
     }
 
-    if (debugger.currentErrBuffPos) {
-        debugger.errBuffer[debugger.currentErrBuffPos] = '\0';
-        gui_console_err_printf("%s", debugger.errBuffer);
-        debugger.currentErrBuffPos = 0;
+    if (debugger.bufferErrPos) {
+        debugger.bufferErr[debugger.bufferErrPos] = '\0';
+        gui_console_err_printf("%s", debugger.bufferErr);
+        debugger.bufferErrPos = 0;
     }
 
     inDebugger = true;
+
+    std::unique_lock<std::mutex> lock(debugM);
     gui_debugger_send_command(reason, data);
+    debugCV.wait(lock);
 
-    while (inDebugger) {
-        gui_emu_sleep(50);
-    }
-
-    cpu.next = debugger.cpu_next;
-    cpu.cycles = debugger.cpu_cycles;
-    cpu.cycles_offset = debugger.total_cycles - cpu.cycles;
+    cpu.next = debugger.cpuNext;
+    cpu.cycles = debugger.cpuCycles;
+    cpu.cyclesOffset = debugger.totalCycles - cpu.cycles;
 
     if (cpuEvents & EVENT_DEBUG_STEP) {
         cpu.next = cpu.cycles + 1;

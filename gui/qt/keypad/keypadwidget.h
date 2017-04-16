@@ -12,7 +12,7 @@ class KeypadWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit KeypadWidget(QWidget *parent = Q_NULLPTR) : QWidget{parent}, m_keys{} { }
+    explicit KeypadWidget(QWidget *parent = Q_NULLPTR) : QWidget{parent}, mKeys{} { }
     virtual ~KeypadWidget();
 
     void setType(bool, unsigned int);
@@ -34,15 +34,15 @@ protected:
 private:
     void addKey(Key *);
 
-    unsigned curr_color = KEYPAD_BLACK;
-    static const size_t s_rows{8}, s_cols{8};
-    static const QRect s_baseRect;
-    KeyConfig m_config;
-    QLinearGradient m_background;
-    QTransform m_transform, m_inverseTransform;
-    Key *m_keys[s_rows][s_cols];
-    int embed_font_id = -2;
-    QColor c_center, c_sides, c_num, c_text, c_other, c_graph;
+    unsigned int color = KEYPAD_BLACK;
+    static const size_t sRows{8}, sCols{8};
+    static const QRect sBaseRect;
+    KeyConfig mConfig;
+    QLinearGradient mBackground;
+    QTransform mTransform, mInverseTransform;
+    Key *mKeys[sRows][sCols];
+    int fontId = -2;
+    QColor cCenter, cSides, cNum, cText, cOther, cGraph;
 };
 
 #endif

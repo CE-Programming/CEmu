@@ -5,14 +5,14 @@
 #include <QtCore/QTimer>
 
 #include <chrono>
+#include <condition_variable>
 
 #include "../../core/asic.h"
 #include "../../core/debug/debug.h"
 
-extern QTimer speedUpdateTimer;
-
 class EmuThread : public QThread {
     Q_OBJECT
+
 public:
     explicit EmuThread(QObject *p = Q_NULLPTR);
 
@@ -44,10 +44,14 @@ signals:
     void started(bool);
     void stopped();
 
+    // Sending/Receiving
+    void sentFile(const QString&, bool);
+    void receiveReady();
+
 public slots:
     virtual void run() override;
     bool stop();
-    void resetTriggered();
+    void reset();
 
     // Debugging
     void setDebugMode(bool);
@@ -58,35 +62,47 @@ public slots:
     void setRunUntilMode();
 
     // Linking
-    void setSendState(bool);
-    void setReceiveState(bool);
+    void send(const QStringList&, unsigned int);
+    void receive();
+    void receiveDone();
 
     // Speed
     void setEmuSpeed(int);
-    void changeThrottleMode(bool);
+    void setThrottleMode(bool);
 
     // Save/Restore
-    bool restore(QString);
-    void save(QString);
-    void saveRomImage(QString);
+    bool restore(const QString&);
+    void save(const QString&);
+    void saveRomImage(const QString&);
 
     // Speed
     void sendActualSpeed();
 
 private:
     void setActualSpeed(int);
+    void sendFiles();
 
-    volatile int speed, actualSpeed;
+    int speed, actualSpeed;
+
     bool enterDebugger = false;
     bool enterSendState = false;
     bool enterReceiveState = false;
+    bool enterRestore = false;
+
     bool throttleOn = true;
-    bool emuStopped = false;
-    std::chrono::steady_clock::time_point lastTime;
+    bool saveImage = false;
+    bool saveRom = false;
+
     QString romExportPath;
-    volatile bool saveImage = false;
-    volatile bool saveRom = false;
-    volatile bool doRestore = false;
+
+    QStringList vars;
+    unsigned int sendLoc;
+
+    std::chrono::steady_clock::time_point lastTime;
+    std::mutex mutex;
+    std::condition_variable cv;
+
+    QTimer speedTimer;
 };
 
 // For friends

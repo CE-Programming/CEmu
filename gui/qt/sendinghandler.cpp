@@ -11,13 +11,18 @@
 
 SendingHandler *sendingHandler = Q_NULLPTR;
 
-SendingHandler::SendingHandler(QProgressBar *bar, QTableWidget *t) {
+SendingHandler::SendingHandler(QObject *p, QProgressBar *bar, QTableWidget *t) : QObject(p) {
     progress = bar;
     table = t;
+    connect(this, &SendingHandler::send, emu_thread, &EmuThread::send, Qt::QueuedConnection);
+    connect(emu_thread, &EmuThread::sentFile, this, &SendingHandler::sentFile, Qt::QueuedConnection);
+}
+
+SendingHandler::~SendingHandler() {
 }
 
 void SendingHandler::dropOccured(QDropEvent *e, unsigned int location) {
-    if (isSending || isReceiving || inDebugger) {
+    if (guiSend || guiReceive || guiDebug) {
         return e->ignore();
     }
 
@@ -47,7 +52,7 @@ void SendingHandler::resendSelected() {
 }
 
 bool SendingHandler::dragOccured(QDragEnterEvent *e) {
-    if (isSending || isReceiving || inDebugger) {
+    if (guiSend || guiReceive || guiDebug) {
         e->ignore();
         return false;
     }
@@ -80,70 +85,57 @@ bool SendingHandler::dragOccured(QDragEnterEvent *e) {
     return true;
 }
 
-void SendingHandler::sendFiles(QStringList fileNames, unsigned int location) {
-    if (progress) { progress->setVisible(true); }
+void SendingHandler::sentFile(const QString &file, bool ok) {
+    bool add = true;
+    int rows = table->rowCount();
 
-    if (isSending || isReceiving || inDebugger) {
-        QMessageBox::warning(nullptr, QObject::tr("Failed Transfer"), QObject::tr("Transfer failed: Emulation Paused"));
-        if (progress) { progress->setVisible(false); }
+    // Send null to complete sending
+    if (!ok || file.isEmpty()) {
+        if (!ok) {
+            QMessageBox::critical(Q_NULLPTR, QObject::tr("Failed Transfer"), QObject::tr("File: ")+file);
+        }
+        progress->setValue(progress->maximum());
+        guiDelay(100);
+        if (progress) {
+            progress->setVisible(false);
+            progress->setValue(0);
+        }
+        guiSend = false;
         return;
     }
 
-    emu_thread->setSendState(true);
+    for (int j = 0; j < rows; j++) {
+        if (!table->item(j, 0)->text().compare(file)) {
+            add = false;
+        }
+    }
+
+    if (add) {
+        table->setRowCount(rows + 1);
+        QTableWidgetItem *path = new QTableWidgetItem(file);
+        table->setItem(rows, 0, path);
+
+        path->setCheckState(Qt::Checked);
+    }
+
+    if (progress) {
+        progress->setValue(progress->value()+1);
+    }
+}
+
+void SendingHandler::sendFiles(const QStringList &fileNames, unsigned int location) {
     const int fileNum = fileNames.size();
 
-    if (fileNames.isEmpty()) {
-        emu_thread->setSendState(false);
-        if (progress) { progress->setVisible(false); }
+    if (guiSend || guiReceive || guiDebug || !fileNum) {
         return;
     }
 
-    /* Wait for an open link */
-    unsigned int tries_cnt = 0;
-    emu_thread->waitForLink = true;
-    do {
-        guiDelay(100);
-        tries_cnt++;
-    } while (emu_thread->waitForLink && tries_cnt < 50);
+    guiSend = true;
 
-    if (emu_thread->waitForLink) {
-        emu_thread->setSendState(false);
-        QMessageBox::warning(Q_NULLPTR, QObject::tr("Failed Transfer"), QObject::tr("Couldn't start the transfer. Make sure the calc is ready (at the home screen, for instance)."));
-        if (progress) { progress->setVisible(false); }
-        return;
+    if (progress) {
+        progress->setVisible(true);
+        progress->setMaximum(fileNum);
     }
 
-    if (progress) { progress->setMaximum(fileNum); }
-
-
-    for (int i = 0; i < fileNum; i++) {
-        int currRow = table->rowCount();
-        bool add = true;
-
-        if (!sendVariableLink(fileNames.at(i).toUtf8(), location)) {
-            QMessageBox::warning(Q_NULLPTR, QObject::tr("Failed Transfer"), QObject::tr("A failure occured during transfer of: ")+fileNames.at(i));
-        }
-
-        for (int j = 0; j < currRow; j++) {
-            if (!table->item(j, 0)->text().compare(fileNames.at(i))) {
-                add = false;
-            }
-        }
-
-        if (add) {
-            table->setRowCount(currRow + 1);
-            QTableWidgetItem *path = new QTableWidgetItem(fileNames.at(i));
-            table->setItem(currRow, 0, path);
-
-            path->setCheckState(Qt::Checked);
-        }
-
-        if (progress) { progress->setValue(i); }
-        QApplication::processEvents();
-    }
-
-    emu_thread->setSendState(false);
-    if (progress) { progress->setValue(fileNum); }
-    while (isSending);
-    if (progress) { progress->setVisible(false); progress->setValue(0); }
+    emit send(fileNames, location);
 }

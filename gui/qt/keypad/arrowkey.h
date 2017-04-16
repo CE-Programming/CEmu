@@ -23,10 +23,10 @@ private:
     static qreal computeAngle(const QRect &, int);
     static QPointF rotatePoint(QPointF, int);
 
-    QColor m_labelColor;
-    QPainterPath m_arrow;
-    QRect m_outer, m_inner;
-    int m_offset;
+    QColor mLabelColor;
+    QPainterPath mArrow;
+    QRect mOuter, mInner;
+    int mOffset;
 };
 
 #endif

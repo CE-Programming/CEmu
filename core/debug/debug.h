@@ -59,10 +59,10 @@ typedef struct {
 } debug_data_t;
 
 typedef struct {        /* For debugging */
-    int cpu_cycles;
-    int cpu_next;
+    int cpuCycles;
+    int cpuNext;
     char *buffer;
-    char *errBuffer;
+    char *bufferErr;
     bool resetOpensDebugger;
     uint32_t stepOverInstrSize;
     uint32_t stepOverExtendSize;
@@ -75,9 +75,9 @@ typedef struct {        /* For debugging */
     int8_t stepOutWait;
     bool stepOverFirstStep;
     debug_data_t data;
-    volatile uint32_t currentBuffPos;
-    volatile uint32_t currentErrBuffPos;
-    uint64_t total_cycles;
+    volatile uint32_t bufferPos;
+    volatile uint32_t bufferErrPos;
+    uint64_t totalCycles;
 } debug_state_t;
 
 /* Debugging */
@@ -86,8 +86,11 @@ extern debug_state_t debugger;
 void debugger_init(void);
 void debugger_free(void);
 
-uint8_t debug_peek_byte(uint32_t address);
+/* Main interface functions */
 void open_debugger(int reason, uint32_t address);
+void close_debugger(void);
+
+uint8_t debug_peek_byte(uint32_t address);
 void debug_switch_step_mode(void);
 
 void debug_init_run_until(uint32_t address);

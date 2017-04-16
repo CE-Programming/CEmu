@@ -70,7 +70,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     progressBar->setTextVisible(false);
     progressBar->setValue(0);
     ui->statusBar->addWidget(progressBar);
-    sendingHandler = new SendingHandler(progressBar, ui->varLoadedView);
+    sendingHandler = new SendingHandler(this, progressBar, ui->varLoadedView);
     progressBar->setVisible(false);
 
     // Emulator -> GUI
@@ -90,7 +90,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(&emu, &EmuThread::raiseDebugger, this, &MainWindow::debuggerRaise, Qt::QueuedConnection);
     connect(&emu, &EmuThread::disableDebugger, this, &MainWindow::debuggerGUIDisable, Qt::QueuedConnection);
     connect(&emu, &EmuThread::sendDebugCommand, this, &MainWindow::debuggerProcessCommand, Qt::QueuedConnection);
-    connect(this, &MainWindow::debuggerSendNewState, &emu, &EmuThread::setDebugMode);
+    connect(this, &MainWindow::setDebugState, &emu, &EmuThread::setDebugMode, Qt::QueuedConnection);
     connect(this, &MainWindow::setDebugStepInMode, &emu, &EmuThread::setDebugStepInMode);
     connect(this, &MainWindow::setRunUntilMode, &emu, &EmuThread::setRunUntilMode);
     connect(this, &MainWindow::setDebugStepOverMode, &emu, &EmuThread::setDebugStepOverMode);
@@ -141,12 +141,13 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     // Linking
     connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::selectFiles);
     connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::selectFiles);
-    connect(ui->buttonRefreshList, &QPushButton::clicked, this, &MainWindow::refreshVariableList);
-    connect(this, &MainWindow::setReceiveState, &emu, &EmuThread::setReceiveState);
+    connect(ui->buttonRefreshList, &QPushButton::clicked, this, &MainWindow::receiveChangeState);
     connect(ui->buttonReceiveFiles, &QPushButton::clicked, this, &MainWindow::saveSelected);
     connect(ui->buttonResendFiles, &QPushButton::clicked, this, &MainWindow::resendFiles);
     connect(ui->varLoadedView, &QWidget::customContextMenuRequested, this, &MainWindow::resendContextMenu);
-    ui->varLoadedView->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(&emu, &EmuThread::receiveReady, this, &MainWindow::changeVariableList, Qt::QueuedConnection);
+    connect(this, &MainWindow::receive, &emu, &EmuThread::receive);
+    connect(this, &MainWindow::receiveDone, &emu, &EmuThread::receiveDone);
 
     // Autotester
     connect(ui->buttonOpenJSONconfig, &QPushButton::clicked, this, &MainWindow::prepareAndOpenJSONConfig);
@@ -168,9 +169,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->actionImportCalculatorState, &QAction::triggered, this, &MainWindow::restoreFromFile);
     connect(ui->actionReloadROM, &QAction::triggered, this, &MainWindow::reloadROM);
     connect(ui->actionResetCalculator, &QAction::triggered, this, &MainWindow::resetCalculator);
-    connect(ui->actionPopoutLCD, &QAction::triggered, this, &MainWindow::createLCD);
+    connect(ui->actionMemoryVisualizer, &QAction::triggered, this, &MainWindow::newMemoryVisualizer);
     connect(ui->actionDisableMenuBar, &QAction::triggered, this, &MainWindow::setMenuBarState);
-    connect(this, &MainWindow::resetTriggered, &emu, &EmuThread::resetTriggered);
+    connect(this, &MainWindow::reset, &emu, &EmuThread::reset);
 
     // Capture
     connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
@@ -184,23 +185,22 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->actionAboutQt, &QAction::triggered, qApp, &QApplication::aboutQt);
 
     // Other GUI actions
-    ui->emuVarView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
     connect(ui->scaleLCD, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setLCDScale);
     connect(ui->refreshLCD, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setLCDRefresh);
     connect(ui->checkSkin, &QCheckBox::stateChanged, this, &MainWindow::setSkinToggle);
     connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::setAlwaysOnTop);
-    connect(ui->emulationSpeed, &QSlider::valueChanged, this, &MainWindow::setEmulatedSpeed);
-    connect(ui->checkThrottle, &QCheckBox::stateChanged, this, &MainWindow::setThrottleMode);
+    connect(ui->emulationSpeed, &QSlider::valueChanged, this, &MainWindow::setEmuSpeed);
+    connect(ui->checkThrottle, &QCheckBox::stateChanged, this, &MainWindow::setThrottle);
     connect(ui->lcdWidget, &QWidget::customContextMenuRequested, this, &MainWindow::screenContextMenu);
     connect(ui->checkSaveRestore, &QCheckBox::stateChanged, this, &MainWindow::setAutoSaveState);
     connect(ui->checkPortable, &QCheckBox::stateChanged, this, &MainWindow::setPortableConfig);
     connect(ui->checkSaveLoadDebug, &QCheckBox::stateChanged, this, &MainWindow::setSaveDebug);
     connect(ui->buttonChangeSavedImagePath, &QPushButton::clicked, this, &MainWindow::setImagePath);
     connect(ui->buttonChangeSavedDebugPath, &QPushButton::clicked, this, &MainWindow::setDebugPath);
-    connect(this, &MainWindow::setEmuSpeed, &emu, &EmuThread::setEmuSpeed);
-    connect(this, &MainWindow::changedThrottleMode, &emu, &EmuThread::changeThrottleMode);
-    connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showActualSpeed, Qt::QueuedConnection);
+    connect(this, &MainWindow::changedEmuSpeed, &emu, &EmuThread::setEmuSpeed);
+    connect(this, &MainWindow::changedThrottleMode, &emu, &EmuThread::setThrottleMode);
+    connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showSpeed, Qt::QueuedConnection);
     connect(ui->flashBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->flashEdit, &QHexEdit::setBytesPerLine);
     connect(ui->ramBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->ramEdit, &QHexEdit::setBytesPerLine);
     connect(ui->memBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->memEdit, &QHexEdit::setBytesPerLine);
@@ -332,7 +332,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     optLoadFiles(opts);
     changeFrameskip(settings->value(SETTING_CAPTURE_FRAMESKIP, 3).toUInt());
     setLCDRefresh(settings->value(SETTING_SCREEN_REFRESH_RATE, 30).toUInt());
-    setEmulatedSpeed(settings->value(SETTING_EMUSPEED, 10).toUInt());
+    setEmuSpeed(settings->value(SETTING_EMUSPEED, 10).toUInt());
     setFont(settings->value(SETTING_DEBUGGER_TEXT_SIZE, 9).toUInt());
     setAutoCheckForUpdates(settings->value(SETTING_AUTOUPDATE, false).toBool());
     setAutoSaveState(settings->value(SETTING_RESTORE_ON_OPEN, true).toBool());
@@ -346,7 +346,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     ui->ramBytes->setValue(settings->value(SETTING_DEBUGGER_RAM_BYTES, 8).toInt());
     ui->memBytes->setValue(settings->value(SETTING_DEBUGGER_MEM_BYTES, 8).toInt());
 
-    currentDir.setPath((settings->value(SETTING_CURRENT_DIR, QDir::homePath()).toString()));
+    currDir.setPath((settings->value(SETTING_CURRENT_DIR, QDir::homePath()).toString()));
     if (settings->value(SETTING_IMAGE_PATH).toString().isEmpty() || portable) {
         QString path = QDir::cleanPath(QFileInfo(settings->fileName()).absoluteDir().absolutePath() + SETTING_DEFAULT_IMAGE_FILE);
         settings->setValue(SETTING_IMAGE_PATH, path);
@@ -424,7 +424,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     optCheckSend(opts);
 
     if (opts.speed != -1) {
-        setEmulatedSpeed(opts.speed/10);
+        setEmuSpeed(opts.speed/10);
     }
 
     debuggerInstall();
@@ -444,8 +444,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
         settings->setValue(SETTING_FIRST_RUN, true);
     }
 
-    speedUpdateTimer.start();
-    speedUpdateTimer.setInterval(1000 / 2);
     ui->lcdWidget->setFocus();
 }
 
@@ -524,7 +522,7 @@ void MainWindow::optCheckSend(CEmuOpts &o) {
         }
     }
 
-    setThrottleMode(o.useUnthrottled ? Qt::Unchecked : Qt::Checked);
+    setThrottle(o.useUnthrottled ? Qt::Unchecked : Qt::Checked);
 }
 
 void MainWindow::optLoadFiles(CEmuOpts &o) {
@@ -582,7 +580,6 @@ MainWindow::~MainWindow() {
     delete ui->ramEdit;
     delete ui->memEdit;
     delete ui;
-    delete sendingHandler;
 }
 
 bool MainWindow::IsInitialized() {
@@ -608,9 +605,10 @@ void MainWindow::saveToPath(QString path) {
 }
 
 bool MainWindow::restoreFromPath(QString path) {
-    if (isReceiving || isSending) {
-        refreshVariableList();
+    if (guiReceive) {
+        receiveChangeState();
     }
+
     if (!emu_thread->restore(path)) {
         QMessageBox::critical(this, MSG_ERROR, tr("Could not resume; try restarting CEmu"));
         return false;
@@ -630,10 +628,10 @@ void MainWindow::saveEmuState() {
 
 void MainWindow::restoreFromFile() {
     QString savedImage = QFileDialog::getOpenFileName(this, tr("Select saved image to restore from"),
-                                                      currentDir.absolutePath(),
+                                                      currDir.absolutePath(),
                                                       tr("CEmu images (*.ce);;All files (*.*)"));
     if (!savedImage.isEmpty()) {
-        currentDir = QFileInfo(savedImage).absoluteDir();
+        currDir = QFileInfo(savedImage).absoluteDir();
         if (restoreFromPath(savedImage)) {
             usingLoadedImage = true;
         }
@@ -642,19 +640,19 @@ void MainWindow::restoreFromFile() {
 
 void MainWindow::saveToFile() {
     QString savedImage = QFileDialog::getSaveFileName(this, tr("Set image to save to"),
-                                                      currentDir.absolutePath(),
+                                                      currDir.absolutePath(),
                                                       tr("CEmu images (*.ce);;All files (*.*)"));
     if (!savedImage.isEmpty()) {
-        currentDir = QFileInfo(savedImage).absoluteDir();
+        currDir = QFileInfo(savedImage).absoluteDir();
         saveToPath(savedImage);
     }
 }
 void MainWindow::exportRom() {
     QString saveRom = QFileDialog::getSaveFileName(this, tr("Set Rom image to save to"),
-                                                      currentDir.absolutePath(),
+                                                      currDir.absolutePath(),
                                                       tr("ROM images (*.rom);;All files (*.*)"));
     if (!saveRom.isEmpty()) {
-        currentDir = QFileInfo(saveRom).absoluteDir();
+        currDir = QFileInfo(saveRom).absoluteDir();
         emu_thread->saveRomImage(saveRom);
     }
 }
@@ -723,11 +721,13 @@ void MainWindow::closeEvent(QCloseEvent *e) {
         QMainWindow::closeEvent(e);
         return;
     }
-    if (inDebugger) {
+
+    if (guiDebug) {
         debuggerChangeState();
     }
-    if (isReceiving || isSending) {
-        refreshVariableList();
+
+    if (guiReceive) {
+        receiveChangeState();
     }
 
     if (settings->value(SETTING_DEBUGGER_SAVE_ON_CLOSE, false).toBool()) {
@@ -740,8 +740,6 @@ void MainWindow::closeEvent(QCloseEvent *e) {
             e->ignore();
             return;
     }
-
-    speedUpdateTimer.stop();
 
     emu.stop();
 
@@ -776,7 +774,7 @@ void MainWindow::consoleErrStr(const QString &str) {
     }
 }
 
-void MainWindow::showActualSpeed(int speed) {
+void MainWindow::showSpeed(int speed) {
     speedLabel.setText(QStringLiteral(" ") + tr("Emulated Speed: ") + QString::number(speed, 10) + QStringLiteral("%"));
 }
 
@@ -785,10 +783,11 @@ void MainWindow::showStatusMsg(const QString &str) {
 }
 
 void MainWindow::setRom(const QString &newRom) {
-    if (isReceiving || isSending) {
-        refreshVariableList();
+    if (guiReceive) {
+        receiveChangeState();
     }
-    if (inDebugger) {
+
+    if (guiDebug) {
         debuggerChangeState();
     }
     emu.rom = newRom;
@@ -797,11 +796,8 @@ void MainWindow::setRom(const QString &newRom) {
         emu.rom = dir.relativeFilePath(emu.rom);
     }
     if (emu.stop()) {
-        speedUpdateTimer.stop();
         ui->rompathView->setText(emu.rom);
         emu.start();
-        speedUpdateTimer.start();
-        speedUpdateTimer.setInterval(1000 / 2);
     } else {
         QMessageBox::critical(this, MSG_ERROR, tr("Failed to load new ROM image!"));
     }
@@ -831,7 +827,7 @@ void MainWindow::screenshotSave(QString nameFilter, QString defaultSuffix, QStri
 
     dialog.setAcceptMode(QFileDialog::AcceptSave);
     dialog.setFileMode(QFileDialog::AnyFile);
-    dialog.setDirectory(currentDir);
+    dialog.setDirectory(currDir);
     dialog.setNameFilter(nameFilter);
     dialog.setWindowTitle("Save Screen");
     dialog.setDefaultSuffix(defaultSuffix);
@@ -846,7 +842,7 @@ void MainWindow::screenshotSave(QString nameFilter, QString defaultSuffix, QStri
             QFile(temppath).rename(filename);
         }
     }
-    currentDir = dialog.directory().absolutePath();
+    currDir = dialog.directory().absolutePath();
 }
 
 void MainWindow::screenshot() {
@@ -880,7 +876,7 @@ void MainWindow::recordGIF() {
     static QString path;
     static QString opt_path;
 
-    if (inDebugger || isReceiving || isSending) {
+    if (guiDebug || guiReceive || guiSend) {
         return;
     }
 
@@ -898,7 +894,7 @@ void MainWindow::recordGIF() {
 
             dialog.setAcceptMode(QFileDialog::AcceptSave);
             dialog.setFileMode(QFileDialog::AnyFile);
-            dialog.setDirectory(currentDir);
+            dialog.setDirectory(currDir);
             dialog.setNameFilter(tr("GIF images (*.gif)"));
             dialog.setWindowTitle(tr("Save Recorded GIF"));
             dialog.setDefaultSuffix(QStringLiteral("gif"));
@@ -920,7 +916,7 @@ void MainWindow::recordGIF() {
                 QFile(opt_path).remove();
             }
 
-            currentDir = dialog.directory();
+            currDir = dialog.directory();
 
         } else {
             QMessageBox::critical(this, MSG_ERROR, tr("A failure occured during GIF recording."));
@@ -1000,6 +996,15 @@ void MainWindow::consoleOutputChanged() {
 //  Linking things
 // ------------------------------------------------
 
+void MainWindow::receiveChangeState() {
+    if (guiReceive) {
+        changeVariableList();
+        emit receiveDone();
+    } else {
+        emit receive();
+    }
+}
+
 QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode, const QString &name_filter, const QString &defaultSuffix) {
     QFileDialog dialog(this);
     int good;
@@ -1007,11 +1012,11 @@ QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode, con
     dialog.setDefaultSuffix(defaultSuffix);
     dialog.setAcceptMode(mode);
     dialog.setFileMode(mode == QFileDialog::AcceptOpen ? QFileDialog::ExistingFiles : QFileDialog::AnyFile);
-    dialog.setDirectory(currentDir);
+    dialog.setDirectory(currDir);
     dialog.setNameFilter(name_filter);
     good = dialog.exec();
 
-    currentDir = dialog.directory().absolutePath();
+    currDir = dialog.directory().absolutePath();
 
     if (good) {
         return dialog.selectedFiles();
@@ -1021,7 +1026,7 @@ QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode, con
 }
 
 void MainWindow::selectFiles() {
-    if (inDebugger) {
+    if (guiDebug) {
        return;
     }
 
@@ -1045,39 +1050,36 @@ void MainWindow::variableDoubleClicked(QTableWidgetItem *item) {
     }
 }
 
-void MainWindow::refreshVariableList() {
+void MainWindow::changeVariableList() {
     calc_var_t var;
 
-    if (inDebugger) {
+    if (guiSend || guiDebug) {
         return;
     }
+
+    guiReceive = !guiReceive;
 
     ui->emuVarView->setRowCount(0);
     ui->emuVarView->setSortingEnabled(false);
 
-    if (isReceiving || isSending) {
+    if (!guiReceive) {
         ui->buttonRefreshList->setText(tr("Show variables"));
         ui->buttonReceiveFiles->setEnabled(false);
         ui->buttonRun->setEnabled(true);
         ui->buttonSend->setEnabled(true);
-        setReceiveState(false);
-        while (isReceiving || isSending) {
-            QApplication::processEvents();
-        }
     } else {
         ui->buttonRefreshList->setText(tr("Resume emulation"));
         ui->buttonSend->setEnabled(false);
         ui->buttonReceiveFiles->setEnabled(true);
         ui->buttonRun->setEnabled(false);
-        setReceiveState(true);
 
         vat_search_init(&var);
         while (vat_search_next(&var)) {
             if (var.size > 2) {
-                int currRow;
+                int row;
 
-                currRow = ui->emuVarView->rowCount();
-                ui->emuVarView->setRowCount(currRow + 1);
+                row = ui->emuVarView->rowCount();
+                ui->emuVarView->setRowCount(row + 1);
 
                 bool var_preview_needs_gray = false;
                 QString var_value;
@@ -1118,10 +1120,10 @@ void MainWindow::refreshVariableList() {
                     var_preview->setForeground(Qt::gray);
                 }
 
-                ui->emuVarView->setItem(currRow, VAR_NAME, var_name);
-                ui->emuVarView->setItem(currRow, VAR_TYPE, var_type);
-                ui->emuVarView->setItem(currRow, VAR_SIZE, var_size);
-                ui->emuVarView->setItem(currRow, VAR_PREVIEW, var_preview);
+                ui->emuVarView->setItem(row, VAR_NAME, var_name);
+                ui->emuVarView->setItem(row, VAR_TYPE, var_type);
+                ui->emuVarView->setItem(row, VAR_SIZE, var_size);
+                ui->emuVarView->setItem(row, VAR_PREVIEW, var_preview);
             }
         }
         ui->emuVarView->resizeColumnToContents(VAR_NAME);
@@ -1176,8 +1178,6 @@ void MainWindow::saveSelected() {
         "",
         "",
     };
-
-    setReceiveState(true);
 
     QVector<const calc_var_t*> selectedVars;
     QStringList fileNames;
@@ -1439,20 +1439,21 @@ void MainWindow::emuStopped() {
 }
 
 void MainWindow::resetCalculator() {
-    if (isReceiving || isSending) {
-        refreshVariableList();
+    if (guiReceive) {
+        receiveChangeState();
     }
-    if (inDebugger) {
+    if (guiDebug) {
         debuggerChangeState();
     }
-    emit resetTriggered();
+    emit reset();
 }
 
 void MainWindow::reloadROM() {
-    if (isReceiving || isSending) {
-        refreshVariableList();
+    if (guiReceive) {
+        receiveChangeState();
     }
-    if (inDebugger) {
+
+    if (guiDebug) {
         debuggerChangeState();
     }
 
@@ -1502,10 +1503,10 @@ void MainWindow::drawNextDisassembleLine() {
         disasm.baseAddress = disasm.newAddress;
         map_t::iterator item = disasm.map.find(disasm.newAddress);
         if (item != disasm.map.end()) {
-            disasmHighlight.hit_read_watchpoint = false;
-            disasmHighlight.hit_write_watchpoint = false;
-            disasmHighlight.hit_exec_breakpoint = false;
-            disasmHighlight.hit_pc = false;
+            disasmHighlight.rWatch = false;
+            disasmHighlight.wWatch = false;
+            disasmHighlight.xBreak = false;
+            disasmHighlight.pc = false;
 
             disasm.instruction.data.clear();
             disasm.instruction.opcode.clear();
@@ -1523,9 +1524,9 @@ void MainWindow::drawNextDisassembleLine() {
 
     // Some round symbol things
     QString breakpointSymbols = QString("<font color='#A3FFA3'>%1</font><font color='#A3A3FF'>%2</font><font color='#FFA3A3'>%3</font>")
-                                   .arg(((disasmHighlight.hit_read_watchpoint == true)  ? "&#9679;" : " "),
-                                        ((disasmHighlight.hit_write_watchpoint == true) ? "&#9679;" : " "),
-                                        ((disasmHighlight.hit_exec_breakpoint == true)  ? "&#9679;" : " "));
+                                   .arg(((disasmHighlight.rWatch == true)  ? "&#9679;" : " "),
+                                        ((disasmHighlight.wWatch == true) ? "&#9679;" : " "),
+                                        ((disasmHighlight.xBreak == true)  ? "&#9679;" : " "));
 
     // Simple syntax highlighting
     QString instructionArgsHighlighted = QString::fromStdString(disasm.instruction.arguments)
@@ -1549,7 +1550,7 @@ void MainWindow::drawNextDisassembleLine() {
         disasmOffset.movePosition(QTextCursor::StartOfLine);
     }
 
-    if (disasmHighlight.hit_pc == true) {
+    if (disasmHighlight.pc == true) {
         ui->disassemblyView->addHighlight(QColor(Qt::blue).lighter(160));
     }
 }
@@ -1645,7 +1646,7 @@ void MainWindow::variablesContextMenu(const QPoint& posa) {
     if (selectedItem) {
         if (selectedItem->text() == launch) {
             // resume emulation and launch
-            refreshVariableList();
+            changeVariableList();
             launchPrgm(&var);
         }
     }
@@ -1687,14 +1688,14 @@ void MainWindow::opContextMenu(const QPoint& posa) {
     }
 }
 
-void MainWindow::createLCD() {
+void MainWindow::newMemoryVisualizer() {
     MemoryVisualizer *p = new MemoryVisualizer(this);
     p->setAttribute(Qt::WA_DeleteOnClose);
     p->show();
 }
 
 void MainWindow::stepInPressed() {
-    if (!inDebugger) {
+    if (!guiDebug) {
         return;
     }
 
@@ -1704,7 +1705,7 @@ void MainWindow::stepInPressed() {
 }
 
 void MainWindow::stepOverPressed() {
-    if (!inDebugger) {
+    if (!guiDebug) {
         return;
     }
 
@@ -1714,7 +1715,7 @@ void MainWindow::stepOverPressed() {
 }
 
 void MainWindow::stepNextPressed() {
-    if (!inDebugger) {
+    if (!guiDebug) {
         return;
     }
 
@@ -1724,7 +1725,7 @@ void MainWindow::stepNextPressed() {
 }
 
 void MainWindow::stepOutPressed() {
-    if (!inDebugger) {
+    if (!guiDebug) {
         return;
     }
 
@@ -1790,7 +1791,7 @@ void MainWindow::ipcHandleCommandlineReceive(QDataStream &stream) {
     optAttemptLoad(o);
     optCheckSend(o);
     if (o.speed != -1) {
-        setEmulatedSpeed(o.speed/10);
+        setEmuSpeed(o.speed/10);
     }
 }
 

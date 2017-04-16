@@ -386,11 +386,11 @@ void disassembleInstruction(void) {
 
     disasm.newAddress = disasm.baseAddress;
 
-    disasmHighlight.hit_read_watchpoint = false;
-    disasmHighlight.hit_write_watchpoint = false;
-    disasmHighlight.hit_exec_breakpoint = false;
-    disasmHighlight.hit_pc = false;
-    disasmHighlight.inst_address = -1;
+    disasmHighlight.rWatch = false;
+    disasmHighlight.wWatch = false;
+    disasmHighlight.xBreak = false;
+    disasmHighlight.pc = false;
+    disasmHighlight.addr = -1;
 
     disasm.instruction.data = "";
     disasm.instruction.opcode = "";
@@ -1023,16 +1023,16 @@ void disassembleInstruction(void) {
         }
         break;
     }
-    int32_t size = disasmHighlight.inst_address - disasm.baseAddress;
+    int32_t size = disasmHighlight.addr - disasm.baseAddress;
     if (size > 0) {
         int precision;
         disasm.newAddress = disasm.baseAddress;
 
-        disasmHighlight.hit_read_watchpoint = false;
-        disasmHighlight.hit_write_watchpoint = false;
-        disasmHighlight.hit_exec_breakpoint = false;
-        disasmHighlight.hit_pc = false;
-        disasmHighlight.inst_address = -1;
+        disasmHighlight.rWatch = false;
+        disasmHighlight.wWatch = false;
+        disasmHighlight.xBreak = false;
+        disasmHighlight.pc = false;
+        disasmHighlight.addr = -1;
 
         disasm.instruction.data = "";
         if (size % 3 == 0) {

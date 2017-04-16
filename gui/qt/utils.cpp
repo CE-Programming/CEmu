@@ -11,6 +11,10 @@
 QString execPath;
 QString configPath;
 
+bool guiDebug;
+bool guiSend;
+bool guiReceive;
+
 bool fileExists(const QString& ptath) {
     QString path(ptath);
     path = QDir::toNativeSeparators(path);
@@ -43,7 +47,7 @@ std::string calc_var_content_string(const calc_var_t& var) {
 void guiDelay(int ms) {
     QTime dt = QTime::currentTime().addMSecs(ms);
     while (QTime::currentTime() < dt) {
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        QCoreApplication::processEvents();
     }
 }
 

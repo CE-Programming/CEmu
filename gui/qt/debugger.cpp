@@ -60,6 +60,7 @@ void MainWindow::debuggerInstall() {
 
 void MainWindow::debuggerGUIDisable(void) {
     debuggerGUISetState(false);
+    guiDebug = false;
 }
 
 void MainWindow::debuggerGUIEnable(void) {
@@ -211,7 +212,7 @@ QString MainWindow::debuggerGetFile(int mode) {
 
     dialog.setAcceptMode(mode ? QFileDialog::AcceptSave : QFileDialog::AcceptOpen);
     dialog.setFileMode(QFileDialog::AnyFile);
-    dialog.setDirectory(currentDir);
+    dialog.setDirectory(currDir);
     dialog.setNameFilter(tr("Debugging Info (*.ini)"));
     dialog.setWindowTitle(mode ? tr("Debugger Import") : tr("Debugger Export"));
     dialog.setDefaultSuffix(QStringLiteral("ini"));
@@ -221,11 +222,12 @@ QString MainWindow::debuggerGetFile(int mode) {
         filename = dialog.selectedFiles().first();
     }
 
-    currentDir = dialog.directory();
+    currDir = dialog.directory();
     return filename;
 }
 
 void MainWindow::debuggerRaise(void) {
+    guiDebug = true;
     debuggerGUIPopulate();
     debuggerGUIEnable();
     connect(stepInShortcut, &QShortcut::activated, this, &MainWindow::stepInPressed);
@@ -297,7 +299,7 @@ void MainWindow::debuggerExecuteCommand(uint32_t debugAddress, uint8_t command) 
     }
 
     // continue emulation
-    inDebugger = false;
+    setDebugState(guiDebug = false);
 }
 
 void MainWindow::debuggerProcessCommand(int reason, uint32_t input) {
@@ -308,12 +310,12 @@ void MainWindow::debuggerProcessCommand(int reason, uint32_t input) {
         if (enabledSoftCommands) {
             debuggerExecuteCommand(static_cast<uint32_t>(reason-DBG_PORT_RANGE), static_cast<uint8_t>(input));
         } else {
-            inDebugger = false;
+            setDebugState(guiDebug = false);
         }
         return;
     }
 
-    QString inputString, type, text = QStringLiteral("");
+    QString inputString, type, text;
 
     switch (reason) {
         case HIT_EXEC_BREAKPOINT:
@@ -359,7 +361,7 @@ void MainWindow::debuggerProcessCommand(int reason, uint32_t input) {
 }
 
 void MainWindow::debuggerUpdateChanges() {
-    if (!inDebugger) {
+    if (!guiDebug) {
         return;
     }
 
@@ -402,7 +404,7 @@ void MainWindow::debuggerUpdateChanges() {
     cpu.IEF1 = ui->checkIEF1->isChecked();
     cpu.IEF2 = ui->checkIEF2->isChecked();
 
-    debugger.total_cycles = static_cast<uint64_t>(ui->cycleView->text().toULongLong());
+    debugger.totalCycles = static_cast<uint64_t>(ui->cycleView->text().toULongLong());
 
     uint32_t uiPC = static_cast<uint32_t>(hex2int(ui->pcregView->text()));
     if (cpu.registers.PC != uiPC) {
@@ -438,7 +440,6 @@ void MainWindow::debuggerGUISetState(bool state) {
         ui->opView->clear();
         ui->vatView->clear();
     }
-    setReceiveState(false);
 
     ui->tabDebugging->setEnabled(state);
     ui->buttonGoto->setEnabled(state);
@@ -464,31 +465,26 @@ void MainWindow::debuggerGUISetState(bool state) {
     ui->buttonSend->setEnabled(!state);
     ui->buttonRefreshList->setEnabled(!state);
     ui->emuVarView->setEnabled(!state);
-    ui->buttonReceiveFiles->setEnabled(!state && (isReceiving || isSending));
+    ui->buttonReceiveFiles->setEnabled(!state && guiReceive);
 }
 
 void MainWindow::debuggerChangeState() {
+    bool state = guiDebug;
+
     if (emu.rom.isEmpty()) {
         return;
     }
 
-    bool previousState = inDebugger;
-
-    if (isReceiving || isSending) {
-        refreshVariableList();
+    if (guiReceive) {
+        receiveChangeState();
     }
 
-    if (inDebugger) {
+    if (guiDebug) {
         debuggerGUIDisable();
         debuggerUpdateChanges();
     }
 
-    emit debuggerSendNewState(!inDebugger);
-
-    // wait for the signal to be processed
-    while (inDebugger == previousState) {
-        QApplication::processEvents();
-    }
+    emit setDebugState(!state);
 }
 
 void MainWindow::debuggerGUIPopulate() {
@@ -574,7 +570,7 @@ void MainWindow::debuggerGUIPopulate() {
     ui->freqView->setPalette(tmp == ui->freqView->text() ? nocolorback : colorback);
     ui->freqView->setText(tmp);
 
-    tmp = QString::number(debugger.total_cycles);
+    tmp = QString::number(debugger.totalCycles);
     ui->cycleView->setPalette(tmp == ui->cycleView->text() ? nocolorback : colorback);
     ui->cycleView->setText(tmp);
 
@@ -632,7 +628,7 @@ void MainWindow::debuggerGUIPopulate() {
 // ------------------------------------------------
 
 void MainWindow::debuggerZeroClockCounter() {
-    debugger.total_cycles = 0;
+    debugger.totalCycles = 0;
     ui->cycleView->setText("0");
 }
 
@@ -752,7 +748,7 @@ void MainWindow::breakpointGUIAdd() {
     int32_t new_address = disasm.newAddress;
 
     disasm.baseAddress = address;
-    disasmHighlight.hit_exec_breakpoint = false;
+    disasmHighlight.xBreak = false;
     disassembleInstruction();
     disasm.baseAddress = base_address;
     disasm.newAddress = new_address;
@@ -762,7 +758,7 @@ void MainWindow::breakpointGUIAdd() {
     c.deleteChar();
 
     // Add the red dot
-    if (disasmHighlight.hit_exec_breakpoint) {
+    if (disasmHighlight.xBreak) {
         c.insertHtml("<font color='#FFA3A3'>&#9679;</font>");
     } else {
         c.insertText(" ");
@@ -1032,8 +1028,8 @@ void MainWindow::watchpointGUIAdd() {
     int32_t new_address = disasm.newAddress;
 
     disasm.baseAddress = address;
-    disasmHighlight.hit_read_watchpoint = false;
-    disasmHighlight.hit_write_watchpoint = false;
+    disasmHighlight.rWatch = false;
+    disasmHighlight.wWatch = false;
     disassembleInstruction();
 
     disasm.baseAddress = base_address;
@@ -1044,7 +1040,7 @@ void MainWindow::watchpointGUIAdd() {
     c.deleteChar();
 
     // Add the green dot
-    if (disasmHighlight.hit_read_watchpoint) {
+    if (disasmHighlight.rWatch) {
         c.insertHtml("<font color='#A3FFA3'>&#9679;</font>");
     } else {
         c.insertText(" ");
@@ -1055,7 +1051,7 @@ void MainWindow::watchpointGUIAdd() {
     c.deleteChar();
 
     // Add the blue dot
-    if (disasmHighlight.hit_write_watchpoint) {
+    if (disasmHighlight.wWatch) {
         c.insertHtml("<font color='#A3A3FF'>&#9679;</font>");
     } else {
         c.insertText(" ");
@@ -1309,7 +1305,7 @@ void MainWindow::equatesAddDialog() {
 
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
     dialog.setFileMode(QFileDialog::ExistingFile);
-    dialog.setDirectory(currentDir);
+    dialog.setDirectory(currDir);
 
     QStringList extFilters;
     extFilters << tr("Equate files (*.inc *.lab *.map)")
@@ -1320,7 +1316,7 @@ void MainWindow::equatesAddDialog() {
         currentEquateFiles.append(dialog.selectedFiles());
         equatesRefresh();
     }
-    currentDir = dialog.directory();
+    currDir = dialog.directory();
 }
 
 void MainWindow::equatesAddFile(const QString &fileName) {
@@ -1389,7 +1385,7 @@ void MainWindow::equatesAddEquate(const QString &name, const QString &addrStr) {
 }
 
 void MainWindow::updateDisasmView(const int sentBase, const bool newPane) {
-    if (!inDebugger) {
+    if (!guiDebug) {
         return;
     }
     addressPane = sentBase;
@@ -1470,7 +1466,7 @@ void MainWindow::gotoPressed() {
 // ------------------------------------------------
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
-    if (!inDebugger) {
+    if (!guiDebug) {
         return false;
     }
     if (e->type() == QEvent::MouseButtonPress) {

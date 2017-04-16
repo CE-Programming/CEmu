@@ -65,31 +65,27 @@ public slots:
     void sendASMKey();
 
     // LCD Popouts
-    void createLCD();
+    void newMemoryVisualizer();
 
 signals:
     // Debugging
-    void debuggerSendNewState(bool);
-    void triggerEmuSendState();
-    void debugInputRequested();
-    void debuggerCommand(QString);
+    void setDebugState(bool);
     void setDebugStepInMode();
     void setDebugStepOverMode();
     void setDebugStepNextMode();
     void setDebugStepOutMode();
     void setRunUntilMode();
 
-    // Linking
-    void setSendState(bool);
-    void sendVariable(std::string);
-    void setReceiveState(bool);
-
     // Speed
-    void setEmuSpeed(int);
+    void changedEmuSpeed(int);
     void changedThrottleMode(bool);
 
     // Reset
-    void resetTriggered();
+    void reset();
+
+    // Linking
+    void receive();
+    void receiveDone();
 
 protected:
     // Misc.
@@ -153,13 +149,12 @@ private:
     void changeSnapshotPath();
 
     // Debugger
-    void debuggerInstall();
     void breakpointGUIAdd();
     void watchpointGUIAdd();
     void debuggerGUIPopulate();
     void debuggerGUISetState(bool);
 
-    void debugCommand();
+    void debuggerInstall();
     void debuggerRaise();
     void debuggerLeave();
     void debuggerUpdateChanges();
@@ -260,9 +255,9 @@ private:
     void setKeypadColor(unsigned int);
 
     // Speed
-    void setEmulatedSpeed(int);
-    void setThrottleMode(int);
-    void showActualSpeed(int);
+    void setEmuSpeed(int);
+    void setThrottle(int);
+    void showSpeed(int);
 
     // Console
     void showStatusMsg(const QString&);
@@ -287,11 +282,12 @@ private:
     // Linking
     QStringList showVariableFileDialog(QFileDialog::AcceptMode, const QString&, const QString&);
     void selectFiles();
-    void refreshVariableList();
+    void changeVariableList();
     void variableDoubleClicked(QTableWidgetItem*);
     void launchPrgm(const calc_var_t *prgm);
     void saveSelected();
     void resendFiles();
+    void receiveChangeState();
 
     // Autotester
     void dispAutotesterError(int);
@@ -370,7 +366,7 @@ private:
     int memSize;
     int hexSearch = SEARCH_MODE_HEX;
 
-    QDir currentDir;
+    QDir currDir;
     QStringList currentEquateFiles;
     EmuThread emu;
 

@@ -15,8 +15,6 @@ public:
     // Constructors and file settings
     Chunks();
     ~Chunks();
-
-    explicit Chunks(QIODevice &ioDevice);
     bool setIODevice(QIODevice &ioDevice);
 
     // Getting data out of Chunks
@@ -48,10 +46,10 @@ public:
 private:
     int getChunkIndex(qint64 absPos);
 
-    QIODevice * _ioDevice;
+    QIODevice *_ioDevice;
     qint64 _pos;
     qint64 _size;
     QList<Chunk> _chunks;
 };
 
-#endif // CHUNKS_H
+#endif

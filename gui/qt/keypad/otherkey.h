@@ -13,7 +13,7 @@ public:
     QStringLiteral("^"),
 #endif
         secondText, QStringLiteral("H"), right, 0, 12} {
-        m_labelFont.setBold(false);
+        mLabelFont.setBold(false);
     }
     OtherKey(KeyConfig &config, int labelWidth,
              QString labelText, QString secondText = {}, QString alphaText = {},

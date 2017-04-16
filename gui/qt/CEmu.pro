@@ -129,7 +129,6 @@ SOURCES +=  utils.cpp \
     ../../core/emu.c \
     ../../core/extras.c \
     ../../core/debug/disasm.cpp \
-    ../../core/debug/debug.c \
     sendinghandler.cpp \
     capture/optimize.c \
     capture/gifread.c \
@@ -143,7 +142,8 @@ SOURCES +=  utils.cpp \
     keyhistory.cpp \
     capture/opttemplate.c \
     capture/quantize.c \
-    memoryvisualizer.cpp
+    memoryvisualizer.cpp \
+    ../../core/debug/debug.cpp
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp

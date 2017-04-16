@@ -158,13 +158,13 @@ void MainWindow::exportCEmuBootImage() {
                                                          "the boot image will be loaded automatically and then removed for convience."));
 
     QString saveImage = QFileDialog::getSaveFileName(this, tr("Save bootable CEmu image"),
-                                                      currentDir.absolutePath(),
+                                                      currDir.absolutePath(),
                                                       tr("Bootable CEmu images (*.cemu);"));
     saveMiscSettings();
     settings->sync();
 
     if (!saveImage.isEmpty()) {
-        currentDir = QFileInfo(saveImage).absoluteDir();
+        currDir = QFileInfo(saveImage).absoluteDir();
         QFile romFile(emu.rom);
         if (!romFile.open(QIODevice::ReadOnly)) return;
         QByteArray romData = romFile.readAll();
@@ -201,7 +201,7 @@ void MainWindow::saveMiscSettings() {
     settings->setValue(SETTING_WINDOW_STATE,                saveState(WindowStateVersion));
     settings->setValue(SETTING_WINDOW_GEOMETRY,             saveGeometry());
     settings->setValue(SETTING_WINDOW_SIZE,                 size());
-    settings->setValue(SETTING_CURRENT_DIR,                 currentDir.absolutePath());
+    settings->setValue(SETTING_CURRENT_DIR,                 currDir.absolutePath());
     settings->setValue(SETTING_DEBUGGER_FLASH_BYTES,        ui->flashBytes->value());
     settings->setValue(SETTING_DEBUGGER_RAM_BYTES,          ui->ramBytes->value());
     settings->setValue(SETTING_DEBUGGER_MEM_BYTES,          ui->memBytes->value());
@@ -287,10 +287,10 @@ void MainWindow::setKeypadColor(unsigned int color) {
 
 void MainWindow::setImagePath() {
     QString saveImagePath = QFileDialog::getSaveFileName(this, tr("Set saved image to restore from"),
-                                                           currentDir.absolutePath(),
+                                                           currDir.absolutePath(),
                                                            tr("CEmu images (*.ce);;All files (*.*)"));
     if (!saveImagePath.isEmpty()) {
-        currentDir = QFileInfo(saveImagePath).absoluteDir();
+        currDir = QFileInfo(saveImagePath).absoluteDir();
         settings->setValue(SETTING_IMAGE_PATH, saveImagePath);
         ui->savedImagePath->setText(saveImagePath);
     }
@@ -298,10 +298,10 @@ void MainWindow::setImagePath() {
 
 void MainWindow::setDebugPath() {
     QString savePath = QFileDialog::getSaveFileName(this, tr("Set debugging information path"),
-                                                           currentDir.absolutePath(),
+                                                           currDir.absolutePath(),
                                                            tr("Debugging information (*.ini);;All files (*.*)"));
     if (!savePath.isEmpty()) {
-        currentDir = QFileInfo(savePath).absoluteDir();
+        currDir = QFileInfo(savePath).absoluteDir();
         settings->setValue(SETTING_DEBUGGER_IMAGE_PATH, savePath);
         ui->savedDebugPath->setText(savePath);
     }
@@ -356,7 +356,7 @@ void MainWindow::setUIEditMode(bool mode) {
     }
 }
 
-void MainWindow::setThrottleMode(int mode) {
+void MainWindow::setThrottle(int mode) {
     ui->checkThrottle->setChecked(mode == Qt::Checked);
     emit changedThrottleMode(mode == Qt::Checked);
 }
@@ -456,12 +456,12 @@ void MainWindow::setLCDRefresh(int value) {
     changeFramerate();
 }
 
-void MainWindow::setEmulatedSpeed(int value) {
+void MainWindow::setEmuSpeed(int value) {
     int actualSpeed = value*10;
     settings->setValue(SETTING_EMUSPEED, value);
     ui->emulationSpeedLabel->setText(QString::number(actualSpeed).rightJustified(3, '0')+QStringLiteral("%"));
     ui->emulationSpeed->setValue(value);
-    emit setEmuSpeed(actualSpeed);
+    emit changedEmuSpeed(actualSpeed);
 }
 
 void MainWindow::selectKeypadColor() {

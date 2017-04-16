@@ -64,24 +64,20 @@ extern uint32_t cpuEvents;
 
 /* Settings */
 extern volatile bool exiting;
-extern volatile bool emulationPaused;
 
 /* Reimplemented GUI callbacks */
 void gui_do_stuff(void);
-void gui_entered_send_state(bool);
 void gui_console_printf(const char *, ...);
 void gui_debugger_raise_or_disable(bool);
 void gui_console_err_printf(const char *, ...);
 void gui_debugger_send_command(int, uint32_t);
-void gui_render_gif_frame(void);
 void gui_emu_sleep(unsigned long);
 
-bool emu_load(const char*,const char*);
+bool emu_load(const char*, const char*);
 void emu_loop(bool);
 void emu_cleanup(void);
 bool emu_save(const char*);
 bool emu_save_rom(const char*);
-void emu_set_emulation_paused(bool);
 
 void throttle_interval_event(int index);
 void throttle_timer_wait(void);

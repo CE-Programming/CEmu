@@ -336,8 +336,8 @@ static void fxxx_write(const uint16_t pio, const uint8_t value, bool poke) {
 
 #ifdef DEBUG_SUPPORT
     if (value != 0) {
-        debugger.buffer[debugger.currentBuffPos] = (char)value;
-        debugger.currentBuffPos = (debugger.currentBuffPos + 1) % (SIZEOF_DBG_BUFFER);
+        debugger.buffer[debugger.bufferPos] = (char)value;
+        debugger.bufferPos = (debugger.bufferPos + 1) % (SIZEOF_DBG_BUFFER);
     }
 #else
     (void)value; /* Uncomment me when needed */

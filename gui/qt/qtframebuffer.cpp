@@ -11,7 +11,7 @@ QImage renderFramebuffer(lcd_state_t *lcds) {
 }
 
 void paintFramebuffer(QPainter *p, lcd_state_t *lcds) {
-    if (lcds && lcds->control & 0x800 && !exiting) {
+    if (lcds && lcds->control & 0x800) {
         QImage img = renderFramebuffer(lcds);
 
         // Interpolation only for < 100% scale

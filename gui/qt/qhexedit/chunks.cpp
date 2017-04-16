@@ -9,24 +9,21 @@
 
 /* Constructors and file settings */
 Chunks::Chunks() {
-    QBuffer *buf = new QBuffer();
-    setIODevice(*buf);
-}
-
-Chunks::Chunks(QIODevice &ioDevice) {
-    setIODevice(ioDevice);
+    _ioDevice = Q_NULLPTR;
+    setIODevice(*_ioDevice);
 }
 
 Chunks::~Chunks() {
-    delete _ioDevice;
+    if (_ioDevice) { _ioDevice->close(); }
 }
 
 bool Chunks::setIODevice(QIODevice &ioDevice) {
+    bool ok = false;
+
     _ioDevice = &ioDevice;
 
-    bool ok = _ioDevice->open(QIODevice::ReadOnly);
-
-    if (ok) {  // Try to open IODevice
+    // Try to open IODevice
+    if (_ioDevice && (ok = _ioDevice->open(QIODevice::ReadOnly))) {
         _size = _ioDevice->size();
         _ioDevice->close();
     } else {

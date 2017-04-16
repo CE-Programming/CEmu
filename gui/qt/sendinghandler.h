@@ -8,15 +8,23 @@
 #include <QtWidgets/QTableWidget>
 #include <QtWidgets/QTableWidgetItem>
 
-class SendingHandler {
+class SendingHandler : public QObject {
+    Q_OBJECT
 
 public:
-    explicit SendingHandler(QProgressBar *bar = Q_NULLPTR, QTableWidget *t = Q_NULLPTR);
+    explicit SendingHandler(QObject *p = Q_NULLPTR, QProgressBar *bar = Q_NULLPTR, QTableWidget *t = Q_NULLPTR);
+    ~SendingHandler();
 
-    void sendFiles(QStringList, unsigned);
+    void sendFiles(const QStringList&, unsigned);
     bool dragOccured(QDragEnterEvent*);
     void dropOccured(QDropEvent*, unsigned);
     void resendSelected();
+
+public slots:
+    void sentFile(const QString&, bool);
+
+signals:
+    void send(const QStringList&, unsigned int);
 
 private:
     QProgressBar *progress;
