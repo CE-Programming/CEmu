@@ -8,7 +8,7 @@
 
 /* Constructor */
 QHexEdit::QHexEdit(QWidget *par) : QAbstractScrollArea(par) {
-    _chunks = new Chunks();
+    _chunks = new Chunks(this);
     _undoStack = new UndoStack(_chunks, this);
 
 #ifdef Q_OS_WIN
