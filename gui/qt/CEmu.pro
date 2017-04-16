@@ -13,8 +13,7 @@ if (0) { # GitHub release/deployment build. Has to correspond to the git tag.
 CI = $$(CI)
 
 # Code beautifying
-DISTFILES += ../../.astylerc \
-    resources/icons/clock.png
+DISTFILES += ../../.astylerc
 
 QT += core gui widgets network
 
