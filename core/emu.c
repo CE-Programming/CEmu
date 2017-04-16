@@ -304,8 +304,8 @@ static void EMSCRIPTEN_KEEPALIVE emu_reset(void) {
 }
 
 static void emu_main_loop_inner(void) {
-    if (cpuEvents & (EVENT_RESET | EVENT_DEBUG_STEP)) {
 #ifdef DEBUG_SUPPORT
+    if (cpuEvents & (EVENT_RESET | EVENT_DEBUG_STEP)) {
         if (!cpu.halted && cpuEvents & EVENT_DEBUG_STEP) {
             cpuEvents &= ~EVENT_DEBUG_STEP;
             open_debugger(DBG_STEP, 0);
@@ -316,7 +316,9 @@ static void emu_main_loop_inner(void) {
             asic_reset();
             cpuEvents &= ~EVENT_RESET;
         }
+#ifdef DEBUG_SUPPORT
     }
+#endif
 
     sched_process_pending_events();
     cpu_execute();
