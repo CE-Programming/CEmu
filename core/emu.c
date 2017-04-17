@@ -78,8 +78,6 @@ bool emu_load(const char *romName, const char *imageName) {
     bool ret = false;
     long lSize;
 
-    emu_cleanup();
-
     if (imageName) {
         FILE *imageFile = NULL;
         emu_image_t *image = NULL;
