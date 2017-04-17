@@ -11,9 +11,11 @@
 volatile bool inDebugger = false;
 debug_state_t debugger;
 
+#ifndef __EMSCRIPTEN__
 #include <condition_variable>
 static std::mutex debugM;
 static std::condition_variable debugCV;
+#endif
 
 void debugger_init(void) {
     debugger.stepOverInstrEnd = -1;
@@ -55,8 +57,10 @@ uint8_t debug_peek_byte(uint32_t addr) {
 }
 
 void close_debugger(void) {
+#ifndef __EMSCRIPTEN__
     std::unique_lock<std::mutex> lock(debugM);
     debugCV.notify_all();
+#endif
     inDebugger = false;
 }
 
@@ -93,9 +97,13 @@ void open_debugger(int reason, uint32_t data) {
 
     inDebugger = true;
 
+#ifndef __EMSCRIPTEN__
     std::unique_lock<std::mutex> lock(debugM);
+#endif
     gui_debugger_send_command(reason, data);
+#ifndef __EMSCRIPTEN__
     debugCV.wait(lock);
+#endif
 
     cpu.next = debugger.cpuNext;
     cpu.cycles = debugger.cpuCycles;

@@ -18,6 +18,7 @@
 
 uint32_t cpuEvents;
 volatile bool exiting;
+volatile bool dummy_emscripten_var = false; /* fixes alignment issues, apparently... */
 
 void throttle_interval_event(int index) {
     event_repeat(index, 27000000 / 60);
@@ -241,6 +242,7 @@ void emu_loop(bool reset) {
     exiting = false;
 
 #ifdef __EMSCRIPTEN__
+    dummy_emscripten_var = true;
     emscripten_set_main_loop(emu_main_loop_inner, 0, 1);
 #else
     while (!exiting) {

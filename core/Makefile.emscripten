@@ -1,13 +1,13 @@
 CC      = emcc
 
 # Add -g3 and disable some opts if needed
-CFLAGS  = -W -Wall -std=c11 -O3
+CFLAGS  = -W -Wall -O3
 
 # For console printing, software commands etc.
 CFLAGS += -DDEBUG_SUPPORT
 
 # Emscripten stuff
-CFLAGS += -s TOTAL_MEMORY=32000000 --llvm-lto 3 -s INVOKE_RUN=0 -s NO_EXIT_RUNTIME=1 -s ASSERTIONS=0
+CFLAGS += -s TOTAL_MEMORY=33554432 --llvm-lto 3 -s INVOKE_RUN=0 -s NO_EXIT_RUNTIME=1 -s ASSERTIONS=0
 
 asmjs: CFLAGS += --closure 1 -s WASM=0
 wasm:  CFLAGS += --closure 0 -s WASM=1 -s "BINARYEN_METHOD='native-wasm,asmjs'"

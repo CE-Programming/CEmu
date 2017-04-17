@@ -2,7 +2,6 @@
 
 #include <emscripten.h>
 
-#define _BSD_SOURCE
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -30,25 +29,26 @@ void throttle_timer_wait() {}
 void gui_emu_sleep() { usleep(50); }
 void gui_do_stuff()
 {
-    if (debugger.currentBuffPos) {
-        debugger.buffer[debugger.currentBuffPos] = '\0';
+    if (debugger.bufferPos) {
+        debugger.buffer[debugger.bufferPos] = '\0';
         fprintf(stdout, "[CEmu DbgOutPrint] %s\n", debugger.buffer);
         fflush(stdout);
-        debugger.currentBuffPos = 0;
+        debugger.bufferPos = 0;
     }
 
-    if (debugger.currentErrBuffPos) {
-        debugger.errBuffer[debugger.currentErrBuffPos] = '\0';
-        fprintf(stderr, "[CEmu DbgErrPrint] %s\n", debugger.errBuffer);
+    if (debugger.bufferErrPos) {
+        debugger.bufferErr[debugger.bufferErrPos] = '\0';
+        fprintf(stderr, "[CEmu DbgErrPrint] %s\n", debugger.bufferErr);
         fflush(stderr);
-        debugger.currentErrBuffPos = 0;
+        debugger.bufferErrPos = 0;
     }
 }
 
-void gui_set_busy(bool busy) {}
+void gui_set_busy(bool busy) { (void)busy; }
 
 void gui_debugger_raise_or_disable(bool entered)
 {
+    (void)entered;
     inDebugger = false;
 }
 
@@ -105,7 +105,6 @@ void EMSCRIPTEN_KEEPALIVE paint_LCD_to_JS()
 {
     if (lcd.control & 0x800) { // LCD on
         lcd_drawframe(buf_lcd_js, &lcd);
-        //EM_ASM(repaint());
     } else { // LCD off
         EM_ASM(drawLCDOff());
     }
@@ -127,7 +126,8 @@ void EMSCRIPTEN_KEEPALIVE emsc_cancel_main_loop() {
 int main(int argc, char* argv[])
 {
     bool success;
-    emulationPaused = false;
+    (void)argc;
+    (void)argv;
 
     success = emu_load("CE.rom", NULL);
 
@@ -140,11 +140,9 @@ int main(int argc, char* argv[])
             initLCD();
             enableGUI();
         );
-        //lcd_event_gui_callback = paint_LCD_to_JS;
         emu_loop(true);
     } else {
         EM_ASM(
-            //lcd_event_gui_callback = NULL;
             emul_is_inited = false;
             disableGUI();
             alert("Error: Couldn't start emulation ; bad ROM?");
@@ -155,7 +153,6 @@ int main(int argc, char* argv[])
     puts("Finished");
 
     EM_ASM(
-        //lcd_event_gui_callback = NULL;
         emul_is_inited = false;
         disableGUI();
     );
