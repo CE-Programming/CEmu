@@ -273,6 +273,7 @@ bool EmuThread::stop() {
 bool EmuThread::restore(const QString &path) {
     image = QDir::toNativeSeparators(path);
     enterRestore = true;
+
     if (!stop()) {
         return false;
     }

@@ -47,5 +47,6 @@ QString randomString(const int length);
 extern bool guiDebug;
 extern bool guiSend;
 extern bool guiReceive;
+extern bool guiEmuValid;
 
 #endif

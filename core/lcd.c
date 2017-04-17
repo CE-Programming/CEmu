@@ -14,24 +14,23 @@ lcd_state_t lcd;
 
 void (*lcd_event_gui_callback)(void) = NULL;
 
-#define c6_to_c8(c) (((c) << 2) | ((c) >> 4))
-
 static bool _rgb;
 
 /* This is an intensive function. Any effort to speed it up would be much appreciated */
-static uint_fast32_t lcd_bgr16out(uint_fast32_t bgr16) {
-    uint_fast32_t r, g, b;
+static uint32_t lcd_bgr16out(uint32_t bgr16) {
+    uint_fast8_t r, g, b;
 
     r = (bgr16 >> 10) & 0x3E;
-    r |= r >> 5;
-    r = c6_to_c8(r);
-
     g = bgr16 >> 5 & 0x3F;
-    g = c6_to_c8(g);
-
     b = (bgr16 << 1) & 0x3E;
+
+    r |= r >> 5;
+    r = (r << 2) | (r >> 4);
+
+    g = (g << 2) | (g >> 4);
+
     b |= b >> 5;
-    b = c6_to_c8(b);
+    b = (b << 2) | (b >> 4);
 
     if (_rgb) {
         return r | (g << 8) | (b << 16) | (255 << 24);
@@ -49,17 +48,17 @@ void lcd_drawframe(uint32_t *out, lcd_state_t *buffer) {
     uint_fast8_t mode = buffer->control >> 1 & 7;
     _rgb = buffer->control & (1 << 8);
     bool bebo = buffer->control & (1 << 9);
-    uint_fast32_t word, color;
+    uint32_t word, color;
     uint32_t *ofs = buffer->ofs;
     uint32_t *ofs_end = buffer->ofs_end;
     uint32_t *out_end = out + buffer->size;
 
     if (!buffer->size) { return; }
-    if (!mem.flash.block || !mem.ram.block || !ofs) { goto draw_black; }
+    if (!ofs) { goto draw_black; }
 
     if (mode < 4) {
         uint_fast8_t bpp = 1 << mode;
-        uint_fast32_t mask = (1 << bpp) - 1;
+        uint32_t mask = (1 << bpp) - 1;
         uint_fast8_t bi = bebo ? 0 : 24;
         bool bepo = buffer->control & (1 << 10);
         if (!bepo) { bi ^= 8 - bpp; }

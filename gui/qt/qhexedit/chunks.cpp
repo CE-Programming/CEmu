@@ -8,20 +8,19 @@
 #define READ_CHUNK_MASK Q_INT64_C(0xfffffffffffff000)
 
 /* Constructors and file settings */
-Chunks::Chunks(QObject *parent): QObject(parent) {
+Chunks::Chunks(QObject *p) : QObject(p) {
     QBuffer *buf = new QBuffer(this);
     setIODevice(*buf);
 }
 
-Chunks::Chunks(QIODevice &ioDevice, QObject *parent): QObject(parent) {
+Chunks::Chunks(QIODevice &ioDevice, QObject *p) : QObject(p) {
     setIODevice(ioDevice);
 }
 
 bool Chunks::setIODevice(QIODevice &ioDevice) {
     _ioDevice = &ioDevice;
     bool ok = _ioDevice->open(QIODevice::ReadOnly);
-    if (ok)   // Try to open IODevice
-    {
+    if (ok) {
         _size = _ioDevice->size();
         _ioDevice->close();
     } else {

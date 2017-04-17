@@ -129,8 +129,8 @@ private:
     };
 
     // Save/Restore
-    void saveToPath(QString path);
-    bool restoreFromPath(QString path);
+    void saveToPath(const QString&);
+    bool restoreFromPath(const QString&);
 
     // Actions
     bool runSetup(void);
@@ -227,8 +227,8 @@ private:
     void watchpointReadWriteGUIAdd();
 
     // Debugging files
-    void debuggerImportFile(QString);
-    void debuggerExportFile(QString);
+    void debuggerImportFile(const QString&);
+    void debuggerExportFile(const QString&);
     QString debuggerGetFile(int);
     void debuggerImport();
     void debuggerExport();

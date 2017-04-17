@@ -83,7 +83,7 @@ void MainWindow::debuggerExport(void) {
     debuggerExportFile(debuggerGetFile(DBG_SAVE));
 }
 
-void MainWindow::debuggerImportFile(QString filename) {
+void MainWindow::debuggerImportFile(const QString &filename) {
     if (filename.isEmpty()) {
         return;
     }
@@ -142,7 +142,7 @@ void MainWindow::debuggerImportFile(QString filename) {
     }
 }
 
-void MainWindow::debuggerExportFile(QString filename) {
+void MainWindow::debuggerExportFile(const QString &filename) {
     if (filename.isEmpty()) {
         return;
     }

@@ -586,25 +586,31 @@ void MainWindow::sendASMKey() {
 }
 
 bool MainWindow::restoreEmuState() {
-    QString default_saved_image = settings->value(SETTING_IMAGE_PATH).toString();
-    if (!default_saved_image.isEmpty()) {
-        return restoreFromPath(default_saved_image);
+    QString defaultImage = settings->value(SETTING_IMAGE_PATH).toString();
+    if (!defaultImage.isEmpty()) {
+        return restoreFromPath(defaultImage);
     } else {
         QMessageBox::critical(this, MSG_ERROR, tr("No saved image path in settings."));
         return false;
     }
 }
 
-void MainWindow::saveToPath(QString path) {
-    emu_thread->save(path);
+void MainWindow::saveToPath(const QString &path) {
+    emu.save(path);
 }
 
-bool MainWindow::restoreFromPath(QString path) {
+bool MainWindow::restoreFromPath(const QString &path) {
     if (guiReceive) {
         receiveChangeState();
     }
 
-    if (!emu_thread->restore(path)) {
+    if (guiDebug) {
+        debuggerChangeState();
+    }
+
+    guiEmuValid = false;
+
+    if (!emu.restore(path)) {
         QMessageBox::critical(this, MSG_ERROR, tr("Could not resume; try restarting CEmu"));
         return false;
     }
@@ -648,11 +654,12 @@ void MainWindow::exportRom() {
                                                       tr("ROM images (*.rom);;All files (*.*)"));
     if (!saveRom.isEmpty()) {
         currDir = QFileInfo(saveRom).absoluteDir();
-        emu_thread->saveRomImage(saveRom);
+        emu.saveRomImage(saveRom);
     }
 }
 
 void MainWindow::started(bool success) {
+    guiEmuValid = success;
     if (success) {
         ui->lcdWidget->setLCD(&lcd);
         setKeypadColor(settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
@@ -662,6 +669,7 @@ void MainWindow::started(bool success) {
 }
 
 void MainWindow::restored(bool success) {
+    guiEmuValid = success;
     if (success) {
         ui->lcdWidget->setLCD(&lcd);
         setKeypadColor(settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
@@ -777,25 +785,14 @@ void MainWindow::showStatusMsg(const QString &str) {
     msgLabel.setText(str);
 }
 
-void MainWindow::setRom(const QString &newRom) {
-    if (guiReceive) {
-        receiveChangeState();
-    }
-
-    if (guiDebug) {
-        debuggerChangeState();
-    }
-    emu.rom = newRom;
+void MainWindow::setRom(const QString &name) {
+    emu.rom = name;
     if (portable) {
         QDir dir(qApp->applicationDirPath());
         emu.rom = dir.relativeFilePath(emu.rom);
     }
-    if (emu.stop()) {
-        ui->rompathView->setText(emu.rom);
-        emu.start();
-    } else {
-        QMessageBox::critical(this, MSG_ERROR, tr("Failed to load new ROM image!"));
-    }
+    reloadROM();
+    ui->rompathView->setText(emu.rom);
     settings->setValue(SETTING_ROM_PATH, emu.rom);
 }
 
@@ -1451,6 +1448,8 @@ void MainWindow::reloadROM() {
     if (guiDebug) {
         debuggerChangeState();
     }
+
+    guiEmuValid = false;
 
     if (!usingLoadedImage) {
         QFile(emu.image).remove();

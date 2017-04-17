@@ -9,14 +9,13 @@ struct Chunk {
     qint64 absPos;
 };
 
-class Chunks: public QObject {
-
-Q_OBJECT
+class Chunks : public QObject {
+    Q_OBJECT
 
 public:
     // Constructors and file settings
-    Chunks(QObject *parent);
-    Chunks(QIODevice &ioDevice, QObject *parent);
+    Chunks(QObject *p = Q_NULLPTR);
+    Chunks(QIODevice &ioDevice, QObject *p = Q_NULLPTR);
     bool setIODevice(QIODevice &ioDevice);
 
     // Getting data out of Chunks

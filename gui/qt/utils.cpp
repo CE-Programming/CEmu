@@ -14,6 +14,7 @@ QString configPath;
 bool guiDebug;
 bool guiSend;
 bool guiReceive;
+bool guiEmuValid = false;
 
 bool fileExists(const QString& ptath) {
     QString path(ptath);
