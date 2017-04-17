@@ -191,12 +191,11 @@ static uint8_t lcd_read(const uint16_t pio, bool peek) {
 
 void lcd_setptrs(lcd_state_t *x) {
     uint8_t mode = x->control >> 1 & 7;
-    uint8_t *ofs_start, *ofs_end, *mem_end, *zero;
+    uint8_t *ofs_start, *ofs_end, *mem_end;
     uint32_t dma_length;
     uint32_t addr = x->upbase;
 
     x->ofs = NULL;
-    x->zero = NULL;
     x->ofs_end = NULL;
     x->size = x->width * x->height;
 
@@ -231,11 +230,10 @@ void lcd_setptrs(lcd_state_t *x) {
 
     if (ofs_start >= mem_end) { return; }
     ofs_end = ofs_start + dma_length;
-    if (ofs_end > mem_end) { zero = ofs_end; ofs_end = mem_end; }
+    if (ofs_end > mem_end) { ofs_end = mem_end; }
 
     x->ofs     = (uint32_t *)ofs_start;
     x->ofs_end = (uint32_t *)ofs_end;
-    x->zero    = (uint32_t *)zero;
 }
 
 static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
