@@ -393,7 +393,7 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
 
     addr &= 0xFFFFFF;
 #ifdef DEBUG_SUPPORT
-    if (debugger.data.block[addr] & DBG_READ_WATCHPOINT) {
+    if (!fetch && debugger.data.block[addr] & DBG_READ_WATCHPOINT) {
         open_debugger(HIT_READ_WATCHPOINT, addr);
     }
 #endif
