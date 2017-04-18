@@ -97,7 +97,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(this, &MainWindow::setDebugStepNextMode, &emu, &EmuThread::setDebugStepNextMode);
     connect(this, &MainWindow::setDebugStepOutMode, &emu, &EmuThread::setDebugStepOutMode);
     connect(ui->buttonRun, &QPushButton::clicked, this, &MainWindow::debuggerChangeState);
-    connect(ui->checkADLDisasm, &QCheckBox::stateChanged, this, &MainWindow::disasmToggleAdl);
+    connect(ui->checkADLDisasm, &QCheckBox::stateChanged, this, &MainWindow::toggleADLDisasm);
+    connect(ui->checkADLStack, &QCheckBox::stateChanged, this, &MainWindow::toggleADLStack);
+    connect(ui->checkADL, &QCheckBox::stateChanged, this, &MainWindow::toggleADL);
 
     connect(ui->tabDebugging, &QTabWidget::currentChanged, this, &MainWindow::debuggerTabSwitched);
     connect(ui->buttonAddPort, &QPushButton::clicked, this, &MainWindow::portSlotAdd);
@@ -1462,32 +1464,6 @@ void MainWindow::reloadROM() {
     } else {
         QMessageBox::critical(this, MSG_ERROR, "Could not stop");
     }
-}
-
-void MainWindow::updateStackView() {
-    QString formattedLine;
-
-    ui->stackView->blockSignals(true);
-    ui->stackView->clear();
-
-    if (cpu.ADL) {
-        for (int i=0; i<60; i+=3) {
-            formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2</pre>")
-                                    .arg(int2hex(cpu.registers.SPL+i, 6),
-                                         int2hex(mem_peek_word(cpu.registers.SPL+i, 1), 6));
-            ui->stackView->appendHtml(formattedLine);
-        }
-    } else {
-        for (int i=0; i<40; i+=2) {
-            formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2</pre>")
-                                    .arg(int2hex(cpu.registers.SPS+i, 4),
-                                         int2hex(mem_peek_word(cpu.registers.SPS+i, 0), 4));
-            ui->stackView->appendHtml(formattedLine);
-        }
-    }
-
-    ui->stackView->moveCursor(QTextCursor::Start);
-    ui->stackView->blockSignals(false);
 }
 
 void MainWindow::drawNextDisassembleLine() {

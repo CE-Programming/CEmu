@@ -161,7 +161,9 @@ private:
     void debuggerChangeState();
     void debuggerExecuteCommand(uint32_t, uint8_t);
     void debuggerProcessCommand(int, uint32_t);
-    void disasmToggleAdl(int);
+    void toggleADLDisasm(int);
+    void toggleADLStack(int);
+    void toggleADL(int);
 
     void portRemoveSelected();
 

@@ -56,6 +56,9 @@ void MainWindow::debuggerInstall() {
     ui->checkADLDisasm->blockSignals(true);
     ui->checkADLDisasm->setCheckState(Qt::PartiallyChecked);
     ui->checkADLDisasm->blockSignals(false);
+    ui->checkADLStack->blockSignals(true);
+    ui->checkADLStack->setCheckState(Qt::PartiallyChecked);
+    ui->checkADLStack->blockSignals(false);
 }
 
 // ------------------------------------------------
@@ -1464,7 +1467,7 @@ void MainWindow::updateDisasmView(const int sentBase, const bool newPane) {
 // Misc
 // ------------------------------------------------
 
-void MainWindow::disasmToggleAdl(int state) {
+void MainWindow::toggleADLDisasm(int state) {
     switch (state) {
         default:
         case Qt::PartiallyChecked:
@@ -1480,6 +1483,18 @@ void MainWindow::disasmToggleAdl(int state) {
     prevDisasmAddress = ui->disassemblyView->getSelectedAddress().toUInt(Q_NULLPTR, 16);
     updateDisasmView(prevDisasmAddress, true);
 }
+
+void MainWindow::toggleADLStack(int state) {
+    (void)(state);
+    updateStackView();
+}
+
+void MainWindow::toggleADL(int state) {
+    (void)(state);
+    toggleADLDisasm(ui->checkADLDisasm->checkState());
+    toggleADLStack(ui->checkADLStack->checkState());
+}
+
 
 void MainWindow::debuggerTabSwitched(int tab) {
     if (tab == 0) {
@@ -1505,7 +1520,6 @@ void MainWindow::gotoPressed() {
         updateDisasmView(hex2int(prevGotoAddress = address), false);
     }
 }
-
 
 // ------------------------------------------------
 // Tooltips
@@ -1602,4 +1616,43 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
         return true;
     }
     return false;
+}
+
+// ------------------------------------------------
+// Stack
+// ------------------------------------------------
+
+void MainWindow::updateStackView() {
+    QString formattedLine;
+
+    ui->stackView->blockSignals(true);
+    ui->stackView->clear();
+
+    bool adl = ui->checkADL->isChecked();
+    int state = ui->checkADLStack->checkState();
+
+    if (state == Qt::Checked) {
+        adl = true;
+    } else if (state == Qt::Unchecked) {
+        adl = false;
+    }
+
+    if (adl) {
+        for (int i=0; i<80; i+=3) {
+            formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2</pre>")
+                                    .arg(int2hex(cpu.registers.SPL+i, 6),
+                                         int2hex(mem_peek_word(cpu.registers.SPL+i, 1), 6));
+            ui->stackView->appendHtml(formattedLine);
+        }
+    } else {
+        for (int i=0; i<60; i+=2) {
+            formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2</pre>")
+                                    .arg(int2hex(cpu.registers.SPS+i, 4),
+                                         int2hex(mem_peek_word(cpu.registers.SPS+i, 0), 4));
+            ui->stackView->appendHtml(formattedLine);
+        }
+    }
+
+    ui->stackView->moveCursor(QTextCursor::Start);
+    ui->stackView->blockSignals(false);
 }

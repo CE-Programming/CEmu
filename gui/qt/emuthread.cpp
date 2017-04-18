@@ -232,7 +232,7 @@ void EmuThread::throttleTimerWait() {
 void EmuThread::run() {
     setTerminationEnabled();
 
-    bool doReset = !enterRestore;
+    bool reset = !enterRestore;
     bool success = emu_load(rom.toStdString().c_str(), enterRestore ? image.toStdString().c_str() : NULL);
 
     if (enterRestore) {
@@ -244,7 +244,7 @@ void EmuThread::run() {
     enterRestore = false;
 
     if (success) {
-        emu_loop(doReset);
+        emu_loop(reset);
     }
     emit stopped();
 }

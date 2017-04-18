@@ -6208,6 +6208,16 @@ QPushButton:pressed {
                 <number>8</number>
                </property>
                <item>
+                <widget class="QCheckBox" name="checkADLStack">
+                 <property name="text">
+                  <string>ADL</string>
+                 </property>
+                 <property name="tristate">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <widget class="QPlainTextEdit" name="stackView">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
