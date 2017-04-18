@@ -637,7 +637,9 @@ void MainWindow::debuggerGUIPopulate() {
     ui->checkN->setChecked(cpu.registers.flags.N);
     ui->checkS->setChecked(cpu.registers.flags.S);
 
+    ui->checkADL->blockSignals(true);
     ui->checkADL->setChecked(cpu.ADL);
+    ui->checkADL->blockSignals(false);
     ui->checkMADL->setChecked(cpu.MADL);
     ui->checkHalted->setChecked(cpu.halted);
     ui->checkIEF1->setChecked(cpu.IEF1);
@@ -1544,7 +1546,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
         if (obj_name == "bc_") memGoto(ui->bc_regView->text());
         if (obj_name == "spl") memGoto(ui->splregView->text());
         if (obj_name == "pc")  memGoto(ui->pcregView->text());
-        return true;
+        return false;
     } else if (e->type() == QEvent::MouseMove) {
         QString obj_name = obj->objectName();
 
@@ -1613,7 +1615,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
         if (obj_name == "rregView")   t = QStringLiteral("r:\t") + val;
 
         QToolTip::showText(static_cast<QMouseEvent*>(e)->globalPos(), t, widget, widget->rect());
-        return true;
+        return false;
     }
     return false;
 }
