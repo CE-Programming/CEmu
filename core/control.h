@@ -16,7 +16,7 @@ enum {
     BATTERY_4
 };
 
-PACK(typedef struct control_state {
+typedef struct control_state {
     uint8_t ports[0x80];
     uint8_t cpuSpeed;
     bool USBSelfPowered;
@@ -31,7 +31,7 @@ PACK(typedef struct control_state {
     uint32_t protectedStart;
     uint32_t protectedEnd;
     uint8_t protectionStatus;
-}) control_state_t;
+} control_state_t;
 
 /* Global CONTROL state */
 extern control_state_t control;

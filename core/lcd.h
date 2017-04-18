@@ -15,7 +15,7 @@ extern "C" {
 extern uint32_t lcd_framebuffer[LCD_SIZE];
 
 /* Standard LCD state */
-PACK(typedef struct lcd_cntrl_state {
+typedef struct lcd_cntrl_state {
     uint32_t timing[4];
 
     uint32_t control;           /* Control register */
@@ -51,7 +51,7 @@ PACK(typedef struct lcd_cntrl_state {
     uint32_t *ofs;                /* Pointer to start of data to start extracting from */
     uint32_t *ofs_end;            /* End pointer that is allowed access */
     uint32_t framebuffer[LCD_SIZE]; /* Location on which to draw the data */
-}) lcd_state_t;
+} lcd_state_t;
 
 /* Global LCD state */
 extern lcd_state_t lcd;

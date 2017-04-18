@@ -8,9 +8,9 @@ extern "C" {
 #include "port.h"
 
 /* Standard USB state */
-PACK(typedef struct usb_state {
+typedef struct usb_state {
     uint8_t dummy;
-}) usb_state_t;
+} usb_state_t;
 
 /* Global GPT state */
 extern usb_state_t usb;

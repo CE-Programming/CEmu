@@ -9,7 +9,7 @@ extern "C" {
 
 #include <time.h>
 
-PACK(typedef struct rtc_state {
+typedef struct rtc_state {
     /* Registers */
     uint8_t control, interrupt;
     uint8_t readSec,
@@ -30,7 +30,7 @@ PACK(typedef struct rtc_state {
              holdDay;
 
     uint32_t revision;
-}) rtc_state_t;
+} rtc_state_t;
 
 /* Global GPT state */
 extern rtc_state_t rtc;

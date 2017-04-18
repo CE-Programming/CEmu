@@ -7,7 +7,7 @@ extern "C" {
 
 #include "port.h"
 
-PACK(typedef struct watchdog_state {
+typedef struct watchdog_state {
     uint32_t count;              /* Standard WATCHDOG state */
     uint32_t load;
     uint16_t restart;
@@ -15,26 +15,26 @@ PACK(typedef struct watchdog_state {
     uint32_t status;
     uint32_t intrptLength;
     uint32_t revision;
-}) watchdog_state_t;
+} watchdog_state_t;
 
-PACK(typedef struct protected_state {  /* Standard PROTECTED state */
+typedef struct protected_state {  /* Standard PROTECTED state */
     bool locked;
     uint8_t ledState;
     uint8_t unknown_ports[0x100];
-}) protected_state_t;
+} protected_state_t;
 
-PACK(typedef struct cxxx_state {
+typedef struct cxxx_state {
     uint8_t ports[0x100];         /* Standard CXXX state */
-}) cxxx_state_t;
-PACK(typedef struct dxxx_state {       /* Standard DXXX state */
+} cxxx_state_t;
+typedef struct dxxx_state {       /* Standard DXXX state */
     uint8_t dummy;                /* Silence warning, remove if other fields are added. */
-}) dxxx_state_t;
-PACK(typedef struct exxx_state {
+} dxxx_state_t;
+typedef struct exxx_state {
     uint8_t ports[0x80];          /* Standard EXXX state */
-}) exxx_state_t;
-PACK(typedef struct fxxx_state {       /* Standard FXXX state */
+} exxx_state_t;
+typedef struct fxxx_state {       /* Standard FXXX state */
     uint8_t dummy;                /* Silence warning, remove if other fields are added. */
-}) fxxx_state_t;
+} fxxx_state_t;
 
 extern watchdog_state_t watchdog;   /* Global WATCHDOG state */
 extern protected_state_t protect;   /* Global PROTECT state */

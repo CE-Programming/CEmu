@@ -51,10 +51,10 @@ typedef struct {
     uint8_t *block;       /* RAM mem */
 } ram_chip_t;
 
-PACK(typedef struct mem_state {
+typedef struct mem_state {
     flash_chip_t flash;
     ram_chip_t ram;
-}) mem_state_t;
+} mem_state_t;
 
 /* Global MEMORY state */
 extern mem_state_t mem;

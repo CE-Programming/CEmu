@@ -19,18 +19,4 @@
 #define write8(data, index, value) WRITE(data, index, 8, value)
 #define read8(data, index) READFROM(data, index, 8)
 
-/* Cross-compiler packed wrapper */
-#ifdef _MSC_VER
-#  define PACK(...) __pragma(pack(push, 1)) __VA_ARGS__ __pragma(pack(pop))
-#elif defined(__GNUC__)
-#  define PACK(...) __VA_ARGS__ __attribute__((packed))
-#endif
-
-/* Cross-compiler alignment */
-#if defined(_MSC_VER)
-#  define ALIGNED_(x) __declspec(align(x))
-#elif defined(__GNUC__)
-#  define ALIGNED_(x) __attribute__ ((aligned(x)))
-#endif
-
 #endif

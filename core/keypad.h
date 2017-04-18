@@ -8,7 +8,7 @@ extern "C" {
 #include "port.h"
 
 /* Standard KEYPAD state */
-PACK(typedef struct keypad_state {
+typedef struct keypad_state {
     union {
         struct {
             uint8_t  mode     : 2;
@@ -30,7 +30,7 @@ PACK(typedef struct keypad_state {
     uint16_t keyMap[16];
     uint32_t gpio_status;
     uint32_t gpio_enable;
-}) keypad_state_t;
+} keypad_state_t;
 
 /* Global KEYPAD state */
 extern keypad_state_t keypad;
