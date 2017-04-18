@@ -125,8 +125,6 @@ ierr:
         if (fseek(romFile, 0L, SEEK_SET) < 0)          goto rerr;
 
         asic_init();
-        sched_reset();
-        asic_reset();
 
         if (fread(mem.flash.block, 1, lSize, romFile) < (size_t)lSize) goto rerr;
 
