@@ -1616,7 +1616,7 @@ void MainWindow::variablesContextMenu(const QPoint& posa) {
     if (selectedItem) {
         if (selectedItem->text() == launch) {
             // resume emulation and launch
-            changeVariableList();
+            receiveChangeState();
             launchPrgm(&var);
         }
     }
