@@ -29,6 +29,7 @@ Windows | macOS | Linux
 * eZ80 disassembler (with equates support)
 * Profiler (WIP-branch)
 * Port monitor/editor
+* Timers simple monitor/editor
 * Memory viewer/editor
 * CPU state/registers viewer/editor
 * LCD state/parameters viewer/editor
