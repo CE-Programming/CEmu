@@ -82,6 +82,7 @@ signals:
 
     // Reset
     void reset();
+    void load();
 
     // Linking
     void receive();

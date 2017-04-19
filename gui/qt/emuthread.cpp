@@ -77,7 +77,7 @@ EmuThread::EmuThread(QObject *p) : QThread(p) {
 }
 
 void EmuThread::reset() {
-    cpuEvents |= EVENT_RESET;
+    doReset = true;
 }
 
 void EmuThread::setEmuSpeed(int value) {
@@ -141,16 +141,21 @@ void EmuThread::doStuff() {
     const std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
     lastTime += std::chrono::steady_clock::now() - cur_time;
 
-    if (saveImage) {
-        bool success = emu_save(image.toStdString().c_str());
-        emit saved(success);
-        saveImage = false;
+    if (doReset) {
+        cpuEvents |= EVENT_RESET;
+        doReset = false;
     }
 
-    if (saveRom) {
+    if (enterSaveImage) {
+        bool success = emu_save(image.toStdString().c_str());
+        emit saved(success);
+        enterSaveImage = false;
+    }
+
+    if (enterSaveRom) {
         bool success = emu_save_rom(romExportPath.toStdString().c_str());
         emit saved(success);
-        saveRom = false;
+        enterSaveRom = false;
     }
 
     if (debugger.bufferPos) {
@@ -270,6 +275,15 @@ bool EmuThread::stop() {
     return true;
 }
 
+void EmuThread::load() {
+    if (!stop()) {
+        return;
+    }
+
+    start();
+    return;
+}
+
 bool EmuThread::restore(const QString &path) {
     image = QDir::toNativeSeparators(path);
     enterRestore = true;
@@ -282,12 +296,12 @@ bool EmuThread::restore(const QString &path) {
     return true;
 }
 
-void EmuThread::save(const QString &path) {
+void EmuThread::saveImage(const QString &path) {
     image = QDir::toNativeSeparators(path);
-    saveImage = true;
+    enterSaveImage = true;
 }
 
-void EmuThread::saveRomImage(const QString &path) {
+void EmuThread::saveRom(const QString &path) {
     romExportPath = QDir::toNativeSeparators(path);
-    saveRom = true;
+    enterSaveRom = true;
 }

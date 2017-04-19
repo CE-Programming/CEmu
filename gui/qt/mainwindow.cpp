@@ -90,7 +90,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(&emu, &EmuThread::raiseDebugger, this, &MainWindow::debuggerRaise, Qt::QueuedConnection);
     connect(&emu, &EmuThread::disableDebugger, this, &MainWindow::debuggerGUIDisable, Qt::QueuedConnection);
     connect(&emu, &EmuThread::sendDebugCommand, this, &MainWindow::debuggerProcessCommand, Qt::QueuedConnection);
-    connect(this, &MainWindow::setDebugState, &emu, &EmuThread::setDebugMode, Qt::QueuedConnection);
+    connect(this, &MainWindow::setDebugState, &emu, &EmuThread::setDebugMode);
     connect(this, &MainWindow::setDebugStepInMode, &emu, &EmuThread::setDebugStepInMode);
     connect(this, &MainWindow::setRunUntilMode, &emu, &EmuThread::setRunUntilMode);
     connect(this, &MainWindow::setDebugStepOverMode, &emu, &EmuThread::setDebugStepOverMode);
@@ -173,7 +173,10 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->actionResetCalculator, &QAction::triggered, this, &MainWindow::resetCalculator);
     connect(ui->actionMemoryVisualizer, &QAction::triggered, this, &MainWindow::newMemoryVisualizer);
     connect(ui->actionDisableMenuBar, &QAction::triggered, this, &MainWindow::setMenuBarState);
-    connect(this, &MainWindow::reset, &emu, &EmuThread::reset);
+
+    // Reset and reload
+    connect(this, &MainWindow::reset, &emu, &EmuThread::reset, Qt::QueuedConnection);
+    connect(this, &MainWindow::load, &emu, &EmuThread::load, Qt::QueuedConnection);
 
     // Capture
     connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
@@ -598,7 +601,7 @@ bool MainWindow::restoreEmuState() {
 }
 
 void MainWindow::saveToPath(const QString &path) {
-    emu.save(path);
+    emu.saveImage(path);
 }
 
 bool MainWindow::restoreFromPath(const QString &path) {
@@ -656,7 +659,7 @@ void MainWindow::exportRom() {
                                                       tr("ROM images (*.rom);;All files (*.*)"));
     if (!saveRom.isEmpty()) {
         currDir = QFileInfo(saveRom).absoluteDir();
-        emu.saveRomImage(saveRom);
+        emu.saveRom(saveRom);
     }
 }
 
@@ -1449,6 +1452,7 @@ void MainWindow::reloadROM() {
 
     if (guiDebug) {
         debuggerChangeState();
+
     }
 
     guiEmuValid = false;
@@ -1459,11 +1463,7 @@ void MainWindow::reloadROM() {
 
     usingLoadedImage = false;
 
-    if (emu.stop()) {
-        emu.start();
-    } else {
-        QMessageBox::critical(this, MSG_ERROR, "Could not stop");
-    }
+    emit load();
 }
 
 void MainWindow::drawNextDisassembleLine() {

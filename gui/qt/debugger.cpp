@@ -488,7 +488,7 @@ void MainWindow::debuggerChangeState() {
         receiveChangeState();
     }
 
-    if (guiDebug) {
+    if (state) {
         debuggerGUIDisable();
         debuggerUpdateChanges();
     }

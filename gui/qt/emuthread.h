@@ -18,7 +18,6 @@ public:
 
     void doStuff();
     void throttleTimerWait();
-    volatile bool waitForLink = false;
     QString rom, image;
 
 signals:
@@ -49,9 +48,9 @@ signals:
     void receiveReady();
 
 public slots:
-    virtual void run() override;
     bool stop();
     void reset();
+    void load();
 
     // Debugging
     void setDebugMode(bool);
@@ -72,11 +71,14 @@ public slots:
 
     // Save/Restore
     bool restore(const QString&);
-    void save(const QString&);
-    void saveRomImage(const QString&);
+    void saveImage(const QString&);
+    void saveRom(const QString&);
 
     // Speed
     void sendActualSpeed();
+
+protected:
+    virtual void run() Q_DECL_OVERRIDE;
 
 private:
     void setActualSpeed(int);
@@ -84,14 +86,16 @@ private:
 
     int speed, actualSpeed;
 
+    bool doReset = false;
+
     bool enterDebugger = false;
     bool enterSendState = false;
     bool enterReceiveState = false;
     bool enterRestore = false;
 
     bool throttleOn = true;
-    bool saveImage = false;
-    bool saveRom = false;
+    bool enterSaveImage = false;
+    bool enterSaveRom = false;
 
     QString romExportPath;
 
