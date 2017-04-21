@@ -84,7 +84,7 @@ static uint8_t rtc_read(const uint16_t pio, bool peek) {
             value = (rtc.control & 128) ? rtc.readHour : rtc.holdHour;
             break;
         case 0x0C: case 0x0D:
-            value = (rtc.control & 128) ? rtc.readDay : rtc.holdDay;
+            value = read8((rtc.control & 128) ? rtc.readDay : rtc.holdDay, bit_offset);
             break;
         case 0x10:
             value = rtc.alarmSec;
