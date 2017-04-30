@@ -25,20 +25,16 @@ std::string calc_var_content_string(const calc_var_t& var);
 // Qt Specific
 #include <QtCore/QString>
 
-extern QString bppModeStr[];
-extern QByteArray *bppArray;
-
-// bpp conversions
-QString sendingROM(QDragEnterEvent *e, bool *value);
-
-// integer to hex strings and vice versa
-int hex2int(QString str);
-QString int2hex(uint32_t a, uint8_t l);
-void guiDelay(int ms);
-
 // local config path
 extern QString configPath;
 extern QString execPath;
+
+QString sendingROM(QDragEnterEvent *e, bool *value);
+
+// integer to hex strings and vice versa
+int hex2int(const QString &str);
+QString int2hex(uint32_t a, uint8_t l);
+void guiDelay(int ms);
 
 bool isProcRunning(pid_t procID);
 

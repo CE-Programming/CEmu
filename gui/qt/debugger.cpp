@@ -710,7 +710,8 @@ bool MainWindow::breakpointRemoveSelectedRow() {
 
 void MainWindow::breakpointRemoveAddress(uint32_t address) {
     for (int i = 0; i < ui->breakpointView->rowCount(); i++) {
-        if (ui->breakpointView->item(i, BREAK_ADDR_LOC)->text().toUInt() == address) {
+        uint32_t test = static_cast<uint32_t>(hex2int(ui->breakpointView->item(i, BREAK_ADDR_LOC)->text()));
+        if (address == test) {
             ui->breakpointView->selectRow(i);
             breakpointRemoveSelectedRow();
             break;
@@ -1029,7 +1030,8 @@ bool MainWindow::watchpointRemoveSelectedRow() {
 
 void MainWindow::watchpointRemoveAddress(uint32_t address) {
     for (int i = 0; i < ui->watchpointView->rowCount(); i++) {
-        if (ui->watchpointView->item(i, WATCH_ADDR_LOC)->text().toUInt() == address) {
+        uint32_t test = static_cast<uint32_t>(hex2int(ui->watchpointView->item(i, WATCH_ADDR_LOC)->text()));
+        if (address == test) {
             ui->watchpointView->selectRow(i);
             watchpointRemoveSelectedRow();
             break;

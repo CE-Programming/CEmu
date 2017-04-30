@@ -32,7 +32,7 @@ bool fileExists(const QString& ptath) {
     }
 }
 
-int hex2int(QString str) {
+int hex2int(const QString &str) {
     return (int)strtol(str.toStdString().c_str(), nullptr, 16);
 }
 
