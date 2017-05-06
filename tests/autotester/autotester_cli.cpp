@@ -5,6 +5,7 @@
  * License: GPLv3
  */
 
+#include <atomic>
 #include <string>
 #include <vector>
 #include <fstream>
@@ -16,15 +17,16 @@
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
   #include <direct.h>
+  #define chdir _chdir
 #else
   #include <unistd.h>
 #endif
 
 #include "autotester.h"
 
-bool do_transfers   = false;
-bool transfers_done = false;
-bool transfers_err  = false;
+std::atomic<bool> do_transfers;
+std::atomic<bool> transfers_done;
+std::atomic<bool> transfers_err;
 
 /* As expected by the core */
 extern "C"
@@ -112,6 +114,10 @@ int main(int argc, char* argv[])
         return -1;
     }
 
+    do_transfers = false;
+    transfers_done = false;
+    transfers_err = false;
+
     const std::string jsonPath(argv[1]);
     std::string jsonContents;
     std::ifstream ifs(jsonPath);
@@ -128,13 +134,16 @@ int main(int argc, char* argv[])
     }
 
     // Go to the json file's dir to allow relative paths from there
-    chdir(jsonPath.substr(0, jsonPath.find_last_of("/\\")).c_str());
+    if (chdir(jsonPath.substr(0, jsonPath.find_last_of("/\\")).c_str())) {
+        std::cerr << "[Error] Couldn't change directory path" << std::endl;
+        return -1;
+    }
 
     if (autotester::loadJSONConfig(jsonContents))
     {
         std::cout << "[OK] Test config loaded and verified. " << autotester::config.hashes.size() << " unique tests found." << std::endl;
     } else {
-        std::cerr << "[Error] -> See the test config file format and make sure values are correct." << std::endl;
+        std::cerr << "[Error] See the test config file format and make sure values are correct" << std::endl;
         return -1;
     }
 
@@ -150,11 +159,11 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     // Clear home screen
     autotester::sendKey(0x09);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
 
     do_transfers = autotester::config.transfer_files.size() > 0;
 
@@ -205,3 +214,4 @@ cleanExit:
 
     return retVal;
 }
+

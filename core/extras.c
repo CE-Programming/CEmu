@@ -21,3 +21,4 @@ void EMSCRIPTEN_KEEPALIVE sendLetterKeyPress(char letter) {
     }
     sendKey(val);
 }
+

@@ -66,14 +66,14 @@ static const std::unordered_map<std::string, coord2d> valid_keys = {
 void sendKey(uint16_t key)
 {
     cemucore::sendKey(key);
-    std::this_thread::sleep_for(std::chrono::milliseconds(90));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     DO_STEP_CALLBACK();
 }
 
 void sendLetterKeyPress(char letter)
 {
     cemucore::sendLetterKeyPress(letter);
-    std::this_thread::sleep_for(std::chrono::milliseconds(90));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     DO_STEP_CALLBACK();
 }
 
@@ -85,7 +85,7 @@ static const std::unordered_map<std::string, seq_cmd_action_func_t> valid_action
         "launch", [] {
             // Assuming we're in the home screen...
             sendKey(CE_KEY_CLEAR);
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds(300));
             if (config.target.isASM) {
                 sendKey(CE_KEY_ASM);
             }
@@ -108,7 +108,7 @@ static const std::unordered_map<std::string, seq_cmd_action_func_t> valid_action
             sendKey(CE_KEY_CLEAR);
             sendKey(CE_KEY_CLASSIC);
             sendKey(CE_KEY_ENTER);
-            std::this_thread::sleep_for(std::chrono::milliseconds(125));
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
         }
     }
 };
@@ -428,16 +428,23 @@ bool sendFilesForTest()
 {
     for (const auto& file : config.transfer_files)
     {
-        if (debugLogs) {
-            std::cout << "- Sending file " << file << "... " << std::endl;
-        }
-        if (!cemucore::sendVariableLink(file.c_str(), cemucore::LINK_FILE))
+        if (debugLogs)
         {
+            std::cout << "- Sending file " << file << "... ";
+        }
+        if (!cemucore::sendVariableLink(file.c_str(), cemucore::LINK_FILE)) {
+	    if (debugLogs)
+            {
+	        std::cout << std::endl;
+	    }
             std::cerr << "[Error] File couldn't be sent" << std::endl;
             return false;
         }
+        if (debugLogs)
+        {
+	    std::cout << "[OK]" << std::endl;
+        }
         DO_STEP_CALLBACK();
-        std::this_thread::sleep_for(std::chrono::milliseconds(150));
     }
     return true;
 }
@@ -449,10 +456,12 @@ bool doTestSequence()
 
     for (const auto& command : config.sequence)
     {
-        if (debugLogs) {
+        if (debugLogs)
+        {
             std::cout << "Launching command " << command.first << " | " << command.second << std::endl;
         }
-        if (!launchCommand(command)) {
+        if (!launchCommand(command))
+        {
             return false;
         }
         DO_STEP_CALLBACK();
@@ -462,3 +471,4 @@ bool doTestSequence()
 }
 
 } // namespace autotester
+

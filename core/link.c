@@ -74,7 +74,7 @@ static void run_asm(const uint8_t *data, const size_t data_size, const uint32_t 
  * Proper USB emulation should really be a thing
  * See GitHub issue #25
  */
-bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned location) {
+bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int location) {
     const size_t h_size = sizeof header_data;
     const uint8_t tVarLst = 0x5D, tAns = 0x72;
     unsigned int i;
