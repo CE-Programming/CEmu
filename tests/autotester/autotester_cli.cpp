@@ -14,6 +14,12 @@
 #include <chrono>
 #include <regex>
 
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+  #include <direct.h>
+#else
+  #include <unistd.h>
+#endif
+
 #include "autotester.h"
 
 /* As expected by the core */
@@ -105,6 +111,9 @@ int main(int argc, char* argv[])
         std::cerr << "[Error] Couldn't open JSON file at provided path" << std::endl;
         return -1;
     }
+
+    // Go to the json file's dir to allow relative paths from there
+    chdir(jsonPath.substr(0, jsonPath.find_last_of("/\\")).c_str());
 
     if (autotester::loadJSONConfig(jsonContents))
     {
