@@ -62,9 +62,6 @@ extern "C"
         fflush(stdout);
     }
 
-
-
-
     void throttle_timer_wait()
     {
         auto interval  = std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(1000000));
