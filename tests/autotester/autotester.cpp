@@ -220,7 +220,7 @@ bool loadJSONConfig(const std::string& jsonContents)
         }
     } else {
         std::cerr << "[Error] JSON parse error: " << jsonError << std::endl;
-        return -1;
+        return false;
     }
 
     config = config_t();

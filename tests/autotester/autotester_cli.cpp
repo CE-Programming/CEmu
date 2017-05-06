@@ -22,15 +22,30 @@
 
 #include "autotester.h"
 
+bool do_transfers   = false;
+bool transfers_done = false;
+bool transfers_err  = false;
+
 /* As expected by the core */
 extern "C"
 {
     auto lastTime = std::chrono::steady_clock::now();
 
-    void gui_do_stuff(void) { }
     void gui_set_busy(bool) { }
     void gui_emu_sleep(unsigned long ms) { std::this_thread::sleep_for(std::chrono::microseconds(ms)); }
     void gui_entered_send_state(bool) { }
+
+    void gui_do_stuff(void)
+    {
+        if (!transfers_done && do_transfers)
+        {
+            if (!autotester::sendFilesForTest())
+            {
+                transfers_err = true;
+            }
+            transfers_done = true;
+        }
+    }
 
     void gui_console_vprintf(const char *fmt, va_list ap)
     {
@@ -141,15 +156,24 @@ int main(int argc, char* argv[])
     autotester::sendKey(0x09);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    // Send files
-    if (!autotester::sendFilesForTest())
+    do_transfers = autotester::config.transfer_files.size() > 0;
+
+    if (do_transfers)
     {
-        std::cerr << "[Error] Error while in sendFilesForTest!" << std::endl;
-        retVal = -1;
-        goto cleanExit;
+        while (!transfers_done) {
+            // wait for the emu thread to finish that.
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+        do_transfers = false;
+        if (transfers_err)
+        {
+            std::cerr << "[Error] Error while in sendFilesForTest!" << std::endl;
+            retVal = -1;
+            goto cleanExit;
+        }
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
     // Follow the sequence
     if (!autotester::doTestSequence())
