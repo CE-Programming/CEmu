@@ -85,6 +85,7 @@ static const std::unordered_map<std::string, seq_cmd_action_func_t> valid_action
         "launch", [] {
             // Assuming we're in the home screen...
             sendKey(CE_KEY_CLEAR);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
             if (config.target.isASM) {
                 sendKey(CE_KEY_ASM);
             }
