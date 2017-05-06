@@ -21,16 +21,53 @@ extern "C"
 {
     auto lastTime = std::chrono::steady_clock::now();
 
-    void gui_emu_sleep(void) { std::this_thread::sleep_for(std::chrono::microseconds(50)); }
     void gui_do_stuff(void) { }
     void gui_set_busy(bool) { }
-    void gui_console_printf(const char*, ...) { }
+    void gui_emu_sleep(unsigned long ms) { std::this_thread::sleep_for(std::chrono::microseconds(ms)); }
     void gui_entered_send_state(bool) { }
+
+    void gui_console_vprintf(const char *fmt, va_list ap)
+    {
+        vfprintf(stdout, fmt, ap);
+        fflush(stdout);
+    }
+
+    void gui_console_err_vprintf(const char *fmt, va_list ap)
+    {
+        vfprintf(stderr, fmt, ap);
+        fflush(stderr);
+    }
+
+    void gui_console_printf(const char *fmt, ...)
+    {
+        va_list ap;
+        va_start(ap, fmt);
+        gui_console_vprintf(fmt, ap);
+        va_end(ap);
+    }
+
+    void gui_console_err_printf(const char *fmt, ...)
+    {
+        va_list ap;
+        va_start(ap, fmt);
+
+        gui_console_err_vprintf(fmt, ap);
+
+        va_end(ap);
+    }
+
+    void gui_perror(const char *msg)
+    {
+        printf("[Error] %s: %s\n", msg, strerror(errno));
+        fflush(stdout);
+    }
+
+
+
 
     void throttle_timer_wait()
     {
-        auto interval  = std::chrono::duration_cast<std::chrono::steady_clock::duration>
-                (std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(800000)); // a bit faster than normal
+        auto interval  = std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(1000000));
 
         auto cur_time  = std::chrono::steady_clock::now(),
              next_time = lastTime + interval;
@@ -84,7 +121,7 @@ int main(int argc, char* argv[])
      * i.e. actually wait until the core is ready to do stuff, instead of blinding doing sleeps, etc.
      * Things like std::condition_variable should help, IIRC */
     std::thread coreThread;
-    if (cemucore::emu_start(autotester::config.rom.c_str(), NULL))
+    if (cemucore::emu_load(autotester::config.rom.c_str(), NULL))
     {
         coreThread = std::thread(&cemucore::emu_loop, true);
     } else {
@@ -96,17 +133,22 @@ int main(int argc, char* argv[])
 
     // Clear home screen
     autotester::sendKey(0x09);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     // Send files
     if (!autotester::sendFilesForTest())
     {
+        std::cerr << "[Error] Error while in sendFilesForTest!" << std::endl;
         retVal = -1;
         goto cleanExit;
     }
 
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+
     // Follow the sequence
     if (!autotester::doTestSequence())
     {
+        std::cerr << "[Error] Error while in doTestSequence!" << std::endl;
         retVal = -1;
         goto cleanExit;
         // This is useless here since cleanExit is right after,
