@@ -19,10 +19,11 @@ install:
 script:
   - mkdir build
   - cd build
-  - qmake ../gui/qt
-  - make -j4 CC=gcc-6 CXX=g++-6 LINK=g++-6
+  - qmake ../gui/qt && make -j4 CC=gcc-6 CXX=g++-6 LINK=g++-6
   - cd ../core
-  - make -j4 CC=gcc-6 CXX=g++-6 LINK=g++-6 clean all
+  - make clean && make -j4 CC=gcc-6 CXX=g++-6 LINK=g++-6 all
+  - cd ../tests/autotester
+  - make clean && make -j4 CC=gcc-6 CXX=g++-6 LINK=g++-6 all
 
 notifications:
   irc:
