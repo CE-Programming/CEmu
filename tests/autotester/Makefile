@@ -8,7 +8,7 @@ CXXFLAGS += -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=r
 # Add these flags if your compiler supports it
 #CFLAGS += -Wstack-protector -fstack-protector-strong --param=ssp-buffer-size=1 -fsanitize=address,bounds -fsanitize-undefined-trap-on-error
 
-LDFLAGS  := -L../../core/ -lcemucore
+LDLIBS  := -L../../core/ -lcemucore
 
 srcfiles := autotester.cpp autotester_cli.cpp
 objects  := $(patsubst %.cpp, %.o, $(srcfiles))
