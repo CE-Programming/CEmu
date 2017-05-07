@@ -16,6 +16,12 @@
 #include <chrono>
 #include <regex>
 
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+  // TODO: implement glob() or do the equivalent!
+#else
+  #include <glob.h>
+#endif
+
 #include "crc32.hpp"
 #include "json11.hpp"
 
@@ -227,6 +233,19 @@ bool loadJSONConfig(const std::string& jsonContents)
 
     json11::Json tmp, tmp2;
 
+    const char* forced_rom_path = getenv("AUTOTESTER_ROM");
+    if (forced_rom_path)
+    {
+        const std::string tmp_path(forced_rom_path);
+        if (file_exists(tmp_path))
+        {
+            config.rom = forced_rom_path;
+            ignoreROMfield = true;
+        } else {
+            std::cerr << "[Error] AUTOTESTER_ROM was given but the file does not exist!" << std::endl;
+        }
+    }
+
     if (!ignoreROMfield)
     {
         tmp = configJson["rom"];
@@ -424,25 +443,80 @@ bool loadJSONConfig(const std::string& jsonContents)
     return true;
 }
 
+std::vector<std::string> globVector(const std::string& pattern)
+{
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+  // TODO: implement that or do the equivalent!
+    return std::vector<std::string>();
+#else
+    glob_t glob_result;
+    glob(pattern.c_str(), GLOB_TILDE, NULL, &glob_result);
+    std::vector<std::string> files;
+    for (unsigned int i=0; i<glob_result.gl_pathc; i++)
+    {
+        files.push_back(std::string(glob_result.gl_pathv[i]));
+    }
+    globfree(&glob_result);
+    return files;
+#endif
+}
+
 bool sendFilesForTest()
 {
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+  // TODO: call the equivalent implementation
+#else
+    const char* forced_libs_dir = getenv("AUTOTESTER_LIBS_DIR");
+    if (forced_libs_dir)
+    {
+        const auto forced_files = globVector(std::string(forced_libs_dir) + "/*.8xv");
+        if (forced_files.size() == 0)
+        {
+            std::cerr << "[Error] AUTOTESTER_LIBS_DIR given but no files found...?" << std::endl;
+            return false;
+        }
+        for (const auto& file : forced_files)
+        {
+            if (debugLogs)
+            {
+                std::cout << "- Sending forced file " << file << "... ";
+            }
+            if (!cemucore::sendVariableLink(file.c_str(), cemucore::LINK_FILE))
+            {
+                if (debugLogs)
+                {
+                    std::cout << std::endl;
+                }
+                std::cerr << "[Error] Forced file couldn't be sent" << std::endl;
+                return false;
+            }
+            if (debugLogs)
+            {
+                std::cout << "[OK]" << std::endl;
+            }
+            DO_STEP_CALLBACK();
+        }
+    }
+#endif
+
     for (const auto& file : config.transfer_files)
     {
         if (debugLogs)
         {
             std::cout << "- Sending file " << file << "... ";
         }
-        if (!cemucore::sendVariableLink(file.c_str(), cemucore::LINK_FILE)) {
-	    if (debugLogs)
+        if (!cemucore::sendVariableLink(file.c_str(), cemucore::LINK_FILE))
+        {
+            if (debugLogs)
             {
-	        std::cout << std::endl;
-	    }
+                std::cout << std::endl;
+            }
             std::cerr << "[Error] File couldn't be sent" << std::endl;
             return false;
         }
         if (debugLogs)
         {
-	    std::cout << "[OK]" << std::endl;
+            std::cout << "[OK]" << std::endl;
         }
         DO_STEP_CALLBACK();
     }

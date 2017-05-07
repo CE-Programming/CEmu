@@ -68,6 +68,8 @@ namespace autotester
 
     bool loadJSONConfig(const std::string& jsonContents);
 
+    std::vector<std::string> globVector(const std::string& pattern);
+
     bool sendFilesForTest();
 
     bool doTestSequence();

@@ -51,8 +51,9 @@ extern "C"
 
     void gui_console_vprintf(const char *fmt, va_list ap)
     {
-        vfprintf(stdout, fmt, ap);
-        fflush(stdout);
+        // Uncomment if needed
+        //vfprintf(stdout, fmt, ap);
+        //fflush(stdout);
     }
 
     void gui_console_err_vprintf(const char *fmt, va_list ap)
