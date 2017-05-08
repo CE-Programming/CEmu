@@ -27,6 +27,7 @@ namespace autotester
         std::string description;
         uint32_t start; /* Actually a pointer, for the CE */
         uint32_t size;
+        int32_t timeout_ms;
         std::vector<uint32_t> expected_CRCs;
     };
 

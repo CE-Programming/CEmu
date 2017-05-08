@@ -141,11 +141,29 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
             const auto& tmp = config.hashes.find(which_hash);
             if (tmp != config.hashes.end())
             {
+                uint8_t* temp_buffer;
+                uint32_t real_hash;
                 const hash_params_t& param = tmp->second;
-                uint8_t *temp_buffer = cemucore::virt_mem_dup(param.start, param.size);
-                const uint32_t real_hash = crc32(temp_buffer, param.size);
-                ::free(temp_buffer);
-                if (std::find(param.expected_CRCs.begin(), param.expected_CRCs.end(), real_hash) != param.expected_CRCs.end())
+                bool match = false;
+
+                const uint32_t timeout = (uint32_t)param.timeout_ms;
+
+                auto until = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeout);
+
+                do
+                {
+                    temp_buffer = cemucore::virt_mem_dup(param.start, param.size);
+                    real_hash = crc32(temp_buffer, param.size);
+                    match = (std::find(param.expected_CRCs.begin(), param.expected_CRCs.end(), real_hash) != param.expected_CRCs.end());
+                    ::free(temp_buffer);
+                    if (timeout > 50)
+                    {
+                        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                        DO_STEP_CALLBACK();
+                    }
+                } while (timeout > 0 && !match && std::chrono::steady_clock::now() < until);
+
+                if (match)
                 {
                     if (debugLogs) {
                         std::cout << "\t[Test passed!] Hash #" << which_hash << " had a matching CRC." << std::endl;
@@ -160,6 +178,23 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
                     hashesFailed++;
                 }
                 hashesTested++;
+            } else {
+                std::cerr << "\t[Error] hash #" << which_hash << " was not declared in the JSON file. Ignoring." << std::endl;
+            }
+        }
+    },
+    {
+        "hashWait", [](const std::string& which_hash) {
+            const auto& tmp = config.hashes.find(which_hash);
+            if (tmp != config.hashes.end())
+            {
+                hash_params_t& param = tmp->second;
+                if (param.timeout_ms < 0)
+                {
+                    std::cout << "\t[Info] hash #" << which_hash << " is a hashWait without a proper timeout value. Using 1000ms." << std::endl;
+                    param.timeout_ms = 1000; // default
+                }
+                valid_seq_commands.at("hash")(which_hash);
             } else {
                 std::cerr << "\t[Error] hash #" << which_hash << " was not declared in the JSON file. Ignoring." << std::endl;
             }
@@ -396,6 +431,9 @@ bool loadJSONConfig(const std::string& jsonContents)
                     std::cerr << "[Error] hash #" << tmpHashName << " config's description was not a string or was empty" << std::endl;
                     return false;
                 }
+
+                hash_param.timeout_ms = tmpHash["timeout"].is_number() ? tmpHash["timeout"].int_value() : -1;
+
                 if (tmpHash["start"].is_string() && !tmpHash["start"].string_value().empty())
                 {
                     std::string start_tmp = tmpHash["start"].string_value();
@@ -413,6 +451,7 @@ bool loadJSONConfig(const std::string& jsonContents)
                     std::cerr << "[Error] hash #" << tmpHashName << " config's start was not a string or was empty" << std::endl;
                     return false;
                 }
+
                 if (tmpHash["size"].is_number() || (tmpHash["size"].is_string() && !tmpHash["size"].string_value().empty()))
                 {
                     std::string size_tmp = tmpHash["size"].is_number() ? std::to_string(tmpHash["size"].int_value()) : tmpHash["size"].string_value();
@@ -430,6 +469,7 @@ bool loadJSONConfig(const std::string& jsonContents)
                     std::cerr << "[Error] hash #" << tmpHashName << " config's size was not a string or was empty" << std::endl;
                     return false;
                 }
+
                 if (tmpHash["expected_CRCs"].is_array() && !tmpHash["expected_CRCs"].array_items().empty())
                 {
                     for (const auto& tmpHashCRC : tmpHash["expected_CRCs"].array_items())
