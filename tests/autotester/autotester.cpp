@@ -178,6 +178,30 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
                 std::cerr << "\t[Error] unknown key \"" << which_key << "\" was not pressed." << std::endl;
             };
         }
+    },
+    {
+        "hold", [](const std::string& which_key) {
+            const auto& tmp = valid_keys.find(which_key);
+            if (tmp != valid_keys.end())
+            {
+                const coord2d& key_coords = tmp->second;
+                cemucore::keypad_key_event(key_coords.y, key_coords.x, true);
+            } else {
+                std::cerr << "\t[Error] unknown key \"" << which_key << "\" was not hold." << std::endl;
+            };
+        }
+    },
+    {
+        "release", [](const std::string& which_key) {
+            const auto& tmp = valid_keys.find(which_key);
+            if (tmp != valid_keys.end())
+            {
+                const coord2d& key_coords = tmp->second;
+                cemucore::keypad_key_event(key_coords.y, key_coords.x, false);
+            } else {
+                std::cerr << "\t[Error] unknown key \"" << which_key << "\" was not released." << std::endl;
+            };
+        }
     }
 };
 
