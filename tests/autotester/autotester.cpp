@@ -146,9 +146,9 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
                 const hash_params_t& param = tmp->second;
                 bool match = false;
 
-                const uint32_t timeout = (uint32_t)param.timeout_ms;
+                const int32_t timeout = param.timeout_ms;
 
-                auto until = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeout);
+                auto until = std::chrono::steady_clock::now() + std::chrono::milliseconds(::abs(timeout));
 
                 do
                 {
