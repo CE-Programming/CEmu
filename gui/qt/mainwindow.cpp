@@ -576,9 +576,6 @@ MainWindow::~MainWindow() {
     delete debuggerShortcut;
     delete stepOverShortcut;
     delete stepNextShortcut;
-    delete ui->flashEdit;
-    delete ui->ramEdit;
-    delete ui->memEdit;
     delete ui;
 }
 
