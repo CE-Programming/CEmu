@@ -1424,7 +1424,7 @@ void MainWindow::equatesAddEquate(const QString &name, const QString &addrStr) {
     if (ptr && ptr[4] == 0xC3 && (ptr[0] == 0xC3 || ptr[8] == 0xC3)) { // jump table?
         uint32_t address2  = ptr[5] | ptr[6] << 8 | ptr[7] << 16;
         if (phys_mem_ptr(address2, 1)) {
-            disasm.map.emplace(address2, " " + name.toStdString());
+            disasm.map.emplace(address2, "_" + name.toStdString());
             uint32_t &itemReverse2 = disasm.reverseMap["_" + name.toUpper().toStdString()];
             itemReverse2 = address2;
         }
