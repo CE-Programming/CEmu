@@ -815,6 +815,10 @@ void MainWindow::breakpointGUIAdd() {
     } else {
         c.insertText(" ");
     }
+
+    if (ui->disassemblyView->labelCheck()) {
+        updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(Q_NULLPTR, 16), true);
+    }
 }
 
 bool MainWindow::breakpointAdd(QString label, uint32_t address, bool enabled) {
@@ -1108,6 +1112,10 @@ void MainWindow::watchpointGUIAdd() {
         c.insertHtml("<font color='#A3A3FF'>&#9679;</font>");
     } else {
         c.insertText(" ");
+    }
+
+    if (ui->disassemblyView->labelCheck()) {
+        updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(Q_NULLPTR, 16), true);
     }
 }
 

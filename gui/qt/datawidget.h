@@ -21,6 +21,7 @@ public:
     void addHighlight(const QColor&);
     void highlightCurrentLine();
     void cursorState(bool movable);
+    bool labelCheck();
     QString getSelectedAddress();
 
 private:

@@ -30,6 +30,14 @@ QString DataWidget::getSelectedAddress() {
     return c.selectedText();
 }
 
+bool DataWidget::labelCheck() {
+    QTextCursor c = textCursor();
+    c.movePosition(QTextCursor::EndOfLine, QTextCursor::MoveAnchor);
+    c.setPosition(c.position()-1, QTextCursor::KeepAnchor);
+
+    return c.selectedText().at(0) == ':';
+}
+
 void DataWidget::cursorState(bool moveable) {
     cursorMoveable = moveable;
     if (moveable) {
