@@ -27,7 +27,7 @@ extern disasm_highlights_state_t disasmHighlight;
 #include <unordered_map>
 #include <stdint.h>
 
-typedef std::unordered_map<uint32_t, std::string> map_t;
+typedef std::unordered_multimap<uint32_t, std::string> map_t;
 typedef std::unordered_map<std::string, uint32_t> map_value_t;
 
 enum forceTypes {

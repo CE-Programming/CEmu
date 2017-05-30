@@ -1417,22 +1417,16 @@ void MainWindow::equatesAddFile(const QString &fileName) {
 
 void MainWindow::equatesAddEquate(const QString &name, const QString &addrStr) {
     uint32_t address = addrStr.toUInt(Q_NULLPTR, 16);
-    std::string &item = disasm.map[address];
     uint32_t &itemReverse = disasm.reverseMap[name.toUpper().toStdString()];
-    if (item.empty()) {
-        itemReverse = address;
-        item = name.toStdString();
-        uint8_t *ptr = phys_mem_ptr(address - 4, 9);
-        if (ptr && ptr[4] == 0xC3 && (ptr[0] == 0xC3 || ptr[8] == 0xC3)) { // jump table?
-            uint32_t address2  = ptr[5] | ptr[6] << 8 | ptr[7] << 16;
-            if (phys_mem_ptr(address2, 1)) {
-                std::string &item2 = disasm.map[address2];
-                if (item2.empty()) {
-                    item2 = "_" + item;
-                    uint32_t &itemReverse2 = disasm.reverseMap["_" + name.toUpper().toStdString()];
-                    itemReverse2 = address2;
-                }
-            }
+    itemReverse = address;
+    disasm.map.emplace(address, name.toStdString());
+    uint8_t *ptr = phys_mem_ptr(address - 4, 9);
+    if (ptr && ptr[4] == 0xC3 && (ptr[0] == 0xC3 || ptr[8] == 0xC3)) { // jump table?
+        uint32_t address2  = ptr[5] | ptr[6] << 8 | ptr[7] << 16;
+        if (phys_mem_ptr(address2, 1)) {
+            disasm.map.emplace(address2, " " + name.toStdString());
+            uint32_t &itemReverse2 = disasm.reverseMap["_" + name.toUpper().toStdString()];
+            itemReverse2 = address2;
         }
     }
 }

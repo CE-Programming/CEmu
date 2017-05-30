@@ -1464,12 +1464,21 @@ void MainWindow::reloadROM() {
 }
 
 void MainWindow::drawNextDisassembleLine() {
-    std::string *label = Q_NULLPTR;
+    bool useLabel = false;
+    map_t::iterator sit;
+    std::pair<map_t::iterator, map_t::iterator> range;
+    unsigned int numLines = 1;
 
     if (disasm.baseAddress != disasm.newAddress) {
         disasm.baseAddress = disasm.newAddress;
-        map_t::iterator item = disasm.map.find(disasm.newAddress);
-        if (item != disasm.map.end()) {
+        if (disasm.map.count(disasm.newAddress)) {
+            range = disasm.map.equal_range(disasm.newAddress);
+
+            numLines = 0;
+            for (sit = range.first;  sit != range.second;  ++sit) {
+               numLines++;
+            }
+
             disasmHighlight.rWatch = false;
             disasmHighlight.wWatch = false;
             disasmHighlight.xBreak = false;
@@ -1481,7 +1490,7 @@ void MainWindow::drawNextDisassembleLine() {
             disasm.instruction.arguments.clear();
             disasm.instruction.size = 0;
 
-            label = &item->second;
+            useLabel = true;
         } else {
             disassembleInstruction();
         }
@@ -1489,27 +1498,49 @@ void MainWindow::drawNextDisassembleLine() {
         disassembleInstruction();
     }
 
-    // Some round symbol things
-    QString breakpointSymbols = QString("<font color='#A3FFA3'>%1</font><font color='#A3A3FF'>%2</font><font color='#FFA3A3'>%3</font>")
-                                   .arg(((disasmHighlight.rWatch == true)  ? "&#9679;" : " "),
-                                        ((disasmHighlight.wWatch == true) ? "&#9679;" : " "),
-                                        ((disasmHighlight.xBreak == true)  ? "&#9679;" : " "));
+    if (useLabel) {
+        range = disasm.map.equal_range(disasm.newAddress);
+        sit = range.first;
+    }
 
-    // Simple syntax highlighting
-    QString instructionArgsHighlighted = QString::fromStdString(disasm.instruction.arguments)
-                                        .replace(QRegularExpression("(\\$[0-9a-fA-F]+)"), "<font color='green'>\\1</font>") // hex numbers
-                                        .replace(QRegularExpression("(^\\d)"), "<font color='blue'>\\1</font>")             // dec number
-                                        .replace(QRegularExpression("([()])"), "<font color='#600'>\\1</font>");            // parentheses
+    for (unsigned int j = 0; j < numLines; j++) {
 
-    QString formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2 %3  <font color='darkblue'>%4%5</font>%6</pre>")
-                               .arg(int2hex(disasm.baseAddress, 6),
-                                    breakpointSymbols,
-                                    label ? QString::fromStdString(*label) + ":" : useDataCol ? QString::fromStdString(disasm.instruction.data).leftJustified(12, ' ') : "",
-                                    QString::fromStdString(disasm.instruction.opcode),
-                                    QString::fromStdString(disasm.instruction.modeSuffix),
-                                    instructionArgsHighlighted);
+        QString formattedLine;
+        QString breakpointSymbols;
+        QString instructionArgsHighlighted;
 
-    ui->disassemblyView->appendHtml(formattedLine);
+        if (useLabel) {
+            formattedLine = QString("<pre><b><font color='#444'>%1</font></b>     %2</pre>")
+                                    .arg(int2hex(disasm.baseAddress, 6),
+                                         QString::fromStdString(sit->second) + ":");
+            if (numLines == j + 1) {
+                useLabel = false;
+            }
+            sit++;
+        } else {
+            // Some round symbol things
+            breakpointSymbols = QString("<font color='#A3FFA3'>%1</font><font color='#A3A3FF'>%2</font><font color='#FFA3A3'>%3</font>")
+                                        .arg((disasmHighlight.rWatch  ? "&#9679;" : " "),
+                                             (disasmHighlight.wWatch ? "&#9679;" : " "),
+                                             (disasmHighlight.xBreak  ? "&#9679;" : " "));
+
+            // Simple syntax highlighting
+            instructionArgsHighlighted = QString::fromStdString(disasm.instruction.arguments)
+                                                  .replace(QRegularExpression("(\\$[0-9a-fA-F]+)"), "<font color='green'>\\1</font>") // hex numbers
+                                                  .replace(QRegularExpression("(^\\d)"), "<font color='blue'>\\1</font>")             // dec number
+                                                  .replace(QRegularExpression("([()])"), "<font color='#600'>\\1</font>");            // parentheses
+
+            formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2 %3  <font color='darkblue'>%4%5</font>%6</pre>")
+                                    .arg(int2hex(disasm.baseAddress, 6),
+                                        breakpointSymbols,
+                                        QString::fromStdString(disasm.instruction.data).leftJustified(12, ' '),
+                                        QString::fromStdString(disasm.instruction.opcode),
+                                        QString::fromStdString(disasm.instruction.modeSuffix),
+                                        instructionArgsHighlighted);
+        }
+
+        ui->disassemblyView->appendHtml(formattedLine);
+    }
 
     if (!disasmOffsetSet && disasm.newAddress > addressPane) {
         disasmOffsetSet = true;

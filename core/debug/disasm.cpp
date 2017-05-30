@@ -85,16 +85,27 @@ static const std::string im_table[] = {
 };
 
 static std::string strW(uint32_t data) {
-    map_t::const_iterator item = disasm.map.find(data);
-    if (item != disasm.map.end()) {
-        return item->second;
+    std::pair<map_t::iterator, map_t::iterator> range;
+    map_t::iterator sit;
+    std::string ret;
+    if (disasm.map.count(data)) {
+        range = disasm.map.equal_range(data);
+        for (sit = range.first;  sit != range.second;) {
+           ret += sit->second; sit++;
+           ret += (sit != range.second ? "|" : "");
+        }
+        return ret;
     }
     if (disasm.il) {
         sprintf(tmpbuf,"$%06X", data);
     } else {
-        item = disasm.map.find(cpu.registers.MBASE<<16|data);
-        if (item != disasm.map.end()) {
-            return item->second + " & $FFFF";
+        if (disasm.map.count(cpu.registers.MBASE<<16|data)) {
+            range = disasm.map.equal_range(cpu.registers.MBASE<<16|data);
+            for (sit = range.first;  sit != range.second;) {
+               ret += sit->second; sit++;
+               ret += (sit != range.second ? "|" : "");
+            }
+            return ret + " & $FFFF";
         }
         sprintf(tmpbuf,"$%04X", data);
     }
