@@ -109,10 +109,18 @@ int main(int argc, char* argv[])
     // Used if the coreThread has been started (need to exit properly ; uses gotos)
     int retVal = 0;
 
-    if (argc != 2)
+    if (argc < 2)
     {
-        std::cerr << "[Error] Needs one argument: path to the test config JSON file" << std::endl;
+        std::cerr << "[Error] Needs a path argument, the test config JSON file" << std::endl;
         return -1;
+    }
+
+    if (strcmp(argv[1], "-d") == 0)
+    {
+        autotester::debugLogs = true;
+        argv++;
+    } else {
+        autotester::debugLogs = false;
     }
 
     do_transfers = false;
@@ -142,7 +150,7 @@ int main(int argc, char* argv[])
 
     if (autotester::loadJSONConfig(jsonContents))
     {
-        std::cout << "[OK] Test config loaded and verified. " << autotester::config.hashes.size() << " unique tests found." << std::endl;
+        std::cout << jsonPath << " loaded and verified. " << autotester::config.hashes.size() << " unique tests found." << std::endl;
     } else {
         std::cerr << "[Error] See the test config file format and make sure values are correct" << std::endl;
         return -1;
@@ -208,8 +216,10 @@ cleanExit:
     // If no JSON/program/misc. error, return the hash failure count.
     if (retVal == 0)
     {
-        std::cout << "\n*** Final results: out of " << autotester::hashesTested << " tests attempted, "
-                  << autotester::hashesPassed << " passed, and " << autotester::hashesFailed << " failed. ***" << std::endl;
+        const auto status = autotester::hashesFailed == 0 ? "[Autotest passed]" : "[Autotest failed]";
+        std::cout << status << " Out of " << autotester::hashesTested << " tests attempted, "
+                  << autotester::hashesPassed << " passed, and " << autotester::hashesFailed << " failed.\n" << std::endl;
+
         return autotester::hashesFailed;
     }
 

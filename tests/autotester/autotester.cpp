@@ -170,11 +170,9 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
                     }
                     hashesPassed++;
                 } else {
-                    if (debugLogs) {
-                        std::cout << "\t[Test failed!] Hash #" << which_hash << " (\"" << param.description << "\") did not match "
-                                  << (param.expected_CRCs.size() > 1 ? "any of the expected CRCs" : "the expected CRC")
-                                  << " (got " << std::uppercase << std::hex << real_hash << std::dec << ")." << std::endl;
-                    }
+                    std::cout << "\t[Test failed!] Hash #" << which_hash << " (\"" << param.description << "\") did not match "
+                              << (param.expected_CRCs.size() > 1 ? "any of the expected CRCs" : "the expected CRC")
+                              << " (got " << std::uppercase << std::hex << real_hash << std::dec << ")." << std::endl;
                     hashesFailed++;
                 }
                 hashesTested++;
@@ -191,7 +189,9 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
                 hash_params_t& param = tmp->second;
                 if (param.timeout_ms < 0)
                 {
-                    std::cout << "\t[Info] hash #" << which_hash << " is a hashWait without a proper timeout value. Using 1000ms." << std::endl;
+                    if (debugLogs) {
+                        std::cout << "\t[Info] hash #" << which_hash << " is a hashWait without a proper timeout value. Using 1000ms." << std::endl;
+                    }
                     param.timeout_ms = 1000; // default
                 }
                 valid_seq_commands.at("hash")(which_hash);
