@@ -1265,7 +1265,7 @@ int MainWindow::openJSONConfig(const QString& jsonPath) {
     {
         ui->JSONconfigPath->setText(jsonPath);
         ui->buttonLaunchTest->setEnabled(true);
-        std::cout << jsonPath << " loaded and verified. " << autotester::config.hashes.size() << " unique tests found." << std::endl;
+        std::cout << jsonPath.toStdString() << " loaded and verified. " << autotester::config.hashes.size() << " unique tests found." << std::endl;
     } else {
         QMessageBox::critical(this, MSG_ERROR, tr("See the test config file format and make sure values are correct and referenced files are there."));
         return 1;
