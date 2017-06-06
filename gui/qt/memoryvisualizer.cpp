@@ -116,6 +116,7 @@ void MemoryVisualizer::stringToView() {
 
 void MemoryVisualizer::setDefaultView() {
     mView = lcd;
+    mView.mask = false;
     viewToString();
 }
 

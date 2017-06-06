@@ -147,6 +147,7 @@ void lcd_reset(void) {
     sched.items[SCHED_LCD].second = -1;
     lcd.width = LCD_WIDTH;
     lcd.height = LCD_HEIGHT;
+    lcd.mask = true;
     lcd_setptrs(&lcd);
     gui_console_printf("[CEmu] LCD reset.\n");
 }
@@ -200,6 +201,12 @@ void lcd_setptrs(lcd_state_t *x) {
     x->size = x->width * x->height;
 
     if (!x->size) { return; }
+
+    /* Mask if true lcd */
+    if (x->mask) {
+        addr &= 0x7FFFF;
+        addr |= 0xD00000;
+    }
 
     if (addr < 0xD00000) {
         mem_end = mem.flash.block + SIZE_FLASH;
