@@ -59,6 +59,7 @@ void MainWindow::debuggerInstall() {
     ui->checkADLStack->blockSignals(true);
     ui->checkADLStack->setCheckState(Qt::PartiallyChecked);
     ui->checkADLStack->blockSignals(false);
+    ui->debuggerLabel->setHidden(true);
 }
 
 // ------------------------------------------------
@@ -249,10 +250,12 @@ void MainWindow::debuggerExecuteCommand(uint32_t debugAddress, uint8_t command) 
         int tmp;
         switch (command) {
             case CMD_ABORT:
+                ui->debuggerLabel->setHidden(false);
                 ui->debuggerLabel->setText(QStringLiteral("Program Aborted"));
                 debuggerRaise();
                 return; // don't exit the debugger
             case CMD_DEBUG:
+                ui->debuggerLabel->setHidden(false);
                 ui->debuggerLabel->setText(QStringLiteral("Program Entered Debugger"));
                 debuggerRaise();
                 return; // don't exit the debugger
@@ -363,7 +366,10 @@ void MainWindow::debuggerProcessCommand(int reason, uint32_t input) {
     }
 
     // Checked everything, now we should raise the debugger
-    ui->debuggerLabel->setText(text);
+    if (!text.isEmpty()) {
+        ui->debuggerLabel->setHidden(false);
+        ui->debuggerLabel->setText(text);
+    }
     debuggerRaise();
 }
 
@@ -434,6 +440,7 @@ void MainWindow::debuggerUpdateChanges() {
     lcd_setptrs(&lcd);
 
     ui->debuggerLabel->clear();
+    ui->debuggerLabel->setHidden(true);
 }
 
 void MainWindow::debuggerGUISetState(bool state) {
@@ -446,6 +453,7 @@ void MainWindow::debuggerGUISetState(bool state) {
         ui->debuggerLabel->clear();
         ui->opView->clear();
         ui->vatView->clear();
+        ui->debuggerLabel->setHidden(true);
     }
 
     ui->tabDebugging->setEnabled(state);
