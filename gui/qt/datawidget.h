@@ -15,7 +15,7 @@ class DataWidget : public QPlainTextEdit {
     Q_OBJECT
 
 public:
-    explicit DataWidget(QWidget *parent = Q_NULLPTR);
+    explicit DataWidget(QWidget *p = Q_NULLPTR);
     void clearAllHighlights();
     void updateAllHighlights();
     void addHighlight(const QColor&);

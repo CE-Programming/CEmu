@@ -2355,6 +2355,12 @@ QPushButton:pressed {
             </item>
             <item>
              <widget class="DataWidget" name="disassemblyView">
+              <property name="mouseTracking">
+               <bool>false</bool>
+              </property>
+              <property name="contextMenuPolicy">
+               <enum>Qt::CustomContextMenu</enum>
+              </property>
               <property name="documentTitle">
                <string notr="true"/>
               </property>
@@ -4610,6 +4616,9 @@ QPushButton:pressed {
                       </disabled>
                      </palette>
                     </property>
+                    <property name="cursor">
+                     <cursorShape>PointingHandCursor</cursorShape>
+                    </property>
                     <property name="mouseTracking">
                      <bool>true</bool>
                     </property>
@@ -4748,6 +4757,9 @@ QPushButton:pressed {
                      </disabled>
                     </palette>
                    </property>
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
+                   </property>
                    <property name="mouseTracking">
                     <bool>true</bool>
                    </property>
@@ -4810,6 +4822,9 @@ QPushButton:pressed {
                      </disabled>
                     </palette>
                    </property>
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
+                   </property>
                    <property name="mouseTracking">
                     <bool>true</bool>
                    </property>
@@ -4871,6 +4886,9 @@ QPushButton:pressed {
                       </colorrole>
                      </disabled>
                     </palette>
+                   </property>
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
                    </property>
                    <property name="mouseTracking">
                     <bool>true</bool>
@@ -4996,6 +5014,9 @@ QPushButton:pressed {
                      </disabled>
                     </palette>
                    </property>
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
+                   </property>
                    <property name="mouseTracking">
                     <bool>true</bool>
                    </property>
@@ -5057,6 +5078,9 @@ QPushButton:pressed {
                       </colorrole>
                      </disabled>
                     </palette>
+                   </property>
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
                    </property>
                    <property name="mouseTracking">
                     <bool>true</bool>
@@ -5243,6 +5267,9 @@ QPushButton:pressed {
                      </disabled>
                     </palette>
                    </property>
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
+                   </property>
                    <property name="mouseTracking">
                     <bool>true</bool>
                    </property>
@@ -5345,6 +5372,9 @@ QPushButton:pressed {
                      </disabled>
                     </palette>
                    </property>
+                   <property name="cursor">
+                    <cursorShape>ArrowCursor</cursorShape>
+                   </property>
                    <property name="mouseTracking">
                     <bool>true</bool>
                    </property>
@@ -5409,6 +5439,9 @@ QPushButton:pressed {
                       </colorrole>
                      </disabled>
                     </palette>
+                   </property>
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
                    </property>
                    <property name="mouseTracking">
                     <bool>true</bool>
@@ -5711,6 +5744,9 @@ QPushButton:pressed {
                       </colorrole>
                      </disabled>
                     </palette>
+                   </property>
+                   <property name="cursor">
+                    <cursorShape>PointingHandCursor</cursorShape>
                    </property>
                    <property name="mouseTracking">
                     <bool>true</bool>

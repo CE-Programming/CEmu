@@ -1555,7 +1555,6 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
         if (obj_name == "bc_") memGoto(ui->bc_regView->text());
         if (obj_name == "spl") memGoto(ui->splregView->text());
         if (obj_name == "pc")  memGoto(ui->pcregView->text());
-        return false;
     } else if (e->type() == QEvent::MouseMove) {
         QString obj_name = obj->objectName();
 
@@ -1624,7 +1623,6 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
         if (obj_name == "rregView")   t = QStringLiteral("r:\t") + val;
 
         QToolTip::showText(static_cast<QMouseEvent*>(e)->globalPos(), t, widget, widget->rect());
-        return false;
     }
     return false;
 }
