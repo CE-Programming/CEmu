@@ -700,6 +700,7 @@ bool MainWindow::breakpointRemoveSelectedRow() {
     }
 
     const int currRow = ui->breakpointView->currentRow();
+
     uint32_t address = static_cast<uint32_t>(hex2int(ui->breakpointView->item(currRow, BREAK_ADDR_LOC)->text()));
 
     debug_breakwatch(address, DBG_EXEC_BREAKPOINT, false);
@@ -898,11 +899,13 @@ void MainWindow::portSlotAdd(void) {
 
 bool MainWindow::portAdd(uint16_t port, unsigned int mask) {
     const int currRow = ui->portView->rowCount();
-    QString portStr = int2hex((port &= 0xFFFF), 4).toUpper();
-    uint8_t data;
+    QString portStr = int2hex(port, 4).toUpper();
+    uint8_t data = 0;
 
     // Read the data from the port
-    data = port_peek_byte(port);
+    if (guiDebug) {
+        data = port_peek_byte(port);
+    }
 
     // Return if port is already set
     for (int i = 0; i < currRow; i++) {
@@ -1167,7 +1170,9 @@ bool MainWindow::watchpointAdd(QString label, uint32_t address, uint8_t len, uns
     ui->watchpointView->setItem(currRow, WATCH_READ_LOC,  itemRWatch);
     ui->watchpointView->setItem(currRow, WATCH_WRITE_LOC, itemWWatch);
 
-    watchpointUpdate(currRow);
+    if (guiDebug) {
+        watchpointUpdate(currRow);
+    }
 
     ui->watchpointView->setCurrentCell(currRow, WATCH_ADDR_LOC);
     ui->watchpointView->setUpdatesEnabled(true);

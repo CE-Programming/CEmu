@@ -10,7 +10,7 @@ static const uint32_t port_mirrors[0x10] = {0x7F,0xFF,0xFF,0x1FF,0xFFF,0xFF,0x1F
 
 static uint8_t port_read(uint16_t address, bool peek) {
     uint8_t port_loc = port_range(address);
-    return port_map[port_loc].read_in(address & port_mirrors[port_loc], peek);
+    return port_map[port_loc].read(address & port_mirrors[port_loc], peek);
 }
 uint8_t port_peek_byte(uint16_t address) {
     return port_read(address, true);
@@ -26,7 +26,7 @@ uint8_t port_read_byte(uint16_t address) {
 
 static void port_write(uint16_t address, uint8_t value, bool peek) {
     uint8_t port_loc = port_range(address);
-    port_map[port_loc].write_out(address & port_mirrors[port_loc], value, peek);
+    port_map[port_loc].write(address & port_mirrors[port_loc], value, peek);
 }
 void port_poke_byte(uint16_t address, uint8_t value) {
     port_write(address, value, true);

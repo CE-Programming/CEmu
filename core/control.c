@@ -178,8 +178,8 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
 }
 
 static const eZ80portrange_t device = {
-    .read_in    = control_read,
-    .write_out  = control_write
+    .read  = control_read,
+    .write = control_write
 };
 
 eZ80portrange_t init_control(void) {

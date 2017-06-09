@@ -29,8 +29,8 @@
 // ------------------------------------------------
 
 QString MainWindow::getAddressString(QString string, bool *ok) {
-    QString address = QInputDialog::getText(this, tr("Goto Address"),
-                                         tr("Input Address:"), QLineEdit::Normal,
+    QString address = QInputDialog::getText(this, tr("Goto"),
+                                         tr("Input Address (Or Equate):"), QLineEdit::Normal,
                                          string, ok).toUpper();
 
     QString exists = getAddressEquate(address.toStdString());

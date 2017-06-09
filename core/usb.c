@@ -23,8 +23,8 @@ void usb_reset(void) {
 }
 
 static const eZ80portrange_t device = {
-    .read_in    = usb_read,
-    .write_out  = usb_write
+    .read  = usb_read,
+    .write = usb_write
 };
 
 eZ80portrange_t init_usb(void) {

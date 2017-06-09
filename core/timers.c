@@ -133,8 +133,8 @@ void gpt_reset() {
 }
 
 static const eZ80portrange_t device = {
-    .read_in    = gpt_read,
-    .write_out  = gpt_write
+    .read  = gpt_read,
+    .write = gpt_write
 };
 
 eZ80portrange_t init_gpt(void) {

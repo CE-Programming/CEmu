@@ -58,8 +58,8 @@ static void backlight_write(const uint16_t pio, const uint8_t byte, bool poke) {
 }
 
 static const eZ80portrange_t device = {
-    .read_in    = backlight_read,
-    .write_out  = backlight_write
+    .read  = backlight_read,
+    .write = backlight_write
 };
 
 eZ80portrange_t init_backlight(void) {

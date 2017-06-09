@@ -146,8 +146,8 @@ static void sha256_write(uint16_t pio, uint8_t byte, bool poke) {
 }
 
 static const eZ80portrange_t device = {
-    .read_in    = sha256_read,
-    .write_out  = sha256_write
+    .read  = sha256_read,
+    .write = sha256_write
 };
 
 eZ80portrange_t init_sha256(void) {

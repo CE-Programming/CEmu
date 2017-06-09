@@ -118,8 +118,8 @@ static void watchdog_write(const uint16_t pio, const uint8_t byte, bool poke) {
 }
 
 static const eZ80portrange_t pwatchdog = {
-    .read_in    = watchdog_read,
-    .write_out  = watchdog_write
+    .read  = watchdog_read,
+    .write = watchdog_write
 };
 
 void watchdog_reset() {
@@ -188,8 +188,8 @@ static void protected_write(const uint16_t pio, const uint8_t byte, bool poke) {
 }
 
 static const eZ80portrange_t p9xxx = {
-    .read_in    = protected_read,
-    .write_out  = protected_write
+    .read  = protected_read,
+    .write = protected_write
 };
 
 eZ80portrange_t init_protected(void) {
@@ -222,8 +222,8 @@ static void cxxx_write(const uint16_t pio, const uint8_t byte, bool poke) {
 }
 
 static const eZ80portrange_t pcxxx = {
-    .read_in    = cxxx_read,
-    .write_out  = cxxx_write
+    .read  = cxxx_read,
+    .write = cxxx_write
 };
 
 eZ80portrange_t init_cxxx(void) {
@@ -261,8 +261,8 @@ static void dxxx_write(const uint16_t pio, const uint8_t byte, bool poke) {
 }
 
 static const eZ80portrange_t pdxxx = {
-    .read_in    = dxxx_read,
-    .write_out  = dxxx_write
+    .read  = dxxx_read,
+    .write = dxxx_write
 };
 
 eZ80portrange_t init_dxxx(void) {
@@ -305,8 +305,8 @@ static void exxx_write(const uint16_t pio, const uint8_t byte, bool poke) {
 }
 
 static const eZ80portrange_t pexxx = {
-    .read_in    = exxx_read,
-    .write_out  = exxx_write
+    .read  = exxx_read,
+    .write = exxx_write
 };
 
 eZ80portrange_t init_exxx(void) {
@@ -352,8 +352,8 @@ static uint8_t fxxx_read(const uint16_t pio, bool peek) {
 }
 
 static const eZ80portrange_t pfxxx = {
-    .read_in    = fxxx_read,
-    .write_out  = fxxx_write
+    .read  = fxxx_read,
+    .write = fxxx_write
 };
 
 eZ80portrange_t init_fxxx(void) {

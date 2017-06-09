@@ -111,8 +111,8 @@ static void intrpt_write(uint16_t pio, uint8_t value, bool poke) {
 }
 
 static const eZ80portrange_t device = {
-    .read_in    = intrpt_read,
-    .write_out  = intrpt_write
+    .read  = intrpt_read,
+    .write = intrpt_write
 };
 
 eZ80portrange_t init_intrpt(void) {

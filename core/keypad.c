@@ -186,8 +186,8 @@ void keypad_reset() {
 }
 
 static const eZ80portrange_t device = {
-    .read_in    = keypad_read,
-    .write_out  = keypad_write
+    .read  = keypad_read,
+    .write = keypad_write
 };
 
 eZ80portrange_t init_keypad(void) {

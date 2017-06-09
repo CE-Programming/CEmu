@@ -413,14 +413,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     stopIcon.addPixmap(QPixmap(":/icons/resources/icons/stop.png"));
     runIcon.addPixmap(QPixmap(":/icons/resources/icons/run.png"));
 
-    if (settings->value(SETTING_DEBUGGER_RESTORE_ON_OPEN, false).toBool()) {
-        if (!opts.debugFile.isEmpty()) {
-            debuggerImportFile(opts.debugFile);
-        } else {
-            debuggerImportFile(settings->value(SETTING_DEBUGGER_IMAGE_PATH).toString());
-        }
-    }
-
     optCheckSend(opts);
 
     if (opts.speed != -1) {
@@ -428,6 +420,14 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     }
 
     debuggerInstall();
+
+    if (settings->value(SETTING_DEBUGGER_RESTORE_ON_OPEN, false).toBool()) {
+        if (!opts.debugFile.isEmpty()) {
+            debuggerImportFile(opts.debugFile);
+        } else {
+            debuggerImportFile(settings->value(SETTING_DEBUGGER_IMAGE_PATH).toString());
+        }
+    }
 
     if (!settings->value(SETTING_FIRST_RUN, false).toBool()) {
         infoBox = new QMessageBox;
@@ -1510,9 +1510,14 @@ void MainWindow::drawNextDisassembleLine() {
         QString instructionArgsHighlighted;
 
         if (useLabel) {
-            formattedLine = QString("<pre><b><font color='#444'>%1</font></b>     %2</pre>")
-                                    .arg(int2hex(disasm.baseAddress, 6),
-                                         QString::fromStdString(sit->second) + ":");
+            if (disasm.baseAddress > 511 || (disasm.baseAddress < 512 && sit->second[0] == '_')) {
+                formattedLine = QString("<pre><b><font color='#444'>%1</font></b>     %2</pre>")
+                                        .arg(int2hex(disasm.baseAddress, 6),
+                                             QString::fromStdString(sit->second) + ":");
+
+                ui->disassemblyView->appendHtml(formattedLine);
+            }
+
             if (numLines == j + 1) {
                 useLabel = false;
             }
@@ -1537,9 +1542,9 @@ void MainWindow::drawNextDisassembleLine() {
                                         QString::fromStdString(disasm.instruction.opcode),
                                         QString::fromStdString(disasm.instruction.modeSuffix),
                                         instructionArgsHighlighted);
-        }
 
-        ui->disassemblyView->appendHtml(formattedLine);
+            ui->disassemblyView->appendHtml(formattedLine);
+        }
     }
 
     if (!disasmOffsetSet && disasm.newAddress > addressPane) {

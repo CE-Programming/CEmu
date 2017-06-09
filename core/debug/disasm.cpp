@@ -88,52 +88,92 @@ static std::string strW(uint32_t data) {
     std::pair<map_t::iterator, map_t::iterator> range;
     map_t::iterator sit;
     std::string ret;
-    if (disasm.map.count(data)) {
+    bool high = data > 511;
+    if (disasm.il) {
+        sprintf(tmpbuf, "$%06X", data);
+    } else {
+        sprintf(tmpbuf, "$%04X", data);
+    }
+    if (high && disasm.map.count(data)) {
         range = disasm.map.equal_range(data);
         for (sit = range.first;  sit != range.second;) {
            ret += sit->second; sit++;
            ret += (sit != range.second ? "|" : "");
         }
+        if (!ret.empty()) {
+            ret += "|";
+        }
+        ret += std::string(tmpbuf);
         return ret;
     }
-    if (disasm.il) {
-        sprintf(tmpbuf,"$%06X", data);
-    } else {
-        if (disasm.map.count(cpu.registers.MBASE<<16|data)) {
+    if (!disasm.il) {
+        if (high && disasm.map.count(cpu.registers.MBASE<<16|data)) {
             range = disasm.map.equal_range(cpu.registers.MBASE<<16|data);
             for (sit = range.first;  sit != range.second;) {
                ret += sit->second; sit++;
                ret += (sit != range.second ? "|" : "");
             }
+            if (!ret.empty()) {
+                ret += "|";
+            }
+            ret += std::string(tmpbuf);
             return ret + " & $FFFF";
         }
-        sprintf(tmpbuf,"$%04X", data);
     }
     return std::string(tmpbuf);
 }
 
 static std::string strA(uint32_t data) {
-    return strW(data);
-}
-
-static std::string strWind(uint32_t data) {
-    return "("+strA(data)+")";
-}
-
-static std::string strS(uint8_t data) {
-    sprintf(tmpbuf,"$%02X",data);
+    std::pair<map_t::iterator, map_t::iterator> range;
+    map_t::iterator sit;
+    std::string ret;
+    bool high = data > 511;
+    if (disasm.map.count(data)) {
+        range = disasm.map.equal_range(data);
+        for (sit = range.first;  sit != range.second;) {
+           if (high || (!high && sit->second[0] == '_')) {
+               ret += sit->second; sit++;
+               ret += (sit != range.second ? "|" : "");
+           }
+        }
+        return ret;
+    }
+    if (disasm.il) {
+        sprintf(tmpbuf, "$%06X", data);
+    } else {
+        if (disasm.map.count(cpu.registers.MBASE<<16|data)) {
+            range = disasm.map.equal_range(cpu.registers.MBASE<<16|data);
+            for (sit = range.first;  sit != range.second;) {
+               if (high || (!high && sit->second[0] == '_')) {
+                   ret += sit->second; sit++;
+                   ret += (sit != range.second ? "|" : "");
+               }
+            }
+            return ret + " & $FFFF";
+        }
+        sprintf(tmpbuf, "$%04X", data);
+    }
     return std::string(tmpbuf);
 }
 
-static std::string strSind(uint8_t data) {
-    return "("+strS(data)+")";
+static std::string strWind(uint32_t data) {
+    return "("+strW(data)+")";
+}
+
+static std::string strB(uint8_t data) {
+    sprintf(tmpbuf, "$%02X", data);
+    return std::string(tmpbuf);
+}
+
+static std::string strBind(uint8_t data) {
+    return "("+strB(data)+")";
 }
 
 static std::string strOffset(uint8_t data) {
     if (data & 128) {
-        sprintf(tmpbuf,"-$%02X",0x100-data);
+        sprintf(tmpbuf, "-$%02X", 256-data);
     } else if (data) {
-        sprintf(tmpbuf,"+$%02X",data);
+        sprintf(tmpbuf, "+$%02X", data);
     } else {
         *tmpbuf = '\0';
     }
@@ -566,7 +606,7 @@ void disassembleInstruction(void) {
                         }
                         disasm.instruction.opcode = "ld";
                         w = (context.y == 6) ? disasm_index_address() : "";
-                        disasm_write_reg_prefetched(context.y, w, strS(disasm_fetch_byte()));
+                        disasm_write_reg_prefetched(context.y, w, strB(disasm_fetch_byte()));
                         break;
                     case 7:
                         if (disasm.prefix) {
@@ -703,11 +743,11 @@ void disassembleInstruction(void) {
                                 break;
                             case 2: // OUT (n), A
                                 disasm.instruction.opcode = "out";
-                                disasm.instruction.arguments = strSind(disasm_fetch_byte())+disasm.space+"a";
+                                disasm.instruction.arguments = strBind(disasm_fetch_byte())+disasm.space+"a";
                                 break;
                             case 3: // IN A, (n)
                                 disasm.instruction.opcode = "in";
-                                disasm.instruction.arguments = "a"+disasm.space+strSind(disasm_fetch_byte());
+                                disasm.instruction.arguments = "a"+disasm.space+strBind(disasm_fetch_byte());
                                 break;
                             case 4: // EX (SP), HL/I
                                 disasm.instruction.opcode = "ex";
@@ -756,7 +796,7 @@ void disassembleInstruction(void) {
                                                             disasm.instruction.arguments.clear();
                                                         } else { // IN0 r[y], (n)
                                                             disasm.instruction.opcode = "in0";
-                                                            disasm.instruction.arguments = disasm_read_reg(context.y)+disasm.space+strSind(disasm_fetch_byte());
+                                                            disasm.instruction.arguments = disasm_read_reg(context.y)+disasm.space+strBind(disasm_fetch_byte());
                                                         }
                                                         break;
                                                      case 1:
@@ -765,7 +805,7 @@ void disassembleInstruction(void) {
                                                             disasm.instruction.arguments = "iy"+disasm.space+"(hl)";
                                                         } else { // OUT0 (n), r[y]
                                                             disasm.instruction.opcode = "out0";
-                                                            disasm.instruction.arguments = strSind(disasm_fetch_byte())+disasm.space+disasm_read_reg(context.y);
+                                                            disasm.instruction.arguments = strBind(disasm_fetch_byte())+disasm.space+disasm_read_reg(context.y);
                                                         }
                                                         break;
                                                     case 2: // LEA rp3[p], IX + d
@@ -855,11 +895,11 @@ void disassembleInstruction(void) {
                                                                     break;
                                                                 case 2:  // TST A, n
                                                                     disasm.instruction.opcode = "tst";
-                                                                    disasm.instruction.arguments = "a"+disasm.space+strS(disasm_fetch_byte());
+                                                                    disasm.instruction.arguments = "a"+disasm.space+strB(disasm_fetch_byte());
                                                                     break;
                                                                 case 3:  // TSTIO n
                                                                     disasm.instruction.opcode = "tstio";
-                                                                    disasm.instruction.arguments = strS(disasm_fetch_byte());
+                                                                    disasm.instruction.arguments = strB(disasm_fetch_byte());
                                                                     break;
                                                             }
                                                         }
@@ -1023,7 +1063,7 @@ void disassembleInstruction(void) {
                         break;
                     case 6: // alu[y] n
                         disasm.instruction.opcode = alu_table[context.y];
-                        disasm.instruction.arguments = "a"+disasm.space+strS(disasm_fetch_byte());
+                        disasm.instruction.arguments = "a"+disasm.space+strB(disasm_fetch_byte());
                         break;
                     case 7: // RST y*8
                         disasm.instruction.opcode = "rst";

@@ -185,8 +185,8 @@ void rtc_reset() {
 }
 
 static const eZ80portrange_t device = {
-    .read_in    = rtc_read,
-    .write_out  = rtc_write
+    .read  = rtc_read,
+    .write = rtc_write
 };
 
 eZ80portrange_t init_rtc(void) {
