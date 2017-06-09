@@ -55,7 +55,7 @@ void MemoryVisualizer::stringToView() {
     set_reset(false, 0x100, mView.control);
 
     foreach (QString str, string) {
-        str.toLower();
+        str = str.toLower();
         if (!str.compare(QLatin1Literal("bepo"), Qt::CaseInsensitive)) {
             set_reset(true, 0x400, mView.control);
         }
