@@ -119,7 +119,10 @@ static std::string strW(uint32_t data) {
                 ret += "|";
             }
             ret += std::string(tmpbuf);
-            return ret + " & $FFFF";
+            if (data > 0xFFFF) {
+                ret += " & $FFFF";
+            }
+            return ret;
         }
     }
     return std::string(tmpbuf);
@@ -141,6 +144,9 @@ static std::string strA(uint32_t data) {
                ++sit;
            }
         }
+        if (ret.back() == '|') {
+            ret.pop_back();
+        }
         return ret;
     }
     if (disasm.il) {
@@ -157,7 +163,13 @@ static std::string strA(uint32_t data) {
                    ++sit;
                }
             }
-            return ret + " & $FFFF";
+            if (ret.back() == '|') {
+                ret.pop_back();
+            }
+            if (data > 0xFFFF) {
+                ret += " & $FFFF";
+            }
+            return ret;
         }
         sprintf(tmpbuf, "$%04X", data);
     }
