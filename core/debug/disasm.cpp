@@ -97,7 +97,8 @@ static std::string strW(uint32_t data) {
     if (high && disasm.map.count(data)) {
         range = disasm.map.equal_range(data);
         for (sit = range.first;  sit != range.second;) {
-           ret += sit->second; sit++;
+           ret += sit->second;
+           ++sit;
            ret += (sit != range.second ? "|" : "");
         }
         if (!ret.empty()) {
@@ -110,7 +111,8 @@ static std::string strW(uint32_t data) {
         if (high && disasm.map.count(cpu.registers.MBASE<<16|data)) {
             range = disasm.map.equal_range(cpu.registers.MBASE<<16|data);
             for (sit = range.first;  sit != range.second;) {
-               ret += sit->second; sit++;
+               ret += sit->second;
+               ++sit;
                ret += (sit != range.second ? "|" : "");
             }
             if (!ret.empty()) {
@@ -132,8 +134,11 @@ static std::string strA(uint32_t data) {
         range = disasm.map.equal_range(data);
         for (sit = range.first;  sit != range.second;) {
            if (high || (!high && sit->second[0] == '_')) {
-               ret += sit->second; sit++;
+               ret += sit->second;
+               ++sit;
                ret += (sit != range.second ? "|" : "");
+           } else {
+               ++sit;
            }
         }
         return ret;
@@ -145,8 +150,11 @@ static std::string strA(uint32_t data) {
             range = disasm.map.equal_range(cpu.registers.MBASE<<16|data);
             for (sit = range.first;  sit != range.second;) {
                if (high || (!high && sit->second[0] == '_')) {
-                   ret += sit->second; sit++;
+                   ret += sit->second;
+                   ++sit;
                    ret += (sit != range.second ? "|" : "");
+               } else {
+                   ++sit;
                }
             }
             return ret + " & $FFFF";
