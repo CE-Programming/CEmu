@@ -177,7 +177,7 @@ static std::string strA(uint32_t data) {
 }
 
 static std::string strWind(uint32_t data) {
-    return "("+strW(data)+")";
+    return "("+strA(data)+")";
 }
 
 static std::string strB(uint8_t data) {
