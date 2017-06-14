@@ -57,7 +57,7 @@ void QtKeypadBridge::keyEvent(QKeyEvent *event, bool press) {
                                       && key->nativeCode == (key->nativeMask & nativeCode)) {
                     keypad_key_event(row, col, press);
                     keyStateChanged({row, col}, press);
-                    if (press) {
+                    if (nativeCode > 1 && press) {
                         pressed[nativeCode] = {row, col};
                     }
                     return;
