@@ -1408,13 +1408,13 @@ void cpu_execute(void) {
                                                         case 7:
                                                             switch (context.y) {
                                                                 case 0: // LD I, A
-                                                                    r->I = r->A | (r->I & 0xF0);
+                                                                    r->I = r->A;
                                                                     break;
                                                                 case 1: // LD R, A
                                                                     r->R = r->A << 1 | r->A >> 7;
                                                                     break;
                                                                 case 2: // LD A, I
-                                                                    r->A = r->I & 0x0F;
+                                                                    r->A = r->I;
                                                                     r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
                                                                         | cpuflag_undef(r->F) | cpuflag_pv(cpu.IEF1)
                                                                         | cpuflag_subtract(0) | cpuflag_c(r->flags.C);
@@ -1474,7 +1474,7 @@ void cpu_execute(void) {
                                                         case 0xCB: // OTDRX
                                                             goto cpu_execute_bli_start;
                                                         case 0xC7: // LD I, HL
-                                                            r->I = r->HL & 0xFFFF;
+                                                            r->I = r->HL;
                                                             break;
                                                         case 0xD7: // LD HL, I
                                                             r->HL = cpu_mask_mode(r->I | (r->MBASE << 16), cpu.L);
