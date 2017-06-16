@@ -1394,7 +1394,11 @@ void cpu_execute(void) {
                                                                 case 5: // LD A, MB
                                                                     r->A = r->MBASE;
                                                                     break;
-                                                                case 6: // SLP -- NOT IMPLEMENTED
+                                                                case 6: // SLP
+                                                                    cpu.halted = 1;
+                                                                    if (cpu.cycles < cpu.next) {
+                                                                        cpu.cycles = cpu.next;
+                                                                    }
                                                                     break;
                                                                 case 7: // RSMIX
                                                                     cpu.MADL = 0;
