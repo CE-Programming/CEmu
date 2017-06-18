@@ -3413,6 +3413,9 @@
         </item>
         <item>
          <widget class="DataWidget" name="disassemblyView">
+          <property name="visible">
+           <bool>false</bool>
+          </property>
           <property name="enabled">
            <bool>false</bool>
           </property>
@@ -3453,6 +3456,9 @@
            <string>Open debugger to view disassembly...</string>
           </property>
          </widget>
+        </item>
+        <item>
+         <widget class="DisasmWidget" name="disasm"/>
         </item>
        </layout>
       </widget>
@@ -9386,7 +9392,11 @@ QPushButton:pressed {
    <class>KeypadWidget</class>
    <extends>QWidget</extends>
    <header>keypad/keypadwidget.h</header>
-   <container>1</container>
+  </customwidget>
+  <customwidget>
+    <class>DisasmWidget</class>
+    <extends>QWidget</extends>
+    <header>debugger/disasmwidget.h</header>
   </customwidget>
   <customwidget>
    <class>DataWidget</class>
