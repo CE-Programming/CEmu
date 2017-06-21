@@ -14,7 +14,7 @@ before_install:
 
 install:
 - sudo apt-get install -y --force-yes -qq g++-6 gcc-6; export CXX="g++-6" CC="gcc-6"; $CXX --version
-- sudo apt-get install -y --force-yes -qq qt56base qt56declarative; source /opt/qt56/bin/qt56-env.sh
+- sudo apt-get install -y --force-yes -qq libgl1-mesa-dev qt56base qt56declarative; source /opt/qt56/bin/qt56-env.sh
 
 script:
   - mkdir build
