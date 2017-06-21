@@ -170,9 +170,14 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
                     }
                     hashesPassed++;
                 } else {
+                    char buf[20] = {0};
+                    sprintf(buf, "%X", param.expected_CRCs[0]);
+                    const std::string expected_hash_str(buf);
+                    sprintf(buf, "%X", real_hash);
+                    const std::string real_hash_str(buf);
                     std::cout << "\t[Test failed!] Hash #" << which_hash << " (\"" << param.description << "\") did not match "
-                              << (param.expected_CRCs.size() > 1 ? "any of the expected CRCs" : "the expected CRC")
-                              << " (got " << std::uppercase << std::hex << real_hash << std::dec << ")." << std::endl;
+                              << (param.expected_CRCs.size() > 1 ? "any of the expected CRCs" : ("the expected CRC " + expected_hash_str))
+                              << " (got " << real_hash_str << ")." << std::endl;
                     hashesFailed++;
                 }
                 hashesTested++;
