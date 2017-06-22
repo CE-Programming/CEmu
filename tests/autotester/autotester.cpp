@@ -156,9 +156,9 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
                     real_hash = crc32(temp_buffer, param.size);
                     match = (std::find(param.expected_CRCs.begin(), param.expected_CRCs.end(), real_hash) != param.expected_CRCs.end());
                     ::free(temp_buffer);
-                    if (timeout > 50)
+                    if (timeout > 10)
                     {
-                        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
                         DO_STEP_CALLBACK();
                     }
                 } while (timeout > 0 && !match && std::chrono::steady_clock::now() < until);
