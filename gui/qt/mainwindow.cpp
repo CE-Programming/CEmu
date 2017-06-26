@@ -664,6 +664,7 @@ void MainWindow::started(bool success) {
     guiEmuValid = success;
     if (success) {
         ui->lcdWidget->setLCD(&lcd);
+        setCalcSkinTopFromType();
         setKeypadColor(settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
     } else {
         QMessageBox::critical(this, MSG_ERROR, tr("Could not load ROM image. Please see console for more information."));
@@ -674,6 +675,7 @@ void MainWindow::restored(bool success) {
     guiEmuValid = success;
     if (success) {
         ui->lcdWidget->setLCD(&lcd);
+        setCalcSkinTopFromType();
         setKeypadColor(settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
     } else {
         QMessageBox::critical(this, MSG_ERROR, tr("Resuming failed.\nPlease reload the ROM from the 'Calculator' menu."));

@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/skin">
         <file>resources/skin/ti84pce.png</file>
+        <file>resources/skin/ti83pce.png</file>
     </qresource>
     <qresource prefix="/setup">
         <file>resources/setup/home.png</file>

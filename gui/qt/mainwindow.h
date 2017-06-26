@@ -256,6 +256,7 @@ private:
     void equatesRefresh();
     void selectKeypadColor();
     void setKeypadColor(unsigned int);
+    void setCalcSkinTopFromType();
 
     // Speed
     void setEmuSpeed(int);

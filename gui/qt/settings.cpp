@@ -285,6 +285,12 @@ void MainWindow::setKeypadColor(unsigned int color) {
     settings->setValue(SETTING_KEYPAD_COLOR, color);
 }
 
+void MainWindow::setCalcSkinTopFromType() {
+    bool is83 = get_device_type() == TI83PCE;
+    ui->calcSkinTop->setStyleSheet(is83 ? ".QFrame { border-image: url(:/skin/resources/skin/ti83pce.png) 0 0 0 0 stretch stretch; }"
+                                        : ".QFrame { border-image: url(:/skin/resources/skin/ti84pce.png) 0 0 0 0 stretch stretch; }");
+}
+
 void MainWindow::setImagePath() {
     QString saveImagePath = QFileDialog::getSaveFileName(this, tr("Set saved image to restore from"),
                                                            currDir.absolutePath(),
