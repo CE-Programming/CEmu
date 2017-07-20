@@ -497,20 +497,20 @@ void MainWindow::optCheckSend(CEmuOpts &o) {
     if (!o.autotesterFile.isEmpty()){
         if (!openJSONConfig(o.autotesterFile)) {
            if (!o.deforceReset) { resetCalculator(); }
-           setEmuSpeed(100);
+           setEmuSpeed(10);
 
            // Race condition requires this
-           guiDelay(1000);
+           guiDelay(2000);
            launchTest();
         }
     }
 
     if (!o.sendFiles.isEmpty() || !o.sendArchFiles.isEmpty() || !o.sendRAMFiles.isEmpty()) {
         if (!o.deforceReset) { resetCalculator(); }
-        setEmuSpeed(100);
+        setEmuSpeed(10);
 
         // Race condition requires this
-        guiDelay(1000);
+        guiDelay(2000);
         if (!o.sendFiles.isEmpty()) {
             sendingHandler->sendFiles(o.sendFiles, LINK_FILE);
         }
