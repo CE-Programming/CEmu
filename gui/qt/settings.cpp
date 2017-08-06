@@ -34,6 +34,7 @@ const QString MainWindow::SETTING_DEBUGGER_IMAGE_PATH       = QStringLiteral("De
 const QString MainWindow::SETTING_DEBUGGER_FLASH_BYTES      = QStringLiteral("Debugger/flash_bytes_per_line");
 const QString MainWindow::SETTING_DEBUGGER_RAM_BYTES        = QStringLiteral("Debugger/ram_bytes_per_line");
 const QString MainWindow::SETTING_DEBUGGER_MEM_BYTES        = QStringLiteral("Debugger/mem_bytes_per_line");
+const QString MainWindow::SETTING_DEBUGGER_BREAK_IGNORE     = QStringLiteral("Debugger/ignore_breakpoints");
 const QString MainWindow::SETTING_SCREEN_REFRESH_RATE       = QStringLiteral("Screen/refresh_rate");
 const QString MainWindow::SETTING_SCREEN_SCALE              = QStringLiteral("Screen/scale");
 const QString MainWindow::SETTING_SCREEN_SKIN               = QStringLiteral("Screen/skin");
@@ -183,7 +184,7 @@ void MainWindow::exportCEmuBootImage() {
     }
 }
 
-void MainWindow::setEnableSoftCommands(bool state) {
+void MainWindow::setDebugSoftCommands(bool state) {
     ui->checkDisableSoftCommands->blockSignals(true);
     ui->checkDisableSoftCommands->setChecked(state);
     ui->checkDisableSoftCommands->blockSignals(false);
@@ -217,6 +218,12 @@ void MainWindow::resetSettingsIfLoadedCEmuBootableImage() {
     if (loadedCEmuBootImage) {
         settings->setValue(SETTING_FIRST_RUN, false);
     }
+}
+
+void MainWindow::setDebugIgnoreBreakpoints(bool state) {
+    ui->checkBreakIgnore->setChecked(state);
+    settings->setValue(SETTING_DEBUGGER_BREAK_IGNORE, state);
+    debugger.ignoreBreakpoints = state;
 }
 
 void MainWindow::setDebugResetTrigger(bool state) {

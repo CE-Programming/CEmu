@@ -199,8 +199,9 @@ private:
     void opContextMenu(const QPoint &);
     void resendContextMenu(const QPoint &);
 
+    void setDebugIgnoreBreakpoints(bool);
     void setDebugResetTrigger(bool);
-    void setEnableSoftCommands(bool);
+    void setDebugSoftCommands(bool);
 
     void breakpointRemoveAddress(uint32_t);
     void watchpointRemoveAddress(uint32_t);
@@ -447,6 +448,7 @@ private:
     static const QString SETTING_DEBUGGER_FLASH_BYTES;
     static const QString SETTING_DEBUGGER_RAM_BYTES;
     static const QString SETTING_DEBUGGER_MEM_BYTES;
+    static const QString SETTING_DEBUGGER_BREAK_IGNORE;
     static const QString SETTING_SCREEN_REFRESH_RATE;
     static const QString SETTING_SCREEN_SCALE;
     static const QString SETTING_SCREEN_SKIN;

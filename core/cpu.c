@@ -60,7 +60,13 @@ static uint8_t cpu_fetch_byte(void) {
     uint8_t value;
 #ifdef DEBUG_SUPPORT
     if (debugger.data.block[cpu.registers.PC] & (DBG_EXEC_BREAKPOINT | DBG_TEMP_EXEC_BREAKPOINT)) {
-        open_debugger((debugger.data.block[cpu.registers.PC] & DBG_EXEC_BREAKPOINT) ? HIT_EXEC_BREAKPOINT : DBG_STEP, cpu.registers.PC);
+        if (debugger.ignoreBreakpoints) {
+            if (debugger.data.block[cpu.registers.PC] & DBG_TEMP_EXEC_BREAKPOINT) {
+                open_debugger(DBG_STEP, cpu.registers.PC);
+            }
+        } else {
+            open_debugger((debugger.data.block[cpu.registers.PC] & DBG_EXEC_BREAKPOINT) ? HIT_EXEC_BREAKPOINT : DBG_STEP, cpu.registers.PC);
+        }
     }
 #endif
     value = cpu.prefetch;
@@ -869,7 +875,7 @@ void cpu_execute(void) {
                 cpu_call(0x38, cpu.MADL);
             } else {
                 cpu.cycles += 1;
-                cpu_call(cpu_read_word(r->I << 8 | r->R), cpu.MADL);
+                cpu_call(cpu_read_word(r->I << 8), cpu.MADL);
             }
 #ifdef DEBUG_SUPPORT
             if (cpuEvents & EVENT_DEBUG_STEP) {

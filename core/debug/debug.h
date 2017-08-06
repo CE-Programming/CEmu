@@ -74,6 +74,7 @@ typedef struct {        /* For debugging */
     uint32_t runUntilAddress;
     int8_t stepOutWait;
     bool stepOverFirstStep;
+    bool ignoreBreakpoints;
     debug_data_t data;
     volatile uint32_t bufferPos;
     volatile uint32_t bufferErrPos;

@@ -125,13 +125,14 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->checkCharging, &QCheckBox::toggled, this, &MainWindow::batteryIsCharging);
     connect(ui->sliderBattery, &QSlider::valueChanged, this, &MainWindow::batteryChangeStatus);
     connect(ui->checkAddSpace, &QCheckBox::toggled, this, &MainWindow::setSpaceDisasm);
-    connect(ui->checkDisableSoftCommands, &QCheckBox::toggled, this, &MainWindow::setEnableSoftCommands);
+    connect(ui->checkDisableSoftCommands, &QCheckBox::toggled, this, &MainWindow::setDebugSoftCommands);
     connect(ui->buttonZero, &QPushButton::clicked, this, &MainWindow::debuggerZeroClockCounter);
 
     // Debugger Options
     connect(ui->buttonAddEquateFile, &QPushButton::clicked, this, &MainWindow::equatesAddDialog);
     connect(ui->buttonClearEquates, &QPushButton::clicked, this, &MainWindow::equatesClear);
     connect(ui->buttonRefreshEquates, &QPushButton::clicked, this, &MainWindow::equatesRefresh);
+    connect(ui->checkBreakIgnore, &QCheckBox::toggled, this, &MainWindow::setDebugIgnoreBreakpoints);
     connect(ui->checkDebugResetTrigger, &QCheckBox::toggled, this, &MainWindow::setDebugResetTrigger);
     connect(ui->checkDataCol, &QCheckBox::toggled, this, &MainWindow::setDataCol);
     connect(ui->textSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setFont);
@@ -345,7 +346,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     setSpaceDisasm(settings->value(SETTING_DEBUGGER_ADD_DISASM_SPACE, false).toBool());
     setUIEditMode(settings->value(SETTING_UI_EDIT_MODE, true).toBool());
     setDebugResetTrigger(settings->value(SETTING_DEBUGGER_RESET_OPENS, false).toBool());
-    setEnableSoftCommands(settings->value(SETTING_DEBUGGER_ENABLE_SOFT, true).toBool());
+    setDebugIgnoreBreakpoints(settings->value(SETTING_DEBUGGER_BREAK_IGNORE, false).toBool());
+    setDebugSoftCommands(settings->value(SETTING_DEBUGGER_ENABLE_SOFT, true).toBool());
     setDataCol(settings->value(SETTING_DEBUGGER_DATA_COL, true).toBool());
     ui->flashBytes->setValue(settings->value(SETTING_DEBUGGER_FLASH_BYTES, 8).toInt());
     ui->ramBytes->setValue(settings->value(SETTING_DEBUGGER_RAM_BYTES, 8).toInt());

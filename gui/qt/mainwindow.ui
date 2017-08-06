@@ -67,7 +67,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -278,45 +278,6 @@
            <string>Recent Files</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_12">
-           <item row="2" column="0">
-            <widget class="QTableWidget" name="varLoadedView">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="focusPolicy">
-              <enum>Qt::ClickFocus</enum>
-             </property>
-             <property name="contextMenuPolicy">
-              <enum>Qt::CustomContextMenu</enum>
-             </property>
-             <property name="showDropIndicator" stdset="0">
-              <bool>false</bool>
-             </property>
-             <property name="dragDropOverwriteMode">
-              <bool>false</bool>
-             </property>
-             <property name="selectionBehavior">
-              <enum>QAbstractItemView::SelectItems</enum>
-             </property>
-             <property name="sortingEnabled">
-              <bool>true</bool>
-             </property>
-             <attribute name="horizontalHeaderStretchLastSection">
-              <bool>true</bool>
-             </attribute>
-             <attribute name="verticalHeaderVisible">
-              <bool>false</bool>
-             </attribute>
-             <column>
-              <property name="text">
-               <string>Path</string>
-              </property>
-             </column>
-            </widget>
-           </item>
            <item row="0" column="0">
             <layout class="QHBoxLayout" name="horizontalLayout_26">
              <property name="bottomMargin">
@@ -349,6 +310,51 @@
               </spacer>
              </item>
             </layout>
+           </item>
+           <item row="2" column="0">
+            <widget class="QTableWidget" name="varLoadedView">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::ClickFocus</enum>
+             </property>
+             <property name="contextMenuPolicy">
+              <enum>Qt::CustomContextMenu</enum>
+             </property>
+             <property name="showDropIndicator" stdset="0">
+              <bool>false</bool>
+             </property>
+             <property name="dragDropOverwriteMode">
+              <bool>false</bool>
+             </property>
+             <property name="selectionBehavior">
+              <enum>QAbstractItemView::SelectRows</enum>
+             </property>
+             <property name="sortingEnabled">
+              <bool>true</bool>
+             </property>
+             <attribute name="horizontalHeaderCascadingSectionResizes">
+              <bool>true</bool>
+             </attribute>
+             <attribute name="horizontalHeaderMinimumSectionSize">
+              <number>10</number>
+             </attribute>
+             <attribute name="horizontalHeaderStretchLastSection">
+              <bool>true</bool>
+             </attribute>
+             <attribute name="verticalHeaderVisible">
+              <bool>false</bool>
+             </attribute>
+             <column>
+              <property name="text">
+               <string>Path</string>
+              </property>
+             </column>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -2232,7 +2238,7 @@ QPushButton:pressed {
            <enum>QTabWidget::Rounded</enum>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <property name="tabsClosable">
            <bool>false</bool>
@@ -2539,6 +2545,13 @@ QPushButton:pressed {
                 <property name="icon">
                  <iconset resource="resources.qrc">
                   <normaloff>:/icons/resources/icons/minus.png</normaloff>:/icons/resources/icons/minus.png</iconset>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="checkBreakIgnore">
+                <property name="text">
+                 <string>Ignore All</string>
                 </property>
                </widget>
               </item>
@@ -8018,7 +8031,7 @@ QPushButton:pressed {
      <x>0</x>
      <y>0</y>
      <width>1025</width>
-     <height>27</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="sizePolicy">
