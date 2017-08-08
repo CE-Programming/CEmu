@@ -15,6 +15,25 @@ CI = $$(CI)
 # Code beautifying
 DISTFILES += ../../.astylerc
 
+# Linux desktop files
+if (linux) {
+    isEmpty(PREFIX) {
+        PREFIX = /usr
+    }
+    target.path = $$PREFIX/bin
+    desktop.target = desktop
+    desktop.path = $$PREFIX/share/applications
+    desktop.commands += xdg-desktop-menu install --novendor --mode system resources/linux/cemu.desktop &&
+    desktop.commands += xdg-mime install --novendor --mode system resources/linux/cemu.xml &&
+    desktop.commands += xdg-mime default cemu.desktop application/x-tice-rom &&
+    desktop.commands += xdg-mime default cemu.desktop application/x-cemu-image &&
+    desktop.commands += for length in 512 256 192 160 128 96 72 64 48 42 40 36 32 24 22 20 16; do xdg-icon-resource install --novendor --context apps --mode system --size \$\$length resources/icons/linux/cemu-\$\$\{length\}x\$\$length.png cemu; done
+    desktop.uninstall += xdg-desktop-menu uninstall --novendor --mode system resources/linux/cemu.desktop &&
+    desktop.uninstall += xdg-mime uninstall --novendor --mode system resources/linux/cemu.xml &&
+    desktop.uninstall += for length in 512 256 192 160 128 96 72 64 48 42 40 36 32 24 22 20 16; do xdg-icon-resource uninstall --novendor --context apps --mode system --size \$\$length resources/icons/linux/cemu-\$\$\{length\}x\$\$length.png cemu; done
+    INSTALLS += target desktop
+}
+
 QT += core gui widgets network
 
 TARGET = CEmu
