@@ -160,8 +160,9 @@ static uint32_t cpu_pop_word(void) {
 
 static uint8_t cpu_read_in(uint16_t pio) {
     cpu.cycles += 2;
-    if (unprivileged_code())
+    if (unprivileged_code()) {
         return 0; // in returns 0 in unprivileged code
+    }
     return port_read_byte(pio);
 }
 

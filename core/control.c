@@ -125,6 +125,9 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
             break;
         case 0x06:
             control.mmioUnlocked = byte & 7;
+            if (!mmio_unlocked()) {
+                control.flashUnlocked &= ~(1 << 3);
+            }
             break;
         case 0x07:
             control.readBatteryStatus = (byte & 0x90) ? 1 : 0;
