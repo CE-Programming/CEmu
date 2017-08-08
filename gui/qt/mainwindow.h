@@ -379,9 +379,7 @@ private:
     bool portable = false;
     bool nativeConsole = false;
     bool closeAfterSave = false;
-    bool isResumed = false;
     bool canScroll = false;
-    bool usingLoadedImage = false;
     bool recordingGif = false;
 
     bool firstTimeShown = false;

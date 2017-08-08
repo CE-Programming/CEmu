@@ -615,7 +615,6 @@ bool MainWindow::restoreFromPath(const QString &path) {
     guiEmuValid = false;
 
     if (!emu.restore(path)) {
-        QMessageBox::critical(this, MSG_ERROR, tr("Could not resume; try restarting CEmu"));
         return false;
     }
 
@@ -637,8 +636,8 @@ void MainWindow::restoreFromFile() {
                                                       tr("CEmu images (*.ce);;All files (*.*)"));
     if (!savedImage.isEmpty()) {
         currDir = QFileInfo(savedImage).absoluteDir();
-        if (restoreFromPath(savedImage)) {
-            usingLoadedImage = true;
+        if (!restoreFromPath(savedImage)) {
+            QMessageBox::critical(this, MSG_ERROR, tr("Could not resume; try restarting CEmu"));
         }
     }
 }
@@ -1453,16 +1452,9 @@ void MainWindow::reloadROM() {
 
     if (guiDebug) {
         debuggerChangeState();
-
     }
 
     guiEmuValid = false;
-
-    if (!usingLoadedImage) {
-        QFile(emu.image).remove();
-    }
-
-    usingLoadedImage = false;
 
     emit load();
 }
