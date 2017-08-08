@@ -829,6 +829,16 @@ void cpu_nmi(void) {
 #endif
 }
 
+void cpu_crash(const char *msg) {
+    gui_console_printf(msg);
+    cpuEvents |= EVENT_RESET;
+#ifdef DEBUG_SUPPORT
+    if (debugger.resetOpensDebugger) {
+        open_debugger(DBG_MISC_RESET, cpu.registers.PC);
+    }
+#endif
+}
+
 void cpu_execute(void) {
     /* variable declarations */
     int8_t s;
@@ -875,7 +885,7 @@ void cpu_execute(void) {
                 cpu_call(0x38, cpu.MADL);
             } else {
                 cpu.cycles += 1;
-                cpu_call(cpu_read_word(r->I << 8), cpu.MADL);
+                cpu_call(cpu_read_word(r->I << 8 | r->R), cpu.MADL);
             }
 #ifdef DEBUG_SUPPORT
             if (cpuEvents & EVENT_DEBUG_STEP) {

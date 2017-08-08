@@ -200,13 +200,13 @@ void EmuThread::sendFiles() {
 }
 
 void EmuThread::sendActualSpeed() {
-    if (!calc_is_off()) {
+    if (!control.off) {
         emit actualSpeedChanged(actualSpeed);
     }
 }
 
 void EmuThread::setActualSpeed(int value) {
-    if (!calc_is_off() && actualSpeed != value) {
+    if (!control.off && actualSpeed != value) {
         actualSpeed = value;
     }
 }

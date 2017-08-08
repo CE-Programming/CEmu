@@ -19,8 +19,8 @@ enum {
 typedef struct control_state {
     uint8_t ports[0x80];
     uint8_t cpuSpeed;
-    bool USBSelfPowered;
-    bool USBBusPowered;
+    bool usbSelfPowered;
+    bool usbBusPowered;
 
     uint8_t setBatteryStatus;
     uint8_t readBatteryStatus;
@@ -31,6 +31,8 @@ typedef struct control_state {
     uint32_t protectedStart;
     uint32_t protectedEnd;
     uint8_t protectionStatus;
+
+    bool off;
 } control_state_t;
 
 /* Global CONTROL state */

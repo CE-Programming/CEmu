@@ -146,7 +146,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int l
 
     if (fseek(file, FILE_DATA_START, SEEK_SET))            goto r_err;
 
-    if (calc_is_off()) {
+    if (control.off) {
         intrpt_set(INT_ON, true);
         control.readBatteryStatus = ~1;
         intrpt_pulse(INT_WAKE);

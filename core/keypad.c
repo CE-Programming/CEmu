@@ -16,7 +16,7 @@ void keypad_intrpt_check() {
 void EMSCRIPTEN_KEEPALIVE keypad_key_event(unsigned int row, unsigned int col, bool press) {
     if (row == 2 && col == 0) {
         intrpt_set(INT_ON, press);
-        if (press && calc_is_off()) {
+        if (press && control.off) {
             if (asic.resetOnWake) {
                 cpuEvents |= EVENT_RESET;
             }

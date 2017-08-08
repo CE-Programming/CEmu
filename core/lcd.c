@@ -6,6 +6,7 @@
 #include "mem.h"
 #include "lcd.h"
 #include "asic.h"
+#include "control.h"
 #include "schedule.h"
 #include "interrupt.h"
 
@@ -188,6 +189,14 @@ static uint8_t lcd_read(const uint16_t pio, bool peek) {
 
     /* Return 0 if bad read */
     return 0;
+}
+
+void lcd_disable(void) {
+    lcd.ofs = NULL;
+}
+
+void lcd_enable(void) {
+    lcd_setptrs(&lcd);
 }
 
 void lcd_setptrs(lcd_state_t *x) {

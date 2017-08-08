@@ -8,7 +8,7 @@
 flash_state_t flash;
 
 static void flash_set_map(uint8_t map) {
-    flash.map = map;
+    flash.map = map & 0x0F;
     if (map & 8) {
         flash.mask = 0xFFFF;
     } else {
@@ -48,11 +48,23 @@ static void flash_write(const uint16_t pio, const uint8_t byte, bool poke) {
         case 0x00:
             flash.mapped = byte;
             break;
+        case 0x01:
+            flash.ports[index] = byte;
+            if (byte > 0x3F) {
+                flash.mapped = 0;
+            }
+            break;
         case 0x02:
             flash_set_map(byte);
             break;
         case 0x05:
             flash.addedWaitStates = byte;
+            break;
+        case 0x08:
+            flash.ports[index] = byte & 1;
+            break;
+        case 0x10:
+            flash.ports[index] = byte & 1;
             break;
         default:
             flash.ports[index] = byte;

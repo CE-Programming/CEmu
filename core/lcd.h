@@ -7,25 +7,25 @@ extern "C" {
 
 #include "port.h"
 
-#define LCD_WIDTH  320
-#define LCD_HEIGHT 240
-#define LCD_SIZE   (LCD_WIDTH*LCD_HEIGHT)
-
-/* Internal Use */
-extern uint32_t lcd_framebuffer[LCD_SIZE];
+#define LCD_WIDTH      320
+#define LCD_HEIGHT     240
+#define LCD_SIZE       (LCD_WIDTH*LCD_HEIGHT)
+#define LCD_BYTE_SIZE  (LCD_SIZE*2)
+#define LCD_RAM_ADDR   0xD40000
+#define LCD_RAM_OFFSET 0x040000
 
 /* Standard LCD state */
 typedef struct lcd_cntrl_state {
     uint32_t timing[4];
 
-    uint32_t control;           /* Control register */
-    uint32_t imsc;              /* Interrupt mask set/clear register */
+    uint32_t control;             /* Control register */
+    uint32_t imsc;                /* Interrupt mask set/clear register */
     uint32_t ris;
 
-    uint32_t upbase;             /* Upper panel frame base address register */
-    uint32_t lpbase;             /* Lower panel frame base address register */
-    uint32_t upcurr;             /* Upper panel current frame address register */
-    uint32_t lpcurr;             /* Lower panel current frame address register */
+    uint32_t upbase;               /* Upper panel frame base address register */
+    uint32_t lpbase;               /* Lower panel frame base address register */
+    uint32_t upcurr;               /* Upper panel current frame address register */
+    uint32_t lpcurr;               /* Lower panel current frame address register */
 
     /* 256x16-bit color palette registers */
     /* 256 palette entries organized as 128 locations of two entries per word */
@@ -34,23 +34,23 @@ typedef struct lcd_cntrl_state {
     /* Cursor image RAM registers */
     /* 256-word wide values defining images overlaid by the hw cursor mechanism */
     uint32_t crsrImage[0x100];
-    uint32_t crsrControl;        /* Cursor control register */
-    uint32_t crsrConfig;         /* Cursor configuration register */
-    uint32_t crsrPalette0;       /* Cursor palette registers */
+    uint32_t crsrControl;          /* Cursor control register */
+    uint32_t crsrConfig;           /* Cursor configuration register */
+    uint32_t crsrPalette0;         /* Cursor palette registers */
     uint32_t crsrPalette1;
-    uint32_t crsrXY;             /* Cursor XY position register */
-    uint32_t crsrClip;           /* Cursor clip position register */
-    uint32_t crsrImsc;           /* Cursor interrupt mask set/clear register */
-    uint32_t crsrIcr;            /* Cursor interrupt clear register */
-    uint32_t crsrRis;            /* Cursor raw interrupt status register - const */
+    uint32_t crsrXY;               /* Cursor XY position register */
+    uint32_t crsrClip;             /* Cursor clip position register */
+    uint32_t crsrImsc;             /* Cursor interrupt mask set/clear register */
+    uint32_t crsrIcr;              /* Cursor interrupt clear register */
+    uint32_t crsrRis;              /* Cursor raw interrupt status register - const */
 
     /* Internal registers */
     bool mask;
     uint32_t width;
     uint32_t height;
     uint32_t size;
-    uint32_t *ofs;                /* Pointer to start of data to start extracting from */
-    uint32_t *ofs_end;            /* End pointer that is allowed access */
+    uint32_t *ofs;                  /* Pointer to start of data to start extracting from */
+    uint32_t *ofs_end;              /* End pointer that is allowed access */
     uint32_t framebuffer[LCD_SIZE]; /* Location on which to draw the data */
 } lcd_state_t;
 
@@ -63,6 +63,9 @@ eZ80portrange_t init_lcd(void);
 
 void lcd_drawframe(uint32_t *out, lcd_state_t*);
 void lcd_setptrs(lcd_state_t*);
+
+void lcd_enable(void);
+void lcd_disable(void);
 
 /* Set this callback function pointer from the GUI. Called in lcd_event() */
 extern void (*lcd_event_gui_callback)(void);

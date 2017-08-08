@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "emu.h"
 #include "cpu.h"
@@ -77,6 +78,9 @@ void asic_init(void) {
     mem_init();
     cpu_init();
 
+    /* Seed the numbers */
+    srand(time(NULL));
+
     asic.resetOnWake = false;
 
     plug_devices();
@@ -105,10 +109,6 @@ void set_device_type(ti_device_t device) {
 
 ti_device_t get_device_type(void) {
     return asic.deviceType;
-}
-
-bool calc_is_off(void) {
-    return (control.ports[0] & 0x40) ? true : false;
 }
 
 uint32_t set_cpu_clock_rate(uint32_t new_rate) {
