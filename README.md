@@ -42,9 +42,11 @@ Windows | macOS | Linux
 * "Autotester" (automated unit testing, light scripting)
 
 ## Downloads
-No stable binaries yet as the code keeps changing these days! When available, they'll be here, though: https://github.com/CE-Programming/CEmu/releases  
-Recent Windows binaries available [here](https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/git/) or [here](https://jacobly.com/CEmu/) (credits to alberthro and jacobly).  
+No binaries have been released yet as the code keeps changing these days! When available, they'll be here: https://github.com/CE-Programming/CEmu/releases   
+The latest Windows builds are available though; [64 bit here](http://jacobly.com/CEmu/master/latest/CEmu64.exe) and [32 bit here](http://jacobly.com/CEmu/master/latest/CEmu32.exe).
 _Note that Release builds have an update checking feature, which is disabled in development builds._
+
+If you wish to browse around older builds; Windows binaries are available [here](https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/git/) or [here](https://jacobly.com/CEmu/) (credits to alberthro and jacobly).
 
 ## How to build
 After downloading the source (you can clone the repo or just [get the zip](https://github.com/CE-Programming/CEmu/archive/master.zip)):
