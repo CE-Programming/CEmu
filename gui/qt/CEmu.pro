@@ -22,7 +22,7 @@ if (linux) {
     }
     target.path = $$PREFIX/bin
     desktop.target = desktop
-    desktop.path = /usr/share/applications
+    desktop.path = $$PREFIX/share/applications
     desktop.commands += xdg-desktop-menu install --novendor --mode system resources/linux/cemu.desktop &&
     desktop.commands += xdg-mime install --novendor --mode system resources/linux/cemu.xml &&
     desktop.commands += xdg-mime default cemu.desktop application/x-tice-rom &&
