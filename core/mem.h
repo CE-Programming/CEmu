@@ -35,7 +35,6 @@ typedef struct {
 } flash_sector_state_t;
 
 typedef struct {
-    bool locked;
     uint8_t write_index;
     uint8_t read_index;
     flash_sector_state_t sector_8k[8];
@@ -54,6 +53,7 @@ typedef struct {
 typedef struct mem_state {
     flash_chip_t flash;
     ram_chip_t ram;
+    uint8_t fetch_index : 4, fetch_buffer[1 << 4];
 } mem_state_t;
 
 /* Global MEMORY state */

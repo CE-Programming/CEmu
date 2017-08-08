@@ -31,6 +31,8 @@ typedef struct control_state {
     uint32_t protectedStart;
     uint32_t protectedEnd;
     uint8_t protectionStatus;
+    uint8_t mmioUnlocked;
+    uint8_t flashUnlocked;
 
     bool off;
 } control_state_t;
@@ -46,6 +48,8 @@ eZ80portrange_t init_control(void);
 typedef struct emu_image emu_image;
 bool control_restore(const emu_image*);
 bool control_save(emu_image*);
+bool mmio_unlocked(void);
+bool flash_unlocked(void);
 bool unprivileged_code(void);
 
 #ifdef __cplusplus

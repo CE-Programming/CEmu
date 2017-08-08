@@ -101,10 +101,10 @@ static uint8_t sha256_read(uint16_t pio, bool peek) {
     static const uint32_t unknown_value = 0x3CA2D5EE; // Unknown function
 
     if (!peek) {
-        if (mem.flash.locked) {
-            index = sha256.last_index;
-        } else {
+        if (mmio_unlocked()) {
             sha256.last_index = index;
+        } else {
+            index = sha256.last_index;
         }
     }
 
@@ -124,10 +124,10 @@ static void sha256_write(uint16_t pio, uint8_t byte, bool poke) {
     uint8_t bit_offset = (pio & 3) << 3;
 
     if (!poke) {
-        if (mem.flash.locked) {
-            return; // writes are ignored when flash is locked
-        } else {
+        if (mmio_unlocked()) {
             sha256.last_index = index;
+        } else {
+            return; // writes are ignored when mmio is locked
         }
     }
 

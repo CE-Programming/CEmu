@@ -33,7 +33,6 @@ void mem_init(void) {
 
     /* Sector 2 is locked */
     mem.flash.sector[1].locked = true;
-    mem.flash.locked = true;
 
     /* Allocate RAM */
     mem.ram.block = (uint8_t*)calloc(SIZE_RAM, 1);
@@ -386,6 +385,20 @@ static void flash_write_handler(uint32_t addr, uint8_t byte) {
     }
 }
 
+static bool detect_flash_unlock_sequence(uint8_t current) {
+    static const uint8_t flash_unlock_sequence[] = { 0xF3, 0x18, 0x00, 0xF3, 0xF3, 0xED, 0x7E, 0xED, 0x56, 0xED, 0x39, 0x28, 0xED, 0x38, 0x28, 0xCB, 0x57 };
+    uint8_t i;
+    if (current != flash_unlock_sequence[sizeof(flash_unlock_sequence) - 1] || unprivileged_code()) {
+        return false;
+    }
+    for (i = 1; i != sizeof(flash_unlock_sequence); i++) {
+        if (mem.fetch_buffer[mem.fetch_index + i & sizeof(mem.fetch_buffer) - 1] != flash_unlock_sequence[i - 1]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
     static const uint8_t mmio_readcycles[0x20] = {2,2,4,3,2,2,2,2,2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2};
     uint8_t value = 0;
@@ -404,6 +417,9 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
             case 0x0: case 0x1: case 0x2: case 0x3:
             case 0x4: case 0x5: case 0x6: case 0x7:
                 value = flash_read_handler(addr);
+                if (fetch && detect_flash_unlock_sequence(value)) {
+                    control.flashUnlocked |= 1 << 3;
+                }
                 break;
 
                 /* UNMAPPED */
@@ -427,6 +443,12 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
                     value = port_read_byte(mmio_port(addr, select));
                 }
                 break;
+        }
+    }
+    if (fetch) {
+        mem.fetch_buffer[++mem.fetch_index] = value;
+        if (unprivileged_code()) {
+            control.flashUnlocked &= ~(1 << 3);
         }
     }
     return value;
@@ -462,7 +484,7 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
                     control.protectionStatus |= 2;
                     gui_console_printf("[CEmu] NMI reset cause by write to flash at address %#06x from unprivileged code. Hint: Possibly a null pointer dereference.\n", addr);
                     cpu_nmi();
-                } else if (!mem.flash.locked) {
+                } else if (flash_unlocked()) {
                     flash_write_handler(addr, value);
                 } // privileged writes with flash locked are probably ignored
                 break;

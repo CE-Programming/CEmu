@@ -23,6 +23,9 @@ static uint8_t control_read(const uint16_t pio, bool peek) {
         case 0x03:
             value = get_device_type();
             break;
+        case 0x06:
+            value = control.mmioUnlocked;
+            break;
         case 0x08:
             value = 0x7F;
             break;
@@ -48,7 +51,7 @@ static uint8_t control_read(const uint16_t pio, bool peek) {
             value = read8(control.protectedEnd, (index - 0x23) << 3);
             break;
         case 0x28:
-            value = control.ports[index] | (1 << 3);
+            value = control.flashUnlocked;
             break;
         case 0x3A: case 0x3B: case 0x3C:
             value = read8(control.stackLimit, (index - 0x3A) << 3);
@@ -121,8 +124,7 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
             control.ports[index] = byte & 7;
             break;
         case 0x06:
-            mem.flash.locked = (byte & 4) == 0;
-            control.ports[index] = byte & 7;
+            control.mmioUnlocked = byte & 7;
             break;
         case 0x07:
             control.readBatteryStatus = (byte & 0x90) ? 1 : 0;
@@ -184,7 +186,7 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
             write8(control.protectedEnd, (index - 0x23) << 3, byte);
             break;
         case 0x28:
-            control.ports[index] = byte & 5;
+            control.flashUnlocked = (control.flashUnlocked | 5) & byte;
             break;
         case 0x29:
             control.ports[index] = byte & 1;
@@ -229,6 +231,14 @@ bool control_save(emu_image *s) {
 bool control_restore(const emu_image *s) {
     control = s->control;
     return true;
+}
+
+bool mmio_unlocked(void) {
+    return (control.mmioUnlocked & 1 << 2) == 1 << 2;
+}
+
+bool flash_unlocked(void) {
+    return (control.flashUnlocked & 3 << 2) == 3 << 2;
 }
 
 bool unprivileged_code(void) {
