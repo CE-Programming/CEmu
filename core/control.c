@@ -162,9 +162,6 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
             control.readBatteryStatus = 0;
             break;
         case 0x0D:
-            if (!(byte & (1 << 1))) {
-                cpu_crash("[CEmu] Reset caused by resetting bit 1 of port 0x000D.\n");
-            }
             /* This bit disables vram and makes it garbage */
             if (!(byte & (1 << 3))) {
                 lcd_disable();
