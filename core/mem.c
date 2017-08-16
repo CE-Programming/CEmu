@@ -392,7 +392,7 @@ static bool detect_flash_unlock_sequence(uint8_t current) {
         return false;
     }
     for (i = 1; i != sizeof(flash_unlock_sequence); i++) {
-        if (mem.fetch_buffer[mem.fetch_index + i & sizeof(mem.fetch_buffer) - 1] != flash_unlock_sequence[i - 1]) {
+        if (mem.fetch_buffer[(mem.fetch_index + i) & (sizeof(mem.fetch_buffer) - 1)] != flash_unlock_sequence[i - 1]) {
             return false;
         }
     }
