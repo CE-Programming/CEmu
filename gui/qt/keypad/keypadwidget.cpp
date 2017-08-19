@@ -1,7 +1,7 @@
 #include <QtWidgets/QApplication>
 #include <QtGui/QPaintEvent>
 #include <QtGui/QScreen>
-#include <QFontDatabase>
+#include <QtGui/QFontDatabase>
 
 #include "keypadwidget.h"
 #include "graphkey.h"
@@ -121,7 +121,7 @@ void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
     
     if (fontId == -2) {
         // Font not loaded yet, load it now!
-        fontId = QFontDatabase::addApplicationFont(":/fonts/resources/fonts/LiberationSansNarrow-Bold.ttf");
+        fontId = QFontDatabase::addApplicationFont(":/fonts/resources/custom_fonts/LiberationSansNarrow-Bold.ttf");
     }
     
     if (fontId != -1) {

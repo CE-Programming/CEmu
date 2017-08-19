@@ -3,8 +3,11 @@
 
 BasicCodeViewerWindow::BasicCodeViewerWindow(QWidget *p) : QDialog(p), ui(new Ui::BasicCodeViewerWindow) {
     ui->setupUi(this);
-    ui->plainTextEdit->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
     connect(ui->pushButton, &QPushButton::clicked, this, &BasicCodeViewerWindow::toggleFormat);
+
+    // Add special jacobly font
+    QFont font = QFont(QStringLiteral("TICELarge"), 9);
+    ui->plainTextEdit->setFont(font);
 }
 
 void BasicCodeViewerWindow::setVariableName(const QString &name) {

@@ -1,4 +1,5 @@
 #include <QtWidgets/QApplication>
+#include <QtGui/QFontDatabase>
 
 #include "mainwindow.h"
 #include "keypad/qtkeypadbridge.h"
@@ -18,6 +19,9 @@ int main(int argc, char *argv[]) {
     execPath = QCoreApplication::applicationFilePath();
 
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
+
+    // Add special jacobly font
+    QFontDatabase::addApplicationFont(":/fonts/resources/custom_fonts/TICELarge.ttf");
 
     // Setup QCommandParser with Our command line parameters
     QCommandLineParser parser;
