@@ -1,6 +1,7 @@
 #include <QtWidgets/QDesktopWidget>
 #include <QtCore/QFileInfo>
 #include <QtCore/QRegularExpression>
+#include <QtGui/QWindow>
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtWidgets/QShortcut>
 #include <QtWidgets/QProgressDialog>
@@ -32,7 +33,6 @@
 #include "../../core/link.h"
 
 #include "../../tests/autotester/crc32.hpp"
-#include "../../tests/autotester/autotester.h"
 #include "../../tests/autotester/autotester.h"
 
 MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow), opts(cliOpts) {
@@ -1770,7 +1770,7 @@ bool MainWindow::ipcSetup() {
 }
 
 void MainWindow::ipcHandleCommandlineReceive(QDataStream &stream) {
-    consoleStr("[CEmu] Received command line options\n");
+    consoleStr("[CEmu] Received IPC: command line options\n");
     CEmuOpts o;
 
     stream >> o.useUnthrottled
@@ -1805,6 +1805,11 @@ void MainWindow::ipcReceived() {
 
     switch (type) {
         case IPC_COMMANDLINEOPTIONS:
+           for (QWindow* w : QGuiApplication::allWindows()) {
+              w->show();
+              w->raise();
+              w->requestActivate();
+           }
            ipcHandleCommandlineReceive(stream);
            break;
         default:
