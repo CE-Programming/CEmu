@@ -51,7 +51,7 @@ If you wish to browse around older builds; Windows binaries are available [here]
 ## How to build
 After downloading the source (you can clone the repo or just [get the zip](https://github.com/CE-Programming/CEmu/archive/master.zip)):
 
-1. Get the [latest Qt5 SDK](https://www.qt.io/download-open-source/#section-3) for your OS *(Note: on Windows, the MinGW variation of the Qt SDK is preferred)*.  
+1. Get the [latest Qt5 SDK](https://www.qt.io/download-open-source/#section-3) for your OS.  
 If you're on Ubuntu, you may need to force update your PATH to have Qt's `bin/` folder prepended. (You might need to run this command, too: `sudo apt-get install git qt5-default`)
 
 2. Now you have two options:
