@@ -516,6 +516,7 @@ std::vector<std::string> globVector(const std::string& pattern)
 {
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
   // TODO: implement that or do the equivalent!
+    (void)pattern;
     return std::vector<std::string>();
 #else
     glob_t glob_result;
