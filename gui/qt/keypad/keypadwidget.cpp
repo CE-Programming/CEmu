@@ -140,6 +140,24 @@ void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
     font.setBold(true);
     font.setPixelSize(5);
 
+#ifdef _MSC_VER
+/* Temporary hack... QStringLiteral mangles the UTF-8 string on MSVC for some reason */
+#define Label(str)          QString::fromUtf8(str)
+#else
+#define Label(str)          QStringLiteral(str)
+#endif
+
+#ifdef Q_OS_MACX
+    bool isMac = true;
+#else
+    bool isMac = false;
+#endif
+#ifdef Q_OS_WIN
+    bool isWin = true;
+#else
+    bool isWin = false;
+#endif
+
     if (isWin) {
         font.setWeight(QFont::Black);
     } else {
@@ -158,24 +176,6 @@ void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
     mConfig.whiteColor  = QColor::fromRgb(0xeeeeee),
     mConfig.textColor   = cText,
     mConfig.key         = {1, 0};
-
-#ifdef _MSC_VER
-/* Temporary hack... QStringLiteral mangles the UTF-8 string on MSVC for some reason */
-#define Label(str)          QString::fromUtf8(str)
-#else
-#define Label(str)          QStringLiteral(str)
-#endif
-
-#ifdef Q_OS_MACX
-    bool isMac = true;
-#else
-    bool isMac = false;
-#endif
-#ifdef Q_OS_WIN
-    bool isWin = true;
-#else
-    bool isWin = false;
-#endif
 
 #define LabelFrEn(fr, en)   (is83 ? Label(fr) : Label(en))
 
