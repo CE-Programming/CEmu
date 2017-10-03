@@ -18,5 +18,9 @@ def generate_file(file_name):
 	print("Rendered", file_name)
 
 files = ['404', 'index', 'download']
+
+if not os.path.isdir(os.path.join(base_dir, "html")):
+	os.mkdir(os.path.join(base_dir, "html"))
+
 for file in files:
 	generate_file(file)
