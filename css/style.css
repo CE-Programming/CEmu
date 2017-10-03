@@ -1,0 +1,48 @@
+/* Custom Stylesheet */
+/**
+ * Use this file to override Materialize files so you can update
+ * the core Materialize files in the future
+ *
+ * Made By MaterializeCSS.com
+ */
+
+.icon-block {
+    padding: 0 15px;
+}
+.icon-block .material-icons {
+    font-size: inherit;
+}
+
+.nav-wrapper .brand-logo {
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+}
+
+.nav-wrapper .brand-logo img {
+    height: 48px;
+    padding-bottom: 3px;
+    vertical-align: middle;
+}
+
+.cemu-color, .tabs .indicator {
+  background-color: #064757 !important;
+}
+
+.cemu-color-lighter {
+  background-color: #58838D !important;
+}
+
+.cemu-color-text {
+  color: #58838D !important;
+}
+
+.not-found-outer {
+  width: 100%;
+}
+
+.not-found-inner {
+  margin-top: 165px;
+  margin-bottom: 165px;
+  text-align: center;
+}

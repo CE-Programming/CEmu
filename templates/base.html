@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0"/>
+  <title>{% block title %}{% endblock %}{% if self.title() %} - {% endif %}CEmu</title>
+
+  <!-- CSS  -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="css/materialize.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+  <link href="css/style.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+  {% block style %}{% endblock style %}
+</head>
+<body>
+  {% set navigation_bar = [
+          ('/', 'index', 'Home', 'home'),
+          ('/download', 'download', 'Download', 'file_download'),
+          ('https://github.com/CE-Programming/CEmu', 'github', 'GitHub', 'code'),
+  ] -%}
+  {% set active_page = active_page|default('index') %}
+  <nav class="cemu-color" role="navigation">
+    <div class="nav-wrapper container">
+      <a id="logo-container" href="/" class="brand-logo"><img class="hide-on-med-and-down" src="img/icon.png" alt="CEmu"> CEmu</a>
+      <ul class="right hide-on-med-and-down">
+        {% for href, id, caption, icon in navigation_bar %}
+        <li class="waves-effect waves-light{% if id == active_page %}active{% endif %}"><a href="{{ href|e }}">{% if icon %}<i class="material-icons left">{{ icon }}</i>{% endif %}{{ caption|e }}</a></li>
+        {% endfor %}
+        <!--
+        <li class="waves-effect waves-light active"><a href="#"><i class="material-icons left">home</i>Home</a></li>
+        <li class="waves-effect waves-light"><a href="#"><i class="material-icons left">file_download</i>Download</a></li>
+        <li class="waves-effect waves-light"><a href="#"><i class="material-icons left">code</i>GitHub</a></li>
+        -->
+      </ul>
+
+      <ul id="nav-mobile" class="side-nav">
+        {% for href, id, caption, icon in navigation_bar %}
+        <li class="waves-effect waves-light{% if id == active_page %}active{% endif %}"><a href="{{ href|e }}">{% if icon %}<i class="material-icons left">{{ icon }}</i>{% endif %}{{ caption|e }}</a></li>
+        {% endfor %}
+      </ul>
+      <a href="#" data-activates="nav-mobile" class="button-collapse"><i class="material-icons">menu</i></a>
+    </div>
+  </nav>
+  {% block content %}
+  {% endblock content %}
+
+  <footer class="page-footer cemu-color">
+    <div class="container">
+      <div class="row">
+        <div class="col l6 s12">
+          <h5 class="white-text">About CEmu</h5>
+          <p class="grey-text text-lighten-4">We are a team of college students working on this project like it's our full time job. Any amount would help support and continue development on this project and is greatly appreciated.</p>
+
+
+        </div>
+        <div class="col l3 s12">
+          <h5 class="white-text">Settings</h5>
+          <ul>
+            <li><a class="white-text" href="#!">Link 1</a></li>
+            <li><a class="white-text" href="#!">Link 2</a></li>
+            <li><a class="white-text" href="#!">Link 3</a></li>
+            <li><a class="white-text" href="#!">Link 4</a></li>
+          </ul>
+        </div>
+        <div class="col l3 s12">
+          <h5 class="white-text">Connect</h5>
+          <ul>
+            <li><a class="white-text" href="#!">Link 1</a></li>
+            <li><a class="white-text" href="#!">Link 2</a></li>
+            <li><a class="white-text" href="#!">Link 3</a></li>
+            <li><a class="white-text" href="#!">Link 4</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-copyright">
+      <div class="container">
+      &copy; 2015-2017 CEmu. Made with <a class="orange-text text-lighten-3" href="http://materializecss.com">Materialize</a>.
+      </div>
+    </div>
+  </footer>
+
+
+  <!--  Scripts-->
+  <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+  <script src="js/materialize.js"></script>
+  <script src="js/init.js"></script>
+  {% block scripts %}
+  {% endblock scripts %}
+
+  </body>
+</html>
