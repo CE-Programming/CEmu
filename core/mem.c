@@ -16,27 +16,27 @@ mem_state_t mem;
 
 void mem_init(void) {
     unsigned int i;
-
+    
     /* Allocate FLASH memory */
     mem.flash.block = (uint8_t*)malloc(SIZE_FLASH);
     memset(mem.flash.block, 0xFF, SIZE_FLASH);
-
+    
     for (i = 0; i < 8; i++) {
         mem.flash.sector_8k[i].ptr = mem.flash.block + i * SIZE_FLASH_SECTOR_8K;
         mem.flash.sector_8k[i].locked = true;
     }
-
+    
     for (i = 0; i < 64; i++) {
         mem.flash.sector[i].ptr = mem.flash.block + i * SIZE_FLASH_SECTOR_64K;
         mem.flash.sector[i].locked = false;
     }
-
+    
     /* Sector 2 is locked */
     mem.flash.sector[1].locked = true;
-
+    
     /* Allocate RAM */
     mem.ram.block = (uint8_t*)calloc(SIZE_RAM, 1);
-
+    
     mem.flash.write_index = 0;
     mem.flash.command = NO_COMMAND;
     gui_console_printf("[CEmu] Initialized Memory...\n");
@@ -147,22 +147,34 @@ static void flash_write(uint32_t addr, uint8_t byte) {
 }
 
 static void flash_erase(uint32_t addr, uint8_t byte) {
+    unsigned int i;
     (void)addr;
     (void)byte;
-
+    
     mem.flash.command = FLASH_CHIP_ERASE;
-
-    memset(mem.flash.block, 0xFF, SIZE_FLASH);
-    gui_console_printf("[CEmu] Erased Flash chip.\n");
+    
+    for (i = 0; i < 8; i++) {
+        if (!mem.flash.sector_8k[i].locked) {
+            memset(mem.flash.sector_8k[i].ptr, 0xFF, SIZE_FLASH_SECTOR_8K);
+        }
+    }
+    
+    for (i = 0; i < 64; i++) {
+        if (!mem.flash.sector_64k[i].locked) {
+            memset(mem.flash.sector_64k[i].ptr, 0xFF, SIZE_FLASH_SECTOR_64K);
+        }
+    }
+    
+    gui_console_printf("[CEmu] Erased Unlocked Sectors.\n");
 }
 
 static void flash_erase_sector(uint32_t addr, uint8_t byte) {
     uint8_t selected;
     (void)byte;
-
+    
     mem.flash.command = FLASH_SECTOR_ERASE;
     selected = addr/SIZE_FLASH_SECTOR_64K;
-
+    
     if (!mem.flash.sector[selected].locked) {
         memset(mem.flash.sector[selected].ptr, 0xFF, SIZE_FLASH_SECTOR_64K);
     }
@@ -171,28 +183,28 @@ static void flash_erase_sector(uint32_t addr, uint8_t byte) {
 static void flash_verify_sector_protection(uint32_t addr, uint8_t byte) {
     (void)addr;
     (void)byte;
-
+    
     mem.flash.command = FLASH_READ_SECTOR_PROTECTION;
 }
 
 static void flash_cfi_read(uint32_t addr, uint8_t byte) {
     (void)addr;
     (void)byte;
-
+    
     mem.flash.command = FLASH_READ_CFI;
 }
 
 static void flash_enter_deep_power_down(uint32_t addr, uint8_t byte) {
     (void)addr;
     (void)byte;
-
+    
     mem.flash.command = FLASH_DEEP_POWER_DOWN;
 }
 
 static void flash_enter_IPB(uint32_t addr, uint8_t byte) {
     (void)addr;
     (void)byte;
-
+    
     mem.flash.command = FLASH_IPB_MODE;
 }
 
@@ -279,13 +291,13 @@ static flash_write_pattern_t patterns[] = {
     {
         .length = 0
     }
-
+    
 };
 
 static uint8_t flash_read_handler(uint32_t addr) {
     uint8_t value = 0;
     uint8_t selected;
-
+    
     cpu.cycles += flash_block(&addr, NULL);
     if (flash.mapped) {
         switch(mem.flash.command) {
@@ -321,13 +333,13 @@ static uint8_t flash_read_handler(uint32_t addr) {
                     value = id[(addr - 0x20)/2];
                 } else if (addr >= 0x36 && addr <= 0x50) {
                     static const uint8_t id[] = { 0x27, 0x36, 0x00, 0x00, 0x03, 0x04, 0x08,
-                                                  0x0E, 0x03, 0x05, 0x03, 0x03, 0x16, 0x02,
-                                                  0x00, 0x05, 0x00, 0x01, 0x08, 0x00, 0x00,
-                                                  0x3F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                                  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50,
-                                                  0x52, 0x49, 0x31, 0x33, 0x0C, 0x02, 0x01,
-                                                  0x00, 0x08, 0x00, 0x00, 0x02, 0x95, 0xA5,
-                                                  0x02, 0x01 };
+                        0x0E, 0x03, 0x05, 0x03, 0x03, 0x16, 0x02,
+                        0x00, 0x05, 0x00, 0x01, 0x08, 0x00, 0x00,
+                        0x3F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50,
+                        0x52, 0x49, 0x31, 0x33, 0x0C, 0x02, 0x01,
+                        0x00, 0x08, 0x00, 0x00, 0x02, 0x95, 0xA5,
+                        0x02, 0x01 };
                     value = id[(addr - 0x36)/2];
                 }
                 break;
@@ -337,7 +349,7 @@ static uint8_t flash_read_handler(uint32_t addr) {
                 break;
         }
     }
-
+    
     /* Returning 0x00 is enough to emulate for the OS. Set the msb bit for user routines? */
     return value;
 }
@@ -347,12 +359,12 @@ static void flash_write_handler(uint32_t addr, uint8_t byte) {
     int partial_match = 0;
     flash_write_t *w;
     flash_write_pattern_t *pattern;
-
+    
     cpu.cycles += flash_block(&addr, NULL);
     if (!flash.mapped) {
         return;
     }
-
+    
     /* See if we can reset to default */
     if (mem.flash.command != NO_COMMAND) {
         if ((mem.flash.command != FLASH_DEEP_POWER_DOWN && byte == 0xF0) ||
@@ -362,15 +374,15 @@ static void flash_write_handler(uint32_t addr, uint8_t byte) {
             return;
         }
     }
-
+    
     w = &mem.flash.writes[mem.flash.write_index++];
     w->addr = addr;
     w->value = byte;
-
+    
     for (pattern = patterns; pattern->length; pattern++) {
         for (i = 0; (i < mem.flash.write_index) && (i < pattern->length) &&
-            (mem.flash.writes[i].addr & pattern->pattern[i].addr_mask) == pattern->pattern[i].addr &&
-            (mem.flash.writes[i].value & pattern->pattern[i].value_mask) == pattern->pattern[i].value; i++) {
+             (mem.flash.writes[i].addr & pattern->pattern[i].addr_mask) == pattern->pattern[i].addr &&
+             (mem.flash.writes[i].value & pattern->pattern[i].value_mask) == pattern->pattern[i].value; i++) {
         }
         if (i == pattern->length) {
             pattern->handler(addr, byte);
@@ -403,7 +415,7 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
     static const uint8_t mmio_readcycles[0x20] = {2,2,4,3,2,2,2,2,2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2};
     uint8_t value = 0;
     uint32_t ramAddr, select;
-
+    
     addr &= 0xFFFFFF;
 #ifdef DEBUG_SUPPORT
     if (!fetch && debugger.data.block[addr] & DBG_READ_WATCHPOINT) {
@@ -413,7 +425,7 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
     // reads from protected memory return 0
     if (!(!fetch && addr >= control.protectedStart && addr <= control.protectedEnd && unprivileged_code())) {
         switch((addr >> 20) & 0xF) {
-            /* FLASH */
+                /* FLASH */
             case 0x0: case 0x1: case 0x2: case 0x3:
             case 0x4: case 0x5: case 0x6: case 0x7:
                 value = flash_read_handler(addr);
@@ -421,12 +433,12 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
                     control.flashUnlocked |= 1 << 3;
                 }
                 break;
-
+                
                 /* UNMAPPED */
             case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
                 cpu.cycles += 258;
                 break;
-
+                
                 /* RAM */
             case 0xD:
                 cpu.cycles += 4;
@@ -435,7 +447,7 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
                     value = mem.ram.block[ramAddr];
                 }
                 break;
-
+                
                 /* MMIO <-> Advanced Perphrial Bus */
             case 0xE: case 0xF:
                 cpu.cycles += mmio_readcycles[(addr >> 16) & 0x1F];
@@ -458,26 +470,26 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
     static const uint8_t mmio_writecycles[0x20] = {2,2,4,2,2,2,2,2,2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2};
     uint32_t ramAddr, select;
     addr &= 0xFFFFFF;
-
+    
 #ifdef DEBUG_SUPPORT
     if ((debugger.data.block[addr] &= ~(DBG_INST_START_MARKER | DBG_INST_MARKER)) & DBG_WRITE_WATCHPOINT) {
         open_debugger(HIT_WRITE_WATCHPOINT, addr);
     }
 #endif
-
+    
     if (addr == control.stackLimit) {
         control.protectionStatus |= 1;
         gui_console_printf("[CEmu] NMI reset caused by writing to the stack limit at address %#06x. Hint: Probably a stack overflow (aka too much recursion).\n", addr);
         cpu_nmi();
     } // writes to stack limit succeed
-
+    
     if (addr >= control.protectedStart && addr <= control.protectedEnd && unprivileged_code()) {
         control.protectionStatus |= 2;
         gui_console_printf("[CEmu] NMI reset caused by writing to protected memory (%#06x through %#06x) at address %#06x from unprivileged code.\n", control.protectedStart, control.protectedEnd, addr);
         cpu_nmi();
     } else { // writes to protected memory are ignored
         switch((addr >> 20) & 0xF) {
-            /* FLASH */
+                /* FLASH */
             case 0x0: case 0x1: case 0x2: case 0x3:
             case 0x4: case 0x5: case 0x6: case 0x7:
                 if (unprivileged_code()) {
@@ -488,12 +500,12 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
                     flash_write_handler(addr, value);
                 } // privileged writes with flash locked are probably ignored
                 break;
-
+                
                 /* UNMAPPED */
             case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
                 cpu.cycles += 258;
                 break;
-
+                
                 /* RAM */
             case 0xD:
                 cpu.cycles += 2;
@@ -502,7 +514,7 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
                     mem.ram.block[ramAddr] = value;
                 }
                 break;
-
+                
                 /* MMIO <-> Advanced Perphrial Bus */
             case 0xE: case 0xF:
                 cpu.cycles += mmio_writecycles[(addr >> 16) & 0x1F];
@@ -548,12 +560,12 @@ uint8_t mem_peek_byte(uint32_t addr) {
 }
 uint16_t mem_peek_short(uint32_t addr) {
     return mem_peek_byte(addr)
-         | mem_peek_byte(addr + 1) << 8;
+    | mem_peek_byte(addr + 1) << 8;
 }
 uint32_t mem_peek_long(uint32_t addr) {
     return mem_peek_byte(addr)
-         | mem_peek_byte(addr + 1) << 8
-         | mem_peek_byte(addr + 2) << 16;
+    | mem_peek_byte(addr + 1) << 8
+    | mem_peek_byte(addr + 2) << 16;
 }
 uint32_t mem_peek_word(uint32_t addr, bool mode) {
     if (mode) {
@@ -579,10 +591,10 @@ void mem_poke_byte(uint32_t addr, uint8_t value) {
 bool mem_save(emu_image *s) {
     assert(mem.flash.block);
     assert(mem.ram.block);
-
+    
     memcpy(s->mem_flash, mem.flash.block, SIZE_FLASH);
     memcpy(s->mem_ram, mem.ram.block, SIZE_RAM);
-
+    
     s->mem = mem;
     s->mem.flash.block = NULL;
     s->mem.ram.block = NULL;
@@ -593,15 +605,15 @@ bool mem_restore(const emu_image *s) {
     unsigned int i;
     uint8_t *tmp_flash_ptr = mem.flash.block;
     uint8_t *tmp_ram_ptr = mem.ram.block;
-
+    
     mem = s->mem;
-
+    
     mem.flash.block = tmp_flash_ptr;
     mem.ram.block = tmp_ram_ptr;
-
+    
     memcpy(mem.flash.block, s->mem_flash, SIZE_FLASH);
     memcpy(mem.ram.block, s->mem_ram, SIZE_RAM);
-
+    
     for (i = 0; i < 8; i++) {
         mem.flash.sector[i].ptr = mem.flash.block + (i*SIZE_FLASH_SECTOR_8K);
     }
@@ -610,3 +622,4 @@ bool mem_restore(const emu_image *s) {
     }
     return true;
 }
+
