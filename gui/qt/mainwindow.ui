@@ -8072,6 +8072,7 @@ QPushButton:pressed {
     <addaction name="actionRecordGIF"/>
     <addaction name="actionTakeGIFScreenshot"/>
     <addaction name="actionScreenshot"/>
+    <addaction name="actionClipScreen"/>
     <addaction name="separator"/>
     <addaction name="actionKeyHistory"/>
     <addaction name="separator"/>
@@ -8196,6 +8197,9 @@ QPushButton:pressed {
    <property name="text">
     <string>Open...</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+O</string>
+   </property>
   </action>
   <action name="actionExit">
    <property name="icon">
@@ -8204,6 +8208,9 @@ QPushButton:pressed {
    </property>
    <property name="text">
     <string>Exit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+Q</string>
    </property>
    <property name="menuRole">
     <enum>QAction::QuitRole</enum>
@@ -8266,7 +8273,7 @@ QPushButton:pressed {
     <string>Record animated GIF</string>
    </property>
    <property name="shortcut">
-    <string>F11</string>
+    <string>Ctrl+Shift+X</string>
    </property>
    <property name="shortcutContext">
     <enum>Qt::ApplicationShortcut</enum>
@@ -8309,6 +8316,9 @@ QPushButton:pressed {
    </property>
    <property name="toolTip">
     <string>Take GIF screenshot</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+D</string>
    </property>
   </action>
   <action name="actionCheckForUpdates">
@@ -8435,6 +8445,18 @@ QPushButton:pressed {
    </property>
    <property name="text">
     <string>Hide menu bar</string>
+   </property>
+  </action>
+  <action name="actionClipScreen">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/pngpng.png</normaloff>:/icons/resources/icons/pngpng.png</iconset>
+   </property>
+   <property name="text">
+    <string>Copy screen to clipboard</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+C</string>
    </property>
   </action>
  </widget>

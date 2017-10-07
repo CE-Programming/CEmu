@@ -343,6 +343,9 @@ private:
     // Key History
     void toggleKeyHistory();
 
+    // Clipboard
+    void saveScreenToClipboard();
+
     // IPC
     void ipcSpawnRandom();
     bool ipcSetup();

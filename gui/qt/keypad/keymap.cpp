@@ -38,7 +38,7 @@ static const HostKey none = { static_cast<Qt::Key>(0), 0, 0, Qt::NoModifier, Qt:
 
 static const HostKey KEY(enter)[] = { NRM(Return), NRM(Enter), none };
 static const HostKey KEY(2nd)[] = { NRM(Tab), NRM(Semicolon), none };
-static const HostKey KEY(alpha)[] = { NRM(Control), NRM(Apostrophe), none };
+static const HostKey KEY(alpha)[] = { NRM(Apostrophe), none };
 static const HostKey KEY(sto)[] = { NRM(Greater), NRM(X), none };
 static const HostKey KEY(clr)[] = { NRM(Escape), none };
 static const HostKey KEY(del)[] = { NRM(Delete), NRM(Insert), none };

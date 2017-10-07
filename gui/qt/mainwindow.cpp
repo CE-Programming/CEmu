@@ -9,6 +9,7 @@
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QScrollBar>
 #include <QtNetwork/QNetworkReply>
+#include <QClipboard>
 #include <fstream>
 
 #ifdef _MSC_VER
@@ -257,6 +258,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->actionNew, &QAction::triggered, this, &MainWindow::ipcSpawnRandom);
     connect(ui->buttonChangeID, &QPushButton::clicked, this, &MainWindow::ipcChangeID);
     connect(com, &ipc::readDone, this, &MainWindow::ipcReceived);
+
+    // Clipboard copy
+    connect(ui->actionClipScreen, &QAction::triggered, this, &MainWindow::saveScreenToClipboard);
 
     // Shortcut Connections
     stepInShortcut = new QShortcut(QKeySequence(Qt::Key_F6), this);
@@ -851,6 +855,12 @@ void MainWindow::screenshot() {
     }
 
     screenshotSave(tr("PNG images (*.png)"), QStringLiteral("png"), path);
+}
+
+void MainWindow::saveScreenToClipboard() {
+    QImage image = renderFramebuffer(&lcd);
+    Q_ASSERT(!image.isNull());
+    QApplication::clipboard()->setImage(image, QClipboard::Clipboard);
 }
 
 void MainWindow::screenshotGIF() {
