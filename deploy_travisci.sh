@@ -62,7 +62,7 @@ echo " -> Grabbing the $TARGET_BRANCH branch..."
 # Create a new empty branch if gh-pages doesn't exist yet (should only happen on first deploy)
 git clone $REPO html; cerr $? "Cloning $TARGET_BRANCH branch"
 cd html; cerr $? "Changing to output HTML directory for branch checkout"
-git checkout $TARGET_BRANCH || git checkout --orphan $TARGET_BRANCH
+git checkout $TARGET_BRANCH || (git checkout --orphan $TARGET_BRANCH && git reset && git clean -fd)
 cerr $? "Checking out (and possibly creating) $TARGET_BRANCH"
 cd ..; cerr $? "Changing back to main directory"
 
@@ -83,6 +83,9 @@ echo " -> Starting deployment..."
 cd html; cerr $? "Changing to HTML deployment directory"
 git config user.name "Travis CI"; cerr $? "Configuring Git username"
 git config user.email "CEmuTravisCI@CE-Programming"; cerr $? "Configuring Git email"
+
+# Do an "intent-to-add" to get new files seen. (-N)
+git add -N -A .; cerr $? "Add git files with intent to add option"
 
 # If there are no changes to the compiled out (e.g. this is a README update) then just bail.
 if git diff --quiet; then
