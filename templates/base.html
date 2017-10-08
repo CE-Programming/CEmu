@@ -69,7 +69,7 @@
       <div class="container">
       &copy; 2015-2017 CEmu. Made with <a class="orange-text text-lighten-3" href="http://materializecss.com">Materialize</a>.
       <span class="right right-align">
-      {% if commit_hash and repo_url %}<a class="cemu-color-text" target="_blank" href="{{ repo_url }}/commit/{{ commit_hash }}">{{ commit_hash[:7] }}</a>{% endif %}
+      {% if build_time and commit_hash and repo_url %}<a class="cemu-color-text" target="_blank" href="{{ repo_url }}/commit/{{ commit_hash }}">{{ commit_hash[:7] }} @ {{ build_time }}</a>{% endif %}
       </span>
       
       </div>
