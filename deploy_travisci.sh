@@ -53,6 +53,16 @@ SHA=`git rev-parse --verify HEAD`
 # Main body
 echo "Started deployment..."
 
+echo " -> Grabbing the $TARGET_BRANCH branch..."
+
+# Clone the existing gh-pages for this repo into out/
+# Create a new empty branch if gh-pages doesn't exist yet (should only happen on first deply)
+git clone $REPO html; cerr $? "Cloning $TARGET_BRANCH branch"
+cd html; cerr $? "Changing to output HTML directory for branch checkout"
+git checkout $TARGET_BRANCH || git checkout --orphan $TARGET_BRANCH
+cerr $? "Checking out (and possibly creating) $TARGET_BRANCH"
+cd ..; cerr $? "Changing back to main directory"
+
 # Build site.
 echo " -> Building website..."
 pip3 install -r requirements.txt; cerr $? "Python Pip Requirements Installation"
@@ -82,7 +92,7 @@ fi
 # Commit the "changes", i.e. the new version.
 # The delta will show diffs between new and old versions.
 git add -A .; cerr $? "Add New HTML Files"
-git commit -m "Deploy to GitHub Pages: ${SHA}"; cerr $? "Creating gh-pages branch git commit"
+git commit -m "Deploy to GitHub Pages: ${SHA}"; cerr $? "Creating $TARGET_BRANCH branch git commit"
 git push $SSH_REPO $TARGET_BRANCH; cerr $? "Pushing to repo"
 
 echo " -> Cleaning up a bit..."
