@@ -56,7 +56,7 @@ echo "Started deployment..."
 echo " -> Grabbing the $TARGET_BRANCH branch..."
 
 # Clone the existing gh-pages for this repo into out/
-# Create a new empty branch if gh-pages doesn't exist yet (should only happen on first deply)
+# Create a new empty branch if gh-pages doesn't exist yet (should only happen on first deploy)
 git clone $REPO html; cerr $? "Cloning $TARGET_BRANCH branch"
 cd html; cerr $? "Changing to output HTML directory for branch checkout"
 git checkout $TARGET_BRANCH || git checkout --orphan $TARGET_BRANCH
