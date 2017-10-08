@@ -41,11 +41,7 @@ private:
     QLinearGradient mBackground;
     QTransform mTransform, mInverseTransform;
     Key *mKeys[sRows][sCols];
-#ifdef Q_OS_WIN
-    /* Disable internal embedded font on Windows */
-    int fontId = -1;
-#else
-    /* Uninitalized, loadable font on all other platforms */
+#ifndef Q_OS_WIN
     int fontId = -2;
 #endif
     QColor cCenter, cSides, cNum, cText, cOther, cGraph;
