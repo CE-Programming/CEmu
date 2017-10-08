@@ -10,21 +10,21 @@ dist: trusty
 
 before_install:
 - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-- sudo add-apt-repository ppa:beineri/opt-qt562-trusty -y
+- sudo add-apt-repository ppa:beineri/opt-qt591-trusty -y
 - sudo apt-get update -qq
 
 install:
-- sudo apt-get install -y --force-yes -qq g++-6 gcc-6; export CXX="g++-6" CC="gcc-6"; $CXX --version
-- sudo apt-get install -y --force-yes -qq libgl1-mesa-dev qt56base qt56declarative; source /opt/qt56/bin/qt56-env.sh
+- sudo apt-get install -y --force-yes -qq g++-7 gcc-7; export CXX="g++-7" CC="gcc-7"; $CXX --version
+- sudo apt-get install -y --force-yes -qq libgl1-mesa-dev qt59base qt59declarative; source /opt/qt59/bin/qt59-env.sh
 
 script:
   - mkdir build
   - cd build
-  - qmake ../gui/qt && make -j4 CC=gcc-6 CXX=g++-6 LINK=g++-6
+  - qmake ../gui/qt && make -j4 CC=gcc-7 CXX=g++-7 LINK=g++-7
   - cd ../core
-  - make clean && make -j4 CC=gcc-6 CXX=g++-6 LINK=g++-6 all
+  - make clean && make -j4 CC=gcc-7 CXX=g++-7 LINK=g++-7 all
   - cd ../tests/autotester
-  - make clean && make -j4 CC=gcc-6 CXX=g++-6 LINK=g++-6 all
+  - make clean && make -j4 CC=gcc-7 CXX=g++-7 LINK=g++-7 all
 
 notifications:
   irc:
