@@ -9,9 +9,13 @@ templateEnv = jinja2.Environment(loader=templateLoader, lstrip_blocks=True, trim
 def generate_file(file_name):
     base_name = file_name
     file_name = file_name + ".html"
+    
+    # Define this if the page is located in a subdirectory instead
+    # of the domain root.
+    page_subdir = "/CEmu"
 
     template = templateEnv.get_template( file_name )
-    outputText = template.render(active_page = base_name) # this is where to put args to the template renderer
+    outputText = template.render(active_page = base_name, page_subdir = page_subdir) # this is where to put args to the template renderer
 
     file = open(os.path.join(base_dir, "html", file_name), 'w')
     file.write(outputText)

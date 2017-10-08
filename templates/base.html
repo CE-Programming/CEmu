@@ -15,8 +15,8 @@
 <body>
   {# Format: Link location, page ID, Display Name, Icon (None or blank to disable) #}
   {% set navigation_bar = [
-          ('/', 'index', 'Home', 'home'),
-          ('/download', 'download', 'Download', 'file_download'),
+          (page_subdir + '/', 'index', 'Home', 'home'),
+          (page_subdir + '/download', 'download', 'Download', 'file_download'),
           ('https://github.com/CE-Programming/CEmu', 'github', 'GitHub', 'code'),
   ] -%}
   {% set active_page = active_page|default('index') %}
