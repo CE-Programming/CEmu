@@ -440,8 +440,6 @@ private:
     QString dragROM;
 
     bool initPassed = true;
-    bool enabledSoftCommands;
-
     bool firstShow = false;
     bool useDataCol;
     bool loadedCEmuBootImage = false;

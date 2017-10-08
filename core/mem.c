@@ -519,21 +519,23 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
             case 0xE: case 0xF:
                 cpu.cycles += mmio_writecycles[(addr >> 16) & 0x1F];
 #ifdef DEBUG_SUPPORT
-                if (addr >= DBG_PORT_RANGE) {
-                    open_debugger(addr, value);
-                    break;
-                } else if ((addr >= DBGOUT_PORT_RANGE && addr < DBGOUT_PORT_RANGE+SIZEOF_DBG_BUFFER-1)) {
-                    if (value) {
-                        debugger.buffer[debugger.bufferPos] = (char)value;
-                        debugger.bufferPos = (debugger.bufferPos + 1) % SIZEOF_DBG_BUFFER;
+                if (emu_allow_instruction_commands) {
+                    if (addr >= DBG_PORT_RANGE) {
+                        open_debugger(addr, value);
+                        break;
+                    } else if ((addr >= DBGOUT_PORT_RANGE && addr < DBGOUT_PORT_RANGE+SIZEOF_DBG_BUFFER-1)) {
+                        if (value) {
+                            debugger.buffer[debugger.bufferPos] = (char)value;
+                            debugger.bufferPos = (debugger.bufferPos + 1) % SIZEOF_DBG_BUFFER;
+                        }
+                        break;
+                    } else if ((addr >= DBGERR_PORT_RANGE && addr < DBGERR_PORT_RANGE+SIZEOF_DBG_BUFFER-1)) {
+                        if (value) {
+                            debugger.bufferErr[debugger.bufferErrPos] = (char)value;
+                            debugger.bufferErrPos = (debugger.bufferErrPos + 1) % SIZEOF_DBG_BUFFER;
+                        }
+                        break;
                     }
-                    break;
-                } else if ((addr >= DBGERR_PORT_RANGE && addr < DBGERR_PORT_RANGE+SIZEOF_DBG_BUFFER-1)) {
-                    if (value) {
-                        debugger.bufferErr[debugger.bufferErrPos] = (char)value;
-                        debugger.bufferErrPos = (debugger.bufferErrPos + 1) % SIZEOF_DBG_BUFFER;
-                    }
-                    break;
                 }
 #endif
                 if (mmio_mapped(addr, select)) {

@@ -318,11 +318,7 @@ void MainWindow::debuggerProcessCommand(int reason, uint32_t input) {
 
     // This means the program is trying to send us a debug command. Let's see what we can do with that information
     if (reason >= NUM_DBG_COMMANDS) {
-        if (enabledSoftCommands) {
-            debuggerExecuteCommand(static_cast<uint32_t>(reason-DBG_PORT_RANGE), static_cast<uint8_t>(input));
-        } else {
-            setDebugState(guiDebug = false);
-        }
+        debuggerExecuteCommand(static_cast<uint32_t>(reason-DBG_PORT_RANGE), static_cast<uint8_t>(input));
         return;
     }
 

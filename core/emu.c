@@ -18,7 +18,7 @@
 
 uint32_t cpuEvents;
 volatile bool exiting;
-volatile bool dummy_emscripten_var = false; /* fixes alignment issues, apparently... */
+volatile bool emu_allow_instruction_commands = false; /* fixes alignment issues, apparently... */
 
 void throttle_interval_event(int index) {
     event_repeat(index, 27000000 / 60);
