@@ -5,6 +5,7 @@ branches:
     - master
     - coverity_scan
     - gh-pages-dev
+    - website-dev
 
 dist: trusty
 
