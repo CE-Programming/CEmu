@@ -7,14 +7,15 @@
     <div class="section">
         <div class="row">
             <h3>Download</h3>
+            <p>Note that all builds are bleeding-edge releases - they may break at any time!</p>
         </div>
         <div class="row">
             <div class="row">
                 <div class="col s12">
                   <ul class="tabs">
                     <li class="tab col s3"><a class="active cemu-color-text" href="#simple-dl">Simple</a></li>
-                    <li class="tab col s3"><a class="cemu-color-text" href="#msvc-wizard-dl">MSVC Builds + Wizard</a></li>
-                    <li class="tab col s3"><a class="cemu-color-text" href="#adv-dl">MSVC - Advanced</a></a></li>
+                    <li class="tab col s3"><a class="cemu-color-text" href="#msvc-wizard-dl">MSVC Windows Builds + Wizard</a></li>
+                    <li class="tab col s3"><a class="cemu-color-text" href="#adv-dl">MSVC Windows - Advanced</a></a></li>
                   </ul>
                 </div>
                 <div id="simple-dl" class="col s12">
@@ -22,22 +23,103 @@
                     If your computer is somewhat recent, you can probably pick the 64-bit version.<br />
                     The 64-bit version is a bit faster on modern computers.<br />
                     If you tried the 64-bit version and it didn't open, use the 32-bit version instead.<br /><br />
-                    Builds are provided by <a href="https://github.com/jacobly0">@jacobly0</a>, and are compiled with MinGW.<br /><br />
-                    <a href="http://jacobly.com/CEmu/master/latest/CEmu64.exe" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download 64-bit</a>
-                    <a href="http://jacobly.com/CEmu/master/latest/CEmu32.exe" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download 32-bit</a>
+                    Builds are provided by <a href="https://github.com/jacobly0">@jacobly0</a>, and are compiled with MinGW (for Windows builds).<br /><br />
+                    <ul class="collapsible" data-collapsible="accordion">
+                        <li>
+                            <div class="collapsible-header active"><i class="material-icons">picture_in_picture_alt</i>Windows</div>
+                            <div class="collapsible-body">
+                                Simply download and run the EXE to get started.<br /><br />
+                                <a href="http://jacobly.com/CEmu/master/latest/CEmu64.exe" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download Windows 64-bit</a>
+                                <a href="http://jacobly.com/CEmu/master/latest/CEmu32.exe" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download Windows 32-bit</a>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="collapsible-header"><i class="material-icons">desktop_mac</i>Mac</div>
+                            <div class="collapsible-body">
+                                None available... for now! Stay tuned! If this is something you really want,
+                                please let us know <a href="https://github.com/CE-Programming/CEmu/issues">here</a>!
+                            </div>
+                        </li>
+                        <li>
+                            <div class="collapsible-header"><i class="material-icons">dashboard</i>Linux</div>
+                            <div class="collapsible-body">
+                                This build requires Qt5 v5.9.1+ and glibc v3.4.21+ to be installed on your system.<br /><br />
+                                <ul class="collapsible" data-collapsible="accordion">
+                                    <li>
+                                        <div class="collapsible-header active"><i class="material-icons">done_all</i>Step 1: Installing Prerequisites</div>
+                                        <div class="collapsible-body">
+                                            glibc is not usually installable or upgradable - you may need to update/upgrade your OS if it is out of date.
+                                            <br /><br />
+                                            For Qt, installation is pretty easy! Select your Linux OS from the options below.<br />
+                                            
+                                            <ul class="collapsible" data-collapsible="accordion">
+                                                <li>
+                                                    <div class="collapsible-header active"><i class="material-icons">done_all</i>Debian/Ubuntu (and Friends)</div>
+                                                    <div class="collapsible-body">
+                                                        Open a terminal and run:
+                                                        <pre>sudo apt-get install libqt5core5a libqt5network5 libqt5gui5 libqt5widgets5</pre>
+                                                        If sudo isn't installed, just run:
+                                                        <pre>su -c "apt-get install libqt5core5a libqt5network5 libqt5gui5 libqt5widgets5"</pre>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <div class="collapsible-header"><i class="material-icons">done_all</i>Fedora/CentOS/RedHat (and Friends)</div>
+                                                    <div class="collapsible-body">
+                                                        Open a terminal and run:
+                                                        <pre>su -c "yum install qt5"</pre>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <div class="collapsible-header active"><i class="material-icons">done_all</i>Other Linux</div>
+                                                    <div class="collapsible-body">
+                                                        First and foremost, see if your package manager has Qt5 available.<br />
+                                                        Only follow these next steps if you are not able to find an existing package for Qt5.<br /><br />
+                                                        <ol>
+                                                            <li>Download <a href="https://www1.qt.io/download-open-source/">Qt5</a>.</li>
+                                                            <li>Open a terminal, and run: <pre>cd /path/to/where/you/downloaded/the/installer && chmod +x ./qt-installer-file-name</pre></li>
+                                                            <li>Then run: <pre>./qt-installer-file-name</pre>
+                                                            Follow the instructions on the screen to install Qt5 into your system. Re-login and/or reboot as necessary.</li>
+                                                        </ol>
+                                                    </div>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div class="collapsible-header active"><i class="material-icons">flash_on</i>Step 2: Running CEmu</div>
+                                        <div class="collapsible-body">
+                                            Finally, open a terminal and run:
+                                            <pre>cd /path/to/where/you/downloaded/CEmu && chmod +x ./CEmuBinaryName</pre>
+                                            <pre>./CEmuBinaryName</pre>
+                                        </div>
+                                    </li>
+                                </ul>
+                                <br />
+                                <a href="http://jacobly.com/CEmu/master/latest/CEmu64" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download Linux 64-bit</a>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
                 <div id="msvc-wizard-dl" class="col s12">
-                    <h4>MSVC Builds</h4>
+                    <h4>MSVC Builds (Windows-only)</h4>
                     If you are having issues with the main builds, try these builds instead.<br />
                     These builds also provide advanced options, such as release vs. debug.<br />
                     Use the wizard if you are looking for advanced options.<br /><br />
                     Builds are provided by <a href="https://github.com/alberthdev">@alberthdev</a>, and are compiled with Visual C++ Compiler.<br /><br />
                     
-                    <a href="#modal-wizard-64-bit-release-static" id="download-button" class="modal-trigger btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download 64-bit</a>
-                    <a href="#modal-wizard-32-bit-release-static" id="download-button" class="modal-trigger btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download 32-bit</a>
-                    
-                    <!-- Modal Trigger -->
-                    <a href="#modal-wizard-start" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter modal-trigger"><i class="material-icons left">launch</i>Launch Wizard</a>
+                    <ul class="collapsible" data-collapsible="accordion">
+                        <li>
+                            <div class="collapsible-header active"><i class="material-icons">picture_in_picture_alt</i>Windows</div>
+                            <div class="collapsible-body">
+                                Simply download, extract the ZIP, and run CEmu.exe to get started.<br /><br />
+                                <a href="#modal-wizard-64-bit-release-static" id="download-button" class="modal-trigger btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download 64-bit</a>
+                                <a href="#modal-wizard-32-bit-release-static" id="download-button" class="modal-trigger btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download 32-bit</a>
+                                
+                                <!-- Modal Trigger -->
+                                <a href="#modal-wizard-start" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter modal-trigger"><i class="material-icons left">launch</i>Launch Wizard</a>                    
+                            </div>
+                        </li>
+                    </ul>
                     
                     <!-- Modal Structure -->
                     <div id="modal-error" class="modal modal-fixed-footer">
@@ -155,7 +237,16 @@
                     Use this only if you know what you are looking for!<br /><br />
                     Builds are provided by <a href="https://github.com/alberthdev">@alberthdev</a>, and are compiled with Visual C++ Compiler.<br /><br />
                     
-                    <a href="#modal-browse" onclick="CEmuDownloader.initFileBrowserOnce(); return false;" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">folder_open</i>Browse Files</a>
+                    <ul class="collapsible" data-collapsible="accordion">
+                        <li>
+                            <div class="collapsible-header active"><i class="material-icons">picture_in_picture_alt</i>Windows</div>
+                            <div class="collapsible-body">
+                                Find the ZIP you want, then simply download, extract the ZIP, and run CEmu.exe to get started.<br /><br />
+                                <a href="#modal-browse" onclick="CEmuDownloader.initFileBrowserOnce(); return false;" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">folder_open</i>Browse Files</a>
+                            </div>
+                        </li>
+                    </ul>
+                    
                     <div id="modal-browse" class="modal modal-fixed-footer">
                       <div class="modal-content">
                         
