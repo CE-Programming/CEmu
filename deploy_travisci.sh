@@ -66,6 +66,8 @@ git config user.email "CEmuTravisCI@CE-Programming"; cerr $? "Configuring Git em
 # If there are no changes to the compiled out (e.g. this is a README update) then just bail.
 if git diff --quiet; then
     echo "No changes to the output on this push; exiting."
+    echo " -> Cleaning up a bit..."
+    rm deploy/id_rsa_travis_deploy_key; cerr $? "Removing deployment key"
     exit 0
 fi
 
