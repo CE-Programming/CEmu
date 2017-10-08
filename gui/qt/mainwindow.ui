@@ -67,7 +67,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>4</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -6761,6 +6761,9 @@ QPushButton:pressed {
           <layout class="QVBoxLayout" name="verticalLayout_23">
            <item>
             <widget class="QTableWidget" name="opView">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="sizePolicy">
               <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
                <horstretch>0</horstretch>
@@ -6863,6 +6866,9 @@ QPushButton:pressed {
           <layout class="QVBoxLayout" name="verticalLayout_25">
            <item>
             <widget class="QTableWidget" name="vatView">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="sizePolicy">
               <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
                <horstretch>0</horstretch>

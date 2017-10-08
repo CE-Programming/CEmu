@@ -31,8 +31,6 @@
 // -----------------------------------------------
 
 void MainWindow::debuggerInstall() {
-    int index = 0;
-
     ui->afregView->installEventFilter(this);
     ui->hlregView->installEventFilter(this);
     ui->bcregView->installEventFilter(this);
@@ -63,20 +61,6 @@ void MainWindow::debuggerInstall() {
     ui->checkADLStack->setCheckState(Qt::PartiallyChecked);
     ui->checkADLStack->blockSignals(false);
     ui->debuggerLabel->setHidden(true);
-
-    for (uint32_t i = 0xD005F8; i < 0xD005F8+77; i += 11) {
-        QTableWidgetItem *opAddress = new QTableWidgetItem(int2hex(i, 6));
-        QTableWidgetItem *opNumber = new QTableWidgetItem(QStringLiteral("OP")+QString::number(((i-0xD005F8)/11)+1));
-        QTableWidgetItem *opData = new QTableWidgetItem();
-        QTableWidgetItem *opDataString = new QTableWidgetItem();
-
-        ui->opView->setRowCount(++index);
-
-        ui->opView->setItem(index-1, OP_ADDRESS, opAddress);
-        ui->opView->setItem(index-1, OP_NUMBER, opNumber);
-        ui->opView->setItem(index-1, OP_DATA, opData);
-        ui->opView->setItem(index-1, OP_DATASTRING, opDataString);
-    }
 }
 
 // ------------------------------------------------
