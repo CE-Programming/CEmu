@@ -15,7 +15,10 @@ def get_git_info():
         commit_hash = None
     
     try:
-        repo_url = subprocess.check_output(['git', 'config', 'remote.origin.url']).decode().strip().replace(".git/", "/")
+        repo_url = subprocess.check_output(['git', 'config', 'remote.origin.url']).decode().strip()
+        repo_url = repo_url.replace("git@github.com:", "https://github.com/")
+        if "github.com" in repo_url and repo_url.endswith(".git"):
+            repo_url = repo_url[:-4]
     except:
         repo_url = None
     
