@@ -15,7 +15,7 @@ def get_git_info():
         commit_hash = None
     
     try:
-        repo_url = subprocess.check_output(['git', 'config', 'remote.origin.url']).decode().strip()
+        repo_url = subprocess.check_output(['git', 'config', 'remote.origin.url']).decode().strip().replace(".git/", "/")
     except:
         repo_url = None
     
