@@ -15,7 +15,7 @@ echo "Started deployment..."
 
 # Build site.
 echo " -> Building website..."
-pip install -r requirements.txt; cerr $? "Python Pip Requirements Installation"
+pip3 install -r requirements.txt; cerr $? "Python Pip Requirements Installation"
 python3 generate.py; cerr $? "Webpage Generation"
 
 cp -r css fonts img js html/; cerr $? "Copying Webpage Support Files"
