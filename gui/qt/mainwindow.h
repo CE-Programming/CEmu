@@ -122,6 +122,21 @@ private:
         PORT_FREEZE_LOC
     };
 
+    enum opIndex {
+        OP_ADDRESS=0,
+        OP_NUMBER,
+        OP_DATA,
+        OP_DATASTRING
+    };
+
+    enum vatIndex {
+        VAT_ADDRESS=0,
+        VAT_VAT_ADDRESS,
+        VAT_SIZE,
+        VAT_NAME,
+        VAT_TYPE
+    };
+
     enum varIndex {
         VAR_NAME=0,
         VAR_TYPE,

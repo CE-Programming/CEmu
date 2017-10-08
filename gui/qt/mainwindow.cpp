@@ -387,11 +387,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     setKeymap(currKeyMap);
 
     ui->rompathView->setText(emu.rom);
-    ui->emuVarView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->vatView->cursorState(true);
-    ui->opView->cursorState(true);
-    ui->opView->updateAllHighlights();
-    ui->vatView->updateAllHighlights();
 
     debugger_init();
 
@@ -1404,43 +1399,6 @@ errCRCret:
     return;
 }
 
-void MainWindow::updateTIOSView() {
-    calc_var_t var;
-    QString formattedLine;
-    QString calcData;
-    QString opType;
-    uint8_t gotData[11];
-
-    ui->opView->clear();
-    ui->vatView->clear();
-
-    for (uint32_t i = 0xD005F8; i<0xD005F8+77; i+=11) {
-        uint8_t index = 0;
-        calcData.clear();
-        opType.clear();
-        for (uint32_t j = i; j < i+11; j++) {
-            gotData[index] = mem_peek_byte(j);
-            calcData += int2hex(gotData[index++], 2);
-        }
-        if (*gotData < 0x40) {
-            opType = QString(calc_var_type_names[*gotData]);
-        }
-
-        formattedLine = QString("<pre><b><font color='#444'>%1</font></b><font color='darkblue'>  %2  </font>%3 <font color='green'>%4</font></pre>")
-                                       .arg(int2hex(i, 6), "OP"+QString::number(((i-0xD005F8)/11)+1), calcData, opType);
-
-        ui->opView->appendHtml(formattedLine);
-    }
-
-    vat_search_init(&var);
-    while (vat_search_next(&var)) {
-        formattedLine = QString("<pre><b><font color='#444'>%1</font></b>  <font color='darkblue'>%2</font> <font color='green'>%3</font> <font color='green'>%4</font>%5</pre>")
-                                        .arg(int2hex(var.address,6), int2hex(var.vat,6), int2hex(var.size,4), QString(calc_var_type_names[var.type]).leftJustified(19, ' '), QString(calc_var_name_to_utf8(var.name)));
-        ui->vatView->appendHtml(formattedLine);
-    }
-    ui->vatView->moveCursor(QTextCursor::Start);
-}
-
 void MainWindow::emuStopped() {
     stoppedEmu = true;
 }
@@ -1657,42 +1615,6 @@ void MainWindow::variablesContextMenu(const QPoint& posa) {
             // resume emulation and launch
             receiveChangeState();
             launchPrgm(&var);
-        }
-    }
-}
-
-void MainWindow::vatContextMenu(const QPoint& posa) {
-    QString goto_mem    = tr("Goto Memory View");
-    QString goto_disasm = tr("Goto Disasm View");
-    ui->vatView->setTextCursor(ui->vatView->cursorForPosition(posa));
-    QPoint globalPos = ui->vatView->mapToGlobal(posa);
-
-    QMenu contextMenu;
-    contextMenu.addAction(goto_mem);
-    contextMenu.addAction(goto_disasm);
-
-    QAction* selectedItem = contextMenu.exec(globalPos);
-    if (selectedItem) {
-        if (selectedItem->text() == goto_mem) {
-            memGoto(ui->vatView->getSelectedAddress());
-        } else if (selectedItem->text() == goto_disasm) {
-            updateDisasmView(hex2int(ui->vatView->getSelectedAddress()) + 4, false);
-        }
-    }
-}
-
-void MainWindow::opContextMenu(const QPoint& posa) {
-    QString goto_mem = tr("Goto Memory View");
-    ui->opView->setTextCursor(ui->opView->cursorForPosition(posa));
-    QPoint globalPos = ui->opView->mapToGlobal(posa);
-
-    QMenu contextMenu;
-    contextMenu.addAction(goto_mem);
-
-    QAction* selectedItem = contextMenu.exec(globalPos);
-    if (selectedItem) {
-        if (selectedItem->text() == goto_mem) {
-            memGoto(ui->opView->getSelectedAddress());
         }
     }
 }

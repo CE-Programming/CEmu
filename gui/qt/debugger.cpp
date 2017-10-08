@@ -6,6 +6,7 @@
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QScrollBar>
 #include <QtNetwork/QNetworkReply>
+#include <QClipboard>
 #include <fstream>
 
 #ifdef _MSC_VER
@@ -30,6 +31,8 @@
 // -----------------------------------------------
 
 void MainWindow::debuggerInstall() {
+    int index = 0;
+
     ui->afregView->installEventFilter(this);
     ui->hlregView->installEventFilter(this);
     ui->bcregView->installEventFilter(this);
@@ -60,6 +63,20 @@ void MainWindow::debuggerInstall() {
     ui->checkADLStack->setCheckState(Qt::PartiallyChecked);
     ui->checkADLStack->blockSignals(false);
     ui->debuggerLabel->setHidden(true);
+
+    for (uint32_t i = 0xD005F8; i < 0xD005F8+77; i += 11) {
+        QTableWidgetItem *opAddress = new QTableWidgetItem(int2hex(i, 6));
+        QTableWidgetItem *opNumber = new QTableWidgetItem(QStringLiteral("OP")+QString::number(((i-0xD005F8)/11)+1));
+        QTableWidgetItem *opData = new QTableWidgetItem();
+        QTableWidgetItem *opDataString = new QTableWidgetItem();
+
+        ui->opView->setRowCount(++index);
+
+        ui->opView->setItem(index-1, OP_ADDRESS, opAddress);
+        ui->opView->setItem(index-1, OP_NUMBER, opNumber);
+        ui->opView->setItem(index-1, OP_DATA, opData);
+        ui->opView->setItem(index-1, OP_DATASTRING, opDataString);
+    }
 }
 
 // ------------------------------------------------
@@ -451,8 +468,6 @@ void MainWindow::debuggerGUISetState(bool state) {
         ui->buttonRun->setText(tr("Stop"));
         ui->buttonRun->setIcon(stopIcon);
         ui->debuggerLabel->clear();
-        ui->opView->clear();
-        ui->vatView->clear();
         ui->debuggerLabel->setHidden(true);
     }
 
@@ -1672,4 +1687,128 @@ void MainWindow::updateStackView() {
 
     ui->stackView->moveCursor(QTextCursor::Start);
     ui->stackView->blockSignals(false);
+}
+
+//------------------------------------------------
+// TI-OS View
+//------------------------------------------------
+
+void MainWindow::updateTIOSView() {
+    calc_var_t var;
+    QString memData;
+    QString memDataString;
+
+    int index = 0;
+    ui->opView->setRowCount(0);
+    ui->vatView->setRowCount(0);
+
+    for (uint32_t i = 0xD005F8; i < 0xD005F8+77; i += 11) {
+        memData.clear();
+        memDataString.clear();
+
+        for (uint32_t j = i; j < i+11; j++) {
+            uint8_t ch = mem_peek_byte(j);
+            memData += int2hex(ch, 2);
+            if ((ch < 0x20) || (ch > 0x7e)) {
+                ch = '.';
+            }
+            memDataString += QChar(ch);
+        }
+
+        QTableWidgetItem *opAddress = new QTableWidgetItem(int2hex(i, 6));
+        QTableWidgetItem *opNumber = new QTableWidgetItem(QStringLiteral("OP")+QString::number(((i-0xD005F8)/11)+1));
+        QTableWidgetItem *opData = new QTableWidgetItem(memData);
+        QTableWidgetItem *opDataString = new QTableWidgetItem(memDataString);
+
+        ui->opView->setRowCount(++index);
+
+        ui->opView->setItem(index-1, OP_ADDRESS, opAddress);
+        ui->opView->setItem(index-1, OP_NUMBER, opNumber);
+        ui->opView->setItem(index-1, OP_DATA, opData);
+        ui->opView->setItem(index-1, OP_DATASTRING, opDataString);
+    }
+
+    index = 0;
+
+    vat_search_init(&var);
+    while (vat_search_next(&var)) {
+        QTableWidgetItem *varAddress = new QTableWidgetItem(int2hex(var.address,6));
+        QTableWidgetItem *varVatAddress = new QTableWidgetItem(int2hex(var.vat,6));
+        QTableWidgetItem *varSize = new QTableWidgetItem(int2hex(var.size,4));
+        QTableWidgetItem *varName = new QTableWidgetItem(QString(calc_var_name_to_utf8(var.name)));
+        QTableWidgetItem *varType = new QTableWidgetItem(QString(calc_var_type_names[var.type]));
+
+        ui->vatView->setRowCount(++index);
+
+        ui->vatView->setItem(index-1, VAT_ADDRESS, varAddress);
+        ui->vatView->setItem(index-1, VAT_VAT_ADDRESS, varVatAddress);
+        ui->vatView->setItem(index-1, VAT_SIZE, varSize);
+        ui->vatView->setItem(index-1, VAT_NAME, varName);
+        ui->vatView->setItem(index-1, VAT_TYPE, varType);
+    }
+}
+
+void MainWindow::opContextMenu(const QPoint& posa) {
+    if (!ui->opView->rowCount() || !ui->opView->selectionModel()->isSelected(ui->opView->currentIndex())) {
+        return;
+    }
+
+    QString goto_mem = tr("Goto Memory View");
+    QString copy_mem = tr("Copy Address");
+    QString copy_data = tr("Copy Data");
+    QPoint globalPos = ui->opView->mapToGlobal(posa);
+
+    QString current_address = ui->opView->item(ui->opView->selectionModel()->selectedRows().first().row(), 0)->text();
+    QString current_data = ui->opView->item(ui->opView->selectionModel()->selectedRows().first().row(), 2)->text();
+
+    QMenu contextMenu;
+    contextMenu.addAction(goto_mem);
+    contextMenu.addSeparator();
+    contextMenu.addAction(copy_mem);
+    contextMenu.addAction(copy_data);
+
+    QAction* selectedItem = contextMenu.exec(globalPos);
+    if (selectedItem) {
+        if (selectedItem->text() == goto_mem) {
+            memGoto(current_address);
+        }
+        if (selectedItem->text() == copy_mem) {
+            QApplication::clipboard()->setText(current_address, QClipboard::Clipboard);
+        }
+        if (selectedItem->text() == copy_data) {
+            QApplication::clipboard()->setText(current_data, QClipboard::Clipboard);
+        }
+    }
+}
+
+void MainWindow::vatContextMenu(const QPoint& posa) {
+    if (!ui->vatView->rowCount() || !ui->vatView->selectionModel()->isSelected(ui->vatView->currentIndex())) {
+        return;
+    }
+
+    QString goto_mem     = tr("Goto Memory View");
+    QString goto_vat_mem = tr("Goto VAT Memory View");
+    QString goto_disasm  = tr("Goto Disasm View");
+    QPoint globalPos = ui->vatView->mapToGlobal(posa);
+
+    QString current_address = ui->vatView->item(ui->vatView->selectionModel()->selectedRows().first().row(), 0)->text();
+    QString current_vat_address = ui->vatView->item(ui->vatView->selectionModel()->selectedRows().first().row(), 1)->text();
+
+    QMenu contextMenu;
+    contextMenu.addAction(goto_mem);
+    contextMenu.addAction(goto_vat_mem);
+    contextMenu.addAction(goto_disasm);
+
+    QAction* selectedItem = contextMenu.exec(globalPos);
+    if (selectedItem) {
+        if (selectedItem->text() == goto_mem) {
+            memGoto(current_address);
+        }
+        if (selectedItem->text() == goto_vat_mem) {
+            memGoto(current_vat_address);
+        }
+        if (selectedItem->text() == goto_disasm) {
+            updateDisasmView(hex2int(current_address) + 4, false);
+        }
+    }
 }
