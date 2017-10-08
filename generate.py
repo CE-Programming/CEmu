@@ -1,5 +1,6 @@
 import jinja2
 import os
+import datetime
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -15,7 +16,9 @@ def generate_file(file_name):
     page_subdir = "/CEmu"
 
     template = templateEnv.get_template( file_name )
-    outputText = template.render(active_page = base_name, page_subdir = page_subdir) # this is where to put args to the template renderer
+    outputText = template.render(active_page = base_name,
+                                 page_subdir = page_subdir,
+                                 build_time  = str(datetime.datetime.now())) # this is where to put args to the template renderer
 
     file = open(os.path.join(base_dir, "html", file_name), 'w')
     file.write(outputText)
