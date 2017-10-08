@@ -20,23 +20,25 @@
           ('https://github.com/CE-Programming/CEmu', 'github', 'GitHub', 'code'),
   ] -%}
   {% set active_page = active_page|default('index') %}
-  <nav class="cemu-color" role="navigation">
-    <div class="nav-wrapper container">
-      <a id="logo-container" href="/" class="brand-logo"><img class="hide-on-med-and-down" src="img/icon.png" alt="CEmu"> CEmu</a>
-      <ul class="right hide-on-med-and-down">
-        {% for href, id, caption, icon in navigation_bar %}
-        <li class="waves-effect waves-light{% if id == active_page %} active{% endif %}"><a href="{{ href|e }}">{% if icon %}<i class="material-icons left">{{ icon }}</i>{% endif %}{{ caption|e }}</a></li>
-        {% endfor %}
-      </ul>
-
-      <ul id="nav-mobile" class="side-nav">
-        {% for href, id, caption, icon in navigation_bar %}
-        <li class="waves-effect waves-light{% if id == active_page %}active{% endif %}"><a href="{{ href|e }}">{% if icon %}<i class="material-icons left">{{ icon }}</i>{% endif %}{{ caption|e }}</a></li>
-        {% endfor %}
-      </ul>
-      <a href="#" data-activates="nav-mobile" class="button-collapse"><i class="material-icons">menu</i></a>
-    </div>
-  </nav>
+  <div class="navbar-fixed">
+    <nav class="cemu-color" role="navigation">
+      <div class="nav-wrapper container">
+        <a id="logo-container" href="/" class="brand-logo"><img class="hide-on-med-and-down" src="img/icon.png" alt="CEmu"> CEmu</a>
+        <ul class="right hide-on-med-and-down">
+          {% for href, id, caption, icon in navigation_bar %}
+          <li class="waves-effect waves-light{% if id == active_page %} active{% endif %}"><a href="{{ href|e }}">{% if icon %}<i class="material-icons left">{{ icon }}</i>{% endif %}{{ caption|e }}</a></li>
+          {% endfor %}
+        </ul>
+    
+        <ul id="nav-mobile" class="side-nav">
+          {% for href, id, caption, icon in navigation_bar %}
+          <li class="waves-effect waves-light{% if id == active_page %}active{% endif %}"><a href="{{ href|e }}">{% if icon %}<i class="material-icons left">{{ icon }}</i>{% endif %}{{ caption|e }}</a></li>
+          {% endfor %}
+        </ul>
+        <a href="#" data-activates="nav-mobile" class="button-collapse"><i class="material-icons">menu</i></a>
+      </div>
+    </nav>
+  </div>
   {% block content %}
   {% endblock content %}
 
