@@ -75,5 +75,8 @@ git add -A .; cerr $? "Add New HTML Files"
 git commit -m "Deploy to GitHub Pages: ${SHA}"; cerr $? "Creating gh-pages branch git commit"
 git push $SSH_REPO $TARGET_BRANCH; cerr $? "Pushing to repo"
 
+echo " -> Cleaning up a bit..."
+rm deploy/id_rsa_travis_deploy_key; cerr $? "Removing deployment key"
+
 echo "Website built successfully!"
 exit 0

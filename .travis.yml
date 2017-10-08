@@ -5,6 +5,7 @@ python:
 
 before_install:
   - openssl aes-256-cbc -K $encrypted_99e0d4c9a82e_key -iv $encrypted_99e0d4c9a82e_iv -in deploy/id_rsa_travis_deploy_key.enc -out deploy/id_rsa_travis_deploy_key -d
+  - chmod 0664 deploy/id_rsa_travis_deploy_key
   - sudo apt-get update -qq
 
 script:
