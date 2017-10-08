@@ -21,6 +21,7 @@
 #include "utils.h"
 
 #include "../../core/schedule.h"
+#include "../../core/emu.h"
 #include "../../core/link.h"
 
 const QString MainWindow::SETTING_DEBUGGER_TEXT_SIZE        = QStringLiteral("Debugger/text_size");
