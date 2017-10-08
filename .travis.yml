@@ -4,15 +4,8 @@ python:
   - "3.6"
 
 before_install:
+  - openssl aes-256-cbc -K $encrypted_99e0d4c9a82e_key -iv $encrypted_99e0d4c9a82e_iv -in deploy/id_rsa_travis_deploy_key.enc -out deploy/id_rsa_travis_deploy_key -d
   - sudo apt-get update -qq
 
 script:
   - ./deploy_travisci.sh
-
-deploy:
-  provider: pages
-  skip_cleanup: true
-  github_token: $GITHUB_TOKEN # Set in travis-ci.org dashboard
-  local_dir: html
-  on:
-    branch: cool-branch
