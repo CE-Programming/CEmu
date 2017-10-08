@@ -64,6 +64,7 @@ extern uint32_t cpuEvents;
 
 /* Settings */
 extern volatile bool exiting;
+extern volatile bool emu_allow_instruction_commands;
 
 /* Reimplemented GUI callbacks */
 void gui_do_stuff(void);
