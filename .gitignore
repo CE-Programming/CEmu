@@ -1,0 +1,57 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Profiling and Coverage
+*.out.*
+*.prof*
+*.supp
+
+# Qt stuff
+CEmu.pro.user*
+gui/build*
+moc_*.cpp
+
+# Other
+*.xcodeproj*
+*.autosave
+*~
+\#*\#
+
+# Windows and Mac crap
+Thumbs.db
+.DS_Store
+
+# Stuff used in the Emscripten version
+*.rom
+*.data
+*.bc
+*.js.mem
+
+# IntelliJ IDEs things
+**/.idea/

@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+   <div class="section no-pad-bot cemu-header-image" id="index-banner">
+    <div class="container white-text">
+      <br><br>
+      <h1 class="header center">A CE Emulator</h1>
+      <div class="row center">
+        <h5 class="header col s12">Developer-oriented emulator of the eZ80-based TI-84 Plus CE / TI-83 Premium CE calculators</h5>
+      </div>
+      <div class="row center">
+        <a href="{{ page_subdir }}/download" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download</a>
+      </div>
+      <br><br>
+
+    </div>
+  </div>
+
+
+  <div class="container">
+    <div class="section">
+
+      <!--   Icon Section   -->
+      <div class="row">
+        <div class="col s12 m4">
+          <div class="icon-block">
+            <h2 class="center cemu-color-text"><i class="material-icons">grid_on</i></h2><!-- book? explore? school? -->
+            <h5 class="center">What is CEmu?</h5>
+
+            <p>
+                CEmu is a third-party TI-84 Plus CE / TI-83 Premium CE calculator emulator, focused on developer features.
+                The core is programmed in C and the GUI in C++ with Qt, for performance and portability reasons.
+                CEmu works natively on Windows, macOS, and Linux.
+            </p>
+          </div>
+        </div>
+
+        <div class="col s12 m4">
+          <div class="icon-block">
+            <h2 class="center cemu-color-text"><i class="material-icons">school</i></h2>
+            <h5 class="center">For Students and Educators</h5>
+
+            <p>
+                We provide awesome features for students and educators to take advantage of!
+                <ul class="browser-default">
+                    <li>Easy setup - get running by doing a one-time only connection of your calculator!</li>
+                    <li>Accurate and fast emulation (and customize the speed + toggle throttling)</li>
+                    <li>Resizable calculator screen</li>
+                    <li>"Always-on-top" window option</li>
+                    <li>Screen capture (PNG, GIF)</li>
+                    <li>Screen recording (animated GIF)</li>
+                    <li>File sending/receiving (partial, WIP)</li>
+                    <li>Multiple keybinding presets</li>
+                    <li>CE skins (colors like the real devices)</li>
+                </ul>
+            </p>
+          </div>
+        </div>
+
+        <div class="col s12 m4">
+          <div class="icon-block">
+            <h2 class="center cemu-color-text"><i class="material-icons">developer_board</i></h2>
+            <h5 class="center">For Developers</h5>
+
+            <p>
+                We also provide powerful debugging and introspection features for CE developers as well!
+                <ul class="browser-default">
+                    <li>Custom display refresh rate</li>
+                    <li>Custom emulation speed/throttling</li>
+                    <li>Code stepping, jumping...</li>
+                    <li>R/W/X breakpoints</li>
+                    <li>eZ80 disassembler (with equates support)</li>
+                    <li>Profiler (WIP-branch)</li>
+                    <li>Port monitor/editor</li>
+                    <li>Timers simple monitor/editor</li>
+                    <li>Memory viewer/editor</li>
+                    <li>CPU state/registers viewer/editor</li>
+                    <li>LCD state/parameters viewer/editor</li>
+                    <li>Memory visualizer (as fully customizable virtual LCDs)</li>
+                    <li>Stack viewer</li>
+                    <li>OP1-6 viewer</li>
+                    <li>VAT viewer</li>
+                    <li>Variable list with preview and program launcher</li>
+                    <li>Misc. emulation (backlight, battery...)</li>
+                    <li>"Autotester" (automated unit testing, light scripting)</li>
+                </ul>
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <br><br>
+  </div>
+{% endblock %}
