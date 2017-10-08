@@ -10,12 +10,12 @@ templateEnv = jinja2.Environment(loader=templateLoader, lstrip_blocks=True, trim
 
 def get_git_info():
     try:
-        commit_hash = subprocess.check_output(['git', 'rev-parse', '--verify', 'HEAD'])
+        commit_hash = subprocess.check_output(['git', 'rev-parse', '--verify', 'HEAD']).decode().strip()
     except:
         commit_hash = None
     
     try:
-        repo_url = subprocess.check_output(['git', 'config', 'remote.origin.url'])
+        repo_url = subprocess.check_output(['git', 'config', 'remote.origin.url']).decode().strip()
     except:
         repo_url = None
     
