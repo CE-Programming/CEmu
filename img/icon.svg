@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="732"
+   height="732"
+   viewBox="0 0 732 732"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.5 r10040"
+   sodipodi:docname="icon-new-cropped-f1.svg">
+  <defs
+     id="defs4">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient3543">
+      <stop
+         style="stop-color:#004455;stop-opacity:1;"
+         offset="0"
+         id="stop3545" />
+      <stop
+         style="stop-color:#004455;stop-opacity:0;"
+         offset="1"
+         id="stop3547" />
+    </linearGradient>
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient3543"
+       id="radialGradient3549"
+       cx="280"
+       cy="546.64789"
+       fx="280"
+       fy="546.64789"
+       r="177.14285"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(1.0954701,3.4178325,-3.6229836,1.1612243,1953.7647,-1045.126)" />
+    <filter
+       inkscape:label="Drop Shadow"
+       id="filter3551"
+       color-interpolation-filters="sRGB">
+      <feFlood
+         flood-opacity="0.498039"
+         flood-color="rgb(0,0,0)"
+         result="flood"
+         id="feFlood3553" />
+      <feComposite
+         in="flood"
+         in2="SourceGraphic"
+         operator="in"
+         result="composite1"
+         id="feComposite3555" />
+      <feGaussianBlur
+         in="composite1"
+         stdDeviation="3"
+         result="blur"
+         id="feGaussianBlur3557" />
+      <feOffset
+         dx="7"
+         dy="7"
+         result="offset"
+         id="feOffset3559" />
+      <feComposite
+         in="SourceGraphic"
+         in2="offset"
+         operator="over"
+         result="composite2"
+         id="feComposite3561" />
+    </filter>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath3799">
+      <rect
+         style="fill:#0000ff;fill-rule:evenodd;stroke:#000000;stroke-width:1.29894698px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         id="rect3801"
+         width="718.60907"
+         height="718.60907"
+         x="59.195473"
+         y="281.55765" />
+    </clipPath>
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient3543"
+       id="radialGradient3803"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(1.0954701,3.4178325,-3.6229836,1.1612243,1953.7647,-1045.126)"
+       cx="280"
+       cy="546.64789"
+       fx="280"
+       fy="546.64789"
+       r="177.14285" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.35"
+     inkscape:cx="732.84106"
+     inkscape:cy="567.79801"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1600"
+     inkscape:window-height="847"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-320.36218)">
+    <g
+       id="g3793"
+       clip-path="url(#clipPath3799)"
+       transform="translate(-52.499973,45.499962)">
+      <circle
+         transform="translate(49.928508,245.64295)"
+         d="m 728.52527,395.21936 c 0,198.79704 -161.15685,359.95389 -359.95389,359.95389 -198.79704,0 -359.9538873,-161.15685 -359.9538873,-359.95389 0,-198.79704 161.1568473,-359.953888 359.9538873,-359.953888 198.79704,0 359.95389,161.156848 359.95389,359.953888 z"
+         sodipodi:ry="359.95389"
+         sodipodi:rx="359.95389"
+         sodipodi:cy="395.21936"
+         sodipodi:cx="368.57138"
+         inkscape:export-ydpi="90"
+         inkscape:export-xdpi="90"
+         r="359.95389"
+         cy="395.21936"
+         cx="368.57138"
+         id="path3336"
+         style="fill:#ffffff" />
+      <circle
+         d="m 468.57141,452.36221 c 0,97.8333 -79.30956,177.14286 -177.14285,177.14286 -97.8333,0 -177.14285,-79.30956 -177.14285,-177.14286 0,-97.83329 79.30955,-177.14285 177.14285,-177.14285 97.83329,0 177.14285,79.30956 177.14285,177.14285 z"
+         sodipodi:ry="177.14285"
+         sodipodi:rx="177.14285"
+         sodipodi:cy="452.36221"
+         sodipodi:cx="291.42856"
+         inkscape:export-ydpi="90"
+         inkscape:export-xdpi="90"
+         transform="matrix(1.7258066,0,0,1.7258066,-81.714273,-139.56255)"
+         style="fill:url(#radialGradient3803);fill-opacity:1;filter:url(#filter3551)"
+         id="circle3338"
+         cx="291.42856"
+         cy="452.36221"
+         r="177.14285" />
+      <text
+         inkscape:export-ydpi="90"
+         inkscape:export-xdpi="90"
+         sodipodi:linespacing="125%"
+         id="text3491"
+         y="769.50739"
+         x="201.98917"
+         style="font-size:388.30633545px;font-style:normal;font-variant:normal;font-weight:100;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;font-family:AR DARLING;-inkscape-font-specification:AR DARLING Thin"
+         xml:space="preserve"><tspan
+           style="font-size:388.30633545px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Aharoni;-inkscape-font-specification:Aharoni Bold"
+           y="769.50739"
+           x="201.98917"
+           id="tspan3493"
+           sodipodi:role="line">CE</tspan></text>
+    </g>
+  </g>
+</svg>

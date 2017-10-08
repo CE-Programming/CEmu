@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<!-- Page built on: 2017-10-08 19:21:35.410383 -->
+<!-- Built with Git Commit: 76448c7c1cae96a1b94d9829a789d7f094c60eeb -->
+<!-- Git Commit Page: https://github.com/CE-Programming/CEmu/commit/76448c7c1cae96a1b94d9829a789d7f094c60eeb -->
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0"/>
+  <link rel="icon" href="img/icon.ico">
+  <title>Download - CEmu</title>
+
+  <!-- CSS  -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="css/materialize.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+  <link href="css/style.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+</head>
+<body>
+  <div class="navbar-fixed">
+    <nav class="cemu-color" role="navigation">
+      <div class="nav-wrapper container">
+        <a id="logo-container" href="/CEmu/" class="brand-logo"><img class="hide-on-med-and-down" src="img/icon.png" alt="CEmu"> CEmu</a>
+        <ul class="right hide-on-med-and-down">
+          <li class="waves-effect waves-light"><a href="/CEmu/"><i class="material-icons left">home</i>Home</a></li>
+          <li class="waves-effect waves-light active"><a href="/CEmu/download"><i class="material-icons left">file_download</i>Download</a></li>
+          <li class="waves-effect waves-light"><a href="https://github.com/CE-Programming/CEmu"><i class="material-icons left">code</i>GitHub</a></li>
+        </ul>
+    
+        <ul id="nav-mobile" class="side-nav">
+          <li class="waves-effect waves-light"><a href="/CEmu/"><i class="material-icons left">home</i>Home</a></li>
+          <li class="waves-effect waves-lightactive"><a href="/CEmu/download"><i class="material-icons left">file_download</i>Download</a></li>
+          <li class="waves-effect waves-light"><a href="https://github.com/CE-Programming/CEmu"><i class="material-icons left">code</i>GitHub</a></li>
+        </ul>
+        <a href="#" data-activates="nav-mobile" class="button-collapse"><i class="material-icons">menu</i></a>
+      </div>
+    </nav>
+  </div>
+<div class="container">
+    <div class="section">
+        <div class="row">
+            <h3>Download</h3>
+        </div>
+        <div class="row">
+            <div class="row">
+                <div class="col s12">
+                  <ul class="tabs">
+                    <li class="tab col s3"><a class="active cemu-color-text" href="#simple-dl">Simple</a></li>
+                    <li class="tab col s3"><a class="cemu-color-text" href="#msvc-wizard-dl">MSVC Builds + Wizard</a></li>
+                    <li class="tab col s3"><a class="cemu-color-text" href="#adv-dl">MSVC - Advanced</a></a></li>
+                  </ul>
+                </div>
+                <div id="simple-dl" class="col s12">
+                    <h4>Select 64-bit or 32-bit.</h4>
+                    If your computer is somewhat recent, you can probably pick the 64-bit version.<br />
+                    The 64-bit version is a bit faster on modern computers.<br />
+                    If you tried the 64-bit version and it didn't open, use the 32-bit version instead.<br /><br />
+                    Builds are provided by <a href="https://github.com/jacobly0">@jacobly0</a>, and are compiled with MinGW.<br /><br />
+                    <a href="http://jacobly.com/CEmu/master/latest/CEmu64.exe" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download 64-bit</a>
+                    <a href="http://jacobly.com/CEmu/master/latest/CEmu32.exe" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download 32-bit</a>
+                </div>
+                <div id="msvc-wizard-dl" class="col s12">
+                    <h4>MSVC Builds</h4>
+                    If you are having issues with the main builds, try these builds instead.<br />
+                    These builds also provide advanced options, such as release vs. debug.<br />
+                    Use the wizard if you are looking for advanced options.<br /><br />
+                    Builds are provided by <a href="https://github.com/alberthdev">@alberthdev</a>, and are compiled with Visual C++ Compiler.<br /><br />
+                    
+                    <a href="#modal-wizard-64-bit-release-static" id="download-button" class="modal-trigger btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download 64-bit</a>
+                    <a href="#modal-wizard-32-bit-release-static" id="download-button" class="modal-trigger btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download 32-bit</a>
+                    
+                    <!-- Modal Trigger -->
+                    <a href="#modal-wizard-start" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter modal-trigger"><i class="material-icons left">launch</i>Launch Wizard</a>
+                    
+                    <!-- Modal Structure -->
+                    <div id="modal-error" class="modal modal-fixed-footer">
+                      <div class="modal-content">
+                        <h4>Error</h4>
+                        <p id="error-content"></p>
+                      </div>
+                      <div class="modal-footer">
+                        <a href="#" onclick="return false;" class="modal-action modal-close waves-effect waves-light cemu-color-lighter btn ">Close</a>
+                      </div>
+                    </div>
+                    
+                    <div id="modal-wizard-start" class="modal modal-fixed-footer">
+                      <div class="modal-content">
+                        <h4>Select 64-bit or 32-bit.</h4>
+                        <nav>
+                            <div class="nav-wrapper cemu-color-lighter">
+                                <div class="col s12">
+                                    <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">64-bit/32-bit ></a>
+                                </div>
+                            </div>
+                        </nav>
+                        <p>
+                            If your computer is somewhat recent, you can probably pick the 64-bit version.<br />
+                            The 64-bit version is a bit faster on modern computers.<br />
+                            If you tried the 64-bit version and it didn't open, use the 32-bit version instead.<br /><br />
+                        </p>
+                      </div>
+                      <div class="modal-footer">
+                        <a href="#modal-wizard-64-bit" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">64-bit</a>
+                        <a href="#modal-wizard-32-bit" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">32-bit</a>
+                      </div>
+                    </div>
+                    <div id="modal-wizard-32-bit" class="modal modal-fixed-footer">
+                      <div class="modal-content">
+                        <h4>Select Release or Debug.</h4>
+                        <nav>
+                            <div class="nav-wrapper cemu-color-lighter">
+                                <div class="col s12">
+                                    <a href="#modal-wizard-start" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">32-bit</a>
+                                    <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Release/Debug</a>
+                                </div>
+                            </div>
+                        </nav>
+                        <p>If you're a regular user, you should almost always pick Release - it's smaller and faster!</p>
+                        <p>If you are a CEmu developer, or a user that is trying to debug a problem with Cemu, pick Debug.</p>
+                      </div>
+                      <div class="modal-footer">
+                        <a href="#modal-wizard-32-bit-release" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Release</a>
+                        <a href="#modal-wizard-32-bit-debug" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Debug</a>
+                      </div>
+                    </div>
+                    
+                    <div id="modal-wizard-32-bit-release" class="modal modal-fixed-footer">
+                      <div class="modal-content">
+                        <h4>Select Static or Dynamic.</h4>
+                        <nav>
+                            <div class="nav-wrapper cemu-color-lighter">
+                                <div class="col s12">
+                                    <a href="#modal-wizard-start" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">32-bit</a>
+                                    <a href="#modal-wizard-32-bit" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">Release</a>
+                                    <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Static/Dynamic</a>
+                                </div>
+                            </div>
+                        </nav>
+                        <p>If you're a regular user, you should almost always pick Static. This will give you one EXE to use, no fuss!</p>
+                        <p>If you are a CEmu developer, or a user that is trying to debug a problem with Cemu, pick Dynamic. This contains both the EXE and the required DLLs, and will allow you to change up the DLLs, as necessary.</p>
+                      </div>
+                      <div class="modal-footer">
+                        <a href="#modal-wizard-32-bit-release-static" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Static</a>
+                        <a href="#modal-wizard-32-bit-release-dynamic" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Dynamic</a>
+                      </div>
+                    </div>
+                    
+                    <div id="modal-wizard-32-bit-release-static" class="modal modal-fixed-footer">
+                      <div class="modal-content">
+                        <h4>You made it!</h4>
+                        <nav>
+                            <div class="nav-wrapper cemu-color-lighter">
+                                <div class="col s12">
+                                    <a href="#modal-wizard-start" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">32-bit</a>
+                                    <a href="#modal-wizard-32-bit" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">Release</a>
+                                    <a href="#modal-wizard-32-bit-release" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">Static</a>
+                                    <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Ready to Download</a>
+                                </div>
+                            </div>
+                        </nav>
+                        <p>
+                            You will be downloading the following:<br /><br />
+                            <b>Architecture:</b> 32-bit<br />
+                            <b>Release:</b> release<br />
+                            <b>Build Type:</b> static<br /><br />
+                            <div id="progress-for-32-bit-release-static" style="display: none;">
+                                <div class="progress">
+                                    <div id="progress-bar-for-32-bit-release-static" class="indeterminate" style="display: none;"></div>
+                                </div>
+                                <span id="progress-lbl-for-32-bit-release-static"></span><br /><br />
+                            </div>
+                            <span id="file-lbl-for-32-bit-release-static"></span>
+                        </p>
+                      </div>
+                      <div class="modal-footer">
+                        <a id="dl-btn-for-32-bit-release-static" href="#" onclick="CEmuDownloader.downloadRelease('32', 'release', 'static'); return false;" class="waves-effect waves-light cemu-color-lighter btn ">Download</a>
+                      </div>
+                    </div>
+                    <div id="modal-wizard-32-bit-release-dynamic" class="modal modal-fixed-footer">
+                      <div class="modal-content">
+                        <h4>You made it!</h4>
+                        <nav>
+                            <div class="nav-wrapper cemu-color-lighter">
+                                <div class="col s12">
+                                    <a href="#modal-wizard-start" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">32-bit</a>
+                                    <a href="#modal-wizard-32-bit" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">Release</a>
+                                    <a href="#modal-wizard-32-bit-release" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">Dynamic</a>
+                                    <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Ready to Download</a>
+                                </div>
+                            </div>
+                        </nav>
+                        <p>
+                            You will be downloading the following:<br /><br />
+                            <b>Architecture:</b> 32-bit<br />
+                            <b>Release:</b> release<br />
+                            <b>Build Type:</b> dynamic<br /><br />
+                            <div id="progress-for-32-bit-release-dynamic" style="display: none;">
+                                <div class="progress">
+                                    <div id="progress-bar-for-32-bit-release-dynamic" class="indeterminate" style="display: none;"></div>
+                                </div>
+                                <span id="progress-lbl-for-32-bit-release-dynamic"></span><br /><br />
+                            </div>
+                            <span id="file-lbl-for-32-bit-release-dynamic"></span>
+                        </p>
+                      </div>
+                      <div class="modal-footer">
+                        <a id="dl-btn-for-32-bit-release-dynamic" href="#" onclick="CEmuDownloader.downloadRelease('32', 'release', 'dynamic'); return false;" class="waves-effect waves-light cemu-color-lighter btn ">Download</a>
+                      </div>
+                    </div>
+                    <div id="modal-wizard-32-bit-debug" class="modal modal-fixed-footer">
+                      <div class="modal-content">
+                        <h4>Select Static or Dynamic.</h4>
+                        <nav>
+                            <div class="nav-wrapper cemu-color-lighter">
+                                <div class="col s12">
+                                    <a href="#modal-wizard-start" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">32-bit</a>
+                                    <a href="#modal-wizard-32-bit" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">Debug</a>
+                                    <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Static/Dynamic</a>
+                                </div>
+                            </div>
+                        </nav>
+                        <p>If you're a regular user, you should almost always pick Static. This will give you one EXE to use, no fuss!</p>
+                        <p>If you are a CEmu developer, or a user that is trying to debug a problem with Cemu, pick Dynamic. This contains both the EXE and the required DLLs, and will allow you to change up the DLLs, as necessary.</p>
+                      </div>
+                      <div class="modal-footer">
+                        <a href="#modal-wizard-32-bit-debug-static" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Static</a>
+                        <a href="#modal-wizard-32-bit-debug-dynamic" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Dynamic</a>
+                      </div>
+                    </div>
+                    
+                    <div id="modal-wizard-32-bit-debug-static" class="modal modal-fixed-footer">
+                      <div class="modal-content">
+                        <h4>You made it!</h4>
+                        <nav>
+                            <div class="nav-wrapper cemu-color-lighter">
+                                <div class="col s12">
+                                    <a href="#modal-wizard-start" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">32-bit</a>
+                                    <a href="#modal-wizard-32-bit" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">Debug</a>
+                                    <a href="#modal-wizard-32-bit-debug" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">Static</a>
+                                    <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Ready to Download</a>
+                                </div>
+                            </div>
+                        </nav>
+                        <p>
+                            You will be downloading the following:<br /><br />
+                            <b>Architecture:</b> 32-bit<br />
+                            <b>Release:</b> debug<br />
+                            <b>Build Type:</b> static<br /><br />
+                            <div id="progress-for-32-bit-debug-static" style="display: none;">
+                                <div class="progress">
+                                    <div id="progress-bar-for-32-bit-debug-static" class="indeterminate" style="display: none;"></div>
+                                </div>
+                                <span id="progress-lbl-for-32-bit-debug-static"></span><br /><br />
+                            </div>
+                            <span id="file-lbl-for-32-bit-debug-static"></span>
+                        </p>
+                      </div>
+                      <div class="modal-footer">
+                        <a id="dl-btn-for-32-bit-debug-static" href="#" onclick="CEmuDownloader.downloadRelease('32', 'debug', 'static'); return false;" class="waves-effect waves-light cemu-color-lighter btn ">Download</a>
+                      </div>
+                    </div>
+                    <div id="modal-wizard-32-bit-debug-dynamic" class="modal modal-fixed-footer">
+                      <div class="modal-content">
+                        <h4>You made it!</h4>
+                        <nav>
+                            <div class="nav-wrapper cemu-color-lighter">
+                                <div class="col s12">
+                                    <a href="#modal-wizard-start" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">32-bit</a>
+                                    <a href="#modal-wizard-32-bit" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">Debug</a>
+                                    <a href="#modal-wizard-32-bit-debug" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">Dynamic</a>
+                                    <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Ready to Download</a>
+                                </div>
+                            </div>
+                        </nav>
+                        <p>
+                            You will be downloading the following:<br /><br />
+                            <b>Architecture:</b> 32-bit<br />
+                            <b>Release:</b> debug<br />
+                            <b>Build Type:</b> dynamic<br /><br />
+                            <div id="progress-for-32-bit-debug-dynamic" style="display: none;">
+                                <div class="progress">
+                                    <div id="progress-bar-for-32-bit-debug-dynamic" class="indeterminate" style="display: none;"></div>
+                                </div>
+                                <span id="progress-lbl-for-32-bit-debug-dynamic"></span><br /><br />
+                            </div>
+                            <span id="file-lbl-for-32-bit-debug-dynamic"></span>
+                        </p>
+                      </div>
+                      <div class="modal-footer">
+                        <a id="dl-btn-for-32-bit-debug-dynamic" href="#" onclick="CEmuDownloader.downloadRelease('32', 'debug', 'dynamic'); return false;" class="waves-effect waves-light cemu-color-lighter btn ">Download</a>
+                      </div>
+                    </div>
+                    <div id="modal-wizard-64-bit" class="modal modal-fixed-footer">
+                      <div class="modal-content">
+                        <h4>Select Release or Debug.</h4>
+                        <nav>
+                            <div class="nav-wrapper cemu-color-lighter">
+                                <div class="col s12">
+                                    <a href="#modal-wizard-start" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">64-bit</a>
+                                    <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Release/Debug</a>
+                                </div>
+                            </div>
+                        </nav>
+                        <p>If you're a regular user, you should almost always pick Release - it's smaller and faster!</p>
+                        <p>If you are a CEmu developer, or a user that is trying to debug a problem with Cemu, pick Debug.</p>
+                      </div>
+                      <div class="modal-footer">
+                        <a href="#modal-wizard-64-bit-release" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Release</a>
+                        <a href="#modal-wizard-64-bit-debug" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Debug</a>
+                      </div>
+                    </div>
+                    
+                    <div id="modal-wizard-64-bit-release" class="modal modal-fixed-footer">
+                      <div class="modal-content">
+                        <h4>Select Static or Dynamic.</h4>
+                        <nav>
+                            <div class="nav-wrapper cemu-color-lighter">
+                                <div class="col s12">
+                                    <a href="#modal-wizard-start" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">64-bit</a>
+                                    <a href="#modal-wizard-64-bit" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">Release</a>
+                                    <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Static/Dynamic</a>
+                                </div>
+                            </div>
+                        </nav>
+                        <p>If you're a regular user, you should almost always pick Static. This will give you one EXE to use, no fuss!</p>
+                        <p>If you are a CEmu developer, or a user that is trying to debug a problem with Cemu, pick Dynamic. This contains both the EXE and the required DLLs, and will allow you to change up the DLLs, as necessary.</p>
+                      </div>
+                      <div class="modal-footer">
+                        <a href="#modal-wizard-64-bit-release-static" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Static</a>
+                        <a href="#modal-wizard-64-bit-release-dynamic" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Dynamic</a>
+                      </div>
+                    </div>
+                    
+                    <div id="modal-wizard-64-bit-release-static" class="modal modal-fixed-footer">
+                      <div class="modal-content">
+                        <h4>You made it!</h4>
+                        <nav>
+                            <div class="nav-wrapper cemu-color-lighter">
+                                <div class="col s12">
+                                    <a href="#modal-wizard-start" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">64-bit</a>
+                                    <a href="#modal-wizard-64-bit" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">Release</a>
+                                    <a href="#modal-wizard-64-bit-release" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">Static</a>
+                                    <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Ready to Download</a>
+                                </div>
+                            </div>
+                        </nav>
+                        <p>
+                            You will be downloading the following:<br /><br />
+                            <b>Architecture:</b> 64-bit<br />
+                            <b>Release:</b> release<br />
+                            <b>Build Type:</b> static<br /><br />
+                            <div id="progress-for-64-bit-release-static" style="display: none;">
+                                <div class="progress">
+                                    <div id="progress-bar-for-64-bit-release-static" class="indeterminate" style="display: none;"></div>
+                                </div>
+                                <span id="progress-lbl-for-64-bit-release-static"></span><br /><br />
+                            </div>
+                            <span id="file-lbl-for-64-bit-release-static"></span>
+                        </p>
+                      </div>
+                      <div class="modal-footer">
+                        <a id="dl-btn-for-64-bit-release-static" href="#" onclick="CEmuDownloader.downloadRelease('64', 'release', 'static'); return false;" class="waves-effect waves-light cemu-color-lighter btn ">Download</a>
+                      </div>
+                    </div>
+                    <div id="modal-wizard-64-bit-release-dynamic" class="modal modal-fixed-footer">
+                      <div class="modal-content">
+                        <h4>You made it!</h4>
+                        <nav>
+                            <div class="nav-wrapper cemu-color-lighter">
+                                <div class="col s12">
+                                    <a href="#modal-wizard-start" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">64-bit</a>
+                                    <a href="#modal-wizard-64-bit" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">Release</a>
+                                    <a href="#modal-wizard-64-bit-release" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">Dynamic</a>
+                                    <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Ready to Download</a>
+                                </div>
+                            </div>
+                        </nav>
+                        <p>
+                            You will be downloading the following:<br /><br />
+                            <b>Architecture:</b> 64-bit<br />
+                            <b>Release:</b> release<br />
+                            <b>Build Type:</b> dynamic<br /><br />
+                            <div id="progress-for-64-bit-release-dynamic" style="display: none;">
+                                <div class="progress">
+                                    <div id="progress-bar-for-64-bit-release-dynamic" class="indeterminate" style="display: none;"></div>
+                                </div>
+                                <span id="progress-lbl-for-64-bit-release-dynamic"></span><br /><br />
+                            </div>
+                            <span id="file-lbl-for-64-bit-release-dynamic"></span>
+                        </p>
+                      </div>
+                      <div class="modal-footer">
+                        <a id="dl-btn-for-64-bit-release-dynamic" href="#" onclick="CEmuDownloader.downloadRelease('64', 'release', 'dynamic'); return false;" class="waves-effect waves-light cemu-color-lighter btn ">Download</a>
+                      </div>
+                    </div>
+                    <div id="modal-wizard-64-bit-debug" class="modal modal-fixed-footer">
+                      <div class="modal-content">
+                        <h4>Select Static or Dynamic.</h4>
+                        <nav>
+                            <div class="nav-wrapper cemu-color-lighter">
+                                <div class="col s12">
+                                    <a href="#modal-wizard-start" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">64-bit</a>
+                                    <a href="#modal-wizard-64-bit" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">Debug</a>
+                                    <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Static/Dynamic</a>
+                                </div>
+                            </div>
+                        </nav>
+                        <p>If you're a regular user, you should almost always pick Static. This will give you one EXE to use, no fuss!</p>
+                        <p>If you are a CEmu developer, or a user that is trying to debug a problem with Cemu, pick Dynamic. This contains both the EXE and the required DLLs, and will allow you to change up the DLLs, as necessary.</p>
+                      </div>
+                      <div class="modal-footer">
+                        <a href="#modal-wizard-64-bit-debug-static" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Static</a>
+                        <a href="#modal-wizard-64-bit-debug-dynamic" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Dynamic</a>
+                      </div>
+                    </div>
+                    
+                    <div id="modal-wizard-64-bit-debug-static" class="modal modal-fixed-footer">
+                      <div class="modal-content">
+                        <h4>You made it!</h4>
+                        <nav>
+                            <div class="nav-wrapper cemu-color-lighter">
+                                <div class="col s12">
+                                    <a href="#modal-wizard-start" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">64-bit</a>
+                                    <a href="#modal-wizard-64-bit" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">Debug</a>
+                                    <a href="#modal-wizard-64-bit-debug" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">Static</a>
+                                    <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Ready to Download</a>
+                                </div>
+                            </div>
+                        </nav>
+                        <p>
+                            You will be downloading the following:<br /><br />
+                            <b>Architecture:</b> 64-bit<br />
+                            <b>Release:</b> debug<br />
+                            <b>Build Type:</b> static<br /><br />
+                            <div id="progress-for-64-bit-debug-static" style="display: none;">
+                                <div class="progress">
+                                    <div id="progress-bar-for-64-bit-debug-static" class="indeterminate" style="display: none;"></div>
+                                </div>
+                                <span id="progress-lbl-for-64-bit-debug-static"></span><br /><br />
+                            </div>
+                            <span id="file-lbl-for-64-bit-debug-static"></span>
+                        </p>
+                      </div>
+                      <div class="modal-footer">
+                        <a id="dl-btn-for-64-bit-debug-static" href="#" onclick="CEmuDownloader.downloadRelease('64', 'debug', 'static'); return false;" class="waves-effect waves-light cemu-color-lighter btn ">Download</a>
+                      </div>
+                    </div>
+                    <div id="modal-wizard-64-bit-debug-dynamic" class="modal modal-fixed-footer">
+                      <div class="modal-content">
+                        <h4>You made it!</h4>
+                        <nav>
+                            <div class="nav-wrapper cemu-color-lighter">
+                                <div class="col s12">
+                                    <a href="#modal-wizard-start" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">64-bit</a>
+                                    <a href="#modal-wizard-64-bit" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">Debug</a>
+                                    <a href="#modal-wizard-64-bit-debug" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">Dynamic</a>
+                                    <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Ready to Download</a>
+                                </div>
+                            </div>
+                        </nav>
+                        <p>
+                            You will be downloading the following:<br /><br />
+                            <b>Architecture:</b> 64-bit<br />
+                            <b>Release:</b> debug<br />
+                            <b>Build Type:</b> dynamic<br /><br />
+                            <div id="progress-for-64-bit-debug-dynamic" style="display: none;">
+                                <div class="progress">
+                                    <div id="progress-bar-for-64-bit-debug-dynamic" class="indeterminate" style="display: none;"></div>
+                                </div>
+                                <span id="progress-lbl-for-64-bit-debug-dynamic"></span><br /><br />
+                            </div>
+                            <span id="file-lbl-for-64-bit-debug-dynamic"></span>
+                        </p>
+                      </div>
+                      <div class="modal-footer">
+                        <a id="dl-btn-for-64-bit-debug-dynamic" href="#" onclick="CEmuDownloader.downloadRelease('64', 'debug', 'dynamic'); return false;" class="waves-effect waves-light cemu-color-lighter btn ">Download</a>
+                      </div>
+                    </div>
+                </div>
+                <div id="adv-dl" class="col s12">
+                    <h4>MSVC Builds - Advanced</h4>
+                    Use this only if you know what you are looking for!<br /><br />
+                    Builds are provided by <a href="https://github.com/alberthdev">@alberthdev</a>, and are compiled with Visual C++ Compiler.<br /><br />
+                    
+                    <a href="#modal-browse" onclick="CEmuDownloader.initFileBrowserOnce(); return false;" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">folder_open</i>Browse Files</a>
+                    <div id="modal-browse" class="modal modal-fixed-footer">
+                      <div class="modal-content">
+                        
+                        <h4>Browse Files</h4>
+                        <nav>
+                            <div class="nav-wrapper cemu-color-lighter">
+                                <div id="pathBreadCrumbs" class="col s12">
+                                    <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Root</a>
+                                </div>
+                            </div>
+                        </nav>
+                        <p>
+                            <div class="progress progress-bar-browser">
+                                <div id="progress-bar-browse" class="indeterminate"></div>
+                            </div>
+                            <table id="fileBrowserTable" class="highlight responsive-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Size</th>
+                                        <th>Created</th>
+                                        <th>Last Modified</th>
+                                        <th>Info</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="browse-files-table">
+                                    <tr>
+                                        <td>Loading...</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </p>
+                      </div>
+                      <div class="modal-footer">
+                        <a href="#" onclick="return false;" class="modal-action modal-close waves-effect waves-light cemu-color-lighter btn ">Close</a>
+                      </div>
+                    </div>
+                    <div id="modal-browse-info" class="modal modal-fixed-footer">
+                      <div class="modal-content">
+                          <h4>Test</h4>
+                      </div>
+                      <div class="modal-footer">
+                        <a href="#" onclick="return false;" class="modal-action modal-close waves-effect waves-light cemu-color-lighter btn ">Close</a>
+                      </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+  <footer class="page-footer cemu-color">
+    <div class="container">
+      <div class="row">
+        <div class="col l6 s12">
+          <h5 class="white-text">About CEmu</h5>
+          <p class="grey-text text-lighten-4">
+              CEmu is a third-party cross-platform TI-84 Plus CE / TI-83 Premium CE calculator emulator, focused on developer features.
+              Any amount would help support and continue development on this project and is greatly appreciated.
+          </p>
+        </div>
+        <div class="col l6 s12">
+          <h5 class="white-text">Support</h5>
+          <ul>
+            <li><a class="white-text" href="https://github.com/CE-Programming/CEmu/wiki">Read Wiki Documentation</a></li>
+            <li><a class="white-text" href="https://github.com/CE-Programming/CEmu/issues">Report a Bug / Request a Feature</a></li>
+            <li><a class="white-text" href="http://chat.efnet.org/irc.cgi?adv=1&nick=cemu-user&chan=%23cemu-dev">Chat with Developers on IRC (EFNet @ #cemu-dev)</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-copyright">
+      <div class="container">
+      &copy; 2015-2017 CEmu. Made with <a class="orange-text text-lighten-3" href="http://materializecss.com">Materialize</a>.
+      <span class="right right-align">
+<a class="cemu-color-text" target="_blank" href="https://github.com/CE-Programming/CEmu/commit/76448c7c1cae96a1b94d9829a789d7f094c60eeb">76448c7 @ 2017-10-08 19:21:35.410383</a>      </span>
+      
+      </div>
+    </div>
+  </footer>
+
+
+  <!--  Scripts-->
+  <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+  <script src="js/materialize.js"></script>
+  <script src="js/init.js"></script>
+<script type="text/javascript">
+    $.ajaxPrefilter( function (options) {
+      if (options.crossDomain && jQuery.support.cors) {
+        var http = (window.location.protocol === 'http:' ? 'http:' : 'https:');
+        options.url = http + '//cors-anywhere.herokuapp.com/' + options.url;
+        //options.url = "http://cors.corsproxy.io/url=" + options.url;
+      }
+    });
+    $(document).ready(function(){
+        // the "href" attribute of the modal trigger must specify the modal ID that wants to be triggered
+        $('.modal').modal();
+    });
+</script>
+<script src="js/artifactory-hunter.js"></script>
+<script src="js/cemu-dl.js"></script>
+<script type="text/javascript">
+    CEmuDownloader.init();
+</script>
+
+  </body>
+</html>
