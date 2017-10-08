@@ -23,7 +23,7 @@
   <div class="navbar-fixed">
     <nav class="cemu-color" role="navigation">
       <div class="nav-wrapper container">
-        <a id="logo-container" href="/" class="brand-logo"><img class="hide-on-med-and-down" src="img/icon.png" alt="CEmu"> CEmu</a>
+        <a id="logo-container" href="{{ page_subdir }}/" class="brand-logo"><img class="hide-on-med-and-down" src="img/icon.png" alt="CEmu"> CEmu</a>
         <ul class="right hide-on-med-and-down">
           {% for href, id, caption, icon in navigation_bar %}
           <li class="waves-effect waves-light{% if id == active_page %} active{% endif %}"><a href="{{ href|e }}">{% if icon %}<i class="material-icons left">{{ icon }}</i>{% endif %}{{ caption|e }}</a></li>
