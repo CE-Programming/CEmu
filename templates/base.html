@@ -3,6 +3,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0"/>
+  <link rel="icon" href="/img/icon.ico">
   <title>{% block title %}{% endblock %}{% if self.title() %} - {% endif %}CEmu</title>
 
   <!-- CSS  -->
@@ -12,6 +13,7 @@
   {% block style %}{% endblock style %}
 </head>
 <body>
+  {# Format: Link location, page ID, Display Name, Icon (None or blank to disable) #}
   {% set navigation_bar = [
           ('/', 'index', 'Home', 'home'),
           ('/download', 'download', 'Download', 'file_download'),
@@ -23,13 +25,8 @@
       <a id="logo-container" href="/" class="brand-logo"><img class="hide-on-med-and-down" src="img/icon.png" alt="CEmu"> CEmu</a>
       <ul class="right hide-on-med-and-down">
         {% for href, id, caption, icon in navigation_bar %}
-        <li class="waves-effect waves-light{% if id == active_page %}active{% endif %}"><a href="{{ href|e }}">{% if icon %}<i class="material-icons left">{{ icon }}</i>{% endif %}{{ caption|e }}</a></li>
+        <li class="waves-effect waves-light{% if id == active_page %} active{% endif %}"><a href="{{ href|e }}">{% if icon %}<i class="material-icons left">{{ icon }}</i>{% endif %}{{ caption|e }}</a></li>
         {% endfor %}
-        <!--
-        <li class="waves-effect waves-light active"><a href="#"><i class="material-icons left">home</i>Home</a></li>
-        <li class="waves-effect waves-light"><a href="#"><i class="material-icons left">file_download</i>Download</a></li>
-        <li class="waves-effect waves-light"><a href="#"><i class="material-icons left">code</i>GitHub</a></li>
-        -->
       </ul>
 
       <ul id="nav-mobile" class="side-nav">
@@ -48,26 +45,17 @@
       <div class="row">
         <div class="col l6 s12">
           <h5 class="white-text">About CEmu</h5>
-          <p class="grey-text text-lighten-4">We are a team of college students working on this project like it's our full time job. Any amount would help support and continue development on this project and is greatly appreciated.</p>
-
-
+          <p class="grey-text text-lighten-4">
+              CEmu is a third-party cross-platform TI-84 Plus CE / TI-83 Premium CE calculator emulator, focused on developer features.
+              Any amount would help support and continue development on this project and is greatly appreciated.
+          </p>
         </div>
-        <div class="col l3 s12">
-          <h5 class="white-text">Settings</h5>
+        <div class="col l6 s12">
+          <h5 class="white-text">Support</h5>
           <ul>
-            <li><a class="white-text" href="#!">Link 1</a></li>
-            <li><a class="white-text" href="#!">Link 2</a></li>
-            <li><a class="white-text" href="#!">Link 3</a></li>
-            <li><a class="white-text" href="#!">Link 4</a></li>
-          </ul>
-        </div>
-        <div class="col l3 s12">
-          <h5 class="white-text">Connect</h5>
-          <ul>
-            <li><a class="white-text" href="#!">Link 1</a></li>
-            <li><a class="white-text" href="#!">Link 2</a></li>
-            <li><a class="white-text" href="#!">Link 3</a></li>
-            <li><a class="white-text" href="#!">Link 4</a></li>
+            <li><a class="white-text" href="https://github.com/CE-Programming/CEmu/wiki">Read Wiki Documentation</a></li>
+            <li><a class="white-text" href="https://github.com/CE-Programming/CEmu/issues">Report a Bug / Request a Feature</a></li>
+            <li><a class="white-text" href="http://chat.efnet.org/irc.cgi?adv=1&nick=cemu-user&chan=%23cemu-dev">Chat with Developers on IRC (EFNet @ #cemu-dev)</a></li>
           </ul>
         </div>
       </div>
