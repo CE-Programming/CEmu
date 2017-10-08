@@ -22,10 +22,10 @@ CEmuDownloader.init = function() {
 
 CEmuDownloader.getLatestFolderHandler = function (callback, resp = null, curPath = null) {
     var dirList = [];
-    console.log(resp)
+    
     for (var fileOrFolder in resp) {
         if (resp[fileOrFolder]["type"] != "dir") {
-            console.log("Returning curPath due to non-folder type on " + fileOrFolder);
+            console.debug("[CEmuDownloader.getLatestFolderHandler] Returning curPath due to non-folder type on " + fileOrFolder);
             callback(curPath);
             return;
         }
@@ -78,8 +78,8 @@ CEmuDownloader.downloadReleasePostLatest = function(path, arch, relType, buildTy
     /* File name is very straight forward:
      * FOLDER_NAME-win32-debug-shared.zip
      */
-    console.log("[CEmuDownloader.downloadReleasePostLatest] Got final dir path: " + path);
-    console.log("[CEmuDownloader.downloadReleasePostLatest] Got final dir name: " + CEmuDownloader.pathBasename(path));
+    console.debug("[CEmuDownloader.downloadReleasePostLatest] Got final dir path: " + path);
+    console.debug("[CEmuDownloader.downloadReleasePostLatest] Got final dir name: " + CEmuDownloader.pathBasename(path));
     var finalDLPath = path + "/" + CEmuDownloader.pathBasename(path) + "-win" + arch + "-" + relType + "-" + (buildType == "static" ? "static" : "shared") + ".zip";
     $("#progress-lbl-for-" + arch + "-bit-" + relType + "-" + buildType).html("Almost there...");
     ArtifactoryHunter.identifyFile(finalDLPath, function(fileInfo) {
@@ -116,7 +116,7 @@ CEmuDownloader.downloadReleasePostIdentify = function(finalRelPath, fileInfo, ar
         strFileInfo += "<b>Last Modified:</b> " + fileInfo["modifiedDate"] + "<br />";
         $("#file-lbl-for-" + arch + "-bit-" + relType + "-" + buildType).html(strFileInfo);
         dlPath = fileInfo["url"];
-        console.log("dlPath configured from strFileInfo = " + dlPath);
+        console.debug("[CEmuDownloader.downloadReleasePostIdentify] dlPath configured from strFileInfo = " + dlPath);
     }
     
     $("#progress-lbl-for-" + arch + "-bit-" + relType + "-" + buildType).html(
@@ -155,7 +155,7 @@ CEmuDownloader.browseToDir = function(path = null) {
 
 CEmuDownloader.browseToDirFetchedDirList = function(resp, path) {
     var dirList = [], fileList = [];
-    console.log(resp)
+    
     for (var fileOrFolder in resp) {
         if (resp[fileOrFolder]["type"] == "dir") {
             dirList.push(fileOrFolder);
