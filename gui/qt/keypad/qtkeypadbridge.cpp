@@ -41,6 +41,10 @@ void QtKeypadBridge::keyEvent(QKeyEvent *event, bool press) {
     quint32 nativeCode = event->nativeScanCode();
     Qt::KeyboardModifiers modifiers = event->modifiers();
 
+    if (modifiers == (Qt::ShiftModifier | Qt::ControlModifier)) {
+        return;
+    }
+
     KeyCode lastKey = pressed.take(nativeCode);
     if (lastKey.valid()) {
         keypad_key_event(lastKey.row(), lastKey.col(), false);
