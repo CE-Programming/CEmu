@@ -21,6 +21,7 @@ void EMSCRIPTEN_KEEPALIVE keypad_key_event(unsigned int row, unsigned int col, b
                 cpuEvents |= EVENT_RESET;
             }
             control.readBatteryStatus = ~1;
+            control.off = false;
             intrpt_pulse(INT_WAKE);
         }
     } else {
