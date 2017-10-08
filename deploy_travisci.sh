@@ -26,7 +26,10 @@
 #      pushing a private key into the repo.
 #   6) Run as needed: mkdir -p deploy
 #   7) Run: cp path/to/my/keys/folder/id_rsa_travis_deploy_key.enc deploy/
-#   8) Add the updated deploy/id_rsa_travis_deploy_key.enc and
+#   8) Right before you push, run: cat id_rsa_travis_deploy_key.pub
+#      Copy the contents to repo Settings > Deploy Keys, and add it.
+#      Make sure to enable write access!
+#   9) Add the updated deploy/id_rsa_travis_deploy_key.enc and
 #      .travis.yml to your commit, and push!
 # 
 # Note that you must follow ALL of these steps, even if you are just
