@@ -29,11 +29,17 @@ FILE *fopen_utf8(const char *filename, const char *mode)
     return fopen(filename, mode);
 }
 
+unsigned int sleep_amount_us = 10000;
+void EMSCRIPTEN_KEEPALIVE set_sleep_amount_us(unsigned int amount)
+{
+    sleep_amount_us = amount;
+}
+
 void throttle_timer_off() {}
 void throttle_timer_on() {}
 void throttle_timer_wait() {
     //EM_ASM( Module.print('hello throttle_timer_wait') );
-    usleep(10000);
+    usleep(sleep_amount_us);
 }
 
 void gui_emu_sleep(unsigned long microseconds) {
@@ -47,6 +53,7 @@ void EMSCRIPTEN_KEEPALIVE set_file_to_send(const char* path)
 
 void gui_do_stuff()
 {
+#ifdef DEBUG_SUPPORT
     if (debugger.bufferPos) {
         debugger.buffer[debugger.bufferPos] = '\0';
         fprintf(stderr, "[CEmu DbgOutPrint] %s\n", debugger.buffer);
@@ -60,7 +67,7 @@ void gui_do_stuff()
         fflush(stderr);
         debugger.bufferErrPos = 0;
     }
-
+#endif
     if (file_buf[0] != '\0') {
         if (!sendVariableLink(file_buf, LINK_FILE))
         {
@@ -76,14 +83,18 @@ void gui_set_busy(bool busy) { (void)busy; }
 void gui_debugger_raise_or_disable(bool entered)
 {
     (void)entered;
+#ifdef DEBUG_SUPPORT
     inDebugger = false;
+#endif
 }
 
 void gui_debugger_send_command(int reason, uint32_t addr)
 {
     printf("[CEmu Debugger] Got software command (r=%d, addr=0x%X)\n", reason, addr);
     fflush(stderr);
+#ifdef DEBUG_SUPPORT
     inDebugger = false;
+#endif
 }
 
 void gui_console_vprintf(const char *fmt, va_list ap)
@@ -181,9 +192,11 @@ int main(int argc, char* argv[])
     success = emu_load("CE.rom", NULL);
 
     if (success) {
+        pthread_t emu_thread;
         pthread_t lcd_thread;
-        pthread_t lcd_thread2;
+#ifdef DEBUG_SUPPORT
         debugger_init();
+#endif
         EM_ASM(
             emul_is_inited = true;
             emul_is_paused = false;
@@ -191,13 +204,13 @@ int main(int argc, char* argv[])
             initLCD();
             enableGUI();
         );
-        if(pthread_create(&lcd_thread,  NULL, emu_loop_wrapper, NULL))
+        if(pthread_create(&emu_thread,  NULL, emu_loop_wrapper, NULL))
         {
             fprintf(stderr, "Error creating emu loop thread\n");
             return 1;
         } else {
             fprintf(stderr, "Emu loop thread created OK\n");
-            if(pthread_create(&lcd_thread2, NULL, lcd_paint_wrapper, NULL))
+            if(pthread_create(&lcd_thread, NULL, lcd_paint_wrapper, NULL))
             {
                 fprintf(stderr, "Error creating lcd paint thread\n");
                 return 1;
