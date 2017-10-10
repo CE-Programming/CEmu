@@ -201,6 +201,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int l
         switch (location) {
             case LINK_FILE:
                 if (var_arc != 0x80) break;
+                /* fallthrough */
             case LINK_ARCH:
                 run_asm(archivevar, sizeof archivevar, 23000000);
                 break;

@@ -849,6 +849,7 @@ void disassembleInstruction(void) {
                                                             disasm.instruction.arguments = "(hl)"+disasm.space+"iy";
                                                             break;
                                                         }
+                                                        // fallthrough
                                                     case 5: // OPCODETRAP
                                                         disasm.instruction.opcode = "OPCODETRAP";
                                                         disasm.instruction.arguments.clear();
