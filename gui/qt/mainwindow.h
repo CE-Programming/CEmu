@@ -139,6 +139,7 @@ private:
 
     enum varIndex {
         VAR_NAME=0,
+        VAR_LOCATION,
         VAR_TYPE,
         VAR_SIZE,
         VAR_PREVIEW

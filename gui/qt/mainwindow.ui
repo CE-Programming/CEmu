@@ -67,7 +67,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -250,6 +250,11 @@
              <column>
               <property name="text">
                <string>Name</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Location</string>
               </property>
              </column>
              <column>

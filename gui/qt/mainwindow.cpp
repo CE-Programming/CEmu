@@ -1107,6 +1107,7 @@ void MainWindow::changeVariableList() {
                 }
 
                 QTableWidgetItem *var_name = new QTableWidgetItem(calc_var_name_to_utf8(var.name));
+                QTableWidgetItem *var_location = new QTableWidgetItem(var.archived ? tr("Archive") : QStringLiteral("RAM"));
                 QTableWidgetItem *var_type = new QTableWidgetItem(var_type_str);
                 QTableWidgetItem *var_preview = new QTableWidgetItem(var_value);
                 QTableWidgetItem *var_size = new QTableWidgetItem();
@@ -1123,12 +1124,14 @@ void MainWindow::changeVariableList() {
                 }
 
                 ui->emuVarView->setItem(row, VAR_NAME, var_name);
+                ui->emuVarView->setItem(row, VAR_LOCATION, var_location);
                 ui->emuVarView->setItem(row, VAR_TYPE, var_type);
                 ui->emuVarView->setItem(row, VAR_SIZE, var_size);
                 ui->emuVarView->setItem(row, VAR_PREVIEW, var_preview);
             }
         }
         ui->emuVarView->resizeColumnToContents(VAR_NAME);
+        ui->emuVarView->resizeColumnToContents(VAR_LOCATION);
         ui->emuVarView->resizeColumnToContents(VAR_TYPE);
         ui->emuVarView->resizeColumnToContents(VAR_SIZE);
     }
