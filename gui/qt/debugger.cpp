@@ -1726,6 +1726,12 @@ void MainWindow::updateTIOSView() {
         ui->vatView->setItem(index-1, VAT_NAME, varName);
         ui->vatView->setItem(index-1, VAT_TYPE, varType);
     }
+
+    ui->vatView->resizeColumnToContents(VAT_ADDRESS);
+    ui->vatView->resizeColumnToContents(VAT_VAT_ADDRESS);
+    ui->vatView->resizeColumnToContents(VAT_NAME);
+    ui->vatView->resizeColumnToContents(VAT_TYPE);
+    ui->vatView->resizeColumnToContents(VAT_SIZE);
 }
 
 void MainWindow::opContextMenu(const QPoint& posa) {
