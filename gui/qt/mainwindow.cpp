@@ -205,6 +205,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->checkSaveLoadDebug, &QCheckBox::stateChanged, this, &MainWindow::setSaveDebug);
     connect(ui->buttonChangeSavedImagePath, &QPushButton::clicked, this, &MainWindow::setImagePath);
     connect(ui->buttonChangeSavedDebugPath, &QPushButton::clicked, this, &MainWindow::setDebugPath);
+    connect(ui->checkFocus, &QCheckBox::stateChanged, this, &MainWindow::setFocusSetting);
     connect(this, &MainWindow::changedEmuSpeed, &emu, &EmuThread::setEmuSpeed);
     connect(this, &MainWindow::changedThrottleMode, &emu, &EmuThread::setThrottleMode);
     connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showSpeed, Qt::QueuedConnection);
@@ -247,6 +248,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->buttonSpaceGrey, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
     connect(ui->buttonCoral, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
     connect(ui->buttonMint, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+
+    // Application connections
+    connect(qGuiApp, &QGuiApplication::applicationStateChanged, this, &MainWindow::pauseEmu);
 
     // Key History Window
     connect(ui->actionKeyHistory, &QAction::triggered, this, &MainWindow::toggleKeyHistory);
@@ -353,6 +357,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     setDebugIgnoreBreakpoints(settings->value(SETTING_DEBUGGER_BREAK_IGNORE, false).toBool());
     setDebugSoftCommands(settings->value(SETTING_DEBUGGER_ENABLE_SOFT, true).toBool());
     setDataCol(settings->value(SETTING_DEBUGGER_DATA_COL, true).toBool());
+    setFocusSetting(settings->value(SETTING_PAUSE_FOCUS, false).toBool());
     ui->flashBytes->setValue(settings->value(SETTING_DEBUGGER_FLASH_BYTES, 8).toInt());
     ui->ramBytes->setValue(settings->value(SETTING_DEBUGGER_RAM_BYTES, 8).toInt());
     ui->memBytes->setValue(settings->value(SETTING_DEBUGGER_MEM_BYTES, 8).toInt());
@@ -992,6 +997,17 @@ void MainWindow::screenContextMenu(const QPoint &posa) {
 
 void MainWindow::consoleOutputChanged() {
     nativeConsole = ui->radioStderr->isChecked();
+}
+
+void MainWindow::pauseEmu(Qt::ApplicationState state) {
+    if (pauseOnFocus) {
+        if (state == Qt::ApplicationInactive) {
+            emit changedEmuSpeed(0);
+        }
+        if (state == Qt::ApplicationActive) {
+            setEmuSpeed(settings->value(SETTING_EMUSPEED).toInt());
+        }
+    }
 }
 
 // ------------------------------------------------

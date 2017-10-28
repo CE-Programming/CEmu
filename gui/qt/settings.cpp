@@ -49,6 +49,7 @@ const QString MainWindow::SETTING_IMAGE_PATH                = QStringLiteral("im
 const QString MainWindow::SETTING_ROM_PATH                  = QStringLiteral("rom_path");
 const QString MainWindow::SETTING_FIRST_RUN                 = QStringLiteral("first_run");
 const QString MainWindow::SETTING_UI_EDIT_MODE              = QStringLiteral("ui_edit_mode");
+const QString MainWindow::SETTING_PAUSE_FOCUS               = QStringLiteral("pause_on_focus_change");
 const QString MainWindow::SETTING_SAVE_ON_CLOSE             = QStringLiteral("save_on_close");
 const QString MainWindow::SETTING_RESTORE_ON_OPEN           = QStringLiteral("restore_on_open");
 const QString MainWindow::SETTING_EMUSPEED                  = QStringLiteral("emulated_speed");
@@ -197,6 +198,12 @@ void MainWindow::setDataCol(bool state) {
     ui->checkDataCol->setChecked(state);
     settings->setValue(SETTING_DEBUGGER_DATA_COL, state);
     useDataCol = state;
+}
+
+void MainWindow::setFocusSetting(bool state) {
+    ui->checkFocus->setChecked(state);
+    settings->setValue(SETTING_PAUSE_FOCUS, state);
+    pauseOnFocus = state;
 }
 
 void MainWindow::saveMiscSettings() {

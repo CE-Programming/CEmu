@@ -72,9 +72,7 @@ QString sendingROM(QDragEnterEvent *e, bool *value) {
 static bool checkProc(DWORD processID) {
     QString processName;
 
-    HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
-                                  PROCESS_VM_READ,
-                                  FALSE, processID);
+    HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processID);
 
     if (hProcess) {
         HMODULE hMod;

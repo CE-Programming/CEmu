@@ -67,7 +67,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>9</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -674,37 +674,21 @@
             </widget>
            </item>
            <item row="1" column="0">
-            <layout class="QHBoxLayout" name="horizontalLayout_12">
-             <property name="bottomMargin">
-              <number>0</number>
+            <widget class="QCheckBox" name="checkAlwaysOnTop">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
              </property>
-             <item>
-              <widget class="QCheckBox" name="checkAlwaysOnTop">
-               <property name="focusPolicy">
-                <enum>Qt::NoFocus</enum>
-               </property>
-               <property name="text">
-                <string>Always show on top of other windows</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer_24">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeType">
-                <enum>QSizePolicy::Expanding</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>10</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
+             <property name="text">
+              <string>Always show on top of other windows</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QCheckBox" name="checkFocus">
+             <property name="text">
+              <string>Pause emulation on focus change</string>
+             </property>
+            </widget>
            </item>
            <item row="1" column="1">
             <widget class="QCheckBox" name="checkPortable">

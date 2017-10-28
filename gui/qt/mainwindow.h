@@ -217,6 +217,7 @@ private:
     void setDebugIgnoreBreakpoints(bool);
     void setDebugResetTrigger(bool);
     void setDebugSoftCommands(bool);
+    void setFocusSetting(bool);
 
     void breakpointRemoveAddress(uint32_t);
     void watchpointRemoveAddress(uint32_t);
@@ -354,6 +355,7 @@ private:
     void optCheckSend(CEmuOpts&);
     void optLoadFiles(CEmuOpts&);
     void optAttemptLoad(CEmuOpts&);
+    void pauseEmu(Qt::ApplicationState);
 
     // Key History
     void toggleKeyHistory();
@@ -373,6 +375,9 @@ private:
     void toggleConsole();
     void installToggleConsole();
 #endif
+
+    // Misc
+    int pausedSpeed;
 
     // Members
     unsigned int watchpointGUIMask = DBG_NO_HANDLE;
@@ -442,6 +447,7 @@ private:
     bool initPassed = true;
     bool firstShow = false;
     bool useDataCol;
+    bool pauseOnFocus;
     bool loadedCEmuBootImage = false;
     bool stoppedEmu = false;
     static const int WindowStateVersion = 0;
@@ -476,6 +482,7 @@ private:
     static const QString SETTING_ROM_PATH;
     static const QString SETTING_FIRST_RUN;
     static const QString SETTING_UI_EDIT_MODE;
+    static const QString SETTING_PAUSE_FOCUS;
     static const QString SETTING_SAVE_ON_CLOSE;
     static const QString SETTING_RESTORE_ON_OPEN;
     static const QString SETTING_EMUSPEED;
