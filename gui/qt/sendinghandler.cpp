@@ -18,9 +18,6 @@ SendingHandler::SendingHandler(QObject *p, QProgressBar *bar, QTableWidget *t) :
     connect(emu_thread, &EmuThread::sentFile, this, &SendingHandler::sentFile, Qt::QueuedConnection);
 }
 
-SendingHandler::~SendingHandler() {
-}
-
 void SendingHandler::dropOccured(QDropEvent *e, unsigned int location) {
     if (guiSend || guiReceive || guiDebug) {
         return e->ignore();

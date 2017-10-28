@@ -10,7 +10,7 @@ extern "C" {
 /* Standard FLASH state */
 typedef struct flash_state {
     uint8_t ports[0x100];
-    uint8_t addedWaitStates;
+    uint32_t waitStates;
     uint32_t mask;
     uint8_t mapped : 1;
     uint8_t map    : 4;
@@ -21,7 +21,6 @@ extern flash_state_t flash;
 
 /* Avbailable functions */
 eZ80portrange_t init_flash(void);
-int flash_open(const char *filename);
 
 /* Save/Restore */
 typedef struct emu_image emu_image;

@@ -37,17 +37,17 @@ public:
 
 public slots:
     // Console
-    void consoleStr(const QString&);
-    void consoleErrStr(const QString&);
+    void consoleStr(const QString& str);
+    void consoleErrStr(const QString& str);
 
     // Saved/Restored State
-    void saved(bool);
-    void started(bool);
+    void saved(bool success);
+    void started(bool success);
     void emuStopped();
-    void restored(bool);
+    void restored(bool success);
 
     // ROM Image setting
-    void setRom(const QString&);
+    void setRom(const QString& name);
 
     // Other
     bool restoreEmuState();
@@ -69,7 +69,7 @@ public slots:
 
 signals:
     // Debugging
-    void setDebugState(bool);
+    void setDebugState(bool state);
     void setDebugStepInMode();
     void setDebugStepOverMode();
     void setDebugStepNextMode();
@@ -77,8 +77,8 @@ signals:
     void setRunUntilMode();
 
     // Speed
-    void changedEmuSpeed(int);
-    void changedThrottleMode(bool);
+    void changedEmuSpeed(int speed);
+    void changedThrottleMode(bool throttled);
 
     // Reset
     void reset();
@@ -146,58 +146,58 @@ private:
     };
 
     // Save/Restore
-    void saveToPath(const QString&);
-    bool restoreFromPath(const QString&);
+    void saveToPath(const QString& path);
+    bool restoreFromPath(const QString& path);
 
     // Actions
-    bool runSetup(void);
-    void screenshot(void);
-    void screenshotGIF(void);
-    void screenshotSave(QString, QString, QString);
-    void recordGIF(void);
-    void changeFrameskip(int);
-    void changeFramerate(void);
-    void checkForUpdates(bool);
-    void showAbout(void);
-    void batteryIsCharging(bool);
-    void batteryChangeStatus(int);
-    void setPortableConfig(bool);
-    void setAutoSaveState(bool);
+    bool runSetup();
+    void screenshot();
+    void screenshotGIF();
+    void screenshotSave(const QString& nameFilter, const QString& defaultSuffix, const QString& temppath);
+    void recordGIF();
+    void changeFrameskip(int value);
+    void changeFramerate();
+    void checkForUpdates(bool forceInfoBox);
+    void showAbout();
+    void batteryIsCharging(bool checked);
+    void batteryChangeStatus(int value);
+    void setPortableConfig(bool state);
+    void setAutoSaveState(bool state);
     void changeSnapshotPath();
 
     // Debugger
     void breakpointGUIAdd();
     void watchpointGUIAdd();
     void debuggerGUIPopulate();
-    void debuggerGUISetState(bool);
+    void debuggerGUISetState(bool state);
 
     void debuggerInstall();
     void debuggerRaise();
     void debuggerLeave();
     void debuggerUpdateChanges();
     void debuggerChangeState();
-    void debuggerExecuteCommand(uint32_t, uint8_t);
-    void debuggerProcessCommand(int, uint32_t);
-    void toggleADLDisasm(int);
-    void toggleADLStack(int);
-    void toggleADL(int);
+    void debuggerExecuteCommand(uint32_t debugAddress, uint8_t command);
+    void debuggerProcessCommand(int reason, uint32_t input);
+    void toggleADLDisasm(int state);
+    void toggleADLStack(int state);
+    void toggleADL(int state);
 
     void portRemoveSelected();
 
-    void portUpdate(int);
-    void watchpointUpdate(int);
+    void portUpdate(int currRow);
+    void watchpointUpdate(int row);
 
-    void portSetPreviousAddress(QTableWidgetItem*);
-    void breakpointSetPreviousAddress(QTableWidgetItem*);
-    void watchpointSetPreviousAddress(QTableWidgetItem*);
+    void portSetPreviousAddress(QTableWidgetItem* curr_item);
+    void breakpointSetPreviousAddress(QTableWidgetItem* curr_item);
+    void watchpointSetPreviousAddress(QTableWidgetItem* curr_item);
 
-    void portDataChanged(QTableWidgetItem*);
-    void breakpointDataChanged(QTableWidgetItem*);
-    void watchpointDataChanged(QTableWidgetItem*);
+    void portDataChanged(QTableWidgetItem* item);
+    void breakpointDataChanged(QTableWidgetItem* item);
+    void watchpointDataChanged(QTableWidgetItem* item);
 
-    void updateDisasmView(const int, const bool);
+    void updateDisasmView(int sentBase, bool newPane);
     void drawNextDisassembleLine();
-    void scrollDisasmView(int);
+    void scrollDisasmView(int value);
 
     void stepInPressed();
     void stepOverPressed();
@@ -219,16 +219,16 @@ private:
     void selectAllVars();
     void resendContextMenu(const QPoint &);
 
-    void setDebugIgnoreBreakpoints(bool);
-    void setDebugResetTrigger(bool);
-    void setDebugSoftCommands(bool);
-    void setFocusSetting(bool);
+    void setDebugIgnoreBreakpoints(bool state);
+    void setDebugResetTrigger(bool state);
+    void setDebugSoftCommands(bool state);
+    void setFocusSetting(bool state);
 
-    void breakpointRemoveAddress(uint32_t);
-    void watchpointRemoveAddress(uint32_t);
+    void breakpointRemoveAddress(uint32_t address);
+    void watchpointRemoveAddress(uint32_t address);
 
     void debuggerZeroClockCounter();
-    void debuggerTabSwitched(int);
+    void debuggerTabSwitched(int tabIdx);
 
     void setDataCol(bool state);
     void setMenuBarState(bool state);
@@ -252,76 +252,76 @@ private:
     void watchpointReadWriteGUIAdd();
 
     // Debugging files
-    void debuggerImportFile(const QString&);
-    void debuggerExportFile(const QString&);
-    QString debuggerGetFile(int);
+    void debuggerImportFile(const QString& filename);
+    void debuggerExportFile(const QString& filename);
+    QString debuggerGetFile(int mode);
     void debuggerImport();
     void debuggerExport();
 
     // Creating bootable images
     bool checkForCEmuBootImage();
     void exportCEmuBootImage();
-    bool loadCEmuBootImage(const QString&);
+    bool loadCEmuBootImage(const QString& bootImagePath);
     void resetSettingsIfLoadedCEmuBootableImage();
 
     // MAIN IMPLEMENTATION ROUTINES
-    bool portAdd(uint16_t, unsigned int);
-    bool breakpointAdd(QString, uint32_t, bool);
-    bool watchpointAdd(QString, uint32_t, uint8_t, unsigned int);
+    bool portAdd(uint16_t port, unsigned int mask);
+    bool breakpointAdd(const QString& label, uint32_t address, bool enabled);
+    bool watchpointAdd(const QString& label, uint32_t address, uint8_t len, unsigned int mask);
 
-    void screenContextMenu(const QPoint&);
+    void screenContextMenu(const QPoint& posa);
     void updateLabels();
     void equatesAddDialog();
-    void equatesAddFile(const QString&);
-    void equatesAddEquate(const QString&, const QString&);
+    void equatesAddFile(const QString& fileName);
+    void equatesAddEquate(const QString &name, const QString &addrStr);
     void equatesClear();
     void equatesRefresh();
     void selectKeypadColor();
-    void setKeypadColor(unsigned int);
+    void setKeypadColor(unsigned int color);
     void setCalcSkinTopFromType();
 
     // Speed
-    void setEmuSpeed(int);
-    void setThrottle(int);
-    void showSpeed(int);
+    void setEmuSpeed(int value);
+    void setThrottle(int mode);
+    void showSpeed(int speed);
 
     // Console
-    void showStatusMsg(const QString&);
+    void showStatusMsg(const QString& str);
     void consoleOutputChanged();
-    void consoleAppend(const QString&, const QColor &color = Qt::black);
+    void consoleAppend(const QString& str, const QColor &color = Qt::black);
 
     // Settings
     void adjustScreen();
     void setDebugPath();
-    void setSkinToggle(bool);
-    void setLCDScale(int);
-    void setLCDRefresh(int);
-    void setAlwaysOnTop(int);
-    void setAutoCheckForUpdates(int);
-    void setSpaceDisasm(bool);
-    void setUIStyle(bool);
-    void setUIEditMode(bool);
-    void toggleUIEditMode(void);
-    void setSaveDebug(bool);
+    void setSkinToggle(bool enable);
+    void setLCDScale(int state);
+    void setLCDRefresh(int value);
+    void setAlwaysOnTop(int state);
+    void setAutoCheckForUpdates(int state);
+    void setSpaceDisasm(bool state);
+    void setUIStyle(bool docks_enabled);
+    void setUIEditMode(bool mode);
+    void toggleUIEditMode();
+    void setSaveDebug(bool state);
     void saveMiscSettings();
 
     // Linking
-    QStringList showVariableFileDialog(QFileDialog::AcceptMode, const QString&, const QString&);
+    QStringList showVariableFileDialog(QFileDialog::AcceptMode mode, const QString &name_filter, const QString &defaultSuffix);
     void selectFiles();
     void changeVariableList();
-    void variableDoubleClicked(QTableWidgetItem*);
-    void launchPrgm(const calc_var_t *prgm);
+    void variableDoubleClicked(QTableWidgetItem* item);
+    void launchPrgm(const calc_var_t* prgm);
     void saveSelected();
     void resendFiles();
     void receiveChangeState();
 
     // Autotester
-    void dispAutotesterError(int);
-    int openJSONConfig(const QString&);
+    void dispAutotesterError(int errCode);
+    int openJSONConfig(const QString& jsonPath);
     void prepareAndOpenJSONConfig();
     void reloadJSONConfig();
     void launchTest();
-    void updateCRCParamsFromPreset(int);
+    void updateCRCParamsFromPreset(int comboBoxIdx);
     void refreshCRC();
 
     // Hex Editor
@@ -333,34 +333,34 @@ private:
     void ramGotoPressed();
     void ramSearchPressed();
     void ramSyncPressed();
-    void memUpdate(uint32_t);
-    void memGoto(QString);
+    void memUpdate(uint32_t addressBegin);
+    void memGoto(const QString& addressStr);
     void memGotoPressed();
     void memSearchPressed();
     void memSyncPressed();
 
     // Others
-    void syncHexView(int, QHexEdit*);
-    void searchEdit(QHexEdit*);
-    QString getAddressEquate(const std::string&);
+    void syncHexView(int posa, QHexEdit* hex_view);
+    void searchEdit(QHexEdit* editor);
+    QString getAddressEquate(const std::string& in);
 
     // Keypad
     void keymapChanged();
-    void setKeymap(const QString&);
+    void setKeymap(const QString& value);
 
     // Font
-    void setFont(int);
+    void setFont(int fontSize);
 
     // Reset
     void reloadROM();
     void resetCalculator();
 
     // Misc
-    QString getAddressString(QString, bool*);
-    void optCheckSend(CEmuOpts&);
-    void optLoadFiles(CEmuOpts&);
-    void optAttemptLoad(CEmuOpts&);
-    void pauseEmu(Qt::ApplicationState);
+    QString getAddressString(const QString& string, bool* ok);
+    void optCheckSend(CEmuOpts& o);
+    void optLoadFiles(CEmuOpts& o);
+    void optAttemptLoad(CEmuOpts& o);
+    void pauseEmu(Qt::ApplicationState state);
 
     // Key History
     void toggleKeyHistory();
@@ -373,7 +373,7 @@ private:
     bool ipcSetup();
     void ipcReceived();
     void ipcChangeID();
-    void ipcHandleCommandlineReceive(QDataStream &);
+    void ipcHandleCommandlineReceive(QDataStream& stream);
 
 #ifdef _WIN32
     // Win32 Console Toggle

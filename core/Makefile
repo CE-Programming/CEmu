@@ -15,8 +15,10 @@ STATICLIB = libcemucore.a
 
 all: lib
 
-lib: $(OBJS)
-	ar rcs $(STATICLIB) $(OBJS)
+lib: $(STATICLIB)
+
+$(STATICLIB): $(OBJS)
+	ar rcs $@ $?
 
 %.o: %.c
 	$(CC)  $(CFLAGS) -std=gnu11 -c $< -o $@

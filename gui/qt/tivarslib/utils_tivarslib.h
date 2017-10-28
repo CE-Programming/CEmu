@@ -29,9 +29,11 @@ typedef unsigned char   uchar;
 typedef std::vector<uchar>   data_t;
 typedef std::unordered_map<std::string, uchar>   options_t;
 
-bool is_in_vector_uchar(const std::vector<unsigned char>& v, unsigned char element);
-bool is_in_vector_uint(const std::vector<unsigned int>& v, unsigned int element);
-bool is_in_vector_string(const std::vector<std::string>& v, const std::string &element);
+template <typename T>
+bool is_in_vector(const std::vector<T>& v, T element)
+{
+    return std::find(v.begin(), v.end(), element) != v.end();
+}
 
 bool has_option(const std::unordered_map<std::string, unsigned char>& m, const std::string &element);
 

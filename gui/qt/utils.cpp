@@ -41,8 +41,10 @@ QString int2hex(uint32_t a, uint8_t l) {
 }
 
 std::string calc_var_content_string(const calc_var_t& var) {
-    auto func = tivars::TypeHandlerFuncGetter::getStringFromDataFunc((int)var.type);
-    return func(data_t(var.data, var.data + var.size), options_t());
+    const auto func = tivars::TypeHandlerFuncGetter::getStringFromDataFunc((int)var.type);
+    const options_t opts = (var.type == CALC_VAR_TYPE_PROG || var.type == CALC_VAR_TYPE_STRING)
+                            ? options_t({ {"prettify", true} }) : options_t();
+    return func(data_t(var.data, var.data + var.size), opts);
 }
 
 void guiDelay(int ms) {

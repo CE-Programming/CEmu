@@ -58,12 +58,12 @@ void ipc::send(const QByteArray &pkt) {
     }
 }
 
-void ipc::clientSetup(QString name) {
+void ipc::clientSetup(const QString& name) {
     hostName = QStringLiteral("cemu-") + name;
     clientSet = true;
 }
 
-void ipc::serverSetup(QString name) {
+void ipc::serverSetup(const QString& name) {
     serverName = QStringLiteral("cemu-") + name;
     serverSet = true;
 }
@@ -76,19 +76,13 @@ QString ipc::getServerName() {
     return serverName;
 }
 
-bool ipc::idOpen(QString name) {
+bool ipc::idOpen(const QString& name) {
     QString idPath = configPath + QStringLiteral("/id/");
     QString idFile = idPath + name;
-
-    QFile testFile(idFile);
-    if (testFile.exists()) {
-        return true;
-    } else {
-        return false;
-    }
+    return QFile(idFile).exists();
 }
 
-bool ipc::ipcSetup(QString id, QString pid) {
+bool ipc::ipcSetup(const QString& id, const QString& pid) {
     bool ret = true;
 
     // find the default configuration path

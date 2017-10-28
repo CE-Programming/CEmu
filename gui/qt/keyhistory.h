@@ -13,7 +13,7 @@ public:
     ~KeyHistory();
 
 public slots:
-    void addEntry(QString entry);
+    void addEntry(const QString& entry);
 
 private:
     void setFont(int size);

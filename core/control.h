@@ -41,7 +41,6 @@ typedef struct control_state {
 extern control_state_t control;
 
 /* Available Functions */
-void free_control(void *_state);
 eZ80portrange_t init_control(void);
 
 /* Save/Restore */

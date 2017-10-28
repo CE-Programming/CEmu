@@ -18,7 +18,7 @@ public:
     explicit DataWidget(QWidget *p = Q_NULLPTR);
     void clearAllHighlights();
     void updateAllHighlights();
-    void addHighlight(const QColor&);
+    void addHighlight(const QColor& color);
     void highlightCurrentLine();
     void cursorState(bool movable);
     bool labelCheck();

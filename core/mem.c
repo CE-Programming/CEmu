@@ -61,7 +61,7 @@ static uint32_t flash_block(uint32_t *addr, uint32_t *size) {
         *size = mask + 1;
     }
     if (*addr <= mask && flash.mapped) {
-        return 6 + flash.addedWaitStates;
+        return flash.waitStates;
     }
     *addr &= mask;
     return 258;

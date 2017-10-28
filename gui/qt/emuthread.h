@@ -24,27 +24,27 @@ signals:
     // Debugger
     void raiseDebugger();
     void disableDebugger();
-    void sendDebugCommand(int, uint32_t);
+    void sendDebugCommand(int reason, uint32_t addr);
     void debugInputRequested(bool);
 
     // I/O
-    void consoleStr(const QString&);
-    void consoleErrStr(const QString&);
+    void consoleStr(const QString& str);
+    void consoleErrStr(const QString& str);
     void exited(int);
 
     // Status
-    void actualSpeedChanged(int);
+    void actualSpeedChanged(int actualSpeed);
 
     // Save/Restore state
-    void saved(bool);
-    void restored(bool);
+    void saved(bool success);
+    void restored(bool success);
 
     // Stopped/Started
-    void started(bool);
+    void started(bool success);
     void stopped();
 
     // Sending/Receiving
-    void sentFile(const QString&, bool);
+    void sentFile(const QString &file, bool ok);
     void receiveReady();
 
 public slots:
@@ -61,18 +61,18 @@ public slots:
     void setRunUntilMode();
 
     // Linking
-    void send(const QStringList&, unsigned int);
+    void send(const QStringList& fileNames, unsigned int location);
     void receive();
     void receiveDone();
 
     // Speed
-    void setEmuSpeed(int);
-    void setThrottleMode(bool);
+    void setEmuSpeed(int speed);
+    void setThrottleMode(bool throttled);
 
     // Save/Restore
-    bool restore(const QString&);
-    void saveImage(const QString&);
-    void saveRom(const QString&);
+    bool restore(const QString &path);
+    void saveImage(const QString &path);
+    void saveRom(const QString &path);
 
     // Speed
     void sendActualSpeed();
@@ -81,7 +81,7 @@ protected:
     virtual void run() Q_DECL_OVERRIDE;
 
 private:
-    void setActualSpeed(int);
+    void setActualSpeed(int actualSpeed);
     void sendFiles();
 
     int speed, actualSpeed;

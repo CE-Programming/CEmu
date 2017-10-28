@@ -13,18 +13,18 @@ class SendingHandler : public QObject {
 
 public:
     explicit SendingHandler(QObject *p = Q_NULLPTR, QProgressBar *bar = Q_NULLPTR, QTableWidget *t = Q_NULLPTR);
-    ~SendingHandler();
+    ~SendingHandler() = default;
 
-    void sendFiles(const QStringList&, unsigned);
-    bool dragOccured(QDragEnterEvent*);
-    void dropOccured(QDropEvent*, unsigned);
+    void sendFiles(const QStringList& fileNames, unsigned int location);
+    bool dragOccured(QDragEnterEvent* e);
+    void dropOccured(QDropEvent* e, unsigned int location);
     void resendSelected();
 
 public slots:
-    void sentFile(const QString&, bool);
+    void sentFile(const QString &file, bool ok);
 
 signals:
-    void send(const QStringList&, unsigned int);
+    void send(const QStringList& fileNames, unsigned int location);
 
 private:
     QProgressBar *progress;

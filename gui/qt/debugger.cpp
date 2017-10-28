@@ -67,24 +67,24 @@ void MainWindow::debuggerInstall() {
 // Main Debugger things
 // ------------------------------------------------
 
-void MainWindow::debuggerGUIDisable(void) {
+void MainWindow::debuggerGUIDisable() {
     debuggerGUISetState(false);
     guiDebug = false;
 }
 
-void MainWindow::debuggerGUIEnable(void) {
+void MainWindow::debuggerGUIEnable() {
     debuggerGUISetState(true);
 }
 
-void MainWindow::debuggerLeave(void) {
+void MainWindow::debuggerLeave() {
     debuggerGUIDisable();
 }
 
-void MainWindow::debuggerImport(void) {
+void MainWindow::debuggerImport() {
     debuggerImportFile(debuggerGetFile(DBG_OPEN));
 }
 
-void MainWindow::debuggerExport(void) {
+void MainWindow::debuggerExport() {
     debuggerExportFile(debuggerGetFile(DBG_SAVE));
 }
 
@@ -235,7 +235,7 @@ QString MainWindow::debuggerGetFile(int mode) {
     return filename;
 }
 
-void MainWindow::debuggerRaise(void) {
+void MainWindow::debuggerRaise() {
     guiDebug = true;
     debuggerGUIPopulate();
     debuggerGUIEnable();
@@ -786,7 +786,7 @@ QString MainWindow::watchpointNextLabel() {
     return QStringLiteral("Label") + QString::number(ui->watchpointView->rowCount());
 }
 
-void MainWindow::breakpointSlotAdd(void) {
+void MainWindow::breakpointSlotAdd() {
     breakpointAdd(breakpointNextLabel(), 0, true);
 }
 
@@ -825,7 +825,7 @@ void MainWindow::breakpointGUIAdd() {
     }
 }
 
-bool MainWindow::breakpointAdd(QString label, uint32_t address, bool enabled) {
+bool MainWindow::breakpointAdd(const QString& label, uint32_t address, bool enabled) {
     const int currRow = ui->breakpointView->rowCount();
     QString addressStr = int2hex((address &= 0xFFFFFF), 6).toUpper();
 
@@ -896,7 +896,7 @@ void MainWindow::portUpdate(int currRow) {
     ui->portView->item(currRow, PORT_VALUE_LOC)->setText(int2hex(read, 2));
 }
 
-void MainWindow::portSlotAdd(void) {
+void MainWindow::portSlotAdd() {
     portAdd(0, DBG_NO_HANDLE);
 }
 
@@ -1125,11 +1125,11 @@ void MainWindow::watchpointGUIAdd() {
     }
 }
 
-void MainWindow::watchpointSlotAdd(void) {
+void MainWindow::watchpointSlotAdd() {
     watchpointAdd(watchpointNextLabel(), 0, 1, DBG_READ_WATCHPOINT | DBG_WRITE_WATCHPOINT);
 }
 
-bool MainWindow::watchpointAdd(QString label, uint32_t address, uint8_t len, unsigned int mask) {
+bool MainWindow::watchpointAdd(const QString& label, uint32_t address, uint8_t len, unsigned int mask) {
     const int currRow = ui->watchpointView->rowCount();
     QString addressStr = int2hex((address &= 0xFFFFFF), 6).toUpper();
     QString watchLen;
@@ -1447,7 +1447,7 @@ void MainWindow::equatesAddEquate(const QString &name, const QString &addrStr) {
     }
 }
 
-void MainWindow::updateDisasmView(const int sentBase, const bool newPane) {
+void MainWindow::updateDisasmView(int sentBase, bool newPane) {
     if (!guiDebug) {
         return;
     }
@@ -1510,8 +1510,8 @@ void MainWindow::toggleADL(int state) {
 }
 
 
-void MainWindow::debuggerTabSwitched(int tab) {
-    if (tab == 0) {
+void MainWindow::debuggerTabSwitched(int tabIdx) {
+    if (tabIdx == 0) {
         updateDisasmView(prevDisasmAddress, true);
     } else {
         ui->portView->clearSelection();
