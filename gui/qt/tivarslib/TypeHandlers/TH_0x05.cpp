@@ -71,7 +71,6 @@ namespace tivars
             initTokens();
         }
 
-        enum { LANG_EN = 0, LANG_FR };
         uint langIdx = (has_option(options, "lang") && options.at("lang") == LANG_FR) ? LANG_FR : LANG_EN;
 
         uint howManyBytes = (data[0] & 0xFF) + ((data[1] << 8) & 0xFF00);
@@ -88,7 +87,7 @@ namespace tivars
             uint currentToken = data[i];
             uint nextToken = (i < dataSize-1) ? data[i+1] : (uint)-1;
             uint bytesKey = currentToken;
-            if (is_in_vector_uchar(firstByteOfTwoByteTokens, (uchar)currentToken))
+            if (is_in_vector(firstByteOfTwoByteTokens, (uchar)currentToken))
             {
                 if (nextToken == (uint)-1)
                 {
@@ -125,44 +124,69 @@ namespace tivars
         return str;
     }
 
-    string TH_0x05::reindentCodeString(const string& str_orig)
+    string TH_0x05::reindentCodeString(const string& str_orig, const options_t& options)
     {
-        string str(str_orig);
+        int lang;
+        if (has_option(options, "lang"))
+        {
+            lang = options.at("lang");
+        } else {
+            lang = (str_orig.size() > 1 && str_orig[0] == '.' && ::isalpha(str_orig[1])) ? PRGMLANG_AXE : PRGMLANG_BASIC;
+        }
 
-        regex eolRegex("\"[^→\"\\n]+[→\"\\n]|(\\:)");
-        string output_text;
-        sregex_token_iterator begin(str.begin(), str.end(), eolRegex, {-1, 0});
-        sregex_token_iterator end;
-        for_each(begin, end, [&output_text](const string& m) { output_text += (m == ":") ? "\n" : m; });
-        str = output_text;
+        string str(str_orig);
 
         str = regex_replace(str, regex("([^\\s])(Del|Eff)Var "), "$1\n$2Var");
 
         vector<string> lines_tmp = explode(str, '\n');
-        vector<pair<uint, string>> lines; // indent, text
-        for (uint i=0; i<lines_tmp.size(); i++)
+
+        // Inplace-replace the appropriate ":" by new-line chars (ie, by inserting the split string in the lines_tmp array)
+        for (uint16_t idx = 0; idx < (uint16_t)lines_tmp.size(); idx++)
         {
-            lines.push_back(make_pair(0, lines_tmp[i]));
+            const auto line = lines_tmp[idx];
+            bool isWithinString = false;
+            for (uint16_t strIdx = 0; strIdx < (uint16_t)line.size(); strIdx++)
+            {
+                const auto currChar = line.substr(strIdx, 1);
+                if (currChar == ":" && !isWithinString)
+                {
+                    lines_tmp[idx] = line.substr(0, strIdx); // replace "old" line by lhs
+                    lines_tmp.insert(lines_tmp.begin() + idx + 1, line.substr(strIdx + 1)); // inserting rhs
+                    break;
+                } else if (currChar == "\"") {
+                    isWithinString = !isWithinString;
+                } else if (currChar == "\n" || currChar == "→") {
+                    isWithinString = false;
+                }
+            }
         }
 
-        vector<string> increaseIndentAfter = { "If", "For", "While", "Repeat" };
+        vector<pair<uint, string>> lines; // indent, text
+        for (auto& line : lines_tmp)
+        {
+            lines.emplace_back(0, line);
+        }
+
+        vector<string> increaseIndentAfter   = { "If", "For", "While", "Repeat" };
+        vector<string> decreaseIndentOfToken = { "Then", "Else", "End", "ElseIf", "EndIf", "End!If" };
+        vector<string> closingTokens         = { "End", "EndIf", "End!If" };
         uint nextIndent = 0;
         string oldFirstCommand = "", firstCommand = "";
         for (uint key=0; key<lines.size(); key++)
         {
-            pair<uint, string> lineData = lines[key];
+            auto lineData = lines[key];
             oldFirstCommand = firstCommand;
 
             string trimmedLine = trim(lineData.second);
             if (trimmedLine.length() > 0) {
                 char* trimmedLine_c = (char*) trimmedLine.c_str();
-                char* tmptok = strtok(trimmedLine_c, " ");
-                firstCommand = tmptok ? tmptok : "";
+                firstCommand = strtok(trimmedLine_c, " ");
                 firstCommand = trim(firstCommand);
+                trimmedLine = string(trimmedLine_c);
+                trimmedLine_c = (char*) trimmedLine.c_str();
                 if (firstCommand == trimmedLine)
                 {
-                    tmptok = strtok(trimmedLine_c, "(");
-                    firstCommand = tmptok ? tmptok : "";
+                    firstCommand = strtok(trimmedLine_c, "(");
                     firstCommand = trim(firstCommand);
                 }
             } else {
@@ -171,15 +195,15 @@ namespace tivars
 
             lines[key].first = nextIndent;
 
-            if (is_in_vector_string(increaseIndentAfter, firstCommand))
+            if (is_in_vector(increaseIndentAfter, firstCommand))
             {
                 nextIndent++;
             }
-            if (lines[key].first > 0 && (firstCommand == "Then" || firstCommand == "Else" || firstCommand == "End"))
+            if (lines[key].first > 0 && is_in_vector(decreaseIndentOfToken, firstCommand))
             {
                 lines[key].first--;
             }
-            if (nextIndent > 0 && (firstCommand == "End" || (oldFirstCommand == "If" && firstCommand != "Then")))
+            if (nextIndent > 0 && (is_in_vector(closingTokens, firstCommand) || (oldFirstCommand == "If" && firstCommand != "Then" && lang != PRGMLANG_AXE)))
             {
                 nextIndent--;
             }
@@ -188,7 +212,7 @@ namespace tivars
         str = "";
         for (const auto& line : lines)
         {
-            str += str_repeat(" ", line.first * 4) + line.second + '\n';
+            str += str_repeat(" ", line.first * 3) + line.second + '\n';
         }
 
         return str;
@@ -209,7 +233,7 @@ namespace tivars
                 uint bytes;
                 if (tokenInfo[6] == "2") // number of bytes for the token
                 {
-                    if (!is_in_vector_uchar(firstByteOfTwoByteTokens, hexdec(tokenInfo[7])))
+                    if (!is_in_vector(firstByteOfTwoByteTokens, hexdec(tokenInfo[7])))
                     {
                         firstByteOfTwoByteTokens.push_back(hexdec(tokenInfo[7]));
                     }

@@ -63,7 +63,9 @@ namespace tivars
 
     namespace TH_0x05   // Program
     {
-        std::string reindentCodeString(const std::string& str_orig);
+        enum lang { LANG_EN = 0, LANG_FR };
+        enum typelang { PRGMLANG_BASIC = 0, PRGMLANG_AXE };
+        std::string reindentCodeString(const std::string& str_orig, const options_t& options = options_t());
         void initTokens();
     }
 
