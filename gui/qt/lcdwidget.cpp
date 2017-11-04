@@ -59,10 +59,8 @@ void LCDWidget::dropEvent(QDropEvent *e) {
     if (isSendingROM) {
         emit sendROM(dragROM);
     } else {
-        inSend = true;
         inDrag = false;
         sendingHandler->dropOccured(e, (e->pos().x() < width() / 2) ? LINK_ARCH : LINK_RAM);
-        inSend = false;
     }
 }
 

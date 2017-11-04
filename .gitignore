@@ -33,7 +33,7 @@
 *.supp
 
 # Qt stuff
-CEmu.pro.user*
+*.pro.user*
 gui/build*
 moc_*.cpp
 
@@ -42,6 +42,7 @@ moc_*.cpp
 *.autosave
 *~
 \#*\#
+cmake-build-debug/
 
 # Windows and Mac crap
 Thumbs.db

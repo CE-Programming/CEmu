@@ -157,7 +157,6 @@ typedef enum {
     FLAG_NONE = 0
 } eZ80flags;
 
-void exx(eZ80registers_t *r);
 int parity(uint8_t x);
 
 /* S Z 5 H 3 PV N C */

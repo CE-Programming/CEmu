@@ -28,7 +28,7 @@
 // Hex Editor Things
 // ------------------------------------------------
 
-QString MainWindow::getAddressString(QString string, bool *ok) {
+QString MainWindow::getAddressString(const QString& string, bool* ok) {
     QString address = QInputDialog::getText(this, tr("Goto"),
                                          tr("Input Address (Or Equate):"), QLineEdit::Normal,
                                          string, ok).toUpper();
@@ -197,7 +197,7 @@ void MainWindow::memSearchPressed() {
     searchEdit(ui->memEdit);
 }
 
-void MainWindow::memGoto(QString addressStr) {
+void MainWindow::memGoto(const QString& addressStr) {
     ui->memEdit->setFocus();
     int address = hex2int(addressStr);
     if (address > 0xFFFFFF || address < 0) {

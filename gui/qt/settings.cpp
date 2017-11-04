@@ -362,7 +362,7 @@ void MainWindow::setUIStyle(bool docks_enabled) {
     ui->tabWidget->setHidden(true);
 }
 
-void MainWindow::toggleUIEditMode(void) {
+void MainWindow::toggleUIEditMode() {
     setUIEditMode(!uiEditMode);
 }
 

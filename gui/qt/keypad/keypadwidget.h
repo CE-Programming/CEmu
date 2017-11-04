@@ -19,7 +19,7 @@ public:
     unsigned getCurrColor(void);
 
 signals:
-    void keyPressed(QString key);
+    void keyPressed(const QString& key);
 
 public slots:
     void changeKeyState(KeyCode keycode, bool press, bool toggleHold = false);

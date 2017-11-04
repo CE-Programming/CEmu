@@ -15,17 +15,17 @@ class ipc : public QObject {
     Q_OBJECT
 public:
     explicit ipc(QObject *p = Q_NULLPTR);
-    void serverSetup(QString);
-    void clientSetup(QString);
+    void serverSetup(const QString& name);
+    void clientSetup(const QString& name);
     void serverListen();
     void idClose();
-    void send(const QByteArray&);
+    void send(const QByteArray& pkt);
 
     QString getServerName();
     QString getHostName();
 
-    bool ipcSetup(QString id, QString pid);
-    static bool idOpen(QString name);
+    bool ipcSetup(const QString& id, const QString& pid);
+    static bool idOpen(const QString& name);
 
     QByteArray getData();
 
@@ -46,7 +46,6 @@ private:
     // client
     QLocalSocket *socket;
     QString hostName;
-    quint32 blockSize;
 
     QByteArray data;
 };

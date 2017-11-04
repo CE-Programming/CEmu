@@ -1,8 +1,6 @@
 #include "utils.h"
 #include "qtframebuffer.h"
 #include "../../core/backlight.h"
-#include "../../core/asic.h"
-#include "../../core/emu.h"
 
 #include <QtGui/QPainter>
 

@@ -29,10 +29,6 @@ private:
     const HostKey *(*keymap)[8][8] = nullptr;
 };
 
-inline uint qHash(KeyCode key, uint seed) {
-    return key.code() ^ seed;
-}
-
 // global event filter
 extern QtKeypadBridge *keypadBridge;
 

@@ -24,7 +24,7 @@ protected:
     virtual void dragMoveEvent(QDragMoveEvent*) Q_DECL_OVERRIDE;
 
 signals:
-    void sendROM(const QString&);
+    void sendROM(const QString& romPath);
 
 private:
     enum lcd_side {
@@ -32,13 +32,9 @@ private:
         LCD_RIGHT
     };
 
-    int lcdSize = 0;
     unsigned int sideDrag;
-    bool stateSet = false;
     bool inDrag = false;
-    bool inSend = false;
     QTimer *refreshTimer;
-    QPainter *painter;
     lcd_state_t *lcdState = Q_NULLPTR;
     QRect left, right;
 

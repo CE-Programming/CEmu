@@ -18,7 +18,7 @@ KeyHistory::~KeyHistory() {
     delete ui;
 }
 
-void KeyHistory::addEntry(QString entry) {
+void KeyHistory::addEntry(const QString& entry) {
     ui->historyView->appendPlainText(entry);
 }
 

@@ -2,11 +2,11 @@
 #define ROMSELECTION_H
 
 #include <QtWidgets/QDialog>
-#include <QtCore/QDir>
-#include <QtGui/QDrag>
 #include <QtWidgets/QLabel>
+#include <QtCore/QDir>
 #include <QtCore/QMimeData>
 #include <QtCore/QPoint>
+#include <QtGui/QDrag>
 
 class QString;
 
@@ -27,10 +27,10 @@ signals:
     void clicked(const QPoint&);
 
 protected:
-    virtual void dragEnterEvent(QDragEnterEvent*) Q_DECL_OVERRIDE;
-    virtual void dragMoveEvent(QDragMoveEvent*) Q_DECL_OVERRIDE;
-    virtual void dragLeaveEvent(QDragLeaveEvent*) Q_DECL_OVERRIDE;
-    virtual void dropEvent(QDropEvent*) Q_DECL_OVERRIDE;
+    virtual void dragEnterEvent(QDragEnterEvent *e) Q_DECL_OVERRIDE;
+    virtual void dragMoveEvent(QDragMoveEvent *e) Q_DECL_OVERRIDE;
+    virtual void dragLeaveEvent(QDragLeaveEvent *e) Q_DECL_OVERRIDE;
+    virtual void dropEvent(QDropEvent *e) Q_DECL_OVERRIDE;
     virtual void mousePressEvent(QMouseEvent *e) Q_DECL_OVERRIDE;
 
 private:

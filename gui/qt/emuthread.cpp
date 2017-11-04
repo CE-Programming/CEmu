@@ -84,8 +84,8 @@ void EmuThread::setEmuSpeed(int value) {
     speed = value;
 }
 
-void EmuThread::setThrottleMode(bool mode) {
-    throttleOn = mode;
+void EmuThread::setThrottleMode(bool throttled) {
+    throttleOn = throttled;
 }
 
 void EmuThread::setDebugMode(bool state) {

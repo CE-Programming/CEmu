@@ -823,7 +823,7 @@ bool MainWindow::runSetup() {
     return true;
 }
 
-void MainWindow::screenshotSave(QString nameFilter, QString defaultSuffix, QString temppath) {
+void MainWindow::screenshotSave(const QString& nameFilter, const QString& defaultSuffix, const QString& temppath) {
     QFileDialog dialog(this);
 
     dialog.setAcceptMode(QFileDialog::AcceptSave);
@@ -1023,6 +1023,17 @@ void MainWindow::receiveChangeState() {
     }
 }
 
+void MainWindow::selectFiles() {
+    if (guiDebug) {
+       return;
+    }
+
+    QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptOpen, tr("TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca *.8cg *.8ci *.8ek);;All Files (*.*)"), Q_NULLPTR);
+
+    sendingHandler->sendFiles(fileNames, LINK_FILE);
+    equatesRefresh();
+}
+
 QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode, const QString &name_filter, const QString &defaultSuffix) {
     QFileDialog dialog(this);
     int good;
@@ -1041,17 +1052,6 @@ QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode, con
     }
 
     return QStringList();
-}
-
-void MainWindow::selectFiles() {
-    if (guiDebug) {
-       return;
-    }
-
-    QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptOpen, tr("TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca *.8cg *.8ci *.8ek);;All Files (*.*)"), Q_NULLPTR);
-
-    sendingHandler->sendFiles(fileNames, LINK_FILE);
-    equatesRefresh();
 }
 
 void MainWindow::variableDoubleClicked(QTableWidgetItem *item) {
