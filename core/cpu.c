@@ -840,6 +840,14 @@ void cpu_crash(const char *msg) {
 #endif
 }
 
+static void cpu_halt(void) {
+    if (cpu.cycles < cpu.next) {
+        cpu.cyclesOffset -= cpu.next - cpu.cycles;
+        cpu.cycles = cpu.next; // consume all of the cycles
+    }
+    cpu.halted = 1;
+}
+
 void cpu_execute(void) {
     /* variable declarations */
     int8_t s;
@@ -893,9 +901,8 @@ void cpu_execute(void) {
                 break;
             }
 #endif
-        } else if (cpu.halted && cpu.cycles < cpu.next) {
-            cpu.cyclesOffset -= cpu.next - cpu.cycles;
-            cpu.cycles = cpu.next; // consume all of the cycles
+        } else if (cpu.halted) {
+            cpu_halt();
         }
         if (exiting || cpu.cycles >= cpu.next) {
             break;
@@ -1068,10 +1075,7 @@ void cpu_execute(void) {
                                 cpu.L = 1; cpu.IL = 1;
                                 continue;
                             case 6: // HALT
-                                cpu.halted = 1;
-                                if (cpu.cycles < cpu.next) {
-                                    cpu.cycles = cpu.next;
-                                }
+                                cpu_halt();
                                 break;
                             case 4: // LD H, H
                             case 5: // LD L, L
@@ -1413,10 +1417,7 @@ void cpu_execute(void) {
                                                                     r->A = r->MBASE;
                                                                     break;
                                                                 case 6: // SLP
-                                                                    cpu.halted = 1;
-                                                                    if (cpu.cycles < cpu.next) {
-                                                                        cpu.cycles = cpu.next;
-                                                                    }
+                                                                    cpu_halt();
                                                                     break;
                                                                 case 7: // RSMIX
                                                                     cpu.MADL = 0;
