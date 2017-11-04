@@ -30,7 +30,7 @@ static uint8_t flash_read(const uint16_t pio, bool peek) {
             value = flash.map;
             break;
         case 0x05:
-            value = flash.addedWaitStates;
+            value = flash.waitStates - 6;
             break;
         default:
             value = flash.ports[index];
@@ -58,7 +58,7 @@ static void flash_write(const uint16_t pio, const uint8_t byte, bool poke) {
             flash_set_map(byte);
             break;
         case 0x05:
-            flash.addedWaitStates = byte;
+            flash.waitStates = byte + 6;
             break;
         case 0x08:
             flash.ports[index] = byte & 1;
@@ -82,6 +82,7 @@ eZ80portrange_t init_flash(void) {
 
     flash.ports[0x00] = 0x01; /* From WikiTI */
     flash.ports[0x07] = 0xFF; /* From WikiTI */
+    flash.waitStates = 10;
     flash.mapped = 1;
     flash_set_map(6);
 
