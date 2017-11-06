@@ -599,10 +599,10 @@
                 <enum>Qt::NoFocus</enum>
                </property>
                <property name="minimum">
-                <number>1</number>
+                <number>0</number>
                </property>
                <property name="maximum">
-                <number>11</number>
+                <number>10</number>
                </property>
                <property name="pageStep">
                 <number>2</number>
