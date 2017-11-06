@@ -213,6 +213,10 @@ private:
     void variablesContextMenu(const QPoint&);
     void vatContextMenu(const QPoint &);
     void opContextMenu(const QPoint &);
+    void removeAllSentVars();
+    void removeSentVars();
+    void deselectAllVars();
+    void selectAllVars();
     void resendContextMenu(const QPoint &);
 
     void setDebugIgnoreBreakpoints(bool);

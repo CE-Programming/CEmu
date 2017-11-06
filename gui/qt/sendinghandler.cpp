@@ -42,9 +42,9 @@ void SendingHandler::dropOccured(QDropEvent *e, unsigned int location) {
 void SendingHandler::resendSelected() {
     QStringList files;
 
-    for (int i = 0; i < table->rowCount(); i++) {
-        if (table->item(i, 0)->checkState() == Qt::Checked) {
-            files.append(table->item(i, 0)->text());
+    for (int row = 0; row < table->rowCount(); row++) {
+        if (table->item(row, 0)->checkState() == Qt::Checked) {
+            files.append(table->item(row, 1)->text());
         }
     }
 
@@ -105,7 +105,7 @@ void SendingHandler::sentFile(const QString &file, bool ok) {
     }
 
     for (int j = 0; j < rows; j++) {
-        if (!table->item(j, 0)->text().compare(file)) {
+        if (!table->item(j, 1)->text().compare(file)) {
             add = false;
         }
     }
@@ -113,9 +113,12 @@ void SendingHandler::sentFile(const QString &file, bool ok) {
     if (add) {
         table->setRowCount(rows + 1);
         QTableWidgetItem *path = new QTableWidgetItem(file);
-        table->setItem(rows, 0, path);
+        QTableWidgetItem *selected = new QTableWidgetItem();
 
-        path->setCheckState(Qt::Checked);
+        table->setItem(rows, 0, selected);
+        table->setItem(rows, 1, path);
+
+        selected->setCheckState(Qt::Checked);
     }
 
     if (progress) {

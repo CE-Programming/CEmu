@@ -136,6 +136,10 @@
                <property name="text">
                 <string>Select files</string>
                </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/resources/icons/open.png</normaloff>:/icons/resources/icons/open.png</iconset>
+               </property>
               </widget>
              </item>
              <item>
@@ -299,6 +303,10 @@
                <property name="text">
                 <string>Resend selected</string>
                </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/resources/icons/variables.png</normaloff>:/icons/resources/icons/variables.png</iconset>
+               </property>
               </widget>
              </item>
              <item>
@@ -313,6 +321,69 @@
                 </size>
                </property>
               </spacer>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_29">
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_26">
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="QPushButton" name="buttonSelectVars">
+                   <property name="text">
+                    <string>Check all</string>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="resources.qrc">
+                     <normaloff>:/icons/resources/icons/run.png</normaloff>:/icons/resources/icons/run.png</iconset>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="buttonDeselectVars">
+                   <property name="text">
+                    <string>Check none</string>
+                   </property>
+                   <property name="icon">
+                    <iconset resource="resources.qrc">
+                     <normaloff>:/icons/resources/icons/minus.png</normaloff>:/icons/resources/icons/minus.png</iconset>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_27">
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <widget class="QPushButton" name="buttonRmSelectedVars">
+                   <property name="text">
+                    <string>Remove selected</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="buttonRmAllVars">
+                   <property name="text">
+                    <string>Remove all</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
              </item>
             </layout>
            </item>
@@ -354,6 +425,11 @@
              <attribute name="verticalHeaderVisible">
               <bool>false</bool>
              </attribute>
+             <column>
+              <property name="text">
+               <string>Select</string>
+              </property>
+             </column>
              <column>
               <property name="text">
                <string>Path</string>

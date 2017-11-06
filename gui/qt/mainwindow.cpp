@@ -148,6 +148,10 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->buttonRefreshList, &QPushButton::clicked, this, &MainWindow::receiveChangeState);
     connect(ui->buttonReceiveFiles, &QPushButton::clicked, this, &MainWindow::saveSelected);
     connect(ui->buttonResendFiles, &QPushButton::clicked, this, &MainWindow::resendFiles);
+    connect(ui->buttonRmAllVars, &QPushButton::clicked, this, &MainWindow::removeAllSentVars);
+    connect(ui->buttonRmSelectedVars, &QPushButton::clicked, this, &MainWindow::removeSentVars);
+    connect(ui->buttonDeselectVars, &QPushButton::clicked, this, &MainWindow::deselectAllVars);
+    connect(ui->buttonSelectVars, &QPushButton::clicked, this, &MainWindow::selectAllVars);
     connect(ui->varLoadedView, &QWidget::customContextMenuRequested, this, &MainWindow::resendContextMenu);
     connect(&emu, &EmuThread::receiveReady, this, &MainWindow::changeVariableList, Qt::QueuedConnection);
     connect(this, &MainWindow::receive, &emu, &EmuThread::receive);
@@ -1233,11 +1237,37 @@ void MainWindow::resendFiles() {
 
 void MainWindow::resendContextMenu(const QPoint& posa) {
     int row = ui->varLoadedView->rowAt(posa.y());
+
     if (row == -1) {
         return;
     }
 
-    ui->varLoadedView->removeRow(row);
+    int check = ui->varLoadedView->item(row, 0)->checkState();
+    ui->varLoadedView->item(row, 0)->setCheckState(check == Qt::Checked ? Qt::Unchecked : Qt::Checked);
+}
+
+void MainWindow::removeAllSentVars() {
+    ui->varLoadedView->setRowCount(0);
+}
+
+void MainWindow::removeSentVars() {
+    for (int row = ui->varLoadedView->rowCount() - 1; row >= 0; row--) {
+        if (ui->varLoadedView->item(row, 0)->checkState() == Qt::Checked) {
+            ui->varLoadedView->removeRow(row);
+        }
+    }
+}
+
+void MainWindow::deselectAllVars() {
+    for (int row = 0; row < ui->varLoadedView->rowCount(); row++) {
+        ui->varLoadedView->item(row, 0)->setCheckState(Qt::Unchecked);
+    }
+}
+
+void MainWindow::selectAllVars() {
+    for (int row = 0; row < ui->varLoadedView->rowCount(); row++) {
+        ui->varLoadedView->item(row, 0)->setCheckState(Qt::Checked);
+    }
 }
 
 // ------------------------------------------------
