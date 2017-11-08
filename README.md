@@ -42,17 +42,19 @@ Windows | macOS | Linux
 * "Autotester" (automated unit testing, light scripting)
 
 ## Downloads
-No binaries have been released yet as the code keeps changing these days! When available, they'll be here: https://github.com/CE-Programming/CEmu/releases   
-The latest Windows builds are available though; [64 bit here](http://jacobly.com/CEmu/master/latest/CEmu64.exe) and [32 bit here](http://jacobly.com/CEmu/master/latest/CEmu32.exe).
-_Note that Release builds have an update checking feature, which is disabled in development builds._
+The latest development builds are available here: https://ce-programming.github.io/CEmu/download
 
-If you wish to browse around older builds; Windows binaries are available [here](https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/git/) or [here](https://jacobly.com/CEmu/) (credits to alberthro and jacobly).
+No binaries have been released yet as the code keeps changing these days! When available, they'll be here: https://github.com/CE-Programming/CEmu/releases   
+
+_Note that Release builds have an update checking feature, which is disabled in development builds._
 
 ## How to build
 After downloading the source (you can clone the repo or just [get the zip](https://github.com/CE-Programming/CEmu/archive/master.zip)):
 
 1. Get the [latest Qt5 SDK](https://www.qt.io/download-open-source/#section-3) for your OS.  
-If you're on Ubuntu, you may need to force update your PATH to have Qt's `bin/` folder prepended. (You might need to run this command, too: `sudo apt-get install git qt5-default`)
+  * If you're on linux, you may need to force update your PATH to have Qt's `bin/` folder prepended. This can be done by editing your shell's profile (for example ~/.bashrc), and adding the line:  
+  `export PATH=<path to Qt directory>/bin:$PATH`
+  * You may need to run this command under linux as well: `sudo apt-get install git qt5-default`
 
 2. Now you have two options:
   * In a shell, `cd` to the project's `/gui/qt/` folder and type `qmake -r CEmu.pro && make`
