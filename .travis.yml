@@ -21,7 +21,7 @@ install:
 - sudo apt-get install -y --force-yes -qq libgl1-mesa-dev qt59base qt59declarative; source /opt/qt59/bin/qt59-env.sh
 
 script:
-  - bash ./get_libpng-apng.sh
+  - cd gui/qt/capture && bash ./get_libpng-apng.sh && cd ../../../
   - mkdir build
   - cd build
   - qmake ../gui/qt && make -j4 CC=gcc-7 CXX=g++-7 LINK=g++-7
