@@ -28,6 +28,7 @@ typedef struct keypad_state {
     uint8_t  enable;
     uint16_t data[16];
     uint16_t keyMap[16];
+    uint16_t delay[16];
     uint32_t gpio_status;
     uint32_t gpio_enable;
 } keypad_state_t;

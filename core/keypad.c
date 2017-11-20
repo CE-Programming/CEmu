@@ -6,6 +6,8 @@
 #include "control.h"
 #include "asic.h"
 
+#include <string.h>
+
 /* Global KEYPAD state */
 keypad_state_t keypad;
 
@@ -27,6 +29,7 @@ void EMSCRIPTEN_KEEPALIVE keypad_key_event(unsigned int row, unsigned int col, b
     } else {
         if (press) {
             keypad.keyMap[row] |= 1 << col;
+            keypad.delay[row] |= 1 << col;
             if (keypad.mode == 1) {
                 keypad.status |= 4;
                 keypad_intrpt_check();
@@ -77,20 +80,22 @@ static uint8_t keypad_read(const uint16_t pio, bool peek) {
 
 /* Scan next row of keypad, if scanning is enabled */
 static void keypad_scan_event(int index) {
-    uint16_t row;
+    uint8_t row = keypad.current_row;
+    uint16_t data;
 
-    if (keypad.current_row >= sizeof(keypad.data) / sizeof(keypad.data[0])) {
+    if (row >= sizeof(keypad.data) / sizeof(keypad.data[0])) {
         return; /* too many keypad rows */
     }
 
     /* scan each data row */
-    row = keypad.keyMap[keypad.current_row];
-    row &= (1 << keypad.cols) - 1;
+    data = keypad.keyMap[row] | keypad.delay[row];
+    keypad.delay[row] = 0;
+    data &= (1 << keypad.cols) - 1;
 
     /* if mode 3 or 2, generate data change interrupt */
-    if (keypad.data[keypad.current_row] != row) {
+    if (keypad.data[row] != data) {
         keypad.status |= 2;
-        keypad.data[keypad.current_row] = row;
+        keypad.data[row] = data;
     }
 
     if (keypad.current_row++ < keypad.rows) {  /* scan the next row */
@@ -108,8 +113,17 @@ static void keypad_scan_event(int index) {
     keypad_intrpt_check();
 }
 
-static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
+static bool keypad_any_key_pressed(void) {
     int row;
+    for (row = 0; row < keypad.rows; row++) {
+        if ((keypad.keyMap[row] | keypad.delay[row]) & ((1 << keypad.cols) - 1)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
     uint16_t index = (pio >> 2) & 0x7F;
     uint8_t bit_offset = (pio & 3) << 3;
 
@@ -121,14 +135,9 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
                 event_set(SCHED_KEYPAD, keypad.scan_wait + keypad.row_wait);
             } else {
                 event_clear(SCHED_KEYPAD);
-                if (keypad.mode == 1) {
-                    for (row = 0; row < keypad.rows; row++) {
-                        if (keypad.keyMap[row] & ((1 << keypad.cols) - 1)) {
-                            keypad.status |= 4;
-                            keypad_intrpt_check();
-                            break;
-                        }
-                    }
+                if (keypad.mode == 1 && keypad_any_key_pressed()) {
+                    keypad.status |= 4;
+                    keypad_intrpt_check();
                 }
             }
             break;
@@ -137,13 +146,8 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
             break;
         case 0x02:
             write8(keypad.status, bit_offset, keypad.status & ~byte);
-            if (keypad.mode == 1) {
-                for (row = 0; row < keypad.rows; row++) {
-                    if (keypad.keyMap[row] & ((1 << keypad.cols) - 1)) {
-                        keypad.status |= 4;
-                        break;
-                    }
-                }
+            if (keypad.mode == 1 && keypad_any_key_pressed()) {
+                keypad.status |= 4;
             }
             keypad_intrpt_check();
             break;
@@ -172,12 +176,10 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
 }
 
 void keypad_reset() {
-    unsigned int i;
-
     keypad.current_row = 0;
-    for(i=0; i<sizeof(keypad.data) / sizeof(keypad.data[0]); i++) {
-        keypad.data[i] = keypad.keyMap[i] = 0;
-    }
+    memset(keypad.data, 0, sizeof(keypad.data));
+    memset(keypad.keyMap, 0, sizeof(keypad.keyMap));
+    memset(keypad.delay, 0, sizeof(keypad.delay));
 
     sched.items[SCHED_KEYPAD].clock = CLOCK_APB;
     sched.items[SCHED_KEYPAD].second = -1;
