@@ -60,7 +60,6 @@ void MainWindow::debuggerInstall() {
     ui->checkADLStack->blockSignals(true);
     ui->checkADLStack->setCheckState(Qt::PartiallyChecked);
     ui->checkADLStack->blockSignals(false);
-    ui->debuggerLabel->setHidden(true);
 }
 
 // ------------------------------------------------
@@ -251,12 +250,10 @@ void MainWindow::debuggerExecuteCommand(uint32_t debugAddress, uint8_t command) 
         int tmp;
         switch (command) {
             case CMD_ABORT:
-                ui->debuggerLabel->setHidden(false);
                 ui->debuggerLabel->setText(QStringLiteral("Program Aborted"));
                 debuggerRaise();
                 return; // don't exit the debugger
             case CMD_DEBUG:
-                ui->debuggerLabel->setHidden(false);
                 ui->debuggerLabel->setText(QStringLiteral("Program Entered Debugger"));
                 debuggerRaise();
                 return; // don't exit the debugger
@@ -364,7 +361,6 @@ void MainWindow::debuggerProcessCommand(int reason, uint32_t input) {
 
     // Checked everything, now we should raise the debugger
     if (!text.isEmpty()) {
-        ui->debuggerLabel->setHidden(false);
         ui->debuggerLabel->setText(text);
     }
     debuggerRaise();
@@ -437,7 +433,6 @@ void MainWindow::debuggerUpdateChanges() {
     lcd_setptrs(&lcd);
 
     ui->debuggerLabel->clear();
-    ui->debuggerLabel->setHidden(true);
 }
 
 void MainWindow::debuggerGUISetState(bool state) {
@@ -448,10 +443,9 @@ void MainWindow::debuggerGUISetState(bool state) {
         ui->buttonRun->setText(tr("Stop"));
         ui->buttonRun->setIcon(stopIcon);
         ui->debuggerLabel->clear();
-        ui->debuggerLabel->setHidden(true);
     }
 
-    ui->tabDebugging->setEnabled(state);
+    ui->tabDebug->setEnabled(state);
     ui->buttonGoto->setEnabled(state);
     ui->buttonStepIn->setEnabled(state);
     ui->buttonStepOver->setEnabled(state);
@@ -471,6 +465,11 @@ void MainWindow::debuggerGUISetState(bool state) {
     ui->vatView->setEnabled(state);
     ui->groupRTC->setEnabled(state);
     ui->groupGPT->setEnabled(state);
+    ui->groupLcdState->setEnabled(state);
+    ui->groupLcdRegs->setEnabled(state);
+    ui->groupBattery->setEnabled(state);
+    ui->groupTrigger->setEnabled(state);
+    ui->disassemblyView->setEnabled(state);
 
     ui->actionRestoreState->setEnabled(!state);
     ui->actionImportCalculatorState->setEnabled(!state);
@@ -708,6 +707,10 @@ bool MainWindow::breakpointRemoveSelectedRow() {
 
     debug_breakwatch(address, DBG_EXEC_BREAKPOINT, false);
 
+    if (!guiAdd) {
+        updateDisasm();
+    }
+
     ui->breakpointView->removeRow(currRow);
     return true;
 }
@@ -749,7 +752,7 @@ void MainWindow::breakpointDataChanged(QTableWidgetItem *item) {
             ui->breakpointView->blockSignals(false);
         }
 
-        if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty() || s.length() > 6) {
+        if (isNotValidHex(s) || s.length() > 6) {
             item->setText(int2hex(prevBreakpointAddress, 6));
             return;
         }
@@ -776,6 +779,7 @@ void MainWindow::breakpointDataChanged(QTableWidgetItem *item) {
         debug_breakwatch(address, mask, true);
         ui->breakpointView->blockSignals(false);
     }
+    updateDisasm();
 }
 
 QString MainWindow::breakpointNextLabel() {
@@ -796,9 +800,13 @@ void MainWindow::breakpointGUIAdd() {
     QTextCursor c = ui->disassemblyView->textCursor();
     c.setCharFormat(ui->disassemblyView->currentCharFormat());
 
+    guiAdd = true;
+
     if (!breakpointAdd(breakpointNextLabel(), address, true)) {
         breakpointRemoveSelectedRow();
     }
+
+    guiAdd = false;
 
     int32_t base_address = disasm.baseAddress;
     int32_t new_address = disasm.newAddress;
@@ -821,7 +829,7 @@ void MainWindow::breakpointGUIAdd() {
     }
 
     if (ui->disassemblyView->labelCheck()) {
-        updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(Q_NULLPTR, 16), true);
+        updateDisasm();
     }
 }
 
@@ -859,6 +867,10 @@ bool MainWindow::breakpointAdd(const QString& label, uint32_t address, bool enab
     ui->breakpointView->setUpdatesEnabled(true);
 
     debug_breakwatch(address, DBG_EXEC_BREAKPOINT, enabled);
+
+    if (!guiAdd) {
+        updateDisasm();
+    }
 
     prevBreakpointAddress = address;
     ui->breakpointView->blockSignals(false);
@@ -972,7 +984,7 @@ void MainWindow::portDataChanged(QTableWidgetItem *item) {
         std::string s = item->text().toUpper().toStdString();
         unsigned int mask;
 
-        if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty() || s.length() > 4) {
+        if (isNotValidHex(s) || s.length() > 4) {
             item->setText(int2hex(prevPortAddress, 4));
             return;
         }
@@ -1034,6 +1046,10 @@ bool MainWindow::watchpointRemoveSelectedRow() {
 
     debug_breakwatch(address, DBG_READ_WATCHPOINT | DBG_WRITE_WATCHPOINT, false);
 
+    if (!guiAdd) {
+        updateDisasm();
+    }
+
     ui->watchpointView->removeRow(currRow);
     return true;
 }
@@ -1083,9 +1099,13 @@ void MainWindow::watchpointGUIAdd() {
     QTextCursor c = ui->disassemblyView->textCursor();
     c.setCharFormat(ui->disassemblyView->currentCharFormat());
 
+    guiAdd = true;
+
     if (!watchpointAdd(watchpointNextLabel(), address, 1, mask)) {
         watchpointRemoveSelectedRow();
     }
+
+    guiAdd = false;
 
     int32_t base_address = disasm.baseAddress;
     int32_t new_address = disasm.newAddress;
@@ -1121,7 +1141,7 @@ void MainWindow::watchpointGUIAdd() {
     }
 
     if (ui->disassemblyView->labelCheck()) {
-        updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(Q_NULLPTR, 16), true);
+        updateDisasm();
     }
 }
 
@@ -1183,6 +1203,10 @@ bool MainWindow::watchpointAdd(const QString& label, uint32_t address, uint8_t l
     // actually set it in the debugger core
     debug_breakwatch(address, mask, true);
 
+    if (!guiAdd) {
+        updateDisasm();
+    }
+
     prevWatchpointAddress = address;
     ui->watchpointView->blockSignals(false);
     return true;
@@ -1203,7 +1227,7 @@ void MainWindow::watchpointDataChanged(QTableWidgetItem *item) {
         address = static_cast<uint32_t>(ui->watchpointView->item(row, WATCH_ADDR_LOC)->text().toUInt());
 
         std::string s = item->text().toUpper().toStdString();
-        if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty()) {
+        if (isNotValidHex(s)) {
             item->setText(int2hex(0, wSize << 1));
             ui->watchpointView->blockSignals(false);
             return;
@@ -1259,7 +1283,7 @@ void MainWindow::watchpointDataChanged(QTableWidgetItem *item) {
             ui->watchpointView->blockSignals(false);
         }
 
-        if (s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty() || s.length() > 6) {
+        if (isNotValidHex(s) || s.length() > 6) {
             item->setText(int2hex(prevWatchpointAddress, 6));
             ui->watchpointView->blockSignals(false);
             return;
@@ -1286,6 +1310,7 @@ void MainWindow::watchpointDataChanged(QTableWidgetItem *item) {
         watchpointUpdate(row);
     }
     ui->watchpointView->blockSignals(false);
+    updateDisasm();
 }
 
 // ------------------------------------------------
@@ -1321,7 +1346,7 @@ void MainWindow::equatesClear() {
     currentEquateFiles.clear();
     disasm.map.clear();
     disasm.reverseMap.clear();
-    updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(Q_NULLPTR, 16), true);
+    updateDisasm();
 }
 
 void MainWindow::updateLabels() {
@@ -1366,7 +1391,7 @@ void MainWindow::equatesRefresh() {
         equatesAddFile(file);
     }
     updateLabels();
-    updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(Q_NULLPTR, 16), true);
+    updateDisasm();
 }
 
 void MainWindow::equatesAddDialog() {
@@ -1427,7 +1452,7 @@ void MainWindow::equatesAddFile(const QString &fileName) {
         } while (in.readLineInto(&line));
     }
 
-    updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(Q_NULLPTR, 16), true);
+    updateDisasm();
     updateLabels();
 }
 
@@ -1445,6 +1470,10 @@ void MainWindow::equatesAddEquate(const QString &name, const QString &addrStr) {
             itemReverse2 = address2;
         }
     }
+}
+
+void MainWindow::updateDisasm() {
+    updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(Q_NULLPTR, 16), true);
 }
 
 void MainWindow::updateDisasmView(int sentBase, bool newPane) {
@@ -1507,18 +1536,6 @@ void MainWindow::toggleADL(int state) {
     (void)(state);
     toggleADLDisasm(ui->checkADLDisasm->checkState());
     toggleADLStack(ui->checkADLStack->checkState());
-}
-
-
-void MainWindow::debuggerTabSwitched(int tabIdx) {
-    if (tabIdx == 0) {
-        updateDisasmView(prevDisasmAddress, true);
-    } else {
-        ui->portView->clearSelection();
-        ui->breakpointView->clearSelection();
-        ui->watchpointView->clearSelection();
-        prevDisasmAddress = ui->disassemblyView->getSelectedAddress().toUInt(Q_NULLPTR, 16);
-    }
 }
 
 void MainWindow::gotoPressed() {

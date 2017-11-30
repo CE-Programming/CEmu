@@ -229,9 +229,9 @@ void MainWindow::resetSettingsIfLoadedCEmuBootableImage() {
 }
 
 void MainWindow::setDebugIgnoreBreakpoints(bool state) {
-    ui->checkBreakIgnore->setChecked(state);
+    ui->buttonToggleBreakpoints->setChecked(state);
     settings->setValue(SETTING_DEBUGGER_BREAK_IGNORE, state);
-    debugger.ignoreBreakpoints = state;
+    debugger.ignore = state;
 }
 
 void MainWindow::setDebugResetTrigger(bool state) {
@@ -326,9 +326,9 @@ void MainWindow::setDebugPath() {
     }
 }
 
-void MainWindow::setUIStyle(bool docks_enabled) {
+void MainWindow::setUIDocks() {
     // Already in this mode?
-    if (docks_enabled == ui->tabWidget->isHidden()) {
+    if (ui->tabWidget->isHidden()) {
         return;
     }
 
@@ -337,7 +337,7 @@ void MainWindow::setUIStyle(bool docks_enabled) {
     ui->menubar->insertMenu(ui->menuAbout->menuAction(), docksMenu);
 
     // Convert the tabs into QDockWidgets
-    DockWidget *last_dock = nullptr;
+    DockWidget *last_dock = Q_NULLPTR;
     while (ui->tabWidget->count()) {
         DockWidget *dw = new DockWidget(ui->tabWidget, this);
 
@@ -354,12 +354,39 @@ void MainWindow::setUIStyle(bool docks_enabled) {
     }
 
     docksMenu->addSeparator();
+
+    debugMenu = new QMenu(tr("Debug"), this);
+    ui->menubar->insertMenu(ui->menuAbout->menuAction(), debugMenu);
+
+    // Convert the tabs into QDockWidgets
+    last_dock = Q_NULLPTR;
+    while (ui->tabDebug->count()) {
+        DockWidget *dw = new DockWidget(ui->tabDebug, this);
+
+        // Fill "Docks" menu
+        QAction *action = dw->toggleViewAction();
+        action->setIcon(dw->windowIcon());
+        debugMenu->addAction(action);
+
+        addDockWidget(Qt::RightDockWidgetArea, dw);
+        if (last_dock != Q_NULLPTR)
+            tabifyDockWidget(last_dock, dw);
+
+        last_dock = dw;
+
+        if (!settings->value(SETTING_FIRST_RUN, false).toBool()) {
+            dw->close();
+        }
+    }
+
+    docksMenu->addSeparator();
     toggleAction = new QAction(tr("Enable UI edit mode"), this);
     toggleAction->setCheckable(true);
     docksMenu->addAction(toggleAction);
     connect(toggleAction, &QAction::triggered, this, &MainWindow::toggleUIEditMode);
 
     ui->tabWidget->setHidden(true);
+    ui->tabDebug->setHidden(true);
 }
 
 void MainWindow::toggleUIEditMode() {

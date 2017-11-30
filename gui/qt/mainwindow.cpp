@@ -47,7 +47,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     ui->statusBar->addWidget(&speedLabel);
     ui->statusBar->addPermanentWidget(&msgLabel);
 
-    setStyleSheet("QMainWindow::separator{ width: 0px; height: 0px; }");
+    //setStyleSheet("QMainWindow::separator{ width: 0px; height: 0px; }");
 
     // Allow for 2017 lines of logging
     ui->console->setMaximumBlockCount(2017);
@@ -102,7 +102,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->checkADLStack, &QCheckBox::stateChanged, this, &MainWindow::toggleADLStack);
     connect(ui->checkADL, &QCheckBox::stateChanged, this, &MainWindow::toggleADL);
 
-    connect(ui->tabDebugging, &QTabWidget::currentChanged, this, &MainWindow::debuggerTabSwitched);
     connect(ui->buttonAddPort, &QPushButton::clicked, this, &MainWindow::portSlotAdd);
     connect(ui->buttonRemovePort, &QPushButton::clicked, this, &MainWindow::portRemoveSelected);
     connect(ui->buttonAddBreakpoint, &QPushButton::clicked, this, &MainWindow::breakpointSlotAdd);
@@ -133,7 +132,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->buttonAddEquateFile, &QPushButton::clicked, this, &MainWindow::equatesAddDialog);
     connect(ui->buttonClearEquates, &QPushButton::clicked, this, &MainWindow::equatesClear);
     connect(ui->buttonRefreshEquates, &QPushButton::clicked, this, &MainWindow::equatesRefresh);
-    connect(ui->checkBreakIgnore, &QCheckBox::toggled, this, &MainWindow::setDebugIgnoreBreakpoints);
+    connect(ui->buttonToggleBreakpoints, &QToolButton::toggled, this, &MainWindow::setDebugIgnoreBreakpoints);
     connect(ui->checkDebugResetTrigger, &QCheckBox::toggled, this, &MainWindow::setDebugResetTrigger);
     connect(ui->checkDataCol, &QCheckBox::toggled, this, &MainWindow::setDataCol);
     connect(ui->textSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setFont);
@@ -301,7 +300,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
     setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
-    setUIStyle(true);
 
     // init IPC
     if (!ipcSetup()) {
@@ -430,6 +428,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     }
 
     debuggerInstall();
+    setUIDocks();
 
     if (settings->value(SETTING_DEBUGGER_RESTORE_ON_OPEN, false).toBool()) {
         if (!opts.debugFile.isEmpty()) {
