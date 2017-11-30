@@ -40,6 +40,8 @@ bool isProcRunning(pid_t procID);
 
 QString randomString(const int length);
 
+bool isNotValidHex(const std::string& s);
+
 extern bool guiDebug;
 extern bool guiSend;
 extern bool guiReceive;

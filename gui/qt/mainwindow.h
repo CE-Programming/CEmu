@@ -195,6 +195,7 @@ private:
     void breakpointDataChanged(QTableWidgetItem* item);
     void watchpointDataChanged(QTableWidgetItem* item);
 
+    void updateDisasm();
     void updateDisasmView(int sentBase, bool newPane);
     void drawNextDisassembleLine();
     void scrollDisasmView(int value);
@@ -228,7 +229,6 @@ private:
     void watchpointRemoveAddress(uint32_t address);
 
     void debuggerZeroClockCounter();
-    void debuggerTabSwitched(int tabIdx);
 
     void setDataCol(bool state);
     void setMenuBarState(bool state);
@@ -299,7 +299,7 @@ private:
     void setAlwaysOnTop(int state);
     void setAutoCheckForUpdates(int state);
     void setSpaceDisasm(bool state);
-    void setUIStyle(bool docks_enabled);
+    void setUIDocks();
     void setUIEditMode(bool mode);
     void toggleUIEditMode();
     void setSaveDebug(bool state);
@@ -440,6 +440,7 @@ private:
 
     QString pathSettings;
     QMenu *docksMenu;
+    QMenu *debugMenu;
 
     KeyHistory *keyHistoryWindow = Q_NULLPTR;
 
@@ -449,6 +450,7 @@ private:
     bool isSendingROM = false;
     QString dragROM;
 
+    bool guiAdd = false;
     bool initPassed = true;
     bool firstShow = false;
     bool useDataCol;

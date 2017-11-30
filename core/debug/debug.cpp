@@ -69,6 +69,12 @@ void open_debugger(int reason, uint32_t data) {
         return;
     }
 
+    if (debugger.ignore && (reason == HIT_PORT_READ_WATCHPOINT || reason == HIT_PORT_WRITE_WATCHPOINT ||
+                            reason == HIT_READ_WATCHPOINT || reason == HIT_WRITE_WATCHPOINT ||
+                            reason == HIT_EXEC_BREAKPOINT)) {
+        return;
+    }
+
     if ((reason == DBG_STEP) && debugger.stepOverFirstStep) {
         if (((cpuEvents & EVENT_DEBUG_STEP_NEXT)
                 && !(debugger.data.block[cpu.registers.PC] & DBG_TEMP_EXEC_BREAKPOINT)) || (cpuEvents & EVENT_DEBUG_STEP_OUT)) {
