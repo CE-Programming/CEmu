@@ -96,9 +96,15 @@ bool apng_save(const char *filename) {
 
         op = PNG_DISPOSE_OP_NONE;
 
+        if (a && !memcmp(apng.frame, apng.prev, LCD_FRAME_SIZE)) {
+            op = PNG_DISPOSE_OP_PREVIOUS;
+        }
+
         png_write_frame_head(png_ptr, info_ptr, row_ptrs, LCD_WIDTH, LCD_HEIGHT, 0, 0, apng.num, apng.den, op, PNG_BLEND_OP_SOURCE);
         png_write_image(png_ptr, row_ptrs);
         png_write_frame_tail(png_ptr, info_ptr);
+
+        memcpy(apng.prev, apng.frame, LCD_FRAME_SIZE);
     }
 
     png_write_end(png_ptr, info_ptr);
