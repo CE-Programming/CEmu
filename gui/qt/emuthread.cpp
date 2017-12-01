@@ -6,7 +6,6 @@
 
 #include "mainwindow.h"
 
-#include "capture/gif.h"
 #include "../../core/emu.h"
 #include "../../core/debug/stepping.h"
 

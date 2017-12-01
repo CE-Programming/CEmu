@@ -152,9 +152,8 @@ private:
     // Actions
     bool runSetup();
     void screenshot();
-    void screenshotGIF();
     void screenshotSave(const QString& nameFilter, const QString& defaultSuffix, const QString& temppath);
-    void recordGIF();
+    void recordAPNG();
     void changeFrameskip(int value);
     void changeFramerate();
     void checkForUpdates(bool forceInfoBox);
@@ -408,7 +407,7 @@ private:
     bool nativeConsole = false;
     bool closeAfterSave = false;
     bool canScroll = false;
-    bool recordingGif = false;
+    bool recordingAnimated = false;
 
     bool firstTimeShown = false;
 

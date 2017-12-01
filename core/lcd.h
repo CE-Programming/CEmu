@@ -51,7 +51,7 @@ typedef struct lcd_cntrl_state {
     uint32_t size;
     uint32_t *ofs;                  /* Pointer to start of data to start extracting from */
     uint32_t *ofs_end;              /* End pointer that is allowed access */
-    uint32_t framebuffer[LCD_SIZE]; /* Location on which to draw the data */
+    uint32_t frame[LCD_SIZE];       /* Location on which to draw the data */
 } lcd_state_t;
 
 /* Global LCD state */

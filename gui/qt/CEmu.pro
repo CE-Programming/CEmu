@@ -101,7 +101,7 @@ if (win32) {
     }
     INCLUDEPATH += $$PWD/capture/libpng-apng
     DEPENDPATH  += $$PWD/capture/libpng-apng
-    LIBS += -L$$PWD/capture/libpng-apng/.libs/ -lpngapng
+    LIBS += -L$$PWD/capture/libpng-apng/.libs/ -lpngapng -lz
 }
 
 SOURCES +=  utils.cpp \
@@ -123,7 +123,6 @@ SOURCES +=  utils.cpp \
     qhexedit/chunks.cpp \
     qhexedit/commands.cpp \
     qhexedit/qhexedit.cpp \
-    capture/gif.cpp \
     tivarslib/utils_tivarslib.cpp \
     tivarslib/TypeHandlers/DummyHandler.cpp \
     tivarslib/TypeHandlers/TH_0x00.cpp \
@@ -164,20 +163,15 @@ SOURCES +=  utils.cpp \
     ../../core/extras.c \
     ../../core/debug/disasm.cpp \
     sendinghandler.cpp \
-    capture/optimize.c \
-    capture/gifread.c \
-    capture/gifwrite.c \
-    capture/giffunc.c \
     debugger.cpp \
     hexeditor.cpp \
     settings.cpp \
     ../../core/debug/stepping.cpp \
     ipc.cpp \
     keyhistory.cpp \
-    capture/opttemplate.c \
-    capture/quantize.c \
     memoryvisualizer.cpp \
-    ../../core/debug/debug.cpp
+    ../../core/debug/debug.cpp \
+    capture/animated-png.c
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
@@ -209,8 +203,6 @@ HEADERS  +=  utils.h \
     qhexedit/chunks.h \
     qhexedit/commands.h \
     qhexedit/qhexedit.h \
-    capture/gif.h \
-    capture/giflib.h \
     tivarslib/autoloader.h \
     tivarslib/utils_tivarslib.h \
     tivarslib/TypeHandlers/TypeHandlerFuncGetter.h \
@@ -246,14 +238,12 @@ HEADERS  +=  utils.h \
     ../../core/debug/stepping.h \
     cemuopts.h \
     sendinghandler.h \
-    capture/gifsicle.h \
-    capture/lcdfgif/gif.h \
     keypad/keycode.h \
     debugger.h \
     ipc.h \
     keyhistory.h \
-    capture/kcolor.h \
-    memoryvisualizer.h
+    memoryvisualizer.h \
+    capture/animated-png.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \

@@ -380,10 +380,7 @@ void MainWindow::setUIDocks() {
     }
 
     docksMenu->addSeparator();
-    toggleAction = new QAction(tr("Enable UI edit mode"), this);
-    toggleAction->setCheckable(true);
     docksMenu->addAction(toggleAction);
-    connect(toggleAction, &QAction::triggered, this, &MainWindow::toggleUIEditMode);
 
     ui->tabWidget->setHidden(true);
     ui->tabDebug->setHidden(true);

@@ -6014,7 +6014,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>1</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -6425,22 +6425,6 @@
               <number>8</number>
              </property>
              <item>
-              <widget class="QPushButton" name="buttonGIFScreenshot">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="focusPolicy">
-                <enum>Qt::NoFocus</enum>
-               </property>
-               <property name="text">
-                <string>GIF</string>
-               </property>
-              </widget>
-             </item>
-             <item>
               <widget class="QPushButton" name="buttonScreenshot">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
@@ -6474,7 +6458,7 @@
              </sizepolicy>
             </property>
             <property name="title">
-             <string>Recording</string>
+             <string>Screen Recording</string>
             </property>
             <layout class="QGridLayout" name="gridLayout">
              <property name="leftMargin">
@@ -6594,7 +6578,7 @@
               </widget>
              </item>
              <item row="3" column="3" alignment="Qt::AlignHCenter">
-              <widget class="QPushButton" name="buttonGIF">
+              <widget class="QPushButton" name="buttonRecordAnimated">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                  <horstretch>0</horstretch>
@@ -6611,7 +6595,7 @@
                 <enum>Qt::NoFocus</enum>
                </property>
                <property name="text">
-                <string>Record GIF</string>
+                <string>Record Animated PNG</string>
                </property>
               </widget>
              </item>
@@ -8202,8 +8186,7 @@ QPushButton:pressed {
     <addaction name="menuExport"/>
     <addaction name="menuImport"/>
     <addaction name="separator"/>
-    <addaction name="actionRecordGIF"/>
-    <addaction name="actionTakeGIFScreenshot"/>
+    <addaction name="actionRecordAnimated"/>
     <addaction name="actionScreenshot"/>
     <addaction name="actionClipScreen"/>
     <addaction name="separator"/>
@@ -8388,7 +8371,7 @@ QPushButton:pressed {
     <string>Take PNG screenshot</string>
    </property>
   </action>
-  <action name="actionRecordGIF">
+  <action name="actionRecordAnimated">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -8400,7 +8383,7 @@ QPushButton:pressed {
      <normaloff>:/icons/resources/icons/gif.png</normaloff>:/icons/resources/icons/gif.png</iconset>
    </property>
    <property name="text">
-    <string>Record animated GIF</string>
+    <string>Record animated PNG</string>
    </property>
    <property name="toolTip">
     <string>Record animated GIF</string>

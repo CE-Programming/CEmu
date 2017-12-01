@@ -28,7 +28,7 @@
 #include "searchwidget.h"
 #include "basiccodeviewerwindow.h"
 #include "utils.h"
-#include "capture/gif.h"
+#include "capture/animated-png.h"
 
 #include "../../core/schedule.h"
 #include "../../core/link.h"
@@ -167,8 +167,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->actionSetup, &QAction::triggered, this, &MainWindow::runSetup);
     connect(ui->actionExit, &QAction::triggered, this, &MainWindow::close);
     connect(ui->actionScreenshot, &QAction::triggered, this, &MainWindow::screenshot);
-    connect(ui->actionRecordGIF, &QAction::triggered, this, &MainWindow::recordGIF);
-    connect(ui->actionTakeGIFScreenshot, &QAction::triggered, this, &MainWindow::screenshotGIF);
+    connect(ui->actionRecordAnimated, &QAction::triggered, this, &MainWindow::recordAPNG);
     connect(ui->actionRestoreState, &QAction::triggered, this, &MainWindow::restoreEmuState);
     connect(ui->actionSaveState, &QAction::triggered, this, &MainWindow::saveEmuState);
     connect(ui->actionExportCalculatorState, &QAction::triggered, this, &MainWindow::saveToFile);
@@ -185,8 +184,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     // Capture
     connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
-    connect(ui->buttonGIF, &QPushButton::clicked, this, &MainWindow::recordGIF);
-    connect(ui->buttonGIFScreenshot, &QPushButton::clicked, this, &MainWindow::screenshotGIF);
+    connect(ui->buttonRecordAnimated, &QPushButton::clicked, this, &MainWindow::recordAPNG);
     connect(ui->frameskipSlider, &QSlider::valueChanged, this, &MainWindow::changeFrameskip);
 
     // About
@@ -268,6 +266,11 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     // Clipboard copy
     connect(ui->actionClipScreen, &QAction::triggered, this, &MainWindow::saveScreenToClipboard);
+
+    // Docks
+    toggleAction = new QAction(tr("Enable UI edit mode"), this);
+    toggleAction->setCheckable(true);
+    connect(toggleAction, &QAction::triggered, this, &MainWindow::toggleUIEditMode);
 
     // Shortcut Connections
     stepInShortcut = new QShortcut(QKeySequence(Qt::Key_F6), this);
@@ -866,80 +869,53 @@ void MainWindow::saveScreenToClipboard() {
     QApplication::clipboard()->setImage(image, QClipboard::Clipboard);
 }
 
-void MainWindow::screenshotGIF() {
-    if (ui->actionRecordGIF->isChecked()) {
-        QMessageBox::warning(this, MSG_WARNING, tr("Currently recording GIF."));
-        return;
-    }
-
-    QString path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.img");
-    lcd_event_gui_callback = gif_new_frame;
-    if (!gif_single_frame(path.toStdString().c_str())) {
-        QMessageBox::critical(this, MSG_ERROR, tr("Failed to save screenshot."));
-    }
-    lcd_event_gui_callback = NULL;
-
-    screenshotSave(tr("GIF images (*.gif)"), QStringLiteral("gif"), path);
-}
-
-void MainWindow::recordGIF() {
+void MainWindow::recordAPNG() {
     static QString path;
-    static QString opt_path;
 
     if (guiDebug || guiReceive || guiSend) {
         return;
     }
 
     if (path.isEmpty()) {
-        path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.gif");
-        opt_path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_opt_tmp.gif");
-        lcd_event_gui_callback = gif_new_frame;
-        gif_start_recording(path.toStdString().c_str(), ui->frameskipSlider->value());
+        path = QDir::tempPath() + QDir::separator() + QStringLiteral("apng_tmp.png");
+        lcd_event_gui_callback = apng_add_frame;
+        apng_start(path.toStdString().c_str(), ui->frameskipSlider->value());
         showStatusMsg(tr("Recording..."));
     } else {
         lcd_event_gui_callback = NULL;
         showStatusMsg(QStringLiteral(""));
-        if (gif_stop_recording()) {
+        if (apng_stop()) {
             QFileDialog dialog(this);
 
             dialog.setAcceptMode(QFileDialog::AcceptSave);
             dialog.setFileMode(QFileDialog::AnyFile);
             dialog.setDirectory(currDir);
-            dialog.setNameFilter(tr("GIF images (*.gif)"));
-            dialog.setWindowTitle(tr("Save Recorded GIF"));
-            dialog.setDefaultSuffix(QStringLiteral("gif"));
+            dialog.setNameFilter(tr("PNG images (*.png)"));
+            dialog.setWindowTitle(tr("Save Recorded PNG"));
+            dialog.setDefaultSuffix(QStringLiteral("png"));
             dialog.exec();
 
             if (!dialog.selectedFiles().isEmpty()) {
                 QString filename = dialog.selectedFiles().first();
                 QFile(filename).remove();
-                if (gif_optimize(path, opt_path)) {
-                    QFile(opt_path).rename(filename);
-                    QFile(path).remove();
-                } else {
-                    QMessageBox::warning(this, MSG_WARNING, tr("Optimizing GIF failed; output is still valid."));
-                    QFile(path).rename(filename);
-                    QFile(opt_path).remove();
-                }
+                QFile(path).rename(filename);
             } else {
                 QFile(path).remove();
-                QFile(opt_path).remove();
             }
 
             currDir = dialog.directory();
 
         } else {
-            QMessageBox::critical(this, MSG_ERROR, tr("A failure occured during GIF recording."));
+            QMessageBox::critical(this, MSG_ERROR, tr("A failure occured during PNG recording."));
         }
         path.clear();
-        opt_path.clear();
     }
 
-    recordingGif = !path.isEmpty();
-    ui->frameskipSlider->setEnabled(!recordingGif);
-    ui->actionRecordGIF->setChecked(recordingGif);
-    ui->buttonGIF->setText(recordingGif ? tr("Stop Recording") : tr("Record GIF"));
-    ui->actionRecordGIF->setText(recordingGif ? tr("Stop GIF Recording...") : tr("Record animated GIF..."));
+    recordingAnimated = !path.isEmpty();
+    ui->frameskipSlider->setEnabled(!recordingAnimated);
+    ui->actionRecordAnimated->setChecked(recordingAnimated);
+    ui->buttonRecordAnimated->setText(recordingAnimated ? tr("Stop Recording...") : tr("Record Animated PNG"));
+    ui->actionRecordAnimated->setText(recordingAnimated ? tr("Stop Recording...") : tr("Record animated PNG..."));
 }
 
 void MainWindow::changeFrameskip(int value) {

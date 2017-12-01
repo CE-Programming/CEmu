@@ -5,8 +5,8 @@
 #include <QtGui/QPainter>
 
 QImage renderFramebuffer(lcd_state_t *lcds) {
-    lcd_drawframe(lcds->framebuffer, lcds);
-    return QImage(reinterpret_cast<const uint8_t*>(lcds->framebuffer), lcds->width, lcds->height, QImage::Format_RGBA8888);
+    lcd_drawframe(lcds->frame, lcds);
+    return QImage(reinterpret_cast<const uint8_t*>(lcds->frame), lcds->width, lcds->height, QImage::Format_RGB888);
 }
 
 void paintFramebuffer(QPainter *p, lcd_state_t *lcds) {
