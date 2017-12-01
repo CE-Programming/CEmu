@@ -18,7 +18,8 @@ typedef struct {
     png_uint_16 den;
     unsigned int n;
     bool recording;
-    unsigned int time;
+    unsigned int frameskip;
+    unsigned int skipped;
     uint8_t frame[LCD_FRAME_SIZE];
     uint8_t prev[LCD_FRAME_SIZE];
     char *name;

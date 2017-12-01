@@ -68,9 +68,6 @@ public slots:
     // LCD Popouts
     void newMemoryVisualizer();
 
-    // Animated Capture
-    void addAnimatedFrame();
-
 signals:
     // Debugging
     void setDebugState(bool state);
@@ -515,8 +512,6 @@ private:
     QMessageBox *infoBox = Q_NULLPTR;
     QMessageBox *warnBox = Q_NULLPTR;
     QProgressBar *progressBar;
-
-    QTimer animationTimer;
 };
 
 #endif

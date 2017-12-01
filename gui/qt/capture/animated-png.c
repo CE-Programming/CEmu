@@ -28,21 +28,29 @@ bool apng_start(const char *tmp_name, int rate, int frameskip) {
     // set delay rate
     apng.num = 1;
     apng.den = rate / frameskip;
+    apng.frameskip = frameskip;
 
     // init recording items
     apng.recording = true;
+    apng.skipped = 0;
     apng.n = 0;
 
     return true;
 }
 
 void apng_add_frame(void) {
-    if (!apng.recording || (++apng.n % (apng.den + 1))) {
+    if (!apng.recording) {
         return;
     }
 
-    // write frame to temp file
-    fwrite(lcd.frame, 1, LCD_FRAME_SIZE, apng.tmp);
+    if (!apng.skipped--) {
+        apng.skipped = apng.frameskip;
+
+        // write frame to temp file
+        fwrite(lcd.frame, 1, LCD_FRAME_SIZE, apng.tmp);
+
+        apng.n++;
+    }
 }
 
 bool apng_stop(void) {
@@ -85,7 +93,7 @@ bool apng_save(const char *filename) {
     }
 
     for (a = 0; a < apng.n; a++) {
-        fread(apng.frame, 1, LCD_FRAME_SIZE, apng.tmp);
+        if (fread(apng.frame, 1, LCD_FRAME_SIZE, apng.tmp) != LCD_FRAME_SIZE) { goto err; };
 
         op = PNG_DISPOSE_OP_NONE;
 
@@ -97,11 +105,9 @@ bool apng_save(const char *filename) {
     png_write_end(png_ptr, info_ptr);
     png_destroy_write_struct(&png_ptr, &info_ptr);
 
+err:
     free(row_ptrs);
     fclose(f);
-
-    apng.time = 0;
-    apng.n = 0;
 
     fclose(apng.tmp);
     apng.tmp = NULL;

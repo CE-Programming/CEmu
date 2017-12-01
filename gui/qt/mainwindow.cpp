@@ -272,9 +272,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     toggleAction->setCheckable(true);
     connect(toggleAction, &QAction::triggered, this, &MainWindow::toggleUIEditMode);
 
-    // Animation Capture
-    connect(&animationTimer, SIGNAL(timeout()), this, SLOT(addAnimatedFrame()));
-
     // Shortcut Connections
     stepInShortcut = new QShortcut(QKeySequence(Qt::Key_F6), this);
     stepOverShortcut = new QShortcut(QKeySequence(Qt::Key_F7), this);
@@ -872,10 +869,6 @@ void MainWindow::saveScreenToClipboard() {
     QApplication::clipboard()->setImage(image, QClipboard::Clipboard);
 }
 
-void MainWindow::addAnimatedFrame() {
-    apng_add_frame();
-}
-
 void MainWindow::recordAPNG() {
     static QString path;
 
@@ -887,9 +880,7 @@ void MainWindow::recordAPNG() {
         path = QDir::tempPath() + QDir::separator() + QStringLiteral("apng_tmp.png");
         apng_start(path.toStdString().c_str(), ui->refreshLCD->value(), ui->frameskipSlider->value() + 1);
         showStatusMsg(tr("Recording..."));
-        animationTimer.start();
     } else {
-        animationTimer.stop();
         showStatusMsg(QStringLiteral(""));
         if (apng_stop()) {
             QFileDialog dialog(this);
@@ -933,7 +924,6 @@ void MainWindow::changeFrameskip(int value) {
 void MainWindow::changeFramerate() {
     float framerate = ((float) ui->refreshLCD->value()) / (ui->frameskipSlider->value() + 1);
     ui->framerateLabel->setText(QString::number(framerate).left(4));
-    animationTimer.setInterval(1000/framerate);
 }
 
 void MainWindow::showAbout() {

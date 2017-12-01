@@ -135,6 +135,8 @@ static void lcd_event(int index) {
             + (lcd.timing[1]       & 0x3FF) + 1; /* Active        */
     event_repeat(index, pcd * htime * vtime);
 
+    lcd_drawframe(lcd.frame, &lcd);
+
     /* For now, assuming vsync occurs at same time UPBASE is loaded */
     lcd.upcurr = lcd.upbase;
     lcd.ris |= 0xC;

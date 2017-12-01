@@ -1,17 +1,24 @@
 #include "utils.h"
 #include "qtframebuffer.h"
 #include "../../core/backlight.h"
+#include "capture/animated-png.h"
 
 #include <QtGui/QPainter>
 
 QImage renderFramebuffer(lcd_state_t *lcds) {
-    lcd_drawframe(lcds->frame, lcds);
+    if (lcds != &lcd) {
+        lcd_drawframe(lcds->frame, lcds);
+    }
     return QImage(reinterpret_cast<const uint8_t*>(lcds->frame), lcds->width, lcds->height, QImage::Format_RGB888);
 }
 
 void paintFramebuffer(QPainter *p, lcd_state_t *lcds) {
     if (guiEmuValid && lcds && lcds->control & 0x800) {
         QImage img = renderFramebuffer(lcds);
+
+        if (lcds == &lcd) {
+            apng_add_frame();
+        }
 
         // Interpolation only for < 100% scale
         p->setRenderHint(QPainter::SmoothPixmapTransform, (p->window().width() < static_cast<int>(lcds->width)));
