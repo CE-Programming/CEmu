@@ -17,8 +17,7 @@ apng_t apng;
 bool apng_start(const char *tmp_name, int rate, int frameskip) {
 
     // copy name for later
-    apng.name = calloc(1, strlen(tmp_name) + 1);
-    strcpy(apng.name, tmp_name);
+    apng.name = strdup(tmp_name);
 
     // temp file used for saving rgb888 data rather than storing everything in ram
     if (!(apng.tmp = fopen(apng.name, "wb"))) {
