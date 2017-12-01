@@ -139,10 +139,6 @@ static void lcd_event(int index) {
     lcd.upcurr = lcd.upbase;
     lcd.ris |= 0xC;
     intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
-
-    if (lcd_event_gui_callback) {
-        lcd_event_gui_callback();
-    }
 }
 
 void lcd_reset(void) {

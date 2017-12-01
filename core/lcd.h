@@ -7,12 +7,14 @@ extern "C" {
 
 #include "port.h"
 
+#define LCD_RGB_SIZE   3
 #define LCD_WIDTH      320
 #define LCD_HEIGHT     240
-#define LCD_SIZE       (LCD_WIDTH*LCD_HEIGHT)
-#define LCD_BYTE_SIZE  (LCD_SIZE*2)
+#define LCD_SIZE       (LCD_WIDTH * LCD_HEIGHT)
+#define LCD_BYTE_SIZE  (LCD_SIZE * 2)
 #define LCD_RAM_ADDR   0xD40000
 #define LCD_RAM_OFFSET 0x040000
+#define LCD_FRAME_SIZE (LCD_SIZE * LCD_RGB_SIZE)
 
 /* Standard LCD state */
 typedef struct lcd_cntrl_state {

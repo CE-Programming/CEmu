@@ -8,6 +8,7 @@
 #include <QtWidgets/QTableWidgetItem>
 #include <QtWidgets/QFileDialog>
 #include <QtCore/QSettings>
+#include <QtCore/QTimer>
 #include <QtGui/QTextCursor>
 #include <QtWidgets/QMessageBox>
 
@@ -66,6 +67,9 @@ public slots:
 
     // LCD Popouts
     void newMemoryVisualizer();
+
+    // Animated Capture
+    void addAnimatedFrame();
 
 signals:
     // Debugging
@@ -511,6 +515,8 @@ private:
     QMessageBox *infoBox = Q_NULLPTR;
     QMessageBox *warnBox = Q_NULLPTR;
     QProgressBar *progressBar;
+
+    QTimer animationTimer;
 };
 
 #endif
