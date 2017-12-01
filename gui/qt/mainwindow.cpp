@@ -878,7 +878,7 @@ void MainWindow::recordAPNG() {
 
     if (path.isEmpty()) {
         path = QDir::tempPath() + QDir::separator() + QStringLiteral("apng_tmp.png");
-        apng_start(path.toStdString().c_str(), ui->refreshLCD->value(), ui->frameskipSlider->value() + 1);
+        apng_start(path.toStdString().c_str(), ui->refreshLCD->value(), ui->frameskipSlider->value());
         showStatusMsg(tr("Recording..."));
     } else {
         showStatusMsg(QStringLiteral(""));

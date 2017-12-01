@@ -26,7 +26,7 @@ bool apng_start(const char *tmp_name, int rate, int frameskip) {
 
     // set delay rate
     apng.num = 1;
-    apng.den = rate / frameskip;
+    apng.den = rate / (frameskip + 1);
     apng.frameskip = frameskip;
 
     // init recording items
