@@ -359,7 +359,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     setAutoSaveState(settings->value(SETTING_RESTORE_ON_OPEN, true).toBool());
     setSaveDebug(settings->value(SETTING_DEBUGGER_RESTORE_ON_OPEN, false).toBool());
     setSpaceDisasm(settings->value(SETTING_DEBUGGER_ADD_DISASM_SPACE, false).toBool());
-    setUIEditMode(settings->value(SETTING_UI_EDIT_MODE, true).toBool());
     setDebugResetTrigger(settings->value(SETTING_DEBUGGER_RESET_OPENS, false).toBool());
     setDebugIgnoreBreakpoints(settings->value(SETTING_DEBUGGER_BREAK_IGNORE, false).toBool());
     setDebugSoftCommands(settings->value(SETTING_DEBUGGER_ENABLE_SOFT, true).toBool());
@@ -434,6 +433,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     debuggerInstall();
     setUIDocks();
+
+    setUIEditMode(settings->value(SETTING_UI_EDIT_MODE, true).toBool());
 
     if (settings->value(SETTING_DEBUGGER_RESTORE_ON_OPEN, false).toBool()) {
         if (!opts.debugFile.isEmpty()) {
