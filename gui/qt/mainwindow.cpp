@@ -269,6 +269,11 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     // Clipboard copy
     connect(ui->actionClipScreen, &QAction::triggered, this, &MainWindow::saveScreenToClipboard);
 
+    // Docks
+    toggleAction = new QAction(tr("Enable UI edit mode"), this);
+    toggleAction->setCheckable(true);
+    connect(toggleAction, &QAction::triggered, this, &MainWindow::toggleUIEditMode);
+
     // Shortcut Connections
     stepInShortcut = new QShortcut(QKeySequence(Qt::Key_F6), this);
     stepOverShortcut = new QShortcut(QKeySequence(Qt::Key_F7), this);
