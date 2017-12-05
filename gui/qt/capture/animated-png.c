@@ -1,6 +1,6 @@
 #include "animated-png.h"
-#include "libpng-apng/png.h"
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -16,11 +16,8 @@ apng_t apng;
 
 bool apng_start(const char *tmp_name, int fps, int frameskip) {
 
-    // copy name for later
-    apng.name = strdup(tmp_name);
-
     // temp file used for saving rgb888 data rather than storing everything in ram
-    if (!(apng.tmp = fopen(apng.name, "wb"))) {
+    if (!(apng.tmp = fopen(tmp_name, "w+b"))) {
         return false;
     }
 
@@ -46,78 +43,195 @@ void apng_add_frame(void) {
         apng.skipped = apng.frameskip;
 
         // write frame to temp file
-        fwrite(lcd.frame, 1, LCD_FRAME_SIZE, apng.tmp);
+        if (!apng.n || 0xFFFFu - apng.delay < apng.num || memcmp(lcd.frame, apng.frame, LCD_FRAME_SIZE)) {
+            if (apng.n) {
+                fwrite(&apng.delay, sizeof(apng.delay), 1, apng.tmp);
+            }
+            apng.delay = 0;
+            memcpy(apng.frame, lcd.frame, LCD_FRAME_SIZE);
+            fwrite(apng.frame, 1, LCD_FRAME_SIZE, apng.tmp);
+            apng.n++;
+        }
 
-        apng.n++;
+        apng.delay += apng.num;
     }
 }
 
 bool apng_stop(void) {
+    fwrite(&apng.delay, sizeof(apng.delay), 1, apng.tmp);
     apng.recording = false;
     return true;
 }
 
-bool apng_save(const char *filename) {
-    uint8_t op = PNG_DISPOSE_OP_NONE;
+bool apng_save(const char *filename, bool optimize) {
     png_structp png_ptr;
     png_infop info_ptr;
-    png_bytep *row_ptrs;
+    png_bytep dst;
+    png_color prev_color, cur_color;
+    png_colorp prev, cur, palette;
     FILE *f;
 
-    unsigned int k, a;
+    uint32_t count = ~0, pixel = 0, i, j, probe, hash;
+    int x, y;
+    struct { int x[2], y[2]; } frame;
 
-    fclose(apng.tmp);
-    if (!(apng.tmp = fopen(apng.name, "rb"))) {
-        return false;
+    if (optimize) {
+        rewind(apng.tmp);
+        memset(apng.table, 0, sizeof(apng.table));
+        count = 1;
+        for (i = 0; i != apng.n; i++) {
+            for (j = 0; j != LCD_SIZE; j++) {
+                if (fread(&pixel, 3, 1, apng.tmp) != 1) {
+                    fclose(apng.tmp);
+                    apng.tmp = NULL;
+                    return false;
+                }
+                hash = pixel % TABLE_SIZE;
+                probe = 1;
+                while (true) {
+                    if (!apng.table[hash]) { // empty
+                        if (count & ~0xFF) {
+                            count++;
+                            i = apng.n;
+                            j = LCD_SIZE;
+                            break; // too many colors
+                        }
+                        apng.table[hash] = count++ << 24 | (pixel & UINT32_C(0xFFFFFF));
+                        break;
+                    } else if ((apng.table[hash] & UINT32_C(0xFFFFFF)) == pixel) {
+                        break;
+                    }
+                    hash += probe;
+                    if (hash >= TABLE_SIZE) {
+                        hash -= TABLE_SIZE;
+                    }
+                    probe += 2;
+                    if (probe >= TABLE_SIZE) {
+                        probe -= TABLE_SIZE;
+                    }
+                }
+            }
+            fseek(apng.tmp, sizeof(apng.delay), SEEK_CUR);
+        }
     }
+    rewind(apng.tmp);
 
     if (!(f = fopen(filename, "wb"))) {
+        fclose(apng.tmp);
+        apng.tmp = NULL;
         return false;
     }
 
     png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     info_ptr = png_create_info_struct(png_ptr);
-    setjmp(png_jmpbuf(png_ptr));
+    if (setjmp(png_jmpbuf(png_ptr))) { goto err; }
     png_init_io(png_ptr, f);
 
-    png_set_IHDR(png_ptr, info_ptr, LCD_WIDTH, LCD_HEIGHT, 8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+    png_set_IHDR(png_ptr, info_ptr, LCD_WIDTH, LCD_HEIGHT, count <= 1 << 1 ? 1 : count <= 1 << 2 ? 2 : count <= 1 << 4 ? 4 : 8,
+                 count <= 1 << 8 ? PNG_COLOR_TYPE_PALETTE : PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+    if (count <= 1 << 8) {
+        palette = &apng.prev[0][0];
+        for (i = 0; i != TABLE_SIZE; i++) {
+            if (apng.table[i]) {
+                j = apng.table[i] >> 24;
+                palette[j].red = apng.table[i];
+                palette[j].green = apng.table[i] >> 8;
+                palette[j].blue = apng.table[i] >> 16;
+            }
+        }
+        palette[0].red = palette[0].green = palette[0].blue = 0; // transparent
+        png_set_PLTE(png_ptr, info_ptr, palette, count);
+        png_set_tRNS(png_ptr, info_ptr, &palette[0].red, 1, NULL);
+    }
 
     png_set_acTL(png_ptr, info_ptr, apng.n, 0);
     png_write_info(png_ptr, info_ptr);
+    png_set_packing(png_ptr);
 
-    row_ptrs = (png_bytepp)png_malloc(png_ptr, sizeof(png_bytep) * LCD_HEIGHT);
+    for (i = 0; i != apng.n; i++) {
+        if (fread(apng.frame, 1, LCD_FRAME_SIZE, apng.tmp) != LCD_FRAME_SIZE ||
+            fread(&apng.delay, sizeof(apng.delay), 1, apng.tmp) != 1) { goto err; }
 
-    for (k = 0; k < LCD_HEIGHT; k++) {
-        row_ptrs[k] = apng.frame + (k * LCD_WIDTH * LCD_RGB_SIZE);
-    }
-
-    for (a = 0; a < apng.n; a++) {
-        if (fread(apng.frame, 1, LCD_FRAME_SIZE, apng.tmp) != LCD_FRAME_SIZE) { goto err; };
-
-        op = PNG_DISPOSE_OP_NONE;
-
-        if (a && !memcmp(apng.frame, apng.prev, LCD_FRAME_SIZE)) {
-            op = PNG_DISPOSE_OP_PREVIOUS;
+	if (count <= 1 << 8) {
+            frame.x[0] = LCD_WIDTH - 1;
+            frame.y[0] = LCD_HEIGHT - 1;
+            frame.x[1] = frame.y[1] = 0;
+            prev = &apng.prev[0][0];
+            cur = &apng.frame[0][0];
+            dst = &cur->red;
+            for (y = 0; y != LCD_HEIGHT; y++) {
+                apng.row_ptrs[y] = dst;
+                for (x = 0; x != LCD_WIDTH; x++) {
+                    prev_color = *prev;
+                    cur_color = *prev++ = *cur++;
+                    if (i && prev_color.red == cur_color.red && prev_color.green == cur_color.green && prev_color.blue == cur_color.blue) {
+                        *dst++ = 0;
+                        continue;
+                    }
+                    if (frame.x[0] > x) {
+                        frame.x[0] = x;
+                    }
+                    if (frame.x[1] < x) {
+                        frame.x[1] = x;
+                    }
+                    if (frame.y[0] > y) {
+                        frame.y[0] = y;
+                    }
+                    if (frame.y[1] < y) {
+                        frame.y[1] = y;
+                    }
+                    pixel = cur_color.red | cur_color.green << 8 | cur_color.blue << 16;
+                    hash = pixel % TABLE_SIZE;
+                    probe = 1;
+                    while (true) {
+                        assert(apng.table[hash]);
+                        if ((apng.table[hash] & UINT32_C(0xFFFFFF)) == pixel) {
+                            *dst++ = apng.table[hash] >> 24;
+                            break;
+                        }
+                        hash += probe;
+                        if (hash >= TABLE_SIZE) {
+                            hash -= TABLE_SIZE;
+                        }
+                        probe += 2;
+                        if (probe >= TABLE_SIZE) {
+                            probe -= TABLE_SIZE;
+                        }
+                    }
+                }
+            }
+            if (frame.x[0] > frame.x[1] || frame.y[0] > frame.y[1]) {
+                frame.x[0] = frame.y[0] = 0;
+                frame.x[1] = frame.y[1] = -1;
+            }
+            for (y = frame.y[0]; y <= frame.y[1]; y++) {
+                apng.row_ptrs[y] += frame.x[0];
+            }
+        } else {
+            frame.x[0] = frame.y[0] = 0;
+            frame.x[1] = LCD_WIDTH - 1;
+            frame.y[1] = LCD_HEIGHT - 1;
+            for (y = frame.y[0]; y <= frame.y[1]; y++) {
+                apng.row_ptrs[y] = &apng.frame[y][0].red;
+            }
         }
 
-        png_write_frame_head(png_ptr, info_ptr, row_ptrs, LCD_WIDTH, LCD_HEIGHT, 0, 0, apng.num, apng.den, op, PNG_BLEND_OP_SOURCE);
-        png_write_image(png_ptr, row_ptrs);
+        png_write_frame_head(png_ptr, info_ptr, &apng.row_ptrs[frame.y[0]], frame.x[1] - frame.x[0] + 1, frame.y[1] - frame.y[0] + 1,
+                             frame.x[0], frame.y[0], apng.delay, apng.den, PNG_DISPOSE_OP_NONE, PNG_BLEND_OP_OVER);
+        png_write_image(png_ptr, &apng.row_ptrs[frame.y[0]]);
         png_write_frame_tail(png_ptr, info_ptr);
-
-        memcpy(apng.prev, apng.frame, LCD_FRAME_SIZE);
     }
-
     png_write_end(png_ptr, info_ptr);
-    png_destroy_write_struct(&png_ptr, &info_ptr);
 
 err:
-    free(row_ptrs);
+    png_destroy_write_struct(&png_ptr, &info_ptr);
     fclose(f);
 
-    fclose(apng.tmp);
-    apng.tmp = NULL;
-    free(apng.name);
-    apng.name = NULL;
+    if (optimize) {
+        fclose(apng.tmp);
+        apng.tmp = NULL;
+    }
 
+    printf("apng_save(%s, %s);\n", filename, optimize ? "true" : "false");
     return true;
 }

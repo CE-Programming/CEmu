@@ -891,11 +891,9 @@ void MainWindow::recordAPNG() {
             dialog.setNameFilter(tr("PNG images (*.png)"));
             dialog.setWindowTitle(tr("Save Recorded PNG"));
             dialog.setDefaultSuffix(QStringLiteral("png"));
-            dialog.exec();
-
-            if (!dialog.selectedFiles().isEmpty()) {
+            if (dialog.exec() == QDialog::Accepted) {
                 QString filename = dialog.selectedFiles().first();
-                apng_save(filename.toStdString().c_str());
+                apng_save(filename.toStdString().c_str(), true);
             }
 
             QFile(path).remove();
