@@ -911,18 +911,20 @@ void MainWindow::recordAPNG() {
 
             QFile(path).remove();
             currDir = dialog.directory();
+            path.clear();
 
             if (res == QDialog::Accepted) {
                 QString filename = dialog.selectedFiles().first();
-                path.clear();
                 saveAnimated(filename);
-                return;
+            } else {
+                updateAnimatedControls();
             }
         } else {
             QMessageBox::critical(this, MSG_ERROR, tr("A failure occured during PNG recording."));
+            showStatusMsg(QStringLiteral(""));
+            path.clear();
         }
-        showStatusMsg(QStringLiteral(""));
-        path.clear();
+        return;
     }
 
     recordingAnimated = true;
