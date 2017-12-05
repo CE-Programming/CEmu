@@ -26,6 +26,15 @@
 #include "../../core/debug/debug.h"
 #include "../../core/debug/disasm.h"
 
+class RecordingThread : public QThread {
+    Q_OBJECT
+    void run() Q_DECL_OVERRIDE;
+public:
+    QString filename;
+signals:
+    void done();
+};
+
 namespace Ui { class MainWindow; }
 
 class MainWindow : public QMainWindow {
@@ -57,6 +66,7 @@ public slots:
     void saveToFile();
     void exportRom();
     void setImagePath();
+    void updateAnimatedControls();
 
     // Debugging
     void debuggerGUIDisable();
@@ -155,6 +165,7 @@ private:
     void screenshot();
     void screenshotSave(const QString& nameFilter, const QString& defaultSuffix, const QString& temppath);
     void recordAPNG();
+    void saveAnimated(QString &filename);
     void changeFrameskip(int value);
     void changeFramerate();
     void checkForUpdates(bool forceInfoBox);

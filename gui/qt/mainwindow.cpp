@@ -877,12 +877,17 @@ void MainWindow::recordAPNG() {
     }
 
     if (path.isEmpty()) {
+        if (recordingAnimated) {
+            return;
+        }
         path = QDir::tempPath() + QDir::separator() + QStringLiteral("apng_tmp.png");
         apng_start(path.toStdString().c_str(), ui->refreshLCD->value(), ui->frameskipSlider->value());
         showStatusMsg(tr("Recording..."));
     } else {
-        showStatusMsg(QStringLiteral(""));
+        showStatusMsg(QStringLiteral("Saving Recording..."));
         if (apng_stop()) {
+            int res;
+
             QFileDialog dialog(this);
 
             dialog.setAcceptMode(QFileDialog::AcceptSave);
@@ -891,25 +896,59 @@ void MainWindow::recordAPNG() {
             dialog.setNameFilter(tr("PNG images (*.png)"));
             dialog.setWindowTitle(tr("Save Recorded PNG"));
             dialog.setDefaultSuffix(QStringLiteral("png"));
-            if (dialog.exec() == QDialog::Accepted) {
-                QString filename = dialog.selectedFiles().first();
-                apng_save(filename.toStdString().c_str(), true);
-            }
+            res = dialog.exec();
 
             QFile(path).remove();
             currDir = dialog.directory();
 
+            if (res == QDialog::Accepted) {
+                QString filename = dialog.selectedFiles().first();
+                path.clear();
+                saveAnimated(filename);
+                return;
+            }
         } else {
             QMessageBox::critical(this, MSG_ERROR, tr("A failure occured during PNG recording."));
         }
+        showStatusMsg(QStringLiteral(""));
         path.clear();
     }
 
-    recordingAnimated = !path.isEmpty();
-    ui->frameskipSlider->setEnabled(!recordingAnimated);
-    ui->actionRecordAnimated->setChecked(recordingAnimated);
-    ui->buttonRecordAnimated->setText(recordingAnimated ? tr("Stop Recording...") : tr("Record Animated PNG"));
-    ui->actionRecordAnimated->setText(recordingAnimated ? tr("Stop Recording...") : tr("Record animated PNG..."));
+    recordingAnimated = true;
+    ui->frameskipSlider->setEnabled(false);
+    ui->actionRecordAnimated->setChecked(true);
+    ui->buttonRecordAnimated->setText(tr("Stop Recording"));
+    ui->actionRecordAnimated->setText(tr("Stop Recording..."));
+}
+
+void MainWindow::saveAnimated(QString &filename) {
+    ui->frameskipSlider->setEnabled(false);
+    ui->actionRecordAnimated->setEnabled(false);
+    ui->buttonRecordAnimated->setEnabled(false);
+    ui->buttonRecordAnimated->setText(tr("Saving..."));
+    ui->actionRecordAnimated->setText(tr("Saving Animated PNG..."));
+
+    RecordingThread *thread = new RecordingThread();
+    connect(thread, &RecordingThread::done, this, &MainWindow::updateAnimatedControls);
+    connect(thread, &RecordingThread::finished, thread, &QObject::deleteLater);
+    thread->filename = filename;
+    thread->start();
+}
+
+void MainWindow::updateAnimatedControls() {
+    recordingAnimated = false;
+    ui->frameskipSlider->setEnabled(true);
+    ui->actionRecordAnimated->setEnabled(true);
+    ui->buttonRecordAnimated->setEnabled(true);
+    ui->actionRecordAnimated->setChecked(false);
+    ui->buttonRecordAnimated->setText(tr("Record"));
+    ui->actionRecordAnimated->setText(tr("Record animated PNG..."));
+    showStatusMsg(QStringLiteral(""));
+}
+
+void RecordingThread::run() {
+    apng_save(filename.toStdString().c_str(), true);
+    emit done();
 }
 
 void MainWindow::changeFrameskip(int value) {
