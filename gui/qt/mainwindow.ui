@@ -3411,8 +3411,6 @@
          </widget>
         </item>
        </layout>
-       <zorder>disassemblyView</zorder>
-       <zorder></zorder>
       </widget>
       <widget class="QWidget" name="tab_13">
        <attribute name="title">
