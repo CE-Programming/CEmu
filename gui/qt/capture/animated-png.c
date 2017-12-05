@@ -229,12 +229,9 @@ err:
     png_destroy_write_struct(&png_ptr, &info_ptr);
     fclose(f);
 
-    if (optimize) {
-        fclose(apng.tmp);
-        apng.tmp = NULL;
-    }
+    fclose(apng.tmp);
+    apng.tmp = NULL;
 
-    printf("apng_save(%s, %s);\n", filename, optimize ? "true" : "false");
     return true;
 }
 
