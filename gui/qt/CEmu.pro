@@ -42,8 +42,18 @@ TEMPLATE = app
 # Localization
 TRANSLATIONS += i18n/fr_FR.ts i18n/es_ES.ts i18n/nl_NL.ts
 
-CONFIG += c++11 console link_pkgconfig
-PKGCONFIG += libpng zlib
+CONFIG += c++11 console
+
+# You should run ./capture/get_libpng-apng.sh first!
+
+# For some reason, the qt-provided PKGCONFIG variable isn't working well on mac...
+if (macx) {
+    INCLUDEPATH = /usr/local/include $$INCLUDEPATH
+    LIBS += $$system(PKG_CONFIG_PATH=/usr/local/lib/pkgconfig /usr/local/bin/pkg-config --libs libpng)
+} else {
+    CONFIG += link_pkgconfig
+    PKGCONFIG += libpng zlib
+}
 
 # Core options
 DEFINES += DEBUG_SUPPORT
