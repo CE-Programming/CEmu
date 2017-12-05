@@ -185,7 +185,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     // Capture
     connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
     connect(ui->buttonRecordAnimated, &QPushButton::clicked, this, &MainWindow::recordAPNG);
-    connect(ui->frameskipSlider, &QSlider::valueChanged, this, &MainWindow::changeFrameskip);
+    connect(ui->frameskipSlider, &QSlider::valueChanged, this, &MainWindow::setFrameskip);
+    connect(ui->checkOptimizeRecording, &QCheckBox::stateChanged, this, &MainWindow::setOptimizeRecording);
 
     // About
     connect(ui->actionCheckForUpdates, &QAction::triggered, this, [=](){ this->checkForUpdates(true); });
@@ -349,7 +350,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 #endif
 
     optLoadFiles(opts);
-    changeFrameskip(settings->value(SETTING_CAPTURE_FRAMESKIP, 3).toUInt());
+    setFrameskip(settings->value(SETTING_CAPTURE_FRAMESKIP, 3).toUInt());
+    setOptimizeRecording(settings->value(SETTING_CAPTURE_OPTIMIZE, true).toBool());
     setLCDRefresh(settings->value(SETTING_SCREEN_REFRESH_RATE, 30).toUInt());
     setEmuSpeed(settings->value(SETTING_EMUSPEED, 10).toUInt());
     setFont(settings->value(SETTING_DEBUGGER_TEXT_SIZE, 9).toUInt());
@@ -932,6 +934,7 @@ void MainWindow::saveAnimated(QString &filename) {
     connect(thread, &RecordingThread::done, this, &MainWindow::updateAnimatedControls);
     connect(thread, &RecordingThread::finished, thread, &QObject::deleteLater);
     thread->filename = filename;
+    thread->optimize = optimizeRecording;
     thread->start();
 }
 
@@ -947,20 +950,8 @@ void MainWindow::updateAnimatedControls() {
 }
 
 void RecordingThread::run() {
-    apng_save(filename.toStdString().c_str(), true);
+    apng_save(filename.toStdString().c_str(), optimize);
     emit done();
-}
-
-void MainWindow::changeFrameskip(int value) {
-    settings->setValue(SETTING_CAPTURE_FRAMESKIP, value);
-    ui->frameskipLabel->setText(QString::number(value));
-    ui->frameskipSlider->setValue(value);
-    changeFramerate();
-}
-
-void MainWindow::changeFramerate() {
-    float framerate = ((float) ui->refreshLCD->value()) / (ui->frameskipSlider->value() + 1);
-    ui->framerateLabel->setText(QString::number(framerate).left(4));
 }
 
 void MainWindow::showAbout() {

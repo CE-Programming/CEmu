@@ -31,6 +31,7 @@ class RecordingThread : public QThread {
     void run() Q_DECL_OVERRIDE;
 public:
     QString filename;
+    bool optimize;
 signals:
     void done();
 };
@@ -166,7 +167,8 @@ private:
     void screenshotSave(const QString& nameFilter, const QString& defaultSuffix, const QString& temppath);
     void recordAPNG();
     void saveAnimated(QString &filename);
-    void changeFrameskip(int value);
+    void setFrameskip(int value);
+    void setOptimizeRecording(bool state);
     void changeFramerate();
     void checkForUpdates(bool forceInfoBox);
     void showAbout();
@@ -468,6 +470,7 @@ private:
     bool pauseOnFocus;
     bool loadedCEmuBootImage = false;
     bool stoppedEmu = false;
+    bool optimizeRecording;
     static const int WindowStateVersion = 0;
 
     // Settings definitions
@@ -496,6 +499,7 @@ private:
     static const QString SETTING_WINDOW_STATE;
     static const QString SETTING_WINDOW_GEOMETRY;
     static const QString SETTING_CAPTURE_FRAMESKIP;
+    static const QString SETTING_CAPTURE_OPTIMIZE;
     static const QString SETTING_IMAGE_PATH;
     static const QString SETTING_ROM_PATH;
     static const QString SETTING_FIRST_RUN;
