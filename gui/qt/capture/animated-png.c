@@ -1,5 +1,7 @@
 #include "animated-png.h"
 
+#ifdef PNG_WRITE_APNG_SUPPORTED
+
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -235,3 +237,5 @@ err:
     printf("apng_save(%s, %s);\n", filename, optimize ? "true" : "false");
     return true;
 }
+
+#endif

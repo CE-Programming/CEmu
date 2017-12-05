@@ -21,11 +21,13 @@
 #include "keyhistory.h"
 #include "keypad/qtkeypadbridge.h"
 #include "qhexedit/qhexedit.h"
+#include "png.h"
 
 #include "../../core/vat.h"
 #include "../../core/debug/debug.h"
 #include "../../core/debug/disasm.h"
 
+#ifdef PNG_WRITE_APNG_SUPPORTED
 class RecordingThread : public QThread {
     Q_OBJECT
     void run() Q_DECL_OVERRIDE;
@@ -35,6 +37,7 @@ public:
 signals:
     void done();
 };
+#endif
 
 namespace Ui { class MainWindow; }
 
@@ -67,7 +70,9 @@ public slots:
     void saveToFile();
     void exportRom();
     void setImagePath();
+#ifdef PNG_WRITE_APNG_SUPPORTED
     void updateAnimatedControls();
+#endif
 
     // Debugging
     void debuggerGUIDisable();
@@ -165,8 +170,10 @@ private:
     bool runSetup();
     void screenshot();
     void screenshotSave(const QString& nameFilter, const QString& defaultSuffix, const QString& temppath);
+#ifdef PNG_WRITE_APNG_SUPPORTED
     void recordAPNG();
     void saveAnimated(QString &filename);
+#endif
     void setFrameskip(int value);
     void setOptimizeRecording(bool state);
     void changeFramerate();

@@ -42,7 +42,8 @@ TEMPLATE = app
 # Localization
 TRANSLATIONS += i18n/fr_FR.ts i18n/es_ES.ts i18n/nl_NL.ts
 
-CONFIG += c++11 console
+CONFIG += c++11 console link_pkgconfig
+PKGCONFIG += libpng zlib
 
 # Core options
 DEFINES += DEBUG_SUPPORT
@@ -88,21 +89,6 @@ QMAKE_CXXFLAGS  += $$GLOBAL_FLAGS
 QMAKE_LFLAGS    += $$GLOBAL_FLAGS
 
 macx: ICON = resources/icons/icon.icns
-
-# libpng-apng stuff. Be sure to keep your built lib up to date ;)
-# See http://www.libpng.org/pub/png/libpng.html and https://sourceforge.net/projects/libpng-apng/files/
-# To build, take a look at the CI scripts (Travis and AppVeyor) for an example.
-# TODO: For Windows, we'll need to work on the CI scripts to build libpng-apng correctly. Remove the win32-related lines once that's done:
-if (win32) {
-    message("TODO: script the libpng-apng building part! Skipping for now...")
-} else {
-    if (!exists("capture/libpng-apng/png.h")) {
-        error("You need to get libpng-apng and put it in $$PWD/capture/libpng-apng. The built libpngapng.a/.lib (rename it) file must then be in $$PWD/capture/libpng-apng/.libs/.")
-    }
-    INCLUDEPATH += $$PWD/capture/libpng-apng
-    DEPENDPATH  += $$PWD/capture/libpng-apng
-    LIBS += -L$$PWD/capture/libpng-apng/.libs/ -lpngapng -lz
-}
 
 SOURCES +=  utils.cpp \
     main.cpp \

@@ -16,9 +16,11 @@ void paintFramebuffer(QPainter *p, lcd_state_t *lcds) {
     if (guiEmuValid && lcds && lcds->control & 0x800) {
         QImage img = renderFramebuffer(lcds);
 
+#ifdef PNG_WRITE_APNG_SUPPORTED
         if (lcds == &lcd) {
             apng_add_frame();
         }
+#endif
 
         // Interpolation only for < 100% scale
         p->setRenderHint(QPainter::SmoothPixmapTransform, (p->window().width() < static_cast<int>(lcds->width)));

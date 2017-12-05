@@ -10,7 +10,9 @@ extern "C" {
 #include <stdint.h>
 
 #include "../../../core/lcd.h"
-#include "libpng-apng/png.h"
+#include "png.h"
+
+#ifdef PNG_WRITE_APNG_SUPPORTED
 
 #define TABLE_SIZE 521 // should be a prime >= 256*2
 
@@ -30,6 +32,8 @@ bool apng_start(const char *tmp_name, int, int);
 void apng_add_frame(void);
 bool apng_stop(void);
 bool apng_save(const char *filename, bool optimize);
+
+#endif
 
 #ifdef __cplusplus
 }

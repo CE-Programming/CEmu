@@ -167,7 +167,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->actionSetup, &QAction::triggered, this, &MainWindow::runSetup);
     connect(ui->actionExit, &QAction::triggered, this, &MainWindow::close);
     connect(ui->actionScreenshot, &QAction::triggered, this, &MainWindow::screenshot);
+#ifdef PNG_WRITE_APNG_SUPPORTED
     connect(ui->actionRecordAnimated, &QAction::triggered, this, &MainWindow::recordAPNG);
+#endif
     connect(ui->actionRestoreState, &QAction::triggered, this, &MainWindow::restoreEmuState);
     connect(ui->actionSaveState, &QAction::triggered, this, &MainWindow::saveEmuState);
     connect(ui->actionExportCalculatorState, &QAction::triggered, this, &MainWindow::saveToFile);
@@ -184,9 +186,15 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     // Capture
     connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
+#ifdef PNG_WRITE_APNG_SUPPORTED
     connect(ui->buttonRecordAnimated, &QPushButton::clicked, this, &MainWindow::recordAPNG);
     connect(ui->frameskipSlider, &QSlider::valueChanged, this, &MainWindow::setFrameskip);
     connect(ui->checkOptimizeRecording, &QCheckBox::stateChanged, this, &MainWindow::setOptimizeRecording);
+#else
+    ui->buttonRecordAnimated->setEnabled(false);
+    ui->frameskipSlider->setEnabled(false);
+    ui->checkOptimizeRecording->setEnabled(false);
+#endif
 
     // About
     connect(ui->actionCheckForUpdates, &QAction::triggered, this, [=](){ this->checkForUpdates(true); });
@@ -871,6 +879,7 @@ void MainWindow::saveScreenToClipboard() {
     QApplication::clipboard()->setImage(image, QClipboard::Clipboard);
 }
 
+#ifdef PNG_WRITE_APNG_SUPPORTED
 void MainWindow::recordAPNG() {
     static QString path;
 
@@ -953,6 +962,7 @@ void RecordingThread::run() {
     apng_save(filename.toStdString().c_str(), optimize);
     emit done();
 }
+#endif
 
 void MainWindow::showAbout() {
     QMessageBox *aboutBox = new QMessageBox(this);
