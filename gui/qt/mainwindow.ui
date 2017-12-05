@@ -6014,7 +6014,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>4</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -6539,10 +6539,10 @@
                 <number>1</number>
                </property>
                <property name="value">
-                <number>2</number>
+                <number>1</number>
                </property>
                <property name="sliderPosition">
-                <number>2</number>
+                <number>1</number>
                </property>
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
