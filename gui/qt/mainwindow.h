@@ -30,7 +30,8 @@
 #ifdef PNG_WRITE_APNG_SUPPORTED
 class RecordingThread : public QThread {
     Q_OBJECT
-    void run() Q_DECL_OVERRIDE;
+protected:
+    virtual void run() Q_DECL_OVERRIDE;
 public:
     QString filename;
     bool optimize;
