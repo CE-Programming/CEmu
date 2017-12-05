@@ -350,7 +350,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 #endif
 
     optLoadFiles(opts);
-    setFrameskip(settings->value(SETTING_CAPTURE_FRAMESKIP, 3).toUInt());
+    setFrameskip(settings->value(SETTING_CAPTURE_FRAMESKIP, 1).toUInt());
     setOptimizeRecording(settings->value(SETTING_CAPTURE_OPTIMIZE, true).toBool());
     setLCDRefresh(settings->value(SETTING_SCREEN_REFRESH_RATE, 30).toUInt());
     setEmuSpeed(settings->value(SETTING_EMUSPEED, 10).toUInt());
