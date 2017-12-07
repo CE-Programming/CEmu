@@ -1,10 +1,12 @@
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QScrollBar>
+#include <QtWidgets/QMenu>
 #include <QtGui/QClipboard>
 #include <QtGui/QKeyEvent>
 #include <QtGui/QPainter>
 
 #include "qhexedit.h"
+#include "../utils.h"
 
 /* Constructor */
 QHexEdit::QHexEdit(QWidget *par) : QAbstractScrollArea(par) {
@@ -63,6 +65,10 @@ void QHexEdit::setAddressOffset(qint64 addressOffset_) {
 
 qint64 QHexEdit::addressOffset() {
     return _addressOffset;
+}
+
+qint64 QHexEdit::currentOffset() {
+    return _bPosCurrent;
 }
 
 int QHexEdit::addressWidth() {

@@ -1815,3 +1815,56 @@ void MainWindow::vatContextMenu(const QPoint& posa) {
         }
     }
 }
+
+void MainWindow::flashContextMenu(const QPoint& posa) {
+    QHexEdit *p = ui->flashEdit;
+    memoryContextMenu(p->mapToGlobal(posa), p->addressOffset() + p->currentOffset());
+}
+
+void MainWindow::ramContextMenu(const QPoint& posa) {
+    QHexEdit *p = ui->ramEdit;
+    memoryContextMenu(p->mapToGlobal(posa), p->addressOffset() + p->currentOffset());
+}
+
+void MainWindow::memContextMenu(const QPoint& posa) {
+    QHexEdit *p = ui->memEdit;
+    memoryContextMenu(p->mapToGlobal(posa), p->addressOffset() + p->currentOffset());
+}
+
+void MainWindow::memoryContextMenu(const QPoint& pos, uint32_t address) {
+    QString copy_addr = tr("Copy Address");
+    QString toggle_break = tr("Toggle Breakpoint");
+    QString toggle_write_watch = tr("Toggle Write Watchpoint");
+    QString toggle_read_watch = tr("Toggle Read Watchpoint");
+
+    QString addr = int2hex(address, 6);
+
+    copy_addr += QStringLiteral(" '") + addr + QStringLiteral("'");
+
+    QMenu menu;
+    menu.addAction(copy_addr);
+    menu.addSeparator();
+    menu.addAction(toggle_break);
+    menu.addAction(toggle_read_watch);
+    menu.addAction(toggle_write_watch);
+
+    QAction* item = menu.exec(pos);
+    if (item) {
+        if (item->text() == copy_addr) {
+            QClipboard *clipboard = QApplication::clipboard();
+            clipboard->setText(addr.toLatin1());
+        } else if (item->text() == toggle_break) {
+            if (!breakpointAdd(breakpointNextLabel(), address, true)) {
+                breakpointRemoveSelectedRow();
+            }
+        } else if (item->text() == toggle_read_watch) {
+            if (!watchpointAdd(watchpointNextLabel(), address, 1, DBG_READ_WATCHPOINT)) {
+                watchpointRemoveSelectedRow();
+            }
+        } else if (item->text() == toggle_write_watch) {
+            if (!watchpointAdd(watchpointNextLabel(), address, 1, DBG_WRITE_WATCHPOINT)) {
+                watchpointRemoveSelectedRow();
+            }
+        }
+    }
+}
