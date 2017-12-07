@@ -7,6 +7,7 @@
 
 #include "qhexedit.h"
 #include "../utils.h"
+#include "../../core/debug/debug.h"
 
 /* Constructor */
 QHexEdit::QHexEdit(QWidget *par) : QAbstractScrollArea(par) {
@@ -576,9 +577,9 @@ void QHexEdit::paintEvent(QPaintEvent *e) {
             address = QString("%1").arg(_bPosFirst + row*bytesPerLine + _addressOffset, _addrDigits, 16, QChar('0'));
             painter.drawText(_pxPosAdrX - pxOfsX, pxPosY, address.toUpper());
         }
-        int address_line = _pxPosAdrX - pxOfsX + addressWidth()*_pxCharWidth + _pxCharWidth/2;
+        int line = _pxPosAdrX - pxOfsX + addressWidth()*_pxCharWidth + _pxCharWidth/2;
         painter.setPen(Qt::gray);
-        painter.drawLine(address_line, e->rect().top(), address_line, height());
+        painter.drawLine(line, e->rect().top(), line, height());
 
         /* Paint hex and ASCII area */
         QPen colStandard = QPen(pal->color(QPalette::WindowText));
@@ -599,12 +600,24 @@ void QHexEdit::paintEvent(QPaintEvent *e) {
                     c = _brushSelection.color();
                     painter.setPen(_penSelection);
                 } else {
-                    if (_highlighting) {
-                        if (_markedShown.at((int)(posBa - _bPosFirst))) {
-                            c = _brushHighlighted.color();
-                            painter.setPen(_penHighlighted);
-                        }
+                    if (_markedShown.at((int)(posBa - _bPosFirst))) {
+                        c = _brushHighlighted.color();
+                        painter.setPen(_penHighlighted);
                     }
+                }
+
+                // r, w , x
+                uint32_t addr = posBa + addressOffset();
+                uint8_t data = debugger.data.block[addr];
+
+                if (data & DBG_READ_WATCHPOINT) {
+                    painter.setPen(QColor(0xA3FFA3));
+                }
+                if (data & DBG_WRITE_WATCHPOINT) {
+                    painter.setPen(QColor(0xA3A3FF));
+                }
+                if (data & DBG_EXEC_BREAKPOINT) {
+                    painter.setPen(QColor(0xFFA3A3));
                 }
 
                 // render hex value
@@ -616,8 +629,17 @@ void QHexEdit::paintEvent(QPaintEvent *e) {
                 }
                 painter.fillRect(r, c);
                 hex = _hexDataShown.mid((bPosLine + colIdx) * 2, 2);
-                painter.drawText(pxPosX, pxPosY, hex.toUpper());
-                pxPosX += 3*_pxCharWidth;
+                if ((data & DBG_WRITE_WATCHPOINT) && (data & DBG_READ_WATCHPOINT)) {
+                    painter.setPen(QColor(0xA3FFA3));
+                    painter.drawText(pxPosX, pxPosY, QString(hex.toUpper().at(0)));
+                    pxPosX += _pxCharWidth;
+                    painter.setPen(QColor(0xA3A3FF));
+                    painter.drawText(pxPosX, pxPosY, QString(hex.toUpper().at(1)));
+                    pxPosX += 2*_pxCharWidth;
+                } else {
+                    painter.drawText(pxPosX, pxPosY, hex.toUpper());
+                    pxPosX += 3*_pxCharWidth;
+                }
 
                 // render ascii value
                 if (_asciiArea) {

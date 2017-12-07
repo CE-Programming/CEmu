@@ -753,6 +753,9 @@ void MainWindow::closeEvent(QCloseEvent *e) {
         return;
     }
 
+    // ignore debug requests
+    debugger.ignore = true;
+
     if (guiDebug) {
         debuggerChangeState();
     }

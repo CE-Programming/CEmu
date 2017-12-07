@@ -1819,16 +1819,19 @@ void MainWindow::vatContextMenu(const QPoint& posa) {
 void MainWindow::flashContextMenu(const QPoint& posa) {
     QHexEdit *p = ui->flashEdit;
     memoryContextMenu(p->mapToGlobal(posa), p->addressOffset() + p->currentOffset());
+    p->viewport()->update();
 }
 
 void MainWindow::ramContextMenu(const QPoint& posa) {
     QHexEdit *p = ui->ramEdit;
     memoryContextMenu(p->mapToGlobal(posa), p->addressOffset() + p->currentOffset());
+    p->viewport()->update();
 }
 
 void MainWindow::memContextMenu(const QPoint& posa) {
     QHexEdit *p = ui->memEdit;
     memoryContextMenu(p->mapToGlobal(posa), p->addressOffset() + p->currentOffset());
+    p->viewport()->update();
 }
 
 void MainWindow::memoryContextMenu(const QPoint& pos, uint32_t address) {
@@ -1836,6 +1839,7 @@ void MainWindow::memoryContextMenu(const QPoint& pos, uint32_t address) {
     QString toggle_break = tr("Toggle Breakpoint");
     QString toggle_write_watch = tr("Toggle Write Watchpoint");
     QString toggle_read_watch = tr("Toggle Read Watchpoint");
+    QString toggle_rw_watch = tr("Toggle Read/Write Watchpoint");
 
     QString addr = int2hex(address, 6);
 
@@ -1847,6 +1851,7 @@ void MainWindow::memoryContextMenu(const QPoint& pos, uint32_t address) {
     menu.addAction(toggle_break);
     menu.addAction(toggle_read_watch);
     menu.addAction(toggle_write_watch);
+    menu.addAction(toggle_rw_watch);
 
     QAction* item = menu.exec(pos);
     if (item) {
@@ -1863,6 +1868,10 @@ void MainWindow::memoryContextMenu(const QPoint& pos, uint32_t address) {
             }
         } else if (item->text() == toggle_write_watch) {
             if (!watchpointAdd(watchpointNextLabel(), address, 1, DBG_WRITE_WATCHPOINT)) {
+                watchpointRemoveSelectedRow();
+            }
+        } else if (item->text() == toggle_rw_watch) {
+            if (!watchpointAdd(watchpointNextLabel(), address, 1, DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT)) {
                 watchpointRemoveSelectedRow();
             }
         }
