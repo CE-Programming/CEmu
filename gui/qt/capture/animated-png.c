@@ -69,10 +69,11 @@ bool apng_save(const char *filename, bool optimize) {
     png_structp png_ptr;
     png_infop info_ptr;
     png_bytep dst;
-    png_color prev_color, cur_color;
     png_colorp prev, cur, palette;
+    png_color_16 trans;
     FILE *f;
 
+    bool have_trans = true;
     uint32_t count = ~0, pixel = 0, i, j, probe, hash;
     int x, y;
     struct { int x[2], y[2]; } frame;
@@ -83,24 +84,34 @@ bool apng_save(const char *filename, bool optimize) {
         count = 1;
         for (i = 0; i != apng.n; i++) {
             for (j = 0; j != LCD_SIZE; j++) {
-                if (fread(&pixel, 3, 1, apng.tmp) != 1) {
+                size_t size = fread(&pixel, 3, 1, apng.tmp);
+                if (size != 1) {
                     fclose(apng.tmp);
                     apng.tmp = NULL;
                     return false;
+                }
+                if (pixel == 0xFEFEFE) {
+                    have_trans = false;
+                }
+                if (count > 1 << 8) {
+                    if (have_trans) {
+                        continue;
+                    } else {
+                        break;
+                    }
                 }
                 hash = pixel % TABLE_SIZE;
                 probe = 1;
                 while (true) {
                     if (!apng.table[hash]) { // empty
-                        if (count & ~0xFF) {
-                            count++;
-                            i = apng.n;
-                            j = LCD_SIZE;
-                            break; // too many colors
-                        }
                         apng.table[hash] = count++ << 24 | (pixel & UINT32_C(0xFFFFFF));
                         break;
-                    } else if ((apng.table[hash] & UINT32_C(0xFFFFFF)) == pixel) {
+                    }
+                    if ((apng.table[hash] & UINT32_C(0xFFFFFF)) == pixel) {
+                        break;
+                    }
+                    if (!probe) {
+                        assert(count & ~0xFF);
                         break;
                     }
                     hash += probe;
@@ -144,6 +155,9 @@ bool apng_save(const char *filename, bool optimize) {
         palette[0].red = palette[0].green = palette[0].blue = 0; // transparent
         png_set_PLTE(png_ptr, info_ptr, palette, count);
         png_set_tRNS(png_ptr, info_ptr, &palette[0].red, 1, NULL);
+    } else if (have_trans) {
+        trans.red = trans.green = trans.blue = 0xFE; // transparent
+        png_set_tRNS(png_ptr, info_ptr, NULL, 0, &trans);
     }
 
     png_set_acTL(png_ptr, info_ptr, apng.n, 0);
@@ -154,52 +168,53 @@ bool apng_save(const char *filename, bool optimize) {
         if (fread(apng.frame, 1, LCD_FRAME_SIZE, apng.tmp) != LCD_FRAME_SIZE ||
             fread(&apng.delay, sizeof(apng.delay), 1, apng.tmp) != 1) { goto err; }
 
+        frame.x[0] = LCD_WIDTH - 1;
+        frame.y[0] = LCD_HEIGHT - 1;
+        frame.x[1] = frame.y[1] = 0;
+        prev = &apng.prev[0][0];
+        cur = &apng.frame[0][0];
 	if (count <= 1 << 8) {
-            frame.x[0] = LCD_WIDTH - 1;
-            frame.y[0] = LCD_HEIGHT - 1;
-            frame.x[1] = frame.y[1] = 0;
-            prev = &apng.prev[0][0];
-            cur = &apng.frame[0][0];
             dst = &cur->red;
             for (y = 0; y != LCD_HEIGHT; y++) {
                 apng.row_ptrs[y] = dst;
                 for (x = 0; x != LCD_WIDTH; x++) {
-                    prev_color = *prev;
-                    cur_color = *prev++ = *cur++;
-                    if (i && prev_color.red == cur_color.red && prev_color.green == cur_color.green && prev_color.blue == cur_color.blue) {
+                    if (i && cur->red == prev->red && cur->green == prev->green && cur->blue == prev->blue) {
                         *dst++ = 0;
-                        continue;
-                    }
-                    if (frame.x[0] > x) {
-                        frame.x[0] = x;
-                    }
-                    if (frame.x[1] < x) {
-                        frame.x[1] = x;
-                    }
-                    if (frame.y[0] > y) {
-                        frame.y[0] = y;
-                    }
-                    if (frame.y[1] < y) {
-                        frame.y[1] = y;
-                    }
-                    pixel = cur_color.red | cur_color.green << 8 | cur_color.blue << 16;
-                    hash = pixel % TABLE_SIZE;
-                    probe = 1;
-                    while (true) {
-                        assert(apng.table[hash]);
-                        if ((apng.table[hash] & UINT32_C(0xFFFFFF)) == pixel) {
-                            *dst++ = apng.table[hash] >> 24;
-                            break;
+                    } else {
+                        if (frame.x[0] > x) {
+                            frame.x[0] = x;
                         }
-                        hash += probe;
-                        if (hash >= TABLE_SIZE) {
-                            hash -= TABLE_SIZE;
+                        if (frame.x[1] < x) {
+                            frame.x[1] = x;
                         }
-                        probe += 2;
-                        if (probe >= TABLE_SIZE) {
-                            probe -= TABLE_SIZE;
+                        if (frame.y[0] > y) {
+                            frame.y[0] = y;
                         }
+                        if (frame.y[1] < y) {
+                            frame.y[1] = y;
+                        }
+                        pixel = cur->red | cur->green << 8 | cur->blue << 16;
+                        hash = pixel % TABLE_SIZE;
+                        probe = 1;
+                        while (true) {
+                            assert(apng.table[hash]);
+                            if ((apng.table[hash] & UINT32_C(0xFFFFFF)) == pixel) {
+                                *dst++ = apng.table[hash] >> 24;
+                                break;
+                            }
+                            hash += probe;
+                            if (hash >= TABLE_SIZE) {
+                                hash -= TABLE_SIZE;
+                            }
+                            probe += 2;
+                            if (probe >= TABLE_SIZE) {
+                                probe -= TABLE_SIZE;
+                            }
+                        }
+                        *prev = *cur;
                     }
+                    prev++;
+                    cur++;
                 }
             }
             if (frame.x[0] > frame.x[1] || frame.y[0] > frame.y[1]) {
@@ -210,11 +225,41 @@ bool apng_save(const char *filename, bool optimize) {
                 apng.row_ptrs[y] += frame.x[0];
             }
         } else {
-            frame.x[0] = frame.y[0] = 0;
-            frame.x[1] = LCD_WIDTH - 1;
-            frame.y[1] = LCD_HEIGHT - 1;
+            for (y = 0; y != LCD_HEIGHT; y++) {
+                apng.row_ptrs[y] = &cur->red;
+                for (x = 0; x != LCD_WIDTH; x++) {
+                    if (i && cur->red == prev->red && cur->green == prev->green && cur->blue == prev->blue) {
+                        if (have_trans) {
+                            cur->red = trans.red;
+                            cur->green = trans.green;
+                            cur->blue = trans.blue;
+                        }
+                    } else {
+                        if (frame.x[0] > x) {
+                            frame.x[0] = x;
+                        }
+                        if (frame.x[1] < x) {
+                            frame.x[1] = x;
+                        }
+                        if (frame.y[0] > y) {
+                            frame.y[0] = y;
+                        }
+                        if (frame.y[1] < y) {
+                            frame.y[1] = y;
+                        }
+                        *prev = *cur;
+                    }
+                    prev++;
+                    cur++;
+                }
+            }
+            if (frame.x[0] > frame.x[1] || frame.y[0] > frame.y[1]) {
+                printf("zero on frame %u/%u\n", i, apng.n);
+                frame.x[0] = frame.y[0] = 0;
+                frame.x[1] = frame.y[1] = -1;
+            }
             for (y = frame.y[0]; y <= frame.y[1]; y++) {
-                apng.row_ptrs[y] = &apng.frame[y][0].red;
+                apng.row_ptrs[y] += frame.x[0] * LCD_RGB_SIZE;
             }
         }
 
