@@ -45,6 +45,7 @@ const QString MainWindow::SETTING_WINDOW_SIZE               = QStringLiteral("Wi
 const QString MainWindow::SETTING_WINDOW_STATE              = QStringLiteral("Window/state");
 const QString MainWindow::SETTING_WINDOW_GEOMETRY           = QStringLiteral("Window/geometry");
 const QString MainWindow::SETTING_CAPTURE_FRAMESKIP         = QStringLiteral("Capture/frameskip");
+const QString MainWindow::SETTING_CAPTURE_OPTIMIZE          = QStringLiteral("Capture/optimize");
 const QString MainWindow::SETTING_IMAGE_PATH                = QStringLiteral("image_path");
 const QString MainWindow::SETTING_ROM_PATH                  = QStringLiteral("rom_path");
 const QString MainWindow::SETTING_FIRST_RUN                 = QStringLiteral("first_run");
@@ -114,6 +115,24 @@ void MainWindow::setPortableConfig(bool state) {
     portable = state;
     ui->buttonChangeSavedDebugPath->setEnabled(!portable);
     ui->buttonChangeSavedImagePath->setEnabled(!portable);
+}
+
+void MainWindow::setFrameskip(int value) {
+    settings->setValue(SETTING_CAPTURE_FRAMESKIP, value);
+    ui->frameskipLabel->setText(QString::number(value));
+    ui->frameskipSlider->setValue(value);
+    changeFramerate();
+}
+
+void MainWindow::changeFramerate() {
+    float framerate = ((float) ui->refreshLCD->value()) / (ui->frameskipSlider->value() + 1);
+    ui->framerateLabel->setText(QString::number(framerate).left(4));
+}
+
+void MainWindow::setOptimizeRecording(bool state) {
+    ui->checkOptimizeRecording->setChecked(state);
+    settings->setValue(SETTING_CAPTURE_OPTIMIZE, state);
+    optimizeRecording = state;
 }
 
 bool MainWindow::checkForCEmuBootImage() {

@@ -3411,8 +3411,6 @@
          </widget>
         </item>
        </layout>
-       <zorder>disassemblyView</zorder>
-       <zorder></zorder>
       </widget>
       <widget class="QWidget" name="tab_13">
        <attribute name="title">
@@ -3507,6 +3505,9 @@
                <height>72</height>
               </size>
              </property>
+             <property name="contextMenuPolicy">
+              <enum>Qt::CustomContextMenu</enum>
+             </property>
             </widget>
            </item>
           </layout>
@@ -3599,6 +3600,9 @@
                <width>338</width>
                <height>72</height>
               </size>
+             </property>
+             <property name="contextMenuPolicy">
+              <enum>Qt::CustomContextMenu</enum>
              </property>
             </widget>
            </item>
@@ -3705,6 +3709,9 @@
                <width>338</width>
                <height>72</height>
               </size>
+             </property>
+             <property name="contextMenuPolicy">
+              <enum>Qt::CustomContextMenu</enum>
              </property>
             </widget>
            </item>
@@ -5884,6 +5891,9 @@
            </item>
            <item row="2" column="0">
             <widget class="QCheckBox" name="checkBox">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="focusPolicy">
               <enum>Qt::NoFocus</enum>
              </property>
@@ -6425,22 +6435,6 @@
               <number>8</number>
              </property>
              <item>
-              <widget class="QPushButton" name="buttonGIFScreenshot">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="focusPolicy">
-                <enum>Qt::NoFocus</enum>
-               </property>
-               <property name="text">
-                <string>GIF</string>
-               </property>
-              </widget>
-             </item>
-             <item>
               <widget class="QPushButton" name="buttonScreenshot">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
@@ -6474,7 +6468,7 @@
              </sizepolicy>
             </property>
             <property name="title">
-             <string>Recording</string>
+             <string>Screen Recording</string>
             </property>
             <layout class="QGridLayout" name="gridLayout">
              <property name="leftMargin">
@@ -6489,7 +6483,7 @@
              <property name="bottomMargin">
               <number>8</number>
              </property>
-             <item row="2" column="4">
+             <item row="2" column="7">
               <spacer name="horizontalSpacer_11">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
@@ -6549,16 +6543,16 @@
                 <number>0</number>
                </property>
                <property name="maximum">
-                <number>10</number>
+                <number>3</number>
                </property>
                <property name="pageStep">
-                <number>2</number>
+                <number>1</number>
                </property>
                <property name="value">
-                <number>3</number>
+                <number>1</number>
                </property>
                <property name="sliderPosition">
-                <number>3</number>
+                <number>1</number>
                </property>
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
@@ -6573,7 +6567,7 @@
                 <enum>QSlider::TicksBelow</enum>
                </property>
                <property name="tickInterval">
-                <number>2</number>
+                <number>1</number>
                </property>
               </widget>
              </item>
@@ -6593,34 +6587,63 @@
                </property>
               </widget>
              </item>
-             <item row="3" column="3" alignment="Qt::AlignHCenter">
-              <widget class="QPushButton" name="buttonGIF">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>88</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="focusPolicy">
-                <enum>Qt::NoFocus</enum>
-               </property>
-               <property name="text">
-                <string>Record GIF</string>
-               </property>
-              </widget>
-             </item>
              <item row="3" column="0">
               <widget class="QLabel" name="framerateTextLabel">
                <property name="text">
                 <string>Framerate:</string>
                </property>
               </widget>
+             </item>
+             <item row="3" column="3">
+              <layout class="QHBoxLayout" name="horizontalLayout_20">
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QPushButton" name="buttonRecordAnimated">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>88</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="layoutDirection">
+                  <enum>Qt::LeftToRight</enum>
+                 </property>
+                 <property name="text">
+                  <string>Record</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="checkOptimizeRecording">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="layoutDirection">
+                  <enum>Qt::RightToLeft</enum>
+                 </property>
+                 <property name="text">
+                  <string>Optimize</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
             </layout>
            </widget>
@@ -8202,8 +8225,7 @@ QPushButton:pressed {
     <addaction name="menuExport"/>
     <addaction name="menuImport"/>
     <addaction name="separator"/>
-    <addaction name="actionRecordGIF"/>
-    <addaction name="actionTakeGIFScreenshot"/>
+    <addaction name="actionRecordAnimated"/>
     <addaction name="actionScreenshot"/>
     <addaction name="actionClipScreen"/>
     <addaction name="separator"/>
@@ -8388,7 +8410,7 @@ QPushButton:pressed {
     <string>Take PNG screenshot</string>
    </property>
   </action>
-  <action name="actionRecordGIF">
+  <action name="actionRecordAnimated">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -8400,7 +8422,7 @@ QPushButton:pressed {
      <normaloff>:/icons/resources/icons/gif.png</normaloff>:/icons/resources/icons/gif.png</iconset>
    </property>
    <property name="text">
-    <string>Record animated GIF</string>
+    <string>Record animated PNG</string>
    </property>
    <property name="toolTip">
     <string>Record animated GIF</string>

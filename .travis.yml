@@ -6,6 +6,7 @@ branches:
     - coverity_scan
     - gh-pages-dev
     - website-dev
+    - feature/apng
 
 sudo: false
 os: linux
@@ -26,6 +27,7 @@ addons:
       - libgl1-mesa-dev
 
 script:
+  - cd gui/qt/capture && bash ./get_libpng-apng.sh && cd ../../../
   - mkdir build
   - cd build
   - qmake ../gui/qt && make -j4 CC=gcc-5 CXX=g++-5 LINK=g++-5

@@ -17,8 +17,8 @@ void (*lcd_event_gui_callback)(void) = NULL;
 
 static bool _rgb;
 
-/* This is an intensive function. Any effort to speed it up would be much appreciated */
-static uint32_t lcd_bgr16out(uint32_t bgr16) {
+/* This is an intensive function. Need speedz. */
+static void lcd_bgr16out(uint32_t bgr16, uint8_t **out) {
     uint_fast8_t r, g, b;
 
     r = (bgr16 >> 10) & 0x3E;
@@ -34,9 +34,13 @@ static uint32_t lcd_bgr16out(uint32_t bgr16) {
     b = (b << 2) | (b >> 4);
 
     if (_rgb) {
-        return r | (g << 8) | (b << 16) | (255 << 24);
+        *(*out)++ = r;
+        *(*out)++ = g;
+        *(*out)++ = b;
     } else {
-        return b | (g << 8) | (r << 16) | (255 << 24);
+        *(*out)++ = b;
+        *(*out)++ = g;
+        *(*out)++ = r;
     }
 }
 
@@ -44,7 +48,7 @@ static uint32_t lcd_bgr16out(uint32_t bgr16) {
 #define c565(w)  (((w) >> 8 & 0xF800) | ((w) >> 5 & 0x7E0) | ((w) >> 3 & 0x1F))
 #define c12(w)   (((w) << 4 & 0xF000) | ((w) << 3 & 0x780) | ((w) << 1 & 0x1E))
 
-/* Draw the lcd onto an RGBA8888 buffer. Alpha is always 255. */
+/* Draw the lcd onto an RGB888 buffer. */
 void lcd_drawframe(uint32_t *out, lcd_state_t *buffer) {
     uint_fast8_t mode = buffer->control >> 1 & 7;
     _rgb = buffer->control & (1 << 8);
@@ -52,7 +56,7 @@ void lcd_drawframe(uint32_t *out, lcd_state_t *buffer) {
     uint32_t word, color;
     uint32_t *ofs = buffer->ofs;
     uint32_t *ofs_end = buffer->ofs_end;
-    uint32_t *out_end = out + buffer->size;
+    uint32_t *out_end = out + buffer->size - ((uintptr_t)(out + buffer->size) >> 2);
 
     if (!buffer->size) { return; }
     if (!ofs) { goto draw_black; }
@@ -68,7 +72,7 @@ void lcd_drawframe(uint32_t *out, lcd_state_t *buffer) {
             word = *ofs++;
             do {
                 color = lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask];
-                *out++ = lcd_bgr16out(c1555(color));
+                lcd_bgr16out(c1555(color), (uint8_t**)&out);
             } while (bitpos && out != out_end);
         } while (ofs < ofs_end);
 
@@ -76,36 +80,36 @@ void lcd_drawframe(uint32_t *out, lcd_state_t *buffer) {
         do {
             word = *ofs++;
             if (bebo) { word = word << 16 | word >> 16; }
-            *out++ = lcd_bgr16out(c1555(word));
+            lcd_bgr16out(c1555(word), (uint8_t**)&out);
             if (out == out_end) break;
             word >>= 16;
-            *out++ = lcd_bgr16out(c1555(word));
+            lcd_bgr16out(c1555(word), (uint8_t**)&out);
         } while (ofs < ofs_end);
 
     } else if (mode == 5) {
         do {
             word = *ofs++;
-            *out++ = lcd_bgr16out(c565(word));
+            lcd_bgr16out(c565(word), (uint8_t**)&out);
         } while (ofs < ofs_end);
 
     } else if (mode == 6) {
         do {
             word = *ofs++;
             if (bebo) { word = word << 16 | word >> 16; }
-            *out++ = lcd_bgr16out(word);
+            lcd_bgr16out(word, (uint8_t**)&out);
             if (out == out_end) break;
             word >>= 16;
-            *out++ = lcd_bgr16out(word);
+            lcd_bgr16out(word, (uint8_t**)&out);
         } while (ofs < ofs_end);
 
     } else { /* mode == 7 */
         do {
             word = *ofs++;
             if (bebo) { word = word << 16 | word >> 16; }
-            *out++ = lcd_bgr16out(c12(word));
+            lcd_bgr16out(c12(word), (uint8_t**)&out);
             if (out == out_end) break;
             word >>= 16;
-            *out++ = lcd_bgr16out(c12(word));
+            lcd_bgr16out(c12(word), (uint8_t**)&out);
         } while (ofs < ofs_end);
     }
 
@@ -131,14 +135,12 @@ static void lcd_event(int index) {
             + (lcd.timing[1]       & 0x3FF) + 1; /* Active        */
     event_repeat(index, pcd * htime * vtime);
 
+    lcd_drawframe(lcd.frame, &lcd);
+
     /* For now, assuming vsync occurs at same time UPBASE is loaded */
     lcd.upcurr = lcd.upbase;
     lcd.ris |= 0xC;
     intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
-
-    if (lcd_event_gui_callback) {
-        lcd_event_gui_callback();
-    }
 }
 
 void lcd_reset(void) {

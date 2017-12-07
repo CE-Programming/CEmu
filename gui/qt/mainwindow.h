@@ -8,6 +8,7 @@
 #include <QtWidgets/QTableWidgetItem>
 #include <QtWidgets/QFileDialog>
 #include <QtCore/QSettings>
+#include <QtCore/QTimer>
 #include <QtGui/QTextCursor>
 #include <QtWidgets/QMessageBox>
 
@@ -20,10 +21,24 @@
 #include "keyhistory.h"
 #include "keypad/qtkeypadbridge.h"
 #include "qhexedit/qhexedit.h"
+#include "png.h"
 
 #include "../../core/vat.h"
 #include "../../core/debug/debug.h"
 #include "../../core/debug/disasm.h"
+
+#ifdef PNG_WRITE_APNG_SUPPORTED
+class RecordingThread : public QThread {
+    Q_OBJECT
+protected:
+    virtual void run() Q_DECL_OVERRIDE;
+public:
+    QString filename;
+    bool optimize;
+signals:
+    void done();
+};
+#endif
 
 namespace Ui { class MainWindow; }
 
@@ -56,6 +71,9 @@ public slots:
     void saveToFile();
     void exportRom();
     void setImagePath();
+#ifdef PNG_WRITE_APNG_SUPPORTED
+    void updateAnimatedControls();
+#endif
 
     // Debugging
     void debuggerGUIDisable();
@@ -152,10 +170,13 @@ private:
     // Actions
     bool runSetup();
     void screenshot();
-    void screenshotGIF();
     void screenshotSave(const QString& nameFilter, const QString& defaultSuffix, const QString& temppath);
-    void recordGIF();
-    void changeFrameskip(int value);
+#ifdef PNG_WRITE_APNG_SUPPORTED
+    void recordAPNG();
+    void saveAnimated(QString &filename);
+#endif
+    void setFrameskip(int value);
+    void setOptimizeRecording(bool state);
     void changeFramerate();
     void checkForUpdates(bool forceInfoBox);
     void showAbout();
@@ -214,6 +235,10 @@ private:
     void variablesContextMenu(const QPoint&);
     void vatContextMenu(const QPoint &);
     void opContextMenu(const QPoint &);
+    void flashContextMenu(const QPoint &);
+    void ramContextMenu(const QPoint &);
+    void memContextMenu(const QPoint &);
+    void memoryContextMenu(const QPoint &, uint32_t);
     void removeAllSentVars();
     void removeSentVars();
     void deselectAllVars();
@@ -408,7 +433,7 @@ private:
     bool nativeConsole = false;
     bool closeAfterSave = false;
     bool canScroll = false;
-    bool recordingGif = false;
+    bool recordingAnimated = false;
 
     bool firstTimeShown = false;
 
@@ -457,6 +482,7 @@ private:
     bool pauseOnFocus;
     bool loadedCEmuBootImage = false;
     bool stoppedEmu = false;
+    bool optimizeRecording;
     static const int WindowStateVersion = 0;
 
     // Settings definitions
@@ -485,6 +511,7 @@ private:
     static const QString SETTING_WINDOW_STATE;
     static const QString SETTING_WINDOW_GEOMETRY;
     static const QString SETTING_CAPTURE_FRAMESKIP;
+    static const QString SETTING_CAPTURE_OPTIMIZE;
     static const QString SETTING_IMAGE_PATH;
     static const QString SETTING_ROM_PATH;
     static const QString SETTING_FIRST_RUN;
