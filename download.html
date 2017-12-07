@@ -51,9 +51,9 @@
                 </div>
                 <div id="simple-dl" class="col s12">
                     <h4>Select 64-bit or 32-bit.</h4>
-                    If your computer is somewhat recent, you can probably pick the 64-bit version.<br />
-                    The 64-bit version is a bit faster on modern computers.<br />
-                    If you tried the 64-bit version and it didn't open, use the 32-bit version instead.<br /><br />
+                    If your computer is somewhat recent, you should pick the 64-bit version.<br />
+                    If you tried the 64-bit version and it didn't open, use the 32-bit version instead.
+                    If any issues are encountered, try using one of the MSVC Windows builds selectable from the above tabs.<br /><br />
                     Windows and Linux builds are provided by <a href="https://github.com/jacobly0">@jacobly0</a>, and are compiled with MinGW (for Windows builds).<br />
                     The Mac build is provided by <a href="https://github.com/adriweb">@adriweb</a>.<br /><br />
                     <ul class="collapsible" data-collapsible="accordion">
@@ -76,64 +76,6 @@
                                 <a href="https://usercontent.irccloud-cdn.com/file/sZOz28jN/CEmu.zip" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download Mac 64-bit</a>
                                 <br /><br />
                                 (Last updated: 10/10/17)
-                            </div>
-                        </li>
-                        <li>
-                            <div class="collapsible-header"><i class="material-icons">dashboard</i>Linux</div>
-                            <div class="collapsible-body">
-                                This build requires Qt5 v5.9.1+ and glibc v3.4.21+ to be installed on your system.<br /><br />
-                                <ul class="collapsible" data-collapsible="accordion">
-                                    <li>
-                                        <div class="collapsible-header active"><i class="material-icons">done_all</i>Step 1: Installing Prerequisites</div>
-                                        <div class="collapsible-body">
-                                            glibc is not usually installable or upgradable - you may need to update/upgrade your OS if it is out of date.
-                                            <br /><br />
-                                            For Qt, installation is pretty easy! Select your Linux OS from the options below.<br />
-                                            
-                                            <ul class="collapsible" data-collapsible="accordion">
-                                                <li>
-                                                    <div class="collapsible-header active"><i class="material-icons">done_all</i>Debian/Ubuntu (and Friends)</div>
-                                                    <div class="collapsible-body">
-                                                        Open a terminal and run:
-                                                        <pre>sudo apt-get install libqt5core5a libqt5network5 libqt5gui5 libqt5widgets5</pre>
-                                                        If sudo isn't installed, just run:
-                                                        <pre>su -c "apt-get install libqt5core5a libqt5network5 libqt5gui5 libqt5widgets5"</pre>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="collapsible-header"><i class="material-icons">done_all</i>Fedora/CentOS/RedHat (and Friends)</div>
-                                                    <div class="collapsible-body">
-                                                        Open a terminal and run:
-                                                        <pre>su -c "yum install qt5"</pre>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="collapsible-header active"><i class="material-icons">done_all</i>Other Linux</div>
-                                                    <div class="collapsible-body">
-                                                        First and foremost, see if your package manager has Qt5 available.<br />
-                                                        Only follow these next steps if you are not able to find an existing package for Qt5.<br /><br />
-                                                        <ol>
-                                                            <li>Download <a href="https://www1.qt.io/download-open-source/">Qt5</a>.</li>
-                                                            <li>Open a terminal, and run: <pre>cd /path/to/where/you/downloaded/the/installer && chmod +x ./qt-installer-file-name</pre></li>
-                                                            <li>Then run: <pre>./qt-installer-file-name</pre>
-                                                            Follow the instructions on the screen to install Qt5 into your system. Re-login and/or reboot as necessary.</li>
-                                                        </ol>
-                                                    </div>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="collapsible-header active"><i class="material-icons">flash_on</i>Step 2: Running CEmu</div>
-                                        <div class="collapsible-body">
-                                            Finally, open a terminal and run:
-                                            <pre>cd /path/to/where/you/downloaded/CEmu && chmod +x ./CEmuBinaryName</pre>
-                                            <pre>./CEmuBinaryName</pre>
-                                        </div>
-                                    </li>
-                                </ul>
-                                <br />
-                                <a href="http://jacobly.com/CEmu/master/latest/CEmu64" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download Linux 64-bit</a>
                             </div>
                         </li>
                     </ul>
