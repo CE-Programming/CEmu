@@ -44,6 +44,17 @@ TRANSLATIONS += i18n/fr_FR.ts i18n/es_ES.ts i18n/nl_NL.ts
 
 CONFIG += c++11 console
 
+# You should run ./capture/get_libpng-apng.sh first!
+
+# For some reason, the qt-provided PKGCONFIG variable isn't working well on mac...
+if (macx) {
+    INCLUDEPATH = /usr/local/include $$INCLUDEPATH
+    LIBS += $$system(PKG_CONFIG_PATH=/usr/local/lib/pkgconfig /usr/local/bin/pkg-config --libs libpng)
+} else {
+    CONFIG += link_pkgconfig
+    PKGCONFIG += libpng zlib
+}
+
 # Core options
 DEFINES += DEBUG_SUPPORT
 
@@ -108,7 +119,6 @@ SOURCES +=  utils.cpp \
     qhexedit/chunks.cpp \
     qhexedit/commands.cpp \
     qhexedit/qhexedit.cpp \
-    capture/gif.cpp \
     tivarslib/utils_tivarslib.cpp \
     tivarslib/TypeHandlers/DummyHandler.cpp \
     tivarslib/TypeHandlers/TH_0x00.cpp \
@@ -149,20 +159,15 @@ SOURCES +=  utils.cpp \
     ../../core/extras.c \
     ../../core/debug/disasm.cpp \
     sendinghandler.cpp \
-    capture/optimize.c \
-    capture/gifread.c \
-    capture/gifwrite.c \
-    capture/giffunc.c \
     debugger.cpp \
     hexeditor.cpp \
     settings.cpp \
     ../../core/debug/stepping.cpp \
     ipc.cpp \
     keyhistory.cpp \
-    capture/opttemplate.c \
-    capture/quantize.c \
     memoryvisualizer.cpp \
-    ../../core/debug/debug.cpp
+    ../../core/debug/debug.cpp \
+    capture/animated-png.c
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
@@ -194,8 +199,6 @@ HEADERS  +=  utils.h \
     qhexedit/chunks.h \
     qhexedit/commands.h \
     qhexedit/qhexedit.h \
-    capture/gif.h \
-    capture/giflib.h \
     tivarslib/autoloader.h \
     tivarslib/utils_tivarslib.h \
     tivarslib/TypeHandlers/TypeHandlerFuncGetter.h \
@@ -231,14 +234,12 @@ HEADERS  +=  utils.h \
     ../../core/debug/stepping.h \
     cemuopts.h \
     sendinghandler.h \
-    capture/gifsicle.h \
-    capture/lcdfgif/gif.h \
     keypad/keycode.h \
     debugger.h \
     ipc.h \
     keyhistory.h \
-    capture/kcolor.h \
-    memoryvisualizer.h
+    memoryvisualizer.h \
+    capture/animated-png.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \

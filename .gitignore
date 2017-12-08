@@ -56,3 +56,6 @@ Thumbs.db
 
 # IntelliJ IDEs things
 **/.idea/
+
+# libpng[-apng] things
+gui/qt/capture/libpng*
