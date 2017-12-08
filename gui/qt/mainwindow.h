@@ -235,6 +235,10 @@ private:
     void variablesContextMenu(const QPoint&);
     void vatContextMenu(const QPoint &);
     void opContextMenu(const QPoint &);
+    void flashContextMenu(const QPoint &);
+    void ramContextMenu(const QPoint &);
+    void memContextMenu(const QPoint &);
+    void memoryContextMenu(const QPoint &, uint32_t);
     void removeAllSentVars();
     void removeSentVars();
     void deselectAllVars();

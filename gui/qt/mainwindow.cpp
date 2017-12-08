@@ -237,6 +237,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->buttonMemGoto, &QPushButton::clicked, this, &MainWindow::memGotoPressed);
     connect(ui->buttonMemSearch, &QPushButton::clicked, this, &MainWindow::memSearchPressed);
     connect(ui->buttonMemSync, &QPushButton::clicked, this, &MainWindow::memSyncPressed);
+    connect(ui->memEdit, &QHexEdit::customContextMenuRequested, this, &MainWindow::memContextMenu);
+    connect(ui->flashEdit, &QHexEdit::customContextMenuRequested, this, &MainWindow::flashContextMenu);
+    connect(ui->ramEdit, &QHexEdit::customContextMenuRequested, this, &MainWindow::ramContextMenu);
 
     // Keybindings
     connect(ui->radioCEmuKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
@@ -750,6 +753,9 @@ void MainWindow::closeEvent(QCloseEvent *e) {
         QMainWindow::closeEvent(e);
         return;
     }
+
+    // ignore debug requests
+    debugger.ignore = true;
 
     if (guiDebug) {
         debuggerChangeState();

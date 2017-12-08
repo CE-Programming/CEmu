@@ -73,6 +73,7 @@ public:
     bool addressArea();
     void setAddressArea(bool addressArea);
 
+    qint64 currentOffset();
     qint64 addressOffset();
     void setAddressOffset(qint64 addressArea);
 
@@ -122,7 +123,7 @@ private:
 
 private slots:
     void adjust();                              // recalc pixel positions
-    void dataChangedPrivate(int idx=0);        // emit dataChanged() signal
+    void dataChangedPrivate(int idx=0);         // emit dataChanged() signal
     void refresh();                             // ensureVisible() and readBuffers()
     void updateCursor();                        // update blinking cursor
 

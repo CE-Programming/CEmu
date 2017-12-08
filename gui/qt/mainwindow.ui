@@ -3505,6 +3505,9 @@
                <height>72</height>
               </size>
              </property>
+             <property name="contextMenuPolicy">
+              <enum>Qt::CustomContextMenu</enum>
+             </property>
             </widget>
            </item>
           </layout>
@@ -3597,6 +3600,9 @@
                <width>338</width>
                <height>72</height>
               </size>
+             </property>
+             <property name="contextMenuPolicy">
+              <enum>Qt::CustomContextMenu</enum>
              </property>
             </widget>
            </item>
@@ -3703,6 +3709,9 @@
                <width>338</width>
                <height>72</height>
               </size>
+             </property>
+             <property name="contextMenuPolicy">
+              <enum>Qt::CustomContextMenu</enum>
              </property>
             </widget>
            </item>
