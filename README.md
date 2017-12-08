@@ -15,8 +15,8 @@ Windows | macOS | Linux
 * Accurate and fast emulation (you can also customize the speed and even toggle throttling)
 * Resizable calculator screen
 * "Always-on-top" window option
-* Screen capture (PNG, GIF)
-* Screen recording (animated GIF)
+* Screen capture (PNG)
+* Screen recording (animated PNG)
 * File sending/receiving _(partial, WIP)_
 * Multiple keybinding presets
 * CE skins (colors like the real devices)
@@ -49,6 +49,8 @@ No binaries have been released yet as the code keeps changing these days! When a
 _Note that Release builds have an update checking feature, which is disabled in development builds._
 
 ## How to build
+*Initial note: CEmu uses Animated PNGs ("APNG") to record the screen efficiently. This requires an appropriate libpng version on your system, see [this script](https://github.com/CE-Programming/CEmu/blob/master/gui/qt/capture/get_libpng-apng.sh).*
+
 After downloading the source (you can clone the repo or just [get the zip](https://github.com/CE-Programming/CEmu/archive/master.zip)):
 
 1. Get the [latest Qt5 SDK](https://www.qt.io/download-open-source/#section-3) for your OS.  
