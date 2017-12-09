@@ -54,18 +54,27 @@ _Note that Release builds have an update checking feature, which is disabled in 
 After downloading the source (you can clone the repo or just [get the zip](https://github.com/CE-Programming/CEmu/archive/master.zip)):
 
 1. Get the [latest Qt5 SDK](https://www.qt.io/download-open-source/#section-3) for your OS.  
-  * If you're on linux, you may need to force update your PATH to have Qt's `bin/` folder prepended. This can be done by editing your shell's profile (for example ~/.bashrc), and adding the line:  
-  `export PATH=<path to Qt directory>/bin:$PATH`
-  * You may need to run this command under linux as well: `sudo apt-get install git qt5-default`
 
-2. Now you have two options:
+2. Now you have two options to actually build CEmu:
   * In a shell, `cd` to the project's `/gui/qt/` folder and type `qmake -r CEmu.pro && make`
-  * Open the .pro file with Qt Creator, set it up (default project settings should be fine), and hit Build. *(Note: you can tell make to use -j4 in the project settings)*
+  * Open the .pro file with Qt Creator, set it up (default project settings should be fine), and hit Build.
 
-3. If you are using linux, use `sudo make install` to integrate with your desktop.
+If you are using linux, use `sudo make install` to integrate with your desktop.
 
-_Note: Debugging support is somewhat core-related but is only built when `DEBUG_SUPPORT` is defined. The Qt GUI does this in the .pro file._  
-_Note 2: If you encounter a build error with something like `lto-wrapper failed`, try removing the -flto option in the .pro file and rebuild (`qmake` etc.). We're not quite sure why this is happening._
+## Build issues and solutions
+
+* If you're on macOS or Linux, you may need to force update your PATH to have Qt's `bin/` folder prepended (i.e. edit your shell's profile (for example ~/.bashrc), and add the line:  
+  `export PATH=<path to Qt directory>/bin:$PATH`  
+  You may need to run this command under linux as well: `sudo apt-get install git qt5-default`
+
+* If you're on macOS or Linux and use Qt Creator, you may need to launch it from the terminal to avoid potential pkgconfig-related issues (for instance, not correctly finding libpng).
+
+* If you're on macOS, CEmu might not launch from Qt Creator, with the default settings. You should then untick some checkboxes in the [project's settings](https://i.imgur.com/44zwQMU.png).
+
+* If you encounter a build error with something like `lto-wrapper failed`, try removing the `-flto` option in the .pro file and rebuild (`qmake` etc.). It's not clear why this is happening._
+
+
+## Contributing
 
 You're welcome to [report any bugs](https://github.com/CE-Programming/CEmu/issues) you may encounter, and if you want to help, tell us, or send patches / pull requests!
 
