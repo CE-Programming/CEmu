@@ -794,18 +794,42 @@ void MainWindow::consoleAppend(const QString &str, const QColor &color) {
 }
 
 void MainWindow::consoleStr(const QString &str) {
-    if (nativeConsole) {
-        fputs(str.toStdString().c_str(), stdout);
+    if (str.at(0) == 0xc) {
+        if (nativeConsole) {
+#ifdef _WIN32
+            system("cls");
+#else
+            system("clear");
+#endif
+        } else {
+            ui->console->clear();
+        }
     } else {
-        consoleAppend(str);
+        if (nativeConsole) {
+            fputs(str.toStdString().c_str(), stdout);
+        } else {
+            consoleAppend(str);
+        }
     }
 }
 
 void MainWindow::consoleErrStr(const QString &str) {
-    if (nativeConsole) {
-        fputs(str.toStdString().c_str(), stderr);
+    if (str.at(0) == 0xc) {
+        if (nativeConsole) {
+#ifdef _WIN32
+            system("cls");
+#else
+            system("clear");
+#endif
+        } else {
+            ui->console->clear();
+        }
     } else {
-        consoleAppend(str, Qt::red);
+        if (nativeConsole) {
+            fputs(str.toStdString().c_str(), stderr);
+        } else {
+            consoleAppend(str, Qt::red);
+        }
     }
 }
 
