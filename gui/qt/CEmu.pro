@@ -161,7 +161,8 @@ SOURCES +=  utils.cpp \
     memoryvisualizer.cpp \
     ../../core/debug/debug.cpp \
     capture/animated-png.c \
-    ../../core/lcd/spi.c
+    ../../core/lcd/spi.c \
+    ../../core/lcd/dma.c
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
@@ -202,7 +203,7 @@ HEADERS  +=  utils.h \
     ../../core/cpu.h \
     ../../core/defines.h \
     ../../core/keypad.h \
-    ../../core/lcd.h \
+    ../../core/lcd/lcd.h \
     ../../core/registers.h \
     ../../core/tidevices.h \
     ../../core/port.h \
@@ -234,7 +235,8 @@ HEADERS  +=  utils.h \
     keyhistory.h \
     memoryvisualizer.h \
     capture/animated-png.h \
-    ../../core/spi.h
+    ../../core/lcd/spi.h \
+    ../../core/lcd/dma.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \
