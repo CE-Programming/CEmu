@@ -71,6 +71,7 @@ static void plug_devices(void) {
     add_reset_proc(usb_reset);
     add_reset_proc(control_reset);
     add_reset_proc(backlight_reset);
+    add_reset_proc(spi_reset);
 
     gui_console_printf("[CEmu] Initialized APB...\n");
 }
