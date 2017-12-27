@@ -30,11 +30,11 @@ static uint8_t spi_read(const uint16_t pio, bool peek) {
 }
 
 /* Write to the SPI range of ports */
-static void spi_write(const uint16_t pio, const uint8_t value, bool poke) {
+static void spi_write(const uint16_t pio, const uint8_t byte, bool poke) {
     (void)poke;
 
-    if (pio == 0xD018) {
-        spi.fifo |= (value & 7) << spi.shift;
+    if (pio == 0x18) {
+        spi.fifo |= (byte & 7) << spi.shift;
         spi.shift -= 3;
         if (!spi.shift) {
             if (spi.fifo & 0x100) {
@@ -56,7 +56,9 @@ static const eZ80portrange_t pspi = {
 };
 
 void spi_reset(void) {
+    spi.fifo = 0;
     spi.param = 0;
+    spi.shift = 6;
     spi.cmd = SPI_COMMAND;
 }
 
