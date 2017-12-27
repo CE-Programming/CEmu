@@ -2,7 +2,7 @@
 
 #include "control.h"
 #include "asic.h"
-#include "lcd.h"
+#include "lcd/lcd.h"
 #include "emu.h"
 #include "debug/debug.h"
 

@@ -9,7 +9,7 @@ extern "C" {
 #include <stdio.h>
 #include <stdint.h>
 
-#include "../../../core/lcd.h"
+#include "../../../core/lcd/lcd.h"
 #include "png.h"
 
 #ifdef PNG_WRITE_APNG_SUPPORTED

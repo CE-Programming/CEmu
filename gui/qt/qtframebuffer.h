@@ -1,7 +1,7 @@
 #ifndef QTFRAMEBUFFER_H
 #define QTFRAMEBUFFER_H
 
-#include "../../core/lcd.h"
+#include "../../core/lcd/lcd.h"
 
 #include <QtWidgets/QWidget>
 

@@ -5,7 +5,7 @@
 #include <QtCore/QTimer>
 
 #include "qtframebuffer.h"
-#include "../../core/lcd.h"
+#include "../../core/lcd/lcd.h"
 
 class LCDWidget : public QWidget {
   Q_OBJECT

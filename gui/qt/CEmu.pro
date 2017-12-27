@@ -131,7 +131,7 @@ SOURCES +=  utils.cpp \
     ../../core/asic.c \
     ../../core/cpu.c \
     ../../core/keypad.c \
-    ../../core/lcd.c \
+    ../../core/lcd/lcd.c \
     ../../core/registers.c \
     ../../core/port.c \
     ../../core/interrupt.c \
@@ -161,7 +161,7 @@ SOURCES +=  utils.cpp \
     memoryvisualizer.cpp \
     ../../core/debug/debug.cpp \
     capture/animated-png.c \
-    ../../core/spi.c
+    ../../core/lcd/spi.c
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
