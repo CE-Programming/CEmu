@@ -95,6 +95,7 @@ static void spi_write_param(uint8_t value) {
             }
             break;
         case 0x2C:
+        case 0x3C:
             switch (sbit) {
                 case 0:
                     write8(spi.colStart, mbit, value);
@@ -149,20 +150,6 @@ static void spi_write_param(uint8_t value) {
             switch (sbit) {
                 case 0:
                     write8(spi.scrollStart, mbit, value);
-                    break;
-                default:
-                    break;
-            }
-            break;
-        case 0x3C:
-            switch (sbit) {
-                case 0:
-                    write8(spi.colStart, mbit, value);
-                    write8(spi.rowStart, mbit, value);
-                    break;
-                case 1:
-                    write8(spi.colEnd, mbit, value);
-                    write8(spi.rowEnd, mbit, value);
                     break;
                 default:
                     break;
