@@ -282,7 +282,9 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
             lcd.cntrl.IPC =    lcd.cntrl.timing[2] >> 13 &     1;
             lcd.cntrl.IOE =    lcd.cntrl.timing[2] >> 14 &     1;
             lcd.cntrl.CPL =   (lcd.cntrl.timing[2] >> 16 & 0x3FF) + 1;
-            lcd.cntrl.PCD =    lcd.cntrl.timing[2] >> 26 &     1;
+            if (lcd.cntrl.timing[2] >> 26 & 1) {
+                lcd.cntrl.PCD = 1;
+            }
             lcd.cntrl.LED =   (lcd.cntrl.timing[3] >>  0 &  0x7F) + 1;
             lcd.cntrl.LEE =   (lcd.cntrl.timing[3] >> 16 &     1;
         } else if (index < 0x014 && index >= 0x010) {

@@ -49,7 +49,7 @@ typedef struct lcd_cntrl_state {
 
     /* Internal registers */
     uint32_t PPL, HSW, HFP, HBP, LPP, VSW, VFP, VBP, PCD, ACB, CPL, LED;
-    bool CLKSEL, IVS, IHS, IPC, IOE, BCD, LEE, mask;
+    bool CLKSEL, IVS, IHS, IPC, IOE, LEE, mask;
     uint32_t width;
     uint32_t height;
     uint32_t size;
