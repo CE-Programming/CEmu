@@ -81,6 +81,7 @@ void cpu_flush(uint32_t, bool);
 void cpu_nmi(void);
 void cpu_execute(void);
 void cpu_crash(const char *msg);
+int64_t cpu_cycles(void);
 
 /* Save/Restore */
 typedef struct emu_image emu_image;

@@ -45,12 +45,12 @@ void apng_add_frame(void) {
         apng.skipped = apng.frameskip;
 
         // write frame to temp file
-        if (!apng.n || 0xFFFFu - apng.delay < apng.num || memcmp(lcd.mmio.frame, apng.frame, LCD_FRAME_SIZE)) {
+        if (!apng.n || 0xFFFFu - apng.delay < apng.num || memcmp(lcd.cntrl.frame, apng.frame, LCD_FRAME_SIZE)) {
             if (apng.n) {
                 fwrite(&apng.delay, sizeof(apng.delay), 1, apng.tmp);
             }
             apng.delay = 0;
-            memcpy(apng.frame, lcd.mmio.frame, LCD_FRAME_SIZE);
+            memcpy(apng.frame, lcd.cntrl.frame, LCD_FRAME_SIZE);
             fwrite(apng.frame, 1, LCD_FRAME_SIZE, apng.tmp);
             apng.n++;
         }

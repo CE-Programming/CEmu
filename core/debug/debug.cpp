@@ -87,7 +87,7 @@ void open_debugger(int reason, uint32_t data) {
 
     debugger.cpuCycles = cpu.cycles;
     debugger.cpuNext = cpu.next;
-    debugger.totalCycles = cpu.cycles + cpu.cyclesOffset;
+    debugger.totalCycles += cpu_cycles();
 
     if (debugger.bufferPos) {
         debugger.buffer[debugger.bufferPos] = '\0';
@@ -113,7 +113,7 @@ void open_debugger(int reason, uint32_t data) {
 
     cpu.next = debugger.cpuNext;
     cpu.cycles = debugger.cpuCycles;
-    cpu.cyclesOffset = debugger.totalCycles - cpu.cycles;
+    debugger.totalCycles -= cpu_cycles();
 
     if (cpuEvents & EVENT_DEBUG_STEP) {
         cpu.next = cpu.cycles + 1;
