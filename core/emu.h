@@ -12,6 +12,7 @@ extern "C" {
 #include "lcd/lcd.h"
 #include "lcd/spi.h"
 #include "schedule.h"
+#include "dma.h"
 #include "link.h"
 #include "usb.h"
 #include "interrupt.h"
@@ -39,6 +40,7 @@ typedef struct emu_image {
     fxxx_state_t fxxx;
     keypad_state_t keypad;
     sched_state_t sched;
+    dma_state_t dma;
     rtc_state_t rtc;
     sha256_state_t sha256;
     general_timers_state_t gpt;
