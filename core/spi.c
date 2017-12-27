@@ -14,22 +14,23 @@ static void spi_sw_reset(void) {
     spi.partial = false;
     spi.invert = false;
     spi.power = false;
-    spi.tear = false;
+    spi.colStart = 0;
     spi.colEnd = spi.MAC & 1 << 5 ? 0x13F : 0xEF;
+    spi.rowStart = 0;
     spi.rowEnd = spi.MAC & 1 << 5 ? 0xEF : 0x13F;
+    spi.topArea = 0;
+    spi.scrollArea = 0x140;
+    spi.bottomArea = 0;
+    spi.partialStart = 0;
+    spi.partialEnd = 0x13F;
+    spi.scrollStart = 0;
+    spi.tear = false;
+    spi.idle = false;
 }
 
 static void spi_hw_reset(void) {
-    spi.colStart = 0;
-    spi.colEnd = 0xEF;
-    spi.rowStart = 0;
-    spi.rowEnd = 0x13F;
-    spi.bottomArea = 0;
-    spi.topArea = 0;
-    spi.scrollArea = 0x140;
-    spi.partialStart = 0;
-    spi.partialEnd = 0x13F;
     spi.MAC = 0;
+    spi_sw_reset();
 }
 
 static void spi_write_cmd(uint8_t value) {
@@ -231,10 +232,15 @@ static const eZ80portrange_t pspi = {
 
 
 void spi_reset(void) {
+    uint8_t i, c;
+    memset(&spi, 0, sizeof(spi));
     spi_hw_reset();
-    spi_sw_reset();
-    spi.scrollStart = 0;
-    spi.idle = false;
+    for (c = 0; c < 1 << 5; c++)
+        spi.lut[i++] = c << 1;
+    for (c = 0; c < 1 << 6; c++)
+        spi.lut[i++] = c << 0;
+    for (c = 0; c < 1 << 5; c++)
+        spi.lut[i++] = c << 1;
 }
 
 eZ80portrange_t init_spi(void) {
