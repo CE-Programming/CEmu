@@ -11,7 +11,6 @@
 watchdog_state_t watchdog;
 protected_state_t protect;
 cxxx_state_t cxxx; /* Global CXXX state */
-dxxx_state_t dxxx; /* Global DXXX state */
 exxx_state_t exxx; /* Global EXXX state */
 fxxx_state_t fxxx; /* Global FXXX state */
 
@@ -238,44 +237,6 @@ bool cxxx_save(emu_image *s) {
 
 bool cxxx_restore(const emu_image *s) {
     cxxx = s->cxxx;
-    return true;
-}
-
-/* ============================================= */
-
-/* TODO: Implement DXXX range -- USB related? */
-
-/* Read from the 0xDXXX range of ports */
-static uint8_t dxxx_read(const uint16_t pio, bool peek) {
-    (void)pio; /* Uncomment me when needed */
-    (void)peek;
-    return 0;
-}
-
-/* Write to the 0xDXXX range of ports */
-static void dxxx_write(const uint16_t pio, const uint8_t byte, bool poke) {
-    (void)pio;  /* Uncomment me when needed */
-    (void)byte; /* Uncomment me when needed */
-    (void)poke;
-    return;
-}
-
-static const eZ80portrange_t pdxxx = {
-    .read  = dxxx_read,
-    .write = dxxx_write
-};
-
-eZ80portrange_t init_dxxx(void) {
-    return pdxxx;
-}
-
-bool dxxx_save(emu_image *s) {
-    s->dxxx = dxxx;
-    return true;
-}
-
-bool dxxx_restore(const emu_image *s) {
-    dxxx = s->dxxx;
     return true;
 }
 

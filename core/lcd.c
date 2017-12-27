@@ -11,7 +11,7 @@
 #include "interrupt.h"
 
 /* Global LCD state */
-lcd_state_t lcd;
+lcd_cntrl_t lcd;
 
 void (*lcd_event_gui_callback)(void) = NULL;
 
@@ -71,7 +71,7 @@ void lcd_drawframe(uint32_t *out, lcd_state_t *buffer) {
             uint_fast8_t bitpos = 32;
             word = *ofs++;
             do {
-                color = lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask];
+                color = lcd.mmio.palette[word >> ((bitpos -= bpp) ^ bi) & mask];
                 lcd_bgr16out(c1555(color), (uint8_t**)&out);
             } while (bitpos && out != out_end);
         } while (ofs < ofs_end);
@@ -121,26 +121,26 @@ static void lcd_event(int index) {
     int pcd = 1;
     int htime, vtime;
 
-    if (!(lcd.timing[2] & (1 << 26))) {
-        pcd = (lcd.timing[2] >> 27 << 5) + (lcd.timing[2] & 0x1F) + 2;
+    if (!(lcd.mmio.timing[2] & (1 << 26))) {
+        pcd = (lcd.mmio.timing[2] >> 27 << 5) + (lcd.mmio.timing[2] & 0x1F) + 2;
     }
 
-    htime =   (lcd.timing[0] >> 24 & 0x0FF) + 1  /* Back porch    */
-            + (lcd.timing[0] >> 16 & 0x0FF) + 1  /* Front porch   */
-            + (lcd.timing[0] >>  8 & 0x0FF) + 1  /* Sync pulse    */
-            + (lcd.timing[2] >> 16 & 0x3FF) + 1; /* Active        */
-    vtime =   (lcd.timing[1] >> 24 & 0x0FF)      /* Back porch    */
-            + (lcd.timing[1] >> 16 & 0x0FF)      /* Front porch   */
-            + (lcd.timing[1] >> 10 & 0x03F) + 1  /* Sync pulse    */
-            + (lcd.timing[1]       & 0x3FF) + 1; /* Active        */
+    htime =   (lcd.mmio.timing[0] >> 24 & 0x0FF) + 1  /* Back porch    */
+            + (lcd.mmio.timing[0] >> 16 & 0x0FF) + 1  /* Front porch   */
+            + (lcd.mmio.timing[0] >>  8 & 0x0FF) + 1  /* Sync pulse    */
+            + (lcd.mmio.timing[2] >> 16 & 0x3FF) + 1; /* Active        */
+    vtime =   (lcd.mmio.timing[1] >> 24 & 0x0FF)      /* Back porch    */
+            + (lcd.mmio.timing[1] >> 16 & 0x0FF)      /* Front porch   */
+            + (lcd.mmio.timing[1] >> 10 & 0x03F) + 1  /* Sync pulse    */
+            + (lcd.mmio.timing[1]       & 0x3FF) + 1; /* Active        */
     event_repeat(index, pcd * htime * vtime);
 
-    lcd_drawframe(lcd.frame, &lcd);
+    lcd_drawframe(lcd.mmio.frame, &lcd.mmio);
 
     /* For now, assuming vsync occurs at same time UPBASE is loaded */
-    lcd.upcurr = lcd.upbase;
-    lcd.ris |= 0xC;
-    intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
+    lcd.mmio.upcurr = lcd.mmio.upbase;
+    lcd.mmio.ris |= 0xC;
+    intrpt_set(INT_LCD, lcd.mmio.ris & lcd.mmio.imsc);
 }
 
 void lcd_reset(void) {
@@ -148,10 +148,10 @@ void lcd_reset(void) {
     sched.items[SCHED_LCD].proc = lcd_event;
     sched.items[SCHED_LCD].clock = CLOCK_24M;
     sched.items[SCHED_LCD].second = -1;
-    lcd.width = LCD_WIDTH;
-    lcd.height = LCD_HEIGHT;
-    lcd.mask = true;
-    lcd_setptrs(&lcd);
+    lcd.mmio.width = LCD_WIDTH;
+    lcd.mmio.height = LCD_HEIGHT;
+    lcd.mmio.mask = true;
+    lcd_setptrs(&lcd.mmio);
     gui_console_printf("[CEmu] LCD reset.\n");
 }
 
@@ -162,26 +162,26 @@ static uint8_t lcd_read(const uint16_t pio, bool peek) {
     (void)peek;
 
     if (index < 0x200) {
-        if (index < 0x010) { return read8(lcd.timing[index >> 2], bit_offset); }
-        if (index < 0x014 && index >= 0x010) { return read8(lcd.upbase, bit_offset); }
-        if (index < 0x018 && index >= 0x014) { return read8(lcd.lpbase, bit_offset); }
-        if (index < 0x01C && index >= 0x018) { return read8(lcd.control, bit_offset); }
-        if (index < 0x020 && index >= 0x01C) { return read8(lcd.imsc, bit_offset); }
-        if (index < 0x024 && index >= 0x020) { return read8(lcd.ris, bit_offset); }
-        if (index < 0x028 && index >= 0x024) { return read8(lcd.imsc & lcd.ris, bit_offset); }
+        if (index < 0x010) { return read8(lcd.mmio.timing[index >> 2], bit_offset); }
+        if (index < 0x014 && index >= 0x010) { return read8(lcd.mmio.upbase, bit_offset); }
+        if (index < 0x018 && index >= 0x014) { return read8(lcd.mmio.lpbase, bit_offset); }
+        if (index < 0x01C && index >= 0x018) { return read8(lcd.mmio.control, bit_offset); }
+        if (index < 0x020 && index >= 0x01C) { return read8(lcd.mmio.imsc, bit_offset); }
+        if (index < 0x024 && index >= 0x020) { return read8(lcd.mmio.ris, bit_offset); }
+        if (index < 0x028 && index >= 0x024) { return read8(lcd.mmio.imsc & lcd.mmio.ris, bit_offset); }
     } else if (index < 0x400) {
-        return *((uint8_t *)lcd.palette + index - 0x200);
+        return *((uint8_t *)lcd.mmio.palette + index - 0x200);
     } else if (index < 0xC30) {
-        if (index < 0xC00 && index >= 0x800) { return read8(lcd.crsrImage[((pio-0x800) & 0x3FF) >> 2], bit_offset); }
-        if (index == 0xC00) { return read8(lcd.crsrControl, bit_offset); }
-        if (index == 0xC04) { return read8(lcd.crsrConfig, bit_offset); }
-        if (index < 0xC0C && index >= 0xC08) { return read8(lcd.crsrPalette0, bit_offset); }
-        if (index < 0xC10 && index >= 0xC0C) { return read8(lcd.crsrPalette1, bit_offset); }
-        if (index < 0xC14 && index >= 0xC10) { return read8(lcd.crsrXY, bit_offset); }
-        if (index < 0xC16 && index >= 0xC14) { return read8(lcd.crsrClip, bit_offset); }
-        if (index == 0xC20) { return read8(lcd.crsrImsc, bit_offset); }
-        if (index == 0xC28) { return read8(lcd.crsrRis, bit_offset); }
-        if (index == 0xC2C) { return read8(lcd.crsrRis & lcd.crsrImsc, bit_offset); }
+        if (index < 0xC00 && index >= 0x800) { return read8(lcd.mmio.crsrImage[((pio-0x800) & 0x3FF) >> 2], bit_offset); }
+        if (index == 0xC00) { return read8(lcd.mmio.crsrControl, bit_offset); }
+        if (index == 0xC04) { return read8(lcd.mmio.crsrConfig, bit_offset); }
+        if (index < 0xC0C && index >= 0xC08) { return read8(lcd.mmio.crsrPalette0, bit_offset); }
+        if (index < 0xC10 && index >= 0xC0C) { return read8(lcd.mmio.crsrPalette1, bit_offset); }
+        if (index < 0xC14 && index >= 0xC10) { return read8(lcd.mmio.crsrXY, bit_offset); }
+        if (index < 0xC16 && index >= 0xC14) { return read8(lcd.mmio.crsrClip, bit_offset); }
+        if (index == 0xC20) { return read8(lcd.mmio.crsrImsc, bit_offset); }
+        if (index == 0xC28) { return read8(lcd.mmio.crsrRis, bit_offset); }
+        if (index == 0xC2C) { return read8(lcd.mmio.crsrRis & lcd.mmio.crsrImsc, bit_offset); }
     } else if (index >= 0xFE0) {
         static const uint8_t id[1][8] = {
             { 0x11, 0x11, 0x14, 0x00, 0x0D, 0xF0, 0x05, 0xB1 }
@@ -194,11 +194,11 @@ static uint8_t lcd_read(const uint16_t pio, bool peek) {
 }
 
 void lcd_disable(void) {
-    lcd.ofs = NULL;
+    lcd.mmio.ofs = NULL;
 }
 
 void lcd_enable(void) {
-    lcd_setptrs(&lcd);
+    lcd_setptrs(&lcd.mmio);
 }
 
 void lcd_setptrs(lcd_state_t *x) {
@@ -226,11 +226,11 @@ void lcd_setptrs(lcd_state_t *x) {
         mem_end = mem.ram.block + SIZE_RAM;
         ofs_start = mem.ram.block + addr - 0xD00000;
     } else if (addr < 0xE30800) {
-        mem_end = (uint8_t *)lcd.palette + sizeof lcd.palette;
-        ofs_start = (uint8_t *)lcd.palette + addr - 0xE30200;
+        mem_end = (uint8_t *)lcd.mmio.palette + sizeof lcd.mmio.palette;
+        ofs_start = (uint8_t *)lcd.mmio.palette + addr - 0xE30200;
     } else if (addr < 0xE30C00){
-        mem_end = (uint8_t *)lcd.crsrImage + sizeof lcd.crsrImage;
-        ofs_start = (uint8_t *)lcd.crsrImage + addr - 0xE30800;
+        mem_end = (uint8_t *)lcd.mmio.crsrImage + sizeof lcd.mmio.crsrImage;
+        ofs_start = (uint8_t *)lcd.mmio.crsrImage + addr - 0xE30800;
     } else {
         return;
     }
@@ -264,68 +264,68 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
 
     if (index < 0x200) {
         if (index < 0x010) {
-            write8(lcd.timing[index >> 2], bit_offset, value);
+            write8(lcd.mmio.timing[index >> 2], bit_offset, value);
         } else if (index < 0x014 && index >= 0x010) {
-            write8(lcd.upbase, bit_offset, value);
-            if (lcd.upbase & 7) {
+            write8(lcd.mmio.upbase, bit_offset, value);
+            if (lcd.mmio.upbase & 7) {
                 gui_console_printf("[CEmu] Warning: Aligning LCD panel\n");
             }
-            lcd.upbase &= ~7U;
-            lcd_setptrs(&lcd);
+            lcd.mmio.upbase &= ~7U;
+            lcd_setptrs(&lcd.mmio);
         } else if (index < 0x018 && index >= 0x014) {
-            write8(lcd.lpbase, bit_offset, value);
-            lcd.lpbase &= ~7U;
+            write8(lcd.mmio.lpbase, bit_offset, value);
+            lcd.mmio.lpbase &= ~7U;
         } else if (index == 0x018) {
             if (byte_offset == 0) {
                 if (value & 1) { event_set(SCHED_LCD, 0); }
                 else { event_clear(SCHED_LCD); }
             }
-            write8(lcd.control, bit_offset, value);
+            write8(lcd.mmio.control, bit_offset, value);
             /* Simple power down of lcd -- Needs to be correctly emulated in future */
-            if (!(lcd.control & 0x800)) { lcd_reset(); }
+            if (!(lcd.mmio.control & 0x800)) { lcd_reset(); }
         } else if (index == 0x01C) {
-            write8(lcd.imsc, bit_offset, value);
-            lcd.imsc &= 0x1E;
-            intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
+            write8(lcd.mmio.imsc, bit_offset, value);
+            lcd.mmio.imsc &= 0x1E;
+            intrpt_set(INT_LCD, lcd.mmio.ris & lcd.mmio.imsc);
         } else if (index == 0x028) {
-            lcd.ris &= ~(value << bit_offset);
-            intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
+            lcd.mmio.ris &= ~(value << bit_offset);
+            intrpt_set(INT_LCD, lcd.mmio.ris & lcd.mmio.imsc);
         }
-        lcd_setptrs(&lcd);
+        lcd_setptrs(&lcd.mmio);
     } else if (index < 0x400) {
-        write8(lcd.palette[pio >> 1 & 0xFF], (pio & 1) << 3, value);
+        write8(lcd.mmio.palette[pio >> 1 & 0xFF], (pio & 1) << 3, value);
     } else if (index < 0xC30) {
         if (index < 0xC00 && index >= 0x800) {
-            write8(lcd.crsrImage[((pio-0x800) & 0x3FF) >> 2], bit_offset, value);
+            write8(lcd.mmio.crsrImage[((pio-0x800) & 0x3FF) >> 2], bit_offset, value);
         }
         if (index == 0xC00) {
-            write8(lcd.crsrControl, bit_offset, value);
+            write8(lcd.mmio.crsrControl, bit_offset, value);
         }
         if (index == 0xC04) {
-            write8(lcd.crsrConfig, bit_offset, value);
-            lcd.crsrConfig &= 0xF;
+            write8(lcd.mmio.crsrConfig, bit_offset, value);
+            lcd.mmio.crsrConfig &= 0xF;
         }
         if (index < 0xC0B && index >= 0xC08) {
-            write8(lcd.crsrPalette0, bit_offset, value);
+            write8(lcd.mmio.crsrPalette0, bit_offset, value);
         }
         if (index < 0xC0F && index >= 0xC0C) {
-            write8(lcd.crsrPalette1, bit_offset, value);
+            write8(lcd.mmio.crsrPalette1, bit_offset, value);
         }
         if (index < 0xC14 && index >= 0xC10) {
-            write8(lcd.crsrXY, bit_offset, value);
-            lcd.crsrXY &= (0xFFF | (0xFFF << 16));
+            write8(lcd.mmio.crsrXY, bit_offset, value);
+            lcd.mmio.crsrXY &= (0xFFF | (0xFFF << 16));
         }
         if (index < 0xC16 && index >= 0xC14) {
-            write8(lcd.crsrClip, bit_offset, value);
-            lcd.crsrClip &= (0x3F | (0x3F << 8));
+            write8(lcd.mmio.crsrClip, bit_offset, value);
+            lcd.mmio.crsrClip &= (0x3F | (0x3F << 8));
         }
         if (index == 0xC20) {
-            write8(lcd.crsrImsc, bit_offset, value);
-            lcd.crsrImsc &= 0xF;
+            write8(lcd.mmio.crsrImsc, bit_offset, value);
+            lcd.mmio.crsrImsc &= 0xF;
         }
         if (index == 0xC24) {
-            lcd.crsrRis &= ~(value << bit_offset);
-            lcd.crsrRis &= 0xF;
+            lcd.mmio.crsrRis &= ~(value << bit_offset);
+            lcd.mmio.crsrRis &= 0xF;
         }
     }
 }
@@ -342,12 +342,12 @@ eZ80portrange_t init_lcd(void) {
 
 bool lcd_save(emu_image *s) {
     s->lcd = lcd;
-    s->lcd.ofs_end = s->lcd.ofs = NULL;
+    s->lcd.mmio.ofs_end = s->lcd.mmio.ofs = NULL;
     return true;
 }
 
 bool lcd_restore(const emu_image *s) {
     lcd = s->lcd;
-    lcd_setptrs(&lcd);
+    lcd_setptrs(&lcd.mmio);
     return true;
 }

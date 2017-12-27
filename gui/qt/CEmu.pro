@@ -160,7 +160,8 @@ SOURCES +=  utils.cpp \
     keyhistory.cpp \
     memoryvisualizer.cpp \
     ../../core/debug/debug.cpp \
-    capture/animated-png.c
+    capture/animated-png.c \
+    ../../core/spi.c
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
@@ -232,7 +233,8 @@ HEADERS  +=  utils.h \
     ipc.h \
     keyhistory.h \
     memoryvisualizer.h \
-    capture/animated-png.h
+    capture/animated-png.h \
+    ../../core/spi.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \

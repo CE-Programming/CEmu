@@ -5890,7 +5890,7 @@
             </widget>
            </item>
            <item row="2" column="0">
-            <widget class="QCheckBox" name="checkBox">
+            <widget class="QCheckBox" name="checkSpi">
              <property name="enabled">
               <bool>false</bool>
              </property>
@@ -5898,7 +5898,7 @@
               <enum>Qt::NoFocus</enum>
              </property>
              <property name="text">
-              <string>Add DMA cycles to cycle counters</string>
+              <string>Emulate full SPI LCD accesses</string>
              </property>
             </widget>
            </item>

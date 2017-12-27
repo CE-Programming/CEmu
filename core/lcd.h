@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include "port.h"
+#include "spi.h"
 
 #define LCD_RGB_SIZE   3
 #define LCD_WIDTH      320
@@ -56,8 +57,13 @@ typedef struct lcd_cntrl_state {
     uint32_t frame[LCD_SIZE];       /* Location on which to draw the data */
 } lcd_state_t;
 
+typedef struct lcd_full_state {
+    spi_state_t spi;
+    lcd_state_t mmio;
+} lcd_cntrl_t;
+
 /* Global LCD state */
-extern lcd_state_t lcd;
+extern lcd_cntrl_t lcd;
 
 /* Available Functions */
 void lcd_reset(void);

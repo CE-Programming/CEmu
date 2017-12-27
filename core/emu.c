@@ -14,7 +14,7 @@
 #include "schedule.h"
 #include "debug/debug.h"
 
-#define IMAGE_VERSION 0xCECE000F
+#define IMAGE_VERSION 0xCECE0010
 
 uint32_t cpuEvents;
 volatile bool exiting;

@@ -688,7 +688,7 @@ void MainWindow::exportRom() {
 void MainWindow::started(bool success) {
     guiEmuValid = success;
     if (success) {
-        ui->lcdWidget->setLCD(&lcd);
+        ui->lcdWidget->setLCD(&lcd.mmio);
         setCalcSkinTopFromType();
         setKeypadColor(settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
     } else {
@@ -699,7 +699,7 @@ void MainWindow::started(bool success) {
 void MainWindow::restored(bool success) {
     guiEmuValid = success;
     if (success) {
-        ui->lcdWidget->setLCD(&lcd);
+        ui->lcdWidget->setLCD(&lcd.mmio);
         setCalcSkinTopFromType();
         setKeypadColor(settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
     } else {
@@ -894,7 +894,7 @@ void MainWindow::screenshotSave(const QString& nameFilter, const QString& defaul
 }
 
 void MainWindow::screenshot() {
-    QImage image = renderFramebuffer(&lcd);
+    QImage image = renderFramebuffer(&lcd.mmio);
 
     QString path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.img");
     if (!image.save(path, "PNG", 0)) {
@@ -905,7 +905,7 @@ void MainWindow::screenshot() {
 }
 
 void MainWindow::saveScreenToClipboard() {
-    QImage image = renderFramebuffer(&lcd);
+    QImage image = renderFramebuffer(&lcd.mmio);
     Q_ASSERT(!image.isNull());
     QApplication::clipboard()->setImage(image, QClipboard::Clipboard);
 }

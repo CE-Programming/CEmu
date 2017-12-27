@@ -52,7 +52,7 @@ static void plug_devices(void) {
     port_map[0xA] = init_keypad();
     port_map[0xB] = init_backlight();
     port_map[0xC] = init_cxxx();
-    port_map[0xD] = init_dxxx();
+    port_map[0xD] = init_spi();
     port_map[0xE] = init_exxx();
     port_map[0xF] = init_fxxx();
 
@@ -139,7 +139,7 @@ bool asic_restore(const emu_image *s) {
            && gpt_restore(s)
            && usb_restore(s)
            && cxxx_restore(s)
-           && dxxx_restore(s)
+           && spi_restore(s)
            && exxx_restore(s)
            && sched_restore(s);
 }
@@ -162,7 +162,7 @@ bool asic_save(emu_image *s) {
            && gpt_save(s)
            && usb_save(s)
            && cxxx_save(s)
-           && dxxx_save(s)
+           && spi_save(s)
            && exxx_save(s)
            && sched_save(s);
 }

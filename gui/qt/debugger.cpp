@@ -419,18 +419,18 @@ void MainWindow::debuggerUpdateChanges() {
 
     backlight.brightness = static_cast<uint8_t>(ui->brightnessSlider->value());
 
-    lcd.upbase = static_cast<uint32_t>(hex2int(ui->lcdbaseView->text()));
-    lcd.upcurr = static_cast<uint32_t>(hex2int(ui->lcdcurrView->text()));
+    lcd.mmio.upbase = static_cast<uint32_t>(hex2int(ui->lcdbaseView->text()));
+    lcd.mmio.upcurr = static_cast<uint32_t>(hex2int(ui->lcdcurrView->text()));
 
-    lcd.control &= ~14;
-    lcd.control |= ui->bppView->currentIndex() << 1;
+    lcd.mmio.control &= ~14;
+    lcd.mmio.control |= ui->bppView->currentIndex() << 1;
 
-    set_reset(ui->checkPowered->isChecked(), 0x800, lcd.control);
-    set_reset(ui->checkBEPO->isChecked(), 0x400, lcd.control);
-    set_reset(ui->checkBEBO->isChecked(), 0x200, lcd.control);
-    set_reset(ui->checkBGR->isChecked(), 0x100, lcd.control);
+    set_reset(ui->checkPowered->isChecked(), 0x800, lcd.mmio.control);
+    set_reset(ui->checkBEPO->isChecked(), 0x400, lcd.mmio.control);
+    set_reset(ui->checkBEBO->isChecked(), 0x200, lcd.mmio.control);
+    set_reset(ui->checkBGR->isChecked(), 0x100, lcd.mmio.control);
 
-    lcd_setptrs(&lcd);
+    lcd_setptrs(&lcd.mmio);
 
     ui->debuggerLabel->clear();
 }
@@ -569,11 +569,11 @@ void MainWindow::debuggerGUIPopulate() {
     ui->rregView->setPalette(tmp == ui->rregView->text() ? nocolorback : colorback);
     ui->rregView->setText(tmp);
 
-    tmp = int2hex(lcd.upbase, 6);
+    tmp = int2hex(lcd.mmio.upbase, 6);
     ui->lcdbaseView->setPalette(tmp == ui->lcdbaseView->text() ? nocolorback : colorback);
     ui->lcdbaseView->setText(tmp);
 
-    tmp = int2hex(lcd.upcurr, 6);
+    tmp = int2hex(lcd.mmio.upcurr, 6);
     ui->lcdcurrView->setPalette(tmp == ui->lcdcurrView->text() ? nocolorback : colorback);
     ui->lcdcurrView->setText(tmp);
 
@@ -628,7 +628,7 @@ void MainWindow::debuggerGUIPopulate() {
     batteryIsCharging(control.batteryCharging);
     batteryChangeStatus(control.setBatteryStatus);
 
-    ui->bppView->setCurrentIndex((lcd.control >> 1) & 7);
+    ui->bppView->setCurrentIndex((lcd.mmio.control >> 1) & 7);
 
     ui->check3->setChecked(cpu.registers.flags._3);
     ui->check5->setChecked(cpu.registers.flags._5);
@@ -647,10 +647,10 @@ void MainWindow::debuggerGUIPopulate() {
     ui->checkIEF1->setChecked(cpu.IEF1);
     ui->checkIEF2->setChecked(cpu.IEF2);
 
-    ui->checkPowered->setChecked(lcd.control & 0x800);
-    ui->checkBEPO->setChecked(lcd.control & 0x400);
-    ui->checkBEBO->setChecked(lcd.control & 0x200);
-    ui->checkBGR->setChecked(lcd.control & 0x100);
+    ui->checkPowered->setChecked(lcd.mmio.control & 0x800);
+    ui->checkBEPO->setChecked(lcd.mmio.control & 0x400);
+    ui->checkBEBO->setChecked(lcd.mmio.control & 0x200);
+    ui->checkBGR->setChecked(lcd.mmio.control & 0x100);
     ui->brightnessSlider->setValue(backlight.brightness);
 
     ui->portView->blockSignals(true);

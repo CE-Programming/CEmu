@@ -33,7 +33,7 @@ typedef struct emu_image {
     watchdog_state_t watchdog;
     protected_state_t protect;
     cxxx_state_t cxxx;
-    dxxx_state_t dxxx;
+    spi_state_t spi;
     exxx_state_t exxx;
     fxxx_state_t fxxx;
     keypad_state_t keypad;
@@ -43,7 +43,7 @@ typedef struct emu_image {
     general_timers_state_t gpt;
     backlight_state_t backlight;
     control_state_t control;
-    lcd_state_t lcd;
+    lcd_cntrl_t lcd;
     mem_state_t mem;
     uint8_t mem_flash[SIZE_FLASH];
     uint8_t mem_ram[SIZE_RAM];
