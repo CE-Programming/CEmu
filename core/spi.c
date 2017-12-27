@@ -56,7 +56,8 @@ static void spi_write_cmd(uint8_t value) {
 }
 
 static void spi_write_param(uint8_t value) {
-    uint8_t ibit = ~spi.param & 1;
+    uint8_t sbit = spi.param >> 1;
+    uint8_t mbit = ~spi.param & 1;
     (void)value;
 
     switch (spi.cmd) {
@@ -70,38 +71,38 @@ static void spi_write_param(uint8_t value) {
             }
             break;
         case 0x2A:
-            switch (ibit) {
+            switch (sbit) {
                 case 0:
-                    write8(spi.colStart, ibit, value);
+                    write8(spi.colStart, mbit, value);
                     break;
                 case 1:
-                    write8(spi.colEnd, ibit, value);
+                    write8(spi.colEnd, mbit, value);
                     break;
                 default:
                     break;
             }
             break;
         case 0x2B:
-            switch (ibit) {
+            switch (sbit) {
                 case 0:
-                    write8(spi.rowStart, ibit, value);
+                    write8(spi.rowStart, mbit, value);
                     break;
                 case 1:
-                    write8(spi.rowEnd, ibit, value);
+                    write8(spi.rowEnd, mbit, value);
                     break;
                 default:
                     break;
             }
             break;
         case 0x2C:
-            switch (ibit) {
+            switch (sbit) {
                 case 0:
-                    write8(spi.colStart, ibit, value);
-                    write8(spi.rowStart, ibit, value);
+                    write8(spi.colStart, mbit, value);
+                    write8(spi.rowStart, mbit, value);
                     break;
                 case 1:
-                    write8(spi.colEnd, ibit, value);
-                    write8(spi.rowEnd, ibit, value);
+                    write8(spi.colEnd, mbit, value);
+                    write8(spi.rowEnd, mbit, value);
                     break;
                 default:
                     break;
@@ -113,27 +114,27 @@ static void spi_write_param(uint8_t value) {
             }
             break;
         case 0x30:
-            switch (ibit) {
+            switch (sbit) {
                 case 0:
-                    write8(spi.partialStart, ibit, value);
+                    write8(spi.partialStart, mbit, value);
                     break;
                 case 1:
-                    write8(spi.partialEnd, ibit, value);
+                    write8(spi.partialEnd, mbit, value);
                     break;
                 default:
                     break;
             }
             break;
         case 0x33:
-            switch (~spi.param & 3) {
+            switch (sbit) {
                 case 0:
-                    write8(spi.topArea, ~spi.param & 3, value);
+                    write8(spi.topArea, mbit, value);
                     break;
                 case 1:
-                    write8(spi.scrollArea, ~spi.param & 3, value);
+                    write8(spi.scrollArea, mbit, value);
                     break;
                 case 2:
-                    write8(spi.bottomArea, ~spi.param & 3, value);
+                    write8(spi.bottomArea, mbit, value);
                     break;
                 default:
                     break;
@@ -145,23 +146,23 @@ static void spi_write_param(uint8_t value) {
             }
             break;
         case 0x37:
-            switch (ibit) {
+            switch (sbit) {
                 case 0:
-                    write8(spi.scrollStart, ibit, value);
+                    write8(spi.scrollStart, mbit, value);
                     break;
                 default:
                     break;
             }
             break;
         case 0x3C:
-            switch (ibit) {
+            switch (sbit) {
                 case 0:
-                    write8(spi.colStart, ibit, value);
-                    write8(spi.rowStart, ibit, value);
+                    write8(spi.colStart, mbit, value);
+                    write8(spi.rowStart, mbit, value);
                     break;
                 case 1:
-                    write8(spi.colEnd, ibit, value);
-                    write8(spi.rowEnd, ibit, value);
+                    write8(spi.colEnd, mbit, value);
+                    write8(spi.rowEnd, mbit, value);
                     break;
                 default:
                     break;
