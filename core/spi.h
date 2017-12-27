@@ -32,8 +32,6 @@ typedef struct spi_state {
     uint16_t param;
 } spi_state_t;
 
-enum { SPI_COMMAND };
-
 /* Global CONTROL state */
 extern spi_state_t spi;
 

@@ -7,13 +7,171 @@ spi_state_t spi;
 static void spi_write_cmd(uint8_t value) {
     spi.cmd = value;
     spi.param = 0;
+
+    switch (spi.cmd) {
+        case 0x00:
+            break;
+        case 0x01:
+            spi_reset();
+            break;
+        case 0x10:
+            spi.sleep = true;
+            break;
+        case 0x11:
+            spi.sleep = false;
+            break;
+        case 0x12:
+            spi.partial = true;
+            break;
+        case 0x13:
+            spi.partial = false;
+            break;
+        case 0x20:
+            spi.invert = false;
+            break;
+        case 0x21:
+            spi.invert = true;
+            break;
+        case 0x28:
+            spi.power = false;
+            break;
+        case 0x29:
+            spi.power = true;
+            break;
+        case 0x34:
+            spi.tear = false;
+            break;
+        case 0x35:
+            spi.tear = true;
+            break;
+        case 0x38:
+            spi.idle = false;
+            break;
+        case 0x39:
+            spi.idle = true;
+            break;
+        default:
+            break;
+    }
 }
 
 static void spi_write_param(uint8_t value) {
+    uint8_t ibit = ~spi.param & 1;
     (void)value;
 
     switch (spi.cmd) {
-        case SPI_COMMAND:
+        case 0x00:
+            break;
+        case 0x01:
+            break;
+        case 0x26:
+            if (spi.param == 0) {
+                spi.gamma = value;
+            }
+            break;
+        case 0x2A:
+            switch (ibit) {
+                case 0:
+                    write8(spi.colStart, ibit, value);
+                    break;
+                case 1:
+                    write8(spi.colEnd, ibit, value);
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case 0x2B:
+            switch (ibit) {
+                case 0:
+                    write8(spi.rowStart, ibit, value);
+                    break;
+                case 1:
+                    write8(spi.rowEnd, ibit, value);
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case 0x2C:
+            switch (ibit) {
+                case 0:
+                    write8(spi.colStart, ibit, value);
+                    write8(spi.rowStart, ibit, value);
+                    break;
+                case 1:
+                    write8(spi.colEnd, ibit, value);
+                    write8(spi.rowEnd, ibit, value);
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case 0x2D:
+            if (spi.param < 128) {
+                spi.lut[spi.param] = value;
+            }
+            break;
+        case 0x30:
+            switch (ibit) {
+                case 0:
+                    write8(spi.partialStart, ibit, value);
+                    break;
+                case 1:
+                    write8(spi.partialEnd, ibit, value);
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case 0x33:
+            switch (~spi.param & 3) {
+                case 0:
+                    write8(spi.topArea, ~spi.param & 3, value);
+                    break;
+                case 1:
+                    write8(spi.scrollArea, ~spi.param & 3, value);
+                    break;
+                case 2:
+                    write8(spi.bottomArea, ~spi.param & 3, value);
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case 0x36:
+            if (spi.param == 0) {
+                spi.MAC = value;
+            }
+            break;
+        case 0x37:
+            switch (ibit) {
+                case 0:
+                    write8(spi.scrollStart, ibit, value);
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case 0x3C:
+            switch (ibit) {
+                case 0:
+                    write8(spi.colStart, ibit, value);
+                    write8(spi.rowStart, ibit, value);
+                    break;
+                case 1:
+                    write8(spi.colEnd, ibit, value);
+                    write8(spi.rowEnd, ibit, value);
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case 0xE0:
+            spi.gammaCorrection[0][spi.param] = value;
+            break;
+        case 0xE1:
+            spi.gammaCorrection[1][spi.param] = value;
             break;
         default:
             break;
@@ -59,7 +217,7 @@ void spi_reset(void) {
     spi.fifo = 0;
     spi.param = 0;
     spi.shift = 6;
-    spi.cmd = SPI_COMMAND;
+    spi.cmd = 0;
 }
 
 eZ80portrange_t init_spi(void) {
