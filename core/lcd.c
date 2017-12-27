@@ -265,6 +265,26 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
     if (index < 0x200) {
         if (index < 0x010) {
             write8(lcd.cntrl.timing[index >> 2], bit_offset, value);
+            lcd.cntrl.PPL =  ((lcd.cntrl.timing[0] >>  2 &  0x3F) + 1) << 4;
+            lcd.cntrl.HSW =   (lcd.cntrl.timing[0] >>  8 &  0xFF) + 1;
+            lcd.cntrl.HFP =   (lcd.cntrl.timing[0] >> 16 &  0xFF) + 1;
+            lcd.cntrl.HBP =   (lcd.cntrl.timing[0] >> 24 &  0xFF) + 1;
+            lcd.cntrl.LPP =   (lcd.cntrl.timing[1] >>  0 & 0x3FF) + 1;
+            lcd.cntrl.VSW =   (lcd.cntrl.timing[1] >> 10 &  0x3F) + 1;
+            lcd.cntrl.VFP =    lcd.cntrl.timing[1] >> 16;
+            lcd.cntrl.VBP =    lcd.cntrl.timing[1] >> 24;
+            lcd.cntrl.PCD =  ((lcd.cntrl.timing[2] >>  0 &  0x1F) |
+                              (lcd.cntrl.timing[2] >> 27 &  0x1F) << 5) + 2;
+            lcd.cntrl.CLKSEL = lcd.cntrl.timing[2] >>  5 &     1;
+            lcd.cntrl.ACB =   (lcd.cntrl.timing[2] >>  6 &  0x1F) + 1;
+            lcd.cntrl.IVS =    lcd.cntrl.timing[2] >> 11 &     1;
+            lcd.cntrl.IHS =    lcd.cntrl.timing[2] >> 12 &     1;
+            lcd.cntrl.IPC =    lcd.cntrl.timing[2] >> 13 &     1;
+            lcd.cntrl.IOE =    lcd.cntrl.timing[2] >> 14 &     1;
+            lcd.cntrl.CPL =   (lcd.cntrl.timing[2] >> 16 & 0x3FF) + 1;
+            lcd.cntrl.PCB =    lcd.cntrl.timing[2] >> 26 &     1;
+            lcd.cntrl.LED =   (lcd.cntrl.timing[3] >>  0 &  0x7F) + 1;
+            lcd.cntrl.LEE =   (lcd.cntrl.timing[3] >> 16 &     1;
         } else if (index < 0x014 && index >= 0x010) {
             write8(lcd.cntrl.upbase, bit_offset, value);
             if (lcd.cntrl.upbase & 7) {

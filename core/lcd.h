@@ -48,7 +48,8 @@ typedef struct lcd_cntrl_state {
     uint32_t crsrRis;              /* Cursor raw interrupt status register - const */
 
     /* Internal registers */
-    bool mask;
+    uint32_t PPL, HSW, HFP, HBP, LPP, VSW, VFP, VBP, PCD, ACB, CPL, LED;
+    bool CLKSEL, IVS, IHS, IPC, IOE, BCD, LEE, mask;
     uint32_t width;
     uint32_t height;
     uint32_t size;
