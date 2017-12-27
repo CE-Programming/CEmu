@@ -356,6 +356,7 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_lcd(void) {
+    lcd.spi = &spi;
     gui_console_printf("[CEmu] Initialized LCD...\n");
     return device;
 }
@@ -363,11 +364,13 @@ eZ80portrange_t init_lcd(void) {
 bool lcd_save(emu_image *s) {
     s->lcd = lcd;
     s->lcd.cntrl.ofs_end = s->lcd.cntrl.ofs = NULL;
+    s->lcd.spi = NULL;
     return true;
 }
 
 bool lcd_restore(const emu_image *s) {
     lcd = s->lcd;
+    lcd.spi = &spi;
     lcd_setptrs(&lcd.cntrl);
     return true;
 }

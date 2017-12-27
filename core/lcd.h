@@ -59,7 +59,7 @@ typedef struct lcd_cntrl_state {
 } lcd_state_t;
 
 typedef struct lcd_full_state {
-    spi_state_t spi;
+    spi_state_t *spi;
     lcd_state_t cntrl;
 } lcd_cntrl_t;
 
