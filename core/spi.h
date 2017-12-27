@@ -15,8 +15,8 @@ typedef struct spi_state {
     bool invert;
     uint8_t gamma;
     bool power;
-    uint16_t colStart, colEnd;
-    uint16_t rowStart, rowEnd;
+    uint16_t colStart, colEnd, colCur;
+    uint16_t rowStart, rowEnd, rowCur;
     uint8_t frame[360][240][3];
     uint8_t lut[128];
     uint16_t partialStart, partialEnd;

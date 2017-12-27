@@ -4,6 +4,34 @@
 
 spi_state_t spi;
 
+static void spi_sw_reset(void) {
+    spi.cmd = 0;
+    spi.fifo = 0;
+    spi.param = 0;
+    spi.shift = 6;
+    spi.gamma = 1;
+    spi.sleep = true;
+    spi.partial = false;
+    spi.invert = false;
+    spi.power = false;
+    spi.tear = false;
+    spi.colEnd = spi.MAC & 1 << 5 ? 0x13F : 0xEF;
+    spi.rowEnd = spi.MAC & 1 << 5 ? 0xEF : 0x13F;
+}
+
+static void spi_hw_reset(void) {
+    spi.colStart = 0;
+    spi.colEnd = 0xEF;
+    spi.rowStart = 0;
+    spi.rowEnd = 0x13F;
+    spi.bottomArea = 0;
+    spi.topArea = 0;
+    spi.scrollArea = 0x140;
+    spi.partialStart = 0;
+    spi.partialEnd = 0x13F;
+    spi.MAC = 0;
+}
+
 static void spi_write_cmd(uint8_t value) {
     spi.cmd = value;
     spi.param = 0;
@@ -12,7 +40,7 @@ static void spi_write_cmd(uint8_t value) {
         case 0x00:
             break;
         case 0x01:
-            spi_reset();
+            spi_sw_reset();
             break;
         case 0x10:
             spi.sleep = true;
@@ -38,6 +66,10 @@ static void spi_write_cmd(uint8_t value) {
         case 0x29:
             spi.power = true;
             break;
+        case 0x2C:
+            spi.rowCur = spi.rowStart;
+            spi.colCur = spi.colStart;
+            break;
         case 0x34:
             spi.tear = false;
             break;
@@ -61,10 +93,6 @@ static void spi_write_param(uint8_t value) {
     (void)value;
 
     switch (spi.cmd) {
-        case 0x00:
-            break;
-        case 0x01:
-            break;
         case 0x26:
             if (spi.param == 0) {
                 spi.gamma = value;
@@ -201,11 +229,12 @@ static const eZ80portrange_t pspi = {
     .write = spi_write
 };
 
+
 void spi_reset(void) {
-    spi.fifo = 0;
-    spi.param = 0;
-    spi.shift = 6;
-    spi.cmd = 0;
+    spi_hw_reset();
+    spi_sw_reset();
+    spi.scrollStart = 0;
+    spi.idle = false;
 }
 
 eZ80portrange_t init_spi(void) {
