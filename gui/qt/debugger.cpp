@@ -410,7 +410,7 @@ void MainWindow::debuggerUpdateChanges() {
     cpu.IEF1 = ui->checkIEF1->isChecked();
     cpu.IEF2 = ui->checkIEF2->isChecked();
 
-    debugger.totalCycles = static_cast<uint64_t>(ui->cycleView->text().toULongLong());
+    debugger.cycleCount = static_cast<uint64_t>(ui->cycleView->text().toULongLong());
 
     uint32_t uiPC = static_cast<uint32_t>(hex2int(ui->pcregView->text()));
     if (cpu.registers.PC != uiPC) {
@@ -583,7 +583,7 @@ void MainWindow::debuggerGUIPopulate() {
     ui->freqView->setPalette(tmp == ui->freqView->text() ? nocolorback : colorback);
     ui->freqView->setText(tmp);
 
-    tmp = QString::number(debugger.totalCycles);
+    tmp = QString::number(debugger.cycleCount);
     ui->cycleView->setPalette(tmp == ui->cycleView->text() ? nocolorback : colorback);
     ui->cycleView->setText(tmp);
 
@@ -683,7 +683,7 @@ void MainWindow::debuggerGUIPopulate() {
 // ------------------------------------------------
 
 void MainWindow::debuggerZeroClockCounter() {
-    debugger.totalCycles = 0;
+    debugger.cycleCount = 0;
     ui->cycleView->setText("0");
 }
 

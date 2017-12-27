@@ -78,7 +78,7 @@ typedef struct {        /* For debugging */
     debug_data_t data;
     volatile uint32_t bufferPos;
     volatile uint32_t bufferErrPos;
-    uint64_t totalCycles;
+    uint64_t cycleCount;
 } debug_state_t;
 
 /* Debugging */
