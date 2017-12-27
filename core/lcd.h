@@ -18,7 +18,7 @@ extern "C" {
 #define LCD_FRAME_SIZE (LCD_SIZE * LCD_RGB_SIZE)
 
 /* Standard LCD state */
-typedef struct lcd_cntrl_state {
+typedef struct lcd_state {
     uint32_t timing[4];
 
     uint32_t control;             /* Control register */
@@ -58,13 +58,8 @@ typedef struct lcd_cntrl_state {
     uint32_t frame[LCD_SIZE];       /* Location on which to draw the data */
 } lcd_state_t;
 
-typedef struct lcd_full_state {
-    spi_state_t *spi;
-    lcd_state_t cntrl;
-} lcd_cntrl_t;
-
 /* Global LCD state */
-extern lcd_cntrl_t lcd;
+extern lcd_state_t lcd;
 
 /* Available Functions */
 void lcd_reset(void);

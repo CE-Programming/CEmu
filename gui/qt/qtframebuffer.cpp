@@ -6,7 +6,7 @@
 #include <QtGui/QPainter>
 
 QImage renderFramebuffer(lcd_state_t *lcds) {
-    if (lcds != &lcd.cntrl) {
+    if (lcds != &lcd) {
         lcd_drawframe(lcds->frame, lcds);
     }
     return QImage(reinterpret_cast<const uint8_t*>(lcds->frame), lcds->width, lcds->height, QImage::Format_RGB888);
@@ -17,7 +17,7 @@ void paintFramebuffer(QPainter *p, lcd_state_t *lcds) {
         QImage img = renderFramebuffer(lcds);
 
 #ifdef PNG_WRITE_APNG_SUPPORTED
-        if (lcds == &lcd.cntrl) {
+        if (lcds == &lcd) {
             apng_add_frame();
         }
 #endif

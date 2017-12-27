@@ -419,7 +419,7 @@ void MainWindow::debuggerUpdateChanges() {
 
     backlight.brightness = static_cast<uint8_t>(ui->brightnessSlider->value());
 
-    lcd_state_t *lcds = &lcd.cntrl;
+    lcd_state_t *lcds = &lcd;
 
     lcds->upbase = static_cast<uint32_t>(hex2int(ui->lcdbaseView->text()));
     lcds->upcurr = static_cast<uint32_t>(hex2int(ui->lcdcurrView->text()));
@@ -571,11 +571,11 @@ void MainWindow::debuggerGUIPopulate() {
     ui->rregView->setPalette(tmp == ui->rregView->text() ? nocolorback : colorback);
     ui->rregView->setText(tmp);
 
-    tmp = int2hex(lcd.cntrl.upbase, 6);
+    tmp = int2hex(lcd.upbase, 6);
     ui->lcdbaseView->setPalette(tmp == ui->lcdbaseView->text() ? nocolorback : colorback);
     ui->lcdbaseView->setText(tmp);
 
-    tmp = int2hex(lcd.cntrl.upcurr, 6);
+    tmp = int2hex(lcd.upcurr, 6);
     ui->lcdcurrView->setPalette(tmp == ui->lcdcurrView->text() ? nocolorback : colorback);
     ui->lcdcurrView->setText(tmp);
 
@@ -630,7 +630,7 @@ void MainWindow::debuggerGUIPopulate() {
     batteryIsCharging(control.batteryCharging);
     batteryChangeStatus(control.setBatteryStatus);
 
-    ui->bppView->setCurrentIndex((lcd.cntrl.control >> 1) & 7);
+    ui->bppView->setCurrentIndex((lcd.control >> 1) & 7);
 
     ui->check3->setChecked(cpu.registers.flags._3);
     ui->check5->setChecked(cpu.registers.flags._5);
@@ -649,10 +649,10 @@ void MainWindow::debuggerGUIPopulate() {
     ui->checkIEF1->setChecked(cpu.IEF1);
     ui->checkIEF2->setChecked(cpu.IEF2);
 
-    ui->checkPowered->setChecked(lcd.cntrl.control & 0x800);
-    ui->checkBEPO->setChecked(lcd.cntrl.control & 0x400);
-    ui->checkBEBO->setChecked(lcd.cntrl.control & 0x200);
-    ui->checkBGR->setChecked(lcd.cntrl.control & 0x100);
+    ui->checkPowered->setChecked(lcd.control & 0x800);
+    ui->checkBEPO->setChecked(lcd.control & 0x400);
+    ui->checkBEBO->setChecked(lcd.control & 0x200);
+    ui->checkBGR->setChecked(lcd.control & 0x100);
     ui->brightnessSlider->setValue(backlight.brightness);
 
     ui->portView->blockSignals(true);

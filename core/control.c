@@ -144,7 +144,7 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
             if (byte == 0xD4) {
                 control.ports[0] |= 1 << 6;
                 asic.resetOnWake = true;
-                lcd.cntrl.control &= ~0x800;
+                lcd.control &= ~0x800;
                 gui_console_printf("[CEmu] Reset caused by entering sleep mode.\n", cpu.registers.PC);
 #ifdef DEBUG_SUPPORT
                 if (debugger.resetOpensDebugger) {

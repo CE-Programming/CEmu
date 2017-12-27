@@ -2,6 +2,8 @@
 #include "emu.h"
 #include "schedule.h"
 
+#include <string.h>
+
 spi_state_t spi;
 
 static void spi_sw_reset(void) {
@@ -232,7 +234,7 @@ static const eZ80portrange_t pspi = {
 
 
 void spi_reset(void) {
-    uint8_t i, c;
+    uint8_t i = 0, c;
     memset(&spi, 0, sizeof(spi));
     spi_hw_reset();
     for (c = 0; c < 1 << 5; c++)

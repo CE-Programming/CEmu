@@ -43,7 +43,7 @@ typedef struct emu_image {
     general_timers_state_t gpt;
     backlight_state_t backlight;
     control_state_t control;
-    lcd_cntrl_t lcd;
+    lcd_state_t lcd;
     mem_state_t mem;
     uint8_t mem_flash[SIZE_FLASH];
     uint8_t mem_ram[SIZE_RAM];
