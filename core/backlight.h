@@ -1,11 +1,13 @@
-#ifndef BACKLIGHTPORT_H
-#define BACKLIGHTPORT_H
+#ifndef BACKLIGHT_H
+#define BACKLIGHT_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "port.h"
+
+#include <stdio.h>
 
 typedef struct backlight_state {
     uint8_t ports[0x100];
@@ -19,9 +21,8 @@ eZ80portrange_t init_backlight(void);
 void backlight_reset(void);
 
 /* Save/Restore */
-typedef struct emu_image emu_image;
-bool backlight_restore(const emu_image*);
-bool backlight_save(emu_image*);
+bool backlight_restore(FILE *image);
+bool backlight_save(FILE *image);
 
 #ifdef __cplusplus
 }

@@ -10,6 +10,7 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 typedef struct spi_state {
     bool sleep;
@@ -41,9 +42,8 @@ extern spi_state_t spi;
 eZ80portrange_t init_spi(void);
 
 /* Save/Restore */
-typedef struct emu_image emu_image;
-bool spi_restore(const emu_image*);
-bool spi_save(emu_image*);
+bool spi_restore(FILE *image);
+bool spi_save(FILE *image);
 
 /* Functions */
 void spi_reset(void);

@@ -6,6 +6,8 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
 
 enum clock_id { CLOCK_CPU, CLOCK_APB, CLOCK_27M, CLOCK_12M, CLOCK_24M, CLOCK_32K,
                 CLOCK_NUM_ITEMS };
@@ -52,9 +54,8 @@ void sched_set_clocks(int count, uint32_t *new_rates);
 uint64_t event_ticks_remaining(int index);
 
 /* Save/Restore */
-typedef struct emu_image emu_image;
-bool sched_restore(const emu_image*);
-bool sched_save(emu_image*);
+bool sched_restore(FILE *image);
+bool sched_save(FILE *image);
 
 #ifdef __cplusplus
 }

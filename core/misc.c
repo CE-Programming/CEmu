@@ -1,12 +1,13 @@
-#include <string.h>
-
-#include "cpu.h"
 #include "misc.h"
+#include "cpu.h"
 #include "schedule.h"
 #include "emu.h"
 #include "defines.h"
 #include "interrupt.h"
 #include "debug/debug.h"
+
+#include <string.h>
+#include <stdio.h>
 
 watchdog_state_t watchdog;
 protected_state_t protect;
@@ -140,14 +141,12 @@ eZ80portrange_t init_watchdog(void) {
     return pwatchdog;
 }
 
-bool watchdog_save(emu_image *s) {
-    s->watchdog = watchdog;
-    return true;
+bool watchdog_save(FILE *image) {
+    return fwrite(&watchdog, sizeof(watchdog), 1, image) == 1;
 }
 
-bool watchdog_restore(const emu_image *s) {
-    watchdog = s->watchdog;
-    return true;
+bool watchdog_restore(FILE *image) {
+    return fread(&watchdog, sizeof(watchdog), 1, image) == 1;
 }
 
 /* ============================================= */
@@ -196,14 +195,12 @@ eZ80portrange_t init_protected(void) {
     return p9xxx;
 }
 
-bool protect_save(emu_image *s) {
-    s->protect = protect;
-    return true;
+bool protect_save(FILE *image) {
+    return fwrite(&protect, sizeof(protect), 1, image) == 1;
 }
 
-bool protect_restore(const emu_image *s) {
-    protect = s->protect;
-    return true;
+bool protect_restore(FILE *image) {
+    return fread(&protect, sizeof(protect), 1, image) == 1;
 }
 
 /* ============================================= */
@@ -230,14 +227,12 @@ eZ80portrange_t init_cxxx(void) {
     return pcxxx;
 }
 
-bool cxxx_save(emu_image *s) {
-    s->cxxx = cxxx;
-    return true;
+bool cxxx_save(FILE *image) {
+    return fwrite(&cxxx, sizeof(cxxx), 1, image) == 1;
 }
 
-bool cxxx_restore(const emu_image *s) {
-    cxxx = s->cxxx;
-    return true;
+bool cxxx_restore(FILE *image) {
+    return fread(&cxxx, sizeof(cxxx), 1, image) == 1;
 }
 
 /* ============================================= */
@@ -271,18 +266,16 @@ static const eZ80portrange_t pexxx = {
 };
 
 eZ80portrange_t init_exxx(void) {
-    memset(&exxx, 0, sizeof exxx);
+    memset(&exxx, 0, sizeof(exxx));
     return pexxx;
 }
 
-bool exxx_save(emu_image *s) {
-    s->exxx = exxx;
-    return true;
+bool exxx_save(FILE *image) {
+    return fwrite(&exxx, sizeof(exxx), 1, image) == 1;
 }
 
-bool exxx_restore(const emu_image *s) {
-    exxx = s->exxx;
-    return true;
+bool exxx_restore(FILE *image) {
+    return fread(&exxx, sizeof(exxx), 1, image) == 1;
 }
 
 /* ============================================= */

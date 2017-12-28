@@ -5,52 +5,9 @@
 extern "C" {
 #endif
 
-#include "defines.h"
-#include "cpu.h"
-#include "flash.h"
-#include "mem.h"
-#include "lcd/lcd.h"
-#include "lcd/spi.h"
-#include "schedule.h"
-#include "dma.h"
-#include "link.h"
-#include "usb.h"
-#include "interrupt.h"
-#include "misc.h"
-#include "keypad.h"
-#include "realclock.h"
-#include "sha256.h"
-#include "tidevices.h"
-#include "backlight.h"
-#include "timers.h"
-#include "control.h"
-
-typedef struct emu_image {
-    uint32_t version; // 0xCECEXXXX - XXXX is version number if the core is changed
-    ti_device_t deviceType;
-    eZ80cpu_t cpu;
-    usb_state_t usb;
-    flash_state_t flash;
-    interrupt_state_t intrpt[2];
-    watchdog_state_t watchdog;
-    protected_state_t protect;
-    cxxx_state_t cxxx;
-    spi_state_t spi;
-    exxx_state_t exxx;
-    fxxx_state_t fxxx;
-    keypad_state_t keypad;
-    sched_state_t sched;
-    dma_state_t dma;
-    rtc_state_t rtc;
-    sha256_state_t sha256;
-    general_timers_state_t gpt;
-    backlight_state_t backlight;
-    control_state_t control;
-    lcd_state_t lcd;
-    mem_state_t mem;
-    uint8_t mem_flash[SIZE_FLASH];
-    uint8_t mem_ram[SIZE_RAM];
-} emu_image_t;
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
 
 /* CPU events */
 extern uint32_t cpuEvents;

@@ -8,6 +8,10 @@ extern "C" {
 #include "../port.h"
 #include "spi.h"
 
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+
 #define LCD_RGB_SIZE   3
 #define LCD_WIDTH      320
 #define LCD_HEIGHT     240
@@ -75,9 +79,8 @@ void lcd_disable(void);
 extern void (*lcd_event_gui_callback)(void);
 
 /* Save/Restore */
-typedef struct emu_image emu_image;
-bool lcd_restore(const emu_image*);
-bool lcd_save(emu_image*);
+bool lcd_restore(FILE *image);
+bool lcd_save(FILE *image);
 
 #ifdef __cplusplus
 }

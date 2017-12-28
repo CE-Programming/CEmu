@@ -2,7 +2,6 @@
 #define EXTRAS_H
 
 #include <stdint.h>
-#include "defines.h"
 
 #ifdef __cplusplus
 extern "C" {

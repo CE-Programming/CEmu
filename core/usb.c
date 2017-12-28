@@ -3,6 +3,8 @@
 #include "schedule.h"
 #include "interrupt.h"
 
+#include <stdio.h>
+
 /* Global GPT state */
 usb_state_t usb;
 
@@ -32,12 +34,10 @@ eZ80portrange_t init_usb(void) {
     return device;
 }
 
-bool usb_save(emu_image *s) {
-    s->usb = usb;
-    return true;
+bool usb_save(FILE *image) {
+    return fwrite(&usb, sizeof(usb), 1, image) == 1;
 }
 
-bool usb_restore(const emu_image *s) {
-    usb = s->usb;
-    return true;
+bool usb_restore(FILE *image) {
+    return fread(&usb, sizeof(usb), 1, image) == 1;
 }

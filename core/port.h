@@ -7,6 +7,9 @@ extern "C" {
 
 #include "defines.h"
 
+#include <stdint.h>
+#include <stdbool.h>
+
 typedef struct eZ80portrange {
     uint8_t (*read)(uint16_t, bool);
     void (*write)(uint16_t, uint8_t, bool);

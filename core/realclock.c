@@ -1,9 +1,10 @@
-#include <string.h>
-
 #include "realclock.h"
 #include "emu.h"
 #include "schedule.h"
 #include "interrupt.h"
+
+#include <string.h>
+#include <stdio.h>
 
 /* Global GPT state */
 rtc_state_t rtc;
@@ -194,12 +195,10 @@ eZ80portrange_t init_rtc(void) {
     return device;
 }
 
-bool rtc_save(emu_image *s) {
-    s->rtc = rtc;
-    return true;
+bool rtc_save(FILE *image) {
+    return fwrite(&rtc, sizeof(rtc), 1, image) == 1;
 }
 
-bool rtc_restore(const emu_image *s) {
-    rtc = s->rtc;
-    return true;
+bool rtc_restore(FILE *image) {
+    return fread(&rtc, sizeof(rtc), 1, image) == 1;
 }

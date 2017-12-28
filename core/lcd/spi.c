@@ -250,12 +250,10 @@ eZ80portrange_t init_spi(void) {
     return pspi;
 }
 
-bool spi_save(emu_image *s) {
-    s->spi = spi;
-    return true;
+bool spi_save(FILE *image) {
+    return fwrite(&spi, sizeof(spi), 1, image) == 1;
 }
 
-bool spi_restore(const emu_image *s) {
-    spi = s->spi;
-    return true;
+bool spi_restore(FILE *image) {
+    return fread(&spi, sizeof(spi), 1, image) == 1;
 }

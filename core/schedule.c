@@ -12,12 +12,13 @@
  * GNU General Public License for more details.
 */
 
-#include <string.h>
-
+#include "schedule.h"
 #include "cpu.h"
 #include "emu.h"
-#include "schedule.h"
 #include "debug/debug.h"
+
+#include <string.h>
+#include <stdio.h>
 
 sched_state_t sched;
 
@@ -147,30 +148,25 @@ void sched_set_clocks(int count, uint32_t *new_rates) {
     sched_update_next_event();
 }
 
-bool sched_save(emu_image *s) {
-    unsigned int i;
-    s->sched = sched;
-
-    for(i = 0; i < SCHED_NUM_ITEMS; i++) {
-        s->sched.items[i].proc = NULL;
-    }
-
-    return true;
+bool sched_save(FILE *image) {
+    return fwrite(&sched, sizeof(sched), 1, image) == 1;
 }
 
-bool sched_restore(const emu_image *s) {
+bool sched_restore(FILE *image) {
+    bool ret;
     unsigned int i;
-    for(i = 0; i < SCHED_NUM_ITEMS; i++) {
-        struct sched_item j = s->sched.items[i];
-        j.proc = sched.items[i].proc;
-        if (!j.proc) {
-            abort();
-        }
-        sched.items[i] = j;
+    struct sched_item items[SCHED_NUM_ITEMS];
+
+    for (i = 0; i < SCHED_NUM_ITEMS; i++) {
+        items[i].proc = sched.items[i].proc;
     }
-    memcpy(sched.clockRates, s->sched.clockRates, sizeof(sched.clockRates));
-    sched.nextCPUtick = s->sched.nextCPUtick;
-    sched.nextIndex = s->sched.nextIndex;
+
+    ret = fread(&sched, sizeof(sched), 1, image) == 1;
+
+    for (i = 0; i < SCHED_NUM_ITEMS; i++) {
+        sched.items[i].proc = items[i].proc;
+    }
+
     sched_update_next_event();
-    return true;
+    return ret;
 }

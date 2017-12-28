@@ -17,16 +17,17 @@
  * DEALINGS IN THE SOFTWARE.
 */
 
-#include <string.h>
-
-#include <stdio.h>
-
 #include "cpu.h"
 #include "emu.h"
 #include "mem.h"
+#include "control.h"
 #include "registers.h"
 #include "interrupt.h"
 #include "debug/debug.h"
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 /* Global CPU state */
 eZ80cpu_t cpu;
@@ -1528,14 +1529,12 @@ void cpu_execute(void) {
     }
 }
 
-bool cpu_restore(const emu_image *s) {
-    cpu = s->cpu;
-    cpuEvents = s->cpu.cpuEventsState;
-    return true;
+bool cpu_restore(FILE *image) {
+    return fread(&cpu, sizeof(cpu), 1, image) == 1 &&
+           fread(&cpuEvents, sizeof(cpuEvents), 1, image) == 1;
 }
 
-bool cpu_save(emu_image *s) {
-    s->cpu = cpu;
-    s->cpu.cpuEventsState = cpuEvents;
-    return true;
+bool cpu_save(FILE *image) {
+    return fwrite(&cpu, sizeof(cpu), 1, image) == 1 &&
+           fwrite(&cpuEvents, sizeof(cpuEvents), 1, image) == 1;
 }

@@ -1,11 +1,15 @@
-#ifndef FLASHPORT_H
-#define FLASHPORT_H
+#ifndef FLASH_H
+#define FLASH_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "port.h"
+
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
 
 /* Standard FLASH state */
 typedef struct flash_state {
@@ -23,9 +27,8 @@ extern flash_state_t flash;
 eZ80portrange_t init_flash(void);
 
 /* Save/Restore */
-typedef struct emu_image emu_image;
-bool flash_restore(const emu_image*);
-bool flash_save(emu_image*);
+bool flash_restore(FILE *image);
+bool flash_save(FILE *image);
 
 #ifdef __cplusplus
 }

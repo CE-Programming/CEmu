@@ -12,11 +12,12 @@
  * GNU General Public License for more details.
 */
 
-#include <string.h>
-#include <stdio.h>
-
 #include "sha256.h"
 #include "emu.h"
+#include "control.h"
+
+#include <string.h>
+#include <stdio.h>
 
 static sha256_state_t sha256;
 
@@ -155,12 +156,11 @@ eZ80portrange_t init_sha256(void) {
     return device;
 }
 
-bool sha256_save(emu_image *s) {
-    s->sha256 = sha256;
-    return true;
+bool sha256_save(FILE *image) {
+    return fwrite(&sha256, sizeof(sha256), 1, image) == 1;
 }
 
-bool sha256_restore(const emu_image *s) {
-    sha256 = s->sha256;
-    return true;
+bool sha256_restore(FILE *image) {
+    return fread(&sha256, sizeof(sha256), 1, image) == 1;
 }
+

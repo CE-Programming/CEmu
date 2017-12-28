@@ -17,6 +17,23 @@ namespace cemucore
     extern "C" {
         #include "../../core/emu.h"
         #include "../../core/link.h"
+        #include "../../core/asic.h"
+        #include "../../core/cpu.h"
+        #include "../../core/misc.h"
+        #include "../../core/mem.h"
+        #include "../../core/dma.h"
+        #include "../../core/interrupt.h"
+        #include "../../core/tidevices.h"
+        #include "../../core/keypad.h"
+        #include "../../core/control.h"
+        #include "../../core/flash.h"
+        #include "../../core/lcd/lcd.h"
+        #include "../../core/lcd/spi.h"
+        #include "../../core/backlight.h"
+        #include "../../core/timers.h"
+        #include "../../core/usb.h"
+        #include "../../core/realclock.h"
+        #include "../../core/sha256.h"
         #include "../../core/extras.h"
     }
 }

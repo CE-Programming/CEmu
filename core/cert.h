@@ -7,6 +7,10 @@ extern "C" {
 
 #include "defines.h"
 
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+
 /* Adapted from libtifiles by the original author */
 int cert_field_get(const uint8_t *data, uint32_t length, uint16_t *field_type, const uint8_t **contents, uint32_t *field_size);
 int cert_field_next(const uint8_t **data, uint32_t *length);

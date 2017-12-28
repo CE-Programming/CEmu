@@ -7,6 +7,10 @@ extern "C" {
 
 #include "port.h"
 
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+
 typedef struct watchdog_state {
     uint32_t count;              /* Standard WATCHDOG state */
     uint32_t load;
@@ -48,15 +52,14 @@ eZ80portrange_t init_exxx(void);
 eZ80portrange_t init_fxxx(void);
 
 /* Save/Restore */
-typedef struct emu_image emu_image;
-bool watchdog_restore(const emu_image*);
-bool watchdog_save(emu_image*);
-bool protect_restore(const emu_image*);
-bool protect_save(emu_image*);
-bool cxxx_restore(const emu_image*);
-bool cxxx_save(emu_image*);
-bool exxx_restore(const emu_image*);
-bool exxx_save(emu_image*);
+bool watchdog_restore(FILE *image);
+bool watchdog_save(FILE *image);
+bool protect_restore(FILE *image);
+bool protect_save(FILE *image);
+bool cxxx_restore(FILE *image);
+bool cxxx_save(FILE *image);
+bool exxx_restore(FILE *image);
+bool exxx_save(FILE *image);
 
 #ifdef __cplusplus
 }

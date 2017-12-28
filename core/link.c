@@ -1,10 +1,14 @@
-#include <stdio.h>
-#include <string.h>
-
 #include "link.h"
 #include "asic.h"
+#include "cpu.h"
+#include "mem.h"
+#include "control.h"
+#include "interrupt.h"
 #include "emu.h"
 #include "os/os.h"
+
+#include <stdio.h>
+#include <string.h>
 
 #define SAFE_RAM 0xD052C6
 

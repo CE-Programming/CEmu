@@ -5,10 +5,9 @@
 extern "C" {
 #endif
 
-#include <stdbool.h>
-
-#include "defines.h"
 #include "vat.h"
+
+#include <stdbool.h>
 
 enum { LINK_RAM=0, LINK_ARCH, LINK_FILE };
 enum { FILE_DATA=0x35, FILE_DATA_START=0x37 };

@@ -1,7 +1,8 @@
-#include <string.h>
-
 #include "backlight.h"
 #include "emu.h"
+
+#include <stdio.h>
+#include <string.h>
 
 /* Global BACKLIGHT state */
 backlight_state_t backlight;
@@ -79,12 +80,10 @@ void backlight_reset(void) {
     backlight.brightness = 0xFF;  /* backlight level (PWM)             */
 }
 
-bool backlight_save(emu_image *s) {
-    s->backlight = backlight;
-    return true;
+bool backlight_save(FILE *image) {
+    return fwrite(&backlight, sizeof(backlight), 1, image) == 1;
 }
 
-bool backlight_restore(const emu_image *s) {
-    backlight = s->backlight;
-    return true;
+bool backlight_restore(FILE *image) {
+    return fread(&backlight, sizeof(backlight), 1, image) == 1;
 }

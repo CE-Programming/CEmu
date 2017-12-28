@@ -26,6 +26,10 @@ extern "C" {
 
 #include "defines.h"
 
+#include <stdint.h>
+#include <stdio.h>
+#include <stdbool.h>
+
 typedef union {
     uint16_t hl, hls;
     struct {

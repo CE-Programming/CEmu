@@ -1,13 +1,16 @@
-#include <string.h>
-#include <assert.h>
-
 #include "mem.h"
 #include "emu.h"
 #include "cpu.h"
 #include "dma.h"
 #include "flash.h"
 #include "control.h"
+#include "lcd/lcd.h"
 #include "debug/debug.h"
+
+#include <assert.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #define mmio_mapped(addr, select) ((addr) < (((select) = (addr) >> 6 & 0x4000) ? 0xFB0000 : 0xE40000))
 #define mmio_port(addr, select) (0x1000 + (select) + ((addr) >> 4 & 0xf000) + ((addr) & 0xfff))
@@ -591,38 +594,42 @@ void mem_poke_byte(uint32_t addr, uint8_t value) {
     }
 }
 
-bool mem_save(emu_image *s) {
+bool mem_save(FILE *image) {
     assert(mem.flash.block);
     assert(mem.ram.block);
 
-    memcpy(s->mem_flash, mem.flash.block, SIZE_FLASH);
-    memcpy(s->mem_ram, mem.ram.block, SIZE_RAM);
-
-    s->mem = mem;
-    s->mem.flash.block = NULL;
-    s->mem.ram.block = NULL;
-    return true;
+    return fwrite(&mem, sizeof(mem), 1, image) == 1 &&
+           fwrite(mem.flash.block, SIZE_FLASH, 1, image) == 1 &&
+           fwrite(mem.ram.block, SIZE_RAM, 1, image) == 1;
 }
 
-bool mem_restore(const emu_image *s) {
+bool mem_restore(FILE *image) {
+    bool ret = false;
     unsigned int i;
-    uint8_t *tmp_flash_ptr = mem.flash.block;
-    uint8_t *tmp_ram_ptr = mem.ram.block;
+    uint8_t *tmp_flash_ptr;
+    uint8_t *tmp_ram_ptr;
 
-    mem = s->mem;
+    assert(mem.flash.block);
+    assert(mem.ram.block);
+
+    tmp_flash_ptr = mem.flash.block;
+    tmp_ram_ptr = mem.ram.block;
+
+    ret |= fread(&mem, sizeof(mem), 1, image) == 1;
 
     mem.flash.block = tmp_flash_ptr;
     mem.ram.block = tmp_ram_ptr;
 
-    memcpy(mem.flash.block, s->mem_flash, SIZE_FLASH);
-    memcpy(mem.ram.block, s->mem_ram, SIZE_RAM);
+    ret |= fread(mem.flash.block, SIZE_FLASH, 1, image) == 1 &&
+           fread(mem.ram.block, SIZE_RAM, 1, image) == 1;
 
     for (i = 0; i < 8; i++) {
-        mem.flash.sector[i].ptr = mem.flash.block + (i*SIZE_FLASH_SECTOR_8K);
+        mem.flash.sector[i].ptr = &mem.flash.block[i*SIZE_FLASH_SECTOR_8K];
     }
     for (i = 0; i < 64; i++) {
-        mem.flash.sector[i].ptr = mem.flash.block + (i*SIZE_FLASH_SECTOR_64K);
+        mem.flash.sector[i].ptr = &mem.flash.block[i*SIZE_FLASH_SECTOR_64K];
     }
-    return true;
+
+    return ret;
 }
 

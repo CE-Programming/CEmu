@@ -23,6 +23,7 @@
 
 #include "../../core/schedule.h"
 #include "../../core/link.h"
+#include "../../core/mem.h"
 
 // ------------------------------------------------
 // Hex Editor Things

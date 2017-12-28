@@ -5,10 +5,9 @@
 extern "C" {
 #endif
 
+#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-
-#include "defines.h"
 
 enum flash_commands {
     NO_COMMAND,
@@ -84,9 +83,8 @@ uint8_t mem_read_cpu(uint32_t address, bool fetch);
 void mem_write_cpu(uint32_t address, uint8_t value);
 
 /* Save/Restore */
-typedef struct emu_image emu_image;
-bool mem_restore(const emu_image*);
-bool mem_save(emu_image*);
+bool mem_restore(FILE *image);
+bool mem_save(FILE *image);
 
 #ifdef __cplusplus
 }

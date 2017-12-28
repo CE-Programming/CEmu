@@ -7,6 +7,10 @@ extern "C" {
 
 #include "port.h"
 
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+
 /* Standard USB state */
 typedef struct usb_state {
     uint8_t dummy;
@@ -20,9 +24,8 @@ eZ80portrange_t init_usb(void);
 void usb_reset(void);
 
 /* Save/Restore */
-typedef struct emu_image emu_image;
-bool usb_restore(const emu_image*);
-bool usb_save(emu_image*);
+bool usb_restore(FILE *image);
+bool usb_save(FILE *image);
 
 #ifdef __cplusplus
 }

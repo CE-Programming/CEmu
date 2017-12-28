@@ -1,10 +1,14 @@
-#include <string.h>
-
 #include "control.h"
 #include "asic.h"
-#include "lcd/lcd.h"
 #include "emu.h"
+#include "mem.h"
+#include "cpu.h"
+#include "lcd/lcd.h"
 #include "debug/debug.h"
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 /* Global CONTROL state */
 control_state_t control;
@@ -235,14 +239,12 @@ void control_reset(void) {
     gui_console_printf("[CEmu] Control reset.\n");
 }
 
-bool control_save(emu_image *s) {
-    s->control = control;
-    return true;
+bool control_save(FILE *image) {
+    return fwrite(&control, sizeof(control), 1, image) == 1;
 }
 
-bool control_restore(const emu_image *s) {
-    control = s->control;
-    return true;
+bool control_restore(FILE *image) {
+    return fread(&control, sizeof(control), 1, image) == 1;
 }
 
 bool mmio_unlocked(void) {

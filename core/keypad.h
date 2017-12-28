@@ -7,6 +7,10 @@ extern "C" {
 
 #include "port.h"
 
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+
 /* Standard KEYPAD state */
 typedef struct keypad_state {
     union {
@@ -43,9 +47,8 @@ void keypad_reset(void);
 void keypad_key_event(unsigned int row, unsigned int col, bool press);
 
 /* Save/Restore */
-typedef struct emu_image emu_image;
-bool keypad_restore(const emu_image*);
-bool keypad_save(emu_image*);
+bool keypad_restore(FILE *image);
+bool keypad_save(FILE *image);
 
 #ifdef __cplusplus
 }

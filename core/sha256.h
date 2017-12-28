@@ -1,11 +1,15 @@
-#ifndef H_SHA256
-#define H_SHA256
+#ifndef SHA256_H
+#define SHA256_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "port.h"
+
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
 
 typedef struct sha256_state {
     uint32_t hash_block[16];
@@ -17,9 +21,8 @@ eZ80portrange_t init_sha256(void);
 void sha256_reset(void);
 
 /* Save/Restore */
-typedef struct emu_image emu_image;
-bool sha256_restore(const emu_image*);
-bool sha256_save(emu_image*);
+bool sha256_restore(FILE *image);
+bool sha256_save(FILE *image);
 
 #ifdef __cplusplus
 }

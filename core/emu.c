@@ -1,3 +1,12 @@
+#include "emu.h"
+#include "mem.h"
+#include "asic.h"
+#include "cpu.h"
+#include "cert.h"
+#include "os/os.h"
+#include "schedule.h"
+#include "debug/debug.h"
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -7,14 +16,7 @@
 #include <emscripten.h>
 #endif
 
-#include "emu.h"
-#include "asic.h"
-#include "cert.h"
-#include "os/os.h"
-#include "schedule.h"
-#include "debug/debug.h"
-
-#define IMAGE_VERSION 0xCECE0010
+#define IMAGE_VERSION 0xCECE0012
 
 uint32_t cpuEvents;
 volatile bool exiting;
@@ -44,67 +46,39 @@ bool emu_save_rom(const char *name) {
 
 bool emu_save(const char *name) {
     FILE *file = NULL;
-    emu_image_t *image = NULL;
-    size_t size = sizeof(emu_image_t);
     bool success = false;
+    uint32_t version = IMAGE_VERSION;
 
     file = fopen_utf8(name, "wb");
-    if (!file) {
-        return false;
+    if (file) {
+        if (fwrite(&version, sizeof(version), 1, file) == 1 && asic_save(file)) {
+            success = true;
+        }
     }
 
-    image = (emu_image_t*)malloc(size);
-
-    do {
-        if (!image) {
-            break;
-        }
-
-        if (!asic_save(image)) {
-            break;
-        }
-
-        image->version = IMAGE_VERSION;
-
-        success = (fwrite(image, 1, size, file) == size);
-    } while (0);
-
-    free(image);
     fclose(file);
 
     return success;
 }
 
 bool emu_load(const char *romName, const char *imageName) {
+    uint32_t version = IMAGE_VERSION;
     bool ret = false;
     long lSize;
 
     if (imageName) {
-        FILE *imageFile = NULL;
-        emu_image_t *image = NULL;
-        imageFile = fopen_utf8(imageName, "rb");
-
-        if (!imageFile)                                goto ierr;
-        if (fseek(imageFile, 0L, SEEK_END) < 0)        goto ierr;
-        lSize = ftell(imageFile);
-        if (lSize < 0)                                 goto ierr;
-        if (fseek(imageFile, 0L, SEEK_SET) < 0)        goto ierr;
-        if ((size_t)lSize < sizeof(emu_image_t))       goto ierr;
-
-        if (!(image = (emu_image_t*)malloc(lSize)))    goto ierr;
-
-        if (fread(image, lSize, 1, imageFile) != 1)    goto ierr;
+        FILE *file = fopen_utf8(imageName, "rb");
+        if (!file) goto rerr;
+        if (fread(&version, sizeof(version), 1, file) != 1) goto rerr;
+        if (version != IMAGE_VERSION) goto rerr;
 
         asic_init();
         sched_reset();
         asic_reset();
 
-        if (image->version != IMAGE_VERSION)           goto ierr;
-        if (!asic_restore(image))                      goto ierr;
+        if (!asic_restore(file)) goto rerr;
 
         ret = true;
-ierr:
-        free(image);
     } else if (romName) {
         bool gotType = false;
         uint16_t field_type;

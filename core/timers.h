@@ -7,6 +7,10 @@ extern "C" {
 
 #include "port.h"
 
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+
 typedef struct timer_state {
     uint32_t counter, reset, match[2];
 } timer_state_t;
@@ -26,9 +30,8 @@ eZ80portrange_t init_gpt(void);
 void gpt_reset(void);
 
 /* Save/Restore */
-typedef struct emu_image emu_image;
-bool gpt_restore(const emu_image*);
-bool gpt_save(emu_image*);
+bool gpt_restore(FILE *image);
+bool gpt_save(FILE *image);
 
 #ifdef __cplusplus
 }

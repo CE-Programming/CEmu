@@ -1,27 +1,29 @@
+#include "asic.h"
+#include "cpu.h"
+#include "misc.h"
+#include "mem.h"
+#include "dma.h"
+#include "interrupt.h"
+#include "tidevices.h"
+#include "keypad.h"
+#include "control.h"
+#include "flash.h"
+#include "lcd/lcd.h"
+#include "lcd/spi.h"
+#include "backlight.h"
+#include "timers.h"
+#include "usb.h"
+#include "realclock.h"
+#include "sha256.h"
+#include "emu.h"
+#include "schedule.h"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
-#include "emu.h"
-#include "cpu.h"
-#include "mem.h"
-#include "lcd/lcd.h"
-#include "lcd/spi.h"
-#include "usb.h"
-#include "asic.h"
-#include "misc.h"
-#include "flash.h"
-#include "keypad.h"
-#include "sha256.h"
-#include "timers.h"
-#include "control.h"
-#include "schedule.h"
-#include "backlight.h"
-#include "interrupt.h"
-#include "realclock.h"
 
 /* Global ASIC state */
 asic_state_t asic;
@@ -123,48 +125,46 @@ uint32_t set_cpu_clock_rate(uint32_t new_rate) {
     return old_rate;
 }
 
-bool asic_restore(const emu_image *s) {
-    asic.deviceType = s->deviceType;
-
-    return backlight_restore(s)
-           && control_restore(s)
-           && cpu_restore(s)
-           && flash_restore(s)
-           && intrpt_restore(s)
-           && keypad_restore(s)
-           && lcd_restore(s)
-           && mem_restore(s)
-           && watchdog_restore(s)
-           && protect_restore(s)
-           && rtc_restore(s)
-           && sha256_restore(s)
-           && gpt_restore(s)
-           && usb_restore(s)
-           && cxxx_restore(s)
-           && spi_restore(s)
-           && exxx_restore(s)
-           && sched_restore(s);
+bool asic_restore(FILE *image) {
+    return fread(&asic.deviceType, sizeof(asic.deviceType), 1, image) == 1
+           && backlight_restore(image)
+           && control_restore(image)
+           && cpu_restore(image)
+           && flash_restore(image)
+           && intrpt_restore(image)
+           && keypad_restore(image)
+           && lcd_restore(image)
+           && mem_restore(image)
+           && watchdog_restore(image)
+           && protect_restore(image)
+           && rtc_restore(image)
+           && sha256_restore(image)
+           && gpt_restore(image)
+           && usb_restore(image)
+           && cxxx_restore(image)
+           && spi_restore(image)
+           && exxx_restore(image)
+           && sched_restore(image);
 }
 
-bool asic_save(emu_image *s) {
-    s->deviceType = asic.deviceType;
-
-    return backlight_save(s)
-           && control_save(s)
-           && cpu_save(s)
-           && flash_save(s)
-           && intrpt_save(s)
-           && keypad_save(s)
-           && lcd_save(s)
-           && mem_save(s)
-           && watchdog_save(s)
-           && protect_save(s)
-           && rtc_save(s)
-           && sha256_save(s)
-           && gpt_save(s)
-           && usb_save(s)
-           && cxxx_save(s)
-           && spi_save(s)
-           && exxx_save(s)
-           && sched_save(s);
+bool asic_save(FILE *image) {
+    return fwrite(&asic.deviceType, sizeof(asic.deviceType), 1, image) == 1
+           && backlight_save(image)
+           && control_save(image)
+           && cpu_save(image)
+           && flash_save(image)
+           && intrpt_save(image)
+           && keypad_save(image)
+           && lcd_save(image)
+           && mem_save(image)
+           && watchdog_save(image)
+           && protect_save(image)
+           && rtc_save(image)
+           && sha256_save(image)
+           && gpt_save(image)
+           && usb_save(image)
+           && cxxx_save(image)
+           && spi_save(image)
+           && exxx_save(image)
+           && sched_save(image);
 }

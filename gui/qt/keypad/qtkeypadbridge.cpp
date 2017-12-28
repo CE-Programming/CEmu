@@ -13,6 +13,7 @@
 */
 
 #include "qtkeypadbridge.h"
+#include "../../../core/keypad.h"
 #include "../../../core/asic.h"
 
 QtKeypadBridge *keypadBridge = Q_NULLPTR;

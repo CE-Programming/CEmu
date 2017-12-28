@@ -1,10 +1,11 @@
-#include <string.h>
-
 #include "timers.h"
 #include "control.h"
 #include "emu.h"
 #include "schedule.h"
 #include "interrupt.h"
+
+#include <string.h>
+#include <stdio.h>
 
 /* Global GPT state */
 general_timers_state_t gpt;
@@ -142,12 +143,10 @@ eZ80portrange_t init_gpt(void) {
     return device;
 }
 
-bool gpt_save(emu_image *s) {
-    s->gpt = gpt;
-    return true;
+bool gpt_save(FILE *image) {
+    return fwrite(&gpt, sizeof(gpt), 1, image) == 1;
 }
 
-bool gpt_restore(const emu_image *s) {
-    gpt = s->gpt;
-    return true;
+bool gpt_restore(FILE *image) {
+    return fread(&gpt, sizeof(gpt), 1, image) == 1;
 }

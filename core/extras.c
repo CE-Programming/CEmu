@@ -1,5 +1,7 @@
 #include "extras.h"
 #include "emu.h"
+#include "mem.h"
+#include "defines.h"
 
 // A few needed locations
 #define CE_kbdKey       0xD0058C

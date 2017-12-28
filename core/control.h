@@ -1,11 +1,15 @@
-#ifndef CONTROLPORT_H
-#define CONTROLPORT_H
+#ifndef CONTROL_H
+#define CONTROL_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "port.h"
+
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 enum {
     BATTERY_DISCHARGED,
@@ -45,9 +49,8 @@ eZ80portrange_t init_control(void);
 void control_reset(void);
 
 /* Save/Restore */
-typedef struct emu_image emu_image;
-bool control_restore(const emu_image*);
-bool control_save(emu_image*);
+bool control_restore(FILE *image);
+bool control_save(FILE *image);
 bool mmio_unlocked(void);
 bool flash_unlocked(void);
 bool unprivileged_code(void);

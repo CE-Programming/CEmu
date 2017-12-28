@@ -1,8 +1,9 @@
-#include <string.h>
-
 #include "flash.h"
 #include "emu.h"
 #include "os/os.h"
+
+#include <string.h>
+#include <stdio.h>
 
 /* Global flash state */
 flash_state_t flash;
@@ -80,8 +81,8 @@ static const eZ80portrange_t device = {
 eZ80portrange_t init_flash(void) {
     memset(flash.ports, 0, sizeof flash.ports);
 
-    flash.ports[0x00] = 0x01; /* From WikiTI */
-    flash.ports[0x07] = 0xFF; /* From WikiTI */
+    flash.ports[0x00] = 0x01;
+    flash.ports[0x07] = 0xFF;
     flash.waitStates = 10;
     flash.mapped = 1;
     flash_set_map(6);
@@ -90,12 +91,10 @@ eZ80portrange_t init_flash(void) {
     return device;
 }
 
-bool flash_save(emu_image *s) {
-    s->flash = flash;
-    return true;
+bool flash_save(FILE *image) {
+    return fwrite(&flash, sizeof(flash), 1, image) == 1;
 }
 
-bool flash_restore(const emu_image *s) {
-    flash = s->flash;
-    return true;
+bool flash_restore(FILE *image) {
+    return fread(&flash, sizeof(flash), 1, image) == 1;
 }

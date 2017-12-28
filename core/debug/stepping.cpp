@@ -6,6 +6,7 @@
 #include "../mem.h"
 #include "../emu.h"
 #include "../asic.h"
+#include "../cpu.h"
 
 void debug_set_step_next(void) {
     debug_clear_temp_break();

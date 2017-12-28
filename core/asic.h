@@ -5,22 +5,11 @@
 extern "C" {
 #endif
 
-#include "cpu.h"
-#include "misc.h"
-#include "mem.h"
-#include "dma.h"
-#include "interrupt.h"
 #include "tidevices.h"
-#include "keypad.h"
-#include "control.h"
-#include "flash.h"
-#include "lcd/lcd.h"
-#include "lcd/spi.h"
-#include "backlight.h"
-#include "timers.h"
-#include "usb.h"
-#include "realclock.h"
-#include "sha256.h"
+
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
 
 typedef struct asic_state {
     ti_device_t deviceType;
@@ -41,9 +30,8 @@ ti_device_t get_device_type(void);
 uint32_t set_cpu_clock_rate(uint32_t new_rate);
 
 /* Save/Restore */
-typedef struct emu_image emu_image;
-bool asic_restore(const emu_image*);
-bool asic_save(emu_image*);
+bool asic_restore(FILE *image);
+bool asic_save(FILE *image);
 
 #ifdef __cplusplus
 }

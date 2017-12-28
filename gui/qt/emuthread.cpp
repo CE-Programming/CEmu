@@ -7,6 +7,9 @@
 #include "mainwindow.h"
 
 #include "../../core/emu.h"
+#include "../../core/cpu.h"
+#include "../../core/control.h"
+#include "../../core/link.h"
 #include "../../core/debug/stepping.h"
 
 EmuThread *emu_thread = Q_NULLPTR;

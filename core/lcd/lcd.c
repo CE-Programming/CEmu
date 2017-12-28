@@ -362,14 +362,13 @@ eZ80portrange_t init_lcd(void) {
     return device;
 }
 
-bool lcd_save(emu_image *s) {
-    s->lcd = lcd;
-    s->lcd.ofs_end = s->lcd.ofs = NULL;
-    return true;
+bool lcd_save(FILE *image) {
+    return fwrite(&lcd, sizeof(lcd), 1, image) == 1;
 }
 
-bool lcd_restore(const emu_image *s) {
-    lcd = s->lcd;
-    lcd_setptrs(&lcd);
-    return true;
+bool lcd_restore(FILE *image) {
+    bool ret = fread(&lcd, sizeof(lcd), 1, image) == 1;
+    lcd.ofs = NULL;
+    lcd.ofs_end = NULL;
+    return ret;
 }

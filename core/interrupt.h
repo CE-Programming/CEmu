@@ -7,6 +7,10 @@ extern "C" {
 
 #include "port.h"
 
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+
 #define INT_ON        (1 <<  0)
 #define INT_TIMER1    (1 <<  1)
 #define INT_TIMER2    (1 <<  2)
@@ -39,9 +43,8 @@ void intrpt_pulse(uint32_t int_num);
 void intrpt_set(uint32_t int_num, bool set);
 
 /* Save/Restore */
-typedef struct emu_image emu_image;
-bool intrpt_restore(const emu_image*);
-bool intrpt_save(emu_image*);
+bool intrpt_restore(FILE *image);
+bool intrpt_save(FILE *image);
 
 #ifdef __cplusplus
 }

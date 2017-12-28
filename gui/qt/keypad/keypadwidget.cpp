@@ -11,7 +11,9 @@
 #include "otherkey.h"
 #include "numkey.h"
 #include "arrowkey.h"
+
 #include "../../../core/asic.h"
+#include "../../../core/keypad.h"
 
 const QRect KeypadWidget::sBaseRect{{}, QSize{162, 235}};
 

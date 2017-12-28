@@ -1,11 +1,6 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdarg.h>
-
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #else

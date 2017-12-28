@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,9 +36,8 @@ void dma_delay(uint8_t pendingAccessDelay);
 void dma_reset(void);
 
 /* Save/Restore */
-typedef struct emu_image emu_image;
-bool dma_restore(const emu_image*);
-bool dma_save(emu_image*);
+bool dma_restore(FILE *image);
+bool dma_save(FILE *image);
 
 #ifdef __cplusplus
 }

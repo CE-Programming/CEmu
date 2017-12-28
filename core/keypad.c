@@ -1,5 +1,5 @@
-#include "defines.h"
 #include "keypad.h"
+#include "defines.h"
 #include "emu.h"
 #include "schedule.h"
 #include "interrupt.h"
@@ -7,6 +7,7 @@
 #include "asic.h"
 
 #include <string.h>
+#include <stdio.h>
 
 /* Global KEYPAD state */
 keypad_state_t keypad;
@@ -198,12 +199,10 @@ eZ80portrange_t init_keypad(void) {
     return device;
 }
 
-bool keypad_save(emu_image *s) {
-    s->keypad = keypad;
-    return true;
+bool keypad_save(FILE *image) {
+    return fwrite(&keypad, sizeof(keypad), 1, image) == 1;
 }
 
-bool keypad_restore(const emu_image *s) {
-    keypad = s->keypad;
-    return true;
+bool keypad_restore(FILE *image) {
+    return fread(&keypad, sizeof(keypad), 1, image) == 1;
 }

@@ -45,12 +45,10 @@ void dma_reset(void) {
     memset(&dma, 0, sizeof(dma));
 }
 
-bool dma_save(emu_image *s) {
-    s->dma = dma;
-    return true;
+bool dma_save(FILE *image) {
+    return fwrite(&dma, sizeof(dma), 1, image) == 1;
 }
 
-bool dma_restore(const emu_image *s) {
-    dma = s->dma;
-    return true;
+bool dma_restore(FILE *image) {
+    return fread(&dma, sizeof(dma), 1, image) == 1;
 }

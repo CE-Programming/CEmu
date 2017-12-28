@@ -1,5 +1,5 @@
-#ifndef H_RTC
-#define H_RTC
+#ifndef RTC_H
+#define RTC_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -7,7 +7,9 @@ extern "C" {
 
 #include "port.h"
 
-#include <time.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
 
 typedef struct rtc_state {
     /* Registers */
@@ -40,9 +42,8 @@ eZ80portrange_t init_rtc(void);
 void rtc_reset(void);
 
 /* Save/Restore */
-typedef struct emu_image emu_image;
-bool rtc_restore(const emu_image*);
-bool rtc_save(emu_image*);
+bool rtc_restore(FILE *image);
+bool rtc_save(FILE *image);
 
 #ifdef __cplusplus
 }

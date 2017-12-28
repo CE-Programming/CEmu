@@ -1,9 +1,10 @@
-#include <assert.h>
-#include <string.h>
-
 #include "interrupt.h"
 #include "emu.h"
 #include "cpu.h"
+
+#include <assert.h>
+#include <string.h>
+#include <stdio.h>
 
 interrupt_state_t intrpt[2];
 
@@ -120,18 +121,20 @@ eZ80portrange_t init_intrpt(void) {
     return device;
 }
 
-bool intrpt_save(emu_image *s) {
+bool intrpt_save(FILE *image) {
+    bool ret;
     size_t request;
     for (request = 0; request < sizeof(intrpt) / sizeof(*intrpt); request++) {
-        s->intrpt[request] = intrpt[request];
+        ret |= fwrite(&intrpt[request], sizeof(intrpt[request]), 1, image) == 1;
     }
-    return true;
+    return ret;
 }
 
-bool intrpt_restore(const emu_image *s) {
+bool intrpt_restore(FILE *image) {
+    bool ret;
     size_t request;
     for (request = 0; request < sizeof(intrpt) / sizeof(*intrpt); request++) {
-        intrpt[request] = s->intrpt[request];
+        ret |= fread(&intrpt[request], sizeof(intrpt[request]), 1, image) == 1;
     }
-    return true;
+    return ret;
 }
