@@ -1,23 +1,43 @@
 #include "dma.h"
 #include "cpu.h"
 #include "emu.h"
+#include "debug/debug.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 dma_state_t dma;
 
-void dma_schedule(enum dma_item_index index, uint64_t when, dma_callback_t callback) {
-    dma.items[index].when = when >= dma.next ? when : dma.next;
-    dma.items[index].callback = callback;
-}
 void dma_delay(uint8_t pendingAccessDelay) {
-    int i;
-    while (dma.next < cpu_cycles()) {
+    int i, nexti;
+    uint64_t now = dma.now, cycles = cpu_cycles(), next;
+    dma_callback_t callback;
+    while (true) {
+        nexti = DMA_NUM_ITEMS;
+        next = now > cycles ? now : cycles;
         for (i = 0; i < DMA_NUM_ITEMS; i++) {
-            if (dma.items[i].when < cpu_cycles()) {
-                dma.next += dma.items[i].callback(i, dma.next);
+            if (dma.items[i].callback && dma.items[i].when <= next) {
+                nexti = i;
+                next = dma.items[i].when;
             }
         }
+        if (nexti == DMA_NUM_ITEMS) {
+            dma.now = next;
+            next -= cycles;
+            cpu.cycles += next + pendingAccessDelay;
+#ifdef DEBUG_SUPPORT
+            if (debugger.ignoreDmaCycles) {
+                debugger.cycleCount -= next;
+            }
+#endif
+            break;
+        }
+        callback = dma.items[nexti].callback;
+        dma.items[nexti].callback = NULL;
+        if (now < next) {
+            now = next;
+        }
+        now += callback(nexti, now);
     }
 }
 
