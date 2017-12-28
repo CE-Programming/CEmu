@@ -48,13 +48,14 @@ static void lcd_bgr16out(uint32_t bgr16, uint8_t **out) {
 #define c12(w)   (((w) << 4 & 0xF000) | ((w) << 3 & 0x780) | ((w) << 1 & 0x1E))
 
 /* Draw the lcd onto an RGB888 buffer. */
-void lcd_drawframe(uint32_t *out, lcd_state_t *buffer) {
+void lcd_drawframe(lcd_state_t *buffer) {
     uint_fast8_t mode = buffer->control >> 1 & 7;
     _rgb = buffer->control & (1 << 8);
     bool bebo = buffer->control & (1 << 9);
     uint32_t word, color;
     uint32_t *ofs = buffer->ofs;
     uint32_t *ofs_end = buffer->ofs_end;
+    uint32_t *out = buffer->frame;
     uint32_t *out_end = out + buffer->size - ((uintptr_t)(out + buffer->size) >> 2);
 
     if (!buffer->size) { return; }
@@ -123,7 +124,7 @@ static void lcd_event(int index) {
     }
     switch (lcd.compare) {
         case LCD_SYNC:
-            lcd_drawframe(lcd.frame, &lcd);
+            lcd_drawframe(&lcd);
             duration = ((lcd.VSW - 1) * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) +
                         lcd.HSW) * lcd.PCD + 1;
             lcd.compare = LCD_LNBU;
@@ -217,7 +218,7 @@ void lcd_enable(void) {
     lcd_setptrs(&lcd);
 }
 
-void lcd_setptrs(lcd_state_t *x) {
+lcd_state_t *lcd_setptrs(lcd_state_t *x) {
     uint8_t mode = x->control >> 1 & 7;
     uint8_t *ofs_start, *ofs_end, *mem_end;
     uint32_t dma_length = 0;
@@ -268,6 +269,8 @@ void lcd_setptrs(lcd_state_t *x) {
 
     x->ofs     = (uint32_t *)ofs_start;
     x->ofs_end = (uint32_t *)ofs_end;
+
+    return x;
 }
 
 static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {

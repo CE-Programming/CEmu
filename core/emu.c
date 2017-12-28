@@ -62,13 +62,14 @@ bool emu_save(const char *name) {
 }
 
 bool emu_load(const char *romName, const char *imageName) {
-    uint32_t version = IMAGE_VERSION;
+    uint32_t version;
     bool ret = false;
-    long lSize;
     FILE *file = NULL;
 
     if (imageName) {
         file = fopen_utf8(imageName, "rb");
+
+        gui_console_printf("[CEmu] Loading Emulator Image...\n");
 
         if (!file) goto rerr;
         if (fread(&version, sizeof(version), 1, file) != 1) goto rerr;
@@ -91,23 +92,37 @@ bool emu_load(const char *romName, const char *imageName) {
         uint32_t data_field_size;
         ti_device_t type;
         uint32_t offset;
+        size_t size;
+
+        gui_console_printf("[CEmu] Loading ROM Image...\n");
+
         file = fopen_utf8(romName, "rb");
 
-        if (!file)                                     goto rerr;
+        if (!file) {
+            gui_console_printf("[CEmu] ROM Error: File nonexistent\n");
+            goto rerr;
+        }
 
-        if (fseek(file, 0L, SEEK_END) < 0)             goto rerr;
-        lSize = ftell(file);
-        if (lSize < 0)                                 goto rerr;
-        if (fseek(file, 0L, SEEK_SET) < 0)             goto rerr;
+        if (fseek(file, 0L, SEEK_END) < 0) goto rerr;
+        size = ftell(file);
+        if (size > SIZE_FLASH) {
+            gui_console_printf("[CEmu] ROM Error: Invalid size (%u bytes | max %u bytes)\n", (unsigned int)size, SIZE_FLASH);
+            goto rerr;
+        }
+        rewind(file);
 
         asic_init();
 
-        if (fread(mem.flash.block, 1, lSize, file) < (size_t)lSize) goto rerr;
+        if (fread(mem.flash.block, size, 1, file) != 1) {
+            gui_console_printf("[CEmu] ROM Error: Reading ROM image\n");
+            goto rerr;
+        }
 
         /* Parse certificate fields to determine model.                            */
         /* We've heard of the OS base being at 0x30000 on at least one calculator. */
         for (offset = 0x20000U; offset < 0x40000U; offset += 0x10000U) {
             outer = mem.flash.block;
+
             /* Outer 0x800(0) field. */
             if (cert_field_get(outer + offset, SIZE_FLASH - offset, &field_type, &outer, &outer_field_size)) goto rerr;
             if (field_type != 0x800F) continue;
@@ -156,14 +171,14 @@ bool emu_load(const char *romName, const char *imageName) {
             break;
         }
 
+        ret = true;
+
         if (gotType) {
             set_device_type(type);
         } else {
             set_device_type(TI84PCE);
             gui_console_printf("[CEmu] Could not determine device type.\n");
         }
-
-        ret = true;
     }
 rerr:
 

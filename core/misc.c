@@ -223,7 +223,7 @@ static const eZ80portrange_t pcxxx = {
 };
 
 eZ80portrange_t init_cxxx(void) {
-    memset(&cxxx, 0, sizeof cxxx);
+    memset(&cxxx, 0, sizeof(cxxx));
     return pcxxx;
 }
 

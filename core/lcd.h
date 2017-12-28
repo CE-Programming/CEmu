@@ -78,8 +78,8 @@ extern lcd_state_t lcd;
 void lcd_reset(void);
 eZ80portrange_t init_lcd(void);
 
-void lcd_drawframe(uint32_t *out, lcd_state_t*);
-void lcd_setptrs(lcd_state_t*);
+void lcd_drawframe(lcd_state_t*);
+lcd_state_t *lcd_setptrs(lcd_state_t*);
 
 void lcd_enable(void);
 void lcd_disable(void);

@@ -7,7 +7,7 @@
 
 QImage renderFramebuffer(lcd_state_t *lcds) {
     if (lcds != &lcd) {
-        lcd_drawframe(lcds->frame, lcds);
+        lcd_drawframe(lcd_setptrs(lcds));
     }
     return QImage(reinterpret_cast<const uint8_t*>(lcds->frame), lcds->width, lcds->height, QImage::Format_RGB888);
 }

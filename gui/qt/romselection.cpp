@@ -171,7 +171,7 @@ _err:
 }
 
 void RomSelection::saveDumpProgram() {
-    FILE* save_program;
+    FILE* file;
     QFileDialog dialog(this);
 
     dialog.setFileMode(QFileDialog::AnyFile);
@@ -185,11 +185,11 @@ void RomSelection::saveDumpProgram() {
         filename += QLatin1Literal(".8xp");
     }
 
-    save_program = fopen_utf8(filename.toStdString().c_str(), "wb");
+    file = fopen_utf8(filename.toStdString().c_str(), "wb");
 
-    if (save_program) {
-        fwrite(dumper_program, 1, sizeof dumper_program, save_program);
-        fclose(save_program);
+    if (file) {
+        fwrite(dumper_program, sizeof(dumper_program), 1, file);
+        fclose(file);
     }
 }
 

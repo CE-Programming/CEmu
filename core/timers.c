@@ -139,7 +139,7 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_gpt(void) {
-    gui_console_printf("[CEmu] Initialized GP timers...\n");
+    gui_console_printf("[CEmu] Initialized General Purpose Timers...\n");
     return device;
 }
 
