@@ -117,14 +117,37 @@ draw_black:
 }
 
 static void lcd_event(int index) {
-    event_repeat(index, (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP) *
-                 (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD);
-
-    lcd_drawframe(lcd.frame, &lcd);
-
-    /* For now, assuming vsync occurs at same time UPBASE is loaded */
-    lcd.upcurr = lcd.upbase;
-    lcd.ris |= 0xC;
+    uint32_t duration;
+    if ((lcd.control >> 12 & 3) == lcd.compare) {
+        lcd.ris |= 1 << 3;
+    }
+    switch (lcd.compare) {
+        case LCD_SYNC:
+            lcd_drawframe(lcd.frame, &lcd);
+            duration = ((lcd.VSW - 1) * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) +
+                        lcd.HSW) * lcd.PCD + 1;
+            lcd.compare = LCD_LNBU;
+            break;
+        case LCD_LNBU:
+            lcd.upcurr = lcd.upbase;
+            lcd.ris |= 1 << 2;
+            duration = (lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD - 1;
+            lcd.compare = LCD_BACK_PORCH;
+            break;
+        case LCD_BACK_PORCH:
+            duration = lcd.VBP * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD;
+            lcd.compare = LCD_ACTIVE_VIDEO;
+            break;
+        case LCD_ACTIVE_VIDEO:
+            duration = lcd.LPP * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD;
+            lcd.compare = LCD_FRONT_PORCH;
+            break;
+        case LCD_FRONT_PORCH:
+            duration = lcd.VFP * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD;
+            lcd.compare = LCD_SYNC;
+            break;
+    }
+    event_repeat(index, duration);
     intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
 }
 

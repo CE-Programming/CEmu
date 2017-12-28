@@ -23,9 +23,10 @@ extern "C" {
 
 enum lcd_comp {
     LCD_SYNC,
-    LCD_BACK,
-    LCD_ACTIVE,
-    LCD_FRONT
+    LCD_BACK_PORCH,
+    LCD_ACTIVE_VIDEO,
+    LCD_FRONT_PORCH,
+    LCD_LNBU
 };
 
 /* Standard LCD state */
@@ -59,7 +60,7 @@ typedef struct lcd_state {
     uint32_t crsrRis;              /* Cursor raw interrupt status register - const */
 
     /* Internal registers */
-    //enum lcd_comp cur_stage;
+    enum lcd_comp compare;
     uint32_t PPL, HSW, HFP, HBP, LPP, VSW, VFP, VBP, PCD, ACB, CPL, LED;
     bool CLKSEL, IVS, IHS, IPC, IOE, LEE, mask;
     uint32_t width;
