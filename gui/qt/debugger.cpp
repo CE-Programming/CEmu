@@ -494,6 +494,7 @@ void MainWindow::debuggerGUISetState(bool state) {
     ui->buttonSend->setEnabled(!state);
     ui->buttonRefreshList->setEnabled(!state);
     ui->emuVarView->setEnabled(!state);
+    ui->buttonResendFiles->setEnabled(!state);
     ui->buttonReceiveFiles->setEnabled(!state && guiReceive);
 }
 

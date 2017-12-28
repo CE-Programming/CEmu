@@ -319,8 +319,10 @@ private:
     void adjustScreen();
     void setDebugPath();
     void setSkinToggle(bool enable);
-    void setLCDScale(int state);
-    void setLCDRefresh(int value);
+    void setLcdScale(int state);
+    void setLcdRefresh(int value);
+    void setLcdSpi(bool state);
+    void setLcdDma(bool state);
     void setAlwaysOnTop(int state);
     void setAutoCheckForUpdates(int state);
     void setSpaceDisasm(bool state);
@@ -501,9 +503,11 @@ private:
     static const QString SETTING_DEBUGGER_RAM_BYTES;
     static const QString SETTING_DEBUGGER_MEM_BYTES;
     static const QString SETTING_DEBUGGER_BREAK_IGNORE;
+    static const QString SETTING_DEBUGGER_IGNORE_DMA;
     static const QString SETTING_SCREEN_REFRESH_RATE;
     static const QString SETTING_SCREEN_SCALE;
     static const QString SETTING_SCREEN_SKIN;
+    static const QString SETTING_SCREEN_SPI;
     static const QString SETTING_KEYPAD_KEYMAP;
     static const QString SETTING_KEYPAD_COLOR;
     static const QString SETTING_WINDOW_SIZE;

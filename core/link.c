@@ -129,7 +129,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int l
     temp_size = (size_t)data_size + FILE_DATA + 4;
 
     if ((size_t)lSize != temp_size) {
-        gui_console_printf("[CEmu] File data section size incorrect.\n");
+        gui_console_printf("[CEmu]Transfer Error: File data section size incorrect.\n");
         goto r_err;
     }
 
@@ -144,7 +144,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int l
     if (fread(&cchecksum, 2, 1, file) != 1)                goto r_err;
 
     if (cchecksum != checksum) {
-        gui_console_printf("[CEmu] File checksum invalid.\n");
+        gui_console_printf("[CEmu] Transfer Error: File checksum invalid.\n");
         goto r_err;
     }
 
@@ -194,8 +194,12 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int l
         run_asm(pgrm_loader, sizeof pgrm_loader, 23000000);
 
         if (mem_peek_byte(0xD008DF)) {
-            gui_console_printf("[CEmu] Variable Transfer Error\n");
+            gui_console_printf("[CEmu] Transfer Error: OS Error encountered\n");
             goto r_err;
+        }
+
+        if (mem_peek_word(0xD0118C, true)) {
+            gui_console_printf("[CEmu] Transfer Warning: Running assembly program; RAM leak possible\n");
         }
 
         var_ptr = phys_mem_ptr(mem_peek_long(SAFE_RAM), var_size);
@@ -271,7 +275,7 @@ bool receiveVariableLink(int count, const calc_var_t *vars, const char *file_nam
 w_err:
     fclose(file);
     if(remove(file_name)) {
-        gui_console_printf("[CEmu] Link error occured. Please contact the developers.\n");
+        gui_console_printf("[CEmu] Transfer Error: Please contact the developers\n");
     }
     return false;
 }

@@ -151,6 +151,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->buttonToggleBreakpoints, &QToolButton::toggled, this, &MainWindow::setDebugIgnoreBreakpoints);
     connect(ui->checkDebugResetTrigger, &QCheckBox::toggled, this, &MainWindow::setDebugResetTrigger);
     connect(ui->checkDataCol, &QCheckBox::toggled, this, &MainWindow::setDataCol);
+    connect(ui->checkDma, &QCheckBox::toggled, this, &MainWindow::setLcdDma);
     connect(ui->textSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setFont);
 
     // Debugging files
@@ -219,9 +220,10 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     // Other GUI actions
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
-    connect(ui->scaleLCD, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setLCDScale);
-    connect(ui->refreshLCD, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setLCDRefresh);
+    connect(ui->scaleLCD, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setLcdScale);
+    connect(ui->refreshLCD, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setLcdRefresh);
     connect(ui->checkSkin, &QCheckBox::stateChanged, this, &MainWindow::setSkinToggle);
+    connect(ui->checkSpi, &QCheckBox::toggled, this, &MainWindow::setLcdSpi);
     connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::setAlwaysOnTop);
     connect(ui->emulationSpeed, &QSlider::valueChanged, this, &MainWindow::setEmuSpeed);
     connect(ui->checkThrottle, &QCheckBox::stateChanged, this, &MainWindow::setThrottle);
@@ -379,7 +381,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     optLoadFiles(opts);
     setFrameskip(settings->value(SETTING_CAPTURE_FRAMESKIP, 1).toUInt());
     setOptimizeRecording(settings->value(SETTING_CAPTURE_OPTIMIZE, true).toBool());
-    setLCDRefresh(settings->value(SETTING_SCREEN_REFRESH_RATE, 30).toUInt());
+    setLcdRefresh(settings->value(SETTING_SCREEN_REFRESH_RATE, 30).toUInt());
     setEmuSpeed(settings->value(SETTING_EMUSPEED, 10).toUInt());
     setFont(settings->value(SETTING_DEBUGGER_TEXT_SIZE, 9).toUInt());
     setAutoCheckForUpdates(settings->value(SETTING_AUTOUPDATE, false).toBool());
@@ -390,6 +392,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     setDebugIgnoreBreakpoints(settings->value(SETTING_DEBUGGER_BREAK_IGNORE, false).toBool());
     setDebugSoftCommands(settings->value(SETTING_DEBUGGER_ENABLE_SOFT, true).toBool());
     setDataCol(settings->value(SETTING_DEBUGGER_DATA_COL, true).toBool());
+    setLcdSpi(settings->value(SETTING_SCREEN_SPI, false).toBool());
+    setLcdDma(settings->value(SETTING_DEBUGGER_IGNORE_DMA, true).toBool());
     setFocusSetting(settings->value(SETTING_PAUSE_FOCUS, false).toBool());
     ui->flashBytes->setValue(settings->value(SETTING_DEBUGGER_FLASH_BYTES, 8).toInt());
     ui->ramBytes->setValue(settings->value(SETTING_DEBUGGER_RAM_BYTES, 8).toInt());
@@ -493,7 +497,7 @@ void MainWindow::showEvent(QShowEvent *e) {
     QMainWindow::showEvent(e);
     if (!firstShow) {
         progressBar->setMaximumHeight(ui->statusBar->height()/2);
-        setLCDScale(settings->value(SETTING_SCREEN_SCALE, 100).toUInt());
+        setLcdScale(settings->value(SETTING_SCREEN_SCALE, 100).toUInt());
         setSkinToggle(settings->value(SETTING_SCREEN_SKIN, true).toBool());
         setAlwaysOnTop(settings->value(SETTING_ALWAYS_ON_TOP, false).toBool());
         setMenuBarState(settings->value(SETTING_DISABLE_MENUBAR, false).toBool());
@@ -1143,15 +1147,19 @@ void MainWindow::changeVariableList() {
     ui->emuVarView->setSortingEnabled(false);
 
     if (!guiReceive) {
-        ui->buttonRefreshList->setText(tr("Show variables"));
+        ui->buttonRefreshList->setText(tr("View Calculator Variables"));
         ui->buttonReceiveFiles->setEnabled(false);
         ui->buttonRun->setEnabled(true);
         ui->buttonSend->setEnabled(true);
+        ui->emuVarView->setEnabled(false);
+        ui->buttonResendFiles->setEnabled(true);
     } else {
         ui->buttonRefreshList->setText(tr("Resume emulation"));
         ui->buttonSend->setEnabled(false);
         ui->buttonReceiveFiles->setEnabled(true);
+        ui->buttonResendFiles->setEnabled(false);
         ui->buttonRun->setEnabled(false);
+        ui->emuVarView->setEnabled(true);
 
         vat_search_init(&var);
         while (vat_search_next(&var)) {

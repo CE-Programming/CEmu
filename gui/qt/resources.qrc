@@ -42,6 +42,7 @@
         <file>resources/icons/wizard.png</file>
         <file>resources/icons/clock.png</file>
         <file>resources/icons/bug.png</file>
+        <file>resources/icons/save.png</file>
     </qresource>
     <qresource prefix="/fonts">
         <file>resources/custom_fonts/TICELarge.ttf</file>

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>982</width>
-    <height>1232</height>
+    <width>1001</width>
+    <height>1236</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -3378,6 +3378,12 @@
         </item>
         <item>
          <widget class="DataWidget" name="disassemblyView">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="mouseTracking">
            <bool>false</bool>
           </property>
@@ -3409,6 +3415,19 @@
            <string>Open debugger to view disassembly...</string>
           </property>
          </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_11">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>0</height>
+           </size>
+          </property>
+         </spacer>
         </item>
        </layout>
       </widget>
@@ -3499,6 +3518,12 @@
            </item>
            <item>
             <widget class="QHexEdit" name="flashEdit">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="minimumSize">
               <size>
                <width>338</width>
@@ -3595,6 +3620,12 @@
            </item>
            <item>
             <widget class="QHexEdit" name="ramEdit">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="minimumSize">
               <size>
                <width>338</width>
@@ -3704,6 +3735,12 @@
            </item>
            <item>
             <widget class="QHexEdit" name="memEdit">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="minimumSize">
               <size>
                <width>338</width>
@@ -4533,7 +4570,7 @@
               <bool>false</bool>
              </property>
              <property name="sizePolicy">
-              <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
@@ -4638,7 +4675,7 @@
               <bool>false</bool>
              </property>
              <property name="sizePolicy">
-              <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
@@ -5833,19 +5870,7 @@
           <property name="title">
            <string>Settings</string>
           </property>
-          <layout class="QGridLayout" name="gridLayout_20">
-           <property name="leftMargin">
-            <number>8</number>
-           </property>
-           <property name="topMargin">
-            <number>8</number>
-           </property>
-           <property name="rightMargin">
-            <number>8</number>
-           </property>
-           <property name="bottomMargin">
-            <number>8</number>
-           </property>
+          <layout class="QGridLayout" name="gridLayout_8">
            <item row="0" column="0">
             <widget class="QCheckBox" name="checkSaveLoadDebug">
              <property name="focusPolicy">
@@ -5853,6 +5878,16 @@
              </property>
              <property name="text">
               <string>Automatically save and restore debug state</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QCheckBox" name="checkDebugResetTrigger">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
+             <property name="text">
+              <string>Open debugger on reset or nmi</string>
              </property>
             </widget>
            </item>
@@ -5879,30 +5914,7 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="1">
-            <widget class="QCheckBox" name="checkDebugResetTrigger">
-             <property name="focusPolicy">
-              <enum>Qt::NoFocus</enum>
-             </property>
-             <property name="text">
-              <string>Open debugger on reset or nmi</string>
-             </property>
-            </widget>
-           </item>
            <item row="2" column="0">
-            <widget class="QCheckBox" name="checkSpi">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="focusPolicy">
-              <enum>Qt::NoFocus</enum>
-             </property>
-             <property name="text">
-              <string>Emulate full SPI LCD accesses</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
             <widget class="QCheckBox" name="checkDisableSoftCommands">
              <property name="focusPolicy">
               <enum>Qt::NoFocus</enum>
@@ -5912,7 +5924,7 @@
              </property>
             </widget>
            </item>
-           <item row="4" column="0">
+           <item row="3" column="0">
             <layout class="QGridLayout" name="gridLayout_21">
              <property name="bottomMargin">
               <number>0</number>
@@ -5972,6 +5984,19 @@
               </spacer>
              </item>
             </layout>
+           </item>
+           <item row="2" column="1">
+            <widget class="QCheckBox" name="checkDma">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
+             <property name="text">
+              <string>Ignore DMA cycles in cycle counter</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -6065,10 +6090,10 @@
         <item>
          <widget class="QGroupBox" name="groupBox_12">
           <property name="title">
-           <string>Send Files</string>
+           <string>Calculator Variables</string>
           </property>
-          <layout class="QGridLayout" name="gridLayout_19">
-           <item row="0" column="0">
+          <layout class="QVBoxLayout" name="verticalLayout_13">
+           <item>
             <layout class="QHBoxLayout" name="horizontalLayout_5">
              <property name="spacing">
               <number>0</number>
@@ -6080,9 +6105,9 @@
               <number>0</number>
              </property>
              <item>
-              <widget class="QPushButton" name="buttonSend">
+              <widget class="QPushButton" name="buttonRefreshList">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+                <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
@@ -6091,11 +6116,11 @@
                 <enum>Qt::TabFocus</enum>
                </property>
                <property name="text">
-                <string>Select files</string>
+                <string>View Calculator Variables</string>
                </property>
                <property name="icon">
                 <iconset resource="resources.qrc">
-                 <normaloff>:/icons/resources/icons/open.png</normaloff>:/icons/resources/icons/open.png</iconset>
+                 <normaloff>:/icons/resources/icons/tios.png</normaloff>:/icons/resources/icons/tios.png</iconset>
                </property>
               </widget>
              </item>
@@ -6116,22 +6141,6 @@
               </spacer>
              </item>
              <item>
-              <widget class="QPushButton" name="buttonRefreshList">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="focusPolicy">
-                <enum>Qt::TabFocus</enum>
-               </property>
-               <property name="text">
-                <string>Show variables</string>
-               </property>
-              </widget>
-             </item>
-             <item>
               <widget class="QPushButton" name="buttonReceiveFiles">
                <property name="enabled">
                 <bool>false</bool>
@@ -6148,14 +6157,21 @@
                <property name="text">
                 <string>Save selected</string>
                </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/resources/icons/save.png</normaloff>:/icons/resources/icons/save.png</iconset>
+               </property>
               </widget>
              </item>
             </layout>
            </item>
-           <item row="1" column="0">
+           <item>
             <widget class="QTableWidget" name="emuVarView">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="sizePolicy">
-              <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
@@ -6234,6 +6250,55 @@
               </property>
              </column>
             </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_25">
+             <property name="spacing">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QPushButton" name="buttonSend">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="focusPolicy">
+                <enum>Qt::TabFocus</enum>
+               </property>
+               <property name="text">
+                <string>Send files to emulator</string>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/resources/icons/open.png</normaloff>:/icons/resources/icons/open.png</iconset>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_12">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Expanding</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
            </item>
           </layout>
          </widget>
@@ -6347,7 +6412,7 @@
            <item row="2" column="0">
             <widget class="QTableWidget" name="varLoadedView">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
@@ -6680,34 +6745,6 @@
            <string>General</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_2">
-           <property name="leftMargin">
-            <number>8</number>
-           </property>
-           <property name="topMargin">
-            <number>8</number>
-           </property>
-           <property name="rightMargin">
-            <number>8</number>
-           </property>
-           <property name="bottomMargin">
-            <number>8</number>
-           </property>
-           <property name="spacing">
-            <number>5</number>
-           </property>
-           <item row="0" column="1">
-            <widget class="QCheckBox" name="checkUpdates">
-             <property name="focusPolicy">
-              <enum>Qt::NoFocus</enum>
-             </property>
-             <property name="text">
-              <string>Automatically check for updates</string>
-             </property>
-             <property name="checked">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
            <item row="0" column="0">
             <widget class="QCheckBox" name="checkSaveRestore">
              <property name="enabled">
@@ -6724,6 +6761,19 @@
              </property>
             </widget>
            </item>
+           <item row="0" column="1">
+            <widget class="QCheckBox" name="checkUpdates">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
+             <property name="text">
+              <string>Automatically check for updates</string>
+             </property>
+             <property name="checked">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
            <item row="1" column="0">
             <widget class="QCheckBox" name="checkAlwaysOnTop">
              <property name="focusPolicy">
@@ -6734,13 +6784,6 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="0">
-            <widget class="QCheckBox" name="checkFocus">
-             <property name="text">
-              <string>Pause emulation on focus change</string>
-             </property>
-            </widget>
-           </item>
            <item row="1" column="1">
             <widget class="QCheckBox" name="checkPortable">
              <property name="focusPolicy">
@@ -6748,6 +6791,26 @@
              </property>
              <property name="text">
               <string>Use portable configuration</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QCheckBox" name="checkFocus">
+             <property name="text">
+              <string>Pause emulation on focus change</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QCheckBox" name="checkSpi">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
+             <property name="text">
+              <string>Emulate real LCD SPI controller</string>
              </property>
             </widget>
            </item>
@@ -8045,6 +8108,12 @@ QPushButton:pressed {
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <widget class="QPlainTextEdit" name="console">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="undoRedoEnabled">
            <bool>false</bool>
           </property>
@@ -8186,7 +8255,7 @@ QPushButton:pressed {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>982</width>
+     <width>1001</width>
      <height>22</height>
     </rect>
    </property>
@@ -8654,8 +8723,6 @@ QPushButton:pressed {
   <tabstop>buttonRmSelectedVars</tabstop>
   <tabstop>checkFocus</tabstop>
   <tabstop>buttonRmAllVars</tabstop>
-  <tabstop>buttonRefreshList</tabstop>
-  <tabstop>buttonSend</tabstop>
   <tabstop>timer1</tabstop>
   <tabstop>timer2</tabstop>
   <tabstop>textSize</tabstop>

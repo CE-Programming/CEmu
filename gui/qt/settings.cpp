@@ -36,9 +36,11 @@ const QString MainWindow::SETTING_DEBUGGER_FLASH_BYTES      = QStringLiteral("De
 const QString MainWindow::SETTING_DEBUGGER_RAM_BYTES        = QStringLiteral("Debugger/ram_bytes_per_line");
 const QString MainWindow::SETTING_DEBUGGER_MEM_BYTES        = QStringLiteral("Debugger/mem_bytes_per_line");
 const QString MainWindow::SETTING_DEBUGGER_BREAK_IGNORE     = QStringLiteral("Debugger/ignore_breakpoints");
+const QString MainWindow::SETTING_DEBUGGER_IGNORE_DMA       = QStringLiteral("Debugger/ignore_dma");
 const QString MainWindow::SETTING_SCREEN_REFRESH_RATE       = QStringLiteral("Screen/refresh_rate");
 const QString MainWindow::SETTING_SCREEN_SCALE              = QStringLiteral("Screen/scale");
 const QString MainWindow::SETTING_SCREEN_SKIN               = QStringLiteral("Screen/skin");
+const QString MainWindow::SETTING_SCREEN_SPI                = QStringLiteral("Screen/spi");
 const QString MainWindow::SETTING_KEYPAD_KEYMAP             = QStringLiteral("Keypad/map");
 const QString MainWindow::SETTING_KEYPAD_COLOR              = QStringLiteral("Keypad/color");
 const QString MainWindow::SETTING_WINDOW_SIZE               = QStringLiteral("Window/size");
@@ -217,6 +219,17 @@ void MainWindow::setDataCol(bool state) {
     ui->checkDataCol->setChecked(state);
     settings->setValue(SETTING_DEBUGGER_DATA_COL, state);
     useDataCol = state;
+}
+
+void MainWindow::setLcdSpi(bool state) {
+    ui->checkSpi->setChecked(state);
+    settings->setValue(SETTING_SCREEN_SPI, state);
+}
+
+void MainWindow::setLcdDma(bool state) {
+    ui->checkDma->setChecked(state);
+    settings->setValue(SETTING_DEBUGGER_IGNORE_DMA, state);
+    debugger.ignoreDmaCycles = state;
 }
 
 void MainWindow::setFocusSetting(bool state) {
@@ -498,7 +511,7 @@ void MainWindow::adjustScreen() {
     ui->screenWidgetContents->setFixedSize(w, h);
 }
 
-void MainWindow::setLCDScale(int scale) {
+void MainWindow::setLcdScale(int scale) {
     int roundedScale = round(scale / 25.0) * 25;
     settings->setValue(SETTING_SCREEN_SCALE, roundedScale);
     ui->scaleLCD->setValue(roundedScale);
@@ -511,7 +524,7 @@ void MainWindow::setSkinToggle(bool enable) {
     adjustScreen();
 }
 
-void MainWindow::setLCDRefresh(int value) {
+void MainWindow::setLcdRefresh(int value) {
     settings->setValue(SETTING_SCREEN_REFRESH_RATE, value);
     ui->refreshLCD->setValue(value);
     ui->lcdWidget->refreshRate(value);
