@@ -884,7 +884,7 @@ void cpu_execute(void) {
         if (cpu.NMI || (cpu.IEF1 && (intrpt->status & intrpt->enabled))) {
             cpu.L = cpu.IL = cpu.ADL || cpu.MADL;
             cpu.IEF1 = cpu.IEF2 = cpu.halted = cpu.inBlock = 0;
-            cpu.cycles += 1;
+            cpu.cycles += 2;
             if (cpu.NMI) {
                 cpu.NMI = 0;
                 cpu_call(0x66, cpu.MADL);
@@ -892,7 +892,6 @@ void cpu_execute(void) {
             } else if (cpu.IM != 3) {
                 cpu_call(0x38, cpu.MADL);
             } else {
-                cpu.cycles += 1;
                 cpu_call(cpu_read_word(r->I << 8 | r->R), cpu.MADL);
             }
 #ifdef DEBUG_SUPPORT
