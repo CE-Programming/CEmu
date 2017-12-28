@@ -1507,7 +1507,7 @@ errCRCret:
 }
 
 void MainWindow::emuStopped() {
-    stoppedEmu = true;
+    guiEmuValid = false;
 }
 
 void MainWindow::resetCalculator() {

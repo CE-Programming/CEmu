@@ -481,7 +481,6 @@ private:
     bool useDataCol;
     bool pauseOnFocus;
     bool loadedCEmuBootImage = false;
-    bool stoppedEmu = false;
     bool optimizeRecording;
     static const int WindowStateVersion = 0;
 

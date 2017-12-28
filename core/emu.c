@@ -69,6 +69,7 @@ bool emu_load(const char *romName, const char *imageName) {
 
     if (imageName) {
         file = fopen_utf8(imageName, "rb");
+
         if (!file) goto rerr;
         if (fread(&version, sizeof(version), 1, file) != 1) goto rerr;
         if (version != IMAGE_VERSION) goto rerr;

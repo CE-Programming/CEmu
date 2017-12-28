@@ -9,11 +9,13 @@
 dma_state_t dma;
 
 void dma_delay(uint8_t pendingAccessDelay) {
-    cpu.cycles += pendingAccessDelay;
-    return;
     unsigned int i, nexti;
     uint64_t now = dma.now, cycles = cpu_cycles(), next;
     dma_callback_t callback;
+
+    cpu.cycles += pendingAccessDelay;
+    return;
+
     while (true) {
         nexti = DMA_NUM_ITEMS;
         next = now > cycles ? now : cycles;

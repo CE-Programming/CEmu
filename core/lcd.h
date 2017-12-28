@@ -75,9 +75,6 @@ void lcd_setptrs(lcd_state_t*);
 void lcd_enable(void);
 void lcd_disable(void);
 
-/* Set this callback function pointer from the GUI. Called in lcd_event() */
-extern void (*lcd_event_gui_callback)(void);
-
 /* Save/Restore */
 bool lcd_restore(FILE *image);
 bool lcd_save(FILE *image);

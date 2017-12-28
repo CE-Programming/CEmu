@@ -237,16 +237,20 @@ void spi_reset(void) {
     uint8_t i = 0, c;
     memset(&spi, 0, sizeof(spi));
     spi_hw_reset();
-    for (c = 0; c < 1 << 5; c++)
+    for (c = 0; c < 1 << 5; c++) {
         spi.lut[i++] = c << 1;
-    for (c = 0; c < 1 << 6; c++)
+    }
+    for (c = 0; c < 1 << 6; c++) {
         spi.lut[i++] = c << 0;
-    for (c = 0; c < 1 << 5; c++)
+    }
+    for (c = 0; c < 1 << 5; c++) {
         spi.lut[i++] = c << 1;
+    }
 }
 
 eZ80portrange_t init_spi(void) {
     spi_reset();
+    gui_console_printf("[CEmu] Initialized SPI...\n");
     return pspi;
 }
 

@@ -13,8 +13,6 @@
 /* Global LCD state */
 lcd_state_t lcd;
 
-void (*lcd_event_gui_callback)(void) = NULL;
-
 static bool _rgb;
 
 /* This is an intensive function. Need speedz. */
@@ -204,7 +202,7 @@ void lcd_enable(void) {
 void lcd_setptrs(lcd_state_t *x) {
     uint8_t mode = x->control >> 1 & 7;
     uint8_t *ofs_start, *ofs_end, *mem_end;
-    uint32_t dma_length;
+    uint32_t dma_length = 0;
     uint32_t addr = x->upbase;
 
     x->ofs = NULL;
