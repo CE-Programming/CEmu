@@ -65,9 +65,10 @@ bool emu_load(const char *romName, const char *imageName) {
     uint32_t version = IMAGE_VERSION;
     bool ret = false;
     long lSize;
+    FILE *file = NULL;
 
     if (imageName) {
-        FILE *file = fopen_utf8(imageName, "rb");
+        file = fopen_utf8(imageName, "rb");
         if (!file) goto rerr;
         if (fread(&version, sizeof(version), 1, file) != 1) goto rerr;
         if (version != IMAGE_VERSION) goto rerr;
@@ -89,18 +90,18 @@ bool emu_load(const char *romName, const char *imageName) {
         uint32_t data_field_size;
         ti_device_t type;
         uint32_t offset;
-        FILE *romFile = fopen_utf8(romName, "rb");
+        file = fopen_utf8(romName, "rb");
 
-        if (!romFile)                                  goto rerr;
+        if (!file)                                     goto rerr;
 
-        if (fseek(romFile, 0L, SEEK_END) < 0)          goto rerr;
-        lSize = ftell(romFile);
+        if (fseek(file, 0L, SEEK_END) < 0)             goto rerr;
+        lSize = ftell(file);
         if (lSize < 0)                                 goto rerr;
-        if (fseek(romFile, 0L, SEEK_SET) < 0)          goto rerr;
+        if (fseek(file, 0L, SEEK_SET) < 0)             goto rerr;
 
         asic_init();
 
-        if (fread(mem.flash.block, 1, lSize, romFile) < (size_t)lSize) goto rerr;
+        if (fread(mem.flash.block, 1, lSize, file) < (size_t)lSize) goto rerr;
 
         /* Parse certificate fields to determine model.                            */
         /* We've heard of the OS base being at 0x30000 on at least one calculator. */
@@ -164,6 +165,10 @@ bool emu_load(const char *romName, const char *imageName) {
         ret = true;
     }
 rerr:
+
+    if (file) {
+        fclose(file);
+    }
 
     if (!ret) {
         emu_cleanup();
