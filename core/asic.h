@@ -8,6 +8,7 @@ extern "C" {
 #include "cpu.h"
 #include "misc.h"
 #include "mem.h"
+#include "dma.h"
 #include "interrupt.h"
 #include "tidevices.h"
 #include "keypad.h"
