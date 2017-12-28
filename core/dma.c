@@ -11,7 +11,6 @@ dma_state_t dma;
 void dma_delay(uint8_t pendingAccessDelay) {
     unsigned int i, nexti;
     uint64_t now = dma.now, cycles = cpu_cycles(), next;
-    dma_callback_t callback;
 
     cpu.cycles += pendingAccessDelay;
     return;
@@ -20,7 +19,7 @@ void dma_delay(uint8_t pendingAccessDelay) {
         nexti = DMA_NUM_ITEMS;
         next = now > cycles ? now : cycles;
         for (i = 0; i < DMA_NUM_ITEMS; i++) {
-            if (dma.items[i].callback && dma.items[i].when <= next) {
+            if (dma.items[i].when <= next) {
                 nexti = i;
                 next = dma.items[i].when;
             }
@@ -36,18 +35,20 @@ void dma_delay(uint8_t pendingAccessDelay) {
 #endif
             break;
         }
-        callback = dma.items[nexti].callback;
         if (now < next) {
             now = next;
         }
-        now += callback(nexti, now);
+        dma.items[nexti].when = ~0;
+        if (dma.items[nexti].proc) {
+            now += dma.items[nexti].proc(nexti, next, now);
+        }
     }
 }
 
 void dma_reset(void) {
     unsigned int i;
     for (i = 0; i < DMA_NUM_ITEMS; i++) {
-        dma.items[i].callback = NULL;
+        dma.items[i].proc = NULL;
         dma.items[i].when = ~0;
     }
     dma.now = 0;
@@ -60,16 +61,16 @@ bool dma_save(FILE *image) {
 bool dma_restore(FILE *image) {
     bool ret;
     unsigned int i;
-    dma_callback_t callbacks[DMA_NUM_ITEMS];
+    dma_proc_t procs[DMA_NUM_ITEMS];
 
     for (i = 0; i < DMA_NUM_ITEMS; i++) {
-        callbacks[i] = dma.items[i].callback;
+        procs[i] = dma.items[i].proc;
     }
 
     ret = fread(&dma, sizeof(dma), 1, image) == 1;
 
     for (i = 0; i < DMA_NUM_ITEMS; i++) {
-        dma.items[i].callback = callbacks[i];
+        dma.items[i].proc = procs[i];
     }
 
     return ret;

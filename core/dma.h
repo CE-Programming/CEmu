@@ -16,10 +16,10 @@ enum dma_item_index {
     DMA_NUM_ITEMS
 };
 
-typedef uint8_t (*dma_callback_t)(enum dma_item_index index, uint64_t when);
+typedef uint8_t (*dma_proc_t)(enum dma_item_index index, uint64_t when, uint64_t now);
 
 struct dma_item {
-    dma_callback_t callback;
+    dma_proc_t proc;
     uint64_t when;
 };
 
@@ -32,7 +32,6 @@ typedef struct dma_state {
 extern dma_state_t dma;
 
 void dma_delay(uint8_t pendingAccessDelay);
-
 void dma_reset(void);
 
 /* Save/Restore */

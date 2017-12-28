@@ -8,6 +8,7 @@
 #include "asic.h"
 #include "control.h"
 #include "schedule.h"
+#include "dma.h"
 #include "interrupt.h"
 
 /* Global LCD state */
@@ -116,22 +117,8 @@ draw_black:
 }
 
 static void lcd_event(int index) {
-    int pcd = 1;
-    int htime, vtime;
-
-    if (!(lcd.timing[2] & (1 << 26))) {
-        pcd = (lcd.timing[2] >> 27 << 5) + (lcd.timing[2] & 0x1F) + 2;
-    }
-
-    htime =   (lcd.timing[0] >> 24 & 0x0FF) + 1  /* Back porch    */
-            + (lcd.timing[0] >> 16 & 0x0FF) + 1  /* Front porch   */
-            + (lcd.timing[0] >>  8 & 0x0FF) + 1  /* Sync pulse    */
-            + (lcd.timing[2] >> 16 & 0x3FF) + 1; /* Active        */
-    vtime =   (lcd.timing[1] >> 24 & 0x0FF)      /* Back porch    */
-            + (lcd.timing[1] >> 16 & 0x0FF)      /* Front porch   */
-            + (lcd.timing[1] >> 10 & 0x03F) + 1  /* Sync pulse    */
-            + (lcd.timing[1]       & 0x3FF) + 1; /* Active        */
-    event_repeat(index, pcd * htime * vtime);
+    event_repeat(index, (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP) *
+                 (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD);
 
     lcd_drawframe(lcd.frame, &lcd);
 
@@ -141,11 +128,19 @@ static void lcd_event(int index) {
     intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
 }
 
+static uint8_t lcd_dma(enum dma_item_index index, uint64_t when, uint64_t now) {
+    (void)index;
+    (void)when;
+    (void)now;
+    return 0;
+}
+
 void lcd_reset(void) {
     memset(&lcd, 0, sizeof(lcd_state_t));
     sched.items[SCHED_LCD].proc = lcd_event;
     sched.items[SCHED_LCD].clock = CLOCK_24M;
     sched.items[SCHED_LCD].second = -1;
+    dma.items[DMA_LCD].proc = lcd_dma;
     lcd.width = LCD_WIDTH;
     lcd.height = LCD_HEIGHT;
     lcd.mask = true;

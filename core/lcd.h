@@ -21,6 +21,13 @@ extern "C" {
 #define LCD_RAM_OFFSET 0x040000
 #define LCD_FRAME_SIZE (LCD_SIZE * LCD_RGB_SIZE)
 
+enum lcd_comp {
+    LCD_SYNC,
+    LCD_BACK,
+    LCD_ACTIVE,
+    LCD_FRONT
+};
+
 /* Standard LCD state */
 typedef struct lcd_state {
     uint32_t timing[4];
@@ -52,6 +59,7 @@ typedef struct lcd_state {
     uint32_t crsrRis;              /* Cursor raw interrupt status register - const */
 
     /* Internal registers */
+    //enum lcd_comp cur_stage;
     uint32_t PPL, HSW, HFP, HBP, LPP, VSW, VFP, VBP, PCD, ACB, CPL, LED;
     bool CLKSEL, IVS, IHS, IPC, IOE, LEE, mask;
     uint32_t width;
