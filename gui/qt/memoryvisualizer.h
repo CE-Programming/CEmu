@@ -3,7 +3,7 @@
 
 #include <QtWidgets/QDialog>
 
-#include "../../core/lcd/lcd.h"
+#include "../../core/lcd.h"
 #include "keypad/qtkeypadbridge.h"
 
 namespace Ui { class MemoryVisualizer; }

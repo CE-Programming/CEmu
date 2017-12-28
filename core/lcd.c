@@ -2,13 +2,13 @@
 #include <stdio.h>
 
 #include "lcd.h"
-#include "../cpu.h"
-#include "../emu.h"
-#include "../mem.h"
-#include "../asic.h"
-#include "../control.h"
-#include "../schedule.h"
-#include "../interrupt.h"
+#include "cpu.h"
+#include "emu.h"
+#include "mem.h"
+#include "asic.h"
+#include "control.h"
+#include "schedule.h"
+#include "interrupt.h"
 
 /* Global LCD state */
 lcd_state_t lcd;

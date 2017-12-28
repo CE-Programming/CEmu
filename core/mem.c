@@ -4,7 +4,7 @@
 #include "dma.h"
 #include "flash.h"
 #include "control.h"
-#include "lcd/lcd.h"
+#include "lcd.h"
 #include "debug/debug.h"
 
 #include <assert.h>

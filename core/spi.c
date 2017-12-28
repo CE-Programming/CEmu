@@ -1,6 +1,6 @@
 #include "spi.h"
-#include "../emu.h"
-#include "../schedule.h"
+#include "emu.h"
+#include "schedule.h"
 
 #include <string.h>
 

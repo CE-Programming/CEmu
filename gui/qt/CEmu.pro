@@ -131,7 +131,7 @@ SOURCES +=  utils.cpp \
     ../../core/asic.c \
     ../../core/cpu.c \
     ../../core/keypad.c \
-    ../../core/lcd/lcd.c \
+    ../../core/lcd.c \
     ../../core/registers.c \
     ../../core/port.c \
     ../../core/interrupt.c \
@@ -161,7 +161,7 @@ SOURCES +=  utils.cpp \
     memoryvisualizer.cpp \
     ../../core/debug/debug.cpp \
     capture/animated-png.c \
-    ../../core/lcd/spi.c \
+    ../../core/spi.c \
     ../../core/dma.c
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
@@ -203,7 +203,7 @@ HEADERS  +=  utils.h \
     ../../core/cpu.h \
     ../../core/defines.h \
     ../../core/keypad.h \
-    ../../core/lcd/lcd.h \
+    ../../core/lcd.h \
     ../../core/registers.h \
     ../../core/tidevices.h \
     ../../core/port.h \
@@ -235,7 +235,7 @@ HEADERS  +=  utils.h \
     keyhistory.h \
     memoryvisualizer.h \
     capture/animated-png.h \
-    ../../core/lcd/spi.h \
+    ../../core/spi.h \
     ../../core/dma.h
 
 FORMS    += mainwindow.ui \

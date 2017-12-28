@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "../port.h"
+#include "port.h"
 #include "spi.h"
 
 #include <stdint.h>

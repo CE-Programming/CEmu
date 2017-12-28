@@ -3,7 +3,7 @@
 #include "emu.h"
 #include "mem.h"
 #include "cpu.h"
-#include "lcd/lcd.h"
+#include "lcd.h"
 #include "debug/debug.h"
 
 #include <stdio.h>
