@@ -368,7 +368,6 @@ bool lcd_save(FILE *image) {
 
 bool lcd_restore(FILE *image) {
     bool ret = fread(&lcd, sizeof(lcd), 1, image) == 1;
-    lcd.ofs = NULL;
-    lcd.ofs_end = NULL;
+    lcd_setptrs(&lcd);
     return ret;
 }
