@@ -198,6 +198,12 @@ void emu_cleanup(void) {
 }
 
 static void EMSCRIPTEN_KEEPALIVE emu_reset(void) {
+    unsigned int i;
+
+    for(i = 0; i < SCHED_NUM_ITEMS; i++) {
+        sched.items[i].second = -1;
+    }
+
     sched_reset();
     asic_reset();
 
@@ -216,8 +222,7 @@ static void emu_main_loop_inner(void) {
 #endif
         if (cpuEvents & EVENT_RESET) {
             gui_console_printf("[CEmu] Reset triggered.\n");
-            asic_reset();
-            cpuEvents &= ~EVENT_RESET;
+            emu_reset();
         }
 #ifdef DEBUG_SUPPORT
     }

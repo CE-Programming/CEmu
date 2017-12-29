@@ -107,7 +107,6 @@ void event_clear(int index) {
 
 void event_set(int index, uint64_t ticks) {
     struct sched_item *item;
-    sched_process_pending_events();
 
     item = &sched.items[index];
     item->tick = muldiv(cpu.cycles, sched.clockRates[item->clock], sched.clockRates[CLOCK_CPU]);
