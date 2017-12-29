@@ -66,12 +66,15 @@ void sched_update_next_event(void) {
             sched.nextIndex = i;
         }
     }
-    cpu.next = sched.nextCPUtick;
+    cpu.next = cpu.saveNext = sched.nextCPUtick;
 #ifdef DEBUG_SUPPORT
     if (!cpu.halted && (cpuEvents & EVENT_DEBUG_STEP)) {
         cpu.next = debugger.cpuCycles + 1;
     }
 #endif
+    if (cpu.IEF_wait == 1) {
+        cpu.next = cpu.cycles;
+    }
 }
 
 void sched_process_pending_events(void) {

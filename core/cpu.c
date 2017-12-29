@@ -72,8 +72,8 @@ static uint8_t cpu_fetch_byte(void) {
     cpu_prefetch(cpu.registers.PC + 1, cpu.ADL);
     return value;
 }
-static void cpu_prefetch_next(void) {
-    cpu_prefetch(cpu.registers.PC + 1, cpu.ADL);
+static void cpu_prefetch_discard(void) {
+    mem_read_cpu(cpu_address_mode(cpu.registers.PC + 1, cpu.ADL), true);
 }
 static int8_t cpu_fetch_offset(void) {
     return (int8_t)cpu_fetch_byte();
@@ -806,7 +806,7 @@ void cpu_init(void) {
 
 void cpu_reset(void) {
     memset(&cpu.registers, 0, sizeof(eZ80registers_t));
-    cpu.IEF1 = cpu.IEF2 = cpu.ADL = cpu.MADL = cpu.IM = cpu.IEF_wait = cpu.halted = cpu.cycles = cpu.next = 0;
+    cpu.IEF1 = cpu.IEF2 = cpu.ADL = cpu.MADL = cpu.IM = cpu.IEF_wait = cpu.halted = cpu.cycles = cpu.next = cpu.saveNext = 0;
     cpu_flush(0, 0);
     gui_console_printf("[CEmu] CPU reset.\n");
 }
@@ -862,35 +862,34 @@ void cpu_execute(void) {
     eZ80registers_t *r = &cpu.registers;
     eZ80context_t context;
 
-    uint32_t save_next = cpu.next;
-
     while (!exiting) {
     cpu_execute_continue:
         if (cpu.IEF_wait) {
             if (cpu.IEF_wait > 1) {
                 if (cpu.cycles < cpu.next) {
                     cpu.IEF_wait = 1;
-                    save_next = cpu.next;
                     cpu.next = cpu.cycles + 1; // execute one more instruction
                 }
             } else {
                 cpu.IEF_wait = 0;
                 cpu.IEF1 = cpu.IEF2 = 1;
-                cpu.next = save_next;
+                cpu.next = cpu.saveNext;
             }
         }
         if (cpu.NMI || (cpu.IEF1 && (intrpt->status & intrpt->enabled))) {
+            cpu_prefetch_discard();
+            cpu.cycles += 2;
             cpu.L = cpu.IL = cpu.ADL || cpu.MADL;
             cpu.IEF1 = cpu.IEF2 = cpu.halted = cpu.inBlock = 0;
-            cpu.cycles += 2;
             if (cpu.NMI) {
                 cpu.NMI = 0;
                 cpu_call(0x66, cpu.MADL);
-                cpu.next = save_next;
+                cpu.next = cpu.saveNext;
             } else if (cpu.IM != 3) {
                 cpu_call(0x38, cpu.MADL);
             } else {
-                cpu_call(cpu_read_word(r->I << 8 | r->R), cpu.MADL);
+                cpu.cycles++;
+                cpu_call(cpu_read_word(r->I << 8 | (rand() & 0xFF)), cpu.MADL);
             }
 #ifdef DEBUG_SUPPORT
             if (cpuEvents & EVENT_DEBUG_STEP) {
@@ -1117,7 +1116,7 @@ void cpu_execute(void) {
                                             r->_HL = w;
                                             break;
                                         case 2: // JP (rr)
-                                            cpu_prefetch_next();
+                                            cpu_prefetch_discard();
                                             cpu_prefetch(cpu_read_index(), cpu.L);
                                             cpu_check_step_out();
                                             break;
@@ -1197,7 +1196,6 @@ void cpu_execute(void) {
                                 case 7: // EI
                                     if (cpu.cycles < cpu.next) {
                                         cpu.IEF_wait = 1;
-                                        save_next = cpu.next;
                                         cpu.next = cpu.cycles + 1; // execute one more instruction
                                     } else {
                                         cpu.IEF_wait = 2;

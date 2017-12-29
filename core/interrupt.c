@@ -28,6 +28,7 @@ void intrpt_set(uint32_t mask, bool set) {
 
 void intrpt_reset() {
     memset(&intrpt, 0, sizeof(intrpt));
+    intrpt_set(INT_PWR, true);
 }
 
 const uint32_t revision = 0x00010900;

@@ -69,8 +69,8 @@ typedef struct eZ80cpu {
         uint8_t inBlock     : 1;  /* Are we processing a block instruction?                                                      */
     };
     eZ80context_t context;
-    uint32_t cycles, next;
-    int64_t cyclesOffset;
+    uint32_t cycles, next, saveNext;
+    uint64_t cyclesOffset;
     uint8_t prefetch, bus;
     uint32_t cpuEventsState;
 } eZ80cpu_t;
