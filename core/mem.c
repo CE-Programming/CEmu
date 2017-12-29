@@ -13,7 +13,7 @@
 #include <stdlib.h>
 
 #define mmio_mapped(addr, select) ((addr) < (((select) = (addr) >> 6 & 0x4000) ? 0xFB0000 : 0xE40000))
-#define mmio_port(addr, select) (0x1000 + (select) + ((addr) >> 4 & 0xf000) + ((addr) & 0xfff))
+#define mmio_port(addr, select) (0x1000 + (select) + ((addr) >> 4 & 0xF000) + ((addr) & 0xFFF))
 
 /* Global MEMORY state */
 mem_state_t mem;
@@ -336,14 +336,14 @@ static uint8_t flash_read_handler(uint32_t addr) {
                     static const uint8_t id[7] = { 0x51, 0x52, 0x59, 0x02, 0x00, 0x40, 0x00 };
                     value = id[(addr - 0x20)/2];
                 } else if (addr >= 0x36 && addr <= 0x50) {
-                    static const uint8_t id[] = { 0x27, 0x36, 0x00, 0x00, 0x03, 0x04, 0x08,
-                        0x0E, 0x03, 0x05, 0x03, 0x03, 0x16, 0x02,
-                        0x00, 0x05, 0x00, 0x01, 0x08, 0x00, 0x00,
-                        0x3F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50,
-                        0x52, 0x49, 0x31, 0x33, 0x0C, 0x02, 0x01,
-                        0x00, 0x08, 0x00, 0x00, 0x02, 0x95, 0xA5,
-                        0x02, 0x01 };
+                    static const uint8_t id[] = {
+                        0x27, 0x36, 0x00, 0x00, 0x03, 0x04, 0x08, 0x0E,
+                        0x03, 0x05, 0x03, 0x03, 0x16, 0x02, 0x00, 0x05,
+                        0x00, 0x01, 0x08, 0x00, 0x00, 0x3F, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x50, 0x52, 0x49, 0x31, 0x33, 0x0C,
+                        0x02, 0x01, 0x00, 0x08, 0x00, 0x00, 0x02, 0x95,
+                        0xA5, 0x02, 0x01 };
                     value = id[(addr - 0x36)/2];
                 }
                 break;
@@ -416,7 +416,6 @@ static bool detect_flash_unlock_sequence(uint8_t current) {
 }
 
 uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
-    static const uint8_t mmio_readcycles[0x20] = {2,2,4,3,2,2,2,2,2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2};
     uint8_t value = 0;
     uint32_t ramAddr, select;
 
@@ -426,7 +425,6 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
         open_debugger(HIT_READ_WATCHPOINT, addr);
     }
 #endif
-    // reads from protected memory return 0
     switch((addr >> 20) & 0xF) {
             /* FLASH */
         case 0x0: case 0x1: case 0x2: case 0x3:
@@ -453,11 +451,17 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
 
             /* MMIO <-> Advanced Perphrial Bus */
         case 0xE: case 0xF:
-            cpu.cycles += mmio_readcycles[(addr >> 16) & 0x1F];
             if (mmio_mapped(addr, select)) {
                 value = port_read_byte(mmio_port(addr, select));
+            } else {
+                if (addr >= 0xFB0000 && addr < 0xFF0000) {
+                    cpu.cycles += 3;
+                } else {
+                    cpu.cycles += 2;
+                }
             }
             break;
+        }
     }
     if (fetch) {
         mem.fetch_buffer[++mem.fetch_index] = value;
@@ -465,13 +469,12 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
             control.flashUnlocked &= ~(1 << 3);
         }
     } else if (addr >= control.protectedStart && addr <= control.protectedEnd && unprivileged_code()) {
-        value = 0;
+        value = 0; /* reads from protected memory return 0 */
     }
     return value;
 }
 
 void mem_write_cpu(uint32_t addr, uint8_t value) {
-    static const uint8_t mmio_writecycles[0x20] = {2,2,4,2,2,2,2,2,2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2};
     uint32_t ramAddr, select;
     addr &= 0xFFFFFF;
 
@@ -521,7 +524,6 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
 
                 /* MMIO <-> Advanced Perphrial Bus */
             case 0xE: case 0xF:
-                cpu.cycles += mmio_writecycles[(addr >> 16) & 0x1F];
 #ifdef DEBUG_SUPPORT
                 if (emu_allow_instruction_commands) {
                     if (addr >= DBG_PORT_RANGE) {
@@ -544,6 +546,12 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
 #endif
                 if (mmio_mapped(addr, select)) {
                     port_write_byte(mmio_port(addr, select), value);
+                } else {
+                    if (addr >= 0xFB0000 && addr < 0xFF0000) {
+                        cpu.cycles += 3;
+                    } else {
+                        cpu.cycles += 2;
+                    }
                 }
                 break;
         }

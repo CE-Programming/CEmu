@@ -158,7 +158,6 @@ static uint32_t cpu_pop_word(void) {
 }
 
 static uint8_t cpu_read_in(uint16_t pio) {
-    cpu.cycles += 2;
     if (unprivileged_code()) {
         return 0; // in returns 0 in unprivileged code
     }
@@ -166,7 +165,6 @@ static uint8_t cpu_read_in(uint16_t pio) {
 }
 
 static void cpu_write_out(uint16_t pio, uint8_t value) {
-    cpu.cycles += 3;
     if (unprivileged_code()) {
         control.protectionStatus |= 2;
         gui_console_printf("[CEmu] NMI reset cause by an out instruction in unpriviledged code.\n");
