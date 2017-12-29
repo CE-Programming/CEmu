@@ -147,6 +147,9 @@ static void lcd_event(int index) {
             duration = lcd.VFP * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD;
             lcd.compare = LCD_SYNC;
             break;
+        default:
+            duration = 0;
+            break;
     }
     event_repeat(index, duration);
     intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
@@ -228,7 +231,7 @@ lcd_state_t *lcd_setptrs(lcd_state_t *x) {
     x->ofs_end = NULL;
     x->size = x->width * x->height;
 
-    if (!x->size) { return; }
+    if (!x->size) { return x; }
 
     /* Mask if true lcd */
     if (x->mask) {
@@ -249,7 +252,7 @@ lcd_state_t *lcd_setptrs(lcd_state_t *x) {
         mem_end = (uint8_t *)lcd.crsrImage + sizeof lcd.crsrImage;
         ofs_start = (uint8_t *)lcd.crsrImage + addr - 0xE30800;
     } else {
-        return;
+        return x;
     }
 
     switch (mode) {
@@ -263,7 +266,7 @@ lcd_state_t *lcd_setptrs(lcd_state_t *x) {
         case 7: dma_length = (x->size >> 1) + x->size; break;
     }
 
-    if (ofs_start >= mem_end) { return; }
+    if (ofs_start >= mem_end) { return x; }
     ofs_end = ofs_start + dma_length;
     if (ofs_end > mem_end) { ofs_end = mem_end; }
 
