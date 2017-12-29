@@ -394,8 +394,8 @@ static uint32_t cpu_dec_bc_partial_mode() {
 static void cpu_call(uint32_t address, bool mixed) {
     eZ80registers_t *r = &cpu.registers;
 #ifdef DEBUG_SUPPORT
-    if (cpuEvents & (EVENT_DEBUG_STEP_OUT | EVENT_DEBUG_STEP_OVER)) {
-        if(cpuEvents & EVENT_DEBUG_STEP_OUT) {
+    if (cpu.events & (EVENT_DEBUG_STEP_OUT | EVENT_DEBUG_STEP_OVER)) {
+        if(cpu.events & EVENT_DEBUG_STEP_OUT) {
             bool addWait = false;
             if (cpu.ADL) {
                 if (r->SPL >= debugger.stepOutSPL) {
@@ -411,7 +411,7 @@ static void cpu_call(uint32_t address, bool mixed) {
             if (addWait && (debugger.stepOutWait < 1)) {
                 debugger.stepOutWait++;
             }
-        } else if (cpuEvents & EVENT_DEBUG_STEP_OVER) {
+        } else if (cpu.events & EVENT_DEBUG_STEP_OVER) {
             if (r->PC == debugger.stepOverInstrEnd) {
                 debugger.data.block[debugger.stepOverInstrEnd] &= ~DBG_TEMP_EXEC_BREAKPOINT;
             }
@@ -447,7 +447,7 @@ static void cpu_trap(void) {
 
 static void cpu_check_step_out(void) {
 #ifdef DEBUG_SUPPORT
-    if (cpuEvents & EVENT_DEBUG_STEP_OUT) {
+    if (cpu.events & EVENT_DEBUG_STEP_OUT) {
         int32_t spDelta = cpu.ADL ? (int32_t) cpu.registers.SPL - (int32_t) debugger.stepOutSPL :
                           (int32_t) cpu.registers.SPS - (int32_t) debugger.stepOutSPS;
         if (spDelta >= 0) {
@@ -792,8 +792,8 @@ static void cpu_execute_bli() {
     cpu.inBlock = repeat;
 
 #ifdef DEBUG_SUPPORT
-    if (cpuEvents & EVENT_DEBUG_STEP_OVER) {
-        cpuEvents &= ~EVENT_DEBUG_STEP;
+    if (cpu.events & EVENT_DEBUG_STEP_OVER) {
+        cpu.events &= ~EVENT_DEBUG_STEP;
     }
 #endif
 
@@ -829,7 +829,7 @@ void cpu_nmi(void) {
 
 void cpu_crash(const char *msg) {
     gui_console_printf(msg);
-    cpuEvents |= EVENT_RESET;
+    cpu.events |= EVENT_RESET;
 #ifdef DEBUG_SUPPORT
     if (debugger.resetOpensDebugger) {
         open_debugger(DBG_MISC_RESET, cpu.registers.PC);
@@ -892,7 +892,7 @@ void cpu_execute(void) {
                 cpu_call(cpu_read_word(r->I << 8 | (rand() & 0xFF)), cpu.MADL);
             }
 #ifdef DEBUG_SUPPORT
-            if (cpuEvents & EVENT_DEBUG_STEP) {
+            if (cpu.events & EVENT_DEBUG_STEP) {
                 break;
             }
 #endif
@@ -1525,11 +1525,9 @@ void cpu_execute(void) {
 }
 
 bool cpu_restore(FILE *image) {
-    return fread(&cpu, sizeof(cpu), 1, image) == 1 &&
-           fread(&cpuEvents, sizeof(cpuEvents), 1, image) == 1;
+    return fread(&cpu, sizeof(cpu), 1, image) == 1;
 }
 
 bool cpu_save(FILE *image) {
-    return fwrite(&cpu, sizeof(cpu), 1, image) == 1 &&
-           fwrite(&cpuEvents, sizeof(cpuEvents), 1, image) == 1;
+    return fwrite(&cpu, sizeof(cpu), 1, image) == 1;
 }

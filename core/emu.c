@@ -18,9 +18,8 @@
 
 #define IMAGE_VERSION 0xCECE0012
 
-uint32_t cpuEvents;
 volatile bool exiting;
-volatile bool emu_allow_instruction_commands = false; /* fixes alignment issues, apparently... */
+volatile bool emuCommands = false;
 
 void throttle_interval_event(int index) {
     event_repeat(index, 27000000 / 60);
@@ -76,7 +75,6 @@ bool emu_load(const char *romName, const char *imageName) {
         if (version != IMAGE_VERSION) goto rerr;
 
         asic_init();
-        sched_reset();
         asic_reset();
 
         if (!asic_restore(file)) goto rerr;
@@ -198,29 +196,22 @@ void emu_cleanup(void) {
 }
 
 static void EMSCRIPTEN_KEEPALIVE emu_reset(void) {
-    unsigned int i;
-
-    for(i = 0; i < SCHED_NUM_ITEMS; i++) {
-        sched.items[i].second = -1;
-    }
-
-    sched_reset();
     asic_reset();
 
-    cpuEvents = EVENT_NONE;
+    cpu.events = EVENT_NONE;
 
     sched_update_next_event();
 }
 
 static void emu_main_loop_inner(void) {
 #ifdef DEBUG_SUPPORT
-    if (cpuEvents & (EVENT_RESET | EVENT_DEBUG_STEP)) {
-        if (!cpu.halted && cpuEvents & EVENT_DEBUG_STEP) {
-            cpuEvents &= ~EVENT_DEBUG_STEP;
+    if (cpu.events & (EVENT_RESET | EVENT_DEBUG_STEP)) {
+        if (!cpu.halted && cpu.events & EVENT_DEBUG_STEP) {
+            cpu.events &= ~EVENT_DEBUG_STEP;
             open_debugger(DBG_STEP, 0);
         }
 #endif
-        if (cpuEvents & EVENT_RESET) {
+        if (cpu.events & EVENT_RESET) {
             gui_console_printf("[CEmu] Reset triggered.\n");
             emu_reset();
         }

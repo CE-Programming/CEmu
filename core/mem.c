@@ -525,7 +525,7 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
                 /* MMIO <-> Advanced Perphrial Bus */
             case 0xE: case 0xF:
 #ifdef DEBUG_SUPPORT
-                if (emu_allow_instruction_commands) {
+                if (emuCommands) {
                     if (addr >= DBG_PORT_RANGE) {
                         open_debugger(addr, value);
                         break;

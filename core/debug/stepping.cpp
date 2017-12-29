@@ -20,7 +20,7 @@ void debug_set_step_next(void) {
     debugger.stepOutSPL = 0;
     debugger.stepOutSPS = 0;
     debugger.stepOutWait = -1;
-    cpuEvents |= EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_NEXT;
+    cpu.events |= EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_NEXT;
 }
 
 void debug_set_step_in(void) {
@@ -32,7 +32,7 @@ void debug_set_step_in(void) {
     debugger.data.block[debugger.stepOverInstrEnd] |= DBG_TEMP_EXEC_BREAKPOINT;
     debugger.stepOverMode = cpu.ADL;
     debugger.stepOverFirstStep = false;
-    cpuEvents |= EVENT_DEBUG_STEP;
+    cpu.events |= EVENT_DEBUG_STEP;
 }
 
 void debug_set_step_over(void) {
@@ -44,7 +44,7 @@ void debug_set_step_over(void) {
     debugger.data.block[debugger.stepOverInstrEnd] |= DBG_TEMP_EXEC_BREAKPOINT;
     debugger.stepOverMode = cpu.ADL;
     debugger.stepOverFirstStep = false;
-    cpuEvents |= EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OVER;
+    cpu.events |= EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OVER;
 }
 
 void debug_set_run_until(void) {
@@ -53,7 +53,7 @@ void debug_set_run_until(void) {
     debugger.data.block[debugger.stepOverInstrEnd] |= DBG_TEMP_EXEC_BREAKPOINT;
     debugger.stepOverMode = cpu.ADL;
     debugger.stepOverFirstStep = false;
-    cpuEvents &= ~(EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OVER | EVENT_DEBUG_STEP_OUT | EVENT_DEBUG_STEP_NEXT);
+    cpu.events &= ~(EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OVER | EVENT_DEBUG_STEP_OUT | EVENT_DEBUG_STEP_NEXT);
 }
 
 void debug_set_step_out(void) {
@@ -62,7 +62,7 @@ void debug_set_step_out(void) {
     debugger.stepOutSPL = cpu.registers.SPL + 1;
     debugger.stepOutSPS = cpu.registers.SPS + 1;
     debugger.stepOutWait = 0;
-    cpuEvents |= EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OUT;
+    cpu.events |= EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OUT;
 }
 
 #endif

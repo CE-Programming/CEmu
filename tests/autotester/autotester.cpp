@@ -104,7 +104,7 @@ static const std::unordered_map<std::string, seq_cmd_action_func_t> valid_action
     },
     {
         "reset", [] {
-            cemucore::cpuEvents |= EVENT_RESET;
+            cemucore::cpu.events |= EVENT_RESET;
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
     },

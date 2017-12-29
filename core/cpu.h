@@ -71,8 +71,8 @@ typedef struct eZ80cpu {
     eZ80context_t context;
     uint32_t cycles, next, saveNext;
     uint64_t cyclesOffset;
-    uint8_t prefetch, bus;
-    uint32_t cpuEventsState;
+    uint8_t prefetch;
+    uint32_t events;
 } eZ80cpu_t;
 
 /* Externals */

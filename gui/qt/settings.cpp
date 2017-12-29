@@ -212,7 +212,7 @@ void MainWindow::setDebugSoftCommands(bool state) {
     ui->checkDisableSoftCommands->setChecked(state);
     ui->checkDisableSoftCommands->blockSignals(false);
     settings->setValue(SETTING_DEBUGGER_ENABLE_SOFT, state);
-    emu_allow_instruction_commands = state;
+    emuCommands = state;
 }
 
 void MainWindow::setDataCol(bool state) {

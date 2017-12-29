@@ -76,8 +76,8 @@ void open_debugger(int reason, uint32_t data) {
     }
 
     if ((reason == DBG_STEP) && debugger.stepOverFirstStep) {
-        if (((cpuEvents & EVENT_DEBUG_STEP_NEXT)
-                && !(debugger.data.block[cpu.registers.PC] & DBG_TEMP_EXEC_BREAKPOINT)) || (cpuEvents & EVENT_DEBUG_STEP_OUT)) {
+        if (((cpu.events & EVENT_DEBUG_STEP_NEXT)
+                && !(debugger.data.block[cpu.registers.PC] & DBG_TEMP_EXEC_BREAKPOINT)) || (cpu.events & EVENT_DEBUG_STEP_OUT)) {
             debugger.stepOverFirstStep = false;
             gui_debugger_raise_or_disable(false);
             return;
@@ -115,19 +115,19 @@ void open_debugger(int reason, uint32_t data) {
     cpu.cycles = debugger.cpuCycles;
     debugger.cycleCount -= cpu_cycles();
 
-    if (cpuEvents & EVENT_DEBUG_STEP) {
+    if (cpu.events & EVENT_DEBUG_STEP) {
         cpu.next = cpu.cycles + 1;
     }
 }
 
 void debug_switch_step_mode(void) {
-    if (cpuEvents & EVENT_DEBUG_STEP_OVER) {
+    if (cpu.events & EVENT_DEBUG_STEP_OVER) {
         debugger.stepOverFirstStep = true;
         debugger.stepOutSPL = cpu.registers.SPL + 1;
         debugger.stepOutSPS = cpu.registers.SPS + 1;
         debugger.stepOutWait = 0;
-        cpuEvents &= ~EVENT_DEBUG_STEP_OVER;
-        cpuEvents |= EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OUT;
+        cpu.events &= ~EVENT_DEBUG_STEP_OVER;
+        cpu.events |= EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OUT;
     }
 }
 
@@ -144,7 +144,7 @@ void debug_init_run_until(uint32_t address) {
 }
 
 void debug_clear_temp_break(void) {
-    cpuEvents &= ~(EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OUT | EVENT_DEBUG_STEP_OVER);
+    cpu.events &= ~(EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OUT | EVENT_DEBUG_STEP_OVER);
     if (debugger.stepOverInstrEnd != 0xFFFFFFFFU) {
         do {
             debugger.data.block[debugger.stepOverInstrEnd] &= ~DBG_TEMP_EXEC_BREAKPOINT;

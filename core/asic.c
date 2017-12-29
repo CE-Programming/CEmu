@@ -62,6 +62,7 @@ static void plug_devices(void) {
     reset_proc_count = 0;
 
     /* Populate reset callbacks */
+    add_reset_proc(sched_reset);
     add_reset_proc(mem_reset);
     add_reset_proc(lcd_reset);
     add_reset_proc(keypad_reset);
@@ -100,9 +101,6 @@ void asic_free(void) {
 
 void asic_reset(void) {
     unsigned int i;
-
-    sched.clockRates[CLOCK_CPU] = 48000000;
-    sched.clockRates[CLOCK_APB] = 78000000;
 
     for(i = 0; i < reset_proc_count; i++) {
         reset_procs[i]();

@@ -144,7 +144,7 @@ void EmuThread::doStuff() {
     lastTime += std::chrono::steady_clock::now() - cur_time;
 
     if (doReset) {
-        cpuEvents |= EVENT_RESET;
+        cpu.events |= EVENT_RESET;
         doReset = false;
     }
 

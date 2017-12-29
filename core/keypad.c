@@ -5,6 +5,7 @@
 #include "interrupt.h"
 #include "control.h"
 #include "asic.h"
+#include "cpu.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -21,7 +22,7 @@ void EMSCRIPTEN_KEEPALIVE keypad_key_event(unsigned int row, unsigned int col, b
         intrpt_set(INT_ON, press);
         if (press && control.off) {
             if (asic.resetOnWake) {
-                cpuEvents |= EVENT_RESET;
+                cpu.events |= EVENT_RESET;
             }
             control.readBatteryStatus = ~1;
             control.off = false;

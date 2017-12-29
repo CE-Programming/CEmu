@@ -34,7 +34,13 @@ static uint32_t muldiv(uint32_t a, uint32_t b, uint32_t c) {
 }
 
 void sched_reset(void) {
+    unsigned int i;
     const uint32_t def_rates[CLOCK_NUM_ITEMS] = { 48000000, 78000000, 27000000, 12000000, 24000000, 32768 };
+
+    for(i = 0; i < SCHED_NUM_ITEMS; i++) {
+        sched.items[i].second = -1;
+    }
+
     memcpy(sched.clockRates, def_rates, sizeof(def_rates));
     memset(sched.items, 0, sizeof sched.items);
     sched.nextIndex = 0;
@@ -68,7 +74,7 @@ void sched_update_next_event(void) {
     }
     cpu.next = cpu.saveNext = sched.nextCPUtick;
 #ifdef DEBUG_SUPPORT
-    if (!cpu.halted && (cpuEvents & EVENT_DEBUG_STEP)) {
+    if (!cpu.halted && (cpu.events & EVENT_DEBUG_STEP)) {
         cpu.next = debugger.cpuCycles + 1;
     }
 #endif

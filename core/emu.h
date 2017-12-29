@@ -9,9 +9,6 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
-/* CPU events */
-extern uint32_t cpuEvents;
-
 #define EVENT_NONE            0
 #define EVENT_RESET           1
 #ifdef DEBUG_SUPPORT
@@ -24,7 +21,7 @@ extern uint32_t cpuEvents;
 
 /* Settings */
 extern volatile bool exiting;
-extern volatile bool emu_allow_instruction_commands;
+extern volatile bool emuCommands;
 
 /* Reimplemented GUI callbacks */
 void gui_do_stuff(void);
