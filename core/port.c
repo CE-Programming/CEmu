@@ -17,7 +17,7 @@ uint8_t port_peek_byte(uint16_t address) {
 }
 uint8_t port_read_byte(uint16_t address) {
     uint8_t port_loc = port_range(address);
-    static const uint8_t port_read_cycles[0x10] = {2,2,2,4,3,2,3,3,3,3,3,3,3,3,3,2};
+    static const uint8_t port_read_cycles[0x10] = {2,2,2,4,3,3,3,3,3,3,3,3,3,3,3,3};
 
     cpu.cycles += port_read_cycles[port_loc];
 
@@ -37,7 +37,7 @@ void port_poke_byte(uint16_t address, uint8_t value) {
 }
 void port_write_byte(uint16_t address, uint8_t value) {
     uint8_t port_loc = port_range(address);
-    static const uint8_t port_write_cycles[0x10] = {2,2,2,4,2,2,3,3,3,3,3,3,3,3,3,2};
+    static const uint8_t port_write_cycles[0x10] = {2,2,2,4,2,3,3,3,3,3,3,3,3,3,3,3};
 
     cpu.cycles += port_write_cycles[port_loc];
 
