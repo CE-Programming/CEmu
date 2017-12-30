@@ -86,9 +86,8 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int l
     FILE *file;
     uint8_t tmp_buf[0x80];
 
-    uint32_t save_cycles,
-             save_next,
-             save_cycles_offset;
+    uint32_t save_cycles, save_next;
+    uint64_t save_base_cycles;
 
     uint8_t var_ver,
             var_arc;
@@ -114,7 +113,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int l
 
     save_cycles = cpu.cycles;
     save_next = cpu.next;
-    save_cycles_offset = cpu.cyclesOffset;
+    save_base_cycles = cpu.baseCycles;
 
     if (fread(tmp_buf, 1, h_size, file) != h_size)         goto r_err;
     if (memcmp(tmp_buf, header_data, h_size))              goto r_err;
@@ -223,14 +222,14 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int l
     run_asm(jforcehome, sizeof jforcehome, 23000000);
     cpu.cycles = save_cycles;
     cpu.next = save_next;
-    cpu.cyclesOffset = save_cycles_offset;
+    cpu.baseCycles = save_base_cycles;
 
     return !fclose(file);
 
 r_err:
     cpu.cycles = save_cycles;
     cpu.next = save_next;
-    cpu.cyclesOffset = save_cycles_offset;
+    cpu.baseCycles = save_base_cycles;
     fclose(file);
     return false;
 }

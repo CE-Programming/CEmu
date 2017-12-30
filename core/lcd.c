@@ -123,6 +123,7 @@ static void lcd_event(int index) {
         lcd.ris |= 1 << 3;
     }
     switch (lcd.compare) {
+        default:
         case LCD_SYNC:
             lcd_drawframe(&lcd);
             duration = ((lcd.VSW - 1) * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) +
@@ -146,9 +147,6 @@ static void lcd_event(int index) {
         case LCD_FRONT_PORCH:
             duration = lcd.VFP * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD;
             lcd.compare = LCD_SYNC;
-            break;
-        default:
-            duration = 0;
             break;
     }
     event_repeat(index, duration);

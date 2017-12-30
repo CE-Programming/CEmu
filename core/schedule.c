@@ -27,9 +27,7 @@ static uint32_t muldiv(uint32_t a, uint32_t b, uint32_t c) {
     asm ("mull %k1\n\tdivl %k2" : "+a" (a) : "g" (b), "g" (c) : "cc", "edx");
     return a;
 #else
-    uint64_t d = a;
-    d *= b;
-    return d / c;
+    return (uint64_t)a * b / c;
 #endif
 }
 
@@ -94,7 +92,7 @@ void sched_process_pending_events(void) {
                 }
             }
             cpu.cycles -= sched.clockRates[CLOCK_CPU];
-            cpu.cyclesOffset += sched.clockRates[CLOCK_CPU];
+            cpu.baseCycles += sched.clockRates[CLOCK_CPU];
         } else {
             sched.items[sched.nextIndex].second = -1;
             sched.items[sched.nextIndex].proc(sched.nextIndex);
@@ -124,8 +122,8 @@ uint64_t event_ticks_remaining(int index) {
     sched_process_pending_events();
 
     item = &sched.items[index];
-    return (uint64_t)item->second * sched.clockRates[item->clock]
-        + item->tick - muldiv(cpu.cycles, sched.clockRates[item->clock], sched.clockRates[CLOCK_CPU]);
+    return (uint64_t)item->second * sched.clockRates[item->clock] + item->tick
+        - muldiv(cpu.cycles, sched.clockRates[item->clock], sched.clockRates[CLOCK_CPU]);
 }
 
 void sched_set_clocks(int count, uint32_t *new_rates) {
@@ -140,9 +138,9 @@ void sched_set_clocks(int count, uint32_t *new_rates) {
         }
     }
 
-    cpu.cyclesOffset += cpu.cycles;
+    cpu.baseCycles += cpu.cycles;
     cpu.cycles = muldiv(cpu.cycles, new_rates[CLOCK_CPU], sched.clockRates[CLOCK_CPU]);
-    cpu.cyclesOffset -= cpu.cycles;
+    cpu.baseCycles -= cpu.cycles;
     memcpy(sched.clockRates, new_rates, sizeof(uint32_t) * count);
 
     for (i = 0; i < SCHED_NUM_ITEMS; i++) {

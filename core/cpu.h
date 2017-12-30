@@ -70,7 +70,7 @@ typedef struct eZ80cpu {
     };
     eZ80context_t context;
     uint32_t cycles, next, saveNext;
-    uint64_t cyclesOffset;
+    uint64_t baseCycles, haltCycles;
     uint8_t prefetch;
     uint32_t events;
 } eZ80cpu_t;
@@ -85,7 +85,7 @@ void cpu_flush(uint32_t, bool);
 void cpu_nmi(void);
 void cpu_execute(void);
 void cpu_crash(const char *msg);
-int64_t cpu_cycles(void);
+uint64_t cpu_total_cycles(void);
 
 /* Save/Restore */
 bool cpu_restore(FILE *image);

@@ -32,8 +32,8 @@
 /* Global CPU state */
 eZ80cpu_t cpu;
 
-int64_t cpu_cycles(void) {
-    return cpu.cycles + cpu.cyclesOffset;
+uint64_t cpu_total_cycles(void) {
+    return cpu.baseCycles + cpu.cycles;
 }
 
 static void cpu_clear_mode(void) {
@@ -806,7 +806,7 @@ void cpu_init(void) {
 
 void cpu_reset(void) {
     memset(&cpu.registers, 0, sizeof(eZ80registers_t));
-    cpu.IEF1 = cpu.IEF2 = cpu.ADL = cpu.MADL = cpu.IM = cpu.IEF_wait = cpu.halted = cpu.cycles = cpu.next = cpu.saveNext = 0;
+    cpu.NMI = cpu.IEF1 = cpu.IEF2 = cpu.ADL = cpu.MADL = cpu.IM = cpu.IEF_wait = cpu.halted = 0;
     cpu_flush(0, 0);
     gui_console_printf("[CEmu] CPU reset.\n");
 }
@@ -839,7 +839,7 @@ void cpu_crash(const char *msg) {
 
 static void cpu_halt(void) {
     if (cpu.cycles < cpu.next) {
-        cpu.cyclesOffset -= cpu.next - cpu.cycles;
+        cpu.haltCycles += cpu.next - cpu.cycles;
         cpu.cycles = cpu.next; // consume all of the cycles
     }
     cpu.halted = 1;
@@ -880,16 +880,19 @@ void cpu_execute(void) {
             cpu_prefetch_discard();
             cpu.cycles += 2;
             cpu.L = cpu.IL = cpu.ADL || cpu.MADL;
-            cpu.IEF1 = cpu.IEF2 = cpu.halted = cpu.inBlock = 0;
+            cpu.IEF1 = cpu.halted = cpu.inBlock = 0;
             if (cpu.NMI) {
                 cpu.NMI = 0;
                 cpu_call(0x66, cpu.MADL);
                 cpu.next = cpu.saveNext;
-            } else if (cpu.IM != 3) {
-                cpu_call(0x38, cpu.MADL);
             } else {
-                cpu.cycles++;
-                cpu_call(cpu_read_word(r->I << 8 | (rand() & 0xFF)), cpu.MADL);
+                cpu.IEF2 = 0;
+                if (cpu.IM != 3) {
+                    cpu_call(0x38, cpu.MADL);
+                } else {
+                    cpu.cycles++;
+                    cpu_call(cpu_read_word(r->I << 8 | (rand() & 0xFF)), cpu.MADL);
+                }
             }
 #ifdef DEBUG_SUPPORT
             if (cpu.events & EVENT_DEBUG_STEP) {
