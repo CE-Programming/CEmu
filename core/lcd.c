@@ -117,7 +117,7 @@ draw_black:
     while (out < out_end) { *out++ = 0xFF000000; }
 }
 
-static void lcd_event(int index) {
+static void lcd_event(enum sched_event event) {
     uint32_t duration;
     if ((lcd.control >> 12 & 3) == lcd.compare) {
         lcd.ris |= 1 << 3;
@@ -149,7 +149,7 @@ static void lcd_event(int index) {
             lcd.compare = LCD_SYNC;
             break;
     }
-    event_repeat(index, duration);
+    event_repeat(event, duration);
     intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
 }
 
@@ -164,7 +164,7 @@ void lcd_reset(void) {
     memset(&lcd, 0, sizeof(lcd_state_t));
     sched.items[SCHED_LCD].proc = lcd_event;
     sched.items[SCHED_LCD].clock = CLOCK_24M;
-    sched.items[SCHED_LCD].second = -1;
+    event_clear(SCHED_LCD);
     dma.items[DMA_LCD].proc = lcd_dma;
     lcd.width = LCD_WIDTH;
     lcd.height = LCD_HEIGHT;

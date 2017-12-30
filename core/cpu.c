@@ -22,6 +22,7 @@
 #include "mem.h"
 #include "control.h"
 #include "registers.h"
+#include "schedule.h"
 #include "interrupt.h"
 #include "debug/debug.h"
 
@@ -807,6 +808,7 @@ void cpu_init(void) {
 void cpu_reset(void) {
     memset(&cpu.registers, 0, sizeof(eZ80registers_t));
     cpu.NMI = cpu.IEF1 = cpu.IEF2 = cpu.ADL = cpu.MADL = cpu.IM = cpu.IEF_wait = cpu.halted = 0;
+    cpu.events = EVENT_NONE;
     cpu_flush(0, 0);
     gui_console_printf("[CEmu] CPU reset.\n");
 }
@@ -819,7 +821,9 @@ void cpu_flush(uint32_t address, bool mode) {
 
 void cpu_nmi(void) {
     cpu.NMI = 1;
-    cpu.next = cpu.cycles;
+    if (cpu.cycles < cpu.next) {
+        cpu.next = cpu.cycles;
+    }
 #ifdef DEBUG_SUPPORT
     if (debugger.resetOpensDebugger) {
         open_debugger(DBG_NMI_TRIGGERED, cpu.registers.PC);
@@ -845,6 +849,12 @@ static void cpu_halt(void) {
     cpu.halted = 1;
 }
 
+void cpu_restore_next(void) {
+    if (!cpu.NMI && cpu.IEF_wait != 1 && !(cpu.events & EVENT_DEBUG_STEP)) {
+        cpu.next = sched.next;
+    }
+}
+
 void cpu_execute(void) {
     /* variable declarations */
     int8_t s;
@@ -865,15 +875,13 @@ void cpu_execute(void) {
     while (!exiting) {
     cpu_execute_continue:
         if (cpu.IEF_wait) {
-            if (cpu.IEF_wait > 1) {
-                if (cpu.cycles < cpu.next) {
-                    cpu.IEF_wait = 1;
-                    cpu.next = cpu.cycles + 1; // execute one more instruction
-                }
-            } else {
+            if (cpu.IEF_wait == 1) {
                 cpu.IEF_wait = 0;
                 cpu.IEF1 = cpu.IEF2 = 1;
-                cpu.next = cpu.saveNext;
+                cpu_restore_next();
+            } else if (cpu.cycles < cpu.next) {
+                cpu.IEF_wait = 1;
+                cpu.next = cpu.cycles + 1; // execute one more instruction
             }
         }
         if (cpu.NMI || (cpu.IEF1 && (intrpt->status & intrpt->enabled))) {
@@ -884,7 +892,7 @@ void cpu_execute(void) {
             if (cpu.NMI) {
                 cpu.NMI = 0;
                 cpu_call(0x66, cpu.MADL);
-                cpu.next = cpu.saveNext;
+                cpu_restore_next();
             } else {
                 cpu.IEF2 = 0;
                 if (cpu.IM != 3) {
@@ -1195,6 +1203,7 @@ void cpu_execute(void) {
                                     break;
                                 case 6: // DI
                                     cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = 0;
+                                    cpu_restore_next();
                                     break;
                                 case 7: // EI
                                     if (cpu.cycles < cpu.next) {

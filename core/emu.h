@@ -5,19 +5,26 @@
 extern "C" {
 #endif
 
+#include "schedule.h"
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
 
 #define EVENT_NONE            0
-#define EVENT_RESET           1
+#define EVENT_RESET           (1 << 0)
 #ifdef DEBUG_SUPPORT
-#define EVENT_DEBUG_STEP      2
-#define EVENT_DEBUG_STEP_OVER 4
-#define EVENT_DEBUG_STEP_NEXT 8
-#define EVENT_DEBUG_STEP_OUT  16
+#define EVENT_DEBUG_STEP      (1 << 1)
+#define EVENT_DEBUG_STEP_OVER (1 << 2)
+#define EVENT_DEBUG_STEP_NEXT (1 << 3)
+#define EVENT_DEBUG_STEP_OUT  (1 << 4)
+#else
+#define EVENT_DEBUG_STEP      0
+#define EVENT_DEBUG_STEP_OVER 0
+#define EVENT_DEBUG_STEP_NEXT 0
+#define EVENT_DEBUG_STEP_OUT  0
 #endif
-#define EVENT_WAITING         32
+#define EVENT_WAITING         (1 << 5)
 
 /* Settings */
 extern volatile bool exiting;
@@ -37,7 +44,7 @@ void emu_cleanup(void);
 bool emu_save(const char*);
 bool emu_save_rom(const char*);
 
-void throttle_interval_event(int index);
+void throttle_interval_event(enum sched_event event);
 void throttle_timer_wait(void);
 
 #ifdef __cplusplus

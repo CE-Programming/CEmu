@@ -69,7 +69,7 @@ typedef struct eZ80cpu {
         uint8_t inBlock     : 1;  /* Are we processing a block instruction?                                                      */
     };
     eZ80context_t context;
-    uint32_t cycles, next, saveNext;
+    uint32_t cycles, next;
     uint64_t baseCycles, haltCycles;
     uint8_t prefetch;
     uint32_t events;
@@ -84,6 +84,7 @@ void cpu_reset(void);
 void cpu_flush(uint32_t, bool);
 void cpu_nmi(void);
 void cpu_execute(void);
+void cpu_restore_next(void);
 void cpu_crash(const char *msg);
 uint64_t cpu_total_cycles(void);
 

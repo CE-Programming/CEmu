@@ -21,8 +21,8 @@
 volatile bool exiting;
 volatile bool emuCommands = false;
 
-void throttle_interval_event(int index) {
-    event_repeat(index, 27000000 / 60);
+void throttle_interval_event(enum sched_event event) {
+    event_repeat(event, 27000000 / 60);
 
     gui_do_stuff();
 
@@ -197,10 +197,6 @@ void emu_cleanup(void) {
 
 static void EMSCRIPTEN_KEEPALIVE emu_reset(void) {
     asic_reset();
-
-    cpu.events = EVENT_NONE;
-
-    sched_update_next_event();
 }
 
 static void emu_main_loop_inner(void) {

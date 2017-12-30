@@ -15,7 +15,7 @@ cxxx_state_t cxxx; /* Global CXXX state */
 exxx_state_t exxx; /* Global EXXX state */
 fxxx_state_t fxxx; /* Global FXXX state */
 
-static void watchdog_event(int index) {
+static void watchdog_event(enum sched_event event) {
 
     if (watchdog.control & 1) {
         watchdog.status = 1;
@@ -32,7 +32,7 @@ static void watchdog_event(int index) {
             gui_console_printf("[CEmu] Watchdog NMI triggered.\n");
             cpu_nmi();
         }
-        event_repeat(index, watchdog.load);
+        event_repeat(event, watchdog.load);
     }
 }
 
@@ -95,16 +95,16 @@ static void watchdog_write(const uint16_t pio, const uint8_t byte, bool poke) {
             break;
         case 0x00C:
             write8(watchdog.control, bit_offset, byte);                    
+            if (watchdog.control & 16) {
+                sched.items[SCHED_WATCHDOG].clock = CLOCK_32K;
+            } else {
+                sched.items[SCHED_WATCHDOG].clock = CLOCK_CPU;
+            }
             if (watchdog.control & 1) {
                 event_set(SCHED_WATCHDOG, watchdog.load);
             } else {
                 watchdog.count = event_ticks_remaining(SCHED_WATCHDOG);
                 event_clear(SCHED_WATCHDOG);
-            }
-            if (watchdog.control & 16) {
-                sched.items[SCHED_WATCHDOG].clock = CLOCK_32K;
-            } else {
-                sched.items[SCHED_WATCHDOG].clock = CLOCK_CPU;
             }
             break;
         case 0x014:
@@ -126,9 +126,9 @@ void watchdog_reset() {
     /* Initialize device to default state */
     memset(&watchdog, 0, sizeof watchdog);
 
-    sched.items[SCHED_WATCHDOG].clock = CLOCK_APB;
-    sched.items[SCHED_WATCHDOG].second = -1;
     sched.items[SCHED_WATCHDOG].proc = watchdog_event;
+    sched.items[SCHED_WATCHDOG].clock = CLOCK_APB;
+    event_clear(SCHED_WATCHDOG);
     watchdog.revision = 0x00010602;
     watchdog.load = 0x03EF1480;   /* (66MHz) */
     watchdog.count = 0x03EF1480;

@@ -12,7 +12,7 @@ extern "C" {
 enum clock_id { CLOCK_CPU, CLOCK_APB, CLOCK_27M, CLOCK_12M, CLOCK_24M, CLOCK_32K,
                 CLOCK_NUM_ITEMS };
 
-enum sched_item_index {
+enum sched_event {
     SCHED_THROTTLE,
     SCHED_KEYPAD,
     SCHED_LCD,
@@ -22,7 +22,7 @@ enum sched_item_index {
     SCHED_TIMER2,
     SCHED_TIMER3,
     SCHED_WATCHDOG,
-    SCHED_NUM_ITEMS
+    SCHED_NUM_EVENTS
 };
 
 struct sched_item {
@@ -30,14 +30,14 @@ struct sched_item {
     int second; /* -1 = disabled */
     uint32_t tick;
     uint32_t cputick;
-    void (*proc)(int index);
+    void (*proc)(enum sched_event event);
 };
 
 typedef struct sched_state {
-    struct sched_item items[SCHED_NUM_ITEMS];
+    struct sched_item items[SCHED_NUM_EVENTS];
     uint32_t clockRates[CLOCK_NUM_ITEMS];
-    uint32_t nextCPUtick;
-    int nextIndex; /* -1 if no more events this second */
+    enum sched_event event;
+    uint32_t next;
 } sched_state_t;
 
 /* Global SCHED state */
@@ -45,13 +45,13 @@ extern sched_state_t sched;
 
 /* Available Functions */
 void sched_reset(void);
-void event_repeat(int index, uint64_t ticks);
-void sched_update_next_event(void);
 void sched_process_pending_events(void);
-void event_clear(int index);
-void event_set(int index, uint64_t ticks);
-void sched_set_clocks(int count, uint32_t *new_rates);
-uint64_t event_ticks_remaining(int index);
+void event_clear(enum sched_event event);
+void event_set(enum sched_event event, uint64_t ticks);
+void event_repeat(enum sched_event event, uint64_t ticks);
+void sched_set_clocks(enum clock_id count, uint32_t *new_rates);
+uint64_t event_next_cycle(enum sched_event event);
+uint64_t event_ticks_remaining(enum sched_event event);
 
 /* Save/Restore */
 bool sched_restore(FILE *image);
