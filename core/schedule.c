@@ -143,8 +143,10 @@ void sched_set_clocks(enum clock_id count, uint32_t *new_rates) {
                 uint64_t ticks = (uint64_t)item->second * sched.clockRates[item->clock] + item->tick;
                 item->second = ticks / new_rates[item->clock];
                 item->tick = ticks % new_rates[item->clock];
+                item->cputick = muldiv(item->tick, new_rates[CLOCK_CPU], new_rates[item->clock]);
+            } else {
+                item->cputick = muldiv(item->tick, new_rates[CLOCK_CPU], sched.clockRates[item->clock]);
             }
-            item->cputick = muldiv(item->tick, new_rates[CLOCK_CPU], sched.clockRates[item->clock]);
             if (event == sched.event) {
                 sched_set_next(item->cputick);
             }
@@ -153,7 +155,6 @@ void sched_set_clocks(enum clock_id count, uint32_t *new_rates) {
     if (sched.event == SCHED_NUM_EVENTS) {
         sched_set_next(new_rates[CLOCK_CPU]);
     }
-    cpu_restore_next();
     memcpy(sched.clockRates, new_rates, sizeof(uint32_t) * count);
 }
 
