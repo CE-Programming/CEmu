@@ -6,7 +6,7 @@ branches:
     - coverity_scan
     - gh-pages-dev
     - website-dev
-    - feature/apng
+    - feature/lcd-spi
 
 sudo: false
 os: linux
