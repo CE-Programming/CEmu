@@ -36,24 +36,6 @@ static void sched_set_next(uint32_t next) {
     cpu_restore_next();
 }
 
-void sched_reset(void) {
-    enum sched_event event;
-    const uint32_t def_rates[CLOCK_NUM_ITEMS] = { 48000000, 78000000, 27000000, 12000000, 24000000, 32768 };
-
-    memcpy(sched.clockRates, def_rates, sizeof(def_rates));
-    memset(sched.items, 0, sizeof sched.items);
-
-    for (event = 0; event < SCHED_NUM_EVENTS; event++) {
-        sched.items[event].second = -1;
-    }
-
-    sched.event = SCHED_NUM_EVENTS;
-    sched_set_next(sched.clockRates[CLOCK_CPU]);
-    sched.items[SCHED_THROTTLE].clock = CLOCK_27M;
-    sched.items[SCHED_THROTTLE].proc = throttle_interval_event;
-    event_set(SCHED_THROTTLE, 0);
-}
-
 static void sched_update_event(enum sched_event event) {
     struct sched_item *item = &sched.items[event];
     if (item->proc && !item->second && item->cputick < sched.next) {
@@ -69,6 +51,19 @@ static void sched_update_events(void) {
     for (event = 0; event < SCHED_NUM_EVENTS; event++) {
         sched_update_event(event);
     }
+}
+
+void sched_reset(void) {
+    const uint32_t def_rates[CLOCK_NUM_ITEMS] = { 48000000, 78000000, 27000000, 12000000, 24000000, 32768 };
+
+    memcpy(sched.clockRates, def_rates, sizeof(def_rates));
+    memset(sched.items, 0, sizeof sched.items);
+
+    sched.event = SCHED_NUM_EVENTS;
+    sched_set_next(sched.clockRates[CLOCK_CPU]);
+    sched.items[SCHED_THROTTLE].clock = CLOCK_27M;
+    sched.items[SCHED_THROTTLE].proc = throttle_interval_event;
+    event_set(SCHED_THROTTLE, 0);
 }
 
 void event_repeat(enum sched_event event, uint64_t ticks) {

@@ -122,12 +122,12 @@ static void gpt_write(uint16_t address, uint8_t value, bool poke) {
 }
 
 void gpt_reset() {
-    int timer;
+    enum sched_event event;
     memset(&gpt, 0, sizeof(gpt));
     gpt.revision = 0x00010801;
-    for(timer = SCHED_TIMER1; timer <= SCHED_TIMER3; timer++) {
-        sched.items[timer].proc = gpt_event;
-        gpt_refresh(timer);
+    for (event = SCHED_TIMER1; event <= SCHED_TIMER3; event++) {
+        sched.items[event].proc = gpt_event;
+        gpt_refresh(event);
     }
     sched.items[SCHED_OSTIMER].proc = ost_event;
     sched.items[SCHED_OSTIMER].clock = CLOCK_32K;
