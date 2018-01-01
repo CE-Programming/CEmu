@@ -3,6 +3,7 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QMimeData>
 #include <QtGui/QDragEnterEvent>
+#include <QtWidgets/QToolButton>
 #include "sendinghandler.h"
 
 #include "utils.h"
@@ -16,6 +17,8 @@ SendingHandler::SendingHandler(QObject *p, QProgressBar *bar, QTableWidget *t) :
     table = t;
     connect(this, &SendingHandler::send, emu_thread, &EmuThread::send, Qt::QueuedConnection);
     connect(emu_thread, &EmuThread::sentFile, this, &SendingHandler::sentFile, Qt::QueuedConnection);
+
+    sendIcon.addPixmap(QPixmap(":/icons/resources/icons/variables.png"));
 }
 
 void SendingHandler::dropOccured(QDropEvent *e, unsigned int location) {
@@ -40,8 +43,21 @@ void SendingHandler::resendSelected() {
     QStringList files;
 
     for (int row = 0; row < table->rowCount(); row++) {
-        if (table->item(row, 0)->checkState() == Qt::Checked) {
-            files.append(table->item(row, 1)->text());
+        if (table->item(row, RECENT_SELECT)->checkState() == Qt::Checked) {
+            files.append(table->item(row, RECENT_PATH)->text());
+        }
+    }
+
+    sendFiles(files, LINK_FILE);
+}
+
+void SendingHandler::resendPressed() {
+    QStringList files;
+
+    for (int row = 0; row < table->rowCount(); row++){
+        if (sender() == table->cellWidget(row, RECENT_RESEND)) {
+            files.append(table->item(row, RECENT_PATH)->text());
+            break;
         }
     }
 
@@ -102,25 +118,44 @@ void SendingHandler::sentFile(const QString &file, bool ok) {
     }
 
     for (int j = 0; j < rows; j++) {
-        if (!table->item(j, 1)->text().compare(file)) {
+        if (!table->item(j, RECENT_PATH)->text().compare(file)) {
             add = false;
         }
     }
 
     if (add) {
-        table->setRowCount(rows + 1);
-        QTableWidgetItem *path = new QTableWidgetItem(file);
-        QTableWidgetItem *selected = new QTableWidgetItem();
-
-        table->setItem(rows, 0, selected);
-        table->setItem(rows, 1, path);
-
-        selected->setCheckState(Qt::Checked);
+        QString path = file;
+        addFile(path, true);
     }
 
     if (progress) {
-        progress->setValue(progress->value()+1);
+        progress->setValue(progress->value() + 1);
     }
+}
+
+
+void SendingHandler::addFile(QString &file, bool select) {
+    int rows = table->rowCount();
+
+    table->setRowCount(rows + 1);
+    QTableWidgetItem *path = new QTableWidgetItem(file);
+    QTableWidgetItem *resend = new QTableWidgetItem();
+    QTableWidgetItem *selected = new QTableWidgetItem();
+
+    selected->setFlags(selected->flags() & ~Qt::ItemIsEditable);
+    selected->setFlags(resend->flags() & ~Qt::ItemIsEditable);
+    selected->setTextAlignment(Qt::AlignCenter);
+
+    QToolButton *btnResend = new QToolButton();
+    btnResend->setIcon(sendIcon);
+    connect(btnResend, &QToolButton::clicked, this, &SendingHandler::resendPressed);
+
+    table->setItem(rows, RECENT_SELECT, selected);
+    table->setItem(rows, RECENT_RESEND, resend);
+    table->setItem(rows, RECENT_PATH, path);
+    table->setCellWidget(rows, RECENT_RESEND, btnResend);
+
+    selected->setCheckState(select ? Qt::Checked : Qt::Unchecked);
 }
 
 void SendingHandler::sendFiles(const QStringList &fileNames, unsigned int location) {

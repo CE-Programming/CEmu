@@ -16,7 +16,7 @@
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-
+#include "sendinghandler.h"
 #include "dockwidget.h"
 #include "utils.h"
 
@@ -63,6 +63,9 @@ const QString MainWindow::SETTING_DISABLE_MENUBAR           = QStringLiteral("di
 const QString MainWindow::SETTING_ALWAYS_ON_TOP             = QStringLiteral("always_on_top");
 const QString MainWindow::SETTING_CURRENT_DIR               = QStringLiteral("current_directory");
 const QString MainWindow::SETTING_ENABLE_WIN_CONSOLE        = QStringLiteral("enable_windows_console");
+const QString MainWindow::SETTING_RECENT_SAVE               = QStringLiteral("Recent/save_paths");
+const QString MainWindow::SETTING_RECENT_PATHS              = QStringLiteral("Recent/paths");
+const QString MainWindow::SETTING_RECENT_SELECT             = QStringLiteral("Recent/selected");
 
 const QString MainWindow::SETTING_KEYPAD_CEMU               = QStringLiteral("cemu");
 const QString MainWindow::SETTING_KEYPAD_TILEM              = QStringLiteral("tilem");
@@ -249,6 +252,7 @@ void MainWindow::saveMiscSettings() {
     settings->setValue(SETTING_DEBUGGER_RAM_BYTES,   ui->ramBytes->value());
     settings->setValue(SETTING_DEBUGGER_MEM_BYTES,   ui->memBytes->value());
     saveSlotInfo();
+    saveRecentInfo();
 }
 
 void MainWindow::setMenuBarState(bool state) {
@@ -612,5 +616,38 @@ void MainWindow::setSlotInfo() {
         QString name = slotNames.at(i);
         QString path = slotPaths.at(i);
         slotAdd(name, path);
+    }
+}
+
+void MainWindow::setRecentSave(bool state) {
+    ui->checkSaveRecent->setChecked(state);
+    settings->setValue(SETTING_RECENT_SAVE, state);
+}
+
+void MainWindow::saveRecentInfo() {
+    QStringList paths;
+    QStringList selects;
+
+    if (settings->value(SETTING_RECENT_SAVE).toBool()) {
+        for (int i = 0; i < ui->varLoadedView->rowCount(); i++) {
+            paths.append(ui->varLoadedView->item(i, RECENT_PATH)->text());
+            selects.append(ui->varLoadedView->item(i, RECENT_SELECT)->checkState() == Qt::Checked ? "y" : "n");
+        }
+    }
+
+    settings->setValue(SETTING_RECENT_PATHS, paths);
+    settings->setValue(SETTING_RECENT_SELECT, selects);
+}
+
+void MainWindow::setRecentInfo() {
+    QStringList paths = settings->value(SETTING_RECENT_PATHS).toStringList();
+    QStringList selects = settings->value(SETTING_RECENT_SELECT).toStringList();
+
+    if (settings->value(SETTING_RECENT_SAVE).toBool()) {
+        for (int i = 0; i < paths.size(); i++) {
+            QString path = paths.at(i);
+            bool select = selects.at(i) == "y";
+            sendingHandler->addFile(path, select);
+        }
     }
 }

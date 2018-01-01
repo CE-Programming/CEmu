@@ -163,6 +163,12 @@ private:
         VAR_PREVIEW
     };
 
+    enum recentIndex {
+        RECENT_SELECT=0,
+        RECENT_LOAD,
+        RECENT_PATH,
+    };
+
     enum slotIndex {
         SLOT_NAME,
         SLOT_LOAD,
@@ -359,6 +365,11 @@ private:
     void resendFiles();
     void receiveChangeState();
 
+    // Recent Files
+    void setRecentInfo();
+    void saveRecentInfo();
+    void setRecentSave(bool state);
+
     // Autotester
     void dispAutotesterError(int errCode);
     int openJSONConfig(const QString& jsonPath);
@@ -548,6 +559,9 @@ private:
     static const QString SETTING_ALWAYS_ON_TOP;
     static const QString SETTING_CURRENT_DIR;
     static const QString SETTING_ENABLE_WIN_CONSOLE;
+    static const QString SETTING_RECENT_SAVE;
+    static const QString SETTING_RECENT_PATHS;
+    static const QString SETTING_RECENT_SELECT;
 
     static const QString SETTING_KEYPAD_CEMU;
     static const QString SETTING_KEYPAD_TILEM;

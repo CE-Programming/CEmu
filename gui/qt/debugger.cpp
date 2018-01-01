@@ -180,7 +180,7 @@ void MainWindow::debuggerExportFile(const QString &filename) {
     for(i = 0; i < ui->breakpointView->rowCount(); i++) {
         breakpointLabel.append(ui->breakpointView->item(i, BREAK_LABEL_LOC)->text());
         breakpointAddress.append(ui->breakpointView->item(i, BREAK_ADDR_LOC)->text());
-        breakpointEnabled.append((ui->breakpointView->item(i, BREAK_ENABLE_LOC)->checkState() == Qt::Checked) ? "y" : "n");
+        breakpointEnabled.append(ui->breakpointView->item(i, BREAK_ENABLE_LOC)->checkState() == Qt::Checked ? "y" : "n");
     }
 
     debugInfo.setValue(QStringLiteral("breakpoints/label"), breakpointLabel);
@@ -197,8 +197,8 @@ void MainWindow::debuggerExportFile(const QString &filename) {
         watchpointLabel.append(ui->watchpointView->item(i, WATCH_LABEL_LOC)->text());
         watchpointAddress.append(ui->watchpointView->item(i, WATCH_ADDR_LOC)->text());
         watchpointSize.append(ui->watchpointView->item(i, WATCH_SIZE_LOC)->text());
-        watchpointREnabled.append((ui->watchpointView->item(i, WATCH_READ_LOC)->checkState() == Qt::Checked) ? "y" : "n");
-        watchpointWEnabled.append((ui->watchpointView->item(i, WATCH_WRITE_LOC)->checkState() == Qt::Checked) ? "y" : "n");
+        watchpointREnabled.append(ui->watchpointView->item(i, WATCH_READ_LOC)->checkState() == Qt::Checked ? "y" : "n");
+        watchpointWEnabled.append(ui->watchpointView->item(i, WATCH_WRITE_LOC)->checkState() == Qt::Checked ? "y" : "n");
     }
 
     debugInfo.setValue(QStringLiteral("watchpoints/label"), watchpointLabel);
@@ -214,9 +214,9 @@ void MainWindow::debuggerExportFile(const QString &filename) {
     QStringList portFEnabled;
     for(i = 0; i < ui->portView->rowCount(); i++) {
         portAddress.append(ui->portView->item(i, PORT_ADDR_LOC)->text());
-        portREnabled.append((ui->portView->item(i, PORT_READ_LOC)->checkState() == Qt::Checked) ? "y" : "n");
-        portWEnabled.append((ui->portView->item(i, PORT_WRITE_LOC)->checkState() == Qt::Checked) ? "y" : "n");
-        portFEnabled.append((ui->portView->item(i, PORT_FREEZE_LOC)->checkState() == Qt::Checked) ? "y" : "n");
+        portREnabled.append(ui->portView->item(i, PORT_READ_LOC)->checkState() == Qt::Checked ? "y" : "n");
+        portWEnabled.append(ui->portView->item(i, PORT_WRITE_LOC)->checkState() == Qt::Checked ? "y" : "n");
+        portFEnabled.append(ui->portView->item(i, PORT_FREEZE_LOC)->checkState() == Qt::Checked ? "y" : "n");
     }
 
     debugInfo.setValue(QStringLiteral("portmonitor/address"), portAddress);
@@ -489,8 +489,6 @@ void MainWindow::debuggerGUISetState(bool state) {
     ui->groupTrigger->setEnabled(state);
     ui->disassemblyView->setEnabled(state);
 
-    ui->actionRestoreState->setEnabled(!state);
-    ui->actionImportCalculatorState->setEnabled(!state);
     ui->buttonSend->setEnabled(!state);
     ui->buttonRefreshList->setEnabled(!state);
     ui->emuVarView->setEnabled(!state);

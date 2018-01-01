@@ -6049,7 +6049,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>5</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -6289,8 +6289,11 @@
              <attribute name="horizontalHeaderCascadingSectionResizes">
               <bool>true</bool>
              </attribute>
+             <attribute name="horizontalHeaderDefaultSectionSize">
+              <number>70</number>
+             </attribute>
              <attribute name="horizontalHeaderMinimumSectionSize">
-              <number>10</number>
+              <number>50</number>
              </attribute>
              <attribute name="horizontalHeaderStretchLastSection">
               <bool>true</bool>
@@ -6298,9 +6301,17 @@
              <attribute name="verticalHeaderVisible">
               <bool>false</bool>
              </attribute>
+             <attribute name="verticalHeaderDefaultSectionSize">
+              <number>21</number>
+             </attribute>
              <column>
               <property name="text">
                <string>Select</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Resend</string>
               </property>
              </column>
              <column>
@@ -6436,6 +6447,13 @@
               </layout>
              </item>
             </layout>
+           </item>
+           <item row="3" column="0">
+            <widget class="QCheckBox" name="checkSaveRecent">
+             <property name="text">
+              <string>Save recent file paths on exit</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>

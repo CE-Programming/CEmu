@@ -19,16 +19,26 @@ public:
     bool dragOccured(QDragEnterEvent* e);
     void dropOccured(QDropEvent* e, unsigned int location);
     void resendSelected();
+    void addFile(QString &path, bool select);
 
 public slots:
     void sentFile(const QString &file, bool ok);
+    void resendPressed();
 
 signals:
     void send(const QStringList& fileNames, unsigned int location);
 
 private:
+
+    enum recentIndex {
+        RECENT_SELECT=0,
+        RECENT_RESEND,
+        RECENT_PATH,
+    };
+
     QProgressBar *progress;
     QTableWidget *table;
+    QIcon sendIcon;
 };
 
 // Used as global

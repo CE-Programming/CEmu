@@ -56,7 +56,7 @@ void mem_free(void) {
 
 void mem_reset(void) {
     memset(mem.ram.block, 0, SIZE_RAM);
-    gui_console_printf("[CEmu] Memory Reset.\n");
+    gui_console_printf("[CEmu] Memory reset.\n");
 }
 
 static uint32_t flash_block(uint32_t *addr, uint32_t *size) {

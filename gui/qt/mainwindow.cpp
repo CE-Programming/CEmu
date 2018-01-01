@@ -400,6 +400,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     setLcdSpi(settings->value(SETTING_SCREEN_SPI, false).toBool());
     setLcdDma(settings->value(SETTING_DEBUGGER_IGNORE_DMA, true).toBool());
     setFocusSetting(settings->value(SETTING_PAUSE_FOCUS, false).toBool());
+    setRecentSave(settings->value(SETTING_RECENT_SAVE, true).toBool());
     ui->flashBytes->setValue(settings->value(SETTING_DEBUGGER_FLASH_BYTES, 8).toInt());
     ui->ramBytes->setValue(settings->value(SETTING_DEBUGGER_RAM_BYTES, 8).toInt());
     ui->memBytes->setValue(settings->value(SETTING_DEBUGGER_MEM_BYTES, 8).toInt());
@@ -472,8 +473,10 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     }
 
     debuggerInstall();
+
     setUIDocks();
     setSlotInfo();
+    setRecentInfo();
 
     setUIEditMode(settings->value(SETTING_UI_EDIT_MODE, true).toBool());
 
@@ -1318,8 +1321,8 @@ void MainWindow::resendContextMenu(const QPoint& posa) {
         return;
     }
 
-    int check = ui->varLoadedView->item(row, 0)->checkState();
-    ui->varLoadedView->item(row, 0)->setCheckState(check == Qt::Checked ? Qt::Unchecked : Qt::Checked);
+    int check = ui->varLoadedView->item(row, RECENT_PATH)->checkState();
+    ui->varLoadedView->item(row, RECENT_SELECT)->setCheckState(check == Qt::Checked ? Qt::Unchecked : Qt::Checked);
 }
 
 void MainWindow::removeAllSentVars() {
@@ -1328,7 +1331,7 @@ void MainWindow::removeAllSentVars() {
 
 void MainWindow::removeSentVars() {
     for (int row = ui->varLoadedView->rowCount() - 1; row >= 0; row--) {
-        if (ui->varLoadedView->item(row, 0)->checkState() == Qt::Checked) {
+        if (ui->varLoadedView->item(row, RECENT_SELECT)->checkState() == Qt::Checked) {
             ui->varLoadedView->removeRow(row);
         }
     }
@@ -1336,13 +1339,13 @@ void MainWindow::removeSentVars() {
 
 void MainWindow::deselectAllVars() {
     for (int row = 0; row < ui->varLoadedView->rowCount(); row++) {
-        ui->varLoadedView->item(row, 0)->setCheckState(Qt::Unchecked);
+        ui->varLoadedView->item(row, RECENT_SELECT)->setCheckState(Qt::Unchecked);
     }
 }
 
 void MainWindow::selectAllVars() {
     for (int row = 0; row < ui->varLoadedView->rowCount(); row++) {
-        ui->varLoadedView->item(row, 0)->setCheckState(Qt::Checked);
+        ui->varLoadedView->item(row, RECENT_SELECT)->setCheckState(Qt::Checked);
     }
 }
 
@@ -1949,7 +1952,7 @@ int MainWindow::slotGet(QObject *obj, int col) {
     int row;
 
     for (row = 0; row < ui->slotView->rowCount(); row++){
-        if(obj == ui->slotView->cellWidget(row, col)) {
+        if (obj == ui->slotView->cellWidget(row, col)) {
             break;
         }
     }
