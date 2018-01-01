@@ -56,6 +56,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     // start up ipc
     com = new ipc(this);
+    qsrand(time(NULL));
 
     // Setup the UI
     ui->setupUi(this);
@@ -197,6 +198,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->actionMemoryVisualizer, &QAction::triggered, this, &MainWindow::newMemoryVisualizer);
     connect(ui->actionDisableMenuBar, &QAction::triggered, this, &MainWindow::setMenuBarState);
 
+    connect(ui->buttonResetCalculator, &QPushButton::clicked, this, &MainWindow::resetCalculator);
+    connect(ui->buttonReloadROM, &QPushButton::clicked, this, &MainWindow::resetCalculator);
+
     // Reset and reload
     connect(this, &MainWindow::reset, &emu, &EmuThread::reset, Qt::QueuedConnection);
     connect(this, &MainWindow::load, &emu, &EmuThread::load, Qt::QueuedConnection);
@@ -242,6 +246,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->memBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->memEdit, &QHexEdit::setBytesPerLine);
     connect(ui->emuVarView, &QTableWidget::itemDoubleClicked, this, &MainWindow::variableDoubleClicked);
     connect(ui->emuVarView, &QTableWidget::customContextMenuRequested, this, &MainWindow::variablesContextMenu);
+    connect(ui->buttonAddSlot, &QPushButton::clicked, this, &MainWindow::slotAddNew);
     connect(ui->actionExportCEmuImage, &QAction::triggered, this, &MainWindow::exportCEmuBootImage);
     connect(ui->lcdWidget, &LCDWidget::sendROM, this, &MainWindow::setRom);
 
@@ -455,6 +460,10 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     stopIcon.addPixmap(QPixmap(":/icons/resources/icons/stop.png"));
     runIcon.addPixmap(QPixmap(":/icons/resources/icons/run.png"));
+    saveIcon.addPixmap(QPixmap(":/icons/resources/icons/import.png"));
+    loadIcon.addPixmap(QPixmap(":/icons/resources/icons/export.png"));
+    editIcon.addPixmap(QPixmap(":/icons/resources/icons/wizard.png"));
+    removeIcon.addPixmap(QPixmap(":/icons/resources/icons/exit.png"));
 
     optCheckSend(opts);
 
@@ -464,6 +473,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     debuggerInstall();
     setUIDocks();
+    setSlotInfo();
 
     setUIEditMode(settings->value(SETTING_UI_EDIT_MODE, true).toBool());
 
@@ -1884,4 +1894,96 @@ void MainWindow::ipcSpawnRandom() {
 
     QProcess *myProcess = new QProcess(this);
     myProcess->startDetached(execPath, arguments);
+}
+
+void MainWindow::slotAddNew() {
+    QString name = randomString(6);
+    QString path = QDir::cleanPath(QFileInfo(settings->fileName()).absoluteDir().absolutePath() + QStringLiteral("/") + name + QStringLiteral(".ce"));
+    slotAdd(name, path);
+}
+
+void MainWindow::slotAdd(QString &name, QString &path) {
+    const int row = ui->slotView->rowCount();
+
+    QToolButton *btnLoad   = new QToolButton();
+    QToolButton *btnSave   = new QToolButton();
+    QToolButton *btnEdit   = new QToolButton();
+    QToolButton *btnRemove = new QToolButton();
+
+    btnLoad->setIcon(loadIcon);
+    btnSave->setIcon(saveIcon);
+    btnEdit->setIcon(editIcon);
+    btnRemove->setIcon(removeIcon);
+
+    connect(btnRemove, &QToolButton::clicked, this, &MainWindow::slotRemove);
+    connect(btnLoad, &QToolButton::clicked, this, &MainWindow::slotLoad);
+    connect(btnSave, &QToolButton::clicked, this, &MainWindow::slotSave);
+    connect(btnEdit, &QToolButton::clicked, this, &MainWindow::slotEdit);
+
+    QTableWidgetItem *itemName   = new QTableWidgetItem(name);
+    QTableWidgetItem *itemLoad   = new QTableWidgetItem();
+    QTableWidgetItem *itemSave   = new QTableWidgetItem();
+    QTableWidgetItem *itemEdit   = new QTableWidgetItem();
+    QTableWidgetItem *itemRemove = new QTableWidgetItem();
+
+    itemEdit->setData(Qt::UserRole, path);
+    saveToPath(itemEdit->data(Qt::UserRole).toString());
+
+    ui->slotView->setRowCount(row + 1);
+    ui->slotView->setItem(row, SLOT_NAME, itemName);
+    ui->slotView->setItem(row, SLOT_LOAD, itemLoad);
+    ui->slotView->setItem(row, SLOT_SAVE, itemSave);
+    ui->slotView->setItem(row, SLOT_EDIT, itemEdit);
+    ui->slotView->setItem(row, SLOT_REMOVE, itemRemove);
+
+    ui->slotView->setCellWidget(row, SLOT_LOAD, btnLoad);
+    ui->slotView->setCellWidget(row, SLOT_SAVE, btnSave);
+    ui->slotView->setCellWidget(row, SLOT_EDIT, btnEdit);
+    ui->slotView->setCellWidget(row, SLOT_REMOVE, btnRemove);
+
+    ui->slotView->setCurrentCell(row, SLOT_NAME);
+    saveSlotInfo();
+}
+
+int MainWindow::slotGet(QObject *obj, int col) {
+    int row;
+
+    for (row = 0; row < ui->slotView->rowCount(); row++){
+        if(obj == ui->slotView->cellWidget(row, col)) {
+            break;
+        }
+    }
+
+    return row;
+}
+
+void MainWindow::slotEdit() {
+    bool ok;
+    int row = slotGet(sender(), SLOT_EDIT);
+    QString old = ui->slotView->item(row, SLOT_EDIT)->data(Qt::UserRole).toString();
+    QString path = QInputDialog::getText(this, tr("Enter image path"), Q_NULLPTR, QLineEdit::Normal, old, &ok);
+    if (ok && !path.isEmpty()) {
+        QFile(old).rename(path);
+        ui->slotView->item(row, SLOT_EDIT)->setData(Qt::UserRole, path);
+    }
+}
+
+void MainWindow::slotRemove() {
+    int row = slotGet(sender(), SLOT_REMOVE);
+    QFile(ui->slotView->item(row, SLOT_EDIT)->data(Qt::UserRole).toString()).remove();
+    ui->slotView->removeRow(row);
+}
+
+void MainWindow::slotSave() {
+    int row = slotGet(sender(), SLOT_SAVE);
+    QString path = ui->slotView->item(row, SLOT_EDIT)->data(Qt::UserRole).toString();
+    saveToPath(path);
+}
+
+void MainWindow::slotLoad() {
+    int row = slotGet(sender(), SLOT_LOAD);
+    QString path = ui->slotView->item(row, SLOT_EDIT)->data(Qt::UserRole).toString();
+    if (!restoreFromPath(path)) {
+        QMessageBox::critical(this, MSG_ERROR, tr("Could not restore image!"));
+    }
 }

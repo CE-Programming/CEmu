@@ -120,7 +120,6 @@ bool isProcRunning(pid_t procID) {
 
 QString randomString(const int length) {
    const QString possibleCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
-   qsrand(time(NULL));
 
    QString randomString;
    for(int i=0; i<length; ++i) {

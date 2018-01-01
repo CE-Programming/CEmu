@@ -163,6 +163,14 @@ private:
         VAR_PREVIEW
     };
 
+    enum slotIndex {
+        SLOT_NAME,
+        SLOT_LOAD,
+        SLOT_SAVE,
+        SLOT_EDIT,
+        SLOT_REMOVE
+    };
+
     // Save/Restore
     void saveToPath(const QString& path);
     bool restoreFromPath(const QString& path);
@@ -230,6 +238,15 @@ private:
     void updateStackView();
 
     void gotoPressed();
+    void slotAddNew();
+    void slotAdd(QString &name, QString &path);
+    void slotRemove();
+    void slotEdit();
+    void slotSave();
+    void slotLoad();
+    void saveSlotInfo();
+    void setSlotInfo();
+    int slotGet(QObject *obj, int col);
 
     void disasmContextMenu(const QPoint &);
     void variablesContextMenu(const QPoint&);
@@ -457,7 +474,8 @@ private:
 
     QAction *toggleAction;
 
-    QIcon runIcon, stopIcon; // help speed up stepping
+    QIcon runIcon, stopIcon;
+    QIcon saveIcon, loadIcon, editIcon, removeIcon;
     QTextCharFormat consoleFormat;
 
     QString prevGotoAddress;
@@ -515,6 +533,8 @@ private:
     static const QString SETTING_WINDOW_GEOMETRY;
     static const QString SETTING_CAPTURE_FRAMESKIP;
     static const QString SETTING_CAPTURE_OPTIMIZE;
+    static const QString SETTING_SLOT_NAMES;
+    static const QString SETTING_SLOT_PATHS;
     static const QString SETTING_IMAGE_PATH;
     static const QString SETTING_ROM_PATH;
     static const QString SETTING_FIRST_RUN;

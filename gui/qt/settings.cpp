@@ -48,6 +48,8 @@ const QString MainWindow::SETTING_WINDOW_STATE              = QStringLiteral("Wi
 const QString MainWindow::SETTING_WINDOW_GEOMETRY           = QStringLiteral("Window/geometry");
 const QString MainWindow::SETTING_CAPTURE_FRAMESKIP         = QStringLiteral("Capture/frameskip");
 const QString MainWindow::SETTING_CAPTURE_OPTIMIZE          = QStringLiteral("Capture/optimize");
+const QString MainWindow::SETTING_SLOT_NAMES                = QStringLiteral("Slot/names");
+const QString MainWindow::SETTING_SLOT_PATHS                = QStringLiteral("Slot/paths");
 const QString MainWindow::SETTING_IMAGE_PATH                = QStringLiteral("image_path");
 const QString MainWindow::SETTING_ROM_PATH                  = QStringLiteral("rom_path");
 const QString MainWindow::SETTING_FIRST_RUN                 = QStringLiteral("first_run");
@@ -239,13 +241,14 @@ void MainWindow::setFocusSetting(bool state) {
 }
 
 void MainWindow::saveMiscSettings() {
-    settings->setValue(SETTING_WINDOW_STATE,                saveState(WindowStateVersion));
-    settings->setValue(SETTING_WINDOW_GEOMETRY,             saveGeometry());
-    settings->setValue(SETTING_WINDOW_SIZE,                 size());
-    settings->setValue(SETTING_CURRENT_DIR,                 currDir.absolutePath());
-    settings->setValue(SETTING_DEBUGGER_FLASH_BYTES,        ui->flashBytes->value());
-    settings->setValue(SETTING_DEBUGGER_RAM_BYTES,          ui->ramBytes->value());
-    settings->setValue(SETTING_DEBUGGER_MEM_BYTES,          ui->memBytes->value());
+    settings->setValue(SETTING_WINDOW_STATE,         saveState(WindowStateVersion));
+    settings->setValue(SETTING_WINDOW_GEOMETRY,      saveGeometry());
+    settings->setValue(SETTING_WINDOW_SIZE,          size());
+    settings->setValue(SETTING_CURRENT_DIR,          currDir.absolutePath());
+    settings->setValue(SETTING_DEBUGGER_FLASH_BYTES, ui->flashBytes->value());
+    settings->setValue(SETTING_DEBUGGER_RAM_BYTES,   ui->ramBytes->value());
+    settings->setValue(SETTING_DEBUGGER_MEM_BYTES,   ui->memBytes->value());
+    saveSlotInfo();
 }
 
 void MainWindow::setMenuBarState(bool state) {
@@ -586,4 +589,28 @@ void MainWindow::setAlwaysOnTop(int state) {
     show();
     settings->setValue(SETTING_ALWAYS_ON_TOP, state);
     ui->checkAlwaysOnTop->setCheckState(Qt::CheckState(state));
+}
+
+void MainWindow::saveSlotInfo() {
+    QStringList slotNames;
+    QStringList slotPaths;
+
+    for (int i = 0; i < ui->slotView->rowCount(); i++) {
+        slotNames.append(ui->slotView->item(i, SLOT_NAME)->text());
+        slotPaths.append(ui->slotView->item(i, SLOT_EDIT)->data(Qt::UserRole).toString());
+    }
+
+    settings->setValue(SETTING_SLOT_NAMES, slotNames);
+    settings->setValue(SETTING_SLOT_PATHS, slotPaths);
+}
+
+void MainWindow::setSlotInfo() {
+    QStringList slotNames = settings->value(SETTING_SLOT_NAMES).toStringList();
+    QStringList slotPaths = settings->value(SETTING_SLOT_PATHS).toStringList();
+
+    for (int i = 0; i < slotNames.size(); i++) {
+        QString name = slotNames.at(i);
+        QString path = slotPaths.at(i);
+        slotAdd(name, path);
+    }
 }
