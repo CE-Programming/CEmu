@@ -985,7 +985,7 @@ bool MainWindow::portAdd(uint16_t port, unsigned int mask) {
     ui->portView->setItem(row, PORT_READ_LOC, itemRBreak);
     ui->portView->setItem(row, PORT_WRITE_LOC, itemWBreak);
     ui->portView->setItem(row, PORT_FREEZE_LOC, itemFreeze);
-    ui->portView->setItem(row, PORT_FREEZE_LOC, itemRemove);
+    ui->portView->setItem(row, PORT_REMOVE_LOC, itemRemove);
     ui->portView->setCellWidget(row, PORT_REMOVE_LOC, btnRemove);
 
     ui->portView->selectRow(row);
