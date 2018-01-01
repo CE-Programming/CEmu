@@ -298,14 +298,14 @@ void MainWindow::debuggerExecuteCommand(uint32_t debugAddress, uint8_t command) 
                 tmp = ui->breakpointView->rowCount();
                 for (int i = 0; i < tmp; i++) {
                     ui->breakpointView->selectRow(0);
-                    breakpointRemoveSelectedRow();
+                    breakpointRemoveSelected();
                 }
                 break;
             case CMD_REM_ALL_WATCH:
                 tmp = ui->watchpointView->rowCount();
                 for (int i = 0; i < tmp; i++) {
                     ui->watchpointView->selectRow(0);
-                    watchpointRemoveSelectedRow();
+                    watchpointRemoveSelected();
                 }
                 break;
             case CMD_SET_E_WATCHPOINT:
@@ -713,31 +713,30 @@ void MainWindow::breakpointSetPreviousAddress(QTableWidgetItem *curr_item) {
     prevBreakpointAddress = static_cast<uint32_t>(hex2int(ui->breakpointView->item(curr_item->row(), BREAK_ADDR_LOC)->text()));
 }
 
-bool MainWindow::breakpointRemoveSelectedRow() {
-    if (!ui->breakpointView->rowCount() || !ui->breakpointView->selectionModel()->isSelected(ui->breakpointView->currentIndex())) {
-        return false;
-    }
-
-    const int currRow = ui->breakpointView->currentRow();
-
-    uint32_t address = static_cast<uint32_t>(hex2int(ui->breakpointView->item(currRow, BREAK_ADDR_LOC)->text()));
+void MainWindow::breakpointRemoveRow(int row) {
+    uint32_t address = static_cast<uint32_t>(hex2int(ui->breakpointView->item(row, BREAK_ADDR_LOC)->text()));
 
     debug_breakwatch(address, DBG_EXEC_BREAKPOINT, false);
-
     if (!guiAdd) {
         updateDisasm();
     }
+    ui->breakpointView->removeRow(row);
+}
 
-    ui->breakpointView->removeRow(currRow);
-    return true;
+void MainWindow::breakpointRemoveSelected() {
+    for (int row = 0; row < ui->breakpointView->rowCount(); row++){
+        if (sender() == ui->breakpointView->cellWidget(row, BREAK_REMOVE_LOC)) {
+            breakpointRemoveRow(row);
+            break;
+        }
+    }
 }
 
 void MainWindow::breakpointRemoveAddress(uint32_t address) {
-    for (int i = 0; i < ui->breakpointView->rowCount(); i++) {
-        uint32_t test = static_cast<uint32_t>(hex2int(ui->breakpointView->item(i, BREAK_ADDR_LOC)->text()));
+    for (int row = 0; row < ui->breakpointView->rowCount(); row++) {
+        uint32_t test = static_cast<uint32_t>(hex2int(ui->breakpointView->item(row, BREAK_ADDR_LOC)->text()));
         if (address == test) {
-            ui->breakpointView->selectRow(i);
-            breakpointRemoveSelectedRow();
+            breakpointRemoveRow(row);
             break;
         }
     }
@@ -820,7 +819,7 @@ void MainWindow::breakpointGUIAdd() {
     guiAdd = true;
 
     if (!breakpointAdd(breakpointNextLabel(), address, true)) {
-        breakpointRemoveSelectedRow();
+        breakpointRemoveSelected();
     }
 
     guiAdd = false;
@@ -851,11 +850,11 @@ void MainWindow::breakpointGUIAdd() {
 }
 
 bool MainWindow::breakpointAdd(const QString& label, uint32_t address, bool enabled) {
-    const int currRow = ui->breakpointView->rowCount();
+    const int row = ui->breakpointView->rowCount();
     QString addressStr = int2hex((address &= 0xFFFFFF), 6).toUpper();
 
     // Return if address is already set
-    for (int i = 0; i < currRow; i++) {
+    for (int i = 0; i < row; i++) {
         if (ui->breakpointView->item(i, BREAK_ADDR_LOC)->text() == addressStr) {
             if (addressStr != "000000") {
                 ui->breakpointView->selectRow(i);
@@ -867,20 +866,27 @@ bool MainWindow::breakpointAdd(const QString& label, uint32_t address, bool enab
     ui->breakpointView->setUpdatesEnabled(false);
     ui->breakpointView->blockSignals(true);
 
-    ui->breakpointView->setRowCount(currRow + 1);
+    ui->breakpointView->setRowCount(row + 1);
+
+    QToolButton *btnRemove = new QToolButton();
+    btnRemove->setIcon(removeIcon);
+    connect(btnRemove, &QToolButton::clicked, this, &MainWindow::breakpointRemoveSelected);
 
     QTableWidgetItem *itemLabel   = new QTableWidgetItem(label);
     QTableWidgetItem *itemAddress = new QTableWidgetItem(addressStr);
     QTableWidgetItem *itemBreak   = new QTableWidgetItem();
+    QTableWidgetItem *itemRemove  = new QTableWidgetItem();
 
     itemBreak->setCheckState(enabled ? Qt::Checked : Qt::Unchecked);
     itemBreak->setFlags(itemBreak->flags() & ~Qt::ItemIsEditable);
 
-    ui->breakpointView->setItem(currRow, BREAK_LABEL_LOC, itemLabel);
-    ui->breakpointView->setItem(currRow, BREAK_ADDR_LOC, itemAddress);
-    ui->breakpointView->setItem(currRow, BREAK_ENABLE_LOC, itemBreak);
+    ui->breakpointView->setItem(row, BREAK_LABEL_LOC, itemLabel);
+    ui->breakpointView->setItem(row, BREAK_ADDR_LOC, itemAddress);
+    ui->breakpointView->setItem(row, BREAK_ENABLE_LOC, itemBreak);
+    ui->breakpointView->setItem(row, BREAK_REMOVE_LOC, itemRemove);
+    ui->breakpointView->setCellWidget(row, BREAK_REMOVE_LOC, btnRemove);
 
-    ui->breakpointView->setCurrentCell(currRow, BREAK_ADDR_LOC);
+    ui->breakpointView->setCurrentCell(row, BREAK_ADDR_LOC);
     ui->breakpointView->setUpdatesEnabled(true);
 
     debug_breakwatch(address, DBG_EXEC_BREAKPOINT, enabled);
@@ -905,18 +911,20 @@ void MainWindow::portSetPreviousAddress(QTableWidgetItem *curr_item) {
     prevPortAddress = static_cast<uint16_t>(hex2int(ui->portView->item(curr_item->row(), PORT_ADDR_LOC)->text()));
 }
 
-void MainWindow::portRemoveSelected() {
-    if (!ui->portView->rowCount() || !ui->portView->selectionModel()->isSelected(ui->portView->currentIndex())) {
-        return;
-    }
-
-    const int currRow = ui->portView->currentRow();
-    uint16_t port = static_cast<uint16_t>(hex2int(ui->portView->item(currRow, PORT_ADDR_LOC)->text()));
-
+void MainWindow::portRemoveRow(int row) {
+    uint16_t port = static_cast<uint16_t>(hex2int(ui->portView->item(row, PORT_ADDR_LOC)->text()));
     debug_pmonitor_remove(port);
-    ui->portView->removeRow(currRow);
+    ui->portView->removeRow(row);
 }
 
+void MainWindow::portRemoveSelected() {
+    for (int row = 0; row < ui->portView->rowCount(); row++){
+        if (sender() == ui->portView->cellWidget(row, PORT_REMOVE_LOC)) {
+            portRemoveRow(row);
+            break;
+        }
+    }
+}
 
 void MainWindow::portUpdate(int currRow) {
     uint16_t port = static_cast<uint16_t>(hex2int(ui->portView->item(currRow, PORT_ADDR_LOC)->text()));
@@ -930,7 +938,7 @@ void MainWindow::portSlotAdd() {
 }
 
 bool MainWindow::portAdd(uint16_t port, unsigned int mask) {
-    const int currRow = ui->portView->rowCount();
+    const int row = ui->portView->rowCount();
     QString portStr = int2hex(port, 4).toUpper();
     uint8_t data = 0;
 
@@ -940,7 +948,7 @@ bool MainWindow::portAdd(uint16_t port, unsigned int mask) {
     }
 
     // Return if port is already set
-    for (int i = 0; i < currRow; i++) {
+    for (int i = 0; i < row; i++) {
         if (ui->portView->item(i, PORT_ADDR_LOC)->text() == portStr) {
             if (portStr != "0000") {
                 return false;
@@ -948,31 +956,39 @@ bool MainWindow::portAdd(uint16_t port, unsigned int mask) {
         }
     }
 
-    ui->portView->setRowCount(currRow + 1);
+    ui->portView->setRowCount(row + 1);
     ui->portView->setUpdatesEnabled(false);
     ui->portView->blockSignals(true);
+
+    QToolButton *btnRemove = new QToolButton();
+    btnRemove->setIcon(removeIcon);
+    connect(btnRemove, &QToolButton::clicked, this, &MainWindow::portRemoveSelected);
 
     QTableWidgetItem *itemAddress = new QTableWidgetItem(portStr);
     QTableWidgetItem *itemData    = new QTableWidgetItem(int2hex(data, 2));
     QTableWidgetItem *itemRBreak  = new QTableWidgetItem();
     QTableWidgetItem *itemWBreak  = new QTableWidgetItem();
     QTableWidgetItem *itemFreeze  = new QTableWidgetItem();
+    QTableWidgetItem *itemRemove  = new QTableWidgetItem();
 
     itemRBreak->setFlags(itemRBreak->flags() & ~Qt::ItemIsEditable);
     itemWBreak->setFlags(itemWBreak->flags() & ~Qt::ItemIsEditable);
     itemFreeze->setFlags(itemFreeze->flags() & ~Qt::ItemIsEditable);
+    itemRemove->setFlags(itemRemove->flags() & ~Qt::ItemIsEditable);
 
     itemRBreak->setCheckState((mask & DBG_PORT_READ) ? Qt::Checked : Qt::Unchecked);
     itemWBreak->setCheckState((mask & DBG_PORT_WRITE) ? Qt::Checked : Qt::Unchecked);
     itemFreeze->setCheckState((mask & DBG_PORT_FREEZE) ? Qt::Checked : Qt::Unchecked);
 
-    ui->portView->setItem(currRow, PORT_ADDR_LOC, itemAddress);
-    ui->portView->setItem(currRow, PORT_VALUE_LOC, itemData);
-    ui->portView->setItem(currRow, PORT_READ_LOC, itemRBreak);
-    ui->portView->setItem(currRow, PORT_WRITE_LOC, itemWBreak);
-    ui->portView->setItem(currRow, PORT_FREEZE_LOC, itemFreeze);
+    ui->portView->setItem(row, PORT_ADDR_LOC, itemAddress);
+    ui->portView->setItem(row, PORT_VALUE_LOC, itemData);
+    ui->portView->setItem(row, PORT_READ_LOC, itemRBreak);
+    ui->portView->setItem(row, PORT_WRITE_LOC, itemWBreak);
+    ui->portView->setItem(row, PORT_FREEZE_LOC, itemFreeze);
+    ui->portView->setItem(row, PORT_FREEZE_LOC, itemRemove);
+    ui->portView->setCellWidget(row, PORT_REMOVE_LOC, btnRemove);
 
-    ui->portView->selectRow(currRow);
+    ui->portView->selectRow(row);
     ui->portView->setUpdatesEnabled(true);
     prevPortAddress = port;
     ui->portView->blockSignals(false);
@@ -1053,13 +1069,8 @@ void MainWindow::watchpointSetPreviousAddress(QTableWidgetItem *curr_item) {
     prevWatchpointAddress = static_cast<uint32_t>(hex2int(ui->watchpointView->item(curr_item->row(), WATCH_ADDR_LOC)->text()));
 }
 
-bool MainWindow::watchpointRemoveSelectedRow() {
-    if (!ui->watchpointView->rowCount() || !ui->watchpointView->selectionModel()->isSelected(ui->watchpointView->currentIndex())) {
-        return false;
-    }
-
-    const int currRow = ui->watchpointView->currentRow();
-    uint32_t address = static_cast<uint32_t>(hex2int(ui->watchpointView->item(currRow, WATCH_ADDR_LOC)->text()));
+void MainWindow::watchpointRemoveRow(int row) {
+    uint32_t address = static_cast<uint32_t>(hex2int(ui->watchpointView->item(row, WATCH_ADDR_LOC)->text()));
 
     debug_breakwatch(address, DBG_READ_WATCHPOINT | DBG_WRITE_WATCHPOINT, false);
 
@@ -1067,16 +1078,23 @@ bool MainWindow::watchpointRemoveSelectedRow() {
         updateDisasm();
     }
 
-    ui->watchpointView->removeRow(currRow);
-    return true;
+    ui->watchpointView->removeRow(row);
+}
+
+void MainWindow::watchpointRemoveSelected() {
+    for (int row = 0; row < ui->watchpointView->rowCount(); row++){
+        if (sender() == ui->watchpointView->cellWidget(row, WATCH_REMOVE_LOC)) {
+            watchpointRemoveRow(row);
+            break;
+        }
+    }
 }
 
 void MainWindow::watchpointRemoveAddress(uint32_t address) {
-    for (int i = 0; i < ui->watchpointView->rowCount(); i++) {
-        uint32_t test = static_cast<uint32_t>(hex2int(ui->watchpointView->item(i, WATCH_ADDR_LOC)->text()));
+    for (int row = 0; row < ui->watchpointView->rowCount(); row++) {
+        uint32_t test = static_cast<uint32_t>(hex2int(ui->watchpointView->item(row, WATCH_ADDR_LOC)->text()));
         if (address == test) {
-            ui->watchpointView->selectRow(i);
-            watchpointRemoveSelectedRow();
+            watchpointRemoveRow(row);
             break;
         }
     }
@@ -1119,7 +1137,7 @@ void MainWindow::watchpointGUIAdd() {
     guiAdd = true;
 
     if (!watchpointAdd(watchpointNextLabel(), address, 1, mask)) {
-        watchpointRemoveSelectedRow();
+        watchpointRemoveSelected();
     }
 
     guiAdd = false;
@@ -1167,7 +1185,7 @@ void MainWindow::watchpointSlotAdd() {
 }
 
 bool MainWindow::watchpointAdd(const QString& label, uint32_t address, uint8_t len, unsigned int mask) {
-    const int currRow = ui->watchpointView->rowCount();
+    const int row = ui->watchpointView->rowCount();
     QString addressStr = int2hex((address &= 0xFFFFFF), 6).toUpper();
     QString watchLen;
 
@@ -1176,7 +1194,7 @@ bool MainWindow::watchpointAdd(const QString& label, uint32_t address, uint8_t l
     watchLen = QString::number(len);
 
     // Return if address is already set
-    for (int i = 0; i < currRow; i++) {
+    for (int i = 0; i < row; i++) {
         if (ui->watchpointView->item(i, WATCH_ADDR_LOC)->text() == addressStr) {
             if (addressStr != "000000") {
                 ui->watchpointView->selectRow(i);
@@ -1188,33 +1206,41 @@ bool MainWindow::watchpointAdd(const QString& label, uint32_t address, uint8_t l
     ui->watchpointView->setUpdatesEnabled(false);
     ui->watchpointView->blockSignals(true);
 
+    QToolButton *btnRemove = new QToolButton();
+    btnRemove->setIcon(removeIcon);
+    connect(btnRemove, &QToolButton::clicked, this, &MainWindow::watchpointRemoveSelected);
+
     QTableWidgetItem *itemLabel   = new QTableWidgetItem(label);
     QTableWidgetItem *itemAddress = new QTableWidgetItem(addressStr);
     QTableWidgetItem *itemSize    = new QTableWidgetItem(watchLen);
     QTableWidgetItem *itemData    = new QTableWidgetItem();
     QTableWidgetItem *itemRWatch  = new QTableWidgetItem();
     QTableWidgetItem *itemWWatch  = new QTableWidgetItem();
+    QTableWidgetItem *itemRemove  = new QTableWidgetItem();
 
     itemWWatch->setFlags(itemWWatch->flags() & ~Qt::ItemIsEditable);
     itemRWatch->setFlags(itemRWatch->flags() & ~Qt::ItemIsEditable);
+    itemRemove->setFlags(itemRemove->flags() & ~Qt::ItemIsEditable);
 
     itemRWatch->setCheckState((mask & DBG_READ_WATCHPOINT) ? Qt::Checked : Qt::Unchecked);
     itemWWatch->setCheckState((mask & DBG_WRITE_WATCHPOINT) ? Qt::Checked : Qt::Unchecked);
 
-    ui->watchpointView->setRowCount(currRow + 1);
+    ui->watchpointView->setRowCount(row + 1);
 
-    ui->watchpointView->setItem(currRow, WATCH_LABEL_LOC, itemLabel);
-    ui->watchpointView->setItem(currRow, WATCH_ADDR_LOC,  itemAddress);
-    ui->watchpointView->setItem(currRow, WATCH_SIZE_LOC,  itemSize);
-    ui->watchpointView->setItem(currRow, WATCH_VALUE_LOC, itemData);
-    ui->watchpointView->setItem(currRow, WATCH_READ_LOC,  itemRWatch);
-    ui->watchpointView->setItem(currRow, WATCH_WRITE_LOC, itemWWatch);
+    ui->watchpointView->setItem(row, WATCH_LABEL_LOC, itemLabel);
+    ui->watchpointView->setItem(row, WATCH_ADDR_LOC,  itemAddress);
+    ui->watchpointView->setItem(row, WATCH_SIZE_LOC,  itemSize);
+    ui->watchpointView->setItem(row, WATCH_VALUE_LOC, itemData);
+    ui->watchpointView->setItem(row, WATCH_READ_LOC,  itemRWatch);
+    ui->watchpointView->setItem(row, WATCH_WRITE_LOC, itemWWatch);
+    ui->watchpointView->setItem(row, WATCH_REMOVE_LOC, itemRemove);
+    ui->watchpointView->setCellWidget(row, WATCH_REMOVE_LOC, btnRemove);
 
     if (guiDebug) {
-        watchpointUpdate(currRow);
+        watchpointUpdate(row);
     }
 
-    ui->watchpointView->setCurrentCell(currRow, WATCH_ADDR_LOC);
+    ui->watchpointView->setCurrentCell(row, WATCH_ADDR_LOC);
     ui->watchpointView->setUpdatesEnabled(true);
 
     // actually set it in the debugger core
@@ -1877,19 +1903,19 @@ void MainWindow::memoryContextMenu(const QPoint& pos, uint32_t address) {
             clipboard->setText(addr.toLatin1());
         } else if (item->text() == toggle_break) {
             if (!breakpointAdd(breakpointNextLabel(), address, true)) {
-                breakpointRemoveSelectedRow();
+                breakpointRemoveSelected();
             }
         } else if (item->text() == toggle_read_watch) {
             if (!watchpointAdd(watchpointNextLabel(), address, 1, DBG_READ_WATCHPOINT)) {
-                watchpointRemoveSelectedRow();
+                watchpointRemoveSelected();
             }
         } else if (item->text() == toggle_write_watch) {
             if (!watchpointAdd(watchpointNextLabel(), address, 1, DBG_WRITE_WATCHPOINT)) {
-                watchpointRemoveSelectedRow();
+                watchpointRemoveSelected();
             }
         } else if (item->text() == toggle_rw_watch) {
             if (!watchpointAdd(watchpointNextLabel(), address, 1, DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT)) {
-                watchpointRemoveSelectedRow();
+                watchpointRemoveSelected();
             }
         }
     }

@@ -55,7 +55,7 @@
 MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow), opts(cliOpts) {
 
     // start up ipc
-    com = new ipc(this);
+    com = new ipc();
     qsrand(time(NULL));
 
     // Setup the UI
@@ -120,11 +120,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->checkADL, &QCheckBox::stateChanged, this, &MainWindow::toggleADL);
 
     connect(ui->buttonAddPort, &QPushButton::clicked, this, &MainWindow::portSlotAdd);
-    connect(ui->buttonRemovePort, &QPushButton::clicked, this, &MainWindow::portRemoveSelected);
     connect(ui->buttonAddBreakpoint, &QPushButton::clicked, this, &MainWindow::breakpointSlotAdd);
-    connect(ui->buttonRemoveBreakpoint, &QPushButton::clicked, this, &MainWindow::breakpointRemoveSelectedRow);
     connect(ui->buttonAddWatchpoint, &QPushButton::clicked, this, &MainWindow::watchpointSlotAdd);
-    connect(ui->buttonRemoveWatchpoint, &QPushButton::clicked, this, &MainWindow::watchpointRemoveSelectedRow);
     connect(ui->buttonStepIn, &QPushButton::clicked, this, &MainWindow::stepInPressed);
     connect(ui->buttonStepOver, &QPushButton::clicked, this, &MainWindow::stepOverPressed);
     connect(ui->buttonStepNext, &QPushButton::clicked, this, &MainWindow::stepNextPressed);

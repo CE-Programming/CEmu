@@ -120,7 +120,8 @@ private:
     enum breakpointIndex {
         BREAK_LABEL_LOC=0,
         BREAK_ADDR_LOC,
-        BREAK_ENABLE_LOC
+        BREAK_ENABLE_LOC,
+        BREAK_REMOVE_LOC
     };
 
     enum watchpointIndex {
@@ -129,7 +130,8 @@ private:
         WATCH_SIZE_LOC,
         WATCH_VALUE_LOC,
         WATCH_READ_LOC,
-        WATCH_WRITE_LOC
+        WATCH_WRITE_LOC,
+        WATCH_REMOVE_LOC
     };
 
     enum portIndex {
@@ -137,7 +139,8 @@ private:
         PORT_VALUE_LOC,
         PORT_READ_LOC,
         PORT_WRITE_LOC,
-        PORT_FREEZE_LOC
+        PORT_FREEZE_LOC,
+        PORT_REMOVE_LOC
     };
 
     enum opIndex {
@@ -218,6 +221,7 @@ private:
     void toggleADL(int state);
 
     void portRemoveSelected();
+    void portRemoveRow(int row);
 
     void portUpdate(int currRow);
     void watchpointUpdate(int row);
@@ -287,8 +291,10 @@ private:
     void portSlotAdd();
 
     // Removal from widgets
-    bool breakpointRemoveSelectedRow();
-    bool watchpointRemoveSelectedRow();
+    void breakpointRemoveSelected();
+    void watchpointRemoveSelected();
+    void breakpointRemoveRow(int row);
+    void watchpointRemoveRow(int row);
 
     // Get labels
     QString watchpointNextLabel();
