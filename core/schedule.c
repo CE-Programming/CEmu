@@ -31,17 +31,21 @@ static uint32_t muldiv(uint32_t a, uint32_t b, uint32_t c) {
 #endif
 }
 
+static uint32_t sched_event_next_cputick(void) {
+    return sched.items[sched.event.next].cputick;
+}
+
 static void sched_update(enum sched_item_id id) {
     struct sched_item *item = &sched.items[id];
     if (id >= SCHED_FIRST_EVENT && id <= SCHED_LAST_EVENT) {
         if (item->callback.event && !item->second &&
-            item->cputick < sched.items[sched.event.next].cputick) {
+            item->cputick < sched_event_next_cputick()) {
             sched.event.next = id;
             cpu_restore_next();
         }
     } else if (id >= SCHED_FIRST_DMA && id <= SCHED_LAST_DMA) {
         if (item->callback.dma && !item->second &&
-            item->cputick < sched.items[sched.dma.next].cputick) {
+            item->cputick < sched_event_next_cputick()) {
             sched.dma.next = id;
         }
     }
@@ -130,7 +134,7 @@ void sched_set_clocks(enum clock_id count, uint32_t *new_rates) {
 }
 
 void sched_process_pending_events(void) {
-    while (cpu.cycles >= sched.items[sched.event.next].cputick) {
+    while (cpu.cycles >= sched_event_next_cputick()) {
         enum sched_item_id id = sched.event.next;
         sched_clear(id);
         sched.items[id].callback.event(id);
@@ -157,7 +161,7 @@ void sched_reset(void) {
 
 uint64_t event_next_cycle(enum sched_item_id id) {
     struct sched_item *item = &sched.items[id];
-    return (uint64_t)item->second * sched.clockRates[CLOCK_CPU] + item->cputick - sched.items[sched.event.next].cputick + cpu.baseCycles;
+    return (uint64_t)item->second * sched.clockRates[CLOCK_CPU] + item->cputick - sched_event_next_cputick() + cpu.baseCycles;
 }
 
 uint64_t event_ticks_remaining(enum sched_item_id id) {
@@ -188,7 +192,7 @@ bool sched_restore(FILE *image) {
     return ret;
 }
 
-void dma_delay(uint8_t duration) {
+void sched_dma_delay(uint8_t duration) {
     (void)duration;
     cpu.cycles += duration;
 }

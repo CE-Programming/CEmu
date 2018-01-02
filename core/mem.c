@@ -441,7 +441,7 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
 
             /* RAM */
         case 0xD:
-            dma_delay(4);
+            sched_dma_delay(4);
             ramAddr = addr & 0x7FFFF;
             if (ramAddr < 0x65800) {
                 value = mem.ram.block[ramAddr];
@@ -514,7 +514,7 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
 
                 /* RAM */
             case 0xD:
-                dma_delay(2);
+                sched_dma_delay(2);
                 ramAddr = addr & 0x7FFFF;
                 if (ramAddr < 0x65800) {
                     mem.ram.block[ramAddr] = value;

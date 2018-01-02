@@ -70,8 +70,7 @@ void sched_set(enum sched_item_id id, uint64_t ticks);
 void sched_repeat(enum sched_item_id id, uint64_t ticks);
 void sched_repeat_relative(enum sched_item_id id, enum sched_item_id base_id, uint64_t ticks);
 void sched_set_clocks(enum clock_id count, uint32_t *new_rates);
-
-void dma_delay(uint8_t pendingAccessDelay);
+void sched_dma_delay(uint8_t duration);
 
 uint64_t event_next_cycle(enum sched_item_id id);
 uint64_t event_ticks_remaining(enum sched_item_id id);
