@@ -9,9 +9,9 @@
 /* Global GPT state */
 rtc_state_t rtc;
 
-static void rtc_event(enum sched_event event) {
+static void rtc_event(enum sched_item_id id) {
     /* Update exactly once a second */
-    event_repeat(event, 1);
+    sched_repeat(id, 1);
 
     if (rtc.control & 64) { /* (Bit 6) -- Load time */
         rtc.readSec = rtc.writeSec;
@@ -145,9 +145,9 @@ static void rtc_write(const uint16_t pio, const uint8_t byte, bool poke) {
         case 0x20:
             rtc.control = byte;
             if (rtc.control & 1) {
-                event_set(SCHED_RTC, 0);
+                sched_set(SCHED_RTC, 0);
             } else {
-                event_clear(SCHED_RTC);
+                sched_clear(SCHED_RTC);
             }
             if (!(rtc.control & 128)) {
                 hold_read();
@@ -178,9 +178,9 @@ void rtc_reset() {
     memset(&rtc, 0, sizeof rtc);
     rtc.revision = 0x00010500;
 
-    sched.items[SCHED_RTC].proc = rtc_event;
+    sched.items[SCHED_RTC].callback.event = rtc_event;
     sched.items[SCHED_RTC].clock = CLOCK_1;
-    event_clear(SCHED_RTC);
+    sched_clear(SCHED_RTC);
 
     gui_console_printf("[CEmu] RTC reset.\n");
 }

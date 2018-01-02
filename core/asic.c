@@ -2,7 +2,6 @@
 #include "cpu.h"
 #include "misc.h"
 #include "mem.h"
-#include "dma.h"
 #include "interrupt.h"
 #include "tidevices.h"
 #include "keypad.h"
@@ -63,7 +62,6 @@ static void plug_devices(void) {
 
     /* Populate reset callbacks */
     add_reset_proc(sched_reset);
-    add_reset_proc(dma_reset);
     add_reset_proc(mem_reset);
     add_reset_proc(lcd_reset);
     add_reset_proc(keypad_reset);

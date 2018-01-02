@@ -44,7 +44,7 @@ void emu_cleanup(void);
 bool emu_save(const char*);
 bool emu_save_rom(const char*);
 
-void throttle_interval_event(enum sched_event event);
+void throttle_interval_event(enum sched_item_id id);
 void throttle_timer_wait(void);
 
 #ifdef __cplusplus

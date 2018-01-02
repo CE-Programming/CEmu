@@ -15,7 +15,7 @@ cxxx_state_t cxxx; /* Global CXXX state */
 exxx_state_t exxx; /* Global EXXX state */
 fxxx_state_t fxxx; /* Global FXXX state */
 
-static void watchdog_event(enum sched_event event) {
+static void watchdog_event(enum sched_item_id id) {
 
     if (watchdog.control & 1) {
         watchdog.status = 1;
@@ -32,7 +32,7 @@ static void watchdog_event(enum sched_event event) {
             gui_console_printf("[CEmu] Watchdog NMI triggered.\n");
             cpu_nmi();
         }
-        event_repeat(event, watchdog.load);
+        sched_repeat(id, watchdog.load);
     }
 }
 
@@ -88,7 +88,7 @@ static void watchdog_write(const uint16_t pio, const uint8_t byte, bool poke) {
         case 0x008: case 0x009:
             write8(watchdog.restart, bit_offset, byte);
             if (watchdog.restart == 0x5AB9) {
-                event_set(SCHED_WATCHDOG, watchdog.load);
+                sched_set(SCHED_WATCHDOG, watchdog.load);
                 watchdog.count = watchdog.load;
                 watchdog.restart = 0;
             }
@@ -101,10 +101,10 @@ static void watchdog_write(const uint16_t pio, const uint8_t byte, bool poke) {
                 sched.items[SCHED_WATCHDOG].clock = CLOCK_CPU;
             }
             if (watchdog.control & 1) {
-                event_set(SCHED_WATCHDOG, watchdog.load);
+                sched_set(SCHED_WATCHDOG, watchdog.load);
             } else {
                 watchdog.count = event_ticks_remaining(SCHED_WATCHDOG);
-                event_clear(SCHED_WATCHDOG);
+                sched_clear(SCHED_WATCHDOG);
             }
             break;
         case 0x014:
@@ -126,9 +126,9 @@ void watchdog_reset() {
     /* Initialize device to default state */
     memset(&watchdog, 0, sizeof watchdog);
 
-    sched.items[SCHED_WATCHDOG].proc = watchdog_event;
+    sched.items[SCHED_WATCHDOG].callback.event = watchdog_event;
     sched.items[SCHED_WATCHDOG].clock = CLOCK_CPU;
-    event_clear(SCHED_WATCHDOG);
+    sched_clear(SCHED_WATCHDOG);
     watchdog.revision = 0x00010602;
     watchdog.load = 0x03EF1480;   /* (66MHz) */
     watchdog.count = 0x03EF1480;

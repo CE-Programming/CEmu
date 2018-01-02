@@ -10,24 +10,24 @@
 /* Global GPT state */
 general_timers_state_t gpt;
 
-static void ost_event(enum sched_event event) {
+static void ost_event(enum sched_item_id id) {
     static const int ost_ticks[4] = { 37, 77, 109, 157 };
     intrpt_pulse(INT_OSTMR);
-    event_repeat(event, ost_ticks[control.ports[0] & 3]);
+    sched_repeat(id, ost_ticks[control.ports[0] & 3]);
 }
 
-static void gpt_restore_state(enum sched_event event) {
-    int index = event - SCHED_TIMER1;
+static void gpt_restore_state(enum sched_item_id id) {
+    int index = id - SCHED_TIMER1;
     timer_state_t *timer = &gpt.timer[index];
     uint32_t invert = (gpt.control >> (9 + index) & 1) ? ~0 : 0;
     if (gpt.control >> (index * 3) & 1 && sched.items[SCHED_TIMER1 + index].second >= 0) {
-        timer->counter += (event_ticks_remaining(event) + invert) ^ invert;
+        timer->counter += (event_ticks_remaining(id) + invert) ^ invert;
     }
 }
 
-static uint64_t gpt_next_event(enum sched_event event) {
-    int index = event - SCHED_TIMER1;
-    struct sched_item *item = &sched.items[event];
+static uint64_t gpt_next_event(enum sched_item_id id) {
+    int index = id - SCHED_TIMER1;
+    struct sched_item *item = &sched.items[id];
     timer_state_t *timer = &gpt.timer[index];
     if (gpt.control >> (index * 3) & 1) {
         int32_t invert, event;
@@ -70,25 +70,25 @@ static uint64_t gpt_next_event(enum sched_event event) {
     return 0;
 }
 
-static void gpt_refresh(enum sched_event event) {
-    uint64_t next_event = gpt_next_event(event);
+static void gpt_refresh(enum sched_item_id id) {
+    uint64_t next_event = gpt_next_event(id);
     if (next_event) {
-        event_set(event, next_event);
+        sched_set(id, next_event);
     } else {
-        event_clear(event);
+        sched_clear(id);
     }
 }
 
-static void gpt_event(enum sched_event event) {
-    uint64_t next_event = gpt_next_event(event);
+static void gpt_event(enum sched_item_id id) {
+    uint64_t next_event = gpt_next_event(id);
     if (next_event) {
-        event_repeat(event, next_event);
+        sched_repeat(id, next_event);
     } else {
-        event_clear(event);
+        sched_clear(id);
     }
 }
 
-static void gpt_some(int which, void update(enum sched_event event)) {
+static void gpt_some(int which, void update(enum sched_item_id id)) {
     int index = which < 3 ? which : 0;
     do {
         update(SCHED_TIMER1 + index);
@@ -122,16 +122,16 @@ static void gpt_write(uint16_t address, uint8_t value, bool poke) {
 }
 
 void gpt_reset() {
-    enum sched_event event;
+    enum sched_item_id id;
     memset(&gpt, 0, sizeof(gpt));
     gpt.revision = 0x00010801;
-    for (event = SCHED_TIMER1; event <= SCHED_TIMER3; event++) {
-        sched.items[event].proc = gpt_event;
-        gpt_refresh(event);
+    for (id = SCHED_TIMER1; id <= SCHED_TIMER3; id++) {
+        sched.items[id].callback.event = gpt_event;
+        gpt_refresh(id);
     }
-    sched.items[SCHED_OSTIMER].proc = ost_event;
+    sched.items[SCHED_OSTIMER].callback.event = ost_event;
     sched.items[SCHED_OSTIMER].clock = CLOCK_32K;
-    event_set(SCHED_OSTIMER, 0);
+    sched_set(SCHED_OSTIMER, 0);
     gui_console_printf("[CEmu] GPT reset.\n");
 }
 

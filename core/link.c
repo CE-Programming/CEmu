@@ -5,7 +5,6 @@
 #include "control.h"
 #include "interrupt.h"
 #include "emu.h"
-#include "dma.h"
 #include "os/os.h"
 
 #include <stdio.h>
@@ -68,8 +67,8 @@ bool listVariablesLink(void) {
 static void run_asm(const uint8_t *data, const size_t data_size, const uint32_t cycles) {
     cpu.halted = cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = 0;
     memcpy(phys_mem_ptr(SAFE_RAM, 8400), data, data_size);
-    cpu.baseCycles = cpu.cycles = dma.now = 0;
-    cpu.next = sched.next = cycles;
+    cpu.baseCycles = cpu.cycles = 0;
+    cpu.next = sched.event.next = cycles;
     cpu_flush(SAFE_RAM, 1);
     cpu_execute();
 }
@@ -87,8 +86,8 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int l
     FILE *file;
     uint8_t tmp_buf[0x80];
 
-    uint32_t save_cycles, save_next, save_sched_next;
-    uint64_t save_base_cycles, save_dma_now;
+    uint32_t save_cycles, save_next, save_event_next;
+    uint64_t save_base_cycles;
 
     uint8_t var_ver,
             var_arc;
@@ -114,9 +113,8 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int l
 
     save_cycles = cpu.cycles;
     save_next = cpu.next;
-    save_sched_next = sched.next;
+    save_event_next = sched.event.next;
     save_base_cycles = cpu.baseCycles;
-    save_dma_now = dma.now;
 
     if (fread(tmp_buf, 1, h_size, file) != h_size)         goto r_err;
     if (memcmp(tmp_buf, header_data, h_size))              goto r_err;
@@ -225,18 +223,16 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int l
     run_asm(jforcehome, sizeof jforcehome, 23000000);
     cpu.cycles = save_cycles;
     cpu.next = save_next;
-    sched.next = save_sched_next;
+    sched.event.next = save_event_next;
     cpu.baseCycles = save_base_cycles;
-    dma.now = save_dma_now;
 
     return !fclose(file);
 
 r_err:
     cpu.cycles = save_cycles;
     cpu.next = save_next;
-    sched.next = save_sched_next;
+    sched.event.next = save_event_next;
     cpu.baseCycles = save_base_cycles;
-    dma.now = save_dma_now;
     fclose(file);
     return false;
 }

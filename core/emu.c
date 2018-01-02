@@ -21,8 +21,8 @@
 volatile bool exiting;
 volatile bool emuCommands = false;
 
-void throttle_interval_event(enum sched_event event) {
-    event_repeat(event, 100000); // 60 Hz
+void throttle_interval_event(enum sched_item_id id) {
+    sched_repeat(id, 100000); // 60 Hz
 
     gui_do_stuff();
 

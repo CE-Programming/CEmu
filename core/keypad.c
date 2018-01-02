@@ -81,7 +81,7 @@ static uint8_t keypad_read(const uint16_t pio, bool peek) {
 }
 
 /* Scan next row of keypad, if scanning is enabled */
-static void keypad_scan_event(enum sched_event event) {
+static void keypad_scan_event(enum sched_item_id id) {
     uint8_t row = keypad.current_row;
     uint16_t data;
 
@@ -100,12 +100,12 @@ static void keypad_scan_event(enum sched_event event) {
         }
 
         keypad.current_row++;
-        event_repeat(event, keypad.row_wait); /* scan the next row */
+        sched_repeat(id, keypad.row_wait); /* scan the next row */
     } else { /* finished scanning the keypad */
         keypad.current_row = 0;
         keypad.status |= 1;
         if (keypad.mode & 1) { /* are we in mode 1 or 3 */
-            event_repeat(event, keypad.scan_wait + 2);
+            sched_repeat(id, keypad.scan_wait + 2);
         } else {
             /* If in single scan mode, go to idle mode */
             keypad.mode = 0;
@@ -133,9 +133,9 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
             write8(keypad.control,bit_offset,byte);
             if (keypad.mode & 2) {
                 keypad.current_row = 0;
-                event_set(SCHED_KEYPAD, keypad.scan_wait + keypad.row_wait);
+                sched_set(SCHED_KEYPAD, keypad.scan_wait + keypad.row_wait);
             } else {
-                event_clear(SCHED_KEYPAD);
+                sched_clear(SCHED_KEYPAD);
                 if (keypad.mode == 1 && keypad_any_key_pressed()) {
                     keypad.status |= 4;
                     keypad_intrpt_check();
@@ -182,9 +182,9 @@ void keypad_reset() {
     memset(keypad.keyMap, 0, sizeof(keypad.keyMap));
     memset(keypad.delay, 0, sizeof(keypad.delay));
 
-    sched.items[SCHED_KEYPAD].proc = keypad_scan_event;
+    sched.items[SCHED_KEYPAD].callback.event = keypad_scan_event;
     sched.items[SCHED_KEYPAD].clock = CLOCK_6M;
-    event_clear(SCHED_KEYPAD);
+    sched_clear(SCHED_KEYPAD);
 
     gui_console_printf("[CEmu] Keypad reset.\n");
 }

@@ -8,7 +8,6 @@
 #include "asic.h"
 #include "control.h"
 #include "schedule.h"
-#include "dma.h"
 #include "interrupt.h"
 
 /* Global LCD state */
@@ -117,7 +116,7 @@ draw_black:
     while (out < out_end) { *out++ = 0xFF000000; }
 }
 
-static void lcd_event(enum sched_event event) {
+static void lcd_event(enum sched_item_id id) {
     uint32_t duration;
     if ((lcd.control >> 12 & 3) == lcd.compare) {
         lcd.ris |= 1 << 3;
@@ -149,23 +148,23 @@ static void lcd_event(enum sched_event event) {
             lcd.compare = LCD_SYNC;
             break;
     }
-    event_repeat(event, duration);
+    sched_repeat(id, duration);
     intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
 }
 
-static uint8_t lcd_dma(enum dma_item_index index, uint64_t when, uint64_t now) {
-    (void)index;
-    (void)when;
-    (void)now;
+static uint8_t lcd_dma(enum sched_item_id id) {
+    (void)id;
     return 0;
 }
 
 void lcd_reset(void) {
     memset(&lcd, 0, sizeof(lcd_state_t));
-    sched.items[SCHED_LCD].proc = lcd_event;
+    sched.items[SCHED_LCD].callback.event = lcd_event;
     sched.items[SCHED_LCD].clock = CLOCK_24M;
-    event_clear(SCHED_LCD);
-    dma.items[DMA_LCD].proc = lcd_dma;
+    sched_clear(SCHED_LCD);
+    sched.items[SCHED_LCD_DMA].callback.dma = lcd_dma;
+    sched.items[SCHED_LCD_DMA].clock = CLOCK_48M;
+    sched_clear(SCHED_LCD_DMA);
     lcd.width = LCD_WIDTH;
     lcd.height = LCD_HEIGHT;
     lcd.mask = true;
@@ -319,8 +318,8 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
             lcd.lpbase &= ~7U;
         } else if (index == 0x018) {
             if (byte_offset == 0) {
-                if (value & 1) { event_set(SCHED_LCD, 0); }
-                else { event_clear(SCHED_LCD); }
+                if (value & 1) { sched_set(SCHED_LCD, 0); }
+                else { sched_clear(SCHED_LCD); }
             }
             write8(lcd.control, bit_offset, value);
             /* Simple power down of lcd -- Needs to be correctly emulated in future */
