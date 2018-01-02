@@ -851,7 +851,7 @@ static void cpu_halt(void) {
 
 void cpu_restore_next(void) {
     if (!cpu.NMI && cpu.IEF_wait != 1 && !(cpu.events & EVENT_DEBUG_STEP)) {
-        cpu.next = sched.items[sched.event.next].cputick;
+        cpu.next = sched_event_next_cputick();
     }
 }
 

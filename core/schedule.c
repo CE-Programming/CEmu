@@ -17,6 +17,7 @@
 #include "emu.h"
 #include "debug/debug.h"
 
+#include <assert.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -31,8 +32,9 @@ static uint32_t muldiv(uint32_t a, uint32_t b, uint32_t c) {
 #endif
 }
 
-static uint32_t sched_event_next_cputick(void) {
-    return sched.items[sched.event.next].cputick;
+uint32_t sched_event_next_cputick(void) {
+    assert(sched.event.next >= SCHED_SECOND && sched.event.next <= SCHED_LAST_EVENT);
+    return sched.event.cputick ? sched.event.cputick : sched.items[sched.event.next].cputick;
 }
 
 static void sched_update(enum sched_item_id id) {
@@ -72,9 +74,9 @@ static void sched_schedule(enum sched_item_id id, int seconds, uint64_t ticks) {
     }
 }
 
-void sched_repeat_relative(enum sched_item_id id, enum sched_item_id base_id, uint64_t ticks) {
-    struct sched_item *item = &sched.items[id], *base = &sched.items[base_id];
-    sched_schedule(id, base->second, muldiv(base->tick, sched.clockRates[item->clock], sched.clockRates[base->clock]) + ticks);
+void sched_repeat_relative(enum sched_item_id id, enum sched_item_id base, uint64_t ticks) {
+    struct sched_item *item = &sched.items[base];
+    sched_schedule(id, item->second, muldiv(item->tick, sched.clockRates[sched.items[id].clock], sched.clockRates[item->clock]) + ticks);
 }
 
 void sched_repeat(enum sched_item_id id, uint64_t ticks) {
@@ -82,7 +84,7 @@ void sched_repeat(enum sched_item_id id, uint64_t ticks) {
 }
 
 void sched_set(enum sched_item_id id, uint64_t ticks) {
-    sched_schedule(id, 0, cpu.cycles + ticks);
+    sched_schedule(id, 0, muldiv(cpu.cycles, sched.clockRates[sched.items[id].clock], sched.clockRates[CLOCK_CPU]) + ticks);
 }
 
 void sched_clear(enum sched_item_id id) {
@@ -149,14 +151,19 @@ void sched_reset(void) {
 
     sched.event.next = sched.dma.next = SCHED_SECOND;
     cpu_restore_next();
+
     sched.items[SCHED_SECOND].callback.event = sched_second;
     sched.items[SCHED_SECOND].clock = CLOCK_1;
     sched.items[SCHED_SECOND].second = 0;
     sched.items[SCHED_SECOND].tick = 1;
     sched.items[SCHED_SECOND].cputick = sched.clockRates[CLOCK_CPU];
+
     sched.items[SCHED_THROTTLE].clock = CLOCK_6M;
     sched.items[SCHED_THROTTLE].callback.event = throttle_interval_event;
     sched_set(SCHED_THROTTLE, 0);
+
+    sched.items[SCHED_PREV_DMA].clock = CLOCK_CPU;
+    sched_schedule(SCHED_PREV_DMA, 0, 0);
 }
 
 uint64_t event_next_cycle(enum sched_item_id id) {
