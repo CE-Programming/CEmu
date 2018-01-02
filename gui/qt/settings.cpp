@@ -46,6 +46,7 @@ const QString MainWindow::SETTING_KEYPAD_COLOR              = QStringLiteral("Ke
 const QString MainWindow::SETTING_WINDOW_SIZE               = QStringLiteral("Window/size");
 const QString MainWindow::SETTING_WINDOW_STATE              = QStringLiteral("Window/state");
 const QString MainWindow::SETTING_WINDOW_GEOMETRY           = QStringLiteral("Window/geometry");
+const QString MainWindow::SETTING_WINDOW_MEMORY_DOCKS       = QStringLiteral("Window/memory_docks");
 const QString MainWindow::SETTING_CAPTURE_FRAMESKIP         = QStringLiteral("Capture/frameskip");
 const QString MainWindow::SETTING_CAPTURE_OPTIMIZE          = QStringLiteral("Capture/optimize");
 const QString MainWindow::SETTING_SLOT_NAMES                = QStringLiteral("Slot/names");
@@ -79,6 +80,7 @@ const QString MainWindow::SETTING_DEFAULT_IMAGE_FILE        = QStringLiteral("/c
 
 const QString MainWindow::MSG_WARNING                       = tr("Warning");
 const QString MainWindow::MSG_ERROR                         = tr("Error");
+const QString MainWindow::TITLE_MEM_DOCK                    = tr("Memory View");
 
 void MainWindow::setPortableConfig(bool state) {
     ui->checkPortable->setChecked(state);
@@ -247,6 +249,7 @@ void MainWindow::saveMiscSettings() {
     settings->setValue(SETTING_WINDOW_STATE,         saveState(WindowStateVersion));
     settings->setValue(SETTING_WINDOW_GEOMETRY,      saveGeometry());
     settings->setValue(SETTING_WINDOW_SIZE,          size());
+    settings->setValue(SETTING_WINDOW_MEMORY_DOCKS,  memoryDocks);
     settings->setValue(SETTING_CURRENT_DIR,          currDir.absolutePath());
     settings->setValue(SETTING_DEBUGGER_FLASH_BYTES, ui->flashBytes->value());
     settings->setValue(SETTING_DEBUGGER_RAM_BYTES,   ui->ramBytes->value());
@@ -386,8 +389,9 @@ void MainWindow::setUIDocks() {
         docksMenu->addAction(action);
 
         addDockWidget(Qt::RightDockWidgetArea, dw);
-        if (last_dock != Q_NULLPTR)
+        if (last_dock) {
             tabifyDockWidget(last_dock, dw);
+        }
 
         last_dock = dw;
     }
@@ -408,8 +412,9 @@ void MainWindow::setUIDocks() {
         debugMenu->addAction(action);
 
         addDockWidget(Qt::RightDockWidgetArea, dw);
-        if (last_dock != Q_NULLPTR)
+        if (last_dock) {
             tabifyDockWidget(last_dock, dw);
+        }
 
         last_dock = dw;
 
@@ -417,6 +422,9 @@ void MainWindow::setUIDocks() {
             dw->close();
         }
     }
+
+    debugMenu->addSeparator();
+    debugMenu->addAction(addMemory);
 
     docksMenu->addSeparator();
     docksMenu->addAction(toggleAction);
@@ -649,5 +657,13 @@ void MainWindow::setRecentInfo() {
             bool select = selects.at(i) == "y";
             sendingHandler->addFile(path, select);
         }
+    }
+}
+
+void MainWindow::setMemoryDocks() {
+    int memories = settings->value(SETTING_WINDOW_MEMORY_DOCKS).toInt();
+
+    for (int i = 0; i < memories; i++) {
+        createMemoryDock(TITLE_MEM_DOCK);
     }
 }

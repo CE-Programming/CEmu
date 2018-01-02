@@ -91,6 +91,10 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     sendingHandler = new SendingHandler(this, progressBar, ui->varLoadedView);
     progressBar->setVisible(false);
 
+    memory.append(ui->flashEdit);
+    memory.append(ui->ramEdit);
+    memory.append(ui->memEdit);
+
     // Emulator -> GUI
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr);
     connect(&emu, &EmuThread::consoleErrStr, this, &MainWindow::consoleErrStr);
@@ -248,18 +252,18 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->lcdWidget, &LCDWidget::sendROM, this, &MainWindow::setRom);
 
     // Hex Editor
+    connect(ui->buttonFlashSearch, &QPushButton::clicked, this, [this]{ memSearchPressed(MEM_FLASH); });
+    connect(ui->buttonRamSearch, &QPushButton::clicked, this, [this]{ memSearchPressed(MEM_RAM); });
+    connect(ui->buttonMemSearch, &QPushButton::clicked, this, [this]{ memSearchPressed(MEM_MEM); });
+    connect(ui->buttonMemGoto, &QPushButton::clicked, this, [this]{ memGotoPressed(MEM_MEM); });
     connect(ui->buttonFlashGoto, &QPushButton::clicked, this, &MainWindow::flashGotoPressed);
-    connect(ui->buttonFlashSearch, &QPushButton::clicked, this, &MainWindow::flashSearchPressed);
-    connect(ui->buttonFlashSync, &QPushButton::clicked, this, &MainWindow::flashSyncPressed);
     connect(ui->buttonRamGoto, &QPushButton::clicked, this, &MainWindow::ramGotoPressed);
-    connect(ui->buttonRamSearch, &QPushButton::clicked, this, &MainWindow::ramSearchPressed);
+    connect(ui->buttonFlashSync, &QPushButton::clicked, this, &MainWindow::flashSyncPressed);
     connect(ui->buttonRamSync, &QPushButton::clicked, this, &MainWindow::ramSyncPressed);
-    connect(ui->buttonMemGoto, &QPushButton::clicked, this, &MainWindow::memGotoPressed);
-    connect(ui->buttonMemSearch, &QPushButton::clicked, this, &MainWindow::memSearchPressed);
-    connect(ui->buttonMemSync, &QPushButton::clicked, this, &MainWindow::memSyncPressed);
+    connect(ui->buttonMemSync, &QPushButton::clicked, this, [this]{ memSyncPressed(MEM_MEM); });
     connect(ui->memEdit, &QHexEdit::customContextMenuRequested, this, &MainWindow::memContextMenu);
-    connect(ui->flashEdit, &QHexEdit::customContextMenuRequested, this, &MainWindow::flashContextMenu);
-    connect(ui->ramEdit, &QHexEdit::customContextMenuRequested, this, &MainWindow::ramContextMenu);
+    connect(ui->flashEdit, &QHexEdit::customContextMenuRequested, this, &MainWindow::memContextMenu);
+    connect(ui->ramEdit, &QHexEdit::customContextMenuRequested, this, &MainWindow::memContextMenu);
 
     // Keybindings
     connect(ui->radioCEmuKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
@@ -303,6 +307,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     toggleAction = new QAction(tr("Enable UI edit mode"), this);
     toggleAction->setCheckable(true);
     connect(toggleAction, &QAction::triggered, this, &MainWindow::toggleUIEditMode);
+
+    addMemory = new QAction(tr("Add Memory View"), this);
+    connect(addMemory, &QAction::triggered, this, [this]{ createMemoryDock(TITLE_MEM_DOCK); });
 
     // Shortcut Connections
     stepInShortcut = new QShortcut(QKeySequence(Qt::Key_F6), this);
@@ -380,6 +387,16 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     ui->actionDisableMenuBar->setVisible(false);
 #endif
 
+    stopIcon.addPixmap(QPixmap(":/icons/resources/icons/stop.png"));
+    runIcon.addPixmap(QPixmap(":/icons/resources/icons/run.png"));
+    saveIcon.addPixmap(QPixmap(":/icons/resources/icons/import.png"));
+    loadIcon.addPixmap(QPixmap(":/icons/resources/icons/export.png"));
+    editIcon.addPixmap(QPixmap(":/icons/resources/icons/wizard.png"));
+    removeIcon.addPixmap(QPixmap(":/icons/resources/icons/exit.png"));
+    searchIcon.addPixmap(QPixmap(":/icons/resources/icons/search.png"));
+    gotoIcon.addPixmap(QPixmap(":/icons/resources/icons/goto.png"));
+
+    setMemoryDocks();
     optLoadFiles(opts);
     setFrameskip(settings->value(SETTING_CAPTURE_FRAMESKIP, 1).toUInt());
     setOptimizeRecording(settings->value(SETTING_CAPTURE_OPTIMIZE, true).toBool());
@@ -456,13 +473,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     colorback.setColor(QPalette::Base, QColor(Qt::yellow).lighter(160));
     consoleFormat = ui->console->currentCharFormat();
 
-    stopIcon.addPixmap(QPixmap(":/icons/resources/icons/stop.png"));
-    runIcon.addPixmap(QPixmap(":/icons/resources/icons/run.png"));
-    saveIcon.addPixmap(QPixmap(":/icons/resources/icons/import.png"));
-    loadIcon.addPixmap(QPixmap(":/icons/resources/icons/export.png"));
-    editIcon.addPixmap(QPixmap(":/icons/resources/icons/wizard.png"));
-    removeIcon.addPixmap(QPixmap(":/icons/resources/icons/exit.png"));
-
     optCheckSend(opts);
 
     if (opts.speed != -1) {
@@ -529,9 +539,75 @@ void MainWindow::showEvent(QShowEvent *e) {
                 resize(newSize);
             }
         }
+        QList<QDockWidget*> docks = findChildren<QDockWidget*>();
+        foreach (QDockWidget* dock, docks) {
+            if (dock->windowTitle().contains(tr("Memory View"))) {
+                if (dock->visibleRegion().isEmpty()) {
+                    removeDockWidget(dock);
+                    memoryDocks--;
+                }
+            }
+        }
         firstShow = true;
     }
     e->accept();
+}
+
+void MainWindow::createMemoryDock(QString title) {
+    DockWidget *dw;
+
+    memoryDocks++;
+
+    dw = new DockWidget(title, this);
+    dw->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+
+    QWidget *widget = new QWidget();
+    QVBoxLayout *vlayout = new QVBoxLayout();
+    QHBoxLayout *hlayout = new QHBoxLayout();
+    QPushButton *buttonGoto = new QPushButton(gotoIcon, tr("Goto"));
+    QPushButton *buttonSearch = new QPushButton(searchIcon, tr("Search"));
+    QPushButton *buttonSync = new QPushButton(tr("Sync Changes"));
+    QSpacerItem *spacer = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Fixed);
+    QSpinBox *spin = new QSpinBox();
+    QHexEdit *edit = new QHexEdit();
+
+    memory.append(edit);
+    int index = memory.size() - 1;
+
+    edit->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    connect(spin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), edit, &QHexEdit::setBytesPerLine);
+    connect(edit, &QHexEdit::customContextMenuRequested, this, &MainWindow::memContextMenu);
+    connect(buttonSearch, &QPushButton::clicked, this, [this, index]{ memSearchPressed(index); });
+    connect(buttonGoto, &QPushButton::clicked, this, [this, index]{ memGotoPressed(index); });
+    connect(buttonSync, &QPushButton::clicked, this, [this, index]{ memSyncPressed(index); });
+
+    spin->setValue(8);
+    spin->setMaximum(32);
+    spin->setMinimum(1);
+
+    hlayout->addWidget(buttonGoto);
+    hlayout->addWidget(buttonSearch);
+    hlayout->addSpacerItem(spacer);
+    hlayout->addWidget(buttonSync);
+    hlayout->addWidget(spin);
+    vlayout->addLayout(hlayout);
+    vlayout->addWidget(edit);
+    widget->setLayout(vlayout);
+    dw->setWidget(widget);
+
+    buttonGoto->setEnabled(guiDebug);
+    buttonSearch->setEnabled(guiDebug);
+    buttonSync->setEnabled(guiDebug);
+    spin->setEnabled(guiDebug);
+    edit->setEnabled(guiDebug);
+
+    if (guiDebug) {
+        memUpdate(index, 0);
+    }
+
+    addDockWidget(Qt::RightDockWidgetArea, dw);
+    dw->setVisible(true);
 }
 
 void MainWindow::toggleKeyHistory() {
@@ -1690,7 +1766,7 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
             debuggerChangeState();
             emit setRunUntilMode();
         } else if (selectedItem->text() == goto_mem) {
-            memGoto(ui->disassemblyView->getSelectedAddress());
+            memGoto(MEM_MEM, ui->disassemblyView->getSelectedAddress());
         }
     }
 }

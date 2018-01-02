@@ -54,6 +54,12 @@
    <layout class="QVBoxLayout" name="verticalLayout_18">
     <item>
      <widget class="QTabWidget" name="tabDebug">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="currentIndex">
        <number>0</number>
       </property>
@@ -3379,7 +3385,7 @@
         <item>
          <widget class="DataWidget" name="disassemblyView">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
@@ -3415,19 +3421,6 @@
            <string>Open debugger to view disassembly...</string>
           </property>
          </widget>
-        </item>
-        <item>
-         <spacer name="verticalSpacer_11">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>0</height>
-           </size>
-          </property>
-         </spacer>
         </item>
        </layout>
       </widget>
@@ -3485,7 +3478,7 @@
               </widget>
              </item>
              <item>
-              <spacer name="horizontalSpacer_5">
+              <spacer name="hs_4">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
                </property>
@@ -3587,7 +3580,7 @@
               </widget>
              </item>
              <item>
-              <spacer name="horizontalSpacer_6">
+              <spacer name="hs_2">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
                </property>
@@ -3689,7 +3682,7 @@
               </widget>
              </item>
              <item>
-              <spacer name="horizontalSpacer_7">
+              <spacer name="hs_3">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
                </property>
@@ -4027,6 +4020,12 @@
        <layout class="QVBoxLayout" name="verticalLayout_7">
         <item>
          <widget class="QToolBox" name="toolBox">
+          <property name="minimumSize">
+           <size>
+            <width>150</width>
+            <height>210</height>
+           </size>
+          </property>
           <property name="frameShape">
            <enum>QFrame::NoFrame</enum>
           </property>
@@ -5951,6 +5950,12 @@
     </item>
     <item>
      <widget class="QTabWidget" name="tabWidget">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="focusPolicy">
        <enum>Qt::ClickFocus</enum>
       </property>
@@ -5964,7 +5969,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>

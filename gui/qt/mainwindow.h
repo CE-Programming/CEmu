@@ -173,11 +173,17 @@ private:
     };
 
     enum slotIndex {
-        SLOT_NAME,
+        SLOT_NAME=0,
         SLOT_LOAD,
         SLOT_SAVE,
         SLOT_EDIT,
         SLOT_REMOVE
+    };
+
+    enum memIndex {
+        MEM_FLASH=0,
+        MEM_RAM,
+        MEM_MEM
     };
 
     // Save/Restore
@@ -262,8 +268,6 @@ private:
     void variablesContextMenu(const QPoint&);
     void vatContextMenu(const QPoint &);
     void opContextMenu(const QPoint &);
-    void flashContextMenu(const QPoint &);
-    void ramContextMenu(const QPoint &);
     void memContextMenu(const QPoint &);
     void memoryContextMenu(const QPoint &, uint32_t);
     void removeAllSentVars();
@@ -306,11 +310,14 @@ private:
     void watchpointReadWriteGUIAdd();
 
     // Debugging files
-    void debuggerImportFile(const QString& filename);
-    void debuggerExportFile(const QString& filename);
+    void debuggerImportFile(const QString &filename);
+    void debuggerExportFile(const QString &filename);
     QString debuggerGetFile(int mode);
     void debuggerImport();
     void debuggerExport();
+
+    // Create memory views
+    void createMemoryDock(QString title);
 
     // Creating bootable images
     bool checkForCEmuBootImage();
@@ -388,21 +395,21 @@ private:
     // Hex Editor
     void flashUpdate();
     void flashGotoPressed();
-    void flashSearchPressed();
     void flashSyncPressed();
     void ramUpdate();
     void ramGotoPressed();
-    void ramSearchPressed();
     void ramSyncPressed();
-    void memUpdate(uint32_t addressBegin);
-    void memGoto(const QString& addressStr);
-    void memGotoPressed();
-    void memSearchPressed();
-    void memSyncPressed();
+    void memEditUpdate(QHexEdit *edit, uint32_t addressBegin);
+    void memUpdate(int index, uint32_t addressBegin);
+    void memGoto(int index, const QString &addressStr);
+    void memGotoPressed(int index);
+    void memSearchPressed(int index);
+    void memSyncPressed(int index);
+    void memDocksUpdate();
 
     // Others
-    void syncHexView(int posa, QHexEdit* hex_view);
-    void searchEdit(QHexEdit* editor);
+    void syncHexView(int posa, QHexEdit *hex_view);
+    void searchEdit(int index);
     QString getAddressEquate(const std::string& in);
 
     // Keypad
@@ -422,6 +429,7 @@ private:
     void optLoadFiles(CEmuOpts& o);
     void optAttemptLoad(CEmuOpts& o);
     void pauseEmu(Qt::ApplicationState state);
+    void setMemoryDocks();
 
     // Key History
     void toggleKeyHistory();
@@ -457,7 +465,6 @@ private:
     bool disasmOffsetSet;
     bool fromPane;
     int32_t addressPane;
-    int memSize;
     int hexSearch = SEARCH_MODE_HEX;
 
     QDir currDir;
@@ -490,9 +497,11 @@ private:
     QShortcut *resendshortcut;
 
     QAction *toggleAction;
+    QAction *addMemory;
 
     QIcon runIcon, stopIcon;
     QIcon saveIcon, loadIcon, editIcon, removeIcon;
+    QIcon searchIcon, gotoIcon;
     QTextCharFormat consoleFormat;
 
     QString prevGotoAddress;
@@ -548,6 +557,7 @@ private:
     static const QString SETTING_WINDOW_SIZE;
     static const QString SETTING_WINDOW_STATE;
     static const QString SETTING_WINDOW_GEOMETRY;
+    static const QString SETTING_WINDOW_MEMORY_DOCKS;
     static const QString SETTING_CAPTURE_FRAMESKIP;
     static const QString SETTING_CAPTURE_OPTIMIZE;
     static const QString SETTING_SLOT_NAMES;
@@ -579,9 +589,13 @@ private:
     static const QString SETTING_DEFAULT_IMAGE_FILE;
     static const QString SETTING_DEFAULT_DEBUG_FILE;
 
+    static const QString TITLE_MEM_DOCK;
+
     QMessageBox *infoBox = Q_NULLPTR;
     QMessageBox *warnBox = Q_NULLPTR;
     QProgressBar *progressBar;
+    QVector<QHexEdit*> memory;
+    int memoryDocks = 0;
 };
 
 #endif

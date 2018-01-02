@@ -100,6 +100,8 @@ public:
     void setLine(int line);
     int getLine();
 
+    uint32_t memSize;
+
 protected:
     // Handle events
     virtual void keyPressEvent(QKeyEvent*) Q_DECL_OVERRIDE;

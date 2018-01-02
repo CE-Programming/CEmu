@@ -356,7 +356,7 @@ void MainWindow::debuggerProcessCommand(int reason, uint32_t input) {
 
             text = tr("Hit ") + type + tr(" watchpoint ") + inputString + QStringLiteral(" (") +
                     ui->watchpointView->item(row-1, WATCH_LABEL_LOC)->text() + QStringLiteral(")");
-            memUpdate(input);
+            memUpdate(MEM_MEM, input);
             break;
         case HIT_PORT_READ_WATCHPOINT:
         case HIT_PORT_WRITE_WATCHPOINT:
@@ -494,6 +494,18 @@ void MainWindow::debuggerGUISetState(bool state) {
     ui->emuVarView->setEnabled(!state);
     ui->buttonResendFiles->setEnabled(!state);
     ui->buttonReceiveFiles->setEnabled(!state && guiReceive);
+
+    QList<QDockWidget*> docks = findChildren<QDockWidget*>();
+    foreach (QDockWidget* dock, docks) {
+        if (dock->windowTitle().contains(TITLE_MEM_DOCK)) {
+            QList<QPushButton*> buttons = dock->findChildren<QPushButton*>();
+            dock->findChildren<QHexEdit*>().first()->setEnabled(state);
+            dock->findChildren<QSpinBox*>().first()->setEnabled(state);
+            foreach (QPushButton *button, buttons) {
+                button->setEnabled(state);
+            }
+        }
+    }
 }
 
 void MainWindow::debuggerChangeState() {
@@ -688,7 +700,9 @@ void MainWindow::debuggerGUIPopulate() {
 
     ramUpdate();
     flashUpdate();
-    memUpdate(prevDisasmAddress);
+    memDocksUpdate();
+    memUpdate(MEM_MEM, prevDisasmAddress);
+
     ui->portView->blockSignals(false);
     ui->watchpointView->blockSignals(false);
 }
@@ -1288,7 +1302,7 @@ void MainWindow::watchpointDataChanged(QTableWidgetItem *item) {
 
         ramUpdate();
         flashUpdate();
-        memUpdate(address);
+        memUpdate(MEM_MEM, address);
     } else if (col == WATCH_LABEL_LOC) {
         updateLabels();
     } else if (col == WATCH_SIZE_LOC) { // length of data we wish to read
@@ -1608,16 +1622,16 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
 
         if (obj_name.length() > 3) return false;
 
-        if (obj_name == "hl")  memGoto(ui->hlregView->text());
-        if (obj_name == "de")  memGoto(ui->deregView->text());
-        if (obj_name == "bc")  memGoto(ui->bcregView->text());
-        if (obj_name == "ix")  memGoto(ui->ixregView->text());
-        if (obj_name == "iy")  memGoto(ui->iyregView->text());
-        if (obj_name == "hl_") memGoto(ui->hl_regView->text());
-        if (obj_name == "de_") memGoto(ui->de_regView->text());
-        if (obj_name == "bc_") memGoto(ui->bc_regView->text());
-        if (obj_name == "spl") memGoto(ui->splregView->text());
-        if (obj_name == "pc")  memGoto(ui->pcregView->text());
+        if (obj_name == "hl")  memGoto(MEM_MEM, ui->hlregView->text());
+        if (obj_name == "de")  memGoto(MEM_MEM, ui->deregView->text());
+        if (obj_name == "bc")  memGoto(MEM_MEM, ui->bcregView->text());
+        if (obj_name == "ix")  memGoto(MEM_MEM, ui->ixregView->text());
+        if (obj_name == "iy")  memGoto(MEM_MEM, ui->iyregView->text());
+        if (obj_name == "hl_") memGoto(MEM_MEM, ui->hl_regView->text());
+        if (obj_name == "de_") memGoto(MEM_MEM, ui->de_regView->text());
+        if (obj_name == "bc_") memGoto(MEM_MEM, ui->bc_regView->text());
+        if (obj_name == "spl") memGoto(MEM_MEM, ui->splregView->text());
+        if (obj_name == "pc")  memGoto(MEM_MEM, ui->pcregView->text());
     } else if (e->type() == QEvent::MouseMove) {
         QString obj_name = obj->objectName();
 
@@ -1816,7 +1830,7 @@ void MainWindow::opContextMenu(const QPoint& posa) {
     QAction* selectedItem = contextMenu.exec(globalPos);
     if (selectedItem) {
         if (selectedItem->text() == goto_mem) {
-            memGoto(current_address);
+            memGoto(MEM_MEM, current_address);
         }
         if (selectedItem->text() == copy_mem) {
             QApplication::clipboard()->setText(current_address, QClipboard::Clipboard);
@@ -1848,10 +1862,10 @@ void MainWindow::vatContextMenu(const QPoint& posa) {
     QAction* selectedItem = contextMenu.exec(globalPos);
     if (selectedItem) {
         if (selectedItem->text() == goto_mem) {
-            memGoto(current_address);
+            memGoto(MEM_MEM, current_address);
         }
         if (selectedItem->text() == goto_vat_mem) {
-            memGoto(current_vat_address);
+            memGoto(MEM_MEM, current_vat_address);
         }
         if (selectedItem->text() == goto_disasm) {
             updateDisasmView(hex2int(current_address) + 4, false);
@@ -1859,20 +1873,8 @@ void MainWindow::vatContextMenu(const QPoint& posa) {
     }
 }
 
-void MainWindow::flashContextMenu(const QPoint& posa) {
-    QHexEdit *p = ui->flashEdit;
-    memoryContextMenu(p->mapToGlobal(posa), p->addressOffset() + p->currentOffset());
-    p->viewport()->update();
-}
-
-void MainWindow::ramContextMenu(const QPoint& posa) {
-    QHexEdit *p = ui->ramEdit;
-    memoryContextMenu(p->mapToGlobal(posa), p->addressOffset() + p->currentOffset());
-    p->viewport()->update();
-}
-
 void MainWindow::memContextMenu(const QPoint& posa) {
-    QHexEdit *p = ui->memEdit;
+    QHexEdit *p = qobject_cast<QHexEdit*>(sender());
     memoryContextMenu(p->mapToGlobal(posa), p->addressOffset() + p->currentOffset());
     p->viewport()->update();
 }
@@ -1917,6 +1919,17 @@ void MainWindow::memoryContextMenu(const QPoint& pos, uint32_t address) {
             if (!watchpointAdd(watchpointNextLabel(), address, 1, DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT)) {
                 watchpointRemoveSelected();
             }
+        }
+        memDocksUpdate();
+    }
+}
+
+void MainWindow::memDocksUpdate() {
+    QList<QDockWidget*> docks = findChildren<QDockWidget*>();
+    foreach (QDockWidget* dock, docks) {
+        if (dock->windowTitle().contains(TITLE_MEM_DOCK)) {
+            QHexEdit *edit = dock->findChildren<QHexEdit*>().first();
+            memEditUpdate(edit, 0);
         }
     }
 }
