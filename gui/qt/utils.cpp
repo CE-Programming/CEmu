@@ -99,6 +99,10 @@ static bool checkProc(DWORD processID) {
 
     return false;
 }
+
+// eventually this function should kill every other CEmu process
+void killAll() {
+}
 #else
 #include <sys/types.h>
 #include <signal.h>
@@ -107,6 +111,15 @@ static bool checkProc(pid_t pid) {
         return true;
     }
     return false;
+}
+
+// eventually this function should kill every other CEmu process
+void killAll() {
+    QDir directory(configPath + "/id/");
+    QStringList ids = directory.entryList(QDir::Files);
+    foreach (QString filename, ids) {
+        filename.clear();
+    }
 }
 #endif
 

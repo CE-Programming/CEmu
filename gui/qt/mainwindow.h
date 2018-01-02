@@ -49,6 +49,7 @@ public:
     explicit MainWindow(CEmuOpts opts,QWidget *p = Q_NULLPTR);
     ~MainWindow();
     bool IsInitialized();
+    bool IsReload();
 
 public slots:
     // Console
@@ -431,6 +432,10 @@ private:
     void pauseEmu(Qt::ApplicationState state);
     void setMemoryDocks();
 
+    // State items
+    void reloadAll();
+    void reloadGui();
+
     // Key History
     void toggleKeyHistory();
 
@@ -521,6 +526,7 @@ private:
     bool isSendingROM = false;
     QString dragROM;
 
+    bool needReload = false;
     bool guiAdd = false;
     bool initPassed = true;
     bool firstShow = false;

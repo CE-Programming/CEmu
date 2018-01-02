@@ -37,6 +37,7 @@ QString int2hex(uint32_t a, uint8_t l);
 void guiDelay(int ms);
 
 bool isProcRunning(pid_t procID);
+void killAll();
 
 QString randomString(const int length);
 

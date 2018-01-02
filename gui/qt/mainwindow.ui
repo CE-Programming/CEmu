@@ -4178,8 +4178,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>520</width>
-             <height>369</height>
+             <width>98</width>
+             <height>119</height>
             </rect>
            </property>
            <attribute name="icon">
@@ -4330,6 +4330,14 @@
            </layout>
           </widget>
           <widget class="QWidget" name="page_3">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>98</width>
+             <height>119</height>
+            </rect>
+           </property>
            <attribute name="icon">
             <iconset resource="resources.qrc">
              <normaloff>:/icons/resources/icons/search.png</normaloff>:/icons/resources/icons/search.png</iconset>
@@ -8404,6 +8412,9 @@ QPushButton:pressed {
     <addaction name="actionAboutQt"/>
     <addaction name="separator"/>
     <addaction name="actionDisableMenuBar"/>
+    <addaction name="separator"/>
+    <addaction name="actionResetGUI"/>
+    <addaction name="actionResetALL"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuCalculator"/>
@@ -8759,6 +8770,16 @@ QPushButton:pressed {
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+C</string>
+   </property>
+  </action>
+  <action name="actionResetGUI">
+   <property name="text">
+    <string>Reset GUI Docks</string>
+   </property>
+  </action>
+  <action name="actionResetALL">
+   <property name="text">
+    <string>Reset ALL</string>
    </property>
   </action>
  </widget>

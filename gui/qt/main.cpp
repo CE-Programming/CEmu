@@ -11,148 +11,156 @@ int main(int argc, char *argv[]) {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
 
-    QApplication app(argc, argv);
+    bool reload = false;
 
-    QCoreApplication::setOrganizationName(QStringLiteral("cemu-dev"));
-    QCoreApplication::setApplicationName(QStringLiteral("CEmu"));
+    do {
+        QApplication app(argc, argv);
 
-    execPath = QCoreApplication::applicationFilePath();
+        QCoreApplication::setOrganizationName(QStringLiteral("cemu-dev"));
+        QCoreApplication::setApplicationName(QStringLiteral("CEmu"));
 
-    app.setAttribute(Qt::AA_UseHighDpiPixmaps);
+        execPath = QCoreApplication::applicationFilePath();
 
-    // Add special jacobly font
-    QFontDatabase::addApplicationFont(":/fonts/resources/custom_fonts/TICELarge.ttf");
+        app.setAttribute(Qt::AA_UseHighDpiPixmaps);
 
-    // Setup QCommandParser with Our command line parameters
-    QCommandLineParser parser;
-    parser.setApplicationDescription("CEmu emulator");
-    parser.addHelpOption();
-    parser.addVersionOption();
+        // Add special jacobly font
+        QFontDatabase::addApplicationFont(":/fonts/resources/custom_fonts/TICELarge.ttf");
 
-    // Disable emulation speed throttling
-    QCommandLineOption unthrottledOption(QStringList() << "u" << "unthrottled",
-                QCoreApplication::translate("main", "Disable emulation speed throttling."));
-    parser.addOption(unthrottledOption);
+        // Setup QCommandParser with Our command line parameters
+        QCommandLineParser parser;
+        parser.setApplicationDescription("CEmu emulator");
+        parser.addHelpOption();
+        parser.addVersionOption();
 
-    // Disable loading a saved state and disables saving to one on application close
-    QCommandLineOption stateOption(QStringList() << "n" << "no-state",
-                QCoreApplication::translate("main", "Do not load state from disk."));
-    parser.addOption(stateOption);
+        // Disable emulation speed throttling
+        QCommandLineOption unthrottledOption(QStringList() << "u" << "unthrottled",
+                    QCoreApplication::translate("main", "Disable emulation speed throttling."));
+        parser.addOption(unthrottledOption);
 
-    // Sends files on start
-    QCommandLineOption sendFiles(QStringList() << "s" << "send",
-                QCoreApplication::translate("main", "Send <File>"),
-                QCoreApplication::translate("main", "File"));
-    parser.addOption(sendFiles);
+        // Disable loading a saved state and disables saving to one on application close
+        QCommandLineOption stateOption(QStringList() << "n" << "no-state",
+                    QCoreApplication::translate("main", "Do not load state from disk."));
+        parser.addOption(stateOption);
 
-    // Force file to archive on send
-    QCommandLineOption sendArchFiles(QStringList() << "a" << "send-arch",
-                QCoreApplication::translate("main", "Force send <File> to archive"),
-                QCoreApplication::translate("main", "File"));
-    parser.addOption(sendArchFiles);
+        // Sends files on start
+        QCommandLineOption sendFiles(QStringList() << "s" << "send",
+                    QCoreApplication::translate("main", "Send <File>"),
+                    QCoreApplication::translate("main", "File"));
+        parser.addOption(sendFiles);
 
-    // Force file to archive on send
-    QCommandLineOption sendRAMFiles(QStringList() << "m" << "send-ram",
-                QCoreApplication::translate("main", "Force send <File> to ram"),
-                QCoreApplication::translate("main", "File"));
-    parser.addOption(sendRAMFiles);
+        // Force file to archive on send
+        QCommandLineOption sendArchFiles(QStringList() << "a" << "send-arch",
+                    QCoreApplication::translate("main", "Force send <File> to archive"),
+                    QCoreApplication::translate("main", "File"));
+        parser.addOption(sendArchFiles);
 
-    // Loads Rom file
-    QCommandLineOption loadRomFile(QStringList() << "r" << "rom",
-                QCoreApplication::translate("main", "Load <RomFile>"),
-                QCoreApplication::translate("main", "RomFile"));
-    parser.addOption(loadRomFile);
+        // Force file to archive on send
+        QCommandLineOption sendRAMFiles(QStringList() << "m" << "send-ram",
+                    QCoreApplication::translate("main", "Force send <File> to ram"),
+                    QCoreApplication::translate("main", "File"));
+        parser.addOption(sendRAMFiles);
 
-    // Loads a json into the autotester and runs on application startup
-    QCommandLineOption loadTestFile(QStringList() << "t" << "auto-test",
-                QCoreApplication::translate("main", "Run <Testfile>"),
-                QCoreApplication::translate("main", "TestFile"));
-    parser.addOption(loadTestFile);
+        // Loads Rom file
+        QCommandLineOption loadRomFile(QStringList() << "r" << "rom",
+                    QCoreApplication::translate("main", "Load <RomFile>"),
+                    QCoreApplication::translate("main", "RomFile"));
+        parser.addOption(loadRomFile);
 
-    // Suppresses the output of an autotester file
-    QCommandLineOption suppressTestDialog(QStringList() << "no-test-dialog",
-                QCoreApplication::translate("main", "Hides test complete dialog"));
-    parser.addOption(suppressTestDialog);
+        // Loads a json into the autotester and runs on application startup
+        QCommandLineOption loadTestFile(QStringList() << "t" << "auto-test",
+                    QCoreApplication::translate("main", "Run <Testfile>"),
+                    QCoreApplication::translate("main", "TestFile"));
+        parser.addOption(loadTestFile);
 
-    // Loads a CEmu settings file on start
-    QCommandLineOption settingsFile(QStringList() << "g" << "settings",
-                QCoreApplication::translate("main", "Load <SettingsFile> as the setup (ignored in IPC)"),
-                QCoreApplication::translate("main", "SettingsFile"));
-    parser.addOption(settingsFile);
+        // Suppresses the output of an autotester file
+        QCommandLineOption suppressTestDialog(QStringList() << "no-test-dialog",
+                    QCoreApplication::translate("main", "Hides test complete dialog"));
+        parser.addOption(suppressTestDialog);
 
-    // Loads a CEmu image file on start
-    QCommandLineOption imageFile(QStringList() << "i" << "image",
-                QCoreApplication::translate("main", "Load <Image> into emulator"),
-                QCoreApplication::translate("main", "Image"));
-    parser.addOption(imageFile);
+        // Loads a CEmu settings file on start
+        QCommandLineOption settingsFile(QStringList() << "g" << "settings",
+                    QCoreApplication::translate("main", "Load <SettingsFile> as the setup (ignored in IPC)"),
+                    QCoreApplication::translate("main", "SettingsFile"));
+        parser.addOption(settingsFile);
 
-    // Loads a CEmu debugging file on start
-    QCommandLineOption debugFile(QStringList() << "d" << "debug-info",
-                QCoreApplication::translate("main", "Load <DebugInfo> as the setup"),
-                QCoreApplication::translate("main", "DebugInfo"));
-    parser.addOption(debugFile);
+        // Loads a CEmu image file on start
+        QCommandLineOption imageFile(QStringList() << "i" << "image",
+                    QCoreApplication::translate("main", "Load <Image> into emulator"),
+                    QCoreApplication::translate("main", "Image"));
+        parser.addOption(imageFile);
 
-    QCommandLineOption procID(QStringList() << "c" << "id",
-                QCoreApplication::translate("main", "Send commands to <id> if it exists, otherwise creates it"),
-                QCoreApplication::translate("main", "id"));
-    parser.addOption(procID);
+        // Loads a CEmu debugging file on start
+        QCommandLineOption debugFile(QStringList() << "d" << "debug-info",
+                    QCoreApplication::translate("main", "Load <DebugInfo> as the setup"),
+                    QCoreApplication::translate("main", "DebugInfo"));
+        parser.addOption(debugFile);
 
-    QCommandLineOption deforceReset(QStringList() << "no-reset",
-                QCoreApplication::translate("main", "Does not reset when sending"));
-    parser.addOption(deforceReset);
+        QCommandLineOption procID(QStringList() << "c" << "id",
+                    QCoreApplication::translate("main", "Send commands to <id> if it exists, otherwise creates it"),
+                    QCoreApplication::translate("main", "id"));
+        parser.addOption(procID);
 
-    QCommandLineOption forceRomReload(QStringList() << "reload-rom",
-                QCoreApplication::translate("main", "Forces a rom reload"));
-    parser.addOption(forceRomReload);
+        QCommandLineOption deforceReset(QStringList() << "no-reset",
+                    QCoreApplication::translate("main", "Does not reset when sending"));
+        parser.addOption(deforceReset);
 
-    QCommandLineOption emuSpeed(QStringList() << "speed",
-                QCoreApplication::translate("main", "Set emulation speed percentage (value 0-500; step 10)"),
-                QCoreApplication::translate("main", "speed"));
-    parser.addOption(emuSpeed);
+        QCommandLineOption forceRomReload(QStringList() << "reload-rom",
+                    QCoreApplication::translate("main", "Forces a rom reload"));
+        parser.addOption(forceRomReload);
 
-    // IPC hooks (can only use on an already running process)
+        QCommandLineOption emuSpeed(QStringList() << "speed",
+                    QCoreApplication::translate("main", "Set emulation speed percentage (value 0-500; step 10)"),
+                    QCoreApplication::translate("main", "speed"));
+        parser.addOption(emuSpeed);
 
-    parser.process(app);
+        // IPC hooks (can only use on an already running process)
 
-    // Take command line args and move to CEmuOpts struct
-    CEmuOpts opts;
-    opts.restoreOnOpen      = !parser.isSet(stateOption);
-    opts.useUnthrottled     = parser.isSet(unthrottledOption);
-    opts.suppressTestDialog = parser.isSet(suppressTestDialog);
-    opts.deforceReset       = parser.isSet(deforceReset);
-    opts.forceReloadRom     = parser.isSet(forceRomReload);
-    opts.romFile            = parser.value(loadRomFile);
-    opts.settingsFile       = parser.value(settingsFile);
-    opts.imageFile          = parser.value(imageFile);
-    opts.debugFile          = parser.value(debugFile);
-    opts.sendFiles          = parser.values(sendFiles);
-    opts.sendArchFiles      = parser.values(sendArchFiles);
-    opts.sendRAMFiles       = parser.values(sendRAMFiles);
-    if (parser.isSet(emuSpeed)) {
-        opts.speed          = parser.value(emuSpeed).toInt();
-        if (opts.speed < 0)   { opts.speed = 0; }
-        if (opts.speed > 500) { opts.speed = 500; }
-    } else {
-        opts.speed = -1;
-    }
-    if (parser.isSet(loadTestFile)) {
-        opts.autotesterFile = QDir::currentPath() + QDir::separator() + parser.value(loadTestFile);
-    }
+        parser.process(app);
 
-    // get application pid and tie it to the id
-    opts.pidString = QString::number(QCoreApplication::applicationPid());
-    opts.idString = parser.value(procID);
-    if (opts.idString.isEmpty()) {
-        opts.idString = "Calculator";
-    }
+        // Take command line args and move to CEmuOpts struct
+        CEmuOpts opts;
+        opts.restoreOnOpen      = !parser.isSet(stateOption);
+        opts.useUnthrottled     = parser.isSet(unthrottledOption);
+        opts.suppressTestDialog = parser.isSet(suppressTestDialog);
+        opts.deforceReset       = parser.isSet(deforceReset);
+        opts.forceReloadRom     = parser.isSet(forceRomReload);
+        opts.romFile            = parser.value(loadRomFile);
+        opts.settingsFile       = parser.value(settingsFile);
+        opts.imageFile          = parser.value(imageFile);
+        opts.debugFile          = parser.value(debugFile);
+        opts.sendFiles          = parser.values(sendFiles);
+        opts.sendArchFiles      = parser.values(sendArchFiles);
+        opts.sendRAMFiles       = parser.values(sendRAMFiles);
+        if (parser.isSet(emuSpeed)) {
+            opts.speed          = parser.value(emuSpeed).toInt();
+            if (opts.speed < 0)   { opts.speed = 0; }
+            if (opts.speed > 500) { opts.speed = 500; }
+        } else {
+            opts.speed = -1;
+        }
+        if (parser.isSet(loadTestFile)) {
+            opts.autotesterFile = QDir::currentPath() + QDir::separator() + parser.value(loadTestFile);
+        }
 
-    configPath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + QStringLiteral("/CEmu");
+        // get application pid and tie it to the id
+        opts.pidString = QString::number(QCoreApplication::applicationPid());
+        opts.idString = parser.value(procID);
+        if (opts.idString.isEmpty()) {
+            opts.idString = "Calculator";
+        }
 
-    MainWindow EmuWin(opts);
-    if (!EmuWin.IsInitialized()) {
-        return 0;
-    }
+        configPath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + QStringLiteral("/CEmu");
 
-    EmuWin.show();
-    return app.exec();
+        MainWindow EmuWin(opts);
+        if (!EmuWin.IsInitialized()) {
+            return 0;
+        }
+
+        EmuWin.show();
+        app.exec();
+
+        reload = EmuWin.IsReload();
+    } while (reload);
+
+    return 0;
 }

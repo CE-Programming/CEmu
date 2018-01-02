@@ -195,6 +195,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->actionExportRomImage, &QAction::triggered, this, &MainWindow::exportRom);
     connect(ui->actionImportCalculatorState, &QAction::triggered, this, &MainWindow::restoreFromFile);
     connect(ui->actionReloadROM, &QAction::triggered, this, &MainWindow::reloadROM);
+    connect(ui->actionResetALL, &QAction::triggered, this, &MainWindow::reloadAll);
+    connect(ui->actionResetGUI, &QAction::triggered, this, &MainWindow::reloadGui);
     connect(ui->actionResetCalculator, &QAction::triggered, this, &MainWindow::resetCalculator);
     connect(ui->actionMemoryVisualizer, &QAction::triggered, this, &MainWindow::newMemoryVisualizer);
     connect(ui->actionDisableMenuBar, &QAction::triggered, this, &MainWindow::setMenuBarState);
@@ -680,7 +682,7 @@ void MainWindow::optAttemptLoad(CEmuOpts &o) {
     if (!fileExists(emu.rom)) {
         if (!runSetup()) {
             initPassed = false;
-            this->close();
+            close();
         }
     } else {
         if (o.restoreOnOpen && !o.imageFile.isEmpty() && fileExists(emu.image)) {
@@ -695,8 +697,6 @@ void MainWindow::optAttemptLoad(CEmuOpts &o) {
 }
 
 MainWindow::~MainWindow() {
-    debugger_free();
-
     delete com;
     delete settings;
     delete progressBar;
@@ -713,6 +713,25 @@ MainWindow::~MainWindow() {
 
 bool MainWindow::IsInitialized() {
     return initPassed;
+}
+
+void MainWindow::reloadAll() {
+    QFile(pathSettings).remove();
+    needReload = true;
+    close();
+}
+
+void MainWindow::reloadGui() {
+    settings->remove(SETTING_WINDOW_GEOMETRY);
+    settings->remove(SETTING_WINDOW_MEMORY_DOCKS);
+    settings->remove(SETTING_WINDOW_SIZE);
+    settings->remove(SETTING_WINDOW_STATE);
+    needReload = true;
+    close();
+}
+
+bool MainWindow::IsReload() {
+    return needReload;
 }
 
 void MainWindow::sendASMKey() {
@@ -885,6 +904,7 @@ void MainWindow::closeEvent(QCloseEvent *e) {
     emu.stop();
 
     saveMiscSettings();
+    debugger_free();
 
     QMainWindow::closeEvent(e);
 }

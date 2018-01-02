@@ -246,10 +246,14 @@ void MainWindow::setFocusSetting(bool state) {
 }
 
 void MainWindow::saveMiscSettings() {
-    settings->setValue(SETTING_WINDOW_STATE,         saveState(WindowStateVersion));
-    settings->setValue(SETTING_WINDOW_GEOMETRY,      saveGeometry());
-    settings->setValue(SETTING_WINDOW_SIZE,          size());
-    settings->setValue(SETTING_WINDOW_MEMORY_DOCKS,  memoryDocks);
+    if (!needReload) {
+        settings->setValue(SETTING_WINDOW_STATE,         saveState(WindowStateVersion));
+        settings->setValue(SETTING_WINDOW_GEOMETRY,      saveGeometry());
+        settings->setValue(SETTING_WINDOW_SIZE,          size());
+        settings->setValue(SETTING_WINDOW_MEMORY_DOCKS,  memoryDocks);
+    } else {
+        settings->setValue(SETTING_FIRST_RUN, false);
+    }
     settings->setValue(SETTING_CURRENT_DIR,          currDir.absolutePath());
     settings->setValue(SETTING_DEBUGGER_FLASH_BYTES, ui->flashBytes->value());
     settings->setValue(SETTING_DEBUGGER_RAM_BYTES,   ui->ramBytes->value());
@@ -419,6 +423,8 @@ void MainWindow::setUIDocks() {
         last_dock = dw;
 
         if (!settings->value(SETTING_FIRST_RUN, false).toBool()) {
+            dw->setFloating(true);
+            dw->setGeometry(0, 0, minimumWidth(), minimumHeight());
             dw->close();
         }
     }
