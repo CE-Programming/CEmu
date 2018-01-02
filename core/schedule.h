@@ -9,8 +9,8 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
-enum clock_id { CLOCK_CPU, CLOCK_APB, CLOCK_27M, CLOCK_12M, CLOCK_24M, CLOCK_32K,
-                CLOCK_NUM_ITEMS };
+enum clock_id { CLOCK_CPU, CLOCK_48M, CLOCK_24M, CLOCK_12M, CLOCK_6M, CLOCK_32K,
+                CLOCK_1, CLOCK_NUM_ITEMS };
 
 enum sched_event {
     SCHED_THROTTLE,

@@ -54,14 +54,14 @@ static void sched_update_events(void) {
 }
 
 void sched_reset(void) {
-    const uint32_t def_rates[CLOCK_NUM_ITEMS] = { 48000000, 78000000, 27000000, 12000000, 24000000, 32768 };
+    const uint32_t def_rates[CLOCK_NUM_ITEMS] = { 48000000, 48000000, 24000000, 12000000, 6000000, 32768, 1 };
 
     memcpy(sched.clockRates, def_rates, sizeof(def_rates));
     memset(sched.items, 0, sizeof sched.items);
 
     sched.event = SCHED_NUM_EVENTS;
     sched_set_next(sched.clockRates[CLOCK_CPU]);
-    sched.items[SCHED_THROTTLE].clock = CLOCK_27M;
+    sched.items[SCHED_THROTTLE].clock = CLOCK_6M;
     sched.items[SCHED_THROTTLE].proc = throttle_interval_event;
     event_set(SCHED_THROTTLE, 0);
 }

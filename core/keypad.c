@@ -85,28 +85,27 @@ static void keypad_scan_event(enum sched_event event) {
     uint8_t row = keypad.current_row;
     uint16_t data;
 
-    if (row >= sizeof(keypad.data) / sizeof(keypad.data[0])) {
-        return; /* too many keypad rows */
-    }
+    if (row < keypad.rows) {
+        if (row < sizeof(keypad.data) / sizeof(keypad.data[0])) {
+            /* scan each data row */
+            data = keypad.keyMap[row] | keypad.delay[row];
+            keypad.delay[row] = 0;
+            data &= (1 << keypad.cols) - 1;
 
-    /* scan each data row */
-    data = keypad.keyMap[row] | keypad.delay[row];
-    keypad.delay[row] = 0;
-    data &= (1 << keypad.cols) - 1;
+            /* if mode 3 or 2, generate data change interrupt */
+            if (keypad.data[row] != data) {
+                keypad.status |= 2;
+                keypad.data[row] = data;
+            }
+        }
 
-    /* if mode 3 or 2, generate data change interrupt */
-    if (keypad.data[row] != data) {
-        keypad.status |= 2;
-        keypad.data[row] = data;
-    }
-
-    if (keypad.current_row++ < keypad.rows) {  /* scan the next row */
-        event_repeat(event, keypad.row_wait);
-    } else {  /* finished scanning the keypad */
+        keypad.current_row++;
+        event_repeat(event, keypad.row_wait); /* scan the next row */
+    } else { /* finished scanning the keypad */
         keypad.current_row = 0;
         keypad.status |= 1;
         if (keypad.mode & 1) { /* are we in mode 1 or 3 */
-            event_repeat(event, keypad.scan_wait + keypad.row_wait);
+            event_repeat(event, keypad.scan_wait + 2);
         } else {
             /* If in single scan mode, go to idle mode */
             keypad.mode = 0;
@@ -184,7 +183,7 @@ void keypad_reset() {
     memset(keypad.delay, 0, sizeof(keypad.delay));
 
     sched.items[SCHED_KEYPAD].proc = keypad_scan_event;
-    sched.items[SCHED_KEYPAD].clock = CLOCK_APB;
+    sched.items[SCHED_KEYPAD].clock = CLOCK_6M;
     event_clear(SCHED_KEYPAD);
 
     gui_console_printf("[CEmu] Keypad reset.\n");
