@@ -130,11 +130,10 @@ void sched_set_clocks(enum clock_id count, uint32_t *new_rates) {
 }
 
 void sched_process_pending_events(void) {
-    enum sched_item_id id = sched.event.next;
-    struct sched_item *item = &sched.items[id];
-    while (cpu.cycles >= item->cputick) {
+    while (cpu.cycles >= sched.items[sched.event.next].cputick) {
+        enum sched_item_id id = sched.event.next;
         sched_clear(id);
-        item->callback.event(id);
+        sched.items[id].callback.event(id);
     }
 }
 
@@ -150,6 +149,7 @@ void sched_reset(void) {
     sched.items[SCHED_SECOND].clock = CLOCK_1;
     sched.items[SCHED_SECOND].second = 0;
     sched.items[SCHED_SECOND].tick = 1;
+    sched.items[SCHED_SECOND].cputick = sched.clockRates[CLOCK_CPU];
     sched.items[SCHED_THROTTLE].clock = CLOCK_6M;
     sched.items[SCHED_THROTTLE].callback.event = throttle_interval_event;
     sched_set(SCHED_THROTTLE, 0);
