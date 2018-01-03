@@ -425,7 +425,7 @@ void MainWindow::setUIDocks() {
         if (!settings->value(SETTING_FIRST_RUN, false).toBool()) {
             dw->setFloating(true);
             dw->setGeometry(0, 0, minimumWidth(), minimumHeight());
-            dw->close();
+            dw->hide();
         }
     }
 

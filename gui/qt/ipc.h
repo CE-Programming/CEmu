@@ -8,13 +8,17 @@
 // different types of available streams
 enum {
     IPC_NONE=0,
-    IPC_COMMANDLINEOPTIONS
+    IPC_CLI,
+    IPC_CLOSE
 };
 
 class ipc : public QObject {
     Q_OBJECT
+
 public:
     explicit ipc(QObject *p = Q_NULLPTR);
+    ~ipc();
+
     void serverSetup(const QString& name);
     void clientSetup(const QString& name);
     void serverListen();
@@ -22,7 +26,7 @@ public:
     void send(const QByteArray& pkt);
 
     QString getServerName();
-    QString getHostName();
+    QString getClientName();
 
     bool ipcSetup(const QString& id, const QString& pid);
     static bool idOpen(const QString& name);
@@ -45,7 +49,7 @@ private:
 
     // client
     QLocalSocket *socket;
-    QString hostName;
+    QString clientName;
 
     QByteArray data;
 };

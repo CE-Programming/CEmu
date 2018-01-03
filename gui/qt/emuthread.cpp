@@ -69,6 +69,7 @@ void throttle_timer_wait(void) {
 }
 
 EmuThread::EmuThread(QObject *p) : QThread(p) {
+    assert(emu_thread == Q_NULLPTR);
     emu_thread = this;
     speed = actualSpeed = 100;
     lastTime = std::chrono::steady_clock::now();

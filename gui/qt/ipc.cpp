@@ -5,14 +5,18 @@
 #include "utils.h"
 
 ipc::ipc(QObject *p) : QObject(p) {
-    server = new QLocalServer(this);
-    socket = new QLocalSocket(this);
+    server = new QLocalServer();
+    socket = new QLocalSocket();
     connect(server, &QLocalServer::newConnection, this, &ipc::accepted);
 }
 
+ipc::~ipc() {
+    delete socket;
+    delete server;
+}
+
 void ipc::idClose() {
-    socket->abort();
-    socket->close();
+    socket->disconnectFromServer();
     server->close();
     file.remove();
 }
@@ -22,7 +26,7 @@ void ipc::serverListen() {
         return;
     }
     server->close();
-    if(!server->listen(serverName)) {
+    if (!server->listen(serverName)) {
         qDebug() << "err: " << server->errorString();
     }
 }
@@ -46,8 +50,8 @@ void ipc::send(const QByteArray &pkt) {
     if (!clientSet) {
         return;
     }
-    socket->abort();
-    socket->connectToServer(hostName);
+    socket->disconnectFromServer();
+    socket->connectToServer(clientName);
     if (socket->waitForConnected()) {
         socket->write(pkt);
         if (!socket->waitForDisconnected()) {
@@ -59,7 +63,7 @@ void ipc::send(const QByteArray &pkt) {
 }
 
 void ipc::clientSetup(const QString& name) {
-    hostName = QStringLiteral("cemu-") + name;
+    clientName = QStringLiteral("cemu-") + name;
     clientSet = true;
 }
 
@@ -68,8 +72,8 @@ void ipc::serverSetup(const QString& name) {
     serverSet = true;
 }
 
-QString ipc::getHostName() {
-    return hostName;
+QString ipc::getClientName() {
+    return clientName;
 }
 
 QString ipc::getServerName() {

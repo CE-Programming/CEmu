@@ -11,6 +11,7 @@
 #include <QtNetwork/QNetworkReply>
 #include <QClipboard>
 #include <fstream>
+#include <stdio.h>
 
 #ifdef _MSC_VER
     #include <direct.h>
@@ -696,17 +697,24 @@ void MainWindow::optAttemptLoad(CEmuOpts &o) {
 }
 
 MainWindow::~MainWindow() {
+    delete sendingHandler;
+    delete keypadBridge;
+
     delete com;
     delete settings;
     delete progressBar;
     delete asmShortcut;
     delete toggleAction;
+    delete addMemory;
     delete stepInShortcut;
     delete stepOutShortcut;
     delete keyHistoryWindow;
     delete debuggerShortcut;
     delete stepOverShortcut;
     delete stepNextShortcut;
+    delete resendshortcut;
+    delete debugMenu;
+    delete docksMenu;
     delete ui;
 }
 
@@ -730,6 +738,7 @@ void MainWindow::reloadGui() {
 }
 
 bool MainWindow::IsReload() {
+    emu_thread = Q_NULLPTR;
     return needReload;
 }
 
@@ -922,10 +931,13 @@ void MainWindow::consoleStr(const QString &str) {
     if (str.at(0) == 0xc) {
         if (nativeConsole) {
 #ifdef _WIN32
-            system("cls");
+            int ret = system("cls");
 #else
-            system("clear");
+            int ret = system("clear");
 #endif
+            if (ret == -1) {
+                ui->console->clear();
+            }
         } else {
             ui->console->clear();
         }
@@ -942,10 +954,13 @@ void MainWindow::consoleErrStr(const QString &str) {
     if (str.at(0) == 0xc) {
         if (nativeConsole) {
 #ifdef _WIN32
-            system("cls");
+            int ret = system("cls");
 #else
-            system("clear");
+            int ret = system("clear");
 #endif
+            if (ret == -1) {
+                ui->console->clear();
+            }
         } else {
             ui->console->clear();
         }
@@ -1900,7 +1915,7 @@ bool MainWindow::ipcSetup() {
     QByteArray byteArray;
     QDataStream stream(&byteArray, QIODevice::WriteOnly);
     stream.setVersion(QDataStream::Qt_5_6);
-    unsigned int type = IPC_COMMANDLINEOPTIONS;
+    unsigned int type = IPC_CLI;
 
     stream << type
            << opts.useUnthrottled
@@ -1956,7 +1971,7 @@ void MainWindow::ipcReceived() {
     stream >> type;
 
     switch (type) {
-        case IPC_COMMANDLINEOPTIONS:
+        case IPC_CLI:
            for (QWindow* w : QGuiApplication::allWindows()) {
               w->show();
               w->raise();
