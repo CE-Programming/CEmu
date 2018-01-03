@@ -19,7 +19,6 @@ public:
 
 private:
     QWidget *titleHide;
-    int titleHeight;
 };
 
 #endif

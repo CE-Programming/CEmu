@@ -3325,7 +3325,7 @@
             </property>
             <property name="sizeHint" stdset="0">
              <size>
-              <width>40</width>
+              <width>0</width>
               <height>20</height>
              </size>
             </property>
@@ -3484,7 +3484,7 @@
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
-                 <width>40</width>
+                 <width>0</width>
                  <height>20</height>
                 </size>
                </property>
@@ -3586,7 +3586,7 @@
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
-                 <width>40</width>
+                 <width>0</width>
                  <height>20</height>
                 </size>
                </property>
@@ -3688,7 +3688,7 @@
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
-                 <width>40</width>
+                 <width>0</width>
                  <height>20</height>
                 </size>
                </property>
@@ -6897,14 +6897,29 @@
             </widget>
            </item>
            <item>
-            <widget class="QLabel" name="emulationSpeedLabel">
-             <property name="text">
-              <string>100%</string>
+            <widget class="QSpinBox" name="emulationSpeedSpin">
+             <property name="suffix">
+              <string>%</string>
+             </property>
+             <property name="maximum">
+              <number>500</number>
+             </property>
+             <property name="value">
+              <number>100</number>
+             </property>
+             <property name="displayIntegerBase">
+              <number>10</number>
              </property>
             </widget>
            </item>
            <item>
             <widget class="QSlider" name="emulationSpeed">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="focusPolicy">
               <enum>Qt::ClickFocus</enum>
              </property>
@@ -6912,16 +6927,22 @@
               <number>0</number>
              </property>
              <property name="maximum">
-              <number>50</number>
+              <number>500</number>
              </property>
              <property name="singleStep">
               <number>10</number>
              </property>
+             <property name="pageStep">
+              <number>100</number>
+             </property>
              <property name="value">
-              <number>10</number>
+              <number>100</number>
              </property>
              <property name="sliderPosition">
-              <number>10</number>
+              <number>100</number>
+             </property>
+             <property name="tracking">
+              <bool>true</bool>
              </property>
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
@@ -6936,7 +6957,7 @@
               <enum>QSlider::TicksBelow</enum>
              </property>
              <property name="tickInterval">
-              <number>1</number>
+              <number>10</number>
              </property>
             </widget>
            </item>
@@ -8616,7 +8637,7 @@ QPushButton:pressed {
      <normaloff>:/icons/resources/icons/reset.png</normaloff>:/icons/resources/icons/reset.png</iconset>
    </property>
    <property name="text">
-    <string>Reset Calculator</string>
+    <string>Reset calculator</string>
    </property>
   </action>
   <action name="actionTakeGIFScreenshot">
@@ -8652,7 +8673,7 @@ QPushButton:pressed {
      <normaloff>:/icons/resources/icons/export.png</normaloff>:/icons/resources/icons/export.png</iconset>
    </property>
    <property name="text">
-    <string>Save State</string>
+    <string>Save state</string>
    </property>
   </action>
   <action name="actionRestoreState">
@@ -8661,7 +8682,7 @@ QPushButton:pressed {
      <normaloff>:/icons/resources/icons/import.png</normaloff>:/icons/resources/icons/import.png</iconset>
    </property>
    <property name="text">
-    <string>Restore State</string>
+    <string>Restore state</string>
    </property>
   </action>
   <action name="actionReloadROM">
@@ -8670,7 +8691,7 @@ QPushButton:pressed {
      <normaloff>:/icons/resources/icons/reload.png</normaloff>:/icons/resources/icons/reload.png</iconset>
    </property>
    <property name="text">
-    <string>Reload Rom</string>
+    <string>Reload ROM</string>
    </property>
   </action>
   <action name="actionExportRomImage">
@@ -8706,7 +8727,7 @@ QPushButton:pressed {
      <normaloff>:/icons/resources/icons/lcd.png</normaloff>:/icons/resources/icons/lcd.png</iconset>
    </property>
    <property name="text">
-    <string>Memory Visualizer</string>
+    <string>Memory visualizer</string>
    </property>
   </action>
   <action name="actionExportDebugger">
@@ -8774,12 +8795,20 @@ QPushButton:pressed {
   </action>
   <action name="actionResetGUI">
    <property name="text">
-    <string>Reset GUI Docks</string>
+    <string>Reset GUI docks</string>
    </property>
   </action>
   <action name="actionResetALL">
    <property name="text">
     <string>Reset CEmu</string>
+   </property>
+  </action>
+  <action name="actionHideDockBoundaries">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Hide dock boundaries</string>
    </property>
   </action>
  </widget>

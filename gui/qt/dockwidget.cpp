@@ -9,17 +9,13 @@ DockWidget::DockWidget(QTabWidget *tabs, QWidget *parent) : DockWidget{tabs->tab
     setWidget(tabs->widget(0));
 }
 
-DockWidget::DockWidget(const QString &title, QWidget *parent)
-    : QDockWidget{title, parent}, titleHide{new QWidget{this}}, titleHeight{-1} {
+DockWidget::DockWidget(const QString &title, QWidget *parent) : QDockWidget{title, parent}, titleHide{new QWidget{this}} {
     setObjectName(windowTitle());
 }
 
 void DockWidget::toggleState(bool visible) {
     visible |= isWindow();
     if ((visible) ^ (titleBarWidget() == Q_NULLPTR)) {
-        if (!visible) {
-            titleHeight = widget()->y();
-        }
         setTitleBarWidget(visible ? Q_NULLPTR : titleHide);
     }
 }

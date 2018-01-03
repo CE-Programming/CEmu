@@ -289,6 +289,7 @@ private:
 
     void setDataCol(bool state);
     void setMenuBarState(bool state);
+    void setDockBoundaries(bool state);
 
     // For linking to the buttons
     void breakpointSlotAdd();
@@ -564,6 +565,8 @@ private:
     static const QString SETTING_WINDOW_SIZE;
     static const QString SETTING_WINDOW_STATE;
     static const QString SETTING_WINDOW_GEOMETRY;
+    static const QString SETTING_WINDOW_SEPARATOR;
+    static const QString SETTING_WINDOW_MENUBAR;
     static const QString SETTING_WINDOW_MEMORY_DOCKS;
     static const QString SETTING_CAPTURE_FRAMESKIP;
     static const QString SETTING_CAPTURE_OPTIMIZE;
@@ -578,7 +581,6 @@ private:
     static const QString SETTING_RESTORE_ON_OPEN;
     static const QString SETTING_EMUSPEED;
     static const QString SETTING_AUTOUPDATE;
-    static const QString SETTING_DISABLE_MENUBAR;
     static const QString SETTING_ALWAYS_ON_TOP;
     static const QString SETTING_CURRENT_DIR;
     static const QString SETTING_ENABLE_WIN_CONSOLE;

@@ -64,10 +64,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     ui->statusBar->addWidget(&speedLabel);
     ui->statusBar->addPermanentWidget(&msgLabel);
 
-    //setStyleSheet("QMainWindow::separator{ width: 0px; height: 0px; }");
-
-    // Allow for 2017 lines of logging
-    ui->console->setMaximumBlockCount(2017);
+    // Allow for 2018 lines of logging
+    ui->console->setMaximumBlockCount(2018);
 
     setWindowTitle(QStringLiteral("CEmu | ") + opts.idString);
 
@@ -200,7 +198,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->actionResetCalculator, &QAction::triggered, this, &MainWindow::resetCalculator);
     connect(ui->actionMemoryVisualizer, &QAction::triggered, this, &MainWindow::newMemoryVisualizer);
     connect(ui->actionDisableMenuBar, &QAction::triggered, this, &MainWindow::setMenuBarState);
-
+    connect(ui->actionHideDockBoundaries, &QAction::triggered, this, &MainWindow::setDockBoundaries);
     connect(ui->buttonResetCalculator, &QPushButton::clicked, this, &MainWindow::resetCalculator);
     connect(ui->buttonReloadROM, &QPushButton::clicked, this, &MainWindow::resetCalculator);
 
@@ -233,6 +231,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->checkSpi, &QCheckBox::toggled, this, &MainWindow::setLcdSpi);
     connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::setAlwaysOnTop);
     connect(ui->emulationSpeed, &QSlider::valueChanged, this, &MainWindow::setEmuSpeed);
+    connect(ui->emulationSpeedSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setEmuSpeed);
     connect(ui->checkThrottle, &QCheckBox::stateChanged, this, &MainWindow::setThrottle);
     connect(ui->lcdWidget, &QWidget::customContextMenuRequested, this, &MainWindow::screenContextMenu);
     connect(ui->checkSaveRestore, &QCheckBox::stateChanged, this, &MainWindow::setAutoSaveState);
@@ -403,7 +402,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     setFrameskip(settings->value(SETTING_CAPTURE_FRAMESKIP, 1).toUInt());
     setOptimizeRecording(settings->value(SETTING_CAPTURE_OPTIMIZE, true).toBool());
     setLcdRefresh(settings->value(SETTING_SCREEN_REFRESH_RATE, 30).toUInt());
-    setEmuSpeed(settings->value(SETTING_EMUSPEED, 10).toUInt());
+    setEmuSpeed(settings->value(SETTING_EMUSPEED, 100).toUInt());
     setFont(settings->value(SETTING_DEBUGGER_TEXT_SIZE, 9).toUInt());
     setAutoCheckForUpdates(settings->value(SETTING_AUTOUPDATE, false).toBool());
     setAutoSaveState(settings->value(SETTING_RESTORE_ON_OPEN, true).toBool());
@@ -527,7 +526,7 @@ void MainWindow::showEvent(QShowEvent *e) {
         setLcdScale(settings->value(SETTING_SCREEN_SCALE, 100).toUInt());
         setSkinToggle(settings->value(SETTING_SCREEN_SKIN, true).toBool());
         setAlwaysOnTop(settings->value(SETTING_ALWAYS_ON_TOP, false).toBool());
-        setMenuBarState(settings->value(SETTING_DISABLE_MENUBAR, false).toBool());
+        setMenuBarState(settings->value(SETTING_WINDOW_MENUBAR, false).toBool());
         const QByteArray geometry = settings->value(SETTING_WINDOW_GEOMETRY, QByteArray()).toByteArray();
         if (geometry.isEmpty()) {
             const QRect availableGeometry = QApplication::desktop()->availableGeometry(this);
@@ -740,6 +739,8 @@ void MainWindow::reloadGui() {
     settings->remove(SETTING_WINDOW_MEMORY_DOCKS);
     settings->remove(SETTING_WINDOW_SIZE);
     settings->remove(SETTING_WINDOW_STATE);
+    settings->remove(SETTING_WINDOW_MENUBAR);
+    settings->remove(SETTING_WINDOW_SEPARATOR);
     needReload = true;
     close();
 }

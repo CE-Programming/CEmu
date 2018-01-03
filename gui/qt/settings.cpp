@@ -46,6 +46,8 @@ const QString MainWindow::SETTING_KEYPAD_COLOR              = QStringLiteral("Ke
 const QString MainWindow::SETTING_WINDOW_SIZE               = QStringLiteral("Window/size");
 const QString MainWindow::SETTING_WINDOW_STATE              = QStringLiteral("Window/state");
 const QString MainWindow::SETTING_WINDOW_GEOMETRY           = QStringLiteral("Window/geometry");
+const QString MainWindow::SETTING_WINDOW_SEPARATOR          = QStringLiteral("Window/boundaries");
+const QString MainWindow::SETTING_WINDOW_MENUBAR            = QStringLiteral("Window/menubar");
 const QString MainWindow::SETTING_WINDOW_MEMORY_DOCKS       = QStringLiteral("Window/memory_docks");
 const QString MainWindow::SETTING_CAPTURE_FRAMESKIP         = QStringLiteral("Capture/frameskip");
 const QString MainWindow::SETTING_CAPTURE_OPTIMIZE          = QStringLiteral("Capture/optimize");
@@ -60,7 +62,6 @@ const QString MainWindow::SETTING_SAVE_ON_CLOSE             = QStringLiteral("sa
 const QString MainWindow::SETTING_RESTORE_ON_OPEN           = QStringLiteral("restore_on_open");
 const QString MainWindow::SETTING_EMUSPEED                  = QStringLiteral("emulated_speed");
 const QString MainWindow::SETTING_AUTOUPDATE                = QStringLiteral("check_for_updates");
-const QString MainWindow::SETTING_DISABLE_MENUBAR           = QStringLiteral("disable_menubar");
 const QString MainWindow::SETTING_ALWAYS_ON_TOP             = QStringLiteral("always_on_top");
 const QString MainWindow::SETTING_CURRENT_DIR               = QStringLiteral("current_directory");
 const QString MainWindow::SETTING_ENABLE_WIN_CONSOLE        = QStringLiteral("enable_windows_console");
@@ -265,7 +266,7 @@ void MainWindow::saveMiscSettings() {
 void MainWindow::setMenuBarState(bool state) {
     ui->menubar->setHidden(state);
     ui->actionDisableMenuBar->setChecked(state);
-    settings->setValue(SETTING_DISABLE_MENUBAR, state);
+    settings->setValue(SETTING_WINDOW_MENUBAR, state);
 }
 
 void MainWindow::resetSettingsIfLoadedCEmuBootableImage() {
@@ -450,6 +451,7 @@ void MainWindow::setUIEditMode(bool mode) {
     for (const auto& dock : findChildren<DockWidget *>()) {
         dock->toggleState(uiEditMode);
     }
+    setDockBoundaries(!mode);
 }
 
 void MainWindow::setThrottle(int mode) {
@@ -553,11 +555,12 @@ void MainWindow::setLcdRefresh(int value) {
 }
 
 void MainWindow::setEmuSpeed(int value) {
-    int actualSpeed = value*10;
     settings->setValue(SETTING_EMUSPEED, value);
-    ui->emulationSpeedLabel->setText(QString::number(actualSpeed).rightJustified(3, '0')+QStringLiteral("%"));
+    ui->emulationSpeedSpin->blockSignals(true);
+    ui->emulationSpeedSpin->setValue(value);
+    ui->emulationSpeedSpin->blockSignals(false);
     ui->emulationSpeed->setValue(value);
-    emit changedEmuSpeed(actualSpeed);
+    emit changedEmuSpeed(value);
 }
 
 void MainWindow::selectKeypadColor() {
@@ -636,6 +639,16 @@ void MainWindow::setSlotInfo() {
 void MainWindow::setRecentSave(bool state) {
     ui->checkSaveRecent->setChecked(state);
     settings->setValue(SETTING_RECENT_SAVE, state);
+}
+
+void MainWindow::setDockBoundaries(bool state) {
+    ui->actionHideDockBoundaries->setChecked(state);
+    settings->setValue(SETTING_WINDOW_SEPARATOR, state);
+    if (state) {
+        setStyleSheet("QMainWindow::separator{ width: 0px; height: 0px; }");
+    } else {
+        setStyleSheet("QMainWindow::separator{ width: 4px; height: 4px; }");
+    }
 }
 
 void MainWindow::saveRecentInfo() {
