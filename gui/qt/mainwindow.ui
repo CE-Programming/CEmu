@@ -8779,7 +8779,7 @@ QPushButton:pressed {
   </action>
   <action name="actionResetALL">
    <property name="text">
-    <string>Reset ALL</string>
+    <string>Reset CEmu</string>
    </property>
   </action>
  </widget>

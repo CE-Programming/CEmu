@@ -1972,6 +1972,7 @@ void MainWindow::ipcCloseOthers() {
     QString idPath = configPath + "/id/";
     QDir dir(idPath);
     QStringList clients = dir.entryList(QDir::Filter::Files);
+    int delay = 100;
 
     foreach (const QString &id, clients) {
         QFile file(idPath + id);
@@ -1992,11 +1993,15 @@ void MainWindow::ipcCloseOthers() {
 
                     com->clientSetup(pid);
                     com->send(byteArray);
+                    delay += 100;
                 }
             }
         }
         file.close();
     }
+
+    // wait for the settings to be written by the other processes
+    guiDelay(delay);
 }
 
 void MainWindow::ipcReceived() {
