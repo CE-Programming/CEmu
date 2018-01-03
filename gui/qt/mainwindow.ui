@@ -5463,7 +5463,7 @@
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
-                   <width>40</width>
+                   <width>0</width>
                    <height>20</height>
                   </size>
                  </property>
@@ -5504,7 +5504,7 @@
                <item>
                 <widget class="QCheckBox" name="checkBoxTestReset">
                  <property name="enabled">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </property>
                  <property name="text">
                   <string>Reset before test</string>
@@ -5531,7 +5531,7 @@
                  </property>
                  <property name="sizeHint" stdset="0">
                   <size>
-                   <width>40</width>
+                   <width>0</width>
                    <height>20</height>
                   </size>
                  </property>
@@ -5547,7 +5547,7 @@
         <item>
          <widget class="QGroupBox" name="screenshotgroup_4">
           <property name="enabled">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
@@ -5758,7 +5758,7 @@
              </property>
              <property name="sizeHint" stdset="0">
               <size>
-               <width>40</width>
+               <width>0</width>
                <height>20</height>
               </size>
              </property>

@@ -72,14 +72,14 @@ static const std::unordered_map<std::string, coord2d> valid_keys = {
 void sendKey(uint16_t key)
 {
     cemucore::sendKey(key);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
     DO_STEP_CALLBACK();
 }
 
 void sendLetterKeyPress(char letter)
 {
     cemucore::sendLetterKeyPress(letter);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
     DO_STEP_CALLBACK();
 }
 

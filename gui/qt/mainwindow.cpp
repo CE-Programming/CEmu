@@ -1501,8 +1501,7 @@ int MainWindow::openJSONConfig(const QString& jsonPath) {
     std::string jsonContents;
     std::ifstream ifs(jsonPath.toStdString());
 
-    if (ifs.good())
-    {
+    if (ifs.good()) {
         int ok = chdir(QDir::toNativeSeparators(QFileInfo(jsonPath).absoluteDir().path()).toStdString().c_str());
         if (ok != 0) {
             QMessageBox::warning(this, MSG_ERROR, tr("Couldn't go to where the JSON file is."));
@@ -1534,17 +1533,22 @@ int MainWindow::openJSONConfig(const QString& jsonPath) {
 
 void MainWindow::prepareAndOpenJSONConfig() {
     QFileDialog dialog(this);
+    int good;
 
     ui->buttonLaunchTest->setEnabled(false);
 
-    dialog.setDirectory(QDir::homePath());
+    dialog.setDirectory(currDir);
     dialog.setFileMode(QFileDialog::ExistingFile);
     dialog.setNameFilter(QStringLiteral("JSON config (*.json)"));
-    if (!dialog.exec()) {
+
+    good = dialog.exec();
+    currDir = dialog.directory().absolutePath();
+
+    if (!good) {
         return;
     }
 
-    openJSONConfig(dialog.selectedFiles().at(0));
+    openJSONConfig(dialog.selectedFiles().first());
 }
 
 void MainWindow::reloadJSONConfig() {
@@ -1559,11 +1563,10 @@ void MainWindow::launchTest() {
 
     if (ui->checkBoxTestReset->isChecked()) {
         resetCalculator();
-        guiDelay(1000);
+        guiDelay(3000);
     }
 
     if (ui->checkBoxTestClear->isChecked()) {
-        // Clear home screen
         autotester::sendKey(0x09);
     }
 
@@ -1574,7 +1577,9 @@ void MainWindow::launchTest() {
 
     sendingHandler->sendFiles(filesList, LINK_FILE);
     equatesRefresh();
-    guiDelay(100);
+    while (guiSend) {
+        guiDelay(10);
+    }
 
     // Follow the sequence
     if (!autotester::doTestSequence()) {
