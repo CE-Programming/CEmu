@@ -44,7 +44,7 @@ signals:
     void stopped();
 
     // Sending/Receiving
-    void sentFile(const QString &file, bool ok);
+    void sentFile(const QString &file, int ok);
     void receiveReady();
 
 public slots:

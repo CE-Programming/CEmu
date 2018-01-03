@@ -85,6 +85,7 @@ bool SendingHandler::dragOccured(QDragEnterEvent *e) {
                                                     QStringLiteral("8xz"),
                                                     QStringLiteral("8xt"),
                                                     QStringLiteral("8ca"),
+                                                    QStringLiteral("8cg"),
                                                     QStringLiteral("8ci") };
 
         QFileInfo file(url.fileName());
@@ -98,14 +99,17 @@ bool SendingHandler::dragOccured(QDragEnterEvent *e) {
     return true;
 }
 
-void SendingHandler::sentFile(const QString &file, bool ok) {
+void SendingHandler::sentFile(const QString &file, int ok) {
     bool add = true;
     int rows = table->rowCount();
 
     // Send null to complete sending
-    if (!ok || file.isEmpty()) {
-        if (!ok) {
-            QMessageBox::critical(Q_NULLPTR, QObject::tr("Failed Transfer"), QObject::tr("File: ")+file);
+    if (ok != LINK_GOOD || file.isEmpty()) {
+        if (ok == LINK_ERR) {
+            QMessageBox::critical(Q_NULLPTR, QObject::tr("Transfer error"), QObject::tr("Transfer Error, see console for information.\nFile: ") + file);
+        }
+        if (ok == LINK_WARN) {
+            QMessageBox::warning(Q_NULLPTR, QObject::tr("Transfer warning"), QObject::tr("Transfer Warning, see console for information.\nFile: ") + file);
         }
         progress->setValue(progress->maximum());
         guiDelay(100);

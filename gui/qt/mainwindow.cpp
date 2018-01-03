@@ -1249,7 +1249,8 @@ QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode, con
 }
 
 void MainWindow::variableDoubleClicked(QTableWidgetItem *item) {
-    const calc_var_t var = *reinterpret_cast<const calc_var_t*>(ui->emuVarView->item(item->row(), VAR_NAME)->data(Qt::UserRole).toByteArray().data());
+    calc_var_t var;
+    memcpy(&var, ui->emuVarView->item(item->row(), VAR_NAME)->data(Qt::UserRole).toByteArray().data(), sizeof(calc_var_t));
     if (calc_var_is_asmprog(&var)) {
         return;
     } else if (var.type != CALC_VAR_TYPE_APP_VAR && (!calc_var_is_internal(&var) || var.name[0] == '#')) {
@@ -1326,10 +1327,9 @@ void MainWindow::changeVariableList() {
                 QTableWidgetItem *var_preview = new QTableWidgetItem(var_value);
                 QTableWidgetItem *var_size = new QTableWidgetItem();
 
-                var_size->setData(Qt::DisplayRole, var.size);
-
                 // Attach var index (hidden) to the name. Needed elsewhere
-                var_name->setData(Qt::UserRole, QByteArray(reinterpret_cast<char*>(&var), sizeof(calc_var_t)));
+                var_name->setData(Qt::UserRole, QByteArray(reinterpret_cast<const char*>(&var), sizeof(calc_var_t)));
+                var_size->setData(Qt::DisplayRole, var.size);
 
                 var_name->setCheckState(Qt::Unchecked);
 
@@ -1398,18 +1398,20 @@ void MainWindow::saveSelected() {
         "",
     };
 
-    QVector<const calc_var_t*> selectedVars;
+    QVector<calc_var_t> selectedVars;
     QStringList fileNames;
     for (int currRow = 0; currRow < ui->emuVarView->rowCount(); currRow++) {
         if (ui->emuVarView->item(currRow, VAR_NAME)->checkState() == Qt::Checked) {
-            selectedVars.append(reinterpret_cast<const calc_var_t*>(ui->emuVarView->item(currRow, VAR_NAME)->data(Qt::UserRole).toByteArray().constData()));
+            calc_var_t var;
+            memcpy(&var, reinterpret_cast<const calc_var_t*>(ui->emuVarView->item(currRow, VAR_NAME)->data(Qt::UserRole).toByteArray().data()), sizeof(calc_var_t));
+            selectedVars.append(var);
         }
     }
     if (selectedVars.size() < 1) {
         QMessageBox::warning(this, MSG_WARNING, tr("Select at least one file to transfer"));
     } else {
         if (selectedVars.size() == 1) {
-            uint8_t i = selectedVars.first()->type1;
+            uint8_t i = selectedVars.first().type1;
             QString defaultSuffix = var_extension[i];
             fileNames = showVariableFileDialog(QFileDialog::AcceptSave, QStringLiteral("TI ") +
                                                QString(calc_var_type_names[i]) +
@@ -1418,7 +1420,7 @@ void MainWindow::saveSelected() {
             fileNames = showVariableFileDialog(QFileDialog::AcceptSave, tr("TI Group (*.8cg);;All Files (*.*)"), QStringLiteral("8cg"));
         }
         if (fileNames.size() == 1) {
-            if (!receiveVariableLink(selectedVars.size(), *selectedVars.constData(),  fileNames.first().toUtf8())) {
+            if (!receiveVariableLink(selectedVars.size(), selectedVars.constData(),  fileNames.first().toUtf8())) {
                 QMessageBox::critical(this, MSG_ERROR, tr("A failure occured during transfer of: ") + fileNames.first());
             }
         }

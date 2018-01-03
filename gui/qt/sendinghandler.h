@@ -16,13 +16,13 @@ public:
     ~SendingHandler() = default;
 
     void sendFiles(const QStringList& fileNames, unsigned int location);
-    bool dragOccured(QDragEnterEvent* e);
-    void dropOccured(QDropEvent* e, unsigned int location);
+    bool dragOccured(QDragEnterEvent *e);
+    void dropOccured(QDropEvent *e, unsigned int location);
     void resendSelected();
     void addFile(QString &path, bool select);
 
 public slots:
-    void sentFile(const QString &file, bool ok);
+    void sentFile(const QString& file, int ok);
     void resendPressed();
 
 signals:

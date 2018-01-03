@@ -198,7 +198,7 @@ void EmuThread::sendFiles() {
         emit sentFile(f, sendVariableLink(f.toUtf8(), sendLoc));
     }
 
-    emit sentFile(QString(), true);
+    emit sentFile(QString(), LINK_GOOD);
 }
 
 void EmuThread::sendActualSpeed() {

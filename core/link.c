@@ -79,10 +79,11 @@ static void run_asm(const uint8_t *data, const size_t data_size, const uint32_t 
  * Proper USB emulation should really be a thing
  * See GitHub issue #25
  */
-bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int location) {
+int EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int location) {
     const size_t h_size = sizeof header_data;
     const uint8_t tVarLst = 0x5D, tAns = 0x72;
     unsigned int i;
+    int ret = LINK_GOOD;
 
     FILE *file;
     uint8_t tmp_buf[0x80];
@@ -109,7 +110,8 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int l
 
     /* Return if we are at an error menu */
     if (*cxCurApp == 0x52 || !(file = fopen_utf8(file_name, "rb"))) {
-        return false;
+        gui_console_printf("[CEmu] Transfer Error: OS in error screen.\n");
+        return LINK_ERR;
     }
 
     save_cycles = cpu.cycles;
@@ -129,8 +131,8 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int l
     temp_size = (size_t)data_size + FILE_DATA + 4;
 
     if ((size_t)lSize != temp_size) {
-        gui_console_printf("[CEmu]Transfer Error: File data section size incorrect.\n");
-        goto r_err;
+        gui_console_printf("[CEmu] Transfer Warning: File data section size incorrect.\n");
+        ret = LINK_WARN;
     }
 
     if (fseek(file, FILE_DATA_START, SEEK_SET))            goto r_err;
@@ -144,8 +146,8 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int l
     if (fread(&cchecksum, 2, 1, file) != 1)                goto r_err;
 
     if (cchecksum != checksum) {
-        gui_console_printf("[CEmu] Transfer Error: File checksum invalid.\n");
-        goto r_err;
+        gui_console_printf("[CEmu] Transfer Warning: File checksum invalid.\n");
+        ret = LINK_WARN;
     }
 
     if (fseek(file, FILE_DATA_START, SEEK_SET))            goto r_err;
@@ -165,7 +167,7 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int l
 
     run_asm(jforcegraph, sizeof jforcegraph, 2500000);
 
-    while (data_size) {
+    while (ftell(file) < lSize-2) {
 
         if (fread(&header_size, 2, 1, file) != 1)          goto r_err;
         if (fread(&var_size, 2, 1, file) != 1)             goto r_err;
@@ -195,11 +197,13 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int l
 
         if (mem_peek_byte(0xD008DF)) {
             gui_console_printf("[CEmu] Transfer Error: OS Error encountered\n");
+            ret = LINK_ERR;
             goto r_err;
         }
 
         if (mem_peek_word(0xD0118C, true)) {
             gui_console_printf("[CEmu] Transfer Warning: Running assembly program; RAM leak possible\n");
+            ret = LINK_WARN;
         }
 
         var_ptr = phys_mem_ptr(mem_peek_long(SAFE_RAM), var_size);
@@ -216,23 +220,22 @@ bool EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int l
             case LINK_RAM:
                 break;
         }
-
-        data_size -= 2 + header_size + 2 + var_size;
     }
 
     run_asm(jforcehome, sizeof jforcehome, 23000000);
     cpu.cycles = save_cycles;
     cpu.next = save_next;
     cpu.baseCycles = save_base_cycles;
+    fclose(file);
 
-    return !fclose(file);
+    return ret;
 
 r_err:
     cpu.cycles = save_cycles;
     cpu.next = save_next;
     cpu.baseCycles = save_base_cycles;
     fclose(file);
-    return false;
+    return ret;
 }
 
 static const char header[] = "**TI83F*\x1A\x0A\0Exported via CEmu ";
