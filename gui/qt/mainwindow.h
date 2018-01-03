@@ -376,7 +376,8 @@ private:
     void changeVariableList();
     void variableDoubleClicked(QTableWidgetItem* item);
     void launchPrgm(const calc_var_t* prgm);
-    void saveSelected();
+    void saveSelectedFile();
+    void saveSelectedFiles();
     void resendFiles();
     void receiveChangeState();
 
@@ -540,6 +541,7 @@ private:
 
     // Settings definitions
 
+    static const QString MSG_INFORMATION;
     static const QString MSG_WARNING;
     static const QString MSG_ERROR;
 
@@ -605,6 +607,8 @@ private:
     QProgressBar *progressBar;
     QVector<QHexEdit*> memory;
     int memoryDocks = 0;
+
+    static const char *var_extension[];
 };
 
 #endif

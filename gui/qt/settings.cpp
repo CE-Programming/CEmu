@@ -79,6 +79,7 @@ const QString MainWindow::SETTING_DEFAULT_ROM_FILE          = QStringLiteral("/c
 const QString MainWindow::SETTING_DEFAULT_DEBUG_FILE        = QStringLiteral("/cemu_debug.ini");
 const QString MainWindow::SETTING_DEFAULT_IMAGE_FILE        = QStringLiteral("/cemu_image.ce");
 
+const QString MainWindow::MSG_INFORMATION                   = tr("Information");
 const QString MainWindow::MSG_WARNING                       = tr("Warning");
 const QString MainWindow::MSG_ERROR                         = tr("Error");
 const QString MainWindow::TITLE_MEM_DOCK                    = tr("Memory View");

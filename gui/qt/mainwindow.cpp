@@ -162,7 +162,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::selectFiles);
     connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::selectFiles);
     connect(ui->buttonRefreshList, &QPushButton::clicked, this, &MainWindow::receiveChangeState);
-    connect(ui->buttonReceiveFiles, &QPushButton::clicked, this, &MainWindow::saveSelected);
+    connect(ui->buttonReceiveFile, &QPushButton::clicked, this, &MainWindow::saveSelectedFile);
+    connect(ui->buttonReceiveFiles, &QPushButton::clicked, this, &MainWindow::saveSelectedFiles);
     connect(ui->buttonResendFiles, &QPushButton::clicked, this, &MainWindow::resendFiles);
     connect(ui->buttonRmAllVars, &QPushButton::clicked, this, &MainWindow::removeAllSentVars);
     connect(ui->buttonRmSelectedVars, &QPushButton::clicked, this, &MainWindow::removeSentVars);
@@ -496,8 +497,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     }
 
     if (!settings->value(SETTING_FIRST_RUN, false).toBool()) {
-        infoBox = new QMessageBox;
-        infoBox->setWindowTitle(tr("Information"));
+        infoBox = new QMessageBox();
+        infoBox->setWindowTitle(MSG_INFORMATION);
         infoBox->setText(tr("Welcome!\nCEmu uses a customizable dock-style interface. "
                             "Drag and drop to move tabs and windows around on the screen, "
                             "and choose which docks are available in the 'Docks' menu in the topmost bar. "
@@ -1278,6 +1279,7 @@ void MainWindow::changeVariableList() {
     if (!guiReceive) {
         ui->buttonRefreshList->setText(tr("View Calculator Variables"));
         ui->buttonReceiveFiles->setEnabled(false);
+        ui->buttonReceiveFile->setEnabled(false);
         ui->buttonRun->setEnabled(true);
         ui->buttonSend->setEnabled(true);
         ui->emuVarView->setEnabled(false);
@@ -1286,6 +1288,7 @@ void MainWindow::changeVariableList() {
         ui->buttonRefreshList->setText(tr("Resume emulation"));
         ui->buttonSend->setEnabled(false);
         ui->buttonReceiveFiles->setEnabled(true);
+        ui->buttonReceiveFile->setEnabled(true);
         ui->buttonResendFiles->setEnabled(false);
         ui->buttonRun->setEnabled(false);
         ui->emuVarView->setEnabled(true);
@@ -1353,51 +1356,7 @@ void MainWindow::changeVariableList() {
     ui->emuVarView->setSortingEnabled(true);
 }
 
-void MainWindow::saveSelected() {
-    constexpr const char* var_extension[] = {
-        "8xn",  // 00
-        "8xl",
-        "8xm",
-        "8xy",
-        "8xs",
-        "8xp",
-        "8xp",
-        "8ci",
-        "8xd",  // 08
-        "",
-        "",
-        "8xw",  // 0B
-        "8xc",
-        "8xl",  // 0D
-        "",
-        "8xw",  // 0F
-        "8xz",  // 10
-        "8xt",  // 11
-        "",
-        "",
-        "",
-        "8xv",  // 15
-        "",
-        "8cg",  // 17
-        "8xn",  // 18
-        "",
-        "8ca",  // 1A
-        "8xc",
-        "8xn",
-        "8xc",
-        "8xc",
-        "8xc",
-        "8xn",
-        "8xn",  // 21
-        "",
-        "8pu",  // 23
-        "8ek",  // 24
-        "",
-        "",
-        "",
-        "",
-    };
-
+void MainWindow::saveSelectedFile() {
     QVector<calc_var_t> selectedVars;
     QStringList fileNames;
     for (int currRow = 0; currRow < ui->emuVarView->rowCount(); currRow++) {
@@ -1407,23 +1366,69 @@ void MainWindow::saveSelected() {
             selectedVars.append(var);
         }
     }
-    if (selectedVars.size() < 1) {
-        QMessageBox::warning(this, MSG_WARNING, tr("Select at least one file to transfer"));
+    if (selectedVars.size() < 2) {
+        QMessageBox::warning(this, MSG_WARNING, tr("Select at least two files to group"));
     } else {
-        if (selectedVars.size() == 1) {
-            uint8_t i = selectedVars.first().type1;
-            QString defaultSuffix = var_extension[i];
-            fileNames = showVariableFileDialog(QFileDialog::AcceptSave, QStringLiteral("TI ") +
-                                               QString(calc_var_type_names[i]) +
-                                               " (*." + defaultSuffix + tr(");;All Files (*.*)"), defaultSuffix);
-        } else {
-            fileNames = showVariableFileDialog(QFileDialog::AcceptSave, tr("TI Group (*.8cg);;All Files (*.*)"), QStringLiteral("8cg"));
-        }
+         fileNames = showVariableFileDialog(QFileDialog::AcceptSave, tr("TI Group (*.8cg);;All Files (*.*)"), QStringLiteral("8cg"));
         if (fileNames.size() == 1) {
-            if (!receiveVariableLink(selectedVars.size(), selectedVars.constData(),  fileNames.first().toUtf8())) {
-                QMessageBox::critical(this, MSG_ERROR, tr("A failure occured during transfer of: ") + fileNames.first());
+            if (!receiveVariableLink(selectedVars.size(), selectedVars.constData(), fileNames.first().toUtf8())) {
+                QMessageBox::critical(this, MSG_ERROR, tr("Transfer error, see console for information:\nFile: ") + fileNames.first());
+            } else {
+                QMessageBox::information(this, MSG_INFORMATION, tr("Transfer completed successfully."));
             }
         }
+    }
+}
+
+void MainWindow::saveSelectedFiles() {
+    QFileDialog dialog(this);
+    dialog.setFileMode(QFileDialog::DirectoryOnly);
+    dialog.setOption(QFileDialog::ShowDirsOnly, false);
+
+    dialog.setDirectory(currDir);
+    int good = 0;
+
+    for (int currRow = 0; currRow < ui->emuVarView->rowCount(); currRow++) {
+        if (ui->emuVarView->item(currRow, VAR_NAME)->checkState() == Qt::Checked) {
+            good = 1;
+            break;
+        }
+    }
+
+    if (!good) {
+        QMessageBox::warning(this, MSG_WARNING, tr("Select at least one file to transfer"));
+        return;
+    }
+
+    good = dialog.exec();
+    currDir = dialog.directory().absolutePath();
+
+    if (!good) {
+        return;
+    }
+
+    QString name;
+    QString filename;
+
+    for (int currRow = 0; currRow < ui->emuVarView->rowCount(); currRow++) {
+        if (ui->emuVarView->item(currRow, VAR_NAME)->checkState() == Qt::Checked) {
+            calc_var_t var;
+            memcpy(&var, reinterpret_cast<const calc_var_t*>(ui->emuVarView->item(currRow, VAR_NAME)->data(Qt::UserRole).toByteArray().data()), sizeof(calc_var_t));
+
+            name = QString(calc_var_name_to_utf8(var.name));
+            filename = dialog.directory().absolutePath() + "/" + name + "." + var_extension[var.type1];
+
+            if (!receiveVariableLink(1, &var, filename.toStdString().c_str())) {
+                good = 0;
+                break;
+            }
+        }
+    }
+
+    if (good) {
+        QMessageBox::information(this, MSG_INFORMATION, tr("Transfer completed successfully."));
+    } else {
+        QMessageBox::critical(this, MSG_ERROR, tr("Transfer error, see console for information:\nFile: ") + filename);
     }
 }
 
@@ -2146,3 +2151,47 @@ void MainWindow::slotLoad() {
         QMessageBox::critical(this, MSG_ERROR, tr("Could not restore image!"));
     }
 }
+
+const char *MainWindow::var_extension[] = {
+        "8xn",  // 00
+        "8xl",
+        "8xm",
+        "8xy",
+        "8xs",
+        "8xp",
+        "8xp",
+        "8ci",
+        "8xd",  // 08
+        "",
+        "",
+        "8xw",  // 0B
+        "8xc",
+        "8xl",  // 0D
+        "",
+        "8xw",  // 0F
+        "8xz",  // 10
+        "8xt",  // 11
+        "",
+        "",
+        "",
+        "8xv",  // 15
+        "",
+        "8cg",  // 17
+        "8xn",  // 18
+        "",
+        "8ca",  // 1A
+        "8xc",
+        "8xn",
+        "8xc",
+        "8xc",
+        "8xc",
+        "8xn",
+        "8xn",  // 21
+        "",
+        "8pu",  // 23
+        "8ek",  // 24
+        "",
+        "",
+        "",
+        "",
+    };

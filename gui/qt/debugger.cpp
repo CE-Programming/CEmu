@@ -493,6 +493,7 @@ void MainWindow::debuggerGUISetState(bool state) {
     ui->emuVarView->setEnabled(!state);
     ui->buttonResendFiles->setEnabled(!state);
     ui->buttonReceiveFiles->setEnabled(!state && guiReceive);
+    ui->buttonReceiveFile->setEnabled(!state && guiReceive);
 
     QList<QDockWidget*> docks = findChildren<QDockWidget*>();
     foreach (QDockWidget* dock, docks) {
