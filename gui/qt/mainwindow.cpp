@@ -457,7 +457,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     if (!fileExists(emu.rom)) {
         if (!runSetup()) {
             initPassed = false;
-            return;
         }
     } else {
         if (settings->value(SETTING_RESTORE_ON_OPEN).toBool()
@@ -518,6 +517,12 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 void MainWindow::showEvent(QShowEvent *e) {
     QMainWindow::showEvent(e);
     if (!firstShow) {
+        if (!initPassed) {
+            QFile(pathSettings).remove();
+            close();
+            e->accept();
+            return;
+        }
         progressBar->setMaximumHeight(ui->statusBar->height()/2);
         setLcdScale(settings->value(SETTING_SCREEN_SCALE, 100).toUInt());
         setSkinToggle(settings->value(SETTING_SCREEN_SKIN, true).toBool());
@@ -723,12 +728,14 @@ bool MainWindow::IsInitialized() {
 }
 
 void MainWindow::reloadAll() {
+    ipcCloseOthers();
     QFile(pathSettings).remove();
     needReload = true;
     close();
 }
 
 void MainWindow::reloadGui() {
+    ipcCloseOthers();
     settings->remove(SETTING_WINDOW_GEOMETRY);
     settings->remove(SETTING_WINDOW_MEMORY_DOCKS);
     settings->remove(SETTING_WINDOW_SIZE);
@@ -1961,6 +1968,37 @@ void MainWindow::ipcHandleCommandlineReceive(QDataStream &stream) {
     }
 }
 
+void MainWindow::ipcCloseOthers() {
+    QString idPath = configPath + "/id/";
+    QDir dir(idPath);
+    QStringList clients = dir.entryList(QDir::Filter::Files);
+
+    foreach (const QString &id, clients) {
+        QFile file(idPath + id);
+        if (file.open(QIODevice::ReadOnly)) {
+            QTextStream stream(&file);
+            QString pid = stream.readLine();
+            if (!isProcRunning(static_cast<pid_t>(pid.toLongLong()))) {
+                file.close();
+                file.remove();
+                continue;
+            } else {
+                if (opts.pidString != pid) {
+                    QByteArray byteArray;
+                    QDataStream stream(&byteArray, QIODevice::WriteOnly);
+                    stream.setVersion(QDataStream::Qt_5_6);
+                    unsigned int type = IPC_CLOSE;
+                    stream << type;
+
+                    com->clientSetup(pid);
+                    com->send(byteArray);
+                }
+            }
+        }
+        file.close();
+    }
+}
+
 void MainWindow::ipcReceived() {
     QByteArray byteArray(com->getData());
 
@@ -1979,6 +2017,9 @@ void MainWindow::ipcReceived() {
            }
            ipcHandleCommandlineReceive(stream);
            break;
+        case IPC_CLOSE:
+            close();
+            break;
         default:
            consoleStr("[CEmu] IPC Unknown\n");
            break;

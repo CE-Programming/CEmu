@@ -41,16 +41,14 @@ private:
 
     // server
     QLocalServer *server;
-    bool serverSet = false;
-    bool clientSet = false;
     QString serverName;
-
-    QFile file;
 
     // client
     QLocalSocket *socket;
     QString clientName;
 
+    // id / storage
+    QFile file;
     QByteArray data;
 };
 

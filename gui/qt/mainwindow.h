@@ -443,8 +443,9 @@ private:
     void saveScreenToClipboard();
 
     // IPC
-    void ipcSpawnRandom();
     bool ipcSetup();
+    void ipcSpawnRandom();
+    void ipcCloseOthers();
     void ipcReceived();
     void ipcChangeID();
     void ipcHandleCommandlineReceive(QDataStream& stream);

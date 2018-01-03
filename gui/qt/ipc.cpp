@@ -22,7 +22,7 @@ void ipc::idClose() {
 }
 
 void ipc::serverListen() {
-    if (!serverSet) {
+    if (serverName.isEmpty()) {
         return;
     }
     server->close();
@@ -47,7 +47,7 @@ QByteArray ipc::getData() {
 }
 
 void ipc::send(const QByteArray &pkt) {
-    if (!clientSet) {
+    if (clientName.isEmpty()) {
         return;
     }
     socket->disconnectFromServer();
@@ -63,13 +63,11 @@ void ipc::send(const QByteArray &pkt) {
 }
 
 void ipc::clientSetup(const QString& name) {
-    clientName = QStringLiteral("cemu-") + name;
-    clientSet = true;
+    clientName = "cemu-" + name;
 }
 
 void ipc::serverSetup(const QString& name) {
-    serverName = QStringLiteral("cemu-") + name;
-    serverSet = true;
+    serverName = "cemu-" + name;
 }
 
 QString ipc::getClientName() {
@@ -98,7 +96,7 @@ bool ipc::ipcSetup(const QString& id, const QString& pid) {
 
     file.setFileName(idFile);
     if (file.exists()) {
-    // send to alternate id
+        // send to alternate id
         if (file.open(QIODevice::ReadOnly)) {
             QTextStream stream(&file);
             QString pidtest = stream.readLine();
@@ -112,7 +110,7 @@ bool ipc::ipcSetup(const QString& id, const QString& pid) {
         }
     } else {
     // create a local id
-    create_id:
+create_id:
         if (file.open(QIODevice::WriteOnly)) {
             QTextStream stream(&file);
             stream << pid << endl;
