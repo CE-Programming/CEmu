@@ -20,6 +20,7 @@ typedef struct general_timers_state {
     timer_state_t timer[3];
     uint32_t control, status, mask, revision;
     uint8_t raw_status[3], padding[1];
+    bool ost_state;
 } general_timers_state_t;
 
 /* Global GPT state */

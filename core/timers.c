@@ -11,9 +11,10 @@
 general_timers_state_t gpt;
 
 static void ost_event(enum sched_item_id id) {
-    static const int ost_ticks[4] = { 37, 77, 109, 157 };
-    intrpt_pulse(INT_OSTMR);
-    sched_repeat(id, ost_ticks[control.ports[0] & 3]);
+    static const int ost_ticks[4] = { 73, 153, 217, 313 };
+    intrpt_set(INT_OSTIMER, gpt.ost_state);
+    sched_repeat(id, gpt.ost_state ? 1 : ost_ticks[control.ports[0] & 3]);
+    gpt.ost_state = !gpt.ost_state;
 }
 
 static void gpt_restore_state(enum sched_item_id id) {

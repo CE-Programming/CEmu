@@ -15,7 +15,7 @@ extern "C" {
 #define INT_TIMER1    (1 <<  1)
 #define INT_TIMER2    (1 <<  2)
 #define INT_TIMER3    (1 <<  3)
-#define INT_OSTMR     (1 <<  4)
+#define INT_OSTIMER   (1 <<  4)
 #define INT_KEYPAD    (1 << 10)
 #define INT_LCD       (1 << 11)
 #define INT_RTC       (1 << 12)
