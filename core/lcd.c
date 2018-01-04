@@ -125,6 +125,28 @@ static void lcd_event(enum sched_item_id id) {
         default:
         case LCD_SYNC:
             lcd_drawframe(&lcd);
+            lcd.PPL =  ((lcd.timing[0] >>  2 &  0x3F) + 1) << 4;
+            lcd.HSW =   (lcd.timing[0] >>  8 &  0xFF) + 1;
+            lcd.HFP =   (lcd.timing[0] >> 16 &  0xFF) + 1;
+            lcd.HBP =   (lcd.timing[0] >> 24 &  0xFF) + 1;
+            lcd.LPP =   (lcd.timing[1] >>  0 & 0x3FF) + 1;
+            lcd.VSW =   (lcd.timing[1] >> 10 &  0x3F) + 1;
+            lcd.VFP =    lcd.timing[1] >> 16 &  0xFF;
+            lcd.VBP =    lcd.timing[1] >> 24 &  0xFF;
+            lcd.PCD =  ((lcd.timing[2] >>  0 &  0x1F) |
+                              (lcd.timing[2] >> 27 &  0x1F) << 5) + 2;
+            lcd.CLKSEL = lcd.timing[2] >>  5 &     1;
+            lcd.ACB =   (lcd.timing[2] >>  6 &  0x1F) + 1;
+            lcd.IVS =    lcd.timing[2] >> 11 &     1;
+            lcd.IHS =    lcd.timing[2] >> 12 &     1;
+            lcd.IPC =    lcd.timing[2] >> 13 &     1;
+            lcd.IOE =    lcd.timing[2] >> 14 &     1;
+            lcd.CPL =   (lcd.timing[2] >> 16 & 0x3FF) + 1;
+            if (lcd.timing[2] >> 26 & 1) {
+                lcd.PCD = 1;
+            }
+            lcd.LED =   (lcd.timing[3] >>  0 &  0x7F) + 1;
+            lcd.LEE =    lcd.timing[3] >> 16 &     1;
             duration = ((lcd.VSW - 1) * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) +
                         lcd.HSW) * lcd.PCD + 1;
             lcd.compare = LCD_LNBU;
@@ -284,28 +306,6 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
     if (index < 0x200) {
         if (index < 0x010) {
             write8(lcd.timing[index >> 2], bit_offset, value);
-            lcd.PPL =  ((lcd.timing[0] >>  2 &  0x3F) + 1) << 4;
-            lcd.HSW =   (lcd.timing[0] >>  8 &  0xFF) + 1;
-            lcd.HFP =   (lcd.timing[0] >> 16 &  0xFF) + 1;
-            lcd.HBP =   (lcd.timing[0] >> 24 &  0xFF) + 1;
-            lcd.LPP =   (lcd.timing[1] >>  0 & 0x3FF) + 1;
-            lcd.VSW =   (lcd.timing[1] >> 10 &  0x3F) + 1;
-            lcd.VFP =    lcd.timing[1] >> 16;
-            lcd.VBP =    lcd.timing[1] >> 24;
-            lcd.PCD =  ((lcd.timing[2] >>  0 &  0x1F) |
-                              (lcd.timing[2] >> 27 &  0x1F) << 5) + 2;
-            lcd.CLKSEL = lcd.timing[2] >>  5 &     1;
-            lcd.ACB =   (lcd.timing[2] >>  6 &  0x1F) + 1;
-            lcd.IVS =    lcd.timing[2] >> 11 &     1;
-            lcd.IHS =    lcd.timing[2] >> 12 &     1;
-            lcd.IPC =    lcd.timing[2] >> 13 &     1;
-            lcd.IOE =    lcd.timing[2] >> 14 &     1;
-            lcd.CPL =   (lcd.timing[2] >> 16 & 0x3FF) + 1;
-            if (lcd.timing[2] >> 26 & 1) {
-                lcd.PCD = 1;
-            }
-            lcd.LED =   (lcd.timing[3] >>  0 &  0x7F) + 1;
-            lcd.LEE =    lcd.timing[3] >> 16 &     1;
         } else if (index < 0x014 && index >= 0x010) {
             write8(lcd.upbase, bit_offset, value);
             if (lcd.upbase & 7) {
