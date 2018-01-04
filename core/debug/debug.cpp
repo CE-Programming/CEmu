@@ -85,9 +85,16 @@ void open_debugger(int reason, uint32_t data) {
         debug_clear_temp_break();
     }
 
+    bool ignoreDmaCycles = debugger.ignoreDmaCycles;
     debugger.cpuCycles = cpu.cycles;
     debugger.cpuNext = cpu.next;
+    debugger.cpuBaseCycles = cpu.baseCycles;
+    debugger.cpuHaltCycles = cpu.haltCycles;
+    debugger.cpuDmaCycles = cpu.dmaCycles;
     debugger.cycleCount += cpu_total_cycles();
+    if (ignoreDmaCycles) {
+        debugger.cycleCount -= cpu.dmaCycles;
+    }
 
     if (debugger.bufferPos) {
         debugger.buffer[debugger.bufferPos] = '\0';
@@ -113,7 +120,13 @@ void open_debugger(int reason, uint32_t data) {
 
     cpu.next = debugger.cpuNext;
     cpu.cycles = debugger.cpuCycles;
+    cpu.baseCycles = debugger.cpuBaseCycles;
+    cpu.haltCycles = debugger.cpuHaltCycles;
+    cpu.dmaCycles = debugger.cpuDmaCycles;
     debugger.cycleCount -= cpu_total_cycles();
+    if (ignoreDmaCycles) {
+        debugger.cycleCount += cpu.dmaCycles;
+    }
 
     if (cpu.events & EVENT_DEBUG_STEP) {
         cpu.next = cpu.cycles + 1;

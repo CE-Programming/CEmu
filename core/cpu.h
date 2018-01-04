@@ -70,7 +70,7 @@ typedef struct eZ80cpu {
     };
     eZ80context_t context;
     uint32_t cycles, next;
-    uint64_t baseCycles, haltCycles;
+    uint64_t baseCycles, haltCycles, dmaCycles;
     uint8_t prefetch;
     uint32_t events;
 } eZ80cpu_t;

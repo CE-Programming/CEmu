@@ -181,7 +181,7 @@ static void lcd_event(enum sched_item_id id) {
     intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
 }
 
-static uint8_t lcd_dma(enum sched_item_id id) {
+static uint32_t lcd_dma(enum sched_item_id id) {
     (void)id;
     return 0;
 }

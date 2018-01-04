@@ -59,8 +59,8 @@ typedef struct {
 } debug_data_t;
 
 typedef struct {        /* For debugging */
-    int cpuCycles;
-    int cpuNext;
+    uint32_t cpuCycles, cpuNext;
+    uint64_t cpuBaseCycles, cpuHaltCycles, cpuDmaCycles;
     char *buffer;
     char *bufferErr;
     bool resetOpensDebugger;

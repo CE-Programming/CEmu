@@ -146,7 +146,7 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
             write8(keypad.size, bit_offset, byte);
             break;
         case 0x02:
-            write8(keypad.status, bit_offset, keypad.status & ~byte);
+            write8(keypad.status, bit_offset, keypad.status >> bit_offset & ~byte);
             if (keypad.mode == 1 && keypad_any_key_pressed()) {
                 keypad.status |= 4;
             }
@@ -168,7 +168,7 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
             keypad_intrpt_check();
             break;
         case 0x11:
-            write8(keypad.gpio_status, bit_offset, keypad.gpio_status & ~byte);
+            write8(keypad.gpio_status, bit_offset, keypad.gpio_status >> bit_offset & ~byte);
             keypad_intrpt_check();
             break;
         default:

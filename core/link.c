@@ -68,10 +68,9 @@ static void run_asm(const uint8_t *data, const size_t data_size, const uint32_t 
     cpu.halted = cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = 0;
     memcpy(phys_mem_ptr(SAFE_RAM, 8400), data, data_size);
     cpu.baseCycles = cpu.cycles = 0;
-    cpu.next = sched.event.cputick = cycles;
+    cpu.next = sched.event.cycle = cycles;
     cpu_flush(SAFE_RAM, 1);
     cpu_execute();
-    sched.event.cputick = 0;
 }
 
 /*
@@ -223,17 +222,11 @@ int EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int lo
     }
 
     run_asm(jforcehome, sizeof jforcehome, 23000000);
-    cpu.cycles = save_cycles;
-    cpu.next = save_next;
-    cpu.baseCycles = save_base_cycles;
-    fclose(file);
-
-    return ret;
-
 r_err:
     cpu.cycles = save_cycles;
     cpu.next = save_next;
     cpu.baseCycles = save_base_cycles;
+    sched.event.cycle = 0;
     fclose(file);
     return ret;
 }
