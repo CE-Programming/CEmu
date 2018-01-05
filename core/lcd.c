@@ -15,8 +15,8 @@
 lcd_state_t lcd;
 
 /* Set this callback function pointer from the GUI. Called in lcd_event() */
-void *lcd_event_callback_data = NULL;
-void (*lcd_event_callback)(void*) = NULL;
+void *lcd_gui_callback_data = NULL;
+void (*lcd_gui_callback)(void*) = NULL;
 
 static bool _rgb;
 
@@ -214,6 +214,12 @@ draw_black:
 }
 #endif
 
+void lcd_gui_event(void) {
+    if (lcd_gui_callback) {
+        lcd_gui_callback(lcd_gui_callback_data);
+    }
+}
+
 static void lcd_event(enum sched_item_id id) {
     uint32_t duration;
     if ((lcd.control >> 12 & 3) == lcd.compare) {
@@ -222,9 +228,7 @@ static void lcd_event(enum sched_item_id id) {
     switch (lcd.compare) {
         default:
         case LCD_SYNC:
-            if (lcd_event_callback) {
-                lcd_event_callback(lcd_event_callback_data);
-            }
+            lcd_gui_event();
             lcd.PPL =  ((lcd.timing[0] >>  2 &  0x3F) + 1) << 4;
             lcd.HSW =   (lcd.timing[0] >>  8 &  0xFF) + 1;
             lcd.HFP =   (lcd.timing[0] >> 16 &  0xFF) + 1;
@@ -290,6 +294,7 @@ void lcd_reset(void) {
     lcd.width = LCD_WIDTH;
     lcd.height = LCD_HEIGHT;
     lcd.mask = true;
+    lcd.off = true;
     lcd_setptrs(&lcd);
     gui_console_printf("[CEmu] LCD reset.\n");
 }
@@ -422,8 +427,13 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
                 else { sched_clear(SCHED_LCD); }
             }
             write8(lcd.control, bit_offset, value);
-            /* Simple power down of lcd -- Needs to be correctly emulated in future */
-            if (!(lcd.control & 0x800)) { lcd_reset(); }
+            /* Simple power down of lcd -- Needs to be correctly emulated in the future */
+            if ((lcd.control & 0x800)) {
+                lcd.off = false;
+            } else {
+                lcd_reset();
+                lcd_gui_event();
+            }
         } else if (index == 0x01C) {
             write8(lcd.imsc, bit_offset, value);
             lcd.imsc &= 0x1E;

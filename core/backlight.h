@@ -12,6 +12,7 @@ extern "C" {
 typedef struct backlight_state {
     uint8_t ports[0x100];
     uint8_t brightness;
+    float factor;
 } backlight_state_t;
 
 /* Global BACKLIGHT state */

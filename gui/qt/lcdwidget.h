@@ -38,7 +38,7 @@ private:
     };
 
     unsigned int sideDrag;
-    bool inDrag = false;
+    bool drag = false;
     QTimer *refreshTimer;
     lcd_state_t *lcdState = Q_NULLPTR;
     QRect left, right;
@@ -52,6 +52,7 @@ private:
     // for dragable roms
     QString dragROM;
     bool isSendingROM;
+    bool main = false;
 };
 
 #endif

@@ -22,8 +22,8 @@ extern "C" {
 #define LCD_FRAME_SIZE (LCD_SIZE * LCD_RGB_SIZE)
 
 /* Set this callback function pointer from the GUI. Called in lcd_event() */
-extern void (*lcd_event_callback)(void*);
-extern void *lcd_event_callback_data;
+extern void (*lcd_gui_callback)(void*);
+extern void *lcd_gui_callback_data;
 
 enum lcd_comp {
     LCD_SYNC,
@@ -66,7 +66,7 @@ typedef struct lcd_state {
     /* Internal registers */
     enum lcd_comp compare;
     uint32_t PPL, HSW, HFP, HBP, LPP, VSW, VFP, VBP, PCD, ACB, CPL, LED;
-    bool CLKSEL, IVS, IHS, IPC, IOE, LEE, mask;
+    bool CLKSEL, IVS, IHS, IPC, IOE, LEE, mask, off;
     uint32_t width;
     uint32_t height;
     uint32_t size;
@@ -87,6 +87,7 @@ lcd_state_t *lcd_setptrs(lcd_state_t*);
 
 void lcd_enable(void);
 void lcd_disable(void);
+void lcd_gui_event(void);
 
 /* Save/Restore */
 bool lcd_restore(FILE *image);

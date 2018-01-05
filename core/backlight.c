@@ -56,6 +56,8 @@ static void backlight_write(const uint16_t pio, const uint8_t byte, bool poke) {
             backlight.ports[index] = byte;
             break;
     }
+
+    backlight.factor = (310 - (float)backlight.brightness) / 160.0;
 }
 
 static const eZ80portrange_t device = {

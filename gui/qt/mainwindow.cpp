@@ -826,8 +826,8 @@ void MainWindow::started(bool success) {
     guiEmuValid = success;
     if (success) {
         ui->lcd->setLCD(&lcd);
-        lcd_event_callback_data = ui->lcd;
-        lcd_event_callback = [](void *lcd) { reinterpret_cast<LCDWidget*>(lcd)->callback(); };
+        lcd_gui_callback_data = ui->lcd;
+        lcd_gui_callback = [](void *lcd) { reinterpret_cast<LCDWidget*>(lcd)->callback(); };
         setCalcSkinTopFromType();
         setKeypadColor(settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
     } else {
@@ -839,8 +839,8 @@ void MainWindow::restored(bool success) {
     guiEmuValid = success;
     if (success) {
         ui->lcd->setLCD(&lcd);
-        lcd_event_callback_data = ui->lcd;
-        lcd_event_callback = [](void *lcd) { reinterpret_cast<LCDWidget*>(lcd)->callback(); };
+        lcd_gui_callback_data = ui->lcd;
+        lcd_gui_callback = [](void *lcd) { reinterpret_cast<LCDWidget*>(lcd)->callback(); };
         setCalcSkinTopFromType();
         setKeypadColor(settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
     } else {

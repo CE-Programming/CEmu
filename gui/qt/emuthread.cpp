@@ -262,8 +262,8 @@ bool EmuThread::stop() {
         return true;
     }
 
-    lcd_event_callback = NULL;
-    lcd_event_callback_data = NULL;
+    lcd_gui_callback = NULL;
+    lcd_gui_callback_data = NULL;
     guiTimer.stop();
 
     exiting = true;

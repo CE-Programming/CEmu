@@ -42,32 +42,27 @@ void LCDWidget::paintEvent(QPaintEvent*) {
     }
 
     QPainter c(this);
-    const QRect &cw = c.window();
+    const QRect& cw = c.window();
 
-    if (lcdState->control & 0x800) {
-        // Interpolation only for < 100% scale
-        c.setRenderHint(QPainter::SmoothPixmapTransform, cw.width() < static_cast<int>(lcdState->width));
-        c.drawImage(cw, image);
+    // Interpolation only for < 100% scale
+    c.setRenderHint(QPainter::SmoothPixmapTransform, cw.width() < static_cast<int>(lcdState->width));
+    c.drawImage(cw, image);
 
-        float factor = (310 - (float)backlight.brightness) / 160.0;
-        if (factor < 1) {
-            c.fillRect(cw, QColor(0, 0, 0, (1 - factor) * 255));
+    if (main) {
+        if (backlight.factor < 1) {
+            c.fillRect(cw, QColor(0, 0, 0, (1 - backlight.factor) * 255));
         }
-    } else {
-        c.fillRect(cw, Qt::black);
-        c.setPen(Qt::white);
-        c.drawText(cw, Qt::AlignCenter, QObject::tr("LCD OFF"));
-    }
-    if (inDrag) {
-        left = cw;
-        right = left;
-        left.setRight(left.right() >> 1);
-        right.setLeft(left.right());
-        c.fillRect(left, QColor(0, 0, sideDrag == LCD_LEFT ? 245 : 200, 128));
-        c.fillRect(right, QColor(0, sideDrag == LCD_RIGHT ? 245 : 200, 0, 128));
-        c.setPen(Qt::white);
-        c.drawText(left, Qt::AlignCenter, tr("Archive"));
-        c.drawText(right, Qt::AlignCenter, tr("RAM"));
+        if (drag) {
+            left = cw;
+            right = left;
+            left.setRight(left.right() >> 1);
+            right.setLeft(left.right());
+            c.fillRect(left, QColor(0, 0, sideDrag == LCD_LEFT ? 245 : 200, 128));
+            c.fillRect(right, QColor(0, sideDrag == LCD_RIGHT ? 245 : 200, 0, 128));
+            c.setPen(Qt::white);
+            c.drawText(left, Qt::AlignCenter, tr("Archive"));
+            c.drawText(right, Qt::AlignCenter, tr("RAM"));
+        }
     }
 }
 
@@ -87,7 +82,15 @@ void LCDWidget::callback(void) {
     apng_add_frame();
 #endif
 
-    fps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP) * (frameskip + 1));
+    if (lcd.off) {
+        QPainter p(&image);
+        p.fillRect(p.window(), Qt::black);
+        p.setPen(Qt::white);
+        p.drawText(p.window(), Qt::AlignCenter, tr("LCD OFF"));
+        fps = 0;
+    } else {
+        fps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP) * (frameskip + 1));
+    }
     update();
 }
 
@@ -116,6 +119,7 @@ void LCDWidget::setLCD(lcd_state_t *x) {
     if (lcdState == &lcd) {
         disconnect(refreshTimer, SIGNAL(timeout()), this, SLOT(draw()));
         refreshTimer->stop();
+        main = true;
     }
 }
 
@@ -123,7 +127,7 @@ void LCDWidget::dropEvent(QDropEvent *e) {
     if (isSendingROM) {
         emit sendROM(dragROM);
     } else {
-        inDrag = false;
+        drag = false;
         sendingHandler->dropOccured(e, (e->pos().x() < width() / 2) ? LINK_ARCH : LINK_RAM);
     }
 }
@@ -134,7 +138,7 @@ void LCDWidget::dragEnterEvent(QDragEnterEvent *e) {
     dragROM = sendingROM(e, &isSendingROM);
 
     if (!isSendingROM) {
-        inDrag = sendingHandler->dragOccured(e);
+        drag = sendingHandler->dragOccured(e);
         sideDrag = (e->pos().x() < width() / 2) ? LCD_LEFT : LCD_RIGHT;
     }
 }
@@ -145,5 +149,5 @@ void LCDWidget::dragMoveEvent(QDragMoveEvent *e) {
 
 void LCDWidget::dragLeaveEvent(QDragLeaveEvent *e) {
     e->accept();
-    inDrag = false;
+    drag = false;
 }
