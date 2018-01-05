@@ -30,12 +30,9 @@ void LCDWidget::draw() {
         return;
     }
 
-    QPainter canvas(this);
     lcd_drawframe(lcd_setptrs(lcdState));
     image = QImage(reinterpret_cast<const uint8_t*>(lcdState->frame),
                    lcdState->width, lcdState->height, QImage::Format_RGB888);
-    canvas.setRenderHint(QPainter::SmoothPixmapTransform, (canvas.window().width() < static_cast<int>(lcdState->width)));
-    canvas.drawImage(canvas.window(), image);
     update();
 }
 
