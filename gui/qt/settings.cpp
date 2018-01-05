@@ -130,14 +130,7 @@ void MainWindow::setPortableConfig(bool state) {
 
 void MainWindow::setFrameskip(int value) {
     settings->setValue(SETTING_CAPTURE_FRAMESKIP, value);
-    ui->frameskipLabel->setText(QString::number(value));
     ui->apngSkip->setValue(value);
-    changeFramerate();
-}
-
-void MainWindow::changeFramerate() {
-    float framerate = 0.0;
-    ui->framerateLabel->setText(QString::number(framerate).left(4));
 }
 
 void MainWindow::setOptimizeRecording(bool state) {

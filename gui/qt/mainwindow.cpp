@@ -210,7 +210,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->checkOptimizeRecording, &QCheckBox::stateChanged, this, &MainWindow::setOptimizeRecording);
 #else
     ui->buttonRecordAnimated->setEnabled(false);
-    ui->frameskipSlider->setEnabled(false);
+    ui->apngSkip->setEnabled(false);
     ui->checkOptimizeRecording->setEnabled(false);
 #endif
 
@@ -981,8 +981,8 @@ void MainWindow::consoleErrStr(const QString &str) {
     }
 }
 
-void MainWindow::showEmuUpdates(int speed, int fps) {
-    QString label = " " + tr("Emulated Speed: ") + QString::number(speed, 10) + "% | FPS: " + QString::number(fps, 10);
+void MainWindow::showEmuUpdates(int speed) {
+    QString label = " " + tr("Emulated Speed: ") + QString::number(speed, 10) + "% | FPS: " + QString::number(ui->lcd->getFPS(), 10);
     speedLabel.setText(label);
 }
 
@@ -996,6 +996,7 @@ void MainWindow::setRom(const QString &name) {
         QDir dir(qApp->applicationDirPath());
         emu.rom = dir.relativeFilePath(emu.rom);
     }
+
     reloadROM();
     ui->rompathView->setText(emu.rom);
     settings->setValue(SETTING_ROM_PATH, emu.rom);

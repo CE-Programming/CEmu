@@ -8,6 +8,7 @@
 #include "lcdwidget.h"
 #include "sendinghandler.h"
 #include "keypad/qtkeypadbridge.h"
+#include "capture/animated-png.h"
 #include "../../core/link.h"
 #include "../../core/debug/debug.h"
 #include "../../core/backlight.h"
@@ -17,6 +18,7 @@ LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
     setContextMenuPolicy(Qt::CustomContextMenu);
     installEventFilter(keypadBridge);
     setAcceptDrops(true);
+    image = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGB888);
 }
 
 LCDWidget::~LCDWidget() {
@@ -73,22 +75,27 @@ void LCDWidget::paintEvent(QPaintEvent*) {
 }
 
 void LCDWidget::callback(void) {
-    static int skip = 0;
-
     if (!guiEmuValid) {
         return;
     }
 
+    lcd_drawframe(&lcd);
+
     if (!skip--) {
         skip = frameskip;
-        image = QImage(reinterpret_cast<const uint8_t*>(lcd.frame), lcd.width, lcd.height, QImage::Format_RGB888);
+        memcpy(image.bits(), lcd.frame, LCD_FRAME_SIZE);
     }
 
 #ifdef PNG_WRITE_APNG_SUPPORTED
     apng_add_frame();
 #endif
 
+    fps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP) * (frameskip + 1));
     update();
+}
+
+int LCDWidget::getFPS() {
+    return fps;
 }
 
 void LCDWidget::setRefreshRate(int rate) {
@@ -102,8 +109,9 @@ void LCDWidget::setRefreshRate(int rate) {
     refresh = rate;
 }
 
-void LCDWidget::setFrameskip(int skip) {
-    frameskip = skip;
+void LCDWidget::setFrameskip(int value) {
+    frameskip = value;
+    skip = value;
 }
 
 void LCDWidget::setLCD(lcd_state_t *x) {

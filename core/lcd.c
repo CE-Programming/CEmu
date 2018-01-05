@@ -128,7 +128,6 @@ static void lcd_event(enum sched_item_id id) {
     switch (lcd.compare) {
         default:
         case LCD_SYNC:
-            lcd_drawframe(&lcd);
             if (lcd_event_callback) {
                 lcd_event_callback(lcd_event_callback_data);
             }

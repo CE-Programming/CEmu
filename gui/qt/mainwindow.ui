@@ -61,7 +61,7 @@
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>9</number>
       </property>
       <widget class="QWidget" name="tab_10">
        <attribute name="title">
@@ -5977,7 +5977,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>1</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -6435,16 +6435,16 @@
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_8">
              <property name="leftMargin">
-              <number>8</number>
+              <number>6</number>
              </property>
              <property name="topMargin">
-              <number>8</number>
+              <number>6</number>
              </property>
              <property name="rightMargin">
-              <number>8</number>
+              <number>6</number>
              </property>
              <property name="bottomMargin">
-              <number>8</number>
+              <number>6</number>
              </property>
              <item>
               <widget class="QPushButton" name="buttonScreenshot">
@@ -6482,131 +6482,92 @@
             <property name="title">
              <string>Screen Recording</string>
             </property>
-            <layout class="QGridLayout" name="gridLayout">
+            <layout class="QVBoxLayout" name="verticalLayout_13">
+             <property name="spacing">
+              <number>6</number>
+             </property>
              <property name="leftMargin">
-              <number>8</number>
+              <number>6</number>
              </property>
              <property name="topMargin">
-              <number>8</number>
+              <number>6</number>
              </property>
              <property name="rightMargin">
-              <number>8</number>
+              <number>6</number>
              </property>
              <property name="bottomMargin">
-              <number>8</number>
+              <number>6</number>
              </property>
-             <item row="2" column="7">
-              <spacer name="horizontalSpacer_11">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>0</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="frameskipTextLabel">
-               <property name="text">
-                <string>Frame skip:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="1">
-              <widget class="QLabel" name="frameskipLabel">
-               <property name="minimumSize">
-                <size>
-                 <width>16</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="3">
-              <widget class="QSlider" name="apngSkip">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                 <horstretch>1</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>50</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>300</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="focusPolicy">
-                <enum>Qt::NoFocus</enum>
-               </property>
-               <property name="minimum">
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_13">
+               <property name="bottomMargin">
                 <number>0</number>
                </property>
-               <property name="maximum">
-                <number>3</number>
-               </property>
-               <property name="pageStep">
-                <number>1</number>
-               </property>
-               <property name="value">
-                <number>1</number>
-               </property>
-               <property name="sliderPosition">
-                <number>1</number>
-               </property>
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="invertedAppearance">
-                <bool>false</bool>
-               </property>
-               <property name="invertedControls">
-                <bool>false</bool>
-               </property>
-               <property name="tickPosition">
-                <enum>QSlider::TicksBelow</enum>
-               </property>
-               <property name="tickInterval">
-                <number>1</number>
-               </property>
-              </widget>
+               <item>
+                <widget class="QLabel" name="frameskipTextLabel">
+                 <property name="text">
+                  <string>Frame skip:</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QSlider" name="apngSkip">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                   <horstretch>1</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>50</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>300</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="minimum">
+                  <number>0</number>
+                 </property>
+                 <property name="maximum">
+                  <number>3</number>
+                 </property>
+                 <property name="pageStep">
+                  <number>1</number>
+                 </property>
+                 <property name="value">
+                  <number>1</number>
+                 </property>
+                 <property name="sliderPosition">
+                  <number>1</number>
+                 </property>
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="invertedAppearance">
+                  <bool>false</bool>
+                 </property>
+                 <property name="invertedControls">
+                  <bool>false</bool>
+                 </property>
+                 <property name="tickPosition">
+                  <enum>QSlider::TicksBelow</enum>
+                 </property>
+                 <property name="tickInterval">
+                  <number>1</number>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
-             <item row="3" column="1">
-              <widget class="QLabel" name="framerateLabel">
-               <property name="minimumSize">
-                <size>
-                 <width>24</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="0">
-              <widget class="QLabel" name="framerateTextLabel">
-               <property name="text">
-                <string>Framerate:</string>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="3">
+             <item>
               <layout class="QHBoxLayout" name="horizontalLayout_20">
                <property name="rightMargin">
                 <number>0</number>

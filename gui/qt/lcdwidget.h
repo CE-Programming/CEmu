@@ -16,6 +16,7 @@ public:
     void setFrameskip(int skip);
     void setLCD(lcd_state_t*);
     void callback(void);
+    int getFPS();
 
 protected:
     virtual void paintEvent(QPaintEvent*) Q_DECL_OVERRIDE;
@@ -43,6 +44,8 @@ private:
     QRect left, right;
     QImage image;
 
+    int fps = 0;
+    int skip = 0;
     int frameskip = 0;
     int refresh;
 

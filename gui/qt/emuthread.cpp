@@ -203,8 +203,7 @@ void EmuThread::sendFiles() {
 
 void EmuThread::sendUpdates() {
     if (!control.off) {
-        fps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP));
-        emit sendGuiUpdates(actualSpeed, fps);
+        emit sendGuiUpdates(actualSpeed);
     }
 }
 

@@ -33,7 +33,7 @@ signals:
     void exited(int);
 
     // Status
-    void sendGuiUpdates(int actualSpeed, int fps);
+    void sendGuiUpdates(int actualSpeed);
 
     // Save/Restore state
     void saved(bool success);
@@ -84,7 +84,7 @@ private:
     void setActualSpeed(int actualSpeed);
     void sendFiles();
 
-    int speed, actualSpeed, fps;
+    int speed, actualSpeed, fps, frameskip = 0;
 
     bool doReset = false;
 

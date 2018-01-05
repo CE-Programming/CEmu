@@ -201,7 +201,6 @@ private:
 #endif
     void setFrameskip(int value);
     void setOptimizeRecording(bool state);
-    void changeFramerate();
     void checkForUpdates(bool forceInfoBox);
     void showAbout();
     void batteryIsCharging(bool checked);
@@ -346,7 +345,7 @@ private:
     // Speed
     void setEmuSpeed(int value);
     void setThrottle(int mode);
-    void showEmuUpdates(int speed, int fps);
+    void showEmuUpdates(int speed);
 
     // Console
     void showStatusMsg(const QString& str);
