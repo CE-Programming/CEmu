@@ -3,8 +3,10 @@
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#define LCD_RGBA8888
 #else
 #define EMSCRIPTEN_KEEPALIVE
+#define LCD_RGB888
 #endif
 
 #define GETMASK(index, size) (((1U << (size)) - 1) << (index))

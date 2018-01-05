@@ -6,6 +6,7 @@
 #include "emu.h"
 #include "mem.h"
 #include "asic.h"
+#include "defines.h"
 #include "control.h"
 #include "schedule.h"
 #include "interrupt.h"
@@ -19,7 +20,103 @@ void (*lcd_event_callback)(void*) = NULL;
 
 static bool _rgb;
 
-/* This is an intensive function. Need speedz. */
+#define c1555(w) ((w) + ((w) & 0xFFE0) + ((w) >> 10 & 0x20))
+#define c565(w)  (((w) >> 8 & 0xF800) | ((w) >> 5 & 0x7E0) | ((w) >> 3 & 0x1F))
+#define c12(w)   (((w) << 4 & 0xF000) | ((w) << 3 & 0x780) | ((w) << 1 & 0x1E))
+
+#ifdef LCD_RGBA8888
+static uint32_t lcd_bgr16out(uint32_t bgr16) {
+    uint_fast8_t r, g, b;
+
+    r = (bgr16 >> 10) & 0x3E;
+    g = bgr16 >> 5 & 0x3F;
+    b = (bgr16 << 1) & 0x3E;
+
+    r |= r >> 5;
+    r = (r << 2) | (r >> 4);
+
+    g = (g << 2) | (g >> 4);
+
+    b |= b >> 5;
+    b = (b << 2) | (b >> 4);
+
+    if (_rgb) {
+        return r | (g << 8) | (b << 16) | (255 << 24);
+    } else {
+        return b | (g << 8) | (r << 16) | (255 << 24);
+    }
+}
+
+/* Draw the lcd onto an RGBA8888 buffer. Alpha is always 255. */
+void lcd_drawframe(lcd_state_t *buffer) {
+    uint_fast8_t mode = buffer->control >> 1 & 7;
+    _rgb = buffer->control & (1 << 8);
+    bool bebo = buffer->control & (1 << 9);
+    uint32_t word, color;
+    uint32_t *ofs = buffer->ofs;
+    uint32_t *ofs_end = buffer->ofs_end;
+    uint32_t *out = buffer->frame;
+    uint32_t *out_end = out + buffer->size;
+
+    if (!buffer->size) { return; }
+    if (!ofs) { goto draw_black; }
+
+    if (mode < 4) {
+        uint_fast8_t bpp = 1 << mode;
+        uint32_t mask = (1 << bpp) - 1;
+        uint_fast8_t bi = bebo ? 0 : 24;
+        bool bepo = buffer->control & (1 << 10);
+        if (!bepo) { bi ^= 8 - bpp; }
+        do {
+            uint_fast8_t bitpos = 32;
+            word = *ofs++;
+            do {
+                color = lcd.palette[word >> ((bitpos -= bpp) ^ bi) & mask];
+                *out++ = lcd_bgr16out(c1555(color));
+            } while (bitpos && out != out_end);
+        } while (ofs < ofs_end);
+
+    } else if (mode == 4) {
+        do {
+            word = *ofs++;
+            if (bebo) { word = word << 16 | word >> 16; }
+            *out++ = lcd_bgr16out(c1555(word));
+            if (out == out_end) break;
+            word >>= 16;
+            *out++ = lcd_bgr16out(c1555(word));
+        } while (ofs < ofs_end);
+
+    } else if (mode == 5) {
+        do {
+            word = *ofs++;
+            *out++ = lcd_bgr16out(c565(word));
+        } while (ofs < ofs_end);
+
+    } else if (mode == 6) {
+        do {
+            word = *ofs++;
+            if (bebo) { word = word << 16 | word >> 16; }
+            *out++ = lcd_bgr16out(word);
+            if (out == out_end) break;
+            word >>= 16;
+            *out++ = lcd_bgr16out(word);
+        } while (ofs < ofs_end);
+
+    } else { /* mode == 7 */
+        do {
+            word = *ofs++;
+            if (bebo) { word = word << 16 | word >> 16; }
+            *out++ = lcd_bgr16out(c12(word));
+            if (out == out_end) break;
+            word >>= 16;
+            *out++ = lcd_bgr16out(c12(word));
+        } while (ofs < ofs_end);
+    }
+
+draw_black:
+    while (out < out_end) { *out++ = 0xFF000000; }
+}
+#else
 static void lcd_bgr16out(uint32_t bgr16, uint8_t **out) {
     uint_fast8_t r, g, b;
 
@@ -45,10 +142,6 @@ static void lcd_bgr16out(uint32_t bgr16, uint8_t **out) {
         *(*out)++ = r;
     }
 }
-
-#define c1555(w) ((w) + ((w) & 0xFFE0) + ((w) >> 10 & 0x20))
-#define c565(w)  (((w) >> 8 & 0xF800) | ((w) >> 5 & 0x7E0) | ((w) >> 3 & 0x1F))
-#define c12(w)   (((w) << 4 & 0xF000) | ((w) << 3 & 0x780) | ((w) << 1 & 0x1E))
 
 /* Draw the lcd onto an RGB888 buffer. */
 void lcd_drawframe(lcd_state_t *buffer) {
@@ -119,6 +212,7 @@ void lcd_drawframe(lcd_state_t *buffer) {
 draw_black:
     while (out < out_end) { *out++ = 0xFF000000; }
 }
+#endif
 
 static void lcd_event(enum sched_item_id id) {
     uint32_t duration;
