@@ -10,49 +10,108 @@
 #include "keypad/qtkeypadbridge.h"
 #include "../../core/link.h"
 #include "../../core/debug/debug.h"
+#include "../../core/backlight.h"
 
 LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
     refreshTimer = new QTimer(this);
     setContextMenuPolicy(Qt::CustomContextMenu);
-
     installEventFilter(keypadBridge);
-
-    connect(refreshTimer, SIGNAL(timeout()), this, SLOT(repaint()));
-
     setAcceptDrops(true);
-
-    // Default rate is 30 FPS
-    refreshRate(30);
 }
 
 LCDWidget::~LCDWidget() {
     delete refreshTimer;
 }
 
-void LCDWidget::paintEvent(QPaintEvent*) {
+void LCDWidget::draw() {
+    if (!guiEmuValid || !lcdState) {
+        return;
+    }
+
     QPainter canvas(this);
-    paintFramebuffer(&canvas, lcdState);
+    lcd_drawframe(lcd_setptrs(lcdState));
+    image = QImage(reinterpret_cast<const uint8_t*>(lcdState->frame),
+                   lcdState->width, lcdState->height, QImage::Format_RGB888);
+    canvas.setRenderHint(QPainter::SmoothPixmapTransform, (canvas.window().width() < static_cast<int>(lcdState->width)));
+    canvas.drawImage(canvas.window(), image);
+    update();
+}
+
+void LCDWidget::paintEvent(QPaintEvent*) {
+    if (!guiEmuValid || !lcdState) {
+        return;
+    }
+
+    QPainter c(this);
+    const QRect &cw = c.window();
+
+    if (lcdState->control & 0x800) {
+        // Interpolation only for < 100% scale
+        c.setRenderHint(QPainter::SmoothPixmapTransform, cw.width() < static_cast<int>(lcdState->width));
+        c.drawImage(cw, image);
+
+        float factor = (310 - (float)backlight.brightness) / 160.0;
+        if (factor < 1) {
+            c.fillRect(cw, QColor(0, 0, 0, (1 - factor) * 255));
+        }
+    } else {
+        c.fillRect(cw, Qt::black);
+        c.setPen(Qt::white);
+        c.drawText(cw, Qt::AlignCenter, QObject::tr("LCD OFF"));
+    }
     if (inDrag) {
-        left = canvas.window();
+        left = cw;
         right = left;
         left.setRight(left.right() >> 1);
         right.setLeft(left.right());
-        canvas.fillRect(left, QColor(0, 0, sideDrag == LCD_LEFT ? 245 : 200, 128));
-        canvas.fillRect(right, QColor(0, sideDrag == LCD_RIGHT ? 245 : 200, 0, 128));
-        canvas.setPen(Qt::white);
-        canvas.drawText(left, Qt::AlignCenter, QObject::tr("Archive"));
-        canvas.drawText(right, Qt::AlignCenter, QObject::tr("RAM"));
+        c.fillRect(left, QColor(0, 0, sideDrag == LCD_LEFT ? 245 : 200, 128));
+        c.fillRect(right, QColor(0, sideDrag == LCD_RIGHT ? 245 : 200, 0, 128));
+        c.setPen(Qt::white);
+        c.drawText(left, Qt::AlignCenter, tr("Archive"));
+        c.drawText(right, Qt::AlignCenter, tr("RAM"));
     }
 }
 
-void LCDWidget::refreshRate(int newrate) {
+void LCDWidget::callback(void) {
+    static int skip = 0;
+
+    if (!guiEmuValid) {
+        return;
+    }
+
+    if (!skip--) {
+        skip = frameskip;
+        image = QImage(reinterpret_cast<const uint8_t*>(lcd.frame), lcd.width, lcd.height, QImage::Format_RGB888);
+    }
+
+#ifdef PNG_WRITE_APNG_SUPPORTED
+    apng_add_frame();
+#endif
+
+    update();
+}
+
+void LCDWidget::setRefreshRate(int rate) {
+    if (!rate || lcdState == &lcd) {
+        return;
+    }
+    connect(refreshTimer, SIGNAL(timeout()), this, SLOT(draw()));
     refreshTimer->stop();
-    refreshTimer->setInterval(1000 / newrate);
+    refreshTimer->setInterval(1000 / rate);
     refreshTimer->start();
+    refresh = rate;
+}
+
+void LCDWidget::setFrameskip(int skip) {
+    frameskip = skip;
 }
 
 void LCDWidget::setLCD(lcd_state_t *x) {
     lcdState = x;
+    if (lcdState == &lcd) {
+        disconnect(refreshTimer, SIGNAL(timeout()), this, SLOT(draw()));
+        refreshTimer->stop();
+    }
 }
 
 void LCDWidget::dropEvent(QDropEvent *e) {

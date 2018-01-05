@@ -13,6 +13,10 @@
 /* Global LCD state */
 lcd_state_t lcd;
 
+/* Set this callback function pointer from the GUI. Called in lcd_event() */
+void *lcd_event_callback_data = NULL;
+void (*lcd_event_callback)(void*) = NULL;
+
 static bool _rgb;
 
 /* This is an intensive function. Need speedz. */
@@ -125,6 +129,9 @@ static void lcd_event(enum sched_item_id id) {
         default:
         case LCD_SYNC:
             lcd_drawframe(&lcd);
+            if (lcd_event_callback) {
+                lcd_event_callback(lcd_event_callback_data);
+            }
             lcd.PPL =  ((lcd.timing[0] >>  2 &  0x3F) + 1) << 4;
             lcd.HSW =   (lcd.timing[0] >>  8 &  0xFF) + 1;
             lcd.HFP =   (lcd.timing[0] >> 16 &  0xFF) + 1;

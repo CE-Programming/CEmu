@@ -33,7 +33,7 @@ signals:
     void exited(int);
 
     // Status
-    void actualSpeedChanged(int actualSpeed);
+    void sendGuiUpdates(int actualSpeed, int fps);
 
     // Save/Restore state
     void saved(bool success);
@@ -74,8 +74,8 @@ public slots:
     void saveImage(const QString &path);
     void saveRom(const QString &path);
 
-    // Speed
-    void sendActualSpeed();
+    // Speed and fps
+    void sendUpdates();
 
 protected:
     virtual void run() Q_DECL_OVERRIDE;
@@ -84,7 +84,7 @@ private:
     void setActualSpeed(int actualSpeed);
     void sendFiles();
 
-    int speed, actualSpeed;
+    int speed, actualSpeed, fps;
 
     bool doReset = false;
 
@@ -106,7 +106,7 @@ private:
     std::mutex mutex;
     std::condition_variable cv;
 
-    QTimer speedTimer;
+    QTimer guiTimer;
 };
 
 // For friends

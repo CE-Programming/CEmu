@@ -5977,7 +5977,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>2</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -6529,7 +6529,7 @@
               </widget>
              </item>
              <item row="2" column="3">
-              <widget class="QSlider" name="frameskipSlider">
+              <widget class="QSlider" name="apngSkip">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                  <horstretch>1</horstretch>
@@ -6767,7 +6767,7 @@
         <item>
          <widget class="QGroupBox" name="groupBox">
           <property name="title">
-           <string>Display</string>
+           <string>Display / Emulation Speed</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout">
            <property name="spacing">
@@ -6832,26 +6832,26 @@
              <item>
               <widget class="QLabel" name="label_2">
                <property name="text">
-                <string>Refresh rate:</string>
+                <string>Frame skip:</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QSpinBox" name="refreshLCD">
+              <widget class="QSpinBox" name="guiSkip">
                <property name="focusPolicy">
                 <enum>Qt::ClickFocus</enum>
                </property>
                <property name="suffix">
-                <string> fps</string>
+                <string/>
                </property>
                <property name="minimum">
-                <number>1</number>
+                <number>0</number>
                </property>
                <property name="maximum">
-                <number>120</number>
+                <number>30</number>
                </property>
                <property name="value">
-                <number>30</number>
+                <number>0</number>
                </property>
                <property name="displayIntegerBase">
                 <number>10</number>
@@ -6859,130 +6859,93 @@
               </widget>
              </item>
              <item>
-              <spacer name="horizontalSpacer_15">
+              <widget class="QCheckBox" name="checkThrottle">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
+               </property>
+               <property name="text">
+                <string>Throttle:</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="checked">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="emulationSpeedSpin">
+               <property name="suffix">
+                <string>%</string>
+               </property>
+               <property name="maximum">
+                <number>500</number>
+               </property>
+               <property name="value">
+                <number>100</number>
+               </property>
+               <property name="displayIntegerBase">
+                <number>10</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSlider" name="emulationSpeed">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="focusPolicy">
+                <enum>Qt::ClickFocus</enum>
+               </property>
+               <property name="minimum">
+                <number>0</number>
+               </property>
+               <property name="maximum">
+                <number>500</number>
+               </property>
+               <property name="singleStep">
+                <number>10</number>
+               </property>
+               <property name="pageStep">
+                <number>100</number>
+               </property>
+               <property name="value">
+                <number>100</number>
+               </property>
+               <property name="sliderPosition">
+                <number>100</number>
+               </property>
+               <property name="tracking">
+                <bool>true</bool>
+               </property>
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
                </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>20</height>
-                </size>
+               <property name="invertedAppearance">
+                <bool>false</bool>
                </property>
-              </spacer>
+               <property name="invertedControls">
+                <bool>false</bool>
+               </property>
+               <property name="tickPosition">
+                <enum>QSlider::TicksBelow</enum>
+               </property>
+               <property name="tickInterval">
+                <number>100</number>
+               </property>
+              </widget>
              </item>
             </layout>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
-         <widget class="QGroupBox" name="groupBox_5">
-          <property name="title">
-           <string>Emulation Speed</string>
-          </property>
-          <layout class="QHBoxLayout" name="horizontalLayout_13">
-           <property name="spacing">
-            <number>5</number>
-           </property>
-           <property name="leftMargin">
-            <number>8</number>
-           </property>
-           <property name="topMargin">
-            <number>8</number>
-           </property>
-           <property name="rightMargin">
-            <number>8</number>
-           </property>
-           <property name="bottomMargin">
-            <number>8</number>
-           </property>
-           <item>
-            <widget class="QCheckBox" name="checkThrottle">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="focusPolicy">
-              <enum>Qt::NoFocus</enum>
-             </property>
-             <property name="text">
-              <string>Throttle:</string>
-             </property>
-             <property name="checkable">
-              <bool>true</bool>
-             </property>
-             <property name="checked">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QSpinBox" name="emulationSpeedSpin">
-             <property name="suffix">
-              <string>%</string>
-             </property>
-             <property name="maximum">
-              <number>500</number>
-             </property>
-             <property name="value">
-              <number>100</number>
-             </property>
-             <property name="displayIntegerBase">
-              <number>10</number>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QSlider" name="emulationSpeed">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="focusPolicy">
-              <enum>Qt::ClickFocus</enum>
-             </property>
-             <property name="minimum">
-              <number>0</number>
-             </property>
-             <property name="maximum">
-              <number>500</number>
-             </property>
-             <property name="singleStep">
-              <number>10</number>
-             </property>
-             <property name="pageStep">
-              <number>100</number>
-             </property>
-             <property name="value">
-              <number>100</number>
-             </property>
-             <property name="sliderPosition">
-              <number>100</number>
-             </property>
-             <property name="tracking">
-              <bool>true</bool>
-             </property>
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="invertedAppearance">
-              <bool>false</bool>
-             </property>
-             <property name="invertedControls">
-              <bool>false</bool>
-             </property>
-             <property name="tickPosition">
-              <enum>QSlider::TicksBelow</enum>
-             </property>
-             <property name="tickInterval">
-              <number>10</number>
-             </property>
-            </widget>
            </item>
           </layout>
          </widget>
@@ -8513,7 +8476,7 @@ QPushButton:pressed {
       <number>0</number>
      </property>
     </widget>
-    <widget class="LCDWidget" name="lcdWidget" native="true">
+    <widget class="LCDWidget" name="lcd" native="true">
      <property name="geometry">
       <rect>
        <x>60</x>
@@ -8542,6 +8505,9 @@ QPushButton:pressed {
      </property>
      <property name="focusPolicy">
       <enum>Qt::StrongFocus</enum>
+     </property>
+     <property name="acceptDrops">
+      <bool>true</bool>
      </property>
     </widget>
    </widget>
@@ -8946,7 +8912,7 @@ QPushButton:pressed {
   <tabstop>comboBoxPresetCRC</tabstop>
   <tabstop>valueCRC</tabstop>
   <tabstop>buttonRefreshCRC</tabstop>
-  <tabstop>lcdWidget</tabstop>
+  <tabstop>lcd</tabstop>
  </tabstops>
  <resources>
   <include location="resources.qrc"/>

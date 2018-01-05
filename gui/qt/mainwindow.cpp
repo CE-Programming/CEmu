@@ -80,14 +80,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     // Setup the file sending handler
     progressBar = new QProgressBar(this);
-    progressBar->setMinimum(0);
-    progressBar->setMinimumWidth(0);
-    progressBar->setMaximumWidth(200);
-    progressBar->setTextVisible(false);
-    progressBar->setValue(0);
     ui->statusBar->addWidget(progressBar);
     sendingHandler = new SendingHandler(this, progressBar, ui->varLoadedView);
-    progressBar->setVisible(false);
 
     memory.append(ui->flashEdit);
     memory.append(ui->ramEdit);
@@ -100,6 +94,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(&emu, &EmuThread::stopped, this, &MainWindow::emuStopped, Qt::QueuedConnection);
     connect(&emu, &EmuThread::restored, this, &MainWindow::restored, Qt::QueuedConnection);
     connect(&emu, &EmuThread::saved, this, &MainWindow::saved, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::sendGuiUpdates, this, &MainWindow::showEmuUpdates, Qt::QueuedConnection);
 
     // Console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, ui->console, &QPlainTextEdit::clear);
@@ -211,7 +206,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
 #ifdef PNG_WRITE_APNG_SUPPORTED
     connect(ui->buttonRecordAnimated, &QPushButton::clicked, this, &MainWindow::recordAPNG);
-    connect(ui->frameskipSlider, &QSlider::valueChanged, this, &MainWindow::setFrameskip);
+    connect(ui->apngSkip, &QSlider::valueChanged, this, &MainWindow::setFrameskip);
     connect(ui->checkOptimizeRecording, &QCheckBox::stateChanged, this, &MainWindow::setOptimizeRecording);
 #else
     ui->buttonRecordAnimated->setEnabled(false);
@@ -227,14 +222,14 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     // Other GUI actions
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
     connect(ui->scaleLCD, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setLcdScale);
-    connect(ui->refreshLCD, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setLcdRefresh);
+    connect(ui->guiSkip, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setGuiSkip);
     connect(ui->checkSkin, &QCheckBox::stateChanged, this, &MainWindow::setSkinToggle);
     connect(ui->checkSpi, &QCheckBox::toggled, this, &MainWindow::setLcdSpi);
     connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::setAlwaysOnTop);
     connect(ui->emulationSpeed, &QSlider::valueChanged, this, &MainWindow::setEmuSpeed);
     connect(ui->emulationSpeedSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setEmuSpeed);
     connect(ui->checkThrottle, &QCheckBox::stateChanged, this, &MainWindow::setThrottle);
-    connect(ui->lcdWidget, &QWidget::customContextMenuRequested, this, &MainWindow::screenContextMenu);
+    connect(ui->lcd, &QWidget::customContextMenuRequested, this, &MainWindow::screenContextMenu);
     connect(ui->checkSaveRestore, &QCheckBox::stateChanged, this, &MainWindow::setAutoSaveState);
     connect(ui->checkPortable, &QCheckBox::stateChanged, this, &MainWindow::setPortableConfig);
     connect(ui->checkSaveRecent, &QCheckBox::stateChanged, this, &MainWindow::setRecentSave);
@@ -244,7 +239,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->checkFocus, &QCheckBox::stateChanged, this, &MainWindow::setFocusSetting);
     connect(this, &MainWindow::changedEmuSpeed, &emu, &EmuThread::setEmuSpeed);
     connect(this, &MainWindow::changedThrottleMode, &emu, &EmuThread::setThrottleMode);
-    connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showSpeed, Qt::QueuedConnection);
     connect(ui->flashBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->flashEdit, &QHexEdit::setBytesPerLine);
     connect(ui->ramBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->ramEdit, &QHexEdit::setBytesPerLine);
     connect(ui->memBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->memEdit, &QHexEdit::setBytesPerLine);
@@ -252,7 +246,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->emuVarView, &QTableWidget::customContextMenuRequested, this, &MainWindow::variablesContextMenu);
     connect(ui->buttonAddSlot, &QPushButton::clicked, this, &MainWindow::slotAddNew);
     connect(ui->actionExportCEmuImage, &QAction::triggered, this, &MainWindow::exportCEmuBootImage);
-    connect(ui->lcdWidget, &LCDWidget::sendROM, this, &MainWindow::setRom);
+    connect(ui->lcd, &LCDWidget::sendROM, this, &MainWindow::setRom);
 
     // Hex Editor
     connect(ui->buttonFlashSearch, &QPushButton::clicked, this, [this]{ memSearchPressed(MEM_FLASH); });
@@ -403,7 +397,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     optLoadFiles(opts);
     setFrameskip(settings->value(SETTING_CAPTURE_FRAMESKIP, 1).toUInt());
     setOptimizeRecording(settings->value(SETTING_CAPTURE_OPTIMIZE, true).toBool());
-    setLcdRefresh(settings->value(SETTING_SCREEN_REFRESH_RATE, 30).toUInt());
+    setGuiSkip(settings->value(SETTING_SCREEN_FRAMESKIP, 0).toUInt());
     setEmuSpeed(settings->value(SETTING_EMUSPEED, 100).toUInt());
     setFont(settings->value(SETTING_DEBUGGER_TEXT_SIZE, 9).toUInt());
     setAutoCheckForUpdates(settings->value(SETTING_AUTOUPDATE, false).toBool());
@@ -512,7 +506,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
         settings->setValue(SETTING_FIRST_RUN, true);
     }
 
-    ui->lcdWidget->setFocus();
+    ui->lcd->setFocus();
 }
 
 void MainWindow::showEvent(QShowEvent *e) {
@@ -831,7 +825,9 @@ void MainWindow::exportRom() {
 void MainWindow::started(bool success) {
     guiEmuValid = success;
     if (success) {
-        ui->lcdWidget->setLCD(&lcd);
+        ui->lcd->setLCD(&lcd);
+        lcd_event_callback_data = ui->lcd;
+        lcd_event_callback = [](void *lcd) { reinterpret_cast<LCDWidget*>(lcd)->callback(); };
         setCalcSkinTopFromType();
         setKeypadColor(settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
     } else {
@@ -842,7 +838,9 @@ void MainWindow::started(bool success) {
 void MainWindow::restored(bool success) {
     guiEmuValid = success;
     if (success) {
-        ui->lcdWidget->setLCD(&lcd);
+        ui->lcd->setLCD(&lcd);
+        lcd_event_callback_data = ui->lcd;
+        lcd_event_callback = [](void *lcd) { reinterpret_cast<LCDWidget*>(lcd)->callback(); };
         setCalcSkinTopFromType();
         setKeypadColor(settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
     } else {
@@ -938,7 +936,7 @@ void MainWindow::consoleAppend(const QString &str, const QColor &color) {
 }
 
 void MainWindow::consoleStr(const QString &str) {
-    if (str.at(0) == 0xc) {
+    if (str.at(0) == '\f') {
         if (nativeConsole) {
 #ifdef _WIN32
             int ret = system("cls");
@@ -961,7 +959,7 @@ void MainWindow::consoleStr(const QString &str) {
 }
 
 void MainWindow::consoleErrStr(const QString &str) {
-    if (str.at(0) == 0xc) {
+    if (str.at(0) == '\f') {
         if (nativeConsole) {
 #ifdef _WIN32
             int ret = system("cls");
@@ -983,8 +981,9 @@ void MainWindow::consoleErrStr(const QString &str) {
     }
 }
 
-void MainWindow::showSpeed(int speed) {
-    speedLabel.setText(QStringLiteral(" ") + tr("Emulated Speed: ") + QString::number(speed, 10) + QStringLiteral("%"));
+void MainWindow::showEmuUpdates(int speed, int fps) {
+    QString label = " " + tr("Emulated Speed: ") + QString::number(speed, 10) + "% | FPS: " + QString::number(fps, 10);
+    speedLabel.setText(label);
 }
 
 void MainWindow::showStatusMsg(const QString &str) {
@@ -1044,7 +1043,7 @@ void MainWindow::screenshotSave(const QString& nameFilter, const QString& defaul
 }
 
 void MainWindow::screenshot() {
-    QImage image = renderFramebuffer(&lcd);
+    QImage image = QImage(reinterpret_cast<const uint8_t*>(lcd.frame), lcd.width, lcd.height, QImage::Format_RGB888);
 
     QString path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.img");
     if (!image.save(path, "PNG", 0)) {
@@ -1055,7 +1054,7 @@ void MainWindow::screenshot() {
 }
 
 void MainWindow::saveScreenToClipboard() {
-    QImage image = renderFramebuffer(&lcd);
+    QImage image = QImage(reinterpret_cast<const uint8_t*>(lcd.frame), lcd.width, lcd.height, QImage::Format_RGB888);
     Q_ASSERT(!image.isNull());
     QApplication::clipboard()->setImage(image, QClipboard::Clipboard);
 }
@@ -1073,7 +1072,7 @@ void MainWindow::recordAPNG() {
             return;
         }
         path = QDir::tempPath() + QDir::separator() + QStringLiteral("apng_tmp.png");
-        apng_start(path.toStdString().c_str(), ui->refreshLCD->value(), ui->frameskipSlider->value());
+        apng_start(path.toStdString().c_str(), ui->guiSkip->value(), ui->apngSkip->value());
         showStatusMsg(tr("Recording..."));
     } else {
         showStatusMsg(QStringLiteral("Saving Recording..."));
@@ -1109,14 +1108,14 @@ void MainWindow::recordAPNG() {
     }
 
     recordingAnimated = true;
-    ui->frameskipSlider->setEnabled(false);
+    ui->apngSkip->setEnabled(false);
     ui->actionRecordAnimated->setChecked(true);
     ui->buttonRecordAnimated->setText(tr("Stop Recording"));
     ui->actionRecordAnimated->setText(tr("Stop Recording..."));
 }
 
 void MainWindow::saveAnimated(QString &filename) {
-    ui->frameskipSlider->setEnabled(false);
+    ui->apngSkip->setEnabled(false);
     ui->actionRecordAnimated->setEnabled(false);
     ui->buttonRecordAnimated->setEnabled(false);
     ui->buttonRecordAnimated->setText(tr("Saving..."));
@@ -1132,7 +1131,7 @@ void MainWindow::saveAnimated(QString &filename) {
 
 void MainWindow::updateAnimatedControls() {
     recordingAnimated = false;
-    ui->frameskipSlider->setEnabled(true);
+    ui->apngSkip->setEnabled(true);
     ui->actionRecordAnimated->setEnabled(true);
     ui->buttonRecordAnimated->setEnabled(true);
     ui->actionRecordAnimated->setChecked(false);
@@ -1183,7 +1182,7 @@ void MainWindow::showAbout() {
 
 void MainWindow::screenContextMenu(const QPoint &posa) {
     QMenu menu;
-    QPoint globalPos = ui->lcdWidget->mapToGlobal(posa);
+    QPoint globalPos = ui->lcd->mapToGlobal(posa);
     menu.addMenu(ui->menuFile);
     menu.addMenu(ui->menuCalculator);
     menu.addMenu(docksMenu);
@@ -1831,7 +1830,7 @@ void MainWindow::launchPrgm(const calc_var_t *prgm) {
     keypad_reset();
 
     // Restore focus to catch keypresses.
-    ui->lcdWidget->setFocus();
+    ui->lcd->setFocus();
     guiDelay(100);
 
     // Launch the program, assuming we're at the home screen...
@@ -1847,7 +1846,7 @@ void MainWindow::launchPrgm(const calc_var_t *prgm) {
     autotester::sendKey(0x05); // Enter
 
     // Restore focus to catch keypresses.
-    ui->lcdWidget->setFocus();
+    ui->lcd->setFocus();
 }
 
 void MainWindow::variablesContextMenu(const QPoint& posa) {

@@ -73,9 +73,9 @@ EmuThread::EmuThread(QObject *p) : QThread(p) {
     emu_thread = this;
     speed = actualSpeed = 100;
     lastTime = std::chrono::steady_clock::now();
-    connect(&speedTimer, SIGNAL(timeout()), this, SLOT(sendActualSpeed()));
-    speedTimer.start();
-    speedTimer.setInterval(1000 / 2);
+    connect(&guiTimer, SIGNAL(timeout()), this, SLOT(sendUpdates()));
+    guiTimer.start();
+    guiTimer.setInterval(1000 / 2);
 }
 
 void EmuThread::reset() {
@@ -162,13 +162,13 @@ void EmuThread::doStuff() {
 
     if (debugger.bufferPos) {
         debugger.buffer[debugger.bufferPos] = '\0';
-        emu_thread->consoleStr(QString(debugger.buffer));
+        consoleStr(QString(debugger.buffer));
         debugger.bufferPos = 0;
     }
 
     if (debugger.bufferErrPos) {
         debugger.bufferErr[debugger.bufferErrPos] = '\0';
-        emu_thread->consoleErrStr(QString(debugger.bufferErr));
+        consoleErrStr(QString(debugger.bufferErr));
         debugger.bufferErrPos = 0;
     }
 
@@ -201,9 +201,10 @@ void EmuThread::sendFiles() {
     emit sentFile(QString(), LINK_GOOD);
 }
 
-void EmuThread::sendActualSpeed() {
+void EmuThread::sendUpdates() {
     if (!control.off) {
-        emit actualSpeedChanged(actualSpeed);
+        fps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP));
+        emit sendGuiUpdates(actualSpeed, fps);
     }
 }
 
@@ -262,7 +263,9 @@ bool EmuThread::stop() {
         return true;
     }
 
-    speedTimer.stop();
+    lcd_event_callback = NULL;
+    lcd_event_callback_data = NULL;
+    guiTimer.stop();
 
     exiting = true;
     cpu.next = 0;

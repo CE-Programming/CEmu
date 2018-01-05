@@ -18,6 +18,12 @@ SendingHandler::SendingHandler(QObject *p, QProgressBar *bar, QTableWidget *t) :
     connect(this, &SendingHandler::send, emu_thread, &EmuThread::send, Qt::QueuedConnection);
     connect(emu_thread, &EmuThread::sentFile, this, &SendingHandler::sentFile, Qt::QueuedConnection);
 
+    bar->setMinimum(0);
+    bar->setMinimumWidth(0);
+    bar->setMaximumWidth(200);
+    bar->setTextVisible(false);
+    bar->setValue(0);
+    bar->setVisible(false);
     sendIcon.addPixmap(QPixmap(":/icons/resources/icons/variables.png"));
 }
 

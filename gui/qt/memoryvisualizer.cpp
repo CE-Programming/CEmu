@@ -156,7 +156,7 @@ void MemoryVisualizer::viewToString() {
     float w = mView.width * s;
     float h = mView.height * s;
     ui->lcdWidget->setFixedSize(w, h);
-    ui->lcdWidget->refreshRate(rate);
+    ui->lcdWidget->setRefreshRate(rate);
     ui->lcdWidget->setLCD(&mView);
     adjustSize();
 }

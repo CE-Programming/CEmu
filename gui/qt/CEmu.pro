@@ -97,7 +97,6 @@ SOURCES +=  utils.cpp \
     main.cpp \
     mainwindow.cpp \
     romselection.cpp \
-    qtframebuffer.cpp \
     lcdwidget.cpp \
     emuthread.cpp \
     datawidget.cpp \
@@ -170,7 +169,6 @@ win32: LIBS += -lpsapi
 HEADERS  +=  utils.h \
     mainwindow.h \
     romselection.h \
-    qtframebuffer.h \
     lcdwidget.h \
     emuthread.h \
     datawidget.h \

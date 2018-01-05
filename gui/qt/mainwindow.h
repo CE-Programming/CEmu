@@ -346,7 +346,7 @@ private:
     // Speed
     void setEmuSpeed(int value);
     void setThrottle(int mode);
-    void showSpeed(int speed);
+    void showEmuUpdates(int speed, int fps);
 
     // Console
     void showStatusMsg(const QString& str);
@@ -358,7 +358,7 @@ private:
     void setDebugPath();
     void setSkinToggle(bool enable);
     void setLcdScale(int state);
-    void setLcdRefresh(int value);
+    void setGuiSkip(int value);
     void setLcdSpi(bool state);
     void setLcdDma(bool state);
     void setAlwaysOnTop(int state);
@@ -558,7 +558,7 @@ private:
     static const QString SETTING_DEBUGGER_MEM_BYTES;
     static const QString SETTING_DEBUGGER_BREAK_IGNORE;
     static const QString SETTING_DEBUGGER_IGNORE_DMA;
-    static const QString SETTING_SCREEN_REFRESH_RATE;
+    static const QString SETTING_SCREEN_FRAMESKIP;
     static const QString SETTING_SCREEN_SCALE;
     static const QString SETTING_SCREEN_SKIN;
     static const QString SETTING_SCREEN_SPI;

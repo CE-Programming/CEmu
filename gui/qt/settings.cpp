@@ -37,7 +37,7 @@ const QString MainWindow::SETTING_DEBUGGER_RAM_BYTES        = QStringLiteral("De
 const QString MainWindow::SETTING_DEBUGGER_MEM_BYTES        = QStringLiteral("Debugger/mem_bytes_per_line");
 const QString MainWindow::SETTING_DEBUGGER_BREAK_IGNORE     = QStringLiteral("Debugger/ignore_breakpoints");
 const QString MainWindow::SETTING_DEBUGGER_IGNORE_DMA       = QStringLiteral("Debugger/ignore_dma");
-const QString MainWindow::SETTING_SCREEN_REFRESH_RATE       = QStringLiteral("Screen/refresh_rate");
+const QString MainWindow::SETTING_SCREEN_FRAMESKIP          = QStringLiteral("Screen/frameskip");
 const QString MainWindow::SETTING_SCREEN_SCALE              = QStringLiteral("Screen/scale");
 const QString MainWindow::SETTING_SCREEN_SKIN               = QStringLiteral("Screen/skin");
 const QString MainWindow::SETTING_SCREEN_SPI                = QStringLiteral("Screen/spi");
@@ -131,12 +131,12 @@ void MainWindow::setPortableConfig(bool state) {
 void MainWindow::setFrameskip(int value) {
     settings->setValue(SETTING_CAPTURE_FRAMESKIP, value);
     ui->frameskipLabel->setText(QString::number(value));
-    ui->frameskipSlider->setValue(value);
+    ui->apngSkip->setValue(value);
     changeFramerate();
 }
 
 void MainWindow::changeFramerate() {
-    float framerate = ((float) ui->refreshLCD->value()) / (ui->frameskipSlider->value() + 1);
+    float framerate = 0.0;
     ui->framerateLabel->setText(QString::number(framerate).left(4));
 }
 
@@ -525,8 +525,8 @@ void MainWindow::adjustScreen() {
     float w, h;
     w = LCD_WIDTH * scale;
     h = LCD_HEIGHT * scale;
-    ui->lcdWidget->setFixedSize(w, h);
-    ui->lcdWidget->move(skin ? 60 * scale : 0, skin ? 78 * scale : 0);
+    ui->lcd->setFixedSize(w, h);
+    ui->lcd->move(skin ? 60 * scale : 0, skin ? 78 * scale : 0);
     if (skin) {
         w = 440 * scale;
         h = 351 * scale;
@@ -548,11 +548,10 @@ void MainWindow::setSkinToggle(bool enable) {
     adjustScreen();
 }
 
-void MainWindow::setLcdRefresh(int value) {
-    settings->setValue(SETTING_SCREEN_REFRESH_RATE, value);
-    ui->refreshLCD->setValue(value);
-    ui->lcdWidget->refreshRate(value);
-    changeFramerate();
+void MainWindow::setGuiSkip(int value) {
+    settings->setValue(SETTING_SCREEN_FRAMESKIP, value);
+    ui->guiSkip->setValue(value);
+    ui->lcd->setFrameskip(value);
 }
 
 void MainWindow::setEmuSpeed(int value) {

@@ -4,7 +4,6 @@
 #include <QtWidgets/QWidget>
 #include <QtCore/QTimer>
 
-#include "qtframebuffer.h"
 #include "../../core/lcd.h"
 
 class LCDWidget : public QWidget {
@@ -13,8 +12,10 @@ class LCDWidget : public QWidget {
 public:
     explicit LCDWidget(QWidget *p = Q_NULLPTR);
     ~LCDWidget();
-    void refreshRate(int);
+    void setRefreshRate(int rate);
+    void setFrameskip(int skip);
     void setLCD(lcd_state_t*);
+    void callback(void);
 
 protected:
     virtual void paintEvent(QPaintEvent*) Q_DECL_OVERRIDE;
@@ -25,6 +26,9 @@ protected:
 
 signals:
     void sendROM(const QString& romPath);
+
+private slots:
+    void draw();
 
 private:
     enum lcd_side {
@@ -37,6 +41,10 @@ private:
     QTimer *refreshTimer;
     lcd_state_t *lcdState = Q_NULLPTR;
     QRect left, right;
+    QImage image;
+
+    int frameskip = 0;
+    int refresh;
 
     // for dragable roms
     QString dragROM;

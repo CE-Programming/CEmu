@@ -21,6 +21,10 @@ extern "C" {
 #define LCD_RAM_OFFSET 0x040000
 #define LCD_FRAME_SIZE (LCD_SIZE * LCD_RGB_SIZE)
 
+/* Set this callback function pointer from the GUI. Called in lcd_event() */
+extern void (*lcd_event_callback)(void*);
+extern void *lcd_event_callback_data;
+
 enum lcd_comp {
     LCD_SYNC,
     LCD_BACK_PORCH,
