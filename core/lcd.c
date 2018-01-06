@@ -287,8 +287,8 @@ static uint32_t lcd_drain_word(void) {
 
 static uint32_t lcd_words(uint8_t words) {
     uint32_t ticks = 0;
-    uint8_t i, j, k, bpp = 1 << lcd.LCDBPP;
-    for (i = 0; i != words; i++) {
+    uint8_t bit, bpp = 1 << lcd.LCDBPP;
+    while (words--) {
         uint32_t word = lcd_drain_word();
         if (__builtin_expect(lcd.LCDBPP == 5, 0)) {
             ticks += lcd_process_pixel(word >> 3 & 0x1F, word >> 10 & 0x3F, word >> 19 & 0x1F);
@@ -299,13 +299,9 @@ static uint32_t lcd_words(uint8_t words) {
             ticks += lcd_process_half(word);
             ticks += lcd_process_half(word >> 16);
         } else {
-            for (j = 0; j < 32; j += bpp) {
-                if (__builtin_expect(lcd.BEPO, 0)) {
-                    k = j;
-                } else {
-                    k = 32 - j;
-                }
-                ticks += lcd_process_index(word >> k & (bpp - 1));
+            for (bit = 0; bit < 32; bit += bpp) {
+                ticks += lcd_process_index(word >> (__builtin_expect(lcd.BEPO, 0) ?
+                                                    32 - bit : bit) & (bpp - 1));
             }
         }
     }
