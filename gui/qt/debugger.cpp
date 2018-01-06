@@ -27,6 +27,7 @@
 #include "../../core/cpu.h"
 #include "../../core/misc.h"
 #include "../../core/mem.h"
+#include "../../core/cert.h"
 #include "../../core/interrupt.h"
 #include "../../core/tidevices.h"
 #include "../../core/keypad.h"
@@ -158,6 +159,46 @@ void MainWindow::debuggerImportFile(const QString &filename) {
     disasm.reverseMap.clear();
     for (QString file : currentEquateFiles) {
         equatesAddFile(file);
+    }
+}
+
+void MainWindow::changeCalcID() {
+    bool ok = true;
+    const uint8_t *data = mem.flash.block;
+    const uint16_t field_type = 0x33D;
+    const uint16_t sub_field_size = 5;
+    const uint16_t sub_field_type = 0x400 | sub_field_size;
+    uint32_t offset = 0x3B0001;
+    uint32_t field_size;
+
+    /* Outer field. */
+    if (cert_field_find(data + offset, SIZE_FLASH - offset, field_type, &data, &field_size)) {
+        ok = false;
+    }
+
+    if (ok) {
+        if (cert_field_find(data, field_size, sub_field_type, &data, &field_size)) {
+            ok = false;
+        }
+        if (field_size != sub_field_size) {
+            ok = false;
+        }
+    }
+
+    if (!ok) {
+        QMessageBox::warning(this, MSG_WARNING, tr("Cannot locate calculator ID in the certificate. This is usually due to an improper ROM dump. Please try another ROM dump using a physical calculator."));
+    } else {
+        uint32_t field_offset = data - mem.flash.block;
+        uint8_t *ptr = mem.flash.block + field_offset;
+        QByteArray array(reinterpret_cast<const char*>(ptr), sub_field_size);
+        QString str = QString(array.toHex());
+
+        QString id = QInputDialog::getText(this, tr("CEmu Change Certificate ID"), tr("Old ID: ") + str, QLineEdit::Normal, Q_NULLPTR, &ok);
+
+        if (ok && id.length() == 10) {
+            QByteArray ba = QByteArray::fromHex(id.toLatin1());
+            memcpy(ptr, ba.data(), sub_field_size);
+        }
     }
 }
 
@@ -468,6 +509,7 @@ void MainWindow::debuggerGUISetState(bool state) {
     ui->buttonStepOver->setEnabled(state);
     ui->buttonStepNext->setEnabled(state);
     ui->buttonStepOut->setEnabled(state);
+    ui->buttonCertID->setEnabled(state);
     ui->groupCPU->setEnabled(state);
     ui->groupFlags->setEnabled(state);
     ui->groupRegisters->setEnabled(state);

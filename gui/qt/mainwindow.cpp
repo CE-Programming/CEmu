@@ -138,6 +138,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->checkAddSpace, &QCheckBox::toggled, this, &MainWindow::setSpaceDisasm);
     connect(ui->checkDisableSoftCommands, &QCheckBox::toggled, this, &MainWindow::setDebugSoftCommands);
     connect(ui->buttonZero, &QPushButton::clicked, this, &MainWindow::debuggerZeroClockCounter);
+    connect(ui->buttonCertID, &QPushButton::clicked, this, &MainWindow::changeCalcID);
 
     // Debugger Options
     connect(ui->buttonAddEquateFile, &QPushButton::clicked, this, &MainWindow::equatesAddDialog);

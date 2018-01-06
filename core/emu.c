@@ -116,8 +116,7 @@ bool emu_load(const char *romName, const char *imageName) {
             goto rerr;
         }
 
-        /* Parse certificate fields to determine model.                            */
-        /* We've heard of the OS base being at 0x30000 on at least one calculator. */
+        /* Parse certificate fields to determine model. */
         for (offset = 0x20000U; offset < 0x40000U; offset += 0x10000U) {
             outer = mem.flash.block;
 

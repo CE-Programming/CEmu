@@ -61,7 +61,7 @@
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>9</number>
+       <number>6</number>
       </property>
       <widget class="QWidget" name="tab_10">
        <attribute name="title">
@@ -4689,6 +4689,26 @@
           </layout>
          </widget>
         </item>
+        <item>
+         <widget class="QPushButton" name="buttonCertID">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string> Change Calulator Certificate ID</string>
+          </property>
+          <property name="icon">
+           <iconset resource="resources.qrc">
+            <normaloff>:/icons/resources/icons/rom.png</normaloff>:/icons/resources/icons/rom.png</iconset>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
       <widget class="QWidget" name="tab_18">
@@ -5977,7 +5997,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>5</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>

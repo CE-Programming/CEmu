@@ -9,15 +9,15 @@ int cert_field_get(const uint8_t *data, uint32_t length, uint16_t *field_type, c
 
     /* Initial sanity checks. */
     if (data == NULL) {
-        fprintf(stderr, "%s: data is NULL\n", __FUNCTION__);
+        //fprintf(stderr, "%s: data is NULL\n", __FUNCTION__);
         return 1;
     }
     if (field_type == NULL && contents == NULL && field_size == NULL) {
-        fprintf(stderr, "%s: all output parameters are NULL\n", __FUNCTION__);
+        //fprintf(stderr, "%s: all output parameters are NULL\n", __FUNCTION__);
         return 1;
     }
     if (length < 2) {
-        fprintf(stderr, "%s: length is too small to contain a valid cert field\n", __FUNCTION__);
+        //fprintf(stderr, "%s: length is too small to contain a valid cert field\n", __FUNCTION__);
         return 1;
     }
 
@@ -31,7 +31,7 @@ int cert_field_get(const uint8_t *data, uint32_t length, uint16_t *field_type, c
     }
 
     if (length < 2 + additional_len) {
-        fprintf(stderr, "%s: length is too small for size bytes\n", __FUNCTION__);
+        //fprintf(stderr, "%s: length is too small for size bytes\n", __FUNCTION__);
         return 1;
     }
 
@@ -55,7 +55,7 @@ int cert_field_get(const uint8_t *data, uint32_t length, uint16_t *field_type, c
     }
 
     if (length < 2 + additional_len + field_len) {
-        fprintf(stderr, "%s: length is too small for data bytes\n", __FUNCTION__);
+        //fprintf(stderr, "%s: length is too small for data bytes\n", __FUNCTION__);
         return 1;
     }
 
@@ -80,11 +80,11 @@ int cert_field_next(const uint8_t **data, uint32_t *length) {
 
     /* Initial sanity checks. */
     if (data == NULL) {
-        fprintf(stderr, "%s: data is NULL\n", __FUNCTION__);
+        //fprintf(stderr, "%s: data is NULL\n", __FUNCTION__);
         return 1;
     }
     if (length == NULL) {
-        fprintf(stderr, "%s: length is NULL\n", __FUNCTION__);
+        //fprintf(stderr, "%s: length is NULL\n", __FUNCTION__);
         return 1;
     }
 
@@ -103,11 +103,11 @@ int cert_field_find(const uint8_t *data, uint32_t length, uint16_t field_type, c
 
     /* Initial sanity checks. */
     if (data == NULL) {
-        fprintf(stderr, "%s: data is NULL\n", __FUNCTION__);
+        //fprintf(stderr, "%s: data is NULL\n", __FUNCTION__);
         return 1;
     }
     if (length < 2) {
-        fprintf(stderr, "%s: length is too small to contain a valid cert field\n", __FUNCTION__);
+        //fprintf(stderr, "%s: length is too small to contain a valid cert field\n", __FUNCTION__);
         return 1;
     }
 
@@ -131,19 +131,19 @@ int cert_field_find_path(const uint8_t *data, uint32_t length, const uint16_t *f
 
     /* Initial sanity checks. */
     if (data == NULL) {
-        fprintf(stderr, "%s: data is NULL\n", __FUNCTION__);
+        //fprintf(stderr, "%s: data is NULL\n", __FUNCTION__);
         return 1;
     }
     if (field_path == NULL) {
-        fprintf(stderr, "%s: field_path is NULL\n", __FUNCTION__);
+        //fprintf(stderr, "%s: field_path is NULL\n", __FUNCTION__);
         return 1;
     }
     if (length < 2) {
-        fprintf(stderr, "%s: length is too small to contain a valid cert field\n", __FUNCTION__);
+        //fprintf(stderr, "%s: length is too small to contain a valid cert field\n", __FUNCTION__);
         return 1;
     }
     if (field_path_len == 0) {
-        fprintf(stderr, "%s: field path is empty\n", __FUNCTION__);
+        //fprintf(stderr, "%s: field path is empty\n", __FUNCTION__);
         return 1;
     }
 
