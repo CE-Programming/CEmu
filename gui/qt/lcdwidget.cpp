@@ -31,9 +31,7 @@ void LCDWidget::draw() {
         return;
     }
 
-    lcd_drawframe(lcd_setptrs(lcdState));
-    image = QImage(reinterpret_cast<const uint8_t*>(lcdState->frame),
-                   lcdState->width, lcdState->height, QImage::Format_RGB888);
+    lcd_drawframe(image.bits(), lcd_setptrs(lcdState));
     update();
 }
 

@@ -74,7 +74,6 @@ typedef struct lcd_state {
     uint32_t size;
     uint32_t *ofs;                  /* Pointer to start of data to start extracting from */
     uint32_t *ofs_end;              /* End pointer that is allowed access */
-    uint32_t frame[LCD_SIZE];       /* Location on which to draw the data */
 } lcd_state_t;
 
 /* Global LCD state */
@@ -84,7 +83,7 @@ extern lcd_state_t lcd;
 void lcd_reset(void);
 eZ80portrange_t init_lcd(void);
 
-void lcd_drawframe(lcd_state_t*);
+void lcd_drawframe(void *output, lcd_state_t *buffer);
 lcd_state_t *lcd_setptrs(lcd_state_t*);
 
 void lcd_enable(void);

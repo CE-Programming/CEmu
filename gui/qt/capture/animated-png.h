@@ -23,8 +23,7 @@ typedef struct {
     bool recording;
     unsigned int frameskip;
     unsigned int skipped;
-    uint32_t table[TABLE_SIZE];
-    png_color frame[LCD_HEIGHT][LCD_WIDTH], prev[LCD_HEIGHT][LCD_WIDTH];
+    uint32_t table[TABLE_SIZE], frame[LCD_HEIGHT][LCD_WIDTH], prev[LCD_HEIGHT][LCD_WIDTH];
     png_bytep row_ptrs[LCD_HEIGHT];
 } apng_t;
 

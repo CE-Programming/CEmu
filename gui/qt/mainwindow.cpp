@@ -1047,7 +1047,7 @@ void MainWindow::screenshotSave(const QString& nameFilter, const QString& defaul
 }
 
 void MainWindow::screenshot() {
-    QImage image = QImage(reinterpret_cast<const uint8_t*>(lcd.frame), lcd.width, lcd.height, QImage::Format_RGB888);
+    QImage image = QImage(reinterpret_cast<const uint8_t*>(spi.display), lcd.width, lcd.height, QImage::Format_ARGB32_Premultiplied);
 
     QString path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.img");
     if (!image.save(path, "PNG", 0)) {
@@ -1058,7 +1058,7 @@ void MainWindow::screenshot() {
 }
 
 void MainWindow::saveScreenToClipboard() {
-    QImage image = QImage(reinterpret_cast<const uint8_t*>(lcd.frame), lcd.width, lcd.height, QImage::Format_RGB888);
+    QImage image = QImage(reinterpret_cast<const uint8_t*>(spi.display), lcd.width, lcd.height, QImage::Format_ARGB32_Premultiplied);
     Q_ASSERT(!image.isNull());
     QApplication::clipboard()->setImage(image, QClipboard::Clipboard);
 }
