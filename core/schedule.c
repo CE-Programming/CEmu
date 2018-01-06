@@ -137,6 +137,10 @@ void sched_process_pending_events(void) {
 }
 
 void sched_process_pending_dma(uint8_t duration) {
+    if (sched.event.cycle) {
+        cpu.cycles += duration;
+        return;
+    }
     while (true) {
         enum sched_item_id id = sched.dma.next;
         if (id == SCHED_PREV_MA) {

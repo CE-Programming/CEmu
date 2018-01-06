@@ -227,6 +227,7 @@ r_err:
     cpu.next = save_next;
     cpu.baseCycles = save_base_cycles;
     sched.event.cycle = 0;
+    cpu_restore_next();
     fclose(file);
     return ret;
 }
