@@ -198,7 +198,16 @@ static void EMSCRIPTEN_KEEPALIVE emu_reset(void) {
     asic_reset();
 }
 
+#ifdef __EMSCRIPTEN__
+
+extern bool throttle_triggered;
+
 static void emu_main_loop_inner(void) {
+
+    throttle_triggered = false;
+    while (1)
+    {
+
 #ifdef DEBUG_SUPPORT
     if (cpu.events & (EVENT_RESET | EVENT_DEBUG_STEP)) {
         if (!cpu.halted && cpu.events & EVENT_DEBUG_STEP) {
@@ -215,13 +224,14 @@ static void emu_main_loop_inner(void) {
 #endif
 
     sched_process_pending_events();
+    if (throttle_triggered) break;
     cpu_execute();
 
-#ifdef __EMSCRIPTEN__
+    } // while
+
     if (exiting) {
         emscripten_cancel_main_loop();
     }
-#endif
 }
 
 void emu_loop(bool reset) {
@@ -230,13 +240,39 @@ void emu_loop(bool reset) {
     }
 
     exiting = false;
-#ifdef __EMSCRIPTEN__
-    emscripten_set_main_loop(emu_main_loop_inner, 0, 1);
-#else
-    while (!exiting) {
-        emu_main_loop_inner();
-    }
-#endif
+    emscripten_set_main_loop(emu_main_loop_inner, 60, 1);
 
     emu_cleanup();
 }
+
+#else // not __EMSCRIPTEN__
+
+void emu_loop(bool reset) {
+    if (reset) {
+        emu_reset();
+    }
+
+    exiting = false;
+    while (!exiting) {
+#ifdef DEBUG_SUPPORT
+        if (cpu.events & (EVENT_RESET | EVENT_DEBUG_STEP)) {
+            if (!cpu.halted && cpu.events & EVENT_DEBUG_STEP) {
+                cpu.events &= ~EVENT_DEBUG_STEP;
+                open_debugger(DBG_STEP, 0);
+            }
+#endif
+            if (cpu.events & EVENT_RESET) {
+                gui_console_printf("[CEmu] Reset triggered.\n");
+                emu_reset();
+            }
+#ifdef DEBUG_SUPPORT
+        }
+#endif
+        sched_process_pending_events();
+        cpu_execute();
+    }
+
+    emu_cleanup();
+}
+
+#endif // __EMSCRIPTEN__

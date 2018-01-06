@@ -35,11 +35,14 @@ void EMSCRIPTEN_KEEPALIVE set_sleep_amount_us(unsigned int amount)
     sleep_amount_us = amount;
 }
 
+bool throttle_triggered = false;
+
 void throttle_timer_off() {}
 void throttle_timer_on() {}
 void throttle_timer_wait() {
     //EM_ASM( Module.print('hello throttle_timer_wait') );
     //usleep(sleep_amount_us);
+    throttle_triggered = true;
 }
 
 void gui_emu_sleep(unsigned long microseconds) {
