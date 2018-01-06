@@ -65,9 +65,9 @@ bool listVariablesLink(void) {
 }
 
 static void run_asm(const uint8_t *data, const size_t data_size, const uint32_t cycles) {
-    cpu.halted = cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = 0;
+    cpu.halted = cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = cpu.NMI = 0;
     memcpy(phys_mem_ptr(SAFE_RAM, 8400), data, data_size);
-    cpu.baseCycles = cpu.cycles = 0;
+    cpu.cycles = 0;
     cpu.next = sched.event.cycle = cycles;
     cpu_flush(SAFE_RAM, 1);
     cpu_execute();
@@ -87,8 +87,7 @@ int EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int lo
     FILE *file;
     uint8_t tmp_buf[0x80];
 
-    uint32_t save_cycles, save_next;
-    uint64_t save_base_cycles;
+    uint32_t save_cycles;
 
     uint8_t var_ver,
             var_arc;
@@ -114,8 +113,6 @@ int EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int lo
     }
 
     save_cycles = cpu.cycles;
-    save_next = cpu.next;
-    save_base_cycles = cpu.baseCycles;
 
     if (fread(tmp_buf, 1, h_size, file) != h_size)         goto r_err;
     if (memcmp(tmp_buf, header_data, h_size))              goto r_err;
@@ -224,8 +221,6 @@ int EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int lo
     run_asm(jforcehome, sizeof jforcehome, 23000000);
 r_err:
     cpu.cycles = save_cycles;
-    cpu.next = save_next;
-    cpu.baseCycles = save_base_cycles;
     sched.event.cycle = 0;
     cpu_restore_next();
     fclose(file);

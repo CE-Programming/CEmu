@@ -188,6 +188,9 @@ void sched_set_clocks(enum clock_id count, uint32_t *new_rates) {
     struct sched_item *item;
     uint64_t ticks;
 
+    if (sched.event.cycle) {
+        return;
+    }
     cpu.baseCycles += cpu.cycles;
     cpu.cycles = muldiv_floor(cpu.cycles, new_rates[CLOCK_CPU], sched.clockRates[CLOCK_CPU]);
     cpu.baseCycles -= cpu.cycles;
