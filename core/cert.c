@@ -23,6 +23,10 @@ int cert_field_get(const uint8_t *data, uint32_t length, uint16_t *field_type, c
 
     /* Retrieve field ID and number of additional bytes we need to read for the field's size. */
     field_id = (((uint16_t)data[0]) << 8) | data[1];
+    if (field_id == 0xFFFF) {
+        return 1;
+    }
+
     switch (field_id & 0xF) {
         case 0xD: additional_len = 1; break;
         case 0xE: additional_len = 2; break;
