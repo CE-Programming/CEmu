@@ -9,8 +9,8 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+#include <stdarg.h>
 
-#include <pthread.h>
 #include <time.h>
 
 #include "os.h"
@@ -39,11 +39,11 @@ void throttle_timer_off() {}
 void throttle_timer_on() {}
 void throttle_timer_wait() {
     //EM_ASM( Module.print('hello throttle_timer_wait') );
-    usleep(sleep_amount_us);
+    //usleep(sleep_amount_us);
 }
 
 void gui_emu_sleep(unsigned long microseconds) {
-    usleep(microseconds);
+    //usleep(microseconds);
 }
 
 void EMSCRIPTEN_KEEPALIVE set_file_to_send(const char* path)
@@ -132,19 +132,13 @@ void gui_perror(const char *msg)
     fprintf(stderr, "[gui_perror] %s: %s\n", msg, strerror(errno));
 }
 
-uint32_t * buf_lcd_js = NULL;
-
-void EMSCRIPTEN_KEEPALIVE set_lcd_js_ptr(uint32_t * ptr) {
-    buf_lcd_js = ptr;
+uint32_t* EMSCRIPTEN_KEEPALIVE lcd_get_frame() {
+    return lcd.frame;
 }
 
-void EMSCRIPTEN_KEEPALIVE paint_LCD_to_JS()
+void EMSCRIPTEN_KEEPALIVE paint_LCD_to_JS(void * lcd_ptr)
 {
-    if (buf_lcd_js && lcd.control & 0x800) { // LCD on
-        lcd_drawframe(buf_lcd_js, &lcd);
-    } else { // LCD off
-        //EM_ASM( drawLCDOff() );
-    }
+    lcd_drawframe((lcd_state_t*)lcd_ptr);
 }
 
 void EMSCRIPTEN_KEEPALIVE emsc_pause_main_loop() {
@@ -160,29 +154,6 @@ void EMSCRIPTEN_KEEPALIVE emsc_cancel_main_loop() {
     emscripten_cancel_main_loop();
 }
 
-static void* emu_loop_wrapper(void *arg)
-{
-    (void)arg;
-    emu_loop(true);
-    return NULL;
-}
-
-static void* lcd_paint_wrapper(void *arg)
-{
-    (void)arg;
-    while (1)
-    {
-        paint_LCD_to_JS();
-        usleep(20000);
-    }
-    return NULL;
-}
-
-void nothing()
-{
-    usleep(50);
-}
-
 int main(int argc, char* argv[])
 {
     bool success;
@@ -192,11 +163,11 @@ int main(int argc, char* argv[])
     success = emu_load("CE.rom", NULL);
 
     if (success) {
-        pthread_t emu_thread;
-        pthread_t lcd_thread;
 #ifdef DEBUG_SUPPORT
         debugger_init();
 #endif
+        lcd_gui_callback_data = &lcd;
+        lcd_gui_callback = paint_LCD_to_JS;
         EM_ASM(
             emul_is_inited = true;
             emul_is_paused = false;
@@ -204,20 +175,7 @@ int main(int argc, char* argv[])
             initLCD();
             enableGUI();
         );
-        if(pthread_create(&emu_thread,  NULL, emu_loop_wrapper, NULL))
-        {
-            fprintf(stderr, "Error creating emu loop thread\n");
-            return 1;
-        } else {
-            fprintf(stderr, "Emu loop thread created OK\n");
-            if(pthread_create(&lcd_thread, NULL, lcd_paint_wrapper, NULL))
-            {
-                fprintf(stderr, "Error creating lcd paint thread\n");
-                return 1;
-            } else {
-                fprintf(stderr, "lcd paint thread created OK\n");
-            }
-        }
+        emu_loop(true);
     } else {
         EM_ASM(
             emul_is_inited = false;
@@ -226,8 +184,6 @@ int main(int argc, char* argv[])
         );
         return 1;
     }
-
-    emscripten_set_main_loop(nothing, 0, 1);
 
     puts("Finished");
 

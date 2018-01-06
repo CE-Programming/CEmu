@@ -216,6 +216,12 @@ static void emu_main_loop_inner(void) {
 
     sched_process_pending_events();
     cpu_execute();
+
+#ifdef __EMSCRIPTEN__
+    if (exiting) {
+        emscripten_cancel_main_loop();
+    }
+#endif
 }
 
 void emu_loop(bool reset) {
@@ -224,8 +230,13 @@ void emu_loop(bool reset) {
     }
 
     exiting = false;
+#ifdef __EMSCRIPTEN__
+    emscripten_set_main_loop(emu_main_loop_inner, 0, 1);
+#else
     while (!exiting) {
         emu_main_loop_inner();
     }
+#endif
+
     emu_cleanup();
 }

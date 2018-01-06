@@ -7,11 +7,12 @@ CFLAGS  = -W -Wall -O3
 CFLAGS += -DDEBUG_SUPPORT
 
 # Emscripten stuff
-CFLAGS += -s TOTAL_MEMORY=33554432 --llvm-lto 3 -s INVOKE_RUN=0 -s NO_EXIT_RUNTIME=1 -s ASSERTIONS=0 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=2
+CFLAGS += -s TOTAL_MEMORY=33554432 --llvm-lto 3 -s INVOKE_RUN=0 -s NO_EXIT_RUNTIME=1 -s ASSERTIONS=0 
 
 # You may want to try with closure 1
-asmjs: CFLAGS += --closure 0 -s WASM=0
-wasm:  CFLAGS += --closure 0 -s WASM=1 -s "BINARYEN_METHOD='native-wasm,asmjs'"
+asmjs:  CFLAGS += --closure 0 -s WASM=0
+wasmfb: CFLAGS += --closure 0 -s WASM=1 -s "BINARYEN_METHOD='native-wasm,asmjs'"
+wasm:   CFLAGS += --closure 0 -s WASM=1
 
 CSOURCES := $(wildcard *.c) ./debug/debug.c ./os/os-emscripten.c
 
@@ -19,8 +20,9 @@ OBJS = $(patsubst %.c, %.bc, $(CSOURCES))
 
 OUTPUT := cemu_web
 
-asmjs: $(OUTPUT).js
-wasm:  $(OUTPUT).js
+asmjs:  $(OUTPUT).js
+wasmfb: $(OUTPUT).js
+wasm:   $(OUTPUT).js
 
 all: asmjs
 
@@ -33,4 +35,4 @@ $(OUTPUT).js: $(OBJS)
 clean:
 	$(RM) -f $(OBJS) $(OUTPUT).js* $(OUTPUT).data $(OUTPUT).asm.js $(OUTPUT).was*
 
-.PHONY: all clean asmjs wasm
+.PHONY: all clean asmjs wasm wasmfb
