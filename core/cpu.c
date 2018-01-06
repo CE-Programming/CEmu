@@ -896,7 +896,7 @@ void cpu_execute(void) {
                 cpu_restore_next();
             } else {
                 cpu.IEF2 = 0;
-                if (cpu.IM == 1) {
+                if (cpu.IM == 2) {
                     cpu_call(0x38, cpu.MADL);
                 } else {
                     if (cpu.preI && cpu.IM == 3) {
