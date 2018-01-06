@@ -110,6 +110,7 @@ void sched_clear(enum sched_item_id id) {
 
 uint64_t sched_cycle(enum sched_item_id id) {
     struct sched_item *item = &sched.items[id];
+    assert(item->second >= 0);
     return (uint64_t)item->second * sched.clockRates[CLOCK_CPU] + item->cycle;
 }
 
@@ -119,6 +120,7 @@ uint64_t sched_cycles_remaining(enum sched_item_id id) {
 
 uint64_t sched_tick(enum sched_item_id id) {
     struct sched_item *item = &sched.items[id];
+    assert(item->second >= 0);
     return (uint64_t)item->second * sched.clockRates[item->clock] + item->tick;
 }
 
@@ -158,8 +160,8 @@ void sched_process_pending_dma(uint8_t duration) {
             cpu.cycles = prev_cycle;
         }
         cpu.cycles += duration;
-        sched_set(SCHED_PREV_MA, 0);
     }
+    sched_set(SCHED_PREV_MA, 0);
 }
 
 static void sched_second(enum sched_item_id id) {
