@@ -63,10 +63,10 @@ private:
 
     QDir currentDir;
     uint8_t *romArray = Q_NULLPTR;
-    uint32_t imageSize = 0;
+    uint32_t osSize = 0;
     QString rom;
     bool segmentFilledStatus[30] = {0};
-    int numROMSegments = 0;
+    int numSegments = 0;
     QStringList segmentFileList;
 
     bool config = false;
