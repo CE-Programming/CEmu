@@ -37,9 +37,20 @@ uint32_t sched_event_next_cycle(void) {
     return sched.event.cycle ? sched.event.cycle : sched.items[next].cycle;
 }
 
+static bool sched_before(enum sched_item_id a_id, enum sched_item_id b_id) {
+    struct sched_item *a = &sched.items[a_id], *b = &sched.items[b_id];
+    return a->second <= b->second && a->cycle < b->cycle;
+}
+
 static void sched_update(enum sched_item_id id) {
     struct sched_item *item = &sched.items[id];
-    if (id >= SCHED_FIRST_EVENT && id <= SCHED_LAST_EVENT) {
+    if (id == SCHED_SECOND) {
+        sched.event.next = id;
+        cpu_restore_next();
+        for (id = SCHED_FIRST_EVENT; id <= SCHED_LAST_EVENT; id++) {
+            sched_update(id);
+        }
+    } else if (id >= SCHED_FIRST_EVENT && id <= SCHED_LAST_EVENT) {
         if (item->callback.event && !item->second &&
             item->cycle < sched_event_next_cycle()) {
             sched.event.next = id;
@@ -51,38 +62,20 @@ static void sched_update(enum sched_item_id id) {
             sched_update(id);
         }
     } else if (id >= SCHED_FIRST_DMA && id <= SCHED_LAST_DMA) {
-        if (item->callback.dma && item->second >= 0) {
-            struct sched_item *prev = &sched.items[SCHED_PREV_MA],
-                              *next = &sched.items[sched.dma.next];
-            if (item->second <= prev->second && item->cycle < prev->cycle) {
-                item->second = prev->second;
-                item->tick = muldiv_ceil(prev->tick, sched.clockRates[item->clock], sched.clockRates[prev->clock]);
-                item->cycle = muldiv_floor(item->tick, sched.clockRates[CLOCK_CPU], sched.clockRates[item->clock]);
-            }
-            if (sched.dma.next == SCHED_PREV_MA ||
-                (item->second <= next->second && item->cycle < next->cycle)) {
-                sched.dma.next = id;
-            }
+        if (item->callback.dma && item->second >= 0 &&
+            (sched.dma.next == SCHED_PREV_MA || sched_before(id, sched.dma.next))) {
+            sched.dma.next = id;
         }
     }
 }
 
-static void sched_update_events(void) {
-    enum sched_item_id id;
-    sched.event.next = SCHED_SECOND;
-    cpu_restore_next();
-    for (id = SCHED_FIRST_EVENT; id <= SCHED_LAST_EVENT; id++) {
-        sched_update(id);
-    }
-}
-
-static void sched_schedule(enum sched_item_id id, int seconds, uint64_t ticks) {
+static void sched_schedule(enum sched_item_id id, int32_t seconds, uint64_t ticks) {
     struct sched_item *item = &sched.items[id];
     item->second = seconds + ticks / sched.clockRates[item->clock];
     item->tick = ticks % sched.clockRates[item->clock];
     item->cycle = muldiv_floor(item->tick, sched.clockRates[CLOCK_CPU], sched.clockRates[item->clock]);
     if (id == sched.event.next) {
-        sched_update_events();
+        sched_update(SCHED_SECOND);
     } else if (id == sched.dma.next) {
         sched_update(SCHED_PREV_MA);
     } else {
@@ -90,13 +83,13 @@ static void sched_schedule(enum sched_item_id id, int seconds, uint64_t ticks) {
     }
 }
 
-void sched_repeat_relative(enum sched_item_id id, enum sched_item_id base, uint64_t ticks) {
+void sched_repeat_relative(enum sched_item_id id, enum sched_item_id base, uint32_t offset, uint64_t ticks) {
     struct sched_item *item = &sched.items[base];
-    sched_schedule(id, item->second, muldiv_ceil(item->tick, sched.clockRates[sched.items[id].clock], sched.clockRates[item->clock]) + ticks);
+    sched_schedule(id, item->second ^ item->second >> 31, muldiv_ceil(item->tick + offset, sched.clockRates[sched.items[id].clock], sched.clockRates[item->clock]) + ticks);
 }
 
 void sched_repeat(enum sched_item_id id, uint64_t ticks) {
-    sched_schedule(id, 0, sched.items[id].tick + ticks);
+    sched_repeat_relative(id, id, 0, ticks);
 }
 
 void sched_set(enum sched_item_id id, uint64_t ticks) {
@@ -104,12 +97,33 @@ void sched_set(enum sched_item_id id, uint64_t ticks) {
 }
 
 void sched_clear(enum sched_item_id id) {
-    sched.items[id].second = -1;
-    if (id == sched.event.next) {
-        sched_update_events();
-    } else if (id == sched.dma.next) {
-        sched_update(SCHED_PREV_MA);
+    struct sched_item *item = &sched.items[id];
+    if (item->second >= 0) {
+        item->second = ~item->second;
+        if (id == sched.event.next) {
+            sched_update(SCHED_SECOND);
+        } else if (id == sched.dma.next) {
+            sched_update(SCHED_PREV_MA);
+        }
     }
+}
+
+uint64_t sched_cycle(enum sched_item_id id) {
+    struct sched_item *item = &sched.items[id];
+    return (uint64_t)item->second * sched.clockRates[CLOCK_CPU] + item->cycle;
+}
+
+uint64_t sched_cycles_remaining(enum sched_item_id id) {
+    return sched_cycle(id) - cpu.cycles;
+}
+
+uint64_t sched_tick(enum sched_item_id id) {
+    struct sched_item *item = &sched.items[id];
+    return (uint64_t)item->second * sched.clockRates[item->clock] + item->tick;
+}
+
+uint64_t sched_ticks_remaining(enum sched_item_id id) {
+    return sched_tick(id) - muldiv_floor(cpu.cycles, sched.clockRates[sched.items[id].clock], sched.clockRates[CLOCK_CPU]);
 }
 
 void sched_process_pending_events(void) {
@@ -121,29 +135,31 @@ void sched_process_pending_events(void) {
 }
 
 void sched_process_pending_dma(uint8_t duration) {
-    struct sched_item *prev = &sched.items[SCHED_PREV_MA];
     while (true) {
         enum sched_item_id id = sched.dma.next;
-        struct sched_item *item = &sched.items[id];
-        if (id == SCHED_PREV_MA ||
-            item->second * sched.clockRates[CLOCK_CPU] + item->cycle > cpu.cycles) {
+        if (id == SCHED_PREV_MA) {
+            break;
+        }
+        if (sched_before(SCHED_PREV_MA, id)) {
+            if (sched_cycle(id) > cpu.cycles) {
+                break;
+            }
+            sched_repeat_relative(SCHED_PREV_MA, id, 0, 0);
+        } else if (sched_cycle(SCHED_PREV_MA) > cpu.cycles) {
             break;
         }
         sched_clear(id);
-        sched_repeat_relative(SCHED_PREV_MA, id, item->callback.dma(id));
+        sched_repeat(SCHED_PREV_MA, sched.items[id].callback.dma(id));
     }
-    if (!duration) {
-        return;
-    }
-    if (prev->second >= 0) {
-        uint32_t prev_cycle = prev->second * sched.clockRates[CLOCK_CPU] + prev->cycle;
+    if (duration) {
+        uint32_t prev_cycle = sched_cycle(SCHED_PREV_MA);
         if (prev_cycle > cpu.cycles) {
             cpu.dmaCycles += prev_cycle - cpu.cycles;
             cpu.cycles = prev_cycle;
         }
+        cpu.cycles += duration;
+        sched_set(SCHED_PREV_MA, 0);
     }
-    cpu.cycles += duration;
-    sched_set(SCHED_PREV_MA, 0);
 }
 
 static void sched_second(enum sched_item_id id) {
@@ -158,7 +174,7 @@ static void sched_second(enum sched_item_id id) {
     cpu.cycles -= sched.clockRates[CLOCK_CPU];
     cpu.baseCycles += sched.clockRates[CLOCK_CPU];
     sched.items[SCHED_SECOND].second = 0; // Don't use sched_repeat!
-    sched_update_events();
+    sched_update(SCHED_SECOND);
 }
 
 void sched_set_clocks(enum clock_id count, uint32_t *new_rates) {
@@ -180,11 +196,9 @@ void sched_set_clocks(enum clock_id count, uint32_t *new_rates) {
             } else {
                 item->cycle = muldiv_floor(item->tick, new_rates[CLOCK_CPU], sched.clockRates[item->clock]);
             }
-            if (id == sched.event.next) {
-                cpu_restore_next();
-            }
         }
     }
+    sched_update(SCHED_SECOND);
     memcpy(sched.clockRates, new_rates, sizeof(uint32_t) * count);
 }
 
@@ -214,12 +228,6 @@ void sched_reset(void) {
 uint64_t event_next_cycle(enum sched_item_id id) {
     struct sched_item *item = &sched.items[id];
     return (uint64_t)item->second * sched.clockRates[CLOCK_CPU] + item->cycle - sched_event_next_cycle() + cpu.baseCycles;
-}
-
-uint64_t event_ticks_remaining(enum sched_item_id id) {
-    struct sched_item *item = &sched.items[id];
-    return (uint64_t)item->second * sched.clockRates[item->clock] + item->tick
-        - muldiv_floor(cpu.cycles, sched.clockRates[item->clock], sched.clockRates[CLOCK_CPU]);
 }
 
 bool sched_save(FILE *image) {

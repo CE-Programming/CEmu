@@ -83,7 +83,7 @@ static uint32_t addr_block(uint32_t *addr, int32_t size, void **block, uint32_t 
         *block = mem.flash.block;
         *block_size = SIZE_FLASH;
     } else if (*addr < 0xE00000) {
-        *addr -= 0xD00000;
+        *addr &= 0x07FFFF;
         *block = mem.ram.block;
         *block_size = SIZE_RAM;
     } else if (*addr < 0xE30800) {
@@ -137,6 +137,33 @@ uint8_t *virt_mem_cpy(uint8_t *dest, uint32_t addr, int32_t size) {
 
 uint8_t *virt_mem_dup(uint32_t addr, int32_t size) {
     return virt_mem_cpy(NULL, addr, size);
+}
+
+uint8_t *mem_dma_cpy(uint8_t *dest, uint32_t addr, int32_t size) {
+    uint8_t *save_dest;
+    fix_size(&addr, &size);
+    if (!dest) {
+        dest = malloc(size);
+    }
+    save_dest = dest;
+    while (size) {
+        addr &= 0x07FFFF;
+        if (addr + size > addr && addr + size <= SIZE_RAM) {
+            memcpy(dest, &mem.ram.block[addr], size);
+            break;
+        }
+        if (addr < SIZE_RAM) {
+            uint32_t temp_size = SIZE_RAM - addr;
+            memcpy(dest, &mem.ram.block[addr], temp_size);
+            dest += temp_size;
+            addr += temp_size;
+            size -= temp_size;
+        } else {
+            *dest++ = mem_peek_byte(0xD00000 | addr++);
+            size--;
+        }
+    }
+    return save_dest;
 }
 
 static void flash_reset_write_index(uint32_t addr, uint8_t byte) {

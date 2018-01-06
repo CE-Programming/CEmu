@@ -42,7 +42,7 @@ enum sched_item_id {
 
 struct sched_item {
     enum clock_id clock;
-    int second; /* -1 = disabled */
+    int32_t second; /* <0 if disabled */
     uint32_t tick;
     uint32_t cycle;
     union sched_callback {
@@ -75,11 +75,14 @@ void sched_process_pending_dma(uint8_t duration);
 void sched_clear(enum sched_item_id id);
 void sched_set(enum sched_item_id id, uint64_t ticks);
 void sched_repeat(enum sched_item_id id, uint64_t ticks);
-void sched_repeat_relative(enum sched_item_id id, enum sched_item_id base, uint64_t ticks);
+void sched_repeat_relative(enum sched_item_id id, enum sched_item_id base, uint32_t offset, uint64_t ticks);
+uint64_t sched_cycle(enum sched_item_id id);
+uint64_t sched_cycles_remaining(enum sched_item_id id);
+uint64_t sched_tick(enum sched_item_id id);
+uint64_t sched_ticks_remaining(enum sched_item_id id);
 void sched_set_clocks(enum clock_id count, uint32_t *new_rates);
 
 uint64_t event_next_cycle(enum sched_item_id id);
-uint64_t event_ticks_remaining(enum sched_item_id id);
 
 /* Save/Restore */
 bool sched_restore(FILE *image);

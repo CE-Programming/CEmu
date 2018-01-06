@@ -64,9 +64,11 @@ typedef struct lcd_state {
     uint32_t crsrRis;              /* Cursor raw interrupt status register - const */
 
     /* Internal registers */
+    uint8_t prefill;
+    uint32_t preCol, preRow, curCol, curRow;
     enum lcd_comp compare;
-    uint32_t PPL, HSW, HFP, HBP, LPP, VSW, VFP, VBP, PCD, ACB, CPL, LED;
-    bool CLKSEL, IVS, IHS, IPC, IOE, LEE, mask, off;
+    uint32_t PPL, HSW, HFP, HBP, LPP, VSW, VFP, VBP, PCD, ACB, CPL, LED, LCDBPP, BPP, PPF;
+    bool CLKSEL, IVS, IHS, IPC, IOE, LEE, BGR, BEBO, BEPO, WTRMRK, mask, off;
     uint32_t width;
     uint32_t height;
     uint32_t size;

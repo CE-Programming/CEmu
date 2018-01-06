@@ -10,6 +10,7 @@
 #include "keypad/qtkeypadbridge.h"
 #include "capture/animated-png.h"
 #include "../../core/link.h"
+#include "../../core/spi.h"
 #include "../../core/debug/debug.h"
 #include "../../core/backlight.h"
 
@@ -18,7 +19,7 @@ LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
     setContextMenuPolicy(Qt::CustomContextMenu);
     installEventFilter(keypadBridge);
     setAcceptDrops(true);
-    image = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGB888);
+    image = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_ARGB32_Premultiplied);
 }
 
 LCDWidget::~LCDWidget() {
@@ -71,11 +72,11 @@ void LCDWidget::callback(void) {
         return;
     }
 
-    lcd_drawframe(&lcd);
+    //lcd_drawframe(&lcd);
 
     if (!skip--) {
         skip = frameskip;
-        memcpy(image.bits(), lcd.frame, LCD_FRAME_SIZE);
+        memcpy(image.bits(), spi.display, sizeof(spi.display));
     }
 
 #ifdef PNG_WRITE_APNG_SUPPORTED

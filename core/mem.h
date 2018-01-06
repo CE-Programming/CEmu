@@ -72,6 +72,7 @@ void mem_reset(void);
 uint8_t *phys_mem_ptr(uint32_t addr, int32_t size);
 uint8_t *virt_mem_cpy(uint8_t *buf, uint32_t addr, int32_t size);
 uint8_t *virt_mem_dup(uint32_t addr, int32_t size);
+uint8_t *mem_dma_cpy(uint8_t *buf, uint32_t addr, int32_t size);
 uint8_t mem_peek_byte(uint32_t addr);
 uint16_t mem_peek_short(uint32_t addr);
 uint32_t mem_peek_long(uint32_t addr);

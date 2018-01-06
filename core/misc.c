@@ -46,7 +46,7 @@ static uint8_t watchdog_read(const uint16_t pio, bool peek) {
     switch (index) {
         case 0x000: case 0x001: case 0x002: case 0x003:
             if (watchdog.control & 1) {
-                value = read8(event_ticks_remaining(SCHED_WATCHDOG), bit_offset);
+                value = read8(sched_ticks_remaining(SCHED_WATCHDOG), bit_offset);
             } else {
                 value = watchdog.count;
             }
@@ -103,7 +103,7 @@ static void watchdog_write(const uint16_t pio, const uint8_t byte, bool poke) {
             if (watchdog.control & 1) {
                 sched_set(SCHED_WATCHDOG, watchdog.load);
             } else {
-                watchdog.count = event_ticks_remaining(SCHED_WATCHDOG);
+                watchdog.count = sched_ticks_remaining(SCHED_WATCHDOG);
                 sched_clear(SCHED_WATCHDOG);
             }
             break;

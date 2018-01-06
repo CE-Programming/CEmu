@@ -2,24 +2,94 @@
 #include "emu.h"
 #include "schedule.h"
 
+#include <assert.h>
 #include <string.h>
 
 spi_state_t spi;
 
+void spi_hsync(void) {
+    spi.colCur = (spi.mac >> 2 & 1) * 239;
+    spi.rowCur += 1 - (spi.mac >> 3 & 2);
+}
+
+static void spi_reset_mregs(void) {
+    if (__builtin_expect(spi.mac >> 5 & 1, 0)) {
+        spi.rowReg = spi.rowStart;
+        spi.colReg = spi.colStart;
+    } else {
+        spi.rowReg = spi.colStart;
+        spi.colReg = spi.rowStart;
+    }
+}
+
+void spi_vsync(void) {
+    spi_reset_mregs();
+    spi_hsync();
+    spi.rowCur = (spi.mac >> 4 & 1) * 319;
+}
+
+static uint32_t spi_idle(uint32_t pixel, uint32_t bit, uint32_t mask) {
+    return pixel & bit ? pixel | mask : pixel & ~mask;
+}
+
+void spi_update_pixel(void) {
+    if (spi.colCur < 240 && spi.rowCur < 320) {
+        uint32_t pixel = 0xFF000000 |
+            (spi.frame[spi.rowCur][spi.colCur][~spi.mac >> 2 & 2] & 0x3F) << 18 |
+            (spi.frame[spi.rowCur][spi.colCur][1] & 0x3F) << 10 |
+            (spi.frame[spi.rowCur][spi.colCur][spi.mac >> 2 & 2] & 0x3F) << 2;
+        if (__builtin_expect(spi.invert, 0)) {
+            pixel ^= 0xFFFFFF;
+        }
+        if (__builtin_expect(spi.idle, 0)) {
+            pixel = spi_idle(pixel, 0x800000, 0xFF0000);
+            pixel = spi_idle(pixel, 0x008000, 0x00FF00);
+            pixel = spi_idle(pixel, 0x000080, 0x0000FF);
+        }
+        spi.display[spi.colCur][spi.rowCur] = pixel;
+        spi.colCur += 1 - (spi.mac >> 1 & 2);
+    }
+}
+
+void spi_process_pixel(uint8_t r, uint8_t g, uint8_t b) {
+    assert(r < 32 && g < 64 && b < 32);
+    if (spi.rowReg < 320 && spi.colReg < 240) {
+        spi.frame[spi.rowReg][spi.colReg][0] = spi.lut[r +  0];
+        spi.frame[spi.rowReg][spi.colReg][1] = spi.lut[g + 32];
+        spi.frame[spi.rowReg][spi.colReg][2] = spi.lut[b + 96];
+    }
+    if (__builtin_expect(spi.mac >> 5 & 1, 0)) {
+        if (__builtin_expect(spi.colReg == spi.colEnd, 0)) {
+            spi.colReg = spi.colStart;
+            spi.rowReg = (spi.rowReg + 1 - (spi.mac >> 6 & 2)) & 0xFF;
+        } else {
+            spi.colReg += 1 - (spi.mac >> 5 & 2);
+        }
+        spi.colReg &= 0x1FF;
+    } else {
+        if (__builtin_expect(spi.rowReg == spi.colEnd, 0)) {
+            spi.rowReg = spi.colStart;
+            spi.colReg = (spi.colReg + 1 - (spi.mac >> 5 & 2)) & 0xFF;
+        } else {
+            spi.rowReg += 1 - (spi.mac >> 6 & 2);
+        }
+        spi.rowReg &= 0x1FF;
+    }
+}
+
 static void spi_sw_reset(void) {
     spi.cmd = 0;
-    spi.fifo = 0;
+    spi.fifo = 1;
     spi.param = 0;
-    spi.shift = 6;
     spi.gamma = 1;
     spi.sleep = true;
     spi.partial = false;
     spi.invert = false;
     spi.power = false;
     spi.colStart = 0;
-    spi.colEnd = spi.MAC & 1 << 5 ? 0x13F : 0xEF;
+    spi.colEnd = spi.mac & 1 << 5 ? 0xEF : 0x13F;
     spi.rowStart = 0;
-    spi.rowEnd = spi.MAC & 1 << 5 ? 0xEF : 0x13F;
+    spi.rowEnd = spi.mac & 1 << 5 ? 0x13F : 0xEF;
     spi.topArea = 0;
     spi.scrollArea = 0x140;
     spi.bottomArea = 0;
@@ -31,7 +101,7 @@ static void spi_sw_reset(void) {
 }
 
 static void spi_hw_reset(void) {
-    spi.MAC = 0;
+    spi.mac = 0;
     spi_sw_reset();
 }
 
@@ -70,8 +140,7 @@ static void spi_write_cmd(uint8_t value) {
             spi.power = true;
             break;
         case 0x2C:
-            spi.rowCur = spi.rowStart;
-            spi.colCur = spi.colStart;
+            spi_reset_mregs();
             break;
         case 0x34:
             spi.tear = false;
@@ -91,9 +160,8 @@ static void spi_write_cmd(uint8_t value) {
 }
 
 static void spi_write_param(uint8_t value) {
-    uint8_t sbit = spi.param >> 1;
-    uint8_t mbit = ~spi.param & 1;
-    (void)value;
+    uint8_t word_param = spi.param >> 1;
+    uint8_t bit_offset = ~spi.param << 3 & 8;
 
     switch (spi.cmd) {
         case 0x26:
@@ -102,24 +170,24 @@ static void spi_write_param(uint8_t value) {
             }
             break;
         case 0x2A:
-            switch (sbit) {
+            switch (word_param) {
                 case 0:
-                    write8(spi.colStart, mbit, value);
+                    write8(spi.colStart, bit_offset, value);
                     break;
                 case 1:
-                    write8(spi.colEnd, mbit, value);
+                    write8(spi.colEnd, bit_offset, value);
                     break;
                 default:
                     break;
             }
             break;
         case 0x2B:
-            switch (sbit) {
+            switch (word_param) {
                 case 0:
-                    write8(spi.rowStart, mbit, value);
+                    write8(spi.rowStart, bit_offset, value);
                     break;
                 case 1:
-                    write8(spi.rowEnd, mbit, value);
+                    write8(spi.rowEnd, bit_offset, value);
                     break;
                 default:
                     break;
@@ -127,14 +195,14 @@ static void spi_write_param(uint8_t value) {
             break;
         case 0x2C:
         case 0x3C:
-            switch (sbit) {
+            switch (word_param) {
                 case 0:
-                    write8(spi.colStart, mbit, value);
-                    write8(spi.rowStart, mbit, value);
+                    write8(spi.colStart, bit_offset, value);
+                    write8(spi.rowStart, bit_offset, value);
                     break;
                 case 1:
-                    write8(spi.colEnd, mbit, value);
-                    write8(spi.rowEnd, mbit, value);
+                    write8(spi.colEnd, bit_offset, value);
+                    write8(spi.rowEnd, bit_offset, value);
                     break;
                 default:
                     break;
@@ -146,27 +214,27 @@ static void spi_write_param(uint8_t value) {
             }
             break;
         case 0x30:
-            switch (sbit) {
+            switch (word_param) {
                 case 0:
-                    write8(spi.partialStart, mbit, value);
+                    write8(spi.partialStart, bit_offset, value);
                     break;
                 case 1:
-                    write8(spi.partialEnd, mbit, value);
+                    write8(spi.partialEnd, bit_offset, value);
                     break;
                 default:
                     break;
             }
             break;
         case 0x33:
-            switch (sbit) {
+            switch (word_param) {
                 case 0:
-                    write8(spi.topArea, mbit, value);
+                    write8(spi.topArea, bit_offset, value);
                     break;
                 case 1:
-                    write8(spi.scrollArea, mbit, value);
+                    write8(spi.scrollArea, bit_offset, value);
                     break;
                 case 2:
-                    write8(spi.bottomArea, mbit, value);
+                    write8(spi.bottomArea, bit_offset, value);
                     break;
                 default:
                     break;
@@ -174,13 +242,13 @@ static void spi_write_param(uint8_t value) {
             break;
         case 0x36:
             if (spi.param == 0) {
-                spi.MAC = value;
+                spi.mac = value;
             }
             break;
         case 0x37:
-            switch (sbit) {
+            switch (word_param) {
                 case 0:
-                    write8(spi.scrollStart, mbit, value);
+                    write8(spi.scrollStart, bit_offset, value);
                     break;
                 default:
                     break;
@@ -211,20 +279,16 @@ static void spi_write(const uint16_t pio, const uint8_t byte, bool poke) {
     (void)poke;
 
     if (pio == 0x18) {
-        spi.fifo |= (byte & 7) << spi.shift;
-        spi.shift -= 3;
-        if (!spi.shift) {
+        spi.fifo = spi.fifo << 3 | (byte & 7);
+        if (spi.fifo & 0x200) {
             if (spi.fifo & 0x100) {
-                spi_write_cmd(spi.fifo);
-            } else {
                 spi_write_param(spi.fifo);
+            } else {
+                spi_write_cmd(spi.fifo);
             }
-            spi.fifo = 0;
-            spi.shift = 6;
+            spi.fifo = 1;
         }
     }
-
-    return;
 }
 
 static const eZ80portrange_t pspi = {

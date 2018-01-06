@@ -22,7 +22,7 @@ static void gpt_restore_state(enum sched_item_id id) {
     timer_state_t *timer = &gpt.timer[index];
     uint32_t invert = (gpt.control >> (9 + index) & 1) ? ~0 : 0;
     if (gpt.control >> (index * 3) & 1 && sched.items[SCHED_TIMER1 + index].second >= 0) {
-        timer->counter += (event_ticks_remaining(id) + invert) ^ invert;
+        timer->counter += (sched_ticks_remaining(id) + invert) ^ invert;
     }
 }
 
