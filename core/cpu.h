@@ -73,6 +73,7 @@ typedef struct eZ80cpu {
     uint64_t baseCycles, haltCycles, dmaCycles;
     uint8_t prefetch;
     uint32_t events;
+    bool preI;
 } eZ80cpu_t;
 
 /* Externals */

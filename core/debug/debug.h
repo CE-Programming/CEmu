@@ -80,6 +80,7 @@ typedef struct {        /* For debugging */
     volatile uint32_t bufferErrPos;
     bool ignoreDmaCycles;
     int64_t cycleCount;
+    bool commands;
 } debug_state_t;
 
 /* Debugging */

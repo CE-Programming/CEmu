@@ -21,8 +21,10 @@
 #include "utils.h"
 
 #include "../../core/schedule.h"
+#include "../../core/cpu.h"
 #include "../../core/emu.h"
 #include "../../core/link.h"
+#include "../../core/debug/debug.h"
 
 const QString MainWindow::SETTING_DEBUGGER_TEXT_SIZE        = QStringLiteral("Debugger/text_size");
 const QString MainWindow::SETTING_DEBUGGER_ADD_DISASM_SPACE = QStringLiteral("Debugger/add_disassembly_space");
@@ -37,6 +39,7 @@ const QString MainWindow::SETTING_DEBUGGER_RAM_BYTES        = QStringLiteral("De
 const QString MainWindow::SETTING_DEBUGGER_MEM_BYTES        = QStringLiteral("Debugger/mem_bytes_per_line");
 const QString MainWindow::SETTING_DEBUGGER_BREAK_IGNORE     = QStringLiteral("Debugger/ignore_breakpoints");
 const QString MainWindow::SETTING_DEBUGGER_IGNORE_DMA       = QStringLiteral("Debugger/ignore_dma");
+const QString MainWindow::SETTING_DEBUGGER_PRE_I            = QStringLiteral("Debugger/pre_i");
 const QString MainWindow::SETTING_SCREEN_FRAMESKIP          = QStringLiteral("Screen/frameskip");
 const QString MainWindow::SETTING_SCREEN_SCALE              = QStringLiteral("Screen/scale");
 const QString MainWindow::SETTING_SCREEN_SKIN               = QStringLiteral("Screen/skin");
@@ -214,7 +217,7 @@ void MainWindow::setDebugSoftCommands(bool state) {
     ui->checkDisableSoftCommands->setChecked(state);
     ui->checkDisableSoftCommands->blockSignals(false);
     settings->setValue(SETTING_DEBUGGER_ENABLE_SOFT, state);
-    emuCommands = state;
+    debugger.commands = state;
 }
 
 void MainWindow::setDataCol(bool state) {
@@ -632,6 +635,13 @@ void MainWindow::setSlotInfo() {
 void MainWindow::setRecentSave(bool state) {
     ui->checkSaveRecent->setChecked(state);
     settings->setValue(SETTING_RECENT_SAVE, state);
+}
+
+void MainWindow::setPreRevisionI(bool state) {
+    ui->checkPreI->setChecked(state);
+    settings->setValue(SETTING_DEBUGGER_PRE_I, state);
+    cpu.preI = state;
+    preI = state;
 }
 
 void MainWindow::setDockBoundaries(bool state) {

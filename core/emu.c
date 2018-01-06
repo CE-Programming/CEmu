@@ -18,8 +18,8 @@
 
 #define IMAGE_VERSION 0xCECE0012
 
-volatile bool exiting;
-volatile bool emuCommands = false;
+volatile bool preI = false;
+volatile bool exiting = false;
 
 void throttle_interval_event(enum sched_item_id id) {
     sched_repeat(id, 100000); // 60 Hz

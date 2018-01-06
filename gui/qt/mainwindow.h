@@ -369,6 +369,7 @@ private:
     void toggleUIEditMode();
     void setSaveDebug(bool state);
     void saveMiscSettings();
+    void setPreRevisionI(bool state);
 
     // Linking
     QStringList showVariableFileDialog(QFileDialog::AcceptMode mode, const QString &name_filter, const QString &defaultSuffix);
@@ -558,6 +559,7 @@ private:
     static const QString SETTING_DEBUGGER_MEM_BYTES;
     static const QString SETTING_DEBUGGER_BREAK_IGNORE;
     static const QString SETTING_DEBUGGER_IGNORE_DMA;
+    static const QString SETTING_DEBUGGER_PRE_I;
     static const QString SETTING_SCREEN_FRAMESKIP;
     static const QString SETTING_SCREEN_SCALE;
     static const QString SETTING_SCREEN_SKIN;

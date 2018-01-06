@@ -240,6 +240,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->checkFocus, &QCheckBox::stateChanged, this, &MainWindow::setFocusSetting);
     connect(this, &MainWindow::changedEmuSpeed, &emu, &EmuThread::setEmuSpeed);
     connect(this, &MainWindow::changedThrottleMode, &emu, &EmuThread::setThrottleMode);
+    connect(ui->checkPreI, &QCheckBox::stateChanged, this, &MainWindow::setPreRevisionI);
     connect(ui->flashBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->flashEdit, &QHexEdit::setBytesPerLine);
     connect(ui->ramBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->ramEdit, &QHexEdit::setBytesPerLine);
     connect(ui->memBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->memEdit, &QHexEdit::setBytesPerLine);
@@ -413,6 +414,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     setLcdDma(settings->value(SETTING_DEBUGGER_IGNORE_DMA, true).toBool());
     setFocusSetting(settings->value(SETTING_PAUSE_FOCUS, false).toBool());
     setRecentSave(settings->value(SETTING_RECENT_SAVE, true).toBool());
+    setPreRevisionI(settings->value(SETTING_DEBUGGER_PRE_I, false).toBool());
     ui->flashBytes->setValue(settings->value(SETTING_DEBUGGER_FLASH_BYTES, 8).toInt());
     ui->ramBytes->setValue(settings->value(SETTING_DEBUGGER_RAM_BYTES, 8).toInt());
     ui->memBytes->setValue(settings->value(SETTING_DEBUGGER_MEM_BYTES, 8).toInt());

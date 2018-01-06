@@ -27,8 +27,8 @@ extern "C" {
 #define EVENT_WAITING         (1 << 5)
 
 /* Settings */
+extern volatile bool preI;
 extern volatile bool exiting;
-extern volatile bool emuCommands;
 
 /* Reimplemented GUI callbacks */
 void gui_do_stuff(void);

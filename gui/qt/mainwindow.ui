@@ -61,7 +61,7 @@
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>6</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_10">
        <attribute name="title">
@@ -5940,6 +5940,13 @@
              </property>
             </widget>
            </item>
+           <item row="3" column="1">
+            <widget class="QCheckBox" name="checkPreI">
+             <property name="text">
+              <string>Emulate Pre-Revision I</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </widget>
         </item>
@@ -6673,6 +6680,29 @@
            <string>General</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_2">
+           <item row="1" column="0">
+            <widget class="QCheckBox" name="checkAlwaysOnTop">
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
+             <property name="text">
+              <string>Always show on top of other windows</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QCheckBox" name="checkSpi">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="focusPolicy">
+              <enum>Qt::NoFocus</enum>
+             </property>
+             <property name="text">
+              <string>Emulate real LCD SPI controller</string>
+             </property>
+            </widget>
+           </item>
            <item row="0" column="0">
             <widget class="QCheckBox" name="checkSaveRestore">
              <property name="enabled">
@@ -6702,16 +6732,6 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="0">
-            <widget class="QCheckBox" name="checkAlwaysOnTop">
-             <property name="focusPolicy">
-              <enum>Qt::NoFocus</enum>
-             </property>
-             <property name="text">
-              <string>Always show on top of other windows</string>
-             </property>
-            </widget>
-           </item>
            <item row="1" column="1">
             <widget class="QCheckBox" name="checkPortable">
              <property name="focusPolicy">
@@ -6726,19 +6746,6 @@
             <widget class="QCheckBox" name="checkFocus">
              <property name="text">
               <string>Pause emulation on focus change</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QCheckBox" name="checkSpi">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="focusPolicy">
-              <enum>Qt::NoFocus</enum>
-             </property>
-             <property name="text">
-              <string>Emulate real LCD SPI controller</string>
              </property>
             </widget>
            </item>

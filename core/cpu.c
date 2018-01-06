@@ -808,6 +808,7 @@ void cpu_init(void) {
 void cpu_reset(void) {
     memset(&cpu.registers, 0, sizeof(eZ80registers_t));
     cpu.NMI = cpu.IEF1 = cpu.IEF2 = cpu.ADL = cpu.MADL = cpu.IM = cpu.IEF_wait = cpu.halted = 0;
+    cpu.preI = preI;
     cpu.events = EVENT_NONE;
     cpu_flush(0, 0);
     gui_console_printf("[CEmu] CPU reset.\n");
@@ -895,11 +896,15 @@ void cpu_execute(void) {
                 cpu_restore_next();
             } else {
                 cpu.IEF2 = 0;
-                if (cpu.IM != 3) {
+                if (cpu.IM == 1) {
                     cpu_call(0x38, cpu.MADL);
                 } else {
-                    cpu.cycles++;
-                    cpu_call(cpu_read_word(r->I << 8 | (rand() & 0xFF)), cpu.MADL);
+                    if (cpu.preI && cpu.IM == 3) {
+                        cpu.cycles++;
+                        cpu_call(cpu_read_word(r->I << 8 | (rand() & 0xFF)), cpu.MADL);
+                    } else {
+                        cpu_call(rand() & 0x38, cpu.MADL);
+                    }
                 }
             }
 #ifdef DEBUG_SUPPORT
