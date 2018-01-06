@@ -263,7 +263,7 @@ static uint32_t lcd_process_half(uint16_t half) {
 }
 static uint32_t lcd_process_index(uint8_t index) {
     uint16_t pixel = lcd.palette[index];
-    return lcd_process_pixel(pixel >> 10 & 0x1F, (pixel >> 4 & 0x3E) | (pixel >> 15 & 1), pixel & 0x1F);
+    return lcd_process_pixel(pixel & 0x1F, (pixel >> 4 & 0x3E) | (pixel >> 15 & 1), pixel >> 10 & 0x1F);
 }
 
 static uint32_t lcd_drain_word(void) {
@@ -301,7 +301,7 @@ static uint32_t lcd_words(uint8_t words) {
         } else {
             for (bit = 0; bit < 32; bit += bpp) {
                 ticks += lcd_process_index(word >> (__builtin_expect(lcd.BEPO, 0) ?
-                                                    32 - bit : bit) & (bpp - 1));
+                                                    32 - bit : bit) & ((1 << bpp) - 1));
             }
         }
     }
