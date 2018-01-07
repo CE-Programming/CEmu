@@ -33,11 +33,16 @@ static uint32_t spi_idle(uint32_t pixel, uint32_t bit, uint32_t mask) {
 }
 
 void spi_update_pixel(void) {
-    if (spi.colCur < 240 && spi.rowCur < 320) {
-        uint32_t pixel = 0xFF000000 |
-            (spi.frame[spi.rowCur][spi.colCur][spi.mac >> 2 & 2] & 0x3F) << 18 |
-            (spi.frame[spi.rowCur][spi.colCur][1] & 0x3F) << 10 |
-            (spi.frame[spi.rowCur][spi.colCur][~spi.mac >> 2 & 2] & 0x3F) << 2;
+    uint32_t row = spi.rowCur, col = spi.colCur, pixel = 0xFFFFFFFF;
+    if (likely(row < 320 && col < 240)) {
+        if (likely(!spi.partial) || (spi.partialStart <= spi.partialEnd ?
+                                     spi.partialStart <= row && row <= spi.partialEnd :
+                                     spi.partialStart <= row || row <= spi.partialEnd)) {
+            pixel = 0xFF000000 |
+                (spi.frame[row][col][spi.mac >> 2 & 2] & 0x3F) << 18 |
+                (spi.frame[row][col][1] & 0x3F) << 10 |
+                (spi.frame[row][col][~spi.mac >> 2 & 2] & 0x3F) << 2;
+        }
         if (unlikely(spi.invert)) {
             pixel ^= 0xFFFFFF;
         }
