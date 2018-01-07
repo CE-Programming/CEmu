@@ -14,7 +14,7 @@ public:
     void setMode(bool mode);
     void setFrameskip(int skip);
     void callback(void);
-    int getFPS();
+    double getFPS();
     QImage getImage();
 
 protected:
@@ -41,7 +41,7 @@ private:
     QRect left, right;
     QImage image;
 
-    int fps = 0;
+    double fps = 0;
     int skip = 0;
     int frameskip = 0;
 

@@ -79,8 +79,8 @@ void LCDWidget::callback(void) {
     update();
 }
 
-int LCDWidget::getFPS() {
-    return fps;
+double LCDWidget::getFPS() {
+    return fps / (frameskip + 1);
 }
 
 void LCDWidget::setFrameskip(int value) {

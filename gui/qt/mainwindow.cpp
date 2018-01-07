@@ -990,7 +990,7 @@ void MainWindow::consoleErrStr(const QString &str) {
 }
 
 void MainWindow::showEmuUpdates(int speed) {
-    QString label = " " + tr("Emulated Speed: ") + QString::number(speed, 10) + "% | FPS: " + QString::number(ui->lcd->getFPS(), 10);
+    QString label = " " + tr("Emulated Speed: ") + QString::number(speed, 10) + "% | FPS: " + QString::number(ui->lcd->getFPS(), 'f', 2);
     speedLabel.setText(label);
 }
 
