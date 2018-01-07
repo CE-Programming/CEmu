@@ -136,12 +136,7 @@ void gui_perror(const char *msg)
 }
 
 uint32_t* EMSCRIPTEN_KEEPALIVE lcd_get_frame() {
-    return lcd.frame;
-}
-
-void EMSCRIPTEN_KEEPALIVE paint_LCD_to_JS(void * lcd_ptr)
-{
-    lcd_drawframe((lcd_state_t*)lcd_ptr);
+    return spi.display;
 }
 
 void EMSCRIPTEN_KEEPALIVE emsc_pause_main_loop() {
@@ -169,8 +164,6 @@ int main(int argc, char* argv[])
 #ifdef DEBUG_SUPPORT
         debugger_init();
 #endif
-        lcd_gui_callback_data = &lcd;
-        lcd_gui_callback = paint_LCD_to_JS;
         EM_ASM(
             emul_is_inited = true;
             emul_is_paused = false;
