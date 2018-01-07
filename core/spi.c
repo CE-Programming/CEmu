@@ -35,9 +35,9 @@ static uint32_t spi_idle(uint32_t pixel, uint32_t bit, uint32_t mask) {
 void spi_update_pixel(void) {
     if (spi.colCur < 240 && spi.rowCur < 320) {
         uint32_t pixel = 0xFF000000 |
-            (spi.frame[spi.rowCur][spi.colCur][~spi.mac >> 2 & 2] & 0x3F) << 18 |
+            (spi.frame[spi.rowCur][spi.colCur][spi.mac >> 2 & 2] & 0x3F) << 18 |
             (spi.frame[spi.rowCur][spi.colCur][1] & 0x3F) << 10 |
-            (spi.frame[spi.rowCur][spi.colCur][spi.mac >> 2 & 2] & 0x3F) << 2;
+            (spi.frame[spi.rowCur][spi.colCur][~spi.mac >> 2 & 2] & 0x3F) << 2;
         if (__builtin_expect(spi.invert, 0)) {
             pixel ^= 0xFFFFFF;
         }

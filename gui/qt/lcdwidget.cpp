@@ -19,7 +19,7 @@ LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
     setContextMenuPolicy(Qt::CustomContextMenu);
     installEventFilter(keypadBridge);
     setAcceptDrops(true);
-    image = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_ARGB32_Premultiplied);
+    image = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGBX8888);
 }
 
 LCDWidget::~LCDWidget() {

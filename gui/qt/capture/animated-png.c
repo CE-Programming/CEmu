@@ -148,9 +148,9 @@ bool apng_save(const char *filename, bool optimize) {
         for (i = 0; i != TABLE_SIZE; i++) {
             if (apng.table[i]) {
                 j = apng.table[i] >> 24;
-                palette[j].red = apng.table[i] >> 16;
+                palette[j].red = apng.table[i];
                 palette[j].green = apng.table[i] >> 8;
-                palette[j].blue = apng.table[i];
+                palette[j].blue = apng.table[i] >> 16;
             }
         }
         palette[0].red = palette[0].green = palette[0].blue = 0; // transparent
@@ -166,8 +166,7 @@ bool apng_save(const char *filename, bool optimize) {
     if (count <= 1 << 8) {
         png_set_packing(png_ptr);
     } else {
-        png_set_bgr(png_ptr);
-        png_set_filler(png_ptr, 0, PNG_FILLER_BEFORE);
+        png_set_filler(png_ptr, 0, PNG_FILLER_AFTER);
     }
 
     for (i = 0; i != apng.n; i++) {
