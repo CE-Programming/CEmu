@@ -50,26 +50,26 @@ void MemoryVisualizer::stringToView() {
 
     rate = 30; scale = 100;
 
-    set_reset(false, 0x400, mView.control);
-    set_reset(false, 0x200, mView.control);
-    set_reset(false, 0x100, mView.control);
+    set_reset(false, 0x400, control);
+    set_reset(false, 0x200, control);
+    set_reset(false, 0x100, control);
 
     foreach (QString str, string) {
         str = str.toLower();
         if (!str.compare(QLatin1Literal("bepo"), Qt::CaseInsensitive)) {
-            set_reset(true, 0x400, mView.control);
+            set_reset(true, 0x400, control);
         }
         if (!str.compare(QLatin1Literal("bebo"), Qt::CaseInsensitive)) {
-            set_reset(true, 0x200, mView.control);
+            set_reset(true, 0x200, control);
         }
         if (!str.compare(QLatin1Literal("bgr"), Qt::CaseInsensitive)) {
-            set_reset(true, 0x100, mView.control);
+            set_reset(true, 0x100, control);
         }
         if (str.contains('x')) {
             QStringList wh = str.split('x');
             if (wh.size() == 2) {
-                mView.width = wh.at(0).toUInt();
-                mView.height = wh.at(1).toUInt();
+                width = wh.at(0).toUInt();
+                height = wh.at(1).toUInt();
             }
         }
         if (str.endsWith('%')) {
@@ -83,7 +83,7 @@ void MemoryVisualizer::stringToView() {
             str.remove(0, 1);
         }
         if (hex_reg.exactMatch(str)) {
-            mView.upbase = str.toUInt(Q_NULLPTR, 16);
+            upbase = str.toUInt(Q_NULLPTR, 16);
         }
         if (bpp_reg.exactMatch(str)) {
             str.chop(3);
@@ -100,8 +100,8 @@ void MemoryVisualizer::stringToView() {
                 default: bpp = 255; break;
             }
             if (bpp != 255) {
-                mView.control &= ~14;
-                mView.control |= bpp << 1;
+                control &= ~14;
+                control |= bpp << 1;
             }
         }
         if (fps_reg.exactMatch(str)) {
@@ -115,16 +115,17 @@ void MemoryVisualizer::stringToView() {
 }
 
 void MemoryVisualizer::setDefaultView() {
-    mView = lcd;
-    mView.mask = false;
-    mView.off = false;
+    width = LCD_WIDTH;
+    height = LCD_HEIGHT;
+    upbase = lcd.upbase;
+    control = lcd.control;
     viewToString();
 }
 
 void MemoryVisualizer::viewToString() {
     QString bpp;
 
-    switch((mView.control >> 1) & 7) {
+    switch((control >> 1) & 7) {
         case 0: bpp = "1"; break;
         case 1: bpp = "2"; break;
         case 2: bpp = "4"; break;
@@ -136,28 +137,31 @@ void MemoryVisualizer::viewToString() {
         default: break;
     }
 
-    if (mView.width * mView.height > LCD_SIZE) {
-        mView.width = LCD_WIDTH;
-        mView.height = LCD_HEIGHT;
+    if (width * height > LCD_SIZE) {
+        width = LCD_WIDTH;
+        height = LCD_HEIGHT;
     }
 
     setup.clear();
-    setup.append(int2hex(mView.upbase, 6).toLower());
-    setup.append(QString::number(mView.width) + "x" + QString::number(mView.height));
+    setup.append(int2hex(upbase, 6).toLower());
+    setup.append(QString::number(width) + "x" + QString::number(height));
     setup.append(bpp + QLatin1Literal("bpp"));
-    if (mView.control & 0x400) { setup.append(QLatin1Literal("bepo")); }
-    if (mView.control & 0x200) { setup.append(QLatin1Literal("bebo")); }
-    if (mView.control & 0x100) { setup.append(QLatin1Literal("bgr")); }
+    if (control & 0x400) { setup.append(QLatin1Literal("bepo")); }
+    if (control & 0x200) { setup.append(QLatin1Literal("bebo")); }
+    if (control & 0x100) { setup.append(QLatin1Literal("bgr")); }
     if (scale != 100) { setup.append(QString::number(scale)+QLatin1Literal("%")); }
     if (rate != 30) { setup.append(QString::number(rate)+QLatin1Literal("fps")); }
 
     ui->edit->setText(setup.join(","));
 
     float s = scale / 100.0;
-    float w = mView.width * s;
-    float h = mView.height * s;
-    ui->lcdWidget->setFixedSize(w, h);
-    ui->lcdWidget->setRefreshRate(rate);
-    ui->lcdWidget->setLCD(&mView);
+    float w = width * s;
+    float h = height * s;
+
+    lcd_setptrs(&data, &data_end, width, height, upbase, control, false);
+
+    ui->view->setFixedSize(w, h);
+    ui->view->setRefreshRate(rate);
+    ui->view->setConfig(height, width, control, data, data_end);
     adjustSize();
 }

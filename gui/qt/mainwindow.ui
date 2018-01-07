@@ -8494,6 +8494,9 @@ QPushButton:pressed {
      <property name="focusPolicy">
       <enum>Qt::StrongFocus</enum>
      </property>
+     <property name="contextMenuPolicy">
+      <enum>Qt::CustomContextMenu</enum>
+     </property>
      <property name="acceptDrops">
       <bool>true</bool>
      </property>

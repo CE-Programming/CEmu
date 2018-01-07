@@ -174,7 +174,7 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
                     mem.ram.block[i] = rand();
                 }
             } else {
-                lcd_enable();
+                lcd_update();
             }
             control.ports[index] = (byte & 0xF) << 4 | (byte & 0xF);
             break;

@@ -12,14 +12,12 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
-#define LCD_RGB_SIZE   3
 #define LCD_WIDTH      320
 #define LCD_HEIGHT     240
 #define LCD_SIZE       (LCD_WIDTH * LCD_HEIGHT)
 #define LCD_BYTE_SIZE  (LCD_SIZE * 2)
 #define LCD_RAM_ADDR   0xD40000
 #define LCD_RAM_OFFSET 0x040000
-#define LCD_FRAME_SIZE (LCD_SIZE * LCD_RGB_SIZE)
 
 /* Set this callback function pointer from the GUI. Called in lcd_event() */
 extern void (*lcd_gui_callback)(void*);
@@ -68,12 +66,10 @@ typedef struct lcd_state {
     uint32_t preCol, preRow, curCol, curRow;
     enum lcd_comp compare;
     uint32_t PPL, HSW, HFP, HBP, LPP, VSW, VFP, VBP, PCD, ACB, CPL, LED, LCDBPP, BPP, PPF;
-    bool CLKSEL, IVS, IHS, IPC, IOE, LEE, BGR, BEBO, BEPO, WTRMRK, mask, off;
-    uint32_t width;
-    uint32_t height;
-    uint32_t size;
-    uint32_t *ofs;                  /* Pointer to start of data to start extracting from */
-    uint32_t *ofs_end;              /* End pointer that is allowed access */
+    bool CLKSEL, IVS, IHS, IPC, IOE, LEE, BGR, BEBO, BEPO, WTRMRK;
+    uint32_t *data;                /* Pointer to start of data to start extracting from */
+    uint32_t *data_end;            /* End pointer that is allowed access */
+    bool off, spi;
 } lcd_state_t;
 
 /* Global LCD state */
@@ -83,10 +79,10 @@ extern lcd_state_t lcd;
 void lcd_reset(void);
 eZ80portrange_t init_lcd(void);
 
-void lcd_drawframe(void *output, lcd_state_t *buffer);
-lcd_state_t *lcd_setptrs(lcd_state_t*);
+void lcd_drawframe(void *output, void *data, void *data_end, uint32_t control, uint32_t size);
+void lcd_setptrs(uint32_t **dat, uint32_t **dat_end, uint32_t width, uint32_t height, uint32_t addr, uint32_t control, bool mask);
 
-void lcd_enable(void);
+void lcd_update(void);
 void lcd_disable(void);
 void lcd_gui_event(void);
 

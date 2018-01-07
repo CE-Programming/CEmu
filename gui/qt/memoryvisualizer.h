@@ -26,13 +26,19 @@ private:
     void stringToView();
     void viewToString();
 
-    lcd_state_t mView;
     QStringList setup;
+    Ui::MemoryVisualizer *ui;
 
     int scale = 100;
     int rate = 30;
 
-    Ui::MemoryVisualizer *ui;
+    // LCD configuration
+    uint32_t height;
+    uint32_t width;
+    uint32_t upbase;
+    uint32_t control;
+    uint32_t *data = NULL;
+    uint32_t *data_end = NULL;
 };
 
 #endif

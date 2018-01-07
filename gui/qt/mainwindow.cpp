@@ -410,7 +410,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     setDebugIgnoreBreakpoints(settings->value(SETTING_DEBUGGER_BREAK_IGNORE, false).toBool());
     setDebugSoftCommands(settings->value(SETTING_DEBUGGER_ENABLE_SOFT, true).toBool());
     setDataCol(settings->value(SETTING_DEBUGGER_DATA_COL, true).toBool());
-    setLcdSpi(settings->value(SETTING_SCREEN_SPI, false).toBool());
+    setLcdSpi(settings->value(SETTING_SCREEN_SPI, true).toBool());
     setLcdDma(settings->value(SETTING_DEBUGGER_IGNORE_DMA, true).toBool());
     setFocusSetting(settings->value(SETTING_PAUSE_FOCUS, false).toBool());
     setRecentSave(settings->value(SETTING_RECENT_SAVE, true).toBool());
@@ -828,7 +828,6 @@ void MainWindow::exportRom() {
 void MainWindow::started(bool success) {
     guiEmuValid = success;
     if (success) {
-        ui->lcd->setLCD(&lcd);
         lcd_gui_callback_data = ui->lcd;
         lcd_gui_callback = [](void *lcd) { reinterpret_cast<LCDWidget*>(lcd)->callback(); };
         setCalcSkinTopFromType();
@@ -841,7 +840,6 @@ void MainWindow::started(bool success) {
 void MainWindow::restored(bool success) {
     guiEmuValid = success;
     if (success) {
-        ui->lcd->setLCD(&lcd);
         lcd_gui_callback_data = ui->lcd;
         lcd_gui_callback = [](void *lcd) { reinterpret_cast<LCDWidget*>(lcd)->callback(); };
         setCalcSkinTopFromType();
@@ -1047,10 +1045,8 @@ void MainWindow::screenshotSave(const QString& nameFilter, const QString& defaul
 }
 
 void MainWindow::screenshot() {
-    QImage image = QImage(reinterpret_cast<const uint8_t*>(spi.display), lcd.width, lcd.height, QImage::Format_RGBX8888);
-
     QString path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_tmp.img");
-    if (!image.save(path, "PNG", 0)) {
+    if (!ui->lcd->getImage().save(path, "PNG", 0)) {
         QMessageBox::critical(this, MSG_ERROR, tr("Failed to save screenshot."));
     }
 
@@ -1058,9 +1054,7 @@ void MainWindow::screenshot() {
 }
 
 void MainWindow::saveScreenToClipboard() {
-    QImage image = QImage(reinterpret_cast<const uint8_t*>(spi.display), lcd.width, lcd.height, QImage::Format_RGBX8888);
-    Q_ASSERT(!image.isNull());
-    QApplication::clipboard()->setImage(image, QClipboard::Clipboard);
+    QApplication::clipboard()->setImage(ui->lcd->getImage(), QClipboard::Clipboard);
 }
 
 #ifdef PNG_WRITE_APNG_SUPPORTED

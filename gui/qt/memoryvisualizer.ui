@@ -129,7 +129,7 @@
     </widget>
    </item>
    <item>
-    <widget class="LCDWidget" name="lcdWidget" native="true">
+    <widget class="MemoryVisualizerWidget" name="view" native="true">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
        <horstretch>0</horstretch>
@@ -160,9 +160,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>LCDWidget</class>
+   <class>MemoryVisualizerWidget</class>
    <extends>QWidget</extends>
-   <header>lcdwidget.h</header>
+   <header>memoryvisualizerwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

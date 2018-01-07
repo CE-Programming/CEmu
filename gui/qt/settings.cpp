@@ -229,6 +229,8 @@ void MainWindow::setDataCol(bool state) {
 void MainWindow::setLcdSpi(bool state) {
     ui->checkSpi->setChecked(state);
     settings->setValue(SETTING_SCREEN_SPI, state);
+    ui->lcd->setMode(state);
+    lcd.spi = state;
 }
 
 void MainWindow::setLcdDma(bool state) {
@@ -641,7 +643,6 @@ void MainWindow::setPreRevisionI(bool state) {
     ui->checkPreI->setChecked(state);
     settings->setValue(SETTING_DEBUGGER_PRE_I, state);
     cpu.preI = state;
-    preI = state;
 }
 
 void MainWindow::setDockBoundaries(bool state) {

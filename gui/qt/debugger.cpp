@@ -464,21 +464,20 @@ void MainWindow::debuggerUpdateChanges() {
     }
 
     backlight.brightness = static_cast<uint8_t>(ui->brightnessSlider->value());
+    backlight.factor = (310 - (float)backlight.brightness) / 160.0;
 
-    lcd_state_t *lcds = &lcd;
+    lcd.upbase = static_cast<uint32_t>(hex2int(ui->lcdbaseView->text()));
+    lcd.upcurr = static_cast<uint32_t>(hex2int(ui->lcdcurrView->text()));
 
-    lcds->upbase = static_cast<uint32_t>(hex2int(ui->lcdbaseView->text()));
-    lcds->upcurr = static_cast<uint32_t>(hex2int(ui->lcdcurrView->text()));
+    lcd.control &= ~14;
+    lcd.control |= ui->bppView->currentIndex() << 1;
 
-    lcds->control &= ~14;
-    lcds->control |= ui->bppView->currentIndex() << 1;
+    set_reset(ui->checkPowered->isChecked(), 0x800, lcd.control);
+    set_reset(ui->checkBEPO->isChecked(), 0x400, lcd.control);
+    set_reset(ui->checkBEBO->isChecked(), 0x200, lcd.control);
+    set_reset(ui->checkBGR->isChecked(), 0x100, lcd.control);
 
-    set_reset(ui->checkPowered->isChecked(), 0x800, lcds->control);
-    set_reset(ui->checkBEPO->isChecked(), 0x400, lcds->control);
-    set_reset(ui->checkBEBO->isChecked(), 0x200, lcds->control);
-    set_reset(ui->checkBGR->isChecked(), 0x100, lcds->control);
-
-    lcd_setptrs(lcds);
+    lcd_update();
 
     ui->debuggerLabel->clear();
 }
