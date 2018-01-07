@@ -153,10 +153,13 @@ void MemoryVisualizer::viewToString() {
     float w = width * s;
     float h = height * s;
 
+    uint32_t *data;
+    uint32_t *data_end;
+
     lcd_setptrs(&data, &data_end, width, height, upbase, control, false);
 
     ui->view->setFixedSize(w, h);
     ui->view->setRefreshRate(rate);
-    ui->view->setConfig(height, width, control, data, data_end);
+    ui->view->setConfig(height, width, upbase, control, data, data_end);
     adjustSize();
 }

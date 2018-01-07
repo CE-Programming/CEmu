@@ -37,8 +37,6 @@ private:
     uint32_t width;
     uint32_t upbase;
     uint32_t control;
-    uint32_t *data = NULL;
-    uint32_t *data_end = NULL;
 };
 
 #endif

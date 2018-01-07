@@ -21,6 +21,7 @@ void MemoryVisualizerWidget::draw() {
         return;
     }
 
+    lcd_setptrs(&data, &data_end, width, height, upbase, control, false);
     lcd_drawframe(image.bits(), data, data_end, control, size);
     update();
 }
@@ -48,9 +49,10 @@ void MemoryVisualizerWidget::setRefreshRate(int rate) {
     refresh = rate;
 }
 
-void MemoryVisualizerWidget::setConfig(uint32_t h, uint32_t w, uint32_t c, uint32_t *d, uint32_t *e) {
+void MemoryVisualizerWidget::setConfig(uint32_t h, uint32_t w, uint32_t u, uint32_t c, uint32_t *d, uint32_t *e) {
     height = h;
     width = w;
+    upbase = u;
     control = c;
     data = d;
     data_end = e;

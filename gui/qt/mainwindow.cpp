@@ -1663,6 +1663,7 @@ void MainWindow::resetCalculator() {
     if (guiDebug) {
         debuggerChangeState();
     }
+
     emit reset();
 }
 
