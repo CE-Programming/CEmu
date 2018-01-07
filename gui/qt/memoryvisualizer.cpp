@@ -137,11 +137,6 @@ void MemoryVisualizer::viewToString() {
         default: break;
     }
 
-    if (width * height > LCD_SIZE) {
-        width = LCD_WIDTH;
-        height = LCD_HEIGHT;
-    }
-
     setup.clear();
     setup.append(int2hex(upbase, 6).toLower());
     setup.append(QString::number(width) + "x" + QString::number(height));
