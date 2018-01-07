@@ -125,7 +125,9 @@ void lcd_gui_event(void) {
 
 static uint32_t lcd_process_pixel(uint8_t r, uint8_t g, uint8_t b) {
     uint32_t ticks = 1;
-    if (likely(lcd.BGR)) {
+    if (!likely(lcd.control & 1 << 11)) {
+        r = g = b = 0;
+    } else if (likely(lcd.BGR)) {
         uint8_t t = r;
         r = b;
         b = t;
@@ -318,7 +320,6 @@ static uint32_t lcd_dma(enum sched_item_id id) {
 void lcd_reset(void) {
     bool spi = lcd.spi;
     memset(&lcd, 0, sizeof(lcd_state_t));
-    lcd.off = true;
     lcd.spi = spi;
     lcd_update();
 
@@ -445,6 +446,8 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
     uint8_t byte_offset = pio & 3;
     uint8_t bit_offset = byte_offset << 3;
 
+    uint32_t old;
+
     (void)poke;
 
     if (index < 0x200) {
@@ -461,17 +464,16 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
             write8(lcd.lpbase, bit_offset, value);
             lcd.lpbase &= ~7U;
         } else if (index == 0x018) {
-            if (byte_offset == 0) {
-                if (value & 1) { sched_set(SCHED_LCD, 0); }
-                else { sched_clear(SCHED_LCD); }
-            }
+            old = lcd.control;
             write8(lcd.control, bit_offset, value);
-            /* Simple power down of lcd -- Needs to be correctly emulated in the future */
-            if ((lcd.control & 0x800)) {
-                lcd.off = false;
-            } else {
-                lcd_reset();
-                lcd_gui_event();
+            if ((lcd.control ^ old) & 1 << 0) { // lcdEn changed
+                if (lcd.control & 1 << 0) {
+                    lcd.compare = LCD_SYNC;
+                    sched_set(SCHED_LCD, 0);
+                } else {
+                    sched_clear(SCHED_LCD);
+                    lcd_gui_event();
+                }
             }
         } else if (index == 0x01C) {
             write8(lcd.imsc, bit_offset, value);

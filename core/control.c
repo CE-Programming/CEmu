@@ -125,7 +125,7 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
             if (control.ports[index] & (1 << 6) && !(byte & (1 << 6))) {
                 cpu_crash("[CEmu] Reset caused by resetting bit 6 of port 0x0005.\n");
             }
-            control.ports[index] = byte & 7;
+            control.ports[index] = byte & 0x1F;
             break;
         case 0x06:
             control.mmioUnlocked = byte & 7;
@@ -148,8 +148,6 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
             if (byte == 0xD4) {
                 control.ports[0] |= 1 << 6;
                 asic.resetOnWake = true;
-                lcd.off = true;
-                lcd_gui_event();
                 gui_console_printf("[CEmu] Reset caused by entering sleep mode.\n", cpu.registers.PC);
 #ifdef DEBUG_SUPPORT
                 if (debugger.resetOpensDebugger) {

@@ -13,6 +13,7 @@
 #include "../../core/spi.h"
 #include "../../core/debug/debug.h"
 #include "../../core/backlight.h"
+#include "../../core/control.h"
 
 LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
     installEventFilter(keypadBridge);
@@ -29,10 +30,15 @@ void LCDWidget::paintEvent(QPaintEvent*) {
 
     // Interpolation only for < 100% scale
     c.setRenderHint(QPainter::SmoothPixmapTransform, cw.width() < LCD_WIDTH);
-    c.drawImage(cw, image);
-
-    if (backlight.factor < 1) {
-        c.fillRect(cw, QColor(0, 0, 0, (1 - backlight.factor) * 255));
+    if (control.ports[5] & 1 << 4) {
+        c.drawImage(cw, image);
+        if (backlight.factor < 1) {
+            c.fillRect(cw, QColor(0, 0, 0, (1 - backlight.factor) * 255));
+        }
+    } else {
+        c.fillRect(cw, Qt::black);
+        c.setPen(Qt::white);
+        c.drawText(cw, Qt::AlignCenter, tr("LCD OFF"));
     }
     if (drag) {
         left = cw;
@@ -61,7 +67,7 @@ void LCDWidget::callback(void) {
         if (mode) {
             memcpy(image.bits(), spi.display, sizeof(spi.display));
         } else {
-            lcd_drawframe(image.bits(), lcd.data, lcd.data_end, lcd.control, LCD_SIZE);
+            lcd_drawframe(image.bits(), lcd.control & 1 << 11 ? lcd.data : nullptr, lcd.data_end, lcd.control, LCD_SIZE);
         }
     }
 
@@ -69,15 +75,7 @@ void LCDWidget::callback(void) {
     apng_add_frame();
 #endif
 
-    if (lcd.off) {
-        QPainter p(&image);
-        p.fillRect(p.window(), Qt::black);
-        p.setPen(Qt::white);
-        p.drawText(p.window(), Qt::AlignCenter, tr("LCD OFF"));
-        fps = 0;
-    } else {
-        fps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP) * (frameskip + 1));
-    }
+    fps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP) * (frameskip + 1));
     update();
 }
 
