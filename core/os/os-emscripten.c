@@ -29,24 +29,17 @@ FILE *fopen_utf8(const char *filename, const char *mode)
     return fopen(filename, mode);
 }
 
-unsigned int sleep_amount_us = 10000;
-void EMSCRIPTEN_KEEPALIVE set_sleep_amount_us(unsigned int amount)
-{
-    sleep_amount_us = amount;
-}
-
 bool throttle_triggered = false;
 
 void throttle_timer_off() {}
 void throttle_timer_on() {}
 void throttle_timer_wait() {
-    //EM_ASM( Module.print('hello throttle_timer_wait') );
-    //usleep(sleep_amount_us);
     throttle_triggered = true;
 }
 
 void gui_emu_sleep(unsigned long microseconds) {
     //usleep(microseconds);
+    (void)microseconds;
 }
 
 void EMSCRIPTEN_KEEPALIVE set_file_to_send(const char* path)
@@ -85,7 +78,8 @@ void gui_set_busy(bool busy) { (void)busy; }
 
 void gui_debugger_raise_or_disable(bool entered)
 {
-    (void)entered;
+    fprintf(stderr, "%s debugger\n", entered ? "Entered" : "Exited");
+    fflush(stderr);
 #ifdef DEBUG_SUPPORT
     inDebugger = false;
 #endif
@@ -136,7 +130,7 @@ void gui_perror(const char *msg)
 }
 
 uint32_t* EMSCRIPTEN_KEEPALIVE lcd_get_frame() {
-    return spi.display;
+    return &(spi.display[0][0]);
 }
 
 void EMSCRIPTEN_KEEPALIVE emsc_pause_main_loop() {
@@ -163,7 +157,9 @@ int main(int argc, char* argv[])
     if (success) {
 #ifdef DEBUG_SUPPORT
         debugger_init();
+        debugger.commands = true;
 #endif
+        lcd.spi = true;
         EM_ASM(
             emul_is_inited = true;
             emul_is_paused = false;
