@@ -32,24 +32,30 @@ static uint32_t spi_idle(uint32_t pixel, uint32_t bit, uint32_t mask) {
     return pixel & bit ? pixel | mask : pixel & ~mask;
 }
 
+static uint8_t spi_round_color(uint8_t color) {
+    return color << 2 | (color >> 4 & 3);
+}
+
 void spi_update_pixel(void) {
     uint32_t row = spi.rowCur, col = spi.colCur, pixel = 0xFFFFFFFF;
     if (likely(row < 320 && col < 240)) {
-        if (likely(!spi.partial) || (spi.partialStart <= spi.partialEnd ?
-                                     spi.partialStart <= row && row <= spi.partialEnd :
-                                     spi.partialStart <= row || row <= spi.partialEnd)) {
-            pixel = 0xFF000000 |
-                (spi.frame[row][col][spi.mac >> 2 & 2] & 0x3F) << 18 |
-                (spi.frame[row][col][1] & 0x3F) << 10 |
-                (spi.frame[row][col][~spi.mac >> 2 & 2] & 0x3F) << 2;
-        }
-        if (unlikely(spi.invert)) {
-            pixel ^= 0xFFFFFF;
-        }
-        if (unlikely(spi.idle)) {
-            pixel = spi_idle(pixel, 0x800000, 0xFF0000);
-            pixel = spi_idle(pixel, 0x008000, 0x00FF00);
-            pixel = spi_idle(pixel, 0x000080, 0x0000FF);
+        if (likely(!spi.sleep) && likely(!spi.blank) &&
+            (likely(!spi.partial) ||
+             (spi.partialStart <= spi.partialEnd ?
+              spi.partialStart <= row && row <= spi.partialEnd :
+              spi.partialStart <= row || row <= spi.partialEnd))) {
+            pixel = 0xFF << 24 |
+                spi_round_color(spi.frame[row][col][spi.mac >> 2 & 2]) << 16 |
+                spi_round_color(spi.frame[row][col][1]) << 8 |
+                spi_round_color(spi.frame[row][col][~spi.mac >> 2 & 2]);
+            if (unlikely(spi.invert)) {
+                pixel ^= 0xFFFFFF;
+            }
+            if (unlikely(spi.idle)) {
+                pixel = spi_idle(pixel, 0x800000, 0xFF0000);
+                pixel = spi_idle(pixel, 0x008000, 0x00FF00);
+                pixel = spi_idle(pixel, 0x000080, 0x0000FF);
+            }
         }
         spi.display[spi.colCur][spi.rowCur] = pixel;
         spi.colCur += 1 - (spi.mac >> 1 & 2);
@@ -90,7 +96,7 @@ static void spi_sw_reset(void) {
     spi.sleep = true;
     spi.partial = false;
     spi.invert = false;
-    spi.power = false;
+    spi.blank = true;
     spi.colStart = 0;
     spi.colEnd = spi.mac & 1 << 5 ? 0xEF : 0x13F;
     spi.rowStart = 0;
@@ -139,10 +145,10 @@ static void spi_write_cmd(uint8_t value) {
             spi.invert = true;
             break;
         case 0x28:
-            spi.power = false;
+            spi.blank = true;
             break;
         case 0x29:
-            spi.power = true;
+            spi.blank = false;
             break;
         case 0x2C:
             spi_reset_mregs();
@@ -307,13 +313,13 @@ void spi_reset(void) {
     memset(&spi, 0, sizeof(spi));
     spi_hw_reset();
     for (c = 0; c < 1 << 5; c++) {
-        spi.lut[i++] = c << 1;
+        spi.lut[i++] = c << 1 | c >> 4;
     }
     for (c = 0; c < 1 << 6; c++) {
-        spi.lut[i++] = c << 0;
+        spi.lut[i++] = c;
     }
     for (c = 0; c < 1 << 5; c++) {
-        spi.lut[i++] = c << 1;
+        spi.lut[i++] = c << 1 | c >> 4;
     }
 }
 

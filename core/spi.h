@@ -17,7 +17,7 @@ typedef struct spi_state {
     bool partial;
     bool invert;
     uint8_t gamma;
-    bool power;
+    bool blank;
     uint32_t colCur, colReg, rowCur, rowReg;
     uint16_t colStart, colEnd;
     uint16_t rowStart, rowEnd;
