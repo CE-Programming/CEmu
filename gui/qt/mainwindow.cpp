@@ -727,8 +727,8 @@ bool MainWindow::IsInitialized() {
 
 void MainWindow::reloadAll() {
     ipcCloseOthers();
-    QFile(pathSettings).remove();
     needReload = true;
+    needFullReset = true;
     close();
 }
 
@@ -747,6 +747,13 @@ void MainWindow::reloadGui() {
 bool MainWindow::IsReload() {
     emu_thread = Q_NULLPTR;
     return needReload;
+}
+
+void MainWindow::CheckResetAll() {
+    if (needFullReset) {
+        QDir dir(configPath);
+        dir.removeRecursively();
+    }
 }
 
 void MainWindow::sendASMKey() {

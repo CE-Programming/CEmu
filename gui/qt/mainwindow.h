@@ -50,6 +50,7 @@ public:
     ~MainWindow();
     bool IsInitialized();
     bool IsReload();
+    void CheckResetAll();
 
 public slots:
     // Console
@@ -531,6 +532,7 @@ private:
     QString dragROM;
 
     bool needReload = false;
+    bool needFullReset = false;
     bool guiAdd = false;
     bool initPassed = true;
     bool firstShow = false;

@@ -157,6 +157,8 @@ int main(int argc, char *argv[]) {
     EmuWin.show();
     app.exec();
 
+    EmuWin.CheckResetAll();
+
     if (EmuWin.IsReload()) {
         qApp->quit();
         QProcess::startDetached(qApp->arguments()[0]);
