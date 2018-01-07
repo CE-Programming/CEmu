@@ -13,7 +13,7 @@ void spi_hsync(void) {
 }
 
 static void spi_reset_mregs(void) {
-    if (__builtin_expect(spi.mac >> 5 & 1, 0)) {
+    if (unlikely(spi.mac >> 5 & 1)) {
         spi.rowReg = spi.rowStart;
         spi.colReg = spi.colStart;
     } else {
@@ -38,10 +38,10 @@ void spi_update_pixel(void) {
             (spi.frame[spi.rowCur][spi.colCur][spi.mac >> 2 & 2] & 0x3F) << 18 |
             (spi.frame[spi.rowCur][spi.colCur][1] & 0x3F) << 10 |
             (spi.frame[spi.rowCur][spi.colCur][~spi.mac >> 2 & 2] & 0x3F) << 2;
-        if (__builtin_expect(spi.invert, 0)) {
+        if (unlikely(spi.invert)) {
             pixel ^= 0xFFFFFF;
         }
-        if (__builtin_expect(spi.idle, 0)) {
+        if (unlikely(spi.idle)) {
             pixel = spi_idle(pixel, 0x800000, 0xFF0000);
             pixel = spi_idle(pixel, 0x008000, 0x00FF00);
             pixel = spi_idle(pixel, 0x000080, 0x0000FF);
@@ -58,8 +58,8 @@ void spi_process_pixel(uint8_t r, uint8_t g, uint8_t b) {
         spi.frame[spi.rowReg][spi.colReg][1] = spi.lut[g + 32];
         spi.frame[spi.rowReg][spi.colReg][2] = spi.lut[b + 96];
     }
-    if (__builtin_expect(spi.mac >> 5 & 1, 0)) {
-        if (__builtin_expect(spi.colReg == spi.colEnd, 0)) {
+    if (unlikely(spi.mac >> 5 & 1)) {
+        if (unlikely(spi.colReg == spi.colEnd)) {
             spi.colReg = spi.colStart;
             spi.rowReg = (spi.rowReg + 1 - (spi.mac >> 6 & 2)) & 0xFF;
         } else {
@@ -67,7 +67,7 @@ void spi_process_pixel(uint8_t r, uint8_t g, uint8_t b) {
         }
         spi.colReg &= 0x1FF;
     } else {
-        if (__builtin_expect(spi.rowReg == spi.colEnd, 0)) {
+        if (unlikely(spi.rowReg == spi.colEnd)) {
             spi.rowReg = spi.colStart;
             spi.colReg = (spi.colReg + 1 - (spi.mac >> 5 & 2)) & 0xFF;
         } else {

@@ -125,26 +125,26 @@ void lcd_gui_event(void) {
 
 static uint32_t lcd_process_pixel(uint8_t r, uint8_t g, uint8_t b) {
     uint32_t ticks = 1;
-    if (__builtin_expect(lcd.BGR, 1)) {
+    if (likely(lcd.BGR)) {
         uint8_t t = r;
         r = b;
         b = t;
     }
-    if (__builtin_expect(lcd.preRow < lcd.LPP, 1)) {
-        if (__builtin_expect(!lcd.preCol && lcd.preRow, 0)) {
+    if (likely(lcd.preRow < lcd.LPP)) {
+        if (unlikely(!lcd.preCol && lcd.preRow)) {
             spi_hsync();
         }
         spi_update_pixel();
         spi_process_pixel(r, g, b);
     }
-    if (__builtin_expect(++lcd.preCol >= lcd.PPL, 0)) {
+    if (unlikely(++lcd.preCol >= lcd.PPL)) {
         lcd.preCol = 0;
         ++lcd.preRow;
     }
-    if (__builtin_expect(!lcd.curCol && lcd.curRow, 0)) {
+    if (unlikely(!lcd.curCol && lcd.curRow)) {
         ticks += lcd.HFP + lcd.HSW + lcd.HBP;
     }
-    if (__builtin_expect(++lcd.curCol >= lcd.PPL, 0)) {
+    if (unlikely(++lcd.curCol >= lcd.PPL)) {
         lcd.curCol = 0;
         ++lcd.curRow;
     }
@@ -173,12 +173,12 @@ static uint32_t lcd_drain_word(void) {
     uint8_t i, byte;
     lcd.upcurr += 4;
     for (i = 0; i != 4; i++) {
-        if (__builtin_expect(addr < SIZE_RAM, 1)) {
+        if (likely(addr < SIZE_RAM)) {
             byte = mem.ram.block[addr + i];
         } else {
             byte = 0;
         }
-        if (__builtin_expect(lcd.BEBO, 0)) {
+        if (unlikely(lcd.BEBO)) {
             word = word << 8 | byte;
         } else {
             word = word >> 8 | byte << 24;
@@ -192,18 +192,18 @@ static uint32_t lcd_words(uint8_t words) {
     uint8_t bit, bpp = 1 << lcd.LCDBPP;
     while (words--) {
         uint32_t word = lcd_drain_word();
-        if (__builtin_expect(lcd.LCDBPP == 5, 0)) {
+        if (unlikely(lcd.LCDBPP == 5)) {
             ticks += lcd_process_pixel(word >> 3 & 0x1F, word >> 10 & 0x3F, word >> 19 & 0x1F);
-        } else if (__builtin_expect(lcd.LCDBPP >= 4, 0)) {
-            if (__builtin_expect(lcd.BEPO, 0)) {
+        } else if (unlikely(lcd.LCDBPP >= 4)) {
+            if (unlikely(lcd.BEPO)) {
                 word = word << 16 | word >> 16;
             }
             ticks += lcd_process_half(word);
             ticks += lcd_process_half(word >> 16);
         } else {
             for (bit = 0; bit < 32; bit += bpp) {
-                ticks += lcd_process_index(word >> (__builtin_expect(lcd.BEPO, 0) ?
-                                                    32 - bit : bit) & ((1 << bpp) - 1));
+                ticks += lcd_process_index(word >> (unlikely(lcd.BEPO) ? 32 - bit : bit) &
+                                           ((1 << bpp) - 1));
             }
         }
     }

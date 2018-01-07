@@ -14,4 +14,7 @@
 #define write8(data, index, value) WRITE(data, index, 8, value)
 #define read8(data, index) READFROM(data, index, 8)
 
+#define unlikely(x) __builtin_expect(!!(x), 0)
+#define   likely(x) __builtin_expect(!!(x), 1)
+
 #endif
