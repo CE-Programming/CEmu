@@ -1,5 +1,5 @@
-#ifndef LCD_LCD_H
-#define LCD_LCD_H
+﻿#ifndef LCD_H
+#define LCD_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,12 +12,12 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
-#define LCD_WIDTH      320
-#define LCD_HEIGHT     240
+#define LCD_WIDTH      (320)
+#define LCD_HEIGHT     (240)
 #define LCD_SIZE       (LCD_WIDTH * LCD_HEIGHT)
 #define LCD_BYTE_SIZE  (LCD_SIZE * 2)
-#define LCD_RAM_ADDR   0xD40000
-#define LCD_RAM_OFFSET 0x040000
+#define LCD_RAM_ADDR   (0xD40000)
+#define LCD_RAM_OFFSET (0x40000)
 
 /* Set this callback function pointer from the GUI. Called in lcd_event() */
 extern void (*lcd_gui_callback)(void*);
@@ -69,7 +69,7 @@ typedef struct lcd_state {
     bool CLKSEL, IVS, IHS, IPC, IOE, LEE, BGR, BEBO, BEPO, WTRMRK;
     uint32_t *data;                /* Pointer to start of data to start extracting from */
     uint32_t *data_end;            /* End pointer that is allowed access */
-    bool off, spi;
+    bool spi;
 } lcd_state_t;
 
 /* Global LCD state */

@@ -87,8 +87,6 @@ void asic_init(void) {
     /* Seed the numbers */
     srand(time(NULL));
 
-    asic.resetOnWake = false;
-
     plug_devices();
     gui_console_printf("[CEmu] Initialized ASIC...\n");
 }

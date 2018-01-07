@@ -339,7 +339,7 @@ static uint8_t flash_read_handler(uint32_t addr) {
                 mem.flash.read_index++;
                 if (mem.flash.read_index == 3) {
                     /* Simulate erase delay */
-                    gui_emu_sleep(1.5e4);
+                    gui_emu_sleep(3e4);
                     mem.flash.read_index = 0;
                     mem.flash.command = NO_COMMAND;
                 }

@@ -88,16 +88,16 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
             }
             switch (control.readBatteryStatus) {
                 case 3: /* Battery Level is 0 */
-                    control.readBatteryStatus = (control.setBatteryStatus == BATTERY_0) ? 0 : (byte & 0x80) ? 5 : 0;
+                    control.readBatteryStatus = control.setBatteryStatus == BATTERY_0 ? 0 : byte & 0x80 ? 5 : 0;
                     break;
                 case 5: /* Battery Level is 1 */
-                    control.readBatteryStatus = (control.setBatteryStatus == BATTERY_1) ? 0 : (byte & 0x80) ? 0 : 7;
+                    control.readBatteryStatus = control.setBatteryStatus == BATTERY_1 ? 0 : byte & 0x80 ? 0 : 7;
                     break;
                 case 7: /* Battery Level is 2 */
-                    control.readBatteryStatus = (control.setBatteryStatus == BATTERY_2) ? 0 : (byte & 0x80) ? 9 : 0;
+                    control.readBatteryStatus = control.setBatteryStatus == BATTERY_2 ? 0 : byte & 0x80 ? 9 : 0;
                     break;
                 case 9: /* Battery Level is 3 (Or 4) */
-                    control.readBatteryStatus = (control.setBatteryStatus == BATTERY_3) ? 0 : (byte & 0x80) ? 0 : 11;
+                    control.readBatteryStatus = control.setBatteryStatus == BATTERY_3 ? 0 : byte & 0x80 ? 0 : 11;
                     break;
             }
             break;
@@ -123,7 +123,7 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
             break;
         case 0x05:
             if (control.ports[index] & (1 << 6) && !(byte & (1 << 6))) {
-                cpu_crash("[CEmu] Reset caused by resetting bit 6 of port 0x0005.\n");
+                cpu_crash("[CEmu] Reset caused by resetting bit 6 of port 5.\n");
             }
             control.ports[index] = byte & 0x1F;
             break;
@@ -139,16 +139,15 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
         case 0x09:
             switch (control.readBatteryStatus) {
                 case 1: /* Battery is bad */
-                    control.readBatteryStatus = (control.setBatteryStatus == BATTERY_DISCHARGED) ? 0 : (byte & 0x80) ? 0 : 3;
+                    control.readBatteryStatus = control.setBatteryStatus == BATTERY_DISCHARGED ? 0 : byte & 0x80 ? 0 : 3;
                     break;
             }
             control.ports[index] = byte;
 
-            /* Appears to enter low-power mode (this will be fine for now) */
             if (byte == 0xD4) {
                 control.ports[0] |= 1 << 6;
-                asic.resetOnWake = true;
-                gui_console_printf("[CEmu] Reset caused by entering sleep mode.\n", cpu.registers.PC);
+                cpu.events |= EVENT_RESET;
+                gui_console_printf("[CEmu] Reset caused by entering sleep mode.\n");
 #ifdef DEBUG_SUPPORT
                 if (debugger.resetOpensDebugger) {
                     open_debugger(DBG_MISC_RESET, cpu.registers.PC);

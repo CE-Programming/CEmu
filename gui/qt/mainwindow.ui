@@ -4022,8 +4022,8 @@
          <widget class="QToolBox" name="toolBox">
           <property name="minimumSize">
            <size>
-            <width>150</width>
-            <height>210</height>
+            <width>350</width>
+            <height>220</height>
            </size>
           </property>
           <property name="frameShape">
@@ -6699,7 +6699,7 @@
               <enum>Qt::NoFocus</enum>
              </property>
              <property name="text">
-              <string>Emulate real LCD SPI controller</string>
+              <string>Emulate pyhsical LCD SPI drawing</string>
              </property>
             </widget>
            </item>

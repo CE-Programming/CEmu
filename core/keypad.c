@@ -21,9 +21,6 @@ void EMSCRIPTEN_KEEPALIVE keypad_key_event(unsigned int row, unsigned int col, b
     if (row == 2 && col == 0) {
         intrpt_set(INT_ON, press);
         if (press && control.off) {
-            if (asic.resetOnWake) {
-                cpu.events |= EVENT_RESET;
-            }
             control.readBatteryStatus = ~1;
             control.off = false;
             intrpt_pulse(INT_WAKE);
