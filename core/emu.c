@@ -257,6 +257,7 @@ void emu_loop(bool reset) {
         if (cpu.events & (EVENT_RESET | EVENT_DEBUG_STEP)) {
             if (!cpu.halted && cpu.events & EVENT_DEBUG_STEP) {
                 cpu.events &= ~EVENT_DEBUG_STEP;
+                cpu_restore_next();
                 open_debugger(DBG_STEP, 0);
             }
 #endif
