@@ -35,7 +35,6 @@ void debug_set_step_in(void) {
     debugger.stepOutSPL = 0;
     debugger.stepOutSPS = 0;
     debugger.stepOutWait = -1;
-    debugger.stepOverExtendSize = 0;
 
     cpu.events |= EVENT_DEBUG_STEP;
 }

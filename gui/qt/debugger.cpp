@@ -942,6 +942,7 @@ bool MainWindow::breakpointAdd(const QString& label, uint32_t address, bool enab
 
     prevBreakpointAddress = address;
     ui->breakpointView->blockSignals(false);
+    ui->lcd->setFocus();
     return true;
 }
 
@@ -1297,6 +1298,7 @@ bool MainWindow::watchpointAdd(const QString& label, uint32_t address, uint8_t l
 
     prevWatchpointAddress = address;
     ui->watchpointView->blockSignals(false);
+    ui->lcd->setFocus();
     return true;
 }
 
