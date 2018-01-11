@@ -210,7 +210,7 @@ cleanExit:
 
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
-    cemucore::emu_cleanup();
+    cemucore::asic_free();
 
     coreThread.join();
 

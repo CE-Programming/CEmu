@@ -71,7 +71,7 @@ void LCDWidget::callback(void) {
         }
         unsigned int msNFramesAgo = array[index];
         array[index] = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
-        realFps = (1e3*index) / (array[index] - msNFramesAgo);
+        realFps = (1e3*ARRAY_SIZE) / (array[index] - msNFramesAgo);
         index = (index + 1) % ARRAY_SIZE;
     }
 

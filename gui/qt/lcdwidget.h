@@ -36,7 +36,7 @@ private:
     };
 
     enum array_info {
-        ARRAY_SIZE = 100
+        ARRAY_SIZE = 60
     };
 
     // true = emulate spi
