@@ -538,6 +538,7 @@ private:
     bool initPassed = true;
     bool firstShow = false;
     bool useDataCol;
+    bool softCommand = false;
     bool pauseOnFocus;
     bool loadedCEmuBootImage = false;
     bool optimizeRecording;

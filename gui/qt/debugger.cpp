@@ -292,16 +292,20 @@ void MainWindow::debuggerRaise() {
 
 void MainWindow::debuggerExecuteCommand(uint32_t debugAddress, uint8_t command) {
 
+    softCommand = true;
+
     if (debugAddress == 0xFF) {
         int tmp;
         switch (command) {
             case CMD_ABORT:
                 ui->debuggerLabel->setText(QStringLiteral("Program Aborted"));
                 debuggerRaise();
+                softCommand = false;
                 return; // don't exit the debugger
             case CMD_DEBUG:
                 ui->debuggerLabel->setText(QStringLiteral("Program Entered Debugger"));
                 debuggerRaise();
+                softCommand = false;
                 return; // don't exit the debugger
             case CMD_SET_BREAKPOINT:
                 breakpointAdd(breakpointNextLabel(), cpu.registers.DE, true);
@@ -327,15 +331,13 @@ void MainWindow::debuggerExecuteCommand(uint32_t debugAddress, uint8_t command) 
             case CMD_REM_ALL_BREAK:
                 tmp = ui->breakpointView->rowCount();
                 for (int i = 0; i < tmp; i++) {
-                    ui->breakpointView->selectRow(0);
-                    breakpointRemoveSelected();
+                    breakpointRemoveRow(0);
                 }
                 break;
             case CMD_REM_ALL_WATCH:
                 tmp = ui->watchpointView->rowCount();
                 for (int i = 0; i < tmp; i++) {
-                    ui->watchpointView->selectRow(0);
-                    watchpointRemoveSelected();
+                    watchpointRemoveRow(0);
                 }
                 break;
             case CMD_SET_E_WATCHPOINT:
@@ -351,6 +353,8 @@ void MainWindow::debuggerExecuteCommand(uint32_t debugAddress, uint8_t command) 
                 break;
         }
     }
+
+    softCommand = false;
 
     // continue emulation
     setDebugState(guiDebug = false);
@@ -762,7 +766,7 @@ void MainWindow::breakpointRemoveRow(int row) {
     uint32_t address = static_cast<uint32_t>(hex2int(ui->breakpointView->item(row, BREAK_ADDR_LOC)->text()));
 
     debug_breakwatch(address, DBG_EXEC_BREAKPOINT, false);
-    if (!guiAdd) {
+    if (!guiAdd && !softCommand) {
         updateDisasm();
     }
     ui->breakpointView->removeRow(row);
@@ -902,7 +906,11 @@ bool MainWindow::breakpointAdd(const QString& label, uint32_t address, bool enab
     for (int i = 0; i < row; i++) {
         if (ui->breakpointView->item(i, BREAK_ADDR_LOC)->text() == addressStr) {
             if (addressStr != "000000") {
-                ui->breakpointView->selectRow(i);
+                if (!softCommand) {
+                    ui->breakpointView->selectRow(i);
+                } else {
+                    ui->lcd->setFocus();
+                }
                 return false;
             }
         }
@@ -936,13 +944,16 @@ bool MainWindow::breakpointAdd(const QString& label, uint32_t address, bool enab
 
     debug_breakwatch(address, DBG_EXEC_BREAKPOINT, enabled);
 
-    if (!guiAdd) {
+    if (!guiAdd && !softCommand) {
         updateDisasm();
     }
 
     prevBreakpointAddress = address;
     ui->breakpointView->blockSignals(false);
-    ui->lcd->setFocus();
+
+    if (softCommand) {
+        ui->lcd->setFocus();
+    }
     return true;
 }
 
@@ -1120,7 +1131,7 @@ void MainWindow::watchpointRemoveRow(int row) {
 
     debug_breakwatch(address, DBG_READ_WATCHPOINT | DBG_WRITE_WATCHPOINT, false);
 
-    if (!guiAdd) {
+    if (!guiAdd && !softCommand) {
         updateDisasm();
     }
 
@@ -1243,7 +1254,11 @@ bool MainWindow::watchpointAdd(const QString& label, uint32_t address, uint8_t l
     for (int i = 0; i < row; i++) {
         if (ui->watchpointView->item(i, WATCH_ADDR_LOC)->text() == addressStr) {
             if (addressStr != "000000") {
-                ui->watchpointView->selectRow(i);
+                if (!softCommand) {
+                    ui->watchpointView->selectRow(i);
+                } else {
+                    ui->lcd->setFocus();
+                }
                 return false;
             }
         }
@@ -1292,13 +1307,16 @@ bool MainWindow::watchpointAdd(const QString& label, uint32_t address, uint8_t l
     // actually set it in the debugger core
     debug_breakwatch(address, mask, true);
 
-    if (!guiAdd) {
+    if (!guiAdd && !softCommand) {
         updateDisasm();
     }
 
     prevWatchpointAddress = address;
     ui->watchpointView->blockSignals(false);
-    ui->lcd->setFocus();
+
+    if (softCommand) {
+        ui->lcd->setFocus();
+    }
     return true;
 }
 
