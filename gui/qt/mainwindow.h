@@ -265,12 +265,13 @@ private:
     void setSlotInfo();
     int slotGet(QObject *obj, int col);
 
-    void disasmContextMenu(const QPoint &);
+    void consoleContextMenu(const QPoint&);
+    void disasmContextMenu(const QPoint&);
     void variablesContextMenu(const QPoint&);
-    void vatContextMenu(const QPoint &);
-    void opContextMenu(const QPoint &);
-    void memContextMenu(const QPoint &);
-    void memoryContextMenu(const QPoint &, uint32_t);
+    void vatContextMenu(const QPoint&);
+    void opContextMenu(const QPoint&);
+    void memContextMenu(const QPoint&);
+    void memoryContextMenu(const QPoint&, uint32_t);
     void removeAllSentVars();
     void removeSentVars();
     void deselectAllVars();

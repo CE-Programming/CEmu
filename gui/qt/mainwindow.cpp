@@ -124,6 +124,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->buttonStepNext, &QPushButton::clicked, this, &MainWindow::stepNextPressed);
     connect(ui->buttonStepOut, &QPushButton::clicked, this, &MainWindow::stepOutPressed);
     connect(ui->buttonGoto, &QPushButton::clicked, this, &MainWindow::gotoPressed);
+    connect(ui->console, &QWidget::customContextMenuRequested, this, &MainWindow::consoleContextMenu);
     connect(ui->disassemblyView, &QWidget::customContextMenuRequested, this, &MainWindow::disasmContextMenu);
     connect(ui->vatView, &QWidget::customContextMenuRequested, this, &MainWindow::vatContextMenu);
     connect(ui->opView, &QWidget::customContextMenuRequested, this, &MainWindow::opContextMenu);
@@ -1794,38 +1795,38 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
     ui->disassemblyView->setTextCursor(ui->disassemblyView->cursorForPosition(posa));
     QPoint globalPos = ui->disassemblyView->mapToGlobal(posa);
 
-    QMenu contextMenu;
-    contextMenu.addAction(run_until);
-    contextMenu.addSeparator();
-    contextMenu.addAction(toggle_break);
-    contextMenu.addAction(toggle_read_watch);
-    contextMenu.addAction(toggle_write_watch);
-    contextMenu.addAction(toggle_rw_watch);
-    contextMenu.addSeparator();
-    contextMenu.addAction(goto_mem);
-    contextMenu.addAction(set_pc);
+    QMenu menu;
+    menu.addAction(run_until);
+    menu.addSeparator();
+    menu.addAction(toggle_break);
+    menu.addAction(toggle_read_watch);
+    menu.addAction(toggle_write_watch);
+    menu.addAction(toggle_rw_watch);
+    menu.addSeparator();
+    menu.addAction(goto_mem);
+    menu.addAction(set_pc);
 
-    QAction* selectedItem = contextMenu.exec(globalPos);
-    if (selectedItem) {
-        if (selectedItem->text() == set_pc) {
+    QAction *item = menu.exec(globalPos);
+    if (item) {
+        if (item->text() == set_pc) {
             ui->pcregView->setText(ui->disassemblyView->getSelectedAddress());
             uint32_t address = static_cast<uint32_t>(hex2int(ui->pcregView->text()));
             debug_set_pc_address(address);
             updateDisasmView(cpu.registers.PC, true);
-        } else if (selectedItem->text() == toggle_break) {
+        } else if (item->text() == toggle_break) {
             breakpointGUIAdd();
-        } else if (selectedItem->text() == toggle_read_watch) {
+        } else if (item->text() == toggle_read_watch) {
             watchpointReadGUIAdd();
-        } else if (selectedItem->text() == toggle_write_watch) {
+        } else if (item->text() == toggle_write_watch) {
             watchpointWriteGUIAdd();
-        } else if (selectedItem->text() == toggle_rw_watch) {
+        } else if (item->text() == toggle_rw_watch) {
             watchpointReadWriteGUIAdd();
-        } else if (selectedItem->text() == run_until) {
+        } else if (item->text() == run_until) {
             uint32_t address = static_cast<uint32_t>(hex2int(ui->disassemblyView->getSelectedAddress()));
             debug_init_run_until(address);
             debuggerChangeState();
             emit setRunUntilMode();
-        } else if (selectedItem->text() == goto_mem) {
+        } else if (item->text() == goto_mem) {
             memGoto(MEM_MEM, ui->disassemblyView->getSelectedAddress());
         }
     }
@@ -1924,6 +1925,65 @@ void MainWindow::stepOutPressed() {
     debuggerUpdateChanges();
     disconnect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOutPressed);
     emit setDebugStepOutMode();
+}
+
+void MainWindow::consoleContextMenu(const QPoint &posa) {
+    bool ok;
+
+    QString goto_mem = tr("Goto Memory View");
+    QString toggle_break = tr("Toggle Breakpoint");
+    QString toggle_write_watch = tr("Toggle Write Watchpoint");
+    QString toggle_read_watch = tr("Toggle Read Watchpoint");
+    QString toggle_rw_watch = tr("Toggle Read/Write Watchpoint");
+    QPoint globalp = ui->console->mapToGlobal(posa);
+    QTextCursor cursor = ui->console->cursorForPosition(posa);
+    ui->console->setTextCursor(cursor);
+    cursor.select(QTextCursor::WordUnderCursor);
+    uint32_t address = cursor.selectedText().toUInt(&ok, 16);
+
+    if (ok) {
+        ui->console->setTextCursor(cursor);
+
+        QMenu menu;
+        menu.addAction(goto_mem);
+        menu.addSeparator();
+        menu.addAction(toggle_break);
+        menu.addAction(toggle_read_watch);
+        menu.addAction(toggle_write_watch);
+        menu.addAction(toggle_rw_watch);
+
+        QAction *item = menu.exec(globalp);
+        if (item) {
+            if (item->text() == goto_mem) {
+                int count = 0;
+                if (!guiDebug) {
+                    debuggerChangeState();
+                }
+                while (!guiDebug && count < 20) {
+                    guiDelay(50);
+                    count++;
+                }
+                memGoto(MEM_MEM, cursor.selectedText());
+            } else if (item->text() == toggle_break) {
+                if (!breakpointAdd(breakpointNextLabel(), address, true)) {
+                    breakpointRemoveSelected();
+                }
+            } else if (item->text() == toggle_read_watch) {
+                if (!watchpointAdd(watchpointNextLabel(), address, 1, DBG_READ_WATCHPOINT)) {
+                    watchpointRemoveSelected();
+                }
+            } else if (item->text() == toggle_write_watch) {
+                if (!watchpointAdd(watchpointNextLabel(), address, 1, DBG_WRITE_WATCHPOINT)) {
+                    watchpointRemoveSelected();
+                }
+            } else if (item->text() == toggle_rw_watch) {
+                if (!watchpointAdd(watchpointNextLabel(), address, 1, DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT)) {
+                    watchpointRemoveSelected();
+                }
+            }
+            memDocksUpdate();
+        }
+    }
 }
 
 // ------------------------------------------------

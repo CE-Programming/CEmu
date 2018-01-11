@@ -197,6 +197,11 @@ void MainWindow::memSearchPressed(int index) {
 }
 
 void MainWindow::memGoto(int index, const QString& addressStr) {
+    if (!guiDebug) {
+        return;
+    }
+
+
     QHexEdit *edit = memory.at(index);
 
     edit->setFocus();
