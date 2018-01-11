@@ -39,7 +39,6 @@ void gui_emu_sleep(unsigned long ms);
 
 bool emu_load(const char*, const char*);
 void emu_loop(bool);
-void emu_cleanup(void);
 bool emu_save(const char*);
 bool emu_save_rom(const char*);
 

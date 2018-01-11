@@ -183,18 +183,10 @@ rerr:
     }
 
     if (!ret) {
-        emu_cleanup();
+        asic_free();
     }
 
     return ret;
-}
-
-void emu_cleanup(void) {
-    asic_free();
-}
-
-static void EMSCRIPTEN_KEEPALIVE emu_reset(void) {
-    asic_reset();
 }
 
 #ifdef __EMSCRIPTEN__
@@ -207,7 +199,7 @@ static void emu_main_loop_inner(void) {
     while (!exiting) {
         if (cpu.events & EVENT_RESET) {
             gui_console_printf("[CEmu] Reset triggered.\n");
-            emu_reset();
+            asic_reset();
         }
 
         sched_process_pending_events();
@@ -222,33 +214,33 @@ static void emu_main_loop_inner(void) {
 
 void emu_loop(bool reset) {
     if (reset) {
-        emu_reset();
+        asic_reset();
     }
 
     exiting = false;
     emscripten_set_main_loop(emu_main_loop_inner, 60, 1);
 
-    emu_cleanup();
+    asic_free();
 }
 
 #else // not __EMSCRIPTEN__
 
 void emu_loop(bool reset) {
     if (reset) {
-        emu_reset();
+        asic_reset();
     }
 
     exiting = false;
     while (!exiting) {
         if (cpu.events & EVENT_RESET) {
             gui_console_printf("[CEmu] Reset triggered.\n");
-            emu_reset();
+            asic_reset();
         }
         sched_process_pending_events();
         cpu_execute();
     }
 
-    emu_cleanup();
+    asic_free();
 }
 
 #endif // __EMSCRIPTEN__
