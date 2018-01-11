@@ -452,7 +452,7 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
     }
 #endif
     switch((addr >> 20) & 0xF) {
-            /* FLASH */
+        /* FLASH */
         case 0x0: case 0x1: case 0x2: case 0x3:
         case 0x4: case 0x5: case 0x6: case 0x7:
             value = flash_read_handler(addr);
@@ -461,12 +461,12 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
             }
             break;
 
-            /* UNMAPPED */
+        /* UNMAPPED */
         case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
             cpu.cycles += 258;
             break;
 
-            /* RAM */
+        /* RAM */
         case 0xD:
             sched_process_pending_dma(4);
             ramAddr = addr & 0x7FFFF;
@@ -475,7 +475,7 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
             }
             break;
 
-            /* MMIO <-> Advanced Perphrial Bus */
+        /* MMIO <-> Advanced Perphrial Bus */
         case 0xE: case 0xF:
             if (mmio_mapped(addr, select)) {
                 value = port_read_byte(mmio_port(addr, select));
@@ -487,7 +487,6 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
                 }
             }
             break;
-        }
     }
     if (fetch) {
         mem.fetch_buffer[++mem.fetch_index] = value;
