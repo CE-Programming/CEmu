@@ -42,6 +42,7 @@ extern control_state_t control;
 
 /* Available Functions */
 eZ80portrange_t init_control(void);
+void control_reset(void);
 
 /* Save/Restore */
 typedef struct emu_image emu_image;

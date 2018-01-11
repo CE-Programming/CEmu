@@ -16,6 +16,7 @@ typedef struct backlight_state {
 extern backlight_state_t backlight;
 
 eZ80portrange_t init_backlight(void);
+void backlight_reset(void);
 
 /* Save/Restore */
 typedef struct emu_image emu_image;

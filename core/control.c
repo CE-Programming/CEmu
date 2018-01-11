@@ -210,17 +210,29 @@ static const eZ80portrange_t device = {
 
 eZ80portrange_t init_control(void) {
     memset(&control, 0, sizeof control);
-    gui_console_printf("[CEmu] Initialized Control Ports...\n");
+    gui_console_printf("[CEmu] Initialized Control...\n");
 
     /* Set default state to full battery and not charging */
     control.batteryCharging = false;
     control.setBatteryStatus = BATTERY_4;
+
+    return device;
+}
+
+
+void control_reset(void) {
+    memset(&control.ports, 0, sizeof control.ports);
+
     control.privileged = 0xFFFFFF;
     control.protectedStart = control.protectedEnd = 0xD1887C;
     control.protectionStatus = 0;
+    control.stackLimit = 0;
+    control.cpuSpeed = 0;
+    control.flashUnlocked = false;
+    control.mmioUnlocked = false;
     control.off = false;
 
-    return device;
+    gui_console_printf("[CEmu] Control reset.\n");
 }
 
 bool control_save(emu_image *s) {

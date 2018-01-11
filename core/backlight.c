@@ -64,16 +64,19 @@ static const eZ80portrange_t device = {
 
 eZ80portrange_t init_backlight(void) {
     memset(backlight.ports, 0, sizeof backlight.ports);
+    backlight.brightness = 0xFF;
+    gui_console_printf("[CEmu] Initialized Backlight Control...\n");
+    return device;
+}
 
+void backlight_reset(void) {
+    memset(backlight.ports, 0, sizeof backlight.ports);
     backlight.ports[0x00] = 0x64;
     backlight.ports[0x01] = 0x64;
     backlight.ports[0x02] = 0x61;
     backlight.ports[0x03] = 0x4C;
     backlight.ports[0x20] = 0xFF; /* backlight scaler? (unimplemented) */
     backlight.brightness = 0xFF;  /* backlight level (PWM)             */
-
-    gui_console_printf("[CEmu] Initialized Backlight Control...\n");
-    return device;
 }
 
 bool backlight_save(emu_image *s) {
