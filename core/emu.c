@@ -202,30 +202,17 @@ static void EMSCRIPTEN_KEEPALIVE emu_reset(void) {
 extern bool throttle_triggered;
 
 static void emu_main_loop_inner(void) {
-
     throttle_triggered = false;
-    while (1)
-    {
 
-#ifdef DEBUG_SUPPORT
-    if (cpu.events & (EVENT_RESET | EVENT_DEBUG_STEP)) {
-        if (!cpu.halted && cpu.events & EVENT_DEBUG_STEP) {
-            cpu.events &= ~EVENT_DEBUG_STEP;
-            open_debugger(DBG_STEP, 0);
-        }
-#endif
+    while (!exiting) {
         if (cpu.events & EVENT_RESET) {
             gui_console_printf("[CEmu] Reset triggered.\n");
             emu_reset();
         }
-#ifdef DEBUG_SUPPORT
-    }
-#endif
 
-    sched_process_pending_events();
-    if (throttle_triggered) break;
-    cpu_execute();
-
+        sched_process_pending_events();
+        if (throttle_triggered) break;
+        cpu_execute();
     } // while
 
     if (exiting) {
@@ -253,21 +240,10 @@ void emu_loop(bool reset) {
 
     exiting = false;
     while (!exiting) {
-#ifdef DEBUG_SUPPORT
-        if (cpu.events & (EVENT_RESET | EVENT_DEBUG_STEP)) {
-            if (!cpu.halted && cpu.events & EVENT_DEBUG_STEP) {
-                cpu.events &= ~EVENT_DEBUG_STEP;
-                cpu_restore_next();
-                open_debugger(DBG_STEP, 0);
-            }
-#endif
-            if (cpu.events & EVENT_RESET) {
-                gui_console_printf("[CEmu] Reset triggered.\n");
-                emu_reset();
-            }
-#ifdef DEBUG_SUPPORT
+        if (cpu.events & EVENT_RESET) {
+            gui_console_printf("[CEmu] Reset triggered.\n");
+            emu_reset();
         }
-#endif
         sched_process_pending_events();
         cpu_execute();
     }

@@ -910,14 +910,17 @@ void cpu_execute(void) {
                     }
                 }
             }
-#ifdef DEBUG_SUPPORT
-            if (cpu.events & EVENT_DEBUG_STEP) {
-                break;
-            }
-#endif
         } else if (cpu.halted) {
             cpu_halt();
         }
+#ifdef DEBUG_SUPPORT
+        if (cpu.events & EVENT_DEBUG_STEP && !cpu.halted) {
+            cpu.events &= ~EVENT_DEBUG_STEP;
+            cpu_restore_next();
+            open_debugger(DBG_STEP, 0);
+            break;
+        }
+#endif
         if (exiting || cpu.cycles >= cpu.next) {
             break;
         }
