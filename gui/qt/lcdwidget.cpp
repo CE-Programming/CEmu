@@ -69,6 +69,10 @@ void LCDWidget::callback(void) {
         } else {
             lcd_drawframe(image.bits(), lcd.control & 1 << 11 ? lcd.data : nullptr, lcd.data_end, lcd.control, LCD_SIZE);
         }
+        unsigned int msNFramesAgo = array[index];
+        array[index] = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+        realFps = (1e3*index) / (array[index] - msNFramesAgo);
+        index = (index + 1) % ARRAY_SIZE;
     }
 
 #ifdef PNG_WRITE_APNG_SUPPORTED
@@ -81,6 +85,10 @@ void LCDWidget::callback(void) {
 
 double LCDWidget::getFPS() {
     return fps / (frameskip + 1);
+}
+
+double LCDWidget::getRealFPS() {
+    return realFps;
 }
 
 void LCDWidget::setFrameskip(int value) {

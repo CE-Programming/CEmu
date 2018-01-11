@@ -3,6 +3,7 @@
 
 #include <QtWidgets/QWidget>
 #include <QtCore/QTimer>
+#include <chrono>
 
 #include "../../core/lcd.h"
 
@@ -15,6 +16,7 @@ public:
     void setFrameskip(int skip);
     void callback(void);
     double getFPS();
+    double getRealFPS();
     QImage getImage();
 
 protected:
@@ -33,6 +35,10 @@ private:
         LCD_RIGHT
     };
 
+    enum array_info {
+        ARRAY_SIZE = 100
+    };
+
     // true = emulate spi
     bool mode;
 
@@ -48,6 +54,10 @@ private:
     // for dragable roms
     QString dragROM;
     bool isSendingROM;
+
+    unsigned int array[ARRAY_SIZE];
+    int index = 0;
+    double realFps = 0;
 };
 
 #endif
