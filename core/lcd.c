@@ -123,21 +123,21 @@ void lcd_gui_event(void) {
     }
 }
 
-static uint32_t lcd_process_pixel(uint8_t r, uint8_t g, uint8_t b) {
+static uint32_t lcd_process_pixel(uint8_t red, uint8_t green, uint8_t blue) {
     uint32_t ticks = 1;
-    if (!likely(lcd.control & 1 << 11)) {
-        r = g = b = 0;
-    } else if (likely(lcd.BGR)) {
-        uint8_t t = r;
-        r = b;
-        b = t;
-    }
     if (likely(lcd.preRow < lcd.LPP)) {
         if (unlikely(!lcd.preCol && lcd.preRow)) {
             spi_hsync();
         }
         spi_update_pixel();
-        spi_process_pixel(r, g, b);
+        if (!likely(lcd.control & 1 << 11)) {
+            red = green = blue = 0;
+        } else if (likely(lcd.BGR)) {
+            uint8_t temp = red;
+            red = blue;
+            blue = temp;
+        }
+        spi_process_pixel(red, green, blue);
     }
     if (unlikely(++lcd.preCol >= lcd.PPL)) {
         lcd.preCol = 0;
@@ -152,22 +152,20 @@ static uint32_t lcd_process_pixel(uint8_t r, uint8_t g, uint8_t b) {
     }
     return ticks * lcd.PCD * 2;
 }
-static uint32_t lcd_process_half(uint16_t half) {
+
+static uint32_t lcd_process_half(uint16_t pixel) {
     switch (lcd.LCDBPP) {
-        case 4: // 555
-            return lcd_process_pixel(half & 0x1F, half >> 4 & 0x3E, half >> 10 & 0x1F);
+        default: // 1555
+            return lcd_process_pixel(pixel & 0x1F, (pixel >> 4 & 0x3E) | (pixel >> 15 & 1), pixel >> 10 & 0x1F);
         case 6: // 565
-            return lcd_process_pixel(half & 0x1F, half >> 5 & 0x3F, half >> 11 & 0x1F);
+            return lcd_process_pixel(pixel & 0x1F, pixel >> 5 & 0x3F, pixel >> 11 & 0x1F);
         case 7: // 444
-            return lcd_process_pixel(half << 1 & 0x1E, half >> 2 & 0x3C, half >> 7 & 0x1E);
-        default:
-            assert(0);
-            __builtin_unreachable();
+            return lcd_process_pixel(pixel << 1 & 0x1E, pixel >> 2 & 0x3C, pixel >> 7 & 0x1E);
     }
 }
+
 static uint32_t lcd_process_index(uint8_t index) {
-    uint16_t pixel = lcd.palette[index];
-    return lcd_process_pixel(pixel & 0x1F, (pixel >> 4 & 0x3E) | (pixel >> 15 & 1), pixel >> 10 & 0x1F);
+    return lcd_process_half(lcd.palette[index]);
 }
 
 static uint32_t lcd_drain_word(void) {

@@ -3,13 +3,51 @@
 #include "schedule.h"
 
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 
 spi_state_t spi;
 
+static void spi_scan_line(uint16_t row) {
+    if (unlikely(row > SPI_LAST_ROW)) {
+        spi.mode |= SPI_MODE_IGNORE;
+        return;
+    }
+    spi.mode &= ~SPI_MODE_IGNORE;
+    if (unlikely(spi.mode & SPI_MODE_PARTIAL) &&
+        spi.partialStart > spi.partialEnd ?
+        spi.partialStart > row && row > spi.partialEnd :
+        spi.partialStart > row || row > spi.partialEnd) {
+        spi.mode |= SPI_MODE_BLANK;
+    } else {
+        spi.mode &= ~SPI_MODE_BLANK;
+    }
+    spi.row = spi.dstRow = spi.srcRow = row;
+    if (unlikely(spi.mode & SPI_MODE_SCROLL)) {
+        uint16_t top = spi.topArea, bot = SPI_LAST_ROW - spi.bottomArea;
+        if (row >= top && row <= bot) {
+            spi.srcRow += spi.scrollStart - top;
+            if (spi.srcRow > bot) {
+                spi.srcRow -= SPI_NUM_ROWS - spi.topArea - spi.bottomArea;
+            }
+            spi.srcRow &= 0x1FF;
+        }
+    }
+    if (unlikely(spi.mac & SPI_MAC_VRO)) {
+        spi.dstRow = SPI_LAST_ROW - spi.dstRow;
+        spi.srcRow = SPI_LAST_ROW - spi.srcRow;
+    }
+    if (unlikely(spi.mac & SPI_MAC_HRO)) {
+        spi.col = SPI_LAST_COL;
+        spi.colDir = -1;
+    } else {
+        spi.col = 0;
+        spi.colDir = 1;
+    }
+}
+
 void spi_hsync(void) {
-    spi.colCur = (spi.mac >> 2 & 1) * 239;
-    spi.rowCur += 1 - (spi.mac >> 3 & 2);
+    spi_scan_line(spi.row + 1);
 }
 
 static void spi_reset_mregs(void) {
@@ -24,50 +62,60 @@ static void spi_reset_mregs(void) {
 
 void spi_vsync(void) {
     spi_reset_mregs();
-    spi_hsync();
-    spi.rowCur = (spi.mac >> 4 & 1) * 319;
-}
-
-static uint32_t spi_idle(uint32_t pixel, uint32_t bit, uint32_t mask) {
-    return pixel & bit ? pixel | mask : pixel & ~mask;
-}
-
-static uint8_t spi_round_color(uint8_t color) {
-    return color << 2 | (color >> 4 & 3);
+    spi_scan_line(0);
 }
 
 void spi_update_pixel(void) {
-    uint32_t row = spi.rowCur, col = spi.colCur, pixel = 0xFFFFFFFF;
-    if (likely(row < 320 && col < 240)) {
-        if (likely(!spi.sleep) && likely(!spi.blank) &&
-            (likely(!spi.partial) ||
-             (spi.partialStart <= spi.partialEnd ?
-              spi.partialStart <= row && row <= spi.partialEnd :
-              spi.partialStart <= row || row <= spi.partialEnd))) {
-            pixel = 0xFF << 24 |
-                spi_round_color(spi.frame[row][col][spi.mac >> 2 & 2]) << 16 |
-                spi_round_color(spi.frame[row][col][1]) << 8 |
-                spi_round_color(spi.frame[row][col][~spi.mac >> 2 & 2]);
-            if (unlikely(spi.invert)) {
-                pixel ^= 0xFFFFFF;
-            }
-            if (unlikely(spi.idle)) {
-                pixel = spi_idle(pixel, 0x800000, 0xFF0000);
-                pixel = spi_idle(pixel, 0x008000, 0x00FF00);
-                pixel = spi_idle(pixel, 0x000080, 0x0000FF);
-            }
+    uint8_t *pixel, red, green, blue;
+    if (unlikely(spi.mode & SPI_MODE_IGNORE)) {
+        return;
+    }
+    if (unlikely(spi.mode & (SPI_MODE_SLEEP | SPI_MODE_OFF | SPI_MODE_BLANK))) {
+        red = green = blue = ~0;
+    } else {
+        if (unlikely(spi.srcRow > SPI_LAST_ROW)) {
+            red = rand();
+            green = rand();
+            blue = rand();
+        } else {
+            pixel = spi.frame[spi.srcRow][spi.col];
+            red = pixel[SPI_RED];
+            green = pixel[SPI_GREEN];
+            blue = pixel[SPI_BLUE];
         }
-        spi.display[spi.colCur][spi.rowCur] = pixel;
-        spi.colCur += 1 - (spi.mac >> 1 & 2);
+        if (!likely(spi.mac & SPI_MAC_BGR)) { // eor
+            uint8_t temp = red;
+            red = blue;
+            blue = temp;
+        }
+        if (unlikely(spi.mode & SPI_MODE_INVERT)) {
+            red = ~red;
+            green = ~green;
+            blue = ~blue;
+        }
+        if (unlikely(spi.mode & SPI_MODE_IDLE)) {
+            red = (int8_t)red >> 7;
+            green = (int8_t)green >> 7;
+            blue = (int8_t)blue >> 7;
+        }
+    }
+    pixel = spi.display[spi.col][spi.dstRow];
+    pixel[SPI_RED] = red;
+    pixel[SPI_GREEN] = green;
+    pixel[SPI_BLUE] = blue;
+    pixel[SPI_ALPHA] = ~0;
+    spi.col += spi.colDir;
+    if (unlikely(spi.col > SPI_LAST_COL)) {
+        spi.mode |= SPI_MODE_IGNORE;
     }
 }
 
-void spi_process_pixel(uint8_t r, uint8_t g, uint8_t b) {
-    assert(r < 32 && g < 64 && b < 32);
+void spi_process_pixel(uint8_t red, uint8_t green, uint8_t blue) {
+    assert(red < 32 && green < 64 && blue < 32);
     if (spi.rowReg < 320 && spi.colReg < 240) {
-        spi.frame[spi.rowReg][spi.colReg][0] = spi.lut[r +  0];
-        spi.frame[spi.rowReg][spi.colReg][1] = spi.lut[g + 32];
-        spi.frame[spi.rowReg][spi.colReg][2] = spi.lut[b + 96];
+        spi.frame[spi.rowReg][spi.colReg][SPI_RED] = spi.lut[red + 0];
+        spi.frame[spi.rowReg][spi.colReg][SPI_GREEN] = spi.lut[green + 32];
+        spi.frame[spi.rowReg][spi.colReg][SPI_BLUE] = spi.lut[blue + 96];
     }
     if (unlikely(spi.mac >> 5 & 1)) {
         if (unlikely(spi.colReg == spi.colEnd)) {
@@ -93,22 +141,18 @@ static void spi_sw_reset(void) {
     spi.fifo = 1;
     spi.param = 0;
     spi.gamma = 1;
-    spi.sleep = true;
-    spi.partial = false;
-    spi.invert = false;
-    spi.blank = true;
+    spi.mode = SPI_MODE_SLEEP | SPI_MODE_OFF;
     spi.colStart = 0;
-    spi.colEnd = spi.mac & 1 << 5 ? 0xEF : 0x13F;
+    spi.colEnd = spi.mac & 1 << 5 ? SPI_LAST_COL : SPI_LAST_ROW;
     spi.rowStart = 0;
-    spi.rowEnd = spi.mac & 1 << 5 ? 0x13F : 0xEF;
+    spi.rowEnd = spi.mac & 1 << 5 ? SPI_LAST_ROW : SPI_LAST_COL;
     spi.topArea = 0;
-    spi.scrollArea = 0x140;
+    spi.scrollArea = SPI_NUM_ROWS;
     spi.bottomArea = 0;
     spi.partialStart = 0;
-    spi.partialEnd = 0x13F;
+    spi.partialEnd = SPI_LAST_ROW;
     spi.scrollStart = 0;
     spi.tear = false;
-    spi.idle = false;
 }
 
 static void spi_hw_reset(void) {
@@ -127,28 +171,30 @@ static void spi_write_cmd(uint8_t value) {
             spi_sw_reset();
             break;
         case 0x10:
-            spi.sleep = true;
+            spi.mode |= SPI_MODE_SLEEP;
             break;
         case 0x11:
-            spi.sleep = false;
+            spi.mode &= ~SPI_MODE_SLEEP;
             break;
         case 0x12:
-            spi.partial = true;
+            spi.mode |= SPI_MODE_PARTIAL;
+            spi.scrollStart = 0;
             break;
         case 0x13:
-            spi.partial = false;
+            spi.mode &= ~(SPI_MODE_PARTIAL | SPI_MODE_SCROLL);
+            spi.scrollStart = 0;
             break;
         case 0x20:
-            spi.invert = false;
+            spi.mode &= ~SPI_MODE_INVERT;
             break;
         case 0x21:
-            spi.invert = true;
+            spi.mode |= SPI_MODE_INVERT;
             break;
         case 0x28:
-            spi.blank = true;
+            spi.mode |= SPI_MODE_OFF;
             break;
         case 0x29:
-            spi.blank = false;
+            spi.mode &= ~SPI_MODE_OFF;
             break;
         case 0x2C:
             spi_reset_mregs();
@@ -160,10 +206,10 @@ static void spi_write_cmd(uint8_t value) {
             spi.tear = true;
             break;
         case 0x38:
-            spi.idle = false;
+            spi.mode &= ~SPI_MODE_IDLE;
             break;
         case 0x39:
-            spi.idle = true;
+            spi.mode |= SPI_MODE_IDLE;
             break;
         default:
             break;
@@ -183,10 +229,10 @@ static void spi_write_param(uint8_t value) {
         case 0x2A:
             switch (word_param) {
                 case 0:
-                    write8(spi.colStart, bit_offset, value);
+                    write8(spi.colStart, bit_offset, value & 0x1FF >> bit_offset);
                     break;
                 case 1:
-                    write8(spi.colEnd, bit_offset, value);
+                    write8(spi.colEnd, bit_offset, value & 0x1FF >> bit_offset);
                     break;
                 default:
                     break;
@@ -195,10 +241,10 @@ static void spi_write_param(uint8_t value) {
         case 0x2B:
             switch (word_param) {
                 case 0:
-                    write8(spi.rowStart, bit_offset, value);
+                    write8(spi.rowStart, bit_offset, value & 0x1FF >> bit_offset);
                     break;
                 case 1:
-                    write8(spi.rowEnd, bit_offset, value);
+                    write8(spi.rowEnd, bit_offset, value & 0x1FF >> bit_offset);
                     break;
                 default:
                     break;
@@ -206,31 +252,16 @@ static void spi_write_param(uint8_t value) {
             break;
         case 0x2C:
         case 0x3C:
-            switch (word_param) {
-                case 0:
-                    write8(spi.colStart, bit_offset, value);
-                    write8(spi.rowStart, bit_offset, value);
-                    break;
-                case 1:
-                    write8(spi.colEnd, bit_offset, value);
-                    write8(spi.rowEnd, bit_offset, value);
-                    break;
-                default:
-                    break;
-            }
             break;
         case 0x2D:
-            if (spi.param < 128) {
-                spi.lut[spi.param] = value;
-            }
             break;
         case 0x30:
             switch (word_param) {
                 case 0:
-                    write8(spi.partialStart, bit_offset, value);
+                    write8(spi.partialStart, bit_offset, value & 0x1FF >> bit_offset);
                     break;
                 case 1:
-                    write8(spi.partialEnd, bit_offset, value);
+                    write8(spi.partialEnd, bit_offset, value & 0x1FF >> bit_offset);
                     break;
                 default:
                     break;
@@ -239,13 +270,13 @@ static void spi_write_param(uint8_t value) {
         case 0x33:
             switch (word_param) {
                 case 0:
-                    write8(spi.topArea, bit_offset, value);
+                    write8(spi.topArea, bit_offset, value & 0x1FF >> bit_offset);
                     break;
                 case 1:
-                    write8(spi.scrollArea, bit_offset, value);
+                    write8(spi.scrollArea, bit_offset, value & 0x1FF >> bit_offset);
                     break;
                 case 2:
-                    write8(spi.bottomArea, bit_offset, value);
+                    write8(spi.bottomArea, bit_offset, value & 0x1FF >> bit_offset);
                     break;
                 default:
                     break;
@@ -259,7 +290,8 @@ static void spi_write_param(uint8_t value) {
         case 0x37:
             switch (word_param) {
                 case 0:
-                    write8(spi.scrollStart, bit_offset, value);
+                    write8(spi.scrollStart, bit_offset, value & 0x1FF >> bit_offset);
+                    spi.mode |= SPI_MODE_SCROLL;
                     break;
                 default:
                     break;
@@ -313,13 +345,13 @@ void spi_reset(void) {
     memset(&spi, 0, sizeof(spi));
     spi_hw_reset();
     for (c = 0; c < 1 << 5; c++) {
-        spi.lut[i++] = c << 1 | c >> 4;
+        spi.lut[i++] = c << 3 | c >> 2;
     }
     for (c = 0; c < 1 << 6; c++) {
-        spi.lut[i++] = c;
+        spi.lut[i++] = c << 2 | c >> 4;
     }
     for (c = 0; c < 1 << 5; c++) {
-        spi.lut[i++] = c << 1 | c >> 4;
+        spi.lut[i++] = c << 3 | c >> 2;
     }
 }
 

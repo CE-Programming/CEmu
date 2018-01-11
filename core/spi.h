@@ -1,39 +1,59 @@
-#ifndef LCD_SPI_H
-#define LCD_SPI_H
+#ifndef SPI_H
+#define SPI_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "port.h"
-#include "lcd.h"
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
 
+#define SPI_RED 0
+#define SPI_GREEN 1
+#define SPI_BLUE 2
+#define SPI_ALPHA 3
+#define SPI_NUM_ROWS 320
+#define SPI_LAST_ROW 319
+#define SPI_NUM_COLS 240
+#define SPI_LAST_COL 239
+
+enum spi_mode {
+    SPI_MODE_SLEEP   = 1 << 0,
+    SPI_MODE_OFF     = 1 << 1,
+    SPI_MODE_BLANK   = 1 << 2,
+    SPI_MODE_PARTIAL = 1 << 3,
+    SPI_MODE_INVERT  = 1 << 4,
+    SPI_MODE_IDLE    = 1 << 5,
+    SPI_MODE_SCROLL  = 1 << 6,
+    SPI_MODE_IGNORE  = 1 << 7,
+};
+
+enum spi_mac {
+    SPI_MAC_HRO = 1 << 2,
+    SPI_MAC_BGR = 1 << 3,
+    SPI_MAC_VRO = 1 << 4,
+    SPI_MAC_RCX = 1 << 5,
+    SPI_MAC_CAO = 1 << 6,
+    SPI_MAC_RAO = 1 << 7,
+};
+
 typedef struct spi_state {
-    bool sleep;
-    bool partial;
-    bool invert;
-    uint8_t gamma;
-    bool blank;
-    uint32_t colCur, colReg, rowCur, rowReg;
-    uint16_t colStart, colEnd;
-    uint16_t rowStart, rowEnd;
-    uint8_t frame[320][240][3];
-    uint32_t display[240][320];
-    uint8_t lut[128];
-    uint16_t partialStart, partialEnd;
-    uint16_t topArea, scrollArea, bottomArea, scrollStart;
-    uint8_t mac;
+    uint32_t param;
+    uint16_t fifo, row, dstRow, srcRow;
+    uint8_t cmd, col, colDir;
+
+    uint32_t scanLine, rowReg, colReg;
+    uint16_t rowStart, rowEnd, colStart, colEnd;
+    uint16_t partialStart, partialEnd, topArea, scrollArea, bottomArea, scrollStart;
+    uint8_t mode, mac, gamma;
+    uint8_t lut[128], frame[320][240][3], display[240][320][4];
+
     bool tear;
-    bool idle;
     uint16_t tearLine;
     uint8_t gammaCorrection[2][16];
-    uint16_t fifo;
-    uint8_t cmd;
-    uint16_t param;
 } spi_state_t;
 
 /* Global CONTROL state */

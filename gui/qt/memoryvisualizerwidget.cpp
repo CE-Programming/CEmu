@@ -4,7 +4,7 @@
 #include "utils.h"
 #include "memoryvisualizerwidget.h"
 #include "keypad/qtkeypadbridge.h"
-#include "../../core/spi.h"
+#include "../../core/lcd.h"
 
 MemoryVisualizerWidget::MemoryVisualizerWidget(QWidget *p) : QWidget(p) {
     refreshTimer = new QTimer(this);
