@@ -3384,6 +3384,9 @@
         </item>
         <item>
          <widget class="DataWidget" name="disassemblyView">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
             <horstretch>0</horstretch>

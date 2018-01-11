@@ -61,7 +61,7 @@ static uint8_t watchdog_read(const uint16_t pio, bool peek) {
             value = read8(watchdog.status, bit_offset);
             break;
         case 0x018:
-            value = read8(watchdog.intrptLength, bit_offset);
+            value = read8(watchdog.length, bit_offset);
             break;
         case 0x01C: case 0x01D: case 0x01E: case 0x01F:
             value = read8(watchdog.revision, bit_offset);
@@ -160,10 +160,10 @@ static uint8_t protected_read(const uint16_t pio, bool peek) {
 
     switch (pio) {
         case 0xB00:
-            value = protect.ledState;
+            value = protect.led;
             break;
         default:
-            value = protect.unknown_ports[pio & 0xFF];
+            value = protect.ports[pio & 0xFF];
             break;
     }
     return value;
@@ -175,10 +175,10 @@ static void protected_write(const uint16_t pio, const uint8_t byte, bool poke) {
 
     switch (pio) {
         case 0xB00:
-            protect.ledState = byte;
+            protect.led = byte;
             break;
         default:
-            protect.unknown_ports[pio & 0xFF] = byte;
+            protect.ports[pio & 0xFF] = byte;
             break;
     }
 
@@ -294,7 +294,7 @@ static void fxxx_write(const uint16_t pio, const uint8_t value, bool poke) {
         debugger.bufferPos = (debugger.bufferPos + 1) % (SIZEOF_DBG_BUFFER);
     }
 #else
-    (void)value; /* Uncomment me when needed */
+    (void)value;
 #endif
 }
 

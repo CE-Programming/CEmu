@@ -32,6 +32,11 @@ void debug_set_step_in(void) {
     debugger.data.block[debugger.stepOverInstrEnd] |= DBG_TEMP_EXEC_BREAKPOINT;
     debugger.stepOverMode = cpu.ADL;
     debugger.stepOverFirstStep = false;
+    debugger.stepOutSPL = 0;
+    debugger.stepOutSPS = 0;
+    debugger.stepOutWait = -1;
+    debugger.stepOverExtendSize = 0;
+
     cpu.events |= EVENT_DEBUG_STEP;
 }
 

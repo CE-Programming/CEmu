@@ -23,6 +23,9 @@ void DataWidget::updateAllHighlights() {
 }
 
 QString DataWidget::getSelectedAddress() {
+    if (!isEnabled()) {
+        return QString("000000");
+    }
     QTextCursor c = textCursor();
     c.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
     c.setPosition(c.position()+6, QTextCursor::KeepAnchor); // +6 == size of the address
@@ -31,6 +34,9 @@ QString DataWidget::getSelectedAddress() {
 }
 
 bool DataWidget::labelCheck() {
+    if (!isEnabled()) {
+        return false;
+    }
     QTextCursor c = textCursor();
     c.movePosition(QTextCursor::EndOfLine, QTextCursor::MoveAnchor);
     c.setPosition(c.position()-1, QTextCursor::KeepAnchor);

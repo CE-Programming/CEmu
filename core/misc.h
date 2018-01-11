@@ -17,14 +17,14 @@ typedef struct watchdog_state {
     uint16_t restart;
     uint32_t control;
     uint32_t status;
-    uint32_t intrptLength;
+    uint32_t length;
     uint32_t revision;
 } watchdog_state_t;
 
 typedef struct protected_state {  /* Standard PROTECTED state */
     bool locked;
-    uint8_t ledState;
-    uint8_t unknown_ports[0x100];
+    uint8_t led;
+    uint8_t ports[0x100];
 } protected_state_t;
 
 typedef struct cxxx_state {
