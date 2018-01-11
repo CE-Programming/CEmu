@@ -701,24 +701,8 @@ void MainWindow::optAttemptLoad(CEmuOpts &o) {
 }
 
 MainWindow::~MainWindow() {
-    delete sendingHandler;
-    delete keypadBridge;
-
     delete com;
     delete settings;
-    delete progressBar;
-    delete asmShortcut;
-    delete toggleAction;
-    delete addMemory;
-    delete stepInShortcut;
-    delete stepOutShortcut;
-    delete keyHistoryWindow;
-    delete debuggerShortcut;
-    delete stepOverShortcut;
-    delete stepNextShortcut;
-    delete resendshortcut;
-    delete debugMenu;
-    delete docksMenu;
     delete ui;
 }
 
