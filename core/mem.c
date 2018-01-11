@@ -423,45 +423,45 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
     }
 #endif
     // reads from protected memory return 0
-    if (!(!fetch && addr >= control.protectedStart && addr <= control.protectedEnd && unprivileged_code())) {
-        switch((addr >> 20) & 0xF) {
-                /* FLASH */
-            case 0x0: case 0x1: case 0x2: case 0x3:
-            case 0x4: case 0x5: case 0x6: case 0x7:
-                value = flash_read_handler(addr);
-                if (fetch && detect_flash_unlock_sequence(value)) {
-                    control.flashUnlocked |= 1 << 3;
-                }
-                break;
+    switch((addr >> 20) & 0xF) {
+            /* FLASH */
+        case 0x0: case 0x1: case 0x2: case 0x3:
+        case 0x4: case 0x5: case 0x6: case 0x7:
+            value = flash_read_handler(addr);
+            if (fetch && detect_flash_unlock_sequence(value)) {
+                control.flashUnlocked |= 1 << 3;
+            }
+            break;
 
-                /* UNMAPPED */
-            case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
-                cpu.cycles += 258;
-                break;
+            /* UNMAPPED */
+        case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
+            cpu.cycles += 258;
+            break;
 
-                /* RAM */
-            case 0xD:
-                cpu.cycles += 4;
-                ramAddr = addr & 0x7FFFF;
-                if (ramAddr < 0x65800) {
-                    value = mem.ram.block[ramAddr];
-                }
-                break;
+            /* RAM */
+        case 0xD:
+            cpu.cycles += 4;
+            ramAddr = addr & 0x7FFFF;
+            if (ramAddr < 0x65800) {
+                value = mem.ram.block[ramAddr];
+            }
+            break;
 
-                /* MMIO <-> Advanced Perphrial Bus */
-            case 0xE: case 0xF:
-                cpu.cycles += mmio_readcycles[(addr >> 16) & 0x1F];
-                if (mmio_mapped(addr, select)) {
-                    value = port_read_byte(mmio_port(addr, select));
-                }
-                break;
-        }
+            /* MMIO <-> Advanced Perphrial Bus */
+        case 0xE: case 0xF:
+            cpu.cycles += mmio_readcycles[(addr >> 16) & 0x1F];
+            if (mmio_mapped(addr, select)) {
+                value = port_read_byte(mmio_port(addr, select));
+            }
+            break;
     }
     if (fetch) {
         mem.fetch_buffer[++mem.fetch_index] = value;
         if (unprivileged_code()) {
             control.flashUnlocked &= ~(1 << 3);
         }
+    } else if (addr >= control.protectedStart && addr <= control.protectedEnd && unprivileged_code()) {
+        value = 0;
     }
     return value;
 }
