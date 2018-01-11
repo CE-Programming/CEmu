@@ -821,9 +821,7 @@ void cpu_flush(uint32_t address, bool mode) {
 
 void cpu_nmi(void) {
     cpu.NMI = 1;
-    if (cpu.cycles < cpu.next) {
-        cpu.next = cpu.cycles;
-    }
+    cpu.next = cpu.cycles;
 #ifdef DEBUG_SUPPORT
     if (debugger.resetOpensDebugger) {
         open_debugger(DBG_NMI_TRIGGERED, cpu.registers.PC);
@@ -834,6 +832,7 @@ void cpu_nmi(void) {
 void cpu_crash(const char *msg) {
     gui_console_printf(msg);
     cpu.events |= EVENT_RESET;
+    cpu.next = cpu.cycles;
 #ifdef DEBUG_SUPPORT
     if (debugger.resetOpensDebugger) {
         open_debugger(DBG_MISC_RESET, cpu.registers.PC);
@@ -850,7 +849,7 @@ static void cpu_halt(void) {
 }
 
 void cpu_restore_next(void) {
-    if (cpu.NMI) {
+    if (cpu.NMI || (cpu.events & EVENT_RESET)) {
         cpu.next = cpu.cycles;
     } else if (cpu.IEF_wait == 1 || (cpu.events & EVENT_DEBUG_STEP)) {
         cpu.next = cpu.cycles + 1; // execute one instruction
@@ -918,10 +917,9 @@ void cpu_execute(void) {
             cpu.events &= ~EVENT_DEBUG_STEP;
             cpu_restore_next();
             open_debugger(DBG_STEP, 0);
-            break;
         }
 #endif
-        if (exiting || cpu.cycles >= cpu.next) {
+        if (exiting || cpu.cycles >= cpu.next || cpu.events & EVENT_RESET) {
             break;
         }
         if (cpu.inBlock) {
