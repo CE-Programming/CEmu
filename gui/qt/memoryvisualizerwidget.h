@@ -3,6 +3,7 @@
 
 #include <QtWidgets/QWidget>
 #include <QtCore/QTimer>
+#include <QClipboard>
 
 class MemoryVisualizerWidget : public QWidget {
   Q_OBJECT
@@ -18,6 +19,7 @@ protected:
 
 private slots:
     void draw();
+    void contextMenu(const QPoint& posa);
 
 private:
     QTimer *refreshTimer;
@@ -25,8 +27,8 @@ private:
     int refresh;
 
     // configuration
-    uint32_t height;
-    uint32_t width;
+    uint32_t m_height;
+    uint32_t m_width;
     uint32_t upbase;
     uint32_t control;
     uint32_t size;

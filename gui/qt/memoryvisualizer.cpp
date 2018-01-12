@@ -3,6 +3,7 @@
 
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QMessageBox>
+#include <QAction>
 
 #include "utils.h"
 #include "keypad/keypadwidget.h"

@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 /* Global LCD state */
 lcd_state_t lcd;
