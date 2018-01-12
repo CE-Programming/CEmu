@@ -60,6 +60,13 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     // Setup the UI
     ui->setupUi(this);
+
+    // init IPC
+    if (!ipcSetup()) {
+        initPassed = false;
+        return;
+    }
+
     ui->centralWidget->hide();
     ui->statusBar->addWidget(&speedLabel);
     ui->statusBar->addPermanentWidget(&msgLabel);
@@ -343,12 +350,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
     setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
 
-    // init IPC
-    if (!ipcSetup()) {
-        initPassed = false;
-        return;
-    }
-
     autotester::stepCallback = []() { QApplication::processEvents(); };
 
     QString portableSettings = qApp->applicationDirPath() + SETTING_DEFAULT_FILE;
@@ -476,7 +477,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     optCheckSend(opts);
 
     if (opts.speed != -1) {
-        setEmuSpeed(opts.speed/10);
+        setEmuSpeed(opts.speed);
     }
 
     debuggerInstall();
@@ -632,23 +633,23 @@ void MainWindow::toggleKeyHistory() {
 }
 
 void MainWindow::optCheckSend(CEmuOpts &o) {
-    if (!o.autotesterFile.isEmpty()){
+    if (!o.autotesterFile.isEmpty()) {
         if (!openJSONConfig(o.autotesterFile)) {
            if (!o.deforceReset) { resetCalculator(); }
-           setEmuSpeed(10);
+           setEmuSpeed(100);
 
            // Race condition requires this
-           guiDelay(2000);
+           guiDelay(o.deforceReset ? 100 : 2000);
            launchTest();
         }
     }
 
     if (!o.sendFiles.isEmpty() || !o.sendArchFiles.isEmpty() || !o.sendRAMFiles.isEmpty()) {
         if (!o.deforceReset) { resetCalculator(); }
-        setEmuSpeed(10);
+        setEmuSpeed(100);
 
         // Race condition requires this
-        guiDelay(2000);
+        guiDelay(o.deforceReset ? 100 : 2000);
         if (!o.sendFiles.isEmpty()) {
             sendingHandler->sendFiles(o.sendFiles, LINK_FILE);
         }
@@ -2028,7 +2029,7 @@ void MainWindow::ipcHandleCommandlineReceive(QDataStream &stream) {
     optAttemptLoad(o);
     optCheckSend(o);
     if (o.speed != -1) {
-        setEmuSpeed(o.speed/10);
+        setEmuSpeed(o.speed);
     }
 }
 
@@ -2079,11 +2080,8 @@ void MainWindow::ipcReceived() {
 
     switch (type) {
         case IPC_CLI:
-           for (QWindow* w : QGuiApplication::allWindows()) {
-              w->show();
-              w->raise();
-              w->requestActivate();
-           }
+           show();
+           raise();
            ipcHandleCommandlineReceive(stream);
            break;
         case IPC_CLOSE:
