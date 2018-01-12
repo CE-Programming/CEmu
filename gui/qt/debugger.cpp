@@ -125,7 +125,7 @@ void MainWindow::debuggerImportFile(const QString &filename) {
     QStringList breakpointAddress = debugInfo.value(QStringLiteral("breakpoints/address")).toStringList();
     QStringList breakpointEnabled = debugInfo.value(QStringLiteral("breakpoints/enable")).toStringList();
     for (i = 0; i < breakpointLabel.size(); i++) {
-        breakpointAdd(breakpointLabel.at(i), hex2int(breakpointAddress.at(i)), breakpointEnabled.at(i) == "y");
+        breakpointAdd(breakpointLabel.at(i), hex2int(breakpointAddress.at(i)), breakpointEnabled.at(i) == "y", false);
     }
 
     // Load the watchpoint information
@@ -137,7 +137,7 @@ void MainWindow::debuggerImportFile(const QString &filename) {
     for (i = 0; i < watchpointLabel.size(); i++) {
         unsigned int mask = (watchpointREnabled.at(i) == "y" ? DBG_READ_WATCHPOINT : DBG_NO_HANDLE) |
                             (watchpointWEnabled.at(i) == "y" ? DBG_WRITE_WATCHPOINT : DBG_NO_HANDLE);
-        watchpointAdd(watchpointLabel.at(i), hex2int(watchpointAddress.at(i)), hex2int(watchpointSize.at(i)), mask);
+        watchpointAdd(watchpointLabel.at(i), hex2int(watchpointAddress.at(i)), hex2int(watchpointSize.at(i)), mask, false);
     }
 
     // Load the port monitor information
@@ -308,22 +308,22 @@ void MainWindow::debuggerExecuteCommand(uint32_t debugAddress, uint8_t command) 
                 softCommand = false;
                 return; // don't exit the debugger
             case CMD_SET_BREAKPOINT:
-                breakpointAdd(breakpointNextLabel(), cpu.registers.DE, true);
+                breakpointAdd(breakpointNextLabel(), cpu.registers.DE, true, false);
                 break;
             case CMD_REM_BREAKPOINT:
                 breakpointRemoveAddress(cpu.registers.DE);
                 break;
             case CMD_SET_R_WATCHPOINT:
                 watchpointRemoveAddress(cpu.registers.DE);
-                watchpointAdd(watchpointNextLabel(), cpu.registers.DE, cpu.registers.bc.l, DBG_READ_WATCHPOINT);
+                watchpointAdd(watchpointNextLabel(), cpu.registers.DE, cpu.registers.bc.l, DBG_READ_WATCHPOINT, false);
                 break;
             case CMD_SET_W_WATCHPOINT:
                 watchpointRemoveAddress(cpu.registers.DE);
-                watchpointAdd(watchpointNextLabel(), cpu.registers.DE, cpu.registers.bc.l, DBG_WRITE_WATCHPOINT);
+                watchpointAdd(watchpointNextLabel(), cpu.registers.DE, cpu.registers.bc.l, DBG_WRITE_WATCHPOINT, false);
                 break;
             case CMD_SET_RW_WATCHPOINT:
                 watchpointRemoveAddress(cpu.registers.DE);
-                watchpointAdd(watchpointNextLabel(), cpu.registers.DE, cpu.registers.bc.l, DBG_RW_WATCHPOINT);
+                watchpointAdd(watchpointNextLabel(), cpu.registers.DE, cpu.registers.bc.l, DBG_RW_WATCHPOINT, false);
                 break;
             case CMD_REM_WATCHPOINT:
                 watchpointRemoveAddress(cpu.registers.DE);
@@ -342,7 +342,7 @@ void MainWindow::debuggerExecuteCommand(uint32_t debugAddress, uint8_t command) 
                 break;
             case CMD_SET_E_WATCHPOINT:
                 watchpointRemoveAddress(cpu.registers.DE);
-                watchpointAdd(watchpointNextLabel(), cpu.registers.DE, cpu.registers.bc.l, DBG_NO_HANDLE);
+                watchpointAdd(watchpointNextLabel(), cpu.registers.DE, cpu.registers.bc.l, DBG_NO_HANDLE, false);
                 break;
             default:
                 consoleErrStr(QStringLiteral("[CEmu] Unknown debug Command: 0x") +
@@ -856,7 +856,7 @@ QString MainWindow::watchpointNextLabel() {
 }
 
 void MainWindow::breakpointSlotAdd() {
-    breakpointAdd(breakpointNextLabel(), 0, true);
+    breakpointAdd(breakpointNextLabel(), 0, true, false);
 }
 
 void MainWindow::breakpointGUIAdd() {
@@ -867,9 +867,7 @@ void MainWindow::breakpointGUIAdd() {
 
     guiAdd = true;
 
-    if (!breakpointAdd(breakpointNextLabel(), address, true)) {
-        breakpointRemoveSelected();
-    }
+    breakpointAdd(breakpointNextLabel(), address, true, true);
 
     guiAdd = false;
 
@@ -898,7 +896,7 @@ void MainWindow::breakpointGUIAdd() {
     }
 }
 
-bool MainWindow::breakpointAdd(const QString& label, uint32_t address, bool enabled) {
+bool MainWindow::breakpointAdd(const QString& label, uint32_t address, bool enabled, bool toggle) {
     const int row = ui->breakpointView->rowCount();
     QString addressStr = int2hex((address &= 0xFFFFFF), 6).toUpper();
 
@@ -908,6 +906,9 @@ bool MainWindow::breakpointAdd(const QString& label, uint32_t address, bool enab
             if (addressStr != "000000") {
                 if (!softCommand) {
                     ui->breakpointView->selectRow(i);
+                    if (toggle) {
+                        breakpointRemoveRow(i);
+                    }
                 } else {
                     ui->lcd->setFocus();
                 }
@@ -1193,9 +1194,7 @@ void MainWindow::watchpointGUIAdd() {
 
     guiAdd = true;
 
-    if (!watchpointAdd(watchpointNextLabel(), address, 1, mask)) {
-        watchpointRemoveSelected();
-    }
+    watchpointAdd(watchpointNextLabel(), address, 1, mask, true);
 
     guiAdd = false;
 
@@ -1238,10 +1237,10 @@ void MainWindow::watchpointGUIAdd() {
 }
 
 void MainWindow::watchpointSlotAdd() {
-    watchpointAdd(watchpointNextLabel(), 0, 1, DBG_READ_WATCHPOINT | DBG_WRITE_WATCHPOINT);
+    watchpointAdd(watchpointNextLabel(), 0, 1, DBG_READ_WATCHPOINT | DBG_WRITE_WATCHPOINT, false);
 }
 
-bool MainWindow::watchpointAdd(const QString& label, uint32_t address, uint8_t len, unsigned int mask) {
+bool MainWindow::watchpointAdd(const QString& label, uint32_t address, uint8_t len, unsigned int mask, bool toggle) {
     const int row = ui->watchpointView->rowCount();
     QString addressStr = int2hex((address &= 0xFFFFFF), 6).toUpper();
     QString watchLen;
@@ -1256,6 +1255,9 @@ bool MainWindow::watchpointAdd(const QString& label, uint32_t address, uint8_t l
             if (addressStr != "000000") {
                 if (!softCommand) {
                     ui->watchpointView->selectRow(i);
+                    if (toggle) {
+                        watchpointRemoveRow(i);
+                    }
                 } else {
                     ui->lcd->setFocus();
                 }
@@ -1955,21 +1957,13 @@ void MainWindow::memoryContextMenu(const QPoint& pos, uint32_t address) {
             QClipboard *clipboard = QApplication::clipboard();
             clipboard->setText(addr.toLatin1());
         } else if (item->text() == toggle_break) {
-            if (!breakpointAdd(breakpointNextLabel(), address, true)) {
-                breakpointRemoveSelected();
-            }
+            breakpointAdd(breakpointNextLabel(), address, true, true);
         } else if (item->text() == toggle_read_watch) {
-            if (!watchpointAdd(watchpointNextLabel(), address, 1, DBG_READ_WATCHPOINT)) {
-                watchpointRemoveSelected();
-            }
+            watchpointAdd(watchpointNextLabel(), address, 1, DBG_READ_WATCHPOINT, true);
         } else if (item->text() == toggle_write_watch) {
-            if (!watchpointAdd(watchpointNextLabel(), address, 1, DBG_WRITE_WATCHPOINT)) {
-                watchpointRemoveSelected();
-            }
+            watchpointAdd(watchpointNextLabel(), address, 1, DBG_WRITE_WATCHPOINT, true);
         } else if (item->text() == toggle_rw_watch) {
-            if (!watchpointAdd(watchpointNextLabel(), address, 1, DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT)) {
-                watchpointRemoveSelected();
-            }
+            watchpointAdd(watchpointNextLabel(), address, 1, DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT, true);
         }
         memDocksUpdate();
     }

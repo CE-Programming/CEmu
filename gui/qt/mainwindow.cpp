@@ -1951,21 +1951,13 @@ void MainWindow::consoleContextMenu(const QPoint &posa) {
                 }
                 memGoto(MEM_MEM, cursor.selectedText());
             } else if (item->text() == toggle_break) {
-                if (!breakpointAdd(breakpointNextLabel(), address, true)) {
-                    breakpointRemoveSelected();
-                }
+                breakpointAdd(breakpointNextLabel(), address, true, true);
             } else if (item->text() == toggle_read_watch) {
-                if (!watchpointAdd(watchpointNextLabel(), address, 1, DBG_READ_WATCHPOINT)) {
-                    watchpointRemoveSelected();
-                }
+                watchpointAdd(watchpointNextLabel(), address, 1, DBG_READ_WATCHPOINT, true);
             } else if (item->text() == toggle_write_watch) {
-                if (!watchpointAdd(watchpointNextLabel(), address, 1, DBG_WRITE_WATCHPOINT)) {
-                    watchpointRemoveSelected();
-                }
+                watchpointAdd(watchpointNextLabel(), address, 1, DBG_WRITE_WATCHPOINT, true);
             } else if (item->text() == toggle_rw_watch) {
-                if (!watchpointAdd(watchpointNextLabel(), address, 1, DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT)) {
-                    watchpointRemoveSelected();
-                }
+                watchpointAdd(watchpointNextLabel(), address, 1, DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT, true);
             }
             memDocksUpdate();
         }

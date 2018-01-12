@@ -330,8 +330,8 @@ private:
 
     // MAIN IMPLEMENTATION ROUTINES
     bool portAdd(uint16_t port, unsigned int mask);
-    bool breakpointAdd(const QString& label, uint32_t address, bool enabled);
-    bool watchpointAdd(const QString& label, uint32_t address, uint8_t len, unsigned int mask);
+    bool breakpointAdd(const QString& label, uint32_t address, bool enabled, bool toggle);
+    bool watchpointAdd(const QString& label, uint32_t address, uint8_t len, unsigned int mask, bool toggle);
 
     void screenContextMenu(const QPoint& posa);
     void updateLabels();
