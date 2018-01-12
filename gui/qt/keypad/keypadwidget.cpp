@@ -257,7 +257,7 @@ void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
     addKey(new ArrowKey{mConfig, outer, inner, 0, QStringLiteral("right")});
     addKey(new ArrowKey{mConfig, outer, inner, 1, QStringLiteral("up")});
 
-    update();
+    repaint();
 }
 KeypadWidget::~KeypadWidget() {
     for (uint8_t row = 0; row != sRows; ++row) {
