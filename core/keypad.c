@@ -130,7 +130,7 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
             write8(keypad.control,bit_offset,byte);
             if (keypad.mode & 2) {
                 keypad.current_row = 0;
-                sched_set(SCHED_KEYPAD, keypad.scan_wait + keypad.row_wait);
+                sched_set(SCHED_KEYPAD, 0);
             } else {
                 sched_clear(SCHED_KEYPAD);
                 if (keypad.mode == 1 && keypad_any_key_pressed()) {
