@@ -203,7 +203,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->actionResetCalculator, &QAction::triggered, this, &MainWindow::resetCalculator);
     connect(ui->actionMemoryVisualizer, &QAction::triggered, this, &MainWindow::newMemoryVisualizer);
     connect(ui->actionDisableMenuBar, &QAction::triggered, this, &MainWindow::setMenuBarState);
-    connect(ui->actionHideDockBoundaries, &QAction::triggered, this, &MainWindow::setDockBoundaries);
     connect(ui->buttonResetCalculator, &QPushButton::clicked, this, &MainWindow::resetCalculator);
     connect(ui->buttonReloadROM, &QPushButton::clicked, this, &MainWindow::resetCalculator);
 

@@ -646,7 +646,6 @@ void MainWindow::setPreRevisionI(bool state) {
 }
 
 void MainWindow::setDockBoundaries(bool state) {
-    ui->actionHideDockBoundaries->setChecked(state);
     settings->setValue(SETTING_WINDOW_SEPARATOR, state);
     if (state) {
         setStyleSheet("QMainWindow::separator{ width: 0px; height: 0px; }");
