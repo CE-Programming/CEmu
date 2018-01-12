@@ -40,8 +40,8 @@ LIBPNG_VERSION=$(curl -L -s 'https://sourceforge.net/p/libpng/code/ref/master/ta
 ([ ! "$?" = "0" ] || [ -z "$LIBPNG_VERSION" ]) && becho "Couldn't autodetect latest libpng, using v$LIBPNG_VERSION_CONSTANT." && LIBPNG_VERSION="$LIBPNG_VERSION_CONSTANT"
 
 becho "Will install: libpng-apng v${LIBPNG_VERSION}"
-becho "Press ENTER to start."
-read
+becho "Starting in 3s (press CTRL-C to abort)"
+sleep 3
 
 # Download libpng
 becho " ** Downloading libpng..."
@@ -75,8 +75,10 @@ CFLAGS="-O2 -fPIC" ./configure --enable-static --enable-shared || cerr
 becho " ** Building libpng-apng..."
 make -j2 || cerr
 
-becho " ** Installing libpng-apng..."
-sudo make install || cerr
+if [ ! "$TRAVIS" = "true" ];then
+    becho " ** Installing libpng-apng..."
+    sudo make install || cerr
+fi
 
 becho " ** All done."
 cd ..
