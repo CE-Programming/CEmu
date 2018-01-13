@@ -230,8 +230,10 @@ void EmuThread::throttleTimerWait() {
         lastTime = next_time;
         std::this_thread::sleep_until(next_time);
     } else {
-        setActualSpeed(unit / (cur_time - lastTime));
-        lastTime = cur_time;
+        if (lastTime != cur_time) {
+            setActualSpeed(unit / (cur_time - lastTime));
+            lastTime = cur_time;
+        }
         std::this_thread::yield();
     }
 }
