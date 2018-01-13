@@ -76,6 +76,7 @@ static uint8_t watchdog_read(const uint16_t pio, bool peek) {
 
 /* Watchdog write routine */
 static void watchdog_write(const uint16_t pio, const uint8_t byte, bool poke) {
+    uint32_t old;
     uint8_t index = pio;
     uint8_t bit_offset = (index & 3) << 3;
 
@@ -94,17 +95,20 @@ static void watchdog_write(const uint16_t pio, const uint8_t byte, bool poke) {
             }
             break;
         case 0x00C:
+            old = watchdog.control;
             write8(watchdog.control, bit_offset, byte);                    
             if (watchdog.control & 16) {
                 sched.items[SCHED_WATCHDOG].clock = CLOCK_32K;
             } else {
                 sched.items[SCHED_WATCHDOG].clock = CLOCK_CPU;
             }
-            if (watchdog.control & 1) {
-                sched_set(SCHED_WATCHDOG, watchdog.load);
-            } else {
-                watchdog.count = sched_ticks_remaining(SCHED_WATCHDOG);
-                sched_clear(SCHED_WATCHDOG);
+            if ((watchdog.control ^ old) & 1) {
+                if (watchdog.control & 1) {
+                    sched_set(SCHED_WATCHDOG, watchdog.load);
+                } else {
+                    watchdog.count = sched_ticks_remaining(SCHED_WATCHDOG);
+                    sched_clear(SCHED_WATCHDOG);
+                }
             }
             break;
         case 0x014:
