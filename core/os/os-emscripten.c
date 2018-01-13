@@ -15,6 +15,7 @@
 
 #include "os.h"
 
+#include "../../core/asic.h"
 #include "../../core/emu.h"
 #include "../../core/lcd.h"
 #include "../../core/link.h"
@@ -129,8 +130,8 @@ void gui_perror(const char *msg)
     fprintf(stderr, "[gui_perror] %s: %s\n", msg, strerror(errno));
 }
 
-uint32_t* EMSCRIPTEN_KEEPALIVE lcd_get_frame() {
-    return &(spi.display[0][0]);
+uint8_t* EMSCRIPTEN_KEEPALIVE lcd_get_frame() {
+    return &(spi.display[0][0][0]);
 }
 
 void EMSCRIPTEN_KEEPALIVE emsc_pause_main_loop() {
@@ -142,8 +143,12 @@ void EMSCRIPTEN_KEEPALIVE emsc_resume_main_loop() {
 }
 
 void EMSCRIPTEN_KEEPALIVE emsc_cancel_main_loop() {
-    emu_cleanup();
+    asic_reset();
     emscripten_cancel_main_loop();
+}
+
+void EMSCRIPTEN_KEEPALIVE emu_reset() {
+    asic_reset();
 }
 
 int main(int argc, char* argv[])
