@@ -400,12 +400,14 @@ def install_deps():
     dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt560_Rel_Static_Win32_DevDeploy.7z')
     dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt560_Rel_Static_Win64_DevDeploy.7z.001')
     dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt560_Rel_Static_Win64_DevDeploy.7z.002')
+    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/libpng-apng-1.6.34.7z')
     
     print(" * Attempting to install dependencies...")
     extract('Qt560_Rel_Win32_DevDeploy.7z')
     extract('Qt560_Rel_Win64_DevDeploy.7z')
     extract('Qt560_Rel_Static_Win32_DevDeploy.7z')
     extract('Qt560_Rel_Static_Win64_DevDeploy.7z.001')
+    extract('libpng-apng-1.6.34.7z')
     
     print(" * Successfully installed build dependencies!")
 
@@ -623,11 +625,19 @@ def deploy_snapshots():
     collect_main_files("x86", r"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\*.dll",
                        r"C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x86\*.dll",
                        os.path.join("build_32", "release"),
-                       os.path.join("deploy", "release32"))
+                       os.path.join("deploy", "release32"),
+                       extra_wc = {
+                                    "libpng/zlib x86 release DLLs" : r"C:\libpng-apng-1.6.34\release\32bit\shared\*.dll",
+                                  }
+                      )
     collect_main_files("x64", r"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x64\Microsoft.VC140.CRT\*.dll",
                        r"C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64\*.dll",
                        os.path.join("build_64", "release"),
-                       os.path.join("deploy", "release64"))
+                       os.path.join("deploy", "release64")
+                       extra_wc = {
+                                    "libpng/zlib x64 release DLLs" : r"C:\libpng-apng-1.6.34\release\64bit\shared\*.dll",
+                                  }
+                      )
     
     # For debug builds, only copy api*.dll for UCRT redist, then copy
     # the specific ucrt debug DLL in the extra copy arg.
@@ -637,6 +647,7 @@ def deploy_snapshots():
                        os.path.join("deploy", "release32_debug"),
                        extra_wc = {
                                     "UCRT Debug" : r"C:\Program Files (x86)\Windows Kits\10\bin\x86\ucrt\*.dll",
+                                    "libpng/zlib x86 debug DLLs" : r"C:\libpng-apng-1.6.34\debug\32bit\shared\*.dll",
                                   }
                       )
     collect_main_files("x64 Debug", r"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\debug_nonredist\x64\Microsoft.VC140.DebugCRT\*.dll",
@@ -645,6 +656,7 @@ def deploy_snapshots():
                        os.path.join("deploy", "release64_debug"),
                        extra_wc = {
                                     "UCRT Debug" : r"C:\Program Files (x86)\Windows Kits\10\bin\x64\ucrt\*.dll",
+                                    "libpng/zlib x64 debug DLLs" : r"C:\libpng-apng-1.6.34\debug\64bit\shared\*.dll",
                                   }
                       )
     

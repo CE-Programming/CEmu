@@ -44,10 +44,6 @@ TRANSLATIONS += i18n/fr_FR.ts i18n/es_ES.ts i18n/nl_NL.ts
 
 CONFIG += c++11 console
 
-# You should run ./capture/get_libpng-apng.sh first!
-CONFIG += link_pkgconfig
-PKGCONFIG += libpng zlib
-
 # Core options
 DEFINES += DEBUG_SUPPORT
 
@@ -70,11 +66,17 @@ if (!win32-msvc*) {
         # -flto might cause an internal compiler error on GCC in some circumstances (with -g3?)... Comment it if needed.
         CONFIG(release, debug|release): GLOBAL_FLAGS += -O3 -flto
     }
+        
+    # You should run ./capture/get_libpng-apng.sh first!
+    CONFIG += link_pkgconfig
+    PKGCONFIG += libpng zlib
 } else {
     # TODO: add equivalent flags
     # Example for -Werror=shadow: /weC4456 /weC4457 /weC4458 /weC4459
     #     Source: https://connect.microsoft.com/VisualStudio/feedback/details/1355600/
     QMAKE_CXXFLAGS  += /Wall
+    
+    # Note that libpng/zlib LIBS/INCLUDES should be specified in the command line.
 }
 
 if (macx|linux) {
