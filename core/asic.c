@@ -139,7 +139,8 @@ bool asic_restore(FILE *image) {
            && cxxx_restore(image)
            && spi_restore(image)
            && exxx_restore(image)
-           && sched_restore(image);
+           && sched_restore(image)
+           && fgetc(image) == EOF;
 }
 
 bool asic_save(FILE *image) {
