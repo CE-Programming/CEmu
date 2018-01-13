@@ -633,7 +633,7 @@ def deploy_snapshots():
     collect_main_files("x64", r"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x64\Microsoft.VC140.CRT\*.dll",
                        r"C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64\*.dll",
                        os.path.join("build_64", "release"),
-                       os.path.join("deploy", "release64")
+                       os.path.join("deploy", "release64"),
                        extra_wc = {
                                     "libpng/zlib x64 release DLLs" : r"C:\libpng-apng-1.6.34\release\64bit\shared\*.dll",
                                   }
