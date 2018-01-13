@@ -76,7 +76,31 @@ if (!win32-msvc*) {
     #     Source: https://connect.microsoft.com/VisualStudio/feedback/details/1355600/
     QMAKE_CXXFLAGS  += /Wall
     
-    # Note that libpng/zlib LIBS/INCLUDES should be specified in the command line.
+    # Note that libpng/zlib LIBS/INCLUDES should be specified in the envrionment.
+    # We will use LIBPNG_APNG_LIB, ZLIB_LIB, and LIBPNG_APNG_INCLUDE.
+    # The logic below accounts for both specifying in the real shell environment,
+    # as well as directly on the command line (e.g. qmake VAR=1).
+    isEmpty(LIBPNG_APNG_LIB) {
+        LIBPNG_APNG_LIB = $$(LIBPNG_APNG_LIB)
+        isEmpty(LIBPNG_APNG_LIB) {
+            error("For MSVC builds, we require LIBPNG_APNG_LIB to point to the libpng-apng lib file to compile against. Please set this in your environment and try again.")
+        }
+    }
+    isEmpty(ZLIB_LIB) {
+        ZLIB_LIB = $$(ZLIB_LIB)
+        isEmpty(ZLIB_LIB) {
+            error("For MSVC builds, we require ZLIB_LIB to point to the zlib lib file to compile against. Please set this in your environment and try again.")
+        }
+    }
+    isEmpty(LIBPNG_APNG_INCLUDE) {
+        LIBPNG_APNG_INCLUDE = $$(LIBPNG_APNG_INCLUDE)
+        isEmpty(LIBPNG_APNG_INCLUDE) {
+            error("For MSVC builds, we require LIBPNG_APNG_INCLUDE to point to the libpng-apng include director to use for compiling. Please set this in your environment and try again.")
+        }
+    }
+    
+    LIBS += $$LIBPNG_APNG_LIB $$ZLIB_LIB
+    INCLUDEPATH += $$LIBPNG_APNG_INCLUDE
 }
 
 if (macx|linux) {
