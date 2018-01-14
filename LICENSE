@@ -5,6 +5,8 @@ Portions of this program use code, directly or modified, from:
 * tivars_lib_cpp, developed by Adrien "Adriweb" Bertrand
 * Silk iconset, created by Mark James from famfamfam.com
 
+CEmu also uses the APNG-enabled fork of libpng (https://sourceforge.net/projects/libpng-apng/) released under the zlib/libpng License.
+
 ________________________________________________________
 z80e license:
 

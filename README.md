@@ -17,16 +17,18 @@ Windows | macOS | Linux
 * "Always-on-top" window option
 * Screen capture (PNG)
 * Screen recording (animated PNG)
-* File sending/receiving
+* File sending/receiving (not for Apps/OS yet)
 * Multiple keybinding presets
 * Emulation states for efficient saving / restoring
 * CE skins (colors like the real devices)
 
 ### _Developer features_
-* Custom display refresh rate
+* Main options available via CLI arguments
+* IPC features when launching several CEmu processes
+* Custom display refresh rate, FPS indicator
 * Custom emulation speed/throttling
 * Code stepping, jumping...
-* R/W/X breakpoints
+* R/W/X breakpoints, watchpoints
 * eZ80 disassembler (with equates support)
 * Port monitor/editor
 * General Timer monitor/editor
@@ -39,13 +41,15 @@ Windows | macOS | Linux
 * Variable Allocation Table (VAT) viewer
 * Variable list with preview and program launcher
 * Recent files list with ability to quickly resend
+* Cycle counter for benchmarking/profiling
+* Emulation of DMA and SPI (for optimal accuracy)
 * Misc. emulation (backlight, battery...)
+* Pre-I HW Rev. emulation toggle (IM 2 compatibility)
 * "Autotester" (automated unit testing, light scripting)
 
 ## Downloads
-The latest development builds are available here: https://ce-programming.github.io/CEmu/download
-
-No binaries have been released yet as the code keeps changing these days! When available, they'll be here: https://github.com/CE-Programming/CEmu/releases   
+The latest development builds are available here: https://ce-programming.github.io/CEmu/download  
+Official ("stable") releases are available here: https://github.com/CE-Programming/CEmu/releases   
 
 _Note that Release builds have an update checking feature, which is disabled in development builds._
 
@@ -54,7 +58,7 @@ _Note that Release builds have an update checking feature, which is disabled in 
 
 After downloading the source (you can clone the repo or just [get the zip](https://github.com/CE-Programming/CEmu/archive/master.zip)):
 
-1. Get the [latest Qt5 SDK](https://www.qt.io/download-open-source/#section-3) for your OS.  
+1. Get the [latest Qt5 SDK](https://www.qt.io/download-qt-installer) for your OS.  
 
 2. Now you have two options to actually build CEmu:
   * In a shell, `cd` to the project's `/gui/qt/` folder and type `qmake -r CEmu.pro && make`
@@ -68,7 +72,7 @@ If you are using linux, use `sudo make install` to integrate with your desktop.
   `export PATH=<path to Qt directory>/bin:$PATH`  
   You may need to run this command under linux as well: `sudo apt-get install git qt5-default`
 
-* If you're on macOS or Linux and use Qt Creator, you may need to launch it from the terminal to avoid potential pkgconfig-related issues (for instance, not correctly finding libpng).
+* If you're on macOS or Linux and use Qt Creator, you may need to launch it from the terminal to avoid potential pkg-config issues (for instance, not correctly finding libpng).
 
 * If you're on macOS, CEmu might not launch from Qt Creator, with the default settings. You should then untick some checkboxes in the [project's settings](https://i.imgur.com/44zwQMU.png).
 
