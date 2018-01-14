@@ -1,7 +1,7 @@
 # CEmu [![Build Status](https://travis-ci.org/CE-Programming/CEmu.svg)](https://travis-ci.org/CE-Programming/CEmu) [![Build Status](https://ci.appveyor.com/api/projects/status/github/CE-Programming/CEmu?branch=master&svg=true)](https://ci.appveyor.com/project/alberthdev/cemu-q0nl8) [![Build Status](https://scan.coverity.com/projects/7576/badge.svg)](https://scan.coverity.com/projects/ce-programming-cemu) [![IRC badge](https://img.shields.io/badge/IRC%20channel-%23cemu--dev%20on%20EFNet-blue.svg)](http://chat.efnet.org/irc.cgi?adv=1&nick=cemu-user&chan=%23cemu-dev)
 
 CEmu is a third-party TI-84 Plus CE / TI-83 Premium CE calculator emulator, focused on developer features.  
-The core is programmed in C and the GUI in C++ with Qt, for performance and portability reasons. CEmu works natively on Windows, macOS, and Linux.
+The core is programmed in C and the GUI in C++ with Qt, for performance and portability. CEmu works natively on Windows, macOS, and Linux.
 
 Here are some screenshots showcasing some of the features:
 
@@ -17,8 +17,9 @@ Windows | macOS | Linux
 * "Always-on-top" window option
 * Screen capture (PNG)
 * Screen recording (animated PNG)
-* File sending/receiving _(partial, WIP)_
+* File sending/receiving
 * Multiple keybinding presets
+* Emulation states for efficient saving / restoring
 * CE skins (colors like the real devices)
 
 ### _Developer features_
@@ -27,17 +28,17 @@ Windows | macOS | Linux
 * Code stepping, jumping...
 * R/W/X breakpoints
 * eZ80 disassembler (with equates support)
-* Profiler (WIP-branch)
 * Port monitor/editor
-* Timers simple monitor/editor
+* General Timer monitor/editor
 * Memory viewer/editor
 * CPU state/registers viewer/editor
 * LCD state/parameters viewer/editor
 * Memory visualizer (as fully customizable virtual LCDs)
 * Stack viewer
-* OP1-6 viewer
-* VAT viewer
+* OP1-7 viewer
+* Variable Allocation Table (VAT) viewer
 * Variable list with preview and program launcher
+* Recent files list with ability to quickly resend
 * Misc. emulation (backlight, battery...)
 * "Autotester" (automated unit testing, light scripting)
 
@@ -71,7 +72,7 @@ If you are using linux, use `sudo make install` to integrate with your desktop.
 
 * If you're on macOS, CEmu might not launch from Qt Creator, with the default settings. You should then untick some checkboxes in the [project's settings](https://i.imgur.com/44zwQMU.png).
 
-* If you encounter a build error with something like `lto-wrapper failed`, try removing the `-flto` option in the .pro file and rebuild (`qmake` etc.). It's not clear why this is happening._
+* If you encounter a build error with something like `lto-wrapper failed`, try removing the `-flto` option in the .pro file and rebuild (`qmake` etc.). It's not clear why this is happening.
 
 
 ## Contributing
@@ -79,12 +80,14 @@ If you are using linux, use `sudo make install` to integrate with your desktop.
 You're welcome to [report any bugs](https://github.com/CE-Programming/CEmu/issues) you may encounter, and if you want to help, tell us, or send patches / pull requests!
 
 If you'd like to contribute code, please consider using [Artistic Style](http://astyle.sourceforge.net/) with the settings specified in the `.astylerc` file to format your code. Qt Creator can [format code with Artistic Style](http://doc.qt.io/qtcreator/creator-beautifier.html) with minimal setup.  
-We also welcome more translations (for now, it's available in English, French, and Spanish). Qt Linguist is a great tool for that (here's [a tutorial](https://doc.qt.io/qt-5/linguist-manager.html)).
+We also welcome more translations (for now, it's available in English, French, Spanish, and Dutch). Qt Linguist is a great tool for that (here's [a tutorial](https://doc.qt.io/qt-5/linguist-manager.html)).
 
 ## Caveats and TODO/WISH list
 _Take a look at [the current issues](https://github.com/CE-Programming/CEmu/issues), since these things are organized there._
 
+Feel free to request any features by opening a new issue as well!
+
 ## License
 CEmu is licensed under the [GPLv3](LICENSE).  
-_Acknowledgements_: Some CEmu parts are, directly, modified, or inspired, from [z80e](https://github.com/KnightOS/z80e), [Firebird](https://github.com/nspire-emus/firebird), [QHexEdit2](https://github.com/Simsys/qhexedit2), [libtifiles](https://github.com/debrouxl/tilibs), [tivars_lib_cpp](https://github.com/adriweb/tivars_lib_cpp), [Gifsicle](https://github.com/kohler/gifsicle), and the [Silk iconset](http://www.famfamfam.com/lab/icons/silk/).  
+_Acknowledgements_: Some CEmu parts are, directly, modified, or inspired, from [z80e](https://github.com/KnightOS/z80e), [Firebird](https://github.com/nspire-emus/firebird), [QHexEdit2](https://github.com/Simsys/qhexedit2), [libtifiles](https://github.com/debrouxl/tilibs), [tivars_lib_cpp](https://github.com/adriweb/tivars_lib_cpp), and the [Silk iconset](http://www.famfamfam.com/lab/icons/silk/).
 The complete licensing information is available in the [LICENSE](LICENSE) file.
