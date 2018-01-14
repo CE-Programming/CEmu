@@ -4,10 +4,6 @@
 <context>
     <name>BasicCodeViewerWindow</name>
     <message>
-        <source>Dialog</source>
-        <translation type="vanished">Dialoog</translation>
-    </message>
-    <message>
         <location filename="../basiccodeviewerwindow.ui" line="49"/>
         <source>Toggle original/reformatted</source>
         <translation>Verander origineel/geformatteerd</translation>
@@ -40,41 +36,6 @@
         <location filename="../keyhistory.ui" line="66"/>
         <source>On top</source>
         <translation>Blijf aan top</translation>
-    </message>
-</context>
-<context>
-    <name>LCDPopout</name>
-    <message>
-        <source>Dialog</source>
-        <translation type="vanished">Dialoog</translation>
-    </message>
-    <message>
-        <source>Popout LCD State</source>
-        <translation type="vanished">Pop out LCD Status</translation>
-    </message>
-    <message>
-        <source>BEBO</source>
-        <translation type="vanished">BEBO</translation>
-    </message>
-    <message>
-        <source>BEPO</source>
-        <translation type="vanished">BEPO</translation>
-    </message>
-    <message>
-        <source>BGR</source>
-        <translation type="vanished">BGR</translation>
-    </message>
-    <message>
-        <source>Registers</source>
-        <translation type="vanished">Registers</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation type="vanished">Adres</translation>
-    </message>
-    <message>
-        <source>BPP</source>
-        <translation type="vanished">BPP</translation>
     </message>
 </context>
 <context>
@@ -1472,10 +1433,6 @@ CEmu uses a customizable dock-style interface. Drag and drop to move tabs and wi
 CEmu maakt gebruik van een aanpasbare dock-style interface. Verplaats de tabs en windows op  het scherm, en kies welke docks er beschikbaar zijn via het &apos;Docks&apos; menu in de menubalk. Zorg ervoor dat &apos;Stel UI bewerk mod ine&apos; is geselecteerd wanneer u de interface aanpast. Veel plezier!</translation>
     </message>
     <message>
-        <source>Try restarting</source>
-        <translation type="vanished">Probeer te herstarten</translation>
-    </message>
-    <message>
         <location filename="../mainwindow.cpp" line="317"/>
         <source>Add Memory View</source>
         <translation>Voeg Geheugen Bekijken Toe</translation>
@@ -1948,34 +1905,6 @@ De bootable image moet in dezelfde folder als de CEmu executable worden geplaats
 <context>
     <name>QObject</name>
     <message>
-        <source>Archive</source>
-        <translation type="vanished">Archive</translation>
-    </message>
-    <message>
-        <source>RAM</source>
-        <translation type="vanished">RAM</translation>
-    </message>
-    <message>
-        <source>LCD OFF</source>
-        <translation type="vanished">LCD UIT</translation>
-    </message>
-    <message>
-        <source>Failed Transfer</source>
-        <translation type="vanished">Transfer Mislukt</translation>
-    </message>
-    <message>
-        <source>Transfer failed: Emulation Paused</source>
-        <translation type="vanished">Transfer mislukt: Emulatie Gepauzeerd</translation>
-    </message>
-    <message>
-        <source>Couldn&apos;t start the transfer. Make sure the calc is ready (at the home screen, for instance).</source>
-        <translation type="vanished">Kon de transfer niet beginnen. Zorg ervoor dat de rekenmachine klaar is (op het startscherm, bijvoorbeeld).</translation>
-    </message>
-    <message>
-        <source>A failure occured during transfer of: </source>
-        <translation type="vanished">Er is een fout opgetreden tijdens de transfer van: </translation>
-    </message>
-    <message>
         <location filename="../sendinghandler.cpp" line="115"/>
         <source>Transfer error</source>
         <translation>Transfer fout</translation>
@@ -2038,18 +1967,6 @@ Bestand: </translation>
         <translation>Zoeken...</translation>
     </message>
     <message>
-        <source>Create a ROM image from a real calculator</source>
-        <translation type="vanished">Maak een ROM bestand van een echte rekenmachine</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation type="vanished">Annuleer</translation>
-    </message>
-    <message>
-        <source>Finish</source>
-        <translation type="vanished">Eindig</translation>
-    </message>
-    <message>
         <location filename="../romselection.ui" line="210"/>
         <source>CEmu Version: </source>
         <translation>CEmu Versie: </translation>
@@ -2103,45 +2020,9 @@ Bestand: </translation>
         <translation>Volgende</translation>
     </message>
     <message>
-        <source>Using your computer&apos;s calculator connectivity software, copy all the variables prefixed with &quot;ROMData&quot; to your computer, and select them all at once with the button below.</source>
-        <translation type="vanished">Gebruik uw computers connectiviteitssoftware om alle variabelen beginnend met &quot;ROMData&quot; naar uw computer te kopiëren, en selecteer ze allemaal tegelijk met de knop hieronder.</translation>
-    </message>
-    <message>
-        <source>Select Segments...</source>
-        <translation type="vanished">Selecteer Segmenten...</translation>
-    </message>
-    <message>
         <location filename="../romselection.ui" line="523"/>
         <source>Choose a place to save your ROM image. Once complete, CEmu will load automatically.</source>
         <translation>Kies een locatie om uw ROM bestand op te slaan. Als dat gebeurd is kan CEmu het automatisch laden.</translation>
-    </message>
-    <message>
-        <source>Continue</source>
-        <translation type="vanished">Doorgaan</translation>
-    </message>
-    <message>
-        <source>Open ROM file</source>
-        <translation type="vanished">Open ROM bestand</translation>
-    </message>
-    <message>
-        <source>Known Types (*.rom *.sav);;ROM Image (*.rom);;Saved Image (*.sav);;All Files (*.*)</source>
-        <translation type="vanished">Geldige Types.(*.rom *.sav);;ROM Bestand (*.rom);;Opgeslagen Bestand (*.sav);;Alle Bestanden (*.*)</translation>
-    </message>
-    <message>
-        <source>Invalid ROM image</source>
-        <translation type="vanished">Ongeldig ROM bestand</translation>
-    </message>
-    <message>
-        <source>You have selected an invalid ROM image.</source>
-        <translation type="vanished">U hebt een ongeldig ROM bestand geselecteerd.</translation>
-    </message>
-    <message>
-        <source>Invalid</source>
-        <translation type="vanished">Ongeldig</translation>
-    </message>
-    <message>
-        <source>Invalid ROM segment: </source>
-        <translation type="vanished">Ongeldig ROM segment: </translation>
     </message>
     <message>
         <location filename="../romselection.cpp" line="70"/>
@@ -2179,10 +2060,6 @@ Bestand: </translation>
         <location filename="../romselection.cpp" line="205"/>
         <source>Save ROM</source>
         <translation>Sla ROM op</translation>
-    </message>
-    <message>
-        <source>Save ROM Image</source>
-        <translation type="vanished">Sla ROM bestand op</translation>
     </message>
     <message>
         <location filename="../romselection.cpp" line="205"/>
@@ -2359,10 +2236,6 @@ Bestand: </translation>
         <location filename="../searchwidget.ui" line="72"/>
         <source>Prev Not</source>
         <translation>Vorige Niet</translation>
-    </message>
-    <message>
-        <source>Find Next</source>
-        <translation type="vanished">Vind volgende</translation>
     </message>
     <message>
         <location filename="../searchwidget.ui" line="85"/>
