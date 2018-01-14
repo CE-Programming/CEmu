@@ -3,7 +3,6 @@
 #include "misc.h"
 #include "mem.h"
 #include "interrupt.h"
-#include "tidevices.h"
 #include "keypad.h"
 #include "control.h"
 #include "flash.h"

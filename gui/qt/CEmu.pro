@@ -229,7 +229,6 @@ HEADERS  +=  utils.h \
     ../../core/keypad.h \
     ../../core/lcd.h \
     ../../core/registers.h \
-    ../../core/tidevices.h \
     ../../core/port.h \
     ../../core/interrupt.h \
     ../../core/emu.h \

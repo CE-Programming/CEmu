@@ -22,7 +22,6 @@ namespace cemucore
         #include "../../core/misc.h"
         #include "../../core/mem.h"
         #include "../../core/interrupt.h"
-        #include "../../core/tidevices.h"
         #include "../../core/keypad.h"
         #include "../../core/control.h"
         #include "../../core/flash.h"

@@ -5,11 +5,14 @@
 extern "C" {
 #endif
 
-#include "tidevices.h"
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+
+typedef enum {
+    TI84PCE = 0,
+    TI83PCE = 1
+} ti_device_t;
 
 typedef struct asic_state {
     ti_device_t deviceType;
