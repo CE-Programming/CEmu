@@ -141,7 +141,7 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
             const auto& tmp = config.hashes.find(which_hash);
             if (tmp != config.hashes.end())
             {
-                uint8_t* temp_buffer;
+                void *temp_buffer;
                 uint32_t real_hash;
                 const hash_params_t& param = tmp->second;
                 bool match = false;

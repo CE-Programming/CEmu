@@ -77,9 +77,9 @@ static const uint32_t crc32c_tab[256] =
     0xBE2DA0A5, 0x4C4623A6, 0x5F16D052, 0xAD7D5351
 };
 
-inline uint32_t crc32_append(uint32_t crc, const uint8_t* buf, size_t size)
+inline uint32_t crc32_append(uint32_t crc, const void *buf, size_t size)
 {
-    uint8_t* p = (uint8_t*)buf;
+    const uint8_t *p = static_cast<const uint8_t *>(buf);
     crc ^= ~0U;
     while (size--) {
         crc = crc32c_tab[(crc ^ *p++) & 0xFF] ^ (crc >> 8);
@@ -87,7 +87,7 @@ inline uint32_t crc32_append(uint32_t crc, const uint8_t* buf, size_t size)
     return crc ^ ~0U;
 }
 
-inline uint32_t crc32(const uint8_t* buf, size_t size)
+inline uint32_t crc32(const void *buf, size_t size)
 {
     return crc32_append(0U, buf, size);
 }

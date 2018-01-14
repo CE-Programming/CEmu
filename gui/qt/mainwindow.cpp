@@ -1610,7 +1610,7 @@ void MainWindow::updateCRCParamsFromPreset(int comboBoxIndex) {
 void MainWindow::refreshCRC() {
     uint32_t tmp_start = 0;
     int32_t crc_size = 0;
-    uint8_t* start;
+    void *start;
     char *endptr1, *endptr2; // catch strtoul issues
     QLineEdit *startCRC = ui->startCRC;
     QLineEdit *sizeCRC = ui->sizeCRC;

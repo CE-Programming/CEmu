@@ -98,7 +98,7 @@ static uint32_t addr_block(uint32_t *addr, int32_t size, void **block, uint32_t 
     return *addr + size;
 }
 
-uint8_t *phys_mem_ptr(uint32_t addr, int32_t size) {
+void *phys_mem_ptr(uint32_t addr, int32_t size) {
     void *block;
     uint32_t block_size, end_addr;
     fix_size(&addr, &size);
@@ -109,8 +109,8 @@ uint8_t *phys_mem_ptr(uint32_t addr, int32_t size) {
     return NULL;
 }
 
-uint8_t *virt_mem_cpy(uint8_t *dest, uint32_t addr, int32_t size) {
-    uint8_t *save_dest;
+void *virt_mem_cpy(void *buf, uint32_t addr, int32_t size) {
+    uint8_t *dest = buf, *save_dest;
     void *block;
     uint32_t temp_addr, block_size, end_addr;
     fix_size(&addr, &size);
@@ -135,12 +135,12 @@ uint8_t *virt_mem_cpy(uint8_t *dest, uint32_t addr, int32_t size) {
     return save_dest;
 }
 
-uint8_t *virt_mem_dup(uint32_t addr, int32_t size) {
+void *virt_mem_dup(uint32_t addr, int32_t size) {
     return virt_mem_cpy(NULL, addr, size);
 }
 
-uint8_t *mem_dma_cpy(uint8_t *dest, uint32_t addr, int32_t size) {
-    uint8_t *save_dest;
+void *mem_dma_cpy(void *buf, uint32_t addr, int32_t size) {
+    uint8_t *dest = buf, *save_dest;
     fix_size(&addr, &size);
     if (!dest) {
         dest = malloc(size);
