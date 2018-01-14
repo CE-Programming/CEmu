@@ -1548,15 +1548,36 @@ void MainWindow::equatesAddFile(const QString &fileName) {
             if (split.size() != 4) {
                 break;
             }
-            equatesAddEquate(split[0], split[1].right(6));
+            equatesAddEquate(split[0], split[1].right(6).toUInt(Q_NULLPTR, 16));
         }
     } else {
-        QRegularExpression equatesRegexp("^\\h*([^\\W\\d]\\w*)\\h*(?:=|\\h\\.?equ(?!\\d))\\h*(?|\\$([\\da-f]{4,})|(\\d[\\da-f]{3,})h)\\h*(?:;.*)?$",
+        QRegularExpression equatesRegexp("^\\h*([^\\W\\d]\\w*)\\h*(?:=|\\h\\.?equ(?!\\d))\\h*([%@$]\\S+|\\d\\S*[boh]?)\\h*(?:;.*)?$",
                                          QRegularExpression::CaseInsensitiveOption);
         do {
             QRegularExpressionMatch matches = equatesRegexp.match(line);
             if (matches.hasMatch()) {
-                equatesAddEquate(matches.captured(1), matches.captured(2));
+                QString addrStr = matches.captured(2);
+                int base = 10;
+                if (addrStr.startsWith('%')) {
+                    addrStr.remove(0, 1);
+                    base = 2;
+                } else if (addrStr.startsWith('@')) {
+                    addrStr.remove(0, 1);
+                    base = 8;
+                } else if (addrStr.startsWith('$')) {
+                    addrStr.remove(0, 1);
+                    base = 16;
+                } else if (addrStr.endsWith('b', Qt::CaseInsensitive)) {
+                    addrStr.chop(1);
+                    base = 2;
+                } else if (addrStr.endsWith('o', Qt::CaseInsensitive)) {
+                    addrStr.chop(1);
+                    base = 8;
+                } else if (addrStr.endsWith('h', Qt::CaseInsensitive)) {
+                    addrStr.chop(1);
+                    base = 16;
+                }
+                equatesAddEquate(matches.captured(1), addrStr.toUInt(Q_NULLPTR, base));
             }
         } while (in.readLineInto(&line));
     }
@@ -1565,8 +1586,10 @@ void MainWindow::equatesAddFile(const QString &fileName) {
     updateLabels();
 }
 
-void MainWindow::equatesAddEquate(const QString &name, const QString &addrStr) {
-    uint32_t address = addrStr.toUInt(Q_NULLPTR, 16);
+void MainWindow::equatesAddEquate(const QString &name, uint32_t address) {
+    if (address < 0x80) {
+        return;
+    }
     uint32_t &itemReverse = disasm.reverseMap[name.toUpper().toStdString()];
     itemReverse = address;
     disasm.map.emplace(address, name.toStdString());

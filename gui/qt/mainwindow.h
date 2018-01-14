@@ -337,7 +337,7 @@ private:
     void updateLabels();
     void equatesAddDialog();
     void equatesAddFile(const QString& fileName);
-    void equatesAddEquate(const QString &name, const QString &addrStr);
+    void equatesAddEquate(const QString &name, uint32_t address);
     void equatesClear();
     void equatesRefresh();
     void selectKeypadColor();
