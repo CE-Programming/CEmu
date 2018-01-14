@@ -203,7 +203,7 @@ static uint32_t lcd_words(uint8_t words) {
             ticks += lcd_process_half(word >> 16);
         } else {
             for (bit = 0; bit < 32; bit += bpp) {
-                ticks += lcd_process_index(word >> (unlikely(lcd.BEPO) ? 32 - bit : bit) &
+                ticks += lcd_process_index(word >> (unlikely(lcd.BEPO) ? (32 - bpp) - bit : bit) &
                                            ((1 << bpp) - 1));
             }
         }
@@ -407,13 +407,13 @@ void lcd_setptrs(uint32_t **dat, uint32_t **dat_end, uint32_t width, uint32_t he
     if (addr < 0xD00000) {
         mem_end = mem.flash.block + SIZE_FLASH;
         data_start = mem.flash.block + addr;
-    } else if (addr < 0xE00000){
+    } else if (addr < 0xE00000) {
         mem_end = mem.ram.block + SIZE_RAM;
         data_start = mem.ram.block + addr - 0xD00000;
-    } else if (addr < 0xE30800) {
+    } else if (addr < 0xE30400 && addr >= 0xE30200) {
         mem_end = (uint8_t *)lcd.palette + sizeof lcd.palette;
         data_start = (uint8_t *)lcd.palette + addr - 0xE30200;
-    } else if (addr < 0xE30C00){
+    } else if (addr < 0xE30C00 && addr >= 0xE30800) {
         mem_end = (uint8_t *)lcd.crsrImage + sizeof lcd.crsrImage;
         data_start = (uint8_t *)lcd.crsrImage + addr - 0xE30800;
     } else {

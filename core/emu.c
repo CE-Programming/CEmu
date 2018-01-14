@@ -48,13 +48,13 @@ bool emu_save(const char *name) {
     uint32_t version = IMAGE_VERSION;
 
     file = fopen_utf8(name, "wb");
+
     if (file) {
         if (fwrite(&version, sizeof(version), 1, file) == 1 && asic_save(file)) {
             success = true;
         }
+        fclose(file);
     }
-
-    fclose(file);
 
     return success;
 }
