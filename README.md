@@ -9,6 +9,13 @@ Windows | macOS | Linux
 ------------ | ------------- | -------------
 <a href="https://i.imgur.com/0GZRIck.png"><img src="https://i.imgur.com/xZBkG65.png" /></a>|<a href="https://i.imgur.com/LznBl5u.png"><img src="https://i.imgur.com/DvZb3Zx.png" /></a>|<a href="https://i.imgur.com/26sioCw.png"><img src="https://i.imgur.com/y4ObHtQ.png" /></a>
 
+## Downloads
+The latest development builds are available here: https://ce-programming.github.io/CEmu/download
+
+Official ("stable") releases are available here: https://github.com/CE-Programming/CEmu/releases
+
+_Note that Release builds have an update checking feature, which is disabled in development builds._
+
 ## Features
 ### _Standard features_
 * Built-in ROM dump wizard. CEmu does _not_ rely on downloading an OS from TI's website nor does it have a custom boot/loader: a ROM from your own calculator is required. CEmu makes it very easy to get it.
@@ -19,8 +26,10 @@ Windows | macOS | Linux
 * Screen recording (animated PNG)
 * File sending/receiving (not for Apps/OS yet)
 * Multiple keybinding presets
+* Keypress recording and history
 * Emulation states for efficient saving / restoring
 * CE skins (colors like the real devices)
+* Available in English, French, Spanish, and Dutch languages
 
 ### _Developer features_
 * Main options available via CLI arguments
@@ -47,49 +56,15 @@ Windows | macOS | Linux
 * Pre-I HW Rev. emulation toggle (IM 2 compatibility)
 * "Autotester" (automated unit testing, light scripting)
 
-## Downloads
-The latest development builds are available here: https://ce-programming.github.io/CEmu/download  
-Official ("stable") releases are available here: https://github.com/CE-Programming/CEmu/releases   
-
-_Note that Release builds have an update checking feature, which is disabled in development builds._
-
 ## How to build
-*Initial note: CEmu uses Animated PNGs ("APNG") to record the screen efficiently. This requires an appropriate libpng version on your system, see [this script](https://github.com/CE-Programming/CEmu/blob/master/gui/qt/capture/get_libpng-apng.sh).*
-
-After downloading the source (you can clone the repo or just [get the zip](https://github.com/CE-Programming/CEmu/archive/master.zip)):
-
-1. Get the [latest Qt5 SDK](https://www.qt.io/download-qt-installer) for your OS.  
-
-2. Now you have two options to actually build CEmu:
-  * In a shell, `cd` to the project's `/gui/qt/` folder and type `qmake -r CEmu.pro && make`
-  * Open the .pro file with Qt Creator, set it up (default project settings should be fine), and hit Build.
-
-If you are using linux, use `sudo make install` to integrate with your desktop.
-
-## Build issues and solutions
-
-* If you're on macOS or Linux, you may need to force update your PATH to have Qt's `bin/` folder prepended (i.e. edit your shell's profile (for example ~/.bashrc), and add the line:  
-  `export PATH=<path to Qt directory>/bin:$PATH`  
-  You may need to run this command under linux as well: `sudo apt-get install git qt5-default`
-
-* If you're on macOS or Linux and use Qt Creator, you may need to launch it from the terminal to avoid potential pkg-config issues (for instance, not correctly finding libpng).
-
-* If you're on macOS, CEmu might not launch from Qt Creator, with the default settings. You should then untick some checkboxes in the [project's settings](https://i.imgur.com/44zwQMU.png).
-
-* If you encounter a build error with something like `lto-wrapper failed`, try removing the `-flto` option in the .pro file and rebuild (`qmake` etc.). It's not clear why this is happening.
-
+You can find information for building CEmu yourself from the source on [this](https://github.com/CE-Programming/CEmu/wiki/Building-CEmu) wiki page. If you encounter any problems, feel free to open an [issue](https://github.com/CE-Programming/CEmu/issues)!
 
 ## Contributing
 
-You're welcome to [report any bugs](https://github.com/CE-Programming/CEmu/issues) you may encounter, and if you want to help, tell us, or send patches / pull requests!
+You're welcome to [report any bugs](https://github.com/CE-Programming/CEmu/issues) you may encounter, in addition to any [feature requests](https://github.com/CE-Programming/CEmu/issues) you may have. If you want to help, [tell us](http://chat.efnet.org/irc.cgi?adv=1&nick=cemu-user&chan=%23cemu-dev), or send patches / pull requests!
 
 If you'd like to contribute code, please consider using [Artistic Style](http://astyle.sourceforge.net/) with the settings specified in the `.astylerc` file to format your code. Qt Creator can [format code with Artistic Style](http://doc.qt.io/qtcreator/creator-beautifier.html) with minimal setup.  
-We also welcome more translations (for now, it's available in English, French, Spanish, and Dutch). Qt Linguist is a great tool for that (here's [a tutorial](https://doc.qt.io/qt-5/linguist-manager.html)).
-
-## Caveats and TODO/WISH list
-_Take a look at [the current issues](https://github.com/CE-Programming/CEmu/issues), since these things are organized there._
-
-Feel free to request any features by opening a new issue as well!
+We also welcome more translations. Qt Linguist is a great tool for that (here's [a tutorial](https://doc.qt.io/qt-5/linguist-manager.html)).
 
 ## License
 CEmu is licensed under the [GPLv3](LICENSE).  
