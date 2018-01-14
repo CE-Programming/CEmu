@@ -120,7 +120,7 @@ bool emu_load(const char *romName, const char *imageName) {
             outer = mem.flash.block;
 
             /* Outer 0x800(0) field. */
-            if (cert_field_get(outer + offset, SIZE_FLASH - offset, &field_type, &outer, &outer_field_size)) goto rerr;
+            if (cert_field_get(outer + offset, SIZE_FLASH - offset, &field_type, &outer, &outer_field_size)) break;
             if (field_type != 0x800F) continue;
 
             /* Inner 0x801(0) field: calculator model */
