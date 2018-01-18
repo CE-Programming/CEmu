@@ -789,15 +789,15 @@ static void cpu_execute_bli() {
         // All block instructions
         r->HL = cpu_mask_mode((int32_t)r->HL + delta, cpu.L);
         cpu.cycles += internalCycles;
-    } while (repeat && (cpu.cycles < cpu.next));
-    cpu.inBlock = repeat;
 
 #ifdef DEBUG_SUPPORT
     if (cpu.events & EVENT_DEBUG_STEP_OVER) {
         cpu.events &= ~EVENT_DEBUG_STEP;
+        cpu_restore_next();
     }
 #endif
-
+    } while (repeat && (cpu.cycles < cpu.next));
+    cpu.inBlock = repeat;
 }
 
 void cpu_init(void) {
