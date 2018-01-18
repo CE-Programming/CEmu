@@ -851,7 +851,7 @@ static void cpu_halt(void) {
 void cpu_restore_next(void) {
     if (cpu.NMI || (cpu.events & EVENT_RESET)) {
         cpu.next = cpu.cycles;
-    } else if (cpu.IEF_wait == 1 || (cpu.events & EVENT_DEBUG_STEP)) {
+    } else if (cpu.IEF_wait == 1 || (cpu.events & EVENT_DEBUG_STEP && !cpu.halted)) {
         cpu.next = cpu.cycles + 1; // execute one instruction
     } else {
         cpu.next = sched_event_next_cycle();

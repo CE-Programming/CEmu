@@ -128,7 +128,7 @@ void open_debugger(int reason, uint32_t data) {
         debugger.cycleCount += cpu.dmaCycles;
     }
 
-    if (cpu.events & EVENT_DEBUG_STEP) {
+    if (cpu.events & EVENT_DEBUG_STEP && !cpu.halted) {
         cpu.next = cpu.cycles + 1;
     }
 }
