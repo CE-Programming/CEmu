@@ -20,7 +20,7 @@
 Name:           cemu
 Version:        1.0
 Release:        0
-Summary:        TI-84 Plus CE / TI-83 Premium CE emulator
+Summary:        CEmu is a TI-84 Plus CE / TI-83 Premium CE emulator
 License:        GPL-3.0
 Group:          Amusements/Teaching/Other
 Url:            https://github.com/CE-Programming/CEmu
