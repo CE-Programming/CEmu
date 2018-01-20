@@ -23,14 +23,14 @@ if (linux) {
     target.path = $$PREFIX/bin
     desktop.target = desktop
     desktop.path = $$PREFIX/share/applications
-    desktop.commands += xdg-desktop-menu install --novendor --mode system resources/linux/cemu.desktop &&
+    desktop.commands += command -v xdg-desktop-menu && \(xdg-desktop-menu install --novendor --mode system resources/linux/cemu.desktop &&
     desktop.commands += xdg-mime install --novendor --mode system resources/linux/cemu.xml &&
     desktop.commands += xdg-mime default cemu.desktop application/x-tice-rom &&
     desktop.commands += xdg-mime default cemu.desktop application/x-cemu-image &&
-    desktop.commands += for length in 512 256 192 160 128 96 72 64 48 42 40 36 32 24 22 20 16; do xdg-icon-resource install --novendor --context apps --mode system --size \$\$length resources/icons/linux/cemu-\$\$\{length\}x\$\$length.png cemu; done
-    desktop.uninstall += xdg-desktop-menu uninstall --novendor --mode system resources/linux/cemu.desktop &&
+    desktop.commands += for length in 512 256 192 160 128 96 72 64 48 42 40 36 32 24 22 20 16; do xdg-icon-resource install --novendor --context apps --mode system --size \$\$length resources/icons/linux/cemu-\$\$\{length\}x\$\$length.png cemu; done\) || true
+    desktop.uninstall += command -v xdg-desktop-menu && \(xdg-desktop-menu uninstall --novendor --mode system resources/linux/cemu.desktop &&
     desktop.uninstall += xdg-mime uninstall --novendor --mode system resources/linux/cemu.xml &&
-    desktop.uninstall += for length in 512 256 192 160 128 96 72 64 48 42 40 36 32 24 22 20 16; do xdg-icon-resource uninstall --novendor --context apps --mode system --size \$\$length resources/icons/linux/cemu-\$\$\{length\}x\$\$length.png cemu; done
+    desktop.uninstall += for length in 512 256 192 160 128 96 72 64 48 42 40 36 32 24 22 20 16; do xdg-icon-resource uninstall --novendor --context apps --mode system --size \$\$length resources/icons/linux/cemu-\$\$\{length\}x\$\$length.png cemu; done\) || true
     INSTALLS += target desktop
 }
 
@@ -66,7 +66,7 @@ if (!win32-msvc*) {
         # -flto might cause an internal compiler error on GCC in some circumstances (with -g3?)... Comment it if needed.
         CONFIG(release, debug|release): GLOBAL_FLAGS += -O3 -flto
     }
-        
+
     # You should run ./capture/get_libpng-apng.sh first!
     CONFIG += link_pkgconfig
     PKGCONFIG += libpng zlib
@@ -75,7 +75,7 @@ if (!win32-msvc*) {
     # Example for -Werror=shadow: /weC4456 /weC4457 /weC4458 /weC4459
     #     Source: https://connect.microsoft.com/VisualStudio/feedback/details/1355600/
     QMAKE_CXXFLAGS  += /Wall
-    
+
     # Note that libpng/zlib LIBS/INCLUDES should be specified in the envrionment.
     # We will use LIBPNG_APNG_LIB, ZLIB_LIB, and LIBPNG_APNG_INCLUDE.
     # The logic below accounts for both specifying in the real shell environment,
@@ -98,7 +98,7 @@ if (!win32-msvc*) {
             error("For MSVC builds, we require LIBPNG_APNG_INCLUDE to point to the libpng-apng include director to use for compiling. Please set this in your environment and try again.")
         }
     }
-    
+
     LIBS += $$LIBPNG_APNG_LIB $$ZLIB_LIB
     INCLUDEPATH += $$LIBPNG_APNG_INCLUDE
 }
