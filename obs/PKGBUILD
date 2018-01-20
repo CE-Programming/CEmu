@@ -1,0 +1,28 @@
+pkgname=cemu
+pkgver=1.0
+pkgrel=0
+pkgdesc='TI-84 Plus CE / TI-83 Premium CE emulator.'
+arch=('i686' 'x86_64')
+url='https://github.com/CE-Programming/CEmu'
+conflicts=('cemu')
+license=()
+depends=()
+makedepends=('qt5-declarative')
+source=("$pkgname-$pkgver.tar.xz")
+md5sums=('SKIP')
+
+build() {
+  # Compile...
+  cd "${srcdir}/${pkgname}-${pkgver}/gui/qt"
+  mkdir -p build
+  cd build
+  qmake ../CEmu.pro
+  make
+}
+
+package() {
+  # Install...
+  cd "${srcdir}/${pkgname}-${pkgver}/gui/qt/build"
+  INSTALL_ROOT="${pkgdir}" make install
+}
+

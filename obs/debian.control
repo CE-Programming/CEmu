@@ -1,0 +1,13 @@
+Source: cemu
+Section: sectionName
+Priority: optional
+Maintainer: Adrien Bertrand <bertrand.adrien@gmail.com>
+Homepage: https://github.com/CE-Programming/CEmu
+Build-Depends: git, pkg-config, debhelper (>= 9), qtbase5-dev (>= 5.6), qtdeclarative5-dev, qttools5-dev, qttools5-dev-tools, libpng-dev, zlib1g-dev
+
+Package: cemu
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Homepage: https://github.com/CE-Programming/CEmu
+Description: TI-84 Plus CE / TI-83 Premium CE emulator
+ Third-party multi-platform emulator of the eZ80-based TI-CE series calculators
