@@ -196,14 +196,11 @@ static uint32_t lcd_words(uint8_t words) {
         if (unlikely(lcd.LCDBPP == 5)) {
             ticks += lcd_process_pixel(word >> 3 & 0x1F, word >> 10 & 0x3F, word >> 19 & 0x1F);
         } else if (unlikely(lcd.LCDBPP >= 4)) {
-            if (unlikely(lcd.BEPO)) {
-                word = word << 16 | word >> 16;
-            }
             ticks += lcd_process_half(word);
             ticks += lcd_process_half(word >> 16);
         } else {
             for (bit = 0; bit < 32; bit += bpp) {
-                ticks += lcd_process_index(word >> (unlikely(lcd.BEPO) ? (32 - bpp) - bit : bit) &
+                ticks += lcd_process_index(word >> (bit ^ (unlikely(lcd.BEPO) ? 8 - bpp : 0)) &
                                            ((1 << bpp) - 1));
             }
         }
