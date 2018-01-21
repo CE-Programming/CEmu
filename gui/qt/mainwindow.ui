@@ -8560,6 +8560,15 @@ QPushButton:pressed {
      <addaction name="actionImportCalculatorState"/>
      <addaction name="actionImportDebugger"/>
     </widget>
+    <widget class="QMenu" name="menuLanguage">
+     <property name="title">
+      <string>Language</string>
+     </property>
+     <addaction name="actionEnglish"/>
+     <addaction name="actionFran_ais"/>
+     <addaction name="actionDutch"/>
+     <addaction name="actionEspanol"/>
+    </widget>
     <addaction name="actionNew"/>
     <addaction name="separator"/>
     <addaction name="actionOpen"/>
@@ -8571,6 +8580,8 @@ QPushButton:pressed {
     <addaction name="actionClipScreen"/>
     <addaction name="separator"/>
     <addaction name="actionKeyHistory"/>
+    <addaction name="separator"/>
+    <addaction name="menuLanguage"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
@@ -8978,6 +8989,26 @@ QPushButton:pressed {
    </property>
    <property name="menuRole">
     <enum>QAction::ApplicationSpecificRole</enum>
+   </property>
+  </action>
+  <action name="actionEnglish">
+   <property name="text">
+    <string>English</string>
+   </property>
+  </action>
+  <action name="actionFran_ais">
+   <property name="text">
+    <string>Français</string>
+   </property>
+  </action>
+  <action name="actionDutch">
+   <property name="text">
+    <string>Nederlands</string>
+   </property>
+  </action>
+  <action name="actionEspanol">
+   <property name="text">
+    <string>Español</string>
    </property>
   </action>
  </widget>

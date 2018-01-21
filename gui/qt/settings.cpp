@@ -77,6 +77,8 @@ const QString MainWindow::SETTING_KEYPAD_TILEM              = QStringLiteral("ti
 const QString MainWindow::SETTING_KEYPAD_WABBITEMU          = QStringLiteral("wabbitemu");
 const QString MainWindow::SETTING_KEYPAD_JSTIFIED           = QStringLiteral("jsTIfied");
 
+const QString MainWindow::SETTING_PREFERRED_LANG            = QStringLiteral("preferred_lang");
+
 const QString MainWindow::SETTING_DEFAULT_FILE              = QStringLiteral("/cemu_config.ini");
 const QString MainWindow::SETTING_DEFAULT_ROM_FILE          = QStringLiteral("/cemu_rom.rom");
 const QString MainWindow::SETTING_DEFAULT_DEBUG_FILE        = QStringLiteral("/cemu_debug.ini");

@@ -14,10 +14,6 @@ int main(int argc, char *argv[]) {
 
     QApplication app(argc, argv);
 
-    QTranslator appTranslator;
-    appTranslator.load(QLocale::system().name(), QStringLiteral(":/i18n/i18n/"));
-    app.installTranslator(&appTranslator);
-
     QCoreApplication::setOrganizationName(QStringLiteral("cemu-dev"));
     QCoreApplication::setApplicationName(QStringLiteral("CEmu"));
 

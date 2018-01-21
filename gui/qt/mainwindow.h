@@ -193,6 +193,7 @@ private:
     bool restoreFromPath(const QString& path);
 
     // Actions
+    void switchTranslator(const QString& lang);
     bool runSetup();
     void screenshot();
     void screenshotSave(const QString& nameFilter, const QString& defaultSuffix, const QString& temppath);
@@ -468,6 +469,8 @@ private:
     unsigned int watchpointGUIMask = DBG_NO_HANDLE;
     QString searchingString;
 
+    QTranslator appTranslator;
+
     Ui::MainWindow *ui = Q_NULLPTR;
     QLabel speedLabel;
     QLabel msgLabel;
@@ -600,6 +603,8 @@ private:
     static const QString SETTING_KEYPAD_TILEM;
     static const QString SETTING_KEYPAD_WABBITEMU;
     static const QString SETTING_KEYPAD_JSTIFIED;
+
+    static const QString SETTING_PREFERRED_LANG;
 
     static const QString SETTING_DEFAULT_FILE;
     static const QString SETTING_DEFAULT_ROM_FILE;

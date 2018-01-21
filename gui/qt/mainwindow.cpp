@@ -53,6 +53,10 @@
 
 MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow), opts(cliOpts) {
 
+    // Setup translations
+    appTranslator.load(QLocale::system().name(), QStringLiteral(":/i18n/i18n/"));
+    qApp->installTranslator(&appTranslator);
+
     // start up ipc
     com = new ipc();
     qsrand(time(NULL));
@@ -255,6 +259,12 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->buttonAddSlot, &QPushButton::clicked, this, &MainWindow::slotAddNew);
     connect(ui->actionExportCEmuImage, &QAction::triggered, this, &MainWindow::exportCEmuBootImage);
     connect(ui->lcd, &LCDWidget::sendROM, this, &MainWindow::setRom);
+
+    // Lang switch
+    connect(ui->actionEnglish,  &QAction::triggered, this, [this]{ switchTranslator(QStringLiteral("en_EN")); });
+    connect(ui->actionFran_ais, &QAction::triggered, this, [this]{ switchTranslator(QStringLiteral("fr_FR")); });
+    connect(ui->actionDutch,    &QAction::triggered, this, [this]{ switchTranslator(QStringLiteral("nl_NL")); });
+    connect(ui->actionEspanol,  &QAction::triggered, this, [this]{ switchTranslator(QStringLiteral("es_ES")); });
 
     // Hex Editor
     connect(ui->buttonFlashSearch, &QPushButton::clicked, this, [this]{ memSearchPressed(MEM_FLASH); });
@@ -510,6 +520,21 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     }
 
     ui->lcd->setFocus();
+
+    switchTranslator(settings->value(SETTING_PREFERRED_LANG, "en_EN").toString());
+}
+
+void MainWindow::switchTranslator(const QString& lang)
+{
+    qApp->removeTranslator(&appTranslator);
+    // For English, nothing to load after removing the translator.
+    if (lang == QStringLiteral("en_EN") || (appTranslator.load(lang, QStringLiteral(":/i18n/i18n/"))
+                                            && qApp->installTranslator(&appTranslator))) {
+        settings->setValue(SETTING_PREFERRED_LANG, lang);
+        ui->retranslateUi(this);
+    } else {
+        QMessageBox::critical(this, MSG_ERROR, tr("Language loading error :("));
+    }
 }
 
 void MainWindow::showEvent(QShowEvent *e) {
