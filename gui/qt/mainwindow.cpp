@@ -521,7 +521,10 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     ui->lcd->setFocus();
 
-    switchTranslator(settings->value(SETTING_PREFERRED_LANG, "en_EN").toString());
+    QString prefLang = settings->value(SETTING_PREFERRED_LANG, "none").toString();
+    if (prefLang != QStringLiteral("none")) {
+        switchTranslator(prefLang);
+    }
 }
 
 void MainWindow::switchTranslator(const QString& lang)
