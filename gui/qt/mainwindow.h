@@ -430,6 +430,10 @@ private:
     void reloadROM();
     void resetCalculator();
 
+    // Profiler
+    void setDebugGranularity(int granularity);
+    void exportProfile();
+
     // Misc
     QString getAddressString(const QString& string, bool* ok);
     void optCheckSend(CEmuOpts& o);

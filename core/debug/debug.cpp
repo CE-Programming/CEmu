@@ -1,12 +1,17 @@
 #ifdef DEBUG_SUPPORT
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <inttypes.h>
 
 #include "disasm.h"
 #include "debug.h"
 #include "../mem.h"
 #include "../emu.h"
 #include "../cpu.h"
+
+#define SIZEOF_PORT_ADDRESSABLE (0x10000)
+#define SIZEOF_ADDRESSABLE (0x1000000)
 
 volatile bool inDebugger = false;
 debug_state_t debugger;
@@ -19,22 +24,49 @@ static std::condition_variable debugCV;
 
 void debugger_init(void) {
     debugger.stepOverInstrEnd = -1;
-    debugger.data.block = (uint8_t*)calloc(0x1000000, 1);    /* Allocate Debug memory */
-    debugger.data.ports = (uint8_t*)calloc(0x10000, 1);      /* Allocate Debug Port Monitor */
+    debugger.data.ports = (uint8_t*)calloc(SIZEOF_PORT_ADDRESSABLE, 1);
+    debugger.data.block = (uint8_t*)calloc(SIZEOF_ADDRESSABLE, 1);
     debugger.buffer = (char*)malloc(SIZEOF_DBG_BUFFER);      /* Used for printing to the console */
     debugger.bufferErr = (char*)malloc(SIZEOF_DBG_BUFFER);   /* Used for printing to the console */
     debugger.bufferPos = 0;
     debugger.bufferErrPos = 0;
+    debugger.granularity = 0;
+    debugger.data.cycles = NULL;
 
     gui_console_printf("[CEmu] Initialized Debugger...\n");
 }
 
 void debugger_free(void) {
+    free(debugger.data.cycles);
     free(debugger.data.block);
     free(debugger.data.ports);
     free(debugger.buffer);
     free(debugger.bufferErr);
     gui_console_printf("[CEmu] Freed Debugger.\n");
+}
+
+void debug_profile_enable(void) {
+#ifdef PROFILE_SUPPORT
+    if (debugger.data.cycles == NULL) {
+        debugger.data.cycles = (uint64_t*)calloc(SIZEOF_ADDRESSABLE >> debugger.granularity, sizeof(uint64_t));
+    }
+#endif
+}
+
+void debug_profile_disable(void) {
+#ifdef PROFILE_SUPPORT
+    free(debugger.data.cycles);
+#endif
+    debugger.data.cycles = NULL;
+}
+
+void debug_profile_export(const char *path) {
+    FILE *file = fopen(path, "w");
+    for (uint32_t i = 0; i < SIZEOF_ADDRESSABLE; i++) {
+        if (debugger.data.cycles[i]) {
+            fprintf(file, "%06X|%" PRIu64 "\n", i, debugger.data.cycles[i]);
+        }
+    }
 }
 
 uint8_t debug_peek_byte(uint32_t addr) {

@@ -461,6 +461,12 @@ void MainWindow::debuggerUpdateChanges() {
 
     debugger.cycleCount = static_cast<uint64_t>(ui->cycleView->text().toULongLong());
 
+    if (ui->checkProfiler->isChecked()) {
+        debug_profile_enable();
+    } else {
+        debug_profile_disable();
+    }
+
     uint32_t uiPC = static_cast<uint32_t>(hex2int(ui->pcregView->text()));
     if (cpu.registers.PC != uiPC) {
         cpu_flush(uiPC, ui->checkADL->isChecked());
@@ -495,6 +501,8 @@ void MainWindow::debuggerGUISetState(bool state) {
         ui->debuggerLabel->clear();
     }
 
+    ui->spinGranularity->setEnabled(state);
+    ui->checkProfiler->setEnabled(state);
     ui->tabDebug->setEnabled(state);
     ui->buttonGoto->setEnabled(state);
     ui->buttonStepIn->setEnabled(state);
@@ -748,6 +756,25 @@ void MainWindow::debuggerGUIPopulate() {
 void MainWindow::debuggerZeroClockCounter() {
     debugger.cycleCount = 0;
     ui->cycleView->setText("0");
+}
+
+// ------------------------------------------------
+// Profiler
+// ------------------------------------------------
+
+void MainWindow::setDebugGranularity(int granularity) {
+    debug_profile_disable();
+    debugger.granularity = static_cast<uint32_t>(granularity);
+}
+
+void MainWindow::exportProfile() {
+    QString path = QFileDialog::getSaveFileName(this, tr("Export profiler information"),
+                                                           currDir.absolutePath(),
+                                                           tr("Profiler information (*.txt);;All files (*.*)"));
+    if (!path.isEmpty()) {
+        currDir = QFileInfo(path).absoluteDir();
+        debug_profile_export(path.toStdString().c_str());
+    }
 }
 
 // ------------------------------------------------

@@ -165,6 +165,10 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->actionImportDebugger, &QAction::triggered, this, &MainWindow::debuggerImport);
     connect(ui->actionExportDebugger, &QAction::triggered, this, &MainWindow::debuggerExport);
 
+    // Profiler
+    connect(ui->buttonProfileExport, &QPushButton::clicked, this, &MainWindow::exportProfile);
+    connect(ui->spinGranularity, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setDebugGranularity);
+
     // Linking
     connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::selectFiles);
     connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::selectFiles);

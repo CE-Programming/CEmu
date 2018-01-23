@@ -68,6 +68,11 @@ static uint8_t cpu_fetch_byte(void) {
     if (debugger.data.block[cpu.registers.PC] & (DBG_EXEC_BREAKPOINT | DBG_TEMP_EXEC_BREAKPOINT)) {
         open_debugger((debugger.data.block[cpu.registers.PC] & DBG_EXEC_BREAKPOINT) ? HIT_EXEC_BREAKPOINT : DBG_STEP, cpu.registers.PC);
     }
+#ifdef PROFILE_SUPPORT
+    if (debugger.data.cycles && !cpu.halted) {
+        debugger.data.cycles[cpu.registers.PC >> debugger.granularity] += cpu_total_cycles();
+    }
+#endif
 #endif
     value = cpu.prefetch;
     cpu_prefetch(cpu.registers.PC + 1, cpu.ADL);

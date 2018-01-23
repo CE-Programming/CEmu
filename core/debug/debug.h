@@ -56,6 +56,7 @@ enum {
 typedef struct {
     uint8_t *block;
     uint8_t *ports;
+    uint64_t *cycles;
 } debug_data_t;
 
 typedef struct {        /* For debugging */
@@ -80,6 +81,7 @@ typedef struct {        /* For debugging */
     bool ignoreDmaCycles;
     int64_t cycleCount;
     bool commands;
+    uint32_t granularity;
 } debug_state_t;
 
 /* Debugging */
@@ -106,6 +108,10 @@ void debug_pmonitor_remove(uint16_t address);
 void debug_set_pc_address(uint32_t address);
 
 void debug_clear_temp_break(void);
+
+void debug_profile_enable(void);
+void debug_profile_disable(void);
+void debug_profile_export(const char *path);
 
 #ifdef __cplusplus
 }

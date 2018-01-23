@@ -46,6 +46,7 @@ CONFIG += c++11 console
 
 # Core options
 DEFINES += DEBUG_SUPPORT
+DEFINES += PROFILE_SUPPORT
 
 CONFIG(release, debug|release) {
     #This is a release build
