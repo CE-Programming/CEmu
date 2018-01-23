@@ -1551,7 +1551,7 @@ void MainWindow::equatesAddFile(const QString &fileName) {
             equatesAddEquate(split[0], split[1].right(6).toUInt(Q_NULLPTR, 16));
         }
     } else {
-        QRegularExpression equatesRegexp("^\\h*([^\\W\\d]\\w*)\\h*(?:=|\\h\\.?equ(?!\\d))\\h*([%@$]\\S+|\\d\\S*[boh]?)\\h*(?:;.*)?$",
+        QRegularExpression equatesRegexp("^\\h*\\??\\h*([.A-Z_a-z][.\\w]*)\\h*(?::?=|\\h\\.?equ(?!\\d))\\h*([%@$]\\S+|\\d\\S*[boh]?)\\h*(?:;.*)?$",
                                          QRegularExpression::CaseInsensitiveOption);
         do {
             QRegularExpressionMatch matches = equatesRegexp.match(line);
