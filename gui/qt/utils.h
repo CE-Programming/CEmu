@@ -29,6 +29,7 @@ std::string calc_var_content_string(const calc_var_t& var);
 extern QString configPath;
 extern QString execPath;
 
+QString getAddressOfEquate(const std::string &in);
 QString sendingROM(QDragEnterEvent *e, bool *value);
 
 // integer to hex strings and vice versa

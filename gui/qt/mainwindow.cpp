@@ -150,6 +150,23 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->checkDisableSoftCommands, &QCheckBox::toggled, this, &MainWindow::setDebugSoftCommands);
     connect(ui->buttonZero, &QPushButton::clicked, this, &MainWindow::debuggerZeroClockCounter);
     connect(ui->buttonCertID, &QPushButton::clicked, this, &MainWindow::changeCalcID);
+    connect(ui->disassemblyView, &DataWidget::gotoDisasmAddress, this, &MainWindow::forceGotoDisasm);
+    connect(ui->disassemblyView, &DataWidget::gotoMemoryAddress, this, &MainWindow::forceGotoMemory);
+
+    // Ctrl + Click
+    connect(ui->console, &QPlainTextEdit::cursorPositionChanged, this, [this]{ handleCtrlClickText(ui->console); });
+    connect(ui->stackView, &QPlainTextEdit::cursorPositionChanged, this, [this]{ handleCtrlClickText(ui->stackView); });
+    connect(ui->hlregView, &QLineEdit::cursorPositionChanged, this, [this]{ handleCtrlClickLine(ui->hlregView); });
+    connect(ui->bcregView, &QLineEdit::cursorPositionChanged, this, [this]{ handleCtrlClickLine(ui->bcregView); });
+    connect(ui->deregView, &QLineEdit::cursorPositionChanged, this, [this]{ handleCtrlClickLine(ui->deregView); });
+    connect(ui->ixregView, &QLineEdit::cursorPositionChanged, this, [this]{ handleCtrlClickLine(ui->ixregView); });
+    connect(ui->iyregView, &QLineEdit::cursorPositionChanged, this, [this]{ handleCtrlClickLine(ui->iyregView); });
+    connect(ui->pcregView, &QLineEdit::cursorPositionChanged, this, [this]{ handleCtrlClickLine(ui->pcregView); });
+    connect(ui->splregView, &QLineEdit::cursorPositionChanged, this, [this]{ handleCtrlClickLine(ui->splregView); });
+    connect(ui->spsregView, &QLineEdit::cursorPositionChanged, this, [this]{ handleCtrlClickLine(ui->spsregView); });
+    connect(ui->hl_regView, &QLineEdit::cursorPositionChanged, this, [this]{ handleCtrlClickLine(ui->hl_regView); });
+    connect(ui->bc_regView, &QLineEdit::cursorPositionChanged, this, [this]{ handleCtrlClickLine(ui->bc_regView); });
+    connect(ui->de_regView, &QLineEdit::cursorPositionChanged, this, [this]{ handleCtrlClickLine(ui->de_regView); });
 
     // Debugger Options
     connect(ui->buttonAddEquateFile, &QPushButton::clicked, this, &MainWindow::equatesAddDialog);
@@ -1939,10 +1956,22 @@ void MainWindow::stepOutPressed() {
     emit setDebugStepOutMode();
 }
 
+void MainWindow::forceEnterDebug() {
+    int count = 0;
+    if (!guiDebug) {
+        debuggerChangeState();
+    }
+    while (!guiDebug && count < 20) {
+        guiDelay(50);
+        count++;
+    }
+}
+
 void MainWindow::consoleContextMenu(const QPoint &posa) {
-    bool ok;
+    bool ok = true;
 
     QString goto_mem = tr("Goto Memory View");
+    QString goto_disasm = tr("Goto Disassembly View");
     QString toggle_break = tr("Toggle Breakpoint");
     QString toggle_write_watch = tr("Toggle Write Watchpoint");
     QString toggle_read_watch = tr("Toggle Read Watchpoint");
@@ -1951,13 +1980,22 @@ void MainWindow::consoleContextMenu(const QPoint &posa) {
     QTextCursor cursor = ui->console->cursorForPosition(posa);
     ui->console->setTextCursor(cursor);
     cursor.select(QTextCursor::WordUnderCursor);
-    uint32_t address = cursor.selectedText().toUInt(&ok, 16);
+
+    QString equ = getAddressOfEquate(cursor.selectedText().toUpper().toStdString());
+    uint32_t address;
+
+    if (!equ.isEmpty()) {
+        address = hex2int(equ);
+    } else {
+        address = cursor.selectedText().toUInt(&ok, 16);
+    }
 
     if (ok) {
         ui->console->setTextCursor(cursor);
 
         QMenu menu;
         menu.addAction(goto_mem);
+        menu.addAction(goto_disasm);
         menu.addSeparator();
         menu.addAction(toggle_break);
         menu.addAction(toggle_read_watch);
@@ -1967,15 +2005,11 @@ void MainWindow::consoleContextMenu(const QPoint &posa) {
         QAction *item = menu.exec(globalp);
         if (item) {
             if (item->text() == goto_mem) {
-                int count = 0;
-                if (!guiDebug) {
-                    debuggerChangeState();
-                }
-                while (!guiDebug && count < 20) {
-                    guiDelay(50);
-                    count++;
-                }
+                forceEnterDebug();
                 memGoto(MEM_MEM, cursor.selectedText());
+            } else if (item->text() == goto_disasm) {
+                forceEnterDebug();
+                forceGotoDisasm(address);
             } else if (item->text() == toggle_break) {
                 breakpointAdd(breakpointNextLabel(), address, true, true);
             } else if (item->text() == toggle_read_watch) {
@@ -2112,7 +2146,7 @@ void MainWindow::ipcReceived() {
 }
 
 void MainWindow::ipcChangeID() {
-    bool ok;
+    bool ok = true;
     QString text = QInputDialog::getText(this, tr("CEmu Change ID"), tr("New ID:"), QLineEdit::Normal, opts.idString, &ok);
     if (ok && !text.isEmpty() && text != opts.idString) {
         if (!ipc::idOpen(text)) {

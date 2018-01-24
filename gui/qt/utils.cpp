@@ -6,6 +6,7 @@
 #include "ipc.h"
 #include "utils.h"
 #include "../../core/os/os.h"
+#include "../../core/debug/disasm.h"
 #include "tivarslib/autoloader.h"
 
 QString execPath;
@@ -49,6 +50,15 @@ std::string calc_var_content_string(const calc_var_t& var) {
     const options_t opts = (var.type == CALC_VAR_TYPE_PROG || var.type == CALC_VAR_TYPE_STRING)
                             ? options_t({ {"prettify", true} }) : options_t();
     return func(data_t(var.data, var.data + var.size), opts);
+}
+
+QString getAddressOfEquate(const std::string &in) {
+    QString value;
+    map_value_t::const_iterator item = disasm.reverseMap.find(in);
+    if (item != disasm.reverseMap.end()) {
+        value = int2hex(item->second, 6);
+    }
+    return value;
 }
 
 void guiDelay(int ms) {

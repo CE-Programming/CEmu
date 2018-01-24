@@ -1,25 +1,27 @@
 #include "datawidget.h"
+#include "utils.h"
+#include "mainwindow.h"
 
-/* extraHighlights[0] = current line selection */
+#include <QtWidgets/QApplication>
 
 DataWidget::DataWidget(QWidget *p) : QPlainTextEdit(p) {
-    cursorMoveable = false;
+    moveable = false;
     setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
 void DataWidget::clearAllHighlights() {
-    disconnect(this, &QPlainTextEdit::cursorPositionChanged, this, &DataWidget::highlightCurrentLine);
-    while (!extraHighlights.isEmpty()) {
-        extraHighlights.removeFirst();
+    disconnect(this, &DataWidget::cursorPositionChanged, this, &DataWidget::highlightCurrentLine);
+    while (!highlights.isEmpty()) {
+        highlights.removeFirst();
     }
 
-    extraHighlights.clear();
+    highlights.clear();
     updateAllHighlights();
 }
 
 void DataWidget::updateAllHighlights() {
-    setExtraSelections(extraHighlights);
-    connect(this, &QPlainTextEdit::cursorPositionChanged, this, &DataWidget::highlightCurrentLine);
+    setExtraSelections(highlights);
+    connect(this, &DataWidget::cursorPositionChanged, this, &DataWidget::highlightCurrentLine);
 }
 
 QString DataWidget::getSelectedAddress() {
@@ -44,8 +46,8 @@ bool DataWidget::labelCheck() {
     return c.selectedText().at(0) == ':';
 }
 
-void DataWidget::cursorState(bool moveable) {
-    cursorMoveable = moveable;
+void DataWidget::cursorState(bool state) {
+    moveable = state;
     if (moveable) {
         addHighlight(QColor(Qt::yellow).lighter(160));
     }
@@ -59,15 +61,50 @@ void DataWidget::addHighlight(const QColor &color) {
     selection.cursor = textCursor();
     selection.cursor.movePosition(QTextCursor::StartOfLine);
 
-    extraHighlights.append(selection);
+    highlights.append(selection);
 }
 
 void DataWidget::highlightCurrentLine() {
-    if (cursorMoveable == true) {
-        if (!extraHighlights.isEmpty()) {
-            extraHighlights.removeLast();
+    if (moveable) {
+        if (!highlights.isEmpty()) {
+            highlights.removeLast();
         }
         addHighlight(QColor(Qt::yellow).lighter(160));
-        setExtraSelections(extraHighlights);
+        setExtraSelections(highlights);
+        if (QApplication::keyboardModifiers().testFlag(Qt::ControlModifier)) {
+            bool ok = true;
+
+            QTextCursor cursor = textCursor();
+            cursor.select(QTextCursor::WordUnderCursor);
+            if (cursor.selectedText().isEmpty()) {
+                return;
+            }
+
+            QString weird = "[]()\",./\\-=";
+
+            if (weird.contains(cursor.selectedText().at(0))) {
+                cursor.movePosition(QTextCursor::WordLeft);
+                cursor.movePosition(QTextCursor::WordLeft);
+                cursor.select(QTextCursor::WordUnderCursor);
+            }
+            setTextCursor(cursor);
+
+            QString equ = getAddressOfEquate(cursor.selectedText().toUpper().toStdString());
+            uint32_t address;
+
+            if (!equ.isEmpty()) {
+                address = hex2int(equ);
+            } else {
+                address = textCursor().selectedText().toUInt(&ok, 16);
+            }
+
+            if (ok) {
+                if (QApplication::keyboardModifiers().testFlag(Qt::ShiftModifier)) {
+                    emit gotoMemoryAddress(address);
+                } else {
+                    emit gotoDisasmAddress(address);
+                }
+            }
+        }
     }
 }

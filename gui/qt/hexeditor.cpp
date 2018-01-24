@@ -34,21 +34,12 @@ QString MainWindow::getAddressString(const QString& string, bool* ok) {
                                          tr("Input Address (Or Equate):"), QLineEdit::Normal,
                                          string, ok).toUpper();
 
-    QString exists = getAddressEquate(address.toStdString());
+    QString exists = getAddressOfEquate(address.toUpper().toStdString());
     if (!exists.isEmpty()) {
         return exists;
     }
 
    return int2hex(hex2int(address), 6);
-}
-
-QString MainWindow::getAddressEquate(const std::string &in) {
-    QString value;
-    map_value_t::const_iterator item = disasm.reverseMap.find(in);
-    if (item != disasm.reverseMap.end()) {
-        value = int2hex(item->second, 6);
-    }
-    return value;
 }
 
 void MainWindow::flashUpdate() {

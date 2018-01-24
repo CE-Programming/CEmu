@@ -24,9 +24,13 @@ public:
     bool labelCheck();
     QString getSelectedAddress();
 
+signals:
+    void gotoDisasmAddress(uint32_t address);
+    void gotoMemoryAddress(uint32_t address);
+
 private:
-    bool cursorMoveable;
-    QList<QTextEdit::ExtraSelection> extraHighlights;
+    bool moveable;
+    QList<QTextEdit::ExtraSelection> highlights;
 };
 
 

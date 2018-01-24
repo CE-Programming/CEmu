@@ -806,7 +806,7 @@ void MainWindow::breakpointDataChanged(QTableWidgetItem *item) {
         QString equate;
         unsigned int mask;
 
-        equate = getAddressEquate(s);
+        equate = getAddressOfEquate(s);
         if (!equate.isEmpty()) {
             s = equate.toStdString();
             ui->breakpointView->blockSignals(true);
@@ -1382,7 +1382,7 @@ void MainWindow::watchpointDataChanged(QTableWidgetItem *item) {
         QString equate;
         unsigned int mask;
 
-        equate = getAddressEquate(s);
+        equate = getAddressOfEquate(s);
         if (!equate.isEmpty()) {
             s = equate.toStdString();
             ui->watchpointView->blockSignals(true);
@@ -1462,7 +1462,7 @@ void MainWindow::updateLabels() {
     QTableWidget *bv = ui->breakpointView;
     QTableWidget *wv = ui->watchpointView;
     for (int row = 0; row < wv->rowCount(); row++) {
-        QString newAddress = getAddressEquate(wv->item(row, WATCH_LABEL_LOC)->text().toUpper().toStdString());
+        QString newAddress = getAddressOfEquate(wv->item(row, WATCH_LABEL_LOC)->text().toUpper().toStdString());
         QString oldAddress = wv->item(row, WATCH_ADDR_LOC)->text();
         if (!newAddress.isEmpty() && newAddress != oldAddress) {
             unsigned int mask = ((wv->item(row, WATCH_READ_LOC)->checkState() == Qt::Checked) ? DBG_READ_WATCHPOINT : DBG_NO_HANDLE)|
@@ -1477,7 +1477,7 @@ void MainWindow::updateLabels() {
         }
     }
     for (int row = 0; row < bv->rowCount(); row++) {
-        QString newAddress = getAddressEquate(bv->item(row, BREAK_LABEL_LOC)->text().toUpper().toStdString());
+        QString newAddress = getAddressOfEquate(bv->item(row, BREAK_LABEL_LOC)->text().toUpper().toStdString());
         QString oldAddress = bv->item(row, BREAK_ADDR_LOC)->text();
         if (!newAddress.isEmpty() && newAddress != oldAddress) {
             unsigned int mask = ((bv->item(row, BREAK_ENABLE_LOC)->checkState() == Qt::Checked) ? DBG_EXEC_BREAKPOINT
@@ -1684,6 +1684,66 @@ void MainWindow::gotoPressed() {
     }
 }
 
+void MainWindow::forceGotoDisasm(uint32_t address) {
+    updateDisasmView(address, false);
+}
+
+void MainWindow::forceGotoMemory(uint32_t address) {
+    memGoto(MEM_MEM, int2hex(address, 6));
+}
+
+void MainWindow::handleCtrlClickText(QPlainTextEdit *edit) {
+    if (QApplication::keyboardModifiers().testFlag(Qt::ControlModifier)) {
+        bool ok = true;
+
+        edit->blockSignals(true);
+
+        QTextCursor cursor = edit->textCursor();
+        cursor.select(QTextCursor::WordUnderCursor);
+        edit->setTextCursor(cursor);
+
+        QString equ = getAddressOfEquate(edit->textCursor().selectedText().toUpper().toStdString());
+        uint32_t address;
+
+        if (!equ.isEmpty()) {
+            address = hex2int(equ);
+        } else {
+            address = edit->textCursor().selectedText().toUInt(&ok, 16);
+        }
+
+        if (ok) {
+            forceEnterDebug();
+            if (QApplication::keyboardModifiers().testFlag(Qt::ShiftModifier)) {
+                forceGotoMemory(address);
+            } else {
+                forceGotoDisasm(address);
+            }
+        }
+
+        edit->blockSignals(false);
+    }
+}
+
+void MainWindow::handleCtrlClickLine(QLineEdit *edit) {
+    if (QApplication::keyboardModifiers().testFlag(Qt::ControlModifier)) {
+        bool ok = true;
+
+        edit->blockSignals(true);
+
+        uint32_t address = edit->text().toUInt(&ok, 16);
+
+        if (ok) {
+            if (QApplication::keyboardModifiers().testFlag(Qt::ShiftModifier)) {
+                forceGotoMemory(address);
+            } else {
+                forceGotoDisasm(address);
+            }
+        }
+
+        edit->blockSignals(false);
+    }
+}
+
 // ------------------------------------------------
 // Tooltips
 // ------------------------------------------------
@@ -1693,20 +1753,20 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
         return false;
     }
     if (e->type() == QEvent::MouseButtonPress) {
-        QString obj_name = obj->objectName();
+        QString name = obj->objectName();
 
-        if (obj_name.length() > 3) return false;
+        if (name.length() > 3) return false;
 
-        if (obj_name == "hl")  memGoto(MEM_MEM, ui->hlregView->text());
-        if (obj_name == "de")  memGoto(MEM_MEM, ui->deregView->text());
-        if (obj_name == "bc")  memGoto(MEM_MEM, ui->bcregView->text());
-        if (obj_name == "ix")  memGoto(MEM_MEM, ui->ixregView->text());
-        if (obj_name == "iy")  memGoto(MEM_MEM, ui->iyregView->text());
-        if (obj_name == "hl_") memGoto(MEM_MEM, ui->hl_regView->text());
-        if (obj_name == "de_") memGoto(MEM_MEM, ui->de_regView->text());
-        if (obj_name == "bc_") memGoto(MEM_MEM, ui->bc_regView->text());
-        if (obj_name == "spl") memGoto(MEM_MEM, ui->splregView->text());
-        if (obj_name == "pc")  memGoto(MEM_MEM, ui->pcregView->text());
+        if (name == "hl")  memGoto(MEM_MEM, ui->hlregView->text());
+        if (name == "de")  memGoto(MEM_MEM, ui->deregView->text());
+        if (name == "bc")  memGoto(MEM_MEM, ui->bcregView->text());
+        if (name == "ix")  memGoto(MEM_MEM, ui->ixregView->text());
+        if (name == "iy")  memGoto(MEM_MEM, ui->iyregView->text());
+        if (name == "hl_") memGoto(MEM_MEM, ui->hl_regView->text());
+        if (name == "de_") memGoto(MEM_MEM, ui->de_regView->text());
+        if (name == "bc_") memGoto(MEM_MEM, ui->bc_regView->text());
+        if (name == "spl") memGoto(MEM_MEM, ui->splregView->text());
+        if (name == "pc")  memGoto(MEM_MEM, ui->pcregView->text());
     } else if (e->type() == QEvent::MouseMove) {
         QString obj_name = obj->objectName();
 

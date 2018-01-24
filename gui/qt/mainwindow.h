@@ -6,6 +6,7 @@
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QTableWidgetItem>
+#include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QFileDialog>
 #include <QtCore/QSettings>
 #include <QtCore/QTimer>
@@ -288,10 +289,17 @@ private:
     void watchpointRemoveAddress(uint32_t address);
 
     void debuggerZeroClockCounter();
+    void forceGotoDisasm(uint32_t address);
+    void forceGotoMemory(uint32_t address);
 
     void setDataCol(bool state);
     void setMenuBarState(bool state);
     void setDockBoundaries(bool state);
+
+    void handleCtrlClickText(QPlainTextEdit *edit);
+    void handleCtrlClickLine(QLineEdit *edit);
+
+    void forceEnterDebug();
 
     // For linking to the buttons
     void breakpointSlotAdd();
@@ -417,7 +425,6 @@ private:
     // Others
     void syncHexView(int posa, QHexEdit *hex_view);
     void searchEdit(int index);
-    QString getAddressEquate(const std::string& in);
 
     // Keypad
     void keymapChanged();
