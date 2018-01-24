@@ -503,6 +503,9 @@ void MainWindow::debuggerGUISetState(bool state) {
 
     ui->spinGranularity->setEnabled(state);
     ui->checkProfiler->setEnabled(state);
+    ui->buttonProfileExport->setEnabled(state);
+    ui->buttonProfileImport->setEnabled(state);
+    ui->buttonProfileReset->setEnabled(state);
     ui->tabDebug->setEnabled(state);
     ui->buttonGoto->setEnabled(state);
     ui->buttonStepIn->setEnabled(state);
@@ -762,19 +765,30 @@ void MainWindow::debuggerZeroClockCounter() {
 // Profiler
 // ------------------------------------------------
 
-void MainWindow::setDebugGranularity(int granularity) {
+void MainWindow::setProfileGranularity(int granularity) {
     debug_profile_disable();
     debugger.granularity = static_cast<uint32_t>(granularity);
 }
 
+void MainWindow::setProfileSort(int value) {
+    debugger.sort = value;
+}
+
 void MainWindow::exportProfile() {
     QString path = QFileDialog::getSaveFileName(this, tr("Export profiler information"),
-                                                           currDir.absolutePath(),
-                                                           tr("Profiler information (*.txt);;All files (*.*)"));
+                                                      currDir.absolutePath(),
+                                                      tr("Profiler information (*.txt);;All files (*.*)"));
     if (!path.isEmpty()) {
         currDir = QFileInfo(path).absoluteDir();
         debug_profile_export(path.toStdString().c_str());
     }
+}
+
+void MainWindow::showProfileHelp() {
+    QMessageBox::information(this, MSG_INFORMATION,
+                             tr("Use the format string to change the profile view. Usage:\n\n"
+                                " 'xxxxxx,xxxxxx'\t6 hex digits specify start/end view address\n"
+                                " '200x100'\t\tSpecify width and height of view\n"));
 }
 
 // ------------------------------------------------

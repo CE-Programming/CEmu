@@ -167,7 +167,10 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     // Profiler
     connect(ui->buttonProfileExport, &QPushButton::clicked, this, &MainWindow::exportProfile);
-    connect(ui->spinGranularity, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setDebugGranularity);
+    connect(ui->spinGranularity, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setProfileGranularity);
+    connect(ui->comboProfileSort, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::setProfileSort);
+    connect(ui->buttonProfileHelp, &QToolButton::clicked, this, &MainWindow::showProfileHelp);
+    connect(ui->buttonProfileView, &QToolButton::clicked, this, [this]{ setProfileString(ui->editProfile->text()); });
 
     // Linking
     connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::selectFiles);
@@ -429,6 +432,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     setFocusSetting(settings->value(SETTING_PAUSE_FOCUS, false).toBool());
     setRecentSave(settings->value(SETTING_RECENT_SAVE, true).toBool());
     setPreRevisionI(settings->value(SETTING_DEBUGGER_PRE_I, false).toBool());
+    setProfileString(settings->value(SETTING_PROFILER_STRING, "d1a881,d292e1,300x200").toString());
     ui->flashBytes->setValue(settings->value(SETTING_DEBUGGER_FLASH_BYTES, 8).toInt());
     ui->ramBytes->setValue(settings->value(SETTING_DEBUGGER_RAM_BYTES, 8).toInt());
     ui->memBytes->setValue(settings->value(SETTING_DEBUGGER_MEM_BYTES, 8).toInt());

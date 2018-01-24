@@ -10,8 +10,8 @@
 #include "../emu.h"
 #include "../cpu.h"
 
-#define SIZEOF_PORT_ADDRESSABLE (0x10000)
-#define SIZEOF_ADDRESSABLE (0x1000000)
+#define SIZEOF_PORT_ADDRESSABLE (0x10000U)
+#define SIZEOF_ADDRESSABLE (0x1000000U)
 
 volatile bool inDebugger = false;
 debug_state_t debugger;
@@ -31,13 +31,13 @@ void debugger_init(void) {
     debugger.bufferPos = 0;
     debugger.bufferErrPos = 0;
     debugger.granularity = 0;
-    debugger.data.cycles = NULL;
+    debugger.profile.cycles = NULL;
 
     gui_console_printf("[CEmu] Initialized Debugger...\n");
 }
 
 void debugger_free(void) {
-    free(debugger.data.cycles);
+    free(debugger.profile.cycles);
     free(debugger.data.block);
     free(debugger.data.ports);
     free(debugger.buffer);
@@ -47,26 +47,112 @@ void debugger_free(void) {
 
 void debug_profile_enable(void) {
 #ifdef PROFILE_SUPPORT
-    if (debugger.data.cycles == NULL) {
-        debugger.data.cycles = (uint64_t*)calloc(SIZEOF_ADDRESSABLE >> debugger.granularity, sizeof(uint64_t));
+    if (debugger.profile.cycles == NULL) {
+        debugger.profile.cycles = (uint64_t*)calloc(SIZEOF_ADDRESSABLE >> debugger.granularity, sizeof(uint64_t));
     }
 #endif
 }
 
 void debug_profile_disable(void) {
 #ifdef PROFILE_SUPPORT
-    free(debugger.data.cycles);
+    free(debugger.profile.cycles);
 #endif
-    debugger.data.cycles = NULL;
+    debugger.profile.cycles = NULL;
+}
+
+static int debug_compare_cycles(const void *a, const void *b) {
+    if (((profiler_item_t*)a)->cycles < ((profiler_item_t*)b)->cycles) {
+        return -1;
+    }
+    if (((profiler_item_t*)a)->cycles == ((profiler_item_t*)b)->cycles) {
+        return 0;
+    }
+    return 1;
+}
+
+static int debug_compare_percentage(const void *a, const void *b) {
+    if (((profiler_item_t*)a)->percentage > ((profiler_item_t*)b)->percentage) {
+        return -1;
+    }
+    if (((profiler_item_t*)a)->percentage == ((profiler_item_t*)b)->percentage) {
+        return 0;
+    }
+    return 1;
 }
 
 void debug_profile_export(const char *path) {
-    FILE *file = fopen(path, "w");
-    for (uint32_t i = 0; i < SIZEOF_ADDRESSABLE; i++) {
-        if (debugger.data.cycles[i]) {
-            fprintf(file, "%06X|%" PRIu64 "\n", i, debugger.data.cycles[i]);
+    uint32_t i, j;
+    static const char *str[] = {
+        "address",
+        "percentage",
+        "cycles"
+    };
+
+    uint64_t max = 0, min = UINT64_MAX;
+    uint64_t avg = 0, tot = 0;
+    uint32_t len = 1, end = 0;
+    for (i = 0; i < (SIZEOF_ADDRESSABLE >> debugger.granularity); i++) {
+        if (debugger.profile.cycles[i]) {
+            tot += debugger.profile.cycles[i];
+            len++; end = i;
+        }
+        if (debugger.profile.cycles[i] < min) {
+            min = debugger.profile.cycles[i];
+        }
+        if (debugger.profile.cycles[i] > max) {
+            max = debugger.profile.cycles[i];
         }
     }
+
+    avg = tot / len;
+    len--;
+
+    if (!len) {
+        return;
+    }
+
+    profiler_item_t *tmp = (profiler_item_t*)malloc(len * sizeof(profiler_item_t));
+    for (j = i = 0; i < (SIZEOF_ADDRESSABLE >> debugger.granularity) && j != end; i++) {
+        if (debugger.profile.cycles[i]) {
+            tmp[j].cycles = debugger.profile.cycles[i];
+            tmp[j].percentage = static_cast<double>(debugger.profile.cycles[i]) / static_cast<double>(avg);
+            tmp[j].address = i;
+            j++;
+        }
+    }
+
+    FILE *file = fopen(path, "w");
+    fprintf(file, "CEmu profiler information\n");
+    fprintf(file, "sort %s\n", str[debugger.sort]);
+    fprintf(file, "granularity %u\n\n", debugger.granularity);
+    fprintf(file, "addr   cycles               %% of average\n"
+                  "------ -------------------- ------------\n");
+
+    switch (debugger.sort) {
+        case PROFILE_SORT_ADDRESS:
+            break;
+        case PROFILE_SORT_CYCLES:
+            qsort(tmp, len, sizeof(profiler_item_t), debug_compare_cycles);
+            break;
+        case PROFILE_SORT_PERCENTAGE:
+            qsort(tmp, len, sizeof(profiler_item_t), debug_compare_percentage);
+            break;
+        default:
+            break;
+    }
+
+    for (i = 0; i < len - 1; i++) {
+        char cycles[30], percent[30];
+        sprintf(cycles, "%" PRIu64, tmp[i].cycles);
+        sprintf(percent, "%.2f", tmp[i].percentage);
+        fprintf(file, "%06X %20s %12s\n", tmp[i].address, cycles, percent);
+    }
+
+    free(tmp);
+    fprintf(file, "end\n");
+    fclose(file);
+
+    debugger.totalProfile = tot;
 }
 
 uint8_t debug_peek_byte(uint32_t addr) {

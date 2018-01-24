@@ -69,8 +69,8 @@ static uint8_t cpu_fetch_byte(void) {
         open_debugger((debugger.data.block[cpu.registers.PC] & DBG_EXEC_BREAKPOINT) ? HIT_EXEC_BREAKPOINT : DBG_STEP, cpu.registers.PC);
     }
 #ifdef PROFILE_SUPPORT
-    if (debugger.data.cycles && !cpu.halted) {
-        debugger.data.cycles[cpu.registers.PC >> debugger.granularity] += cpu_total_cycles();
+    if (debugger.profile.cycles && !cpu.halted) {
+        debugger.profile.cycles[cpu.registers.PC >> debugger.granularity] += cpu_total_cycles();
     }
 #endif
 #endif

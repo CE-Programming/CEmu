@@ -431,8 +431,11 @@ private:
     void resetCalculator();
 
     // Profiler
-    void setDebugGranularity(int granularity);
+    void setProfileSort(int value);
+    void setProfileGranularity(int granularity);
     void exportProfile();
+    void showProfileHelp();
+    void setProfileString(const QString &string);
 
     // Misc
     QString getAddressString(const QString& string, bool* ok);
@@ -571,6 +574,7 @@ private:
     static const QString SETTING_DEBUGGER_BREAK_IGNORE;
     static const QString SETTING_DEBUGGER_IGNORE_DMA;
     static const QString SETTING_DEBUGGER_PRE_I;
+    static const QString SETTING_PROFILER_STRING;
     static const QString SETTING_SCREEN_FRAMESKIP;
     static const QString SETTING_SCREEN_SCALE;
     static const QString SETTING_SCREEN_SKIN;

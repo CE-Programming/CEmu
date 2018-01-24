@@ -61,7 +61,7 @@
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>6</number>
       </property>
       <widget class="QWidget" name="tab_10">
        <attribute name="title">
@@ -4040,8 +4040,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>521</width>
-             <height>369</height>
+             <width>611</width>
+             <height>371</height>
             </rect>
            </property>
            <attribute name="icon">
@@ -4181,8 +4181,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>100</width>
-             <height>128</height>
+             <width>98</width>
+             <height>119</height>
             </rect>
            </property>
            <attribute name="icon">
@@ -4337,8 +4337,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>100</width>
-             <height>128</height>
+             <width>98</width>
+             <height>119</height>
             </rect>
            </property>
            <attribute name="icon">
@@ -4548,6 +4548,9 @@
           </property>
           <item>
            <widget class="QPushButton" name="buttonProfileExport">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="sizePolicy">
              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -4565,6 +4568,9 @@
           </item>
           <item>
            <widget class="QPushButton" name="buttonProfileImport">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="sizePolicy">
              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -4595,6 +4601,9 @@
           </item>
           <item>
            <widget class="QPushButton" name="buttonProfileReset">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="sizePolicy">
              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -4613,6 +4622,119 @@
          </layout>
         </item>
         <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_35">
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="label_28">
+            <property name="text">
+             <string>Configuration:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="editProfile">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="buttonProfileView">
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset resource="resources.qrc">
+              <normaloff>:/icons/resources/icons/debugger.png</normaloff>:/icons/resources/icons/debugger.png</iconset>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QToolButton" name="buttonProfileHelp">
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset resource="resources.qrc">
+              <normaloff>:/icons/resources/icons/info.png</normaloff>:/icons/resources/icons/info.png</iconset>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_36">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <spacer name="horizontalSpacer_15">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="ProfileWidget" name="profileWidget" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>300</width>
+              <height>200</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>300</width>
+              <height>200</height>
+             </size>
+            </property>
+            <property name="focusPolicy">
+             <enum>Qt::StrongFocus</enum>
+            </property>
+            <property name="contextMenuPolicy">
+             <enum>Qt::CustomContextMenu</enum>
+            </property>
+            <property name="acceptDrops">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_14">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
          <spacer name="verticalSpacer_12">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -4620,7 +4742,7 @@
           <property name="sizeHint" stdset="0">
            <size>
             <width>20</width>
-            <height>40</height>
+            <height>0</height>
            </size>
           </property>
          </spacer>
@@ -6626,7 +6748,7 @@
                 </widget>
                </item>
                <item>
-                <spacer name="horizontalSpacer_5">
+                <spacer name="horizontalSpacer_awesome">
                  <property name="orientation">
                   <enum>Qt::Horizontal</enum>
                  </property>
@@ -6688,7 +6810,7 @@
         <item>
          <widget class="QTabWidget" name="tabWidget_2">
           <property name="currentIndex">
-           <number>0</number>
+           <number>2</number>
           </property>
           <widget class="QWidget" name="tab_2">
            <attribute name="title">
@@ -8328,6 +8450,60 @@ QPushButton:pressed {
              </widget>
             </item>
             <item>
+             <widget class="QGroupBox" name="groupBox_6">
+              <property name="title">
+               <string>Profiler</string>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_34">
+               <item>
+                <widget class="QLabel" name="label_27">
+                 <property name="text">
+                  <string>Sort Method:</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="comboProfileSort">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <item>
+                  <property name="text">
+                   <string>Address</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Percentage</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>Cycles</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_13">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
              <spacer name="verticalSpacer_6">
               <property name="orientation">
                <enum>Qt::Vertical</enum>
@@ -9196,6 +9372,12 @@ QPushButton:pressed {
    <class>DataWidget</class>
    <extends>QPlainTextEdit</extends>
    <header>datawidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ProfileWidget</class>
+   <extends>QWidget</extends>
+   <header>profilewidget.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <tabstops>

@@ -54,9 +54,20 @@ enum {
 #define SIZEOF_DBG_BUFFER         0x1000
 
 typedef struct {
+    uint64_t *cycles;
+    uint32_t start;
+    uint32_t end;
+} profiler_t;
+
+typedef struct {
+    uint64_t cycles;
+    uint32_t address;
+    double percentage;
+} profiler_item_t;
+
+typedef struct {
     uint8_t *block;
     uint8_t *ports;
-    uint64_t *cycles;
 } debug_data_t;
 
 typedef struct {        /* For debugging */
@@ -82,6 +93,9 @@ typedef struct {        /* For debugging */
     int64_t cycleCount;
     bool commands;
     uint32_t granularity;
+    profiler_t profile;
+    int sort;
+    uint32_t totalProfile;
 } debug_state_t;
 
 /* Debugging */
@@ -112,6 +126,12 @@ void debug_clear_temp_break(void);
 void debug_profile_enable(void);
 void debug_profile_disable(void);
 void debug_profile_export(const char *path);
+
+enum {
+    PROFILE_SORT_ADDRESS,
+    PROFILE_SORT_PERCENTAGE,
+    PROFILE_SORT_CYCLES
+};
 
 #ifdef __cplusplus
 }

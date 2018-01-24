@@ -40,6 +40,7 @@ const QString MainWindow::SETTING_DEBUGGER_MEM_BYTES        = QStringLiteral("De
 const QString MainWindow::SETTING_DEBUGGER_BREAK_IGNORE     = QStringLiteral("Debugger/ignore_breakpoints");
 const QString MainWindow::SETTING_DEBUGGER_IGNORE_DMA       = QStringLiteral("Debugger/ignore_dma");
 const QString MainWindow::SETTING_DEBUGGER_PRE_I            = QStringLiteral("Debugger/pre_i");
+const QString MainWindow::SETTING_PROFILER_STRING           = QStringLiteral("Profiler/string");
 const QString MainWindow::SETTING_SCREEN_FRAMESKIP          = QStringLiteral("Screen/frameskip");
 const QString MainWindow::SETTING_SCREEN_SCALE              = QStringLiteral("Screen/scale");
 const QString MainWindow::SETTING_SCREEN_SKIN               = QStringLiteral("Screen/skin");
@@ -654,6 +655,12 @@ void MainWindow::setDockBoundaries(bool state) {
     } else {
         setStyleSheet("QMainWindow::separator{ width: 4px; height: 4px; }");
     }
+}
+
+void MainWindow::setProfileString(const QString &string) {
+    QString value = ui->profileWidget->setConfig(string);
+    settings->setValue(SETTING_PROFILER_STRING, value);
+    ui->editProfile->setText(value);
 }
 
 void MainWindow::saveRecentInfo() {
