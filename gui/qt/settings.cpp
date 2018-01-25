@@ -394,6 +394,7 @@ void MainWindow::setUIDocks() {
         action->setIcon(dw->windowIcon());
         docksMenu->addAction(action);
 
+        dw->setAllowedAreas(Qt::AllDockWidgetAreas);
         addDockWidget(Qt::RightDockWidgetArea, dw);
         if (last_dock) {
             tabifyDockWidget(last_dock, dw);
@@ -417,6 +418,7 @@ void MainWindow::setUIDocks() {
         action->setIcon(dw->windowIcon());
         debugMenu->addAction(action);
 
+        dw->setAllowedAreas(Qt::AllDockWidgetAreas);
         addDockWidget(Qt::RightDockWidgetArea, dw);
         if (last_dock) {
             tabifyDockWidget(last_dock, dw);
@@ -426,7 +428,7 @@ void MainWindow::setUIDocks() {
 
         if (!settings->value(SETTING_FIRST_RUN, false).toBool()) {
             dw->setFloating(true);
-            dw->setGeometry(0, 0, minimumWidth(), minimumHeight());
+            dw->setBaseSize(minimumWidth(), minimumHeight());
             dw->close();
         }
     }

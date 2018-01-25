@@ -609,7 +609,9 @@ void MainWindow::createMemoryDock(QString title) {
     memoryDocks++;
 
     dw = new DockWidget(title, this);
-    dw->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    dw->setAllowedAreas(Qt::AllDockWidgetAreas);
+    dw->setFloating(true);
+    dw->setBaseSize(minimumWidth(), minimumHeight());
 
     QWidget *widget = new QWidget();
     QVBoxLayout *vlayout = new QVBoxLayout();
