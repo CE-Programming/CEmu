@@ -3,16 +3,20 @@
 CEmu is a third-party TI-84 Plus CE / TI-83 Premium CE calculator emulator, focused on developer features.  
 The core is programmed in C and the GUI in C++ with Qt, for performance and portability. CEmu works natively on Windows, macOS, and Linux.
 
-Here are some screenshots showcasing some of the features:
+Here are some screenshots showcasing some of the features and various layouts, on these OSes:
 
-Windows | macOS | Linux
------------- | ------------- | -------------
-<a href="https://i.imgur.com/0GZRIck.png"><img src="https://i.imgur.com/xZBkG65.png" /></a>|<a href="https://i.imgur.com/LznBl5u.png"><img src="https://i.imgur.com/DvZb3Zx.png" /></a>|<a href="https://i.imgur.com/26sioCw.png"><img src="https://i.imgur.com/y4ObHtQ.png" /></a>
+On macOS (a non-debug layout) |
+------------ | 
+<a href="https://i.imgur.com/432aLxq.png"><img src="https://i.imgur.com/VjvesTi.png" /></a>|
+
+On Windows (a debug layout) | On Linux (another debug layout)|
+------------ | ------------- |
+<a href="https://i.imgur.com/zOeFTfw.png"><img src="https://i.imgur.com/KRhbDmv.png" /></a>|<a href="https://i.imgur.com/hJFVdtF.png"><img src="https://i.imgur.com/H5TQrci.png" /></a>
 
 ## Downloads
-The latest development builds are available here: https://ce-programming.github.io/CEmu/download
+Development builds are available here: https://ce-programming.github.io/CEmu/download
 
-Official ("stable") releases are available here: https://github.com/CE-Programming/CEmu/releases
+Official stable releases are available here: https://github.com/CE-Programming/CEmu/releases
 
 _Note that Release builds have an update checking feature, which is disabled in development builds._
 
@@ -29,7 +33,7 @@ _Note that Release builds have an update checking feature, which is disabled in 
 * Keypress recording and history
 * Emulation states for efficient saving / restoring
 * CE skins (colors like the real devices)
-* Available in English, French, Spanish, and Dutch languages
+* Available in English, French, Spanish, and Dutch
 
 ### _Developer features_
 * Main options available via CLI arguments
@@ -68,5 +72,5 @@ We also welcome more translations. Qt Linguist is a great tool for that (here's 
 
 ## License
 CEmu is licensed under the [GPLv3](LICENSE).  
-_Acknowledgements_: Some CEmu parts are, directly, modified, or inspired, from [z80e](https://github.com/KnightOS/z80e), [Firebird](https://github.com/nspire-emus/firebird), [QHexEdit2](https://github.com/Simsys/qhexedit2), [libtifiles](https://github.com/debrouxl/tilibs), [tivars_lib_cpp](https://github.com/adriweb/tivars_lib_cpp), and the [Silk iconset](http://www.famfamfam.com/lab/icons/silk/).
+_Acknowledgements_: Some CEmu parts are, directly, modified, or inspired, from [z80e](https://github.com/KnightOS/z80e), [Firebird](https://github.com/nspire-emus/firebird), [QHexEdit2](https://github.com/Simsys/qhexedit2), [libtifiles](https://github.com/debrouxl/tilibs), [tivars_lib_cpp](https://github.com/adriweb/tivars_lib_cpp), and the [Silk iconset](http://www.famfamfam.com/lab/icons/silk/).  
 The complete licensing information is available in the [LICENSE](LICENSE) file.
