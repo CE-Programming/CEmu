@@ -1,6 +1,8 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QRegularExpression>
 #include <QtNetwork/QNetworkAccessManager>
+#include <QtWidgets/QDesktopWidget>
+#include <QtWidgets/QApplication>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QScrollBar>
@@ -420,15 +422,9 @@ void MainWindow::setUIDocks() {
 
         dw->setAllowedAreas(Qt::AllDockWidgetAreas);
         addDockWidget(Qt::RightDockWidgetArea, dw);
-        if (last_dock) {
-            tabifyDockWidget(last_dock, dw);
-        }
-
-        last_dock = dw;
-
         if (!settings->value(SETTING_FIRST_RUN, false).toBool()) {
             dw->setFloating(true);
-            dw->setBaseSize(minimumWidth(), minimumHeight());
+            dw->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, dw->minimumSize(), qApp->desktop()->availableGeometry()));
             dw->close();
         }
     }
