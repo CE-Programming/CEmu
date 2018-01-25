@@ -124,12 +124,12 @@ if (!win32-msvc*) {
 		# This is a bad hack, but MOC kinda needs it to work correctly...
 		QMAKE_MOC_OPTIONS += -DPNG_WRITE_APNG_SUPPORTED
 	}
-	
+
 	# Otherwise...
     !equals(LIBPNG_APNG_FROM_VCPKG, 1) {
         # If we're not using vcpkg, we rely on manual variables to find needed
         # libpng-apng components.
-        # 
+        #
         # Note that libpng/zlib LIBS/INCLUDES should be specified in the envrionment.
         # We will use LIBPNG_APNG_LIB, ZLIB_LIB, and LIBPNG_APNG_INCLUDE.
         # The logic below accounts for both specifying in the real shell environment,
@@ -252,6 +252,7 @@ SOURCES += \
     visualizerwidget.cpp \
     debugger/visualizerdisplaywidget.cpp \
     memorywidget.cpp \
+    debugger/sourceswidget.cpp
     archive/extractor.c \
     ../../core/bus.c \
     keyhistorywidget.cpp \
@@ -344,6 +345,7 @@ HEADERS  += \
     tivars_lib_cpp/src/TypeHandlers/TypeHandlers.h \
     visualizerwidget.h \
     debugger/visualizerdisplaywidget.h \
+    debugger/sourceswidget.h
     archive/extractor.h \
     ../../core/bus.h \
     keyhistorywidget.h \

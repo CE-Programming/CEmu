@@ -9374,6 +9374,11 @@ QPushButton:pressed {
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_27"/>
       </widget>
+      <widget class="SourcesWidget" name="sources">
+       <attribute name="title">
+        <string>Sources</string>
+       </attribute>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -9972,6 +9977,12 @@ QPushButton:pressed {
    <class>KeypadWidget</class>
    <extends>QWidget</extends>
    <header>keypad/keypadwidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>SourcesWidget</class>
+   <extends>QWidget</extends>
+   <header>sourceswidget.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>

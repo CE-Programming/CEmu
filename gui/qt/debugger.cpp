@@ -788,6 +788,7 @@ void MainWindow::debugPopulate() {
     osUpdate();
     stackUpdate();
     disasmUpdateAddr(m_prevDisasmAddr = cpu.registers.PC, true);
+    ui->sources->updatePC(m_prevDisasmAddr);
 
     memUpdate();
 }

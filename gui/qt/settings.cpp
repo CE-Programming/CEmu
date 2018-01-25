@@ -429,7 +429,7 @@ void MainWindow::setFont(int fontSize) {
     monospace.setPointSize(fontSize);
     ui->console->setFont(monospace);
     m_disasm->setFont(monospace);
-
+    ui->sources->setSourceFont(monospace);
     ui->stackView->setFont(monospace);
 
     ui->afregView->setFont(monospace);
