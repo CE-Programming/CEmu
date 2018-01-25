@@ -3,6 +3,7 @@
 #include <QtCore/QDirIterator>
 #include <QtGui/QTextFrame>
 #include <QtWidgets/QFileDialog>
+#include <QtWidgets/QMenu>
 #include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QTabWidget>
@@ -70,11 +71,13 @@ void SourcesWidget::selectDebugFile() {
         {
             QFile file(dir);
             if (success && file.open(QIODevice::ReadOnly)) {
-                QPlainTextEdit *edit = new QPlainTextEdit(file.readAll());
-                edit->setReadOnly(true);
-                edit->setFont(m_sourceFont);
-                edit->setCenterOnScroll(true);
-                m_tabs->addTab(edit, QFileInfo(file).baseName());
+                QPlainTextEdit *source = new QPlainTextEdit(file.readAll());
+                source->setReadOnly(true);
+                source->setFont(m_sourceFont);
+                source->setCenterOnScroll(true);
+                source->setContextMenuPolicy(Qt::CustomContextMenu);
+                connect(source, &QWidget::customContextMenuRequested, this, &SourcesWidget::sourceContextMenu);
+                m_tabs->addTab(source, QFileInfo(file).baseName());
             }
         }
         {
@@ -102,6 +105,11 @@ void SourcesWidget::selectDebugFile() {
 }
 
 void SourcesWidget::updatePC(quint32 pc) {
+    QTextBlockFormat format;
+    if (!m_pcCursor.isNull()) {
+        format.setBackground(Qt::white);
+        m_pcCursor.mergeBlockFormat(format);
+    }
     if (m_addrToLoc.empty()) {
         return;
     }
@@ -111,18 +119,36 @@ void SourcesWidget::updatePC(quint32 pc) {
     }
     quint32 loc = *--i, line = loc & 0xFFFFFF;
     quint8 index = loc >> 24;
-    QPlainTextEdit *edit = static_cast<QPlainTextEdit *>(m_tabs->widget(index));
+    QPlainTextEdit *source = static_cast<QPlainTextEdit *>(m_tabs->widget(index));
     if (line) {
         line--;
     }
-    QTextCursor cursor(edit->document()->findBlockByLineNumber(line));
-    QTextBlockFormat format;
-    format.setBackground(Qt::white);
-    edit->textCursor().mergeBlockFormat(format);
     format.setBackground(Qt::red);
-    cursor.mergeBlockFormat(format);
-    edit->setTextCursor(cursor);
+    m_pcCursor = QTextCursor(source->document()->findBlockByLineNumber(line));
+    m_pcCursor.mergeBlockFormat(format);
+    source->setTextCursor(m_pcCursor);
     m_tabs->setCurrentIndex(index);
+}
+
+void SourcesWidget::sourceContextMenu(const QPoint &pos) {
+    QPlainTextEdit *source = static_cast<QPlainTextEdit *>(m_tabs->currentWidget());
+    quint8 index = m_tabs->currentIndex();
+    quint32 line = source->cursorForPosition(pos).block().blockNumber() + 1,
+        loc = index << 24 | line;
+    auto i = m_locToAddr.upperBound(loc);
+    if (i != m_addrToLoc.begin()) {
+        i--;
+    }
+    quint32 addr = *i;
+
+    QMenu menu;
+    QAction toggleBreak(tr("Toggle Breakpoint"));
+    menu.addAction(&toggleBreak);
+
+    QAction *action = menu.exec(source->mapToGlobal(pos));
+    if (action == &toggleBreak) {
+        emit breakToggled(addr);
+    }
 }
 
 void SourcesWidget::setSourceFont(const QFont &font) {
