@@ -145,13 +145,13 @@ if (!win32-msvc*) {
     }
 
     # Do we have a flag specifying use of libpng-apng from vcpkg?
-    equals(LIBPNG_APNG_FROM_VCPKG, 1) {
-        warning("Enabled using libpng-apng from vcpkg. Note that if you do not have vcpkg integrated into MSVC, and/or do not have libpng-apng installed within vcpkg, the build will likely fail.")
-        # This is a bad hack, but MOC kinda needs it to work correctly...
-        QMAKE_MOC_OPTIONS += -DPNG_WRITE_APNG_SUPPORTED
-    }
+	equals(LIBPNG_APNG_FROM_VCPKG, 1) {
+		warning("Enabled using libpng-apng from vcpkg. Note that if you do not have vcpkg integrated into MSVC, and/or do not have libpng-apng installed within vcpkg, the build will likely fail.")
+		# This is a bad hack, but MOC kinda needs it to work correctly...
+		QMAKE_MOC_OPTIONS += -DPNG_WRITE_APNG_SUPPORTED
+	}
 
-    # Otherwise...
+	# Otherwise...
     !equals(LIBPNG_APNG_FROM_VCPKG, 1) {
         # If we're not using vcpkg, we rely on manual variables to find needed
         # libpng-apng components.
@@ -287,6 +287,7 @@ SOURCES += \
     visualizerwidget.cpp \
     debugger/visualizerdisplaywidget.cpp \
     memorywidget.cpp \
+    debugger/sourceswidget.cpp
     archive/extractor.c \
     ../../core/bus.c \
     keyhistorywidget.cpp \
@@ -387,6 +388,7 @@ HEADERS  += \
     vartablemodel.h \
     visualizerwidget.h \
     debugger/visualizerdisplaywidget.h \
+    debugger/sourceswidget.h
     archive/extractor.h \
     ../../core/bus.h \
     keyhistorywidget.h \

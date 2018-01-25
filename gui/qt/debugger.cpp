@@ -855,6 +855,7 @@ void MainWindow::debugPopulate() {
     osUpdate();
     stackUpdate();
     disasmUpdateAddr(m_prevDisasmAddr = cpu.registers.PC, true);
+    ui->sources->updatePC(m_prevDisasmAddr);
     // Track step navigation: append on control-flow (branch taken),
     // replace on linear advance. Non-step stops do not modify history
     if (m_stepCtx.active) {
