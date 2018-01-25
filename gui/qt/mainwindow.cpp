@@ -180,6 +180,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonCertID, &QPushButton::clicked, this, &MainWindow::setCalcId);
     connect(m_disasm, &DataWidget::gotoDisasmAddress, this, &MainWindow::gotoDisasmAddr);
     connect(m_disasm, &DataWidget::gotoMemoryAddress, this, &MainWindow::gotoMemAddr);
+    connect(ui->sources, &SourcesWidget::breakToggled, this, &MainWindow::breakToggle);
 
 #ifdef Q_OS_MACX
     {

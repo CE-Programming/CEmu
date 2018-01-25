@@ -930,17 +930,21 @@ void MainWindow::breakAddSlot() {
     breakAdd(breakNextLabel(), 0, true, false, true);
 }
 
+void MainWindow::breakToggle(quint32 address, bool gui) {
+    m_guiAdd = gui;
+
+    breakAdd(breakNextLabel(), address, true, true, false);
+
+    m_guiAdd = false;
+}
+
 void MainWindow::breakAddGui() {
     uint32_t address = static_cast<uint32_t>(hex2int(m_disasm->getSelectedAddr()));
 
     QTextCursor c = m_disasm->textCursor();
     c.setCharFormat(m_disasm->currentCharFormat());
 
-    m_guiAdd = true;
-
-    breakAdd(breakNextLabel(), address, true, true, false);
-
-    m_guiAdd = false;
+    breakToggle(address);
 
     int32_t base = disasm.base;
     int32_t next = disasm.next;
