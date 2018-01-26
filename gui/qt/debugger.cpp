@@ -914,7 +914,7 @@ void MainWindow::breakSetPrev(QTableWidgetItem *current, [[maybe_unused]] QTable
 void MainWindow::breakRemoveRow(int row) {
     uint32_t address = static_cast<uint32_t>(hex2int(m_breakpoints->item(row, BREAK_ADDR_COL)->text()));
 
-    debug_watch(address, DBG_MASK_EXEC, false);
+    changeDebugPoint(address, DBG_MASK_EXEC, false);
     if (!m_guiAdd && !m_useSoftCom) {
         disasmUpdate();
         memUpdate();
@@ -1000,10 +1000,10 @@ void MainWindow::breakModified(QTableWidgetItem *item) {
         mask = breakGetMask(row);
 
         if (m_prevBreakAddr != DEBUG_UNSET_ADDR) {
-            debug_watch(hex2int(m_prevBreakAddr), DBG_MASK_EXEC, false);
+            changeDebugPoint(hex2int(m_prevBreakAddr), DBG_MASK_EXEC, false);
         }
         item->setText(addrStr);
-        debug_watch(addr, mask, true);
+        changeDebugPoint(addr, mask, true);
         m_breakpoints->blockSignals(false);
     }
     disasmUpdate();
@@ -1028,6 +1028,11 @@ void MainWindow::breakToggle(quint32 address, bool gui) {
     breakAdd(breakNextLabel(), address, true, true, false);
 
     m_guiAdd = false;
+}
+
+void MainWindow::changeDebugPoint(quint32 address, unsigned type, bool state) {
+    debug_watch(address, type, state);
+    emit debugPointChanged(address, type, state);
 }
 
 void MainWindow::breakAddGui() {
@@ -1111,7 +1116,7 @@ bool MainWindow::breakAdd(const QString &label, uint32_t addr, bool enabled, boo
     connect(btnEnable, &QToolButton::clicked, [this, btnEnable, itemAddr](bool checked) {
         uint32_t addr = static_cast<uint32_t>(hex2int(itemAddr->text()));
         btnEnable->setIcon(checked ? m_iconCheck : m_iconCheckGray);
-        debug_watch(addr, DBG_MASK_EXEC, checked);
+        changeDebugPoint(addr, DBG_MASK_EXEC, checked);
         disasmUpdate();
         memUpdate();
     });
@@ -1126,7 +1131,7 @@ bool MainWindow::breakAdd(const QString &label, uint32_t addr, bool enabled, boo
     m_breakpoints->setCurrentCell(row, BREAK_REMOVE_COL);
 
     if (addrStr != DEBUG_UNSET_ADDR) {
-        debug_watch(addr, DBG_MASK_EXEC, enabled);
+        changeDebugPoint(addr, DBG_MASK_EXEC, enabled);
     }
 
     if (!m_guiAdd && !m_useSoftCom) {
@@ -1367,7 +1372,7 @@ void MainWindow::watchRemoveRow(int row) {
         uint32_t high = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_HIGH_COL)->text()));
 
         for (uint32_t addr = low; addr <= high; addr++) {
-            debug_watch(addr, DBG_MASK_READ | DBG_MASK_WRITE, false);
+            changeDebugPoint(addr, DBG_MASK_READ | DBG_MASK_WRITE, false);
         }
 
         if (!m_guiAdd && !m_useSoftCom) {
@@ -1480,7 +1485,7 @@ void MainWindow::watchUpdate() {
             int mask = watchGetMask(row);
 
             for (uint32_t addr = low; addr <= high; addr++) {
-                debug_watch(addr, mask, true);
+                changeDebugPoint(addr, mask, true);
             }
         }
     }
@@ -1499,7 +1504,7 @@ void MainWindow::watchUpdateRow(QTableWidgetItem *itemLow, QTableWidgetItem *ite
         uint32_t high = static_cast<uint32_t>(hex2int(itemHigh->text()));
 
         for (uint32_t addr = low; addr <= high; addr++) {
-            debug_watch(addr, DBG_MASK_READ | DBG_MASK_WRITE, false);
+            changeDebugPoint(addr, DBG_MASK_READ | DBG_MASK_WRITE, false);
         }
     }
 
@@ -1682,7 +1687,7 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
             uint32_t high = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_HIGH_COL)->text()));
 
             for (uint32_t watch_addr = low; watch_addr <= high; watch_addr++) {
-                debug_watch(watch_addr, DBG_MASK_READ | DBG_MASK_WRITE, false);
+                changeDebugPoint(watch_addr, DBG_MASK_READ | DBG_MASK_WRITE, false);
             }
         }
 
@@ -1733,7 +1738,7 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
             uint32_t high = static_cast<uint32_t>(hex2int(m_prevWatchHigh));
 
             for (uint32_t watch_addr = low; watch_addr <= high; watch_addr++) {
-                debug_watch(watch_addr, DBG_MASK_READ | DBG_MASK_WRITE, false);
+                changeDebugPoint(watch_addr, DBG_MASK_READ | DBG_MASK_WRITE, false);
             }
         }
 
@@ -1802,9 +1807,9 @@ void MainWindow::updateLabels() {
                                 (m_watchpoints->item(row, WATCH_WRITE_COL)->checkState() == Qt::Checked ? DBG_MASK_WRITE : DBG_MASK_NONE);
             // remove old watchpoint and add new one
             m_watchpoints->blockSignals(true);
-            debug_watch(static_cast<uint32_t>(hex2int(old)), mask, false);
+            changeDebugPoint(uint32_t(hex2int(old)), mask, false);
             m_watchpoints->item(row, WATCH_LOW_COL)->setText(next);
-            debug_watch(static_cast<uint32_t>(hex2int(next)), mask, true);
+            changeDebugPoint(uint32_t(hex2int(next)), mask, true);
             m_watchpoints->blockSignals(true);
         }
     }
@@ -1814,9 +1819,9 @@ void MainWindow::updateLabels() {
         if (!next.isEmpty() && next != old) {
             int mask = breakGetMask(row);
             m_breakpoints->blockSignals(true);
-            debug_watch(static_cast<uint32_t>(hex2int(old)), mask, false);
+            changeDebugPoint(uint32_t(hex2int(old)), mask, false);
             m_breakpoints->item(row, BREAK_ADDR_COL)->setText(next);
-            debug_watch(static_cast<uint32_t>(hex2int(next)), mask, true);
+            changeDebugPoint(uint32_t(hex2int(next)), mask, true);
             m_breakpoints->blockSignals(false);
         }
     }

@@ -92,6 +92,8 @@ signals:
     void usbHotplug(libusb_device *device, bool attached);
 #endif
     void usbUnplug();
+    // Debugging
+    void debugPointChanged(quint32 address, unsigned type, bool state);
 
 private slots:
     void usbUnplugged() const;
@@ -364,6 +366,7 @@ private:
     void gotoDisasmAddr(uint32_t addr);
     QAction *gotoDisasmAction(QMenu *menu) const;
     void gotoMemAddr(uint32_t addr);
+    void changeDebugPoint(quint32 address, unsigned type, bool state);
     HexWidget *gotoMemAddrNoRaise(uint32_t addr);
     QAction *gotoMemAction(QMenu *menu, bool vat = false) const;
 
