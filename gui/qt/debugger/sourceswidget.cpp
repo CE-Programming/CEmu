@@ -1,4 +1,5 @@
 #include "sourceswidget.h"
+#include "cdebughighlighter.h"
 
 #include <QtCore/QDirIterator>
 #include <QtGui/QTextFrame>
@@ -41,14 +42,28 @@ SourcesWidget::SourcesWidget(QWidget *parent) : QWidget(parent) {
     layout->addWidget(m_tabs);
     setLayout(layout);
     connect(m_button, &QPushButton::clicked, this, &SourcesWidget::selectDebugFile);
+    m_literalFormat.setForeground(QColor::fromRgb(0x008000));
+    m_escapeFormat.setForeground(QColor::fromRgb(0x008000));
+    m_escapeFormat.setFontWeight(QFont::Bold);
+    m_preprocessorFormat.setForeground(QColor::fromRgb(0x003F3F));
+    m_preprocessorFormat.setFontWeight(QFont::Bold);
+    m_commentFormat.setForeground(QColor::fromRgb(0x808080));
+    m_keywordFormat.setForeground(QColor::fromRgb(0x3F3FFF));
+    m_keywordFormat.setFontWeight(QFont::Bold);
+    m_operatorFormat.setFontWeight(QFont::Bold);
+    m_errorFormat.setBackground(QColor::fromRgb(0xFF3F3F));
 }
 
 void SourcesWidget::selectDebugFile() {
-    QString debugName = QFileDialog::getOpenFileName(this, tr("Open Debug File"), "", tr("Debug File (*.dbg)"));
+    QString debugName = QFileDialog::getOpenFileName(this, tr("Open Debug File"), "/home/jacob/Programming/calc/ez80/c/debug/bin", tr("Debug File (*.dbg)"));
     if (debugName.isNull()) {
         return;
     }
+    for (int i = 0; i < m_tabs->count(); i++) {
+        m_tabs->widget(i)->deleteLater();
+    }
     m_tabs->clear();
+    m_highlighters.clear();
     m_addrToLoc.clear();
     m_locToAddr.clear();
     DebugFile debugFile(debugName);
@@ -73,9 +88,9 @@ void SourcesWidget::selectDebugFile() {
             if (success && file.open(QIODevice::ReadOnly)) {
                 QPlainTextEdit *source = new QPlainTextEdit(file.readAll());
                 source->setReadOnly(true);
-                source->setFont(m_sourceFont);
                 source->setCenterOnScroll(true);
                 source->setContextMenuPolicy(Qt::CustomContextMenu);
+                m_highlighters << new CDebugHighlighter(this, source);
                 connect(source, &QWidget::customContextMenuRequested, this, &SourcesWidget::sourceContextMenu);
                 m_tabs->addTab(source, QFileInfo(file).baseName());
             }
@@ -104,30 +119,46 @@ void SourcesWidget::selectDebugFile() {
     }
 }
 
-void SourcesWidget::updatePC(quint32 pc) {
-    QTextBlockFormat format;
-    if (!m_pcCursor.isNull()) {
-        format.setBackground(Qt::white);
-        m_pcCursor.mergeBlockFormat(format);
-    }
+void SourcesWidget::update(quint32 addr, bool pc) {
     if (m_addrToLoc.empty()) {
         return;
     }
-    auto i = m_addrToLoc.upperBound(pc);
+    auto i = m_addrToLoc.upperBound(addr);
     if (i == m_addrToLoc.begin() || i == m_addrToLoc.end()) {
         return;
     }
     quint32 loc = *--i, line = loc & 0xFFFFFF;
     quint8 index = loc >> 24;
-    QPlainTextEdit *source = static_cast<QPlainTextEdit *>(m_tabs->widget(index));
-    if (line) {
-        line--;
+    if (index >= m_highlighters.size()) {
+        return;
     }
-    format.setBackground(Qt::red);
-    m_pcCursor = QTextCursor(source->document()->findBlockByLineNumber(line));
-    m_pcCursor.mergeBlockFormat(format);
-    source->setTextCursor(m_pcCursor);
-    m_tabs->setCurrentIndex(index);
+    QPlainTextEdit *source = static_cast<QPlainTextEdit *>(m_tabs->widget(index));
+    if (!line) {
+        return;
+    }
+    QTextBlock block = source->document()->findBlockByNumber(line);
+    if (!block.isValid()) {
+        return;
+    }
+    m_highlighters[index]->rehighlightBlock(block);
+    if (pc) {
+        m_tabs->setCurrentIndex(index);
+        source->setTextCursor(QTextCursor(block));
+    }
+}
+
+void SourcesWidget::updateAll() {
+    for (auto *highlighter : m_highlighters) {
+        highlighter->rehighlight();
+    }
+}
+
+void SourcesWidget::updatePC(quint32 pc) {
+    update(pc, true);
+}
+
+void SourcesWidget::updateAddr(quint32 addr) {
+    update(addr, false);
 }
 
 void SourcesWidget::sourceContextMenu(const QPoint &pos) {
@@ -152,8 +183,11 @@ void SourcesWidget::sourceContextMenu(const QPoint &pos) {
 }
 
 void SourcesWidget::setSourceFont(const QFont &font) {
-    for (int i = 0; i != m_tabs->count(); i++) {
-        m_tabs->widget(i)->setFont(font);
+    for (auto *format : { &m_defaultFormat, &m_operatorFormat, &m_literalFormat, &m_escapeFormat,
+                          &m_preprocessorFormat, &m_commentFormat, &m_keywordFormat, &m_identifierFormat, &m_errorFormat }) {
+        QFont::Weight weight = static_cast<QFont::Weight>(format->fontWeight());
+        format->setFont(font);
+        format->setFontWeight(weight);
     }
-    m_sourceFont = font;
+    updateAll();
 }
