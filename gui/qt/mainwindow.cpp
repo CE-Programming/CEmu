@@ -181,6 +181,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(m_disasm, &DataWidget::gotoDisasmAddress, this, &MainWindow::gotoDisasmAddr);
     connect(m_disasm, &DataWidget::gotoMemoryAddress, this, &MainWindow::gotoMemAddr);
     connect(ui->sources, &SourcesWidget::breakToggled, this, &MainWindow::breakToggle);
+    connect(this, &MainWindow::debugPointChanged, ui->sources, &SourcesWidget::updateAddr);
 
 #ifdef Q_OS_MACX
     {

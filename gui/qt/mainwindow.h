@@ -62,6 +62,9 @@ signals:
     void setLcdFrameskip(int value);
     void setLcdMode(bool spi);
 
+    // Debugging
+    void debugPointChanged(quint32 address, unsigned type, bool state);
+
 protected:
     virtual void changeEvent(QEvent* event) Q_DECL_OVERRIDE;
     virtual void closeEvent(QCloseEvent *event) Q_DECL_OVERRIDE;
@@ -281,6 +284,7 @@ private:
     void gotoPressed();
     void gotoDisasmAddr(uint32_t addr);
     void gotoMemAddr(uint32_t addr);
+    void changeDebugPoint(quint32 address, unsigned type, bool state);
 
     void handleCtrlClickText(QPlainTextEdit *edit);
     void handleCtrlClickLine(QLineEdit *edit);
