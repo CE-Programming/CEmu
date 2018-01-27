@@ -5,9 +5,9 @@ The core is programmed in C and the GUI in C++ with Qt, for performance and port
 
 Here are some screenshots showcasing some of the features and various layouts, on these OSes:
 
-On macOS (a non-debug layout) |
------------- | 
-<a href="https://i.imgur.com/432aLxq.png"><img src="https://i.imgur.com/VjvesTi.png" /></a>|
+On macOS (a non-debug layout) | On Windows (a non-debug layout) |
+------------ | ------------- |
+<a href="https://i.imgur.com/432aLxq.png"><img src="https://i.imgur.com/VjvesTi.png" /></a>|<a href="https://i.imgur.com/W5mKf1n.png"><img src="https://i.imgur.com/EZKWRUh.png" /></a>
 
 On Windows (a debug layout) | On Linux (another debug layout)|
 ------------ | ------------- |
