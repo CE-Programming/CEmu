@@ -17,7 +17,8 @@
 #include <regex>
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-  // TODO: implement glob() or do the equivalent!
+  #include <fileapi.h>
+  #include <handleapi.h>
 #else
   #include <glob.h>
 #endif
@@ -514,28 +515,32 @@ bool loadJSONConfig(const std::string& jsonContents)
 
 std::vector<std::string> globVector(const std::string& pattern)
 {
+    std::vector<std::string> files;
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-  // TODO: implement that or do the equivalent!
-    (void)pattern;
-    return std::vector<std::string>();
+    WIN32_FIND_DATAA find_result;
+    HANDLE find_handle = FindFirstFileA(pattern.c_str(), &find_result);
+    if (find_handle != INVALID_HANDLE_VALUE) {
+        do {
+            files.push_back(pattern.substr(0, pattern.find_last_of("/\\") + 1) + find_result.cFileName);
+        } while (FindNextFileA(find_handle, &find_result));
+        FindClose(find_handle);
+    }
 #else
     glob_t glob_result;
-    glob(pattern.c_str(), GLOB_TILDE, NULL, &glob_result);
-    std::vector<std::string> files;
-    for (unsigned int i=0; i<glob_result.gl_pathc; i++)
+    if (!glob(pattern.c_str(), GLOB_TILDE, NULL, &glob_result))
     {
-        files.push_back(std::string(glob_result.gl_pathv[i]));
+        for (unsigned int i=0; i<glob_result.gl_pathc; i++)
+        {
+            files.push_back(std::string(glob_result.gl_pathv[i]));
+        }
+        globfree(&glob_result);
     }
-    globfree(&glob_result);
-    return files;
 #endif
+    return files;
 }
 
 bool sendFilesForTest()
 {
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-  // TODO: call the equivalent implementation
-#else
     const char* forced_libs_dir = getenv("AUTOTESTER_LIBS_DIR");
     if (forced_libs_dir)
     {
@@ -567,7 +572,6 @@ bool sendFilesForTest()
             DO_STEP_CALLBACK();
         }
     }
-#endif
 
     for (const auto& file : config.transfer_files)
     {
