@@ -17,8 +17,7 @@
 #include <regex>
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-  #include <fileapi.h>
-  #include <handleapi.h>
+  #include <windows.h>
 #else
   #include <glob.h>
 #endif
