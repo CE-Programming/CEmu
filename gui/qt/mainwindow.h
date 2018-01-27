@@ -111,6 +111,7 @@ signals:
 
 protected:
     // Misc.
+    virtual void changeEvent(QEvent* event) Q_DECL_OVERRIDE;
     virtual void closeEvent(QCloseEvent*) Q_DECL_OVERRIDE;
     virtual bool eventFilter(QObject*, QEvent*) Q_DECL_OVERRIDE;
     virtual void showEvent(QShowEvent *event) Q_DECL_OVERRIDE;

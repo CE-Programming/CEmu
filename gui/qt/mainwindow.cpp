@@ -551,10 +551,20 @@ void MainWindow::switchTranslator(const QString& lang)
     if (lang == QStringLiteral("en_EN") || (appTranslator.load(lang, QStringLiteral(":/i18n/i18n/"))
                                             && qApp->installTranslator(&appTranslator))) {
         settings->setValue(SETTING_PREFERRED_LANG, lang);
-        ui->retranslateUi(this);
     } else {
-        QMessageBox::critical(this, MSG_ERROR, tr("Language loading error :("));
+        QMessageBox::warning(this, MSG_WARNING, tr("No translation available for this language :("));
     }
+}
+
+void MainWindow::changeEvent(QEvent* event)
+{
+    const auto eventType = event->type();
+    if (eventType == QEvent::LanguageChange) {
+        ui->retranslateUi(this);
+    } else if (eventType == QEvent::LocaleChange) {
+        switchTranslator(QLocale::system().name());
+    }
+    QMainWindow::changeEvent(event);
 }
 
 void MainWindow::showEvent(QShowEvent *e) {

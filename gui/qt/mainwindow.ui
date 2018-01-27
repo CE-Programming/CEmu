@@ -8565,9 +8565,9 @@ QPushButton:pressed {
       <string>Language</string>
      </property>
      <addaction name="actionEnglish"/>
+     <addaction name="actionEspanol"/>
      <addaction name="actionFran_ais"/>
      <addaction name="actionDutch"/>
-     <addaction name="actionEspanol"/>
     </widget>
     <addaction name="actionNew"/>
     <addaction name="separator"/>
