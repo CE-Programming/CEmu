@@ -10,10 +10,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define PNG_BPP 16
-#define PNG_WIDTH 320
-#define PNG_HEIGHT 240
-
 apng_t apng;
 
 bool apng_start(const char *tmp_name, int fps, int frameskip) {
