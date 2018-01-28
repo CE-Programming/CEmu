@@ -8,10 +8,10 @@
 
 spi_state_t spi;
 
-static void spi_scan_line(uint16_t row) {
+static bool spi_scan_line(uint16_t row) {
     if (unlikely(row > SPI_LAST_ROW)) {
         spi.mode |= SPI_MODE_IGNORE;
-        return;
+        return false;
     }
     spi.mode &= ~SPI_MODE_IGNORE;
     if (unlikely(spi.mode & SPI_MODE_PARTIAL) &&
@@ -44,10 +44,11 @@ static void spi_scan_line(uint16_t row) {
         spi.col = 0;
         spi.colDir = 1;
     }
+    return true;
 }
 
-void spi_hsync(void) {
-    spi_scan_line(spi.row + 1);
+bool spi_hsync(void) {
+    return spi_scan_line(spi.row + 1);
 }
 
 static void spi_reset_mregs(void) {
@@ -60,15 +61,15 @@ static void spi_reset_mregs(void) {
     }
 }
 
-void spi_vsync(void) {
+bool spi_vsync(void) {
     spi_reset_mregs();
-    spi_scan_line(0);
+    return spi_scan_line(0);
 }
 
-void spi_update_pixel(void) {
+bool spi_refresh_pixel(void) {
     uint8_t *pixel, red, green, blue;
     if (unlikely(spi.mode & SPI_MODE_IGNORE)) {
-        return;
+        return false;
     }
     if (unlikely(spi.mode & (SPI_MODE_SLEEP | SPI_MODE_OFF | SPI_MODE_BLANK))) {
         red = green = blue = ~0;
@@ -107,10 +108,12 @@ void spi_update_pixel(void) {
     spi.col += spi.colDir;
     if (unlikely(spi.col > SPI_LAST_COL)) {
         spi.mode |= SPI_MODE_IGNORE;
+        return false;
     }
+    return true;
 }
 
-void spi_process_pixel(uint8_t red, uint8_t green, uint8_t blue) {
+void spi_update_pixel(uint8_t red, uint8_t green, uint8_t blue) {
     assert(red < 32 && green < 64 && blue < 32);
     if (spi.rowReg < 320 && spi.colReg < 240) {
         spi.frame[spi.rowReg][spi.colReg][SPI_RED] = spi.lut[red + 0];

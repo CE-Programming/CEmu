@@ -8,8 +8,6 @@
 #include "schedule.h"
 #include "interrupt.h"
 
-#include <assert.h>
-#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -115,7 +113,7 @@ void lcd_drawframe(void *output, void *data, void *data_end, uint32_t control, u
     }
 
 draw_black:
-    while (out < out_end) { *out++ = 0xFF000000; }
+    while (out < out_end) { *out++ = 0xFF000000 | rand(); }
 }
 
 void lcd_gui_event(void) {
@@ -125,31 +123,48 @@ void lcd_gui_event(void) {
 }
 
 static uint32_t lcd_process_pixel(uint8_t red, uint8_t green, uint8_t blue) {
-    uint32_t ticks = 1;
-    if (likely(lcd.preRow < lcd.LPP)) {
-        if (unlikely(!lcd.preCol && lcd.preRow)) {
+    uint32_t v, h, ticks = 1;
+    if (likely(lcd.curRow < lcd.LPP)) {
+        if (!likely(lcd.curCol)) {
+            if (!likely(lcd.curRow)) {
+                for (v = lcd.VBP; v; v--) {
+                    for (h = lcd.HBP + lcd.CPL + lcd.HFP; h && spi_refresh_pixel(); h--) {
+                    }
+                    if (!spi_hsync()) {
+                        break;
+                    }
+                }
+            }
+            for (h = lcd.HBP; h && spi_refresh_pixel(); h--) {
+            }
+        }
+        spi_refresh_pixel();
+        if (likely(lcd.curCol < lcd.PPL)) {
+            if (!likely(lcd.control & 1 << 11)) {
+                red = green = blue = 0;
+            } else if (likely(lcd.BGR)) {
+                uint8_t temp = red;
+                red = blue;
+                blue = temp;
+            }
+            spi_update_pixel(red, green, blue);
+        }
+        if (unlikely(++lcd.curCol >= lcd.CPL)) {
+            for (h = lcd.HFP; h && spi_refresh_pixel(); h--) {
+            }
             spi_hsync();
+            if (unlikely(++lcd.curRow >= lcd.LPP)) {
+                for (v = lcd.VFP; v; v--) {
+                    for (h = lcd.HBP + lcd.CPL + lcd.HFP; h && spi_refresh_pixel(); h--) {
+                    }
+                    if (!spi_hsync()) {
+                        break;
+                    }
+                }
+            }
+            lcd.curCol = 0;
+            ticks += lcd.HFP + lcd.HSW + lcd.HBP;
         }
-        spi_update_pixel();
-        if (!likely(lcd.control & 1 << 11)) {
-            red = green = blue = 0;
-        } else if (likely(lcd.BGR)) {
-            uint8_t temp = red;
-            red = blue;
-            blue = temp;
-        }
-        spi_process_pixel(red, green, blue);
-    }
-    if (unlikely(++lcd.preCol >= lcd.PPL)) {
-        lcd.preCol = 0;
-        ++lcd.preRow;
-    }
-    if (unlikely(!lcd.curCol && lcd.curRow)) {
-        ticks += lcd.HFP + lcd.HSW + lcd.HBP;
-    }
-    if (unlikely(++lcd.curCol >= lcd.PPL)) {
-        lcd.curCol = 0;
-        ++lcd.curRow;
     }
     return ticks * lcd.PCD * 2;
 }
@@ -169,30 +184,33 @@ static uint32_t lcd_process_index(uint8_t index) {
     return lcd_process_half(lcd.palette[index]);
 }
 
-static uint32_t lcd_drain_word(void) {
-    uint32_t addr = lcd.upcurr & 0x07FFFC, word = 0;
-    uint8_t i, byte;
-    lcd.upcurr += 4;
-    for (i = 0; i != 4; i++) {
-        if (likely(addr < SIZE_RAM)) {
-            byte = mem.ram.block[addr + i];
-        } else {
-            byte = 0;
-        }
-        if (unlikely(lcd.BEBO)) {
-            word = word << 8 | byte;
-        } else {
-            word = word >> 8 | byte << 24;
-        }
+static void lcd_fill_bytes(uint8_t bytes) {
+    mem_dma_cpy(&lcd.fifo[lcd.pos], lcd.upcurr, bytes);
+    lcd.pos += bytes;
+    lcd.upcurr += bytes;
+}
+
+static uint32_t lcd_drain_word(uint8_t *pos) {
+    uint32_t word = 0;
+    if (unlikely(lcd.BEBO)) {
+        word |= lcd.fifo[(*pos)++] << 24;
+        word |= lcd.fifo[(*pos)++] << 16;
+        word |= lcd.fifo[(*pos)++] <<  8;
+        word |= lcd.fifo[(*pos)++] <<  0;
+    } else {
+        word |= lcd.fifo[(*pos)++] <<  0;
+        word |= lcd.fifo[(*pos)++] <<  8;
+        word |= lcd.fifo[(*pos)++] << 16;
+        word |= lcd.fifo[(*pos)++] << 24;
     }
     return word;
 }
 
 static uint32_t lcd_words(uint8_t words) {
     uint32_t ticks = 0;
-    uint8_t bit, bpp = 1 << lcd.LCDBPP;
+    uint8_t pos = lcd.pos, bit, bpp = 1 << lcd.LCDBPP;
     while (words--) {
-        uint32_t word = lcd_drain_word();
+        uint32_t word = lcd_drain_word(&pos);
         if (unlikely(lcd.LCDBPP == 5)) {
             ticks += lcd_process_pixel(word >> 3 & 0x1F, word >> 10 & 0x3F, word >> 19 & 0x1F);
         } else if (unlikely(lcd.LCDBPP >= 4)) {
@@ -249,10 +267,12 @@ static void lcd_event(enum sched_item_id id) {
             lcd.PPF = 1 << (8 + lcd.WTRMRK - lcd.BPP);
             duration = ((lcd.VSW - 1) * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) +
                         lcd.HSW) * lcd.PCD + 1;
-            lcd.prefill = 0;
+            lcd.prefill = true;
             if (lcd.spi) {
-                sched_repeat_relative(SCHED_LCD_DMA, SCHED_LCD, duration, 0);
+                lcd.pos = 0;
+                lcd.curRow = lcd.curCol = 0;
                 spi_vsync();
+                sched_repeat_relative(SCHED_LCD_DMA, SCHED_LCD, duration, 0);
             }
             lcd.compare = LCD_LNBU;
             break;
@@ -267,7 +287,7 @@ static void lcd_event(enum sched_item_id id) {
             break;
         case LCD_ACTIVE_VIDEO:
             duration = lcd.LPP * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD;
-            if (lcd.prefill >= 4) {
+            if (!lcd.prefill) {
                 sched_repeat_relative(SCHED_LCD_DMA, SCHED_LCD, lcd.HSW + lcd.HBP, 0);
             }
             lcd.compare = LCD_FRONT_PORCH;
@@ -283,31 +303,21 @@ static void lcd_event(enum sched_item_id id) {
 
 static uint32_t lcd_dma(enum sched_item_id id) {
     uint32_t ticks;
-    switch (lcd.prefill++) {
-        case 0:
+    if (unlikely(lcd.prefill)) {
+        if (!lcd.pos) {
             lcd.upcurr = lcd.upbase;
-            lcd.preRow = lcd.preCol = 0;
-        case 2:
-            lcd_words(16);
-            sched_repeat(id, 19);
-            return 18;
-        case 1:
-            lcd_words(16);
-            sched_repeat(id, 22);
-            return 19;
-        case 3:
-            lcd_words(16);
-            lcd.curRow = lcd.curCol = 0;
-            if (lcd.compare == LCD_FRONT_PORCH) {
-                sched_repeat_relative(SCHED_LCD_DMA, SCHED_LCD, lcd.HSW + lcd.HBP, 0);
-            }
-            return 19;
-        default:
-            lcd.prefill = 4;
-            break;
+        }
+        lcd_fill_bytes(64);
+        if ((lcd.prefill = lcd.pos)) {
+            sched_repeat(id, lcd.pos == 128 ? 22 : 19);
+        } else if (lcd.compare == LCD_FRONT_PORCH) {
+            sched_repeat_relative(SCHED_LCD_DMA, SCHED_LCD, lcd.HSW + lcd.HBP, 0);
+        }
+        return lcd.pos & 64 ? 18 : 19;
     }
     ticks = lcd_words(lcd.WTRMRK ? 16 : 8);
-    if (lcd.preRow < lcd.LPP || lcd.curRow < lcd.LPP) {
+    lcd_fill_bytes(lcd.WTRMRK ? 64 : 32);
+    if (lcd.curRow < lcd.LPP) {
         sched_repeat(id, ticks);
     }
     return lcd.WTRMRK ? 19 : 11;

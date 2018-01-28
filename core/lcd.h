@@ -62,8 +62,9 @@ typedef struct lcd_state {
     uint32_t crsrRis;              /* Cursor raw interrupt status register - const */
 
     /* Internal registers */
-    uint8_t prefill;
-    uint32_t preCol, preRow, curCol, curRow;
+    bool prefill;
+    uint8_t pos, fifo[256];
+    uint32_t curCol, curRow;
     enum lcd_comp compare;
     uint32_t PPL, HSW, HFP, HBP, LPP, VSW, VFP, VBP, PCD, ACB, CPL, LED, LCDBPP, BPP, PPF;
     bool CLKSEL, IVS, IHS, IPC, IOE, LEE, BGR, BEBO, BEPO, WTRMRK;

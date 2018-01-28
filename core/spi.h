@@ -61,10 +61,10 @@ extern spi_state_t spi;
 
 /* Available Functions */
 eZ80portrange_t init_spi(void);
-void spi_hsync(void);
-void spi_vsync(void);
-void spi_update_pixel(void);
-void spi_process_pixel(uint8_t r, uint8_t g, uint8_t b);
+bool spi_hsync(void);
+bool spi_vsync(void);
+bool spi_refresh_pixel(void);
+void spi_update_pixel(uint8_t r, uint8_t g, uint8_t b);
 
 /* Save/Restore */
 bool spi_restore(FILE *image);
