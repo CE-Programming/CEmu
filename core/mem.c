@@ -159,7 +159,7 @@ void *mem_dma_cpy(void *buf, uint32_t addr, int32_t size) {
             addr += temp_size;
             size -= temp_size;
         } else {
-            *dest++ = mem_peek_byte(0xD00000 | addr++);
+            *dest++ = mem_read_unmapped_ram(true);
             size--;
         }
     }
@@ -324,7 +324,7 @@ static flash_write_pattern_t patterns[] = {
 
 };
 
-static uint8_t flash_read_handler(uint32_t addr) {
+static uint8_t mem_read_flash(uint32_t addr) {
     uint8_t value = 0;
     uint8_t selected;
 
@@ -377,14 +377,17 @@ static uint8_t flash_read_handler(uint32_t addr) {
                 break;
             case FLASH_IPB_MODE:
                 break;
+            default:
+                break;
         }
+    } else {
+        value = mem_read_unmapped_flash(true);
     }
 
-    /* Returning 0x00 is enough to emulate for the OS. Set the msb bit for user routines? */
     return value;
 }
 
-static void flash_write_handler(uint32_t addr, uint8_t byte) {
+static void mem_write_flash(uint32_t addr, uint8_t byte) {
     int i;
     int partial_match = 0;
     flash_write_t *w;
@@ -455,7 +458,7 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
         /* FLASH */
         case 0x0: case 0x1: case 0x2: case 0x3:
         case 0x4: case 0x5: case 0x6: case 0x7:
-            value = flash_read_handler(addr);
+            value = mem_read_flash(addr);
             if (fetch && detect_flash_unlock_sequence(value)) {
                 control.flashUnlocked |= 1 << 3;
             }
@@ -463,6 +466,7 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
 
         /* UNMAPPED */
         case 0x8: case 0x9: case 0xA: case 0xB: case 0xC:
+            value = mem_read_unmapped_other(true);
             cpu.cycles += 258;
             break;
 
@@ -472,6 +476,8 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
             ramAddr = addr & 0x7FFFF;
             if (ramAddr < 0x65800) {
                 value = mem.ram.block[ramAddr];
+            } else {
+                value = mem_read_unmapped_ram(true);
             }
             break;
 
@@ -529,7 +535,7 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
                     gui_console_printf("[CEmu] NMI reset cause by write to flash at address %#06x from unprivileged code. Hint: Possibly a null pointer dereference.\n", addr);
                     cpu_nmi();
                 } else if (flash_unlocked()) {
-                    flash_write_handler(addr, value);
+                    mem_write_flash(addr, value);
                 } // privileged writes with flash locked are probably ignored
                 break;
 
@@ -591,6 +597,8 @@ uint8_t mem_peek_byte(uint32_t addr) {
         uint8_t *ptr;
         if ((ptr = phys_mem_ptr(addr, 1))) {
             value = *ptr;
+        } else {
+            value = mem_read_unmapped_ram(false);
         }
     } else if (mmio_mapped(addr, select)) {
         value = port_peek_byte(mmio_port(addr, select));
@@ -625,6 +633,30 @@ void mem_poke_byte(uint32_t addr, uint8_t value) {
     } else if (mmio_mapped(addr, select)) {
         port_poke_byte(mmio_port(addr, select), value);
     }
+}
+
+uint8_t mem_read_unmapped_ram(bool update) {
+    static uint8_t value = 0;
+    if (update) {
+        value = rand();
+    }
+    return value;
+}
+
+uint8_t mem_read_unmapped_flash(bool update) {
+    static uint8_t value = 0;
+    if (update) {
+        value = rand();
+    }
+    return value;
+}
+
+uint8_t mem_read_unmapped_other(bool update) {
+    static uint8_t value = 0;
+    if (update) {
+        value = rand();
+    }
+    return value;
 }
 
 bool mem_save(FILE *image) {
@@ -665,4 +697,3 @@ bool mem_restore(FILE *image) {
 
     return ret;
 }
-

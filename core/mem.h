@@ -78,6 +78,9 @@ uint16_t mem_peek_short(uint32_t addr);
 uint32_t mem_peek_long(uint32_t addr);
 uint32_t mem_peek_word(uint32_t addr, bool mode);
 void mem_poke_byte(uint32_t addr, uint8_t value);
+uint8_t mem_read_unmapped_ram(bool update);
+uint8_t mem_read_unmapped_flash(bool update);
+uint8_t mem_read_unmapped_other(bool update);
 
 /* Mateo, do not use! Use the ones above. */
 uint8_t mem_read_cpu(uint32_t address, bool fetch);
