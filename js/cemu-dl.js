@@ -109,11 +109,20 @@ CEmuDownloader.downloadReleasePostIdentify = function(finalRelPath, fileInfo, ar
         $("#file-lbl-for-" + arch + "-bit-" + relType + "-" + buildType).html("No file information was found. This might be a bug in the file fetching API - please report this to us!");
         dlPath = CEmuDownloader.config.baseDLPath + finalRelPath;
     } else {
+        var gitHash = null;
+        if (CEmuDownloader.pathBasename(finalRelPath).split("-").length >= 4) {
+            gitHash = CEmuDownloader.pathBasename(finalRelPath).split("-")[3];
+        }
         var strFileInfo = "<b>File:</b> " + CEmuDownloader.pathBasename(finalRelPath) + "<br />";
         strFileInfo += "<b>Size:</b> " + CEmuDownloader.bytesToSizeStr(fileInfo["size"]) + "<br />";
         strFileInfo += "<b>MD5:</b> " + fileInfo["md5"] + "<br />";
         strFileInfo += "<b>SHA1:</b> " + fileInfo["sha1"]+ "<br />";
         strFileInfo += "<b>Last Modified:</b> " + fileInfo["modifiedDate"] + "<br />";
+        if (gitHash) {
+            strFileInfo += "<b>Commit:</b> <a target='_blank' href='https://github.com/CE-Programming/CEmu/commit/" + gitHash + "'>" + gitHash + "</a><br />";
+        } else {
+            strFileInfo += "<b>Commit:</b> Unknown<br />";
+        }
         $("#file-lbl-for-" + arch + "-bit-" + relType + "-" + buildType).html(strFileInfo);
         dlPath = fileInfo["url"];
         console.debug("[CEmuDownloader.downloadReleasePostIdentify] dlPath configured from strFileInfo = " + dlPath);
@@ -233,6 +242,10 @@ CEmuDownloader.displayFileInfoPostFetch = function(path, fileInfo) {
     if (CEmuDownloader.isObjEmpty(fileInfo)) {
         strFileInfo += "No file information was found. This might be a bug in the file fetching API - please report this to us!";
     } else {
+        var gitHash = null;
+        if (CEmuDownloader.pathBasename(path).split("-").length >= 4) {
+            gitHash = CEmuDownloader.pathBasename(path).split("-")[3];
+        }
         strFileInfo += "<b>Size:</b> " + CEmuDownloader.bytesToSizeStr(fileInfo["size"]) + "<br />";
         strFileInfo += "<b>MIME Type:</b> " + fileInfo["mimeType"] + "<br />";
         strFileInfo += "<b>MD5:</b> " + fileInfo["md5"] + "<br />";
@@ -241,6 +254,11 @@ CEmuDownloader.displayFileInfoPostFetch = function(path, fileInfo) {
         strFileInfo += "<b>Created On:</b> " + fileInfo["createdDate"] + "<br />";
         strFileInfo += "<b>Last Modified By:</b> " + fileInfo["modifiedBy"] + "<br />";
         strFileInfo += "<b>Last Modified On:</b> " + fileInfo["modifiedDate"] + "<br />";
+        if (gitHash) {
+            strFileInfo += "<b>Commit:</b> <a target='_blank' href='https://github.com/CE-Programming/CEmu/commit/" + gitHash + "'>" + gitHash + "</a><br />";
+        } else {
+            strFileInfo += "<b>Commit:</b> Unknown<br />";
+        }
     }
     $("#modal-browse-info .modal-content").html(strFileInfo);
     $("#modal-browse-info").modal('open');

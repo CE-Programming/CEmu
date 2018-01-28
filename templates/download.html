@@ -26,251 +26,212 @@
         <div class="row">
             <h3>Download Development Builds</h3>
             <p>Note that some of these builds are bleeding-edge versions - they may break at any time! Recommended only if you want to try new features, and don't mind occasional bugs.</p>
-        </div>
-        <div class="row">
-            <div class="row">
-                <div class="col s12">
-                  <ul class="tabs">
-                    <li class="tab col s3"><a class="active cemu-color-text" href="#simple-dl">Simple</a></li>
-                    <li class="tab col s3"><a class="cemu-color-text" href="#msvc-wizard-dl">MSVC Windows Builds + Wizard</a></li>
-                    <li class="tab col s3"><a class="cemu-color-text" href="#adv-dl">MSVC Windows - Advanced</a></a></li>
-                  </ul>
-                </div>
-                <div id="simple-dl" class="col s12">
-                    <h4>Select 64-bit or 32-bit.</h4>
+
+            The Windows build is provided by <a href="https://github.com/alberthdev">@alberthdev</a> (MSVC) and <a href="https://github.com/jacobly0">@jacobly0</a> (MinGW).
+            The Linux and Mac builds are provided by <a href="https://github.com/adriweb">@adriweb</a>.<br /><br />
+            <ul class="collapsible" data-collapsible="accordion">
+                <li>
+                    <div class="collapsible-header active"><i class="material-icons">picture_in_picture_alt</i>Windows</div>
+                    <div class="collapsible-body">
+                        Simply download, extract the ZIP, and run CEmu.exe to get started.<br /><br />
+                        <a href="#modal-wizard-64-bit-release-static" id="download-button" class="tooltipped modal-trigger btn-large waves-effect waves-light cemu-color-lighter" data-position="bottom" data-delay="50" data-tooltip="Most modern PCs should be able to run this slightly faster 64-bit build.<br />If in doubt, download this, and if it doesn't work, try the 32-bit build instead."><i class="material-icons left">file_download</i>Download 64-bit</a>
+                        <a href="#modal-wizard-32-bit-release-static" id="download-button" class="tooltipped modal-trigger btn-large waves-effect waves-light cemu-color-lighter" data-position="bottom" data-delay="50" data-tooltip="Download this 32-bit build if the 64-bit one doesn't work for you."><i class="material-icons left">file_download</i>Download 32-bit</a>
+                        <!-- Dropdown Trigger -->
+                        <a class='btn-large waves-effect waves-light cemu-color-lighter dropdown-button' href='#' data-activates='windows-advanced-dropdown'><i class="material-icons left">file_download</i>Advanced Download Options...</a>
+                        
+                        <!-- Dropdown Structure -->
+                        <ul id='windows-advanced-dropdown' class='dropdown-content'>
+                            <!-- Modal Trigger -->
+                            <li><a href="#modal-wizard-start" id="download-button" class="tooltipped waves-effect waves-light modal-trigger" data-position="left" data-delay="50" data-tooltip="Use this wizard if you're an advanced user looking for a particular MSVC build."><i class="material-icons">launch</i>Launch MSVC Build Wizard</a></li>
+                            <li><a href="#modal-browse" onclick="CEmuDownloader.initFileBrowserOnce(); return false;" id="download-button" class="tooltipped waves-effect waves-light" data-position="left" data-delay="50" data-tooltip="Use this MSVC build browser if you're an advanced user looking for a particular build in the archive."><i class="material-icons left">folder_open</i>Browse MSVC Builds</a></li>
+                            <li class="divider"></li>
+                            <li><a href="http://jacobly.com/CEmu/master/latest/CEmu64.exe" id="download-button" class="tooltipped waves-effect waves-light" data-position="left" data-delay="50" data-tooltip="Download @jacobly's Windows 64-bit MinGW build. Useful if the main build isn't working."><i class="material-icons left">file_download</i>Download Windows 64-bit (MinGW)</a></li>
+                            <li><a href="http://jacobly.com/CEmu/master/latest/CEmu32.exe" id="download-button" class="tooltipped waves-effect waves-light" data-position="left" data-delay="50" data-tooltip="Download @jacobly's Windows 32-bit MinGW build. Useful if the main build isn't working."><i class="material-icons left">file_download</i>Download Windows 32-bit (MinGW)</a></li>
+                        </ul>
+                    </div>
+                </li>
+                <li>
+                    <div class="collapsible-header"><i class="material-icons">desktop_mac</i>Mac</div>
+                    <div class="collapsible-body">
+                        By popular demand, an "unofficial" build has been provided by
+                        <a href="https://github.com/adriweb">@adriweb</a>, one of the CEmu developers.
+                        If this is something you really want to see more of,
+                        please let us know <a href="https://github.com/CE-Programming/CEmu/issues">here</a>
+                        by creating an issue! (If an issue has already been raised, please add your interest to it!)<br /><br />
+                        <a href="https://usercontent.irccloud-cdn.com/file/sZOz28jN/CEmu.zip" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download Mac 64-bit</a>
+                        <br /><br />
+                        (Last updated: 10/10/17)
+                    </div>
+                </li>
+                <li>
+                    <div class="collapsible-header"><i class="material-icons">dashboard</i>Linux</div>
+                    <div class="collapsible-body">
+                        Downloads for most distros are available on the Open Build Service.<br /><br />
+                        <a href="https://software.opensuse.org/download.html?project=home%3Aadriweb%3ACEmu&amp;package=cemu&amp;locale=en" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download Linux (All Distros)</a>
+                    </div>
+                </li>
+            </ul>
+            
+            <!-- Modal Structure -->
+            <div id="modal-error" class="modal modal-fixed-footer">
+              <div class="modal-content">
+                <h4>Error</h4>
+                <p id="error-content"></p>
+              </div>
+              <div class="modal-footer">
+                <a href="#" onclick="return false;" class="modal-action modal-close waves-effect waves-light cemu-color-lighter btn ">Close</a>
+              </div>
+            </div>
+            
+            <div id="modal-wizard-start" class="modal modal-fixed-footer">
+              <div class="modal-content">
+                <h4>Select 64-bit or 32-bit.</h4>
+                <nav>
+                    <div class="nav-wrapper cemu-color-lighter">
+                        <div class="col s12">
+                            <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">64-bit/32-bit ></a>
+                        </div>
+                    </div>
+                </nav>
+                <p>
                     If your computer is somewhat recent, you can probably pick the 64-bit version.<br />
                     The 64-bit version is a bit faster on modern computers.<br />
                     If you tried the 64-bit version and it didn't open, use the 32-bit version instead.<br /><br />
-                    The Windows build is provided by <a href="https://github.com/jacobly0">@jacobly0</a>, and are compiled with MinGW (for Windows builds).<br />
-                    The Linux and Mac builds are provided by <a href="https://github.com/adriweb">@adriweb</a>.<br /><br />
-                    <ul class="collapsible" data-collapsible="accordion">
-                        <li>
-                            <div class="collapsible-header active"><i class="material-icons">picture_in_picture_alt</i>Windows</div>
-                            <div class="collapsible-body">
-                                Simply download and run the EXE to get started.<br /><br />
-                                <a href="http://jacobly.com/CEmu/master/latest/CEmu64.exe" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download Windows 64-bit</a>
-                                <a href="http://jacobly.com/CEmu/master/latest/CEmu32.exe" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download Windows 32-bit</a>
-                            </div>
-                        </li>
-                        <li>
-                            <div class="collapsible-header"><i class="material-icons">desktop_mac</i>Mac</div>
-                            <div class="collapsible-body">
-                                By popular demand, an "unofficial" build has been provided by
-                                <a href="https://github.com/adriweb">@adriweb</a>, one of the CEmu developers.
-                                If this is something you really want to see more of,
-                                please let us know <a href="https://github.com/CE-Programming/CEmu/issues">here</a>
-                                by creating an issue! (If an issue has already been raised, please add your interest to it!)<br /><br />
-                                <a href="https://usercontent.irccloud-cdn.com/file/sZOz28jN/CEmu.zip" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download Mac 64-bit</a>
-                                <br /><br />
-                                (Last updated: 10/10/17)
-                            </div>
-                        </li>
-                        <li>
-                            <div class="collapsible-header"><i class="material-icons">dashboard</i>Linux</div>
-                            <div class="collapsible-body">
-                                Downloads for most distros are available on the Open Build Service.<br /><br />
-                                <a href="https://software.opensuse.org/download.html?project=home%3Aadriweb%3ACEmu&amp;package=cemu&amp;locale=en" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download Linux (All Distros)</a>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-                <div id="msvc-wizard-dl" class="col s12">
-                    <h4>MSVC Builds (Windows-only)</h4>
-                    If you are having issues with the main builds, try these builds instead.<br />
-                    These builds also provide advanced options, such as release vs. debug.<br />
-                    Use the wizard if you are looking for advanced options.<br /><br />
-                    Builds are provided by <a href="https://github.com/alberthdev">@alberthdev</a>, and are compiled with Visual C++ Compiler.<br /><br />
-                    
-                    <ul class="collapsible" data-collapsible="accordion">
-                        <li>
-                            <div class="collapsible-header active"><i class="material-icons">picture_in_picture_alt</i>Windows</div>
-                            <div class="collapsible-body">
-                                Simply download, extract the ZIP, and run CEmu.exe to get started.<br /><br />
-                                <a href="#modal-wizard-64-bit-release-static" id="download-button" class="modal-trigger btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download 64-bit</a>
-                                <a href="#modal-wizard-32-bit-release-static" id="download-button" class="modal-trigger btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download 32-bit</a>
-                                
-                                <!-- Modal Trigger -->
-                                <a href="#modal-wizard-start" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter modal-trigger"><i class="material-icons left">launch</i>Launch Wizard</a>                    
-                            </div>
-                        </li>
-                    </ul>
-                    
-                    <!-- Modal Structure -->
-                    <div id="modal-error" class="modal modal-fixed-footer">
-                      <div class="modal-content">
-                        <h4>Error</h4>
-                        <p id="error-content"></p>
-                      </div>
-                      <div class="modal-footer">
-                        <a href="#" onclick="return false;" class="modal-action modal-close waves-effect waves-light cemu-color-lighter btn ">Close</a>
-                      </div>
+                </p>
+              </div>
+              <div class="modal-footer">
+                <a href="#modal-wizard-64-bit" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">64-bit</a>
+                <a href="#modal-wizard-32-bit" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">32-bit</a>
+              </div>
+            </div>
+            {% for arch in [ "32", "64" ] %}
+            <div id="modal-wizard-{{ arch }}-bit" class="modal modal-fixed-footer">
+              <div class="modal-content">
+                <h4>Select Release or Debug.</h4>
+                <nav>
+                    <div class="nav-wrapper cemu-color-lighter">
+                        <div class="col s12">
+                            <a href="#modal-wizard-start" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">{{ arch }}-bit</a>
+                            <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Release/Debug</a>
+                        </div>
                     </div>
-                    
-                    <div id="modal-wizard-start" class="modal modal-fixed-footer">
-                      <div class="modal-content">
-                        <h4>Select 64-bit or 32-bit.</h4>
-                        <nav>
-                            <div class="nav-wrapper cemu-color-lighter">
-                                <div class="col s12">
-                                    <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">64-bit/32-bit ></a>
-                                </div>
-                            </div>
-                        </nav>
-                        <p>
-                            If your computer is somewhat recent, you can probably pick the 64-bit version.<br />
-                            The 64-bit version is a bit faster on modern computers.<br />
-                            If you tried the 64-bit version and it didn't open, use the 32-bit version instead.<br /><br />
-                        </p>
-                      </div>
-                      <div class="modal-footer">
-                        <a href="#modal-wizard-64-bit" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">64-bit</a>
-                        <a href="#modal-wizard-32-bit" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">32-bit</a>
-                      </div>
+                </nav>
+                <p>If you're a regular user, you should almost always pick Release - it's smaller and faster!</p>
+                <p>If you are a CEmu developer, or a user that is trying to debug a problem with Cemu, pick Debug.</p>
+              </div>
+              <div class="modal-footer">
+                <a href="#modal-wizard-{{ arch }}-bit-release" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Release</a>
+                <a href="#modal-wizard-{{ arch }}-bit-debug" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Debug</a>
+              </div>
+            </div>
+            
+            {% for rel_type in [ "release", "debug" ] %}
+            <div id="modal-wizard-{{ arch }}-bit-{{ rel_type }}" class="modal modal-fixed-footer">
+              <div class="modal-content">
+                <h4>Select Static or Dynamic.</h4>
+                <nav>
+                    <div class="nav-wrapper cemu-color-lighter">
+                        <div class="col s12">
+                            <a href="#modal-wizard-start" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">{{ arch }}-bit</a>
+                            <a href="#modal-wizard-{{ arch }}-bit" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">{{ rel_type|title }}</a>
+                            <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Static/Dynamic</a>
+                        </div>
                     </div>
-                    {% for arch in [ "32", "64" ] %}
-                    <div id="modal-wizard-{{ arch }}-bit" class="modal modal-fixed-footer">
-                      <div class="modal-content">
-                        <h4>Select Release or Debug.</h4>
-                        <nav>
-                            <div class="nav-wrapper cemu-color-lighter">
-                                <div class="col s12">
-                                    <a href="#modal-wizard-start" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">{{ arch }}-bit</a>
-                                    <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Release/Debug</a>
-                                </div>
-                            </div>
-                        </nav>
-                        <p>If you're a regular user, you should almost always pick Release - it's smaller and faster!</p>
-                        <p>If you are a CEmu developer, or a user that is trying to debug a problem with Cemu, pick Debug.</p>
-                      </div>
-                      <div class="modal-footer">
-                        <a href="#modal-wizard-{{ arch }}-bit-release" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Release</a>
-                        <a href="#modal-wizard-{{ arch }}-bit-debug" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Debug</a>
-                      </div>
+                </nav>
+                <p>If you're a regular user, you should almost always pick Static. This will give you one EXE to use, no fuss!</p>
+                <p>If you are a CEmu developer, or a user that is trying to debug a problem with Cemu, pick Dynamic. This contains both the EXE and the required DLLs, and will allow you to change up the DLLs, as necessary.</p>
+              </div>
+              <div class="modal-footer">
+                <a href="#modal-wizard-{{ arch }}-bit-{{ rel_type }}-static" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Static</a>
+                <a href="#modal-wizard-{{ arch }}-bit-{{ rel_type }}-dynamic" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Dynamic</a>
+              </div>
+            </div>
+            
+            {% for build_type in [ "static", "dynamic" ] %}
+            <div id="modal-wizard-{{ arch }}-bit-{{ rel_type }}-{{ build_type }}" class="modal modal-fixed-footer">
+              <div class="modal-content">
+                <h4>You made it!</h4>
+                <nav>
+                    <div class="nav-wrapper cemu-color-lighter">
+                        <div class="col s12">
+                            <a href="#modal-wizard-start" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">{{ arch }}-bit</a>
+                            <a href="#modal-wizard-{{ arch }}-bit" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">{{ rel_type|title }}</a>
+                            <a href="#modal-wizard-{{ arch }}-bit-{{ rel_type }}" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">{{ build_type|title }}</a>
+                            <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Ready to Download</a>
+                        </div>
                     </div>
-                    
-                    {% for rel_type in [ "release", "debug" ] %}
-                    <div id="modal-wizard-{{ arch }}-bit-{{ rel_type }}" class="modal modal-fixed-footer">
-                      <div class="modal-content">
-                        <h4>Select Static or Dynamic.</h4>
-                        <nav>
-                            <div class="nav-wrapper cemu-color-lighter">
-                                <div class="col s12">
-                                    <a href="#modal-wizard-start" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">{{ arch }}-bit</a>
-                                    <a href="#modal-wizard-{{ arch }}-bit" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">{{ rel_type|title }}</a>
-                                    <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Static/Dynamic</a>
-                                </div>
-                            </div>
-                        </nav>
-                        <p>If you're a regular user, you should almost always pick Static. This will give you one EXE to use, no fuss!</p>
-                        <p>If you are a CEmu developer, or a user that is trying to debug a problem with Cemu, pick Dynamic. This contains both the EXE and the required DLLs, and will allow you to change up the DLLs, as necessary.</p>
-                      </div>
-                      <div class="modal-footer">
-                        <a href="#modal-wizard-{{ arch }}-bit-{{ rel_type }}-static" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Static</a>
-                        <a href="#modal-wizard-{{ arch }}-bit-{{ rel_type }}-dynamic" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Dynamic</a>
-                      </div>
+                </nav>
+                <p>
+                    You will be downloading the following:<br /><br />
+                    <b>Architecture:</b> {{ arch }}-bit<br />
+                    <b>Release:</b> {{ rel_type }}<br />
+                    <b>Build Type:</b> {{ build_type }}<br /><br />
+                    <div id="progress-for-{{ arch }}-bit-{{ rel_type }}-{{ build_type }}" style="display: none;">
+                        <div class="progress">
+                            <div id="progress-bar-for-{{ arch }}-bit-{{ rel_type }}-{{ build_type }}" class="indeterminate" style="display: none;"></div>
+                        </div>
+                        <span id="progress-lbl-for-{{ arch }}-bit-{{ rel_type }}-{{ build_type }}"></span><br /><br />
                     </div>
-                    
-                    {% for build_type in [ "static", "dynamic" ] %}
-                    <div id="modal-wizard-{{ arch }}-bit-{{ rel_type }}-{{ build_type }}" class="modal modal-fixed-footer">
-                      <div class="modal-content">
-                        <h4>You made it!</h4>
-                        <nav>
-                            <div class="nav-wrapper cemu-color-lighter">
-                                <div class="col s12">
-                                    <a href="#modal-wizard-start" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">{{ arch }}-bit</a>
-                                    <a href="#modal-wizard-{{ arch }}-bit" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">{{ rel_type|title }}</a>
-                                    <a href="#modal-wizard-{{ arch }}-bit-{{ rel_type }}" onclick="return false;" class="modal-action modal-close modal-trigger breadcrumb waves-effect waves-light">{{ build_type|title }}</a>
-                                    <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Ready to Download</a>
-                                </div>
-                            </div>
-                        </nav>
-                        <p>
-                            You will be downloading the following:<br /><br />
-                            <b>Architecture:</b> {{ arch }}-bit<br />
-                            <b>Release:</b> {{ rel_type }}<br />
-                            <b>Build Type:</b> {{ build_type }}<br /><br />
-                            <div id="progress-for-{{ arch }}-bit-{{ rel_type }}-{{ build_type }}" style="display: none;">
-                                <div class="progress">
-                                    <div id="progress-bar-for-{{ arch }}-bit-{{ rel_type }}-{{ build_type }}" class="indeterminate" style="display: none;"></div>
-                                </div>
-                                <span id="progress-lbl-for-{{ arch }}-bit-{{ rel_type }}-{{ build_type }}"></span><br /><br />
-                            </div>
-                            <span id="file-lbl-for-{{ arch }}-bit-{{ rel_type }}-{{ build_type }}"></span>
-                        </p>
-                      </div>
-                      <div class="modal-footer">
-                        <a id="dl-btn-for-{{ arch }}-bit-{{ rel_type }}-{{ build_type }}" href="#" onclick="CEmuDownloader.downloadRelease('{{ arch }}', '{{ rel_type }}', '{{ build_type }}'); return false;" class="waves-effect waves-light cemu-color-lighter btn ">Download</a>
-                      </div>
+                    <span id="file-lbl-for-{{ arch }}-bit-{{ rel_type }}-{{ build_type }}"></span>
+                </p>
+              </div>
+              <div class="modal-footer">
+                <a id="dl-btn-for-{{ arch }}-bit-{{ rel_type }}-{{ build_type }}" href="#" onclick="CEmuDownloader.downloadRelease('{{ arch }}', '{{ rel_type }}', '{{ build_type }}'); return false;" class="waves-effect waves-light cemu-color-lighter btn ">Download</a>
+              </div>
+            </div>
+            {% endfor %}
+            {% endfor %}
+            {% endfor %}
+            
+            <!-- MSVC Windows Browse Models -->
+            <div id="modal-browse" class="modal modal-fixed-footer">
+              <div class="modal-content">
+                
+                <h4>Browse Files</h4>
+                <nav>
+                    <div class="nav-wrapper cemu-color-lighter">
+                        <div id="pathBreadCrumbs" class="col s12">
+                            <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Root</a>
+                        </div>
                     </div>
-                    {% endfor %}
-                    {% endfor %}
-                    {% endfor %}
-                </div>
-                <div id="adv-dl" class="col s12">
-                    <h4>MSVC Builds - Advanced</h4>
-                    Use this only if you know what you are looking for!<br /><br />
-                    Builds are provided by <a href="https://github.com/alberthdev">@alberthdev</a>, and are compiled with Visual C++ Compiler.<br /><br />
-                    
-                    <ul class="collapsible" data-collapsible="accordion">
-                        <li>
-                            <div class="collapsible-header active"><i class="material-icons">picture_in_picture_alt</i>Windows</div>
-                            <div class="collapsible-body">
-                                Find the ZIP you want, then simply download, extract the ZIP, and run CEmu.exe to get started.<br /><br />
-                                <a href="#modal-browse" onclick="CEmuDownloader.initFileBrowserOnce(); return false;" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">folder_open</i>Browse Files</a>
-                            </div>
-                        </li>
-                    </ul>
-                    
-                    <div id="modal-browse" class="modal modal-fixed-footer">
-                      <div class="modal-content">
-                        
-                        <h4>Browse Files</h4>
-                        <nav>
-                            <div class="nav-wrapper cemu-color-lighter">
-                                <div id="pathBreadCrumbs" class="col s12">
-                                    <a href="#" onclick="return false;" class="breadcrumb waves-effect waves-light">Root</a>
-                                </div>
-                            </div>
-                        </nav>
-                        <p>
-                            <div class="progress progress-bar-browser">
-                                <div id="progress-bar-browse" class="indeterminate"></div>
-                            </div>
-                            <table id="fileBrowserTable" class="highlight responsive-table">
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Type</th>
-                                        <th>Size</th>
-                                        <th>Created</th>
-                                        <th>Last Modified</th>
-                                        <th>Info</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="browse-files-table">
-                                    <tr>
-                                        <td>Loading...</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Loading...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </p>
-                      </div>
-                      <div class="modal-footer">
-                        <a href="#" onclick="return false;" class="modal-action modal-close waves-effect waves-light cemu-color-lighter btn ">Close</a>
-                      </div>
+                </nav>
+                <p>
+                    <div class="progress progress-bar-browser">
+                        <div id="progress-bar-browse" class="indeterminate"></div>
                     </div>
-                    <div id="modal-browse-info" class="modal modal-fixed-footer">
-                      <div class="modal-content">
-                          <h4>Test</h4>
-                      </div>
-                      <div class="modal-footer">
-                        <a href="#" onclick="return false;" class="modal-action modal-close waves-effect waves-light cemu-color-lighter btn ">Close</a>
-                      </div>
-                    </div>
-                </div>
+                    <table id="fileBrowserTable" class="highlight responsive-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Size</th>
+                                <th>Created</th>
+                                <th>Last Modified</th>
+                                <th>Info</th>
+                            </tr>
+                        </thead>
+                        <tbody id="browse-files-table">
+                            <tr>
+                                <td>Loading...</td>
+                            </tr>
+                            <tr>
+                                <td>Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </p>
+              </div>
+              <div class="modal-footer">
+                <a href="#" onclick="return false;" class="modal-action modal-close waves-effect waves-light cemu-color-lighter btn ">Close</a>
+              </div>
+            </div>
+            <div id="modal-browse-info" class="modal modal-fixed-footer">
+              <div class="modal-content">
+                  <h4>Test</h4>
+              </div>
+              <div class="modal-footer">
+                <a href="#" onclick="return false;" class="modal-action modal-close waves-effect waves-light cemu-color-lighter btn ">Close</a>
+              </div>
             </div>
         </div>
     </div>

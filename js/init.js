@@ -2,7 +2,8 @@
   $(function(){
 
     // One time tab init
-    var oneTimeTabInit = false;
+    // Set to true since we don't have any subtabs anymore
+    var oneTimeTabInit = true;
 
     $('.button-collapse').sideNav();
 
@@ -28,6 +29,8 @@
         return true;
       }
     });
-
+    
+    // Custom HTML support for tooltips
+    $('.tooltipped').tooltip({html: true});
   }); // end of document ready
 })(jQuery); // end of jQuery name space
