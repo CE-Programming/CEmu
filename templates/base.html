@@ -17,15 +17,15 @@
 </head>
 <body>
   {# Format: Link location, page ID, Display Name, Icon (None or blank to disable) #}
+  {% set navbar_tabs = False %}
   {% set navigation_bar = [
           (page_subdir + '/', 'index', 'Home', 'home'),
-          ('https://github.com/CE-Programming/CEmu/releases/latest', 'releases', 'Download', 'file_download'),
-          (page_subdir + '/download', 'download', 'Dev. builds', 'file_download'),
+          (page_subdir + '/download', 'download', 'Download', 'file_download'),
           ('https://github.com/CE-Programming/CEmu', 'github', 'GitHub', 'code'),
   ] -%}
   {% set active_page = active_page|default('index') %}
-  <div class="navbar-fixed">
-    <nav class="cemu-color" role="navigation">
+  <div class="{% if self.navbar_tabs() %}navbar-fixed-with-tabs{% else %}navbar-fixed{% endif %}">
+    <nav class="cemu-color{% if self.navbar_tabs() %} nav-extended{% endif %}" role="navigation">
       <div class="nav-wrapper container">
         <a id="logo-container" href="{{ page_subdir }}/" class="brand-logo"><img class="hide-on-med-and-down" src="img/icon.png" alt="CEmu"> CEmu</a>
         <ul class="right hide-on-med-and-down">
@@ -33,16 +33,16 @@
           <li class="waves-effect waves-light{% if id == active_page %} active{% endif %}"><a href="{{ href|e }}">{% if icon %}<i class="material-icons left">{{ icon }}</i>{% endif %}{{ caption|e }}</a></li>
           {% endfor %}
         </ul>
-    
-        <ul id="nav-mobile" class="side-nav">
-          {% for href, id, caption, icon in navigation_bar %}
-          <li class="waves-effect waves-light{% if id == active_page %}active{% endif %}"><a href="{{ href|e }}">{% if icon %}<i class="material-icons left">{{ icon }}</i>{% endif %}{{ caption|e }}</a></li>
-          {% endfor %}
-        </ul>
         <a href="#" data-activates="nav-mobile" class="button-collapse"><i class="material-icons">menu</i></a>
       </div>
+      {% if self.navbar_tabs() %}{% block navbar_tabs %}{% endblock %}{% endif %}
     </nav>
   </div>
+  <ul id="nav-mobile" class="side-nav">
+    {% for href, id, caption, icon in navigation_bar %}
+    <li class="{% if id == active_page %}active{% endif %}"><a href="{{ href|e }}">{% if icon %}<i class="material-icons left">{{ icon }}</i>{% endif %}{{ caption|e }}</a></li>
+    {% endfor %}
+  </ul>
   {% block content %}
   {% endblock content %}
 

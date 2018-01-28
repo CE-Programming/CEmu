@@ -1,13 +1,31 @@
 {% extends 'base.html' %}
 
+{% set navbar_tabs = True %}
+
 {% block title %}Development builds downloads{% endblock %}
+
+{% block navbar_tabs %}
+      <div class="container nav-content">
+        <ul class="tabs tabs-transparent cemu-header-tabs row">
+          <li class="tab col s2"><a class="active" href="#stable-builds">Stable</a></li>
+          <li class="tab col s2"><a href="#development-builds">Development</a></li>
+        </ul>
+      </div>
+{% endblock %}
 
 {% block content %}
 <div class="container">
-    <div class="section">
+    <div class="section" id="stable-builds">
         <div class="row">
-            <h3>Development builds downloads</h3>
-            <p>Note that some of these builds are bleeding-edge versions - they may break at any time!</p>
+            <h3>Download Stable Version</h3>
+            <p>This is your best bet if you want to get up and running quickly without any issues.</p>
+            <a href="https://github.com/CE-Programming/CEmu/releases/latest" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download For All Platforms</a>
+        </div>
+    </div>
+    <div class="section" id="development-builds">
+        <div class="row">
+            <h3>Download Development Builds</h3>
+            <p>Note that some of these builds are bleeding-edge versions - they may break at any time! Recommended only if you want to try new features, and don't mind occasional bugs.</p>
         </div>
         <div class="row">
             <div class="row">
