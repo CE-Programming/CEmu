@@ -62,7 +62,9 @@ void LCDWidget::callback(void) {
         return;
     }
 
-    if (!skip--) {
+    if (skip) {
+        skip--;
+    } else {
         skip = frameskip;
         if (mode) {
             memcpy(image.bits(), spi.display, sizeof(spi.display));
@@ -79,7 +81,7 @@ void LCDWidget::callback(void) {
     apng_add_frame();
 #endif
 
-    fps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP) * (frameskip + 1));
+    fps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP));
     update();
 }
 
