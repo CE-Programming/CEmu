@@ -20,7 +20,7 @@
 Name:           cemu
 Version:        1.0
 Release:        0
-Summary:        CEmu is a TI-84 Plus CE / TI-83 Premium CE emulator
+Summary:        TI-84 Plus CE / TI-83 Premium CE emulator
 License:        GPL-3.0
 Group:          Amusements/Teaching/Other
 Url:            https://github.com/CE-Programming/CEmu
@@ -94,7 +94,10 @@ test -x "$(type -p gcc-6)"   && export CC=gcc-6     && export QMAKE_CC=gcc-6
 test -x "$(type -p g++-6)"   && export CXX=g++-6    && export QMAKE_CXX=g++-6
 test -x "$(type -p gcc-7)"   && export CC=gcc-7     && export QMAKE_CC=gcc-7
 test -x "$(type -p g++-7)"   && export CXX=g++-7    && export QMAKE_CXX=g++-7
+mkdir -p ${HOME}/lib/pkgconfig
+export PKG_CONFIG_PATH=${HOME}/lib/pkgconfig:$PKG_CONFIG_PATH
 cd gui/qt/
+cd capture/libpng-apng-1.6.34 && CFLAGS="-O2 -fPIC" ./configure --prefix=${HOME} --enable-static --disable-shared && make && make install && cd ../..
 qmake-qt5 QMAKE_CXX="$QMAKE_CXX" QMAKE_LINK="$QMAKE_CXX" QMAKE_CC="$QMAKE_CC"
 make %{?_smp_mflags}
 
