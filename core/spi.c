@@ -115,27 +115,33 @@ bool spi_refresh_pixel(void) {
 
 void spi_update_pixel(uint8_t red, uint8_t green, uint8_t blue) {
     assert(red < 32 && green < 64 && blue < 32);
-    if (spi.rowReg < 320 && spi.colReg < 240) {
+    if (likely(spi.rowReg < 320 && spi.colReg < 240)) {
         spi.frame[spi.rowReg][spi.colReg][SPI_RED] = spi.lut[red + 0];
         spi.frame[spi.rowReg][spi.colReg][SPI_GREEN] = spi.lut[green + 32];
         spi.frame[spi.rowReg][spi.colReg][SPI_BLUE] = spi.lut[blue + 96];
     }
     if (unlikely(spi.mac >> 5 & 1)) {
         if (unlikely(spi.colReg == spi.colEnd)) {
-            spi.colReg = spi.colStart;
-            spi.rowReg = (spi.rowReg + 1 - (spi.mac >> 6 & 2)) & 0xFF;
-        } else {
-            spi.colReg += 1 - (spi.mac >> 5 & 2);
+            if (unlikely(spi.rowReg == spi.rowEnd && spi.rowStart <= spi.rowEnd)) {
+                spi.rowReg = spi.colReg = ~0;
+            } else {
+                spi.colReg = spi.colStart;
+                spi.rowReg = (spi.rowReg + 1 - (spi.mac >> 6 & 2)) & 0xFF;
+            }
+        } else if (spi.colReg < 0x200) {
+            spi.colReg = (spi.colReg + 1 - (spi.mac >> 5 & 2)) & 0x1FF;
         }
-        spi.colReg &= 0x1FF;
     } else {
         if (unlikely(spi.rowReg == spi.colEnd)) {
-            spi.rowReg = spi.colStart;
-            spi.colReg = (spi.colReg + 1 - (spi.mac >> 5 & 2)) & 0xFF;
-        } else {
-            spi.rowReg += 1 - (spi.mac >> 6 & 2);
+            if (unlikely(spi.colReg == spi.rowEnd && spi.rowStart <= spi.rowEnd)) {
+                spi.rowReg = spi.colReg = ~0;
+            } else {
+                spi.rowReg = spi.colStart;
+                spi.colReg = (spi.colReg + 1 - (spi.mac >> 5 & 2)) & 0xFF;
+            }
+        } else if (spi.rowReg < 0x200) {
+            spi.rowReg = (spi.rowReg + 1 - (spi.mac >> 6 & 2)) & 0x1FF;
         }
-        spi.rowReg &= 0x1FF;
     }
 }
 
