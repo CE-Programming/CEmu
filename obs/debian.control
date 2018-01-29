@@ -3,7 +3,7 @@ Section: sectionName
 Priority: optional
 Maintainer: Adrien Bertrand <bertrand.adrien@gmail.com>
 Homepage: https://github.com/CE-Programming/CEmu
-Build-Depends: git, pkg-config, debhelper (>= 9), qtbase5-dev (>= 5.6), qtdeclarative5-dev, qttools5-dev, qttools5-dev-tools, libpng-dev, zlib1g-dev
+Build-Depends: git, pkg-config, debhelper (>= 9), qtbase5-dev (>= 5.5), qtdeclarative5-dev, qttools5-dev, qttools5-dev-tools, libpng-dev, zlib1g-dev
 
 Package: cemu
 Architecture: any

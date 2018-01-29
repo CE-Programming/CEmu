@@ -70,10 +70,10 @@ BuildRequires:  libpng-devel
 BuildRequires:  hicolor-icon-theme
 Requires:       hicolor-icon-theme
 %if  0%{?fedora_version} || 0%{?rhel_version} || 0%{?centos_version}
-BuildRequires:  qt5-qtbase-devel >= 5.6
+BuildRequires:  qt5-qtbase-devel >= 5.5
 BuildRequires:  qt5-qtdeclarative-devel
 %else
-BuildRequires:  libqt5-qtbase-devel >= 5.6
+BuildRequires:  libqt5-qtbase-devel >= 5.5
 BuildRequires:  libqt5-qtdeclarative-devel
 BuildRequires:  update-desktop-files
 %endif
