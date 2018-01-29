@@ -2050,7 +2050,7 @@ bool MainWindow::ipcSetup() {
     // if failure, then send a command to the other process with the command options
     QByteArray byteArray;
     QDataStream stream(&byteArray, QIODevice::WriteOnly);
-    stream.setVersion(QDataStream::Qt_5_6);
+    stream.setVersion(QDataStream::Qt_5_5);
     unsigned int type = IPC_CLI;
 
     stream << type
@@ -2116,7 +2116,7 @@ void MainWindow::ipcCloseOthers() {
                 if (opts.pidString != pid) {
                     QByteArray byteArray;
                     QDataStream stream(&byteArray, QIODevice::WriteOnly);
-                    stream.setVersion(QDataStream::Qt_5_6);
+                    stream.setVersion(QDataStream::Qt_5_5);
                     unsigned int type = IPC_CLOSE;
                     stream << type;
 
@@ -2137,7 +2137,7 @@ void MainWindow::ipcReceived() {
     QByteArray byteArray(com->getData());
 
     QDataStream stream(byteArray);
-    stream.setVersion(QDataStream::Qt_5_6);
+    stream.setVersion(QDataStream::Qt_5_5);
     unsigned int type;
 
     stream >> type;
