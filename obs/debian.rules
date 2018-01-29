@@ -19,8 +19,6 @@ build-stamp:
 	dh_testdir
 
 	# Add here commands to compile the package.
-	mkdir -p ${HOME}/lib/pkgconfig
-	export PKG_CONFIG_PATH=${HOME}/lib/pkgconfig:$PKG_CONFIG_PATH
 	cd gui/qt/capture/libpng-apng-1.6.34 && CFLAGS="-O2 -fPIC" ./configure --prefix=${HOME} --enable-static --disable-shared && make && make install && cd ../../../..
 	qmake gui/qt/CEmu.pro
 	make

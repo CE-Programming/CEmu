@@ -13,8 +13,6 @@ md5sums=('SKIP')
 
 build() {
   # Compile...
-  mkdir -p ${HOME}/lib/pkgconfig
-  export PKG_CONFIG_PATH=${HOME}/lib/pkgconfig:$PKG_CONFIG_PATH
   cd "${srcdir}/${pkgname}-${pkgver}/gui/qt"
   cd capture/libpng-apng-1.6.34 && CFLAGS="-O2 -fPIC" ./configure --prefix=${HOME} --enable-static --disable-shared && make && make install && cd ../..
   mkdir -p build

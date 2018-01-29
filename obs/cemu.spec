@@ -66,7 +66,6 @@ BuildRequires:  gcc5-c++
 %endif
 
 BuildRequires:  zlib-devel
-BuildRequires:  libpng-devel
 BuildRequires:  hicolor-icon-theme
 Requires:       hicolor-icon-theme
 %if  0%{?fedora_version} || 0%{?rhel_version} || 0%{?centos_version}
@@ -94,8 +93,6 @@ test -x "$(type -p gcc-6)"   && export CC=gcc-6     && export QMAKE_CC=gcc-6
 test -x "$(type -p g++-6)"   && export CXX=g++-6    && export QMAKE_CXX=g++-6
 test -x "$(type -p gcc-7)"   && export CC=gcc-7     && export QMAKE_CC=gcc-7
 test -x "$(type -p g++-7)"   && export CXX=g++-7    && export QMAKE_CXX=g++-7
-mkdir -p ${HOME}/lib/pkgconfig
-export PKG_CONFIG_PATH=${HOME}/lib/pkgconfig:$PKG_CONFIG_PATH
 cd gui/qt/
 cd capture/libpng-apng-1.6.34 && CFLAGS="-O2 -fPIC" ./configure --prefix=${HOME} --enable-static --disable-shared && make && make install && cd ../..
 qmake-qt5 QMAKE_CXX="$QMAKE_CXX" QMAKE_LINK="$QMAKE_CXX" QMAKE_CC="$QMAKE_CC"
