@@ -2,7 +2,7 @@
 
 {% set navbar_tabs = True %}
 
-{% block title %}Development builds downloads{% endblock %}
+{% block title %}Download{% endblock %}
 
 {% block navbar_tabs %}
       <div class="container nav-content">
@@ -29,7 +29,7 @@
                 <a href="https://travis-ci.org/CE-Programming/CEmu" target="_blank"><img src="https://api.travis-ci.org/CE-Programming/CEmu.svg?branch=master" alt="Linux Build Status" /></a>
                 <a href="https://ci.appveyor.com/project/alberthdev/cemu-q0nl8" target="_blank"><img src="https://ci.appveyor.com/api/projects/status/github/CE-Programming/CEmu?branch=master&svg=true" alt="Windows Build Status" /></a>
                 <a href="https://scan.coverity.com/projects/ce-programming-cemu" target="_blank"><img src="https://scan.coverity.com/projects/7576/badge.svg" alt="Coverity Status" /></a>
-            
+
             <p>Note that some of these builds are bleeding-edge versions - they may break at any time! Recommended only if you want to try new features, and don't mind occasional bugs.</p>
 
             The Windows build is provided by <a href="https://github.com/alberthdev">@alberthdev</a> (MSVC) and <a href="https://github.com/jacobly0">@jacobly0</a> (MinGW).
@@ -43,7 +43,7 @@
                         <a href="#modal-wizard-32-bit-release-static" id="download-button" class="tooltipped modal-trigger btn-large waves-effect waves-light cemu-color-lighter" data-position="bottom" data-delay="50" data-tooltip="Download this 32-bit build if the 64-bit one doesn't work for you."><i class="material-icons left">file_download</i>Download 32-bit</a>
                         <!-- Dropdown Trigger -->
                         <a class='btn-large waves-effect waves-light cemu-color-lighter dropdown-button' href='#' data-activates='windows-advanced-dropdown'><i class="material-icons left">file_download</i>Advanced Download Options...</a>
-                        
+
                         <!-- Dropdown Structure -->
                         <ul id='windows-advanced-dropdown' class='dropdown-content'>
                             <!-- Modal Trigger -->
@@ -76,7 +76,7 @@
                     </div>
                 </li>
             </ul>
-            
+
             <!-- Modal Structure -->
             <div id="modal-error" class="modal modal-fixed-footer">
               <div class="modal-content">
@@ -87,7 +87,7 @@
                 <a href="#" onclick="return false;" class="modal-action modal-close waves-effect waves-light cemu-color-lighter btn ">Close</a>
               </div>
             </div>
-            
+
             <div id="modal-wizard-start" class="modal modal-fixed-footer">
               <div class="modal-content">
                 <h4>Select 64-bit or 32-bit.</h4>
@@ -129,7 +129,7 @@
                 <a href="#modal-wizard-{{ arch }}-bit-debug" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Debug</a>
               </div>
             </div>
-            
+
             {% for rel_type in [ "release", "debug" ] %}
             <div id="modal-wizard-{{ arch }}-bit-{{ rel_type }}" class="modal modal-fixed-footer">
               <div class="modal-content">
@@ -151,7 +151,7 @@
                 <a href="#modal-wizard-{{ arch }}-bit-{{ rel_type }}-dynamic" onclick="return false;" class="modal-action modal-close modal-trigger waves-effect waves-light cemu-color-lighter btn ">Dynamic</a>
               </div>
             </div>
-            
+
             {% for build_type in [ "static", "dynamic" ] %}
             <div id="modal-wizard-{{ arch }}-bit-{{ rel_type }}-{{ build_type }}" class="modal modal-fixed-footer">
               <div class="modal-content">
@@ -187,11 +187,11 @@
             {% endfor %}
             {% endfor %}
             {% endfor %}
-            
+
             <!-- MSVC Windows Browse Models -->
             <div id="modal-browse" class="modal modal-fixed-footer">
               <div class="modal-content">
-                
+
                 <h4>Browse Files</h4>
                 <nav>
                     <div class="nav-wrapper cemu-color-lighter">
