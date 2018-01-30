@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.0" language="nl_NL">
+<TS version="2.1" language="nl_NL">
 <context>
     <name>BasicCodeViewerWindow</name>
     <message>
@@ -248,7 +248,7 @@
     <message>
         <location filename="../mainwindow.cpp" line="565"/>
         <source>Debug</source>
-        <translation type="unfinished">Debug</translation>
+        <translation>Debug</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="101"/>
@@ -1068,7 +1068,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8017"/>
         <source>Debugging</source>
-        <translation type="unfinished"></translation>
+        <translation>Debuggen</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8334"/>
@@ -1120,7 +1120,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8565"/>
         <source>Language</source>
-        <translation type="unfinished"></translation>
+        <translation>Taal</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8590"/>
@@ -1208,22 +1208,22 @@
     <message>
         <location filename="../mainwindow.ui" line="8996"/>
         <source>English</source>
-        <translation type="unfinished"></translation>
+        <translation>English</translation>
     </message>
-    <message utf8="true">
+    <message>
         <location filename="../mainwindow.ui" line="9001"/>
         <source>Français</source>
-        <translation type="unfinished"></translation>
+        <translation>Français</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9006"/>
         <source>Nederlands</source>
-        <translation type="unfinished"></translation>
+        <translation>Nederlands</translation>
     </message>
-    <message utf8="true">
+    <message>
         <location filename="../mainwindow.ui" line="9011"/>
         <source>Español</source>
-        <translation type="unfinished"></translation>
+        <translation>Español</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8478"/>
@@ -1469,12 +1469,12 @@
         <source>Welcome!
 CEmu uses a customizable dock-style interface. Drag and drop to move tabs and windows around on the screen, and choose which docks are available in the &apos;Docks&apos; menu in the topmost bar. Be sure that &apos;Enable UI edit mode&apos; is selected when laying out your interface. Enjoy!</source>
         <translation>Welkom!
-CEmu maakt gebruik van een aanpasbare dock-style interface. Verplaats de tabs en windows op  het scherm, en kies welke docks er beschikbaar zijn via het &apos;Docks&apos; menu in de menubalk. Zorg ervoor dat &apos;Stel UI bewerk mod ine&apos; is geselecteerd wanneer u de interface aanpast. Veel plezier!</translation>
+CEmu maakt gebruik van een aanpasbare dock-style interface. Verplaats de tabs en windows op  het scherm, en kies welke docks er beschikbaar zijn via het &apos;Docks&apos; menu in de menubalk. Zorg ervoor dat &apos;Stel UI bewerk mode in&apos; is geselecteerd wanneer u de interface aanpast. Veel plezier!</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="569"/>
         <source>Add Memory View</source>
-        <translation type="unfinished">Voeg Geheugen Bekijken Toe</translation>
+        <translation>Voeg Geheugen Bekijken Toe</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="783"/>
@@ -1635,7 +1635,7 @@ Bestand: </translation>
     <message>
         <location filename="../mainwindow.cpp" line="2138"/>
         <source>Goto Disassembly View</source>
-        <translation type="unfinished"></translation>
+        <translation>Ga naar Disassembly Bekijken</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="2398"/>
@@ -1706,7 +1706,7 @@ Bestand: </translation>
     <message>
         <location filename="../mainwindow.cpp" line="557"/>
         <source>No translation available for this language :(</source>
-        <translation type="unfinished"></translation>
+        <translation>Geen vertaling beschikbaar voor deze taal :(</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1681"/>
@@ -1798,7 +1798,7 @@ Bestand: </translation>
     <message>
         <location filename="../mainwindow.cpp" line="564"/>
         <source>Docks</source>
-        <translation type="unfinished">Docks</translation>
+        <translation>Docks</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="570"/>
@@ -2040,12 +2040,12 @@ Bestand: </translation>
     <message>
         <location filename="../romselection.ui" line="285"/>
         <source>Cancel and close</source>
-        <translation>Annuleer en sluit</translation>
+        <translation>Annuleren en afsluiten</translation>
     </message>
     <message>
         <location filename="../romselection.ui" line="311"/>
         <source>Click this button to save the dumper program to your computer, then send the program to your real calculator.</source>
-        <translation>Klik op deze knop om het dumper programma op te slaan op uw computer, en transfer dit programma naar uw echte rekenmachine.</translation>
+        <translation>Klik op deze knop om het dumper programma op te slaan op uw computer, en verzend dit programma naar uw echte rekenmachine.</translation>
     </message>
     <message>
         <location filename="../romselection.ui" line="327"/>
@@ -2304,7 +2304,7 @@ Bestand: </translation>
     <message>
         <location filename="../searchwidget.ui" line="110"/>
         <source>Input search string:</source>
-        <translation>Input zoekterm:</translation>
+        <translation>Voer zoekterm in:</translation>
     </message>
 </context>
 </TS>
