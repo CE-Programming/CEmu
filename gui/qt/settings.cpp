@@ -548,7 +548,9 @@ void MainWindow::setSkinToggle(bool enable) {
 
 void MainWindow::setGuiSkip(int value) {
     settings->setValue(SETTING_SCREEN_FRAMESKIP, value);
+    ui->guiSkip->blockSignals(true);
     ui->guiSkip->setValue(value);
+    ui->guiSkip->blockSignals(false);
     ui->lcd->setFrameskip(value);
 }
 
