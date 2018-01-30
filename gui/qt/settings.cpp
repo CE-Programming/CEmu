@@ -86,11 +86,6 @@ const QString MainWindow::SETTING_DEFAULT_ROM_FILE          = QStringLiteral("/c
 const QString MainWindow::SETTING_DEFAULT_DEBUG_FILE        = QStringLiteral("/cemu_debug.ini");
 const QString MainWindow::SETTING_DEFAULT_IMAGE_FILE        = QStringLiteral("/cemu_image.ce");
 
-const QString MainWindow::MSG_INFORMATION                   = tr("Information");
-const QString MainWindow::MSG_WARNING                       = tr("Warning");
-const QString MainWindow::MSG_ERROR                         = tr("Error");
-const QString MainWindow::TITLE_MEM_DOCK                    = tr("Memory View");
-
 void MainWindow::setPortableConfig(bool state) {
     ui->checkPortable->setChecked(state);
     QString debugPath;
@@ -383,7 +378,7 @@ void MainWindow::setUIDocks() {
     }
 
     // Create "Docks" menu to make closing and opening docks more intuitive
-    docksMenu = new QMenu(tr("Docks"), this);
+    docksMenu = new QMenu(TITLE_DOCKS, this);
     ui->menubar->insertMenu(ui->menuAbout->menuAction(), docksMenu);
 
     // Convert the tabs into QDockWidgets
@@ -407,7 +402,7 @@ void MainWindow::setUIDocks() {
 
     docksMenu->addSeparator();
 
-    debugMenu = new QMenu(tr("Debug"), this);
+    debugMenu = new QMenu(TITLE_DEBUG, this);
     ui->menubar->insertMenu(ui->menuAbout->menuAction(), debugMenu);
 
     // Convert the tabs into QDockWidgets
@@ -430,10 +425,10 @@ void MainWindow::setUIDocks() {
     }
 
     debugMenu->addSeparator();
-    debugMenu->addAction(addMemory);
+    debugMenu->addAction(actionAddMemory);
 
     docksMenu->addSeparator();
-    docksMenu->addAction(toggleAction);
+    docksMenu->addAction(actionToggleUI);
 
     ui->tabWidget->setHidden(true);
     ui->tabDebug->setHidden(true);
@@ -446,7 +441,7 @@ void MainWindow::toggleUIEditMode() {
 void MainWindow::setUIEditMode(bool mode) {
     uiEditMode = mode;
     settings->setValue(SETTING_UI_EDIT_MODE, uiEditMode);
-    toggleAction->setChecked(uiEditMode);
+    actionToggleUI->setChecked(uiEditMode);
     for (const auto& dock : findChildren<DockWidget *>()) {
         dock->toggleState(uiEditMode);
     }
@@ -564,22 +559,22 @@ void MainWindow::setEmuSpeed(int value) {
 }
 
 void MainWindow::selectKeypadColor() {
-    QString sender_obj_name = sender()->objectName();
+    QString name = sender()->objectName();
     unsigned int color = KEYPAD_BLACK;
 
-    if (sender_obj_name == "buttonWhite")     color = KEYPAD_WHITE;
-    if (sender_obj_name == "buttonBlack")     color = KEYPAD_BLACK;
-    if (sender_obj_name == "buttonGolden")    color = KEYPAD_GOLDEN;
-    if (sender_obj_name == "buttonPlum")      color = KEYPAD_PLUM;
-    if (sender_obj_name == "buttonPink")      color = KEYPAD_PINK;
-    if (sender_obj_name == "buttonRed")       color = KEYPAD_RED;
-    if (sender_obj_name == "buttonLightning") color = KEYPAD_LIGHTNING;
-    if (sender_obj_name == "buttonTrueBlue")  color = KEYPAD_TRUE_BLUE;
-    if (sender_obj_name == "buttonDenim")     color = KEYPAD_DENIM;
-    if (sender_obj_name == "buttonSilver")    color = KEYPAD_SILVER;
-    if (sender_obj_name == "buttonSpaceGrey") color = KEYPAD_SPACEGREY;
-    if (sender_obj_name == "buttonCoral")     color = KEYPAD_CORAL;
-    if (sender_obj_name == "buttonMint")      color = KEYPAD_MINT;
+    if (name == "buttonWhite")     color = KEYPAD_WHITE;
+    if (name == "buttonBlack")     color = KEYPAD_BLACK;
+    if (name == "buttonGolden")    color = KEYPAD_GOLDEN;
+    if (name == "buttonPlum")      color = KEYPAD_PLUM;
+    if (name == "buttonPink")      color = KEYPAD_PINK;
+    if (name == "buttonRed")       color = KEYPAD_RED;
+    if (name == "buttonLightning") color = KEYPAD_LIGHTNING;
+    if (name == "buttonTrueBlue")  color = KEYPAD_TRUE_BLUE;
+    if (name == "buttonDenim")     color = KEYPAD_DENIM;
+    if (name == "buttonSilver")    color = KEYPAD_SILVER;
+    if (name == "buttonSpaceGrey") color = KEYPAD_SPACEGREY;
+    if (name == "buttonCoral")     color = KEYPAD_CORAL;
+    if (name == "buttonMint")      color = KEYPAD_MINT;
 
     setKeypadColor(color);
 }
@@ -688,6 +683,6 @@ void MainWindow::setMemoryDocks() {
     int memories = settings->value(SETTING_WINDOW_MEMORY_DOCKS).toInt();
 
     for (int i = 0; i < memories; i++) {
-        createMemoryDock(TITLE_MEM_DOCK);
+        createMemoryDock(TXT_MEM_DOCK);
     }
 }

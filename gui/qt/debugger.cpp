@@ -531,7 +531,7 @@ void MainWindow::debuggerGUISetState(bool state) {
 
     QList<QDockWidget*> docks = findChildren<QDockWidget*>();
     foreach (QDockWidget* dock, docks) {
-        if (dock->windowTitle().contains(TITLE_MEM_DOCK)) {
+        if (dock->windowTitle().contains(TXT_MEM_DOCK)) {
             QList<QPushButton*> buttons = dock->findChildren<QPushButton*>();
             dock->findChildren<QHexEdit*>().first()->setEnabled(state);
             dock->findChildren<QSpinBox*>().first()->setEnabled(state);
@@ -2054,7 +2054,7 @@ void MainWindow::memoryContextMenu(const QPoint& pos, uint32_t address) {
 void MainWindow::memDocksUpdate() {
     QList<QDockWidget*> docks = findChildren<QDockWidget*>();
     foreach (QDockWidget* dock, docks) {
-        if (dock->windowTitle().contains(TITLE_MEM_DOCK)) {
+        if (dock->windowTitle().contains(TXT_MEM_DOCK)) {
             QHexEdit *edit = dock->findChildren<QHexEdit*>().first();
             memEditUpdate(edit, 0);
         }

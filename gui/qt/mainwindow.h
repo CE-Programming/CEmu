@@ -190,6 +190,15 @@ private:
         MEM_MEM
     };
 
+    // Language
+    enum {
+        TRANSLATE_INIT,
+        TRANSLATE_UPDATE,
+        TRANSLATE_ONLY
+    };
+
+    void translateExtras(int init);
+
     // Save/Restore
     void saveToPath(const QString& path);
     bool restoreFromPath(const QString& path);
@@ -518,8 +527,8 @@ private:
     QShortcut *asmShortcut;
     QShortcut *resendshortcut;
 
-    QAction *toggleAction;
-    QAction *addMemory;
+    QAction *actionToggleUI;
+    QAction *actionAddMemory;
 
     QIcon runIcon, stopIcon;
     QIcon saveIcon, loadIcon, editIcon, removeIcon;
@@ -556,10 +565,6 @@ private:
     static const int WindowStateVersion = 0;
 
     // Settings definitions
-
-    static const QString MSG_INFORMATION;
-    static const QString MSG_WARNING;
-    static const QString MSG_ERROR;
 
     static const QString SETTING_DEBUGGER_TEXT_SIZE;
     static const QString SETTING_DEBUGGER_ADD_DISASM_SPACE;
@@ -619,7 +624,33 @@ private:
     static const QString SETTING_DEFAULT_IMAGE_FILE;
     static const QString SETTING_DEFAULT_DEBUG_FILE;
 
-    static const QString TITLE_MEM_DOCK;
+    QString TITLE_DEBUG;
+    QString TITLE_DOCKS;
+
+    QString TXT_MEM_DOCK;
+
+    QString TXT_CONSOLE;
+    QString TXT_SETTINGS;
+    QString TXT_VARIABLES;
+    QString TXT_CAPTURE;
+    QString TXT_STATE;
+    QString TXT_KEYPAD;
+
+    QString TXT_DEBUG_CONTROL;
+    QString TXT_CPU_STATUS;
+    QString TXT_DISASSEMBLY;
+    QString TXT_MEMORY;
+    QString TXT_TIMERS;
+    QString TXT_BREAK_WATCH;
+    QString TXT_OS_VIEW;
+    QString TXT_MISC;
+    QString TXT_AUTOTESTER;
+    
+    QString MSG_INFORMATION;
+    QString MSG_WARNING;
+    QString MSG_ERROR;
+    QString MSG_ADD_MEMORY;
+    QString MSG_EDIT_UI;
 
     QMessageBox *infoBox = Q_NULLPTR;
     QMessageBox *warnBox = Q_NULLPTR;
@@ -628,6 +659,10 @@ private:
     int memoryDocks = 0;
 
     static const char *var_extension[];
+#ifdef _WIN32
+    QAction *actionToggleConsole;
+    QString TXT_TOGGLE_CONSOLE;
+#endif
 };
 
 #endif

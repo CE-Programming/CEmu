@@ -336,12 +336,13 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->actionClipScreen, &QAction::triggered, this, &MainWindow::saveScreenToClipboard);
 
     // Docks
-    toggleAction = new QAction(tr("Enable UI edit mode"), this);
-    toggleAction->setCheckable(true);
-    connect(toggleAction, &QAction::triggered, this, &MainWindow::toggleUIEditMode);
+    translateExtras(TRANSLATE_INIT);
+    actionToggleUI = new QAction(MSG_EDIT_UI, this);
+    actionToggleUI->setCheckable(true);
+    connect(actionToggleUI, &QAction::triggered, this, &MainWindow::toggleUIEditMode);
 
-    addMemory = new QAction(tr("Add Memory View"), this);
-    connect(addMemory, &QAction::triggered, this, [this]{ createMemoryDock(TITLE_MEM_DOCK); });
+    actionAddMemory = new QAction(MSG_ADD_MEMORY, this);
+    connect(actionAddMemory, &QAction::triggered, this, [this]{ createMemoryDock(TXT_MEM_DOCK); });
 
     // Shortcut Connections
     stepInShortcut = new QShortcut(QKeySequence(Qt::Key_F6), this);
@@ -542,10 +543,11 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     if (prefLang != QStringLiteral("none")) {
         switchTranslator(prefLang);
     }
+
+    translateExtras(TRANSLATE_UPDATE);
 }
 
-void MainWindow::switchTranslator(const QString& lang)
-{
+void MainWindow::switchTranslator(const QString& lang) {
     qApp->removeTranslator(&appTranslator);
     // For English, nothing to load after removing the translator.
     if (lang == QStringLiteral("en_EN") || (appTranslator.load(lang, QStringLiteral(":/i18n/i18n/"))
@@ -556,11 +558,161 @@ void MainWindow::switchTranslator(const QString& lang)
     }
 }
 
-void MainWindow::changeEvent(QEvent* event)
-{
+void MainWindow::translateExtras(int init) {
+    QAction *action;
+
+    TITLE_DOCKS = tr("Docks");
+    TITLE_DEBUG = tr("Debug");
+    MSG_INFORMATION = tr("Information");
+    MSG_WARNING = tr("Warning");
+    MSG_ERROR = tr("Error");
+    MSG_ADD_MEMORY = tr("Add Memory View");
+    MSG_EDIT_UI = tr("Enable UI edit mode");
+
+    QString __TXT_MEM_DOCK = tr("Memory View");
+
+    QString __TXT_CONSOLE = tr("Console");
+    QString __TXT_SETTINGS = tr("Settings");
+    QString __TXT_VARIABLES = tr("Variables");
+    QString __TXT_CAPTURE = tr("Capture");
+    QString __TXT_STATE = tr("State");
+    QString __TXT_KEYPAD = tr("Keypad");
+
+    QString __TXT_DEBUG_CONTROL = tr("Debug Control");
+    QString __TXT_CPU_STATUS = tr("CPU Status");
+    QString __TXT_DISASSEMBLY = tr("Disassembly");
+    QString __TXT_MEMORY = tr("Memory");
+    QString __TXT_TIMERS = tr("Timers");
+    QString __TXT_BREAK_WATCH = tr("Break / Watch / Port");
+    QString __TXT_OS_VIEW = tr("OS View");
+    QString __TXT_MISC = tr("Miscellaneous");
+    QString __TXT_AUTOTESTER = tr("AutoTester");
+
+    if (init == TRANSLATE_UPDATE) {
+        for (const auto &dock : findChildren<DockWidget*>()) {
+            if (dock->windowTitle() == TXT_MEM_DOCK) {
+                dock->setWindowTitle(__TXT_MEM_DOCK);
+            }
+            if (dock->windowTitle() == TXT_CONSOLE) {
+                dock->setWindowTitle(__TXT_CONSOLE);
+            }
+            if (dock->windowTitle() == TXT_SETTINGS) {
+                dock->setWindowTitle(__TXT_SETTINGS);
+            }
+            if (dock->windowTitle() == TXT_VARIABLES) {
+                dock->setWindowTitle(__TXT_VARIABLES);
+            }
+            if (dock->windowTitle() == TXT_CAPTURE) {
+                dock->setWindowTitle(__TXT_CAPTURE);
+            }
+            if (dock->windowTitle() == TXT_STATE) {
+                dock->setWindowTitle(__TXT_STATE);
+            }
+            if (dock->windowTitle() == TXT_KEYPAD) {
+                dock->setWindowTitle(__TXT_KEYPAD);
+            }
+            if (dock->windowTitle() == TXT_DEBUG_CONTROL) {
+                dock->setWindowTitle(__TXT_DEBUG_CONTROL);
+            }
+            if (dock->windowTitle() == TXT_CPU_STATUS) {
+                dock->setWindowTitle(__TXT_CPU_STATUS);
+            }
+            if (dock->windowTitle() == TXT_DISASSEMBLY) {
+                dock->setWindowTitle(__TXT_DISASSEMBLY);
+            }
+            if (dock->windowTitle() == TXT_MEMORY) {
+                dock->setWindowTitle(__TXT_MEMORY);
+            }
+            if (dock->windowTitle() == TXT_TIMERS) {
+                dock->setWindowTitle(__TXT_TIMERS);
+            }
+            if (dock->windowTitle() == TXT_BREAK_WATCH) {
+                dock->setWindowTitle(__TXT_BREAK_WATCH);
+            }
+            if (dock->windowTitle() == TXT_OS_VIEW) {
+                dock->setWindowTitle(__TXT_OS_VIEW);
+            }
+            if (dock->windowTitle() == TXT_MISC) {
+                dock->setWindowTitle(__TXT_MISC);
+            }
+            if (dock->windowTitle() == TXT_AUTOTESTER) {
+                dock->setWindowTitle(__TXT_AUTOTESTER);
+            }
+        }
+    }
+
+    TXT_MEM_DOCK = __TXT_MEM_DOCK;
+
+    TXT_CONSOLE = __TXT_CONSOLE;
+    TXT_SETTINGS = __TXT_SETTINGS;
+    TXT_VARIABLES = __TXT_VARIABLES;
+    TXT_CAPTURE = __TXT_CAPTURE;
+    TXT_STATE = __TXT_STATE;
+    TXT_KEYPAD = __TXT_KEYPAD;
+
+    TXT_DEBUG_CONTROL = __TXT_DEBUG_CONTROL;
+    TXT_CPU_STATUS = __TXT_CPU_STATUS;
+    TXT_DISASSEMBLY = __TXT_DISASSEMBLY;
+    TXT_MEMORY = __TXT_MEMORY;
+    TXT_TIMERS = __TXT_TIMERS;
+    TXT_BREAK_WATCH = __TXT_BREAK_WATCH;
+    TXT_OS_VIEW = __TXT_OS_VIEW;
+    TXT_MISC = __TXT_MISC;
+    TXT_AUTOTESTER = __TXT_AUTOTESTER;
+
+#ifdef _WIN32
+    TXT_TOGGLE_CONSOLE = tr("Toggle Windows Console");
+#endif
+
+    if (init == TRANSLATE_UPDATE) {
+        actionToggleUI->setText(MSG_EDIT_UI);
+        actionAddMemory->setText(MSG_ADD_MEMORY);
+        debugMenu->setTitle(TITLE_DEBUG);
+        docksMenu->setTitle(TITLE_DOCKS);
+
+        action = docksMenu->actions().at(0);
+        action->setText(TXT_VARIABLES);
+        action = docksMenu->actions().at(1);
+        action->setText(TXT_CAPTURE);
+        action = docksMenu->actions().at(2);
+        action->setText(TXT_SETTINGS);
+        action = docksMenu->actions().at(3);
+        action->setText(TXT_CONSOLE);
+        action = docksMenu->actions().at(4);
+        action->setText(TXT_STATE);
+        action = docksMenu->actions().at(5);
+        action->setText(TXT_KEYPAD);
+
+        action = debugMenu->actions().at(0);
+        action->setText(TXT_DEBUG_CONTROL);
+        action = debugMenu->actions().at(1);
+        action->setText(TXT_CPU_STATUS);
+        action = debugMenu->actions().at(2);
+        action->setText(TXT_DISASSEMBLY);
+        action = debugMenu->actions().at(3);
+        action->setText(TXT_MEMORY);
+        action = debugMenu->actions().at(4);
+        action->setText(TXT_TIMERS);
+        action = debugMenu->actions().at(5);
+        action->setText(TXT_BREAK_WATCH);
+        action = debugMenu->actions().at(6);
+        action->setText(TXT_OS_VIEW);
+        action = debugMenu->actions().at(7);
+        action->setText(TXT_MISC);
+        action = debugMenu->actions().at(8);
+        action->setText(TXT_AUTOTESTER);
+
+#ifdef _WIN32
+        actionToggleConsole->setText(TXT_TOGGLE_CONSOLE);
+#endif
+    }
+}
+
+void MainWindow::changeEvent(QEvent* event) {
     const auto eventType = event->type();
     if (eventType == QEvent::LanguageChange) {
         ui->retranslateUi(this);
+        translateExtras(TRANSLATE_UPDATE);
     } else if (eventType == QEvent::LocaleChange) {
         switchTranslator(QLocale::system().name());
     }
@@ -601,7 +753,7 @@ void MainWindow::showEvent(QShowEvent *e) {
         }
         QList<QDockWidget*> docks = findChildren<QDockWidget*>();
         foreach (QDockWidget* dock, docks) {
-            if (dock->windowTitle().contains(tr("Memory View"))) {
+            if (dock->windowTitle().contains(TXT_MEM_DOCK)) {
                 if (dock->visibleRegion().isEmpty()) {
                     removeDockWidget(dock);
                     memoryDocks--;

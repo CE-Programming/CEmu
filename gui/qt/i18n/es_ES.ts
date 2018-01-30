@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="es_ES">
+<TS version="2.0" language="es_ES">
 <context>
     <name>BasicCodeViewerWindow</name>
     <message>
@@ -60,55 +60,59 @@
     <name>MainWindow</name>
     <message>
         <location filename="../mainwindow.ui" line="8517"/>
+        <location filename="../mainwindow.cpp" line="579"/>
         <source>Keypad</source>
         <translation>Teclado</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6045"/>
+        <location filename="../mainwindow.ui" line="5870"/>
+        <location filename="../mainwindow.cpp" line="576"/>
         <source>Variables</source>
         <translation>Variables</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4308"/>
         <location filename="../mainwindow.ui" line="4677"/>
-        <location filename="../mainwindow.ui" line="6237"/>
+        <location filename="../mainwindow.ui" line="6062"/>
         <source>Size</source>
         <translation>El Tamaño</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6462"/>
+        <location filename="../mainwindow.ui" line="6287"/>
+        <location filename="../mainwindow.cpp" line="577"/>
         <source>Capture</source>
         <translation>Foto</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6476"/>
+        <location filename="../mainwindow.ui" line="6301"/>
         <source>Screenshot</source>
         <translation>Copia de LCD</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5816"/>
-        <location filename="../mainwindow.ui" line="6705"/>
-        <location filename="../mainwindow.ui" line="7930"/>
+        <location filename="../mainwindow.ui" line="6530"/>
+        <location filename="../mainwindow.ui" line="7755"/>
+        <location filename="../mainwindow.ui" line="8023"/>
+        <location filename="../mainwindow.cpp" line="575"/>
         <source>Settings</source>
         <translation>Ajustes</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6715"/>
+        <location filename="../mainwindow.ui" line="6540"/>
         <source>General</source>
         <translation>General</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6768"/>
+        <location filename="../mainwindow.ui" line="6593"/>
         <source>Automatically save and restore state</source>
         <translation>Automatiquement sauver et reprendre l&apos;état</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7850"/>
+        <location filename="../mainwindow.ui" line="7675"/>
         <source>ROM Image</source>
         <translation>Imagen de ROM</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="405"/>
+        <location filename="../mainwindow.cpp" line="565"/>
         <source>Debug</source>
         <translation>Depurar</translation>
     </message>
@@ -225,51 +229,51 @@
         <translation>[CEmu] No se pudo abrir el archivo de equivalentes (remoto): </translation>
     </message>
     <message>
-        <location filename="../debugger.cpp" line="1892"/>
-        <location filename="../debugger.cpp" line="1958"/>
+        <location filename="../debugger.cpp" line="1952"/>
+        <location filename="../debugger.cpp" line="2018"/>
         <source>Copy Address</source>
         <translation>Copiar dirección</translation>
     </message>
     <message>
-        <location filename="../debugger.cpp" line="1893"/>
+        <location filename="../debugger.cpp" line="1953"/>
         <source>Copy Data</source>
         <translation>Copiar datos</translation>
     </message>
     <message>
-        <location filename="../debugger.cpp" line="1925"/>
+        <location filename="../debugger.cpp" line="1985"/>
         <source>Goto VAT Memory View</source>
         <translation>Ir a la vista de la memoria del VAT</translation>
     </message>
     <message>
-        <location filename="../debugger.cpp" line="1926"/>
+        <location filename="../debugger.cpp" line="1986"/>
         <source>Goto Disasm View</source>
         <translation>Ir a Desmontaje</translation>
     </message>
     <message>
-        <location filename="../debugger.cpp" line="1959"/>
-        <location filename="../mainwindow.cpp" line="1773"/>
-        <location filename="../mainwindow.cpp" line="1918"/>
+        <location filename="../debugger.cpp" line="2019"/>
+        <location filename="../mainwindow.cpp" line="1982"/>
+        <location filename="../mainwindow.cpp" line="2139"/>
         <source>Toggle Breakpoint</source>
         <translation>Alternar este punto de interrupción</translation>
     </message>
     <message>
-        <location filename="../debugger.cpp" line="1960"/>
-        <location filename="../mainwindow.cpp" line="1774"/>
-        <location filename="../mainwindow.cpp" line="1919"/>
+        <location filename="../debugger.cpp" line="2020"/>
+        <location filename="../mainwindow.cpp" line="1983"/>
+        <location filename="../mainwindow.cpp" line="2140"/>
         <source>Toggle Write Watchpoint</source>
         <translation>Alternar este punto de observación de escritura</translation>
     </message>
     <message>
-        <location filename="../debugger.cpp" line="1961"/>
-        <location filename="../mainwindow.cpp" line="1775"/>
-        <location filename="../mainwindow.cpp" line="1920"/>
+        <location filename="../debugger.cpp" line="2021"/>
+        <location filename="../mainwindow.cpp" line="1984"/>
+        <location filename="../mainwindow.cpp" line="2141"/>
         <source>Toggle Read Watchpoint</source>
         <translation>Alternar este punto de mira leído</translation>
     </message>
     <message>
-        <location filename="../debugger.cpp" line="1962"/>
-        <location filename="../mainwindow.cpp" line="1776"/>
-        <location filename="../mainwindow.cpp" line="1921"/>
+        <location filename="../debugger.cpp" line="2022"/>
+        <location filename="../mainwindow.cpp" line="1985"/>
+        <location filename="../mainwindow.cpp" line="2142"/>
         <source>Toggle Read/Write Watchpoint</source>
         <translation>Alternar este punto de mira de lectura / escritura</translation>
     </message>
@@ -294,47 +298,48 @@
         <location filename="../mainwindow.ui" line="3566"/>
         <location filename="../mainwindow.ui" line="3668"/>
         <location filename="../hexeditor.cpp" line="33"/>
-        <location filename="../mainwindow.cpp" line="572"/>
+        <location filename="../mainwindow.cpp" line="781"/>
         <source>Goto</source>
         <translation>Ir a</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3274"/>
+        <location filename="../mainwindow.cpp" line="583"/>
         <source>Disassembly</source>
         <translation>Desmontaje</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6242"/>
+        <location filename="../mainwindow.ui" line="6067"/>
         <source>Preview</source>
         <translation>Avance</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6742"/>
+        <location filename="../mainwindow.ui" line="6567"/>
         <source>Always show on top of other windows</source>
         <translation>Siempre mostrar encima de otras ventanas</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7803"/>
+        <location filename="../mainwindow.ui" line="7628"/>
         <source>File Locations</source>
         <translation>Ubicación de archivos</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7923"/>
+        <location filename="../mainwindow.ui" line="7748"/>
         <source>Saved Image</source>
         <translation>Imagen guardada</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6835"/>
+        <location filename="../mainwindow.ui" line="6660"/>
         <source>Skin</source>
         <translation>Caso</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6851"/>
+        <location filename="../mainwindow.ui" line="6676"/>
         <source>Scale:</source>
         <translation>Tamaño:</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7005"/>
+        <location filename="../mainwindow.ui" line="6830"/>
         <source>Keypad Skin Color</source>
         <translation>Color de teclado</translation>
     </message>
@@ -426,6 +431,7 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3432"/>
+        <location filename="../mainwindow.cpp" line="584"/>
         <source>Memory</source>
         <translation>Memoria</translation>
     </message>
@@ -565,53 +571,53 @@
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8775"/>
+        <location filename="../mainwindow.ui" line="8786"/>
         <source>Record animated PNG</source>
         <translation>Grabar PNG animado</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8781"/>
+        <location filename="../mainwindow.ui" line="8792"/>
         <source>Ctrl+Shift+X</source>
         <translation>Ctrl+Shift+X</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8811"/>
+        <location filename="../mainwindow.ui" line="8822"/>
         <source>Reset calculator</source>
         <translation>Restablecer calculadora</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8826"/>
+        <location filename="../mainwindow.ui" line="8837"/>
         <source>Ctrl+Shift+D</source>
         <translation>Ctrl+Shift+D</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8847"/>
+        <location filename="../mainwindow.ui" line="8858"/>
         <source>Save state</source>
         <translation>Guardar Estado</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8856"/>
+        <location filename="../mainwindow.ui" line="8867"/>
         <source>Restore state</source>
         <translation>Estado de restauración</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8865"/>
+        <location filename="../mainwindow.ui" line="8876"/>
         <source>Reload ROM</source>
         <translation>Recargar ROM</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8901"/>
+        <location filename="../mainwindow.ui" line="8912"/>
         <source>Memory visualizer</source>
         <translation>Visualizador de memoria</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8910"/>
-        <location filename="../mainwindow.ui" line="8922"/>
+        <location filename="../mainwindow.ui" line="8921"/>
+        <location filename="../mainwindow.ui" line="8933"/>
         <source>Debugging status</source>
         <translation>Estado del depurador</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8618"/>
+        <location filename="../mainwindow.ui" line="8629"/>
         <source>Screen</source>
         <translation>Pantalla</translation>
     </message>
@@ -621,13 +627,13 @@
         <translation>Recargar Rom</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8874"/>
+        <location filename="../mainwindow.ui" line="8885"/>
         <source>Rom image</source>
         <translation>Imagen de la ROM</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8883"/>
-        <location filename="../mainwindow.ui" line="8892"/>
+        <location filename="../mainwindow.ui" line="8894"/>
+        <location filename="../mainwindow.ui" line="8903"/>
         <source>Calculator image</source>
         <translation>Imagen de la Calculadora</translation>
     </message>
@@ -640,59 +646,59 @@
         <translation>Alocución</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6509"/>
+        <location filename="../mainwindow.ui" line="6334"/>
         <source>PNG</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6781"/>
+        <location filename="../mainwindow.ui" line="6606"/>
         <source>Automatically check for updates</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6794"/>
+        <location filename="../mainwindow.ui" line="6619"/>
         <source>Use portable configuration</source>
         <translation>Configuración portátil</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5837"/>
+        <location filename="../mainwindow.ui" line="8044"/>
         <source>Automatically save and restore debug state</source>
         <translation>Guarde y restaure automáticamente el estado</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5857"/>
+        <location filename="../mainwindow.ui" line="8064"/>
         <source>Show Data column</source>
         <translation>Mostrar columna de datos</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5870"/>
+        <location filename="../mainwindow.ui" line="8077"/>
         <source>Opcode / Operand space</source>
         <translation>Operando por separado</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5847"/>
+        <location filename="../mainwindow.ui" line="8054"/>
         <source>Open debugger on reset or nmi</source>
         <translation>Abra el depurador al reiniciar o NMI</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5880"/>
+        <location filename="../mainwindow.ui" line="8087"/>
         <source>Enable software commands</source>
         <translation>Habilitar comandos de software</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6867"/>
-        <location filename="../mainwindow.ui" line="8033"/>
+        <location filename="../mainwindow.ui" line="6692"/>
+        <location filename="../mainwindow.ui" line="7858"/>
         <source>%</source>
         <translation>%</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7872"/>
-        <location filename="../mainwindow.ui" line="7959"/>
+        <location filename="../mainwindow.ui" line="7697"/>
+        <location filename="../mainwindow.ui" line="7784"/>
         <source>Change path</source>
         <translation>Cambiar ruta</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7937"/>
+        <location filename="../mainwindow.ui" line="7762"/>
         <source>Saved Debug</source>
         <translation>Depuración guardada</translation>
     </message>
@@ -723,8 +729,8 @@
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6557"/>
-        <location filename="../mainwindow.ui" line="8111"/>
+        <location filename="../mainwindow.ui" line="6382"/>
+        <location filename="../mainwindow.ui" line="7936"/>
         <source>Frame skip:</source>
         <translation>Tasa de salto:</translation>
     </message>
@@ -775,22 +781,22 @@
         <translation>Congelar</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6128"/>
+        <location filename="../mainwindow.ui" line="5953"/>
         <source>Save selected</source>
         <translation>Guardar la sélection</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8020"/>
+        <location filename="../mainwindow.ui" line="7845"/>
         <source>Throttle:</source>
         <translation>Acelerador:</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5904"/>
+        <location filename="../mainwindow.ui" line="8111"/>
         <source>Text size:</source>
         <translation>Tamaño de texto:</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6902"/>
+        <location filename="../mainwindow.ui" line="6727"/>
         <source>Key bindings</source>
         <translation>Asociaciones de teclas</translation>
     </message>
@@ -832,34 +838,34 @@
         <translation>Posición de bloqueo</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8730"/>
+        <location filename="../mainwindow.ui" line="8741"/>
         <source>Rom setup wizard...</source>
         <translation>Configuración de ROM...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8757"/>
-        <location filename="../mainwindow.ui" line="8760"/>
+        <location filename="../mainwindow.ui" line="8768"/>
+        <location filename="../mainwindow.ui" line="8771"/>
         <source>Take PNG screenshot</source>
         <translation>Tome un PNG captura</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8778"/>
+        <location filename="../mainwindow.ui" line="8789"/>
         <source>Record animated GIF</source>
         <translation>Grabar un GIF</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8820"/>
-        <location filename="../mainwindow.ui" line="8823"/>
+        <location filename="../mainwindow.ui" line="8831"/>
+        <location filename="../mainwindow.ui" line="8834"/>
         <source>Take GIF screenshot</source>
         <translation>Tome un GIF captura</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8835"/>
+        <location filename="../mainwindow.ui" line="8846"/>
         <source>Check for updates...</source>
         <translation>Buscar actualizaciones...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8799"/>
+        <location filename="../mainwindow.ui" line="8810"/>
         <source>About Qt</source>
         <translation>Información de Qt</translation>
     </message>
@@ -869,7 +875,7 @@
         <translation>Interrupciones</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6811"/>
+        <location filename="../mainwindow.ui" line="6636"/>
         <source>Display</source>
         <translation>Monitor</translation>
     </message>
@@ -880,18 +886,19 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8213"/>
+        <location filename="../mainwindow.cpp" line="574"/>
         <source>Console</source>
         <translation>Consola</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4682"/>
-        <location filename="../mainwindow.ui" line="6222"/>
+        <location filename="../mainwindow.ui" line="6047"/>
         <location filename="../mainwindow.ui" line="8401"/>
         <source>Name</source>
         <translation>Nombre</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6232"/>
+        <location filename="../mainwindow.ui" line="6057"/>
         <source>Type</source>
         <translation>Tipo</translation>
     </message>
@@ -927,12 +934,12 @@
         <location filename="../mainwindow.ui" line="3475"/>
         <location filename="../mainwindow.ui" line="3577"/>
         <location filename="../mainwindow.ui" line="3679"/>
-        <location filename="../mainwindow.cpp" line="573"/>
+        <location filename="../mainwindow.cpp" line="782"/>
         <source>Search</source>
         <translation>Buscar</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="574"/>
+        <location filename="../mainwindow.cpp" line="783"/>
         <source>Sync Changes</source>
         <translation>Synchroniser les changements</translation>
     </message>
@@ -943,8 +950,7 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3645"/>
-        <location filename="../mainwindow.cpp" line="549"/>
-        <location filename="../settings.cpp" line="88"/>
+        <location filename="../mainwindow.cpp" line="572"/>
         <source>Memory View</source>
         <translation>Memoria</translation>
     </message>
@@ -954,17 +960,17 @@
         <translation>&amp;Archivo</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8703"/>
+        <location filename="../mainwindow.ui" line="8714"/>
         <source>Open...</source>
         <translation>Abrir...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8715"/>
+        <location filename="../mainwindow.ui" line="8726"/>
         <source>Exit</source>
         <translation>Terminar</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7897"/>
+        <location filename="../mainwindow.ui" line="7722"/>
         <source>Setup wizard</source>
         <translation>Assistant de configuration</translation>
     </message>
@@ -975,11 +981,13 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="68"/>
+        <location filename="../mainwindow.cpp" line="581"/>
         <source>Debug Control</source>
         <translation>Control de depuración</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="262"/>
+        <location filename="../mainwindow.cpp" line="582"/>
         <source>CPU Status</source>
         <translation>Estado de la CPU</translation>
     </message>
@@ -996,6 +1004,7 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3758"/>
+        <location filename="../mainwindow.cpp" line="585"/>
         <source>Timers</source>
         <translation>Temporizadores</translation>
     </message>
@@ -1053,6 +1062,7 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4021"/>
+        <location filename="../mainwindow.cpp" line="586"/>
         <source>Break / Watch / Port</source>
         <translation>Puntos de interrupción / Observación / Puertos</translation>
     </message>
@@ -1063,6 +1073,7 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4477"/>
+        <location filename="../mainwindow.cpp" line="587"/>
         <source>OS View</source>
         <translation>Vista del sistema operativo</translation>
     </message>
@@ -1098,6 +1109,7 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4719"/>
+        <location filename="../mainwindow.cpp" line="588"/>
         <source>Miscellaneous</source>
         <translation>Diverso</translation>
     </message>
@@ -1153,6 +1165,7 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5415"/>
+        <location filename="../mainwindow.cpp" line="589"/>
         <source>AutoTester</source>
         <translation>Probador automático</translation>
     </message>
@@ -1167,144 +1180,145 @@
         <translation>Recargar</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5810"/>
-        <source>Debug Settings</source>
-        <translation>Configuración de depuración</translation>
-    </message>
-    <message>
-        <location filename="../mainwindow.ui" line="5954"/>
+        <location filename="../mainwindow.ui" line="8161"/>
         <source>Ignore DMA cycles in cycle counter</source>
-        <translation>gnorar los ciclos de DMA</translation>
+        <translation>Ignorar los ciclos de DMA</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="5961"/>
+        <location filename="../mainwindow.ui" line="8168"/>
         <source>Emulate Pre-Revision I</source>
         <translation>Emular Pre-Revisión I</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6063"/>
+        <location filename="../mainwindow.ui" line="5888"/>
         <source>Calculator Receive</source>
         <translation>Calculadora Reciba</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6089"/>
-        <location filename="../mainwindow.cpp" line="1270"/>
+        <location filename="../mainwindow.ui" line="5914"/>
+        <location filename="../mainwindow.cpp" line="1479"/>
         <source>View Calculator Variables</source>
         <translation>Ver variables de la calculadora</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6151"/>
+        <location filename="../mainwindow.ui" line="5976"/>
         <source>Save group</source>
         <translation>Guardar grupo</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6227"/>
+        <location filename="../mainwindow.ui" line="6052"/>
         <source>Location</source>
         <translation>Ubicación</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6253"/>
+        <location filename="../mainwindow.ui" line="6078"/>
         <source>Calculator Send</source>
         <translation>Calculadora Enviar</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6302"/>
+        <location filename="../mainwindow.ui" line="6127"/>
         <source>Select</source>
         <translation>Seleccionar</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6307"/>
+        <location filename="../mainwindow.ui" line="6132"/>
         <source>Resend</source>
         <translation>Reenviar</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6312"/>
+        <location filename="../mainwindow.ui" line="6137"/>
         <source>Path</source>
         <translation>Ruta</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6339"/>
+        <location filename="../mainwindow.ui" line="6164"/>
         <source>Send files to emulator</source>
         <translation>Enviar archivos</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6356"/>
+        <location filename="../mainwindow.ui" line="6181"/>
         <source>Resend selected</source>
         <translation>Reenviar seleccionado</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6398"/>
+        <location filename="../mainwindow.ui" line="6223"/>
         <source>Check all</source>
         <translation>Seleccionar todo</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6409"/>
+        <location filename="../mainwindow.ui" line="6234"/>
         <source>Check none</source>
         <translation>Seleccionar ninguno</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6427"/>
+        <location filename="../mainwindow.ui" line="6252"/>
         <source>Remove selected</source>
         <translation>Eliminar selección</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6434"/>
+        <location filename="../mainwindow.ui" line="6259"/>
         <source>Remove all</source>
         <translation>Eliminar todo</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6447"/>
+        <location filename="../mainwindow.ui" line="6272"/>
         <source>Save recent file paths on exit</source>
         <translation>Guardar reciente cuando salga</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6525"/>
+        <location filename="../mainwindow.ui" line="6350"/>
         <source>Screen Recording</source>
         <translation>Grabación de pantalla</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6644"/>
-        <location filename="../mainwindow.cpp" line="1128"/>
+        <location filename="../mainwindow.ui" line="6469"/>
+        <location filename="../mainwindow.cpp" line="1337"/>
         <source>Record</source>
         <translation>Grabar</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6670"/>
+        <location filename="../mainwindow.ui" line="6495"/>
         <source>Optimize</source>
         <translation>Optimizar</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6721"/>
+        <location filename="../mainwindow.ui" line="6546"/>
         <source>Configuration</source>
         <translation>Configuración</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6755"/>
+        <location filename="../mainwindow.ui" line="6580"/>
         <source>Emulate pyhsical LCD SPI drawing</source>
         <translation>Emular SPI LCD real</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="6801"/>
+        <location filename="../mainwindow.ui" line="6626"/>
         <source>Pause emulation on focus change</source>
         <translation>Emulación de pausa cuando el interruptor</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7797"/>
+        <location filename="../mainwindow.ui" line="7622"/>
         <source>Emulation</source>
         <translation>Emulación</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="7985"/>
+        <location filename="../mainwindow.ui" line="7810"/>
         <source>Display / Emulation Speed</source>
         <translation>LCD / Velocidad de Emulación</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8146"/>
+        <location filename="../mainwindow.ui" line="7971"/>
         <source>Actual FPS:</source>
         <translation>FPS real:</translation>
     </message>
     <message>
+        <location filename="../mainwindow.ui" line="8017"/>
+        <source>Debugging</source>
+        <translation>Depuración</translation>
+    </message>
+    <message>
         <location filename="../mainwindow.ui" line="8334"/>
+        <location filename="../mainwindow.cpp" line="578"/>
         <source>State</source>
         <translation>Estado</translation>
     </message>
@@ -1339,352 +1353,387 @@
         <translation>Importar</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8579"/>
+        <location filename="../mainwindow.ui" line="8565"/>
+        <source>Language</source>
+        <translation>Idioma</translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="8590"/>
         <source>&amp;Calculator</source>
         <translation>&amp;Calculadora</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8593"/>
+        <location filename="../mainwindow.ui" line="8604"/>
         <source>&amp;About</source>
         <translation>&amp;Información</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8706"/>
+        <location filename="../mainwindow.ui" line="8717"/>
         <source>Ctrl+Shift+O</source>
         <translation>Ctrl+Shift+O</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8718"/>
+        <location filename="../mainwindow.ui" line="8729"/>
         <source>Ctrl+Shift+Q</source>
         <translation>Ctrl+Shift+Q</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8742"/>
-        <location filename="../mainwindow.cpp" line="1142"/>
+        <location filename="../mainwindow.ui" line="8753"/>
+        <location filename="../mainwindow.cpp" line="1351"/>
         <source>About CEmu</source>
         <translation>Información de CEmu</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8927"/>
+        <location filename="../mainwindow.ui" line="8938"/>
         <source>New CEmu instance</source>
         <translation>Nuevo CEmu</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8935"/>
+        <location filename="../mainwindow.ui" line="8946"/>
         <source>Show key history</source>
         <translation>Historia del teclado</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8944"/>
+        <location filename="../mainwindow.ui" line="8955"/>
         <source>Bootable CEmu image</source>
         <translation>CEmu imagen</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8952"/>
+        <location filename="../mainwindow.ui" line="8963"/>
         <source>Hide menu bar</source>
         <translation>Ocultar barra de menú</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8961"/>
+        <location filename="../mainwindow.ui" line="8972"/>
         <source>Copy screen to clipboard</source>
         <translation>Copiar la pantalla al portapapeles</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8964"/>
+        <location filename="../mainwindow.ui" line="8975"/>
         <source>Ctrl+Shift+C</source>
         <translation>Ctrl+Shift+C</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8969"/>
+        <location filename="../mainwindow.ui" line="8980"/>
         <source>Reset GUI docks</source>
         <translation>Restablecer GUI</translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="8977"/>
+        <location filename="../mainwindow.ui" line="8988"/>
         <source>Reset CEmu</source>
         <translation>Restablecer CEmu</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="382"/>
+        <location filename="../mainwindow.ui" line="8996"/>
+        <source>English</source>
+        <translation></translation>
+    </message>
+    <message utf8="true">
+        <location filename="../mainwindow.ui" line="9001"/>
+        <source>Français</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="9006"/>
+        <source>Nederlands</source>
+        <translation></translation>
+    </message>
+    <message utf8="true">
+        <location filename="../mainwindow.ui" line="9011"/>
+        <source>Español</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="564"/>
         <source>Docks</source>
         <translation>Pantallas</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1045"/>
-        <location filename="../mainwindow.cpp" line="1077"/>
+        <location filename="../mainwindow.cpp" line="1254"/>
+        <location filename="../mainwindow.cpp" line="1286"/>
         <source>PNG images (*.png)</source>
         <translation>Imagenes de PNG (*.png)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="789"/>
+        <location filename="../mainwindow.cpp" line="998"/>
         <source>Select saved image to restore from</source>
         <translation>Seleccione una imagen guardada para restaurar</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="791"/>
-        <location filename="../mainwindow.cpp" line="803"/>
-        <location filename="../settings.cpp" line="356"/>
+        <location filename="../mainwindow.cpp" line="1000"/>
+        <location filename="../mainwindow.cpp" line="1012"/>
+        <location filename="../settings.cpp" line="355"/>
         <source>CEmu images (*.ce);;All files (*.*)</source>
         <translation>CEmu imágenes (*.ce);;Todos los archivos (*.*)</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="85"/>
-        <location filename="../settings.cpp" line="185"/>
+        <location filename="../mainwindow.cpp" line="566"/>
+        <location filename="../settings.cpp" line="184"/>
         <source>Information</source>
         <translation>Información</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="500"/>
+        <location filename="../mainwindow.cpp" line="528"/>
         <source>Welcome!
 CEmu uses a customizable dock-style interface. Drag and drop to move tabs and windows around on the screen, and choose which docks are available in the &apos;Docks&apos; menu in the topmost bar. Be sure that &apos;Enable UI edit mode&apos; is selected when laying out your interface. Enjoy!</source>
         <translation>¡Bienvenido!
 CEmu tiene una interfaz personalizada. Arrastra y suelta las ventanas de la computadora. Use el menú &apos;Ventanas&apos; para buscar ventanas. ¡Disfrutar!</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="801"/>
+        <location filename="../mainwindow.cpp" line="1010"/>
         <source>Set image to save to</source>
         <translation>Establecer imagen para guardar</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="810"/>
+        <location filename="../mainwindow.cpp" line="1019"/>
         <source>Set Rom image to save to</source>
         <translation>Establecer imagen de Rom para guarda</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="812"/>
+        <location filename="../mainwindow.cpp" line="1021"/>
         <source>ROM images (*.rom);;All files (*.*)</source>
         <translation>ROM imágenes (*.rom);;Todos los archivos (*.*)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="977"/>
+        <location filename="../mainwindow.cpp" line="1186"/>
         <source>Emulated Speed: </source>
         <translation>Velocidad Emulada: </translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="473"/>
+        <location filename="../settings.cpp" line="468"/>
         <source>Checking updates is disabled for development builds</source>
         <translation>Comprobación de actualizaciones está deshabilitado para el desarrollo construye</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="506"/>
+        <location filename="../settings.cpp" line="501"/>
         <source>&lt;b&gt;An error occurred while checking for CEmu updates.&lt;/b&gt;&lt;br/&gt;You can however &lt;a href=&apos;https://github.com/CE-Programming/CEmu/releases/latest&apos;&gt;go here&lt;/a&gt; to check yourself.</source>
         <translation>&lt;b&gt;Hay un error cuando buscar actualizaciones de CEmu.&lt;/b&gt;&lt;br/&gt;Sin embargo ir a&lt;a href=&apos;https://github.com/CE-Programming/CEmu/releases/latest&apos;&gt;&lt;/a&gt;para comprobar.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1066"/>
+        <location filename="../mainwindow.cpp" line="1275"/>
         <source>Recording...</source>
         <translation>Grabación...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1103"/>
+        <location filename="../mainwindow.cpp" line="1312"/>
         <source>Stop Recording</source>
         <translation>Terminar de grabar</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1216"/>
+        <location filename="../mainwindow.cpp" line="1425"/>
         <source>TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca *.8cg *.8ci *.8ek);;All Files (*.*)</source>
         <translation>TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca *.8cg *.8ci *.8ek);;Todos Archivos (*.*)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1300"/>
+        <location filename="../mainwindow.cpp" line="1509"/>
         <source>Can&apos;t preview this OS variable</source>
         <translation>No se puede obtener una vista previa de esta variable de la OS</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1306"/>
+        <location filename="../mainwindow.cpp" line="1515"/>
         <source>[Double-click to view...]</source>
         <translation>[Doble clic para ver...]</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1389"/>
+        <location filename="../mainwindow.cpp" line="1598"/>
         <source>Select at least one file to transfer</source>
         <translation>Seleccionar al menos un archivo a transferir</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="316"/>
+        <location filename="../mainwindow.cpp" line="569"/>
         <source>Add Memory View</source>
         <translation>Agregar vista de memoria</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="752"/>
+        <location filename="../mainwindow.cpp" line="961"/>
         <source>No saved image path in settings.</source>
         <translation>Sin imagen guardada.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="784"/>
+        <location filename="../mainwindow.cpp" line="993"/>
         <source>No saved image path in settings given.</source>
         <translation>Sin imagen guardada.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="795"/>
+        <location filename="../mainwindow.cpp" line="1004"/>
         <source>Could not resume; try restarting CEmu</source>
         <translation>Podría no empezar; intente reiniciar</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="827"/>
+        <location filename="../mainwindow.cpp" line="1036"/>
         <source>Could not load ROM image. Please see console for more information.</source>
         <translation>No se pudo cargar la ROM. Ver consola para información.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="839"/>
+        <location filename="../mainwindow.cpp" line="1048"/>
         <source>Resuming failed.
 Please reload the ROM from the &apos;Calculator&apos; menu.</source>
         <translation>La reanudación falló.
 Por favor, vuelva a cargar la ROM desde el menú &apos;Calculadora&apos;.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="845"/>
+        <location filename="../mainwindow.cpp" line="1054"/>
         <source>Saving failed.
 Saving failed! Please let someone who maintains this know.</source>
         <translation>Error de guardado.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1042"/>
+        <location filename="../mainwindow.cpp" line="1251"/>
         <source>Failed to save screenshot.</source>
         <translation>Error al guardar la captura de pantalla.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1078"/>
+        <location filename="../mainwindow.cpp" line="1287"/>
         <source>Save Recorded PNG</source>
         <translation>Guardar PNG grabados</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1093"/>
+        <location filename="../mainwindow.cpp" line="1302"/>
         <source>A failure occured during PNG recording.</source>
         <translation>Error al guardar la captura de pantalla.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1104"/>
+        <location filename="../mainwindow.cpp" line="1313"/>
         <source>Stop Recording...</source>
         <translation>Terminar de grabar...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1111"/>
+        <location filename="../mainwindow.cpp" line="1320"/>
         <source>Saving...</source>
         <translation>Guardar...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1112"/>
+        <location filename="../mainwindow.cpp" line="1321"/>
         <source>Saving Animated PNG...</source>
         <translation>Guardar PNG animado...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1129"/>
+        <location filename="../mainwindow.cpp" line="1338"/>
         <source>Record animated PNG...</source>
         <translation>Grabar PNG animado...</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1150"/>
+        <location filename="../mainwindow.cpp" line="1359"/>
         <source>&lt;h3&gt;CEmu %1&lt;/h3&gt;&lt;a href=&apos;https://github.com/CE-Programming/CEmu&apos;&gt;On GitHub&lt;/a&gt;&lt;br&gt;&lt;br&gt;Main authors:&lt;br&gt;Matt Waltz (&lt;a href=&apos;https://github.com/mateoconlechuga&apos;&gt;MateoConLechuga&lt;/a&gt;)&lt;br&gt;Jacob Young (&lt;a href=&apos;https://github.com/jacobly0&apos;&gt;jacobly0&lt;/a&gt;)&lt;br&gt;Adrien Bertrand (&lt;a href=&apos;https://github.com/adriweb&apos;&gt;adriweb&lt;/a&gt;)&lt;br&gt;&lt;br&gt;Other contributors:&lt;br&gt;Lionel Debroux (&lt;a href=&apos;https://github.com/debrouxl&apos;&gt;debrouxl&lt;/a&gt;)&lt;br&gt;Fabian Vogt (&lt;a href=&apos;https://github.com/Vogtinator&apos;&gt;Vogtinator&lt;/a&gt;)&lt;br&gt;&lt;br&gt;Many thanks to the &lt;a href=&apos;https://github.com/KnightOS/z80e&apos;&gt;z80e&lt;/a&gt; (MIT license &lt;a href=&apos;https://github.com/KnightOS/z80e/blob/master/LICENSE&apos;&gt;here&lt;/a&gt;) and &lt;a href=&apos;https://github.com/nspire-emus/firebird&apos;&gt;Firebird&lt;/a&gt; (GPLv3 license &lt;a href=&apos;https://github.com/nspire-emus/firebird/blob/master/LICENSE&apos;&gt;here&lt;/a&gt;) projects.&lt;br&gt;In-program icons are courtesy of the &lt;a href=&apos;http://www.famfamfam.com/lab/icons/silk/&apos;&gt;Silk iconset&lt;/a&gt;.&lt;br&gt;&lt;br&gt;This work is licensed under the GPLv3.&lt;br&gt;To view a copy of this license, visit &lt;a href=&apos;https://www.gnu.org/licenses/gpl-3.0.html&apos;&gt;https://www.gnu.org/licenses/gpl-3.0.html&lt;/a&gt;</source>
         <translation>&lt;h3&gt;CEmu %1&lt;/h3&gt;&lt;a href=&apos;https://github.com/CE-Programming/CEmu&apos;&gt;En GitHub&lt;/a&gt;&lt;br&gt;&lt;br&gt;Autores principales:&lt;br&gt;Matt Waltz (&lt;a href=&apos;https://github.com/mateoconlechuga&apos;&gt;MateoConLechuga&lt;/a&gt;)&lt;br&gt;Jacob Young (&lt;a href=&apos;https://github.com/jacobly0&apos;&gt;jacobly0&lt;/a&gt;)&lt;br&gt;Adrien Bertrand (&lt;a href=&apos;https://github.com/adriweb&apos;&gt;adriweb&lt;/a&gt;)&lt;br&gt;&lt;br&gt;Otros contribuidores:&lt;br&gt;Lionel Debroux (&lt;a href=&apos;https://github.com/debrouxl&apos;&gt;debrouxl&lt;/a&gt;)&lt;br&gt;Fabian Vogt (&lt;a href=&apos;https://github.com/Vogtinator&apos;&gt;Vogtinator&lt;/a&gt;)&lt;br&gt;&lt;br&gt;Muchas gracias a &lt;a href=&apos;https://github.com/KnightOS/z80e&apos;&gt;z80e&lt;/a&gt; (MIT license &lt;a href=&apos;https://github.com/KnightOS/z80e/blob/master/LICENSE&apos;&gt;aquí&lt;/a&gt;) y &lt;a href=&apos;https://github.com/nspire-emus/firebird&apos;&gt;Firebird&lt;/a&gt; (GPLv3 licencia &lt;a href=&apos;https://github.com/nspire-emus/firebird/blob/master/LICENSE&apos;&gt;aquí&lt;/a&gt;) programas.&lt;br&gt;Los íconos dentro del programa son cortesía de &lt;a href=&apos;http://www.famfamfam.com/lab/icons/silk/&apos;&gt;Silk conjunto de iconos&lt;/a&gt;.&lt;br&gt;&lt;br&gt;Este programa tiene licencia bajo el GPLv3.&lt;br&gt;Para ver una copia, visita &lt;a href=&apos;https://www.gnu.org/licenses/gpl-3.0.html&apos;&gt;https://www.gnu.org/licenses/gpl-3.0.html&lt;/a&gt;</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1297"/>
-        <location filename="../mainwindow.cpp" line="1303"/>
+        <location filename="../mainwindow.cpp" line="1506"/>
+        <location filename="../mainwindow.cpp" line="1512"/>
         <source>Can&apos;t preview this</source>
         <translation>No se puede previsualizar</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1318"/>
+        <location filename="../mainwindow.cpp" line="1527"/>
         <source>Archive</source>
         <translation>Archivo</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1360"/>
+        <location filename="../mainwindow.cpp" line="1569"/>
         <source>Select at least two files to group</source>
         <translation>Seleccione al menos dos archivos</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1362"/>
+        <location filename="../mainwindow.cpp" line="1571"/>
         <source>TI Group (*.8cg);;All Files (*.*)</source>
         <translation>TI Grupo (*.8cg);;Todos los archivos (*.*)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1365"/>
-        <location filename="../mainwindow.cpp" line="1421"/>
+        <location filename="../mainwindow.cpp" line="1574"/>
+        <location filename="../mainwindow.cpp" line="1630"/>
         <source>Transfer error, see console for information:
 File: </source>
         <translation>Error de transferencia, consulte la consola para obtener información:
 Archivo: </translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1367"/>
-        <location filename="../mainwindow.cpp" line="1419"/>
+        <location filename="../mainwindow.cpp" line="1576"/>
+        <location filename="../mainwindow.cpp" line="1628"/>
         <source>Transfer completed successfully.</source>
         <translation>La transferencia se completó exitosamente.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1472"/>
+        <location filename="../mainwindow.cpp" line="1681"/>
         <source>Error. No config loaded</source>
         <translation>Error. Sin configuración cargadas</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1475"/>
+        <location filename="../mainwindow.cpp" line="1684"/>
         <source>Error. Couldn&apos;t follow the test sequence defined in the configuration</source>
         <translation>Error. No se pudo seguir la secuencia de prueba definido en la configuración</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1478"/>
+        <location filename="../mainwindow.cpp" line="1687"/>
         <source>Error. Unknown one - wat?</source>
         <translation>Error. Desconocido uno?</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1517"/>
+        <location filename="../mainwindow.cpp" line="1726"/>
         <source>See the test config file format and make sure values are correct and referenced files are there.</source>
         <translation>Vea el formato de archivo de configuración de prueba y asegúrese de que los valores sean correctos.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1643"/>
+        <location filename="../mainwindow.cpp" line="1852"/>
         <source>Make sure you have entered a valid start/size pair or preset.</source>
         <translation>Asegúrate de que los valores sean correctos.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1772"/>
+        <location filename="../mainwindow.cpp" line="1981"/>
         <source>Set PC</source>
         <translation>Establecer contador de programa</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1777"/>
+        <location filename="../mainwindow.cpp" line="1986"/>
         <source>Run Until</source>
         <translation>Ejecutar hasta</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2172"/>
+        <location filename="../mainwindow.cpp" line="2138"/>
+        <source>Goto Disassembly View</source>
+        <translation>Ir a Desmontaje</translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="2398"/>
         <source>Enter image path</source>
         <translation>Ingrese ruta de la imagen</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2195"/>
+        <location filename="../mainwindow.cpp" line="2421"/>
         <source>Could not restore image!</source>
         <translation>¡No se pudo restaurar la imagen!</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1487"/>
+        <location filename="../mainwindow.cpp" line="1696"/>
         <source>Please choose a json file or type its path.</source>
         <translation>Elija un archivo json o escriba su ruta.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1496"/>
+        <location filename="../mainwindow.cpp" line="557"/>
+        <source>No translation available for this language :(</source>
+        <translation>No hay traducción disponible para este idioma :(</translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1705"/>
         <source>Couldn&apos;t go to where the JSON file is.</source>
         <translation>No se pudo encontrar el archivo JSON.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1501"/>
+        <location filename="../mainwindow.cpp" line="1710"/>
         <source>Couldn&apos;t read JSON file.</source>
         <translation>No se pudo abrir el archivo de JSON.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1505"/>
+        <location filename="../mainwindow.cpp" line="1714"/>
         <source>Unable to open the file.</source>
         <translation>No se puede abrir el archivo.</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1579"/>
+        <location filename="../mainwindow.cpp" line="1788"/>
         <source>Test results</source>
         <translation>Resultados de la prueba</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1579"/>
+        <location filename="../mainwindow.cpp" line="1788"/>
         <source>Out of %2 tests attempted:
 %4 passed
 %6 failed</source>
@@ -1693,55 +1742,55 @@ Archivo: </translation>
 %6 fallado</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1851"/>
+        <location filename="../mainwindow.cpp" line="2060"/>
         <source>Launch program</source>
         <translation>Ejecute el programa</translation>
     </message>
     <message>
-        <location filename="../debugger.cpp" line="1891"/>
-        <location filename="../debugger.cpp" line="1924"/>
-        <location filename="../mainwindow.cpp" line="1778"/>
-        <location filename="../mainwindow.cpp" line="1917"/>
+        <location filename="../debugger.cpp" line="1951"/>
+        <location filename="../debugger.cpp" line="1984"/>
+        <location filename="../mainwindow.cpp" line="1987"/>
+        <location filename="../mainwindow.cpp" line="2137"/>
         <source>Goto Memory View</source>
         <translation>Ir a la memoria</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2088"/>
+        <location filename="../mainwindow.cpp" line="2314"/>
         <source>CEmu Change ID</source>
         <translation>Cambio de ID de CEmu</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="2088"/>
+        <location filename="../mainwindow.cpp" line="2314"/>
         <source>New ID:</source>
         <translation>Nueva ID:</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="354"/>
+        <location filename="../settings.cpp" line="353"/>
         <source>Set saved image to restore from</source>
         <translation>Establecer la imagen guardada para restaurar desde</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="365"/>
+        <location filename="../settings.cpp" line="364"/>
         <source>Set debugging information path</source>
         <translation>Establecer la ruta de información de depuración</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="367"/>
+        <location filename="../settings.cpp" line="366"/>
         <source>Debugging information (*.ini);;All files (*.*)</source>
         <translation>Información de depuración (* .ini);;Todos archivos (*. *)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="312"/>
+        <location filename="../mainwindow.cpp" line="570"/>
         <source>Enable UI edit mode</source>
         <translation>Habilitar modo de edición</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="86"/>
+        <location filename="../mainwindow.cpp" line="567"/>
         <source>Warning</source>
         <translation>Advertencia</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="185"/>
+        <location filename="../settings.cpp" line="184"/>
         <source>A bootable image can be used to start CEmu with predefined configurations, without the need for any extra setup.
 
 The bootable image should be placed in the same directory as the CEmu executable. When CEmu is then started, the boot image will be loaded automatically and then removed for convience.</source>
@@ -1750,47 +1799,47 @@ The bootable image should be placed in the same directory as the CEmu executable
 La imagen de inicio debe colocarse en el mismo directorio que el ejecutable CEmu. Cuando se inicia CEmu, la imagen de arranque se cargará automáticamente y luego se eliminará para mayor comodidad.</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="189"/>
+        <location filename="../settings.cpp" line="188"/>
         <source>Save bootable CEmu image</source>
         <translation>Guardar imagen CEmu de arranque</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="191"/>
+        <location filename="../settings.cpp" line="190"/>
         <source>Bootable CEmu images (*.cemu);</source>
         <translation>Imágenes arrancables de CEmu (* .cemu);</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="485"/>
+        <location filename="../settings.cpp" line="480"/>
         <source>No update available</source>
         <translation>Sin actualización disponible</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="485"/>
+        <location filename="../settings.cpp" line="480"/>
         <source>You already have the latest CEmu version (</source>
         <translation>Ya tiene la última versión de CEmu (</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="491"/>
+        <location filename="../settings.cpp" line="486"/>
         <source>CEmu update</source>
         <translation>Actualización de Cému</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="492"/>
+        <location filename="../settings.cpp" line="487"/>
         <source>&lt;b&gt;A new version of CEmu is available!&lt;/b&gt;&lt;br/&gt;You can &lt;a href=&apos;%1&apos;&gt;download it here&lt;/a&gt;.</source>
         <translation>&lt;b&gt;Una nueva versión de CEmu está disponible!&lt;/b&gt;&lt;br/&gt;Puede &lt;a href=&apos;%1&apos;&gt;descargarlo aquí&lt;/a&gt;.</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="505"/>
+        <location filename="../settings.cpp" line="500"/>
         <source>Update check failed</source>
         <translation>Actualización cheque esta roto</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1144"/>
+        <location filename="../mainwindow.cpp" line="1353"/>
         <source>Check for updates</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1278"/>
+        <location filename="../mainwindow.cpp" line="1487"/>
         <source>Resume emulation</source>
         <translation></translation>
     </message>
@@ -1800,22 +1849,22 @@ La imagen de inicio debe colocarse en el mismo directorio que el ejecutable CEmu
         <translation>Dirección de entrada (o Equiparar):</translation>
     </message>
     <message>
-        <location filename="../hexeditor.cpp" line="130"/>
+        <location filename="../hexeditor.cpp" line="121"/>
         <source>Error when reading input string</source>
         <translation>Error en el texto de entrada</translation>
     </message>
     <message>
-        <location filename="../hexeditor.cpp" line="153"/>
+        <location filename="../hexeditor.cpp" line="144"/>
         <source>String not found.</source>
         <translation>Texto no encontrado.</translation>
     </message>
     <message>
-        <location filename="../settings.cpp" line="87"/>
+        <location filename="../mainwindow.cpp" line="568"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location filename="../win32-console.cpp" line="36"/>
+        <location filename="../mainwindow.cpp" line="664"/>
         <source>Toggle Windows Console</source>
         <translation>Activar la consola de Windows</translation>
     </message>

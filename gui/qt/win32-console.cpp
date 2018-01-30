@@ -5,8 +5,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-QAction *actionToggleConsole;
-
 void MainWindow::toggleConsole() {
     if (actionToggleConsole->isChecked()) {
         // If the console is created from opening up the EXE in
@@ -31,9 +29,8 @@ void MainWindow::toggleConsole() {
 
 void MainWindow::installToggleConsole() {
     // Build menu option and add it!
-    actionToggleConsole = new QAction(this);
+    actionToggleConsole = new QAction(TXT_TOGGLE_CONSOLE, this);
     actionToggleConsole->setObjectName(QStringLiteral("actionToggleConsole"));
-    actionToggleConsole->setText(QApplication::translate("MainWindow", "Toggle Windows Console", 0));
     actionToggleConsole->setCheckable(true);
     actionToggleConsole->setChecked(true);
     actionToggleConsole->setEnabled(true);
