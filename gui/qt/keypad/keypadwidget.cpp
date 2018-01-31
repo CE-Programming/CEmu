@@ -252,10 +252,10 @@ void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
     inner.setSize({16, 16});
     outer.moveCenter(center);
     inner.moveCenter(center);
-    addKey(new ArrowKey(mConfig, outer, inner, 3, QStringLiteral("down")));
-    addKey(new ArrowKey(mConfig, outer, inner, 2, QStringLiteral("left")));
-    addKey(new ArrowKey(mConfig, outer, inner, 0, QStringLiteral("right")));
-    addKey(new ArrowKey(mConfig, outer, inner, 1, QStringLiteral("up")));
+    addKey(new ArrowKey{mConfig, outer, inner, 3, QStringLiteral("down"), 2});
+    addKey(new ArrowKey{mConfig, outer, inner, 2, QStringLiteral("left"), 2});
+    addKey(new ArrowKey{mConfig, outer, inner, 0, QStringLiteral("right"), 2});
+    addKey(new ArrowKey{mConfig, outer, inner, 1, QStringLiteral("up"), 2});
 
     repaint();
 }
