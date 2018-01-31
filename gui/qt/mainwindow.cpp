@@ -237,6 +237,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->apngSkip, &QSlider::valueChanged, this, &MainWindow::setFrameskip);
     connect(ui->checkOptimizeRecording, &QCheckBox::stateChanged, this, &MainWindow::setOptimizeRecording);
 #else
+    ui->actionRecordAnimated->setEnabled(false);
     ui->buttonRecordAnimated->setEnabled(false);
     ui->apngSkip->setEnabled(false);
     ui->checkOptimizeRecording->setEnabled(false);

@@ -14,10 +14,10 @@ md5sums=('SKIP')
 build() {
   # Compile...
   cd "${srcdir}/${pkgname}-${pkgver}"
-  (cd gui/qt/capture/libpng-apng-1.6.34 && ./configure --disable-shared CFLAGS="-O2 -fPIC" && make libpng16.la)
+  cd gui/qt/capture/libpng-apng && ./configure --with-libpng-prefix=a --enable-static --disable-shared CFLAGS="-O2 -fPIC" && make libpng16.la && cd ../../../..
   mkdir -p build
   cd build
-  qmake ../gui/qt/CEmu.pro CEMU_VERSION=1.0 USE_LIBPNG=internal
+  qmake ../gui/qt/CEmu.pro CEMU_VERSION=1.0 USE_LIBPNG=internal TARGET_NAME=cemu
   make
 }
 

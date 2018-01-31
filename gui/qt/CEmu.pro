@@ -35,7 +35,10 @@ if (linux) {
 
 QT += core gui widgets network
 
-TARGET = CEmu
+isEmpty(TARGET_NAME) {
+    TARGET_NAME = CEmu
+}
+TARGET = $$TARGET_NAME
 TEMPLATE = app
 
 # Localization
@@ -77,10 +80,12 @@ if (!win32-msvc*) {
         }
     }
     equals(USE_LIBPNG, "system") {
+        message("Warning: unless your system libpng has APNG support, you will not be able to record screen captures!")
         PKGCONFIG += libpng
     } else {
-        INCLUDEPATH += $$PWD/capture/libpng-apng-1.6.34
-        LIBS += $$PWD/capture/libpng-apng-1.6.34/.libs/libpng16.a
+        !exists("$$PWD/capture/libpng-apng/.libs/libpng16.a"): error("You have to run $$PWD/capture/get_libpng-apng.sh first!")
+        INCLUDEPATH += $$PWD/capture/libpng-apng
+        LIBS += $$PWD/capture/libpng-apng/.libs/libpng16.a
     }
 } else {
     # TODO: add equivalent flags

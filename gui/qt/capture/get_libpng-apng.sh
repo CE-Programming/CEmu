@@ -70,15 +70,15 @@ rm -f ../libpng-${LIBPNG_VERSION}-apng.patch || cerr
 
 # Build libpng-apng
 becho " ** Configuring libpng-apng..."
-CFLAGS="-O2 -fPIC" ./configure --enable-static --enable-shared || cerr
+./configure --with-libpng-prefix=a --enable-static --disable-shared CFLAGS="-O2 -fPIC" || cerr
 
 becho " ** Building libpng-apng..."
 make -j2 || cerr
 
-if [ ! "$TRAVIS" = "true" ];then
-    becho " ** Installing libpng-apng..."
-    sudo make install || cerr
-fi
-
-becho " ** All done."
 cd ..
+
+becho " ** Renaming folder to libpng-apng"
+mv "libpng-${LIBPNG_VERSION}" "libpng-apng"
+
+becho " ** All done!"
+
