@@ -447,11 +447,16 @@ private:
     void reloadROM();
     void resetCalculator();
 
+    // Versioning
+    void setVersion();
+    void checkVersion();
+    bool isFirstRun();
+
     // Misc
-    QString getAddressString(const QString& string, bool* ok);
-    void optCheckSend(CEmuOpts& o);
-    void optLoadFiles(CEmuOpts& o);
-    void optAttemptLoad(CEmuOpts& o);
+    QString getAddressString(const QString &string, bool *ok);
+    void optCheckSend(CEmuOpts &o);
+    void optLoadFiles(CEmuOpts &o);
+    void optAttemptLoad(CEmuOpts &o);
     void pauseEmu(Qt::ApplicationState state);
     void setMemoryDocks();
 
@@ -471,7 +476,7 @@ private:
     void ipcCloseOthers();
     void ipcReceived();
     void ipcChangeID();
-    void ipcHandleCommandlineReceive(QDataStream& stream);
+    void ipcHandleCommandlineReceive(QDataStream &stream);
 
 #ifdef _WIN32
     // Win32 Console Toggle
@@ -618,6 +623,7 @@ private:
     static const QString SETTING_KEYPAD_JSTIFIED;
 
     static const QString SETTING_PREFERRED_LANG;
+    static const QString SETTING_VERSION;
 
     static const QString SETTING_DEFAULT_FILE;
     static const QString SETTING_DEFAULT_ROM_FILE;

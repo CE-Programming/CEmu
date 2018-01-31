@@ -415,6 +415,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     ui->actionDisableMenuBar->setVisible(false);
 #endif
 
+    checkVersion();
+
     stopIcon.addPixmap(QPixmap(":/icons/resources/icons/stop.png"));
     runIcon.addPixmap(QPixmap(":/icons/resources/icons/run.png"));
     saveIcon.addPixmap(QPixmap(":/icons/resources/icons/import.png"));
@@ -523,7 +525,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
         }
     }
 
-    if (!settings->value(SETTING_FIRST_RUN, false).toBool()) {
+    if (isFirstRun() && initPassed && !needFullReset) {
         infoBox = new QMessageBox();
         infoBox->setWindowTitle(MSG_INFORMATION);
         infoBox->setText(tr("Welcome!\nCEmu uses a customizable dock-style interface. "
@@ -537,8 +539,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
         infoBox->show();
         settings->setValue(SETTING_FIRST_RUN, true);
     }
-
-    ui->lcd->setFocus();
 
     QString prefLang = settings->value(SETTING_PREFERRED_LANG, "none").toString();
     if (prefLang != QStringLiteral("none")) {
@@ -729,6 +729,7 @@ void MainWindow::showEvent(QShowEvent *e) {
             e->accept();
             return;
         }
+        ui->lcd->setFocus();
         progressBar->setMaximumHeight(ui->statusBar->height()/2);
         setLcdScale(settings->value(SETTING_SCREEN_SCALE, 100).toUInt());
         setSkinToggle(settings->value(SETTING_SCREEN_SKIN, true).toBool());

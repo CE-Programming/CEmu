@@ -80,6 +80,7 @@ const QString MainWindow::SETTING_KEYPAD_WABBITEMU          = QStringLiteral("wa
 const QString MainWindow::SETTING_KEYPAD_JSTIFIED           = QStringLiteral("jsTIfied");
 
 const QString MainWindow::SETTING_PREFERRED_LANG            = QStringLiteral("preferred_lang");
+const QString MainWindow::SETTING_VERSION                   = QStringLiteral("version");
 
 const QString MainWindow::SETTING_DEFAULT_FILE              = QStringLiteral("/cemu_config.ini");
 const QString MainWindow::SETTING_DEFAULT_ROM_FILE          = QStringLiteral("/cemu_rom.rom");
@@ -685,4 +686,40 @@ void MainWindow::setMemoryDocks() {
     for (int i = 0; i < memories; i++) {
         createMemoryDock(TXT_MEM_DOCK);
     }
+}
+
+void MainWindow::setVersion() {
+    settings->setValue(SETTING_VERSION, QStringLiteral(CEMU_VERSION));
+}
+
+void MainWindow::checkVersion() {
+    bool ask = false;
+
+    if (isFirstRun()) {
+        setVersion();
+        return;
+    }
+
+    if (settings->contains(SETTING_VERSION)) {
+        if (settings->value(SETTING_VERSION, QStringLiteral(CEMU_VERSION)).toString().compare(QStringLiteral(CEMU_VERSION))) {
+            ask = true;
+        }
+    } else {
+        ask = true;
+    }
+
+    if (ask) {
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(this, tr("Different CEmu version detected"),
+                                            tr("This version of CEmu is not compatible with your settings, probably made by an older version. "
+                                               "Would you like to erase them to prevent any unexpected behavior?"), QMessageBox::Yes|QMessageBox::No);
+        if (reply == QMessageBox::Yes) {
+            reloadAll();
+        }
+        setVersion();
+    }
+}
+
+bool MainWindow::isFirstRun() {
+    return !settings->value(SETTING_FIRST_RUN, false).toBool();
 }
