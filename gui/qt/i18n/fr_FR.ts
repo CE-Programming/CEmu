@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.0" language="fr_FR">
+<TS version="2.1" language="fr_FR">
 <context>
     <name>BasicCodeViewerWindow</name>
     <message>
@@ -114,7 +114,7 @@
     <message>
         <location filename="../mainwindow.cpp" line="565"/>
         <source>Debug</source>
-        <translation type="unfinished">Debug</translation>
+        <translation>Debuggage</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="114"/>
@@ -1311,7 +1311,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8017"/>
         <source>Debugging</source>
-        <translation type="unfinished"></translation>
+        <translation>Debuggage</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8334"/>
@@ -1352,7 +1352,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8565"/>
         <source>Language</source>
-        <translation type="unfinished"></translation>
+        <translation>Langage</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8590"/>
@@ -1393,27 +1393,27 @@
     <message>
         <location filename="../mainwindow.ui" line="8996"/>
         <source>English</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
-    <message utf8="true">
+    <message>
         <location filename="../mainwindow.ui" line="9001"/>
         <source>Français</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9006"/>
         <source>Nederlands</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
-    <message utf8="true">
+    <message>
         <location filename="../mainwindow.ui" line="9011"/>
         <source>Español</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="564"/>
         <source>Docks</source>
-        <translation type="unfinished">Docks</translation>
+        <translation>Docks</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1254"/>
@@ -1579,7 +1579,7 @@ Sauvegarde échouée ! Veuillez contacter un développeur.</translation>
     <message>
         <location filename="../mainwindow.cpp" line="2138"/>
         <source>Goto Disassembly View</source>
-        <translation type="unfinished"></translation>
+        <translation>Aller au désassembleur</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="2398"/>
@@ -1643,7 +1643,7 @@ Fichier : </translation>
     <message>
         <location filename="../mainwindow.cpp" line="557"/>
         <source>No translation available for this language :(</source>
-        <translation type="unfinished"></translation>
+        <translation>Pas de traduction disponible pour cette langue :(</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1571"/>
