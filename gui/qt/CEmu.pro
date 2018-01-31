@@ -4,7 +4,7 @@ lessThan(QT_MINOR_VERSION, 5) : error("You need at least Qt 5.5 to build CEmu!")
 # CEmu version
 isEmpty(CEMU_VERSION) {
     GIT_VERSION = $$system(git describe --abbrev=7 --dirty --always --tags)
-    CEMU_VERSION = 0.9dev_$$GIT_VERSION
+    CEMU_VERSION = 1.0dev_$$GIT_VERSION
 }
 DEFINES += CEMU_VERSION=\\\"$$CEMU_VERSION\\\"
 
@@ -73,10 +73,15 @@ if (!win32-msvc*) {
     PKGCONFIG += zlib
     # You should run ./capture/get_libpng-apng.sh first!
     isEmpty(USE_LIBPNG) {
-        packagesExist(libpng) {
-            USE_LIBPNG = system
-        } else {
+        exists("$$PWD/capture/libpng-apng/.libs/libpng16.a") {
+            message("Built libpng-apng detected, using it")
             USE_LIBPNG = internal
+        } else {
+            packagesExist(libpng) {
+                USE_LIBPNG = system
+            } else {
+                error("You have to run $$PWD/capture/get_libpng-apng.sh first, or at least get libpng-dev(el)!")
+            }
         }
     }
     equals(USE_LIBPNG, "system") {
