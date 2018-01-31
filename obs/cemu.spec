@@ -83,23 +83,21 @@ BuildRequires:  update-desktop-files
 %setup -q
 
 %build
-export QMAKE_CC=gcc
-export QMAKE_CXX=g++
-test -x "$(type -p gcc-4.9)" && export CC=gcc-4.9   && export QMAKE_CC=gcc-4.9
-test -x "$(type -p g++-4.9)" && export CXX=g++-4.9  && export QMAKE_CXX=g++-4.9
-test -x "$(type -p gcc-5)"   && export CC=gcc-5     && export QMAKE_CC=gcc-5
-test -x "$(type -p g++-5)"   && export CXX=g++-5    && export QMAKE_CXX=g++-5
-test -x "$(type -p gcc-6)"   && export CC=gcc-6     && export QMAKE_CC=gcc-6
-test -x "$(type -p g++-6)"   && export CXX=g++-6    && export QMAKE_CXX=g++-6
-test -x "$(type -p gcc-7)"   && export CC=gcc-7     && export QMAKE_CC=gcc-7
-test -x "$(type -p g++-7)"   && export CXX=g++-7    && export QMAKE_CXX=g++-7
-cd gui/qt/
-cd capture/libpng-apng-1.6.34 && CFLAGS="-O2 -fPIC" ./configure --prefix=${HOME} --enable-static --disable-shared && make && make install && cd ../..
-qmake-qt5 QMAKE_CXX="$QMAKE_CXX" QMAKE_LINK="$QMAKE_CXX" QMAKE_CC="$QMAKE_CC"
+export CC=gcc
+export CXX=g++
+test -x "$(type -p gcc-4.9)" && export CC=gcc-4.9
+test -x "$(type -p g++-4.9)" && export CXX=g++-4.9
+test -x "$(type -p gcc-5)"   && export CC=gcc-5
+test -x "$(type -p g++-5)"   && export CXX=g++-5
+test -x "$(type -p gcc-6)"   && export CC=gcc-6
+test -x "$(type -p g++-6)"   && export CXX=g++-6
+test -x "$(type -p gcc-7)"   && export CC=gcc-7
+test -x "$(type -p g++-7)"   && export CXX=g++-7
+(cd gui/qt/capture/libpng-apng-1.6.34 && ./configure --disable-shared CFLAGS="-O2 -fPIC" && make libpng16.la)
+qmake-qt5 QMAKE_CC="$CC" QMAKE_CXX="$CXX" QMAKE_LINK="$CXX" gui/qt/CEmu.pro CEMU_VERSION=1.0 USE_LIBPNG=internal
 make %{?_smp_mflags}
 
 %install
-cd gui/qt/
 make %{?_smp_mflags} DESTDIR=%{buildroot} install INSTALL_ROOT=%{buildroot}
 
 %files

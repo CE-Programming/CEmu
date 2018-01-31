@@ -19,8 +19,8 @@ build-stamp:
 	dh_testdir
 
 	# Add here commands to compile the package.
-	cd gui/qt/capture/libpng-apng-1.6.34 && CFLAGS="-O2 -fPIC" ./configure --prefix=${HOME} --enable-static --disable-shared && make && make install && cd ../../../..
-	qmake gui/qt/CEmu.pro
+	(cd gui/qt/capture/libpng-apng-1.6.34 && ./configure --disable-shared CFLAGS="-O2 -fPIC" && make libpng16.la)
+	qmake gui/qt/CEmu.pro CEMU_VERSION=1.0 USE_LIBPNG=internal
 	make
 	# --- end custom part for compiling
 

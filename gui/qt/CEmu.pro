@@ -2,12 +2,11 @@ lessThan(QT_MAJOR_VERSION, 5) : error("You need at least Qt 5.5 to build CEmu!")
 lessThan(QT_MINOR_VERSION, 5) : error("You need at least Qt 5.5 to build CEmu!")
 
 # CEmu version
-if (0) { # GitHub release/deployment build. Has to correspond to the git tag.
-    DEFINES += CEMU_VERSION=\\\"1.0\\\"
-} else { # Development build. Used in the about screen
+isEmpty(CEMU_VERSION) {
     GIT_VERSION = $$system(git describe --abbrev=7 --dirty --always --tags)
-    DEFINES += CEMU_VERSION=\\\"0.9dev_$$GIT_VERSION\\\"
+    CEMU_VERSION = 0.9dev_$$GIT_VERSION
 }
+DEFINES += CEMU_VERSION=\\\"$$CEMU_VERSION\\\"
 
 # Continuous Integration (variable checked later)
 CI = $$(CI)
@@ -67,9 +66,22 @@ if (!win32-msvc*) {
         CONFIG(release, debug|release): GLOBAL_FLAGS += -O3 -flto
     }
 
-    # You should run ./capture/get_libpng-apng.sh first!
     CONFIG += link_pkgconfig
-    PKGCONFIG += libpng zlib
+    PKGCONFIG += zlib
+    # You should run ./capture/get_libpng-apng.sh first!
+    isEmpty(USE_LIBPNG) {
+        packagesExist(libpng) {
+            USE_LIBPNG = system
+        } else {
+            USE_LIBPNG = internal
+        }
+    }
+    equals(USE_LIBPNG, "system") {
+        PKGCONFIG += libpng
+    } else {
+        INCLUDEPATH += $$PWD/capture/libpng-apng-1.6.34
+        LIBS += $$PWD/capture/libpng-apng-1.6.34/.libs/libpng16.a
+    }
 } else {
     # TODO: add equivalent flags
     # Example for -Werror=shadow: /weC4456 /weC4457 /weC4458 /weC4459
