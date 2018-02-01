@@ -101,7 +101,7 @@ static uint8_t sha256_read(uint16_t pio, bool peek) {
     uint8_t bit_offset = (pio & 3) << 3;
 
     if (!peek) {
-        if (mmio_unlocked()) {
+        if (protected_ports_unlocked()) {
             sha256.last_index = index;
         } else {
             index = sha256.last_index;
@@ -124,7 +124,7 @@ static void sha256_write(uint16_t pio, uint8_t byte, bool poke) {
     uint8_t bit_offset = (pio & 3) << 3;
 
     if (!poke) {
-        if (mmio_unlocked()) {
+        if (protected_ports_unlocked()) {
             sha256.last_index = index;
         } else {
             return; // writes are ignored when mmio is locked

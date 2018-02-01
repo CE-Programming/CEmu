@@ -28,7 +28,7 @@ static uint8_t control_read(const uint16_t pio, bool peek) {
             value = get_device_type();
             break;
         case 0x06:
-            value = control.mmioUnlocked;
+            value = control.protectedPortsUnlocked;
             break;
         case 0x08:
             value = 0x7F;
@@ -128,8 +128,8 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
             control.ports[index] = byte & 0x1F;
             break;
         case 0x06:
-            control.mmioUnlocked = byte & 7;
-            if (!mmio_unlocked()) {
+            control.protectedPortsUnlocked = byte & 7;
+            if (!protected_ports_unlocked()) {
                 control.flashUnlocked &= ~(1 << 3);
             }
             break;
@@ -231,7 +231,7 @@ void control_reset(void) {
     control.stackLimit = 0;
     control.cpuSpeed = 0;
     control.flashUnlocked = false;
-    control.mmioUnlocked = false;
+    control.protectedPortsUnlocked = false;
     control.off = false;
 
     gui_console_printf("[CEmu] Control reset.\n");
@@ -245,8 +245,8 @@ bool control_restore(FILE *image) {
     return fread(&control, sizeof(control), 1, image) == 1;
 }
 
-bool mmio_unlocked(void) {
-    return (control.mmioUnlocked & 1 << 2) == 1 << 2;
+bool protected_ports_unlocked(void) {
+    return (control.protectedPortsUnlocked & 1 << 2) == 1 << 2;
 }
 
 bool flash_unlocked(void) {

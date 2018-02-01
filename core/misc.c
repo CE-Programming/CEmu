@@ -1,4 +1,5 @@
 #include "misc.h"
+#include "control.h"
 #include "cpu.h"
 #include "schedule.h"
 #include "emu.h"
@@ -160,33 +161,31 @@ bool watchdog_restore(FILE *image) {
 /* Read from the 0x9XXX range of ports */
 static uint8_t protected_read(const uint16_t pio, bool peek) {
     uint8_t value = 0;
-    (void)peek;
-
-    switch (pio) {
-        case 0xB00:
-            value = protect.led;
-            break;
-        default:
-            value = protect.ports[pio & 0xFF];
-            break;
+    if (peek || protected_ports_unlocked()) {
+        switch (pio) {
+            case 0xB00:
+                value = protect.led;
+                break;
+            default:
+                value = protect.ports[pio & 0xFF];
+                break;
+        }
     }
     return value;
 }
 
 /* Write to the 0x9XXX range of ports */
 static void protected_write(const uint16_t pio, const uint8_t byte, bool poke) {
-    (void)poke;
-
-    switch (pio) {
-        case 0xB00:
-            protect.led = byte;
-            break;
-        default:
-            protect.ports[pio & 0xFF] = byte;
-            break;
+    if (poke || protected_ports_unlocked()) {
+        switch (pio) {
+            case 0xB00:
+                protect.led = byte;
+                break;
+            default:
+                protect.ports[pio & 0xFF] = byte;
+                break;
+        }
     }
-
-    return;
 }
 
 static const eZ80portrange_t p9xxx = {

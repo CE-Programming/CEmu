@@ -433,7 +433,8 @@ static void mem_write_flash(uint32_t addr, uint8_t byte) {
 static bool detect_flash_unlock_sequence(uint8_t current) {
     static const uint8_t flash_unlock_sequence[] = { 0xF3, 0x18, 0x00, 0xF3, 0xF3, 0xED, 0x7E, 0xED, 0x56, 0xED, 0x39, 0x28, 0xED, 0x38, 0x28, 0xCB, 0x57 };
     uint8_t i;
-    if (current != flash_unlock_sequence[sizeof(flash_unlock_sequence) - 1] || !mmio_unlocked() || unprivileged_code()) {
+    if (current != flash_unlock_sequence[sizeof(flash_unlock_sequence) - 1] ||
+        !protected_ports_unlocked() || unprivileged_code()) {
         return false;
     }
     for (i = 1; i != sizeof(flash_unlock_sequence); i++) {

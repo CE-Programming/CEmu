@@ -35,7 +35,7 @@ typedef struct control_state {
     uint32_t protectedStart;
     uint32_t protectedEnd;
     uint8_t protectionStatus;
-    uint8_t mmioUnlocked;
+    uint8_t protectedPortsUnlocked;
     uint8_t flashUnlocked;
 
     bool off;
@@ -51,7 +51,7 @@ void control_reset(void);
 /* Save/Restore */
 bool control_restore(FILE *image);
 bool control_save(FILE *image);
-bool mmio_unlocked(void);
+bool protected_ports_unlocked(void);
 bool flash_unlocked(void);
 bool unprivileged_code(void);
 
