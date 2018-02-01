@@ -132,7 +132,7 @@ static void sha256_write(uint16_t pio, uint8_t byte, bool poke) {
         }
     }
 
-    if (!pio) {
+    if (!pio && flash_unlocked()) {
         if (byte & 0x10) {
             memset(sha256.hash_state, 0, sizeof(sha256.hash_state));
         } else {
