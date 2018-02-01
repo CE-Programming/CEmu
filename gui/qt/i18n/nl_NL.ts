@@ -6,7 +6,7 @@
     <message>
         <location filename="../basiccodeviewerwindow.ui" line="49"/>
         <source>Toggle original/reformatted</source>
-        <translation>Verander origineel/geformatteerd</translation>
+        <translation>Origineel/geformatteerd wisselen</translation>
     </message>
     <message>
         <location filename="../basiccodeviewerwindow.ui" line="14"/>
@@ -156,7 +156,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8064"/>
         <source>Show Data column</source>
-        <translation>Data kolom bekijken</translation>
+        <translation>Datakolom weergeven</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8077"/>
@@ -312,7 +312,7 @@
     <message>
         <location filename="../mainwindow.ui" line="3337"/>
         <source>Equates:</source>
-        <translation>Staat gelijk aan:</translation>
+        <translation>Equates:</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3353"/>
@@ -398,7 +398,7 @@
         <location filename="../mainwindow.ui" line="4021"/>
         <location filename="../mainwindow.cpp" line="587"/>
         <source>Break / Watch / Port</source>
-        <translation>Stop / Bekijk / Poort</translation>
+        <translation>Break / Watch / Poort</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4052"/>
@@ -622,7 +622,7 @@
     <message>
         <location filename="../mainwindow.ui" line="4193"/>
         <source>WatchPoints</source>
-        <translation>WatchPoints</translation>
+        <translation>Watchpoints</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4477"/>
@@ -1410,28 +1410,28 @@
         <location filename="../mainwindow.cpp" line="1984"/>
         <location filename="../mainwindow.cpp" line="2141"/>
         <source>Toggle Breakpoint</source>
-        <translation>Verander breakpoint</translation>
+        <translation>Breakpoint wisselen</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="2020"/>
         <location filename="../mainwindow.cpp" line="1985"/>
         <location filename="../mainwindow.cpp" line="2142"/>
         <source>Toggle Write Watchpoint</source>
-        <translation>Verander Schrijf watchpoint</translation>
+        <translation>Write watchpoint wisselen</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="2021"/>
         <location filename="../mainwindow.cpp" line="1986"/>
         <location filename="../mainwindow.cpp" line="2143"/>
         <source>Toggle Read Watchpoint</source>
-        <translation>Verander Lees watchpoint</translation>
+        <translation>Read watchpoint wisselen</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="2022"/>
         <location filename="../mainwindow.cpp" line="1987"/>
         <location filename="../mainwindow.cpp" line="2144"/>
         <source>Toggle Read/Write Watchpoint</source>
-        <translation>Verander Lees/Schrijf watchpoint</translation>
+        <translation>Read/write watchpoint wisselen</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="569"/>
@@ -1446,7 +1446,7 @@
     <message>
         <location filename="../hexeditor.cpp" line="34"/>
         <source>Input Address (Or Equate):</source>
-        <translation>Input Adres (Of Equate):</translation>
+        <translation>Inputadres (of Equate):</translation>
     </message>
     <message>
         <location filename="../hexeditor.cpp" line="121"/>
@@ -1591,7 +1591,7 @@ Opslaan mislukt! Geef het a.u.b. door aan de makers van dit programma.</translat
     <message>
         <location filename="../mainwindow.cpp" line="1529"/>
         <source>Archive</source>
-        <translation>Archiief</translation>
+        <translation>Archief</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1571"/>
@@ -1877,7 +1877,7 @@ De bootable image moet in dezelfde folder als de CEmu executable worden geplaats
     <message>
         <location filename="../mainwindow.cpp" line="665"/>
         <source>Toggle Windows Console</source>
-        <translation>Verander Windows Console</translation>
+        <translation>Windows Console wisselen</translation>
     </message>
 </context>
 <context>
@@ -1948,17 +1948,17 @@ De bootable image moet in dezelfde folder als de CEmu executable worden geplaats
     <message>
         <location filename="../memoryvisualizerwidget.cpp" line="74"/>
         <source>Toggle Write Watchpoint</source>
-        <translation>Verander Schrijf watchpoint</translation>
+        <translation>Write watchpoint wisselen</translation>
     </message>
     <message>
         <location filename="../memoryvisualizerwidget.cpp" line="75"/>
         <source>Toggle Read Watchpoint</source>
-        <translation>Verander Lees watchpoint</translation>
+        <translation>Read watchpoint wisselen</translation>
     </message>
     <message>
         <location filename="../memoryvisualizerwidget.cpp" line="76"/>
         <source>Toggle Read/Write Watchpoint</source>
-        <translation>Verander Lees/Schrijf watchpoint</translation>
+        <translation>Read/write watchpoint wisselen</translation>
     </message>
 </context>
 <context>
