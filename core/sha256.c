@@ -99,7 +99,6 @@ void sha256_reset(void) {
 static uint8_t sha256_read(uint16_t pio, bool peek) {
     uint16_t index = pio >> 2;
     uint8_t bit_offset = (pio & 3) << 3;
-    static const uint32_t unknown_value = 0x3CA2D5EE; // Unknown function
 
     if (!peek) {
         if (mmio_unlocked()) {
@@ -110,7 +109,7 @@ static uint8_t sha256_read(uint16_t pio, bool peek) {
     }
 
     if (index == 0x0C >> 2) {
-        return read8(unknown_value, bit_offset);
+        return read8(sha256.hash_state[7], bit_offset);
     } else if (index >= 0x10 >> 2 && index < 0x50 >> 2) {
         return read8(sha256.hash_block[index - (0x10 >> 2)], bit_offset);
     } else if (index >= 0x60 >> 2 && index < 0x80 >> 2) {
