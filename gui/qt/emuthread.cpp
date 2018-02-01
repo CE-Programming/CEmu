@@ -75,7 +75,7 @@ EmuThread::EmuThread(QObject *p) : QThread(p) {
     lastTime = std::chrono::steady_clock::now();
     connect(&guiTimer, SIGNAL(timeout()), this, SLOT(sendUpdates()));
     guiTimer.start();
-    guiTimer.setInterval(1000 / 2);
+    guiTimer.setInterval(600);
 }
 
 void EmuThread::reset() {

@@ -589,6 +589,8 @@ void MainWindow::translateExtras(int init) {
     QString __TXT_MISC = tr("Miscellaneous");
     QString __TXT_AUTOTESTER = tr("AutoTester");
 
+    setWindowTitle(QStringLiteral("CEmu | ") + opts.idString);
+
     if (init == TRANSLATE_UPDATE) {
         for (const auto &dock : findChildren<DockWidget*>()) {
             if (dock->windowTitle() == TXT_MEM_DOCK) {
@@ -1187,7 +1189,7 @@ void MainWindow::consoleErrStr(const QString &str) {
 void MainWindow::showEmuUpdates(int speed) {
     QString label = " " + tr("Emulated Speed: ") + QString::number(speed, 10) + "% | FPS: " + QString::number(ui->lcd->getRealFPS(), 'f', 2);
     speedLabel.setText(label);
-    ui->maxFps->setText(QString::number(ui->lcd->getFPS()));
+    ui->maxFps->setText(tr("Actual FPS: ") + QString::number(ui->lcd->getFPS()));
 }
 
 void MainWindow::showStatusMsg(const QString &str) {
