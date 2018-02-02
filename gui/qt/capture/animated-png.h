@@ -28,7 +28,7 @@ typedef struct {
 } apng_t;
 
 bool apng_start(const char *tmp_name, int, int);
-void apng_add_frame(void);
+void apng_add_frame(void *frame);
 bool apng_stop(void);
 bool apng_save(const char *filename, bool optimize);
 

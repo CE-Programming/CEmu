@@ -32,7 +32,7 @@ bool apng_start(const char *tmp_name, int fps, int frameskip) {
     return true;
 }
 
-void apng_add_frame(void) {
+void apng_add_frame(void *frame) {
     if (!apng.recording) {
         return;
     }
@@ -41,12 +41,12 @@ void apng_add_frame(void) {
         apng.skipped = apng.frameskip;
 
         // write frame to temp file
-        if (!apng.n || 0xFFFFu - apng.delay < apng.num || memcmp(spi.display, apng.frame, sizeof(apng.frame))) {
+        if (!apng.n || 0xFFFFu - apng.delay < apng.num || memcmp(frame, apng.frame, sizeof(apng.frame))) {
             if (apng.n) {
                 fwrite(&apng.delay, sizeof(apng.delay), 1, apng.tmp);
             }
             apng.delay = 0;
-            memcpy(apng.frame, spi.display, sizeof(apng.frame));
+            memcpy(apng.frame, frame, sizeof(apng.frame));
             fwrite(apng.frame, 1, sizeof(apng.frame), apng.tmp);
             apng.n++;
         }

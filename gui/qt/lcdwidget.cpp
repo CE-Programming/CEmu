@@ -75,14 +75,14 @@ void LCDWidget::callback(void) {
         array[index] = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
         realFps = (1e3*ARRAY_SIZE) / (array[index] - msNFramesAgo);
         index = (index + 1) % ARRAY_SIZE;
+        update();
     }
 
 #ifdef PNG_WRITE_APNG_SUPPORTED
-    apng_add_frame();
+    apng_add_frame(image.bits());
 #endif
 
     fps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP));
-    update();
 }
 
 double LCDWidget::getFPS() {
