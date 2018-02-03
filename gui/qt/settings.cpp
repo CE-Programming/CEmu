@@ -710,9 +710,9 @@ void MainWindow::checkVersion() {
 
     if (ask) {
         QMessageBox::StandardButton reply;
-        reply = QMessageBox::question(this, tr("Different CEmu version detected"),
-                                            tr("This version of CEmu is not compatible with your settings, probably made by an older version. "
-                                               "Would you like to erase them to prevent any unexpected behavior?"), QMessageBox::Yes|QMessageBox::No);
+        reply = QMessageBox::question(Q_NULLPTR, tr("Different CEmu version detected"),
+                                                 tr("This version of CEmu is not compatible with your settings, probably made by an older version. "
+                                                 "Would you like to erase them to prevent any unexpected behavior?"), QMessageBox::Yes|QMessageBox::No);
         if (reply == QMessageBox::Yes) {
             reloadAll();
         }
