@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.0" language="nl_NL">
+<TS version="2.1" language="nl_NL">
 <context>
     <name>BasicCodeViewerWindow</name>
     <message>
@@ -151,7 +151,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8044"/>
         <source>Automatically save and restore debug state</source>
-        <translation>Debug status automatisch opslaan en herstellen</translation>
+        <translation>Debugstatus automatisch opslaan en herstellen</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8064"/>
@@ -171,7 +171,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8087"/>
         <source>Enable software commands</source>
-        <translation>Software commando&apos;s activeren</translation>
+        <translation>Softwarecommando&apos;s activeren</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8111"/>
@@ -243,7 +243,7 @@
     <message>
         <location filename="../mainwindow.ui" line="6830"/>
         <source>Keypad Skin Color</source>
-        <translation>Toetsenbord Themakleur</translation>
+        <translation>Themakleur toetsenbord</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="566"/>
@@ -601,7 +601,7 @@
         <location filename="../mainwindow.ui" line="3601"/>
         <location filename="../mainwindow.ui" line="3716"/>
         <source>Sync changes</source>
-        <translation>Wijzig veranderingen</translation>
+        <translation>Aanpassingen doorvoeren</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3543"/>
@@ -663,7 +663,7 @@
     <message>
         <location filename="../mainwindow.ui" line="4707"/>
         <source> Change Calulator Certificate ID</source>
-        <translation> Rekenmachine Certificaat-ID veranderen</translation>
+        <translation> Rekenmachine Certificaat-ID aanpassen</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4719"/>
@@ -781,7 +781,7 @@
     <message>
         <location filename="../mainwindow.ui" line="6132"/>
         <source>Resend</source>
-        <translation>Herzenden</translation>
+        <translation>Opnieuw verzenden</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6137"/>
@@ -852,7 +852,7 @@
     <message>
         <location filename="../mainwindow.ui" line="6626"/>
         <source>Pause emulation on focus change</source>
-        <translation>Pauzeer emulatie wanneer focus verandert</translation>
+        <translation>Emulatie pauzeren bij focuswisseling</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="7622"/>
@@ -862,7 +862,7 @@
     <message>
         <location filename="../mainwindow.ui" line="7810"/>
         <source>Display / Emulation Speed</source>
-        <translation>Display / Emulatiesnelheid</translation>
+        <translation>Scherm- / Emulatiesnelheid</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="7971"/>
@@ -893,7 +893,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8320"/>
         <source>Change ID</source>
-        <translation>Verander ID</translation>
+        <translation>ID aanpassen</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8912"/>
@@ -1068,7 +1068,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8017"/>
         <source>Debugging</source>
-        <translation>Debuggen</translation>
+        <translation>Debugger</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8334"/>
@@ -1210,7 +1210,7 @@
         <source>English</source>
         <translation>English</translation>
     </message>
-    <message utf8="true">
+    <message>
         <location filename="../mainwindow.ui" line="9001"/>
         <source>Français</source>
         <translation>Français</translation>
@@ -1220,7 +1220,7 @@
         <source>Nederlands</source>
         <translation>Nederlands</translation>
     </message>
-    <message utf8="true">
+    <message>
         <location filename="../mainwindow.ui" line="9011"/>
         <source>Español</source>
         <translation>Español</translation>
@@ -1275,7 +1275,7 @@
     <message>
         <location filename="../debugger.cpp" line="114"/>
         <source>Invalid Version</source>
-        <translation>Ongeldige Versie</translation>
+        <translation>Ongeldige versie</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="115"/>
@@ -1916,16 +1916,16 @@ De bootable image moet in dezelfde folder als de CEmu executable worden geplaats
  &apos;bgr&apos;	Set BGR LCD bit
  &apos;200%&apos;	Change scale of displayed image
  &apos;40fps&apos;	Change refresh rate of displayed image</source>
-        <translation>Gebruik de geformatteerde string om de weergave te veranderen. Klik op de scherm knop om de huidige LCD status te gebruiken. Voorbeelden:
+        <translation>Gebruik de geformatteerde string om de weergave aan te passen. Klik op de scherm knop om de huidige LCD status te gebruiken. Voorbeelden:
 
- &apos;d40000&apos;	6 hexadecimale cijfers is het startadres
- &apos;320x240&apos;	Bepaal de breedte en hoogte van de data
- &apos;16bpp&apos;	Verander het aantal bits per pixel
- &apos;bebo&apos;	Stel de BEBO LCD bit in
- &apos;bepo&apos;	Stel de BEPO LCD bit in
- &apos;bgr&apos;	Stel de BGR LCD bit in
- &apos;200%&apos;	Verander de schaal van het beeld
- &apos;40fps&apos;	Verander de vernieuwingssnelheid van het beeld</translation>
+ &apos;d40000&apos;	Startadres (6 hexadecimale cijfers)
+ &apos;320x240&apos;	Breedte en hoogte van de data
+ &apos;16bpp&apos;	Bits per pixel
+ &apos;bebo&apos;	BEBO LCD bit
+ &apos;bepo&apos;	BEPO LCD bit
+ &apos;bgr&apos;	BGR LCD bit
+ &apos;200%&apos;	Schaal van het emulatiescherm
+ &apos;40fps&apos;	Vernieuwingssnelheid van het emulatiescherm</translation>
     </message>
 </context>
 <context>
