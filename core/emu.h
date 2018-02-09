@@ -36,6 +36,7 @@ void gui_debugger_raise_or_disable(bool);
 void gui_console_err_printf(const char *, ...);
 void gui_debugger_send_command(int, uint32_t);
 void gui_emu_sleep(unsigned long ms);
+void gui_lcd_update(void);
 
 bool emu_load(const char*, const char*);
 void emu_loop(bool);

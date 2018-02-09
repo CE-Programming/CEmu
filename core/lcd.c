@@ -15,8 +15,8 @@
 lcd_state_t lcd;
 
 /* Set this callback function pointer from the GUI. Called in lcd_event() */
-void *lcd_gui_callback_data = NULL;
-void (*lcd_gui_callback)(void*) = NULL;
+void (*lcd_gui_callback)(void) = NULL;
+void *lcd_gui_buffer = NULL;
 
 static bool _rgb;
 
@@ -118,7 +118,7 @@ draw_black:
 
 void lcd_gui_event(void) {
     if (lcd_gui_callback) {
-        lcd_gui_callback(lcd_gui_callback_data);
+        lcd_gui_callback();
     }
 }
 

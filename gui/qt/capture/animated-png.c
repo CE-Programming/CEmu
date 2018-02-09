@@ -32,7 +32,7 @@ bool apng_start(const char *tmp_name, int fps, int frameskip) {
     return true;
 }
 
-void apng_add_frame(void *frame) {
+void apng_add_frame(const void *frame) {
     if (!apng.recording) {
         return;
     }

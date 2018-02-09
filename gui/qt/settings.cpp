@@ -229,8 +229,8 @@ void MainWindow::setDataCol(bool state) {
 void MainWindow::setLcdSpi(bool state) {
     ui->checkSpi->setChecked(state);
     settings->setValue(SETTING_SCREEN_SPI, state);
-    ui->lcd->setMode(state);
     lcd.spi = state;
+    emit updateMode(state);
 }
 
 void MainWindow::setLcdDma(bool state) {
@@ -547,7 +547,7 @@ void MainWindow::setGuiSkip(int value) {
     ui->guiSkip->blockSignals(true);
     ui->guiSkip->setValue(value);
     ui->guiSkip->blockSignals(false);
-    ui->lcd->setFrameskip(value);
+    emit updateFrameskip(value);
 }
 
 void MainWindow::setEmuSpeed(int value) {
@@ -692,12 +692,12 @@ void MainWindow::setVersion() {
     settings->setValue(SETTING_VERSION, QStringLiteral(CEMU_VERSION));
 }
 
-void MainWindow::checkVersion() {
+bool MainWindow::checkVersion() {
     bool ask = false;
 
     if (isFirstRun()) {
         setVersion();
-        return;
+        return ask;
     }
 
     if (settings->contains(SETTING_VERSION)) {
@@ -708,16 +708,7 @@ void MainWindow::checkVersion() {
         ask = true;
     }
 
-    if (ask) {
-        QMessageBox::StandardButton reply;
-        reply = QMessageBox::question(Q_NULLPTR, tr("Different CEmu version detected"),
-                                                 tr("This version of CEmu is not compatible with your settings, probably made by an older version. "
-                                                 "Would you like to erase them to prevent any unexpected behavior?"), QMessageBox::Yes|QMessageBox::No);
-        if (reply == QMessageBox::Yes) {
-            reloadAll();
-        }
-        setVersion();
-    }
+    return ask;
 }
 
 bool MainWindow::isFirstRun() {

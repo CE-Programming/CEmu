@@ -31,6 +31,7 @@
 #include "basiccodeviewerwindow.h"
 #include "capture/animated-png.h"
 
+#include "../../core/emu.h"
 #include "../../core/asic.h"
 #include "../../core/cpu.h"
 #include "../../core/misc.h"
@@ -227,8 +228,13 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->buttonReloadROM, &QPushButton::clicked, this, &MainWindow::resetCalculator);
 
     // Reset and reload
-    connect(this, &MainWindow::reset, &emu, &EmuThread::reset, Qt::QueuedConnection);
-    connect(this, &MainWindow::load, &emu, &EmuThread::load, Qt::QueuedConnection);
+    connect(this, &MainWindow::reset, &emu, &EmuThread::reset);
+    connect(this, &MainWindow::load, &emu, &EmuThread::load);
+
+    // LCD Update
+    connect(&emu, &EmuThread::updateLcd, ui->lcd, static_cast<void (LCDWidget::*)(void)>(&LCDWidget::update), Qt::QueuedConnection);
+    connect(this, &MainWindow::updateMode, &emu, &EmuThread::setMode);
+    connect(this, &MainWindow::updateFrameskip, &emu, &EmuThread::setFrameskip);
 
     // Capture
     connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
@@ -415,7 +421,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     ui->actionDisableMenuBar->setVisible(false);
 #endif
 
-    checkVersion();
+    bool good_version = !checkVersion();
 
     stopIcon.addPixmap(QPixmap(":/icons/resources/icons/stop.png"));
     runIcon.addPixmap(QPixmap(":/icons/resources/icons/run.png"));
@@ -525,8 +531,22 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
         }
     }
 
+    if (!good_version) {
+        settings->setValue(SETTING_FIRST_RUN, true);
+        QMessageBox *box = new QMessageBox();
+        box->setWindowTitle(tr("Different CEmu version detected"));
+        box->setText(tr("This version of CEmu is not compatible with your settings, probably made by an older version. "
+                        "Would you like to erase them to prevent any unexpected behavior?"));
+        box->show();
+        if (box->exec()) {
+            reloadAll();
+        }
+        setVersion();
+    }
+
     if (isFirstRun() && initPassed && !needFullReset) {
         infoBox = new QMessageBox();
+        settings->setValue(SETTING_FIRST_RUN, true);
         infoBox->setWindowTitle(MSG_INFORMATION);
         infoBox->setText(tr("Welcome!\nCEmu uses a customizable dock-style interface. "
                             "Drag and drop to move tabs and windows around on the screen, "
@@ -537,7 +557,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
         infoBox->setWindowFlags(infoBox->windowFlags() | Qt::WindowStaysOnTopHint);
         infoBox->setAttribute(Qt::WA_DeleteOnClose);
         infoBox->show();
-        settings->setValue(SETTING_FIRST_RUN, true);
     }
 
     QString prefLang = settings->value(SETTING_PREFERRED_LANG, "none").toString();
@@ -723,10 +742,14 @@ void MainWindow::changeEvent(QEvent* event) {
 }
 
 void MainWindow::showEvent(QShowEvent *e) {
-    QMainWindow::showEvent(e);
     if (!firstShow) {
         if (!initPassed) {
             QFile(pathSettings).remove();
+            close();
+            e->accept();
+            return;
+        }
+        if (needFullReset) {
             close();
             e->accept();
             return;
@@ -766,6 +789,7 @@ void MainWindow::showEvent(QShowEvent *e) {
         }
         firstShow = true;
     }
+    QMainWindow::showEvent(e);
     e->accept();
 }
 
@@ -1032,8 +1056,7 @@ void MainWindow::exportRom() {
 void MainWindow::started(bool success) {
     guiEmuValid = success;
     if (success) {
-        lcd_gui_callback_data = ui->lcd;
-        lcd_gui_callback = [](void *lcd) { reinterpret_cast<LCDWidget*>(lcd)->callback(); };
+        ui->lcd->setup();
         setCalcSkinTopFromType();
         setKeypadColor(settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
     } else {
@@ -1044,8 +1067,7 @@ void MainWindow::started(bool success) {
 void MainWindow::restored(bool success) {
     guiEmuValid = success;
     if (success) {
-        lcd_gui_callback_data = ui->lcd;
-        lcd_gui_callback = [](void *lcd) { reinterpret_cast<LCDWidget*>(lcd)->callback(); };
+        ui->lcd->setup();
         setCalcSkinTopFromType();
         setKeypadColor(settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
     } else {
@@ -1186,10 +1208,10 @@ void MainWindow::consoleErrStr(const QString &str) {
     }
 }
 
-void MainWindow::showEmuUpdates(int speed) {
-    QString label = " " + tr("Emulated Speed: ") + QString::number(speed, 10) + "% | FPS: " + QString::number(ui->lcd->getRealFPS(), 'f', 2);
+void MainWindow::showEmuUpdates(int speed, double fps, double realFps) {
+    QString label = " " + tr("Emulated Speed: ") + QString::number(speed, 10) + "% | FPS: " + QString::number(realFps, 'f', 2);
     speedLabel.setText(label);
-    ui->maxFps->setText(tr("Actual FPS: ") + QString::number(ui->lcd->getFPS()));
+    ui->maxFps->setText(tr("Actual FPS: ") + QString::number(fps, 'f', 2));
 }
 
 void MainWindow::showStatusMsg(const QString &str) {

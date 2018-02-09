@@ -6,6 +6,7 @@
 
 #include "mainwindow.h"
 
+#include "capture/animated-png.h"
 #include "../../core/emu.h"
 #include "../../core/cpu.h"
 #include "../../core/control.h"
@@ -56,6 +57,10 @@ void gui_debugger_send_command(int reason, uint32_t addr) {
     emu_thread->sendDebugCommand(reason, addr);
 }
 
+void gui_lcd_update(void) {
+    emu_thread->drawLcd();
+}
+
 void gui_debugger_raise_or_disable(bool entered) {
     if (entered) {
         emu_thread->raiseDebugger();
@@ -80,6 +85,36 @@ EmuThread::EmuThread(QObject *p) : QThread(p) {
 
 void EmuThread::reset() {
     doReset = true;
+}
+
+void EmuThread::drawLcd() {
+    if (skip) {
+        skip--;
+    } else {
+        skip = frameskip;
+        if (mode) {
+            memcpy(lcd_gui_buffer, spi.display, sizeof(spi.display));
+        } else {
+            lcd_drawframe(lcd_gui_buffer, lcd.control & 1 << 11 ? lcd.data : nullptr, lcd.data_end, lcd.control, LCD_SIZE);
+        }
+        unsigned int msNFramesAgo = array[index];
+        array[index] = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+        realFps = (1e3*ARRAY_SIZE) / (array[index] - msNFramesAgo);
+        index = (index + 1) % ARRAY_SIZE;
+#ifdef PNG_WRITE_APNG_SUPPORTED
+    apng_add_frame(lcd_gui_buffer);
+#endif
+        emit updateLcd();
+    }
+}
+
+void EmuThread::setMode(bool state) {
+    mode = state;
+}
+
+void EmuThread::setFrameskip(int value) {
+    frameskip = value;
+    skip = value;
 }
 
 void EmuThread::setEmuSpeed(int value) {
@@ -203,7 +238,8 @@ void EmuThread::sendFiles() {
 
 void EmuThread::sendUpdates() {
     if (!control.off) {
-        emit sendGuiUpdates(actualSpeed);
+        fps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP));
+        emit sendGuiUpdates(actualSpeed, fps / (frameskip + 1), realFps);
     }
 }
 
@@ -265,7 +301,7 @@ bool EmuThread::stop() {
     }
 
     lcd_gui_callback = NULL;
-    lcd_gui_callback_data = NULL;
+    lcd_gui_buffer = NULL;
     guiTimer.stop();
 
     exiting = true;

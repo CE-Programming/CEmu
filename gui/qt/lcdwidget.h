@@ -12,12 +12,8 @@ class LCDWidget : public QWidget {
 
 public:
     explicit LCDWidget(QWidget *p = Q_NULLPTR);
-    void setMode(bool mode);
-    void setFrameskip(int skip);
-    void callback(void);
-    double getFPS();
-    double getRealFPS();
     QImage getImage();
+    void setup();
 
 protected:
     virtual void paintEvent(QPaintEvent*) Q_DECL_OVERRIDE;
@@ -28,6 +24,7 @@ protected:
 
 signals:
     void sendROM(const QString& romPath);
+    void updateDone();
 
 private:
     enum lcd_side {
@@ -35,29 +32,14 @@ private:
         LCD_RIGHT
     };
 
-    enum array_info {
-        ARRAY_SIZE = 60
-    };
-
-    // true = emulate spi
-    bool mode;
-
     unsigned int sideDrag;
     bool drag = false;
     QRect left, right;
     QImage image;
 
-    double fps = 0;
-    int skip = 0;
-    int frameskip = 0;
-
     // for dragable roms
     QString dragROM;
     bool isSendingROM;
-
-    unsigned int array[ARRAY_SIZE];
-    int index = 0;
-    double realFps = 0;
 };
 
 #endif

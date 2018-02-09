@@ -109,6 +109,10 @@ signals:
     void receive();
     void receiveDone();
 
+    // LCD
+    void updateFrameskip(int value);
+    void updateMode(bool state);
+
 protected:
     // Misc.
     virtual void changeEvent(QEvent* event) Q_DECL_OVERRIDE;
@@ -367,7 +371,7 @@ private:
     // Speed
     void setEmuSpeed(int value);
     void setThrottle(int mode);
-    void showEmuUpdates(int speed);
+    void showEmuUpdates(int speed, double fps, double realFPS);
 
     // Console
     void showStatusMsg(const QString& str);
@@ -449,7 +453,7 @@ private:
 
     // Versioning
     void setVersion();
-    void checkVersion();
+    bool checkVersion();
     bool isFirstRun();
 
     // Misc

@@ -10,7 +10,8 @@
 #include "keypad/qtkeypadbridge.h"
 #include "capture/animated-png.h"
 #include "../../core/link.h"
-#include "../../core/spi.h"
+#include "../../core/lcd.h"
+#include "../../core/emu.h"
 #include "../../core/debug/debug.h"
 #include "../../core/backlight.h"
 #include "../../core/control.h"
@@ -53,51 +54,6 @@ void LCDWidget::paintEvent(QPaintEvent*) {
     }
 }
 
-void LCDWidget::setMode(bool state) {
-    mode = state;
-}
-
-void LCDWidget::callback(void) {
-    if (!guiEmuValid) {
-        return;
-    }
-
-    if (skip) {
-        skip--;
-    } else {
-        skip = frameskip;
-        if (mode) {
-            memcpy(image.bits(), spi.display, sizeof(spi.display));
-        } else {
-            lcd_drawframe(image.bits(), lcd.control & 1 << 11 ? lcd.data : nullptr, lcd.data_end, lcd.control, LCD_SIZE);
-        }
-        unsigned int msNFramesAgo = array[index];
-        array[index] = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
-        realFps = (1e3*ARRAY_SIZE) / (array[index] - msNFramesAgo);
-        index = (index + 1) % ARRAY_SIZE;
-        update();
-    }
-
-#ifdef PNG_WRITE_APNG_SUPPORTED
-    apng_add_frame(image.bits());
-#endif
-
-    fps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP));
-}
-
-double LCDWidget::getFPS() {
-    return fps / (frameskip + 1);
-}
-
-double LCDWidget::getRealFPS() {
-    return realFps;
-}
-
-void LCDWidget::setFrameskip(int value) {
-    frameskip = value;
-    skip = value;
-}
-
 void LCDWidget::dropEvent(QDropEvent *e) {
     if (isSendingROM) {
         emit sendROM(dragROM);
@@ -127,4 +83,9 @@ void LCDWidget::dragLeaveEvent(QDragLeaveEvent *e) {
 
 QImage LCDWidget::getImage() {
     return image;
+}
+
+void LCDWidget::setup() {
+    lcd_gui_callback = gui_lcd_update;
+    lcd_gui_buffer = image.bits();
 }

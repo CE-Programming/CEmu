@@ -27,13 +27,16 @@ signals:
     void sendDebugCommand(int reason, uint32_t addr);
     void debugInputRequested(bool);
 
+    // LCD update
+    void updateLcd();
+
     // I/O
     void consoleStr(const QString& str);
     void consoleErrStr(const QString& str);
     void exited(int);
 
     // Status
-    void sendGuiUpdates(int actualSpeed);
+    void sendGuiUpdates(int actualSpeed, double fps, double realFps);
 
     // Save/Restore state
     void saved(bool success);
@@ -51,6 +54,11 @@ public slots:
     bool stop();
     void reset();
     void load();
+
+    // LCD
+    void setFrameskip(int value);
+    void setMode(bool state);
+    void drawLcd();
 
     // Debugging
     void setDebugMode(bool);
@@ -84,7 +92,7 @@ private:
     void setActualSpeed(int actualSpeed);
     void sendFiles();
 
-    int speed, actualSpeed, fps, frameskip = 0;
+    int speed, actualSpeed;
 
     bool doReset = false;
 
@@ -107,6 +115,22 @@ private:
     std::condition_variable cv;
 
     QTimer guiTimer;
+
+    // lcd updating
+    enum array_info {
+        ARRAY_SIZE = 60
+    };
+
+    // true = emulate spi
+    bool mode;
+
+    double fps = 0;
+    int skip = 0;
+    int frameskip = 0;
+
+    unsigned int array[ARRAY_SIZE];
+    int index = 0;
+    double realFps = 0;
 };
 
 // For friends
