@@ -73,6 +73,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 
     ui->centralWidget->hide();
     ui->statusBar->addWidget(&speedLabel);
+    ui->statusBar->addWidget(&fpsLabel);
     ui->statusBar->addPermanentWidget(&msgLabel);
 
     // Allow for 2018 lines of logging
@@ -105,7 +106,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(&emu, &EmuThread::stopped, this, &MainWindow::emuStopped, Qt::QueuedConnection);
     connect(&emu, &EmuThread::restored, this, &MainWindow::restored, Qt::QueuedConnection);
     connect(&emu, &EmuThread::saved, this, &MainWindow::saved, Qt::QueuedConnection);
-    connect(&emu, &EmuThread::sendGuiUpdates, this, &MainWindow::showEmuUpdates, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed, Qt::QueuedConnection);
 
     // Console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, ui->console, &QPlainTextEdit::clear);
@@ -232,7 +233,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(this, &MainWindow::load, &emu, &EmuThread::load);
 
     // LCD Update
-    connect(&emu, &EmuThread::updateLcd, ui->lcd, &LCDWidget::updateLcd, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::updateLcd, this, &MainWindow::updateLcd, Qt::QueuedConnection);
     connect(this, &MainWindow::updateMode, &emu, &EmuThread::setMode);
     connect(this, &MainWindow::updateFrameskip, &emu, &EmuThread::setFrameskip);
 
@@ -720,7 +721,7 @@ void MainWindow::translateExtras(int init) {
 void MainWindow::changeEvent(QEvent* event) {
     const auto eventType = event->type();
     if (eventType == QEvent::LanguageChange) {
-        if (firstShow) {
+        if (visibleWindow) {
             ui->retranslateUi(this);
             translateExtras(TRANSLATE_UPDATE);
         }
@@ -731,7 +732,7 @@ void MainWindow::changeEvent(QEvent* event) {
 }
 
 void MainWindow::showEvent(QShowEvent *e) {
-    if (!firstShow) {
+    if (!visibleWindow) {
         if (!initPassed) {
             QFile(pathSettings).remove();
             close();
@@ -771,7 +772,7 @@ void MainWindow::showEvent(QShowEvent *e) {
                 }
             }
         }
-        firstShow = true;
+        visibleWindow = true;
     }
     QMainWindow::showEvent(e);
     e->accept();
@@ -1192,10 +1193,23 @@ void MainWindow::consoleErrStr(const QString &str) {
     }
 }
 
-void MainWindow::showEmuUpdates(int speed, double emuFps) {
-    QString label = " " + tr("Emulated Speed: ") + QString::number(speed, 10) + "% | FPS: " + QString::number(ui->lcd->getFps(), 'f', 2);
+void MainWindow::showEmuSpeed(int speed) {
+    QString label = " " + tr("Emulated Speed: ") + QString::number(speed, 10) + "%";
     speedLabel.setText(label);
-    ui->maxFps->setText(tr("Actual FPS: ") + QString::number(emuFps, 'f', 2));
+}
+
+void MainWindow::updateLcd(double emuFps) {
+    static double guiFpsPrev = 0;
+    static double emuFpsPrev = 0;
+    double guiFps = ui->lcd->refresh();
+    if (emuFpsPrev != emuFps) {
+        ui->maxFps->setText(tr("Actual FPS: ") + QString::number(emuFps, 'f', 2));
+        emuFpsPrev = emuFps;
+    }
+    if (guiFps < guiFpsPrev - 1 || guiFps > guiFpsPrev + 1) {
+        fpsLabel.setText("FPS: " + QString::number(guiFps, 'f', 2));
+        guiFpsPrev = guiFps;
+    }
 }
 
 void MainWindow::showStatusMsg(const QString &str) {

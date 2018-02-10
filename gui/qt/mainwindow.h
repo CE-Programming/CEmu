@@ -371,7 +371,7 @@ private:
     // Speed
     void setEmuSpeed(int value);
     void setThrottle(int mode);
-    void showEmuUpdates(int speed, double emuFps);
+    void showEmuSpeed(int speed);
 
     // Console
     void showStatusMsg(const QString& str);
@@ -464,6 +464,9 @@ private:
     void pauseEmu(Qt::ApplicationState state);
     void setMemoryDocks();
 
+    // LCD
+    void updateLcd(double emuFps);
+
     // State items
     void reloadAll();
     void reloadGui();
@@ -499,6 +502,7 @@ private:
 
     Ui::MainWindow *ui = Q_NULLPTR;
     QLabel speedLabel;
+    QLabel fpsLabel;
     QLabel msgLabel;
     QSettings *settings = Q_NULLPTR;
     QTextCursor disasmOffset;
@@ -565,7 +569,7 @@ private:
     bool needFullReset = false;
     bool guiAdd = false;
     bool initPassed = true;
-    bool firstShow = false;
+    bool visibleWindow = false;
     bool useDataCol;
     bool softCommand = false;
     bool pauseOnFocus;

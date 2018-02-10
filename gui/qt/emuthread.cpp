@@ -78,9 +78,6 @@ EmuThread::EmuThread(QObject *p) : QThread(p) {
     emu_thread = this;
     speed = actualSpeed = 100;
     lastTime = std::chrono::steady_clock::now();
-    connect(&guiTimer, SIGNAL(timeout()), this, SLOT(sendUpdates()));
-    guiTimer.start();
-    guiTimer.setInterval(600);
 }
 
 void EmuThread::reset() {
@@ -92,7 +89,7 @@ void EmuThread::drawLcd() {
         skip--;
     } else {
         skip = frameskip;
-        if (mode) {
+        if (spiMode) {
             memcpy(lcd_gui_buffer, spi.display, sizeof(spi.display));
         } else {
             lcd_drawframe(lcd_gui_buffer, lcd.control & 1 << 11 ? lcd.data : nullptr, lcd.data_end, lcd.control, LCD_SIZE);
@@ -100,12 +97,13 @@ void EmuThread::drawLcd() {
 #ifdef PNG_WRITE_APNG_SUPPORTED
         apng_add_frame(lcd_gui_buffer);
 #endif
-        emit updateLcd();
+        double emuFps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP));
+        emit updateLcd(emuFps / (frameskip + 1));
     }
 }
 
 void EmuThread::setMode(bool state) {
-    mode = state;
+    spiMode = state;
 }
 
 void EmuThread::setFrameskip(int value) {
@@ -232,16 +230,12 @@ void EmuThread::sendFiles() {
     emit sentFile(QString(), LINK_GOOD);
 }
 
-void EmuThread::sendUpdates() {
-    if (!control.off) {
-        emuFps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP));
-        emit sendGuiUpdates(actualSpeed, emuFps / (frameskip + 1));
-    }
-}
-
 void EmuThread::setActualSpeed(int value) {
-    if (!control.off && actualSpeed != value) {
-        actualSpeed = value;
+    if (!control.off) {
+        if (actualSpeed != value) {
+            actualSpeed = value;
+            emit actualSpeedChanged(value);
+        }
     }
 }
 
@@ -298,7 +292,6 @@ bool EmuThread::stop() {
 
     lcd_gui_callback = NULL;
     lcd_gui_buffer = NULL;
-    guiTimer.stop();
 
     exiting = true;
     cpu.next = 0;

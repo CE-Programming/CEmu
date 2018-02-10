@@ -14,10 +14,9 @@ public:
     explicit LCDWidget(QWidget *p = Q_NULLPTR);
     QImage getImage();
     void setup();
-    double getFps();
 
 public slots:
-    void updateLcd();
+    double refresh();
 
 protected:
     virtual void paintEvent(QPaintEvent*) Q_DECL_OVERRIDE;
@@ -31,12 +30,12 @@ signals:
 
 private:
     enum lcd_side {
-        LCD_LEFT=0,
+        LCD_LEFT = 0,
         LCD_RIGHT
     };
 
     enum array_info {
-        ARRAY_SIZE = 60
+        ARRAY_SIZE = 50
     };
 
     unsigned int sideDrag;
@@ -50,7 +49,6 @@ private:
 
     unsigned int array[ARRAY_SIZE];
     int index = 0;
-    double guiFps = 0;
 };
 
 #endif

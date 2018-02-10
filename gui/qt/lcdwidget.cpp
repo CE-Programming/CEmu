@@ -85,16 +85,13 @@ QImage LCDWidget::getImage() {
     return image;
 }
 
-double LCDWidget::getFps() {
-    return guiFps;
-}
-
-void LCDWidget::updateLcd() {
+double LCDWidget::refresh() {
     unsigned int msNFramesAgo = array[index];
     array[index] = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
-    guiFps = (1e3*ARRAY_SIZE) / (array[index] - msNFramesAgo);
+    double guiFps = (1e3*ARRAY_SIZE) / (array[index] - msNFramesAgo);
     index = (index + 1) % ARRAY_SIZE;
     update();
+    return guiFps;
 }
 
 void LCDWidget::setup() {

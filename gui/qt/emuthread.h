@@ -28,7 +28,7 @@ signals:
     void debugInputRequested(bool);
 
     // LCD update
-    void updateLcd();
+    void updateLcd(double emuFps);
 
     // I/O
     void consoleStr(const QString& str);
@@ -36,7 +36,7 @@ signals:
     void exited(int);
 
     // Status
-    void sendGuiUpdates(int actualSpeed, double emuFps);
+    void actualSpeedChanged(int value);
 
     // Save/Restore state
     void saved(bool success);
@@ -82,9 +82,6 @@ public slots:
     void saveImage(const QString &path);
     void saveRom(const QString &path);
 
-    // Speed and fps
-    void sendUpdates();
-
 protected:
     virtual void run() Q_DECL_OVERRIDE;
 
@@ -114,12 +111,8 @@ private:
     std::mutex mutex;
     std::condition_variable cv;
 
-    QTimer guiTimer;
-
     // true = emulate spi
-    bool mode;
-
-    double emuFps = 0;
+    bool spiMode;
     int skip = 0;
     int frameskip = 0;
 };
