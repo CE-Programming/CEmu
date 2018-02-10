@@ -720,8 +720,10 @@ void MainWindow::translateExtras(int init) {
 void MainWindow::changeEvent(QEvent* event) {
     const auto eventType = event->type();
     if (eventType == QEvent::LanguageChange) {
-        ui->retranslateUi(this);
-        translateExtras(TRANSLATE_UPDATE);
+        if (firstShow) {
+            ui->retranslateUi(this);
+            translateExtras(TRANSLATE_UPDATE);
+        }
     } else if (eventType == QEvent::LocaleChange) {
         switchTranslator(QLocale::system().name());
     }

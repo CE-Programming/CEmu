@@ -86,6 +86,7 @@ QImage LCDWidget::getImage() {
 }
 
 void LCDWidget::setup() {
+    image.fill(Qt::black);
     lcd_gui_callback = gui_lcd_update;
     lcd_gui_buffer = image.bits();
 }
