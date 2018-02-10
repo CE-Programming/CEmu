@@ -24,7 +24,6 @@ protected:
 
 signals:
     void sendROM(const QString& romPath);
-    void updateDone();
 
 private:
     enum lcd_side {

@@ -413,6 +413,8 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
         ui->settingsPath->setText(pathSettings);
     }
 
+    checkVersion();
+
 #ifdef Q_OS_WIN
     installToggleConsole();
 #endif
@@ -420,8 +422,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
 #ifdef Q_OS_MACX
     ui->actionDisableMenuBar->setVisible(false);
 #endif
-
-    bool good_version = !checkVersion();
 
     stopIcon.addPixmap(QPixmap(":/icons/resources/icons/stop.png"));
     runIcon.addPixmap(QPixmap(":/icons/resources/icons/run.png"));
@@ -529,19 +529,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
         } else {
             debuggerImportFile(settings->value(SETTING_DEBUGGER_IMAGE_PATH).toString());
         }
-    }
-
-    if (!good_version) {
-        settings->setValue(SETTING_FIRST_RUN, true);
-        QMessageBox *box = new QMessageBox();
-        box->setWindowTitle(tr("Different CEmu version detected"));
-        box->setText(tr("This version of CEmu is not compatible with your settings, probably made by an older version. "
-                        "Would you like to erase them to prevent any unexpected behavior?"));
-        box->show();
-        if (box->exec()) {
-            reloadAll();
-        }
-        setVersion();
     }
 
     if (isFirstRun() && initPassed && !needFullReset) {
@@ -745,11 +732,6 @@ void MainWindow::showEvent(QShowEvent *e) {
     if (!firstShow) {
         if (!initPassed) {
             QFile(pathSettings).remove();
-            close();
-            e->accept();
-            return;
-        }
-        if (needFullReset) {
             close();
             e->accept();
             return;
@@ -966,15 +948,15 @@ void MainWindow::reloadGui() {
 }
 
 bool MainWindow::IsReload() {
-    emu_thread = Q_NULLPTR;
     return needReload;
 }
 
-void MainWindow::CheckResetAll() {
+bool MainWindow::IsResetAll() {
     if (needFullReset) {
         QDir dir(configPath);
         dir.removeRecursively();
     }
+    return needFullReset;
 }
 
 void MainWindow::sendASMKey() {

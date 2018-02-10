@@ -692,12 +692,12 @@ void MainWindow::setVersion() {
     settings->setValue(SETTING_VERSION, QStringLiteral(CEMU_VERSION));
 }
 
-bool MainWindow::checkVersion() {
+void MainWindow::checkVersion() {
     bool ask = false;
 
     if (isFirstRun()) {
         setVersion();
-        return ask;
+        return;
     }
 
     if (settings->contains(SETTING_VERSION)) {
@@ -708,7 +708,16 @@ bool MainWindow::checkVersion() {
         ask = true;
     }
 
-    return ask;
+    if (ask) {
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(Q_NULLPTR, tr("Different CEmu version detected"),
+                                                 tr("This version of CEmu is not compatible with your settings, probably made by an older version. "
+                                                    "Would you like to erase them to prevent any unexpected behavior?"), QMessageBox::Yes|QMessageBox::No);
+        if (reply == QMessageBox::Yes) {
+            reloadAll();
+        }
+        setVersion();
+    }
 }
 
 bool MainWindow::isFirstRun() {

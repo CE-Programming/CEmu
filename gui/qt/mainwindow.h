@@ -51,7 +51,7 @@ public:
     ~MainWindow();
     bool IsInitialized();
     bool IsReload();
-    void CheckResetAll();
+    bool IsResetAll();
 
 public slots:
     // Console
@@ -453,7 +453,7 @@ private:
 
     // Versioning
     void setVersion();
-    bool checkVersion();
+    void checkVersion();
     bool isFirstRun();
 
     // Misc

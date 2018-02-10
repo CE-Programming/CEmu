@@ -153,13 +153,13 @@ int main(int argc, char *argv[]) {
     if (!EmuWin.IsInitialized()) {
         return 0;
     }
+    if (!EmuWin.IsResetAll()) {
+        EmuWin.show();
+    }
 
-    EmuWin.show();
     app.exec();
 
-    EmuWin.CheckResetAll();
-
-    if (EmuWin.IsReload()) {
+    if (EmuWin.IsResetAll() || EmuWin.IsReload()) {
         qApp->quit();
         QProcess::startDetached(qApp->arguments()[0]);
     }
