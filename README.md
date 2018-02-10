@@ -5,13 +5,9 @@ The core is programmed in C and the GUI in C++ with Qt, for performance and port
 
 Here are some screenshots showcasing some of the features and various layouts, on these OSes:
 
-On macOS (a non-debug layout) | On Windows (a non-debug layout) |
------------- | ------------- |
-<a href="https://i.imgur.com/432aLxq.png"><img src="https://i.imgur.com/VjvesTi.png" /></a>|<a href="https://i.imgur.com/W5mKf1n.png"><img src="https://i.imgur.com/EZKWRUh.png" /></a>
-
-On Windows (a debug layout) | On Linux (another debug layout)|
------------- | ------------- |
-<a href="https://i.imgur.com/zOeFTfw.png"><img src="https://i.imgur.com/KRhbDmv.png" /></a>|<a href="https://i.imgur.com/hJFVdtF.png"><img src="https://i.imgur.com/H5TQrci.png" /></a>
+Calc-only layout | A mixed layout with various panes | A debugging-oriented layout for developers |
+------------ | ------------ | ------------- |
+<a href="https://i.imgur.com/4CJ7RqT.png"><img src="https://i.imgur.com/e1BgJRw.png" /></a>|<a href="https://i.imgur.com/W5mKf1n.png"><img src="https://i.imgur.com/EZKWRUh.png" /></a>|<a href="https://i.imgur.com/hJFVdtF.png"><img src="https://i.imgur.com/H5TQrci.png" /></a>
 
 ## Downloads
 Development builds are available here: https://ce-programming.github.io/CEmu/download
