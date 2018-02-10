@@ -1,4 +1,4 @@
-#ifndef EMUTHREAD_H
+﻿#ifndef EMUTHREAD_H
 #define EMUTHREAD_H
 
 #include <QtCore/QThread>
@@ -36,7 +36,7 @@ signals:
     void exited(int);
 
     // Status
-    void sendGuiUpdates(int actualSpeed, double fps, double realFps);
+    void sendGuiUpdates(int actualSpeed, double emuFps);
 
     // Save/Restore state
     void saved(bool success);
@@ -116,21 +116,12 @@ private:
 
     QTimer guiTimer;
 
-    // lcd updating
-    enum array_info {
-        ARRAY_SIZE = 60
-    };
-
     // true = emulate spi
     bool mode;
 
-    double fps = 0;
+    double emuFps = 0;
     int skip = 0;
     int frameskip = 0;
-
-    unsigned int array[ARRAY_SIZE];
-    int index = 0;
-    double realFps = 0;
 };
 
 // For friends

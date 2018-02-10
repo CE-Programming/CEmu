@@ -232,7 +232,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(this, &MainWindow::load, &emu, &EmuThread::load);
 
     // LCD Update
-    connect(&emu, &EmuThread::updateLcd, ui->lcd, static_cast<void (LCDWidget::*)(void)>(&LCDWidget::update), Qt::QueuedConnection);
+    connect(&emu, &EmuThread::updateLcd, ui->lcd, &LCDWidget::updateLcd, Qt::QueuedConnection);
     connect(this, &MainWindow::updateMode, &emu, &EmuThread::setMode);
     connect(this, &MainWindow::updateFrameskip, &emu, &EmuThread::setFrameskip);
 
@@ -1192,10 +1192,10 @@ void MainWindow::consoleErrStr(const QString &str) {
     }
 }
 
-void MainWindow::showEmuUpdates(int speed, double fps, double realFps) {
-    QString label = " " + tr("Emulated Speed: ") + QString::number(speed, 10) + "% | FPS: " + QString::number(realFps, 'f', 2);
+void MainWindow::showEmuUpdates(int speed, double emuFps) {
+    QString label = " " + tr("Emulated Speed: ") + QString::number(speed, 10) + "% | FPS: " + QString::number(ui->lcd->getFps(), 'f', 2);
     speedLabel.setText(label);
-    ui->maxFps->setText(tr("Actual FPS: ") + QString::number(fps, 'f', 2));
+    ui->maxFps->setText(tr("Actual FPS: ") + QString::number(emuFps, 'f', 2));
 }
 
 void MainWindow::showStatusMsg(const QString &str) {

@@ -97,12 +97,8 @@ void EmuThread::drawLcd() {
         } else {
             lcd_drawframe(lcd_gui_buffer, lcd.control & 1 << 11 ? lcd.data : nullptr, lcd.data_end, lcd.control, LCD_SIZE);
         }
-        unsigned int msNFramesAgo = array[index];
-        array[index] = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
-        realFps = (1e3*ARRAY_SIZE) / (array[index] - msNFramesAgo);
-        index = (index + 1) % ARRAY_SIZE;
 #ifdef PNG_WRITE_APNG_SUPPORTED
-    apng_add_frame(lcd_gui_buffer);
+        apng_add_frame(lcd_gui_buffer);
 #endif
         emit updateLcd();
     }
@@ -238,8 +234,8 @@ void EmuThread::sendFiles() {
 
 void EmuThread::sendUpdates() {
     if (!control.off) {
-        fps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP));
-        emit sendGuiUpdates(actualSpeed, fps / (frameskip + 1), realFps);
+        emuFps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP));
+        emit sendGuiUpdates(actualSpeed, emuFps / (frameskip + 1));
     }
 }
 

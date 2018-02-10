@@ -371,7 +371,7 @@ private:
     // Speed
     void setEmuSpeed(int value);
     void setThrottle(int mode);
-    void showEmuUpdates(int speed, double fps, double realFPS);
+    void showEmuUpdates(int speed, double emuFps);
 
     // Console
     void showStatusMsg(const QString& str);
