@@ -139,6 +139,9 @@ QMAKE_CFLAGS    += $$GLOBAL_FLAGS
 QMAKE_CXXFLAGS  += $$GLOBAL_FLAGS
 QMAKE_LFLAGS    += $$GLOBAL_FLAGS
 
+# If we want to keep supporting macOS down to 10.9, add this flag and build/deploy with Qt 5.8
+macx: QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.9
+
 macx: ICON = resources/icons/icon.icns
 
 SOURCES +=  utils.cpp \
