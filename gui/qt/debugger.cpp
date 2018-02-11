@@ -356,7 +356,11 @@ void MainWindow::debuggerExecuteCommand(uint32_t debugAddress, uint8_t command) 
     softCommand = false;
 
     // continue emulation
-    setDebugState(guiDebug = false);
+    if (guiDebug) {
+        debuggerRaise();
+    } else {
+        setDebugState(false);
+    }
 }
 
 void MainWindow::debuggerProcessCommand(int reason, uint32_t input) {
