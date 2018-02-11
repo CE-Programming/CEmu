@@ -265,7 +265,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->emulationSpeed, &QSlider::valueChanged, this, &MainWindow::setEmuSpeed);
     connect(ui->emulationSpeedSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setEmuSpeed);
     connect(ui->checkThrottle, &QCheckBox::stateChanged, this, &MainWindow::setThrottle);
-    connect(ui->lcd, &LCDWidget::customContextMenuRequested, this, &MainWindow::screenContextMenu);
+    connect(ui->checkAutoEquates, &QCheckBox::stateChanged, this, &MainWindow::setAutoEquates);
     connect(ui->checkSaveRestore, &QCheckBox::stateChanged, this, &MainWindow::setAutoSaveState);
     connect(ui->checkPortable, &QCheckBox::stateChanged, this, &MainWindow::setPortableConfig);
     connect(ui->checkSaveRecent, &QCheckBox::stateChanged, this, &MainWindow::setRecentSave);
@@ -273,8 +273,6 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->buttonChangeSavedImagePath, &QPushButton::clicked, this, &MainWindow::setImagePath);
     connect(ui->buttonChangeSavedDebugPath, &QPushButton::clicked, this, &MainWindow::setDebugPath);
     connect(ui->checkFocus, &QCheckBox::stateChanged, this, &MainWindow::setFocusSetting);
-    connect(this, &MainWindow::changedEmuSpeed, &emu, &EmuThread::setEmuSpeed);
-    connect(this, &MainWindow::changedThrottleMode, &emu, &EmuThread::setThrottleMode);
     connect(ui->checkPreI, &QCheckBox::stateChanged, this, &MainWindow::setPreRevisionI);
     connect(ui->flashBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->flashEdit, &QHexEdit::setBytesPerLine);
     connect(ui->ramBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->ramEdit, &QHexEdit::setBytesPerLine);
@@ -284,12 +282,20 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->buttonAddSlot, &QPushButton::clicked, this, &MainWindow::slotAddNew);
     connect(ui->actionExportCEmuImage, &QAction::triggered, this, &MainWindow::exportCEmuBootImage);
     connect(ui->lcd, &LCDWidget::sendROM, this, &MainWindow::setRom);
+    connect(ui->lcd, &LCDWidget::customContextMenuRequested, this, &MainWindow::screenContextMenu);
+    connect(this, &MainWindow::changedEmuSpeed, &emu, &EmuThread::setEmuSpeed);
+    connect(this, &MainWindow::changedThrottleMode, &emu, &EmuThread::setThrottleMode);
 
     // Lang switch
     connect(ui->actionEnglish,  &QAction::triggered, this, [this]{ switchTranslator(QStringLiteral("en_EN")); });
     connect(ui->actionFran_ais, &QAction::triggered, this, [this]{ switchTranslator(QStringLiteral("fr_FR")); });
     connect(ui->actionDutch,    &QAction::triggered, this, [this]{ switchTranslator(QStringLiteral("nl_NL")); });
     connect(ui->actionEspanol,  &QAction::triggered, this, [this]{ switchTranslator(QStringLiteral("es_ES")); });
+
+    // Sending Handler
+    connect(sendingHandler, &SendingHandler::send, &emu, &EmuThread::send, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::sentFile, sendingHandler, &SendingHandler::sentFile, Qt::QueuedConnection);
+    connect(sendingHandler, &SendingHandler::loadEquateFile, this, &MainWindow::equatesAddFile);
 
     // Hex Editor
     connect(ui->buttonFlashSearch, &QPushButton::clicked, this, [this]{ memSearchPressed(MEM_FLASH); });
@@ -444,6 +450,7 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     setAutoSaveState(settings->value(SETTING_RESTORE_ON_OPEN, true).toBool());
     setSaveDebug(settings->value(SETTING_DEBUGGER_RESTORE_ON_OPEN, false).toBool());
     setSpaceDisasm(settings->value(SETTING_DEBUGGER_ADD_DISASM_SPACE, false).toBool());
+    setAutoEquates(settings->value(SETTING_DEBUGGER_AUTO_EQUATES, false).toBool());
     setDebugResetTrigger(settings->value(SETTING_DEBUGGER_RESET_OPENS, false).toBool());
     setDebugIgnoreBreakpoints(settings->value(SETTING_DEBUGGER_BREAK_IGNORE, false).toBool());
     setDebugSoftCommands(settings->value(SETTING_DEBUGGER_ENABLE_SOFT, true).toBool());

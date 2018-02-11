@@ -341,6 +341,7 @@ private:
     QString debuggerGetFile(int mode);
     void debuggerImport();
     void debuggerExport();
+    void setAutoEquates(bool enable);
 
     // Create memory views
     void createMemoryDock(QString title);
@@ -592,6 +593,7 @@ private:
     static const QString SETTING_DEBUGGER_MEM_BYTES;
     static const QString SETTING_DEBUGGER_BREAK_IGNORE;
     static const QString SETTING_DEBUGGER_IGNORE_DMA;
+    static const QString SETTING_DEBUGGER_AUTO_EQUATES;
     static const QString SETTING_DEBUGGER_PRE_I;
     static const QString SETTING_SCREEN_FRAMESKIP;
     static const QString SETTING_SCREEN_SCALE;

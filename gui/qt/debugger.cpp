@@ -1526,7 +1526,7 @@ void MainWindow::equatesAddFile(const QString &fileName) {
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         currentEquateFiles.removeAll(fileName);
-        consoleErrStr(tr("[CEmu] Debugger couldn't open this equate file (removed): ") + fileName);
+        consoleStr(tr("[CEmu] Debugger couldn't open this equate file (removed): ") + fileName + "\n");
         return;
     }
 
@@ -1582,6 +1582,8 @@ void MainWindow::equatesAddFile(const QString &fileName) {
         } while (in.readLineInto(&line));
     }
 
+    consoleStr(tr("[CEmu] Loaded equate file: ") + fileName + "\n");
+
     updateDisasm();
     updateLabels();
 }
@@ -1589,6 +1591,14 @@ void MainWindow::equatesAddFile(const QString &fileName) {
 void MainWindow::equatesAddEquate(const QString &name, uint32_t address) {
     if (address < 0x80) {
         return;
+    }
+    map_value_t::const_iterator item = disasm.reverseMap.find(name.toUpper().toStdString());
+    if (item != disasm.reverseMap.end()) {
+        if (address == item->second) {
+            return;
+        } else {
+            disasm.reverseMap.erase(item);
+        }
     }
     uint32_t &itemReverse = disasm.reverseMap[name.toUpper().toStdString()];
     itemReverse = address;
@@ -2060,3 +2070,4 @@ void MainWindow::memDocksUpdate() {
         }
     }
 }
+

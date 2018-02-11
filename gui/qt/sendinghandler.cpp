@@ -15,8 +15,6 @@ SendingHandler *sendingHandler = Q_NULLPTR;
 SendingHandler::SendingHandler(QObject *p, QProgressBar *bar, QTableWidget *t) : QObject(p) {
     progress = bar;
     table = t;
-    connect(this, &SendingHandler::send, emu_thread, &EmuThread::send, Qt::QueuedConnection);
-    connect(emu_thread, &EmuThread::sentFile, this, &SendingHandler::sentFile, Qt::QueuedConnection);
 
     bar->setMinimum(0);
     bar->setMinimumWidth(0);
@@ -127,6 +125,16 @@ void SendingHandler::sentFile(const QString &file, int ok) {
         return;
     }
 
+    // check for sending of equate file
+    if (sendEquates) {
+        QFileInfo fi(file);
+        QString directory = fi.absolutePath();
+        if (!directories.contains(directory)) {
+            directories.append(directory);
+            checkDirForEquateFiles(directory);
+        }
+    }
+
     for (int j = 0; j < rows; j++) {
         if (!table->item(j, RECENT_PATH)->text().compare(file)) {
             add = false;
@@ -176,6 +184,7 @@ void SendingHandler::sendFiles(const QStringList &fileNames, unsigned int locati
     }
 
     guiSend = true;
+    directories.clear();
 
     if (progress) {
         progress->setVisible(true);
@@ -183,4 +192,24 @@ void SendingHandler::sendFiles(const QStringList &fileNames, unsigned int locati
     }
 
     emit send(fileNames, location);
+}
+
+void SendingHandler::setLoadEquates(bool state) {
+    sendEquates = state;
+}
+
+void SendingHandler::checkDirForEquateFiles(QString &dirPath) {
+    QDirIterator dirIt(dirPath, QDirIterator::NoIteratorFlags);
+    while (dirIt.hasNext()) {
+        dirIt.next();
+        QString dirItFile = dirIt.filePath();
+        if (QFileInfo(dirItFile).isFile()) {
+            QString suffix = QFileInfo(dirItFile).suffix();
+            if (suffix == QStringLiteral("map") ||
+                suffix == QStringLiteral("inc") ||
+                suffix == QStringLiteral("lab")) {
+                emit loadEquateFile(dirItFile);
+            }
+        }
+    }
 }

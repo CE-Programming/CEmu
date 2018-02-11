@@ -40,6 +40,7 @@ const QString MainWindow::SETTING_DEBUGGER_FLASH_BYTES      = QStringLiteral("De
 const QString MainWindow::SETTING_DEBUGGER_RAM_BYTES        = QStringLiteral("Debugger/ram_bytes_per_line");
 const QString MainWindow::SETTING_DEBUGGER_MEM_BYTES        = QStringLiteral("Debugger/mem_bytes_per_line");
 const QString MainWindow::SETTING_DEBUGGER_BREAK_IGNORE     = QStringLiteral("Debugger/ignore_breakpoints");
+const QString MainWindow::SETTING_DEBUGGER_AUTO_EQUATES     = QStringLiteral("Debugger/auto_equates");
 const QString MainWindow::SETTING_DEBUGGER_IGNORE_DMA       = QStringLiteral("Debugger/ignore_dma");
 const QString MainWindow::SETTING_DEBUGGER_PRE_I            = QStringLiteral("Debugger/pre_i");
 const QString MainWindow::SETTING_SCREEN_FRAMESKIP          = QStringLiteral("Screen/frameskip");
@@ -540,6 +541,12 @@ void MainWindow::setSkinToggle(bool enable) {
     settings->setValue(SETTING_SCREEN_SKIN, enable);
     ui->checkSkin->setChecked(enable);
     adjustScreen();
+}
+
+void MainWindow::setAutoEquates(bool enable) {
+    settings->setValue(SETTING_DEBUGGER_AUTO_EQUATES, enable);
+    ui->checkAutoEquates->setChecked(enable);
+    sendingHandler->setLoadEquates(enable);
 }
 
 void MainWindow::setGuiSkip(int value) {

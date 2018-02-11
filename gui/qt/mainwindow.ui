@@ -3413,44 +3413,54 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="buttonAddEquateFile">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="focusPolicy">
-             <enum>Qt::NoFocus</enum>
-            </property>
-            <property name="text">
+           <widget class="QToolButton" name="buttonAddEquateFile">
+            <property name="toolTip">
              <string>Load...</string>
             </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset resource="resources.qrc">
+              <normaloff>:/icons/resources/icons/open.png</normaloff>:/icons/resources/icons/open.png</iconset>
+            </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="buttonRefreshEquates">
-            <property name="focusPolicy">
-             <enum>Qt::NoFocus</enum>
-            </property>
-            <property name="text">
+           <widget class="QToolButton" name="buttonRefreshEquates">
+            <property name="toolTip">
              <string>Refresh</string>
             </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset resource="resources.qrc">
+              <normaloff>:/icons/resources/icons/refresh.png</normaloff>:/icons/resources/icons/refresh.png</iconset>
+            </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="buttonClearEquates">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="focusPolicy">
-             <enum>Qt::NoFocus</enum>
+           <widget class="QToolButton" name="buttonClearEquates">
+            <property name="toolTip">
+             <string>Clear Equates</string>
             </property>
             <property name="text">
-             <string>Clear</string>
+             <string/>
+            </property>
+            <property name="icon">
+             <iconset resource="resources.qrc">
+              <normaloff>:/icons/resources/icons/minus.png</normaloff>:/icons/resources/icons/minus.png</iconset>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkAutoEquates">
+            <property name="toolTip">
+             <string>Autoloads any .inc, .map, or .lab found when transferring files </string>
+            </property>
+            <property name="text">
+             <string>Autoload</string>
             </property>
            </widget>
           </item>
@@ -4117,8 +4127,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>611</width>
-             <height>542</height>
+             <width>536</width>
+             <height>347</height>
             </rect>
            </property>
            <attribute name="icon">
