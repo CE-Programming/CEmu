@@ -15,9 +15,9 @@ QHexEdit::QHexEdit(QWidget *par) : QAbstractScrollArea(par) {
     _undoStack = new UndoStack(_chunks, this);
 
 #ifdef Q_OS_WIN
-    setFont(QFont("Courier", 10));
+    setFont(QFont(QStringLiteral("Courier"), 10));
 #else
-    setFont(QFont("Monospace", 10));
+    setFont(QFont(QStringLiteral("Monospace"), 10));
 #endif
 
     setHighlightingColor(QColor(Qt::blue).lighter(160));
@@ -574,7 +574,7 @@ void QHexEdit::paintEvent(QPaintEvent *e) {
         /* Paint address area */
         QString address;
         for (int row=0, pxPosY = _pxCharHeight; row <= (_dataShown.size()/bytesPerLine); row++, pxPosY +=_pxCharHeight) {
-            address = QString("%1").arg(_bPosFirst + row*bytesPerLine + _addressOffset, _addrDigits, 16, QChar('0'));
+            address = QString(QStringLiteral("%1")).arg(_bPosFirst + row*bytesPerLine + _addressOffset, _addrDigits, 16, QChar('0'));
             painter.drawText(_pxPosAdrX - pxOfsX, pxPosY, address.toUpper());
         }
         int line = _pxPosAdrX - pxOfsX + addressWidth()*_pxCharWidth + _pxCharWidth/2;
@@ -781,7 +781,7 @@ QString QHexEdit::toReadable(const QByteArray &ba) {
     QString result;
 
     for (int i=0; i < ba.size(); i += 16) {
-        QString addrStr = QString("%1").arg(_addressOffset + i, addressWidth(), 16, QChar('0'));
+        QString addrStr = QString(QStringLiteral("%1")).arg(_addressOffset + i, addressWidth(), 16, QChar('0'));
         QString hexStr;
         QString ascStr;
         for (int j=0; j<16; j++) {
@@ -793,7 +793,7 @@ QString QHexEdit::toReadable(const QByteArray &ba) {
                 ascStr.append(QChar(ch));
             }
         }
-        result += addrStr + " " + QString("%1").arg(hexStr, -48) + "  " + QString("%1").arg(ascStr, -17) + "\n";
+        result += addrStr + QStringLiteral(" ") + QString(QStringLiteral("%1")).arg(hexStr, -48) + QStringLiteral("  ") + QString(QStringLiteral("%1")).arg(ascStr, -17) + QStringLiteral("\n");
     }
     return result;
 }

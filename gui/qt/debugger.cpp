@@ -644,7 +644,7 @@ void MainWindow::debuggerGUIPopulate() {
     ui->freqView->setPalette(tmp == ui->freqView->text() ? nocolorback : colorback);
     ui->freqView->setText(tmp);
 
-    tmp = QString::number(debugger.cycleCount);
+    tmp = QString::number(debugger.ignoreDmaCycles ? debugger.cycleCountNoDma : debugger.cycleCount);
     ui->cycleView->setPalette(tmp == ui->cycleView->text() ? nocolorback : colorback);
     ui->cycleView->setText(tmp);
 
@@ -747,7 +747,9 @@ void MainWindow::debuggerGUIPopulate() {
 
 void MainWindow::debuggerZeroClockCounter() {
     debugger.cycleCount = 0;
-    ui->cycleView->setText("0");
+    debugger.cycleCountNoDma = 0;
+    debugger.cpuDmaCycles = 0;
+    ui->cycleView->setText(QStringLiteral("0"));
 }
 
 // ------------------------------------------------
@@ -1526,7 +1528,7 @@ void MainWindow::equatesAddFile(const QString &fileName) {
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         currentEquateFiles.removeAll(fileName);
-        consoleStr(tr("[CEmu] Debugger couldn't open this equate file (removed): ") + fileName + "\n");
+        consoleStr(QStringLiteral("[CEmu] Debugger couldn't open this equate file (removed): ") + fileName + "\n");
         return;
     }
 
@@ -1582,7 +1584,7 @@ void MainWindow::equatesAddFile(const QString &fileName) {
         } while (in.readLineInto(&line));
     }
 
-    consoleStr(tr("[CEmu] Loaded equate file: ") + fileName + "\n");
+    consoleStr(QStringLiteral("[CEmu] Loaded equate file: ") + fileName + QStringLiteral("\n"));
 
     updateDisasm();
     updateLabels();

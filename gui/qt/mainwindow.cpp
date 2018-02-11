@@ -171,9 +171,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->de_regView, &QLineEdit::cursorPositionChanged, this, [this]{ handleCtrlClickLine(ui->de_regView); });
 
     // Debugger Options
-    connect(ui->buttonAddEquateFile, &QPushButton::clicked, this, &MainWindow::equatesAddDialog);
-    connect(ui->buttonClearEquates, &QPushButton::clicked, this, &MainWindow::equatesClear);
-    connect(ui->buttonRefreshEquates, &QPushButton::clicked, this, &MainWindow::equatesRefresh);
+    connect(ui->buttonAddEquateFile, &QToolButton::clicked, this, &MainWindow::equatesAddDialog);
+    connect(ui->buttonClearEquates, &QToolButton::clicked, this, &MainWindow::equatesClear);
+    connect(ui->buttonRefreshEquates, &QToolButton::clicked, this, &MainWindow::equatesRefresh);
     connect(ui->buttonToggleBreakpoints, &QToolButton::toggled, this, &MainWindow::setDebugIgnoreBreakpoints);
     connect(ui->checkDebugResetTrigger, &QCheckBox::toggled, this, &MainWindow::setDebugResetTrigger);
     connect(ui->checkDataCol, &QCheckBox::toggled, this, &MainWindow::setDataCol);
@@ -304,9 +304,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(ui->buttonMemGoto, &QPushButton::clicked, this, [this]{ memGotoPressed(MEM_MEM); });
     connect(ui->buttonFlashGoto, &QPushButton::clicked, this, &MainWindow::flashGotoPressed);
     connect(ui->buttonRamGoto, &QPushButton::clicked, this, &MainWindow::ramGotoPressed);
-    connect(ui->buttonFlashSync, &QPushButton::clicked, this, &MainWindow::flashSyncPressed);
-    connect(ui->buttonRamSync, &QPushButton::clicked, this, &MainWindow::ramSyncPressed);
-    connect(ui->buttonMemSync, &QPushButton::clicked, this, [this]{ memSyncPressed(MEM_MEM); });
+    connect(ui->buttonFlashSync, &QToolButton::clicked, this, &MainWindow::flashSyncPressed);
+    connect(ui->buttonRamSync, &QToolButton::clicked, this, &MainWindow::ramSyncPressed);
+    connect(ui->buttonMemSync, &QToolButton::clicked, this, [this]{ memSyncPressed(MEM_MEM); });
     connect(ui->memEdit, &QHexEdit::customContextMenuRequested, this, &MainWindow::memContextMenu);
     connect(ui->flashEdit, &QHexEdit::customContextMenuRequested, this, &MainWindow::memContextMenu);
     connect(ui->ramEdit, &QHexEdit::customContextMenuRequested, this, &MainWindow::memContextMenu);
@@ -430,14 +430,14 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     ui->actionDisableMenuBar->setVisible(false);
 #endif
 
-    stopIcon.addPixmap(QPixmap(":/icons/resources/icons/stop.png"));
-    runIcon.addPixmap(QPixmap(":/icons/resources/icons/run.png"));
-    saveIcon.addPixmap(QPixmap(":/icons/resources/icons/import.png"));
-    loadIcon.addPixmap(QPixmap(":/icons/resources/icons/export.png"));
-    editIcon.addPixmap(QPixmap(":/icons/resources/icons/wizard.png"));
-    removeIcon.addPixmap(QPixmap(":/icons/resources/icons/exit.png"));
-    searchIcon.addPixmap(QPixmap(":/icons/resources/icons/search.png"));
-    gotoIcon.addPixmap(QPixmap(":/icons/resources/icons/goto.png"));
+    stopIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/stop.png")));
+    runIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/run.png")));
+    saveIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/import.png")));
+    loadIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/export.png")));
+    editIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/wizard.png")));
+    removeIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/exit.png")));
+    searchIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/search.png")));
+    gotoIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/goto.png")));
 
     setMemoryDocks();
     optLoadFiles(opts);
@@ -785,7 +785,7 @@ void MainWindow::showEvent(QShowEvent *e) {
     e->accept();
 }
 
-void MainWindow::createMemoryDock(QString title) {
+void MainWindow::createMemoryDock(const QString &title) {
     DockWidget *dw;
 
     memoryDocks++;
@@ -1260,7 +1260,7 @@ void MainWindow::screenshotSave(const QString& nameFilter, const QString& defaul
     dialog.setFileMode(QFileDialog::AnyFile);
     dialog.setDirectory(currDir);
     dialog.setNameFilter(nameFilter);
-    dialog.setWindowTitle("Save Screen");
+    dialog.setWindowTitle(tr("Save Screen"));
     dialog.setDefaultSuffix(defaultSuffix);
     dialog.exec();
 
@@ -1378,7 +1378,7 @@ void RecordingThread::run() {
 
 void MainWindow::showAbout() {
     QMessageBox *aboutBox = new QMessageBox(this);
-    aboutBox->setIconPixmap(QPixmap(":/icons/resources/icons/icon.png"));
+    aboutBox->setIconPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/icon.png")));
     aboutBox->setWindowTitle(tr("About CEmu"));
 
     QAbstractButton *buttonUpdateCheck = aboutBox->addButton(tr("Check for updates"), QMessageBox::ActionRole);
@@ -1551,7 +1551,7 @@ void MainWindow::changeVariableList() {
                 // Do not translate - things rely on those names.
                 QString var_type_str = calc_var_type_names[var.type];
                 if (calc_var_is_asmprog(&var)) {
-                    var_type_str += " (ASM)";
+                    var_type_str += QStringLiteral(" (ASM)");
                 }
 
                 QTableWidgetItem *var_name = new QTableWidgetItem(calc_var_name_to_utf8(var.name));
@@ -1961,7 +1961,7 @@ void MainWindow::drawNextDisassembleLine() {
 
         if (useLabel) {
             if (disasm.baseAddress > 511 || (disasm.baseAddress < 512 && sit->second[0] == '_')) {
-                formattedLine = QString("<pre><b><font color='#444'>%1</font></b>     %2</pre>")
+                formattedLine = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b>     %2</pre>"))
                                         .arg(int2hex(disasm.baseAddress, 6),
                                              QString::fromStdString(sit->second) + ":");
 
@@ -1974,18 +1974,18 @@ void MainWindow::drawNextDisassembleLine() {
             sit++;
         } else {
             // Some round symbol things
-            breakpointSymbols = QString("<font color='#A3FFA3'>%1</font><font color='#A3A3FF'>%2</font><font color='#FFA3A3'>%3</font>")
-                                        .arg((disasmHighlight.rWatch  ? "&#9679;" : " "),
-                                             (disasmHighlight.wWatch ? "&#9679;" : " "),
-                                             (disasmHighlight.xBreak  ? "&#9679;" : " "));
+            breakpointSymbols = QString(QStringLiteral("<font color='#A3FFA3'>%1</font><font color='#A3A3FF'>%2</font><font color='#FFA3A3'>%3</font>"))
+                                        .arg((disasmHighlight.rWatch  ? QStringLiteral("&#9679;") : QStringLiteral(" ")),
+                                             (disasmHighlight.wWatch ? QStringLiteral("&#9679;") : QStringLiteral(" ")),
+                                             (disasmHighlight.xBreak  ? QStringLiteral("&#9679;") : QStringLiteral(" ")));
 
             // Simple syntax highlighting
             instructionArgsHighlighted = QString::fromStdString(disasm.instruction.arguments)
-                                                  .replace(QRegularExpression("(\\$[0-9a-fA-F]+)"), "<font color='green'>\\1</font>") // hex numbers
-                                                  .replace(QRegularExpression("(^\\d)"), "<font color='blue'>\\1</font>")             // dec number
-                                                  .replace(QRegularExpression("([()])"), "<font color='#600'>\\1</font>");            // parentheses
+                                                  .replace(QRegularExpression(QStringLiteral("(\\$[0-9a-fA-F]+)")), QStringLiteral("<font color='green'>\\1</font>")) // hex numbers
+                                                  .replace(QRegularExpression(QStringLiteral("(^\\d)")), QStringLiteral("<font color='blue'>\\1</font>"))             // dec number
+                                                  .replace(QRegularExpression(QStringLiteral("([()])")), QStringLiteral("<font color='#600'>\\1</font>"));            // parentheses
 
-            formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2 %3  <font color='darkblue'>%4%5</font>%6</pre>")
+            formattedLine = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2 %3  <font color='darkblue'>%4%5</font>%6</pre>"))
                                     .arg(int2hex(disasm.baseAddress, 6),
                                         breakpointSymbols,
                                         QString::fromStdString(disasm.instruction.data).leftJustified(12, ' '),
@@ -2256,7 +2256,7 @@ bool MainWindow::ipcSetup() {
 }
 
 void MainWindow::ipcHandleCommandlineReceive(QDataStream &stream) {
-    consoleStr("[CEmu] Received IPC: command line options\n");
+    consoleStr(QStringLiteral("[CEmu] Received IPC: command line options\n"));
     CEmuOpts o;
 
     stream >> o.useUnthrottled
@@ -2335,7 +2335,7 @@ void MainWindow::ipcReceived() {
             close();
             break;
         default:
-           consoleStr("[CEmu] IPC Unknown\n");
+           consoleStr(QStringLiteral("[CEmu] IPC Unknown\n"));
            break;
     }
 }
@@ -2355,7 +2355,7 @@ void MainWindow::ipcChangeID() {
 
 void MainWindow::ipcSpawnRandom() {
     QStringList arguments;
-    arguments << "--id" << randomString(15);
+    arguments << QStringLiteral("--id") << randomString(15);
 
     QProcess *myProcess = new QProcess(this);
     myProcess->startDetached(execPath, arguments);

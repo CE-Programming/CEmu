@@ -237,13 +237,13 @@ void MainWindow::syncHexView(int posa, QHexEdit *edit) {
 
 void MainWindow::flashSyncPressed() {
     qint64 posa = ui->flashEdit->cursorPosition();
-    memcpy(mem.flash.block, ui->flashEdit->data().data(), 0x400000);
+    memcpy(mem.flash.block, ui->flashEdit->data().constData(), 0x400000);
     syncHexView(posa, ui->flashEdit);
 }
 
 void MainWindow::ramSyncPressed() {
     qint64 posa = ui->ramEdit->cursorPosition();
-    memcpy(mem.ram.block, ui->ramEdit->data().data(), 0x65800);
+    memcpy(mem.ram.block, ui->ramEdit->data().constData(), 0x65800);
     syncHexView(posa, ui->ramEdit);
 }
 

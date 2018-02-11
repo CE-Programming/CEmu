@@ -184,8 +184,8 @@ void RomSelection::saveDumpProgram() {
 
     if (filename.isEmpty()) { return; }
 
-    if (!filename.endsWith(QLatin1Literal(".8xp"), Qt::CaseInsensitive)) {
-        filename += QLatin1Literal(".8xp");
+    if (!filename.endsWith(QStringLiteral(".8xp"), Qt::CaseInsensitive)) {
+        filename += QStringLiteral(".8xp");
     }
 
     file = fopen_utf8(filename.toStdString().c_str(), "wb");
@@ -208,8 +208,8 @@ void RomSelection::saveROMImage() {
 
     if  (filename.isEmpty()) { return; }
 
-    if (!filename.endsWith(QLatin1Literal(".rom"), Qt::CaseInsensitive)) {
-        filename += QLatin1Literal(".rom");
+    if (!filename.endsWith(QStringLiteral(".rom"), Qt::CaseInsensitive)) {
+        filename += QStringLiteral(".rom");
     }
 
     saveRom = fopen_utf8(filename.toStdString().c_str(), "wb");

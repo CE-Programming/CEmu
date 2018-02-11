@@ -11,15 +11,15 @@
 class QHexEdit : public QAbstractScrollArea {
     Q_OBJECT
 
-    Q_PROPERTY(bool addressArea READ addressArea WRITE setAddressArea)
-    Q_PROPERTY(qint64 addressOffset READ addressOffset WRITE setAddressOffset)
-    Q_PROPERTY(bool asciiArea READ asciiArea WRITE setAsciiArea)
-    Q_PROPERTY(qint64 cursorPosition READ cursorPosition WRITE setCursorPosition)
+    Q_PROPERTY(bool addressArea READ addressArea WRITE setAddressArea CONSTANT)
+    Q_PROPERTY(qint64 addressOffset READ addressOffset WRITE setAddressOffset CONSTANT)
+    Q_PROPERTY(bool asciiArea READ asciiArea WRITE setAsciiArea CONSTANT)
+    Q_PROPERTY(qint64 cursorPosition READ cursorPosition WRITE setCursorPosition CONSTANT)
     Q_PROPERTY(QByteArray data READ data WRITE setData NOTIFY dataChanged)
-    Q_PROPERTY(bool highlighting READ highlighting WRITE setHighlighting)
-    Q_PROPERTY(QColor highlightingColor READ highlightingColor WRITE setHighlightingColor)
-    Q_PROPERTY(QColor selectionColor READ selectionColor WRITE setSelectionColor)
-    Q_PROPERTY(QFont font READ font WRITE setFont)
+    Q_PROPERTY(bool highlighting READ highlighting WRITE setHighlighting CONSTANT)
+    Q_PROPERTY(QColor highlightingColor READ highlightingColor WRITE setHighlightingColor CONSTANT)
+    Q_PROPERTY(QColor selectionColor READ selectionColor WRITE setSelectionColor CONSTANT)
+    Q_PROPERTY(QFont font READ font WRITE setFont CONSTANT)
 
 public:
 

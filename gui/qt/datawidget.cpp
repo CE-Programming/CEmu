@@ -26,7 +26,7 @@ void DataWidget::updateAllHighlights() {
 
 QString DataWidget::getSelectedAddress() {
     if (!isEnabled()) {
-        return QString("000000");
+        return QStringLiteral("000000");
     }
     QTextCursor c = textCursor();
     c.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);

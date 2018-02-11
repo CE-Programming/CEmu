@@ -344,12 +344,12 @@ private:
     void setAutoEquates(bool enable);
 
     // Create memory views
-    void createMemoryDock(QString title);
+    void createMemoryDock(const QString &title);
 
     // Creating bootable images
     bool checkForCEmuBootImage();
     void exportCEmuBootImage();
-    bool loadCEmuBootImage(const QString& bootImagePath);
+    bool loadCEmuBootImage(const QString &bootImagePath);
     void resetSettingsIfLoadedCEmuBootableImage();
 
     // MAIN IMPLEMENTATION ROUTINES

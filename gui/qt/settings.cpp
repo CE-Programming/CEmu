@@ -236,8 +236,9 @@ void MainWindow::setLcdSpi(bool state) {
 
 void MainWindow::setLcdDma(bool state) {
     ui->checkDma->setChecked(state);
-    settings->setValue(SETTING_DEBUGGER_IGNORE_DMA, state);
-    debugger.ignoreDmaCycles = state;
+    settings->setValue(SETTING_DEBUGGER_IGNORE_DMA, !state);
+    ui->cycleView->setText(QString::number(!state ? debugger.cycleCountNoDma : debugger.cycleCount));
+    debugger.ignoreDmaCycles = !state;
 }
 
 void MainWindow::setFocusSetting(bool state) {
@@ -347,8 +348,8 @@ void MainWindow::setKeypadColor(unsigned int color) {
 
 void MainWindow::setCalcSkinTopFromType() {
     bool is83 = get_device_type() == TI83PCE;
-    ui->calcSkinTop->setStyleSheet(is83 ? ".QFrame { border-image: url(:/skin/resources/skin/ti83pce.png) 0 0 0 0 stretch stretch; }"
-                                        : ".QFrame { border-image: url(:/skin/resources/skin/ti84pce.png) 0 0 0 0 stretch stretch; }");
+    ui->calcSkinTop->setStyleSheet(is83 ? QStringLiteral(".QFrame { border-image: url(:/skin/resources/skin/ti83pce.png) 0 0 0 0 stretch stretch; }")
+                                        : QStringLiteral(".QFrame { border-image: url(:/skin/resources/skin/ti84pce.png) 0 0 0 0 stretch stretch; }"));
 }
 
 void MainWindow::setImagePath() {
@@ -484,7 +485,7 @@ void MainWindow::checkForUpdates(bool forceInfoBox) {
             } else {
                 QMessageBox updateInfoBox(this);
                 updateInfoBox.addButton(QMessageBox::Ok);
-                updateInfoBox.setIconPixmap(QPixmap(":/icons/resources/icons/icon.png"));
+                updateInfoBox.setIconPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/icon.png")));
                 updateInfoBox.setWindowTitle(tr("CEmu update"));
                 updateInfoBox.setText(tr("<b>A new version of CEmu is available!</b>"
                                          "<br/>"
@@ -570,19 +571,19 @@ void MainWindow::selectKeypadColor() {
     QString name = sender()->objectName();
     unsigned int color = KEYPAD_BLACK;
 
-    if (name == "buttonWhite")     color = KEYPAD_WHITE;
-    if (name == "buttonBlack")     color = KEYPAD_BLACK;
-    if (name == "buttonGolden")    color = KEYPAD_GOLDEN;
-    if (name == "buttonPlum")      color = KEYPAD_PLUM;
-    if (name == "buttonPink")      color = KEYPAD_PINK;
-    if (name == "buttonRed")       color = KEYPAD_RED;
-    if (name == "buttonLightning") color = KEYPAD_LIGHTNING;
-    if (name == "buttonTrueBlue")  color = KEYPAD_TRUE_BLUE;
-    if (name == "buttonDenim")     color = KEYPAD_DENIM;
-    if (name == "buttonSilver")    color = KEYPAD_SILVER;
-    if (name == "buttonSpaceGrey") color = KEYPAD_SPACEGREY;
-    if (name == "buttonCoral")     color = KEYPAD_CORAL;
-    if (name == "buttonMint")      color = KEYPAD_MINT;
+    if (name == QStringLiteral("buttonWhite"))     color = KEYPAD_WHITE;
+    if (name == QStringLiteral("buttonBlack"))     color = KEYPAD_BLACK;
+    if (name == QStringLiteral("buttonGolden"))    color = KEYPAD_GOLDEN;
+    if (name == QStringLiteral("buttonPlum"))      color = KEYPAD_PLUM;
+    if (name == QStringLiteral("buttonPink"))      color = KEYPAD_PINK;
+    if (name == QStringLiteral("buttonRed"))       color = KEYPAD_RED;
+    if (name == QStringLiteral("buttonLightning")) color = KEYPAD_LIGHTNING;
+    if (name == QStringLiteral("buttonTrueBlue"))  color = KEYPAD_TRUE_BLUE;
+    if (name == QStringLiteral("buttonDenim"))     color = KEYPAD_DENIM;
+    if (name == QStringLiteral("buttonSilver"))    color = KEYPAD_SILVER;
+    if (name == QStringLiteral("buttonSpaceGrey")) color = KEYPAD_SPACEGREY;
+    if (name == QStringLiteral("buttonCoral"))     color = KEYPAD_CORAL;
+    if (name == QStringLiteral("buttonMint"))      color = KEYPAD_MINT;
 
     setKeypadColor(color);
 }
@@ -653,9 +654,9 @@ void MainWindow::setPreRevisionI(bool state) {
 void MainWindow::setDockBoundaries(bool state) {
     settings->setValue(SETTING_WINDOW_SEPARATOR, state);
     if (state) {
-        setStyleSheet("QMainWindow::separator{ width: 0px; height: 0px; }");
+        setStyleSheet(QStringLiteral("QMainWindow::separator{ width: 0px; height: 0px; }"));
     } else {
-        setStyleSheet("QMainWindow::separator{ width: 4px; height: 4px; }");
+        setStyleSheet(QStringLiteral("QMainWindow::separator{ width: 4px; height: 4px; }"));
     }
 }
 
@@ -681,7 +682,7 @@ void MainWindow::setRecentInfo() {
     if (settings->value(SETTING_RECENT_SAVE).toBool()) {
         for (int i = 0; i < paths.size(); i++) {
             QString path = paths.at(i);
-            bool select = selects.at(i) == "y";
+            bool select = selects.at(i) == QStringLiteral("y");
             sendingHandler->addFile(path, select);
         }
     }
