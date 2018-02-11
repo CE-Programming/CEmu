@@ -27,9 +27,6 @@ signals:
     void sendDebugCommand(int reason, uint32_t addr);
     void debugInputRequested(bool);
 
-    // LCD update
-    void updateLcd(double emuFps);
-
     // I/O
     void consoleStr(const QString& str);
     void consoleErrStr(const QString& str);
@@ -54,11 +51,6 @@ public slots:
     bool stop();
     void reset();
     void load();
-
-    // LCD
-    void setFrameskip(int value);
-    void setMode(bool state);
-    void drawLcd();
 
     // Debugging
     void setDebugMode(bool);
@@ -110,11 +102,6 @@ private:
     std::chrono::steady_clock::time_point lastTime;
     std::mutex mutex;
     std::condition_variable cv;
-
-    // true = emulate spi
-    bool spiMode;
-    int skip = 0;
-    int frameskip = 0;
 };
 
 // For friends

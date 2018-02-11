@@ -57,10 +57,6 @@ void gui_debugger_send_command(int reason, uint32_t addr) {
     emu_thread->sendDebugCommand(reason, addr);
 }
 
-void gui_lcd_update(void) {
-    emu_thread->drawLcd();
-}
-
 void gui_debugger_raise_or_disable(bool entered) {
     if (entered) {
         emu_thread->raiseDebugger();
@@ -82,33 +78,6 @@ EmuThread::EmuThread(QObject *p) : QThread(p) {
 
 void EmuThread::reset() {
     doReset = true;
-}
-
-void EmuThread::drawLcd() {
-    if (skip) {
-        skip--;
-    } else {
-        skip = frameskip;
-        if (spiMode) {
-            memcpy(lcd_gui_buffer, spi.display, sizeof(spi.display));
-        } else {
-            lcd_drawframe(lcd_gui_buffer, lcd.control & 1 << 11 ? lcd.data : nullptr, lcd.data_end, lcd.control, LCD_SIZE);
-        }
-#ifdef PNG_WRITE_APNG_SUPPORTED
-        apng_add_frame(lcd_gui_buffer);
-#endif
-        double emuFps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP));
-        emit updateLcd(emuFps / (frameskip + 1));
-    }
-}
-
-void EmuThread::setMode(bool state) {
-    spiMode = state;
-}
-
-void EmuThread::setFrameskip(int value) {
-    frameskip = value;
-    skip = value;
 }
 
 void EmuThread::setEmuSpeed(int value) {
@@ -291,8 +260,7 @@ bool EmuThread::stop() {
     }
 
     lcd_gui_callback = NULL;
-    lcd_gui_buffer = NULL;
-
+    lcd_gui_callback_data = NULL;
     exiting = true;
     cpu.next = 0;
 

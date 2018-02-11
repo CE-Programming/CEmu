@@ -20,8 +20,8 @@ extern "C" {
 #define LCD_RAM_OFFSET (0x40000)
 
 /* Set this callback function pointer from the GUI. Called in lcd_event() */
-extern void (*lcd_gui_callback)(void);
-extern void *lcd_gui_buffer;
+extern void (*lcd_gui_callback)(void*);
+extern void *lcd_gui_callback_data;
 
 enum lcd_comp {
     LCD_SYNC,

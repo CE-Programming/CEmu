@@ -3,6 +3,7 @@
 
 #include <QtWidgets/QWidget>
 #include <QtCore/QTimer>
+#include <QtCore/QMutex>
 #include <chrono>
 
 #include "../../core/lcd.h"
@@ -13,7 +14,13 @@ class LCDWidget : public QWidget {
 public:
     explicit LCDWidget(QWidget *p = Q_NULLPTR);
     QImage getImage();
-    void setup();
+    void setMain();
+    void draw();
+    void setFrameskip(int value);
+    void setMode(bool state);
+
+signals:
+    void updateLcd(double emuFps);
 
 public slots:
     double refresh();
@@ -42,6 +49,7 @@ private:
     bool drag = false;
     QRect left, right;
     QImage image;
+    QMutex mutex;
 
     // for dragable roms
     QString dragROM;
@@ -49,6 +57,9 @@ private:
 
     unsigned int array[ARRAY_SIZE];
     int index = 0;
+    bool spiMode;
+    int skip = 0;
+    int frameskip = 0;
 };
 
 #endif

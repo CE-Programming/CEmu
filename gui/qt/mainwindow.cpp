@@ -233,9 +233,9 @@ MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui
     connect(this, &MainWindow::load, &emu, &EmuThread::load);
 
     // LCD Update
-    connect(&emu, &EmuThread::updateLcd, this, &MainWindow::updateLcd, Qt::QueuedConnection);
-    connect(this, &MainWindow::updateMode, &emu, &EmuThread::setMode);
-    connect(this, &MainWindow::updateFrameskip, &emu, &EmuThread::setFrameskip);
+    connect(ui->lcd, &LCDWidget::updateLcd, this, &MainWindow::updateLcd, Qt::QueuedConnection);
+    connect(this, &MainWindow::updateMode, ui->lcd, &LCDWidget::setMode);
+    connect(this, &MainWindow::updateFrameskip, ui->lcd, &LCDWidget::setFrameskip);
 
     // Capture
     connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
@@ -1041,7 +1041,7 @@ void MainWindow::exportRom() {
 void MainWindow::started(bool success) {
     guiEmuValid = success;
     if (success) {
-        ui->lcd->setup();
+        ui->lcd->setMain();
         setCalcSkinTopFromType();
         setKeypadColor(settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
     } else {
@@ -1052,7 +1052,7 @@ void MainWindow::started(bool success) {
 void MainWindow::restored(bool success) {
     guiEmuValid = success;
     if (success) {
-        ui->lcd->setup();
+        ui->lcd->setMain();
         setCalcSkinTopFromType();
         setKeypadColor(settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
     } else {

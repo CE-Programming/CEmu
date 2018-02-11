@@ -18,7 +18,9 @@
 
 LCDWidget::LCDWidget(QWidget *p) : QWidget(p) {
     installEventFilter(keypadBridge);
+    mutex.lock();
     image = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGBX8888);
+    mutex.unlock();
 }
 
 void LCDWidget::paintEvent(QPaintEvent*) {
@@ -32,7 +34,9 @@ void LCDWidget::paintEvent(QPaintEvent*) {
     // Interpolation only for < 100% scale
     c.setRenderHint(QPainter::SmoothPixmapTransform, cw.width() < LCD_WIDTH);
     if (control.ports[5] & 1 << 4) {
+        mutex.lock();
         c.drawImage(cw, image);
+        mutex.unlock();
         if (backlight.factor < 1) {
             c.fillRect(cw, QColor(0, 0, 0, (1 - backlight.factor) * 255));
         }
@@ -82,7 +86,10 @@ void LCDWidget::dragLeaveEvent(QDragLeaveEvent *e) {
 }
 
 QImage LCDWidget::getImage() {
-    return image;
+    mutex.lock();
+    QImage ret(image);
+    mutex.unlock();
+    return ret;
 }
 
 double LCDWidget::refresh() {
@@ -94,8 +101,43 @@ double LCDWidget::refresh() {
     return guiFps;
 }
 
-void LCDWidget::setup() {
+void LCDWidget::setMain() {
+    mutex.lock();
     image.fill(Qt::black);
-    lcd_gui_callback = gui_lcd_update;
-    lcd_gui_buffer = image.bits();
+    mutex.unlock();
+    lcd_gui_callback_data = this;
+    lcd_gui_callback = [](void *lcd) { reinterpret_cast<LCDWidget*>(lcd)->draw(); };
 }
+
+void LCDWidget::setMode(bool state) {
+    spiMode = state;
+}
+
+void LCDWidget::setFrameskip(int value) {
+    frameskip = value;
+    skip = value;
+}
+
+// called by the emu thread to draw the lcd
+void LCDWidget::draw() {
+    if (skip) {
+        skip--;
+    } else {
+        skip = frameskip;
+        if (spiMode) {
+            mutex.lock();
+            memcpy(image.bits(), spi.display, sizeof(spi.display));
+            mutex.unlock();
+        } else {
+            mutex.lock();
+            lcd_drawframe(image.bits(), lcd.control & 1 << 11 ? lcd.data : nullptr, lcd.data_end, lcd.control, LCD_SIZE);
+            mutex.unlock();
+        }
+#ifdef PNG_WRITE_APNG_SUPPORTED
+        apng_add_frame(image.constBits());
+#endif
+        double emuFps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP));
+        emit updateLcd(emuFps / (frameskip + 1));
+    }
+}
+
