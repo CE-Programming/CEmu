@@ -65,24 +65,22 @@ void close_debugger(void) {
 }
 
 void open_debugger(int reason, uint32_t data) {
-    if (inDebugger) {
+    if (inDebugger || (debugger.ignore && (reason > HIT_MIN && reason < HIT_MAX))) {
         return;
     }
 
-    if (debugger.ignore && (reason == HIT_PORT_READ_WATCHPOINT || reason == HIT_PORT_WRITE_WATCHPOINT ||
-                            reason == HIT_READ_WATCHPOINT || reason == HIT_WRITE_WATCHPOINT ||
-                            reason == HIT_EXEC_BREAKPOINT)) {
-        return;
-    }
-
-    if ((reason == DBG_STEP) && debugger.stepOverFirstStep) {
-        if (((cpu.events & EVENT_DEBUG_STEP_NEXT)
-                && !(debugger.data.block[cpu.registers.PC] & DBG_TEMP_EXEC_BREAKPOINT)) || (cpu.events & EVENT_DEBUG_STEP_OUT)) {
+    if (reason == DBG_STEP && debugger.stepOverFirstStep) {
+        if ((cpu.events & EVENT_DEBUG_STEP_OUT) ||
+           ((cpu.events & EVENT_DEBUG_STEP_NEXT) && !(debugger.data.block[cpu.registers.PC] & DBG_TEMP_EXEC_BREAKPOINT))) {
             debugger.stepOverFirstStep = false;
             gui_debugger_raise_or_disable(false);
             return;
         }
         debug_clear_temp_break();
+    }
+
+    if (reason == HIT_EXEC_BREAKPOINT && (cpu.events & EVENT_DEBUG_STEP)) {
+        return;
     }
 
     debugger.cpuCycles = cpu.cycles;
@@ -105,12 +103,11 @@ void open_debugger(int reason, uint32_t data) {
         debugger.bufferErrPos = 0;
     }
 
-    inDebugger = true;
-
 #ifndef __EMSCRIPTEN__
     std::unique_lock<std::mutex> lock(debugM);
 #endif
     gui_debugger_send_command(reason, data);
+    inDebugger = true;
 #ifndef __EMSCRIPTEN__
     debugCV.wait(lock);
 #endif
