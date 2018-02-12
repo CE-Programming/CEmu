@@ -197,12 +197,11 @@ static void emu_main_loop_inner(void) {
     throttle_triggered = false;
 
     while (!exiting) {
+        sched_process_pending_events();
         if (cpu.events & EVENT_RESET) {
             gui_console_printf("[CEmu] Reset triggered.\n");
             asic_reset();
         }
-
-        sched_process_pending_events();
         if (throttle_triggered) break;
         cpu_execute();
     } // while
@@ -232,11 +231,11 @@ void emu_loop(bool reset) {
 
     exiting = false;
     while (!exiting) {
+        sched_process_pending_events();
         if (cpu.events & EVENT_RESET) {
             gui_console_printf("[CEmu] Reset triggered.\n");
             asic_reset();
         }
-        sched_process_pending_events();
         cpu_execute();
     }
 
