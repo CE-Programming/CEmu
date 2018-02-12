@@ -2,11 +2,14 @@ lessThan(QT_MAJOR_VERSION, 5) : error("You need at least Qt 5.5 to build CEmu!")
 lessThan(QT_MINOR_VERSION, 5) : error("You need at least Qt 5.5 to build CEmu!")
 
 # CEmu version
+CEMU_RELEASE = true
 isEmpty(CEMU_VERSION) {
     GIT_VERSION = $$system(git describe --abbrev=7 --dirty --always --tags)
     CEMU_VERSION = 1.0dev_$$GIT_VERSION
+    CEMU_RELEASE = false
 }
 DEFINES += CEMU_VERSION=\\\"$$CEMU_VERSION\\\"
+DEFINES += CEMU_RELEASE=$$CEMU_RELEASE
 
 # Continuous Integration (variable checked later)
 CI = $$(CI)

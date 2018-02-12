@@ -446,7 +446,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setGuiSkip(settings->value(SETTING_SCREEN_FRAMESKIP, 0).toUInt());
     setEmuSpeed(settings->value(SETTING_EMUSPEED, 100).toUInt());
     setFont(settings->value(SETTING_DEBUGGER_TEXT_SIZE, 9).toUInt());
-    setAutoCheckForUpdates(settings->value(SETTING_AUTOUPDATE, false).toBool());
+    setAutoCheckForUpdates(settings->value(SETTING_AUTOUPDATE, CEMU_RELEASE).toBool());
     setAutoSaveState(settings->value(SETTING_RESTORE_ON_OPEN, true).toBool());
     setSaveDebug(settings->value(SETTING_DEBUGGER_RESTORE_ON_OPEN, false).toBool());
     setSpaceDisasm(settings->value(SETTING_DEBUGGER_ADD_DISASM_SPACE, false).toBool());

@@ -468,7 +468,7 @@ void MainWindow::setAutoCheckForUpdates(int state) {
 }
 
 void MainWindow::checkForUpdates(bool forceInfoBox) {
-    if (QStringLiteral(CEMU_VERSION).contains(QStringLiteral("dev"))) {
+    if (!CEMU_RELEASE) {
         if (forceInfoBox) {
             QMessageBox::warning(this, MSG_WARNING, tr("Checking updates is disabled for development builds"));
         }
