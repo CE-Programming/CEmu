@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.0" language="nl_NL">
+<TS version="2.1" language="nl_NL">
 <context>
     <name>BasicCodeViewerWindow</name>
     <message>
@@ -20,7 +20,7 @@
     <message>
         <location filename="../dockwidget.cpp" line="6"/>
         <source>Screen</source>
-        <translation type="unfinished">Scherm</translation>
+        <translation>Scherm</translation>
     </message>
 </context>
 <context>
@@ -921,12 +921,12 @@
     <message>
         <location filename="../mainwindow.ui" line="2481"/>
         <source>Hz</source>
-        <translation type="unfinished"></translation>
+        <translation>Hz</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2755"/>
         <source>Zero</source>
-        <translation type="unfinished"></translation>
+        <translation>Nul</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3447"/>
@@ -946,22 +946,22 @@
     <message>
         <location filename="../mainwindow.ui" line="3814"/>
         <source>Lock</source>
-        <translation type="unfinished"></translation>
+        <translation>Bevriezen</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5029"/>
         <source>Control</source>
-        <translation type="unfinished"></translation>
+        <translation>Control</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5467"/>
         <source>Base</source>
-        <translation type="unfinished"></translation>
+        <translation>Base</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5511"/>
         <source>Current</source>
-        <translation type="unfinished"></translation>
+        <translation>Huidige</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5816"/>
@@ -1233,7 +1233,7 @@
         <source>English</source>
         <translation>English</translation>
     </message>
-    <message utf8="true">
+    <message>
         <location filename="../mainwindow.ui" line="9398"/>
         <source>Français</source>
         <translation>Français</translation>
@@ -1243,7 +1243,7 @@
         <source>Nederlands</source>
         <translation>Nederlands</translation>
     </message>
-    <message utf8="true">
+    <message>
         <location filename="../mainwindow.ui" line="9408"/>
         <source>Español</source>
         <translation>Español</translation>
@@ -1563,12 +1563,12 @@ Opslaan mislukt! Geef het a.u.b. door aan de makers van dit programma.</translat
     <message>
         <location filename="../mainwindow.cpp" line="1213"/>
         <source>Actual FPS: </source>
-        <translation>Actuele FPS:</translation>
+        <translation>Actuele FPS: </translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1263"/>
         <source>Save Screen</source>
-        <translation type="unfinished"></translation>
+        <translation>Scherm opslaan</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1283"/>
