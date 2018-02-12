@@ -156,7 +156,7 @@ void MainWindow::debuggerImportFile(const QString &filename) {
 
     disasm.map.clear();
     disasm.reverseMap.clear();
-    for (QString file : currentEquateFiles) {
+    for (QString &file : currentEquateFiles) {
         equatesAddFile(file);
     }
 }
@@ -272,7 +272,8 @@ QString MainWindow::debuggerGetFile(int mode) {
     dialog.exec();
 
     if (!dialog.selectedFiles().isEmpty()) {
-        filename = dialog.selectedFiles().first();
+        QStringList selected = dialog.selectedFiles();
+        filename = selected.first();
     }
 
     currDir = dialog.directory();
@@ -1556,7 +1557,7 @@ void MainWindow::equatesAddFile(const QString &fileName) {
             if (split.size() != 4) {
                 break;
             }
-            equatesAddEquate(split[0], split[1].right(6).toUInt(Q_NULLPTR, 16));
+            equatesAddEquate(split[0], split[1].rightRef(6).toUInt(Q_NULLPTR, 16));
         }
     } else {
         QRegularExpression equatesRegexp(QStringLiteral("^\\h*\\??\\h*([.A-Z_a-z][.\\w]*)\\h*(?::?=|\\h\\.?equ(?!\\d))\\h*([%@$]\\S+|\\d\\S*[boh]?)\\h*(?:;.*)?$"),
@@ -1775,16 +1776,16 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
 
         if (name.length() > 3) return QMainWindow::eventFilter(obj, e);
 
-        if (name == "hl")  memGoto(MEM_MEM, ui->hlregView->text());
-        if (name == "de")  memGoto(MEM_MEM, ui->deregView->text());
-        if (name == "bc")  memGoto(MEM_MEM, ui->bcregView->text());
-        if (name == "ix")  memGoto(MEM_MEM, ui->ixregView->text());
-        if (name == "iy")  memGoto(MEM_MEM, ui->iyregView->text());
-        if (name == "hl_") memGoto(MEM_MEM, ui->hl_regView->text());
-        if (name == "de_") memGoto(MEM_MEM, ui->de_regView->text());
-        if (name == "bc_") memGoto(MEM_MEM, ui->bc_regView->text());
-        if (name == "spl") memGoto(MEM_MEM, ui->splregView->text());
-        if (name == "pc")  memGoto(MEM_MEM, ui->pcregView->text());
+        if (name == QStringLiteral("hl"))  memGoto(MEM_MEM, ui->hlregView->text());
+        if (name == QStringLiteral("de"))  memGoto(MEM_MEM, ui->deregView->text());
+        if (name == QStringLiteral("bc"))  memGoto(MEM_MEM, ui->bcregView->text());
+        if (name == QStringLiteral("ix"))  memGoto(MEM_MEM, ui->ixregView->text());
+        if (name == QStringLiteral("iy"))  memGoto(MEM_MEM, ui->iyregView->text());
+        if (name == QStringLiteral("hl_")) memGoto(MEM_MEM, ui->hl_regView->text());
+        if (name == QStringLiteral("de_")) memGoto(MEM_MEM, ui->de_regView->text());
+        if (name == QStringLiteral("bc_")) memGoto(MEM_MEM, ui->bc_regView->text());
+        if (name == QStringLiteral("spl")) memGoto(MEM_MEM, ui->splregView->text());
+        if (name == QStringLiteral("pc"))  memGoto(MEM_MEM, ui->pcregView->text());
     } else if (e->type() == QEvent::MouseMove) {
         QString name = obj->objectName();
 
@@ -1889,14 +1890,14 @@ void MainWindow::updateStackView() {
 
     if (adl) {
         for (int i=0; i<80; i+=3) {
-            formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2</pre>")
+            formattedLine = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2</pre>"))
                                     .arg(int2hex(cpu.registers.SPL+i, 6),
                                          int2hex(mem_peek_word(cpu.registers.SPL+i, 1), 6));
             ui->stackView->appendHtml(formattedLine);
         }
     } else {
         for (int i=0; i<60; i+=2) {
-            formattedLine = QString("<pre><b><font color='#444'>%1</font></b> %2</pre>")
+            formattedLine = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2</pre>"))
                                     .arg(int2hex(cpu.registers.SPS+i, 4),
                                          int2hex(mem_peek_word(cpu.registers.SPS+i, 0), 4));
             ui->stackView->appendHtml(formattedLine);

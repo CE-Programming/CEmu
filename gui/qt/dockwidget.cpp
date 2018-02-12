@@ -3,7 +3,7 @@
 #include <QtWidgets/QTabWidget>
 #include <QtGui/QHoverEvent>
 
-DockWidget::DockWidget(QWidget *parent) : DockWidget{"Screen", parent} { }
+DockWidget::DockWidget(QWidget *parent) : DockWidget{tr("Screen"), parent} { }
 DockWidget::DockWidget(QTabWidget *tabs, QWidget *parent) : DockWidget{tabs->tabText(0), parent} {
     setWindowIcon(tabs->tabIcon(0));
     setWidget(tabs->widget(0));

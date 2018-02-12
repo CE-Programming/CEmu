@@ -220,7 +220,7 @@ namespace tivars
 
     void TH_0x05::initTokens()
     {
-        QFile inputFile(":/other/tivarslib/TypeHandlers/programs_tokens.csv");
+        QFile inputFile(QStringLiteral(":/other/tivarslib/TypeHandlers/programs_tokens.csv"));
         if (inputFile.open(QIODevice::ReadOnly))
         {
             vector<vector<string>> lines;
