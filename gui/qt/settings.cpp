@@ -719,6 +719,9 @@ void MainWindow::checkVersion() {
     }
 
     if (ask) {
+        if (CEMU_RELEASE) {
+            setAutoCheckForUpdates(true);
+        }
         QMessageBox::StandardButton reply;
         reply = QMessageBox::question(Q_NULLPTR, tr("Different CEmu version detected"),
                                                  tr("This version of CEmu is not compatible with your settings, probably made by an older version. "
