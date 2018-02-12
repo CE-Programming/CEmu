@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1017</width>
-    <height>1034</height>
+    <width>992</width>
+    <height>1005</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -4265,7 +4265,7 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>536</width>
+             <width>511</width>
              <height>347</height>
             </rect>
            </property>
@@ -6195,7 +6195,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>2</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -6912,96 +6912,62 @@
             <string>General</string>
            </attribute>
            <layout class="QGridLayout" name="gridLayout_16">
-            <item row="0" column="0" rowspan="2" colspan="2">
-             <widget class="QGroupBox" name="generalgroup">
-              <property name="title">
-               <string>Configuration</string>
+            <item row="5" column="0" colspan="2">
+             <spacer name="verticalSpacer_11">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayout_30">
-               <property name="leftMargin">
-                <number>6</number>
-               </property>
-               <property name="topMargin">
-                <number>6</number>
-               </property>
-               <property name="rightMargin">
-                <number>6</number>
-               </property>
-               <property name="bottomMargin">
-                <number>6</number>
-               </property>
-               <item>
-                <widget class="QCheckBox" name="checkUpdates">
-                 <property name="focusPolicy">
-                  <enum>Qt::NoFocus</enum>
-                 </property>
-                 <property name="text">
-                  <string>Automatically check for updates</string>
-                 </property>
-                 <property name="checked">
-                  <bool>false</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QCheckBox" name="checkSaveRestore">
-                 <property name="enabled">
-                  <bool>true</bool>
-                 </property>
-                 <property name="focusPolicy">
-                  <enum>Qt::NoFocus</enum>
-                 </property>
-                 <property name="text">
-                  <string>Automatically save and restore state</string>
-                 </property>
-                 <property name="checked">
-                  <bool>false</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QCheckBox" name="checkAlwaysOnTop">
-                 <property name="focusPolicy">
-                  <enum>Qt::NoFocus</enum>
-                 </property>
-                 <property name="text">
-                  <string>Always show on top of other windows</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QCheckBox" name="checkFocus">
-                 <property name="text">
-                  <string>Pause emulation on focus change</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
             </item>
-            <item row="3" column="0" colspan="2">
-             <widget class="QGroupBox" name="groupKeys">
+            <item row="2" column="0" colspan="2">
+             <widget class="QGroupBox" name="groupBox_4">
               <property name="title">
-               <string>Key bindings</string>
+               <string>Display</string>
               </property>
-              <layout class="QHBoxLayout" name="horizontalLayout_14">
-               <property name="spacing">
-                <number>4</number>
-               </property>
+              <layout class="QGridLayout" name="gridLayout_19">
                <property name="leftMargin">
                 <number>6</number>
                </property>
                <property name="topMargin">
                 <number>6</number>
                </property>
-               <property name="rightMargin">
-                <number>6</number>
-               </property>
                <property name="bottomMargin">
                 <number>6</number>
                </property>
-               <item>
-                <widget class="QRadioButton" name="radioCEmuKeys">
+               <item row="0" column="4">
+                <spacer name="horizontalSpacer_7">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>0</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item row="0" column="2">
+                <widget class="QLabel" name="label_26">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Scale:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="0">
+                <widget class="QCheckBox" name="checkSkin">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                    <horstretch>0</horstretch>
@@ -7012,18 +6978,15 @@
                   <enum>Qt::NoFocus</enum>
                  </property>
                  <property name="text">
-                  <string notr="true">CEmu</string>
+                  <string>Skin</string>
                  </property>
                  <property name="checked">
                   <bool>false</bool>
                  </property>
-                 <property name="autoExclusive">
-                  <bool>true</bool>
-                 </property>
                 </widget>
                </item>
-               <item>
-                <widget class="QRadioButton" name="radioTilEmKeys">
+               <item row="0" column="3">
+                <widget class="QSpinBox" name="scaleLCD">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                    <horstretch>0</horstretch>
@@ -7031,53 +6994,40 @@
                   </sizepolicy>
                  </property>
                  <property name="focusPolicy">
-                  <enum>Qt::NoFocus</enum>
+                  <enum>Qt::ClickFocus</enum>
                  </property>
-                 <property name="text">
-                  <string notr="true">TilEm</string>
+                 <property name="suffix">
+                  <string>%</string>
                  </property>
-                 <property name="autoExclusive">
-                  <bool>true</bool>
+                 <property name="minimum">
+                  <number>50</number>
                  </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QRadioButton" name="radioWabbitemuKeys">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
+                 <property name="maximum">
+                  <number>410</number>
                  </property>
-                 <property name="focusPolicy">
-                  <enum>Qt::NoFocus</enum>
+                 <property name="singleStep">
+                  <number>25</number>
                  </property>
-                 <property name="text">
-                  <string notr="true">Wabbitemu</string>
-                 </property>
-                 <property name="autoExclusive">
-                  <bool>true</bool>
+                 <property name="value">
+                  <number>100</number>
                  </property>
                 </widget>
                </item>
-               <item>
-                <widget class="QRadioButton" name="radiojsTIfiedKeys">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
+               <item row="0" column="1">
+                <spacer name="horizontalSpacer_24">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
                  </property>
-                 <property name="focusPolicy">
-                  <enum>Qt::NoFocus</enum>
+                 <property name="sizeType">
+                  <enum>QSizePolicy::Fixed</enum>
                  </property>
-                 <property name="text">
-                  <string notr="true">jsTIfied</string>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>20</height>
+                  </size>
                  </property>
-                 <property name="autoExclusive">
-                  <bool>true</bool>
-                 </property>
-                </widget>
+                </spacer>
                </item>
               </layout>
              </widget>
@@ -7860,62 +7810,106 @@ QPushButton:pressed {
               </layout>
              </widget>
             </item>
-            <item row="5" column="0" colspan="2">
-             <spacer name="verticalSpacer_11">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>0</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="2" column="0" colspan="2">
-             <widget class="QGroupBox" name="groupBox_4">
+            <item row="0" column="0" rowspan="2" colspan="2">
+             <widget class="QGroupBox" name="generalgroup">
               <property name="title">
-               <string>Display</string>
+               <string>Configuration</string>
               </property>
-              <layout class="QGridLayout" name="gridLayout_19">
+              <layout class="QGridLayout" name="gridLayout_11">
                <property name="leftMargin">
                 <number>6</number>
                </property>
                <property name="topMargin">
                 <number>6</number>
                </property>
+               <property name="rightMargin">
+                <number>6</number>
+               </property>
                <property name="bottomMargin">
                 <number>6</number>
                </property>
-               <item row="0" column="4">
-                <spacer name="horizontalSpacer_7">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>0</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item row="0" column="2">
-                <widget class="QLabel" name="label_26">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
+               <item row="1" column="1">
+                <widget class="QCheckBox" name="checkPortable">
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
                  </property>
                  <property name="text">
-                  <string>Scale:</string>
+                  <string>Use portable configuration</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="0">
+                <widget class="QCheckBox" name="checkFocus">
+                 <property name="text">
+                  <string>Pause emulation on focus change</string>
                  </property>
                 </widget>
                </item>
                <item row="0" column="0">
-                <widget class="QCheckBox" name="checkSkin">
+                <widget class="QCheckBox" name="checkSaveRestore">
+                 <property name="enabled">
+                  <bool>true</bool>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="text">
+                  <string>Automatically save and restore state</string>
+                 </property>
+                 <property name="checked">
+                  <bool>false</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QCheckBox" name="checkUpdates">
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="text">
+                  <string>Automatically check for updates</string>
+                 </property>
+                 <property name="checked">
+                  <bool>false</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QCheckBox" name="checkAlwaysOnTop">
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="text">
+                  <string>Always show on top of other windows</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="3" column="0" colspan="2">
+             <widget class="QGroupBox" name="groupKeys">
+              <property name="title">
+               <string>Key bindings</string>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_14">
+               <property name="spacing">
+                <number>4</number>
+               </property>
+               <property name="leftMargin">
+                <number>6</number>
+               </property>
+               <property name="topMargin">
+                <number>6</number>
+               </property>
+               <property name="rightMargin">
+                <number>6</number>
+               </property>
+               <property name="bottomMargin">
+                <number>6</number>
+               </property>
+               <item>
+                <widget class="QRadioButton" name="radioCEmuKeys">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                    <horstretch>0</horstretch>
@@ -7926,15 +7920,18 @@ QPushButton:pressed {
                   <enum>Qt::NoFocus</enum>
                  </property>
                  <property name="text">
-                  <string>Skin</string>
+                  <string notr="true">CEmu</string>
                  </property>
                  <property name="checked">
                   <bool>false</bool>
                  </property>
+                 <property name="autoExclusive">
+                  <bool>true</bool>
+                 </property>
                 </widget>
                </item>
-               <item row="0" column="3">
-                <widget class="QSpinBox" name="scaleLCD">
+               <item>
+                <widget class="QRadioButton" name="radioTilEmKeys">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                    <horstretch>0</horstretch>
@@ -7942,40 +7939,53 @@ QPushButton:pressed {
                   </sizepolicy>
                  </property>
                  <property name="focusPolicy">
-                  <enum>Qt::ClickFocus</enum>
+                  <enum>Qt::NoFocus</enum>
                  </property>
-                 <property name="suffix">
-                  <string>%</string>
+                 <property name="text">
+                  <string notr="true">TilEm</string>
                  </property>
-                 <property name="minimum">
-                  <number>50</number>
-                 </property>
-                 <property name="maximum">
-                  <number>410</number>
-                 </property>
-                 <property name="singleStep">
-                  <number>25</number>
-                 </property>
-                 <property name="value">
-                  <number>100</number>
+                 <property name="autoExclusive">
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>
-               <item row="0" column="1">
-                <spacer name="horizontalSpacer_24">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
+               <item>
+                <widget class="QRadioButton" name="radioWabbitemuKeys">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
                  </property>
-                 <property name="sizeType">
-                  <enum>QSizePolicy::Fixed</enum>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
                  </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>20</width>
-                   <height>20</height>
-                  </size>
+                 <property name="text">
+                  <string notr="true">Wabbitemu</string>
                  </property>
-                </spacer>
+                 <property name="autoExclusive">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QRadioButton" name="radiojsTIfiedKeys">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="text">
+                  <string notr="true">jsTIfied</string>
+                 </property>
+                 <property name="autoExclusive">
+                  <bool>true</bool>
+                 </property>
+                </widget>
                </item>
               </layout>
              </widget>
@@ -7987,7 +7997,20 @@ QPushButton:pressed {
             <string>Emulation</string>
            </attribute>
            <layout class="QGridLayout" name="gridLayout_10">
-            <item row="1" column="0">
+            <item row="4" column="0">
+             <spacer name="verticalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="2" column="0">
              <widget class="QGroupBox" name="romgroup">
               <property name="title">
                <string>File Locations</string>
@@ -8008,8 +8031,8 @@ QPushButton:pressed {
                <property name="spacing">
                 <number>5</number>
                </property>
-               <item row="5" column="1">
-                <widget class="QLineEdit" name="savedDebugPath">
+               <item row="0" column="1">
+                <widget class="QLineEdit" name="rompathView">
                  <property name="focusPolicy">
                   <enum>Qt::NoFocus</enum>
                  </property>
@@ -8021,48 +8044,10 @@ QPushButton:pressed {
                  </property>
                 </widget>
                </item>
-               <item row="4" column="1">
-                <widget class="QLineEdit" name="savedImagePath">
-                 <property name="focusPolicy">
-                  <enum>Qt::NoFocus</enum>
-                 </property>
-                 <property name="frame">
-                  <bool>false</bool>
-                 </property>
-                 <property name="readOnly">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="0">
-                <widget class="QLabel" name="label">
+               <item row="1" column="0">
+                <widget class="QLabel" name="label_16">
                  <property name="text">
-                  <string>ROM Image</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="2">
-                <widget class="QPushButton" name="buttonChangeSavedImagePath">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                 <property name="focusPolicy">
-                  <enum>Qt::NoFocus</enum>
-                 </property>
-                 <property name="text">
-                  <string>Change path</string>
-                 </property>
-                 <property name="flat">
-                  <bool>false</bool>
+                  <string>Settings</string>
                  </property>
                 </widget>
                </item>
@@ -8091,11 +8076,15 @@ QPushButton:pressed {
                  </property>
                 </widget>
                </item>
-               <item row="1" column="1">
-                <widget class="QLineEdit" name="settingsPath">
-                 <property name="enabled">
-                  <bool>true</bool>
+               <item row="3" column="0">
+                <widget class="QLabel" name="label_6">
+                 <property name="text">
+                  <string>Saved Image</string>
                  </property>
+                </widget>
+               </item>
+               <item row="4" column="1">
+                <widget class="QLineEdit" name="savedDebugPath">
                  <property name="focusPolicy">
                   <enum>Qt::NoFocus</enum>
                  </property>
@@ -8108,27 +8097,38 @@ QPushButton:pressed {
                 </widget>
                </item>
                <item row="4" column="0">
-                <widget class="QLabel" name="label_6">
-                 <property name="text">
-                  <string>Saved Image</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QLabel" name="label_16">
-                 <property name="text">
-                  <string>Settings</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="5" column="0">
                 <widget class="QLabel" name="label_15">
                  <property name="text">
                   <string>Saved Debug</string>
                  </property>
                 </widget>
                </item>
-               <item row="5" column="2">
+               <item row="3" column="2">
+                <widget class="QPushButton" name="buttonChangeSavedImagePath">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="text">
+                  <string>Change path</string>
+                 </property>
+                 <property name="flat">
+                  <bool>false</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="2">
                 <widget class="QPushButton" name="buttonChangeSavedDebugPath">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
@@ -8153,8 +8153,11 @@ QPushButton:pressed {
                  </property>
                 </widget>
                </item>
-               <item row="0" column="1">
-                <widget class="QLineEdit" name="rompathView">
+               <item row="1" column="1">
+                <widget class="QLineEdit" name="settingsPath">
+                 <property name="enabled">
+                  <bool>true</bool>
+                 </property>
                  <property name="focusPolicy">
                   <enum>Qt::NoFocus</enum>
                  </property>
@@ -8166,36 +8169,30 @@ QPushButton:pressed {
                  </property>
                 </widget>
                </item>
-               <item row="2" column="1">
-                <widget class="QCheckBox" name="checkPortable">
+               <item row="3" column="1">
+                <widget class="QLineEdit" name="savedImagePath">
                  <property name="focusPolicy">
                   <enum>Qt::NoFocus</enum>
                  </property>
-                 <property name="text">
-                  <string>Use portable configuration</string>
+                 <property name="frame">
+                  <bool>false</bool>
+                 </property>
+                 <property name="readOnly">
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>
-               <item row="3" column="1">
-                <spacer name="verticalSpacer_12">
-                 <property name="orientation">
-                  <enum>Qt::Vertical</enum>
+               <item row="0" column="0">
+                <widget class="QLabel" name="label">
+                 <property name="text">
+                  <string>ROM Image</string>
                  </property>
-                 <property name="sizeType">
-                  <enum>QSizePolicy::Fixed</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>20</width>
-                   <height>10</height>
-                  </size>
-                 </property>
-                </spacer>
+                </widget>
                </item>
               </layout>
              </widget>
             </item>
-            <item row="0" column="0">
+            <item row="1" column="0">
              <widget class="QGroupBox" name="groupBox">
               <property name="title">
                <string>Display / Emulation Speed</string>
@@ -8382,19 +8379,6 @@ QPushButton:pressed {
                </item>
               </layout>
              </widget>
-            </item>
-            <item row="3" column="0">
-             <spacer name="verticalSpacer_3">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>0</height>
-               </size>
-              </property>
-             </spacer>
             </item>
            </layout>
           </widget>
@@ -8924,7 +8908,7 @@ QPushButton:pressed {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1017</width>
+     <width>992</width>
      <height>22</height>
     </rect>
    </property>
