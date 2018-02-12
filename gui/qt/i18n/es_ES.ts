@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.0" language="es_ES">
+<TS version="2.1" language="es_ES">
 <context>
     <name>BasicCodeViewerWindow</name>
     <message>
@@ -1446,7 +1446,7 @@
         <source>English</source>
         <translation></translation>
     </message>
-    <message utf8="true">
+    <message>
         <location filename="../mainwindow.ui" line="9398"/>
         <source>Français</source>
         <translation></translation>
@@ -1456,7 +1456,7 @@
         <source>Nederlands</source>
         <translation></translation>
     </message>
-    <message utf8="true">
+    <message>
         <location filename="../mainwindow.ui" line="9408"/>
         <source>Español</source>
         <translation></translation>
@@ -1598,7 +1598,7 @@ Saving failed! Please let someone who maintains this know.</source>
     <message>
         <location filename="../mainwindow.cpp" line="1213"/>
         <source>Actual FPS: </source>
-        <translation>FPS real:</translation>
+        <translation>FPS real: </translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1263"/>

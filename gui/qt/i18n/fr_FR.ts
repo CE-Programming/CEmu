@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.0" language="fr_FR">
+<TS version="2.1" language="fr_FR">
 <context>
     <name>BasicCodeViewerWindow</name>
     <message>
@@ -20,7 +20,7 @@
     <message>
         <location filename="../dockwidget.cpp" line="6"/>
         <source>Screen</source>
-        <translation type="unfinished">Ecran</translation>
+        <translation>Écran</translation>
     </message>
 </context>
 <context>
@@ -415,12 +415,12 @@
     <message>
         <location filename="../mainwindow.ui" line="2481"/>
         <source>Hz</source>
-        <translation type="unfinished"></translation>
+        <translation>Hz</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2755"/>
         <source>Zero</source>
-        <translation type="unfinished"></translation>
+        <translation>RàZ</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3447"/>
@@ -440,7 +440,7 @@
     <message>
         <location filename="../mainwindow.ui" line="3814"/>
         <source>Lock</source>
-        <translation type="unfinished"></translation>
+        <translation>Vérouiller</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4989"/>
@@ -450,17 +450,17 @@
     <message>
         <location filename="../mainwindow.ui" line="5029"/>
         <source>Control</source>
-        <translation type="unfinished"></translation>
+        <translation>Contrôle</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5467"/>
         <source>Base</source>
-        <translation type="unfinished"></translation>
+        <translation>Base</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5511"/>
         <source>Current</source>
-        <translation type="unfinished"></translation>
+        <translation>Actuel</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5800"/>
@@ -1413,7 +1413,7 @@
         <source>English</source>
         <translation></translation>
     </message>
-    <message utf8="true">
+    <message>
         <location filename="../mainwindow.ui" line="9398"/>
         <source>Français</source>
         <translation></translation>
@@ -1423,7 +1423,7 @@
         <source>Nederlands</source>
         <translation></translation>
     </message>
-    <message utf8="true">
+    <message>
         <location filename="../mainwindow.ui" line="9408"/>
         <source>Español</source>
         <translation></translation>
@@ -1567,7 +1567,7 @@ Sauvegarde échouée ! Veuillez contacter un développeur.</translation>
     <message>
         <location filename="../mainwindow.cpp" line="1263"/>
         <source>Save Screen</source>
-        <translation type="unfinished"></translation>
+        <translation>Enregistrer l&apos;écran</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1283"/>
