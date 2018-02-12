@@ -27,8 +27,8 @@ public:
         : RectKey{config, {x - left, y - 9, left + 18 + right, 9}, {x, y, 18, 12},
                   {labelWidth, labelHeight}, 4, 4, 4, 4,
                   config.otherColor, config.textColor, labelText, secondText, alphaText,
-                  Qt::AlignHCenter | (labelText.contains("^") ? Qt::AlignTop : Qt::AlignVCenter),
-                  Qt::AlignVCenter | (alphaText.isNull() ? labelText == "on" ?
+                  Qt::AlignHCenter | (labelText.contains(QStringLiteral("^")) ? Qt::AlignTop : Qt::AlignVCenter),
+                  Qt::AlignVCenter | (alphaText.isNull() ? labelText == QStringLiteral("on") ?
                   Qt::AlignRight : Qt::AlignHCenter : Qt::AlignLeft)} { }
 };
 

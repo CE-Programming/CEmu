@@ -61,7 +61,7 @@
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_10">
        <attribute name="title">
@@ -1029,6 +1029,9 @@
                        </colorrole>
                       </disabled>
                      </palette>
+                    </property>
+                    <property name="cursor">
+                     <cursorShape>PointingHandCursor</cursorShape>
                     </property>
                     <property name="mouseTracking">
                      <bool>true</bool>
@@ -6192,7 +6195,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>5</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>

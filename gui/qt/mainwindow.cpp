@@ -52,7 +52,7 @@
 #include "../../tests/autotester/crc32.hpp"
 #include "../../tests/autotester/autotester.h"
 
-MainWindow::MainWindow(CEmuOpts cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow), opts(cliOpts) {
+MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow), opts(cliOpts) {
 
     // Setup translations
     appTranslator.load(QLocale::system().name(), QStringLiteral(":/i18n/i18n/"));
@@ -1265,7 +1265,8 @@ void MainWindow::screenshotSave(const QString& nameFilter, const QString& defaul
     dialog.exec();
 
     if (!(dialog.selectedFiles().isEmpty())) {
-        QString filename = dialog.selectedFiles().first();
+        QStringList selected = dialog.selectedFiles();
+        QString filename = selected.first();
         if (filename.isEmpty()) {
             QFile(temppath).remove();
         } else {
@@ -1324,7 +1325,8 @@ void MainWindow::recordAPNG() {
             path.clear();
 
             if (res == QDialog::Accepted) {
-                QString filename = dialog.selectedFiles().first();
+                QStringList selected = dialog.selectedFiles();
+                QString filename = selected.first();
                 saveAnimated(filename);
             } else {
                 updateAnimatedControls();
@@ -1777,7 +1779,8 @@ void MainWindow::prepareAndOpenJSONConfig() {
         return;
     }
 
-    openJSONConfig(dialog.selectedFiles().first());
+    QStringList selected = dialog.selectedFiles();
+    openJSONConfig(selected.first());
 }
 
 void MainWindow::reloadJSONConfig() {

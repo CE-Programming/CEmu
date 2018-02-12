@@ -123,7 +123,7 @@ void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
 #ifndef Q_OS_WIN
     if (fontId == -2) {
         // Font not loaded yet, load it now!
-        fontId = QFontDatabase::addApplicationFont(":/fonts/resources/custom_fonts/LiberationSansNarrow-Bold.ttf");
+        fontId = QFontDatabase::addApplicationFont(QStringLiteral(":/fonts/resources/custom_fonts/LiberationSansNarrow-Bold.ttf"));
     }
     
     if (fontId != -1) {
@@ -132,11 +132,11 @@ void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
         font.setFamily(family);
     } else {
         // Fallback
-        fprintf(stderr, "Failed to load internal font, using fallback... (%d)\n", fontId);
+        //fprintf(stderr, "Failed to load internal font, using fallback... (%d)\n", fontId);
 #endif
-        font.setFamily("Helvetica Neue Bold");
+        font.setFamily(QStringLiteral("Helvetica Neue Bold"));
         if (!font.exactMatch()) {
-            font.setFamily("Open Sans Bold");
+            font.setFamily(QStringLiteral("Open Sans Bold"));
         }
 #ifndef Q_OS_WIN
     }

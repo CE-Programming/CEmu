@@ -280,7 +280,8 @@ bool Chunks::removeAt(qint64 posa) {
 
 /* Utility functions */
 char Chunks::operator[](qint64 posa) {
-    return data(posa, 1)[0];
+    QByteArray arr(data(posa, 1));
+    return arr[0];
 }
 
 qint64 Chunks::pos() {

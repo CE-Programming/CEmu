@@ -161,7 +161,10 @@ int main(int argc, char *argv[]) {
 
     if (EmuWin.IsResetAll() || EmuWin.IsReload()) {
         qApp->quit();
-        QProcess::startDetached(qApp->arguments()[0]);
+        QStringList args = qApp->arguments();
+        if (args.length()) {
+            QProcess::startDetached(args.first());
+        }
     }
 
     return 0;

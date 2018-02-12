@@ -22,12 +22,13 @@ SendingHandler::SendingHandler(QObject *p, QProgressBar *bar, QTableWidget *t) :
     bar->setTextVisible(false);
     bar->setValue(0);
     bar->setVisible(false);
-    sendIcon.addPixmap(QPixmap(":/icons/resources/icons/variables.png"));
+    sendIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/variables.png")));
 }
 
 void SendingHandler::dropOccured(QDropEvent *e, unsigned int location) {
     if (guiSend || guiReceive || guiDebug) {
-        return e->ignore();
+        e->ignore();
+        return;
     }
 
     const QMimeData* mime_data = e->mimeData();

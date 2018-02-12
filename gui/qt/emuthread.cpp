@@ -160,13 +160,13 @@ void EmuThread::doStuff() {
 
     if (debugger.bufferPos) {
         debugger.buffer[debugger.bufferPos] = '\0';
-        consoleStr(QString(debugger.buffer));
+        emit consoleStr(QString(debugger.buffer));
         debugger.bufferPos = 0;
     }
 
     if (debugger.bufferErrPos) {
         debugger.bufferErr[debugger.bufferErrPos] = '\0';
-        consoleErrStr(QString(debugger.bufferErr));
+        emit consoleErrStr(QString(debugger.bufferErr));
         debugger.bufferErrPos = 0;
     }
 

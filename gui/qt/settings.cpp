@@ -87,6 +87,8 @@ const QString MainWindow::SETTING_DEFAULT_FILE              = QStringLiteral("/c
 const QString MainWindow::SETTING_DEFAULT_ROM_FILE          = QStringLiteral("/cemu_rom.rom");
 const QString MainWindow::SETTING_DEFAULT_DEBUG_FILE        = QStringLiteral("/cemu_debug.ini");
 const QString MainWindow::SETTING_DEFAULT_IMAGE_FILE        = QStringLiteral("/cemu_image.ce");
+const QString MainWindow::TXT_YES                           = QStringLiteral("y");
+const QString MainWindow::TXT_NO                            = QStringLiteral("n");
 
 void MainWindow::setPortableConfig(bool state) {
     ui->checkPortable->setChecked(state);
@@ -667,7 +669,7 @@ void MainWindow::saveRecentInfo() {
     if (settings->value(SETTING_RECENT_SAVE).toBool()) {
         for (int i = 0; i < ui->varLoadedView->rowCount(); i++) {
             paths.append(ui->varLoadedView->item(i, RECENT_PATH)->text());
-            selects.append(ui->varLoadedView->item(i, RECENT_SELECT)->checkState() == Qt::Checked ? "y" : "n");
+            selects.append(ui->varLoadedView->item(i, RECENT_SELECT)->checkState() == Qt::Checked ? TXT_YES : TXT_NO);
         }
     }
 
@@ -682,7 +684,7 @@ void MainWindow::setRecentInfo() {
     if (settings->value(SETTING_RECENT_SAVE).toBool()) {
         for (int i = 0; i < paths.size(); i++) {
             QString path = paths.at(i);
-            bool select = selects.at(i) == QStringLiteral("y");
+            bool select = selects.at(i) == TXT_YES;
             sendingHandler->addFile(path, select);
         }
     }

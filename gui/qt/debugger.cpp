@@ -124,7 +124,7 @@ void MainWindow::debuggerImportFile(const QString &filename) {
     QStringList breakpointAddress = debugInfo.value(QStringLiteral("breakpoints/address")).toStringList();
     QStringList breakpointEnabled = debugInfo.value(QStringLiteral("breakpoints/enable")).toStringList();
     for (i = 0; i < breakpointLabel.size(); i++) {
-        breakpointAdd(breakpointLabel.at(i), hex2int(breakpointAddress.at(i)), breakpointEnabled.at(i) == "y", false);
+        breakpointAdd(breakpointLabel.at(i), hex2int(breakpointAddress.at(i)), breakpointEnabled.at(i) == TXT_YES, false);
     }
 
     // Load the watchpoint information
@@ -134,8 +134,8 @@ void MainWindow::debuggerImportFile(const QString &filename) {
     QStringList watchpointREnabled = debugInfo.value(QStringLiteral("watchpoints/read")).toStringList();
     QStringList watchpointWEnabled = debugInfo.value(QStringLiteral("watchpoints/write")).toStringList();
     for (i = 0; i < watchpointLabel.size(); i++) {
-        unsigned int mask = (watchpointREnabled.at(i) == "y" ? DBG_READ_WATCHPOINT : DBG_NO_HANDLE) |
-                            (watchpointWEnabled.at(i) == "y" ? DBG_WRITE_WATCHPOINT : DBG_NO_HANDLE);
+        unsigned int mask = (watchpointREnabled.at(i) == TXT_YES ? DBG_READ_WATCHPOINT : DBG_NO_HANDLE) |
+                            (watchpointWEnabled.at(i) == TXT_YES ? DBG_WRITE_WATCHPOINT : DBG_NO_HANDLE);
         watchpointAdd(watchpointLabel.at(i), hex2int(watchpointAddress.at(i)), hex2int(watchpointSize.at(i)), mask, false);
     }
 
@@ -145,9 +145,9 @@ void MainWindow::debuggerImportFile(const QString &filename) {
     QStringList portWEnabled = debugInfo.value(QStringLiteral("portmonitor/write")).toStringList();
     QStringList portFEnabled = debugInfo.value(QStringLiteral("portmonitor/freeze")).toStringList();
     for (i = 0; i < portAddress.size(); i++) {
-        unsigned int mask = (portREnabled.at(i) == "y" ? DBG_PORT_READ : DBG_NO_HANDLE)  |
-                            (portWEnabled.at(i) == "y" ? DBG_PORT_WRITE : DBG_NO_HANDLE) |
-                            (portFEnabled.at(i) == "y" ? DBG_PORT_FREEZE : DBG_NO_HANDLE);
+        unsigned int mask = (portREnabled.at(i) == TXT_YES ? DBG_PORT_READ : DBG_NO_HANDLE)  |
+                            (portWEnabled.at(i) == TXT_YES ? DBG_PORT_WRITE : DBG_NO_HANDLE) |
+                            (portFEnabled.at(i) == TXT_YES ? DBG_PORT_FREEZE : DBG_NO_HANDLE);
         portAdd(hex2int(portAddress.at(i)), mask);
     }
 
@@ -209,7 +209,7 @@ void MainWindow::debuggerExportFile(const QString &filename) {
     for(i = 0; i < ui->breakpointView->rowCount(); i++) {
         breakpointLabel.append(ui->breakpointView->item(i, BREAK_LABEL_LOC)->text());
         breakpointAddress.append(ui->breakpointView->item(i, BREAK_ADDR_LOC)->text());
-        breakpointEnabled.append(ui->breakpointView->item(i, BREAK_ENABLE_LOC)->checkState() == Qt::Checked ? "y" : "n");
+        breakpointEnabled.append(ui->breakpointView->item(i, BREAK_ENABLE_LOC)->checkState() == Qt::Checked ? TXT_YES : TXT_NO);
     }
 
     debugInfo.setValue(QStringLiteral("breakpoints/label"), breakpointLabel);
@@ -226,8 +226,8 @@ void MainWindow::debuggerExportFile(const QString &filename) {
         watchpointLabel.append(ui->watchpointView->item(i, WATCH_LABEL_LOC)->text());
         watchpointAddress.append(ui->watchpointView->item(i, WATCH_ADDR_LOC)->text());
         watchpointSize.append(ui->watchpointView->item(i, WATCH_SIZE_LOC)->text());
-        watchpointREnabled.append(ui->watchpointView->item(i, WATCH_READ_LOC)->checkState() == Qt::Checked ? "y" : "n");
-        watchpointWEnabled.append(ui->watchpointView->item(i, WATCH_WRITE_LOC)->checkState() == Qt::Checked ? "y" : "n");
+        watchpointREnabled.append(ui->watchpointView->item(i, WATCH_READ_LOC)->checkState() == Qt::Checked ? TXT_YES : TXT_NO);
+        watchpointWEnabled.append(ui->watchpointView->item(i, WATCH_WRITE_LOC)->checkState() == Qt::Checked ? TXT_YES : TXT_NO);
     }
 
     debugInfo.setValue(QStringLiteral("watchpoints/label"), watchpointLabel);
@@ -243,9 +243,9 @@ void MainWindow::debuggerExportFile(const QString &filename) {
     QStringList portFEnabled;
     for(i = 0; i < ui->portView->rowCount(); i++) {
         portAddress.append(ui->portView->item(i, PORT_ADDR_LOC)->text());
-        portREnabled.append(ui->portView->item(i, PORT_READ_LOC)->checkState() == Qt::Checked ? "y" : "n");
-        portWEnabled.append(ui->portView->item(i, PORT_WRITE_LOC)->checkState() == Qt::Checked ? "y" : "n");
-        portFEnabled.append(ui->portView->item(i, PORT_FREEZE_LOC)->checkState() == Qt::Checked ? "y" : "n");
+        portREnabled.append(ui->portView->item(i, PORT_READ_LOC)->checkState() == Qt::Checked ? TXT_YES : TXT_NO);
+        portWEnabled.append(ui->portView->item(i, PORT_WRITE_LOC)->checkState() == Qt::Checked ? TXT_YES : TXT_NO);
+        portFEnabled.append(ui->portView->item(i, PORT_FREEZE_LOC)->checkState() == Qt::Checked ? TXT_YES : TXT_NO);
     }
 
     debugInfo.setValue(QStringLiteral("portmonitor/address"), portAddress);
@@ -359,7 +359,7 @@ void MainWindow::debuggerExecuteCommand(uint32_t debugAddress, uint8_t command) 
     if (guiDebug) {
         debuggerRaise();
     } else {
-        setDebugState(false);
+        emit setDebugState(false);
     }
 }
 
@@ -537,8 +537,10 @@ void MainWindow::debuggerGUISetState(bool state) {
     foreach (QDockWidget* dock, docks) {
         if (dock->windowTitle().contains(TXT_MEM_DOCK)) {
             QList<QPushButton*> buttons = dock->findChildren<QPushButton*>();
-            dock->findChildren<QHexEdit*>().first()->setEnabled(state);
-            dock->findChildren<QSpinBox*>().first()->setEnabled(state);
+            QList<QHexEdit*> editChildren = dock->findChildren<QHexEdit*>();
+            QList<QSpinBox*> spinChildren = dock->findChildren<QSpinBox*>();
+            editChildren.first()->setEnabled(state);
+            spinChildren.first()->setEnabled(state);
             foreach (QPushButton *button, buttons) {
                 button->setEnabled(state);
             }
@@ -891,9 +893,9 @@ void MainWindow::breakpointGUIAdd() {
 
     // Add the red dot
     if (disasmHighlight.xBreak) {
-        c.insertHtml("<font color='#FFA3A3'>&#9679;</font>");
+        c.insertHtml(QStringLiteral("<font color='#FFA3A3'>&#9679;</font>"));
     } else {
-        c.insertText(" ");
+        c.insertText(QStringLiteral(" "));
     }
 
     if (ui->disassemblyView->labelCheck()) {
@@ -908,7 +910,7 @@ bool MainWindow::breakpointAdd(const QString& label, uint32_t address, bool enab
     // Return if address is already set
     for (int i = 0; i < row; i++) {
         if (ui->breakpointView->item(i, BREAK_ADDR_LOC)->text() == addressStr) {
-            if (addressStr != "000000") {
+            if (addressStr != QStringLiteral("000000")) {
                 if (!softCommand) {
                     ui->breakpointView->selectRow(i);
                     if (toggle) {
@@ -1013,7 +1015,7 @@ bool MainWindow::portAdd(uint16_t port, unsigned int mask) {
     // Return if port is already set
     for (int i = 0; i < row; i++) {
         if (ui->portView->item(i, PORT_ADDR_LOC)->text() == portStr) {
-            if (portStr != "0000") {
+            if (portStr != QStringLiteral("0000")) {
                 return false;
             }
         }
@@ -1220,9 +1222,9 @@ void MainWindow::watchpointGUIAdd() {
 
     // Add the green dot
     if (disasmHighlight.rWatch) {
-        c.insertHtml("<font color='#A3FFA3'>&#9679;</font>");
+        c.insertHtml(QStringLiteral("<font color='#A3FFA3'>&#9679;</font>"));
     } else {
-        c.insertText(" ");
+        c.insertText(QStringLiteral(" "));
     }
 
     c.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
@@ -1231,9 +1233,9 @@ void MainWindow::watchpointGUIAdd() {
 
     // Add the blue dot
     if (disasmHighlight.wWatch) {
-        c.insertHtml("<font color='#A3A3FF'>&#9679;</font>");
+        c.insertHtml(QStringLiteral("<font color='#A3A3FF'>&#9679;</font>"));
     } else {
-        c.insertText(" ");
+        c.insertText(QStringLiteral(" "));
     }
 
     if (ui->disassemblyView->labelCheck()) {
@@ -1257,7 +1259,7 @@ bool MainWindow::watchpointAdd(const QString& label, uint32_t address, uint8_t l
     // Return if address is already set
     for (int i = 0; i < row; i++) {
         if (ui->watchpointView->item(i, WATCH_ADDR_LOC)->text() == addressStr) {
-            if (addressStr != "000000") {
+            if (addressStr != QStringLiteral("000000")) {
                 if (!softCommand) {
                     ui->watchpointView->selectRow(i);
                     if (toggle) {
@@ -1502,7 +1504,7 @@ void MainWindow::equatesRefresh() {
     // reset the map
     disasm.map.clear();
     disasm.reverseMap.clear();
-    for (QString file : currentEquateFiles) {
+    for (QString &file : currentEquateFiles) {
         equatesAddFile(file);
     }
     updateLabels();
@@ -1539,9 +1541,9 @@ void MainWindow::equatesAddFile(const QString &fileName) {
     QTextStream in(&file);
     QString line;
     if (in.readLineInto(&line) && line.isEmpty() &&
-        in.readLineInto(&line) && line.startsWith("IEEE 695 OMF Linker ")) {
-        while ((in.readLineInto(&line) && line != "\f") ||
-               (in.readLineInto(&line) && line != "EXTERNAL DEFINITIONS:"));
+        in.readLineInto(&line) && line.startsWith(QStringLiteral("IEEE 695 OMF Linker "))) {
+        while ((in.readLineInto(&line) && line != QStringLiteral("\f")) ||
+               (in.readLineInto(&line) && line != QStringLiteral("EXTERNAL DEFINITIONS:")));
         if (!in.readLineInto(&line) ||
             !in.readLineInto(&line) ||
             !in.readLineInto(&line) ||
@@ -1557,7 +1559,7 @@ void MainWindow::equatesAddFile(const QString &fileName) {
             equatesAddEquate(split[0], split[1].right(6).toUInt(Q_NULLPTR, 16));
         }
     } else {
-        QRegularExpression equatesRegexp("^\\h*\\??\\h*([.A-Z_a-z][.\\w]*)\\h*(?::?=|\\h\\.?equ(?!\\d))\\h*([%@$]\\S+|\\d\\S*[boh]?)\\h*(?:;.*)?$",
+        QRegularExpression equatesRegexp(QStringLiteral("^\\h*\\??\\h*([.A-Z_a-z][.\\w]*)\\h*(?::?=|\\h\\.?equ(?!\\d))\\h*([%@$]\\S+|\\d\\S*[boh]?)\\h*(?:;.*)?$"),
                                          QRegularExpression::CaseInsensitiveOption);
         do {
             QRegularExpressionMatch matches = equatesRegexp.match(line);
@@ -1766,12 +1768,12 @@ void MainWindow::handleCtrlClickLine(QLineEdit *edit) {
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
     if (!guiDebug) {
-        return false;
+        return QMainWindow::eventFilter(obj, e);
     }
     if (e->type() == QEvent::MouseButtonPress) {
         QString name = obj->objectName();
 
-        if (name.length() > 3) return false;
+        if (name.length() > 3) return QMainWindow::eventFilter(obj, e);
 
         if (name == "hl")  memGoto(MEM_MEM, ui->hlregView->text());
         if (name == "de")  memGoto(MEM_MEM, ui->deregView->text());
@@ -1784,9 +1786,9 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
         if (name == "spl") memGoto(MEM_MEM, ui->splregView->text());
         if (name == "pc")  memGoto(MEM_MEM, ui->pcregView->text());
     } else if (e->type() == QEvent::MouseMove) {
-        QString obj_name = obj->objectName();
+        QString name = obj->objectName();
 
-        if (obj_name.length() < 4) return false;
+        if (name.length() < 4) return QMainWindow::eventFilter(obj, e);
 
         QLineEdit *widget = static_cast<QLineEdit*>(obj);
 
@@ -1814,45 +1816,56 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
             val2 += QStringLiteral("\t") + QString::number(static_cast<int8_t>(num2));
         }
 
-        if (obj_name == "afregView")  t = QStringLiteral("a:\t") + val1 +
-                                          QStringLiteral("\nf:\t") + val0;
-        if (obj_name == "hlregView")  t = QStringLiteral("hl:\t") + val +
-                                          QStringLiteral("\nu:\t") + val2 +
-                                          QStringLiteral("\nh:\t") + val1 +
-                                          QStringLiteral("\nl:\t") + val0;
-        if (obj_name == "deregView")  t = QStringLiteral("de:\t") + val +
-                                          QStringLiteral("\nu:\t") + val2 +
-                                          QStringLiteral("\nd:\t") + val1 +
-                                          QStringLiteral("\ne:\t") + val0;
-        if (obj_name == "bcregView")  t = QStringLiteral("bc:\t") + val +
-                                          QStringLiteral("\nu:\t") + val2 +
-                                          QStringLiteral("\nb:\t") + val1 +
-                                          QStringLiteral("\nc:\t") + val0;
-        if (obj_name == "ixregView")  t = QStringLiteral("ix:\t") + val +
-                                          QStringLiteral("\nixh:\t") + val1 +
-                                          QStringLiteral("\nixl:\t") + val0;
-        if (obj_name == "iyregView")  t = QStringLiteral("iy:\t") + val +
-                                          QStringLiteral("\niyh:\t") + val1 +
-                                          QStringLiteral("\niyl:\t") + val0;
-        if (obj_name == "af_regView") t = QStringLiteral("a':\t") + val1 +
-                                          QStringLiteral("\nf':\t") + val0;
-        if (obj_name == "hl_regView") t = QStringLiteral("hl':\t") + val +
-                                          QStringLiteral("\nu':\t") + val2 +
-                                          QStringLiteral("\nh':\t") + val1 +
-                                          QStringLiteral("\nl':\t") + val0;
-        if (obj_name == "de_regView") t = QStringLiteral("de':\t") + val +
-                                          QStringLiteral("\nu':\t") + val2 +
-                                          QStringLiteral("\nd':\t") + val1 +
-                                          QStringLiteral("\ne':\t") + val0;
-        if (obj_name == "bc_regView") t = QStringLiteral("bc':\t") + val +
-                                          QStringLiteral("\nu':\t") + val2 +
-                                          QStringLiteral("\nb':\t") + val1 +
-                                          QStringLiteral("\nc':\t") + val0;
-        if (obj_name == "rregView")   t = QStringLiteral("r:\t") + val;
+        if (name == QStringLiteral("afregView"))
+            t = QStringLiteral("a:\t") + val1 +
+                QStringLiteral("\nf:\t") + val0;
+        if (name == QStringLiteral("hlregView"))
+            t = QStringLiteral("hl:\t") + val +
+                QStringLiteral("\nu:\t") + val2 +
+                QStringLiteral("\nh:\t") + val1 +
+                QStringLiteral("\nl:\t") + val0;
+        if (name == QStringLiteral("deregView"))
+            t = QStringLiteral("de:\t") + val +
+                QStringLiteral("\nu:\t") + val2 +
+                QStringLiteral("\nd:\t") + val1 +
+                QStringLiteral("\ne:\t") + val0;
+        if (name == QStringLiteral("bcregView"))
+            t = QStringLiteral("bc:\t") + val +
+                QStringLiteral("\nu:\t") + val2 +
+                QStringLiteral("\nb:\t") + val1 +
+                QStringLiteral("\nc:\t") + val0;
+        if (name == QStringLiteral("ixregView"))
+            t = QStringLiteral("ix:\t") + val +
+                QStringLiteral("\nixh:\t") + val1 +
+                QStringLiteral("\nixl:\t") + val0;
+        if (name == QStringLiteral("iyregView"))
+            t = QStringLiteral("iy:\t") + val +
+                QStringLiteral("\niyh:\t") + val1 +
+                QStringLiteral("\niyl:\t") + val0;
+        if (name == QStringLiteral("af_regView"))
+            t = QStringLiteral("a':\t") + val1 +
+                QStringLiteral("\nf':\t") + val0;
+        if (name == QStringLiteral("hl_regView"))
+            t = QStringLiteral("hl':\t") + val +
+            QStringLiteral("\nu':\t") + val2 +
+            QStringLiteral("\nh':\t") + val1 +
+            QStringLiteral("\nl':\t") + val0;
+        if (name == QStringLiteral("de_regView"))
+            t = QStringLiteral("de':\t") + val +
+                QStringLiteral("\nu':\t") + val2 +
+                QStringLiteral("\nd':\t") + val1 +
+                QStringLiteral("\ne':\t") + val0;
+        if (name == QStringLiteral("bc_regView"))
+            t = QStringLiteral("bc':\t") + val +
+                QStringLiteral("\nu':\t") + val2 +
+                QStringLiteral("\nb':\t") + val1 +
+                QStringLiteral("\nc':\t") + val0;
+        if (name == QStringLiteral("rregView"))
+            t = QStringLiteral("r:\t") + val;
 
         QToolTip::showText(static_cast<QMouseEvent*>(e)->globalPos(), t, widget, widget->rect());
     }
-    return false;
+    return QMainWindow::eventFilter(obj, e);
 }
 
 // ------------------------------------------------
@@ -2071,7 +2084,8 @@ void MainWindow::memDocksUpdate() {
     QList<QDockWidget*> docks = findChildren<QDockWidget*>();
     foreach (QDockWidget* dock, docks) {
         if (dock->windowTitle().contains(TXT_MEM_DOCK)) {
-            QHexEdit *edit = dock->findChildren<QHexEdit*>().first();
+            QList<QHexEdit*> editChildren = dock->findChildren<QHexEdit*>();
+            QHexEdit *edit = editChildren.first();
             memEditUpdate(edit, 0);
         }
     }

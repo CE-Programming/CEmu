@@ -80,7 +80,7 @@ void DataWidget::highlightCurrentLine() {
                 return;
             }
 
-            QString weird = "[]()\",./\\-=";
+            QString weird(QStringLiteral("[]()\",./\\-="));
 
             if (weird.contains(cursor.selectedText().at(0))) {
                 cursor.movePosition(QTextCursor::WordLeft);

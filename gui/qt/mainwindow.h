@@ -47,7 +47,7 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow(CEmuOpts opts,QWidget *p = Q_NULLPTR);
+    explicit MainWindow(CEmuOpts &opts, QWidget *p = Q_NULLPTR);
     ~MainWindow();
     bool IsInitialized();
     bool IsReload();
@@ -55,8 +55,8 @@ public:
 
 public slots:
     // Console
-    void consoleStr(const QString& str);
-    void consoleErrStr(const QString& str);
+    void consoleStr(const QString &str);
+    void consoleErrStr(const QString &str);
 
     // Saved/Restored State
     void saved(bool success);
@@ -65,7 +65,7 @@ public slots:
     void restored(bool success);
 
     // ROM Image setting
-    void setRom(const QString& name);
+    void setRom(const QString &name);
 
     // Other
     bool restoreEmuState();
@@ -204,14 +204,14 @@ private:
     void translateExtras(int init);
 
     // Save/Restore
-    void saveToPath(const QString& path);
-    bool restoreFromPath(const QString& path);
+    void saveToPath(const QString &path);
+    bool restoreFromPath(const QString &path);
 
     // Actions
-    void switchTranslator(const QString& lang);
+    void switchTranslator(const QString &lang);
     bool runSetup();
     void screenshot();
-    void screenshotSave(const QString& nameFilter, const QString& defaultSuffix, const QString& temppath);
+    void screenshotSave(const QString &nameFilter, const QString &defaultSuffix, const QString &temppath);
 #ifdef PNG_WRITE_APNG_SUPPORTED
     void recordAPNG();
     void saveAnimated(QString &filename);
@@ -249,13 +249,13 @@ private:
     void portUpdate(int currRow);
     void watchpointUpdate(int row);
 
-    void portSetPreviousAddress(QTableWidgetItem* curr_item);
-    void breakpointSetPreviousAddress(QTableWidgetItem* curr_item);
-    void watchpointSetPreviousAddress(QTableWidgetItem* curr_item);
+    void portSetPreviousAddress(QTableWidgetItem *item);
+    void breakpointSetPreviousAddress(QTableWidgetItem *item);
+    void watchpointSetPreviousAddress(QTableWidgetItem *item);
 
-    void portDataChanged(QTableWidgetItem* item);
-    void breakpointDataChanged(QTableWidgetItem* item);
-    void watchpointDataChanged(QTableWidgetItem* item);
+    void portDataChanged(QTableWidgetItem *item);
+    void breakpointDataChanged(QTableWidgetItem *item);
+    void watchpointDataChanged(QTableWidgetItem *item);
 
     void updateDisasm();
     void updateDisasmView(int sentBase, bool newPane);
@@ -354,13 +354,13 @@ private:
 
     // MAIN IMPLEMENTATION ROUTINES
     bool portAdd(uint16_t port, unsigned int mask);
-    bool breakpointAdd(const QString& label, uint32_t address, bool enabled, bool toggle);
-    bool watchpointAdd(const QString& label, uint32_t address, uint8_t len, unsigned int mask, bool toggle);
+    bool breakpointAdd(const QString &label, uint32_t address, bool enabled, bool toggle);
+    bool watchpointAdd(const QString &label, uint32_t address, uint8_t len, unsigned int mask, bool toggle);
 
-    void screenContextMenu(const QPoint& posa);
+    void screenContextMenu(const QPoint &posa);
     void updateLabels();
     void equatesAddDialog();
-    void equatesAddFile(const QString& fileName);
+    void equatesAddFile(const QString &fileName);
     void equatesAddEquate(const QString &name, uint32_t address);
     void equatesClear();
     void equatesRefresh();
@@ -375,9 +375,9 @@ private:
     void showEmuSpeed(int speed);
 
     // Console
-    void showStatusMsg(const QString& str);
+    void showStatusMsg(const QString &str);
     void consoleOutputChanged();
-    void consoleAppend(const QString& str, const QColor &color = Qt::black);
+    void consoleAppend(const QString &str, const QColor &color = Qt::black);
 
     // Settings
     void adjustScreen();
@@ -401,8 +401,8 @@ private:
     QStringList showVariableFileDialog(QFileDialog::AcceptMode mode, const QString &name_filter, const QString &defaultSuffix);
     void selectFiles();
     void changeVariableList();
-    void variableDoubleClicked(QTableWidgetItem* item);
-    void launchPrgm(const calc_var_t* prgm);
+    void variableDoubleClicked(QTableWidgetItem *item);
+    void launchPrgm(const calc_var_t *prgm);
     void saveSelectedFile();
     void saveSelectedFiles();
     void resendFiles();
@@ -415,7 +415,7 @@ private:
 
     // Autotester
     void dispAutotesterError(int errCode);
-    int openJSONConfig(const QString& jsonPath);
+    int openJSONConfig(const QString &jsonPath);
     void prepareAndOpenJSONConfig();
     void reloadJSONConfig();
     void launchTest();
@@ -443,7 +443,7 @@ private:
 
     // Keypad
     void keymapChanged();
-    void setKeymap(const QString& value);
+    void setKeymap(const QString &value);
 
     // Font
     void setFont(int fontSize);
@@ -522,8 +522,6 @@ private:
     bool closeAfterSave = false;
     bool canScroll = false;
     bool recordingAnimated = false;
-
-    bool firstTimeShown = false;
 
     CEmuOpts opts;
 
@@ -639,6 +637,8 @@ private:
     static const QString SETTING_DEFAULT_ROM_FILE;
     static const QString SETTING_DEFAULT_IMAGE_FILE;
     static const QString SETTING_DEFAULT_DEBUG_FILE;
+    static const QString TXT_YES;
+    static const QString TXT_NO;
 
     QString TITLE_DEBUG;
     QString TITLE_DOCKS;

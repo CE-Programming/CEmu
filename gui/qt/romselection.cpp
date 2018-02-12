@@ -70,7 +70,8 @@ void RomSelection::browseForROM() {
     dialog.setWindowTitle(tr("Select ROM file"));
     dialog.setNameFilter(tr("ROM Image (*.rom *.Rom *.ROM);;All Files (*.*)"));
     if (dialog.exec()) {
-        rom = dialog.selectedFiles().first();
+        QStringList selected = dialog.selectedFiles();
+        rom = selected.first();
         close();
     }
 }

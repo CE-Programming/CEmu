@@ -127,28 +127,28 @@ void MemoryVisualizer::viewToString() {
     QString bpp;
 
     switch((control >> 1) & 7) {
-        case 0: bpp = "1"; break;
-        case 1: bpp = "2"; break;
-        case 2: bpp = "4"; break;
-        case 3: bpp = "8"; break;
-        case 4: bpp = "161555"; break;
-        case 5: bpp = "24"; break;
-        case 6: bpp = "16"; break;
-        case 7: bpp = "12"; break;
+        case 0: bpp = QStringLiteral("1"); break;
+        case 1: bpp = QStringLiteral("2"); break;
+        case 2: bpp = QStringLiteral("4"); break;
+        case 3: bpp = QStringLiteral("8"); break;
+        case 4: bpp = QStringLiteral("161555"); break;
+        case 5: bpp = QStringLiteral("24"); break;
+        case 6: bpp = QStringLiteral("16"); break;
+        case 7: bpp = QStringLiteral("12"); break;
         default: break;
     }
 
     setup.clear();
     setup.append(int2hex(upbase, 6).toLower());
-    setup.append(QString::number(width) + "x" + QString::number(height));
-    setup.append(bpp + QLatin1Literal("bpp"));
-    if (control & 0x400) { setup.append(QLatin1Literal("bepo")); }
-    if (control & 0x200) { setup.append(QLatin1Literal("bebo")); }
-    if (control & 0x100) { setup.append(QLatin1Literal("bgr")); }
-    if (scale != 100) { setup.append(QString::number(scale)+QLatin1Literal("%")); }
-    if (rate != 30) { setup.append(QString::number(rate)+QLatin1Literal("fps")); }
+    setup.append(QString::number(width) + QStringLiteral("x") + QString::number(height));
+    setup.append(bpp + QStringLiteral("bpp"));
+    if (control & 0x400) { setup.append(QStringLiteral("bepo")); }
+    if (control & 0x200) { setup.append(QStringLiteral("bebo")); }
+    if (control & 0x100) { setup.append(QStringLiteral("bgr")); }
+    if (scale != 100) { setup.append(QString::number(scale) + QStringLiteral("%")); }
+    if (rate != 30) { setup.append(QString::number(rate) + QStringLiteral("fps")); }
 
-    ui->edit->setText(setup.join(","));
+    ui->edit->setText(setup.join(QStringLiteral(",")));
 
     float s = scale / 100.0;
     float w = width * s;
