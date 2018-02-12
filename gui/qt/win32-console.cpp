@@ -40,7 +40,7 @@ void MainWindow::installToggleConsole() {
     connect(actionToggleConsole, &QAction::triggered, this, &MainWindow::toggleConsole);
     
     // Check if we opted to not show a window
-    if (!settings->value(SETTING_ENABLE_WIN_CONSOLE, true).toBool()) {
+    if (!settings->value(SETTING_ENABLE_WIN_CONSOLE, false).toBool()) {
         actionToggleConsole->setChecked(false);
         toggleConsole();
     }

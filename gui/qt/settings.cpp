@@ -463,7 +463,7 @@ void MainWindow::setAutoCheckForUpdates(int state) {
     ui->checkUpdates->setChecked(state);
 
     if (state == Qt::Checked) {
-        checkForUpdates(true);
+        checkForUpdates(false);
     }
 }
 
