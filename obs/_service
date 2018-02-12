@@ -3,7 +3,7 @@
     <param name="url">https://github.com/CE-Programming/CEmu.git</param>
     <param name="scm">git</param>
     <param name="filename">CEmu</param>
-    <param name="revision">6baa406</param>
+    <param name="revision">adb2af5</param>
     <param name="version">1.0</param>
   </service>
   <service name="recompress" mode="disabled">
