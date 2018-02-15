@@ -1405,7 +1405,7 @@ void MainWindow::showAbout() {
                          "<br>"
                          "This work is licensed under the GPLv3.<br>"
                          "To view a copy of this license, visit <a href='https://www.gnu.org/licenses/gpl-3.0.html'>https://www.gnu.org/licenses/gpl-3.0.html</a>")
-                         .arg(QStringLiteral(CEMU_VERSION)));
+                         .arg(QStringLiteral(CEMU_VERSION " <small><i>(git: " CEMU_GIT_SHA ")</i></small>")));
     aboutBox->setTextFormat(Qt::RichText);
     aboutBox->setWindowModality(Qt::NonModal);
     aboutBox->setAttribute(Qt::WA_DeleteOnClose);
