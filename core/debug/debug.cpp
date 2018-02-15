@@ -115,7 +115,7 @@ void open_debugger(int reason, uint32_t data) {
     cpu.cycles = debugger.cpuCycles;
     cpu.baseCycles = debugger.cpuBaseCycles;
     cpu.haltCycles = debugger.cpuHaltCycles;
-    cpu.dmaCycles -= debugger.dmaCycles;
+    debugger.dmaCycles -= cpu.dmaCycles;
     debugger.totalCycles -= cpu_total_cycles();
 
     if (cpu.events & EVENT_DEBUG_STEP && !cpu.halted) {
