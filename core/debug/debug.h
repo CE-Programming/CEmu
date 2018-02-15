@@ -60,16 +60,15 @@ typedef struct {
     uint8_t *ports;
 } debug_data_t;
 
-typedef struct {        /* For debugging */
+typedef struct {
     uint32_t cpuCycles, cpuNext;
-    uint64_t cpuBaseCycles, cpuHaltCycles, cpuDmaCycles;
+    uint64_t cpuBaseCycles, cpuHaltCycles, dmaCycles;
     char *buffer;
     char *bufferErr;
     bool resetOpensDebugger;
     uint32_t stepOverInstrSize;
     uint8_t stepOverMode;
     uint32_t stepOutSPL;
-    uint32_t stoAddress;
     uint16_t stepOutSPS;
     uint32_t stepOverInstrEnd;
     uint32_t runUntilAddress;
@@ -80,8 +79,7 @@ typedef struct {        /* For debugging */
     volatile uint32_t bufferPos;
     volatile uint32_t bufferErrPos;
     bool ignoreDmaCycles;
-    int64_t cycleCountNoDma;
-    int64_t cycleCount;
+    int64_t totalCycles;
     bool commands;
 } debug_state_t;
 

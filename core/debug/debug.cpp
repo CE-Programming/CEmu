@@ -87,9 +87,8 @@ void open_debugger(int reason, uint32_t data) {
     debugger.cpuNext = cpu.next;
     debugger.cpuBaseCycles = cpu.baseCycles;
     debugger.cpuHaltCycles = cpu.haltCycles;
-    debugger.cpuDmaCycles = cpu.dmaCycles;
-    debugger.cycleCount += cpu_total_cycles();
-    debugger.cycleCountNoDma = debugger.cycleCount - debugger.cpuDmaCycles;
+    debugger.totalCycles += cpu_total_cycles();
+    debugger.dmaCycles += cpu.dmaCycles;
 
     if (debugger.bufferPos) {
         debugger.buffer[debugger.bufferPos] = '\0';
@@ -116,8 +115,8 @@ void open_debugger(int reason, uint32_t data) {
     cpu.cycles = debugger.cpuCycles;
     cpu.baseCycles = debugger.cpuBaseCycles;
     cpu.haltCycles = debugger.cpuHaltCycles;
-    cpu.dmaCycles = debugger.cpuDmaCycles;
-    debugger.cycleCount -= cpu_total_cycles();
+    cpu.dmaCycles -= debugger.dmaCycles;
+    debugger.totalCycles -= cpu_total_cycles();
 
     if (cpu.events & EVENT_DEBUG_STEP && !cpu.halted) {
         cpu.next = cpu.cycles + 1;

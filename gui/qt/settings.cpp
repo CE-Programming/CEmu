@@ -239,7 +239,7 @@ void MainWindow::setLcdSpi(bool state) {
 void MainWindow::setLcdDma(bool state) {
     ui->checkDma->setChecked(state);
     settings->setValue(SETTING_DEBUGGER_IGNORE_DMA, !state);
-    ui->cycleView->setText(QString::number(!state ? debugger.cycleCountNoDma : debugger.cycleCount));
+    ui->cycleView->setText(QString::number(!state ? debugger.totalCycles : debugger.totalCycles + debugger.dmaCycles));
     debugger.ignoreDmaCycles = !state;
 }
 

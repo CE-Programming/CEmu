@@ -464,7 +464,7 @@ void MainWindow::debuggerUpdateChanges() {
     cpu.IEF1 = ui->checkIEF1->isChecked();
     cpu.IEF2 = ui->checkIEF2->isChecked();
 
-    debugger.cycleCount = static_cast<uint64_t>(ui->cycleView->text().toULongLong());
+    debugger.totalCycles = static_cast<uint64_t>(ui->cycleView->text().toULongLong());
 
     uint32_t uiPC = static_cast<uint32_t>(hex2int(ui->pcregView->text()));
     if (cpu.registers.PC != uiPC) {
@@ -651,7 +651,7 @@ void MainWindow::debuggerGUIPopulate() {
     ui->freqView->setPalette(tmp == ui->freqView->text() ? nocolorback : colorback);
     ui->freqView->setText(tmp);
 
-    tmp = QString::number(debugger.ignoreDmaCycles ? debugger.cycleCountNoDma : debugger.cycleCount);
+    tmp = QString::number(debugger.ignoreDmaCycles ? debugger.totalCycles : debugger.totalCycles + debugger.dmaCycles);
     ui->cycleView->setPalette(tmp == ui->cycleView->text() ? nocolorback : colorback);
     ui->cycleView->setText(tmp);
 
@@ -753,9 +753,8 @@ void MainWindow::debuggerGUIPopulate() {
 // ------------------------------------------------
 
 void MainWindow::debuggerZeroClockCounter() {
-    debugger.cycleCount = 0;
-    debugger.cycleCountNoDma = 0;
-    debugger.cpuDmaCycles = 0;
+    debugger.totalCycles = 0;
+    debugger.dmaCycles = 0;
     ui->cycleView->setText(QStringLiteral("0"));
 }
 
@@ -1541,23 +1540,14 @@ void MainWindow::equatesAddFile(const QString &fileName) {
 
     QTextStream in(&file);
     QString line;
-    if (in.readLineInto(&line) && line.isEmpty() &&
-        in.readLineInto(&line) && line.startsWith(QStringLiteral("IEEE 695 OMF Linker "))) {
-        while ((in.readLineInto(&line) && line != QStringLiteral("\f")) ||
-               (in.readLineInto(&line) && line != QStringLiteral("EXTERNAL DEFINITIONS:")));
-        if (!in.readLineInto(&line) ||
-            !in.readLineInto(&line) ||
-            !in.readLineInto(&line) ||
-            !in.readLineInto(&line)) {
-            QMessageBox::critical(this, MSG_ERROR, tr("Looks like a map file, but no definitions found"));
+    if (in.readLineInto(&line) && line.startsWith(QStringLiteral("Segment"))) {
+        while ((in.readLineInto(&line) && !line.startsWith(QStringLiteral("Label"))));
+        if (!in.readLineInto(&line)) {
             return;
         }
         while (in.readLineInto(&line) && !line.isEmpty()) {
-            QStringList split = line.split(' ', QString::SkipEmptyParts);
-            if (split.size() != 4) {
-                break;
-            }
-            equatesAddEquate(split[0], split[1].rightRef(6).toUInt(Q_NULLPTR, 16));
+            QStringList split = line.split('=', QString::SkipEmptyParts);
+            equatesAddEquate(split.at(0).simplified(), hex2int(split.at(1).simplified()));
         }
     } else {
         QRegularExpression equatesRegexp(QStringLiteral("^\\h*\\??\\h*([.A-Z_a-z][.\\w]*)\\h*(?::?=|\\h\\.?equ(?!\\d))\\h*([%@$]\\S+|\\d\\S*[boh]?)\\h*(?:;.*)?$"),
