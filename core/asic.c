@@ -111,12 +111,9 @@ ti_device_t get_device_type(void) {
     return asic.deviceType;
 }
 
-uint32_t set_cpu_clock_rate(uint32_t new_rate) {
-    uint32_t old_rate = sched.clockRates[CLOCK_CPU];
+void set_cpu_clock_rate(uint32_t new_rate) {
     uint32_t cpu_new_rate[1] = { new_rate };
     sched_set_clocks(1, cpu_new_rate);
-
-    return old_rate;
 }
 
 bool asic_restore(FILE *image) {

@@ -83,7 +83,7 @@
             </property>
             <property name="sizeHint" stdset="0">
              <size>
-              <width>8</width>
+              <width>0</width>
               <height>20</height>
              </size>
             </property>
@@ -92,7 +92,7 @@
           <item>
            <widget class="QPushButton" name="buttonRun">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Maximum">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
@@ -110,25 +110,12 @@
            </widget>
           </item>
           <item>
-           <spacer name="horizontalSpacer_11">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
            <widget class="QPushButton" name="buttonStepIn">
             <property name="enabled">
              <bool>false</bool>
             </property>
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Maximum">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
@@ -146,25 +133,12 @@
            </widget>
           </item>
           <item>
-           <spacer name="horizontalSpacer_13">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
            <widget class="QPushButton" name="buttonStepOver">
             <property name="enabled">
              <bool>false</bool>
             </property>
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Maximum">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
@@ -182,25 +156,12 @@
            </widget>
           </item>
           <item>
-           <spacer name="horizontalSpacer_14">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
            <widget class="QPushButton" name="buttonStepNext">
             <property name="enabled">
              <bool>false</bool>
             </property>
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Maximum">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
@@ -218,25 +179,12 @@
            </widget>
           </item>
           <item>
-           <spacer name="horizontalSpacer_15">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
            <widget class="QPushButton" name="buttonStepOut">
             <property name="enabled">
              <bool>false</bool>
             </property>
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Maximum">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
@@ -254,25 +202,12 @@
            </widget>
           </item>
           <item>
-           <spacer name="horizontalSpacer_19">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
            <widget class="QToolButton" name="buttonToggleBreakpoints">
             <property name="enabled">
              <bool>true</bool>
             </property>
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Maximum">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
@@ -305,7 +240,7 @@
             </property>
             <property name="sizeHint" stdset="0">
              <size>
-              <width>8</width>
+              <width>0</width>
               <height>20</height>
              </size>
             </property>
@@ -314,12 +249,9 @@
          </layout>
         </item>
         <item>
-         <spacer name="verticalSpacer_8">
+         <spacer name="verticalSpacer_4">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::MinimumExpanding</enum>
           </property>
           <property name="sizeHint" stdset="0">
            <size>
@@ -3330,7 +3262,7 @@
          </layout>
         </item>
         <item>
-         <spacer name="verticalSpacer_10">
+         <spacer name="verticalSpacer_7">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>
@@ -4224,16 +4156,13 @@
          </widget>
         </item>
         <item>
-         <spacer name="verticalSpacer_4">
+         <spacer name="verticalSpacer_8">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::MinimumExpanding</enum>
-          </property>
           <property name="sizeHint" stdset="0">
            <size>
-            <width>0</width>
+            <width>20</width>
             <height>0</height>
            </size>
           </property>
@@ -5658,7 +5587,7 @@
            <property name="spacing">
             <number>6</number>
            </property>
-           <item row="0" column="0">
+           <item row="1" column="0">
             <layout class="QHBoxLayout" name="horizontalLayout_3">
              <property name="rightMargin">
               <number>0</number>
@@ -6142,7 +6071,7 @@
          </widget>
         </item>
         <item>
-         <spacer name="verticalSpacer_7">
+         <spacer name="verticalSpacer_10">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>
@@ -6195,7 +6124,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>5</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -6874,12 +6803,9 @@
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::MinimumExpanding</enum>
-          </property>
           <property name="sizeHint" stdset="0">
            <size>
-            <width>0</width>
+            <width>20</width>
             <height>0</height>
            </size>
           </property>
@@ -8551,9 +8477,6 @@ QPushButton:pressed {
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::MinimumExpanding</enum>
-          </property>
           <property name="sizeHint" stdset="0">
            <size>
             <width>20</width>
@@ -8751,6 +8674,9 @@ QPushButton:pressed {
            <enum>QAbstractItemView::ScrollPerPixel</enum>
           </property>
           <property name="sortingEnabled">
+           <bool>false</bool>
+          </property>
+          <property name="cornerButtonEnabled">
            <bool>true</bool>
           </property>
           <attribute name="horizontalHeaderDefaultSectionSize">
@@ -8763,7 +8689,7 @@ QPushButton:pressed {
            <number>50</number>
           </attribute>
           <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
-           <bool>true</bool>
+           <bool>false</bool>
           </attribute>
           <attribute name="horizontalHeaderStretchLastSection">
            <bool>false</bool>

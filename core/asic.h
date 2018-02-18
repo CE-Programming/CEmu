@@ -29,7 +29,7 @@ void asic_reset(void);
 void set_device_type(ti_device_t device);
 ti_device_t get_device_type(void);
 
-uint32_t set_cpu_clock_rate(uint32_t new_rate);
+void set_cpu_clock_rate(uint32_t new_rate);
 
 /* Save/Restore */
 bool asic_restore(FILE *image);

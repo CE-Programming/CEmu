@@ -1,6 +1,7 @@
 #include <QtWidgets/QApplication>
 #include <QtGui/QFontDatabase>
 #include <QtCore/QProcess>
+#include <QtWidgets/QDesktopWidget>
 
 #include "mainwindow.h"
 #include "keypad/qtkeypadbridge.h"
@@ -155,6 +156,22 @@ int main(int argc, char *argv[]) {
     }
     if (!EmuWin.IsResetAll()) {
         EmuWin.show();
+        const QByteArray geometry = EmuWin.settings->value(QStringLiteral("Window/geometry"), QByteArray()).toByteArray();
+        if (geometry.isEmpty()) {
+            const QRect availableGeometry = qApp->desktop()->availableGeometry();
+            EmuWin.resize(availableGeometry.width() / 2, availableGeometry.height() / 2);
+            EmuWin.move((availableGeometry.width() - EmuWin.width()) / 2, (availableGeometry.height() - EmuWin.height()) / 2);
+        } else {
+            EmuWin.restoreGeometry(geometry);
+            EmuWin.restoreState(EmuWin.settings->value(QStringLiteral("Window/state")).toByteArray());
+            if (!EmuWin.isMaximized()) {
+                QSize newSize = EmuWin.settings->value(QStringLiteral("Window/size")).toSize();
+                EmuWin.setMinimumSize(QSize(0, 0));
+                EmuWin.setMaximumSize(QSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX));
+                EmuWin.resize(newSize);
+            }
+        }
+        EmuWin.setUIEditMode(EmuWin.settings->value(QStringLiteral("ui_edit_mode"), true).toBool());
     }
 
     app.exec();

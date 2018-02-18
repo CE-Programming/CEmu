@@ -500,7 +500,6 @@ void MainWindow::debuggerGUISetState(bool state) {
         ui->debuggerLabel->clear();
     }
 
-    ui->tabDebug->setEnabled(state);
     ui->buttonGoto->setEnabled(state);
     ui->buttonStepIn->setEnabled(state);
     ui->buttonStepOver->setEnabled(state);
@@ -537,13 +536,19 @@ void MainWindow::debuggerGUISetState(bool state) {
     QList<QDockWidget*> docks = findChildren<QDockWidget*>();
     foreach (QDockWidget* dock, docks) {
         if (dock->windowTitle().contains(TXT_MEM_DOCK)) {
-            QList<QPushButton*> buttons = dock->findChildren<QPushButton*>();
-            QList<QHexEdit*> editChildren = dock->findChildren<QHexEdit*>();
-            QList<QSpinBox*> spinChildren = dock->findChildren<QSpinBox*>();
-            editChildren.first()->setEnabled(state);
-            spinChildren.first()->setEnabled(state);
-            foreach (QPushButton *button, buttons) {
-                button->setEnabled(state);
+            if (dock->isVisible()) {
+                QList<QPushButton*> buttons = dock->findChildren<QPushButton*>();
+                QList<QToolButton*> tools = dock->findChildren<QToolButton*>();
+                QList<QHexEdit*> editChildren = dock->findChildren<QHexEdit*>();
+                QList<QSpinBox*> spinChildren = dock->findChildren<QSpinBox*>();
+                editChildren.first()->setEnabled(state);
+                spinChildren.first()->setEnabled(state);
+                foreach (QPushButton *button, buttons) {
+                    button->setEnabled(state);
+                }
+                foreach (QToolButton *tool, tools) {
+                    tool->setEnabled(state);
+                }
             }
         }
     }

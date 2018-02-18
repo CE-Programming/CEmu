@@ -251,7 +251,7 @@ void MainWindow::setFocusSetting(bool state) {
 
 void MainWindow::saveMiscSettings() {
     if (!needReload) {
-        settings->setValue(SETTING_WINDOW_STATE,         saveState(WindowStateVersion));
+        settings->setValue(SETTING_WINDOW_STATE,         saveState());
         settings->setValue(SETTING_WINDOW_GEOMETRY,      saveGeometry());
         settings->setValue(SETTING_WINDOW_SIZE,          size());
         settings->setValue(SETTING_WINDOW_MEMORY_DOCKS,  memoryDocks);
@@ -435,8 +435,8 @@ void MainWindow::setUIDocks() {
     docksMenu->addSeparator();
     docksMenu->addAction(actionToggleUI);
 
-    ui->tabWidget->setHidden(true);
-    ui->tabDebug->setHidden(true);
+    ui->tabWidget->close();
+    ui->tabDebug->close();
 }
 
 void MainWindow::toggleUIEditMode() {
@@ -447,10 +447,22 @@ void MainWindow::setUIEditMode(bool mode) {
     uiEditMode = mode;
     settings->setValue(SETTING_UI_EDIT_MODE, uiEditMode);
     actionToggleUI->setChecked(uiEditMode);
-    for (const auto& dock : findChildren<DockWidget *>()) {
+    actionAddMemory->setEnabled(uiEditMode);
+    for (const auto &dock : findChildren<DockWidget *>()) {
         dock->toggleState(uiEditMode);
+        if (dock->isFloating() && !dock->isHidden() && !uiEditMode) {
+            removeDockWidget(dock);
+            dock->show();
+            dock->activateWindow();
+            dock->raise();
+        }
     }
-    setDockBoundaries(!mode);
+    if (uiEditMode) {
+        setDockOptions(QMainWindow::AnimatedDocks | QMainWindow::AllowNestedDocks | QMainWindow::AllowTabbedDocks);
+    } else {
+        setDockOptions(0);
+    }
+    setDockBoundaries(!uiEditMode);
 }
 
 void MainWindow::setThrottle(int mode) {
@@ -691,10 +703,10 @@ void MainWindow::setRecentInfo() {
 }
 
 void MainWindow::setMemoryDocks() {
-    int memories = settings->value(SETTING_WINDOW_MEMORY_DOCKS).toInt();
+    QStringList names = settings->value(SETTING_WINDOW_MEMORY_DOCKS).toStringList();
 
-    for (int i = 0; i < memories; i++) {
-        createMemoryDock(TXT_MEM_DOCK);
+    for (QString &name : names) {
+        createMemoryDock(name);
     }
 }
 

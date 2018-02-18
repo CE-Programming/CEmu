@@ -27,8 +27,8 @@ typedef struct {
     png_bytep row_ptrs[LCD_HEIGHT];
 } apng_t;
 
-bool apng_start(const char *tmp_name, int, int);
-void apng_add_frame(const void *frame);
+bool apng_start(const char *tmp_name, int frameskip);
+void apng_add_frame(const void *frame, double fps);
 bool apng_stop(void);
 bool apng_save(const char *filename, bool optimize);
 

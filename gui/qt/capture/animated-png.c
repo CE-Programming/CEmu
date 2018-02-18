@@ -12,16 +12,14 @@
 
 apng_t apng;
 
-bool apng_start(const char *tmp_name, int fps, int frameskip) {
+bool apng_start(const char *tmp_name, int frameskip) {
 
     // temp file used for saving rgb888 data rather than storing everything in ram
     if (!(apng.tmp = fopen(tmp_name, "w+b"))) {
         return false;
     }
 
-    // set delay rate
-    apng.num = frameskip + 1;
-    apng.den = fps;
+    // set frameskip rate
     apng.frameskip = frameskip;
 
     // init recording items
@@ -32,10 +30,13 @@ bool apng_start(const char *tmp_name, int fps, int frameskip) {
     return true;
 }
 
-void apng_add_frame(const void *frame) {
+void apng_add_frame(const void *frame, double fps) {
     if (!apng.recording) {
         return;
     }
+
+    apng.num = fps;
+    apng.den = 1;
 
     if (!apng.skipped--) {
         apng.skipped = apng.frameskip;

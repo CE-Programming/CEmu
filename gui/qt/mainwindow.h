@@ -52,6 +52,8 @@ public:
     bool IsInitialized();
     bool IsReload();
     bool IsResetAll();
+    void setUIEditMode(bool mode);
+    QSettings *settings = Q_NULLPTR;
 
 public slots:
     // Console
@@ -391,7 +393,6 @@ private:
     void setAutoCheckForUpdates(int state);
     void setSpaceDisasm(bool state);
     void setUIDocks();
-    void setUIEditMode(bool mode);
     void toggleUIEditMode();
     void setSaveDebug(bool state);
     void saveMiscSettings();
@@ -505,7 +506,6 @@ private:
     QLabel speedLabel;
     QLabel fpsLabel;
     QLabel msgLabel;
-    QSettings *settings = Q_NULLPTR;
     QTextCursor disasmOffset;
     bool disasmOffsetSet;
     bool fromPane;
@@ -545,6 +545,7 @@ private:
     QIcon runIcon, stopIcon;
     QIcon saveIcon, loadIcon, editIcon, removeIcon;
     QIcon searchIcon, gotoIcon;
+    QIcon syncIcon;
     QTextCharFormat consoleFormat;
 
     QString prevGotoAddress;
@@ -574,10 +575,8 @@ private:
     bool pauseOnFocus;
     bool loadedCEmuBootImage = false;
     bool optimizeRecording;
-    static const int WindowStateVersion = 0;
 
     // Settings definitions
-
     static const QString SETTING_DEBUGGER_TEXT_SIZE;
     static const QString SETTING_DEBUGGER_ADD_DISASM_SPACE;
     static const QString SETTING_DEBUGGER_RESTORE_ON_OPEN;
@@ -672,7 +671,7 @@ private:
     QMessageBox *warnBox = Q_NULLPTR;
     QProgressBar *progressBar;
     QVector<QHexEdit*> memory;
-    int memoryDocks = 0;
+    QStringList memoryDocks;
 
     static const char *var_extension[];
 #ifdef _WIN32

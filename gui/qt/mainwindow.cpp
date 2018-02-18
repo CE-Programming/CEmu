@@ -439,6 +439,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     removeIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/exit.png")));
     searchIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/search.png")));
     gotoIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/goto.png")));
+    syncIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/refresh.png")));
 
     setMemoryDocks();
     optLoadFiles(opts);
@@ -528,8 +529,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setUIDocks();
     setSlotInfo();
     setRecentInfo();
-
-    setUIEditMode(settings->value(SETTING_UI_EDIT_MODE, true).toBool());
 
     if (settings->value(SETTING_DEBUGGER_RESTORE_ON_OPEN, false).toBool()) {
         if (!opts.debugFile.isEmpty()) {
@@ -752,34 +751,16 @@ void MainWindow::showEvent(QShowEvent *e) {
         setSkinToggle(settings->value(SETTING_SCREEN_SKIN, true).toBool());
         setAlwaysOnTop(settings->value(SETTING_ALWAYS_ON_TOP, false).toBool());
         setMenuBarState(settings->value(SETTING_WINDOW_MENUBAR, false).toBool());
-        const QByteArray geometry = settings->value(SETTING_WINDOW_GEOMETRY, QByteArray()).toByteArray();
-        if (geometry.isEmpty()) {
-            const QRect availableGeometry = QApplication::desktop()->availableGeometry(this);
-            resize(availableGeometry.width() / 2, availableGeometry.height() / 2);
-            move((availableGeometry.width() - width()) / 2,
-                 (availableGeometry.height() - height()) / 2);
-        } else {
-            restoreGeometry(geometry);
-            restoreState(settings->value(SETTING_WINDOW_STATE).toByteArray(), WindowStateVersion);
-            if (!isMaximized()) {
-                QSize newSize = settings->value(SETTING_WINDOW_SIZE).toSize();
-
-                setMinimumSize(QSize(0, 0));
-                setMaximumSize(QSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX));
-
-                resize(newSize);
-            }
-        }
+        visibleWindow = true;
         QList<QDockWidget*> docks = findChildren<QDockWidget*>();
         foreach (QDockWidget* dock, docks) {
             if (dock->windowTitle().contains(TXT_MEM_DOCK)) {
                 if (dock->visibleRegion().isEmpty()) {
                     removeDockWidget(dock);
-                    memoryDocks--;
+                    memoryDocks.removeOne(dock->objectName());
                 }
             }
         }
-        visibleWindow = true;
     }
     QMainWindow::showEvent(e);
     e->accept();
@@ -788,22 +769,30 @@ void MainWindow::showEvent(QShowEvent *e) {
 void MainWindow::createMemoryDock(const QString &title) {
     DockWidget *dw;
 
-    memoryDocks++;
-
-    dw = new DockWidget(title, this);
-    dw->setAllowedAreas(Qt::AllDockWidgetAreas);
+    dw = new DockWidget(TXT_MEM_DOCK, this);
+    dw->setObjectName(title);
     dw->setFloating(true);
     dw->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, dw->minimumSize(), qApp->desktop()->availableGeometry()));
+
+    memoryDocks.append(title);
 
     QWidget *widget = new QWidget();
     QVBoxLayout *vlayout = new QVBoxLayout();
     QHBoxLayout *hlayout = new QHBoxLayout();
     QPushButton *buttonGoto = new QPushButton(gotoIcon, tr("Goto"));
     QPushButton *buttonSearch = new QPushButton(searchIcon, tr("Search"));
-    QPushButton *buttonSync = new QPushButton(tr("Sync Changes"));
+    QToolButton *buttonSync = new QToolButton();
+    buttonSync->setIcon(syncIcon);
+    buttonSync->setToolTip(tr("Sync Changes"));
     QSpacerItem *spacer = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Fixed);
     QSpinBox *spin = new QSpinBox();
     QHexEdit *edit = new QHexEdit();
+
+    buttonGoto->setEnabled(guiDebug);
+    buttonSearch->setEnabled(guiDebug);
+    buttonSync->setEnabled(guiDebug);
+    spin->setEnabled(guiDebug);
+    edit->setEnabled(guiDebug);
 
     memory.append(edit);
     int index = memory.size() - 1;
@@ -814,7 +803,7 @@ void MainWindow::createMemoryDock(const QString &title) {
     connect(edit, &QHexEdit::customContextMenuRequested, this, &MainWindow::memContextMenu);
     connect(buttonSearch, &QPushButton::clicked, this, [this, index]{ memSearchPressed(index); });
     connect(buttonGoto, &QPushButton::clicked, this, [this, index]{ memGotoPressed(index); });
-    connect(buttonSync, &QPushButton::clicked, this, [this, index]{ memSyncPressed(index); });
+    connect(buttonSync, &QToolButton::clicked, this, [this, index]{ memSyncPressed(index); });
 
     spin->setValue(8);
     spin->setMaximum(32);
@@ -830,18 +819,15 @@ void MainWindow::createMemoryDock(const QString &title) {
     widget->setLayout(vlayout);
     dw->setWidget(widget);
 
-    buttonGoto->setEnabled(guiDebug);
-    buttonSearch->setEnabled(guiDebug);
-    buttonSync->setEnabled(guiDebug);
-    spin->setEnabled(guiDebug);
-    edit->setEnabled(guiDebug);
-
     if (guiDebug) {
         memUpdate(index, 0);
     }
 
     addDockWidget(Qt::RightDockWidgetArea, dw);
-    dw->setVisible(true);
+    dw->toggleState(uiEditMode);
+    dw->show();
+    dw->activateWindow();
+    dw->raise();
 }
 
 void MainWindow::toggleKeyHistory() {
@@ -950,6 +936,7 @@ void MainWindow::reloadGui() {
     settings->remove(SETTING_WINDOW_GEOMETRY);
     settings->remove(SETTING_WINDOW_MEMORY_DOCKS);
     settings->remove(SETTING_WINDOW_SIZE);
+    settings->remove(SETTING_UI_EDIT_MODE);
     settings->remove(SETTING_WINDOW_STATE);
     settings->remove(SETTING_WINDOW_MENUBAR);
     settings->remove(SETTING_WINDOW_SEPARATOR);
@@ -1116,6 +1103,7 @@ void MainWindow::closeEvent(QCloseEvent *e) {
 
     // ignore debug requests
     debugger.ignore = true;
+    saveMiscSettings();
 
     if (guiDebug) {
         debuggerChangeState();
@@ -1137,8 +1125,6 @@ void MainWindow::closeEvent(QCloseEvent *e) {
     }
 
     emu.stop();
-
-    saveMiscSettings();
     debugger_free();
 
     QMainWindow::closeEvent(e);
@@ -1303,7 +1289,7 @@ void MainWindow::recordAPNG() {
             return;
         }
         path = QDir::tempPath() + QDir::separator() + QStringLiteral("apng_tmp.png");
-        apng_start(path.toStdString().c_str(), ui->guiSkip->value(), ui->apngSkip->value());
+        apng_start(path.toStdString().c_str(), ui->guiSkip->value() + ui->apngSkip->value());
         showStatusMsg(tr("Recording..."));
     } else {
         showStatusMsg(QStringLiteral("Saving Recording..."));

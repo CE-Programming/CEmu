@@ -11,6 +11,7 @@
 #include "capture/animated-png.h"
 #include "../../core/link.h"
 #include "../../core/lcd.h"
+#include "../../core/cpu.h"
 #include "../../core/emu.h"
 #include "../../core/debug/debug.h"
 #include "../../core/backlight.h"
@@ -133,10 +134,10 @@ void LCDWidget::draw() {
             lcd_drawframe(image.bits(), lcd.control & 1 << 11 ? lcd.data : nullptr, lcd.data_end, lcd.control, LCD_SIZE);
             mutex.unlock();
         }
-#ifdef PNG_WRITE_APNG_SUPPORTED
-        apng_add_frame(image.constBits());
-#endif
         double emuFps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP));
+#ifdef PNG_WRITE_APNG_SUPPORTED
+        apng_add_frame(image.constBits(), emuFps);
+#endif
         emit updateLcd(emuFps / (frameskip + 1));
     }
 }

@@ -14,7 +14,6 @@ public:
     explicit DockWidget(QWidget *p = Q_NULLPTR);
     DockWidget(QTabWidget *tabs, QWidget *p = Q_NULLPTR);
     DockWidget(const QString &title, QWidget *p = Q_NULLPTR);
-
     void toggleState(bool visible);
 
 private:
