@@ -881,7 +881,7 @@ void MainWindow::optSend(CEmuOpts &o) {
            setEmuSpeed(100);
 
            // Race condition requires this
-           guiDelay(o.deforceReset ? 100 : 2000);
+           guiDelay(o.deforceReset ? 100 : 4000);
            launchTest();
         }
     }
@@ -891,7 +891,7 @@ void MainWindow::optSend(CEmuOpts &o) {
         setEmuSpeed(100);
 
         // Race condition requires this
-        guiDelay(o.deforceReset ? 100 : 2000);
+        guiDelay(o.deforceReset ? 100 : 4000);
         if (!o.sendFiles.isEmpty()) {
             sendingHandler->sendFiles(o.sendFiles, LINK_FILE);
         }
@@ -1814,7 +1814,7 @@ void MainWindow::launchTest() {
 
     if (ui->checkBoxTestReset->isChecked()) {
         resetCalculator();
-        guiDelay(3000);
+        guiDelay(4000);
     }
 
     if (ui->checkBoxTestClear->isChecked()) {
