@@ -134,11 +134,11 @@ void LCDWidget::draw() {
             lcd_drawframe(image.bits(), lcd.control & 1 << 11 ? lcd.data : nullptr, lcd.data_end, lcd.control, LCD_SIZE);
             mutex.unlock();
         }
-        double emuFps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP));
+        double lcdRate = lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP);
 #ifdef PNG_WRITE_APNG_SUPPORTED
-        apng_add_frame(image.constBits(), emuFps);
+        apng_add_frame(image.constBits(), lcdRate, 24e6);
 #endif
-        emit updateLcd(emuFps / (frameskip + 1));
+        emit updateLcd((24e6 / lcdRate) / (frameskip + 1));
     }
 }
 

@@ -30,13 +30,13 @@ bool apng_start(const char *tmp_name, int frameskip) {
     return true;
 }
 
-void apng_add_frame(const void *frame, double fps) {
+void apng_add_frame(const void *frame, int num, int den) {
     if (!apng.recording) {
         return;
     }
 
-    apng.num = fps;
-    apng.den = 1;
+    apng.num = num;
+    apng.den = den;
 
     if (!apng.skipped--) {
         apng.skipped = apng.frameskip;
