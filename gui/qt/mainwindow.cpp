@@ -917,6 +917,9 @@ void MainWindow::optLoadFiles(CEmuOpts &o) {
         }
     } else {
         emu.rom = o.romFile;
+        if (!settings->contains(SETTING_ROM_PATH)) {
+            settings->setValue(SETTING_ROM_PATH, emu.rom);
+        }
     }
 
     if (!o.imageFile.isEmpty()) {
