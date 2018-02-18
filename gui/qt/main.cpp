@@ -8,19 +8,14 @@
 #include "utils.h"
 
 int main(int argc, char *argv[]) {
-#ifdef Q_OS_WIN
-    // DPI scaling fix must be applied at the very beginning before QApplication init
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-#endif
 
+    QCoreApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
     QApplication app(argc, argv);
 
     QCoreApplication::setOrganizationName(QStringLiteral("cemu-dev"));
     QCoreApplication::setApplicationName(QStringLiteral("CEmu"));
 
     execPath = QCoreApplication::applicationFilePath();
-
-    app.setAttribute(Qt::AA_UseHighDpiPixmaps);
 
     // Add special jacobly font
     QFontDatabase::addApplicationFont(QStringLiteral(":/fonts/resources/custom_fonts/TICELarge.ttf"));
