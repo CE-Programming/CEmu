@@ -49,11 +49,10 @@ class MainWindow : public QMainWindow {
 public:
     explicit MainWindow(CEmuOpts &opts, QWidget *p = Q_NULLPTR);
     ~MainWindow();
-    bool IsInitialized();
-    bool IsReload();
-    bool IsResetAll();
-    void setUIEditMode(bool mode);
-    QSettings *settings = Q_NULLPTR;
+    void setup();
+    bool isInitialized();
+    bool isReload();
+    bool isResetAll();
 
 public slots:
     // Console
@@ -458,9 +457,12 @@ private:
     void checkVersion();
     bool isFirstRun();
 
+    // Init
+    void setUIEditMode(bool mode);
+    void optSend(CEmuOpts &o);
+
     // Misc
     QString getAddressString(const QString &string, bool *ok);
-    void optCheckSend(CEmuOpts &o);
     void optLoadFiles(CEmuOpts &o);
     void optAttemptLoad(CEmuOpts &o);
     void pauseEmu(Qt::ApplicationState state);
@@ -672,6 +674,7 @@ private:
     QProgressBar *progressBar;
     QVector<QHexEdit*> memory;
     QStringList memoryDocks;
+    QSettings *settings = Q_NULLPTR;
 
     static const char *var_extension[];
 #ifdef _WIN32

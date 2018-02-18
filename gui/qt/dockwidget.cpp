@@ -5,6 +5,7 @@
 #include <QtGui/QHoverEvent>
 
 DockWidget::DockWidget(QWidget *parent) : DockWidget{tr("Screen"), parent} { }
+
 DockWidget::DockWidget(QTabWidget *tabs, QWidget *parent) : DockWidget{tabs->tabText(0), parent} {
     setWindowIcon(tabs->tabIcon(0));
     setWidget(tabs->widget(0));
@@ -12,13 +13,17 @@ DockWidget::DockWidget(QTabWidget *tabs, QWidget *parent) : DockWidget{tabs->tab
 }
 
 DockWidget::DockWidget(const QString &title, QWidget *parent) : QDockWidget{title, parent}, titleHide{new QWidget{this}} {
-    setObjectName(windowTitle());
+    setObjectName(title);
 }
 
 void DockWidget::toggleState(bool visible) {
     if (visible) {
+        if (objectName() == QStringLiteral("screenWidget")) {
+            setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+        } else {
+            setFeatures(QDockWidget::AllDockWidgetFeatures);
+        }
         setAllowedAreas(Qt::AllDockWidgetAreas);
-        setFeatures(features() | QDockWidget::AllDockWidgetFeatures);
     } else {
         setFeatures(features() & ~(QDockWidget::AllDockWidgetFeatures));
         setAllowedAreas(Qt::NoDockWidgetArea);

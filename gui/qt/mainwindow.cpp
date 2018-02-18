@@ -100,8 +100,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     memory.append(ui->memEdit);
 
     // Emulator -> GUI
-    connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr);
-    connect(&emu, &EmuThread::consoleErrStr, this, &MainWindow::consoleErrStr);
+    connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::consoleErrStr, this, &MainWindow::consoleErrStr, Qt::QueuedConnection);
     connect(&emu, &EmuThread::started, this, &MainWindow::started, Qt::QueuedConnection);
     connect(&emu, &EmuThread::stopped, this, &MainWindow::emuStopped, Qt::QueuedConnection);
     connect(&emu, &EmuThread::restored, this, &MainWindow::restored, Qt::QueuedConnection);
@@ -197,8 +197,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonSelectVars, &QPushButton::clicked, this, &MainWindow::selectAllVars);
     connect(ui->varLoadedView, &QWidget::customContextMenuRequested, this, &MainWindow::resendContextMenu);
     connect(&emu, &EmuThread::receiveReady, this, &MainWindow::changeVariableList, Qt::QueuedConnection);
-    connect(this, &MainWindow::receive, &emu, &EmuThread::receive);
-    connect(this, &MainWindow::receiveDone, &emu, &EmuThread::receiveDone);
+    connect(this, &MainWindow::receive, &emu, &EmuThread::receive, Qt::QueuedConnection);
+    connect(this, &MainWindow::receiveDone, &emu, &EmuThread::receiveDone, Qt::QueuedConnection);
 
     // Autotester
     connect(ui->buttonOpenJSONconfig, &QPushButton::clicked, this, &MainWindow::prepareAndOpenJSONConfig);
@@ -356,7 +356,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(actionToggleUI, &QAction::triggered, this, &MainWindow::toggleUIEditMode);
 
     actionAddMemory = new QAction(MSG_ADD_MEMORY, this);
-    connect(actionAddMemory, &QAction::triggered, this, [this]{ createMemoryDock(TXT_MEM_DOCK); });
+    connect(actionAddMemory, &QAction::triggered, this, [this]{ createMemoryDock(randomString(20)); });
 
     // Shortcut Connections
     stepInShortcut = new QShortcut(QKeySequence(Qt::Key_F6), this);
@@ -518,12 +518,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     colorback.setColor(QPalette::Base, QColor(Qt::yellow).lighter(160));
     consoleFormat = ui->console->currentCharFormat();
 
-    optCheckSend(opts);
-
-    if (opts.speed != -1) {
-        setEmuSpeed(opts.speed);
-    }
-
     debuggerInstall();
 
     setUIDocks();
@@ -559,6 +553,10 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     }
 
     translateExtras(TRANSLATE_UPDATE);
+
+    if (opts.speed != -1) {
+        setEmuSpeed(opts.speed);
+    }
 }
 
 void MainWindow::switchTranslator(const QString& lang) {
@@ -585,6 +583,10 @@ void MainWindow::translateExtras(int init) {
 
     QString __TXT_MEM_DOCK = tr("Memory View");
 
+    QString __TXT_GOTO = tr("Goto");
+    QString __TXT_SEARCH = tr("Search");
+    QString __TXT_SYNC = tr("Sync Changes");
+
     QString __TXT_CONSOLE = tr("Console");
     QString __TXT_SETTINGS = tr("Settings");
     QString __TXT_VARIABLES = tr("Variables");
@@ -607,7 +609,12 @@ void MainWindow::translateExtras(int init) {
     if (init == TRANSLATE_UPDATE) {
         for (const auto &dock : findChildren<DockWidget*>()) {
             if (dock->windowTitle() == TXT_MEM_DOCK) {
+                QList<QPushButton*> buttons = dock->findChildren<QPushButton*>();
+                QList<QToolButton*> tools = dock->findChildren<QToolButton*>();
                 dock->setWindowTitle(__TXT_MEM_DOCK);
+                buttons.at(0)->setText(__TXT_GOTO);
+                buttons.at(1)->setText(__TXT_SEARCH);
+                tools.at(0)->setToolTip(__TXT_SYNC);
             }
             if (dock->windowTitle() == TXT_CONSOLE) {
                 dock->setWindowTitle(__TXT_CONSOLE);
@@ -766,6 +773,27 @@ void MainWindow::showEvent(QShowEvent *e) {
     e->accept();
 }
 
+void MainWindow::setup() {
+    const QByteArray geometry = settings->value(SETTING_WINDOW_GEOMETRY, QByteArray()).toByteArray();
+    if (geometry.isEmpty()) {
+        const QRect availableGeometry = qApp->desktop()->availableGeometry();
+        resize(availableGeometry.width() / 2, availableGeometry.height() / 2);
+        move((availableGeometry.width() - width()) / 2, (availableGeometry.height() - height()) / 2);
+    } else {
+        restoreGeometry(geometry);
+        restoreState(settings->value(SETTING_WINDOW_STATE).toByteArray());
+        if (!isMaximized()) {
+            QSize newSize = settings->value(SETTING_WINDOW_SIZE).toSize();
+            setMinimumSize(QSize(0, 0));
+            setMaximumSize(QSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX));
+            resize(newSize);
+        }
+    }
+    setUIEditMode(settings->value(SETTING_UI_EDIT_MODE, true).toBool());
+    optSend(opts);
+    settings->sync();
+}
+
 void MainWindow::createMemoryDock(const QString &title) {
     DockWidget *dw;
 
@@ -845,7 +873,8 @@ void MainWindow::toggleKeyHistory() {
     }
 }
 
-void MainWindow::optCheckSend(CEmuOpts &o) {
+void MainWindow::optSend(CEmuOpts &o) {
+    int speed = settings->value(SETTING_EMUSPEED).toInt();
     if (!o.autotesterFile.isEmpty()) {
         if (!openJSONConfig(o.autotesterFile)) {
            if (!o.deforceReset) { resetCalculator(); }
@@ -875,6 +904,7 @@ void MainWindow::optCheckSend(CEmuOpts &o) {
     }
 
     setThrottle(o.useUnthrottled ? Qt::Unchecked : Qt::Checked);
+    setEmuSpeed(speed);
 }
 
 void MainWindow::optLoadFiles(CEmuOpts &o) {
@@ -920,7 +950,7 @@ MainWindow::~MainWindow() {
     delete ui;
 }
 
-bool MainWindow::IsInitialized() {
+bool MainWindow::isInitialized() {
     return initPassed;
 }
 
@@ -944,11 +974,11 @@ void MainWindow::reloadGui() {
     close();
 }
 
-bool MainWindow::IsReload() {
+bool MainWindow::isReload() {
     return needReload;
 }
 
-bool MainWindow::IsResetAll() {
+bool MainWindow::isResetAll() {
     if (needFullReset) {
         QDir dir(configPath);
         dir.removeRecursively();
@@ -2263,7 +2293,7 @@ void MainWindow::ipcHandleCommandlineReceive(QDataStream &stream) {
 
     optLoadFiles(o);
     optAttemptLoad(o);
-    optCheckSend(o);
+    optSend(o);
     if (o.speed != -1) {
         setEmuSpeed(o.speed);
     }
