@@ -4891,7 +4891,7 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string> Change Calulator Certificate ID</string>
+           <string> Change Calculator certificate ID</string>
           </property>
           <property name="icon">
            <iconset resource="resources.qrc">
