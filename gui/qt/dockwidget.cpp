@@ -28,11 +28,10 @@ void DockWidget::toggleState(bool visible) {
         setFeatures(features() & ~(QDockWidget::AllDockWidgetFeatures));
         setAllowedAreas(Qt::NoDockWidgetArea);
     }
-    if (!isVisible() || isFloating()) {
+    if (isFloating()) {
+        setTitleBarWidget(Q_NULLPTR);
         return;
-    }
-    visible |= isWindow();
-    if ((visible) ^ (titleBarWidget() == Q_NULLPTR)) {
+    } else {
         setTitleBarWidget(visible ? Q_NULLPTR : titleHide);
     }
 }

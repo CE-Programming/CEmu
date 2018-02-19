@@ -750,6 +750,7 @@ void MainWindow::setup() {
         restoreState(settings->value(SETTING_WINDOW_STATE).toByteArray());
     }
 
+    updateDocks();
     setSlotInfo();
     setRecentInfo();
 

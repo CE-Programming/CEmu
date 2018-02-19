@@ -444,11 +444,7 @@ void MainWindow::toggleUIEditMode() {
     setUIEditMode(!uiEditMode);
 }
 
-void MainWindow::setUIEditMode(bool mode) {
-    uiEditMode = mode;
-    settings->setValue(SETTING_UI_EDIT_MODE, uiEditMode);
-    actionToggleUI->setChecked(uiEditMode);
-    actionAddMemory->setEnabled(uiEditMode);
+void MainWindow::updateDocks() {
     for (const auto &dock : findChildren<DockWidget *>()) {
         dock->toggleState(uiEditMode);
         if (dock->isFloating() && !dock->isHidden() && !uiEditMode) {
@@ -458,6 +454,14 @@ void MainWindow::setUIEditMode(bool mode) {
             dock->raise();
         }
     }
+}
+
+void MainWindow::setUIEditMode(bool mode) {
+    uiEditMode = mode;
+    settings->setValue(SETTING_UI_EDIT_MODE, uiEditMode);
+    actionToggleUI->setChecked(uiEditMode);
+    actionAddMemory->setEnabled(uiEditMode);
+    updateDocks();
     if (uiEditMode) {
         setDockOptions(QMainWindow::AnimatedDocks | QMainWindow::AllowNestedDocks | QMainWindow::AllowTabbedDocks);
     } else {

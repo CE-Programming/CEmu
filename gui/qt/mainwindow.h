@@ -392,6 +392,7 @@ private:
     void setAutoCheckForUpdates(int state);
     void setSpaceDisasm(bool state);
     void setUIDocks();
+    void updateDocks();
     void toggleUIEditMode();
     void setSaveDebug(bool state);
     void saveMiscSettings();
