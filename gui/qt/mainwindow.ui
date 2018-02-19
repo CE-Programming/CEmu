@@ -63,7 +63,7 @@
       <property name="currentIndex">
        <number>0</number>
       </property>
-      <widget class="QWidget" name="tab_10">
+      <widget class="QWidget" name="debugControlWidget">
        <attribute name="title">
         <string>Debug Control</string>
        </attribute>
@@ -263,7 +263,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_11">
+      <widget class="QWidget" name="debugCpuStatusWidget">
        <attribute name="title">
         <string>CPU Status</string>
        </attribute>
@@ -3276,7 +3276,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_12">
+      <widget class="QWidget" name="debugDisassemblyWidget">
        <attribute name="title">
         <string>Disassembly</string>
        </attribute>
@@ -3444,7 +3444,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_13">
+      <widget class="QWidget" name="debugMemoryWidget">
        <attribute name="title">
         <string>Memory</string>
        </attribute>
@@ -3797,7 +3797,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_14">
+      <widget class="QWidget" name="debugTimerWidget">
        <attribute name="title">
         <string>Timers</string>
        </attribute>
@@ -4170,7 +4170,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_15">
+      <widget class="QWidget" name="debugBreakWidget">
        <attribute name="title">
         <string>Break / Watch / Port</string>
        </attribute>
@@ -4629,7 +4629,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_21">
+      <widget class="QWidget" name="debugOsWidget">
        <attribute name="title">
         <string>OS View</string>
        </attribute>
@@ -4901,7 +4901,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_18">
+      <widget class="QWidget" name="debugMiscWidget">
        <attribute name="title">
         <string>Miscellaneous</string>
        </attribute>
@@ -5690,7 +5690,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_19">
+      <widget class="QWidget" name="debugAutoTesterWidget">
        <attribute name="title">
         <string>AutoTester</string>
        </attribute>
@@ -6141,7 +6141,7 @@
       <property name="tabBarAutoHide">
        <bool>false</bool>
       </property>
-      <widget class="QWidget" name="tabVariables">
+      <widget class="QWidget" name="variablesWidget">
        <attribute name="icon">
         <iconset resource="resources.qrc">
          <normaloff>:/icons/resources/icons/variables.png</normaloff>:/icons/resources/icons/variables.png</iconset>
@@ -6570,7 +6570,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tabCapture">
+      <widget class="QWidget" name="captureWidget">
        <attribute name="icon">
         <iconset resource="resources.qrc">
          <normaloff>:/icons/resources/icons/capture.png</normaloff>:/icons/resources/icons/capture.png</iconset>
@@ -6813,7 +6813,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tabSettings">
+      <widget class="QWidget" name="settingsWidget">
        <attribute name="icon">
         <iconset resource="resources.qrc">
          <normaloff>:/icons/resources/icons/settings.png</normaloff>:/icons/resources/icons/settings.png</iconset>
@@ -8487,7 +8487,7 @@ QPushButton:pressed {
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tabConsole">
+      <widget class="QWidget" name="consoleWidget">
        <attribute name="icon">
         <iconset resource="resources.qrc">
          <normaloff>:/icons/resources/icons/console.png</normaloff>:/icons/resources/icons/console.png</iconset>
@@ -8608,7 +8608,7 @@ QPushButton:pressed {
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab">
+      <widget class="QWidget" name="stateWidget">
        <attribute name="icon">
         <iconset resource="resources.qrc">
          <normaloff>:/icons/resources/icons/tios.png</normaloff>:/icons/resources/icons/tios.png</iconset>

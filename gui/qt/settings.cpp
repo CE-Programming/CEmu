@@ -411,7 +411,6 @@ void MainWindow::setUIDocks() {
     ui->menubar->insertMenu(ui->menuAbout->menuAction(), debugMenu);
 
     // Convert the tabs into QDockWidgets
-    last_dock = Q_NULLPTR;
     while (ui->tabDebug->count()) {
         DockWidget *dw = new DockWidget(ui->tabDebug, this);
 
