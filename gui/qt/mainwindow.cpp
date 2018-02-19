@@ -519,44 +519,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     consoleFormat = ui->console->currentCharFormat();
 
     debuggerInstall();
-
-    setUIDocks();
-    setSlotInfo();
-    setRecentInfo();
-
-    if (settings->value(SETTING_DEBUGGER_RESTORE_ON_OPEN, false).toBool()) {
-        if (!opts.debugFile.isEmpty()) {
-            debuggerImportFile(opts.debugFile);
-        } else {
-            debuggerImportFile(settings->value(SETTING_DEBUGGER_IMAGE_PATH).toString());
-        }
-    }
-
-    if (isFirstRun() && initPassed && !needFullReset) {
-        infoBox = new QMessageBox();
-        settings->setValue(SETTING_FIRST_RUN, true);
-        infoBox->setWindowTitle(MSG_INFORMATION);
-        infoBox->setText(tr("Welcome!\nCEmu uses a customizable dock-style interface. "
-                            "Drag and drop to move tabs and windows around on the screen, "
-                            "and choose which docks are available in the 'Docks' menu in the topmost bar. "
-                            "Be sure that 'Enable UI edit mode' is selected when laying out your interface. "
-                            "Enjoy!"));
-        infoBox->setWindowModality(Qt::NonModal);
-        infoBox->setWindowFlags(infoBox->windowFlags() | Qt::WindowStaysOnTopHint);
-        infoBox->setAttribute(Qt::WA_DeleteOnClose);
-        infoBox->show();
-    }
-
-    QString prefLang = settings->value(SETTING_PREFERRED_LANG, "none").toString();
-    if (prefLang != QStringLiteral("none")) {
-        switchTranslator(prefLang);
-    }
-
-    translateExtras(TRANSLATE_UPDATE);
-
-    if (opts.speed != -1) {
-        setEmuSpeed(opts.speed);
-    }
 }
 
 void MainWindow::switchTranslator(const QString& lang) {
@@ -775,22 +737,56 @@ void MainWindow::showEvent(QShowEvent *e) {
 
 void MainWindow::setup() {
     const QByteArray geometry = settings->value(SETTING_WINDOW_GEOMETRY, QByteArray()).toByteArray();
+    const QRect availableGeometry = qApp->desktop()->availableGeometry();
     if (geometry.isEmpty()) {
-        const QRect availableGeometry = qApp->desktop()->availableGeometry();
         resize(availableGeometry.width() / 2, availableGeometry.height() / 2);
         move((availableGeometry.width() - width()) / 2, (availableGeometry.height() - height()) / 2);
+        setUIDocks();
+        setUIEditMode(settings->value(SETTING_UI_EDIT_MODE, true).toBool());
     } else {
         restoreGeometry(geometry);
+        setUIDocks();
+        setUIEditMode(settings->value(SETTING_UI_EDIT_MODE, true).toBool());
         restoreState(settings->value(SETTING_WINDOW_STATE).toByteArray());
-        if (!isMaximized()) {
-            QSize newSize = settings->value(SETTING_WINDOW_SIZE).toSize();
-            setMinimumSize(QSize(0, 0));
-            setMaximumSize(QSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX));
-            resize(newSize);
+    }
+
+    setSlotInfo();
+    setRecentInfo();
+
+    if (settings->value(SETTING_DEBUGGER_RESTORE_ON_OPEN, false).toBool()) {
+        if (!opts.debugFile.isEmpty()) {
+            debuggerImportFile(opts.debugFile);
+        } else {
+            debuggerImportFile(settings->value(SETTING_DEBUGGER_IMAGE_PATH).toString());
         }
     }
-    setUIEditMode(settings->value(SETTING_UI_EDIT_MODE, true).toBool());
+
+    if (isFirstRun() && initPassed && !needFullReset) {
+        infoBox = new QMessageBox();
+        settings->setValue(SETTING_FIRST_RUN, true);
+        infoBox->setWindowTitle(MSG_INFORMATION);
+        infoBox->setText(tr("Welcome!\nCEmu uses a customizable dock-style interface. "
+                            "Drag and drop to move tabs and windows around on the screen, "
+                            "and choose which docks are available in the 'Docks' menu in the topmost bar. "
+                            "Be sure that 'Enable UI edit mode' is selected when laying out your interface. "
+                            "Enjoy!"));
+        infoBox->setWindowModality(Qt::NonModal);
+        infoBox->setWindowFlags(infoBox->windowFlags() | Qt::WindowStaysOnTopHint);
+        infoBox->setAttribute(Qt::WA_DeleteOnClose);
+        infoBox->show();
+    }
+
+    QString prefLang = settings->value(SETTING_PREFERRED_LANG, "none").toString();
+    if (prefLang != QStringLiteral("none")) {
+        switchTranslator(prefLang);
+    }
+
+    translateExtras(TRANSLATE_UPDATE);
+
     optSend(opts);
+    if (opts.speed != -1) {
+        setEmuSpeed(opts.speed);
+    }
     settings->sync();
 }
 
@@ -966,6 +962,7 @@ void MainWindow::reloadAll() {
 
 void MainWindow::reloadGui() {
     ipcCloseOthers();
+    settings->remove(SETTING_SCREEN_SKIN);
     settings->remove(SETTING_WINDOW_GEOMETRY);
     settings->remove(SETTING_WINDOW_MEMORY_DOCKS);
     settings->remove(SETTING_WINDOW_SIZE);
@@ -1136,7 +1133,6 @@ void MainWindow::closeEvent(QCloseEvent *e) {
 
     // ignore debug requests
     debugger.ignore = true;
-    saveMiscSettings();
 
     if (guiDebug) {
         debuggerChangeState();
@@ -1160,6 +1156,7 @@ void MainWindow::closeEvent(QCloseEvent *e) {
     emu.stop();
     debugger_free();
 
+    saveMiscSettings();
     QMainWindow::closeEvent(e);
 }
 

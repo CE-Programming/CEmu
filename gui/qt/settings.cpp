@@ -426,6 +426,7 @@ void MainWindow::setUIDocks() {
             dw->setFloating(true);
             dw->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, dw->minimumSize(), qApp->desktop()->availableGeometry()));
             dw->close();
+            dw->hide();
         }
     }
 
