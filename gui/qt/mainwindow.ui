@@ -4895,7 +4895,7 @@
           </property>
           <property name="icon">
            <iconset resource="resources.qrc">
-            <normaloff>:/icons/resources/icons/rom.png</normaloff>:/icons/resources/icons/rom.png</iconset>
+            <normaloff>:/icons/resources/icons/change_cert.png</normaloff>:/icons/resources/icons/change_cert.png</iconset>
           </property>
          </widget>
         </item>
@@ -6195,7 +6195,7 @@
                </property>
                <property name="icon">
                 <iconset resource="resources.qrc">
-                 <normaloff>:/icons/resources/icons/tios.png</normaloff>:/icons/resources/icons/tios.png</iconset>
+                 <normaloff>:/icons/resources/icons/states.png</normaloff>:/icons/resources/icons/states.png</iconset>
                </property>
               </widget>
              </item>
@@ -8611,7 +8611,7 @@ QPushButton:pressed {
       <widget class="QWidget" name="stateWidget">
        <attribute name="icon">
         <iconset resource="resources.qrc">
-         <normaloff>:/icons/resources/icons/tios.png</normaloff>:/icons/resources/icons/tios.png</iconset>
+         <normaloff>:/icons/resources/icons/states.png</normaloff>:/icons/resources/icons/states.png</iconset>
        </attribute>
        <attribute name="title">
         <string>State</string>
@@ -8786,7 +8786,7 @@ QPushButton:pressed {
             </property>
             <property name="icon">
              <iconset resource="resources.qrc">
-              <normaloff>:/icons/resources/icons/reload.png</normaloff>:/icons/resources/icons/reload.png</iconset>
+              <normaloff>:/icons/resources/icons/reload_rom.png</normaloff>:/icons/resources/icons/reload_rom.png</iconset>
             </property>
            </widget>
           </item>
@@ -9138,7 +9138,7 @@ QPushButton:pressed {
   <action name="actionCheckForUpdates">
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/icons/resources/icons/rom.png</normaloff>:/icons/resources/icons/rom.png</iconset>
+     <normaloff>:/icons/resources/icons/check_update.png</normaloff>:/icons/resources/icons/check_update.png</iconset>
    </property>
    <property name="text">
     <string>Check for updates...</string>
@@ -9168,7 +9168,7 @@ QPushButton:pressed {
   <action name="actionReloadROM">
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/icons/resources/icons/reload.png</normaloff>:/icons/resources/icons/reload.png</iconset>
+     <normaloff>:/icons/resources/icons/reload_rom.png</normaloff>:/icons/resources/icons/reload_rom.png</iconset>
    </property>
    <property name="text">
     <string>Reload ROM</string>
