@@ -35,8 +35,11 @@ DockWidget::DockWidget(QTabWidget *tabs, QWidget *parent) : DockWidget{tabs->tab
 
 void DockWidget::toggleState(bool visible) {
     if (visible) {
-        setFeatures(QDockWidget::DockWidgetFeatures(QDockWidget::AllDockWidgetFeatures)
-                    .setFlag(QDockWidget::DockWidgetClosable, isClosable()));
+        if (isClosable()) {
+            setFeatures(QDockWidget::AllDockWidgetFeatures);
+        } else {
+            setFeatures(QDockWidget::DockWidgetFeatures(QDockWidget::AllDockWidgetFeatures & ~QDockWidget::DockWidgetClosable));
+        }
         setAllowedAreas(Qt::AllDockWidgetAreas);
     } else {
         setFeatures(QDockWidget::NoDockWidgetFeatures);
