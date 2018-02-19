@@ -202,6 +202,13 @@ private:
         TRANSLATE_ONLY
     };
 
+    // Fullscreen modes
+    enum {
+        FULLSCREEN_NONE,
+        FULLSCREEN_ALL,
+        FULLSCREEN_LCD
+    };
+
     void translateExtras(int init);
 
     // Save/Restore
@@ -394,6 +401,7 @@ private:
     void setUIDocks();
     void updateDocks();
     void toggleUIEditMode();
+    void toggleFullscreen();
     void setSaveDebug(bool state);
     void saveMiscSettings();
     void setPreRevisionI(bool state);
@@ -539,6 +547,7 @@ private:
     QShortcut *stepNextShortcut;
     QShortcut *stepOutShortcut;
     QShortcut *debuggerShortcut;
+    QShortcut *fullscreenShortcut;
     QShortcut *asmShortcut;
     QShortcut *resendshortcut;
 
@@ -578,6 +587,7 @@ private:
     bool pauseOnFocus;
     bool loadedCEmuBootImage = false;
     bool optimizeRecording;
+    int fullscreen = FULLSCREEN_NONE;
 
     // Settings definitions
     static const QString SETTING_DEBUGGER_TEXT_SIZE;

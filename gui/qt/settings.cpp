@@ -550,7 +550,7 @@ void MainWindow::adjustScreen() {
 }
 
 void MainWindow::setLcdScale(int scale) {
-    int roundedScale = round(scale / 25.0) * 25;
+    int roundedScale = round(scale / 10.0) * 10;
     settings->setValue(SETTING_SCREEN_SCALE, roundedScale);
     ui->scaleLCD->setValue(roundedScale);
     adjustScreen();
@@ -621,6 +621,33 @@ void MainWindow::keymapChanged() {
 void MainWindow::setKeymap(const QString & value) {
     settings->setValue(SETTING_KEYPAD_KEYMAP, value);
     keypadBridge->setKeymap(value);
+}
+
+void MainWindow::toggleFullscreen() {
+    static QWidget *parent_ptr = Q_NULLPTR;
+    switch (fullscreen) {
+        default:
+        case FULLSCREEN_NONE:
+            showFullScreen();
+            fullscreen = FULLSCREEN_ALL;
+            break;
+        case FULLSCREEN_ALL:
+            showNormal();
+            parent_ptr = ui->lcd->parentWidget();
+            ui->lcd->setParent(this, Qt::Tool | Qt::FramelessWindowHint | Qt::CustomizeWindowHint);
+            ui->lcd->setFixedSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+            ui->lcd->showFullScreen();
+            ui->lcd->installEventFilter(keypadBridge);
+            ui->lcd->setFocus();
+            fullscreen = FULLSCREEN_LCD;
+            break;
+        case FULLSCREEN_LCD:
+            ui->lcd->setParent(parent_ptr);
+            ui->lcd->showNormal();
+            adjustScreen();
+            fullscreen = FULLSCREEN_NONE;
+            break;
+    }
 }
 
 void MainWindow::setAlwaysOnTop(int state) {

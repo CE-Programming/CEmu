@@ -4891,7 +4891,7 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string> Change Calculator certificate ID</string>
+           <string> Change Calculator Certificate ID</string>
           </property>
           <property name="icon">
            <iconset resource="resources.qrc">
@@ -6926,13 +6926,13 @@
                   <string>%</string>
                  </property>
                  <property name="minimum">
-                  <number>50</number>
+                  <number>10</number>
                  </property>
                  <property name="maximum">
-                  <number>410</number>
+                  <number>500</number>
                  </property>
                  <property name="singleStep">
-                  <number>25</number>
+                  <number>10</number>
                  </property>
                  <property name="value">
                   <number>100</number>
@@ -8935,15 +8935,15 @@ QPushButton:pressed {
    <property name="windowTitle">
     <string>Screen</string>
    </property>
+   <property name="closable" stdset="0">
+    <bool>false</bool>
+   </property>
+   <property name="expandable" stdset="0">
+    <bool>false</bool>
+   </property>
    <attribute name="dockWidgetArea">
     <number>1</number>
    </attribute>
-   <property name="closable">
-     <bool>false</bool>
-   </property>
-   <property name="expandable">
-     <bool>false</bool>
-   </property>
    <widget class="QWidget" name="screenWidget">
     <property name="minimumSize">
      <size>
@@ -8989,21 +8989,21 @@ QPushButton:pressed {
       </rect>
      </property>
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
      <property name="minimumSize">
       <size>
-       <width>320</width>
-       <height>240</height>
+       <width>0</width>
+       <height>0</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
-       <width>320</width>
-       <height>240</height>
+       <width>16777215</width>
+       <height>16777215</height>
       </size>
      </property>
      <property name="focusPolicy">

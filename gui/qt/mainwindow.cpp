@@ -364,9 +364,11 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     stepNextShortcut = new QShortcut(QKeySequence(Qt::Key_F8), this);
     stepOutShortcut = new QShortcut(QKeySequence(Qt::Key_F9), this);
     debuggerShortcut = new QShortcut(QKeySequence(Qt::Key_F10), this);
+    fullscreenShortcut = new QShortcut(QKeySequence(Qt::Key_F11), this);
     asmShortcut = new QShortcut(QKeySequence(Qt::Key_Pause), this);
     resendshortcut = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_X), this);
 
+    fullscreenShortcut->setAutoRepeat(false);
     debuggerShortcut->setAutoRepeat(false);
     stepInShortcut->setAutoRepeat(false);
     stepOverShortcut->setAutoRepeat(false);
@@ -375,6 +377,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     asmShortcut->setAutoRepeat(false);
     resendshortcut->setAutoRepeat(false);
 
+    connect(fullscreenShortcut, &QShortcut::activated, this, &MainWindow::toggleFullscreen);
     connect(resendshortcut, &QShortcut::activated, this, &MainWindow::resendFiles);
     connect(asmShortcut, &QShortcut::activated, this, &MainWindow::sendASMKey);
     connect(debuggerShortcut, &QShortcut::activated, this, &MainWindow::debuggerChangeState);
