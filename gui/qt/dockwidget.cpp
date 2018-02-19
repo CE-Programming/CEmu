@@ -5,10 +5,9 @@
 #include <QtWidgets/QTabWidget>
 #include <QtGui/QHoverEvent>
 
-DockWidget::DockWidget(QWidget *parent) : QDockWidget{parent}, m_titleHide{new QWidget},
-                                          m_closable{true}, m_expandable{false} {
-    connect(this, &QDockWidget::topLevelChanged, this, &DockWidget::dockLocationChange);
-}
+DockWidget::DockWidget(QWidget *parent)
+    : QDockWidget{parent}, m_titleHide{new QWidget{this}}, m_tabs{this},
+      m_closable{true}, m_expandable{false} {}
 
 DockWidget::DockWidget(const QString &title, QWidget *parent) : DockWidget{parent} {
     setWindowTitle(title);
@@ -31,9 +30,9 @@ DockWidget::DockWidget(QTabWidget *tabs, QWidget *parent) : DockWidget{tabs->tab
 void DockWidget::toggleState(bool visible) {
     if (visible) {
         if (isClosable()) {
-            setFeatures(QDockWidget::AllDockWidgetFeatures);
+            setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
         } else {
-            setFeatures(QDockWidget::DockWidgetFeatures(QDockWidget::AllDockWidgetFeatures & ~QDockWidget::DockWidgetClosable));
+            setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
         }
         setAllowedAreas(Qt::AllDockWidgetAreas);
     } else {
@@ -43,22 +42,47 @@ void DockWidget::toggleState(bool visible) {
     setTitleBarWidget(isFloating() || visible ? Q_NULLPTR : new QWidget(this));
 }
 
-bool DockWidget::isAnyTabExpandable() {
-    if (isExpandable()) {
-        return true;
+QList<DockWidget *> DockWidget::tabs(DockWidget *without) {
+    QList<DockWidget *> tabs;
+    if (this != without) {
+        tabs << this;
     }
     for (QDockWidget *tab : qobject_cast<QMainWindow *>(parentWidget())->tabifiedDockWidgets(this)) {
-        if (qobject_cast<DockWidget *>(tab)->isExpandable()) {
-            return true;
+        if (tab != without) {
+            tabs << qobject_cast<DockWidget *>(tab);
         }
     }
-    return false;
+    return tabs;
 }
 
-void DockWidget::dockLocationChange() {
-    if (isAnyTabExpandable()) {
-        widget()->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-    } else {
-        widget()->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
+void DockWidget::showEvent(QShowEvent *event) {
+    if (event->spontaneous()) {
+        return;
+    }
+    if (m_tabs != this) {
+        m_tabs->updateExpandability(m_tabs->tabs(this));
+    }
+    updateExpandability(tabs());
+}
+
+void DockWidget::updateExpandability(const QList<DockWidget *> &tabs) {
+    bool expandable = false;
+    for (DockWidget *tab : tabs) {
+        if (tab->isExpandable()) {
+            expandable = true;
+            break;
+        }
+    }
+    DockWidget *other = tabs.last();
+    for (DockWidget *tab : tabs) {
+        if (tab->widget()) {
+            if (expandable || tab->isExpandable()) {
+                tab->widget()->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+            } else {
+                tab->widget()->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
+            }
+        }
+        tab->m_tabs = other;
+        other = tab;
     }
 }

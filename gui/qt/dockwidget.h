@@ -13,7 +13,6 @@ class DockWidget : public QDockWidget {
     Q_PROPERTY(bool expandable READ isExpandable WRITE setExpandable)
 
 public:
-
     explicit DockWidget(QWidget *parent = Q_NULLPTR);
     DockWidget(QTabWidget *tabs, QWidget *parent = Q_NULLPTR);
     DockWidget(const QString &title, QWidget *parent = Q_NULLPTR);
@@ -24,12 +23,14 @@ public:
     void setExpandable(bool expandable) { m_expandable = expandable; }
 
 protected slots:
-    void dockLocationChange();
+    QList<DockWidget *> tabs(DockWidget *without = Q_NULLPTR);
+    void showEvent(QShowEvent *event);
+    void updateExpandability(const QList<DockWidget *> &tabs);
 
 private:
     QWidget *m_titleHide;
+    DockWidget *m_tabs;
     bool m_closable : 1, m_expandable : 1;
-    bool isAnyTabExpandable();
 };
 
 #endif
