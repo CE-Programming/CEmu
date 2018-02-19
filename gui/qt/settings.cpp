@@ -546,7 +546,7 @@ void MainWindow::adjustScreen() {
         h = 351 * scale;
     }
     ui->calcSkinTop->resize(w, h);
-    ui->screenWidgetContents->setFixedSize(w, h);
+    ui->screenWidget->setFixedSize(w, h);
 }
 
 void MainWindow::setLcdScale(int scale) {

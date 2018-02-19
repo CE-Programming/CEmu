@@ -8925,7 +8925,7 @@ QPushButton:pressed {
    <addaction name="menuAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
-  <widget class="DockWidget" name="screenWidget">
+  <widget class="DockWidget" name="screenDock">
    <property name="floating">
     <bool>false</bool>
    </property>
@@ -8938,7 +8938,13 @@ QPushButton:pressed {
    <attribute name="dockWidgetArea">
     <number>1</number>
    </attribute>
-   <widget class="QWidget" name="screenWidgetContents">
+   <property name="closable">
+     <bool>false</bool>
+   </property>
+   <property name="expandable">
+     <bool>false</bool>
+   </property>
+   <widget class="QWidget" name="screenWidget">
     <property name="minimumSize">
      <size>
       <width>440</width>
