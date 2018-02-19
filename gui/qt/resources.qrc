@@ -10,19 +10,17 @@
         <file>resources/icons/capture.png</file>
         <file>resources/icons/console.png</file>
         <file>resources/icons/debugger.png</file>
-        <file>resources/icons/gif.png</file>
+        <file>resources/icons/record.png</file>
         <file>resources/icons/goto.png</file>
         <file>resources/icons/icon.ico</file>
         <file>resources/icons/icon.png</file>
         <file>resources/icons/info.png</file>
         <file>resources/icons/keypad.png</file>
-        <file>resources/icons/mem.png</file>
         <file>resources/icons/minus.png</file>
         <file>resources/icons/open.png</file>
         <file>resources/icons/plus.png</file>
-        <file>resources/icons/pngpng.png</file>
+        <file>resources/icons/screenshot.png</file>
         <file>resources/icons/run.png</file>
-        <file>resources/icons/screenshotgif.png</file>
         <file>resources/icons/search.png</file>
         <file>resources/icons/settings.png</file>
         <file>resources/icons/stepin.png</file>

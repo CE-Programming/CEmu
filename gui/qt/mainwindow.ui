@@ -9075,7 +9075,7 @@ QPushButton:pressed {
    </property>
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/icons/resources/icons/pngpng.png</normaloff>:/icons/resources/icons/pngpng.png</iconset>
+     <normaloff>:/icons/resources/icons/screenshot.png</normaloff>:/icons/resources/icons/screenshot.png</iconset>
    </property>
    <property name="text">
     <string>Take PNG screenshot</string>
@@ -9093,7 +9093,7 @@ QPushButton:pressed {
    </property>
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/icons/resources/icons/gif.png</normaloff>:/icons/resources/icons/gif.png</iconset>
+     <normaloff>:/icons/resources/icons/record.png</normaloff>:/icons/resources/icons/record.png</iconset>
    </property>
    <property name="text">
     <string>Record animated PNG</string>
@@ -9133,21 +9133,6 @@ QPushButton:pressed {
    </property>
    <property name="text">
     <string>Reset calculator</string>
-   </property>
-  </action>
-  <action name="actionTakeGIFScreenshot">
-   <property name="icon">
-    <iconset resource="resources.qrc">
-     <normaloff>:/icons/resources/icons/screenshotgif.png</normaloff>:/icons/resources/icons/screenshotgif.png</iconset>
-   </property>
-   <property name="text">
-    <string>Take GIF screenshot</string>
-   </property>
-   <property name="toolTip">
-    <string>Take GIF screenshot</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+D</string>
    </property>
   </action>
   <action name="actionCheckForUpdates">
@@ -9279,7 +9264,7 @@ QPushButton:pressed {
   <action name="actionClipScreen">
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/icons/resources/icons/pngpng.png</normaloff>:/icons/resources/icons/pngpng.png</iconset>
+     <normaloff>:/icons/resources/icons/screenshot.png</normaloff>:/icons/resources/icons/screenshot.png</iconset>
    </property>
    <property name="text">
     <string>Copy screen to clipboard</string>

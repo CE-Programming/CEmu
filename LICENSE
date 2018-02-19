@@ -3,7 +3,7 @@ Portions of this program use code, directly or modified, from:
 * Firebird, a TI-Nspire emulator developed by Fabian Vogt
 * QHexEdit2, developed by Simsys
 * tivars_lib_cpp, developed by Adrien "Adriweb" Bertrand
-* Silk iconset, created by Mark James from famfamfam.com
+* FatCow's "Farm-Fresh Web Icons" (CC 3.0 license) - http://www.fatcow.com/free-icons
 
 CEmu also uses the APNG-enabled fork of libpng (https://sourceforge.net/projects/libpng-apng/) released under the zlib/libpng License.
 
