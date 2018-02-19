@@ -27,9 +27,9 @@ protected slots:
     void dockLocationChange();
 
 private:
+    QWidget *m_titleHide;
     bool m_closable : 1, m_expandable : 1;
     bool isAnyTabExpandable();
-    static QWidget *s_titleHide();
 };
 
 #endif

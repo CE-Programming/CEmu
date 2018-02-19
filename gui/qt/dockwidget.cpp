@@ -5,12 +5,7 @@
 #include <QtWidgets/QTabWidget>
 #include <QtGui/QHoverEvent>
 
-QWidget *DockWidget::s_titleHide() {
-    static QWidget *titleHide = new QWidget;
-    return titleHide;
-}
-
-DockWidget::DockWidget(QWidget *parent) : QDockWidget{parent},
+DockWidget::DockWidget(QWidget *parent) : QDockWidget{parent}, m_titleHide{new QWidget},
                                           m_closable{true}, m_expandable{false} {
     connect(this, &QDockWidget::topLevelChanged, this, &DockWidget::dockLocationChange);
 }
@@ -45,12 +40,7 @@ void DockWidget::toggleState(bool visible) {
         setFeatures(QDockWidget::NoDockWidgetFeatures);
         setAllowedAreas(Qt::NoDockWidgetArea);
     }
-    if (isFloating()) {
-        setTitleBarWidget(Q_NULLPTR);
-        return;
-    } else {
-        setTitleBarWidget(visible ? Q_NULLPTR : s_titleHide());
-    }
+    setTitleBarWidget(isFloating() || visible ? Q_NULLPTR : new QWidget(this));
 }
 
 bool DockWidget::isAnyTabExpandable() {
