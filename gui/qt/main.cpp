@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
         opts.idString = QStringLiteral("Calculator");
     }
 
-    configPath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + QStringLiteral("/CEmu");
+    configPath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
 
     MainWindow EmuWin(opts);
     if (!EmuWin.isInitialized()) {
