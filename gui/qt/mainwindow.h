@@ -407,6 +407,7 @@ private:
     void setSaveDebug(bool state);
     void saveMiscSettings();
     void setPreRevisionI(bool state);
+    void saveSettings();
 
     // Linking
     QStringList showVariableFileDialog(QFileDialog::AcceptMode mode, const QString &name_filter, const QString &defaultSuffix);
@@ -596,6 +597,7 @@ private:
     bool pauseOnFocus;
     bool loadedCEmuBootImage = false;
     bool optimizeRecording;
+    bool activatedPortable = false;
     int fullscreen = FULLSCREEN_NONE;
 
     // Settings definitions
@@ -689,12 +691,12 @@ private:
     QString MSG_ADD_MEMORY;
     QString MSG_EDIT_UI;
 
-    QMessageBox *infoBox = Q_NULLPTR;
-    QMessageBox *warnBox = Q_NULLPTR;
     QProgressBar *progressBar;
     QVector<QHexEdit*> memory;
     QStringList memoryDocks;
     QSettings *settings = Q_NULLPTR;
+
+    QTimer emuStatusTimer;
 
     static const char *var_extension[];
 #ifdef _WIN32

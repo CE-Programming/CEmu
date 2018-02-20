@@ -184,7 +184,9 @@ void RomSelection::saveDumpProgram() {
 
     currentDir = dialog.directory();
 
-    if (filename.isEmpty()) { return; }
+    if (filename.isEmpty()) {
+        return;
+    }
 
     if (!filename.endsWith(QStringLiteral(".8xp"), Qt::CaseInsensitive)) {
         filename += QStringLiteral(".8xp");

@@ -110,12 +110,12 @@ void MainWindow::debuggerImportFile(const QString &filename) {
 
     QSettings debugInfo(filename, QSettings::IniFormat);
     if (debugInfo.value(QStringLiteral("version")) != DBG_VERSION) {
-        warnBox = new QMessageBox;
-        warnBox->setWindowTitle(tr("Invalid Version"));
-        warnBox->setText(tr("This debugging information is incompatible with this version of CEmu"));
-        warnBox->setWindowModality(Qt::ApplicationModal);
-        warnBox->setAttribute(Qt::WA_DeleteOnClose);
-        warnBox->show();
+        QMessageBox *warn = new QMessageBox;
+        warn->setWindowTitle(tr("Invalid Version"));
+        warn->setText(tr("This debugging information is incompatible with this version of CEmu"));
+        warn->setWindowModality(Qt::ApplicationModal);
+        warn->setAttribute(Qt::WA_DeleteOnClose);
+        warn->show();
         return;
     }
 

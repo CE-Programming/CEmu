@@ -96,7 +96,7 @@ void MainWindow::setPortableConfig(bool state) {
     QString imagePath;
     QString setPath;
     QString romPath;
-    QDir dir = qApp->applicationDirPath();
+    QDir appDir = qApp->applicationDirPath();
 
     if (state) {
         setPath = qApp->applicationDirPath() + SETTING_DEFAULT_FILE;
@@ -109,12 +109,12 @@ void MainWindow::setPortableConfig(bool state) {
     imagePath =  QDir::cleanPath(QFileInfo(setPath).absoluteDir().absolutePath() + SETTING_DEFAULT_IMAGE_FILE);
 
     if(state) {
-        debugPath = dir.relativeFilePath(debugPath);
-        imagePath = dir.relativeFilePath(imagePath);
-        romPath = dir.relativeFilePath(settings->value(SETTING_ROM_PATH).toString());
+        debugPath = appDir.relativeFilePath(debugPath);
+        imagePath = appDir.relativeFilePath(imagePath);
+        romPath = appDir.relativeFilePath(settings->value(SETTING_ROM_PATH).toString());
         settings->setValue(SETTING_ROM_PATH, romPath);
         ui->rompathView->setText(romPath);
-        ui->settingsPath->setText(dir.relativeFilePath(setPath));
+        ui->settingsPath->setText(appDir.relativeFilePath(setPath));
     } else {
         ui->settingsPath->setText(setPath);
     }
@@ -128,7 +128,7 @@ void MainWindow::setPortableConfig(bool state) {
     ui->savedDebugPath->setText(debugPath);
     emu.image = imagePath;
     pathSettings = setPath;
-    settings->sync();
+    saveSettings();
     portable = state;
     ui->buttonChangeSavedDebugPath->setEnabled(!portable);
     ui->buttonChangeSavedImagePath->setEnabled(!portable);
@@ -193,7 +193,7 @@ void MainWindow::exportCEmuBootImage() {
                                                       currDir.absolutePath(),
                                                       tr("Bootable CEmu images (*.cemu);"));
     saveMiscSettings();
-    settings->sync();
+    saveSettings();
 
     if (!saveImage.isEmpty()) {
         currDir = QFileInfo(saveImage).absoluteDir();
@@ -777,6 +777,15 @@ void MainWindow::checkVersion() {
             reloadAll();
         }
         setVersion();
+    }
+}
+
+void MainWindow::saveSettings() {
+    if (opts.useSettings) {
+        settings->sync();
+    } else {
+        QFile settingsFile(settings->fileName());
+        settingsFile.remove();
     }
 }
 

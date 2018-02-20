@@ -411,17 +411,32 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
         pathSettings = opts.settingsFile;
     }
 
-    settings = new QSettings(pathSettings, QSettings::IniFormat);
+    if (opts.useSettings) {
+        settings = new QSettings(pathSettings, QSettings::IniFormat);
+    } else {
+        settings = new QSettings();
+        settings->clear();
+        saveSettings();
+    }
     resetSettingsIfLoadedCEmuBootableImage();
+
+    QFileInfo settingsFile(pathSettings);
+    QFileInfo settingsDirectory(settingsFile.path());
+    if(opts.useSettings && settingsDirectory.isDir() && !settingsDirectory.isWritable()){
+        pathSettings = portableSettings;
+        ui->settingsPath->setText(pathSettings);
+        setPortableConfig(true);
+        pathSettings = portableSettings;
+        ui->settingsPath->setText(pathSettings);
+        activatedPortable = true;
+    }
 
     if (portable) {
         ui->checkPortable->setChecked(true);
         ui->buttonChangeSavedDebugPath->setEnabled(false);
         ui->buttonChangeSavedImagePath->setEnabled(false);
-        ui->settingsPath->setText(QFile(pathSettings).fileName());
-    } else {
-        ui->settingsPath->setText(pathSettings);
     }
+    ui->settingsPath->setText(pathSettings);
 
     setAutoCheckForUpdates(settings->value(SETTING_AUTOUPDATE, CEMU_RELEASE).toBool());
     checkVersion();
@@ -506,7 +521,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
             initPassed = false;
         }
     } else {
-        if (settings->value(SETTING_RESTORE_ON_OPEN).toBool()
+        if (opts.useSettings && settings->value(SETTING_RESTORE_ON_OPEN, true).toBool()
                 && fileExists(emu.image)
                 && opts.restoreOnOpen) {
             restoreEmuState();
@@ -776,10 +791,8 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent *event) {
 
 void MainWindow::setup() {
     const QByteArray geometry = settings->value(SETTING_WINDOW_GEOMETRY, QByteArray()).toByteArray();
-    const QRect availableGeometry = qApp->desktop()->availableGeometry();
     if (geometry.isEmpty()) {
-        resize(availableGeometry.width() / 2, availableGeometry.height() / 2);
-        move((availableGeometry.width() - width()) / 2, (availableGeometry.height() - height()) / 2);
+        setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, minimumSize(), qApp->desktop()->availableGeometry()));
         setUIDocks();
         setUIEditMode(settings->value(SETTING_UI_EDIT_MODE, true).toBool());
     } else {
@@ -801,19 +814,19 @@ void MainWindow::setup() {
         }
     }
 
-    if (isFirstRun() && initPassed && !needFullReset) {
-        infoBox = new QMessageBox();
+    if (opts.useSettings && isFirstRun() && initPassed && !needFullReset) {
+        QMessageBox *info = new QMessageBox();
         settings->setValue(SETTING_FIRST_RUN, true);
-        infoBox->setWindowTitle(MSG_INFORMATION);
-        infoBox->setText(tr("Welcome!\nCEmu uses a customizable dock-style interface. "
+        info->setWindowTitle(MSG_INFORMATION);
+        info->setText(tr("Welcome!\nCEmu uses a customizable dock-style interface. "
                             "Drag and drop to move tabs and windows around on the screen, "
                             "and choose which docks are available in the 'Docks' menu in the topmost bar. "
                             "Be sure that 'Enable UI edit mode' is selected when laying out your interface. "
                             "Enjoy!"));
-        infoBox->setWindowModality(Qt::NonModal);
-        infoBox->setWindowFlags(infoBox->windowFlags() | Qt::WindowStaysOnTopHint);
-        infoBox->setAttribute(Qt::WA_DeleteOnClose);
-        infoBox->show();
+        info->setWindowModality(Qt::NonModal);
+        info->setWindowFlags(info->windowFlags() | Qt::WindowStaysOnTopHint);
+        info->setAttribute(Qt::WA_DeleteOnClose);
+        info->show();
     }
 
     QString prefLang = settings->value(SETTING_PREFERRED_LANG, "none").toString();
@@ -827,7 +840,18 @@ void MainWindow::setup() {
     if (opts.speed != -1) {
         setEmuSpeed(opts.speed);
     }
-    settings->sync();
+
+    saveSettings();
+    if (activatedPortable) {
+        QMessageBox *info = new QMessageBox();
+        info->setWindowTitle(MSG_INFORMATION);
+        info->setText(tr("CEmu was not able to write to the standard settings location.\n"
+                         "Portable mode has been activated."));
+        info->setWindowModality(Qt::NonModal);
+        info->setWindowFlags(info->windowFlags() | Qt::WindowStaysOnTopHint);
+        info->setAttribute(Qt::WA_DeleteOnClose);
+        info->show();
+    }
 }
 
 void MainWindow::createMemoryDock(const QString &title) {
@@ -1126,15 +1150,11 @@ void MainWindow::restored(bool success) {
 
 void MainWindow::saved(bool success) {
     if (!success) {
-        QMessageBox::warning(this, MSG_WARNING, tr("Saving failed.\nSaving failed! Please let someone who maintains this know."));
+        QMessageBox::warning(this, MSG_WARNING, tr("Saving failed. Please check write permissions in settings directory."));
     }
 
     if (closeAfterSave) {
-        if (!success) {
-            closeAfterSave = false;
-        } else {
-            close();
-        }
+        close();
     }
 }
 

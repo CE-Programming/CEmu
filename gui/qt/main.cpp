@@ -37,9 +37,9 @@ int main(int argc, char *argv[]) {
     parser.addOption(unthrottledOption);
 
     // Disable loading a saved state and disables saving to one on application close
-    QCommandLineOption stateOption(QStringList() << QStringLiteral("n") << QStringLiteral("no-state"),
+    QCommandLineOption noState(QStringList() << QStringLiteral("n") << QStringLiteral("no-state"),
                 QCoreApplication::translate("main", "Do not load state from disk."));
-    parser.addOption(stateOption);
+    parser.addOption(noState);
 
     // Sends files on start
     QCommandLineOption sendFiles(QStringList() << QStringLiteral("s") << QStringLiteral("send"),
@@ -103,6 +103,10 @@ int main(int argc, char *argv[]) {
                 QCoreApplication::translate("main", "Does not reset when sending"));
     parser.addOption(deforceReset);
 
+    QCommandLineOption noSettings(QStringList() << QStringLiteral("no-settings"),
+                QCoreApplication::translate("main", "Do not restore or save settings when running"));
+    parser.addOption(noSettings);
+
     QCommandLineOption forceRomReload(QStringList() << QStringLiteral("reload-rom"),
                 QCoreApplication::translate("main", "Forces a rom reload"));
     parser.addOption(forceRomReload);
@@ -118,7 +122,8 @@ int main(int argc, char *argv[]) {
 
     // Take command line args and move to CEmuOpts struct
     CEmuOpts opts;
-    opts.restoreOnOpen      = !parser.isSet(stateOption);
+    opts.restoreOnOpen      = !parser.isSet(noState);
+    opts.useSettings        = !parser.isSet(noSettings);
     opts.useUnthrottled     = parser.isSet(unthrottledOption);
     opts.suppressTestDialog = parser.isSet(suppressTestDialog);
     opts.deforceReset       = parser.isSet(deforceReset);
