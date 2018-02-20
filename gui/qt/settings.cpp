@@ -462,7 +462,11 @@ void MainWindow::setUIEditMode(bool mode) {
     actionAddMemory->setEnabled(uiEditMode);
     updateDocks();
     if (uiEditMode) {
-        setDockOptions(QMainWindow::GroupedDragging | QMainWindow::AnimatedDocks | QMainWindow::AllowNestedDocks | QMainWindow::AllowTabbedDocks);
+        setDockOptions(QMainWindow::AnimatedDocks | QMainWindow::AllowNestedDocks | QMainWindow::AllowTabbedDocks
+#if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
+        | QMainWindow::GroupedDragging
+#endif
+        );
     } else {
         setDockOptions(0);
     }
