@@ -7,7 +7,7 @@
 
 DockWidget::DockWidget(QWidget *parent)
     : QDockWidget{parent}, m_titleHide{new QWidget{this}}, m_tabs{this},
-      m_closable{true}, m_expandable{false} {}
+      m_closable{true}, m_expandable{true} {}
 
 DockWidget::DockWidget(const QString &title, QWidget *parent) : DockWidget{parent} {
     setWindowTitle(title);
