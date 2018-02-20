@@ -55,7 +55,8 @@ RomSelection::RomSelection(QWidget *p) : QDialog(p), ui(new Ui::RomSelection) {
     ui->dropArea->clear();
     connect(ui->dropArea, &DropArea::processDrop, this, &RomSelection::processDrop);
 
-    ui->versionLabel->setText(ui->versionLabel->text() + QStringLiteral(CEMU_VERSION));
+    ui->versionLabel->setText(ui->versionLabel->text() + QStringLiteral(CEMU_VERSION " (git: " CEMU_GIT_SHA ")"));
+
     ui->progressBar->setEnabled(false);
 }
 
