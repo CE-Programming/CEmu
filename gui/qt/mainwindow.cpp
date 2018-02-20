@@ -746,27 +746,32 @@ DockWidget *MainWindow::redistributeFindDock(const QPoint &pos) {
     return findSelfOrParent<DockWidget *>(child);
 }
 bool MainWindow::redistributeDocks(const QPoint &pos, const QPoint &offset,
+                                   Qt::CursorShape cursorShape,
                                    int (QSize::*dimension)() const,
                                    Qt::Orientation orientation) {
-    if (DockWidget *before = redistributeFindDock(pos - offset)) {
-        if (DockWidget *after = redistributeFindDock(pos + offset)) {
-            if (before != after) {
-                int size = (before->size().*dimension)() + (after->size().*dimension)();
-                resizeDocks({before, after}, {size / 2, size - size / 2}, orientation);
-                return true;
+    if (cursor().shape() == cursorShape) {
+        if (DockWidget *before = redistributeFindDock(pos - offset)) {
+            if (DockWidget *after = redistributeFindDock(pos + offset)) {
+                if (before != after) {
+                    int size = (before->size().*dimension)() + (after->size().*dimension)();
+                    resizeDocks({before, after}, {size / 2, size - size / 2}, orientation);
+                    return true;
+                }
             }
         }
     }
     return false;
 }
 void MainWindow::mouseDoubleClickEvent(QMouseEvent *event) {
-    int sep = style()->pixelMetric(QStyle::PM_DockWidgetSeparatorExtent, Q_NULLPTR, this);
-    if (redistributeDocks(event->pos(), {sep, 0}, &QSize::width, Qt::Horizontal) ||
-        redistributeDocks(event->pos(), {0, sep}, &QSize::height, Qt::Vertical)) {
-        event->accept();
-    } else {
-        QMainWindow::mouseDoubleClickEvent(event);
+    if (!childAt(event->pos())) {
+        int sep = style()->pixelMetric(QStyle::PM_DockWidgetSeparatorExtent, Q_NULLPTR, this);
+        if (redistributeDocks(event->pos(), {sep, 0}, Qt::SplitHCursor, &QSize::width, Qt::Horizontal) ||
+            redistributeDocks(event->pos(), {0, sep}, Qt::SplitVCursor, &QSize::height, Qt::Vertical)) {
+            event->accept();
+            return;
+        }
     }
+    QMainWindow::mouseDoubleClickEvent(event);
 }
 
 void MainWindow::setup() {

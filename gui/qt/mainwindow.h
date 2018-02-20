@@ -509,6 +509,7 @@ private:
     // Redistribute Docks
     DockWidget *redistributeFindDock(const QPoint &pos);
     bool redistributeDocks(const QPoint &pos, const QPoint &offset,
+                           Qt::CursorShape cursorShape,
                            int (QSize::*dimension)() const,
                            Qt::Orientation orientation);
 
