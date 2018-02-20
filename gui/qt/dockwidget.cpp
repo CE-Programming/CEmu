@@ -42,14 +42,25 @@ void DockWidget::toggleState(bool visible) {
     setTitleBarWidget(isFloating() || visible ? Q_NULLPTR : new QWidget(this));
 }
 
+QMainWindow *DockWidget::mainWindow() {
+    for (QWidget *parent = parentWidget(); parent; parent = parent->parentWidget()) {
+        if (QMainWindow *window = qobject_cast<QMainWindow *>(parent)) {
+            return window;
+        }
+    }
+    return Q_NULLPTR;
+}
+
 QList<DockWidget *> DockWidget::tabs(DockWidget *without) {
     QList<DockWidget *> tabs;
     if (this != without) {
         tabs << this;
     }
-    for (QDockWidget *tab : qobject_cast<QMainWindow *>(parentWidget())->tabifiedDockWidgets(this)) {
-        if (tab != without) {
-            tabs << qobject_cast<DockWidget *>(tab);
+    if (QMainWindow *window = mainWindow()) {
+        for (QDockWidget *tab : window->tabifiedDockWidgets(this)) {
+            if (tab != without) {
+                tabs << qobject_cast<DockWidget *>(tab);
+            }
         }
     }
     return tabs;
@@ -75,11 +86,11 @@ void DockWidget::updateExpandability(const QList<DockWidget *> &tabs) {
     }
     DockWidget *other = tabs.last();
     for (DockWidget *tab : tabs) {
-        if (tab->widget()) {
+        if (QWidget *widget = tab->widget()) {
             if (expandable || tab->isExpandable()) {
-                tab->widget()->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+                widget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
             } else {
-                tab->widget()->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
+                widget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
             }
         }
         tab->m_tabs = other;

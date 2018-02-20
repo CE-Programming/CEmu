@@ -23,8 +23,9 @@ public:
     void setExpandable(bool expandable) { m_expandable = expandable; }
 
 protected slots:
+    QMainWindow *mainWindow();
     QList<DockWidget *> tabs(DockWidget *without = Q_NULLPTR);
-    void showEvent(QShowEvent *event);
+    virtual void showEvent(QShowEvent *event) Q_DECL_OVERRIDE;
     void updateExpandability(const QList<DockWidget *> &tabs);
 
 private:
