@@ -738,6 +738,37 @@ void MainWindow::showEvent(QShowEvent *e) {
     e->accept();
 }
 
+DockWidget *MainWindow::redistributeFindDock(const QPoint &pos) {
+    QWidget *child = childAt(pos);
+    if (QTabBar *tabBar = findSelfOrParent<QTabBar *>(child)) {
+        child = childAt({pos.x(), tabBar->mapTo(this, {}).y() - 1});
+    }
+    return findSelfOrParent<DockWidget *>(child);
+}
+bool MainWindow::redistributeDocks(const QPoint &pos, const QPoint &offset,
+                                   int (QSize::*dimension)() const,
+                                   Qt::Orientation orientation) {
+    if (DockWidget *before = redistributeFindDock(pos - offset)) {
+        if (DockWidget *after = redistributeFindDock(pos + offset)) {
+            if (before != after) {
+                int size = (before->size().*dimension)() + (after->size().*dimension)();
+                resizeDocks({before, after}, {size / 2, size - size / 2}, orientation);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+void MainWindow::mouseDoubleClickEvent(QMouseEvent *event) {
+    int sep = style()->pixelMetric(QStyle::PM_DockWidgetSeparatorExtent, Q_NULLPTR, this);
+    if (redistributeDocks(event->pos(), {sep, 0}, &QSize::width, Qt::Horizontal) ||
+        redistributeDocks(event->pos(), {0, sep}, &QSize::height, Qt::Vertical)) {
+        event->accept();
+    } else {
+        QMainWindow::mouseDoubleClickEvent(event);
+    }
+}
+
 void MainWindow::setup() {
     const QByteArray geometry = settings->value(SETTING_WINDOW_GEOMETRY, QByteArray()).toByteArray();
     const QRect availableGeometry = qApp->desktop()->availableGeometry();

@@ -1,10 +1,13 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <string>
 #include <QtCore/QMimeData>
+#include <QtCore/QObject>
 #include <QtGui/QDrag>
 #include <QtGui/QDragEnterEvent>
+
+#include <string>
+#include <type_traits>
 
 #ifdef _MSC_VER
 // Define a custom version of pid_t for MSVC (DWORD native type)
@@ -48,5 +51,26 @@ extern bool guiDebug;
 extern bool guiSend;
 extern bool guiReceive;
 extern bool guiEmuValid;
+
+template<class T>
+typename std::enable_if<std::is_pointer<T>::value, T>::type
+findSelfOrParent(QObject *object) {
+    while (object) {
+        if (T result = qobject_cast<T>(object)) {
+            return result;
+        }
+        object = object->parent();
+    }
+    return Q_NULLPTR;
+}
+
+template<class T>
+typename std::enable_if<std::is_pointer<T>::value, T>::type
+findParent(QObject *object) {
+    if (!object) {
+        return Q_NULLPTR;
+    }
+    return findSelfOrParent<T>(object->parent());
+}
 
 #endif

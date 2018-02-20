@@ -23,6 +23,7 @@
 #include "keypad/qtkeypadbridge.h"
 #include "qhexedit/qhexedit.h"
 #include "png.h"
+class DockWidget;
 
 #include "../../core/vat.h"
 #include "../../core/debug/debug.h"
@@ -120,6 +121,7 @@ protected:
     virtual void closeEvent(QCloseEvent*) Q_DECL_OVERRIDE;
     virtual bool eventFilter(QObject*, QEvent*) Q_DECL_OVERRIDE;
     virtual void showEvent(QShowEvent *event) Q_DECL_OVERRIDE;
+    virtual void mouseDoubleClickEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
 
     // Drag & Drop
     virtual void dropEvent(QDropEvent*) Q_DECL_OVERRIDE;
@@ -503,6 +505,12 @@ private:
     void toggleConsole();
     void installToggleConsole();
 #endif
+
+    // Redistribute Docks
+    DockWidget *redistributeFindDock(const QPoint &pos);
+    bool redistributeDocks(const QPoint &pos, const QPoint &offset,
+                           int (QSize::*dimension)() const,
+                           Qt::Orientation orientation);
 
     // Misc
     int pausedSpeed;

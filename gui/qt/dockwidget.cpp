@@ -1,4 +1,5 @@
 #include "dockwidget.h"
+#include "utils.h"
 
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QMainWindow>
@@ -42,21 +43,12 @@ void DockWidget::toggleState(bool visible) {
     setTitleBarWidget(isFloating() || visible ? Q_NULLPTR : new QWidget(this));
 }
 
-QMainWindow *DockWidget::mainWindow() {
-    for (QWidget *parent = parentWidget(); parent; parent = parent->parentWidget()) {
-        if (QMainWindow *window = qobject_cast<QMainWindow *>(parent)) {
-            return window;
-        }
-    }
-    return Q_NULLPTR;
-}
-
 QList<DockWidget *> DockWidget::tabs(DockWidget *without) {
     QList<DockWidget *> tabs;
     if (this != without) {
         tabs << this;
     }
-    if (QMainWindow *window = mainWindow()) {
+    if (QMainWindow *window = findParent<QMainWindow *>(this)) {
         for (QDockWidget *tab : window->tabifiedDockWidgets(this)) {
             if (tab != without) {
                 tabs << qobject_cast<DockWidget *>(tab);
