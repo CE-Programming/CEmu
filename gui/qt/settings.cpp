@@ -505,7 +505,7 @@ void MainWindow::checkForUpdates(bool forceInfoBox) {
         if (!newVersionURL.isEmpty()) {
             if (newVersionURL.compare(currentVersionReleaseURL) == 0) {
                 if (forceInfoBox) {
-                    QMessageBox::information(this, tr("No update available"), tr("You already have the latest CEmu version (" CEMU_VERSION ")"));
+                    QMessageBox::information(this, tr("No update available"), tr("You already have the latest CEmu version") + QStringLiteral(" (" CEMU_VERSION ")"));
                 }
             } else {
                 QMessageBox updateInfoBox(this);
