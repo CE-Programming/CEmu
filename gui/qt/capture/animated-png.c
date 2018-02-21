@@ -10,6 +10,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "../../core/schedule.h"
+
 apng_t apng;
 
 bool apng_start(const char *tmp_name, int frameskip) {
@@ -33,15 +35,7 @@ bool apng_start(const char *tmp_name, int frameskip) {
     return true;
 }
 
-
-static uint32_t gcd(uint32_t a, uint32_t b) {
-    if (!a) {
-        return b;
-    }
-    return gcd(b % a, a);
-}
-
-void apng_add_frame(const void *frame, uint16_t num, uint16_t den) {
+void apng_add_frame(const void *frame) {
     if (!apng.recording) {
         return;
     }
@@ -49,25 +43,20 @@ void apng_add_frame(const void *frame, uint16_t num, uint16_t den) {
     if (!apng.skipped--) {
         apng.skipped = apng.frameskip;
 
-        if (!memcmp(frame, apng.frame, sizeof(apng.frame))) {
-            uint32_t num_tmp, den_tmp, den_gcd;
-            den_gcd = gcd(apng.den, den);
-            den_tmp = (apng.den / den_gcd) * den;
-            num_tmp = (num * (den_tmp / apng.den)) + (num * (den_tmp / den));
-            if (den_tmp < 0xFFFFu && num_tmp < 0xFFFFu) {
-                apng.num = num_tmp;
-                apng.den = den_tmp;
-            }
-        } else {
+        if (!apng.n || memcmp(frame, apng.frame, sizeof(apng.frame))) {
             if (apng.n) {
+                uint64_t cycles = sched_total_time() - apng.prev_time;
+                uint32_t logo = 48 - __builtin_clzll(cycles);
+                uint32_t shift = logo < 10 ? 10 : logo;
+                apng.num = cycles >> shift;
+                apng.den = 48000000 >> shift;
                 fwrite(&apng.num, sizeof(apng.num), 1, apng.tmp);
                 fwrite(&apng.den, sizeof(apng.den), 1, apng.tmp);
+                apng.prev_time = apng.num << shift;
             }
             memcpy(apng.frame, frame, sizeof(apng.frame));
             fwrite(apng.frame, 1, sizeof(apng.frame), apng.tmp);
             apng.n++;
-            apng.num = num;
-            apng.den = den;
         }
     }
 }
@@ -139,8 +128,7 @@ bool apng_save(const char *filename, bool optimize) {
                     }
                 }
             }
-            fseek(apng.tmp, sizeof(apng.num), SEEK_CUR);
-            fseek(apng.tmp, sizeof(apng.den), SEEK_CUR);
+            fseek(apng.tmp, sizeof(apng.num) + sizeof(apng.den), SEEK_CUR);
         }
     }
     rewind(apng.tmp);

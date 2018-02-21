@@ -137,6 +137,7 @@ void MainWindow::setPortableConfig(bool state) {
 void MainWindow::setFrameskip(int value) {
     settings->setValue(SETTING_CAPTURE_FRAMESKIP, value);
     ui->apngSkip->setValue(value);
+    ui->apngSkipDisplay->setText(QString::number(ui->guiSkip->value() + ui->apngSkip->value() + 1));
 }
 
 void MainWindow::setOptimizeRecording(bool state) {
@@ -579,6 +580,7 @@ void MainWindow::setGuiSkip(int value) {
     ui->guiSkip->blockSignals(true);
     ui->guiSkip->setValue(value);
     ui->guiSkip->blockSignals(false);
+    ui->apngSkipDisplay->setText(QString::number(ui->guiSkip->value() + ui->apngSkip->value() + 1));
     emit updateFrameskip(value);
 }
 

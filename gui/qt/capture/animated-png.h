@@ -24,11 +24,12 @@ typedef struct {
     unsigned int frameskip;
     unsigned int skipped;
     uint32_t table[TABLE_SIZE], frame[LCD_HEIGHT][LCD_WIDTH], prev[LCD_HEIGHT][LCD_WIDTH];
+    uint64_t prev_time;
     png_bytep row_ptrs[LCD_HEIGHT];
 } apng_t;
 
 bool apng_start(const char *tmp_name, int frameskip);
-void apng_add_frame(const void *frame, uint16_t num, uint16_t den);
+void apng_add_frame(const void *frame);
 bool apng_stop(void);
 bool apng_save(const char *filename, bool optimize);
 

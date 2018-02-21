@@ -1406,7 +1406,7 @@ void MainWindow::recordAPNG() {
             return;
         }
         path = QDir::tempPath() + QDir::separator() + QStringLiteral("apng_tmp.png");
-        apng_start(path.toStdString().c_str(), ui->guiSkip->value() + ui->apngSkip->value());
+        apng_start(path.toStdString().c_str(), ui->apngSkip->value());
         showStatusMsg(tr("Recording..."));
     } else {
         showStatusMsg(QStringLiteral("Saving Recording..."));
