@@ -10,12 +10,12 @@ from util import *
 
 SEVENZIP="C:\\Program Files\\7-Zip\\7z.exe"
 QTBASEDIR="C:\\"
-QT32 = "Qt\\Qt5.6.0-static"
+QT32 = "Qt\\Qt5.10.0-static"
 SSL32 = "OpenSSL-win32"
 SSL64 = "OpenSSL-win64"
-QT64 = "Qt\\Qt5.6.0x64-static"
+QT64 = "Qt\\Qt5.10.0x64-static"
 LIB_DLL_DIR = ""
-ARC_PREFIX = "Qt560_Rel_Static_"
+ARC_PREFIX = "Qt5100_Rel_Static_"
 ARC_SUFFIX_DEV = "_DevDeploy"
 
 # What libraries need to be included?
@@ -105,7 +105,7 @@ def silent_remove_wildcard(file_wc):
         silentremove(f)
 
 print("====================================================")
-print("= Building Qt v5.6 development archive (static)... =")
+print("= Building Qt v5.10 development archive (static)... =")
 print("====================================================")
 
 # Modify PATH if needed
@@ -127,7 +127,7 @@ mkdir_p("build_32")
 
 os.chdir("build_32")
 print(os.getcwd())
-if not simple_exec([r'C:\Qt\Qt5.6.0-static\bin\qmake', '-spec', 'win32-msvc2015', '-tp', 'vc', r'..\..\CEmu.pro']):
+if not simple_exec([r'C:\Qt\Qt5.10.0-static\bin\qmake', '-spec', 'win32-msvc2015', '-tp', 'vc', r'..\..\CEmu.pro']):
     print(" ! ERROR: Creating project files for x86 failed!")
     sys.exit(1)
 os.chdir("..")
