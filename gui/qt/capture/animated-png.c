@@ -27,37 +27,54 @@ bool apng_start(const char *tmp_name, int frameskip) {
     apng.skipped = 0;
     apng.n = 0;
 
+    apng.num = 0;
+    apng.den = 0;
+
     return true;
 }
 
-void apng_add_frame(const void *frame, int num, int den) {
+
+static uint32_t gcd(uint32_t a, uint32_t b) {
+    if (!a) {
+        return b;
+    }
+    return gcd(b % a, a);
+}
+
+void apng_add_frame(const void *frame, uint16_t num, uint16_t den) {
     if (!apng.recording) {
         return;
     }
 
-    apng.num = num;
-    apng.den = den;
-
     if (!apng.skipped--) {
         apng.skipped = apng.frameskip;
 
-        // write frame to temp file
-        if (!apng.n || 0xFFFFu - apng.delay < apng.num || memcmp(frame, apng.frame, sizeof(apng.frame))) {
-            if (apng.n) {
-                fwrite(&apng.delay, sizeof(apng.delay), 1, apng.tmp);
+        if (!memcmp(frame, apng.frame, sizeof(apng.frame))) {
+            uint32_t num_tmp, den_tmp, den_gcd;
+            den_gcd = gcd(apng.den, den);
+            den_tmp = (apng.den / den_gcd) * den;
+            num_tmp = (num * (den_tmp / apng.den)) + (num * (den_tmp / den));
+            if (den_tmp < 0xFFFFu && num_tmp < 0xFFFFu) {
+                apng.num = num_tmp;
+                apng.den = den_tmp;
             }
-            apng.delay = 0;
+        } else {
+            if (apng.n) {
+                fwrite(&apng.num, sizeof(apng.num), 1, apng.tmp);
+                fwrite(&apng.den, sizeof(apng.den), 1, apng.tmp);
+            }
             memcpy(apng.frame, frame, sizeof(apng.frame));
             fwrite(apng.frame, 1, sizeof(apng.frame), apng.tmp);
             apng.n++;
+            apng.num = num;
+            apng.den = den;
         }
-
-        apng.delay += apng.num;
     }
 }
 
 bool apng_stop(void) {
-    fwrite(&apng.delay, sizeof(apng.delay), 1, apng.tmp);
+    fwrite(&apng.num, sizeof(apng.num), 1, apng.tmp);
+    fwrite(&apng.den, sizeof(apng.den), 1, apng.tmp);
     apng.recording = false;
     return true;
 }
@@ -122,7 +139,8 @@ bool apng_save(const char *filename, bool optimize) {
                     }
                 }
             }
-            fseek(apng.tmp, sizeof(apng.delay), SEEK_CUR);
+            fseek(apng.tmp, sizeof(apng.num), SEEK_CUR);
+            fseek(apng.tmp, sizeof(apng.den), SEEK_CUR);
         }
     }
     rewind(apng.tmp);
@@ -168,7 +186,8 @@ bool apng_save(const char *filename, bool optimize) {
 
     for (i = 0; i != apng.n; i++) {
         if (fread(apng.frame, 1, sizeof(apng.frame), apng.tmp) != sizeof(apng.frame) ||
-            fread(&apng.delay, sizeof(apng.delay), 1, apng.tmp) != 1) { goto err; }
+            fread(&apng.num, sizeof(apng.num), 1, apng.tmp) != 1 ||
+            fread(&apng.den, sizeof(apng.den), 1, apng.tmp) != 1) { goto err; }
 
         frame.x[0] = LCD_WIDTH - 1;
         frame.y[0] = LCD_HEIGHT - 1;
@@ -263,7 +282,7 @@ bool apng_save(const char *filename, bool optimize) {
         }
 
         png_write_frame_head(png_ptr, info_ptr, &apng.row_ptrs[frame.y[0]], frame.x[1] - frame.x[0] + 1, frame.y[1] - frame.y[0] + 1,
-                             frame.x[0], frame.y[0], apng.delay, apng.den, PNG_DISPOSE_OP_NONE, PNG_BLEND_OP_OVER);
+                             frame.x[0], frame.y[0], apng.num, apng.den, PNG_DISPOSE_OP_NONE, PNG_BLEND_OP_OVER);
         png_write_image(png_ptr, &apng.row_ptrs[frame.y[0]]);
         png_write_frame_tail(png_ptr, info_ptr);
     }

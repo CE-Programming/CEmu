@@ -15,6 +15,7 @@ int main(int argc, char *argv[]) {
 #endif
     QApplication app(argc, argv);
 
+
     QCoreApplication::setOrganizationName(QStringLiteral("cemu-dev"));
     QCoreApplication::setApplicationName(QStringLiteral("CEmu"));
 

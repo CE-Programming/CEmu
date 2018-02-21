@@ -134,11 +134,19 @@ void LCDWidget::draw() {
             lcd_drawframe(image.bits(), lcd.control & 1 << 11 ? lcd.data : nullptr, lcd.data_end, lcd.control, LCD_SIZE);
             mutex.unlock();
         }
-        double lcdRate = lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP);
 #ifdef PNG_WRITE_APNG_SUPPORTED
-        apng_add_frame(image.constBits(), lcdRate, 24e6);
+        static uint64_t prev_cycles = 0;
+        uint32_t rate = sched.clockRates[CLOCK_CPU];
+        uint64_t cycles = sched_total_time() - prev_cycles;
+        uint32_t logo = (rate / 1e6) - __builtin_clzll(cycles);
+        uint32_t shift = logo < 10 ? 10 : logo;
+        uint16_t num = cycles >> shift;
+        uint16_t den = rate >> shift;
+        apng_add_frame(image.constBits(), num, den);
+        prev_cycles = num << shift;
 #endif
-        emit updateLcd((24e6 / lcdRate) / (frameskip + 1));
+        double guiFps = 24e6 / (lcd.PCD * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * (lcd.VSW + lcd.VBP + lcd.LPP + lcd.VFP));
+        emit updateLcd(guiFps / (frameskip + 1));
     }
 }
 
