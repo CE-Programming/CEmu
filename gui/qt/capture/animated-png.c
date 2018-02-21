@@ -34,7 +34,6 @@ static inline int clzll(unsigned long long input_num) {
 apng_t apng;
 
 bool apng_start(const char *tmp_name, int frameskip) {
-
     // temp file used for saving rgb888 data rather than storing everything in ram
     if (!(apng.tmp = fopen(tmp_name, "w+b"))) {
         return false;
@@ -48,10 +47,17 @@ bool apng_start(const char *tmp_name, int frameskip) {
     apng.skipped = 0;
     apng.n = 0;
 
-    apng.num = 0;
-    apng.den = 0;
-
     return true;
+}
+
+static void apng_write_delay(void) {
+    uint64_t time = sched_total_time() - apng.prev_time;
+    int logo = 48 - clzll(time);
+    uint64_t shift = logo > 10 ? logo : 10;
+    png_uint_16 num = time >> shift, den = 48000000 >> shift;
+    fwrite(&num, sizeof(num), 1, apng.tmp);
+    fwrite(&den, sizeof(den), 1, apng.tmp);
+    apng.prev_time += num << shift;
 }
 
 void apng_add_frame(const void *frame) {
@@ -63,15 +69,10 @@ void apng_add_frame(const void *frame) {
         apng.skipped = apng.frameskip;
 
         if (!apng.n || memcmp(frame, apng.frame, sizeof(apng.frame))) {
-            if (apng.n) {
-                uint64_t cycles = sched_total_time() - apng.prev_time;
-                uint64_t logo = 48 - clzll(cycles);
-                uint64_t shift = logo < 10 ? 10 : logo;
-                apng.num = cycles >> shift;
-                apng.den = 48000000 >> shift;
-                fwrite(&apng.num, sizeof(apng.num), 1, apng.tmp);
-                fwrite(&apng.den, sizeof(apng.den), 1, apng.tmp);
-                apng.prev_time = apng.num << shift;
+            if (!apng.n) {
+                apng.prev_time = sched_total_time();
+            } else {
+                apng_write_delay();
             }
             memcpy(apng.frame, frame, sizeof(apng.frame));
             fwrite(apng.frame, 1, sizeof(apng.frame), apng.tmp);
@@ -81,8 +82,7 @@ void apng_add_frame(const void *frame) {
 }
 
 bool apng_stop(void) {
-    fwrite(&apng.num, sizeof(apng.num), 1, apng.tmp);
-    fwrite(&apng.den, sizeof(apng.den), 1, apng.tmp);
+    apng_write_delay();
     apng.recording = false;
     return true;
 }
@@ -91,6 +91,7 @@ bool apng_save(const char *filename, bool optimize) {
     png_structp png_ptr;
     png_infop info_ptr;
     png_bytep dst;
+    png_uint_16 num, den;
     uint32_t *prev, *cur;
     png_colorp palette;
     png_color_16 trans;
@@ -147,7 +148,7 @@ bool apng_save(const char *filename, bool optimize) {
                     }
                 }
             }
-            fseek(apng.tmp, sizeof(apng.num) + sizeof(apng.den), SEEK_CUR);
+            fseek(apng.tmp, sizeof(num) + sizeof(den), SEEK_CUR);
         }
     }
     rewind(apng.tmp);
@@ -193,8 +194,8 @@ bool apng_save(const char *filename, bool optimize) {
 
     for (i = 0; i != apng.n; i++) {
         if (fread(apng.frame, 1, sizeof(apng.frame), apng.tmp) != sizeof(apng.frame) ||
-            fread(&apng.num, sizeof(apng.num), 1, apng.tmp) != 1 ||
-            fread(&apng.den, sizeof(apng.den), 1, apng.tmp) != 1) { goto err; }
+            fread(&num, sizeof(num), 1, apng.tmp) != 1 ||
+            fread(&den, sizeof(den), 1, apng.tmp) != 1) { goto err; }
 
         frame.x[0] = LCD_WIDTH - 1;
         frame.y[0] = LCD_HEIGHT - 1;
@@ -289,7 +290,7 @@ bool apng_save(const char *filename, bool optimize) {
         }
 
         png_write_frame_head(png_ptr, info_ptr, &apng.row_ptrs[frame.y[0]], frame.x[1] - frame.x[0] + 1, frame.y[1] - frame.y[0] + 1,
-                             frame.x[0], frame.y[0], apng.num, apng.den, PNG_DISPOSE_OP_NONE, PNG_BLEND_OP_OVER);
+                             frame.x[0], frame.y[0], num, den, PNG_DISPOSE_OP_NONE, PNG_BLEND_OP_OVER);
         png_write_image(png_ptr, &apng.row_ptrs[frame.y[0]]);
         png_write_frame_tail(png_ptr, info_ptr);
     }

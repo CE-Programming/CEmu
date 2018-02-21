@@ -18,7 +18,6 @@ extern "C" {
 
 typedef struct {
     FILE *tmp;
-    png_uint_16 num, den, delay;
     uint32_t n;
     bool recording;
     unsigned int frameskip;
