@@ -8927,6 +8927,10 @@ QPushButton:pressed {
      <property name="title">
       <string>Export</string>
      </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/icons/resources/icons/generic_export.png</normaloff>:/icons/resources/icons/generic_export.png</iconset>
+     </property>
      <addaction name="actionExportRomImage"/>
      <addaction name="actionExportCalculatorState"/>
      <addaction name="actionExportDebugger"/>
@@ -8936,6 +8940,10 @@ QPushButton:pressed {
     <widget class="QMenu" name="menuImport">
      <property name="title">
       <string>Import</string>
+     </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/icons/resources/icons/generic_import.png</normaloff>:/icons/resources/icons/generic_import.png</iconset>
      </property>
      <addaction name="actionImportCalculatorState"/>
      <addaction name="actionImportDebugger"/>
@@ -9310,6 +9318,10 @@ QPushButton:pressed {
    </property>
   </action>
   <action name="actionNew">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/icon.png</normaloff>:/icons/resources/icons/icon.png</iconset>
+   </property>
    <property name="text">
     <string>New CEmu instance</string>
    </property>
