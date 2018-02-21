@@ -233,6 +233,12 @@ static void lcd_event(enum sched_item_id id) {
         lcd.ris |= 1 << 3;
     }
     switch (lcd.compare) {
+        case LCD_FRONT_PORCH:
+            if (lcd.VFP) {
+                duration = lcd.VFP * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD;
+                lcd.compare = LCD_SYNC;
+                break;
+            }
         default:
         case LCD_SYNC:
             lcd_gui_event();
@@ -282,19 +288,17 @@ static void lcd_event(enum sched_item_id id) {
             lcd.compare = LCD_BACK_PORCH;
             break;
         case LCD_BACK_PORCH:
-            duration = lcd.VBP * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD;
-            lcd.compare = LCD_ACTIVE_VIDEO;
-            break;
+            if (lcd.VBP) {
+                duration = lcd.VBP * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD;
+                lcd.compare = LCD_ACTIVE_VIDEO;
+                break;
+            }
         case LCD_ACTIVE_VIDEO:
             duration = lcd.LPP * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD;
             if (!lcd.prefill) {
                 sched_repeat_relative(SCHED_LCD_DMA, SCHED_LCD, lcd.HSW + lcd.HBP, 0);
             }
             lcd.compare = LCD_FRONT_PORCH;
-            break;
-        case LCD_FRONT_PORCH:
-            duration = lcd.VFP * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD;
-            lcd.compare = LCD_SYNC;
             break;
     }
     intrpt_set(INT_LCD, lcd.ris & lcd.imsc);
