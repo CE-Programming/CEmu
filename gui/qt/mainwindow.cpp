@@ -236,6 +236,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->lcd, &LCDWidget::updateLcd, this, &MainWindow::updateLcd, Qt::QueuedConnection);
     connect(this, &MainWindow::updateMode, ui->lcd, &LCDWidget::setMode);
     connect(this, &MainWindow::updateFrameskip, ui->lcd, &LCDWidget::setFrameskip);
+    connect(ui->statusInterval, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setStatusInterval);
 
     // Capture
     connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
@@ -469,11 +470,12 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     setMemoryDocks();
     optLoadFiles(opts);
-    setFrameskip(settings->value(SETTING_CAPTURE_FRAMESKIP, 1).toUInt());
+    setFrameskip(settings->value(SETTING_CAPTURE_FRAMESKIP, 1).toInt());
     setOptimizeRecording(settings->value(SETTING_CAPTURE_OPTIMIZE, true).toBool());
-    setGuiSkip(settings->value(SETTING_SCREEN_FRAMESKIP, 0).toUInt());
-    setEmuSpeed(settings->value(SETTING_EMUSPEED, 100).toUInt());
-    setFont(settings->value(SETTING_DEBUGGER_TEXT_SIZE, 9).toUInt());
+    setStatusInterval(settings->value(SETTING_STATUS_INTERVAL, 1).toInt());
+    setGuiSkip(settings->value(SETTING_SCREEN_FRAMESKIP, 0).toInt());
+    setEmuSpeed(settings->value(SETTING_EMUSPEED, 100).toInt());
+    setFont(settings->value(SETTING_DEBUGGER_TEXT_SIZE, 9).toInt());
     setAutoSaveState(settings->value(SETTING_RESTORE_ON_OPEN, true).toBool());
     setSaveDebug(settings->value(SETTING_DEBUGGER_RESTORE_ON_OPEN, false).toBool());
     setSpaceDisasm(settings->value(SETTING_DEBUGGER_ADD_DISASM_SPACE, false).toBool());
@@ -1280,15 +1282,28 @@ void MainWindow::consoleErrStr(const QString &str) {
     }
 }
 
-void MainWindow::showEmuSpeed(int speed) {
-    QString label = " " + tr("Emulated Speed: ") + QString::number(speed, 10) + "%";
-    speedLabel.setText(label);
+void MainWindow::emuTimerSlot() {
+    connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed, Qt::QueuedConnection);
 }
 
-void MainWindow::updateLcd(double emuFps) {
+void MainWindow::fpsTimerSlot() {
+    fpsTimerTriggered = true;
+}
+
+void MainWindow::showEmuSpeed(int speed) {
+    static int speedPrev = 0;
+    if (speedPrev != speed) {
+        speedLabel.setText(tr("Emulated Speed: ") + QString::number(speed) + QStringLiteral("%"));
+        speedPrev = speed;
+    }
+    if (emuTimerTriggerable) {
+        disconnect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed);
+    }
+}
+
+void MainWindow::showFpsSpeed(double emuFps, double guiFps) {
     static double guiFpsPrev = 0;
     static double emuFpsPrev = 0;
-    double guiFps = ui->lcd->refresh();
     if (emuFpsPrev != emuFps) {
         ui->maxFps->setText(tr("Actual FPS: ") + QString::number(emuFps, 'f', 2));
         emuFpsPrev = emuFps;
@@ -1296,6 +1311,14 @@ void MainWindow::updateLcd(double emuFps) {
     if (guiFps < guiFpsPrev - 1 || guiFps > guiFpsPrev + 1) {
         fpsLabel.setText("FPS: " + QString::number(guiFps, 'f', 2));
         guiFpsPrev = guiFps;
+    }
+}
+
+void MainWindow::updateLcd(double emuFps) {
+    double guiFps = ui->lcd->refresh();
+    if (fpsTimerTriggered) {
+        showFpsSpeed(emuFps, guiFps);
+        fpsTimerTriggered = !fpsTimerTriggerable;
     }
 }
 

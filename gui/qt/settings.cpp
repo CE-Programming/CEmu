@@ -60,6 +60,7 @@ const QString MainWindow::SETTING_SLOT_NAMES                = QStringLiteral("Sl
 const QString MainWindow::SETTING_SLOT_PATHS                = QStringLiteral("Slot/paths");
 const QString MainWindow::SETTING_IMAGE_PATH                = QStringLiteral("image_path");
 const QString MainWindow::SETTING_ROM_PATH                  = QStringLiteral("rom_path");
+const QString MainWindow::SETTING_STATUS_INTERVAL           = QStringLiteral("status_interval");
 const QString MainWindow::SETTING_FIRST_RUN                 = QStringLiteral("first_run");
 const QString MainWindow::SETTING_UI_EDIT_MODE              = QStringLiteral("ui_edit_mode");
 const QString MainWindow::SETTING_PAUSE_FOCUS               = QStringLiteral("pause_on_focus_change");
@@ -581,6 +582,28 @@ void MainWindow::setGuiSkip(int value) {
     emit updateFrameskip(value);
 }
 
+void MainWindow::setStatusInterval(int value) {
+    settings->setValue(SETTING_STATUS_INTERVAL, value);
+    ui->statusInterval->setValue(value);
+    fpsTimer.stop();
+    emuTimer.stop();
+    connect(&emuTimer, SIGNAL(timeout()), this, SLOT(emuTimerSlot()));
+    connect(&fpsTimer, SIGNAL(timeout()), this, SLOT(fpsTimerSlot()));
+    emuTimerTriggerable = true;
+    fpsTimerTriggerable = true;
+    if (!value) {
+        disconnect(&emuTimer, SIGNAL(timeout()), this, SLOT(emuTimerSlot()));
+        disconnect(&fpsTimer, SIGNAL(timeout()), this, SLOT(fpsTimerSlot()));
+        connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed, Qt::QueuedConnection);
+        fpsTimerTriggered = true;
+        emuTimerTriggerable = false;
+        fpsTimerTriggerable = false;
+    } else {
+        fpsTimer.start(value * 1000);
+        emuTimer.start(value * 1000);
+    }
+}
+
 void MainWindow::setEmuSpeed(int value) {
     settings->setValue(SETTING_EMUSPEED, value);
     ui->emulationSpeedSpin->blockSignals(true);
@@ -806,6 +829,7 @@ void MainWindow::exportWindowConfig() {
     window.setValue(SETTING_WINDOW_GEOMETRY, saveGeometry());
     window.setValue(SETTING_WINDOW_MEMORY_DOCKS, memoryDocks);
     window.setValue(SETTING_UI_EDIT_MODE, uiEditMode);
+    window.setValue(SETTING_STATUS_INTERVAL, ui->statusInterval->value());
     window.sync();
 }
 
@@ -826,6 +850,7 @@ void MainWindow::importWindowConfig() {
     settings->setValue(SETTING_UI_EDIT_MODE, window.value(SETTING_UI_EDIT_MODE));
     settings->setValue(SETTING_WINDOW_MENUBAR, window.value(SETTING_WINDOW_MENUBAR));
     settings->setValue(SETTING_WINDOW_SEPARATOR, window.value(SETTING_WINDOW_SEPARATOR));
+    settings->setValue(SETTING_STATUS_INTERVAL, window.value(SETTING_STATUS_INTERVAL));
     needReload = true;
     loadingWindow = true;
     close();

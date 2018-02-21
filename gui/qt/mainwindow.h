@@ -92,6 +92,10 @@ public slots:
     // LCD Popouts
     void newMemoryVisualizer();
 
+private slots:
+    void emuTimerSlot();
+    void fpsTimerSlot();
+
 signals:
     // Debugging
     void setDebugState(bool state);
@@ -385,6 +389,7 @@ private:
     void setEmuSpeed(int value);
     void setThrottle(int mode);
     void showEmuSpeed(int speed);
+    void showFpsSpeed(double emuFps, double guiFps);
 
     // Console
     void showStatusMsg(const QString &str);
@@ -454,6 +459,7 @@ private:
     // Others
     void syncHexView(int posa, QHexEdit *hex_view);
     void searchEdit(int index);
+    void setStatusInterval(int value);
 
     // Keypad
     void keymapChanged();
@@ -639,6 +645,7 @@ private:
     static const QString SETTING_SLOT_PATHS;
     static const QString SETTING_IMAGE_PATH;
     static const QString SETTING_ROM_PATH;
+    static const QString SETTING_STATUS_INTERVAL;
     static const QString SETTING_FIRST_RUN;
     static const QString SETTING_UI_EDIT_MODE;
     static const QString SETTING_PAUSE_FOCUS;
@@ -701,7 +708,11 @@ private:
     QStringList memoryDocks;
     QSettings *settings = Q_NULLPTR;
 
-    QTimer emuStatusTimer;
+    QTimer emuTimer;
+    QTimer fpsTimer;
+    bool emuTimerTriggerable = true;
+    bool fpsTimerTriggerable = true;
+    bool fpsTimerTriggered = false;
 
     static const char *var_extension[];
 #ifdef _WIN32
