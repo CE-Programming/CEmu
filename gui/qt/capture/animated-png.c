@@ -12,6 +12,25 @@
 
 #include "../../core/schedule.h"
 
+#ifdef _MSC_VER
+static inline int clzll(unsigned long long input_num) {
+    unsigned long index;
+#ifdef _WIN64
+    _BitScanReverse64(&index, input_num);
+#else  // if we must support 32-bit Windows
+    if (input_num > 0xFFFFFFF) {
+        _BitScanReverse(&index, (uint32_t)(input_num >> 32));
+    } else {
+        _BitScanReverse(&index, (uint32_t)(input_num));
+        index += 32;
+    }
+#endif
+    return 63 - index;
+}
+#else
+#define clzll(x) __builtin_clzll(x)
+#endif
+
 apng_t apng;
 
 bool apng_start(const char *tmp_name, int frameskip) {
@@ -22,7 +41,7 @@ bool apng_start(const char *tmp_name, int frameskip) {
     }
 
     // set frameskip rate
-    apng.frameskip = frameskip;
+    apng.frameskip = frameskip + 1;
 
     // init recording items
     apng.recording = true;
@@ -46,8 +65,8 @@ void apng_add_frame(const void *frame) {
         if (!apng.n || memcmp(frame, apng.frame, sizeof(apng.frame))) {
             if (apng.n) {
                 uint64_t cycles = sched_total_time() - apng.prev_time;
-                uint32_t logo = 48 - __builtin_clzll(cycles);
-                uint32_t shift = logo < 10 ? 10 : logo;
+                uint64_t logo = 48 - clzll(cycles);
+                uint64_t shift = logo < 10 ? 10 : logo;
                 apng.num = cycles >> shift;
                 apng.den = 48000000 >> shift;
                 fwrite(&apng.num, sizeof(apng.num), 1, apng.tmp);
