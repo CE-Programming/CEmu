@@ -662,7 +662,6 @@ void MainWindow::toggleFullscreen() {
             fullscreen = FULLSCREEN_ALL;
             break;
         case FULLSCREEN_ALL:
-            showNormal();
             parent_ptr = ui->lcd->parentWidget();
             ui->lcd->setParent(this, Qt::Tool | Qt::FramelessWindowHint | Qt::CustomizeWindowHint);
             ui->lcd->setFixedSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
@@ -672,6 +671,7 @@ void MainWindow::toggleFullscreen() {
             fullscreen = FULLSCREEN_LCD;
             break;
         case FULLSCREEN_LCD:
+            showNormal();
             ui->lcd->setParent(parent_ptr);
             ui->lcd->showNormal();
             adjustScreen();
