@@ -177,6 +177,7 @@ static void sched_second(enum sched_item_id id) {
             item->second--;
         }
     }
+    cpu.seconds++;
     cpu.cycles -= sched.clockRates[CLOCK_CPU];
     cpu.baseCycles += sched.clockRates[CLOCK_CPU];
     sched.items[SCHED_SECOND].second = 0; // Don't use sched_repeat!
@@ -232,6 +233,14 @@ void sched_reset(void) {
 
     sched.items[SCHED_PREV_MA].clock = CLOCK_48M;
     sched_set(SCHED_PREV_MA, 0);
+}
+
+uint64_t sched_total_cycles(void) {
+    return cpu.baseCycles + cpu.cycles;
+}
+
+uint64_t sched_total_time(void) {
+    return (uint64_t)cpu.seconds * sched.clockRates[CLOCK_48M] + muldiv_floor(cpu.cycles, sched.clockRates[CLOCK_48M], sched.clockRates[CLOCK_CPU]);
 }
 
 uint64_t event_next_cycle(enum sched_item_id id) {

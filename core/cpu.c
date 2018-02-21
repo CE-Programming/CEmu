@@ -33,10 +33,6 @@
 /* Global CPU state */
 eZ80cpu_t cpu;
 
-uint64_t cpu_total_cycles(void) {
-    return cpu.baseCycles + cpu.cycles;
-}
-
 static void cpu_clear_mode(void) {
 #ifdef DEBUG_SUPPORT
     debugger.data.block[cpu.registers.PC] |= DBG_INST_START_MARKER;
