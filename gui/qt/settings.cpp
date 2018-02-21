@@ -478,6 +478,7 @@ void MainWindow::setUIEditMode(bool mode) {
 
 void MainWindow::setThrottle(int mode) {
     ui->checkThrottle->setChecked(mode == Qt::Checked);
+    connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed, Qt::QueuedConnection);
     emit changedThrottleMode(mode == Qt::Checked);
 }
 
