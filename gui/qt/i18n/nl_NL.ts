@@ -911,7 +911,7 @@
     <message>
         <location filename="../mainwindow.ui" line="9286"/>
         <source>Reset CEmu</source>
-        <translation>Reset CEmu</translation>
+        <translation>CEmu opnieuw instellen</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5729"/>
@@ -1148,7 +1148,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8872"/>
         <source>Language</source>
-        <translation>Taal</translation>
+        <translation>Taal (Language)</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8897"/>
