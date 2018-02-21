@@ -89,3 +89,9 @@ void DockWidget::updateExpandability(const QList<DockWidget *> &tabs) {
         other = tab;
     }
 }
+
+void DockWidget::closeEvent(QCloseEvent *event) {
+    emit closed(objectName());
+    event->accept();
+    QDockWidget::closeEvent(event);
+}

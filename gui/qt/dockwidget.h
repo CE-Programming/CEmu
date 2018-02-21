@@ -22,9 +22,13 @@ public:
     bool isExpandable() const { return m_expandable; }
     void setExpandable(bool expandable) { m_expandable = expandable; }
 
+signals:
+    void closed(const QString &name);
+
 protected slots:
     QList<DockWidget *> tabs(DockWidget *without = Q_NULLPTR);
     virtual void showEvent(QShowEvent *event) Q_DECL_OVERRIDE;
+    virtual void closeEvent(QCloseEvent *event) Q_DECL_OVERRIDE;
     void updateExpandability(const QList<DockWidget *> &tabs);
 
 private:

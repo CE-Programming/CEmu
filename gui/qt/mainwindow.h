@@ -75,6 +75,8 @@ public slots:
     void restoreFromFile();
     void saveToFile();
     void exportRom();
+    void exportWindowConfig();
+    void importWindowConfig();
     void setImagePath();
 #ifdef PNG_WRITE_APNG_SUPPORTED
     void updateAnimatedControls();
@@ -479,13 +481,14 @@ private:
     void optAttemptLoad(CEmuOpts &o);
     void pauseEmu(Qt::ApplicationState state);
     void setMemoryDocks();
+    void closedDock(const QString &name);
 
     // LCD
     void updateLcd(double emuFps);
 
     // State items
     void reloadAll();
-    void reloadGui();
+    void resetGui();
 
     // Key History
     void toggleKeyHistory();
@@ -565,9 +568,11 @@ private:
     QAction *actionAddMemory;
 
     QIcon runIcon, stopIcon;
-    QIcon saveIcon, loadIcon, editIcon, removeIcon;
+    QIcon saveIcon, loadIcon;
+    QIcon editIcon, removeIcon;
     QIcon searchIcon, gotoIcon;
-    QIcon syncIcon;
+    QIcon syncIcon, addMemIcon;
+    QIcon uiEditIcon;
     QTextCharFormat consoleFormat;
 
     QString prevGotoAddress;
@@ -588,6 +593,7 @@ private:
     QString dragROM;
 
     bool needReload = false;
+    bool loadingWindow = false;
     bool needFullReset = false;
     bool guiAdd = false;
     bool initPassed = true;
@@ -622,7 +628,6 @@ private:
     static const QString SETTING_SCREEN_SPI;
     static const QString SETTING_KEYPAD_KEYMAP;
     static const QString SETTING_KEYPAD_COLOR;
-    static const QString SETTING_WINDOW_SIZE;
     static const QString SETTING_WINDOW_STATE;
     static const QString SETTING_WINDOW_GEOMETRY;
     static const QString SETTING_WINDOW_SEPARATOR;

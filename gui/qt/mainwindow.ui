@@ -64,6 +64,10 @@
        <number>0</number>
       </property>
       <widget class="QWidget" name="debugControlWidget">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/debug_control.png</normaloff>:/icons/resources/icons/debug_control.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>Debug Control</string>
        </attribute>
@@ -264,6 +268,10 @@
        </layout>
       </widget>
       <widget class="QWidget" name="debugCpuStatusWidget">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/cpu_status.png</normaloff>:/icons/resources/icons/cpu_status.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>CPU Status</string>
        </attribute>
@@ -3277,6 +3285,10 @@
        </layout>
       </widget>
       <widget class="QWidget" name="debugDisassemblyWidget">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/disasm.png</normaloff>:/icons/resources/icons/disasm.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>Disassembly</string>
        </attribute>
@@ -3445,6 +3457,10 @@
        </layout>
       </widget>
       <widget class="QWidget" name="debugMemoryWidget">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/memory.png</normaloff>:/icons/resources/icons/memory.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>Memory</string>
        </attribute>
@@ -3798,6 +3814,10 @@
        </layout>
       </widget>
       <widget class="QWidget" name="debugTimerWidget">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/timers.png</normaloff>:/icons/resources/icons/timers.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>Timers</string>
        </attribute>
@@ -4171,6 +4191,10 @@
        </layout>
       </widget>
       <widget class="QWidget" name="debugBreakWidget">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/break_watch_port.png</normaloff>:/icons/resources/icons/break_watch_port.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>Break / Watch / Port</string>
        </attribute>
@@ -4200,7 +4224,7 @@
            </property>
            <attribute name="icon">
             <iconset resource="resources.qrc">
-             <normaloff>:/icons/resources/icons/goto.png</normaloff>:/icons/resources/icons/goto.png</iconset>
+             <normaloff>:/icons/resources/icons/breakpoints.png</normaloff>:/icons/resources/icons/breakpoints.png</iconset>
            </attribute>
            <attribute name="label">
             <string>Breakpoints</string>
@@ -4335,13 +4359,13 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>98</width>
-             <height>119</height>
+             <width>511</width>
+             <height>347</height>
             </rect>
            </property>
            <attribute name="icon">
             <iconset resource="resources.qrc">
-             <normaloff>:/icons/resources/icons/debugger.png</normaloff>:/icons/resources/icons/debugger.png</iconset>
+             <normaloff>:/icons/resources/icons/watchpoints.png</normaloff>:/icons/resources/icons/watchpoints.png</iconset>
            </attribute>
            <attribute name="label">
             <string>WatchPoints</string>
@@ -4491,13 +4515,13 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>98</width>
-             <height>119</height>
+             <width>511</width>
+             <height>347</height>
             </rect>
            </property>
            <attribute name="icon">
             <iconset resource="resources.qrc">
-             <normaloff>:/icons/resources/icons/search.png</normaloff>:/icons/resources/icons/search.png</iconset>
+             <normaloff>:/icons/resources/icons/port.png</normaloff>:/icons/resources/icons/port.png</iconset>
            </attribute>
            <attribute name="label">
             <string>Port Monitor</string>
@@ -4630,6 +4654,10 @@
        </layout>
       </widget>
       <widget class="QWidget" name="debugOsWidget">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/os_view.png</normaloff>:/icons/resources/icons/os_view.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>OS View</string>
        </attribute>
@@ -4902,6 +4930,10 @@
        </layout>
       </widget>
       <widget class="QWidget" name="debugMiscWidget">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/misc.png</normaloff>:/icons/resources/icons/misc.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>Miscellaneous</string>
        </attribute>
@@ -5691,6 +5723,10 @@
        </layout>
       </widget>
       <widget class="QWidget" name="debugAutoTesterWidget">
+       <attribute name="icon">
+        <iconset resource="resources.qrc">
+         <normaloff>:/icons/resources/icons/autotester.png</normaloff>:/icons/resources/icons/autotester.png</iconset>
+       </attribute>
        <attribute name="title">
         <string>AutoTester</string>
        </attribute>
@@ -8859,6 +8895,7 @@ QPushButton:pressed {
      <addaction name="actionExportCalculatorState"/>
      <addaction name="actionExportDebugger"/>
      <addaction name="actionExportCEmuImage"/>
+     <addaction name="actionExportWindowConfig"/>
     </widget>
     <widget class="QMenu" name="menuImport">
      <property name="title">
@@ -8866,10 +8903,15 @@ QPushButton:pressed {
      </property>
      <addaction name="actionImportCalculatorState"/>
      <addaction name="actionImportDebugger"/>
+     <addaction name="actionImportWindowConfig"/>
     </widget>
     <widget class="QMenu" name="menuLanguage">
      <property name="title">
       <string>Language</string>
+     </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/icons/resources/icons/change_language.png</normaloff>:/icons/resources/icons/change_language.png</iconset>
      </property>
      <addaction name="actionEnglish"/>
      <addaction name="actionEspanol"/>
@@ -9177,7 +9219,7 @@ QPushButton:pressed {
   <action name="actionExportRomImage">
    <property name="icon">
     <iconset resource="resources.qrc">
-     <normaloff>:/icons/resources/icons/export.png</normaloff>:/icons/resources/icons/export.png</iconset>
+     <normaloff>:/icons/resources/icons/rom_chip.png</normaloff>:/icons/resources/icons/rom_chip.png</iconset>
    </property>
    <property name="text">
     <string>Rom image</string>
@@ -9189,7 +9231,7 @@ QPushButton:pressed {
      <normaloff>:/icons/resources/icons/import.png</normaloff>:/icons/resources/icons/import.png</iconset>
    </property>
    <property name="text">
-    <string>Calculator image</string>
+    <string>Calculator state</string>
    </property>
   </action>
   <action name="actionExportCalculatorState">
@@ -9198,7 +9240,7 @@ QPushButton:pressed {
      <normaloff>:/icons/resources/icons/export.png</normaloff>:/icons/resources/icons/export.png</iconset>
    </property>
    <property name="text">
-    <string>Calculator image</string>
+    <string>Calculator state</string>
    </property>
   </action>
   <action name="actionMemoryVisualizer">
@@ -9216,7 +9258,7 @@ QPushButton:pressed {
      <normaloff>:/icons/resources/icons/debugger.png</normaloff>:/icons/resources/icons/debugger.png</iconset>
    </property>
    <property name="text">
-    <string>Debugging status</string>
+    <string>Debug state</string>
    </property>
   </action>
   <action name="actionImportDebugger">
@@ -9228,7 +9270,7 @@ QPushButton:pressed {
      <normaloff>:/icons/resources/icons/debugger.png</normaloff>:/icons/resources/icons/debugger.png</iconset>
    </property>
    <property name="text">
-    <string>Debugging status</string>
+    <string>Debug state</string>
    </property>
   </action>
   <action name="actionNew">
@@ -9239,6 +9281,10 @@ QPushButton:pressed {
   <action name="actionKeyHistory">
    <property name="checkable">
     <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/key_history.png</normaloff>:/icons/resources/icons/key_history.png</iconset>
    </property>
    <property name="text">
     <string>Show key history</string>
@@ -9274,6 +9320,10 @@ QPushButton:pressed {
    </property>
   </action>
   <action name="actionResetGUI">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/reset_gui.png</normaloff>:/icons/resources/icons/reset_gui.png</iconset>
+   </property>
    <property name="text">
     <string>Reset GUI docks</string>
    </property>
@@ -9282,6 +9332,10 @@ QPushButton:pressed {
    </property>
   </action>
   <action name="actionResetALL">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/reset_cemu.png</normaloff>:/icons/resources/icons/reset_cemu.png</iconset>
+   </property>
    <property name="text">
     <string>Reset CEmu</string>
    </property>
@@ -9307,6 +9361,24 @@ QPushButton:pressed {
   <action name="actionEspanol">
    <property name="text">
     <string>Español</string>
+   </property>
+  </action>
+  <action name="actionExportWindowConfig">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/ui_edit.png</normaloff>:/icons/resources/icons/ui_edit.png</iconset>
+   </property>
+   <property name="text">
+    <string>Window configuration</string>
+   </property>
+  </action>
+  <action name="actionImportWindowConfig">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/ui_edit.png</normaloff>:/icons/resources/icons/ui_edit.png</iconset>
+   </property>
+   <property name="text">
+    <string>Window configuration</string>
    </property>
   </action>
  </widget>

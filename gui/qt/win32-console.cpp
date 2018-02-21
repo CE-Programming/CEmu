@@ -29,7 +29,10 @@ void MainWindow::toggleConsole() {
 
 void MainWindow::installToggleConsole() {
     // Build menu option and add it!
+    QIcon uiEditIcon;
+    uiEditIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/toggle_console.png")));
     actionToggleConsole = new QAction(TXT_TOGGLE_CONSOLE, this);
+    actionToggleConsole->setIcon(uiEditIcon);
     actionToggleConsole->setObjectName(QStringLiteral("actionToggleConsole"));
     actionToggleConsole->setCheckable(true);
     actionToggleConsole->setChecked(true);

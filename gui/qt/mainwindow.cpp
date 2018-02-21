@@ -221,7 +221,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->actionImportCalculatorState, &QAction::triggered, this, &MainWindow::restoreFromFile);
     connect(ui->actionReloadROM, &QAction::triggered, this, &MainWindow::reloadROM);
     connect(ui->actionResetALL, &QAction::triggered, this, &MainWindow::reloadAll);
-    connect(ui->actionResetGUI, &QAction::triggered, this, &MainWindow::reloadGui);
+    connect(ui->actionResetGUI, &QAction::triggered, this, &MainWindow::resetGui);
     connect(ui->actionResetCalculator, &QAction::triggered, this, &MainWindow::resetCalculator);
     connect(ui->actionMemoryVisualizer, &QAction::triggered, this, &MainWindow::newMemoryVisualizer);
     connect(ui->actionDisableMenuBar, &QAction::triggered, this, &MainWindow::setMenuBarState);
@@ -331,6 +331,10 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonSpaceGrey, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
     connect(ui->buttonCoral, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
     connect(ui->buttonMint, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+
+    // Export / Import window config
+    connect(ui->actionExportWindowConfig, &QAction::triggered, this, &MainWindow::exportWindowConfig);
+    connect(ui->actionImportWindowConfig, &QAction::triggered, this, &MainWindow::importWindowConfig);
 
     // Application connections
     connect(qGuiApp, &QGuiApplication::applicationStateChanged, this, &MainWindow::pauseEmu);
@@ -458,6 +462,10 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     searchIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/search.png")));
     gotoIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/goto.png")));
     syncIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/refresh.png")));
+    addMemIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/add_mem.png")));
+    uiEditIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/ui_edit.png")));
+    actionAddMemory->setIcon(addMemIcon);
+    actionToggleUI->setIcon(uiEditIcon);
 
     setMemoryDocks();
     optLoadFiles(opts);
@@ -739,15 +747,6 @@ void MainWindow::showEvent(QShowEvent *e) {
         setAlwaysOnTop(settings->value(SETTING_ALWAYS_ON_TOP, false).toBool());
         setMenuBarState(settings->value(SETTING_WINDOW_MENUBAR, false).toBool());
         visibleWindow = true;
-        QList<QDockWidget*> docks = findChildren<QDockWidget*>();
-        foreach (QDockWidget* dock, docks) {
-            if (dock->windowTitle().contains(TXT_MEM_DOCK)) {
-                if (dock->visibleRegion().isEmpty()) {
-                    removeDockWidget(dock);
-                    memoryDocks.removeOne(dock->objectName());
-                }
-            }
-        }
     }
     QMainWindow::showEvent(e);
     e->accept();
@@ -854,15 +853,17 @@ void MainWindow::setup() {
     }
 }
 
-void MainWindow::createMemoryDock(const QString &title) {
+void MainWindow::createMemoryDock(const QString &magic) {
     DockWidget *dw;
 
     dw = new DockWidget(TXT_MEM_DOCK, this);
-    dw->setObjectName(title);
+    dw->setObjectName(magic);
     dw->setFloating(true);
     dw->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, dw->minimumSize(), qApp->desktop()->availableGeometry()));
 
-    memoryDocks.append(title);
+    if (!memoryDocks.contains(magic)) {
+        memoryDocks.append(magic);
+    }
 
     QWidget *widget = new QWidget();
     QVBoxLayout *vlayout = new QVBoxLayout();
@@ -916,6 +917,11 @@ void MainWindow::createMemoryDock(const QString &title) {
     dw->show();
     dw->activateWindow();
     dw->raise();
+    connect(dw, &DockWidget::closed, this, &MainWindow::closedDock);
+}
+
+void MainWindow::closedDock(const QString &name) {
+    memoryDocks.removeOne(name);
 }
 
 void MainWindow::toggleKeyHistory() {
@@ -1024,12 +1030,11 @@ void MainWindow::reloadAll() {
     close();
 }
 
-void MainWindow::reloadGui() {
+void MainWindow::resetGui() {
     ipcCloseOthers();
     settings->remove(SETTING_SCREEN_SKIN);
     settings->remove(SETTING_WINDOW_GEOMETRY);
     settings->remove(SETTING_WINDOW_MEMORY_DOCKS);
-    settings->remove(SETTING_WINDOW_SIZE);
     settings->remove(SETTING_UI_EDIT_MODE);
     settings->remove(SETTING_WINDOW_STATE);
     settings->remove(SETTING_WINDOW_MENUBAR);
@@ -1207,16 +1212,15 @@ void MainWindow::closeEvent(QCloseEvent *e) {
     }
 
     if (!closeAfterSave && settings->value(SETTING_SAVE_ON_CLOSE).toBool()) {
-            closeAfterSave = true;
-            saveEmuState();
-            e->ignore();
-            return;
+        closeAfterSave = true;
+        saveEmuState();
     }
 
     emu.stop();
     debugger_free();
 
     saveMiscSettings();
+    saveSettings();
     QMainWindow::closeEvent(e);
 }
 

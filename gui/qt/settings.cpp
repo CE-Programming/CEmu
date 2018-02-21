@@ -49,7 +49,6 @@ const QString MainWindow::SETTING_SCREEN_SKIN               = QStringLiteral("Sc
 const QString MainWindow::SETTING_SCREEN_SPI                = QStringLiteral("Screen/spi");
 const QString MainWindow::SETTING_KEYPAD_KEYMAP             = QStringLiteral("Keypad/map");
 const QString MainWindow::SETTING_KEYPAD_COLOR              = QStringLiteral("Keypad/color");
-const QString MainWindow::SETTING_WINDOW_SIZE               = QStringLiteral("Window/size");
 const QString MainWindow::SETTING_WINDOW_STATE              = QStringLiteral("Window/state");
 const QString MainWindow::SETTING_WINDOW_GEOMETRY           = QStringLiteral("Window/geometry");
 const QString MainWindow::SETTING_WINDOW_SEPARATOR          = QStringLiteral("Window/boundaries");
@@ -185,9 +184,9 @@ bool MainWindow::loadCEmuBootImage(const QString &bootImagePath) {
 }
 
 void MainWindow::exportCEmuBootImage() {
-    QMessageBox::information(this, tr("Information"), tr("A bootable image can be used to start CEmu with predefined configurations, without the need for any extra setup."
-                                                         "\n\nThe bootable image should be placed in the same directory as the CEmu executable. When CEmu is then started, "
-                                                         "the boot image will be loaded automatically and then removed for convience."));
+    QMessageBox::information(this, MSG_INFORMATION, tr("A bootable image can be used to start CEmu with predefined configurations, without the need for any extra setup."
+                                                       "\n\nThe bootable image should be placed in the same directory as the CEmu executable. When CEmu is then started, "
+                                                       "the boot image will be loaded automatically and then removed for convience."));
 
     QString saveImage = QFileDialog::getSaveFileName(this, tr("Save bootable CEmu image"),
                                                       currDir.absolutePath(),
@@ -250,20 +249,22 @@ void MainWindow::setFocusSetting(bool state) {
 }
 
 void MainWindow::saveMiscSettings() {
-    if (!needReload) {
-        settings->setValue(SETTING_WINDOW_STATE,         saveState());
-        settings->setValue(SETTING_WINDOW_GEOMETRY,      saveGeometry());
-        settings->setValue(SETTING_WINDOW_SIZE,          size());
-        settings->setValue(SETTING_WINDOW_MEMORY_DOCKS,  memoryDocks);
-    } else {
-        settings->setValue(SETTING_FIRST_RUN, false);
-    }
-    settings->setValue(SETTING_CURRENT_DIR,          currDir.absolutePath());
+    settings->setValue(SETTING_CURRENT_DIR, currDir.absolutePath());
     settings->setValue(SETTING_DEBUGGER_FLASH_BYTES, ui->flashBytes->value());
-    settings->setValue(SETTING_DEBUGGER_RAM_BYTES,   ui->ramBytes->value());
-    settings->setValue(SETTING_DEBUGGER_MEM_BYTES,   ui->memBytes->value());
+    settings->setValue(SETTING_DEBUGGER_RAM_BYTES, ui->ramBytes->value());
+    settings->setValue(SETTING_DEBUGGER_MEM_BYTES, ui->memBytes->value());
     saveSlotInfo();
     saveRecentInfo();
+
+    if (!needReload) {
+        settings->setValue(SETTING_WINDOW_STATE, saveState());
+        settings->setValue(SETTING_WINDOW_GEOMETRY, saveGeometry());
+        settings->setValue(SETTING_WINDOW_MEMORY_DOCKS, memoryDocks);
+    } else {
+        if (!loadingWindow) {
+            settings->setValue(SETTING_FIRST_RUN, false);
+        }
+    }
 }
 
 void MainWindow::setMenuBarState(bool state) {
@@ -787,6 +788,47 @@ void MainWindow::saveSettings() {
         QFile settingsFile(settings->fileName());
         settingsFile.remove();
     }
+}
+
+void MainWindow::exportWindowConfig() {
+    QString filter = tr("Window Config (*.ini)");
+    QString path = QFileDialog::getSaveFileName(this, tr("Save window configuration"),
+                                                currDir.absolutePath(), filter, &filter);
+    if (path.isEmpty()) {
+        return;
+    }
+
+    QSettings window(path, QSettings::IniFormat);
+    window.setValue(SETTING_SCREEN_SKIN, settings->value(SETTING_SCREEN_SKIN));
+    window.setValue(SETTING_UI_EDIT_MODE, settings->value(SETTING_WINDOW_MENUBAR));
+    window.setValue(SETTING_WINDOW_SEPARATOR, settings->value(SETTING_WINDOW_SEPARATOR));
+    window.setValue(SETTING_WINDOW_STATE, saveState());
+    window.setValue(SETTING_WINDOW_GEOMETRY, saveGeometry());
+    window.setValue(SETTING_WINDOW_MEMORY_DOCKS, memoryDocks);
+    window.setValue(SETTING_UI_EDIT_MODE, uiEditMode);
+    window.sync();
+}
+
+void MainWindow::importWindowConfig() {
+    QString path = QFileDialog::getOpenFileName(this, tr("Select saved image to restore from"),
+                                                currDir.absolutePath(),
+                                                tr("Window Config (*.ini);;All files (*.*)"));
+    if (path.isEmpty()) {
+        return;
+    }
+
+    QSettings window(path, QSettings::IniFormat);
+    ipcCloseOthers();
+    settings->setValue(SETTING_SCREEN_SKIN, window.value(SETTING_SCREEN_SKIN));
+    settings->setValue(SETTING_WINDOW_GEOMETRY, window.value(SETTING_WINDOW_GEOMETRY));
+    settings->setValue(SETTING_WINDOW_STATE, window.value(SETTING_WINDOW_STATE));
+    settings->setValue(SETTING_WINDOW_MEMORY_DOCKS, window.value(SETTING_WINDOW_MEMORY_DOCKS));
+    settings->setValue(SETTING_UI_EDIT_MODE, window.value(SETTING_UI_EDIT_MODE));
+    settings->setValue(SETTING_WINDOW_MENUBAR, window.value(SETTING_WINDOW_MENUBAR));
+    settings->setValue(SETTING_WINDOW_SEPARATOR, window.value(SETTING_WINDOW_SEPARATOR));
+    needReload = true;
+    loadingWindow = true;
+    close();
 }
 
 bool MainWindow::isFirstRun() {
