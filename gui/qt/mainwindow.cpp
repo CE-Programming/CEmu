@@ -73,8 +73,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     ui->centralWidget->hide();
     ui->statusBar->addWidget(&speedLabel);
-    ui->statusBar->addWidget(&fpsLabel);
     ui->statusBar->addPermanentWidget(&msgLabel);
+    ui->statusBar->addPermanentWidget(&fpsLabel);
 
     // Allow for 2018 lines of logging
     ui->console->setMaximumBlockCount(2018);
