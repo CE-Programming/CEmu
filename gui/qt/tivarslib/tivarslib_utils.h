@@ -1,6 +1,6 @@
 /*
  * Part of tivars_lib_cpp
- * (C) 2015-2016 Adrien 'Adriweb' Bertrand
+ * (C) 2015-2018 Adrien "Adriweb" Bertrand
  * https://github.com/adriweb/tivars_lib_cpp
  * License: MIT
  */
@@ -8,26 +8,13 @@
 #ifndef TIVARSLIB_UTILS_H
 #define TIVARSLIB_UTILS_H
 
-#include <cstdio>
-#include <cstdint>
-#include <cstdlib>
-#include <cmath>
-#include <cfloat>
-
-#include <iostream>
-#include <sstream>
-#include <iomanip>
-#include <string>
 #include <vector>
-#include <regex>
+#include <string>
 #include <algorithm>
-#include <unordered_map>
 
-typedef unsigned int    uint;
-typedef unsigned char   uchar;
-
-typedef std::vector<uchar>   data_t;
-typedef std::unordered_map<std::string, uchar>   options_t;
+#include "CommonTypes.h"
+#include "TIModel.h"
+#include "TIVarType.h"
 
 template <typename T>
 bool is_in_vector(const std::vector<T>& v, T element)
@@ -35,11 +22,13 @@ bool is_in_vector(const std::vector<T>& v, T element)
     return std::find(v.begin(), v.end(), element) != v.end();
 }
 
-bool has_option(const std::unordered_map<std::string, unsigned char>& m, const std::string &element);
+bool has_option(const options_t& m, const std::string& element);
 
 unsigned char hexdec(const std::string& str);
 
 std::string dechex(unsigned char i);
+
+std::string strtoupper(const std::string& str);
 
 std::vector<std::string> explode(const std::string& str, const std::string& delim);
 std::vector<std::string> explode(const std::string& str, char delim);
@@ -48,7 +37,7 @@ std::string ltrim(std::string s, const char* t = " \t\n\r\f\v");
 
 std::string rtrim(std::string s, const char* t = " \t\n\r\f\v");
 
-std::string trim(std::string s, const char* t = " \t\n\r\f\v");
+std::string trim(const std::string& s, const char* t = " \t\n\r\f\v");
 
 std::string str_repeat(const std::string& str, unsigned int times);
 
@@ -56,7 +45,7 @@ void ParseCSV(const std::string& csvSource, std::vector<std::vector<std::string>
 
 bool is_numeric(const std::string& str);
 
-std::string stripchars(std::string str, const std::string& chars);
+bool file_exists(const std::string& filePath);
 
 std::string str_pad(const std::string& str, unsigned long pad_length, std::string pad_string = " ");
 

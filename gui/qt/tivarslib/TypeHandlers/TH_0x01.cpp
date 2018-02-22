@@ -1,11 +1,12 @@
 /*
  * Part of tivars_lib_cpp
- * (C) 2016 Adrien 'Adriweb' Bertrand
+ * (C) 2015-2018 Adrien "Adriweb" Bertrand
  * https://github.com/adriweb/tivars_lib_cpp
  * License: MIT
  */
 
-#include "../autoloader.h"
+#include "TypeHandlers.h"
+#include "../tivarslib_utils.h"
 
 using namespace std;
 
@@ -33,8 +34,7 @@ namespace tivars
         }
         if (str.empty() || arr.empty() || !formatOk || numCount > 999)
         {
-            std::cerr << "Invalid input string. Needs to be a valid real list" << endl;
-            return data;
+            throw invalid_argument("Invalid input string. Needs to be a valid real list");
         }
 
         data[0] = (uchar) (numCount & 0xFF);
@@ -56,12 +56,11 @@ namespace tivars
         string str;
 
         size_t byteCount = data.size();
-        size_t numCount = (size_t) ((data[0] & 0xFF) + ((data[1] << 8) & 0xFF00));
+        size_t numCount = (size_t) ((data[0] & 0xFF) + ((data[1] & 0xFF) << 8));
         if (byteCount < 2+TH_0x00::dataByteCount || ((byteCount - 2) % TH_0x00::dataByteCount != 0)
             || (numCount != (size_t)((byteCount - 2) / TH_0x00::dataByteCount)) || numCount > 999)
         {
-            std::cerr << "Invalid data array. Needs to contain 2+" + to_string(TH_0x00::dataByteCount) + "*n bytes" << endl;
-            return "";
+            throw invalid_argument("Invalid data array. Needs to contain 2+" + to_string(TH_0x00::dataByteCount) + "*n bytes");
         }
 
         str = "{";
@@ -76,7 +75,7 @@ namespace tivars
         }
 
         str += "}";
-
+        
         return str;
     }
 }

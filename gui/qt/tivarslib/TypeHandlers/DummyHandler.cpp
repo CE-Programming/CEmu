@@ -1,11 +1,12 @@
 /*
  * Part of tivars_lib_cpp
- * (C) 2016 Adrien 'Adriweb' Bertrand
+ * (C) 2015-2018 Adrien "Adriweb" Bertrand
  * https://github.com/adriweb/tivars_lib_cpp
  * License: MIT
  */
 
-#include "../autoloader.h"
+#include "../CommonTypes.h"
+#include "TypeHandlers.h"
 
 namespace tivars
 {
@@ -14,18 +15,14 @@ namespace tivars
     {
         (void)str;
         (void)options;
-
-        std::cerr << "This type is not supported / implemented (yet?)" << std::endl;
-        return data_t();
+        throw std::runtime_error("This type is not supported / implemented (yet?)");
     }
 
     std::string DummyHandler::makeStringFromData(const data_t& data, const options_t& options)
     {
         (void)data;
         (void)options;
-
-        std::cerr << "This type is not supported / implemented (yet?)" << std::endl;
-        return "";
+        throw std::runtime_error("This type is not supported / implemented (yet?)");
     }
 
 }

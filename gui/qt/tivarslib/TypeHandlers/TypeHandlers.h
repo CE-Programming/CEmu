@@ -1,6 +1,6 @@
 /*
  * Part of tivars_lib_cpp
- * (C) 2016 Adrien 'Adriweb' Bertrand
+ * (C) 2015-2018 Adrien "Adriweb" Bertrand
  * https://github.com/adriweb/tivars_lib_cpp
  * License: MIT
  */
@@ -8,7 +8,7 @@
 #ifndef TYPE_HANDLERS_H
 #define TYPE_HANDLERS_H
 
-#include "../utils_tivarslib.h"
+#include "../CommonTypes.h"
 
 namespace tivars
 {
@@ -35,6 +35,8 @@ namespace tivars
     namespace TH_0x0C { th(); }  // Complex
 
     namespace TH_0x0D { th(); }  // Complex list
+
+    namespace TH_0x15 { th(); }  // Application variable
 
     namespace TH_0x1B { th(); }  // Exact Complex Fraction
 
@@ -73,7 +75,6 @@ namespace tivars
     {
         const constexpr size_t dataByteCount = 2 * TH_0x00::dataByteCount;
         bool checkValidString(const std::string& str);
-        bool checkValidStringAndGetMatches(const std::string& str, std::smatch& matches);
     }
 
     namespace TH_0x1B   // Exact Complex Fraction

@@ -1,25 +1,23 @@
 /*
  * Part of tivars_lib_cpp
- * (C) 2015-2016 Adrien 'Adriweb' Bertrand
+ * (C) 2015-2018 Adrien "Adriweb" Bertrand
  * https://github.com/adriweb/tivars_lib_cpp
  * License: MIT
  */
 
-#include "../autoloader.h"
-
-#include <QtCore/QFile>
-
-#include <fstream>
-#include <sstream>
 #include <regex>
+#include "TypeHandlers.h"
 
 using namespace std;
 
 namespace tivars
 {
+    static bool checkValidStringAndGetMatches(const string& str, smatch& matches);
+
     data_t TH_0x0C::makeDataFromString(const string& str, const options_t& options)
     {
         (void)options;
+
         data_t data;
 
         string newStr = str;
@@ -33,8 +31,7 @@ namespace tivars
 
         if (!isValid || matches.size() != 3)
         {
-            std::cerr << "Invalid input string. Needs to be a valid complex number (a+bi)" << endl;
-            return data_t();
+            throw invalid_argument("Invalid input string. Needs to be a valid complex number (a+bi)");
         }
 
         for (int i=0; i<2; i++)
@@ -63,17 +60,16 @@ namespace tivars
     {
         (void)options;
 
-        if (data.size() != 2 * TH_0x00::dataByteCount)
+        if (data.size() != dataByteCount)
         {
-            std::cerr << "Empty data array. Needs to contain " + to_string(2 * TH_0x00::dataByteCount) + " bytes" << endl;
-            return "";
+            throw invalid_argument("Empty data array. Needs to contain " + to_string(dataByteCount) + " bytes");
         }
 
         string coeffR = TH_0x00::makeStringFromData(data_t(data.begin(), data.begin() + TH_0x00::dataByteCount));
-        string coeffI = TH_0x00::makeStringFromData(data_t(data.begin() + TH_0x00::dataByteCount, data.begin() + 2 * TH_0x00::dataByteCount));
+        string coeffI = TH_0x00::makeStringFromData(data_t(data.begin() + TH_0x00::dataByteCount, data.begin() + TH_0x0C::dataByteCount));
 
         string str = coeffR + "+" + coeffI + "i";
-        str = regex_replace(str, regex("\\+\\-"), "-");
+        str = regex_replace(str, regex("\\+-"), "-");
 
         return str;
     }
@@ -84,7 +80,7 @@ namespace tivars
         return checkValidStringAndGetMatches(str, matches);
     }
 
-    bool TH_0x0C::checkValidStringAndGetMatches(const string& str, smatch& matches)
+    static bool checkValidStringAndGetMatches(const string& str, smatch& matches)
     {
         if (str.empty())
         {
@@ -98,4 +94,5 @@ namespace tivars
 
         return isValid;
     }
+
 }

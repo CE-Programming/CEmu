@@ -1,11 +1,12 @@
 /*
  * Part of tivars_lib_cpp
- * (C) 2016 Adrien 'Adriweb' Bertrand
+ * (C) 2015-2018 Adrien "Adriweb" Bertrand
  * https://github.com/adriweb/tivars_lib_cpp
  * License: MIT
  */
 
-#include "../autoloader.h"
+#include "TypeHandlers.h"
+#include "../tivarslib_utils.h"
 
 using namespace std;
 
@@ -20,8 +21,7 @@ namespace tivars
 
         if (str.length() < 5 || str.substr(0, 2) != "[[" || str.substr(str.length()-2, 2) != "]]")
         {
-            std::cerr << "Invalid input string. Needs to be a valid matrix" << std::endl;
-            return data_t();
+            throw invalid_argument("Invalid input string. Needs to be a valid matrix");
         }
 
         size_t rowCount, colCount;
@@ -36,8 +36,7 @@ namespace tivars
 
         if (colCount > 0xFF || rowCount > 0xFF)
         {
-            std::cerr << "Invalid input string. Needs to be a valid matrix (max col/row = 255)" << std::endl;
-            return data_t();
+            throw invalid_argument("Invalid input string. Needs to be a valid matrix (max col/row = 255)");
         }
 
         uint counter = 0;
@@ -49,14 +48,12 @@ namespace tivars
                 numStr = trim(numStr);
                 if (!is_numeric(numStr))
                 {
-                    std::cerr << "Invalid input string. Needs to be a valid matrix (real numbers inside)" << std::endl;
-                    return data_t();
+                    throw invalid_argument("Invalid input string. Needs to be a valid matrix (real numbers inside)");
                 }
             }
             if (tmp.size() != colCount)
             {
-                std::cerr << "Invalid input string. Needs to be a valid matrix (consistent column count)" << std::endl;
-                return data_t();
+                throw invalid_argument("Invalid input string. Needs to be a valid matrix (consistent column count)");
             }
             matrix[counter++] = tmp;
         }
@@ -78,7 +75,7 @@ namespace tivars
 
     string TH_0x02::makeStringFromData(const data_t& data, const options_t& options)
     {
-        (void)options;
+        (void)options; // TODO: prettified option
 
         size_t byteCount = data.size();
         size_t colCount = data[0];
@@ -87,8 +84,7 @@ namespace tivars
         if (data.size() < 2+TH_0x00::dataByteCount || colCount < 1 || rowCount < 1 || colCount > 255 || rowCount > 255
             || ((byteCount - 2) % TH_0x00::dataByteCount != 0) || (colCount*rowCount != (byteCount - 2) / TH_0x00::dataByteCount))
         {
-            std::cerr << "Invalid data array. Needs to contain 1+1+" << TH_0x00::dataByteCount << "*n bytes" << std::endl;
-            return "";
+            throw invalid_argument("Invalid data array. Needs to contain 1+1+" + to_string(TH_0x00::dataByteCount) + "*n bytes");
         }
 
         string str = "[";
@@ -110,8 +106,6 @@ namespace tivars
 
         str += "]";
 
-        // TODO: prettified option
-        
         return str;
     }
 }

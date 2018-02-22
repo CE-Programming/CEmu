@@ -10,8 +10,10 @@
 #include <QtWidgets/QScrollBar>
 #include <QtNetwork/QNetworkReply>
 #include <QClipboard>
+
+#include <iostream>
+#include <cstdio>
 #include <fstream>
-#include <stdio.h>
 
 #ifdef _MSC_VER
     #include <direct.h>
@@ -30,6 +32,10 @@
 #include "searchwidget.h"
 #include "basiccodeviewerwindow.h"
 #include "capture/animated-png.h"
+
+#include "tivarslib/TIModels.h"
+#include "tivarslib/TIVarTypes.h"
+#include "tivarslib/TypeHandlers/TypeHandlers.h"
 
 #include "../../core/emu.h"
 #include "../../core/asic.h"
@@ -70,6 +76,11 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
         initPassed = false;
         return;
     }
+
+    // Init tivars_lib stuff
+    tivars::TIModels::initTIModelsArray();
+    tivars::TIVarTypes::initTIVarTypesArray();
+    tivars::TH_0x05::initTokens();
 
     ui->centralWidget->hide();
     ui->statusBar->addWidget(&speedLabel);
@@ -1584,11 +1595,18 @@ void MainWindow::variableDoubleClicked(QTableWidgetItem *item) {
     if (calc_var_is_asmprog(&var)) {
         return;
     } else if (var.type != CALC_VAR_TYPE_APP_VAR && (!calc_var_is_internal(&var) || var.name[0] == '#')) {
+        std::string str;
+        try {
+            str = calc_var_content_string(var);
+        } catch(std::exception e) {
+            QMessageBox::warning(this, tr("Variable preview error"), tr("Could not get preview of variable. Error: ") + e.what());
+            return;
+        }
         BasicCodeViewerWindow *codePopup = new BasicCodeViewerWindow(this);
         codePopup->setVariableName(ui->emuVarView->item(item->row(), VAR_NAME)->text());
         codePopup->setWindowModality(Qt::NonModal);
         codePopup->setAttribute(Qt::WA_DeleteOnClose);
-        codePopup->setOriginalCode(QString::fromStdString(calc_var_content_string(var)));
+        codePopup->setOriginalCode(QString::fromStdString(str));
         codePopup->show();
     }
 }

@@ -1,13 +1,15 @@
 /*
  * Part of tivars_lib_cpp
- * (C) 2015-2016 Adrien 'Adriweb' Bertrand
+ * (C) 2015-2018 Adrien "Adriweb" Bertrand
  * https://github.com/adriweb/tivars_lib_cpp
  * License: MIT
  */
 
-#include "../autoloader.h"
+#include "TypeHandlers.h"
+#include "../tivarslib_utils.h"
 
 // TODO : check if the models have different exponent offsets
+// TODO : redo float creation more correctly...
 
 using namespace std;
 
@@ -19,8 +21,7 @@ namespace
         sign = *i++ == '-';
       }
       if (i == e) {
-        std::cerr << "parseSign: Unexpected end of string." << endl;
-        return false;
+        throw invalid_argument("Unexpected end of string.");
       }
       return sign;
     }
@@ -28,7 +29,7 @@ namespace
 
 namespace tivars
 {
-    
+
     data_t TH_0x00::makeDataFromString(const string& str, const options_t& options)
     {
         (void)options;
@@ -46,8 +47,7 @@ namespace tivars
           char c = *i++;
           if (c == '.') {
             if (!beforePoint) {
-              std::cerr << "TH_0x00::makeDataFromString: Extra decimal points." << endl;
-              return data_t{};
+              throw invalid_argument("Extra decimal points.");
             }
             beforePoint = false;
           } else if (c == '0') {
@@ -90,23 +90,19 @@ namespace tivars
                 offset *= 10;
                 offset += c - '0';
               } else {
-                std::cerr << "TH_0x00::makeDataFromString: Unexpected character." << endl;
-                return data_t{};
+                throw invalid_argument("Unexpected character.");
               }
             } while (i != e);
             exponent = sign ? exponent - offset : exponent + offset;
           } else {
-              std::cerr << "TH_0x00::makeDataFromString: Unexpected character." << endl;
-              return data_t{};
+              throw invalid_argument("Unexpected character.");
           }
         } while (i != e);
         if (noDigits) {
-          std::cerr << "TH_0x00::makeDataFromString: No digits found." << endl;
-          return data_t{};
+          throw invalid_argument("No digits found.");
         }
         if (exponent < 0x80 - 99 || exponent > 0x80 + 99) {
-          std::cerr << "TH_0x00::makeDataFromString: Exponent out of range." << endl;
-          return data_t{};
+          throw invalid_argument("Exponent out of range.");
         }
         data[1] = exponent;
         return data;
@@ -116,10 +112,9 @@ namespace tivars
     {
         (void)options;
 
-        if (data.size() != TH_0x00::dataByteCount)
+        if (data.size() != dataByteCount)
         {
-            std::cerr << "TH_0x00::makeDataFromString: Invalid data array. Needs to contain " + to_string(TH_0x00::dataByteCount) + " bytes" << endl;
-            return "";
+            throw invalid_argument("Empty data array. Needs to contain " + to_string(dataByteCount) + " bytes");
         }
 
         uint flags      = data[0];

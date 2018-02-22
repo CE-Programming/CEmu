@@ -3,7 +3,7 @@
 
 #include <QtWidgets/QDialog>
 #include <QtCore/QString>
-#include "tivarslib/autoloader.h"
+#include "tivarslib/TypeHandlers/TypeHandlers.h"
 
 namespace Ui { class BasicCodeViewerWindow; }
 

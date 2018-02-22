@@ -165,7 +165,13 @@ SOURCES +=  utils.cpp \
     qhexedit/chunks.cpp \
     qhexedit/commands.cpp \
     qhexedit/qhexedit.cpp \
-    tivarslib/utils_tivarslib.cpp \
+    tivarslib/tivarslib_utils.cpp \
+    tivarslib/BinaryFile.cpp \
+    tivarslib/TIVarFile.cpp \
+    tivarslib/TIModel.cpp \
+    tivarslib/TIModels.cpp \
+    tivarslib/TIVarType.cpp \
+    tivarslib/TIVarTypes.cpp \
     tivarslib/TypeHandlers/DummyHandler.cpp \
     tivarslib/TypeHandlers/TH_0x00.cpp \
     tivarslib/TypeHandlers/TH_0x01.cpp \
@@ -173,6 +179,7 @@ SOURCES +=  utils.cpp \
     tivarslib/TypeHandlers/TH_0x05.cpp \
     tivarslib/TypeHandlers/TH_0x0C.cpp \
     tivarslib/TypeHandlers/TH_0x0D.cpp \
+    tivarslib/TypeHandlers/TH_0x15.cpp \
     tivarslib/TypeHandlers/TH_0x1B.cpp \
     tivarslib/TypeHandlers/TH_0x1C.cpp \
     tivarslib/TypeHandlers/TH_0x1D.cpp \
@@ -245,9 +252,14 @@ HEADERS  +=  utils.h \
     qhexedit/chunks.h \
     qhexedit/commands.h \
     qhexedit/qhexedit.h \
-    tivarslib/autoloader.h \
-    tivarslib/utils_tivarslib.h \
-    tivarslib/TypeHandlers/TypeHandlerFuncGetter.h \
+    tivarslib/tivarslib_utils.h \
+    tivarslib/CommonTypes.h \
+    tivarslib/BinaryFile.h \
+    tivarslib/TIModel.h \
+    tivarslib/TIModels.h \
+    tivarslib/TIVarFile.h \
+    tivarslib/TIVarType.h \
+    tivarslib/TIVarTypes.h \
     tivarslib/TypeHandlers/TypeHandlers.h \
     ../../tests/autotester/autotester.h \
     ../../core/asic.h \

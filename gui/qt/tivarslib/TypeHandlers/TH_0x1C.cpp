@@ -1,11 +1,13 @@
 /*
  * Part of tivars_lib_cpp
- * (C) 2015-2016 Adrien 'Adriweb' Bertrand
+ * (C) 2015-2018 Adrien "Adriweb" Bertrand
  * https://github.com/adriweb/tivars_lib_cpp
  * License: MIT
  */
 
-#include "../autoloader.h"
+#include "TypeHandlers.h"
+#include "../tivarslib_utils.h"
+#include <regex>
 
 using namespace std;
 
@@ -16,12 +18,11 @@ namespace tivars
     {
         (void)options;
 
-        std::cerr << "Unimplemented" << std::endl;
-        return data_t();
+        throw runtime_error("Unimplemented");
 
         if (str == "" || !is_numeric(str))
         {
-            std::cerr << "Invalid input string. Needs to be a valid Exact Real Radical" << std::endl;
+            throw invalid_argument("Invalid input string. Needs to be a valid Exact Real Radical");
         }
     }
 
@@ -31,8 +32,7 @@ namespace tivars
 
         if (data.size() != dataByteCount)
         {
-            std::cerr << ("Empty data array. Needs to contain " + to_string(dataByteCount) + " bytes") << std::endl;
-            return "";
+            throw invalid_argument("Empty data array. Needs to contain " + to_string(dataByteCount) + " bytes");
         }
 
         string dataStr = "";
@@ -44,15 +44,13 @@ namespace tivars
         string type = dataStr.substr(0, 2);
         if (!(type == "1c" || type == "1d")) // real or complex (two reals, see TH_1D)
         {
-            std::cerr << ("Invalid data bytes - invalid vartype: " + type) << std::endl;
-            return "";
+            throw invalid_argument("Invalid data bytes - invalid vartype: " + type);
         }
 
         int subtype = atoi(dataStr.substr(2, 1).c_str());
         if (subtype < 0 || subtype > 3)
         {
-            std::cerr << ("Invalid data bytes - unknown subtype: " + to_string(subtype)) << std::endl;
-            return "";
+            throw invalid_argument("Invalid data bytes - unknown subtype: " + to_string(subtype));
         }
 
         const vector<string> parts = {

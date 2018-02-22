@@ -1,11 +1,13 @@
 /*
  * Part of tivars_lib_cpp
- * (C) 2015-2016 Adrien "Adriweb" Bertrand
+ * (C) 2015-2018 Adrien "Adriweb" Bertrand
  * https://github.com/adriweb/tivars_lib_cpp
  * License: MIT
  */
 
-#include "../autoloader.h"
+#include "TypeHandlers.h"
+#include "../tivarslib_utils.h"
+#include <regex>
 
 using namespace std;
 
@@ -16,12 +18,11 @@ namespace tivars
     {
         (void)options;
 
-        std::cerr << "Unimplemented" << std::endl;
-        return data_t();
+        throw runtime_error("Unimplemented");
 
         if (str == "" || !is_numeric(str))
         {
-            std::cerr << "Invalid input string. Needs to be a valid Exact Complex Radical" << std::endl;
+            throw invalid_argument("Invalid input string. Needs to be a valid Exact Complex Radical");
         }
     }
 
@@ -31,8 +32,7 @@ namespace tivars
 
         if (data.size() != dataByteCount)
         {
-            std::cerr << ("Empty data array. Needs to contain " + to_string(dataByteCount) + " bytes") << std::endl;
-            return "";
+            throw invalid_argument("Empty data array. Needs to contain " + to_string(dataByteCount) + " bytes");
         }
 
         string coeffR = TH_0x1C::makeStringFromData(data_t(data.begin(), data.begin() + TH_0x1C::dataByteCount));
