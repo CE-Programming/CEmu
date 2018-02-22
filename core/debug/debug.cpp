@@ -58,14 +58,17 @@ uint8_t debug_peek_byte(uint32_t addr) {
 
 void close_debugger(void) {
 #ifndef __EMSCRIPTEN__
-    std::unique_lock<std::mutex> lock(debugM);
-    debugCV.notify_all();
-#endif
+    debugM.lock();
     inDebugger = false;
+    debugCV.notify_all();
+    debugM.unlock();
+#else
+    inDebugger = false;
+#endif
 }
 
 void open_debugger(int reason, uint32_t data) {
-    if (inDebugger || (debugger.ignore && (reason > HIT_MIN && reason < HIT_MAX))) {
+    if (exiting || inDebugger || (debugger.ignore && (reason > HIT_MIN && reason < HIT_MAX))) {
         return;
     }
 
@@ -108,7 +111,9 @@ void open_debugger(int reason, uint32_t data) {
     gui_debugger_send_command(reason, data);
     inDebugger = true;
 #ifndef __EMSCRIPTEN__
-    debugCV.wait(lock);
+    while (inDebugger) {
+        debugCV.wait(lock);
+    }
 #endif
 
     cpu.next = debugger.cpuNext;

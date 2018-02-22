@@ -51,6 +51,7 @@ extern bool guiDebug;
 extern bool guiSend;
 extern bool guiReceive;
 extern bool guiEmuValid;
+extern bool guiReset;
 
 template<class T>
 typename std::enable_if<std::is_pointer<T>::value, T>::type

@@ -1076,16 +1076,14 @@ void MainWindow::saveToPath(const QString &path) {
 }
 
 bool MainWindow::restoreFromPath(const QString &path) {
+    guiEmuValid = false;
+
     if (guiReceive) {
         receiveChangeState();
     }
-
     if (guiDebug) {
         debuggerChangeState();
     }
-
-    guiEmuValid = false;
-
     if (!emu.restore(path)) {
         return false;
     }
@@ -1135,6 +1133,7 @@ void MainWindow::exportRom() {
 
 void MainWindow::started(bool success) {
     guiEmuValid = success;
+    guiReset = false;
     if (success) {
         ui->lcd->setMain();
         setCalcSkinTopFromType();
@@ -1995,6 +1994,8 @@ void MainWindow::emuStopped() {
 }
 
 void MainWindow::resetCalculator() {
+    guiReset = true;
+
     if (guiReceive) {
         receiveChangeState();
     }
@@ -2006,15 +2007,14 @@ void MainWindow::resetCalculator() {
 }
 
 void MainWindow::reloadROM() {
+    guiEmuValid = false;
+
     if (guiReceive) {
         receiveChangeState();
     }
-
     if (guiDebug) {
         debuggerChangeState();
     }
-
-    guiEmuValid = false;
 
     emit load();
 }

@@ -281,6 +281,10 @@ QString MainWindow::debuggerGetFile(int mode) {
 }
 
 void MainWindow::debuggerRaise() {
+    if (guiReset) {
+        return;
+    }
+
     guiDebug = true;
     debuggerGUIPopulate();
     debuggerGUIEnable();
@@ -365,6 +369,18 @@ void MainWindow::debuggerExecuteCommand(uint32_t debugAddress, uint8_t command) 
 }
 
 void MainWindow::debuggerProcessCommand(int reason, uint32_t input) {
+
+    // ensure that the calculator has fully reset before processing debug
+    if (reason == DBG_READY || !guiEmuValid) {
+        guiReset = false;
+        return;
+    }
+
+    if (guiReset) {
+        close_debugger();
+        return;
+    }
+
     int row = 0;
 
     // This means the program is trying to send us a debug command. Let's see what we can do with that information

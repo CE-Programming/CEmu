@@ -235,6 +235,9 @@ void emu_loop(bool reset) {
         if (cpu.events & EVENT_RESET) {
             gui_console_printf("[CEmu] Reset triggered.\n");
             asic_reset();
+#ifdef DEBUG_SUPPORT
+            gui_debugger_send_command(DBG_READY, 0);
+#endif
         }
         cpu_execute();
     }

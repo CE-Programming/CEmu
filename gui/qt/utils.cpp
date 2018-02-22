@@ -16,6 +16,7 @@ bool guiDebug;
 bool guiSend;
 bool guiReceive;
 bool guiEmuValid = false;
+bool guiReset = false;
 
 bool isNotValidHex(const std::string& s) {
     return s.find_first_not_of("0123456789ABCDEF") != std::string::npos || s.empty();
