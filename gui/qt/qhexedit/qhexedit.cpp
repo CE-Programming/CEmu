@@ -610,13 +610,13 @@ void QHexEdit::paintEvent(QPaintEvent *e) {
                 uint32_t addr = posBa + addressOffset();
                 uint8_t data = debugger.data.block[addr];
 
-                if (data & DBG_READ_WATCHPOINT) {
+                if (data & DBG_MASK_READ) {
                     painter.setPen(QColor(0xA3FFA3));
                 }
-                if (data & DBG_WRITE_WATCHPOINT) {
+                if (data & DBG_MASK_WRITE) {
                     painter.setPen(QColor(0xA3A3FF));
                 }
-                if (data & DBG_EXEC_BREAKPOINT) {
+                if (data & DBG_MASK_EXEC) {
                     painter.setPen(QColor(0xFFA3A3));
                 }
 
@@ -629,7 +629,7 @@ void QHexEdit::paintEvent(QPaintEvent *e) {
                 }
                 painter.fillRect(r, c);
                 hex = _hexDataShown.mid((bPosLine + colIdx) * 2, 2);
-                if ((data & DBG_WRITE_WATCHPOINT) && (data & DBG_READ_WATCHPOINT)) {
+                if ((data & DBG_MASK_READ) && (data & DBG_MASK_WRITE)) {
                     painter.setPen(QColor(0xA3FFA3));
                     painter.drawText(pxPosX, pxPosY, QString(hex.toUpper().at(0)));
                     pxPosX += _pxCharWidth;

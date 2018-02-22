@@ -209,7 +209,6 @@ SOURCES +=  utils.cpp \
     debugger.cpp \
     hexeditor.cpp \
     settings.cpp \
-    ../../core/debug/stepping.cpp \
     ipc.cpp \
     keyhistory.cpp \
     memoryvisualizer.cpp \
@@ -278,7 +277,6 @@ HEADERS  +=  utils.h \
     ../../core/os/os.h \
     ../../core/debug/debug.h \
     ../../core/debug/disasm.h \
-    ../../core/debug/stepping.h \
     cemuopts.h \
     sendinghandler.h \
     keypad/keycode.h \

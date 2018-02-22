@@ -99,11 +99,6 @@ private slots:
 signals:
     // Debugging
     void setDebugState(bool state);
-    void setDebugStepInMode();
-    void setDebugStepOverMode();
-    void setDebugStepNextMode();
-    void setDebugStepOutMode();
-    void setRunUntilMode();
 
     // Speed
     void changedEmuSpeed(int speed);
@@ -218,6 +213,7 @@ private:
     };
 
     void translateExtras(int init);
+    void debuggerStep(int mode);
 
     // Save/Restore
     void saveToPath(const QString &path);
@@ -527,7 +523,7 @@ private:
     int pausedSpeed;
 
     // Members
-    unsigned int watchpointGUIMask = DBG_NO_HANDLE;
+    unsigned int watchpointGUIMask = DBG_MASK_NONE;
     QString searchingString;
 
     QTranslator appTranslator;

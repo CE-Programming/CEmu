@@ -118,11 +118,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(&emu, &EmuThread::disableDebugger, this, &MainWindow::debuggerGUIDisable, Qt::QueuedConnection);
     connect(&emu, &EmuThread::sendDebugCommand, this, &MainWindow::debuggerProcessCommand, Qt::QueuedConnection);
     connect(this, &MainWindow::setDebugState, &emu, &EmuThread::setDebugMode);
-    connect(this, &MainWindow::setDebugStepInMode, &emu, &EmuThread::setDebugStepInMode);
-    connect(this, &MainWindow::setRunUntilMode, &emu, &EmuThread::setRunUntilMode);
-    connect(this, &MainWindow::setDebugStepOverMode, &emu, &EmuThread::setDebugStepOverMode);
-    connect(this, &MainWindow::setDebugStepNextMode, &emu, &EmuThread::setDebugStepNextMode);
-    connect(this, &MainWindow::setDebugStepOutMode, &emu, &EmuThread::setDebugStepOutMode);
     connect(ui->buttonRun, &QPushButton::clicked, this, &MainWindow::debuggerChangeState);
     connect(ui->checkADLDisasm, &QCheckBox::stateChanged, this, &MainWindow::toggleADLDisasm);
     connect(ui->checkADLStack, &QCheckBox::stateChanged, this, &MainWindow::toggleADLStack);
@@ -2153,9 +2148,9 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
             watchpointReadWriteGUIAdd();
         } else if (item->text() == run_until) {
             uint32_t address = static_cast<uint32_t>(hex2int(ui->disassemblyView->getSelectedAddress()));
-            debug_init_run_until(address);
+            debugger.runUntilAddress = address;
             debuggerChangeState();
-            emit setRunUntilMode();
+            debuggerStep(DBG_RUN_UNTIL);
         } else if (item->text() == goto_mem) {
             memGoto(MEM_MEM, ui->disassemblyView->getSelectedAddress());
         }
@@ -2222,9 +2217,10 @@ void MainWindow::stepInPressed() {
         return;
     }
 
-    debuggerUpdateChanges();
     disconnect(stepInShortcut, &QShortcut::activated, this, &MainWindow::stepInPressed);
-    emit setDebugStepInMode();
+
+    debuggerUpdateChanges();
+    debuggerStep(DBG_STEP_IN);
 }
 
 void MainWindow::stepOverPressed() {
@@ -2232,9 +2228,10 @@ void MainWindow::stepOverPressed() {
         return;
     }
 
-    debuggerUpdateChanges();
     disconnect(stepOverShortcut, &QShortcut::activated, this, &MainWindow::stepOverPressed);
-    emit setDebugStepOverMode();
+
+    debuggerUpdateChanges();
+    debuggerStep(DBG_STEP_OVER);
 }
 
 void MainWindow::stepNextPressed() {
@@ -2242,9 +2239,10 @@ void MainWindow::stepNextPressed() {
         return;
     }
 
-    debuggerUpdateChanges();
     disconnect(stepNextShortcut, &QShortcut::activated, this, &MainWindow::stepNextPressed);
-    emit setDebugStepNextMode();
+
+    debuggerUpdateChanges();
+    debuggerStep(DBG_STEP_NEXT);
 }
 
 void MainWindow::stepOutPressed() {
@@ -2252,9 +2250,10 @@ void MainWindow::stepOutPressed() {
         return;
     }
 
-    debuggerUpdateChanges();
     disconnect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOutPressed);
-    emit setDebugStepOutMode();
+
+    debuggerUpdateChanges();
+    debuggerStep(DBG_STEP_OUT);
 }
 
 void MainWindow::forceEnterDebug() {
@@ -2314,11 +2313,11 @@ void MainWindow::consoleContextMenu(const QPoint &posa) {
             } else if (item->text() == toggle_break) {
                 breakpointAdd(breakpointNextLabel(), address, true, true);
             } else if (item->text() == toggle_read_watch) {
-                watchpointAdd(watchpointNextLabel(), address, 1, DBG_READ_WATCHPOINT, true);
+                watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_READ, true);
             } else if (item->text() == toggle_write_watch) {
-                watchpointAdd(watchpointNextLabel(), address, 1, DBG_WRITE_WATCHPOINT, true);
+                watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_WRITE, true);
             } else if (item->text() == toggle_rw_watch) {
-                watchpointAdd(watchpointNextLabel(), address, 1, DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT, true);
+                watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_READ | DBG_MASK_WRITE, true);
             }
             memDocksUpdate();
         }

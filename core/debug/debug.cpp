@@ -41,9 +41,9 @@ uint8_t debug_peek_byte(uint32_t addr) {
     uint8_t value = mem_peek_byte(addr), data;
 
     if ((data = debugger.data.block[addr])) {
-        disasmHighlight.rWatch |= data & DBG_READ_WATCHPOINT ? true : false;
-        disasmHighlight.wWatch |= data & DBG_WRITE_WATCHPOINT ? true : false;
-        disasmHighlight.xBreak |= data & DBG_EXEC_BREAKPOINT ? true : false;
+        disasmHighlight.rWatch |= data & DBG_MASK_READ ? true : false;
+        disasmHighlight.wWatch |= data & DBG_MASK_WRITE ? true : false;
+        disasmHighlight.xBreak |= data & DBG_MASK_EXEC ? true : false;
         if (data & DBG_INST_START_MARKER && disasmHighlight.addr < 0) {
             disasmHighlight.addr = addr;
         }
@@ -68,13 +68,13 @@ void close_debugger(void) {
 }
 
 void open_debugger(int reason, uint32_t data) {
-    if (exiting || inDebugger || (debugger.ignore && (reason > HIT_MIN && reason < HIT_MAX))) {
+    if (exiting || inDebugger || (debugger.ignore && (reason >= DBG_EXEC_BREAKPOINT && reason <= DBG_PORT_WRITE))) {
         return;
     }
 
     if (reason == DBG_STEP && debugger.stepOverFirstStep) {
         if ((cpu.events & EVENT_DEBUG_STEP_OUT) ||
-           ((cpu.events & EVENT_DEBUG_STEP_NEXT) && !(debugger.data.block[cpu.registers.PC] & DBG_TEMP_EXEC_BREAKPOINT))) {
+           ((cpu.events & EVENT_DEBUG_STEP_NEXT) && !(debugger.data.block[cpu.registers.PC] & DBG_MASK_TEMP_EXEC))) {
             debugger.stepOverFirstStep = false;
             gui_debugger_raise_or_disable(false);
             return;
@@ -82,7 +82,7 @@ void open_debugger(int reason, uint32_t data) {
         debug_clear_temp_break();
     }
 
-    if (reason == HIT_EXEC_BREAKPOINT && (cpu.events & EVENT_DEBUG_STEP)) {
+    if (reason == DBG_EXEC_BREAKPOINT && (cpu.events & EVENT_DEBUG_STEP)) {
         return;
     }
 
@@ -147,17 +147,13 @@ void debug_breakwatch(uint32_t address, unsigned int type, bool set) {
     }
 }
 
-void debug_init_run_until(uint32_t address) {
-    debugger.runUntilAddress = address;
-}
-
 void debug_clear_temp_break(void) {
     cpu.events &= ~(EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OUT | EVENT_DEBUG_STEP_OVER);
     if (debugger.stepOverInstrEnd != 0xFFFFFFFFU) {
         do {
-            debugger.data.block[debugger.stepOverInstrEnd] &= ~DBG_TEMP_EXEC_BREAKPOINT;
+            debugger.data.block[debugger.stepOverInstrEnd] &= ~DBG_MASK_TEMP_EXEC;
             debugger.stepOverInstrEnd = cpu_mask_mode(debugger.stepOverInstrEnd - 1, debugger.stepOverMode);
-        } while (debugger.data.block[debugger.stepOverInstrEnd] & DBG_TEMP_EXEC_BREAKPOINT);
+        } while (debugger.data.block[debugger.stepOverInstrEnd] & DBG_MASK_TEMP_EXEC);
     }
     debugger.stepOverInstrEnd = 0xFFFFFFFFU;
 }
@@ -167,7 +163,7 @@ void debug_set_pc_address(uint32_t address) {
 }
 
 void debug_breakpoint_remove(uint32_t address) {
-    debug_breakwatch(address, ~DBG_NO_HANDLE, false);
+    debug_breakwatch(address, ~DBG_MASK_NONE, false);
 }
 
 void debug_pmonitor_set(uint16_t address, unsigned int type, bool set) {
@@ -179,7 +175,48 @@ void debug_pmonitor_set(uint16_t address, unsigned int type, bool set) {
 }
 
 void debug_pmonitor_remove(uint16_t address) {
-    debug_pmonitor_set(address, ~DBG_NO_HANDLE, false);
+    debug_pmonitor_set(address, ~DBG_MASK_NONE, false);
+}
+
+void debug_set_step_mode(int mode) {
+    debug_clear_temp_break();
+    disasm.baseAddress = cpu.registers.PC;
+    disasm.adl = cpu.ADL;
+    disassembleInstruction();
+    debugger.stepOverInstrEnd = disasm.newAddress;
+    debugger.stepOverFirstStep = false;
+    debugger.stepOverMode = cpu.ADL;
+    debugger.stepOutSPL = 0;
+    debugger.stepOutSPS = 0;
+    debugger.stepOutWait = -1;
+
+    switch (mode) {
+        case DBG_STEP_IN:
+            cpu.events |= EVENT_DEBUG_STEP;
+            break;
+        case DBG_STEP_OVER:
+            cpu.events |= EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OVER;
+            break;
+        case DBG_STEP_NEXT:
+            debugger.stepOverFirstStep = true;
+            cpu.events |= EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_NEXT;
+            break;
+        case DBG_STEP_OUT:
+            debugger.stepOverFirstStep = true;
+            debugger.stepOutSPL = cpu.registers.SPL + 1;
+            debugger.stepOutSPS = cpu.registers.SPS + 1;
+            debugger.stepOutWait = 0;
+            cpu.events |= EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OUT;
+            break;
+        case DBG_RUN_UNTIL:
+            debugger.stepOverInstrEnd = debugger.runUntilAddress;
+            cpu.events &= ~(EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OVER | EVENT_DEBUG_STEP_OUT | EVENT_DEBUG_STEP_NEXT);
+            break;
+        default:
+            break;
+    }
+
+    debugger.data.block[debugger.stepOverInstrEnd] |= DBG_MASK_TEMP_EXEC;
 }
 
 #endif

@@ -11,7 +11,6 @@
 #include "../../core/cpu.h"
 #include "../../core/control.h"
 #include "../../core/link.h"
-#include "../../core/debug/stepping.h"
 
 EmuThread *emu_thread = Q_NULLPTR;
 
@@ -91,8 +90,8 @@ void EmuThread::setThrottleMode(bool throttled) {
 void EmuThread::setDebugMode(bool state) {
     enterDebugger = state;
     if (inDebugger && !state) {
-        close_debugger();
         debug_clear_temp_break();
+        close_debugger();
     }
 }
 
@@ -107,33 +106,9 @@ void EmuThread::receive() {
 }
 
 void EmuThread::receiveDone() {
-    std::unique_lock<std::mutex> lock(mutex);
+    mutex.lock();
     cv.notify_all();
-}
-
-void EmuThread::setRunUntilMode() {
-    debug_set_run_until();
-    close_debugger();
-}
-
-void EmuThread::setDebugStepInMode() {
-    debug_set_step_in();
-    close_debugger();
-}
-
-void EmuThread::setDebugStepOverMode() {
-    debug_set_step_over();
-    close_debugger();
-}
-
-void EmuThread::setDebugStepNextMode() {
-    debug_set_step_next();
-    close_debugger();
-}
-
-void EmuThread::setDebugStepOutMode() {
-    debug_set_step_out();
-    close_debugger();
+    mutex.unlock();
 }
 
 // Called occasionally, only way to do something in the same thread the emulator runs in.

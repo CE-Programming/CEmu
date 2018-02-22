@@ -70,13 +70,9 @@ void MemoryVisualizerWidget::setConfig(uint32_t h, uint32_t w, uint32_t u, uint3
 void MemoryVisualizerWidget::contextMenu(const QPoint& posa) {
     QString coord = tr("Coordinate: ");
     QString copy_addr = tr("Copy Address");
-    QString goto_mem = tr("Goto Memory View");
-    QString toggle_write_watch = tr("Toggle Write Watchpoint");
-    QString toggle_read_watch = tr("Toggle Read Watchpoint");
-    QString toggle_rw_watch = tr("Toggle Read/Write Watchpoint");
 
     QTransform tr;
-    tr.scale(m_width*1.0/width(), m_height*1.0/height());
+    tr.scale(m_width * 1.0 / width(), m_height * 1.0 / height());
     QPoint point = tr.map(posa);
     uint32_t x = point.x();
     uint32_t y = point.y();
@@ -90,33 +86,12 @@ void MemoryVisualizerWidget::contextMenu(const QPoint& posa) {
     menu.addAction(coord);
     menu.addSeparator();
     menu.addAction(copy_addr);
-    //menu.addAction(goto_mem);
-    //menu.addSeparator();
-    //menu.addAction(toggle_write_watch);
-    //menu.addAction(toggle_read_watch);
-    //menu.addAction(toggle_rw_watch);
 
     QAction* item = menu.exec(mapToGlobal(posa));
     if (item) {
         if (item->text() == copy_addr) {
             QClipboard *clipboard = QApplication::clipboard();
             clipboard->setText(addr.toLatin1());
-        } else if (item->text() == goto_mem) {
-            int count = 0;
-            if (!guiDebug) {
-                //MainWindow::debuggerChangeState();
-            }
-            while (!guiDebug && count < 20) {
-                guiDelay(50);
-                count++;
-            }
-            //MainWindow::memGoto(MEM_MEM, cursor.selectedText());
-        } else if (item->text() == toggle_read_watch) {
-            //MainWindow::watchpointAdd(watchpointNextLabel(), address, 1, DBG_READ_WATCHPOINT, true);
-        } else if (item->text() == toggle_write_watch) {
-            //MainWindow::watchpointAdd(watchpointNextLabel(), address, 1, DBG_WRITE_WATCHPOINT, true);
-        } else if (item->text() == toggle_rw_watch) {
-            //MainWindow::watchpointAdd(watchpointNextLabel(), address, 1, DBG_WRITE_WATCHPOINT | DBG_READ_WATCHPOINT, true);
         }
     }
 }

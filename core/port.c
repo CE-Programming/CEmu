@@ -22,8 +22,8 @@ uint8_t port_read_byte(uint16_t address) {
     cpu.cycles += port_read_cycles[port_loc];
 
 #ifdef DEBUG_SUPPORT
-    if (debugger.data.ports[address] & DBG_PORT_READ) {
-        open_debugger(HIT_PORT_READ_WATCHPOINT, address);
+    if (debugger.data.ports[address] & DBG_MASK_PORT_READ) {
+        open_debugger(DBG_PORT_READ, address);
     }
 #endif
     return port_read(address, port_loc, false);
@@ -42,11 +42,11 @@ void port_write_byte(uint16_t address, uint8_t value) {
     cpu.cycles += port_write_cycles[port_loc];
 
 #ifdef DEBUG_SUPPORT
-    if (debugger.data.ports[address] & (DBG_PORT_FREEZE | DBG_PORT_WRITE)) {
-        if (debugger.data.ports[address] & DBG_PORT_WRITE) {
-            open_debugger(HIT_PORT_WRITE_WATCHPOINT, address);
+    if (debugger.data.ports[address] & (DBG_MASK_PORT_FREEZE | DBG_MASK_PORT_WRITE)) {
+        if (debugger.data.ports[address] & DBG_MASK_PORT_WRITE) {
+            open_debugger(DBG_PORT_WRITE, address);
         }
-        if (debugger.data.ports[address] & DBG_PORT_FREEZE) {
+        if (debugger.data.ports[address] & DBG_MASK_PORT_FREEZE) {
             return;
         }
     }

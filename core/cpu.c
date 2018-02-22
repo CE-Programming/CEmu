@@ -61,8 +61,8 @@ static void cpu_prefetch(uint32_t address, bool mode) {
 static uint8_t cpu_fetch_byte(void) {
     uint8_t value;
 #ifdef DEBUG_SUPPORT
-    if (debugger.data.block[cpu.registers.PC] & (DBG_EXEC_BREAKPOINT | DBG_TEMP_EXEC_BREAKPOINT)) {
-        open_debugger((debugger.data.block[cpu.registers.PC] & DBG_EXEC_BREAKPOINT) ? HIT_EXEC_BREAKPOINT : DBG_STEP, cpu.registers.PC);
+    if (debugger.data.block[cpu.registers.PC] & (DBG_MASK_TEMP_EXEC | DBG_MASK_EXEC)) {
+        open_debugger((debugger.data.block[cpu.registers.PC] & DBG_MASK_EXEC) ? DBG_EXEC_BREAKPOINT : DBG_STEP, cpu.registers.PC);
     }
 #endif
     value = cpu.prefetch;
@@ -98,7 +98,7 @@ static uint8_t cpu_read_byte(uint32_t address) {
     uint32_t cpuAddress = cpu_address_mode(address, cpu.L);
 #ifdef DEBUG_SUPPORT
     if (cpuAddress == debugger.stepOverInstrEnd) {
-        debugger.data.block[debugger.stepOverInstrEnd = cpu_mask_mode(address + 1, debugger.stepOverMode)] |= DBG_TEMP_EXEC_BREAKPOINT;
+        debugger.data.block[debugger.stepOverInstrEnd = cpu_mask_mode(address + 1, debugger.stepOverMode)] |= DBG_MASK_TEMP_EXEC;
     }
 #endif
     return mem_read_cpu(cpuAddress, false);
@@ -410,7 +410,7 @@ static void cpu_call(uint32_t address, bool mixed) {
             }
         } else if (cpu.events & EVENT_DEBUG_STEP_OVER) {
             if (r->PC == debugger.stepOverInstrEnd) {
-                debugger.data.block[debugger.stepOverInstrEnd] &= ~DBG_TEMP_EXEC_BREAKPOINT;
+                debugger.data.block[debugger.stepOverInstrEnd] &= ~DBG_MASK_TEMP_EXEC;
             }
         }
     }

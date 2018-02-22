@@ -14,42 +14,42 @@ extern volatile bool inDebugger;
 
 eZ80portrange_t init_debugger_ports(void);
 
-/* For use in the debugger */
 enum {
     DBG_USER,
-    DBG_STEP,
-    HIT_MIN,
-    HIT_EXEC_BREAKPOINT,
-    HIT_READ_WATCHPOINT,
-    HIT_WRITE_WATCHPOINT,
-    HIT_RUN_BREAKPOINT,
-    HIT_PORT_WRITE_WATCHPOINT,
-    HIT_PORT_READ_WATCHPOINT,
-    HIT_MAX,
+    DBG_READY,
+    DBG_EXEC_BREAKPOINT,
+    DBG_READ_WATCHPOINT,
+    DBG_WRITE_WATCHPOINT,
+    DBG_PORT_READ,
+    DBG_PORT_WRITE,
     DBG_NMI_TRIGGERED,
     DBG_WATCHDOG_TIMEOUT,
     DBG_MISC_RESET,
-    DBG_READY,
-    NUM_DBG_COMMANDS,
+    DBG_STEP,
+    DBG_STEP_IN,
+    DBG_STEP_OUT,
+    DBG_STEP_OVER,
+    DBG_STEP_NEXT,
+    DBG_RUN_UNTIL,
+    DBG_NUM_COMMANDS,
 };
 
 /* For Port Monitoring */
-#define DBG_NO_HANDLE             0
-#define DBG_PORT_READ             1
-#define DBG_PORT_WRITE            2
-#define DBG_PORT_FREEZE           4
+#define DBG_MASK_NONE            0
+#define DBG_MASK_PORT_READ       1
+#define DBG_MASK_PORT_WRITE      2
+#define DBG_MASK_PORT_FREEZE     4
 
 /* For Memory Brakpoints */
-#define DBG_READ_WATCHPOINT       (1 << 0)
-#define DBG_WRITE_WATCHPOINT      (1 << 1)
-#define DBG_EXEC_BREAKPOINT       (1 << 2)
-#define DBG_TEMP_EXEC_BREAKPOINT  (1 << 3)
-
-#define DBG_RW_WATCHPOINT         ((DBG_WRITE_WATCHPOINT) | (DBG_READ_WATCHPOINT))
+#define DBG_MASK_READ            1
+#define DBG_MASK_WRITE           2
+#define DBG_MASK_EXEC            4
+#define DBG_MASK_TEMP_EXEC       8
+#define DBG_MASK_RW              ((DBG_MASK_READ) | (DBG_MASK_WRITE))
 
 /* For other things */
-#define DBG_INST_START_MARKER     (1 << 4)
-#define DBG_INST_MARKER           (1 << 5)
+#define DBG_INST_START_MARKER    16
+#define DBG_INST_MARKER          32
 
 #define DBG_PORT_RANGE            0xFFFF00
 #define DBGOUT_PORT_RANGE         0xFB0000
@@ -97,8 +97,6 @@ void close_debugger(void);
 uint8_t debug_peek_byte(uint32_t address);
 void debug_switch_step_mode(void);
 
-void debug_init_run_until(uint32_t address);
-
 void debug_breakwatch(uint32_t address, unsigned int type, bool set);
 void debug_breakpoint_remove(uint32_t address);
 
@@ -108,6 +106,7 @@ void debug_pmonitor_remove(uint16_t address);
 void debug_set_pc_address(uint32_t address);
 
 void debug_clear_temp_break(void);
+void debug_set_step_mode(int mode);
 
 #ifdef __cplusplus
 }

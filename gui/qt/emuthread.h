@@ -54,11 +54,6 @@ public slots:
 
     // Debugging
     void setDebugMode(bool);
-    void setDebugStepInMode();
-    void setDebugStepOverMode();
-    void setDebugStepNextMode();
-    void setDebugStepOutMode();
-    void setRunUntilMode();
 
     // Linking
     void send(const QStringList& fileNames, unsigned int location);
