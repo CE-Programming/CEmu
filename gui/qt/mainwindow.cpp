@@ -203,8 +203,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonSelectVars, &QPushButton::clicked, this, &MainWindow::selectAllVars);
     connect(ui->varLoadedView, &QWidget::customContextMenuRequested, this, &MainWindow::resendContextMenu);
     connect(&emu, &EmuThread::receiveReady, this, &MainWindow::changeVariableList, Qt::QueuedConnection);
-    connect(this, &MainWindow::receive, &emu, &EmuThread::receive, Qt::QueuedConnection);
-    connect(this, &MainWindow::receiveDone, &emu, &EmuThread::receiveDone, Qt::QueuedConnection);
+    connect(this, &MainWindow::receive, &emu, &EmuThread::receive);
+    connect(this, &MainWindow::receiveDone, &emu, &EmuThread::receiveDone);
 
     // Autotester
     connect(ui->buttonOpenJSONconfig, &QPushButton::clicked, this, &MainWindow::prepareAndOpenJSONConfig);
@@ -1203,8 +1203,7 @@ void MainWindow::closeEvent(QCloseEvent *e) {
         return;
     }
 
-    // ignore debug requests
-    debugger.ignore = true;
+    guiEmuValid = false;
 
     if (guiDebug) {
         debuggerChangeState();
