@@ -858,7 +858,7 @@ private:
     QString TXT_OS_STACKS;
     QString TXT_MISC;
     QString TXT_AUTOTESTER;
-
+    QString TXT_SCRIPTING;
     QString MSG_INFORMATION;
     QString MSG_WARNING;
     QString MSG_ERROR;
