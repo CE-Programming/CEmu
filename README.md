@@ -9,6 +9,8 @@ Calc-only layout | A mixed layout with various panes | A debugging-oriented layo
 ------------ | ------------ | ------------- |
 <a href="https://i.imgur.com/4CJ7RqT.png"><img src="https://i.imgur.com/e1BgJRw.png" /></a>|<a href="https://i.imgur.com/W5mKf1n.png"><img src="https://i.imgur.com/EZKWRUh.png" /></a>|<a href="https://i.imgur.com/hJFVdtF.png"><img src="https://i.imgur.com/H5TQrci.png" /></a>
 
+_Note: CEmu is not affiliated, connected to, or a product of Texas Instruments in any way._
+
 ## Downloads
 Development builds are available here: https://ce-programming.github.io/CEmu/download
 
