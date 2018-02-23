@@ -23,14 +23,17 @@ public:
 
     void doStuff();
     void throttleTimerWait();
-    QString rom, image;
     void consoleAquire(int dest, const char *format, ...);
-    QString consoleRelease(int size);
+    QString rom, image;
+    int consoleWritePosition = 0;
+    int consoleReadPosition = 0;
+    char consoleBuffer[CONSOLE_BUFFER_SIZE];
+    QSemaphore consoleWriteSemaphore;
+    QSemaphore consoleReadSemaphore;
 
 signals:
     // Console Strings
-    void consoleNorm(int size);
-    void consoleErr(int size);
+    void consoleStr(int dest);
 
     // Debugger
     void raiseDebugger();
@@ -104,9 +107,6 @@ private:
     std::chrono::steady_clock::time_point lastTime;
     std::mutex mutex;
     std::condition_variable cv;
-
-    int consoleWritePosition = 0, consoleReadPosition = 0;
-    char consoleBuffer[CONSOLE_BUFFER_SIZE];
 };
 
 // For friends

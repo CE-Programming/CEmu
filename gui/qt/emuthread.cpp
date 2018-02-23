@@ -13,8 +13,6 @@
 #include "../../core/link.h"
 
 EmuThread *emu_thread = Q_NULLPTR;
-QSemaphore consoleWriteSemaphore(CONSOLE_BUFFER_SIZE);
-QSemaphore consoleReadSemaphore;
 
 void gui_emu_sleep(unsigned long microseconds) {
     QThread::usleep(microseconds);
@@ -54,7 +52,7 @@ void throttle_timer_wait(void) {
     emu_thread->throttleTimerWait();
 }
 
-EmuThread::EmuThread(QObject *p) : QThread(p) {
+EmuThread::EmuThread(QObject *p) : QThread(p), consoleWriteSemaphore(CONSOLE_BUFFER_SIZE) {
     assert(emu_thread == Q_NULLPTR);
     emu_thread = this;
     speed = actualSpeed = 100;
@@ -70,57 +68,47 @@ void EmuThread::consoleAquire(int dest, const char *format, ...) {
 	int size = vsnprintf(&consoleBuffer[consoleWritePosition], space, format, args);
 	va_end(args);
 	if (size > 0) {
+		if (size > CONSOLE_BUFFER_SIZE) {
+			return; // buffer overflow
+		}
 		consoleWriteSemaphore.acquire(size);
-		consoleReadSemaphore.release(size);
-		if (dest == CONSOLE_NORM) {
-			emit consoleNorm(size);
-		} else if (dest == CONSOLE_ERR) {
-			emit consoleErr(size);
+	}
+	if (size <= space) {
+		if (size < remaining) {
+			consoleWritePosition += size;
+		} else {
+			consoleWritePosition = 0;
 		}
 	} else {
-		return;
-	}
-	if (size < space) {
-		consoleWritePosition += size;
-		return;
-	}
-	va_start(args, format);
-	if (size < remaining) {
-		vsnprintf(&consoleBuffer[consoleWritePosition], size, format, args);
-		consoleWritePosition += size;
-	} else if (size - remaining + consoleWriteSemaphore.available()) {
-		vsnprintf(&consoleBuffer[0], size, format, args);
-		memcpy(&consoleBuffer[consoleWritePosition], &consoleBuffer[0], remaining);
-		consoleWritePosition = size - remaining;
-		memmove(&consoleBuffer[0], &consoleBuffer[remaining], consoleWritePosition);
-	} else {
-		char *buffer = (char*)malloc(size);
-		if (!buffer) {
-			return;
+		va_start(args, format);
+		if (size <= remaining) {
+			vsnprintf(&consoleBuffer[consoleWritePosition], size, format, args);
+			if (size < remaining) {
+				consoleWritePosition += size;
+			} else {
+				consoleWritePosition = 0;
+			}
+		} else if (size - remaining <= consoleWriteSemaphore.available()) {
+			vsnprintf(&consoleBuffer[0], size, format, args);
+			memcpy(&consoleBuffer[consoleWritePosition], &consoleBuffer[0], remaining);
+			consoleWritePosition = size - remaining;
+			memmove(&consoleBuffer[0], &consoleBuffer[remaining], consoleWritePosition);
+		} else {
+			char *buffer = static_cast<char*>(malloc(size));
+			if (!buffer) {
+				consoleWriteSemaphore.release(size);
+				return; // out of memory
+			}
+			vsnprintf(buffer, size, format, args);
+			memcpy(&consoleBuffer[consoleWritePosition], buffer, remaining);
+			consoleWritePosition = size - remaining;
+			memcpy(&consoleBuffer[0], &buffer[remaining], consoleWritePosition);
+			free(buffer);
 		}
-		vsnprintf(buffer, size, format, args);
-		memcpy(&consoleBuffer[consoleWritePosition], buffer, remaining);
-		consoleWritePosition = size - remaining;
-		memcpy(&consoleBuffer[0], &buffer[remaining], consoleWritePosition);
-		free(buffer);
+		va_end(args);
 	}
-	va_end(args);
-}
-
-QString EmuThread::consoleRelease(int size) {
-	std::string apple;
-	consoleReadSemaphore.acquire(size);
-	int remaining = CONSOLE_BUFFER_SIZE - consoleReadPosition;
-	if (size < remaining) {
-		apple.append(&consoleBuffer[consoleReadPosition], size);
-		consoleReadPosition += size;
-	} else {
-		apple.append(&consoleBuffer[consoleReadPosition], remaining);
-		consoleReadPosition = size - remaining;
-		apple.append(&consoleBuffer[0], consoleReadPosition);
-	}
-	consoleWriteSemaphore.release(size);
-	return QString::fromStdString(apple);
+	consoleReadSemaphore.release(size);
+	emit consoleStr(dest);
 }
 
 void EmuThread::reset() {

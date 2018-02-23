@@ -58,8 +58,7 @@ public:
 public slots:
     // Console
     void console(const QString &str, const QColor &color = Qt::black);
-    void consoleStr(int size);
-    void consoleErrStr(int size);
+    void consoleStr(int type);
 
     // Saved/Restored State
     void saved(bool success);

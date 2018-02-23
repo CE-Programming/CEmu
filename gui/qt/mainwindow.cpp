@@ -111,8 +111,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     memory.append(ui->memEdit);
 
     // Emulator -> GUI
-    connect(&emu, &EmuThread::consoleNorm, this, &MainWindow::consoleStr, Qt::UniqueConnection);
-    connect(&emu, &EmuThread::consoleErr, this, &MainWindow::consoleErrStr, Qt::UniqueConnection);
+    connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr, Qt::UniqueConnection);
     connect(&emu, &EmuThread::started, this, &MainWindow::started, Qt::QueuedConnection);
     connect(&emu, &EmuThread::stopped, this, &MainWindow::emuStopped, Qt::QueuedConnection);
     connect(&emu, &EmuThread::restored, this, &MainWindow::restored, Qt::QueuedConnection);
@@ -1231,40 +1230,49 @@ void MainWindow::closeEvent(QCloseEvent *e) {
 }
 
 void MainWindow::console(const QString &str, const QColor &color) {
-    if (str.at(0) == '\f') {
-        if (nativeConsole) {
+    if (nativeConsole) {
+        fputs(str.toStdString().c_str(), stdout);
+    } else {
+        QTextCursor cur(ui->console->document());
+        cur.movePosition(QTextCursor::End);
+        consoleFormat.setForeground(color);
+        cur.insertText(str, consoleFormat);
+        if (ui->checkAutoScroll->isChecked()) {
+            ui->console->setTextCursor(cur);
+        }
+    }
+}
+
+void MainWindow::consoleStr(int type) {
+	int size = emu.consoleReadSemaphore.available();
+	int remaining = CONSOLE_BUFFER_SIZE - emu.consoleReadPosition;
+	emu.consoleReadSemaphore.acquire(size);
+	bool clear = emu.consoleBuffer[emu.consoleReadPosition] == '\f';
+	if (nativeConsole) {
+		if (clear) {
 #ifdef _WIN32
-            int ret = system("cls");
+			int ret = system("cls");
 #else
-            int ret = system("clear");
+			int ret = system("clear");
 #endif
             if (ret == -1) {
                 ui->console->clear();
             }
         } else {
-            ui->console->clear();
+            fwrite(&emu.consoleBuffer[emu.consoleReadPosition], sizeof(char), size, stdout);
         }
     } else {
-        if (nativeConsole) {
-            fputs(str.toStdString().c_str(), stdout);
+        if (clear) {
+            ui->console->clear();
         } else {
-            QTextCursor cur(ui->console->document());
-            cur.movePosition(QTextCursor::End);
-            consoleFormat.setForeground(color);
-            cur.insertText(str, consoleFormat);
-            if (ui->checkAutoScroll->isChecked()) {
-                ui->console->setTextCursor(cur);
+            QColor color = type == CONSOLE_ERR ? Qt::darkRed : Qt::black;
+            console(QString::fromLocal8Bit(&emu.consoleBuffer[emu.consoleReadPosition], remaining), color);
+            if (size > remaining) {
+                console(QString::fromLocal8Bit(&emu.consoleBuffer[0], size - remaining), color);
             }
         }
     }
-}
-
-void MainWindow::consoleStr(int size) {
-    console(emu.consoleRelease(size));
-}
-
-void MainWindow::consoleErrStr(int size) {
-    console(emu.consoleRelease(size), Qt::darkRed);
+    emu.consoleWriteSemaphore.release(size);
 }
 
 void MainWindow::emuTimerSlot() {
