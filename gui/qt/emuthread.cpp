@@ -13,7 +13,8 @@
 #include "../../core/link.h"
 
 EmuThread *emu_thread = Q_NULLPTR;
-QSemaphore consoleSemaphore(CONSOLE_BUFFER_SIZE);
+QSemaphore consoleWriteSemaphore(CONSOLE_BUFFER_SIZE);
+QSemaphore consoleReadSemaphore;
 
 void gui_emu_sleep(unsigned long microseconds) {
     QThread::usleep(microseconds);
@@ -63,13 +64,14 @@ EmuThread::EmuThread(QObject *p) : QThread(p) {
 void EmuThread::consoleAquire(int dest, const char *format, ...) {
 	va_list args;
 	va_start(args, format);
-	int available = consoleSemaphore.available();
+	int available = consoleWriteSemaphore.available();
 	int remaining = CONSOLE_BUFFER_SIZE - consoleWritePosition;
 	int space = available < remaining ? available : remaining;
 	int size = vsnprintf(&consoleBuffer[consoleWritePosition], space, format, args);
 	va_end(args);
 	if (size > 0) {
-		consoleSemaphore.acquire(size);
+		consoleWriteSemaphore.acquire(size);
+		consoleReadSemaphore.release(size);
 		if (dest == CONSOLE_NORM) {
 			emit consoleNorm(size);
 		} else if (dest == CONSOLE_ERR) {
@@ -86,7 +88,7 @@ void EmuThread::consoleAquire(int dest, const char *format, ...) {
 	if (size < remaining) {
 		vsnprintf(&consoleBuffer[consoleWritePosition], size, format, args);
 		consoleWritePosition += size;
-	} else if (size - remaining + consoleSemaphore.available()) {
+	} else if (size - remaining + consoleWriteSemaphore.available()) {
 		vsnprintf(&consoleBuffer[0], size, format, args);
 		memcpy(&consoleBuffer[consoleWritePosition], &consoleBuffer[0], remaining);
 		consoleWritePosition = size - remaining;
@@ -107,7 +109,7 @@ void EmuThread::consoleAquire(int dest, const char *format, ...) {
 
 QString EmuThread::consoleRelease(int size) {
 	std::string apple;
-	consoleSemaphore.release(size);
+	consoleReadSemaphore.acquire(size);
 	int remaining = CONSOLE_BUFFER_SIZE - consoleReadPosition;
 	if (size < remaining) {
 		apple.append(&consoleBuffer[consoleReadPosition], size);
@@ -117,6 +119,7 @@ QString EmuThread::consoleRelease(int size) {
 		consoleReadPosition = size - remaining;
 		apple.append(&consoleBuffer[0], consoleReadPosition);
 	}
+	consoleWriteSemaphore.release(size);
 	return QString::fromStdString(apple);
 }
 

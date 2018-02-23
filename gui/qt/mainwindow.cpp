@@ -1230,16 +1230,6 @@ void MainWindow::closeEvent(QCloseEvent *e) {
     QMainWindow::closeEvent(e);
 }
 
-void MainWindow::consoleAppend(const QString &str, const QColor &color) {
-    QTextCursor cur(ui->console->document());
-    cur.movePosition(QTextCursor::End);
-    consoleFormat.setForeground(color);
-    cur.insertText(str, consoleFormat);
-    if (ui->checkAutoScroll->isChecked()) {
-        ui->console->setTextCursor(cur);
-    }
-}
-
 void MainWindow::console(const QString &str, const QColor &color) {
     if (str.at(0) == '\f') {
         if (nativeConsole) {
@@ -1258,7 +1248,13 @@ void MainWindow::console(const QString &str, const QColor &color) {
         if (nativeConsole) {
             fputs(str.toStdString().c_str(), stdout);
         } else {
-            consoleAppend(str, color);
+            QTextCursor cur(ui->console->document());
+            cur.movePosition(QTextCursor::End);
+            consoleFormat.setForeground(color);
+            cur.insertText(str, consoleFormat);
+            if (ui->checkAutoScroll->isChecked()) {
+                ui->console->setTextCursor(cur);
+            }
         }
     }
 }
@@ -1398,7 +1394,7 @@ void MainWindow::recordAPNG() {
         apng_start(path.toStdString().c_str(), ui->apngSkip->value());
         showStatusMsg(tr("Recording..."));
     } else {
-        showStatusMsg(QStringLiteral("Saving Recording..."));
+        showStatusMsg(tr("Saving Recording..."));
         if (apng_stop()) {
             int res;
 
@@ -1425,7 +1421,7 @@ void MainWindow::recordAPNG() {
             }
         } else {
             QMessageBox::critical(this, MSG_ERROR, tr("A failure occured during PNG recording."));
-            showStatusMsg(QStringLiteral(""));
+            msgLabel.clear();
             path.clear();
         }
         return;
@@ -1461,7 +1457,7 @@ void MainWindow::updateAnimatedControls() {
     ui->actionRecordAnimated->setChecked(false);
     ui->buttonRecordAnimated->setText(tr("Record"));
     ui->actionRecordAnimated->setText(tr("Record animated PNG..."));
-    showStatusMsg(QStringLiteral(""));
+    msgLabel.clear();
 }
 
 void RecordingThread::run() {

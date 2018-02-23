@@ -11,7 +11,7 @@
 #include "../../core/asic.h"
 #include "../../core/debug/debug.h"
 
-#define CONSOLE_BUFFER_SIZE 2048
+#define CONSOLE_BUFFER_SIZE 512
 #define CONSOLE_NORM 0
 #define CONSOLE_ERR 1
 

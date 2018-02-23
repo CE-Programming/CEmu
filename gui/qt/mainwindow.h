@@ -391,7 +391,6 @@ private:
     // Console
     void showStatusMsg(const QString &str);
     void consoleOutputChanged();
-    void consoleAppend(const QString &str, const QColor &color = Qt::black);
 
     // Settings
     void adjustScreen();
