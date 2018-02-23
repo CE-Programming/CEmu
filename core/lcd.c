@@ -482,7 +482,6 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
                     sched_set(SCHED_LCD, 0);
                 } else {
                     sched_clear(SCHED_LCD);
-                    lcd_gui_event();
                 }
             }
         } else if (index == 0x01C) {
