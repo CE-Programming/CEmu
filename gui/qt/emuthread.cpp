@@ -13,6 +13,7 @@
 #include "../../core/link.h"
 
 EmuThread *emu_thread = Q_NULLPTR;
+QSemaphore consoleSemaphore(CONSOLE_BUFFER_SIZE);
 
 void gui_emu_sleep(unsigned long microseconds) {
     QThread::usleep(microseconds);
@@ -22,34 +23,18 @@ void gui_do_stuff(void) {
     emu_thread->doStuff();
 }
 
-static void gui_console_vprintf(const char *fmt, va_list ap) {
-    QString str;
-    str.vsprintf(fmt, ap);
-    emu_thread->consoleStr(str);
+void gui_console_printf(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    emu_thread->consoleAquire(CONSOLE_NORM, format, args);
+    va_end(args);
 }
 
-void gui_console_printf(const char *fmt, ...) {
-    va_list ap;
-    va_start(ap, fmt);
-
-    gui_console_vprintf(fmt, ap);
-
-    va_end(ap);
-}
-
-static void gui_console_err_vprintf(const char *fmt, va_list ap) {
-    QString str;
-    str.vsprintf(fmt, ap);
-    emu_thread->consoleErrStr(str);
-}
-
-void gui_console_err_printf(const char *fmt, ...) {
-    va_list ap;
-    va_start(ap, fmt);
-
-    gui_console_err_vprintf(fmt, ap);
-
-    va_end(ap);
+void gui_console_err_printf(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    emu_thread->consoleAquire(CONSOLE_ERR, format, args);
+    va_end(args);
 }
 
 void gui_debugger_send_command(int reason, uint32_t addr) {
@@ -73,6 +58,66 @@ EmuThread::EmuThread(QObject *p) : QThread(p) {
     emu_thread = this;
     speed = actualSpeed = 100;
     lastTime = std::chrono::steady_clock::now();
+}
+
+void EmuThread::consoleAquire(int dest, const char *format, ...) {
+	va_list args;
+	va_start(args, format);
+	int available = consoleSemaphore.available();
+	int remaining = CONSOLE_BUFFER_SIZE - consoleWritePosition;
+	int space = available < remaining ? available : remaining;
+	int size = vsnprintf(&consoleBuffer[consoleWritePosition], space, format, args);
+	va_end(args);
+	if (size > 0) {
+		consoleSemaphore.acquire(size);
+		if (dest == CONSOLE_NORM) {
+			emit consoleNorm(size);
+		} else if (dest == CONSOLE_ERR) {
+			emit consoleErr(size);
+		}
+	} else {
+		return;
+	}
+	if (size < space) {
+		consoleWritePosition += size;
+		return;
+	}
+	va_start(args, format);
+	if (size < remaining) {
+		vsnprintf(&consoleBuffer[consoleWritePosition], size, format, args);
+		consoleWritePosition += size;
+	} else if (size - remaining + consoleSemaphore.available()) {
+		vsnprintf(&consoleBuffer[0], size, format, args);
+		memcpy(&consoleBuffer[consoleWritePosition], &consoleBuffer[0], remaining);
+		consoleWritePosition = size - remaining;
+		memmove(&consoleBuffer[0], &consoleBuffer[remaining], consoleWritePosition);
+	} else {
+		char *buffer = (char*)malloc(size);
+		if (!buffer) {
+			return;
+		}
+		vsnprintf(buffer, size, format, args);
+		memcpy(&consoleBuffer[consoleWritePosition], buffer, remaining);
+		consoleWritePosition = size - remaining;
+		memcpy(&consoleBuffer[0], &buffer[remaining], consoleWritePosition);
+		free(buffer);
+	}
+	va_end(args);
+}
+
+QString EmuThread::consoleRelease(int size) {
+	std::string apple;
+	consoleSemaphore.release(size);
+	int remaining = CONSOLE_BUFFER_SIZE - consoleReadPosition;
+	if (size < remaining) {
+		apple.append(&consoleBuffer[consoleReadPosition], size);
+		consoleReadPosition += size;
+	} else {
+		apple.append(&consoleBuffer[consoleReadPosition], remaining);
+		consoleReadPosition = size - remaining;
+		apple.append(&consoleBuffer[0], consoleReadPosition);
+	}
+	return QString::fromStdString(apple);
 }
 
 void EmuThread::reset() {
@@ -131,18 +176,6 @@ void EmuThread::doStuff() {
         bool success = emu_save_rom(romExportPath.toStdString().c_str());
         emit saved(success);
         enterSaveRom = false;
-    }
-
-    if (debugger.bufferPos) {
-        debugger.buffer[debugger.bufferPos] = '\0';
-        emit consoleStr(QString(debugger.buffer));
-        debugger.bufferPos = 0;
-    }
-
-    if (debugger.bufferErrPos) {
-        debugger.bufferErr[debugger.bufferErrPos] = '\0';
-        emit consoleErrStr(QString(debugger.bufferErr));
-        debugger.bufferErrPos = 0;
     }
 
     if (enterSendState) {

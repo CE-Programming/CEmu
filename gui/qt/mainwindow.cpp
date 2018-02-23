@@ -111,8 +111,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     memory.append(ui->memEdit);
 
     // Emulator -> GUI
-    connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr, Qt::QueuedConnection);
-    connect(&emu, &EmuThread::consoleErrStr, this, &MainWindow::consoleErrStr, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::consoleNorm, this, &MainWindow::consoleStr, Qt::UniqueConnection);
+    connect(&emu, &EmuThread::consoleErr, this, &MainWindow::consoleErrStr, Qt::UniqueConnection);
     connect(&emu, &EmuThread::started, this, &MainWindow::started, Qt::QueuedConnection);
     connect(&emu, &EmuThread::stopped, this, &MainWindow::emuStopped, Qt::QueuedConnection);
     connect(&emu, &EmuThread::restored, this, &MainWindow::restored, Qt::QueuedConnection);
@@ -1240,7 +1240,7 @@ void MainWindow::consoleAppend(const QString &str, const QColor &color) {
     }
 }
 
-void MainWindow::consoleStr(const QString &str) {
+void MainWindow::console(const QString &str, const QColor &color) {
     if (str.at(0) == '\f') {
         if (nativeConsole) {
 #ifdef _WIN32
@@ -1258,32 +1258,17 @@ void MainWindow::consoleStr(const QString &str) {
         if (nativeConsole) {
             fputs(str.toStdString().c_str(), stdout);
         } else {
-            consoleAppend(str);
+            consoleAppend(str, color);
         }
     }
 }
 
-void MainWindow::consoleErrStr(const QString &str) {
-    if (str.at(0) == '\f') {
-        if (nativeConsole) {
-#ifdef _WIN32
-            int ret = system("cls");
-#else
-            int ret = system("clear");
-#endif
-            if (ret == -1) {
-                ui->console->clear();
-            }
-        } else {
-            ui->console->clear();
-        }
-    } else {
-        if (nativeConsole) {
-            fputs(str.toStdString().c_str(), stderr);
-        } else {
-            consoleAppend(str, Qt::red);
-        }
-    }
+void MainWindow::consoleStr(int size) {
+    console(emu.consoleRelease(size));
+}
+
+void MainWindow::consoleErrStr(int size) {
+    console(emu.consoleRelease(size), Qt::darkRed);
 }
 
 void MainWindow::emuTimerSlot() {
@@ -2348,7 +2333,7 @@ void MainWindow::consoleContextMenu(const QPoint &posa) {
 bool MainWindow::ipcSetup() {
     // start the main communictions
     if (com->ipcSetup(opts.idString, opts.pidString)) {
-        consoleStr(QStringLiteral("[CEmu] Initialized Server [") + opts.idString + QStringLiteral(" | ") + com->getServerName() + QStringLiteral("]\n"));
+        console(QStringLiteral("[CEmu] Initialized Server [") + opts.idString + QStringLiteral(" | ") + com->getServerName() + QStringLiteral("]\n"));
         return true;
     }
 
@@ -2378,7 +2363,7 @@ bool MainWindow::ipcSetup() {
 }
 
 void MainWindow::ipcHandleCommandlineReceive(QDataStream &stream) {
-    consoleStr(QStringLiteral("[CEmu] Received IPC: command line options\n"));
+    console(QStringLiteral("[CEmu] Received IPC: command line options\n"));
     CEmuOpts o;
 
     stream >> o.useUnthrottled
@@ -2457,7 +2442,7 @@ void MainWindow::ipcReceived() {
             close();
             break;
         default:
-           consoleStr(QStringLiteral("[CEmu] IPC Unknown\n"));
+           console(QStringLiteral("[CEmu] IPC Unknown\n"));
            break;
     }
 }
@@ -2469,7 +2454,7 @@ void MainWindow::ipcChangeID() {
         if (!ipc::idOpen(text)) {
             com->idClose();
             com->ipcSetup(opts.idString = text, opts.pidString);
-            consoleStr(QStringLiteral("[CEmu] Initialized Server [") + opts.idString + QStringLiteral(" | ") + com->getServerName() + QStringLiteral("]\n"));
+            console(QStringLiteral("[CEmu] Initialized Server [") + opts.idString + QStringLiteral(" | ") + com->getServerName() + QStringLiteral("]\n"));
             setWindowTitle(QStringLiteral("CEmu | ") + opts.idString);
         }
     }

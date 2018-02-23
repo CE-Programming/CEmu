@@ -354,11 +354,11 @@ void MainWindow::debuggerExecuteCommand(uint32_t debugAddress, uint8_t command) 
                 watchpointAdd(watchpointNextLabel(), cpu.registers.DE, cpu.registers.bc.l, DBG_MASK_NONE, false);
                 break;
             default:
-                consoleErrStr(QStringLiteral("[CEmu] Unknown debug Command: 0x") +
-                              QString::number(command, 16).rightJustified(2, '0') +
-                              QStringLiteral(",0x") +
-                              QString::number(debugAddress + 0xFFFF00, 16) +
-                              QStringLiteral("\n"));
+                console(QStringLiteral("[CEmu] Unknown debug Command: 0x") +
+                        QString::number(command, 16).rightJustified(2, '0') +
+                        QStringLiteral(",0x") +
+                        QString::number(debugAddress + 0xFFFF00, 16) +
+                        QStringLiteral("\n"), Qt::darkRed);
                 break;
         }
     }
@@ -1559,7 +1559,7 @@ void MainWindow::equatesAddFile(const QString &fileName) {
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         currentEquateFiles.removeAll(fileName);
-        consoleStr(QStringLiteral("[CEmu] Debugger couldn't open this equate file (removed): ") + fileName + "\n");
+        console(QStringLiteral("[CEmu] Debugger couldn't open this equate file (removed): ") + fileName + "\n");
         return;
     }
 
@@ -1606,7 +1606,7 @@ void MainWindow::equatesAddFile(const QString &fileName) {
         } while (in.readLineInto(&line));
     }
 
-    consoleStr(QStringLiteral("[CEmu] Loaded equate file: ") + fileName + QStringLiteral("\n"));
+    console(QStringLiteral("[CEmu] Loaded equate file: ") + fileName + QStringLiteral("\n"));
 
     updateDisasm();
     updateLabels();

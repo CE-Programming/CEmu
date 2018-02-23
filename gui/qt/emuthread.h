@@ -3,12 +3,17 @@
 
 #include <QtCore/QThread>
 #include <QtCore/QTimer>
+#include <QtCore/QSemaphore>
 
 #include <chrono>
 #include <condition_variable>
 
 #include "../../core/asic.h"
 #include "../../core/debug/debug.h"
+
+#define CONSOLE_BUFFER_SIZE 2048
+#define CONSOLE_NORM 0
+#define CONSOLE_ERR 1
 
 class EmuThread : public QThread {
     Q_OBJECT
@@ -19,21 +24,23 @@ public:
     void doStuff();
     void throttleTimerWait();
     QString rom, image;
+    void consoleAquire(int dest, const char *format, ...);
+    QString consoleRelease(int size);
 
 signals:
+    // Console Strings
+    void consoleNorm(int size);
+    void consoleErr(int size);
+
     // Debugger
     void raiseDebugger();
     void disableDebugger();
     void sendDebugCommand(int reason, uint32_t addr);
     void debugInputRequested(bool);
 
-    // I/O
-    void consoleStr(const QString& str);
-    void consoleErrStr(const QString& str);
-    void exited(int);
-
     // Status
     void actualSpeedChanged(int value);
+    void exited(int);
 
     // Save/Restore state
     void saved(bool success);
@@ -97,6 +104,9 @@ private:
     std::chrono::steady_clock::time_point lastTime;
     std::mutex mutex;
     std::condition_variable cv;
+
+    int consoleWritePosition = 0, consoleReadPosition = 0;
+    char consoleBuffer[CONSOLE_BUFFER_SIZE];
 };
 
 // For friends
