@@ -23,7 +23,7 @@ public:
 
     void doStuff();
     void throttleTimerWait();
-    void consoleAquire(int dest, const char *format, ...);
+    void consoleAquire(int dest, const char *format, va_list args);
     QString rom, image;
     int consoleWritePosition = 0;
     int consoleReadPosition = 0;

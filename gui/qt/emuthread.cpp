@@ -59,14 +59,11 @@ EmuThread::EmuThread(QObject *p) : QThread(p), consoleWriteSemaphore(CONSOLE_BUF
     lastTime = std::chrono::steady_clock::now();
 }
 
-void EmuThread::consoleAquire(int dest, const char *format, ...) {
-	va_list args;
-	va_start(args, format);
+void EmuThread::consoleAquire(int dest, const char *format, va_list args) {
 	int available = consoleWriteSemaphore.available();
 	int remaining = CONSOLE_BUFFER_SIZE - consoleWritePosition;
 	int space = available < remaining ? available : remaining;
 	int size = vsnprintf(&consoleBuffer[consoleWritePosition], space, format, args);
-	va_end(args);
 	if (size > 0) {
 		if (size > CONSOLE_BUFFER_SIZE) {
 			return; // buffer overflow
@@ -80,7 +77,6 @@ void EmuThread::consoleAquire(int dest, const char *format, ...) {
 			consoleWritePosition = 0;
 		}
 	} else {
-		va_start(args, format);
 		if (size <= remaining) {
 			vsnprintf(&consoleBuffer[consoleWritePosition], size, format, args);
 			if (size < remaining) {
@@ -105,7 +101,6 @@ void EmuThread::consoleAquire(int dest, const char *format, ...) {
 			memcpy(&consoleBuffer[0], &buffer[remaining], consoleWritePosition);
 			free(buffer);
 		}
-		va_end(args);
 	}
 	consoleReadSemaphore.release(size);
 	emit consoleStr(dest);

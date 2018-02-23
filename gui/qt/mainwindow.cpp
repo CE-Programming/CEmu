@@ -1247,32 +1247,27 @@ void MainWindow::consoleStr(int type) {
 	int size = emu.consoleReadSemaphore.available();
 	int remaining = CONSOLE_BUFFER_SIZE - emu.consoleReadPosition;
 	emu.consoleReadSemaphore.acquire(size);
-	bool clear = emu.consoleBuffer[emu.consoleReadPosition] == '\f';
 	if (nativeConsole) {
-		if (clear) {
-#ifdef _WIN32
-			int ret = system("cls");
-#else
-			int ret = system("clear");
-#endif
-            if (ret == -1) {
-                ui->console->clear();
-            }
-        } else {
-            fwrite(&emu.consoleBuffer[emu.consoleReadPosition], sizeof(char), size, stdout);
-        }
-    } else {
-        if (clear) {
-            ui->console->clear();
-        } else {
-            QColor color = type == CONSOLE_ERR ? Qt::darkRed : Qt::black;
-            console(QString::fromLocal8Bit(&emu.consoleBuffer[emu.consoleReadPosition], remaining), color);
-            if (size > remaining) {
-                console(QString::fromLocal8Bit(&emu.consoleBuffer[0], size - remaining), color);
-            }
-        }
-    }
-    emu.consoleWriteSemaphore.release(size);
+		if (size < remaining) {
+			fwrite(&emu.consoleBuffer[emu.consoleReadPosition], sizeof(char), size, stdout);
+			emu.consoleReadPosition += size;
+		} else {
+			fwrite(&emu.consoleBuffer[emu.consoleReadPosition], sizeof(char), remaining, stdout);
+			emu.consoleReadPosition = size - remaining;
+			fwrite(&emu.consoleBuffer[0], sizeof(char), emu.consoleReadPosition, stdout);
+		}
+	} else {
+		QColor color = type == CONSOLE_ERR ? Qt::darkRed : Qt::black;
+		if (size < remaining) {
+			console(QString::fromLocal8Bit(&emu.consoleBuffer[emu.consoleReadPosition], size), color);
+			emu.consoleReadPosition += size;
+		} else {
+			console(QString::fromLocal8Bit(&emu.consoleBuffer[emu.consoleReadPosition], remaining), color);
+			emu.consoleReadPosition = size - remaining;
+			console(QString::fromLocal8Bit(&emu.consoleBuffer[0], emu.consoleReadPosition), color);
+		}
+	}
+	emu.consoleWriteSemaphore.release(size);
 }
 
 void MainWindow::emuTimerSlot() {
