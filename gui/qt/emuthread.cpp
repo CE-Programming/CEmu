@@ -78,19 +78,21 @@ void EmuThread::writeConsoleBuffer(int dest, const char *format, va_list args) {
         int bufferPosition = 0;
         char *buffer = size < available - remaining ? consoleBuffer : new char[size + 1];
         if (buffer && vsnprintf(buffer, size + 1, format, args) >= 0) {
-            while (size - bufferPosition >= remaining) {
+            while (size >= remaining) {
                 consoleWriteSemaphore.acquire(remaining);
                 memcpy(consoleBuffer + consoleWritePosition, buffer + bufferPosition, remaining);
                 bufferPosition += remaining;
+                size -= remaining;
                 consoleWritePosition = 0;
-                remaining = CONSOLE_BUFFER_SIZE;
                 consoleReadSemaphore.release(remaining);
+                remaining = CONSOLE_BUFFER_SIZE;
                 emit consoleStr(dest);
             }
-            if ((consoleWritePosition = size - bufferPosition)) {
-                consoleWriteSemaphore.acquire(consoleWritePosition);
-                memmove(consoleBuffer, buffer + bufferPosition, consoleWritePosition);
-                consoleReadSemaphore.release(consoleWritePosition);
+            if (size) {
+                consoleWriteSemaphore.acquire(size);
+                memmove(consoleBuffer + consoleWritePosition, buffer + bufferPosition, size);
+                consoleWritePosition += size;
+                consoleReadSemaphore.release(size);
                 emit consoleStr(dest);
             }
         }
