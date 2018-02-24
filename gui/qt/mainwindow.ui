@@ -9000,6 +9000,7 @@ QPushButton:pressed {
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
     <addaction name="actionAboutQt"/>
+    <addaction name="actionReportBug"/>
     <addaction name="separator"/>
     <addaction name="actionDisableMenuBar"/>
     <addaction name="separator"/>
@@ -9427,6 +9428,18 @@ QPushButton:pressed {
    </property>
    <property name="text">
     <string>Window configuration</string>
+   </property>
+  </action>
+  <action name="actionReportBug">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/debugger.png</normaloff>:/icons/resources/icons/debugger.png</iconset>
+   </property>
+   <property name="text">
+    <string>Report a bug / give feedback</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::ApplicationSpecificRole</enum>
    </property>
   </action>
  </widget>

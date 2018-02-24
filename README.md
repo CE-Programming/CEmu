@@ -9,7 +9,7 @@ Calc-only layout | A mixed layout with various panes | A debugging-oriented layo
 ------------ | ------------ | ------------- |
 <a href="https://i.imgur.com/4CJ7RqT.png"><img src="https://i.imgur.com/e1BgJRw.png" /></a>|<a href="https://i.imgur.com/W5mKf1n.png"><img src="https://i.imgur.com/EZKWRUh.png" /></a>|<a href="https://i.imgur.com/hJFVdtF.png"><img src="https://i.imgur.com/H5TQrci.png" /></a>
 
-_Note: CEmu is not affiliated, connected to, or a product of Texas Instruments in any way._
+_Note: CEmu is not a TI product nor is it affiliated to/endorsed by TI. If you need an official TI CE emulator, take a look at TI-SmartView™ CE!_
 
 ## Downloads
 Development builds are available here: https://ce-programming.github.io/CEmu/download

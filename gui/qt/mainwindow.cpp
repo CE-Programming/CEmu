@@ -1,15 +1,16 @@
-#include <QtWidgets/QDesktopWidget>
 #include <QtCore/QFileInfo>
 #include <QtCore/QRegularExpression>
 #include <QtGui/QWindow>
-#include <QtNetwork/QNetworkAccessManager>
+#include <QtGui/QDesktopServices>
+#include <QtGui/QClipboard>
+#include <QtWidgets/QDesktopWidget>
 #include <QtWidgets/QShortcut>
 #include <QtWidgets/QProgressDialog>
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QScrollBar>
+#include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkReply>
-#include <QClipboard>
 
 #include <iostream>
 #include <cstdio>
@@ -260,6 +261,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->actionCheckForUpdates, &QAction::triggered, this, [=](){ this->checkForUpdates(true); });
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::showAbout);
     connect(ui->actionAboutQt, &QAction::triggered, qApp, &QApplication::aboutQt);
+    connect(ui->actionReportBug, &QAction::triggered, this, [=](){ QDesktopServices::openUrl(QUrl("https://github.com/CE-Programming/CEmu/issues")); });
+
 
     // Other GUI actions
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
@@ -1471,7 +1474,8 @@ void RecordingThread::run() {
 
 void MainWindow::showAbout() {
     QMessageBox *aboutBox = new QMessageBox(this);
-    aboutBox->setIconPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/icon.png")));
+
+    aboutBox->setStyleSheet("QLabel{min-width: 620px;}");
     aboutBox->setWindowTitle(tr("About CEmu"));
 
     QAbstractButton *buttonUpdateCheck = aboutBox->addButton(tr("Check for updates"), QMessageBox::ActionRole);
@@ -1480,23 +1484,36 @@ void MainWindow::showAbout() {
     QAbstractButton *okButton = aboutBox->addButton(QMessageBox::Ok);
     okButton->setFocus();
 
-    aboutBox->setText(tr("<h3>CEmu %1</h3>"
+    QByteArray iconByteArray;
+    QBuffer buffer(&iconByteArray);
+    QPixmap(QStringLiteral(":/icons/resources/icons/icon.png")).save(&buffer, "PNG");
+
+    aboutBox->setText(tr("%1<h3>CEmu %2</h3>"
                          "<a href='https://github.com/CE-Programming/CEmu'>On GitHub</a><br>"
-                         "<br>"
-                         "Main authors:<br>"
-                         "Matt Waltz (<a href='https://github.com/mateoconlechuga'>MateoConLechuga</a>)<br>"
-                         "Jacob Young (<a href='https://github.com/jacobly0'>jacobly0</a>)<br>"
-                         "Adrien Bertrand (<a href='https://github.com/adriweb'>adriweb</a>)<br>"
-                         "<br>"
-                         "Other contributors:<br>"
-                         "Lionel Debroux (<a href='https://github.com/debrouxl'>debrouxl</a>)<br>"
-                         "Fabian Vogt (<a href='https://github.com/Vogtinator'>Vogtinator</a>)<br>"
-                         "<br>"
-                         "Many thanks to the <a href='https://github.com/KnightOS/z80e'>z80e</a> (MIT license <a href='https://github.com/KnightOS/z80e/blob/master/LICENSE'>here</a>) and <a href='https://github.com/nspire-emus/firebird'>Firebird</a> (GPLv3 license <a href='https://github.com/nspire-emus/firebird/blob/master/LICENSE'>here</a>) projects.<br>In-program icons are courtesy of <a href='http://www.fatcow.com/free-icons'>FatCow's 'Farm-Fresh Web Icons'</a>.<br>"
-                         "<br>"
-                         "This work is licensed under the GPLv3.<br>"
-                         "To view a copy of this license, visit <a href='https://www.gnu.org/licenses/gpl-3.0.html'>https://www.gnu.org/licenses/gpl-3.0.html</a>")
-                         .arg(QStringLiteral(CEMU_VERSION " <small><i>(git: " CEMU_GIT_SHA ")</i></small>")));
+                         "<br>Main authors:<br>%3"
+                         "<br>Other contributors include:<br>%4"
+                         "<br>Translations provided by:<br>%5"
+                         "<br>Many thanks to the following projects: %6<br>In-program icons are courtesy of %7.<br>"
+                         "<br>CEmu is licensed under the %8, and is not a TI product nor is it affiliated to/endorsed by TI.<br><br>")
+                         .arg(QStringLiteral("<img src='data:image/png;base64,") + iconByteArray.toBase64() + "' align='right'/>",
+                              QStringLiteral(CEMU_VERSION " <small><i>(git: " CEMU_GIT_SHA ")</i></small>"),
+                              QStringLiteral("Matt Waltz (<a href='https://github.com/mateoconlechuga'>MateoConLechuga</a>)<br>"
+                                             "Jacob Young (<a href='https://github.com/jacobly0'>jacobly0</a>)<br>"
+                                             "Adrien Bertrand (<a href='https://github.com/adriweb'>adriweb</a>)<br>"),
+                              QStringLiteral("Zachary Wassall (<a href='https://github.com/runer112'>Runer112</a>)<br>"
+                                             "Albert Huang (<a href='https://github.com/alberthdev'>alberthdev</a>)<br>"
+                                             "Lionel Debroux (<a href='https://github.com/debrouxl'>debrouxl</a>)<br>"
+                                             "Fabian Vogt (<a href='https://github.com/Vogtinator'>Vogtinator</a>)<br>"),
+                              QStringLiteral("Matt Waltz (ES), Adrien Bertrand (FR), Stephan Paternotte &amp; Peter Tillema (NL)<br>"),
+                              QStringLiteral("<a href='https://github.com/KnightOS/z80e'>z80e</a>, "
+                                             "<a href='https://github.com/nspire-emus/firebird'>Firebird Emu</a>, "
+                                             "<a href='https://github.com/Simsys/qhexedit2'>QHexEdit2</a>, "
+                                             "<a href='https://github.com/debrouxl/tilibs'>tilibs</a>, "
+                                             "<a href='https://github.com/adriweb/tivars_lib_cpp'>tivars_lib_cpp</a>."),
+                              QStringLiteral("<a href='http://www.fatcow.com/free-icons'>FatCow's 'Farm-Fresh Web Icons'</a>"),
+                              QStringLiteral("<a href='https://www.gnu.org/licenses/gpl-3.0.html'>GPLv3</a>")
+                          ));
+
     aboutBox->setTextFormat(Qt::RichText);
     aboutBox->setWindowModality(Qt::NonModal);
     aboutBox->setAttribute(Qt::WA_DeleteOnClose);
