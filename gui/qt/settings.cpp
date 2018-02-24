@@ -85,7 +85,7 @@ const QString MainWindow::SETTING_VERSION                   = QStringLiteral("ve
 
 const QString MainWindow::SETTING_DEFAULT_FILE              = QStringLiteral("/cemu_config.ini");
 const QString MainWindow::SETTING_DEFAULT_ROM_FILE          = QStringLiteral("/cemu_rom.rom");
-const QString MainWindow::SETTING_DEFAULT_DEBUG_FILE        = QStringLiteral("/cemu_debug.ini");
+const QString MainWindow::SETTING_DEBUG_PATH                = QStringLiteral("/cemu_debug.ini");
 const QString MainWindow::SETTING_DEFAULT_IMAGE_FILE        = QStringLiteral("/cemu_image.ce");
 const QString MainWindow::TXT_YES                           = QStringLiteral("y");
 const QString MainWindow::TXT_NO                            = QStringLiteral("n");
@@ -105,7 +105,7 @@ void MainWindow::setPortableConfig(bool state) {
         setPath = configPath + SETTING_DEFAULT_FILE;
         QFile(pathSettings).remove();
     }
-    debugPath = QDir::cleanPath(QFileInfo(setPath).absoluteDir().absolutePath() + SETTING_DEFAULT_DEBUG_FILE);
+    debugPath = QDir::cleanPath(QFileInfo(setPath).absoluteDir().absolutePath() + SETTING_DEBUG_PATH);
     imagePath =  QDir::cleanPath(QFileInfo(setPath).absoluteDir().absolutePath() + SETTING_DEFAULT_IMAGE_FILE);
 
     if(state) {
@@ -263,7 +263,7 @@ void MainWindow::saveMiscSettings() {
         settings->setValue(SETTING_WINDOW_GEOMETRY, saveGeometry());
         settings->setValue(SETTING_WINDOW_MEMORY_DOCKS, memoryDocks);
     } else {
-        if (!loadingWindow) {
+        if (!loadingWindow && !keepSetup) {
             settings->setValue(SETTING_FIRST_RUN, false);
         }
     }
@@ -379,7 +379,7 @@ void MainWindow::setDebugPath() {
     }
 }
 
-void MainWindow::setUIDocks() {
+void MainWindow::setUIDocks(bool firstRun) {
     // Already in this mode?
     if (ui->tabWidget->isHidden()) {
         return;
@@ -424,7 +424,7 @@ void MainWindow::setUIDocks() {
 
         dw->setAllowedAreas(Qt::AllDockWidgetAreas);
         addDockWidget(Qt::RightDockWidgetArea, dw);
-        if (!settings->value(SETTING_FIRST_RUN, false).toBool()) {
+        if (firstRun) {
             dw->setFloating(true);
             dw->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, dw->minimumSize(), qApp->desktop()->availableGeometry()));
             dw->close();
@@ -796,11 +796,24 @@ void MainWindow::checkVersion() {
         if (CEMU_RELEASE) {
             setAutoCheckForUpdates(true);
         }
-        QMessageBox::StandardButton reply;
-        reply = QMessageBox::question(Q_NULLPTR, tr("Different CEmu version detected"),
-                                                 tr("This version of CEmu is not compatible with your settings, probably made by an older version. "
-                                                    "Would you like to erase them to prevent any unexpected behavior?"), QMessageBox::Yes|QMessageBox::No);
-        if (reply == QMessageBox::Yes) {
+
+        keepSetup = true;
+        QCheckBox *cb = new QCheckBox(tr("Keep migratable settings"));
+        cb->setChecked(true);
+        QMessageBox msgbox;
+        msgbox.setText(tr("This version of CEmu is not compatible with your settings, probably made by an older version. "
+                          "Would you like to erase them to prevent any unexpected behavior?"));
+        msgbox.setIcon(QMessageBox::Icon::Question);
+        msgbox.addButton(QMessageBox::Yes);
+        msgbox.addButton(QMessageBox::No);
+        msgbox.setDefaultButton(QMessageBox::Yes);
+        msgbox.setCheckBox(cb);
+
+        connect(cb, &QCheckBox::stateChanged, [this](int state) {
+            keepSetup = static_cast<Qt::CheckState>(state) == Qt::CheckState::Checked;
+        });
+
+        if (msgbox.exec() == QMessageBox::Yes) {
             reloadAll();
         }
         setVersion();
@@ -826,7 +839,7 @@ void MainWindow::exportWindowConfig() {
 
     QSettings window(path, QSettings::IniFormat);
     window.setValue(SETTING_SCREEN_SKIN, settings->value(SETTING_SCREEN_SKIN));
-    window.setValue(SETTING_UI_EDIT_MODE, settings->value(SETTING_WINDOW_MENUBAR));
+    window.setValue(SETTING_WINDOW_MENUBAR, settings->value(SETTING_WINDOW_MENUBAR));
     window.setValue(SETTING_WINDOW_SEPARATOR, settings->value(SETTING_WINDOW_SEPARATOR));
     window.setValue(SETTING_WINDOW_STATE, saveState());
     window.setValue(SETTING_WINDOW_GEOMETRY, saveGeometry());

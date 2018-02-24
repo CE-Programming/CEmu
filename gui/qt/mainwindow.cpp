@@ -502,15 +502,15 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     ui->memBytes->setValue(settings->value(SETTING_DEBUGGER_MEM_BYTES, 8).toInt());
 
     currDir.setPath((settings->value(SETTING_CURRENT_DIR, QDir::homePath()).toString()));
-    if (settings->value(SETTING_IMAGE_PATH).toString().isEmpty() || portable) {
+    if (settings->value(SETTING_IMAGE_PATH, QStringLiteral("")).toString().isEmpty() || portable) {
         QString path = QDir::cleanPath(QFileInfo(settings->fileName()).absoluteDir().absolutePath() + SETTING_DEFAULT_IMAGE_FILE);
         settings->setValue(SETTING_IMAGE_PATH, path);
     }
     ui->savedImagePath->setText(settings->value(SETTING_IMAGE_PATH).toString());
     emu.image = ui->savedImagePath->text();
 
-    if (settings->value(SETTING_DEBUGGER_IMAGE_PATH).toString().isEmpty() || portable) {
-        QString path = QDir::cleanPath(QFileInfo(settings->fileName()).absoluteDir().absolutePath() + SETTING_DEFAULT_DEBUG_FILE);
+    if (settings->value(SETTING_DEBUGGER_IMAGE_PATH, QStringLiteral("")).toString().isEmpty() || portable) {
+        QString path = QDir::cleanPath(QFileInfo(settings->fileName()).absoluteDir().absolutePath() + SETTING_DEBUG_PATH);
         settings->setValue(SETTING_DEBUGGER_IMAGE_PATH, path);
     }
     ui->savedDebugPath->setText(settings->value(SETTING_DEBUGGER_IMAGE_PATH).toString());
@@ -802,11 +802,11 @@ void MainWindow::setup() {
     const QByteArray geometry = settings->value(SETTING_WINDOW_GEOMETRY, QByteArray()).toByteArray();
     if (geometry.isEmpty()) {
         setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, minimumSize(), qApp->desktop()->availableGeometry()));
-        setUIDocks();
+        setUIDocks(true);
         setUIEditMode(settings->value(SETTING_UI_EDIT_MODE, true).toBool());
     } else {
         restoreGeometry(geometry);
-        setUIDocks();
+        setUIDocks(false);
         setUIEditMode(settings->value(SETTING_UI_EDIT_MODE, true).toBool());
         restoreState(settings->value(SETTING_WINDOW_STATE).toByteArray());
     }
@@ -1059,8 +1059,25 @@ bool MainWindow::isReload() {
 
 bool MainWindow::isResetAll() {
     if (needFullReset) {
-        QDir dir(configPath);
-        dir.removeRecursively();
+        QFile imageFile(settings->value(SETTING_IMAGE_PATH).toString());
+        QFile debugFile(settings->value(SETTING_DEBUG_PATH).toString());
+        imageFile.remove();
+        debugFile.remove();
+        if (keepSetup) {
+            settings->remove(SETTING_IMAGE_PATH);
+            settings->remove(SETTING_DEBUG_PATH);
+            settings->remove(SETTING_SCREEN_SKIN);
+            settings->remove(SETTING_WINDOW_GEOMETRY);
+            settings->remove(SETTING_WINDOW_MEMORY_DOCKS);
+            settings->remove(SETTING_UI_EDIT_MODE);
+            settings->remove(SETTING_WINDOW_STATE);
+            settings->remove(SETTING_WINDOW_MENUBAR);
+            settings->remove(SETTING_WINDOW_SEPARATOR);
+            saveSettings();
+        } else {
+            QFile settingsFile(settings->fileName());
+            settingsFile.remove();
+        }
     }
     return needFullReset;
 }

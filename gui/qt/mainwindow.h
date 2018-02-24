@@ -403,7 +403,7 @@ private:
     void setAlwaysOnTop(int state);
     void setAutoCheckForUpdates(int state);
     void setSpaceDisasm(bool state);
-    void setUIDocks();
+    void setUIDocks(bool firstRun);
     void updateDocks();
     void toggleUIEditMode();
     void toggleFullscreen();
@@ -597,6 +597,7 @@ private:
     bool needReload = false;
     bool loadingWindow = false;
     bool needFullReset = false;
+    bool keepSetup = false;
     bool guiAdd = false;
     bool initPassed = true;
     bool visibleWindow = false;
@@ -667,7 +668,7 @@ private:
     static const QString SETTING_DEFAULT_FILE;
     static const QString SETTING_DEFAULT_ROM_FILE;
     static const QString SETTING_DEFAULT_IMAGE_FILE;
-    static const QString SETTING_DEFAULT_DEBUG_FILE;
+    static const QString SETTING_DEBUG_PATH;
     static const QString TXT_YES;
     static const QString TXT_NO;
 
@@ -692,7 +693,7 @@ private:
     QString TXT_OS_VIEW;
     QString TXT_MISC;
     QString TXT_AUTOTESTER;
-    
+
     QString MSG_INFORMATION;
     QString MSG_WARNING;
     QString MSG_ERROR;
