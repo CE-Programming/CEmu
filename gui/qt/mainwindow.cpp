@@ -1246,31 +1246,31 @@ void MainWindow::console(const QString &str, const QColor &color) {
     }
 }
 
+void MainWindow::console(int type, const char *str, int size) {
+    if (size == -1) {
+        size = strlen(str);
+    }
+    if (nativeConsole) {
+        fwrite(str, sizeof(char), size, type == CONSOLE_ERR ? stderr : stdout);
+    } else {
+        console(QString::fromUtf8(str, size), type == CONSOLE_ERR ? Qt::darkRed : Qt::black);
+    }
+}
+
 void MainWindow::consoleStr(int type) {
-	int size = emu.consoleReadSemaphore.available();
-	int remaining = CONSOLE_BUFFER_SIZE - emu.consoleReadPosition;
-	emu.consoleReadSemaphore.acquire(size);
-	if (nativeConsole) {
-		if (size < remaining) {
-			fwrite(&emu.consoleBuffer[emu.consoleReadPosition], sizeof(char), size, stdout);
-			emu.consoleReadPosition += size;
-		} else {
-			fwrite(&emu.consoleBuffer[emu.consoleReadPosition], sizeof(char), remaining, stdout);
-			emu.consoleReadPosition = size - remaining;
-			fwrite(&emu.consoleBuffer[0], sizeof(char), emu.consoleReadPosition, stdout);
-		}
-	} else {
-		QColor color = type == CONSOLE_ERR ? Qt::darkRed : Qt::black;
-		if (size < remaining) {
-			console(QString::fromLocal8Bit(&emu.consoleBuffer[emu.consoleReadPosition], size), color);
-			emu.consoleReadPosition += size;
-		} else {
-			console(QString::fromLocal8Bit(&emu.consoleBuffer[emu.consoleReadPosition], remaining), color);
-			emu.consoleReadPosition = size - remaining;
-			console(QString::fromLocal8Bit(&emu.consoleBuffer[0], emu.consoleReadPosition), color);
-		}
-	}
-	emu.consoleWriteSemaphore.release(size);
+    int available = emu.consoleReadSemaphore.available();
+    int remaining = CONSOLE_BUFFER_SIZE - emu.consoleReadPosition;
+    emu.consoleReadSemaphore.acquire(available);
+    console(type, emu.consoleBuffer + emu.consoleReadPosition, available < remaining ? available : remaining);
+    if (available < remaining) {
+        emu.consoleReadPosition += available;
+    } else if (available == remaining) {
+        emu.consoleReadPosition = 0;
+    } else {
+        emu.consoleReadPosition = available - remaining;
+        console(type, emu.consoleBuffer, emu.consoleReadPosition);
+    }
+    emu.consoleWriteSemaphore.release(available);
 }
 
 void MainWindow::emuTimerSlot() {

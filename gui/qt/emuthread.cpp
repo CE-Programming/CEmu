@@ -25,14 +25,14 @@ void gui_do_stuff(void) {
 void gui_console_printf(const char *format, ...) {
     va_list args;
     va_start(args, format);
-    emu_thread->consoleAquire(CONSOLE_NORM, format, args);
+    emu_thread->writeConsoleBuffer(CONSOLE_NORM, format, args);
     va_end(args);
 }
 
 void gui_console_err_printf(const char *format, ...) {
     va_list args;
     va_start(args, format);
-    emu_thread->consoleAquire(CONSOLE_ERR, format, args);
+    emu_thread->writeConsoleBuffer(CONSOLE_ERR, format, args);
     va_end(args);
 }
 
@@ -59,51 +59,45 @@ EmuThread::EmuThread(QObject *p) : QThread(p), consoleWriteSemaphore(CONSOLE_BUF
     lastTime = std::chrono::steady_clock::now();
 }
 
-void EmuThread::consoleAquire(int dest, const char *format, va_list args) {
-	int available = consoleWriteSemaphore.available();
-	int remaining = CONSOLE_BUFFER_SIZE - consoleWritePosition;
-	int space = available < remaining ? available : remaining;
-	int size = vsnprintf(&consoleBuffer[consoleWritePosition], space, format, args);
-	if (size > 0) {
-		if (size > CONSOLE_BUFFER_SIZE) {
-			return; // buffer overflow
-		}
-		consoleWriteSemaphore.acquire(size);
-	}
-	if (size <= space) {
-		if (size < remaining) {
-			consoleWritePosition += size;
-		} else {
-			consoleWritePosition = 0;
-		}
-	} else {
-		if (size <= remaining) {
-			vsnprintf(&consoleBuffer[consoleWritePosition], size, format, args);
-			if (size < remaining) {
-				consoleWritePosition += size;
-			} else {
-				consoleWritePosition = 0;
-			}
-		} else if (size - remaining <= consoleWriteSemaphore.available()) {
-			vsnprintf(&consoleBuffer[0], size, format, args);
-			memcpy(&consoleBuffer[consoleWritePosition], &consoleBuffer[0], remaining);
-			consoleWritePosition = size - remaining;
-			memmove(&consoleBuffer[0], &consoleBuffer[remaining], consoleWritePosition);
-		} else {
-			char *buffer = static_cast<char*>(malloc(size));
-			if (!buffer) {
-				consoleWriteSemaphore.release(size);
-				return; // out of memory
-			}
-			vsnprintf(buffer, size, format, args);
-			memcpy(&consoleBuffer[consoleWritePosition], buffer, remaining);
-			consoleWritePosition = size - remaining;
-			memcpy(&consoleBuffer[0], &buffer[remaining], consoleWritePosition);
-			free(buffer);
-		}
-	}
-	consoleReadSemaphore.release(size);
-	emit consoleStr(dest);
+void EmuThread::writeConsoleBuffer(int dest, const char *format, va_list args) {
+    va_list argsCopy;
+    va_copy(argsCopy, args);
+    int available = consoleWriteSemaphore.available();
+    int remaining = CONSOLE_BUFFER_SIZE - consoleWritePosition;
+    int space = available < remaining ? available : remaining;
+    int size = vsnprintf(consoleBuffer + consoleWritePosition, space, format, argsCopy);
+    va_end(argsCopy);
+    if (size < space) {
+        if (size > 0) {
+            consoleWriteSemaphore.acquire(size);
+            consoleWritePosition += size;
+            consoleReadSemaphore.release(size);
+            emit consoleStr(dest);
+        }
+    } else {
+        int bufferPosition = 0;
+        char *buffer = size < available - remaining ? consoleBuffer : new char[size + 1];
+        if (buffer && vsnprintf(buffer, size + 1, format, args) >= 0) {
+            while (size - bufferPosition >= remaining) {
+                consoleWriteSemaphore.acquire(remaining);
+                memcpy(consoleBuffer + consoleWritePosition, buffer + bufferPosition, remaining);
+                bufferPosition += remaining;
+                consoleWritePosition = 0;
+                remaining = CONSOLE_BUFFER_SIZE;
+                consoleReadSemaphore.release(remaining);
+                emit consoleStr(dest);
+            }
+            if ((consoleWritePosition = size - bufferPosition)) {
+                consoleWriteSemaphore.acquire(consoleWritePosition);
+                memmove(consoleBuffer, buffer + bufferPosition, consoleWritePosition);
+                consoleReadSemaphore.release(consoleWritePosition);
+                emit consoleStr(dest);
+            }
+        }
+        if (buffer != consoleBuffer) {
+            delete [] buffer;
+        }
+    }
 }
 
 void EmuThread::reset() {
