@@ -62,7 +62,7 @@ static uint8_t cpu_fetch_byte(void) {
     uint8_t value;
 #ifdef DEBUG_SUPPORT
     if (debugger.data.block[cpu.registers.PC] & (DBG_MASK_TEMP_EXEC | DBG_MASK_EXEC)) {
-        open_debugger((debugger.data.block[cpu.registers.PC] & DBG_MASK_EXEC) ? DBG_EXEC_BREAKPOINT : DBG_STEP, cpu.registers.PC);
+        open_debugger(debugger.data.block[cpu.registers.PC] & DBG_MASK_EXEC ? DBG_EXEC_BREAKPOINT : DBG_STEP, cpu.registers.PC);
     }
 #endif
     value = cpu.prefetch;

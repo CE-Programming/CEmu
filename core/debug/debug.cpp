@@ -139,11 +139,11 @@ void debug_switch_step_mode(void) {
     }
 }
 
-void debug_breakwatch(uint32_t address, unsigned int type, bool set) {
+void debug_breakwatch(uint32_t address, unsigned int mask, bool set) {
     if (set) {
-        debugger.data.block[address] |= type;
+        debugger.data.block[address] |= mask;
     } else {
-        debugger.data.block[address] &= ~type;
+        debugger.data.block[address] &= ~mask;
     }
 }
 

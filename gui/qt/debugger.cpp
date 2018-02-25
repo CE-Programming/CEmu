@@ -395,15 +395,18 @@ void MainWindow::debuggerProcessCommand(int reason, uint32_t input) {
     }
 
     QString inputString, type, text;
+    QString labelString = QStringLiteral("Unknown");
 
     switch (reason) {
         case DBG_EXEC_BREAKPOINT:
             inputString = int2hex(input, 6);
 
-            while (ui->breakpointView->item(row++, BREAK_ADDR_LOC)->text() != inputString);
+            if (ui->breakpointView->rowCount()) {
+                while (ui->breakpointView->item(row++, BREAK_ADDR_LOC)->text() != inputString);
+                labelString = ui->breakpointView->item(row-1, BREAK_LABEL_LOC)->text();
+            }
 
-            text = tr("Hit breakpoint ") + inputString + QStringLiteral(" (") +
-                    ui->breakpointView->item(row-1, BREAK_LABEL_LOC)->text() + QStringLiteral(")");
+            text = tr("Hit breakpoint ") + inputString + QStringLiteral(" (") + labelString + QStringLiteral(")");
             break;
         case DBG_READ_WATCHPOINT:
         case DBG_WRITE_WATCHPOINT:
@@ -411,10 +414,12 @@ void MainWindow::debuggerProcessCommand(int reason, uint32_t input) {
             type = (reason == DBG_READ_WATCHPOINT) ? tr("read") : tr("write");
             text = tr("Hit ") + type + tr(" watchpoint ") + inputString;
 
-            while (ui->watchpointView->item(row++, WATCH_ADDR_LOC)->text() != inputString);
+            if (ui->watchpointView->rowCount()) {
+                while (ui->watchpointView->item(row++, WATCH_ADDR_LOC)->text() != inputString);
+                labelString = ui->watchpointView->item(row-1, WATCH_LABEL_LOC)->text();
+            }
 
-            text = tr("Hit ") + type + tr(" watchpoint ") + inputString + QStringLiteral(" (") +
-                    ui->watchpointView->item(row-1, WATCH_LABEL_LOC)->text() + QStringLiteral(")");
+            text = tr("Hit ") + type + tr(" watchpoint ") + inputString + QStringLiteral(" (") + labelString + QStringLiteral(")");
             memUpdate(MEM_MEM, input);
             break;
         case DBG_PORT_READ:
@@ -1499,7 +1504,7 @@ void MainWindow::updateLabels() {
         QString newAddress = getAddressOfEquate(wv->item(row, WATCH_LABEL_LOC)->text().toUpper().toStdString());
         QString oldAddress = wv->item(row, WATCH_ADDR_LOC)->text();
         if (!newAddress.isEmpty() && newAddress != oldAddress) {
-            unsigned int mask = (wv->item(row, WATCH_READ_LOC)->checkState() == Qt::Checked ? DBG_MASK_READ : DBG_MASK_NONE)|
+            unsigned int mask = (wv->item(row, WATCH_READ_LOC)->checkState() == Qt::Checked ? DBG_MASK_READ : DBG_MASK_NONE) |
                                 (wv->item(row, WATCH_WRITE_LOC)->checkState() == Qt::Checked ? DBG_MASK_WRITE : DBG_MASK_NONE);
             // remove old watchpoint and add new one
             wv->blockSignals(true);
@@ -1514,11 +1519,11 @@ void MainWindow::updateLabels() {
         QString newAddress = getAddressOfEquate(bv->item(row, BREAK_LABEL_LOC)->text().toUpper().toStdString());
         QString oldAddress = bv->item(row, BREAK_ADDR_LOC)->text();
         if (!newAddress.isEmpty() && newAddress != oldAddress) {
-            unsigned int mask = (bv->item(row, BREAK_ENABLE_LOC)->checkState() == Qt::Checked ? DBG_MASK_EXEC : DBG_MASK_NONE);
+            unsigned int mask = bv->item(row, BREAK_ENABLE_LOC)->checkState() == Qt::Checked ? DBG_MASK_EXEC : DBG_MASK_NONE;
             // remove old breakpoint and add new one
             bv->blockSignals(true);
             debug_breakwatch(static_cast<uint32_t>(hex2int(oldAddress)), mask, false);
-            bv->item(row, WATCH_ADDR_LOC)->setText(newAddress);
+            bv->item(row, BREAK_ADDR_LOC)->setText(newAddress);
             debug_breakwatch(static_cast<uint32_t>(hex2int(newAddress)), mask, true);
             bv->blockSignals(false);
         }
