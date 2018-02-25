@@ -92,10 +92,13 @@ namespace tivars
             cerr << "[Warning] Byte count (" << (data.size() - 2) << ") and size field (" << howManyBytes  << ") mismatch!";
         }
 
-        const uint16_t twoFirstBytes = (uint16_t) ((data[3] & 0xFF) + ((data[2] & 0xFF) << 8));
-        if (find(begin(squishedASMTokens), end(squishedASMTokens), twoFirstBytes) != end(squishedASMTokens))
+        if (howManyBytes >= 2)
         {
-            return "[Error] This is a squished ASM program - cannnot preview it!";
+            const uint16_t twoFirstBytes = (uint16_t) ((data[3] & 0xFF) + ((data[2] & 0xFF) << 8));
+            if (find(begin(squishedASMTokens), end(squishedASMTokens), twoFirstBytes) != end(squishedASMTokens))
+            {
+                return "[Error] This is a squished ASM program - cannnot preview it!";
+            }
         }
 
         uint errCount = 0;
