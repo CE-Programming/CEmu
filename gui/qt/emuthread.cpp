@@ -114,7 +114,7 @@ void EmuThread::setThrottleMode(bool throttled) {
     throttleOn = throttled;
 }
 
-void EmuThread::setDebugMode(bool state) {
+void EmuThread::debug(bool state) {
     enterDebugger = state;
     if (inDebugger && !state) {
         debug_clear_temp_break();
@@ -132,7 +132,7 @@ void EmuThread::receive() {
     enterReceiveState = true;
 }
 
-void EmuThread::receiveDone() {
+void EmuThread::unlock() {
     mutex.lock();
     cv.notify_all();
     mutex.unlock();
@@ -148,16 +148,10 @@ void EmuThread::doStuff() {
         doReset = false;
     }
 
-    if (enterSaveImage) {
-        bool success = emu_save(image.toStdString().c_str());
+    if (enterSave) {
+        bool success = emu_save(saveImage, savePath.toStdString().c_str());
         emit saved(success);
-        enterSaveImage = false;
-    }
-
-    if (enterSaveRom) {
-        bool success = emu_save_rom(romExportPath.toStdString().c_str());
-        emit saved(success);
-        enterSaveRom = false;
+        enterSave = false;
     }
 
     if (enterSendState) {
@@ -224,28 +218,30 @@ void EmuThread::throttleTimerWait() {
 }
 
 void EmuThread::run() {
-    setTerminationEnabled();
-
-    bool reset = !enterRestore;
-    bool success = emu_load(rom.toStdString().c_str(), enterRestore ? image.toStdString().c_str() : NULL);
-
-    if (enterRestore) {
-        emit restored(success);
-    } else {
-        emit started(success);
-    }
-
-    enterRestore = false;
-
-    if (success) {
-        emu_loop(reset);
-    }
+    emu_loop();
     emit stopped();
 }
 
-bool EmuThread::stop() {
+int EmuThread::load(bool restore, const QString &rom, const QString &image) {
+    int ret = EMU_LOAD_FAIL;
 
-    if (!isRunning()) {
+    setTerminationEnabled();
+    enterRestore = restore;
+
+    if (!stop()) {
+        return EMU_LOAD_FAIL;
+    }
+
+    if (restore) {
+        ret = emu_load(true, image.toStdString().c_str());
+    } else {
+        ret = emu_load(false, rom.toStdString().c_str());
+    }
+    return ret;
+}
+
+bool EmuThread::stop() {
+    if (!this->isRunning()) {
         return true;
     }
 
@@ -264,33 +260,8 @@ bool EmuThread::stop() {
     return true;
 }
 
-void EmuThread::load() {
-    if (!stop()) {
-        return;
-    }
-
-    start();
-    return;
-}
-
-bool EmuThread::restore(const QString &path) {
-    image = QDir::toNativeSeparators(path);
-    enterRestore = true;
-
-    if (!stop()) {
-        return false;
-    }
-
-    start();
-    return true;
-}
-
-void EmuThread::saveImage(const QString &path) {
-    image = QDir::toNativeSeparators(path);
-    enterSaveImage = true;
-}
-
-void EmuThread::saveRom(const QString &path) {
-    romExportPath = QDir::toNativeSeparators(path);
-    enterSaveRom = true;
+void EmuThread::save(bool image, const QString &path) {
+    savePath = path;
+    saveImage = image;
+    enterSave = true;
 }

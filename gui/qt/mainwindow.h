@@ -63,15 +63,12 @@ public slots:
 
     // Saved/Restored State
     void saved(bool success);
-    void started(bool success);
-    void emuStopped();
-    void restored(bool success);
+    void stopped();
 
     // ROM Image setting
     void setRom(const QString &name);
 
     // Other
-    bool restoreEmuState();
     void saveEmuState();
     void restoreFromFile();
     void saveToFile();
@@ -98,21 +95,6 @@ private slots:
     void fpsTimerSlot();
 
 signals:
-    // Debugging
-    void setDebugState(bool state);
-
-    // Speed
-    void changedEmuSpeed(int speed);
-    void changedThrottleMode(bool throttled);
-
-    // Reset
-    void reset();
-    void load();
-
-    // Linking
-    void receive();
-    void receiveDone();
-
     // LCD
     void updateFrameskip(int value);
     void updateMode(bool state);
@@ -465,7 +447,7 @@ private:
     void setFont(int fontSize);
 
     // Reset
-    void reloadROM();
+    int loadEmu(bool image);
     void resetCalculator();
 
     // Versioning
@@ -489,11 +471,12 @@ private:
     void updateLcd(double emuFps);
 
     // State items
-    void reloadAll();
+    void resetCEmu();
     void resetGui();
 
     // Key History
     void toggleKeyHistory();
+    void closedKeyHistory();
 
     // Clipboard
     void saveScreenToClipboard();
@@ -607,6 +590,7 @@ private:
     bool loadedCEmuBootImage = false;
     bool optimizeRecording;
     bool activatedPortable = false;
+    bool ignoreDmaCycles;
     int fullscreen = FULLSCREEN_NONE;
 
     // Settings definitions
@@ -668,7 +652,7 @@ private:
     static const QString SETTING_DEFAULT_FILE;
     static const QString SETTING_DEFAULT_ROM_FILE;
     static const QString SETTING_DEFAULT_IMAGE_FILE;
-    static const QString SETTING_DEBUG_PATH;
+    static const QString SETTING_DEFAULT_DEBUG_FILE;
     static const QString TXT_YES;
     static const QString TXT_NO;
 
@@ -705,6 +689,8 @@ private:
     QStringList memoryDocks;
     QSettings *settings = Q_NULLPTR;
 
+    QString romPath;
+    QString imagePath;
     QTimer emuTimer;
     QTimer fpsTimer;
     bool emuTimerTriggerable = true;

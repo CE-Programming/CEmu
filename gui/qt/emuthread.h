@@ -24,7 +24,6 @@ public:
     void doStuff();
     void throttleTimerWait();
     void writeConsoleBuffer(int dest, const char *format, va_list args);
-    QString rom, image;
     int consoleWritePosition = 0;
     int consoleReadPosition = 0;
     char consoleBuffer[CONSOLE_BUFFER_SIZE];
@@ -39,18 +38,12 @@ signals:
     void raiseDebugger();
     void disableDebugger();
     void sendDebugCommand(int reason, uint32_t addr);
-    void debugInputRequested(bool);
 
     // Status
     void actualSpeedChanged(int value);
-    void exited(int);
 
-    // Save/Restore state
+    // State
     void saved(bool success);
-    void restored(bool success);
-
-    // Stopped/Started
-    void started(bool success);
     void stopped();
 
     // Sending/Receiving
@@ -58,26 +51,24 @@ signals:
     void receiveReady();
 
 public slots:
+    int load(bool restore, const QString &rom, const QString &image);
     bool stop();
     void reset();
-    void load();
 
     // Debugging
-    void setDebugMode(bool);
+    void debug(bool);
 
     // Linking
-    void send(const QStringList& fileNames, unsigned int location);
+    void send(const QStringList &fileNames, unsigned int location);
     void receive();
-    void receiveDone();
+    void unlock();
 
     // Speed
     void setEmuSpeed(int speed);
     void setThrottleMode(bool throttled);
 
-    // Save/Restore
-    bool restore(const QString &path);
-    void saveImage(const QString &path);
-    void saveRom(const QString &path);
+    // Save / Restore
+    void save(bool image, const QString &path);
 
 protected:
     virtual void run() Q_DECL_OVERRIDE;
@@ -94,13 +85,12 @@ private:
     bool enterSendState = false;
     bool enterReceiveState = false;
     bool enterRestore = false;
+    bool enterSave = false;
+    bool saveImage = false;
 
     bool throttleOn = true;
-    bool enterSaveImage = false;
-    bool enterSaveRom = false;
 
-    QString romExportPath;
-
+    QString savePath;
     QStringList vars;
     unsigned int sendLoc;
 

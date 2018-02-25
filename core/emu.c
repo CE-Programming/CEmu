@@ -28,30 +28,20 @@ void throttle_interval_event(enum sched_item_id id) {
     throttle_timer_wait();
 }
 
-bool emu_save_rom(const char *name) {
-    bool success = false;
-    FILE *file = fopen(name, "wb");
-    if (!file) {
-        return false;
-    }
-
-    success = (fwrite(mem.flash.block, 1, SIZE_FLASH, file) == SIZE_FLASH);
-
-    fclose(file);
-
-    return success;
-}
-
-bool emu_save(const char *name) {
+bool emu_save(bool image, const char *path) {
     FILE *file = NULL;
     bool success = false;
     uint32_t version = IMAGE_VERSION;
 
-    file = fopen_utf8(name, "wb");
+    file = fopen_utf8(path, "wb");
 
     if (file) {
-        if (fwrite(&version, sizeof(version), 1, file) == 1 && asic_save(file)) {
-            success = true;
+        if (image) {
+            if (fwrite(&version, sizeof(version), 1, file) == 1 && asic_save(file)) {
+                success = true;
+            }
+        } else {
+            success = (fwrite(mem.flash.block, 1, SIZE_FLASH, file) == SIZE_FLASH);
         }
         fclose(file);
     }
@@ -59,27 +49,40 @@ bool emu_save(const char *name) {
     return success;
 }
 
-bool emu_load(const char *romName, const char *imageName) {
+int emu_load(bool image, const char *path) {
     uint32_t version;
-    bool ret = false;
+    int ret = EMU_LOAD_FAIL;
     FILE *file = NULL;
 
-    if (imageName) {
-        file = fopen_utf8(imageName, "rb");
+    if (!path) {
+        return ret;
+    }
+
+    if (image) {
+        file = fopen_utf8(path, "rb");
 
         gui_console_printf("[CEmu] Loading Emulator Image...\n");
 
         if (!file) goto rerr;
         if (fread(&version, sizeof(version), 1, file) != 1) goto rerr;
-        if (version != IMAGE_VERSION) goto rerr;
+
+        if (version != IMAGE_VERSION) {
+            gui_console_printf("[CEmu] Error in versioning.\n");
+            goto rerr;
+        }
 
         asic_init();
         asic_reset();
 
-        if (!asic_restore(file)) goto rerr;
+        if (!asic_restore(file)) {
+            gui_console_printf("[CEmu] Error reading image.\n");
+            goto rerr;
+        }
 
-        ret = true;
-    } else if (romName) {
+        gui_console_printf("[CEmu] Loaded Emulator Image.\n");
+
+        ret = EMU_LOAD_OKAY;
+    } else {
         bool gotType = false;
         uint16_t field_type;
         const uint8_t *outer;
@@ -93,25 +96,26 @@ bool emu_load(const char *romName, const char *imageName) {
 
         gui_console_printf("[CEmu] Loading ROM Image...\n");
 
-        file = fopen_utf8(romName, "rb");
+        file = fopen_utf8(path, "rb");
 
         if (!file) {
-            gui_console_printf("[CEmu] ROM Error: File nonexistent\n");
+            gui_console_printf("[CEmu] ROM file nonexistent\n");
             goto rerr;
         }
 
         if (fseek(file, 0L, SEEK_END) < 0) goto rerr;
         size = ftell(file);
         if (size > SIZE_FLASH) {
-            gui_console_printf("[CEmu] ROM Error: Invalid size (%u bytes | max %u bytes)\n", (unsigned int)size, SIZE_FLASH);
+            gui_console_printf("[CEmu] Invalid ROM size (%u bytes | max %u bytes)\n", (unsigned int)size, SIZE_FLASH);
             goto rerr;
         }
         rewind(file);
 
         asic_init();
+        asic_reset();
 
         if (fread(mem.flash.block, size, 1, file) != 1) {
-            gui_console_printf("[CEmu] ROM Error: Reading ROM image\n");
+            gui_console_printf("[CEmu] Error reading ROM image\n");
             goto rerr;
         }
 
@@ -167,13 +171,14 @@ bool emu_load(const char *romName, const char *imageName) {
             break;
         }
 
-        ret = true;
+        ret = EMU_LOAD_OKAY;
 
         if (gotType) {
             set_device_type(type);
         } else {
             set_device_type(TI84PCE);
             gui_console_printf("[CEmu] Could not determine device type.\n");
+            ret = EMU_LOAD_NOTROM;
         }
     }
 rerr:
@@ -182,7 +187,7 @@ rerr:
         fclose(file);
     }
 
-    if (!ret) {
+    if (ret == EMU_LOAD_FAIL) {
         asic_free();
     }
 
@@ -211,24 +216,15 @@ static void emu_main_loop_inner(void) {
     }
 }
 
-void emu_loop(bool reset) {
-    if (reset) {
-        asic_reset();
-    }
-
+void emu_loop(void) {
     exiting = false;
     emscripten_set_main_loop(emu_main_loop_inner, 60, 1);
-
     asic_free();
 }
 
 #else // not __EMSCRIPTEN__
 
-void emu_loop(bool reset) {
-    if (reset) {
-        asic_reset();
-    }
-
+void emu_loop(void) {
     exiting = false;
     while (!exiting) {
         sched_process_pending_events();
@@ -241,7 +237,6 @@ void emu_loop(bool reset) {
         }
         cpu_execute();
     }
-
     asic_free();
 }
 

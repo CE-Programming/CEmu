@@ -68,7 +68,7 @@ static const eZ80portrange_t device = {
 eZ80portrange_t init_backlight(void) {
     memset(backlight.ports, 0, sizeof backlight.ports);
     backlight.brightness = 0xFF;
-    gui_console_printf("[CEmu] Initialized Backlight Control...\n");
+    gui_console_printf("[CEmu] Initialized Backlight...\n");
     return device;
 }
 

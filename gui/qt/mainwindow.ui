@@ -4359,8 +4359,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>511</width>
-             <height>347</height>
+             <width>98</width>
+             <height>119</height>
             </rect>
            </property>
            <attribute name="icon">
@@ -4515,8 +4515,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>511</width>
-             <height>347</height>
+             <width>98</width>
+             <height>119</height>
             </rect>
            </property>
            <attribute name="icon">
@@ -6160,7 +6160,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>4</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>

@@ -26,21 +26,25 @@ extern "C" {
 #endif
 #define EVENT_WAITING         (1 << 5)
 
+#define EMU_LOAD_OKAY     0
+#define EMU_LOAD_FAIL     1
+#define EMU_LOAD_NOTROM   2
+#define EMU_LOAD_RESTORED 3
+
 /* Settings */
 extern volatile bool exiting;
 
 /* Reimplemented GUI callbacks */
 void gui_do_stuff(void);
-void gui_console_printf(const char *, ...);
-void gui_debugger_raise_or_disable(bool);
-void gui_console_err_printf(const char *, ...);
+void gui_console_printf(const char *fmt, ...);
+void gui_debugger_raise_or_disable(bool enter);
+void gui_console_err_printf(const char *fmt, ...);
 void gui_debugger_send_command(int, uint32_t);
 void gui_emu_sleep(unsigned long ms);
 
-bool emu_load(const char*, const char*);
-void emu_loop(bool);
-bool emu_save(const char*);
-bool emu_save_rom(const char*);
+int emu_load(bool image, const char *path);
+bool emu_save(bool image, const char *path);
+void emu_loop(void);
 
 void throttle_interval_event(enum sched_item_id id);
 void throttle_timer_wait(void);

@@ -75,7 +75,7 @@ static void plug_devices(void) {
     add_reset_proc(backlight_reset);
     add_reset_proc(spi_reset);
 
-    gui_console_printf("[CEmu] Initialized APB...\n");
+    gui_console_printf("[CEmu] Initialized Advanced Peripheral Bus...\n");
 }
 
 void asic_init(void) {

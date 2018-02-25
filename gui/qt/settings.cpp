@@ -85,49 +85,50 @@ const QString MainWindow::SETTING_VERSION                   = QStringLiteral("ve
 
 const QString MainWindow::SETTING_DEFAULT_FILE              = QStringLiteral("/cemu_config.ini");
 const QString MainWindow::SETTING_DEFAULT_ROM_FILE          = QStringLiteral("/cemu_rom.rom");
-const QString MainWindow::SETTING_DEBUG_PATH                = QStringLiteral("/cemu_debug.ini");
+const QString MainWindow::SETTING_DEFAULT_DEBUG_FILE        = QStringLiteral("/cemu_debug.ini");
 const QString MainWindow::SETTING_DEFAULT_IMAGE_FILE        = QStringLiteral("/cemu_image.ce");
 const QString MainWindow::TXT_YES                           = QStringLiteral("y");
 const QString MainWindow::TXT_NO                            = QStringLiteral("n");
 
 void MainWindow::setPortableConfig(bool state) {
     ui->checkPortable->setChecked(state);
-    QString debugPath;
-    QString imagePath;
-    QString setPath;
-    QString romPath;
+    QString pathSet;
+    QString romPathSet;
+    QString debugPathSet;
+    QString imagePathSet;
     QDir appDir = qApp->applicationDirPath();
 
     if (state) {
-        setPath = qApp->applicationDirPath() + SETTING_DEFAULT_FILE;
-        QFile::copy(pathSettings, setPath);
+        pathSet = qApp->applicationDirPath() + SETTING_DEFAULT_FILE;
+        QFile::copy(pathSettings, pathSet);
     } else {
-        setPath = configPath + SETTING_DEFAULT_FILE;
+        pathSet = configPath + SETTING_DEFAULT_FILE;
         QFile(pathSettings).remove();
     }
-    debugPath = QDir::cleanPath(QFileInfo(setPath).absoluteDir().absolutePath() + SETTING_DEBUG_PATH);
-    imagePath =  QDir::cleanPath(QFileInfo(setPath).absoluteDir().absolutePath() + SETTING_DEFAULT_IMAGE_FILE);
+    debugPathSet = QDir::cleanPath(QFileInfo(pathSet).absoluteDir().absolutePath() + SETTING_DEFAULT_DEBUG_FILE);
+    imagePathSet =  QDir::cleanPath(QFileInfo(pathSet).absoluteDir().absolutePath() + SETTING_DEFAULT_IMAGE_FILE);
 
     if(state) {
-        debugPath = appDir.relativeFilePath(debugPath);
-        imagePath = appDir.relativeFilePath(imagePath);
-        romPath = appDir.relativeFilePath(settings->value(SETTING_ROM_PATH).toString());
-        settings->setValue(SETTING_ROM_PATH, romPath);
-        ui->rompathView->setText(romPath);
-        ui->settingsPath->setText(appDir.relativeFilePath(setPath));
+        debugPathSet = appDir.relativeFilePath(debugPathSet);
+        imagePathSet = appDir.relativeFilePath(imagePathSet);
+        romPathSet = appDir.relativeFilePath(settings->value(SETTING_ROM_PATH).toString());
+        romPath = romPathSet;
+        settings->setValue(SETTING_ROM_PATH, romPathSet);
+        ui->rompathView->setText(romPathSet);
+        ui->settingsPath->setText(appDir.relativeFilePath(pathSet));
     } else {
-        ui->settingsPath->setText(setPath);
+        ui->settingsPath->setText(pathSet);
     }
 
     delete settings;
-    settings = new QSettings(setPath, QSettings::IniFormat);
-    settings->setValue(SETTING_DEBUGGER_IMAGE_PATH, debugPath);
-    settings->setValue(SETTING_IMAGE_PATH, imagePath);
+    settings = new QSettings(pathSet, QSettings::IniFormat);
+    settings->setValue(SETTING_DEBUGGER_IMAGE_PATH, debugPathSet);
+    settings->setValue(SETTING_IMAGE_PATH, imagePathSet);
 
-    ui->savedImagePath->setText(imagePath);
-    ui->savedDebugPath->setText(debugPath);
-    emu.image = imagePath;
-    pathSettings = setPath;
+    ui->savedImagePath->setText(imagePathSet);
+    ui->savedDebugPath->setText(debugPathSet);
+    imagePath = imagePathSet;
+    pathSettings = pathSet;
     saveSettings();
     portable = state;
     ui->buttonChangeSavedDebugPath->setEnabled(!portable);
@@ -190,15 +191,14 @@ void MainWindow::exportCEmuBootImage() {
                                                        "\n\nThe bootable image should be placed in the same directory as the CEmu executable. When CEmu is then started, "
                                                        "the boot image will be loaded automatically and then removed for convience."));
 
-    QString saveImage = QFileDialog::getSaveFileName(this, tr("Save bootable CEmu image"),
-                                                      currDir.absolutePath(),
-                                                      tr("Bootable CEmu images (*.cemu);"));
-    saveMiscSettings();
+    QString path = QFileDialog::getSaveFileName(this, tr("Save bootable CEmu image"),
+                                                currDir.absolutePath(),
+                                                tr("Bootable CEmu images (*.cemu);"));
     saveSettings();
 
-    if (!saveImage.isEmpty()) {
-        currDir = QFileInfo(saveImage).absoluteDir();
-        QFile romFile(emu.rom);
+    if (!path.isEmpty()) {
+        currDir = QFileInfo(path).absoluteDir();
+        QFile romFile(romPath);
         if (!romFile.open(QIODevice::ReadOnly)) return;
         QByteArray romData = romFile.readAll();
 
@@ -206,7 +206,7 @@ void MainWindow::exportCEmuBootImage() {
         if (!settingsFile.open(QIODevice::ReadOnly)) return;
         QByteArray settingsData = settingsFile.readAll();
 
-        QFile writter(saveImage);
+        QFile writter(path);
         writter.open(QIODevice::WriteOnly);
         writter.write(romData);
         writter.write(settingsData);
@@ -241,7 +241,7 @@ void MainWindow::setLcdDma(bool state) {
     ui->checkDma->setChecked(state);
     settings->setValue(SETTING_DEBUGGER_IGNORE_DMA, !state);
     ui->cycleView->setText(QString::number(!state ? debugger.totalCycles : debugger.totalCycles + debugger.dmaCycles));
-    debugger.ignoreDmaCycles = !state;
+    ignoreDmaCycles = !state;
 }
 
 void MainWindow::setFocusSetting(bool state) {
@@ -479,7 +479,7 @@ void MainWindow::setUIEditMode(bool mode) {
 void MainWindow::setThrottle(int mode) {
     ui->checkThrottle->setChecked(mode == Qt::Checked);
     connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed, Qt::QueuedConnection);
-    emit changedThrottleMode(mode == Qt::Checked);
+    emu.setThrottleMode(mode == Qt::Checked);
 }
 
 void MainWindow::setAutoCheckForUpdates(int state) {
@@ -613,7 +613,7 @@ void MainWindow::setEmuSpeed(int value) {
     ui->emulationSpeedSpin->setValue(value);
     ui->emulationSpeedSpin->blockSignals(false);
     ui->emulationSpeed->setValue(value);
-    emit changedEmuSpeed(value);
+    emu.setEmuSpeed(value);
 }
 
 void MainWindow::selectKeypadColor() {
@@ -814,13 +814,14 @@ void MainWindow::checkVersion() {
         });
 
         if (msgbox.exec() == QMessageBox::Yes) {
-            reloadAll();
+            resetCEmu();
         }
         setVersion();
     }
 }
 
 void MainWindow::saveSettings() {
+    saveMiscSettings();
     if (opts.useSettings) {
         settings->sync();
     } else {

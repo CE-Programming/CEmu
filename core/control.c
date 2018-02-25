@@ -212,7 +212,7 @@ static const eZ80portrange_t device = {
 
 eZ80portrange_t init_control(void) {
     memset(&control, 0, sizeof control);
-    gui_console_printf("[CEmu] Initialized Control...\n");
+    gui_console_printf("[CEmu] Initialized Control Ports...\n");
 
     /* Set default state to full battery and not charging */
     control.batteryCharging = false;

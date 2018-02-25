@@ -191,7 +191,7 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_rtc(void) {
-    gui_console_printf("[CEmu] Initialized RTC...\n");
+    gui_console_printf("[CEmu] Initialized Real Time Clock...\n");
     return device;
 }
 

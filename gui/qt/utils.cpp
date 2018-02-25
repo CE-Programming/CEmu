@@ -67,7 +67,7 @@ QString getAddressOfEquate(const std::string &in) {
 void guiDelay(int ms) {
     QTime dt = QTime::currentTime().addMSecs(ms);
     while (QTime::currentTime() < dt) {
-        QCoreApplication::processEvents();
+        qApp->processEvents();
     }
 }
 

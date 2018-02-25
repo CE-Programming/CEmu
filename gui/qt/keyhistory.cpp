@@ -6,7 +6,6 @@
 
 KeyHistory::KeyHistory(QWidget *parent) : QWidget(parent), ui(new Ui::KeyHistory) {
     ui->setupUi(this);
-    setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint);
     connect(ui->buttonClear, &QPushButton::clicked, ui->historyView, &QPlainTextEdit::clear);
     connect(ui->textSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &KeyHistory::setFont);
     connect(ui->checkOnTop, &QCheckBox::clicked, this, &KeyHistory::setTop);
@@ -37,4 +36,10 @@ void KeyHistory::setFont(int size) {
     ui->textSize->setValue(size);
     monospace.setPointSize(size);
     ui->historyView->setFont(monospace);
+}
+
+void KeyHistory::closeEvent(QCloseEvent *event) {
+    emit closed();
+    event->accept();
+    QWidget::closeEvent(event);
 }

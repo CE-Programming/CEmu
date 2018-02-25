@@ -369,7 +369,7 @@ void MainWindow::debuggerExecuteCommand(uint32_t debugAddress, uint8_t command) 
     if (guiDebug) {
         debuggerRaise();
     } else {
-        emit setDebugState(false);
+        emu.debug(false);
     }
 }
 
@@ -583,7 +583,7 @@ void MainWindow::debuggerGUISetState(bool state) {
 void MainWindow::debuggerChangeState() {
     bool state = guiDebug;
 
-    if (emu.rom.isEmpty()) {
+    if (romPath.isEmpty()) {
         return;
     }
 
@@ -596,7 +596,7 @@ void MainWindow::debuggerChangeState() {
         debuggerGUIDisable();
     }
 
-    emit setDebugState(!state);
+    emu.debug(!state);
 }
 
 void MainWindow::debuggerGUIPopulate() {
@@ -682,7 +682,7 @@ void MainWindow::debuggerGUIPopulate() {
     ui->freqView->setPalette(tmp == ui->freqView->text() ? nocolorback : colorback);
     ui->freqView->setText(tmp);
 
-    tmp = QString::number(debugger.ignoreDmaCycles ? debugger.totalCycles : debugger.totalCycles + debugger.dmaCycles);
+    tmp = QString::number(ignoreDmaCycles ? debugger.totalCycles : debugger.totalCycles + debugger.dmaCycles);
     ui->cycleView->setPalette(tmp == ui->cycleView->text() ? nocolorback : colorback);
     ui->cycleView->setText(tmp);
 

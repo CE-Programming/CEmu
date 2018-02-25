@@ -21,7 +21,7 @@ static void usb_write(const uint16_t pio, const uint8_t byte, bool poke) {
 }
 
 void usb_reset(void) {
-
+    gui_console_printf("[CEmu] USB Reset.\n");
 }
 
 static const eZ80portrange_t device = {
@@ -30,7 +30,7 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_usb(void) {
-    gui_console_printf("[CEmu] Initialized USB...\n");
+    gui_console_printf("[CEmu] Initialized Universal Serial Bus...\n");
     return device;
 }
 

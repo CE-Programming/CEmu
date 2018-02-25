@@ -366,7 +366,7 @@ void spi_reset(void) {
 
 eZ80portrange_t init_spi(void) {
     spi_reset();
-    gui_console_printf("[CEmu] Initialized SPI...\n");
+    gui_console_printf("[CEmu] Initialized Serial Peripheral Interface...\n");
     return pspi;
 }
 

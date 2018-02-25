@@ -87,7 +87,7 @@ eZ80portrange_t init_flash(void) {
     flash.mapped = 1;
     flash_set_map(6);
 
-    gui_console_printf("[CEmu] Initialized Flash Chip...\n");
+    gui_console_printf("[CEmu] Initialized Flash...\n");
     return device;
 }
 

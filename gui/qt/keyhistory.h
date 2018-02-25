@@ -12,8 +12,14 @@ public:
     explicit KeyHistory(QWidget *p = Q_NULLPTR);
     ~KeyHistory();
 
+signals:
+    void closed();
+
 public slots:
     void addEntry(const QString& entry);
+
+protected slots:
+    virtual void closeEvent(QCloseEvent *event) Q_DECL_OVERRIDE;
 
 private:
     void setFont(int size);

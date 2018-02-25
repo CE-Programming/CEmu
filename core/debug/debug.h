@@ -79,7 +79,6 @@ typedef struct {
     debug_data_t data;
     volatile uint32_t bufferPos;
     volatile uint32_t bufferErrPos;
-    bool ignoreDmaCycles;
     int64_t totalCycles;
     bool commands;
 } debug_state_t;
