@@ -163,7 +163,7 @@ int main(int argc, char* argv[])
     std::thread coreThread;
     if (cemucore::emu_load(autotester::config.rom.c_str(), NULL))
     {
-        coreThread = std::thread(&cemucore::emu_loop, true);
+        coreThread = std::thread(&cemucore::emu_loop);
     } else {
         std::cerr << "[Error] Couldn't start emulation!" << std::endl;
         return -1;

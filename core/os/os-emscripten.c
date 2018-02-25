@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
             initLCD();
             enableGUI();
         );
-        emu_loop(true);
+        emu_loop();
     } else {
         EM_ASM(
             emul_is_inited = false;
