@@ -216,7 +216,9 @@ void debug_set_step_mode(int mode) {
             break;
     }
 
-    debugger.data.block[debugger.stepOverInstrEnd] |= DBG_MASK_TEMP_EXEC;
+    if (mode != DBG_STEP_OUT) {
+        debugger.data.block[debugger.stepOverInstrEnd] |= DBG_MASK_TEMP_EXEC;
+    }
 }
 
 #endif
