@@ -226,7 +226,6 @@ int EmuThread::load(bool restore, const QString &rom, const QString &image) {
     int ret = EMU_LOAD_FAIL;
 
     setTerminationEnabled();
-    enterRestore = restore;
 
     if (!stop()) {
         return EMU_LOAD_FAIL;

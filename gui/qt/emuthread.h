@@ -84,7 +84,6 @@ private:
     bool enterDebugger = false;
     bool enterSendState = false;
     bool enterReceiveState = false;
-    bool enterRestore = false;
     bool enterSave = false;
     bool saveImage = false;
 
