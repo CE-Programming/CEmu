@@ -44,7 +44,6 @@ signals:
 
     // State
     void saved(bool success);
-    void stopped();
 
     // Sending/Receiving
     void sentFile(const QString &file, int ok);

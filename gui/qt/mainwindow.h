@@ -63,7 +63,6 @@ public slots:
 
     // Saved/Restored State
     void saved(bool success);
-    void stopped();
 
     // ROM Image setting
     void setRom(const QString &name);

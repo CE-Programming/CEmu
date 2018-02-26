@@ -113,7 +113,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     // Emulator -> GUI
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr, Qt::UniqueConnection);
-    connect(&emu, &EmuThread::stopped, this, &MainWindow::stopped, Qt::QueuedConnection);
     connect(&emu, &EmuThread::saved, this, &MainWindow::saved, Qt::QueuedConnection);
     connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed, Qt::QueuedConnection);
     connect(&emu, &EmuThread::raiseDebugger, this, &MainWindow::debuggerRaise, Qt::QueuedConnection);
@@ -1217,7 +1216,6 @@ void MainWindow::console(int type, const char *str, int size) {
     } else {
         console(QString::fromUtf8(str, size), type == CONSOLE_ERR ? Qt::darkRed : Qt::black);
     }
-    qApp->processEvents();
 }
 
 void MainWindow::consoleStr(int type) {
@@ -1962,10 +1960,6 @@ void MainWindow::refreshCRC() {
 errCRCret:
     QMessageBox::critical(this, MSG_ERROR, tr("Make sure you have entered a valid start/size pair or preset."));
     return;
-}
-
-void MainWindow::stopped() {
-    guiEmuValid = false;
 }
 
 void MainWindow::resetCalculator() {

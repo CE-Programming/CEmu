@@ -63,7 +63,11 @@ int emu_load(bool image, const char *path) {
 
         gui_console_printf("[CEmu] Loading Emulator Image...\n");
 
-        if (!file) goto rerr;
+        if (!file) {
+            gui_console_printf("[CEmu] Image file nonexistent.\n");
+            goto rerr;
+        }
+
         if (fread(&version, sizeof(version), 1, file) != 1) goto rerr;
 
         if (version != IMAGE_VERSION) {
@@ -99,7 +103,7 @@ int emu_load(bool image, const char *path) {
         file = fopen_utf8(path, "rb");
 
         if (!file) {
-            gui_console_printf("[CEmu] ROM file nonexistent\n");
+            gui_console_printf("[CEmu] ROM file nonexistent.\n");
             goto rerr;
         }
 
@@ -112,7 +116,6 @@ int emu_load(bool image, const char *path) {
         rewind(file);
 
         asic_init();
-        asic_reset();
 
         if (fread(mem.flash.block, size, 1, file) != 1) {
             gui_console_printf("[CEmu] Error reading ROM image\n");
@@ -180,6 +183,8 @@ int emu_load(bool image, const char *path) {
             gui_console_printf("[CEmu] Could not determine device type.\n");
             ret = EMU_LOAD_NOTROM;
         }
+
+        asic_reset();
     }
 rerr:
 

@@ -219,7 +219,6 @@ void EmuThread::throttleTimerWait() {
 
 void EmuThread::run() {
     emu_loop();
-    emit stopped();
 }
 
 int EmuThread::load(bool restore, const QString &rom, const QString &image) {
