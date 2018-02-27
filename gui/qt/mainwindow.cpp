@@ -113,11 +113,12 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     // Emulator -> GUI
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr, Qt::UniqueConnection);
-    connect(&emu, &EmuThread::saved, this, &MainWindow::saved, Qt::QueuedConnection);
     connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed, Qt::QueuedConnection);
     connect(&emu, &EmuThread::raiseDebugger, this, &MainWindow::debuggerRaise, Qt::QueuedConnection);
     connect(&emu, &EmuThread::disableDebugger, this, &MainWindow::debuggerGUIDisable, Qt::QueuedConnection);
     connect(&emu, &EmuThread::sendDebugCommand, this, &MainWindow::debuggerProcessCommand, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::saved, this, &MainWindow::savedEmu, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::locked, this, &MainWindow::lockedEmu, Qt::QueuedConnection);
 
     // Console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, ui->console, &QPlainTextEdit::clear);
@@ -198,7 +199,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonDeselectVars, &QPushButton::clicked, this, &MainWindow::deselectAllVars);
     connect(ui->buttonSelectVars, &QPushButton::clicked, this, &MainWindow::selectAllVars);
     connect(ui->varLoadedView, &QWidget::customContextMenuRequested, this, &MainWindow::resendContextMenu);
-    connect(&emu, &EmuThread::receiveReady, this, &MainWindow::changeVariableList, Qt::QueuedConnection);
 
     // Autotester
     connect(ui->buttonOpenJSONconfig, &QPushButton::clicked, this, &MainWindow::prepareAndOpenJSONConfig);
@@ -214,7 +214,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 #ifdef PNG_WRITE_APNG_SUPPORTED
     connect(ui->actionRecordAnimated, &QAction::triggered, this, &MainWindow::recordAPNG);
 #endif
-    connect(ui->actionSaveState, &QAction::triggered, this, &MainWindow::saveEmuState);
+    connect(ui->actionSaveState, &QAction::triggered, this, &MainWindow::saveEmu);
     connect(ui->actionExportCalculatorState, &QAction::triggered, this, &MainWindow::saveToFile);
     connect(ui->actionExportRomImage, &QAction::triggered, this, &MainWindow::exportRom);
     connect(ui->actionImportCalculatorState, &QAction::triggered, this, &MainWindow::restoreFromFile);
@@ -1084,7 +1084,7 @@ void MainWindow::sendASMKey() {
     autotester::sendKey(0x9CFC); // "Asm("
 }
 
-void MainWindow::saveEmuState() {
+void MainWindow::saveEmu() {
     emu.save(true, imagePath);
 }
 
@@ -1093,8 +1093,11 @@ void MainWindow::saveToPath(const QString &path) {
 }
 
 bool MainWindow::restoreFromPath(const QString &path) {
+    QString prev = imagePath;
     imagePath = path;
-    return loadEmu(true) == EMU_LOAD_OKAY;
+    int ret = loadEmu(true);
+    imagePath = prev;
+    return ret == EMU_LOAD_OKAY;
 }
 
 void MainWindow::restoreFromFile() {
@@ -1128,16 +1131,6 @@ void MainWindow::exportRom() {
     }
 }
 
-void MainWindow::saved(bool success) {
-    if (!success) {
-        QMessageBox::warning(this, MSG_WARNING, tr("Saving failed. Please check write permissions in settings directory."));
-    }
-
-    if (closeAfterSave) {
-        close();
-    }
-}
-
 void MainWindow::dropEvent(QDropEvent *e) {
     if (isSendingROM) {
         setRom(dragROM);
@@ -1157,16 +1150,26 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *e) {
     }
 }
 
+void MainWindow::savedEmu(bool success) {
+    if (!success) {
+        QMessageBox::warning(this, MSG_WARNING, tr("Saving failed. Please check write permissions in settings directory."));
+    }
+
+    if (shutdown) {
+        close();
+    }
+}
+
 void MainWindow::closeEvent(QCloseEvent *e) {
-    if (!closeAfterSave) {
+    if (!shutdown) {
+        shutdown = true;
+
         com->idClose();
 
         if (!initPassed) {
             QMainWindow::closeEvent(e);
             return;
         }
-
-        guiEmuValid = false;
 
         if (guiDebug) {
             debuggerChangeState();
@@ -1176,20 +1179,21 @@ void MainWindow::closeEvent(QCloseEvent *e) {
             receiveChangeState();
         }
 
+        saveSettings();
+
         if (settings->value(SETTING_DEBUGGER_SAVE_ON_CLOSE, false).toBool()) {
             debuggerExportFile(settings->value(SETTING_DEBUGGER_IMAGE_PATH).toString());
         }
 
         if (settings->value(SETTING_SAVE_ON_CLOSE).toBool()) {
-            saveEmuState();
+            saveEmu();
             e->ignore();
-            closeAfterSave = true;
             return;
         }
     }
 
+    guiEmuValid = false;
     emu.stop();
-    saveSettings();
     QMainWindow::closeEvent(e);
 }
 
@@ -1511,10 +1515,10 @@ void MainWindow::pauseEmu(Qt::ApplicationState state) {
 
 void MainWindow::receiveChangeState() {
     if (guiReceive) {
-        changeVariableList();
+        changeVariableState();
         emu.unlock();
     } else {
-        emu.receive();
+        emu.req(REQUEST_RECEIVE);
     }
 }
 
@@ -1571,7 +1575,20 @@ void MainWindow::variableDoubleClicked(QTableWidgetItem *item) {
     }
 }
 
-void MainWindow::changeVariableList() {
+void MainWindow::lockedEmu(int req) {
+    switch (req) {
+        default:
+        case REQUEST_NONE:
+            break;
+        case REQUEST_PAUSE:
+            break;
+        case REQUEST_RECEIVE:
+            changeVariableState();
+            break;
+    }
+}
+
+void MainWindow::changeVariableState() {
     calc_var_t var;
 
     if (guiSend || guiDebug) {
@@ -1972,7 +1989,7 @@ void MainWindow::resetCalculator() {
         debuggerChangeState();
     }
 
-    emu.reset();
+    emu.req(REQUEST_RESET);
 }
 
 int MainWindow::loadEmu(bool image) {

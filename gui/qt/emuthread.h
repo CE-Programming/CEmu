@@ -15,12 +15,23 @@
 #define CONSOLE_NORM 0
 #define CONSOLE_ERR 1
 
+enum {
+    REQUEST_NONE,
+    REQUEST_PAUSE,
+    REQUEST_RESET,
+    REQUEST_SAVE,
+    REQUEST_SEND,
+    REQUEST_RECEIVE,
+    REQUEST_DEBUGGER
+};
+
 class EmuThread : public QThread {
     Q_OBJECT
 
 public:
     explicit EmuThread(QObject *p = Q_NULLPTR);
 
+    void req(int req);
     void doStuff();
     void throttleTimerWait();
     void writeConsoleBuffer(int dest, const char *format, va_list args);
@@ -47,19 +58,17 @@ signals:
 
     // Sending/Receiving
     void sentFile(const QString &file, int ok);
-    void receiveReady();
+    void locked(int req);
 
 public slots:
     int load(bool restore, const QString &rom, const QString &image);
-    bool stop();
-    void reset();
+    void stop();
 
     // Debugging
     void debug(bool);
 
     // Linking
     void send(const QStringList &fileNames, unsigned int location);
-    void receive();
     void unlock();
 
     // Speed
@@ -73,20 +82,16 @@ protected:
     virtual void run() Q_DECL_OVERRIDE;
 
 private:
-    void setActualSpeed(int actualSpeed);
+    void block();
+    void setActualSpeed(int value);
     void sendFiles();
 
-    int speed, actualSpeed;
+    int actualSpeed;
+    bool saveImage;
 
-    bool doReset = false;
-
-    bool enterDebugger = false;
-    bool enterSendState = false;
-    bool enterReceiveState = false;
-    bool enterSave = false;
-    bool saveImage = false;
-
-    bool throttleOn = true;
+    std::atomic<int> request;
+    std::atomic<int> speed;
+    std::atomic<bool> throttle;
 
     QString savePath;
     QStringList vars;

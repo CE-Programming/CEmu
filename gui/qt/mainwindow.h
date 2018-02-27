@@ -62,13 +62,13 @@ public slots:
     void consoleStr(int type);
 
     // Saved/Restored State
-    void saved(bool success);
+    void savedEmu(bool success);
 
     // ROM Image setting
     void setRom(const QString &name);
 
     // Other
-    void saveEmuState();
+    void saveEmu();
     void restoreFromFile();
     void saveToFile();
     void exportRom();
@@ -396,7 +396,8 @@ private:
     // Linking
     QStringList showVariableFileDialog(QFileDialog::AcceptMode mode, const QString &name_filter, const QString &defaultSuffix);
     void selectFiles();
-    void changeVariableList();
+    void lockedEmu(int req);
+    void changeVariableState();
     void variableDoubleClicked(QTableWidgetItem *item);
     void launchPrgm(const calc_var_t *prgm);
     void saveSelectedFile();
@@ -527,7 +528,7 @@ private:
     bool uiEditMode;
     bool portable = false;
     bool nativeConsole = false;
-    bool closeAfterSave = false;
+    bool shutdown = false;
     bool canScroll = false;
     bool recordingAnimated = false;
 
