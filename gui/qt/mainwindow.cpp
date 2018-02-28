@@ -1202,16 +1202,8 @@ void MainWindow::console(const QString &str, const QColor &colorFg, const QColor
     if (nativeConsole) {
         fputs(str.toStdString().c_str(), type == EmuThread::ConsoleErr ? stderr : stdout);
     } else {
-        static QColor prevColorBg = Qt::white;
-        static QColor prevColorFg = Qt::black;
-        if (prevColorBg != colorBg) {
-            consoleFormat.setBackground(colorBg);
-            prevColorBg = colorBg;
-        }
-        if (prevColorFg != colorFg) {
-            consoleFormat.setForeground(colorFg);
-            prevColorFg = colorFg;
-        }
+        consoleFormat.setBackground(colorBg);
+        consoleFormat.setForeground(colorFg);
         QTextCursor cur(ui->console->document());
         cur.movePosition(QTextCursor::End);
         cur.insertText(str, consoleFormat);
@@ -1251,9 +1243,9 @@ void MainWindow::console(int type, const char *str, int size) {
                             }
                             break;
                         case CONSOLE_BRACKET:
-                            if (x == '[')
+                            if (x == '[') {
                                 state = CONSOLE_PARSE;
-                            else {
+                            } else {
                                 state = CONSOLE_ESC;
                             }
                             break;
