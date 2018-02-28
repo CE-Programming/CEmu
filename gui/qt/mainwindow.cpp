@@ -1214,8 +1214,8 @@ void MainWindow::console(const QString &str, const QColor &colorFg, const QColor
 }
 
 void MainWindow::console(int type, const char *str, int size) {
-    static QColor colorFg = Qt::black;
-    static QColor colorBg = Qt::white;
+    static QColor sColorFg = Qt::black;
+    static QColor sColorBg = Qt::white;
     const QColor lookup[8] = { Qt::black, Qt::red, Qt::green, Qt::yellow, Qt::blue, Qt::magenta, Qt::cyan, Qt::white };
     static int state = CONSOLE_ESC;
     if (size == -1) {
@@ -1225,16 +1225,15 @@ void MainWindow::console(int type, const char *str, int size) {
         fwrite(str, sizeof(char), size, type == EmuThread::ConsoleErr ? stderr : stdout);
     } else {
         const char *tok;
+        QColor colorFg = sColorFg;
+        QColor colorBg = sColorBg;
         if ((tok = static_cast<const char*>(memchr(str, '\x1B', size)))) {
             if (tok != str) {
-                console(QString::fromUtf8(str, tok - str), colorFg, colorBg, type);
+                console(QString::fromUtf8(str, tok - str), sColorFg, sColorBg, type);
                 size -= tok - str;
             }
-            if (size <= 0) {
-                return;
-            }
             do {
-                while(--size) {
+                while(--size > 0) {
                     char x = *tok++;
                     switch (state) {
                         case CONSOLE_ESC:
@@ -1253,8 +1252,8 @@ void MainWindow::console(int type, const char *str, int size) {
                             switch (x) {
                                 case '0':
                                     state = CONSOLE_ENDVAL;
-                                    colorFg = Qt::black;
                                     colorBg = Qt::white;
+                                    colorFg = Qt::black;
                                     break;
                                 case '3':
                                     state = CONSOLE_FGCOLOR;
@@ -1264,8 +1263,8 @@ void MainWindow::console(int type, const char *str, int size) {
                                     break;
                                 default:
                                     state = CONSOLE_ESC;
-                                    colorFg = Qt::black;
-                                    colorBg = Qt::white;
+                                    sColorBg = Qt::white;
+                                    sColorFg = Qt::black;
                                     break;
                             }
                             break;
@@ -1275,8 +1274,6 @@ void MainWindow::console(int type, const char *str, int size) {
                                 colorFg = lookup[x - '0'];
                             } else {
                                 state = CONSOLE_ESC;
-                                colorFg = Qt::black;
-                                colorBg = Qt::white;
                             }
                             break;
                         case CONSOLE_BGCOLOR:
@@ -1285,22 +1282,21 @@ void MainWindow::console(int type, const char *str, int size) {
                                 colorBg = lookup[x - '0'];
                             } else {
                                 state = CONSOLE_ESC;
-                                colorFg = Qt::black;
-                                colorBg = Qt::white;
                             }
                             break;
                         case CONSOLE_ENDVAL:
                             if (x == ';') {
                                 state = CONSOLE_PARSE;
                             } else if (x == 'm') {
+                                sColorBg = colorBg;
+                                sColorFg = colorFg;
                                 state = CONSOLE_ESC;
                             } else {
                                 state = CONSOLE_ESC;
-                                colorFg = Qt::black;
-                                colorBg = Qt::white;
                             }
                             break;
                         default:
+                            state = CONSOLE_ESC;
                             break;
                     }
                     if (state == CONSOLE_ESC) {
@@ -1310,10 +1306,10 @@ void MainWindow::console(int type, const char *str, int size) {
                 if (size > 0) {
                     const char *tokn = static_cast<const char*>(memchr(tok, '\x1B', size));
                     if (tokn) {
-                        console(QString::fromUtf8(tok, tokn - tok), colorFg, colorBg, type);
+                        console(QString::fromUtf8(tok, tokn - tok), sColorFg, sColorBg, type);
                         size -= tokn - tok;
                     } else {
-                        console(QString::fromUtf8(tok, size), colorFg, colorBg, type);
+                        console(QString::fromUtf8(tok, size), sColorFg, sColorBg, type);
                     }
                     tok = tokn;
                 } else {
@@ -1321,7 +1317,7 @@ void MainWindow::console(int type, const char *str, int size) {
                 }
             } while (tok);
         } else {
-            console(QString::fromUtf8(str, size), colorFg, colorBg, type);
+            console(QString::fromUtf8(str, size), sColorFg, sColorBg, type);
         }
     }
 }
