@@ -112,13 +112,13 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     memory.append(ui->memEdit);
 
     // Emulator -> GUI (Should be queued)
-    connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr);
-    connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed);
-    connect(&emu, &EmuThread::raiseDebugger, this, &MainWindow::debuggerRaise);
-    connect(&emu, &EmuThread::disableDebugger, this, &MainWindow::debuggerGUIDisable);
-    connect(&emu, &EmuThread::sendDebugCommand, this, &MainWindow::debuggerProcessCommand);
-    connect(&emu, &EmuThread::saved, this, &MainWindow::savedEmu);
-    connect(&emu, &EmuThread::locked, this, &MainWindow::lockedEmu);
+    connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr, Qt::UniqueConnection);
+    connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::raiseDebugger, this, &MainWindow::debuggerRaise, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::disableDebugger, this, &MainWindow::debuggerGUIDisable, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::sendDebugCommand, this, &MainWindow::debuggerProcessCommand, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::saved, this, &MainWindow::savedEmu, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::locked, this, &MainWindow::lockedEmu, Qt::QueuedConnection);
 
     // Console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, ui->console, &QPlainTextEdit::clear);
@@ -1197,9 +1197,9 @@ void MainWindow::closeEvent(QCloseEvent *e) {
     QMainWindow::closeEvent(e);
 }
 
-void MainWindow::console(const QString &str, const QColor &color) {
+void MainWindow::console(const QString &str, const QColor &color, int type) {
     if (nativeConsole) {
-        fputs(str.toStdString().c_str(), stdout);
+        fputs(str.toStdString().c_str(), type == EmuThread::ConsoleErr ? stderr : stdout);
     } else {
         QTextCursor cur(ui->console->document());
         cur.movePosition(QTextCursor::End);
@@ -1212,13 +1212,21 @@ void MainWindow::console(const QString &str, const QColor &color) {
 }
 
 void MainWindow::console(int type, const char *str, int size) {
+    static QColor color = Qt::black;
     if (size == -1) {
         size = strlen(str);
     }
     if (nativeConsole) {
-        fwrite(str, sizeof(char), size, type == CONSOLE_ERR ? stderr : stdout);
+        fwrite(str, sizeof(char), size, type == EmuThread::ConsoleErr ? stderr : stdout);
     } else {
-        console(QString::fromUtf8(str, size), type == CONSOLE_ERR ? Qt::darkRed : Qt::black);
+        const char *tok;
+        if ((tok = static_cast<const char*>(memchr(str, '\x1B', size)))) {
+            if (tok != str) {
+                console(QString::fromUtf8(str, tok - str), color);
+            }
+        } else {
+            console(QString::fromUtf8(str, size), color);
+        }
     }
 }
 
@@ -1518,7 +1526,7 @@ void MainWindow::receiveChangeState() {
         changeVariableState();
         emu.unlock();
     } else {
-        emu.req(REQUEST_RECEIVE);
+        emu.receive();
     }
 }
 
@@ -1578,11 +1586,10 @@ void MainWindow::variableDoubleClicked(QTableWidgetItem *item) {
 void MainWindow::lockedEmu(int req) {
     switch (req) {
         default:
-        case REQUEST_NONE:
+        case EmuThread::RequestNone:
+        case EmuThread::RequestPause:
             break;
-        case REQUEST_PAUSE:
-            break;
-        case REQUEST_RECEIVE:
+        case EmuThread::RequestReceive:
             changeVariableState();
             break;
     }
@@ -1989,7 +1996,7 @@ void MainWindow::resetCalculator() {
         debuggerChangeState();
     }
 
-    emu.req(REQUEST_RESET);
+    emu.reset();
 }
 
 int MainWindow::loadEmu(bool image) {

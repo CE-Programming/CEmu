@@ -25,14 +25,14 @@ void gui_do_stuff(void) {
 void gui_console_printf(const char *format, ...) {
     va_list args;
     va_start(args, format);
-    emu_thread->writeConsoleBuffer(CONSOLE_NORM, format, args);
+    emu_thread->writeConsoleBuffer(EmuThread::ConsoleNorm, format, args);
     va_end(args);
 }
 
 void gui_console_err_printf(const char *format, ...) {
     va_list args;
     va_start(args, format);
-    emu_thread->writeConsoleBuffer(CONSOLE_ERR, format, args);
+    emu_thread->writeConsoleBuffer(EmuThread::ConsoleErr, format, args);
     va_end(args);
 }
 
@@ -55,12 +55,12 @@ void throttle_timer_wait(void) {
 EmuThread::EmuThread(QObject *p) : QThread(p) {
     assert(emu_thread == Q_NULLPTR);
     emu_thread = this;
-    for (int i = 0; i < CONSOLE_MAX; i++) {
+    for (int i = 0; i < ConsoleMax; i++) {
         consoleWriteSemaphore[i].release(CONSOLE_BUFFER_SIZE);
     }
     speed = 100;
     throttle = true;
-    request = REQUEST_NONE;
+    request = RequestNone;
     lastTime = std::chrono::steady_clock::now();
 }
 
@@ -123,32 +123,32 @@ void EmuThread::block() {
 void EmuThread::doStuff() {
     const std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
 
-    if (request != REQUEST_NONE) {
-        switch (request) {
+    if (request != RequestNone) {
+        switch (+request) {
             default:
                 break;
-            case REQUEST_PAUSE:
+            case RequestPause:
                 block();
                 break;
-            case REQUEST_RESET:
+            case RequestReset:
                 cpu.events |= EVENT_RESET;
                 break;
-            case REQUEST_SEND:
+            case RequestSend:
                 sendFiles();
                 break;
-            case REQUEST_RECEIVE:
+            case RequestReceive:
                 block();
                 break;
-            case REQUEST_DEBUGGER:
+            case RequestDebugger:
                 open_debugger(DBG_USER, 0);
                 break;
         }
 
-        if (request == REQUEST_SAVE) {
+        if (request == RequestSave) {
             emit saved(emu_save(saveImage, savePath.toStdString().c_str()));
         }
 
-        request = REQUEST_NONE;
+        request = RequestNone;
     }
 
     lastTime += std::chrono::steady_clock::now() - cur_time;
@@ -203,16 +203,24 @@ void EmuThread::req(int req) {
     request = req;
 }
 
+void EmuThread::reset() {
+    req(RequestReset);
+}
+
+void EmuThread::receive() {
+    req(RequestReceive);
+}
+
 void EmuThread::send(const QStringList &list, unsigned int location) {
     vars = list;
     sendLoc = location;
-    req(REQUEST_SEND);
+    req(RequestSend);
 }
 
 void EmuThread::save(bool image, const QString &path) {
     savePath = path;
     saveImage = image;
-    req(REQUEST_SAVE);
+    req(RequestSave);
 }
 
 void EmuThread::setEmuSpeed(int value) {
@@ -229,7 +237,7 @@ void EmuThread::debug(bool state) {
         close_debugger();
     }
     if (state) {
-        req(REQUEST_DEBUGGER);
+        req(RequestDebugger);
     }
 }
 

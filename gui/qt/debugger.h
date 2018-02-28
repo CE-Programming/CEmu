@@ -1,8 +1,9 @@
 #ifndef DEBUGGER_H
 #define DEBUGGER_H
 
-enum debugCMDS {
-    CMD_ABORT=1,           // abort() routine hit
+enum {
+    CMD_NONE=0,
+    CMD_ABORT,             // abort() routine hit
     CMD_DEBUG,             // debugger() routine hit
     CMD_SET_BREAKPOINT,    // set a breakpoint with the value in DE; enabled
     CMD_REM_BREAKPOINT,    // remove a breakpoint with the value in DE
@@ -15,7 +16,7 @@ enum debugCMDS {
     CMD_SET_E_WATCHPOINT   // set an empty watchpoint with the value in DE; length in C
 };
 
-enum openDebuggerMode {
+enum {
     DBG_OPEN=0,
     DBG_SAVE
 };

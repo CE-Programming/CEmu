@@ -13,37 +13,36 @@
 
 #define CONSOLE_BUFFER_SIZE 512
 
-enum {
-    CONSOLE_NORM,
-    CONSOLE_ERR,
-    CONSOLE_MAX
-};
-
-enum {
-    REQUEST_NONE,
-    REQUEST_PAUSE,
-    REQUEST_RESET,
-    REQUEST_SAVE,
-    REQUEST_SEND,
-    REQUEST_RECEIVE,
-    REQUEST_DEBUGGER
-};
-
 class EmuThread : public QThread {
     Q_OBJECT
 
 public:
     explicit EmuThread(QObject *p = Q_NULLPTR);
 
-    void req(int req);
     void doStuff();
     void throttleTimerWait();
     void writeConsoleBuffer(int type, const char *format, va_list args);
-    int consoleWritePosition[CONSOLE_MAX] = {0};
-    int consoleReadPosition[CONSOLE_MAX] = {0};
-    char consoleBuffer[CONSOLE_MAX][CONSOLE_BUFFER_SIZE];
-    QSemaphore consoleWriteSemaphore[CONSOLE_MAX];
-    QSemaphore consoleReadSemaphore[CONSOLE_MAX];
+
+    enum {
+        ConsoleNorm,
+        ConsoleErr,
+        ConsoleMax
+    };
+    enum {
+        RequestNone,
+        RequestPause,
+        RequestReset,
+        RequestSave,
+        RequestSend,
+        RequestReceive,
+        RequestDebugger
+    };
+
+    int consoleWritePosition[ConsoleMax] = {0};
+    int consoleReadPosition[ConsoleMax] = {0};
+    char consoleBuffer[ConsoleMax][CONSOLE_BUFFER_SIZE];
+    QSemaphore consoleWriteSemaphore[ConsoleMax];
+    QSemaphore consoleReadSemaphore[ConsoleMax];
 
 signals:
     // Console Strings
@@ -65,14 +64,15 @@ signals:
     void locked(int req);
 
 public slots:
+    void req(int req);
     int load(bool restore, const QString &rom, const QString &image);
+    void reset();
     void stop();
-
-    // Debugging
     void debug(bool);
 
     // Linking
     void send(const QStringList &fileNames, unsigned int location);
+    void receive();
     void unlock();
 
     // Speed

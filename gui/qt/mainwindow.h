@@ -57,7 +57,7 @@ public:
 
 public slots:
     // Console
-    void console(const QString &str, const QColor &color = Qt::black);
+    void console(const QString &str, const QColor &color = Qt::black, int type = EmuThread::ConsoleNorm);
     void console(int type, const char *str, int size = -1);
     void consoleStr(int type);
 
