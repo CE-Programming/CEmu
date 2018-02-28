@@ -12,8 +12,12 @@
 #include "../../core/debug/debug.h"
 
 #define CONSOLE_BUFFER_SIZE 512
-#define CONSOLE_NORM 0
-#define CONSOLE_ERR 1
+
+enum {
+    CONSOLE_NORM,
+    CONSOLE_ERR,
+    CONSOLE_MAX
+};
 
 enum {
     REQUEST_NONE,
@@ -34,12 +38,12 @@ public:
     void req(int req);
     void doStuff();
     void throttleTimerWait();
-    void writeConsoleBuffer(int dest, const char *format, va_list args);
-    int consoleWritePosition = 0;
-    int consoleReadPosition = 0;
-    char consoleBuffer[CONSOLE_BUFFER_SIZE];
-    QSemaphore consoleWriteSemaphore;
-    QSemaphore consoleReadSemaphore;
+    void writeConsoleBuffer(int type, const char *format, va_list args);
+    int consoleWritePosition[CONSOLE_MAX] = {0};
+    int consoleReadPosition[CONSOLE_MAX] = {0};
+    char consoleBuffer[CONSOLE_MAX][CONSOLE_BUFFER_SIZE];
+    QSemaphore consoleWriteSemaphore[CONSOLE_MAX];
+    QSemaphore consoleReadSemaphore[CONSOLE_MAX];
 
 signals:
     // Console Strings

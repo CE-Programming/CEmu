@@ -111,14 +111,14 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     memory.append(ui->ramEdit);
     memory.append(ui->memEdit);
 
-    // Emulator -> GUI
-    connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr, Qt::UniqueConnection);
-    connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed, Qt::QueuedConnection);
-    connect(&emu, &EmuThread::raiseDebugger, this, &MainWindow::debuggerRaise, Qt::QueuedConnection);
-    connect(&emu, &EmuThread::disableDebugger, this, &MainWindow::debuggerGUIDisable, Qt::QueuedConnection);
-    connect(&emu, &EmuThread::sendDebugCommand, this, &MainWindow::debuggerProcessCommand, Qt::QueuedConnection);
-    connect(&emu, &EmuThread::saved, this, &MainWindow::savedEmu, Qt::QueuedConnection);
-    connect(&emu, &EmuThread::locked, this, &MainWindow::lockedEmu, Qt::QueuedConnection);
+    // Emulator -> GUI (Should be queued)
+    connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr);
+    connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed);
+    connect(&emu, &EmuThread::raiseDebugger, this, &MainWindow::debuggerRaise);
+    connect(&emu, &EmuThread::disableDebugger, this, &MainWindow::debuggerGUIDisable);
+    connect(&emu, &EmuThread::sendDebugCommand, this, &MainWindow::debuggerProcessCommand);
+    connect(&emu, &EmuThread::saved, this, &MainWindow::savedEmu);
+    connect(&emu, &EmuThread::locked, this, &MainWindow::lockedEmu);
 
     // Console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, ui->console, &QPlainTextEdit::clear);
@@ -1223,19 +1223,19 @@ void MainWindow::console(int type, const char *str, int size) {
 }
 
 void MainWindow::consoleStr(int type) {
-    int available = emu.consoleReadSemaphore.available();
-    int remaining = CONSOLE_BUFFER_SIZE - emu.consoleReadPosition;
-    emu.consoleReadSemaphore.acquire(available);
-    console(type, emu.consoleBuffer + emu.consoleReadPosition, available < remaining ? available : remaining);
+    int available = emu.consoleReadSemaphore[type].available();
+    int remaining = CONSOLE_BUFFER_SIZE - emu.consoleReadPosition[type];
+    emu.consoleReadSemaphore[type].acquire(available);
+    console(type, emu.consoleBuffer[type] + emu.consoleReadPosition[type], available < remaining ? available : remaining);
     if (available < remaining) {
-        emu.consoleReadPosition += available;
+        emu.consoleReadPosition[type] += available;
     } else if (available == remaining) {
-        emu.consoleReadPosition = 0;
+        emu.consoleReadPosition[type] = 0;
     } else {
-        emu.consoleReadPosition = available - remaining;
-        console(type, emu.consoleBuffer, emu.consoleReadPosition);
+        emu.consoleReadPosition [type]= available - remaining;
+        console(type, emu.consoleBuffer[type], emu.consoleReadPosition[type]);
     }
-    emu.consoleWriteSemaphore.release(available);
+    emu.consoleWriteSemaphore[type].release(available);
 }
 
 void MainWindow::emuTimerSlot() {
