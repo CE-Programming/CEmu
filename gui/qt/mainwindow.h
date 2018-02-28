@@ -57,7 +57,7 @@ public:
 
 public slots:
     // Console
-    void console(const QString &str, const QColor &color = Qt::black, int type = EmuThread::ConsoleNorm);
+    void console(const QString &str, const QColor &colorFg = Qt::black, const QColor &colorBg = Qt::white, int type = EmuThread::ConsoleNorm);
     void console(int type, const char *str, int size = -1);
     void consoleStr(int type);
 
@@ -111,6 +111,16 @@ protected:
     virtual void dragEnterEvent(QDragEnterEvent*) Q_DECL_OVERRIDE;
 
 private:
+    enum consoleColors {
+        CONSOLE_ESC,
+        CONSOLE_BRACKET,
+        CONSOLE_PARSE,
+        CONSOLE_BGCOLOR,
+        CONSOLE_FGCOLOR,
+        CONSOLE_EQUALS,
+        CONSOLE_ENDVAL
+    };
+
     enum breakpointIndex {
         BREAK_LABEL_LOC=0,
         BREAK_ADDR_LOC,

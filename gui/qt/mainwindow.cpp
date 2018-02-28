@@ -540,6 +540,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     colorback.setColor(QPalette::Base, QColor(Qt::yellow).lighter(160));
     consoleFormat = ui->console->currentCharFormat();
+    consoleFormat.setForeground(Qt::black);
 
     debuggerInstall();
 }
@@ -1197,13 +1198,22 @@ void MainWindow::closeEvent(QCloseEvent *e) {
     QMainWindow::closeEvent(e);
 }
 
-void MainWindow::console(const QString &str, const QColor &color, int type) {
+void MainWindow::console(const QString &str, const QColor &colorFg, const QColor &colorBg, int type) {
     if (nativeConsole) {
         fputs(str.toStdString().c_str(), type == EmuThread::ConsoleErr ? stderr : stdout);
     } else {
+        static QColor prevColorBg = Qt::white;
+        static QColor prevColorFg = Qt::black;
+        if (prevColorBg != colorBg) {
+            consoleFormat.setBackground(colorBg);
+            prevColorBg = colorBg;
+        }
+        if (prevColorFg != colorFg) {
+            consoleFormat.setForeground(colorFg);
+            prevColorFg = colorFg;
+        }
         QTextCursor cur(ui->console->document());
         cur.movePosition(QTextCursor::End);
-        consoleFormat.setForeground(color);
         cur.insertText(str, consoleFormat);
         if (ui->checkAutoScroll->isChecked()) {
             ui->console->setTextCursor(cur);
@@ -1212,7 +1222,10 @@ void MainWindow::console(const QString &str, const QColor &color, int type) {
 }
 
 void MainWindow::console(int type, const char *str, int size) {
-    static QColor color = Qt::black;
+    static QColor colorFg = Qt::black;
+    static QColor colorBg = Qt::white;
+    const QColor lookup[8] = { Qt::black, Qt::red, Qt::green, Qt::yellow, Qt::blue, Qt::magenta, Qt::cyan, Qt::white };
+    static int state = CONSOLE_ESC;
     if (size == -1) {
         size = strlen(str);
     }
@@ -1222,10 +1235,101 @@ void MainWindow::console(int type, const char *str, int size) {
         const char *tok;
         if ((tok = static_cast<const char*>(memchr(str, '\x1B', size)))) {
             if (tok != str) {
-                console(QString::fromUtf8(str, tok - str), color);
+                console(QString::fromUtf8(str, tok - str), colorFg, colorBg, type);
+                size -= tok - str;
             }
+            if (size <= 0) {
+                return;
+            }
+            do {
+                while(--size) {
+                    char x = *tok++;
+                    switch (state) {
+                        case CONSOLE_ESC:
+                            if (x == '\x1B') {
+                                state = CONSOLE_BRACKET;
+                            }
+                            break;
+                        case CONSOLE_BRACKET:
+                            if (x == '[')
+                                state = CONSOLE_PARSE;
+                            else {
+                                state = CONSOLE_ESC;
+                            }
+                            break;
+                        case CONSOLE_PARSE:
+                            switch (x) {
+                                case '0':
+                                    state = CONSOLE_ENDVAL;
+                                    colorFg = Qt::black;
+                                    colorBg = Qt::white;
+                                    break;
+                                case '3':
+                                    state = CONSOLE_FGCOLOR;
+                                    break;
+                                case '4':
+                                    state = CONSOLE_BGCOLOR;
+                                    break;
+                                default:
+                                    state = CONSOLE_ESC;
+                                    colorFg = Qt::black;
+                                    colorBg = Qt::white;
+                                    break;
+                            }
+                            break;
+                        case CONSOLE_FGCOLOR:
+                            if (x >= '0' && x <= '7') {
+                                state = CONSOLE_ENDVAL;
+                                colorFg = lookup[x - '0'];
+                            } else {
+                                state = CONSOLE_ESC;
+                                colorFg = Qt::black;
+                                colorBg = Qt::white;
+                            }
+                            break;
+                        case CONSOLE_BGCOLOR:
+                            if (x >= '0' && x <= '7') {
+                                state = CONSOLE_ENDVAL;
+                                colorBg = lookup[x - '0'];
+                            } else {
+                                state = CONSOLE_ESC;
+                                colorFg = Qt::black;
+                                colorBg = Qt::white;
+                            }
+                            break;
+                        case CONSOLE_ENDVAL:
+                            if (x == ';') {
+                                state = CONSOLE_PARSE;
+                            } else if (x == 'm') {
+                                state = CONSOLE_ESC;
+                            } else {
+                                state = CONSOLE_ESC;
+                                colorFg = Qt::black;
+                                colorBg = Qt::white;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    if (state == CONSOLE_ESC) {
+                        break;
+                    }
+                }
+                if (size > 0) {
+                    const char *tokn = static_cast<const char*>(memchr(tok, '\x1B', size));
+                    if (tokn) {
+                        console(QString::fromUtf8(tok, tokn - tok), colorFg, colorBg, type);
+                        size -= tokn - tok;
+                    } else {
+                        console(QString::fromUtf8(tok, size), colorFg, colorBg, type);
+                    }
+                    tok = tokn;
+                } else {
+                    tok = NULL;
+                }
+            } while (tok);
         } else {
-            console(QString::fromUtf8(str, size), color);
+            console(QString::fromUtf8(str, size), colorFg, colorBg, type);
         }
     }
 }
