@@ -51,10 +51,10 @@ bool apng_start(const char *tmp_name, int frameskip) {
 }
 
 static void apng_write_delay(void) {
-    uint64_t time = sched_total_time() - apng.prev_time;
+    uint64_t time = sched_total_time(CLOCK_48M) - apng.prev_time;
     int logo = 48 - clzll(time);
     uint64_t shift = logo > 10 ? logo : 10;
-    png_uint_16 num = time >> shift, den = 48000000 >> shift;
+    png_uint_16 num = time >> shift, den = sched.clockRates[CLOCK_48M] >> shift;
     fwrite(&num, sizeof(num), 1, apng.tmp);
     fwrite(&den, sizeof(den), 1, apng.tmp);
     apng.prev_time += num << shift;
@@ -70,7 +70,7 @@ void apng_add_frame(const void *frame) {
 
         if (!apng.n || memcmp(frame, apng.frame, sizeof(apng.frame))) {
             if (!apng.n) {
-                apng.prev_time = sched_total_time();
+                apng.prev_time = sched_total_time(CLOCK_48M);
             } else {
                 apng_write_delay();
             }

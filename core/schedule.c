@@ -239,8 +239,8 @@ uint64_t sched_total_cycles(void) {
     return cpu.baseCycles + cpu.cycles;
 }
 
-uint64_t sched_total_time(void) {
-    return (uint64_t)cpu.seconds * sched.clockRates[CLOCK_48M] + muldiv_floor(cpu.cycles, sched.clockRates[CLOCK_48M], sched.clockRates[CLOCK_CPU]);
+uint64_t sched_total_time(enum clock_id clock) {
+    return (uint64_t)cpu.seconds * sched.clockRates[clock] + muldiv_floor(cpu.cycles, sched.clockRates[clock], sched.clockRates[CLOCK_CPU]);
 }
 
 uint64_t event_next_cycle(enum sched_item_id id) {

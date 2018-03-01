@@ -82,7 +82,7 @@ uint64_t sched_tick(enum sched_item_id id);
 uint64_t sched_ticks_remaining(enum sched_item_id id);
 void sched_set_clocks(enum clock_id count, uint32_t *new_rates);
 uint64_t sched_total_cycles(void);
-uint64_t sched_total_time(void);
+uint64_t sched_total_time(enum clock_id clock);
 
 uint64_t event_next_cycle(enum sched_item_id id);
 
