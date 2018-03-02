@@ -293,10 +293,10 @@ void MainWindow::debuggerRaise() {
     guiDebug = true;
     debuggerGUIPopulate();
     debuggerGUIEnable();
-    connect(stepInShortcut, &QShortcut::activated, this, &MainWindow::stepInPressed);
-    connect(stepOverShortcut, &QShortcut::activated, this, &MainWindow::stepOverPressed);
-    connect(stepNextShortcut, &QShortcut::activated, this, &MainWindow::stepNextPressed);
-    connect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOutPressed);
+    connect(stepInShortcut, &QShortcut::activated, this, &MainWindow::stepIn);
+    connect(stepOverShortcut, &QShortcut::activated, this, &MainWindow::stepOver);
+    connect(stepNextShortcut, &QShortcut::activated, this, &MainWindow::stepNext);
+    connect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOut);
 }
 
 void MainWindow::debuggerExecuteCommand(uint32_t debugAddress, uint8_t command) {

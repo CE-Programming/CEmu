@@ -134,10 +134,10 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonAddPort, &QPushButton::clicked, this, &MainWindow::portSlotAdd);
     connect(ui->buttonAddBreakpoint, &QPushButton::clicked, this, &MainWindow::breakpointSlotAdd);
     connect(ui->buttonAddWatchpoint, &QPushButton::clicked, this, &MainWindow::watchpointSlotAdd);
-    connect(ui->buttonStepIn, &QPushButton::clicked, this, &MainWindow::stepInPressed);
-    connect(ui->buttonStepOver, &QPushButton::clicked, this, &MainWindow::stepOverPressed);
-    connect(ui->buttonStepNext, &QPushButton::clicked, this, &MainWindow::stepNextPressed);
-    connect(ui->buttonStepOut, &QPushButton::clicked, this, &MainWindow::stepOutPressed);
+    connect(ui->buttonStepIn, &QPushButton::clicked, this, &MainWindow::stepIn);
+    connect(ui->buttonStepOver, &QPushButton::clicked, this, &MainWindow::stepOver);
+    connect(ui->buttonStepNext, &QPushButton::clicked, this, &MainWindow::stepNext);
+    connect(ui->buttonStepOut, &QPushButton::clicked, this, &MainWindow::stepOut);
     connect(ui->buttonGoto, &QPushButton::clicked, this, &MainWindow::gotoPressed);
     connect(ui->console, &QWidget::customContextMenuRequested, this, &MainWindow::consoleContextMenu);
     connect(ui->disassemblyView, &QWidget::customContextMenuRequested, this, &MainWindow::disasmContextMenu);
@@ -282,6 +282,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->actionExportCEmuImage, &QAction::triggered, this, &MainWindow::exportCEmuBootImage);
     connect(ui->lcd, &LCDWidget::sendROM, this, &MainWindow::setRom);
     connect(ui->lcd, &LCDWidget::customContextMenuRequested, this, &MainWindow::screenContextMenu);
+    connect(ui->consoleLine, &QLineEdit::returnPressed, this, &MainWindow::consoleSubmission);
+    connect(ui->consoleSubmit, &QPushButton::clicked, this, &MainWindow::consoleSubmission);
 
     // Lang switch
     connect(ui->actionEnglish,  &QAction::triggered, [this]{ switchTranslator(QStringLiteral("en_EN")); });
@@ -378,10 +380,10 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(resendshortcut, &QShortcut::activated, this, &MainWindow::resendFiles);
     connect(asmShortcut, &QShortcut::activated, this, &MainWindow::sendASMKey);
     connect(debuggerShortcut, &QShortcut::activated, this, &MainWindow::debuggerChangeState);
-    connect(stepInShortcut, &QShortcut::activated, this, &MainWindow::stepInPressed);
-    connect(stepOverShortcut, &QShortcut::activated, this, &MainWindow::stepOverPressed);
-    connect(stepNextShortcut, &QShortcut::activated, this, &MainWindow::stepNextPressed);
-    connect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOutPressed);
+    connect(stepInShortcut, &QShortcut::activated, this, &MainWindow::stepIn);
+    connect(stepOverShortcut, &QShortcut::activated, this, &MainWindow::stepOver);
+    connect(stepNextShortcut, &QShortcut::activated, this, &MainWindow::stepNext);
+    connect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOut);
 
     ui->portView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     ui->breakpointView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
@@ -1365,6 +1367,28 @@ void MainWindow::consoleStr(int type) {
 
         emu.write.release(available);
     }
+}
+
+void MainWindow::consoleSubmission() {
+    QString string = ui->consoleLine->text().trimmed().toUpper();
+    if (string == QStringLiteral("DBG")) {
+        debuggerChangeState();
+    }
+    if (guiDebug) {
+        if (string == QStringLiteral("C") || string == QStringLiteral("CONTINUE")) {
+            debuggerChangeState();
+        }
+        if (string == QStringLiteral("N") || string == QStringLiteral("NEXT")) {
+            stepNext();
+        }
+        if (string == QStringLiteral("S") || string == QStringLiteral("STEP")) {
+            stepIn();
+        }
+        if (string == QStringLiteral("Q") || string == QStringLiteral("QUIT")) {
+            debuggerChangeState();
+        }
+    }
+    ui->consoleLine->clear();
 }
 
 void MainWindow::emuTimerSlot() {
@@ -2360,45 +2384,45 @@ void MainWindow::newMemoryVisualizer() {
     p->show();
 }
 
-void MainWindow::stepInPressed() {
+void MainWindow::stepIn() {
     if (!guiDebug) {
         return;
     }
 
-    disconnect(stepInShortcut, &QShortcut::activated, this, &MainWindow::stepInPressed);
+    disconnect(stepInShortcut, &QShortcut::activated, this, &MainWindow::stepIn);
 
     debuggerUpdateChanges();
     debuggerStep(DBG_STEP_IN);
 }
 
-void MainWindow::stepOverPressed() {
+void MainWindow::stepOver() {
     if (!guiDebug) {
         return;
     }
 
-    disconnect(stepOverShortcut, &QShortcut::activated, this, &MainWindow::stepOverPressed);
+    disconnect(stepOverShortcut, &QShortcut::activated, this, &MainWindow::stepOver);
 
     debuggerUpdateChanges();
     debuggerStep(DBG_STEP_OVER);
 }
 
-void MainWindow::stepNextPressed() {
+void MainWindow::stepNext() {
     if (!guiDebug) {
         return;
     }
 
-    disconnect(stepNextShortcut, &QShortcut::activated, this, &MainWindow::stepNextPressed);
+    disconnect(stepNextShortcut, &QShortcut::activated, this, &MainWindow::stepNext);
 
     debuggerUpdateChanges();
     debuggerStep(DBG_STEP_NEXT);
 }
 
-void MainWindow::stepOutPressed() {
+void MainWindow::stepOut() {
     if (!guiDebug) {
         return;
     }
 
-    disconnect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOutPressed);
+    disconnect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOut);
 
     debuggerUpdateChanges();
     debuggerStep(DBG_STEP_OUT);

@@ -60,6 +60,7 @@ public slots:
     void console(const QString &str, const QColor &colorFg = Qt::black, const QColor &colorBg = Qt::white, int type = EmuThread::ConsoleNorm);
     void console(int type, const char *str, int size = -1);
     void consoleStr(int type);
+    void consoleSubmission();
 
     // Saved/Restored State
     void savedEmu(bool success);
@@ -268,10 +269,10 @@ private:
     void scrollDisasm(int value);
     void scrollStack(int value);
 
-    void stepInPressed();
-    void stepOverPressed();
-    void stepNextPressed();
-    void stepOutPressed();
+    void stepIn();
+    void stepOver();
+    void stepNext();
+    void stepOut();
 
     void updateTIOSView();
     void updateStack();
