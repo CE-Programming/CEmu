@@ -53,6 +53,7 @@ signals:
     void currentAddressChanged(qint64 address);
     void currentSizeChanged(qint64 size);
     void dataChanged();
+    void focused();
 
 public:
     ~QHexEdit();
@@ -99,6 +100,7 @@ protected:
     virtual void mousePressEvent(QMouseEvent*) Q_DECL_OVERRIDE;
     virtual void paintEvent(QPaintEvent*) Q_DECL_OVERRIDE;
     virtual void resizeEvent(QResizeEvent*) Q_DECL_OVERRIDE;
+    virtual void focusInEvent(QFocusEvent*) Q_DECL_OVERRIDE;
 
 private:
     // Handle selections

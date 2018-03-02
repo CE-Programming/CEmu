@@ -5,6 +5,7 @@
 
 #include "ipc.h"
 #include "utils.h"
+#include "../../core/cpu.h"
 #include "../../core/os/os.h"
 #include "../../core/debug/disasm.h"
 
@@ -60,6 +61,38 @@ QString getAddressOfEquate(const std::string &in) {
     map_value_t::const_iterator item = disasm.reverseMap.find(in);
     if (item != disasm.reverseMap.end()) {
         value = int2hex(item->second, 6);
+    } else {
+        uint32_t conv = 0xFFFFFFFFu;
+        if (in == "AF") {
+            conv = cpu.registers.AF;
+        } else if (in == "HL") {
+            conv = cpu.registers.HL;
+        } else if (in == "DE") {
+            conv = cpu.registers.DE;
+        } else if (in == "BC") {
+            conv = cpu.registers.BC;
+        } else if (in == "IX") {
+            conv = cpu.registers.IX;
+        } else if (in == "IY") {
+            conv = cpu.registers.IY;
+        } else if (in == "AF\'") {
+            conv = cpu.registers._AF;
+        } else if (in == "HL\'") {
+            conv = cpu.registers._HL;
+        } else if (in == "DE\'") {
+            conv = cpu.registers._DE;
+        } else if (in == "BC\'") {
+            conv = cpu.registers._BC;
+        } else if (in == "SPL") {
+            conv = cpu.registers.SPL;
+        } else if (in == "SPS") {
+            conv = cpu.registers.SPS;
+        } else if (in == "PC") {
+            conv = cpu.registers.PC;
+        }
+        if (conv != 0xFFFFFFFFu) {
+            value = int2hex(conv, 6);
+        }
     }
     return value;
 }

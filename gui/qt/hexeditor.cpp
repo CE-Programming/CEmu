@@ -57,23 +57,17 @@ void MainWindow::ramUpdate() {
     ui->ramEdit->setLine(line);
 }
 
-void MainWindow::memUpdate(int index, uint32_t addressBegin) {
-    memEditUpdate(memory.at(index), addressBegin);
-}
+void MainWindow::memUpdateEdit(QHexEdit *edit) {
+    if (edit == Q_NULLPTR) {
+        return;
+    }
 
-void MainWindow::memEditUpdate(QHexEdit *edit, uint32_t addressBegin) {
-    edit->setFocus();
     QByteArray mem_data;
 
-    bool locked = ui->checkLockPosition->isChecked() || edit != ui->memEdit;
     int32_t start, line = 0;
 
-    if (locked) {
-        start = static_cast<int32_t>(edit->addressOffset());
-        line = edit->getLine();
-    } else {
-        start = static_cast<int32_t>(addressBegin) - 0x1000;
-    }
+    start = static_cast<int32_t>(edit->addressOffset());
+    line = edit->getLine();
 
     if (start < 0) { start = 0; }
     int32_t end = start+0x2000;
@@ -88,16 +82,52 @@ void MainWindow::memEditUpdate(QHexEdit *edit, uint32_t addressBegin) {
     edit->setData(mem_data);
     edit->setAddressOffset(start);
 
-    if (locked) {
-        edit->setLine(line);
-    } else {
-        edit->setCursorPosition((addressBegin-start)<<1);
-        edit->ensureVisible();
+    edit->setLine(line);
+    edit->ensureVisible();
+}
+
+void MainWindow::flashGotoPressed() {
+    bool accept = false;
+    QString addressStr = getAddressString(prevFlashAddress, &accept);
+
+    if (accept) {
+
+        ui->flashEdit->setFocus();
+        int address = hex2int(addressStr);
+        if (address > 0x3FFFFF) {
+            return;
+        }
+
+        prevFlashAddress = addressStr;
+
+        ui->flashEdit->setCursorPosition(address * 2);
+        ui->flashEdit->ensureVisible();
     }
 }
 
-void MainWindow::searchEdit(int index) {
-    QHexEdit *edit = memory.at(index);
+void MainWindow::ramGotoPressed() {
+    bool accept = false;
+    QString addressStr = getAddressString(prevRAMAddress, &accept);
+
+    if (accept) {
+
+        ui->ramEdit->setFocus();
+        int address = hex2int(addressStr)-0xD00000;
+        if (address >= 0x65800 || address < 0) {
+            return;
+        }
+
+        prevRAMAddress = addressStr;
+
+        ui->ramEdit->setCursorPosition(address * 2);
+        ui->ramEdit->ensureVisible();
+    }
+}
+
+void MainWindow::memSearchEdit(QHexEdit *edit) {
+    if (edit == Q_NULLPTR) {
+        return;
+    }
 
     SearchWidget search(searchingString, hexSearch);
     int searchMode, err = 0;
@@ -145,69 +175,19 @@ void MainWindow::searchEdit(int index) {
     }
 }
 
-void MainWindow::flashGotoPressed() {
-    bool accept = false;
-    QString addressStr = getAddressString(prevFlashAddress, &accept);
-
-    if (accept) {
-
-        ui->flashEdit->setFocus();
-        int address = hex2int(addressStr);
-        if (address > 0x3FFFFF) {
-            return;
-        }
-
-        prevFlashAddress = addressStr;
-
-        ui->flashEdit->setCursorPosition(address * 2);
-        ui->flashEdit->ensureVisible();
-    }
-}
-
-void MainWindow::ramGotoPressed() {
-    bool accept = false;
-    QString addressStr = getAddressString(prevRAMAddress, &accept);
-
-    if (accept) {
-
-        ui->ramEdit->setFocus();
-        int address = hex2int(addressStr)-0xD00000;
-        if (address >= 0x65800 || address < 0) {
-            return;
-        }
-
-        prevRAMAddress = addressStr;
-
-        ui->ramEdit->setCursorPosition(address * 2);
-        ui->ramEdit->ensureVisible();
-    }
-}
-
-void MainWindow::memSearchPressed(int index) {
-    searchEdit(index);
-}
-
-void MainWindow::memGoto(int index, const QString& addressStr) {
-    if (!guiDebug) {
-        return;
-    }
-
-
-    QHexEdit *edit = memory.at(index);
-
-    edit->setFocus();
-    int address = hex2int(addressStr);
-    if (address > 0xFFFFFF || address < 0) {
+void MainWindow::memGoto(QHexEdit *edit, uint32_t address) {
+    if (edit == Q_NULLPTR || !guiDebug || address > 0xFFFFFF) {
         return;
     }
 
     QByteArray mem_data;
-    int start = address-0x500;
+    int start = static_cast<int>(address) - 0x500;
     if (start < 0) { start = 0; }
-    int end = start+0x1000;
+    int end = start + 0x1000;
     if (end > 0xFFFFFF) { end = 0xFFFFFF; }
 
-    edit->memSize = end-start;
+    edit->setFocus();
+    edit->memSize = end - start;
 
     for (int i = start; i < end; i++) {
         mem_data.append(mem_peek_byte(i));
@@ -215,22 +195,31 @@ void MainWindow::memGoto(int index, const QString& addressStr) {
 
     edit->setData(mem_data);
     edit->setAddressOffset(start);
-    edit->setCursorPosition((address-start) * 2);
+    edit->setCursorPosition((static_cast<int>(address) - start) * 2);
     edit->ensureVisible();
+    edit->setFocus();
 }
 
-void MainWindow::memGotoPressed(int index) {
+void MainWindow::memGotoEdit(QHexEdit *edit) {
+    if (edit == Q_NULLPTR) {
+        return;
+    }
+
     bool accept = false;
     QString address = getAddressString(prevMemAddress, &accept);
 
     if (accept) {
-        memGoto(index, prevMemAddress = address);
+        memGoto(edit, static_cast<uint32_t>(hex2int(prevMemAddress = address)));
     }
 }
 
 void MainWindow::syncHexView(int posa, QHexEdit *edit) {
+    if (edit == Q_NULLPTR) {
+        return;
+    }
+
     debuggerGUIPopulate();
-    updateDisasmView(addressPane, fromPane);
+    updateDisasmAddr(addressPane, fromPane);
     edit->setFocus();
     edit->setCursorPosition(posa);
 }
@@ -247,8 +236,10 @@ void MainWindow::ramSyncPressed() {
     syncHexView(posa, ui->ramEdit);
 }
 
-void MainWindow::memSyncPressed(int index) {
-    QHexEdit *edit = memory.at(index);
+void MainWindow::memSyncEdit(QHexEdit *edit) {
+    if (edit == Q_NULLPTR) {
+        return;
+    }
 
     int start = edit->addressOffset();
     qint64 posa = edit->cursorPosition();
@@ -259,4 +250,12 @@ void MainWindow::memSyncPressed(int index) {
     }
 
     syncHexView(posa, edit);
+}
+
+void MainWindow::memAsciiToggle(QHexEdit *edit) {
+    if (edit == Q_NULLPTR) {
+        return;
+    }
+
+    edit->setAsciiArea(!edit->asciiArea());
 }

@@ -23,7 +23,7 @@ public:
     void setExpandable(bool expandable) { m_expandable = expandable; }
 
 signals:
-    void closed(const QString &name);
+    void closed();
 
 protected slots:
     QList<DockWidget *> tabs(DockWidget *without = Q_NULLPTR);

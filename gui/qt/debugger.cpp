@@ -420,7 +420,6 @@ void MainWindow::debuggerProcessCommand(int reason, uint32_t input) {
             }
 
             text = tr("Hit ") + type + tr(" watchpoint ") + inputString + QStringLiteral(" (") + labelString + QStringLiteral(")");
-            memUpdate(MEM_MEM, input);
             break;
         case DBG_PORT_READ:
         case DBG_PORT_WRITE:
@@ -539,7 +538,6 @@ void MainWindow::debuggerGUISetState(bool state) {
     ui->groupStack->setEnabled(state);
     ui->groupFlash->setEnabled(state);
     ui->groupRAM->setEnabled(state);
-    ui->groupMem->setEnabled(state);
     ui->cycleView->setEnabled(state);
     ui->freqView->setEnabled(state);
     ui->opView->setEnabled(state);
@@ -766,14 +764,11 @@ void MainWindow::debuggerGUIPopulate() {
     }
 
     updateTIOSView();
-    updateStackView();
+    updateStack();
     prevDisasmAddress = cpu.registers.PC;
-    updateDisasmView(prevDisasmAddress, true);
+    updateDisasmAddr(prevDisasmAddress, true);
 
-    ramUpdate();
-    flashUpdate();
-    memDocksUpdate();
-    memUpdate(MEM_MEM, prevDisasmAddress);
+    updateMemoryViews();
 
     ui->portView->blockSignals(false);
     ui->watchpointView->blockSignals(false);
@@ -1360,6 +1355,12 @@ bool MainWindow::watchpointAdd(const QString& label, uint32_t address, uint8_t l
     return true;
 }
 
+void MainWindow::updateMemoryViews() {
+    ramUpdate();
+    flashUpdate();
+    memDocksUpdate();
+}
+
 void MainWindow::watchpointDataChanged(QTableWidgetItem *item) {
     auto row = item->row();
     auto col = item->column();
@@ -1391,9 +1392,7 @@ void MainWindow::watchpointDataChanged(QTableWidgetItem *item) {
             mem_poke_byte(address + i, (wData >> ((i << 3)) & 255));
         }
 
-        ramUpdate();
-        flashUpdate();
-        memUpdate(MEM_MEM, address);
+        updateMemoryViews();
     } else if (col == WATCH_LABEL_LOC) {
         updateLabels();
     } else if (col == WATCH_SIZE_LOC) { // length of data we wish to read
@@ -1479,18 +1478,27 @@ void MainWindow::batteryChangeStatus(int value) {
 // Disassembly View
 // ------------------------------------------------
 
-void MainWindow::scrollDisasmView(int value) {
+void MainWindow::scrollDisasm(int value) {
     QScrollBar *v = ui->disassemblyView->verticalScrollBar();
     if (value >= v->maximum()) {
         v->blockSignals(true);
-        drawNextDisassembleLine();
-        v->setValue(ui->disassemblyView->verticalScrollBar()->maximum()-1);
+        drawNextDisasmLine();
+        v->setValue(ui->disassemblyView->verticalScrollBar()->maximum() - 1);
+        v->blockSignals(false);
+    }
+}
+
+void MainWindow::scrollStack(int value) {
+    QScrollBar *v = ui->stackView->verticalScrollBar();
+    if (value >= v->maximum()) {
+        v->blockSignals(true);
+        drawNextStackLine();
+        v->setValue(ui->stackView->verticalScrollBar()->maximum() - 1);
         v->blockSignals(false);
     }
 }
 
 void MainWindow::equatesClear() {
-    // Reset the map
     currentEquateFiles.clear();
     disasm.map.clear();
     disasm.reverseMap.clear();
@@ -1520,7 +1528,6 @@ void MainWindow::updateLabels() {
         QString oldAddress = bv->item(row, BREAK_ADDR_LOC)->text();
         if (!newAddress.isEmpty() && newAddress != oldAddress) {
             unsigned int mask = bv->item(row, BREAK_ENABLE_LOC)->checkState() == Qt::Checked ? DBG_MASK_EXEC : DBG_MASK_NONE;
-            // remove old breakpoint and add new one
             bv->blockSignals(true);
             debug_breakwatch(static_cast<uint32_t>(hex2int(oldAddress)), mask, false);
             bv->item(row, BREAK_ADDR_LOC)->setText(newAddress);
@@ -1531,7 +1538,6 @@ void MainWindow::updateLabels() {
 }
 
 void MainWindow::equatesRefresh() {
-    // reset the map
     disasm.map.clear();
     disasm.reverseMap.clear();
     for (QString &file : currentEquateFiles) {
@@ -1644,10 +1650,10 @@ void MainWindow::equatesAddEquate(const QString &name, uint32_t address) {
 }
 
 void MainWindow::updateDisasm() {
-    updateDisasmView(ui->disassemblyView->getSelectedAddress().toInt(Q_NULLPTR, 16), true);
+    updateDisasmAddr(ui->disassemblyView->getSelectedAddress().toInt(Q_NULLPTR, 16), true);
 }
 
-void MainWindow::updateDisasmView(int sentBase, bool newPane) {
+void MainWindow::updateDisasmAddr(int sentBase, bool newPane) {
     if (!guiDebug) {
         return;
     }
@@ -1661,20 +1667,20 @@ void MainWindow::updateDisasmView(int sentBase, bool newPane) {
     int32_t last_address = disasm.newAddress + 0x120;
     if (last_address > 0xFFFFFF) { last_address = 0xFFFFFF; }
 
-    disconnect(ui->disassemblyView->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::scrollDisasmView);
+    disconnect(ui->disassemblyView->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::scrollDisasm);
     ui->disassemblyView->clear();
     ui->disassemblyView->cursorState(false);
     ui->disassemblyView->clearAllHighlights();
 
     while (disasm.newAddress < last_address) {
-        drawNextDisassembleLine();
+        drawNextDisasmLine();
     }
 
     ui->disassemblyView->setTextCursor(disasmOffset);
     ui->disassemblyView->cursorState(true);
     ui->disassemblyView->updateAllHighlights();
     ui->disassemblyView->centerCursor();
-    connect(ui->disassemblyView->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::scrollDisasmView);
+    connect(ui->disassemblyView->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::scrollDisasm);
 }
 
 // ------------------------------------------------
@@ -1695,12 +1701,12 @@ void MainWindow::toggleADLDisasm(int state) {
             break;
     }
     prevDisasmAddress = ui->disassemblyView->getSelectedAddress().toUInt(Q_NULLPTR, 16);
-    updateDisasmView(prevDisasmAddress, true);
+    updateDisasmAddr(prevDisasmAddress, true);
 }
 
 void MainWindow::toggleADLStack(int state) {
     (void)(state);
-    updateStackView();
+    updateStack();
 }
 
 void MainWindow::toggleADL(int state) {
@@ -1719,16 +1725,16 @@ void MainWindow::gotoPressed() {
     QString address = getAddressString(prevGotoAddress, &accept);
 
     if (accept) {
-        updateDisasmView(hex2int(prevGotoAddress = address), false);
+        updateDisasmAddr(hex2int(prevGotoAddress = address), false);
     }
 }
 
-void MainWindow::forceGotoDisasm(uint32_t address) {
-    updateDisasmView(address, false);
+void MainWindow::gotoDisasmAddr(uint32_t address) {
+    updateDisasmAddr(address, false);
 }
 
-void MainWindow::forceGotoMemory(uint32_t address) {
-    memGoto(MEM_MEM, int2hex(address, 6));
+void MainWindow::gotoMemAddr(uint32_t address) {
+    memGoto(selectedMemory, address);
 }
 
 void MainWindow::handleCtrlClickText(QPlainTextEdit *edit) {
@@ -1753,9 +1759,9 @@ void MainWindow::handleCtrlClickText(QPlainTextEdit *edit) {
         if (ok) {
             forceEnterDebug();
             if (QApplication::keyboardModifiers().testFlag(Qt::ShiftModifier)) {
-                forceGotoMemory(address);
+                gotoMemAddr(address);
             } else {
-                forceGotoDisasm(address);
+                gotoDisasmAddr(address);
             }
         }
 
@@ -1773,9 +1779,9 @@ void MainWindow::handleCtrlClickLine(QLineEdit *edit) {
 
         if (ok) {
             if (QApplication::keyboardModifiers().testFlag(Qt::ShiftModifier)) {
-                forceGotoMemory(address);
+                gotoMemAddr(address);
             } else {
-                forceGotoDisasm(address);
+                gotoDisasmAddr(address);
             }
         }
 
@@ -1796,16 +1802,16 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
 
         if (name.length() > 3) return QMainWindow::eventFilter(obj, e);
 
-        if (name == QStringLiteral("hl"))  memGoto(MEM_MEM, ui->hlregView->text());
-        if (name == QStringLiteral("de"))  memGoto(MEM_MEM, ui->deregView->text());
-        if (name == QStringLiteral("bc"))  memGoto(MEM_MEM, ui->bcregView->text());
-        if (name == QStringLiteral("ix"))  memGoto(MEM_MEM, ui->ixregView->text());
-        if (name == QStringLiteral("iy"))  memGoto(MEM_MEM, ui->iyregView->text());
-        if (name == QStringLiteral("hl_")) memGoto(MEM_MEM, ui->hl_regView->text());
-        if (name == QStringLiteral("de_")) memGoto(MEM_MEM, ui->de_regView->text());
-        if (name == QStringLiteral("bc_")) memGoto(MEM_MEM, ui->bc_regView->text());
-        if (name == QStringLiteral("spl")) memGoto(MEM_MEM, ui->splregView->text());
-        if (name == QStringLiteral("pc"))  memGoto(MEM_MEM, ui->pcregView->text());
+        if (name == QStringLiteral("hl"))  gotoMemAddr(hex2int(ui->hlregView->text()));
+        if (name == QStringLiteral("de"))  gotoMemAddr(hex2int(ui->deregView->text()));
+        if (name == QStringLiteral("bc"))  gotoMemAddr(hex2int(ui->bcregView->text()));
+        if (name == QStringLiteral("ix"))  gotoMemAddr(hex2int(ui->ixregView->text()));
+        if (name == QStringLiteral("iy"))  gotoMemAddr(hex2int(ui->iyregView->text()));
+        if (name == QStringLiteral("hl_")) gotoMemAddr(hex2int(ui->hl_regView->text()));
+        if (name == QStringLiteral("de_")) gotoMemAddr(hex2int(ui->de_regView->text()));
+        if (name == QStringLiteral("bc_")) gotoMemAddr(hex2int(ui->bc_regView->text()));
+        if (name == QStringLiteral("spl")) gotoMemAddr(hex2int(ui->splregView->text()));
+        if (name == QStringLiteral("pc"))  gotoMemAddr(hex2int(ui->pcregView->text()));
     } else if (e->type() == QEvent::MouseMove) {
         QString name = obj->objectName();
 
@@ -1893,10 +1899,10 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
 // Stack
 // ------------------------------------------------
 
-void MainWindow::updateStackView() {
+void MainWindow::updateStack() {
     QString formattedLine;
 
-    ui->stackView->blockSignals(true);
+    disconnect(ui->stackView->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::scrollStack);
     ui->stackView->clear();
 
     bool adl = ui->checkADL->isChecked();
@@ -1909,22 +1915,56 @@ void MainWindow::updateStackView() {
     }
 
     if (adl) {
-        for (int i=0; i<80; i+=3) {
+        stackAddress = cpu.registers.SPL;
+        for (int i = 0; i < 80; i += 3) {
+            stackAddress = (stackAddress + 3) & 0xFFFFFF;
             formattedLine = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2</pre>"))
-                                    .arg(int2hex(cpu.registers.SPL+i, 6),
-                                         int2hex(mem_peek_word(cpu.registers.SPL+i, 1), 6));
+                                    .arg(int2hex(stackAddress, 6),
+                                         int2hex(mem_peek_word(stackAddress, 1), 6));
             ui->stackView->appendHtml(formattedLine);
         }
     } else {
-        for (int i=0; i<60; i+=2) {
+        stackAddress = cpu.registers.SPS;
+        for (int i = 0; i < 60; i += 2) {
+            stackAddress = (stackAddress + 2) & 0xFFFFFF;
             formattedLine = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2</pre>"))
-                                    .arg(int2hex(cpu.registers.SPS+i, 4),
-                                         int2hex(mem_peek_word(cpu.registers.SPS+i, 0), 4));
+                                    .arg(int2hex(stackAddress, 4),
+                                         int2hex(mem_peek_word(stackAddress, 0), 4));
             ui->stackView->appendHtml(formattedLine);
         }
     }
 
+    ui->stackView->blockSignals(false);
     ui->stackView->moveCursor(QTextCursor::Start);
+    connect(ui->stackView->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::scrollStack);
+}
+
+void MainWindow::drawNextStackLine() {
+    QString line;
+
+    ui->stackView->blockSignals(true);
+    bool adl = ui->checkADL->isChecked();
+    int state = ui->checkADLStack->checkState();
+
+    if (state == Qt::Checked) {
+        adl = true;
+    } else if (state == Qt::Unchecked) {
+        adl = false;
+    }
+
+    if (adl) {
+        stackAddress = (stackAddress + 3) & 0xFFFFFF;
+        line = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2</pre>"))
+                       .arg(int2hex(stackAddress, 6),
+                            int2hex(mem_peek_word(stackAddress, 1), 6));
+    } else {
+        stackAddress = (stackAddress + 2) & 0xFFFFFF;
+        line = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2</pre>"))
+                       .arg(int2hex(stackAddress, 4),
+                            int2hex(mem_peek_word(stackAddress, 0), 4));
+    }
+
+    ui->stackView->appendHtml(line);
     ui->stackView->blockSignals(false);
 }
 
@@ -2015,7 +2055,7 @@ void MainWindow::opContextMenu(const QPoint& posa) {
     QAction* selectedItem = contextMenu.exec(globalPos);
     if (selectedItem) {
         if (selectedItem->text() == goto_mem) {
-            memGoto(MEM_MEM, current_address);
+            gotoMemAddr(hex2int(current_address));
         }
         if (selectedItem->text() == copy_mem) {
             QApplication::clipboard()->setText(current_address, QClipboard::Clipboard);
@@ -2047,13 +2087,13 @@ void MainWindow::vatContextMenu(const QPoint& posa) {
     QAction* selectedItem = contextMenu.exec(globalPos);
     if (selectedItem) {
         if (selectedItem->text() == goto_mem) {
-            memGoto(MEM_MEM, current_address);
+            gotoMemAddr(hex2int(current_address));
         }
         if (selectedItem->text() == goto_vat_mem) {
-            memGoto(MEM_MEM, current_vat_address);
+            gotoMemAddr(hex2int(current_vat_address));
         }
         if (selectedItem->text() == goto_disasm) {
-            updateDisasmView(hex2int(current_address) + 4, false);
+            updateDisasmAddr(hex2int(current_address) + 4, false);
         }
     }
 }
@@ -2107,7 +2147,7 @@ void MainWindow::memDocksUpdate() {
         if (dock->windowTitle().contains(TXT_MEM_DOCK)) {
             QList<QHexEdit*> editChildren = dock->findChildren<QHexEdit*>();
             QHexEdit *edit = editChildren.first();
-            memEditUpdate(edit, 0);
+            memUpdateEdit(edit);
         }
     }
 }

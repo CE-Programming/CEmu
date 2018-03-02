@@ -38,7 +38,8 @@ const QString MainWindow::SETTING_DEBUGGER_DATA_COL         = QStringLiteral("De
 const QString MainWindow::SETTING_DEBUGGER_IMAGE_PATH       = QStringLiteral("Debugger/image_path");
 const QString MainWindow::SETTING_DEBUGGER_FLASH_BYTES      = QStringLiteral("Debugger/flash_bytes_per_line");
 const QString MainWindow::SETTING_DEBUGGER_RAM_BYTES        = QStringLiteral("Debugger/ram_bytes_per_line");
-const QString MainWindow::SETTING_DEBUGGER_MEM_BYTES        = QStringLiteral("Debugger/mem_bytes_per_line");
+const QString MainWindow::SETTING_DEBUGGER_FLASH_ASCII      = QStringLiteral("Debugger/flash_ascii");
+const QString MainWindow::SETTING_DEBUGGER_RAM_ASCII        = QStringLiteral("Debugger/ram_ascii");
 const QString MainWindow::SETTING_DEBUGGER_BREAK_IGNORE     = QStringLiteral("Debugger/ignore_breakpoints");
 const QString MainWindow::SETTING_DEBUGGER_AUTO_EQUATES     = QStringLiteral("Debugger/auto_equates");
 const QString MainWindow::SETTING_DEBUGGER_IGNORE_DMA       = QStringLiteral("Debugger/ignore_dma");
@@ -54,6 +55,8 @@ const QString MainWindow::SETTING_WINDOW_GEOMETRY           = QStringLiteral("Wi
 const QString MainWindow::SETTING_WINDOW_SEPARATOR          = QStringLiteral("Window/boundaries");
 const QString MainWindow::SETTING_WINDOW_MENUBAR            = QStringLiteral("Window/menubar");
 const QString MainWindow::SETTING_WINDOW_MEMORY_DOCKS       = QStringLiteral("Window/memory_docks");
+const QString MainWindow::SETTING_WINDOW_MEMORY_DOCK_BYTES  = QStringLiteral("Window/memory_docks_bytes");
+const QString MainWindow::SETTING_WINDOW_MEMORY_DOCK_ASCII  = QStringLiteral("Window/memory_docks_ascii");
 const QString MainWindow::SETTING_CAPTURE_FRAMESKIP         = QStringLiteral("Capture/frameskip");
 const QString MainWindow::SETTING_CAPTURE_OPTIMIZE          = QStringLiteral("Capture/optimize");
 const QString MainWindow::SETTING_SLOT_NAMES                = QStringLiteral("Slot/names");
@@ -254,7 +257,8 @@ void MainWindow::saveMiscSettings() {
     settings->setValue(SETTING_CURRENT_DIR, currDir.absolutePath());
     settings->setValue(SETTING_DEBUGGER_FLASH_BYTES, ui->flashBytes->value());
     settings->setValue(SETTING_DEBUGGER_RAM_BYTES, ui->ramBytes->value());
-    settings->setValue(SETTING_DEBUGGER_MEM_BYTES, ui->memBytes->value());
+    settings->setValue(SETTING_DEBUGGER_FLASH_ASCII, ui->flashAscii->isChecked());
+    settings->setValue(SETTING_DEBUGGER_RAM_ASCII, ui->ramAscii->isChecked());
     saveSlotInfo();
     saveRecentInfo();
 
@@ -262,11 +266,22 @@ void MainWindow::saveMiscSettings() {
         settings->setValue(SETTING_WINDOW_STATE, saveState());
         settings->setValue(SETTING_WINDOW_GEOMETRY, saveGeometry());
         settings->setValue(SETTING_WINDOW_MEMORY_DOCKS, memoryDocks);
+        settings->setValue(SETTING_WINDOW_MEMORY_DOCK_BYTES, QVariant::fromValue(memoryDocksBytes));
+        settings->setValue(SETTING_WINDOW_MEMORY_DOCK_ASCII, QVariant::fromValue(memoryDocksAscii));
     } else {
         if (!loadingWindow && !keepSetup) {
             settings->setValue(SETTING_FIRST_RUN, false);
         }
     }
+}
+
+void MainWindow::setMemoryState() {
+    ui->ramBytes->setValue(settings->value(SETTING_DEBUGGER_RAM_BYTES, 8).toInt());
+    ui->flashBytes->setValue(settings->value(SETTING_DEBUGGER_FLASH_BYTES, 8).toInt());
+    ui->ramAscii->setChecked(settings->value(SETTING_DEBUGGER_RAM_ASCII, true).toBool());
+    ui->flashAscii->setChecked(settings->value(SETTING_DEBUGGER_FLASH_ASCII, true).toBool());
+    ui->ramEdit->setAsciiArea(ui->ramAscii->isChecked());
+    ui->flashEdit->setAsciiArea(ui->flashAscii->isChecked());
 }
 
 void MainWindow::setMenuBarState(bool state) {
@@ -689,7 +704,7 @@ void MainWindow::setAlwaysOnTop(int state) {
     }
     show();
     settings->setValue(SETTING_ALWAYS_ON_TOP, state);
-    ui->checkAlwaysOnTop->setCheckState(Qt::CheckState(state));
+    ui->checkAlwaysOnTop->setCheckState(state ? Qt::Checked : Qt::Unchecked);
 }
 
 void MainWindow::saveSlotInfo() {
@@ -766,9 +781,15 @@ void MainWindow::setRecentInfo() {
 
 void MainWindow::setMemoryDocks() {
     QStringList names = settings->value(SETTING_WINDOW_MEMORY_DOCKS).toStringList();
+    QList<int> bytes = settings->value(SETTING_WINDOW_MEMORY_DOCK_BYTES).value<QList<int>>();
+    QList<bool> ascii = settings->value(SETTING_WINDOW_MEMORY_DOCK_ASCII).value<QList<bool>>();
 
-    for (QString &name : names) {
-        createMemoryDock(name);
+    if (names.length() != bytes.length()) {
+        return;
+    }
+
+    for (int i = 0; i < names.length(); i++) {
+        addMemoryDock(names.at(i), bytes.at(i), ascii.at(i));
     }
 }
 
@@ -845,6 +866,8 @@ void MainWindow::exportWindowConfig() {
     window.setValue(SETTING_WINDOW_STATE, saveState());
     window.setValue(SETTING_WINDOW_GEOMETRY, saveGeometry());
     window.setValue(SETTING_WINDOW_MEMORY_DOCKS, memoryDocks);
+    window.setValue(SETTING_WINDOW_MEMORY_DOCK_BYTES, QVariant::fromValue(memoryDocksBytes));
+    window.setValue(SETTING_WINDOW_MEMORY_DOCK_ASCII, QVariant::fromValue(memoryDocksAscii));
     window.setValue(SETTING_UI_EDIT_MODE, uiEditMode);
     window.setValue(SETTING_STATUS_INTERVAL, ui->statusInterval->value());
     window.sync();
@@ -864,6 +887,8 @@ void MainWindow::importWindowConfig() {
     settings->setValue(SETTING_WINDOW_GEOMETRY, window.value(SETTING_WINDOW_GEOMETRY));
     settings->setValue(SETTING_WINDOW_STATE, window.value(SETTING_WINDOW_STATE));
     settings->setValue(SETTING_WINDOW_MEMORY_DOCKS, window.value(SETTING_WINDOW_MEMORY_DOCKS));
+    settings->setValue(SETTING_WINDOW_MEMORY_DOCK_BYTES, window.value(SETTING_WINDOW_MEMORY_DOCK_BYTES));
+    settings->setValue(SETTING_WINDOW_MEMORY_DOCK_ASCII, window.value(SETTING_WINDOW_MEMORY_DOCK_ASCII));
     settings->setValue(SETTING_UI_EDIT_MODE, window.value(SETTING_UI_EDIT_MODE));
     settings->setValue(SETTING_WINDOW_MENUBAR, window.value(SETTING_WINDOW_MENUBAR));
     settings->setValue(SETTING_WINDOW_SEPARATOR, window.value(SETTING_WINDOW_SEPARATOR));
@@ -876,3 +901,4 @@ void MainWindow::importWindowConfig() {
 bool MainWindow::isFirstRun() {
     return !settings->value(SETTING_FIRST_RUN, false).toBool();
 }
+

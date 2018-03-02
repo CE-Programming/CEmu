@@ -552,6 +552,11 @@ void QHexEdit::mousePressEvent(QMouseEvent *e) {
     }
 }
 
+void QHexEdit::focusInEvent(QFocusEvent *event) {
+    emit focused();
+    QAbstractScrollArea::focusInEvent(event);
+}
+
 void QHexEdit::paintEvent(QPaintEvent *e) {
     QPainter painter(viewport());
     const QPalette *pal = &viewport()->palette();

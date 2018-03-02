@@ -262,9 +262,11 @@ private:
     void watchpointDataChanged(QTableWidgetItem *item);
 
     void updateDisasm();
-    void updateDisasmView(int sentBase, bool newPane);
-    void drawNextDisassembleLine();
-    void scrollDisasmView(int value);
+    void updateDisasmAddr(int sentBase, bool newPane);
+    void drawNextDisasmLine();
+    void drawNextStackLine();
+    void scrollDisasm(int value);
+    void scrollStack(int value);
 
     void stepInPressed();
     void stepOverPressed();
@@ -272,7 +274,7 @@ private:
     void stepOutPressed();
 
     void updateTIOSView();
-    void updateStackView();
+    void updateStack();
 
     void gotoPressed();
     void slotAddNew();
@@ -307,8 +309,8 @@ private:
     void watchpointRemoveAddress(uint32_t address);
 
     void debuggerZeroClockCounter();
-    void forceGotoDisasm(uint32_t address);
-    void forceGotoMemory(uint32_t address);
+    void gotoDisasmAddr(uint32_t address);
+    void gotoMemAddr(uint32_t address);
 
     void setDataCol(bool state);
     void setMenuBarState(bool state);
@@ -348,7 +350,7 @@ private:
     void setAutoEquates(bool enable);
 
     // Create memory views
-    void createMemoryDock(const QString &title);
+    void addMemoryDock(const QString &title, int bytes, bool ascii);
 
     // Creating bootable images
     bool checkForCEmuBootImage();
@@ -436,17 +438,17 @@ private:
     void ramUpdate();
     void ramGotoPressed();
     void ramSyncPressed();
-    void memEditUpdate(QHexEdit *edit, uint32_t addressBegin);
-    void memUpdate(int index, uint32_t addressBegin);
-    void memGoto(int index, const QString &addressStr);
-    void memGotoPressed(int index);
-    void memSearchPressed(int index);
-    void memSyncPressed(int index);
+    void updateMemoryViews();
+    void memUpdateEdit(QHexEdit *edit);
+    void memGotoEdit(QHexEdit *edit);
+    void memGoto(QHexEdit *edit, uint32_t address);
+    void memSearchEdit(QHexEdit *edit);
+    void memSyncEdit(QHexEdit *edit);
+    void memAsciiToggle(QHexEdit *edit);
     void memDocksUpdate();
 
     // Others
     void syncHexView(int posa, QHexEdit *hex_view);
-    void searchEdit(int index);
     void setStatusInterval(int value);
 
     // Keypad
@@ -475,7 +477,7 @@ private:
     void optAttemptLoad(CEmuOpts &o);
     void pauseEmu(Qt::ApplicationState state);
     void setMemoryDocks();
-    void closedDock(const QString &name);
+    void setMemoryState();
 
     // LCD
     void updateLcd(double emuFps);
@@ -529,6 +531,7 @@ private:
     bool disasmOffsetSet;
     bool fromPane;
     int32_t addressPane;
+    uint32_t stackAddress;
     int hexSearch = SEARCH_MODE_HEX;
 
     QDir currDir;
@@ -567,7 +570,7 @@ private:
     QIcon editIcon, removeIcon;
     QIcon searchIcon, gotoIcon;
     QIcon syncIcon, addMemIcon;
-    QIcon uiEditIcon;
+    QIcon asciiIcon, uiEditIcon;
     QTextCharFormat consoleFormat;
 
     QString prevGotoAddress;
@@ -614,7 +617,8 @@ private:
     static const QString SETTING_DEBUGGER_IMAGE_PATH;
     static const QString SETTING_DEBUGGER_FLASH_BYTES;
     static const QString SETTING_DEBUGGER_RAM_BYTES;
-    static const QString SETTING_DEBUGGER_MEM_BYTES;
+    static const QString SETTING_DEBUGGER_FLASH_ASCII;
+    static const QString SETTING_DEBUGGER_RAM_ASCII;
     static const QString SETTING_DEBUGGER_BREAK_IGNORE;
     static const QString SETTING_DEBUGGER_IGNORE_DMA;
     static const QString SETTING_DEBUGGER_AUTO_EQUATES;
@@ -630,6 +634,8 @@ private:
     static const QString SETTING_WINDOW_SEPARATOR;
     static const QString SETTING_WINDOW_MENUBAR;
     static const QString SETTING_WINDOW_MEMORY_DOCKS;
+    static const QString SETTING_WINDOW_MEMORY_DOCK_BYTES;
+    static const QString SETTING_WINDOW_MEMORY_DOCK_ASCII;
     static const QString SETTING_CAPTURE_FRAMESKIP;
     static const QString SETTING_CAPTURE_OPTIMIZE;
     static const QString SETTING_SLOT_NAMES;
@@ -695,9 +701,11 @@ private:
     QString MSG_EDIT_UI;
 
     QProgressBar *progressBar;
-    QVector<QHexEdit*> memory;
     QStringList memoryDocks;
+    QList<int> memoryDocksBytes;
+    QList<bool> memoryDocksAscii;
     QSettings *settings = Q_NULLPTR;
+    QHexEdit *selectedMemory = Q_NULLPTR;
 
     QString romPath;
     QString imagePath;

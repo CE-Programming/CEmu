@@ -65,9 +65,13 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     appTranslator.load(QLocale::system().name(), QStringLiteral(":/i18n/i18n/"));
     qApp->installTranslator(&appTranslator);
 
-    // start up ipc
+    // Start up ipc
     com = new ipc();
     qsrand(time(NULL));
+
+    // Register setting metatypes
+    qRegisterMetaTypeStreamOperators<QList<int>>("QList<int>");
+    qRegisterMetaTypeStreamOperators<QList<bool>>("QList<bool>");
 
     // Setup the UI
     ui->setupUi(this);
@@ -106,10 +110,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     progressBar = new QProgressBar(this);
     ui->statusBar->addWidget(progressBar);
     sendingHandler = new SendingHandler(this, progressBar, ui->varLoadedView);
-
-    memory.append(ui->flashEdit);
-    memory.append(ui->ramEdit);
-    memory.append(ui->memEdit);
 
     // Emulator -> GUI (Should be queued)
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr, Qt::UniqueConnection);
@@ -155,8 +155,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->checkDisableSoftCommands, &QCheckBox::toggled, this, &MainWindow::setDebugSoftCommands);
     connect(ui->buttonZero, &QPushButton::clicked, this, &MainWindow::debuggerZeroClockCounter);
     connect(ui->buttonCertID, &QPushButton::clicked, this, &MainWindow::changeCalcID);
-    connect(ui->disassemblyView, &DataWidget::gotoDisasmAddress, this, &MainWindow::forceGotoDisasm);
-    connect(ui->disassemblyView, &DataWidget::gotoMemoryAddress, this, &MainWindow::forceGotoMemory);
+    connect(ui->disassemblyView, &DataWidget::gotoDisasmAddress, this, &MainWindow::gotoDisasmAddr);
+    connect(ui->disassemblyView, &DataWidget::gotoMemoryAddress, this, &MainWindow::gotoMemAddr);
 
     // Ctrl + Click
     connect(ui->console, &QPlainTextEdit::cursorPositionChanged, [this]{ handleCtrlClickText(ui->console); });
@@ -251,8 +251,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->actionCheckForUpdates, &QAction::triggered, [this]{ checkForUpdates(true); });
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::showAbout);
     connect(ui->actionAboutQt, &QAction::triggered, qApp, &QApplication::aboutQt);
-    connect(ui->actionReportBug, &QAction::triggered, [this]{ QDesktopServices::openUrl(QUrl("https://github.com/CE-Programming/CEmu/issues")); });
-
+    connect(ui->actionReportBug, &QAction::triggered, []{ QDesktopServices::openUrl(QUrl("https://github.com/CE-Programming/CEmu/issues")); });
 
     // Other GUI actions
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
@@ -275,7 +274,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->checkPreI, &QCheckBox::stateChanged, this, &MainWindow::setPreRevisionI);
     connect(ui->flashBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->flashEdit, &QHexEdit::setBytesPerLine);
     connect(ui->ramBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->ramEdit, &QHexEdit::setBytesPerLine);
-    connect(ui->memBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->memEdit, &QHexEdit::setBytesPerLine);
+    connect(ui->ramAscii, &QToolButton::toggled, [this](bool set){ ui->ramEdit->setAsciiArea(set); });
+    connect(ui->flashAscii, &QToolButton::toggled, [this](bool set){ ui->flashEdit->setAsciiArea(set); });
     connect(ui->emuVarView, &QTableWidget::itemDoubleClicked, this, &MainWindow::variableDoubleClicked);
     connect(ui->emuVarView, &QTableWidget::customContextMenuRequested, this, &MainWindow::variablesContextMenu);
     connect(ui->buttonAddSlot, &QPushButton::clicked, this, &MainWindow::slotAddNew);
@@ -295,16 +295,12 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(sendingHandler, &SendingHandler::loadEquateFile, this, &MainWindow::equatesAddFile);
 
     // Hex Editor
-    connect(ui->buttonFlashSearch, &QPushButton::clicked, [this]{ memSearchPressed(MEM_FLASH); });
-    connect(ui->buttonRamSearch, &QPushButton::clicked, [this]{ memSearchPressed(MEM_RAM); });
-    connect(ui->buttonMemSearch, &QPushButton::clicked, [this]{ memSearchPressed(MEM_MEM); });
-    connect(ui->buttonMemGoto, &QPushButton::clicked, [this]{ memGotoPressed(MEM_MEM); });
+    connect(ui->buttonFlashSearch, &QPushButton::clicked, [this]{ memSearchEdit(ui->flashEdit); });
+    connect(ui->buttonRamSearch, &QPushButton::clicked, [this]{ memSearchEdit(ui->ramEdit); });
     connect(ui->buttonFlashGoto, &QPushButton::clicked, this, &MainWindow::flashGotoPressed);
     connect(ui->buttonRamGoto, &QPushButton::clicked, this, &MainWindow::ramGotoPressed);
     connect(ui->buttonFlashSync, &QToolButton::clicked, this, &MainWindow::flashSyncPressed);
     connect(ui->buttonRamSync, &QToolButton::clicked, this, &MainWindow::ramSyncPressed);
-    connect(ui->buttonMemSync, &QToolButton::clicked, [this]{ memSyncPressed(MEM_MEM); });
-    connect(ui->memEdit, &QHexEdit::customContextMenuRequested, this, &MainWindow::memContextMenu);
     connect(ui->flashEdit, &QHexEdit::customContextMenuRequested, this, &MainWindow::memContextMenu);
     connect(ui->ramEdit, &QHexEdit::customContextMenuRequested, this, &MainWindow::memContextMenu);
 
@@ -357,7 +353,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(actionToggleUI, &QAction::triggered, this, &MainWindow::toggleUIEditMode);
 
     actionAddMemory = new QAction(MSG_ADD_MEMORY, this);
-    connect(actionAddMemory, &QAction::triggered, [this]{ createMemoryDock(randomString(20)); });
+    connect(actionAddMemory, &QAction::triggered, [this]{ addMemoryDock(randomString(20), 8, true); });
 
     // Shortcut Connections
     stepInShortcut = new QShortcut(QKeySequence(Qt::Key_F6), this);
@@ -461,10 +457,12 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     syncIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/refresh.png")));
     addMemIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/add_mem.png")));
     uiEditIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/ui_edit.png")));
+    asciiIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/characters.png")));
     actionAddMemory->setIcon(addMemIcon);
     actionToggleUI->setIcon(uiEditIcon);
 
     setMemoryDocks();
+    setMemoryState();
     optLoadFiles(opts);
     setFrameskip(settings->value(SETTING_CAPTURE_FRAMESKIP, 1).toInt());
     setOptimizeRecording(settings->value(SETTING_CAPTURE_OPTIMIZE, true).toBool());
@@ -485,9 +483,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setFocusSetting(settings->value(SETTING_PAUSE_FOCUS, false).toBool());
     setRecentSave(settings->value(SETTING_RECENT_SAVE, true).toBool());
     setPreRevisionI(settings->value(SETTING_DEBUGGER_PRE_I, false).toBool());
-    ui->flashBytes->setValue(settings->value(SETTING_DEBUGGER_FLASH_BYTES, 8).toInt());
-    ui->ramBytes->setValue(settings->value(SETTING_DEBUGGER_RAM_BYTES, 8).toInt());
-    ui->memBytes->setValue(settings->value(SETTING_DEBUGGER_MEM_BYTES, 8).toInt());
 
     currDir.setPath((settings->value(SETTING_CURRENT_DIR, QDir::homePath()).toString()));
     if (settings->value(SETTING_IMAGE_PATH, QStringLiteral("")).toString().isEmpty() || portable) {
@@ -572,6 +567,7 @@ void MainWindow::translateExtras(int init) {
     QString __TXT_GOTO = tr("Goto");
     QString __TXT_SEARCH = tr("Search");
     QString __TXT_SYNC = tr("Sync Changes");
+    QString __TXT_ASCII = tr("Show ASCII");
 
     QString __TXT_CONSOLE = tr("Console");
     QString __TXT_SETTINGS = tr("Settings");
@@ -600,7 +596,8 @@ void MainWindow::translateExtras(int init) {
                 dock->setWindowTitle(__TXT_MEM_DOCK);
                 buttons.at(0)->setText(__TXT_GOTO);
                 buttons.at(1)->setText(__TXT_SEARCH);
-                tools.at(0)->setToolTip(__TXT_SYNC);
+                tools.at(0)->setToolTip(__TXT_ASCII);
+                tools.at(1)->setToolTip(__TXT_SYNC);
             }
             if (dock->windowTitle() == TXT_CONSOLE) {
                 dock->setWindowTitle(__TXT_CONSOLE);
@@ -851,54 +848,74 @@ void MainWindow::setup() {
     }
 }
 
-void MainWindow::createMemoryDock(const QString &magic) {
-    DockWidget *dw;
+void MainWindow::addMemoryDock(const QString &magic, int bytes, bool ascii) {
+    if (memoryDocks.contains(magic)) {
+        return;
+    }
 
+    DockWidget *dw;
     dw = new DockWidget(TXT_MEM_DOCK, this);
     dw->setObjectName(magic);
     dw->setFloating(true);
     dw->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, dw->minimumSize(), qApp->desktop()->availableGeometry()));
 
-    if (!memoryDocks.contains(magic)) {
-        memoryDocks.append(magic);
-    }
+    memoryDocks.append(magic);
+    memoryDocksBytes.append(bytes);
+    memoryDocksAscii.append(ascii);
 
     QWidget *widget = new QWidget();
     QVBoxLayout *vlayout = new QVBoxLayout();
     QHBoxLayout *hlayout = new QHBoxLayout();
     QPushButton *buttonGoto = new QPushButton(gotoIcon, tr("Goto"));
     QPushButton *buttonSearch = new QPushButton(searchIcon, tr("Search"));
+    QToolButton *buttonAscii = new QToolButton();
     QToolButton *buttonSync = new QToolButton();
+    buttonAscii->setCheckable(true);
+    buttonAscii->setChecked(ascii);
+    buttonAscii->setIcon(asciiIcon);
     buttonSync->setIcon(syncIcon);
+    buttonAscii->setToolTip(tr("Show ASCII"));
     buttonSync->setToolTip(tr("Sync Changes"));
-    QSpacerItem *spacer = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Fixed);
+    QSpacerItem *spacer = new QSpacerItem(0, 20, QSizePolicy::Expanding, QSizePolicy::Maximum);
     QSpinBox *spin = new QSpinBox();
     QHexEdit *edit = new QHexEdit();
 
     buttonGoto->setEnabled(guiDebug);
     buttonSearch->setEnabled(guiDebug);
+    buttonAscii->setEnabled(guiDebug);
     buttonSync->setEnabled(guiDebug);
     spin->setEnabled(guiDebug);
     edit->setEnabled(guiDebug);
-
-    memory.append(edit);
-    int index = memory.size() - 1;
-
     edit->setContextMenuPolicy(Qt::CustomContextMenu);
+    edit->setAsciiArea(ascii);
 
-    connect(spin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), edit, &QHexEdit::setBytesPerLine);
     connect(edit, &QHexEdit::customContextMenuRequested, this, &MainWindow::memContextMenu);
-    connect(buttonSearch, &QPushButton::clicked, this, [this, index]{ memSearchPressed(index); });
-    connect(buttonGoto, &QPushButton::clicked, this, [this, index]{ memGotoPressed(index); });
-    connect(buttonSync, &QToolButton::clicked, this, [this, index]{ memSyncPressed(index); });
+    connect(buttonSearch, &QPushButton::clicked, [this, edit]{ memSearchEdit(edit); });
+    connect(buttonGoto, &QPushButton::clicked, [this, edit]{ memGotoEdit(edit); });
+    connect(buttonSync, &QToolButton::clicked, [this, edit]{ memSyncEdit(edit); });
+    connect(buttonAscii, &QToolButton::toggled, [this, edit, magic]{
+        memAsciiToggle(edit);
+        int index;
+        if ((index = memoryDocks.indexOf(magic)) != -1) {
+            memoryDocksAscii[index] = edit->asciiArea();
+        }
+    });
+    connect(spin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), [this, edit, magic](int val){
+        edit->setBytesPerLine(val);
+        int index;
+        if ((index = memoryDocks.indexOf(magic)) != -1) {
+            memoryDocksBytes[index] = val;
+        }
+    });
 
-    spin->setValue(8);
-    spin->setMaximum(32);
+    spin->setMaximum(999);
     spin->setMinimum(1);
+    spin->setValue(bytes);
 
     hlayout->addWidget(buttonGoto);
     hlayout->addWidget(buttonSearch);
     hlayout->addSpacerItem(spacer);
+    hlayout->addWidget(buttonAscii);
     hlayout->addWidget(buttonSync);
     hlayout->addWidget(spin);
     vlayout->addLayout(hlayout);
@@ -907,7 +924,7 @@ void MainWindow::createMemoryDock(const QString &magic) {
     dw->setWidget(widget);
 
     if (guiDebug) {
-        memUpdate(index, 0);
+        memUpdateEdit(edit);
     }
 
     addDockWidget(Qt::RightDockWidgetArea, dw);
@@ -915,11 +932,15 @@ void MainWindow::createMemoryDock(const QString &magic) {
     dw->show();
     dw->activateWindow();
     dw->raise();
-    connect(dw, &DockWidget::closed, this, &MainWindow::closedDock);
-}
-
-void MainWindow::closedDock(const QString &name) {
-    memoryDocks.removeOne(name);
+    connect(edit, &QHexEdit::focused, [this, edit]{ selectedMemory = edit; });
+    connect(dw, &DockWidget::closed, [this, magic]{
+        int index;
+        if ((index = memoryDocks.indexOf(magic)) != -1) {
+            memoryDocks.removeAt(index);
+            memoryDocksBytes.removeAt(index);
+            memoryDocksAscii.removeAt(index);
+        }
+    });
 }
 
 void MainWindow::toggleKeyHistory() {
@@ -2133,7 +2154,7 @@ int MainWindow::loadEmu(bool image) {
     return success;
 }
 
-void MainWindow::drawNextDisassembleLine() {
+void MainWindow::drawNextDisasmLine() {
     bool useLabel = false;
     map_t::iterator sit;
     std::pair<map_t::iterator, map_t::iterator> range;
@@ -2256,7 +2277,7 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
             ui->pcregView->setText(ui->disassemblyView->getSelectedAddress());
             uint32_t address = static_cast<uint32_t>(hex2int(ui->pcregView->text()));
             debug_set_pc_address(address);
-            updateDisasmView(cpu.registers.PC, true);
+            updateDisasmAddr(cpu.registers.PC, true);
         } else if (item->text() == toggle_break) {
             breakpointGUIAdd();
         } else if (item->text() == toggle_read_watch) {
@@ -2271,7 +2292,7 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
             debuggerChangeState();
             debuggerStep(DBG_RUN_UNTIL);
         } else if (item->text() == goto_mem) {
-            memGoto(MEM_MEM, ui->disassemblyView->getSelectedAddress());
+            //memGoto(MEM_MEM, ui->disassemblyView->getSelectedAddress());
         }
     }
 }
@@ -2425,10 +2446,10 @@ void MainWindow::consoleContextMenu(const QPoint &posa) {
         if (item) {
             if (item->text() == goto_mem) {
                 forceEnterDebug();
-                memGoto(MEM_MEM, cursor.selectedText());
+                //memGoto(MEM_MEM, cursor.selectedText());
             } else if (item->text() == goto_disasm) {
                 forceEnterDebug();
-                forceGotoDisasm(address);
+                gotoDisasmAddr(address);
             } else if (item->text() == toggle_break) {
                 breakpointAdd(breakpointNextLabel(), address, true, true);
             } else if (item->text() == toggle_read_watch) {
