@@ -2250,49 +2250,49 @@ void MainWindow::drawNextDisasmLine() {
 }
 
 void MainWindow::disasmContextMenu(const QPoint& posa) {
-    QString set_pc = tr("Set PC");
-    QString toggle_break = tr("Toggle Breakpoint");
-    QString toggle_write_watch = tr("Toggle Write Watchpoint");
-    QString toggle_read_watch = tr("Toggle Read Watchpoint");
-    QString toggle_rw_watch = tr("Toggle Read/Write Watchpoint");
-    QString run_until = tr("Run Until");
-    QString goto_mem = tr("Goto Memory View");
+    QString setPc = tr("Set PC");
+    QString toggleBreak = tr("Toggle Breakpoint");
+    QString toggleWrite = tr("Toggle Write Watchpoint");
+    QString toggleRead = tr("Toggle Read Watchpoint");
+    QString toggleRw = tr("Toggle Read/Write Watchpoint");
+    QString runUntil = tr("Run Until");
+    QString gotoMem = tr("Goto Memory View");
     ui->disassemblyView->setTextCursor(ui->disassemblyView->cursorForPosition(posa));
     QPoint globalPos = ui->disassemblyView->mapToGlobal(posa);
+    QString addressStr = ui->disassemblyView->getSelectedAddress();
+    uint32_t address = static_cast<uint32_t>(hex2int(addressStr));
 
     QMenu menu;
-    menu.addAction(run_until);
+    menu.addAction(runUntil);
     menu.addSeparator();
-    menu.addAction(toggle_break);
-    menu.addAction(toggle_read_watch);
-    menu.addAction(toggle_write_watch);
-    menu.addAction(toggle_rw_watch);
+    menu.addAction(toggleBreak);
+    menu.addAction(toggleRead);
+    menu.addAction(toggleWrite);
+    menu.addAction(toggleRw);
     menu.addSeparator();
-    menu.addAction(goto_mem);
-    menu.addAction(set_pc);
+    menu.addAction(gotoMem);
+    menu.addAction(setPc);
 
     QAction *item = menu.exec(globalPos);
     if (item) {
-        if (item->text() == set_pc) {
-            ui->pcregView->setText(ui->disassemblyView->getSelectedAddress());
-            uint32_t address = static_cast<uint32_t>(hex2int(ui->pcregView->text()));
+        if (item->text() == setPc) {
+            ui->pcregView->setText(addressStr);
             debug_set_pc_address(address);
             updateDisasmAddr(cpu.registers.PC, true);
-        } else if (item->text() == toggle_break) {
+        } else if (item->text() == toggleBreak) {
             breakpointGUIAdd();
-        } else if (item->text() == toggle_read_watch) {
+        } else if (item->text() == toggleRead) {
             watchpointReadGUIAdd();
-        } else if (item->text() == toggle_write_watch) {
+        } else if (item->text() == toggleWrite) {
             watchpointWriteGUIAdd();
-        } else if (item->text() == toggle_rw_watch) {
+        } else if (item->text() == toggleRw) {
             watchpointReadWriteGUIAdd();
-        } else if (item->text() == run_until) {
-            uint32_t address = static_cast<uint32_t>(hex2int(ui->disassemblyView->getSelectedAddress()));
+        } else if (item->text() == runUntil) {
             debugger.runUntilAddress = address;
             debuggerChangeState();
             debuggerStep(DBG_RUN_UNTIL);
-        } else if (item->text() == goto_mem) {
-            //memGoto(MEM_MEM, ui->disassemblyView->getSelectedAddress());
+        } else if (item->text() == gotoMem) {
+            gotoMemAddr(address);
         }
     }
 }
@@ -2410,12 +2410,12 @@ void MainWindow::forceEnterDebug() {
 void MainWindow::consoleContextMenu(const QPoint &posa) {
     bool ok = true;
 
-    QString goto_mem = tr("Goto Memory View");
-    QString goto_disasm = tr("Goto Disassembly View");
-    QString toggle_break = tr("Toggle Breakpoint");
-    QString toggle_write_watch = tr("Toggle Write Watchpoint");
-    QString toggle_read_watch = tr("Toggle Read Watchpoint");
-    QString toggle_rw_watch = tr("Toggle Read/Write Watchpoint");
+    QString gotoMem = tr("Goto Memory View");
+    QString gotoDisasm = tr("Goto Disassembly View");
+    QString toggleBreak = tr("Toggle Breakpoint");
+    QString toggleWrite = tr("Toggle Write Watchpoint");
+    QString toggleRead = tr("Toggle Read Watchpoint");
+    QString toggleRw = tr("Toggle Read/Write Watchpoint");
     QPoint globalp = ui->console->mapToGlobal(posa);
     QTextCursor cursor = ui->console->cursorForPosition(posa);
     ui->console->setTextCursor(cursor);
@@ -2434,29 +2434,29 @@ void MainWindow::consoleContextMenu(const QPoint &posa) {
         ui->console->setTextCursor(cursor);
 
         QMenu menu;
-        menu.addAction(goto_mem);
-        menu.addAction(goto_disasm);
+        menu.addAction(gotoMem);
+        menu.addAction(gotoDisasm);
         menu.addSeparator();
-        menu.addAction(toggle_break);
-        menu.addAction(toggle_read_watch);
-        menu.addAction(toggle_write_watch);
-        menu.addAction(toggle_rw_watch);
+        menu.addAction(toggleBreak);
+        menu.addAction(toggleRead);
+        menu.addAction(toggleWrite);
+        menu.addAction(toggleRw);
 
         QAction *item = menu.exec(globalp);
         if (item) {
-            if (item->text() == goto_mem) {
+            if (item->text() == gotoMem) {
                 forceEnterDebug();
-                //memGoto(MEM_MEM, cursor.selectedText());
-            } else if (item->text() == goto_disasm) {
+                gotoMemAddr(address);
+            } else if (item->text() == gotoDisasm) {
                 forceEnterDebug();
                 gotoDisasmAddr(address);
-            } else if (item->text() == toggle_break) {
+            } else if (item->text() == toggleBreak) {
                 breakpointAdd(breakpointNextLabel(), address, true, true);
-            } else if (item->text() == toggle_read_watch) {
+            } else if (item->text() == toggleRead) {
                 watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_READ, true);
-            } else if (item->text() == toggle_write_watch) {
+            } else if (item->text() == toggleWrite) {
                 watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_WRITE, true);
-            } else if (item->text() == toggle_rw_watch) {
+            } else if (item->text() == toggleRw) {
                 watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_READ | DBG_MASK_WRITE, true);
             }
             memDocksUpdate();
