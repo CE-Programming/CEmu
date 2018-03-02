@@ -1344,19 +1344,22 @@ void MainWindow::console(int type, const char *str, int size) {
 }
 
 void MainWindow::consoleStr(int type) {
-    int available = emu.consoleReadSemaphore[type].available();
-    int remaining = CONSOLE_BUFFER_SIZE - emu.consoleReadPosition[type];
-    emu.consoleReadSemaphore[type].acquire(available);
-    console(type, emu.consoleBuffer[type] + emu.consoleReadPosition[type], available < remaining ? available : remaining);
-    if (available < remaining) {
-        emu.consoleReadPosition[type] += available;
-    } else if (available == remaining) {
-        emu.consoleReadPosition[type] = 0;
-    } else {
-        emu.consoleReadPosition [type]= available - remaining;
-        console(type, emu.consoleBuffer[type], emu.consoleReadPosition[type]);
+    if (int available = emu.read.available()) {
+        int remaining = CONSOLE_BUFFER_SIZE - emu.readPos;
+        emu.read.acquire(available);
+
+        console(type, emu.buffer + emu.readPos, available < remaining ? available : remaining);
+        if (available < remaining) {
+            emu.readPos += available;
+        } else if (available == remaining) {
+            emu.readPos = 0;
+        } else {
+            emu.readPos = available - remaining;
+            console(type, emu.buffer, emu.readPos);
+        }
+
+        emu.write.release(available);
     }
-    emu.consoleWriteSemaphore[type].release(available);
 }
 
 void MainWindow::emuTimerSlot() {

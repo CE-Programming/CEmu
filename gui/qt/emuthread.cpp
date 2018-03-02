@@ -52,12 +52,9 @@ void throttle_timer_wait(void) {
     emu_thread->throttleTimerWait();
 }
 
-EmuThread::EmuThread(QObject *p) : QThread(p) {
+EmuThread::EmuThread(QObject *p) : QThread(p), write(CONSOLE_BUFFER_SIZE) {
     assert(emu_thread == Q_NULLPTR);
     emu_thread = this;
-    for (int i = 0; i < ConsoleMax; i++) {
-        consoleWriteSemaphore[i].release(CONSOLE_BUFFER_SIZE);
-    }
     speed = 100;
     throttle = true;
     request = RequestNone;
@@ -65,44 +62,50 @@ EmuThread::EmuThread(QObject *p) : QThread(p) {
 }
 
 void EmuThread::writeConsoleBuffer(int type, const char *format, va_list args) {
+    static int prevType = ConsoleNorm;
+    if (prevType != type) {
+        write.acquire(CONSOLE_BUFFER_SIZE);
+        prevType = type;
+        write.release(CONSOLE_BUFFER_SIZE);
+    }
     va_list argsCopy;
     va_copy(argsCopy, args);
-    int available = consoleWriteSemaphore[type].available();
-    int remaining = CONSOLE_BUFFER_SIZE - consoleWritePosition[type];
+    int available = write.available();
+    int remaining = CONSOLE_BUFFER_SIZE - writePos;
     int space = available < remaining ? available : remaining;
-    int size = vsnprintf(consoleBuffer[type] + consoleWritePosition[type], space, format, argsCopy);
+    int size = vsnprintf(buffer + writePos, space, format, argsCopy);
     va_end(argsCopy);
     if (size < space) {
         if (size > 0) {
-            consoleWriteSemaphore[type].acquire(size);
-            consoleWritePosition[type] += size;
-            consoleReadSemaphore[type].release(size);
+            write.acquire(size);
+            writePos += size;
+            read.release(size);
             emit consoleStr(type);
         }
     } else {
-        int bufferPosition = 0;
-        char *buffer = size < available - remaining ? consoleBuffer[type] : new char[size + 1];
+        int tmpPos = 0;
+        char *tmp = size < available - remaining ? buffer : new char[size + 1];
         if (buffer && vsnprintf(buffer, size + 1, format, args) >= 0) {
             while (size >= remaining) {
-                consoleWriteSemaphore[type].acquire(remaining);
-                memcpy(consoleBuffer[type] + consoleWritePosition[type], buffer + bufferPosition, remaining);
-                bufferPosition += remaining;
+                write.acquire(remaining);
+                memcpy(buffer + writePos, tmp + tmpPos, remaining);
+                tmpPos += remaining;
                 size -= remaining;
-                consoleWritePosition[type] = 0;
-                consoleReadSemaphore[type].release(remaining);
+                writePos = 0;
+                read.release(remaining);
                 remaining = CONSOLE_BUFFER_SIZE;
                 emit consoleStr(type);
             }
             if (size) {
-                consoleWriteSemaphore[type].acquire(size);
-                memmove(consoleBuffer[type] + consoleWritePosition[type], buffer + bufferPosition, size);
-                consoleWritePosition[type] += size;
-                consoleReadSemaphore[type].release(size);
+                write.acquire(size);
+                memmove(buffer + writePos, tmp + tmpPos, size);
+                writePos += size;
+                read.release(size);
                 emit consoleStr(type);
             }
         }
-        if (buffer != consoleBuffer[type]) {
-            delete [] buffer;
+        if (tmp != buffer) {
+            delete [] tmp;
         }
     }
 }

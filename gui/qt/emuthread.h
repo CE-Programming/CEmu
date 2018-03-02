@@ -38,11 +38,11 @@ public:
         RequestDebugger
     };
 
-    int consoleWritePosition[ConsoleMax] = {0};
-    int consoleReadPosition[ConsoleMax] = {0};
-    char consoleBuffer[ConsoleMax][CONSOLE_BUFFER_SIZE];
-    QSemaphore consoleWriteSemaphore[ConsoleMax];
-    QSemaphore consoleReadSemaphore[ConsoleMax];
+    int writePos = 0;
+    int readPos = 0;
+    char buffer[CONSOLE_BUFFER_SIZE];
+    QSemaphore write;
+    QSemaphore read;
 
 signals:
     // Console Strings
