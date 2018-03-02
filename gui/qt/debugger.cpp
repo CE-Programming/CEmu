@@ -782,6 +782,7 @@ void MainWindow::debuggerZeroClockCounter() {
     debugger.totalCycles = 0;
     debugger.dmaCycles = 0;
     ui->cycleView->setText(QStringLiteral("0"));
+    ui->cycleView->repaint();
 }
 
 // ------------------------------------------------
