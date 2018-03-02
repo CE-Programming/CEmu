@@ -1223,6 +1223,11 @@ void MainWindow::console(const QString &str, const QColor &colorFg, const QColor
     if (nativeConsole) {
         fputs(str.toStdString().c_str(), type == EmuThread::ConsoleErr ? stderr : stdout);
     } else {
+        if (type == EmuThread::ConsoleNorm) {
+            consoleFormat.setFontWeight(QFont::Normal);
+        } else {
+            consoleFormat.setFontWeight(QFont::Black);
+        }
         consoleFormat.setBackground(colorBg);
         consoleFormat.setForeground(colorFg);
         QTextCursor cur(ui->console->document());
