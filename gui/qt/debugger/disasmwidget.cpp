@@ -13,8 +13,12 @@ QSize DisasmWidget::sizeHint() const {
 }
 
 void DisasmWidget::wheelEvent(QWheelEvent *event) {
-    if (static_cast<int>(m_scroll) >= event->pixelDelta().y()) {
-        m_scroll -= event->pixelDelta().y();
+    QPoint delta = event->pixelDelta();
+    if (delta.isNull()) {
+        delta = event->angleDelta() / 2;
+    }
+    if (static_cast<int>(m_scroll) >= delta.y()) {
+        m_scroll -= delta.y();
         repaint();
     }
     event->accept();
