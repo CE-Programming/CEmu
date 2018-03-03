@@ -17,6 +17,7 @@ HexWidget::HexWidget(QWidget *parent) : QAbstractScrollArea{parent}, m_data{0} {
     connect(verticalScrollBar(), &QScrollBar::valueChanged, this, &HexWidget::adjust);
     connect(horizontalScrollBar(), &QScrollBar::valueChanged, this, &HexWidget::adjust);
 
+    resetSelection();
     adjust();
 }
 
@@ -37,7 +38,7 @@ void HexWidget::appendData(const QByteArray &ba) {
 
 int HexWidget::indexPrevOf(const QByteArray &ba) {
     int res = -1;
-    QByteArray buffer{m_data.mid(0, m_addrCursor - 1)};
+    QByteArray buffer{m_data.mid(0, m_cursorAddr - 1)};
     int found = buffer.lastIndexOf(ba);
     if (found >= 0) {
         setAddr(res = found);
@@ -47,7 +48,7 @@ int HexWidget::indexPrevOf(const QByteArray &ba) {
 
 int HexWidget::indexPrevNotOf(const QByteArray &ba) {
     int res = -1;
-    QByteArray buffer{m_data.mid(0, m_addrCursor - 1)};
+    QByteArray buffer{m_data.mid(0, m_cursorAddr - 1)};
     std::size_t found = buffer.toStdString().find_last_not_of(ba.toStdString());
     if (found != std::string::npos) {
         setAddr(res = static_cast<int>(found));
@@ -57,7 +58,7 @@ int HexWidget::indexPrevNotOf(const QByteArray &ba) {
 
 int HexWidget::indexOf(const QByteArray &ba) {
     int res = -1;
-    QByteArray buffer{m_data.mid(m_addrCursor, m_addrEnd)};
+    QByteArray buffer{m_data.mid(m_cursorAddr, m_addrEnd)};
     int found = buffer.indexOf(ba);
     if (found >= 0) {
         setAddr(res = found);
@@ -67,7 +68,7 @@ int HexWidget::indexOf(const QByteArray &ba) {
 
 int HexWidget::indexNotOf(const QByteArray &ba) {
     int res = -1;
-    QByteArray buffer{m_data.mid(m_addrCursor, m_addrEnd)};
+    QByteArray buffer{m_data.mid(m_cursorAddr, m_addrEnd)};
     std::size_t found = buffer.toStdString().find_first_not_of(ba.toStdString());
     if (found != std::string::npos) {
         setAddr(res = static_cast<int>(found));
@@ -87,7 +88,7 @@ void HexWidget::setCursorAddr(int addr) {
         addr = 0;
     }
 
-    m_addrCursor = addr;
+    m_cursorAddr = addr;
     adjust();
     cursorScroll();
 }
@@ -107,7 +108,7 @@ int HexWidget::getCursorAddr(QPoint posa) {
 }
 
 void HexWidget::cursorScroll() {
-    int addr = m_addrCursor / 2;
+    int addr = m_cursorAddr / 2;
     if (addr <= m_lineAddrStart) {
         verticalScrollBar()->setValue(addr / m_bytesPerLine);
     }
@@ -153,8 +154,8 @@ void HexWidget::adjust() {
         m_lineAddrEnd = m_addrEnd;
     }
 
-    int y = (((m_addrCursor / 2) - m_lineAddrStart) / m_bytesPerLine + 1) * m_charHeight;
-    int x = m_addrCursor % (m_bytesPerLine * 2);
+    int y = (((m_cursorAddr / 2) - m_lineAddrStart) / m_bytesPerLine + 1) * m_charHeight;
+    int x = m_cursorAddr % (m_bytesPerLine * 2);
     x = (((x / 2) * 3) + (x % 2)) * m_charWidth + m_dataLoc;
     m_cursor = QRect(x - horizontalScrollBar()->value(), y + m_cursorHeight, m_charWidth, m_cursorHeight);
 
@@ -168,15 +169,13 @@ void HexWidget::paintEvent(QPaintEvent *event) {
     const QPalette &pal = viewport()->palette();
     const QColor cText = pal.color(QPalette::WindowText);
     const QColor cBg = Qt::white;
+    const QColor cHighlight = QColor(Qt::yellow).lighter(160);
+    const QColor cModified = QColor(Qt::blue).lighter(160);
     const int xOffset = horizontalScrollBar()->value();
     const int xAddr = m_addrLoc - xOffset;
 
     painter.setRenderHint(QPainter::Antialiasing);
     painter.fillRect(region, cBg);
-
-    if (m_data.size()) {
-        painter.fillRect(m_cursor, cText);
-    }
 
     painter.setPen(Qt::gray);
     painter.drawLine(m_dataLine - xOffset, region.top(), m_dataLine - xOffset, height());
@@ -209,6 +208,16 @@ void HexWidget::paintEvent(QPaintEvent *event) {
                 painter.setPen(QColor(0xFFA3A3));
             }
 
+            if (addr >= m_selectAddrStart && addr <= m_selectAddrEnd) {
+                QRect r;
+                if (!col) {
+                    r.setRect(xData, y - m_charHeight + m_selectPart, 2 * m_charWidth, m_charHeight);
+                } else {
+                    r.setRect(xData - m_charWidth, y - m_charHeight + m_selectPart, 3 * m_charWidth, m_charHeight);
+                }
+                painter.fillRect(r, cHighlight);
+            }
+
             QString hex = int2hex(data, 2);
             if ((dbg & DBG_MASK_READ) && (dbg & DBG_MASK_WRITE)) {
                 painter.setPen(QColor(0xA3FFA3));
@@ -232,6 +241,10 @@ void HexWidget::paintEvent(QPaintEvent *event) {
             }
         }
     }
+
+    if (m_data.size()) {
+        painter.fillRect(m_cursor, cText);
+    }
 }
 
 void HexWidget::resizeEvent(QResizeEvent *event) {
@@ -247,12 +260,38 @@ void HexWidget::focusInEvent(QFocusEvent *event) {
 void HexWidget::mousePressEvent(QMouseEvent *event) {
     int addr = getCursorAddr(event->pos());
     if (addr >= 0) {
+        resetSelection();
         setCursorAddr(addr);
     }
 }
 
+void HexWidget::mouseMoveEvent(QMouseEvent *event) {
+    int addr = getCursorAddr(event->pos());
+    if (addr >= 0) {
+        setSelection(addr);
+        setCursorAddr(addr);
+    }
+}
+
+void HexWidget::setSelection(int addr) {
+    if (addr < 0) {
+        addr = 0;
+    }
+
+    addr = addr / 2;
+    if (m_selectAddrStart == -1) {
+        m_selectAddrStart = addr;
+        m_selectAddrEnd = addr;
+    }
+    if (addr > m_selectAddrStart) {
+        m_selectAddrEnd = addr;
+    } else {
+        m_selectAddrStart = addr;
+    }
+}
+
 void HexWidget::keyPressEvent(QKeyEvent *event) {
-    int addr = m_addrCursor;
+    int addr = m_cursorAddr;
     if (event->matches(QKeySequence::MoveToNextChar)) {
         addr += 1;
     }
@@ -263,7 +302,7 @@ void HexWidget::keyPressEvent(QKeyEvent *event) {
         addr |= m_bytesPerLine * 2 - 1;
     }
     if (event->matches(QKeySequence::MoveToStartOfLine)) {
-        addr -= m_addrCursor % (m_bytesPerLine * 2);
+        addr -= m_cursorAddr % (m_bytesPerLine * 2);
     }
     if (event->matches(QKeySequence::MoveToPreviousLine)) {
         addr -= m_bytesPerLine * 2;

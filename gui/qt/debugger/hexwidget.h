@@ -26,7 +26,7 @@ public:
 
     void setAddr(int addr);
     void setCursorAddr(int address);
-    uint32_t getAddr() { return static_cast<uint32_t>(m_addrCursor / 2); }
+    uint32_t getAddr() { return static_cast<uint32_t>(m_cursorAddr / 2); }
 
     void setData(const QByteArray &ba);
     void prependData(const QByteArray &ba);
@@ -48,6 +48,7 @@ protected:
     virtual void focusInEvent(QFocusEvent *) Q_DECL_OVERRIDE;
     virtual void resizeEvent(QResizeEvent *) Q_DECL_OVERRIDE;
     virtual void mousePressEvent(QMouseEvent *) Q_DECL_OVERRIDE;
+    virtual void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     virtual void keyPressEvent(QKeyEvent *) Q_DECL_OVERRIDE;
 
 signals:
@@ -58,10 +59,11 @@ public slots:
 private:
     void adjust();
     void cursorScroll();
+    void setSelection(int addr);
+    void resetSelection() { m_selectAddrStart = m_selectAddrEnd = -1; }
 
     int m_bytesPerLine = 8;
     int m_baseAddr = 0;
-    int m_addrCursor = 0;
     bool m_asciiArea = true;
 
     int m_charWidth;
@@ -86,7 +88,11 @@ private:
     bool m_scrollable = false;          // fetch bytes from memory on scroll
 
     QRect m_cursor;
+    int m_cursorAddr = 0;
     int m_cursorHeight;
+
+    int m_selectAddrStart;
+    int m_selectAddrEnd;
 };
 
 #endif

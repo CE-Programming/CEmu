@@ -1719,14 +1719,14 @@ void MainWindow::toggleADL(int state) {
 void MainWindow::gotoPressed() {
     bool accept;
 
-    if (m_gotoAddress.isEmpty()) {
-        m_gotoAddress = ui->disassemblyView->getSelectedAddress();
+    if (m_gotoAddr.isEmpty()) {
+        m_gotoAddr = ui->disassemblyView->getSelectedAddress();
     }
 
-    QString address = getAddressString(m_gotoAddress, &accept);
+    QString address = getAddressString(m_gotoAddr, &accept);
 
     if (accept) {
-        updateDisasmAddr(hex2int(m_gotoAddress = address), false);
+        updateDisasmAddr(hex2int(m_gotoAddr = address), false);
     }
 }
 

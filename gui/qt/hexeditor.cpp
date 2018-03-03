@@ -171,10 +171,10 @@ void MainWindow::memGotoEdit(HexWidget *edit) {
     }
 
     bool accept = false;
-    QString address = getAddressString(prevMemAddress, &accept);
+    QString address = getAddressString(m_memGotoAddr, &accept);
 
     if (accept) {
-        memGoto(edit, static_cast<uint32_t>(hex2int(prevMemAddress = address)));
+        memGoto(edit, static_cast<uint32_t>(hex2int(m_memGotoAddr = address)));
     }
 }
 
