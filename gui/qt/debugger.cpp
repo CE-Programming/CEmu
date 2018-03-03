@@ -563,7 +563,7 @@ void MainWindow::debuggerGUISetState(bool state) {
             if (dock->isVisible()) {
                 QList<QPushButton*> buttons = dock->findChildren<QPushButton*>();
                 QList<QToolButton*> tools = dock->findChildren<QToolButton*>();
-                QList<QHexEdit*> editChildren = dock->findChildren<QHexEdit*>();
+                QList<HexWidget*> editChildren = dock->findChildren<HexWidget*>();
                 QList<QSpinBox*> spinChildren = dock->findChildren<QSpinBox*>();
                 editChildren.first()->setEnabled(state);
                 spinChildren.first()->setEnabled(state);
@@ -2100,9 +2100,8 @@ void MainWindow::vatContextMenu(const QPoint& posa) {
 }
 
 void MainWindow::memContextMenu(const QPoint& posa) {
-    QHexEdit *p = qobject_cast<QHexEdit*>(sender());
-    memoryContextMenu(p->mapToGlobal(posa), p->addressOffset() + p->currentOffset());
-    p->viewport()->update();
+    HexWidget *p = qobject_cast<HexWidget*>(sender());
+    memoryContextMenu(p->mapToGlobal(posa), p->positionAddr());
 }
 
 void MainWindow::memoryContextMenu(const QPoint& pos, uint32_t address) {
@@ -2146,8 +2145,8 @@ void MainWindow::memDocksUpdate() {
     QList<QDockWidget*> docks = findChildren<QDockWidget*>();
     foreach (QDockWidget* dock, docks) {
         if (dock->windowTitle().contains(TXT_MEM_DOCK)) {
-            QList<QHexEdit*> editChildren = dock->findChildren<QHexEdit*>();
-            QHexEdit *edit = editChildren.first();
+            QList<HexWidget*> editChildren = dock->findChildren<HexWidget*>();
+            HexWidget *edit = editChildren.first();
             memUpdateEdit(edit);
         }
     }

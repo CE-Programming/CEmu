@@ -2,6 +2,8 @@
 #include <QtGui/QFontDatabase>
 #include <QtCore/QProcess>
 #include <QtWidgets/QDesktopWidget>
+#include <QtCore/QCommandLineOption>
+#include <QtCore/QCommandLineParser>
 
 #include "mainwindow.h"
 #include "keypad/qtkeypadbridge.h"
@@ -15,7 +17,6 @@ int main(int argc, char *argv[]) {
 #endif
     QApplication app(argc, argv);
 
-
     QCoreApplication::setOrganizationName(QStringLiteral("cemu-dev"));
     QCoreApplication::setApplicationName(QStringLiteral("CEmu"));
 
@@ -26,7 +27,7 @@ int main(int argc, char *argv[]) {
     // Add special jacobly font
     QFontDatabase::addApplicationFont(QStringLiteral(":/fonts/resources/custom_fonts/TICELarge.ttf"));
 
-    // Setup QCommandParser with Our command line parameters
+    // Setup QCommandParser with command line parameters
     QCommandLineParser parser;
     parser.setApplicationDescription(QStringLiteral("CEmu emulator"));
     parser.addHelpOption();

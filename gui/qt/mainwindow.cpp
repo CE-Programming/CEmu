@@ -1,5 +1,7 @@
 ﻿#include <QtCore/QFileInfo>
 #include <QtCore/QRegularExpression>
+#include <QtCore/QBuffer>
+#include <QtCore/QProcess>
 #include <QtGui/QWindow>
 #include <QtGui/QDesktopServices>
 #include <QtGui/QClipboard>
@@ -272,8 +274,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonChangeSavedDebugPath, &QPushButton::clicked, this, &MainWindow::setDebugPath);
     connect(ui->checkFocus, &QCheckBox::stateChanged, this, &MainWindow::setFocusSetting);
     connect(ui->checkPreI, &QCheckBox::stateChanged, this, &MainWindow::setPreRevisionI);
-    connect(ui->flashBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->flashEdit, &QHexEdit::setBytesPerLine);
-    connect(ui->ramBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->ramEdit, &QHexEdit::setBytesPerLine);
+    connect(ui->flashBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->flashEdit, &HexWidget::setBytesPerLine);
+    connect(ui->ramBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->ramEdit, &HexWidget::setBytesPerLine);
     connect(ui->ramAscii, &QToolButton::toggled, [this](bool set){ ui->ramEdit->setAsciiArea(set); });
     connect(ui->flashAscii, &QToolButton::toggled, [this](bool set){ ui->flashEdit->setAsciiArea(set); });
     connect(ui->emuVarView, &QTableWidget::itemDoubleClicked, this, &MainWindow::variableDoubleClicked);
@@ -303,8 +305,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonRamGoto, &QPushButton::clicked, this, &MainWindow::ramGotoPressed);
     connect(ui->buttonFlashSync, &QToolButton::clicked, this, &MainWindow::flashSyncPressed);
     connect(ui->buttonRamSync, &QToolButton::clicked, this, &MainWindow::ramSyncPressed);
-    connect(ui->flashEdit, &QHexEdit::customContextMenuRequested, this, &MainWindow::memContextMenu);
-    connect(ui->ramEdit, &QHexEdit::customContextMenuRequested, this, &MainWindow::memContextMenu);
+    connect(ui->flashEdit, &HexWidget::customContextMenuRequested, this, &MainWindow::memContextMenu);
+    connect(ui->ramEdit, &HexWidget::customContextMenuRequested, this, &MainWindow::memContextMenu);
 
     // Keybindings
     connect(ui->radioCEmuKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
@@ -880,7 +882,7 @@ void MainWindow::addMemoryDock(const QString &magic, int bytes, bool ascii) {
     buttonSync->setToolTip(tr("Sync Changes"));
     QSpacerItem *spacer = new QSpacerItem(0, 20, QSizePolicy::Expanding, QSizePolicy::Maximum);
     QSpinBox *spin = new QSpinBox();
-    QHexEdit *edit = new QHexEdit();
+    HexWidget *edit = new HexWidget();
 
     buttonGoto->setEnabled(guiDebug);
     buttonSearch->setEnabled(guiDebug);
@@ -891,7 +893,7 @@ void MainWindow::addMemoryDock(const QString &magic, int bytes, bool ascii) {
     edit->setContextMenuPolicy(Qt::CustomContextMenu);
     edit->setAsciiArea(ascii);
 
-    connect(edit, &QHexEdit::customContextMenuRequested, this, &MainWindow::memContextMenu);
+    connect(edit, &HexWidget::customContextMenuRequested, this, &MainWindow::memContextMenu);
     connect(buttonSearch, &QPushButton::clicked, [this, edit]{ memSearchEdit(edit); });
     connect(buttonGoto, &QPushButton::clicked, [this, edit]{ memGotoEdit(edit); });
     connect(buttonSync, &QToolButton::clicked, [this, edit]{ memSyncEdit(edit); });
@@ -934,7 +936,7 @@ void MainWindow::addMemoryDock(const QString &magic, int bytes, bool ascii) {
     dw->show();
     dw->activateWindow();
     dw->raise();
-    connect(edit, &QHexEdit::focused, [this, edit]{ selectedMemory = edit; });
+    connect(edit, &HexWidget::focused, [this, edit]{ selectedMemory = edit; });
     connect(dw, &DockWidget::closed, [this, magic]{
         int index;
         if ((index = memoryDocks.indexOf(magic)) != -1) {

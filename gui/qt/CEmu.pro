@@ -162,9 +162,6 @@ SOURCES +=  utils.cpp \
     keypad/keypadwidget.cpp \
     keypad/rectkey.cpp \
     keypad/arrowkey.cpp \
-    qhexedit/chunks.cpp \
-    qhexedit/commands.cpp \
-    qhexedit/qhexedit.cpp \
     tivarslib/tivarslib_utils.cpp \
     tivarslib/BinaryFile.cpp \
     tivarslib/TIVarFile.cpp \
@@ -221,7 +218,8 @@ SOURCES +=  utils.cpp \
     ../../core/debug/debug.cpp \
     capture/animated-png.c \
     ../../core/spi.c \
-    memoryvisualizerwidget.cpp
+    memoryvisualizerwidget.cpp \
+    debugger/hexwidget.cpp
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
@@ -249,9 +247,6 @@ HEADERS  +=  utils.h \
     keypad/numkey.h \
     keypad/operkey.h \
     keypad/arrowkey.h \
-    qhexedit/chunks.h \
-    qhexedit/commands.h \
-    qhexedit/qhexedit.h \
     tivarslib/tivarslib_utils.h \
     tivarslib/CommonTypes.h \
     tivarslib/BinaryFile.h \
@@ -297,7 +292,8 @@ HEADERS  +=  utils.h \
     memoryvisualizer.h \
     capture/animated-png.h \
     ../../core/spi.h \
-    memoryvisualizerwidget.h
+    memoryvisualizerwidget.h \
+    debugger/hexwidget.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \

@@ -3567,7 +3567,7 @@
             </layout>
            </item>
            <item>
-            <widget class="QHexEdit" name="flashEdit">
+            <widget class="HexWidget" name="flashEdit">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                <horstretch>0</horstretch>
@@ -3690,7 +3690,7 @@
             </layout>
            </item>
            <item>
-            <widget class="QHexEdit" name="ramEdit">
+            <widget class="HexWidget" name="ramEdit">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                <horstretch>0</horstretch>
@@ -9378,11 +9378,6 @@ QPushButton:pressed {
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>QHexEdit</class>
-   <extends>QPlainTextEdit</extends>
-   <header>qhexedit/qhexedit.h</header>
-  </customwidget>
-  <customwidget>
    <class>KeypadWidget</class>
    <extends>QWidget</extends>
    <header>keypad/keypadwidget.h</header>
@@ -9392,6 +9387,11 @@ QPushButton:pressed {
    <class>DataWidget</class>
    <extends>QPlainTextEdit</extends>
    <header>datawidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>HexWidget</class>
+   <extends>QPlainTextEdit</extends>
+   <header>debugger/hexwidget.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

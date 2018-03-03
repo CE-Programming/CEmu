@@ -12,6 +12,8 @@
 #include <QtCore/QTimer>
 #include <QtGui/QTextCursor>
 #include <QtWidgets/QMessageBox>
+#include <QtCore/QTranslator>
+#include <QtCore/QStandardPaths>
 
 #include "ipc.h"
 #include "searchwidget.h"
@@ -20,10 +22,10 @@
 #include "romselection.h"
 #include "emuthread.h"
 #include "keyhistory.h"
+#include "dockwidget.h"
 #include "keypad/qtkeypadbridge.h"
-#include "qhexedit/qhexedit.h"
+#include "debugger/hexwidget.h"
 #include "png.h"
-class DockWidget;
 
 #include "../../core/vat.h"
 #include "../../core/debug/debug.h"
@@ -440,16 +442,16 @@ private:
     void ramGotoPressed();
     void ramSyncPressed();
     void updateMemoryViews();
-    void memUpdateEdit(QHexEdit *edit);
-    void memGotoEdit(QHexEdit *edit);
-    void memGoto(QHexEdit *edit, uint32_t address);
-    void memSearchEdit(QHexEdit *edit);
-    void memSyncEdit(QHexEdit *edit);
-    void memAsciiToggle(QHexEdit *edit);
+    void memUpdateEdit(HexWidget *edit);
+    void memGotoEdit(HexWidget *edit);
+    void memGoto(HexWidget *edit, uint32_t address);
+    void memSearchEdit(HexWidget *edit);
+    void memSyncEdit(HexWidget *edit);
+    void memAsciiToggle(HexWidget *edit);
     void memDocksUpdate();
 
     // Others
-    void syncHexView(int posa, QHexEdit *hex_view);
+    void syncHexWidget(HexWidget *hex_view);
     void setStatusInterval(int value);
 
     // Keypad
@@ -706,7 +708,7 @@ private:
     QList<int> memoryDocksBytes;
     QList<bool> memoryDocksAscii;
     QSettings *settings = Q_NULLPTR;
-    QHexEdit *selectedMemory = Q_NULLPTR;
+    HexWidget *selectedMemory = Q_NULLPTR;
 
     QString romPath;
     QString imagePath;
