@@ -17,7 +17,13 @@ protected:
     virtual void paintEvent(QPaintEvent *) Q_DECL_OVERRIDE;
 
 private:
-    uint32_t m_baseAddr = 0, m_scroll = 0;
+    typedef enum { None, Label, Inst } addr_type_t;
+    typedef struct { uint32_t addr : 24; addr_type_t type : 8; } addr_t;
+    addr_t next(addr_t addr);
+
+    addr_t m_baseAddr = { 0, None };
+    int m_scroll = 0;
+    QHash<uint32_t, QString> m_labels;
 };
 
 #endif

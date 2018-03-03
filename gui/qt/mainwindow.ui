@@ -3458,7 +3458,7 @@
          </widget>
         </item>
         <item>
-         <widget class="DisasmWidget" name="disasm"/>
+         <widget class="DisasmWidget" name="disasmWidget"/>
         </item>
        </layout>
       </widget>

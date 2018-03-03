@@ -335,6 +335,7 @@ void MainWindow::setFont(int fontSize) {
     monospace.setPointSize(fontSize);
     ui->console->setFont(monospace);
     ui->disassemblyView->setFont(monospace);
+    ui->disasmWidget->setFont(monospace);
 
     ui->stackView->setFont(monospace);
 

@@ -1,4 +1,6 @@
 #include "disasmwidget.h"
+#include "../../core/debug/disasm.h"
+#include "../../core/mem.h"
 
 #include <QtGui/QWheelEvent>
 #include <QtGui/QPainter>
@@ -6,6 +8,15 @@
 
 DisasmWidget::DisasmWidget(QWidget *parent) : QWidget{parent} {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    m_labels[0x00] = QStringLiteral("Rst00");
+    m_labels[0x08] = QStringLiteral("Rst08");
+    m_labels[0x10] = QStringLiteral("Rst10");
+    m_labels[0x18] = QStringLiteral("Rst18");
+    m_labels[0x20] = QStringLiteral("Rst20");
+    m_labels[0x28] = QStringLiteral("Rst28");
+    m_labels[0x30] = QStringLiteral("Rst30");
+    m_labels[0x38] = QStringLiteral("Rst38");
+    m_baseAddr = next(m_baseAddr);
 }
 
 QSize DisasmWidget::sizeHint() const {
@@ -17,21 +28,63 @@ void DisasmWidget::wheelEvent(QWheelEvent *event) {
     if (delta.isNull()) {
         delta = event->angleDelta() / 2;
     }
-    if (static_cast<int>(m_scroll) >= delta.y()) {
-        m_scroll -= delta.y();
+    if (delta.y()) {
+        if (m_scroll >= delta.y()) {
+            m_scroll -= delta.y();
+        } else {
+            m_scroll = 0;
+        }
         repaint();
     }
     event->accept();
 }
 
-void DisasmWidget::paintEvent(QPaintEvent *event) {
+auto DisasmWidget::next(addr_t addr) -> addr_t {
+    switch (addr.type) {
+        case Label:
+            addr.type = Inst;
+            break;
+        case Inst:
+            disasm.baseAddress = addr.addr;
+            disassembleInstruction();
+            addr.addr = disasm.newAddress;
+        case None:
+            addr.type = m_labels.contains(addr.addr) ? Label : Inst;
+            break;
+    }
+    return addr;
+}
+
+void DisasmWidget::paintEvent(QPaintEvent *) {
     const int lineHeight = fontMetrics().height();
     QPainter painter{this};
     painter.setRenderHint(QPainter::Antialiasing);
     painter.fillRect(rect(), Qt::white);
-    unsigned line = m_scroll / lineHeight;
-    for (QRect lineRect{0, -static_cast<int>(m_scroll % lineHeight), width(), static_cast<int>(lineHeight)};
-         lineRect.y() < height(); lineRect.translate(0, lineHeight), ++line) {
-        painter.drawText(lineRect, Qt::TextSingleLine, QString::number(m_baseAddr + line));
+    addr_t addr = m_baseAddr;
+    for (QRect lineRect{0, -m_scroll, width(), lineHeight}; lineRect.y() < height(); lineRect.translate(0, lineHeight)) {
+        addr_t nextAddr = next(addr);
+        if (lineRect.bottom() >= 0) {
+            switch (addr.type) {
+                case None:
+                    return;
+                case Label:
+                    painter.drawText(lineRect.translated(100, 0), Qt::TextSingleLine, m_labels[addr.addr] + ':');
+                    break;
+                case Inst: {
+                    uint32_t data = 0, size = nextAddr.addr - addr.addr;
+                    for (uint32_t i = 0; i != size; i++)
+                        data = data << 8 | mem_peek_byte(addr.addr + i);
+                    painter.drawText(lineRect, Qt::TextSingleLine, QStringLiteral("%1 %2")
+                                     .arg(addr.addr, 6, 16, QChar('0'))
+                                     .arg(data, size << 1, 16, QChar('0'))
+                                     .toUpper().leftJustified(20) +
+                                     QString::fromStdString(disasm.instruction.opcode) +
+                                     QString::fromStdString(disasm.instruction.modeSuffix) +
+                                     QString::fromStdString(disasm.instruction.arguments));
+                    break;
+                }
+            }
+        }
+        addr = nextAddr;
     }
 }
