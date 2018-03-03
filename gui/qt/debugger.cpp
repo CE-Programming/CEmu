@@ -1719,14 +1719,14 @@ void MainWindow::toggleADL(int state) {
 void MainWindow::gotoPressed() {
     bool accept;
 
-    if (prevGotoAddress.isEmpty()) {
-        prevGotoAddress = ui->disassemblyView->getSelectedAddress();
+    if (m_gotoAddress.isEmpty()) {
+        m_gotoAddress = ui->disassemblyView->getSelectedAddress();
     }
 
-    QString address = getAddressString(prevGotoAddress, &accept);
+    QString address = getAddressString(m_gotoAddress, &accept);
 
     if (accept) {
-        updateDisasmAddr(hex2int(prevGotoAddress = address), false);
+        updateDisasmAddr(hex2int(m_gotoAddress = address), false);
     }
 }
 
@@ -2101,7 +2101,7 @@ void MainWindow::vatContextMenu(const QPoint& posa) {
 
 void MainWindow::memContextMenu(const QPoint& posa) {
     HexWidget *p = qobject_cast<HexWidget*>(sender());
-    memoryContextMenu(p->mapToGlobal(posa), p->positionAddr());
+    memoryContextMenu(p->mapToGlobal(posa), p->getAddr());
 }
 
 void MainWindow::memoryContextMenu(const QPoint& pos, uint32_t address) {

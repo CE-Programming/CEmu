@@ -1,4 +1,4 @@
-#ifndef MAINWINDOW_H
+﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QtWidgets/QProgressBar>
@@ -576,10 +576,10 @@ private:
     QIcon asciiIcon, uiEditIcon;
     QTextCharFormat consoleFormat;
 
-    QString prevGotoAddress;
-    QString prevFlashAddress;
-    QString prevRAMAddress;
-    QString prevMemAddress;
+    QString m_gotoAddr;
+    QString m_flashGotoAddr;
+    QString m_RamGotoAddr;
+    QString m_memGotoAddr;
 
     QString pathSettings;
     QMenu *docksMenu;

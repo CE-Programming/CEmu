@@ -47,7 +47,7 @@ void MainWindow::flashUpdate() {
 }
 
 void MainWindow::ramUpdate() {
-    ui->ramEdit->setBaseAddress(0xD00000);
+    ui->ramEdit->setBaseAddr(0xD00000);
     ui->ramEdit->setData(QByteArray::fromRawData(reinterpret_cast<char*>(mem.ram.block), 0x65800));
 }
 
@@ -57,9 +57,9 @@ void MainWindow::memUpdateEdit(HexWidget *edit) {
     }
 
     QByteArray data;
-    int start = edit->baseAddress();
+    int start = edit->baseAddr();
     if (start < 0) { start = 0; }
-    int end = start+0x2000;
+    int end = start + 0x2000;
     if (end > 0xFFFFFF) { end = 0xFFFFFF; }
 
     for (int i = start; i < end; i++) {
@@ -67,42 +67,27 @@ void MainWindow::memUpdateEdit(HexWidget *edit) {
     }
 
     edit->setData(data);
-    edit->setBaseAddress(start);
 }
 
 void MainWindow::flashGotoPressed() {
     bool accept = false;
-    QString addressStr = getAddressString(prevFlashAddress, &accept);
+    QString addrStr = getAddressString(m_flashGotoAddr, &accept);
 
     if (accept) {
-
+        m_flashGotoAddr = addrStr;
         ui->flashEdit->setFocus();
-        int address = hex2int(addressStr);
-        if (address > 0x3FFFFF) {
-            return;
-        }
-
-        prevFlashAddress = addressStr;
-
-        ui->flashEdit->setPositionAddr(address * 2);
+        ui->flashEdit->setAddr(hex2int(addrStr));
     }
 }
 
 void MainWindow::ramGotoPressed() {
     bool accept = false;
-    QString addressStr = getAddressString(prevRAMAddress, &accept);
+    QString addrStr = getAddressString(m_RamGotoAddr, &accept);
 
     if (accept) {
-
+        m_RamGotoAddr = addrStr;
         ui->ramEdit->setFocus();
-        int address = hex2int(addressStr)-0xD00000;
-        if (address >= 0x65800 || address < 0) {
-            return;
-        }
-
-        prevRAMAddress = addressStr;
-
-        ui->ramEdit->setPositionAddr(address * 2);
+        ui->ramEdit->setAddr(hex2int(addrStr) - 0xD00000);
     }
 }
 
@@ -112,7 +97,7 @@ void MainWindow::memSearchEdit(HexWidget *edit) {
     }
 
     SearchWidget search(searchingString, hexSearch);
-    int searchMode, err = 0;
+    int searchMode, found = 0;
     search.show();
 
     if (!((searchMode = search.exec()) > SEARCH_CANCEL)) { return; }
@@ -138,21 +123,21 @@ void MainWindow::memSearchEdit(HexWidget *edit) {
 
     switch (searchMode) {
         case SEARCH_NEXT_NOT:
-            err = edit->indexNotOf(searchBa);
+            found = edit->indexNotOf(searchBa);
             break;
         case SEARCH_PREV:
-            err = edit->indexPrevOf(searchBa);
+            found = edit->indexPrevOf(searchBa);
             break;
         case SEARCH_PREV_NOT:
-            err = edit->indexPrevNotOf(searchBa);
+            found = edit->indexPrevNotOf(searchBa);
             break;
         case SEARCH_NEXT:
         default:
-            err = edit->indexOf(searchBa);
+            found = edit->indexOf(searchBa);
             break;
     }
 
-    if (err == -1) {
+    if (found == -1) {
          QMessageBox::warning(this, MSG_WARNING, tr("String not found."));
     }
 }
@@ -162,21 +147,22 @@ void MainWindow::memGoto(HexWidget *edit, uint32_t address) {
         return;
     }
 
-    QByteArray data;
     int addr = static_cast<int>(address);
     int start = addr - 0x500;
     if (start < 0) { start = 0; }
     int end = start + 0x1000;
     if (end > 0xFFFFFF) { end = 0xFFFFFF; }
+    QByteArray data;
+    data.resize(end - start + 1);
 
     for (int i = start; i < end; i++) {
-        data.append(mem_peek_byte(i));
+        data[i] = mem_peek_byte(i);
     }
 
-    edit->setData(data);
-    edit->setBaseAddress(start);
-    edit->setPositionAddr((addr - start) * 2);
     edit->setFocus();
+    edit->setData(data);
+    edit->setBaseAddr(start);
+    edit->setAddr(addr - start);
 }
 
 void MainWindow::memGotoEdit(HexWidget *edit) {
@@ -217,7 +203,7 @@ void MainWindow::memSyncEdit(HexWidget *edit) {
         return;
     }
 
-    uint32_t start = edit->baseAddress();
+    uint32_t start = edit->baseAddr();
     for (int i = 0; i < edit->size(); i++) {
         mem_poke_byte(start + i, edit->data()[i]);
         QCoreApplication::processEvents(QEventLoop::AllEvents, 50);

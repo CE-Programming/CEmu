@@ -1,7 +1,8 @@
 #ifndef HEXWIDGET_H
 #define HEXWIDGET_H
 
-#include <QWidget>
+#include <QtCore/QPoint>
+#include <QtWidgets/QWidget>
 #include <QtWidgets/QAbstractScrollArea>
 
 class HexWidget : public QAbstractScrollArea {
@@ -11,8 +12,8 @@ public:
     explicit HexWidget(QWidget *parent = Q_NULLPTR);
     virtual ~HexWidget() { }
 
-    void setBaseAddress(uint32_t address) { m_baseAddr = address; adjust(); }
-    uint32_t baseAddress() { return m_baseAddr; }
+    void setBaseAddr(int address) { m_baseAddr = address; adjust(); }
+    uint32_t baseAddr() { return static_cast<uint32_t>(m_baseAddr); }
 
     void setBytesPerLine(int bytes) { m_bytesPerLine = bytes; adjust(); }
     int bytesPerLine() { return m_bytesPerLine; }
@@ -23,8 +24,9 @@ public:
     void setScrollable(bool state) { m_scrollable = state; adjust(); }
     bool scrollable() { return m_scrollable; }
 
-    void setPositionAddr(uint32_t address) { m_addrSelected = address; }
-    uint32_t positionAddr() { return m_addrSelected; }
+    void setAddr(int addr);
+    void setCursorAddr(int address);
+    uint32_t getAddr() { return static_cast<uint32_t>(m_addrCursor / 2); }
 
     void setData(const QByteArray &ba);
     void prependData(const QByteArray &ba);
@@ -39,11 +41,14 @@ public:
     int indexOf(const QByteArray &ba);
 
     void setFont(const QFont &font) { QAbstractScrollArea::setFont(font); adjust(); }
+    int getCursorAddr(QPoint posa);
 
 protected:
     virtual void paintEvent(QPaintEvent *) Q_DECL_OVERRIDE;
     virtual void focusInEvent(QFocusEvent *) Q_DECL_OVERRIDE;
-    virtual void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
+    virtual void resizeEvent(QResizeEvent *) Q_DECL_OVERRIDE;
+    virtual void mousePressEvent(QMouseEvent *) Q_DECL_OVERRIDE;
+    virtual void keyPressEvent(QKeyEvent *) Q_DECL_OVERRIDE;
 
 signals:
     void focused();
@@ -52,10 +57,11 @@ public slots:
 
 private:
     void adjust();
+    void cursorScroll();
 
     int m_bytesPerLine = 8;
-    uint32_t m_baseAddr = 0;
-    uint32_t m_addrSelected = 0;
+    int m_baseAddr = 0;
+    int m_addrCursor = 0;
     bool m_asciiArea = true;
 
     int m_charWidth;
@@ -79,6 +85,8 @@ private:
 
     bool m_scrollable = false;          // fetch bytes from memory on scroll
 
+    QRect m_cursor;
+    int m_cursorHeight;
 };
 
 #endif
