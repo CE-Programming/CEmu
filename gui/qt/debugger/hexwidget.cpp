@@ -290,7 +290,7 @@ void HexWidget::paintEvent(QPaintEvent *event) {
         int xAscii = m_asciiLoc - xOffset;
         int lineAddr = m_lineStart + row * m_bytesPerLine;
         int addr = lineAddr;
-        if (addr > 0xffffff) { break; }
+        if (addr + m_base > 0xffffff) { break; }
         painter.setPen(cText);
         painter.drawText(xAddr, y, int2hex(m_base + lineAddr, 6));
         for (int col = 0; col < m_bytesPerLine && addr < m_maxOffset; col++) {
