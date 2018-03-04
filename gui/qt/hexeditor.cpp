@@ -205,8 +205,10 @@ void MainWindow::memSyncEdit(HexWidget *edit) {
 
     uint32_t start = edit->baseAddr();
     for (int i = 0; i < edit->size(); i++) {
-        mem_poke_byte(start + i, edit->data()[i]);
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+        if (edit->modified()[i]) {
+            mem_poke_byte(start + i, edit->data()[i]);
+        }
+        qApp->processEvents();
     }
 
     syncHexWidget(edit);

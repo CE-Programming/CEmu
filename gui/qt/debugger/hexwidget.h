@@ -2,6 +2,7 @@
 #define HEXWIDGET_H
 
 #include <QtCore/QPoint>
+#include <QtCore/QStack>
 #include <QtWidgets/QWidget>
 #include <QtWidgets/QAbstractScrollArea>
 
@@ -25,13 +26,14 @@ public:
     bool scrollable() { return m_scrollable; }
 
     void setAddr(int addr);
-    void setCursorAddr(int address);
+    void setCursorAddr(int address, bool selection = true);
     uint32_t getAddr() { return static_cast<uint32_t>(m_cursorAddr / 2); }
 
     void setData(const QByteArray &ba);
     void prependData(const QByteArray &ba);
     void appendData(const QByteArray &ba);
     const char *data() { return m_data.constData(); }
+    const char *modified() { return m_modified.constData(); }
 
     int size() { return m_size; }
 
@@ -54,13 +56,22 @@ protected:
 signals:
     void focused();
 
-public slots:
-
 private:
+    void redo();
+    void undo();
     void adjust();
     void cursorScroll();
     void setSelection(int addr);
     void resetSelection() { m_selectAddrStart = m_selectAddrEnd = -1; }
+    bool isSelected() { return m_selectAddrStart != -1; }
+    void setSelected(char n) { overwrite(m_selectAddrStart * 2, m_selectLen, QByteArray(m_selectLen, n)); }
+    void overwrite(int pos, char c);
+    void overwrite(int pos, int len, const QByteArray &ba);
+
+    typedef struct {
+        int addr;
+        QByteArray ba;
+    } stack_entry_t;
 
     int m_bytesPerLine = 8;
     int m_baseAddr = 0;
@@ -68,7 +79,7 @@ private:
 
     int m_charWidth;
     int m_charHeight;
-    int m_selectPart;
+    int m_marginSelect;
     int m_marginGap;
     int m_addrLoc;
     int m_dataLine;
@@ -82,10 +93,9 @@ private:
     int m_lineAddrEnd;
 
     QByteArray m_data;
+    QByteArray m_modified;
     int m_size;
     int m_addrEnd;
-
-    bool m_scrollable = false;          // fetch bytes from memory on scroll
 
     QRect m_cursor;
     int m_cursorAddr = 0;
@@ -93,6 +103,11 @@ private:
 
     int m_selectAddrStart;
     int m_selectAddrEnd;
+    int m_selectLen;
+
+    bool m_scrollable = false;          // fetch bytes from memory on scroll
+
+    QStack<stack_entry_t> m_stack;
 };
 
 #endif

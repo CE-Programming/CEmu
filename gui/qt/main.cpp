@@ -1,9 +1,9 @@
 #include <QtWidgets/QApplication>
-#include <QtGui/QFontDatabase>
-#include <QtCore/QProcess>
 #include <QtWidgets/QDesktopWidget>
+#include <QtCore/QProcess>
 #include <QtCore/QCommandLineOption>
 #include <QtCore/QCommandLineParser>
+#include <QtGui/QFontDatabase>
 
 #include "mainwindow.h"
 #include "keypad/qtkeypadbridge.h"

@@ -3,9 +3,10 @@
 #include "../../core/mem.h"
 #include "../utils.h"
 
-#include <QtGui/QWheelEvent>
-#include <QtGui/QPainter>
+#include <QtWidgets/QApplication>
 #include <QtWidgets/QScrollBar>
+#include <QtGui/QPainter>
+#include <QtGui/QClipboard>
 
 HexWidget::HexWidget(QWidget *parent) : QAbstractScrollArea{parent}, m_data{0} {
 #ifdef Q_OS_WIN
@@ -23,16 +24,20 @@ HexWidget::HexWidget(QWidget *parent) : QAbstractScrollArea{parent}, m_data{0} {
 
 void HexWidget::setData(const QByteArray &ba) {
     m_data = ba;
+    m_modified.resize(m_data.size());
+    m_modified.fill(0);
     adjust();
 }
 
 void HexWidget::prependData(const QByteArray &ba) {
     m_data.prepend(ba);
+    m_modified.prepend(QByteArray(ba.size(), 0));
     adjust();
 }
 
 void HexWidget::appendData(const QByteArray &ba) {
     m_data.append(ba);
+    m_modified.append(QByteArray(ba.size(), 0));
     adjust();
 }
 
@@ -80,12 +85,15 @@ void HexWidget::setAddr(int addr) {
     setCursorAddr(addr * 2);
 }
 
-void HexWidget::setCursorAddr(int addr) {
+void HexWidget::setCursorAddr(int addr, bool selection) {
     if (addr > m_addrEnd) {
         addr = m_addrEnd;
     }
     if (addr < 0) {
         addr = 0;
+    }
+    if (selection) {
+        resetSelection();
     }
 
     m_cursorAddr = addr;
@@ -126,7 +134,7 @@ void HexWidget::adjust() {
     m_charWidth = fontMetrics().width(QLatin1Char('D'));
     m_charHeight = fontMetrics().height();
     m_cursorHeight = m_charHeight / 7;
-    m_selectPart = m_charHeight / 5;
+    m_marginSelect = m_charHeight / 5;
     m_marginGap = m_charWidth / 2;
     m_addrLoc = m_marginGap;
 
@@ -163,14 +171,65 @@ void HexWidget::adjust() {
     viewport()->update();
 }
 
+void HexWidget::setSelection(int addr) {
+    if ((addr /= 2) < 0) {
+        addr = 0;
+    }
+
+    if (m_selectAddrStart == -1) {
+        m_selectAddrStart = addr;
+        m_selectAddrEnd = addr;
+        m_selectLen = 0;
+    }
+    if (addr > m_selectAddrStart) {
+        m_selectAddrEnd = addr;
+        m_selectLen = addr - m_selectAddrStart + 1;
+    } else {
+        m_selectAddrStart = addr;
+        m_selectLen = m_selectAddrEnd - addr + 1;
+    }
+}
+
+void HexWidget::undo() {
+    if (!m_stack.isEmpty()) {
+        stack_entry_t entry = m_stack.pop();
+        int address = entry.addr / 2;
+        int len = entry.ba.size();
+        m_data.replace(address, len, entry.ba);
+        for (int i = address; i < address + len; i++) {
+            m_modified[i] = m_modified[i] - 1;
+        }
+        setCursorAddr(entry.addr);
+    }
+}
+
+void HexWidget::overwrite(int addr, char c) {
+    int address = addr / 2;
+    stack_entry_t entry{addr, m_data.mid(address, 1)};
+    m_stack.push(entry);
+    m_data[address] = c;
+    m_modified[address] = m_modified[address] + 1;
+}
+
+void HexWidget::overwrite(int addr, int len, const QByteArray &ba) {
+    int address = addr / 2;
+    stack_entry_t entry{addr, m_data.mid(address, len)};
+    m_stack.push(entry);
+    m_data.replace(address, len, ba);
+    for (int i = address; i < address + len; i++) {
+        m_modified[i] = m_modified[i] + 1;
+    }
+}
+
 void HexWidget::paintEvent(QPaintEvent *event) {
     QPainter painter(viewport());
     const QRect &region = event->rect();
     const QPalette &pal = viewport()->palette();
     const QColor cText = pal.color(QPalette::WindowText);
     const QColor cBg = Qt::white;
-    const QColor cHighlight = QColor(Qt::yellow).lighter(160);
+    const QColor cSelected = QColor(Qt::yellow).lighter(160);
     const QColor cModified = QColor(Qt::blue).lighter(160);
+    const QColor cBoth = QColor(Qt::green).lighter(160);
     const int xOffset = horizontalScrollBar()->value();
     const int xAddr = m_addrLoc - xOffset;
 
@@ -195,31 +254,33 @@ void HexWidget::paintEvent(QPaintEvent *event) {
             addr = lineAddr + col;
 
             painter.setPen(cText);
-            uint8_t data = m_data.at(addr);
-            uint8_t dbg = debugger.data.block[addr];
+            uint8_t data = m_data[addr];
+            uint8_t flags = debugger.data.block[addr];
+            bool selected = addr >= m_selectAddrStart && addr <= m_selectAddrEnd;
+            bool modified = m_modified[addr];
 
-            if (dbg & DBG_MASK_READ) {
+            if (flags & DBG_MASK_READ) {
                 painter.setPen(QColor(0xA3FFA3));
             }
-            if (dbg & DBG_MASK_WRITE) {
+            if (flags & DBG_MASK_WRITE) {
                 painter.setPen(QColor(0xA3A3FF));
             }
-            if (dbg & DBG_MASK_EXEC) {
+            if (flags & DBG_MASK_EXEC) {
                 painter.setPen(QColor(0xFFA3A3));
             }
 
-            if (addr >= m_selectAddrStart && addr <= m_selectAddrEnd) {
+            if (modified || selected) {
                 QRect r;
                 if (!col) {
-                    r.setRect(xData, y - m_charHeight + m_selectPart, 2 * m_charWidth, m_charHeight);
+                    r.setRect(xData, y - m_charHeight + m_marginSelect, 2 * m_charWidth, m_charHeight);
                 } else {
-                    r.setRect(xData - m_charWidth, y - m_charHeight + m_selectPart, 3 * m_charWidth, m_charHeight);
+                    r.setRect(xData - m_charWidth, y - m_charHeight + m_marginSelect, 3 * m_charWidth, m_charHeight);
                 }
-                painter.fillRect(r, cHighlight);
+                painter.fillRect(r, modified ? selected ? cBoth : cModified : cSelected);
             }
 
             QString hex = int2hex(data, 2);
-            if ((dbg & DBG_MASK_READ) && (dbg & DBG_MASK_WRITE)) {
+            if ((flags & DBG_MASK_READ) && (flags & DBG_MASK_WRITE)) {
                 painter.setPen(QColor(0xA3FFA3));
                 painter.drawText(xData, y, hex.at(0));
                 xData += m_charWidth;
@@ -242,6 +303,10 @@ void HexWidget::paintEvent(QPaintEvent *event) {
         }
     }
 
+    if (!isEnabled()) {
+        m_stack.clear();
+    }
+
     if (m_data.size()) {
         painter.fillRect(m_cursor, cText);
     }
@@ -260,8 +325,7 @@ void HexWidget::focusInEvent(QFocusEvent *event) {
 void HexWidget::mousePressEvent(QMouseEvent *event) {
     int addr = getCursorAddr(event->pos());
     if (addr >= 0) {
-        resetSelection();
-        setCursorAddr(addr);
+        setCursorAddr(addr, true);
     }
 }
 
@@ -269,58 +333,93 @@ void HexWidget::mouseMoveEvent(QMouseEvent *event) {
     int addr = getCursorAddr(event->pos());
     if (addr >= 0) {
         setSelection(addr);
-        setCursorAddr(addr);
-    }
-}
-
-void HexWidget::setSelection(int addr) {
-    if (addr < 0) {
-        addr = 0;
-    }
-
-    addr = addr / 2;
-    if (m_selectAddrStart == -1) {
-        m_selectAddrStart = addr;
-        m_selectAddrEnd = addr;
-    }
-    if (addr > m_selectAddrStart) {
-        m_selectAddrEnd = addr;
-    } else {
-        m_selectAddrStart = addr;
+        setCursorAddr(addr, false);
     }
 }
 
 void HexWidget::keyPressEvent(QKeyEvent *event) {
     int addr = m_cursorAddr;
     if (event->matches(QKeySequence::MoveToNextChar)) {
-        addr += 1;
+        setCursorAddr(addr + 1);
     }
     if (event->matches(QKeySequence::MoveToPreviousChar)) {
-        addr -= 1;
+        setCursorAddr(addr - 1);
     }
     if (event->matches(QKeySequence::MoveToEndOfLine)) {
-        addr |= m_bytesPerLine * 2 - 1;
+        setCursorAddr(addr | (m_bytesPerLine * 2 - 1));
     }
     if (event->matches(QKeySequence::MoveToStartOfLine)) {
-        addr -= m_cursorAddr % (m_bytesPerLine * 2);
+        setCursorAddr(addr - (m_cursorAddr % (m_bytesPerLine * 2)));
     }
     if (event->matches(QKeySequence::MoveToPreviousLine)) {
-        addr -= m_bytesPerLine * 2;
+        setCursorAddr(addr - m_bytesPerLine * 2);
     }
     if (event->matches(QKeySequence::MoveToNextLine)) {
-        addr += m_bytesPerLine * 2;
+        setCursorAddr(addr + m_bytesPerLine * 2);
     }
     if (event->matches(QKeySequence::MoveToPreviousPage)) {
-        addr -= (m_visibleRows - 1) * m_bytesPerLine * 2;
+        setCursorAddr(addr - (m_visibleRows - 1) * m_bytesPerLine * 2);
     }
     if (event->matches(QKeySequence::MoveToNextPage)) {
-        addr += (m_visibleRows - 1) * m_bytesPerLine * 2;
+        setCursorAddr(addr + (m_visibleRows - 1) * m_bytesPerLine * 2);
     }
     if (event->matches(QKeySequence::MoveToEndOfDocument)) {
-        addr = m_size * 2;
+        setCursorAddr(m_size * 2);
     }
     if (event->matches(QKeySequence::MoveToStartOfDocument)){
-        addr = 0;
+        setCursorAddr(0);
     }
-    setCursorAddr(addr);
+
+    if (!(event->modifiers() & ~(Qt::ShiftModifier | Qt::KeypadModifier))) {
+        int key = event->key();
+        if ((key >= '0' && key <= '9') || (key >= 'A' && key <= 'F')) {
+
+            if (isSelected()) {
+                setSelected(0);
+            }
+
+            if (m_data.size() > 0) {
+                uint8_t value;
+                uint8_t num =  (key <= '9') ? (key - '0') : (key - 'A' + 10);
+                if (m_cursorAddr % 2) {
+                    value = (m_data[addr / 2] & 0xf0) | num;
+                } else {
+                    value = (m_data[addr / 2] & 0x0f) | (num << 4);
+                }
+                overwrite(addr, value);
+                setCursorAddr(addr + 1);
+            }
+        }
+    }
+
+    if (event->matches(QKeySequence::Cut) && isSelected()) {
+        QByteArray ba = m_data.mid(m_selectAddrStart, m_selectLen).toHex();
+        qApp->clipboard()->setText(ba);
+        setSelected(0);
+        setCursorAddr(addr);
+    }
+
+    if (event->matches(QKeySequence::Copy) && isSelected()) {
+        QByteArray ba = m_data.mid(m_selectAddrStart, m_selectLen).toHex();
+        qApp->clipboard()->setText(ba);
+    }
+
+    if (event->matches(QKeySequence::Paste)) {
+        QByteArray ba = QByteArray().fromHex(qApp->clipboard()->text().toLatin1());
+        overwrite(addr, ba.size(), ba);
+        setCursorAddr(addr + ba.size() * 2);
+    }
+
+    if (event->matches(QKeySequence::Delete)) {
+        if (isSelected()) {
+            setSelected(0);
+        } else {
+            overwrite(addr, 0);
+        }
+        setCursorAddr(addr + 2);
+    }
+
+    if (event->matches(QKeySequence::Undo)) {
+        undo();
+    }
 }
