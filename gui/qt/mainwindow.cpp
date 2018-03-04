@@ -892,6 +892,7 @@ void MainWindow::addMemoryDock(const QString &magic, int bytes, bool ascii) {
     edit->setEnabled(guiDebug);
     edit->setContextMenuPolicy(Qt::CustomContextMenu);
     edit->setAsciiArea(ascii);
+    edit->setScrollable(true);
 
     connect(edit, &HexWidget::customContextMenuRequested, this, &MainWindow::memContextMenu);
     connect(buttonSearch, &QPushButton::clicked, [this, edit]{ memSearchEdit(edit); });

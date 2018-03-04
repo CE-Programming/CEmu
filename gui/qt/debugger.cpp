@@ -2101,7 +2101,7 @@ void MainWindow::vatContextMenu(const QPoint& posa) {
 
 void MainWindow::memContextMenu(const QPoint &posa) {
     HexWidget *p = qobject_cast<HexWidget*>(sender());
-    memoryContextMenu(p->mapToGlobal(posa), p->getAddr() + p->baseAddr());
+    memoryContextMenu(p->mapToGlobal(posa), p->getOffset() + p->getBase());
 }
 
 void MainWindow::memoryContextMenu(const QPoint &pos, uint32_t address) {
@@ -2129,14 +2129,17 @@ void MainWindow::memoryContextMenu(const QPoint &pos, uint32_t address) {
             clipboard->setText(addr.toLatin1());
         } else if (item->text() == toggleBreak) {
             breakpointAdd(breakpointNextLabel(), address, true, true);
+            memDocksUpdate();
         } else if (item->text() == toggleRead) {
             watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_READ, true);
+            memDocksUpdate();
         } else if (item->text() == toggleWrite) {
             watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_READ, true);
+            memDocksUpdate();
         } else if (item->text() == toggleRw) {
             watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_READ | DBG_MASK_WRITE, true);
+            memDocksUpdate();
         }
-        memDocksUpdate();
     }
 }
 

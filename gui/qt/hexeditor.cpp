@@ -47,7 +47,7 @@ void MainWindow::flashUpdate() {
 }
 
 void MainWindow::ramUpdate() {
-    ui->ramEdit->setBaseAddr(0xD00000);
+    ui->ramEdit->setBase(0xD00000);
     ui->ramEdit->setData(QByteArray::fromRawData(reinterpret_cast<char*>(mem.ram.block), 0x65800));
 }
 
@@ -57,16 +57,36 @@ void MainWindow::memUpdateEdit(HexWidget *edit) {
     }
 
     QByteArray data;
-    int start = edit->baseAddr();
-    if (start < 0) { start = 0; }
-    int end = start + 0x2000;
-    if (end > 0xFFFFFF) { end = 0xFFFFFF; }
+    int off = edit->getOffset();
+    int base = edit->getBase();
+    int mid = off + base;
+    int start = mid - 0x1000;
+    int end = mid + 0x1000;
 
-    for (int i = start; i < end; i++) {
-        data.append(mem_peek_byte(i));
+    if (start < 0) {
+        start = 0;
+    } else {
+        if (start < 0x1000) {
+            if (off > 0x1000) {
+                off -= start;
+            }
+        }
+    }
+    if (end > 0xFFFFFF) {
+        end = 0xFFFFFF;
+    }
+    data.resize(end - start + 1);
+
+    fprintf(stdout, "base: 0x%06X\nstart: 0x%06X\noffset: 0x%06X\n", base, start, off);
+    fflush(stdout);
+
+    for (int j = 0, i = start; i < end; j++, i++) {
+        data[j] = mem_peek_byte(i);
     }
 
+    edit->setBase(start);
     edit->setData(data);
+    edit->setOffset(off);
 }
 
 void MainWindow::flashGotoPressed() {
@@ -76,7 +96,7 @@ void MainWindow::flashGotoPressed() {
     if (accept) {
         m_flashGotoAddr = addrStr;
         ui->flashEdit->setFocus();
-        ui->flashEdit->setAddr(hex2int(addrStr));
+        ui->flashEdit->setOffset(hex2int(addrStr));
     }
 }
 
@@ -87,7 +107,7 @@ void MainWindow::ramGotoPressed() {
     if (accept) {
         m_RamGotoAddr = addrStr;
         ui->ramEdit->setFocus();
-        ui->ramEdit->setAddr(hex2int(addrStr) - 0xD00000);
+        ui->ramEdit->setOffset(hex2int(addrStr) - 0xD00000);
     }
 }
 
@@ -161,8 +181,8 @@ void MainWindow::memGoto(HexWidget *edit, uint32_t address) {
 
     edit->setFocus();
     edit->setData(data);
-    edit->setBaseAddr(start);
-    edit->setAddr(addr - start);
+    edit->setBase(start);
+    edit->setOffset(addr - start);
 }
 
 void MainWindow::memGotoEdit(HexWidget *edit) {
@@ -207,11 +227,11 @@ void MainWindow::memSyncEdit(HexWidget *edit) {
         return;
     }
 
-    uint32_t start = edit->baseAddr();
+    int base = edit->getBase();
     int count = edit->modifiedCount();
-    for (int i = 0; count, i < edit->size(); i++) {
+    for (int i = 0; count && i < edit->size(); i++) {
         if (edit->modified()[i]) {
-            mem_poke_byte(start + i, edit->data()[i]);
+            mem_poke_byte(static_cast<uint32_t>(base + i), edit->data()[i]);
             count--;
         }
         qApp->processEvents();
