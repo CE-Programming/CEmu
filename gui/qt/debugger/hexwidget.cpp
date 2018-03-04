@@ -42,19 +42,37 @@ void HexWidget::appendData(const QByteArray &ba) {
 }
 
 void HexWidget::scroll(int value) {
-    if (m_scrollable && value >= verticalScrollBar()->maximum()) {
-        uint32_t addr = m_maxOffset + m_base;
-        verticalScrollBar()->blockSignals(true);
+    if (!m_scrollable) {
+        return;
+    }
+
+    verticalScrollBar()->blockSignals(true);
+    if (value <= verticalScrollBar()->minimum()) {
+        int addr = m_base;
         QByteArray data;
-        for (int i = 0; i < m_bytesPerLine && addr + i < 0x1000000; i++) {
+        for (int i = -m_bytesPerLine; i < 0; i++) {
+            if (addr + i >= 0) {
+                data.append(mem_peek_byte(addr + i));
+            }
+        }
+        if (data.size()) {
+            m_base -= data.size();
+            prependData(data);
+            verticalScrollBar()->setValue(1);
+        }
+    }
+    if (value >= verticalScrollBar()->maximum()) {
+        int addr = m_maxOffset + m_base + 1;
+        QByteArray data;
+        for (int i = 0; i < m_bytesPerLine && (addr + i) < 0x1000000; i++) {
             data.append(mem_peek_byte(addr + i));
         }
         if (data.size()) {
             appendData(data);
             verticalScrollBar()->setValue(verticalScrollBar()->maximum() - 1);
         }
-        verticalScrollBar()->blockSignals(false);
     }
+    verticalScrollBar()->blockSignals(false);
 }
 
 int HexWidget::indexPrevOf(const QByteArray &ba) {
@@ -163,16 +181,20 @@ void HexWidget::adjust() {
     m_dataLoc = m_dataLine + m_charWidth;
 
     int xWidth = m_dataLoc + (m_bytesPerLine * 3 * m_charWidth);
+    m_asciiLine = xWidth + m_gap;
+    m_asciiLoc = m_asciiLine + m_gap;
     if (m_asciiArea) {
-        m_asciiLine = xWidth + m_gap;
-        m_asciiLoc = m_asciiLine + m_gap;
         xWidth = m_asciiLoc + (m_bytesPerLine * m_charWidth) + m_gap;
     }
     horizontalScrollBar()->setRange(0, xWidth - viewport()->width());
     horizontalScrollBar()->setPageStep(viewport()->width());
 
     int rows = m_size / m_bytesPerLine;
-    m_visibleRows = (viewport()->height() - m_gap) / m_charHeight;
+    int visibleHeight = viewport()->height() - m_gap;
+    if (horizontalScrollBar()->isVisible()) {
+        visibleHeight -= horizontalScrollBar()->height();
+    }
+    m_visibleRows = visibleHeight / m_charHeight;
     verticalScrollBar()->setRange(0, rows - m_visibleRows);
     verticalScrollBar()->setPageStep(m_visibleRows);
 
@@ -268,6 +290,7 @@ void HexWidget::paintEvent(QPaintEvent *event) {
         int xAscii = m_asciiLoc - xOffset;
         int lineAddr = m_lineStart + row * m_bytesPerLine;
         int addr = lineAddr;
+        if (addr > 0xffffff) { break; }
         painter.setPen(cText);
         painter.drawText(xAddr, y, int2hex(m_base + lineAddr, 6));
         for (int col = 0; col < m_bytesPerLine && addr < m_maxOffset; col++) {

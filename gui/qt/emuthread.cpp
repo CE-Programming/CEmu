@@ -85,7 +85,7 @@ void EmuThread::writeConsoleBuffer(int type, const char *format, va_list args) {
     } else {
         int tmpPos = 0;
         char *tmp = size < available - remaining ? buffer : new char[size + 1];
-        if (buffer && vsnprintf(buffer, size + 1, format, args) >= 0) {
+        if (tmp && vsnprintf(tmp, size + 1, format, args) >= 0) {
             while (size >= remaining) {
                 write.acquire(remaining);
                 memcpy(buffer + writePos, tmp + tmpPos, remaining);

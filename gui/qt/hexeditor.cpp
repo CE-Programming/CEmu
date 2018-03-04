@@ -57,28 +57,22 @@ void MainWindow::memUpdateEdit(HexWidget *edit) {
     }
 
     QByteArray data;
+    bool second = edit->getCursorOffset() & 1;
     int off = edit->getOffset();
     int base = edit->getBase();
-    int mid = off + base;
-    int start = mid - 0x1000;
-    int end = mid + 0x1000;
+    int addr = off + base;
+    int start = addr - 0x1000;
+    int end = addr + 0x1000;
+    off = 0x1000;
 
     if (start < 0) {
+        off += start;
         start = 0;
-    } else {
-        if (start < 0x1000) {
-            if (off > 0x1000) {
-                off -= start;
-            }
-        }
     }
     if (end > 0xFFFFFF) {
         end = 0xFFFFFF;
     }
     data.resize(end - start + 1);
-
-    fprintf(stdout, "base: 0x%06X\nstart: 0x%06X\noffset: 0x%06X\n", base, start, off);
-    fflush(stdout);
 
     for (int j = 0, i = start; i < end; j++, i++) {
         data[j] = mem_peek_byte(i);
@@ -86,7 +80,11 @@ void MainWindow::memUpdateEdit(HexWidget *edit) {
 
     edit->setBase(start);
     edit->setData(data);
-    edit->setOffset(off);
+    if (second) {
+        edit->setCursorOffset(off * 2 + 1);
+    } else {
+        edit->setOffset(off);
+    }
 }
 
 void MainWindow::flashGotoPressed() {
@@ -163,26 +161,13 @@ void MainWindow::memSearchEdit(HexWidget *edit) {
 }
 
 void MainWindow::memGoto(HexWidget *edit, uint32_t address) {
-    if (edit == Q_NULLPTR || !guiDebug || address > 0xFFFFFF) {
+    if (edit == Q_NULLPTR) {
         return;
     }
 
-    int addr = static_cast<int>(address);
-    int start = addr - 0x500;
-    if (start < 0) { start = 0; }
-    int end = start + 0x1000;
-    if (end > 0xFFFFFF) { end = 0xFFFFFF; }
-    QByteArray data;
-    data.resize(end - start + 1);
-
-    for (int j = 0, i = start; i < end; i++, j++) {
-        data[j] = mem_peek_byte(i);
-    }
-
-    edit->setFocus();
-    edit->setData(data);
-    edit->setBase(start);
-    edit->setOffset(addr - start);
+    edit->setBase(static_cast<int>(address));
+    edit->setOffset(0);
+    memUpdateEdit(edit);
 }
 
 void MainWindow::memGotoEdit(HexWidget *edit) {
