@@ -3,12 +3,14 @@
 #include "sendinghandler.h"
 #include "dockwidget.h"
 #include "utils.h"
+
 #include "../../core/schedule.h"
 #include "../../core/cpu.h"
 #include "../../core/emu.h"
 #include "../../core/link.h"
 #include "../../core/debug/debug.h"
 
+#include <cmath>
 #include <QtCore/QFileInfo>
 #include <QtCore/QRegularExpression>
 #include <QtNetwork/QNetworkAccessManager>
