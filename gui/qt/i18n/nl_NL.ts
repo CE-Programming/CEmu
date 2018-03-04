@@ -1879,7 +1879,7 @@ De bootable image moet in dezelfde folder als de CEmu executable worden geplaats
     <message>
         <location filename="../settings.cpp" line="515"/>
         <source>&lt;b&gt;A new version of CEmu is available!&lt;/b&gt;&lt;br/&gt;You can &lt;a href=&apos;%1&apos;&gt;download it here&lt;/a&gt;.</source>
-        <translation>&lt;b&gt;Een nieuwe versie van CEmu is beschikbaar!&lt;/b&gt;&lt;br/&gt;U kan het &lt;a href=&apos;%1&apos;&gt;hier downloaden&lt;/a&gt;.</translation>
+        <translation>&lt;b&gt;Een nieuwe versie van CEmu is beschikbaar!&lt;/b&gt;&lt;br/&gt;U kunt het &lt;a href=&apos;%1&apos;&gt;van de website downloaden&lt;/a&gt;.</translation>
     </message>
     <message>
         <location filename="../settings.cpp" line="528"/>
@@ -1889,7 +1889,7 @@ De bootable image moet in dezelfde folder als de CEmu executable worden geplaats
     <message>
         <location filename="../settings.cpp" line="529"/>
         <source>&lt;b&gt;An error occurred while checking for CEmu updates.&lt;/b&gt;&lt;br/&gt;You can however &lt;a href=&apos;https://github.com/CE-Programming/CEmu/releases/latest&apos;&gt;go here&lt;/a&gt; to check yourself.</source>
-        <translation>&lt;b&gt;Er is een fout opgetreden tijdens controle van CEmu updates.&lt;/b&gt;&lt;br&gt;U kan echter &lt;a href=&apos;https://github.com/CE-Programming/CEmu/releases/latest&apos;&gt;hier naar toe gaan&lt;/a&gt; om het zelf te controleren.</translation>
+        <translation>&lt;b&gt;Er is een fout opgetreden tijdens de controle op CEmu-updates.&lt;/b&gt;&lt;br&gt;U kunt ook &lt;a href=&apos;https://github.com/CE-Programming/CEmu/releases/latest&apos;&gt;de website bezoeken&lt;/a&gt; om het zelf te controleren.</translation>
     </message>
     <message>
         <location filename="../settings.cpp" line="799"/>
