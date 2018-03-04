@@ -47,39 +47,52 @@ void MainWindow::ramUpdate() {
     ui->ramEdit->setData(QByteArray::fromRawData(reinterpret_cast<char*>(mem.ram.block), 0x65800));
 }
 
-void MainWindow::memUpdateEdit(HexWidget *edit) {
+void MainWindow::memUpdateEdit(HexWidget *edit, bool force) {
     if (edit == Q_NULLPTR) {
         return;
     }
 
     QByteArray data;
-    bool second = edit->getCursorOffset() & 1;
-    int off = edit->getOffset();
-    int base = edit->getBase();
-    int addr = off + base;
-    int start = addr - 0x1000;
-    int end = addr + 0x1000;
-    off = 0x1000;
 
-    if (start < 0) {
-        off += start;
-        start = 0;
-    }
-    if (end > 0xFFFFFF) {
-        end = 0xFFFFFF;
-    }
-    data.resize(end - start + 1);
+    if (force || edit->getScrolled() || !edit->getSize()) {
+        bool second = edit->getCursorOffset() & 1;
+        int off = edit->getOffset();
+        int base = edit->getBase();
+        int addr = off + base;
+        int start = addr - 0x1000;
+        int end = addr + 0x1000;
+        off = 0x1000;
 
-    for (int j = 0, i = start; i < end; j++, i++) {
-        data[j] = mem_peek_byte(i);
-    }
+        if (start < 0) {
+            off += start;
+            start = 0;
+        }
+        if (end > 0xFFFFFF) {
+            end = 0xFFFFFF;
+        }
+        data.resize(end - start + 1);
 
-    edit->setBase(start);
-    edit->setData(data);
-    if (second) {
-        edit->setCursorOffset(off * 2 + 1);
+        for (int j = 0, i = start; i < end; j++, i++) {
+            data[j] = mem_peek_byte(i);
+        }
+
+        edit->setBase(start);
+        edit->setData(data);
+        if (second) {
+            edit->setCursorOffset(off * 2 + 1);
+        } else {
+            edit->setOffset(off);
+        }
     } else {
-        edit->setOffset(off);
+        int start = edit->getBase();
+        int len = edit->getSize();
+        data.resize(len);
+
+        for (int j = 0, i = start; j < len; j++, i++) {
+            data[j] = mem_peek_byte(i);
+        }
+
+        edit->setData(data);
     }
 }
 
@@ -163,7 +176,7 @@ void MainWindow::memGoto(HexWidget *edit, uint32_t address) {
 
     edit->setBase(static_cast<int>(address));
     edit->setOffset(0);
-    memUpdateEdit(edit);
+    memUpdateEdit(edit, true);
 }
 
 void MainWindow::memGotoEdit(HexWidget *edit) {
@@ -210,7 +223,7 @@ void MainWindow::memSyncEdit(HexWidget *edit) {
 
     int base = edit->getBase();
     int count = edit->modifiedCount();
-    for (int i = 0; count && i < edit->size(); i++) {
+    for (int i = 0; count && i < edit->getSize(); i++) {
         if (edit->modified()[i]) {
             mem_poke_byte(static_cast<uint32_t>(base + i), edit->data()[i]);
             count--;

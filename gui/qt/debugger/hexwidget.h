@@ -26,8 +26,9 @@ public:
     int getOffset() { return m_cursorOffset / 2; }
     int getCursorOffset() { return m_cursorOffset; }
     bool getAsciiArea() { return m_asciiArea; }
+    bool getScrolled() { return m_scrolled; }
+    int getSize() { return m_size; }
     int modifiedCount() { return m_modified.count(); }
-    int size() { return m_size; }
     int indexNotOf(const QByteArray &ba);
     int indexPrevOf(const QByteArray &ba);
     int indexPrevNotOf(const QByteArray &ba);
@@ -100,6 +101,7 @@ private:
 
     bool m_scrollable = false;          // fetch bytes from memory on scroll
     bool m_asciiArea = true;            // show character representations
+    bool m_scrolled = false;
 
     QStack<stack_entry_t> m_stack;
 };

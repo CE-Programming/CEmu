@@ -441,7 +441,7 @@ private:
     void ramGotoPressed();
     void ramSyncPressed();
     void updateMemoryViews();
-    void memUpdateEdit(HexWidget *edit);
+    void memUpdateEdit(HexWidget *edit, bool force = false);
     void memGotoEdit(HexWidget *edit);
     void memGoto(HexWidget *edit, uint32_t address);
     void memSearchEdit(HexWidget *edit);

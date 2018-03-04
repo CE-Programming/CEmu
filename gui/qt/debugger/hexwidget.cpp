@@ -23,6 +23,7 @@ HexWidget::HexWidget(QWidget *parent) : QAbstractScrollArea{parent}, m_data{0} {
 }
 
 void HexWidget::setData(const QByteArray &ba) {
+    m_scrolled = false;
     m_data = ba;
     m_modified.resize(m_data.size());
     m_modified.fill(0);
@@ -58,6 +59,7 @@ void HexWidget::scroll(int value) {
             }
         }
         if (data.size()) {
+            m_scrolled = true;
             m_base -= data.size();
             prependData(data);
             verticalScrollBar()->setValue(1);
@@ -70,6 +72,7 @@ void HexWidget::scroll(int value) {
             data.append(mem_peek_byte(addr + i));
         }
         if (data.size()) {
+            m_scrolled = true;
             appendData(data);
             verticalScrollBar()->setValue(verticalScrollBar()->maximum() - 1);
         }
