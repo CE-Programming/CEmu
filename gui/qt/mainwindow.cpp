@@ -1626,7 +1626,6 @@ void MainWindow::showAbout() {
                               QStringLiteral("Matt Waltz (ES), Adrien Bertrand (FR), Stephan Paternotte &amp; Peter Tillema (NL)<br>"),
                               QStringLiteral("<a href='https://github.com/KnightOS/z80e'>z80e</a>, "
                                              "<a href='https://github.com/nspire-emus/firebird'>Firebird Emu</a>, "
-                                             "<a href='https://github.com/Simsys/qhexedit2'>QHexEdit2</a>, "
                                              "<a href='https://github.com/debrouxl/tilibs'>tilibs</a>, "
                                              "<a href='https://github.com/adriweb/tivars_lib_cpp'>tivars_lib_cpp</a>."),
                               QStringLiteral("<a href='http://www.fatcow.com/free-icons'>FatCow's 'Farm-Fresh Web Icons'</a>"),

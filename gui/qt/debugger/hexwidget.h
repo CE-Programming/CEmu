@@ -34,6 +34,7 @@ public:
     void appendData(const QByteArray &ba);
     const char *data() { return m_data.constData(); }
     const char *modified() { return m_modified.constData(); }
+    int modifiedCount() { return m_modified.count(); }
 
     int size() { return m_size; }
 

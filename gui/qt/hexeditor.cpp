@@ -189,12 +189,16 @@ void MainWindow::syncHexWidget(HexWidget *edit) {
 }
 
 void MainWindow::flashSyncPressed() {
-    memcpy(mem.flash.block, ui->flashEdit->data(), 0x400000);
+    if (ui->flashEdit->modifiedCount()) {
+        memcpy(mem.flash.block, ui->flashEdit->data(), 0x400000);
+    }
     syncHexWidget(ui->flashEdit);
 }
 
 void MainWindow::ramSyncPressed() {
-    memcpy(mem.ram.block, ui->ramEdit->data(), 0x65800);
+    if (ui->ramEdit->modifiedCount()) {
+        memcpy(mem.ram.block, ui->ramEdit->data(), 0x65800);
+    }
     syncHexWidget(ui->ramEdit);
 }
 
@@ -204,9 +208,11 @@ void MainWindow::memSyncEdit(HexWidget *edit) {
     }
 
     uint32_t start = edit->baseAddr();
-    for (int i = 0; i < edit->size(); i++) {
+    int count = edit->modifiedCount();
+    for (int i = 0; count, i < edit->size(); i++) {
         if (edit->modified()[i]) {
             mem_poke_byte(start + i, edit->data()[i]);
+            count--;
         }
         qApp->processEvents();
     }
