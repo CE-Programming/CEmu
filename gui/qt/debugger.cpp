@@ -1,28 +1,8 @@
-#include <QtWidgets/QToolTip>
-#include <QtCore/QFileInfo>
-#include <QtCore/QRegularExpression>
-#include <QtNetwork/QNetworkAccessManager>
-#include <QtWidgets/QMessageBox>
-#include <QtWidgets/QInputDialog>
-#include <QtWidgets/QScrollBar>
-#include <QtNetwork/QNetworkReply>
-#include <QClipboard>
-#include <fstream>
-
-#ifdef _MSC_VER
-    #include <direct.h>
-    #define chdir _chdir
-#else
-    #include <unistd.h>
-#endif
-
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-
 #include "debugger.h"
 #include "dockwidget.h"
 #include "utils.h"
-
 #include "../../core/asic.h"
 #include "../../core/cpu.h"
 #include "../../core/misc.h"
@@ -40,6 +20,24 @@
 #include "../../core/realclock.h"
 #include "../../core/sha256.h"
 #include "../../core/schedule.h"
+
+#include <QtWidgets/QToolTip>
+#include <QtCore/QFileInfo>
+#include <QtCore/QRegularExpression>
+#include <QtNetwork/QNetworkAccessManager>
+#include <QtWidgets/QMessageBox>
+#include <QtWidgets/QInputDialog>
+#include <QtWidgets/QScrollBar>
+#include <QtWidgets/QDesktopWidget>
+#include <QtNetwork/QNetworkReply>
+#include <QtGui/QClipboard>
+
+#ifdef _MSC_VER
+    #include <direct.h>
+    #define chdir _chdir
+#else
+    #include <unistd.h>
+#endif
 
 // -----------------------------------------------
 // Debugger Init
@@ -95,11 +93,11 @@ void MainWindow::debuggerLeave() {
 }
 
 void MainWindow::debuggerImport() {
-    debuggerImportFile(debuggerGetFile(DBG_OPEN));
+    debuggerImportFile(debuggerGetFile(false));
 }
 
 void MainWindow::debuggerExport() {
-    debuggerExportFile(debuggerGetFile(DBG_SAVE));
+    debuggerExportFile(debuggerGetFile(true));
 }
 
 void MainWindow::debuggerStep(int mode) {
@@ -114,7 +112,7 @@ void MainWindow::debuggerImportFile(const QString &filename) {
     int i;
 
     QSettings debugInfo(filename, QSettings::IniFormat);
-    if (debugInfo.value(QStringLiteral("version")) != DBG_VERSION) {
+    if (debugInfo.value(QStringLiteral("version")) != VERSION_DBG) {
         QMessageBox *warn = new QMessageBox;
         warn->setWindowTitle(tr("Invalid Version"));
         warn->setText(tr("This debugging information is incompatible with this version of CEmu"));
@@ -157,11 +155,11 @@ void MainWindow::debuggerImportFile(const QString &filename) {
     }
 
     // Add all the equate files and load them in
-    currentEquateFiles = debugInfo.value(QStringLiteral("equates/files")).toStringList();
+    m_equateFiles = debugInfo.value(QStringLiteral("equates/files")).toStringList();
 
     disasm.map.clear();
     disasm.reverseMap.clear();
-    for (QString &file : currentEquateFiles) {
+    for (QString &file : m_equateFiles) {
         equatesAddFile(file);
     }
 }
@@ -205,7 +203,7 @@ void MainWindow::debuggerExportFile(const QString &filename) {
     QSettings debugInfo(filename, QSettings::IniFormat);
 
     // Set the file format version
-    debugInfo.setValue(QStringLiteral("version"), DBG_VERSION);
+    debugInfo.setValue(QStringLiteral("version"), VERSION_DBG);
 
     // Save the breakpoint information
     QStringList breakpointLabel;
@@ -258,21 +256,21 @@ void MainWindow::debuggerExportFile(const QString &filename) {
     debugInfo.setValue(QStringLiteral("portmonitor/write"), portWEnabled);
     debugInfo.setValue(QStringLiteral("portmonitor/freeze"), portFEnabled);
 
-    debugInfo.setValue(QStringLiteral("equates/files"), currentEquateFiles);
+    debugInfo.setValue(QStringLiteral("equates/files"), m_equateFiles);
 
     // Make sure we write the settings
     debugInfo.sync();
 }
 
-QString MainWindow::debuggerGetFile(int mode) {
+QString MainWindow::debuggerGetFile(bool save) {
     QString filename;
     QFileDialog dialog(this);
 
-    dialog.setAcceptMode(mode ? QFileDialog::AcceptSave : QFileDialog::AcceptOpen);
+    dialog.setAcceptMode(save ? QFileDialog::AcceptSave : QFileDialog::AcceptOpen);
     dialog.setFileMode(QFileDialog::AnyFile);
-    dialog.setDirectory(currDir);
+    dialog.setDirectory(m_dir);
     dialog.setNameFilter(tr("Debugging Info (*.ini)"));
-    dialog.setWindowTitle(mode ? tr("Debugger Import") : tr("Debugger Export"));
+    dialog.setWindowTitle(save ? tr("Debugger Import") : tr("Debugger Export"));
     dialog.setDefaultSuffix(QStringLiteral("ini"));
     dialog.exec();
 
@@ -281,7 +279,7 @@ QString MainWindow::debuggerGetFile(int mode) {
         filename = selected.first();
     }
 
-    currDir = dialog.directory();
+    m_dir = dialog.directory();
     return filename;
 }
 
@@ -293,15 +291,14 @@ void MainWindow::debuggerRaise() {
     guiDebug = true;
     debuggerGUIPopulate();
     debuggerGUIEnable();
-    connect(stepInShortcut, &QShortcut::activated, this, &MainWindow::stepIn);
-    connect(stepOverShortcut, &QShortcut::activated, this, &MainWindow::stepOver);
-    connect(stepNextShortcut, &QShortcut::activated, this, &MainWindow::stepNext);
-    connect(stepOutShortcut, &QShortcut::activated, this, &MainWindow::stepOut);
+    connect(m_shortcutStepIn, &QShortcut::activated, this, &MainWindow::stepIn);
+    connect(m_shortcutStepOver, &QShortcut::activated, this, &MainWindow::stepOver);
+    connect(m_shortcutStepNext, &QShortcut::activated, this, &MainWindow::stepNext);
+    connect(m_shortcutStepOut, &QShortcut::activated, this, &MainWindow::stepOut);
 }
 
 void MainWindow::debuggerExecuteCommand(uint32_t debugAddress, uint8_t command) {
-
-    softCommand = true;
+    m_useSoftCom = true;
 
     if (debugAddress == 0xFF) {
         int tmp;
@@ -309,12 +306,12 @@ void MainWindow::debuggerExecuteCommand(uint32_t debugAddress, uint8_t command) 
             case CMD_ABORT:
                 ui->debuggerLabel->setText(QStringLiteral("Program Aborted"));
                 debuggerRaise();
-                softCommand = false;
+                m_useSoftCom = false;
                 return; // don't exit the debugger
             case CMD_DEBUG:
                 ui->debuggerLabel->setText(QStringLiteral("Program Entered Debugger"));
                 debuggerRaise();
-                softCommand = false;
+                m_useSoftCom = false;
                 return; // don't exit the debugger
             case CMD_SET_BREAKPOINT:
                 breakpointAdd(breakpointNextLabel(), cpu.registers.DE, true, false);
@@ -363,7 +360,7 @@ void MainWindow::debuggerExecuteCommand(uint32_t debugAddress, uint8_t command) 
         }
     }
 
-    softCommand = false;
+    m_useSoftCom = false;
 
     // continue emulation
     if (guiDebug) {
@@ -518,10 +515,10 @@ void MainWindow::debuggerUpdateChanges() {
 void MainWindow::debuggerGUISetState(bool state) {
     if (state) {
         ui->buttonRun->setText(tr("Run"));
-        ui->buttonRun->setIcon(runIcon);
+        ui->buttonRun->setIcon(m_iconRun);
     } else {
         ui->buttonRun->setText(tr("Stop"));
-        ui->buttonRun->setIcon(stopIcon);
+        ui->buttonRun->setIcon(m_iconStop);
         ui->debuggerLabel->clear();
     }
 
@@ -581,7 +578,7 @@ void MainWindow::debuggerGUISetState(bool state) {
 void MainWindow::debuggerChangeState() {
     bool state = guiDebug;
 
-    if (romPath.isEmpty()) {
+    if (m_pathRom.isEmpty()) {
         return;
     }
 
@@ -601,127 +598,127 @@ void MainWindow::debuggerGUIPopulate() {
     QString tmp;
 
     tmp = int2hex(cpu.registers.AF, 4);
-    ui->afregView->setPalette(tmp == ui->afregView->text() ? nocolorback : colorback);
+    ui->afregView->setPalette(tmp == ui->afregView->text() ? m_cNone : m_cBack);
     ui->afregView->setText(tmp);
 
     tmp = int2hex(cpu.registers.HL, 6);
-    ui->hlregView->setPalette(tmp == ui->hlregView->text() ? nocolorback : colorback);
+    ui->hlregView->setPalette(tmp == ui->hlregView->text() ? m_cNone : m_cBack);
     ui->hlregView->setText(tmp);
 
     tmp = int2hex(cpu.registers.DE, 6);
-    ui->deregView->setPalette(tmp == ui->deregView->text() ? nocolorback : colorback);
+    ui->deregView->setPalette(tmp == ui->deregView->text() ? m_cNone : m_cBack);
     ui->deregView->setText(tmp);
 
     tmp = int2hex(cpu.registers.BC, 6);
-    ui->bcregView->setPalette(tmp == ui->bcregView->text() ? nocolorback : colorback);
+    ui->bcregView->setPalette(tmp == ui->bcregView->text() ? m_cNone : m_cBack);
     ui->bcregView->setText(tmp);
 
     tmp = int2hex(cpu.registers.IX, 6);
-    ui->ixregView->setPalette(tmp == ui->ixregView->text() ? nocolorback : colorback);
+    ui->ixregView->setPalette(tmp == ui->ixregView->text() ? m_cNone : m_cBack);
     ui->ixregView->setText(tmp);
 
     tmp = int2hex(cpu.registers.IY, 6);
-    ui->iyregView->setPalette(tmp == ui->iyregView->text() ? nocolorback : colorback);
+    ui->iyregView->setPalette(tmp == ui->iyregView->text() ? m_cNone : m_cBack);
     ui->iyregView->setText(tmp);
 
     tmp = int2hex(cpu.registers._AF, 4);
-    ui->af_regView->setPalette(tmp == ui->af_regView->text() ? nocolorback : colorback);
+    ui->af_regView->setPalette(tmp == ui->af_regView->text() ? m_cNone : m_cBack);
     ui->af_regView->setText(tmp);
 
     tmp = int2hex(cpu.registers._HL, 6);
-    ui->hl_regView->setPalette(tmp == ui->hl_regView->text() ? nocolorback : colorback);
+    ui->hl_regView->setPalette(tmp == ui->hl_regView->text() ? m_cNone : m_cBack);
     ui->hl_regView->setText(tmp);
 
     tmp = int2hex(cpu.registers._DE, 6);
-    ui->de_regView->setPalette(tmp == ui->de_regView->text() ? nocolorback : colorback);
+    ui->de_regView->setPalette(tmp == ui->de_regView->text() ? m_cNone : m_cBack);
     ui->de_regView->setText(tmp);
 
     tmp = int2hex(cpu.registers._BC, 6);
-    ui->bc_regView->setPalette(tmp == ui->bc_regView->text() ? nocolorback : colorback);
+    ui->bc_regView->setPalette(tmp == ui->bc_regView->text() ? m_cNone : m_cBack);
     ui->bc_regView->setText(tmp);
 
     tmp = int2hex(cpu.registers.SPS, 4);
-    ui->spsregView->setPalette(tmp == ui->spsregView->text() ? nocolorback : colorback);
+    ui->spsregView->setPalette(tmp == ui->spsregView->text() ? m_cNone : m_cBack);
     ui->spsregView->setText(tmp);
 
     tmp = int2hex(cpu.registers.SPL, 6);
-    ui->splregView->setPalette(tmp == ui->splregView->text() ? nocolorback : colorback);
+    ui->splregView->setPalette(tmp == ui->splregView->text() ? m_cNone : m_cBack);
     ui->splregView->setText(tmp);
 
     tmp = int2hex(cpu.registers.MBASE, 2);
-    ui->mbregView->setPalette(tmp == ui->mbregView->text() ? nocolorback : colorback);
+    ui->mbregView->setPalette(tmp == ui->mbregView->text() ? m_cNone : m_cBack);
     ui->mbregView->setText(tmp);
 
     tmp = int2hex(cpu.registers.I, 4);
-    ui->iregView->setPalette(tmp == ui->iregView->text() ? nocolorback : colorback);
+    ui->iregView->setPalette(tmp == ui->iregView->text() ? m_cNone : m_cBack);
     ui->iregView->setText(tmp);
 
     tmp = int2hex(cpu.IM - !!cpu.IM, 1);
-    ui->imregView->setPalette(tmp == ui->imregView->text() ? nocolorback : colorback);
+    ui->imregView->setPalette(tmp == ui->imregView->text() ? m_cNone : m_cBack);
     ui->imregView->setText(tmp);
 
     tmp = int2hex(cpu.registers.PC, 6);
-    ui->pcregView->setPalette(tmp == ui->pcregView->text() ? nocolorback : colorback);
+    ui->pcregView->setPalette(tmp == ui->pcregView->text() ? m_cNone : m_cBack);
     ui->pcregView->setText(tmp);
 
     tmp = int2hex(cpu.registers.R >> 1 | cpu.registers.R << 7, 2);
-    ui->rregView->setPalette(tmp == ui->rregView->text() ? nocolorback : colorback);
+    ui->rregView->setPalette(tmp == ui->rregView->text() ? m_cNone : m_cBack);
     ui->rregView->setText(tmp);
 
     tmp = int2hex(lcd.upbase, 6);
-    ui->lcdbaseView->setPalette(tmp == ui->lcdbaseView->text() ? nocolorback : colorback);
+    ui->lcdbaseView->setPalette(tmp == ui->lcdbaseView->text() ? m_cNone : m_cBack);
     ui->lcdbaseView->setText(tmp);
 
     tmp = int2hex(lcd.upcurr, 6);
-    ui->lcdcurrView->setPalette(tmp == ui->lcdcurrView->text() ? nocolorback : colorback);
+    ui->lcdcurrView->setPalette(tmp == ui->lcdcurrView->text() ? m_cNone : m_cBack);
     ui->lcdcurrView->setText(tmp);
 
     tmp = QString::number(sched.clockRates[CLOCK_CPU]);
-    ui->freqView->setPalette(tmp == ui->freqView->text() ? nocolorback : colorback);
+    ui->freqView->setPalette(tmp == ui->freqView->text() ? m_cNone : m_cBack);
     ui->freqView->setText(tmp);
 
-    tmp = QString::number(ignoreDmaCycles ? debugger.totalCycles : debugger.totalCycles + debugger.dmaCycles);
-    ui->cycleView->setPalette(tmp == ui->cycleView->text() ? nocolorback : colorback);
+    tmp = QString::number(m_ignoreDmaCycles ? debugger.totalCycles : debugger.totalCycles + debugger.dmaCycles);
+    ui->cycleView->setPalette(tmp == ui->cycleView->text() ? m_cNone : m_cBack);
     ui->cycleView->setText(tmp);
 
     tmp = QString::number(rtc.readSec);
-    ui->seconds->setPalette(tmp == ui->seconds->text() ? nocolorback : colorback);
+    ui->seconds->setPalette(tmp == ui->seconds->text() ? m_cNone : m_cBack);
     ui->seconds->setText(tmp);
 
     tmp = QString::number(rtc.readMin);
-    ui->minutes->setPalette(tmp == ui->minutes->text() ? nocolorback : colorback);
+    ui->minutes->setPalette(tmp == ui->minutes->text() ? m_cNone : m_cBack);
     ui->minutes->setText(tmp);
 
     tmp = QString::number(rtc.readHour);
-    ui->hours->setPalette(tmp == ui->hours->text() ? nocolorback : colorback);
+    ui->hours->setPalette(tmp == ui->hours->text() ? m_cNone : m_cBack);
     ui->hours->setText(tmp);
 
     tmp = QString::number(rtc.readDay);
-    ui->days->setPalette(tmp == ui->days->text() ? nocolorback : colorback);
+    ui->days->setPalette(tmp == ui->days->text() ? m_cNone : m_cBack);
     ui->days->setText(tmp);
 
     tmp = QString::number(gpt.timer[0].counter);
-    ui->timer1->setPalette(tmp == ui->timer1->text() ? nocolorback : colorback);
+    ui->timer1->setPalette(tmp == ui->timer1->text() ? m_cNone : m_cBack);
     ui->timer1->setText(tmp);
 
     tmp = QString::number(gpt.timer[0].reset);
-    ui->timer1r->setPalette(tmp == ui->timer1r->text() ? nocolorback : colorback);
+    ui->timer1r->setPalette(tmp == ui->timer1r->text() ? m_cNone : m_cBack);
     ui->timer1r->setText(tmp);
 
     tmp = QString::number(gpt.timer[1].counter);
-    ui->timer2->setPalette(tmp == ui->timer2->text() ? nocolorback : colorback);
+    ui->timer2->setPalette(tmp == ui->timer2->text() ? m_cNone : m_cBack);
     ui->timer2->setText(tmp);
 
     tmp = QString::number(gpt.timer[1].reset);
-    ui->timer2r->setPalette(tmp == ui->timer2r->text() ? nocolorback : colorback);
+    ui->timer2r->setPalette(tmp == ui->timer2r->text() ? m_cNone : m_cBack);
     ui->timer2r->setText(tmp);
 
     tmp = QString::number(gpt.timer[2].counter);
-    ui->timer3->setPalette(tmp == ui->timer3->text() ? nocolorback : colorback);
+    ui->timer3->setPalette(tmp == ui->timer3->text() ? m_cNone : m_cBack);
     ui->timer3->setText(tmp);
 
     tmp = QString::number(gpt.timer[2].reset);
-    ui->timer3r->setPalette(tmp == ui->timer3r->text() ? nocolorback : colorback);
+    ui->timer3r->setPalette(tmp == ui->timer3r->text() ? m_cNone : m_cBack);
     ui->timer3r->setText(tmp);
 
     batteryIsCharging(control.batteryCharging);
@@ -765,8 +762,8 @@ void MainWindow::debuggerGUIPopulate() {
 
     updateTIOSView();
     updateStack();
-    prevDisasmAddress = cpu.registers.PC;
-    updateDisasmAddr(prevDisasmAddress, true);
+    m_prevDisasmAddr = cpu.registers.PC;
+    updateDisasmAddr(m_prevDisasmAddr, true);
 
     updateMemoryViews();
 
@@ -793,14 +790,14 @@ void MainWindow::breakpointSetPreviousAddress(QTableWidgetItem *curr_item) {
     if (curr_item->text().isEmpty()) {
         return;
     }
-    prevBreakpointAddress = static_cast<uint32_t>(hex2int(ui->breakpointView->item(curr_item->row(), BREAK_ADDR_LOC)->text()));
+    m_prevBreakAddr = static_cast<uint32_t>(hex2int(ui->breakpointView->item(curr_item->row(), BREAK_ADDR_LOC)->text()));
 }
 
 void MainWindow::breakpointRemoveRow(int row) {
     uint32_t address = static_cast<uint32_t>(hex2int(ui->breakpointView->item(row, BREAK_ADDR_LOC)->text()));
 
     debug_breakwatch(address, DBG_MASK_EXEC, false);
-    if (!guiAdd && !softCommand) {
+    if (!m_guiAdd && !m_useSoftCom) {
         updateDisasm();
     }
     ui->breakpointView->removeRow(row);
@@ -852,7 +849,7 @@ void MainWindow::breakpointDataChanged(QTableWidgetItem *item) {
         }
 
         if (isNotValidHex(s) || s.length() > 6) {
-            item->setText(int2hex(prevBreakpointAddress, 6));
+            item->setText(int2hex(m_prevBreakAddr, 6));
             return;
         }
 
@@ -864,7 +861,7 @@ void MainWindow::breakpointDataChanged(QTableWidgetItem *item) {
         // Return if address is already set
         for (int i = 0; i < ui->breakpointView->rowCount(); i++) {
             if (ui->breakpointView->item(i, BREAK_ADDR_LOC)->text() == addressString && i != row) {
-                item->setText(int2hex(prevBreakpointAddress, 6));
+                item->setText(int2hex(m_prevBreakAddr, 6));
                 ui->breakpointView->blockSignals(false);
                 return;
             }
@@ -873,7 +870,7 @@ void MainWindow::breakpointDataChanged(QTableWidgetItem *item) {
         mask = ((ui->breakpointView->item(row, BREAK_ENABLE_LOC)->checkState() == Qt::Checked) ? DBG_MASK_EXEC
                                                                                                : DBG_MASK_NONE);
 
-        debug_breakwatch(prevBreakpointAddress, DBG_MASK_EXEC, false);
+        debug_breakwatch(m_prevBreakAddr, DBG_MASK_EXEC, false);
         item->setText(addressString);
         debug_breakwatch(address, mask, true);
         ui->breakpointView->blockSignals(false);
@@ -899,11 +896,11 @@ void MainWindow::breakpointGUIAdd() {
     QTextCursor c = ui->disassemblyView->textCursor();
     c.setCharFormat(ui->disassemblyView->currentCharFormat());
 
-    guiAdd = true;
+    m_guiAdd = true;
 
     breakpointAdd(breakpointNextLabel(), address, true, true);
 
-    guiAdd = false;
+    m_guiAdd = false;
 
     int32_t base_address = disasm.baseAddress;
     int32_t new_address = disasm.newAddress;
@@ -938,7 +935,7 @@ bool MainWindow::breakpointAdd(const QString& label, uint32_t address, bool enab
     for (int i = 0; i < row; i++) {
         if (ui->breakpointView->item(i, BREAK_ADDR_LOC)->text() == addressStr) {
             if (addressStr != QStringLiteral("000000")) {
-                if (!softCommand) {
+                if (!m_useSoftCom) {
                     ui->breakpointView->selectRow(i);
                     if (toggle) {
                         breakpointRemoveRow(i);
@@ -957,7 +954,7 @@ bool MainWindow::breakpointAdd(const QString& label, uint32_t address, bool enab
     ui->breakpointView->setRowCount(row + 1);
 
     QToolButton *btnRemove = new QToolButton();
-    btnRemove->setIcon(removeIcon);
+    btnRemove->setIcon(m_iconRemove);
     connect(btnRemove, &QToolButton::clicked, this, &MainWindow::breakpointRemoveSelected);
 
     QTableWidgetItem *itemLabel   = new QTableWidgetItem(label);
@@ -979,14 +976,14 @@ bool MainWindow::breakpointAdd(const QString& label, uint32_t address, bool enab
 
     debug_breakwatch(address, DBG_MASK_EXEC, enabled);
 
-    if (!guiAdd && !softCommand) {
+    if (!m_guiAdd && !m_useSoftCom) {
         updateDisasm();
     }
 
-    prevBreakpointAddress = address;
+    m_prevBreakAddr = address;
     ui->breakpointView->blockSignals(false);
 
-    if (softCommand) {
+    if (m_useSoftCom) {
         ui->lcd->setFocus();
     }
     return true;
@@ -1000,7 +997,7 @@ void MainWindow::portSetPreviousAddress(QTableWidgetItem *curr_item) {
     if (curr_item->text().isEmpty()) {
         return;
     }
-    prevPortAddress = static_cast<uint16_t>(hex2int(ui->portView->item(curr_item->row(), PORT_ADDR_LOC)->text()));
+    m_prevPortAddr = static_cast<uint16_t>(hex2int(ui->portView->item(curr_item->row(), PORT_ADDR_LOC)->text()));
 }
 
 void MainWindow::portRemoveRow(int row) {
@@ -1053,7 +1050,7 @@ bool MainWindow::portAdd(uint16_t port, unsigned int mask) {
     ui->portView->blockSignals(true);
 
     QToolButton *btnRemove = new QToolButton();
-    btnRemove->setIcon(removeIcon);
+    btnRemove->setIcon(m_iconRemove);
     connect(btnRemove, &QToolButton::clicked, this, &MainWindow::portRemoveSelected);
 
     QTableWidgetItem *itemAddress = new QTableWidgetItem(portStr);
@@ -1082,7 +1079,7 @@ bool MainWindow::portAdd(uint16_t port, unsigned int mask) {
 
     ui->portView->selectRow(row);
     ui->portView->setUpdatesEnabled(true);
-    prevPortAddress = port;
+    m_prevPortAddr = port;
     ui->portView->blockSignals(false);
     return true;
 }
@@ -1110,7 +1107,7 @@ void MainWindow::portDataChanged(QTableWidgetItem *item) {
         unsigned int mask;
 
         if (isNotValidHex(s) || s.length() > 4) {
-            item->setText(int2hex(prevPortAddress, 4));
+            item->setText(int2hex(m_prevPortAddr, 4));
             return;
         }
 
@@ -1123,13 +1120,13 @@ void MainWindow::portDataChanged(QTableWidgetItem *item) {
         // Return if port is already set
         for (int i=0; i<ui->portView->rowCount(); i++) {
             if (ui->portView->item(i, PORT_ADDR_LOC)->text() == portStr && i != row) {
-                item->setText(int2hex(prevPortAddress, 4));
+                item->setText(int2hex(m_prevPortAddr, 4));
                 ui->portView->blockSignals(false);
                 return;
             }
         }
 
-        debug_pmonitor_remove(prevPortAddress);
+        debug_pmonitor_remove(m_prevPortAddr);
 
         mask = (ui->portView->item(row, PORT_READ_LOC)->checkState() == Qt::Checked ? DBG_MASK_PORT_READ : DBG_MASK_NONE)  |
                (ui->portView->item(row, PORT_WRITE_LOC)->checkState() == Qt::Checked ? DBG_MASK_PORT_WRITE : DBG_MASK_NONE) |
@@ -1158,7 +1155,7 @@ void MainWindow::watchpointSetPreviousAddress(QTableWidgetItem *curr_item) {
         return;
     }
 
-    prevWatchpointAddress = static_cast<uint32_t>(hex2int(ui->watchpointView->item(curr_item->row(), WATCH_ADDR_LOC)->text()));
+    m_prevWatchAddr = static_cast<uint32_t>(hex2int(ui->watchpointView->item(curr_item->row(), WATCH_ADDR_LOC)->text()));
 }
 
 void MainWindow::watchpointRemoveRow(int row) {
@@ -1166,7 +1163,7 @@ void MainWindow::watchpointRemoveRow(int row) {
 
     debug_breakwatch(address, DBG_MASK_READ | DBG_MASK_WRITE, false);
 
-    if (!guiAdd && !softCommand) {
+    if (!m_guiAdd && !m_useSoftCom) {
         updateDisasm();
     }
 
@@ -1205,32 +1202,32 @@ void MainWindow::watchpointUpdate(int row) {
 }
 
 void MainWindow::watchpointReadGUIAdd() {
-    watchpointGUIMask = DBG_MASK_READ;
+    m_watchGUIMask = DBG_MASK_READ;
     watchpointGUIAdd();
 }
 
 void MainWindow::watchpointWriteGUIAdd() {
-    watchpointGUIMask = DBG_MASK_WRITE;
+    m_watchGUIMask = DBG_MASK_WRITE;
     watchpointGUIAdd();
 }
 
 void MainWindow::watchpointReadWriteGUIAdd() {
-    watchpointGUIMask = DBG_MASK_READ | DBG_MASK_WRITE;
+    m_watchGUIMask = DBG_MASK_READ | DBG_MASK_WRITE;
     watchpointGUIAdd();
 }
 
 void MainWindow::watchpointGUIAdd() {
-    unsigned int mask = watchpointGUIMask;
+    unsigned int mask = m_watchGUIMask;
     uint32_t address = static_cast<uint32_t>(hex2int(ui->disassemblyView->getSelectedAddress()));
 
     QTextCursor c = ui->disassemblyView->textCursor();
     c.setCharFormat(ui->disassemblyView->currentCharFormat());
 
-    guiAdd = true;
+    m_guiAdd = true;
 
     watchpointAdd(watchpointNextLabel(), address, 1, mask, true);
 
-    guiAdd = false;
+    m_guiAdd = false;
 
     int32_t base_address = disasm.baseAddress;
     int32_t new_address = disasm.newAddress;
@@ -1287,7 +1284,7 @@ bool MainWindow::watchpointAdd(const QString& label, uint32_t address, uint8_t l
     for (int i = 0; i < row; i++) {
         if (ui->watchpointView->item(i, WATCH_ADDR_LOC)->text() == addressStr) {
             if (addressStr != QStringLiteral("000000")) {
-                if (!softCommand) {
+                if (!m_useSoftCom) {
                     ui->watchpointView->selectRow(i);
                     if (toggle) {
                         watchpointRemoveRow(i);
@@ -1304,7 +1301,7 @@ bool MainWindow::watchpointAdd(const QString& label, uint32_t address, uint8_t l
     ui->watchpointView->blockSignals(true);
 
     QToolButton *btnRemove = new QToolButton();
-    btnRemove->setIcon(removeIcon);
+    btnRemove->setIcon(m_iconRemove);
     connect(btnRemove, &QToolButton::clicked, this, &MainWindow::watchpointRemoveSelected);
 
     QTableWidgetItem *itemLabel   = new QTableWidgetItem(label);
@@ -1343,14 +1340,14 @@ bool MainWindow::watchpointAdd(const QString& label, uint32_t address, uint8_t l
     // actually set it in the debugger core
     debug_breakwatch(address, mask, true);
 
-    if (!guiAdd && !softCommand) {
+    if (!m_guiAdd && !m_useSoftCom) {
         updateDisasm();
     }
 
-    prevWatchpointAddress = address;
+    m_prevWatchAddr = address;
     ui->watchpointView->blockSignals(false);
 
-    if (softCommand) {
+    if (m_useSoftCom) {
         ui->lcd->setFocus();
     }
     return true;
@@ -1432,7 +1429,7 @@ void MainWindow::watchpointDataChanged(QTableWidgetItem *item) {
         }
 
         if (isNotValidHex(s) || s.length() > 6) {
-            item->setText(int2hex(prevWatchpointAddress, 6));
+            item->setText(int2hex(m_prevWatchAddr, 6));
             ui->watchpointView->blockSignals(false);
             return;
         }
@@ -1443,7 +1440,7 @@ void MainWindow::watchpointDataChanged(QTableWidgetItem *item) {
         /* Return if address is already set */
         for (int i = 0; i < ui->watchpointView->rowCount(); i++) {
             if (ui->watchpointView->item(i, WATCH_ADDR_LOC)->text() == newString && i != row) {
-                item->setText(int2hex(prevWatchpointAddress, 6));
+                item->setText(int2hex(m_prevWatchAddr, 6));
                 ui->watchpointView->blockSignals(false);
                 return;
             }
@@ -1452,7 +1449,7 @@ void MainWindow::watchpointDataChanged(QTableWidgetItem *item) {
         mask = ((ui->watchpointView->item(row, WATCH_READ_LOC)->checkState() == Qt::Checked) ? DBG_MASK_READ : DBG_MASK_NONE)|
                ((ui->watchpointView->item(row, WATCH_WRITE_LOC)->checkState() == Qt::Checked) ? DBG_MASK_WRITE : DBG_MASK_NONE);
 
-        debug_breakwatch(prevWatchpointAddress, DBG_MASK_READ | DBG_MASK_WRITE, false);
+        debug_breakwatch(m_prevWatchAddr, DBG_MASK_READ | DBG_MASK_WRITE, false);
         item->setText(newString);
         debug_breakwatch(address, mask, true);
         watchpointUpdate(row);
@@ -1500,7 +1497,7 @@ void MainWindow::scrollStack(int value) {
 }
 
 void MainWindow::equatesClear() {
-    currentEquateFiles.clear();
+    m_equateFiles.clear();
     disasm.map.clear();
     disasm.reverseMap.clear();
     updateDisasm();
@@ -1541,7 +1538,7 @@ void MainWindow::updateLabels() {
 void MainWindow::equatesRefresh() {
     disasm.map.clear();
     disasm.reverseMap.clear();
-    for (QString &file : currentEquateFiles) {
+    for (QString &file : m_equateFiles) {
         equatesAddFile(file);
     }
     updateLabels();
@@ -1553,7 +1550,7 @@ void MainWindow::equatesAddDialog() {
 
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
     dialog.setFileMode(QFileDialog::ExistingFile);
-    dialog.setDirectory(currDir);
+    dialog.setDirectory(m_dir);
 
     QStringList extFilters;
     extFilters << tr("Equate files (*.inc *.lab *.map)")
@@ -1561,16 +1558,16 @@ void MainWindow::equatesAddDialog() {
     dialog.setNameFilters(extFilters);
 
     if (dialog.exec()) {
-        currentEquateFiles.append(dialog.selectedFiles());
+        m_equateFiles.append(dialog.selectedFiles());
         equatesRefresh();
     }
-    currDir = dialog.directory();
+    m_dir = dialog.directory();
 }
 
 void MainWindow::equatesAddFile(const QString &fileName) {
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        currentEquateFiles.removeAll(fileName);
+        m_equateFiles.removeAll(fileName);
         console(QStringLiteral("[CEmu] Debugger couldn't open this equate file (removed): ") + fileName + "\n");
         return;
     }
@@ -1658,12 +1655,12 @@ void MainWindow::updateDisasmAddr(int sentBase, bool newPane) {
     if (!guiDebug) {
         return;
     }
-    addressPane = sentBase;
-    fromPane = newPane;
-    disasmOffsetSet = false;
+    m_addressPane = sentBase;
+    m_fromPane = newPane;
+    m_disasmOffsetSet = false;
     disasm.adl = ui->checkADL->isChecked();
     disasm.baseAddress = -1;
-    disasm.newAddress = addressPane - ((newPane) ? 0x40 : 0);
+    disasm.newAddress = m_addressPane - ((newPane) ? 0x40 : 0);
     if (disasm.newAddress < 0) { disasm.newAddress = 0; }
     int32_t last_address = disasm.newAddress + 0x120;
     if (last_address > 0xFFFFFF) { last_address = 0xFFFFFF; }
@@ -1677,7 +1674,7 @@ void MainWindow::updateDisasmAddr(int sentBase, bool newPane) {
         drawNextDisasmLine();
     }
 
-    ui->disassemblyView->setTextCursor(disasmOffset);
+    ui->disassemblyView->setTextCursor(m_disasmOffset);
     ui->disassemblyView->cursorState(true);
     ui->disassemblyView->updateAllHighlights();
     ui->disassemblyView->centerCursor();
@@ -1701,8 +1698,8 @@ void MainWindow::toggleADLDisasm(int state) {
             disasm.forceAdl = FORCE_NONADL;
             break;
     }
-    prevDisasmAddress = ui->disassemblyView->getSelectedAddress().toUInt(Q_NULLPTR, 16);
-    updateDisasmAddr(prevDisasmAddress, true);
+    m_prevDisasmAddr = ui->disassemblyView->getSelectedAddress().toUInt(Q_NULLPTR, 16);
+    updateDisasmAddr(m_prevDisasmAddr, true);
 }
 
 void MainWindow::toggleADLStack(int state) {
@@ -1735,7 +1732,7 @@ void MainWindow::gotoDisasmAddr(uint32_t address) {
 }
 
 void MainWindow::gotoMemAddr(uint32_t address) {
-    memGoto(selectedMemory, address);
+    memGoto(m_memoryWidget, address);
 }
 
 void MainWindow::handleCtrlClickText(QPlainTextEdit *edit) {
@@ -1916,21 +1913,21 @@ void MainWindow::updateStack() {
     }
 
     if (adl) {
-        stackAddress = cpu.registers.SPL;
+        m_stackAddr = cpu.registers.SPL;
         for (int i = 0; i < 80; i += 3) {
-            stackAddress = (stackAddress + 3) & 0xFFFFFF;
+            m_stackAddr = (m_stackAddr + 3) & 0xFFFFFF;
             formattedLine = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2</pre>"))
-                                    .arg(int2hex(stackAddress, 6),
-                                         int2hex(mem_peek_word(stackAddress, 1), 6));
+                                    .arg(int2hex(m_stackAddr, 6),
+                                         int2hex(mem_peek_word(m_stackAddr, 1), 6));
             ui->stackView->appendHtml(formattedLine);
         }
     } else {
-        stackAddress = cpu.registers.SPS;
+        m_stackAddr = cpu.registers.SPS;
         for (int i = 0; i < 60; i += 2) {
-            stackAddress = (stackAddress + 2) & 0xFFFFFF;
+            m_stackAddr = (m_stackAddr + 2) & 0xFFFFFF;
             formattedLine = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2</pre>"))
-                                    .arg(int2hex(stackAddress, 4),
-                                         int2hex(mem_peek_word(stackAddress, 0), 4));
+                                    .arg(int2hex(m_stackAddr, 4),
+                                         int2hex(mem_peek_word(m_stackAddr, 0), 4));
             ui->stackView->appendHtml(formattedLine);
         }
     }
@@ -1954,15 +1951,15 @@ void MainWindow::drawNextStackLine() {
     }
 
     if (adl) {
-        stackAddress = (stackAddress + 3) & 0xFFFFFF;
+        m_stackAddr = (m_stackAddr + 3) & 0xFFFFFF;
         line = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2</pre>"))
-                       .arg(int2hex(stackAddress, 6),
-                            int2hex(mem_peek_word(stackAddress, 1), 6));
+                       .arg(int2hex(m_stackAddr, 6),
+                            int2hex(mem_peek_word(m_stackAddr, 1), 6));
     } else {
-        stackAddress = (stackAddress + 2) & 0xFFFFFF;
+        m_stackAddr = (m_stackAddr + 2) & 0xFFFFFF;
         line = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2</pre>"))
-                       .arg(int2hex(stackAddress, 4),
-                            int2hex(mem_peek_word(stackAddress, 0), 4));
+                       .arg(int2hex(m_stackAddr, 4),
+                            int2hex(mem_peek_word(m_stackAddr, 0), 4));
     }
 
     ui->stackView->appendHtml(line);
@@ -2099,50 +2096,6 @@ void MainWindow::vatContextMenu(const QPoint& posa) {
     }
 }
 
-void MainWindow::memContextMenu(const QPoint &posa) {
-    HexWidget *p = qobject_cast<HexWidget*>(sender());
-    memoryContextMenu(p->mapToGlobal(posa), p->getOffset() + p->getBase());
-}
-
-void MainWindow::memoryContextMenu(const QPoint &pos, uint32_t address) {
-    QString copyAddr = tr("Copy Address");
-    QString toggleBreak = tr("Toggle Breakpoint");
-    QString toggleWrite = tr("Toggle Write Watchpoint");
-    QString toggleRead = tr("Toggle Read Watchpoint");
-    QString toggleRw = tr("Toggle Read/Write Watchpoint");
-    QString addr = int2hex(address, 6);
-
-    copyAddr += QStringLiteral(" '") + addr + QStringLiteral("'");
-
-    QMenu menu;
-    menu.addAction(copyAddr);
-    menu.addSeparator();
-    menu.addAction(toggleBreak);
-    menu.addAction(toggleRead);
-    menu.addAction(toggleWrite);
-    menu.addAction(toggleRw);
-
-    QAction* item = menu.exec(pos);
-    if (item) {
-        if (item->text() == copyAddr) {
-            QClipboard *clipboard = QApplication::clipboard();
-            clipboard->setText(addr.toLatin1());
-        } else if (item->text() == toggleBreak) {
-            breakpointAdd(breakpointNextLabel(), address, true, true);
-            memDocksUpdate();
-        } else if (item->text() == toggleRead) {
-            watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_READ, true);
-            memDocksUpdate();
-        } else if (item->text() == toggleWrite) {
-            watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_READ, true);
-            memDocksUpdate();
-        } else if (item->text() == toggleRw) {
-            watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_READ | DBG_MASK_WRITE, true);
-            memDocksUpdate();
-        }
-    }
-}
-
 void MainWindow::memDocksUpdate() {
     QList<QDockWidget*> docks = findChildren<QDockWidget*>();
     foreach (QDockWidget* dock, docks) {
@@ -2154,3 +2107,161 @@ void MainWindow::memDocksUpdate() {
     }
 }
 
+//------------------------------------------------
+// Stepping
+//------------------------------------------------
+
+void MainWindow::stepIn() {
+    if (!guiDebug) {
+        return;
+    }
+
+    disconnect(m_shortcutStepIn, &QShortcut::activated, this, &MainWindow::stepIn);
+
+    debuggerUpdateChanges();
+    debuggerStep(DBG_STEP_IN);
+}
+
+void MainWindow::stepOver() {
+    if (!guiDebug) {
+        return;
+    }
+
+    disconnect(m_shortcutStepOver, &QShortcut::activated, this, &MainWindow::stepOver);
+
+    debuggerUpdateChanges();
+    debuggerStep(DBG_STEP_OVER);
+}
+
+void MainWindow::stepNext() {
+    if (!guiDebug) {
+        return;
+    }
+
+    disconnect(m_shortcutStepNext, &QShortcut::activated, this, &MainWindow::stepNext);
+
+    debuggerUpdateChanges();
+    debuggerStep(DBG_STEP_NEXT);
+}
+
+void MainWindow::stepOut() {
+    if (!guiDebug) {
+        return;
+    }
+
+    disconnect(m_shortcutStepOut, &QShortcut::activated, this, &MainWindow::stepOut);
+
+    debuggerUpdateChanges();
+    debuggerStep(DBG_STEP_OUT);
+}
+
+//------------------------------------------------
+// Other Functions
+//------------------------------------------------
+
+void MainWindow::forceEnterDebug() {
+    int count = 0;
+    if (!guiDebug) {
+        debuggerChangeState();
+    }
+    while (!guiDebug && count < 20) {
+        guiDelay(50);
+        count++;
+    }
+}
+
+void MainWindow::addMemoryDock(const QString &magic, int bytes, bool ascii) {
+    if (m_docksMemory.contains(magic)) {
+        return;
+    }
+
+    DockWidget *dw;
+    dw = new DockWidget(TXT_MEM_DOCK, this);
+    dw->setObjectName(magic);
+    dw->setFloating(true);
+    dw->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, dw->minimumSize(), qApp->desktop()->availableGeometry()));
+
+    m_docksMemory.append(magic);
+    m_docksMemoryBytes.append(bytes);
+    m_docksMemoryAscii.append(ascii);
+
+    QWidget *widget = new QWidget();
+    QVBoxLayout *vlayout = new QVBoxLayout();
+    QHBoxLayout *hlayout = new QHBoxLayout();
+    QPushButton *buttonGoto = new QPushButton(m_iconGoto, tr("Goto"));
+    QPushButton *buttonSearch = new QPushButton(m_iconSearch, tr("Search"));
+    QToolButton *buttonAscii = new QToolButton();
+    QToolButton *buttonSync = new QToolButton();
+    buttonAscii->setCheckable(true);
+    buttonAscii->setChecked(ascii);
+    buttonAscii->setIcon(m_iconAscii);
+    buttonSync->setIcon(m_iconSync);
+    buttonAscii->setToolTip(tr("Show ASCII"));
+    buttonSync->setToolTip(tr("Sync Changes"));
+    QSpacerItem *spacer = new QSpacerItem(0, 20, QSizePolicy::Expanding, QSizePolicy::Maximum);
+    QSpinBox *spin = new QSpinBox();
+    HexWidget *edit = new HexWidget();
+
+    buttonGoto->setEnabled(guiDebug);
+    buttonSearch->setEnabled(guiDebug);
+    buttonAscii->setEnabled(guiDebug);
+    buttonSync->setEnabled(guiDebug);
+    spin->setEnabled(guiDebug);
+    edit->setEnabled(guiDebug);
+    edit->setContextMenuPolicy(Qt::CustomContextMenu);
+    edit->setAsciiArea(ascii);
+    edit->setScrollable(true);
+
+    connect(edit, &HexWidget::customContextMenuRequested, this, &MainWindow::memContextMenu);
+    connect(buttonSearch, &QPushButton::clicked, [this, edit]{ memSearchEdit(edit); });
+    connect(buttonGoto, &QPushButton::clicked, [this, edit]{ memGotoEdit(edit); });
+    connect(buttonSync, &QToolButton::clicked, [this, edit]{ memSyncEdit(edit); });
+    connect(buttonAscii, &QToolButton::toggled, [this, edit, magic]{
+        memAsciiToggle(edit);
+        int index;
+        if ((index = m_docksMemory.indexOf(magic)) != -1) {
+            m_docksMemoryAscii[index] = edit->getAsciiArea();
+        }
+    });
+    connect(spin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), [this, edit, magic](int val){
+        edit->setBytesPerLine(val);
+        int index;
+        if ((index = m_docksMemory.indexOf(magic)) != -1) {
+            m_docksMemoryBytes[index] = val;
+        }
+    });
+
+    spin->setMaximum(999);
+    spin->setMinimum(1);
+    spin->setValue(bytes);
+
+    hlayout->addWidget(buttonGoto);
+    hlayout->addWidget(buttonSearch);
+    hlayout->addSpacerItem(spacer);
+    hlayout->addWidget(buttonAscii);
+    hlayout->addWidget(buttonSync);
+    hlayout->addWidget(spin);
+    vlayout->addLayout(hlayout);
+    vlayout->addWidget(edit);
+    widget->setLayout(vlayout);
+    dw->setWidget(widget);
+
+    if (guiDebug) {
+        memUpdateEdit(edit);
+    }
+
+    addDockWidget(Qt::RightDockWidgetArea, dw);
+    dw->toggleState(m_uiEditMode);
+    dw->show();
+    dw->activateWindow();
+    dw->raise();
+    connect(edit, &HexWidget::focused, [this, edit]{ m_memoryWidget = edit; });
+    connect(dw, &DockWidget::closed, [this, magic]{
+        int index;
+        if ((index = m_docksMemory.indexOf(magic)) != -1) {
+            m_docksMemory.removeAt(index);
+            m_docksMemoryBytes.removeAt(index);
+            m_docksMemoryAscii.removeAt(index);
+        }
+    });
+}

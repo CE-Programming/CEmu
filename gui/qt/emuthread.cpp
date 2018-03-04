@@ -1,16 +1,13 @@
 #include "emuthread.h"
-
-#include <cassert>
-#include <cstdarg>
-#include <thread>
-
-#include "mainwindow.h"
-
 #include "capture/animated-png.h"
 #include "../../core/emu.h"
 #include "../../core/cpu.h"
 #include "../../core/control.h"
 #include "../../core/link.h"
+
+#include <cassert>
+#include <cstdarg>
+#include <thread>
 
 EmuThread *emu_thread = Q_NULLPTR;
 
@@ -52,13 +49,13 @@ void throttle_timer_wait(void) {
     emu_thread->throttleTimerWait();
 }
 
-EmuThread::EmuThread(QObject *p) : QThread(p), write(CONSOLE_BUFFER_SIZE) {
+EmuThread::EmuThread(QObject *parent) : QThread{parent}, write(CONSOLE_BUFFER_SIZE) {
     assert(emu_thread == Q_NULLPTR);
     emu_thread = this;
-    speed = 100;
-    throttle = true;
-    request = RequestNone;
-    lastTime = std::chrono::steady_clock::now();
+    m_speed = 100;
+    m_throttle = true;
+    m_request = RequestNone;
+    m_lastTime = std::chrono::steady_clock::now();
 }
 
 void EmuThread::writeConsoleBuffer(int type, const char *format, va_list args) {
@@ -111,23 +108,23 @@ void EmuThread::writeConsoleBuffer(int type, const char *format, va_list args) {
 }
 
 void EmuThread::unlock() {
-    mutex.lock();
-    cv.notify_all();
-    mutex.unlock();
+    m_mutex.lock();
+    m_cv.notify_all();
+    m_mutex.unlock();
 }
 
 void EmuThread::block() {
-    std::unique_lock<std::mutex> lock(mutex);
-    emit locked(request);
-    cv.wait(lock);
+    std::unique_lock<std::mutex> lock(m_mutex);
+    emit locked(m_request);
+    m_cv.wait(lock);
 }
 
 // Called occasionally, only way to do something in the same thread the emulator runs in.
 void EmuThread::doStuff() {
     const std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
 
-    if (request != RequestNone) {
-        switch (+request) {
+    if (m_request != RequestNone) {
+        switch (+m_request) {
             default:
                 break;
             case RequestPause:
@@ -147,22 +144,22 @@ void EmuThread::doStuff() {
                 break;
         }
 
-        if (request == RequestSave) {
-            emit saved(emu_save(saveImage, savePath.toStdString().c_str()));
+        if (m_request == RequestSave) {
+            emit saved(emu_save(m_saveImage, m_savePath.toStdString().c_str()));
         }
 
-        request = RequestNone;
+        m_request = RequestNone;
     }
 
-    lastTime += std::chrono::steady_clock::now() - cur_time;
+    m_lastTime += std::chrono::steady_clock::now() - cur_time;
 }
 
 void EmuThread::sendFiles() {
-    const int fileNum = vars.size();
+    const int fileNum = m_vars.size();
 
     for (int i = 0; i < fileNum; i++) {
-        const QString &f = vars.at(i);
-        emit sentFile(f, sendVariableLink(f.toUtf8(), sendLoc));
+        const QString &f = m_vars.at(i);
+        emit sentFile(f, sendVariableLink(f.toUtf8(), m_sendLoc));
     }
 
     emit sentFile(QString(), LINK_GOOD);
@@ -170,40 +167,40 @@ void EmuThread::sendFiles() {
 
 void EmuThread::setActualSpeed(int value) {
     if (!control.off) {
-        if (actualSpeed != value) {
-            actualSpeed = value;
+        if (m_actualSpeed != value) {
+            m_actualSpeed = value;
             emit actualSpeedChanged(value);
         }
     }
 }
 
 void EmuThread::throttleTimerWait() {
-    if (!speed) {
+    if (!m_speed) {
         setActualSpeed(0);
-        while(!speed) {
+        while(!m_speed) {
             QThread::msleep(10);
         }
         return;
     }
     std::chrono::duration<int, std::ratio<100, 60>> unit(1);
     std::chrono::steady_clock::duration interval(std::chrono::duration_cast<std::chrono::steady_clock::duration>
-                                                (std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(1000000 * 100 / speed)));
-    std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now(), next_time = lastTime + interval;
-    if (throttle && cur_time < next_time) {
-        setActualSpeed(speed);
-        lastTime = next_time;
+                                                (std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(1000000 * 100 / m_speed)));
+    std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now(), next_time = m_lastTime + interval;
+    if (m_throttle && cur_time < next_time) {
+        setActualSpeed(m_speed);
+        m_lastTime = next_time;
         std::this_thread::sleep_until(next_time);
     } else {
-        if (lastTime != cur_time) {
-            setActualSpeed(unit / (cur_time - lastTime));
-            lastTime = cur_time;
+        if (m_lastTime != cur_time) {
+            setActualSpeed(unit / (cur_time - m_lastTime));
+            m_lastTime = cur_time;
         }
         std::this_thread::yield();
     }
 }
 
 void EmuThread::req(int req) {
-    request = req;
+    m_request = req;
 }
 
 void EmuThread::reset() {
@@ -215,23 +212,23 @@ void EmuThread::receive() {
 }
 
 void EmuThread::send(const QStringList &list, unsigned int location) {
-    vars = list;
-    sendLoc = location;
+    m_vars = list;
+    m_sendLoc = location;
     req(RequestSend);
 }
 
 void EmuThread::save(bool image, const QString &path) {
-    savePath = path;
-    saveImage = image;
+    m_savePath = path;
+    m_saveImage = image;
     req(RequestSave);
 }
 
 void EmuThread::setEmuSpeed(int value) {
-    speed = value;
+    m_speed = value;
 }
 
 void EmuThread::setThrottleMode(bool value) {
-    throttle = value;
+    m_throttle = value;
 }
 
 void EmuThread::debug(bool state) {

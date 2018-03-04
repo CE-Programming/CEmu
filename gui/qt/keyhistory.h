@@ -1,7 +1,7 @@
 #ifndef KEYHISTORY_H
 #define KEYHISTORY_H
 
-#include <QWidget>
+#include <QtWidgets/QWidget>
 
 namespace Ui { class KeyHistory; }
 

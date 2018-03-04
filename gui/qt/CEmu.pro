@@ -210,7 +210,6 @@ SOURCES +=  utils.cpp \
     ../../core/debug/disasm.cpp \
     sendinghandler.cpp \
     debugger.cpp \
-    hexeditor.cpp \
     settings.cpp \
     ipc.cpp \
     keyhistory.cpp \
@@ -218,8 +217,9 @@ SOURCES +=  utils.cpp \
     ../../core/debug/debug.cpp \
     capture/animated-png.c \
     ../../core/spi.c \
-    memoryvisualizerwidget.cpp \
-    debugger/hexwidget.cpp
+    debugger/hexwidget.cpp \
+    memoryedit.cpp \
+    debugger/memoryvisualizerwidget.cpp
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
@@ -292,8 +292,8 @@ HEADERS  +=  utils.h \
     memoryvisualizer.h \
     capture/animated-png.h \
     ../../core/spi.h \
-    memoryvisualizerwidget.h \
-    debugger/hexwidget.h
+    debugger/hexwidget.h \
+    debugger/memoryvisualizerwidget.h
 
 FORMS    += mainwindow.ui \
     romselection.ui \

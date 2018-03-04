@@ -34,7 +34,7 @@ protected:
     virtual void mousePressEvent(QMouseEvent *e) Q_DECL_OVERRIDE;
 
 private:
-    QLabel *label;
+    QLabel *m_label;
 };
 
 class RomSelection : public QDialog {
@@ -61,16 +61,16 @@ private:
 
     Ui::RomSelection *ui;
 
-    QDir currentDir;
-    uint8_t *romArray = Q_NULLPTR;
-    uint32_t osSize = 0;
-    QString rom;
-    bool segmentFilledStatus[30] = {0};
-    int numSegments = 0;
-    QStringList segmentFileList;
+    QDir m_dir;
+    uint8_t *m_array = Q_NULLPTR;
+    uint32_t m_OsSize = 0;
+    QString m_rom;
+    bool m_segmentStatus[30] = {0};
+    int m_segmentsNum = 0;
+    QStringList m_segmentsList;
 
-    bool config = false;
-    bool allocedmem = false;
+    bool m_config = false;
+    bool m_allocedMem = false;
 };
 
 #endif

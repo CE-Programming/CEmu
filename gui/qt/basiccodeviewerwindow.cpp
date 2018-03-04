@@ -1,7 +1,7 @@
 #include "basiccodeviewerwindow.h"
 #include "ui_basiccodeviewerwindow.h"
 
-BasicCodeViewerWindow::BasicCodeViewerWindow(QWidget *p) : QDialog(p), ui(new Ui::BasicCodeViewerWindow) {
+BasicCodeViewerWindow::BasicCodeViewerWindow(QWidget *parent) : QDialog{parent}, ui(new Ui::BasicCodeViewerWindow) {
     ui->setupUi(this);
     connect(ui->pushButton, &QPushButton::clicked, this, &BasicCodeViewerWindow::toggleFormat);
 
@@ -11,17 +11,17 @@ BasicCodeViewerWindow::BasicCodeViewerWindow(QWidget *p) : QDialog(p), ui(new Ui
 }
 
 void BasicCodeViewerWindow::setVariableName(const QString &name) {
-    variableName = name;
-    setWindowTitle(tr("Variable viewer") + QStringLiteral(" | ") + variableName);
+    m_variableName = name;
+    setWindowTitle(tr("Variable viewer") + QStringLiteral(" | ") + m_variableName);
 }
 
 void BasicCodeViewerWindow::toggleFormat() {
-    showingFormatted ^= true;
+    m_showingFormatted ^= true;
     showCode();
 }
 
 void BasicCodeViewerWindow::showCode() {
-    ui->plainTextEdit->document()->setPlainText(showingFormatted ? formattedCode : originalCode);
+    ui->plainTextEdit->document()->setPlainText(m_showingFormatted ? m_formattedCode : m_originalCode);
 }
 
 BasicCodeViewerWindow::~BasicCodeViewerWindow() {

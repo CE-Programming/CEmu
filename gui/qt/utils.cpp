@@ -1,16 +1,15 @@
+#include "utils.h"
+#include "ipc.h"
+#include "../../core/cpu.h"
+#include "../../core/os/os.h"
+#include "../../core/debug/disasm.h"
+#include "tivarslib/TIVarType.h"
+#include "tivarslib/TypeHandlers/TypeHandlers.h"
+
 #include <QDir>
 #include <QtCore/QString>
 #include <QtCore/QTime>
 #include <QtCore/QCoreApplication>
-
-#include "ipc.h"
-#include "utils.h"
-#include "../../core/cpu.h"
-#include "../../core/os/os.h"
-#include "../../core/debug/disasm.h"
-
-#include "tivarslib/TIVarType.h"
-#include "tivarslib/TypeHandlers/TypeHandlers.h"
 
 QString execPath;
 QString configPath;

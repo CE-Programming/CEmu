@@ -1,10 +1,10 @@
-#include <QtWidgets>
-#include <QPushButton>
-
 #include "keyhistory.h"
 #include "ui_keyhistory.h"
 
-KeyHistory::KeyHistory(QWidget *parent) : QWidget(parent), ui(new Ui::KeyHistory) {
+#include <QtWidgets/QWidget>
+#include <QtWidgets/QPushButton>
+
+KeyHistory::KeyHistory(QWidget *parent) : QWidget{parent}, ui(new Ui::KeyHistory) {
     ui->setupUi(this);
     connect(ui->buttonClear, &QPushButton::clicked, ui->historyView, &QPlainTextEdit::clear);
     connect(ui->textSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &KeyHistory::setFont);

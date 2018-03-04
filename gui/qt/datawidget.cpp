@@ -4,7 +4,7 @@
 
 #include <QtWidgets/QApplication>
 
-DataWidget::DataWidget(QWidget *p) : QPlainTextEdit(p) {
+DataWidget::DataWidget(QWidget *parent) : QPlainTextEdit{parent} {
     moveable = false;
     setContextMenuPolicy(Qt::CustomContextMenu);
 }

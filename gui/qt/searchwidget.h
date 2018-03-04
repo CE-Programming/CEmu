@@ -39,8 +39,8 @@ public slots:
     void changeInputASCII();
 
 private:
-    int searchMode = SEARCH_MODE_HEX;
-    int searchType = SEARCH_CANCEL;
+    int m_searchMode = SEARCH_MODE_HEX;
+    int m_searchType = SEARCH_CANCEL;
     Ui::searchwidget *ui;
 };
 

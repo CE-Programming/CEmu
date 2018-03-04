@@ -1,11 +1,18 @@
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
+#include "searchwidget.h"
+#include "dockwidget.h"
+#include "utils.h"
+#include "../../core/schedule.h"
+#include "../../core/link.h"
+#include "../../core/mem.h"
+
+#include <QtGui/QClipboard>
 #include <QtCore/QFileInfo>
 #include <QtCore/QRegularExpression>
-#include <QtNetwork/QNetworkAccessManager>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QScrollBar>
-#include <QtNetwork/QNetworkReply>
-#include <fstream>
 
 #ifdef _MSC_VER
     #include <direct.h>
@@ -13,17 +20,6 @@
 #else
     #include <unistd.h>
 #endif
-
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
-
-#include "searchwidget.h"
-#include "dockwidget.h"
-#include "utils.h"
-
-#include "../../core/schedule.h"
-#include "../../core/link.h"
-#include "../../core/mem.h"
 
 // ------------------------------------------------
 // Hex Editor Things
@@ -114,20 +110,20 @@ void MainWindow::memSearchEdit(HexWidget *edit) {
         return;
     }
 
-    SearchWidget search(searchingString, hexSearch);
+    SearchWidget search(m_searchStr, m_searchMode);
     int searchMode, found = 0;
     search.show();
 
     if (!((searchMode = search.exec()) > SEARCH_CANCEL)) { return; }
 
-    hexSearch = search.getType();
-    searchingString = search.getSearchString();
+    m_searchMode = search.getType();
+    m_searchStr = search.getSearchString();
 
     QString searchString;
-    if (hexSearch == SEARCH_MODE_HEX) {
-        searchString = searchingString;
+    if (m_searchMode == SEARCH_MODE_HEX) {
+        searchString = m_searchStr;
     } else {
-        searchString = QString::fromStdString(searchingString.toLatin1().toHex().toStdString());
+        searchString = QString::fromStdString(m_searchStr.toLatin1().toHex().toStdString());
     }
 
     edit->setFocus();
@@ -189,7 +185,7 @@ void MainWindow::syncHexWidget(HexWidget *edit) {
     }
 
     debuggerGUIPopulate();
-    updateDisasmAddr(addressPane, fromPane);
+    updateDisasmAddr(m_addressPane, m_fromPane);
     edit->setFocus();
 }
 
@@ -230,5 +226,48 @@ void MainWindow::memAsciiToggle(HexWidget *edit) {
         return;
     }
 
-    edit->setAsciiArea(!edit->asciiArea());
+    edit->setAsciiArea(!edit->getAsciiArea());
+}
+
+void MainWindow::memContextMenu(const QPoint &posa) {
+    HexWidget *p = qobject_cast<HexWidget*>(sender());
+    memoryContextMenu(p->mapToGlobal(posa), p->getOffset() + p->getBase());
+}
+
+void MainWindow::memoryContextMenu(const QPoint &pos, uint32_t address) {
+    QString copyAddr = tr("Copy Address");
+    QString toggleBreak = tr("Toggle Breakpoint");
+    QString toggleWrite = tr("Toggle Write Watchpoint");
+    QString toggleRead = tr("Toggle Read Watchpoint");
+    QString toggleRw = tr("Toggle Read/Write Watchpoint");
+    QString addr = int2hex(address, 6);
+
+    copyAddr += QStringLiteral(" '") + addr + QStringLiteral("'");
+
+    QMenu menu;
+    menu.addAction(copyAddr);
+    menu.addSeparator();
+    menu.addAction(toggleBreak);
+    menu.addAction(toggleRead);
+    menu.addAction(toggleWrite);
+    menu.addAction(toggleRw);
+
+    QAction* item = menu.exec(pos);
+    if (item) {
+        if (item->text() == copyAddr) {
+            qApp->clipboard()->setText(addr.toLatin1());
+        } else if (item->text() == toggleBreak) {
+            breakpointAdd(breakpointNextLabel(), address, true, true);
+            memDocksUpdate();
+        } else if (item->text() == toggleRead) {
+            watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_READ, true);
+            memDocksUpdate();
+        } else if (item->text() == toggleWrite) {
+            watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_READ, true);
+            memDocksUpdate();
+        } else if (item->text() == toggleRw) {
+            watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_READ | DBG_MASK_WRITE, true);
+            memDocksUpdate();
+        }
+    }
 }

@@ -1,11 +1,13 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include "ipc.h"
+#include "../../core/vat.h"
+
 #include <QtCore/QMimeData>
 #include <QtCore/QObject>
 #include <QtGui/QDrag>
 #include <QtGui/QDragEnterEvent>
-
 #include <string>
 #include <type_traits>
 
@@ -16,9 +18,6 @@
 #else
 #include <unistd.h>
 #endif
-
-#include "ipc.h"
-#include "../../core/vat.h"
 
 #define set_reset(in, out, var) ((var) = (bool)(in) ? ((var) | (out)) : ((var) & ~(out)))
 

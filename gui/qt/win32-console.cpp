@@ -1,9 +1,10 @@
 #ifdef _WIN32
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
+
 #include <QtWidgets/QAction>
 #include <QtWidgets/QMessageBox>
 #include <windows.h>
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
 
 void MainWindow::toggleConsole() {
     if (actionToggleConsole->isChecked()) {

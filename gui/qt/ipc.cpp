@@ -1,60 +1,60 @@
-#include <QtCore/QDir>
-#include <sys/types.h>
-
 #include "ipc.h"
 #include "utils.h"
 
-ipc::ipc(QObject *p) : QObject(p) {
-    server = new QLocalServer();
-    socket = new QLocalSocket();
-    connect(server, &QLocalServer::newConnection, this, &ipc::accepted);
+#include <QtCore/QDir>
+#include <sys/types.h>
+
+InterCom::InterCom(QObject *parent) : QObject{parent} {
+    m_server = new QLocalServer();
+    m_socket = new QLocalSocket();
+    connect(m_server, &QLocalServer::newConnection, this, &InterCom::accepted);
 }
 
-ipc::~ipc() {
-    delete socket;
-    delete server;
+InterCom::~InterCom() {
+    delete m_socket;
+    delete m_server;
 }
 
-void ipc::idClose() {
-    socket->disconnectFromServer();
-    server->close();
-    file.remove();
+void InterCom::idClose() {
+    m_socket->disconnectFromServer();
+    m_server->close();
+    m_file.remove();
 }
 
-void ipc::serverListen() {
-    if (serverName.isEmpty()) {
+void InterCom::serverListen() {
+    if (m_serverName.isEmpty()) {
         return;
     }
-    server->close();
-    if (!server->listen(serverName)) {
-        qDebug() << "err: " << server->errorString();
+    m_server->close();
+    if (!m_server->listen(m_serverName)) {
+        qDebug() << "err: " << m_server->errorString();
     }
 }
 
-void ipc::accepted() {
-    socket = server->nextPendingConnection();
-    if (socket->waitForReadyRead()) {
-        data = socket->readAll();
-        socket->disconnectFromServer();
+void InterCom::accepted() {
+    m_socket = m_server->nextPendingConnection();
+    if (m_socket->waitForReadyRead()) {
+        m_data = m_socket->readAll();
+        m_socket->disconnectFromServer();
         emit readDone();
     } else {
         qDebug() << "err: receiving packet";
     }
 }
 
-QByteArray ipc::getData() {
-    return data;
+QByteArray InterCom::getData() {
+    return m_data;
 }
 
-void ipc::send(const QByteArray &pkt) {
-    if (clientName.isEmpty()) {
+void InterCom::send(const QByteArray &pkt) {
+    if (m_clientName.isEmpty()) {
         return;
     }
-    socket->disconnectFromServer();
-    socket->connectToServer(clientName);
-    if (socket->waitForConnected()) {
-        socket->write(pkt);
-        if (!socket->waitForDisconnected()) {
+    m_socket->disconnectFromServer();
+    m_socket->connectToServer(m_clientName);
+    if (m_socket->waitForConnected()) {
+        m_socket->write(pkt);
+        if (!m_socket->waitForDisconnected()) {
             qDebug() << "err: sending packet";
         }
     } else {
@@ -62,47 +62,47 @@ void ipc::send(const QByteArray &pkt) {
     }
 }
 
-void ipc::clientSetup(const QString& name) {
-    clientName = "cemu-" + name;
+void InterCom::clientSetup(const QString &name) {
+    m_clientName = "cemu-" + name;
 }
 
-void ipc::serverSetup(const QString& name) {
-    serverName = "cemu-" + name;
+void InterCom::serverSetup(const QString &name) {
+    m_serverName = "cemu-" + name;
 }
 
-QString ipc::getClientName() {
-    return clientName;
+QString InterCom::getClientName() {
+    return m_clientName;
 }
 
-QString ipc::getServerName() {
-    return serverName;
+QString InterCom::getServerName() {
+    return m_serverName;
 }
 
-bool ipc::idOpen(const QString& name) {
-    QString idPath = configPath + "/id/";
+bool InterCom::idOpen(const QString &name) {
+    QString idPath = configPath + QStringLiteral("/id/");
     QString idFile = idPath + name;
     return QFile(idFile).exists();
 }
 
-bool ipc::ipcSetup(const QString& id, const QString& pid) {
+bool InterCom::ipcSetup(const QString &id, const QString &pid) {
     bool ret = true;
 
     // find the default configuration path
-    QString idPath = configPath + "/id/";
+    QString idPath = configPath + QStringLiteral("/id/");
     QString idFile = idPath + id;
 
     QDir config;
     config.mkpath(idPath);
 
-    file.setFileName(idFile);
-    if (file.exists()) {
+    m_file.setFileName(idFile);
+    if (m_file.exists()) {
         // send to alternate id
-        if (file.open(QIODevice::ReadOnly)) {
-            QTextStream stream(&file);
+        if (m_file.open(QIODevice::ReadOnly)) {
+            QTextStream stream(&m_file);
             QString pidtest = stream.readLine();
             if (!isProcRunning(static_cast<pid_t>(pidtest.toLongLong()))) {
-                file.close();
-                file.remove();
+                m_file.close();
+                m_file.remove();
                 goto create_id;
             }
             clientSetup(pidtest);
@@ -111,14 +111,14 @@ bool ipc::ipcSetup(const QString& id, const QString& pid) {
     } else {
     // create a local id
 create_id:
-        if (file.open(QIODevice::WriteOnly)) {
-            QTextStream stream(&file);
+        if (m_file.open(QIODevice::WriteOnly)) {
+            QTextStream stream(&m_file);
             stream << pid << endl;
 
             serverSetup(pid);
             serverListen();
         }
     }
-    file.close();
+    m_file.close();
     return ret;
 }

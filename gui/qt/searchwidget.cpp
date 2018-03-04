@@ -1,10 +1,8 @@
 #include "searchwidget.h"
 #include "ui_searchwidget.h"
 
-#include <QtCore/QDebug>
-
-SearchWidget::SearchWidget(const QString &line, int type, QWidget *p) : QDialog(p), ui(new Ui::searchwidget) {
-    searchType = type;
+SearchWidget::SearchWidget(const QString &line, int type, QWidget *parent) : QDialog{parent}, ui(new Ui::searchwidget) {
+    m_searchType = type;
     bool mode = (type == SEARCH_MODE_HEX);
     ui->setupUi(this);
 
@@ -28,11 +26,11 @@ SearchWidget::~SearchWidget() {
 }
 
 int SearchWidget::getType() {
-    return searchType;
+    return m_searchType;
 }
 
 int SearchWidget::getMode() {
-    return searchMode;
+    return m_searchMode;
 }
 
 QString SearchWidget::getSearchString() {
@@ -40,34 +38,34 @@ QString SearchWidget::getSearchString() {
 }
 
 void SearchWidget::findNext() {
-    searchMode = SEARCH_NEXT;
-    done(searchMode);
+    m_searchMode = SEARCH_NEXT;
+    done(m_searchMode);
 }
 
 void SearchWidget::findNextNot() {
-    searchMode = SEARCH_NEXT_NOT;
-    done(searchMode);
+    m_searchMode = SEARCH_NEXT_NOT;
+    done(m_searchMode);
 }
 
 void SearchWidget::findPrev() {
-    searchMode = SEARCH_PREV;
-    done(searchMode);
+    m_searchMode = SEARCH_PREV;
+    done(m_searchMode);
 }
 
 void SearchWidget::findPrevNot() {
-    searchMode = SEARCH_PREV_NOT;
-    done(searchMode);
+    m_searchMode = SEARCH_PREV_NOT;
+    done(m_searchMode);
 }
 
 void SearchWidget::changeInputASCII() {
     ui->radioASCII->setChecked(true);
     ui->radioHEX->setChecked(false);
-    searchType = SEARCH_MODE_ASCII;
+    m_searchType = SEARCH_MODE_ASCII;
 }
 
 void SearchWidget::changeInputHEX() {
     ui->radioHEX->setChecked(true);
     ui->radioASCII->setChecked(false);
-    searchType = SEARCH_MODE_HEX;
+    m_searchType = SEARCH_MODE_HEX;
 }
 

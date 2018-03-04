@@ -1,15 +1,15 @@
 ﻿#ifndef EMUTHREAD_H
 #define EMUTHREAD_H
 
+#include "../../core/asic.h"
+#include "../../core/debug/debug.h"
+
 #include <QtCore/QThread>
 #include <QtCore/QTimer>
 #include <QtCore/QSemaphore>
 
 #include <chrono>
 #include <condition_variable>
-
-#include "../../core/asic.h"
-#include "../../core/debug/debug.h"
 
 #define CONSOLE_BUFFER_SIZE 512
 
@@ -76,7 +76,7 @@ public slots:
     void unlock();
 
     // Speed
-    void setEmuSpeed(int speed);
+    void setEmuSpeed(int m_speed);
     void setThrottleMode(bool throttled);
 
     // Save / Restore
@@ -90,20 +90,20 @@ private:
     void setActualSpeed(int value);
     void sendFiles();
 
-    int actualSpeed;
-    bool saveImage;
+    int m_actualSpeed;
+    bool m_saveImage;
 
-    std::atomic<int> request;
-    std::atomic<int> speed;
-    std::atomic<bool> throttle;
+    std::atomic<int> m_request;
+    std::atomic<int> m_speed;
+    std::atomic<bool> m_throttle;
 
-    QString savePath;
-    QStringList vars;
-    unsigned int sendLoc;
+    QString m_savePath;
+    QStringList m_vars;
+    unsigned int m_sendLoc;
 
-    std::chrono::steady_clock::time_point lastTime;
-    std::mutex mutex;
-    std::condition_variable cv;
+    std::chrono::steady_clock::time_point m_lastTime;
+    std::mutex m_mutex;
+    std::condition_variable m_cv;
 };
 
 // For friends

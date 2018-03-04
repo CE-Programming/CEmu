@@ -36,30 +36,30 @@ signals:
     void sendROM(const QString& romPath);
 
 private:
-    enum lcd_side {
-        LCD_LEFT = 0,
-        LCD_RIGHT
+    enum {
+        LcdLeft = 0,
+        LcdRight
     };
 
-    enum array_info {
-        ARRAY_SIZE = 50
+    enum {
+        ArraySize = 50
     };
 
-    unsigned int sideDrag;
-    bool drag = false;
-    QRect left, right;
-    QImage image;
-    QMutex mutex;
+    unsigned int m_side;
+    bool m_drag = false;
+    QRect m_left, m_right;
+    QImage m_image;
+    QMutex m_mutex;
 
     // for dragable roms
-    QString dragROM;
-    bool isSendingROM;
+    QString m_dragRom;
+    bool m_isSendingRom;
 
-    unsigned int array[ARRAY_SIZE];
-    int index = 0;
-    bool spiMode;
-    int skip = 0;
-    int frameskip = 0;
+    unsigned int m_array[ArraySize];
+    int m_index = 0;
+    bool m_spiMode;
+    int m_skip = 0;
+    int m_frameskip = 0;
 };
 
 #endif

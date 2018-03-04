@@ -43,11 +43,11 @@ private:
         RECENT_PATH,
     };
 
-    QProgressBar *progress;
-    QTableWidget *table;
-    QIcon sendIcon;
-    QStringList directories;
-    bool sendEquates = false;
+    QProgressBar *m_progressBar;
+    QTableWidget *m_table;
+    QIcon m_sendIcon;
+    QStringList m_dirs;
+    bool m_sendEquates = false;
 };
 
 // Used as global

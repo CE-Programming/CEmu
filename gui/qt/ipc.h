@@ -12,24 +12,24 @@ enum {
     IPC_CLOSE
 };
 
-class ipc : public QObject {
+class InterCom : public QObject {
     Q_OBJECT
 
 public:
-    explicit ipc(QObject *p = Q_NULLPTR);
-    ~ipc();
+    explicit InterCom(QObject *p = Q_NULLPTR);
+    ~InterCom();
 
-    void serverSetup(const QString& name);
-    void clientSetup(const QString& name);
+    void serverSetup(const QString &name);
+    void clientSetup(const QString &name);
     void serverListen();
     void idClose();
-    void send(const QByteArray& pkt);
+    void send(const QByteArray &pkt);
 
     QString getServerName();
     QString getClientName();
 
-    bool ipcSetup(const QString& id, const QString& pid);
-    static bool idOpen(const QString& name);
+    bool ipcSetup(const QString &id, const QString &pid);
+    static bool idOpen(const QString &name);
 
     QByteArray getData();
 
@@ -40,16 +40,16 @@ private:
     void accepted();
 
     // server
-    QLocalServer *server;
-    QString serverName;
+    QLocalServer *m_server;
+    QString m_serverName;
 
     // client
-    QLocalSocket *socket;
-    QString clientName;
+    QLocalSocket *m_socket;
+    QString m_clientName;
 
     // id / storage
-    QFile file;
-    QByteArray data;
+    QFile m_file;
+    QByteArray m_data;
 };
 
 #endif

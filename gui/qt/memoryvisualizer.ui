@@ -162,7 +162,7 @@
   <customwidget>
    <class>MemoryVisualizerWidget</class>
    <extends>QWidget</extends>
-   <header>memoryvisualizerwidget.h</header>
+   <header>debugger/memoryvisualizerwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

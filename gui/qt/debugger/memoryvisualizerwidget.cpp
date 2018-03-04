@@ -1,26 +1,25 @@
+#include "memoryvisualizerwidget.h"
+#include "keypad/qtkeypadbridge.h"
+#include "utils.h"
+#include "../../core/lcd.h"
+
 #include <QtGui/QPainter>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
 
-#include "utils.h"
-#include "memoryvisualizerwidget.h"
-#include "keypad/qtkeypadbridge.h"
-#include "mainwindow.h"
-#include "../../core/lcd.h"
-
-MemoryVisualizerWidget::MemoryVisualizerWidget(QWidget *p) : QWidget(p) {
-    refreshTimer = new QTimer(this);
+MemoryVisualizerWidget::MemoryVisualizerWidget(QWidget *parent) : QWidget{parent} {
+    m_refreshTimer = new QTimer(this);
     installEventFilter(keypadBridge);
 
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, &MemoryVisualizerWidget::customContextMenuRequested, this, &MemoryVisualizerWidget::contextMenu);
 
-    image = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGBX8888);
+    m_image = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGBX8888);
 }
 
 MemoryVisualizerWidget::~MemoryVisualizerWidget() {
-    delete refreshTimer;
+    delete m_refreshTimer;
 }
 
 void MemoryVisualizerWidget::draw() {
@@ -28,8 +27,8 @@ void MemoryVisualizerWidget::draw() {
         return;
     }
 
-    lcd_setptrs(&data, &data_end, m_width, m_height, upbase, control, false);
-    lcd_drawframe(image.bits(), data, data_end, control, size);
+    lcd_setptrs(&m_data, &m_data_end, m_width, m_height, m_upbase, m_control, false);
+    lcd_drawframe(m_image.bits(), m_data, m_data_end, m_control, m_size);
     update();
 }
 
@@ -42,29 +41,29 @@ void MemoryVisualizerWidget::paintEvent(QPaintEvent*) {
     const QRect& cw = c.window();
 
     c.setRenderHint(QPainter::SmoothPixmapTransform, cw.width() < static_cast<int>(m_width));
-    c.drawImage(cw, image);
+    c.drawImage(cw, m_image);
 }
 
 void MemoryVisualizerWidget::setRefreshRate(int rate) {
     if (!rate) {
         return;
     }
-    connect(refreshTimer, SIGNAL(timeout()), this, SLOT(draw()));
-    refreshTimer->stop();
-    refreshTimer->setInterval(1000 / rate);
-    refreshTimer->start();
-    refresh = rate;
+    connect(m_refreshTimer, SIGNAL(timeout()), this, SLOT(draw()));
+    m_refreshTimer->stop();
+    m_refreshTimer->setInterval(1000 / rate);
+    m_refreshTimer->start();
+    m_refresh = rate;
 }
 
 void MemoryVisualizerWidget::setConfig(uint32_t h, uint32_t w, uint32_t u, uint32_t c, uint32_t *d, uint32_t *e) {
     m_height = h;
     m_width = w;
-    upbase = u;
-    control = c;
-    data = d;
-    data_end = e;
-    size = m_width * m_height;
-    image = QImage(m_width, m_height, QImage::Format_RGBX8888);
+    m_upbase = u;
+    m_control = c;
+    m_data = d;
+    m_data_end = e;
+    m_size = m_width * m_height;
+    m_image = QImage(m_width, m_height, QImage::Format_RGBX8888);
 }
 
 void MemoryVisualizerWidget::contextMenu(const QPoint& posa) {
@@ -77,7 +76,7 @@ void MemoryVisualizerWidget::contextMenu(const QPoint& posa) {
     uint32_t x = point.x();
     uint32_t y = point.y();
 
-    QString addr = int2hex(upbase + (x + (m_width * y)), 6);
+    QString addr = int2hex(m_upbase + (x + (m_width * y)), 6);
 
     coord += QString::number(x) + QStringLiteral("x") + QString::number(y);
     copy_addr += QStringLiteral(" '") + addr + QStringLiteral("'");

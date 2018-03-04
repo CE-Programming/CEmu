@@ -1,20 +1,20 @@
+#include "sendinghandler.h"
+#include "utils.h"
+#include "emuthread.h"
+#include "../../core/link.h"
+
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QApplication>
 #include <QtCore/QFileInfo>
 #include <QtCore/QMimeData>
 #include <QtGui/QDragEnterEvent>
 #include <QtWidgets/QToolButton>
-#include "sendinghandler.h"
-
-#include "utils.h"
-#include "emuthread.h"
-#include "../../core/link.h"
 
 SendingHandler *sendingHandler = Q_NULLPTR;
 
-SendingHandler::SendingHandler(QObject *p, QProgressBar *bar, QTableWidget *t) : QObject(p) {
-    progress = bar;
-    table = t;
+SendingHandler::SendingHandler(QObject *parent, QProgressBar *bar, QTableWidget *table) : QObject{parent} {
+    m_progressBar = bar;
+    m_table = table;
 
     bar->setMinimum(0);
     bar->setMinimumWidth(0);
@@ -22,7 +22,7 @@ SendingHandler::SendingHandler(QObject *p, QProgressBar *bar, QTableWidget *t) :
     bar->setTextVisible(false);
     bar->setValue(0);
     bar->setVisible(false);
-    sendIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/variables.png")));
+    m_sendIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/variables.png")));
 }
 
 void SendingHandler::dropOccured(QDropEvent *e, unsigned int location) {
@@ -47,9 +47,9 @@ void SendingHandler::dropOccured(QDropEvent *e, unsigned int location) {
 void SendingHandler::resendSelected() {
     QStringList files;
 
-    for (int row = 0; row < table->rowCount(); row++) {
-        if (table->item(row, RECENT_SELECT)->checkState() == Qt::Checked) {
-            files.append(table->item(row, RECENT_PATH)->text());
+    for (int row = 0; row < m_table->rowCount(); row++) {
+        if (m_table->item(row, RECENT_SELECT)->checkState() == Qt::Checked) {
+            files.append(m_table->item(row, RECENT_PATH)->text());
         }
     }
 
@@ -59,9 +59,9 @@ void SendingHandler::resendSelected() {
 void SendingHandler::resendPressed() {
     QStringList files;
 
-    for (int row = 0; row < table->rowCount(); row++){
-        if (sender() == table->cellWidget(row, RECENT_RESEND)) {
-            files.append(table->item(row, RECENT_PATH)->text());
+    for (int row = 0; row < m_table->rowCount(); row++){
+        if (sender() == m_table->cellWidget(row, RECENT_RESEND)) {
+            files.append(m_table->item(row, RECENT_PATH)->text());
             break;
         }
     }
@@ -106,7 +106,7 @@ bool SendingHandler::dragOccured(QDragEnterEvent *e) {
 
 void SendingHandler::sentFile(const QString &file, int ok) {
     bool add = true;
-    int rows = table->rowCount();
+    int rows = m_table->rowCount();
 
     // Send null to complete sending
     if (ok != LINK_GOOD || file.isEmpty()) {
@@ -116,28 +116,28 @@ void SendingHandler::sentFile(const QString &file, int ok) {
         if (ok == LINK_WARN) {
             QMessageBox::warning(Q_NULLPTR, QObject::tr("Transfer warning"), QObject::tr("Transfer Warning, see console for information.\nFile: ") + file);
         }
-        progress->setValue(progress->maximum());
+        m_progressBar->setValue(m_progressBar->maximum());
         guiDelay(100);
-        if (progress) {
-            progress->setVisible(false);
-            progress->setValue(0);
+        if (m_progressBar) {
+            m_progressBar->setVisible(false);
+            m_progressBar->setValue(0);
         }
         guiSend = false;
         return;
     }
 
     // check for sending of equate file
-    if (sendEquates) {
+    if (m_sendEquates) {
         QFileInfo fi(file);
         QString directory = fi.absolutePath();
-        if (!directories.contains(directory)) {
-            directories.append(directory);
+        if (!m_dirs.contains(directory)) {
+            m_dirs.append(directory);
             checkDirForEquateFiles(directory);
         }
     }
 
     for (int j = 0; j < rows; j++) {
-        if (!table->item(j, RECENT_PATH)->text().compare(file)) {
+        if (!m_table->item(j, RECENT_PATH)->text().compare(file)) {
             add = false;
         }
     }
@@ -147,16 +147,16 @@ void SendingHandler::sentFile(const QString &file, int ok) {
         addFile(path, true);
     }
 
-    if (progress) {
-        progress->setValue(progress->value() + 1);
+    if (m_progressBar) {
+        m_progressBar->setValue(m_progressBar->value() + 1);
     }
 }
 
 
 void SendingHandler::addFile(QString &file, bool select) {
-    int rows = table->rowCount();
+    int rows = m_table->rowCount();
 
-    table->setRowCount(rows + 1);
+    m_table->setRowCount(rows + 1);
     QTableWidgetItem *path = new QTableWidgetItem(file);
     QTableWidgetItem *resend = new QTableWidgetItem();
     QTableWidgetItem *selected = new QTableWidgetItem();
@@ -166,13 +166,13 @@ void SendingHandler::addFile(QString &file, bool select) {
     selected->setTextAlignment(Qt::AlignCenter);
 
     QToolButton *btnResend = new QToolButton();
-    btnResend->setIcon(sendIcon);
+    btnResend->setIcon(m_sendIcon);
     connect(btnResend, &QToolButton::clicked, this, &SendingHandler::resendPressed);
 
-    table->setItem(rows, RECENT_SELECT, selected);
-    table->setItem(rows, RECENT_RESEND, resend);
-    table->setItem(rows, RECENT_PATH, path);
-    table->setCellWidget(rows, RECENT_RESEND, btnResend);
+    m_table->setItem(rows, RECENT_SELECT, selected);
+    m_table->setItem(rows, RECENT_RESEND, resend);
+    m_table->setItem(rows, RECENT_PATH, path);
+    m_table->setCellWidget(rows, RECENT_RESEND, btnResend);
 
     selected->setCheckState(select ? Qt::Checked : Qt::Unchecked);
 }
@@ -185,18 +185,18 @@ void SendingHandler::sendFiles(const QStringList &fileNames, unsigned int locati
     }
 
     guiSend = true;
-    directories.clear();
+    m_dirs.clear();
 
-    if (progress) {
-        progress->setVisible(true);
-        progress->setMaximum(fileNum);
+    if (m_progressBar) {
+        m_progressBar->setVisible(true);
+        m_progressBar->setMaximum(fileNum);
     }
 
     emit send(fileNames, location);
 }
 
 void SendingHandler::setLoadEquates(bool state) {
-    sendEquates = state;
+    m_sendEquates = state;
 }
 
 void SendingHandler::checkDirForEquateFiles(QString &dirPath) {

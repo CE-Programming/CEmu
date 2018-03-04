@@ -1,10 +1,10 @@
 #ifndef MEMORYVISUALIZER_H
 #define MEMORYVISUALIZER_H
 
-#include <QtWidgets/QDialog>
-
-#include "../../core/lcd.h"
 #include "keypad/qtkeypadbridge.h"
+#include "../../core/lcd.h"
+
+#include <QtWidgets/QDialog>
 
 namespace Ui { class MemoryVisualizer; }
 
@@ -26,17 +26,16 @@ private:
     void stringToView();
     void viewToString();
 
-    QStringList setup;
+    QStringList m_setup;
     Ui::MemoryVisualizer *ui;
 
-    int scale = 100;
-    int rate = 30;
+    int m_scale = 100;
+    int m_rate = 30;
 
-    // LCD configuration
-    uint32_t height;
-    uint32_t width;
-    uint32_t upbase;
-    uint32_t control;
+    uint32_t m_height;          // lcd configuration
+    uint32_t m_width;
+    uint32_t m_base;
+    uint32_t m_control;
 };
 
 #endif

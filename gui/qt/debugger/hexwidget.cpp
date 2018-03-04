@@ -15,7 +15,7 @@ HexWidget::HexWidget(QWidget *parent) : QAbstractScrollArea{parent}, m_data{0} {
     setFont(QFont(QStringLiteral("Monospace"), 10));
 #endif
 
-    connect(verticalScrollBar(), &QScrollBar::valueChanged, this, &HexWidget::adjustScroll);
+    connect(verticalScrollBar(), &QScrollBar::valueChanged, this, &HexWidget::scroll);
     connect(horizontalScrollBar(), &QScrollBar::valueChanged, this, &HexWidget::adjust);
 
     resetSelection();
@@ -42,6 +42,8 @@ void HexWidget::appendData(const QByteArray &ba) {
 }
 
 void HexWidget::scroll(int value) {
+    adjust();
+
     if (!m_scrollable) {
         return;
     }
@@ -132,7 +134,7 @@ void HexWidget::setCursorOffset(int offset, bool selection) {
 
     m_cursorOffset = offset;
     adjust();
-    cursorScroll();
+    showCursor();
 }
 
 int HexWidget::getPosition(QPoint posa) {
@@ -149,7 +151,7 @@ int HexWidget::getPosition(QPoint posa) {
     return result;
 }
 
-void HexWidget::cursorScroll() {
+void HexWidget::showCursor() {
     int addr = m_cursorOffset / 2;
     if (addr <= m_lineStart) {
         verticalScrollBar()->setValue(addr / m_bytesPerLine);
@@ -160,11 +162,6 @@ void HexWidget::cursorScroll() {
     if (m_cursor.x() < horizontalScrollBar()->value()) {
         horizontalScrollBar()->setValue(0);
     }
-}
-
-void HexWidget::adjustScroll(int value) {
-    adjust();
-    scroll(value);
 }
 
 void HexWidget::adjust() {

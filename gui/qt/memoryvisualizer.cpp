@@ -1,14 +1,13 @@
 #include "memoryvisualizer.h"
 #include "ui_memoryvisualizer.h"
+#include "keypad/keypadwidget.h"
+#include "utils.h"
 
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QMessageBox>
-#include <QAction>
+#include <QtWidgets/QAction>
 
-#include "utils.h"
-#include "keypad/keypadwidget.h"
-
-MemoryVisualizer::MemoryVisualizer(QWidget *p) : QDialog(p), ui(new Ui::MemoryVisualizer) {
+MemoryVisualizer::MemoryVisualizer(QWidget *parent) : QDialog{parent}, ui(new Ui::MemoryVisualizer) {
     ui->setupUi(this);
 
     connect(ui->edit, &QLineEdit::returnPressed, this, &MemoryVisualizer::stringToView);
@@ -49,33 +48,33 @@ void MemoryVisualizer::stringToView() {
     QRegExp bpp_reg("^\\d{1,6}bpp$", Qt::CaseInsensitive);
     QRegExp fps_reg("^\\d+fps$", Qt::CaseInsensitive);
 
-    rate = 30; scale = 100;
+    m_rate = 30; m_scale = 100;
 
-    set_reset(false, 0x400, control);
-    set_reset(false, 0x200, control);
-    set_reset(false, 0x100, control);
+    set_reset(false, 0x400, m_control);
+    set_reset(false, 0x200, m_control);
+    set_reset(false, 0x100, m_control);
 
     foreach (QString str, string) {
         str = str.toLower();
         if (!str.compare(QLatin1Literal("bepo"), Qt::CaseInsensitive)) {
-            set_reset(true, 0x400, control);
+            set_reset(true, 0x400, m_control);
         }
         if (!str.compare(QLatin1Literal("bebo"), Qt::CaseInsensitive)) {
-            set_reset(true, 0x200, control);
+            set_reset(true, 0x200, m_control);
         }
         if (!str.compare(QLatin1Literal("bgr"), Qt::CaseInsensitive)) {
-            set_reset(true, 0x100, control);
+            set_reset(true, 0x100, m_control);
         }
         if (str.contains('x')) {
             QStringList wh = str.split('x');
             if (wh.size() == 2) {
-                width = wh.at(0).toUInt();
-                height = wh.at(1).toUInt();
+                m_width = wh.at(0).toUInt();
+                m_height = wh.at(1).toUInt();
             }
         }
         if (str.endsWith('%')) {
             str.remove('%');
-            scale = str.toInt();
+            m_scale = str.toInt();
         }
         if (str.length() == 8 && str.at(0) == '0' && str.at(1) == 'x') {
             str.remove(0, 2);
@@ -84,7 +83,7 @@ void MemoryVisualizer::stringToView() {
             str.remove(0, 1);
         }
         if (hex_reg.exactMatch(str)) {
-            upbase = str.toUInt(Q_NULLPTR, 16);
+            m_base = str.toUInt(Q_NULLPTR, 16);
         }
         if (bpp_reg.exactMatch(str)) {
             str.chop(3);
@@ -101,14 +100,14 @@ void MemoryVisualizer::stringToView() {
                 default: bpp = 255; break;
             }
             if (bpp != 255) {
-                control &= ~14;
-                control |= bpp << 1;
+                m_control &= ~14;
+                m_control |= bpp << 1;
             }
         }
         if (fps_reg.exactMatch(str)) {
             str.chop(3);
-            rate = str.toUInt();
-            if (rate < 1 || rate > 120) { rate = 30; }
+            m_rate = str.toUInt();
+            if (m_rate < 1 || m_rate > 120) { m_rate = 30; }
         }
     }
 
@@ -116,17 +115,17 @@ void MemoryVisualizer::stringToView() {
 }
 
 void MemoryVisualizer::setDefaultView() {
-    width = LCD_WIDTH;
-    height = LCD_HEIGHT;
-    upbase = lcd.upbase;
-    control = lcd.control;
+    m_width = LCD_WIDTH;
+    m_height = LCD_HEIGHT;
+    m_base = lcd.upbase;
+    m_control = lcd.control;
     viewToString();
 }
 
 void MemoryVisualizer::viewToString() {
     QString bpp;
 
-    switch((control >> 1) & 7) {
+    switch((m_control >> 1) & 7) {
         case 0: bpp = QStringLiteral("1"); break;
         case 1: bpp = QStringLiteral("2"); break;
         case 2: bpp = QStringLiteral("4"); break;
@@ -138,29 +137,29 @@ void MemoryVisualizer::viewToString() {
         default: break;
     }
 
-    setup.clear();
-    setup.append(int2hex(upbase, 6).toLower());
-    setup.append(QString::number(width) + QStringLiteral("x") + QString::number(height));
-    setup.append(bpp + QStringLiteral("bpp"));
-    if (control & 0x400) { setup.append(QStringLiteral("bepo")); }
-    if (control & 0x200) { setup.append(QStringLiteral("bebo")); }
-    if (control & 0x100) { setup.append(QStringLiteral("bgr")); }
-    if (scale != 100) { setup.append(QString::number(scale) + QStringLiteral("%")); }
-    if (rate != 30) { setup.append(QString::number(rate) + QStringLiteral("fps")); }
+    m_setup.clear();
+    m_setup.append(int2hex(m_base, 6).toLower());
+    m_setup.append(QString::number(m_width) + QStringLiteral("x") + QString::number(m_height));
+    m_setup.append(bpp + QStringLiteral("bpp"));
+    if (m_control & 0x400) { m_setup.append(QStringLiteral("bepo")); }
+    if (m_control & 0x200) { m_setup.append(QStringLiteral("bebo")); }
+    if (m_control & 0x100) { m_setup.append(QStringLiteral("bgr")); }
+    if (m_scale != 100) { m_setup.append(QString::number(m_scale) + QStringLiteral("%")); }
+    if (m_rate != 30) { m_setup.append(QString::number(m_rate) + QStringLiteral("fps")); }
 
-    ui->edit->setText(setup.join(QStringLiteral(",")));
+    ui->edit->setText(m_setup.join(QStringLiteral(",")));
 
-    float s = scale / 100.0;
-    float w = width * s;
-    float h = height * s;
+    float s = m_scale / 100.0;
+    float w = m_width * s;
+    float h = m_height * s;
 
     uint32_t *data;
     uint32_t *data_end;
 
-    lcd_setptrs(&data, &data_end, width, height, upbase, control, false);
+    lcd_setptrs(&data, &data_end, m_width, m_height, m_base, m_control, false);
 
     ui->view->setFixedSize(w, h);
-    ui->view->setRefreshRate(rate);
-    ui->view->setConfig(height, width, upbase, control, data, data_end);
+    ui->view->setRefreshRate(m_rate);
+    ui->view->setConfig(m_height, m_width, m_base, m_control, data, data_end);
     adjustSize();
 }

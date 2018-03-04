@@ -1,13 +1,13 @@
-#include <QtWidgets/QApplication>
-#include <QtWidgets/QDesktopWidget>
+#include "utils.h"
+#include "mainwindow.h"
+#include "keypad/qtkeypadbridge.h"
+
 #include <QtCore/QProcess>
 #include <QtCore/QCommandLineOption>
 #include <QtCore/QCommandLineParser>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QDesktopWidget>
 #include <QtGui/QFontDatabase>
-
-#include "mainwindow.h"
-#include "keypad/qtkeypadbridge.h"
-#include "utils.h"
 
 int main(int argc, char *argv[]) {
 
@@ -22,6 +22,7 @@ int main(int argc, char *argv[]) {
 
     execPath = QCoreApplication::applicationFilePath();
 
+    qsrand(time(NULL));
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
 
     // Add special jacobly font

@@ -16,11 +16,6 @@ enum {
     CMD_SET_E_WATCHPOINT   // set an empty watchpoint with the value in DE; length in C
 };
 
-enum {
-    DBG_OPEN=0,
-    DBG_SAVE
-};
-
-#define DBG_VERSION 2
+#define VERSION_DBG 2
 
 #endif

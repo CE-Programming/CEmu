@@ -1,5 +1,20 @@
-﻿#ifndef MAINWINDOW_H
+#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
+
+#include "ipc.h"
+#include "searchwidget.h"
+#include "cemuopts.h"
+#include "lcdwidget.h"
+#include "romselection.h"
+#include "emuthread.h"
+#include "keyhistory.h"
+#include "dockwidget.h"
+#include "keypad/qtkeypadbridge.h"
+#include "debugger/hexwidget.h"
+#include "png.h"
+#include "../../core/vat.h"
+#include "../../core/debug/debug.h"
+#include "../../core/debug/disasm.h"
 
 #include <QtWidgets/QProgressBar>
 #include <QtWidgets/QShortcut>
@@ -15,30 +30,14 @@
 #include <QtCore/QTranslator>
 #include <QtCore/QStandardPaths>
 
-#include "ipc.h"
-#include "searchwidget.h"
-#include "cemuopts.h"
-#include "lcdwidget.h"
-#include "romselection.h"
-#include "emuthread.h"
-#include "keyhistory.h"
-#include "dockwidget.h"
-#include "keypad/qtkeypadbridge.h"
-#include "debugger/hexwidget.h"
-#include "png.h"
-
-#include "../../core/vat.h"
-#include "../../core/debug/debug.h"
-#include "../../core/debug/disasm.h"
-
 #ifdef PNG_WRITE_APNG_SUPPORTED
 class RecordingThread : public QThread {
     Q_OBJECT
 protected:
     virtual void run() Q_DECL_OVERRIDE;
 public:
-    QString filename;
-    bool optimize;
+    QString m_filename;
+    bool m_optimize;
 signals:
     void done();
 };
@@ -104,8 +103,8 @@ signals:
 protected:
     // Misc.
     virtual void changeEvent(QEvent* event) Q_DECL_OVERRIDE;
-    virtual void closeEvent(QCloseEvent*) Q_DECL_OVERRIDE;
-    virtual bool eventFilter(QObject*, QEvent*) Q_DECL_OVERRIDE;
+    virtual void closeEvent(QCloseEvent *event) Q_DECL_OVERRIDE;
+    virtual bool eventFilter(QObject *object, QEvent *event) Q_DECL_OVERRIDE;
     virtual void showEvent(QShowEvent *event) Q_DECL_OVERRIDE;
     virtual void mouseDoubleClickEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
 
@@ -290,13 +289,13 @@ private:
     void setSlotInfo();
     int slotGet(QObject *obj, int col);
 
-    void consoleContextMenu(const QPoint&);
-    void disasmContextMenu(const QPoint&);
-    void variablesContextMenu(const QPoint&);
-    void vatContextMenu(const QPoint&);
-    void opContextMenu(const QPoint&);
-    void memContextMenu(const QPoint&);
-    void memoryContextMenu(const QPoint&, uint32_t);
+    void consoleContextMenu(const QPoint &posa);
+    void disasmContextMenu(const QPoint &posa);
+    void variablesContextMenu(const QPoint &posa);
+    void vatContextMenu(const QPoint &posa);
+    void opContextMenu(const QPoint &posa);
+    void memContextMenu(const QPoint &posa);
+    void memoryContextMenu(const QPoint &posa, uint32_t addr);
     void removeAllSentVars();
     void removeSentVars();
     void deselectAllVars();
@@ -347,7 +346,7 @@ private:
     // Debugging files
     void debuggerImportFile(const QString &filename);
     void debuggerExportFile(const QString &filename);
-    QString debuggerGetFile(int mode);
+    QString debuggerGetFile(bool save);
     void debuggerImport();
     void debuggerExport();
     void setAutoEquates(bool enable);
@@ -451,7 +450,7 @@ private:
     void memDocksUpdate();
 
     // Others
-    void syncHexWidget(HexWidget *hex_view);
+    void syncHexWidget(HexWidget *edit);
     void setStatusInterval(int value);
 
     // Keypad
@@ -517,97 +516,108 @@ private:
                            int (QSize::*dimension)() const,
                            Qt::Orientation orientation);
 
-    // Misc
-    int pausedSpeed;
-
     // Members
-    unsigned int watchpointGUIMask = DBG_MASK_NONE;
-    QString searchingString;
-
-    QTranslator appTranslator;
-
     Ui::MainWindow *ui = Q_NULLPTR;
-    QLabel speedLabel;
-    QLabel fpsLabel;
-    QLabel msgLabel;
-    QTextCursor disasmOffset;
-    bool disasmOffsetSet;
-    bool fromPane;
-    int32_t addressPane;
-    uint32_t stackAddress;
-    int hexSearch = SEARCH_MODE_HEX;
-
-    QDir currDir;
-    QStringList currentEquateFiles;
     EmuThread emu;
-
-    bool uiEditMode;
-    bool portable = false;
-    bool nativeConsole = false;
-    bool shutdown = false;
-    bool canScroll = false;
-    bool recordingAnimated = false;
-
     CEmuOpts opts;
+    InterCom com;
 
-    uint32_t prevBreakpointAddress = 0;
-    uint32_t prevWatchpointAddress = 0;
-    uint32_t prevDisasmAddress = 0;
-    uint16_t prevPortAddress = 0;
-    QPalette colorback, nocolorback;
+    unsigned int m_watchGUIMask = DBG_MASK_NONE;
 
-    QShortcut *stepInShortcut;
-    QShortcut *stepOverShortcut;
-    QShortcut *stepNextShortcut;
-    QShortcut *stepOutShortcut;
-    QShortcut *debuggerShortcut;
-    QShortcut *fullscreenShortcut;
-    QShortcut *asmShortcut;
-    QShortcut *resendshortcut;
+    QTranslator m_appTranslator;
+    QLabel m_speedLabel;
+    QLabel m_fpsLabel;
+    QLabel m_msgLabel;
+    QTextCursor m_disasmOffset;
+    bool m_disasmOffsetSet;
+    bool m_fromPane;
+    int32_t m_addressPane;
+    uint32_t m_stackAddr;
 
-    QAction *actionToggleUI;
-    QAction *actionAddMemory;
+    QString m_searchStr;
+    int m_searchMode = SEARCH_MODE_HEX;
 
-    QIcon runIcon, stopIcon;
-    QIcon saveIcon, loadIcon;
-    QIcon editIcon, removeIcon;
-    QIcon searchIcon, gotoIcon;
-    QIcon syncIcon, addMemIcon;
-    QIcon asciiIcon, uiEditIcon;
-    QTextCharFormat consoleFormat;
+    QDir m_dir;
+    QStringList m_equateFiles;
+
+    bool m_uiEditMode;
+    bool m_portable = false;
+    bool m_nativeConsole = false;
+    bool m_shutdown = false;
+    bool m_recording = false;
+
+    uint32_t m_prevBreakAddr = 0;
+    uint32_t m_prevWatchAddr = 0;
+    uint32_t m_prevDisasmAddr = 0;
+    uint16_t m_prevPortAddr = 0;
+    QPalette m_cBack, m_cNone;
+
+    QShortcut *m_shortcutStepIn;
+    QShortcut *m_shortcutStepOver;
+    QShortcut *m_shortcutStepNext;
+    QShortcut *m_shortcutStepOut;
+    QShortcut *m_shortcutDebug;
+    QShortcut *m_shortcutFullscreen;
+    QShortcut *m_shortcutAsm;
+    QShortcut *m_shortcutResend;
+
+    QAction *m_actionToggleUI;
+    QAction *m_actionAddMemory;
+
+    QIcon m_iconRun, m_iconStop;
+    QIcon m_iconSave, m_iconLoad;
+    QIcon m_iconEdit, m_iconRemove;
+    QIcon m_iconSearch, m_iconGoto;
+    QIcon m_iconSync, m_iconAddMem;
+    QIcon m_iconAscii, m_iconUiEdit;
+    QTextCharFormat m_consoleFormat;
 
     QString m_gotoAddr;
     QString m_flashGotoAddr;
     QString m_RamGotoAddr;
     QString m_memGotoAddr;
 
-    QString pathSettings;
-    QMenu *docksMenu;
-    QMenu *debugMenu;
+    QString m_settingsPath;
+    QMenu *m_menuDocks;
+    QMenu *m_menuDebug;
 
-    KeyHistory *keyHistoryWindow = Q_NULLPTR;
+    KeyHistory *m_windowKeys = Q_NULLPTR;
 
-    ipc *com;
+    bool m_isSendingRom = false;
+    QString m_dragRom;
 
-    // for drag and drop of rom files
-    bool isSendingROM = false;
-    QString dragROM;
+    bool m_needReload = false;
+    bool m_needFullReset = false;
+    bool m_windowLoading = false;
+    bool m_keepSetup = false;
+    bool m_guiAdd = false;
+    bool m_initPassed = true;
+    bool m_windowVisible = false;
+    bool m_useDataCol;
+    bool m_useSoftCom = false;
+    bool m_pauseOnFocus;
+    bool m_loadedBootImage = false;
+    bool m_optimizeRecording;
+    bool m_activatedPortable = false;
+    bool m_ignoreDmaCycles;
+    int m_fullscreen = FULLSCREEN_NONE;
 
-    bool needReload = false;
-    bool loadingWindow = false;
-    bool needFullReset = false;
-    bool keepSetup = false;
-    bool guiAdd = false;
-    bool initPassed = true;
-    bool visibleWindow = false;
-    bool useDataCol;
-    bool softCommand = false;
-    bool pauseOnFocus;
-    bool loadedCEmuBootImage = false;
-    bool optimizeRecording;
-    bool activatedPortable = false;
-    bool ignoreDmaCycles;
-    int fullscreen = FULLSCREEN_NONE;
+    QProgressBar *m_progressBar;
+    QStringList m_docksMemory;
+    QList<int> m_docksMemoryBytes;
+    QList<bool> m_docksMemoryAscii;
+    QSettings *m_settings = Q_NULLPTR;
+    HexWidget *m_memoryWidget = Q_NULLPTR;
+
+    QString m_pathRom;
+    QString m_pathImage;
+    QTimer m_timerEmu;
+    QTimer m_timerFps;
+    bool m_timerEmuTriggerable = true;
+    bool m_timerFpsTriggerable = true;
+    bool m_timerFpsTriggered = false;
+
+    static const char *m_varExtensions[];
 
     // Settings definitions
     static const QString SETTING_DEBUGGER_TEXT_SIZE;
@@ -703,22 +713,6 @@ private:
     QString MSG_ADD_MEMORY;
     QString MSG_EDIT_UI;
 
-    QProgressBar *progressBar;
-    QStringList memoryDocks;
-    QList<int> memoryDocksBytes;
-    QList<bool> memoryDocksAscii;
-    QSettings *settings = Q_NULLPTR;
-    HexWidget *selectedMemory = Q_NULLPTR;
-
-    QString romPath;
-    QString imagePath;
-    QTimer emuTimer;
-    QTimer fpsTimer;
-    bool emuTimerTriggerable = true;
-    bool fpsTimerTriggerable = true;
-    bool fpsTimerTriggered = false;
-
-    static const char *var_extension[];
 #ifdef _WIN32
     QAction *actionToggleConsole;
     QString TXT_TOGGLE_CONSOLE;

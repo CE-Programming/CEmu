@@ -1,13 +1,12 @@
+#include "romselection.h"
+#include "ui_romselection.h"
+#include "utils.h"
+#include "../../core/os/os.h"
+
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QMessageBox>
-
-#include "romselection.h"
-#include "ui_romselection.h"
-
-#include "utils.h"
-#include "../../core/os/os.h"
 
 #define ROM_SIZE 0x400000
 #define SEG_SIZE 0xFFE9
@@ -32,7 +31,7 @@ static const uint8_t dumper_program[] = {
     0x67, 0x20, 0x53, 0x65, 0x67, 0x6D, 0x65, 0x6E, 0x74, 0x20, 0x00, 0x87, 0x5D
 };
 
-RomSelection::RomSelection(QWidget *p) : QDialog(p), ui(new Ui::RomSelection) {
+RomSelection::RomSelection(QWidget *parent) : QDialog{parent}, ui(new Ui::RomSelection) {
     ui->setupUi(this);
 
     setWindowModality(Qt::NonModal);
@@ -61,7 +60,7 @@ RomSelection::RomSelection(QWidget *p) : QDialog(p), ui(new Ui::RomSelection) {
 }
 
 RomSelection::~RomSelection() {
-    delete romArray;
+    delete m_array;
     delete ui;
 }
 
@@ -72,7 +71,7 @@ void RomSelection::browseForROM() {
     dialog.setNameFilter(tr("ROM Image (*.rom *.Rom *.ROM);;All Files (*.*)"));
     if (dialog.exec()) {
         QStringList selected = dialog.selectedFiles();
-        rom = selected.first();
+        m_rom = selected.first();
         close();
     }
 }
@@ -89,7 +88,7 @@ void RomSelection::openROMSegments() {
     QFileDialog dialog(this);
 
 
-    dialog.setDirectory(currentDir);
+    dialog.setDirectory(m_dir);
     dialog.setFileMode(QFileDialog::ExistingFiles);
     dialog.setNameFilter(QStringLiteral("ROMData (*.8xv *.8Xv *.8xV .8XV)"));
 
@@ -97,9 +96,9 @@ void RomSelection::openROMSegments() {
         return;
     }
 
-    currentDir = dialog.directory();
+    m_dir = dialog.directory();
 
-    segmentFileList = dialog.selectedFiles();
+    m_segmentsList = dialog.selectedFiles();
     parseROMSegments();
 }
 
@@ -109,15 +108,15 @@ void RomSelection::parseROMSegments() {
     uint8_t buf[10];
     uint16_t u16 = 0;
 
-    if (!allocedmem) {
-        romArray = new uint8_t[ROM_SIZE];
-        memset(romArray, 255, ROM_SIZE);
-        allocedmem = true;
+    if (!m_allocedMem) {
+        m_array = new uint8_t[ROM_SIZE];
+        memset(m_array, 255, ROM_SIZE);
+        m_allocedMem = true;
     }
 
-    for (i = 0; i < segmentFileList.size(); i++) {
+    for (i = 0; i < m_segmentsList.size(); i++) {
         ui->progressBar->setEnabled(true);
-        seg = fopen_utf8(segmentFileList.at(i).toStdString().c_str(), "rb");
+        seg = fopen_utf8(m_segmentsList.at(i).toStdString().c_str(), "rb");
         if (!seg) goto _err;
         if (fseek(seg, 0x3C, SEEK_SET)) goto _err;
         if (fread(buf, 1, 8, seg) != 8) goto _err;
@@ -127,7 +126,7 @@ void RomSelection::parseROMSegments() {
                 if (fseek(seg, 0x48, 0)) goto _err;
                 if (fread(&u16, sizeof(u16), 1 ,seg) != 1) goto _err;
                 if (SEG_SIZE == u16) {
-                    if (fread(&romArray[CERT_LOC], SEG_SIZE, 1, seg) != 1) {
+                    if (fread(&m_array[CERT_LOC], SEG_SIZE, 1, seg) != 1) {
                         goto _err;
                     }
                     ui->progressBar->setValue(ui->progressBar->value() + 1);
@@ -136,21 +135,21 @@ void RomSelection::parseROMSegments() {
                 if (fseek(seg, 0x4A, 0)) goto _err;
                 if (fread(buf, 1, 3, seg) != 3) goto _err;
 
-                osSize = static_cast<uint32_t>(buf[0] << 0) |
+                m_OsSize = static_cast<uint32_t>(buf[0] << 0) |
                          static_cast<uint32_t>(buf[1] << 8) |
                          static_cast<uint32_t>(buf[2] << 16);
 
-                numSegments = (osSize/SEG_SIZE) + 2;
-                ui->progressBar->setMaximum(numSegments);
-                config = true;
+                m_segmentsNum = (m_OsSize/SEG_SIZE) + 2;
+                ui->progressBar->setMaximum(m_segmentsNum);
+                m_config = true;
             } else {
                 if (fseek(seg, 0x48, 0)) goto _err;
                 if (fread(&u16, sizeof(u16), 1 ,seg) != 1) goto _err;
                 if (SEG_SIZE == u16) {
                     segint = buf[7] - 'A';
-                    if (segmentFilledStatus[segint] == false) {
-                        segmentFilledStatus[segint] = true;
-                        if (fread(&romArray[SEG_SIZE * segint], SEG_SIZE, 1, seg) != 1) {
+                    if (m_segmentStatus[segint] == false) {
+                        m_segmentStatus[segint] = true;
+                        if (fread(&m_array[SEG_SIZE * segint], SEG_SIZE, 1, seg) != 1) {
                             goto _err;
                         }
                         ui->progressBar->setValue(ui->progressBar->value() + 1);
@@ -163,14 +162,14 @@ void RomSelection::parseROMSegments() {
 
         fclose(seg);
     }
-    segmentFileList.clear();
-    if (config && ui->progressBar->value() == numSegments) {
+    m_segmentsList.clear();
+    if (m_config && ui->progressBar->value() == m_segmentsNum) {
         ui->buttonBrowseSave->setEnabled(true);
     }
     return;
 
 _err:
-    QMessageBox::critical(this, tr("Error"), tr("Invalid ROM segment\n") + segmentFileList.at(i));
+    QMessageBox::critical(this, tr("Error"), tr("Invalid ROM segment\n") + m_segmentsList.at(i));
     fclose(seg);
     return;
 }
@@ -180,9 +179,9 @@ void RomSelection::saveDumpProgram() {
     QFileDialog dialog(this);
 
     dialog.setFileMode(QFileDialog::AnyFile);
-    QString filename = dialog.getSaveFileName(this, tr("Save ROM Dumper Program"), currentDir.absolutePath(), tr("ROM Dumper (*.8xp)"));
+    QString filename = dialog.getSaveFileName(this, tr("Save ROM Dumper Program"), m_dir.absolutePath(), tr("ROM Dumper (*.8xp)"));
 
-    currentDir = dialog.directory();
+    m_dir = dialog.directory();
 
     if (filename.isEmpty()) {
         return;
@@ -206,9 +205,9 @@ void RomSelection::saveROMImage() {
     QFileDialog dialog(this);
 
     dialog.setFileMode(QFileDialog::AnyFile);
-    QString filename = dialog.getSaveFileName(this, tr("Save ROM"), currentDir.absolutePath(), tr("ROM Image (*.rom)"));
+    QString filename = dialog.getSaveFileName(this, tr("Save ROM"), m_dir.absolutePath(), tr("ROM Image (*.rom)"));
 
-    currentDir = dialog.directory();
+    m_dir = dialog.directory();
 
     if  (filename.isEmpty()) { return; }
 
@@ -219,15 +218,15 @@ void RomSelection::saveROMImage() {
     saveRom = fopen_utf8(filename.toStdString().c_str(), "wb");
 
     if (saveRom) {
-        fwrite(romArray, 1, ROM_SIZE, saveRom);
+        fwrite(m_array, 1, ROM_SIZE, saveRom);
         fclose(saveRom);
-        rom = filename;
+        m_rom = filename;
         close();
     }
 }
 
 QString RomSelection::getRomPath() {
-    return rom;
+    return m_rom;
 }
 
 /*!
@@ -275,12 +274,12 @@ void DropArea::mousePressEvent(QMouseEvent *e) {
 void RomSelection::processDrop(QDropEvent *e) {
     const QMimeData *mimeData = e->mimeData();
 
-    segmentFileList.clear();
+    m_segmentsList.clear();
 
     if (mimeData->hasUrls()) {
         const QList<QUrl> urlList = mimeData->urls();
         foreach (const QUrl &url, urlList) {
-            segmentFileList.append(url.toLocalFile());
+            m_segmentsList.append(url.toLocalFile());
         }
     }
 

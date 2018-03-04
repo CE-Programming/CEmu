@@ -1,9 +1,9 @@
 #ifndef MEMORYVISUALIZERWIDGET_H
 #define MEMORYVISUALIZERWIDGET_H
 
-#include <QtWidgets/QWidget>
 #include <QtCore/QTimer>
-#include <QClipboard>
+#include <QtWidgets/QWidget>
+#include <QtGui/QClipboard>
 
 class MemoryVisualizerWidget : public QWidget {
   Q_OBJECT
@@ -22,18 +22,17 @@ private slots:
     void contextMenu(const QPoint& posa);
 
 private:
-    QTimer *refreshTimer;
-    QImage image;
-    int refresh;
+    QTimer *m_refreshTimer;
+    QImage m_image;
+    int m_refresh;
 
-    // configuration
-    uint32_t m_height;
+    uint32_t m_height;                  // configuration
     uint32_t m_width;
-    uint32_t upbase;
-    uint32_t control;
-    uint32_t size;
-    uint32_t *data;
-    uint32_t *data_end;
+    uint32_t m_upbase;
+    uint32_t m_control;
+    uint32_t m_size;
+    uint32_t *m_data;
+    uint32_t *m_data_end;
 };
 
 #endif
