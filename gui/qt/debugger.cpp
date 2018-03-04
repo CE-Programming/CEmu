@@ -2099,42 +2099,41 @@ void MainWindow::vatContextMenu(const QPoint& posa) {
     }
 }
 
-void MainWindow::memContextMenu(const QPoint& posa) {
+void MainWindow::memContextMenu(const QPoint &posa) {
     HexWidget *p = qobject_cast<HexWidget*>(sender());
-    memoryContextMenu(p->mapToGlobal(posa), p->getAddr());
+    memoryContextMenu(p->mapToGlobal(posa), p->getAddr() + p->baseAddr());
 }
 
-void MainWindow::memoryContextMenu(const QPoint& pos, uint32_t address) {
-    QString copy_addr = tr("Copy Address");
-    QString toggle_break = tr("Toggle Breakpoint");
-    QString toggle_write_watch = tr("Toggle Write Watchpoint");
-    QString toggle_read_watch = tr("Toggle Read Watchpoint");
-    QString toggle_rw_watch = tr("Toggle Read/Write Watchpoint");
-
+void MainWindow::memoryContextMenu(const QPoint &pos, uint32_t address) {
+    QString copyAddr = tr("Copy Address");
+    QString toggleBreak = tr("Toggle Breakpoint");
+    QString toggleWrite = tr("Toggle Write Watchpoint");
+    QString toggleRead = tr("Toggle Read Watchpoint");
+    QString toggleRw = tr("Toggle Read/Write Watchpoint");
     QString addr = int2hex(address, 6);
 
-    copy_addr += QStringLiteral(" '") + addr + QStringLiteral("'");
+    copyAddr += QStringLiteral(" '") + addr + QStringLiteral("'");
 
     QMenu menu;
-    menu.addAction(copy_addr);
+    menu.addAction(copyAddr);
     menu.addSeparator();
-    menu.addAction(toggle_break);
-    menu.addAction(toggle_read_watch);
-    menu.addAction(toggle_write_watch);
-    menu.addAction(toggle_rw_watch);
+    menu.addAction(toggleBreak);
+    menu.addAction(toggleRead);
+    menu.addAction(toggleWrite);
+    menu.addAction(toggleRw);
 
     QAction* item = menu.exec(pos);
     if (item) {
-        if (item->text() == copy_addr) {
+        if (item->text() == copyAddr) {
             QClipboard *clipboard = QApplication::clipboard();
             clipboard->setText(addr.toLatin1());
-        } else if (item->text() == toggle_break) {
+        } else if (item->text() == toggleBreak) {
             breakpointAdd(breakpointNextLabel(), address, true, true);
-        } else if (item->text() == toggle_read_watch) {
+        } else if (item->text() == toggleRead) {
             watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_READ, true);
-        } else if (item->text() == toggle_write_watch) {
+        } else if (item->text() == toggleWrite) {
             watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_READ, true);
-        } else if (item->text() == toggle_rw_watch) {
+        } else if (item->text() == toggleRw) {
             watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_READ | DBG_MASK_WRITE, true);
         }
         memDocksUpdate();

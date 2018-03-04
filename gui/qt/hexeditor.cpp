@@ -155,8 +155,8 @@ void MainWindow::memGoto(HexWidget *edit, uint32_t address) {
     QByteArray data;
     data.resize(end - start + 1);
 
-    for (int i = start; i < end; i++) {
-        data[i] = mem_peek_byte(i);
+    for (int j = 0, i = start; i < end; i++, j++) {
+        data[j] = mem_peek_byte(i);
     }
 
     edit->setFocus();

@@ -242,20 +242,19 @@ void HexWidget::paintEvent(QPaintEvent *event) {
         painter.drawLine(m_asciiLine - xOffset, region.top(), m_asciiLine - xOffset, height());
     }
 
-    painter.setPen(cText);
-
     for (int row = 0, y = m_charHeight; row <= m_visibleRows; row++, y += m_charHeight) {
         int xData = m_dataLoc - xOffset;
         int xAscii = m_asciiLoc - xOffset;
         int lineAddr = m_lineAddrStart + row * m_bytesPerLine;
         int addr = lineAddr;
+        painter.setPen(cText);
         painter.drawText(xAddr, y, int2hex(m_baseAddr + lineAddr, 6));
         for (int col = 0; col < m_bytesPerLine && addr < m_addrEnd; col++) {
             addr = lineAddr + col;
 
             painter.setPen(cText);
             uint8_t data = m_data[addr];
-            uint8_t flags = debugger.data.block[addr];
+            uint8_t flags = debugger.data.block[addr + m_baseAddr];
             bool selected = addr >= m_selectAddrStart && addr <= m_selectAddrEnd;
             bool modified = m_modified[addr];
 
@@ -305,6 +304,7 @@ void HexWidget::paintEvent(QPaintEvent *event) {
 
     if (!isEnabled()) {
         m_stack.clear();
+        m_modified.clear();
     }
 
     if (m_data.size()) {
