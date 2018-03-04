@@ -15,7 +15,7 @@
 #include "../../../core/asic.h"
 #include "../../../core/keypad.h"
 
-const QRect KeypadWidget::sBaseRect{{}, QSize{162, 235}};
+const QRect KeypadWidget::sBaseRect{{}, QSize{162, 238}};
 
 void KeypadWidget::addKey(Key *key) {
     const KeyCode code = key->keycode();
@@ -36,6 +36,9 @@ void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
     cText  = cNum;
     cOther = QColor::fromRgb(0x1d1d1d);
     cGraph = QColor::fromRgb(0xeeeeee);
+
+    this->setAttribute(Qt::WA_TranslucentBackground, false);
+    this->setAutoFillBackground(false);
 
     switch(color_scheme) {
         default:
@@ -109,6 +112,21 @@ void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
             cSides  = cCenter.darker(115);
             cOther  = QColor::fromRgb(53, 53, 53);
             cGraph  = QColor::fromRgb(0xD0D3D4);
+            break;
+        case KEYPAD_ROSEGOLD:
+            cCenter = QColor::fromRgb(0xAF867C);
+            cSides  = cCenter.darker(105);
+            cOther  = QColor::fromRgb(0xD8D3B6);
+            cText   = QColor::fromRgb(0x222222);
+            cGraph  = QColor::fromRgb(0xD0D3D4);
+            break;
+        case KEYPAD_CRYSTALCLEAR:
+            cCenter = QColor::fromRgb(0xACA7AE); cCenter.setAlpha(220);
+            cSides  = cCenter.lighter(130);
+            cOther  = QColor::fromRgb(0x191919); cOther.setAlpha(120);
+            cGraph  = QColor::fromRgb(0xD0D3D4); cGraph.setAlpha(120);
+            this->setAttribute(Qt::WA_TranslucentBackground, true);
+            this->setAutoFillBackground(true);
             break;
     }
 
@@ -280,8 +298,11 @@ void KeypadWidget::paintEvent(QPaintEvent *event) {
     QRegion region{mInverseTransform.map(event->region())};
     QPainter painter{this};
     painter.setRenderHint(QPainter::Antialiasing);
+    if (color == KEYPAD_CRYSTALCLEAR) {
+        painter.fillRect(this->rect(), cclrBackground);
+    }
     painter.setTransform(mTransform);
-    painter.fillRect(sBaseRect, mBackground);
+    painter.fillPath(keypadPath, mBackground);
     for (uint8_t row = 0; row != sRows; ++row) {
         for (uint8_t col = 0; col != sCols; ++col) {
             if (const Key *key = mKeys[row][col]) {

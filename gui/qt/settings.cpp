@@ -635,19 +635,21 @@ void MainWindow::selectKeypadColor() {
     QString name = sender()->objectName();
     unsigned int color = KEYPAD_BLACK;
 
-    if (name == QStringLiteral("buttonWhite"))     color = KEYPAD_WHITE;
-    if (name == QStringLiteral("buttonBlack"))     color = KEYPAD_BLACK;
-    if (name == QStringLiteral("buttonGolden"))    color = KEYPAD_GOLDEN;
-    if (name == QStringLiteral("buttonPlum"))      color = KEYPAD_PLUM;
-    if (name == QStringLiteral("buttonPink"))      color = KEYPAD_PINK;
-    if (name == QStringLiteral("buttonRed"))       color = KEYPAD_RED;
-    if (name == QStringLiteral("buttonLightning")) color = KEYPAD_LIGHTNING;
-    if (name == QStringLiteral("buttonTrueBlue"))  color = KEYPAD_TRUE_BLUE;
-    if (name == QStringLiteral("buttonDenim"))     color = KEYPAD_DENIM;
-    if (name == QStringLiteral("buttonSilver"))    color = KEYPAD_SILVER;
-    if (name == QStringLiteral("buttonSpaceGrey")) color = KEYPAD_SPACEGREY;
-    if (name == QStringLiteral("buttonCoral"))     color = KEYPAD_CORAL;
-    if (name == QStringLiteral("buttonMint"))      color = KEYPAD_MINT;
+    if      (name == QStringLiteral("buttonWhite"))        color = KEYPAD_WHITE;
+    else if (name == QStringLiteral("buttonBlack"))        color = KEYPAD_BLACK;
+    else if (name == QStringLiteral("buttonGolden"))       color = KEYPAD_GOLDEN;
+    else if (name == QStringLiteral("buttonPlum"))         color = KEYPAD_PLUM;
+    else if (name == QStringLiteral("buttonPink"))         color = KEYPAD_PINK;
+    else if (name == QStringLiteral("buttonRed"))          color = KEYPAD_RED;
+    else if (name == QStringLiteral("buttonLightning"))    color = KEYPAD_LIGHTNING;
+    else if (name == QStringLiteral("buttonTrueBlue"))     color = KEYPAD_TRUE_BLUE;
+    else if (name == QStringLiteral("buttonDenim"))        color = KEYPAD_DENIM;
+    else if (name == QStringLiteral("buttonSilver"))       color = KEYPAD_SILVER;
+    else if (name == QStringLiteral("buttonSpaceGrey"))    color = KEYPAD_SPACEGREY;
+    else if (name == QStringLiteral("buttonCoral"))        color = KEYPAD_CORAL;
+    else if (name == QStringLiteral("buttonMint"))         color = KEYPAD_MINT;
+    else if (name == QStringLiteral("buttonRoseGold"))     color = KEYPAD_ROSEGOLD;
+    else if (name == QStringLiteral("buttonCrystalClear")) color = KEYPAD_CRYSTALCLEAR;
 
     setKeypadColor(color);
 }

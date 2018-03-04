@@ -318,6 +318,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonSpaceGrey, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
     connect(ui->buttonCoral, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
     connect(ui->buttonMint, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonRoseGold, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    connect(ui->buttonCrystalClear, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
 
     // Export / Import window config
     connect(ui->actionExportWindowConfig, &QAction::triggered, this, &MainWindow::exportWindowConfig);
