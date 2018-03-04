@@ -24,8 +24,8 @@ void MainWindow::toggleConsole() {
             QMessageBox::critical(this, "Error", "Unable to close console. If you are running directly from a console, you may not be able to close it.");
         }
     }
-    
-    settings->setValue(SETTING_ENABLE_WIN_CONSOLE, actionToggleConsole->isChecked());
+
+    m_settings->setValue(SETTING_ENABLE_WIN_CONSOLE, actionToggleConsole->isChecked());
 }
 
 void MainWindow::installToggleConsole() {
@@ -39,12 +39,12 @@ void MainWindow::installToggleConsole() {
     actionToggleConsole->setChecked(true);
     actionToggleConsole->setEnabled(true);
     ui->menuCalculator->addAction(actionToggleConsole);
-    
+
     // Connect menu action to function
     connect(actionToggleConsole, &QAction::triggered, this, &MainWindow::toggleConsole);
-    
+
     // Check if we opted to not show a window
-    if (!settings->value(SETTING_ENABLE_WIN_CONSOLE, false).toBool()) {
+    if (!m_settings->value(SETTING_ENABLE_WIN_CONSOLE, false).toBool()) {
         actionToggleConsole->setChecked(false);
         toggleConsole();
     }
