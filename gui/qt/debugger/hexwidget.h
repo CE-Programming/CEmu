@@ -61,7 +61,7 @@ private:
     void setSelected(char n) { overwrite(m_selectStart * 2, m_selectLen, QByteArray(m_selectLen, n)); }
     void overwrite(int pos, char c);
     void overwrite(int pos, int len, const QByteArray &ba);
-    int getPosition(QPoint posa);
+    int getPosition(QPoint posa, bool allow = true);
 
     typedef struct {
         int addr;
@@ -101,7 +101,8 @@ private:
 
     bool m_scrollable = false;          // fetch bytes from memory on scroll
     bool m_asciiArea = true;            // show character representations
-    bool m_scrolled = false;
+    bool m_scrolled = false;            // scrolled while focused
+    bool m_asciiEdit = false;           // editing from the ascii side
 
     QStack<stack_entry_t> m_stack;
 };

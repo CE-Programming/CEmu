@@ -140,15 +140,31 @@ void HexWidget::setCursorOffset(int offset, bool selection) {
     showCursor();
 }
 
-int HexWidget::getPosition(QPoint posa) {
+int HexWidget::getPosition(QPoint posa, bool allow) {
     int xOffset = posa.x() + horizontalScrollBar()->value();
     int result = -1;
 
+    if (xOffset >= m_asciiLoc && xOffset < (m_asciiLoc + m_bytesPerLine * m_charWidth)) {
+        if (allow) {
+            m_asciiEdit = true;
+        }
+        if (m_asciiEdit) {
+            int y = ((posa.y() - m_gap) / m_charHeight) * m_bytesPerLine * 2;
+            int x = (xOffset - m_asciiLoc) / m_charWidth;
+            result = m_lineStart * 2 + x * 2 + y;
+        }
+    }
+
     if (xOffset >= m_dataLoc && xOffset < m_asciiLine) {
-        int y = ((posa.y() - m_gap) / m_charHeight) * m_bytesPerLine * 2;
-        int x = (xOffset - m_dataLoc) / m_charWidth;
-        x = (x / 3) * 2 + x % 3;
-        result = m_lineStart * 2 + x + y;
+        if (allow) {
+            m_asciiEdit = false;
+        }
+        if (!m_asciiEdit) {
+            int y = ((posa.y() - m_gap) / m_charHeight) * m_bytesPerLine * 2;
+            int x = (xOffset - m_dataLoc) / m_charWidth;
+            x = (x / 3) * 2 + x % 3;
+            result = m_lineStart * 2 + x + y;
+        }
     }
 
     return result;
@@ -205,9 +221,16 @@ void HexWidget::adjust() {
         m_lineEnd = m_maxOffset;
     }
 
-    int y = (((m_cursorOffset / 2) - m_lineStart) / m_bytesPerLine + 1) * m_charHeight;
-    int x = m_cursorOffset % (m_bytesPerLine * 2);
-    x = (((x / 2) * 3) + (x % 2)) * m_charWidth + m_dataLoc;
+    int x, y = (((m_cursorOffset / 2) - m_lineStart) / m_bytesPerLine + 1) * m_charHeight;
+    if (!m_asciiEdit) {
+        y = (((m_cursorOffset / 2) - m_lineStart) / m_bytesPerLine + 1) * m_charHeight;
+        x = m_cursorOffset % (m_bytesPerLine * 2);
+        x = (((x / 2) * 3) + (x % 2)) * m_charWidth + m_dataLoc;
+    } else {
+        y = (((m_cursorOffset / 2) - m_lineStart) / m_bytesPerLine + 1) * m_charHeight;
+        x = (m_cursorOffset % (m_bytesPerLine * 2)) / 2;
+        x = x * m_charWidth + m_asciiLoc;
+    }
     m_cursor = QRect(x - horizontalScrollBar()->value(), y + m_cursorHeight, m_charWidth, m_cursorHeight);
 
     update();
@@ -265,6 +288,7 @@ void HexWidget::overwrite(int addr, int len, const QByteArray &ba) {
 }
 
 void HexWidget::paintEvent(QPaintEvent *event) {
+    QRect r;
     QPainter painter(viewport());
     const QRect &region = event->rect();
     const QPalette &pal = viewport()->palette();
@@ -313,7 +337,6 @@ void HexWidget::paintEvent(QPaintEvent *event) {
             }
 
             if (modified || selected) {
-                QRect r;
                 if (!col) {
                     r.setRect(xData, y - m_charHeight + m_margin, 2 * m_charWidth, m_charHeight);
                 } else {
@@ -339,6 +362,10 @@ void HexWidget::paintEvent(QPaintEvent *event) {
                 char ch = static_cast<char>(data);
                 if (ch < 0x20 || ch > 0x7e) {
                     ch = '.';
+                }
+                if (modified || selected) {
+                    r.setRect(xAscii, y - m_charHeight + m_margin, m_charWidth, m_charHeight);
+                    painter.fillRect(r, modified ? selected ? cBoth : cModified : cSelected);
                 }
                 painter.drawText(xAscii, y, QChar(ch));
                 xAscii += m_charWidth;
@@ -374,7 +401,7 @@ void HexWidget::mousePressEvent(QMouseEvent *event) {
 }
 
 void HexWidget::mouseMoveEvent(QMouseEvent *event) {
-    int addr = getPosition(event->pos());
+    int addr = getPosition(event->pos(), false);
     if (addr >= 0) {
         setSelection(addr);
         setCursorOffset(addr, false);
@@ -384,86 +411,98 @@ void HexWidget::mouseMoveEvent(QMouseEvent *event) {
 void HexWidget::keyPressEvent(QKeyEvent *event) {
     int addr = m_cursorOffset;
     if (event->matches(QKeySequence::MoveToNextChar)) {
-        setCursorOffset(addr + 1);
-    }
+        setCursorOffset(m_asciiEdit ? addr + 2 : addr + 1);
+    } else
     if (event->matches(QKeySequence::MoveToPreviousChar)) {
-        setCursorOffset(addr - 1);
-    }
+        setCursorOffset(m_asciiEdit ? addr - 2 : addr - 1);
+    } else
     if (event->matches(QKeySequence::MoveToEndOfLine)) {
         setCursorOffset(addr | (m_bytesPerLine * 2 - 1));
-    }
+    } else
     if (event->matches(QKeySequence::MoveToStartOfLine)) {
         setCursorOffset(addr - (m_cursorOffset % (m_bytesPerLine * 2)));
-    }
+    } else
     if (event->matches(QKeySequence::MoveToPreviousLine)) {
         setCursorOffset(addr - m_bytesPerLine * 2);
-    }
+    } else
     if (event->matches(QKeySequence::MoveToNextLine)) {
         setCursorOffset(addr + m_bytesPerLine * 2);
-    }
+    } else
     if (event->matches(QKeySequence::MoveToPreviousPage)) {
         setCursorOffset(addr - (m_visibleRows - 1) * m_bytesPerLine * 2);
-    }
+    } else
     if (event->matches(QKeySequence::MoveToNextPage)) {
         setCursorOffset(addr + (m_visibleRows - 1) * m_bytesPerLine * 2);
-    }
+    } else
     if (event->matches(QKeySequence::MoveToEndOfDocument)) {
         setCursorOffset(m_size * 2);
-    }
+    } else
     if (event->matches(QKeySequence::MoveToStartOfDocument)){
         setCursorOffset(0);
-    }
-
-    if (!(event->modifiers() & ~(Qt::ShiftModifier | Qt::KeypadModifier))) {
-        int key = event->key();
-        if ((key >= '0' && key <= '9') || (key >= 'A' && key <= 'F')) {
-
-            if (isSelected()) {
-                setSelected(0);
-            }
-
-            if (m_data.size() > 0) {
-                uint8_t value;
-                uint8_t num =  (key <= '9') ? (key - '0') : (key - 'A' + 10);
-                if (m_cursorOffset % 2) {
-                    value = (m_data[addr / 2] & 0xf0) | num;
-                } else {
-                    value = (m_data[addr / 2] & 0x0f) | (num << 4);
-                }
-                overwrite(addr, value);
-                setCursorOffset(addr + 1);
-            }
-        }
-    }
-
-    if (event->matches(QKeySequence::Cut) && isSelected()) {
-        QByteArray ba = m_data.mid(m_selectStart, m_selectLen).toHex();
-        qApp->clipboard()->setText(ba);
-        setSelected(0);
-        setCursorOffset(addr);
-    }
-
+    } else
     if (event->matches(QKeySequence::Copy) && isSelected()) {
-        QByteArray ba = m_data.mid(m_selectStart, m_selectLen).toHex();
-        qApp->clipboard()->setText(ba);
-    }
-
+        if (m_asciiEdit) {
+            QByteArray ba = m_data.mid(m_selectStart, m_selectLen);
+            QByteArray ascii;
+            for (const char ch : ba) {
+                ascii.append((ch < 0x20 || ch > 0x7e) ? '.' : ch);
+            }
+            ascii.append('\0');
+            qApp->clipboard()->setText(ascii);
+        } else {
+            QByteArray ba = m_data.mid(m_selectStart, m_selectLen).toHex();
+            qApp->clipboard()->setText(ba);
+        }
+    } else
     if (event->matches(QKeySequence::Paste)) {
-        QByteArray ba = QByteArray().fromHex(qApp->clipboard()->text().toLatin1());
+        QByteArray ba = qApp->clipboard()->text().toLatin1();
+        if (!m_asciiEdit) {
+            ba = QByteArray::fromHex(ba);
+        }
         overwrite(addr, ba.size(), ba);
         setCursorOffset(addr + ba.size() * 2);
-    }
-
+    } else
     if (event->matches(QKeySequence::Delete)) {
         if (isSelected()) {
             setSelected(0);
         } else {
             overwrite(addr, 0);
         }
-        setCursorOffset(addr + 2);
-    }
-
+        setCursorOffset(m_asciiEdit ? addr + 4 : addr + 2);
+    } else
     if (event->matches(QKeySequence::Undo)) {
         undo();
+    } else
+    if (!(event->modifiers() & ~(Qt::ShiftModifier | Qt::KeypadModifier))) {
+        int key = event->key();
+        if (!m_asciiEdit) {
+            if ((key >= '0' && key <= '9') || (key >= 'A' && key <= 'F')) {
+
+                if (isSelected()) {
+                    setSelected(0);
+                }
+
+                if (m_data.size() > 0) {
+                    uint8_t value;
+                    uint8_t num =  (key <= '9') ? (key - '0') : (key - 'A' + 10);
+                    if (m_cursorOffset % 2) {
+                        value = (m_data[addr / 2] & 0xf0) | num;
+                    } else {
+                        value = (m_data[addr / 2] & 0x0f) | (num << 4);
+                    }
+                    overwrite(addr, value);
+                    setCursorOffset(addr + 1);
+                }
+            }
+        } else {
+            if (isSelected()) {
+                setSelected(0);
+            }
+
+            if (m_data.size() > 0) {
+                overwrite(addr, static_cast<char>(key));
+                setCursorOffset(addr + 2);
+            }
+        }
     }
 }
