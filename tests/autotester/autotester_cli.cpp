@@ -160,7 +160,7 @@ int main(int argc, char* argv[])
      * i.e. actually wait until the core is ready to do stuff, instead of blinding doing sleeps, etc.
      * Things like std::condition_variable should help, IIRC */
     std::thread coreThread;
-    if (cemucore::emu_load(autotester::config.rom.c_str(), NULL))
+    if (EMU_LOAD_OKAY == cemucore::emu_load(false, autotester::config.rom.c_str()))
     {
         coreThread = std::thread(&cemucore::emu_loop);
     } else {
