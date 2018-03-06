@@ -468,7 +468,7 @@ void HexWidget::keyPressEvent(QKeyEvent *event) {
         } else {
             overwrite(addr, 0);
         }
-        setCursorOffset(m_asciiEdit ? addr + 4 : addr + 2);
+        setCursorOffset(addr + 2);
     } else
     if (event->matches(QKeySequence::Undo)) {
         undo();
