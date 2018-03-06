@@ -36,7 +36,7 @@ config_t config;
 bool debugLogs = true;
 bool ignoreROMfield = false;
 bool configLoaded = false;
-void (*stepCallback)(void) = nullptr;
+void (*stepCallback)() = nullptr;
 
 #define DO_STEP_CALLBACK()  if (stepCallback) { stepCallback(); }
 
@@ -334,7 +334,7 @@ bool loadJSONConfig(const std::string& jsonContents)
         {
             if (tmpFile.is_string() && !tmpFile.string_value().empty())
             {
-                std::string tmpFileStr = tmpFile.string_value();
+                const std::string& tmpFileStr = tmpFile.string_value();
                 config.transfer_files.push_back(tmpFileStr);
                 if (!file_exists(tmpFileStr))
                 {
@@ -356,7 +356,7 @@ bool loadJSONConfig(const std::string& jsonContents)
     {
         tmp2 = tmp["name"];
         if (tmp2.is_string() && !tmp2.string_value().empty()) {
-            std::string name_tmp = tmp2.string_value();
+            const std::string& name_tmp = tmp2.string_value();
             if (std::regex_match(name_tmp, std::regex("[A-Z][0-9A-Zθ]{0,7}"))) {
                 config.target.name = str_replace_all(name_tmp, "θ", "@");
             } else {
@@ -386,7 +386,7 @@ bool loadJSONConfig(const std::string& jsonContents)
         {
             if (tmpSeqItem.is_string() && tmpSeqItem.string_value().find('|') != std::string::npos)
             {
-                std::string tmpSeqItem_str = tmpSeqItem.string_value();
+                const std::string& tmpSeqItem_str = tmpSeqItem.string_value();
                 size_t sep_pos = tmpSeqItem.string_value().find('|');
                 if (sep_pos > 2 && sep_pos < tmpSeqItem_str.length()-1)
                 {
@@ -396,7 +396,7 @@ bool loadJSONConfig(const std::string& jsonContents)
                     {
                         if (command != "action" || valid_actions.count(value))
                         {
-                            config.sequence.push_back(std::make_pair(command, value));
+                            config.sequence.emplace_back(command, value);
                         } else {
                             std::cerr << "[Error] bad value for \"action\": '" << value << "'" << std::endl;
                             return false;
@@ -480,7 +480,7 @@ bool loadJSONConfig(const std::string& jsonContents)
                     for (const auto& tmpHashCRC : tmpHash["expected_CRCs"].array_items())
                     {
                         if (tmpHashCRC.is_string() && !tmpHashCRC.string_value().empty()) {
-                            const std::string crc_tmp = tmpHashCRC.string_value();
+                            const std::string& crc_tmp = tmpHashCRC.string_value();
                             if (std::regex_match(crc_tmp, std::regex("^[0-9a-fA-F]+$"))) {
                                 hash_param.expected_CRCs.push_back((uint32_t)std::stoul(crc_tmp, nullptr, 16));
                             } else {
@@ -526,11 +526,11 @@ std::vector<std::string> globVector(const std::string& pattern)
     }
 #else
     glob_t glob_result;
-    if (!glob(pattern.c_str(), GLOB_TILDE, NULL, &glob_result))
+    if (!glob(pattern.c_str(), GLOB_TILDE, nullptr, &glob_result))
     {
         for (unsigned int i=0; i<glob_result.gl_pathc; i++)
         {
-            files.push_back(std::string(glob_result.gl_pathv[i]));
+            files.emplace_back(glob_result.gl_pathv[i]);
         }
         globfree(&glob_result);
     }
@@ -544,7 +544,7 @@ bool sendFilesForTest()
     if (forced_libs_dir)
     {
         const auto forced_files = globVector(std::string(forced_libs_dir) + "/*.8xv");
-        if (forced_files.size() == 0)
+        if (forced_files.empty())
         {
             std::cerr << "[Error] AUTOTESTER_LIBS_DIR given but no files found...?" << std::endl;
             return false;

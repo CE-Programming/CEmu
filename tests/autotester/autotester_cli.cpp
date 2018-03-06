@@ -10,11 +10,10 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
-#include <unordered_map>
 #include <thread>
 #include <chrono>
-#include <regex>
 #include <cstdarg>
+#include <cstring>
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
   #include <direct.h>
@@ -124,9 +123,9 @@ int main(int argc, char* argv[])
         autotester::debugLogs = false;
     }
 
-    do_transfers = false;
+    do_transfers   = false;
     transfers_done = false;
-    transfers_err = false;
+    transfers_err  = false;
 
     const std::string jsonPath(argv[1]);
     std::string jsonContents;
@@ -175,7 +174,7 @@ int main(int argc, char* argv[])
     autotester::sendKey(0x09);
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
 
-    do_transfers = autotester::config.transfer_files.size() > 0;
+    do_transfers = !autotester::config.transfer_files.empty();
 
     if (do_transfers)
     {
@@ -217,7 +216,7 @@ cleanExit:
     // If no JSON/program/misc. error, return the hash failure count.
     if (retVal == 0)
     {
-        const auto status = autotester::hashesFailed == 0 ? "[Autotest passed]" : "[Autotest failed]";
+        const char* status = autotester::hashesFailed == 0 ? "[Autotest passed]" : "[Autotest failed]";
         std::cout << status << " Out of " << autotester::hashesTested << " tests attempted, "
                   << autotester::hashesPassed << " passed, and " << autotester::hashesFailed << " failed.\n" << std::endl;
 

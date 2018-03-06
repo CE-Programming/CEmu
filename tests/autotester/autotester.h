@@ -19,19 +19,9 @@ namespace cemucore
         #include "../../core/link.h"
         #include "../../core/asic.h"
         #include "../../core/cpu.h"
-        #include "../../core/misc.h"
         #include "../../core/mem.h"
-        #include "../../core/interrupt.h"
         #include "../../core/keypad.h"
-        #include "../../core/control.h"
-        #include "../../core/flash.h"
         #include "../../core/lcd.h"
-        #include "../../core/spi.h"
-        #include "../../core/backlight.h"
-        #include "../../core/timers.h"
-        #include "../../core/usb.h"
-        #include "../../core/realclock.h"
-        #include "../../core/sha256.h"
         #include "../../core/extras.h"
     }
 }
@@ -91,7 +81,7 @@ namespace autotester
     bool doTestSequence();
 
     /* Optional callback function called after each step (useful for GUIs) */
-    extern void (*stepCallback)(void);
+    extern void (*stepCallback)();
 
     /* The global config variable */
     extern config_t config;
