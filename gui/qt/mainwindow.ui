@@ -9133,8 +9133,8 @@ QPushButton:pressed {
     <addaction name="actionNew"/>
     <addaction name="separator"/>
     <addaction name="actionOpen"/>
-    <addaction name="menuExport"/>
     <addaction name="menuImport"/>
+    <addaction name="menuExport"/>
     <addaction name="separator"/>
     <addaction name="actionRecordAnimated"/>
     <addaction name="actionScreenshot"/>
