@@ -73,6 +73,9 @@ void EmuThread::writeConsoleBuffer(int type, const char *format, va_list args) {
     int size = vsnprintf(buffer + writePos, space, format, argsCopy);
     if (size >= 0 && size < space) {
         va_end(argsCopy);
+        if (size == 0) {
+            return;
+        }
         write.acquire(size);
         writePos += size;
         read.release(size);
