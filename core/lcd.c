@@ -239,7 +239,9 @@ static void lcd_event(enum sched_item_id id) {
                 lcd.compare = LCD_SYNC;
                 break;
             }
+            /* fallthrough */
         default:
+	    /* fallthrough */
         case LCD_SYNC:
             lcd_gui_event();
             lcd.PPL =  ((lcd.timing[0] >>  2 &  0x3F) + 1) << 4;
@@ -293,6 +295,7 @@ static void lcd_event(enum sched_item_id id) {
                 lcd.compare = LCD_ACTIVE_VIDEO;
                 break;
             }
+            /* fallthrough */
         case LCD_ACTIVE_VIDEO:
             duration = lcd.LPP * (lcd.HSW + lcd.HBP + lcd.CPL + lcd.HFP) * lcd.PCD;
             if (!lcd.prefill) {
