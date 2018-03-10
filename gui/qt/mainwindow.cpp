@@ -1993,10 +1993,6 @@ void MainWindow::updateCRCParamsFromPreset(int comboBoxIndex) {
 }
 
 void MainWindow::refreshCRC() {
-    uint32_t tmp_start = 0;
-    int32_t crc_size = 0;
-    void *start;
-    char *endptr1, *endptr2; // catch strtoul issues
     QLineEdit *startCRC = ui->startCRC;
     QLineEdit *sizeCRC = ui->sizeCRC;
 
@@ -2004,29 +2000,32 @@ void MainWindow::refreshCRC() {
     sizeCRC->setText(sizeCRC->text().trimmed());
 
     if (startCRC->text().isEmpty() || sizeCRC->text().isEmpty()) {
-        goto errCRCret;
+        QMessageBox::critical(this, MSG_ERROR, tr("Make sure you have entered a valid start/size pair or preset."));
+        return;
     }
 
     // Get GUI values
-    tmp_start = (uint32_t)strtoul(startCRC->text().toStdString().c_str(), &endptr1, 0);
-    crc_size = (size_t)strtoul(sizeCRC->text().toStdString().c_str(), &endptr2, 0);
-    if (*endptr1 || *endptr2) {
-        goto errCRCret;
+    bool ok1, ok2; // catch conversion issues
+    uint32_t tmp_start = startCRC->text().toUInt(&ok1, 0);
+    int32_t  crc_size  = sizeCRC->text().toInt(&ok2, 0);
+    if (!ok1 || !ok2) {
+        QMessageBox::critical(this, MSG_ERROR, tr("Could not convert those values into numbers"));
+        return;
     }
 
     // Get real start pointer
-    start = virt_mem_dup(tmp_start, crc_size);
+    void* start = virt_mem_dup(tmp_start, crc_size);
+    if (!start) {
+        QMessageBox::critical(this, MSG_ERROR, tr("Could not retrieve this memory chunk"));
+        return;
+    }
 
     // Compute and display CRC
     char buf[10];
     sprintf(buf, "%X", crc32(start, crc_size));
     free(start);
     ui->valueCRC->setText(buf);
-    return;
-
-errCRCret:
-    QMessageBox::critical(this, MSG_ERROR, tr("Make sure you have entered a valid start/size pair or preset."));
-    return;
+    ui->valueCRC->repaint();
 }
 
 void MainWindow::resetCalculator() {
