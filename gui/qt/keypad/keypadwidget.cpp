@@ -48,7 +48,7 @@ void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
             break;
         case KEYPAD_WHITE:
             cCenter = QColor::fromRgb(0xe8e8e8);
-            cSides  = QColor::fromRgb(0xc4c4c4);
+            cSides  = QColor::fromRgb(0xdddddd);
             cNum    = QColor::fromRgb(0x707880);
             cText   = QColor::fromRgb(0x222222);
             cOther  = QColor::fromRgb(0xc0c0c0);
