@@ -65,14 +65,15 @@ void EmuThread::writeConsoleBuffer(int type, const char *format, va_list args) {
         prevType = type;
         write.release(CONSOLE_BUFFER_SIZE);
     }
-    va_list argsCopy;
-    va_copy(argsCopy, args);
     int available = write.available();
     int remaining = CONSOLE_BUFFER_SIZE - writePos;
     int space = available < remaining ? available : remaining;
-    int size = vsnprintf(buffer + writePos, space, format, argsCopy);
+    int size;
+    va_list argsCopy;
+    va_copy(argsCopy, args);
+    size = vsnprintf(buffer + writePos, space, format, argsCopy);
+    va_end(argsCopy);
     if (size >= 0 && size < space) {
-        va_end(argsCopy);
         if (size == 0) {
             return;
         }
@@ -82,9 +83,13 @@ void EmuThread::writeConsoleBuffer(int type, const char *format, va_list args) {
         emit consoleStr(type);
     } else {
         if (size < 0) {
+            va_copy(argsCopy, args);
             size = vsnprintf(nullptr, 0, format, argsCopy);
+            va_end(argsCopy);
+            if (size <= 0) {
+                return;
+            }
         }
-        va_end(argsCopy);
         char *tmp = size < available - remaining ? buffer : new char[size + 1];
         if (tmp && vsnprintf(tmp, size + 1, format, args) >= 0) {
             int tmpPos = 0;
