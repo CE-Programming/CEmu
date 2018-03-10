@@ -473,16 +473,8 @@ void disassembleInstruction(void) {
     disasm.prefix = 0;
     disasm.suffix = 0;
 
-    if (disasm.forceAdl == FORCE_ADL) {
-        disasm.il = true;
-        disasm.l = true;
-    } else if (disasm.forceAdl == FORCE_NONADL) {
-        disasm.il = false;
-        disasm.l = false;
-    } else {
-        disasm.il = disasm.adl;
-        disasm.l = disasm.adl;
-    }
+    disasm.il = disasm.adl;
+    disasm.l = disasm.adl;
 
     union {
         uint8_t opcode;

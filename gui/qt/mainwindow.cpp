@@ -119,9 +119,9 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     // Debugger
     connect(ui->buttonRun, &QPushButton::clicked, this, &MainWindow::debuggerChangeState);
-    connect(ui->checkADLDisasm, &QCheckBox::stateChanged, this, &MainWindow::toggleADLDisasm);
-    connect(ui->checkADLStack, &QCheckBox::stateChanged, this, &MainWindow::toggleADLStack);
-    connect(ui->checkADL, &QCheckBox::stateChanged, this, &MainWindow::toggleADL);
+    connect(ui->checkADLDisasm, &QCheckBox::stateChanged, this, &MainWindow::updateDisasm);
+    connect(ui->checkADLStack, &QCheckBox::stateChanged, this, &MainWindow::updateStack);
+    connect(ui->checkADL, &QCheckBox::stateChanged, [this]{ updateDisasm(); updateStack(); });
 
     connect(ui->buttonAddPort, &QPushButton::clicked, this, &MainWindow::portSlotAdd);
     connect(ui->buttonAddBreakpoint, &QPushButton::clicked, this, &MainWindow::breakpointSlotAdd);

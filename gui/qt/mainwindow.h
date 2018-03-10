@@ -245,9 +245,6 @@ private:
     void debuggerChangeState();
     void debuggerExecuteCommand(uint32_t debugAddress, uint8_t command);
     void debuggerProcessCommand(int reason, uint32_t input);
-    void toggleADLDisasm(int state);
-    void toggleADLStack(int state);
-    void toggleADL(int state);
 
     void portRemoveSelected();
     void portRemoveRow(int row);
@@ -269,6 +266,7 @@ private:
     void drawNextStackLine();
     void scrollDisasm(int value);
     void scrollStack(int value);
+    bool getAdlState(int state);
 
     void stepIn();
     void stepOver();

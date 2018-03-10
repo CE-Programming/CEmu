@@ -50,7 +50,6 @@ typedef struct {
     int32_t newAddress;
     uint8_t prefix, suffix;
     bool adl, iw, il, l;
-    int forceAdl;
     map_t map;
     map_value_t reverseMap;
     std::string space;

@@ -66,7 +66,6 @@ void MainWindow::debuggerInstall() {
     ui->pc->installEventFilter(this);
     ui->spl->installEventFilter(this);
 
-    disasm.forceAdl = FORCE_NONE;
     ui->checkADLDisasm->blockSignals(true);
     ui->checkADLDisasm->setCheckState(Qt::PartiallyChecked);
     ui->checkADLDisasm->blockSignals(false);
@@ -1658,7 +1657,7 @@ void MainWindow::updateDisasmAddr(int sentBase, bool newPane) {
     m_addressPane = sentBase;
     m_fromPane = newPane;
     m_disasmOffsetSet = false;
-    disasm.adl = ui->checkADL->isChecked();
+    disasm.adl = getAdlState(ui->checkADLDisasm->checkState());
     disasm.baseAddress = -1;
     disasm.newAddress = m_addressPane - ((newPane) ? 0x40 : 0);
     if (disasm.newAddress < 0) { disasm.newAddress = 0; }
@@ -1684,34 +1683,6 @@ void MainWindow::updateDisasmAddr(int sentBase, bool newPane) {
 // ------------------------------------------------
 // Misc
 // ------------------------------------------------
-
-void MainWindow::toggleADLDisasm(int state) {
-    switch (state) {
-        default:
-        case Qt::PartiallyChecked:
-            disasm.forceAdl = FORCE_NONE;
-            break;
-        case Qt::Checked:
-            disasm.forceAdl = FORCE_ADL;
-            break;
-        case Qt::Unchecked:
-            disasm.forceAdl = FORCE_NONADL;
-            break;
-    }
-    m_prevDisasmAddr = ui->disassemblyView->getSelectedAddress().toUInt(Q_NULLPTR, 16);
-    updateDisasmAddr(m_prevDisasmAddr, true);
-}
-
-void MainWindow::toggleADLStack(int state) {
-    (void)(state);
-    updateStack();
-}
-
-void MainWindow::toggleADL(int state) {
-    (void)(state);
-    toggleADLDisasm(ui->checkADLDisasm->checkState());
-    toggleADLStack(ui->checkADLStack->checkState());
-}
 
 void MainWindow::gotoPressed() {
     bool accept;
@@ -1897,73 +1868,39 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e) {
 // Stack
 // ------------------------------------------------
 
-void MainWindow::updateStack() {
-    QString formattedLine;
-
-    disconnect(ui->stackView->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::scrollStack);
-    ui->stackView->clear();
-
+bool MainWindow::getAdlState(int state) {
     bool adl = ui->checkADL->isChecked();
-    int state = ui->checkADLStack->checkState();
-
     if (state == Qt::Checked) {
         adl = true;
     } else if (state == Qt::Unchecked) {
         adl = false;
     }
+    return adl;
+}
 
-    if (adl) {
-        m_stackAddr = cpu.registers.SPL;
-        for (int i = 0; i < 80; i += 3) {
-            m_stackAddr = (m_stackAddr + 3) & 0xFFFFFF;
-            formattedLine = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2</pre>"))
-                                    .arg(int2hex(m_stackAddr, 6),
-                                         int2hex(mem_peek_word(m_stackAddr, 1), 6));
-            ui->stackView->appendHtml(formattedLine);
-        }
-    } else {
-        m_stackAddr = cpu.registers.SPS;
-        for (int i = 0; i < 60; i += 2) {
-            m_stackAddr = (m_stackAddr + 2) & 0xFFFFFF;
-            formattedLine = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2</pre>"))
-                                    .arg(int2hex(m_stackAddr, 4),
-                                         int2hex(mem_peek_word(m_stackAddr, 0), 4));
-            ui->stackView->appendHtml(formattedLine);
-        }
+void MainWindow::updateStack() {
+    disconnect(ui->stackView->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::scrollStack);
+    ui->stackView->clear();
+
+    m_stackAddr = getAdlState(ui->checkADLStack->checkState()) ? cpu.registers.SPL : cpu.registers.SPS;
+
+    for (int i = 0; i < 20; i++) {
+        drawNextStackLine();
     }
 
-    ui->stackView->blockSignals(false);
     ui->stackView->moveCursor(QTextCursor::Start);
     connect(ui->stackView->verticalScrollBar(), &QScrollBar::valueChanged, this, &MainWindow::scrollStack);
 }
 
 void MainWindow::drawNextStackLine() {
-    QString line;
+    int width = getAdlState(ui->checkADLStack->checkState()) ? 6 : 4;
 
-    ui->stackView->blockSignals(true);
-    bool adl = ui->checkADL->isChecked();
-    int state = ui->checkADLStack->checkState();
-
-    if (state == Qt::Checked) {
-        adl = true;
-    } else if (state == Qt::Unchecked) {
-        adl = false;
-    }
-
-    if (adl) {
-        m_stackAddr = (m_stackAddr + 3) & 0xFFFFFF;
-        line = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2</pre>"))
-                       .arg(int2hex(m_stackAddr, 6),
-                            int2hex(mem_peek_word(m_stackAddr, 1), 6));
-    } else {
-        m_stackAddr = (m_stackAddr + 2) & 0xFFFFFF;
-        line = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2</pre>"))
-                       .arg(int2hex(m_stackAddr, 4),
-                            int2hex(mem_peek_word(m_stackAddr, 0), 4));
-    }
+    QString line = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2</pre>"))
+                   .arg(int2hex(m_stackAddr, width),
+                        int2hex(mem_peek_word(m_stackAddr, width == 6), width));
+    m_stackAddr = (m_stackAddr + (width >> 1)) & 0xFFFFFF;
 
     ui->stackView->appendHtml(line);
-    ui->stackView->blockSignals(false);
 }
 
 //------------------------------------------------
