@@ -93,18 +93,6 @@ void open_debugger(int reason, uint32_t data) {
     debugger.totalCycles += sched_total_cycles();
     debugger.dmaCycles += cpu.dmaCycles;
 
-    if (debugger.bufferPos) {
-        debugger.buffer[debugger.bufferPos] = '\0';
-        gui_console_printf("%s", debugger.buffer);
-        debugger.bufferPos = 0;
-    }
-
-    if (debugger.bufferErrPos) {
-        debugger.bufferErr[debugger.bufferErrPos] = '\0';
-        gui_console_err_printf("%s", debugger.bufferErr);
-        debugger.bufferErrPos = 0;
-    }
-
 #ifndef __EMSCRIPTEN__
     std::unique_lock<std::mutex> lock(debugM);
 #endif

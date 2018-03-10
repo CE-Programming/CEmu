@@ -562,15 +562,19 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
                         open_debugger(addr, value);
                         break;
                     } else if ((addr >= DBGOUT_PORT_RANGE && addr < DBGOUT_PORT_RANGE+SIZEOF_DBG_BUFFER-1)) {
-                        if (value) {
-                            debugger.buffer[debugger.bufferPos] = (char)value;
-                            debugger.bufferPos = (debugger.bufferPos + 1) % SIZEOF_DBG_BUFFER;
+                        debugger.buffer[debugger.bufferPos] = (char)value;
+                        debugger.bufferPos = (debugger.bufferPos + 1) % SIZEOF_DBG_BUFFER;
+                        if (!value) {
+                            gui_console_printf("%s", debugger.buffer);
+                            debugger.bufferPos = 0;
                         }
                         break;
                     } else if ((addr >= DBGERR_PORT_RANGE && addr < DBGERR_PORT_RANGE+SIZEOF_DBG_BUFFER-1)) {
-                        if (value) {
-                            debugger.bufferErr[debugger.bufferErrPos] = (char)value;
-                            debugger.bufferErrPos = (debugger.bufferErrPos + 1) % SIZEOF_DBG_BUFFER;
+                        debugger.bufferErr[debugger.bufferErrPos] = (char)value;
+                        debugger.bufferErrPos = (debugger.bufferErrPos + 1) % SIZEOF_DBG_BUFFER;
+                        if (!value) {
+                            gui_console_err_printf("%s", debugger.bufferErr);
+                            debugger.bufferErrPos = 0;
                         }
                         break;
                     }

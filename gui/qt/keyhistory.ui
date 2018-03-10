@@ -52,11 +52,14 @@
      </item>
      <item>
       <widget class="QSpinBox" name="textSize">
+       <property name="correctionMode">
+        <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+       </property>
        <property name="minimum">
-        <number>5</number>
+        <number>1</number>
        </property>
        <property name="maximum">
-        <number>20</number>
+        <number>99</number>
        </property>
       </widget>
      </item>

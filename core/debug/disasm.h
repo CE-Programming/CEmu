@@ -30,12 +30,6 @@ extern disasm_highlights_state_t disasmHighlight;
 typedef std::unordered_multimap<uint32_t, std::string> map_t;
 typedef std::unordered_map<std::string, uint32_t> map_value_t;
 
-enum forceTypes {
-    FORCE_NONE,
-    FORCE_ADL,
-    FORCE_NONADL
-};
-
 typedef struct {
     std::string opcode;
     std::string arguments;
