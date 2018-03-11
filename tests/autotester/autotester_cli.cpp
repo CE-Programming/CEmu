@@ -33,9 +33,9 @@ extern "C"
 {
     auto lastTime = std::chrono::steady_clock::now();
 
-    void gui_set_busy(bool) { }
-    void gui_emu_sleep(unsigned long ms) { std::this_thread::sleep_for(std::chrono::microseconds(ms)); }
-    void gui_entered_send_state(bool) { }
+    void gui_emu_sleep(unsigned long ms) {
+        std::this_thread::sleep_for(std::chrono::microseconds(ms));
+    }
 
     void gui_do_stuff(void)
     {
@@ -49,44 +49,10 @@ extern "C"
         }
     }
 
-    void gui_console_vprintf(const char *fmt, va_list ap)
-    {
-        // Uncomment if needed
-        //vfprintf(stdout, fmt, ap);
-        //fflush(stdout);
-    }
+    void gui_console_printf(const char *format, ...) {}
+    void gui_console_err_printf(const char *format, ...) {}
 
-    void gui_console_err_vprintf(const char *fmt, va_list ap)
-    {
-        vfprintf(stderr, fmt, ap);
-        fflush(stderr);
-    }
-
-    void gui_console_printf(const char *fmt, ...)
-    {
-        va_list ap;
-        va_start(ap, fmt);
-        gui_console_vprintf(fmt, ap);
-        va_end(ap);
-    }
-
-    void gui_console_err_printf(const char *fmt, ...)
-    {
-        va_list ap;
-        va_start(ap, fmt);
-
-        gui_console_err_vprintf(fmt, ap);
-
-        va_end(ap);
-    }
-
-    void gui_perror(const char *msg)
-    {
-        printf("[Error] %s: %s\n", msg, strerror(errno));
-        fflush(stdout);
-    }
-
-    void throttle_timer_wait()
+    void gui_throttle()
     {
         auto interval  = std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(1000000));
 
@@ -160,7 +126,7 @@ int main(int argc, char* argv[])
      * i.e. actually wait until the core is ready to do stuff, instead of blinding doing sleeps, etc.
      * Things like std::condition_variable should help, IIRC */
     std::thread coreThread;
-    if (EMU_LOAD_OKAY == cemucore::emu_load(false, autotester::config.rom.c_str()))
+    if (cemucore::EMU_LOAD_OKAY == cemucore::emu_load(false, autotester::config.rom.c_str()))
     {
         coreThread = std::thread(&cemucore::emu_loop);
     } else {
