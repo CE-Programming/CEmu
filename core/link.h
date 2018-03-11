@@ -6,7 +6,6 @@ extern "C" {
 #endif
 
 #include "vat.h"
-
 #include <stdbool.h>
 
 enum { LINK_RAM=0, LINK_ARCH, LINK_FILE, LINK_GOOD, LINK_WARN, LINK_ERR };

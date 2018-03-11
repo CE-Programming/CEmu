@@ -57,24 +57,20 @@
 
 MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow), opts(cliOpts) {
 
-    // Setup translations
+    // setup translations
     m_appTranslator.load(QLocale::system().name(), QStringLiteral(":/i18n/i18n/"));
     qApp->installTranslator(&m_appTranslator);
 
-    // Register setting metatypes
+    // setting metatypes
     qRegisterMetaTypeStreamOperators<QList<int>>("QList<int>");
     qRegisterMetaTypeStreamOperators<QList<bool>>("QList<bool>");
-
-    // Setup the UI
     ui->setupUi(this);
-
-    // init IPC
     if (!ipcSetup()) {
         m_initPassed = false;
         return;
     }
 
-    // Init tivars_lib stuff
+    // init tivars_lib stuff
     tivars::TIModels::initTIModelsArray();
     tivars::TIVarTypes::initTIVarTypesArray();
     tivars::TH_0x05::initTokens();
@@ -84,73 +80,72 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     ui->statusBar->addPermanentWidget(&m_msgLabel);
     ui->statusBar->addPermanentWidget(&m_fpsLabel);
 
-    // Allow for 2018 lines of logging
-    ui->console->setMaximumBlockCount(2018);
+    m_watchpoints = ui->watchpoints;
+    m_breakpoints = ui->breakpoints;
+    m_ports = ui->ports;
+    m_disasm = ui->disasm;
+
+    ui->console->setMaximumBlockCount(1000);
 
     setWindowTitle(QStringLiteral("CEmu | ") + opts.idString);
 
-    // Register QtKeypadBridge for the virtual keyboard functionality
     keypadBridge = new QtKeypadBridge(this);
     connect(keypadBridge, &QtKeypadBridge::keyStateChanged, ui->keypadWidget, &KeypadWidget::changeKeyState);
-
     installEventFilter(keypadBridge);
     for (const auto &tab : ui->tabWidget->children()[0]->children()) {
         tab->installEventFilter(keypadBridge);
     }
 
-    // Setup the file sending handler
     m_progressBar = new QProgressBar(this);
     ui->statusBar->addWidget(m_progressBar);
     sendingHandler = new SendingHandler(this, m_progressBar, ui->varLoadedView);
 
-    // Emulator -> GUI (Should be queued)
+    // emulator -> gui (Should be queued)
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr, Qt::UniqueConnection);
     connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed, Qt::QueuedConnection);
-    connect(&emu, &EmuThread::raiseDebugger, this, &MainWindow::debuggerRaise, Qt::QueuedConnection);
-    connect(&emu, &EmuThread::disableDebugger, this, &MainWindow::debuggerGUIDisable, Qt::QueuedConnection);
-    connect(&emu, &EmuThread::sendDebugCommand, this, &MainWindow::debuggerProcessCommand, Qt::QueuedConnection);
-    connect(&emu, &EmuThread::saved, this, &MainWindow::savedEmu, Qt::QueuedConnection);
-    connect(&emu, &EmuThread::locked, this, &MainWindow::lockedEmu, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::debugDisable, this, &MainWindow::debugDisable, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::debugCommand, this, &MainWindow::debugCommand, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::saved, this, &MainWindow::emuSaved, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::blocked, this, &MainWindow::emuBlocked, Qt::QueuedConnection);
 
-    // Console actions
+    // console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, ui->console, &QPlainTextEdit::clear);
-    connect(ui->radioConsole, &QRadioButton::clicked, this, &MainWindow::consoleOutputChanged);
-    connect(ui->radioStderr, &QRadioButton::clicked, this, &MainWindow::consoleOutputChanged);
+    connect(ui->radioConsole, &QRadioButton::clicked, this, &MainWindow::consoleModified);
+    connect(ui->radioStderr, &QRadioButton::clicked, this, &MainWindow::consoleModified);
 
-    // Debugger
-    connect(ui->buttonRun, &QPushButton::clicked, this, &MainWindow::debuggerChangeState);
-    connect(ui->checkADLDisasm, &QCheckBox::stateChanged, this, &MainWindow::updateDisasm);
-    connect(ui->checkADLStack, &QCheckBox::stateChanged, this, &MainWindow::updateStack);
-    connect(ui->checkADL, &QCheckBox::stateChanged, [this]{ updateDisasm(); updateStack(); });
-
-    connect(ui->buttonAddPort, &QPushButton::clicked, this, &MainWindow::portSlotAdd);
-    connect(ui->buttonAddBreakpoint, &QPushButton::clicked, this, &MainWindow::breakpointSlotAdd);
-    connect(ui->buttonAddWatchpoint, &QPushButton::clicked, this, &MainWindow::watchpointSlotAdd);
+    // debug actions
+    connect(ui->buttonRun, &QPushButton::clicked, this, &MainWindow::debugToggle);
+    connect(ui->checkADLDisasm, &QCheckBox::stateChanged, this, &MainWindow::disasmUpdate);
+    connect(ui->checkADLStack, &QCheckBox::stateChanged, this, &MainWindow::stackUpdate);
+    connect(ui->checkADL, &QCheckBox::stateChanged, [this]{ disasmUpdate(); stackUpdate(); });
+    connect(ui->buttonAddPort, &QPushButton::clicked, this, &MainWindow::portAddSlot);
+    connect(ui->buttonAddBreakpoint, &QPushButton::clicked, this, &MainWindow::breakAddSlot);
+    connect(ui->buttonAddWatchpoint, &QPushButton::clicked, this, &MainWindow::watchAddSlot);
     connect(ui->buttonStepIn, &QPushButton::clicked, this, &MainWindow::stepIn);
     connect(ui->buttonStepOver, &QPushButton::clicked, this, &MainWindow::stepOver);
     connect(ui->buttonStepNext, &QPushButton::clicked, this, &MainWindow::stepNext);
     connect(ui->buttonStepOut, &QPushButton::clicked, this, &MainWindow::stepOut);
     connect(ui->buttonGoto, &QPushButton::clicked, this, &MainWindow::gotoPressed);
-    connect(ui->console, &QWidget::customContextMenuRequested, this, &MainWindow::consoleContextMenu);
-    connect(ui->disassemblyView, &QWidget::customContextMenuRequested, this, &MainWindow::disasmContextMenu);
-    connect(ui->vatView, &QWidget::customContextMenuRequested, this, &MainWindow::vatContextMenu);
-    connect(ui->opView, &QWidget::customContextMenuRequested, this, &MainWindow::opContextMenu);
-    connect(ui->portView, &QTableWidget::itemChanged, this, &MainWindow::portDataChanged);
-    connect(ui->portView, &QTableWidget::itemPressed, this, &MainWindow::portSetPreviousAddress);
-    connect(ui->breakpointView, &QTableWidget::itemChanged, this, &MainWindow::breakpointDataChanged);
-    connect(ui->breakpointView, &QTableWidget::itemPressed, this, &MainWindow::breakpointSetPreviousAddress);
-    connect(ui->watchpointView, &QTableWidget::itemChanged, this, &MainWindow::watchpointDataChanged);
-    connect(ui->watchpointView, &QTableWidget::itemPressed, this, &MainWindow::watchpointSetPreviousAddress);
-    connect(ui->checkCharging, &QCheckBox::toggled, this, &MainWindow::batteryIsCharging);
-    connect(ui->sliderBattery, &QSlider::valueChanged, this, &MainWindow::batteryChangeStatus);
-    connect(ui->checkAddSpace, &QCheckBox::toggled, this, &MainWindow::setSpaceDisasm);
+    connect(ui->console, &QWidget::customContextMenuRequested, this, &MainWindow::contextConsole);
+    connect(m_disasm, &QWidget::customContextMenuRequested, this, &MainWindow::contextDisasm);
+    connect(ui->vatView, &QWidget::customContextMenuRequested, this, &MainWindow::contextVat);
+    connect(ui->opView, &QWidget::customContextMenuRequested, this, &MainWindow::contextOp);
+    connect(m_ports, &QTableWidget::itemChanged, this, &MainWindow::portModified);
+    connect(m_ports, &QTableWidget::itemPressed, this, &MainWindow::portSetPrev);
+    connect(m_breakpoints, &QTableWidget::itemChanged, this, &MainWindow::breakModified);
+    connect(m_breakpoints, &QTableWidget::itemPressed, this, &MainWindow::breakSetPrev);
+    connect(m_watchpoints, &QTableWidget::itemChanged, this, &MainWindow::watchModified);
+    connect(m_watchpoints, &QTableWidget::itemPressed, this, &MainWindow::watchSetPrev);
+    connect(ui->checkCharging, &QCheckBox::toggled, this, &MainWindow::batterySetCharging);
+    connect(ui->sliderBattery, &QSlider::valueChanged, this, &MainWindow::batterySet);
+    connect(ui->checkAddSpace, &QCheckBox::toggled, this, &MainWindow::setDebugDisasmSpace);
     connect(ui->checkDisableSoftCommands, &QCheckBox::toggled, this, &MainWindow::setDebugSoftCommands);
-    connect(ui->buttonZero, &QPushButton::clicked, this, &MainWindow::debuggerZeroClockCounter);
-    connect(ui->buttonCertID, &QPushButton::clicked, this, &MainWindow::changeCalcID);
-    connect(ui->disassemblyView, &DataWidget::gotoDisasmAddress, this, &MainWindow::gotoDisasmAddr);
-    connect(ui->disassemblyView, &DataWidget::gotoMemoryAddress, this, &MainWindow::gotoMemAddr);
+    connect(ui->buttonZero, &QPushButton::clicked, this, &MainWindow::debugZeroCycles);
+    connect(ui->buttonCertID, &QPushButton::clicked, this, &MainWindow::setCalcId);
+    connect(m_disasm, &DataWidget::gotoDisasmAddress, this, &MainWindow::gotoDisasmAddr);
+    connect(m_disasm, &DataWidget::gotoMemoryAddress, this, &MainWindow::gotoMemAddr);
 
-    // Ctrl + Click
+    // ctrl + click
     connect(ui->console, &QPlainTextEdit::cursorPositionChanged, [this]{ handleCtrlClickText(ui->console); });
     connect(ui->stackView, &QPlainTextEdit::cursorPositionChanged, [this]{ handleCtrlClickText(ui->stackView); });
     connect(ui->hlregView, &QLineEdit::cursorPositionChanged, [this]{ handleCtrlClickLine(ui->hlregView); });
@@ -165,73 +160,75 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->bc_regView, &QLineEdit::cursorPositionChanged, [this]{ handleCtrlClickLine(ui->bc_regView); });
     connect(ui->de_regView, &QLineEdit::cursorPositionChanged, [this]{ handleCtrlClickLine(ui->de_regView); });
 
-    // Debugger Options
+    // debug options
     connect(ui->buttonAddEquateFile, &QToolButton::clicked, this, &MainWindow::equatesAddDialog);
     connect(ui->buttonClearEquates, &QToolButton::clicked, this, &MainWindow::equatesClear);
     connect(ui->buttonRefreshEquates, &QToolButton::clicked, this, &MainWindow::equatesRefresh);
     connect(ui->buttonToggleBreakpoints, &QToolButton::toggled, this, &MainWindow::setDebugIgnoreBreakpoints);
     connect(ui->checkDebugResetTrigger, &QCheckBox::toggled, this, &MainWindow::setDebugResetTrigger);
-    connect(ui->checkDataCol, &QCheckBox::toggled, this, &MainWindow::setDataCol);
+    connect(ui->checkDataCol, &QCheckBox::toggled, this, &MainWindow::setDebugDisasmData);
     connect(ui->checkDma, &QCheckBox::toggled, this, &MainWindow::setLcdDma);
     connect(ui->textSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setFont);
 
-    // Debugging files
-    connect(ui->actionImportDebugger, &QAction::triggered, this, &MainWindow::debuggerImport);
-    connect(ui->actionExportDebugger, &QAction::triggered, this, &MainWindow::debuggerExport);
+    // debug files
+    connect(ui->actionImportDebugger, &QAction::triggered, [this]{ debugImportFile(debugGetFile(false)); });
+    connect(ui->actionExportDebugger, &QAction::triggered, [this]{ debugExportFile(debugGetFile(true)); });
 
-    // Linking
-    connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::selectFiles);
-    connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::selectFiles);
-    connect(ui->buttonRefreshList, &QPushButton::clicked, this, &MainWindow::receiveChangeState);
-    connect(ui->buttonReceiveFile, &QPushButton::clicked, this, &MainWindow::saveSelectedFile);
-    connect(ui->buttonReceiveFiles, &QPushButton::clicked, this, &MainWindow::saveSelectedFiles);
-    connect(ui->buttonResendFiles, &QPushButton::clicked, this, &MainWindow::resendFiles);
-    connect(ui->buttonRmAllVars, &QPushButton::clicked, this, &MainWindow::removeAllSentVars);
-    connect(ui->buttonRmSelectedVars, &QPushButton::clicked, this, &MainWindow::removeSentVars);
-    connect(ui->buttonDeselectVars, &QPushButton::clicked, this, &MainWindow::deselectAllVars);
-    connect(ui->buttonSelectVars, &QPushButton::clicked, this, &MainWindow::selectAllVars);
-    connect(ui->varLoadedView, &QWidget::customContextMenuRequested, this, &MainWindow::resendContextMenu);
+    // linking
+    connect(ui->buttonSend, &QPushButton::clicked, this, &MainWindow::varSelect);
+    connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::varSelect);
+    connect(ui->buttonRefreshList, &QPushButton::clicked, this, &MainWindow::varToggle);
+    connect(ui->buttonReceiveFile, &QPushButton::clicked, this, &MainWindow::varSaveSelected);
+    connect(ui->buttonReceiveFiles, &QPushButton::clicked, this, &MainWindow::varSaveSelectedFiles);
+    connect(ui->buttonResendFiles, &QPushButton::clicked, this, &MainWindow::varResend);
+    connect(ui->buttonRmAllVars, &QPushButton::clicked, this, &MainWindow::recentRemoveAll);
+    connect(ui->buttonRmSelectedVars, &QPushButton::clicked, this, &MainWindow::recentRemoveSelected);
+    connect(ui->buttonDeselectVars, &QPushButton::clicked, this, &MainWindow::recentDeselectAll);
+    connect(ui->buttonSelectVars, &QPushButton::clicked, this, &MainWindow::recentSelectAll);
+    connect(ui->varLoadedView, &QWidget::customContextMenuRequested, this, &MainWindow::contextRecent);
 
-    // Autotester
-    connect(ui->buttonOpenJSONconfig, &QPushButton::clicked, this, &MainWindow::prepareAndOpenJSONConfig);
-    connect(ui->buttonReloadJSONconfig, &QPushButton::clicked, this, &MainWindow::reloadJSONConfig);
-    connect(ui->buttonLaunchTest, &QPushButton::clicked, this, &MainWindow::launchTest);
-    connect(ui->comboBoxPresetCRC, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::updateCRCParamsFromPreset);
-    connect(ui->buttonRefreshCRC, &QPushButton::clicked, this, &MainWindow::refreshCRC);
+    // autotester
+    connect(ui->buttonOpenJSONconfig, &QPushButton::clicked, this, &MainWindow::autotesterLoad);
+    connect(ui->buttonReloadJSONconfig, &QPushButton::clicked, this, &MainWindow::autotesterReload);
+    connect(ui->buttonLaunchTest, &QPushButton::clicked, this, &MainWindow::autotesterLaunch);
+    connect(ui->comboBoxPresetCRC, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::autotesterUpdatePresets);
+    connect(ui->buttonRefreshCRC, &QPushButton::clicked, this, &MainWindow::autotesterRefreshCRC);
 
-    // Menubar Actions
+    // menubar actions
     connect(ui->actionSetup, &QAction::triggered, this, &MainWindow::runSetup);
     connect(ui->actionExit, &QAction::triggered, this, &MainWindow::close);
     connect(ui->actionScreenshot, &QAction::triggered, this, &MainWindow::screenshot);
 #ifdef PNG_WRITE_APNG_SUPPORTED
-    connect(ui->actionRecordAnimated, &QAction::triggered, this, &MainWindow::recordAPNG);
+    connect(ui->actionRecordAnimated, &QAction::triggered, this, &MainWindow::recordAnimated);
 #endif
-    connect(ui->actionSaveState, &QAction::triggered, this, &MainWindow::saveEmu);
-    connect(ui->actionExportCalculatorState, &QAction::triggered, this, &MainWindow::saveToFile);
-    connect(ui->actionExportRomImage, &QAction::triggered, this, &MainWindow::exportRom);
-    connect(ui->actionImportCalculatorState, &QAction::triggered, this, &MainWindow::restoreFromFile);
+    connect(ui->actionSaveState, &QAction::triggered, this, &MainWindow::stateSaveDefault);
+    connect(ui->actionExportCalculatorState, &QAction::triggered, this, &MainWindow::stateToFile);
+    connect(ui->actionExportRomImage, &QAction::triggered, this, &MainWindow::romExport);
+    connect(ui->actionImportCalculatorState, &QAction::triggered, this, &MainWindow::stateFromFile);
     connect(ui->actionReloadROM, &QAction::triggered, [this]{ loadEmu(false); });
     connect(ui->actionRestoreState, &QAction::triggered, [this]{ this->loadEmu(true); });
     connect(ui->actionResetALL, &QAction::triggered, this, &MainWindow::resetCEmu);
     connect(ui->actionResetGUI, &QAction::triggered, this, &MainWindow::resetGui);
-    connect(ui->actionResetCalculator, &QAction::triggered, this, &MainWindow::resetCalculator);
-    connect(ui->actionMemoryVisualizer, &QAction::triggered, this, &MainWindow::newMemoryVisualizer);
-    connect(ui->actionDisableMenuBar, &QAction::triggered, this, &MainWindow::setMenuBarState);
-    connect(ui->buttonResetCalculator, &QPushButton::clicked, this, &MainWindow::resetCalculator);
-    connect(ui->buttonReloadROM, &QPushButton::clicked, this, &MainWindow::resetCalculator);
+    connect(ui->actionResetCalculator, &QAction::triggered, this, &MainWindow::resetEmu);
+    connect(ui->actionMemoryVisualizer, &QAction::triggered, this, &MainWindow::addMemVisualizer);
+    connect(ui->actionHideMenuBar, &QAction::triggered, this, &MainWindow::setMenuBarState);
+    connect(ui->actionHideStatusBar, &QAction::triggered, this, &MainWindow::setStatusBarState);
+    connect(ui->buttonResetCalculator, &QPushButton::clicked, this, &MainWindow::resetEmu);
+    connect(ui->buttonReloadROM, &QPushButton::clicked, this, &MainWindow::resetEmu);
 
-    // LCD Update
-    connect(ui->lcd, &LCDWidget::updateLcd, this, &MainWindow::updateLcd, Qt::QueuedConnection);
-    connect(this, &MainWindow::updateMode, ui->lcd, &LCDWidget::setMode);
-    connect(this, &MainWindow::updateFrameskip, ui->lcd, &LCDWidget::setFrameskip);
+    // lcd flow
+    connect(ui->lcd, &LCDWidget::updateLcd, this, &MainWindow::lcdUpdate, Qt::QueuedConnection);
+    connect(this, &MainWindow::setLcdMode, ui->lcd, &LCDWidget::setMode);
+    connect(this, &MainWindow::setLcdFrameskip, ui->lcd, &LCDWidget::setFrameskip);
     connect(ui->statusInterval, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setStatusInterval);
 
-    // Capture
+    // screen capture
     connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
+    connect(ui->actionClipScreen, &QAction::triggered, this, &MainWindow::lcdCopy);
 #ifdef PNG_WRITE_APNG_SUPPORTED
-    connect(ui->buttonRecordAnimated, &QPushButton::clicked, this, &MainWindow::recordAPNG);
+    connect(ui->buttonRecordAnimated, &QPushButton::clicked, this, &MainWindow::recordAnimated);
     connect(ui->apngSkip, &QSlider::valueChanged, this, &MainWindow::setFrameskip);
-    connect(ui->checkOptimizeRecording, &QCheckBox::stateChanged, this, &MainWindow::setOptimizeRecording);
+    connect(ui->checkOptimizeRecording, &QCheckBox::stateChanged, this, &MainWindow::setOptimizeRecord);
 #else
     ui->actionRecordAnimated->setEnabled(false);
     ui->buttonRecordAnimated->setEnabled(false);
@@ -239,27 +236,27 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     ui->checkOptimizeRecording->setEnabled(false);
 #endif
 
-    // About
-    connect(ui->actionCheckForUpdates, &QAction::triggered, [this]{ checkForUpdates(true); });
+    // about menus
+    connect(ui->actionCheckForUpdates, &QAction::triggered, [this]{ checkUpdate(true); });
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::showAbout);
     connect(ui->actionAboutQt, &QAction::triggered, qApp, &QApplication::aboutQt);
     connect(ui->actionReportBug, &QAction::triggered, []{ QDesktopServices::openUrl(QUrl("https://github.com/CE-Programming/CEmu/issues")); });
 
-    // Other GUI actions
+    // other gui actions
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
     connect(ui->scaleLCD, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setLcdScale);
     connect(ui->guiSkip, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setGuiSkip);
     connect(ui->checkSkin, &QCheckBox::stateChanged, this, &MainWindow::setSkinToggle);
     connect(ui->checkSpi, &QCheckBox::toggled, this, &MainWindow::setLcdSpi);
-    connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::setAlwaysOnTop);
+    connect(ui->checkAlwaysOnTop, &QCheckBox::stateChanged, this, &MainWindow::setTop);
     connect(ui->emulationSpeed, &QSlider::valueChanged, this, &MainWindow::setEmuSpeed);
     connect(ui->emulationSpeedSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setEmuSpeed);
     connect(ui->checkThrottle, &QCheckBox::stateChanged, this, &MainWindow::setThrottle);
     connect(ui->checkAutoEquates, &QCheckBox::stateChanged, this, &MainWindow::setAutoEquates);
-    connect(ui->checkSaveRestore, &QCheckBox::stateChanged, this, &MainWindow::setAutoSaveState);
-    connect(ui->checkPortable, &QCheckBox::stateChanged, this, &MainWindow::setPortableConfig);
+    connect(ui->checkSaveRestore, &QCheckBox::stateChanged, this, &MainWindow::setAutoSave);
+    connect(ui->checkPortable, &QCheckBox::stateChanged, this, &MainWindow::setPortable);
     connect(ui->checkSaveRecent, &QCheckBox::stateChanged, this, &MainWindow::setRecentSave);
-    connect(ui->checkSaveLoadDebug, &QCheckBox::stateChanged, this, &MainWindow::setSaveDebug);
+    connect(ui->checkSaveLoadDebug, &QCheckBox::stateChanged, this, &MainWindow::setDebugAutoSave);
     connect(ui->buttonChangeSavedImagePath, &QPushButton::clicked, this, &MainWindow::setImagePath);
     connect(ui->buttonChangeSavedDebugPath, &QPushButton::clicked, this, &MainWindow::setDebugPath);
     connect(ui->checkFocus, &QCheckBox::stateChanged, this, &MainWindow::setFocusSetting);
@@ -268,81 +265,74 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->ramBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->ramEdit, &HexWidget::setBytesPerLine);
     connect(ui->ramAscii, &QToolButton::toggled, [this](bool set){ ui->ramEdit->setAsciiArea(set); });
     connect(ui->flashAscii, &QToolButton::toggled, [this](bool set){ ui->flashEdit->setAsciiArea(set); });
-    connect(ui->emuVarView, &QTableWidget::itemDoubleClicked, this, &MainWindow::variableDoubleClicked);
-    connect(ui->emuVarView, &QTableWidget::customContextMenuRequested, this, &MainWindow::variablesContextMenu);
-    connect(ui->buttonAddSlot, &QPushButton::clicked, this, &MainWindow::slotAddNew);
-    connect(ui->actionExportCEmuImage, &QAction::triggered, this, &MainWindow::exportCEmuBootImage);
+    connect(ui->emuVarView, &QTableWidget::itemDoubleClicked, this, &MainWindow::varPressed);
+    connect(ui->emuVarView, &QTableWidget::customContextMenuRequested, this, &MainWindow::contextVars);
+    connect(ui->buttonAddSlot, &QPushButton::clicked, this, &MainWindow::stateAddNew);
+    connect(ui->actionExportCEmuImage, &QAction::triggered, this, &MainWindow::bootImageExport);
     connect(ui->lcd, &LCDWidget::sendROM, this, &MainWindow::setRom);
-    connect(ui->lcd, &LCDWidget::customContextMenuRequested, this, &MainWindow::screenContextMenu);
+    connect(ui->lcd, &LCDWidget::customContextMenuRequested, this, &MainWindow::contextLcd);
     connect(ui->consoleLine, &QLineEdit::returnPressed, this, &MainWindow::consoleSubmission);
     connect(ui->consoleSubmit, &QPushButton::clicked, this, &MainWindow::consoleSubmission);
+    connect(ui->checkUpdates, &QCheckBox::stateChanged, this, &MainWindow::setAutoUpdates);
+    connect(ui->actionKeyHistory, &QAction::triggered, this, &MainWindow::keyHistoryToggle);
 
-    // Lang switch
-    connect(ui->actionEnglish,  &QAction::triggered, [this]{ switchTranslator(QStringLiteral("en_EN")); });
-    connect(ui->actionFran_ais, &QAction::triggered, [this]{ switchTranslator(QStringLiteral("fr_FR")); });
-    connect(ui->actionDutch,    &QAction::triggered, [this]{ switchTranslator(QStringLiteral("nl_NL")); });
-    connect(ui->actionEspanol,  &QAction::triggered, [this]{ switchTranslator(QStringLiteral("es_ES")); });
+    // languages
+    connect(ui->actionEnglish,  &QAction::triggered, [this]{ translateSwitch(QStringLiteral("en_EN")); });
+    connect(ui->actionFran_ais, &QAction::triggered, [this]{ translateSwitch(QStringLiteral("fr_FR")); });
+    connect(ui->actionDutch,    &QAction::triggered, [this]{ translateSwitch(QStringLiteral("nl_NL")); });
+    connect(ui->actionEspanol,  &QAction::triggered, [this]{ translateSwitch(QStringLiteral("es_ES")); });
 
-    // Sending Handler
+    // sending handler
     connect(sendingHandler, &SendingHandler::send, &emu, &EmuThread::send, Qt::QueuedConnection);
     connect(&emu, &EmuThread::sentFile, sendingHandler, &SendingHandler::sentFile, Qt::QueuedConnection);
     connect(sendingHandler, &SendingHandler::loadEquateFile, this, &MainWindow::equatesAddFile);
 
-    // Hex Editor
+    // memory editors
     connect(ui->buttonFlashSearch, &QPushButton::clicked, [this]{ memSearchEdit(ui->flashEdit); });
     connect(ui->buttonRamSearch, &QPushButton::clicked, [this]{ memSearchEdit(ui->ramEdit); });
     connect(ui->buttonFlashGoto, &QPushButton::clicked, this, &MainWindow::flashGotoPressed);
     connect(ui->buttonRamGoto, &QPushButton::clicked, this, &MainWindow::ramGotoPressed);
     connect(ui->buttonFlashSync, &QToolButton::clicked, this, &MainWindow::flashSyncPressed);
     connect(ui->buttonRamSync, &QToolButton::clicked, this, &MainWindow::ramSyncPressed);
-    connect(ui->flashEdit, &HexWidget::customContextMenuRequested, this, &MainWindow::memContextMenu);
-    connect(ui->ramEdit, &HexWidget::customContextMenuRequested, this, &MainWindow::memContextMenu);
+    connect(ui->flashEdit, &HexWidget::customContextMenuRequested, this, &MainWindow::contextMem);
+    connect(ui->ramEdit, &HexWidget::customContextMenuRequested, this, &MainWindow::contextMem);
 
-    // Keybindings
+    // keymap
     connect(ui->radioCEmuKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
     connect(ui->radioTilEmKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
     connect(ui->radioWabbitemuKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
     connect(ui->radiojsTIfiedKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
 
-    // Keypad Coloring
-    connect(ui->buttonTrueBlue, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonDenim, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonPink, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonPlum, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonRed, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonLightning, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonGolden, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonWhite, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonBlack, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonSilver, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonSpaceGrey, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonCoral, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonMint, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonRoseGold, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
-    connect(ui->buttonCrystalClear, &QPushButton::clicked, this, &MainWindow::selectKeypadColor);
+    // keypad
+    connect(ui->buttonTrueBlue, &QPushButton::clicked, this, &MainWindow::keypadChanged);
+    connect(ui->buttonDenim, &QPushButton::clicked, this, &MainWindow::keypadChanged);
+    connect(ui->buttonPink, &QPushButton::clicked, this, &MainWindow::keypadChanged);
+    connect(ui->buttonPlum, &QPushButton::clicked, this, &MainWindow::keypadChanged);
+    connect(ui->buttonRed, &QPushButton::clicked, this, &MainWindow::keypadChanged);
+    connect(ui->buttonLightning, &QPushButton::clicked, this, &MainWindow::keypadChanged);
+    connect(ui->buttonGolden, &QPushButton::clicked, this, &MainWindow::keypadChanged);
+    connect(ui->buttonWhite, &QPushButton::clicked, this, &MainWindow::keypadChanged);
+    connect(ui->buttonBlack, &QPushButton::clicked, this, &MainWindow::keypadChanged);
+    connect(ui->buttonSilver, &QPushButton::clicked, this, &MainWindow::keypadChanged);
+    connect(ui->buttonSpaceGrey, &QPushButton::clicked, this, &MainWindow::keypadChanged);
+    connect(ui->buttonCoral, &QPushButton::clicked, this, &MainWindow::keypadChanged);
+    connect(ui->buttonMint, &QPushButton::clicked, this, &MainWindow::keypadChanged);
+    connect(ui->buttonRoseGold, &QPushButton::clicked, this, &MainWindow::keypadChanged);
+    connect(ui->buttonCrystalClear, &QPushButton::clicked, this, &MainWindow::keypadChanged);
 
-    // Export / Import window config
-    connect(ui->actionExportWindowConfig, &QAction::triggered, this, &MainWindow::exportWindowConfig);
-    connect(ui->actionImportWindowConfig, &QAction::triggered, this, &MainWindow::importWindowConfig);
+    // gui configurations
+    connect(ui->actionExportWindowConfig, &QAction::triggered, this, &MainWindow::guiExport);
+    connect(ui->actionImportWindowConfig, &QAction::triggered, this, &MainWindow::guiImport);
 
-    // Application connections
+    // application state
     connect(qGuiApp, &QGuiApplication::applicationStateChanged, this, &MainWindow::pauseEmu);
 
-    // Key History Window
-    connect(ui->actionKeyHistory, &QAction::triggered, this, &MainWindow::toggleKeyHistory);
-
-    // Auto Updates
-    connect(ui->checkUpdates, &QCheckBox::stateChanged, this, &MainWindow::setAutoCheckForUpdates);
-
-    // IPC
-    connect(ui->actionNew, &QAction::triggered, this, &MainWindow::ipcSpawnRandom);
-    connect(ui->buttonChangeID, &QPushButton::clicked, this, &MainWindow::ipcChangeID);
+    // process communication
+    connect(ui->actionNew, &QAction::triggered, this, &MainWindow::ipcSpawn);
+    connect(ui->buttonChangeID, &QPushButton::clicked, this, &MainWindow::ipcSetId);
     connect(&com, &InterCom::readDone, this, &MainWindow::ipcReceived);
 
-    // Clipboard copy
-    connect(ui->actionClipScreen, &QAction::triggered, this, &MainWindow::saveScreenToClipboard);
-
-    // Docks
+    // docks
     translateExtras(TRANSLATE_INIT);
     m_actionToggleUI = new QAction(MSG_EDIT_UI, this);
     m_actionToggleUI->setCheckable(true);
@@ -351,7 +341,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     m_actionAddMemory = new QAction(MSG_ADD_MEMORY, this);
     connect(m_actionAddMemory, &QAction::triggered, [this]{ addMemoryDock(randomString(20), 8, true); });
 
-    // Shortcut Connections
+    // shortcut connections
     m_shortcutStepIn = new QShortcut(QKeySequence(Qt::Key_F6), this);
     m_shortcutStepOver = new QShortcut(QKeySequence(Qt::Key_F7), this);
     m_shortcutStepNext = new QShortcut(QKeySequence(Qt::Key_F8), this);
@@ -371,17 +361,17 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     m_shortcutResend->setAutoRepeat(false);
 
     connect(m_shortcutFullscreen, &QShortcut::activated, this, &MainWindow::toggleFullscreen);
-    connect(m_shortcutResend, &QShortcut::activated, this, &MainWindow::resendFiles);
-    connect(m_shortcutAsm, &QShortcut::activated, this, &MainWindow::sendASMKey);
-    connect(m_shortcutDebug, &QShortcut::activated, this, &MainWindow::debuggerChangeState);
+    connect(m_shortcutResend, &QShortcut::activated, this, &MainWindow::varResend);
+    connect(m_shortcutAsm, &QShortcut::activated, [this]{ autotester::sendKey(0x9CFC); });
+    connect(m_shortcutDebug, &QShortcut::activated, this, &MainWindow::debugToggle);
     connect(m_shortcutStepIn, &QShortcut::activated, this, &MainWindow::stepIn);
     connect(m_shortcutStepOver, &QShortcut::activated, this, &MainWindow::stepOver);
     connect(m_shortcutStepNext, &QShortcut::activated, this, &MainWindow::stepNext);
     connect(m_shortcutStepOut, &QShortcut::activated, this, &MainWindow::stepOut);
 
-    ui->portView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    ui->breakpointView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    ui->watchpointView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    m_ports->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    m_breakpoints->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    m_watchpoints->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 
     setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
     setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
@@ -392,7 +382,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     QString localSettings = configPath + SETTING_DEFAULT_FILE;
 
     if (opts.settingsFile.isEmpty()) {
-        if (checkForCEmuBootImage()) {
+        if (bootImageCheck()) {
             m_settingsPath = localSettings;
         } else if (fileExists(portableSettings)) {
             m_settingsPath = portableSettings;
@@ -409,16 +399,16 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     } else {
         m_settings = new QSettings();
         m_settings->clear();
-        saveSettings();
+        settingsSave();
     }
-    resetSettingsIfLoadedCEmuBootableImage();
+    bootImageLoaded();
 
     QFileInfo settingsFile(m_settingsPath);
     QFileInfo settingsDirectory(settingsFile.path());
     if(opts.useSettings && settingsDirectory.isDir() && !settingsDirectory.isWritable()){
         m_settingsPath = portableSettings;
         ui->settingsPath->setText(m_settingsPath);
-        setPortableConfig(true);
+        setPortable(true);
         m_settingsPath = portableSettings;
         ui->settingsPath->setText(m_settingsPath);
         m_activatedPortable = true;
@@ -431,7 +421,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     }
     ui->settingsPath->setText(m_settingsPath);
 
-    setAutoCheckForUpdates(m_settings->value(SETTING_AUTOUPDATE, CEMU_RELEASE).toBool());
+    setAutoUpdates(m_settings->value(SETTING_AUTOUPDATE, CEMU_RELEASE).toBool());
     checkVersion();
 
 #ifdef Q_OS_WIN
@@ -439,41 +429,42 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 #endif
 
 #ifdef Q_OS_MACX
-    ui->actionDisableMenuBar->setVisible(false);
+    ui->actionHideMenuBar->setVisible(false);
 #endif
 
-    m_iconStop.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/stop.png")));
-    m_iconRun.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/run.png")));
-    m_iconSave.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/import.png")));
-    m_iconLoad.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/export.png")));
-    m_iconEdit.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/wizard.png")));
-    m_iconRemove.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/exit.png")));
-    m_iconSearch.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/search.png")));
-    m_iconGoto.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/goto.png")));
-    m_iconSync.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/refresh.png")));
-    m_iconAddMem.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/add_mem.png")));
-    m_iconUiEdit.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/ui_edit.png")));
-    m_iconAscii.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/characters.png")));
+    QString iconPath = QStringLiteral(":/icons/resources/icons/");
+    m_iconStop.addPixmap(QPixmap(iconPath + QStringLiteral("stop.png")));
+    m_iconRun.addPixmap(QPixmap(iconPath + QStringLiteral("run.png")));
+    m_iconSave.addPixmap(QPixmap(iconPath + QStringLiteral("import.png")));
+    m_iconLoad.addPixmap(QPixmap(iconPath + QStringLiteral("export.png")));
+    m_iconEdit.addPixmap(QPixmap(iconPath + QStringLiteral("wizard.png")));
+    m_iconRemove.addPixmap(QPixmap(iconPath + QStringLiteral("exit.png")));
+    m_iconSearch.addPixmap(QPixmap(iconPath + QStringLiteral("search.png")));
+    m_iconGoto.addPixmap(QPixmap(iconPath + QStringLiteral("goto.png")));
+    m_iconSync.addPixmap(QPixmap(iconPath + QStringLiteral("refresh.png")));
+    m_iconAddMem.addPixmap(QPixmap(iconPath + QStringLiteral("add_mem.png")));
+    m_iconUiEdit.addPixmap(QPixmap(iconPath + QStringLiteral("ui_edit.png")));
+    m_iconAscii.addPixmap(QPixmap(iconPath + QStringLiteral("characters.png")));
     m_actionAddMemory->setIcon(m_iconAddMem);
     m_actionToggleUI->setIcon(m_iconUiEdit);
 
-    setMemoryDocks();
-    setMemoryState();
+    memLoadDocks();
+    memLoadState();
     optLoadFiles(opts);
     setFrameskip(m_settings->value(SETTING_CAPTURE_FRAMESKIP, 1).toInt());
-    setOptimizeRecording(m_settings->value(SETTING_CAPTURE_OPTIMIZE, true).toBool());
+    setOptimizeRecord(m_settings->value(SETTING_CAPTURE_OPTIMIZE, true).toBool());
     setStatusInterval(m_settings->value(SETTING_STATUS_INTERVAL, 1).toInt());
     setGuiSkip(m_settings->value(SETTING_SCREEN_FRAMESKIP, 0).toInt());
     setEmuSpeed(m_settings->value(SETTING_EMUSPEED, 100).toInt());
     setFont(m_settings->value(SETTING_DEBUGGER_TEXT_SIZE, 9).toInt());
-    setAutoSaveState(m_settings->value(SETTING_RESTORE_ON_OPEN, true).toBool());
-    setSaveDebug(m_settings->value(SETTING_DEBUGGER_RESTORE_ON_OPEN, false).toBool());
-    setSpaceDisasm(m_settings->value(SETTING_DEBUGGER_ADD_DISASM_SPACE, false).toBool());
+    setAutoSave(m_settings->value(SETTING_RESTORE_ON_OPEN, true).toBool());
+    setDebugAutoSave(m_settings->value(SETTING_DEBUGGER_RESTORE_ON_OPEN, false).toBool());
+    setDebugDisasmSpace(m_settings->value(SETTING_DEBUGGER_ADD_DISASM_SPACE, false).toBool());
     setAutoEquates(m_settings->value(SETTING_DEBUGGER_AUTO_EQUATES, false).toBool());
     setDebugResetTrigger(m_settings->value(SETTING_DEBUGGER_RESET_OPENS, false).toBool());
     setDebugIgnoreBreakpoints(m_settings->value(SETTING_DEBUGGER_BREAK_IGNORE, false).toBool());
     setDebugSoftCommands(m_settings->value(SETTING_DEBUGGER_ENABLE_SOFT, true).toBool());
-    setDataCol(m_settings->value(SETTING_DEBUGGER_DATA_COL, true).toBool());
+    setDebugDisasmData(m_settings->value(SETTING_DEBUGGER_DATA_COL, true).toBool());
     setLcdSpi(m_settings->value(SETTING_SCREEN_SPI, true).toBool());
     setLcdDma(m_settings->value(SETTING_DEBUGGER_IGNORE_DMA, true).toBool());
     setFocusSetting(m_settings->value(SETTING_PAUSE_FOCUS, false).toBool());
@@ -511,7 +502,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     ui->rompathView->setText(m_pathRom);
 
-    debugger_init();
+    debug_init();
 
     if (!fileExists(m_pathRom)) {
         if (!runSetup()) {
@@ -533,10 +524,10 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     m_consoleFormat = ui->console->currentCharFormat();
     m_consoleFormat.setForeground(Qt::black);
 
-    debuggerInstall();
+    debugInit();
 }
 
-void MainWindow::switchTranslator(const QString& lang) {
+void MainWindow::translateSwitch(const QString& lang) {
     qApp->removeTranslator(&m_appTranslator);
     // For English, nothing to load after removing the translator.
     if (lang == QStringLiteral("en_EN") || (m_appTranslator.load(lang, QStringLiteral(":/i18n/i18n/"))
@@ -718,7 +709,7 @@ void MainWindow::changeEvent(QEvent* event) {
             translateExtras(TRANSLATE_UPDATE);
         }
     } else if (eventType == QEvent::LocaleChange) {
-        switchTranslator(QLocale::system().name());
+        translateSwitch(QLocale::system().name());
     }
     QMainWindow::changeEvent(event);
 }
@@ -735,8 +726,9 @@ void MainWindow::showEvent(QShowEvent *e) {
         m_progressBar->setMaximumHeight(ui->statusBar->height()/2);
         setLcdScale(m_settings->value(SETTING_SCREEN_SCALE, 100).toUInt());
         setSkinToggle(m_settings->value(SETTING_SCREEN_SKIN, true).toBool());
-        setAlwaysOnTop(m_settings->value(SETTING_ALWAYS_ON_TOP, false).toBool());
+        setTop(m_settings->value(SETTING_ALWAYS_ON_TOP, false).toBool());
         setMenuBarState(m_settings->value(SETTING_WINDOW_MENUBAR, false).toBool());
+        setStatusBarState(m_settings->value(SETTING_WINDOW_STATUSBAR, false).toBool());
         m_windowVisible = true;
     }
     QMainWindow::showEvent(e);
@@ -794,14 +786,14 @@ void MainWindow::setup() {
     }
 
     updateDocks();
-    setSlotInfo();
-    setRecentInfo();
+    stateLoadInfo();
+    recentLoad();
 
     if (m_settings->value(SETTING_DEBUGGER_RESTORE_ON_OPEN, false).toBool()) {
         if (!opts.debugFile.isEmpty()) {
-            debuggerImportFile(opts.debugFile);
+            debugImportFile(opts.debugFile);
         } else {
-            debuggerImportFile(m_settings->value(SETTING_DEBUGGER_IMAGE_PATH).toString());
+            debugImportFile(m_settings->value(SETTING_DEBUGGER_IMAGE_PATH).toString());
         }
     }
 
@@ -822,7 +814,7 @@ void MainWindow::setup() {
 
     QString prefLang = m_settings->value(SETTING_PREFERRED_LANG, "none").toString();
     if (prefLang != QStringLiteral("none")) {
-        switchTranslator(prefLang);
+        translateSwitch(prefLang);
     }
 
     translateExtras(TRANSLATE_UPDATE);
@@ -832,7 +824,7 @@ void MainWindow::setup() {
         setEmuSpeed(opts.speed);
     }
 
-    saveSettings();
+    settingsSave();
     if (m_activatedPortable) {
         QMessageBox *info = new QMessageBox();
         info->setWindowTitle(MSG_INFORMATION);
@@ -845,24 +837,24 @@ void MainWindow::setup() {
     }
 }
 
-void MainWindow::toggleKeyHistory() {
+void MainWindow::keyHistoryToggle() {
     if (!m_windowKeys) {
         m_windowKeys = new KeyHistory();
-        connect(m_windowKeys, &KeyHistory::closed, this, &MainWindow::closedKeyHistory);
-        connect(ui->keypadWidget, &KeypadWidget::keyPressed, m_windowKeys, &KeyHistory::addEntry);
+        connect(m_windowKeys, &KeyHistory::closed, this, &MainWindow::keyHistoryClosed);
+        connect(ui->keypadWidget, &KeypadWidget::keyPressed, m_windowKeys, &KeyHistory::add);
         m_windowKeys->setAttribute(Qt::WA_DeleteOnClose);
         m_windowKeys->show();
         ui->actionKeyHistory->setChecked(true);
     } else {
-        disconnect(ui->keypadWidget, &KeypadWidget::keyPressed, m_windowKeys, &KeyHistory::addEntry);
+        disconnect(ui->keypadWidget, &KeypadWidget::keyPressed, m_windowKeys, &KeyHistory::add);
         m_windowKeys->close();
         m_windowKeys = Q_NULLPTR;
         ui->actionKeyHistory->setChecked(false);
     }
 }
 
-void MainWindow::closedKeyHistory() {
-    disconnect(ui->keypadWidget, &KeypadWidget::keyPressed, m_windowKeys, &KeyHistory::addEntry);
+void MainWindow::keyHistoryClosed() {
+    disconnect(ui->keypadWidget, &KeypadWidget::keyPressed, m_windowKeys, &KeyHistory::add);
     ui->actionKeyHistory->setChecked(false);
     m_windowKeys = Q_NULLPTR;
 }
@@ -870,21 +862,21 @@ void MainWindow::closedKeyHistory() {
 void MainWindow::optSend(CEmuOpts &o) {
     int speed = m_settings->value(SETTING_EMUSPEED).toInt();
     if (!o.autotesterFile.isEmpty()) {
-        if (!openJSONConfig(o.autotesterFile)) {
+        if (!autotesterOpen(o.autotesterFile)) {
            if (!o.deforceReset) {
-               resetCalculator();
+               resetEmu();
            }
            setEmuSpeed(100);
 
            // Race condition requires this
            guiDelay(o.deforceReset ? 100 : 4000);
-           launchTest();
+           autotesterLaunch();
         }
     }
 
     if (!o.sendFiles.isEmpty() || !o.sendArchFiles.isEmpty() || !o.sendRAMFiles.isEmpty()) {
         if (!o.deforceReset) {
-            resetCalculator();
+            resetEmu();
         }
         setEmuSpeed(100);
 
@@ -955,20 +947,21 @@ bool MainWindow::isInitialized() {
 }
 
 void MainWindow::resetCEmu() {
-    ipcCloseOthers();
+    ipcCloseConnected();
     m_needReload = true;
     m_needFullReset = true;
     close();
 }
 
 void MainWindow::resetGui() {
-    ipcCloseOthers();
+    ipcCloseConnected();
     m_settings->remove(SETTING_SCREEN_SKIN);
     m_settings->remove(SETTING_WINDOW_GEOMETRY);
     m_settings->remove(SETTING_WINDOW_MEMORY_DOCKS);
     m_settings->remove(SETTING_UI_EDIT_MODE);
     m_settings->remove(SETTING_WINDOW_STATE);
     m_settings->remove(SETTING_WINDOW_MENUBAR);
+    m_settings->remove(SETTING_WINDOW_STATUSBAR);
     m_settings->remove(SETTING_WINDOW_SEPARATOR);
     m_needReload = true;
     close();
@@ -993,8 +986,9 @@ bool MainWindow::isResetAll() {
             m_settings->remove(SETTING_UI_EDIT_MODE);
             m_settings->remove(SETTING_WINDOW_STATE);
             m_settings->remove(SETTING_WINDOW_MENUBAR);
+            m_settings->remove(SETTING_WINDOW_STATUSBAR);
             m_settings->remove(SETTING_WINDOW_SEPARATOR);
-            saveSettings();
+            settingsSave();
         } else {
             QFile settingsFile(m_settings->fileName());
             settingsFile.remove();
@@ -1003,19 +997,15 @@ bool MainWindow::isResetAll() {
     return m_needFullReset;
 }
 
-void MainWindow::sendASMKey() {
-    autotester::sendKey(0x9CFC); // "Asm("
-}
-
-void MainWindow::saveEmu() {
+void MainWindow::stateSaveDefault() {
     emu.save(true, m_pathImage);
 }
 
-void MainWindow::saveToPath(const QString &path) {
+void MainWindow::stateToPath(const QString &path) {
     emu.save(true, path);
 }
 
-bool MainWindow::restoreFromPath(const QString &path) {
+bool MainWindow::stateFromPath(const QString &path) {
     QString prev = m_pathImage;
     m_pathImage = path;
     int ret = loadEmu(true);
@@ -1023,28 +1013,28 @@ bool MainWindow::restoreFromPath(const QString &path) {
     return ret == EMU_LOAD_OKAY;
 }
 
-void MainWindow::restoreFromFile() {
+void MainWindow::stateFromFile() {
     QString path = QFileDialog::getOpenFileName(this, tr("Select saved image to restore from"),
                                                       m_dir.absolutePath(),
                                                       tr("CEmu images (*.ce);;All files (*.*)"));
     if (!path.isEmpty()) {
         m_dir = QFileInfo(path).absoluteDir();
-        if (!restoreFromPath(path)) {
+        if (!stateFromPath(path)) {
             QMessageBox::critical(this, MSG_ERROR, tr("Could not resume; try restarting CEmu"));
         }
     }
 }
 
-void MainWindow::saveToFile() {
+void MainWindow::stateToFile() {
     QString path = QFileDialog::getSaveFileName(this, tr("Set image to save to"),
                                                       m_dir.absolutePath(),
                                                       tr("CEmu images (*.ce);;All files (*.*)"));
     if (!path.isEmpty()) {
         m_dir = QFileInfo(path).absoluteDir();
-        saveToPath(path);
+        stateToPath(path);
     }
 }
-void MainWindow::exportRom() {
+void MainWindow::romExport() {
     QString path = QFileDialog::getSaveFileName(this, tr("Set Rom image to save to"),
                                                 m_dir.absolutePath(),
                                                 tr("ROM images (*.rom);;All files (*.*)"));
@@ -1073,7 +1063,7 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *e) {
     }
 }
 
-void MainWindow::savedEmu(bool success) {
+void MainWindow::emuSaved(bool success) {
     if (!success) {
         QMessageBox::warning(this, MSG_WARNING, tr("Saving failed. Please check write permissions in settings directory."));
     }
@@ -1095,21 +1085,21 @@ void MainWindow::closeEvent(QCloseEvent *e) {
         }
 
         if (guiDebug) {
-            debuggerChangeState();
+            debugToggle();
         }
 
         if (guiReceive) {
-            receiveChangeState();
+            varToggle();
         }
 
-        saveSettings();
+        settingsSave();
 
         if (m_settings->value(SETTING_DEBUGGER_SAVE_ON_CLOSE, false).toBool()) {
-            debuggerExportFile(m_settings->value(SETTING_DEBUGGER_IMAGE_PATH).toString());
+            debugExportFile(m_settings->value(SETTING_DEBUGGER_IMAGE_PATH).toString());
         }
 
         if (m_settings->value(SETTING_SAVE_ON_CLOSE).toBool()) {
-            saveEmu();
+            stateSaveDefault();
             e->ignore();
             return;
         }
@@ -1271,11 +1261,11 @@ void MainWindow::consoleStr(int type) {
 void MainWindow::consoleSubmission() {
     QString string = ui->consoleLine->text().trimmed().toUpper();
     if (string == QStringLiteral("DBG")) {
-        debuggerChangeState();
+        debugToggle();
     }
     if (guiDebug) {
         if (string == QStringLiteral("C") || string == QStringLiteral("CONTINUE")) {
-            debuggerChangeState();
+            debugToggle();
         }
         if (string == QStringLiteral("N") || string == QStringLiteral("NEXT")) {
             stepNext();
@@ -1284,17 +1274,17 @@ void MainWindow::consoleSubmission() {
             stepIn();
         }
         if (string == QStringLiteral("Q") || string == QStringLiteral("QUIT")) {
-            debuggerChangeState();
+            debugToggle();
         }
     }
     ui->consoleLine->clear();
 }
 
-void MainWindow::emuTimerSlot() {
+void MainWindow::emuSync() {
     connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed, Qt::QueuedConnection);
 }
 
-void MainWindow::fpsTimerSlot() {
+void MainWindow::fpsSync() {
     m_timerFpsTriggered = true;
 }
 
@@ -1322,7 +1312,7 @@ void MainWindow::showFpsSpeed(double emuFps, double guiFps) {
     }
 }
 
-void MainWindow::updateLcd(double emuFps) {
+void MainWindow::lcdUpdate(double emuFps) {
     double guiFps = ui->lcd->refresh();
     if (m_timerFpsTriggered) {
         showFpsSpeed(emuFps, guiFps);
@@ -1396,12 +1386,12 @@ void MainWindow::screenshot() {
     screenshotSave(tr("PNG images (*.png)"), QStringLiteral("png"), path);
 }
 
-void MainWindow::saveScreenToClipboard() {
+void MainWindow::lcdCopy() {
     QApplication::clipboard()->setImage(ui->lcd->getImage(), QClipboard::Clipboard);
 }
 
 #ifdef PNG_WRITE_APNG_SUPPORTED
-void MainWindow::recordAPNG() {
+void MainWindow::recordAnimated() {
     static QString path;
 
     if (guiDebug || guiReceive || guiSend) {
@@ -1437,9 +1427,9 @@ void MainWindow::recordAPNG() {
             if (res == QDialog::Accepted) {
                 QStringList selected = dialog.selectedFiles();
                 QString filename = selected.first();
-                saveAnimated(filename);
+                recordSave(filename);
             } else {
-                updateAnimatedControls();
+                recordControlUpdate();
             }
         } else {
             QMessageBox::critical(this, MSG_ERROR, tr("A failure occured during PNG recording."));
@@ -1456,7 +1446,7 @@ void MainWindow::recordAPNG() {
     ui->actionRecordAnimated->setText(tr("Stop Recording..."));
 }
 
-void MainWindow::saveAnimated(QString &filename) {
+void MainWindow::recordSave(const QString &filename) {
     ui->apngSkip->setEnabled(false);
     ui->actionRecordAnimated->setEnabled(false);
     ui->buttonRecordAnimated->setEnabled(false);
@@ -1464,14 +1454,14 @@ void MainWindow::saveAnimated(QString &filename) {
     ui->actionRecordAnimated->setText(tr("Saving Animated PNG..."));
 
     RecordingThread *thread = new RecordingThread();
-    connect(thread, &RecordingThread::done, this, &MainWindow::updateAnimatedControls);
+    connect(thread, &RecordingThread::done, this, &MainWindow::recordControlUpdate);
     connect(thread, &RecordingThread::finished, thread, &QObject::deleteLater);
     thread->m_filename = filename;
     thread->m_optimize = m_optimizeRecording;
     thread->start();
 }
 
-void MainWindow::updateAnimatedControls() {
+void MainWindow::recordControlUpdate() {
     m_recording = false;
     ui->apngSkip->setEnabled(true);
     ui->actionRecordAnimated->setEnabled(true);
@@ -1495,7 +1485,7 @@ void MainWindow::showAbout() {
     aboutBox->setWindowTitle(tr("About CEmu"));
 
     QAbstractButton *buttonUpdateCheck = aboutBox->addButton(tr("Check for updates"), QMessageBox::ActionRole);
-    connect(buttonUpdateCheck, &QAbstractButton::clicked, this, [=](){ this->checkForUpdates(true); });
+    connect(buttonUpdateCheck, &QAbstractButton::clicked, this, [=](){ this->checkUpdate(true); });
 
     QAbstractButton *okButton = aboutBox->addButton(QMessageBox::Ok);
     okButton->setFocus();
@@ -1535,7 +1525,7 @@ void MainWindow::showAbout() {
     aboutBox->show();
 }
 
-void MainWindow::screenContextMenu(const QPoint &posa) {
+void MainWindow::contextLcd(const QPoint &posa) {
     QMenu menu;
     QPoint globalPos = ui->lcd->mapToGlobal(posa);
     menu.addMenu(ui->menuFile);
@@ -1545,14 +1535,14 @@ void MainWindow::screenContextMenu(const QPoint &posa) {
     menu.exec(globalPos);
 }
 
-void MainWindow::consoleOutputChanged() {
+void MainWindow::consoleModified() {
     m_nativeConsole = ui->radioStderr->isChecked();
 }
 
 void MainWindow::pauseEmu(Qt::ApplicationState state) {
     if (m_pauseOnFocus) {
         if (state == Qt::ApplicationInactive) {
-            emu.setEmuSpeed(0);
+            emu.setSpeed(0);
         }
         if (state == Qt::ApplicationActive) {
             setEmuSpeed(m_settings->value(SETTING_EMUSPEED).toInt());
@@ -1564,27 +1554,27 @@ void MainWindow::pauseEmu(Qt::ApplicationState state) {
 //  Linking things
 // ------------------------------------------------
 
-void MainWindow::receiveChangeState() {
+void MainWindow::varToggle() {
     if (guiReceive) {
-        changeVariableState();
-        emu.unlock();
+        varShow();
+        emu.unblock();
     } else {
         emu.receive();
     }
 }
 
-void MainWindow::selectFiles() {
+void MainWindow::varSelect() {
     if (guiDebug) {
        return;
     }
 
-    QStringList fileNames = showVariableFileDialog(QFileDialog::AcceptOpen, tr("TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca *.8cg *.8ci *.8ek);;All Files (*.*)"), Q_NULLPTR);
+    QStringList fileNames = varDialog(QFileDialog::AcceptOpen, tr("TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca *.8cg *.8ci *.8ek);;All Files (*.*)"), Q_NULLPTR);
 
     sendingHandler->sendFiles(fileNames, LINK_FILE);
     equatesRefresh();
 }
 
-QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode, const QString &name_filter, const QString &defaultSuffix) {
+QStringList MainWindow::varDialog(QFileDialog::AcceptMode mode, const QString &name_filter, const QString &defaultSuffix) {
     QFileDialog dialog(this);
     int good;
 
@@ -1604,7 +1594,7 @@ QStringList MainWindow::showVariableFileDialog(QFileDialog::AcceptMode mode, con
     return QStringList();
 }
 
-void MainWindow::variableDoubleClicked(QTableWidgetItem *item) {
+void MainWindow::varPressed(QTableWidgetItem *item) {
     calc_var_t var;
     memcpy(&var, ui->emuVarView->item(item->row(), VAR_NAME)->data(Qt::UserRole).toByteArray().data(), sizeof(calc_var_t));
     if (calc_var_is_asmprog(&var)) {
@@ -1626,19 +1616,19 @@ void MainWindow::variableDoubleClicked(QTableWidgetItem *item) {
     }
 }
 
-void MainWindow::lockedEmu(int req) {
+void MainWindow::emuBlocked(int req) {
     switch (req) {
         default:
         case EmuThread::RequestNone:
         case EmuThread::RequestPause:
             break;
         case EmuThread::RequestReceive:
-            changeVariableState();
+            varShow();
             break;
     }
 }
 
-void MainWindow::changeVariableState() {
+void MainWindow::varShow() {
     calc_var_t var;
 
     if (guiSend || guiDebug) {
@@ -1730,7 +1720,7 @@ void MainWindow::changeVariableState() {
     ui->emuVarView->setSortingEnabled(true);
 }
 
-void MainWindow::saveSelectedFile() {
+void MainWindow::varSaveSelected() {
     QVector<calc_var_t> selectedVars;
     QStringList fileNames;
     for (int currRow = 0; currRow < ui->emuVarView->rowCount(); currRow++) {
@@ -1743,7 +1733,7 @@ void MainWindow::saveSelectedFile() {
     if (selectedVars.size() < 2) {
         QMessageBox::warning(this, MSG_WARNING, tr("Select at least two files to group"));
     } else {
-         fileNames = showVariableFileDialog(QFileDialog::AcceptSave, tr("TI Group (*.8cg);;All Files (*.*)"), QStringLiteral("8cg"));
+         fileNames = varDialog(QFileDialog::AcceptSave, tr("TI Group (*.8cg);;All Files (*.*)"), QStringLiteral("8cg"));
         if (fileNames.size() == 1) {
             if (!receiveVariableLink(selectedVars.size(), selectedVars.constData(), fileNames.first().toUtf8())) {
                 QMessageBox::critical(this, MSG_ERROR, tr("Transfer error, see console for information:\nFile: ") + fileNames.first());
@@ -1754,7 +1744,7 @@ void MainWindow::saveSelectedFile() {
     }
 }
 
-void MainWindow::saveSelectedFiles() {
+void MainWindow::varSaveSelectedFiles() {
     QFileDialog dialog(this);
     dialog.setFileMode(QFileDialog::DirectoryOnly);
     dialog.setOption(QFileDialog::ShowDirsOnly, false);
@@ -1806,11 +1796,11 @@ void MainWindow::saveSelectedFiles() {
     }
 }
 
-void MainWindow::resendFiles() {
+void MainWindow::varResend() {
     sendingHandler->resendSelected();
 }
 
-void MainWindow::resendContextMenu(const QPoint& posa) {
+void MainWindow::contextRecent(const QPoint& posa) {
     int row = ui->varLoadedView->rowAt(posa.y());
 
     if (row == -1) {
@@ -1821,11 +1811,11 @@ void MainWindow::resendContextMenu(const QPoint& posa) {
     ui->varLoadedView->item(row, RECENT_SELECT)->setCheckState(check == Qt::Checked ? Qt::Unchecked : Qt::Checked);
 }
 
-void MainWindow::removeAllSentVars() {
+void MainWindow::recentRemoveAll() {
     ui->varLoadedView->setRowCount(0);
 }
 
-void MainWindow::removeSentVars() {
+void MainWindow::recentRemoveSelected() {
     for (int row = ui->varLoadedView->rowCount() - 1; row >= 0; row--) {
         if (ui->varLoadedView->item(row, RECENT_SELECT)->checkState() == Qt::Checked) {
             ui->varLoadedView->removeRow(row);
@@ -1833,13 +1823,13 @@ void MainWindow::removeSentVars() {
     }
 }
 
-void MainWindow::deselectAllVars() {
+void MainWindow::recentDeselectAll() {
     for (int row = 0; row < ui->varLoadedView->rowCount(); row++) {
         ui->varLoadedView->item(row, RECENT_SELECT)->setCheckState(Qt::Unchecked);
     }
 }
 
-void MainWindow::selectAllVars() {
+void MainWindow::recentSelectAll() {
     for (int row = 0; row < ui->varLoadedView->rowCount(); row++) {
         ui->varLoadedView->item(row, RECENT_SELECT)->setCheckState(Qt::Checked);
     }
@@ -1849,7 +1839,7 @@ void MainWindow::selectAllVars() {
 // Autotester things
 // ------------------------------------------------
 
-void MainWindow::dispAutotesterError(int errCode) {
+void MainWindow::autotesterErr(int errCode) {
     QString errMsg;
     switch (errCode) {
         case -1:
@@ -1866,7 +1856,7 @@ void MainWindow::dispAutotesterError(int errCode) {
 }
 
 
-int MainWindow::openJSONConfig(const QString& jsonPath) {
+int MainWindow::autotesterOpen(const QString& jsonPath) {
     if (jsonPath.length() == 0) {
         QMessageBox::warning(this, MSG_ERROR, tr("Please choose a json file or type its path."));
         return 1;
@@ -1904,7 +1894,7 @@ int MainWindow::openJSONConfig(const QString& jsonPath) {
     return 0;
 }
 
-void MainWindow::prepareAndOpenJSONConfig() {
+void MainWindow::autotesterLoad() {
     QFileDialog dialog(this);
     int good;
 
@@ -1922,21 +1912,21 @@ void MainWindow::prepareAndOpenJSONConfig() {
     }
 
     QStringList selected = dialog.selectedFiles();
-    openJSONConfig(selected.first());
+    autotesterOpen(selected.first());
 }
 
-void MainWindow::reloadJSONConfig() {
-    openJSONConfig(ui->JSONconfigPath->text());
+void MainWindow::autotesterReload() {
+    autotesterOpen(ui->JSONconfigPath->text());
 }
 
-void MainWindow::launchTest() {
+void MainWindow::autotesterLaunch() {
     if (!autotester::configLoaded) {
-        dispAutotesterError(-1);
+        autotesterErr(-1);
         return;
     }
 
     if (ui->checkBoxTestReset->isChecked()) {
-        resetCalculator();
+        resetEmu();
         guiDelay(4000);
     }
 
@@ -1957,7 +1947,7 @@ void MainWindow::launchTest() {
 
     // Follow the sequence
     if (!autotester::doTestSequence()) {
-        dispAutotesterError(1);
+        autotesterErr(1);
         return;
     }
     if (!opts.suppressTestDialog) {
@@ -1965,7 +1955,7 @@ void MainWindow::launchTest() {
     }
 }
 
-void MainWindow::updateCRCParamsFromPreset(int comboBoxIndex) {
+void MainWindow::autotesterUpdatePresets(int comboBoxIndex) {
     // The order matters, here! (See the combobox in the GUI)
     static const std::pair<unsigned int, unsigned int> mapIdConsts[] = {
         std::make_pair(autotester::hash_consts.at("vram_start"),     autotester::hash_consts.at("vram_16_size")),
@@ -1988,11 +1978,11 @@ void MainWindow::updateCRCParamsFromPreset(int comboBoxIndex) {
         ui->startCRC->setText(buf);
         sprintf(buf, "0x%X", mapIdConsts[comboBoxIndex-1].second);
         ui->sizeCRC->setText(buf);
-        refreshCRC();
+        autotesterRefreshCRC();
     }
 }
 
-void MainWindow::refreshCRC() {
+void MainWindow::autotesterRefreshCRC() {
     QLineEdit *startCRC = ui->startCRC;
     QLineEdit *sizeCRC = ui->sizeCRC;
 
@@ -2021,21 +2011,19 @@ void MainWindow::refreshCRC() {
     }
 
     // Compute and display CRC
-    char buf[10];
-    sprintf(buf, "%X", crc32(start, crc_size));
     free(start);
-    ui->valueCRC->setText(buf);
+    ui->valueCRC->setText(int2hex(crc32(start, crc_size), 8));
     ui->valueCRC->repaint();
 }
 
-void MainWindow::resetCalculator() {
+void MainWindow::resetEmu() {
     guiReset = true;
 
     if (guiReceive) {
-        receiveChangeState();
+        varToggle();
     }
     if (guiDebug) {
-        debuggerChangeState();
+        debugToggle();
     }
 
     emu.reset();
@@ -2045,10 +2033,10 @@ int MainWindow::loadEmu(bool image) {
     guiEmuValid = false;
 
     if (guiReceive) {
-        receiveChangeState();
+        varToggle();
     }
     if (guiDebug) {
-        debuggerChangeState();
+        debugToggle();
     }
 
     int success = emu.load(image, m_pathRom, m_pathImage);
@@ -2083,59 +2071,59 @@ int MainWindow::loadEmu(bool image) {
     return success;
 }
 
-void MainWindow::drawNextDisasmLine() {
+void MainWindow::disasmLine() {
     bool useLabel = false;
     map_t::iterator sit;
     std::pair<map_t::iterator, map_t::iterator> range;
     unsigned int numLines = 1;
 
-    if (disasm.baseAddress != disasm.newAddress) {
-        disasm.baseAddress = disasm.newAddress;
-        if (disasm.map.count(disasm.newAddress)) {
-            range = disasm.map.equal_range(disasm.newAddress);
+    if (disasm.base != disasm.next) {
+        disasm.base = disasm.next;
+        if (disasm.map.count(disasm.next)) {
+            range = disasm.map.equal_range(disasm.next);
 
             numLines = 0;
             for (sit = range.first;  sit != range.second;  ++sit) {
                numLines++;
             }
 
-            disasmHighlight.rWatch = false;
-            disasmHighlight.wWatch = false;
-            disasmHighlight.xBreak = false;
-            disasmHighlight.pc = false;
+            disasm.highlight.watchR = false;
+            disasm.highlight.watchW = false;
+            disasm.highlight.breakP = false;
+            disasm.highlight.pc = false;
 
-            disasm.instruction.data.clear();
-            disasm.instruction.opcode.clear();
-            disasm.instruction.modeSuffix.clear();
-            disasm.instruction.arguments.clear();
-            disasm.instruction.size = 0;
+            disasm.instr.data.clear();
+            disasm.instr.opcode.clear();
+            disasm.instr.suffix.clear();
+            disasm.instr.operands.clear();
+            disasm.instr.size = 0;
 
             useLabel = true;
         } else {
-            disassembleInstruction();
+            disasmInstr();
         }
     } else {
-        disassembleInstruction();
+        disasmInstr();
     }
 
     if (useLabel) {
-        range = disasm.map.equal_range(disasm.newAddress);
+        range = disasm.map.equal_range(disasm.next);
         sit = range.first;
     }
 
     for (unsigned int j = 0; j < numLines; j++) {
 
-        QString formattedLine;
-        QString breakpointSymbols;
-        QString instructionArgsHighlighted;
+        QString line;
+        QString symbols;
+        QString highlighted;
 
         if (useLabel) {
-            if (disasm.baseAddress > 511 || (disasm.baseAddress < 512 && sit->second[0] == '_')) {
-                formattedLine = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b>     %2</pre>"))
-                                        .arg(int2hex(disasm.baseAddress, 6),
+            if (disasm.base > 511 || (disasm.base < 512 && sit->second[0] == '_')) {
+                line = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b>     %2</pre>"))
+                                        .arg(int2hex(disasm.base, 6),
                                              QString::fromStdString(sit->second) + ":");
 
-                ui->disassemblyView->appendHtml(formattedLine);
+                m_disasm->appendHtml(line);
             }
 
             if (numLines == j + 1) {
@@ -2143,42 +2131,39 @@ void MainWindow::drawNextDisasmLine() {
             }
             sit++;
         } else {
-            // Some round symbol things
-            breakpointSymbols = QString(QStringLiteral("<font color='#A3FFA3'>%1</font><font color='#A3A3FF'>%2</font><font color='#FFA3A3'>%3</font>"))
-                                        .arg((disasmHighlight.rWatch  ? QStringLiteral("&#9679;") : QStringLiteral(" ")),
-                                             (disasmHighlight.wWatch ? QStringLiteral("&#9679;") : QStringLiteral(" ")),
-                                             (disasmHighlight.xBreak  ? QStringLiteral("&#9679;") : QStringLiteral(" ")));
+            symbols = QString(QStringLiteral("<font color='#A3FFA3'>%1</font><font color='#A3A3FF'>%2</font><font color='#FFA3A3'>%3</font>"))
+                             .arg((disasm.highlight.watchR  ? QStringLiteral("&#9679;") : QStringLiteral(" ")),
+                                  (disasm.highlight.watchW ? QStringLiteral("&#9679;") : QStringLiteral(" ")),
+                                  (disasm.highlight.breakP  ? QStringLiteral("&#9679;") : QStringLiteral(" ")));
 
-            // Simple syntax highlighting
-            instructionArgsHighlighted = QString::fromStdString(disasm.instruction.arguments)
-                                                  .replace(QRegularExpression(QStringLiteral("(\\$[0-9a-fA-F]+)")), QStringLiteral("<font color='green'>\\1</font>")) // hex numbers
-                                                  .replace(QRegularExpression(QStringLiteral("(^\\d)")), QStringLiteral("<font color='blue'>\\1</font>"))             // dec number
-                                                  .replace(QRegularExpression(QStringLiteral("([()])")), QStringLiteral("<font color='#600'>\\1</font>"));            // parentheses
+            highlighted = QString::fromStdString(disasm.instr.operands)
+                                  .replace(QRegularExpression(QStringLiteral("(\\$[0-9a-fA-F]+)")), QStringLiteral("<font color='green'>\\1</font>")) // hex numbers
+                                  .replace(QRegularExpression(QStringLiteral("(^\\d)")), QStringLiteral("<font color='blue'>\\1</font>"))             // dec number
+                                  .replace(QRegularExpression(QStringLiteral("([()])")), QStringLiteral("<font color='#600'>\\1</font>"));            // parentheses
 
-            formattedLine = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2 %3  <font color='darkblue'>%4%5</font>%6</pre>"))
-                                    .arg(int2hex(disasm.baseAddress, 6),
-                                        breakpointSymbols,
-                                        QString::fromStdString(disasm.instruction.data).leftJustified(12, ' '),
-                                        QString::fromStdString(disasm.instruction.opcode),
-                                        QString::fromStdString(disasm.instruction.modeSuffix),
-                                        instructionArgsHighlighted);
+            line = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2 %3  <font color='darkblue'>%4%5</font>%6</pre>"))
+                           .arg(int2hex(disasm.base, 6), symbols,
+                                QString::fromStdString(disasm.instr.data).leftJustified(12, ' '),
+                                QString::fromStdString(disasm.instr.opcode),
+                                QString::fromStdString(disasm.instr.suffix),
+                                highlighted);
 
-            ui->disassemblyView->appendHtml(formattedLine);
+            m_disasm->appendHtml(line);
         }
     }
 
-    if (!m_disasmOffsetSet && disasm.newAddress > m_addressPane) {
+    if (!m_disasmOffsetSet && disasm.next > m_disasmAddr) {
         m_disasmOffsetSet = true;
-        m_disasmOffset = ui->disassemblyView->textCursor();
+        m_disasmOffset = m_disasm->textCursor();
         m_disasmOffset.movePosition(QTextCursor::StartOfLine);
     }
 
-    if (disasmHighlight.pc == true) {
-        ui->disassemblyView->addHighlight(QColor(Qt::blue).lighter(160));
+    if (disasm.highlight.pc == true) {
+        m_disasm->addHighlight(QColor(Qt::blue).lighter(160));
     }
 }
 
-void MainWindow::disasmContextMenu(const QPoint& posa) {
+void MainWindow::contextDisasm(const QPoint& posa) {
     QString setPc = tr("Set PC");
     QString toggleBreak = tr("Toggle Breakpoint");
     QString toggleWrite = tr("Toggle Write Watchpoint");
@@ -2186,9 +2171,9 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
     QString toggleRw = tr("Toggle Read/Write Watchpoint");
     QString runUntil = tr("Run Until");
     QString gotoMem = tr("Goto Memory View");
-    ui->disassemblyView->setTextCursor(ui->disassemblyView->cursorForPosition(posa));
-    QPoint globalPos = ui->disassemblyView->mapToGlobal(posa);
-    QString addressStr = ui->disassemblyView->getSelectedAddress();
+    m_disasm->setTextCursor(m_disasm->cursorForPosition(posa));
+    QPoint globalPos = m_disasm->mapToGlobal(posa);
+    QString addressStr = m_disasm->getSelectedAddr();
     uint32_t address = static_cast<uint32_t>(hex2int(addressStr));
 
     QMenu menu;
@@ -2206,35 +2191,31 @@ void MainWindow::disasmContextMenu(const QPoint& posa) {
     if (item) {
         if (item->text() == setPc) {
             ui->pcregView->setText(addressStr);
-            debug_set_pc_address(address);
-            updateDisasmAddr(cpu.registers.PC, true);
+            debug_set_pc(address);
+            disasmUpdateAddr(cpu.registers.PC, true);
         } else if (item->text() == toggleBreak) {
-            breakpointGUIAdd();
+            breakAddGui();
         } else if (item->text() == toggleRead) {
-            watchpointReadGUIAdd();
+            watchAddGuiR();
         } else if (item->text() == toggleWrite) {
-            watchpointWriteGUIAdd();
+            watchAddGuiW();
         } else if (item->text() == toggleRw) {
-            watchpointReadWriteGUIAdd();
+            watchAddGuiRW();
         } else if (item->text() == runUntil) {
-            debugger.runUntilAddress = address;
-            debuggerChangeState();
-            debuggerStep(DBG_RUN_UNTIL);
+            debug.runUntilAddr = address;
+            debugToggle();
+            debugStep(DBG_RUN_UNTIL);
         } else if (item->text() == gotoMem) {
             gotoMemAddr(address);
         }
     }
 }
 
-void MainWindow::launchPrgm(const calc_var_t *prgm) {
-    // Reset keypad state
+void MainWindow::varLaunch(const calc_var_t *prgm) {
     keypad_reset();
-
-    // Restore focus to catch keypresses.
     ui->lcd->setFocus();
     guiDelay(100);
 
-    // Launch the program, assuming we're at the home screen...
     autotester::sendKey(0x09); // Clear
     if (calc_var_is_asmprog(prgm)) {
         autotester::sendKey(0x9CFC); // Asm(
@@ -2245,12 +2226,10 @@ void MainWindow::launchPrgm(const calc_var_t *prgm) {
         autotester::sendLetterKeyPress(c); // type program name
     }
     autotester::sendKey(0x05); // Enter
-
-    // Restore focus to catch keypresses.
     ui->lcd->setFocus();
 }
 
-void MainWindow::variablesContextMenu(const QPoint& posa) {
+void MainWindow::contextVars(const QPoint& posa) {
     int itemRow = ui->emuVarView->rowAt(posa.y());
     if (itemRow == -1) {
         return;
@@ -2268,20 +2247,19 @@ void MainWindow::variablesContextMenu(const QPoint& posa) {
     QAction *selectedItem = contextMenu.exec(ui->emuVarView->mapToGlobal(posa));
     if (selectedItem) {
         if (selectedItem->text() == launch) {
-            // resume emulation and launch
-            receiveChangeState();
-            launchPrgm(&var);
+            varToggle();
+            varLaunch(&var);
         }
     }
 }
 
-void MainWindow::newMemoryVisualizer() {
+void MainWindow::addMemVisualizer() {
     MemoryVisualizer *p = new MemoryVisualizer(this);
     p->setAttribute(Qt::WA_DeleteOnClose);
     p->show();
 }
 
-void MainWindow::consoleContextMenu(const QPoint &posa) {
+void MainWindow::contextConsole(const QPoint &posa) {
     bool ok = true;
 
     QString gotoMem = tr("Goto Memory View");
@@ -2319,19 +2297,19 @@ void MainWindow::consoleContextMenu(const QPoint &posa) {
         QAction *item = menu.exec(globalp);
         if (item) {
             if (item->text() == gotoMem) {
-                forceEnterDebug();
+                debugForce();
                 gotoMemAddr(address);
             } else if (item->text() == gotoDisasm) {
-                forceEnterDebug();
+                debugForce();
                 gotoDisasmAddr(address);
             } else if (item->text() == toggleBreak) {
-                breakpointAdd(breakpointNextLabel(), address, true, true);
+                breakAdd(breakNextLabel(), address, true, true);
             } else if (item->text() == toggleRead) {
-                watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_READ, true);
+                watchAdd(watchNextLabel(), address, 1, DBG_MASK_READ, true);
             } else if (item->text() == toggleWrite) {
-                watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_WRITE, true);
+                watchAdd(watchNextLabel(), address, 1, DBG_MASK_WRITE, true);
             } else if (item->text() == toggleRw) {
-                watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_READ | DBG_MASK_WRITE, true);
+                watchAdd(watchNextLabel(), address, 1, DBG_MASK_READ | DBG_MASK_WRITE, true);
             }
             memDocksUpdate();
         }
@@ -2374,7 +2352,7 @@ bool MainWindow::ipcSetup() {
     return false;
 }
 
-void MainWindow::ipcHandleCommandlineReceive(QDataStream &stream) {
+void MainWindow::ipcCli(QDataStream &stream) {
     console(QStringLiteral("[CEmu] Received IPC: command line options\n"));
     CEmuOpts o;
 
@@ -2399,7 +2377,7 @@ void MainWindow::ipcHandleCommandlineReceive(QDataStream &stream) {
     }
 }
 
-void MainWindow::ipcCloseOthers() {
+void MainWindow::ipcCloseConnected() {
     QString idPath = configPath + "/id/";
     QDir dir(idPath);
     QStringList clients = dir.entryList(QDir::Filter::Files);
@@ -2448,7 +2426,7 @@ void MainWindow::ipcReceived() {
         case IPC_CLI:
            show();
            raise();
-           ipcHandleCommandlineReceive(stream);
+           ipcCli(stream);
            break;
         case IPC_CLOSE:
             close();
@@ -2459,7 +2437,7 @@ void MainWindow::ipcReceived() {
     }
 }
 
-void MainWindow::ipcChangeID() {
+void MainWindow::ipcSetId() {
     bool ok = true;
     QString text = QInputDialog::getText(this, tr("CEmu Change ID"), tr("New ID:"), QLineEdit::Normal, opts.idString, &ok);
     if (ok && !text.isEmpty() && text != opts.idString) {
@@ -2472,7 +2450,7 @@ void MainWindow::ipcChangeID() {
     }
 }
 
-void MainWindow::ipcSpawnRandom() {
+void MainWindow::ipcSpawn() {
     QStringList arguments;
     arguments << QStringLiteral("--id") << randomString(15);
 
@@ -2480,13 +2458,13 @@ void MainWindow::ipcSpawnRandom() {
     myProcess->startDetached(execPath, arguments);
 }
 
-void MainWindow::slotAddNew() {
+void MainWindow::stateAddNew() {
     QString name = randomString(6);
     QString path = QDir::cleanPath(QFileInfo(m_settings->fileName()).absoluteDir().absolutePath() + QStringLiteral("/") + name + QStringLiteral(".ce"));
-    slotAdd(name, path);
+    stateAdd(name, path);
 }
 
-void MainWindow::slotAdd(QString &name, QString &path) {
+void MainWindow::stateAdd(QString &name, QString &path) {
     const int row = ui->slotView->rowCount();
 
     QToolButton *btnLoad   = new QToolButton();
@@ -2499,10 +2477,10 @@ void MainWindow::slotAdd(QString &name, QString &path) {
     btnEdit->setIcon(m_iconEdit);
     btnRemove->setIcon(m_iconRemove);
 
-    connect(btnRemove, &QToolButton::clicked, this, &MainWindow::slotRemove);
-    connect(btnLoad, &QToolButton::clicked, this, &MainWindow::slotLoad);
-    connect(btnSave, &QToolButton::clicked, this, &MainWindow::slotSave);
-    connect(btnEdit, &QToolButton::clicked, this, &MainWindow::slotEdit);
+    connect(btnRemove, &QToolButton::clicked, this, &MainWindow::stateRemove);
+    connect(btnLoad, &QToolButton::clicked, this, &MainWindow::stateLoad);
+    connect(btnSave, &QToolButton::clicked, this, &MainWindow::stateSave);
+    connect(btnEdit, &QToolButton::clicked, this, &MainWindow::stateEdit);
 
     QTableWidgetItem *itemName   = new QTableWidgetItem(name);
     QTableWidgetItem *itemLoad   = new QTableWidgetItem();
@@ -2511,7 +2489,7 @@ void MainWindow::slotAdd(QString &name, QString &path) {
     QTableWidgetItem *itemRemove = new QTableWidgetItem();
 
     itemEdit->setData(Qt::UserRole, path);
-    saveToPath(itemEdit->data(Qt::UserRole).toString());
+    stateToPath(itemEdit->data(Qt::UserRole).toString());
 
     ui->slotView->setRowCount(row + 1);
     ui->slotView->setItem(row, SLOT_NAME, itemName);
@@ -2526,10 +2504,10 @@ void MainWindow::slotAdd(QString &name, QString &path) {
     ui->slotView->setCellWidget(row, SLOT_REMOVE, btnRemove);
 
     ui->slotView->setCurrentCell(row, SLOT_NAME);
-    saveSlotInfo();
+    stateSaveInfo();
 }
 
-int MainWindow::slotGet(QObject *obj, int col) {
+int MainWindow::stateGet(QObject *obj, int col) {
     int row;
 
     for (row = 0; row < ui->slotView->rowCount(); row++){
@@ -2541,9 +2519,9 @@ int MainWindow::slotGet(QObject *obj, int col) {
     return row;
 }
 
-void MainWindow::slotEdit() {
+void MainWindow::stateEdit() {
     bool ok;
-    int row = slotGet(sender(), SLOT_EDIT);
+    int row = stateGet(sender(), SLOT_EDIT);
     QString old = ui->slotView->item(row, SLOT_EDIT)->data(Qt::UserRole).toString();
     QString path = QInputDialog::getText(this, tr("Enter image path"), Q_NULLPTR, QLineEdit::Normal, old, &ok);
     if (ok && !path.isEmpty()) {
@@ -2552,22 +2530,22 @@ void MainWindow::slotEdit() {
     }
 }
 
-void MainWindow::slotRemove() {
-    int row = slotGet(sender(), SLOT_REMOVE);
+void MainWindow::stateRemove() {
+    int row = stateGet(sender(), SLOT_REMOVE);
     QFile(ui->slotView->item(row, SLOT_EDIT)->data(Qt::UserRole).toString()).remove();
     ui->slotView->removeRow(row);
 }
 
-void MainWindow::slotSave() {
-    int row = slotGet(sender(), SLOT_SAVE);
+void MainWindow::stateSave() {
+    int row = stateGet(sender(), SLOT_SAVE);
     QString path = ui->slotView->item(row, SLOT_EDIT)->data(Qt::UserRole).toString();
-    saveToPath(path);
+    stateToPath(path);
 }
 
-void MainWindow::slotLoad() {
-    int row = slotGet(sender(), SLOT_LOAD);
+void MainWindow::stateLoad() {
+    int row = stateGet(sender(), SLOT_LOAD);
     QString path = ui->slotView->item(row, SLOT_EDIT)->data(Qt::UserRole).toString();
-    restoreFromPath(path);
+    stateFromPath(path);
 }
 
 const char *MainWindow::m_varExtensions[] = {

@@ -1,12 +1,12 @@
 #include "utils.h"
 #include "ipc.h"
+#include "debugger/disasm.h"
 #include "../../core/cpu.h"
 #include "../../core/os/os.h"
-#include "../../core/debug/disasm.h"
 #include "tivarslib/TIVarType.h"
 #include "tivarslib/TypeHandlers/TypeHandlers.h"
 
-#include <QDir>
+#include <QtCore/QDir>
 #include <QtCore/QString>
 #include <QtCore/QTime>
 #include <QtCore/QCoreApplication>
@@ -57,8 +57,8 @@ std::string calc_var_content_string(const calc_var_t& var) {
 
 QString getAddressOfEquate(const std::string &in) {
     QString value;
-    map_value_t::const_iterator item = disasm.reverseMap.find(in);
-    if (item != disasm.reverseMap.end()) {
+    map_value_t::const_iterator item = disasm.reverse.find(in);
+    if (item != disasm.reverse.end()) {
         value = int2hex(item->second, 6);
     } else {
         uint32_t conv = 0xFFFFFFFFu;

@@ -12,7 +12,7 @@ extern "C" {
 #include <stdbool.h>
 
 typedef struct watchdog_state {
-    uint32_t count;              /* Standard WATCHDOG state */
+    uint32_t count;
     uint32_t load;
     uint16_t restart;
     uint32_t control;
@@ -21,37 +21,34 @@ typedef struct watchdog_state {
     uint32_t revision;
 } watchdog_state_t;
 
-typedef struct protected_state {  /* Standard PROTECTED state */
+typedef struct protected_state {
     bool locked;
     uint8_t led;
     uint8_t ports[0x100];
 } protected_state_t;
 
 typedef struct cxxx_state {
-    uint8_t ports[0x100];         /* Standard CXXX state */
+    uint8_t ports[0x100];
 } cxxx_state_t;
 typedef struct exxx_state {
-    uint8_t ports[0x80];          /* Standard EXXX state */
+    uint8_t ports[0x80];
 } exxx_state_t;
-typedef struct fxxx_state {       /* Standard FXXX state */
-    uint8_t dummy;                /* Silence warning, remove if other fields are added. */
+typedef struct fxxx_state {
+    uint8_t dummy;
 } fxxx_state_t;
 
-extern watchdog_state_t watchdog;   /* Global WATCHDOG state */
-extern protected_state_t protect;   /* Global PROTECT state */
-extern cxxx_state_t cxxx;           /* Global CXXX state */
-extern exxx_state_t exxx;           /* Global EXXX state */
-extern fxxx_state_t fxxx;           /* Global FXXX state */
+extern watchdog_state_t watchdog;
+extern protected_state_t protect;
+extern cxxx_state_t cxxx;
+extern exxx_state_t exxx;
+extern fxxx_state_t fxxx;
 
-/* Available functions */
-void watchdog_reset(void);
 eZ80portrange_t init_watchdog(void);
 eZ80portrange_t init_protected(void);
 eZ80portrange_t init_cxxx(void);
 eZ80portrange_t init_exxx(void);
 eZ80portrange_t init_fxxx(void);
-
-/* Save/Restore */
+void watchdog_reset(void);
 bool watchdog_restore(FILE *image);
 bool watchdog_save(FILE *image);
 bool protect_restore(FILE *image);

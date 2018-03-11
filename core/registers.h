@@ -25,7 +25,6 @@ extern "C" {
 #endif
 
 #include "defines.h"
-
 #include <stdint.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -146,7 +145,7 @@ typedef struct {
     };
     uint32_t rawPC;
     uint16_t I;
-    uint8_t R, MBASE;  /* interrupt, r, and z80 MBASE */
+    uint8_t R, MBASE;
 } eZ80registers_t;
 
 typedef enum {

@@ -228,7 +228,7 @@ void sched_reset(void) {
     sched.items[SCHED_SECOND].cycle = sched.clockRates[CLOCK_CPU];
 
     sched.items[SCHED_THROTTLE].clock = CLOCK_6M;
-    sched.items[SCHED_THROTTLE].callback.event = throttle_interval_event;
+    sched.items[SCHED_THROTTLE].callback.event = emu_throttle_event;
     sched_set(SCHED_THROTTLE, 0);
 
     sched.items[SCHED_PREV_MA].clock = CLOCK_48M;

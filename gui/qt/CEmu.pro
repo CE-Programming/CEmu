@@ -147,43 +147,7 @@ macx: QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.9
 
 macx: ICON = resources/icons/icon.icns
 
-SOURCES +=  utils.cpp \
-    main.cpp \
-    mainwindow.cpp \
-    romselection.cpp \
-    lcdwidget.cpp \
-    emuthread.cpp \
-    datawidget.cpp \
-    dockwidget.cpp \
-    searchwidget.cpp \
-    basiccodeviewerwindow.cpp \
-    keypad/qtkeypadbridge.cpp \
-    keypad/keymap.cpp \
-    keypad/keypadwidget.cpp \
-    keypad/rectkey.cpp \
-    keypad/arrowkey.cpp \
-    tivarslib/tivarslib_utils.cpp \
-    tivarslib/BinaryFile.cpp \
-    tivarslib/TIVarFile.cpp \
-    tivarslib/TIModel.cpp \
-    tivarslib/TIModels.cpp \
-    tivarslib/TIVarType.cpp \
-    tivarslib/TIVarTypes.cpp \
-    tivarslib/TypeHandlers/DummyHandler.cpp \
-    tivarslib/TypeHandlers/TH_0x00.cpp \
-    tivarslib/TypeHandlers/TH_0x01.cpp \
-    tivarslib/TypeHandlers/TH_0x02.cpp \
-    tivarslib/TypeHandlers/TH_0x05.cpp \
-    tivarslib/TypeHandlers/TH_0x0C.cpp \
-    tivarslib/TypeHandlers/TH_0x0D.cpp \
-    tivarslib/TypeHandlers/TH_0x15.cpp \
-    tivarslib/TypeHandlers/TH_0x1B.cpp \
-    tivarslib/TypeHandlers/TH_0x1C.cpp \
-    tivarslib/TypeHandlers/TH_0x1D.cpp \
-    tivarslib/TypeHandlers/TH_0x1E.cpp \
-    tivarslib/TypeHandlers/TH_0x1F.cpp \
-    tivarslib/TypeHandlers/TH_0x20.cpp \
-    tivarslib/TypeHandlers/TH_0x21.cpp \
+SOURCES += \
     ../../tests/autotester/autotester.cpp \
     ../../core/asic.c \
     ../../core/cpu.c \
@@ -207,55 +171,62 @@ SOURCES +=  utils.cpp \
     ../../core/vat.c \
     ../../core/emu.c \
     ../../core/extras.c \
-    ../../core/debug/disasm.cpp \
+    ../../core/spi.c \
+    ../../core/debug/debug.c \
+    ipc.cpp \
+    main.cpp \
+    utils.cpp \
+    mainwindow.cpp \
+    romselection.cpp \
+    lcdwidget.cpp \
+    emuthread.cpp \
+    datawidget.cpp \
+    dockwidget.cpp \
+    searchwidget.cpp \
+    basiccodeviewerwindow.cpp \
     sendinghandler.cpp \
     debugger.cpp \
     settings.cpp \
-    ipc.cpp \
     keyhistory.cpp \
     memoryvisualizer.cpp \
-    ../../core/debug/debug.cpp \
     capture/animated-png.c \
-    ../../core/spi.c \
-    debugger/hexwidget.cpp \
     memoryedit.cpp \
-    debugger/memoryvisualizerwidget.cpp
+    keypad/qtkeypadbridge.cpp \
+    keypad/keymap.cpp \
+    keypad/keypadwidget.cpp \
+    keypad/rectkey.cpp \
+    keypad/arrowkey.cpp \
+    debugger/hexwidget.cpp \
+    debugger/memoryvisualizerwidget.cpp \
+    debugger/disasm.cpp \
+    tivarslib/tivarslib_utils.cpp \
+    tivarslib/BinaryFile.cpp \
+    tivarslib/TIVarFile.cpp \
+    tivarslib/TIModel.cpp \
+    tivarslib/TIModels.cpp \
+    tivarslib/TIVarType.cpp \
+    tivarslib/TIVarTypes.cpp \
+    tivarslib/TypeHandlers/DummyHandler.cpp \
+    tivarslib/TypeHandlers/TH_0x00.cpp \
+    tivarslib/TypeHandlers/TH_0x01.cpp \
+    tivarslib/TypeHandlers/TH_0x02.cpp \
+    tivarslib/TypeHandlers/TH_0x05.cpp \
+    tivarslib/TypeHandlers/TH_0x0C.cpp \
+    tivarslib/TypeHandlers/TH_0x0D.cpp \
+    tivarslib/TypeHandlers/TH_0x15.cpp \
+    tivarslib/TypeHandlers/TH_0x1B.cpp \
+    tivarslib/TypeHandlers/TH_0x1C.cpp \
+    tivarslib/TypeHandlers/TH_0x1D.cpp \
+    tivarslib/TypeHandlers/TH_0x1E.cpp \
+    tivarslib/TypeHandlers/TH_0x1F.cpp \
+    tivarslib/TypeHandlers/TH_0x20.cpp \
+    tivarslib/TypeHandlers/TH_0x21.cpp
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
 win32: LIBS += -lpsapi
 
-HEADERS  +=  utils.h \
-    mainwindow.h \
-    romselection.h \
-    lcdwidget.h \
-    emuthread.h \
-    datawidget.h \
-    dockwidget.h \
-    searchwidget.h \
-    basiccodeviewerwindow.h \
-    keypad/qtkeypadbridge.h \
-    keypad/keymap.h \
-    keypad/keypadwidget.h \
-    keypad/key.h \
-    keypad/keyconfig.h \
-    keypad/rectkey.h \
-    keypad/graphkey.h \
-    keypad/secondkey.h \
-    keypad/alphakey.h \
-    keypad/otherkey.h \
-    keypad/numkey.h \
-    keypad/operkey.h \
-    keypad/arrowkey.h \
-    tivarslib/tivarslib_utils.h \
-    tivarslib/CommonTypes.h \
-    tivarslib/BinaryFile.h \
-    tivarslib/TIModel.h \
-    tivarslib/TIModels.h \
-    tivarslib/TIVarFile.h \
-    tivarslib/TIVarType.h \
-    tivarslib/TIVarTypes.h \
-    tivarslib/TypeHandlers/TypeHandlers.h \
+HEADERS  += \
     ../../tests/autotester/autotester.h \
     ../../core/asic.h \
     ../../core/cpu.h \
@@ -281,21 +252,52 @@ HEADERS  +=  utils.h \
     ../../core/vat.h \
     ../../core/extras.h \
     ../../core/os/os.h \
-    ../../core/debug/debug.h \
-    ../../core/debug/disasm.h \
-    cemuopts.h \
-    sendinghandler.h \
-    keypad/keycode.h \
-    debugger.h \
-    ipc.h \
-    keyhistory.h \
-    memoryvisualizer.h \
-    capture/animated-png.h \
     ../../core/spi.h \
+    ../../core/debug/debug.h \
+    ipc.h \
+    utils.h \
+    cemuopts.h \
+    mainwindow.h \
+    romselection.h \
+    lcdwidget.h \
+    emuthread.h \
+    datawidget.h \
+    dockwidget.h \
+    searchwidget.h \
+    basiccodeviewerwindow.h \
+    sendinghandler.h \
+    memoryvisualizer.h \
+    keyhistory.h \
+    keypad/qtkeypadbridge.h \
+    keypad/keymap.h \
+    keypad/keypadwidget.h \
+    keypad/key.h \
+    keypad/keycode.h \
+    keypad/keyconfig.h \
+    keypad/rectkey.h \
+    keypad/graphkey.h \
+    keypad/secondkey.h \
+    keypad/alphakey.h \
+    keypad/otherkey.h \
+    keypad/numkey.h \
+    keypad/operkey.h \
+    keypad/arrowkey.h \
+    capture/animated-png.h \
     debugger/hexwidget.h \
-    debugger/memoryvisualizerwidget.h
+    debugger/memoryvisualizerwidget.h \
+    debugger/disasm.h \
+    tivarslib/tivarslib_utils.h \
+    tivarslib/CommonTypes.h \
+    tivarslib/BinaryFile.h \
+    tivarslib/TIModel.h \
+    tivarslib/TIModels.h \
+    tivarslib/TIVarFile.h \
+    tivarslib/TIVarType.h \
+    tivarslib/TIVarTypes.h \
+    tivarslib/TypeHandlers/TypeHandlers.h
 
-FORMS    += mainwindow.ui \
+FORMS    += \
+    mainwindow.ui \
     romselection.ui \
     searchwidget.ui \
     basiccodeviewerwindow.ui \

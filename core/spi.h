@@ -56,22 +56,16 @@ typedef struct spi_state {
     uint8_t gammaCorrection[2][16];
 } spi_state_t;
 
-/* Global CONTROL state */
 extern spi_state_t spi;
 
-/* Available Functions */
 eZ80portrange_t init_spi(void);
+void spi_reset(void);
 bool spi_hsync(void);
 bool spi_vsync(void);
 bool spi_refresh_pixel(void);
 void spi_update_pixel(uint8_t r, uint8_t g, uint8_t b);
-
-/* Save/Restore */
 bool spi_restore(FILE *image);
 bool spi_save(FILE *image);
-
-/* Functions */
-void spi_reset(void);
 
 #ifdef __cplusplus
 }

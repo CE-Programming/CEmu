@@ -7,7 +7,6 @@ extern "C" {
 
 #include "port.h"
 #include "spi.h"
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -31,7 +30,6 @@ enum lcd_comp {
     LCD_LNBU
 };
 
-/* Standard LCD state */
 typedef struct lcd_state {
     uint32_t timing[4];
 
@@ -61,7 +59,7 @@ typedef struct lcd_state {
     uint32_t crsrIcr;              /* Cursor interrupt clear register */
     uint32_t crsrRis;              /* Cursor raw interrupt status register - const */
 
-    /* Internal registers */
+    /* Internal */
     bool prefill;
     uint8_t pos, fifo[256];
     uint32_t curCol, curRow;
@@ -73,23 +71,17 @@ typedef struct lcd_state {
     bool spi;
 } lcd_state_t;
 
-/* Global LCD state */
 extern lcd_state_t lcd;
 
-/* Available Functions */
 void lcd_reset(void);
 eZ80portrange_t init_lcd(void);
-
+bool lcd_restore(FILE *image);
+bool lcd_save(FILE *image);
 void lcd_drawframe(void *output, void *data, void *data_end, uint32_t control, uint32_t size);
 void lcd_setptrs(uint32_t **dat, uint32_t **dat_end, uint32_t width, uint32_t height, uint32_t addr, uint32_t control, bool mask);
-
 void lcd_update(void);
 void lcd_disable(void);
 void lcd_gui_event(void);
-
-/* Save/Restore */
-bool lcd_restore(FILE *image);
-bool lcd_save(FILE *image);
 
 #ifdef __cplusplus
 }

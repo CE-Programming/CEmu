@@ -35,7 +35,7 @@ eZ80cpu_t cpu;
 
 static void cpu_clear_mode(void) {
 #ifdef DEBUG_SUPPORT
-    debugger.data.block[cpu.registers.PC] |= DBG_INST_START_MARKER;
+    debug.addr[cpu.registers.PC] |= DBG_INST_START_MARKER;
 #endif
     cpu.PREFIX = cpu.SUFFIX = 0;
     cpu.L = cpu.ADL;
@@ -55,14 +55,14 @@ static void cpu_prefetch(uint32_t address, bool mode) {
     cpu.registers.PC = cpu_address_mode(address, mode);
     cpu.prefetch = mem_read_cpu(cpu.registers.PC, true);
 #ifdef DEBUG_SUPPORT
-    debugger.data.block[cpu.registers.PC] |= DBG_INST_MARKER;
+    debug.addr[cpu.registers.PC] |= DBG_INST_MARKER;
 #endif
 }
 static uint8_t cpu_fetch_byte(void) {
     uint8_t value;
 #ifdef DEBUG_SUPPORT
-    if (debugger.data.block[cpu.registers.PC] & (DBG_MASK_TEMP_EXEC | DBG_MASK_EXEC)) {
-        open_debugger(debugger.data.block[cpu.registers.PC] & DBG_MASK_EXEC ? DBG_EXEC_BREAKPOINT : DBG_STEP, cpu.registers.PC);
+    if (debug.addr[cpu.registers.PC] & (DBG_MASK_TEMP_EXEC | DBG_MASK_EXEC)) {
+        debug_open(debug.addr[cpu.registers.PC] & DBG_MASK_EXEC ? DBG_EXEC_BREAKPOINT : DBG_STEP, cpu.registers.PC);
     }
 #endif
     value = cpu.prefetch;
@@ -97,8 +97,8 @@ static uint32_t cpu_fetch_word_no_prefetch(void) {
 static uint8_t cpu_read_byte(uint32_t address) {
     uint32_t cpuAddress = cpu_address_mode(address, cpu.L);
 #ifdef DEBUG_SUPPORT
-    if (cpuAddress == debugger.stepOverInstrEnd) {
-        debugger.data.block[debugger.stepOverInstrEnd = cpu_mask_mode(address + 1, debugger.stepOverMode)] |= DBG_MASK_TEMP_EXEC;
+    if (cpuAddress == debug.stepOverEnd) {
+        debug.addr[debug.stepOverEnd = cpu_mask_mode(address + 1, debug.stepOverMode)] |= DBG_MASK_TEMP_EXEC;
     }
 #endif
     return mem_read_cpu(cpuAddress, false);
@@ -395,22 +395,22 @@ static void cpu_call(uint32_t address, bool mixed) {
         if(cpu.events & EVENT_DEBUG_STEP_OUT) {
             bool addWait = false;
             if (cpu.ADL) {
-                if (r->SPL >= debugger.stepOutSPL) {
+                if (r->SPL >= debug.stepOutSPL) {
                     addWait = true;
-                    debugger.stepOutSPL = r->SPL;
+                    debug.stepOutSPL = r->SPL;
                 }
             } else {
-                if (r->SPS >= debugger.stepOutSPS) {
+                if (r->SPS >= debug.stepOutSPS) {
                     addWait = true;
-                    debugger.stepOutSPS = r->SPS;
+                    debug.stepOutSPS = r->SPS;
                 }
             }
-            if (addWait && (debugger.stepOutWait < 1)) {
-                debugger.stepOutWait++;
+            if (addWait && (debug.stepOutWait < 1)) {
+                debug.stepOutWait++;
             }
         } else if (cpu.events & EVENT_DEBUG_STEP_OVER) {
-            if (r->PC == debugger.stepOverInstrEnd) {
-                debugger.data.block[debugger.stepOverInstrEnd] &= ~DBG_MASK_TEMP_EXEC;
+            if (r->PC == debug.stepOverEnd) {
+                debug.addr[debug.stepOverEnd] &= ~DBG_MASK_TEMP_EXEC;
             }
         }
     }
@@ -445,13 +445,12 @@ static void cpu_trap(void) {
 static void cpu_check_step_out(void) {
 #ifdef DEBUG_SUPPORT
     if (cpu.events & EVENT_DEBUG_STEP_OUT) {
-        int32_t spDelta = cpu.ADL ? (int32_t) cpu.registers.SPL - (int32_t) debugger.stepOutSPL :
-                          (int32_t) cpu.registers.SPS - (int32_t) debugger.stepOutSPS;
+        int32_t spDelta = cpu.ADL ? (int32_t) cpu.registers.SPL - (int32_t) debug.stepOutSPL :
+                          (int32_t) cpu.registers.SPS - (int32_t) debug.stepOutSPS;
         if (spDelta >= 0) {
-            if (!debugger.stepOutWait--) {
-                debug_clear_temp_break();
+            if (!debug.stepOutWait--) {
                 cpu_clear_mode();
-                open_debugger(DBG_STEP, 0);
+                debug_open(DBG_STEP, 0);
             }
         }
     }
@@ -819,8 +818,8 @@ void cpu_nmi(void) {
     cpu.NMI = 1;
     cpu.next = cpu.cycles;
 #ifdef DEBUG_SUPPORT
-    if (debugger.resetOpensDebugger) {
-        open_debugger(DBG_NMI_TRIGGERED, cpu.registers.PC);
+    if (debug.openOnReset) {
+        debug_open(DBG_NMI_TRIGGERED, cpu.registers.PC);
     }
 #endif
 }
@@ -830,8 +829,8 @@ void cpu_crash(const char *msg) {
     cpu.events |= EVENT_RESET;
     cpu.next = cpu.cycles;
 #ifdef DEBUG_SUPPORT
-    if (debugger.resetOpensDebugger) {
-        open_debugger(DBG_MISC_RESET, cpu.registers.PC);
+    if (debug.openOnReset) {
+        debug_open(DBG_MISC_RESET, cpu.registers.PC);
     }
 #endif
 }
@@ -912,7 +911,7 @@ void cpu_execute(void) {
         if (cpu.events & EVENT_DEBUG_STEP && !cpu.halted) {
             cpu.events &= ~EVENT_DEBUG_STEP;
             cpu_restore_next();
-            open_debugger(DBG_STEP, 0);
+            debug_open(DBG_STEP, 0);
         }
 #endif
         if (exiting || cpu.cycles >= cpu.next || cpu.events & EVENT_RESET) {
@@ -1224,7 +1223,7 @@ void cpu_execute(void) {
                             if (cpu_read_cc(context.y)) {
                                 cpu_call(cpu_fetch_word_no_prefetch(), cpu.SUFFIX);
 #ifdef DEBUG_SUPPORT
-                                debug_switch_step_mode();
+                                debug_step_switch();
 #endif
                             } else {
                                 cpu_fetch_word();
@@ -1240,7 +1239,7 @@ void cpu_execute(void) {
                                         case 0: // CALL nn
                                             cpu_call(cpu_fetch_word_no_prefetch(), cpu.SUFFIX);
 #ifdef DEBUG_SUPPORT
-                                            debug_switch_step_mode();
+                                            debug_step_switch();
 #endif
                                             break;
                                         case 1: // 0xDD prefixed opcodes

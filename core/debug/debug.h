@@ -8,11 +8,10 @@ extern "C" {
 #endif
 
 #include "../defines.h"
-#include "../port.h"
+#include <stdint.h>
+#include <stdbool.h>
 
-extern volatile bool inDebugger;
-
-eZ80portrange_t init_debugger_ports(void);
+#define VERSION_DBG 0x0003
 
 enum {
     DBG_USER,
@@ -34,22 +33,37 @@ enum {
     DBG_NUM_COMMANDS,
 };
 
+enum {
+    CMD_NONE,
+    CMD_ABORT,             /* abort() routine hit */
+    CMD_DEBUG,             /* debugger() routine hit */
+    CMD_SET_BREAKPOINT,    /* set a breakpoint with the value in DE; enabled */
+    CMD_REM_BREAKPOINT,    /* remove a breakpoint with the value in DE */
+    CMD_SET_R_WATCHPOINT,  /* set a read watchpoint with the value in DE; length in C */
+    CMD_SET_W_WATCHPOINT,  /* set a write watchpoint with the value in DE; length in C */
+    CMD_SET_RW_WATCHPOINT, /* set a read/write watchpoint with the value in DE; length in C */
+    CMD_REM_WATCHPOINT,    /* we need to remove a watchpoint with the value in DE */
+    CMD_REM_ALL_BREAK,     /* we need to remove all breakpoints */
+    CMD_REM_ALL_WATCH,     /* we need to remove all watchpoints */
+    CMD_SET_E_WATCHPOINT   /* set an empty watchpoint with the value in DE; length in C */
+};
+
 /* For Port Monitoring */
-#define DBG_MASK_NONE            0
-#define DBG_MASK_PORT_READ       1
-#define DBG_MASK_PORT_WRITE      2
-#define DBG_MASK_PORT_FREEZE     4
+#define DBG_MASK_NONE            (0 << 0)
+#define DBG_MASK_PORT_READ       (1 << 0)
+#define DBG_MASK_PORT_WRITE      (1 << 1)
+#define DBG_MASK_PORT_FREEZE     (1 << 2)
 
 /* For Memory Brakpoints */
-#define DBG_MASK_READ            1
-#define DBG_MASK_WRITE           2
-#define DBG_MASK_EXEC            4
-#define DBG_MASK_TEMP_EXEC       8
+#define DBG_MASK_READ            (1 << 0)
+#define DBG_MASK_WRITE           (1 << 1)
+#define DBG_MASK_EXEC            (1 << 2)
+#define DBG_MASK_TEMP_EXEC       (1 << 3)
 #define DBG_MASK_RW              ((DBG_MASK_READ) | (DBG_MASK_WRITE))
 
 /* For other things */
-#define DBG_INST_START_MARKER    16
-#define DBG_INST_MARKER          32
+#define DBG_INST_START_MARKER    (1 << 4)
+#define DBG_INST_MARKER          (1 << 5)
 
 #define DBG_PORT_RANGE            0xFFFF00
 #define DBGOUT_PORT_RANGE         0xFB0000
@@ -57,55 +71,43 @@ enum {
 #define SIZEOF_DBG_BUFFER         0x1000
 
 typedef struct {
-    uint8_t *block;
-    uint8_t *ports;
-} debug_data_t;
-
-typedef struct {
     uint32_t cpuCycles, cpuNext;
     uint64_t cpuBaseCycles, cpuHaltCycles, dmaCycles;
-    char *buffer;
-    char *bufferErr;
-    bool resetOpensDebugger;
-    uint32_t stepOverInstrSize;
+    char buffer[SIZEOF_DBG_BUFFER];
+    char bufferErr[SIZEOF_DBG_BUFFER];
+    bool stepOverFirstStep;
+    int8_t stepOutWait;
+    int64_t totalCycles;
     uint8_t stepOverMode;
     uint32_t stepOutSPL;
     uint16_t stepOutSPS;
-    uint32_t stepOverInstrEnd;
-    uint32_t runUntilAddress;
-    int8_t stepOutWait;
-    bool stepOverFirstStep;
-    bool ignore;
-    debug_data_t data;
-    volatile uint32_t bufferPos;
-    volatile uint32_t bufferErrPos;
-    int64_t totalCycles;
-    bool commands;
+    uint32_t stepOverEnd;
+    uint32_t runUntilAddr;
+    uint32_t bufPos;
+    uint32_t bufErrPos;
+    uint8_t *addr;
+    uint8_t *port;
+    bool open;
+    bool ignore; /* not thread safe! */
+    bool commands; /* not thread safe! */
+    bool openOnReset; /* not thread safe! */
 } debug_state_t;
 
-/* Debugging */
-extern debug_state_t debugger;
+extern debug_state_t debug;
 
-void debugger_init(void);
-void debugger_free(void);
+/* main interface functions */
+/* if using, please read the comments */
+void debug_init(void);                                               /* call before starting emulation */
+void debug_free(void);                                               /* call after emulation end */
+void debug_set_pc(uint32_t addr);                                    /* when in gui debug set program counter */
+void debug_breakwatch(uint32_t addr, unsigned int type, bool set);   /* set a breakpoint or a watchpoint */
+void debug_ports(uint16_t addr, unsigned int type, bool set);        /* set port monitor flags */
+void debug_step(int mode, uint32_t addr);                            /* set a step mode, addr points to the instruction after pc */
 
-/* Main interface functions */
-void open_debugger(int reason, uint32_t address);
-void close_debugger(void);
-
-uint8_t debug_peek_byte(uint32_t address);
-void debug_switch_step_mode(void);
-
-void debug_breakwatch(uint32_t address, unsigned int type, bool set);
-void debug_breakpoint_remove(uint32_t address);
-
-void debug_pmonitor_set(uint16_t address, unsigned int type, bool set);
-void debug_pmonitor_remove(uint16_t address);
-
-void debug_set_pc_address(uint32_t address);
-
-void debug_clear_temp_break(void);
-void debug_set_step_mode(int mode);
+/* internal core functions (no need to use or worry about) */
+void debug_open(int reason, uint32_t data);
+void debug_step_switch(void);
+void debug_step_reset(void);
 
 #ifdef __cplusplus
 }

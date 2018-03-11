@@ -81,18 +81,19 @@ void HexWidget::scroll(int value) {
 }
 
 int HexWidget::indexPrevOf(const QByteArray &ba) {
-    int res = -1;
-    QByteArray buffer{m_data.mid(0, m_cursorOffset - 1)};
-    int found = buffer.lastIndexOf(ba);
-    if (found >= 0) {
-        setOffset(res = found);
+    int res = m_data.mid(0, m_cursorOffset / 2).lastIndexOf(ba);
+    if (res >= 0) {
+        m_selectStart = res;
+        m_selectLen = ba.size();
+        m_selectEnd = m_selectStart + m_selectLen - 1;
+        setCursorOffset(res * 2, false);
     }
     return res;
 }
 
 int HexWidget::indexPrevNotOf(const QByteArray &ba) {
     int res = -1;
-    QByteArray buffer{m_data.mid(0, m_cursorOffset - 1)};
+    QByteArray buffer{m_data.mid(0, m_cursorOffset / 2 - 1)};
     std::size_t found = buffer.toStdString().find_last_not_of(ba.toStdString());
     if (found != std::string::npos) {
         setOffset(res = static_cast<int>(found));
@@ -101,11 +102,12 @@ int HexWidget::indexPrevNotOf(const QByteArray &ba) {
 }
 
 int HexWidget::indexOf(const QByteArray &ba) {
-    int res = -1;
-    QByteArray buffer{m_data.mid(m_cursorOffset, m_maxOffset)};
-    int found = buffer.indexOf(ba);
-    if (found >= 0) {
-        setOffset(res = found);
+    int res = m_data.indexOf(ba, m_cursorOffset / 2 + 1);
+    if (res >= 0) {
+        m_selectStart = res;
+        m_selectLen = ba.size();
+        m_selectEnd = m_selectStart + m_selectLen - 1;
+        setCursorOffset(res * 2, false);
     }
     return res;
 }
@@ -171,8 +173,11 @@ int HexWidget::getPosition(QPoint posa, bool allow) {
 }
 
 void HexWidget::showCursor() {
+    disconnect(verticalScrollBar(), &QScrollBar::valueChanged, this, &HexWidget::scroll);
     int addr = m_cursorOffset / 2;
-    if (addr <= m_lineStart) {
+    if (addr <= m_bytesPerLine) {
+        verticalScrollBar()->setValue(0);
+    } else if (addr <= m_lineStart) {
         verticalScrollBar()->setValue(addr / m_bytesPerLine);
     }
     if (addr > (m_lineStart + m_visibleRows * m_bytesPerLine - 1)) {
@@ -181,6 +186,8 @@ void HexWidget::showCursor() {
     if (m_cursor.x() < horizontalScrollBar()->value()) {
         horizontalScrollBar()->setValue(0);
     }
+    adjust();
+    connect(verticalScrollBar(), &QScrollBar::valueChanged, this, &HexWidget::scroll);
 }
 
 void HexWidget::adjust() {
@@ -322,7 +329,7 @@ void HexWidget::paintEvent(QPaintEvent *event) {
 
             painter.setPen(cText);
             uint8_t data = m_data[addr];
-            uint8_t flags = debugger.data.block[addr + m_base];
+            uint8_t flags = debug.addr[addr + m_base];
             bool selected = addr >= m_selectStart && addr <= m_selectEnd;
             bool modified = m_modified[addr];
 

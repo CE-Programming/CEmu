@@ -41,14 +41,10 @@ typedef struct control_state {
     bool off;
 } control_state_t;
 
-/* Global CONTROL state */
 extern control_state_t control;
 
-/* Available Functions */
 eZ80portrange_t init_control(void);
 void control_reset(void);
-
-/* Save/Restore */
 bool control_restore(FILE *image);
 bool control_save(FILE *image);
 bool protected_ports_unlocked(void);

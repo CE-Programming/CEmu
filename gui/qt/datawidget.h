@@ -22,7 +22,7 @@ public:
     void highlightCurrentLine();
     void cursorState(bool movable);
     bool labelCheck();
-    QString getSelectedAddress();
+    QString getSelectedAddr();
 
 signals:
     void gotoDisasmAddress(uint32_t address);

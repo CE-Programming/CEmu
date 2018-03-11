@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>992</width>
+    <width>1003</width>
     <height>1005</height>
    </rect>
   </property>
@@ -3412,7 +3412,7 @@
          </layout>
         </item>
         <item>
-         <widget class="DataWidget" name="disassemblyView">
+         <widget class="DataWidget" name="disasm">
           <property name="enabled">
            <bool>false</bool>
           </property>
@@ -4113,7 +4113,7 @@
           <property name="currentIndex">
            <number>0</number>
           </property>
-          <widget class="QWidget" name="page">
+          <widget class="QWidget" name="pageBreak">
            <property name="geometry">
             <rect>
              <x>0</x>
@@ -4151,7 +4151,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QTableWidget" name="breakpointView">
+             <widget class="QTableWidget" name="breakpoints">
               <property name="focusPolicy">
                <enum>Qt::NoFocus</enum>
               </property>
@@ -4254,7 +4254,7 @@
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="page_2">
+          <widget class="QWidget" name="pageWatch">
            <property name="geometry">
             <rect>
              <x>0</x>
@@ -4292,7 +4292,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QTableWidget" name="watchpointView">
+             <widget class="QTableWidget" name="watchpoints">
               <property name="focusPolicy">
                <enum>Qt::NoFocus</enum>
               </property>
@@ -4410,7 +4410,7 @@
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="page_3">
+          <widget class="QWidget" name="pagePorts">
            <property name="geometry">
             <rect>
              <x>0</x>
@@ -4448,7 +4448,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QTableWidget" name="portView">
+             <widget class="QTableWidget" name="ports">
               <property name="focusPolicy">
                <enum>Qt::NoFocus</enum>
               </property>
@@ -6060,7 +6060,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -9074,7 +9074,7 @@ QPushButton:pressed {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>992</width>
+     <width>1003</width>
      <height>22</height>
     </rect>
    </property>
@@ -9164,13 +9164,24 @@ QPushButton:pressed {
     <property name="title">
      <string>&amp;About</string>
     </property>
+    <widget class="QMenu" name="menuExtras">
+     <property name="title">
+      <string>Extras</string>
+     </property>
+     <property name="icon">
+      <iconset resource="resources.qrc">
+       <normaloff>:/icons/resources/icons/settings.png</normaloff>:/icons/resources/icons/settings.png</iconset>
+     </property>
+     <addaction name="actionHideStatusBar"/>
+     <addaction name="actionHideMenuBar"/>
+    </widget>
     <addaction name="actionCheckForUpdates"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
     <addaction name="actionAboutQt"/>
     <addaction name="actionReportBug"/>
     <addaction name="separator"/>
-    <addaction name="actionDisableMenuBar"/>
+    <addaction name="menuExtras"/>
     <addaction name="separator"/>
     <addaction name="actionResetGUI"/>
     <addaction name="actionResetALL"/>
@@ -9516,7 +9527,7 @@ QPushButton:pressed {
     <string>Bootable CEmu image</string>
    </property>
   </action>
-  <action name="actionDisableMenuBar">
+  <action name="actionHideMenuBar">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -9608,6 +9619,14 @@ QPushButton:pressed {
    </property>
    <property name="menuRole">
     <enum>QAction::ApplicationSpecificRole</enum>
+   </property>
+  </action>
+  <action name="actionHideStatusBar">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Hide status bar</string>
    </property>
   </action>
  </widget>

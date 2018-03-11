@@ -127,13 +127,15 @@ void MainWindow::memSearchEdit(HexWidget *edit) {
     int searchMode, found = 0;
     search.show();
 
-    if (!((searchMode = search.exec()) > SEARCH_CANCEL)) { return; }
+    if ((searchMode = search.exec()) == SearchWidget::Cancel) {
+        return;
+    }
 
     m_searchMode = search.getType();
     m_searchStr = search.getSearchString();
 
     QString searchString;
-    if (m_searchMode == SEARCH_MODE_HEX) {
+    if (m_searchMode == SearchWidget::Hex) {
         searchString = m_searchStr;
     } else {
         searchString = QString::fromStdString(m_searchStr.toLatin1().toHex().toStdString());
@@ -149,17 +151,17 @@ void MainWindow::memSearchEdit(HexWidget *edit) {
     QByteArray searchBa = QByteArray::fromHex(searchString.toLatin1());
 
     switch (searchMode) {
-        case SEARCH_NEXT_NOT:
+        default:
+        case SearchWidget::NextNot:
             found = edit->indexNotOf(searchBa);
             break;
-        case SEARCH_PREV:
+        case SearchWidget::Prev:
             found = edit->indexPrevOf(searchBa);
             break;
-        case SEARCH_PREV_NOT:
+        case SearchWidget::PrevNot:
             found = edit->indexPrevNotOf(searchBa);
             break;
-        case SEARCH_NEXT:
-        default:
+        case SearchWidget::Next:
             found = edit->indexOf(searchBa);
             break;
     }
@@ -192,13 +194,13 @@ void MainWindow::memGotoEdit(HexWidget *edit) {
     }
 }
 
-void MainWindow::syncHexWidget(HexWidget *edit) {
+void MainWindow::memSync(HexWidget *edit) {
     if (edit == Q_NULLPTR) {
         return;
     }
 
-    debuggerGUIPopulate();
-    updateDisasmAddr(m_addressPane, m_fromPane);
+    debugPopulate();
+    disasmUpdateAddr(m_disasmAddr, m_disasmPane);
     edit->setFocus();
 }
 
@@ -206,14 +208,14 @@ void MainWindow::flashSyncPressed() {
     if (ui->flashEdit->modifiedCount()) {
         memcpy(mem.flash.block, ui->flashEdit->data(), 0x400000);
     }
-    syncHexWidget(ui->flashEdit);
+    memSync(ui->flashEdit);
 }
 
 void MainWindow::ramSyncPressed() {
     if (ui->ramEdit->modifiedCount()) {
         memcpy(mem.ram.block, ui->ramEdit->data(), 0x65800);
     }
-    syncHexWidget(ui->ramEdit);
+    memSync(ui->ramEdit);
 }
 
 void MainWindow::memSyncEdit(HexWidget *edit) {
@@ -231,7 +233,7 @@ void MainWindow::memSyncEdit(HexWidget *edit) {
         qApp->processEvents();
     }
 
-    syncHexWidget(edit);
+    memSync(edit);
 }
 
 void MainWindow::memAsciiToggle(HexWidget *edit) {
@@ -242,12 +244,12 @@ void MainWindow::memAsciiToggle(HexWidget *edit) {
     edit->setAsciiArea(!edit->getAsciiArea());
 }
 
-void MainWindow::memContextMenu(const QPoint &posa) {
+void MainWindow::contextMem(const QPoint &posa) {
     HexWidget *p = qobject_cast<HexWidget*>(sender());
-    memoryContextMenu(p->mapToGlobal(posa), p->getOffset() + p->getBase());
+    contextMemWidget(p->mapToGlobal(posa), p->getOffset() + p->getBase());
 }
 
-void MainWindow::memoryContextMenu(const QPoint &pos, uint32_t address) {
+void MainWindow::contextMemWidget(const QPoint &pos, uint32_t address) {
     QString copyAddr = tr("Copy Address");
     QString toggleBreak = tr("Toggle Breakpoint");
     QString toggleWrite = tr("Toggle Write Watchpoint");
@@ -270,16 +272,16 @@ void MainWindow::memoryContextMenu(const QPoint &pos, uint32_t address) {
         if (item->text() == copyAddr) {
             qApp->clipboard()->setText(addr.toLatin1());
         } else if (item->text() == toggleBreak) {
-            breakpointAdd(breakpointNextLabel(), address, true, true);
+            breakAdd(breakNextLabel(), address, true, true);
             memDocksUpdate();
         } else if (item->text() == toggleRead) {
-            watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_READ, true);
+            watchAdd(watchNextLabel(), address, 1, DBG_MASK_READ, true);
             memDocksUpdate();
         } else if (item->text() == toggleWrite) {
-            watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_READ, true);
+            watchAdd(watchNextLabel(), address, 1, DBG_MASK_READ, true);
             memDocksUpdate();
         } else if (item->text() == toggleRw) {
-            watchpointAdd(watchpointNextLabel(), address, 1, DBG_MASK_READ | DBG_MASK_WRITE, true);
+            watchAdd(watchNextLabel(), address, 1, DBG_MASK_READ | DBG_MASK_WRITE, true);
             memDocksUpdate();
         }
     }

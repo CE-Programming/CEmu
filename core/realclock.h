@@ -6,13 +6,11 @@ extern "C" {
 #endif
 
 #include "port.h"
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
 
 typedef struct rtc_state {
-    /* Registers */
     uint8_t control, interrupt;
     uint8_t readSec,
             readMin,
@@ -34,14 +32,10 @@ typedef struct rtc_state {
     uint32_t revision;
 } rtc_state_t;
 
-/* Global GPT state */
 extern rtc_state_t rtc;
 
-/* Available Functions */
 eZ80portrange_t init_rtc(void);
 void rtc_reset(void);
-
-/* Save/Restore */
 bool rtc_restore(FILE *image);
 bool rtc_save(FILE *image);
 

@@ -5,30 +5,28 @@
 
 namespace Ui { class searchwidget; }
 
-enum {
-    SEARCH_CANCEL=0,
-    SEARCH_NEXT,
-    SEARCH_NEXT_NOT,
-    SEARCH_PREV,
-    SEARCH_PREV_NOT,
-    SEARCH_MAX
-};
-
-enum {
-    SEARCH_MODE_HEX=0,
-    SEARCH_MODE_ASCII
-};
-
 class SearchWidget : public QDialog {
     Q_OBJECT
 
 public:
     explicit SearchWidget(const QString&, int, QWidget *p = Q_NULLPTR);
     ~SearchWidget();
-
     int getMode();
     int getType();
     QString getSearchString();
+
+    enum {
+        Cancel,
+        Next,
+        NextNot,
+        Prev,
+        PrevNot
+    };
+
+    enum {
+        Hex,
+        Ascii
+    };
 
 public slots:
     void findNext();
@@ -39,8 +37,8 @@ public slots:
     void changeInputASCII();
 
 private:
-    int m_searchMode = SEARCH_MODE_HEX;
-    int m_searchType = SEARCH_CANCEL;
+    int m_searchMode = Hex;
+    int m_searchType = Cancel;
     Ui::searchwidget *ui;
 };
 

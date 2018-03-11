@@ -1,13 +1,11 @@
-#ifdef DEBUG_SUPPORT
-
 #include <string.h>
 #include <unordered_map>
 
 #include "disasm.h"
-#include "debug.h"
-#include "../cpu.h"
+#include "../../core/debug/debug.h"
+#include "../../core/cpu.h"
+#include "../../core/mem.h"
 
-disasm_highlights_state_t disasmHighlight;
 disasm_state_t disasm;
 
 static char tmpbuf[20];
@@ -201,10 +199,25 @@ static std::string strOffset(uint8_t data) {
 }
 
 static uint8_t disasm_fetch_byte(void) {
-    uint8_t value = debug_peek_byte(disasm.newAddress++);
-    sprintf(tmpbuf,"%02X",value);
-    disasm.instruction.data += std::string(tmpbuf);
-    disasm.instruction.size++;
+    uint32_t addr = disasm.next;
+    uint8_t value = mem_peek_byte(addr), data;
+    if ((data = debug.addr[addr])) {
+        disasm.highlight.watchR |= data & DBG_MASK_READ ? true : false;
+        disasm.highlight.watchW |= data & DBG_MASK_WRITE ? true : false;
+        disasm.highlight.breakP |= data & DBG_MASK_EXEC ? true : false;
+        if (data & DBG_INST_START_MARKER && disasm.highlight.addr < 0) {
+            disasm.highlight.addr = addr;
+        }
+    }
+
+    if (cpu.registers.PC == addr) {
+        disasm.highlight.pc = true;
+    }
+
+    sprintf(tmpbuf, "%02X", value);
+    disasm.instr.data += std::string(tmpbuf);
+    disasm.instr.size++;
+    disasm.next++;
     return value;
 }
 
@@ -252,7 +265,7 @@ static std::string disasm_read_reg(int i) {
 }
 
 static void disasm_write_reg(int i, std::string const& value) {
-    disasm.instruction.arguments = disasm_read_reg(i)+disasm.space+value;
+    disasm.instr.operands = disasm_read_reg(i)+disasm.space+value;
 }
 
 static void disasm_read_write_reg(uint8_t read, uint8_t write) {
@@ -262,7 +275,7 @@ static void disasm_read_write_reg(uint8_t read, uint8_t write) {
     value = disasm_read_reg(read);
     disasm.prefix = (read != 6) ? old_prefix : 0;
     disasm_write_reg(write, value);
-    disasm.instruction.opcode = "ld";
+    disasm.instr.opcode = "ld";
 }
 
 static std::string disasm_read_reg_prefetched(int i, std::string const& address) {
@@ -282,7 +295,7 @@ static std::string disasm_read_reg_prefetched(int i, std::string const& address)
 }
 
 static void disasm_write_reg_prefetched(int i, std::string const& address, std::string const& value) {
-    disasm.instruction.arguments = disasm_read_reg_prefetched(i, address)+disasm.space+value;
+    disasm.instr.operands = disasm_read_reg_prefetched(i, address)+disasm.space+value;
 }
 
 static std::string disasm_read_rp(int i) {
@@ -322,152 +335,152 @@ static void disasm_bli(int y, int z) {
         case 0:
             switch (z) {
                 case 2: // INIM
-                    disasm.instruction.opcode = "inim";
+                    disasm.instr.opcode = "inim";
                     break;
                 case 3: // OTIM
-                    disasm.instruction.opcode = "otim";
+                    disasm.instr.opcode = "otim";
                     break;
                 case 4: // INI2
-                    disasm.instruction.opcode = "ini2";
+                    disasm.instr.opcode = "ini2";
                     break;
             }
             break;
         case 1:
             switch (z) {
                 case 2: // INDM
-                    disasm.instruction.opcode = "indm";
+                    disasm.instr.opcode = "indm";
                     break;
                 case 3: // OTDM
-                    disasm.instruction.opcode = "otdm";
+                    disasm.instr.opcode = "otdm";
                     break;
                 case 4: // IND2
-                    disasm.instruction.opcode = "ind2";
+                    disasm.instr.opcode = "ind2";
                     break;
             }
             break;
         case 2:
             switch (z) {
                 case 2: // INIMR
-                    disasm.instruction.opcode = "inimr";
+                    disasm.instr.opcode = "inimr";
                     break;
                 case 3: // OTIMR
-                    disasm.instruction.opcode = "otimr";
+                    disasm.instr.opcode = "otimr";
                     break;
                 case 4: // INI2R
-                    disasm.instruction.opcode = "ini2r";
+                    disasm.instr.opcode = "ini2r";
                     break;
             }
             break;
         case 3:
             switch (z) {
                 case 2: // INDMR
-                    disasm.instruction.opcode = "indmr";
+                    disasm.instr.opcode = "indmr";
                     break;
                 case 3: // OTDMR
-                    disasm.instruction.opcode = "otdmr";
+                    disasm.instr.opcode = "otdmr";
                     break;
                 case 4: // IND2R
-                    disasm.instruction.opcode = "ind2r";
+                    disasm.instr.opcode = "ind2r";
                     break;
             }
             break;
         case 4:
             switch (z) {
                 case 0: // LDI
-                    disasm.instruction.opcode = "ldi";
+                    disasm.instr.opcode = "ldi";
                     break;
                 case 1: // CPI
-                    disasm.instruction.opcode = "cpi";
+                    disasm.instr.opcode = "cpi";
                     break;
                 case 2: // INI
-                    disasm.instruction.opcode = "ini";
+                    disasm.instr.opcode = "ini";
                     break;
                 case 3: // OUTI
-                    disasm.instruction.opcode = "outi";
+                    disasm.instr.opcode = "outi";
                     break;
                 case 4: // OUTI2
-                    disasm.instruction.opcode = "outi2";
+                    disasm.instr.opcode = "outi2";
                     break;
             }
             break;
         case 5:
             switch (z) {
                 case 0: // LDD
-                    disasm.instruction.opcode = "ldd";
+                    disasm.instr.opcode = "ldd";
                     break;
                 case 1: // CPD
-                   disasm.instruction.opcode = "cpd";
+                   disasm.instr.opcode = "cpd";
                     break;
                 case 2: // IND
-                   disasm.instruction.opcode = "ind";
+                   disasm.instr.opcode = "ind";
                     break;
                 case 3: // OUTD
-                    disasm.instruction.opcode = "outd";
+                    disasm.instr.opcode = "outd";
                     break;
                 case 4: // OUTD2
-                    disasm.instruction.opcode = "outd2";
+                    disasm.instr.opcode = "outd2";
                     break;
             }
             break;
         case 6:
             switch (z) {
                 case 0: // LDIR
-                    disasm.instruction.opcode = "ldir";
+                    disasm.instr.opcode = "ldir";
                     break;
                 case 1: // CPIR
-                    disasm.instruction.opcode = "cpir";
+                    disasm.instr.opcode = "cpir";
                     break;
                 case 2: // INIR
-                    disasm.instruction.opcode = "inir";
+                    disasm.instr.opcode = "inir";
                     break;
                 case 3: // OTIR
-                    disasm.instruction.opcode = "otir";
+                    disasm.instr.opcode = "otir";
                     break;
                 case 4: // OTI2R
-                    disasm.instruction.opcode = "oti2r";
+                    disasm.instr.opcode = "oti2r";
                     break;
             }
             break;
         case 7:
             switch (z) {
                 case 0: // LDDR
-                    disasm.instruction.opcode = "lddr";
+                    disasm.instr.opcode = "lddr";
                     break;
                 case 1: // CPDR
-                    disasm.instruction.opcode = "cpdr";
+                    disasm.instr.opcode = "cpdr";
                     break;
                 case 2: // INDR
-                    disasm.instruction.opcode = "indr";
+                    disasm.instr.opcode = "indr";
                     break;
                 case 3: // OTDR
-                    disasm.instruction.opcode = "otdr";
+                    disasm.instr.opcode = "otdr";
                     break;
                 case 4: // OTD2R
-                    disasm.instruction.opcode = "otdr2";
+                    disasm.instr.opcode = "otdr2";
                     break;
             }
             break;
     }
 }
 
-void disassembleInstruction(void) {
+void disasmInstr(void) {
     std::string old;
     std::string w;
     int32_t o;
 
-    disasm.newAddress = disasm.baseAddress;
+    disasm.next = disasm.base;
 
-    disasmHighlight.rWatch = false;
-    disasmHighlight.wWatch = false;
-    disasmHighlight.xBreak = false;
-    disasmHighlight.pc = false;
-    disasmHighlight.addr = -1;
+    disasm.highlight.watchR = false;
+    disasm.highlight.watchW = false;
+    disasm.highlight.breakP = false;
+    disasm.highlight.pc = false;
+    disasm.highlight.addr = -1;
 
-    disasm.instruction.data = "";
-    disasm.instruction.opcode = "";
-    disasm.instruction.modeSuffix = " ";
-    disasm.instruction.arguments = "";
-    disasm.instruction.size = 0;
+    disasm.instr.data = "";
+    disasm.instr.opcode = "";
+    disasm.instr.suffix = " ";
+    disasm.instr.operands = "";
+    disasm.instr.size = 0;
 
     disasm.iw = true;
     disasm.prefix = 0;
@@ -501,29 +514,29 @@ void disassembleInstruction(void) {
                     case 0:
                         switch (context.y) {
                             case 0:  // NOP
-                                disasm.instruction.opcode = "nop";
+                                disasm.instr.opcode = "nop";
                                 break;
                             case 1:  // EX af,af'
-                                disasm.instruction.opcode = "ex";
-                                disasm.instruction.arguments = "af"+disasm.space+"af'";
+                                disasm.instr.opcode = "ex";
+                                disasm.instr.operands = "af"+disasm.space+"af'";
                                 break;
                             case 2: // DJNZ d
                                 o = static_cast<int32_t>(disasm_fetch_offset());
-                                disasm.instruction.opcode = "djnz";
-                                disasm.instruction.arguments = strA(disasm.newAddress+o);
+                                disasm.instr.opcode = "djnz";
+                                disasm.instr.operands = strA(disasm.next+o);
                                 break;
                             case 3: // JR d
                                 o = static_cast<int32_t>(disasm_fetch_offset());
-                                disasm.instruction.opcode = "jr";
-                                disasm.instruction.arguments = strA(disasm.newAddress+o);
+                                disasm.instr.opcode = "jr";
+                                disasm.instr.operands = strA(disasm.next+o);
                                 break;
                             case 4:
                             case 5:
                             case 6:
                             case 7: // JR cc[y-4], d
                                 o = static_cast<int32_t>(disasm_fetch_offset());
-                                disasm.instruction.opcode = "jr";
-                                disasm.instruction.arguments = cc_table[context.y-4]+disasm.space+strA(disasm.newAddress+o);
+                                disasm.instr.opcode = "jr";
+                                disasm.instr.operands = cc_table[context.y-4]+disasm.space+strA(disasm.next+o);
                                 break;
                         }
                         break;
@@ -531,16 +544,16 @@ void disassembleInstruction(void) {
                         switch (context.q) {
                             case 0: // LD rr, Mmn
                                 if (context.p == 3 && disasm.prefix) { // LD IY/IX, (IX/IY + d)
-                                    disasm.instruction.opcode = "ld";
-                                    disasm.instruction.arguments = index_table[disasm.prefix ^ 1] + disasm.space+"(" + index_table[disasm.prefix] + strOffset(disasm_fetch_offset()) + ")" ;
+                                    disasm.instr.opcode = "ld";
+                                    disasm.instr.operands = index_table[disasm.prefix ^ 1] + disasm.space+"(" + index_table[disasm.prefix] + strOffset(disasm_fetch_offset()) + ")" ;
                                     break;
                                 }
-                                disasm.instruction.opcode = "ld";
-                                disasm.instruction.arguments = disasm_read_rp(context.p)+disasm.space+strW(disasm_fetch_word());
+                                disasm.instr.opcode = "ld";
+                                disasm.instr.operands = disasm_read_rp(context.p)+disasm.space+strW(disasm_fetch_word());
                                 break;
                             case 1: // ADD HL,rr
-                                disasm.instruction.opcode = "add";
-                                disasm.instruction.arguments = index_table[disasm.prefix]+disasm.space+disasm_read_rp(context.p);
+                                disasm.instr.opcode = "add";
+                                disasm.instr.operands = index_table[disasm.prefix]+disasm.space+disasm_read_rp(context.p);
                                 break;
                         }
                         break;
@@ -549,40 +562,40 @@ void disassembleInstruction(void) {
                             case 0:
                                 switch (context.p) {
                                     case 0: // LD (BC), A
-                                        disasm.instruction.opcode = "ld";
-                                        disasm.instruction.arguments = "(bc)"+disasm.space+"a";
+                                        disasm.instr.opcode = "ld";
+                                        disasm.instr.operands = "(bc)"+disasm.space+"a";
                                         break;
                                     case 1: // LD (DE), A
-                                        disasm.instruction.opcode = "ld";
-                                        disasm.instruction.arguments = "(de)"+disasm.space+"a";
+                                        disasm.instr.opcode = "ld";
+                                        disasm.instr.operands = "(de)"+disasm.space+"a";
                                         break;
                                     case 2: // LD (Mmn), HL
-                                        disasm.instruction.opcode = "ld";
-                                        disasm.instruction.arguments = strWind(disasm_fetch_word())+disasm.space+index_table[disasm.prefix];
+                                        disasm.instr.opcode = "ld";
+                                        disasm.instr.operands = strWind(disasm_fetch_word())+disasm.space+index_table[disasm.prefix];
                                         break;
                                     case 3: // LD (Mmn), A
-                                        disasm.instruction.opcode = "ld";
-                                        disasm.instruction.arguments = strWind(disasm_fetch_word())+disasm.space+"a";
+                                        disasm.instr.opcode = "ld";
+                                        disasm.instr.operands = strWind(disasm_fetch_word())+disasm.space+"a";
                                         break;
                                 }
                                 break;
                             case 1:
                                 switch (context.p) {
                                     case 0: // LD A, (BC)
-                                        disasm.instruction.opcode = "ld";
-                                        disasm.instruction.arguments = "a"+disasm.space+"(bc)";
+                                        disasm.instr.opcode = "ld";
+                                        disasm.instr.operands = "a"+disasm.space+"(bc)";
                                         break;
                                     case 1: // LD A, (DE)
-                                        disasm.instruction.opcode = "ld";
-                                        disasm.instruction.arguments = "a"+disasm.space+"(de)";
+                                        disasm.instr.opcode = "ld";
+                                        disasm.instr.operands = "a"+disasm.space+"(de)";
                                         break;
                                     case 2: // LD HL, (Mmn)
-                                        disasm.instruction.opcode = "ld";
-                                        disasm.instruction.arguments = index_table[disasm.prefix]+disasm.space+strWind(disasm_fetch_word());
+                                        disasm.instr.opcode = "ld";
+                                        disasm.instr.operands = index_table[disasm.prefix]+disasm.space+strWind(disasm_fetch_word());
                                         break;
                                     case 3: // LD A, (Mmn)
-                                        disasm.instruction.opcode = "ld";
-                                        disasm.instruction.arguments = "a"+disasm.space+strWind(disasm_fetch_word());
+                                        disasm.instr.opcode = "ld";
+                                        disasm.instr.operands = "a"+disasm.space+strWind(disasm_fetch_word());
                                         break;
                                 }
                                 break;
@@ -591,46 +604,46 @@ void disassembleInstruction(void) {
                     case 3:
                         switch (context.q) {
                             case 0: // INC rp[p]
-                                disasm.instruction.opcode = "inc";
-                                disasm.instruction.arguments = disasm_read_rp(context.p);
+                                disasm.instr.opcode = "inc";
+                                disasm.instr.operands = disasm_read_rp(context.p);
                                 break;
                             case 1: // DEC rp[p]
-                                disasm.instruction.opcode = "dec";
-                                disasm.instruction.arguments = disasm_read_rp(context.p);
+                                disasm.instr.opcode = "dec";
+                                disasm.instr.operands = disasm_read_rp(context.p);
                                 break;
                         }
                         break;
                     case 4: // INC r[y]
-                        disasm.instruction.opcode = "inc";
+                        disasm.instr.opcode = "inc";
                         w = (context.y == 6) ? disasm_index_address() : "0";
-                        disasm.instruction.arguments = disasm_read_reg_prefetched(context.y, w);
+                        disasm.instr.operands = disasm_read_reg_prefetched(context.y, w);
                         break;
                     case 5: // DEC r[y]
-                        disasm.instruction.opcode = "dec";
+                        disasm.instr.opcode = "dec";
                         w = (context.y == 6) ? disasm_index_address() : "0";
-                        disasm.instruction.arguments = disasm_read_reg_prefetched(context.y, w);
+                        disasm.instr.operands = disasm_read_reg_prefetched(context.y, w);
                         break;
                     case 6: // LD r[y], n
                         if (context.y == 7 && disasm.prefix) { // LD (IX/IY + d), IY/IX
-                            disasm.instruction.opcode = "ld";
-                            disasm.instruction.arguments = "("+index_table[disasm.prefix]+strOffset(disasm_fetch_offset())+")"+disasm.space+index_table[disasm.prefix ^ 1];
+                            disasm.instr.opcode = "ld";
+                            disasm.instr.operands = "("+index_table[disasm.prefix]+strOffset(disasm_fetch_offset())+")"+disasm.space+index_table[disasm.prefix ^ 1];
                             break;
                         }
-                        disasm.instruction.opcode = "ld";
+                        disasm.instr.opcode = "ld";
                         w = (context.y == 6) ? disasm_index_address() : "";
                         disasm_write_reg_prefetched(context.y, w, strB(disasm_fetch_byte()));
                         break;
                     case 7:
                         if (disasm.prefix) {
                             if (context.q) { // LD (IX/IY + d), rp3[p]
-                                disasm.instruction.opcode = "ld";
-                                disasm.instruction.arguments = "("+index_table[disasm.prefix]+strOffset(disasm_fetch_offset())+")"+disasm.space+disasm_read_rp3(context.p);
+                                disasm.instr.opcode = "ld";
+                                disasm.instr.operands = "("+index_table[disasm.prefix]+strOffset(disasm_fetch_offset())+")"+disasm.space+disasm_read_rp3(context.p);
                             } else { // LD rp3[p], (IX/IY + d)
-                                disasm.instruction.opcode = "ld";
-                                disasm.instruction.arguments = disasm_read_rp3(context.p)+disasm.space+"("+index_table[disasm.prefix]+strOffset(disasm_fetch_offset())+")";
+                                disasm.instr.opcode = "ld";
+                                disasm.instr.operands = disasm_read_rp3(context.p)+disasm.space+"("+index_table[disasm.prefix]+strOffset(disasm_fetch_offset())+")";
                             }
                         } else {
-                            disasm.instruction.opcode = rot_acc_table[context.y];
+                            disasm.instr.opcode = rot_acc_table[context.y];
                         }
                         break;
                 }
@@ -640,42 +653,42 @@ void disassembleInstruction(void) {
                     switch (context.z) {
                         case 0: // .SIS
                             disasm.suffix = 1;
-                            disasm.instruction.modeSuffix = ".sis ";
+                            disasm.instr.suffix = ".sis ";
                             disasm.l = false;
                             disasm.il = false;
                             continue;
                         case 1: // .LIS
                             disasm.suffix = 1;
-                            disasm.instruction.modeSuffix = ".lis ";
+                            disasm.instr.suffix = ".lis ";
                             disasm.l = true;
                             disasm.il = false;
                             continue;
                         case 2: // .SIL
                             disasm.suffix = 1;
-                            disasm.instruction.modeSuffix = ".sil ";
+                            disasm.instr.suffix = ".sil ";
                             disasm.l = false;
                             disasm.il = true;
                             continue;
                         case 3: // .LIL
                             disasm.suffix = 1;
-                            disasm.instruction.modeSuffix = ".lil ";
+                            disasm.instr.suffix = ".lil ";
                             disasm.l = true;
                             disasm.il = true;
                             continue;
                         case 6: // HALT
-                            disasm.instruction.opcode = "halt";
+                            disasm.instr.opcode = "halt";
                             break;
                         case 4: // LD H, H
-                            disasm.instruction.opcode = "ld";
-                            disasm.instruction.arguments = index_h[disasm.prefix]+disasm.space+index_h[disasm.prefix];
+                            disasm.instr.opcode = "ld";
+                            disasm.instr.operands = index_h[disasm.prefix]+disasm.space+index_h[disasm.prefix];
                             break;
                         case 5: // LD L, L
-                            disasm.instruction.opcode = "ld";
-                            disasm.instruction.arguments = index_l[disasm.prefix]+disasm.space+index_l[disasm.prefix];
+                            disasm.instr.opcode = "ld";
+                            disasm.instr.operands = index_l[disasm.prefix]+disasm.space+index_l[disasm.prefix];
                             break;
                         case 7: // LD A, A
-                            disasm.instruction.opcode = "ld";
-                            disasm.instruction.arguments = "a"+disasm.space+"a";
+                            disasm.instr.opcode = "ld";
+                            disasm.instr.operands = "a"+disasm.space+"a";
                             break;
                         default:
                             abort();
@@ -685,50 +698,50 @@ void disassembleInstruction(void) {
                 }
                 break;
             case 2: // ALU[y] r[z]
-                disasm.instruction.opcode = alu_table[context.y];
-                disasm.instruction.arguments = "a"+disasm.space+disasm_read_reg(context.z);
+                disasm.instr.opcode = alu_table[context.y];
+                disasm.instr.operands = "a"+disasm.space+disasm_read_reg(context.z);
                 break;
             case 3:
                 switch (context.z) {
                     case 0: // RET cc[y]
-                        disasm.instruction.opcode = "ret";
-                        disasm.instruction.arguments = cc_table[context.y];
+                        disasm.instr.opcode = "ret";
+                        disasm.instr.operands = cc_table[context.y];
                         break;
                     case 1:
                         switch (context.q) {
                             case 0: // POP rp2[p]
-                                disasm.instruction.opcode = "pop";
-                                disasm.instruction.arguments = disasm_read_rp2(context.p);
+                                disasm.instr.opcode = "pop";
+                                disasm.instr.operands = disasm_read_rp2(context.p);
                                 break;
                             case 1:
                                 switch (context.p) {
                                     case 0: // RET
-                                        disasm.instruction.opcode = "ret";
+                                        disasm.instr.opcode = "ret";
                                         break;
                                     case 1: // EXX
-                                        disasm.instruction.opcode = "exx";
+                                        disasm.instr.opcode = "exx";
                                         break;
                                     case 2: // JP (rr)
-                                        disasm.instruction.opcode = "jp";
-                                        disasm.instruction.arguments = "("+index_table[disasm.prefix]+")";
+                                        disasm.instr.opcode = "jp";
+                                        disasm.instr.operands = "("+index_table[disasm.prefix]+")";
                                         break;
                                     case 3: // LD SP, INDEX
-                                        disasm.instruction.opcode = "ld";
-                                        disasm.instruction.arguments = "sp"+disasm.space+index_table[disasm.prefix];
+                                        disasm.instr.opcode = "ld";
+                                        disasm.instr.operands = "sp"+disasm.space+index_table[disasm.prefix];
                                         break;
                                 }
                                 break;
                         }
                         break;
                     case 2: // JP cc[y], nn
-                        disasm.instruction.opcode = "jp";
-                        disasm.instruction.arguments = cc_table[context.y]+disasm.space+strA(disasm_fetch_word());
+                        disasm.instr.opcode = "jp";
+                        disasm.instr.operands = cc_table[context.y]+disasm.space+strA(disasm_fetch_word());
                         break;
                     case 3:
                         switch (context.y) {
                             case 0: // JP nn
-                                disasm.instruction.opcode = "jp";
-                                disasm.instruction.arguments = strA(disasm_fetch_word());
+                                disasm.instr.opcode = "jp";
+                                disasm.instr.operands = strA(disasm_fetch_word());
                                 break;
                             case 1: // 0xCB prefixed opcodes
                                 w = disasm_index_address();
@@ -736,62 +749,62 @@ void disassembleInstruction(void) {
                                 old = disasm_read_reg_prefetched(context.z, w);
                                 switch (context.x) {
                                     case 0: // rot[y] r[z]
-                                        disasm.instruction.opcode = rot_table[context.y];
-                                        disasm.instruction.arguments = old;
+                                        disasm.instr.opcode = rot_table[context.y];
+                                        disasm.instr.operands = old;
                                         break;
                                     case 1: // BIT y, r[z]
-                                        disasm.instruction.opcode = "bit";
-                                        disasm.instruction.arguments = std::to_string(context.y)+disasm.space+old;
+                                        disasm.instr.opcode = "bit";
+                                        disasm.instr.operands = std::to_string(context.y)+disasm.space+old;
                                         break;
                                     case 2: // RES y, r[z]
-                                        disasm.instruction.opcode = "res";
-                                        disasm.instruction.arguments = std::to_string(context.y)+disasm.space+old;
+                                        disasm.instr.opcode = "res";
+                                        disasm.instr.operands = std::to_string(context.y)+disasm.space+old;
                                         break;
                                     case 3: // SET y, r[z]
-                                        disasm.instruction.opcode = "set";
-                                        disasm.instruction.arguments = std::to_string(context.y)+disasm.space+old;
+                                        disasm.instr.opcode = "set";
+                                        disasm.instr.operands = std::to_string(context.y)+disasm.space+old;
                                         break;
                                 }
                                 break;
                             case 2: // OUT (n), A
-                                disasm.instruction.opcode = "out";
-                                disasm.instruction.arguments = strBind(disasm_fetch_byte())+disasm.space+"a";
+                                disasm.instr.opcode = "out";
+                                disasm.instr.operands = strBind(disasm_fetch_byte())+disasm.space+"a";
                                 break;
                             case 3: // IN A, (n)
-                                disasm.instruction.opcode = "in";
-                                disasm.instruction.arguments = "a"+disasm.space+strBind(disasm_fetch_byte());
+                                disasm.instr.opcode = "in";
+                                disasm.instr.operands = "a"+disasm.space+strBind(disasm_fetch_byte());
                                 break;
                             case 4: // EX (SP), HL/I
-                                disasm.instruction.opcode = "ex";
-                                disasm.instruction.arguments = "(sp)"+disasm.space+index_table[disasm.prefix];
+                                disasm.instr.opcode = "ex";
+                                disasm.instr.operands = "(sp)"+disasm.space+index_table[disasm.prefix];
                                 break;
                             case 5: // EX DE, HL
-                                disasm.instruction.opcode = "ex";
-                                disasm.instruction.arguments = "de"+disasm.space+"hl";
+                                disasm.instr.opcode = "ex";
+                                disasm.instr.operands = "de"+disasm.space+"hl";
                                 break;
                             case 6: // DI
-                                disasm.instruction.opcode = "di";
+                                disasm.instr.opcode = "di";
                                 break;
                             case 7: // EI
-                                disasm.instruction.opcode = "ei";
+                                disasm.instr.opcode = "ei";
                                 break;
                         }
                         break;
                     case 4: // CALL cc[y], nn
-                        disasm.instruction.opcode = "call";
-                        disasm.instruction.arguments = cc_table[context.y]+disasm.space+strA(disasm_fetch_word());
+                        disasm.instr.opcode = "call";
+                        disasm.instr.operands = cc_table[context.y]+disasm.space+strA(disasm_fetch_word());
                         break;
                     case 5:
                         switch (context.q) {
                             case 0: // PUSH r2p[p]
-                                disasm.instruction.opcode = "push";
-                                disasm.instruction.arguments = disasm_read_rp2(context.p);
+                                disasm.instr.opcode = "push";
+                                disasm.instr.operands = disasm_read_rp2(context.p);
                                 break;
                             case 1:
                                 switch (context.p) {
                                     case 0: // CALL nn
-                                        disasm.instruction.opcode = "call";
-                                        disasm.instruction.arguments = strA(disasm_fetch_word());
+                                        disasm.instr.opcode = "call";
+                                        disasm.instr.operands = strA(disasm_fetch_word());
                                         break;
                                     case 1: // 0xDD prefixed opcodes
                                         disasm.prefix = 2;
@@ -804,56 +817,56 @@ void disassembleInstruction(void) {
                                                 switch (context.z) {
                                                     case 0:
                                                         if (context.y == 6) { // OPCODETRAP
-                                                            disasm.instruction.opcode = "OPCODETRAP";
-                                                            disasm.instruction.arguments.clear();
+                                                            disasm.instr.opcode = "OPCODETRAP";
+                                                            disasm.instr.operands.clear();
                                                         } else { // IN0 r[y], (n)
-                                                            disasm.instruction.opcode = "in0";
-                                                            disasm.instruction.arguments = disasm_read_reg(context.y)+disasm.space+strBind(disasm_fetch_byte());
+                                                            disasm.instr.opcode = "in0";
+                                                            disasm.instr.operands = disasm_read_reg(context.y)+disasm.space+strBind(disasm_fetch_byte());
                                                         }
                                                         break;
                                                      case 1:
                                                         if (context.y == 6) { // LD IY, (HL)
-                                                            disasm.instruction.opcode = "ld";
-                                                            disasm.instruction.arguments = "iy"+disasm.space+"(hl)";
+                                                            disasm.instr.opcode = "ld";
+                                                            disasm.instr.operands = "iy"+disasm.space+"(hl)";
                                                         } else { // OUT0 (n), r[y]
-                                                            disasm.instruction.opcode = "out0";
-                                                            disasm.instruction.arguments = strBind(disasm_fetch_byte())+disasm.space+disasm_read_reg(context.y);
+                                                            disasm.instr.opcode = "out0";
+                                                            disasm.instr.operands = strBind(disasm_fetch_byte())+disasm.space+disasm_read_reg(context.y);
                                                         }
                                                         break;
                                                     case 2: // LEA rp3[p], IX + d
                                                     case 3: // LEA rp3[p], IY + d
                                                         if (context.q) { // OPCODETRAP
-                                                            disasm.instruction.opcode = "OPCODETRAP";
-                                                            disasm.instruction.arguments.clear();
+                                                            disasm.instr.opcode = "OPCODETRAP";
+                                                            disasm.instr.operands.clear();
                                                         } else {
                                                             disasm.prefix = context.z;
-                                                            disasm.instruction.opcode = "lea";
-                                                            disasm.instruction.arguments = disasm_read_rp3(context.p)+disasm.space+index_table[context.z]+strOffset(disasm_fetch_offset());
+                                                            disasm.instr.opcode = "lea";
+                                                            disasm.instr.operands = disasm_read_rp3(context.p)+disasm.space+index_table[context.z]+strOffset(disasm_fetch_offset());
                                                         }
                                                         break;
                                                     case 4: // TST A, r[y]
-                                                        disasm.instruction.opcode = "tst";
-                                                        disasm.instruction.arguments = "a"+disasm.space+disasm_read_reg(context.y);
+                                                        disasm.instr.opcode = "tst";
+                                                        disasm.instr.operands = "a"+disasm.space+disasm_read_reg(context.y);
                                                         break;
                                                     case 6:
                                                         if (context.y == 7) { // LD (HL), IY
-                                                            disasm.instruction.opcode = "ld";
-                                                            disasm.instruction.arguments = "(hl)"+disasm.space+"iy";
+                                                            disasm.instr.opcode = "ld";
+                                                            disasm.instr.operands = "(hl)"+disasm.space+"iy";
                                                             break;
                                                         }
                                                         // fallthrough
                                                     case 5: // OPCODETRAP
-                                                        disasm.instruction.opcode = "OPCODETRAP";
-                                                        disasm.instruction.arguments.clear();
+                                                        disasm.instr.opcode = "OPCODETRAP";
+                                                        disasm.instr.operands.clear();
                                                         break;
                                                     case 7:
                                                         disasm.prefix = 2;
                                                         if (context.q) { // LD (HL), rp3[p]
-                                                            disasm.instruction.opcode = "ld";
-                                                            disasm.instruction.arguments = "(hl)"+disasm.space+disasm_read_rp3(context.p);
+                                                            disasm.instr.opcode = "ld";
+                                                            disasm.instr.operands = "(hl)"+disasm.space+disasm_read_rp3(context.p);
                                                         } else { // LD rp3[p], (HL)
-                                                            disasm.instruction.opcode = "ld";
-                                                            disasm.instruction.arguments = disasm_read_rp3(context.p)+disasm.space+"(hl)";
+                                                            disasm.instr.opcode = "ld";
+                                                            disasm.instr.operands = disasm_read_rp3(context.p)+disasm.space+"(hl)";
                                                         }
                                                         break;
                                                 }
@@ -862,98 +875,98 @@ void disassembleInstruction(void) {
                                                 switch (context.z) {
                                                     case 0:
                                                         if (context.y == 6) { // OPCODETRAP (ADL)
-                                                            disasm.instruction.opcode = "OPCODETRAP";
-                                                            disasm.instruction.arguments.clear();
+                                                            disasm.instr.opcode = "OPCODETRAP";
+                                                            disasm.instr.operands.clear();
                                                         } else { // IN r[y], (BC)
-                                                            disasm.instruction.opcode = "in";
-                                                            disasm.instruction.arguments = disasm_read_reg(context.y)+disasm.space+"(bc)";
+                                                            disasm.instr.opcode = "in";
+                                                            disasm.instr.operands = disasm_read_reg(context.y)+disasm.space+"(bc)";
                                                         }
                                                         break;
                                                     case 1:
                                                         if (context.y == 6) { // OPCODETRAP (ADL)
-                                                            disasm.instruction.opcode = "OPCODETRAP";
-                                                            disasm.instruction.arguments.clear();
+                                                            disasm.instr.opcode = "OPCODETRAP";
+                                                            disasm.instr.operands.clear();
                                                         } else { // OUT (BC), r[y]
-                                                            disasm.instruction.opcode = "out";
-                                                            disasm.instruction.arguments = "(bc)"+disasm.space+disasm_read_reg(context.y);
+                                                            disasm.instr.opcode = "out";
+                                                            disasm.instr.operands = "(bc)"+disasm.space+disasm_read_reg(context.y);
                                                         }
                                                         break;
                                                     case 2:
                                                         if (context.q == 0) { // SBC HL, rp[p]
-                                                            disasm.instruction.opcode = "sbc";
-                                                            disasm.instruction.arguments = "hl"+disasm.space+disasm_read_rp(context.p);
+                                                            disasm.instr.opcode = "sbc";
+                                                            disasm.instr.operands = "hl"+disasm.space+disasm_read_rp(context.p);
                                                         } else { // ADC HL, rp[p]
-                                                            disasm.instruction.opcode = "adc";
-                                                            disasm.instruction.arguments = "hl"+disasm.space+disasm_read_rp(context.p);
+                                                            disasm.instr.opcode = "adc";
+                                                            disasm.instr.operands = "hl"+disasm.space+disasm_read_rp(context.p);
                                                         }
                                                         break;
                                                     case 3:
                                                         if (context.q == 0) { // LD (nn), rp[p]
-                                                            disasm.instruction.opcode = "ld";
-                                                            disasm.instruction.arguments = strWind(disasm_fetch_word())+disasm.space+disasm_read_rp(context.p);
+                                                            disasm.instr.opcode = "ld";
+                                                            disasm.instr.operands = strWind(disasm_fetch_word())+disasm.space+disasm_read_rp(context.p);
                                                         } else { // LD rp[p], (nn)
-                                                            disasm.instruction.opcode = "ld";
-                                                            disasm.instruction.arguments = disasm_read_rp(context.p)+disasm.space+strWind(disasm_fetch_word());
+                                                            disasm.instr.opcode = "ld";
+                                                            disasm.instr.operands = disasm_read_rp(context.p)+disasm.space+strWind(disasm_fetch_word());
                                                         }
                                                         break;
                                                     case 4:
                                                         if (context.q == 0) {
                                                             switch (context.p) {
                                                                 case 0:  // NEG
-                                                                    disasm.instruction.opcode = "neg";
+                                                                    disasm.instr.opcode = "neg";
                                                                     break;
                                                                 case 1:  // LEA IX, IY + d
-                                                                    disasm.instruction.opcode = "lea";
-                                                                    disasm.instruction.arguments = "ix"+disasm.space+"iy"+strOffset(disasm_fetch_byte());
+                                                                    disasm.instr.opcode = "lea";
+                                                                    disasm.instr.operands = "ix"+disasm.space+"iy"+strOffset(disasm_fetch_byte());
                                                                     break;
                                                                 case 2:  // TST A, n
-                                                                    disasm.instruction.opcode = "tst";
-                                                                    disasm.instruction.arguments = "a"+disasm.space+strB(disasm_fetch_byte());
+                                                                    disasm.instr.opcode = "tst";
+                                                                    disasm.instr.operands = "a"+disasm.space+strB(disasm_fetch_byte());
                                                                     break;
                                                                 case 3:  // TSTIO n
-                                                                    disasm.instruction.opcode = "tstio";
-                                                                    disasm.instruction.arguments = strB(disasm_fetch_byte());
+                                                                    disasm.instr.opcode = "tstio";
+                                                                    disasm.instr.operands = strB(disasm_fetch_byte());
                                                                     break;
                                                             }
                                                         }
                                                         else { // MLT rp[p]
-                                                            disasm.instruction.opcode = "mlt";
-                                                            disasm.instruction.arguments = disasm_read_rp(context.p);
+                                                            disasm.instr.opcode = "mlt";
+                                                            disasm.instr.operands = disasm_read_rp(context.p);
                                                             break;
                                                         }
                                                         break;
                                                     case 5:
                                                         switch (context.y) {
                                                             case 0: // RETN
-                                                                disasm.instruction.opcode = "retn";
+                                                                disasm.instr.opcode = "retn";
                                                                 break;
                                                             case 1: // RETI
-                                                                disasm.instruction.opcode = "reti";
+                                                                disasm.instr.opcode = "reti";
                                                                 break;
                                                             case 2: // LEA IY, IX + d
-                                                                disasm.instruction.opcode = "lea";
-                                                                disasm.instruction.arguments = "iy"+disasm.space+"ix"+strOffset(disasm_fetch_offset());
+                                                                disasm.instr.opcode = "lea";
+                                                                disasm.instr.operands = "iy"+disasm.space+"ix"+strOffset(disasm_fetch_offset());
                                                                 break;
                                                             case 3:
                                                             case 6: // OPCODETRAP
-                                                                disasm.instruction.opcode = "OPCODETRAP";
-                                                                disasm.instruction.arguments.clear();
+                                                                disasm.instr.opcode = "OPCODETRAP";
+                                                                disasm.instr.operands.clear();
                                                                 break;
                                                             case 4: // PEA IX + d
-                                                                disasm.instruction.opcode = "pea";
-                                                                disasm.instruction.arguments = "ix"+strOffset(disasm_fetch_offset());
+                                                                disasm.instr.opcode = "pea";
+                                                                disasm.instr.operands = "ix"+strOffset(disasm_fetch_offset());
                                                                 break;
                                                             case 5: // LD MB, A
                                                                 if (disasm.il) {
-                                                                    disasm.instruction.opcode = "ld";
-                                                                    disasm.instruction.arguments = "mb"+disasm.space+"a";
+                                                                    disasm.instr.opcode = "ld";
+                                                                    disasm.instr.operands = "mb"+disasm.space+"a";
                                                                 } else { // OPCODETRAP
-                                                                    disasm.instruction.opcode = "OPCODETRAP";
-                                                                    disasm.instruction.arguments.clear();
+                                                                    disasm.instr.opcode = "OPCODETRAP";
+                                                                    disasm.instr.operands.clear();
                                                                 }
                                                                 break;
                                                             case 7: // STMIX
-                                                                disasm.instruction.opcode = "stmix";
+                                                                disasm.instr.opcode = "stmix";
                                                                 break;
                                                         }
                                                         break;
@@ -962,61 +975,61 @@ void disassembleInstruction(void) {
                                                             case 0:
                                                             case 2:
                                                             case 3: // IM im[y]
-                                                                disasm.instruction.opcode = "im";
-                                                                disasm.instruction.arguments = im_table[context.y];
+                                                                disasm.instr.opcode = "im";
+                                                                disasm.instr.operands = im_table[context.y];
                                                                 break;
                                                             case 1: // OPCODETRAP
-                                                                disasm.instruction.opcode = "OPCODETRAP";
-                                                                disasm.instruction.arguments.clear();
+                                                                disasm.instr.opcode = "OPCODETRAP";
+                                                                disasm.instr.operands.clear();
                                                                 break;
                                                             case 4: // PEA IY + d
-                                                                disasm.instruction.opcode = "pea";
-                                                                disasm.instruction.arguments = "iy"+strOffset(disasm_fetch_offset());
+                                                                disasm.instr.opcode = "pea";
+                                                                disasm.instr.operands = "iy"+strOffset(disasm_fetch_offset());
                                                                 break;
                                                             case 5: // LD A, MB
                                                                 if (disasm.il) {
-                                                                    disasm.instruction.opcode = "ld";
-                                                                    disasm.instruction.arguments = "a"+disasm.space+"mb";
+                                                                    disasm.instr.opcode = "ld";
+                                                                    disasm.instr.operands = "a"+disasm.space+"mb";
                                                                 } else { // OPCODETRAP
-                                                                    disasm.instruction.opcode = "OPCODETRAP";
-                                                                    disasm.instruction.arguments.clear();
+                                                                    disasm.instr.opcode = "OPCODETRAP";
+                                                                    disasm.instr.operands.clear();
                                                                 }
                                                                 break;
                                                             case 6: // SLP
-                                                                disasm.instruction.arguments = "slp";
+                                                                disasm.instr.operands = "slp";
                                                                 break;
                                                             case 7: // RSMIX
-                                                                disasm.instruction.opcode = "rsmix";
+                                                                disasm.instr.opcode = "rsmix";
                                                                 break;
                                                         }
                                                         break;
                                                     case 7:
                                                         switch (context.y) {
                                                             case 0: // LD I, A
-                                                                disasm.instruction.opcode = "ld";
-                                                                disasm.instruction.arguments = "i"+disasm.space+"a";
+                                                                disasm.instr.opcode = "ld";
+                                                                disasm.instr.operands = "i"+disasm.space+"a";
                                                                 break;
                                                             case 1: // LD R, A
-                                                                disasm.instruction.opcode = "ld";
-                                                                disasm.instruction.arguments = "r"+disasm.space+"a";
+                                                                disasm.instr.opcode = "ld";
+                                                                disasm.instr.operands = "r"+disasm.space+"a";
                                                                 break;
                                                             case 2: // LD A, I
-                                                                disasm.instruction.opcode = "ld";
-                                                                disasm.instruction.arguments = "a"+disasm.space+"i";
+                                                                disasm.instr.opcode = "ld";
+                                                                disasm.instr.operands = "a"+disasm.space+"i";
                                                                 break;
                                                             case 3: // LD A, R
-                                                                disasm.instruction.opcode = "ld";
-                                                                disasm.instruction.arguments = "a"+disasm.space+"r";
+                                                                disasm.instr.opcode = "ld";
+                                                                disasm.instr.operands = "a"+disasm.space+"r";
                                                                 break;
                                                             case 4: // RRD
-                                                                disasm.instruction.opcode = "rrd";
+                                                                disasm.instr.opcode = "rrd";
                                                                 break;
                                                             case 5: // RLD
-                                                                disasm.instruction.opcode = "rld";
+                                                                disasm.instr.opcode = "rld";
                                                                 break;
                                                             default: // OPCODETRAP
-                                                                disasm.instruction.opcode = "OPCODETRAP";
-                                                                disasm.instruction.arguments.clear();
+                                                                disasm.instr.opcode = "OPCODETRAP";
+                                                                disasm.instr.operands.clear();
                                                                 break;
                                                         }
                                                         break;
@@ -1026,44 +1039,44 @@ void disassembleInstruction(void) {
                                                 if (context.z <= 4) { // bli[y,z]
                                                     disasm_bli(context.y, context.z);
                                                 } else { // OPCODETRAP
-                                                    disasm.instruction.opcode = "OPCODETRAP";
-                                                    disasm.instruction.arguments.clear();
+                                                    disasm.instr.opcode = "OPCODETRAP";
+                                                    disasm.instr.operands.clear();
                                                 }
                                                 break;
                                             case 3:  // There are only a few of these, so a simple switch for these shouldn't matter too much
                                                 switch(context.opcode) {
                                                     case 0xC2: // INIRX
-                                                        disasm.instruction.opcode = "inirx";
+                                                        disasm.instr.opcode = "inirx";
                                                         break;
                                                     case 0xC3: // OTIRX
-                                                        disasm.instruction.opcode = "otirx";
+                                                        disasm.instr.opcode = "otirx";
                                                         break;
                                                     case 0xC7: // LD I, HL
-                                                        disasm.instruction.opcode = "ld";
-                                                        disasm.instruction.arguments = "i"+disasm.space+"hl";
+                                                        disasm.instr.opcode = "ld";
+                                                        disasm.instr.operands = "i"+disasm.space+"hl";
                                                         break;
                                                     case 0xD7: // LD HL, I
-                                                        disasm.instruction.opcode = "ld";
-                                                        disasm.instruction.arguments = "hl"+disasm.space+"i";
+                                                        disasm.instr.opcode = "ld";
+                                                        disasm.instr.operands = "hl"+disasm.space+"i";
                                                         break;
                                                     case 0xCA: // INDRX
-                                                        disasm.instruction.opcode = "indrx";
+                                                        disasm.instr.opcode = "indrx";
                                                         break;
                                                     case 0xCB: // OTDRX
-                                                        disasm.instruction.opcode = "otdrx";
+                                                        disasm.instr.opcode = "otdrx";
                                                         break;
                                                     case 0xEE: // flash erase
-                                                        disasm.instruction.opcode = "FLASH_ERASE";
+                                                        disasm.instr.opcode = "FLASH_ERASE";
                                                         break;
                                                     default:   // OPCODETRAP
-                                                        disasm.instruction.opcode = "OPCODETRAP";
-                                                        disasm.instruction.arguments.clear();
+                                                        disasm.instr.opcode = "OPCODETRAP";
+                                                        disasm.instr.operands.clear();
                                                         break;
                                                 }
                                                 break;
                                             default: // OPCODETRAP
-                                                disasm.instruction.opcode = "OPCODETRAP";
-                                                disasm.instruction.arguments.clear();
+                                                disasm.instr.opcode = "OPCODETRAP";
+                                                disasm.instr.operands.clear();
                                                 break;
                                         }
                                         break;
@@ -1075,57 +1088,55 @@ void disassembleInstruction(void) {
                         }
                         break;
                     case 6: // alu[y] n
-                        disasm.instruction.opcode = alu_table[context.y];
-                        disasm.instruction.arguments = "a"+disasm.space+strB(disasm_fetch_byte());
+                        disasm.instr.opcode = alu_table[context.y];
+                        disasm.instr.operands = "a"+disasm.space+strB(disasm_fetch_byte());
                         break;
                     case 7: // RST y*8
-                        disasm.instruction.opcode = "rst";
-                        disasm.instruction.arguments = strA(context.y << 3);
+                        disasm.instr.opcode = "rst";
+                        disasm.instr.operands = strA(context.y << 3);
                         break;
                 }
                 break;
         }
         break;
     }
-    int32_t size = disasmHighlight.addr - disasm.baseAddress;
+    int32_t size = disasm.highlight.addr - disasm.base;
     if (size > 0) {
         int precision;
-        disasm.newAddress = disasm.baseAddress;
+        disasm.next = disasm.base;
 
-        disasmHighlight.rWatch = false;
-        disasmHighlight.wWatch = false;
-        disasmHighlight.xBreak = false;
-        disasmHighlight.pc = false;
-        disasmHighlight.addr = -1;
+        disasm.highlight.watchR = false;
+        disasm.highlight.watchW = false;
+        disasm.highlight.breakP = false;
+        disasm.highlight.pc = false;
+        disasm.highlight.addr = -1;
 
-        disasm.instruction.data = "";
+        disasm.instr.data = "";
         if (size % 3 == 0) {
             size /= 3;
             precision = 6;
-            disasm.instruction.opcode = ".dl";
+            disasm.instr.opcode = ".dl";
             disasm.il = true;
         } else if (size % 2 == 0) {
             size /= 2;
             precision = 4;
-            disasm.instruction.opcode = ".dw";
+            disasm.instr.opcode = ".dw";
             disasm.il = false;
         } else {
             precision = 2;
-            disasm.instruction.opcode = ".db";
+            disasm.instr.opcode = ".db";
             disasm.iw = false;
         }
-        disasm.instruction.modeSuffix = " ";
-        disasm.instruction.arguments = "";
-        disasm.instruction.size = 0;
+        disasm.instr.suffix = " ";
+        disasm.instr.operands = "";
+        disasm.instr.size = 0;
 
         do {
             sprintf(tmpbuf,"$%0*X", precision, disasm_fetch_word());
-            disasm.instruction.arguments += tmpbuf;
+            disasm.instr.operands += tmpbuf;
             if (--size) {
-                disasm.instruction.arguments += ',';
+                disasm.instr.operands += ',';
             }
         } while (size);
     }
 }
-
-#endif

@@ -54,6 +54,7 @@ const QString MainWindow::SETTING_WINDOW_STATE              = QStringLiteral("Wi
 const QString MainWindow::SETTING_WINDOW_GEOMETRY           = QStringLiteral("Window/geometry");
 const QString MainWindow::SETTING_WINDOW_SEPARATOR          = QStringLiteral("Window/boundaries");
 const QString MainWindow::SETTING_WINDOW_MENUBAR            = QStringLiteral("Window/menubar");
+const QString MainWindow::SETTING_WINDOW_STATUSBAR          = QStringLiteral("Window/statusbar");
 const QString MainWindow::SETTING_WINDOW_MEMORY_DOCKS       = QStringLiteral("Window/memory_docks");
 const QString MainWindow::SETTING_WINDOW_MEMORY_DOCK_BYTES  = QStringLiteral("Window/memory_docks_bytes");
 const QString MainWindow::SETTING_WINDOW_MEMORY_DOCK_ASCII  = QStringLiteral("Window/memory_docks_ascii");
@@ -93,7 +94,7 @@ const QString MainWindow::SETTING_DEFAULT_IMAGE_FILE        = QStringLiteral("/c
 const QString MainWindow::TXT_YES                           = QStringLiteral("y");
 const QString MainWindow::TXT_NO                            = QStringLiteral("n");
 
-void MainWindow::setPortableConfig(bool state) {
+void MainWindow::setPortable(bool state) {
     ui->checkPortable->setChecked(state);
     QString pathSet;
     QString romPathSet;
@@ -132,7 +133,7 @@ void MainWindow::setPortableConfig(bool state) {
     ui->savedDebugPath->setText(debugPathSet);
     m_pathImage = imagePathSet;
     m_settingsPath = pathSet;
-    saveSettings();
+    settingsSave();
     m_portable = state;
     ui->buttonChangeSavedDebugPath->setEnabled(!m_portable);
     ui->buttonChangeSavedImagePath->setEnabled(!m_portable);
@@ -144,13 +145,13 @@ void MainWindow::setFrameskip(int value) {
     ui->apngSkipDisplay->setText(QString::number((ui->guiSkip->value() + 1) * (ui->apngSkip->value() + 1) - 1));
 }
 
-void MainWindow::setOptimizeRecording(bool state) {
+void MainWindow::setOptimizeRecord(bool state) {
     ui->checkOptimizeRecording->setChecked(state);
     m_settings->setValue(SETTING_CAPTURE_OPTIMIZE, state);
     m_optimizeRecording = state;
 }
 
-bool MainWindow::checkForCEmuBootImage() {
+bool MainWindow::bootImageCheck() {
     QDirIterator dirIt(qApp->applicationDirPath(), QDirIterator::NoIteratorFlags);
     while (dirIt.hasNext()) {
         dirIt.next();
@@ -158,7 +159,7 @@ bool MainWindow::checkForCEmuBootImage() {
         if (QFileInfo(dirItFile).isFile()) {
             if (QFileInfo(dirItFile).suffix() == QStringLiteral("cemu")) {
                 if (!m_loadedBootImage) {
-                    m_loadedBootImage = loadCEmuBootImage(dirItFile);
+                    m_loadedBootImage = bootImageImport(dirItFile);
                 }
                 QFile(dirItFile).remove();
             }
@@ -167,7 +168,7 @@ bool MainWindow::checkForCEmuBootImage() {
     return m_loadedBootImage;
 }
 
-bool MainWindow::loadCEmuBootImage(const QString &bootImagePath) {
+bool MainWindow::bootImageImport(const QString &bootImagePath) {
     QString newSettingsPath = configPath + SETTING_DEFAULT_FILE;
     QString romPath = configPath + SETTING_DEFAULT_ROM_FILE;
     QFile bootFile(bootImagePath);
@@ -189,7 +190,7 @@ bool MainWindow::loadCEmuBootImage(const QString &bootImagePath) {
     return true;
 }
 
-void MainWindow::exportCEmuBootImage() {
+void MainWindow::bootImageExport() {
     QMessageBox::information(this, MSG_INFORMATION, tr("A bootable image can be used to start CEmu with predefined configurations, without the need for any extra setup."
                                                        "\n\nThe bootable image should be placed in the same directory as the CEmu executable. When CEmu is then started, "
                                                        "the boot image will be loaded automatically and then removed for convience."));
@@ -197,7 +198,7 @@ void MainWindow::exportCEmuBootImage() {
     QString path = QFileDialog::getSaveFileName(this, tr("Save bootable CEmu image"),
                                                 m_dir.absolutePath(),
                                                 tr("Bootable CEmu images (*.cemu);"));
-    saveSettings();
+    settingsSave();
 
     if (!path.isEmpty()) {
         m_dir = QFileInfo(path).absoluteDir();
@@ -224,10 +225,10 @@ void MainWindow::setDebugSoftCommands(bool state) {
     ui->checkDisableSoftCommands->setChecked(state);
     ui->checkDisableSoftCommands->blockSignals(false);
     m_settings->setValue(SETTING_DEBUGGER_ENABLE_SOFT, state);
-    debugger.commands = state;
+    debug.commands = state;
 }
 
-void MainWindow::setDataCol(bool state) {
+void MainWindow::setDebugDisasmData(bool state) {
     ui->checkDataCol->setChecked(state);
     m_settings->setValue(SETTING_DEBUGGER_DATA_COL, state);
     m_useDataCol = state;
@@ -237,13 +238,13 @@ void MainWindow::setLcdSpi(bool state) {
     ui->checkSpi->setChecked(state);
     m_settings->setValue(SETTING_SCREEN_SPI, state);
     lcd.spi = state;
-    emit updateMode(state);
+    emit setLcdMode(state);
 }
 
 void MainWindow::setLcdDma(bool state) {
     ui->checkDma->setChecked(state);
     m_settings->setValue(SETTING_DEBUGGER_IGNORE_DMA, !state);
-    ui->cycleView->setText(QString::number(!state ? debugger.totalCycles : debugger.totalCycles + debugger.dmaCycles));
+    ui->cycleView->setText(QString::number(!state ? debug.totalCycles : debug.totalCycles + debug.dmaCycles));
     m_ignoreDmaCycles = !state;
 }
 
@@ -253,14 +254,14 @@ void MainWindow::setFocusSetting(bool state) {
     m_pauseOnFocus = state;
 }
 
-void MainWindow::saveMiscSettings() {
+void MainWindow::settingsSaveMisc() {
     m_settings->setValue(SETTING_CURRENT_DIR, m_dir.absolutePath());
     m_settings->setValue(SETTING_DEBUGGER_FLASH_BYTES, ui->flashBytes->value());
     m_settings->setValue(SETTING_DEBUGGER_RAM_BYTES, ui->ramBytes->value());
     m_settings->setValue(SETTING_DEBUGGER_FLASH_ASCII, ui->flashAscii->isChecked());
     m_settings->setValue(SETTING_DEBUGGER_RAM_ASCII, ui->ramAscii->isChecked());
-    saveSlotInfo();
-    saveRecentInfo();
+    stateSaveInfo();
+    recentSave();
 
     if (!m_needReload) {
         m_settings->setValue(SETTING_WINDOW_STATE, saveState());
@@ -275,7 +276,7 @@ void MainWindow::saveMiscSettings() {
     }
 }
 
-void MainWindow::setMemoryState() {
+void MainWindow::memLoadState() {
     ui->ramBytes->setValue(m_settings->value(SETTING_DEBUGGER_RAM_BYTES, 8).toInt());
     ui->flashBytes->setValue(m_settings->value(SETTING_DEBUGGER_FLASH_BYTES, 8).toInt());
     ui->ramAscii->setChecked(m_settings->value(SETTING_DEBUGGER_RAM_ASCII, true).toBool());
@@ -286,11 +287,17 @@ void MainWindow::setMemoryState() {
 
 void MainWindow::setMenuBarState(bool state) {
     ui->menubar->setHidden(state);
-    ui->actionDisableMenuBar->setChecked(state);
+    ui->actionHideMenuBar->setChecked(state);
     m_settings->setValue(SETTING_WINDOW_MENUBAR, state);
 }
 
-void MainWindow::resetSettingsIfLoadedCEmuBootableImage() {
+void MainWindow::setStatusBarState(bool state) {
+    ui->statusBar->setHidden(state);
+    ui->actionHideStatusBar->setChecked(state);
+    m_settings->setValue(SETTING_WINDOW_STATUSBAR, state);
+}
+
+void MainWindow::bootImageLoaded() {
     if (m_loadedBootImage) {
         m_settings->setValue(SETTING_FIRST_RUN, false);
     }
@@ -299,28 +306,28 @@ void MainWindow::resetSettingsIfLoadedCEmuBootableImage() {
 void MainWindow::setDebugIgnoreBreakpoints(bool state) {
     ui->buttonToggleBreakpoints->setChecked(state);
     m_settings->setValue(SETTING_DEBUGGER_BREAK_IGNORE, state);
-    debugger.ignore = state;
+    debug.ignore = state;
 }
 
 void MainWindow::setDebugResetTrigger(bool state) {
     ui->checkDebugResetTrigger->setChecked(state);
     m_settings->setValue(SETTING_DEBUGGER_RESET_OPENS, state);
-    debugger.resetOpensDebugger = state;
+    debug.openOnReset = state;
 }
 
-void MainWindow::setAutoSaveState(bool state) {
+void MainWindow::setAutoSave(bool state) {
     ui->checkSaveRestore->setChecked(state);
     m_settings->setValue(SETTING_RESTORE_ON_OPEN, state);
     m_settings->setValue(SETTING_SAVE_ON_CLOSE, state);
 }
 
-void MainWindow::setSaveDebug(bool state) {
+void MainWindow::setDebugAutoSave(bool state) {
     ui->checkSaveLoadDebug->setChecked(state);
     m_settings->setValue(SETTING_DEBUGGER_SAVE_ON_CLOSE, state);
     m_settings->setValue(SETTING_DEBUGGER_RESTORE_ON_OPEN, state);
 }
 
-void MainWindow::setSpaceDisasm(bool state) {
+void MainWindow::setDebugDisasmSpace(bool state) {
     ui->checkAddSpace->setChecked(state);
     m_settings->setValue(SETTING_DEBUGGER_ADD_DISASM_SPACE, state);
     disasm.space = state ? ", " : ",";
@@ -334,7 +341,7 @@ void MainWindow::setFont(int fontSize) {
 
     monospace.setPointSize(fontSize);
     ui->console->setFont(monospace);
-    ui->disassemblyView->setFont(monospace);
+    m_disasm->setFont(monospace);
 
     ui->stackView->setFont(monospace);
 
@@ -494,19 +501,19 @@ void MainWindow::setUIEditMode(bool mode) {
 void MainWindow::setThrottle(int mode) {
     ui->checkThrottle->setChecked(mode == Qt::Checked);
     connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed, Qt::QueuedConnection);
-    emu.setThrottleMode(mode == Qt::Checked);
+    emu.setThrottle(mode == Qt::Checked);
 }
 
-void MainWindow::setAutoCheckForUpdates(int state) {
+void MainWindow::setAutoUpdates(int state) {
     m_settings->setValue(SETTING_AUTOUPDATE, state);
     ui->checkUpdates->setChecked(state);
 
     if (state == Qt::Checked) {
-        checkForUpdates(false);
+        checkUpdate(false);
     }
 }
 
-void MainWindow::checkForUpdates(bool forceInfoBox) {
+void MainWindow::checkUpdate(bool forceInfoBox) {
     if (!CEMU_RELEASE) {
         if (forceInfoBox) {
             QMessageBox::warning(this, MSG_WARNING, tr("Checking updates is disabled for development builds"));
@@ -555,7 +562,7 @@ void MainWindow::checkForUpdates(bool forceInfoBox) {
     manager->get(QNetworkRequest(QUrl(QStringLiteral("https://github.com/CE-Programming/CEmu/releases/latest"))));
 }
 
-void MainWindow::adjustScreen() {
+void MainWindow::lcdAdjust() {
     float scale = ui->scaleLCD->value() / 100.0;
     bool skin = ui->checkSkin->isChecked();
     ui->calcSkinTop->setVisible(skin);
@@ -576,13 +583,13 @@ void MainWindow::setLcdScale(int scale) {
     int roundedScale = round(scale / 10.0) * 10;
     m_settings->setValue(SETTING_SCREEN_SCALE, roundedScale);
     ui->scaleLCD->setValue(roundedScale);
-    adjustScreen();
+    lcdAdjust();
 }
 
 void MainWindow::setSkinToggle(bool enable) {
     m_settings->setValue(SETTING_SCREEN_SKIN, enable);
     ui->checkSkin->setChecked(enable);
-    adjustScreen();
+    lcdAdjust();
 }
 
 void MainWindow::setAutoEquates(bool enable) {
@@ -597,7 +604,7 @@ void MainWindow::setGuiSkip(int value) {
     ui->guiSkip->setValue(value);
     ui->guiSkip->blockSignals(false);
     ui->apngSkipDisplay->setText(QString::number((ui->guiSkip->value() + 1) * (ui->apngSkip->value() + 1) - 1));
-    emit updateFrameskip(value);
+    emit setLcdFrameskip(value);
 }
 
 void MainWindow::setStatusInterval(int value) {
@@ -605,13 +612,13 @@ void MainWindow::setStatusInterval(int value) {
     ui->statusInterval->setValue(value);
     m_timerFps.stop();
     m_timerEmu.stop();
-    connect(&m_timerEmu, SIGNAL(timeout()), this, SLOT(emuTimerSlot()));
-    connect(&m_timerFps, SIGNAL(timeout()), this, SLOT(fpsTimerSlot()));
+    connect(&m_timerEmu, SIGNAL(timeout()), this, SLOT(emuSync()));
+    connect(&m_timerFps, SIGNAL(timeout()), this, SLOT(fpsSync()));
     m_timerEmuTriggerable = true;
     m_timerFpsTriggerable = true;
     if (!value) {
-        disconnect(&m_timerEmu, SIGNAL(timeout()), this, SLOT(emuTimerSlot()));
-        disconnect(&m_timerFps, SIGNAL(timeout()), this, SLOT(fpsTimerSlot()));
+        disconnect(&m_timerEmu, SIGNAL(timeout()), this, SLOT(emuSync()));
+        disconnect(&m_timerFps, SIGNAL(timeout()), this, SLOT(fpsSync()));
         connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed, Qt::QueuedConnection);
         m_timerFpsTriggered = true;
         m_timerEmuTriggerable = false;
@@ -628,10 +635,10 @@ void MainWindow::setEmuSpeed(int value) {
     ui->emulationSpeedSpin->setValue(value);
     ui->emulationSpeedSpin->blockSignals(false);
     ui->emulationSpeed->setValue(value);
-    emu.setEmuSpeed(value);
+    emu.setSpeed(value);
 }
 
-void MainWindow::selectKeypadColor() {
+void MainWindow::keypadChanged() {
     QString name = sender()->objectName();
     unsigned int color = KEYPAD_BLACK;
 
@@ -672,7 +679,7 @@ void MainWindow::setKeymap(const QString & value) {
 }
 
 void MainWindow::toggleFullscreen() {
-    static QWidget *parent_ptr = Q_NULLPTR;
+    static QWidget *parentPtr = Q_NULLPTR;
     switch (m_fullscreen) {
         default:
         case FULLSCREEN_NONE:
@@ -680,7 +687,7 @@ void MainWindow::toggleFullscreen() {
             m_fullscreen = FULLSCREEN_ALL;
             break;
         case FULLSCREEN_ALL:
-            parent_ptr = ui->lcd->parentWidget();
+            parentPtr = ui->lcd->parentWidget();
             ui->lcd->setParent(this, Qt::Tool | Qt::FramelessWindowHint | Qt::CustomizeWindowHint);
             ui->lcd->setFixedSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
             ui->lcd->showFullScreen();
@@ -690,15 +697,15 @@ void MainWindow::toggleFullscreen() {
             break;
         case FULLSCREEN_LCD:
             showNormal();
-            ui->lcd->setParent(parent_ptr);
+            ui->lcd->setParent(parentPtr);
             ui->lcd->showNormal();
-            adjustScreen();
+            lcdAdjust();
             m_fullscreen = FULLSCREEN_NONE;
             break;
     }
 }
 
-void MainWindow::setAlwaysOnTop(int state) {
+void MainWindow::setTop(bool state) {
     if (!state) {
         setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
     } else {
@@ -709,7 +716,7 @@ void MainWindow::setAlwaysOnTop(int state) {
     ui->checkAlwaysOnTop->setCheckState(state ? Qt::Checked : Qt::Unchecked);
 }
 
-void MainWindow::saveSlotInfo() {
+void MainWindow::stateSaveInfo() {
     QStringList slotNames;
     QStringList slotPaths;
 
@@ -722,14 +729,14 @@ void MainWindow::saveSlotInfo() {
     m_settings->setValue(SETTING_SLOT_PATHS, slotPaths);
 }
 
-void MainWindow::setSlotInfo() {
+void MainWindow::stateLoadInfo() {
     QStringList slotNames = m_settings->value(SETTING_SLOT_NAMES).toStringList();
     QStringList slotPaths = m_settings->value(SETTING_SLOT_PATHS).toStringList();
 
     for (int i = 0; i < slotNames.size(); i++) {
         QString name = slotNames.at(i);
         QString path = slotPaths.at(i);
-        slotAdd(name, path);
+        stateAdd(name, path);
     }
 }
 
@@ -753,7 +760,7 @@ void MainWindow::setDockBoundaries(bool state) {
     }
 }
 
-void MainWindow::saveRecentInfo() {
+void MainWindow::recentSave() {
     QStringList paths;
     QStringList selects;
 
@@ -768,7 +775,7 @@ void MainWindow::saveRecentInfo() {
     m_settings->setValue(SETTING_RECENT_SELECT, selects);
 }
 
-void MainWindow::setRecentInfo() {
+void MainWindow::recentLoad() {
     QStringList paths = m_settings->value(SETTING_RECENT_PATHS).toStringList();
     QStringList selects = m_settings->value(SETTING_RECENT_SELECT).toStringList();
 
@@ -781,7 +788,7 @@ void MainWindow::setRecentInfo() {
     }
 }
 
-void MainWindow::setMemoryDocks() {
+void MainWindow::memLoadDocks() {
     QStringList names = m_settings->value(SETTING_WINDOW_MEMORY_DOCKS).toStringList();
     QList<int> bytes = m_settings->value(SETTING_WINDOW_MEMORY_DOCK_BYTES).value<QList<int>>();
     QList<bool> ascii = m_settings->value(SETTING_WINDOW_MEMORY_DOCK_ASCII).value<QList<bool>>();
@@ -817,7 +824,7 @@ void MainWindow::checkVersion() {
 
     if (ask) {
         if (CEMU_RELEASE) {
-            setAutoCheckForUpdates(true);
+            setAutoUpdates(true);
         }
 
         m_keepSetup = true;
@@ -843,8 +850,8 @@ void MainWindow::checkVersion() {
     }
 }
 
-void MainWindow::saveSettings() {
-    saveMiscSettings();
+void MainWindow::settingsSave() {
+    settingsSaveMisc();
     if (opts.useSettings) {
         m_settings->sync();
     } else {
@@ -853,7 +860,7 @@ void MainWindow::saveSettings() {
     }
 }
 
-void MainWindow::exportWindowConfig() {
+void MainWindow::guiExport() {
     QString filter = tr("Window Config (*.ini)");
     QString path = QFileDialog::getSaveFileName(this, tr("Save window configuration"),
                                                 m_dir.absolutePath(), filter, &filter);
@@ -864,6 +871,7 @@ void MainWindow::exportWindowConfig() {
     QSettings window(path, QSettings::IniFormat);
     window.setValue(SETTING_SCREEN_SKIN, m_settings->value(SETTING_SCREEN_SKIN));
     window.setValue(SETTING_WINDOW_MENUBAR, m_settings->value(SETTING_WINDOW_MENUBAR));
+    window.setValue(SETTING_WINDOW_STATUSBAR, m_settings->value(SETTING_WINDOW_STATUSBAR));
     window.setValue(SETTING_WINDOW_SEPARATOR, m_settings->value(SETTING_WINDOW_SEPARATOR));
     window.setValue(SETTING_WINDOW_STATE, saveState());
     window.setValue(SETTING_WINDOW_GEOMETRY, saveGeometry());
@@ -875,7 +883,7 @@ void MainWindow::exportWindowConfig() {
     window.sync();
 }
 
-void MainWindow::importWindowConfig() {
+void MainWindow::guiImport() {
     QString path = QFileDialog::getOpenFileName(this, tr("Select saved image to restore from"),
                                                 m_dir.absolutePath(),
                                                 tr("Window Config (*.ini);;All files (*.*)"));
@@ -884,7 +892,7 @@ void MainWindow::importWindowConfig() {
     }
 
     QSettings window(path, QSettings::IniFormat);
-    ipcCloseOthers();
+    ipcCloseConnected();
     m_settings->setValue(SETTING_SCREEN_SKIN, window.value(SETTING_SCREEN_SKIN));
     m_settings->setValue(SETTING_WINDOW_GEOMETRY, window.value(SETTING_WINDOW_GEOMETRY));
     m_settings->setValue(SETTING_WINDOW_STATE, window.value(SETTING_WINDOW_STATE));
@@ -893,6 +901,7 @@ void MainWindow::importWindowConfig() {
     m_settings->setValue(SETTING_WINDOW_MEMORY_DOCK_ASCII, window.value(SETTING_WINDOW_MEMORY_DOCK_ASCII));
     m_settings->setValue(SETTING_UI_EDIT_MODE, window.value(SETTING_UI_EDIT_MODE));
     m_settings->setValue(SETTING_WINDOW_MENUBAR, window.value(SETTING_WINDOW_MENUBAR));
+    m_settings->setValue(SETTING_WINDOW_STATUSBAR, window.value(SETTING_WINDOW_STATUSBAR));
     m_settings->setValue(SETTING_WINDOW_SEPARATOR, window.value(SETTING_WINDOW_SEPARATOR));
     m_settings->setValue(SETTING_STATUS_INTERVAL, window.value(SETTING_STATUS_INTERVAL));
     m_needReload = true;

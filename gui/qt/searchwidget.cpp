@@ -3,7 +3,7 @@
 
 SearchWidget::SearchWidget(const QString &line, int type, QWidget *parent) : QDialog{parent}, ui(new Ui::searchwidget) {
     m_searchType = type;
-    bool mode = (type == SEARCH_MODE_HEX);
+    bool mode = (type == Hex);
     ui->setupUi(this);
 
     ui->searchEdit->setText(line);
@@ -38,34 +38,34 @@ QString SearchWidget::getSearchString() {
 }
 
 void SearchWidget::findNext() {
-    m_searchMode = SEARCH_NEXT;
+    m_searchMode = Next;
     done(m_searchMode);
 }
 
 void SearchWidget::findNextNot() {
-    m_searchMode = SEARCH_NEXT_NOT;
+    m_searchMode = NextNot;
     done(m_searchMode);
 }
 
 void SearchWidget::findPrev() {
-    m_searchMode = SEARCH_PREV;
+    m_searchMode = Prev;
     done(m_searchMode);
 }
 
 void SearchWidget::findPrevNot() {
-    m_searchMode = SEARCH_PREV_NOT;
+    m_searchMode = PrevNot;
     done(m_searchMode);
 }
 
 void SearchWidget::changeInputASCII() {
     ui->radioASCII->setChecked(true);
     ui->radioHEX->setChecked(false);
-    m_searchType = SEARCH_MODE_ASCII;
+    m_searchType = Ascii;
 }
 
 void SearchWidget::changeInputHEX() {
     ui->radioHEX->setChecked(true);
     ui->radioASCII->setChecked(false);
-    m_searchType = SEARCH_MODE_HEX;
+    m_searchType = Hex;
 }
 

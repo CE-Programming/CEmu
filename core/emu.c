@@ -20,12 +20,15 @@
 
 volatile bool exiting = false;
 
-void throttle_interval_event(enum sched_item_id id) {
+void emu_throttle_event(enum sched_item_id id) {
     sched_repeat(id, 100000); // 60 Hz
 
     gui_do_stuff();
+    gui_throttle();
+}
 
-    throttle_timer_wait();
+void emu_exit(void) {
+    exiting = true;
 }
 
 bool emu_save(bool image, const char *path) {
@@ -214,7 +217,7 @@ static void emu_main_loop_inner(void) {
         }
         if (throttle_triggered) break;
         cpu_execute();
-    } // while
+    }
 
     if (exiting) {
         emscripten_cancel_main_loop();
@@ -237,7 +240,7 @@ void emu_loop(void) {
             gui_console_printf("[CEmu] Reset triggered.\n");
             asic_reset();
 #ifdef DEBUG_SUPPORT
-            gui_debugger_send_command(DBG_READY, 0);
+            gui_debug_open(DBG_READY, 0);
 #endif
         }
         cpu_execute();

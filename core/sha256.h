@@ -6,7 +6,6 @@ extern "C" {
 #endif
 
 #include "port.h"
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -19,8 +18,6 @@ typedef struct sha256_state {
 
 eZ80portrange_t init_sha256(void);
 void sha256_reset(void);
-
-/* Save/Restore */
 bool sha256_restore(FILE *image);
 bool sha256_save(FILE *image);
 

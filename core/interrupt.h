@@ -6,7 +6,6 @@ extern "C" {
 #endif
 
 #include "port.h"
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -33,16 +32,12 @@ typedef struct interrupt_state {
     uint32_t          :  2;
 } interrupt_state_t;
 
-/* External INTERRUPT state */
 extern interrupt_state_t intrpt[2];
 
-/* Available Functions */
 eZ80portrange_t init_intrpt(void);
 void intrpt_reset(void);
 void intrpt_pulse(uint32_t int_num);
 void intrpt_set(uint32_t int_num, bool set);
-
-/* Save/Restore */
 bool intrpt_restore(FILE *image);
 bool intrpt_save(FILE *image);
 

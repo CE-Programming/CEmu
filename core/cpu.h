@@ -30,7 +30,22 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-/* eZ80 CPU Opcode Context */
+#define EVENT_NONE            0
+#define EVENT_RESET           (1 << 0)
+#ifdef DEBUG_SUPPORT
+#define EVENT_DEBUG_STEP      (1 << 1)
+#define EVENT_DEBUG_STEP_OVER (1 << 2)
+#define EVENT_DEBUG_STEP_NEXT (1 << 3)
+#define EVENT_DEBUG_STEP_OUT  (1 << 4)
+#else
+#define EVENT_DEBUG_STEP      0
+#define EVENT_DEBUG_STEP_OVER 0
+#define EVENT_DEBUG_STEP_NEXT 0
+#define EVENT_DEBUG_STEP_OUT  0
+#endif
+
+#define cpu_mask_mode(address, mode) ((uint32_t)((address) & ((mode) ? 0xFFFFFF : 0xFFFF)))
+
 typedef union eZ80context {
     uint8_t opcode;
     struct {
@@ -76,10 +91,8 @@ typedef struct eZ80cpu {
     bool preI;
 } eZ80cpu_t;
 
-/* Externals */
 extern eZ80cpu_t cpu;
 
-/* Available Functions */
 void cpu_init(void);
 void cpu_reset(void);
 void cpu_flush(uint32_t, bool);
@@ -87,12 +100,8 @@ void cpu_nmi(void);
 void cpu_execute(void);
 void cpu_restore_next(void);
 void cpu_crash(const char *msg);
-
-/* Save/Restore */
 bool cpu_restore(FILE *image);
 bool cpu_save(FILE *image);
-
-#define cpu_mask_mode(address, mode) ((uint32_t)((address) & ((mode) ? 0xFFFFFF : 0xFFFF)))
 
 #ifdef __cplusplus
 }

@@ -24,8 +24,8 @@ static void watchdog_event(enum sched_item_id id) {
             gui_console_printf("[CEmu] Reset triggered by watchdog timer.\n");
             cpu.events |= EVENT_RESET;
 #ifdef DEBUG_SUPPORT
-            if (debugger.resetOpensDebugger) {
-                open_debugger(DBG_WATCHDOG_TIMEOUT, cpu.registers.PC);
+            if (debug.openOnReset) {
+                debug_open(DBG_WATCHDOG_TIMEOUT, cpu.registers.PC);
             }
 #endif
         }
@@ -293,8 +293,8 @@ static void fxxx_write(const uint16_t pio, const uint8_t value, bool poke) {
 
 #ifdef DEBUG_SUPPORT
     if (value != 0) {
-        debugger.buffer[debugger.bufferPos] = (char)value;
-        debugger.bufferPos = (debugger.bufferPos + 1) % (SIZEOF_DBG_BUFFER);
+        debug.buffer[debug.bufPos] = (char)value;
+        debug.bufPos = (debug.bufPos + 1) % (SIZEOF_DBG_BUFFER);
     }
 #else
     (void)value;

@@ -1,5 +1,13 @@
 #ifdef __EMSCRIPTEN__
 
+#include "os.h"
+
+#include "../../core/asic.h"
+#include "../../core/emu.h"
+#include "../../core/lcd.h"
+#include "../../core/link.h"
+#include "../../core/debug/debug.h"
+
 #include <emscripten.h>
 
 #include <stdbool.h>
@@ -13,61 +21,20 @@
 
 #include <time.h>
 
-#include "os.h"
-
-#include "../../core/asic.h"
-#include "../../core/emu.h"
-#include "../../core/lcd.h"
-#include "../../core/link.h"
-#include "../../core/debug/debug.h"
-
-extern lcd_state_t lcd;
-
+bool throttle_triggered;
 char file_buf[500];
 
-FILE *fopen_utf8(const char *filename, const char *mode)
-{
-    return fopen(filename, mode);
-}
-
-bool throttle_triggered = false;
-
-void throttle_timer_off() {}
-void throttle_timer_on() {}
-void throttle_timer_wait() {
+void gui_throttle() {
     throttle_triggered = true;
 }
 
 void gui_emu_sleep(unsigned long microseconds) {
-    //usleep(microseconds);
     (void)microseconds;
 }
 
-void EMSCRIPTEN_KEEPALIVE set_file_to_send(const char* path)
-{
-    strcpy(file_buf, path);
-}
-
-void gui_do_stuff()
-{
-#ifdef DEBUG_SUPPORT
-    if (debugger.bufferPos) {
-        debugger.buffer[debugger.bufferPos] = '\0';
-        fprintf(stderr, "[CEmu DbgOutPrint] %s\n", debugger.buffer);
-        fflush(stderr);
-        debugger.bufferPos = 0;
-    }
-
-    if (debugger.bufferErrPos) {
-        debugger.bufferErr[debugger.bufferErrPos] = '\0';
-        fprintf(stderr, "[CEmu DbgErrPrint] %s\n", debugger.bufferErr);
-        fflush(stderr);
-        debugger.bufferErrPos = 0;
-    }
-#endif
+void gui_do_stuff() {
     if (file_buf[0] != '\0') {
-        if (!sendVariableLink(file_buf, LINK_FILE))
-        {
+        if (!sendVariableLink(file_buf, LINK_FILE)) {
             fprintf(stderr, "Error sending file to emu: %s\n", file_buf);
             fflush(stderr);
         }
@@ -75,59 +42,35 @@ void gui_do_stuff()
     }
 }
 
-void gui_set_busy(bool busy) { (void)busy; }
+void gui_debug_close(void) {}
 
-void gui_debugger_raise_or_disable(bool entered)
-{
-    fprintf(stderr, "%s debugger\n", entered ? "Entered" : "Exited");
-    fflush(stderr);
-#ifdef DEBUG_SUPPORT
-    inDebugger = false;
-#endif
-}
-
-void gui_debugger_send_command(int reason, uint32_t addr)
-{
-    printf("[CEmu Debugger] Got software command (r=%d, addr=0x%X)\n", reason, addr);
-    fflush(stderr);
-#ifdef DEBUG_SUPPORT
-    inDebugger = false;
-#endif
-}
-
-void gui_console_vprintf(const char *fmt, va_list ap)
-{
-    vfprintf(stderr, fmt, ap);
+void gui_debug_open(int reason, uint32_t data) {
+    printf("[CEmu debug] (reason=%d, data=0x%X)\n", reason, data);
     fflush(stderr);
 }
 
-void gui_console_err_vprintf(const char *fmt, va_list ap)
-{
-    vfprintf(stderr, fmt, ap);
-    fflush(stderr);
-}
-
-void gui_console_printf(const char *fmt, ...)
-{
+void gui_console_printf(const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
-    gui_console_vprintf(fmt, ap);
+    vfprintf(stderr, fmt, ap);
+    fflush(stderr);
     va_end(ap);
 }
 
-void gui_console_err_printf(const char *fmt, ...)
-{
+void gui_console_err_printf(const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
-
-    gui_console_err_vprintf(fmt, ap);
-
+    vfprintf(stderr, fmt, ap);
+    fflush(stderr);
     va_end(ap);
 }
 
-void gui_perror(const char *msg)
-{
-    fprintf(stderr, "[gui_perror] %s: %s\n", msg, strerror(errno));
+FILE *fopen_utf8(const char *filename, const char *mode) {
+    return fopen(filename, mode);
+}
+
+void EMSCRIPTEN_KEEPALIVE set_file_to_send(const char* path) {
+    strcpy(file_buf, path);
 }
 
 uint8_t* EMSCRIPTEN_KEEPALIVE lcd_get_frame() {
@@ -151,18 +94,17 @@ void EMSCRIPTEN_KEEPALIVE emu_reset() {
     asic_reset();
 }
 
-int main(int argc, char* argv[])
-{
-    bool success;
+int main(int argc, char* argv[]) {
+    int success;
     (void)argc;
     (void)argv;
 
-    success = emu_load("CE.rom", NULL);
+    success = emu_load(false, "CE.rom");
 
-    if (success) {
+    if (success == EMU_LOAD_OKAY) {
 #ifdef DEBUG_SUPPORT
-        debugger_init();
-        debugger.commands = true;
+        debug_init();
+        debug.commands = true;
 #endif
         lcd.spi = true;
         EM_ASM(

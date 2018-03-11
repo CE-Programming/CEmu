@@ -3,6 +3,7 @@
 
 #include "../../core/asic.h"
 #include "../../core/debug/debug.h"
+#include "../../core/link.h"
 
 #include <QtCore/QThread>
 #include <QtCore/QTimer>
@@ -17,11 +18,21 @@ class EmuThread : public QThread {
     Q_OBJECT
 
 public:
-    explicit EmuThread(QObject *p = Q_NULLPTR);
-
+    explicit EmuThread(QObject *parent = Q_NULLPTR);
+    void stop();
+    void reset();
+    void resume();
+    void receive();
+    void unblock();
+    void debug(bool);
     void doStuff();
-    void throttleTimerWait();
-    void writeConsoleBuffer(int type, const char *format, va_list args);
+    void throttleWait();
+    void setSpeed(int value);
+    void setThrottle(bool state);
+    void writeConsole(int type, const char *format, va_list args);
+    void debugOpen(int reason, uint32_t addr);
+    void save(bool image, const QString &path);
+    int load(bool restore, const QString &rom, const QString &image);
 
     enum {
         ConsoleNorm,
@@ -45,50 +56,51 @@ public:
     QSemaphore read;
 
 signals:
-    // Console Strings
+    // console
     void consoleStr(int dest);
 
-    // Debugger
-    void raiseDebugger();
-    void disableDebugger();
-    void sendDebugCommand(int reason, uint32_t addr);
+    // debug
+    void debugDisable();
+    void debugCommand(int reason, uint32_t addr);
 
-    // Status
+    // speed
     void actualSpeedChanged(int value);
 
-    // State
+    // state
     void saved(bool success);
-
-    // Sending/Receiving
+    void blocked(int req);
     void sentFile(const QString &file, int ok);
-    void locked(int req);
 
 public slots:
-    void req(int req);
-    int load(bool restore, const QString &rom, const QString &image);
-    void reset();
-    void stop();
-    void debug(bool);
-
-    // Linking
     void send(const QStringList &fileNames, unsigned int location);
-    void receive();
-    void unlock();
-
-    // Speed
-    void setEmuSpeed(int m_speed);
-    void setThrottleMode(bool throttled);
-
-    // Save / Restore
-    void save(bool image, const QString &path);
 
 protected:
     virtual void run() Q_DECL_OVERRIDE;
 
 private:
-    void block();
-    void setActualSpeed(int value);
-    void sendFiles();
+    void sendFiles() {
+        for (const QString &f : m_vars) {
+            emit sentFile(f, sendVariableLink(f.toUtf8(), m_sendLoc));
+        }
+        emit sentFile(QString(), LINK_GOOD);
+    }
+
+    void setActualSpeed(int value) {
+        if (m_actualSpeed != value) {
+            m_actualSpeed = value;
+            emit actualSpeedChanged(value);
+        }
+    }
+
+    void req(int req) {
+        m_request = req;
+    }
+
+    void block() {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        emit blocked(m_request);
+        m_cv.wait(lock);
+    }
 
     int m_actualSpeed;
     bool m_saveImage;
@@ -104,9 +116,10 @@ private:
     std::chrono::steady_clock::time_point m_lastTime;
     std::mutex m_mutex;
     std::condition_variable m_cv;
-};
+    std::mutex m_mutexDebug;
+    std::condition_variable m_cvDebug;
 
-// For friends
-extern EmuThread *emu_thread;
+    bool m_debug = false;
+};
 
 #endif

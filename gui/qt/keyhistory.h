@@ -9,14 +9,14 @@ class KeyHistory : public QWidget {
     Q_OBJECT
 
 public:
-    explicit KeyHistory(QWidget *p = Q_NULLPTR);
+    explicit KeyHistory(QWidget *parent = Q_NULLPTR);
     ~KeyHistory();
 
 signals:
     void closed();
 
 public slots:
-    void addEntry(const QString& entry);
+    void add(const QString &entry);
 
 protected slots:
     virtual void closeEvent(QCloseEvent *event) Q_DECL_OVERRIDE;

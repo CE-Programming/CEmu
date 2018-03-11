@@ -338,8 +338,7 @@ static uint8_t mem_read_flash(uint32_t addr) {
                 value = 0x80;
                 mem.flash.read_index++;
                 if (mem.flash.read_index == 3) {
-                    /* Simulate erase delay */
-                    gui_emu_sleep(3e4);
+                    gui_emu_sleep(3e4); /* Simulate erase delay */
                     mem.flash.read_index = 0;
                     mem.flash.command = NO_COMMAND;
                 }
@@ -398,7 +397,6 @@ static void mem_write_flash(uint32_t addr, uint8_t byte) {
         return;
     }
 
-    /* See if we can reset to default */
     if (mem.flash.command != NO_COMMAND) {
         if ((mem.flash.command != FLASH_DEEP_POWER_DOWN && byte == 0xF0) ||
             (mem.flash.command == FLASH_DEEP_POWER_DOWN && byte == 0xAB)) {
@@ -451,8 +449,8 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
 
     addr &= 0xFFFFFF;
 #ifdef DEBUG_SUPPORT
-    if (!fetch && debugger.data.block[addr] & DBG_MASK_READ) {
-        open_debugger(DBG_READ_WATCHPOINT, addr);
+    if (!fetch && debug.addr[addr] & DBG_MASK_READ) {
+        debug_open(DBG_READ_WATCHPOINT, addr);
     }
 #endif
     switch((addr >> 20) & 0xF) {
@@ -511,8 +509,8 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
     addr &= 0xFFFFFF;
 
 #ifdef DEBUG_SUPPORT
-    if ((debugger.data.block[addr] &= ~(DBG_INST_START_MARKER | DBG_INST_MARKER)) & DBG_MASK_WRITE) {
-        open_debugger(DBG_WRITE_WATCHPOINT, addr);
+    if ((debug.addr[addr] &= ~(DBG_INST_START_MARKER | DBG_INST_MARKER)) & DBG_MASK_WRITE) {
+        debug_open(DBG_WRITE_WATCHPOINT, addr);
     }
 #endif
 
@@ -520,13 +518,13 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
         control.protectionStatus |= 1;
         gui_console_printf("[CEmu] NMI reset caused by writing to the stack limit at address %#06x. Hint: Probably a stack overflow (aka too much recursion).\n", addr);
         cpu_nmi();
-    } // writes to stack limit succeed
+    } /* writes to stack limit succeed */
 
     if (addr >= control.protectedStart && addr <= control.protectedEnd && unprivileged_code()) {
         control.protectionStatus |= 2;
         gui_console_printf("[CEmu] NMI reset caused by writing to protected memory (%#06x through %#06x) at address %#06x from unprivileged code.\n", control.protectedStart, control.protectedEnd, addr);
         cpu_nmi();
-    } else { // writes to protected memory are ignored
+    } else { /* writes to protected memory are ignored */
         switch((addr >> 20) & 0xF) {
                 /* FLASH */
             case 0x0: case 0x1: case 0x2: case 0x3:
@@ -537,7 +535,7 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
                     cpu_nmi();
                 } else if (flash_unlocked()) {
                     mem_write_flash(addr, value);
-                } // privileged writes with flash locked are probably ignored
+                } /* privileged writes with flash locked are probably ignored */
                 break;
 
                 /* UNMAPPED */
@@ -557,24 +555,24 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
                 /* MMIO <-> Advanced Perphrial Bus */
             case 0xE: case 0xF:
 #ifdef DEBUG_SUPPORT
-                if (debugger.commands) {
+                if (debug.commands) {
                     if (addr >= DBG_PORT_RANGE) {
-                        open_debugger(addr, value);
+                        debug_open(addr, value);
                         break;
                     } else if ((addr >= DBGOUT_PORT_RANGE && addr < DBGOUT_PORT_RANGE+SIZEOF_DBG_BUFFER-1)) {
-                        debugger.buffer[debugger.bufferPos] = (char)value;
-                        debugger.bufferPos = (debugger.bufferPos + 1) % SIZEOF_DBG_BUFFER;
+                        debug.buffer[debug.bufPos] = (char)value;
+                        debug.bufPos = (debug.bufPos + 1) % SIZEOF_DBG_BUFFER;
                         if (!value) {
-                            gui_console_printf("%s", debugger.buffer);
-                            debugger.bufferPos = 0;
+                            gui_console_printf("%s", debug.buffer);
+                            debug.bufPos = 0;
                         }
                         break;
                     } else if ((addr >= DBGERR_PORT_RANGE && addr < DBGERR_PORT_RANGE+SIZEOF_DBG_BUFFER-1)) {
-                        debugger.bufferErr[debugger.bufferErrPos] = (char)value;
-                        debugger.bufferErrPos = (debugger.bufferErrPos + 1) % SIZEOF_DBG_BUFFER;
+                        debug.bufferErr[debug.bufErrPos] = (char)value;
+                        debug.bufErrPos = (debug.bufErrPos + 1) % SIZEOF_DBG_BUFFER;
                         if (!value) {
-                            gui_console_err_printf("%s", debugger.bufferErr);
-                            debugger.bufferErrPos = 0;
+                            gui_console_err_printf("%s", debug.bufferErr);
+                            debug.bufErrPos = 0;
                         }
                         break;
                     }

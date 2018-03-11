@@ -9,56 +9,58 @@
 #include <cstdarg>
 #include <thread>
 
-EmuThread *emu_thread = Q_NULLPTR;
+static EmuThread *emu;
 
-void gui_emu_sleep(unsigned long microseconds) {
-    QThread::usleep(microseconds);
-}
+// reimplemented callbacks
 
 void gui_do_stuff(void) {
-    emu_thread->doStuff();
+    emu->doStuff();
+}
+
+void gui_emu_sleep(unsigned long microseconds) {
+    emu->usleep(microseconds);
 }
 
 void gui_console_printf(const char *format, ...) {
     va_list args;
     va_start(args, format);
-    emu_thread->writeConsoleBuffer(EmuThread::ConsoleNorm, format, args);
+    emu->writeConsole(EmuThread::ConsoleNorm, format, args);
     va_end(args);
 }
 
 void gui_console_err_printf(const char *format, ...) {
     va_list args;
     va_start(args, format);
-    emu_thread->writeConsoleBuffer(EmuThread::ConsoleErr, format, args);
+    emu->writeConsole(EmuThread::ConsoleErr, format, args);
     va_end(args);
 }
 
-void gui_debugger_send_command(int reason, uint32_t addr) {
-    emu_thread->sendDebugCommand(reason, addr);
+void gui_debug_open(int reason, uint32_t data) {
+    emu->debugOpen(reason, data);
 }
 
-void gui_debugger_raise_or_disable(bool entered) {
-    if (entered) {
-        emu_thread->raiseDebugger();
-    } else {
-        emu_thread->disableDebugger();
-    }
+void gui_debug_close(void) {
+    emu->debugDisable();
 }
 
-void throttle_timer_wait(void) {
-    emu_thread->throttleTimerWait();
+void gui_throttle(void) {
+    emu->throttleWait();
 }
 
 EmuThread::EmuThread(QObject *parent) : QThread{parent}, write(CONSOLE_BUFFER_SIZE) {
-    assert(emu_thread == Q_NULLPTR);
-    emu_thread = this;
+    assert(emu == Q_NULLPTR);
+    emu = this;
     m_speed = 100;
     m_throttle = true;
     m_request = RequestNone;
     m_lastTime = std::chrono::steady_clock::now();
 }
 
-void EmuThread::writeConsoleBuffer(int type, const char *format, va_list args) {
+void EmuThread::run() {
+    emu_loop();
+}
+
+void EmuThread::writeConsole(int type, const char *format, va_list args) {
     static int prevType = ConsoleNorm;
     if (prevType != type) {
         write.acquire(CONSOLE_BUFFER_SIZE);
@@ -117,19 +119,6 @@ void EmuThread::writeConsoleBuffer(int type, const char *format, va_list args) {
     }
 }
 
-void EmuThread::unlock() {
-    m_mutex.lock();
-    m_cv.notify_all();
-    m_mutex.unlock();
-}
-
-void EmuThread::block() {
-    std::unique_lock<std::mutex> lock(m_mutex);
-    emit locked(m_request);
-    m_cv.wait(lock);
-}
-
-// Called occasionally, only way to do something in the same thread the emulator runs in.
 void EmuThread::doStuff() {
     const std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
 
@@ -150,7 +139,7 @@ void EmuThread::doStuff() {
                 block();
                 break;
             case RequestDebugger:
-                open_debugger(DBG_USER, 0);
+                debug_open(DBG_USER, 0);
                 break;
         }
 
@@ -164,27 +153,7 @@ void EmuThread::doStuff() {
     m_lastTime += std::chrono::steady_clock::now() - cur_time;
 }
 
-void EmuThread::sendFiles() {
-    const int fileNum = m_vars.size();
-
-    for (int i = 0; i < fileNum; i++) {
-        const QString &f = m_vars.at(i);
-        emit sentFile(f, sendVariableLink(f.toUtf8(), m_sendLoc));
-    }
-
-    emit sentFile(QString(), LINK_GOOD);
-}
-
-void EmuThread::setActualSpeed(int value) {
-    if (!control.off) {
-        if (m_actualSpeed != value) {
-            m_actualSpeed = value;
-            emit actualSpeedChanged(value);
-        }
-    }
-}
-
-void EmuThread::throttleTimerWait() {
+void EmuThread::throttleWait() {
     if (!m_speed) {
         setActualSpeed(0);
         while(!m_speed) {
@@ -209,8 +178,10 @@ void EmuThread::throttleTimerWait() {
     }
 }
 
-void EmuThread::req(int req) {
-    m_request = req;
+void EmuThread::unblock() {
+    m_mutex.lock();
+    m_cv.notify_all();
+    m_mutex.unlock();
 }
 
 void EmuThread::reset() {
@@ -233,26 +204,37 @@ void EmuThread::save(bool image, const QString &path) {
     req(RequestSave);
 }
 
-void EmuThread::setEmuSpeed(int value) {
+void EmuThread::setSpeed(int value) {
     m_speed = value;
 }
 
-void EmuThread::setThrottleMode(bool value) {
-    m_throttle = value;
+void EmuThread::setThrottle(bool state) {
+    m_throttle = state;
+}
+
+void EmuThread::debugOpen(int reason, uint32_t data) {
+    std::unique_lock<std::mutex> lock(m_mutexDebug);
+    emit debugCommand(reason, data);
+    m_debug = true;
+    while (m_debug) {
+        m_cvDebug.wait(lock);
+    }
+}
+
+void EmuThread::resume() {
+    m_mutexDebug.lock();
+    m_debug = false;
+    m_cvDebug.notify_all();
+    m_mutexDebug.unlock();
 }
 
 void EmuThread::debug(bool state) {
-    if (inDebugger && !state) {
-        debug_clear_temp_break();
-        close_debugger();
+    if (m_debug && !state) {
+        resume();
     }
     if (state) {
         req(RequestDebugger);
     }
-}
-
-void EmuThread::run() {
-    emu_loop();
 }
 
 int EmuThread::load(bool restore, const QString &rom, const QString &image) {
@@ -269,12 +251,11 @@ int EmuThread::load(bool restore, const QString &rom, const QString &image) {
     return ret;
 }
 
-// call from gui thread
 void EmuThread::stop() {
     if (!isRunning()) {
         return;
     }
-    exiting = true;
+    emu_exit();
     if (!wait(200)) {
         terminate();
         wait(300);

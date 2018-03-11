@@ -9,6 +9,11 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
+#define SIZE_RAM              0x65800
+#define SIZE_FLASH            0x400000
+#define SIZE_FLASH_SECTOR_8K  0x2000
+#define SIZE_FLASH_SECTOR_64K 0x10000
+
 enum flash_commands {
     NO_COMMAND,
     FLASH_SECTOR_ERASE,
@@ -26,8 +31,6 @@ typedef struct {
     uint8_t value_mask;
 } flash_write_t;
 
-/* The first 8 sectors are 8K in length */
-/* The other 63 are 64K in length, uniform, for a total of 64 uniform sectors */
 typedef struct {
     bool locked;
     uint8_t *ptr;
@@ -38,15 +41,15 @@ typedef struct {
     uint8_t read_index;
     flash_sector_state_t sector_8k[8];
     flash_sector_state_t sector[64];
-    uint8_t *block;       /* Flash mem */
+    uint8_t *block;
 
-    /* Internal */
+    /* internal */
     uint8_t command;
     flash_write_t writes[6];
 } flash_chip_t;
 
 typedef struct {
-    uint8_t *block;       /* RAM mem */
+    uint8_t *block;
 } ram_chip_t;
 
 typedef struct mem_state {
@@ -55,19 +58,13 @@ typedef struct mem_state {
     uint8_t fetch_index : 4, fetch_buffer[1 << 4];
 } mem_state_t;
 
-/* Global MEMORY state */
 extern mem_state_t mem;
 
-/* Standard definitions */
-#define SIZE_RAM              0x65800
-#define SIZE_FLASH            0x400000
-#define SIZE_FLASH_SECTOR_8K  0x2000
-#define SIZE_FLASH_SECTOR_64K 0x10000
-
-/* Available Functions */
 void mem_init(void);
 void mem_free(void);
 void mem_reset(void);
+bool mem_restore(FILE *image);
+bool mem_save(FILE *image);
 
 void *phys_mem_ptr(uint32_t addr, int32_t size);
 void *virt_mem_cpy(void *buf, uint32_t addr, int32_t size);
@@ -82,13 +79,9 @@ uint8_t mem_read_unmapped_ram(bool update);
 uint8_t mem_read_unmapped_flash(bool update);
 uint8_t mem_read_unmapped_other(bool update);
 
-/* Mateo, do not use! Use the ones above. */
+/* Don NOT use (Mateo)! Use the above ones. */
 uint8_t mem_read_cpu(uint32_t address, bool fetch);
 void mem_write_cpu(uint32_t address, uint8_t value);
-
-/* Save/Restore */
-bool mem_restore(FILE *image);
-bool mem_save(FILE *image);
 
 #ifdef __cplusplus
 }

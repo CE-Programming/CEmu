@@ -24,7 +24,7 @@ void DataWidget::updateAllHighlights() {
     connect(this, &DataWidget::cursorPositionChanged, this, &DataWidget::highlightCurrentLine);
 }
 
-QString DataWidget::getSelectedAddress() {
+QString DataWidget::getSelectedAddr() {
     if (!isEnabled()) {
         return QStringLiteral("000000");
     }
