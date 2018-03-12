@@ -581,6 +581,7 @@ private:
     bool m_activatedPortable = false;
     bool m_ignoreDmaCycles;
     int m_fullscreen = FULLSCREEN_NONE;
+    uint32_t m_runUntilAddr;
 
     QProgressBar *m_progressBar;
     QStringList m_docksMemory;

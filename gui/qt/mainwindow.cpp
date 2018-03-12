@@ -2047,7 +2047,7 @@ int MainWindow::loadEmu(bool image) {
             setCalcSkinTopFromType();
             setKeypadColor(m_settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
             break;
-        case EMU_LOAD_NOTROM:
+        case EMU_LOAD_NOT_A_CE:
             if (QMessageBox::Yes == QMessageBox::question(this, MSG_WARNING, tr("Image does not appear to be from a CE. Do you want to attempt to load it anyway? "
                                                           "This may cause instability."), QMessageBox::Yes|QMessageBox::No)) {
                 ui->lcd->setMain();
@@ -2163,7 +2163,7 @@ void MainWindow::disasmLine() {
     }
 }
 
-void MainWindow::contextDisasm(const QPoint& posa) {
+void MainWindow::contextDisasm(const QPoint &posa) {
     QString setPc = tr("Set PC");
     QString toggleBreak = tr("Toggle Breakpoint");
     QString toggleWrite = tr("Toggle Write Watchpoint");
@@ -2171,10 +2171,11 @@ void MainWindow::contextDisasm(const QPoint& posa) {
     QString toggleRw = tr("Toggle Read/Write Watchpoint");
     QString runUntil = tr("Run Until");
     QString gotoMem = tr("Goto Memory View");
+
     m_disasm->setTextCursor(m_disasm->cursorForPosition(posa));
     QPoint globalPos = m_disasm->mapToGlobal(posa);
-    QString addressStr = m_disasm->getSelectedAddr();
-    uint32_t address = static_cast<uint32_t>(hex2int(addressStr));
+    QString addrStr = m_disasm->getSelectedAddr();
+    uint32_t addr = static_cast<uint32_t>(hex2int(addrStr));
 
     QMenu menu;
     menu.addAction(runUntil);
@@ -2190,8 +2191,8 @@ void MainWindow::contextDisasm(const QPoint& posa) {
     QAction *item = menu.exec(globalPos);
     if (item) {
         if (item->text() == setPc) {
-            ui->pcregView->setText(addressStr);
-            debug_set_pc(address);
+            ui->pcregView->setText(addrStr);
+            debug_set_pc(addr);
             disasmUpdateAddr(cpu.registers.PC, true);
         } else if (item->text() == toggleBreak) {
             breakAddGui();
@@ -2202,11 +2203,11 @@ void MainWindow::contextDisasm(const QPoint& posa) {
         } else if (item->text() == toggleRw) {
             watchAddGuiRW();
         } else if (item->text() == runUntil) {
-            debug.runUntilAddr = address;
+            m_runUntilAddr = addr;
             debugToggle();
             debugStep(DBG_RUN_UNTIL);
         } else if (item->text() == gotoMem) {
-            gotoMemAddr(address);
+            gotoMemAddr(addr);
         }
     }
 }

@@ -1,6 +1,8 @@
 #ifndef EMU_H
 #define EMU_H
 
+#include "defines.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -11,13 +13,12 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
-extern volatile bool exiting;
+extern _Atomic(bool) exiting;
 
 enum {
     EMU_LOAD_OKAY,
     EMU_LOAD_FAIL,
-    EMU_LOAD_NOTROM,
-    EMU_LOAD_RESTORED
+    EMU_LOAD_NOT_A_CE
 };
 
 /* emulator functions for frontend use */

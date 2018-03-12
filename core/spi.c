@@ -84,7 +84,7 @@ bool spi_refresh_pixel(void) {
             green = pixel[SPI_GREEN];
             blue = pixel[SPI_BLUE];
         }
-        if (!likely(spi.mac & SPI_MAC_BGR)) { // eor
+        if (!likely(spi.mac & SPI_MAC_BGR)) { /* eor */
             uint8_t temp = red;
             red = blue;
             blue = temp;

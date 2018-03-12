@@ -28,7 +28,7 @@ enum spi_mode {
     SPI_MODE_INVERT  = 1 << 4,
     SPI_MODE_IDLE    = 1 << 5,
     SPI_MODE_SCROLL  = 1 << 6,
-    SPI_MODE_IGNORE  = 1 << 7,
+    SPI_MODE_IGNORE  = 1 << 7
 };
 
 enum spi_mac {
@@ -37,7 +37,7 @@ enum spi_mac {
     SPI_MAC_VRO = 1 << 4,
     SPI_MAC_RCX = 1 << 5,
     SPI_MAC_CAO = 1 << 6,
-    SPI_MAC_RAO = 1 << 7,
+    SPI_MAC_RAO = 1 << 7
 };
 
 typedef struct spi_state {

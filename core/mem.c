@@ -449,7 +449,7 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
     addr &= 0xFFFFFF;
 #ifdef DEBUG_SUPPORT
     if (!fetch && debug.addr[addr] & DBG_MASK_READ) {
-        debug_open(DBG_READ_WATCHPOINT, addr);
+        debug_open(DBG_WATCHPOINT_READ, addr);
     }
 #endif
     switch((addr >> 20) & 0xF) {
@@ -509,7 +509,7 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
 
 #ifdef DEBUG_SUPPORT
     if ((debug.addr[addr] &= ~(DBG_INST_START_MARKER | DBG_INST_MARKER)) & DBG_MASK_WRITE) {
-        debug_open(DBG_WRITE_WATCHPOINT, addr);
+        debug_open(DBG_WATCHPOINT_WRITE, addr);
     }
 #endif
 

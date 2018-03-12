@@ -26,14 +26,18 @@ void debug_free(void) {
     gui_console_printf("[CEmu] Freed Debugger.\n");
 }
 
+bool debug_is_open(void) {
+    return debug.open;
+}
+
 void debug_open(int reason, uint32_t data) {
-    if (exiting || debug.open || (debug.ignore && (reason >= DBG_EXEC_BREAKPOINT && reason <= DBG_PORT_WRITE))) {
+    if (exiting || debug.open || (debug.ignore && (reason >= DBG_BREAKPOINT && reason <= DBG_PORT_WRITE))) {
         return;
     }
 
     if (reason == DBG_STEP && debug.stepOverFirstStep) {
         if ((cpu.events & EVENT_DEBUG_STEP_OUT) ||
-           ((cpu.events & EVENT_DEBUG_STEP_NEXT) && !(debug.addr[cpu.registers.PC] & DBG_MASK_TEMP_EXEC))) {
+           ((cpu.events & EVENT_DEBUG_STEP_NEXT) && !(debug.addr[cpu.registers.PC] & DBG_MASK_TEMP))) {
             debug.stepOverFirstStep = false;
             gui_debug_close();
             return;
@@ -41,7 +45,7 @@ void debug_open(int reason, uint32_t data) {
         debug_step_reset();
     }
 
-    if (reason == DBG_EXEC_BREAKPOINT && (cpu.events & EVENT_DEBUG_STEP)) {
+    if (reason == DBG_BREAKPOINT && (cpu.events & EVENT_DEBUG_STEP)) {
         return;
     }
 
@@ -70,7 +74,7 @@ void debug_open(int reason, uint32_t data) {
     }
 }
 
-void debug_breakwatch(uint32_t addr, unsigned int mask, bool set) {
+void debug_watch(uint32_t addr, int mask, bool set) {
     if (set) {
         debug.addr[addr] |= mask;
     } else {
@@ -78,12 +82,23 @@ void debug_breakwatch(uint32_t addr, unsigned int mask, bool set) {
     }
 }
 
-void debug_ports(uint16_t addr, unsigned int type, bool set) {
+void debug_ports(uint16_t addr, int mask, bool set) {
     if (set) {
-        debug.addr[addr] |= type;
+        debug.addr[addr] |= mask;
     } else {
-        debug.addr[addr] &= ~type;
+        debug.addr[addr] &= ~mask;
     }
+}
+
+void debug_flag(int mask, bool set) {
+    if (set) {
+        debug.flags |= mask;
+    } else {
+        debug.flags &= ~mask;
+    }
+    debug.ignore = debug.flags & DBG_IGNORE;
+    debug.commands = debug.flags & DBG_SOFT_COMMANDS;
+    debug.openOnReset = debug.flags & DBG_OPEN_ON_RESET;
 }
 
 void debug_step(int mode, uint32_t addr) {
@@ -114,7 +129,7 @@ void debug_step(int mode, uint32_t addr) {
             cpu.events |= EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OUT;
             break;
         case DBG_RUN_UNTIL:
-            debug.stepOverEnd = debug.runUntilAddr;
+            debug.stepOverEnd = addr;
             cpu.events &= ~(EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OVER | EVENT_DEBUG_STEP_OUT | EVENT_DEBUG_STEP_NEXT);
             break;
         default:
@@ -122,7 +137,7 @@ void debug_step(int mode, uint32_t addr) {
     }
 
     if (mode != DBG_STEP_OUT) {
-        debug.addr[debug.stepOverEnd] |= DBG_MASK_TEMP_EXEC;
+        debug.addr[debug.stepOverEnd] |= DBG_MASK_TEMP;
     }
 }
 
@@ -141,9 +156,9 @@ void debug_step_reset(void) {
     cpu.events &= ~(EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OUT | EVENT_DEBUG_STEP_OVER);
     if (debug.stepOverEnd != 0xFFFFFFFFU) {
         do {
-            debug.addr[debug.stepOverEnd] &= ~DBG_MASK_TEMP_EXEC;
+            debug.addr[debug.stepOverEnd] &= ~DBG_MASK_TEMP;
             debug.stepOverEnd = cpu_mask_mode(debug.stepOverEnd - 1, debug.stepOverMode);
-        } while (debug.addr[debug.stepOverEnd] & DBG_MASK_TEMP_EXEC);
+        } while (debug.addr[debug.stepOverEnd] & DBG_MASK_TEMP);
     }
     debug.stepOverEnd = 0xFFFFFFFFU;
 }

@@ -14,7 +14,7 @@ extern "C" {
 
 #ifdef PNG_WRITE_APNG_SUPPORTED
 
-#define TABLE_SIZE 521 // should be a prime >= 256*2
+#define TABLE_SIZE 521 /* should be a prime >= 256*2 */
 
 typedef struct {
     FILE *tmp;

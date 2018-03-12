@@ -163,6 +163,6 @@ namespace tivars
         return (sig != "" && models.count(sig));
     }
 
-};
+}
 
 // TIModels::initTIModelsArray();

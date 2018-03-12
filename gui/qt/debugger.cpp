@@ -88,10 +88,14 @@ void MainWindow::debugEnable() {
 }
 
 void MainWindow::debugStep(int mode) {
-    disasm.base = cpu.registers.PC;
-    disasm.adl = cpu.ADL;
-    disasmInstr();
-    debug_step(mode, disasm.next);
+    if (mode == DBG_RUN_UNTIL) {
+        debug_step(mode, m_runUntilAddr);
+    } else {
+        disasm.base = cpu.registers.PC;
+        disasm.adl = cpu.ADL;
+        disasmInstr();
+        debug_step(mode, disasm.next);
+    }
     emu.resume();
 }
 
@@ -342,7 +346,7 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
     int row = 0;
 
     // This means the program is trying to send us a debug command. Let's see what we can do with that information
-    if (reason >= DBG_NUM_COMMANDS) {
+    if (reason >= DBG_NUMBER) {
         debugExecute(static_cast<uint32_t>(reason - DBG_PORT_RANGE), static_cast<uint8_t>(data));
         return;
     }
@@ -351,7 +355,7 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
     QString label = QStringLiteral("Unknown");
 
     switch (reason) {
-        case DBG_EXEC_BREAKPOINT:
+        case DBG_BREAKPOINT:
             input = int2hex(data, 6);
 
             if (m_breakpoints->rowCount()) {
@@ -361,10 +365,10 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
 
             text = tr("Hit breakpoint ") + input + QStringLiteral(" (") + label + QStringLiteral(")");
             break;
-        case DBG_READ_WATCHPOINT:
-        case DBG_WRITE_WATCHPOINT:
+        case DBG_WATCHPOINT_READ:
+        case DBG_WATCHPOINT_WRITE:
             input = int2hex(data, 6);
-            type = (reason == DBG_READ_WATCHPOINT) ? tr("read") : tr("write");
+            type = (reason == DBG_WATCHPOINT_READ) ? tr("read") : tr("write");
             text = tr("Hit ") + type + tr(" watchpoint ") + input;
 
             if (m_watchpoints->rowCount()) {
@@ -384,7 +388,10 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
             text = tr("NMI triggered");
             break;
         case DBG_WATCHDOG_TIMEOUT:
-            text = tr("Watchdog timer caused reset");
+            text = tr("Watchdog timeout");
+            break;
+        case DBG_MISC_RESET:
+            text = tr("Misc. reset");
             break;
         default:
         case DBG_USER:
@@ -753,7 +760,7 @@ void MainWindow::breakSetPrev(QTableWidgetItem *curr_item) {
 void MainWindow::breakRemoveRow(int row) {
     uint32_t address = static_cast<uint32_t>(hex2int(m_breakpoints->item(row, BREAK_ADDR_LOC)->text()));
 
-    debug_breakwatch(address, DBG_MASK_EXEC, false);
+    debug_watch(address, DBG_MASK_EXEC, false);
     if (!m_guiAdd && !m_useSoftCom) {
         disasmUpdate();
     }
@@ -787,7 +794,7 @@ void MainWindow::breakModified(QTableWidgetItem *item) {
 
     if (col == BREAK_ENABLE_LOC) {
         address = static_cast<uint32_t>(hex2int(m_breakpoints->item(row, BREAK_ADDR_LOC)->text()));
-        debug_breakwatch(address, DBG_MASK_EXEC, item->checkState() == Qt::Checked);
+        debug_watch(address, DBG_MASK_EXEC, item->checkState() == Qt::Checked);
     } else if (col == BREAK_LABEL_LOC) {
         updateLabels();
     } else if (col == BREAK_ADDR_LOC){
@@ -827,9 +834,9 @@ void MainWindow::breakModified(QTableWidgetItem *item) {
         mask = ((m_breakpoints->item(row, BREAK_ENABLE_LOC)->checkState() == Qt::Checked) ? DBG_MASK_EXEC
                                                                                                : DBG_MASK_NONE);
 
-        debug_breakwatch(m_prevBreakAddr, DBG_MASK_EXEC, false);
+        debug_watch(m_prevBreakAddr, DBG_MASK_EXEC, false);
         item->setText(addressString);
-        debug_breakwatch(address, mask, true);
+        debug_watch(address, mask, true);
         m_breakpoints->blockSignals(false);
     }
     disasmUpdate();
@@ -931,7 +938,7 @@ bool MainWindow::breakAdd(const QString &label, uint32_t addr, bool enabled, boo
     m_breakpoints->setCurrentCell(row, BREAK_ADDR_LOC);
     m_breakpoints->setUpdatesEnabled(true);
 
-    debug_breakwatch(addr, DBG_MASK_EXEC, enabled);
+    debug_watch(addr, DBG_MASK_EXEC, enabled);
 
     if (!m_guiAdd && !m_useSoftCom) {
         disasmUpdate();
@@ -1118,7 +1125,7 @@ void MainWindow::watchSetPrev(QTableWidgetItem *item) {
 void MainWindow::watchRemoveRow(int row) {
     uint32_t address = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_ADDR_LOC)->text()));
 
-    debug_breakwatch(address, DBG_MASK_READ | DBG_MASK_WRITE, false);
+    debug_watch(address, DBG_MASK_READ | DBG_MASK_WRITE, false);
 
     if (!m_guiAdd && !m_useSoftCom) {
         disasmUpdate();
@@ -1294,7 +1301,7 @@ bool MainWindow::watchAdd(const QString& label, uint32_t address, uint8_t len, u
     m_watchpoints->setUpdatesEnabled(true);
 
     // actually set it in the debugger core
-    debug_breakwatch(address, mask, true);
+    debug_watch(address, mask, true);
 
     if (!m_guiAdd && !m_useSoftCom) {
         disasmUpdate();
@@ -1368,7 +1375,7 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
         if (col == WATCH_WRITE_LOC) { // Break on write
             mask = DBG_MASK_WRITE;
         }
-        debug_breakwatch(address, mask, item->checkState() == Qt::Checked);
+        debug_watch(address, mask, item->checkState() == Qt::Checked);
     } else if (col == WATCH_ADDR_LOC){
         std::string s = item->text().toUpper().toStdString();
         QString equate;
@@ -1405,9 +1412,9 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
         mask = ((m_watchpoints->item(row, WATCH_READ_LOC)->checkState() == Qt::Checked) ? DBG_MASK_READ : DBG_MASK_NONE)|
                ((m_watchpoints->item(row, WATCH_WRITE_LOC)->checkState() == Qt::Checked) ? DBG_MASK_WRITE : DBG_MASK_NONE);
 
-        debug_breakwatch(m_prevWatchAddr, DBG_MASK_READ | DBG_MASK_WRITE, false);
+        debug_watch(m_prevWatchAddr, DBG_MASK_READ | DBG_MASK_WRITE, false);
         item->setText(newString);
-        debug_breakwatch(address, mask, true);
+        debug_watch(address, mask, true);
         watchPopulate(row);
     }
     m_watchpoints->blockSignals(false);
@@ -1468,9 +1475,9 @@ void MainWindow::updateLabels() {
                                 (m_watchpoints->item(row, WATCH_WRITE_LOC)->checkState() == Qt::Checked ? DBG_MASK_WRITE : DBG_MASK_NONE);
             // remove old watchpoint and add new one
             m_watchpoints->blockSignals(true);
-            debug_breakwatch(static_cast<uint32_t>(hex2int(old)), mask, false);
+            debug_watch(static_cast<uint32_t>(hex2int(old)), mask, false);
             m_watchpoints->item(row, WATCH_ADDR_LOC)->setText(next);
-            debug_breakwatch(static_cast<uint32_t>(hex2int(next)), mask, true);
+            debug_watch(static_cast<uint32_t>(hex2int(next)), mask, true);
             watchPopulate(row);
             m_watchpoints->blockSignals(true);
         }
@@ -1481,9 +1488,9 @@ void MainWindow::updateLabels() {
         if (!next.isEmpty() && next != old) {
             unsigned int mask = m_breakpoints->item(row, BREAK_ENABLE_LOC)->checkState() == Qt::Checked ? DBG_MASK_EXEC : DBG_MASK_NONE;
             m_breakpoints->blockSignals(true);
-            debug_breakwatch(static_cast<uint32_t>(hex2int(old)), mask, false);
+            debug_watch(static_cast<uint32_t>(hex2int(old)), mask, false);
             m_breakpoints->item(row, BREAK_ADDR_LOC)->setText(next);
-            debug_breakwatch(static_cast<uint32_t>(hex2int(next)), mask, true);
+            debug_watch(static_cast<uint32_t>(hex2int(next)), mask, true);
             m_breakpoints->blockSignals(false);
         }
     }

@@ -127,7 +127,7 @@ static void sha256_write(uint16_t pio, uint8_t byte, bool poke) {
         if (protected_ports_unlocked()) {
             sha256.last = index;
         } else {
-            return; // writes are ignored when mmio is locked
+            return; /* writes are ignored when mmio is locked */
         }
     }
 

@@ -4,6 +4,7 @@
 #include "cpu.h"
 #include "cert.h"
 #include "os/os.h"
+#include "defines.h"
 #include "schedule.h"
 #include "debug/debug.h"
 
@@ -18,7 +19,7 @@
 
 #define IMAGE_VERSION 0xCECE0012
 
-volatile bool exiting = false;
+_Atomic(bool) exiting;
 
 void EMSCRIPTEN_KEEPALIVE emu_exit(void) {
     exiting = true;
@@ -181,7 +182,7 @@ int emu_load(bool image, const char *path) {
         } else {
             set_device_type(TI84PCE);
             gui_console_printf("[CEmu] Could not determine device type.\n");
-            ret = EMU_LOAD_NOTROM;
+            ret = EMU_LOAD_NOT_A_CE;
         }
 
         asic_reset();
@@ -227,7 +228,7 @@ void emu_loop(void) {
     asic_free();
 }
 
-#else // not __EMSCRIPTEN__
+#else
 
 void emu_loop(void) {
     exiting = false;
@@ -245,4 +246,4 @@ void emu_loop(void) {
     asic_free();
 }
 
-#endif // __EMSCRIPTEN__
+#endif

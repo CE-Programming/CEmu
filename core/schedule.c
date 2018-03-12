@@ -31,7 +31,7 @@ static uint32_t muldiv_ceil(uint32_t a, uint32_t b, uint32_t c) {
 }
 
 void sched_throttle_event(enum sched_item_id id) {
-    sched_repeat(id, 100000); // 60 Hz
+    sched_repeat(id, 100000); /* 60 Hz */
     gui_do_stuff();
     gui_throttle();
 }
@@ -186,7 +186,7 @@ static void sched_second(enum sched_item_id id) {
     cpu.seconds++;
     cpu.cycles -= sched.clockRates[CLOCK_CPU];
     cpu.baseCycles += sched.clockRates[CLOCK_CPU];
-    sched.items[SCHED_SECOND].second = 0; // Don't use sched_repeat!
+    sched.items[SCHED_SECOND].second = 0; /* Don't use sched_repeat! */
     sched_update(SCHED_SECOND);
 }
 

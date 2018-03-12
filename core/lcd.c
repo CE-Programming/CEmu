@@ -171,11 +171,11 @@ static uint32_t lcd_process_pixel(uint8_t red, uint8_t green, uint8_t blue) {
 
 static uint32_t lcd_process_half(uint16_t pixel) {
     switch (lcd.LCDBPP) {
-        default: // 1555
+        default: /* 1555 */
             return lcd_process_pixel(pixel & 0x1F, (pixel >> 4 & 0x3E) | (pixel >> 15 & 1), pixel >> 10 & 0x1F);
-        case 6: // 565
+        case 6: /* 565 */
             return lcd_process_pixel(pixel & 0x1F, pixel >> 5 & 0x3F, pixel >> 11 & 0x1F);
-        case 7: // 444
+        case 7: /* 444 */
             return lcd_process_pixel(pixel << 1 & 0x1E, pixel >> 2 & 0x3C, pixel >> 7 & 0x1E);
     }
 }
@@ -479,7 +479,7 @@ static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
         } else if (index == 0x018) {
             old = lcd.control;
             write8(lcd.control, bit_offset, value);
-            if ((lcd.control ^ old) & 1 << 0) { // lcdEn changed
+            if ((lcd.control ^ old) & 1 << 0) { /* lcdEn changed */
                 if (lcd.control & 1 << 0) {
                     lcd.compare = LCD_SYNC;
                     sched_set(SCHED_LCD, 0);

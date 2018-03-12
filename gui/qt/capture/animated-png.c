@@ -34,15 +34,15 @@ static inline int clzll(unsigned long long input_num) {
 apng_t apng;
 
 bool apng_start(const char *tmp_name, int frameskip) {
-    // temp file used for saving rgb888 data rather than storing everything in ram
+    /* temp file used for saving rgb888 data rather than storing everything in ram */
     if (!(apng.tmp = fopen(tmp_name, "w+b"))) {
         return false;
     }
 
-    // set frameskip rate
+    /* set frameskip rate */
     apng.frameskip = frameskip + 1;
 
-    // init recording items
+    /* init recording items */
     apng.recording = true;
     apng.skipped = 0;
     apng.n = 0;
@@ -127,7 +127,7 @@ bool apng_save(const char *filename, bool optimize) {
                 hash = pixel % TABLE_SIZE;
                 probe = 1;
                 while (true) {
-                    if (!apng.table[hash]) { // empty
+                    if (!apng.table[hash]) { /* empty */
                         apng.table[hash] = count++ << 24 | (pixel & UINT32_C(0xFFFFFF));
                         break;
                     }
@@ -176,11 +176,11 @@ bool apng_save(const char *filename, bool optimize) {
                 palette[j].blue = apng.table[i] >> 16;
             }
         }
-        palette[0].red = palette[0].green = palette[0].blue = 0; // transparent
+        palette[0].red = palette[0].green = palette[0].blue = 0; /* transparent */
         png_set_PLTE(png_ptr, info_ptr, palette, count);
         png_set_tRNS(png_ptr, info_ptr, &palette[0].red, 1, NULL);
     } else if (have_trans) {
-        trans.red = trans.green = trans.blue = 0xFE; // transparent
+        trans.red = trans.green = trans.blue = 0xFE; /* transparent */
         png_set_tRNS(png_ptr, info_ptr, NULL, 0, &trans);
     }
 

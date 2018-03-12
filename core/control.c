@@ -106,16 +106,16 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
             control.cpuSpeed = byte & 3;
             switch(control.cpuSpeed) {
                 case 0:
-                    set_cpu_clock_rate(6e6);  /* 6 MHz  */
+                    set_cpu_clock(6e6);  /* 6 MHz  */
                     break;
                 case 1:
-                    set_cpu_clock_rate(12e6); /* 12 MHz */
+                    set_cpu_clock(12e6); /* 12 MHz */
                     break;
                 case 2:
-                    set_cpu_clock_rate(24e6); /* 24 MHz */
+                    set_cpu_clock(24e6); /* 24 MHz */
                     break;
                 case 3:
-                    set_cpu_clock_rate(48e6); /* 48 MHz */
+                    set_cpu_clock(48e6); /* 48 MHz */
                     break;
                 default:
                     break;

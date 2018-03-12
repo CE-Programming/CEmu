@@ -225,7 +225,7 @@ void MainWindow::setDebugSoftCommands(bool state) {
     ui->checkDisableSoftCommands->setChecked(state);
     ui->checkDisableSoftCommands->blockSignals(false);
     m_settings->setValue(SETTING_DEBUGGER_ENABLE_SOFT, state);
-    debug.commands = state;
+    debug_flag(DBG_SOFT_COMMANDS, state);
 }
 
 void MainWindow::setDebugDisasmData(bool state) {
@@ -306,13 +306,13 @@ void MainWindow::bootImageLoaded() {
 void MainWindow::setDebugIgnoreBreakpoints(bool state) {
     ui->buttonToggleBreakpoints->setChecked(state);
     m_settings->setValue(SETTING_DEBUGGER_BREAK_IGNORE, state);
-    debug.ignore = state;
+    debug_flag(DBG_IGNORE, state);
 }
 
 void MainWindow::setDebugResetTrigger(bool state) {
     ui->checkDebugResetTrigger->setChecked(state);
     m_settings->setValue(SETTING_DEBUGGER_RESET_OPENS, state);
-    debug.openOnReset = state;
+    debug_flag(DBG_OPEN_ON_RESET, state);
 }
 
 void MainWindow::setAutoSave(bool state) {

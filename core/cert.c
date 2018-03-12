@@ -1,27 +1,23 @@
-#include <stdio.h>
-
 #include "cert.h"
+#include <stdio.h>
 
 int cert_field_get(const uint8_t *data, uint32_t length, uint16_t *field_type, const uint8_t **contents, uint32_t *field_size) {
     uint16_t field_id;
     uint32_t field_len;
     uint32_t additional_len;
 
-    /* Initial sanity checks. */
+    /* sanity checks. */
     if (data == NULL) {
-        //fprintf(stderr, "%s: data is NULL\n", __FUNCTION__);
         return 1;
     }
     if (field_type == NULL && contents == NULL && field_size == NULL) {
-        //fprintf(stderr, "%s: all output parameters are NULL\n", __FUNCTION__);
         return 1;
     }
     if (length < 2) {
-        //fprintf(stderr, "%s: length is too small to contain a valid cert field\n", __FUNCTION__);
         return 1;
     }
 
-    /* Retrieve field ID and number of additional bytes we need to read for the field's size. */
+    /* retrieve field id and number of additional bytes we need to read for the field's size */
     field_id = (((uint16_t)data[0]) << 8) | data[1];
     if (field_id == 0xFFFF) {
         return 1;
@@ -35,11 +31,10 @@ int cert_field_get(const uint8_t *data, uint32_t length, uint16_t *field_type, c
     }
 
     if (length < 2 + additional_len) {
-        //fprintf(stderr, "%s: length is too small for size bytes\n", __FUNCTION__);
         return 1;
     }
 
-    /* Retrieve data size of field. */
+    /* retrieve data size of field. */
     switch (field_id & 0xF) {
         case 0xD:
             field_len = (uint32_t)data[2];
@@ -59,12 +54,11 @@ int cert_field_get(const uint8_t *data, uint32_t length, uint16_t *field_type, c
     }
 
     if (length < 2 + additional_len + field_len) {
-        //fprintf(stderr, "%s: length is too small for data bytes\n", __FUNCTION__);
         return 1;
     }
 
     if (field_type != NULL) {
-        /* Don't mask out the size indication, it may be useful to the user. */
+        /* don't mask out the size indication, it may be useful to the user. */
         *field_type = field_id;
     }
     if (contents != NULL) {
@@ -82,13 +76,11 @@ int cert_field_next(const uint8_t **data, uint32_t *length) {
     const uint8_t * contents;
     uint32_t field_size;
 
-    /* Initial sanity checks. */
+    /* sanity checks. */
     if (data == NULL) {
-        //fprintf(stderr, "%s: data is NULL\n", __FUNCTION__);
         return 1;
     }
     if (length == NULL) {
-        //fprintf(stderr, "%s: length is NULL\n", __FUNCTION__);
         return 1;
     }
 
@@ -105,17 +97,15 @@ int cert_field_find(const uint8_t *data, uint32_t length, uint16_t field_type, c
     int ret = 0;
     uint16_t ft;
 
-    /* Initial sanity checks. */
+    /* sanity checks. */
     if (data == NULL) {
-        //fprintf(stderr, "%s: data is NULL\n", __FUNCTION__);
         return 1;
     }
     if (length < 2) {
-        //fprintf(stderr, "%s: length is too small to contain a valid cert field\n", __FUNCTION__);
         return 1;
     }
 
-    /* Mask out the size indication, it is harmful for finding a field. */
+    /* mask out the size indication, it is harmful for finding a field */
     field_type &= 0xFFF0;
     ft = 0xFFFF;
 
@@ -133,21 +123,17 @@ int cert_field_find(const uint8_t *data, uint32_t length, uint16_t field_type, c
 int cert_field_find_path(const uint8_t *data, uint32_t length, const uint16_t *field_path, uint16_t field_path_len, const uint8_t **contents, uint32_t *field_size) {
     int ret = 0;
 
-    /* Initial sanity checks. */
+    /* sanity checks. */
     if (data == NULL) {
-        //fprintf(stderr, "%s: data is NULL\n", __FUNCTION__);
         return 1;
     }
     if (field_path == NULL) {
-        //fprintf(stderr, "%s: field_path is NULL\n", __FUNCTION__);
         return 1;
     }
     if (length < 2) {
-        //fprintf(stderr, "%s: length is too small to contain a valid cert field\n", __FUNCTION__);
         return 1;
     }
     if (field_path_len == 0) {
-        //fprintf(stderr, "%s: field path is empty\n", __FUNCTION__);
         return 1;
     }
 

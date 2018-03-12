@@ -1,10 +1,11 @@
-#include <inttypes.h>
-#include <string.h>
-#include <stdio.h>
-
 #include "vat.h"
 #include "mem.h"
 #include "debug/debug.h"
+
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <inttypes.h>
 
 const char *calc_var_type_names[0x40] = {
     "Real",
@@ -74,7 +75,7 @@ const char *calc_var_type_names[0x40] = {
 };
 
 const char *calc_var_name_to_utf8(uint8_t name[8]) {
-    static char buffer[17];
+    static char buffer[20];
     char *dest = buffer;
     uint8_t i = 0;
     if (name[0] == 0x5D) {
@@ -184,7 +185,7 @@ const char *calc_var_name_to_utf8(uint8_t name[8]) {
                 }
                 if (!i) {
                     for (; i < 8 && name[i]; i++) {
-                        dest += snprintf(dest, 3, "%02" PRIX8, name[i]);
+                        dest += sprintf(dest, "%02" PRIX8, name[i]);
                     }
                 }
                 break;
@@ -207,7 +208,7 @@ bool vat_search_next(calc_var_t *var) {
     uint8_t i;
     bool prog = var->vat <= progPtr;
     if (!var->vat || var->vat < userMem || var->vat <= pTemp || var->vat > symTable) {
-        return false; // Some sanity check failed
+        return false; /* some sanity check failed */
     }
     var->type1    = mem_peek_byte(var->vat--);
     var->type2    = mem_peek_byte(var->vat--);
@@ -218,7 +219,7 @@ bool vat_search_next(calc_var_t *var) {
     if (prog) {
         var->namelen = mem_peek_byte(var->vat--);
         if (!var->namelen || var->namelen > 8) {
-            return false; // Invalid name length
+            return false; /* invalid name length */
         }
     } else {
         var->namelen = 3;

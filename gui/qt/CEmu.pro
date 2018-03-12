@@ -11,6 +11,7 @@ isEmpty(CEMU_VERSION) {
 DEFINES += CEMU_VERSION=\\\"$$CEMU_VERSION\\\"
 DEFINES += CEMU_GIT_SHA=\\\"$$CEMU_GIT_SHA\\\"
 DEFINES += CEMU_RELEASE=$$CEMU_RELEASE
+DEFINES += MULTITHREAD
 
 # Continuous Integration (variable checked later)
 CI = $$(CI)

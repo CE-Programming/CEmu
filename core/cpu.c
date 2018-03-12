@@ -50,7 +50,7 @@ static uint32_t cpu_address_mode(uint32_t address, bool mode) {
 }
 static void cpu_prefetch(uint32_t address, bool mode) {
     cpu.ADL = mode;
-    // rawPC the PC after the next prefetch (which we do late), before adding MBASE.
+    /* rawPC the PC after the next prefetch (which we do late), before adding MBASE. */
     cpu.registers.rawPC = cpu_mask_mode(address + 1, mode);
     cpu.registers.PC = cpu_address_mode(address, mode);
     cpu.prefetch = mem_read_cpu(cpu.registers.PC, true);
@@ -61,8 +61,8 @@ static void cpu_prefetch(uint32_t address, bool mode) {
 static uint8_t cpu_fetch_byte(void) {
     uint8_t value;
 #ifdef DEBUG_SUPPORT
-    if (debug.addr[cpu.registers.PC] & (DBG_MASK_TEMP_EXEC | DBG_MASK_EXEC)) {
-        debug_open(debug.addr[cpu.registers.PC] & DBG_MASK_EXEC ? DBG_EXEC_BREAKPOINT : DBG_STEP, cpu.registers.PC);
+    if (debug.addr[cpu.registers.PC] & (DBG_MASK_TEMP | DBG_MASK_EXEC)) {
+        debug_open(debug.addr[cpu.registers.PC] & DBG_MASK_EXEC ? DBG_BREAKPOINT : DBG_STEP, cpu.registers.PC);
     }
 #endif
     value = cpu.prefetch;
@@ -98,7 +98,7 @@ static uint8_t cpu_read_byte(uint32_t address) {
     uint32_t cpuAddress = cpu_address_mode(address, cpu.L);
 #ifdef DEBUG_SUPPORT
     if (cpuAddress == debug.stepOverEnd) {
-        debug.addr[debug.stepOverEnd = cpu_mask_mode(address + 1, debug.stepOverMode)] |= DBG_MASK_TEMP_EXEC;
+        debug.addr[debug.stepOverEnd = cpu_mask_mode(address + 1, debug.stepOverMode)] |= DBG_MASK_TEMP;
     }
 #endif
     return mem_read_cpu(cpuAddress, false);
@@ -156,7 +156,7 @@ static uint32_t cpu_pop_word(void) {
 
 static uint8_t cpu_read_in(uint16_t pio) {
     if (unprivileged_code()) {
-        return 0; // in returns 0 in unprivileged code
+        return 0; /* in returns 0 in unprivileged code */
     }
     return port_read_byte(pio);
 }
@@ -410,7 +410,7 @@ static void cpu_call(uint32_t address, bool mixed) {
             }
         } else if (cpu.events & EVENT_DEBUG_STEP_OVER) {
             if (r->PC == debug.stepOverEnd) {
-                debug.addr[debug.stepOverEnd] &= ~DBG_MASK_TEMP_EXEC;
+                debug.addr[debug.stepOverEnd] &= ~DBG_MASK_TEMP;
             }
         }
     }
@@ -479,7 +479,7 @@ static void cpu_execute_alu(int i, uint8_t v) {
     uint8_t old;
     eZ80registers_t *r = &cpu.registers;
     switch (i) {
-        case 0: // ADD A, v
+        case 0: /* ADD A, v */
             old = r->A;
             r->A += v;
             r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
@@ -487,7 +487,7 @@ static void cpu_execute_alu(int i, uint8_t v) {
                 | cpuflag_subtract(0) | cpuflag_carry_b(old + v)
                 | cpuflag_halfcarry_b_add(old, v, 0);
             break;
-        case 1: // ADC A, v
+        case 1: /* ADC A, v */
             old = r->A;
             r->A += v + r->flags.C;
             r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
@@ -495,7 +495,7 @@ static void cpu_execute_alu(int i, uint8_t v) {
                 | cpuflag_subtract(0) | cpuflag_carry_b(old + v + r->flags.C)
                 | cpuflag_halfcarry_b_add(old, v, r->flags.C);
             break;
-        case 2: // SUB v
+        case 2: /* SUB v */
             old = r->A;
             r->A -= v;
             r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
@@ -503,7 +503,7 @@ static void cpu_execute_alu(int i, uint8_t v) {
                 | cpuflag_subtract(1) | cpuflag_carry_b(old - v)
                 | cpuflag_halfcarry_b_sub(old, v, 0);
             break;
-        case 3: // SBC v
+        case 3: /* SBC v */
             old = r->A;
             r->A -= v + r->flags.C;
             r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
@@ -511,23 +511,23 @@ static void cpu_execute_alu(int i, uint8_t v) {
                 | cpuflag_subtract(1) | cpuflag_carry_b(old - v - r->flags.C)
                 | cpuflag_halfcarry_b_sub(old, v, r->flags.C);
             break;
-        case 4: // AND v
+        case 4: /* AND v */
             r->A &= v;
             r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
                 | cpuflag_undef(r->F) | cpuflag_parity(r->A)
                 | FLAG_H;
             break;
-        case 5: // XOR v
+        case 5: /* XOR v */
             r->A ^= v;
             r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
                 | cpuflag_undef(r->F) | cpuflag_parity(r->A);
             break;
-        case 6: // OR v
+        case 6: /* OR v */
             r->A |= v;
             r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
                 | cpuflag_undef(r->F) | cpuflag_parity(r->A);
             break;
-        case 7: // CP v
+        case 7: /* CP v */
             old = r->A - v;
             r->F = cpuflag_sign_b(old) | cpuflag_zero(old)
                 | cpuflag_undef(r->F) | cpuflag_subtract(1)
@@ -545,39 +545,39 @@ static void cpu_execute_rot(int y, int z, uint32_t address, uint8_t value) {
     uint8_t old_c = r->flags.C;
     uint8_t new_c;
     switch (y) {
-        case 0: // RLC value[z]
+        case 0: /* RLC value[z] */
             value <<= 1;
             value |= old_7;
             new_c = old_7;
             break;
-        case 1: // RRC value[z]
+        case 1: /* RRC value[z] */
             value >>= 1;
             value |= old_0 << 7;
             new_c = old_0;
             break;
-        case 2: // RL value[z]
+        case 2: /* RL value[z] */
             value <<= 1;
             value |= old_c;
             new_c = old_7;
             break;
-        case 3: // RR value[z]
+        case 3: /* RR value[z] */
             value >>= 1;
             value |= old_c << 7;
             new_c = old_0;
             break;
-        case 4: // SLA value[z]
+        case 4: /* SLA value[z] */
             value <<= 1;
             new_c = old_7;
             break;
-        case 5: // SRA value[z]
+        case 5: /* SRA value[z] */
             value >>= 1;
             value |= old_7 << 7;
             new_c = old_0;
             break;
-        case 6: // OPCODETRAP
+        case 6: /* OPCODETRAP */
             cpu_trap_rewind(1 + (cpu.PREFIX != 0));
             return;
-        case 7: // SRL value[z]
+        case 7: /* SRL value[z] */
             value >>= 1;
             new_c = old_0;
             break;
@@ -594,46 +594,46 @@ static void cpu_execute_rot_acc(int y)
     eZ80registers_t *r = &cpu.registers;
     uint8_t old;
     switch (y) {
-        case 0: // RLCA
+        case 0: /* RLCA */
             old = (r->A & 0x80) > 0;
             r->flags.C = old;
             r->A <<= 1;
             r->A |= old;
             r->flags.N = r->flags.H = 0;
             break;
-        case 1: // RRCA
+        case 1: /* RRCA */
             old = (r->A & 1) > 0;
             r->flags.C = old;
             r->A >>= 1;
             r->A |= old << 7;
             r->flags.N = r->flags.H = 0;
             break;
-        case 2: // RLA
+        case 2: /* RLA */
             old = r->flags.C;
             r->flags.C = (r->A & 0x80) > 0;
             r->A <<= 1;
             r->A |= old;
             r->flags.N = r->flags.H = 0;
             break;
-        case 3: // RRA
+        case 3: /* RRA */
             old = r->flags.C;
             r->flags.C = (r->A & 1) > 0;
             r->A >>= 1;
             r->A |= old << 7;
             r->flags.N = r->flags.H = 0;
             break;
-        case 4: // DAA
+        case 4: /* DAA */
             cpu_execute_daa();
             break;
-        case 5: // CPL
+        case 5: /* CPL */
             r->A = ~r->A;
             r->flags.N = r->flags.H = 1;
             break;
-        case 6: // SCF
+        case 6: /* SCF */
             r->flags.C = 1;
             r->flags.N = r->flags.H = 0;
             break;
-        case 7: // CCF
+        case 7: /* CCF */
             r->flags.H = r->flags.C;
             r->flags.C = !r->flags.C;
             r->flags.N = 0;
@@ -652,38 +652,38 @@ static void cpu_execute_bli() {
         switch (cpu.context.z) {
             case 0:
                 switch (xp) {
-                    case 0xA: // LDI, LDD
-                    case 0xB: // LDIR, LDDR
+                    case 0xA: /* LDI, LDD */
+                    case 0xB: /* LDIR, LDDR */
                         break;
                     default:
                         cpu_trap();
                         return;
                 }
-                // LDI, LDD, LDIR, LDDR
+                /* LDI, LDD, LDIR, LDDR */
                 cpu_write_byte(r->DE, cpu_read_byte(r->HL));
                 r->DE = cpu_mask_mode((int32_t)r->DE + delta, cpu.L);
                 r->flags.H = 0;
-                r->flags.PV = cpu_dec_bc_partial_mode() != 0; // Do not mask BC
+                r->flags.PV = cpu_dec_bc_partial_mode() != 0; /* Do not mask BC */
                 r->flags.N = 0;
                 repeat &= r->flags.PV;
                 break;
             case 1:
                 switch (xp) {
-                    case 0xA: // CPI, CPD
+                    case 0xA: /* CPI, CPD */
                         break;
-                    case 0xB: // CPIR, CPDR
+                    case 0xB: /* CPIR, CPDR */
                         internalCycles = 2;
                         break;
                     default:
                         cpu_trap();
                         return;
                 }
-                // CPI, CPD, CPIR, CPDR
+                /* CPI, CPD, CPIR, CPDR */
                 old = cpu_read_byte(r->HL);
                 new = r->A - old;
                 r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
                     | cpuflag_halfcarry_b_sub(r->A, old, 0)
-                    | cpuflag_pv(cpu_dec_bc_partial_mode()) // Do not mask BC
+                    | cpuflag_pv(cpu_dec_bc_partial_mode()) /* Do not mask BC */
                     | cpuflag_subtract(1) | cpuflag_c(r->flags.C)
                     | cpuflag_undef(r->F);
                 repeat &= !r->flags.Z && r->flags.PV;
@@ -693,7 +693,7 @@ static void cpu_execute_bli() {
                 break;
             case 2:
                 switch (xp) {
-                    case 0x8: // INIM, INDM
+                    case 0x8: /* INIM, INDM */
                         cpu_write_byte(r->HL, new = cpu_read_in(r->C));
                         r->C += delta;
                         old = r->B--;
@@ -701,34 +701,34 @@ static void cpu_execute_bli() {
                             | cpuflag_halfcarry_b_sub(old, 0, 1)
                             | cpuflag_subtract(cpuflag_sign_b(new)) | cpuflag_undef(r->F);
                         break;
-                    case 0x9: // INIMR, INDMR
+                    case 0x9: /* INIMR, INDMR */
                         cpu_write_byte(r->HL, new = cpu_read_in(r->C));
                         r->C += delta;
                         r->flags.Z = --r->B == 0;
                         r->flags.N = cpuflag_sign_b(new) != 0;
                         break;
-                    case 0xA: // INI, IND
-                    case 0xB: // INIR, INDR
+                    case 0xA: /* INI, IND */
+                    case 0xB: /* INIR, INDR */
                         cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
                         r->flags.Z = --r->B == 0;
                         r->flags.N = cpuflag_sign_b(new) != 0;
                         break;
-                    case 0xC: // INIRX, INDRX
+                    case 0xC: /* INIRX, INDRX */
                         cpu_write_byte(r->HL, new = cpu_read_in(r->DE));
-                        r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
+                        r->flags.Z = cpu_dec_bc_partial_mode() == 0; /* Do not mask BC */
                         r->flags.N = cpuflag_sign_b(new) != 0;
                         break;
                     default:
                         cpu_trap();
                         return;
                 }
-                // INIM, INDM, INIMR, INDMR, INI, IND, INIR, INDR, INIRX, INDRX
+                /* INIM, INDM, INIMR, INDMR, INI, IND, INIR, INDR, INIRX, INDRX */
                 repeat &= !r->flags.Z;
                 break;
             case 3:
                 switch (xp) {
-                    case 0x8: // OTIM, OTDM
-                    case 0x9: // OTIMR, OTDMR
+                    case 0x8: /* OTIM, OTDM */
+                    case 0x9: /* OTIMR, OTDMR */
                         cpu_write_out(r->C, new = cpu_read_byte(r->HL));
                         r->C += delta;
                         old = r->B--;
@@ -736,42 +736,42 @@ static void cpu_execute_bli() {
                             | cpuflag_halfcarry_b_sub(old, 0, 1)
                             | cpuflag_subtract(cpuflag_sign_b(new)) | cpuflag_undef(r->F);
                         break;
-                    case 0xA: // OUTI, OUTD
-                    case 0xB: // OTIR, OTDR
+                    case 0xA: /* OUTI, OUTD */
+                    case 0xB: /* OTIR, OTDR */
                         cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
                         r->flags.Z = --r->B == 0;
                         r->flags.N = cpuflag_sign_b(new) != 0;
                         break;
-                    case 0xC: // OTIRX, OTDRX
+                    case 0xC: /* OTIRX, OTDRX */
                         cpu_write_out(r->DE, new = cpu_read_byte(r->HL));
-                        r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
+                        r->flags.Z = cpu_dec_bc_partial_mode() == 0; /* Do not mask BC */
                         r->flags.N = cpuflag_sign_b(new) != 0;
                         break;
                     default:
                         cpu_trap();
                         return;
                 }
-                // OTIM, OTDM, OTIMR, OTDMR, OUTI, OUTD, OTIR, OTDR, OTIRX, OTDRX
+                /* OTIM, OTDM, OTIMR, OTDMR, OUTI, OUTD, OTIR, OTDR, OTIRX, OTDRX */
                 repeat &= !r->flags.Z;
                 break;
             case 4:
                 if (xp & 1) {
-                    if (xp & 2) { // OTI2R, OTD2R
+                    if (xp & 2) { /* OTI2R, OTD2R */
                         cpu_write_out(r->DE, new = cpu_read_byte(r->HL));
-                    } else {      // INI2R, IND2R
+                    } else {      /* INI2R, IND2R */
                         cpu_write_byte(r->HL, new = cpu_read_in(r->DE));
                     }
-                    // INI2R, IND2R, OTI2R, OTD2R
+                    /* INI2R, IND2R, OTI2R, OTD2R */
                     r->DE = cpu_mask_mode((int32_t)r->DE + delta, cpu.L);
-                    r->flags.Z = cpu_dec_bc_partial_mode() == 0; // Do not mask BC
+                    r->flags.Z = cpu_dec_bc_partial_mode() == 0; /* Do not mask BC */
                     repeat &= !r->flags.Z;
                 } else {
-                    if (xp & 2) { // OUTI2, OUTD2
+                    if (xp & 2) { /* OUTI2, OUTD2 */
                         cpu_write_out(r->BC, new = cpu_read_byte(r->HL));
-                    } else {      // INI2, IND2
+                    } else {      /* INI2, IND2 */
                         cpu_write_byte(r->HL, new = cpu_read_in(r->BC));
                     }
-                    // INI2, IND2, OUTI2, OUTD2
+                    /* INI2, IND2, OUTI2, OUTD2 */
                     r->C += delta;
                     r->flags.Z = --r->B == 0;
                 }
@@ -781,7 +781,7 @@ static void cpu_execute_bli() {
                 cpu_trap();
                 return;
         }
-        // All block instructions
+        /* All block instructions */
         r->HL = cpu_mask_mode((int32_t)r->HL + delta, cpu.L);
         cpu.cycles += internalCycles;
 
@@ -838,7 +838,7 @@ void cpu_crash(const char *msg) {
 static void cpu_halt(void) {
     if (cpu.cycles < cpu.next) {
         cpu.haltCycles += cpu.next - cpu.cycles;
-        cpu.cycles = cpu.next; // consume all of the cycles
+        cpu.cycles = cpu.next; /* consume all of the cycles */
     }
     cpu.halted = 1;
 }
@@ -847,7 +847,7 @@ void cpu_restore_next(void) {
     if (cpu.NMI || (cpu.events & EVENT_RESET)) {
         cpu.next = cpu.cycles;
     } else if (cpu.IEF_wait == 1 || (cpu.events & EVENT_DEBUG_STEP && !cpu.halted)) {
-        cpu.next = cpu.cycles + 1; // execute one instruction
+        cpu.next = cpu.cycles + 1; /* execute one instruction */
     } else {
         cpu.next = sched_event_next_cycle();
     }
@@ -879,7 +879,7 @@ void cpu_execute(void) {
                 cpu_restore_next();
             } else if (cpu.cycles < cpu.next) {
                 cpu.IEF_wait = 1;
-                cpu.next = cpu.cycles + 1; // execute one more instruction
+                cpu.next = cpu.cycles + 1; /* execute one more instruction */
             }
         }
         if (cpu.NMI || (cpu.IEF1 && (intrpt->status & intrpt->enabled))) {
@@ -921,7 +921,7 @@ void cpu_execute(void) {
             goto cpu_execute_bli_continue;
         }
         do {
-            // fetch opcode
+            /* fetch opcode */
             context.opcode = cpu_fetch_byte();
             r->R += 2;
             switch (context.x) {
@@ -929,28 +929,28 @@ void cpu_execute(void) {
                     switch (context.z) {
                         case 0:
                             switch (context.y) {
-                                case 0:  // NOP
+                                case 0:  /* NOP */
                                     break;
-                                case 1:  // EX af,af'
+                                case 1:  /* EX af,af' */
                                     w = r->AF;
                                     r->AF = r->_AF;
                                     r->_AF = w;
                                     break;
-                                case 2: // DJNZ d
+                                case 2: /* DJNZ d */
                                     s = cpu_fetch_offset();
                                     if (--r->B) {
                                         cpu.cycles++;
                                         cpu_prefetch(cpu_mask_mode((int32_t)r->PC + s, cpu.L), cpu.ADL);
                                     }
                                     break;
-                                case 3: // JR d
+                                case 3: /* JR d */
                                     s = cpu_fetch_offset();
                                     cpu_prefetch(cpu_mask_mode((int32_t)r->PC + s, cpu.L), cpu.ADL);
                                     break;
                                 case 4:
                                 case 5:
                                 case 6:
-                                case 7: // JR cc[y-4], d
+                                case 7: /* JR cc[y-4], d */
                                     s = cpu_fetch_offset();
                                     if (cpu_read_cc(context.y - 4)) {
                                         cpu.cycles++;
@@ -961,14 +961,14 @@ void cpu_execute(void) {
                             break;
                         case 1:
                             switch (context.q) {
-                                case 0: // LD rr, Mmn
-                                    if (context.p == 3 && cpu.PREFIX) { // LD IY/IX, (IX/IY + d)
+                                case 0: /* LD rr, Mmn */
+                                    if (context.p == 3 && cpu.PREFIX) { /* LD IY/IX, (IX/IY + d) */
                                         cpu_write_other_index(cpu_read_word(cpu_index_address()));
                                         break;
                                     }
                                     cpu_write_rp(context.p, cpu_fetch_word());
                                     break;
-                                case 1: // ADD HL,rr
+                                case 1: /* ADD HL,rr */
                                     old_word = cpu_mask_mode(cpu_read_index(), cpu.L);
                                     op_word = cpu_mask_mode(cpu_read_rp(context.p), cpu.L);
                                     new_word = old_word + op_word;
@@ -984,32 +984,32 @@ void cpu_execute(void) {
                             switch (context.q) {
                                 case 0:
                                     switch (context.p) {
-                                        case 0: // LD (BC), A
+                                        case 0: /* LD (BC), A */
                                             cpu_write_byte(r->BC, r->A);
                                             break;
-                                        case 1: // LD (DE), A
+                                        case 1: /* LD (DE), A */
                                             cpu_write_byte(r->DE, r->A);
                                             break;
-                                        case 2: // LD (Mmn), HL
+                                        case 2: /* LD (Mmn), HL */
                                             cpu_write_word(cpu_fetch_word(), cpu_read_index());
                                             break;
-                                        case 3: // LD (Mmn), A
+                                        case 3: /* LD (Mmn), A */
                                             cpu_write_byte(cpu_fetch_word(), r->A);
                                             break;
                                     }
                                     break;
                                 case 1:
                                     switch (context.p) {
-                                        case 0: // LD A, (BC)
+                                        case 0: /* LD A, (BC) */
                                             r->A = cpu_read_byte(r->BC);
                                             break;
-                                        case 1: // LD A, (DE)
+                                        case 1: /* LD A, (DE) */
                                             r->A = cpu_read_byte(r->DE);
                                             break;
-                                        case 2: // LD HL, (Mmn)
+                                        case 2: /* LD HL, (Mmn) */
                                             cpu_write_index(cpu_read_word(cpu_fetch_word()));
                                             break;
-                                        case 3: // LD A, (Mmn)
+                                        case 3: /* LD A, (Mmn) */
                                             r->A = cpu_read_byte(cpu_fetch_word());
                                             break;
                                     }
@@ -1018,15 +1018,15 @@ void cpu_execute(void) {
                             break;
                         case 3:
                             switch (context.q) {
-                                case 0: // INC rp[p]
+                                case 0: /* INC rp[p] */
                                     cpu_write_rp(context.p, (int32_t)cpu_read_rp(context.p) + 1);
                                     break;
-                                case 1: // DEC rp[p]
+                                case 1: /* DEC rp[p] */
                                     cpu_write_rp(context.p, (int32_t)cpu_read_rp(context.p) - 1);
                                     break;
                             }
                             break;
-                        case 4: // INC r[y]
+                        case 4: /* INC r[y] */
                             w = (context.y == 6) ? cpu_index_address() : 0;
                             old = cpu_read_reg_prefetched(context.y, w);
                             new = old + 1;
@@ -1035,7 +1035,7 @@ void cpu_execute(void) {
                                 | cpuflag_halfcarry_b_add(old, 0, 1) | cpuflag_pv(new == 0x80)
                                 | cpuflag_subtract(0) | cpuflag_undef(r->F);
                             break;
-                        case 5: // DEC r[y]
+                        case 5: /* DEC r[y] */
                             w = (context.y == 6) ? cpu_index_address() : 0;
                             old = cpu_read_reg_prefetched(context.y, w);
                             new = old - 1;
@@ -1044,8 +1044,8 @@ void cpu_execute(void) {
                                 | cpuflag_halfcarry_b_sub(old, 0, 1) | cpuflag_pv(old == 0x80)
                                 | cpuflag_subtract(1) | cpuflag_undef(r->F);
                             break;
-                        case 6: // LD r[y], n
-                            if (context.y == 7 && cpu.PREFIX) { // LD (IX/IY + d), IY/IX
+                        case 6: /* LD r[y], n */
+                            if (context.y == 7 && cpu.PREFIX) { /* LD (IX/IY + d), IY/IX */
                                 cpu_write_word(cpu_index_address(), cpu_read_other_index());
                                 break;
                             }
@@ -1054,9 +1054,9 @@ void cpu_execute(void) {
                             break;
                         case 7:
                             if (cpu.PREFIX) {
-                                if (context.q) { // LD (IX/IY + d), rp3[p]
+                                if (context.q) { /* LD (IX/IY + d), rp3[p] */
                                     cpu_write_word(cpu_index_address(), cpu_read_rp3(context.p));
-                                } else { // LD rp3[p], (IX/IY + d)
+                                } else { /* LD rp3[p], (IX/IY + d) */
                                     cpu_write_rp3(context.p, cpu_read_word(cpu_index_address()));
                                 }
                             } else {
@@ -1065,31 +1065,31 @@ void cpu_execute(void) {
                             break;
                     }
                     break;
-                case 1: // ignore prefixed prefixes
+                case 1: /* ignore prefixed prefixes */
                     if (context.z == context.y) {
                         switch (context.z) {
-                            case 0: // .SIS
+                            case 0: /* .SIS */
                                 cpu.SUFFIX = 1;
                                 cpu.L = 0; cpu.IL = 0;
                                 continue;
-                            case 1: // .LIS
+                            case 1: /* .LIS */
                                 cpu.SUFFIX = 1;
                                 cpu.L = 1; cpu.IL = 0;
                                 continue;
-                            case 2: // .SIL
+                            case 2: /* .SIL */
                                 cpu.SUFFIX = 1;
                                 cpu.L = 0; cpu.IL = 1;
                                 continue;
-                            case 3: // .LIL
+                            case 3: /* .LIL */
                                 cpu.SUFFIX = 1;
                                 cpu.L = 1; cpu.IL = 1;
                                 continue;
-                            case 6: // HALT
+                            case 6: /* HALT */
                                 cpu_halt();
                                 break;
-                            case 4: // LD H, H
-                            case 5: // LD L, L
-                            case 7: // LD A, A
+                            case 4: /* LD H, H */
+                            case 5: /* LD L, L */
+                            case 7: /* LD A, A */
                                 break;
                             default:
                                 abort();
@@ -1098,12 +1098,12 @@ void cpu_execute(void) {
                         cpu_read_write_reg(context.z, context.y);
                     }
                     break;
-                case 2: // ALU[y] r[z]
+                case 2: /* ALU[y] r[z] */
                     cpu_execute_alu(context.y, cpu_read_reg(context.z));
                     break;
                 case 3:
                     switch (context.z) {
-                        case 0: // RET cc[y]
+                        case 0: /* RET cc[y] */
                             cpu.cycles++;
                             if (cpu_read_cc(context.y)) {
                                 cpu_return();
@@ -1111,15 +1111,15 @@ void cpu_execute(void) {
                             break;
                         case 1:
                             switch (context.q) {
-                                case 0: // POP rp2[p]
+                                case 0: /* POP rp2[p] */
                                     cpu_write_rp2(context.p, cpu_pop_word());
                                     break;
                                 case 1:
                                     switch (context.p) {
-                                        case 0: // RET
+                                        case 0: /* RET */
                                             cpu_return();
                                             break;
-                                        case 1: // EXX
+                                        case 1: /* EXX */
                                             w = r->BC;
                                             r->BC = r->_BC;
                                             r->_BC = w;
@@ -1130,19 +1130,19 @@ void cpu_execute(void) {
                                             r->HL = r->_HL;
                                             r->_HL = w;
                                             break;
-                                        case 2: // JP (rr)
+                                        case 2: /* JP (rr) */
                                             cpu_prefetch_discard();
                                             cpu_prefetch(cpu_read_index(), cpu.L);
                                             cpu_check_step_out();
                                             break;
-                                        case 3: // LD SP, HL
+                                        case 3: /* LD SP, HL */
                                             cpu_write_sp(cpu_read_index());
                                             break;
                                     }
                                     break;
                             }
                             break;
-                        case 2: // JP cc[y], nn
+                        case 2: /* JP cc[y], nn */
                             if (cpu_read_cc(context.y)) {
                                 cpu.cycles++;
                                 cpu_prefetch(cpu_fetch_word_no_prefetch(), cpu.L);
@@ -1152,34 +1152,34 @@ void cpu_execute(void) {
                             break;
                         case 3:
                             switch (context.y) {
-                                case 0: // JP nn
+                                case 0: /* JP nn */
                                     cpu.cycles++;
                                     cpu_prefetch(cpu_fetch_word_no_prefetch(), cpu.L);
                                     break;
-                                case 1: // 0xCB prefixed opcodes
+                                case 1: /* 0xCB prefixed opcodes */
                                     w = cpu_index_address();
                                     context.opcode = cpu_fetch_byte();
                                     r->R += ~cpu.PREFIX & 2;
-                                    if (cpu.PREFIX && context.z != 6) { // OPCODETRAP
+                                    if (cpu.PREFIX && context.z != 6) { /* OPCODETRAP */
                                         cpu_trap_rewind(2);
                                     } else {
                                         old = cpu_read_reg_prefetched(context.z, w);
                                         switch (context.x) {
-                                            case 0: // rot[y] r[z]
+                                            case 0: /* rot[y] r[z] */
                                                 cpu_execute_rot(context.y, context.z, w, old);
                                                 break;
-                                            case 1: // BIT y, r[z]
+                                            case 1: /* BIT y, r[z] */
                                                 old &= (1 << context.y);
                                                 r->F = cpuflag_sign_b(old) | cpuflag_zero(old) | cpuflag_undef(r->F)
                                                     | cpuflag_parity(old) | cpuflag_c(r->flags.C)
                                                     | FLAG_H;
                                                 break;
-                                            case 2: // RES y, r[z]
+                                            case 2: /* RES y, r[z] */
                                                 cpu.cycles += context.z == 6;
                                                 old &= ~(1 << context.y);
                                                 cpu_write_reg_prefetched(context.z, w, old);
                                                 break;
-                                            case 3: // SET y, r[z]
+                                            case 3: /* SET y, r[z] */
                                                 cpu.cycles += context.z == 6;
                                                 old |= 1 << context.y;
                                                 cpu_write_reg_prefetched(context.z, w, old);
@@ -1187,39 +1187,39 @@ void cpu_execute(void) {
                                         }
                                     }
                                     break;
-                                case 2: // OUT (n), A
+                                case 2: /* OUT (n), A */
                                     cpu_write_out((r->A << 8) | cpu_fetch_byte(), r->A);
                                     break;
-                                case 3: // IN A, (n)
+                                case 3: /* IN A, (n) */
                                     r->A = cpu_read_in((r->A << 8) | cpu_fetch_byte());
                                     break;
-                                case 4: // EX (SP), HL/I
+                                case 4: /* EX (SP), HL/I */
                                     w = cpu_read_sp();
                                     old_word = cpu_read_word(w);
                                     new_word = cpu_read_index();
                                     cpu_write_index(old_word);
                                     cpu_write_word(w, new_word);
                                     break;
-                                case 5: // EX DE, HL
+                                case 5: /* EX DE, HL */
                                     w = cpu_mask_mode(r->DE, cpu.L);
                                     r->DE = cpu_mask_mode(r->HL, cpu.L);
                                     r->HL = w;
                                     break;
-                                case 6: // DI
+                                case 6: /* DI */
                                     cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = 0;
                                     cpu_restore_next();
                                     break;
-                                case 7: // EI
+                                case 7: /* EI */
                                     if (cpu.cycles < cpu.next) {
                                         cpu.IEF_wait = 1;
-                                        cpu.next = cpu.cycles + 1; // execute one more instruction
+                                        cpu.next = cpu.cycles + 1; /* execute one more instruction */
                                     } else {
                                         cpu.IEF_wait = 2;
                                     }
                                     break;
                             }
                             break;
-                        case 4: // CALL cc[y], nn
+                        case 4: /* CALL cc[y], nn */
                             if (cpu_read_cc(context.y)) {
                                 cpu_call(cpu_fetch_word_no_prefetch(), cpu.SUFFIX);
 #ifdef DEBUG_SUPPORT
@@ -1231,28 +1231,28 @@ void cpu_execute(void) {
                             break;
                         case 5:
                             switch (context.q) {
-                                case 0: // PUSH r2p[p]
+                                case 0: /* PUSH r2p[p] */
                                     cpu_push_word(cpu_read_rp2(context.p));
                                     break;
                                 case 1:
                                     switch (context.p) {
-                                        case 0: // CALL nn
+                                        case 0: /* CALL nn */
                                             cpu_call(cpu_fetch_word_no_prefetch(), cpu.SUFFIX);
 #ifdef DEBUG_SUPPORT
                                             debug_step_switch();
 #endif
                                             break;
-                                        case 1: // 0xDD prefixed opcodes
+                                        case 1: /* 0xDD prefixed opcodes */
                                             cpu.PREFIX = 2;
                                             continue;
-                                        case 2: // 0xED prefixed opcodes
-                                            cpu.PREFIX = 0; // ED cancels effect of DD/FD prefix
+                                        case 2: /* 0xED prefixed opcodes */
+                                            cpu.PREFIX = 0; /* ED cancels effect of DD/FD prefix */
                                             context.opcode = cpu_fetch_byte();
                                             r->R += 2;
                                             switch (context.x) {
                                                 case 0:
                                                     switch (context.z) {
-                                                        case 0: // IN0 r[y], (n)
+                                                        case 0: /* IN0 r[y], (n) */
                                                             new = cpu_read_in(cpu_fetch_byte());
                                                             if (context.y != 6) {
                                                                 cpu_write_reg(context.y, new);
@@ -1262,41 +1262,41 @@ void cpu_execute(void) {
                                                                 | cpuflag_c(r->flags.C);
                                                             break;
                                                          case 1:
-                                                            if (context.y == 6) { // LD IY, (HL)
+                                                            if (context.y == 6) { /* LD IY, (HL) */
                                                                 r->IY = cpu_read_word(r->HL);
-                                                            } else { // OUT0 (n), r[y]
+                                                            } else { /* OUT0 (n), r[y] */
                                                                 cpu_write_out(cpu_fetch_byte(), cpu_read_reg(context.y));
                                                             }
                                                             break;
-                                                        case 2: // LEA rp3[p], IX
-                                                        case 3: // LEA rp3[p], IY
-                                                            if (context.q) { // OPCODETRAP
+                                                        case 2: /* LEA rp3[p], IX */
+                                                        case 3: /* LEA rp3[p], IY */
+                                                            if (context.q) { /* OPCODETRAP */
                                                                 cpu_trap();
                                                             } else {
                                                                 cpu.PREFIX = context.z;
                                                                 cpu_write_rp3(context.p, cpu_index_address());
                                                             }
                                                             break;
-                                                        case 4: // TST A, r[y]
+                                                        case 4: /* TST A, r[y] */
                                                             new = r->A & cpu_read_reg(context.y);
                                                             r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
                                                                 | cpuflag_undef(r->F) | cpuflag_parity(new)
                                                                 | FLAG_H;
                                                             break;
                                                         case 6:
-                                                            if (context.y == 7) { // LD (HL), IY
+                                                            if (context.y == 7) { /* LD (HL), IY */
                                                                 cpu_write_word(r->HL, r->IY);
                                                                 break;
                                                             }
-                                                            // fallthrough
-                                                        case 5: // OPCODETRAP
+                                                            /* fallthrough */
+                                                        case 5: /* OPCODETRAP */
                                                             cpu_trap();
                                                             break;
                                                         case 7:
                                                             cpu.PREFIX = 2;
-                                                            if (context.q) { // LD (HL), rp3[p]
+                                                            if (context.q) { /* LD (HL), rp3[p] */
                                                                 cpu_write_word(r->HL, cpu_read_rp3(context.p));
-                                                            } else { // LD rp3[p], (HL)
+                                                            } else { /* LD rp3[p], (HL) */
                                                                 cpu_write_rp3(context.p, cpu_read_word(r->HL));
                                                             }
                                                             break;
@@ -1304,7 +1304,7 @@ void cpu_execute(void) {
                                                     break;
                                                 case 1:
                                                     switch (context.z) {
-                                                        case 0: // IN r[y], (BC)
+                                                        case 0: /* IN r[y], (BC) */
                                                             new = cpu_read_in(r->BC);
                                                             if (context.y != 6) {
                                                                 cpu_write_reg(context.y, new);
@@ -1314,22 +1314,22 @@ void cpu_execute(void) {
                                                                 | cpuflag_c(r->flags.C);
                                                             break;
                                                         case 1:
-                                                            if (context.y == 6) { // OPCODETRAP (ADL)
+                                                            if (context.y == 6) { /* OPCODETRAP (ADL) */
                                                                 cpu_trap();
-                                                            } else { // OUT (BC), r[y]
+                                                            } else { /* OUT (BC), r[y] */
                                                                 cpu_write_out(r->BC, cpu_read_reg(context.y));
                                                             }
                                                             break;
                                                         case 2:
                                                             old_word = cpu_mask_mode(r->HL, cpu.L);
                                                             op_word = cpu_mask_mode(cpu_read_rp(context.p), cpu.L);
-                                                            if (context.q == 0) { // SBC HL, rp[p]
+                                                            if (context.q == 0) { /* SBC HL, rp[p] */
                                                                 r->HL = cpu_mask_mode(sw = (int32_t)old_word - (int32_t)op_word - r->flags.C, cpu.L);
                                                                 r->F = cpuflag_sign_w(r->HL, cpu.L) | cpuflag_zero(r->HL)
                                                                     | cpuflag_undef(r->F) | cpuflag_overflow_w_sub(old_word, op_word, r->HL, cpu.L)
                                                                     | cpuflag_subtract(1) | cpuflag_carry_w(sw, cpu.L)
                                                                     | cpuflag_halfcarry_w_sub(old_word, op_word, r->flags.C);
-                                                            } else { // ADC HL, rp[p]
+                                                            } else { /* ADC HL, rp[p] */
                                                                 r->HL = cpu_mask_mode(sw = (int32_t)old_word + (int32_t)op_word + r->flags.C, cpu.L);
                                                                 r->F = cpuflag_sign_w(sw, cpu.L) | cpuflag_zero(r->HL)
                                                                     | cpuflag_undef(r->F) | cpuflag_overflow_w_add(old_word, op_word, r->HL, cpu.L)
@@ -1338,16 +1338,16 @@ void cpu_execute(void) {
                                                             }
                                                             break;
                                                         case 3:
-                                                            if (context.q == 0) { // LD (nn), rp[p]
+                                                            if (context.q == 0) { /* LD (nn), rp[p] */
                                                                 cpu_write_word(cpu_fetch_word(), cpu_read_rp(context.p));
-                                                            } else { // LD rp[p], (nn)
+                                                            } else { /* LD rp[p], (nn) */
                                                                 cpu_write_rp(context.p, cpu_read_word(cpu_fetch_word()));
                                                             }
                                                             break;
                                                         case 4:
                                                             if (context.q == 0) {
                                                                 switch (context.p) {
-                                                                    case 0:  // NEG
+                                                                    case 0:  /* NEG */
                                                                         old = r->A;
                                                                         r->A = -r->A;
                                                                         r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
@@ -1355,17 +1355,17 @@ void cpu_execute(void) {
                                                                             | cpuflag_subtract(1) | cpuflag_c(old != 0)
                                                                             | cpuflag_halfcarry_b_sub(0, old, 0);
                                                                         break;
-                                                                    case 1:  // LEA IX, IY + d
+                                                                    case 1:  /* LEA IX, IY + d */
                                                                         cpu.PREFIX = 3;
                                                                         r->IX = cpu_index_address();
                                                                         break;
-                                                                    case 2:  // TST A, n
+                                                                    case 2:  /* TST A, n */
                                                                         new = r->A & cpu_fetch_byte();
                                                                         r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
                                                                             | cpuflag_undef(r->F) | cpuflag_parity(new)
                                                                             | FLAG_H;
                                                                         break;
-                                                                    case 3:  // TSTIO n
+                                                                    case 3:  /* TSTIO n */
                                                                         new = cpu_read_in(r->C) & cpu_fetch_byte();
                                                                         r->F = cpuflag_sign_b(new) | cpuflag_zero(new)
                                                                             | cpuflag_undef(r->F) | cpuflag_parity(new)
@@ -1373,7 +1373,7 @@ void cpu_execute(void) {
                                                                         break;
                                                                 }
                                                             }
-                                                            else { // MLT rp[p]
+                                                            else { /* MLT rp[p] */
                                                                 cpu.cycles += 4;
                                                                 old_word = cpu_read_rp(context.p);
                                                                 new_word = (old_word&0xFF) * ((old_word>>8)&0xFF);
@@ -1383,78 +1383,78 @@ void cpu_execute(void) {
                                                             break;
                                                         case 5:
                                                             switch (context.y) {
-                                                                case 0: // RETN
-                                                                    // This is actually identical to reti on the z80
-                                                                case 1: // RETI
+                                                                case 0: /* RETN */
+                                                                    /* This is actually identical to reti on the z80 */
+                                                                case 1: /* RETI */
                                                                     cpu.IEF1 = cpu.IEF2;
                                                                     cpu_return();
                                                                     break;
-                                                                case 2: // LEA IY, IX + d
+                                                                case 2: /* LEA IY, IX + d */
                                                                     cpu.PREFIX = 2;
                                                                     r->IY = cpu_index_address();
                                                                     break;
                                                                 case 3:
-                                                                case 6: // OPCODETRAP
+                                                                case 6: /* OPCODETRAP */
                                                                     cpu_trap();
                                                                     break;
-                                                                case 4: // PEA IX + d
+                                                                case 4: /* PEA IX + d */
                                                                     cpu_push_word((int32_t)r->IX + cpu_fetch_offset());
                                                                     break;
-                                                                case 5: // LD MB, A
+                                                                case 5: /* LD MB, A */
                                                                     if (cpu.ADL) {
                                                                         r->MBASE = r->A;
                                                                     }
                                                                     break;
-                                                                case 7: // STMIX
+                                                                case 7: /* STMIX */
                                                                     cpu.MADL = 1;
                                                                     break;
                                                             }
                                                             break;
-                                                        case 6: // IM im[y]
+                                                        case 6: /* IM im[y] */
                                                             switch (context.y) {
                                                                 case 0:
                                                                 case 2:
-                                                                case 3: // IM im[y]
+                                                                case 3: /* IM im[y] */
                                                                     cpu.IM = context.y;
                                                                     break;
-                                                                case 1: // OPCODETRAP
+                                                                case 1: /* OPCODETRAP */
                                                                     cpu_trap();
                                                                     break;
-                                                                case 4: // PEA IY + d
+                                                                case 4: /* PEA IY + d */
                                                                     cpu_push_word((int32_t)r->IY + cpu_fetch_offset());
                                                                     break;
-                                                                case 5: // LD A, MB
+                                                                case 5: /* LD A, MB */
                                                                     r->A = r->MBASE;
                                                                     break;
-                                                                case 6: // SLP
+                                                                case 6: /* SLP */
                                                                     cpu_halt();
                                                                     break;
-                                                                case 7: // RSMIX
+                                                                case 7: /* RSMIX */
                                                                     cpu.MADL = 0;
                                                                     break;
                                                             }
                                                             break;
                                                         case 7:
                                                             switch (context.y) {
-                                                                case 0: // LD I, A
+                                                                case 0: /* LD I, A */
                                                                     r->I = r->A;
                                                                     break;
-                                                                case 1: // LD R, A
+                                                                case 1: /* LD R, A */
                                                                     r->R = r->A << 1 | r->A >> 7;
                                                                     break;
-                                                                case 2: // LD A, I
+                                                                case 2: /* LD A, I */
                                                                     r->A = r->I;
                                                                     r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
                                                                         | cpuflag_undef(r->F) | cpuflag_pv(cpu.IEF1)
                                                                         | cpuflag_subtract(0) | cpuflag_c(r->flags.C);
                                                                     break;
-                                                                case 3: // LD A, R
+                                                                case 3: /* LD A, R */
                                                                     r->A = r->R >> 1 | r->R << 7;
                                                                     r->F = cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
                                                                         | cpuflag_undef(r->F) | cpuflag_pv(cpu.IEF1)
                                                                         | cpuflag_subtract(0) | cpuflag_c(r->flags.C);
                                                                     break;
-                                                                case 4: // RRD
+                                                                case 4: /* RRD */
                                                                     old = r->A;
                                                                     new = cpu_read_byte(r->HL);
                                                                     r->A &= 0xF0;
@@ -1465,7 +1465,7 @@ void cpu_execute(void) {
                                                                     r->F = cpuflag_c(r->flags.C) | cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
                                                                         | cpuflag_parity(r->A) | cpuflag_undef(r->F);
                                                                     break;
-                                                                case 5: // RLD
+                                                                case 5: /* RLD */
                                                                     old = r->A;
                                                                     new = cpu_read_byte(r->HL);
                                                                     r->A &= 0xF0;
@@ -1476,7 +1476,7 @@ void cpu_execute(void) {
                                                                     r->F = cpuflag_c(r->flags.C) | cpuflag_sign_b(r->A) | cpuflag_zero(r->A)
                                                                         | cpuflag_parity(r->A) | cpuflag_undef(r->F);
                                                                     break;
-                                                                default: // OPCODETRAP
+                                                                default: /* OPCODETRAP */
                                                                     cpu_trap();
                                                                     break;
                                                             }
@@ -1495,40 +1495,40 @@ void cpu_execute(void) {
                                                         r->PC = cpu_address_mode(r->PC + 2 + cpu.SUFFIX, cpu.ADL);
                                                     }
                                                     break;
-                                                case 3:  // There are only a few of these, so a simple switch for these shouldn't matter too much
+                                                case 3:  /* There are only a few of these, so a simple switch for these shouldn't matter too much */
                                                     switch(context.opcode) {
-                                                        case 0xC2: // INIRX
-                                                        case 0xC3: // OTIRX
-                                                        case 0xCA: // INDRX
-                                                        case 0xCB: // OTDRX
+                                                        case 0xC2: /* INIRX */
+                                                        case 0xC3: /* OTIRX */
+                                                        case 0xCA: /* INDRX */
+                                                        case 0xCB: /* OTDRX */
                                                             goto cpu_execute_bli_start;
-                                                        case 0xC7: // LD I, HL
+                                                        case 0xC7: /* LD I, HL */
                                                             r->I = r->HL;
                                                             break;
-                                                        case 0xD7: // LD HL, I
+                                                        case 0xD7: /* LD HL, I */
                                                             r->HL = cpu_mask_mode(r->I | (r->MBASE << 16), cpu.L);
                                                             break;
-                                                        default:   // OPCODETRAP
+                                                        default:   /* OPCODETRAP */
                                                             cpu_trap();
                                                             break;
                                                     }
                                                     break;
-                                                default: // OPCODETRAP
+                                                default: /* OPCODETRAP */
                                                     cpu_trap();
                                                     break;
                                             }
                                             break;
-                                        case 3: // 0xFD prefixed opcodes
+                                        case 3: /* 0xFD prefixed opcodes */
                                             cpu.PREFIX = 3;
                                             continue;
                                     }
                                     break;
                             }
                             break;
-                        case 6: // alu[y] n
+                        case 6: /* alu[y] n */
                             cpu_execute_alu(context.y, cpu_fetch_byte());
                             break;
-                        case 7: // RST y*8
+                        case 7: /* RST y*8 */
                             cpu.cycles++;
                             cpu_call(context.y << 3, cpu.SUFFIX);
                             break;
