@@ -224,6 +224,7 @@ static void emu_main_loop_inner(void) {
 void emu_loop(void) {
     exiting = false;
     emscripten_set_main_loop(emu_main_loop_inner, 60, 1);
+    asic_free();
 }
 
 #else // not __EMSCRIPTEN__
@@ -241,6 +242,7 @@ void emu_loop(void) {
         }
         cpu_execute();
     }
+    asic_free();
 }
 
 #endif // __EMSCRIPTEN__
