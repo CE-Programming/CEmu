@@ -12,9 +12,9 @@ general_timers_state_t gpt;
 
 static void ost_event(enum sched_item_id id) {
     static const int ost_ticks[4] = { 73, 153, 217, 313 };
-    intrpt_set(INT_OSTIMER, gpt.ost_state);
-    sched_repeat(id, gpt.ost_state ? 1 : ost_ticks[control.ports[0] & 3]);
-    gpt.ost_state = !gpt.ost_state;
+    intrpt_set(INT_OSTIMER, gpt.osTimerState);
+    sched_repeat(id, gpt.osTimerState ? 1 : ost_ticks[control.ports[0] & 3]);
+    gpt.osTimerState = !gpt.osTimerState;
 }
 
 static void gpt_restore_state(enum sched_item_id id) {
@@ -58,15 +58,15 @@ static uint64_t gpt_next_event(enum sched_item_id id) {
                 next = temp;
             }
         }
-        gpt.status |= (status & ~gpt.raw_status[index]) << (index * 3);
+        gpt.status |= (status & ~gpt.raw[index]) << (index * 3);
         intrpt_set(INT_TIMER1 << index, status);
-        gpt.raw_status[index] = next ? 0 : status;
-        intrpt_set(INT_TIMER1 << index, gpt.raw_status[index]);
+        gpt.raw[index] = next ? 0 : status;
+        intrpt_set(INT_TIMER1 << index, gpt.raw[index]);
         timer->counter -= ((uint32_t)next + invert) ^ invert;
         item->clock = (gpt.control >> index*3 & 2) ? CLOCK_32K : CLOCK_CPU;
         return next;
     }
-    gpt.raw_status[index] = 0;
+    gpt.raw[index] = 0;
     intrpt_set(INT_TIMER1 << index, 0);
     return 0;
 }

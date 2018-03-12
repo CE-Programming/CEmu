@@ -242,10 +242,6 @@ QString MainWindow::debugGetFile(bool save) {
 }
 
 void MainWindow::debugRaise() {
-    if (guiReset) {
-        return;
-    }
-
     debugEnable();
     debugPopulate();
     connect(m_shortcutStepIn, &QShortcut::activated, this, &MainWindow::stepIn);
@@ -328,14 +324,18 @@ void MainWindow::debugExecute(uint32_t offset, uint8_t cmd) {
 }
 
 void MainWindow::debugCommand(int reason, uint32_t data) {
-    // ensure that the calculator has fully reset before processing debug
-    if (reason == DBG_READY || !guiEmuValid) {
+    if (!guiEmuValid) {
+        return;
+    }
+
+    if (reason == DBG_READY) {
         guiReset = false;
+        emu.resume();
         return;
     }
 
     if (guiReset) {
-        emu.debug(false);
+        emu.resume();
         return;
     }
 

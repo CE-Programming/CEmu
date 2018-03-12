@@ -26,9 +26,9 @@ enum flash_commands {
 
 typedef struct {
     uint32_t addr;
-    uint32_t addr_mask;
+    uint32_t addrMask;
     uint8_t value;
-    uint8_t value_mask;
+    uint8_t valueMask;
 } flash_write_t;
 
 typedef struct {
@@ -37,9 +37,9 @@ typedef struct {
 } flash_sector_state_t;
 
 typedef struct {
-    uint8_t write_index;
-    uint8_t read_index;
-    flash_sector_state_t sector_8k[8];
+    uint8_t write;
+    uint8_t read;
+    flash_sector_state_t sector8k[8];
     flash_sector_state_t sector[64];
     uint8_t *block;
 
@@ -55,7 +55,7 @@ typedef struct {
 typedef struct mem_state {
     flash_chip_t flash;
     ram_chip_t ram;
-    uint8_t fetch_index : 4, fetch_buffer[1 << 4];
+    uint8_t fetch : 4, buffer[1 << 4];
 } mem_state_t;
 
 extern mem_state_t mem;

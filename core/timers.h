@@ -17,8 +17,8 @@ typedef struct timer_state {
 typedef struct general_timers_state {
     timer_state_t timer[3];
     uint32_t control, status, mask, revision;
-    uint8_t raw_status[3], padding[1];
-    bool ost_state;
+    uint8_t raw[3], padding[1];
+    bool osTimerState;
 } general_timers_state_t;
 
 extern general_timers_state_t gpt;

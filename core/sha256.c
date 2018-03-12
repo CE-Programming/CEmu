@@ -28,7 +28,7 @@ static void initialize() {
         0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
         0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
     };
-    memcpy(sha256.hash_state, initial_state, 32);
+    memcpy(sha256.state, initial_state, 32);
 }
 
 static void process_block() {
@@ -47,21 +47,21 @@ static void process_block() {
     uint32_t w[64];
     int i;
 
-    memcpy(w, sha256.hash_block, 64);
+    memcpy(w, sha256.block, 64);
     for (i = 16; i < 64; i++) {
         uint32_t s0 = ROR(w[i-15], 7) ^ ROR(w[i-15], 18) ^ (w[i-15] >> 3);
         uint32_t s1 = ROR(w[i-2], 17) ^ ROR(w[i-2], 19) ^ (w[i-2] >> 10);
         w[i] = w[i-16] + s0 + w[i-7] + s1;
     }
 
-    a = sha256.hash_state[0];
-    b = sha256.hash_state[1];
-    c = sha256.hash_state[2];
-    d = sha256.hash_state[3];
-    e = sha256.hash_state[4];
-    f = sha256.hash_state[5];
-    g = sha256.hash_state[6];
-    h = sha256.hash_state[7];
+    a = sha256.state[0];
+    b = sha256.state[1];
+    c = sha256.state[2];
+    d = sha256.state[3];
+    e = sha256.state[4];
+    f = sha256.state[5];
+    g = sha256.state[6];
+    h = sha256.state[7];
 
     for (i = 0; i < 64; i++) {
         uint32_t s0 = ROR(a, 2) ^ ROR(a, 13) ^ ROR(a, 22);
@@ -81,14 +81,14 @@ static void process_block() {
         a = t1 + t2;
     }
 
-    sha256.hash_state[0] += a;
-    sha256.hash_state[1] += b;
-    sha256.hash_state[2] += c;
-    sha256.hash_state[3] += d;
-    sha256.hash_state[4] += e;
-    sha256.hash_state[5] += f;
-    sha256.hash_state[6] += g;
-    sha256.hash_state[7] += h;
+    sha256.state[0] += a;
+    sha256.state[1] += b;
+    sha256.state[2] += c;
+    sha256.state[3] += d;
+    sha256.state[4] += e;
+    sha256.state[5] += f;
+    sha256.state[6] += g;
+    sha256.state[7] += h;
 }
 
 void sha256_reset(void) {
@@ -102,18 +102,18 @@ static uint8_t sha256_read(uint16_t pio, bool peek) {
 
     if (!peek) {
         if (protected_ports_unlocked()) {
-            sha256.last_index = index;
+            sha256.last = index;
         } else {
-            index = sha256.last_index;
+            index = sha256.last;
         }
     }
 
     if (index == 0x0C >> 2) {
-        return read8(sha256.hash_state[7], bit_offset);
+        return read8(sha256.state[7], bit_offset);
     } else if (index >= 0x10 >> 2 && index < 0x50 >> 2) {
-        return read8(sha256.hash_block[index - (0x10 >> 2)], bit_offset);
+        return read8(sha256.block[index - (0x10 >> 2)], bit_offset);
     } else if (index >= 0x60 >> 2 && index < 0x80 >> 2) {
-        return read8(sha256.hash_state[index - (0x60 >> 2)], bit_offset);
+        return read8(sha256.state[index - (0x60 >> 2)], bit_offset);
     }
     /* Return 0 if invalid */
     return 0;
@@ -125,7 +125,7 @@ static void sha256_write(uint16_t pio, uint8_t byte, bool poke) {
 
     if (!poke) {
         if (protected_ports_unlocked()) {
-            sha256.last_index = index;
+            sha256.last = index;
         } else {
             return; // writes are ignored when mmio is locked
         }
@@ -133,7 +133,7 @@ static void sha256_write(uint16_t pio, uint8_t byte, bool poke) {
 
     if (!pio && flash_unlocked()) {
         if (byte & 0x10) {
-            memset(sha256.hash_state, 0, sizeof(sha256.hash_state));
+            memset(sha256.state, 0, sizeof(sha256.state));
         } else {
             if ((byte & 0xE) == 0xA) /* 0A or 0B: first block */
                 initialize();
@@ -141,7 +141,7 @@ static void sha256_write(uint16_t pio, uint8_t byte, bool poke) {
                 process_block();
         }
     } else if (index >= 0x10 >> 2 && index < 0x50 >> 2) {
-        write8(sha256.hash_block[index - (0x10 >> 2)], bit_offset, byte);
+        write8(sha256.block[index - (0x10 >> 2)], bit_offset, byte);
     }
 }
 

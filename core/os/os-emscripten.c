@@ -28,10 +28,6 @@ void gui_throttle() {
     throttle_triggered = true;
 }
 
-void gui_emu_sleep(unsigned long microseconds) {
-    (void)microseconds;
-}
-
 void gui_do_stuff() {
     if (file_buf[0] != '\0') {
         if (!sendVariableLink(file_buf, LINK_FILE)) {
@@ -86,12 +82,8 @@ void EMSCRIPTEN_KEEPALIVE emsc_resume_main_loop() {
 }
 
 void EMSCRIPTEN_KEEPALIVE emsc_cancel_main_loop() {
-    asic_reset();
+    emu_reset();
     emscripten_cancel_main_loop();
-}
-
-void EMSCRIPTEN_KEEPALIVE emu_reset() {
-    asic_reset();
 }
 
 int main(int argc, char* argv[]) {

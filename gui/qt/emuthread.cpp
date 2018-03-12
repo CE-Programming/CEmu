@@ -17,10 +17,6 @@ void gui_do_stuff(void) {
     emu->doStuff();
 }
 
-void gui_emu_sleep(unsigned long microseconds) {
-    emu->usleep(microseconds);
-}
-
 void gui_console_printf(const char *format, ...) {
     va_list args;
     va_start(args, format);

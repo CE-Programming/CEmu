@@ -20,15 +20,12 @@
 
 volatile bool exiting = false;
 
-void emu_throttle_event(enum sched_item_id id) {
-    sched_repeat(id, 100000); // 60 Hz
-
-    gui_do_stuff();
-    gui_throttle();
+void EMSCRIPTEN_KEEPALIVE emu_exit(void) {
+    exiting = true;
 }
 
-void emu_exit(void) {
-    exiting = true;
+void EMSCRIPTEN_KEEPALIVE emu_reset(void) {
+    asic_reset();
 }
 
 bool emu_save(bool image, const char *path) {
@@ -227,7 +224,6 @@ static void emu_main_loop_inner(void) {
 void emu_loop(void) {
     exiting = false;
     emscripten_set_main_loop(emu_main_loop_inner, 60, 1);
-    asic_free();
 }
 
 #else // not __EMSCRIPTEN__
@@ -245,7 +241,6 @@ void emu_loop(void) {
         }
         cpu_execute();
     }
-    asic_free();
 }
 
 #endif // __EMSCRIPTEN__

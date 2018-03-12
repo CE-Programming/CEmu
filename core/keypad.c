@@ -14,7 +14,7 @@
 keypad_state_t keypad;
 
 void keypad_intrpt_check() {
-    intrpt_set(INT_KEYPAD, (keypad.status & keypad.enable) | (keypad.gpio_status & keypad.gpio_enable));
+    intrpt_set(INT_KEYPAD, (keypad.status & keypad.enable) | (keypad.gpioStatus & keypad.gpioEnable));
 }
 
 void EMSCRIPTEN_KEEPALIVE keypad_key_event(unsigned int row, unsigned int col, bool press) {
@@ -64,10 +64,10 @@ static uint8_t keypad_read(const uint16_t pio, bool peek) {
             value = read8(keypad.data[(pio - 0x10) >> 1 & 15], pio << 3 & 8);
             break;
         case 0x10:
-            value = read8(keypad.gpio_enable, bit_offset);
+            value = read8(keypad.gpioEnable, bit_offset);
             break;
         case 0x11:
-            value = read8(keypad.gpio_status, bit_offset);
+            value = read8(keypad.gpioStatus, bit_offset);
             break;
         default:
             break;
@@ -79,7 +79,7 @@ static uint8_t keypad_read(const uint16_t pio, bool peek) {
 
 /* Scan next row of keypad, if scanning is enabled */
 static void keypad_scan_event(enum sched_item_id id) {
-    uint8_t row = keypad.current_row++;
+    uint8_t row = keypad.row++;
     if (row < keypad.rows && row < sizeof(keypad.data) / sizeof(keypad.data[0])) {
         /* scan each data row */
         uint16_t data = keypad.keyMap[row] | keypad.delay[row];
@@ -92,13 +92,13 @@ static void keypad_scan_event(enum sched_item_id id) {
             keypad.data[row] = data;
         }
     }
-    if (keypad.current_row < keypad.rows) { /* scan the next row */
-        sched_repeat(id, keypad.row_wait);
+    if (keypad.row < keypad.rows) { /* scan the next row */
+        sched_repeat(id, keypad.rowWait);
     } else { /* finished scanning the keypad */
         keypad.status |= 1;
         if (keypad.mode & 1) { /* are we in mode 1 or 3 */
-            keypad.current_row = 0;
-            sched_repeat(id, 2 + keypad.scan_wait + keypad.row_wait);
+            keypad.row = 0;
+            sched_repeat(id, 2 + keypad.scanWait + keypad.rowWait);
         } else {
             /* If in single scan mode, go to idle mode */
             keypad.mode = 0;
@@ -125,8 +125,8 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
         case 0x00:
             write8(keypad.control,bit_offset,byte);
             if (keypad.mode & 2) {
-                keypad.current_row = 0;
-                sched_set(SCHED_KEYPAD, keypad.row_wait);
+                keypad.row = 0;
+                sched_set(SCHED_KEYPAD, keypad.rowWait);
             } else {
                 sched_clear(SCHED_KEYPAD);
                 if (keypad.mode == 1 && keypad_any_key_pressed()) {
@@ -157,11 +157,11 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
             }
             break;
         case 0x10:
-            write8(keypad.gpio_enable, bit_offset, byte);
+            write8(keypad.gpioEnable, bit_offset, byte);
             keypad_intrpt_check();
             break;
         case 0x11:
-            write8(keypad.gpio_status, bit_offset, keypad.gpio_status >> bit_offset & ~byte);
+            write8(keypad.gpioStatus, bit_offset, keypad.gpioStatus >> bit_offset & ~byte);
             keypad_intrpt_check();
             break;
         default:
@@ -170,7 +170,7 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
 }
 
 void keypad_reset() {
-    keypad.current_row = 0;
+    keypad.row = 0;
     memset(keypad.data, 0, sizeof(keypad.data));
     memset(keypad.keyMap, 0, sizeof(keypad.keyMap));
     memset(keypad.delay, 0, sizeof(keypad.delay));

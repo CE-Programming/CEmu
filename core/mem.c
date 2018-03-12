@@ -25,8 +25,8 @@ void mem_init(void) {
     memset(mem.flash.block, 0xFF, SIZE_FLASH);
 
     for (i = 0; i < 8; i++) {
-        mem.flash.sector_8k[i].ptr = mem.flash.block + i * SIZE_FLASH_SECTOR_8K;
-        mem.flash.sector_8k[i].locked = true;
+        mem.flash.sector8k[i].ptr = mem.flash.block + i * SIZE_FLASH_SECTOR_8K;
+        mem.flash.sector8k[i].locked = true;
     }
 
     for (i = 0; i < 64; i++) {
@@ -40,7 +40,7 @@ void mem_init(void) {
     /* Allocate RAM */
     mem.ram.block = (uint8_t*)calloc(SIZE_RAM, 1);
 
-    mem.flash.write_index = 0;
+    mem.flash.write = 0;
     mem.flash.command = NO_COMMAND;
     gui_console_printf("[CEmu] Initialized Memory...\n");
 }
@@ -169,7 +169,7 @@ void *mem_dma_cpy(void *buf, uint32_t addr, int32_t size) {
 static void flash_reset_write_index(uint32_t addr, uint8_t byte) {
     (void)addr;
     (void)byte;
-    mem.flash.write_index = 0;
+    mem.flash.write = 0;
 }
 
 static void flash_write(uint32_t addr, uint8_t byte) {
@@ -184,8 +184,8 @@ static void flash_erase(uint32_t addr, uint8_t byte) {
     mem.flash.command = FLASH_CHIP_ERASE;
 
     for (i = 0; i < 8; i++) {
-        if (!mem.flash.sector_8k[i].locked) {
-            memset(mem.flash.sector_8k[i].ptr, 0xFF, SIZE_FLASH_SECTOR_8K);
+        if (!mem.flash.sector8k[i].locked) {
+            memset(mem.flash.sector8k[i].ptr, 0xFF, SIZE_FLASH_SECTOR_8K);
         }
     }
 
@@ -253,68 +253,68 @@ static flash_write_pattern_t patterns[] = {
     {
         .length = 4,
         .pattern = {
-            { .addr = 0xAAA, .addr_mask = 0xFFF, .value = 0xAA, .value_mask = 0xFF },
-            { .addr = 0x555, .addr_mask = 0xFFF, .value = 0x55, .value_mask = 0xFF },
-            { .addr = 0xAAA, .addr_mask = 0xFFF, .value = 0xA0, .value_mask = 0xFF },
-            { .addr = 0x000, .addr_mask = 0x000, .value = 0x00, .value_mask = 0x00 },
+            { .addr = 0xAAA, .addrMask = 0xFFF, .value = 0xAA, .valueMask = 0xFF },
+            { .addr = 0x555, .addrMask = 0xFFF, .value = 0x55, .valueMask = 0xFF },
+            { .addr = 0xAAA, .addrMask = 0xFFF, .value = 0xA0, .valueMask = 0xFF },
+            { .addr = 0x000, .addrMask = 0x000, .value = 0x00, .valueMask = 0x00 },
         },
         .handler = flash_write
     },
     {
         .length = 6,
         .pattern = {
-            { .addr = 0xAAA, .addr_mask = 0xFFF, .value = 0xAA, .value_mask = 0xFF },
-            { .addr = 0x555, .addr_mask = 0xFFF, .value = 0x55, .value_mask = 0xFF },
-            { .addr = 0xAAA, .addr_mask = 0xFFF, .value = 0x80, .value_mask = 0xFF },
-            { .addr = 0xAAA, .addr_mask = 0xFFF, .value = 0xAA, .value_mask = 0xFF },
-            { .addr = 0x555, .addr_mask = 0xFFF, .value = 0x55, .value_mask = 0xFF },
-            { .addr = 0x000, .addr_mask = 0x000, .value = 0x30, .value_mask = 0xFF },
+            { .addr = 0xAAA, .addrMask = 0xFFF, .value = 0xAA, .valueMask = 0xFF },
+            { .addr = 0x555, .addrMask = 0xFFF, .value = 0x55, .valueMask = 0xFF },
+            { .addr = 0xAAA, .addrMask = 0xFFF, .value = 0x80, .valueMask = 0xFF },
+            { .addr = 0xAAA, .addrMask = 0xFFF, .value = 0xAA, .valueMask = 0xFF },
+            { .addr = 0x555, .addrMask = 0xFFF, .value = 0x55, .valueMask = 0xFF },
+            { .addr = 0x000, .addrMask = 0x000, .value = 0x30, .valueMask = 0xFF },
         },
         .handler = flash_erase_sector
     },
     {
         .length = 6,
         .pattern = {
-            { .addr = 0xAAA, .addr_mask = 0xFFF, .value = 0xAA, .value_mask = 0xFF },
-            { .addr = 0x555, .addr_mask = 0xFFF, .value = 0x55, .value_mask = 0xFF },
-            { .addr = 0xAAA, .addr_mask = 0xFFF, .value = 0x80, .value_mask = 0xFF },
-            { .addr = 0xAAA, .addr_mask = 0xFFF, .value = 0xAA, .value_mask = 0xFF },
-            { .addr = 0x555, .addr_mask = 0xFFF, .value = 0x55, .value_mask = 0xFF },
-            { .addr = 0xAAA, .addr_mask = 0xFFF, .value = 0x10, .value_mask = 0xFF },
+            { .addr = 0xAAA, .addrMask = 0xFFF, .value = 0xAA, .valueMask = 0xFF },
+            { .addr = 0x555, .addrMask = 0xFFF, .value = 0x55, .valueMask = 0xFF },
+            { .addr = 0xAAA, .addrMask = 0xFFF, .value = 0x80, .valueMask = 0xFF },
+            { .addr = 0xAAA, .addrMask = 0xFFF, .value = 0xAA, .valueMask = 0xFF },
+            { .addr = 0x555, .addrMask = 0xFFF, .value = 0x55, .valueMask = 0xFF },
+            { .addr = 0xAAA, .addrMask = 0xFFF, .value = 0x10, .valueMask = 0xFF },
         },
         .handler = flash_erase
     },
     {
         .length = 1,
         .pattern = {
-            { .addr = 0xAA, .addr_mask = 0xFFF, .value = 0x98, .value_mask = 0xFF },
+            { .addr = 0xAA, .addrMask = 0xFFF, .value = 0x98, .valueMask = 0xFF },
         },
         .handler = flash_cfi_read
     },
     {
         .length = 3,
         .pattern = {
-            { .addr = 0xAAA, .addr_mask = 0xFFF, .value = 0xAA, .value_mask = 0xFF },
-            { .addr = 0x555, .addr_mask = 0xFFF, .value = 0x55, .value_mask = 0xFF },
-            { .addr = 0xAAA, .addr_mask = 0xFFF, .value = 0x90, .value_mask = 0xFF },
+            { .addr = 0xAAA, .addrMask = 0xFFF, .value = 0xAA, .valueMask = 0xFF },
+            { .addr = 0x555, .addrMask = 0xFFF, .value = 0x55, .valueMask = 0xFF },
+            { .addr = 0xAAA, .addrMask = 0xFFF, .value = 0x90, .valueMask = 0xFF },
         },
         .handler = flash_verify_sector_protection
     },
     {
         .length = 3,
         .pattern = {
-            { .addr = 0xAAA, .addr_mask = 0xFFF, .value = 0xAA, .value_mask = 0xFF },
-            { .addr = 0x555, .addr_mask = 0xFFF, .value = 0x55, .value_mask = 0xFF },
-            { .addr = 0x000, .addr_mask = 0x000, .value = 0xB9, .value_mask = 0xFF },
+            { .addr = 0xAAA, .addrMask = 0xFFF, .value = 0xAA, .valueMask = 0xFF },
+            { .addr = 0x555, .addrMask = 0xFFF, .value = 0x55, .valueMask = 0xFF },
+            { .addr = 0x000, .addrMask = 0x000, .value = 0xB9, .valueMask = 0xFF },
         },
         .handler = flash_enter_deep_power_down
     },
     {
         .length = 3,
         .pattern = {
-            { .addr = 0xAAA, .addr_mask = 0xFFF, .value = 0xAA, .value_mask = 0xFF },
-            { .addr = 0x555, .addr_mask = 0xFFF, .value = 0x55, .value_mask = 0xFF },
-            { .addr = 0xAAA, .addr_mask = 0xFFF, .value = 0xC0, .value_mask = 0xFF },
+            { .addr = 0xAAA, .addrMask = 0xFFF, .value = 0xAA, .valueMask = 0xFF },
+            { .addr = 0x555, .addrMask = 0xFFF, .value = 0x55, .valueMask = 0xFF },
+            { .addr = 0xAAA, .addrMask = 0xFFF, .value = 0xC0, .valueMask = 0xFF },
         },
         .handler = flash_enter_IPB
     },
@@ -336,10 +336,9 @@ static uint8_t mem_read_flash(uint32_t addr) {
                 break;
             case FLASH_SECTOR_ERASE:
                 value = 0x80;
-                mem.flash.read_index++;
-                if (mem.flash.read_index == 3) {
-                    gui_emu_sleep(3e4); /* Simulate erase delay */
-                    mem.flash.read_index = 0;
+                mem.flash.read++;
+                if (mem.flash.read == 3) {
+                    mem.flash.read = 0;
                     mem.flash.command = NO_COMMAND;
                 }
                 break;
@@ -350,7 +349,7 @@ static uint8_t mem_read_flash(uint32_t addr) {
             case FLASH_READ_SECTOR_PROTECTION:
                 if (addr < 0x10000) {
                     selected = addr/SIZE_FLASH_SECTOR_8K;
-                    value = mem.flash.sector_8k[selected].locked ? 1 : 0;
+                    value = mem.flash.sector8k[selected].locked ? 1 : 0;
                 } else {
                     selected = addr/SIZE_FLASH_SECTOR_64K;
                     value = mem.flash.sector[selected].locked ? 1 : 0;
@@ -406,20 +405,20 @@ static void mem_write_flash(uint32_t addr, uint8_t byte) {
         }
     }
 
-    w = &mem.flash.writes[mem.flash.write_index++];
+    w = &mem.flash.writes[mem.flash.write++];
     w->addr = addr;
     w->value = byte;
 
     for (pattern = patterns; pattern->length; pattern++) {
-        for (i = 0; (i < mem.flash.write_index) && (i < pattern->length) &&
-             (mem.flash.writes[i].addr & pattern->pattern[i].addr_mask) == pattern->pattern[i].addr &&
-             (mem.flash.writes[i].value & pattern->pattern[i].value_mask) == pattern->pattern[i].value; i++) {
+        for (i = 0; (i < mem.flash.write) && (i < pattern->length) &&
+             (mem.flash.writes[i].addr & pattern->pattern[i].addrMask) == pattern->pattern[i].addr &&
+             (mem.flash.writes[i].value & pattern->pattern[i].valueMask) == pattern->pattern[i].value; i++) {
         }
         if (i == pattern->length) {
             pattern->handler(addr, byte);
             partial_match = 0;
             break;
-        } else if (i == mem.flash.write_index) {
+        } else if (i == mem.flash.write) {
             partial_match = 1;
         }
     }
@@ -436,7 +435,7 @@ static bool detect_flash_unlock_sequence(uint8_t current) {
         return false;
     }
     for (i = 1; i != sizeof(flash_unlock_sequence); i++) {
-        if (mem.fetch_buffer[(mem.fetch_index + i) & (sizeof(mem.fetch_buffer) - 1)] != flash_unlock_sequence[i - 1]) {
+        if (mem.buffer[(mem.fetch + i) & (sizeof(mem.buffer) - 1)] != flash_unlock_sequence[i - 1]) {
             return false;
         }
     }
@@ -494,7 +493,7 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
             break;
     }
     if (fetch) {
-        mem.fetch_buffer[++mem.fetch_index] = value;
+        mem.buffer[++mem.fetch] = value;
         if (unprivileged_code()) {
             control.flashUnlocked &= ~(1 << 3);
         }

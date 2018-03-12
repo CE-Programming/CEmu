@@ -106,11 +106,11 @@ void asic_reset(void) {
 }
 
 void set_device_type(ti_device_t device) {
-    asic.deviceType = device;
+    asic.device = device;
 }
 
 ti_device_t get_device_type(void) {
-    return asic.deviceType;
+    return asic.device;
 }
 
 void set_cpu_clock_rate(uint32_t new_rate) {
@@ -119,7 +119,7 @@ void set_cpu_clock_rate(uint32_t new_rate) {
 }
 
 bool asic_restore(FILE *image) {
-    return fread(&asic.deviceType, sizeof(asic.deviceType), 1, image) == 1
+    return fread(&asic.device, sizeof(asic.device), 1, image) == 1
            && backlight_restore(image)
            && control_restore(image)
            && cpu_restore(image)
@@ -142,7 +142,7 @@ bool asic_restore(FILE *image) {
 }
 
 bool asic_save(FILE *image) {
-    return fwrite(&asic.deviceType, sizeof(asic.deviceType), 1, image) == 1
+    return fwrite(&asic.device, sizeof(asic.device), 1, image) == 1
            && backlight_save(image)
            && control_save(image)
            && cpu_save(image)

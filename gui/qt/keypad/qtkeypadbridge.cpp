@@ -71,7 +71,7 @@ void QtKeypadBridge::keyEvent(QKeyEvent *event, bool press) {
         }
     }
 
-    keypad.gpio_enable |= 0x800;
+    keypad.gpioEnable |= 0x800;
     keypad_intrpt_check();
 }
 

@@ -66,6 +66,7 @@ typedef struct sched_state {
 extern sched_state_t sched;
 
 void sched_reset(void);
+void sched_throttle_event(enum sched_item_id id);
 uint32_t sched_event_next_cycle(void);
 uint32_t sched_dma_next_cycle(void);
 void sched_process_pending_events(void);

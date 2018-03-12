@@ -11,9 +11,9 @@ extern "C" {
 #include <stdio.h>
 
 typedef struct sha256_state {
-    uint32_t hash_block[16];
-    uint32_t hash_state[8];
-    uint16_t last_index;
+    uint32_t block[16];
+    uint32_t state[8];
+    uint16_t last;
 } sha256_state_t;
 
 eZ80portrange_t init_sha256(void);

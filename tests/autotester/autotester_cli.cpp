@@ -33,10 +33,6 @@ extern "C"
 {
     auto lastTime = std::chrono::steady_clock::now();
 
-    void gui_emu_sleep(unsigned long ms) {
-        std::this_thread::sleep_for(std::chrono::microseconds(ms));
-    }
-
     void gui_do_stuff(void)
     {
         if (!transfers_done && do_transfers)
