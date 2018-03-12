@@ -14,13 +14,7 @@
 
 namespace cemucore
 {
-#ifndef __cplusplus
-    extern "C" {
-#endif
-        #include "../../core/emu.h"
-#ifndef __cplusplus
-    }
-#endif
+    #include "../../core/emu.h"
     extern "C" {
         #include "../../core/link.h"
         #include "../../core/asic.h"
