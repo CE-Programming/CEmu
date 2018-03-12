@@ -166,13 +166,7 @@ int main(int argc, char* argv[])
     }
 
 cleanExit:
-    cemucore::exiting = true; // exit outer emu loop
-    cemucore::cpu.next = 0; // exit inner emu loop
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-
-    cemucore::asic_free();
-
+    cemucore::emu_exit();
     coreThread.join();
 
     // If no JSON/program/misc. error, return the hash failure count.

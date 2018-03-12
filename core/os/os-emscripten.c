@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
     if (success == EMU_LOAD_OKAY) {
 #ifdef DEBUG_SUPPORT
         debug_init();
-        debug.commands = true;
+        debug_flag(DBG_SOFT_COMMANDS, true);
 #endif
         lcd.spi = true;
         EM_ASM(
