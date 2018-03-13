@@ -74,6 +74,11 @@ const char *calc_var_type_names[0x40] = {
     "Unknown #25",
 };
 
+static char hexchar(uint8_t nibble) {
+    nibble &= 0xF;
+    return nibble < 10 ? '0' + nibble : 'A' + nibble - 10;
+}
+
 const char *calc_var_name_to_utf8(uint8_t name[8]) {
     static char buffer[20];
     char *dest = buffer;
@@ -100,6 +105,13 @@ const char *calc_var_name_to_utf8(uint8_t name[8]) {
             case '.':
             case '@':
                 *dest++ = name[0];
+                break;
+            case '$':
+                *dest++ = name[0];
+                *dest++ = hexchar(name[2] >> 4);
+                *dest++ = hexchar(name[2] >> 0);
+                *dest++ = hexchar(name[1] >> 4);
+                *dest++ = hexchar(name[1] >> 0);
                 break;
             case 0x3C:
                 *dest++ = 'I';
@@ -202,12 +214,13 @@ void vat_search_init(calc_var_t *var) {
 
 bool vat_search_next(calc_var_t *var) {
     const uint32_t userMem  = 0xD1A881,
+                   OPBase   = mem_peek_long(0xD02590),
                    pTemp    = mem_peek_long(0xD0259A),
                    progPtr  = mem_peek_long(0xD0259D),
                    symTable = 0xD3FFFF;
     uint8_t i;
-    bool prog = var->vat <= progPtr;
-    if (!var->vat || var->vat < userMem || var->vat <= pTemp || var->vat > symTable) {
+    bool prog = var->vat > pTemp && var->vat <= progPtr;
+    if (!var->vat || var->vat < userMem || var->vat <= OPBase || var->vat > symTable) {
         return false; /* some sanity check failed */
     }
     var->type1    = mem_peek_byte(var->vat--);
