@@ -362,7 +362,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     connect(m_shortcutFullscreen, &QShortcut::activated, this, &MainWindow::toggleFullscreen);
     connect(m_shortcutResend, &QShortcut::activated, this, &MainWindow::varResend);
-    connect(m_shortcutAsm, &QShortcut::activated, [this]{ autotester::sendKey(0x9CFC); });
+    connect(m_shortcutAsm, &QShortcut::activated, []{ autotester::sendKey(0x9CFC); });
     connect(m_shortcutDebug, &QShortcut::activated, this, &MainWindow::debugToggle);
     connect(m_shortcutStepIn, &QShortcut::activated, this, &MainWindow::stepIn);
     connect(m_shortcutStepOver, &QShortcut::activated, this, &MainWindow::stepOver);
