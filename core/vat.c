@@ -3,9 +3,6 @@
 #include "debug/debug.h"
 
 #include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <inttypes.h>
 
 const char *calc_var_type_names[0x40] = {
     "Real",
@@ -106,6 +103,7 @@ const char *calc_var_name_to_utf8(uint8_t name[8]) {
         switch (name[0]) {
             case '!':
             case '#':
+            case '-':
             case '.':
             case '@':
                 *dest++ = name[0];
