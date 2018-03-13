@@ -74,9 +74,13 @@ const char *calc_var_type_names[0x40] = {
     "Unknown #25",
 };
 
-static char hexchar(uint8_t nibble) {
+static char hex_char(uint8_t nibble) {
     nibble &= 0xF;
     return nibble < 10 ? '0' + nibble : 'A' + nibble - 10;
+}
+static void hex_byte(char **dest, uint8_t byte) {
+    *(*dest)++ = hex_char(byte >> 4);
+    *(*dest)++ = hex_char(byte >> 0);
 }
 
 const char *calc_var_name_to_utf8(uint8_t name[8]) {
@@ -108,10 +112,8 @@ const char *calc_var_name_to_utf8(uint8_t name[8]) {
                 break;
             case '$':
                 *dest++ = name[0];
-                *dest++ = hexchar(name[2] >> 4);
-                *dest++ = hexchar(name[2] >> 0);
-                *dest++ = hexchar(name[1] >> 4);
-                *dest++ = hexchar(name[1] >> 0);
+                hex_byte(&dest, name[2]);
+                hex_byte(&dest, name[1]);
                 break;
             case 0x3C:
                 *dest++ = 'I';
@@ -197,7 +199,7 @@ const char *calc_var_name_to_utf8(uint8_t name[8]) {
                 }
                 if (!i) {
                     for (; i < 8 && name[i]; i++) {
-                        dest += sprintf(dest, "%02" PRIX8, name[i]);
+                        hex_byte(&dest, name[i]);
                     }
                 }
                 break;
