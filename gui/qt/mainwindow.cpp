@@ -339,7 +339,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(m_actionToggleUI, &QAction::triggered, this, &MainWindow::toggleUIEditMode);
 
     m_actionAddMemory = new QAction(MSG_ADD_MEMORY, this);
-    connect(m_actionAddMemory, &QAction::triggered, [this]{ addMemoryDock(randomString(20), 8, true); });
+    connect(m_actionAddMemory, &QAction::triggered, [this]{ addMemDock(randomString(20), 8, true); });
 
     // shortcut connections
     m_shortcutStepIn = new QShortcut(QKeySequence(Qt::Key_F6), this);

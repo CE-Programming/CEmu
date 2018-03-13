@@ -435,7 +435,7 @@ private:
     void memSyncEdit(HexWidget *edit);
     void memAsciiToggle(HexWidget *edit);
     void memDocksUpdate();
-    void addMemoryDock(const QString &title, int bytes, bool ascii);
+    void addMemDock(const QString &title, int bytes, bool ascii);
     void addMemVisualizer();
 
     // versions

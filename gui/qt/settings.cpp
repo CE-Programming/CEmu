@@ -798,7 +798,7 @@ void MainWindow::memLoadDocks() {
     }
 
     for (int i = 0; i < names.length(); i++) {
-        addMemoryDock(names.at(i), bytes.at(i), ascii.at(i));
+        addMemDock(names.at(i), bytes.at(i), ascii.at(i));
     }
 }
 

@@ -2074,7 +2074,7 @@ void MainWindow::debugForce() {
     }
 }
 
-void MainWindow::addMemoryDock(const QString &magic, int bytes, bool ascii) {
+void MainWindow::addMemDock(const QString &magic, int bytes, bool ascii) {
     if (m_docksMemory.contains(magic)) {
         return;
     }
@@ -2115,6 +2115,8 @@ void MainWindow::addMemoryDock(const QString &magic, int bytes, bool ascii) {
     edit->setContextMenuPolicy(Qt::CustomContextMenu);
     edit->setAsciiArea(ascii);
     edit->setScrollable(true);
+
+    m_memWidget = edit;
 
     connect(edit, &HexWidget::customContextMenuRequested, this, &MainWindow::contextMem);
     connect(buttonSearch, &QPushButton::clicked, [this, edit]{ memSearchEdit(edit); });
