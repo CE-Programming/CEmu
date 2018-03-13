@@ -8,7 +8,7 @@ CFLAGS = -Wall -Wextra -fPIC -O3 -static
 # Add these flags if your compiler supports it
 #CFLAGS += -Wstack-protector -fstack-protector-strong --param=ssp-buffer-size=1 -fsanitize=address,bounds -fsanitize-undefined-trap-on-error
 
-OBJS  = $(patsubst %.c,   %.o, $(shell find . -name \*.c))
+OBJS  = $(patsubst %.c,   %.o, $(shell find . -name usb -prune -or -name \*.c -print))
 
 STATICLIB = libcemucore.a
 

@@ -16,7 +16,6 @@
  #define _Atomic(X) volatile X /* doesn't do anything, but makes me feel better... although if you are trying to do multithreading glhf */
 #endif
 #else
- using namespace std;
  #include <atomic>
  #define _Atomic(X) std::atomic<X>
 #endif

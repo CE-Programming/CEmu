@@ -12,10 +12,11 @@
 #include <vector>
 #include <unordered_map>
 
+#include "../../core/defines.h"
 namespace cemucore
 {
-    #include "../../core/emu.h"
     extern "C" {
+        #include "../../core/emu.h"
         #include "../../core/link.h"
         #include "../../core/asic.h"
         #include "../../core/cpu.h"
