@@ -206,7 +206,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->actionExportRomImage, &QAction::triggered, this, &MainWindow::romExport);
     connect(ui->actionImportCalculatorState, &QAction::triggered, this, &MainWindow::stateFromFile);
     connect(ui->actionReloadROM, &QAction::triggered, [this]{ loadEmu(false); });
-    connect(ui->actionRestoreState, &QAction::triggered, [this]{ this->loadEmu(true); });
+    connect(ui->actionRestoreState, &QAction::triggered, [this]{ loadEmu(true); });
     connect(ui->actionResetALL, &QAction::triggered, this, &MainWindow::resetCEmu);
     connect(ui->actionResetGUI, &QAction::triggered, this, &MainWindow::resetGui);
     connect(ui->actionResetCalculator, &QAction::triggered, this, &MainWindow::resetEmu);
@@ -214,7 +214,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->actionHideMenuBar, &QAction::triggered, this, &MainWindow::setMenuBarState);
     connect(ui->actionHideStatusBar, &QAction::triggered, this, &MainWindow::setStatusBarState);
     connect(ui->buttonResetCalculator, &QPushButton::clicked, this, &MainWindow::resetEmu);
-    connect(ui->buttonReloadROM, &QPushButton::clicked, this, &MainWindow::resetEmu);
+    connect(ui->buttonReloadROM, &QPushButton::clicked, [this]{ loadEmu(false); });
 
     // lcd flow
     connect(ui->lcd, &LCDWidget::updateLcd, this, &MainWindow::lcdUpdate, Qt::QueuedConnection);
