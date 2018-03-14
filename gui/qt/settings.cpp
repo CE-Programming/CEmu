@@ -724,7 +724,7 @@ void MainWindow::stateSaveInfo() {
     m_settings->setValue(SETTING_SLOT_PATHS, slotPaths);
 }
 
-void MainWindow::stateInitDock() {
+void MainWindow::stateLoadInfo() {
     QStringList slotNames = m_settings->value(SETTING_SLOT_NAMES).toStringList();
     QStringList slotPaths = m_settings->value(SETTING_SLOT_PATHS).toStringList();
 
@@ -770,7 +770,7 @@ void MainWindow::recentSaveInfo() {
     m_settings->setValue(SETTING_RECENT_SELECT, selects);
 }
 
-void MainWindow::recentInitDock() {
+void MainWindow::recentLoadInfo() {
     QStringList paths = m_settings->value(SETTING_RECENT_PATHS).toStringList();
     QStringList selects = m_settings->value(SETTING_RECENT_SELECT).toStringList();
 
