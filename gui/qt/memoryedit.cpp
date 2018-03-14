@@ -39,16 +39,24 @@ QString MainWindow::getAddressString(const QString& string, bool* ok) {
 }
 
 void MainWindow::flashUpdate() {
+    if (!guiEmuValid) {
+        return;
+    }
+
     ui->flashEdit->setData(QByteArray::fromRawData(reinterpret_cast<char*>(mem.flash.block), 0x400000));
 }
 
 void MainWindow::ramUpdate() {
+    if (!guiEmuValid) {
+        return;
+    }
+
     ui->ramEdit->setBase(0xD00000);
     ui->ramEdit->setData(QByteArray::fromRawData(reinterpret_cast<char*>(mem.ram.block), 0x65800));
 }
 
 void MainWindow::memUpdateEdit(HexWidget *edit, bool force) {
-    if (edit == Q_NULLPTR) {
+    if (edit == Q_NULLPTR || !guiEmuValid) {
         return;
     }
 
