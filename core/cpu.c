@@ -20,6 +20,7 @@
 #include "cpu.h"
 #include "emu.h"
 #include "mem.h"
+#include "defines.h"
 #include "control.h"
 #include "registers.h"
 #include "schedule.h"

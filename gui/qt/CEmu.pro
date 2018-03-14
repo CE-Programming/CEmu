@@ -231,6 +231,7 @@ HEADERS  += \
     ../../tests/autotester/autotester.h \
     ../../core/asic.h \
     ../../core/cpu.h \
+    ../../core/atomics.h \
     ../../core/defines.h \
     ../../core/keypad.h \
     ../../core/lcd.h \

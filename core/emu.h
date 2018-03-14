@@ -1,7 +1,7 @@
 #ifndef EMU_H
 #define EMU_H
 
-#include "defines.h"
+#include "atomics.h"
 
 #ifdef __cplusplus
 extern "C" {

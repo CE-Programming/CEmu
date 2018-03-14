@@ -5,8 +5,6 @@
 extern "C" {
 #endif
 
-#include "defines.h"
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>

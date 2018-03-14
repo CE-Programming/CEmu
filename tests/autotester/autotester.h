@@ -12,7 +12,7 @@
 #include <vector>
 #include <unordered_map>
 
-#include "../../core/defines.h"
+#include "../../core/atomics.h"
 namespace cemucore
 {
     extern "C" {
