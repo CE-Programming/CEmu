@@ -260,8 +260,9 @@ void MainWindow::settingsSaveMisc() {
     m_settings->setValue(SETTING_DEBUGGER_RAM_BYTES, ui->ramBytes->value());
     m_settings->setValue(SETTING_DEBUGGER_FLASH_ASCII, ui->flashAscii->isChecked());
     m_settings->setValue(SETTING_DEBUGGER_RAM_ASCII, ui->ramAscii->isChecked());
+
     stateSaveInfo();
-    recentSave();
+    recentSaveInfo();
 
     if (!m_needReload) {
         m_settings->setValue(SETTING_WINDOW_STATE, saveState());
@@ -295,12 +296,6 @@ void MainWindow::setStatusBarState(bool state) {
     ui->statusBar->setHidden(state);
     ui->actionHideStatusBar->setChecked(state);
     m_settings->setValue(SETTING_WINDOW_STATUSBAR, state);
-}
-
-void MainWindow::bootImageLoaded() {
-    if (m_loadedBootImage) {
-        m_settings->setValue(SETTING_FIRST_RUN, false);
-    }
 }
 
 void MainWindow::setDebugIgnoreBreakpoints(bool state) {
@@ -411,8 +406,8 @@ void MainWindow::setUIDocks(bool firstRun) {
     m_menuDocks = new QMenu(TITLE_DOCKS, this);
     ui->menubar->insertMenu(ui->menuAbout->menuAction(), m_menuDocks);
 
-    // Convert the tabs into QDockWidgets
-    DockWidget *last_dock = Q_NULLPTR;
+    // Convert the tabs into DockWidgets
+    DockWidget *prev = Q_NULLPTR;
     while (ui->tabWidget->count()) {
         DockWidget *dw = new DockWidget(ui->tabWidget, this);
 
@@ -423,11 +418,11 @@ void MainWindow::setUIDocks(bool firstRun) {
 
         dw->setAllowedAreas(Qt::AllDockWidgetAreas);
         addDockWidget(Qt::RightDockWidgetArea, dw);
-        if (last_dock) {
-            tabifyDockWidget(last_dock, dw);
+        if (prev) {
+            tabifyDockWidget(prev, dw);
         }
 
-        last_dock = dw;
+        prev = dw;
     }
 
     m_menuDocks->addSeparator();
@@ -446,7 +441,7 @@ void MainWindow::setUIDocks(bool firstRun) {
 
         dw->setAllowedAreas(Qt::AllDockWidgetAreas);
         addDockWidget(Qt::RightDockWidgetArea, dw);
-        if (firstRun) {
+        if (firstRun || !opts.useSettings) {
             dw->setFloating(true);
             dw->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, dw->minimumSize(), qApp->desktop()->availableGeometry()));
             dw->close();
@@ -482,11 +477,11 @@ void MainWindow::updateDocks() {
 
 void MainWindow::setUIEditMode(bool mode) {
     m_uiEditMode = mode;
-    m_settings->setValue(SETTING_UI_EDIT_MODE, m_uiEditMode);
-    m_actionToggleUI->setChecked(m_uiEditMode);
-    m_actionAddMemory->setEnabled(m_uiEditMode);
+    m_settings->setValue(SETTING_UI_EDIT_MODE, mode);
+    m_actionToggleUI->setChecked(mode);
+    m_actionAddMemory->setEnabled(mode);
     updateDocks();
-    if (m_uiEditMode) {
+    if (mode) {
         setDockOptions(QMainWindow::AnimatedDocks | QMainWindow::AllowNestedDocks | QMainWindow::AllowTabbedDocks
 #if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
         | QMainWindow::GroupedDragging
@@ -729,7 +724,7 @@ void MainWindow::stateSaveInfo() {
     m_settings->setValue(SETTING_SLOT_PATHS, slotPaths);
 }
 
-void MainWindow::stateLoadInfo() {
+void MainWindow::stateInitDock() {
     QStringList slotNames = m_settings->value(SETTING_SLOT_NAMES).toStringList();
     QStringList slotPaths = m_settings->value(SETTING_SLOT_PATHS).toStringList();
 
@@ -760,7 +755,7 @@ void MainWindow::setDockBoundaries(bool state) {
     }
 }
 
-void MainWindow::recentSave() {
+void MainWindow::recentSaveInfo() {
     QStringList paths;
     QStringList selects;
 
@@ -775,7 +770,7 @@ void MainWindow::recentSave() {
     m_settings->setValue(SETTING_RECENT_SELECT, selects);
 }
 
-void MainWindow::recentLoad() {
+void MainWindow::recentInitDock() {
     QStringList paths = m_settings->value(SETTING_RECENT_PATHS).toStringList();
     QStringList selects = m_settings->value(SETTING_RECENT_SELECT).toStringList();
 
@@ -851,12 +846,14 @@ void MainWindow::checkVersion() {
 }
 
 void MainWindow::settingsSave() {
-    settingsSaveMisc();
     if (opts.useSettings) {
+        settingsSaveMisc();
         m_settings->sync();
     } else {
-        QFile settingsFile(m_settings->fileName());
-        settingsFile.remove();
+        QFile file(m_settings->fileName());
+        if (file.exists()) {
+            file.remove();
+        }
     }
 }
 

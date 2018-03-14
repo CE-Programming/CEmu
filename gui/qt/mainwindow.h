@@ -326,7 +326,6 @@ private:
     bool bootImageImport(const QString &path);
     bool bootImageCheck();
     void bootImageExport();
-    void bootImageLoaded();
 
     // equates
     void setAutoEquates(bool enable);
@@ -405,8 +404,8 @@ private:
     void recentRemoveSelected();
     void recentDeselectAll();
     void recentSelectAll();
-    void recentLoad();
-    void recentSave();
+    void recentLoadInfo();
+    void recentSaveInfo();
 
     // autotester
     int autotesterOpen(const QString &jsonPath);

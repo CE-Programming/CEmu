@@ -399,9 +399,10 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     } else {
         m_settings = new QSettings();
         m_settings->clear();
-        settingsSave();
     }
-    bootImageLoaded();
+    if (m_loadedBootImage) {
+        m_settings->setValue(SETTING_FIRST_RUN, false);
+    }
 
     QFileInfo settingsFile(m_settingsPath);
     QFileInfo settingsDirectory(settingsFile.path());
@@ -419,7 +420,10 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
         ui->buttonChangeSavedDebugPath->setEnabled(false);
         ui->buttonChangeSavedImagePath->setEnabled(false);
     }
-    ui->settingsPath->setText(m_settingsPath);
+
+    if (opts.useSettings) {
+        ui->settingsPath->setText(m_settingsPath);
+    }
 
     setAutoUpdates(m_settings->value(SETTING_AUTOUPDATE, CEMU_RELEASE).toBool());
     checkVersion();
@@ -509,14 +513,18 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
             m_initPassed = false;
         }
     } else {
-        if (opts.useSettings && m_settings->value(SETTING_RESTORE_ON_OPEN, true).toBool()
-                && fileExists(m_pathImage)
-                && opts.restoreOnOpen) {
-            loadEmu(true);
-        } else {
-            if (opts.forceReloadRom) {
-                loadEmu(false);
+        if (opts.romFile.isEmpty()) {
+            if (opts.useSettings && m_settings->value(SETTING_RESTORE_ON_OPEN, true).toBool()
+                    && fileExists(m_pathImage)
+                    && opts.restoreOnOpen) {
+                loadEmu(true);
+            } else {
+                if (opts.forceReloadRom) {
+                    loadEmu(false);
+                }
             }
+        } else {
+            loadEmu(false);
         }
     }
 
@@ -787,9 +795,9 @@ void MainWindow::setup() {
 
     updateDocks();
     stateLoadInfo();
-    recentLoad();
+    recentLoadInfo();
 
-    if (m_settings->value(SETTING_DEBUGGER_RESTORE_ON_OPEN, false).toBool()) {
+    if (m_settings->value(SETTING_DEBUGGER_RESTORE_ON_OPEN).toBool()) {
         if (!opts.debugFile.isEmpty()) {
             debugImportFile(opts.debugFile);
         } else {
@@ -1092,11 +1100,11 @@ void MainWindow::closeEvent(QCloseEvent *e) {
             varToggle();
         }
 
-        settingsSave();
-
         if (m_settings->value(SETTING_DEBUGGER_SAVE_ON_CLOSE, false).toBool()) {
             debugExportFile(m_settings->value(SETTING_DEBUGGER_IMAGE_PATH).toString());
         }
+
+        settingsSave();
 
         if (m_settings->value(SETTING_SAVE_ON_CLOSE).toBool()) {
             stateSaveDefault();
