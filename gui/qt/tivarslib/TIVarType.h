@@ -19,14 +19,12 @@ namespace tivars
 
     public:
 
-        TIVarType()
-        {}
+        TIVarType() = default;
 
         TIVarType(int id, const std::string& name, const std::vector<std::string>& exts, const handler_pair_t& handlers) : id(id), name(name), exts(exts), handlers(handlers)
         {}
 
-        ~TIVarType()
-        {}
+        ~TIVarType() = default;
 
         /* Getters */
         int getId() const { return this->id; }

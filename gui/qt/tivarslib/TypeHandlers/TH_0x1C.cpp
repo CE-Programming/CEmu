@@ -20,7 +20,7 @@ namespace tivars
 
         throw runtime_error("Unimplemented");
 
-        if (str == "" || !is_numeric(str))
+        if (str.empty() || !is_numeric(str))
         {
             throw invalid_argument("Invalid input string. Needs to be a valid Exact Real Radical");
         }
@@ -35,7 +35,7 @@ namespace tivars
             throw invalid_argument("Empty data array. Needs to contain " + to_string(dataByteCount) + " bytes");
         }
 
-        string dataStr = "";
+        string dataStr;
         for (uint i = 0; i < TH_0x1C::dataByteCount; i++)
         {
             dataStr += (data[i] < 0x10 ? "0" : "") + dechex(data[i]); // zero left pad

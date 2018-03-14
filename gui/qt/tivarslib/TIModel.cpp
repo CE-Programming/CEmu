@@ -16,7 +16,7 @@ namespace tivars
     bool TIModel::supportsType(const TIVarType& type)
     {
         const vector<string>& exts = type.getExts();
-        return this->orderID >= 0 && this->orderID < (int)exts.size() && exts[this->orderID] != "";
+        return this->orderID >= 0 && this->orderID < (int)exts.size() && !exts[this->orderID].empty();
     }
 
     /*** "Constructors" ***/

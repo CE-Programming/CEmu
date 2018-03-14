@@ -254,6 +254,11 @@ namespace tivars
     }
 
 
+    bool TIVarFile::isCorrupt() const
+    {
+        return corrupt;
+    }
+
     data_t TIVarFile::getRawContent()
     {
         return this->varEntry.data;
@@ -392,6 +397,7 @@ namespace tivars
                     .function("setCalcModel"             , &TIVarFile::setCalcModel)
                     .function("setVarName"               , &TIVarFile::setVarName)
                     .function("setArchived"              , &TIVarFile::setArchived)
+                    .function("isCorrupt"                , &TIVarFile::isCorrupt)
                     .function("getRawContent"            , &TIVarFile::getRawContent)
                     .function("getReadableContent"       , select_overload<std::string(const options_t&)>(&TIVarFile::getReadableContent))
                     .function("getReadableContent"       , select_overload<std::string(void)>(&TIVarFile::getReadableContent))

@@ -20,7 +20,7 @@ namespace tivars
 
         throw runtime_error("Unimplemented");
 
-        if (str == "" || !is_numeric(str))
+        if (str.empty() || !is_numeric(str))
         {
             throw invalid_argument("Invalid input string. Needs to be a valid Exact Complex Pi");
         }
@@ -47,7 +47,7 @@ namespace tivars
         str = regex_replace(str, regex("\\+-"),    "-");
 
         // Shouldn't happen - I don't believe the calc generate such files.
-        if (str == "")
+        if (str.empty())
         {
             str = "0";
         }

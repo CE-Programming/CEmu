@@ -12,9 +12,9 @@
 #include <string>
 #include <map>
 
-typedef unsigned int    uint;
-typedef unsigned char   uchar;
-typedef std::vector<uchar>   data_t;
-typedef std::map<std::string, int>   options_t;
+using uint = unsigned int;
+using uchar = unsigned char;
+using data_t = std::vector<uchar>;
+using options_t = std::map<std::string, int>;
 
 #endif

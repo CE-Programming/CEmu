@@ -20,7 +20,7 @@ namespace tivars
 
         throw runtime_error("Unimplemented");
 
-        if (str == "" || !is_numeric(str))
+        if (str.empty() || !is_numeric(str))
         {
             throw invalid_argument("Invalid input string. Needs to be a valid Exact Complex Radical");
         }

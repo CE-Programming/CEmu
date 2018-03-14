@@ -19,14 +19,12 @@ namespace tivars
 
     public:
 
-        TIModel()
-        {}
+        TIModel() = default;
 
         TIModel(int orderId, const std::string& name, uint flags, const std::string& sig) : orderID(orderId), name(name), flags(flags), sig(sig)
         {}
 
-        ~TIModel()
-        {}
+        ~TIModel() = default;
 
         /* Getters */
         int getOrderId() const { return this->orderID; }

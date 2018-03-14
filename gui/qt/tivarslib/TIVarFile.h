@@ -38,8 +38,7 @@ namespace tivars
             data_t   data;
         };
 
-        static const constexpr uint16_t headerLength      = 55;   // size of packed struct var_header_t
-        static const constexpr uint16_t dataSectionOffset = 55;   // == headerLength;
+        static const constexpr uint16_t dataSectionOffset = 55;   // comes right after the header, so == its size (8+3+42+2)
         static const constexpr uint16_t varEntryOldLength = 0x0B; // 2+1+8     (if calcFlags <  TIFeatureFlags::hasFlash)
         static const constexpr uint16_t varEntryNewLength = 0x0D; // 2+1+8+1+1 (if calcFlags >= TIFeatureFlags::hasFlash)
 
@@ -71,6 +70,8 @@ namespace tivars
         void setCalcModel(const TIModel& model);
         void setVarName(const std::string& name);
         void setArchived(bool flag);
+
+        bool isCorrupt() const;
 
         data_t getRawContent();
 

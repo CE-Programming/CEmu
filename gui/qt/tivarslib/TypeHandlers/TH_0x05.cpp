@@ -102,7 +102,7 @@ namespace tivars
         }
 
         uint errCount = 0;
-        string str("");
+        string str;
         const size_t dataSize = data.size();
         for (uint i = 2; i < (uint)howManyBytes + 2; i++)
         {
@@ -135,7 +135,7 @@ namespace tivars
 
         if (has_option(options, "prettify") && options.at("prettify") == 1)
         {
-            str = regex_replace(str, regex("\\[?\\|?([a-z]+)\\]?"), "$1");
+            str = regex_replace(str, regex(R"(\[?\|?([a-z]+)\]?)"), "$1");
         }
 
         if (has_option(options, "reindent") && options.at("reindent") == 1)
@@ -183,8 +183,8 @@ namespace tivars
             }
         }
 
-        vector<pair<uint, string>> lines; // indent, text
-        for (auto& line : lines_tmp)
+        vector<pair<uint, string>> lines(lines_tmp.size()); // indent, text
+        for (const auto& line : lines_tmp)
         {
             lines.emplace_back(0, line);
         }
@@ -193,13 +193,12 @@ namespace tivars
         vector<string> decreaseIndentOfToken = { "Then", "Else", "End", "ElseIf", "EndIf", "End!If" };
         vector<string> closingTokens         = { "End", "EndIf", "End!If" };
         uint nextIndent = 0;
-        string oldFirstCommand = "", firstCommand = "";
-        for (uint key=0; key<lines.size(); key++)
+        string oldFirstCommand, firstCommand;
+        for (auto& line : lines)
         {
-            auto lineData = lines[key];
             oldFirstCommand = firstCommand;
 
-            string trimmedLine = trim(lineData.second);
+            string trimmedLine = trim(line.second);
             if (trimmedLine.length() > 0) {
                 char* trimmedLine_c = (char*) trimmedLine.c_str();
                 firstCommand = strtok(trimmedLine_c, " ");
@@ -215,15 +214,15 @@ namespace tivars
                 firstCommand = "";
             }
 
-            lines[key].first = nextIndent;
+            line.first = nextIndent;
 
             if (is_in_vector(increaseIndentAfter, firstCommand))
             {
                 nextIndent++;
             }
-            if (lines[key].first > 0 && is_in_vector(decreaseIndentOfToken, firstCommand))
+            if (line.first > 0 && is_in_vector(decreaseIndentOfToken, firstCommand))
             {
-                lines[key].first--;
+                line.first--;
             }
             if (nextIndent > 0 && (is_in_vector(closingTokens, firstCommand) || (oldFirstCommand == "If" && firstCommand != "Then" && lang != PRGMLANG_AXE)))
             {
@@ -237,7 +236,7 @@ namespace tivars
             str += str_repeat(" ", line.first * 3) + line.second + '\n';
         }
 
-        return str;
+        return ltrim(rtrim(str, "\t\n\r\f\v"));
     }
 
     void TH_0x05::initTokens()
@@ -275,7 +274,7 @@ namespace tivars
 
             (inputFile.*(&QFile::close))(); // Compiler/Linker weirdness when in LTO (undefined symbol).
         } else {
-            std::cerr << "Could not open the tokens csv file" << std::endl;
+            throw runtime_error("Could not open the tokens csv file");
         }
     }
 

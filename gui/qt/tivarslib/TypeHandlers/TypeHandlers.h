@@ -113,9 +113,9 @@ namespace tivars
     }
 
 
-    typedef decltype(&DummyHandler::makeDataFromString) dataFromString_handler_t;
-    typedef decltype(&DummyHandler::makeStringFromData) stringFromData_handler_t;
-    typedef std::pair<dataFromString_handler_t, stringFromData_handler_t> handler_pair_t;
+    using dataFromString_handler_t = decltype(&DummyHandler::makeDataFromString);
+    using stringFromData_handler_t = decltype(&DummyHandler::makeStringFromData);
+    using handler_pair_t           = std::pair<dataFromString_handler_t, stringFromData_handler_t>;
 
 #define make_handler_pair(cls)   make_pair(&cls::makeDataFromString, &cls::makeStringFromData)
 

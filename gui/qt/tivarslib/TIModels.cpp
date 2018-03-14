@@ -155,12 +155,12 @@ namespace tivars
 
     bool TIModels::isValidName(const string& name)
     {
-        return (name != "" && models.count(name));
+        return (!name.empty() && models.count(name));
     }
 
     bool TIModels::isValidSignature(const string& sig)
     {
-        return (sig != "" && models.count(sig));
+        return (!sig.empty() && models.count(sig));
     }
 
 }

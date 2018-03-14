@@ -15,7 +15,7 @@ using namespace std;
 
 namespace
 {
-    static bool parseSign(string::const_iterator &i, const string::const_iterator &e) {
+    bool parseSign(string::const_iterator &i, const string::const_iterator &e) {
       bool sign = false;
       if (i != e && (*i == '+' || *i == '-')) {
         sign = *i++ == '-';

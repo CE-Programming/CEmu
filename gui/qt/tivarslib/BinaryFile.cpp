@@ -19,7 +19,7 @@ namespace tivars
      */
     BinaryFile::BinaryFile(const string& filePath)
     {
-        if (filePath != "")
+        if (!filePath.empty())
         {
             if (file_exists(filePath))
             {
@@ -36,33 +36,28 @@ namespace tivars
                 throw runtime_error("No such file");
             }
         } else {
-            throw invalid_argument("No file path given");
+            throw invalid_argument("Empty file path given");
         }
     }
 
     /**
      * Returns an array of bytes bytes read from the file
      *
-     * @param   int bytes
-     * @return  array
-     * @throws  \Exception
+     * @param   uint bytes
+     * @return  data_t
+     * @throws  runtime_error
      */
     data_t BinaryFile::get_raw_bytes(uint bytes)
     {
         if (file)
         {
-            if (bytes > 0)
+            data_t v(bytes);
+            size_t n = fread(v.data(), sizeof(uchar), bytes, file);
+            if (n != bytes || ferror(file))
             {
-                uchar buf[bytes];
-                size_t n = fread(buf, sizeof(uchar), bytes, file);
-                if (n < 1) {
-                    return data_t{};
-                }
-                data_t v(buf, buf + bytes);
-                return v;
-            } else {
-                throw invalid_argument("Invalid number of bytes to read");
+                throw runtime_error("Error in get_raw_bytes");
             }
+            return v;
         } else {
             throw runtime_error("No file loaded");
         }
@@ -71,26 +66,21 @@ namespace tivars
     /**
      * Returns a string of bytes bytes read from the file (doesn't stop at NUL)
      *
-     * @param   int bytes The number of bytes to read
+     * @param   uint bytes The number of bytes to read
      * @return  string
-     * @throws  \Exception
+     * @throws  runtime_error
      */
     string BinaryFile::get_string_bytes(uint bytes)
     {
         if (file)
         {
-            if (bytes > 0)
+            string buf(bytes, '\0');
+            size_t n = fread(&buf[0], sizeof(char), bytes, file);
+            if (n != bytes || ferror(file))
             {
-                char buf[bytes+1];
-                size_t n = fread(buf, sizeof(char), bytes, file);
-                if (n < 1) {
-                    return string{};
-                }
-                buf[bytes] = '\0';
-                return string(buf);
-            } else {
-                throw invalid_argument("Invalid number of bytes to read");
+                throw runtime_error("Error in get_string_bytes");
             }
+            return buf;
         } else {
             throw runtime_error("No file loaded");
         }
