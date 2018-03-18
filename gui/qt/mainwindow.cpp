@@ -1247,19 +1247,19 @@ void MainWindow::console(int type, const char *str, int size) {
     }
 }
 
-void MainWindow::consoleStr(int type) {
+void MainWindow::consoleStr() {
     if (int available = emu.read.available()) {
         int remaining = CONSOLE_BUFFER_SIZE - emu.readPos;
         emu.read.acquire(available);
 
-        console(type, emu.buffer + emu.readPos, available < remaining ? available : remaining);
+        console(emu.type, emu.buffer + emu.readPos, available < remaining ? available : remaining);
         if (available < remaining) {
             emu.readPos += available;
         } else if (available == remaining) {
             emu.readPos = 0;
         } else {
             emu.readPos = available - remaining;
-            console(type, emu.buffer, emu.readPos);
+            console(emu.type, emu.buffer, emu.readPos);
         }
 
         emu.write.release(available);

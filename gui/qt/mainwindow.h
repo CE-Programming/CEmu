@@ -163,7 +163,7 @@ private:
     // console
     void console(const QString &str, const QColor &colorFg = Qt::black, const QColor &colorBg = Qt::white, int type = EmuThread::ConsoleNorm);
     void console(int type, const char *str, int size = -1);
-    void consoleStr(int type);
+    void consoleStr();
     void consoleSubmission();
     void consoleModified();
 

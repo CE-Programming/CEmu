@@ -56,11 +56,10 @@ void EmuThread::run() {
     emu_loop();
 }
 
-void EmuThread::writeConsole(int type, const char *format, va_list args) {
-    static int prevType = ConsoleNorm;
-    if (prevType != type) {
+void EmuThread::writeConsole(int console, const char *format, va_list args) {
+    if (type != console) {
         write.acquire(CONSOLE_BUFFER_SIZE);
-        prevType = type;
+        type = console;
         write.release(CONSOLE_BUFFER_SIZE);
     }
     int available = write.available();
@@ -78,7 +77,7 @@ void EmuThread::writeConsole(int type, const char *format, va_list args) {
         write.acquire(size);
         writePos += size;
         read.release(size);
-        emit consoleStr(type);
+        emit consoleStr();
     } else {
         if (size < 0) {
             va_copy(argsCopy, args);
@@ -99,14 +98,14 @@ void EmuThread::writeConsole(int type, const char *format, va_list args) {
                 writePos = 0;
                 read.release(remaining);
                 remaining = CONSOLE_BUFFER_SIZE;
-                emit consoleStr(type);
+                emit consoleStr();
             }
             if (size) {
                 write.acquire(size);
                 memmove(buffer + writePos, tmp + tmpPos, size);
                 writePos += size;
                 read.release(size);
-                emit consoleStr(type);
+                emit consoleStr();
             }
         }
         if (tmp != buffer) {

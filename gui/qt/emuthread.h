@@ -29,7 +29,7 @@ public:
     void throttleWait();
     void setSpeed(int value);
     void setThrottle(bool state);
-    void writeConsole(int type, const char *format, va_list args);
+    void writeConsole(int console, const char *format, va_list args);
     void debugOpen(int reason, uint32_t addr);
     void save(bool image, const QString &path);
     int load(bool restore, const QString &rom, const QString &image);
@@ -49,6 +49,7 @@ public:
         RequestDebugger
     };
 
+    int type = ConsoleNorm;
     int writePos = 0;
     int readPos = 0;
     char buffer[CONSOLE_BUFFER_SIZE];
@@ -57,7 +58,7 @@ public:
 
 signals:
     // console
-    void consoleStr(int dest);
+    void consoleStr();
 
     // debug
     void debugDisable();
