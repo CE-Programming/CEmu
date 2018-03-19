@@ -1894,6 +1894,8 @@ void MainWindow::osUpdate() {
     ui->opStack->setRowCount(0);
     ui->fpStack->setRowCount(0);
 
+    disconnect(ui->opView, &QTableWidget::itemChanged, this, &MainWindow::opModified);
+
     for (uint32_t i = 0xD005F8; i < 0xD005F8+77; i += 11) {
         array.clear();
         dataString.clear();
@@ -2012,15 +2014,66 @@ void MainWindow::osUpdate() {
     ui->vatView->resizeColumnToContents(VAT_NAME);
     ui->vatView->resizeColumnToContents(VAT_TYPE);
     ui->vatView->resizeColumnToContents(VAT_SIZE);
+
+    connect(ui->opView, &QTableWidget::itemChanged, this, &MainWindow::opModified);
 }
 
 void MainWindow::opModified(QTableWidgetItem *item) {
     int col = item->column();
+    int row = item->row();
+
+    QString txt = item->text();
+    QString data;
+    QByteArray array;
+    uint32_t addr = hex2int(ui->opView->item(row, OP_ADDRESS)->text());
+    array.resize(11);
+
+    sender()->blockSignals(true);
 
     if (col == OP_DATA) {
+        array.fill(0);
+        for (int i = 0; i < 11 && i < txt.length() / 2; i++) {
+            array[i] = hex2int(txt.mid(i*2, 2));
+        }
+        for (int i = 0; i < 11; i++) {
+            mem_poke_byte(addr + i, array[i]);
+        }
     } else if (col == OP_STRING) {
-    } else if (col == OP_VALUE){
+        array.fill('.');
+        for (int i = 0; i < 11 && i < txt.length(); i++) {
+            array[i] = txt[i].toLatin1();
+        }
+    } else if (col == OP_VALUE) {
+        array.fill(0);
+        data_t value = tivars::TH_0x00::makeDataFromString(txt.toStdString());
+        for (int i = 0; i < 11 && i < static_cast<int>(value.size()); i++) {
+            array[i] = value[i];
+        }
     }
+
+    for (int i = 0; i < 11; i++) {
+        mem_poke_byte(addr + i, array[i]);
+    }
+
+    array.clear();
+    data.clear();
+
+    for (uint32_t j = addr; j < addr + 11; j++) {
+        uint8_t ch = mem_peek_byte(j);
+        array.append(ch);
+        if ((ch < 0x20) || (ch > 0x7e)) {
+            ch = '.';
+        }
+        data += QChar(ch);
+    }
+
+    data_t vect(array.constData(), array.constEnd() - 2);
+
+    ui->opView->item(row, OP_STRING)->setText(data);
+    ui->opView->item(row, OP_DATA)->setText(QString(array.toHex()));
+    ui->opView->item(row, OP_VALUE)->setText(QString::fromStdString(tivars::TH_0x00::makeStringFromData(vect)));
+
+    sender()->blockSignals(false);
 }
 
 void MainWindow::contextOp(const QPoint &posa) {

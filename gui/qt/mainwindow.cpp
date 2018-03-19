@@ -144,7 +144,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->checkDisableSoftCommands, &QCheckBox::toggled, this, &MainWindow::setDebugSoftCommands);
     connect(ui->buttonZero, &QPushButton::clicked, this, &MainWindow::debugZeroCycles);
     connect(ui->buttonCertID, &QPushButton::clicked, this, &MainWindow::setCalcId);
-    connect(ui->opView, &QTableWidget::itemChanged, this, &MainWindow::opModified);
     connect(m_disasm, &DataWidget::gotoDisasmAddress, this, &MainWindow::gotoDisasmAddr);
     connect(m_disasm, &DataWidget::gotoMemoryAddress, this, &MainWindow::gotoMemAddr);
 
