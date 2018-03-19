@@ -39,7 +39,7 @@
 #endif
 
 // -----------------------------------------------
-// Debugger Init
+// Debugger Initialization
 // -----------------------------------------------
 
 void MainWindow::debugInit() {
@@ -486,6 +486,7 @@ void MainWindow::debugGuiState(bool state) {
         ui->debuggerLabel->clear();
     }
 
+    m_disasm->setEnabled(state);
     ui->buttonGoto->setEnabled(state);
     ui->buttonStepIn->setEnabled(state);
     ui->buttonStepOver->setEnabled(state);
@@ -501,15 +502,17 @@ void MainWindow::debugGuiState(bool state) {
     ui->groupRAM->setEnabled(state);
     ui->cycleView->setEnabled(state);
     ui->freqView->setEnabled(state);
-    ui->opView->setEnabled(state);
-    ui->vatView->setEnabled(state);
     ui->groupRTC->setEnabled(state);
     ui->groupGPT->setEnabled(state);
     ui->groupLcdState->setEnabled(state);
     ui->groupLcdRegs->setEnabled(state);
     ui->groupBattery->setEnabled(state);
     ui->groupTrigger->setEnabled(state);
-    m_disasm->setEnabled(state);
+
+    ui->opView->setEnabled(state && m_normalOs);
+    ui->vatView->setEnabled(state && m_normalOs);
+    ui->opStack->setEnabled(state && m_normalOs);
+    ui->fpStack->setEnabled(state && m_normalOs);
 
     ui->buttonSend->setEnabled(!state);
     ui->buttonRefreshList->setEnabled(!state);
@@ -729,8 +732,7 @@ void MainWindow::debugPopulate() {
 
     osUpdate();
     stackUpdate();
-    m_prevDisasmAddr = cpu.registers.PC;
-    disasmUpdateAddr(m_prevDisasmAddr, true);
+    disasmUpdateAddr(m_prevDisasmAddr = cpu.registers.PC, true);
 
     memUpdate();
 }
@@ -1875,38 +1877,97 @@ void MainWindow::stackLine() {
 //------------------------------------------------
 
 void MainWindow::osUpdate() {
+    if (!m_normalOs) {
+        return;
+    }
+
     calc_var_t var;
-    QString memData;
-    QString memDataString;
+    QString data;
+    QString dataString;
 
     int index = 0;
     ui->opView->setRowCount(0);
     ui->vatView->setRowCount(0);
+    ui->opStack->setRowCount(0);
+    ui->fpStack->setRowCount(0);
 
     for (uint32_t i = 0xD005F8; i < 0xD005F8+77; i += 11) {
-        memData.clear();
-        memDataString.clear();
+        data.clear();
+        dataString.clear();
 
         for (uint32_t j = i; j < i+11; j++) {
             uint8_t ch = mem_peek_byte(j);
-            memData += int2hex(ch, 2);
+            data += int2hex(ch, 2);
             if ((ch < 0x20) || (ch > 0x7e)) {
                 ch = '.';
             }
-            memDataString += QChar(ch);
+            dataString += QChar(ch);
         }
 
         QTableWidgetItem *opAddress = new QTableWidgetItem(int2hex(i, 6));
         QTableWidgetItem *opNumber = new QTableWidgetItem(QStringLiteral("OP")+QString::number(((i-0xD005F8)/11)+1));
-        QTableWidgetItem *opData = new QTableWidgetItem(memData);
-        QTableWidgetItem *opDataString = new QTableWidgetItem(memDataString);
+        QTableWidgetItem *opData = new QTableWidgetItem(data);
+        QTableWidgetItem *opDataString = new QTableWidgetItem(dataString);
 
-        ui->opView->setRowCount(++index);
+        ui->opView->setRowCount(index+1);
 
-        ui->opView->setItem(index-1, OP_ADDRESS, opAddress);
-        ui->opView->setItem(index-1, OP_NUMBER, opNumber);
-        ui->opView->setItem(index-1, OP_DATA, opData);
-        ui->opView->setItem(index-1, OP_DATASTRING, opDataString);
+        ui->opView->setItem(index, OP_ADDRESS, opAddress);
+        ui->opView->setItem(index, OP_NUMBER, opNumber);
+        ui->opView->setItem(index, OP_DATA, opData);
+        ui->opView->setItem(index, OP_DATASTRING, opDataString);
+
+        index++;
+    }
+
+    uint32_t fpBase = mem_peek_word(0xD0258A, true);
+    uint32_t fpTop = mem_peek_word(0xD0258D, true);
+
+    index = 0;
+
+    for (uint32_t i = fpTop; i > fpBase; i -= 9) {
+        data.clear();
+        dataString.clear();
+
+        for (uint32_t j = i; j < i+9; j++) {
+            uint8_t ch = mem_peek_byte(j);
+            data += int2hex(ch, 2);
+            if ((ch < 0x20) || (ch > 0x7e)) {
+                ch = '.';
+            }
+            dataString += QChar(ch);
+        }
+
+        QTableWidgetItem *fpAddr = new QTableWidgetItem(int2hex(i, 6));
+        QTableWidgetItem *fpData = new QTableWidgetItem(data);
+        QTableWidgetItem *fpString = new QTableWidgetItem(dataString);
+
+        ui->fpStack->setRowCount(index+1);
+
+        ui->fpStack->setItem(index, FP_ADDRESS, fpAddr);
+        ui->fpStack->setItem(index, FP_DATA, fpData);
+        ui->fpStack->setItem(index, FP_DATASTRING, fpString);
+
+        index++;
+    }
+
+    uint32_t opBase = mem_peek_word(0xD02593, true);
+    uint32_t opTop = mem_peek_word(0xD02590, true);
+
+    index = 0;
+
+    for (uint32_t i = opBase; i < opTop; i++) {
+        data.clear();
+        data.append(int2hex(mem_peek_byte(i), 2));
+
+        QTableWidgetItem *opAddr = new QTableWidgetItem(int2hex(i, 6));
+        QTableWidgetItem *opData = new QTableWidgetItem(data);
+
+        ui->opStack->setRowCount(index+1);
+
+        ui->opStack->setItem(index, OPS_ADDRESS, opAddr);
+        ui->opStack->setItem(index, OPS_DATA, opData);
+
+        index++;
     }
 
     index = 0;
@@ -1919,13 +1980,15 @@ void MainWindow::osUpdate() {
         QTableWidgetItem *varName = new QTableWidgetItem(QString(calc_var_name_to_utf8(var.name)));
         QTableWidgetItem *varType = new QTableWidgetItem(QString(calc_var_type_names[var.type]));
 
-        ui->vatView->setRowCount(++index);
+        ui->vatView->setRowCount(index+1);
 
-        ui->vatView->setItem(index-1, VAT_ADDRESS, varAddress);
-        ui->vatView->setItem(index-1, VAT_VAT_ADDRESS, varVatAddress);
-        ui->vatView->setItem(index-1, VAT_SIZE, varSize);
-        ui->vatView->setItem(index-1, VAT_NAME, varName);
-        ui->vatView->setItem(index-1, VAT_TYPE, varType);
+        ui->vatView->setItem(index, VAT_ADDRESS, varAddress);
+        ui->vatView->setItem(index, VAT_VAT_ADDRESS, varVatAddress);
+        ui->vatView->setItem(index, VAT_SIZE, varSize);
+        ui->vatView->setItem(index, VAT_NAME, varName);
+        ui->vatView->setItem(index, VAT_TYPE, varType);
+
+        index++;
     }
 
     ui->vatView->resizeColumnToContents(VAT_ADDRESS);
@@ -1935,23 +1998,24 @@ void MainWindow::osUpdate() {
     ui->vatView->resizeColumnToContents(VAT_SIZE);
 }
 
-void MainWindow::contextOp(const QPoint& posa) {
-    if (!ui->opView->rowCount() || !ui->opView->selectionModel()->isSelected(ui->opView->currentIndex())) {
+void MainWindow::contextOp(const QPoint &posa) {
+    QTableWidget *obj = static_cast<QTableWidget*>(sender());
+    if (!obj->rowCount() || !obj->selectionModel()->isSelected(obj->currentIndex())) {
         return;
     }
 
     QString gotoMem = tr("Goto Memory View");
-    QString copyMem = tr("Copy Address");
+    QString copyAddr = tr("Copy Address");
     QString copyData = tr("Copy Data");
-    QPoint globalPos = ui->opView->mapToGlobal(posa);
+    QPoint globalPos = obj->mapToGlobal(posa);
 
-    QString addr = ui->opView->item(ui->opView->selectionModel()->selectedRows().first().row(), 0)->text();
-    QString data = ui->opView->item(ui->opView->selectionModel()->selectedRows().first().row(), 2)->text();
+    QString addr = obj->item(obj->selectionModel()->selectedRows().first().row(), OP_ADDRESS)->text();
+    QString data = obj->item(obj->selectionModel()->selectedRows().first().row(), obj->objectName() == QStringLiteral("opView") ? 2 : 1)->text();
 
     QMenu menu;
     menu.addAction(gotoMem);
     menu.addSeparator();
-    menu.addAction(copyMem);
+    menu.addAction(copyAddr);
     menu.addAction(copyData);
 
     QAction *item = menu.exec(globalPos);
@@ -1959,7 +2023,7 @@ void MainWindow::contextOp(const QPoint& posa) {
         if (item->text() == gotoMem) {
             gotoMemAddr(hex2int(addr));
         }
-        if (item->text() == copyMem) {
+        if (item->text() == copyAddr) {
             qApp->clipboard()->setText(addr);
         }
         if (item->text() == copyData) {
@@ -1968,18 +2032,19 @@ void MainWindow::contextOp(const QPoint& posa) {
     }
 }
 
-void MainWindow::contextVat(const QPoint& posa) {
-    if (!ui->vatView->rowCount() || !ui->vatView->selectionModel()->isSelected(ui->vatView->currentIndex())) {
+void MainWindow::contextVat(const QPoint &posa) {
+    QTableWidget *obj = static_cast<QTableWidget*>(sender());
+    if (!obj->rowCount() || !obj->selectionModel()->isSelected(obj->currentIndex())) {
         return;
     }
 
     QString gotoMem = tr("Goto Memory View");
     QString gotoVat = tr("Goto VAT Memory View");
     QString gotoDisasm = tr("Goto Disasm View");
-    QPoint globalPos = ui->vatView->mapToGlobal(posa);
+    QPoint globalPos = obj->mapToGlobal(posa);
 
-    QString addr = ui->vatView->item(ui->vatView->selectionModel()->selectedRows().first().row(), 0)->text();
-    QString vatAddr = ui->vatView->item(ui->vatView->selectionModel()->selectedRows().first().row(), 1)->text();
+    QString addr = obj->item(obj->selectionModel()->selectedRows().first().row(), VAT_ADDRESS)->text();
+    QString vatAddr = obj->item(obj->selectionModel()->selectedRows().first().row(), VAT_VAT_ADDRESS)->text();
 
     QMenu menu;
     menu.addAction(gotoMem);

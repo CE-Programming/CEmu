@@ -119,6 +119,18 @@ private:
     };
 
     enum {
+        FP_ADDRESS,
+        FP_DATA,
+        FP_DATASTRING
+    };
+
+    enum {
+        OPS_ADDRESS,
+        OPS_DATA,
+        OPS_DATASTRING
+    };
+
+    enum {
         VAT_ADDRESS,
         VAT_VAT_ADDRESS,
         VAT_SIZE,
@@ -359,6 +371,7 @@ private:
     void setStatusBarState(bool state);
     void setDockBoundaries(bool state);
     void setPreRevisionI(bool state);
+    void setNormalOs(bool state);
     void setRecentSave(bool state);
     void setPortable(bool state);
     void setAutoSave(bool state);
@@ -579,6 +592,7 @@ private:
     bool m_optimizeRecording;
     bool m_activatedPortable = false;
     bool m_ignoreDmaCycles;
+    bool m_normalOs;
     int m_fullscreen = FULLSCREEN_NONE;
     uint32_t m_runUntilAddr;
 
@@ -616,6 +630,7 @@ private:
     static const QString SETTING_DEBUGGER_IGNORE_DMA;
     static const QString SETTING_DEBUGGER_AUTO_EQUATES;
     static const QString SETTING_DEBUGGER_PRE_I;
+    static const QString SETTING_DEBUGGER_NORM_OS;
     static const QString SETTING_SCREEN_FRAMESKIP;
     static const QString SETTING_SCREEN_SCALE;
     static const QString SETTING_SCREEN_SKIN;
@@ -685,6 +700,7 @@ private:
     QString TXT_TIMERS;
     QString TXT_BREAK_WATCH;
     QString TXT_OS_VIEW;
+    QString TXT_OS_STACKS;
     QString TXT_MISC;
     QString TXT_AUTOTESTER;
 

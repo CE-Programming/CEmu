@@ -130,6 +130,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(m_disasm, &QWidget::customContextMenuRequested, this, &MainWindow::contextDisasm);
     connect(ui->vatView, &QWidget::customContextMenuRequested, this, &MainWindow::contextVat);
     connect(ui->opView, &QWidget::customContextMenuRequested, this, &MainWindow::contextOp);
+    connect(ui->opStack, &QWidget::customContextMenuRequested, this, &MainWindow::contextOp);
+    connect(ui->fpStack, &QWidget::customContextMenuRequested, this, &MainWindow::contextOp);
     connect(m_ports, &QTableWidget::itemChanged, this, &MainWindow::portModified);
     connect(m_ports, &QTableWidget::itemPressed, this, &MainWindow::portSetPrev);
     connect(m_breakpoints, &QTableWidget::itemChanged, this, &MainWindow::breakModified);
@@ -261,6 +263,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonChangeSavedDebugPath, &QPushButton::clicked, this, &MainWindow::setDebugPath);
     connect(ui->checkFocus, &QCheckBox::stateChanged, this, &MainWindow::setFocusSetting);
     connect(ui->checkPreI, &QCheckBox::stateChanged, this, &MainWindow::setPreRevisionI);
+    connect(ui->checkNormOs, &QCheckBox::stateChanged, this, &MainWindow::setNormalOs);
     connect(ui->flashBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->flashEdit, &HexWidget::setBytesPerLine);
     connect(ui->ramBytes, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), ui->ramEdit, &HexWidget::setBytesPerLine);
     connect(ui->ramAscii, &QToolButton::toggled, [this](bool set){ ui->ramEdit->setAsciiArea(set); });
@@ -474,6 +477,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setFocusSetting(m_settings->value(SETTING_PAUSE_FOCUS, false).toBool());
     setRecentSave(m_settings->value(SETTING_RECENT_SAVE, true).toBool());
     setPreRevisionI(m_settings->value(SETTING_DEBUGGER_PRE_I, false).toBool());
+    setNormalOs(m_settings->value(SETTING_DEBUGGER_NORM_OS, true).toBool());
 
     m_dir.setPath((m_settings->value(SETTING_CURRENT_DIR, QDir::homePath()).toString()));
     if (m_settings->value(SETTING_IMAGE_PATH, QStringLiteral("")).toString().isEmpty() || m_portable) {
@@ -577,7 +581,8 @@ void MainWindow::translateExtras(int init) {
     QString __TXT_MEMORY = tr("Memory");
     QString __TXT_TIMERS = tr("Timers");
     QString __TXT_BREAK_WATCH = tr("Break / Watch / Port");
-    QString __TXT_OS_VIEW = tr("OS View");
+    QString __TXT_OS_VIEW = tr("OS Variables");
+    QString __TXT_OS_STACKS = tr("OS Stacks");
     QString __TXT_MISC = tr("Miscellaneous");
     QString __TXT_AUTOTESTER = tr("AutoTester");
 
@@ -633,6 +638,9 @@ void MainWindow::translateExtras(int init) {
             if (dock->windowTitle() == TXT_OS_VIEW) {
                 dock->setWindowTitle(__TXT_OS_VIEW);
             }
+            if (dock->windowTitle() == TXT_OS_STACKS) {
+                dock->setWindowTitle(__TXT_OS_STACKS);
+            }
             if (dock->windowTitle() == TXT_MISC) {
                 dock->setWindowTitle(__TXT_MISC);
             }
@@ -658,6 +666,7 @@ void MainWindow::translateExtras(int init) {
     TXT_TIMERS = __TXT_TIMERS;
     TXT_BREAK_WATCH = __TXT_BREAK_WATCH;
     TXT_OS_VIEW = __TXT_OS_VIEW;
+    TXT_OS_STACKS = __TXT_OS_STACKS;
     TXT_MISC = __TXT_MISC;
     TXT_AUTOTESTER = __TXT_AUTOTESTER;
 
@@ -699,8 +708,10 @@ void MainWindow::translateExtras(int init) {
         action = m_menuDebug->actions().at(6);
         action->setText(TXT_OS_VIEW);
         action = m_menuDebug->actions().at(7);
-        action->setText(TXT_MISC);
+        action->setText(TXT_OS_STACKS);
         action = m_menuDebug->actions().at(8);
+        action->setText(TXT_MISC);
+        action = m_menuDebug->actions().at(9);
         action->setText(TXT_AUTOTESTER);
 
 #ifdef _WIN32

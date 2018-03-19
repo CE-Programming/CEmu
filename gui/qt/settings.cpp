@@ -43,6 +43,7 @@ const QString MainWindow::SETTING_DEBUGGER_RAM_ASCII        = QStringLiteral("De
 const QString MainWindow::SETTING_DEBUGGER_BREAK_IGNORE     = QStringLiteral("Debugger/ignore_breakpoints");
 const QString MainWindow::SETTING_DEBUGGER_AUTO_EQUATES     = QStringLiteral("Debugger/auto_equates");
 const QString MainWindow::SETTING_DEBUGGER_IGNORE_DMA       = QStringLiteral("Debugger/ignore_dma");
+const QString MainWindow::SETTING_DEBUGGER_NORM_OS          = QStringLiteral("Debugger/norm_os");
 const QString MainWindow::SETTING_DEBUGGER_PRE_I            = QStringLiteral("Debugger/pre_i");
 const QString MainWindow::SETTING_SCREEN_FRAMESKIP          = QStringLiteral("Screen/frameskip");
 const QString MainWindow::SETTING_SCREEN_SCALE              = QStringLiteral("Screen/scale");
@@ -744,6 +745,21 @@ void MainWindow::setPreRevisionI(bool state) {
     ui->checkPreI->setChecked(state);
     m_settings->setValue(SETTING_DEBUGGER_PRE_I, state);
     cpu.preI = state;
+}
+
+void MainWindow::setNormalOs(bool state) {
+    ui->checkNormOs->setChecked(state);
+    m_settings->setValue(SETTING_DEBUGGER_NORM_OS, state);
+    m_normalOs = state;
+    if (guiDebug) {
+        ui->opView->setEnabled(state);
+        ui->vatView->setEnabled(state);
+        ui->opStack->setEnabled(state);
+        ui->fpStack->setEnabled(state);
+        if (state) {
+            osUpdate();
+        }
+    }
 }
 
 void MainWindow::setDockBoundaries(bool state) {
