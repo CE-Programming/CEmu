@@ -4748,7 +4748,7 @@
               <bool>false</bool>
              </property>
              <property name="editTriggers">
-              <set>QAbstractItemView::NoEditTriggers</set>
+              <set>QAbstractItemView::AllEditTriggers</set>
              </property>
              <property name="showDropIndicator" stdset="0">
               <bool>false</bool>
@@ -4815,7 +4815,12 @@
              </column>
              <column>
               <property name="text">
-               <string>Data String</string>
+               <string>String</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Value</string>
               </property>
              </column>
             </widget>
@@ -4899,7 +4904,7 @@
               <bool>false</bool>
              </property>
              <property name="editTriggers">
-              <set>QAbstractItemView::NoEditTriggers</set>
+              <set>QAbstractItemView::AllEditTriggers</set>
              </property>
              <property name="showDropIndicator" stdset="0">
               <bool>false</bool>
@@ -5009,7 +5014,7 @@
               <bool>false</bool>
              </property>
              <property name="editTriggers">
-              <set>QAbstractItemView::NoEditTriggers</set>
+              <set>QAbstractItemView::AllEditTriggers</set>
              </property>
              <property name="showDropIndicator" stdset="0">
               <bool>false</bool>
@@ -5071,7 +5076,12 @@
              </column>
              <column>
               <property name="text">
-               <string>Data String</string>
+               <string>String</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Value</string>
               </property>
              </column>
             </widget>

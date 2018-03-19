@@ -115,13 +115,15 @@ private:
         OP_ADDRESS,
         OP_NUMBER,
         OP_DATA,
-        OP_DATASTRING
+        OP_STRING,
+        OP_VALUE
     };
 
     enum {
         FP_ADDRESS,
         FP_DATA,
-        FP_DATASTRING
+        FP_STRING,
+        FP_VALUE
     };
 
     enum {
@@ -270,6 +272,7 @@ private:
 
     // os view
     void osUpdate();
+    void opModified(QTableWidgetItem *item);
 
     // goto
     void gotoPressed();

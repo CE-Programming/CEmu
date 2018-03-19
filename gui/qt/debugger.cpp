@@ -2,6 +2,8 @@
 #include "ui_mainwindow.h"
 #include "dockwidget.h"
 #include "utils.h"
+#include "tivarslib/TIVarType.h"
+#include "tivarslib/TypeHandlers/TypeHandlers.h"
 #include "../../core/asic.h"
 #include "../../core/cpu.h"
 #include "../../core/misc.h"
@@ -789,14 +791,14 @@ void MainWindow::breakRemove(uint32_t address) {
 }
 
 void MainWindow::breakModified(QTableWidgetItem *item) {
-    auto row = item->row();
-    auto col = item->column();
-    QString addressString;
-    uint32_t address;
+    int row = item->row();
+    int col = item->column();
+    QString addrString;
+    uint32_t addr;
 
     if (col == BREAK_ENABLE_LOC) {
-        address = static_cast<uint32_t>(hex2int(m_breakpoints->item(row, BREAK_ADDR_LOC)->text()));
-        debug_watch(address, DBG_MASK_EXEC, item->checkState() == Qt::Checked);
+        addr = static_cast<uint32_t>(hex2int(m_breakpoints->item(row, BREAK_ADDR_LOC)->text()));
+        debug_watch(addr, DBG_MASK_EXEC, item->checkState() == Qt::Checked);
     } else if (col == BREAK_LABEL_LOC) {
         updateLabels();
     } else if (col == BREAK_ADDR_LOC){
@@ -819,14 +821,14 @@ void MainWindow::breakModified(QTableWidgetItem *item) {
             return;
         }
 
-        address = static_cast<uint32_t>(hex2int(QString::fromStdString(s)));
-        addressString = int2hex(address, 6);
+        addr = static_cast<uint32_t>(hex2int(QString::fromStdString(s)));
+        addrString = int2hex(addr, 6);
 
         m_breakpoints->blockSignals(true);
 
         // Return if address is already set
         for (int i = 0; i < m_breakpoints->rowCount(); i++) {
-            if (m_breakpoints->item(i, BREAK_ADDR_LOC)->text() == addressString && i != row) {
+            if (m_breakpoints->item(i, BREAK_ADDR_LOC)->text() == addrString && i != row) {
                 item->setText(int2hex(m_prevBreakAddr, 6));
                 m_breakpoints->blockSignals(false);
                 return;
@@ -837,8 +839,8 @@ void MainWindow::breakModified(QTableWidgetItem *item) {
                                                                                                : DBG_MASK_NONE);
 
         debug_watch(m_prevBreakAddr, DBG_MASK_EXEC, false);
-        item->setText(addressString);
-        debug_watch(address, mask, true);
+        item->setText(addrString);
+        debug_watch(addr, mask, true);
         m_breakpoints->blockSignals(false);
     }
     disasmUpdate();
@@ -1882,6 +1884,7 @@ void MainWindow::osUpdate() {
     }
 
     calc_var_t var;
+    QByteArray array;
     QString data;
     QString dataString;
 
@@ -1892,29 +1895,35 @@ void MainWindow::osUpdate() {
     ui->fpStack->setRowCount(0);
 
     for (uint32_t i = 0xD005F8; i < 0xD005F8+77; i += 11) {
-        data.clear();
+        array.clear();
         dataString.clear();
 
         for (uint32_t j = i; j < i+11; j++) {
             uint8_t ch = mem_peek_byte(j);
-            data += int2hex(ch, 2);
+            array.append(ch);
             if ((ch < 0x20) || (ch > 0x7e)) {
                 ch = '.';
             }
             dataString += QChar(ch);
         }
 
-        QTableWidgetItem *opAddress = new QTableWidgetItem(int2hex(i, 6));
-        QTableWidgetItem *opNumber = new QTableWidgetItem(QStringLiteral("OP")+QString::number(((i-0xD005F8)/11)+1));
-        QTableWidgetItem *opData = new QTableWidgetItem(data);
-        QTableWidgetItem *opDataString = new QTableWidgetItem(dataString);
+        data_t vect(array.constData(), array.constEnd() - 2);
+
+        QTableWidgetItem *opAddr = new QTableWidgetItem(int2hex(i, 6));
+        QTableWidgetItem *opNumber = new QTableWidgetItem(QStringLiteral("OP") + QString::number(index+1));
+        QTableWidgetItem *opData = new QTableWidgetItem(QString(array.toHex()));
+        QTableWidgetItem *opString = new QTableWidgetItem(dataString);
+        QTableWidgetItem *opValue = new QTableWidgetItem(QString::fromStdString(tivars::TH_0x00::makeStringFromData(vect)));
+        opNumber->setFlags(opNumber->flags() & ~Qt::ItemIsEditable);
+        opAddr->setFlags(opNumber->flags() & ~Qt::ItemIsEditable);
 
         ui->opView->setRowCount(index+1);
 
-        ui->opView->setItem(index, OP_ADDRESS, opAddress);
+        ui->opView->setItem(index, OP_ADDRESS, opAddr);
         ui->opView->setItem(index, OP_NUMBER, opNumber);
         ui->opView->setItem(index, OP_DATA, opData);
-        ui->opView->setItem(index, OP_DATASTRING, opDataString);
+        ui->opView->setItem(index, OP_STRING, opString);
+        ui->opView->setItem(index, OP_VALUE, opValue);
 
         index++;
     }
@@ -1925,27 +1934,32 @@ void MainWindow::osUpdate() {
     index = 0;
 
     for (uint32_t i = fpTop; i > fpBase; i -= 9) {
-        data.clear();
+        array.clear();
         dataString.clear();
 
         for (uint32_t j = i; j < i+9; j++) {
             uint8_t ch = mem_peek_byte(j);
-            data += int2hex(ch, 2);
+            array.append(ch);
             if ((ch < 0x20) || (ch > 0x7e)) {
                 ch = '.';
             }
             dataString += QChar(ch);
         }
 
+        data_t vect(array.constData(), array.constEnd());
+
         QTableWidgetItem *fpAddr = new QTableWidgetItem(int2hex(i, 6));
-        QTableWidgetItem *fpData = new QTableWidgetItem(data);
+        QTableWidgetItem *fpData = new QTableWidgetItem(QString(array.toHex()));
         QTableWidgetItem *fpString = new QTableWidgetItem(dataString);
+        QTableWidgetItem *fpValue = new QTableWidgetItem(QString::fromStdString(tivars::TH_0x00::makeStringFromData(vect)));
+        fpAddr->setFlags(fpAddr->flags() & ~Qt::ItemIsEditable);
 
         ui->fpStack->setRowCount(index+1);
 
         ui->fpStack->setItem(index, FP_ADDRESS, fpAddr);
         ui->fpStack->setItem(index, FP_DATA, fpData);
-        ui->fpStack->setItem(index, FP_DATASTRING, fpString);
+        ui->fpStack->setItem(index, FP_STRING, fpString);
+        ui->fpStack->setItem(index, FP_VALUE, fpValue);
 
         index++;
     }
@@ -1961,6 +1975,8 @@ void MainWindow::osUpdate() {
 
         QTableWidgetItem *opAddr = new QTableWidgetItem(int2hex(i, 6));
         QTableWidgetItem *opData = new QTableWidgetItem(data);
+        opAddr->setFlags(opAddr->flags() & ~Qt::ItemIsEditable);
+        opData->setFlags(opData->flags() & ~Qt::ItemIsEditable);
 
         ui->opStack->setRowCount(index+1);
 
@@ -1974,16 +1990,16 @@ void MainWindow::osUpdate() {
 
     vat_search_init(&var);
     while (vat_search_next(&var)) {
-        QTableWidgetItem *varAddress = new QTableWidgetItem(int2hex(var.address,6));
-        QTableWidgetItem *varVatAddress = new QTableWidgetItem(int2hex(var.vat,6));
-        QTableWidgetItem *varSize = new QTableWidgetItem(int2hex(var.size,4));
+        QTableWidgetItem *varAddr = new QTableWidgetItem(int2hex(var.address, 6));
+        QTableWidgetItem *varVatAddr = new QTableWidgetItem(int2hex(var.vat, 6));
+        QTableWidgetItem *varSize = new QTableWidgetItem(int2hex(var.size, 4));
         QTableWidgetItem *varName = new QTableWidgetItem(QString(calc_var_name_to_utf8(var.name)));
         QTableWidgetItem *varType = new QTableWidgetItem(QString(calc_var_type_names[var.type]));
 
         ui->vatView->setRowCount(index+1);
 
-        ui->vatView->setItem(index, VAT_ADDRESS, varAddress);
-        ui->vatView->setItem(index, VAT_VAT_ADDRESS, varVatAddress);
+        ui->vatView->setItem(index, VAT_ADDRESS, varAddr);
+        ui->vatView->setItem(index, VAT_VAT_ADDRESS, varVatAddr);
         ui->vatView->setItem(index, VAT_SIZE, varSize);
         ui->vatView->setItem(index, VAT_NAME, varName);
         ui->vatView->setItem(index, VAT_TYPE, varType);
@@ -1996,6 +2012,15 @@ void MainWindow::osUpdate() {
     ui->vatView->resizeColumnToContents(VAT_NAME);
     ui->vatView->resizeColumnToContents(VAT_TYPE);
     ui->vatView->resizeColumnToContents(VAT_SIZE);
+}
+
+void MainWindow::opModified(QTableWidgetItem *item) {
+    int col = item->column();
+
+    if (col == OP_DATA) {
+    } else if (col == OP_STRING) {
+    } else if (col == OP_VALUE){
+    }
 }
 
 void MainWindow::contextOp(const QPoint &posa) {
