@@ -1894,6 +1894,9 @@ void MainWindow::osUpdate() {
     ui->opStack->setRowCount(0);
     ui->fpStack->setRowCount(0);
 
+    QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+
+    disconnect(ui->fpStack, &QTableWidget::itemChanged, this, &MainWindow::fpModified);
     disconnect(ui->opView, &QTableWidget::itemChanged, this, &MainWindow::opModified);
 
     for (uint32_t i = 0xD005F8; i < 0xD005F8+77; i += 11) {
@@ -1918,6 +1921,12 @@ void MainWindow::osUpdate() {
         QTableWidgetItem *opValue = new QTableWidgetItem(QString::fromStdString(tivars::TH_0x00::makeStringFromData(vect)));
         opNumber->setFlags(opNumber->flags() & ~Qt::ItemIsEditable);
         opAddr->setFlags(opNumber->flags() & ~Qt::ItemIsEditable);
+
+        opAddr->setFont(monospace);
+        opNumber->setFont(monospace);
+        opData->setFont(monospace);
+        opString->setFont(monospace);
+        opValue->setFont(monospace);
 
         ui->opView->setRowCount(index+1);
 
@@ -1956,6 +1965,11 @@ void MainWindow::osUpdate() {
         QTableWidgetItem *fpValue = new QTableWidgetItem(QString::fromStdString(tivars::TH_0x00::makeStringFromData(vect)));
         fpAddr->setFlags(fpAddr->flags() & ~Qt::ItemIsEditable);
 
+        fpAddr->setFont(monospace);
+        fpData->setFont(monospace);
+        fpString->setFont(monospace);
+        fpValue->setFont(monospace);
+
         ui->fpStack->setRowCount(index+1);
 
         ui->fpStack->setItem(index, FP_ADDRESS, fpAddr);
@@ -1980,6 +1994,9 @@ void MainWindow::osUpdate() {
         opAddr->setFlags(opAddr->flags() & ~Qt::ItemIsEditable);
         opData->setFlags(opData->flags() & ~Qt::ItemIsEditable);
 
+        opAddr->setFont(monospace);
+        opData->setFont(monospace);
+
         ui->opStack->setRowCount(index+1);
 
         ui->opStack->setItem(index, OPS_ADDRESS, opAddr);
@@ -1997,6 +2014,12 @@ void MainWindow::osUpdate() {
         QTableWidgetItem *varSize = new QTableWidgetItem(int2hex(var.size, 4));
         QTableWidgetItem *varName = new QTableWidgetItem(QString(calc_var_name_to_utf8(var.name)));
         QTableWidgetItem *varType = new QTableWidgetItem(QString(calc_var_type_names[var.type]));
+
+        varAddr->setFont(monospace);
+        varVatAddr->setFont(monospace);
+        varSize->setFont(monospace);
+        varName->setFont(monospace);
+        varType->setFont(monospace);
 
         ui->vatView->setRowCount(index+1);
 
@@ -2016,6 +2039,7 @@ void MainWindow::osUpdate() {
     ui->vatView->resizeColumnToContents(VAT_SIZE);
 
     connect(ui->opView, &QTableWidget::itemChanged, this, &MainWindow::opModified);
+    connect(ui->fpStack, &QTableWidget::itemChanged, this, &MainWindow::fpModified);
 }
 
 void MainWindow::opModified(QTableWidgetItem *item) {
@@ -2033,10 +2057,7 @@ void MainWindow::opModified(QTableWidgetItem *item) {
     if (col == OP_DATA) {
         array.fill(0);
         for (int i = 0; i < 11 && i < txt.length() / 2; i++) {
-            array[i] = hex2int(txt.mid(i*2, 2));
-        }
-        for (int i = 0; i < 11; i++) {
-            mem_poke_byte(addr + i, array[i]);
+            array[i] = hex2int(txt.mid(i * 2, 2));
         }
     } else if (col == OP_STRING) {
         array.fill('.');
@@ -2072,6 +2093,61 @@ void MainWindow::opModified(QTableWidgetItem *item) {
     ui->opView->item(row, OP_STRING)->setText(data);
     ui->opView->item(row, OP_DATA)->setText(QString(array.toHex()));
     ui->opView->item(row, OP_VALUE)->setText(QString::fromStdString(tivars::TH_0x00::makeStringFromData(vect)));
+
+    sender()->blockSignals(false);
+}
+
+void MainWindow::fpModified(QTableWidgetItem *item) {
+    int col = item->column();
+    int row = item->row();
+
+    QString txt = item->text();
+    QString data;
+    QByteArray array;
+    uint32_t addr = hex2int(ui->fpStack->item(row, FP_ADDRESS)->text());
+    array.resize(11);
+
+    sender()->blockSignals(true);
+
+    if (col == FP_DATA) {
+        array.fill(0);
+        for (int i = 0; i < 9 && i < txt.length() / 2; i++) {
+            array[i] = hex2int(txt.mid(i * 2, 2));
+        }
+    } else if (col == FP_STRING) {
+        array.fill('.');
+        for (int i = 0; i < 9 && i < txt.length(); i++) {
+            array[i] = txt[i].toLatin1();
+        }
+    } else if (col == FP_VALUE) {
+        array.fill(0);
+        data_t value = tivars::TH_0x00::makeDataFromString(txt.toStdString());
+        for (int i = 0; i < 9 && i < static_cast<int>(value.size()); i++) {
+            array[i] = value[i];
+        }
+    }
+
+    for (int i = 0; i < 9; i++) {
+        mem_poke_byte(addr + i, array[i]);
+    }
+
+    array.clear();
+    data.clear();
+
+    for (uint32_t j = addr; j < addr + 9; j++) {
+        uint8_t ch = mem_peek_byte(j);
+        array.append(ch);
+        if ((ch < 0x20) || (ch > 0x7e)) {
+            ch = '.';
+        }
+        data += QChar(ch);
+    }
+
+    data_t vect(array.constData(), array.constEnd());
+
+    ui->fpStack->item(row, FP_STRING)->setText(data);
+    ui->fpStack->item(row, FP_DATA)->setText(QString(array.toHex()));
+    ui->fpStack->item(row, FP_VALUE)->setText(QString::fromStdString(tivars::TH_0x00::makeStringFromData(vect)));
 
     sender()->blockSignals(false);
 }

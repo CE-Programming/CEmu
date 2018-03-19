@@ -273,6 +273,7 @@ private:
     // os view
     void osUpdate();
     void opModified(QTableWidgetItem *item);
+    void fpModified(QTableWidgetItem *item);
 
     // goto
     void gotoPressed();

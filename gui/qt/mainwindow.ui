@@ -4978,7 +4978,7 @@
            </sizepolicy>
           </property>
           <property name="title">
-           <string>FPS Stack</string>
+           <string>FP Stack</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_36">
            <property name="leftMargin">
