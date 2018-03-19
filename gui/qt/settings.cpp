@@ -94,6 +94,7 @@ const QString MainWindow::SETTING_DEFAULT_DEBUG_FILE        = QStringLiteral("/c
 const QString MainWindow::SETTING_DEFAULT_IMAGE_FILE        = QStringLiteral("/cemu_image.ce");
 const QString MainWindow::TXT_YES                           = QStringLiteral("y");
 const QString MainWindow::TXT_NO                            = QStringLiteral("n");
+const QString MainWindow::TXT_NAN                           = QStringLiteral("NaN");
 
 void MainWindow::setPortable(bool state) {
     ui->checkPortable->setChecked(state);

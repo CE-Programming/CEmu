@@ -684,6 +684,7 @@ private:
     static const QString SETTING_DEFAULT_DEBUG_FILE;
     static const QString TXT_YES;
     static const QString TXT_NO;
+    static const QString TXT_NAN;
 
     QString TITLE_DEBUG;
     QString TITLE_DOCKS;
