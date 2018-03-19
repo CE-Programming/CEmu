@@ -9,7 +9,6 @@
 #include "../tivarslib_utils.h"
 
 // TODO : check if the models have different exponent offsets
-// TODO : redo float creation more correctly...
 
 using namespace std;
 
@@ -121,6 +120,11 @@ namespace tivars
         bool isNegative = (flags >> 7 == 1);
 //      bool isSeqInit  = (flags  & 1 == 1); // if true, "used for initial sequence values"
         int exponent    = data[1] - 0x80;
+
+        if (exponent < -99 || exponent > 99) {
+            return string{"NaN"};
+        }
+
         unsigned numLeadingZeros = 0, pointPos = 4;
         bool scientific = false;
         if (exponent < -3 || exponent > 9) {
