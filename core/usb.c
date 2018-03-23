@@ -11,7 +11,7 @@ usb_state_t usb;
 static uint8_t usb_read(const uint16_t pio, bool peek) {
     (void)pio;
     (void)peek;
-    return 0;
+    return 255;
 }
 
 static void usb_write(const uint16_t pio, const uint8_t byte, bool poke) {
