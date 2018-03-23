@@ -1622,8 +1622,7 @@ void MainWindow::varPressed(QTableWidgetItem *item) {
         std::string str;
         try {
             str = calc_var_content_string(var);
-        } catch(std::exception e) {
-            QMessageBox::warning(this, tr("Variable preview error"), tr("Could not get preview of variable. Error: ") + e.what());
+        } catch(...) {
             return;
         }
         BasicCodeViewerWindow *codePopup = new BasicCodeViewerWindow(this);
@@ -1698,7 +1697,12 @@ void MainWindow::varShow() {
                 } else if (var.size > 500) {
                     var_value = tr("[Double-click to view...]");
                 } else {
-                    var_value = QString::fromStdString(calc_var_content_string(var));
+                    try {
+                        var_value = QString::fromStdString(calc_var_content_string(var));
+                    } catch(...) {
+                        var_value = tr("Can't preview this");
+                        var_preview_needs_gray = true;
+                    }
                 }
 
                 // Do not translate - things rely on those names.
