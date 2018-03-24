@@ -109,6 +109,7 @@ private:
     std::atomic<int> m_request;
     std::atomic<int> m_speed;
     std::atomic<bool> m_throttle;
+    std::atomic<bool> m_debug;
 
     QString m_savePath;
     QStringList m_vars;
@@ -119,8 +120,6 @@ private:
     std::condition_variable m_cv;
     std::mutex m_mutexDebug;
     std::condition_variable m_cvDebug;
-
-    bool m_debug = false;
 };
 
 #endif

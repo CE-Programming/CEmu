@@ -47,6 +47,7 @@ EmuThread::EmuThread(QObject *parent) : QThread{parent}, write(CONSOLE_BUFFER_SI
     assert(emu == Q_NULLPTR);
     emu = this;
     m_speed = 100;
+    m_debug = false;
     m_throttle = true;
     m_request = RequestNone;
     m_lastTime = std::chrono::steady_clock::now();

@@ -2034,9 +2034,9 @@ void MainWindow::autotesterRefreshCRC() {
     }
 
     // Compute and display CRC
-    free(start);
     ui->valueCRC->setText(int2hex(crc32(start, crc_size), 8));
     ui->valueCRC->repaint();
+    free(start);
 }
 
 void MainWindow::resetEmu() {
