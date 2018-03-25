@@ -23,6 +23,10 @@ HexWidget::HexWidget(QWidget *parent) : QAbstractScrollArea{parent}, m_data{0} {
 }
 
 void HexWidget::setData(const QByteArray &ba) {
+    if (!isEnabled()) {
+        return;
+    }
+
     m_scrolled = false;
     m_data = ba;
     m_modified.resize(m_data.size());
@@ -45,7 +49,7 @@ void HexWidget::appendData(const QByteArray &ba) {
 void HexWidget::scroll(int value) {
     adjust();
 
-    if (!m_scrollable) {
+    if (!m_scrollable || !isEnabled()) {
         return;
     }
 
