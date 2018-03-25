@@ -4,7 +4,7 @@
 /* hacky atomics */
 #if defined (MULTITHREAD)
 #ifndef __cplusplus
-#if !defined(__STDC_NO_ATOMICS__)
+#if !defined(__STDC_NO_ATOMICS__) && !defined(_MSC_VER)
  #include <stdatomic.h>
 #else
  #define _Atomic(X) volatile X /* doesn't do anything, but makes me feel better... although if you are trying to do multithreading glhf */
