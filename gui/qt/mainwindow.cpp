@@ -765,6 +765,7 @@ bool MainWindow::redistributeDocks(const QPoint &pos, const QPoint &offset,
                                    Qt::CursorShape cursorShape,
                                    int (QSize::*dimension)() const,
                                    Qt::Orientation orientation) {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
     if (cursor().shape() == cursorShape) {
         if (DockWidget *before = redistributeFindDock(pos - offset)) {
             if (DockWidget *after = redistributeFindDock(pos + offset)) {
@@ -776,6 +777,9 @@ bool MainWindow::redistributeDocks(const QPoint &pos, const QPoint &offset,
             }
         }
     }
+#else
+    (void)pos; (void)offset; (void)cursorShape; (void)dimension; (void)orientation;
+#endif
     return false;
 }
 
