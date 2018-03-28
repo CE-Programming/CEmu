@@ -61,8 +61,11 @@ static uint64_t gpt_next_event(enum sched_item_id id) {
         delta = ((uint32_t)next + invert) ^ invert;
         item->clock = (gpt.control >> index*3 & 2) ? CLOCK_32K : CLOCK_CPU;
         if (item->clock == CLOCK_CPU) {
-            if(timer->counter > timer->counter - delta) { status = 1 << 2; }
-            if(timer->counter < timer->counter - delta) { status = 1 << 2; }
+            if((int)delta > 0) {
+                if(timer->counter > UINT32_MAX - delta) { status = 1 << 2; }
+            } else {
+                if(timer->counter < 0 - delta) { status = 1 << 2; }
+            }
         }
         timer->counter -= delta;
         gpt.status |= (status & ~gpt.raw[index]) << (index * 3);
