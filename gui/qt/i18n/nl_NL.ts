@@ -6,7 +6,7 @@
     <message>
         <location filename="../basiccodeviewerwindow.ui" line="49"/>
         <source>Toggle original/reformatted</source>
-        <translation>Origineel/geformatteerd tonen</translation>
+        <translation>Origineel/geformatteerd weergeven</translation>
     </message>
     <message>
         <location filename="../basiccodeviewerwindow.ui" line="14"/>
@@ -1919,7 +1919,7 @@ De bootable image moet in dezelfde folder als de CEmu executable worden geplaats
     <message>
         <location filename="../mainwindow.cpp" line="677"/>
         <source>Toggle Windows Console</source>
-        <translation>Windows Console tonen</translation>
+        <translation>Windows Console weergeven</translation>
     </message>
 </context>
 <context>
