@@ -6,7 +6,7 @@
     <message>
         <location filename="../basiccodeviewerwindow.ui" line="49"/>
         <source>Toggle original/reformatted</source>
-        <translation>Origineel/geformatteerd wisselen</translation>
+        <translation>Origineel/geformatteerd tonen</translation>
     </message>
     <message>
         <location filename="../basiccodeviewerwindow.ui" line="14"/>
@@ -1427,28 +1427,28 @@
         <location filename="../mainwindow.cpp" line="2119"/>
         <location filename="../mainwindow.cpp" line="2276"/>
         <source>Toggle Breakpoint</source>
-        <translation>Breakpoint wisselen</translation>
+        <translation>Breakpoint aan/uit</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="2045"/>
         <location filename="../mainwindow.cpp" line="2120"/>
         <location filename="../mainwindow.cpp" line="2277"/>
         <source>Toggle Write Watchpoint</source>
-        <translation>Write watchpoint wisselen</translation>
+        <translation>Write watchpoint aan/uit</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="2046"/>
         <location filename="../mainwindow.cpp" line="2121"/>
         <location filename="../mainwindow.cpp" line="2278"/>
         <source>Toggle Read Watchpoint</source>
-        <translation>Read watchpoint wisselen</translation>
+        <translation>Read watchpoint aan/uit</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="2047"/>
         <location filename="../mainwindow.cpp" line="2122"/>
         <location filename="../mainwindow.cpp" line="2279"/>
         <source>Toggle Read/Write Watchpoint</source>
-        <translation>Read/write watchpoint wisselen</translation>
+        <translation>Read/write watchpoint aan/uit</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="570"/>
@@ -1919,7 +1919,7 @@ De bootable image moet in dezelfde folder als de CEmu executable worden geplaats
     <message>
         <location filename="../mainwindow.cpp" line="677"/>
         <source>Toggle Windows Console</source>
-        <translation>Windows Console wisselen</translation>
+        <translation>Windows Console tonen</translation>
     </message>
 </context>
 <context>
@@ -1990,17 +1990,17 @@ De bootable image moet in dezelfde folder als de CEmu executable worden geplaats
     <message>
         <location filename="../memoryvisualizerwidget.cpp" line="74"/>
         <source>Toggle Write Watchpoint</source>
-        <translation>Write watchpoint wisselen</translation>
+        <translation>Write watchpoint aan/uit</translation>
     </message>
     <message>
         <location filename="../memoryvisualizerwidget.cpp" line="75"/>
         <source>Toggle Read Watchpoint</source>
-        <translation>Read watchpoint wisselen</translation>
+        <translation>Read watchpoint aan/uit</translation>
     </message>
     <message>
         <location filename="../memoryvisualizerwidget.cpp" line="76"/>
         <source>Toggle Read/Write Watchpoint</source>
-        <translation>Read/write watchpoint wisselen</translation>
+        <translation>Read/write watchpoint aan/uit</translation>
     </message>
 </context>
 <context>
