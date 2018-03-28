@@ -149,7 +149,7 @@ static uint32_t lcd_process_pixel(uint8_t red, uint8_t green, uint8_t blue) {
             }
             spi_update_pixel(red, green, blue);
         }
-        if (unlikely(++lcd.curCol >= lcd.CPL)) {
+        if (unlikely(++lcd.curCol >= lcd.PPL)) {
             for (h = lcd.HFP; h && spi_refresh_pixel(); h--) {
             }
             spi_hsync();
