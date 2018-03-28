@@ -32,7 +32,7 @@ static uint64_t gpt_next_event(enum sched_item_id id) {
     timer_state_t *timer = &gpt.timer[index];
     if (gpt.control >> (index * 3) & 1) {
         int32_t invert, event;
-        uint32_t status = 0;
+        uint32_t delta, status = 0;
         uint64_t next;
         invert = (gpt.control >> (9 + index) & 1) ? ~0 : 0;
         if (!timer->counter) {
@@ -58,12 +58,17 @@ static uint64_t gpt_next_event(enum sched_item_id id) {
                 next = temp;
             }
         }
+        delta = ((uint32_t)next + invert) ^ invert;
+        item->clock = (gpt.control >> index*3 & 2) ? CLOCK_32K : CLOCK_CPU;
+        if (item->clock == CLOCK_CPU) {
+            if(timer->counter > timer->counter - delta) { status = 1 << 2; }
+            if(timer->counter < timer->counter - delta) { status = 1 << 2; }
+        }
+        timer->counter -= delta;
         gpt.status |= (status & ~gpt.raw[index]) << (index * 3);
         intrpt_set(INT_TIMER1 << index, status);
         gpt.raw[index] = next ? 0 : status;
         intrpt_set(INT_TIMER1 << index, gpt.raw[index]);
-        timer->counter -= ((uint32_t)next + invert) ^ invert;
-        item->clock = (gpt.control >> index*3 & 2) ? CLOCK_32K : CLOCK_CPU;
         return next;
     }
     gpt.raw[index] = 0;
