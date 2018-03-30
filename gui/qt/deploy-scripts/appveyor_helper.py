@@ -663,16 +663,16 @@ def deploy_snapshots():
                        #extra_wc = {
                        #             "EGL Library" : r"C:\Qt\Qt5.10.1-static\bin\libEGL.dll",
                        #             "GLESv2 Library" : r"C:\Qt\Qt5.10.1-static\bin\libGLESv2.dll",
-                       #             "DirectX Compiler Library" : r"C:\Qt\Qt5.10.1\5.10\msvc2015\bin\d3dcompiler_*.dll",
-                       #             "Mesa OpenGL Software Rendering Library" : r"C:\Qt\Qt5.10.1\5.10\msvc2015\bin\opengl32sw.dll",
+                       #             "DirectX Compiler Library" : r"C:\Qt\5.10.1\msvc2015\bin\d3dcompiler_*.dll",
+                       #             "Mesa OpenGL Software Rendering Library" : r"C:\Qt\5.10.1\msvc2015\bin\opengl32sw.dll",
                        #           }
                       )
     collect_static_main_files("x64 Static", os.path.join("build_static_64", "release"), os.path.join("deploy_static", "release64"),
                        #extra_wc = {
                        #             "EGL Library" : r"C:\Qt\Qt5.10.1x64-static\bin\libEGL.dll",
                        #             "GLESv2 Library" : r"C:\Qt\Qt5.10.1x64-static\bin\libGLESv2.dll",
-                       #             "DirectX Compiler Library" : r"C:\Qt\Qt5.10.1x64\5.10\msvc2015_64\bin\d3dcompiler_*.dll",
-                       #             "Mesa OpenGL Software Rendering Library" : r"C:\Qt\Qt5.10.1x64\5.10\msvc2015_64\bin\opengl32sw.dll",
+                       #             "DirectX Compiler Library" : r"C:\Qt\5.10.1\msvc2015_64\bin\d3dcompiler_*.dll",
+                       #             "Mesa OpenGL Software Rendering Library" : r"C:\Qt\5.10.1\msvc2015_64\bin\opengl32sw.dll",
                        #           }
                       )
     
@@ -681,25 +681,25 @@ def deploy_snapshots():
                        #extra_wc = {
                        #             "EGL Library" : r"C:\Qt\Qt5.10.1-static\bin\libEGLd.dll",
                        #             "GLESv2 Library" : r"C:\Qt\Qt5.10.1-static\bin\libGLESv2d.dll",
-                       #             "DirectX Compiler Library" : r"C:\Qt\Qt5.10.1\5.10\msvc2015\bin\d3dcompiler_*.dll",
-                       #             "Mesa OpenGL Software Rendering Library" : r"C:\Qt\Qt5.10.1\5.10\msvc2015\bin\opengl32sw.dll",
+                       #             "DirectX Compiler Library" : r"C:\Qt\5.10.1\msvc2015\bin\d3dcompiler_*.dll",
+                       #             "Mesa OpenGL Software Rendering Library" : r"C:\Qt\5.10.1\msvc2015\bin\opengl32sw.dll",
                        #           }
                       )
     collect_static_main_files("x64 Static Debug", os.path.join("build_static_64", "debug"), os.path.join("deploy_static", "release64_debug"),
                        #extra_wc = {
                        #             "EGL Library" : r"C:\Qt\Qt5.10.1x64-static\bin\libEGLd.dll",
                        #             "GLESv2 Library" : r"C:\Qt\Qt5.10.1x64-static\bin\libGLESv2d.dll",
-                       #             "DirectX Compiler Library" : r"C:\Qt\Qt5.10.1x64\5.10\msvc2015_64\bin\d3dcompiler_*.dll",
-                       #             "Mesa OpenGL Software Rendering Library" : r"C:\Qt\Qt5.10.1x64\5.10\msvc2015_64\bin\opengl32sw.dll",
+                       #             "DirectX Compiler Library" : r"C:\Qt\5.10.1\msvc2015_64\bin\d3dcompiler_*.dll",
+                       #             "Mesa OpenGL Software Rendering Library" : r"C:\Qt\5.10.1\msvc2015_64\bin\opengl32sw.dll",
                        #           }
                       )
     
     # Qt files only needed for dynamic builds
-    collect_qt_files("x86", r"C:\Qt\Qt5.10.1\5.10\msvc2015\bin\windeployqt.exe", r"deploy\release32", r'build_32\release\CEmu.exe')
-    collect_qt_files("x64", r"C:\Qt\Qt5.10.1x64\5.10\msvc2015_64\bin\windeployqt.exe", r"deploy\release64", r'build_64\release\CEmu.exe')
+    collect_qt_files("x86", r"C:\Qt\5.10.1\msvc2015\bin\windeployqt.exe", r"deploy\release32", r'build_32\release\CEmu.exe')
+    collect_qt_files("x64", r"C:\Qt\5.10.1\msvc2015_64\bin\windeployqt.exe", r"deploy\release64", r'build_64\release\CEmu.exe')
     
-    collect_qt_files("x86 Debug", r"C:\Qt\Qt5.10.1\5.10\msvc2015\bin\windeployqt.exe", r"deploy\release32_debug", r'build_32\debug\CEmu.exe')
-    collect_qt_files("x64 Debug", r"C:\Qt\Qt5.10.1x64\5.10\msvc2015_64\bin\windeployqt.exe", r"deploy\release64_debug", r'build_64\debug\CEmu.exe')
+    collect_qt_files("x86 Debug", r"C:\Qt\5.10.1\msvc2015\bin\windeployqt.exe", r"deploy\release32_debug", r'build_32\debug\CEmu.exe')
+    collect_qt_files("x64 Debug", r"C:\Qt\5.10.1\msvc2015_64\bin\windeployqt.exe", r"deploy\release64_debug", r'build_64\debug\CEmu.exe')
     
     file_list_32 = build_file_list("x86", r"deploy\release32")
     file_list_64 = build_file_list("x64", r"deploy\release64")
