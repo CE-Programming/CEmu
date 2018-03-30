@@ -8920,6 +8920,9 @@ QPushButton:pressed {
                </item>
                <item row="3" column="1">
                 <widget class="QCheckBox" name="checkNormOs">
+                 <property name="toolTip">
+                  <string>Some debugging views only make sense when in the context of normal OS operation (may not be the case when some ASM programs are running, for instance)</string>
+                 </property>
                  <property name="text">
                   <string>Assume normal OS operation</string>
                  </property>
