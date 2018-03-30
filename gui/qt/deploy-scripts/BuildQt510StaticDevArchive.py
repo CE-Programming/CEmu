@@ -10,12 +10,12 @@ from util import *
 
 SEVENZIP="C:\\Program Files\\7-Zip\\7z.exe"
 QTBASEDIR="C:\\"
-QT32 = "Qt\\Qt5.10.0-static"
-SSL32 = "OpenSSL-win32"
-SSL64 = "OpenSSL-win64"
-QT64 = "Qt\\Qt5.10.0x64-static"
+QT32 = "Qt\\Qt5.10.1-static"
+SSL32 = "LibreSSL-win32"
+SSL64 = "LibreSSL-win64"
+QT64 = "Qt\\Qt5.10.1x64-static"
 LIB_DLL_DIR = ""
-ARC_PREFIX = "Qt5100_Rel_Static_"
+ARC_PREFIX = "Qt5.10.1_Rel_Static_"
 ARC_SUFFIX_DEV = "_DevDeploy"
 
 # What libraries need to be included?
@@ -26,7 +26,8 @@ QT_LIB_INCLUDE = "core gui quick widgets quickwidgets network qml"
 
 # Binary excludes
 # (Don't change unless you know what you're doing!)
-BIN_EXCLUDES = [ "assistant.exe", "designer.exe", "idc.exe", "idc.pdb", "linguist.exe", "moc.pdb", "pixeltool.exe", "qdbus*", "rcc.pdb", "testcon*", "windeployqt*"]
+BIN_EXCLUDES = [ "assistant.exe", "designer.exe", "idc.exe", "idc.pdb", "linguist.exe", "moc.pdb",
+                 "pixeltool.exe", "qdbus*", "rcc.pdb", "testcon*", "windeployqt*"]
 
 def collect_qt_static_files(proj_file):
     proj_fh = open(proj_file, "r")
@@ -105,13 +106,13 @@ def silent_remove_wildcard(file_wc):
         silentremove(f)
 
 print("====================================================")
-print("= Building Qt v5.10 development archive (static)... =")
+print("= Building Qt v5.10 development archive (static)   =")
 print("====================================================")
 
 # Modify PATH if needed
 entire_path = os.environ["PATH"]
 entire_path = entire_path.split(os.pathsep)
-entire_path = [p for p in entire_path if "PyQt4" not in p]
+entire_path = [p for p in entire_path if "PyQt5" not in p]
 entire_path = os.pathsep.join(entire_path)
 os.environ["PATH"] = entire_path
 
@@ -127,7 +128,16 @@ mkdir_p("build_32")
 
 os.chdir("build_32")
 print(os.getcwd())
-if not simple_exec([r'C:\Qt\Qt5.10.0-static\bin\qmake', '-spec', 'win32-msvc2015', '-tp', 'vc', r'..\..\CEmu.pro']):
+
+REQUIRED_ENV_VARS = ["ZLIB_LIB", "LIBPNG_APNG_LIB", "LIBPNG_APNG_INCLUDE"]
+
+if not all([True if p in os.environ else False for p in REQUIRED_ENV_VARS]):
+    print(" ! ERROR: These environment variables for 32-bit builds must be defined for detection to work: %s" % ", ".join(REQUIRED_ENV_VARS))
+    sys.exit(1)
+
+if not simple_exec([r'C:\Qt\Qt5.10.1-static\bin\qmake', '-spec', 'win32-msvc', '-tp', 'vc',
+                   'LIBS+=' + os.environ.get('ZLIB_LIB'), 'LIBS+=' + os.environ.get('LIBPNG_APNG_LIB'),
+                   'INCLUDEPATH+=' + os.environ.get('LIBPNG_APNG_INCLUDE'), r'..\..\CEmu.pro']):
     print(" ! ERROR: Creating project files for x86 failed!")
     sys.exit(1)
 os.chdir("..")
@@ -138,6 +148,8 @@ print("   -> Stage 2a: Collecting Qt Dependencies")
 cemu32_proj = os.path.join("build_32", "CEmu.vcxproj")
 
 found_libs = collect_qt_static_files(cemu32_proj)
+
+print("   -- Found %d Qt libraries to include." % len(found_libs))
 
 print("   -> Stage 2b: Creating Exclusion List")
 
@@ -226,6 +238,8 @@ if (not ("webengine" in qt_lib_include_arr)) and (not ("webenginecore" in qt_lib
 
 all_excludes = all_excludes + ["-xr!" + e for e in BIN_EXCLUDES]
 
+print("   -- Excluding %d files from the archive." % len(all_excludes))
+
 shutil.rmtree("build_32")
 
 # To preserve path in 7-Zip, you MUST change directory to where the
@@ -237,7 +251,7 @@ os.chdir(QTBASEDIR)
 
 print(" * Stage 3: Building Development Archive (x86)")
 subprocess.call([SEVENZIP, "a", os.path.join(cdir, ARC_PREFIX + "Win32" + ARC_SUFFIX_DEV + ".7z"), SSL32, QT32,
-                "-t7z", "-m0=lzma2", "-mx9", "-v100m",
+                "-t7z", "-m0=lzma2", "-mx9", "-v100000000",
                     # Exclude unnecessary files
                     
                     # Installation files
@@ -264,7 +278,7 @@ move_single_7z_file(os.path.join(cdir, ARC_PREFIX + "Win32" + ARC_SUFFIX_DEV + "
 
 print(" * Stage 4: Building Development Archive (x64)")
 subprocess.call([SEVENZIP, "a", os.path.join(cdir, ARC_PREFIX + "Win64" + ARC_SUFFIX_DEV + ".7z"), SSL64, QT64,
-                "-t7z", "-m0=lzma2", "-mx9", "-v100m",
+                "-t7z", "-m0=lzma2", "-mx9", "-v100000000",
                     # Exclude unnecessary files
                     
                     # Installation files

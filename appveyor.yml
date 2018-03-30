@@ -22,44 +22,44 @@ build_script:
   - cd build_32
   - cmd: set ZLIB_LIB=C:\libpng-apng-1.6.34\debug\32bit\shared\zlib.lib
   - cmd: set LIBPNG_APNG_LIB=C:\libpng-apng-1.6.34\debug\32bit\shared\libpng16.lib
-  - C:\Qt\Qt5.10.0\5.10\msvc2015\bin\qmake -spec win32-msvc2015 -tp vc CEMU_VERSION=v1.0 LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
+  - C:\Qt\Qt5.10.1\5.10\msvc\bin\qmake -spec win32-msvc -tp vc LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
   - msbuild CEmu.vcxproj /p:Configuration=Debug
   - cmd: set ZLIB_LIB=C:\libpng-apng-1.6.34\release\32bit\shared\zlib.lib
   - cmd: set LIBPNG_APNG_LIB=C:\libpng-apng-1.6.34\release\32bit\shared\libpng16.lib
-  - C:\Qt\Qt5.10.0\5.10\msvc2015\bin\qmake -spec win32-msvc2015 -tp vc CEMU_VERSION=v1.0 LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
+  - C:\Qt\Qt5.10.1\5.10\msvc\bin\qmake -spec win32-msvc -tp vc LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
   - msbuild CEmu.vcxproj /p:Configuration=Release
   - cd ..
 
   - cd build_64
   - cmd: set ZLIB_LIB=C:\libpng-apng-1.6.34\debug\64bit\shared\zlib.lib
   - cmd: set LIBPNG_APNG_LIB=C:\libpng-apng-1.6.34\debug\64bit\shared\libpng16.lib
-  - C:\Qt\Qt5.10.0x64\5.10\msvc2015_64\bin\qmake -spec win32-msvc2015 -tp vc CEMU_VERSION=v1.0 LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
+  - C:\Qt\Qt5.10.1x64\5.10\msvc_64\bin\qmake -spec win32-msvc -tp vc LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
   - msbuild CEmu.vcxproj /p:Configuration=Debug /p:Platform="x64"
   - cmd: set ZLIB_LIB=C:\libpng-apng-1.6.34\release\64bit\shared\zlib.lib
   - cmd: set LIBPNG_APNG_LIB=C:\libpng-apng-1.6.34\release\64bit\shared\libpng16.lib
-  - C:\Qt\Qt5.10.0x64\5.10\msvc2015_64\bin\qmake -spec win32-msvc2015 -tp vc CEMU_VERSION=v1.0 LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
+  - C:\Qt\Qt5.10.1x64\5.10\msvc_64\bin\qmake -spec win32-msvc -tp vc LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
   - msbuild CEmu.vcxproj /p:Configuration=Release /p:Platform="x64"
   - cd ..
 
   - cd build_static_32
   - cmd: set ZLIB_LIB=C:\libpng-apng-1.6.34\debug\32bit\static\zlib.lib
   - cmd: set LIBPNG_APNG_LIB=C:\libpng-apng-1.6.34\debug\32bit\static\libpng16.lib
-  - C:\Qt\Qt5.10.0-static\bin\qmake -spec win32-msvc2015 -tp vc CEMU_VERSION=v1.0 LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
+  - C:\Qt\Qt5.10.1-static\bin\qmake -spec win32-msvc -tp vc LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
   - msbuild CEmu.vcxproj /p:Configuration=Debug
   - cmd: set ZLIB_LIB=C:\libpng-apng-1.6.34\release\32bit\static\zlib.lib
   - cmd: set LIBPNG_APNG_LIB=C:\libpng-apng-1.6.34\release\32bit\static\libpng16.lib
-  - C:\Qt\Qt5.10.0-static\bin\qmake -spec win32-msvc2015 -tp vc CEMU_VERSION=v1.0 LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
+  - C:\Qt\Qt5.10.1-static\bin\qmake -spec win32-msvc -tp vc LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
   - msbuild CEmu.vcxproj /p:Configuration=Release
   - cd ..
 
   - cd build_static_64
   - cmd: set ZLIB_LIB=C:\libpng-apng-1.6.34\debug\64bit\static\zlib.lib
   - cmd: set LIBPNG_APNG_LIB=C:\libpng-apng-1.6.34\debug\64bit\static\libpng16.lib
-  - C:\Qt\Qt5.10.0x64-static\bin\qmake -spec win32-msvc2015 -tp vc CEMU_VERSION=v1.0 LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
+  - C:\Qt\Qt5.10.1x64-static\bin\qmake -spec win32-msvc -tp vc LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
   - msbuild CEmu.vcxproj /p:Configuration=Debug /p:Platform="x64"
   - cmd: set ZLIB_LIB=C:\libpng-apng-1.6.34\release\64bit\static\zlib.lib
   - cmd: set LIBPNG_APNG_LIB=C:\libpng-apng-1.6.34\release\64bit\static\libpng16.lib
-  - C:\Qt\Qt5.10.0x64-static\bin\qmake -spec win32-msvc2015 -tp vc CEMU_VERSION=v1.0 LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
+  - C:\Qt\Qt5.10.1x64-static\bin\qmake -spec win32-msvc -tp vc LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
   - msbuild CEmu.vcxproj /p:Configuration=Release /p:Platform="x64"
   - cd ..
 
