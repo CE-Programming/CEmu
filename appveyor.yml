@@ -19,6 +19,8 @@ install:
 build_script:
   - cmd: set LIBPNG_APNG_INCLUDE=C:\libpng-apng-1.6.34\include
 
+  - setlocal
+
   - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
 
   - cd build_32
@@ -42,6 +44,10 @@ build_script:
   - C:\Qt\Qt5.10.1-static\bin\qmake -spec win32-msvc -tp vc LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
   - msbuild CEmu.vcxproj /p:Configuration=Release
   - cd ..
+
+  - endlocal
+
+  - setlocal
 
   - call "C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64
   - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86_amd64
@@ -67,6 +73,8 @@ build_script:
   - C:\Qt\Qt5.10.1x64-static\bin\qmake -spec win32-msvc -tp vc LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
   - msbuild CEmu.vcxproj /p:Configuration=Release /p:Platform="x64"
   - cd ..
+  
+  - endlocal
 
 deploy_script:
   - cd %APPVEYOR_BUILD_FOLDER%
