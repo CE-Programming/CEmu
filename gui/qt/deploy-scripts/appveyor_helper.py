@@ -396,7 +396,7 @@ def extract(filename):
 def install_deps():
     print(" * Attempting to download dependencies...")
     dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.10.1_Rel_Static_Win32_DevDeploy.7z.001')
-	dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.10.1_Rel_Static_Win32_DevDeploy.7z.002')
+    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.10.1_Rel_Static_Win32_DevDeploy.7z.002')
     dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.10.1_Rel_Static_Win64_DevDeploy.7z.001')
     dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.10.1_Rel_Static_Win64_DevDeploy.7z.002')
     dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/libpng-apng-1.6.34.7z')
