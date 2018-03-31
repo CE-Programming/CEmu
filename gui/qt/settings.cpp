@@ -406,7 +406,7 @@ void MainWindow::setUIDocks(bool firstRun) {
 
     // Create "Docks" menu to make closing and opening docks more intuitive
     m_menuDocks = new QMenu(TITLE_DOCKS, this);
-    ui->menubar->insertMenu(ui->menuAbout->menuAction(), m_menuDocks);
+    ui->menubar->insertMenu(ui->menuExtras->menuAction(), m_menuDocks);
 
     // Convert the tabs into DockWidgets
     DockWidget *prev = Q_NULLPTR;
@@ -430,7 +430,7 @@ void MainWindow::setUIDocks(bool firstRun) {
     m_menuDocks->addSeparator();
 
     m_menuDebug = new QMenu(TITLE_DEBUG, this);
-    ui->menubar->insertMenu(ui->menuAbout->menuAction(), m_menuDebug);
+    ui->menubar->insertMenu(ui->menuExtras->menuAction(), m_menuDebug);
 
     // Convert the tabs into QDockWidgets
     while (ui->tabDebug->count()) {

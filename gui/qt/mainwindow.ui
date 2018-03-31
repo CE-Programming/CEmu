@@ -4284,7 +4284,7 @@
              <normaloff>:/icons/resources/icons/watchpoints.png</normaloff>:/icons/resources/icons/watchpoints.png</iconset>
            </attribute>
            <attribute name="label">
-            <string>WatchPoints</string>
+            <string>Watchpoints</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_24">
             <item>
@@ -9392,10 +9392,6 @@ QPushButton:pressed {
     <addaction name="menuImport"/>
     <addaction name="menuExport"/>
     <addaction name="separator"/>
-    <addaction name="actionRecordAnimated"/>
-    <addaction name="actionScreenshot"/>
-    <addaction name="actionClipScreen"/>
-    <addaction name="separator"/>
     <addaction name="actionKeyHistory"/>
     <addaction name="separator"/>
     <addaction name="menuLanguage"/>
@@ -9416,35 +9412,34 @@ QPushButton:pressed {
     <addaction name="separator"/>
     <addaction name="actionMemoryVisualizer"/>
    </widget>
-   <widget class="QMenu" name="menuAbout">
+   <widget class="QMenu" name="menuExtras">
     <property name="title">
-     <string>&amp;About</string>
+     <string>Extras</string>
     </property>
-    <widget class="QMenu" name="menuExtras">
-     <property name="title">
-      <string>Extras</string>
-     </property>
-     <property name="icon">
-      <iconset resource="resources.qrc">
-       <normaloff>:/icons/resources/icons/settings.png</normaloff>:/icons/resources/icons/settings.png</iconset>
-     </property>
-     <addaction name="actionHideStatusBar"/>
-     <addaction name="actionHideMenuBar"/>
-    </widget>
     <addaction name="actionCheckForUpdates"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
     <addaction name="actionAboutQt"/>
     <addaction name="actionReportBug"/>
     <addaction name="separator"/>
-    <addaction name="menuExtras"/>
+    <addaction name="actionHideMenuBar"/>
+    <addaction name="actionHideStatusBar"/>
     <addaction name="separator"/>
     <addaction name="actionResetGUI"/>
     <addaction name="actionResetALL"/>
    </widget>
+   <widget class="QMenu" name="menuCapture">
+    <property name="title">
+     <string>Capture</string>
+    </property>
+    <addaction name="actionScreenshot"/>
+    <addaction name="actionRecordAnimated"/>
+    <addaction name="actionClipScreen"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuCalculator"/>
-   <addaction name="menuAbout"/>
+   <addaction name="menuCapture"/>
+   <addaction name="menuExtras"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="DockWidget" name="screenDock">
@@ -9811,9 +9806,6 @@ QPushButton:pressed {
    <property name="text">
     <string>Reset GUI docks</string>
    </property>
-   <property name="menuRole">
-    <enum>QAction::ApplicationSpecificRole</enum>
-   </property>
   </action>
   <action name="actionResetALL">
    <property name="icon">
@@ -9822,9 +9814,6 @@ QPushButton:pressed {
    </property>
    <property name="text">
     <string>Reset CEmu</string>
-   </property>
-   <property name="menuRole">
-    <enum>QAction::ApplicationSpecificRole</enum>
    </property>
   </action>
   <action name="actionEnglish">
@@ -9872,9 +9861,6 @@ QPushButton:pressed {
    </property>
    <property name="text">
     <string>Report a bug / give feedback</string>
-   </property>
-   <property name="menuRole">
-    <enum>QAction::ApplicationSpecificRole</enum>
    </property>
   </action>
   <action name="actionHideStatusBar">

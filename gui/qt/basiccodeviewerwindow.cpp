@@ -132,7 +132,7 @@ BasicHighlighter::BasicHighlighter(QTextDocument *parent) : QSyntaxHighlighter(p
 
     builtinFormat.setForeground(Qt::darkCyan);
     QStringList builtinPatterns;
-    builtinPatterns << "\\bAsmComp\\b" << "\\bAsm(8[34]CE?)?Prgm\\b" <<"\\bAUTO\\b"
+    builtinPatterns << "\\bAns\\b" << "\\bAsmComp\\b" << "\\bAsm(8[34]CE?)?Prgm\\b" <<"\\bAUTO\\b"
                     << "\\bAxesOff\\b" << "\\bAxesOn\\b" << "\\bBackgroundOn\\b" << "\\bBackgroundOff\\b"
                     << "\\bCLASSIC\\b" << "\\bClockOff\\b" << "\\bClockOn\\b" << "\\bConnected\\b" << "\\bCoordOff\\b"
                     << "\\bCoordOn\\b" << "\\bDiagnosticOff\\b" << "\\bDiagnosticOn\\b" << "\\bDot\\b" << "\\beval\\b"

@@ -1553,8 +1553,9 @@ void MainWindow::contextLcd(const QPoint &posa) {
     QPoint globalPos = ui->lcd->mapToGlobal(posa);
     menu.addMenu(ui->menuFile);
     menu.addMenu(ui->menuCalculator);
+    menu.addMenu(ui->menuCapture);
     menu.addMenu(m_menuDocks);
-    menu.addMenu(ui->menuAbout);
+    menu.addMenu(ui->menuExtras);
     menu.exec(globalPos);
 }
 
