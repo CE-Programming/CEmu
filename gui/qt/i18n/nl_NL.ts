@@ -91,7 +91,7 @@
     <message>
         <location filename="../mainwindow.ui" line="6535"/>
         <source>Preview</source>
-        <translation>Bekijken</translation>
+        <translation>Weergeven</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6761"/>
@@ -136,17 +136,17 @@
     <message>
         <location filename="../mainwindow.ui" line="8220"/>
         <source>Automatically save and restore state</source>
-        <translation>Status automatisch opslaan en herstellen</translation>
+        <translation>Automatisch status opslaan en laden</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8246"/>
         <source>Always show on top of other windows</source>
-        <translation>Altijd boven andere vensters</translation>
+        <translation>Altijd boven andere vensters weeergeven</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8200"/>
         <source>Use portable configuration</source>
-        <translation>Portable configuratie toepassen</translation>
+        <translation>Portable configuratie gebruiken</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8826"/>
@@ -197,7 +197,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8596"/>
         <source>Throttle:</source>
-        <translation>Aanpassen:</translation>
+        <translation>Reguleren:</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8256"/>
@@ -328,7 +328,7 @@
     <message>
         <location filename="../mainwindow.ui" line="3469"/>
         <source>Open debugger to view disassembly...</source>
-        <translation>Open debugger om de disassembly te zien…</translation>
+        <translation>Open debugger om disassembly te zien…</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3738"/>
@@ -458,7 +458,7 @@
     <message>
         <location filename="../mainwindow.ui" line="4443"/>
         <source>Port Monitor</source>
-        <translation>Poort Monitor</translation>
+        <translation>Poort-Monitor</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4536"/>
@@ -608,7 +608,7 @@
     <message>
         <location filename="../mainwindow.ui" line="4808"/>
         <source>OP Number</source>
-        <translation>OP-nummer</translation>
+        <translation>OP-Nummer</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4813"/>
@@ -624,12 +624,12 @@
     <message>
         <location filename="../mainwindow.ui" line="4683"/>
         <source>VAT Address</source>
-        <translation>VAT Adres</translation>
+        <translation>VAT-Adres</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4698"/>
         <source>Data Type</source>
-        <translation>Data Type</translation>
+        <translation>Data-Type</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5100"/>
@@ -696,27 +696,27 @@
     <message>
         <location filename="../mainwindow.ui" line="5905"/>
         <source>Launch Test Configuration</source>
-        <translation>Start Test-Configuratie</translation>
+        <translation>Test-Configuratie starten</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6376"/>
         <source>View calc variables</source>
-        <translation>Rekenmachine Variabelen-weergave</translation>
+        <translation>Rekenmachine-Variabelen weergeven</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6638"/>
         <source>Send files to calc</source>
-        <translation>Bestanden naar de rekenmachine verzenden</translation>
+        <translation>Bestanden naar rekenmachine verzenden</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8768"/>
         <source>Emulate physical LCD SPI drawing</source>
-        <translation>Emuleer fysieke LCD SPI-tekenen</translation>
+        <translation>Fysieke LCD SPI emuleren</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8806"/>
         <source>Auto. save and restore debug state</source>
-        <translation>Debugstatus automatisch opslaan en herstellen</translation>
+        <translation>Debug-Status automatisch opslaan en laden</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6350"/>
@@ -726,7 +726,7 @@
     <message>
         <location filename="../mainwindow.cpp" line="1666"/>
         <source>View Calculator Variables</source>
-        <translation>Rekenmachine Variabelen-weergave</translation>
+        <translation>Rekenmachine-Variabelen-weergeven</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6438"/>
@@ -786,7 +786,7 @@
     <message>
         <location filename="../mainwindow.ui" line="6746"/>
         <source>Save recent file paths on exit</source>
-        <translation>Recente locaties bij sluiten opslaan</translation>
+        <translation>Recente locaties opslaan bij sluiten</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6824"/>
@@ -807,7 +807,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8179"/>
         <source>Configuration</source>
-        <translation>Configuratie</translation>
+        <translation>Instellingen</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8207"/>
@@ -859,7 +859,7 @@
         <location filename="../mainwindow.ui" line="9714"/>
         <location filename="../mainwindow.ui" line="9723"/>
         <source>Calculator state</source>
-        <translation>Rekenmachine-status</translation>
+        <translation>Rekenmachine-Status</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9732"/>
@@ -870,7 +870,7 @@
         <location filename="../mainwindow.ui" line="9741"/>
         <location filename="../mainwindow.ui" line="9753"/>
         <source>Debug state</source>
-        <translation>Debug-status></translation>
+        <translation>Debug-status</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9762"/>
@@ -915,7 +915,7 @@
     <message>
         <location filename="../mainwindow.ui" line="5927"/>
         <source>.json file:</source>
-        <translation>.json bestand:</translation>
+        <translation>.json-bestand:</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2437"/>
@@ -935,7 +935,7 @@
     <message>
         <location filename="../mainwindow.ui" line="3421"/>
         <source>Autoloads any .inc, .map, or .lab found when transferring files </source>
-        <translation>Laad automatisch alle .inc, .map of .lab bestanden</translation>
+        <translation>Automatisch alle .inc, .map of .lab bestanden laden</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3424"/>
@@ -949,7 +949,7 @@
     <message>
         <location filename="../mainwindow.ui" line="5152"/>
         <source>Control</source>
-        <translation>Control</translation>
+        <translation>Controleren</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5590"/>
@@ -969,12 +969,12 @@
     <message>
         <location filename="../mainwindow.ui" line="5956"/>
         <source>(Re)Load</source>
-        <translation>(Her)Laden</translation>
+        <translation>(Opnieuw) Laden</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5992"/>
         <source>Launch test</source>
-        <translation>Start test</translation>
+        <translation>Test uitvoeren</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6011"/>
@@ -1019,12 +1019,12 @@
     <message>
         <location filename="../mainwindow.ui" line="6141"/>
         <source>1st half of the VRAM (8bpp)</source>
-        <translation>Eerste helft van VRAM (8bpp)</translation>
+        <translation>1e helft van VRAM (8bpp)</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6146"/>
         <source>2nd half of the VRAM (8bpp)</source>
-        <translation>Tweede helft van VRAM (8bpp)</translation>
+        <translation>2e helft van VRAM (8bpp)</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6151"/>
@@ -1094,7 +1094,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8779"/>
         <source>Debugging</source>
-        <translation>Debugger</translation>
+        <translation>Debuggen</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9113"/>
@@ -1159,7 +1159,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8924"/>
         <source>Some debugging views only make sense when in the context of normal OS operation (may not be the case when some ASM programs are running, for instance)</source>
-        <translation>Sommige debugging-vensters zijn alleen zinvol binnen de context van normale OS-uitvoering (behalve wanneer bepaalde ASM-programma's draaien)</translation>
+        <translation>Sommige debugging-vensters zijn alleen zinvol binnen de context van normale OS-uitvoering (behalve wanneer bepaalde ASM-programma&apos;s draaien)</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8927"/>
@@ -1230,7 +1230,7 @@
     <message>
         <location filename="../mainwindow.ui" line="9425"/>
         <source>Extras</source>
-        <translation>Extra's</translation>
+        <translation>Extra&apos;s</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9458"/>
@@ -1277,12 +1277,12 @@
     <message>
         <location filename="../mainwindow.ui" line="9621"/>
         <source>Record animated PNG</source>
-        <translation>Geanimeerde PNG opname</translation>
+        <translation>Animatie-PNG opnemen</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9624"/>
         <source>Record animated GIF</source>
-        <translation>Geanimeerde GIF opname</translation>
+        <translation>Animatie-GIF opnemen</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9627"/>
@@ -1347,7 +1347,7 @@
     <message>
         <location filename="../mainwindow.ui" line="9687"/>
         <source>Restore state</source>
-        <translation>Status herstellen</translation>
+        <translation>Status laden</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9696"/>
@@ -1367,7 +1367,7 @@
     <message>
         <location filename="../debugger.cpp" line="114"/>
         <source>This debugging information is incompatible with this version of CEmu</source>
-        <translation>Deze debugging-informatie is niet geldig voor deze versie van CEmu</translation>
+        <translation>Deze debug-informatie is niet geldig voor deze versie van CEmu</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="393"/>
@@ -1560,7 +1560,7 @@
         <source>Welcome!
 CEmu uses a customizable dock-style interface. Drag and drop to move tabs and windows around on the screen, and choose which docks are available in the &apos;Docks&apos; menu in the topmost bar. Be sure that &apos;Enable UI edit mode&apos; is selected when laying out your interface. Enjoy!</source>
         <translation>Welkom!
-CEmu maakt gebruik van een aanpasbare dock-style interface. Verplaats de tabs en windows op het scherm en kies welke docks er beschikbaar zijn via het &apos;Docks&apos; menu in de menubalk. Zorg ervoor dat &apos;UI bewerk-modus&apos; is geselecteerd wanneer u de interface aanpast. Veel plezier!</translation>
+CEmu maakt gebruik van een aanpasbare dock-style interface. Selecteer de beschikbare docks via het &apos;Docks&apos; menu in de menubalk en plaats de tabs en vensters op het scherm. Zorg ervoor dat &apos;UI bewerk-modus&apos; is geselecteerd wanneer u de interface aanpast. Veel plezier!</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="561"/>
@@ -1592,7 +1592,7 @@ Portable-modus is ingesteld.</translation>
         <location filename="../mainwindow.cpp" line="1040"/>
         <location filename="../settings.cpp" line="901"/>
         <source>Select saved image to restore from</source>
-        <translation>Selecteer opgeslagen image om daarvandaan te herstellen</translation>
+        <translation>Selecteer opgeslagen image om te laden</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1042"/>
@@ -1609,7 +1609,7 @@ Portable-modus is ingesteld.</translation>
     <message>
         <location filename="../mainwindow.cpp" line="1052"/>
         <source>Set image to save to</source>
-        <translation>Stel bestand in om op te slaan</translation>
+        <translation>Image instellen om op te slaan</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1061"/>
@@ -1644,7 +1644,7 @@ Herlaad de ROM van de &apos;Rekenmachine&apos; menu aub.</translation>
     <message>
         <location filename="../mainwindow.cpp" line="1406"/>
         <source>Failed to save screenshot.</source>
-        <translation>Opslag schermopname mislukt.</translation>
+        <translation>Schermopname niet kunnen opslaan.</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1432"/>
@@ -1674,7 +1674,7 @@ Herlaad de ROM van de &apos;Rekenmachine&apos; menu aub.</translation>
     <message>
         <location filename="../mainwindow.cpp" line="1477"/>
         <source>Saving Animated PNG...</source>
-        <translation>Animatie-PNG-opname opslaan…</translation>
+        <translation>Animatie-PNG opslaan…</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1494"/>
@@ -1684,7 +1684,7 @@ Herlaad de ROM van de &apos;Rekenmachine&apos; menu aub.</translation>
     <message>
         <location filename="../mainwindow.cpp" line="1520"/>
         <source>%1&lt;h3&gt;CEmu %2&lt;/h3&gt;&lt;a href=&apos;https://github.com/CE-Programming/CEmu&apos;&gt;On GitHub&lt;/a&gt;&lt;br&gt;&lt;br&gt;Main authors:&lt;br&gt;%3&lt;br&gt;Other contributors include:&lt;br&gt;%4&lt;br&gt;Translations provided by:&lt;br&gt;%5&lt;br&gt;Many thanks to the following projects: %6&lt;br&gt;In-program icons are courtesy of %7.&lt;br&gt;&lt;br&gt;CEmu is licensed under the %8, and is not a TI product nor is it affiliated to/endorsed by TI.&lt;br&gt;&lt;br&gt;</source>
-        <translation>%1&lt;h3&gt;CEmu %2&lt;/h3&gt;&lt;a href=&apos;https://github.com/CE-Programming/CEmu&apos;&gt;On GitHub&lt;/a&gt;&lt;br&gt;&lt;br&gt;Makers:&lt;br&gt;%3&lt;br&gt;Met bijdragen van:&lt;br&gt;%4&lt;br&gt;Vertalingen:&lt;br&gt;%5&lt;br&gt;Met dank aan de volgende projecten: %6&lt;br&gt;Programma-ikonen met dank aan %7.&lt;br&gt;&lt;br&gt;CEmu is licensed under the %8, and is not a TI product nor is it affiliated to/endorsed by TI.&lt;br&gt;&lt;br&gt;</translation>
+        <translation>%1&lt;h3&gt;CEmu %2&lt;/h3&gt;&lt;a href=&apos;https://github.com/CE-Programming/CEmu&apos;&gt;On GitHub&lt;/a&gt;&lt;br&gt;&lt;br&gt;Makers:&lt;br&gt;%3&lt;br&gt;Met bijdragen van o.a.:&lt;br&gt;%4&lt;br&gt;Vertalingen aangeleverd door:&lt;br&gt;%5&lt;br&gt;Met dank aan de volgende projecten: %6&lt;br&gt;Programma-ikonen met dank aan %7.&lt;br&gt;&lt;br&gt;CEmu is licensed under the %8, and is not a TI product nor is it affiliated to/endorsed by TI.&lt;br&gt;&lt;br&gt;</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1693"/>
@@ -1720,12 +1720,12 @@ Bestand: </translation>
     <message>
         <location filename="../mainwindow.cpp" line="1918"/>
         <source>See the test config file format and make sure values are correct and referenced files are there.</source>
-        <translation>Controleer het test configuratie-bestandsformat en zorg ervoor dat die waarden correct zijn en dat de referentie bestanden erin staan.</translation>
+        <translation>Bestudeer het test configuratie-bestandsformaat en zorg ervoor dat de waarden en de referentiebestanden correct vermeld staan.</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="2020"/>
         <source>Make sure you have entered a valid start/size pair or preset.</source>
-        <translation>Zorg dat u een geldige start/grootte-combinatie of gedefinieerde waarde gebruikt.</translation>
+        <translation>Zorg voor een geldige start/grootte-combinatie of gedefinieerde waarde.</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="2029"/>
@@ -1740,7 +1740,7 @@ Bestand: </translation>
     <message>
         <location filename="../mainwindow.cpp" line="2078"/>
         <source>Image does not appear to be from a CE. Do you want to attempt to load it anyway? This may cause instability.</source>
-        <translation>Dit image lijkt niet afkomstig van een CE. Toch proberen te laden? Het kan instabiliteit geven.</translation>
+        <translation>Dit image lijkt niet afkomstig van een CE. Wlt u het toch proberen te laden? Dit kan instabiliteit opleveren.</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="2088"/>
@@ -1800,7 +1800,7 @@ Bestand: </translation>
     <message>
         <location filename="../mainwindow.cpp" line="1594"/>
         <source>TI Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca *.8cg *.8ci *.8ek);;All Files (*.*)</source>
-        <translation>TI-Variable (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca *.8cg *.8ci *.8ek);;Alle Bestanden (*.*)</translation>
+        <translation>TI-Variabelen (*.8xp *.8xv *.8xl *.8xn *.8xm *.8xy *.8xg *.8xs *.8xd *.8xw *.8xc *.8xl *.8xz *.8xt *.8ca *.8cg *.8ci *.8ek);;Alle Bestanden (*.*)</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1674"/>
@@ -1845,7 +1845,7 @@ Bestand: </translation>
     <message>
         <location filename="../mainwindow.cpp" line="1876"/>
         <source>Error. Couldn&apos;t follow the test sequence defined in the configuration</source>
-        <translation>Fout. Kon de testvolgorde in de configuratie niet volgen</translation>
+        <translation>Fout. Kon de tesopdrachten in de configuratie niet begrijpen</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1879"/>
@@ -1855,7 +1855,7 @@ Bestand: </translation>
     <message>
         <location filename="../mainwindow.cpp" line="1888"/>
         <source>Please choose a json file or type its path.</source>
-        <translation>Kies a.u.b. een json-bestand of geef zijn locatie.</translation>
+        <translation>Kies a.u.b. een json-bestand of geef de locatie.</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1897"/>
@@ -1882,7 +1882,7 @@ Bestand: </translation>
         <source>Out of %2 tests attempted:
 %4 passed
 %6 failed</source>
-        <translation>Van de %2 tests die zijn geprobeerd:
+        <translation>Van de %2 uitgevoerde tests:
 %4 geslaagd
 %6 mislukt</translation>
     </message>
@@ -1946,7 +1946,7 @@ Bestand: </translation>
 The bootable image should be placed in the same directory as the CEmu executable. When CEmu is then started, the boot image will be loaded automatically and then removed for convience.</source>
         <translation>Een bootable image kan worden gebruikt om CEmu te starten met vooraf definieerde instellingen, zonder een extra setup.
 
-De bootable image moet in dezelfde folder als de CEmu executable worden geplaatst. Als CEmu wordt gestart, wordt voor het gemak de image automatisch geladen.</translation>
+Plaats hiertoe de bootable image in dezelfde folder als de CEmu executable. Als CEmu wordt gestart, worden de image en instellingen automatisch geladen, waarna de image wordt gewist.</translation>
     </message>
     <message>
         <location filename="../settings.cpp" line="200"/>
@@ -1961,7 +1961,7 @@ De bootable image moet in dezelfde folder als de CEmu executable worden geplaats
     <message>
         <location filename="../settings.cpp" line="516"/>
         <source>Checking updates is disabled for development builds</source>
-        <translation>Controleren voor updates is uitgeschakeld bij ontwikkelingsversiens van CEmu</translation>
+        <translation>Controle op updates is uitgeschakeld bij ontwikkelingsversies</translation>
     </message>
     <message>
         <location filename="../settings.cpp" line="528"/>
@@ -1991,7 +1991,7 @@ De bootable image moet in dezelfde folder als de CEmu executable worden geplaats
     <message>
         <location filename="../settings.cpp" line="549"/>
         <source>&lt;b&gt;An error occurred while checking for CEmu updates.&lt;/b&gt;&lt;br/&gt;You can however &lt;a href=&apos;https://github.com/CE-Programming/CEmu/releases/latest&apos;&gt;go here&lt;/a&gt; to check yourself.</source>
-        <translation>&lt;b&gt;Er is een fout opgetreden tijdens de controle op CEmu-updates.&lt;/b&gt;&lt;br&gt;U kunt ook &lt;a href=&apos;https://github.com/CE-Programming/CEmu/releases/latest&apos;&gt;de website bezoeken&lt;/a&gt; om het zelf te controleren.</translation>
+        <translation>&lt;b&gt;Er is een fout opgetreden bij de controle op CEmu-updates.&lt;/b&gt;&lt;br&gt;U kunt ook &lt;a href=&apos;https://github.com/CE-Programming/CEmu/releases/latest&apos;&gt;de website bezoeken&lt;/a&gt; om het zelf te controleren.</translation>
     </message>
     <message>
         <location filename="../settings.cpp" line="843"/>
@@ -2152,17 +2152,17 @@ Bestand: </translation>
     <message>
         <location filename="../romselection.ui" line="271"/>
         <source>Browse my computer for a ROM image</source>
-        <translation>Zoek op mijn computer voor een ROM-bestand</translation>
+        <translation>Een ROM-bestand op mijn computer zoeken</translation>
     </message>
     <message>
         <location filename="../romselection.ui" line="443"/>
         <source>Using your computer&apos;s calculator connectivity software, copy all the variables prefixed with &quot;ROMData&quot; to your computer. Drag and drop all of them into the box below.</source>
-        <translation>Gebruik uw computer&apos;s connectiviteitssoftware om alle variabelen beginnend met &quot;ROMData&quot; te kopiëren naar uw computer. Sleep ze allemaal naar het vak hieronder.</translation>
+        <translation>Gebruik uw computer&apos;s verbindingssoftware en kopieer alle variabelen beginnend met &quot;ROMData&quot; naar uw computer. Sleep al deze ROMData naar het onderstaande vak.</translation>
     </message>
     <message>
         <location filename="../romselection.ui" line="468"/>
         <source>Drop ROM segments here</source>
-        <translation>ROM-segmenten hier loslaten</translation>
+        <translation>Sleep ROM-segmenten hierheen</translation>
     </message>
     <message>
         <location filename="../romselection.ui" line="542"/>
@@ -2172,7 +2172,7 @@ Bestand: </translation>
     <message>
         <location filename="../romselection.ui" line="210"/>
         <source>CEmu Version: </source>
-        <translation>CEmu Versie: </translation>
+        <translation>CEmu-versie: </translation>
     </message>
     <message>
         <location filename="../romselection.ui" line="134"/>
@@ -2199,17 +2199,17 @@ Bestand: </translation>
     <message>
         <location filename="../romselection.ui" line="311"/>
         <source>Click this button to save the dumper program to your computer, then send the program to your real calculator.</source>
-        <translation>Klik op deze knop om het dumperprogramma op te slaan op uw computer, en verzend dit programma naar uw echte rekenmachine.</translation>
+        <translation>Klik op deze knop om het dumper-programma op te slaan op uw computer en verzend dit programma naar uw echte rekenmachine.</translation>
     </message>
     <message>
         <location filename="../romselection.ui" line="327"/>
         <source>Save Program...</source>
-        <translation>Program opslaan...</translation>
+        <translation>Program opslaan…</translation>
     </message>
     <message>
         <location filename="../romselection.ui" line="341"/>
         <source>To run the program, select Asm( from the catolog by pressing [2nd][0], and then pressing enter at the following prompt.</source>
-        <translation>Om het programma uit te voeren, selecteer Asm( van de Catalogus door [2nd][0] in te toetsen en daarna Enter.</translation>
+        <translation>Om het programma uit te voeren, selecteer Asm( in de Catalogus door [2nd][0] in te toetsen en vervolgens Enter.</translation>
     </message>
     <message>
         <location filename="../romselection.ui" line="392"/>
@@ -2230,7 +2230,7 @@ Bestand: </translation>
     <message>
         <location filename="../romselection.cpp" line="70"/>
         <source>Select ROM file</source>
-        <translation>Selecteer ROM-bestand</translation>
+        <translation>ROM-bestand selecteren</translation>
     </message>
     <message>
         <location filename="../romselection.cpp" line="71"/>
@@ -2290,7 +2290,7 @@ Bestand: </translation>
     <message>
         <location filename="../main.cpp" line="39"/>
         <source>Disable emulation speed throttling.</source>
-        <translation>Aanpassingen emulatiesnelheid uitschakelen.</translation>
+        <translation>Emulatiesnelheid niet reguleren.</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="44"/>
@@ -2312,12 +2312,12 @@ Bestand: </translation>
     <message>
         <location filename="../main.cpp" line="55"/>
         <source>Force send &lt;File&gt; to archive</source>
-        <translation>Forceer verzend &lt;File&gt; naar archive</translation>
+        <translation>Verzenden &lt;File&gt; naar archive forceren</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="61"/>
         <source>Force send &lt;File&gt; to ram</source>
-        <translation>Forceer verzend &lt;File&gt; naar ram</translation>
+        <translation>Verzenden &lt;File&gt; naar ram forceren</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="67"/>
@@ -2327,7 +2327,7 @@ Bestand: </translation>
     <message>
         <location filename="../main.cpp" line="68"/>
         <source>RomFile</source>
-        <translation>RomBestand</translation>
+        <translation>Rom-bestand</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="73"/>
@@ -2337,12 +2337,12 @@ Bestand: </translation>
     <message>
         <location filename="../main.cpp" line="74"/>
         <source>TestFile</source>
-        <translation>TestBestand</translation>
+        <translation>Test-bestand</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="79"/>
         <source>Hides test complete dialog</source>
-        <translation>Dialoog test compleet verbergen</translation>
+        <translation>Dialoog Test voltooid verbergen</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="84"/>
@@ -2352,7 +2352,7 @@ Bestand: </translation>
     <message>
         <location filename="../main.cpp" line="85"/>
         <source>SettingsFile</source>
-        <translation>InstellingenBestand</translation>
+        <translation>Instellingen-bestand</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="90"/>
@@ -2372,12 +2372,12 @@ Bestand: </translation>
     <message>
         <location filename="../main.cpp" line="97"/>
         <source>DebugInfo</source>
-        <translation>DebugInfo</translation>
+        <translation>Debug-informatie</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="101"/>
         <source>Send commands to &lt;id&gt; if it exists, otherwise creates it</source>
-        <translation>commando&apos;s naar &lt;id&gt; verzenden of aanmaken</translation>
+        <translation>Commando&apos;s naar &lt;id&gt; verzenden of aanmaken</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="102"/>
@@ -2387,7 +2387,7 @@ Bestand: </translation>
     <message>
         <location filename="../main.cpp" line="106"/>
         <source>Does not reset when sending</source>
-        <translation>Reset niet tijdens het verzenden</translation>
+        <translation>Geen reset tijdens het verzenden</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="110"/>
@@ -2397,7 +2397,7 @@ Bestand: </translation>
     <message>
         <location filename="../main.cpp" line="114"/>
         <source>Forces a rom reload</source>
-        <translation>Forceer herlaad een rom</translation>
+        <translation>Forceert opnieuw laden van rom</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="118"/>
