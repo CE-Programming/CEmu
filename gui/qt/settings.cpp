@@ -102,12 +102,7 @@ void MainWindow::setPortable(bool state) {
     QString romPathSet;
     QString debugPathSet;
     QString imagePathSet;
-    QDir appDir = qApp->applicationDirPath();
-#ifdef Q_OS_MACX
-    appDir.cdUp(); // On macOS, the binary is
-    appDir.cdUp(); // actually 3 levels deep
-    appDir.cdUp(); // in the .app folder
-#endif
+    QDir appDir = getCEmuDirPath();
     
     if (state) {
         pathSet = appDir.path() + SETTING_DEFAULT_FILE;
@@ -159,13 +154,7 @@ void MainWindow::setOptimizeRecord(bool state) {
 }
 
 bool MainWindow::bootImageCheck() {
-    QDir appDir = qApp->applicationDirPath();
-#ifdef Q_OS_MACX
-    appDir.cdUp(); // On macOS, the binary is
-    appDir.cdUp(); // actually 3 levels deep
-    appDir.cdUp(); // in the .app folder
-#endif
-    
+    QDir appDir = getCEmuDirPath();    
     QDirIterator dirIt(appDir, QDirIterator::NoIteratorFlags);
     while (dirIt.hasNext()) {
         dirIt.next();

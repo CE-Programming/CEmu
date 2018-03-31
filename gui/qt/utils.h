@@ -6,6 +6,7 @@
 
 #include <QtCore/QMimeData>
 #include <QtCore/QObject>
+#include <QtCore/QDir>
 #include <QtGui/QDrag>
 #include <QtGui/QDragEnterEvent>
 #include <string>
@@ -43,6 +44,7 @@ bool isProcRunning(pid_t procID);
 void killAll();
 
 QString randomString(const int length);
+QDir getCEmuDirPath();
 
 bool isNotValidHex(const std::string& s);
 
