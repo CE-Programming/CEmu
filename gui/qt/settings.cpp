@@ -103,16 +103,21 @@ void MainWindow::setPortable(bool state) {
     QString debugPathSet;
     QString imagePathSet;
     QDir appDir = qApp->applicationDirPath();
-
+#ifdef Q_OS_MACX
+    appDir.cdUp(); // On macOS, the binary is
+    appDir.cdUp(); // actually 3 levels deep
+    appDir.cdUp(); // in the .app folder
+#endif
+    
     if (state) {
-        pathSet = qApp->applicationDirPath() + SETTING_DEFAULT_FILE;
+        pathSet = appDir.path() + SETTING_DEFAULT_FILE;
         QFile::copy(m_settingsPath, pathSet);
     } else {
         pathSet = configPath + SETTING_DEFAULT_FILE;
         QFile(m_settingsPath).remove();
     }
     debugPathSet = QDir::cleanPath(QFileInfo(pathSet).absoluteDir().absolutePath() + SETTING_DEFAULT_DEBUG_FILE);
-    imagePathSet =  QDir::cleanPath(QFileInfo(pathSet).absoluteDir().absolutePath() + SETTING_DEFAULT_IMAGE_FILE);
+    imagePathSet = QDir::cleanPath(QFileInfo(pathSet).absoluteDir().absolutePath() + SETTING_DEFAULT_IMAGE_FILE);
 
     if(state) {
         debugPathSet = appDir.relativeFilePath(debugPathSet);
@@ -154,7 +159,14 @@ void MainWindow::setOptimizeRecord(bool state) {
 }
 
 bool MainWindow::bootImageCheck() {
-    QDirIterator dirIt(qApp->applicationDirPath(), QDirIterator::NoIteratorFlags);
+    QDir appDir = qApp->applicationDirPath();
+#ifdef Q_OS_MACX
+    appDir.cdUp(); // On macOS, the binary is
+    appDir.cdUp(); // actually 3 levels deep
+    appDir.cdUp(); // in the .app folder
+#endif
+    
+    QDirIterator dirIt(appDir, QDirIterator::NoIteratorFlags);
     while (dirIt.hasNext()) {
         dirIt.next();
         QString dirItFile = dirIt.filePath();

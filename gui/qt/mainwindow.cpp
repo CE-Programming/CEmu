@@ -381,7 +381,14 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     autotester::stepCallback = [](){ qApp->processEvents(); };
 
-    QString portableSettings = qApp->applicationDirPath() + SETTING_DEFAULT_FILE;
+    QDir appDir = qApp->applicationDirPath();
+#ifdef Q_OS_MACX
+    appDir.cdUp(); // On macOS, the binary is
+    appDir.cdUp(); // actually 3 levels deep
+    appDir.cdUp(); // in the .app folder
+#endif
+    
+    QString portableSettings = appDir.path() + SETTING_DEFAULT_FILE;
     QString localSettings = configPath + SETTING_DEFAULT_FILE;
 
     if (opts.settingsFile.isEmpty()) {
@@ -1350,8 +1357,13 @@ void MainWindow::showStatusMsg(const QString &str) {
 void MainWindow::setRom(const QString &path) {
     m_pathRom = path;
     if (m_portable) {
-        QDir dir(qApp->applicationDirPath());
-        m_pathRom = dir.relativeFilePath(m_pathRom);
+        QDir appDir = qApp->applicationDirPath();
+#ifdef Q_OS_MACX
+        appDir.cdUp(); // On macOS, the binary is
+        appDir.cdUp(); // actually 3 levels deep
+        appDir.cdUp(); // in the .app folder
+#endif
+        m_pathRom = appDir.relativeFilePath(m_pathRom);
     }
     loadEmu(false);
     ui->rompathView->setText(m_pathRom);
