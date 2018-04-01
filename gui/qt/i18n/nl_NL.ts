@@ -1297,7 +1297,7 @@
     <message>
         <location filename="../mainwindow.ui" line="9666"/>
         <source>Check for updates...</source>
-        <translation>Controleren op updates...</translation>
+        <translation>Controleren op updates…</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9832"/>
@@ -1785,7 +1785,7 @@ Bestand: </translation>
     <message>
         <location filename="../mainwindow.cpp" line="1430"/>
         <source>Recording...</source>
-        <translation>Opnemen...</translation>
+        <translation>Opnemen…</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1468"/>
@@ -1815,7 +1815,7 @@ Bestand: </translation>
     <message>
         <location filename="../mainwindow.cpp" line="1702"/>
         <source>[Double-click to view...]</source>
-        <translation>[Dubbelklik om weer te geven...]</translation>
+        <translation>[Dubbelklik om weer te geven…]</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1790"/>
@@ -1850,7 +1850,7 @@ Bestand: </translation>
     <message>
         <location filename="../mainwindow.cpp" line="1879"/>
         <source>Error. Unknown one - wat?</source>
-        <translation>Fout. Onbekende fout - wat?</translation>
+        <translation>Fout. Onbekende wie - wat?</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1888"/>
@@ -2204,7 +2204,7 @@ Bestand: </translation>
     <message>
         <location filename="../romselection.ui" line="327"/>
         <source>Save Program...</source>
-        <translation>Program opslaan…</translation>
+        <translation>Programma opslaan…</translation>
     </message>
     <message>
         <location filename="../romselection.ui" line="341"/>
