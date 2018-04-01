@@ -826,11 +826,15 @@ void MainWindow::setup() {
         QMessageBox *info = new QMessageBox();
         m_settings->setValue(SETTING_FIRST_RUN, true);
         info->setWindowTitle(MSG_INFORMATION);
-        info->setText(tr("Welcome!\nCEmu uses a customizable dock-style interface. "
+        info->setText(tr("Welcome!\n\nCEmu uses a customizable dock-style interface. "
                             "Drag and drop to move tabs and windows around on the screen, "
                             "and choose which docks are available in the 'Docks' menu in the topmost bar. "
                             "Be sure that 'Enable UI edit mode' is selected when laying out your interface. "
-                            "Enjoy!"));
+                            "Enjoy!"
+#if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
+                             "\n\n(Warning: since v1.1, you can drag grouped tabs or an individual tab from their title or tab bar, respectively)"
+#endif
+                         ));
         info->setWindowModality(Qt::NonModal);
         info->setWindowFlags(info->windowFlags() | Qt::WindowStaysOnTopHint);
         info->setAttribute(Qt::WA_DeleteOnClose);
