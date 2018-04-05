@@ -897,7 +897,8 @@ void MainWindow::optLoadFiles(CEmuOpts &o) {
             m_pathRom = configPath + SETTING_DEFAULT_ROM_FILE;
             m_settings->setValue(SETTING_ROM_PATH, m_pathRom);
         } else {
-            m_pathRom = m_settings->value(SETTING_ROM_PATH).toString();
+            const QString path = m_settings->value(SETTING_ROM_PATH).toString();
+            m_pathRom = m_portable ? appDir().relativeFilePath(path) : appDir().absoluteFilePath(path);
         }
     } else {
         m_pathRom = o.romFile;
