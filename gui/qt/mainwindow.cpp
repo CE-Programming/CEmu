@@ -1855,8 +1855,8 @@ int MainWindow::autotesterOpen(const QString& jsonPath) {
     std::ifstream ifs(jsonPath.toStdString());
 
     if (ifs.good()) {
-        int ok = chdir(QDir::toNativeSeparators(QFileInfo(jsonPath).absoluteDir().path()).toStdString().c_str());
-        if (ok != 0) {
+        const std::string absJsonDirPath = QDir::toNativeSeparators(QFileInfo(jsonPath).absoluteDir().path()).toStdString();
+        if (chdir(absJsonDirPath.c_str()) != 0) {
             QMessageBox::warning(this, MSG_ERROR, tr("Couldn't go to where the JSON file is."));
             return 0;
         }
