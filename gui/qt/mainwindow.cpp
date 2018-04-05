@@ -2029,28 +2029,40 @@ int MainWindow::loadEmu(bool image) {
         debugToggle();
     }
 
-    int success = emu.load(image, m_pathRom, m_pathImage);
+    bool done = false;
+    int success;
 
-    switch (success) {
-        case EMU_LOAD_OKAY:
-            ui->lcd->setMain();
-            setCalcSkinTopFromType();
-            setKeypadColor(m_settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
-            break;
-        case EMU_LOAD_NOT_A_CE:
-            if (QMessageBox::Yes == QMessageBox::question(this, MSG_WARNING, tr("Image does not appear to be from a CE. Do you want to attempt to load it anyway? "
-                                                          "This may cause instability."), QMessageBox::Yes|QMessageBox::No)) {
+    do {
+        success = emu.load(image, m_pathRom, m_pathImage);
+
+        switch (success) {
+            case EMU_LOAD_OKAY:
                 ui->lcd->setMain();
                 setCalcSkinTopFromType();
                 setKeypadColor(m_settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
-                success = EMU_LOAD_OKAY;
-            }
-            break;
-        default:
-        case EMU_LOAD_FAIL:
-            QMessageBox::critical(this, MSG_ERROR, tr("Could not load image. Please see console for more information."));
-            break;
-    }
+                done = true;
+                break;
+            case EMU_LOAD_NOT_A_CE:
+                if (QMessageBox::Yes == QMessageBox::question(this, MSG_WARNING, tr("Image does not appear to be from a CE. Do you want to attempt to load it anyway? "
+                                                              "This may cause instability."), QMessageBox::Yes|QMessageBox::No)) {
+                    ui->lcd->setMain();
+                    setCalcSkinTopFromType();
+                    setKeypadColor(m_settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
+                    success = EMU_LOAD_OKAY;
+                }
+                done = true;
+                break;
+            default:
+            case EMU_LOAD_FAIL:
+                if (image) {
+                    console(QStringLiteral("[CEmu] Failed resuming, falling back to ROM...\n"));
+                    image = false;
+                } else {
+                    done = true;
+                }
+                break;
+        }
+    } while (!done);
 
     if (success == EMU_LOAD_OKAY) {
         emu.start();
