@@ -106,7 +106,9 @@ void MainWindow::setPortable(bool state) {
     QString debugPathSet;
     QString imagePathSet;
 
-    m_settings->sync();
+    delete m_settings;
+    m_settings = Q_NULLPTR;
+
     QFile::copy(m_settingsPath, pathSet);
     QFile(m_settingsPath).remove();
 
@@ -130,7 +132,6 @@ void MainWindow::setPortable(bool state) {
     m_pathImage = imagePathSet;
     m_settingsPath = pathSet;
 
-    delete m_settings;
     m_settings = new QSettings(pathSet, QSettings::IniFormat);
     m_settings->setValue(SETTING_DEBUGGER_IMAGE_PATH, debugPathSet);
     m_settings->setValue(SETTING_IMAGE_PATH, imagePathSet);
