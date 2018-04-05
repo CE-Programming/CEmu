@@ -140,7 +140,8 @@ void EmuThread::doStuff() {
         }
 
         if (m_request == RequestSave) {
-            emit saved(emu_save(m_saveImage, m_savePath.toStdString().c_str()));
+            const std::string tmpSavePath = m_savePath.toStdString();
+            emit saved(emu_save(m_saveImage, tmpSavePath.c_str()));
         }
 
         m_request = RequestNone;

@@ -96,53 +96,51 @@ const QString MainWindow::TXT_YES                           = QStringLiteral("y"
 const QString MainWindow::TXT_NO                            = QStringLiteral("n");
 const QString MainWindow::TXT_NAN                           = QStringLiteral("NaN");
 
+// In all cases, all paths in memory should be absolute paths.
+// But in the UI or config file, they can be relative (to appDir()) if portable mode is enabled, or absolute otherwise.
 void MainWindow::setPortable(bool state) {
+    ui->checkPortable->blockSignals(true);
     ui->checkPortable->setChecked(state);
+    ui->checkPortable->blockSignals(false);
     m_portable = state;
 
-    QDir dir = appDir();
-    QString pathSet = (state ? dir.path() : configPath) + SETTING_DEFAULT_FILE;
-    QString romPathSet;
-    QString debugPathSet;
-    QString imagePathSet;
-
-    const QString pathSetAbsolute = QDir::cleanPath(dir.absoluteFilePath(pathSet));
     delete m_settings;
     m_settings = Q_NULLPTR;
 
-    debugPathSet = QDir::cleanPath(QFileInfo(pathSet).absoluteDir().absolutePath() + SETTING_DEFAULT_DEBUG_FILE);
-    imagePathSet = QDir::cleanPath(QFileInfo(pathSet).absoluteDir().absolutePath() + SETTING_DEFAULT_IMAGE_FILE);
-    romPathSet = QDir::cleanPath(m_pathRom);
+    const QDir dir = appDir();
 
-    QFile(m_settingsPath).rename(pathSet);
-    QFile(m_pathImage).rename(imagePathSet);
+    // Get all new paths, in absolute
+    const QString newConfigPath = QFileInfo((state ? dir.path() : configPath) + SETTING_DEFAULT_FILE).absoluteFilePath();
+    const QString newConfigDirPath = QDir::cleanPath(QFileInfo(newConfigPath).absolutePath());
+    QString newDebugPath = newConfigDirPath + SETTING_DEFAULT_DEBUG_FILE;
+    QString newImagePath = newConfigDirPath + SETTING_DEFAULT_IMAGE_FILE;
+    QString newRomPath = m_pathRom; // No change here
 
-    if(state) {
-        debugPathSet = QDir::cleanPath(dir.relativeFilePath(debugPathSet));
-        imagePathSet = QDir::cleanPath(dir.relativeFilePath(imagePathSet));
-        romPathSet = QDir::cleanPath(dir.relativeFilePath(romPathSet));
-        pathSet = QDir::cleanPath(dir.relativeFilePath(pathSet));
-    } else {
-        debugPathSet = QDir::cleanPath(dir.absoluteFilePath(debugPathSet));
-        imagePathSet = QDir::cleanPath(dir.absoluteFilePath(imagePathSet));
-        romPathSet = QDir::cleanPath(dir.absoluteFilePath(romPathSet));
-        pathSet = QDir::cleanPath(dir.absoluteFilePath(pathSet));
+    // Update the FS (still using absolute paths)
+    QFile(m_settingsPath).copy(newConfigPath);
+    QFile(m_pathImage).copy(newImagePath);
+
+    // Update paths in memory (still using absolute paths)
+    m_settingsPath = newConfigPath;
+    m_pathImage = newImagePath;
+
+    // Now changing the UI and qsettings content, with, if portable, paths relative to appDir()
+    if (state) {
+        newDebugPath = dir.relativeFilePath(newDebugPath);
+        newImagePath = dir.relativeFilePath(newImagePath);
+        newRomPath = dir.relativeFilePath(newRomPath);
     }
 
-    m_pathRom = romPathSet;
-    m_pathImage = imagePathSet;
-    m_settingsPath = pathSet;
-
-    m_settings = new QSettings(pathSetAbsolute, QSettings::IniFormat);
-    m_settings->setValue(SETTING_DEBUGGER_IMAGE_PATH, debugPathSet);
-    m_settings->setValue(SETTING_IMAGE_PATH, imagePathSet);
-    m_settings->setValue(SETTING_ROM_PATH, romPathSet);
+    // Update new QSettings (memory + FS)
+    m_settings = new QSettings(newConfigPath, QSettings::IniFormat); // Path is absolute
+    m_settings->setValue(SETTING_DEBUGGER_IMAGE_PATH, newDebugPath);
+    m_settings->setValue(SETTING_IMAGE_PATH, newImagePath);
+    m_settings->setValue(SETTING_ROM_PATH, newRomPath);
     m_settings->sync();
 
-    ui->settingsPath->setText(pathSet);
-    ui->romPath->setText(romPathSet);
-    ui->savedImagePath->setText(imagePathSet);
-    ui->savedDebugPath->setText(debugPathSet);
+    ui->savedDebugPath->setText(newDebugPath);
+    ui->savedImagePath->setText(newImagePath);
+    ui->romPath->setText(newRomPath);
 
     ui->buttonChangeSavedDebugPath->setEnabled(!state);
     ui->buttonChangeSavedImagePath->setEnabled(!state);

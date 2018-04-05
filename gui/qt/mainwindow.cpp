@@ -378,6 +378,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     autotester::stepCallback = [](){ qApp->processEvents(); };
 
+    /* Absolute paths */
     QString portableSettings = appDir().path() + SETTING_DEFAULT_FILE;
     QString localSettings = configPath + SETTING_DEFAULT_FILE;
 
@@ -391,13 +392,15 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
             m_settingsPath = localSettings;
         }
     } else {
-        m_settingsPath = opts.settingsFile;
+        m_settingsPath = QFileInfo(opts.settingsFile).absoluteFilePath();
     }
 
     if (opts.useSettings) {
         m_settings = new QSettings(m_settingsPath, QSettings::IniFormat);
     } else {
+        ui->checkPortable->blockSignals(true);
         ui->checkPortable->setEnabled(false);
+        ui->checkPortable->blockSignals(false);
         m_settings = new QSettings();
         m_settings->clear();
     }
@@ -409,7 +412,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     QFileInfo settingsDirectory(settingsFile.path());
     if (opts.useSettings && settingsDirectory.isDir() && !settingsDirectory.isWritable()) {
         m_settingsPath = portableSettings;
-        ui->settingsPath->setText(appDir().relativeFilePath(portableSettings));
+        ui->settingsPath->setText(portableSettings);
         m_activatedPortable = true;
         m_portable = true;
     }
@@ -458,21 +461,22 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     m_dir.setPath(m_settings->value(SETTING_CURRENT_DIR, appDir().path()).toString());
 
     if (!m_settings->contains(SETTING_IMAGE_PATH) || m_portable) {
-        QString path = QDir::cleanPath(QFileInfo(m_settingsPath).absoluteDir().absolutePath() + SETTING_DEFAULT_IMAGE_FILE);
+        QString path = QFileInfo(m_settingsPath).absolutePath() + SETTING_DEFAULT_IMAGE_FILE;
         if (m_portable) {
             path = appDir().relativeFilePath(path);
         }
-        m_settings->setValue(SETTING_IMAGE_PATH, path);
+        m_settings->setValue(SETTING_IMAGE_PATH, QDir::cleanPath(path));
     }
     ui->savedImagePath->setText(m_settings->value(SETTING_IMAGE_PATH).toString());
-    m_pathImage = ui->savedImagePath->text();
+
+    m_pathImage = QDir::cleanPath(appDir().absoluteFilePath(ui->savedImagePath->text()));
 
     if (!m_settings->contains(SETTING_DEBUGGER_IMAGE_PATH) || m_portable) {
-        QString path = QDir::cleanPath(QFileInfo(m_settingsPath).absoluteDir().absolutePath() + SETTING_DEFAULT_DEBUG_FILE);
+        QString path = QFileInfo(m_settingsPath).absolutePath() + SETTING_DEFAULT_DEBUG_FILE;
         if (m_portable) {
             path = appDir().relativeFilePath(path);
         }
-        m_settings->setValue(SETTING_DEBUGGER_IMAGE_PATH, path);
+        m_settings->setValue(SETTING_DEBUGGER_IMAGE_PATH, QDir::cleanPath(path));
     }
     ui->savedDebugPath->setText(m_settings->value(SETTING_DEBUGGER_IMAGE_PATH).toString());
 
@@ -491,9 +495,10 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
         }
     }
 
-    ui->romPath->setText(m_pathRom);
+    ui->romPath->setText(m_portable ? appDir().relativeFilePath(m_pathRom) : m_pathRom);
+
     if (opts.useSettings) {
-        ui->settingsPath->setText(m_portable ? appDir().relativeFilePath(m_settingsPath) : m_settingsPath);
+        ui->settingsPath->setText(m_settingsPath);
     }
 
     if (m_portable) {
@@ -901,11 +906,11 @@ void MainWindow::optLoadFiles(CEmuOpts &o) {
             if (path.isEmpty()) {
                 m_pathRom.clear();
             } else {
-                m_pathRom = m_portable ? appDir().relativeFilePath(path) : appDir().absoluteFilePath(path);
+                m_pathRom = QDir::cleanPath(appDir().absoluteFilePath(path));
             }
         }
     } else {
-        m_pathRom = o.romFile;
+        m_pathRom = QDir::cleanPath(o.romFile);
         if (!m_settings->contains(SETTING_ROM_PATH)) {
             m_settings->setValue(SETTING_ROM_PATH, m_pathRom);
         }
@@ -913,7 +918,7 @@ void MainWindow::optLoadFiles(CEmuOpts &o) {
 
     if (!o.imageFile.isEmpty()) {
         if (fileExists(o.imageFile)) {
-            m_pathImage = o.imageFile;
+            m_pathImage = QDir::cleanPath(QFileInfo(o.imageFile).absoluteFilePath());
         }
     }
 }
@@ -998,7 +1003,7 @@ void MainWindow::stateToPath(const QString &path) {
 
 bool MainWindow::stateFromPath(const QString &path) {
     QString prev = m_pathImage;
-    m_pathImage = path;
+    m_pathImage = appDir().absoluteFilePath(path);
     int ret = loadEmu(true);
     m_pathImage = prev;
     return ret == EMU_LOAD_OKAY;
@@ -1315,9 +1320,9 @@ void MainWindow::showStatusMsg(const QString &str) {
 }
 
 void MainWindow::setRom(const QString &path) {
-    m_pathRom = m_portable ? appDir().relativeFilePath(path) : appDir().absoluteFilePath(path);
+    m_pathRom = QDir::cleanPath(appDir().absoluteFilePath(path));
     m_settings->setValue(SETTING_ROM_PATH, m_pathRom);
-    ui->romPath->setText(m_pathRom);
+    ui->romPath->setText(m_portable ? appDir().relativeFilePath(m_pathRom) : m_pathRom);
     loadEmu(false);
 }
 
@@ -1858,6 +1863,7 @@ int MainWindow::autotesterOpen(const QString& jsonPath) {
 
     if (ifs.good()) {
         const std::string absJsonDirPath = QDir::toNativeSeparators(QFileInfo(jsonPath).absoluteDir().path()).toStdString();
+        // TODO: fix me (don't use chdir, or at the very least, go back to the previous path afterwards)
         if (chdir(absJsonDirPath.c_str()) != 0) {
             QMessageBox::warning(this, MSG_ERROR, tr("Couldn't go to where the JSON file is."));
             return 0;
@@ -2035,7 +2041,7 @@ int MainWindow::loadEmu(bool image) {
     int success;
 
     do {
-        success = emu.load(image, appDir().absoluteFilePath(m_pathRom), appDir().absoluteFilePath(m_pathImage));
+        success = emu.load(image, m_pathRom, m_pathImage);
 
         switch (success) {
             case EMU_LOAD_OKAY:
