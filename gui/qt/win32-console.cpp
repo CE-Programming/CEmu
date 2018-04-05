@@ -25,7 +25,7 @@ void MainWindow::toggleConsole() {
         }
     }
 
-    m_settings->setValue(SETTING_ENABLE_WIN_CONSOLE, actionToggleConsole->isChecked());
+    m_config->setValue(SETTING_ENABLE_WIN_CONSOLE, actionToggleConsole->isChecked());
 }
 
 void MainWindow::installToggleConsole() {
@@ -44,7 +44,7 @@ void MainWindow::installToggleConsole() {
     connect(actionToggleConsole, &QAction::triggered, this, &MainWindow::toggleConsole);
 
     // Check if we opted to not show a window
-    if (!m_settings->value(SETTING_ENABLE_WIN_CONSOLE, false).toBool()) {
+    if (!m_config->value(SETTING_ENABLE_WIN_CONSOLE, false).toBool()) {
         actionToggleConsole->setChecked(false);
         toggleConsole();
     }
