@@ -110,12 +110,12 @@ void MainWindow::setPortable(bool state) {
     delete m_settings;
     m_settings = Q_NULLPTR;
 
-    QFile::copy(m_settingsPath, pathSet);
-    QFile(m_settingsPath).remove();
-
     debugPathSet = QDir::cleanPath(QFileInfo(pathSet).absoluteDir().absolutePath() + SETTING_DEFAULT_DEBUG_FILE);
     imagePathSet = QDir::cleanPath(QFileInfo(pathSet).absoluteDir().absolutePath() + SETTING_DEFAULT_IMAGE_FILE);
     romPathSet = QDir::cleanPath(m_pathRom);
+
+    QFile(m_settingsPath).rename(pathSet);
+    QFile(m_pathImage).rename(imagePathSet);
 
     if(state) {
         debugPathSet = QDir::cleanPath(dir.relativeFilePath(debugPathSet));

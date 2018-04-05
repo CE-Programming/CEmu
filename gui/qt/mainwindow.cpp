@@ -204,7 +204,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 #ifdef PNG_WRITE_APNG_SUPPORTED
     connect(ui->actionRecordAnimated, &QAction::triggered, this, &MainWindow::recordAnimated);
 #endif
-    connect(ui->actionSaveState, &QAction::triggered, this, &MainWindow::stateSaveDefault);
+    connect(ui->actionSaveState, &QAction::triggered, [this]{ stateToPath(m_pathImage); });
     connect(ui->actionExportCalculatorState, &QAction::triggered, this, &MainWindow::stateToFile);
     connect(ui->actionExportRomImage, &QAction::triggered, this, &MainWindow::romExport);
     connect(ui->actionImportCalculatorState, &QAction::triggered, this, &MainWindow::stateFromFile);
@@ -897,8 +897,12 @@ void MainWindow::optLoadFiles(CEmuOpts &o) {
             m_pathRom = configPath + SETTING_DEFAULT_ROM_FILE;
             m_settings->setValue(SETTING_ROM_PATH, m_pathRom);
         } else {
-            const QString path = m_settings->value(SETTING_ROM_PATH).toString();
-            m_pathRom = m_portable ? appDir().relativeFilePath(path) : appDir().absoluteFilePath(path);
+            const QString path = m_settings->value(SETTING_ROM_PATH, QString()).toString();
+            if (path.isEmpty()) {
+                m_pathRom.clear();
+            } else {
+                m_pathRom = m_portable ? appDir().relativeFilePath(path) : appDir().absoluteFilePath(path);
+            }
         }
     } else {
         m_pathRom = o.romFile;
@@ -988,10 +992,6 @@ bool MainWindow::isResetAll() {
     return m_needFullReset;
 }
 
-void MainWindow::stateSaveDefault() {
-    emu.save(true, m_pathImage);
-}
-
 void MainWindow::stateToPath(const QString &path) {
     emu.save(true, path);
 }
@@ -1025,6 +1025,7 @@ void MainWindow::stateToFile() {
         stateToPath(path);
     }
 }
+
 void MainWindow::romExport() {
     QString path = QFileDialog::getSaveFileName(this, tr("Set Rom image to save to"),
                                                 m_dir.absolutePath(),
@@ -1087,7 +1088,7 @@ void MainWindow::closeEvent(QCloseEvent *e) {
             saveSettings();
 
             if (m_settings->value(SETTING_SAVE_ON_CLOSE).toBool()) {
-                stateSaveDefault();
+                stateToPath(m_pathImage);
                 e->ignore();
                 return;
             }

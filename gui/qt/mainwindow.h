@@ -210,7 +210,6 @@ private:
     int stateGet(QObject *obj, int col);
 
     // save / restore states
-    void stateSaveDefault();
     void stateToFile();
     void stateToPath(const QString &path);
     void stateFromFile();
