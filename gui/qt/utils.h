@@ -44,7 +44,7 @@ bool isProcRunning(pid_t procID);
 void killAll();
 
 QString randomString(const int length);
-QDir getCEmuDirPath();
+QDir appDir();
 
 bool isNotValidHex(const std::string& s);
 

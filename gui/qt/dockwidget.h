@@ -16,7 +16,7 @@ public:
     explicit DockWidget(QWidget *parent = Q_NULLPTR);
     DockWidget(QTabWidget *tabs, QWidget *parent = Q_NULLPTR);
     DockWidget(const QString &title, QWidget *parent = Q_NULLPTR);
-    void toggleState(bool visible);
+    void setState(bool visible);
     bool isClosable() const { return m_closable; }
     void setClosable(bool closable) { m_closable = closable; }
     bool isExpandable() const { return m_expandable; }
@@ -32,6 +32,7 @@ protected slots:
     void updateExpandability(const QList<DockWidget *> &tabs);
 
 private:
+    bool m_showTitle = true;
     QWidget *m_titleHide;
     DockWidget *m_tabs;
     bool m_closable : 1, m_expandable : 1;

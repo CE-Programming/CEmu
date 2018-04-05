@@ -353,6 +353,7 @@ private:
     QString getAddressString(const QString &string, bool *ok);
 
     // keypad
+    void keymapLoad();
     void keymapChanged();
     void keypadChanged();
     void setKeymap(const QString &value);
@@ -373,21 +374,21 @@ private:
     void setTop(bool state);
     void setMenuBarState(bool state);
     void setStatusBarState(bool state);
-    void setDockBoundaries(bool state);
+    void setUIBoundaries(bool state);
     void setPreRevisionI(bool state);
     void setNormalOs(bool state);
     void setRecentSave(bool state);
     void setPortable(bool state);
     void setAutoSave(bool state);
     void setAutoUpdates(int value);
-    void settingsSave();
-    void settingsSaveMisc();
+    void saveSettings();
+    void saveDebug();
     void setFont(int size);
     void setUIDocks(bool first);
+    void setUIDockEditMode(bool mode);
     void setUIEditMode(bool mode);
-    void toggleUIEditMode();
     void toggleFullscreen();
-    void updateDocks();
+    void iconsLoad();
 
     // speed settings
     void setEmuSpeed(int value);
@@ -584,11 +585,9 @@ private:
 
     bool m_needReload = false;
     bool m_needFullReset = false;
-    bool m_windowLoading = false;
     bool m_keepSetup = false;
     bool m_guiAdd = false;
     bool m_initPassed = true;
-    bool m_windowVisible = false;
     bool m_useDataCol;
     bool m_useSoftCom = false;
     bool m_pauseOnFocus;
@@ -597,6 +596,7 @@ private:
     bool m_activatedPortable = false;
     bool m_ignoreDmaCycles;
     bool m_normalOs;
+    bool m_setup = false;
     int m_fullscreen = FULLSCREEN_NONE;
     uint32_t m_runUntilAddr;
 

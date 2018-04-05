@@ -175,7 +175,7 @@ QString randomString(const int length) {
    return randomString;
 }
 
-QDir getCEmuDirPath() {
+QDir appDir() {
     QDir appDir = qApp->applicationDirPath();
 #ifdef Q_OS_MACX
     appDir.cdUp(); // On macOS, the binary is
