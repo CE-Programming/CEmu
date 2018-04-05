@@ -993,7 +993,7 @@ bool MainWindow::isResetAll() {
 }
 
 void MainWindow::stateToPath(const QString &path) {
-    emu.save(true, path);
+    emu.save(true, appDir().absoluteFilePath(path));
 }
 
 bool MainWindow::stateFromPath(const QString &path) {
@@ -2035,7 +2035,7 @@ int MainWindow::loadEmu(bool image) {
     int success;
 
     do {
-        success = emu.load(image, m_pathRom, m_pathImage);
+        success = emu.load(image, appDir().absoluteFilePath(m_pathRom), appDir().absoluteFilePath(m_pathImage));
 
         switch (success) {
             case EMU_LOAD_OKAY:
