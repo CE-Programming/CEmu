@@ -29,15 +29,9 @@ RectKey::RectKey(KeyCode keycode, const QRect &textGeometry, const QRect &keyGeo
     corner.moveTopLeft(keyGeometry.topLeft());
     mKeyShape.arcTo(corner, 90 * 1, 90);
 
-#ifdef _WIN32
-    mLabelFont.setPixelSize(labelSize.height());
-    mLabelFont.setStretch(1+(labelSize.width() /
-                           QFontMetricsF(mLabelFont).size(Qt::TextSingleLine, mLabelText).width()));
-#else
     mLabelFont.setPixelSize(labelSize.height());
     mLabelFont.setStretch(labelSize.width() * mLabelFont.stretch() /
                            QFontMetricsF(mLabelFont).size(Qt::TextSingleLine, mLabelText).width());
-#endif
 }
 
 void RectKey::paint(QPainter &painter) const {
