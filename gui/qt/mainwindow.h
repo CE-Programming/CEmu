@@ -573,7 +573,7 @@ private:
     QString m_RamGotoAddr;
     QString m_memGotoAddr;
 
-    QString m_settingsPath;
+    QString m_pathConfig;
     QMenu *m_menuDocks;
     QMenu *m_menuDebug;
 
@@ -592,7 +592,7 @@ private:
     bool m_pauseOnFocus;
     bool m_loadedBootImage = false;
     bool m_optimizeRecording;
-    bool m_activatedPortable = false;
+    bool m_portableActivated = false;
     bool m_ignoreDmaCycles;
     bool m_normalOs;
     bool m_setup = false;
@@ -603,7 +603,7 @@ private:
     QStringList m_docksMemory;
     QList<int> m_docksMemoryBytes;
     QList<bool> m_docksMemoryAscii;
-    QSettings *m_settings = Q_NULLPTR;
+    QSettings *m_config = Q_NULLPTR;
     HexWidget *m_memWidget = Q_NULLPTR;
 
     QString m_pathRom;
@@ -677,7 +677,7 @@ private:
     static const QString SETTING_PREFERRED_LANG;
     static const QString SETTING_VERSION;
 
-    static const QString SETTING_DEFAULT_FILE;
+    static const QString SETTING_DEFAULT_CONFIG_FILE;
     static const QString SETTING_DEFAULT_ROM_FILE;
     static const QString SETTING_DEFAULT_IMAGE_FILE;
     static const QString SETTING_DEFAULT_DEBUG_FILE;

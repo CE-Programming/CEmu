@@ -379,45 +379,44 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     autotester::stepCallback = [](){ qApp->processEvents(); };
 
     /* Absolute paths */
-    QString portableSettings = appDir().path() + SETTING_DEFAULT_FILE;
-    QString localSettings = configPath + SETTING_DEFAULT_FILE;
+    QString portableConfig = appDir().path() + SETTING_DEFAULT_CONFIG_FILE;
+    QString sharedConfig = configPath + SETTING_DEFAULT_CONFIG_FILE;
 
     if (opts.settingsFile.isEmpty()) {
         if (bootImageCheck()) {
-            m_settingsPath = localSettings;
-        } else if (fileExists(portableSettings)) {
-            m_settingsPath = portableSettings;
+            m_pathConfig = sharedConfig;
+        } else if (fileExists(portableConfig)) {
+            m_pathConfig = portableConfig;
             m_portable = true;
         } else {
-            m_settingsPath = localSettings;
+            m_pathConfig = sharedConfig;
         }
     } else {
-        m_settingsPath = QFileInfo(opts.settingsFile).absoluteFilePath();
+        m_pathConfig = QFileInfo(opts.settingsFile).absoluteFilePath();
     }
 
     if (opts.useSettings) {
-        m_settings = new QSettings(m_settingsPath, QSettings::IniFormat);
+        m_config = new QSettings(m_pathConfig, QSettings::IniFormat);
     } else {
         ui->checkPortable->blockSignals(true);
         ui->checkPortable->setEnabled(false);
         ui->checkPortable->blockSignals(false);
-        m_settings = new QSettings();
-        m_settings->clear();
+        m_config = new QSettings();
+        m_config->clear();
     }
     if (m_loadedBootImage) {
-        m_settings->setValue(SETTING_FIRST_RUN, false);
+        m_config->setValue(SETTING_FIRST_RUN, false);
     }
 
-    QFileInfo settingsFile(m_settingsPath);
-    QFileInfo settingsDirectory(settingsFile.path());
-    if (opts.useSettings && settingsDirectory.isDir() && !settingsDirectory.isWritable()) {
-        m_settingsPath = portableSettings;
-        ui->settingsPath->setText(portableSettings);
-        m_activatedPortable = true;
+    QFileInfo configDir(QFileInfo(m_pathConfig).path());
+    if (opts.useSettings && configDir.isDir() && !configDir.isWritable()) {
+        m_pathConfig = portableConfig;
+        ui->pathConfig->setText(portableConfig);
+        m_portableActivated = true;
         m_portable = true;
     }
 
-    setAutoUpdates(m_settings->value(SETTING_AUTOUPDATE, CEMU_RELEASE).toBool());
+    setAutoUpdates(m_config->value(SETTING_AUTOUPDATE, CEMU_RELEASE).toBool());
     checkVersion();
 
 #ifdef Q_OS_WIN
@@ -432,53 +431,53 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     memLoadDocks();
     memLoadState();
     optLoadFiles(opts);
-    setFrameskip(m_settings->value(SETTING_CAPTURE_FRAMESKIP, 1).toInt());
-    setOptimizeRecord(m_settings->value(SETTING_CAPTURE_OPTIMIZE, true).toBool());
-    setStatusInterval(m_settings->value(SETTING_STATUS_INTERVAL, 1).toInt());
-    setLcdScale(m_settings->value(SETTING_SCREEN_SCALE, 100).toUInt());
-    setSkinToggle(m_settings->value(SETTING_SCREEN_SKIN, true).toBool());
-    setGuiSkip(m_settings->value(SETTING_SCREEN_FRAMESKIP, 0).toInt());
-    setEmuSpeed(m_settings->value(SETTING_EMUSPEED, 100).toInt());
-    setFont(m_settings->value(SETTING_DEBUGGER_TEXT_SIZE, 9).toInt());
-    setAutoSave(m_settings->value(SETTING_RESTORE_ON_OPEN, true).toBool());
-    setDebugAutoSave(m_settings->value(SETTING_DEBUGGER_RESTORE_ON_OPEN, false).toBool());
-    setDebugDisasmSpace(m_settings->value(SETTING_DEBUGGER_ADD_DISASM_SPACE, false).toBool());
-    setAutoEquates(m_settings->value(SETTING_DEBUGGER_AUTO_EQUATES, false).toBool());
-    setDebugResetTrigger(m_settings->value(SETTING_DEBUGGER_RESET_OPENS, false).toBool());
-    setDebugIgnoreBreakpoints(m_settings->value(SETTING_DEBUGGER_BREAK_IGNORE, false).toBool());
-    setDebugSoftCommands(m_settings->value(SETTING_DEBUGGER_ENABLE_SOFT, true).toBool());
-    setDebugDisasmData(m_settings->value(SETTING_DEBUGGER_DATA_COL, true).toBool());
-    setLcdSpi(m_settings->value(SETTING_SCREEN_SPI, true).toBool());
-    setLcdDma(m_settings->value(SETTING_DEBUGGER_IGNORE_DMA, true).toBool());
-    setFocusSetting(m_settings->value(SETTING_PAUSE_FOCUS, false).toBool());
-    setRecentSave(m_settings->value(SETTING_RECENT_SAVE, true).toBool());
-    setPreRevisionI(m_settings->value(SETTING_DEBUGGER_PRE_I, false).toBool());
-    setNormalOs(m_settings->value(SETTING_DEBUGGER_NORM_OS, true).toBool());
-    setMenuBarState(m_settings->value(SETTING_WINDOW_MENUBAR, false).toBool());
-    setStatusBarState(m_settings->value(SETTING_WINDOW_STATUSBAR, false).toBool());
-    setTop(m_settings->value(SETTING_ALWAYS_ON_TOP, false).toBool());
+    setFrameskip(m_config->value(SETTING_CAPTURE_FRAMESKIP, 1).toInt());
+    setOptimizeRecord(m_config->value(SETTING_CAPTURE_OPTIMIZE, true).toBool());
+    setStatusInterval(m_config->value(SETTING_STATUS_INTERVAL, 1).toInt());
+    setLcdScale(m_config->value(SETTING_SCREEN_SCALE, 100).toUInt());
+    setSkinToggle(m_config->value(SETTING_SCREEN_SKIN, true).toBool());
+    setGuiSkip(m_config->value(SETTING_SCREEN_FRAMESKIP, 0).toInt());
+    setEmuSpeed(m_config->value(SETTING_EMUSPEED, 100).toInt());
+    setFont(m_config->value(SETTING_DEBUGGER_TEXT_SIZE, 9).toInt());
+    setAutoSave(m_config->value(SETTING_RESTORE_ON_OPEN, true).toBool());
+    setDebugAutoSave(m_config->value(SETTING_DEBUGGER_RESTORE_ON_OPEN, false).toBool());
+    setDebugDisasmSpace(m_config->value(SETTING_DEBUGGER_ADD_DISASM_SPACE, false).toBool());
+    setAutoEquates(m_config->value(SETTING_DEBUGGER_AUTO_EQUATES, false).toBool());
+    setDebugResetTrigger(m_config->value(SETTING_DEBUGGER_RESET_OPENS, false).toBool());
+    setDebugIgnoreBreakpoints(m_config->value(SETTING_DEBUGGER_BREAK_IGNORE, false).toBool());
+    setDebugSoftCommands(m_config->value(SETTING_DEBUGGER_ENABLE_SOFT, true).toBool());
+    setDebugDisasmData(m_config->value(SETTING_DEBUGGER_DATA_COL, true).toBool());
+    setLcdSpi(m_config->value(SETTING_SCREEN_SPI, true).toBool());
+    setLcdDma(m_config->value(SETTING_DEBUGGER_IGNORE_DMA, true).toBool());
+    setFocusSetting(m_config->value(SETTING_PAUSE_FOCUS, false).toBool());
+    setRecentSave(m_config->value(SETTING_RECENT_SAVE, true).toBool());
+    setPreRevisionI(m_config->value(SETTING_DEBUGGER_PRE_I, false).toBool());
+    setNormalOs(m_config->value(SETTING_DEBUGGER_NORM_OS, true).toBool());
+    setMenuBarState(m_config->value(SETTING_WINDOW_MENUBAR, false).toBool());
+    setStatusBarState(m_config->value(SETTING_WINDOW_STATUSBAR, false).toBool());
+    setTop(m_config->value(SETTING_ALWAYS_ON_TOP, false).toBool());
 
-    m_dir.setPath(m_settings->value(SETTING_CURRENT_DIR, appDir().path()).toString());
+    m_dir.setPath(m_config->value(SETTING_CURRENT_DIR, appDir().path()).toString());
 
-    if (!m_settings->contains(SETTING_IMAGE_PATH) || m_portable) {
-        QString path = QFileInfo(m_settingsPath).absolutePath() + SETTING_DEFAULT_IMAGE_FILE;
+    if (!m_config->contains(SETTING_IMAGE_PATH) || m_portable) {
+        QString path = QFileInfo(m_pathConfig).absolutePath() + SETTING_DEFAULT_IMAGE_FILE;
         if (m_portable) {
             path = appDir().relativeFilePath(path);
         }
-        m_settings->setValue(SETTING_IMAGE_PATH, QDir::cleanPath(path));
+        m_config->setValue(SETTING_IMAGE_PATH, QDir::cleanPath(path));
     }
-    ui->savedImagePath->setText(m_settings->value(SETTING_IMAGE_PATH).toString());
+    ui->pathImage->setText(m_config->value(SETTING_IMAGE_PATH).toString());
 
-    m_pathImage = QDir::cleanPath(appDir().absoluteFilePath(ui->savedImagePath->text()));
+    m_pathImage = QDir::cleanPath(appDir().absoluteFilePath(ui->pathImage->text()));
 
-    if (!m_settings->contains(SETTING_DEBUGGER_IMAGE_PATH) || m_portable) {
-        QString path = QFileInfo(m_settingsPath).absolutePath() + SETTING_DEFAULT_DEBUG_FILE;
+    if (!m_config->contains(SETTING_DEBUGGER_IMAGE_PATH) || m_portable) {
+        QString path = QFileInfo(m_pathConfig).absolutePath() + SETTING_DEFAULT_DEBUG_FILE;
         if (m_portable) {
             path = appDir().relativeFilePath(path);
         }
-        m_settings->setValue(SETTING_DEBUGGER_IMAGE_PATH, QDir::cleanPath(path));
+        m_config->setValue(SETTING_DEBUGGER_IMAGE_PATH, QDir::cleanPath(path));
     }
-    ui->savedDebugPath->setText(m_settings->value(SETTING_DEBUGGER_IMAGE_PATH).toString());
+    ui->pathDebug->setText(m_config->value(SETTING_DEBUGGER_IMAGE_PATH).toString());
 
     keymapLoad();
     debugInit();
@@ -488,17 +487,17 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
             m_initPassed = false;
         }
     } else {
-        if (opts.useSettings && opts.restoreOnOpen && m_settings->value(SETTING_RESTORE_ON_OPEN, true).toBool()) {
+        if (opts.useSettings && opts.restoreOnOpen && m_config->value(SETTING_RESTORE_ON_OPEN, true).toBool()) {
             loadEmu(!opts.forceReloadRom);
         } else {
             loadEmu(false);
         }
     }
 
-    ui->romPath->setText(m_portable ? appDir().relativeFilePath(m_pathRom) : m_pathRom);
+    ui->pathRom->setText(m_portable ? appDir().relativeFilePath(m_pathRom) : m_pathRom);
 
     if (opts.useSettings) {
-        ui->settingsPath->setText(m_settingsPath);
+        ui->pathConfig->setText(m_pathConfig);
     }
 
     if (m_portable) {
@@ -519,7 +518,7 @@ void MainWindow::translateSwitch(const QString& lang) {
     // For English, nothing to load after removing the translator.
     if (lang == QStringLiteral("en_EN") || (m_appTranslator.load(lang, QStringLiteral(":/i18n/i18n/"))
                                             && qApp->installTranslator(&m_appTranslator))) {
-        m_settings->setValue(SETTING_PREFERRED_LANG, lang);
+        m_config->setValue(SETTING_PREFERRED_LANG, lang);
     } else {
         QMessageBox::warning(this, MSG_WARNING, tr("No translation available for this language :("));
     }
@@ -761,14 +760,14 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent *event) {
 
 void MainWindow::setup() {
     if (!m_initPassed) {
-        QFile(m_settingsPath).remove();
+        QFile(m_pathConfig).remove();
         close();
         return;
     }
 
-    m_uiEditMode = m_settings->value(SETTING_UI_EDIT_MODE, true).toBool();
+    m_uiEditMode = m_config->value(SETTING_UI_EDIT_MODE, true).toBool();
 
-    const QByteArray geometry = m_settings->value(SETTING_WINDOW_GEOMETRY, QByteArray()).toByteArray();
+    const QByteArray geometry = m_config->value(SETTING_WINDOW_GEOMETRY, QByteArray()).toByteArray();
     setUIBoundaries(!m_uiEditMode);
     setUIDocks(geometry.isEmpty());
     setUIEditMode(m_uiEditMode);
@@ -777,23 +776,23 @@ void MainWindow::setup() {
         setGeometry(0, 0, minimumWidth(), minimumHeight());
     } else {
         restoreGeometry(geometry);
-        restoreState(m_settings->value(SETTING_WINDOW_STATE).toByteArray());
+        restoreState(m_config->value(SETTING_WINDOW_STATE).toByteArray());
     }
 
     stateLoadInfo();
     recentLoadInfo();
 
-    if (m_settings->value(SETTING_DEBUGGER_RESTORE_ON_OPEN).toBool()) {
+    if (m_config->value(SETTING_DEBUGGER_RESTORE_ON_OPEN).toBool()) {
         if (!opts.debugFile.isEmpty()) {
             debugImportFile(opts.debugFile);
         } else {
-            debugImportFile(m_settings->value(SETTING_DEBUGGER_IMAGE_PATH).toString());
+            debugImportFile(m_config->value(SETTING_DEBUGGER_IMAGE_PATH).toString());
         }
     }
 
     if (opts.useSettings && isFirstRun() && m_initPassed && !m_needFullReset) {
         QMessageBox *info = new QMessageBox();
-        m_settings->setValue(SETTING_FIRST_RUN, true);
+        m_config->setValue(SETTING_FIRST_RUN, true);
         info->setWindowTitle(MSG_INFORMATION);
         info->setText(tr("Welcome!\n\nCEmu uses a customizable dock-style interface. "
                             "Drag and drop to move tabs and windows around on the screen, "
@@ -808,7 +807,7 @@ void MainWindow::setup() {
         info->show();
     }
 
-    QString prefLang = m_settings->value(SETTING_PREFERRED_LANG, QStringLiteral("none")).toString();
+    QString prefLang = m_config->value(SETTING_PREFERRED_LANG, QStringLiteral("none")).toString();
     if (prefLang != QStringLiteral("none")) {
         translateSwitch(prefLang);
     }
@@ -820,7 +819,7 @@ void MainWindow::setup() {
         setEmuSpeed(opts.speed);
     }
 
-    if (m_activatedPortable) {
+    if (m_portableActivated) {
         QMessageBox *info = new QMessageBox();
         info->setWindowTitle(MSG_INFORMATION);
         info->setText(tr("CEmu was not able to write to the standard settings location.\n"
@@ -859,7 +858,7 @@ void MainWindow::keyHistoryClosed() {
 }
 
 void MainWindow::optSend(CEmuOpts &o) {
-    int speed = m_settings->value(SETTING_EMUSPEED).toInt();
+    int speed = m_config->value(SETTING_EMUSPEED).toInt();
     if (!o.autotesterFile.isEmpty()) {
         if (!autotesterOpen(o.autotesterFile)) {
            if (!o.deforceReset) {
@@ -900,9 +899,9 @@ void MainWindow::optLoadFiles(CEmuOpts &o) {
     if (o.romFile.isEmpty()) {
         if (m_loadedBootImage) {
             m_pathRom = configPath + SETTING_DEFAULT_ROM_FILE;
-            m_settings->setValue(SETTING_ROM_PATH, m_pathRom);
+            m_config->setValue(SETTING_ROM_PATH, m_pathRom);
         } else {
-            const QString path = m_settings->value(SETTING_ROM_PATH, QString()).toString();
+            const QString path = m_config->value(SETTING_ROM_PATH, QString()).toString();
             if (path.isEmpty()) {
                 m_pathRom.clear();
             } else {
@@ -911,8 +910,8 @@ void MainWindow::optLoadFiles(CEmuOpts &o) {
         }
     } else {
         m_pathRom = QDir::cleanPath(o.romFile);
-        if (!m_settings->contains(SETTING_ROM_PATH)) {
-            m_settings->setValue(SETTING_ROM_PATH, m_pathRom);
+        if (!m_config->contains(SETTING_ROM_PATH)) {
+            m_config->setValue(SETTING_ROM_PATH, m_pathRom);
         }
     }
 
@@ -941,7 +940,7 @@ void MainWindow::optAttemptLoad(CEmuOpts &o) {
 }
 
 MainWindow::~MainWindow() {
-    delete m_settings;
+    delete m_config;
     delete ui;
 }
 
@@ -958,14 +957,14 @@ void MainWindow::resetCEmu() {
 
 void MainWindow::resetGui() {
     ipcCloseConnected();
-    m_settings->remove(SETTING_SCREEN_SKIN);
-    m_settings->remove(SETTING_WINDOW_GEOMETRY);
-    m_settings->remove(SETTING_WINDOW_MEMORY_DOCKS);
-    m_settings->remove(SETTING_UI_EDIT_MODE);
-    m_settings->remove(SETTING_WINDOW_STATE);
-    m_settings->remove(SETTING_WINDOW_MENUBAR);
-    m_settings->remove(SETTING_WINDOW_STATUSBAR);
-    m_settings->remove(SETTING_WINDOW_SEPARATOR);
+    m_config->remove(SETTING_SCREEN_SKIN);
+    m_config->remove(SETTING_WINDOW_GEOMETRY);
+    m_config->remove(SETTING_WINDOW_MEMORY_DOCKS);
+    m_config->remove(SETTING_UI_EDIT_MODE);
+    m_config->remove(SETTING_WINDOW_STATE);
+    m_config->remove(SETTING_WINDOW_MENUBAR);
+    m_config->remove(SETTING_WINDOW_STATUSBAR);
+    m_config->remove(SETTING_WINDOW_SEPARATOR);
     m_needReload = true;
     close();
 }
@@ -976,22 +975,22 @@ bool MainWindow::isReload() {
 
 bool MainWindow::isResetAll() {
     if (m_needFullReset) {
-        QFile(m_settings->value(SETTING_IMAGE_PATH).toString()).remove();
-        QFile(m_settings->value(SETTING_DEBUGGER_IMAGE_PATH).toString()).remove();
+        QFile(m_config->value(SETTING_IMAGE_PATH).toString()).remove();
+        QFile(m_config->value(SETTING_DEBUGGER_IMAGE_PATH).toString()).remove();
         if (m_keepSetup) {
-            m_settings->remove(SETTING_IMAGE_PATH);
-            m_settings->remove(SETTING_DEBUGGER_IMAGE_PATH);
-            m_settings->remove(SETTING_SCREEN_SKIN);
-            m_settings->remove(SETTING_WINDOW_GEOMETRY);
-            m_settings->remove(SETTING_WINDOW_STATE);
-            m_settings->remove(SETTING_WINDOW_MEMORY_DOCKS);
-            m_settings->remove(SETTING_UI_EDIT_MODE);
-            m_settings->remove(SETTING_WINDOW_MENUBAR);
-            m_settings->remove(SETTING_WINDOW_STATUSBAR);
-            m_settings->remove(SETTING_WINDOW_SEPARATOR);
-            m_settings->sync();
+            m_config->remove(SETTING_IMAGE_PATH);
+            m_config->remove(SETTING_DEBUGGER_IMAGE_PATH);
+            m_config->remove(SETTING_SCREEN_SKIN);
+            m_config->remove(SETTING_WINDOW_GEOMETRY);
+            m_config->remove(SETTING_WINDOW_STATE);
+            m_config->remove(SETTING_WINDOW_MEMORY_DOCKS);
+            m_config->remove(SETTING_UI_EDIT_MODE);
+            m_config->remove(SETTING_WINDOW_MENUBAR);
+            m_config->remove(SETTING_WINDOW_STATUSBAR);
+            m_config->remove(SETTING_WINDOW_SEPARATOR);
+            m_config->sync();
         } else {
-            QFile(m_settingsPath).remove();
+            QFile(m_pathConfig).remove();
         }
     }
     return m_needFullReset;
@@ -1092,7 +1091,7 @@ void MainWindow::closeEvent(QCloseEvent *e) {
         if (!m_needReload) {
             saveSettings();
 
-            if (m_settings->value(SETTING_SAVE_ON_CLOSE).toBool()) {
+            if (m_config->value(SETTING_SAVE_ON_CLOSE).toBool()) {
                 stateToPath(m_pathImage);
                 e->ignore();
                 return;
@@ -1321,8 +1320,8 @@ void MainWindow::showStatusMsg(const QString &str) {
 
 void MainWindow::setRom(const QString &path) {
     m_pathRom = QDir::cleanPath(appDir().absoluteFilePath(path));
-    m_settings->setValue(SETTING_ROM_PATH, m_pathRom);
-    ui->romPath->setText(m_portable ? appDir().relativeFilePath(m_pathRom) : m_pathRom);
+    m_config->setValue(SETTING_ROM_PATH, m_pathRom);
+    ui->pathRom->setText(m_portable ? appDir().relativeFilePath(m_pathRom) : m_pathRom);
     loadEmu(false);
 }
 
@@ -1538,7 +1537,7 @@ void MainWindow::pauseEmu(Qt::ApplicationState state) {
             emu.setSpeed(0);
         }
         if (state == Qt::ApplicationActive) {
-            setEmuSpeed(m_settings->value(SETTING_EMUSPEED).toInt());
+            setEmuSpeed(m_config->value(SETTING_EMUSPEED).toInt());
         }
     }
 }
@@ -2047,7 +2046,7 @@ int MainWindow::loadEmu(bool image) {
             case EMU_LOAD_OKAY:
                 ui->lcd->setMain();
                 setCalcSkinTopFromType();
-                setKeypadColor(m_settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
+                setKeypadColor(m_config->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
                 done = true;
                 break;
             case EMU_LOAD_NOT_A_CE:
@@ -2055,7 +2054,7 @@ int MainWindow::loadEmu(bool image) {
                                                               "This may cause instability."), QMessageBox::Yes|QMessageBox::No)) {
                     ui->lcd->setMain();
                     setCalcSkinTopFromType();
-                    setKeypadColor(m_settings->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
+                    setKeypadColor(m_config->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
                     success = EMU_LOAD_OKAY;
                 }
                 done = true;
@@ -2473,7 +2472,7 @@ void MainWindow::ipcSpawn() {
 
 void MainWindow::stateAddNew() {
     QString name = randomString(6);
-    QString path = QDir::cleanPath(QFileInfo(m_settings->fileName()).absoluteDir().absolutePath() + QStringLiteral("/") + name + QStringLiteral(".ce"));
+    QString path = QDir::cleanPath(QFileInfo(m_config->fileName()).absoluteDir().absolutePath() + QStringLiteral("/") + name + QStringLiteral(".ce"));
     stateAdd(name, path);
 }
 

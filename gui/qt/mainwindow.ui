@@ -6306,7 +6306,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -8395,7 +8395,7 @@ QPushButton:pressed {
                 <number>5</number>
                </property>
                <item row="0" column="1">
-                <widget class="QLineEdit" name="romPath">
+                <widget class="QLineEdit" name="pathRom">
                  <property name="focusPolicy">
                   <enum>Qt::NoFocus</enum>
                  </property>
@@ -8447,7 +8447,7 @@ QPushButton:pressed {
                 </widget>
                </item>
                <item row="4" column="1">
-                <widget class="QLineEdit" name="savedDebugPath">
+                <widget class="QLineEdit" name="pathDebug">
                  <property name="focusPolicy">
                   <enum>Qt::NoFocus</enum>
                  </property>
@@ -8517,7 +8517,7 @@ QPushButton:pressed {
                 </widget>
                </item>
                <item row="1" column="1">
-                <widget class="QLineEdit" name="settingsPath">
+                <widget class="QLineEdit" name="pathConfig">
                  <property name="enabled">
                   <bool>true</bool>
                  </property>
@@ -8533,7 +8533,7 @@ QPushButton:pressed {
                 </widget>
                </item>
                <item row="3" column="1">
-                <widget class="QLineEdit" name="savedImagePath">
+                <widget class="QLineEdit" name="pathImage">
                  <property name="focusPolicy">
                   <enum>Qt::NoFocus</enum>
                  </property>
