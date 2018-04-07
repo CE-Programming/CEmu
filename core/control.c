@@ -146,8 +146,7 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
 
             if (byte == 0xD4) {
                 control.ports[0] |= 1 << 6;
-                cpu.events |= EVENT_RESET;
-                gui_console_printf("[CEmu] Reset caused by entering sleep mode.\n");
+                cpu_crash("[CEmu] Reset caused by entering sleep mode.\n");
 #ifdef DEBUG_SUPPORT
                 if (debug.openOnReset) {
                     debug_open(DBG_MISC_RESET, cpu.registers.PC);

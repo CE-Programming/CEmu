@@ -98,7 +98,7 @@ typedef struct {
     uint64_t cpuHaltCycles;
     char buffer[SIZEOF_DBG_BUFFER];
     char bufferErr[SIZEOF_DBG_BUFFER];
-    bool stepOverFirstStep;
+    bool step, stepReady, stepOver, stepNext, stepOut, stepOverFirstStep;
     int8_t stepOutWait;
     int64_t totalCycles;
     uint8_t stepOverMode;

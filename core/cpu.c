@@ -35,12 +35,19 @@
 eZ80cpu_t cpu;
 
 static void cpu_clear_mode(void) {
-#ifdef DEBUG_SUPPORT
-    debug.addr[cpu.registers.PC] |= DBG_INST_START_MARKER;
-#endif
     cpu.PREFIX = cpu.SUFFIX = 0;
     cpu.L = cpu.ADL;
     cpu.IL = cpu.ADL;
+#ifdef DEBUG_SUPPORT
+    debug.addr[cpu.registers.PC] |= DBG_INST_START_MARKER;
+    if (debug.step) {
+        if (debug.stepReady) {
+            debug.step = false;
+            debug_open(DBG_STEP, 0);
+        }
+        debug.stepReady = true;
+    }
+#endif
 }
 
 static uint32_t cpu_address_mode(uint32_t address, bool mode) {
@@ -392,8 +399,8 @@ static uint32_t cpu_dec_bc_partial_mode() {
 static void cpu_call(uint32_t address, bool mixed) {
     eZ80registers_t *r = &cpu.registers;
 #ifdef DEBUG_SUPPORT
-    if (cpu.events & (EVENT_DEBUG_STEP_OUT | EVENT_DEBUG_STEP_OVER)) {
-        if(cpu.events & EVENT_DEBUG_STEP_OUT) {
+    if (debug.stepOut || debug.stepOver) {
+        if (debug.stepOut) {
             bool addWait = false;
             if (cpu.ADL) {
                 if (r->SPL >= debug.stepOutSPL) {
@@ -409,7 +416,7 @@ static void cpu_call(uint32_t address, bool mixed) {
             if (addWait && (debug.stepOutWait < 1)) {
                 debug.stepOutWait++;
             }
-        } else if (cpu.events & EVENT_DEBUG_STEP_OVER) {
+        } else if (debug.stepOver) {
             if (r->PC == debug.stepOverEnd) {
                 debug.addr[debug.stepOverEnd] &= ~DBG_MASK_TEMP;
             }
@@ -445,7 +452,7 @@ static void cpu_trap(void) {
 
 static void cpu_check_step_out(void) {
 #ifdef DEBUG_SUPPORT
-    if (cpu.events & EVENT_DEBUG_STEP_OUT) {
+    if (debug.stepOut) {
         int32_t spDelta = cpu.ADL ? (int32_t) cpu.registers.SPL - (int32_t) debug.stepOutSPL :
                           (int32_t) cpu.registers.SPS - (int32_t) debug.stepOutSPS;
         if (spDelta >= 0) {
@@ -787,8 +794,8 @@ static void cpu_execute_bli() {
         cpu.cycles += internalCycles;
 
 #ifdef DEBUG_SUPPORT
-    if (cpu.events & EVENT_DEBUG_STEP_OVER) {
-        cpu.events &= ~EVENT_DEBUG_STEP;
+    if (debug.stepOver) {
+        debug.step = false;
         cpu_restore_next();
     }
 #endif
@@ -803,8 +810,7 @@ void cpu_init(void) {
 
 void cpu_reset(void) {
     memset(&cpu.registers, 0, sizeof(eZ80registers_t));
-    cpu.NMI = cpu.IEF1 = cpu.IEF2 = cpu.ADL = cpu.MADL = cpu.IM = cpu.IEF_wait = cpu.halted = 0;
-    cpu.events = EVENT_NONE;
+    cpu.NMI = cpu.IEF1 = cpu.IEF2 = cpu.ADL = cpu.MADL = cpu.IM = cpu.IEF_wait = cpu.IEF_ready = cpu.halted = 0;
     cpu_flush(0, 0);
     gui_console_printf("[CEmu] CPU reset.\n");
 }
@@ -826,8 +832,11 @@ void cpu_nmi(void) {
 }
 
 void cpu_crash(const char *msg) {
-    gui_console_printf(msg);
-    cpu.events |= EVENT_RESET;
+    uint8_t temp = CPU_ABORT_NONE;
+    if (msg) {
+        gui_console_printf(msg);
+    }
+    atomic_compare_exchange_strong(&cpu.abort, &temp, CPU_ABORT_RESET);
     cpu.next = cpu.cycles;
 #ifdef DEBUG_SUPPORT
     if (debug.openOnReset) {
@@ -845,9 +854,9 @@ static void cpu_halt(void) {
 }
 
 void cpu_restore_next(void) {
-    if (cpu.NMI || (cpu.events & EVENT_RESET)) {
+    if (cpu.NMI || cpu.abort) {
         cpu.next = cpu.cycles;
-    } else if (cpu.IEF_wait == 1 || (cpu.events & EVENT_DEBUG_STEP && !cpu.halted)) {
+    } else if (cpu.IEF_wait && cpu.IEF_ready) {
         cpu.next = cpu.cycles + 1; /* execute one instruction */
     } else {
         cpu.next = sched_event_next_cycle();
@@ -871,17 +880,16 @@ void cpu_execute(void) {
     eZ80registers_t *r = &cpu.registers;
     eZ80context_t context;
 
-    while (!exiting) {
+    while (true) {
     cpu_execute_continue:
         if (cpu.IEF_wait) {
-            if (cpu.IEF_wait == 1) {
-                cpu.IEF_wait = 0;
-                cpu.IEF1 = cpu.IEF2 = 1;
-                cpu_restore_next();
-            } else if (cpu.cycles < cpu.next) {
-                cpu.IEF_wait = 1;
-                cpu.next = cpu.cycles + 1; /* execute one more instruction */
+            if (cpu.IEF_ready) {
+                cpu.IEF_wait = cpu.IEF_ready = false;
+                cpu.IEF1 = cpu.IEF2 = true;
+            } else {
+                cpu.IEF_ready = cpu.cycles < cpu.next;
             }
+            cpu_restore_next();
         }
         if (cpu.NMI || (cpu.IEF1 && (intrpt->status & intrpt->enabled))) {
             cpu_prefetch_discard();
@@ -908,14 +916,7 @@ void cpu_execute(void) {
         } else if (cpu.halted) {
             cpu_halt();
         }
-#ifdef DEBUG_SUPPORT
-        if (cpu.events & EVENT_DEBUG_STEP && !cpu.halted) {
-            cpu.events &= ~EVENT_DEBUG_STEP;
-            cpu_restore_next();
-            debug_open(DBG_STEP, 0);
-        }
-#endif
-        if (exiting || cpu.cycles >= cpu.next || cpu.events & EVENT_RESET) {
+        if (cpu.cycles >= cpu.next || cpu.abort != CPU_ABORT_NONE) {
             break;
         }
         if (cpu.inBlock) {
@@ -1105,9 +1106,12 @@ void cpu_execute(void) {
                             break;
                         }
                         if (context.z < 4) {
+                            if (cpu.SUFFIX && cpu.abort) { // suffix can infinite loop
+                                return;
+                            }
                             cpu.L = context.s;
                             cpu.IL = context.r;
-                            cpu.SUFFIX = 1;
+                            cpu.SUFFIX = true;
                             continue;
                         }
                         if (context.z == 6) { /* HALT */
@@ -1251,16 +1255,13 @@ void cpu_execute(void) {
                                     r->HL = w;
                                     break;
                                 case 6: /* DI */
-                                    cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = 0;
+                                    cpu.IEF_wait = cpu.IEF_ready = cpu.IEF1 = cpu.IEF2 = false;
                                     cpu_restore_next();
                                     break;
                                 case 7: /* EI */
-                                    if (cpu.cycles < cpu.next) {
-                                        cpu.IEF_wait = 1;
-                                        cpu.next = cpu.cycles + 1; /* execute one more instruction */
-                                    } else {
-                                        cpu.IEF_wait = 2;
-                                    }
+                                    cpu.IEF_wait = true;
+                                    cpu.IEF_ready = cpu.cycles < cpu.next;
+                                    cpu_restore_next();
                                     break;
                             }
                             break;

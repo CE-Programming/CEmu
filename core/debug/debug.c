@@ -31,22 +31,18 @@ bool debug_is_open(void) {
 }
 
 void debug_open(int reason, uint32_t data) {
-    if (exiting || debug.open || (debug.ignore && (reason >= DBG_BREAKPOINT && reason <= DBG_PORT_WRITE))) {
+    if (cpu.abort == CPU_ABORT_EXIT || debug.open || (debug.ignore && (reason >= DBG_BREAKPOINT && reason <= DBG_PORT_WRITE))) {
         return;
     }
 
     if (reason == DBG_STEP && debug.stepOverFirstStep) {
-        if ((cpu.events & EVENT_DEBUG_STEP_OUT) ||
-           ((cpu.events & EVENT_DEBUG_STEP_NEXT) && !(debug.addr[cpu.registers.PC] & DBG_MASK_TEMP))) {
+        if (debug.stepOut ||
+            (debug.stepNext && !(debug.addr[cpu.registers.PC] & DBG_MASK_TEMP))) {
             debug.stepOverFirstStep = false;
             gui_debug_close();
             return;
         }
         debug_step_reset();
-    }
-
-    if (reason == DBG_BREAKPOINT && (cpu.events & EVENT_DEBUG_STEP)) {
-        return;
     }
 
     debug_step_reset();
@@ -68,10 +64,6 @@ void debug_open(int reason, uint32_t data) {
     cpu.haltCycles = debug.cpuHaltCycles;
     debug.dmaCycles -= cpu.dmaCycles;
     debug.totalCycles -= sched_total_cycles();
-
-    if (cpu.events & EVENT_DEBUG_STEP && !cpu.halted) {
-        cpu.next = cpu.cycles + 1;
-    }
 }
 
 void debug_watch(uint32_t addr, int mask, bool set) {
@@ -103,6 +95,7 @@ void debug_flag(int mask, bool set) {
 
 void debug_step(int mode, uint32_t addr) {
     debug_step_reset();
+    debug.stepReady = false;
     debug.stepOverEnd = addr;
     debug.stepOverFirstStep = false;
     debug.stepOverMode = cpu.ADL;
@@ -112,25 +105,23 @@ void debug_step(int mode, uint32_t addr) {
 
     switch (mode) {
         case DBG_STEP_IN:
-            cpu.events |= EVENT_DEBUG_STEP;
+            debug.step = true;
             break;
         case DBG_STEP_OVER:
-            cpu.events |= EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OVER;
+            debug.step = debug.stepOver = true;
             break;
         case DBG_STEP_NEXT:
-            debug.stepOverFirstStep = true;
-            cpu.events |= EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_NEXT;
+            debug.step = debug.stepNext = debug.stepOverFirstStep = true;
             break;
         case DBG_STEP_OUT:
-            debug.stepOverFirstStep = true;
+            debug.step = debug.stepOut = debug.stepOverFirstStep = true;
             debug.stepOutSPL = cpu.registers.SPL + 1;
             debug.stepOutSPS = cpu.registers.SPS + 1;
             debug.stepOutWait = 0;
-            cpu.events |= EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OUT;
             break;
         case DBG_RUN_UNTIL:
+            debug.stepNext = false;
             debug.stepOverEnd = addr;
-            cpu.events &= ~(EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OVER | EVENT_DEBUG_STEP_OUT | EVENT_DEBUG_STEP_NEXT);
             break;
         default:
             break;
@@ -142,18 +133,18 @@ void debug_step(int mode, uint32_t addr) {
 }
 
 void debug_step_switch(void) {
-    if (cpu.events & EVENT_DEBUG_STEP_OVER) {
+    if (debug.stepOver) {
         debug.stepOverFirstStep = true;
         debug.stepOutSPL = cpu.registers.SPL + 1;
         debug.stepOutSPS = cpu.registers.SPS + 1;
         debug.stepOutWait = 0;
-        cpu.events &= ~EVENT_DEBUG_STEP_OVER;
-        cpu.events |= EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OUT;
+        debug.stepOver = false;
+        debug.step = debug.stepOut = true;
     }
 }
 
 void debug_step_reset(void) {
-    cpu.events &= ~(EVENT_DEBUG_STEP | EVENT_DEBUG_STEP_OUT | EVENT_DEBUG_STEP_OVER);
+    debug.step = debug.stepOut = debug.stepOver = false;
     if (debug.stepOverEnd != 0xFFFFFFFFU) {
         do {
             debug.addr[debug.stepOverEnd] &= ~DBG_MASK_TEMP;

@@ -20,6 +20,8 @@
 #ifndef CPU_H
 #define CPU_H
 
+#include "atomics.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -30,21 +32,13 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-#define EVENT_NONE            0
-#define EVENT_RESET           (1 << 0)
-#ifdef DEBUG_SUPPORT
-#define EVENT_DEBUG_STEP      (1 << 1)
-#define EVENT_DEBUG_STEP_OVER (1 << 2)
-#define EVENT_DEBUG_STEP_NEXT (1 << 3)
-#define EVENT_DEBUG_STEP_OUT  (1 << 4)
-#else
-#define EVENT_DEBUG_STEP      0
-#define EVENT_DEBUG_STEP_OVER 0
-#define EVENT_DEBUG_STEP_NEXT 0
-#define EVENT_DEBUG_STEP_OUT  0
-#endif
-
 #define cpu_mask_mode(address, mode) ((uint32_t)((address) & ((mode) ? 0xFFFFFF : 0xFFFF)))
+
+typedef enum eZ80abort {
+    CPU_ABORT_NONE,
+    CPU_ABORT_RESET,
+    CPU_ABORT_EXIT,
+} eZ80abort_t;
 
 typedef union eZ80context {
     uint8_t opcode;
@@ -65,31 +59,32 @@ typedef union eZ80context {
 /* eZ80 CPU State */
 typedef struct eZ80cpu {
     eZ80registers_t registers;
-    struct {
-        uint8_t NMI         : 1;  /* Non-Maskable interrupt  */
-        uint8_t IEF1        : 1;  /* Interrupt enable flag 1 */
-        uint8_t IEF2        : 1;  /* Interrupt enable flag 2 */
-        uint8_t ADL         : 1;  /* ADL bit                 */
-        uint8_t MADL        : 1;  /* Mixed-Memory modes      */
-        uint8_t IM          : 2;  /* Current interrupt mode  */
-
-        /* Internal use: */
-        uint8_t PREFIX      : 2;  /* Which index register is in use. 0: hl, 2: ix, 3: iy                                         */
-        uint8_t SUFFIX      : 1;  /* There was an explicit suffix                                                                */
-      /*uint8_t S           : 1;*//* The CPU data block operates in Z80 mode using 16-bit registers. All addresses use MBASE.    */
-        uint8_t L           : 1;  /* The CPU data block operates in ADL mode using 24-bit registers. Addresses do not use MBASE. */
-      /*uint8_t IS          : 1;*//* The CPU control block operates in Z80 mode.                                                 */
-        uint8_t IL          : 1;  /* The CPU control block operates in ADL mode.                                                 */
-        uint8_t IEF_wait    : 2;  /* Wait for interrupt                                                                          */
-        uint8_t halted      : 1;  /* Have we halted the CPU?                                                                     */
-        uint8_t inBlock     : 1;  /* Are we processing a block instruction?                                                      */
-    };
     eZ80context_t context;
     uint32_t seconds, cycles, next;
     uint64_t baseCycles, haltCycles, dmaCycles;
     uint8_t prefetch;
-    uint32_t events;
-    bool preI;
+    _Atomic(uint8_t) abort;
+    struct {
+        bool    NMI         : 1;  /* Non-Maskable interrupt  */
+        bool    IEF1        : 1;  /* Interrupt enable flag 1 */
+        bool    IEF2        : 1;  /* Interrupt enable flag 2 */
+        bool    ADL         : 1;  /* ADL bit                 */
+        bool    MADL        : 1;  /* Mixed-Memory modes      */
+        uint8_t IM          : 2;  /* Current interrupt mode  */
+
+        /* Internal use: */
+        uint8_t PREFIX      : 2;  /* Which index register is in use. 0: hl, 2: ix, 3: iy                                         */
+        bool    SUFFIX      : 1;  /* There was an explicit suffix                                                                */
+      /*bool    S           : 1;*//* The CPU data block operates in Z80 mode using 16-bit registers. All addresses use MBASE.    */
+        bool    L           : 1;  /* The CPU data block operates in ADL mode using 24-bit registers. Addresses do not use MBASE. */
+      /*bool    IS          : 1;*//* The CPU control block operates in Z80 mode.                                                 */
+        bool    IL          : 1;  /* The CPU control block operates in ADL mode.                                                 */
+        bool    IEF_wait    : 1;  /* Wait for interrupt enable                                                                   */
+        bool    IEF_ready   : 1;  /* Ready for interrupt enable                                                                  */
+        bool    halted      : 1;  /* Have we halted the CPU?                                                                     */
+        bool    inBlock     : 1;  /* Are we processing a block instruction?                                                      */
+        bool    preI        : 1;
+    };
 } eZ80cpu_t;
 
 extern eZ80cpu_t cpu;

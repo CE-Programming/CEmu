@@ -8,6 +8,7 @@
  #include <stdatomic.h>
 #else
  #define _Atomic(X) volatile X /* doesn't do anything, but makes me feel better... although if you are trying to do multithreading glhf */
+ #define atomic_compare_exchange_strong(object, expected, desired) (*(object) == *(expected) ? (*(object) = (desired)) : (*(expected) = (desired)))
 #endif
 #else
  #include <atomic>
@@ -15,6 +16,7 @@
 #endif
 #else
  #define _Atomic(X) X
+ #define atomic_compare_exchange_strong(object, expected, desired) (*(object) == *(expected) ? (*(object) = (desired)) : (*(expected) = (desired)))
 #endif
 
 #endif

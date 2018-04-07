@@ -43,6 +43,11 @@ uint32_t sched_event_next_cycle(void) {
     return sched.event.cycle ? sched.event.cycle : sched.items[next].cycle;
 }
 
+static void sched_update_next(enum sched_item_id id) {
+    sched.event.next = id;
+    cpu_restore_next();
+}
+
 static bool sched_before(enum sched_item_id a_id, enum sched_item_id b_id) {
     struct sched_item *a = &sched.items[a_id], *b = &sched.items[b_id];
     return a->second <= b->second && a->cycle < b->cycle;
@@ -51,16 +56,14 @@ static bool sched_before(enum sched_item_id a_id, enum sched_item_id b_id) {
 static void sched_update(enum sched_item_id id) {
     struct sched_item *item = &sched.items[id];
     if (id == SCHED_SECOND) {
-        sched.event.next = id;
-        cpu_restore_next();
+        sched_update_next(id);
         for (id = SCHED_FIRST_EVENT; id <= SCHED_LAST_EVENT; id++) {
             sched_update(id);
         }
     } else if (id >= SCHED_FIRST_EVENT && id <= SCHED_LAST_EVENT) {
         if (item->callback.event && !item->second &&
             item->cycle < sched_event_next_cycle()) {
-            sched.event.next = id;
-            cpu_restore_next();
+            sched_update_next(id);
         }
     } else if (id == SCHED_PREV_MA) {
         sched.dma.next = id;
@@ -224,8 +227,7 @@ void sched_reset(void) {
     memcpy(sched.clockRates, def_rates, sizeof(def_rates));
     memset(sched.items, 0, sizeof sched.items);
 
-    sched.event.next = sched.dma.next = SCHED_SECOND;
-    cpu_restore_next();
+    sched_update_next(sched.dma.next = SCHED_SECOND);
 
     sched.items[SCHED_SECOND].callback.event = sched_second;
     sched.items[SCHED_SECOND].clock = CLOCK_1;

@@ -13,8 +13,6 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
-extern _Atomic(bool) exiting;
-
 enum {
     EMU_LOAD_OKAY,
     EMU_LOAD_FAIL,

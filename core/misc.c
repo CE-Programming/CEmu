@@ -21,13 +21,7 @@ static void watchdog_event(enum sched_item_id id) {
     if (watchdog.control & 1) {
         watchdog.status = 1;
         if (watchdog.control & 2) {
-            gui_console_printf("[CEmu] Reset triggered by watchdog timer.\n");
-            cpu.events |= EVENT_RESET;
-#ifdef DEBUG_SUPPORT
-            if (debug.openOnReset) {
-                debug_open(DBG_WATCHDOG_TIMEOUT, cpu.registers.PC);
-            }
-#endif
+            cpu_crash("[CEmu] Reset triggered by watchdog timer.\n");
         }
         if (watchdog.control & 4) {
             gui_console_printf("[CEmu] Watchdog NMI triggered.\n");

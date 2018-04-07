@@ -126,7 +126,7 @@ void EmuThread::doStuff() {
                 block();
                 break;
             case RequestReset:
-                cpu.events |= EVENT_RESET;
+                cpu_crash("[CEmu] Reset requested by user");
                 break;
             case RequestSend:
                 sendFiles();
