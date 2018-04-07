@@ -158,6 +158,7 @@ int main(int argc, char *argv[]) {
 
     configPath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
 
+    int ret = 0;
     MainWindow EmuWin(opts);
     if (!EmuWin.isInitialized()) {
         return 0;
@@ -165,9 +166,10 @@ int main(int argc, char *argv[]) {
     if (!EmuWin.isResetAll()) {
         EmuWin.show();
         EmuWin.setup();
+		// Only execute when we have a window open - otherwise this will
+		// hang forever
+		ret = app.exec();
     }
-
-    int ret = app.exec();
 
     if (EmuWin.isResetAll() || EmuWin.isReload()) {
         QStringList args = qApp->arguments();
