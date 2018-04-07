@@ -73,6 +73,8 @@ void MainWindow::debugInit() {
     ui->checkADLStack->blockSignals(true);
     ui->checkADLStack->setCheckState(Qt::PartiallyChecked);
     ui->checkADLStack->blockSignals(false);
+
+    debug_init();
 }
 
 // ------------------------------------------------
@@ -2398,7 +2400,7 @@ void MainWindow::addMemDock(const QString &magic, int bytes, bool ascii) {
     }
 
     addDockWidget(Qt::RightDockWidgetArea, dw);
-    dw->toggleState(m_uiEditMode);
+    dw->setState(m_uiEditMode);
     dw->show();
     dw->activateWindow();
     dw->raise();

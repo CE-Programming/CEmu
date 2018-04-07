@@ -108,8 +108,8 @@ static void keypad_scan_event(enum sched_item_id id) {
 }
 
 static bool keypad_any_key_pressed(void) {
-    int row;
-    for (row = 0; row < keypad.rows; row++) {
+    unsigned int row;
+    for (row = 0; row < keypad.rows && row < sizeof(keypad.data) / sizeof(keypad.data[0]); row++) {
         if ((keypad.keyMap[row] | keypad.delay[row]) & ((1 << keypad.cols) - 1)) {
             return true;
         }

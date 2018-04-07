@@ -1,15 +1,11 @@
 # CEmu [![Build Status](https://travis-ci.org/CE-Programming/CEmu.svg)](https://travis-ci.org/CE-Programming/CEmu) [![Build Status](https://ci.appveyor.com/api/projects/status/github/CE-Programming/CEmu?branch=master&svg=true)](https://ci.appveyor.com/project/alberthdev/cemu-q0nl8) [![Build Status](https://scan.coverity.com/projects/7576/badge.svg)](https://scan.coverity.com/projects/ce-programming-cemu) [![IRC badge](https://img.shields.io/badge/IRC%20channel-%23cemu--dev%20on%20EFNet-blue.svg)](http://chat.efnet.org/irc.cgi?adv=1&nick=cemu-user&chan=%23cemu-dev)
 
 CEmu is a third-party TI-84 Plus CE / TI-83 Premium CE calculator emulator, focused on developer features.  
-The core is programmed in C and the GUI in C++ with Qt, for performance and portability. CEmu works natively on Windows, macOS, and Linux.
+CEmu works natively on Windows, macOS, and Linux. For performance and portability, the core is programmed in C and its customizable GUI in C++ with Qt.
 
-Here are some screenshots showcasing some of the features and various layouts, on these OSes:
+<a href="https://i.imgur.com/XTrCWQn.png"><img src="https://i.imgur.com/RhX2wof.png" /></a>
 
-Calc-only layout | A mixed layout with various panes | A debugging-oriented layout for developers |
------------- | ------------ | ------------- |
-<a href="https://i.imgur.com/4CJ7RqT.png"><img src="https://i.imgur.com/e1BgJRw.png" /></a>|<a href="https://i.imgur.com/W5mKf1n.png"><img src="https://i.imgur.com/EZKWRUh.png" /></a>|<a href="https://i.imgur.com/hJFVdtF.png"><img src="https://i.imgur.com/H5TQrci.png" /></a>
-
-_Note: CEmu is not a TI product nor is it affiliated to/endorsed by TI. If you need an official TI CE emulator, take a look at TI-SmartView™ CE!_
+_Note: CEmu is not a TI product nor is it TI-endorsed/affiliated. If you need an official TI CE emulator, TI-SmartView™ CE is for you._
 
 ## Downloads
 Development builds are available here: https://ce-programming.github.io/CEmu/download
@@ -39,6 +35,7 @@ _Note that Release builds have an update checking feature, which is disabled in 
 * IPC features when launching several CEmu processes
 * Custom display refresh rate, FPS indicator
 * Custom emulation speed/throttling
+* Rich text console for easier logging/debugging
 * Code stepping, jumping...
 * R/W/X breakpoints, watchpoints
 * eZ80 disassembler (with equates support)
@@ -50,8 +47,10 @@ _Note that Release builds have an update checking feature, which is disabled in 
 * Memory visualizer (as fully customizable virtual LCDs)
 * Stack viewer
 * OP1-7 viewer
+* FP and OP stacks viewer/editor
 * Variable Allocation Table (VAT) viewer
 * Variable list with preview and program launcher
+* TI-Basic program viewer with syntax-highlight
 * Recent files list with ability to quickly resend
 * Cycle counter for benchmarking/profiling
 * Emulation of DMA and SPI (for optimal accuracy)

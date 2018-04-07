@@ -158,7 +158,7 @@ namespace tivars
 
         string str(str_orig);
 
-        str = regex_replace(str, regex("([^\\s])(Del|Eff)Var "), "$1\n$2Var");
+        str = regex_replace(str, regex("([^\\s])(Del|Eff)Var "), "$1\n$2Var ");
 
         vector<string> lines_tmp = explode(str, '\n');
 

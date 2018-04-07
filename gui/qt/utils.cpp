@@ -174,3 +174,13 @@ QString randomString(const int length) {
    }
    return randomString;
 }
+
+QDir appDir() {
+    QDir appDir = qApp->applicationDirPath();
+#ifdef Q_OS_MACX
+    appDir.cdUp(); // On macOS, the binary is
+    appDir.cdUp(); // actually 3 levels deep
+    appDir.cdUp(); // in the .app folder
+#endif
+    return appDir;
+}

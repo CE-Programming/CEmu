@@ -210,7 +210,6 @@ private:
     int stateGet(QObject *obj, int col);
 
     // save / restore states
-    void stateSaveDefault();
     void stateToFile();
     void stateToPath(const QString &path);
     void stateFromFile();
@@ -353,6 +352,7 @@ private:
     QString getAddressString(const QString &string, bool *ok);
 
     // keypad
+    void keymapLoad();
     void keymapChanged();
     void keypadChanged();
     void setKeymap(const QString &value);
@@ -373,21 +373,21 @@ private:
     void setTop(bool state);
     void setMenuBarState(bool state);
     void setStatusBarState(bool state);
-    void setDockBoundaries(bool state);
+    void setUIBoundaries(bool state);
     void setPreRevisionI(bool state);
     void setNormalOs(bool state);
     void setRecentSave(bool state);
     void setPortable(bool state);
     void setAutoSave(bool state);
     void setAutoUpdates(int value);
-    void settingsSave();
-    void settingsSaveMisc();
+    void saveSettings();
+    void saveDebug();
     void setFont(int size);
     void setUIDocks(bool first);
+    void setUIDockEditMode(bool mode);
     void setUIEditMode(bool mode);
-    void toggleUIEditMode();
     void toggleFullscreen();
-    void updateDocks();
+    void iconsLoad();
 
     // speed settings
     void setEmuSpeed(int value);
@@ -573,7 +573,7 @@ private:
     QString m_RamGotoAddr;
     QString m_memGotoAddr;
 
-    QString m_settingsPath;
+    QString m_pathConfig;
     QMenu *m_menuDocks;
     QMenu *m_menuDebug;
 
@@ -584,19 +584,18 @@ private:
 
     bool m_needReload = false;
     bool m_needFullReset = false;
-    bool m_windowLoading = false;
     bool m_keepSetup = false;
     bool m_guiAdd = false;
     bool m_initPassed = true;
-    bool m_windowVisible = false;
     bool m_useDataCol;
     bool m_useSoftCom = false;
     bool m_pauseOnFocus;
     bool m_loadedBootImage = false;
     bool m_optimizeRecording;
-    bool m_activatedPortable = false;
+    bool m_portableActivated = false;
     bool m_ignoreDmaCycles;
     bool m_normalOs;
+    bool m_setup = false;
     int m_fullscreen = FULLSCREEN_NONE;
     uint32_t m_runUntilAddr;
 
@@ -604,7 +603,7 @@ private:
     QStringList m_docksMemory;
     QList<int> m_docksMemoryBytes;
     QList<bool> m_docksMemoryAscii;
-    QSettings *m_settings = Q_NULLPTR;
+    QSettings *m_config = Q_NULLPTR;
     HexWidget *m_memWidget = Q_NULLPTR;
 
     QString m_pathRom;
@@ -678,7 +677,7 @@ private:
     static const QString SETTING_PREFERRED_LANG;
     static const QString SETTING_VERSION;
 
-    static const QString SETTING_DEFAULT_FILE;
+    static const QString SETTING_DEFAULT_CONFIG_FILE;
     static const QString SETTING_DEFAULT_ROM_FILE;
     static const QString SETTING_DEFAULT_IMAGE_FILE;
     static const QString SETTING_DEFAULT_DEBUG_FILE;

@@ -1,9 +1,11 @@
 #include "dockwidget.h"
 #include "utils.h"
 
+#include <QtWidgets/QStyle>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QTabWidget>
+#include <QtWidgets/QDesktopWidget>
 #include <QtGui/QHoverEvent>
 
 DockWidget::DockWidget(QWidget *parent)
@@ -28,8 +30,9 @@ DockWidget::DockWidget(QTabWidget *tabs, QWidget *parent) : DockWidget{tabs->tab
                     objectName() == QStringLiteral("captureWidget_dock"))); // TODO: lolz fixme plz
 }
 
-void DockWidget::toggleState(bool visible) {
-    if (visible) {
+void DockWidget::setState(bool edit) {
+    m_showTitle = edit;
+    if (edit) {
         if (isClosable()) {
             setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
         } else {
@@ -40,7 +43,7 @@ void DockWidget::toggleState(bool visible) {
         setFeatures(QDockWidget::NoDockWidgetFeatures);
         setAllowedAreas(Qt::NoDockWidgetArea);
     }
-    setTitleBarWidget(isFloating() || visible ? Q_NULLPTR : new QWidget(this));
+    setTitleBarWidget(isFloating() || edit ? Q_NULLPTR : m_titleHide);
 }
 
 QList<DockWidget *> DockWidget::tabs(DockWidget *without) {
@@ -91,6 +94,8 @@ void DockWidget::updateExpandability(const QList<DockWidget *> &tabs) {
 }
 
 void DockWidget::closeEvent(QCloseEvent *event) {
+    setFloating(true);
+    setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, minimumSize(), qApp->desktop()->availableGeometry()));
     emit closed();
     event->accept();
     QDockWidget::closeEvent(event);
