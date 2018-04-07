@@ -1510,6 +1510,7 @@ void MainWindow::showAbout() {
                               QStringLiteral("<a href='https://www.gnu.org/licenses/gpl-3.0.html'>GPLv3</a>")
                           ));
 
+    aboutBox->setTextInteractionFlags(Qt::TextSelectableByMouse);
     aboutBox->setTextFormat(Qt::RichText);
     aboutBox->setWindowModality(Qt::NonModal);
     aboutBox->setAttribute(Qt::WA_DeleteOnClose);
