@@ -559,12 +559,13 @@ private:
 
     QAction *m_actionToggleUI;
     QAction *m_actionAddMemory;
+    QAction *m_actionAddMemoryVisualizer;
 
     QIcon m_iconRun, m_iconStop;
     QIcon m_iconSave, m_iconLoad;
     QIcon m_iconEdit, m_iconRemove;
     QIcon m_iconSearch, m_iconGoto;
-    QIcon m_iconSync, m_iconAddMem;
+    QIcon m_iconSync, m_iconAddMem, m_iconAddMemViz;
     QIcon m_iconAscii, m_iconUiEdit;
     QTextCharFormat m_consoleFormat;
 
@@ -712,6 +713,7 @@ private:
     QString MSG_WARNING;
     QString MSG_ERROR;
     QString MSG_ADD_MEMORY;
+    QString MSG_ADD_MEMORY_VISUALIZER;
     QString MSG_EDIT_UI;
 
     QTableWidget *m_breakpoints = Q_NULLPTR;

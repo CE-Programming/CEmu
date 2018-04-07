@@ -177,9 +177,11 @@ void MainWindow::iconsLoad() {
     m_iconGoto.addPixmap(QPixmap(iconPath + QStringLiteral("goto.png")));
     m_iconSync.addPixmap(QPixmap(iconPath + QStringLiteral("refresh.png")));
     m_iconAddMem.addPixmap(QPixmap(iconPath + QStringLiteral("add_mem.png")));
+    m_iconAddMemViz.addPixmap(QPixmap(iconPath + QStringLiteral("lcd.png")));
     m_iconUiEdit.addPixmap(QPixmap(iconPath + QStringLiteral("ui_edit.png")));
     m_iconAscii.addPixmap(QPixmap(iconPath + QStringLiteral("characters.png")));
     m_actionAddMemory->setIcon(m_iconAddMem);
+    m_actionAddMemoryVisualizer->setIcon(m_iconAddMemViz);
     m_actionToggleUI->setIcon(m_iconUiEdit);
 }
 
@@ -469,6 +471,7 @@ void MainWindow::setUIDocks(bool firstRun) {
 
     m_menuDebug->addSeparator();
     m_menuDebug->addAction(m_actionAddMemory);
+    m_menuDebug->addAction(m_actionAddMemoryVisualizer);
 
     m_menuDocks->addSeparator();
     m_menuDocks->addAction(m_actionToggleUI);
@@ -488,6 +491,7 @@ void MainWindow::setUIEditMode(bool mode) {
     m_config->setValue(SETTING_UI_EDIT_MODE, mode);
     m_actionToggleUI->setChecked(mode);
     m_actionAddMemory->setEnabled(mode);
+    m_actionAddMemoryVisualizer->setEnabled(true); /* this one can stay enabled */
     if (mode) {
         setDockOptions(QMainWindow::AnimatedDocks | QMainWindow::AllowNestedDocks | QMainWindow::AllowTabbedDocks
 #if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)

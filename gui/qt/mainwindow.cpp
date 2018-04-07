@@ -213,7 +213,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->actionResetALL, &QAction::triggered, this, &MainWindow::resetCEmu);
     connect(ui->actionResetGUI, &QAction::triggered, this, &MainWindow::resetGui);
     connect(ui->actionResetCalculator, &QAction::triggered, this, &MainWindow::resetEmu);
-    connect(ui->actionMemoryVisualizer, &QAction::triggered, this, &MainWindow::addMemVisualizer);
     connect(ui->actionHideMenuBar, &QAction::triggered, this, &MainWindow::setMenuBarState);
     connect(ui->actionHideStatusBar, &QAction::triggered, this, &MainWindow::setStatusBarState);
     connect(ui->buttonResetCalculator, &QPushButton::clicked, this, &MainWindow::resetEmu);
@@ -344,6 +343,9 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     m_actionAddMemory = new QAction(MSG_ADD_MEMORY, this);
     connect(m_actionAddMemory, &QAction::triggered, [this]{ addMemDock(randomString(20), 8, true); });
+
+    m_actionAddMemoryVisualizer = new QAction(MSG_ADD_MEMORY_VISUALIZER, this);
+    connect(m_actionAddMemoryVisualizer, &QAction::triggered, this, &MainWindow::addMemVisualizer);
 
     // shortcut connections
     m_shortcutStepIn = new QShortcut(QKeySequence(Qt::Key_F6), this);
@@ -532,10 +534,11 @@ void MainWindow::translateExtras(int init) {
     MSG_INFORMATION = tr("Information");
     MSG_WARNING = tr("Warning");
     MSG_ERROR = tr("Error");
-    MSG_ADD_MEMORY = tr("Add Memory View");
+    MSG_ADD_MEMORY = tr("Add Memory view");
+    MSG_ADD_MEMORY_VISUALIZER = tr("Add Memory visualizer (live)");
     MSG_EDIT_UI = tr("Enable UI edit mode");
 
-    QString __TXT_MEM_DOCK = tr("Memory View");
+    QString __TXT_MEM_DOCK = tr("Memory view");
 
     QString __TXT_GOTO = tr("Goto");
     QString __TXT_SEARCH = tr("Search");
@@ -651,6 +654,7 @@ void MainWindow::translateExtras(int init) {
     if (init == TRANSLATE_UPDATE) {
         m_actionToggleUI->setText(MSG_EDIT_UI);
         m_actionAddMemory->setText(MSG_ADD_MEMORY);
+        m_actionAddMemoryVisualizer->setText(MSG_ADD_MEMORY_VISUALIZER);
         m_menuDebug->setTitle(TITLE_DEBUG);
         m_menuDocks->setTitle(TITLE_DOCKS);
 

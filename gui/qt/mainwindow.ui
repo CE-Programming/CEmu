@@ -9392,8 +9392,6 @@ QPushButton:pressed {
     <addaction name="menuImport"/>
     <addaction name="menuExport"/>
     <addaction name="separator"/>
-    <addaction name="actionKeyHistory"/>
-    <addaction name="separator"/>
     <addaction name="menuLanguage"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
@@ -9409,8 +9407,6 @@ QPushButton:pressed {
     <addaction name="separator"/>
     <addaction name="actionSaveState"/>
     <addaction name="actionRestoreState"/>
-    <addaction name="separator"/>
-    <addaction name="actionMemoryVisualizer"/>
    </widget>
    <widget class="QMenu" name="menuExtras">
     <property name="title">
@@ -9424,6 +9420,8 @@ QPushButton:pressed {
     <addaction name="separator"/>
     <addaction name="actionHideMenuBar"/>
     <addaction name="actionHideStatusBar"/>
+    <addaction name="separator"/>
+    <addaction name="actionKeyHistory"/>
     <addaction name="separator"/>
     <addaction name="actionResetGUI"/>
     <addaction name="actionResetALL"/>
@@ -9716,15 +9714,6 @@ QPushButton:pressed {
    </property>
    <property name="text">
     <string>Calculator state</string>
-   </property>
-  </action>
-  <action name="actionMemoryVisualizer">
-   <property name="icon">
-    <iconset resource="resources.qrc">
-     <normaloff>:/icons/resources/icons/lcd.png</normaloff>:/icons/resources/icons/lcd.png</iconset>
-   </property>
-   <property name="text">
-    <string>Memory visualizer</string>
    </property>
   </action>
   <action name="actionExportDebugger">

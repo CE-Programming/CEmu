@@ -11,11 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Memory Visualizer</string>
+   <string>Memory visualizer</string>
   </property>
   <property name="windowIcon">
    <iconset resource="resources.qrc">
-    <normaloff>:/icons/resources/icons/debugger.png</normaloff>:/icons/resources/icons/debugger.png</iconset>
+    <normaloff>:/icons/resources/icons/lcd.png</normaloff>:/icons/resources/icons/lcd.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -94,6 +94,9 @@
       </item>
       <item row="1" column="2">
        <widget class="QToolButton" name="buttonDefault">
+        <property name="toolTip">
+         <string>Reset to default</string>
+        </property>
         <property name="text">
          <string>...</string>
         </property>
@@ -105,6 +108,9 @@
       </item>
       <item row="1" column="1">
        <widget class="QToolButton" name="buttonSubmit">
+        <property name="toolTip">
+         <string>Apply changes</string>
+        </property>
         <property name="text">
          <string>...</string>
         </property>
@@ -116,6 +122,9 @@
       </item>
       <item row="1" column="3">
        <widget class="QToolButton" name="buttonHelp">
+        <property name="toolTip">
+         <string>Help</string>
+        </property>
         <property name="text">
          <string>...</string>
         </property>
