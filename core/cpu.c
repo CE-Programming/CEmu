@@ -929,6 +929,10 @@ void cpu_execute(void) {
                 case 0:
                     switch (context.z) {
                         case 0:
+                            if (cpu.PREFIX) {
+                                cpu_trap();
+                                break;
+                            }
                             switch (context.y) {
                                 case 0:  /* NOP */
                                     break;
@@ -963,8 +967,12 @@ void cpu_execute(void) {
                         case 1:
                             switch (context.q) {
                                 case 0: /* LD rr, Mmn */
-                                    if (context.p == 3 && cpu.PREFIX) { /* LD IY/IX, (IX/IY + d) */
-                                        cpu_write_other_index(cpu_read_word(cpu_index_address()));
+                                    if (cpu.PREFIX && context.p != 2) {
+                                        if (context.y == 6) { /* LD IY/IX, (IX/IY + d) */
+                                            cpu_write_other_index(cpu_read_word(cpu_index_address()));
+                                        } else {
+                                            cpu_trap();
+                                        }
                                         break;
                                     }
                                     cpu_write_rp(context.p, cpu_fetch_word());
@@ -982,6 +990,10 @@ void cpu_execute(void) {
                             }
                             break;
                         case 2:
+                            if (cpu.PREFIX && context.p != 2) {
+                                cpu_trap();
+                                break;
+                            }
                             switch (context.q) {
                                 case 0:
                                     switch (context.p) {
@@ -1018,6 +1030,10 @@ void cpu_execute(void) {
                             }
                             break;
                         case 3:
+                            if (cpu.PREFIX && context.p != 2) {
+                                cpu_trap();
+                                break;
+                            }
                             switch (context.q) {
                                 case 0: /* INC rp[p] */
                                     cpu_write_rp(context.p, (int32_t)cpu_read_rp(context.p) + 1);
@@ -1028,6 +1044,10 @@ void cpu_execute(void) {
                             }
                             break;
                         case 4: /* INC r[y] */
+                            if (cpu.PREFIX && (context.y < 4 || context.y == 7)) {
+                                cpu_trap();
+                                break;
+                            }
                             w = (context.y == 6) ? cpu_index_address() : 0;
                             old = cpu_read_reg_prefetched(context.y, w);
                             new = old + 1;
@@ -1037,6 +1057,10 @@ void cpu_execute(void) {
                                 | cpuflag_subtract(0) | cpuflag_undef(r->F);
                             break;
                         case 5: /* DEC r[y] */
+                            if (cpu.PREFIX && (context.y < 4 || context.y == 7)) {
+                                cpu_trap();
+                                break;
+                            }
                             w = (context.y == 6) ? cpu_index_address() : 0;
                             old = cpu_read_reg_prefetched(context.y, w);
                             new = old - 1;
@@ -1046,11 +1070,19 @@ void cpu_execute(void) {
                                 | cpuflag_subtract(1) | cpuflag_undef(r->F);
                             break;
                         case 6: /* LD r[y], n */
-                            if (context.y == 7 && cpu.PREFIX) { /* LD (IX/IY + d), IY/IX */
-                                cpu_write_word(cpu_index_address(), cpu_read_other_index());
-                                break;
+                            if (cpu.PREFIX) {
+                                if (context.y < 4) {
+                                    cpu_trap();
+                                    break;
+                                }
+                                if (context.y == 7) { /* LD (IX/IY + d), IY/IX */
+                                    cpu_write_word(cpu_index_address(), cpu_read_other_index());
+                                    break;
+                                }
                             }
-                            w = (context.y == 6) ? cpu_index_address() : 0;
+                            if (context.y == 6) {
+                                w = cpu_index_address();
+                            }
                             cpu_write_reg_prefetched(context.y, w, cpu_fetch_byte());
                             break;
                         case 7:
@@ -1068,41 +1100,41 @@ void cpu_execute(void) {
                     break;
                 case 1: /* ignore prefixed prefixes */
                     if (context.z == context.y) {
-                        switch (context.z) {
-                            case 0: /* .SIS */
-                                cpu.SUFFIX = 1;
-                                cpu.L = 0; cpu.IL = 0;
-                                continue;
-                            case 1: /* .LIS */
-                                cpu.SUFFIX = 1;
-                                cpu.L = 1; cpu.IL = 0;
-                                continue;
-                            case 2: /* .SIL */
-                                cpu.SUFFIX = 1;
-                                cpu.L = 0; cpu.IL = 1;
-                                continue;
-                            case 3: /* .LIL */
-                                cpu.SUFFIX = 1;
-                                cpu.L = 1; cpu.IL = 1;
-                                continue;
-                            case 6: /* HALT */
-                                cpu_halt();
-                                break;
-                            case 4: /* LD H, H */
-                            case 5: /* LD L, L */
-                            case 7: /* LD A, A */
-                                break;
-                            default:
-                                abort();
+                        if (cpu.PREFIX && context.z != 4 && context.z != 5) {
+                            cpu_trap();
+                            break;
+                        }
+                        if (context.z < 4) {
+                            cpu.L = context.s;
+                            cpu.IL = context.r;
+                            cpu.SUFFIX = 1;
+                            continue;
+                        }
+                        if (context.z == 6) { /* HALT */
+                            cpu_halt();
                         }
                     } else {
+                        if (cpu.PREFIX &&
+                            (context.z < 4 || context.z == 7) &&
+                            (context.y < 4 || context.y == 7)) {
+                            cpu_trap();
+                            break;
+                        }
                         cpu_read_write_reg(context.z, context.y);
                     }
                     break;
                 case 2: /* ALU[y] r[z] */
+                    if (cpu.PREFIX && (context.z < 4 || context.z == 7)) {
+                        cpu_trap();
+                        break;
+                    }
                     cpu_execute_alu(context.y, cpu_read_reg(context.z));
                     break;
                 case 3:
+                    if (cpu.PREFIX && !context.s) {
+                        cpu_trap();
+                        break;
+                    }
                     switch (context.z) {
                         case 0: /* RET cc[y] */
                             cpu.cycles++;
@@ -1113,9 +1145,17 @@ void cpu_execute(void) {
                         case 1:
                             switch (context.q) {
                                 case 0: /* POP rp2[p] */
+                                    if (cpu.PREFIX && context.p != 2) {
+                                        cpu_trap();
+                                        break;
+                                    }
                                     cpu_write_rp2(context.p, cpu_pop_word());
                                     break;
                                 case 1:
+                                    if (cpu.PREFIX && context.p < 2) {
+                                        cpu_trap();
+                                        break;
+                                    }
                                     switch (context.p) {
                                         case 0: /* RET */
                                             cpu_return();
@@ -1152,6 +1192,10 @@ void cpu_execute(void) {
                             }
                             break;
                         case 3:
+                            if (cpu.PREFIX && context.y != 1 && context.y != 4) {
+                                cpu_trap();
+                                break;
+                            }
                             switch (context.y) {
                                 case 0: /* JP nn */
                                     cpu.cycles++;
@@ -1163,29 +1207,29 @@ void cpu_execute(void) {
                                     r->R += ~cpu.PREFIX & 2;
                                     if (cpu.PREFIX && context.z != 6) { /* OPCODETRAP */
                                         cpu_trap_rewind(2);
-                                    } else {
-                                        old = cpu_read_reg_prefetched(context.z, w);
-                                        switch (context.x) {
-                                            case 0: /* rot[y] r[z] */
-                                                cpu_execute_rot(context.y, context.z, w, old);
-                                                break;
-                                            case 1: /* BIT y, r[z] */
-                                                old &= (1 << context.y);
-                                                r->F = cpuflag_sign_b(old) | cpuflag_zero(old) | cpuflag_undef(r->F)
-                                                    | cpuflag_parity(old) | cpuflag_c(r->flags.C)
-                                                    | FLAG_H;
-                                                break;
-                                            case 2: /* RES y, r[z] */
-                                                cpu.cycles += context.z == 6;
-                                                old &= ~(1 << context.y);
-                                                cpu_write_reg_prefetched(context.z, w, old);
-                                                break;
-                                            case 3: /* SET y, r[z] */
-                                                cpu.cycles += context.z == 6;
-                                                old |= 1 << context.y;
-                                                cpu_write_reg_prefetched(context.z, w, old);
-                                                break;
-                                        }
+                                        break;
+                                    }
+                                    old = cpu_read_reg_prefetched(context.z, w);
+                                    switch (context.x) {
+                                        case 0: /* rot[y] r[z] */
+                                            cpu_execute_rot(context.y, context.z, w, old);
+                                            break;
+                                        case 1: /* BIT y, r[z] */
+                                            old &= (1 << context.y);
+                                            r->F = cpuflag_sign_b(old) | cpuflag_zero(old) | cpuflag_undef(r->F)
+                                                | cpuflag_parity(old) | cpuflag_c(r->flags.C)
+                                                | FLAG_H;
+                                            break;
+                                        case 2: /* RES y, r[z] */
+                                            cpu.cycles += context.z == 6;
+                                            old &= ~(1 << context.y);
+                                            cpu_write_reg_prefetched(context.z, w, old);
+                                            break;
+                                        case 3: /* SET y, r[z] */
+                                            cpu.cycles += context.z == 6;
+                                            old |= 1 << context.y;
+                                            cpu_write_reg_prefetched(context.z, w, old);
+                                            break;
                                     }
                                     break;
                                 case 2: /* OUT (n), A */
@@ -1231,6 +1275,10 @@ void cpu_execute(void) {
                             }
                             break;
                         case 5:
+                            if (cpu.PREFIX && context.y != 4) {
+                                cpu_trap();
+                                break;
+                            }
                             switch (context.q) {
                                 case 0: /* PUSH r2p[p] */
                                     cpu_push_word(cpu_read_rp2(context.p));
@@ -1244,6 +1292,10 @@ void cpu_execute(void) {
 #endif
                                             break;
                                         case 1: /* 0xDD prefixed opcodes */
+                                            if (cpu.PREFIX) {
+                                                cpu_trap();
+                                                break;
+                                            }
                                             cpu.PREFIX = 2;
                                             continue;
                                         case 2: /* 0xED prefixed opcodes */
@@ -1273,10 +1325,10 @@ void cpu_execute(void) {
                                                         case 3: /* LEA rp3[p], IY */
                                                             if (context.q) { /* OPCODETRAP */
                                                                 cpu_trap();
-                                                            } else {
-                                                                cpu.PREFIX = context.z;
-                                                                cpu_write_rp3(context.p, cpu_index_address());
+                                                                break;
                                                             }
+                                                            cpu.PREFIX = context.z;
+                                                            cpu_write_rp3(context.p, cpu_index_address());
                                                             break;
                                                         case 4: /* TST A, r[y] */
                                                             new = r->A & cpu_read_reg(context.y);
@@ -1314,12 +1366,12 @@ void cpu_execute(void) {
                                                                 | cpuflag_undef(r->F) | cpuflag_parity(new)
                                                                 | cpuflag_c(r->flags.C);
                                                             break;
-                                                        case 1:
+                                                        case 1: /* OUT (BC), r[y] */
                                                             if (context.y == 6) { /* OPCODETRAP (ADL) */
                                                                 cpu_trap();
-                                                            } else { /* OUT (BC), r[y] */
-                                                                cpu_write_out(r->BC, cpu_read_reg(context.y));
+                                                                break;
                                                             }
+                                                            cpu_write_out(r->BC, cpu_read_reg(context.y));
                                                             break;
                                                         case 2:
                                                             old_word = cpu_mask_mode(r->HL, cpu.L);
@@ -1520,6 +1572,10 @@ void cpu_execute(void) {
                                             }
                                             break;
                                         case 3: /* 0xFD prefixed opcodes */
+                                            if (cpu.PREFIX) {
+                                                cpu_trap();
+                                                break;
+                                            }
                                             cpu.PREFIX = 3;
                                             continue;
                                     }
@@ -1530,6 +1586,10 @@ void cpu_execute(void) {
                             cpu_execute_alu(context.y, cpu_fetch_byte());
                             break;
                         case 7: /* RST y*8 */
+                            if (cpu.PREFIX) {
+                                cpu_trap();
+                                break;
+                            }
                             cpu.cycles++;
                             cpu_call(context.y << 3, cpu.SUFFIX);
                             break;

@@ -54,8 +54,9 @@ typedef union eZ80context {
         uint8_t x : 2;
     };
     struct {
+        uint8_t s : 1;
         uint8_t r : 1;
-        uint8_t   : 2;
+        uint8_t   : 1;
         uint8_t q : 1;
         uint8_t p : 2;
     };
