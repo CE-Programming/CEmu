@@ -80,7 +80,7 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
         case 0x00:
             control.ports[index] = byte & 0x93;
             if (byte & (1 << 4)) {
-                cpu_crash("[CEmu] Reset caused by writing to bit 4 of port 0.\n");
+                cpu_crash("writing to bit 4 of port 0");
             }
             /* Setting this bit turns off the calc (not implemented yet) */
             if (byte & (1 << 6)) {
@@ -123,7 +123,7 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
             break;
         case 0x05:
             if (control.ports[index] & (1 << 6) && !(byte & (1 << 6))) {
-                cpu_crash("[CEmu] Reset caused by resetting bit 6 of port 5.\n");
+                cpu_crash("resetting bit 6 of port 5");
             }
             control.ports[index] = byte & 0x1F;
             break;
@@ -146,7 +146,7 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
 
             if (byte == 0xD4) {
                 control.ports[0] |= 1 << 6;
-                cpu_crash("[CEmu] Reset caused by entering sleep mode.\n");
+                cpu_crash("entering sleep mode");
 #ifdef DEBUG_SUPPORT
                 if (debug.openOnReset) {
                     debug_open(DBG_MISC_RESET, cpu.registers.PC);

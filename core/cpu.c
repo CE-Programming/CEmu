@@ -809,8 +809,10 @@ void cpu_init(void) {
 }
 
 void cpu_reset(void) {
-    memset(&cpu.registers, 0, sizeof(eZ80registers_t));
-    cpu.NMI = cpu.IEF1 = cpu.IEF2 = cpu.ADL = cpu.MADL = cpu.IM = cpu.IEF_wait = cpu.IEF_ready = cpu.halted = 0;
+    bool preI = cpu.preI;
+    memset(&cpu, 0, sizeof(cpu));
+    cpu.preI = preI;
+    cpu_restore_next();
     cpu_flush(0, 0);
     gui_console_printf("[CEmu] CPU reset.\n");
 }
@@ -837,15 +839,12 @@ void cpu_transition_abort(uint8_t from, uint8_t to) {
 
 void cpu_crash(const char *msg) {
     cpu_transition_abort(CPU_ABORT_NONE, CPU_ABORT_RESET);
-    cpu.next = cpu.cycles;
+    gui_console_printf("[CEmu] Reset caused by %s.\n", msg);
 #ifdef DEBUG_SUPPORT
     if (debug.openOnReset) {
         debug_open(DBG_MISC_RESET, cpu.registers.PC);
     }
 #endif
-    if (msg) {
-        gui_console_printf(msg);
-    }
 }
 
 static void cpu_halt(void) {
