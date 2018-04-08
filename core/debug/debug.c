@@ -12,7 +12,6 @@
 debug_state_t debug;
 
 void debug_init(void) {
-    debug.stepOverEnd = 0xFFFFFFFFU;
     debug.addr = (uint8_t*)calloc(0x1000000, 1);
     debug.port = (uint8_t*)calloc(0x10000, 1);
     debug.bufPos = debug.bufErrPos = 0;
@@ -34,18 +33,6 @@ void debug_open(int reason, uint32_t data) {
     if (cpu.abort == CPU_ABORT_EXIT || debug.open || (debug.ignore && (reason >= DBG_BREAKPOINT && reason <= DBG_PORT_WRITE))) {
         return;
     }
-
-    if (reason == DBG_STEP && debug.stepOverFirstStep) {
-        if (debug.stepOut ||
-            (debug.stepNext && !(debug.addr[cpu.registers.PC] & DBG_MASK_TEMP))) {
-            debug.stepOverFirstStep = false;
-            gui_debug_close();
-            return;
-        }
-        debug_step_reset();
-    }
-
-    debug_step_reset();
 
     debug.cpuCycles = cpu.cycles;
     debug.cpuNext = cpu.next;
@@ -94,64 +81,6 @@ void debug_flag(int mask, bool set) {
 }
 
 void debug_step(int mode, uint32_t addr) {
-    debug_step_reset();
-    debug.stepReady = false;
-    debug.stepOverEnd = addr;
-    debug.stepOverFirstStep = false;
-    debug.stepOverMode = cpu.ADL;
-    debug.stepOutSPL = 0;
-    debug.stepOutSPS = 0;
-    debug.stepOutWait = -1;
-
-    switch (mode) {
-        case DBG_STEP_IN:
-            debug.step = true;
-            break;
-        case DBG_STEP_OVER:
-            debug.step = debug.stepOver = true;
-            break;
-        case DBG_STEP_NEXT:
-            debug.step = debug.stepNext = debug.stepOverFirstStep = true;
-            break;
-        case DBG_STEP_OUT:
-            debug.step = debug.stepOut = debug.stepOverFirstStep = true;
-            debug.stepOutSPL = cpu.registers.SPL + 1;
-            debug.stepOutSPS = cpu.registers.SPS + 1;
-            debug.stepOutWait = 0;
-            break;
-        case DBG_RUN_UNTIL:
-            debug.stepNext = false;
-            debug.stepOverEnd = addr;
-            break;
-        default:
-            break;
-    }
-
-    if (mode != DBG_STEP_OUT) {
-        debug.addr[debug.stepOverEnd] |= DBG_MASK_TEMP;
-    }
-}
-
-void debug_step_switch(void) {
-    if (debug.stepOver) {
-        debug.stepOverFirstStep = true;
-        debug.stepOutSPL = cpu.registers.SPL + 1;
-        debug.stepOutSPS = cpu.registers.SPS + 1;
-        debug.stepOutWait = 0;
-        debug.stepOver = false;
-        debug.step = debug.stepOut = true;
-    }
-}
-
-void debug_step_reset(void) {
-    debug.step = debug.stepOut = debug.stepOver = false;
-    if (debug.stepOverEnd != 0xFFFFFFFFU) {
-        do {
-            debug.addr[debug.stepOverEnd] &= ~DBG_MASK_TEMP;
-            debug.stepOverEnd = cpu_mask_mode(debug.stepOverEnd - 1, debug.stepOverMode);
-        } while (debug.addr[debug.stepOverEnd] & DBG_MASK_TEMP);
-    }
-    debug.stepOverEnd = 0xFFFFFFFFU;
 }
 
 void debug_set_pc(uint32_t addr) {

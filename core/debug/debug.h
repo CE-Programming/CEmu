@@ -96,15 +96,9 @@ typedef struct {
     uint64_t dmaCycles;
     uint64_t cpuBaseCycles;
     uint64_t cpuHaltCycles;
+    int64_t totalCycles;
     char buffer[SIZEOF_DBG_BUFFER];
     char bufferErr[SIZEOF_DBG_BUFFER];
-    bool step, stepReady, stepOver, stepNext, stepOut, stepOverFirstStep;
-    int8_t stepOutWait;
-    int64_t totalCycles;
-    uint8_t stepOverMode;
-    uint32_t stepOutSPL;
-    uint16_t stepOutSPS;
-    uint32_t stepOverEnd;
     uint32_t bufErrPos;
     uint32_t bufPos;
     uint8_t *addr;

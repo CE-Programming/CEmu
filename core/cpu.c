@@ -40,13 +40,6 @@ static void cpu_clear_mode(void) {
     cpu.IL = cpu.ADL;
 #ifdef DEBUG_SUPPORT
     debug.addr[cpu.registers.PC] |= DBG_INST_START_MARKER;
-    if (debug.step) {
-        if (debug.stepReady) {
-            debug.step = false;
-            debug_open(DBG_STEP, 0);
-        }
-        debug.stepReady = true;
-    }
 #endif
 }
 
@@ -68,11 +61,6 @@ static void cpu_prefetch(uint32_t address, bool mode) {
 }
 static uint8_t cpu_fetch_byte(void) {
     uint8_t value;
-#ifdef DEBUG_SUPPORT
-    if (debug.addr[cpu.registers.PC] & (DBG_MASK_TEMP | DBG_MASK_EXEC)) {
-        debug_open(debug.addr[cpu.registers.PC] & DBG_MASK_EXEC ? DBG_BREAKPOINT : DBG_STEP, cpu.registers.PC);
-    }
-#endif
     value = cpu.prefetch;
     cpu_prefetch(cpu.registers.PC + 1, cpu.ADL);
     return value;
@@ -104,11 +92,6 @@ static uint32_t cpu_fetch_word_no_prefetch(void) {
 
 static uint8_t cpu_read_byte(uint32_t address) {
     uint32_t cpuAddress = cpu_address_mode(address, cpu.L);
-#ifdef DEBUG_SUPPORT
-    if (cpuAddress == debug.stepOverEnd) {
-        debug.addr[debug.stepOverEnd = cpu_mask_mode(address + 1, debug.stepOverMode)] |= DBG_MASK_TEMP;
-    }
-#endif
     return mem_read_cpu(cpuAddress, false);
 }
 static void cpu_write_byte(uint32_t address, uint8_t value) {
@@ -398,31 +381,6 @@ static uint32_t cpu_dec_bc_partial_mode() {
 
 static void cpu_call(uint32_t address, bool mixed) {
     eZ80registers_t *r = &cpu.registers;
-#ifdef DEBUG_SUPPORT
-    if (debug.stepOut || debug.stepOver) {
-        if (debug.stepOut) {
-            bool addWait = false;
-            if (cpu.ADL) {
-                if (r->SPL >= debug.stepOutSPL) {
-                    addWait = true;
-                    debug.stepOutSPL = r->SPL;
-                }
-            } else {
-                if (r->SPS >= debug.stepOutSPS) {
-                    addWait = true;
-                    debug.stepOutSPS = r->SPS;
-                }
-            }
-            if (addWait && (debug.stepOutWait < 1)) {
-                debug.stepOutWait++;
-            }
-        } else if (debug.stepOver) {
-            if (r->PC == debug.stepOverEnd) {
-                debug.addr[debug.stepOverEnd] &= ~DBG_MASK_TEMP;
-            }
-        }
-    }
-#endif
     if (mixed) {
         bool stack = cpu.IL || (cpu.L && !cpu.ADL);
         if (cpu.ADL) {
@@ -451,18 +409,6 @@ static void cpu_trap(void) {
 }
 
 static void cpu_check_step_out(void) {
-#ifdef DEBUG_SUPPORT
-    if (debug.stepOut) {
-        int32_t spDelta = cpu.ADL ? (int32_t) cpu.registers.SPL - (int32_t) debug.stepOutSPL :
-                          (int32_t) cpu.registers.SPS - (int32_t) debug.stepOutSPS;
-        if (spDelta >= 0) {
-            if (!debug.stepOutWait--) {
-                cpu_clear_mode();
-                debug_open(DBG_STEP, 0);
-            }
-        }
-    }
-#endif
 }
 
 static void cpu_return(void) {
@@ -792,13 +738,6 @@ static void cpu_execute_bli() {
         /* All block instructions */
         r->HL = cpu_mask_mode((int32_t)r->HL + delta, cpu.L);
         cpu.cycles += internalCycles;
-
-#ifdef DEBUG_SUPPORT
-    if (debug.stepOver) {
-        debug.step = false;
-        cpu_restore_next();
-    }
-#endif
     } while (repeat && (cpu.cycles < cpu.next));
     cpu.inBlock = repeat;
 }
@@ -1270,9 +1209,6 @@ void cpu_execute(void) {
                         case 4: /* CALL cc[y], nn */
                             if (cpu_read_cc(context.y)) {
                                 cpu_call(cpu_fetch_word_no_prefetch(), cpu.SUFFIX);
-#ifdef DEBUG_SUPPORT
-                                debug_step_switch();
-#endif
                             } else {
                                 cpu_fetch_word();
                             }
@@ -1290,9 +1226,6 @@ void cpu_execute(void) {
                                     switch (context.p) {
                                         case 0: /* CALL nn */
                                             cpu_call(cpu_fetch_word_no_prefetch(), cpu.SUFFIX);
-#ifdef DEBUG_SUPPORT
-                                            debug_step_switch();
-#endif
                                             break;
                                         case 1: /* 0xDD prefixed opcodes */
                                             if (cpu.PREFIX) {
