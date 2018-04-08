@@ -6,7 +6,6 @@ branches:
     - coverity_scan
     - gh-pages-dev
     - website-dev
-    - feature/lcd-spi
 
 sudo: false
 os: linux
@@ -34,7 +33,7 @@ script:
   - cd ../core
   - make clean && make -j4 CC=gcc-5 CXX=g++-5 LINK=g++-5 all
   - cd ../tests/autotester
-  - make clean && make -j4 CC=gcc-5 CXX=g++-5 LINK=g++-5 all
+  - make clean && make -j4 CC=gcc-5 CXX=g++-5 LINK=g++-5 CPPFLAGS="-DMULTITHREAD" all
 
 notifications:
   irc:
