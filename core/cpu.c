@@ -34,10 +34,14 @@
 /* Global CPU state */
 eZ80cpu_t cpu;
 
-static void cpu_clear_mode(void) {
+static void cpu_clear_context(void) {
     cpu.PREFIX = cpu.SUFFIX = 0;
     cpu.L = cpu.ADL;
     cpu.IL = cpu.ADL;
+}
+
+static void cpu_inst_start(void) {
+    cpu_clear_context();
 #ifdef DEBUG_SUPPORT
     debug.addr[cpu.registers.PC] |= DBG_INST_START_MARKER;
 #endif
@@ -55,13 +59,16 @@ static void cpu_prefetch(uint32_t address, bool mode) {
     cpu.registers.rawPC = cpu_mask_mode(address + 1, mode);
     cpu.registers.PC = cpu_address_mode(address, mode);
     cpu.prefetch = mem_read_cpu(cpu.registers.PC, true);
-#ifdef DEBUG_SUPPORT
-    debug.addr[cpu.registers.PC] |= DBG_INST_MARKER;
-#endif
 }
 static uint8_t cpu_fetch_byte(void) {
-    uint8_t value;
-    value = cpu.prefetch;
+    uint8_t value = cpu.prefetch;
+#ifdef DEBUG_SUPPORT
+    debug.addr[cpu.registers.PC] |= DBG_INST_MARKER;
+    if (debug.addr[cpu.registers.PC] & DBG_MASK_EXEC) {
+        debug_open(DBG_BREAKPOINT, cpu.registers.PC);
+        value = mem_peek_byte(cpu.registers.PC);
+    }
+#endif
     cpu_prefetch(cpu.registers.PC + 1, cpu.ADL);
     return value;
 }
@@ -397,10 +404,10 @@ static void cpu_call(uint32_t address, bool mixed) {
 
 static void cpu_trap_rewind(uint_fast8_t rewind) {
     eZ80registers_t *r = &cpu.registers;
-    cpu_fetch_byte();
+    cpu_prefetch_discard();
     cpu.cycles++;
     r->PC = cpu_mask_mode(r->PC - 1 - rewind, cpu.ADL);
-    cpu_clear_mode();
+    cpu_clear_context();
     cpu_call(0x00, cpu.MADL);
 }
 
@@ -758,7 +765,7 @@ void cpu_reset(void) {
 
 void cpu_flush(uint32_t address, bool mode) {
     cpu_prefetch(address, mode);
-    cpu_clear_mode();
+    cpu_inst_start();
     cpu.inBlock = 0;
 }
 
@@ -1532,7 +1539,7 @@ void cpu_execute(void) {
                     }
                     break;
             }
-            cpu_clear_mode();
+            cpu_inst_start();
         } while (cpu.PREFIX || cpu.SUFFIX || cpu.cycles < cpu.next);
     }
 }
