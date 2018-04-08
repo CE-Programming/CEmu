@@ -95,6 +95,7 @@ void cpu_flush(uint32_t, bool);
 void cpu_nmi(void);
 void cpu_execute(void);
 void cpu_restore_next(void);
+void cpu_transition_abort(uint8_t from, uint8_t to);
 void cpu_crash(const char *msg);
 bool cpu_restore(FILE *image);
 bool cpu_save(FILE *image);

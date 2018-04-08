@@ -212,6 +212,7 @@ static void emu_main_loop_inner(void) {
         }
         sched_process_pending_events();
         if (cpu.abort == CPU_ABORT_RESET) {
+            cpu_transition_abort(CPU_ABORT_RESET, CPU_ABORT_NONE);
             gui_console_printf("[CEmu] Reset triggered.\n");
             asic_reset();
         }
@@ -233,6 +234,7 @@ void emu_loop(void) {
     while (cpu.abort != CPU_ABORT_EXIT) {
         sched_process_pending_events();
         if (cpu.abort == CPU_ABORT_RESET) {
+            cpu_transition_abort(CPU_ABORT_RESET, CPU_ABORT_NONE);
             gui_console_printf("[CEmu] Reset triggered.\n");
             asic_reset();
 #ifdef DEBUG_SUPPORT

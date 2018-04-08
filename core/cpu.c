@@ -831,18 +831,21 @@ void cpu_nmi(void) {
 #endif
 }
 
+void cpu_transition_abort(uint8_t from, uint8_t to) {
+    atomic_compare_exchange_strong(&cpu.abort, &from, to);
+}
+
 void cpu_crash(const char *msg) {
-    uint8_t temp = CPU_ABORT_NONE;
-    if (msg) {
-        gui_console_printf(msg);
-    }
-    atomic_compare_exchange_strong(&cpu.abort, &temp, CPU_ABORT_RESET);
+    cpu_transition_abort(CPU_ABORT_NONE, CPU_ABORT_RESET);
     cpu.next = cpu.cycles;
 #ifdef DEBUG_SUPPORT
     if (debug.openOnReset) {
         debug_open(DBG_MISC_RESET, cpu.registers.PC);
     }
 #endif
+    if (msg) {
+        gui_console_printf(msg);
+    }
 }
 
 static void cpu_halt(void) {
