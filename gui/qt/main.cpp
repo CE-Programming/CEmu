@@ -166,9 +166,9 @@ int main(int argc, char *argv[]) {
     if (!EmuWin.isResetAll()) {
         EmuWin.show();
         EmuWin.setup();
-		// Only execute when we have a window open - otherwise this will
-		// hang forever
-		ret = app.exec();
+        // Only execute when we have a window open - otherwise this will
+        // hang forever
+        ret = app.exec();
     }
 
     if (EmuWin.isResetAll() || EmuWin.isReload()) {
