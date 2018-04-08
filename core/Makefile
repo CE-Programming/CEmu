@@ -20,7 +20,7 @@ $(STATICLIB): $(OBJS)
 	ar rcs $@ $?
 
 %.o: %.c
-	$(CC)  $(CFLAGS) -std=gnu11 -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -std=gnu11 -c $< -o $@
 
 clean:
 	rm -f $(OBJS) $(STATICLIB)
