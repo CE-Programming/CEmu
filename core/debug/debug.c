@@ -34,6 +34,8 @@ void debug_open(int reason, uint32_t data) {
         return;
     }
 
+    debug_clear_step();
+
     debug.cpuCycles = cpu.cycles;
     debug.cpuNext = cpu.next;
     debug.cpuBaseCycles = cpu.baseCycles;
@@ -54,6 +56,7 @@ void debug_open(int reason, uint32_t data) {
 }
 
 void debug_watch(uint32_t addr, int mask, bool set) {
+    addr &= 0xFFFFFF;
     if (set) {
         debug.addr[addr] |= mask;
     } else {
@@ -62,10 +65,11 @@ void debug_watch(uint32_t addr, int mask, bool set) {
 }
 
 void debug_ports(uint16_t addr, int mask, bool set) {
+    addr &= 0xFFFF;
     if (set) {
-        debug.addr[addr] |= mask;
+        debug.port[addr] |= mask;
     } else {
-        debug.addr[addr] &= ~mask;
+        debug.port[addr] &= ~mask;
     }
 }
 
@@ -81,6 +85,21 @@ void debug_flag(int mask, bool set) {
 }
 
 void debug_step(int mode, uint32_t addr) {
+    switch (mode) {
+        case DBG_STEP_NEXT:
+        case DBG_RUN_UNTIL:
+            debug.tempMode = cpu.ADL;
+            debug_watch(debug.tempAddr = addr, DBG_MASK_TEMP, true);
+            break;
+    }
+}
+
+void debug_clear_step(void) {
+    uint32_t addr = debug.tempAddr;
+    while (debug.addr[addr] & DBG_MASK_TEMP) {
+        debug_watch(debug.tempAddr, DBG_MASK_TEMP, false);
+        addr = cpu_mask_mode(addr + 1, debug.tempMode);
+    }
 }
 
 void debug_set_pc(uint32_t addr) {

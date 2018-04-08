@@ -64,8 +64,8 @@ static uint8_t cpu_fetch_byte(void) {
     uint8_t value = cpu.prefetch;
 #ifdef DEBUG_SUPPORT
     debug.addr[cpu.registers.PC] |= DBG_INST_MARKER;
-    if (debug.addr[cpu.registers.PC] & DBG_MASK_EXEC) {
-        debug_open(DBG_BREAKPOINT, cpu.registers.PC);
+    if (debug.addr[cpu.registers.PC] & (DBG_MASK_EXEC | DBG_MASK_TEMP)) {
+        debug_open(debug.addr[cpu.registers.PC] & DBG_MASK_EXEC ? DBG_BREAKPOINT : DBG_STEP, cpu.registers.PC);
         value = mem_peek_byte(cpu.registers.PC);
     }
 #endif
@@ -759,7 +759,7 @@ void cpu_reset(void) {
     memset(&cpu, 0, sizeof(cpu));
     cpu.preI = preI;
     cpu_restore_next();
-    cpu_flush(0, 0);
+    cpu_flush(0, false);
     gui_console_printf("[CEmu] CPU reset.\n");
 }
 

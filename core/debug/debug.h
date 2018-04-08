@@ -97,6 +97,8 @@ typedef struct {
     uint64_t cpuBaseCycles;
     uint64_t cpuHaltCycles;
     int64_t totalCycles;
+    bool tempMode;
+    uint32_t tempAddr;
     char buffer[SIZEOF_DBG_BUFFER];
     char bufferErr[SIZEOF_DBG_BUFFER];
     uint32_t bufErrPos;
@@ -122,7 +124,7 @@ enum {
 
 /* internal core functions */
 void debug_step_switch(void);
-void debug_step_reset(void);
+void debug_clear_step(void);
 
 #ifdef __cplusplus
 }
