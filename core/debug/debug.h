@@ -22,6 +22,7 @@ extern "C" {
 enum {
     DBG_USER,              /* request to open the debugger externally */
     DBG_READY,             /* if reset, debugger ready for new commands */
+    DBG_FROZEN,            /* di \ halt */
     DBG_BREAKPOINT,        /* hit a breakpoint */
     DBG_WATCHPOINT_READ,   /* hit a read watchpoint */
     DBG_WATCHPOINT_WRITE,  /* hit a write watchpoint */
@@ -97,6 +98,7 @@ typedef struct {
     uint64_t cpuBaseCycles;
     uint64_t cpuHaltCycles;
     int64_t totalCycles;
+    bool step;
     bool tempMode;
     uint32_t tempAddr;
     char buffer[SIZEOF_DBG_BUFFER];

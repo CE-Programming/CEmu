@@ -44,6 +44,10 @@ static void cpu_inst_start(void) {
     cpu_clear_context();
 #ifdef DEBUG_SUPPORT
     debug.addr[cpu.registers.PC] |= DBG_INST_START_MARKER;
+    if (debug.step) {
+        debug.step = false;
+        debug_open(DBG_STEP, cpu.registers.PC);
+    }
 #endif
 }
 
@@ -610,6 +614,12 @@ static void cpu_execute_bli() {
     int_fast8_t delta = cpu.context.q ? -1 : 1;
     bool repeat = (cpu.context.x | cpu.context.p) & 1;
     do {
+#ifdef DEBUG_SUPPORT
+        if (cpu.inBlock && debug.step) {
+            debug.step = false;
+            debug_open(DBG_STEP, cpu.registers.PC);
+        }
+#endif
         switch (cpu.context.z) {
             case 0:
                 switch (xp) {
@@ -745,8 +755,7 @@ static void cpu_execute_bli() {
         /* All block instructions */
         r->HL = cpu_mask_mode((int32_t)r->HL + delta, cpu.L);
         cpu.cycles += internalCycles;
-    } while (repeat && (cpu.cycles < cpu.next));
-    cpu.inBlock = repeat;
+    } while ((cpu.inBlock = repeat) && cpu.cycles < cpu.next);
 }
 
 void cpu_init(void) {
@@ -766,7 +775,7 @@ void cpu_reset(void) {
 void cpu_flush(uint32_t address, bool mode) {
     cpu_prefetch(address, mode);
     cpu_inst_start();
-    cpu.inBlock = 0;
+    cpu.inBlock = false;
 }
 
 void cpu_nmi(void) {
@@ -794,11 +803,18 @@ void cpu_crash(const char *msg) {
 }
 
 static void cpu_halt(void) {
+    cpu.halted = true;
+#ifdef DEBUG_SUPPORT
+    while (cpu.cycles < cpu.next && !cpu.IEF1 && debug.step) {
+        cpu.haltCycles++;
+        cpu.cycles++;
+        debug_open(DBG_FROZEN, cpu.registers.PC);
+    }
+#endif
     if (cpu.cycles < cpu.next) {
         cpu.haltCycles += cpu.next - cpu.cycles;
         cpu.cycles = cpu.next; /* consume all of the cycles */
     }
-    cpu.halted = 1;
 }
 
 void cpu_restore_next(void) {
@@ -843,7 +859,7 @@ void cpu_execute(void) {
             cpu_prefetch_discard();
             cpu.cycles += 2;
             cpu.L = cpu.IL = cpu.ADL || cpu.MADL;
-            cpu.IEF1 = cpu.halted = cpu.inBlock = 0;
+            cpu.IEF1 = cpu.halted = cpu.inBlock = false;
             if (cpu.NMI) {
                 cpu.NMI = 0;
                 cpu_call(0x66, cpu.MADL);

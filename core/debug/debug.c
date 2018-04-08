@@ -86,6 +86,9 @@ void debug_flag(int mask, bool set) {
 
 void debug_step(int mode, uint32_t addr) {
     switch (mode) {
+        case DBG_STEP_IN:
+            debug.step = true;
+            break;
         case DBG_STEP_NEXT:
         case DBG_RUN_UNTIL:
             debug.tempMode = cpu.ADL;
