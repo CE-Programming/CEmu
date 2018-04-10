@@ -43,11 +43,7 @@ static void cpu_clear_context(void) {
 static void cpu_inst_start(void) {
     cpu_clear_context();
 #ifdef DEBUG_SUPPORT
-    debug.addr[cpu.registers.PC] |= DBG_INST_START_MARKER;
-    if (debug.step) {
-        debug.step = false;
-        debug_open(DBG_STEP, cpu.registers.PC);
-    }
+    debug_inst_start();
 #endif
 }
 
@@ -67,11 +63,7 @@ static void cpu_prefetch(uint32_t address, bool mode) {
 static uint8_t cpu_fetch_byte(void) {
     uint8_t value = cpu.prefetch;
 #ifdef DEBUG_SUPPORT
-    debug.addr[cpu.registers.PC] |= DBG_INST_MARKER;
-    if (debug.addr[cpu.registers.PC] & (DBG_MASK_EXEC | DBG_MASK_TEMP)) {
-        debug_open(debug.addr[cpu.registers.PC] & DBG_MASK_EXEC ? DBG_BREAKPOINT : DBG_STEP, cpu.registers.PC);
-        value = mem_peek_byte(cpu.registers.PC);
-    }
+    debug_inst_fetch();
 #endif
     cpu_prefetch(cpu.registers.PC + 1, cpu.ADL);
     return value;
@@ -392,7 +384,7 @@ static uint32_t cpu_dec_bc_partial_mode() {
 
 static void cpu_call(uint32_t address, bool mixed) {
 #ifdef DEBUG_SUPPORT
-    debug_record_call(cpu.ADL, cpu.registers.PC);
+    debug_record_call(cpu.registers.PC, cpu.L);
 #endif
     if (mixed) {
         bool stack = cpu.IL || (cpu.L && !cpu.ADL);
@@ -421,6 +413,13 @@ static void cpu_trap(void) {
     cpu_trap_rewind(1);
 }
 
+static void cpu_jump(uint32_t address, bool mode) {
+    cpu_prefetch(address, mode);
+#ifdef DEBUG_SUPPORT
+    debug_record_ret(address, mode);
+#endif
+}
+
 static void cpu_return(void) {
     uint32_t address;
     bool mode = cpu.ADL;
@@ -435,10 +434,7 @@ static void cpu_return(void) {
     } else {
         address = cpu_pop_word();
     }
-    cpu_prefetch(address, mode);
-#ifdef DEBUG_SUPPORT
-    debug_record_ret(mode, address);
-#endif
+    cpu_jump(address, mode);
 }
 
 static void cpu_execute_alu(int i, uint8_t v) {
@@ -616,9 +612,8 @@ static void cpu_execute_bli() {
     bool repeat = (cpu.context.x | cpu.context.p) & 1;
     do {
 #ifdef DEBUG_SUPPORT
-        if (cpu.inBlock && debug.step) {
-            debug.step = false;
-            debug_open(DBG_STEP, cpu.registers.PC);
+        if (cpu.inBlock) {
+            debug_inst_repeat();
         }
 #endif
         switch (cpu.context.z) {
@@ -1143,10 +1138,7 @@ void cpu_execute(void) {
                                             break;
                                         case 2: /* JP (rr) */
                                             cpu_prefetch_discard();
-                                            cpu_prefetch(w = cpu_read_index(), cpu.L);
-#ifdef DEBUG_SUPPORT
-                                            debug_record_ret(cpu.L, w);
-#endif
+                                            cpu_jump(cpu_read_index(), cpu.L);
                                             break;
                                         case 3: /* LD SP, HL */
                                             cpu_write_sp(cpu_read_index());
@@ -1158,7 +1150,7 @@ void cpu_execute(void) {
                         case 2: /* JP cc[y], nn */
                             if (cpu_read_cc(context.y)) {
                                 cpu.cycles++;
-                                cpu_prefetch(cpu_fetch_word_no_prefetch(), cpu.L);
+                                cpu_jump(cpu_fetch_word_no_prefetch(), cpu.L);
                             } else {
                                 cpu_fetch_word();
                             }
@@ -1171,7 +1163,7 @@ void cpu_execute(void) {
                             switch (context.y) {
                                 case 0: /* JP nn */
                                     cpu.cycles++;
-                                    cpu_prefetch(cpu_fetch_word_no_prefetch(), cpu.L);
+                                    cpu_jump(cpu_fetch_word_no_prefetch(), cpu.L);
                                     break;
                                 case 1: /* 0xCB prefixed opcodes */
                                     w = cpu_index_address();

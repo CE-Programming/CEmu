@@ -12,16 +12,18 @@
 debug_state_t debug;
 
 void debug_init(void) {
-    debug.stackTop = debug.stackBot;
-    debug.stepOut = ~0;
-    debug.addr = (uint8_t*)calloc(0x1000000, 1);
-    debug.port = (uint8_t*)calloc(0x10000, 1);
+    debug_clear_step();
+    debug.stackIndex = debug.stackSize = 0;
+    debug.stack = (debug_stack_entry_t*)calloc(DBG_STACK_SIZE, sizeof(debug_stack_entry_t));
+    debug.addr = (uint8_t*)calloc(DBG_ADDR_SIZE, sizeof(uint8_t));
+    debug.port = (uint8_t*)calloc(DBG_PORT_SIZE, sizeof(uint8_t));
     debug.bufPos = debug.bufErrPos = 0;
     debug.open = false;
     gui_console_printf("[CEmu] Initialized Debugger...\n");
 }
 
 void debug_free(void) {
+    free(debug.stack);
     free(debug.addr);
     free(debug.port);
     gui_console_printf("[CEmu] Freed Debugger.\n");
@@ -91,69 +93,91 @@ void debug_step(int mode, uint32_t addr) {
         case DBG_STEP_IN:
             debug.step = true;
             break;
+        case DBG_STEP_OVER:
+            debug.step = debug.stepOver = true;
+            break;
         case DBG_STEP_OUT:
-            debug.stepOut = debug.stackBot;
+            debug.stepOut = debug.stackIndex;
             break;
         case DBG_STEP_NEXT:
         case DBG_RUN_UNTIL:
-            debug.tempMode = cpu.ADL;
-            debug_watch(debug.tempAddr = addr, DBG_MASK_TEMP, true);
+            debug.tempExec = addr;
             break;
     }
 }
 
-static uint32_t debug_next_addr(uint32_t addr, bool mode) {
-    addr++;
-    if (!mode && !(addr & 0xFFFF)) {
-        addr -= 0x10000;
-    }
-    return addr;
-}
-
 void debug_clear_step(void) {
-    uint32_t addr = debug.tempAddr;
-    while (debug.addr[addr] & DBG_MASK_TEMP) {
-        debug_watch(addr, DBG_MASK_TEMP, false);
-        addr = debug_next_addr(addr, debug.tempMode);
-    }
-    debug.step = false;
+    debug.step = debug.stepOver = false;
+    debug.tempExec = debug.stepOut = ~0;
 }
 
-void debug_record_call(bool mode, uint32_t retAddr) {
-    uint32_t stack = cpu_address_mode(cpu.registers.stack[mode].hl, mode);
-    uint32_t index = (debug.stackBot + 1) & DBG_STACK_MASK;
-    debug_stack_entry_t *entry = &debug.stack[index];
-    debug.stackBot = index;
-    if (debug.stackTop == index) {
-        debug.stackTop = (index + 1) & DBG_STACK_MASK;
+void debug_inst_start(void) {
+    uint32_t pc = cpu.registers.PC;
+    debug.addr[pc] |= DBG_INST_START_MARKER;
+    if (debug.step && !(debug.addr[pc] & DBG_MASK_EXEC) && pc != debug.tempExec) {
+        debug.step = debug.stepOver = false;
+        debug_open(DBG_STEP, cpu.registers.PC);
     }
+}
+
+void debug_inst_fetch(void) {
+    uint32_t pc = cpu.registers.PC;
+    debug.addr[pc] |= DBG_INST_MARKER;
+    if (debug.addr[pc] & DBG_MASK_EXEC) {
+        debug_open(DBG_BREAKPOINT, pc);
+    } else if (pc == debug.tempExec) {
+        debug_open(DBG_STEP, pc);
+    }
+}
+
+void debug_inst_repeat(void) {
+    if (debug.step && !debug.stepOver) {
+        debug.step = false;
+        debug_open(DBG_STEP, cpu.registers.PC);
+    }
+}
+
+void debug_record_call(uint32_t retAddr, bool mode) {
+    uint32_t stack = cpu_address_mode(cpu.registers.stack[mode].hl, mode);
+    uint32_t index = (debug.stackIndex + 1) & DBG_STACK_MASK;
+    debug_stack_entry_t *entry = &debug.stack[index];
     entry->mode = mode;
     entry->popped = false;
     entry->stack = stack;
     entry->retAddr = retAddr;
     entry->range = 1;
+    debug.stackIndex = index;
+    if (debug.stackSize < DBG_STACK_SIZE) {
+        debug.stackSize++;
+    }
+    if (debug.stepOver) {
+        debug.step = debug.stepOver = false;
+        debug.stepOut = index;
+    }
 }
 
-void debug_record_ret(bool mode, uint32_t retAddr) {
+void debug_record_ret(uint32_t retAddr, bool mode) {
     uint32_t stack = cpu_address_mode(cpu.registers.stack[mode].hl, mode);
-    uint32_t index = debug.stackBot;
+    uint32_t index = debug.stackIndex;
+    uint32_t size = debug.stackSize;
     debug_stack_entry_t *entry;
     bool found = false, stepOut = false;
-    while (index != debug.stackTop) {
+    while (size--) {
         stepOut |= index == debug.stepOut;
         entry = &debug.stack[index];
         index = (index - 1) & DBG_STACK_MASK;
         if (mode == entry->mode && (stack == entry->stack || entry->popped) &&
             retAddr - entry->retAddr <= entry->range) {
-            debug.stackBot = index;
-            if (stepOut) {
-                debug.step = true;
-                debug.stepOut = ~0;
-            }
+            debug.stackIndex = index;
+            debug.stackSize = size;
             found = true;
         } else if (found) {
-            return;
+            break;
         }
+    }
+    if (found && stepOut) {
+        debug.step = true;
+        debug.stepOut = ~0;
     }
 }
 

@@ -449,7 +449,7 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
     addr &= 0xFFFFFF;
 #ifdef DEBUG_SUPPORT
     if (!fetch) {
-        debug_stack_entry_t *entry = &debug.stack[debug.stackBot];
+        debug_stack_entry_t *entry = &debug.stack[debug.stackIndex];
         if (entry->mode == cpu.L) {
             if (entry->stack - addr <= 2 + entry->mode) {
                 entry->popped = true;

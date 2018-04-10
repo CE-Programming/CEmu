@@ -56,8 +56,11 @@ enum {
 void debug_init(void);                               /* call before starting emulation */
 void debug_free(void);                               /* call after emulation end */
 void debug_set_pc(uint32_t addr);                    /* when in gui debug set program counter */
-void debug_record_call(bool stack, uint32_t retAddr);
-void debug_record_ret(bool stack, uint32_t retAddr);
+void debug_inst_start(void);
+void debug_inst_fetch(void);
+void debug_inst_repeat(void);
+void debug_record_call(uint32_t retAddr, bool stack);
+void debug_record_ret(uint32_t retAddr, bool stack);
 void debug_watch(uint32_t addr, int mask, bool set); /* set a breakpoint or a watchpoint */
 void debug_ports(uint16_t addr, int mask, bool set); /* set port monitor flags */
 void debug_flag(int mask, bool set);                 /* configure setup of debug core */
@@ -84,15 +87,16 @@ bool debug_is_open(void);                            /* returns the status of th
 
 
 /* internal items below this line */
-#define DBG_MASK_TEMP         (1 << 3)
-#define DBG_INST_START_MARKER (1 << 4)
-#define DBG_INST_MARKER       (1 << 5)
+#define DBG_INST_START_MARKER (1 << 3)
+#define DBG_INST_MARKER       (1 << 4)
 
 #define DBG_PORT_RANGE        0xFFFF00
 #define DBGOUT_PORT_RANGE     0xFB0000
 #define DBGERR_PORT_RANGE     0xFC0000
 #define DBG_STACK_SIZE        0x1000
 #define DBG_STACK_MASK        (DBG_STACK_SIZE-1)
+#define DBG_ADDR_SIZE         0x1000000
+#define DBG_PORT_SIZE         0x10000
 #define SIZEOF_DBG_BUFFER     0x1000
 
 typedef struct {
@@ -110,11 +114,11 @@ typedef struct {
     uint64_t cpuBaseCycles;
     uint64_t cpuHaltCycles;
     int64_t totalCycles;
-    bool step, tempMode;
-    uint32_t tempAddr;
+    bool step, stepOver;
+    uint32_t tempExec, stepOut;
 
-    uint32_t stackTop, stackBot, stepOut;
-    debug_stack_entry_t stack[DBG_STACK_SIZE];
+    uint32_t stackIndex, stackSize;
+    debug_stack_entry_t *stack;
 
     char buffer[SIZEOF_DBG_BUFFER];
     char bufferErr[SIZEOF_DBG_BUFFER];
