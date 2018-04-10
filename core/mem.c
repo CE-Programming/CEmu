@@ -448,8 +448,21 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
 
     addr &= 0xFFFFFF;
 #ifdef DEBUG_SUPPORT
-    if (!fetch && debug.addr[addr] & DBG_MASK_READ) {
-        debug_open(DBG_WATCHPOINT_READ, addr);
+    if (!fetch) {
+        debug_stack_entry_t *entry = &debug.stack[debug.stackBot];
+        if (entry->mode == cpu.L) {
+            if (entry->stack - addr <= 2 + entry->mode) {
+                entry->popped = true;
+            }
+            if (entry->retAddr + entry->range == addr) {
+                if (!++entry->range) {
+                    --entry->range;
+                }
+            }
+        }
+        if (debug.addr[addr] & DBG_MASK_READ) {
+            debug_open(DBG_WATCHPOINT_READ, addr);
+        }
     }
 #endif
     switch((addr >> 20) & 0xF) {

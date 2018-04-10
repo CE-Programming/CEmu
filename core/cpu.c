@@ -51,7 +51,7 @@ static void cpu_inst_start(void) {
 #endif
 }
 
-static uint32_t cpu_address_mode(uint32_t address, bool mode) {
+uint32_t cpu_address_mode(uint32_t address, bool mode) {
     if (mode) {
         return address & 0xFFFFFF;
     }
@@ -391,17 +391,19 @@ static uint32_t cpu_dec_bc_partial_mode() {
 }
 
 static void cpu_call(uint32_t address, bool mixed) {
-    eZ80registers_t *r = &cpu.registers;
+#ifdef DEBUG_SUPPORT
+    debug_record_call(cpu.ADL, cpu.registers.PC);
+#endif
     if (mixed) {
         bool stack = cpu.IL || (cpu.L && !cpu.ADL);
         if (cpu.ADL) {
-            cpu_push_byte_mode(r->PCU, true);
+            cpu_push_byte_mode(cpu.registers.PCU, true);
         }
-        cpu_push_byte_mode(r->PCH, stack);
-        cpu_push_byte_mode(r->PCL, stack);
+        cpu_push_byte_mode(cpu.registers.PCH, stack);
+        cpu_push_byte_mode(cpu.registers.PCL, stack);
         cpu_push_byte_mode((cpu.MADL << 1) | cpu.ADL, true);
     } else {
-        cpu_push_word(r->PC);
+        cpu_push_word(cpu.registers.PC);
     }
     cpu_prefetch(address, cpu.IL);
 }
@@ -419,9 +421,6 @@ static void cpu_trap(void) {
     cpu_trap_rewind(1);
 }
 
-static void cpu_check_step_out(void) {
-}
-
 static void cpu_return(void) {
     uint32_t address;
     bool mode = cpu.ADL;
@@ -437,7 +436,9 @@ static void cpu_return(void) {
         address = cpu_pop_word();
     }
     cpu_prefetch(address, mode);
-    cpu_check_step_out();
+#ifdef DEBUG_SUPPORT
+    debug_record_ret(mode, address);
+#endif
 }
 
 static void cpu_execute_alu(int i, uint8_t v) {
@@ -861,11 +862,11 @@ void cpu_execute(void) {
             cpu.L = cpu.IL = cpu.ADL || cpu.MADL;
             cpu.IEF1 = cpu.halted = cpu.inBlock = false;
             if (cpu.NMI) {
-                cpu.NMI = 0;
+                cpu.NMI = false;
                 cpu_call(0x66, cpu.MADL);
                 cpu_restore_next();
             } else {
-                cpu.IEF2 = 0;
+                cpu.IEF2 = false;
                 if (cpu.IM == 2) {
                     cpu_call(0x38, cpu.MADL);
                 } else {
@@ -877,6 +878,7 @@ void cpu_execute(void) {
                     }
                 }
             }
+            cpu_inst_start();
         } else if (cpu.halted) {
             cpu_halt();
         }
@@ -1141,8 +1143,10 @@ void cpu_execute(void) {
                                             break;
                                         case 2: /* JP (rr) */
                                             cpu_prefetch_discard();
-                                            cpu_prefetch(cpu_read_index(), cpu.L);
-                                            cpu_check_step_out();
+                                            cpu_prefetch(w = cpu_read_index(), cpu.L);
+#ifdef DEBUG_SUPPORT
+                                            debug_record_ret(cpu.L, w);
+#endif
                                             break;
                                         case 3: /* LD SP, HL */
                                             cpu_write_sp(cpu_read_index());

@@ -56,6 +56,8 @@ enum {
 void debug_init(void);                               /* call before starting emulation */
 void debug_free(void);                               /* call after emulation end */
 void debug_set_pc(uint32_t addr);                    /* when in gui debug set program counter */
+void debug_record_call(bool stack, uint32_t retAddr);
+void debug_record_ret(bool stack, uint32_t retAddr);
 void debug_watch(uint32_t addr, int mask, bool set); /* set a breakpoint or a watchpoint */
 void debug_ports(uint16_t addr, int mask, bool set); /* set port monitor flags */
 void debug_flag(int mask, bool set);                 /* configure setup of debug core */
@@ -89,7 +91,17 @@ bool debug_is_open(void);                            /* returns the status of th
 #define DBG_PORT_RANGE        0xFFFF00
 #define DBGOUT_PORT_RANGE     0xFB0000
 #define DBGERR_PORT_RANGE     0xFC0000
+#define DBG_STACK_SIZE        0x1000
+#define DBG_STACK_MASK        (DBG_STACK_SIZE-1)
 #define SIZEOF_DBG_BUFFER     0x1000
+
+typedef struct {
+    bool mode : 1;
+    bool popped : 1;
+    uint32_t stack : 24;
+    uint32_t retAddr : 24;
+    uint8_t range : 8;
+} debug_stack_entry_t;
 
 typedef struct {
     uint32_t cpuNext;
@@ -98,13 +110,17 @@ typedef struct {
     uint64_t cpuBaseCycles;
     uint64_t cpuHaltCycles;
     int64_t totalCycles;
-    bool step;
-    bool tempMode;
+    bool step, tempMode;
     uint32_t tempAddr;
+
+    uint32_t stackTop, stackBot, stepOut;
+    debug_stack_entry_t stack[DBG_STACK_SIZE];
+
     char buffer[SIZEOF_DBG_BUFFER];
     char bufferErr[SIZEOF_DBG_BUFFER];
     uint32_t bufErrPos;
     uint32_t bufPos;
+
     uint8_t *addr;
     uint8_t *port;
     _Atomic(int) flags;

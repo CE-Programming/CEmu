@@ -89,6 +89,7 @@ typedef struct eZ80cpu {
 
 extern eZ80cpu_t cpu;
 
+uint32_t cpu_address_mode(uint32_t address, bool mode);
 void cpu_init(void);
 void cpu_reset(void);
 void cpu_flush(uint32_t, bool);
