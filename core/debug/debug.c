@@ -97,10 +97,12 @@ void debug_step(int mode, uint32_t addr) {
             debug.step = debug.stepOver = true;
             break;
         case DBG_STEP_OUT:
+            gui_debug_close();
             debug.stepOut = debug.stackIndex;
             break;
         case DBG_STEP_NEXT:
         case DBG_RUN_UNTIL:
+            gui_debug_close();
             debug.tempExec = addr;
             break;
     }
@@ -131,9 +133,13 @@ void debug_inst_fetch(void) {
 }
 
 void debug_inst_repeat(void) {
-    if (debug.step && !debug.stepOver) {
-        debug.step = false;
-        debug_open(DBG_STEP, cpu.registers.PC);
+    if (debug.step) {
+        if (debug.stepOver) {
+            gui_debug_close();
+        } else {
+            debug.step = false;
+            debug_open(DBG_STEP, cpu.registers.PC);
+        }
     }
 }
 
@@ -151,6 +157,7 @@ void debug_record_call(uint32_t retAddr, bool mode) {
         debug.stackSize++;
     }
     if (debug.stepOver) {
+        gui_debug_close();
         debug.step = debug.stepOver = false;
         debug.stepOut = index;
     }
