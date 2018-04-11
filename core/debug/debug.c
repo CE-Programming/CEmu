@@ -157,13 +157,12 @@ void debug_record_call(uint32_t retAddr, bool mode) {
 }
 
 void debug_record_ret(uint32_t retAddr, bool mode) {
-    uint32_t stack = cpu_address_mode(cpu.registers.stack[mode].hl, mode);
-    uint32_t index = debug.stackIndex;
-    uint32_t size = debug.stackSize;
+    uint32_t stack = cpu_address_mode(cpu.registers.stack[mode].hl, mode),
+        index = debug.stackIndex, size = debug.stackSize;
     debug_stack_entry_t *entry;
-    bool found = false, stepOut = false;
+    bool found = false, stepOut = false, stepOutMatch;
     while (size--) {
-        stepOut |= index == debug.stepOut;
+        stepOutMatch = index == debug.stepOut;
         entry = &debug.stack[index];
         index = (index - 1) & DBG_STACK_MASK;
         if (mode == entry->mode && (stack == entry->stack || entry->popped) &&
@@ -174,6 +173,7 @@ void debug_record_ret(uint32_t retAddr, bool mode) {
         } else if (found) {
             break;
         }
+        stepOut |= stepOutMatch;
     }
     if (found && stepOut) {
         debug.step = true;
