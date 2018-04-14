@@ -184,8 +184,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonReceiveFile, &QPushButton::clicked, this, &MainWindow::varSaveSelected);
     connect(ui->buttonReceiveFiles, &QPushButton::clicked, this, &MainWindow::varSaveSelectedFiles);
     connect(ui->buttonResendFiles, &QPushButton::clicked, this, &MainWindow::varResend);
-    connect(ui->buttonRmAllVars, &QPushButton::clicked, this, &MainWindow::recentRemoveAll);
-    connect(ui->buttonRmSelectedVars, &QPushButton::clicked, this, &MainWindow::recentRemoveSelected);
     connect(ui->buttonDeselectVars, &QPushButton::clicked, this, &MainWindow::recentDeselectAll);
     connect(ui->buttonSelectVars, &QPushButton::clicked, this, &MainWindow::recentSelectAll);
     connect(ui->varLoadedView, &QWidget::customContextMenuRequested, this, &MainWindow::contextRecent);
@@ -1815,18 +1813,6 @@ void MainWindow::contextRecent(const QPoint& posa) {
 
     int check = ui->varLoadedView->item(row, RECENT_PATH)->checkState();
     ui->varLoadedView->item(row, RECENT_SELECT)->setCheckState(check == Qt::Checked ? Qt::Unchecked : Qt::Checked);
-}
-
-void MainWindow::recentRemoveAll() {
-    ui->varLoadedView->setRowCount(0);
-}
-
-void MainWindow::recentRemoveSelected() {
-    for (int row = ui->varLoadedView->rowCount() - 1; row >= 0; row--) {
-        if (ui->varLoadedView->item(row, RECENT_SELECT)->checkState() == Qt::Checked) {
-            ui->varLoadedView->removeRow(row);
-        }
-    }
 }
 
 void MainWindow::recentDeselectAll() {

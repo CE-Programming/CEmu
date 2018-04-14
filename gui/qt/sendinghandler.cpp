@@ -69,6 +69,15 @@ void SendingHandler::resendPressed() {
     sendFiles(files, LINK_FILE);
 }
 
+void SendingHandler::removeRow() {
+    for (int row = 0; row < m_table->rowCount(); row++){
+        if (sender() == m_table->cellWidget(row, RECENT_REMOVE)) {
+            m_table->removeRow(row);
+            break;
+        }
+    }
+}
+
 bool SendingHandler::dragOccured(QDragEnterEvent *e) {
     if (guiSend || guiReceive || guiDebug) {
         e->ignore();
@@ -154,11 +163,16 @@ void SendingHandler::sentFile(const QString &file, int ok) {
 
 
 void SendingHandler::addFile(QString &file, bool select) {
+    QIcon removeIcon(QPixmap(QStringLiteral(":/icons/resources/icons/exit.png")));
     int rows = m_table->rowCount();
+
+    QToolButton *btnRemove = new QToolButton();
+    btnRemove->setIcon(removeIcon);
 
     m_table->setRowCount(rows + 1);
     QTableWidgetItem *path = new QTableWidgetItem(file);
     QTableWidgetItem *resend = new QTableWidgetItem();
+    QTableWidgetItem *remove = new QTableWidgetItem();
     QTableWidgetItem *selected = new QTableWidgetItem();
 
     selected->setFlags(selected->flags() & ~Qt::ItemIsEditable);
@@ -168,11 +182,14 @@ void SendingHandler::addFile(QString &file, bool select) {
     QToolButton *btnResend = new QToolButton();
     btnResend->setIcon(m_sendIcon);
     connect(btnResend, &QToolButton::clicked, this, &SendingHandler::resendPressed);
+    connect(btnRemove, &QToolButton::clicked, this, &SendingHandler::removeRow);
 
     m_table->setItem(rows, RECENT_SELECT, selected);
     m_table->setItem(rows, RECENT_RESEND, resend);
+    m_table->setItem(rows, RECENT_REMOVE, remove);
     m_table->setItem(rows, RECENT_PATH, path);
     m_table->setCellWidget(rows, RECENT_RESEND, btnResend);
+    m_table->setCellWidget(rows, RECENT_REMOVE, btnRemove);
 
     selected->setCheckState(select ? Qt::Checked : Qt::Unchecked);
 }

@@ -29,6 +29,7 @@ public:
 public slots:
     void sentFile(const QString &file, int ok);
     void resendPressed();
+    void removeRow();
 
 signals:
     void send(const QStringList &fileNames, unsigned int location);
@@ -40,7 +41,8 @@ private:
     enum recentIndex {
         RECENT_SELECT=0,
         RECENT_RESEND,
-        RECENT_PATH,
+        RECENT_REMOVE,
+        RECENT_PATH
     };
 
     QProgressBar *m_progressBar;

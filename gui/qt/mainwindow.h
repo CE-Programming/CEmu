@@ -151,7 +151,8 @@ private:
     enum {
         RECENT_SELECT,
         RECENT_LOAD,
-        RECENT_PATH,
+        RECENT_REMOVE,
+        RECENT_PATH
     };
 
     enum {
@@ -417,8 +418,6 @@ private:
     void varToggle();
 
     // recent
-    void recentRemoveAll();
-    void recentRemoveSelected();
     void recentDeselectAll();
     void recentSelectAll();
     void recentLoadInfo();

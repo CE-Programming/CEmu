@@ -6608,6 +6608,11 @@
              </column>
              <column>
               <property name="text">
+               <string>Remove</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
                <string>Path</string>
               </property>
              </column>
@@ -6652,7 +6657,7 @@
                   </sizepolicy>
                  </property>
                  <property name="text">
-                  <string>Resend selected</string>
+                  <string>Resend checked</string>
                  </property>
                  <property name="icon">
                   <iconset resource="resources.qrc">
@@ -6710,27 +6715,6 @@
                    <property name="icon">
                     <iconset resource="resources.qrc">
                      <normaloff>:/icons/resources/icons/minus.png</normaloff>:/icons/resources/icons/minus.png</iconset>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <layout class="QVBoxLayout" name="verticalLayout_27">
-                 <property name="rightMargin">
-                  <number>0</number>
-                 </property>
-                 <item>
-                  <widget class="QPushButton" name="buttonRmSelectedVars">
-                   <property name="text">
-                    <string>Remove selected</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="buttonRmAllVars">
-                   <property name="text">
-                    <string>Remove all</string>
                    </property>
                   </widget>
                  </item>
@@ -9897,9 +9881,7 @@ QPushButton:pressed {
   <tabstop>buttonReceiveFiles</tabstop>
   <tabstop>buttonSelectVars</tabstop>
   <tabstop>opView</tabstop>
-  <tabstop>buttonRmSelectedVars</tabstop>
   <tabstop>checkFocus</tabstop>
-  <tabstop>buttonRmAllVars</tabstop>
   <tabstop>textSize</tabstop>
   <tabstop>pcregView</tabstop>
   <tabstop>mbregView</tabstop>
