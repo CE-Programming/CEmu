@@ -451,7 +451,7 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
     if (!fetch) {
         debug_stack_entry_t *entry = &debug.stack[debug.stackIndex];
         if (entry->mode == cpu.L) {
-            if (entry->stack - addr <= 2 + entry->mode) {
+            if (entry->stack - addr <= 2 + (uint32_t)entry->mode) {
                 entry->popped = true;
             }
             if (entry->retAddr + entry->range == addr) {

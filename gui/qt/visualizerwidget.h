@@ -18,6 +18,7 @@ public:
     ~VisualizerWidget();
     QString getConfig();
     void translate();
+    void forceUpdate();
 
 signals:
     void configChanged();

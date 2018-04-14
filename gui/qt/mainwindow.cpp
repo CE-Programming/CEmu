@@ -2042,6 +2042,17 @@ void MainWindow::resetEmu() {
     emu.reset();
 }
 
+void MainWindow::loadedEmu() {
+    ui->lcd->setMain();
+    setCalcSkinTopFromType();
+    setKeypadColor(m_config->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
+    for (const auto &dock : findChildren<DockWidget*>()) {
+        if (dock->windowTitle() == TXT_VISUALIZER_DOCK) {
+            static_cast<VisualizerWidget*>(dock->widget())->forceUpdate();
+        }
+    }
+}
+
 int MainWindow::loadEmu(bool image) {
     guiEmuValid = false;
 
@@ -2060,17 +2071,13 @@ int MainWindow::loadEmu(bool image) {
 
         switch (success) {
             case EMU_LOAD_OKAY:
-                ui->lcd->setMain();
-                setCalcSkinTopFromType();
-                setKeypadColor(m_config->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
+                loadedEmu();
                 done = true;
                 break;
             case EMU_LOAD_NOT_A_CE:
                 if (QMessageBox::Yes == QMessageBox::question(this, MSG_WARNING, tr("Image does not appear to be from a CE. Do you want to attempt to load it anyway? "
                                                               "This may cause instability."), QMessageBox::Yes|QMessageBox::No)) {
-                    ui->lcd->setMain();
-                    setCalcSkinTopFromType();
-                    setKeypadColor(m_config->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
+                    loadedEmu();
                     success = EMU_LOAD_OKAY;
                 }
                 done = true;

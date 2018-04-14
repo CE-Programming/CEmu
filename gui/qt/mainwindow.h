@@ -472,6 +472,7 @@ private:
 
     // resets and loads
     int loadEmu(bool image);
+    void loadedEmu();
     void resetEmu();
     void resetCEmu();
     void resetGui();

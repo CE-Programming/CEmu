@@ -193,6 +193,10 @@ void VisualizerWidget::setDefaultView() {
     viewToString();
 }
 
+void VisualizerWidget::forceUpdate() {
+    stringToView();
+}
+
 void VisualizerWidget::viewToString() {
     QString bpp;
 
