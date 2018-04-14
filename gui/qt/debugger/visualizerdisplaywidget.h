@@ -5,12 +5,12 @@
 #include <QtWidgets/QWidget>
 #include <QtGui/QClipboard>
 
-class MemoryVisualizerWidget : public QWidget {
+class VisualizerDisplayWidget : public QWidget {
   Q_OBJECT
 
 public:
-    explicit MemoryVisualizerWidget(QWidget *p = Q_NULLPTR);
-    ~MemoryVisualizerWidget();
+    explicit VisualizerDisplayWidget(QWidget *p = Q_NULLPTR);
+    ~VisualizerDisplayWidget();
     void setRefreshRate(int rate);
     void setConfig(uint32_t h, uint32_t w, uint32_t u, uint32_t c, uint32_t *d, uint32_t *e);
 
@@ -19,7 +19,7 @@ protected:
 
 private slots:
     void draw();
-    void contextMenu(const QPoint& posa);
+    void contextMenu(const QPoint &posa);
 
 private:
     QTimer *m_refreshTimer;

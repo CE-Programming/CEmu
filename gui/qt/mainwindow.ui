@@ -9435,7 +9435,7 @@ QPushButton:pressed {
     <string>Screen</string>
    </property>
    <property name="closable" stdset="0">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="expandable" stdset="0">
     <bool>false</bool>

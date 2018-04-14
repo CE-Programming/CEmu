@@ -1,4 +1,4 @@
-#include "memoryvisualizerwidget.h"
+#include "visualizerdisplaywidget.h"
 #include "keypad/qtkeypadbridge.h"
 #include "utils.h"
 #include "../../core/lcd.h"
@@ -8,21 +8,21 @@
 #include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
 
-MemoryVisualizerWidget::MemoryVisualizerWidget(QWidget *parent) : QWidget{parent} {
+VisualizerDisplayWidget::VisualizerDisplayWidget(QWidget *parent) : QWidget{parent} {
     m_refreshTimer = new QTimer(this);
     installEventFilter(keypadBridge);
 
     setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(this, &MemoryVisualizerWidget::customContextMenuRequested, this, &MemoryVisualizerWidget::contextMenu);
+    connect(this, &VisualizerDisplayWidget::customContextMenuRequested, this, &VisualizerDisplayWidget::contextMenu);
 
     m_image = QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGBX8888);
 }
 
-MemoryVisualizerWidget::~MemoryVisualizerWidget() {
+VisualizerDisplayWidget::~VisualizerDisplayWidget() {
     delete m_refreshTimer;
 }
 
-void MemoryVisualizerWidget::draw() {
+void VisualizerDisplayWidget::draw() {
     if (!guiEmuValid) {
         return;
     }
@@ -32,7 +32,7 @@ void MemoryVisualizerWidget::draw() {
     update();
 }
 
-void MemoryVisualizerWidget::paintEvent(QPaintEvent*) {
+void VisualizerDisplayWidget::paintEvent(QPaintEvent*) {
     if (!guiEmuValid) {
         return;
     }
@@ -44,7 +44,7 @@ void MemoryVisualizerWidget::paintEvent(QPaintEvent*) {
     c.drawImage(cw, m_image);
 }
 
-void MemoryVisualizerWidget::setRefreshRate(int rate) {
+void VisualizerDisplayWidget::setRefreshRate(int rate) {
     if (!rate) {
         return;
     }
@@ -55,7 +55,7 @@ void MemoryVisualizerWidget::setRefreshRate(int rate) {
     m_refresh = rate;
 }
 
-void MemoryVisualizerWidget::setConfig(uint32_t h, uint32_t w, uint32_t u, uint32_t c, uint32_t *d, uint32_t *e) {
+void VisualizerDisplayWidget::setConfig(uint32_t h, uint32_t w, uint32_t u, uint32_t c, uint32_t *d, uint32_t *e) {
     m_height = h;
     m_width = w;
     m_upbase = u;
@@ -66,7 +66,7 @@ void MemoryVisualizerWidget::setConfig(uint32_t h, uint32_t w, uint32_t u, uint3
     m_image = QImage(m_width, m_height, QImage::Format_RGBX8888);
 }
 
-void MemoryVisualizerWidget::contextMenu(const QPoint& posa) {
+void VisualizerDisplayWidget::contextMenu(const QPoint& posa) {
     QString coord = tr("Coordinate: ");
     QString copy_addr = tr("Copy Address");
 
@@ -86,7 +86,7 @@ void MemoryVisualizerWidget::contextMenu(const QPoint& posa) {
     menu.addSeparator();
     menu.addAction(copy_addr);
 
-    QAction* item = menu.exec(mapToGlobal(posa));
+    QAction *item = menu.exec(mapToGlobal(posa));
     if (item) {
         if (item->text() == copy_addr) {
             QClipboard *clipboard = QApplication::clipboard();

@@ -160,14 +160,16 @@ int main(int argc, char *argv[]) {
 
     int ret = 0;
     MainWindow EmuWin(opts);
+
     if (!EmuWin.isInitialized()) {
-        return 0;
+        return ret;
     }
+
     if (!EmuWin.isResetAll()) {
-        EmuWin.show();
         EmuWin.setup();
-        // Only execute when we have a window open - otherwise this will
-        // hang forever
+        EmuWin.show();
+        EmuWin.restore();
+
         ret = app.exec();
     }
 

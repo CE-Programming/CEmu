@@ -2,7 +2,7 @@
 #include "ui_mainwindow.h"
 #include "utils.h"
 #include "sendinghandler.h"
-#include "memoryvisualizer.h"
+#include "visualizerwidget.h"
 #include "dockwidget.h"
 #include "searchwidget.h"
 #include "basiccodeviewerwindow.h"
@@ -342,8 +342,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     m_actionAddMemory = new QAction(MSG_ADD_MEMORY, this);
     connect(m_actionAddMemory, &QAction::triggered, [this]{ addMemDock(randomString(20), 8, true); });
 
-    m_actionAddMemoryVisualizer = new QAction(MSG_ADD_MEMORY_VISUALIZER, this);
-    connect(m_actionAddMemoryVisualizer, &QAction::triggered, this, &MainWindow::addMemVisualizer);
+    m_actionAddVisualizer = new QAction(MSG_ADD_VISUALIZER, this);
+    connect(m_actionAddVisualizer, &QAction::triggered, [this]{ addVisualizerDock(randomString(20), QString()); });
 
     // shortcut connections
     m_shortcutStepIn = new QShortcut(QKeySequence(Qt::Key_F6), this);
@@ -428,7 +428,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 #endif
 
     iconsLoad();
-    memLoadDocks();
     memLoadState();
     optLoadFiles(opts);
     setFrameskip(m_config->value(SETTING_CAPTURE_FRAMESKIP, 1).toInt());
@@ -532,11 +531,12 @@ void MainWindow::translateExtras(int init) {
     MSG_INFORMATION = tr("Information");
     MSG_WARNING = tr("Warning");
     MSG_ERROR = tr("Error");
-    MSG_ADD_MEMORY = tr("Add Memory view");
-    MSG_ADD_MEMORY_VISUALIZER = tr("Add Memory visualizer (live)");
+    MSG_ADD_MEMORY = tr("Add memory view");
+    MSG_ADD_VISUALIZER = tr("Add memory visualizer");
     MSG_EDIT_UI = tr("Enable UI edit mode");
 
-    QString __TXT_MEM_DOCK = tr("Memory view");
+    QString __TXT_MEM_DOCK = tr("Memory View");
+    QString __TXT_VISUALIZER_DOCK = tr("Memory Visualizer");
 
     QString __TXT_GOTO = tr("Goto");
     QString __TXT_SEARCH = tr("Search");
@@ -573,6 +573,10 @@ void MainWindow::translateExtras(int init) {
                 buttons.at(1)->setText(__TXT_SEARCH);
                 tools.at(0)->setToolTip(__TXT_ASCII);
                 tools.at(1)->setToolTip(__TXT_SYNC);
+            }
+            if (dock->windowTitle() == TXT_VISUALIZER_DOCK) {
+                dock->setWindowTitle(__TXT_VISUALIZER_DOCK);
+                static_cast<VisualizerWidget*>(dock->widget())->translate();
             }
             if (dock->windowTitle() == TXT_CONSOLE) {
                 dock->setWindowTitle(__TXT_CONSOLE);
@@ -626,6 +630,7 @@ void MainWindow::translateExtras(int init) {
     }
 
     TXT_MEM_DOCK = __TXT_MEM_DOCK;
+    TXT_VISUALIZER_DOCK = __TXT_VISUALIZER_DOCK;
 
     TXT_CONSOLE = __TXT_CONSOLE;
     TXT_SETTINGS = __TXT_SETTINGS;
@@ -652,7 +657,7 @@ void MainWindow::translateExtras(int init) {
     if (init == TRANSLATE_UPDATE) {
         m_actionToggleUI->setText(MSG_EDIT_UI);
         m_actionAddMemory->setText(MSG_ADD_MEMORY);
-        m_actionAddMemoryVisualizer->setText(MSG_ADD_MEMORY_VISUALIZER);
+        m_actionAddVisualizer->setText(MSG_ADD_VISUALIZER);
         m_menuDebug->setTitle(TITLE_DEBUG);
         m_menuDocks->setTitle(TITLE_DOCKS);
 
@@ -760,6 +765,19 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent *event) {
     QMainWindow::mouseDoubleClickEvent(event);
 }
 
+void MainWindow::restore() {
+    const QByteArray geometry = m_config->value(SETTING_WINDOW_GEOMETRY, QByteArray()).toByteArray();
+    if (geometry.isEmpty()) {
+        QStyleOptionTitleBar so;
+        so.titleBarFlags = Qt::Window;
+        resize(minimumWidth(), minimumHeight());
+        move(0, style()->pixelMetric(QStyle::PM_TitleBarHeight, &so, this));
+    } else {
+        restoreGeometry(geometry);
+        restoreState(m_config->value(SETTING_WINDOW_STATE).toByteArray());
+    }
+}
+
 void MainWindow::setup() {
     if (!m_initPassed) {
         QFile(m_pathConfig).remove();
@@ -770,12 +788,14 @@ void MainWindow::setup() {
     m_uiEditMode = m_config->value(SETTING_UI_EDIT_MODE, true).toBool();
 
     const QByteArray geometry = m_config->value(SETTING_WINDOW_GEOMETRY, QByteArray()).toByteArray();
-    setUIBoundaries(!m_uiEditMode);
-    setUIDocks(geometry.isEmpty());
     setUIEditMode(m_uiEditMode);
+    setUIDocks(geometry.isEmpty());
 
     if (geometry.isEmpty()) {
-        setGeometry(0, 0, minimumWidth(), minimumHeight());
+        QStyleOptionTitleBar so;
+        so.titleBarFlags = Qt::Window;
+        resize(minimumWidth(), minimumHeight());
+        move(0, style()->pixelMetric(QStyle::PM_TitleBarHeight, &so, this));
     } else {
         restoreGeometry(geometry);
         restoreState(m_config->value(SETTING_WINDOW_STATE).toByteArray());
@@ -2257,12 +2277,6 @@ void MainWindow::contextVars(const QPoint& posa) {
             varLaunch(&var);
         }
     }
-}
-
-void MainWindow::addMemVisualizer() {
-    MemoryVisualizer *p = new MemoryVisualizer(this);
-    p->setAttribute(Qt::WA_DeleteOnClose);
-    p->show();
 }
 
 void MainWindow::contextConsole(const QPoint &posa) {

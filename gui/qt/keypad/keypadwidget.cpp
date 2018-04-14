@@ -277,6 +277,7 @@ void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
 
     repaint();
 }
+
 KeypadWidget::~KeypadWidget() {
     for (uint8_t row = 0; row != sRows; ++row) {
         for (uint8_t col = 0; col != sCols; ++col) {

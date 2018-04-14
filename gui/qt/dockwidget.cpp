@@ -31,7 +31,6 @@ DockWidget::DockWidget(QTabWidget *tabs, QWidget *parent) : DockWidget{tabs->tab
 }
 
 void DockWidget::setState(bool edit) {
-    m_showTitle = edit;
     if (edit) {
         if (isClosable()) {
             setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);

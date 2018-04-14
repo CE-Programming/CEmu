@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "dockwidget.h"
 #include "utils.h"
+#include "visualizerwidget.h"
 #include "tivarslib/TIVarType.h"
 #include "tivarslib/TypeHandlers/TypeHandlers.h"
 #include "../../core/asic.h"
@@ -2317,6 +2318,49 @@ void MainWindow::debugForce() {
     }
 }
 
+void MainWindow::addVisualizerDock(const QString &magic, const QString &config) {
+    if (m_docksVisualizer.contains(magic)) {
+        return;
+    }
+
+    m_docksVisualizer.append(magic);
+    m_docksVisualizerConfig.append(config);
+
+    DockWidget *dw = new DockWidget(TXT_VISUALIZER_DOCK, this);
+
+    if (m_setup) {
+        dw->setFloating(true);
+        dw->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, dw->minimumSize(), qApp->desktop()->availableGeometry()));
+    }
+
+    VisualizerWidget *widget = new VisualizerWidget(this, config);
+
+    connect(widget, &VisualizerWidget::configChanged, [this, widget, magic]{
+        int index;
+        if ((index = m_docksVisualizer.indexOf(magic)) != -1) {
+            m_docksVisualizerConfig[index] = widget->getConfig();
+        }
+    });
+    connect(dw, &DockWidget::closed, [this, magic]{
+        int index;
+        if ((index = m_docksVisualizer.indexOf(magic)) != -1) {
+            m_docksVisualizer.removeAt(index);
+            m_docksVisualizerConfig.removeAt(index);
+        }
+    });
+
+    dw->setState(m_uiEditMode);
+    addDockWidget(Qt::RightDockWidgetArea, dw);
+    dw->setObjectName(magic);
+    dw->setWidget(widget);
+
+    if (m_setup) {
+        dw->show();
+        dw->activateWindow();
+        dw->raise();
+    }
+}
+
 void MainWindow::addMemDock(const QString &magic, int bytes, bool ascii) {
     if (m_docksMemory.contains(magic)) {
         return;
@@ -2325,8 +2369,12 @@ void MainWindow::addMemDock(const QString &magic, int bytes, bool ascii) {
     DockWidget *dw;
     dw = new DockWidget(TXT_MEM_DOCK, this);
     dw->setObjectName(magic);
-    dw->setFloating(true);
-    dw->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, dw->minimumSize(), qApp->desktop()->availableGeometry()));
+    dw->setState(m_uiEditMode);
+
+    if (m_setup) {
+        dw->setFloating(true);
+        dw->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, dw->minimumSize(), qApp->desktop()->availableGeometry()));
+    }
 
     m_docksMemory.append(magic);
     m_docksMemoryBytes.append(bytes);
@@ -2379,6 +2427,15 @@ void MainWindow::addMemDock(const QString &magic, int bytes, bool ascii) {
             m_docksMemoryBytes[index] = val;
         }
     });
+    connect(edit, &HexWidget::focused, [this, edit]{ m_memWidget = edit; });
+    connect(dw, &DockWidget::closed, [this, magic]{
+        int index;
+        if ((index = m_docksMemory.indexOf(magic)) != -1) {
+            m_docksMemory.removeAt(index);
+            m_docksMemoryBytes.removeAt(index);
+            m_docksMemoryAscii.removeAt(index);
+        }
+    });
 
     spin->setMaximum(999);
     spin->setMinimum(1);
@@ -2400,19 +2457,12 @@ void MainWindow::addMemDock(const QString &magic, int bytes, bool ascii) {
     }
 
     addDockWidget(Qt::RightDockWidgetArea, dw);
-    dw->setState(m_uiEditMode);
-    dw->show();
-    dw->activateWindow();
-    dw->raise();
-    connect(edit, &HexWidget::focused, [this, edit]{ m_memWidget = edit; });
-    connect(dw, &DockWidget::closed, [this, magic]{
-        int index;
-        if ((index = m_docksMemory.indexOf(magic)) != -1) {
-            m_docksMemory.removeAt(index);
-            m_docksMemoryBytes.removeAt(index);
-            m_docksMemoryAscii.removeAt(index);
-        }
-    });
+
+    if (m_setup) {
+        dw->show();
+        dw->activateWindow();
+        dw->raise();
+    }
 }
 
 void MainWindow::setCalcId() {

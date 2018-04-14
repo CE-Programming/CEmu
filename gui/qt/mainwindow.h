@@ -53,6 +53,7 @@ public:
     explicit MainWindow(CEmuOpts &opts, QWidget *p = Q_NULLPTR);
     ~MainWindow();
     void setup();
+    void restore();
     bool isInitialized();
     bool isReload();
     bool isResetAll();
@@ -440,7 +441,8 @@ private:
     void ramGotoPressed();
     void ramSyncPressed();
     void memUpdate();
-    void memLoadDocks();
+    void setMemDocks();
+    void setVisualizerDocks();
     void memLoadState();
     void memSync(HexWidget *edit);
     void memUpdateEdit(HexWidget *edit, bool force = false);
@@ -450,8 +452,8 @@ private:
     void memSyncEdit(HexWidget *edit);
     void memAsciiToggle(HexWidget *edit);
     void memDocksUpdate();
-    void addMemDock(const QString &title, int bytes, bool ascii);
-    void addMemVisualizer();
+    void addMemDock(const QString &magic, int bytes, bool ascii);
+    void addVisualizerDock(const QString &magic, const QString &config);
 
     // versions
     void setVersion();
@@ -558,13 +560,13 @@ private:
 
     QAction *m_actionToggleUI;
     QAction *m_actionAddMemory;
-    QAction *m_actionAddMemoryVisualizer;
+    QAction *m_actionAddVisualizer;
 
     QIcon m_iconRun, m_iconStop;
     QIcon m_iconSave, m_iconLoad;
     QIcon m_iconEdit, m_iconRemove;
     QIcon m_iconSearch, m_iconGoto;
-    QIcon m_iconSync, m_iconAddMem, m_iconAddMemViz;
+    QIcon m_iconSync, m_iconAddMem, m_iconLcd;
     QIcon m_iconAscii, m_iconUiEdit;
     QTextCharFormat m_consoleFormat;
 
@@ -601,6 +603,8 @@ private:
 
     QProgressBar *m_progressBar;
     QStringList m_docksMemory;
+    QStringList m_docksVisualizer;
+    QStringList m_docksVisualizerConfig;
     QList<int> m_docksMemoryBytes;
     QList<bool> m_docksMemoryAscii;
     QSettings *m_config = Q_NULLPTR;
@@ -648,6 +652,8 @@ private:
     static const QString SETTING_WINDOW_MEMORY_DOCKS;
     static const QString SETTING_WINDOW_MEMORY_DOCK_BYTES;
     static const QString SETTING_WINDOW_MEMORY_DOCK_ASCII;
+    static const QString SETTING_WINDOW_VISUALIZER_DOCKS;
+    static const QString SETTING_WINDOW_VISUALIZER_CONFIG;
     static const QString SETTING_CAPTURE_FRAMESKIP;
     static const QString SETTING_CAPTURE_OPTIMIZE;
     static const QString SETTING_SLOT_NAMES;
@@ -689,6 +695,7 @@ private:
     QString TITLE_DOCKS;
 
     QString TXT_MEM_DOCK;
+    QString TXT_VISUALIZER_DOCK;
 
     QString TXT_CONSOLE;
     QString TXT_SETTINGS;
@@ -712,7 +719,7 @@ private:
     QString MSG_WARNING;
     QString MSG_ERROR;
     QString MSG_ADD_MEMORY;
-    QString MSG_ADD_MEMORY_VISUALIZER;
+    QString MSG_ADD_VISUALIZER;
     QString MSG_EDIT_UI;
 
     QTableWidget *m_breakpoints = Q_NULLPTR;

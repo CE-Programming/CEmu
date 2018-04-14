@@ -32,7 +32,6 @@ protected slots:
     void updateExpandability(const QList<DockWidget *> &tabs);
 
 private:
-    bool m_showTitle = true;
     QWidget *m_titleHide;
     DockWidget *m_tabs;
     bool m_closable : 1, m_expandable : 1;

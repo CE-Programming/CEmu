@@ -189,16 +189,13 @@ SOURCES += \
     debugger.cpp \
     settings.cpp \
     keyhistory.cpp \
-    memoryvisualizer.cpp \
     capture/animated-png.c \
-    memoryedit.cpp \
     keypad/qtkeypadbridge.cpp \
     keypad/keymap.cpp \
     keypad/keypadwidget.cpp \
     keypad/rectkey.cpp \
     keypad/arrowkey.cpp \
     debugger/hexwidget.cpp \
-    debugger/memoryvisualizerwidget.cpp \
     debugger/disasm.cpp \
     tivarslib/tivarslib_utils.cpp \
     tivarslib/BinaryFile.cpp \
@@ -221,7 +218,10 @@ SOURCES += \
     tivarslib/TypeHandlers/TH_0x1E.cpp \
     tivarslib/TypeHandlers/TH_0x1F.cpp \
     tivarslib/TypeHandlers/TH_0x20.cpp \
-    tivarslib/TypeHandlers/TH_0x21.cpp
+    tivarslib/TypeHandlers/TH_0x21.cpp \
+    visualizerwidget.cpp \
+    debugger/visualizerdisplaywidget.cpp \
+    memorywidget.cpp
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
@@ -268,7 +268,6 @@ HEADERS  += \
     searchwidget.h \
     basiccodeviewerwindow.h \
     sendinghandler.h \
-    memoryvisualizer.h \
     keyhistory.h \
     keypad/qtkeypadbridge.h \
     keypad/keymap.h \
@@ -286,7 +285,6 @@ HEADERS  += \
     keypad/arrowkey.h \
     capture/animated-png.h \
     debugger/hexwidget.h \
-    debugger/memoryvisualizerwidget.h \
     debugger/disasm.h \
     tivarslib/tivarslib_utils.h \
     tivarslib/CommonTypes.h \
@@ -296,15 +294,16 @@ HEADERS  += \
     tivarslib/TIVarFile.h \
     tivarslib/TIVarType.h \
     tivarslib/TIVarTypes.h \
-    tivarslib/TypeHandlers/TypeHandlers.h
+    tivarslib/TypeHandlers/TypeHandlers.h \
+    visualizerwidget.h \
+    debugger/visualizerdisplaywidget.h
 
 FORMS    += \
     mainwindow.ui \
     romselection.ui \
     searchwidget.ui \
     basiccodeviewerwindow.ui \
-    keyhistory.ui \
-    memoryvisualizer.ui
+    keyhistory.ui
 
 RESOURCES += \
     resources.qrc

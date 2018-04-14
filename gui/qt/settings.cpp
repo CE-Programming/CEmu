@@ -59,6 +59,8 @@ const QString MainWindow::SETTING_WINDOW_STATUSBAR          = QStringLiteral("Wi
 const QString MainWindow::SETTING_WINDOW_MEMORY_DOCKS       = QStringLiteral("Window/memory_docks");
 const QString MainWindow::SETTING_WINDOW_MEMORY_DOCK_BYTES  = QStringLiteral("Window/memory_docks_bytes");
 const QString MainWindow::SETTING_WINDOW_MEMORY_DOCK_ASCII  = QStringLiteral("Window/memory_docks_ascii");
+const QString MainWindow::SETTING_WINDOW_VISUALIZER_DOCKS   = QStringLiteral("Window/visualizer_docks");
+const QString MainWindow::SETTING_WINDOW_VISUALIZER_CONFIG  = QStringLiteral("Window/visualizer_config");
 const QString MainWindow::SETTING_CAPTURE_FRAMESKIP         = QStringLiteral("Capture/frameskip");
 const QString MainWindow::SETTING_CAPTURE_OPTIMIZE          = QStringLiteral("Capture/optimize");
 const QString MainWindow::SETTING_SLOT_NAMES                = QStringLiteral("Slot/names");
@@ -177,11 +179,11 @@ void MainWindow::iconsLoad() {
     m_iconGoto.addPixmap(QPixmap(iconPath + QStringLiteral("goto.png")));
     m_iconSync.addPixmap(QPixmap(iconPath + QStringLiteral("refresh.png")));
     m_iconAddMem.addPixmap(QPixmap(iconPath + QStringLiteral("add_mem.png")));
-    m_iconAddMemViz.addPixmap(QPixmap(iconPath + QStringLiteral("lcd.png")));
+    m_iconLcd.addPixmap(QPixmap(iconPath + QStringLiteral("lcd.png")));
     m_iconUiEdit.addPixmap(QPixmap(iconPath + QStringLiteral("ui_edit.png")));
     m_iconAscii.addPixmap(QPixmap(iconPath + QStringLiteral("characters.png")));
     m_actionAddMemory->setIcon(m_iconAddMem);
-    m_actionAddMemoryVisualizer->setIcon(m_iconAddMemViz);
+    m_actionAddVisualizer->setIcon(m_iconLcd);
     m_actionToggleUI->setIcon(m_iconUiEdit);
 }
 
@@ -426,6 +428,10 @@ void MainWindow::setUIDocks(bool firstRun) {
         dock->setState(m_uiEditMode);
     }
 
+    // Add the screen action
+    QAction *action = ui->screenDock->toggleViewAction();
+    action->setIcon(m_iconLcd);
+
     // Convert the tabs into DockWidgets
     DockWidget *prev = Q_NULLPTR;
     while (ui->tabWidget->count()) {
@@ -436,7 +442,6 @@ void MainWindow::setUIDocks(bool firstRun) {
         action->setIcon(dw->windowIcon());
         m_menuDocks->addAction(action);
 
-        dw->setAllowedAreas(Qt::AllDockWidgetAreas);
         dw->setState(m_uiEditMode);
         addDockWidget(Qt::RightDockWidgetArea, dw);
         if (prev) {
@@ -446,6 +451,7 @@ void MainWindow::setUIDocks(bool firstRun) {
         prev = dw;
     }
 
+    m_menuDocks->addAction(action);
     m_menuDocks->addSeparator();
 
     m_menuDebug = new QMenu(TITLE_DEBUG, this);
@@ -460,7 +466,6 @@ void MainWindow::setUIDocks(bool firstRun) {
         action->setIcon(dw->windowIcon());
         m_menuDebug->addAction(action);
 
-        dw->setAllowedAreas(Qt::AllDockWidgetAreas);
         dw->setState(m_uiEditMode);
         addDockWidget(Qt::RightDockWidgetArea, dw);
         if (firstRun || !opts.useSettings) {
@@ -469,9 +474,13 @@ void MainWindow::setUIDocks(bool firstRun) {
         }
     }
 
+    // Load removable docks
+    setMemDocks();
+    setVisualizerDocks();
+
     m_menuDebug->addSeparator();
     m_menuDebug->addAction(m_actionAddMemory);
-    m_menuDebug->addAction(m_actionAddMemoryVisualizer);
+    m_menuDebug->addAction(m_actionAddVisualizer);
 
     m_menuDocks->addSeparator();
     m_menuDocks->addAction(m_actionToggleUI);
@@ -491,7 +500,7 @@ void MainWindow::setUIEditMode(bool mode) {
     m_config->setValue(SETTING_UI_EDIT_MODE, mode);
     m_actionToggleUI->setChecked(mode);
     m_actionAddMemory->setEnabled(mode);
-    m_actionAddMemoryVisualizer->setEnabled(true); /* this one can stay enabled */
+    m_actionAddVisualizer->setEnabled(true); /* this one can stay enabled */
     if (mode) {
         setDockOptions(QMainWindow::AnimatedDocks | QMainWindow::AllowNestedDocks | QMainWindow::AllowTabbedDocks
 #if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
@@ -503,16 +512,6 @@ void MainWindow::setUIEditMode(bool mode) {
     }
     setUIBoundaries(mode);
     setUIDockEditMode(mode);
-    if (m_setup) {
-        for (const auto &dock : findChildren<DockWidget*>()) {
-            if (dock->isFloating() && !dock->isHidden() && !m_uiEditMode) {
-                removeDockWidget(dock);
-                dock->show();
-                dock->activateWindow();
-                dock->raise();
-            }
-        }
-    }
 }
 
 void MainWindow::setThrottle(int mode) {
@@ -839,7 +838,7 @@ void MainWindow::recentLoadInfo() {
     }
 }
 
-void MainWindow::memLoadDocks() {
+void MainWindow::setMemDocks() {
     QStringList names = m_config->value(SETTING_WINDOW_MEMORY_DOCKS).toStringList();
     QList<int> bytes = m_config->value(SETTING_WINDOW_MEMORY_DOCK_BYTES).value<QList<int>>();
     QList<bool> ascii = m_config->value(SETTING_WINDOW_MEMORY_DOCK_ASCII).value<QList<bool>>();
@@ -850,6 +849,19 @@ void MainWindow::memLoadDocks() {
 
     for (int i = 0; i < names.length(); i++) {
         addMemDock(names.at(i), bytes.at(i), ascii.at(i));
+    }
+}
+
+void MainWindow::setVisualizerDocks() {
+    QStringList names = m_config->value(SETTING_WINDOW_VISUALIZER_DOCKS).toStringList();
+    QStringList configs = m_config->value(SETTING_WINDOW_VISUALIZER_CONFIG).toStringList();
+
+    if (names.length() != configs.length()) {
+        return;
+    }
+
+    for (int i = 0; i < names.length(); i++) {
+        addVisualizerDock(names.at(i), configs.at(i));
     }
 }
 
@@ -919,6 +931,8 @@ void MainWindow::saveSettings() {
         m_config->setValue(SETTING_WINDOW_MEMORY_DOCKS, m_docksMemory);
         m_config->setValue(SETTING_WINDOW_MEMORY_DOCK_BYTES, QVariant::fromValue(m_docksMemoryBytes));
         m_config->setValue(SETTING_WINDOW_MEMORY_DOCK_ASCII, QVariant::fromValue(m_docksMemoryAscii));
+        m_config->setValue(SETTING_WINDOW_VISUALIZER_DOCKS, m_docksVisualizer);
+        m_config->setValue(SETTING_WINDOW_VISUALIZER_CONFIG, m_docksVisualizerConfig);
 
         saveDebug();
         stateSaveInfo();
@@ -946,6 +960,8 @@ void MainWindow::guiExport() {
     window.setValue(SETTING_WINDOW_MEMORY_DOCKS, m_docksMemory);
     window.setValue(SETTING_WINDOW_MEMORY_DOCK_BYTES, QVariant::fromValue(m_docksMemoryBytes));
     window.setValue(SETTING_WINDOW_MEMORY_DOCK_ASCII, QVariant::fromValue(m_docksMemoryAscii));
+    window.setValue(SETTING_WINDOW_VISUALIZER_DOCKS, m_docksVisualizer);
+    window.setValue(SETTING_WINDOW_VISUALIZER_CONFIG, m_docksVisualizerConfig);
     window.setValue(SETTING_UI_EDIT_MODE, m_uiEditMode);
     window.setValue(SETTING_STATUS_INTERVAL, ui->statusInterval->value());
     window.sync();
@@ -967,6 +983,8 @@ void MainWindow::guiImport() {
     m_config->setValue(SETTING_WINDOW_MEMORY_DOCKS, window.value(SETTING_WINDOW_MEMORY_DOCKS));
     m_config->setValue(SETTING_WINDOW_MEMORY_DOCK_BYTES, window.value(SETTING_WINDOW_MEMORY_DOCK_BYTES));
     m_config->setValue(SETTING_WINDOW_MEMORY_DOCK_ASCII, window.value(SETTING_WINDOW_MEMORY_DOCK_ASCII));
+    m_config->setValue(SETTING_WINDOW_VISUALIZER_DOCKS, window.value(SETTING_WINDOW_VISUALIZER_DOCKS));
+    m_config->setValue(SETTING_WINDOW_VISUALIZER_CONFIG, window.value(SETTING_WINDOW_VISUALIZER_CONFIG));
     m_config->setValue(SETTING_UI_EDIT_MODE, window.value(SETTING_UI_EDIT_MODE));
     m_config->setValue(SETTING_WINDOW_MENUBAR, window.value(SETTING_WINDOW_MENUBAR));
     m_config->setValue(SETTING_WINDOW_STATUSBAR, window.value(SETTING_WINDOW_STATUSBAR));
