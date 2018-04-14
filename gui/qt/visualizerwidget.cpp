@@ -92,7 +92,7 @@ void VisualizerWidget::showPresets() {
             stringToView();
         } else
         if (item->text() == preset_4) {
-            m_config->setText("e30200,64x8,8bpp,bgr,500%");
+            m_config->setText("e30200,32x8,1555bpp,bgr,1000%");
             stringToView();
         }
     }
@@ -158,15 +158,15 @@ void VisualizerWidget::stringToView() {
         if (bpp_reg.exactMatch(str)) {
             str.chop(3);
             uint8_t bpp;
-            switch(str.toUInt()) {
+            switch (str.toUInt()) {
                 case 1: bpp = 0; break;
                 case 2: bpp = 1; break;
                 case 4: bpp = 2; break;
                 case 8: bpp = 3; break;
-                case 161555: bpp = 4; break;
-                case 24: bpp = 5; break;
-                case 16: bpp = 6; break;
-                case 12: bpp = 7; break;
+                case 161555: case 1555: bpp = 4; break;
+                case 24: case 888: bpp = 5; break;
+                case 16: case 565: bpp = 6; break;
+                case 12: case 444: bpp = 7; break;
                 default: bpp = 255; break;
             }
             if (bpp != 255) {
@@ -196,15 +196,15 @@ void VisualizerWidget::setDefaultView() {
 void VisualizerWidget::viewToString() {
     QString bpp;
 
-    switch((m_control >> 1) & 7) {
+    switch ((m_control >> 1) & 7) {
         case 0: bpp = QStringLiteral("1"); break;
         case 1: bpp = QStringLiteral("2"); break;
         case 2: bpp = QStringLiteral("4"); break;
         case 3: bpp = QStringLiteral("8"); break;
-        case 4: bpp = QStringLiteral("161555"); break;
-        case 5: bpp = QStringLiteral("24"); break;
-        case 6: bpp = QStringLiteral("16"); break;
-        case 7: bpp = QStringLiteral("12"); break;
+        case 4: bpp = QStringLiteral("1555"); break;
+        case 5: bpp = QStringLiteral("888"); break;
+        case 6: bpp = QStringLiteral("565"); break;
+        case 7: bpp = QStringLiteral("444"); break;
         default: break;
     }
 
