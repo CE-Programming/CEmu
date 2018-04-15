@@ -228,6 +228,14 @@ linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
 win32: LIBS += -lpsapi
 
+# This doesn't exist, but Qt Creator ignores that
+just_show_up_in_qt_creator {
+SOURCES +=  ../../tests/autotester/autotester_cli.cpp \
+    ../../core/os/os-emscripten.c \
+    ../../core/os/os-linux.c \
+    ../../core/os/os-win32.c
+}
+
 HEADERS  += \
     ../../tests/autotester/autotester.h \
     ../../core/asic.h \
