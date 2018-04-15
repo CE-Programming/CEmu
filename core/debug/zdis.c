@@ -56,10 +56,10 @@ enum arg {
   ARG_IYX,
   ARG__IXY,
   ARG__IXYO,
+  ARG__IXYO2,
   ARG_IXO,
   ARG_IYO,
   ARG_LAST,
-  ARG_FIRST_IMM = ARG_BYTE
 };
 static_assert(ARG_LAST <= MASK(6, 1), "Too many arguments");
 static const char args[][ARG_MAX_LEN] = {
@@ -67,7 +67,7 @@ static const char args[][ARG_MAX_LEN] = {
 #define ARG2(x,y) y,
 #include "arg.def"
 };
-#define ARG2PUT(x) ((enum zdis_put)((x) - ARG_FIRST_IMM + ZDIS_PUT_FIRST_IMM))
+#define ARG2PUT(x) ((enum zdis_put)((x) - ARG_BYTE + ZDIS_PUT_BYTE))
 
 #define I(m1,m2,s1,a1,s2,a2) {MNE_##m1|(MNE_##m2<<5&MASK(5, 3)),MNE_##m2>>3|ARG_##a1<<2,SEP_##s1|ARG_##a2<<1|SEP_##s2<<7},
 #define P(p) {p,0,0},
@@ -203,9 +203,13 @@ static const uint8_t ed_insts[1 << 8][3] = {
 #undef I
 #define I(m1,m2,s1,a1,s2,a2) (MNE_##m1|MNE_##m2<<5|ARG_##a1<<10|SEP_##s1<<16|ARG_##a2<<17|SEP_##s2<<23)
 
-static bool next(uint8_t *result, struct zdis_ctx *ctx) {
+static bool peek(uint8_t *res, struct zdis_ctx *ctx, int8_t off) {
+  int byte = ctx->zdis_read(ctx, ctx->zdis_end_addr + off);
+  return (*res = byte) == byte;
+}
+static bool next(uint8_t *res, struct zdis_ctx *ctx) {
   int byte = ctx->zdis_read(ctx, ctx->zdis_end_addr++);
-  return (*result = byte) == byte;
+  return (*res = byte) == byte;
 }
 
 static bool put(struct zdis_ctx *ctx, char c) {
@@ -224,12 +228,6 @@ static bool letters(struct zdis_ctx *ctx, const char *str, size_t len) {
       return false;
   return true;
 }
-static bool str(struct zdis_ctx *ctx, const char *str) {
-  while (*str)
-    if (!ctx->zdis_put(ctx, ZDIS_PUT_CHAR, *str++))
-      return false;
-  return true;
-}
 static bool mne(struct zdis_ctx *ctx, enum mne mne) {
   return letters(ctx, mnes[mne], MNE_MAX_LEN);
 }
@@ -240,11 +238,10 @@ static bool index(struct zdis_ctx *ctx, bool index) {
   return letter(ctx, 'I') && letter(ctx, 'X' + index);
 }
 static bool sep(struct zdis_ctx *ctx, bool sep, bool last, uint8_t extra, uint8_t *which) {
-  ctx->zdis_end_addr += last && extra & MASK(7, 1);
   return !sep || ((*which || !(extra & MASK(2, 1)) ||
 		   (put(ctx, '.') && suffix(ctx, extra & MASK(0, 1)) &&
 		    letter(ctx, 'i') && suffix(ctx, extra & MASK(1, 1)))) &&
-		  (last || str(ctx, ctx->zdis_separators[(*which)++])));
+		  (ctx->zdis_put(ctx, last ? ZDIS_PUT_END : ZDIS_PUT_MNE_SEP + (*which)++, 0)));
 }
 static bool arg(struct zdis_ctx *ctx, enum arg arg, uint8_t extra, uint8_t *which) {
   uint8_t a, b, c = 0;
@@ -280,7 +277,8 @@ static bool arg(struct zdis_ctx *ctx, enum arg arg, uint8_t extra, uint8_t *whic
     case ARG_IYX:
     case ARG__IXY:
     case ARG__IXYO:
-      return (arg < ARG__IXYO || next(&a, ctx)) &&
+    case ARG__IXYO2:
+      return (arg < ARG__IXYO || (arg == ARG__IXYO ? next(&a, ctx) : peek(&a, ctx, -2))) &&
 	(arg < ARG__IXY || put(ctx, '(')) &&
 	index(ctx, (extra >> 6 ^ (arg == ARG_IYX)) & MASK(0, 1)) &&
 	(arg < ARG__IXYO || ctx->zdis_put(ctx, ZDIS_PUT_OFF, (int8_t)a)) &&
@@ -290,6 +288,24 @@ static bool arg(struct zdis_ctx *ctx, enum arg arg, uint8_t extra, uint8_t *whic
     case ARG_IYO:
       return next(&a, ctx) && index(ctx, (arg ^ ARG_IXO) & MASK(0, 1)) &&
 	ctx->zdis_put(ctx, ZDIS_PUT_OFF, (int8_t)a);
+  }
+}
+static uint8_t arg_size(struct zdis_ctx *ctx, enum arg arg, uint8_t extra) {
+  switch (arg) {
+    default:
+      return 0;
+    case ARG_BYTE:
+    case ARG_PORT:
+    case ARG_OFF:
+    case ARG_REL:
+    case ARG__IXYO:
+    case ARG_IXO:
+    case ARG_IYO:
+      return 1;
+    case ARG_WORD:
+    case ARG_ADDR:
+    case ARG_ABS:
+      return (extra & MASK(2, 1) ? extra & MASK(1, 1) : ctx->zdis_adl) ? 3 : 2;
   }
 }
 
@@ -312,7 +328,7 @@ static uint32_t zdis_decode(struct zdis_ctx *ctx) {
       if (x <= MASK(0, 2)) {
 	if (!(extra & MASK(2, 1))) { extra |= MASK(2, 1) | x; continue; }
 	ctx->zdis_end_addr--;
-	return I(N,O,,N,,I);
+	return I(N,O,,N,,I) | extra << 24;
       }
       if (x == 6) return I(,,,H,,ALT) | extra << 24;
     }
@@ -321,24 +337,27 @@ static uint32_t zdis_decode(struct zdis_ctx *ctx) {
   if (z == 2) return (lookup(main_insts[1][x << 3 | 6]) & ~MASK(17, 6)) | (ARG_B + y) << 17 | extra << 24;
   if ((inst = lookup(main_insts[z >> 1][opc & MASK(0, 6)])) > MASK(0, 5)) return inst | extra << 24;
   if (!next(&opc, ctx)) return 0;
-  x = opc >> 3 & MASK(0, 3);
-  y = opc >> 0 & MASK(0, 3);
-  z = opc >> 6 & MASK(0, 2);
   extra = (extra & ~MASK(3, 4)) | (opc & MASK(3, 3)) | (inst << 6 & MASK(6, 1));
   switch (inst) {
     case 0:
-      return (lookup(cb_insts[opc >> 3]) + (opc >> 3 != 6 ? y << 17 : 0)) | extra << 24;
+      return (lookup(cb_insts[opc >> 3]) + (opc >> 3 != 6 ? opc << 17 & MASK(17, 3) : 0)) | extra << 24;
     case 1:
       return lookup(ed_insts[opc]) | extra << 24;
     default:
-      inst = lookup(xd_insts[opc]);
       if ((inst = lookup(xd_insts[opc]))) return inst | extra << 24;
-      extra |= 0x80;
-      if ((inst = ctx->zdis_read(ctx, ctx->zdis_end_addr + 1)) > MASK(0, 8)) return 0;
-      opc = inst;
-      if (opc >> 3 == 6 || (opc & MASK(0, 3)) != 6) return I(T,R,,A,,P) | (uint32_t)extra << 24;
-      return (lookup(cb_insts[opc >> 3]) + ((ARG__IXYO - ARG_B) << 17)) | (uint32_t)extra << 24;
+      ctx->zdis_end_addr++;
+      if (!next(&opc, ctx)) return 0;
+      if (opc >> 3 == 6 || (opc & MASK(0, 3)) != 6) return I(T,R,,A,,P) | extra << 24;
+      return (lookup(cb_insts[opc >> 3]) + ((ARG__IXYO2 - ARG_B) << 17)) | extra << 24;
   }
+}
+
+int8_t zdis_inst_size(struct zdis_ctx *ctx) {
+  uint32_t inst = zdis_decode(ctx);
+  if (!inst) return -1;
+  ctx->zdis_end_addr += arg_size(ctx, inst >> 10 & ARG_MASK, inst >> 24);
+  ctx->zdis_end_addr += arg_size(ctx, inst >> 17 & ARG_MASK, inst >> 24);
+  return ctx->zdis_end_addr - ctx->zdis_start_addr;
 }
 
 bool zdis_put_inst(struct zdis_ctx *ctx) {
