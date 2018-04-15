@@ -1,4 +1,4 @@
-MNE()
+MNE2(, "")
 MNE(0)
 MNE(AD)
 MNE(AN)
@@ -31,3 +31,4 @@ MNE(T0)
 MNE(UB)
 MNE(X)
 #undef MNE
+#undef MNE2

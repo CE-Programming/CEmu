@@ -1,4 +1,4 @@
-ARG()
+ARG2(, "")
 ARG(0)
 ARG(1)
 ARG(2)

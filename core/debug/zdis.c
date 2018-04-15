@@ -1,17 +1,21 @@
 #include "zdis.h"
 
+#include <assert.h>
+
 #define MASK(start, length) (((1u << (length)) - 1u) << start)
 
 #define MNE_MAX_LEN 2
 #define MNE_MASK MASK(0, 5)
 enum mne {
 #define MNE(x) MNE_##x,
+#define MNE2(x,y) MNE(x)
 #include "mne.def"
-  MNE_LAST,
+  MNE_LAST
 };
-_Static_assert(MNE_LAST <= MASK(5, 1), "Too many mnemonics");
+static_assert(MNE_LAST <= MASK(5, 1), "Too many mnemonics");
 static const char mnes[][MNE_MAX_LEN] = {
 #define MNE(x) #x,
+#define MNE2(x,y) y,
 #include "mne.def"
 };
 
@@ -55,9 +59,9 @@ enum arg {
   ARG_IXO,
   ARG_IYO,
   ARG_LAST,
-  ARG_FIRST_IMM = ARG_BYTE,
+  ARG_FIRST_IMM = ARG_BYTE
 };
-_Static_assert(ARG_LAST <= MASK(6, 1), "Too many arguments");
+static_assert(ARG_LAST <= MASK(6, 1), "Too many arguments");
 static const char args[][ARG_MAX_LEN] = {
 #define ARG(x) #x,
 #define ARG2(x,y) y,
