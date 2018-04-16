@@ -986,13 +986,18 @@ void MainWindow::resetCEmu() {
 void MainWindow::resetGui() {
     ipcCloseConnected();
     m_config->remove(SETTING_SCREEN_SKIN);
+    m_config->remove(SETTING_SCREEN_SCALE);
     m_config->remove(SETTING_WINDOW_GEOMETRY);
     m_config->remove(SETTING_WINDOW_MEMORY_DOCKS);
-    m_config->remove(SETTING_UI_EDIT_MODE);
+    m_config->remove(SETTING_WINDOW_MEMORY_DOCK_ASCII);
+    m_config->remove(SETTING_WINDOW_MEMORY_DOCK_BYTES);
+    m_config->remove(SETTING_WINDOW_VISUALIZER_DOCKS);
+    m_config->remove(SETTING_WINDOW_VISUALIZER_CONFIG);
     m_config->remove(SETTING_WINDOW_STATE);
     m_config->remove(SETTING_WINDOW_MENUBAR);
     m_config->remove(SETTING_WINDOW_STATUSBAR);
     m_config->remove(SETTING_WINDOW_SEPARATOR);
+    m_config->remove(SETTING_UI_EDIT_MODE);
     m_needReload = true;
     close();
 }
