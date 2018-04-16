@@ -125,13 +125,13 @@ static int disasmFetch(struct zdis_ctx *ctx, uint32_t addr) {
 }
 
 static bool disasmPut(struct zdis_ctx *ctx, enum zdis_put kind, int32_t val, bool il) {
-    char tmp[8], sign = '+';
+    char tmp[11], sign = '+';
     (void)ctx;
     disasm.il = il;
     switch (kind) {
         case ZDIS_PUT_BYTE:
         case ZDIS_PUT_PORT:
-            snprintf(tmp, 4, "$%02X", val);
+            snprintf(tmp, 10, "$%02X", val);
             *disasm.cur += tmp;
             break;
         case ZDIS_PUT_WORD:
@@ -143,7 +143,7 @@ static bool disasmPut(struct zdis_ctx *ctx, enum zdis_put kind, int32_t val, boo
                 sign = '-';
             }
             if (val) {
-                snprintf(tmp, 5, "%c$%02X", sign, val);
+                snprintf(tmp, 11, "%c$%02X", sign, val);
                 *disasm.cur += tmp;
             }
             break;
