@@ -342,7 +342,7 @@ void MainWindow::setDebugAutoSave(bool state) {
 void MainWindow::setDebugDisasmSpace(bool state) {
     ui->checkAddSpace->setChecked(state);
     m_config->setValue(SETTING_DEBUGGER_ADD_DISASM_SPACE, state);
-    disasm.space = state ? ", " : ",";
+    disasm.comma = state ? ", " : ",";
 }
 
 void MainWindow::setFont(int fontSize) {
