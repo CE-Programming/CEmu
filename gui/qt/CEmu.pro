@@ -174,7 +174,7 @@ SOURCES += \
     ../../core/extras.c \
     ../../core/spi.c \
     ../../core/debug/debug.c \
-    ../../core/debug/zdis.c \
+    ../../core/debug/zdis/zdis.c \
     ipc.cpp \
     main.cpp \
     utils.cpp \
@@ -265,7 +265,7 @@ HEADERS  += \
     ../../core/os/os.h \
     ../../core/spi.h \
     ../../core/debug/debug.h \
-    ../../core/debug/zdis.h \
+    ../../core/debug/zdis/zdis.h \
     ipc.h \
     utils.h \
     cemuopts.h \

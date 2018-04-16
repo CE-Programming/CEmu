@@ -1,0 +1,3 @@
+[submodule "core/debug/zdis"]
+	path = core/debug/zdis
+	url = https://github.com/CE-Programming/zdis.git
