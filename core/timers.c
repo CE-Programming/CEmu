@@ -60,7 +60,7 @@ static uint64_t gpt_next_event(enum sched_item_id id) {
         }
         gpt.status |= (status & ~gpt.raw[index]) << (index * 3);
         intrpt_set(INT_TIMER1 << index, status);
-        gpt.raw[index] = next ? 0 : status;
+        gpt.raw[index] = 0;//next ? 0 : status;
         intrpt_set(INT_TIMER1 << index, gpt.raw[index]);
         timer->counter -= ((uint32_t)next + invert) ^ invert;
         item->clock = (gpt.control >> index*3 & 2) ? CLOCK_32K : CLOCK_CPU;
