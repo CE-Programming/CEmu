@@ -29,12 +29,15 @@
 #endif
 
 const QString MainWindow::SETTING_DEBUGGER_TEXT_SIZE        = QStringLiteral("Debugger/text_size");
-const QString MainWindow::SETTING_DEBUGGER_ADD_DISASM_SPACE = QStringLiteral("Debugger/add_disassembly_space");
 const QString MainWindow::SETTING_DEBUGGER_RESTORE_ON_OPEN  = QStringLiteral("Debugger/restore_on_open");
 const QString MainWindow::SETTING_DEBUGGER_SAVE_ON_CLOSE    = QStringLiteral("Debugger/save_on_close");
 const QString MainWindow::SETTING_DEBUGGER_RESET_OPENS      = QStringLiteral("Debugger/open_on_reset");
 const QString MainWindow::SETTING_DEBUGGER_ENABLE_SOFT      = QStringLiteral("Debugger/enable_soft_commands");
-const QString MainWindow::SETTING_DEBUGGER_DATA_COL         = QStringLiteral("Debugger/show_data_column");
+const QString MainWindow::SETTING_DEBUGGER_DISASM_SPACE     = QStringLiteral("Debugger/disasm_add_space");
+const QString MainWindow::SETTING_DEBUGGER_ADDR_COL         = QStringLiteral("Debugger/disasm_addr_column");
+const QString MainWindow::SETTING_DEBUGGER_DATA_COL         = QStringLiteral("Debugger/disasm_data_column");
+const QString MainWindow::SETTING_DEBUGGER_IMPLICT          = QStringLiteral("Debugger/disasm_implict");
+const QString MainWindow::SETTING_DEBUGGER_UPPERCASE        = QStringLiteral("Debugger/disasm_uppercase");
 const QString MainWindow::SETTING_DEBUGGER_IMAGE_PATH       = QStringLiteral("Debugger/image_path");
 const QString MainWindow::SETTING_DEBUGGER_FLASH_BYTES      = QStringLiteral("Debugger/flash_bytes_per_line");
 const QString MainWindow::SETTING_DEBUGGER_RAM_BYTES        = QStringLiteral("Debugger/ram_bytes_per_line");
@@ -268,10 +271,49 @@ void MainWindow::setDebugSoftCommands(bool state) {
     debug_flag(DBG_SOFT_COMMANDS, state);
 }
 
-void MainWindow::setDebugDisasmData(bool state) {
+void MainWindow::setDebugDisasmDataCol(bool state) {
     ui->checkDataCol->setChecked(state);
     m_config->setValue(SETTING_DEBUGGER_DATA_COL, state);
-    m_useDataCol = state;
+    disasm.bytes = state;
+    if (guiDebug) {
+        disasmUpdate();
+    }
+}
+
+void MainWindow::setDebugDisasmAddrCol(bool state) {
+    ui->checkDisasmAddr->setChecked(state);
+    m_config->setValue(SETTING_DEBUGGER_ADDR_COL, state);
+    disasm.addr = state;
+    if (guiDebug) {
+        disasmUpdate();
+    }
+}
+
+void MainWindow::setDebugDisasmImplict(bool state) {
+    ui->checkDisasmImplict->setChecked(state);
+    m_config->setValue(SETTING_DEBUGGER_IMPLICT, state);
+    disasm.implicit = state;
+    if (guiDebug) {
+        disasmUpdate();
+    }
+}
+
+void MainWindow::setDebugDisasmUppercase(bool state) {
+    ui->checkDisasmUppercase->setChecked(state);
+    m_config->setValue(SETTING_DEBUGGER_UPPERCASE, state);
+    disasm.uppercase = state;
+    if (guiDebug) {
+        disasmUpdate();
+    }
+}
+
+void MainWindow::setDebugDisasmSpace(bool state) {
+    ui->checkAddSpace->setChecked(state);
+    m_config->setValue(SETTING_DEBUGGER_DISASM_SPACE, state);
+    disasm.comma = state ? ", " : ",";
+    if (guiDebug) {
+        disasmUpdate();
+    }
 }
 
 void MainWindow::setLcdSpi(bool state) {
@@ -337,12 +379,6 @@ void MainWindow::setDebugAutoSave(bool state) {
     ui->checkSaveLoadDebug->setChecked(state);
     m_config->setValue(SETTING_DEBUGGER_SAVE_ON_CLOSE, state);
     m_config->setValue(SETTING_DEBUGGER_RESTORE_ON_OPEN, state);
-}
-
-void MainWindow::setDebugDisasmSpace(bool state) {
-    ui->checkAddSpace->setChecked(state);
-    m_config->setValue(SETTING_DEBUGGER_ADD_DISASM_SPACE, state);
-    disasm.comma = state ? ", " : ",";
 }
 
 void MainWindow::setFont(int fontSize) {
@@ -608,7 +644,7 @@ void MainWindow::setSkinToggle(bool enable) {
     lcdAdjust();
 }
 
-void MainWindow::setAutoEquates(bool enable) {
+void MainWindow::setDebugAutoEquates(bool enable) {
     m_config->setValue(SETTING_DEBUGGER_AUTO_EQUATES, enable);
     ui->checkAutoEquates->setChecked(enable);
     sendingHandler->setLoadEquates(enable);

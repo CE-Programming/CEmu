@@ -119,8 +119,11 @@ static int disasmFetch(struct zdis_ctx *ctx, uint32_t addr) {
         disasm.highlight.pc = true;
     }
 
-    snprintf(tmp, 3, "%02X", value);
-    disasm.instr.data += tmp;
+    if (disasm.bytes) {
+        snprintf(tmp, 3, "%02X", value);
+        disasm.instr.data += tmp;
+    }
+
     return value;
 }
 
@@ -170,18 +173,16 @@ static bool disasmPut(struct zdis_ctx *ctx, enum zdis_put kind, int32_t val, boo
     return true;
 }
 
-void disasmInstr(void) {
-    // FIXME: init once
+void disasmInit() {
     disasm.ctx.zdis_read = disasmFetch;
     disasm.ctx.zdis_put = disasmPut;
+}
 
-    // FIXME: init from settings
-    disasm.ctx.zdis_lowercase = true;
-    disasm.ctx.zdis_implicit = true;
-
+void disasmGet() {
+    disasm.ctx.zdis_lowercase = !disasm.uppercase;
+    disasm.ctx.zdis_implicit = !disasm.implicit;
     disasm.ctx.zdis_end_addr = disasm.base;
     disasm.cur = &disasm.instr.opcode;
-    disasm.ctx.zdis_adl = disasm.adl;
 
     disasm.highlight.watchR = false;
     disasm.highlight.watchW = false;
@@ -189,10 +190,9 @@ void disasmInstr(void) {
     disasm.highlight.pc = false;
     disasm.highlight.addr = -1;
 
-    disasm.instr.data = "";
-    disasm.instr.opcode = "";
-    disasm.instr.suffix = " ";
-    disasm.instr.operands = "";
+    disasm.instr.data.clear();
+    disasm.instr.opcode.clear();
+    disasm.instr.operands.clear();
 
     zdis_put_inst(&disasm.ctx);
 

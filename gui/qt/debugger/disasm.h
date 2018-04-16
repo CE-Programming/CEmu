@@ -17,7 +17,6 @@ typedef struct {
     struct {
         std::string opcode;
         std::string operands;
-        std::string suffix;
         std::string data;
         unsigned int size;
     } instr;
@@ -30,7 +29,11 @@ typedef struct {
     } highlight;
     int32_t base;
     int32_t next;
-    bool adl, il;
+    bool il;
+    bool uppercase;
+    bool implicit;
+    bool bytes;
+    bool addr;
     map_t map;
     map_value_t reverse;
     std::string comma;
@@ -38,7 +41,8 @@ typedef struct {
 
 extern disasm_state_t disasm;
 
-void disasmInstr(void);
+void disasmInit();
+void disasmGet();
 
 #endif
 

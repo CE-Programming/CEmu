@@ -345,7 +345,7 @@ private:
     void bootImageExport();
 
     // equates
-    void setAutoEquates(bool enable);
+    void setDebugAutoEquates(bool enable);
     void equatesAddDialog();
     void equatesAddFile(const QString &file);
     void equatesAddEquate(const QString &name, uint32_t addr);
@@ -401,8 +401,11 @@ private:
     // debug settings
     void setDebugPath();
     void setDebugAutoSave(bool state);
-    void setDebugDisasmData(bool state);
+    void setDebugDisasmDataCol(bool state);
+    void setDebugDisasmAddrCol(bool state);
     void setDebugDisasmSpace(bool state);
+    void setDebugDisasmImplict(bool state);
+    void setDebugDisasmUppercase(bool state);
     void setDebugIgnoreBreakpoints(bool state);
     void setDebugResetTrigger(bool state);
     void setDebugSoftCommands(bool state);
@@ -590,7 +593,6 @@ private:
     bool m_keepSetup = false;
     bool m_guiAdd = false;
     bool m_initPassed = true;
-    bool m_useDataCol;
     bool m_useSoftCom = false;
     bool m_pauseOnFocus;
     bool m_loadedBootImage = false;
@@ -623,12 +625,15 @@ private:
 
     // Settings definitions
     static const QString SETTING_DEBUGGER_TEXT_SIZE;
-    static const QString SETTING_DEBUGGER_ADD_DISASM_SPACE;
+    static const QString SETTING_DEBUGGER_DISASM_SPACE;
     static const QString SETTING_DEBUGGER_RESTORE_ON_OPEN;
     static const QString SETTING_DEBUGGER_SAVE_ON_CLOSE;
     static const QString SETTING_DEBUGGER_RESET_OPENS;
     static const QString SETTING_DEBUGGER_ENABLE_SOFT;
     static const QString SETTING_DEBUGGER_DATA_COL;
+    static const QString SETTING_DEBUGGER_ADDR_COL;
+    static const QString SETTING_DEBUGGER_IMPLICT;
+    static const QString SETTING_DEBUGGER_UPPERCASE;
     static const QString SETTING_DEBUGGER_IMAGE_PATH;
     static const QString SETTING_DEBUGGER_FLASH_BYTES;
     static const QString SETTING_DEBUGGER_RAM_BYTES;

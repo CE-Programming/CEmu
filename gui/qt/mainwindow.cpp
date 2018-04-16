@@ -169,7 +169,10 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonRefreshEquates, &QToolButton::clicked, this, &MainWindow::equatesRefresh);
     connect(ui->buttonToggleBreakpoints, &QToolButton::toggled, this, &MainWindow::setDebugIgnoreBreakpoints);
     connect(ui->checkDebugResetTrigger, &QCheckBox::toggled, this, &MainWindow::setDebugResetTrigger);
-    connect(ui->checkDataCol, &QCheckBox::toggled, this, &MainWindow::setDebugDisasmData);
+    connect(ui->checkDataCol, &QCheckBox::toggled, this, &MainWindow::setDebugDisasmDataCol);
+    connect(ui->checkDisasmAddr, &QCheckBox::toggled, this, &MainWindow::setDebugDisasmAddrCol);
+    connect(ui->checkDisasmImplict, &QCheckBox::toggled, this, &MainWindow::setDebugDisasmImplict);
+    connect(ui->checkDisasmUppercase, &QCheckBox::toggled, this, &MainWindow::setDebugDisasmUppercase);
     connect(ui->checkDma, &QCheckBox::toggled, this, &MainWindow::setLcdDma);
     connect(ui->textSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setFont);
 
@@ -252,7 +255,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->emulationSpeed, &QSlider::valueChanged, this, &MainWindow::setEmuSpeed);
     connect(ui->emulationSpeedSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setEmuSpeed);
     connect(ui->checkThrottle, &QCheckBox::stateChanged, this, &MainWindow::setThrottle);
-    connect(ui->checkAutoEquates, &QCheckBox::stateChanged, this, &MainWindow::setAutoEquates);
+    connect(ui->checkAutoEquates, &QCheckBox::stateChanged, this, &MainWindow::setDebugAutoEquates);
     connect(ui->checkSaveRestore, &QCheckBox::stateChanged, this, &MainWindow::setAutoSave);
     connect(ui->checkPortable, &QCheckBox::stateChanged, this, &MainWindow::setPortable);
     connect(ui->checkSaveRecent, &QCheckBox::stateChanged, this, &MainWindow::setRecentSave);
@@ -439,13 +442,16 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setEmuSpeed(m_config->value(SETTING_EMUSPEED, 100).toInt());
     setFont(m_config->value(SETTING_DEBUGGER_TEXT_SIZE, 9).toInt());
     setAutoSave(m_config->value(SETTING_RESTORE_ON_OPEN, true).toBool());
+    setDebugDisasmSpace(m_config->value(SETTING_DEBUGGER_DISASM_SPACE, false).toBool());
+    setDebugDisasmAddrCol(m_config->value(SETTING_DEBUGGER_ADDR_COL, true).toBool());
+    setDebugDisasmDataCol(m_config->value(SETTING_DEBUGGER_DATA_COL, true).toBool());
+    setDebugDisasmUppercase(m_config->value(SETTING_DEBUGGER_UPPERCASE, false).toBool());
+    setDebugDisasmImplict(m_config->value(SETTING_DEBUGGER_IMPLICT, false).toBool());
     setDebugAutoSave(m_config->value(SETTING_DEBUGGER_RESTORE_ON_OPEN, false).toBool());
-    setDebugDisasmSpace(m_config->value(SETTING_DEBUGGER_ADD_DISASM_SPACE, false).toBool());
-    setAutoEquates(m_config->value(SETTING_DEBUGGER_AUTO_EQUATES, false).toBool());
+    setDebugAutoEquates(m_config->value(SETTING_DEBUGGER_AUTO_EQUATES, false).toBool());
     setDebugResetTrigger(m_config->value(SETTING_DEBUGGER_RESET_OPENS, false).toBool());
     setDebugIgnoreBreakpoints(m_config->value(SETTING_DEBUGGER_BREAK_IGNORE, false).toBool());
     setDebugSoftCommands(m_config->value(SETTING_DEBUGGER_ENABLE_SOFT, true).toBool());
-    setDebugDisasmData(m_config->value(SETTING_DEBUGGER_DATA_COL, true).toBool());
     setLcdSpi(m_config->value(SETTING_SCREEN_SPI, true).toBool());
     setLcdDma(m_config->value(SETTING_DEBUGGER_IGNORE_DMA, true).toBool());
     setFocusSetting(m_config->value(SETTING_PAUSE_FOCUS, false).toBool());
@@ -2126,16 +2132,15 @@ void MainWindow::disasmLine() {
 
             disasm.instr.data.clear();
             disasm.instr.opcode.clear();
-            disasm.instr.suffix.clear();
             disasm.instr.operands.clear();
             disasm.instr.size = 0;
 
             useLabel = true;
         } else {
-            disasmInstr();
+            disasmGet();
         }
     } else {
-        disasmInstr();
+        disasmGet();
     }
 
     if (useLabel) {
@@ -2173,11 +2178,10 @@ void MainWindow::disasmLine() {
                                   .replace(QRegularExpression(QStringLiteral("(^\\d)")), QStringLiteral("<font color='blue'>\\1</font>"))             // dec number
                                   .replace(QRegularExpression(QStringLiteral("([()])")), QStringLiteral("<font color='#600'>\\1</font>"));            // parentheses
 
-            line = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2 %3  <font color='darkblue'>%4%5</font>%6</pre>"))
-                           .arg(int2hex(disasm.base, 6), symbols,
-                                QString::fromStdString(disasm.instr.data).leftJustified(12, ' '),
+            line = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2 %3  <font color='darkblue'>%4</font> %5</pre>"))
+                           .arg(disasm.addr ? int2hex(disasm.base, 6) : QString(), symbols,
+                                disasm.bytes ? QString::fromStdString(disasm.instr.data).leftJustified(12, ' ') : QStringLiteral(" "),
                                 QString::fromStdString(disasm.instr.opcode),
-                                QString::fromStdString(disasm.instr.suffix),
                                 highlighted);
 
             m_disasm->appendHtml(line);

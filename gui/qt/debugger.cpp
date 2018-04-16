@@ -46,6 +46,8 @@
 // -----------------------------------------------
 
 void MainWindow::debugInit() {
+    disasmInit();
+
     ui->afregView->installEventFilter(this);
     ui->hlregView->installEventFilter(this);
     ui->bcregView->installEventFilter(this);
@@ -97,8 +99,8 @@ void MainWindow::debugStep(int mode) {
         debug_step(mode, m_runUntilAddr);
     } else {
         disasm.base = cpu.registers.PC;
-        disasm.adl = cpu.ADL;
-        disasmInstr();
+        disasm.ctx.zdis_adl = cpu.ADL;
+        disasmGet();
         debug_step(mode, disasm.next);
     }
     emu.resume();
@@ -878,7 +880,7 @@ void MainWindow::breakAddGui() {
 
     disasm.base = address;
     disasm.highlight.breakP = false;
-    disasmInstr();
+    disasmGet();
     disasm.base = base;
     disasm.next = next;
 
@@ -1206,7 +1208,7 @@ void MainWindow::watchAddGui() {
     disasm.base = address;
     disasm.highlight.watchR = false;
     disasm.highlight.watchW = false;
-    disasmInstr();
+    disasmGet();
 
     disasm.base = base;
     disasm.next = next;
@@ -1626,7 +1628,7 @@ void MainWindow::disasmUpdateAddr(int base, bool pane) {
     m_disasmAddr = base;
     m_disasmPane = pane;
     m_disasmOffsetSet = false;
-    disasm.adl = adlState(ui->checkADLDisasm->checkState());
+    disasm.ctx.zdis_adl = adlState(ui->checkADLDisasm->checkState());
     disasm.base = -1;
     disasm.next = m_disasmAddr - ((pane) ? 0x40 : 0);
     if (disasm.next < 0) { disasm.next = 0; }
