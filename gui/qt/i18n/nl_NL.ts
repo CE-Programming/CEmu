@@ -98,7 +98,7 @@
         <location filename="../mainwindow.ui" line="9415"/>
         <location filename="../mainwindow.cpp" line="549"/>
         <source>Capture</source>
-        <translation>Vastleggen</translation>
+        <translation>Opname</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6759"/>
