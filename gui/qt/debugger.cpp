@@ -1999,13 +1999,13 @@ void MainWindow::osUpdate() {
         ui->fpStack->setEnabled(false);
     }
 
-    uint32_t opBase = mem_peek_word(0xD02593, true);
-    uint32_t opTop = mem_peek_word(0xD02590, true);
+    uint32_t opBase = mem_peek_word(0xD02590, true);
+    uint32_t opTop = mem_peek_word(0xD02593, true);
 
     index = 0;
 
-    if (opTop >= opBase && (opTop >= 0xD00000 && opTop < 0xD40000) && (opBase >= 0xD00000 && opBase < 0xD40000)) {
-        for (uint32_t i = opBase; i < opTop; i++) {
+    if (opTop <= opBase && (opTop >= 0xD00000 && opTop < 0xD40000) && (opBase >= 0xD00000 && opBase < 0xD40000)) {
+        for (uint32_t i = opTop; i < opBase; i++) {
             data.clear();
             data.append(int2hex(mem_peek_byte(i), 2));
 
