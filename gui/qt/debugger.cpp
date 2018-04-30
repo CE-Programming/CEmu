@@ -1954,45 +1954,49 @@ void MainWindow::osUpdate() {
 
     index = 0;
 
-    for (uint32_t i = fpTop; i > fpBase; i -= 9) {
-        array.clear();
-        dataString.clear();
+    if (fpTop >= fpBase && (fpTop >= 0xD00000 && fpTop < 0xD40000) && (fpBase >= 0xD00000 && fpBase < 0xD40000)) {
+        for (uint32_t i = fpTop; i > fpBase; i -= 9) {
+            array.clear();
+            dataString.clear();
 
-        for (uint32_t j = i; j < i+9; j++) {
-            uint8_t ch = mem_peek_byte(j);
-            array.append(ch);
-            if ((ch < 0x20) || (ch > 0x7e)) {
-                ch = '.';
+            for (uint32_t j = i; j < i+9; j++) {
+                uint8_t ch = mem_peek_byte(j);
+                array.append(ch);
+                if ((ch < 0x20) || (ch > 0x7e)) {
+                    ch = '.';
+                }
+                dataString += QChar(ch);
             }
-            dataString += QChar(ch);
+
+            data_t vect(array.constData(), array.constEnd());
+
+            QTableWidgetItem *fpAddr = new QTableWidgetItem(int2hex(i, 6));
+            QTableWidgetItem *fpData = new QTableWidgetItem(QString(array.toHex()));
+            QTableWidgetItem *fpString = new QTableWidgetItem(dataString);
+            QTableWidgetItem *fpValue;
+            try {
+                fpValue = new QTableWidgetItem(QString::fromStdString(tivars::TH_0x00::makeStringFromData(vect)));
+            } catch(...) {
+                fpValue = new QTableWidgetItem(TXT_NAN);
+            }
+            fpAddr->setFlags(fpAddr->flags() & ~Qt::ItemIsEditable);
+
+            fpAddr->setFont(monospace);
+            fpData->setFont(monospace);
+            fpString->setFont(monospace);
+            fpValue->setFont(monospace);
+
+            ui->fpStack->setRowCount(index+1);
+
+            ui->fpStack->setItem(index, FP_ADDRESS, fpAddr);
+            ui->fpStack->setItem(index, FP_DATA, fpData);
+            ui->fpStack->setItem(index, FP_STRING, fpString);
+            ui->fpStack->setItem(index, FP_VALUE, fpValue);
+
+            index++;
         }
-
-        data_t vect(array.constData(), array.constEnd());
-
-        QTableWidgetItem *fpAddr = new QTableWidgetItem(int2hex(i, 6));
-        QTableWidgetItem *fpData = new QTableWidgetItem(QString(array.toHex()));
-        QTableWidgetItem *fpString = new QTableWidgetItem(dataString);
-        QTableWidgetItem *fpValue;
-        try {
-            fpValue = new QTableWidgetItem(QString::fromStdString(tivars::TH_0x00::makeStringFromData(vect)));
-        } catch(...) {
-            fpValue = new QTableWidgetItem(TXT_NAN);
-        }
-        fpAddr->setFlags(fpAddr->flags() & ~Qt::ItemIsEditable);
-
-        fpAddr->setFont(monospace);
-        fpData->setFont(monospace);
-        fpString->setFont(monospace);
-        fpValue->setFont(monospace);
-
-        ui->fpStack->setRowCount(index+1);
-
-        ui->fpStack->setItem(index, FP_ADDRESS, fpAddr);
-        ui->fpStack->setItem(index, FP_DATA, fpData);
-        ui->fpStack->setItem(index, FP_STRING, fpString);
-        ui->fpStack->setItem(index, FP_VALUE, fpValue);
-
-        index++;
+    } else {
+        ui->fpStack->setEnabled(false);
     }
 
     uint32_t opBase = mem_peek_word(0xD02593, true);
@@ -2000,24 +2004,28 @@ void MainWindow::osUpdate() {
 
     index = 0;
 
-    for (uint32_t i = opBase; i < opTop; i++) {
-        data.clear();
-        data.append(int2hex(mem_peek_byte(i), 2));
+    if (opTop >= opBase && (opTop >= 0xD00000 && opTop < 0xD40000) && (opBase >= 0xD00000 && opBase < 0xD40000)) {
+        for (uint32_t i = opBase; i < opTop; i++) {
+            data.clear();
+            data.append(int2hex(mem_peek_byte(i), 2));
 
-        QTableWidgetItem *opAddr = new QTableWidgetItem(int2hex(i, 6));
-        QTableWidgetItem *opData = new QTableWidgetItem(data);
-        opAddr->setFlags(opAddr->flags() & ~Qt::ItemIsEditable);
-        opData->setFlags(opData->flags() & ~Qt::ItemIsEditable);
+            QTableWidgetItem *opAddr = new QTableWidgetItem(int2hex(i, 6));
+            QTableWidgetItem *opData = new QTableWidgetItem(data);
+            opAddr->setFlags(opAddr->flags() & ~Qt::ItemIsEditable);
+            opData->setFlags(opData->flags() & ~Qt::ItemIsEditable);
 
-        opAddr->setFont(monospace);
-        opData->setFont(monospace);
+            opAddr->setFont(monospace);
+            opData->setFont(monospace);
 
-        ui->opStack->setRowCount(index+1);
+            ui->opStack->setRowCount(index+1);
 
-        ui->opStack->setItem(index, OPS_ADDRESS, opAddr);
-        ui->opStack->setItem(index, OPS_DATA, opData);
+            ui->opStack->setItem(index, OPS_ADDRESS, opAddr);
+            ui->opStack->setItem(index, OPS_DATA, opData);
 
-        index++;
+            index++;
+        }
+    } else {
+        ui->opStack->setEnabled(false);
     }
 
     index = 0;

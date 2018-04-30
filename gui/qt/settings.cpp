@@ -285,7 +285,11 @@ void MainWindow::setDebugDisasmAddrCol(bool state) {
     m_config->setValue(SETTING_DEBUGGER_ADDR_COL, state);
     disasm.addr = state;
     if (guiDebug) {
-        disasmUpdate();
+        if (!disasm.addr) {
+            disasmUpdate();
+        } else {
+            disasmUpdateAddr(cpu.registers.PC, true);
+        }
     }
 }
 
