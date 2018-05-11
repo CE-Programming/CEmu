@@ -457,7 +457,8 @@ void MainWindow::debugSync() {
     cpu.IEF1 = ui->checkIEF1->isChecked();
     cpu.IEF2 = ui->checkIEF2->isChecked();
 
-    debug.totalCycles = static_cast<uint64_t>(ui->cycleView->text().toULongLong());
+    int64_t displayedCycles = static_cast<int64_t>(ui->cycleView->text().toLongLong());
+    debug.totalCycles = displayedCycles - (ui->checkDma->isChecked() ? debug.dmaCycles : 0);
 
     uint32_t uiPC = static_cast<uint32_t>(hex2int(ui->pcregView->text()));
     if (cpu.registers.PC != uiPC) {
