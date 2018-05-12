@@ -330,7 +330,15 @@ void MainWindow::setLcdSpi(bool state) {
 void MainWindow::setLcdDma(bool state) {
     ui->checkDma->setChecked(state);
     m_config->setValue(SETTING_DEBUGGER_IGNORE_DMA, !state);
-    ui->cycleView->setText(QString::number(debug.totalCycles - (!state ? debug.dmaCycles : 0)));
+    bool ok;
+    int64_t cycleCounter = ui->cycleView->text().toLongLong(&ok);
+    if (!ok)
+        cycleCounter = debug.totalCycles - (!state ? debug.dmaCycles : 0);
+    else if (!state)
+        cycleCounter -= debug.dmaCycles;
+    else
+        cycleCounter += debug.dmaCycles;
+    ui->cycleView->setText(QString::number(cycleCounter));
     m_ignoreDmaCycles = !state;
 }
 
