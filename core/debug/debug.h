@@ -110,10 +110,9 @@ typedef struct {
 typedef struct {
     uint32_t cpuNext;
     uint32_t cpuCycles;
-    uint64_t dmaCycles;
     uint64_t cpuBaseCycles;
     uint64_t cpuHaltCycles;
-    int64_t totalCycles;
+    int64_t totalCycles, dmaCycles;
     bool step, stepOver;
     uint32_t tempExec, stepOut;
 

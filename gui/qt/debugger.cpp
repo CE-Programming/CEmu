@@ -457,8 +457,7 @@ void MainWindow::debugSync() {
     cpu.IEF1 = ui->checkIEF1->isChecked();
     cpu.IEF2 = ui->checkIEF2->isChecked();
 
-    int64_t displayedCycles = static_cast<int64_t>(ui->cycleView->text().toLongLong());
-    debug.totalCycles = displayedCycles - (ui->checkDma->isChecked() ? debug.dmaCycles : 0);
+    debug.totalCycles = ui->cycleView->text().toLongLong() + (m_ignoreDmaCycles ? debug.dmaCycles : 0);
 
     uint32_t uiPC = static_cast<uint32_t>(hex2int(ui->pcregView->text()));
     if (cpu.registers.PC != uiPC) {
@@ -652,7 +651,7 @@ void MainWindow::debugPopulate() {
     ui->freqView->setPalette(tmp == ui->freqView->text() ? m_cNone : m_cBack);
     ui->freqView->setText(tmp);
 
-    tmp = QString::number(m_ignoreDmaCycles ? debug.totalCycles : debug.totalCycles + debug.dmaCycles);
+    tmp = QString::number(debug.totalCycles - (m_ignoreDmaCycles ? debug.dmaCycles : 0));
     ui->cycleView->setPalette(tmp == ui->cycleView->text() ? m_cNone : m_cBack);
     ui->cycleView->setText(tmp);
 
