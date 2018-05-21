@@ -82,7 +82,7 @@ static void sched_schedule(enum sched_item_id id, int32_t seconds, uint64_t tick
     struct sched_item *item = &sched.items[id];
     item->second = seconds + ticks / sched.clockRates[item->clock];
     item->tick = ticks % sched.clockRates[item->clock];
-    item->cycle = muldiv_floor(item->tick, sched.clockRates[CLOCK_CPU], sched.clockRates[item->clock]);
+    item->cycle = muldiv_ceil(item->tick, sched.clockRates[CLOCK_CPU], sched.clockRates[item->clock]);
     if (id == sched.event.next) {
         sched_update(SCHED_SECOND);
     } else if (id == sched.dma.next) {
@@ -102,7 +102,7 @@ void sched_repeat(enum sched_item_id id, uint64_t ticks) {
 }
 
 void sched_set(enum sched_item_id id, uint64_t ticks) {
-    sched_schedule(id, 0, muldiv_ceil(cpu.cycles, sched.clockRates[sched.items[id].clock], sched.clockRates[CLOCK_CPU]) + ticks);
+    sched_schedule(id, 0, muldiv_floor(cpu.cycles, sched.clockRates[sched.items[id].clock], sched.clockRates[CLOCK_CPU]) + ticks);
 }
 
 void sched_clear(enum sched_item_id id) {
