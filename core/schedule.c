@@ -71,7 +71,7 @@ static void sched_update(enum sched_item_id id) {
             sched_update(id);
         }
     } else if (id >= SCHED_FIRST_DMA && id <= SCHED_LAST_DMA) {
-        if (item->callback.dma && item->second >= 0 &&
+        if (item->callback.dma && sched_active(id) &&
             (sched.dma.next == SCHED_PREV_MA || sched_before(id, sched.dma.next))) {
             sched.dma.next = id;
         }
@@ -107,7 +107,7 @@ void sched_set(enum sched_item_id id, uint64_t ticks) {
 
 void sched_clear(enum sched_item_id id) {
     struct sched_item *item = &sched.items[id];
-    if (item->second >= 0) {
+    if (sched_active(id)) {
         item->second = ~item->second;
         if (id == sched.event.next) {
             sched_update(SCHED_SECOND);
@@ -117,9 +117,13 @@ void sched_clear(enum sched_item_id id) {
     }
 }
 
+bool sched_active(enum sched_item_id id) {
+    return sched.items[id].second >= 0;
+}
+
 uint64_t sched_cycle(enum sched_item_id id) {
     struct sched_item *item = &sched.items[id];
-    assert(item->second >= 0);
+    assert(sched_active(id));
     return (uint64_t)item->second * sched.clockRates[CLOCK_CPU] + item->cycle;
 }
 
@@ -178,12 +182,10 @@ void sched_process_pending_dma(uint8_t duration) {
 }
 
 static void sched_second(enum sched_item_id id) {
-    struct sched_item *item;
     sched_process_pending_dma(0);
-    for (id = 0; id < SCHED_NUM_ITEMS; id++) {
-        item = &sched.items[id];
-        if (item->second >= 0) {
-            item->second--;
+    for (id = SCHED_SECOND; id < SCHED_NUM_ITEMS; id++) {
+        if (sched_active(id)) {
+            sched.items[id].second--;
         }
     }
     cpu.seconds++;
@@ -205,8 +207,8 @@ void sched_set_clocks(enum clock_id count, uint32_t *new_rates) {
     cpu.cycles = muldiv_floor(cpu.cycles, new_rates[CLOCK_CPU], sched.clockRates[CLOCK_CPU]);
     cpu.baseCycles -= cpu.cycles;
     for (id = 0; id < SCHED_NUM_ITEMS; id++) {
-        item = &sched.items[id];
-        if (item->second >= 0) {
+        if (sched_active(id)) {
+            item = &sched.items[id];
             if (item->clock < count) {
                 ticks = (uint64_t)item->second * sched.clockRates[item->clock] + item->tick;
                 item->second = ticks / new_rates[item->clock];

@@ -17,6 +17,7 @@ enum sched_item_id {
 
     SCHED_THROTTLE,
     SCHED_WATCHDOG,
+    SCHED_TIMER_DELAY, /* Must be before TIMER# */
     SCHED_TIMER1,
     SCHED_TIMER2,
     SCHED_TIMER3,
@@ -75,6 +76,7 @@ void sched_clear(enum sched_item_id id);
 void sched_set(enum sched_item_id id, uint64_t ticks);
 void sched_repeat(enum sched_item_id id, uint64_t ticks);
 void sched_repeat_relative(enum sched_item_id id, enum sched_item_id base, uint32_t offset, uint64_t ticks);
+bool sched_active(enum sched_item_id id);
 uint64_t sched_cycle(enum sched_item_id id);
 uint64_t sched_cycles_remaining(enum sched_item_id id);
 uint64_t sched_tick(enum sched_item_id id);

@@ -1,5 +1,6 @@
 #include "port.h"
 #include "cpu.h"
+#include "schedule.h"
 #include "debug/debug.h"
 
 /* Global APB state */
@@ -26,6 +27,7 @@ uint8_t port_read_byte(uint16_t address) {
         debug_open(DBG_PORT_READ, address);
     }
 #endif
+    sched_process_pending_events(); // make io ports consistent with mid-instruction state
     return port_read(address, port_loc, false);
 }
 
@@ -51,5 +53,6 @@ void port_write_byte(uint16_t address, uint8_t value) {
         }
     }
 #endif
+    sched_process_pending_events(); // make io ports consistent with mid-instruction state
     port_write(address, port_loc, value, false);
 }
