@@ -190,6 +190,7 @@ static void sched_second(enum sched_item_id id) {
     }
     cpu.seconds++;
     cpu.cycles -= sched.clockRates[CLOCK_CPU];
+    cpu.eiDelay -= sched.clockRates[CLOCK_CPU];
     cpu.baseCycles += sched.clockRates[CLOCK_CPU];
     sched.items[SCHED_SECOND].second = 0; /* Don't use sched_repeat! */
     sched_update(SCHED_SECOND);

@@ -816,8 +816,8 @@ static void cpu_halt(void) {
 void cpu_restore_next(void) {
     if (cpu.NMI || cpu.abort) {
         cpu.next = cpu.cycles;
-    } else if (cpu.IEF_wait && cpu.IEF_ready) {
-        cpu.next = cpu.cycles + 1; /* execute one instruction */
+    } else if (cpu.IEF_wait) {
+        cpu.next = cpu.eiDelay; /* execute one instruction */
     } else {
         cpu.next = sched_event_next_cycle();
     }
@@ -842,13 +842,9 @@ void cpu_execute(void) {
 
     while (true) {
     cpu_execute_continue:
-        if (cpu.IEF_wait) {
-            if (cpu.IEF_ready) {
-                cpu.IEF_wait = cpu.IEF_ready = false;
-                cpu.IEF1 = cpu.IEF2 = true;
-            } else {
-                cpu.IEF_ready = cpu.cycles < cpu.next;
-            }
+        if (cpu.IEF_wait && cpu.cycles >= cpu.eiDelay) {
+            cpu.IEF_wait = false;
+            cpu.IEF1 = cpu.IEF2 = true;
             cpu_restore_next();
         }
         if (cpu.NMI || (cpu.IEF1 && (intrpt->status & intrpt->enabled))) {
@@ -1215,12 +1211,12 @@ void cpu_execute(void) {
                                     r->HL = w;
                                     break;
                                 case 6: /* DI */
-                                    cpu.IEF_wait = cpu.IEF_ready = cpu.IEF1 = cpu.IEF2 = false;
+                                    cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = false;
                                     cpu_restore_next();
                                     break;
                                 case 7: /* EI */
                                     cpu.IEF_wait = true;
-                                    cpu.IEF_ready = cpu.cycles < cpu.next;
+                                    cpu.eiDelay = cpu.cycles + 1;
                                     cpu_restore_next();
                                     break;
                             }
