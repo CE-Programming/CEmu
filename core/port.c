@@ -17,10 +17,11 @@ uint8_t port_peek_byte(uint16_t address) {
     return port_read(address, port_range(address), true);
 }
 uint8_t port_read_byte(uint16_t address) {
+    uint8_t value;
     uint8_t port_loc = port_range(address);
     static const uint8_t port_read_cycles[0x10] = {2,2,2,4,3,3,3,3,3,3,3,3,3,3,3,3};
 
-    cpu.cycles += port_read_cycles[port_loc];
+    cpu.cycles += port_read_cycles[port_loc] - 1;
 
 #ifdef DEBUG_SUPPORT
     if (debug.port[address] & DBG_MASK_PORT_READ) {
@@ -28,7 +29,9 @@ uint8_t port_read_byte(uint16_t address) {
     }
 #endif
     sched_process_pending_events(); // make io ports consistent with mid-instruction state
-    return port_read(address, port_loc, false);
+    value = port_read(address, port_loc, false);
+    cpu.cycles++;
+    return value;
 }
 
 static void port_write(uint16_t address, uint8_t loc, uint8_t value, bool peek) {
