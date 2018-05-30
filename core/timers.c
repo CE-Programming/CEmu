@@ -58,7 +58,7 @@ static uint64_t gpt_next_event(enum sched_item_id id) {
         }
         if (status) {
             if (!sched_active(SCHED_TIMER_DELAY)) {
-                sched_repeat_relative(SCHED_TIMER_DELAY, id, 2, 0);
+                sched_repeat_relative(SCHED_TIMER_DELAY, id, 0, 2);
             }
             delay = sched_cycle(SCHED_TIMER_DELAY) - sched_cycle(id);
             assert(0 <= delay && delay <= 2);
