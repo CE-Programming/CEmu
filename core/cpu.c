@@ -814,7 +814,7 @@ static void cpu_halt(void) {
 }
 
 void cpu_restore_next(void) {
-    if (cpu.NMI || cpu.abort) {
+    if (cpu.NMI || (cpu.IEF1 && (intrpt->status & intrpt->enabled)) || cpu.abort != CPU_ABORT_NONE) {
         cpu.next = cpu.cycles;
     } else if (cpu.IEF_wait) {
         cpu.next = cpu.eiDelay; /* execute one instruction */
@@ -855,7 +855,6 @@ void cpu_execute(void) {
             if (cpu.NMI) {
                 cpu.NMI = false;
                 cpu_call(0x66, cpu.MADL);
-                cpu_restore_next();
             } else {
                 cpu.IEF2 = false;
                 if (cpu.IM == 2) {
@@ -869,6 +868,7 @@ void cpu_execute(void) {
                     }
                 }
             }
+            cpu_restore_next();
             cpu_inst_start();
         } else if (cpu.halted) {
             cpu_halt();
