@@ -1,5 +1,6 @@
 #include "timers.h"
 #include "control.h"
+#include "cpu.h"
 #include "emu.h"
 #include "schedule.h"
 #include "interrupt.h"
@@ -62,7 +63,7 @@ static uint64_t gpt_next_event(enum sched_item_id id) {
             }
             delay = sched_cycle(SCHED_TIMER_DELAY) - sched_cycle(id);
             assert(0 <= delay && delay <= 2);
-            gpt.delayStatus |= status << (9*(2 - delay) + 3*index);
+            gpt.delayStatus |= status << (((2 - delay)*3 + index)*3);
             gpt.delayIntrpt |= 1 << (3*(4 - delay) + index);
         }
         item->clock = (gpt.control >> index*3 & 2) ? CLOCK_32K : CLOCK_CPU;
@@ -127,8 +128,10 @@ static uint8_t gpt_read(uint16_t address, bool peek) {
     uint8_t value = 0;
     (void)peek;
 
-    if (address < 0x30 && (address & 0xF) < 4) {
+    if (address < 0x30 && (address & 0xC) == 0) {
+        cpu.cycles--;
         value = read8(gpt_peek_counter(address >> 4 & 3), (address & 3) << 3);
+        cpu.cycles++;
     } else if (address < 0x40) {
         value = ((uint8_t *)&gpt)[address];
     }
@@ -137,15 +140,19 @@ static uint8_t gpt_read(uint16_t address, bool peek) {
 
 static void gpt_write(uint16_t address, uint8_t value, bool poke) {
     int timer;
+    bool counter_delay;
     (void)poke;
 
     if (address >= 0x34 && address < 0x38) {
         ((uint8_t *)&gpt)[address] &= ~value;
     } else if (address < 0x3C) {
+        counter_delay = address < 0x30 && (address & 0xC) == 0;
+        cpu.cycles += counter_delay;
         timer = address >> 4 & 3;
         gpt_some(timer, gpt_restore_state);
         ((uint8_t *)&gpt)[address] = value;
         gpt_some(timer, gpt_refresh);
+        cpu.cycles -= counter_delay;
     }
 }
 
