@@ -23,11 +23,14 @@ static uint32_t gpt_peek_counter(int index) {
     enum sched_item_id id = SCHED_TIMER1 + index;
     timer_state_t *timer = &gpt.timer[index];
     uint32_t invert = (gpt.control >> (9 + index) & 1) ? ~0 : 0;
-    uint32_t result = timer->counter;
-    if (gpt.control >> (index * 3) & 1 && sched_active(SCHED_TIMER1 + index)) {
-        result += (sched_ticks_remaining(id) + invert) ^ invert;
+    if (!(gpt.control >> (index * 3) & 1) || !sched_active(id)) {
+        return timer->counter;
     }
-    return result;
+    if (gpt.reset & 1 << index) {
+        gpt.reset &= ~(1 << index);
+        return invert;
+    }
+    return timer->counter + ((sched_ticks_remaining(id) + invert) ^ invert);
 }
 
 static void gpt_restore_state(enum sched_item_id id) {
@@ -40,6 +43,7 @@ static uint64_t gpt_next_event(enum sched_item_id id) {
     struct sched_item *item = &sched.items[id];
     timer_state_t *timer = &gpt.timer[index];
     uint64_t delay;
+    gpt.reset &= ~(1 << index);
     if (gpt.control >> (3*index) & 1) {
         int event;
         uint32_t counter = timer->counter, invert, status = 0, next;
@@ -50,6 +54,7 @@ static uint64_t gpt_next_event(enum sched_item_id id) {
             }
         }
         if (counter == invert) {
+            gpt.reset |= 1 << index;
             if (gpt.control >> (3*index) & 1 << 2) {
                 status |= 1 << 2;
             }
@@ -67,8 +72,13 @@ static uint64_t gpt_next_event(enum sched_item_id id) {
             gpt.delayIntrpt |= 1 << (3*(4 - delay) + index);
         }
         item->clock = (gpt.control >> index*3 & 2) ? CLOCK_32K : CLOCK_CPU;
-        next = counter ^ invert;
-        timer->counter = invert;
+        if (gpt.reset & 1 << index) {
+            next = 0;
+            timer->counter = counter;
+        } else {
+            next = counter ^ invert;
+            timer->counter = invert;
+        }
         for (event = 1; event >= 0; event--) {
             uint32_t temp = (counter ^ invert) - (timer->match[event] ^ invert);
             if (temp < next) {
@@ -129,9 +139,7 @@ static uint8_t gpt_read(uint16_t address, bool peek) {
     (void)peek;
 
     if (address < 0x30 && (address & 0xC) == 0) {
-        cpu.cycles--;
         value = read8(gpt_peek_counter(address >> 4 & 3), (address & 3) << 3);
-        cpu.cycles++;
     } else if (address < 0x40) {
         value = ((uint8_t *)&gpt)[address];
     }
