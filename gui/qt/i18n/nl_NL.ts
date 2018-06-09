@@ -1123,7 +1123,7 @@
     <message>
         <location filename="../mainwindow.ui" line="6660"/>
         <source>Resend checked</source>
-        <translation>Stuur opnieuw gecontroleerd</translation>
+        <translation>Controle opnieuw versturen</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8865"/>
@@ -1138,12 +1138,12 @@
     <message>
         <location filename="../mainwindow.ui" line="8907"/>
         <source>Show data column</source>
-        <translation>Kolom met gegevens weergeven</translation>
+        <translation>Datakolom weergeven</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8917"/>
         <source>Use implicit mode</source>
-        <translation>Gebruik de impliciete modus</translation>
+        <translation>Impliciete modus gebruiken</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8927"/>
@@ -1153,12 +1153,12 @@
     <message>
         <location filename="../mainwindow.ui" line="8934"/>
         <source>Use uppercase font</source>
-        <translation>Gebruik hoofdlettertype</translation>
+        <translation>Hoofdletters gebruiken</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8941"/>
         <source>Show address column</source>
-        <translation>Adres kolom weergeven</translation>
+        <translation>Adreskolom weergeven</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9085"/>
@@ -2209,12 +2209,12 @@ Bestand: </translation>
     <message>
         <location filename="../visualizerwidget.cpp" line="71"/>
         <source>8bpp Buffer 1</source>
-        <translation></translation>
+        <translation>8bpp Buffer 1</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="72"/>
         <source>8bpp Buffer 2</source>
-        <translation></translation>
+        <translation>8bpp Buffer 2</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="73"/>
