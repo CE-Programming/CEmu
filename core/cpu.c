@@ -776,7 +776,7 @@ void cpu_flush(uint32_t address, bool mode) {
 
 void cpu_nmi(void) {
     cpu.NMI = 1;
-    cpu.next = cpu.cycles;
+    cpu_restore_next();
 #ifdef DEBUG_SUPPORT
     if (debug.openOnReset) {
         debug_open(DBG_NMI_TRIGGERED, cpu.registers.PC);
@@ -800,6 +800,7 @@ void cpu_crash(const char *msg) {
 
 static void cpu_halt(void) {
     cpu.halted = true;
+    cpu_restore_next();
 #ifdef DEBUG_SUPPORT
     while (cpu.cycles < cpu.next && !cpu.IEF1 && debug.step) {
         cpu.haltCycles++;
@@ -845,7 +846,6 @@ void cpu_execute(void) {
         if (cpu.IEF_wait && cpu.cycles >= cpu.eiDelay) {
             cpu.IEF_wait = false;
             cpu.IEF1 = cpu.IEF2 = true;
-            cpu_restore_next();
         }
         if (cpu.NMI || (cpu.IEF1 && (intrpt->status & intrpt->enabled))) {
             cpu_prefetch_discard();
@@ -872,6 +872,8 @@ void cpu_execute(void) {
             cpu_inst_start();
         } else if (cpu.halted) {
             cpu_halt();
+        } else {
+            cpu_restore_next();
         }
         if (cpu.cycles >= cpu.next || cpu.abort != CPU_ABORT_NONE) {
             break;
