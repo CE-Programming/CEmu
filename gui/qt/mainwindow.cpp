@@ -1308,6 +1308,7 @@ void MainWindow::consoleSubmission() {
 }
 
 void MainWindow::emuSync() {
+    disconnect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed);
     connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed, Qt::QueuedConnection);
 }
 
