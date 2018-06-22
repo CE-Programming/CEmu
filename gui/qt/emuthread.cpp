@@ -43,7 +43,7 @@ void gui_throttle(void) {
     emu->throttleWait();
 }
 
-EmuThread::EmuThread(QObject *parent) : QThread{parent}, write(CONSOLE_BUFFER_SIZE),
+EmuThread::EmuThread(QObject *parent) : QThread{parent}, write{CONSOLE_BUFFER_SIZE},
                                         m_speed{100}, m_throttle{true},
                                         m_lastTime{std::chrono::steady_clock::now()},
                                         m_request{RequestNone}, m_debug{true} {
@@ -154,14 +154,13 @@ void EmuThread::throttleWait() {
     {
         std::unique_lock<std::mutex> lockSpeed(m_mutexSpeed);
         speed = m_speed;
-        throttle = m_throttle;
         if (!speed) {
             setActualSpeed(0);
             m_cvSpeed.wait(lockSpeed, [this] { return m_speed != 0; });
             speed = m_speed;
-            throttle = m_throttle;
             m_lastTime = std::chrono::steady_clock::now();
         }
+        throttle = m_throttle;
     }
     std::chrono::duration<int, std::ratio<100, 60>> unit(1);
     std::chrono::steady_clock::duration interval(std::chrono::duration_cast<std::chrono::steady_clock::duration>
