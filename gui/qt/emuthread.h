@@ -103,19 +103,21 @@ private:
         m_cv.wait(lock);
     }
 
-    int m_actualSpeed;
     bool m_saveImage;
 
+    int m_speed, m_actualSpeed;
+    bool m_throttle;
+    std::chrono::steady_clock::time_point m_lastTime;
+    std::mutex m_mutexSpeed;
+    std::condition_variable m_cvSpeed;
+
     std::atomic<int> m_request;
-    std::atomic<int> m_speed;
-    std::atomic<bool> m_throttle;
     std::atomic<bool> m_debug;
 
     QString m_savePath;
     QStringList m_vars;
     unsigned int m_sendLoc;
 
-    std::chrono::steady_clock::time_point m_lastTime;
     std::mutex m_mutex;
     std::condition_variable m_cv;
     std::mutex m_mutexDebug;

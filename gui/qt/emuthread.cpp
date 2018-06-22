@@ -43,14 +43,12 @@ void gui_throttle(void) {
     emu->throttleWait();
 }
 
-EmuThread::EmuThread(QObject *parent) : QThread{parent}, write(CONSOLE_BUFFER_SIZE) {
+EmuThread::EmuThread(QObject *parent) : QThread{parent}, write(CONSOLE_BUFFER_SIZE),
+                                        m_speed{100}, m_throttle{true},
+                                        m_lastTime{std::chrono::steady_clock::now()},
+                                        m_request{RequestNone}, m_debug{true} {
     assert(emu == Q_NULLPTR);
     emu = this;
-    m_speed = 100;
-    m_debug = false;
-    m_throttle = true;
-    m_request = RequestNone;
-    m_lastTime = std::chrono::steady_clock::now();
 }
 
 void EmuThread::run() {
@@ -151,19 +149,26 @@ void EmuThread::doStuff() {
 }
 
 void EmuThread::throttleWait() {
-    if (!m_speed) {
-        setActualSpeed(0);
-        while(!m_speed) {
-            QThread::msleep(10);
+    int speed;
+    bool throttle;
+    {
+        std::unique_lock<std::mutex> lockSpeed(m_mutexSpeed);
+        speed = m_speed;
+        throttle = m_throttle;
+        if (!speed) {
+            setActualSpeed(0);
+            m_cvSpeed.wait(lockSpeed, [this] { return m_speed != 0; });
+            speed = m_speed;
+            throttle = m_throttle;
+            m_lastTime = std::chrono::steady_clock::now();
         }
-        return;
     }
     std::chrono::duration<int, std::ratio<100, 60>> unit(1);
     std::chrono::steady_clock::duration interval(std::chrono::duration_cast<std::chrono::steady_clock::duration>
-                                                (std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(1000000 * 100 / m_speed)));
+                                                (std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(1000000 * 100 / speed)));
     std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now(), next_time = m_lastTime + interval;
-    if (m_throttle && cur_time < next_time) {
-        setActualSpeed(m_speed);
+    if (throttle && cur_time < next_time) {
+        setActualSpeed(speed);
         m_lastTime = next_time;
         std::this_thread::sleep_until(next_time);
     } else {
@@ -202,10 +207,17 @@ void EmuThread::save(bool image, const QString &path) {
 }
 
 void EmuThread::setSpeed(int value) {
-    m_speed = value;
+    {
+        std::unique_lock<std::mutex> lockSpeed(m_mutexSpeed);
+        m_speed = value;
+    }
+    if (value) {
+        m_cvSpeed.notify_one();
+    }
 }
 
 void EmuThread::setThrottle(bool state) {
+    std::unique_lock<std::mutex> lockSpeed(m_mutexSpeed);
     m_throttle = state;
 }
 
