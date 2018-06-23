@@ -46,7 +46,7 @@ void gui_throttle(void) {
 EmuThread::EmuThread(QObject *parent) : QThread{parent}, write{CONSOLE_BUFFER_SIZE},
                                         m_speed{100}, m_throttle{true},
                                         m_lastTime{std::chrono::steady_clock::now()},
-                                        m_request{RequestNone}, m_debug{true} {
+                                        m_request{RequestNone}, m_debug{false} {
     assert(emu == Q_NULLPTR);
     emu = this;
 }
