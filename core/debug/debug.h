@@ -93,6 +93,7 @@ bool debug_is_open(void);                            /* returns the status of th
 #define DBG_PORT_RANGE        0xFFFF00
 #define DBGOUT_PORT_RANGE     0xFB0000
 #define DBGERR_PORT_RANGE     0xFC0000
+#define DBGEXT_PORT           0xFD0000
 #define DBG_STACK_SIZE        0x100
 #define DBG_STACK_MASK        (DBG_STACK_SIZE-1)
 #define DBG_ADDR_SIZE         0x1000000

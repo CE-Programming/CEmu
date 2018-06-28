@@ -17,6 +17,10 @@ void gui_do_stuff(void) {
     emu->doStuff();
 }
 
+void gui_console_clear(void) {
+    emu->consoleClear();
+}
+
 void gui_console_printf(const char *format, ...) {
     va_list args;
     va_start(args, format);
@@ -155,7 +159,7 @@ void EmuThread::throttleWait() {
         std::unique_lock<std::mutex> lockSpeed(m_mutexSpeed);
         speed = m_speed;
         if (!speed) {
-            setActualSpeed(0);
+            sendSpeed(0);
             m_cvSpeed.wait(lockSpeed, [this] { return m_speed != 0; });
             speed = m_speed;
             m_lastTime = std::chrono::steady_clock::now();
@@ -167,12 +171,12 @@ void EmuThread::throttleWait() {
                                                 (std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(1000000 * 100 / speed)));
     std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now(), next_time = m_lastTime + interval;
     if (throttle && cur_time < next_time) {
-        setActualSpeed(speed);
+        sendSpeed(speed);
         m_lastTime = next_time;
         std::this_thread::sleep_until(next_time);
     } else {
         if (m_lastTime != cur_time) {
-            setActualSpeed(unit / (cur_time - m_lastTime));
+            sendSpeed(unit / (cur_time - m_lastTime));
             m_lastTime = cur_time;
         }
         std::this_thread::yield();

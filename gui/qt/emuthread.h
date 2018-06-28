@@ -1,4 +1,4 @@
-﻿#ifndef EMUTHREAD_H
+#ifndef EMUTHREAD_H
 #define EMUTHREAD_H
 
 #include "../../core/asic.h"
@@ -59,13 +59,14 @@ public:
 signals:
     // console
     void consoleStr();
+    void consoleClear();
 
     // debug
     void debugDisable();
     void debugCommand(int reason, uint32_t addr);
 
     // speed
-    void actualSpeedChanged(int value);
+    void sendSpeed(int value);
 
     // state
     void saved(bool success);
@@ -84,13 +85,6 @@ private:
             emit sentFile(f, sendVariableLink(f.toUtf8(), m_sendLoc));
         }
         emit sentFile(QString(), LINK_GOOD);
-    }
-
-    void setActualSpeed(int value) {
-        if (m_actualSpeed != value) {
-            m_actualSpeed = value;
-            emit actualSpeedChanged(value);
-        }
     }
 
     void req(int req) {

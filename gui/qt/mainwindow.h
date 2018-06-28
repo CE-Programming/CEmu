@@ -71,10 +71,6 @@ protected:
     virtual void dropEvent(QDropEvent *event) Q_DECL_OVERRIDE;
     virtual void dragEnterEvent(QDragEnterEvent *event) Q_DECL_OVERRIDE;
 
-private slots:
-    void emuSync();
-    void fpsSync();
-
 private:
     enum {
         CONSOLE_ESC,
@@ -180,6 +176,7 @@ private:
     void console(const QString &str, const QColor &colorFg = Qt::black, const QColor &colorBg = Qt::white, int type = EmuThread::ConsoleNorm);
     void console(int type, const char *str, int size = -1);
     void consoleStr();
+    void consoleClear();
     void consoleSubmission();
     void consoleModified();
 
@@ -619,6 +616,7 @@ private:
     QTimer m_timerFps;
     bool m_timerEmuTriggerable = true;
     bool m_timerFpsTriggerable = true;
+    bool m_timerEmuTriggered = false;
     bool m_timerFpsTriggered = false;
 
     static const char *m_varExtensions[];

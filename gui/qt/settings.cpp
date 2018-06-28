@@ -564,7 +564,6 @@ void MainWindow::setUIEditMode(bool mode) {
 
 void MainWindow::setThrottle(int mode) {
     ui->checkThrottle->setChecked(mode == Qt::Checked);
-    connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed, Qt::QueuedConnection);
     emu.setThrottle(mode == Qt::Checked);
 }
 
@@ -676,15 +675,11 @@ void MainWindow::setStatusInterval(int value) {
     ui->statusInterval->setValue(value);
     m_timerFps.stop();
     m_timerEmu.stop();
-    connect(&m_timerEmu, SIGNAL(timeout()), this, SLOT(emuSync()));
-    connect(&m_timerFps, SIGNAL(timeout()), this, SLOT(fpsSync()));
+    m_timerFpsTriggered = true;
+    m_timerEmuTriggered = true;
     m_timerEmuTriggerable = true;
     m_timerFpsTriggerable = true;
     if (!value) {
-        disconnect(&m_timerEmu, SIGNAL(timeout()), this, SLOT(emuSync()));
-        disconnect(&m_timerFps, SIGNAL(timeout()), this, SLOT(fpsSync()));
-        connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed, Qt::QueuedConnection);
-        m_timerFpsTriggered = true;
         m_timerEmuTriggerable = false;
         m_timerFpsTriggerable = false;
     } else {
@@ -700,6 +695,10 @@ void MainWindow::setEmuSpeed(int value) {
     ui->emulationSpeedSpin->blockSignals(false);
     ui->emulationSpeed->setValue(value);
     emu.setSpeed(value);
+    if (value == 0) {
+      m_timerEmuTriggered = true;
+      showEmuSpeed(0);
+    }
 }
 
 void MainWindow::keypadChanged() {

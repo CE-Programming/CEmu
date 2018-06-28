@@ -45,6 +45,7 @@ extern "C"
         }
     }
 
+    void gui_console_clear() {}
     void gui_console_printf(const char *format, ...) {}
     void gui_console_err_printf(const char *format, ...) {}
 

@@ -103,7 +103,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     // emulator -> gui (Should be queued)
     connect(&emu, &EmuThread::consoleStr, this, &MainWindow::consoleStr, Qt::UniqueConnection);
-    connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::consoleClear, this, &MainWindow::consoleClear, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::sendSpeed, this, &MainWindow::showEmuSpeed, Qt::QueuedConnection);
     connect(&emu, &EmuThread::debugDisable, this, &MainWindow::debugDisable, Qt::QueuedConnection);
     connect(&emu, &EmuThread::debugCommand, this, &MainWindow::debugCommand, Qt::QueuedConnection);
     connect(&emu, &EmuThread::saved, this, &MainWindow::emuSaved, Qt::QueuedConnection);
@@ -224,6 +225,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(this, &MainWindow::setLcdMode, ui->lcd, &LCDWidget::setMode);
     connect(this, &MainWindow::setLcdFrameskip, ui->lcd, &LCDWidget::setFrameskip);
     connect(ui->statusInterval, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setStatusInterval);
+    connect(&m_timerEmu, &QTimer::timeout, [this]{ m_timerEmuTriggered = true; });
+    connect(&m_timerFps, &QTimer::timeout, [this]{ m_timerFpsTriggered = true; });
 
     // screen capture
     connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
@@ -1266,6 +1269,22 @@ void MainWindow::console(int type, const char *str, int size) {
     }
 }
 
+void MainWindow::consoleClear() {
+    if (m_nativeConsole) {
+        int ret;
+#ifdef _WIN32
+        ret = system("cls");
+#else
+        ret = system("clear");
+#endif
+        if (ret == -1) {
+            console(QStringLiteral("[CEmu] Error clearing console\n"));
+        }
+    } else {
+        ui->console->clear();
+    }
+}
+
 void MainWindow::consoleStr() {
     if (int available = emu.read.available()) {
         int remaining = CONSOLE_BUFFER_SIZE - emu.readPos;
@@ -1307,23 +1326,10 @@ void MainWindow::consoleSubmission() {
     ui->consoleLine->clear();
 }
 
-void MainWindow::emuSync() {
-    disconnect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed);
-    connect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed, Qt::QueuedConnection);
-}
-
-void MainWindow::fpsSync() {
-    m_timerFpsTriggered = true;
-}
-
 void MainWindow::showEmuSpeed(int speed) {
-    static int speedPrev = 0;
-    if (speedPrev != speed) {
+    if (m_timerEmuTriggered) {
         m_speedLabel.setText(tr("Emulated Speed: ") + QString::number(speed) + QStringLiteral("%"));
-        speedPrev = speed;
-    }
-    if (m_timerEmuTriggerable) {
-        disconnect(&emu, &EmuThread::actualSpeedChanged, this, &MainWindow::showEmuSpeed);
+        m_timerEmuTriggered = !m_timerEmuTriggerable;
     }
 }
 

@@ -587,6 +587,13 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
                             debug.bufErrPos = 0;
                         }
                         break;
+                    } else if (addr == DBGEXT_PORT) {
+                        switch (value) {
+                            case 1:
+                                gui_console_clear();
+                            default:
+                                break;
+                        }
                     }
                 }
 #endif
