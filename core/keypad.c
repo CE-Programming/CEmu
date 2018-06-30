@@ -17,6 +17,26 @@ void keypad_intrpt_check() {
     intrpt_set(INT_KEYPAD, (keypad.status & keypad.enable) | (keypad.gpioStatus & keypad.gpioEnable));
 }
 
+static void keypad_any_check(void) {
+    uint8_t any = 0;
+    unsigned int row;
+    if (keypad.mode != 1) {
+        return;
+    }
+    for (row = 0; row < keypad.rows && row < sizeof(keypad.data) / sizeof(keypad.data[0]); row++) {
+        any |= keypad.keyMap[row] | keypad.delay[row];
+        keypad.delay[row] = 0;
+    }
+    any &= (1 << keypad.cols) - 1;
+    for (row = 0; row < keypad.rows && row < sizeof(keypad.data) / sizeof(keypad.data[0]); row++) {
+        keypad.data[row] = any;
+    }
+    if (any) {
+        keypad.status |= 4;
+        keypad_intrpt_check();
+    }
+}
+
 void EMSCRIPTEN_KEEPALIVE keypad_key_event(unsigned int row, unsigned int col, bool press) {
     if (row == 2 && col == 0) {
         intrpt_set(INT_ON, press);
@@ -29,14 +49,11 @@ void EMSCRIPTEN_KEEPALIVE keypad_key_event(unsigned int row, unsigned int col, b
         if (press) {
             keypad.keyMap[row] |= 1 << col;
             keypad.delay[row] |= 1 << col;
-            if (keypad.mode == 1) {
-                keypad.status |= 4;
-                keypad_intrpt_check();
-            }
         } else {
             keypad.keyMap[row] &= ~(1 << col);
             keypad_intrpt_check();
         }
+        keypad_any_check();
     }
 }
 
@@ -82,9 +99,8 @@ static void keypad_scan_event(enum sched_item_id id) {
     uint8_t row = keypad.row++;
     if (row < keypad.rows && row < sizeof(keypad.data) / sizeof(keypad.data[0])) {
         /* scan each data row */
-        uint16_t data = keypad.keyMap[row] | keypad.delay[row];
+        uint16_t data = (keypad.keyMap[row] | keypad.delay[row]) & ((1 << keypad.cols) - 1);
         keypad.delay[row] = 0;
-        data &= (1 << keypad.cols) - 1;
 
         /* if mode 3 or 2, generate data change interrupt */
         if (keypad.data[row] != data) {
@@ -107,32 +123,19 @@ static void keypad_scan_event(enum sched_item_id id) {
     keypad_intrpt_check();
 }
 
-static bool keypad_any_key_pressed(void) {
-    unsigned int row;
-    for (row = 0; row < keypad.rows && row < sizeof(keypad.data) / sizeof(keypad.data[0]); row++) {
-        if ((keypad.keyMap[row] | keypad.delay[row]) & ((1 << keypad.cols) - 1)) {
-            return true;
-        }
-    }
-    return false;
-}
-
 static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
     uint16_t index = (pio >> 2) & 0x7F;
     uint8_t bit_offset = (pio & 3) << 3;
 
     switch (index) {
         case 0x00:
-            write8(keypad.control,bit_offset,byte);
+            write8(keypad.control, bit_offset, byte);
             if (keypad.mode & 2) {
                 keypad.row = 0;
                 sched_set(SCHED_KEYPAD, keypad.rowWait);
             } else {
                 sched_clear(SCHED_KEYPAD);
-                if (keypad.mode == 1 && keypad_any_key_pressed()) {
-                    keypad.status |= 4;
-                    keypad_intrpt_check();
-                }
+                keypad_any_check();
             }
             break;
         case 0x01:
@@ -140,9 +143,7 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
             break;
         case 0x02:
             write8(keypad.status, bit_offset, keypad.status >> bit_offset & ~byte);
-            if (keypad.mode == 1 && keypad_any_key_pressed()) {
-                keypad.status |= 4;
-            }
+            keypad_any_check();
             keypad_intrpt_check();
             break;
         case 0x03:
