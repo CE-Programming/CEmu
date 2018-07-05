@@ -555,7 +555,7 @@ bool sendFilesForTest()
             {
                 std::cout << "- Sending forced file " << file << "... ";
             }
-            if (!cemucore::sendVariableLink(file.c_str(), cemucore::LINK_FILE))
+            if (cemucore::sendVariableLink(file.c_str(), cemucore::LINK_FILE) != cemucore::LINK_GOOD)
             {
                 if (debugLogs)
                 {
@@ -578,7 +578,7 @@ bool sendFilesForTest()
         {
             std::cout << "- Sending file " << file << "... ";
         }
-        if (!cemucore::sendVariableLink(file.c_str(), cemucore::LINK_FILE))
+        if (cemucore::sendVariableLink(file.c_str(), cemucore::LINK_FILE) != cemucore::LINK_GOOD)
         {
             if (debugLogs)
             {
