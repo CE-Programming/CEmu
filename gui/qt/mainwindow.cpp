@@ -368,7 +368,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     connect(m_shortcutFullscreen, &QShortcut::activated, this, &MainWindow::toggleFullscreen);
     connect(m_shortcutResend, &QShortcut::activated, this, &MainWindow::varResend);
-    connect(m_shortcutAsm, &QShortcut::activated, []{ autotester::sendKey(0x9CFC); });
+    connect(m_shortcutAsm, &QShortcut::activated, []{ autotester::sendKey(0xFC9C); });
     connect(m_shortcutDebug, &QShortcut::activated, this, &MainWindow::debugToggle);
     connect(m_shortcutStepIn, &QShortcut::activated, this, &MainWindow::stepIn);
     connect(m_shortcutStepOver, &QShortcut::activated, this, &MainWindow::stepOver);
@@ -2267,12 +2267,11 @@ void MainWindow::varLaunch(const calc_var_t *prgm) {
 
     autotester::sendKey(0x09); // Clear
     if (calc_var_is_asmprog(prgm)) {
-        autotester::sendKey(0x9CFC); // Asm(
+        autotester::sendKey(0xFC9C); // Asm(
     }
     autotester::sendKey(0xDA); // prgm
-    for (const char& c : prgm->name) {
-        if (!c) { break; }
-        autotester::sendLetterKeyPress(c); // type program name
+    for (const uint8_t *c = prgm->name; *c; c++) {
+        autotester::sendLetterKeyPress(*c); // type program name
     }
     autotester::sendKey(0x05); // Enter
     ui->lcd->setFocus();

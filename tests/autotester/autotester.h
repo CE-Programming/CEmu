@@ -68,6 +68,7 @@ namespace autotester
         { "cursorImage",    0xE30800 },  { "cursorImage_size",     1024 }
     };
 
+    void sendCSC(uint8_t csc);
     void sendKey(uint16_t key);
     void sendLetterKeyPress(char letter);
 

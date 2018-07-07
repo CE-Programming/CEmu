@@ -63,24 +63,31 @@ static const std::unordered_map<std::string, coord2d> valid_keys = {
 #define CE_KEY_ENTER    0x05
 #define CE_KEY_CLEAR    0x09
 #define CE_KEY_PRGM     0xDA
-#define CE_KEY_ASM      0x9CFC
-#define CE_KEY_CLASSIC  0xD3FB
+#define CE_KEY_ASM      0xFC9C
+#define CE_KEY_CLASSIC  0xFBD3
 
-// A few needed locations
-#define CE_KBDKEY       0xD0058C
-#define CE_KEYEXTEND    0xD0058E
+void sendCSC(uint8_t csc)
+{
+    while (!cemucore::sendCSC(csc)) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        DO_STEP_CALLBACK();
+    }
+}
+
 void sendKey(uint16_t key)
 {
-    cemucore::sendKey(key);
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    DO_STEP_CALLBACK();
+    while (!cemucore::sendKey(key)) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        DO_STEP_CALLBACK();
+    }
 }
 
 void sendLetterKeyPress(char letter)
 {
-    cemucore::sendLetterKeyPress(letter);
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    DO_STEP_CALLBACK();
+    while (!cemucore::sendLetterKeyPress(letter)) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        DO_STEP_CALLBACK();
+    }
 }
 
 typedef std::function<void(const std::string&)> seq_cmd_func_t;
@@ -91,7 +98,6 @@ static const std::unordered_map<std::string, seq_cmd_action_func_t> valid_action
         "launch", [] {
             // Assuming we're in the home screen...
             sendKey(CE_KEY_CLEAR);
-            std::this_thread::sleep_for(std::chrono::milliseconds(300));
             if (config.target.isASM) {
                 sendKey(CE_KEY_ASM);
             }
@@ -114,7 +120,6 @@ static const std::unordered_map<std::string, seq_cmd_action_func_t> valid_action
             sendKey(CE_KEY_CLEAR);
             sendKey(CE_KEY_CLASSIC);
             sendKey(CE_KEY_ENTER);
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
         }
     }
 };
