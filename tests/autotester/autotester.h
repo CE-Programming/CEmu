@@ -40,6 +40,8 @@ namespace autotester
     struct config_t {
         std::string rom;
         std::vector<std::string> transfer_files;
+        unsigned int delay_after_key  =  0; /* delay in ms after each "key" action (after release) */
+        unsigned int delay_after_step = 80; /* delay in ms after each sequence step */
         struct {
             std::string name;
             bool isASM;

@@ -219,6 +219,11 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
                 cemucore::keypad_key_event(key_coords.y, key_coords.x, true);
                 std::this_thread::sleep_for(std::chrono::milliseconds(80));
                 cemucore::keypad_key_event(key_coords.y, key_coords.x, false);
+                if (config.delay_after_key > 0)
+                {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(config.delay_after_key));
+                    DO_STEP_CALLBACK();
+                }
             } else {
                 std::cerr << "\t[Error] unknown key \"" << which_key << "\" was not pressed." << std::endl;
             };
@@ -382,6 +387,44 @@ bool loadJSONConfig(const std::string& jsonContents)
     } else {
         std::cerr << "[Error] \"target\" parameter not given or invalid" << std::endl;
         return false;
+    }
+
+    if (configJson.object_items().count("delay_after_key"))
+    {
+        tmp = configJson["delay_after_key"];
+        if (tmp.is_number())
+        {
+            unsigned int delay = tmp.int_value();
+            if (delay < 10000)
+            {
+                config.delay_after_key = delay;
+            } else {
+                std::cerr << "[Error] bad value for \"delay_after_key\": '" << delay << "'. Range: 0<x<10000." << std::endl;
+                return false;
+            }
+        } else {
+            std::cerr << "[Error] bad type for \"delay_after_key\", unsigned integer needed." << std::endl;
+            return false;
+        }
+    }
+
+    if (configJson.object_items().count("delay_after_step"))
+    {
+        tmp = configJson["delay_after_step"];
+        if (tmp.is_number())
+        {
+            unsigned int delay = tmp.int_value();
+            if (delay < 10000)
+            {
+                config.delay_after_step = delay;
+            } else {
+                std::cerr << "[Error] bad value for \"delay_after_step\": '" << delay << "'. Range: 0<x<10000." << std::endl;
+                return false;
+            }
+        } else {
+            std::cerr << "[Error] bad type for \"delay_after_step\", unsigned integer needed." << std::endl;
+            return false;
+        }
     }
 
     tmp = configJson["sequence"];
@@ -617,7 +660,7 @@ bool doTestSequence()
             return false;
         }
         DO_STEP_CALLBACK();
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(config.delay_after_step));
     }
     return true;
 }
