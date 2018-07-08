@@ -637,10 +637,11 @@ uint32_t mem_peek_long(uint32_t addr) {
     | mem_peek_byte(addr + 2) << 16;
 }
 uint32_t mem_peek_word(uint32_t addr, bool mode) {
+    addr = cpu_address_mode(addr, mode);
     if (mode) {
         return mem_peek_long(addr);
     } else {
-        return (uint32_t)mem_peek_short((addr & 0xFFFF) | (cpu.registers.MBASE << 16));
+        return mem_peek_short(addr);
     }
 }
 
@@ -654,6 +655,23 @@ void mem_poke_byte(uint32_t addr, uint8_t value) {
         }
     } else if (mmio_mapped(addr, select)) {
         port_poke_byte(mmio_port(addr, select), value);
+    }
+}
+void mem_poke_short(uint32_t addr, uint16_t value) {
+    mem_poke_byte(addr, value);
+    mem_poke_byte(addr + 1, value >> 8);
+}
+void mem_poke_long(uint32_t addr, uint32_t value) {
+    mem_poke_byte(addr, value);
+    mem_poke_byte(addr + 1, value >> 8);
+    mem_poke_byte(addr + 2, value >> 16);
+}
+void mem_poke_word(uint32_t addr, uint32_t value, bool mode) {
+    addr = cpu_address_mode(addr, mode);
+    if (mode) {
+        mem_poke_long(addr, value);
+    } else {
+        mem_poke_short(addr, value);
     }
 }
 
