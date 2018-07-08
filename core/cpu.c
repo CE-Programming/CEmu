@@ -60,6 +60,11 @@ static void cpu_prefetch(uint32_t address, bool mode) {
     cpu.registers.PC = cpu_address_mode(address, mode);
     cpu.prefetch = mem_read_cpu(cpu.registers.PC, true);
 }
+static void cpu_jump_target(uint32_t address, bool mode) {
+    void record_jump_target(uint32_t source, uint32_t target);
+    record_jump_target(cpu.registers.PC, cpu_address_mode(address, mode));
+    cpu_prefetch(address, mode);
+}
 static uint8_t cpu_fetch_byte(void) {
     uint8_t value;
 #ifdef DEBUG_SUPPORT
@@ -398,7 +403,7 @@ static void cpu_call(uint32_t address, bool mixed) {
     } else {
         cpu_push_word(cpu.registers.PC);
     }
-    cpu_prefetch(address, cpu.IL);
+    cpu_jump_target(address, cpu.IL);
 }
 
 static void cpu_trap_rewind(uint_fast8_t rewind) {
@@ -415,7 +420,7 @@ static void cpu_trap(void) {
 }
 
 static void cpu_jump(uint32_t address, bool mode) {
-    cpu_prefetch(address, mode);
+    cpu_jump_target(address, mode);
 #ifdef DEBUG_SUPPORT
     debug_record_ret(address, mode);
 #endif
@@ -770,7 +775,7 @@ void cpu_reset(void) {
 }
 
 void cpu_flush(uint32_t address, bool mode) {
-    cpu_prefetch(address, mode);
+    cpu_jump_target(address, mode);
     cpu_inst_start();
     cpu.inBlock = false;
 }
@@ -849,6 +854,8 @@ void cpu_execute(void) {
             cpu.IEF1 = cpu.IEF2 = true;
         }
         if (cpu.NMI || (cpu.IEF1 && (intrpt->status & intrpt->enabled))) {
+            void record_interrupt(uint32_t source);
+            record_interrupt(cpu.registers.PC);
             cpu_prefetch_discard();
             cpu.cycles += 2;
             cpu.L = cpu.IL = cpu.ADL || cpu.MADL;
@@ -906,12 +913,12 @@ void cpu_execute(void) {
                                     s = cpu_fetch_offset();
                                     if (--r->B) {
                                         cpu.cycles++;
-                                        cpu_prefetch(cpu_mask_mode((int32_t)r->PC + s, cpu.L), cpu.ADL);
+                                        cpu_jump_target(cpu_mask_mode((int32_t)r->PC + s, cpu.L), cpu.ADL);
                                     }
                                     break;
                                 case 3: /* JR d */
                                     s = cpu_fetch_offset();
-                                    cpu_prefetch(cpu_mask_mode((int32_t)r->PC + s, cpu.L), cpu.ADL);
+                                    cpu_jump_target(cpu_mask_mode((int32_t)r->PC + s, cpu.L), cpu.ADL);
                                     break;
                                 case 4:
                                 case 5:
@@ -920,7 +927,7 @@ void cpu_execute(void) {
                                     s = cpu_fetch_offset();
                                     if (cpu_read_cc(context.y - 4)) {
                                         cpu.cycles++;
-                                        cpu_prefetch(cpu_mask_mode((int32_t)r->PC + s, cpu.L), cpu.ADL);
+                                        cpu_jump_target(cpu_mask_mode((int32_t)r->PC + s, cpu.L), cpu.ADL);
                                     }
                                     break;
                             }
