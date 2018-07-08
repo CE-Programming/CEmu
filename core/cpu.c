@@ -61,10 +61,11 @@ static void cpu_prefetch(uint32_t address, bool mode) {
     cpu.prefetch = mem_read_cpu(cpu.registers.PC, true);
 }
 static uint8_t cpu_fetch_byte(void) {
-    uint8_t value = cpu.prefetch;
+    uint8_t value;
 #ifdef DEBUG_SUPPORT
     debug_inst_fetch();
 #endif
+    value = cpu.prefetch;
     cpu_prefetch(cpu.registers.PC + 1, cpu.ADL);
     return value;
 }
