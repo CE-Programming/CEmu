@@ -4,13 +4,23 @@
 #include <QtWidgets/QStyle>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QMainWindow>
+#include <QtWidgets/QStackedLayout>
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QDesktopWidget>
 #include <QtGui/QHoverEvent>
 
 DockWidget::DockWidget(QWidget *parent)
     : QDockWidget{parent}, m_titleHide{new QWidget{this}}, m_tabs{this},
-      m_closable{true}, m_expandable{true} {}
+      m_closable{true}, m_expandable{true} {
+    // If we just use a vanilla new QWidget for m_titleHide, as a Qt source
+    // comment tells us to, then m_titleHide->sizeHint() will return {-1, -1}
+    // which, as the exact same Qt comment hints at, doesn't work and causes,
+    // at the very least, one pixel to be cropped off of the top of the dock's
+    // child widget.  Therefore, our two choices are to subclass QWidget and
+    // override sizeHint and minimumSizeHint to both return {0, 0}, or to just
+    // set a dummy layout as we do below.
+    m_titleHide->setLayout(new QStackedLayout{m_titleHide});
+}
 
 DockWidget::DockWidget(const QString &title, QWidget *parent) : DockWidget{parent} {
     setWindowTitle(title);
