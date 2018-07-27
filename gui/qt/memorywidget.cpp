@@ -286,7 +286,7 @@ void MainWindow::contextMemWidget(const QPoint &pos, uint32_t address) {
             watchAdd(watchNextLabel(), address, 1, DBG_MASK_READ, true);
             memDocksUpdate();
         } else if (item->text() == toggleWrite) {
-            watchAdd(watchNextLabel(), address, 1, DBG_MASK_READ, true);
+            watchAdd(watchNextLabel(), address, 1, DBG_MASK_WRITE, true);
             memDocksUpdate();
         } else if (item->text() == toggleRw) {
             watchAdd(watchNextLabel(), address, 1, DBG_MASK_READ | DBG_MASK_WRITE, true);
