@@ -1665,7 +1665,7 @@ CEmu maakt gebruik van een aanpasbare dock-style interface. Verplaats de tabs en
     <message>
         <location filename="../mainwindow.cpp" line="1514"/>
         <source>Copy version</source>
-        <translation>Versier versie</translation>
+        <translation>Kopiëer versie</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1526"/>
