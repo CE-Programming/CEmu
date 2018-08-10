@@ -785,11 +785,17 @@ void MainWindow::setup() {
 
     m_uiEditMode = m_config->value(SETTING_UI_EDIT_MODE, true).toBool();
 
-    const QByteArray geometry = m_config->value(SETTING_WINDOW_GEOMETRY, QByteArray()).toByteArray();
     setUIDocks();
+
+    QRect geometryRect;
+    if (restoreGeometry(m_config->value(SETTING_WINDOW_GEOMETRY, QByteArray()).toByteArray())) {
+        geometryRect = geometry();
+    }
     show();
 
-    if (!restoreState(m_config->value(SETTING_WINDOW_STATE).toByteArray()) || !restoreGeometry(geometry)|| !restoreGeometry(geometry)) {
+    if (!geometryRect.isNull() && restoreState(m_config->value(SETTING_WINDOW_STATE).toByteArray())) {
+        QTimer::singleShot(0, [this, geometryRect]() { setGeometry(geometryRect); });
+    } else {
         foreach (DockWidget *dw, m_dockPtrs) {
             dw->setVisible(true);
         }
