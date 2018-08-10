@@ -381,7 +381,7 @@ private:
     void saveSettings();
     void saveDebug();
     void setFont(int size);
-    void setUIDocks(bool first);
+    void setUIDocks();
     void setUIDockEditMode(bool mode);
     void setUIEditMode(bool mode);
     void toggleFullscreen();
@@ -607,6 +607,7 @@ private:
     QStringList m_docksVisualizerConfig;
     QList<int> m_docksMemoryBytes;
     QList<bool> m_docksMemoryAscii;
+    QList<DockWidget*> m_dockPtrs;
     QSettings *m_config = Q_NULLPTR;
     HexWidget *m_memWidget = Q_NULLPTR;
 

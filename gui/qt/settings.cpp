@@ -471,11 +471,7 @@ void MainWindow::setDebugPath() {
     }
 }
 
-void MainWindow::setUIDocks(bool firstRun) {
-    // Already in this mode?
-    if (ui->tabWidget->isHidden()) {
-        return;
-    }
+void MainWindow::setUIDocks() {
 
     // Create "Docks" menu to make closing and opening docks more intuitive
     m_menuDocks = new QMenu(TITLE_DOCKS, this);
@@ -491,7 +487,6 @@ void MainWindow::setUIDocks(bool firstRun) {
     action->setIcon(m_iconLcd);
 
     // Convert the tabs into DockWidgets
-    DockWidget *prev = Q_NULLPTR;
     while (ui->tabWidget->count()) {
         DockWidget *dw = new DockWidget(ui->tabWidget, this);
 
@@ -502,11 +497,11 @@ void MainWindow::setUIDocks(bool firstRun) {
 
         dw->setState(m_uiEditMode);
         addDockWidget(Qt::RightDockWidgetArea, dw);
-        if (prev) {
-            tabifyDockWidget(prev, dw);
+        if (!m_dockPtrs.isEmpty()) {
+            tabifyDockWidget(m_dockPtrs.back(), dw);
         }
 
-        prev = dw;
+        m_dockPtrs.append(dw);
     }
 
     m_menuDocks->addAction(action);
@@ -526,7 +521,7 @@ void MainWindow::setUIDocks(bool firstRun) {
 
         dw->setState(m_uiEditMode);
         addDockWidget(Qt::RightDockWidgetArea, dw);
-        if (firstRun || !opts.useSettings) {
+        if (isFirstRun() || !opts.useSettings) {
             dw->hide();
             dw->close();
         }
@@ -545,6 +540,13 @@ void MainWindow::setUIDocks(bool firstRun) {
 
     ui->tabWidget->close();
     ui->tabDebug->close();
+
+    m_dockPtrs.append(ui->screenDock);
+
+    // hide all the docks
+    for (const auto &dock : findChildren<DockWidget*>()) {
+        dock->setVisible(false);
+    }
 }
 
 void MainWindow::setUIDockEditMode(bool mode) {

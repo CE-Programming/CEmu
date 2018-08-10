@@ -786,14 +786,15 @@ void MainWindow::setup() {
     m_uiEditMode = m_config->value(SETTING_UI_EDIT_MODE, true).toBool();
 
     const QByteArray geometry = m_config->value(SETTING_WINDOW_GEOMETRY, QByteArray()).toByteArray();
-    setUIDocks(geometry.isEmpty());
+    setUIDocks();
     show();
 
-    if (!restoreState(m_config->value(SETTING_WINDOW_STATE).toByteArray()) || !restoreGeometry(geometry) || !restoreGeometry(geometry)) {
-        QStyleOptionTitleBar so;
-        so.titleBarFlags = Qt::Window;
+    if (!restoreState(m_config->value(SETTING_WINDOW_STATE).toByteArray()) || !restoreGeometry(geometry)|| !restoreGeometry(geometry)) {
+        foreach (DockWidget *dw, m_dockPtrs) {
+            dw->setVisible(true);
+        }
         resize(minimumWidth(), minimumHeight());
-        move(0, style()->pixelMetric(QStyle::PM_TitleBarHeight, &so, this));
+        setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, size(), qApp->desktop()->availableGeometry()));
     }
 
     setUIEditMode(m_uiEditMode);
