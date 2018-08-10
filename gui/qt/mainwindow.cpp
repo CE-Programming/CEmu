@@ -774,19 +774,6 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent *event) {
     QMainWindow::mouseDoubleClickEvent(event);
 }
 
-void MainWindow::restore() {
-    const QByteArray geometry = m_config->value(SETTING_WINDOW_GEOMETRY, QByteArray()).toByteArray();
-    if (geometry.isEmpty()) {
-        QStyleOptionTitleBar so;
-        so.titleBarFlags = Qt::Window;
-        resize(minimumWidth(), minimumHeight());
-        move(0, style()->pixelMetric(QStyle::PM_TitleBarHeight, &so, this));
-    } else {
-        restoreGeometry(geometry);
-        restoreState(m_config->value(SETTING_WINDOW_STATE).toByteArray());
-    }
-}
-
 void MainWindow::setup() {
     if (!m_initPassed) {
         QFile(m_pathConfig).remove();
@@ -797,18 +784,17 @@ void MainWindow::setup() {
     m_uiEditMode = m_config->value(SETTING_UI_EDIT_MODE, true).toBool();
 
     const QByteArray geometry = m_config->value(SETTING_WINDOW_GEOMETRY, QByteArray()).toByteArray();
-    setUIEditMode(m_uiEditMode);
     setUIDocks(geometry.isEmpty());
+    show();
 
-    if (geometry.isEmpty()) {
+    if (!restoreState(m_config->value(SETTING_WINDOW_STATE).toByteArray()) || !restoreGeometry(geometry)) {
         QStyleOptionTitleBar so;
         so.titleBarFlags = Qt::Window;
         resize(minimumWidth(), minimumHeight());
         move(0, style()->pixelMetric(QStyle::PM_TitleBarHeight, &so, this));
-    } else {
-        restoreGeometry(geometry);
-        restoreState(m_config->value(SETTING_WINDOW_STATE).toByteArray());
     }
+
+    setUIEditMode(m_uiEditMode);
 
     stateLoadInfo();
     recentLoadInfo();

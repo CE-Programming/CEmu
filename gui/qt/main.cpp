@@ -167,9 +167,6 @@ int main(int argc, char *argv[]) {
 
     if (!EmuWin.isResetAll()) {
         EmuWin.setup();
-        EmuWin.show();
-        EmuWin.restore();
-
         ret = app.exec();
     }
 

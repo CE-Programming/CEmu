@@ -53,7 +53,6 @@ public:
     explicit MainWindow(CEmuOpts &opts, QWidget *p = Q_NULLPTR);
     ~MainWindow();
     void setup();
-    void restore();
     bool isInitialized();
     bool isReload();
     bool isResetAll();
