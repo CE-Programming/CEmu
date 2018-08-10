@@ -789,7 +789,7 @@ void MainWindow::setup() {
     setUIDocks(geometry.isEmpty());
     show();
 
-    if (!restoreState(m_config->value(SETTING_WINDOW_STATE).toByteArray()) || !restoreGeometry(geometry)) {
+    if (!restoreState(m_config->value(SETTING_WINDOW_STATE).toByteArray()) || !restoreGeometry(geometry) || !restoreGeometry(geometry)) {
         QStyleOptionTitleBar so;
         so.titleBarFlags = Qt::Window;
         resize(minimumWidth(), minimumHeight());
