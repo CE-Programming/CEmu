@@ -33,6 +33,7 @@ const QString MainWindow::SETTING_DEBUGGER_RESTORE_ON_OPEN  = QStringLiteral("De
 const QString MainWindow::SETTING_DEBUGGER_SAVE_ON_CLOSE    = QStringLiteral("Debugger/save_on_close");
 const QString MainWindow::SETTING_DEBUGGER_RESET_OPENS      = QStringLiteral("Debugger/open_on_reset");
 const QString MainWindow::SETTING_DEBUGGER_ENABLE_SOFT      = QStringLiteral("Debugger/enable_soft_commands");
+const QString MainWindow::SETTING_DEBUGGER_BOLD_SYMBOLS     = QStringLiteral("Debugger/disasm_bold_symbols");
 const QString MainWindow::SETTING_DEBUGGER_DISASM_SPACE     = QStringLiteral("Debugger/disasm_add_space");
 const QString MainWindow::SETTING_DEBUGGER_ADDR_COL         = QStringLiteral("Debugger/disasm_addr_column");
 const QString MainWindow::SETTING_DEBUGGER_DATA_COL         = QStringLiteral("Debugger/disasm_data_column");
@@ -271,8 +272,17 @@ void MainWindow::setDebugSoftCommands(bool state) {
     debug_flag(DBG_SOFT_COMMANDS, state);
 }
 
+void MainWindow::setDebugDisasmBoldSymbols(bool state) {
+    ui->checkDisasmBoldSymbols->setChecked(state);
+    m_config->setValue(SETTING_DEBUGGER_BOLD_SYMBOLS, state);
+    disasm.bold_sym = state;
+    if (guiDebug) {
+        disasmUpdate();
+    }
+}
+
 void MainWindow::setDebugDisasmDataCol(bool state) {
-    ui->checkDataCol->setChecked(state);
+    ui->checkDisasmDataCol->setChecked(state);
     m_config->setValue(SETTING_DEBUGGER_DATA_COL, state);
     disasm.bytes = state;
     if (guiDebug) {

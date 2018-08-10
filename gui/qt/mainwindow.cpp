@@ -170,7 +170,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonRefreshEquates, &QToolButton::clicked, this, &MainWindow::equatesRefresh);
     connect(ui->buttonToggleBreakpoints, &QToolButton::toggled, this, &MainWindow::setDebugIgnoreBreakpoints);
     connect(ui->checkDebugResetTrigger, &QCheckBox::toggled, this, &MainWindow::setDebugResetTrigger);
-    connect(ui->checkDataCol, &QCheckBox::toggled, this, &MainWindow::setDebugDisasmDataCol);
+    connect(ui->checkDisasmDataCol, &QCheckBox::toggled, this, &MainWindow::setDebugDisasmDataCol);
+    connect(ui->checkDisasmBoldSymbols, &QCheckBox::toggled, this, &MainWindow::setDebugDisasmBoldSymbols);
     connect(ui->checkDisasmAddr, &QCheckBox::toggled, this, &MainWindow::setDebugDisasmAddrCol);
     connect(ui->checkDisasmImplict, &QCheckBox::toggled, this, &MainWindow::setDebugDisasmImplict);
     connect(ui->checkDisasmUppercase, &QCheckBox::toggled, this, &MainWindow::setDebugDisasmUppercase);
@@ -448,6 +449,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setDebugDisasmSpace(m_config->value(SETTING_DEBUGGER_DISASM_SPACE, false).toBool());
     setDebugDisasmAddrCol(m_config->value(SETTING_DEBUGGER_ADDR_COL, true).toBool());
     setDebugDisasmDataCol(m_config->value(SETTING_DEBUGGER_DATA_COL, true).toBool());
+    setDebugDisasmBoldSymbols(m_config->value(SETTING_DEBUGGER_BOLD_SYMBOLS, false).toBool());
     setDebugDisasmUppercase(m_config->value(SETTING_DEBUGGER_UPPERCASE, false).toBool());
     setDebugDisasmImplict(m_config->value(SETTING_DEBUGGER_IMPLICT, false).toBool());
     setDebugAutoSave(m_config->value(SETTING_DEBUGGER_RESTORE_ON_OPEN, false).toBool());
@@ -2156,7 +2158,7 @@ void MainWindow::disasmLine() {
             if (disasm.base > 511 || (disasm.base < 512 && sit->second[0] == '_')) {
                 line = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b>     %2</pre>"))
                                         .arg(int2hex(disasm.base, 6),
-                                             QString::fromStdString(sit->second) + ":");
+                                             QString::fromStdString(disasm.bold_sym ? "<b>" + sit->second + "</b>" : sit->second) + ":");
 
                 m_disasm->appendHtml(line);
             }

@@ -34,6 +34,7 @@ typedef struct {
     bool implicit;
     bool bytes;
     bool addr;
+    bool bold_sym;
     map_t map;
     map_value_t reverse;
     std::string comma;

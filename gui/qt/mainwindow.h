@@ -402,6 +402,7 @@ private:
     void setDebugDisasmSpace(bool state);
     void setDebugDisasmImplict(bool state);
     void setDebugDisasmUppercase(bool state);
+    void setDebugDisasmBoldSymbols(bool state);
     void setDebugIgnoreBreakpoints(bool state);
     void setDebugResetTrigger(bool state);
     void setDebugSoftCommands(bool state);
@@ -627,6 +628,7 @@ private:
     static const QString SETTING_DEBUGGER_SAVE_ON_CLOSE;
     static const QString SETTING_DEBUGGER_RESET_OPENS;
     static const QString SETTING_DEBUGGER_ENABLE_SOFT;
+    static const QString SETTING_DEBUGGER_BOLD_SYMBOLS;
     static const QString SETTING_DEBUGGER_DATA_COL;
     static const QString SETTING_DEBUGGER_ADDR_COL;
     static const QString SETTING_DEBUGGER_IMPLICT;
