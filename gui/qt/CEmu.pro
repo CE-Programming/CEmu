@@ -41,7 +41,7 @@ if (linux) {
     INSTALLS += target desktop
 }
 
-QT += core gui widgets network
+QT += core concurrent gui widgets network
 
 isEmpty(TARGET_NAME) {
     TARGET_NAME = CEmu
@@ -77,7 +77,7 @@ if (!win32-msvc*) {
     }
 
     CONFIG += link_pkgconfig
-    PKGCONFIG += zlib
+    PKGCONFIG += zlib libarchive
     # You should run ./capture/get_libpng-apng.sh first!
     isEmpty(USE_LIBPNG) {
         exists("$$PWD/capture/libpng-apng/.libs/libpng16.a") {
@@ -178,6 +178,7 @@ SOURCES += \
     ../../core/spi.c \
     ../../core/debug/debug.c \
     ../../core/debug/zdis/zdis.c \
+    QArchive.cc \
     ipc.cpp \
     main.cpp \
     utils.cpp \
@@ -269,6 +270,7 @@ HEADERS  += \
     ../../core/spi.h \
     ../../core/debug/debug.h \
     ../../core/debug/zdis/zdis.h \
+    QArchive.hpp \
     ipc.h \
     utils.h \
     cemuopts.h \

@@ -11,6 +11,7 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QDir>
 #include <QtCore/QDirIterator>
+#include <QtCore/QTemporaryDir>
 
 class SendingHandler : public QObject {
     Q_OBJECT
@@ -37,6 +38,7 @@ signals:
 
 private:
     void checkDirForEquateFiles(QString &dirPath);
+    QStringList getValidFilesFromArchive(const QString &archivePath);
 
     enum recentIndex {
         RECENT_SELECT=0,
@@ -45,6 +47,7 @@ private:
         RECENT_PATH
     };
 
+    QTemporaryDir m_tempDir;
     QProgressBar *m_progressBar;
     QTableWidget *m_table;
     QIcon m_sendIcon;

@@ -13,6 +13,7 @@ Portions of this program use code, directly or modified, from:
 * z80e, a z80 emulator developed by KnightOS Group
 * Firebird, a TI-Nspire emulator developed by Fabian Vogt
 * tivars_lib_cpp, developed by Adrien "Adriweb" Bertrand
+* QArchive, developed by "antony jr" (BSD 3-Clause license) - https://github.com/antony-jr/QArchive
 * FatCow's "Farm-Fresh Web Icons" (CC 3.0 license) - http://www.fatcow.com/free-icons
 
 CEmu also uses the APNG-enabled fork of libpng (https://sourceforge.net/projects/libpng-apng/) released under the zlib/libpng License.
