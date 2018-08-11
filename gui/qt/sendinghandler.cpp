@@ -5,10 +5,12 @@
 
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QToolButton>
 #include <QtCore/QFileInfo>
 #include <QtCore/QMimeData>
 #include <QtGui/QDragEnterEvent>
-#include <QtWidgets/QToolButton>
+
+#include "QArchive.hpp"
 
 SendingHandler *sendingHandler = Q_NULLPTR;
 
@@ -28,6 +30,47 @@ static const QStringList valid_suffixes = { QStringLiteral("8xp"),
                                             QStringLiteral("8ca"),
                                             QStringLiteral("8cg"),
                                             QStringLiteral("8ci") };
+
+static inline bool pathHasBundleExtension(const QString& filepath) {
+    return filepath.endsWith("b84") || filepath.endsWith("b83");
+}
+
+QStringList SendingHandler::getValidFilesFromArchive(const QString& archivePath) {
+    if (!m_tempDir.isValid()) {
+        QMessageBox::critical(Q_NULLPTR, tr("Transfer error"), tr("Could not create the temporary directory to extract the archive.\nFile: ") + archivePath);
+        return {};
+    }
+
+    QStringList filesInArchive = QArchive::Reader(archivePath).start().waitForFinished().getFilesList().keys();
+    QStringList filesToExtract;
+    for (const QString& name : filesInArchive) {
+        if (valid_suffixes.contains(QFileInfo(name).suffix().toLower())) {
+            filesToExtract.append(name);
+        }
+    }
+
+    if (filesToExtract.empty()) {
+        QMessageBox::critical(Q_NULLPTR, tr("Transfer error"), tr("No valid file found in this archive.\nFile: ") + archivePath);
+        return {};
+    }
+
+    const QString tempDirPath = m_tempDir.path();
+
+    QArchive::Extractor(archivePath, tempDirPath).onlyExtract(filesToExtract).start().waitForFinished();
+
+    QFileInfoList extractedFilesInfos = QDir(tempDirPath).entryInfoList(QDir::Filter::Files);
+
+    if (extractedFilesInfos.size() != filesToExtract.size()) {
+        QMessageBox::critical(Q_NULLPTR, tr("Transfer error"), tr("An error occured while extracting this archive.\nFile: ") + archivePath);
+        return {};
+    }
+
+    QStringList validFilesPaths;
+    for (const QFileInfo& fi : extractedFilesInfos) {
+        validFilesPaths.append(fi.absoluteFilePath());
+    }
+    return validFilesPaths;
+}
 
 SendingHandler::SendingHandler(QObject *parent, QProgressBar *bar, QTableWidget *table) : QObject{parent} {
     m_progressBar = bar;
@@ -55,7 +98,12 @@ void SendingHandler::dropOccured(QDropEvent *e, unsigned int location) {
 
     QStringList files;
     for(auto &&url : mime_data->urls()) {
-        files.append(url.toLocalFile());
+        QString filePath = url.toLocalFile();
+        if (pathHasBundleExtension(filePath)) {
+            files.append(getValidFilesFromArchive(filePath));
+        } else {
+            files.append(filePath);
+        }
     }
 
     sendFiles(files, location);
@@ -103,7 +151,8 @@ bool SendingHandler::dragOccured(QDragEnterEvent *e) {
 
     for (QUrl &url : e->mimeData()->urls()) {
         QFileInfo file(url.fileName());
-        if (!valid_suffixes.contains(file.suffix().toLower())) {
+        QString fileExtension = file.suffix().toLower();
+        if (!pathHasBundleExtension(fileExtension) && !valid_suffixes.contains(fileExtension)) {
             e->ignore();
             return false;
         }
