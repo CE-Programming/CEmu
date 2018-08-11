@@ -1933,7 +1933,7 @@ void Reader::deinit(int canceled)
 
 QString Reader::getDirectoryFileName(const QString &dir)
 {
-    if(dir[dir.count() - 1] == "/") {
+    if(dir[dir.count() - 1] == QStringLiteral("/")) {
         return dir.mid(0, dir.count() - 1);
     }
     return dir;

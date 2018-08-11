@@ -101,6 +101,7 @@ void SendingHandler::dropOccured(QDropEvent *e, unsigned int location) {
         QString filePath = url.toLocalFile();
         if (pathHasBundleExtension(filePath)) {
             files.append(getValidFilesFromArchive(filePath));
+            addFile(filePath, true); // we do this here because it's convenient...
         } else {
             files.append(filePath);
         }
@@ -184,19 +185,27 @@ void SendingHandler::sentFile(const QString &file, int ok) {
         return;
     }
 
+    QFileInfo fi(file);
+    QString directory = fi.absolutePath();
+
     // check for sending of equate file
     if (m_sendEquates) {
-        QFileInfo fi(file);
-        QString directory = fi.absolutePath();
         if (!m_dirs.contains(directory)) {
             m_dirs.append(directory);
             checkDirForEquateFiles(directory);
         }
     }
 
-    for (int j = 0; j < rows; j++) {
-        if (!m_table->item(j, RECENT_PATH)->text().compare(file)) {
-            add = false;
+    // don't add temp files in the history
+    if (directory == m_tempDir.path()) {
+        add = false;
+    }
+
+    if (add) {
+        for (int j = 0; j < rows; j++) {
+            if (!m_table->item(j, RECENT_PATH)->text().compare(file)) {
+                add = false;
+            }
         }
     }
 
