@@ -12,6 +12,23 @@
 
 SendingHandler *sendingHandler = Q_NULLPTR;
 
+static const QStringList valid_suffixes = { QStringLiteral("8xp"),
+                                            QStringLiteral("8xv"),
+                                            QStringLiteral("8xl"),
+                                            QStringLiteral("8xn"),
+                                            QStringLiteral("8xm"),
+                                            QStringLiteral("8xy"),
+                                            QStringLiteral("8xg"),
+                                            QStringLiteral("8xs"),
+                                            QStringLiteral("8xd"),
+                                            QStringLiteral("8xw"),
+                                            QStringLiteral("8xc"),
+                                            QStringLiteral("8xz"),
+                                            QStringLiteral("8xt"),
+                                            QStringLiteral("8ca"),
+                                            QStringLiteral("8cg"),
+                                            QStringLiteral("8ci") };
+
 SendingHandler::SendingHandler(QObject *parent, QProgressBar *bar, QTableWidget *table) : QObject{parent} {
     m_progressBar = bar;
     m_table = table;
@@ -85,23 +102,6 @@ bool SendingHandler::dragOccured(QDragEnterEvent *e) {
     }
 
     for (QUrl &url : e->mimeData()->urls()) {
-        static const QStringList valid_suffixes = { QStringLiteral("8xp"),
-                                                    QStringLiteral("8xv"),
-                                                    QStringLiteral("8xl"),
-                                                    QStringLiteral("8xn"),
-                                                    QStringLiteral("8xm"),
-                                                    QStringLiteral("8xy"),
-                                                    QStringLiteral("8xg"),
-                                                    QStringLiteral("8xs"),
-                                                    QStringLiteral("8xd"),
-                                                    QStringLiteral("8xw"),
-                                                    QStringLiteral("8xc"),
-                                                    QStringLiteral("8xz"),
-                                                    QStringLiteral("8xt"),
-                                                    QStringLiteral("8ca"),
-                                                    QStringLiteral("8cg"),
-                                                    QStringLiteral("8ci") };
-
         QFileInfo file(url.fileName());
         if (!valid_suffixes.contains(file.suffix().toLower())) {
             e->ignore();
