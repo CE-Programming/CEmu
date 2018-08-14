@@ -1514,6 +1514,7 @@ void cpu_execute(void) {
                                                             break;
                                                         case 0xD7: /* LD HL, I */
                                                             r->HL = cpu_mask_mode(r->I | (r->MBASE << 16), cpu.L);
+                                                            r->F = cpuflag_undef(r->F);
                                                             break;
                                                         default:   /* OPCODETRAP */
                                                             cpu_trap();
