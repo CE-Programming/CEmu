@@ -60,6 +60,7 @@ const QString MainWindow::SETTING_WINDOW_GEOMETRY           = QStringLiteral("Wi
 const QString MainWindow::SETTING_WINDOW_SEPARATOR          = QStringLiteral("Window/boundaries");
 const QString MainWindow::SETTING_WINDOW_MENUBAR            = QStringLiteral("Window/menubar");
 const QString MainWindow::SETTING_WINDOW_STATUSBAR          = QStringLiteral("Window/statusbar");
+const QString MainWindow::SETTING_WINDOW_POSITION          = QStringLiteral("Window/position");
 const QString MainWindow::SETTING_WINDOW_MEMORY_DOCKS       = QStringLiteral("Window/memory_docks");
 const QString MainWindow::SETTING_WINDOW_MEMORY_DOCK_BYTES  = QStringLiteral("Window/memory_docks_bytes");
 const QString MainWindow::SETTING_WINDOW_MEMORY_DOCK_ASCII  = QStringLiteral("Window/memory_docks_ascii");
@@ -980,6 +981,7 @@ void MainWindow::saveDebug() {
 
 void MainWindow::saveSettings() {
     if (opts.useSettings) {
+        m_config->setValue(SETTING_WINDOW_POSITION, pos());
         m_config->setValue(SETTING_WINDOW_GEOMETRY, saveGeometry());
         m_config->setValue(SETTING_WINDOW_STATE, saveState());
         m_config->setValue(SETTING_CURRENT_DIR, m_dir.absolutePath());
@@ -1016,6 +1018,7 @@ void MainWindow::guiExport() {
     window.setValue(SETTING_WINDOW_SEPARATOR, m_config->value(SETTING_WINDOW_SEPARATOR));
     window.setValue(SETTING_WINDOW_STATE, saveState());
     window.setValue(SETTING_WINDOW_GEOMETRY, saveGeometry());
+    window.setValue(SETTING_WINDOW_POSITION, pos());
     window.setValue(SETTING_WINDOW_MEMORY_DOCKS, m_docksMemory);
     window.setValue(SETTING_WINDOW_MEMORY_DOCK_BYTES, QVariant::fromValue(m_docksMemoryBytes));
     window.setValue(SETTING_WINDOW_MEMORY_DOCK_ASCII, QVariant::fromValue(m_docksMemoryAscii));
@@ -1039,6 +1042,7 @@ void MainWindow::guiImport() {
     m_config->setValue(SETTING_SCREEN_SKIN, window.value(SETTING_SCREEN_SKIN));
     m_config->setValue(SETTING_WINDOW_GEOMETRY, window.value(SETTING_WINDOW_GEOMETRY));
     m_config->setValue(SETTING_WINDOW_STATE, window.value(SETTING_WINDOW_STATE));
+    m_config->setValue(SETTING_WINDOW_POSITION, window.value(SETTING_WINDOW_POSITION));
     m_config->setValue(SETTING_WINDOW_MEMORY_DOCKS, window.value(SETTING_WINDOW_MEMORY_DOCKS));
     m_config->setValue(SETTING_WINDOW_MEMORY_DOCK_BYTES, window.value(SETTING_WINDOW_MEMORY_DOCK_BYTES));
     m_config->setValue(SETTING_WINDOW_MEMORY_DOCK_ASCII, window.value(SETTING_WINDOW_MEMORY_DOCK_ASCII));

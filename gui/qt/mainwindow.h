@@ -655,6 +655,7 @@ private:
     static const QString SETTING_WINDOW_SEPARATOR;
     static const QString SETTING_WINDOW_MENUBAR;
     static const QString SETTING_WINDOW_STATUSBAR;
+    static const QString SETTING_WINDOW_POSITION;
     static const QString SETTING_WINDOW_MEMORY_DOCKS;
     static const QString SETTING_WINDOW_MEMORY_DOCK_BYTES;
     static const QString SETTING_WINDOW_MEMORY_DOCK_ASCII;

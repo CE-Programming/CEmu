@@ -786,6 +786,9 @@ void MainWindow::setup() {
     m_uiEditMode = m_config->value(SETTING_UI_EDIT_MODE, true).toBool();
 
     const QByteArray geometry = m_config->value(SETTING_WINDOW_GEOMETRY, QByteArray()).toByteArray();
+    const QPoint position = m_config->value(SETTING_WINDOW_POSITION).toPoint();
+    QTimer::singleShot(0, [this, position]() { move(position); });
+
     setUIDocks();
     show();
 
@@ -980,6 +983,7 @@ void MainWindow::resetGui() {
     m_config->remove(SETTING_SCREEN_SKIN);
     m_config->remove(SETTING_SCREEN_SCALE);
     m_config->remove(SETTING_WINDOW_GEOMETRY);
+    m_config->remove(SETTING_WINDOW_POSITION);
     m_config->remove(SETTING_WINDOW_MEMORY_DOCKS);
     m_config->remove(SETTING_WINDOW_MEMORY_DOCK_ASCII);
     m_config->remove(SETTING_WINDOW_MEMORY_DOCK_BYTES);
@@ -1006,6 +1010,7 @@ bool MainWindow::isResetAll() {
             m_config->remove(SETTING_IMAGE_PATH);
             m_config->remove(SETTING_DEBUGGER_IMAGE_PATH);
             m_config->remove(SETTING_SCREEN_SKIN);
+            m_config->remove(SETTING_WINDOW_POSITION);
             m_config->remove(SETTING_WINDOW_GEOMETRY);
             m_config->remove(SETTING_WINDOW_STATE);
             m_config->remove(SETTING_WINDOW_MEMORY_DOCKS);
