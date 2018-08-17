@@ -41,17 +41,21 @@ DockWidget::DockWidget(QTabWidget *tabs, QWidget *parent) : DockWidget{tabs->tab
 }
 
 void DockWidget::setState(bool edit) {
+    QDockWidget::DockWidgetFeatures features;
     if (edit) {
-        if (isClosable()) {
-            setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
-        } else {
-            setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
-        }
         setAllowedAreas(Qt::AllDockWidgetAreas);
+        features = QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable;
+        if (isClosable()) {
+            features |= QDockWidget::DockWidgetClosable;
+        }
     } else {
-        setFeatures(QDockWidget::NoDockWidgetFeatures);
         setAllowedAreas(Qt::NoDockWidgetArea);
+        features = QDockWidget::NoDockWidgetFeatures;
+        if (isFloating()) {
+            features |= QDockWidget::DockWidgetFloatable;
+        }
     }
+    setFeatures(features);
     setTitleBarWidget(isFloating() || edit ? Q_NULLPTR : m_titleHide);
 }
 
