@@ -25,11 +25,12 @@ public:
 signals:
     void closed();
 
-protected slots:
+protected:
+    virtual bool event(QEvent *event) Q_DECL_OVERRIDE;
     QList<DockWidget *> tabs(DockWidget *without = Q_NULLPTR);
     virtual void showEvent(QShowEvent *event) Q_DECL_OVERRIDE;
-    virtual void closeEvent(QCloseEvent *event) Q_DECL_OVERRIDE;
     void updateExpandability(const QList<DockWidget *> &tabs);
+    virtual void closeEvent(QCloseEvent *event) Q_DECL_OVERRIDE;
 
 private:
     QWidget *m_titleHide;

@@ -59,6 +59,14 @@ void DockWidget::setState(bool edit) {
     setTitleBarWidget(isFloating() || edit ? Q_NULLPTR : m_titleHide);
 }
 
+bool DockWidget::event(QEvent *event) {
+    if (event->type() == QEvent::MouseButtonDblClick &&
+        allowedAreas() == Qt::NoDockWidgetArea) {
+        return QWidget::event(event);
+    }
+    return QDockWidget::event(event);
+}
+
 QList<DockWidget *> DockWidget::tabs(DockWidget *without) {
     QList<DockWidget *> tabs;
     if (this != without) {
