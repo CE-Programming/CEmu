@@ -250,6 +250,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->actionReportBug, &QAction::triggered, []{ QDesktopServices::openUrl(QUrl("https://github.com/CE-Programming/CEmu/issues")); });
 
     // other gui actions
+    connect(ui->checkAllowGroupDrag, &QCheckBox::stateChanged, this, &MainWindow::setDockGroupDrag);
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
     connect(ui->scaleLCD, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setLcdScale);
     connect(ui->guiSkip, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setGuiSkip);
@@ -442,10 +443,11 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setStatusInterval(m_config->value(SETTING_STATUS_INTERVAL, 1).toInt());
     setLcdScale(m_config->value(SETTING_SCREEN_SCALE, 100).toUInt());
     setSkinToggle(m_config->value(SETTING_SCREEN_SKIN, true).toBool());
+    setLcdSpi(m_config->value(SETTING_SCREEN_SPI, true).toBool());
     setGuiSkip(m_config->value(SETTING_SCREEN_FRAMESKIP, 0).toInt());
     setEmuSpeed(m_config->value(SETTING_EMUSPEED, 100).toInt());
-    setFont(m_config->value(SETTING_DEBUGGER_TEXT_SIZE, 9).toInt());
     setAutoSave(m_config->value(SETTING_RESTORE_ON_OPEN, true).toBool());
+    setFont(m_config->value(SETTING_DEBUGGER_TEXT_SIZE, 9).toInt());
     setDebugDisasmSpace(m_config->value(SETTING_DEBUGGER_DISASM_SPACE, false).toBool());
     setDebugDisasmAddrCol(m_config->value(SETTING_DEBUGGER_ADDR_COL, true).toBool());
     setDebugDisasmDataCol(m_config->value(SETTING_DEBUGGER_DATA_COL, true).toBool());
@@ -457,12 +459,12 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setDebugResetTrigger(m_config->value(SETTING_DEBUGGER_RESET_OPENS, false).toBool());
     setDebugIgnoreBreakpoints(m_config->value(SETTING_DEBUGGER_BREAK_IGNORE, false).toBool());
     setDebugSoftCommands(m_config->value(SETTING_DEBUGGER_ENABLE_SOFT, true).toBool());
-    setLcdSpi(m_config->value(SETTING_SCREEN_SPI, true).toBool());
+    setPreRevisionI(m_config->value(SETTING_DEBUGGER_PRE_I, false).toBool());
+    setNormalOs(m_config->value(SETTING_DEBUGGER_NORM_OS, true).toBool());
     setLcdDma(m_config->value(SETTING_DEBUGGER_IGNORE_DMA, true).toBool());
     setFocusSetting(m_config->value(SETTING_PAUSE_FOCUS, false).toBool());
     setRecentSave(m_config->value(SETTING_RECENT_SAVE, true).toBool());
-    setPreRevisionI(m_config->value(SETTING_DEBUGGER_PRE_I, false).toBool());
-    setNormalOs(m_config->value(SETTING_DEBUGGER_NORM_OS, true).toBool());
+    setDockGroupDrag(m_config->value(SETTING_WINDOW_GROUP_DRAG, false).toBool());
     setMenuBarState(m_config->value(SETTING_WINDOW_MENUBAR, false).toBool());
     setStatusBarState(m_config->value(SETTING_WINDOW_STATUSBAR, false).toBool());
     setTop(m_config->value(SETTING_ALWAYS_ON_TOP, false).toBool());

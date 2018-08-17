@@ -369,6 +369,7 @@ private:
     void setLcdSpi(bool state);
     void setLcdDma(bool state);
     void setTop(bool state);
+    void setDockGroupDrag(bool state);
     void setMenuBarState(bool state);
     void setStatusBarState(bool state);
     void setUIBoundaries(bool state);
@@ -650,6 +651,7 @@ private:
     static const QString SETTING_SCREEN_SPI;
     static const QString SETTING_KEYPAD_KEYMAP;
     static const QString SETTING_KEYPAD_COLOR;
+    static const QString SETTING_WINDOW_GROUP_DRAG;
     static const QString SETTING_WINDOW_STATE;
     static const QString SETTING_WINDOW_GEOMETRY;
     static const QString SETTING_WINDOW_SEPARATOR;

@@ -55,12 +55,13 @@ const QString MainWindow::SETTING_SCREEN_SKIN               = QStringLiteral("Sc
 const QString MainWindow::SETTING_SCREEN_SPI                = QStringLiteral("Screen/spi");
 const QString MainWindow::SETTING_KEYPAD_KEYMAP             = QStringLiteral("Keypad/map");
 const QString MainWindow::SETTING_KEYPAD_COLOR              = QStringLiteral("Keypad/color");
+const QString MainWindow::SETTING_WINDOW_GROUP_DRAG         = QStringLiteral("Window/group_dock_drag");
 const QString MainWindow::SETTING_WINDOW_STATE              = QStringLiteral("Window/state");
 const QString MainWindow::SETTING_WINDOW_GEOMETRY           = QStringLiteral("Window/geometry");
 const QString MainWindow::SETTING_WINDOW_SEPARATOR          = QStringLiteral("Window/boundaries");
 const QString MainWindow::SETTING_WINDOW_MENUBAR            = QStringLiteral("Window/menubar");
 const QString MainWindow::SETTING_WINDOW_STATUSBAR          = QStringLiteral("Window/statusbar");
-const QString MainWindow::SETTING_WINDOW_POSITION          = QStringLiteral("Window/position");
+const QString MainWindow::SETTING_WINDOW_POSITION           = QStringLiteral("Window/position");
 const QString MainWindow::SETTING_WINDOW_MEMORY_DOCKS       = QStringLiteral("Window/memory_docks");
 const QString MainWindow::SETTING_WINDOW_MEMORY_DOCK_BYTES  = QStringLiteral("Window/memory_docks_bytes");
 const QString MainWindow::SETTING_WINDOW_MEMORY_DOCK_ASCII  = QStringLiteral("Window/memory_docks_ascii");
@@ -280,6 +281,12 @@ void MainWindow::setDebugDisasmBoldSymbols(bool state) {
     if (guiDebug) {
         disasmUpdate();
     }
+}
+
+void MainWindow::setDockGroupDrag(bool state) {
+    ui->checkAllowGroupDrag->setChecked(state);
+    m_config->setValue(SETTING_WINDOW_GROUP_DRAG, state);
+    setUIDockEditMode(m_uiEditMode);
 }
 
 void MainWindow::setDebugDisasmDataCol(bool state) {
@@ -551,6 +558,19 @@ void MainWindow::setUIDocks() {
 }
 
 void MainWindow::setUIDockEditMode(bool mode) {
+    if (mode) {
+        if (m_config->value(SETTING_WINDOW_GROUP_DRAG).toBool()) {
+            setDockOptions(QMainWindow::AnimatedDocks | QMainWindow::AllowNestedDocks | QMainWindow::AllowTabbedDocks
+#if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
+                | QMainWindow::GroupedDragging
+#endif
+            );
+        } else {
+            setDockOptions(QMainWindow::AnimatedDocks | QMainWindow::AllowNestedDocks | QMainWindow::AllowTabbedDocks);
+        }
+    } else {
+        setDockOptions(0);
+    }
     for (const auto &dock : findChildren<DockWidget*>()) {
         dock->setState(mode);
     }
@@ -561,12 +581,7 @@ void MainWindow::setUIEditMode(bool mode) {
     m_config->setValue(SETTING_UI_EDIT_MODE, mode);
     m_actionToggleUI->setChecked(mode);
     m_actionAddMemory->setEnabled(mode);
-    m_actionAddVisualizer->setEnabled(true); /* this one can stay enabled */
-    if (mode) {
-        setDockOptions(QMainWindow::AnimatedDocks | QMainWindow::AllowNestedDocks | QMainWindow::AllowTabbedDocks);
-    } else {
-        setDockOptions(0);
-    }
+    m_actionAddVisualizer->setEnabled(mode);
     setUIBoundaries(mode);
     setUIDockEditMode(mode);
 }
