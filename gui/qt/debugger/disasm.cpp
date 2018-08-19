@@ -213,9 +213,30 @@ void disasmGet() {
     zdis_put_inst(&disasm.ctx);
 
     if (disasm.highlight.pc && cpu.registers.PC != disasm.base) {
-        disasm.instr.data = disasm.instr.data.substr(0, (cpu.registers.PC - disasm.base) * 2);
-        disasm.instr.opcode = "data";
+        static char tmpbuf[20];
+        int32_t size = cpu.registers.PC - disasm.base;
+        disasm.instr.data = disasm.instr.data.substr(0, size * 2);
         disasm.instr.operands.clear();
+        int precision;
+        if (size % 3 == 0) {
+            size /= 3;
+            precision = 6;
+            disasm.instr.opcode = "dl";
+        } else if (size % 2 == 0) {
+            size /= 2;
+            precision = 4;
+            disasm.instr.opcode = "dw";
+        } else {
+            precision = 2;
+            disasm.instr.opcode = "db";
+        }
+        do {
+            snprintf(tmpbuf, sizeof(tmpbuf) - 1, "$%0*X", precision, mem_peek_long(disasm.base) & ((1 << 4*precision) - 1));
+            disasm.instr.operands += tmpbuf;
+            if (--size) {
+                disasm.instr.operands += ',';
+            }
+        } while (size);
         disasm.base = static_cast<int32_t>(disasm.ctx.zdis_start_addr);
         disasm.next = static_cast<int32_t>(cpu.registers.PC);
         disasm.highlight.pc = false;
