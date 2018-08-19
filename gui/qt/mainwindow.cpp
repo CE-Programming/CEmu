@@ -65,6 +65,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     qRegisterMetaTypeStreamOperators<QList<int>>("QList<int>");
     qRegisterMetaTypeStreamOperators<QList<bool>>("QList<bool>");
     ui->setupUi(this);
+
     if (!ipcSetup()) {
         m_initPassed = false;
         return;
@@ -522,7 +523,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     m_cBack.setColor(QPalette::Base, QColor(Qt::yellow).lighter(160));
     m_consoleFormat = ui->console->currentCharFormat();
-    m_consoleFormat.setForeground(Qt::black);
 }
 
 void MainWindow::translateSwitch(const QString& lang) {
@@ -1158,12 +1158,12 @@ void MainWindow::console(const QString &str, const QColor &colorFg, const QColor
 }
 
 void MainWindow::console(int type, const char *str, int size) {
-    static QColor sColorFg = Qt::black;
-    static QColor sColorBg = Qt::white;
+    static QColor sColorFg = ui->console->palette().color(QPalette::Text);
+    static QColor sColorBg = ui->console->palette().color(QPalette::Base);
     const QColor lookup[8] = { Qt::black, Qt::red, Qt::green, Qt::yellow, Qt::blue, Qt::magenta, Qt::cyan, Qt::white };
     static int state = CONSOLE_ESC;
     if (size == -1) {
-        size = strlen(str);
+        size = static_cast<int>(strlen(str));
     }
     if (m_nativeConsole) {
         fwrite(str, sizeof(char), size, type == EmuThread::ConsoleErr ? stderr : stdout);
@@ -1196,8 +1196,8 @@ void MainWindow::console(int type, const char *str, int size) {
                             switch (x) {
                                 case '0':
                                     state = CONSOLE_ENDVAL;
-                                    colorBg = Qt::white;
-                                    colorFg = Qt::black;
+                                    colorBg = ui->console->palette().color(QPalette::Base);
+                                    colorFg = ui->console->palette().color(QPalette::Text);
                                     break;
                                 case '3':
                                     state = CONSOLE_FGCOLOR;
@@ -1207,8 +1207,8 @@ void MainWindow::console(int type, const char *str, int size) {
                                     break;
                                 default:
                                     state = CONSOLE_ESC;
-                                    sColorBg = Qt::white;
-                                    sColorFg = Qt::black;
+                                    sColorBg = ui->console->palette().color(QPalette::Base);
+                                    sColorFg = ui->console->palette().color(QPalette::Text);
                                     break;
                             }
                             break;
