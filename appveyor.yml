@@ -11,10 +11,33 @@ install:
   - git submodule update --init --recursive
   - C:\Python35\Scripts\pip install requests jinja2 irc
   - C:\Python35\python -u gui\qt\deploy-scripts\appveyor_helper.py install
+
+# Leverage vcpkg to install libarchive deps, because we're lazy
+# Make sure we set the special VCPKG_PLATFORM_TOOLSET var to v140
+# to build for VS2010.
+  - cmd: set VCPKG_PLATFORM_TOOLSET=v140
+
+# Hack to update vcpkg to maybe make things work
+  - cd "C:\Tools\vcpkg"
+  - git pull
+  - .\bootstrap-vcpkg.bat
+  - cd %APPVEYOR_BUILD_FOLDER%
+
+  - vcpkg install libarchive:x86-windows
+  - vcpkg install libarchive:x64-windows
+  - vcpkg install libarchive:x86-windows-static
+  - vcpkg install libarchive:x64-windows-static
+
   - md build_32
   - md build_64
   - md build_static_32
   - md build_static_64
+
+# Since we want to use vcpkg, ensure that it's integrated into the
+# build environment.
+  - cd c:\tools\vcpkg
+  - vcpkg integrate install
+  - cd %APPVEYOR_BUILD_FOLDER%
 
 build_script:
   - cmd: set LIBPNG_APNG_INCLUDE=C:\libpng-apng-1.6.34\include
@@ -89,3 +112,4 @@ on_failure:
 
 cache:
   - build_state -> appveyor.yml
+  - c:\tools\vcpkg\installed\
