@@ -766,9 +766,6 @@ private:
     QString TXT_MISC;
     QString TXT_AUTOTESTER;
 
-    QString MSG_INFORMATION;
-    QString MSG_WARNING;
-    QString MSG_ERROR;
     QString MSG_ADD_MEMORY;
     QString MSG_ADD_VISUALIZER;
     QString MSG_EDIT_UI;
@@ -782,6 +779,11 @@ private:
     QAction *actionToggleConsole;
     QString TXT_TOGGLE_CONSOLE;
 #endif
+
+public:
+    QString MSG_INFORMATION;
+    QString MSG_WARNING;
+    QString MSG_ERROR;
 };
 
 #endif
