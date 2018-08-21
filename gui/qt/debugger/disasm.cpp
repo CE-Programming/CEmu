@@ -168,13 +168,14 @@ static bool disasmPut(struct zdis_ctx *ctx, enum zdis_put kind, int32_t val, boo
             break;
         case ZDIS_PUT_REL:
             val += disasm.ctx.zdis_end_addr;
+            [[fallthrough]];
         case ZDIS_PUT_ADDR:
         case ZDIS_PUT_ABS:
         case ZDIS_PUT_RST:
             *disasm.cur += strA(static_cast<uint32_t>(val));
             break;
         case ZDIS_PUT_CHAR:
-            *disasm.cur += static_cast<char>(val);
+            *disasm.cur += char(val);
             break;
         case ZDIS_PUT_MNE_SEP:
             disasm.cur = &disasm.instr.operands;
@@ -197,7 +198,7 @@ void disasmInit() {
 void disasmGet() {
     disasm.ctx.zdis_lowercase = !disasm.uppercase;
     disasm.ctx.zdis_implicit = !disasm.implicit;
-    disasm.ctx.zdis_end_addr = static_cast<uint32_t>(disasm.base);
+    disasm.ctx.zdis_end_addr = uint32_t(disasm.base);
     disasm.cur = &disasm.instr.opcode;
 
     disasm.highlight.watchR = false;
@@ -212,7 +213,7 @@ void disasmGet() {
 
     zdis_put_inst(&disasm.ctx);
 
-    if (disasm.highlight.pc && cpu.registers.PC != static_cast<uint32_t>(disasm.base)) {
+    if (disasm.highlight.pc && cpu.registers.PC != uint32_t(disasm.base)) {
         static char tmpbuf[20];
         size_t size = cpu.registers.PC - static_cast<uint32_t>(disasm.base);
         disasm.instr.data = disasm.instr.data.substr(0, size * 2);
@@ -237,12 +238,12 @@ void disasmGet() {
                 disasm.instr.operands += ',';
             }
         } while (size);
-        disasm.base = static_cast<int32_t>(disasm.ctx.zdis_start_addr);
-        disasm.next = static_cast<int32_t>(cpu.registers.PC);
+        disasm.base = int32_t(disasm.ctx.zdis_start_addr);
+        disasm.next = int32_t(cpu.registers.PC);
         disasm.highlight.pc = false;
     } else {
-        disasm.base = static_cast<int32_t>(disasm.ctx.zdis_start_addr);
-        disasm.next = static_cast<int32_t>(disasm.ctx.zdis_end_addr);
+        disasm.base = int32_t(disasm.ctx.zdis_start_addr);
+        disasm.next = int32_t(disasm.ctx.zdis_end_addr);
     }
 
     disasm.instr.size = static_cast<unsigned int>(disasm.next) - static_cast<unsigned int>(disasm.base);

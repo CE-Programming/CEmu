@@ -70,32 +70,37 @@ void CDebugHighlighter::highlightBlock(const QString &text) {
         EscapeHexadecimal
     } state = static_cast<ParseState>(previousBlockState()), baseState = state;
     assert(state == ParseState::Default || state == ParseState::MultilineComment);
-    int start = 0, literalStart = 0, characterLiteralCount = 0;
+    int start = 0, literalStart = 0, literalInfo = 0;
     for (int i = 0; i <= text.length(); i++) {
         QChar c = text.data()[i];
         switch (state) {
             case ParseState::Default:
-                if (c == QChar('\"')) {
+                if (c == '\"') {
                     state = ParseState::StringLiteral;
                     literalStart = i;
-                } else if (c == QChar('#') && !i) {
+                } else if (c == '#' && !i) {
                     state = ParseState::PreprocessorDirective;
-                } else if (c == QChar('\'')) {
+                } else if (c == '\'') {
                     state = ParseState::CharacterLiteral;
                     literalStart = i;
-                    characterLiteralCount = 0;
-                } else if (c == QChar('/') && i + 1 < text.length()) {
+                    literalInfo = 0;
+                } else if (c == '.' && i < text.length() - 1) {
                     c = text[i + 1];
-                    if (c == QChar('*')) {
+                    if (c >= '0' && c <= '9') {
+                        state = ParseState::NumberLiteral;
+                        literalInfo = true;
+                    }
+                } else if (c == '/' && i < text.length() - 1) {
+                    c = text[i + 1];
+                    if (c == '*') {
                         state = ParseState::MultilineComment;
-                    } else if (c == QChar('/')) {
+                    } else if (c == '/') {
                         state = ParseState::Comment;
                     }
-                } else if (c >= QChar('0') && c <= QChar('9')) {
+                } else if (c >= '0' && c <= '9') {
                     state = ParseState::NumberLiteral;
-                } else if ((c >= QChar('A') && c <= QChar('Z')) ||
-                           c == QChar('_') ||
-                           (c >= QChar('a') && c <= QChar('z'))) {
+                    literalInfo = false;
+                } else if ((c >='A' && c <= 'Z') || c == '_' || (c >= 'a' && c <= 'z')) {
                     state = ParseState::Identifier;
                 }
                 if (i == text.length() || state != ParseState::Default) {
@@ -109,13 +114,14 @@ void CDebugHighlighter::highlightBlock(const QString &text) {
             case ParseState::PreprocessorFilename:
                 if (i == text.length()) {
                     setFormat(literalStart, i - literalStart, m_sources->m_errorFormat);
-                } else if ((c == QChar('\"') && (state == ParseState::StringLiteral ||
-                                                 state == ParseState::PreprocessorString)) ||
-                           (c == QChar('\'') && state == ParseState::CharacterLiteral) ||
-                           (c == QChar('>') && state == ParseState::PreprocessorFilename)) {
+                } else if ((c == '\"' && (state == ParseState::StringLiteral ||
+                                          state == ParseState::PreprocessorString)) ||
+                           (c == '\'' && state == ParseState::CharacterLiteral) ||
+                           (c == '>' && state == ParseState::PreprocessorFilename)) {
                     setFormat(start, i + 1 - start, m_sources->m_literalFormat);
-                    if (state == ParseState::CharacterLiteral && characterLiteralCount != 1) {
-                        setFormat(literalStart, i + 1 - literalStart, m_sources->m_errorFormat);
+                    if (state == ParseState::CharacterLiteral && literalInfo != 1) {
+                        setFormat(literalStart, i + 1 - literalStart,
+                                  m_sources->m_errorFormat);
                     }
                     start = i + 1;
                     if (state == ParseState::StringLiteral || state == ParseState::CharacterLiteral) {
@@ -124,10 +130,8 @@ void CDebugHighlighter::highlightBlock(const QString &text) {
                         state = ParseState::PreprocessorOther;
                     }
                 } else {
-                    if (state == ParseState::CharacterLiteral) {
-                        characterLiteralCount++;
-                    }
-                    if (c == QChar('\\') &&
+                    literalInfo++;
+                    if (c == '\\' &&
                         state != ParseState::PreprocessorString &&
                         state != ParseState::PreprocessorFilename) {
                         setFormat(start, i - start, m_sources->m_literalFormat);
@@ -138,15 +142,15 @@ void CDebugHighlighter::highlightBlock(const QString &text) {
                 }
                 break;
             case ParseState::PreprocessorDirective:
-                if (i == text.length() || (c != QChar(' ') && c != QChar('\t'))) {
+                if (i == text.length() || (c != ' ' && c != '\t')) {
                     state = ParseState::PreprocessorInstruction;
                     start = i;
                 } else {
                     break;
                 }
-                // FALLTHOURGH
+                [[fallthrough]];
             case ParseState::PreprocessorInstruction:
-                if (c == QChar(' ') || c == QChar('\t')) {
+                if (c == ' ' || c == '\t') {
                     QStringRef instruction = text.midRef(start, i - start);
                     if (instruction == QStringLiteral("include")) {
                         state = ParseState::PreprocessorInclude;
@@ -161,17 +165,17 @@ void CDebugHighlighter::highlightBlock(const QString &text) {
                     break;
                 }
                 start = 0;
-                // FALLTHROUGH
+                [[fallthrough]];
             case ParseState::PreprocessorInclude:
             case ParseState::PreprocessorIf:
             case ParseState::PreprocessorOther:
-                if (i == text.length() || c == QChar('\"') ||
-                    (c == QChar('<') && state == ParseState::PreprocessorInclude)) {
+                if (i == text.length() || c == '\"' ||
+                    (c == '<' && state == ParseState::PreprocessorInclude)) {
                     setFormat(start, i - start, m_sources->m_preprocessorFormat);
-                    state = c == QChar('\"') ?
-                        ParseState::PreprocessorString : ParseState::PreprocessorFilename;
+                    state = c == '\"' ? ParseState::PreprocessorString
+                                      : ParseState::PreprocessorFilename;
                     start = literalStart = i;
-                } else if (c != QChar(' ') && c != QChar('\t')) {
+                } else if (c != ' ' && c != '\t') {
                     state = ParseState::PreprocessorOther;
                 }
                 break;
@@ -179,7 +183,7 @@ void CDebugHighlighter::highlightBlock(const QString &text) {
                 if (i == text.length()) {
                     setFormat(start, i - start, m_sources->m_commentFormat);
                 } else if (i > start + 1 + (baseState != ParseState::MultilineComment) &&
-                           c == QChar('/') && text[i - 1] == QChar('*')) {
+                           c == '/' && text[i - 1] == '*') {
                     setFormat(start, i + 1 - start, m_sources->m_commentFormat);
                     start = i + 1;
                     state = baseState = ParseState::Default;
@@ -192,39 +196,54 @@ void CDebugHighlighter::highlightBlock(const QString &text) {
             case ParseState::NumberLiteral:
             case ParseState::Identifier:
                 if (i == text.length() ||
-                    ((c < QChar('0') || c > QChar('9')) &&
-                     (c < QChar('A') || c > QChar('Z')) &&
-                     c != QChar('_') &&
-                     (c < QChar('a') || c > QChar('z')))) {
-                    QString token = text.mid(start, i - start);
-                    bool number = state == ParseState::NumberLiteral, ok = true, keyword = false;
-                    if (number) {
-                        bool unsignedSuffix = false, longSuffix = false;
-                        do {
-                            if (!unsignedSuffix && token.endsWith(QChar('u'), Qt::CaseInsensitive)) {
-                                token.chop(1);
-                                unsignedSuffix = true;
-                                continue;
-                            } else if (!longSuffix && token.endsWith(QChar('l'), Qt::CaseInsensitive)) {
-                                token.chop(1);
-                                longSuffix = true;
-                                continue;
-                            }
-                        } while (false);
-                        if (unsignedSuffix) {
-                            uint value = token.toUInt(&ok, 0);
-                            ok &= longSuffix || value < 1u << 24;
-                        } else {
-                            int value = token.toInt(&ok, 0);
-                            ok &= longSuffix || (value >= -(1 << 23) && value < 1 << 23);
+                    ((c < '0' || c > '9') && (c < 'A' || c > 'Z') &&
+                     c != '_' && (c < 'a' || c > 'z'))) {
+                    QStringRef token = text.midRef(start, i - start);
+                    if (state == ParseState::NumberLiteral) {
+                        if (c == '.' || ((c == '+' || c == '-') && i > start &&
+                                         (text[i - 1] == 'E' || text[i - 1] == 'e'))) {
+                            literalInfo = true;
+                            break;
                         }
+                        bool ok;
+                        if (literalInfo) {
+                            if (token.endsWith('f', Qt::CaseInsensitive) ||
+                                token.endsWith('l', Qt::CaseInsensitive)) {
+                                token.chop(1);
+                            }
+                            token.toFloat(&ok);
+                        } else {
+                            bool unsignedSuffix = false, longSuffix = false;
+                            do {
+                                if (!unsignedSuffix &&
+                                    token.endsWith('u', Qt::CaseInsensitive)) {
+                                    token.chop(1);
+                                    unsignedSuffix = true;
+                                    continue;
+                                } else if (!longSuffix &&
+                                           token.endsWith('l', Qt::CaseInsensitive)) {
+                                    token.chop(1);
+                                    longSuffix = true;
+                                    continue;
+                                }
+                            } while (false);
+                            if (unsignedSuffix) {
+                                uint value = token.toUInt(&ok, 0);
+                                ok &= longSuffix || value < 1u << 24;
+                            } else {
+                                int value = token.toInt(&ok, 0);
+                                ok &= longSuffix || (value >= -(1 << 23) &&
+                                                     value < 1 << 23);
+                            }
+                        }
+                        setFormat(start, i - start, ok ? m_sources->m_literalFormat
+                                                       : m_sources->m_errorFormat);
                     } else {
-                        keyword = s_keywords.contains(token);
+                        setFormat(start, i - start,
+                                  s_keywords.contains(token.toString()) ?
+                                  m_sources->m_keywordFormat :
+                                  m_sources->m_identifierFormat);
                     }
-                    setFormat(start, i - start, number ? ok ? m_sources->m_literalFormat :
-                              m_sources->m_errorFormat :
-                              keyword ? m_sources->m_keywordFormat :
-                              m_sources->m_identifierFormat);
                     start = i--;
                     state = ParseState::Default;
                 }
