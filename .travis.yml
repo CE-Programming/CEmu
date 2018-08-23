@@ -24,6 +24,7 @@ addons:
       - g++-5
       - qt56base
       - libgl1-mesa-dev
+      - libarchive-dev
 
 script:
   - cd gui/qt/capture ; bash ./get_libpng-apng.sh ; cd ../../../
