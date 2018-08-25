@@ -106,7 +106,7 @@ build_script:
   
   - endlocal
 
-deploy_script:
+after_build:
   - cd %APPVEYOR_BUILD_FOLDER%
   - C:\Python35\python -u gui\qt\deploy-scripts\appveyor_helper.py deploy
 
