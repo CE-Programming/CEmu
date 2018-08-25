@@ -34,6 +34,9 @@
  *  @description 	: Namespace and Class Declaration for QArchive.
  * =============================================================================
 */
+
+#define QARCHIVE_PASSWORD_SUPPORT 0
+
 #if !defined (QARCHIVE_HPP_INCLUDED)
 #define QARCHIVE_HPP_INCLUDED
 
@@ -275,7 +278,7 @@ public:
     explicit Extractor(const QString&, const QString&);
     Extractor &setArchive(const QString&);
     Extractor &setArchive(const QString&, const QString&);
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     Extractor &setPassword(const QString&);
     Extractor &setAskPassword(bool);
 #endif
@@ -309,7 +312,7 @@ Q_SIGNALS:
     void resumed(void);
     void canceled(void);
     void progress(int);
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     void passwordRequired(int);
     void submitPassword(void);
 #endif
@@ -332,7 +335,7 @@ private:
     struct archive_entry *entry;
 
     QMutex mutex;
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     bool AskPassword = false;
     int PasswordTries = 0;
 #endif
@@ -342,14 +345,14 @@ private:
     int BlockSize = 10240;
     QString ArchivePath;
     QString Destination;
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     QString Password;
 #endif
     QStringList OnlyExtract;
     UNBlock *UNBlocker = nullptr;
 
 
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     /*
      * This callback makes it possible to check if the password is wrong or
      * correct and also loop until the user gives a correct password or an
@@ -493,7 +496,7 @@ public:
     Compressor &setArchive(const QString &archive, const QString &file);
     Compressor &setArchive(const QString &archive, const QStringList &files);
     Compressor &setArchiveFormat(short type);
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     Compressor &setPassword(const QString&);
 #endif
     Compressor &setBlocksize(int);
@@ -551,7 +554,7 @@ private:
     int CompressionLevel = 0;
     short archiveFormat = NO_FORMAT;
     QString archivePath;
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     QString Password;
 #endif
     QMap<QString, QString>::iterator mapIter;
@@ -623,7 +626,7 @@ public:
     explicit Reader(QObject *parent = nullptr);
     explicit Reader(const QString&);
     Reader &setArchive(const QString&);
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     Reader &setPassword(const QString&);
     Reader &setAskPassword(bool);
 #endif
@@ -645,7 +648,7 @@ public Q_SLOTS:
     bool isStarted() const;
 
     Reader &setFunc(short, std::function<void(void)>);
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     Reader &setFunc(std::function<void(int)>);
 #endif
     Reader &setFunc(std::function<void(QJsonObject)>);
@@ -662,7 +665,7 @@ Q_SIGNALS:
     void paused();
     void resumed();
     void canceled();
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     void passwordRequired(int);
     void submitPassword();
 #endif
@@ -675,19 +678,19 @@ private:
     struct archive_entry *entry;
 
     QMutex mutex;
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     bool AskPassword = false;
     int PasswordTries = 0;
 #endif
     int BlockSize = 10240;
     QString ArchivePath;
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     QString Password;
 #endif
     QJsonObject ArchiveContents;
     UNBlock *UNBlocker = nullptr;
 
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     static const char *password_callback(struct archive *a, void *_client_data)
     {
 
