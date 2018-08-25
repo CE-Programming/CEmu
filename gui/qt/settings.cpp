@@ -82,6 +82,7 @@ const QString MainWindow::SETTING_RESTORE_ON_OPEN           = QStringLiteral("re
 const QString MainWindow::SETTING_EMUSPEED                  = QStringLiteral("emulated_speed");
 const QString MainWindow::SETTING_AUTOUPDATE                = QStringLiteral("check_for_updates");
 const QString MainWindow::SETTING_ALWAYS_ON_TOP             = QStringLiteral("always_on_top");
+const QString MainWindow::SETTING_NATIVE_CONSOLE            = QStringLiteral("native_console");
 const QString MainWindow::SETTING_CURRENT_DIR               = QStringLiteral("current_directory");
 const QString MainWindow::SETTING_ENABLE_WIN_CONSOLE        = QStringLiteral("enable_windows_console");
 const QString MainWindow::SETTING_RECENT_SAVE               = QStringLiteral("Recent/save_paths");

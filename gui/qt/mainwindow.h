@@ -678,6 +678,7 @@ private:
     static const QString SETTING_EMUSPEED;
     static const QString SETTING_AUTOUPDATE;
     static const QString SETTING_ALWAYS_ON_TOP;
+    static const QString SETTING_NATIVE_CONSOLE;
     static const QString SETTING_CURRENT_DIR;
     static const QString SETTING_ENABLE_WIN_CONSOLE;
     static const QString SETTING_RECENT_SAVE;

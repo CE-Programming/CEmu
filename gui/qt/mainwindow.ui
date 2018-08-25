@@ -6306,7 +6306,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>5</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -9039,7 +9039,7 @@ QPushButton:pressed {
              <number>0</number>
             </property>
             <item>
-             <widget class="QRadioButton" name="radioStderr">
+             <widget class="QRadioButton" name="radioConsole">
               <property name="text">
                <string>console</string>
               </property>
@@ -9049,7 +9049,7 @@ QPushButton:pressed {
              </widget>
             </item>
             <item>
-             <widget class="QRadioButton" name="radioConsole">
+             <widget class="QRadioButton" name="radioDock">
               <property name="text">
                <string>dock</string>
               </property>

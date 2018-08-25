@@ -113,8 +113,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     // console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, ui->console, &QPlainTextEdit::clear);
+    connect(ui->radioDock, &QRadioButton::clicked, this, &MainWindow::consoleModified);
     connect(ui->radioConsole, &QRadioButton::clicked, this, &MainWindow::consoleModified);
-    connect(ui->radioStderr, &QRadioButton::clicked, this, &MainWindow::consoleModified);
 
     // debug actions
     connect(ui->buttonRun, &QPushButton::clicked, this, &MainWindow::debugToggle);
@@ -469,6 +469,11 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setMenuBarState(m_config->value(SETTING_WINDOW_MENUBAR, false).toBool());
     setStatusBarState(m_config->value(SETTING_WINDOW_STATUSBAR, false).toBool());
     setTop(m_config->value(SETTING_ALWAYS_ON_TOP, false).toBool());
+
+    if (m_config->value(SETTING_NATIVE_CONSOLE, false).toBool()) {
+        ui->radioConsole->setChecked(true);
+        consoleModified();
+    }
 
     m_dir.setPath(m_config->value(SETTING_CURRENT_DIR, appDir().path()).toString());
 
@@ -1571,7 +1576,8 @@ void MainWindow::contextLcd(const QPoint &posa) {
 }
 
 void MainWindow::consoleModified() {
-    m_nativeConsole = ui->radioStderr->isChecked();
+    m_nativeConsole = ui->radioConsole->isChecked();
+    m_config->setValue(SETTING_NATIVE_CONSOLE, m_nativeConsole);
 }
 
 void MainWindow::pauseEmu(Qt::ApplicationState state) {
