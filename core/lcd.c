@@ -48,7 +48,6 @@ static uint32_t lcd_bgr16out(uint32_t bgr16) {
 
 /* Draw the lcd onto an RGBA8888 buffer. Alpha is always 255. */
 void lcd_drawframe(void *output, void *data, void *data_end, uint32_t control, uint32_t size) {
-    _rgb = control & (1 << 8);
     bool bebo = control & (1 << 9);
     uint_fast8_t mode = control >> 1 & 7;
     uint32_t word, color;
@@ -56,6 +55,8 @@ void lcd_drawframe(void *output, void *data, void *data_end, uint32_t control, u
     uint32_t *out_end = out + size;
     uint32_t *dat = data;
     uint32_t *dat_end = data_end;
+
+    _rgb = control & (1 << 8);
 
     if (!out) { return; }
     if (!dat) { goto draw_black; }
