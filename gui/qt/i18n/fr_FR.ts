@@ -1348,7 +1348,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8237"/>
         <source>Allow dock grouped dragging</source>
-        <translation type="unfinished"></translation>
+        <translation>Drag&apos;n&apos;drop groupé de docks</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8351"/>
@@ -1398,7 +1398,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8955"/>
         <source>Bold disassembly symbols</source>
-        <translation type="unfinished"></translation>
+        <translation>Symboles de désassembleur en gras</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9141"/>

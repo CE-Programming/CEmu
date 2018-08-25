@@ -1128,7 +1128,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8237"/>
         <source>Allow dock grouped dragging</source>
-        <translation type="unfinished"></translation>
+        <translation>Laat vensters gegroepeerd slepen toe</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8872"/>
@@ -1168,7 +1168,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8955"/>
         <source>Bold disassembly symbols</source>
-        <translation type="unfinished"></translation>
+        <translation>Vet gedemonteerde symbolen</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9099"/>
