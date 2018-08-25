@@ -21,7 +21,7 @@ build-stamp:
 	# Add here commands to compile the package.
 	echo $PWD
 	cd gui/qt/capture/libpng-apng && ./configure --with-libpng-prefix=a --enable-static --disable-shared CFLAGS="-O2 -fPIC" && make libpng16.la && cd ../../../..
-	qmake gui/qt/CEmu.pro CEMU_VERSION=v1.0 USE_LIBPNG=internal TARGET_NAME=cemu
+	qmake gui/qt/CEmu.pro CEMU_VERSION=v1.1 USE_LIBPNG=internal TARGET_NAME=cemu
 	make
 	# --- end custom part for compiling
 
