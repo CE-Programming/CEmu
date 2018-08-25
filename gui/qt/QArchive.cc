@@ -513,7 +513,7 @@ Extractor &Extractor::setArchive(const QString &filename, const QString &destina
     return *this;
 }
 
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
 Extractor &Extractor::setPassword(const QString &pwd)
 {
     QMutexLocker locker(&mutex);
@@ -578,14 +578,14 @@ Extractor &Extractor::clear(void)
     ext.reset();
 
     ret = 0;
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     PasswordTries = 0;
     AskPassword = false;
 #endif
     BlockSize = 10240;
     ArchivePath.clear();
     Destination.clear();
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     Password.clear();
 #endif
     OnlyExtract.clear();
@@ -710,7 +710,7 @@ Extractor &Extractor::setFunc(short signal, std::function<void(int)> function)
     if(signal == PROGRESS) {
         connect(this, &Extractor::progress, function);
     } else {
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
         connect(this, &Extractor::passwordRequired, function);
 #endif
     }
@@ -754,7 +754,7 @@ int Extractor::init(void)
     archive_write_disk_set_options(ext.data(), flags);
     archive_read_support_format_all(archive.data());
     archive_read_support_filter_all(archive.data());
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     archive_read_set_passphrase_callback(archive.data(), (void*)this, password_callback);
 #endif
 
@@ -797,7 +797,7 @@ int Extractor::condition(void)
 
 int Extractor::loopContent(void)
 {
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     PasswordTries = 0; // reset
 #endif
     if(!Destination.isEmpty()) {
@@ -869,7 +869,7 @@ int Extractor::totalFileCount(void)
     }
     archive_read_support_format_all(a.data());
     archive_read_support_filter_all(a.data());
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     archive_read_add_passphrase(a.data(), Password.toUtf8().constData());
 #endif
     if((archive_read_open_filename(a.data(), ArchivePath.toUtf8().constData(), BlockSize))) {
@@ -1027,7 +1027,7 @@ Compressor &Compressor::setArchiveFormat(short type)
     return *this;
 }
 
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
 Compressor &Compressor::setPassword(const QString &pwd)
 {
     QMutexLocker locker(&mutex);
@@ -1128,7 +1128,7 @@ Compressor &Compressor::clear(void)
     CompressionLevel = 0; // Use Default.
     archiveFormat = NO_FORMAT; // Defaults to tar.
     archivePath.clear();
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     Password.clear();
 #endif
     nodes.clear();
@@ -1329,7 +1329,7 @@ int Compressor::init(void)
      * Set config for the new archive.
      * ================================
     */
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     /*
      * Currently I don't know if libarchive supports passwords that well.
      * So for the time beign lets keep this empty.
@@ -1429,7 +1429,7 @@ void Compressor::deinit(int canceled)
     CompressionLevel = 0;
     archiveFormat = NO_FORMAT;
     archivePath.clear();
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     Password.clear();
 #endif
     nodes.clear();
@@ -1569,7 +1569,7 @@ Reader &Reader::setArchive(const QString &filename)
     return *this;
 }
 
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
 Reader &Reader::setPassword(const QString &pwd)
 {
     QMutexLocker locker(&mutex);
@@ -1611,13 +1611,13 @@ Reader &Reader::clear(void)
 
     archive.reset();
     ret = 0;
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     PasswordTries = 0;
     AskPassword = false;
 #endif
     BlockSize = 10240;
     ArchivePath.clear();
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     Password.clear();
 #endif
     ArchiveContents = QJsonObject();
@@ -1721,7 +1721,7 @@ Reader &Reader::setFunc(short signal, std::function<void(void)> function)
     return *this;
 }
 
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
 Reader &Reader::setFunc(std::function<void(int)> function)
 {
     QMutexLocker locker(&mutex);
@@ -1771,7 +1771,7 @@ int Reader::init(void)
     }
     archive_read_support_format_all(archive.data());
     archive_read_support_filter_all(archive.data());
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     archive_read_set_passphrase_callback(archive.data(), (void*)this, password_callback);
 #endif
 
@@ -1797,7 +1797,7 @@ int Reader::condition(void)
 
 int Reader::loopContent(void)
 {
-#if ARCHIVE_VERSION_NUMBER >= 3003002
+#if ARCHIVE_VERSION_NUMBER >= 3003002 && QARCHIVE_PASSWORD_SUPPORT == 1
     PasswordTries = 0; // reset
 #endif
     QString CurrentFile = QString(archive_entry_pathname(entry));
