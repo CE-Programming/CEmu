@@ -625,6 +625,7 @@ def deploy_snapshots():
                        os.path.join("deploy", "release32"),
                        extra_wc = {
                                     "libpng/zlib x86 release DLLs" : r"C:\libpng-apng-1.6.34\release\32bit\shared\*.dll",
+                                    "vcpkg provided DLLs" : os.path.join("build_32", "release") + r"\*.dll"
                                   }
                       )
     collect_main_files("x64", r"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x64\Microsoft.VC140.CRT\*.dll",
@@ -633,6 +634,7 @@ def deploy_snapshots():
                        os.path.join("deploy", "release64"),
                        extra_wc = {
                                     "libpng/zlib x64 release DLLs" : r"C:\libpng-apng-1.6.34\release\64bit\shared\*.dll",
+                                    "vcpkg provided DLLs" : os.path.join("build_64", "release") + r"\*.dll"
                                   }
                       )
     
@@ -645,6 +647,7 @@ def deploy_snapshots():
                        extra_wc = {
                                     "UCRT Debug" : r"C:\Program Files (x86)\Windows Kits\10\bin\x86\ucrt\*.dll",
                                     "libpng/zlib x86 debug DLLs" : r"C:\libpng-apng-1.6.34\debug\32bit\shared\*.dll",
+                                    "vcpkg provided DLLs" : os.path.join("build_32", "debug") + r"\*.dll"
                                   }
                       )
     collect_main_files("x64 Debug", r"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\debug_nonredist\x64\Microsoft.VC140.DebugCRT\*.dll",
@@ -654,6 +657,7 @@ def deploy_snapshots():
                        extra_wc = {
                                     "UCRT Debug" : r"C:\Program Files (x86)\Windows Kits\10\bin\x64\ucrt\*.dll",
                                     "libpng/zlib x64 debug DLLs" : r"C:\libpng-apng-1.6.34\debug\64bit\shared\*.dll",
+                                    "vcpkg provided DLLs" : os.path.join("build_64", "debug") + r"\*.dll"
                                   }
                       )
     

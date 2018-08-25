@@ -69,11 +69,11 @@ build_script:
   - cmd: set ZLIB_LIB=C:\libpng-apng-1.6.34\debug\32bit\static\zlib.lib
   - cmd: set LIBPNG_APNG_LIB=C:\libpng-apng-1.6.34\debug\32bit\static\libpng16.lib
   - C:\Qt\Qt5.10.1-static\bin\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION:~1% LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
-  - msbuild CEmu.vcxproj /p:Configuration=Debug
+  - msbuild CEmu.vcxproj /p:Configuration=Debug /p:VcpkgTriplet=x86-windows-static
   - cmd: set ZLIB_LIB=C:\libpng-apng-1.6.34\release\32bit\static\zlib.lib
   - cmd: set LIBPNG_APNG_LIB=C:\libpng-apng-1.6.34\release\32bit\static\libpng16.lib
   - C:\Qt\Qt5.10.1-static\bin\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION:~1% LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
-  - msbuild CEmu.vcxproj /p:Configuration=Release
+  - msbuild CEmu.vcxproj /p:Configuration=Release /p:VcpkgTriplet=x86-windows-static
   - cd ..
 
   - endlocal
@@ -97,11 +97,11 @@ build_script:
   - cmd: set ZLIB_LIB=C:\libpng-apng-1.6.34\debug\64bit\static\zlib.lib
   - cmd: set LIBPNG_APNG_LIB=C:\libpng-apng-1.6.34\debug\64bit\static\libpng16.lib
   - C:\Qt\Qt5.10.1x64-static\bin\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION:~1% LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
-  - msbuild CEmu.vcxproj /p:Configuration=Debug /p:Platform="x64"
+  - msbuild CEmu.vcxproj /p:Configuration=Debug /p:Platform="x64" /p:VcpkgTriplet=x64-windows-static
   - cmd: set ZLIB_LIB=C:\libpng-apng-1.6.34\release\64bit\static\zlib.lib
   - cmd: set LIBPNG_APNG_LIB=C:\libpng-apng-1.6.34\release\64bit\static\libpng16.lib
   - C:\Qt\Qt5.10.1x64-static\bin\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION:~1% LIBS+=%ZLIB_LIB% LIBS+=%LIBPNG_APNG_LIB% INCLUDEPATH+=%LIBPNG_APNG_INCLUDE% "..\gui\qt\CEmu.pro"
-  - msbuild CEmu.vcxproj /p:Configuration=Release /p:Platform="x64"
+  - msbuild CEmu.vcxproj /p:Configuration=Release /p:Platform="x64" /p:VcpkgTriplet=x64-windows-static
   - cd ..
   
   - endlocal
