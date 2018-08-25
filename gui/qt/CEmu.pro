@@ -105,6 +105,9 @@ if (!win32-msvc*) {
     #     Source: https://connect.microsoft.com/VisualStudio/feedback/details/1355600/
     QMAKE_CXXFLAGS  += /Wall
 
+    # Add -MP to enable speedier builds
+    QMAKE_CXXFLAGS += /MP
+
     # Note that libpng/zlib LIBS/INCLUDES should be specified in the envrionment.
     # We will use LIBPNG_APNG_LIB, ZLIB_LIB, and LIBPNG_APNG_INCLUDE.
     # The logic below accounts for both specifying in the real shell environment,
