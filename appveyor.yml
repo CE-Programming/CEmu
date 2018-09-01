@@ -41,12 +41,11 @@ install:
 
 build_script:
   # Figure out version to set - if tag is defined, use that.
-  # If not, set it to a space (which would evaluate to empty in
-  # our QMake command).
+  # If not, set it to a space (which would evaluate to empty in our QMake command).
   # 
-  # We remove the first character of CEMU_VERSION below to correctly
-  # set our version for the build.
-  - cmd: if defined APPVEYOR_REPO_TAG_NAME (set CEMU_VERSION=%APPVEYOR_REPO_TAG_NAME% & echo Using tagged version %CEMU_VERSION%) ELSE (set "CEMU_VERSION= " & echo No version defined, using empty version '%CEMU_VERSION%' and allowing QMake to set default for dev.)
+  # We remove the first character (dummy 'z' or space) of
+  # CEMU_VERSION below to correctly set our version for the build.
+  - cmd: if defined APPVEYOR_REPO_TAG_NAME (set CEMU_VERSION=z%APPVEYOR_REPO_TAG_NAME% & echo Using tagged version %CEMU_VERSION%) ELSE (set "CEMU_VERSION= " & echo No version defined, using empty version '%CEMU_VERSION%' and allowing QMake to set default for dev.)
 
   - cmd: set LIBPNG_APNG_INCLUDE=C:\libpng-apng-1.6.34\include
 
