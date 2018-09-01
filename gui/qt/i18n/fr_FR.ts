@@ -1511,9 +1511,9 @@ CEmu uses a customizable dock-style interface. Drag and drop to move tabs and wi
 
 (Notice: depending on your version, you can drag grouped tabs or an individual tab from their title or tab bar, respectively)</source>
         <translation>Bienvenue !
-CEmu utilise une intermace personnalisable de &quot;docks&quot;. Glissez-déposez les onglets là où bon vous semble, et affichez/cachez les depuis le menu &quot;Docks&quot; dans la barre de menu en haut. Assurez-vous bien d&apos;avoir coché &quot;Activer l&apos;édition d&apos;interface&quot; dans le menu. Profitez-en bien!
+CEmu utilise une interface personnalisable de &quot;docks&quot;. Glissez-déposez les onglets là où bon vous semble, et affichez/cachez les depuis le menu &quot;Docks&quot; dans la barre de menu en haut. Assurez-vous bien d&apos;avoir coché &quot;Activer l&apos;édition d&apos;interface&quot; dans le menu. Profitez-en bien!
 
-(Attention: depuis la v1.1, vous pouvez déplacer les onglets engroupe ou individuellement, depuis leur barre de titre ou d&apos;onglet, repectivement)</translation>
+(Attention: depuis la v1.1, vous pouvez déplacer les onglets en groupe ou individuellement, depuis leur barre de titre ou d&apos;onglet, repectivement)</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1414"/>
