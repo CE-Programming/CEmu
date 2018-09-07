@@ -1128,7 +1128,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8237"/>
         <source>Allow dock grouped dragging</source>
-        <translation>Laat vensters gegroepeerd slepen toe</translation>
+        <translation>Vensters gegroepeerd slepen toestaan</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8872"/>
