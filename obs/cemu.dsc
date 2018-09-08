@@ -1,7 +1,7 @@
 Format: 3.0 (quilt)
 Source: cemu
 Binary: cemu
-Version: 1.1-0
+Version: 1.1.1-0
 Architecture: any
 Maintainer: Adrien Bertrand <bertrand.adrien@gmail.com>
 Homepage: https://github.com/CE-Programming/CEmu

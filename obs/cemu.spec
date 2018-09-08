@@ -18,7 +18,7 @@
 
 %global debug_package %{nil}
 Name:           cemu
-Version:        1.1
+Version:        1.1.1
 Release:        0
 Summary:        TI-84 Plus CE / TI-83 Premium CE emulator
 License:        GPL-3.0
@@ -95,7 +95,7 @@ test -x "$(type -p g++-6)"   && export CXX=g++-6
 test -x "$(type -p gcc-7)"   && export CC=gcc-7
 test -x "$(type -p g++-7)"   && export CXX=g++-7
 cd gui/qt/capture/libpng-apng && ./configure --with-libpng-prefix=a --enable-static --disable-shared CFLAGS="-O2 -fPIC" && make libpng16.la && cd ../../../..
-qmake-qt5 QMAKE_CC="$CC" QMAKE_CXX="$CXX" QMAKE_LINK="$CXX" gui/qt/CEmu.pro CEMU_VERSION=v1.1 USE_LIBPNG=internal TARGET_NAME=cemu
+qmake-qt5 QMAKE_CC="$CC" QMAKE_CXX="$CXX" QMAKE_LINK="$CXX" gui/qt/CEmu.pro CEMU_VERSION=v1.1.1 USE_LIBPNG=internal TARGET_NAME=cemu
 make %{?_smp_mflags}
 
 %install

@@ -8,7 +8,7 @@ lessThan(QT_MINOR_VERSION, 5) : error("You need at least Qt 5.5 to build CEmu!")
 CEMU_RELEASE = true
 CEMU_GIT_SHA = $$system(git describe --abbrev=7 --always)
 isEmpty(CEMU_VERSION) {
-    CEMU_VERSION = 1.1dev
+    CEMU_VERSION = v1.2dev
     CEMU_RELEASE = false
 }
 DEFINES += CEMU_VERSION=\\\"$$CEMU_VERSION\\\"
