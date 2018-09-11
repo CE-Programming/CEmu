@@ -48,6 +48,8 @@
 #include <fstream>
 #include <iostream>
 
+Q_DECLARE_METATYPE(calc_var_t)
+
 #ifdef _MSC_VER
     #include <direct.h>
     #define chdir _chdir
@@ -1528,10 +1530,6 @@ void MainWindow::showAbout() {
     QAbstractButton *okButton = aboutBox->addButton(QMessageBox::Ok);
     okButton->setFocus();
 
-    QByteArray iconByteArray;
-    QBuffer buffer(&iconByteArray);
-    QPixmap(QStringLiteral(":/icons/resources/icons/icon.png")).save(&buffer, "PNG");
-
     aboutBox->setText(tr("%1<h3>CEmu %2</h3>"
                          "<a href='https://github.com/CE-Programming/CEmu'>On GitHub</a><br>"
                          "<br>Main authors:<br>%3"
@@ -1539,7 +1537,7 @@ void MainWindow::showAbout() {
                          "<br>Translations provided by:<br>%5"
                          "<br>Many thanks to the following projects: %6<br>In-program icons are courtesy of %7.<br>"
                          "<br>CEmu is licensed under the %8, and is not a TI product nor is it affiliated to/endorsed by TI.<br><br>")
-                         .arg(QStringLiteral("<img src='data:image/png;base64,") + iconByteArray.toBase64() + "' align='right'/>",
+                         .arg(QStringLiteral("<img src=':/icons/resources/icons/icon.png' align='right'>"),
                               QStringLiteral(CEMU_VERSION " <small><i>(git: " CEMU_GIT_SHA ")</i></small>"),
                               QStringLiteral("Matt Waltz (<a href='https://github.com/mateoconlechuga'>MateoConLechuga</a>)<br>"
                                              "Jacob Young (<a href='https://github.com/jacobly0'>jacobly0</a>)<br>"
@@ -1636,8 +1634,7 @@ QStringList MainWindow::varDialog(QFileDialog::AcceptMode mode, const QString &n
 }
 
 void MainWindow::varPressed(QTableWidgetItem *item) {
-    calc_var_t var;
-    memcpy(&var, ui->emuVarView->item(item->row(), VAR_NAME)->data(Qt::UserRole).toByteArray().data(), sizeof(calc_var_t));
+    calc_var_t var = ui->emuVarView->item(item->row(), VAR_NAME)->data(Qt::UserRole).value<calc_var_t>();
     if (var.size <= 2 || calc_var_is_asmprog(&var)) {
         return;
     } else if (var.type != CALC_VAR_TYPE_APP_VAR && (!calc_var_is_internal(&var) || var.name[0] == '#')) {
@@ -1743,7 +1740,7 @@ void MainWindow::varShow() {
                 QTableWidgetItem *var_size = new QTableWidgetItem();
 
                 // Attach var index (hidden) to the name. Needed elsewhere
-                var_name->setData(Qt::UserRole, QByteArray(reinterpret_cast<const char*>(&var), sizeof(calc_var_t)));
+                var_name->setData(Qt::UserRole, QVariant::fromValue(var));
                 var_size->setData(Qt::DisplayRole, var.size);
 
                 var_name->setCheckState(Qt::Unchecked);
@@ -1773,9 +1770,7 @@ void MainWindow::varSaveSelected() {
     QStringList fileNames;
     for (int currRow = 0; currRow < ui->emuVarView->rowCount(); currRow++) {
         if (ui->emuVarView->item(currRow, VAR_NAME)->checkState() == Qt::Checked) {
-            calc_var_t var;
-            memcpy(&var, reinterpret_cast<const calc_var_t*>(ui->emuVarView->item(currRow, VAR_NAME)->data(Qt::UserRole).toByteArray().data()), sizeof(calc_var_t));
-            selectedVars.append(var);
+            selectedVars.append(ui->emuVarView->item(currRow, VAR_NAME)->data(Qt::UserRole).value<calc_var_t>());
         }
     }
     if (selectedVars.size() < 2) {
@@ -1824,8 +1819,7 @@ void MainWindow::varSaveSelectedFiles() {
 
     for (int currRow = 0; currRow < ui->emuVarView->rowCount(); currRow++) {
         if (ui->emuVarView->item(currRow, VAR_NAME)->checkState() == Qt::Checked) {
-            calc_var_t var;
-            memcpy(&var, reinterpret_cast<const calc_var_t*>(ui->emuVarView->item(currRow, VAR_NAME)->data(Qt::UserRole).toByteArray().data()), sizeof(calc_var_t));
+            calc_var_t var = ui->emuVarView->item(currRow, VAR_NAME)->data(Qt::UserRole).value<calc_var_t>();
 
             name = QString(calc_var_name_to_utf8(var.name));
             filename = dialog.directory().absolutePath() + "/" + name + "." + m_varExtensions[var.type1];
