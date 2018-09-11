@@ -84,7 +84,7 @@ typedef struct calc_var {
     uint8_t type1, type2, version, namelen, name[9], *data;
     calc_var_type_t type;
     uint16_t size;
-    bool archived;
+    bool archived, named;
 } calc_var_t;
 
 void vat_search_init(calc_var_t *);

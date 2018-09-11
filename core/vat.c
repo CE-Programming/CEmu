@@ -219,7 +219,6 @@ bool vat_search_next(calc_var_t *var) {
                    progPtr  = mem_peek_long(0xD0259D),
                    symTable = 0xD3FFFF;
     uint8_t i;
-    bool prog = var->vat > pTemp && var->vat <= progPtr;
     if (!var->vat || var->vat < userMem || var->vat <= OPBase || var->vat > symTable) {
         return false; /* some sanity check failed */
     }
@@ -229,7 +228,7 @@ bool vat_search_next(calc_var_t *var) {
     var->address  = mem_peek_byte(var->vat--);
     var->address |= mem_peek_byte(var->vat--) << 8;
     var->address |= mem_peek_byte(var->vat--) << 16;
-    if (prog) {
+    if ((var->named = var->vat > pTemp && var->vat <= progPtr)) {
         var->namelen = mem_peek_byte(var->vat--);
         if (!var->namelen || var->namelen > 8) {
             return false; /* invalid name length */
@@ -239,7 +238,7 @@ bool vat_search_next(calc_var_t *var) {
     }
     var->archived = var->address > 0xC0000 && var->address < 0x400000;
     if (var->archived) {
-        var->address += 9 + prog + var->namelen;
+        var->address += 9 + var->named + var->namelen;
     } else if (var->address < 0xD1A881 || var->address >= 0xD40000) {
         return false;
     }
