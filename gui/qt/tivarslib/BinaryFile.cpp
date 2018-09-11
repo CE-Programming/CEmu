@@ -8,8 +8,6 @@
 #include "BinaryFile.h"
 #include "tivarslib_utils.h"
 
-using namespace std;
-
 namespace tivars
 {
 
@@ -17,7 +15,7 @@ namespace tivars
      * @param null filePath
      * @throws \Exception
      */
-    BinaryFile::BinaryFile(const string& filePath)
+    BinaryFile::BinaryFile(const std::string& filePath)
     {
         if (!filePath.empty())
         {
@@ -26,17 +24,17 @@ namespace tivars
                 this->file = fopen(filePath.c_str(), "rb+");
                 if (!this->file)
                 {
-                    throw runtime_error("Can't open the input file");
+                    throw std::runtime_error("Can't open the input file");
                 }
                 this->filePath = filePath;
                 fseek(this->file, 0L, SEEK_END);
                 this->fileSize = (size_t) ftell(this->file);
                 fseek(this->file, 0L, SEEK_SET);
             } else {
-                throw runtime_error("No such file");
+                throw std::runtime_error("No such file");
             }
         } else {
-            throw invalid_argument("Empty file path given");
+            throw std::invalid_argument("Empty file path given");
         }
     }
 
@@ -55,11 +53,11 @@ namespace tivars
             size_t n = fread(v.data(), sizeof(uchar), bytes, file);
             if (n != bytes || ferror(file))
             {
-                throw runtime_error("Error in get_raw_bytes");
+                throw std::runtime_error("Error in get_raw_bytes");
             }
             return v;
         } else {
-            throw runtime_error("No file loaded");
+            throw std::runtime_error("No file loaded");
         }
     }
 
@@ -70,19 +68,19 @@ namespace tivars
      * @return  string
      * @throws  runtime_error
      */
-    string BinaryFile::get_string_bytes(uint bytes)
+    std::string BinaryFile::get_string_bytes(uint bytes)
     {
         if (file)
         {
-            string buf(bytes, '\0');
+            std::string buf(bytes, '\0');
             size_t n = fread(&buf[0], sizeof(char), bytes, file);
             if (n != bytes || ferror(file))
             {
-                throw runtime_error("Error in get_string_bytes");
+                throw std::runtime_error("Error in get_string_bytes");
             }
             return buf;
         } else {
-            throw runtime_error("No file loaded");
+            throw std::runtime_error("No file loaded");
         }
     }
 

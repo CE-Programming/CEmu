@@ -8,12 +8,10 @@
 #include "TIModels.h"
 #include <unordered_map>
 
-using namespace std;
-
 namespace tivars
 {
 
-    unordered_map<string, TIModel>  models;
+    std::unordered_map<std::string, TIModel>  models;
 
     /**
      *  Make and insert the associative arrays for the model.
@@ -23,14 +21,14 @@ namespace tivars
      * @param string    name    The name of the calc using this model
      * @param string    sig     The signature (magic bytes) used for this model
      */
-    void TIModels::insertModel(int orderID, uint flags, const string& name, const string& sig)
+    void TIModels::insertModel(int orderID, uint flags, const std::string& name, const std::string& sig)
     {
         TIModel model(orderID, name, flags, sig);
 
         if (!models.count(name))
             models[name] = model;
 
-        string flags_str = to_string(flags);
+        std::string flags_str = std::to_string(flags);
         if (!models.count(flags_str))
             models[flags_str] = model;
 
@@ -66,9 +64,9 @@ namespace tivars
      * @param   int     flags  The model flags
      * @return  string          The model name for those flags
      */
-    string TIModels::getDefaultNameFromFlags(uint flags)
+    std::string TIModels::getDefaultNameFromFlags(uint flags)
     {
-        string flags_str = to_string(flags);
+        std::string flags_str = std::to_string(flags);
         return isValidFlags(flags) ? models[flags_str].getName() : "Unknown";
     }
 
@@ -76,7 +74,7 @@ namespace tivars
      * @param   string  name   The model name
      * @return  int             The model flags for that name
      */
-    uint TIModels::getFlagsFromName(const string& name)
+    uint TIModels::getFlagsFromName(const std::string& name)
     {
         return isValidName(name) ? models[name].getFlags() : 0;
     }
@@ -85,9 +83,9 @@ namespace tivars
      * @param   int     flags  The model flags
      * @return  string          The signature for those flags
      */
-    string TIModels::getSignatureFromFlags(uint flags)
+    std::string TIModels::getSignatureFromFlags(uint flags)
     {
-        string flags_str = to_string(flags);
+        std::string flags_str = std::to_string(flags);
         return isValidFlags(flags) ? models[flags_str].getSig() : "";
     }
 
@@ -95,7 +93,7 @@ namespace tivars
      * @param   string  name
      * @return  string          The signature for that name
      */
-    string TIModels::getSignatureFromName(const string& name)
+    std::string TIModels::getSignatureFromName(const std::string& name)
     {
         return isValidName(name) ? models[name].getSig() : "";
     }
@@ -104,7 +102,7 @@ namespace tivars
      * @param   string  sig    The signature
      * @return  string          The default calc name whose file formats use that signature
      */
-    string TIModels::getDefaultNameFromSignature(const string& sig)
+    std::string TIModels::getDefaultNameFromSignature(const std::string& sig)
     {
         return isValidSignature(sig) ? models[sig].getName() : "";
     }
@@ -113,7 +111,7 @@ namespace tivars
      * @param   string  sig    The signature
      * @return  int             The default calc order ID whose file formats use that signature
      */
-    int TIModels::getDefaultOrderIDFromSignature(const string& sig)
+    int TIModels::getDefaultOrderIDFromSignature(const std::string& sig)
     {
         return isValidSignature(sig) ? models[sig].getOrderId() : -1;
     }
@@ -122,7 +120,7 @@ namespace tivars
      * @param   string  name
      * @return  int             The default calc order ID whose file formats use that signature
      */
-    int TIModels::getOrderIDFromName(string name)
+    int TIModels::getOrderIDFromName(std::string name)
     {
         return isValidName(name) ? models[name].getOrderId() : -1;
     }
@@ -133,7 +131,7 @@ namespace tivars
      */
     int TIModels::getDefaultOrderIDFromFlags(uint flags)
     {
-        string flags_str = to_string(flags);
+        std::string flags_str = std::to_string(flags);
         return isValidFlags(flags) ? models[flags_str].getOrderId() : -1;
     }
 
@@ -141,7 +139,7 @@ namespace tivars
      * @param   string  sig    The signature
      * @return  string          The minimum compatibility flags for that signaure
      */
-    uint TIModels::getMinFlagsFromSignature(const string& sig)
+    uint TIModels::getMinFlagsFromSignature(const std::string& sig)
     {
         return isValidSignature(sig) ? models[sig].getFlags() : 0;
     }
@@ -149,20 +147,20 @@ namespace tivars
 
     bool TIModels::isValidFlags(uint flags)
     {
-        string flags_str = to_string(flags);
+        std::string flags_str = std::to_string(flags);
         return (flags != 0 && models.count(flags_str));
     }
 
-    bool TIModels::isValidName(const string& name)
+    bool TIModels::isValidName(const std::string& name)
     {
         return (!name.empty() && models.count(name));
     }
 
-    bool TIModels::isValidSignature(const string& sig)
+    bool TIModels::isValidSignature(const std::string& sig)
     {
         return (!sig.empty() && models.count(sig));
     }
 
-}
+};
 
 // TIModels::initTIModelsArray();

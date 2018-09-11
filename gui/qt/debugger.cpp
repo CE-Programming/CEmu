@@ -1925,8 +1925,8 @@ void MainWindow::osUpdate() {
         QTableWidgetItem *opString = new QTableWidgetItem(dataString);
         QTableWidgetItem *opValue;
         try {
-            opValue = new QTableWidgetItem(QString::fromStdString(tivars::TH_0x00::makeStringFromData(vect)));
-        } catch(...) {
+            opValue = new QTableWidgetItem(QString::fromStdString(tivars::TH_GenericReal::makeStringFromData(vect)));
+        } catch (...) {
             opValue = new QTableWidgetItem(TXT_NAN);
         }
         opNumber->setFlags(opNumber->flags() & ~Qt::ItemIsEditable);
@@ -1975,7 +1975,7 @@ void MainWindow::osUpdate() {
             QTableWidgetItem *fpString = new QTableWidgetItem(dataString);
             QTableWidgetItem *fpValue;
             try {
-                fpValue = new QTableWidgetItem(QString::fromStdString(tivars::TH_0x00::makeStringFromData(vect)));
+                fpValue = new QTableWidgetItem(QString::fromStdString(tivars::TH_GenericReal::makeStringFromData(vect)));
             } catch(...) {
                 fpValue = new QTableWidgetItem(TXT_NAN);
             }
@@ -2090,7 +2090,7 @@ void MainWindow::opModified(QTableWidgetItem *item) {
     } else if (col == OP_VALUE) {
         array.fill(0);
         try {
-            data_t value = tivars::TH_0x00::makeDataFromString(txt.toStdString());
+            data_t value = tivars::TH_GenericReal::makeDataFromString(txt.toStdString());
             for (int i = 0; i < 11 && i < static_cast<int>(value.size()); i++) {
                 array[i] = value[i];
             }
@@ -2118,7 +2118,7 @@ void MainWindow::opModified(QTableWidgetItem *item) {
     ui->opView->item(row, OP_STRING)->setText(data);
     ui->opView->item(row, OP_DATA)->setText(QString(array.toHex()));
     try {
-        ui->opView->item(row, OP_VALUE)->setText(QString::fromStdString(tivars::TH_0x00::makeStringFromData(vect)));
+        ui->opView->item(row, OP_VALUE)->setText(QString::fromStdString(tivars::TH_GenericReal::makeStringFromData(vect)));
     } catch(...) {
         ui->opView->item(row, OP_VALUE)->setText(TXT_NAN);
     }
@@ -2151,7 +2151,7 @@ void MainWindow::fpModified(QTableWidgetItem *item) {
     } else if (col == FP_VALUE) {
         array.fill(0);
         try {
-            data_t value = tivars::TH_0x00::makeDataFromString(txt.toStdString());
+            data_t value = tivars::TH_GenericReal::makeDataFromString(txt.toStdString());
             for (int i = 0; i < 9 && i < static_cast<int>(value.size()); i++) {
                 array[i] = value[i];
             }
@@ -2179,7 +2179,7 @@ void MainWindow::fpModified(QTableWidgetItem *item) {
     ui->fpStack->item(row, FP_STRING)->setText(data);
     ui->fpStack->item(row, FP_DATA)->setText(QString(array.toHex()));
     try {
-        ui->fpStack->item(row, FP_VALUE)->setText(QString::fromStdString(tivars::TH_0x00::makeStringFromData(vect)));
+        ui->fpStack->item(row, FP_VALUE)->setText(QString::fromStdString(tivars::TH_GenericReal::makeStringFromData(vect)));
     } catch(...) {
         ui->fpStack->item(row, FP_VALUE)->setText(TXT_NAN);
     }

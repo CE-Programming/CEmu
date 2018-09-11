@@ -8,12 +8,10 @@
 #include "TypeHandlers.h"
 #include "../tivarslib_utils.h"
 
-using namespace std;
-
 namespace tivars
 {
-    
-    data_t TH_0x02::makeDataFromString(const string& str, const options_t& options)
+
+    data_t TH_Matrix::makeDataFromString(const std::string& str, const options_t& options)
     {
         (void)options;
 
@@ -21,12 +19,12 @@ namespace tivars
 
         if (str.length() < 5 || str.substr(0, 2) != "[[" || str.substr(str.length()-2, 2) != "]]")
         {
-            throw invalid_argument("Invalid input string. Needs to be a valid matrix");
+            throw std::invalid_argument("Invalid input string. Needs to be a valid matrix");
         }
 
         size_t rowCount, colCount;
-        vector<vector<string>> matrix;
-        vector<string> rows;
+        std::vector<std::vector<std::string>> matrix;
+        std::vector<std::string> rows;
 
         rows = explode(str.substr(2, str.length()-4), "][");
         rowCount = rows.size();
@@ -36,7 +34,7 @@ namespace tivars
 
         if (colCount > 0xFF || rowCount > 0xFF)
         {
-            throw invalid_argument("Invalid input string. Needs to be a valid matrix (max col/row = 255)");
+            throw std::invalid_argument("Invalid input string. Needs to be a valid matrix (max col/row = 255)");
         }
 
         uint counter = 0;
@@ -48,12 +46,12 @@ namespace tivars
                 numStr = trim(numStr);
                 if (!is_numeric(numStr))
                 {
-                    throw invalid_argument("Invalid input string. Needs to be a valid matrix (real numbers inside)");
+                    throw std::invalid_argument("Invalid input string. Needs to be a valid matrix (real numbers inside)");
                 }
             }
             if (tmp.size() != colCount)
             {
-                throw invalid_argument("Invalid input string. Needs to be a valid matrix (consistent column count)");
+                throw std::invalid_argument("Invalid input string. Needs to be a valid matrix (consistent column count)");
             }
             matrix[counter++] = tmp;
         }
@@ -61,11 +59,11 @@ namespace tivars
         data[0] = (uchar)(colCount & 0xFF);
         data[1] = (uchar)(rowCount & 0xFF);
 
-        for (const vector<string>& row : matrix)
+        for (const std::vector<std::string>& row : matrix)
         {
             for (const auto& numStr : row)
             {
-                const auto& tmp = TH_0x00::makeDataFromString(numStr);
+                const auto& tmp = TH_GenericReal::makeDataFromString(numStr, { {"_type", 0x00} });
                 data.insert(data.end(), tmp.begin(), tmp.end());
             }
         }
@@ -73,7 +71,7 @@ namespace tivars
         return data;
     }
 
-    string TH_0x02::makeStringFromData(const data_t& data, const options_t& options)
+    std::string TH_Matrix::makeStringFromData(const data_t& data, const options_t& options)
     {
         (void)options; // TODO: prettified option
 
@@ -81,21 +79,21 @@ namespace tivars
         size_t colCount = data[0];
         size_t rowCount = data[1];
 
-        if (data.size() < 2+TH_0x00::dataByteCount || colCount < 1 || rowCount < 1 || colCount > 255 || rowCount > 255
-            || ((byteCount - 2) % TH_0x00::dataByteCount != 0) || (colCount*rowCount != (byteCount - 2) / TH_0x00::dataByteCount))
+        if (data.size() < 2+TH_GenericReal::dataByteCount || colCount < 1 || rowCount < 1 || colCount > 255 || rowCount > 255
+            || ((byteCount - 2) % TH_GenericReal::dataByteCount != 0) || (colCount*rowCount != (byteCount - 2) / TH_GenericReal::dataByteCount))
         {
-            throw invalid_argument("Invalid data array. Needs to contain 1+1+" + to_string(TH_0x00::dataByteCount) + "*n bytes");
+            throw std::invalid_argument("Invalid data array. Needs to contain 1+1+" + std::to_string(TH_GenericReal::dataByteCount) + "*n bytes");
         }
 
-        string str = "[";
+        std::string str = "[";
 
-        for (uint i = 2, num = 0; i < byteCount; i += TH_0x00::dataByteCount, num++)
+        for (uint i = 2, num = 0; i < byteCount; i += TH_GenericReal::dataByteCount, num++)
         {
             if (num % colCount == 0) // first column
             {
                 str += "[";
             }
-            str += TH_0x00::makeStringFromData(data_t(data.begin()+i, data.begin()+i+TH_0x00::dataByteCount));
+            str += TH_GenericReal::makeStringFromData(data_t(data.begin()+i, data.begin()+i+TH_GenericReal::dataByteCount));
             if (num % colCount < colCount - 1) // not last column
             {
                 str += ",";

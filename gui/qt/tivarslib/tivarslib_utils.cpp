@@ -9,28 +9,26 @@
 #include <sstream>
 #include <cmath>
 
-using namespace std;
-
-bool has_option(const options_t& m, const string& element)
+bool has_option(const options_t& m, const std::string& element)
 {
     return m.find(element) != m.end();
 }
 
-unsigned char hexdec(const string& str)
+unsigned char hexdec(const std::string& str)
 {
     return (unsigned char) stoul(str, nullptr, 16);
 }
 
-string dechex(unsigned char i)
+std::string dechex(unsigned char i)
 {
-    stringstream stream;
+    std::stringstream stream;
     stream << std::hex << (unsigned int)i;
     return stream.str();
 }
 
-string strtoupper(const string& str)
+std::string strtoupper(const std::string& str)
 {
-    string newStr(str);
+    std::string newStr(str);
     for (char& c : newStr)
     {
         c = (char) toupper(c);
@@ -38,13 +36,13 @@ string strtoupper(const string& str)
     return newStr;
 }
 
-vector<string> explode(const string& str, const string& delim)
+std::vector<std::string> explode(const std::string& str, const std::string& delim)
 {
-    vector<string> result;
+    std::vector<std::string> result;
 
     size_t last = 0;
     size_t next = 0;
-    while ((next = str.find(delim, last)) != string::npos)
+    while ((next = str.find(delim, last)) != std::string::npos)
     {
         result.push_back(str.substr(last, next - last));
         last = next + delim.length();
@@ -54,34 +52,34 @@ vector<string> explode(const string& str, const string& delim)
     return result;
 }
 
-vector<string> explode(const string& str, char delim)
+std::vector<std::string> explode(const std::string& str, char delim)
 {
-    return explode(str, string(1, delim));
+    return explode(str, std::string(1, delim));
 }
 
 // trim from start
-string ltrim(string s, const char* t)
+std::string ltrim(std::string s, const char* t)
 {
     s.erase(0, s.find_first_not_of(t));
     return s;
 }
 
 // trim from end
-string rtrim(string s, const char* t)
+std::string rtrim(std::string s, const char* t)
 {
     s.erase(s.find_last_not_of(t) + 1);
     return s;
 }
 
 // trim from both ends
-string trim(const string& s, const char* t)
+std::string trim(const std::string& s, const char* t)
 {
     return ltrim(rtrim(s, t), t);
 }
 
-string str_repeat(const string& str, unsigned int times)
+std::string str_repeat(const std::string& str, unsigned int times)
 {
-    string result;
+    std::string result;
     result.reserve(times * str.length()); // avoid repeated reallocation
     for (unsigned char i = 0; i < times; i++)
     {
@@ -91,16 +89,16 @@ string str_repeat(const string& str, unsigned int times)
 }
 
 // From http://stackoverflow.com/a/2481126/378298
-void ParseCSV(const string& csvSource, vector<vector<string>>& lines)
+void ParseCSV(const std::string& csvSource, std::vector<std::vector<std::string>>& lines)
 {
     bool inQuote(false);
     bool newLine(false);
-    string field;
+    std::string field;
     lines.clear();
-    vector<string> line;
+    std::vector<std::string> line;
 
-    string::const_iterator aChar = csvSource.begin();
-    string::const_iterator tmp;
+    std::string::const_iterator aChar = csvSource.begin();
+    std::string::const_iterator tmp;
 
     while (aChar != csvSource.end())
     {
@@ -166,7 +164,7 @@ void ParseCSV(const string& csvSource, vector<vector<string>>& lines)
         lines.push_back(line);
 }
 
-bool is_numeric(const string& str)
+bool is_numeric(const std::string& str)
 {
     char* p;
     double ignored = ::strtod(str.c_str(), &p);
@@ -174,7 +172,7 @@ bool is_numeric(const string& str)
     return (bool)!*p;
 }
 
-bool file_exists(const string& path) {
+bool file_exists(const std::string& path) {
     if (path.empty()) {
         return false;
     }
@@ -186,7 +184,7 @@ bool file_exists(const string& path) {
     }
 }
 
-string str_pad(const string& str, unsigned long pad_length, string pad_string)
+std::string str_pad(const std::string& str, unsigned long pad_length, std::string pad_string)
 {
     unsigned long i, j, x;
     unsigned long str_size = str.size();
@@ -197,7 +195,7 @@ string str_pad(const string& str, unsigned long pad_length, string pad_string)
         return str;
     }
 
-    string o;
+    std::string o;
     o.reserve(pad_length);
 
     for (i = 0, x = str_size; i < x; i++)
@@ -215,8 +213,22 @@ string str_pad(const string& str, unsigned long pad_length, string pad_string)
     return o;
 }
 
+std::string multiple(int num, const std::string &var) {
+    const std::string unit = var.empty() ? "1" : var;
+    switch (num) {
+        case 0:
+            return "0";
+        case 1:
+            return unit;
+        case -1:
+            return "-" + unit;
+        default:
+            return std::to_string(num) + var;
+    }
+}
+
 // Adapted from http://stackoverflow.com/a/32903747/378298
-string dec2frac(double num, double err)
+std::string dec2frac(double num, const std::string& var, double err)
 {
     if (err <= 0.0 || err >= 1.0)
     {
@@ -227,7 +239,7 @@ string dec2frac(double num, double err)
 
     if (sign == -1)
     {
-        num = abs(num);
+        num = std::abs(num);
     }
 
     if (sign != 0)
@@ -236,17 +248,17 @@ string dec2frac(double num, double err)
         err *= num;
     }
 
-    int n = (int) floor(num);
+    int n = (int) std::floor(num);
     num -= n;
 
     if (num < err)
     {
-        return to_string(sign * n);
+        return multiple(sign * n, var);
     }
 
     if (1 - err < num)
     {
-        return to_string(sign * (n + 1));
+        return multiple(sign * (n + 1), var);
     }
 
     // The lower fraction is 0/1
@@ -276,12 +288,12 @@ string dec2frac(double num, double err)
             lower_d = middle_d;
         } else {
             // Middle is our best fraction
-            return to_string((n * middle_d + middle_n) * sign) + "/" + to_string(middle_d);
+            return multiple((n * middle_d + middle_n) * sign, var) + "/" + std::to_string(middle_d);
         }
     }
 }
 
 std::string trimZeros(const std::string& str)
 {
-    return to_string(stoi(str));
+    return std::to_string(std::stoi(str));
 }

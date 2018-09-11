@@ -9,23 +9,21 @@
 #include "../tivarslib_utils.h"
 #include <regex>
 
-using namespace std;
-
 namespace tivars
 {
 
-    data_t TH_0x15::makeDataFromString(const string& str, const options_t& options)
+    data_t TH_AppVar::makeDataFromString(const std::string& str, const options_t& options)
     {
         (void)options;
 
-        bool formatOk = regex_match(str, regex("^([0-9a-fA-F]{2})+$"));
+        bool formatOk = regex_match(str, std::regex("^([0-9a-fA-F]{2})+$"));
 
         const size_t length = str.size();
         const size_t bytes  = length / 2;
 
         if (length == 0 || !formatOk || bytes > 0xFFFF)
         {
-            throw invalid_argument("Invalid input string. Needs to be a valid hex data block");
+            throw std::invalid_argument("Invalid input string. Needs to be a valid hex data block");
         }
 
         data_t data = { (uchar)(bytes & 0xFF), (uchar)((bytes >> 8) & 0xFF) };
@@ -38,7 +36,7 @@ namespace tivars
         return data;
     }
 
-    string TH_0x15::makeStringFromData(const data_t& data, const options_t& options)
+    std::string TH_AppVar::makeStringFromData(const data_t& data, const options_t& options)
     {
         (void)options;
 
@@ -48,10 +46,10 @@ namespace tivars
 
         if (lengthExp != lengthDat)
         {
-            throw invalid_argument("Invalid data array. Expected " + to_string(lengthExp) + " bytes, got " + to_string(lengthDat));
+            throw std::invalid_argument("Invalid data array. Expected " + std::to_string(lengthExp) + " bytes, got " + std::to_string(lengthDat));
         }
 
-        string str;
+        std::string str;
 
         for (size_t i=2; i<byteCount; i++)
         {

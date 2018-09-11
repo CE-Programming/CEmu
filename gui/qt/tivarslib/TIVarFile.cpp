@@ -11,8 +11,6 @@
 #include <numeric>
 #include <regex>
 
-using namespace std;
-
 namespace tivars
 {
 
@@ -25,12 +23,12 @@ namespace tivars
      * @param   string  filePath
      * @throws  \Exception
      */
-    TIVarFile::TIVarFile(const string& filePath) : BinaryFile(filePath)
+    TIVarFile::TIVarFile(const std::string& filePath) : BinaryFile(filePath)
     {
         this->isFromFile = true;
         if (this->fileSize < 76) // bare minimum for header + a var entry
         {
-            throw runtime_error("This file is not a valid TI-[e]z80 variable file");
+            throw std::runtime_error("This file is not a valid TI-[e]z80 variable file");
         }
         this->makeHeaderFromFile();
         this->makeVarEntryFromFile();
@@ -45,42 +43,42 @@ namespace tivars
         this->close(); // let's free the resource up as early as possible
     }
 
-    TIVarFile TIVarFile::loadFromFile(const string& filePath)
+    TIVarFile TIVarFile::loadFromFile(const std::string& filePath)
     {
         if (!filePath.empty())
         {
             return TIVarFile(filePath);
         } else {
-            throw runtime_error("No file path given");
+            throw std::runtime_error("No file path given");
         }
     }
 
-    TIVarFile::TIVarFile(const TIVarType& type, const string& name, const TIModel& model) : type(type), calcModel(model)
+    TIVarFile::TIVarFile(const TIVarType& type, const std::string& name, const TIModel& model) : type(type), calcModel(model)
     {
         if (!this->calcModel.supportsType(this->type))
         {
-            throw runtime_error("This calculator model (" + this->calcModel.getName() + ") does not support the type " + this->type.getName());
+            throw std::runtime_error("This calculator model (" + this->calcModel.getName() + ") does not support the type " + this->type.getName());
         }
 
-        string newName = this->fixVarName(name);
-        string signature = this->calcModel.getSig(); std::copy(signature.begin(), signature.end(), this->header.signature);
+        std::string newName = this->fixVarName(name);
+        std::string signature = this->calcModel.getSig(); std::copy(signature.begin(), signature.end(), this->header.signature);
         uchar sig_extra[3] = {0x1A, 0x0A, 0x00};       std::copy(sig_extra, sig_extra + 3, this->header.sig_extra);
-        string comment = str_pad("Created by tivars_lib_cpp", 42, "\0"); std::copy(comment.begin(), comment.end(), this->header.comment);
+        std::string comment = str_pad("Created by tivars_lib_cpp", 42, "\0"); std::copy(comment.begin(), comment.end(), this->header.comment);
         this->header.entries_len = 0; // will have to be overwritten later
 
         this->varEntry.meta_length  = (this->calcModel.getFlags() >= TIFeatureFlags::hasFlash) ? varEntryNewLength : varEntryOldLength;
         this->varEntry.data_length  = 0; // will have to be overwritten later
         this->varEntry.typeID       = (uchar) type.getId();
-        string varname = str_pad(newName, 8, "\0");    std::copy(varname.begin(), varname.begin() + 7, this->varEntry.varname);
+        std::string varname = str_pad(newName, 8, "\0");    std::copy(varname.begin(), varname.begin() + 7, this->varEntry.varname);
         this->varEntry.data_length2 = 0; // will have to be overwritten later
     }
 
-    TIVarFile TIVarFile::createNew(const TIVarType& type, const string& name, const TIModel& model)
+    TIVarFile TIVarFile::createNew(const TIVarType& type, const std::string& name, const TIModel& model)
     {
         return TIVarFile(type, name, model);
     }
 
-    TIVarFile TIVarFile::createNew(const TIVarType& type, const string& name)
+    TIVarFile TIVarFile::createNew(const TIVarType& type, const std::string& name)
     {
         return createNew(type, name, TIModel::createFromName("84+"));
     }
@@ -96,9 +94,9 @@ namespace tivars
     {
         rewind(this->file);
 
-        string signature = this->get_string_bytes(8);  std::copy(signature.begin(), signature.end(), this->header.signature);
+        std::string signature = this->get_string_bytes(8);  std::copy(signature.begin(), signature.end(), this->header.signature);
         auto sig_extra   = this->get_raw_bytes(3);     std::copy(sig_extra.begin(), sig_extra.end(), this->header.sig_extra);
-        string comment   = this->get_string_bytes(42); std::copy(comment.begin(),   comment.end(),   this->header.comment);
+        std::string comment   = this->get_string_bytes(42); std::copy(comment.begin(),   comment.end(),   this->header.comment);
         this->header.entries_len  = (uint16_t)((this->get_raw_bytes(1)[0] & 0xFF) + (this->get_raw_bytes(1)[0] << 8));
         this->calcModel = TIModel::createFromSignature(signature);
     }
@@ -110,7 +108,7 @@ namespace tivars
         this->varEntry.meta_length  = (uint16_t)((this->get_raw_bytes(1)[0] & 0xFF) + (this->get_raw_bytes(1)[0] << 8));
         this->varEntry.data_length  = (uint16_t)((this->get_raw_bytes(1)[0] & 0xFF) + (this->get_raw_bytes(1)[0] << 8));
         this->varEntry.typeID       = this->get_raw_bytes(1)[0];
-        string varname              = this->get_string_bytes(8); std::copy(varname.begin(), varname.begin() + 7, this->varEntry.varname);
+        std::string varname              = this->get_string_bytes(8); std::copy(varname.begin(), varname.begin() + 7, this->varEntry.varname);
         if (this->calcModel.getFlags() >= TIFeatureFlags::hasFlash)
         {
             this->varEntry.version      = this->get_raw_bytes(1)[0];
@@ -136,7 +134,7 @@ namespace tivars
             }
             return (uint16_t) (sum & 0xFFFF);
         } else {
-            throw runtime_error("[Error] No file loaded");
+            throw std::runtime_error("[Error] No file loaded");
         }
     }
 
@@ -163,7 +161,7 @@ namespace tivars
             fseek(this->file, this->fileSize - 2, SEEK_SET);
             return this->get_raw_bytes(1)[0] + (this->get_raw_bytes(1)[0] << 8);
         } else {
-            throw runtime_error("[Error] No file loaded");
+            throw std::runtime_error("[Error] No file loaded");
         }
     }
 
@@ -182,17 +180,17 @@ namespace tivars
         this->computedChecksum = this->computeChecksumFromInstanceData();
     }
 
-    string TIVarFile::fixVarName(const string& name)
+    std::string TIVarFile::fixVarName(const std::string& name)
     {
-        string newName(name);
+        std::string newName(name);
         if (newName.empty())
         {
             newName = "FILE" + (type.getExts().empty() ? "" : type.getExts()[0]);
         }
-        newName = regex_replace(newName, regex("[^a-zA-Z0-9]"), "");
+        newName = std::regex_replace(newName, std::regex("[^a-zA-Z0-9]"), "");
         if (newName.length() > 8 || newName.empty() || is_numeric(newName.substr(0, 1)))
         {
-            throw invalid_argument("Invalid name given. 8 chars (A-Z, 0-9) max, starting by a letter");
+            throw std::invalid_argument("Invalid name given. 8 chars (A-Z, 0-9) max, starting by a letter");
         }
 
         for (auto & c: newName) c = (char) toupper(c);
@@ -214,16 +212,16 @@ namespace tivars
             this->varEntry.data = data;
             this->refreshMetadataFields();
         } else {
-            throw runtime_error("[Error] No data given");
+            throw std::runtime_error("[Error] No data given");
         }
     }
 
-    void TIVarFile::setContentFromString(const string& str, const options_t& options)
+    void TIVarFile::setContentFromString(const std::string& str, const options_t& options)
     {
         this->varEntry.data = (this->type.getHandlers().first)(str, options);
         this->refreshMetadataFields();
     }
-    void TIVarFile::setContentFromString(const string& str)
+    void TIVarFile::setContentFromString(const std::string& str)
     {
         setContentFromString(str, {});
     }
@@ -231,13 +229,13 @@ namespace tivars
     void TIVarFile::setCalcModel(const TIModel& model)
     {
         this->calcModel = model;
-        string signature = model.getSig();
+        std::string signature = model.getSig();
         std::copy(signature.begin(), signature.end(), this->header.signature);
     }
 
-    void TIVarFile::setVarName(const string& name)
+    void TIVarFile::setVarName(const std::string& name)
     {
-        string varname = TIVarFile::fixVarName(name);
+        std::string varname = TIVarFile::fixVarName(name);
         std::copy(varname.begin(), varname.begin() + 7, this->varEntry.varname);
         this->refreshMetadataFields();
     }
@@ -249,7 +247,7 @@ namespace tivars
             this->varEntry.archivedFlag = (uchar)(flag ? 1 : 0);
             this->refreshMetadataFields();
         } else {
-            throw runtime_error("[Error] Archived flag not supported on this calculator model");
+            throw std::runtime_error("[Error] Archived flag not supported on this calculator model");
         }
     }
 
@@ -264,11 +262,11 @@ namespace tivars
         return this->varEntry.data;
     }
 
-    string TIVarFile::getReadableContent(const options_t& options)
+    std::string TIVarFile::getReadableContent(const options_t& options)
     {
         return (this->type.getHandlers().second)(this->varEntry.data, options);
     }
-    string TIVarFile::getReadableContent()
+    std::string TIVarFile::getReadableContent()
     {
         return getReadableContent({});
     }
@@ -312,9 +310,9 @@ namespace tivars
      * @param   string  name       Name of the file, without the extension
      * @return  string  the full path
      */
-    string TIVarFile::saveVarToFile(string directory, string name)
+    std::string TIVarFile::saveVarToFile(std::string directory, std::string name)
     {
-        string fullPath;
+        std::string fullPath;
         FILE* handle;
 
         if (this->isFromFile && directory.empty())
@@ -323,7 +321,7 @@ namespace tivars
         } else {
             if (name.empty())
             {
-                string tmp;
+                std::string tmp;
                 for (unsigned char c : this->varEntry.varname)
                 {
                     if (c)
@@ -340,7 +338,7 @@ namespace tivars
             {
                 extIndex = 0;
             }
-            string fileName = name + "." + this->getType().getExts()[extIndex];
+            std::string fileName = name + "." + this->getType().getExts()[extIndex];
             if (directory.empty())
             {
                 directory = ".";
@@ -351,7 +349,7 @@ namespace tivars
         handle = fopen(fullPath.c_str(), "wb");
         if (!handle)
         {
-            throw runtime_error("Can't open the input file");
+            throw std::runtime_error("Can't open the input file");
         }
 
         this->refreshMetadataFields();
@@ -371,11 +369,11 @@ namespace tivars
         return fullPath;
     }
 
-    string TIVarFile::saveVarToFile()
+    std::string TIVarFile::saveVarToFile()
     {
         return saveVarToFile("", "");
     }
-
+}
 
 #ifdef __EMSCRIPTEN__
     #include <emscripten/bind.h>
@@ -384,33 +382,31 @@ namespace tivars
 
             register_map<std::string, int>("options_t");
 
-            class_<TIVarFile>("TIVarFile")
-                    .function("getHeader"                , &TIVarFile::getHeader)
-                    .function("getVarEntry"              , &TIVarFile::getVarEntry)
-                    .function("getType"                  , &TIVarFile::getType)
-                    .function("getInstanceChecksum"      , &TIVarFile::getInstanceChecksum)
+            class_<tivars::TIVarFile>("TIVarFile")
+                    .function("getHeader"                , &tivars::TIVarFile::getHeader)
+                    .function("getVarEntry"              , &tivars::TIVarFile::getVarEntry)
+                    .function("getType"                  , &tivars::TIVarFile::getType)
+                    .function("getInstanceChecksum"      , &tivars::TIVarFile::getInstanceChecksum)
 
-                    .function("getChecksumValueFromFile" , &TIVarFile::getChecksumValueFromFile)
-                    .function("setContentFromData"       , &TIVarFile::setContentFromData)
-                    .function("setContentFromString"     , select_overload<void(const std::string&, const options_t&)>(&TIVarFile::setContentFromString))
-                    .function("setContentFromString"     , select_overload<void(const std::string&)>(&TIVarFile::setContentFromString))
-                    .function("setCalcModel"             , &TIVarFile::setCalcModel)
-                    .function("setVarName"               , &TIVarFile::setVarName)
-                    .function("setArchived"              , &TIVarFile::setArchived)
-                    .function("isCorrupt"                , &TIVarFile::isCorrupt)
-                    .function("getRawContent"            , &TIVarFile::getRawContent)
-                    .function("getReadableContent"       , select_overload<std::string(const options_t&)>(&TIVarFile::getReadableContent))
-                    .function("getReadableContent"       , select_overload<std::string(void)>(&TIVarFile::getReadableContent))
+                    .function("getChecksumValueFromFile" , &tivars::TIVarFile::getChecksumValueFromFile)
+                    .function("setContentFromData"       , &tivars::TIVarFile::setContentFromData)
+                    .function("setContentFromString"     , select_overload<void(const std::string&, const options_t&)>(&tivars::TIVarFile::setContentFromString))
+                    .function("setContentFromString"     , select_overload<void(const std::string&)>(&tivars::TIVarFile::setContentFromString))
+                    .function("setCalcModel"             , &tivars::TIVarFile::setCalcModel)
+                    .function("setVarName"               , &tivars::TIVarFile::setVarName)
+                    .function("setArchived"              , &tivars::TIVarFile::setArchived)
+                    .function("isCorrupt"                , &tivars::TIVarFile::isCorrupt)
+                    .function("getRawContent"            , &tivars::TIVarFile::getRawContent)
+                    .function("getReadableContent"       , select_overload<std::string(const options_t&)>(&tivars::TIVarFile::getReadableContent))
+                    .function("getReadableContent"       , select_overload<std::string(void)>(&tivars::TIVarFile::getReadableContent))
 
-                    .function("saveVarToFile"            , select_overload<std::string(std::string, std::string)>(&TIVarFile::saveVarToFile))
-                    .function("saveVarToFile"            , select_overload<std::string(void)>(&TIVarFile::saveVarToFile))
+                    .function("saveVarToFile"            , select_overload<std::string(std::string, std::string)>(&tivars::TIVarFile::saveVarToFile))
+                    .function("saveVarToFile"            , select_overload<std::string(void)>(&tivars::TIVarFile::saveVarToFile))
 
-                    .class_function("loadFromFile", &TIVarFile::loadFromFile)
-                    .class_function("createNew", select_overload<TIVarFile(const TIVarType&, const std::string&, const TIModel&)>(&TIVarFile::createNew))
-                    .class_function("createNew", select_overload<TIVarFile(const TIVarType&, const std::string&)>(&TIVarFile::createNew))
-                    .class_function("createNew", select_overload<TIVarFile(const TIVarType&)>(&TIVarFile::createNew))
+                    .class_function("loadFromFile", &tivars::TIVarFile::loadFromFile)
+                    .class_function("createNew", select_overload<tivars::TIVarFile(const tivars::TIVarType&, const std::string&, const tivars::TIModel&)>(&tivars::TIVarFile::createNew))
+                    .class_function("createNew", select_overload<tivars::TIVarFile(const tivars::TIVarType&, const std::string&)>(&tivars::TIVarFile::createNew))
+                    .class_function("createNew", select_overload<tivars::TIVarFile(const tivars::TIVarType&)>(&tivars::TIVarFile::createNew))
             ;
     }
 #endif
-
-}

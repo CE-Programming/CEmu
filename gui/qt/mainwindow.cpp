@@ -76,7 +76,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     // init tivars_lib stuff
     tivars::TIModels::initTIModelsArray();
     tivars::TIVarTypes::initTIVarTypesArray();
-    tivars::TH_0x05::initTokens();
+    tivars::TH_Tokenized::initTokens();
 
     ui->centralWidget->hide();
     ui->statusBar->addWidget(&m_speedLabel);

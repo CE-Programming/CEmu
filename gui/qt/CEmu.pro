@@ -212,21 +212,18 @@ SOURCES += \
     tivarslib/TIModels.cpp \
     tivarslib/TIVarType.cpp \
     tivarslib/TIVarTypes.cpp \
+    tivarslib/TypeHandlers/TH_GenericList.cpp \
+    tivarslib/TypeHandlers/TH_Tokenized.cpp \
+    tivarslib/TypeHandlers/TH_GenericComplex.cpp \
+    tivarslib/TypeHandlers/TH_Matrix.cpp \
+    tivarslib/TypeHandlers/STH_ExactFractionPi.cpp \
     tivarslib/TypeHandlers/DummyHandler.cpp \
-    tivarslib/TypeHandlers/TH_0x00.cpp \
-    tivarslib/TypeHandlers/TH_0x01.cpp \
-    tivarslib/TypeHandlers/TH_0x02.cpp \
-    tivarslib/TypeHandlers/TH_0x05.cpp \
-    tivarslib/TypeHandlers/TH_0x0C.cpp \
-    tivarslib/TypeHandlers/TH_0x0D.cpp \
-    tivarslib/TypeHandlers/TH_0x15.cpp \
-    tivarslib/TypeHandlers/TH_0x1B.cpp \
-    tivarslib/TypeHandlers/TH_0x1C.cpp \
-    tivarslib/TypeHandlers/TH_0x1D.cpp \
-    tivarslib/TypeHandlers/TH_0x1E.cpp \
-    tivarslib/TypeHandlers/TH_0x1F.cpp \
-    tivarslib/TypeHandlers/TH_0x20.cpp \
-    tivarslib/TypeHandlers/TH_0x21.cpp \
+    tivarslib/TypeHandlers/STH_ExactFraction.cpp \
+    tivarslib/TypeHandlers/TH_GenericReal.cpp \
+    tivarslib/TypeHandlers/TH_AppVar.cpp \
+    tivarslib/TypeHandlers/STH_ExactRadical.cpp \
+    tivarslib/TypeHandlers/STH_ExactPi.cpp \
+    tivarslib/TypeHandlers/STH_FP.cpp \
     visualizerwidget.cpp \
     debugger/visualizerdisplaywidget.cpp \
     memorywidget.cpp

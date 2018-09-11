@@ -12,6 +12,8 @@
 #include <string>
 #include <map>
 
+#include <cstdint>
+
 using uint = unsigned int;
 using uchar = unsigned char;
 using data_t = std::vector<uchar>;

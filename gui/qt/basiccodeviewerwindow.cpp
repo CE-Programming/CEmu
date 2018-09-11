@@ -258,7 +258,7 @@ void BasicCodeViewerWindow::setVariableName(const QString &name) {
 
 void BasicCodeViewerWindow::setOriginalCode(const QString &code) {
     m_originalCode = code;
-    m_formattedCode = QString::fromStdString(tivars::TH_0x05::reindentCodeString(m_originalCode.toStdString()));
+    m_formattedCode = QString::fromStdString(tivars::TH_Tokenized::reindentCodeString(m_originalCode.toStdString()));
     showCode();
 }
 

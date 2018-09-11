@@ -8,14 +8,12 @@
 #include "TIModel.h"
 #include "TIModels.h"
 
-using namespace std;
-
 namespace tivars
 {
     
     bool TIModel::supportsType(const TIVarType& type)
     {
-        const vector<string>& exts = type.getExts();
+        const std::vector<std::string>& exts = type.getExts();
         return this->orderID >= 0 && this->orderID < (int)exts.size() && !exts[this->orderID].empty();
     }
 
@@ -38,7 +36,7 @@ namespace tivars
             return model;
         } else
         {
-            throw invalid_argument("Invalid version ID");
+            throw std::invalid_argument("Invalid version ID");
         }
     }
 
@@ -47,7 +45,7 @@ namespace tivars
      * @return  TIModel
      * @throws  \Exception
      */
-    TIModel TIModel::createFromName(string name)
+    TIModel TIModel::createFromName(std::string name)
     {
         if (TIModels::isValidName(name))
         {
@@ -59,7 +57,7 @@ namespace tivars
             return model;
         } else
         {
-            throw invalid_argument("Invalid version name");
+            throw std::invalid_argument("Invalid version name");
         }
     }
 
@@ -68,7 +66,7 @@ namespace tivars
      * @return  TIModel
      * @throws  \Exception
      */
-    TIModel TIModel::createFromSignature(string sig)
+    TIModel TIModel::createFromSignature(std::string sig)
     {
         if (TIModels::isValidSignature(sig))
         {
@@ -80,30 +78,28 @@ namespace tivars
             return model;
         } else
         {
-            throw invalid_argument("Invalid version signature");
+            throw std::invalid_argument("Invalid version signature");
         }
     }
-
+}
 
 #ifdef __EMSCRIPTEN__
     #include <emscripten/bind.h>
     using namespace emscripten;
     EMSCRIPTEN_BINDINGS(_timodel) {
-            class_<TIModel>("TIModel")
+            class_<tivars::TIModel>("TIModel")
                     .constructor<>()
                     .constructor<int, const std::string&, uint, const std::string&>()
 
-                    .function("getOrderId"  , &TIModel::getOrderId)
-                    .function("getName"     , &TIModel::getName)
-                    .function("getFlags"    , &TIModel::getFlags)
-                    .function("getSig"      , &TIModel::getSig)
-                    .function("supportsType", &TIModel::supportsType)
+                    .function("getOrderId"  , &tivars::TIModel::getOrderId)
+                    .function("getName"     , &tivars::TIModel::getName)
+                    .function("getFlags"    , &tivars::TIModel::getFlags)
+                    .function("getSig"      , &tivars::TIModel::getSig)
+                    .function("supportsType", &tivars::TIModel::supportsType)
 
-                    .class_function("createFromFlags",      &TIModel::createFromFlags)
-                    .class_function("createFromName",       &TIModel::createFromName)
-                    .class_function("createFromSignature",  &TIModel::createFromSignature)
+                    .class_function("createFromFlags",      &tivars::TIModel::createFromFlags)
+                    .class_function("createFromName",       &tivars::TIModel::createFromName)
+                    .class_function("createFromSignature",  &tivars::TIModel::createFromSignature)
             ;
     }
 #endif
-
-}
