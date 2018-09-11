@@ -1638,7 +1638,7 @@ QStringList MainWindow::varDialog(QFileDialog::AcceptMode mode, const QString &n
 void MainWindow::varPressed(QTableWidgetItem *item) {
     calc_var_t var;
     memcpy(&var, ui->emuVarView->item(item->row(), VAR_NAME)->data(Qt::UserRole).toByteArray().data(), sizeof(calc_var_t));
-    if (calc_var_is_asmprog(&var)) {
+    if (var.size <= 2 || calc_var_is_asmprog(&var)) {
         return;
     } else if (var.type != CALC_VAR_TYPE_APP_VAR && (!calc_var_is_internal(&var) || var.name[0] == '#')) {
         std::string str;
@@ -1699,7 +1699,7 @@ void MainWindow::varShow() {
 
         vat_search_init(&var);
         while (vat_search_next(&var)) {
-            if (var.size > 2) {
+            if (var.named || var.size > 2) {
                 int row;
 
                 row = ui->emuVarView->rowCount();
@@ -1707,7 +1707,10 @@ void MainWindow::varShow() {
 
                 bool var_preview_needs_gray = false;
                 QString var_value;
-                if (calc_var_is_asmprog(&var)) {
+                if (var.size <= 2) {
+                    var_value = tr("Empty");
+                    var_preview_needs_gray = true;
+                } else if (calc_var_is_asmprog(&var)) {
                     var_value = tr("Can't preview this");
                     var_preview_needs_gray = true;
                 } else if (calc_var_is_internal(&var) && var.name[0] != '#') { // # is previewable
