@@ -140,7 +140,7 @@ static uint32_t lcd_process_pixel(uint8_t red, uint8_t green, uint8_t blue) {
             }
         }
         spi_refresh_pixel();
-        if (likely(lcd.curCol < lcd.PPL)) {
+        if (likely(lcd.curCol < lcd.PPL && spi.ifCtl & SPI_IC_CTRL_DATA)) {
             if (!likely(lcd.control & 1 << 11)) {
                 red = green = blue = 0;
             } else if (likely(lcd.BGR)) {
@@ -148,7 +148,7 @@ static uint32_t lcd_process_pixel(uint8_t red, uint8_t green, uint8_t blue) {
                 red = blue;
                 blue = temp;
             }
-            spi_update_pixel(red, green, blue);
+            spi_update_pixel_16bpp(red, green, blue);
         }
         if (unlikely(++lcd.curCol >= lcd.PPL)) {
             for (h = lcd.HFP; h && spi_refresh_pixel(); h--) {

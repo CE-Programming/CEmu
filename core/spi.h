@@ -40,6 +40,12 @@ enum spi_mac {
     SPI_MAC_RAO = 1 << 7
 };
 
+enum spi_ic {
+    SPI_IC_CTRL_SYNC   = 1 << 0,
+    SPI_IC_CTRL_DATA   = 1 << 4,
+    SPI_IC_GRAM_BYPASS = 1 << 7
+};
+
 typedef struct spi_state {
     uint32_t param;
     uint16_t fifo, row, dstRow, srcRow;
@@ -48,7 +54,7 @@ typedef struct spi_state {
     uint32_t scanLine, rowReg, colReg;
     uint16_t rowStart, rowEnd, colStart, colEnd;
     uint16_t partialStart, partialEnd, topArea, scrollArea, bottomArea, scrollStart;
-    uint8_t mode, mac, gamma;
+    uint8_t mode, ifBpp, ifCtl, ifRed, ifGreen, ifBlue, mac, gamma;
     uint8_t lut[128], frame[320][240][3], display[240][320][4];
 
     bool tear;
@@ -63,7 +69,9 @@ void spi_reset(void);
 bool spi_hsync(void);
 bool spi_vsync(void);
 bool spi_refresh_pixel(void);
-void spi_update_pixel(uint8_t r, uint8_t g, uint8_t b);
+void spi_update_pixel_18bpp(uint8_t r, uint8_t g, uint8_t b);
+void spi_update_pixel_16bpp(uint8_t r, uint8_t g, uint8_t b);
+void spi_update_pixel_12bpp(uint8_t r, uint8_t g, uint8_t b);
 bool spi_restore(FILE *image);
 bool spi_save(FILE *image);
 

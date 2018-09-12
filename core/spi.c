@@ -52,7 +52,7 @@ bool spi_hsync(void) {
 }
 
 static void spi_reset_mregs(void) {
-    if (unlikely(spi.mac >> 5 & 1)) {
+    if (unlikely(spi.mac & SPI_MAC_RCX)) {
         spi.rowReg = spi.rowStart;
         spi.colReg = spi.colStart;
     } else {
@@ -62,7 +62,9 @@ static void spi_reset_mregs(void) {
 }
 
 bool spi_vsync(void) {
-    spi_reset_mregs();
+    if (likely(spi.ifCtl & SPI_IC_CTRL_DATA)) {
+        spi_reset_mregs();
+    }
     return spi_scan_line(0);
 }
 
@@ -113,23 +115,23 @@ bool spi_refresh_pixel(void) {
     return true;
 }
 
-void spi_update_pixel(uint8_t red, uint8_t green, uint8_t blue) {
-    assert(red < 32 && green < 64 && blue < 32);
+static void spi_update_pixel(uint8_t red, uint8_t green, uint8_t blue) {
     if (likely(spi.rowReg < 320 && spi.colReg < 240)) {
-        spi.frame[spi.rowReg][spi.colReg][SPI_RED] = spi.lut[red + 0];
-        spi.frame[spi.rowReg][spi.colReg][SPI_GREEN] = spi.lut[green + 32];
-        spi.frame[spi.rowReg][spi.colReg][SPI_BLUE] = spi.lut[blue + 96];
+        uint8_t *pixel = spi.frame[spi.rowReg][spi.colReg];
+        pixel[SPI_RED] = red;
+        pixel[SPI_GREEN] = green;
+        pixel[SPI_BLUE] = blue;
     }
-    if (unlikely(spi.mac >> 5 & 1)) {
+    if (unlikely(spi.mac & SPI_MAC_RCX)) {
         if (unlikely(spi.colReg == spi.colEnd)) {
             if (unlikely(spi.rowReg == spi.rowEnd && spi.rowStart <= spi.rowEnd)) {
                 spi.rowReg = spi.colReg = ~0;
             } else {
                 spi.colReg = spi.colStart;
-                spi.rowReg = (spi.rowReg + 1 - (spi.mac >> 6 & 2)) & 0xFF;
+                spi.rowReg = (spi.rowReg + 1 - (spi.mac >> 6 & 2)) & 0x1FF;
             }
-        } else if (spi.colReg < 0x200) {
-            spi.colReg = (spi.colReg + 1 - (spi.mac >> 5 & 2)) & 0x1FF;
+        } else if (spi.colReg < 0x100) {
+            spi.colReg = (spi.colReg + 1 - (spi.mac >> 5 & 2)) & 0xFF;
         }
     } else {
         if (unlikely(spi.rowReg == spi.colEnd)) {
@@ -145,6 +147,21 @@ void spi_update_pixel(uint8_t red, uint8_t green, uint8_t blue) {
     }
 }
 
+void spi_update_pixel_18bpp(uint8_t red, uint8_t green, uint8_t blue) {
+    assert(red < 64 && green < 64 && blue < 64);
+    spi_update_pixel(red << 2 | red >> 4, green << 2 | green >> 4, blue << 2 | blue >> 4);
+}
+
+void spi_update_pixel_16bpp(uint8_t red, uint8_t green, uint8_t blue) {
+    assert(red < 32 && green < 64 && blue < 32);
+    spi_update_pixel(spi.lut[red + 0], spi.lut[green + 32], spi.lut[blue + 96]);
+}
+
+void spi_update_pixel_12bpp(uint8_t red, uint8_t green, uint8_t blue) {
+    assert(red < 16 && green < 16 && blue < 16);
+    spi_update_pixel(spi.lut[(red << 1) + 0], spi.lut[(green << 2) + 32], spi.lut[(blue << 1) + 96]);
+}
+
 static void spi_sw_reset(void) {
     spi.cmd = 0;
     spi.fifo = 1;
@@ -152,9 +169,9 @@ static void spi_sw_reset(void) {
     spi.gamma = 1;
     spi.mode = SPI_MODE_SLEEP | SPI_MODE_OFF;
     spi.colStart = 0;
-    spi.colEnd = spi.mac & 1 << 5 ? SPI_LAST_COL : SPI_LAST_ROW;
+    spi.colEnd = spi.mac & SPI_MAC_RCX ? SPI_LAST_COL : SPI_LAST_ROW;
     spi.rowStart = 0;
-    spi.rowEnd = spi.mac & 1 << 5 ? SPI_LAST_ROW : SPI_LAST_COL;
+    spi.rowEnd = spi.mac & SPI_MAC_RCX ? SPI_LAST_ROW : SPI_LAST_COL;
     spi.topArea = 0;
     spi.scrollArea = SPI_NUM_ROWS;
     spi.bottomArea = 0;
@@ -261,6 +278,56 @@ static void spi_write_param(uint8_t value) {
             break;
         case 0x2C:
         case 0x3C:
+            if (unlikely(!(spi.ifCtl & SPI_IC_CTRL_DATA))) {
+                switch (spi.ifBpp & 7) {
+                    default:
+                    case 6: // 18bpp
+                        switch (spi.param % 3) {
+                            case 0:
+                                spi.ifBlue = value >> 2;
+                                break;
+                            case 1:
+                                spi.ifGreen = value >> 2;
+                                break;
+                            case 2:
+                                spi.ifRed = value >> 2;
+                                spi_update_pixel_18bpp(spi.ifRed, spi.ifGreen, spi.ifBlue);
+                                break;
+                        }
+                        break;
+                    case 5: // 16bpp
+                        switch (spi.param % 2) {
+                            case 0:
+                                spi.ifBlue = value >> 3;
+                                spi.ifGreen = value << 3 & 0x38;
+                                break;
+                            case 1:
+                                spi.ifGreen |= value >> 5;
+                                spi.ifRed = value & 0x1F;
+                                spi_update_pixel_16bpp(spi.ifRed, spi.ifGreen, spi.ifBlue);
+                                break;
+                        }
+                        break;
+                    case 3: // 12bpp
+                        switch (spi.param % 3) {
+                            case 0:
+                                spi.ifBlue = value >> 4;
+                                spi.ifGreen = value & 0xF;
+                                break;
+                            case 1:
+                                spi.ifRed = value >> 4;
+                                spi_update_pixel_12bpp(spi.ifRed, spi.ifGreen, spi.ifBlue);
+                                spi.ifBlue = value & 0xF;
+                                break;
+                            case 2:
+                                spi.ifGreen = value >> 4;
+                                spi.ifRed = value & 0xF;
+                                spi_update_pixel_12bpp(spi.ifRed, spi.ifGreen, spi.ifBlue);
+                                break;
+                        }
+                        break;
+                }
+            }
             break;
         case 0x2D:
             break;
@@ -301,6 +368,26 @@ static void spi_write_param(uint8_t value) {
                 case 0:
                     write8(spi.scrollStart, bit_offset, value & 0x1FF >> bit_offset);
                     spi.mode |= SPI_MODE_SCROLL;
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case 0x3A:
+            switch (word_param) {
+                case 0:
+                    spi.ifBpp = value;
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case 0xB0:
+            switch (word_param) {
+                case 0:
+                    spi.ifCtl = value;
+                    break;
+                case 1:
                     break;
                 default:
                     break;
