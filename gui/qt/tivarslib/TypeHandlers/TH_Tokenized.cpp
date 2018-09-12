@@ -269,8 +269,6 @@ namespace tivars
                     lengthOfLongestTokenName = maxLenName;
                 }
             }
-
-            (inputFile.*(&QFile::close))(); // Compiler/Linker weirdness when in LTO (undefined symbol).
         } else {
             throw std::runtime_error("Could not open the tokens csv file");
         }
