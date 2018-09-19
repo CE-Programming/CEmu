@@ -1912,7 +1912,7 @@ int MainWindow::autotesterOpen(const QString& jsonPath) {
     }
 
     autotester::ignoreROMfield = true;
-    autotester::debugLogs = false;
+    autotester::debugMode = false;
     if (autotester::loadJSONConfig(jsonContents))
     {
         ui->JSONconfigPath->setText(jsonPath);

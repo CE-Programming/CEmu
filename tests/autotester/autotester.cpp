@@ -33,7 +33,7 @@ namespace autotester
 /* The global config variable */
 config_t config;
 
-bool debugLogs = true;
+bool debugMode = true;
 bool ignoreROMfield = false;
 bool configLoaded = false;
 void (*stepCallback)() = nullptr;
@@ -170,7 +170,7 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
 
                 if (match)
                 {
-                    if (debugLogs) {
+                    if (debugMode) {
                         std::cout << "\t[Test passed!] Hash #" << which_hash << " had a matching CRC." << std::endl;
                     }
                     hashesPassed++;
@@ -199,7 +199,7 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
                 hash_params_t& param = tmp->second;
                 if (param.timeout_ms < 0)
                 {
-                    if (debugLogs) {
+                    if (debugMode) {
                         std::cout << "\t[Info] hash #" << which_hash << " is a hashWait without a proper timeout value. Using 1000ms." << std::endl;
                     }
                     param.timeout_ms = 1000; // default
@@ -295,7 +295,7 @@ bool loadJSONConfig(const std::string& jsonContents)
     json11::Json configJson = json11::Json::parse(jsonContents, jsonError);
     if (jsonError.empty())
     {
-        if (debugLogs) {
+        if (debugMode) {
             std::cout << "[OK] JSON parsed" << std::endl;
         }
     } else {
@@ -599,20 +599,20 @@ bool sendFilesForTest()
         }
         for (const auto& file : forced_files)
         {
-            if (debugLogs)
+            if (debugMode)
             {
                 std::cout << "- Sending forced file " << file << "... ";
             }
             if (cemucore::sendVariableLink(file.c_str(), cemucore::LINK_FILE) != cemucore::LINK_GOOD)
             {
-                if (debugLogs)
+                if (debugMode)
                 {
                     std::cout << std::endl;
                 }
                 std::cerr << "[Error] Forced file couldn't be sent" << std::endl;
                 return false;
             }
-            if (debugLogs)
+            if (debugMode)
             {
                 std::cout << "[OK]" << std::endl;
             }
@@ -622,20 +622,20 @@ bool sendFilesForTest()
 
     for (const auto& file : config.transfer_files)
     {
-        if (debugLogs)
+        if (debugMode)
         {
             std::cout << "- Sending file " << file << "... ";
         }
         if (cemucore::sendVariableLink(file.c_str(), cemucore::LINK_FILE) != cemucore::LINK_GOOD)
         {
-            if (debugLogs)
+            if (debugMode)
             {
                 std::cout << std::endl;
             }
             std::cerr << "[Error] File couldn't be sent" << std::endl;
             return false;
         }
-        if (debugLogs)
+        if (debugMode)
         {
             std::cout << "[OK]" << std::endl;
         }
@@ -651,7 +651,7 @@ bool doTestSequence()
 
     for (const auto& command : config.sequence)
     {
-        if (debugLogs)
+        if (debugMode)
         {
             std::cout << "Launching command " << command.first << " | " << command.second << std::endl;
         }

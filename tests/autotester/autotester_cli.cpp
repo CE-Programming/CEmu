@@ -80,10 +80,10 @@ int main(int argc, char* argv[])
 
     if (strcmp(argv[1], "-d") == 0)
     {
-        autotester::debugLogs = true;
+        autotester::debugMode = true;
         argv++;
     } else {
-        autotester::debugLogs = false;
+        autotester::debugMode = false;
     }
 
     do_transfers   = false;
