@@ -146,7 +146,8 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
             const auto& tmp = config.hashes.find(which_hash);
             if (tmp != config.hashes.end())
             {
-                void *temp_buffer;
+                void *temp_buffer = nullptr;
+                void *temp_buffer_dup = nullptr;
                 uint32_t real_hash;
                 const hash_params_t& param = tmp->second;
                 bool match = false;
@@ -160,6 +161,11 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
                     temp_buffer = cemucore::virt_mem_dup(param.start, param.size);
                     real_hash = crc32(temp_buffer, param.size);
                     match = (std::find(param.expected_CRCs.begin(), param.expected_CRCs.end(), real_hash) != param.expected_CRCs.end());
+                    if (debugMode && !match) {
+                        ::free(temp_buffer_dup);
+                        temp_buffer_dup = malloc(param.size);
+                        memcpy(temp_buffer_dup, temp_buffer, param.size);
+                    }
                     ::free(temp_buffer);
                     if (timeout > 10)
                     {
@@ -183,7 +189,18 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
                     std::cout << "\t[Test failed!] Hash #" << which_hash << " (\"" << param.description << "\") did not match "
                               << (param.expected_CRCs.size() > 1 ? "any of the expected CRCs" : ("the expected CRC " + expected_hash_str))
                               << " (got " << real_hash_str << ")." << std::endl;
+                    if (debugMode) {
+                        char dump_path[150] = {0};
+                        sprintf(dump_path, "failure_hash%s_num%d_dump.bin", which_hash.c_str(), hashesTested+1);
+                        FILE *dump_file = fopen(dump_path, "wb");
+                        fwrite(temp_buffer_dup, param.size, 1, dump_file);
+                        fclose(dump_file);
+                        std::cout << "\tDumped memory into " << dump_path << std::endl;
+                    }
                     hashesFailed++;
+                }
+                if (debugMode) {
+                    ::free(temp_buffer_dup);
                 }
                 hashesTested++;
             } else {
