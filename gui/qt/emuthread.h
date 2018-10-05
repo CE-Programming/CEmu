@@ -106,7 +106,7 @@ private:
     std::condition_variable m_cvSpeed;
 
     std::atomic<int> m_request;
-    std::atomic<bool> m_debug;
+    bool m_debug; // protected by m_mutexDebug
 
     QString m_savePath;
     QStringList m_vars;
@@ -115,7 +115,7 @@ private:
     std::mutex m_mutex;
     std::condition_variable m_cv;
     std::mutex m_mutexDebug;
-    std::condition_variable m_cvDebug;
+    std::condition_variable m_cvDebug; // protected by m_mutexDebug
 };
 
 #endif

@@ -226,22 +226,26 @@ void EmuThread::setThrottle(bool state) {
 
 void EmuThread::debugOpen(int reason, uint32_t data) {
     std::unique_lock<std::mutex> lock(m_mutexDebug);
-    emit debugCommand(reason, data);
     m_debug = true;
-    while (m_debug) {
-        m_cvDebug.wait(lock);
-    }
+    emit debugCommand(reason, data);
+    m_cvDebug.wait(lock, [this](){ return !m_debug; });
 }
 
 void EmuThread::resume() {
-    m_mutexDebug.lock();
-    m_debug = false;
+    {
+        std::lock_guard<std::mutex> lock(m_mutexDebug);
+        m_debug = false;
+    }
     m_cvDebug.notify_all();
-    m_mutexDebug.unlock();
 }
 
 void EmuThread::debug(bool state) {
-    if (m_debug && !state) {
+    bool oldState;
+    {
+        std::lock_guard<std::mutex> lock(m_mutexDebug);
+        oldState = m_debug;
+    }
+    if (oldState && !state) {
         resume();
     }
     if (state) {
