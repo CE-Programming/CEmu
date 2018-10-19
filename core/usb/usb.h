@@ -7,6 +7,9 @@ extern "C" {
 
 #include "../port.h"
 
+#include <assert.h>
+#include <stdalign.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include "fotg210.h"
@@ -23,7 +26,7 @@ typedef union usb_qlink {
     };
     struct {
         bool : 1;
-        uint8_t nak_cnt : 4; // alt
+        uint8_t nak_cnt : 4; // overlay alt
         uint32_t ptr : 27;
     };
 } usb_qlink_t;
@@ -42,10 +45,19 @@ typedef struct usb_qtd {
 typedef struct usb_qh {
     usb_qlink_t horiz;
     uint16_t dev_addr : 7, i : 1, endpt : 4, eps : 2, dtc : 1, h : 1, max_pkt_size : 11, c : 1, nak_rl : 4;
-    uint8_t s_mask, c_mask, hub_addr : 7, port_num : 7, mult : 2;
+    uint8_t s_mask, c_mask;
+    uint16_t hub_addr : 7, port_num : 7, mult : 2;
     usb_qlink_t cur;
     usb_qtd_t overlay;
 } usb_qh_t;
+static_assert(offsetof(usb_qtd_t, next) == 0x00, "Next qTD Pointer is not at offset 0x00");
+static_assert(offsetof(usb_qtd_t, alt) == 0x04, "Alternate Next qTD Pointer is not at offset 0x04");
+static_assert(offsetof(usb_qtd_t, bufs) == 0x0C, "Buffer Pointers are not at offset 0x0C");
+static_assert(sizeof(usb_qtd_t) == 0x20, "usb_qtd_t does not have a size of 0x20");
+static_assert(offsetof(usb_qh_t, horiz) == 0x00, "Queue Head Horizontal Link Pointer is not at offset 0x00");
+static_assert(offsetof(usb_qh_t, cur) == 0x0C, "Current qTD Pointer is not at offset 0x0C");
+static_assert(offsetof(usb_qh_t, overlay) == 0x10, "Transfer Overlay is not at offset 0x10");
+static_assert(sizeof(usb_qh_t) == 0x30, "usb_qh_t does not have a size of 0x30");
 /* Standard USB state */
 typedef struct usb_state {
     struct fotg210_regs regs;
@@ -58,11 +70,17 @@ typedef struct usb_state {
     libusb_context *ctx;
     libusb_device *dev;
     struct libusb_transfer *xfer;
-    bool wait : 1, process : 1;
+    bool wait : 1, process : 1, control : 1;
     enum  {
         USB_HC_STATE_PERIOD,
         USB_HC_STATE_ASYNC
     } hc_state : 1;
+    enum {
+          USB_NAK_CNT_WAIT_FOR_START_EVENT,
+          USB_NAK_CNT_DO_RELOAD,
+          USB_NAK_CNT_WAIT_FOR_LIST_HEAD,
+    } nak_cnt_reload_state : 2;
+    usb_qh_t *fake_recl_head;
 } usb_state_t;
 
 extern usb_state_t usb;

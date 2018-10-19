@@ -337,10 +337,8 @@ static bool usb_scatter_qtd(usb_qtd_t *qtd, const uint8_t *src, uint16_t len) {
 }
 
 static void usb_xfer_append_data(struct libusb_transfer *xfer, const void *src, size_t len) {
-    if (len) {
-        memcpy((xfer->type == LIBUSB_TRANSFER_TYPE_CONTROL ? libusb_control_transfer_get_data(xfer) : xfer->buffer) + xfer->actual_length, src, len);
-        xfer->actual_length += len;
-    }
+    memcpy((xfer->type == LIBUSB_TRANSFER_TYPE_CONTROL ? libusb_control_transfer_get_data(xfer) : xfer->buffer) + xfer->actual_length, src, len);
+    xfer->actual_length += len;
 }
 
 static void usb_write_back_qtd(usb_qh_t *qh) {
@@ -378,56 +376,51 @@ static void usb_qh_halted(usb_qh_t *qh) {
 static void LIBUSB_CALL usb_process_xfer(struct libusb_transfer *xfer) {
     usb_qh_t *qh;
     uint8_t *buf = usb.xfer->buffer;
-    usb.xfer->length = 0;
+    xfer->length = 0;
     usb.wait = false;
     if (usb.process) {
         usb.process = false;
-        gui_console_printf("[USB] Callback called: %d\n", xfer->status);
+        //gui_console_printf("[USB] Callback called: %d\n", xfer->status);
+        qh = xfer->user_data;
         switch (xfer->type) {
             case LIBUSB_TRANSFER_TYPE_CONTROL:
-                buf = libusb_control_transfer_get_data(usb.xfer);
+                buf = libusb_control_transfer_get_data(xfer);
                 // FALLTHROUGH
             case LIBUSB_TRANSFER_TYPE_BULK:
-                qh = xfer->user_data;
+                if (xfer->status) {
+                    gui_console_printf("[USB] Error: Transfer failed: %s\n", libusb_error_name(xfer->status));
+                }
                 switch (xfer->status) {
                     case LIBUSB_TRANSFER_COMPLETED:
                         if (usb_scatter_qtd(&qh->overlay, buf, xfer->actual_length)) {
                             usb_host_sys_err();
                             return;
                         }
-                        usb_qh_completed(qh);
-                        break;
+                        return usb_qh_completed(qh);
+                    case LIBUSB_TRANSFER_ERROR:
+                        qh->overlay.xact_err = true;
+                        return usb_qh_halted(qh);
+                    case LIBUSB_TRANSFER_TIMED_OUT:
+                        qh->overlay.cerr = 0;
+                        // FALLTHROUGH
+                    case LIBUSB_TRANSFER_STALL:
+                        return usb_qh_halted(qh);
+                    case LIBUSB_TRANSFER_NO_DEVICE:
+                        return;
+                    case LIBUSB_TRANSFER_OVERFLOW:
+                        qh->overlay.buf_err = true;
+                        return usb_qh_halted(qh);
                     default:
-                        usb_qh_halted(qh);
                         asm("int3");
                         gui_console_printf("[USB] Error: Callback called with unknown status %d!\n", xfer->status);
-                        break;
+                        return usb_qh_halted(qh);
                 }
-                break;
             default:
                 asm("int3");
                 gui_console_printf("[USB] Error: Callback called with unknown type %d!\n", xfer->type);
-                return;
+                return usb_qh_halted(qh);
         }
     }
-}
-
-static void usb_execute_qh_old(usb_qh_t *qh) {
-    usb_qtd_t *qtd = &qh->overlay;
-    usb.xfer->type = qtd->pid == 2 ? LIBUSB_TRANSFER_TYPE_CONTROL : LIBUSB_TRANSFER_TYPE_BULK;
-    usb.xfer->length = 0;
-    usb.xfer->user_data = qh;
-    if (qtd->pid > 2 || usb_gather_qtd(usb.xfer->buffer, qtd, &usb.xfer->length) ||
-        (qtd->pid == 2 && (usb.xfer->length != LIBUSB_CONTROL_SETUP_SIZE || qtd->next.term ||
-                           !(qtd = ram_dma_ptr(qtd->next.ptr << 5, sizeof *qtd)) ||
-                           usb_gather_qtd(libusb_control_transfer_get_data(usb.xfer), qtd, &usb.xfer->length)))) {
-        usb_host_sys_err();
-        return;
-    }
-    usb.xfer->endpoint = qtd->pid << 7 | qh->endpt;
-    libusb_submit_transfer(usb.xfer);
-    usb.wait = usb.process = true;
-    return;
 }
 
 static enum libusb_transfer_status libusb_status_from_error(enum libusb_error error) {
@@ -456,10 +449,11 @@ static enum libusb_transfer_status libusb_status_from_error(enum libusb_error er
 }
 
 static bool usb_execute_setup(struct libusb_transfer *xfer) {
+    enum libusb_error err;
+    struct libusb_config_descriptor *config = NULL;
     struct libusb_control_setup *setup = libusb_control_transfer_get_setup(xfer);
     void *data = libusb_control_transfer_get_data(xfer);
     uint8_t type = setup->wValue >> 8, index = setup->wValue, iface, alt, endpt;
-    struct libusb_config_descriptor *config = NULL;
     xfer->status = LIBUSB_TRANSFER_STALL;
     xfer->actual_length = 0;
     switch (setup->bRequest) {
@@ -491,7 +485,6 @@ static bool usb_execute_setup(struct libusb_transfer *xfer) {
                                 }
                             }
                         }
-                        libusb_free_config_descriptor(config);
                     }
                     break;
                 case LIBUSB_DT_STRING:
@@ -505,17 +498,31 @@ static bool usb_execute_setup(struct libusb_transfer *xfer) {
                 case LIBUSB_DT_HUB:
                 case LIBUSB_DT_SUPERSPEED_HUB:
                 case LIBUSB_DT_SS_ENDPOINT_COMPANION:
-                    break;
+                    return false;
             }
             break;
         case LIBUSB_REQUEST_SET_DESCRIPTOR:
         case LIBUSB_REQUEST_GET_CONFIGURATION:
-            break;
+            return false;
         case LIBUSB_REQUEST_SET_CONFIGURATION:
             if (setup->bmRequestType == (LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE) && !type && !setup->wIndex) {
-                libusb_release_interface(xfer->dev_handle, 0);
-                xfer->status = libusb_status_from_error(libusb_set_configuration(xfer->dev_handle, index));
-                libusb_claim_interface(xfer->dev_handle, 0);
+                if (libusb_get_active_config_descriptor(libusb_get_device(xfer->dev_handle), &config) == LIBUSB_SUCCESS) {
+                    for (iface = 0; iface != config->bNumInterfaces; ++iface) {
+                        gui_console_printf("[USB] Info: Kernel driver was active on interface %u: %s!\n", iface, libusb_kernel_driver_active(usb.xfer->dev_handle, iface) ? "yes" : "no");
+                        libusb_detach_kernel_driver(usb.xfer->dev_handle, iface);
+                        libusb_release_interface(usb.xfer->dev_handle, iface);
+                    }
+                    libusb_free_config_descriptor(config);
+                }
+                if ((xfer->status = libusb_status_from_error(err = libusb_get_config_descriptor_by_value(libusb_get_device(xfer->dev_handle), index, &config))) == LIBUSB_TRANSFER_COMPLETED &&
+                    (xfer->status = libusb_status_from_error(err = libusb_set_configuration(xfer->dev_handle, index))) == LIBUSB_TRANSFER_COMPLETED) {
+                    for (iface = 0; iface != config->bNumInterfaces; ++iface) {
+                        gui_console_printf("[USB] Info: Kernel driver now active on interface %u: %s!\n", iface, libusb_kernel_driver_active(usb.xfer->dev_handle, iface) ? "yes" : "no");
+                        libusb_claim_interface(usb.xfer->dev_handle, iface);
+                    }
+                } else {
+                    gui_console_printf("[USB] Error: Set configuration failed: %s!\n", libusb_error_name(err));
+                }
             }
             break;
         case LIBUSB_REQUEST_GET_INTERFACE:
@@ -523,7 +530,6 @@ static bool usb_execute_setup(struct libusb_transfer *xfer) {
         case LIBUSB_REQUEST_SYNCH_FRAME:
         case LIBUSB_REQUEST_SET_SEL:
         case LIBUSB_SET_ISOCH_DELAY:
-            break;
         default:
             return false;
     }
@@ -531,87 +537,68 @@ static bool usb_execute_setup(struct libusb_transfer *xfer) {
         xfer->actual_length = setup->wLength;
     }
     if (xfer->status != LIBUSB_TRANSFER_COMPLETED) {
-        asm("int3");
+        //asm("int3");
     }
+    libusb_free_config_descriptor(config);
     return true;
 }
 
 static void usb_execute_qh(usb_qh_t *qh) {
     usb_qtd_t *qtd = &qh->overlay;
-    int err;
+    enum libusb_error err;
     usb.xfer->user_data = qh;
     usb.xfer->endpoint = qtd->pid << 7 | qh->endpt;
-    if (qh->c && qtd->pid < 2) {
+    if (usb.control && qtd->pid < 2) {
+        usb.control = qtd->total_bytes;
         if (!qtd->total_bytes && !usb.xfer->length) { // Status Stage
-            usb.xfer->length = 0;
             return usb_qh_completed(qh);
         } // Data Stage (or Status Stage with no Data)
         if (usb.xfer->length != 8 || usb_gather_qtd(libusb_control_transfer_get_data(usb.xfer), qtd, &usb.xfer->length)) {
             return usb_host_sys_err();
         }
-        usb.xfer->type = LIBUSB_TRANSFER_TYPE_CONTROL;
         if (usb_execute_setup(usb.xfer)) {
             usb.wait = usb.process = true;
             return usb_process_xfer(usb.xfer);
         }
+        usb.xfer->type = LIBUSB_TRANSFER_TYPE_CONTROL;
     } else {
         if (qtd->pid > 2 || usb_gather_qtd(usb.xfer->buffer, qtd, &usb.xfer->length)) {
             return usb_host_sys_err();
         }
-        if (qtd->pid == 2) { // Setup Stage
+        if ((usb.control = qtd->pid == 2)) { // Setup Stage
             return usb_qh_completed(qh);
         }
         usb.xfer->type = LIBUSB_TRANSFER_TYPE_BULK;
     }
     usb.wait = usb.process = true;
-    err = libusb_submit_transfer(usb.xfer);
-    gui_console_printf("[USB] Error: Submit transfer failed: %s!\n", libusb_strerror(err));
-    return;
-    if (usb.xfer->type == LIBUSB_TRANSFER_TYPE_CONTROL) {
-        struct libusb_control_setup *setup = libusb_control_transfer_get_setup(usb.xfer);
-        switch (setup->bRequest) {
-            case LIBUSB_REQUEST_GET_CONFIGURATION:
-                switch (setup->wValue >> 8) {
-                    case LIBUSB_DT_DEVICE:
-                        break;
-                }
-                break;
-        }
-        asm("int3");
-        usb_process_xfer(usb.xfer);
-    }
-    asm("int3");
-    if (usb.xfer->type == LIBUSB_TRANSFER_TYPE_CONTROL &&
-        libusb_control_transfer_get_setup(usb.xfer)->bRequest == LIBUSB_REQUEST_SET_ADDRESS) {
-        usb.xfer->status = LIBUSB_TRANSFER_COMPLETED;
-        usb.xfer->actual_length = 0;
-        usb_process_xfer(usb.xfer);
-    } else if (usb.xfer->type == LIBUSB_TRANSFER_TYPE_CONTROL) {
-        
-    } else {
-        libusb_submit_transfer(usb.xfer);
+    if ((err = libusb_submit_transfer(usb.xfer))) {
+        gui_console_printf("[USB] Error: Submit transfer failed: %s!\n", libusb_error_name(err));
     }
 }
 
 static bool usb_process_qh(usb_qh_t *qh) {
-    usb_qlink_t link;
-    usb_qtd_t *qtd;
+    uint8_t qHTransactionCounter;
     // Fetch QH
     if (!qh) {
         usb_host_sys_err();
         return true;
     }
-    if (qh->h && !qh->s_mask) {
+    if (!qh->s_mask && qh->h) {
         if (!(usb.regs.hcor.usbsts & USBSTS_RECLAMATION)) {
-            usb.regs.hcor.usbsts |= USBSTS_RECLAMATION;
             return true;
         }
         usb.regs.hcor.usbsts &= ~USBSTS_RECLAMATION;
+        if (usb.nak_cnt_reload_state != USB_NAK_CNT_WAIT_FOR_START_EVENT) {
+            // Either WAIT_FOR_LIST_HEAD -> DO_RELOAD or DO_RELOAD -> WAIT_FOR_START_EVENT
+            usb.nak_cnt_reload_state--;
+        }
     }
     if (qh->overlay.halted) {
         return false;
     }
     if (!qh->overlay.active) {
+        usb_qlink_t link;
+        usb_qtd_t *qtd;
         if (qh->i) {
             return false;
         }
@@ -643,30 +630,54 @@ static bool usb_process_qh(usb_qh_t *qh) {
         qh->overlay.bufs[1].c_prog_mask = 0;
         qh->overlay.bufs[2].frame_tag = 0;
     }
-    usb_execute_qh(qh);
-    return true;
+    // Execute Transaction
+    if (qh->s_mask) {
+        // Interrupt Transfer Pre-condition Criteria
+        if (!(qh->s_mask & 1 << (usb.regs.hcor.frindex & 7))) {
+            return false;
+        }
+    } else {
+        // Asynchronous Transfer Pre-operations
+        if (usb.nak_cnt_reload_state == USB_NAK_CNT_DO_RELOAD) {
+            qh->overlay.alt.nak_cnt = qh->nak_rl;
+        }
+        // Asynchronous Transfer Pre-condition Criteria
+        if (!qh->overlay.alt.nak_cnt && qh->nak_rl) {
+            return false;
+        }
+    }
+    usb.regs.hcor.usbsts |= USBSTS_RECLAMATION;
+    usb.fake_recl_head = NULL;
+    for (qHTransactionCounter = qh->mult; qHTransactionCounter && qh->overlay.active;
+         --qHTransactionCounter) {
+        usb_execute_qh(qh);
+    }
+    return usb.wait;
+}
+
+static void usb_start_event(void) {
+    usb.regs.hcor.usbsts |= USBSTS_RECLAMATION;
+    usb.nak_cnt_reload_state = USB_NAK_CNT_WAIT_FOR_LIST_HEAD;
+    usb.fake_recl_head = NULL;
 }
 
 static void usb_event(enum sched_item_id event) {
     bool high_speed = false;
-    usb_qh_t *qh, *fake_recl_head = NULL;
+    usb_qh_t *qh;
     uint8_t i = 0;
     enum libusb_error err;
     if (usb.dev && !usb.xfer->dev_handle && ++usb.delay > 100) {
         if ((err = libusb_open(usb.dev, &usb.xfer->dev_handle))) {
-            gui_console_printf("[USB] Error: Open device: %s!\n", libusb_strerror(err));
+            gui_console_printf("[USB] Error: Open device: %s!\n", libusb_error_name(err));
             usb.xfer->dev_handle = NULL;
-#if 1
-        } else if ((err = libusb_claim_interface(usb.xfer->dev_handle, 0))) {
-            gui_console_printf("[USB] Error: Claim interface: %s!\n", libusb_strerror(err));
-            usb.xfer->dev_handle = NULL;
-#endif
         } else {
             usb_plug_a();
         }
         usb.delay = 0;
     }
-    libusb_handle_events_timeout(usb.ctx, &zero_tv);
+    if ((err = libusb_handle_events_timeout(usb.ctx, &zero_tv))) {
+        gui_console_printf("[USB] Error: Handle events: %s!\n", libusb_error_name(err));
+    }
     if (!usb.wait && usb.regs.otgcsr & OTGCSR_A_VBUS_VLD) {
         if (usb.regs.otgcsr & OTGCSR_DEV_B) {
             if ((high_speed = usb.regs.dev_ctrl & DEVCTRL_HS)) {
@@ -678,52 +689,35 @@ static void usb_event(enum sched_item_id event) {
             }
         } else {
             high_speed = usb.regs.otgcsr & OTGCSR_SPD_HIGH;
-#if 0
-            if (usb.regs.hcor.usbcmd & USBCMD_RUN && usb.regs.hcor.usbsts & USBSTS_PERIOD_SCHED) {
-                usb_process_period();
-                usb.regs.hcor.frindex++;
-                usb.regs.hcor.frindex &= USBCMD_FRLIST_BYTES(usb.regs.hcor.usbcmd) - 1;
-            }
-            if (usb.regs.hcor.usbcmd & USBCMD_RUN && usb.regs.hcor.usbsts & USBSTS_ASYNC_SCHED) {
-                usb_process_async();
-            }
-#endif
-            if (usb.regs.hcor.usbcmd & USBCMD_RUN) {
-                switch (usb.hc_state) {
-                    case USB_HC_STATE_PERIOD:
-                        if (!(usb.regs.hcor.usbsts & USBSTS_PERIOD_SCHED)) {
-                            usb.hc_state = USB_HC_STATE_ASYNC;
-                            break;
-                        }
-                        asm("int3");
-                        usb_host_sys_err();
-                        break;
-                    case USB_HC_STATE_ASYNC:
-                        usb.hc_state = USB_HC_STATE_PERIOD;
-                        if (!(usb.regs.hcor.usbsts & USBSTS_ASYNC_SCHED)) {
-                            break;
-                        }
-                        while (true) {
-                            qh = ram_dma_ptr(usb.regs.hcor.asynclistaddr, sizeof *qh);
-                            if (usb_process_qh(qh)) {
-                                break;
-                            }
-                            if (qh == fake_recl_head) {
-                                //gui_console_printf("[USB] Warning: No reclamation head!\n");
-                                break;
-                            }
-                            if (!++i) {
-                                gui_console_printf("[USB] Warning: Very long asynchronous list!\n");
-                                break;
-                            }
-                            if (!fake_recl_head) {
-                                fake_recl_head = qh;
-                            }
-                            // Follow QH Horizontal Pointer
-                            usb.regs.hcor.asynclistaddr = qh->horiz.ptr << 5;
-                        }
-                        break;
+            while (usb.regs.hcor.usbcmd & USBCMD_RUN) {
+                if (false && usb.regs.hcor.usbsts & USBSTS_PERIOD_SCHED) {
+                    asm("int3");
+                    usb_host_sys_err();
+                    break;
                 }
+                if (usb.regs.hcor.usbsts & USBSTS_ASYNC_SCHED) {
+                    usb_start_event();
+                    while (true) {
+                        qh = ram_dma_ptr(usb.regs.hcor.asynclistaddr, sizeof *qh);
+                        if (usb_process_qh(qh)) {
+                            break;
+                        }
+                        if (qh == usb.fake_recl_head) {
+                            //gui_console_printf("[USB] Warning: No reclamation head!\n");
+                            break;
+                        }
+                        if (!++i) {
+                            gui_console_printf("[USB] Warning: Very long asynchronous list!\n");
+                            break;
+                        }
+                        if (!usb.fake_recl_head) {
+                            usb.fake_recl_head = qh;
+                        }
+                        // Follow QH Horizontal Pointer
+                        usb.regs.hcor.asynclistaddr = qh->horiz.ptr << 5;
+                    }
+                }
+                break;
             }
         }
     }
@@ -745,6 +739,7 @@ static uint8_t usb_read(uint16_t pio, bool peek) {
     } else if (pio < (peek ? 0x1d8 : 0x1d4)) {
         value = usb.ep0_data[peek ? (usb.ep0_idx & 4) ^ (pio & 7) : (usb_ep0_idx_update() & 4) | (pio & 3)];
     }
+    //fprintf(stderr, "%06x: 3%03hx -> %02hhx\n", cpu.registers.PC, pio, value);
     return value;
 }
 
@@ -758,8 +753,9 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
     uint8_t index = pio >> 2;
     uint8_t bit_offset = (pio & 3) << 3;
     uint32_t old, changed;
-    int err;
+    enum libusb_error err;
     (void)poke;
+    //fprintf(stderr, "%06x: 3%03hx <- %02hhx\n", cpu.registers.PC, pio, value);
     switch (index) {
         case 0x010 >> 2: // USBCMD - USB Command Register
             changed = usb_write_reg_masked(&usb.regs.hcor.usbcmd, 0xFF0BFF, value, bit_offset);
@@ -795,19 +791,20 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             usb.regs.hcor.portsc[0] &= ~(((uint32_t)value << bit_offset & 0x2E) | 0x1F0100) ^ PORTSC_EN_STATUS; // W[0/1]C mask (V or RO or W)
             usb.regs.hcor.portsc[0] |= (uint32_t)value << bit_offset & 0x1F0100; // W mask (RO)
             if (usb.xfer->dev_handle && old & ~usb.regs.hcor.portsc[0] & PORTSC_RESET) {
-                err = libusb_reset_device(usb.xfer->dev_handle);
-                gui_console_printf("[USB] Error: Reset device failed: %s!\n", libusb_strerror(err));
-                if (!err) {
-                if (usb_update_status_change(usb.regs.hcor.portsc, PORTSC_EN_STATUS, PORTSC_EN_CHANGE, true)) {
-                    usb_host_int(USBSTS_PORT_CHANGE);
-                }
-                usb.regs.otgcsr |= OTGCSR_A_VBUS_VLD | OTGCSR_A_SESS_VLD | OTGCSR_B_SESS_VLD;
-                usb.regs.otgcsr &= ~OTGCSR_SPD_MASK;
-                switch (libusb_get_device_speed(libusb_get_device(usb.xfer->dev_handle))) {
-                    case LIBUSB_SPEED_LOW:  usb.regs.otgcsr |= OTGCSR_SPD_LOW;  break;
-                    case LIBUSB_SPEED_FULL: usb.regs.otgcsr |= OTGCSR_SPD_FULL; break;
-                    case LIBUSB_SPEED_HIGH: usb.regs.otgcsr |= OTGCSR_SPD_HIGH; break;
-                }
+                usb.control = false;
+                if ((err = libusb_reset_device(usb.xfer->dev_handle))) {
+                    gui_console_printf("[USB] Error: Reset device failed: %s!\n", libusb_error_name(err));
+                } else {
+                    if (usb_update_status_change(usb.regs.hcor.portsc, PORTSC_EN_STATUS, PORTSC_EN_CHANGE, true)) {
+                        usb_host_int(USBSTS_PORT_CHANGE);
+                    }
+                    usb.regs.otgcsr |= OTGCSR_A_VBUS_VLD | OTGCSR_A_SESS_VLD | OTGCSR_B_SESS_VLD;
+                    usb.regs.otgcsr &= ~OTGCSR_SPD_MASK;
+                    switch (libusb_get_device_speed(libusb_get_device(usb.xfer->dev_handle))) {
+                        case LIBUSB_SPEED_LOW:  usb.regs.otgcsr |= OTGCSR_SPD_LOW;  break;
+                        case LIBUSB_SPEED_FULL: usb.regs.otgcsr |= OTGCSR_SPD_FULL; break;
+                        case LIBUSB_SPEED_HIGH: usb.regs.otgcsr |= OTGCSR_SPD_HIGH; break;
+                    }
                 }
             }
             break;
@@ -1034,6 +1031,24 @@ static void usb_init_hccr(void) {
     usb.regs.hccr.data[3] = 0; // No Port Routing Rules
 }
 
+static void usb_close(libusb_device_handle **dev_handle) {
+    struct libusb_config_descriptor *config;
+    uint8_t iface;
+    if (!*dev_handle) {
+        return;
+    }
+    if (libusb_get_active_config_descriptor(libusb_get_device(*dev_handle), &config) == LIBUSB_SUCCESS) {
+        for (iface = 0; iface != config->bNumInterfaces; ++iface) {
+            libusb_release_interface(*dev_handle, iface);
+            libusb_attach_kernel_driver(*dev_handle, iface);
+            gui_console_printf("[USB] Info: Kernel driver now active on interface %u: %s!\n", iface, libusb_kernel_driver_active(*dev_handle, iface) ? "yes" : "no");
+        }
+        libusb_free_config_descriptor(config);
+    }
+    libusb_close(*dev_handle);
+    *dev_handle = NULL;
+}
+
 static int LIBUSB_CALL usb_hotplug(libusb_context *ctx, libusb_device *dev, libusb_hotplug_event evt, void *data) {
     struct libusb_device_descriptor desc;
     uint16_t langid[2], manu[129], prod[129];
@@ -1042,14 +1057,13 @@ static int LIBUSB_CALL usb_hotplug(libusb_context *ctx, libusb_device *dev, libu
     enum libusb_error err;
     switch (evt) {
         case LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED:
+            usb_close(&usb.xfer->dev_handle);
             usb.dev = dev;
-            libusb_close(usb.xfer->dev_handle);
-            usb.xfer->dev_handle = NULL;
             gui_console_printf("[USB] Device plugged.\n");
             break;
-            while ((err = libusb_open(dev, &usb.xfer->dev_handle))); {
-                gui_console_printf("[USB] Error: Open device failed: %s!\n", libusb_strerror(err));
-                //} else {
+            if ((err = libusb_open(dev, &usb.xfer->dev_handle))) {
+                gui_console_printf("[USB] Error: Open device failed: %s!\n", libusb_error_name(err));
+            } else {
                 usb_plug_a();
             }
             break;
@@ -1072,9 +1086,7 @@ static int LIBUSB_CALL usb_hotplug(libusb_context *ctx, libusb_device *dev, libu
         case LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT:
             if (dev == usb.dev) {
                 usb_unplug_a();
-                usb.dev = NULL;
-                libusb_close(usb.xfer->dev_handle);
-                usb.xfer->dev_handle = NULL;
+                usb_close(&usb.xfer->dev_handle);
                 gui_console_printf("[USB] Device unplugged.\n");
             }
             break;
@@ -1091,16 +1103,16 @@ static const eZ80portrange_t device = {
 };
 
 static void init_libusb(void) {
-    if (!libusb_init(&usb.ctx)) {
-        if ((usb.xfer = libusb_alloc_transfer(3))) {
-            usb.xfer->callback = usb_process_xfer;
-            usb.xfer->buffer = malloc(0x5008);
-            libusb_set_option(usb.ctx, LIBUSB_OPTION_LOG_LEVEL, LIBUSB_LOG_LEVEL_DEBUG);
-            libusb_hotplug_register_callback(usb.ctx, LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT, LIBUSB_HOTPLUG_ENUMERATE, 0x0451, 0xE008, 0, usb_hotplug, NULL, NULL);
-        } else {
-            usb_free();
-        }
+    if (libusb_init(&usb.ctx)) {
+        return;
     }
+    if (!(usb.xfer = libusb_alloc_transfer(3)) || !(usb.xfer->buffer = malloc(0x5008))) {
+        usb_free();
+        return;
+    }
+    usb.xfer->callback = usb_process_xfer;
+    libusb_set_option(usb.ctx, LIBUSB_OPTION_LOG_LEVEL, LIBUSB_LOG_LEVEL_INFO);
+    libusb_hotplug_register_callback(usb.ctx, LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT, LIBUSB_HOTPLUG_ENUMERATE, /*0x0451,0xE008*/ 0x058F,0x6387, 0, usb_hotplug, NULL, NULL);
 }
 
 eZ80portrange_t init_usb(void) {
@@ -1113,9 +1125,12 @@ eZ80portrange_t init_usb(void) {
 }
 
 void usb_free(void) {
-    free(usb.xfer->buffer);
-    libusb_close(usb.xfer->dev_handle);
-    usb.xfer->dev_handle = NULL;
+    if (usb.xfer) {
+        usb_close(&usb.xfer->dev_handle);
+        free(usb.xfer->buffer);
+        libusb_free_transfer(usb.xfer);
+        usb.xfer = NULL;
+    }
     if (usb.ctx) {
         libusb_exit(usb.ctx);
         usb.ctx = NULL;
