@@ -261,12 +261,12 @@
     <message>
         <location filename="../mainwindow.ui" line="147"/>
         <source>Step</source>
-        <translation>Étape</translation>
+        <translation>Pas-à-pas détaillé</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="170"/>
         <source>Step Over</source>
-        <translation>Étape principale</translation>
+        <translation>Pas-à-pas principal</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3332"/>
@@ -293,7 +293,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8230"/>
         <source>Always show on top of other windows</source>
-        <translation>Toujours afficher en premier plan</translation>
+        <translation>Toujours afficher au premier plan</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8370"/>
@@ -308,7 +308,7 @@
     <message>
         <location filename="../mainwindow.ui" line="7080"/>
         <source>Skin</source>
-        <translation>Thème</translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="7064"/>
@@ -323,7 +323,7 @@
     <message>
         <location filename="../mainwindow.ui" line="193"/>
         <source>Step Next</source>
-        <translation>Étape suivante</translation>
+        <translation>Pas-à-pas</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3372"/>
@@ -998,7 +998,7 @@
     <message>
         <location filename="../mainwindow.ui" line="216"/>
         <source>Step Out</source>
-        <translation></translation>
+        <translation>Pas-à-pas sortant</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2380"/>
