@@ -68,6 +68,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     qRegisterMetaTypeStreamOperators<QList<bool>>("QList<bool>");
     ui->setupUi(this);
 
+    setStyleSheet(QStringLiteral("QMainWindow::separator{ width: 0px; height: 0px; }"));
+
     if (!ipcSetup()) {
         m_initPassed = false;
         return;
