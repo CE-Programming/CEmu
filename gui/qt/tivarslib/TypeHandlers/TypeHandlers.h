@@ -72,6 +72,9 @@ namespace tivars
         void initTokens();
     }
 
+    // Special temporary type that may appear as an equation, during basic program execution
+    namespace TH_TempEqu     { th(); }
+
 #undef th
 
 

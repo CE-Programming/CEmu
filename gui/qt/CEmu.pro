@@ -212,15 +212,16 @@ SOURCES += \
     tivarslib/TIModels.cpp \
     tivarslib/TIVarType.cpp \
     tivarslib/TIVarTypes.cpp \
+    tivarslib/TypeHandlers/DummyHandler.cpp \
     tivarslib/TypeHandlers/TH_GenericList.cpp \
     tivarslib/TypeHandlers/TH_Tokenized.cpp \
     tivarslib/TypeHandlers/TH_GenericComplex.cpp \
     tivarslib/TypeHandlers/TH_Matrix.cpp \
-    tivarslib/TypeHandlers/STH_ExactFractionPi.cpp \
-    tivarslib/TypeHandlers/DummyHandler.cpp \
-    tivarslib/TypeHandlers/STH_ExactFraction.cpp \
     tivarslib/TypeHandlers/TH_GenericReal.cpp \
     tivarslib/TypeHandlers/TH_AppVar.cpp \
+    tivarslib/TypeHandlers/TH_TempEqu.cpp \
+    tivarslib/TypeHandlers/STH_ExactFractionPi.cpp \
+    tivarslib/TypeHandlers/STH_ExactFraction.cpp \
     tivarslib/TypeHandlers/STH_ExactRadical.cpp \
     tivarslib/TypeHandlers/STH_ExactPi.cpp \
     tivarslib/TypeHandlers/STH_FP.cpp \
