@@ -49,7 +49,13 @@ QString int2hex(uint32_t a, uint8_t l) {
 }
 
 std::string calc_var_content_string(const calc_var_t& var) {
-    const auto func = tivars::TIVarType::createFromID((uint)var.type).getHandlers().second;
+    tivars::stringFromData_handler_t func;
+    // We need to special case some specific temp-equ variables...
+    if (var.type == CALC_VAR_TYPE_EQU && var.name[0] == '$') {
+        func = &tivars::TH_TempEqu::makeStringFromData;
+    } else {
+        func = tivars::TIVarType::createFromID((uint)var.type).getHandlers().second;
+    }
     const options_t opts = (var.type == CALC_VAR_TYPE_PROG || var.type == CALC_VAR_TYPE_STRING)
                             ? options_t({ {"prettify", true} }) : options_t();
     return func(data_t(var.data, var.data + var.size), opts);
