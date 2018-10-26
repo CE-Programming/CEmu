@@ -92,6 +92,9 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     ui->console->setMaximumBlockCount(1000);
 
+    varPreviewCEFont = QFont(QStringLiteral("TICELarge"), 11);
+    varPreviewItalicFont.setItalic(true);
+
     setWindowTitle(QStringLiteral("CEmu | ") + opts.idString);
 
     keypadBridge = new QtKeypadBridge(this);
@@ -1705,6 +1708,7 @@ void MainWindow::varShow() {
                 ui->emuVarView->setRowCount(row + 1);
 
                 bool var_preview_needs_gray = false;
+                bool var_preview_is_invite = false;
                 QString var_value;
                 if (var.size <= 2) {
                     var_value = tr("Empty");
@@ -1720,6 +1724,7 @@ void MainWindow::varShow() {
                     var_preview_needs_gray = true;
                 } else if (var.size > 500) {
                     var_value = tr("[Double-click to view...]");
+                    var_preview_is_invite = true;
                 } else {
                     try {
                         var_value = QString::fromStdString(calc_var_content_string(var));
@@ -1747,6 +1752,11 @@ void MainWindow::varShow() {
 
                 var_name->setCheckState(Qt::Unchecked);
 
+                if (var_preview_is_invite || var_preview_needs_gray) {
+                    var_preview->setFont(varPreviewItalicFont);
+                } else {
+                    var_preview->setFont(varPreviewCEFont);
+                }
                 if (var_preview_needs_gray) {
                     var_preview->setForeground(Qt::gray);
                 }

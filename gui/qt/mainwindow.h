@@ -27,6 +27,7 @@
 #include <QtCore/QSettings>
 #include <QtCore/QTimer>
 #include <QtGui/QTextCursor>
+#include <QtGui/QFont>
 #include <QtWidgets/QMessageBox>
 #include <QtCore/QTranslator>
 #include <QtCore/QStandardPaths>
@@ -325,7 +326,7 @@ private:
     void portRemoveSelected();
     void portRemoveRow(int row);
 
-    // lables
+    // labels
     QString watchNextLabel();
     QString breakNextLabel();
     void updateLabels();
@@ -620,6 +621,9 @@ private:
     bool m_timerFpsTriggerable = true;
     bool m_timerEmuTriggered = false;
     bool m_timerFpsTriggered = false;
+
+    QFont varPreviewCEFont;
+    QFont varPreviewItalicFont;
 
     static const char *m_varExtensions[];
 
