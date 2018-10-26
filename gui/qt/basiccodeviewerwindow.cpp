@@ -22,6 +22,16 @@ BasicEditor::BasicEditor(QWidget *parent) : QPlainTextEdit(parent)
     highlightCurrentLine();
 }
 
+void BasicEditor::toggleHighlight()
+{
+    if (highlighter == nullptr) {
+        highlighter = new BasicHighlighter(document());
+    } else {
+        delete highlighter;
+        highlighter = nullptr;
+    }
+}
+
 int BasicEditor::lineNumberAreaWidth()
 {
     int digits = 1;
@@ -244,7 +254,9 @@ void BasicHighlighter::highlightBlock(const QString &text)
 
 BasicCodeViewerWindow::BasicCodeViewerWindow(QWidget *parent) : QDialog{parent}, ui(new Ui::BasicCodeViewerWindow) {
     ui->setupUi(this);
-    connect(ui->pushButton, &QPushButton::clicked, this, &BasicCodeViewerWindow::toggleFormat);
+    connect(ui->checkboxHighlighting, &QCheckBox::toggled, this, &BasicCodeViewerWindow::toggleHighlight);
+    connect(ui->checkboxLineWrapping, &QCheckBox::toggled, this, &BasicCodeViewerWindow::toggleWrap);
+    connect(ui->checkboxReformatting, &QCheckBox::toggled, this, &BasicCodeViewerWindow::toggleFormat);
 
     // Add special jacobly font
     QFont font = QFont(QStringLiteral("TICELarge"), 11);
@@ -262,12 +274,24 @@ void BasicCodeViewerWindow::setOriginalCode(const QString &code) {
     showCode();
 }
 
+void BasicCodeViewerWindow::toggleHighlight() {
+    m_showingHighlighted ^= true;
+    ui->basicEdit->toggleHighlight();
+    showCode();
+}
+
+void BasicCodeViewerWindow::toggleWrap() {
+    m_showingWrapped ^= true;
+    showCode();
+}
+
 void BasicCodeViewerWindow::toggleFormat() {
     m_showingFormatted ^= true;
     showCode();
 }
 
 void BasicCodeViewerWindow::showCode() {
+    ui->basicEdit->setWordWrapMode(m_showingWrapped ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);
     ui->basicEdit->document()->setPlainText(m_showingFormatted ? m_formattedCode : m_originalCode);
 }
 

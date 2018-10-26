@@ -62,6 +62,7 @@ public:
 
     void lineNumberAreaPaintEvent(QPaintEvent *event);
     int lineNumberAreaWidth();
+    void toggleHighlight();
 
 protected:
     void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
@@ -107,6 +108,8 @@ public:
     ~BasicCodeViewerWindow() override;
 
 private slots:
+    void toggleHighlight();
+    void toggleWrap();
     void toggleFormat();
 
 private:
@@ -116,6 +119,8 @@ private:
     QString m_variableName;
     QString m_originalCode;
     QString m_formattedCode;
+    bool m_showingHighlighted = true;
+    bool m_showingWrapped = false;
     bool m_showingFormatted = false;
 };
 
