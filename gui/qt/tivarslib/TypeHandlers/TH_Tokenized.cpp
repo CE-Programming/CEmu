@@ -150,8 +150,12 @@ namespace tivars
         if (has_option(options, "lang"))
         {
             lang = options.at("lang");
+        } else if (str_orig.size() > 1 && str_orig[0] == '.' && (str_orig[1] == '.' || ::isalpha(str_orig[1]))) {
+            lang = PRGMLANG_AXE;
+        } else if (str_orig.substr(0, sizeof("\U0001D456") - 1) == "\U0001D456") {
+            lang = PRGMLANG_ICE;
         } else {
-            lang = (str_orig.size() > 1 && str_orig[0] == '.' && ::isalpha(str_orig[1])) ? PRGMLANG_AXE : PRGMLANG_BASIC;
+            lang = PRGMLANG_BASIC;
         }
 
         std::string str(str_orig);
@@ -222,7 +226,7 @@ namespace tivars
             {
                 line.first--;
             }
-            if (nextIndent > 0 && (is_in_vector(closingTokens, firstCommand) || (oldFirstCommand == "If" && firstCommand != "Then" && lang != PRGMLANG_AXE)))
+            if (nextIndent > 0 && (is_in_vector(closingTokens, firstCommand) || (oldFirstCommand == "If" && firstCommand != "Then" && lang != PRGMLANG_AXE && lang != PRGMLANG_ICE)))
             {
                 nextIndent--;
             }

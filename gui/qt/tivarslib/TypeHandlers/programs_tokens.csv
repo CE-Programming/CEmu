@@ -42,7 +42,7 @@
 ,,, , , ,1,29,,,Text/Symbol only,,,,
 ,,,"""","""","""",1,2A,,,Delimiter,,,,
 ,,,",",",",",",1,2B,,,Text/Symbol only,,,,
-,,,\uf02f,i,i,1,2C,,Read-only,Constant,,,Complex i,
+,,,\uf02f,𝑖,𝑖,1,2C,,Read-only,Constant,,,Complex i,
 ,,,!,!,!,1,2D,,,Postfix operator,,,,
 ,,,CubicReg ,CubicReg ,RegCubique ,1,2E,,,Function,,,,
 ,,,QuartReg ,QuartReg ,RegQuatre ,1,2F,,,Function,,,,
