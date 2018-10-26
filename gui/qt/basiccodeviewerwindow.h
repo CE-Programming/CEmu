@@ -122,6 +122,7 @@ private:
     bool m_showingHighlighted = true;
     bool m_showingWrapped = false;
     bool m_showingFormatted = false;
+    bool hasCodeYet = false;
 };
 
 #endif

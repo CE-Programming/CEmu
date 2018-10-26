@@ -4,6 +4,7 @@
 #include "tivarslib/TypeHandlers/TypeHandlers.h"
 
 #include <QtGui/QPainter>
+#include <QtWidgets/QScrollBar>
 
 BasicEditor::BasicEditor(QWidget *parent) : QPlainTextEdit(parent)
 {
@@ -259,8 +260,7 @@ BasicCodeViewerWindow::BasicCodeViewerWindow(QWidget *parent) : QDialog{parent},
     connect(ui->checkboxReformatting, &QCheckBox::toggled, this, &BasicCodeViewerWindow::toggleFormat);
 
     // Add special jacobly font
-    QFont font = QFont(QStringLiteral("TICELarge"), 11);
-    ui->basicEdit->setFont(font);
+    ui->basicEdit->setFont(QFont(QStringLiteral("TICELarge"), 11));
 }
 
 void BasicCodeViewerWindow::setVariableName(const QString &name) {
@@ -282,17 +282,26 @@ void BasicCodeViewerWindow::toggleHighlight() {
 
 void BasicCodeViewerWindow::toggleWrap() {
     m_showingWrapped ^= true;
+    ui->basicEdit->setWordWrapMode(m_showingWrapped ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);
     showCode();
 }
 
 void BasicCodeViewerWindow::toggleFormat() {
     m_showingFormatted ^= true;
+    const int scrollValue = ui->basicEdit->verticalScrollBar()->value();
+    ui->basicEdit->document()->setPlainText(m_showingFormatted ? m_formattedCode : m_originalCode);
+    ui->basicEdit->verticalScrollBar()->setValue(scrollValue);
     showCode();
 }
 
 void BasicCodeViewerWindow::showCode() {
-    ui->basicEdit->setWordWrapMode(m_showingWrapped ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);
-    ui->basicEdit->document()->setPlainText(m_showingFormatted ? m_formattedCode : m_originalCode);
+
+    if (!hasCodeYet) {
+        ui->basicEdit->document()->setPlainText(m_showingFormatted ? m_formattedCode : m_originalCode);
+        hasCodeYet = true;
+    } else {
+        ui->basicEdit->repaint();
+    }
 }
 
 BasicCodeViewerWindow::~BasicCodeViewerWindow() {
