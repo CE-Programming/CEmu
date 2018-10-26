@@ -116,7 +116,7 @@ BasicHighlighter::BasicHighlighter(QTextDocument *parent) : QSyntaxHighlighter(p
     highlightingRules.append(rule);
 
     variableFormat.setForeground(Qt::darkYellow);
-    rule.pattern = QRegExp(R"((\[[A-J]\])|([A-Zθ])|([\|?uvw])|((GDB|Str|Pic|Img)[1-9])|([XYr][₁₂₃₄₅₆₇₈₉]ᴛ?)|([XY](min|max|scl|res)))");
+    rule.pattern = QRegExp(R"((\[[A-J]\])|([A-Zθ])|([\|?uvw])|((GDB|Str|Pic|Img)[0-9])|([XYr][₁₂₃₄₅₆₇₈₉]ᴛ?)|([XY](min|max|scl|res)))");
     rule.format = variableFormat;
     highlightingRules.append(rule);
 
