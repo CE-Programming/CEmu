@@ -182,7 +182,9 @@ private:
 
     // Other
     void romExport();
+    void ramExport();
     void guiExport();
+    void ramImport();
     void guiImport();
 
     // emu state
@@ -212,7 +214,7 @@ private:
     void stateToFile();
     void stateToPath(const QString &path);
     void stateFromFile();
-    bool stateFromPath(const QString &path);
+    void stateFromPath(const QString &path);
 
     // others
     bool runSetup();
@@ -473,8 +475,8 @@ private:
     void lcdCopy();
 
     // resets and loads
-    int loadEmu(bool image);
-    void loadedEmu();
+    void emuLoad(emu_data_t type);
+    void emuCheck(emu_state_t state, emu_data_t type);
     void resetEmu();
     void resetCEmu();
     void resetGui();
@@ -614,6 +616,7 @@ private:
     HexWidget *m_memWidget = Q_NULLPTR;
 
     QString m_pathRom;
+    QString m_pathRam;
     QString m_pathImage;
     QTimer m_timerEmu;
     QTimer m_timerFps;

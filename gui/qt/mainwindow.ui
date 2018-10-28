@@ -9384,6 +9384,7 @@ QPushButton:pressed {
        <normaloff>:/icons/resources/icons/generic_export.png</normaloff>:/icons/resources/icons/generic_export.png</iconset>
      </property>
      <addaction name="actionExportRomImage"/>
+     <addaction name="actionExportRamImage"/>
      <addaction name="actionExportCalculatorState"/>
      <addaction name="actionExportDebugger"/>
      <addaction name="actionExportCEmuImage"/>
@@ -9397,6 +9398,7 @@ QPushButton:pressed {
       <iconset resource="resources.qrc">
        <normaloff>:/icons/resources/icons/generic_import.png</normaloff>:/icons/resources/icons/generic_import.png</iconset>
      </property>
+     <addaction name="actionImportRamImage"/>
      <addaction name="actionImportCalculatorState"/>
      <addaction name="actionImportDebugger"/>
      <addaction name="actionImportWindowConfig"/>
@@ -9723,7 +9725,7 @@ QPushButton:pressed {
      <normaloff>:/icons/resources/icons/rom_chip.png</normaloff>:/icons/resources/icons/rom_chip.png</iconset>
    </property>
    <property name="text">
-    <string>Rom image</string>
+    <string>ROM image</string>
    </property>
   </action>
   <action name="actionImportCalculatorState">
@@ -9886,6 +9888,24 @@ QPushButton:pressed {
    </property>
    <property name="text">
     <string>Hide status bar</string>
+   </property>
+  </action>
+  <action name="actionExportRamImage">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/ram_chip.png</normaloff>:/icons/resources/icons/ram_chip.png</iconset>
+   </property>
+   <property name="text">
+    <string>RAM image</string>
+   </property>
+  </action>
+  <action name="actionImportRamImage">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/ram_chip.png</normaloff>:/icons/resources/icons/ram_chip.png</iconset>
+   </property>
+   <property name="text">
+    <string>RAM image</string>
    </property>
   </action>
  </widget>

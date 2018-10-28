@@ -13,32 +13,38 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
-enum {
-    EMU_LOAD_OKAY,
-    EMU_LOAD_FAIL,
-    EMU_LOAD_NOT_A_CE
-};
+typedef enum {
+    EMU_STATE_VALID,
+    EMU_STATE_INVALID,
+    EMU_STATE_NOT_A_CE
+} emu_state_t;
+
+typedef enum {
+    EMU_DATA_IMAGE,
+    EMU_DATA_ROM,
+    EMU_DATA_RAM,
+} emu_data_t;
 
 /* emulator functions for frontend use */
 /* these should only be called from the emulation thread if multithreaded */
-int emu_load(bool image, const char *path);             /* load an emulator rom or image, returns an integer in the above enum */
-bool emu_save(bool image, const char *path);            /* save an emulator rom or image */
-void emu_loop(void);                                    /* core emulation loop, call after emu_load */
-void emu_reset(void);                                   /* reset emulation as if the reset button was pressed */
-void emu_exit(void);                                    /* exit emulation */
+emu_state_t emu_load(emu_data_t type, const char *path);  /* load an emulator state */
+bool emu_save(emu_data_t type, const char *path);         /* save an emulator state */
+void emu_loop(void);                                      /* core emulation loop, call after emu_load */
+void emu_reset(void);                                     /* reset emulation as if the reset button was pressed */
+void emu_exit(void);                                      /* exit emulation */
 
 /* gui callbacks called by the core */
 /* if you want to port CEmu to another platform, simply reimplement these callbacks */
 /* if you want debugging support, don't forget about the debug callbacks as well */
-void gui_do_stuff(void);                                /* perform tasks such as sending files, opening debugger */
-void gui_throttle(void);                                /* throttling to get correct emulation speed */
-void gui_console_clear(void);                           /* sent to clear the console */
-void gui_console_printf(const char *format, ...);       /* printf from the core to stdout */
-void gui_console_err_printf(const char *format, ...);   /* printf from the core to stderr */
+void gui_do_stuff(void);                                  /* perform tasks such as sending files, opening debugger */
+void gui_throttle(void);                                  /* throttling to get correct emulation speed */
+void gui_console_clear(void);                             /* sent to clear the console */
+void gui_console_printf(const char *format, ...);         /* printf from the core to stdout */
+void gui_console_err_printf(const char *format, ...);     /* printf from the core to stderr */
 
 #ifdef DEBUG_SUPPORT
-void gui_debug_open(int reason, uint32_t data);         /* open the gui debugger */
-void gui_debug_close(void);                             /* disable the gui debugger if called */
+void gui_debug_open(int reason, uint32_t data);           /* open the gui debugger */
+void gui_debug_close(void);                               /* disable the gui debugger if called */
 #endif
 
 #ifdef __cplusplus

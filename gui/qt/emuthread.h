@@ -1,7 +1,7 @@
 #ifndef EMUTHREAD_H
 #define EMUTHREAD_H
 
-#include "../../core/asic.h"
+#include "../../core/emu.h"
 #include "../../core/debug/debug.h"
 #include "../../core/link.h"
 
@@ -31,8 +31,9 @@ public:
     void setThrottle(bool state);
     void writeConsole(int console, const char *format, va_list args);
     void debugOpen(int reason, uint32_t addr);
-    void save(bool image, const QString &path);
-    int load(bool restore, const QString &rom, const QString &image);
+    void save(emu_data_t type, const QString &path);
+    void setRam(const QString &path);
+    void load(emu_data_t type, const QString &path);
 
     enum {
         ConsoleNorm,
@@ -44,6 +45,7 @@ public:
         RequestPause,
         RequestReset,
         RequestSave,
+        RequestLoad,
         RequestSend,
         RequestReceive,
         RequestDebugger
@@ -70,6 +72,7 @@ signals:
 
     // state
     void saved(bool success);
+    void loaded(emu_state_t state, emu_data_t type);
     void blocked(int req);
     void sentFile(const QString &file, int ok);
 
@@ -80,6 +83,7 @@ protected:
     virtual void run() Q_DECL_OVERRIDE;
 
 private:
+
     void sendFiles() {
         for (const QString &f : m_vars) {
             emit sentFile(f, sendVariableLink(f.toUtf8(), m_sendLoc));
@@ -97,7 +101,8 @@ private:
         m_cv.wait(lock);
     }
 
-    bool m_saveImage;
+    emu_data_t m_saveType;
+    emu_data_t m_loadType;
 
     int m_speed, m_actualSpeed;
     bool m_throttle;
@@ -109,6 +114,7 @@ private:
     bool m_debug; // protected by m_mutexDebug
 
     QString m_savePath;
+    QString m_loadPath;
     QStringList m_vars;
     unsigned int m_sendLoc;
 

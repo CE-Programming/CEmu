@@ -71,6 +71,7 @@
         <file>resources/icons/reset_cemu.png</file>
         <file>resources/icons/characters.png</file>
         <file>resources/icons/stack.png</file>
+        <file>resources/icons/ram_chip.png</file>
     </qresource>
     <qresource prefix="/fonts">
         <file>resources/custom_fonts/TICELarge.ttf</file>

@@ -47,8 +47,11 @@
 #include <QtNetwork/QNetworkReply>
 #include <fstream>
 #include <iostream>
+#include <math.h>
 
 Q_DECLARE_METATYPE(calc_var_t)
+Q_DECLARE_METATYPE(emu_state_t)
+Q_DECLARE_METATYPE(emu_data_t)
 
 #ifdef _MSC_VER
     #include <direct.h>
@@ -67,8 +70,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     qRegisterMetaTypeStreamOperators<QList<int>>("QList<int>");
     qRegisterMetaTypeStreamOperators<QList<bool>>("QList<bool>");
     ui->setupUi(this);
-
-    setStyleSheet(QStringLiteral("QMainWindow::separator{ width: 0px; height: 0px; }"));
 
     if (!ipcSetup()) {
         m_initPassed = false;
@@ -116,6 +117,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(&emu, &EmuThread::debugDisable, this, &MainWindow::debugDisable, Qt::QueuedConnection);
     connect(&emu, &EmuThread::debugCommand, this, &MainWindow::debugCommand, Qt::QueuedConnection);
     connect(&emu, &EmuThread::saved, this, &MainWindow::emuSaved, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::loaded, this, &MainWindow::emuCheck, Qt::QueuedConnection);
     connect(&emu, &EmuThread::blocked, this, &MainWindow::emuBlocked, Qt::QueuedConnection);
 
     // console actions
@@ -218,16 +220,18 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->actionSaveState, &QAction::triggered, [this]{ stateToPath(m_pathImage); });
     connect(ui->actionExportCalculatorState, &QAction::triggered, this, &MainWindow::stateToFile);
     connect(ui->actionExportRomImage, &QAction::triggered, this, &MainWindow::romExport);
+    connect(ui->actionExportRamImage, &QAction::triggered, this, &MainWindow::ramExport);
+    connect(ui->actionImportRamImage, &QAction::triggered, this, &MainWindow::ramImport);
     connect(ui->actionImportCalculatorState, &QAction::triggered, this, &MainWindow::stateFromFile);
-    connect(ui->actionReloadROM, &QAction::triggered, [this]{ loadEmu(false); });
-    connect(ui->actionRestoreState, &QAction::triggered, [this]{ loadEmu(true); });
+    connect(ui->actionReloadROM, &QAction::triggered, [this]{ emuLoad(EMU_DATA_ROM); });
+    connect(ui->actionRestoreState, &QAction::triggered, [this]{ emuLoad(EMU_DATA_IMAGE); });
     connect(ui->actionResetALL, &QAction::triggered, this, &MainWindow::resetCEmu);
     connect(ui->actionResetGUI, &QAction::triggered, this, &MainWindow::resetGui);
     connect(ui->actionResetCalculator, &QAction::triggered, this, &MainWindow::resetEmu);
     connect(ui->actionHideMenuBar, &QAction::triggered, this, &MainWindow::setMenuBarState);
     connect(ui->actionHideStatusBar, &QAction::triggered, this, &MainWindow::setStatusBarState);
     connect(ui->buttonResetCalculator, &QPushButton::clicked, this, &MainWindow::resetEmu);
-    connect(ui->buttonReloadROM, &QPushButton::clicked, [this]{ loadEmu(false); });
+    connect(ui->buttonReloadROM, &QPushButton::clicked, [this]{ emuLoad(EMU_DATA_ROM); });
 
     // lcd flow
     connect(ui->lcd, &LCDWidget::updateLcd, this, &MainWindow::lcdUpdate, Qt::QueuedConnection);
@@ -449,7 +453,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setFrameskip(m_config->value(SETTING_CAPTURE_FRAMESKIP, 1).toInt());
     setOptimizeRecord(m_config->value(SETTING_CAPTURE_OPTIMIZE, true).toBool());
     setStatusInterval(m_config->value(SETTING_STATUS_INTERVAL, 1).toInt());
-    setLcdScale(m_config->value(SETTING_SCREEN_SCALE, 100).toUInt());
+    setLcdScale(m_config->value(SETTING_SCREEN_SCALE, 100).toInt());
     setSkinToggle(m_config->value(SETTING_SCREEN_SKIN, true).toBool());
     setLcdSpi(m_config->value(SETTING_SCREEN_SPI, true).toBool());
     setGuiSkip(m_config->value(SETTING_SCREEN_FRAMESKIP, 0).toInt());
@@ -513,9 +517,9 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
         }
     } else {
         if (opts.useSettings && opts.restoreOnOpen && m_config->value(SETTING_RESTORE_ON_OPEN, true).toBool()) {
-            loadEmu(!opts.forceReloadRom);
+            emuLoad(opts.forceReloadRom ? EMU_DATA_ROM : EMU_DATA_IMAGE);
         } else {
-            loadEmu(false);
+            emuLoad(EMU_DATA_ROM);
         }
     }
 
@@ -967,10 +971,10 @@ void MainWindow::optAttemptLoad(CEmuOpts &o) {
         }
     } else {
         if (o.restoreOnOpen && !o.imageFile.isEmpty() && fileExists(m_pathImage)) {
-            loadEmu(true);
+            emuLoad(EMU_DATA_IMAGE);
         } else {
             if (o.forceReloadRom) {
-                loadEmu(false);
+                emuLoad(EMU_DATA_ROM);
                 guiDelay(500);
             }
         }
@@ -1042,15 +1046,14 @@ bool MainWindow::isResetAll() {
 }
 
 void MainWindow::stateToPath(const QString &path) {
-    emu.save(true, appDir().absoluteFilePath(path));
+    emu.save(EMU_DATA_IMAGE, appDir().absoluteFilePath(path));
 }
 
-bool MainWindow::stateFromPath(const QString &path) {
+void MainWindow::stateFromPath(const QString &path) {
     QString prev = m_pathImage;
     m_pathImage = appDir().absoluteFilePath(path);
-    int ret = loadEmu(true);
+    emuLoad(EMU_DATA_IMAGE);
     m_pathImage = prev;
-    return ret == EMU_LOAD_OKAY;
 }
 
 void MainWindow::stateFromFile() {
@@ -1059,9 +1062,7 @@ void MainWindow::stateFromFile() {
                                                       tr("CEmu images (*.ce);;All files (*.*)"));
     if (!path.isEmpty()) {
         m_dir = QFileInfo(path).absoluteDir();
-        if (!stateFromPath(path)) {
-            QMessageBox::critical(this, MSG_ERROR, tr("Could not resume; try restarting CEmu"));
-        }
+        stateFromPath(path);
     }
 }
 
@@ -1076,12 +1077,35 @@ void MainWindow::stateToFile() {
 }
 
 void MainWindow::romExport() {
-    QString path = QFileDialog::getSaveFileName(this, tr("Set Rom image to save to"),
+    QString filter = tr("ROM images (*.rom)");
+    QString path = QFileDialog::getSaveFileName(this, tr("Set ROM image to save to"),
                                                 m_dir.absolutePath(),
-                                                tr("ROM images (*.rom);;All files (*.*)"));
+                                                filter, &filter);
     if (!path.isEmpty()) {
         m_dir = QFileInfo(path).absoluteDir();
-        emu.save(false, path);
+        emu.save(EMU_DATA_ROM, path);
+    }
+}
+
+void MainWindow::ramExport() {
+    QString filter = tr("RAM images (*.ram)");
+    QString path = QFileDialog::getSaveFileName(this, tr("Set RAM image to save to"),
+                                                m_dir.absolutePath(),
+                                                filter, &filter);
+    if (!path.isEmpty()) {
+        m_dir = QFileInfo(path).absoluteDir();
+        emu.save(EMU_DATA_RAM, path);
+    }
+}
+
+void MainWindow::ramImport() {
+    QString path = QFileDialog::getOpenFileName(this, tr("Select RAM image to load"),
+                                                      m_dir.absolutePath(),
+                                                      tr("RAM images (*.ram);;All files (*.*)"));
+    if (!path.isEmpty()) {
+        m_dir = QFileInfo(path).absoluteDir();
+        m_pathRam = path;
+        emuLoad(EMU_DATA_RAM);
     }
 }
 
@@ -1178,14 +1202,14 @@ void MainWindow::console(int type, const char *str, int size) {
         size = static_cast<int>(strlen(str));
     }
     if (m_nativeConsole) {
-        fwrite(str, sizeof(char), size, type == EmuThread::ConsoleErr ? stderr : stdout);
+        fwrite(str, sizeof(char), static_cast<size_t>(size), type == EmuThread::ConsoleErr ? stderr : stdout);
     } else {
         const char *tok;
         QColor colorFg = sColorFg;
         QColor colorBg = sColorBg;
-        if ((tok = static_cast<const char*>(memchr(str, '\x1B', size)))) {
+        if ((tok = static_cast<const char*>(memchr(str, '\x1B', static_cast<size_t>(size))))) {
             if (tok != str) {
-                console(QString::fromUtf8(str, tok - str), sColorFg, sColorBg, type);
+                console(QString::fromUtf8(str, static_cast<int>(tok - str)), sColorFg, sColorBg, type);
                 size -= tok - str;
             }
             do {
@@ -1260,16 +1284,16 @@ void MainWindow::console(int type, const char *str, int size) {
                     }
                 }
                 if (size > 0) {
-                    const char *tokn = static_cast<const char*>(memchr(tok, '\x1B', size));
+                    const char *tokn = static_cast<const char*>(memchr(tok, '\x1B', static_cast<size_t>(size)));
                     if (tokn) {
-                        console(QString::fromUtf8(tok, tokn - tok), sColorFg, sColorBg, type);
+                        console(QString::fromUtf8(tok, static_cast<int>(tokn - tok)), sColorFg, sColorBg, type);
                         size -= tokn - tok;
                     } else {
-                        console(QString::fromUtf8(tok, size), sColorFg, sColorBg, type);
+                        console(QString::fromUtf8(tok, static_cast<int>(size)), sColorFg, sColorBg, type);
                     }
                     tok = tokn;
                 } else {
-                    tok = NULL;
+                    tok = nullptr;
                 }
             } while (tok);
         } else {
@@ -1345,7 +1369,7 @@ void MainWindow::showEmuSpeed(int speed) {
 void MainWindow::showFpsSpeed(double emuFps, double guiFps) {
     static double guiFpsPrev = 0;
     static double emuFpsPrev = 0;
-    if (emuFpsPrev != emuFps) {
+    if (fabs(emuFpsPrev - emuFps) < 0.02) {
         ui->maxFps->setText(tr("Actual FPS: ") + QString::number(emuFps, 'f', 2));
         emuFpsPrev = emuFps;
     }
@@ -1371,7 +1395,7 @@ void MainWindow::setRom(const QString &path) {
     m_pathRom = QDir::cleanPath(appDir().absoluteFilePath(path));
     m_config->setValue(SETTING_ROM_PATH, m_pathRom);
     ui->pathRom->setText(m_portable ? appDir().relativeFilePath(m_pathRom) : m_pathRom);
-    loadEmu(false);
+    emuLoad(EMU_DATA_ROM);
 }
 
 bool MainWindow::runSetup() {
@@ -2015,7 +2039,7 @@ void MainWindow::autotesterUpdatePresets(int comboBoxIndex) {
         std::make_pair(autotester::hash_consts.at("cursorImage"),    autotester::hash_consts.at("cursorImage_size")),
         std::make_pair(autotester::hash_consts.at("ram_start"),      autotester::hash_consts.at("ram_size"))
     };
-    if (comboBoxIndex >= 1 && comboBoxIndex <= (int)(sizeof(mapIdConsts)/sizeof(mapIdConsts[0]))) {
+    if (comboBoxIndex >= 1 && comboBoxIndex <= static_cast<int>((sizeof(mapIdConsts)/sizeof(mapIdConsts[0])))) {
         char buf[10] = {0};
         sprintf(buf, "0x%X", mapIdConsts[comboBoxIndex-1].first);
         ui->startCRC->setText(buf);
@@ -2054,7 +2078,7 @@ void MainWindow::autotesterRefreshCRC() {
     }
 
     // Compute and display CRC
-    ui->valueCRC->setText(int2hex(crc32(start, crc_size), 8));
+    ui->valueCRC->setText(int2hex(crc32(start, static_cast<size_t>(crc_size)), 8));
     ui->valueCRC->repaint();
     free(start);
 }
@@ -2072,19 +2096,51 @@ void MainWindow::resetEmu() {
     emu.reset();
 }
 
-void MainWindow::loadedEmu() {
-    ui->lcd->setMain();
-    setCalcSkinTopFromType();
-    setKeypadColor(m_config->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
-    for (const auto &dock : findChildren<DockWidget*>()) {
-        if (dock->windowTitle() == TXT_VISUALIZER_DOCK) {
-            static_cast<VisualizerWidget*>(dock->widget())->forceUpdate();
-        }
+void MainWindow::emuCheck(emu_state_t state, emu_data_t type) {
+
+    /* don't need to do anything if just loading ram */
+    if (type == EMU_DATA_RAM && state == EMU_STATE_VALID) {
+        guiEmuValid = true;
+        return;
     }
+
+    /* verify emulation state */
+    switch (state) {
+        case EMU_STATE_VALID:
+            break;
+        case EMU_STATE_NOT_A_CE:
+            if (QMessageBox::Yes == QMessageBox::question(this, MSG_WARNING, tr("Image does not appear to be from a CE. Do you want to attempt to load it anyway? "
+                                                          "This may cause instability."), QMessageBox::Yes|QMessageBox::No)) {
+                state = EMU_STATE_VALID;
+            }
+            break;
+        case EMU_STATE_INVALID:
+            if (type == EMU_DATA_IMAGE) {
+                console(QStringLiteral("[CEmu] Failed loading image, falling back to ROM.\n"));
+                emu.load(EMU_DATA_ROM, m_pathRom);
+            }
+            break;
+    }
+
+    if (state == EMU_STATE_VALID) {
+        ui->lcd->setMain();
+        setCalcSkinTopFromType();
+        setKeypadColor(m_config->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
+        for (const auto &dock : findChildren<DockWidget*>()) {
+            if (dock->windowTitle() == TXT_VISUALIZER_DOCK) {
+                static_cast<VisualizerWidget*>(dock->widget())->forceUpdate();
+            }
+        }
+        emu.start();
+        guiEmuValid = true;
+    }
+
+    guiReset = false;
 }
 
-int MainWindow::loadEmu(bool image) {
+void MainWindow::emuLoad(emu_data_t type) {
     guiEmuValid = false;
+    QString path;
 
     if (guiReceive) {
         varToggle();
@@ -2093,44 +2149,19 @@ int MainWindow::loadEmu(bool image) {
         debugToggle();
     }
 
-    bool done = false;
-    int success;
-
-    do {
-        success = emu.load(image, m_pathRom, m_pathImage);
-
-        switch (success) {
-            case EMU_LOAD_OKAY:
-                loadedEmu();
-                done = true;
-                break;
-            case EMU_LOAD_NOT_A_CE:
-                if (QMessageBox::Yes == QMessageBox::question(this, MSG_WARNING, tr("Image does not appear to be from a CE. Do you want to attempt to load it anyway? "
-                                                              "This may cause instability."), QMessageBox::Yes|QMessageBox::No)) {
-                    loadedEmu();
-                    success = EMU_LOAD_OKAY;
-                }
-                done = true;
-                break;
-            default:
-            case EMU_LOAD_FAIL:
-                if (image) {
-                    console(QStringLiteral("[CEmu] Failed resuming, falling back to ROM...\n"));
-                    image = false;
-                } else {
-                    done = true;
-                }
-                break;
-        }
-    } while (!done);
-
-    if (success == EMU_LOAD_OKAY) {
-        emu.start();
-        guiEmuValid = true;
+    switch (type) {
+        case EMU_DATA_ROM:
+            path = m_pathRom;
+            break;
+        case EMU_DATA_IMAGE:
+            path = m_pathImage;
+            break;
+        case EMU_DATA_RAM:
+            path = m_pathRam;
+            break;
     }
 
-    guiReset = false;
-    return success;
+    emu.load(type, path);
 }
 
 void MainWindow::disasmLine() {
@@ -2253,7 +2284,7 @@ void MainWindow::contextDisasm(const QPoint &posa) {
         if (item->text() == setPc) {
             ui->pcregView->setText(addrStr);
             debug_set_pc(addr);
-            disasmUpdateAddr(cpu.registers.PC, true);
+            disasmUpdateAddr(static_cast<int>(cpu.registers.PC), true);
         } else if (item->text() == toggleBreak) {
             breakAddGui();
         } else if (item->text() == toggleRead) {
@@ -2331,7 +2362,7 @@ void MainWindow::contextConsole(const QPoint &posa) {
     uint32_t address;
 
     if (!equ.isEmpty()) {
-        address = hex2int(equ);
+        address = static_cast<uint32_t>(hex2int(equ));
     } else {
         address = cursor.selectedText().toUInt(&ok, 16);
     }

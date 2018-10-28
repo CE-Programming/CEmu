@@ -142,8 +142,11 @@ void EmuThread::doStuff() {
         }
 
         if (m_request == RequestSave) {
-            const std::string tmpSavePath = m_savePath.toStdString();
-            emit saved(emu_save(m_saveImage, tmpSavePath.c_str()));
+            emit saved(emu_save(m_saveType, m_savePath.toStdString().c_str()));
+        }
+
+        if (m_request == RequestLoad) {
+            emit loaded(emu_load(m_loadType, m_loadPath.toStdString().c_str()), m_loadType);
         }
 
         m_request = RequestNone;
@@ -203,9 +206,9 @@ void EmuThread::send(const QStringList &list, unsigned int location) {
     req(RequestSend);
 }
 
-void EmuThread::save(bool image, const QString &path) {
+void EmuThread::save(emu_data_t type, const QString &path) {
     m_savePath = path;
-    m_saveImage = image;
+    m_saveType = type;
     req(RequestSave);
 }
 
@@ -253,18 +256,19 @@ void EmuThread::debug(bool state) {
     }
 }
 
-int EmuThread::load(bool restore, const QString &rom, const QString &image) {
-    int ret = EMU_LOAD_FAIL;
+void EmuThread::load(emu_data_t type, const QString &path) {
 
-    setTerminationEnabled();
-    stop();
+    /* if loading an image or rom, we need to restart emulation */
+    if (type == EMU_DATA_IMAGE || type == EMU_DATA_ROM) {
+        setTerminationEnabled();
+        stop();
 
-    if (restore) {
-        ret = emu_load(true, image.toStdString().c_str());
-    } else {
-        ret = emu_load(false, rom.toStdString().c_str());
+        emit loaded(emu_load(type, path.toStdString().c_str()), type);
+    } else if (type == EMU_DATA_RAM) {
+        m_loadPath = path;
+        m_loadType = type;
+        req(RequestLoad);
     }
-    return ret;
 }
 
 void EmuThread::stop() {
