@@ -41,7 +41,7 @@ if (linux) {
     INSTALLS += target desktop
 }
 
-QT += core concurrent gui widgets network
+QT += core gui widgets network
 
 isEmpty(TARGET_NAME) {
     TARGET_NAME = CEmu
@@ -181,7 +181,6 @@ SOURCES += \
     ../../core/spi.c \
     ../../core/debug/debug.c \
     ../../core/debug/zdis/zdis.c \
-    QArchive.cc \
     ipc.cpp \
     main.cpp \
     utils.cpp \
@@ -227,7 +226,8 @@ SOURCES += \
     tivarslib/TypeHandlers/STH_FP.cpp \
     visualizerwidget.cpp \
     debugger/visualizerdisplaywidget.cpp \
-    memorywidget.cpp
+    memorywidget.cpp \
+    archive/extractor.c
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
@@ -271,7 +271,6 @@ HEADERS  += \
     ../../core/spi.h \
     ../../core/debug/debug.h \
     ../../core/debug/zdis/zdis.h \
-    QArchive.hpp \
     ipc.h \
     utils.h \
     cemuopts.h \
@@ -312,7 +311,8 @@ HEADERS  += \
     tivarslib/TIVarTypes.h \
     tivarslib/TypeHandlers/TypeHandlers.h \
     visualizerwidget.h \
-    debugger/visualizerdisplaywidget.h
+    debugger/visualizerdisplaywidget.h \
+    archive/extractor.h
 
 FORMS    += \
     mainwindow.ui \

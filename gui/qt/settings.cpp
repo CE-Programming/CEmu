@@ -903,7 +903,7 @@ void MainWindow::recentLoadInfo() {
 
     if (m_config->value(SETTING_RECENT_SAVE).toBool()) {
         for (int i = 0; i < paths.size(); i++) {
-            QString path = paths.at(i);
+            const QString path = paths.at(i);
             bool select = selects.at(i) == TXT_YES;
             sendingHandler->addFile(path, select);
         }

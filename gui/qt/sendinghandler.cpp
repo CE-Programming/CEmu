@@ -1,7 +1,8 @@
-#include "sendinghandler.h"
+﻿#include "sendinghandler.h"
 #include "utils.h"
 #include "emuthread.h"
 #include "../../core/link.h"
+#include "archive/extractor.h"
 
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QApplication>
@@ -9,8 +10,6 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QMimeData>
 #include <QtGui/QDragEnterEvent>
-
-#include "QArchive.hpp"
 
 SendingHandler *sendingHandler = Q_NULLPTR;
 
@@ -29,10 +28,22 @@ static const QStringList valid_suffixes = { QStringLiteral("8xp"),
                                             QStringLiteral("8xt"),
                                             QStringLiteral("8ca"),
                                             QStringLiteral("8cg"),
-                                            QStringLiteral("8ci") };
+                                            QStringLiteral("8ci"), };
 
 static inline bool pathHasBundleExtension(const QString& filepath) {
-    return filepath.endsWith("b84") || filepath.endsWith("b83");
+    return filepath.toLower().endsWith("b84") || filepath.toLower().endsWith("b83");
+}
+
+static QStringList bundleList;
+static bool checkValidFile(const char *path) {
+    QString npath(path);
+    foreach (const QString &str, valid_suffixes) {
+        if (npath.toLower().endsWith(str)) {
+            bundleList.append(path);
+            return true;
+        }
+    }
+    return false;
 }
 
 QStringList SendingHandler::getValidFilesFromArchive(const QString& archivePath) {
@@ -41,35 +52,9 @@ QStringList SendingHandler::getValidFilesFromArchive(const QString& archivePath)
         return {};
     }
 
-    QStringList filesInArchive = QArchive::Reader(archivePath).start().waitForFinished().getFilesList().keys();
-    QStringList filesToExtract;
-    for (const QString& name : filesInArchive) {
-        if (valid_suffixes.contains(QFileInfo(name).suffix().toLower())) {
-            filesToExtract.append(name);
-        }
-    }
-
-    if (filesToExtract.empty()) {
-        QMessageBox::critical(Q_NULLPTR, tr("Transfer error"), tr("No valid file found in this archive.\nFile: ") + archivePath);
-        return {};
-    }
-
-    const QString tempDirPath = m_tempDir.path();
-
-    QArchive::Extractor(archivePath, tempDirPath).onlyExtract(filesToExtract).start().waitForFinished();
-
-    QFileInfoList extractedFilesInfos = QDir(tempDirPath).entryInfoList(QDir::Filter::Files);
-
-    if (extractedFilesInfos.size() != filesToExtract.size()) {
-        QMessageBox::critical(Q_NULLPTR, tr("Transfer error"), tr("An error occured while extracting this archive.\nFile: ") + archivePath);
-        return {};
-    }
-
-    QStringList validFilesPaths;
-    for (const QFileInfo& fi : extractedFilesInfos) {
-        validFilesPaths.append(fi.absoluteFilePath());
-    }
-    return validFilesPaths;
+    bundleList.clear();
+    extractor(archivePath.toStdString().c_str(), m_tempDir.path().toStdString().c_str(), checkValidFile);
+    return bundleList;
 }
 
 SendingHandler::SendingHandler(QObject *parent, QProgressBar *bar, QTableWidget *table) : QObject{parent} {
@@ -98,13 +83,8 @@ void SendingHandler::dropOccured(QDropEvent *e, unsigned int location) {
 
     QStringList files;
     for(auto &&url : mime_data->urls()) {
-        QString filePath = url.toLocalFile();
-        if (pathHasBundleExtension(filePath)) {
-            files.append(getValidFilesFromArchive(filePath));
-            addFile(filePath, true); // we do this here because it's convenient...
-        } else {
-            files.append(filePath);
-        }
+        const QString filePath = url.toLocalFile();
+        files.append(filePath);
     }
 
     sendFiles(files, location);
@@ -164,8 +144,6 @@ bool SendingHandler::dragOccured(QDragEnterEvent *e) {
 }
 
 void SendingHandler::sentFile(const QString &file, int ok) {
-    bool add = true;
-    int rows = m_table->rowCount();
 
     // Send null to complete sending
     if (ok != LINK_GOOD || file.isEmpty()) {
@@ -196,21 +174,9 @@ void SendingHandler::sentFile(const QString &file, int ok) {
         }
     }
 
-    // don't add temp files in the history
-    if (directory == m_tempDir.path()) {
-        add = false;
-    }
-
-    if (add) {
-        for (int j = 0; j < rows; j++) {
-            if (!m_table->item(j, RECENT_PATH)->text().compare(file)) {
-                add = false;
-            }
-        }
-    }
-
-    if (add) {
-        QString path = file;
+    // don't add temp files (created by bundles)
+    if (directory != m_tempDir.path()) {
+        const QString path = file;
         addFile(path, true);
     }
 
@@ -220,10 +186,16 @@ void SendingHandler::sentFile(const QString &file, int ok) {
 }
 
 
-void SendingHandler::addFile(QString &file, bool select) {
-    QIcon removeIcon(QPixmap(QStringLiteral(":/icons/resources/icons/exit.png")));
-    int rows = m_table->rowCount();
+void SendingHandler::addFile(const QString &file, bool select) {
+    int j, rows = m_table->rowCount();
 
+    for (j = 0; j < rows; j++) {
+        if (!m_table->item(j, RECENT_PATH)->text().compare(file)) {
+            return;
+        }
+    }
+
+    QIcon removeIcon(QPixmap(QStringLiteral(":/icons/resources/icons/exit.png")));
     QToolButton *btnRemove = new QToolButton();
     btnRemove->setIcon(removeIcon);
 
@@ -253,21 +225,29 @@ void SendingHandler::addFile(QString &file, bool select) {
 }
 
 void SendingHandler::sendFiles(const QStringList &fileNames, unsigned int location) {
-    const int fileNum = fileNames.size();
+    QStringList list = fileNames;
 
-    if (guiSend || guiReceive || guiDebug || !fileNum) {
+    if (guiSend || guiReceive || guiDebug || !list.size()) {
         return;
     }
 
     guiSend = true;
     m_dirs.clear();
 
-    if (m_progressBar) {
-        m_progressBar->setVisible(true);
-        m_progressBar->setMaximum(fileNum);
+    foreach(const QString &str, fileNames) {
+        if (pathHasBundleExtension(str)) {
+            list.removeOne(str);
+            list.append(getValidFilesFromArchive(str));
+            addFile(str, true);
+        }
     }
 
-    emit send(fileNames, location);
+    if (m_progressBar) {
+        m_progressBar->setVisible(true);
+        m_progressBar->setMaximum(list.size());
+    }
+
+    emit send(list, location);
 }
 
 void SendingHandler::setLoadEquates(bool state) {

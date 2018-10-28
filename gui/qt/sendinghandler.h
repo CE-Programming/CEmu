@@ -24,7 +24,7 @@ public:
     bool dragOccured(QDragEnterEvent *e);
     void dropOccured(QDropEvent *e, unsigned int location);
     void resendSelected();
-    void addFile(QString &path, bool select);
+    void addFile(const QString &path, bool select);
     void setLoadEquates(bool state);
 
 public slots:
