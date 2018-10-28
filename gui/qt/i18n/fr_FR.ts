@@ -6,7 +6,7 @@
     <message>
         <location filename="../basiccodeviewerwindow.ui" line="49"/>
         <source>Toggle original/reformatted</source>
-        <translation>Voir l&apos;original/reformatté</translation>
+        <translation>Voir l&apos;original/reformaté</translation>
     </message>
     <message>
         <location filename="../basiccodeviewerwindow.ui" line="14"/>
@@ -94,7 +94,7 @@
     <message>
         <location filename="../mainwindow.ui" line="6759"/>
         <source>Screenshot</source>
-        <translation>Copie d&apos;écran</translation>
+        <translation>Capture d&apos;écran</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6995"/>
@@ -122,7 +122,7 @@
     <message>
         <location filename="../mainwindow.cpp" line="543"/>
         <source>Debug</source>
-        <translation>Debuggage</translation>
+        <translation>Débogage</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="118"/>
@@ -132,7 +132,7 @@
     <message>
         <location filename="../debugger.cpp" line="119"/>
         <source>This debugging information is incompatible with this version of CEmu</source>
-        <translation>Cette information de débuggage est incompatible avec cette version de CEmu</translation>
+        <translation>Cette information de débogage est incompatible avec cette version de CEmu</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="398"/>
@@ -153,7 +153,7 @@
     <message>
         <location filename="../debugger.cpp" line="2492"/>
         <source>Cannot locate calculator ID in the certificate. This is usually due to an improper ROM dump. Please try another ROM dump using a physical calculator.</source>
-        <translation>Impossible de trouver l&apos;ID de la calculatrice dans le certificat. Ceci est généralement du a un dump de ROM incomplet. Veuillez retenter un dump de ROM.</translation>
+        <translation>Impossible de trouver l&apos;ID de la calculatrice dans le certificat. Ceci est généralement dû à un dump de ROM incomplet. Veuillez retenter un dump de ROM.</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="2499"/>
@@ -168,22 +168,22 @@
     <message>
         <location filename="../debugger.cpp" line="241"/>
         <source>Debugging Info (*.ini)</source>
-        <translation>Information de débuggage (*.ini)</translation>
+        <translation>Information de débogage (*.ini)</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="242"/>
         <source>Debugger Import</source>
-        <translation>Import de debug</translation>
+        <translation>Import de débogage</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="242"/>
         <source>Debugger Export</source>
-        <translation>Export de debug</translation>
+        <translation>Export de débogage</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="373"/>
         <source>Hit breakpoint </source>
-        <translation>Breakpoint atteint </translation>
+        <translation>Point d&apos;arrêt atteint </translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="378"/>
@@ -210,12 +210,12 @@
     <message>
         <location filename="../debugger.cpp" line="391"/>
         <source>Read</source>
-        <translation>lecture</translation>
+        <translation>Lu</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="391"/>
         <source>Wrote</source>
-        <translation>écriture</translation>
+        <translation>Écrit</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="392"/>
@@ -276,7 +276,7 @@
         <location filename="../mainwindow.cpp" line="554"/>
         <location filename="../memorywidget.cpp" line="29"/>
         <source>Goto</source>
-        <translation>Aller à...</translation>
+        <translation>Aller à</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3309"/>
@@ -293,17 +293,17 @@
     <message>
         <location filename="../mainwindow.ui" line="8230"/>
         <source>Always show on top of other windows</source>
-        <translation>Toujours afficher par dessus d&apos;autres fenêtres</translation>
+        <translation>Toujours afficher au premier plan</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8370"/>
         <source>File Locations</source>
-        <translation>Emplacement des fichiers</translation>
+        <translation>Emplacements des fichiers</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8436"/>
         <source>Saved Image</source>
-        <translation>Image sauvée</translation>
+        <translation>Image sauvé</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="7080"/>
@@ -313,12 +313,12 @@
     <message>
         <location filename="../mainwindow.ui" line="7064"/>
         <source>Scale:</source>
-        <translation>Echelle :</translation>
+        <translation>Échelle :</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="7137"/>
         <source>Keypad Skin Color</source>
-        <translation>Coluleur du skin du clavier</translation>
+        <translation>Couleur du skin du clavier</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="193"/>
@@ -339,7 +339,7 @@
         <location filename="../mainwindow.ui" line="3393"/>
         <location filename="../mainwindow.ui" line="6244"/>
         <source>Refresh</source>
-        <translation>Raffraîchir</translation>
+        <translation>Actualiser</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9127"/>
@@ -349,7 +349,7 @@
     <message>
         <location filename="../mainwindow.ui" line="3469"/>
         <source>Open debugger to view disassembly...</source>
-        <translation>Ouvez le débuggeur pour voir le désassemblage...</translation>
+        <translation>Ouvrez le débogueur pour voir le désassemblage...</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3876"/>
@@ -414,7 +414,7 @@
     <message>
         <location filename="../mainwindow.ui" line="9080"/>
         <source>Auto scroll</source>
-        <translation>Défilement auto.</translation>
+        <translation>Auto-défilement</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9090"/>
@@ -594,12 +594,12 @@
     <message>
         <location filename="../mainwindow.ui" line="6660"/>
         <source>Resend checked</source>
-        <translation>Renvoyé le(s) coché(s)</translation>
+        <translation>Renvoyer le(s) coché(s)</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8722"/>
         <source>Update status:</source>
-        <translation>Mise-à-jour du statut :</translation>
+        <translation>Mise à jour du statut :</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8735"/>
@@ -609,22 +609,22 @@
     <message>
         <location filename="../mainwindow.ui" line="8759"/>
         <source>Emulate physical LCD SPI drawing</source>
-        <translation>Emuler le dessin du LCD par le SPI</translation>
+        <translation>Émuler le dessin du LCD par le SPI</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8895"/>
         <source>Auto. save and restore debug state</source>
-        <translation>Auto. sauver et charger l&apos;état de debug</translation>
+        <translation>Auto. sauver et charger l&apos;état de débogage</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8855"/>
         <source>Emulate Pre-Revision I (IM 2)</source>
-        <translation>Emulation de revision pre-I (IM 2)</translation>
+        <translation>Émulation de révision pre-I (IM 2)</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8872"/>
         <source>Some debugging views only make sense when in the context of normal OS operation (may not be the case when some ASM programs are running, for instance)</source>
-        <translation>Certaines fenêtres de debug ont de sens uniquement lorsque l&apos;OS est en train de s&apos;exécuter (et non pas lors de l&apos;exécution de certains programmes ASM, par exemple)</translation>
+        <translation>Certaines fenêtres de débogage n&apos;ont de sens que lorsque l&apos;OS est en train de s&apos;exécuter (et non pas lors de l&apos;exécution de certains programmes ASM, par exemple)</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8875"/>
@@ -634,7 +634,7 @@
     <message>
         <location filename="../mainwindow.ui" line="9099"/>
         <source>Enter</source>
-        <translation>Entrer</translation>
+        <translation>Entrée</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9441"/>
@@ -649,7 +649,7 @@
     <message>
         <location filename="../mainwindow.ui" line="9678"/>
         <source>Reset calculator</source>
-        <translation>Reseter la calculatrice</translation>
+        <translation>Réinitialiser la calculatrice</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9699"/>
@@ -670,7 +670,7 @@
         <location filename="../mainwindow.ui" line="9735"/>
         <location filename="../mainwindow.ui" line="9744"/>
         <source>Calculator state</source>
-        <translation>Etat de la calculatrice</translation>
+        <translation>État de la calculatrice</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9862"/>
@@ -701,7 +701,7 @@
     <message>
         <location filename="../mainwindow.ui" line="9479"/>
         <source>Screen</source>
-        <translation>Ecran</translation>
+        <translation>Écran</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9648"/>
@@ -736,12 +736,12 @@
     <message>
         <location filename="../mainwindow.ui" line="8217"/>
         <source>Automatically check for updates</source>
-        <translation>Vérifier les mises-à-jour automatiquement</translation>
+        <translation>Vérifier automatiquement les mises à jour</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8184"/>
         <source>Use portable configuration</source>
-        <translation>Utiliser une config. portable</translation>
+        <translation>Utiliser une configuration portable</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8885"/>
@@ -773,12 +773,12 @@
         <location filename="../mainwindow.ui" line="8478"/>
         <location filename="../mainwindow.ui" line="8503"/>
         <source>Change path</source>
-        <translation>Changer de dossier...</translation>
+        <translation>Changer de dossier</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8456"/>
         <source>Saved Debug</source>
-        <translation>Debug sauvé</translation>
+        <translation>Débogage sauvé</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2820"/>
@@ -838,17 +838,17 @@
         <location filename="../mainwindow.ui" line="4859"/>
         <location filename="../mainwindow.cpp" line="573"/>
         <source>OS Stacks</source>
-        <translation>Stacks de l&apos;OS</translation>
+        <translation>Piles (stacks) de l&apos;OS</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4871"/>
         <source>OP Stack</source>
-        <translation>Stack OP</translation>
+        <translation>Pile OP</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4981"/>
         <source>FP Stack</source>
-        <translation>Stack FP</translation>
+        <translation>Pile FP</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5678"/>
@@ -909,7 +909,7 @@
     <message>
         <location filename="../mainwindow.ui" line="9812"/>
         <source>Copy screen to clipboard</source>
-        <translation>Capturer l&apos;écran dans le press-papier</translation>
+        <translation>Capturer l&apos;écran dans le presse-papier</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9815"/>
@@ -919,7 +919,7 @@
     <message>
         <location filename="../mainwindow.ui" line="410"/>
         <source>Flags</source>
-        <translation></translation>
+        <translation>État / drapeaux (flags)</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6840"/>
@@ -1040,12 +1040,12 @@
     <message>
         <location filename="../mainwindow.ui" line="9687"/>
         <source>Check for updates...</source>
-        <translation>Vérifier les mises-à-jour...</translation>
+        <translation>Vérifier les mises à jour...</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9666"/>
         <source>About Qt</source>
-        <translation>A propos de Qt</translation>
+        <translation>À propos de Qt</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2891"/>
@@ -1055,7 +1055,7 @@
     <message>
         <location filename="../mainwindow.ui" line="7030"/>
         <source>Display</source>
-        <translation>Ecran</translation>
+        <translation>Écran</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5209"/>
@@ -1343,7 +1343,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8191"/>
         <source>Pause emulation on focus change</source>
-        <translation>Mettre en pauser l&apos;émulation quand le focus est perdu</translation>
+        <translation>Mettre en pause l&apos;émulation quand le focus est perdu</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8237"/>
