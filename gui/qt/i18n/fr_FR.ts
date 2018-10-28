@@ -261,12 +261,12 @@
     <message>
         <location filename="../mainwindow.ui" line="147"/>
         <source>Step</source>
-        <translation>Pas-à-pas détaillé</translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="170"/>
         <source>Step Over</source>
-        <translation>Pas-à-pas principal</translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3332"/>
@@ -303,7 +303,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8436"/>
         <source>Saved Image</source>
-        <translation>Image sauvegardée</translation>
+        <translation>Image sauvé</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="7080"/>
@@ -318,12 +318,12 @@
     <message>
         <location filename="../mainwindow.ui" line="7137"/>
         <source>Keypad Skin Color</source>
-        <translation>Coluleur du thème du clavier</translation>
+        <translation>Couleur du skin du clavier</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="193"/>
         <source>Step Next</source>
-        <translation>Pas-à-pas</translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3372"/>
@@ -414,7 +414,7 @@
     <message>
         <location filename="../mainwindow.ui" line="9080"/>
         <source>Auto scroll</source>
-        <translation>Défilement automatique</translation>
+        <translation>Auto-défilement</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9090"/>
@@ -778,7 +778,7 @@
     <message>
         <location filename="../mainwindow.ui" line="8456"/>
         <source>Saved Debug</source>
-        <translation>Débogages sauvegardés</translation>
+        <translation>Débogage sauvé</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2820"/>
@@ -838,7 +838,7 @@
         <location filename="../mainwindow.ui" line="4859"/>
         <location filename="../mainwindow.cpp" line="573"/>
         <source>OS Stacks</source>
-        <translation>Piles de l&apos;OS</translation>
+        <translation>Piles (stacks) de l&apos;OS</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4871"/>
@@ -919,7 +919,7 @@
     <message>
         <location filename="../mainwindow.ui" line="410"/>
         <source>Flags</source>
-        <translation>État / drapeaux</translation>
+        <translation>État / drapeaux (flags)</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6840"/>
@@ -998,7 +998,7 @@
     <message>
         <location filename="../mainwindow.ui" line="216"/>
         <source>Step Out</source>
-        <translation>Pas-à-pas sortant</translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="2380"/>
