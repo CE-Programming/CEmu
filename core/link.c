@@ -10,7 +10,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#define SAFE_RAM 0xD052C6
+#define ADDR_SAFE_RAM   0xD052C6
+#define ADDR_ERRNO      0xD008DF
+#define ADDR_PRGM_SIZE  0xD0118C
 
 static const uint8_t jforcegraph[9] = {
     0xF3,                         /* di                            */
@@ -45,9 +47,9 @@ static const uint8_t pgrm_loader[34] = {
     0x3A, 0xF8, 0x05, 0xD0,       /* ld a,(OP1)           */
     0xCD, 0x38, 0x13, 0x02,       /* call _createvar      */
     0xED, 0x53,
-    (SAFE_RAM>>0)&255,
-    (SAFE_RAM>>8)&255,
-    (SAFE_RAM>>16)&255,           /* ld (SAFE_RAM),de     */
+    (ADDR_SAFE_RAM>>0)&255,
+    (ADDR_SAFE_RAM>>8)&255,
+    (ADDR_SAFE_RAM>>16)&255,      /* ld (SAFE_RAM),de     */
     0x18, 0xFE                    /* _sink: jr _sink      */
 };
 
@@ -66,10 +68,10 @@ bool listVariablesLink(void) {
 
 static void run_asm(const uint8_t *data, const size_t data_size, const uint32_t cycles) {
     cpu.halted = cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = cpu.NMI = 0;
-    memcpy(phys_mem_ptr(SAFE_RAM, 8400), data, data_size);
+    memcpy(phys_mem_ptr(ADDR_SAFE_RAM, 8400), data, data_size);
     cpu.cycles = 0;
     cpu.next = sched.event.cycle = cycles;
-    cpu_flush(SAFE_RAM, 1);
+    cpu_flush(ADDR_SAFE_RAM, 1);
     cpu_execute();
 }
 
@@ -80,7 +82,7 @@ static void run_asm(const uint8_t *data, const size_t data_size, const uint32_t 
  */
 int EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int location) {
     const size_t h_size = sizeof header_data;
-    const uint8_t tVarLst = 0x5D, tAns = 0x72;
+    const uint8_t tVarLst = 0x5D, tAns = 0x72, cxError = 0x52;
     unsigned int i;
     int ret = LINK_GOOD;
 
@@ -107,7 +109,7 @@ int EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int lo
     long     lSize;
 
     /* Return if we are at an error menu */
-    if (*cxCurApp == 0x52 || !(file = fopen_utf8(file_name, "rb"))) {
+    if (*cxCurApp == cxError || !(file = fopen_utf8(file_name, "rb"))) {
         gui_console_printf("[CEmu] Transfer Error: OS in error screen.\n");
         return LINK_ERR;
     }
@@ -135,7 +137,7 @@ int EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int lo
 
     /* make sure the checksum is correct */
     checksum = 0;
-    for (i = 0x37; i<(unsigned int)lSize-2; i++) {
+    for (i = FILE_DATA_START; i<(unsigned int)lSize-2; i++) {
         checksum = (checksum + fgetc(file)) & 0xffff;
     }
 
@@ -159,7 +161,7 @@ int EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int lo
         goto r_err;
     }
 
-    /* parse each varaible individually until the entire file is compelete. */
+    /* parse each variable individually until the entire file is complete. */
 
     run_asm(jforcegraph, sizeof jforcegraph, 2500000);
 
@@ -177,32 +179,32 @@ int EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int lo
         if (fread(&var_size2, 2, 1, file) != 1)            goto r_err;
         if (var_size != var_size2)                         goto r_err;
 
-        /* Hack for TI Connect CE bug */
+        /* Hack for TI Connect CE bug - see github issue #80 */
         if ((*op1 == CALC_VAR_TYPE_REAL_LIST || *op1 == CALC_VAR_TYPE_CPLX_LIST) &&
             !(op1[1] == tVarLst || op1[1] == tAns)) {
             memmove(op1 + 2, op1 + 1, 7);
             op1[1] = tVarLst;
         }
 
-        mem_poke_byte(0xD008DF, 0);
+        mem_poke_byte(ADDR_ERRNO, 0);
         cpu.registers.HL = var_size - 2;
 
         /* copy the program into the emulator */
 
         run_asm(pgrm_loader, sizeof pgrm_loader, 23000000);
 
-        if (mem_peek_byte(0xD008DF)) {
+        if (mem_peek_byte(ADDR_ERRNO)) {
             gui_console_printf("[CEmu] Transfer Error: OS Error encountered\n");
             ret = LINK_ERR;
             goto r_err;
         }
 
-        if (mem_peek_word(0xD0118C, true)) {
+        if (mem_peek_word(ADDR_PRGM_SIZE, true)) {
             gui_console_printf("[CEmu] Transfer Warning: Running assembly program; RAM leak possible\n");
             ret = LINK_WARN;
         }
 
-        var_ptr = phys_mem_ptr(mem_peek_long(SAFE_RAM), var_size);
+        var_ptr = phys_mem_ptr(mem_peek_long(ADDR_SAFE_RAM), var_size);
 
         if (fread(var_ptr, 1, var_size, file) != var_size) goto r_err;
 
@@ -240,7 +242,7 @@ bool receiveVariableLink(int count, const calc_var_t *vars, const char *file_nam
     }
     setbuf(file, NULL);
     if (fwrite(header, sizeof header - 1, 1, file) != 1) goto w_err;
-    if (fseek(file, 0x37, SEEK_SET))                     goto w_err;
+    if (fseek(file, FILE_DATA_START, SEEK_SET))          goto w_err;
     while (count--) {
         if (!vat_search_find(vars++, &var))              goto w_err;
         if (fwrite(&header_size,       2, 1, file) != 1) goto w_err;
@@ -253,7 +255,7 @@ bool receiveVariableLink(int count, const calc_var_t *vars, const char *file_nam
         if (fwrite(var.data,    var.size, 1, file) != 1) goto w_err;
         size += 17 + var.size;
     }
-    if (fseek(file, 0x35, SEEK_SET))                     goto w_err;
+    if (fseek(file, FILE_DATA, SEEK_SET))                goto w_err;
     if (fwrite(&size,                  2, 1, file) != 1) goto w_err;
     if (fflush(file))                                    goto w_err;
     while (size--) {
