@@ -605,15 +605,31 @@ std::vector<std::string> globVector(const std::string& pattern)
 
 bool sendFilesForTest()
 {
-    const char* forced_libs_dir = getenv("AUTOTESTER_LIBS_DIR");
-    if (forced_libs_dir)
+    std::vector<std::string> forced_files;
+    const char* forced_libs_group = getenv("AUTOTESTER_LIBS_GROUP");
+    const char* forced_libs_dir   = getenv("AUTOTESTER_LIBS_DIR");
+
+    if (forced_libs_group)
     {
-        const auto forced_files = globVector(std::string(forced_libs_dir) + "/*.8xv");
-        if (forced_files.empty())
+        if (file_exists(forced_libs_group))
         {
-            std::cerr << "[Error] AUTOTESTER_LIBS_DIR given but no files found...?" << std::endl;
-            return false;
+            forced_files.push_back(forced_libs_group);
+        } else {
+            std::cerr << "[Error] Env var for libs group given, but no such file...?" << std::endl;
+            forced_libs_group = nullptr;
         }
+    }
+
+    if (!forced_libs_group && forced_libs_dir)
+    {
+        forced_files = globVector(std::string(forced_libs_dir) + "/*.8xv");
+    }
+
+    if ((forced_libs_group || forced_libs_dir) && forced_files.empty())
+    {
+        std::cerr << "[Error] Env var for libs-dir/group given, but no files found...?" << std::endl;
+        return false;
+    } else {
         for (const auto& file : forced_files)
         {
             if (debugMode)

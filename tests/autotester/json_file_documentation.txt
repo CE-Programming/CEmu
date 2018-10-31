@@ -13,11 +13,12 @@ Structure of the JSON object for the test config files:
         action|x (with x being one of: launch (to launch the target program), reset (to reset the emulation), useClassic (to use CLASSIC and not MathPrint)
         delay|num (with num being a number of milliseconds to wait for)
         hash|hashName (the hash param's key (string), as defined later in your JSON)
+        hashWait|hashName (the hash param's key (string), as defined later in your JSON)
         key|keyName (with keyName being one of: ***TODO***)
 
 "hashes" (array of objects)
     each object's key corresponds to the name of the hash (params).
-    each object has 4 properties:
+    each object has the following properties:
         - "description" (string)
             Just to explain what this hash is for
         - "start" (string of number in decimal or hexadecimal if prefixed by 0x)
@@ -25,3 +26,5 @@ Structure of the JSON object for the test config files:
         - "size" (number (decimal only), or string of number in decimal or hexadecimal if prefixed by 0x)
             The length of the area that will be hashed. The number itself or string of a few common sizes: "vram_8_size", "vram_16_size", "ram_size"
         - "expected_CRCs" (array of strings (in hex, without a prefix)): one or several expected/valid CRCs
+        - "timeout" (optional: positive integer): if a hashWait action is used, sets the maximum ms to wait for
+
