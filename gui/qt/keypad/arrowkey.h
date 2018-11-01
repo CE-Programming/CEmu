@@ -17,7 +17,7 @@ public:
     virtual void paint(QPainter &) const;
 
 protected:
-    virtual bool canAccept(const QPointF &);
+    virtual bool canAccept(const QPointF &) const;
 
 private:
     static qreal computeAngle(const QRect &, int);

@@ -56,7 +56,7 @@ public:
     virtual void paint(QPainter &) const;
 
 protected:
-    virtual bool canAccept(const QPointF &);
+    virtual bool canAccept(const QPointF &) const;
 
     QColor mTextColor, mSecondColor, mAlphaColor;
     Qt::Alignment mLabelAlign, mSecondAlign, mAlphaAlign;

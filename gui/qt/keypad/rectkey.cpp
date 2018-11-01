@@ -51,6 +51,6 @@ void RectKey::paint(QPainter &painter) const {
     }
 }
 
-bool RectKey::canAccept(const QPointF &point) {
+bool RectKey::canAccept(const QPointF &point) const {
     return mKeyShape.contains(point);
 }

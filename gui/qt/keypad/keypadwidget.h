@@ -5,6 +5,13 @@
 #include "key.h"
 
 #include <QtWidgets/QWidget>
+QT_BEGIN_NAMESPACE
+class QResizeEvent;
+class QPaintEvent;
+class QEvent;
+class QMouseEvent;
+class QTouchEvent;
+QT_END_NAMESPACE
 
 enum keypad_colors { KEYPAD_BLACK=0, KEYPAD_WHITE, KEYPAD_TRUE_BLUE, KEYPAD_DENIM, KEYPAD_SILVER, KEYPAD_PINK, KEYPAD_PLUM, KEYPAD_RED, KEYPAD_LIGHTNING, KEYPAD_GOLDEN, KEYPAD_SPACEGREY, KEYPAD_CORAL, KEYPAD_MINT, KEYPAD_ROSEGOLD, KEYPAD_CRYSTALCLEAR };
 
@@ -13,6 +20,7 @@ class KeypadWidget : public QWidget {
 
 public:
     explicit KeypadWidget(QWidget *parent = Q_NULLPTR) : QWidget{parent}, cclrBackground{Qt::gray}, mKeys{} {
+        setAttribute(Qt::WA_AcceptTouchEvents);
         cclrBackground.setAlpha(100);
         keypadPath.setFillRule(Qt::WindingFill);
         keypadPath.addRoundedRect(sBaseRect, 20, 20);
@@ -29,16 +37,18 @@ signals:
     void keyPressed(const QString& key);
 
 public slots:
-    void changeKeyState(KeyCode keycode, bool press, bool toggleHold = false);
+    void changeKeyState(KeyCode keycode, bool press);
 
-protected:
-    virtual void resizeEvent(QResizeEvent *) Q_DECL_OVERRIDE;
-    virtual void paintEvent(QPaintEvent *) Q_DECL_OVERRIDE;
-    virtual void mousePressEvent(QMouseEvent *) Q_DECL_OVERRIDE;
-    virtual void mouseMoveEvent(QMouseEvent *) Q_DECL_OVERRIDE;
-    virtual void mouseReleaseEvent(QMouseEvent *) Q_DECL_OVERRIDE;
+    void resizeEvent(QResizeEvent *) override;
+    void paintEvent(QPaintEvent *) override;
+    bool event(QEvent *) override;
+    void mouseEvent(QMouseEvent *);
+    void mouseEndEvent(QMouseEvent *);
+    void touchEvent(QTouchEvent *);
+    void touchEndEvent();
 
 private:
+    void updateKey(Key *, bool);
     void addKey(Key *);
 
     unsigned int color = KEYPAD_BLACK;

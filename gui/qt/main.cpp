@@ -15,7 +15,6 @@ int main(int argc, char *argv[]) {
     // DPI scaling fix must be applied at the very beginning before QApplication init
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
-    QCoreApplication::setAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents);
     QApplication app(argc, argv);
 
     QCoreApplication::setOrganizationName(QStringLiteral("cemu-dev"));

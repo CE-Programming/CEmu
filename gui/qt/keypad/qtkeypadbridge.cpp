@@ -48,7 +48,6 @@ void QtKeypadBridge::keyEvent(QKeyEvent *event, bool press) {
 
     KeyCode lastKey = pressed.take(nativeCode);
     if (lastKey.valid()) {
-        keypad_key_event(lastKey.row(), lastKey.col(), false);
         emit keyStateChanged(lastKey, false);
         if (!press) {
             return;
@@ -60,7 +59,6 @@ void QtKeypadBridge::keyEvent(QKeyEvent *event, bool press) {
             for (const HostKey *key = (*keymap)[row][col]; key->code; ++key) {
                 if (key->code == code && key->modifier == (key->mask & modifiers)
                                       && key->nativeCode == (key->nativeMask & nativeCode)) {
-                    keypad_key_event(row, col, press);
                     emit keyStateChanged({row, col}, press);
                     if (nativeCode > 1 && press) {
                         pressed[nativeCode] = {row, col};
@@ -78,7 +76,6 @@ void QtKeypadBridge::keyEvent(QKeyEvent *event, bool press) {
 void QtKeypadBridge::releaseAll() {
     for (auto i = pressed.begin(), e = pressed.end(); i != e; i = pressed.erase(i)) {
         if (i->valid()) {
-            keypad_key_event(i->row(), i->col(), false);
             emit keyStateChanged(*i, false);
         }
     }

@@ -315,62 +315,113 @@ void KeypadWidget::paintEvent(QPaintEvent *event) {
     }
 }
 
-void KeypadWidget::changeKeyState(KeyCode keycode, bool press, bool toggleHold) {
+void KeypadWidget::changeKeyState(KeyCode keycode, bool press) {
     if (Key *key = mKeys[keycode.row()][keycode.col()]) {
         bool wasSelected = key->isSelected();
         key->setPressed(press);
-        if (toggleHold) {
-            key->toggleHeld();
-        }
-        bool selected = key->isSelected();
-        if (selected != wasSelected) {
-            update(mTransform.mapRect(key->keyGeometry()));
-            keypad_key_event(keycode.row(), keycode.col(), selected);
-            if (selected) {
-                QString out = QStringLiteral("[") + key->getLabel() + QStringLiteral("]");
-                emit keyPressed(out.simplified());
-            }
+        updateKey(key, wasSelected);
+    }
+}
+
+void KeypadWidget::updateKey(Key *key, bool wasSelected) {
+    bool selected = key->isSelected();
+    if (selected != wasSelected) {
+        update(mTransform.mapRect(key->keyGeometry()));
+        keypad_key_event(key->keycode().row(), key->keycode().col(), selected);
+        if (selected) {
+            QString out = QStringLiteral("[") + key->getLabel() + QStringLiteral("]");
+            emit keyPressed(out.simplified());
         }
     }
 }
 
-void KeypadWidget::mousePressEvent(QMouseEvent *event) {
-    QPointF point{event->localPos() * mInverseTransform};
+void KeypadWidget::mouseEvent(QMouseEvent *event) {
+    QPointF pos{event->localPos() * mInverseTransform};
     for (uint8_t row = 0; row != sRows; ++row) {
         for (uint8_t col = 0; col != sCols; ++col) {
             if (Key *key = mKeys[row][col]) {
-                if (key->accept(point)) {
-                    changeKeyState(key->keycode(), true);
+                bool wasSelected = key->isSelected();
+                if (key->accept(pos)) {
+                    updateKey(key, wasSelected);
                 }
             }
         }
     }
 }
 
-void KeypadWidget::mouseMoveEvent(QMouseEvent *event) {
-    QPointF point{event->localPos() * mInverseTransform};
+void KeypadWidget::mouseEndEvent(QMouseEvent *event) {
+    bool toggleHeld{event->button() == Qt::RightButton};
     for (uint8_t row = 0; row != sRows; ++row) {
         for (uint8_t col = 0; col != sCols; ++col) {
             if (Key *key = mKeys[row][col]) {
-                if (key->accept(point)) {
-                    changeKeyState(key->keycode(), true);
-                } else if (key->unaccept()) {
-                    changeKeyState(key->keycode(), false);
-                }
-            }
-        }
-    }
-}
-
-void KeypadWidget::mouseReleaseEvent(QMouseEvent *event) {
-    bool toggleHold{event->button() == Qt::RightButton};
-    for (uint8_t row = 0; row != sRows; ++row) {
-        for (uint8_t col = 0; col != sCols; ++col) {
-            if (Key *key = mKeys[row][col]) {
+                bool wasSelected = key->isSelected();
                 if (key->unaccept()) {
-                    changeKeyState(key->keycode(), false, toggleHold);
+                    if (toggleHeld) {
+                        key->toggleHeld();
+                    }
+                    updateKey(key, wasSelected);
                 }
             }
         }
     }
+}
+
+void KeypadWidget::touchEvent(QTouchEvent *event) {
+    for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+        Qt::TouchPointState state = point.state();
+        if (state == Qt::TouchPointStationary) {
+            continue;
+        }
+        QPointF acceptPos{point.pos() * mInverseTransform},
+            unacceptPos{state == Qt::TouchPointMoved ? point.lastPos() * mInverseTransform
+                                                     : acceptPos};
+        for (uint8_t row = 0; row != sRows; ++row) {
+            for (uint8_t col = 0; col != sCols; ++col) {
+                if (Key *key = mKeys[row][col]) {
+                    bool wasSelected = key->isSelected();
+                    if ((state != Qt::TouchPointPressed && key->unacceptTouch(unacceptPos)) ||
+                        (state != Qt::TouchPointReleased && key->acceptTouch(acceptPos))) {
+                        updateKey(key, wasSelected);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void KeypadWidget::touchEndEvent() {
+    for (uint8_t row = 0; row != sRows; ++row) {
+        for (uint8_t col = 0; col != sCols; ++col) {
+            if (Key *key = mKeys[row][col]) {
+                bool wasSelected = key->isSelected();
+                if (key->unacceptAllTouch()) {
+                    updateKey(key, wasSelected);
+                }
+            }
+        }
+    }
+}
+
+bool KeypadWidget::event(QEvent *event) {
+    switch (event->type()) {
+        case QEvent::MouseMove:
+        case QEvent::MouseButtonPress:
+            mouseEvent(static_cast<QMouseEvent *>(event));
+            break;
+        case QEvent::MouseButtonRelease:
+            mouseEndEvent(static_cast<QMouseEvent *>(event));
+            break;
+        case QEvent::TouchBegin:
+        case QEvent::TouchUpdate:
+            touchEvent(static_cast<QTouchEvent *>(event));
+            break;
+        case QEvent::TouchEnd:
+        case QEvent::TouchCancel:
+            touchEndEvent();
+            break;
+        default:
+            return QWidget::event(event);
+    }
+    event->accept();
+    return true;
 }

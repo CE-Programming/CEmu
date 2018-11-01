@@ -36,7 +36,7 @@ void ArrowKey::paint(QPainter &painter) const {
     painter.drawPath(mArrow);
 }
 
-bool ArrowKey::canAccept(const QPointF &point) {
+bool ArrowKey::canAccept(const QPointF &point) const {
     QPointF norm{point - mOuter.center()};
     qreal outerRadius = mOuter.width() * .7,
         radiusSquared = QPointF::dotProduct(norm, norm);
