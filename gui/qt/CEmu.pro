@@ -227,7 +227,9 @@ SOURCES += \
     visualizerwidget.cpp \
     debugger/visualizerdisplaywidget.cpp \
     memorywidget.cpp \
-    archive/extractor.c
+    archive/extractor.c \
+    runerbot/ops.c \
+    runerbot/parse.c
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
@@ -312,7 +314,8 @@ HEADERS  += \
     tivarslib/TypeHandlers/TypeHandlers.h \
     visualizerwidget.h \
     debugger/visualizerdisplaywidget.h \
-    archive/extractor.h
+    archive/extractor.h \
+    runerbot/runerbot.h
 
 FORMS    += \
     mainwindow.ui \
