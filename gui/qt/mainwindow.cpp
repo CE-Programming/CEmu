@@ -242,7 +242,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(&m_timerFps, &QTimer::timeout, [this]{ m_timerFpsTriggered = true; });
 
     // screen capture
-    connect(ui->buttonScreenshot, &QPushButton::clicked, this, &MainWindow::screenshot);
+    connect(ui->buttonSavePNG, &QPushButton::clicked, this, &MainWindow::screenshot);
+    connect(ui->buttonCopyPNG, &QPushButton::clicked, this, &MainWindow::lcdCopy);
     connect(ui->actionClipScreen, &QAction::triggered, this, &MainWindow::lcdCopy);
 #ifdef PNG_WRITE_APNG_SUPPORTED
     connect(ui->buttonRecordAnimated, &QPushButton::clicked, this, &MainWindow::recordAnimated);

@@ -6772,7 +6772,7 @@
               <number>6</number>
              </property>
              <item>
-              <widget class="QPushButton" name="buttonScreenshot">
+              <widget class="QPushButton" name="buttonSavePNG">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                  <horstretch>0</horstretch>
@@ -6789,7 +6789,29 @@
                 <enum>Qt::NoFocus</enum>
                </property>
                <property name="text">
-                <string>PNG</string>
+                <string>Save PNG</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="buttonCopyPNG">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>160</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="focusPolicy">
+                <enum>Qt::NoFocus</enum>
+               </property>
+               <property name="text">
+                <string>Copy PNG</string>
                </property>
               </widget>
              </item>
