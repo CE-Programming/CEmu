@@ -42,10 +42,12 @@ public slots:
     void resizeEvent(QResizeEvent *) override;
     void paintEvent(QPaintEvent *) override;
     bool event(QEvent *) override;
-    void mouseEvent(QMouseEvent *);
+    void mouseUpdateEvent(QMouseEvent *);
     void mouseEndEvent(QMouseEvent *);
-    void touchEvent(QTouchEvent *);
+    void mouseEvent(QMouseEvent *);
+    void touchUpdateEvent(QTouchEvent *);
     void touchEndEvent();
+    void touchEvent(QTouchEvent *);
 
 private:
     void updateKey(Key *, bool);

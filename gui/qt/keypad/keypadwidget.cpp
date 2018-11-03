@@ -335,7 +335,7 @@ void KeypadWidget::updateKey(Key *key, bool wasSelected) {
     }
 }
 
-void KeypadWidget::mouseEvent(QMouseEvent *event) {
+void KeypadWidget::mouseUpdateEvent(QMouseEvent *event) {
     QPointF pos{event->localPos() * mInverseTransform};
     for (uint8_t row = 0; row != sRows; ++row) {
         for (uint8_t col = 0; col != sCols; ++col) {
@@ -366,7 +366,25 @@ void KeypadWidget::mouseEndEvent(QMouseEvent *event) {
     }
 }
 
-void KeypadWidget::touchEvent(QTouchEvent *event) {
+void KeypadWidget::mouseEvent(QMouseEvent *event) {
+    if (event->source() != Qt::MouseEventNotSynthesized) {
+        event->accept();
+        return;
+    }
+    switch (event->type()) {
+        case QEvent::MouseButtonPress:
+        case QEvent::MouseMove:
+            mouseUpdateEvent(event);
+            break;
+        case QEvent::MouseButtonRelease:
+            mouseEndEvent(event);
+            break;
+        default:
+            abort();
+    }
+}
+
+void KeypadWidget::touchUpdateEvent(QTouchEvent *event) {
     for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
         Qt::TouchPointState state = point.state();
         if (state == Qt::TouchPointStationary) {
@@ -402,26 +420,40 @@ void KeypadWidget::touchEndEvent() {
     }
 }
 
-bool KeypadWidget::event(QEvent *event) {
+void KeypadWidget::touchEvent(QTouchEvent *event) {
+    if (!event->device()->capabilities().testFlag(QTouchDevice::Position)) {
+        event->ignore();
+        return;
+    }
     switch (event->type()) {
-        case QEvent::MouseMove:
-        case QEvent::MouseButtonPress:
-            mouseEvent(static_cast<QMouseEvent *>(event));
-            break;
-        case QEvent::MouseButtonRelease:
-            mouseEndEvent(static_cast<QMouseEvent *>(event));
-            break;
         case QEvent::TouchBegin:
         case QEvent::TouchUpdate:
-            touchEvent(static_cast<QTouchEvent *>(event));
+            touchUpdateEvent(event);
             break;
         case QEvent::TouchEnd:
         case QEvent::TouchCancel:
             touchEndEvent();
             break;
         default:
+            abort();
+    }
+}
+
+bool KeypadWidget::event(QEvent *event) {
+    switch (event->type()) {
+        case QEvent::MouseButtonPress:
+        case QEvent::MouseMove:
+        case QEvent::MouseButtonRelease:
+            mouseEvent(static_cast<QMouseEvent *>(event));
+            break;
+        case QEvent::TouchBegin:
+        case QEvent::TouchUpdate:
+        case QEvent::TouchEnd:
+        case QEvent::TouchCancel:
+            touchEvent(static_cast<QTouchEvent *>(event));
+            break;
+        default:
             return QWidget::event(event);
     }
-    event->accept();
     return true;
 }
