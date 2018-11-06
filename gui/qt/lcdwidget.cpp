@@ -101,6 +101,7 @@ void LCDWidget::mousePressEvent(QMouseEvent *e) {
         QPixmap mymap = QPixmap::fromImage(image);
         QString path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_") + randomString(5) + QStringLiteral(".png");
         image.save(path, "PNG", 0);
+        mimeData->setImageData(image);
         mimeData->setUrls(QList<QUrl>() << QUrl::fromLocalFile(path));
         drag->setMimeData(mimeData);
         drag->setHotSpot(e->pos());
