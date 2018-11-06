@@ -93,6 +93,25 @@ QImage LCDWidget::getImage() {
     return ret;
 }
 
+void LCDWidget::mousePressEvent(QMouseEvent *e) {
+    if (e->button() == Qt::LeftButton && (control.ports[5] & 1 << 4)) {
+        QDrag *drag = new QDrag(this);
+        QMimeData *mimeData = new QMimeData;
+        QImage image = getImage();
+        QPixmap mymap = QPixmap::fromImage(image);
+        QString path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_") + randomString(5) + QStringLiteral(".png");
+        image.save(path, "PNG", 0);
+        mimeData->setUrls(QList<QUrl>() << QUrl::fromLocalFile(path));
+        drag->setMimeData(mimeData);
+        drag->setHotSpot(e->pos());
+        drag->setPixmap(mymap);
+        drag->exec(Qt::CopyAction | Qt::MoveAction);
+        e->accept();
+    } else {
+        e->ignore();
+    }
+}
+
 double LCDWidget::refresh() {
     unsigned int msNFramesAgo = m_array[m_index];
     m_array[m_index] = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();

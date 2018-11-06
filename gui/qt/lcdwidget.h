@@ -31,6 +31,7 @@ protected:
     virtual void dragEnterEvent(QDragEnterEvent*) Q_DECL_OVERRIDE;
     virtual void dragLeaveEvent(QDragLeaveEvent*) Q_DECL_OVERRIDE;
     virtual void dragMoveEvent(QDragMoveEvent*) Q_DECL_OVERRIDE;
+    virtual void mousePressEvent(QMouseEvent*) Q_DECL_OVERRIDE;
 
 signals:
     void sendROM(const QString& romPath);
