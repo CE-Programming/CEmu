@@ -60,7 +60,7 @@ public:
         ++mSelected;
     }
     void release() {
-        assert(mPressed);
+        assert(mSelected);
         --mSelected;
     }
 
