@@ -1,5 +1,7 @@
 #include "arrowkey.h"
 
+#include <QtGui/QVector2D>
+
 #include <cmath>
 
 qreal ArrowKey::computeAngle(const QRect &bounds, int gap) {
@@ -36,10 +38,9 @@ void ArrowKey::paint(QPainter &painter) const {
     painter.drawPath(mArrow);
 }
 
-bool ArrowKey::canAccept(const QPointF &point) const {
-    QPointF norm{point - mOuter.center()};
-    qreal outerRadius = mOuter.width() * .7,
-        radiusSquared = QPointF::dotProduct(norm, norm);
-    return radiusSquared <= outerRadius * outerRadius &&
-        (static_cast<int>((2 * M_2_PI * std::atan2(norm.y(), norm.x()) + 9.5) + mOffset) & 7) < 3;
+bool ArrowKey::isUnder(const QPainterPath &area) const {
+    QVector2D offset{area.controlPointRect().center() - mOuter.center()};
+    qreal outerRadius = mOuter.width() * .7;
+    return offset.lengthSquared() <= outerRadius * outerRadius &&
+        (static_cast<int>((2 * M_2_PI * std::atan2(offset.y(), offset.x()) + 9.5) + mOffset) & 7) < 3;
 }

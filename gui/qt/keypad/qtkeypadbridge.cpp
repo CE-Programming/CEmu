@@ -74,11 +74,12 @@ void QtKeypadBridge::keyEvent(QKeyEvent *event, bool press) {
 }
 
 void QtKeypadBridge::releaseAll() {
-    for (auto i = pressed.begin(), e = pressed.end(); i != e; i = pressed.erase(i)) {
-        if (i->valid()) {
-            emit keyStateChanged(*i, false);
+    for (KeyCode code : pressed) {
+        if (code.valid()) {
+            emit keyStateChanged(code, false);
         }
     }
+    pressed.clear();
 }
 
 bool QtKeypadBridge::eventFilter(QObject *obj, QEvent *e){

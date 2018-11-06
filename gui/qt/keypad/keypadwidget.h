@@ -4,13 +4,16 @@
 #include "keyconfig.h"
 #include "key.h"
 
+#include <QtCore/QList>
+#include <QtCore/QMultiHash>
+#include <QtCore/QSet>
+#include <QtGui/QTouchEvent>
 #include <QtWidgets/QWidget>
 QT_BEGIN_NAMESPACE
 class QResizeEvent;
 class QPaintEvent;
 class QEvent;
 class QMouseEvent;
-class QTouchEvent;
 QT_END_NAMESPACE
 
 enum keypad_colors { KEYPAD_BLACK=0, KEYPAD_WHITE, KEYPAD_TRUE_BLUE, KEYPAD_DENIM, KEYPAD_SILVER, KEYPAD_PINK, KEYPAD_PLUM, KEYPAD_RED, KEYPAD_LIGHTNING, KEYPAD_GOLDEN, KEYPAD_SPACEGREY, KEYPAD_CORAL, KEYPAD_MINT, KEYPAD_ROSEGOLD, KEYPAD_CRYSTALCLEAR };
@@ -39,19 +42,19 @@ signals:
 public slots:
     void changeKeyState(KeyCode keycode, bool press);
 
-    void resizeEvent(QResizeEvent *) override;
-    void paintEvent(QPaintEvent *) override;
-    bool event(QEvent *) override;
-    void mouseUpdateEvent(QMouseEvent *);
-    void mouseEndEvent(QMouseEvent *);
-    void mouseEvent(QMouseEvent *);
-    void touchUpdateEvent(QTouchEvent *);
-    void touchEndEvent();
-    void touchEvent(QTouchEvent *);
+    void resizeEvent(QResizeEvent *event) override;
+    void paintEvent(QPaintEvent *event) override;
+    bool event(QEvent *event) override;
+    void mouseUpdate(QPointF pos);
+    void mouseEnd(bool toggleHeld);
+    void mouseEvent(QMouseEvent *event);
+    void touchUpdate(const QList<QTouchEvent::TouchPoint> &points);
+    void touchEnd();
+    void touchEvent(QTouchEvent *event);
 
 private:
-    void updateKey(Key *, bool);
-    void addKey(Key *);
+    void updateKey(Key *key, bool);
+    void addKey(Key *key);
 
     unsigned int color = KEYPAD_BLACK;
     QColor cclrBackground;
@@ -62,6 +65,8 @@ private:
     QLinearGradient mBackground;
     QTransform mTransform, mInverseTransform;
     Key *mKeys[sRows][sCols];
+    QSet<KeyCode> mClicked;
+    QMultiHash<int, KeyCode> mTouched;
 #ifndef Q_OS_WIN
     int fontId = -2;
 #endif

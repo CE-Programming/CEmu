@@ -8,11 +8,13 @@
 #include <QtGui/QPainter>
 #include <QtGui/QPainterPath>
 
+#include <assert.h>
+
 class Key {
 public:
     Key(KeyCode keycode, const QRect &textGeometry, const QRect &keyGeometry, const QColor &keyColor) :
         mTextGeometry{textGeometry}, mKeyGeometry{keyGeometry}, mKeyColor{keyColor},
-        mKeycode{keycode}, mAcceptedTouch{}, mPressed{}, mHeld{}, mAccepted{} {}
+        mSelected{}, mKeycode{keycode}, mHeld{}, mPressed{} {}
     virtual ~Key() {}
 
     const QString getLabel() const { return mLabelText; }
@@ -21,10 +23,16 @@ public:
     const KeyCode keycode() const { return mKeycode; }
     bool isPressed() const { return mPressed; }
     bool isHeld() const { return mHeld; }
-    bool isSelected() const { return isPressed() || isHeld() || mAccepted || mAcceptedTouch; }
+    bool isSelected() const { return mSelected; }
 
-    void setPressed(bool pressed) { mPressed = pressed; }
-    void toggleHeld() { mHeld = !mHeld; }
+    void setPressed(bool pressed) {
+        if (mPressed != pressed) {
+            pressOrRelease(mPressed = pressed);
+        }
+    }
+    void toggleHeld() {
+        pressOrRelease(mHeld = !mHeld);
+    }
 
     virtual void paint(QPainter &painter) const {
         painter.setBrush(mKeyColor);
@@ -35,50 +43,39 @@ public:
             painter.drawPath(mKeyShape);
         }
     }
-    bool accept(const QPointF &pos) {
-        if (!canAccept(pos)) {
-            return unaccept();
+    bool isUnder(const QPointF &center, qreal radius = {}) const {
+        QPainterPath circle{center};
+        circle.addEllipse(center, radius, radius);
+        return isUnder(circle);
+    }
+    void pressOrRelease(bool isPress) {
+        if (isPress) {
+            press();
+        } else {
+            release();
         }
-        bool wasAccepted = mAccepted;
-        mAccepted = true;
-        return !wasAccepted;
     }
-    bool unaccept() {
-        bool wasAccepted = mAccepted;
-        mAccepted = false;
-        return wasAccepted;
+    void press() {
+        assert(static_cast<decltype(mSelected)>(mSelected + 1));
+        ++mSelected;
     }
-    bool acceptTouch(const QPointF &pos) {
-        if (!canAccept(pos)) {
-            return false;
-        }
-        return !mAcceptedTouch++;
-    }
-    bool unacceptTouch(const QPointF &pos) {
-        if (!canAccept(pos)) {
-            return false;
-        }
-        return !--mAcceptedTouch;
-    }
-    bool unacceptAllTouch() {
-        bool wasAcceptedTouch = mAcceptedTouch;
-        mAcceptedTouch = 0;
-        return wasAcceptedTouch;
+    void release() {
+        assert(mPressed);
+        --mSelected;
     }
 
 protected:
-    virtual bool canAccept(const QPointF &) const = 0;
+    virtual bool isUnder(const QPainterPath &area) const = 0;
     QString mLabelText;
     QPainterPath mKeyShape;
 
 private:
     QRect mTextGeometry, mKeyGeometry;
     QColor mKeyColor;
+    unsigned mSelected;
     const KeyCode mKeycode;
-    unsigned mAcceptedTouch;
-    bool mPressed  : 1;
-    bool mHeld     : 1;
-    bool mAccepted : 1;
+    bool mHeld;
+    bool mPressed;
 };
 
 #endif

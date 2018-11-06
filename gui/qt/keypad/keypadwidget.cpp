@@ -315,8 +315,8 @@ void KeypadWidget::paintEvent(QPaintEvent *event) {
     }
 }
 
-void KeypadWidget::changeKeyState(KeyCode keycode, bool press) {
-    if (Key *key = mKeys[keycode.row()][keycode.col()]) {
+void KeypadWidget::changeKeyState(KeyCode code, bool press) {
+    if (Key *key = mKeys[code.row()][code.col()]) {
         bool wasSelected = key->isSelected();
         key->setPressed(press);
         updateKey(key, wasSelected);
@@ -335,35 +335,38 @@ void KeypadWidget::updateKey(Key *key, bool wasSelected) {
     }
 }
 
-void KeypadWidget::mouseUpdateEvent(QMouseEvent *event) {
-    QPointF pos{event->localPos() * mInverseTransform};
+void KeypadWidget::mouseUpdate(QPointF pos) {
+    pos = pos * mInverseTransform;
     for (uint8_t row = 0; row != sRows; ++row) {
         for (uint8_t col = 0; col != sCols; ++col) {
             if (Key *key = mKeys[row][col]) {
                 bool wasSelected = key->isSelected();
-                if (key->accept(pos)) {
-                    updateKey(key, wasSelected);
+                if (key->isUnder(pos)) {
+                    if (!mClicked.contains(key->keycode())) {
+                        mClicked.insert(key->keycode());
+                        key->press();
+                    }
+                } else if (mClicked.remove(key->keycode())) {
+                    key->release();
                 }
+                updateKey(key, wasSelected);
             }
         }
     }
 }
 
-void KeypadWidget::mouseEndEvent(QMouseEvent *event) {
-    bool toggleHeld{event->button() == Qt::RightButton};
-    for (uint8_t row = 0; row != sRows; ++row) {
-        for (uint8_t col = 0; col != sCols; ++col) {
-            if (Key *key = mKeys[row][col]) {
-                bool wasSelected = key->isSelected();
-                if (key->unaccept()) {
-                    if (toggleHeld) {
-                        key->toggleHeld();
-                    }
-                    updateKey(key, wasSelected);
-                }
+void KeypadWidget::mouseEnd(bool toggleHeld) {
+    for (KeyCode code : mClicked) {
+        if (Key *key = mKeys[code.row()][code.col()]) {
+            bool wasSelected = key->isSelected();
+            key->release();
+            if (toggleHeld) {
+                key->toggleHeld();
             }
+            updateKey(key, wasSelected);
         }
     }
+    mClicked.clear();
 }
 
 void KeypadWidget::mouseEvent(QMouseEvent *event) {
@@ -374,50 +377,50 @@ void KeypadWidget::mouseEvent(QMouseEvent *event) {
     switch (event->type()) {
         case QEvent::MouseButtonPress:
         case QEvent::MouseMove:
-            mouseUpdateEvent(event);
+            mouseUpdate(event->localPos());
             break;
         case QEvent::MouseButtonRelease:
-            mouseEndEvent(event);
+            mouseEnd(event->button() == Qt::RightButton);
             break;
         default:
             abort();
     }
 }
 
-void KeypadWidget::touchUpdateEvent(QTouchEvent *event) {
-    for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-        Qt::TouchPointState state = point.state();
-        if (state == Qt::TouchPointStationary) {
-            continue;
-        }
-        QPointF acceptPos{point.pos() * mInverseTransform},
-            unacceptPos{state == Qt::TouchPointMoved ? point.lastPos() * mInverseTransform
-                                                     : acceptPos};
-        for (uint8_t row = 0; row != sRows; ++row) {
-            for (uint8_t col = 0; col != sCols; ++col) {
-                if (Key *key = mKeys[row][col]) {
-                    bool wasSelected = key->isSelected();
-                    if ((state != Qt::TouchPointPressed && key->unacceptTouch(unacceptPos)) ||
-                        (state != Qt::TouchPointReleased && key->acceptTouch(acceptPos))) {
-                        updateKey(key, wasSelected);
+void KeypadWidget::touchUpdate(const QList<QTouchEvent::TouchPoint> &points) {
+    for (uint8_t row = 0; row != sRows; ++row) {
+        for (uint8_t col = 0; col != sCols; ++col) {
+            if (Key *key = mKeys[row][col]) {
+                bool wasSelected = key->isSelected();
+                for (const QTouchEvent::TouchPoint &point : points) {
+                    if (point.state() == Qt::TouchPointStationary) {
+                        continue;
+                    }
+                    if (point.state() != Qt::TouchPointReleased &&
+                        key->isUnder(point.pos() * mInverseTransform)) {
+                        if (!mTouched.contains(point.id(), key->keycode())) {
+                            mTouched.insert(point.id(), key->keycode());
+                            key->press();
+                        }
+                    } else if (mTouched.remove(point.id(), key->keycode())) {
+                        key->release();
                     }
                 }
+                updateKey(key, wasSelected);
             }
         }
     }
 }
 
-void KeypadWidget::touchEndEvent() {
-    for (uint8_t row = 0; row != sRows; ++row) {
-        for (uint8_t col = 0; col != sCols; ++col) {
-            if (Key *key = mKeys[row][col]) {
-                bool wasSelected = key->isSelected();
-                if (key->unacceptAllTouch()) {
-                    updateKey(key, wasSelected);
-                }
-            }
+void KeypadWidget::touchEnd() {
+    for (KeyCode code : mTouched) {
+        if (Key *key = mKeys[code.row()][code.col()]) {
+            bool wasSelected = key->isSelected();
+            key->release();
+            updateKey(key, wasSelected);
         }
     }
+    mTouched.clear();
 }
 
 void KeypadWidget::touchEvent(QTouchEvent *event) {
@@ -428,11 +431,11 @@ void KeypadWidget::touchEvent(QTouchEvent *event) {
     switch (event->type()) {
         case QEvent::TouchBegin:
         case QEvent::TouchUpdate:
-            touchUpdateEvent(event);
+            touchUpdate(event->touchPoints());
             break;
         case QEvent::TouchEnd:
         case QEvent::TouchCancel:
-            touchEndEvent();
+            touchEnd();
             break;
         default:
             abort();

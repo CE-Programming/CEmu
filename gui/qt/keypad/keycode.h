@@ -1,6 +1,8 @@
 #ifndef KEYCODE_H
 #define KEYCODE_H
 
+#include <QtCore/QHashFunctions>
+
 struct KeyCode {
     KeyCode() : mCode(~0) {}
     KeyCode(unsigned code) : mCode(code) {}
@@ -14,6 +16,9 @@ struct KeyCode {
 
     bool operator==(KeyCode other) const { return code() == other.code(); }
     bool operator!=(KeyCode other) const { return !(*this == other); }
+    friend uint qHash(KeyCode code, uint seed = 0) {
+        return qHash(code.code(), seed);
+    }
 
 private:
     unsigned char mCode;
