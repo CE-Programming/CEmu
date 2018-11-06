@@ -14,10 +14,8 @@ public:
     ArrowKey(KeyConfig &config, const QRect &outer, const QRect &inner,
              int offset, const QString &labelText, qreal gap = 2);
 
-    void paint(QPainter &) const override;
-
-protected:
-    bool isUnder(const QPainterPath &) const override;
+    void paint(QPainter &painter) const override;
+    bool isUnder(const QPainterPath &area) const override;
 
 private:
     static qreal computeAngle(const QRect &, int);

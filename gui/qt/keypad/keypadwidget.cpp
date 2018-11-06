@@ -335,13 +335,13 @@ void KeypadWidget::updateKey(Key *key, bool wasSelected) {
     }
 }
 
-void KeypadWidget::mouseUpdate(QPointF pos) {
-    pos = pos * mInverseTransform;
+void KeypadWidget::mouseUpdate(const QPointF &pos) {
+    const QPainterPath area{pos * mInverseTransform};
     for (uint8_t row = 0; row != sRows; ++row) {
         for (uint8_t col = 0; col != sCols; ++col) {
             if (Key *key = mKeys[row][col]) {
                 bool wasSelected = key->isSelected();
-                if (key->isUnder(pos)) {
+                if (key->isUnder(area)) {
                     if (!mClicked.contains(key->keycode())) {
                         mClicked.insert(key->keycode());
                         key->press();
@@ -396,8 +396,22 @@ void KeypadWidget::touchUpdate(const QList<QTouchEvent::TouchPoint> &points) {
                     if (point.state() == Qt::TouchPointStationary) {
                         continue;
                     }
-                    if (point.state() != Qt::TouchPointReleased &&
-                        key->isUnder(point.pos() * mInverseTransform)) {
+                    QRectF ellipse;
+                    ellipse.setSize(point.ellipseDiameters());
+                    ellipse.moveCenter(point.pos());
+                    ellipse = mInverseTransform.mapRect(ellipse);
+                    if (ellipse.isEmpty()) {
+                        ellipse += {4, 4, 4, 4};
+                    }
+                    QPainterPath area;
+                    area.addEllipse(ellipse);
+                    if (point.rotation()) {
+                        area = area * QTransform::fromTranslate(ellipse.center().x(),
+                                                                ellipse.center().y()).
+                            rotate(point.rotation()).
+                            translate(-ellipse.center().x(), -ellipse.center().y());
+                    }
+                    if (point.state() != Qt::TouchPointReleased && key->isUnder(area)) {
                         if (!mTouched.contains(point.id(), key->keycode())) {
                             mTouched.insert(point.id(), key->keycode());
                             key->press();

@@ -39,8 +39,12 @@ void ArrowKey::paint(QPainter &painter) const {
 }
 
 bool ArrowKey::isUnder(const QPainterPath &area) const {
-    QVector2D offset{area.controlPointRect().center() - mOuter.center()};
-    qreal outerRadius = mOuter.width() * .7;
-    return offset.lengthSquared() <= outerRadius * outerRadius &&
-        (static_cast<int>((2 * M_2_PI * std::atan2(offset.y(), offset.x()) + 9.5) + mOffset) & 7) < 3;
+    QPainterPath key;
+    key.addEllipse(mOuter);
+    if (!key.intersects(area) || !area.elementCount()) {
+        return false;
+    }
+    QPointF center{area.isEmpty() ? area.elementAt(0) : area.controlPointRect().center()};
+    QVector2D offset{center - mOuter.center()};
+    return (static_cast<int>((2*M_2_PI * std::atan2(offset.y(), offset.x()) + 9.5) + mOffset) & 7) < 3;
 }

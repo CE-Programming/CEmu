@@ -45,7 +45,7 @@ public slots:
     void resizeEvent(QResizeEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
     bool event(QEvent *event) override;
-    void mouseUpdate(QPointF pos);
+    void mouseUpdate(const QPointF &pos);
     void mouseEnd(bool toggleHeld);
     void mouseEvent(QMouseEvent *event);
     void touchUpdate(const QList<QTouchEvent::TouchPoint> &points);

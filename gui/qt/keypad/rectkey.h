@@ -53,11 +53,10 @@ public:
             Qt::Alignment secondAlign = Qt::AlignVCenter | Qt::AlignLeft,
             Qt::Alignment alphaAlign  = Qt::AlignVCenter | Qt::AlignRight);
 
-    void paint(QPainter &) const override;
-
-protected:
+    void paint(QPainter &painter) const override;
     bool isUnder(const QPainterPath &area) const override;
 
+protected:
     QColor mTextColor, mSecondColor, mAlphaColor;
     Qt::Alignment mLabelAlign, mSecondAlign, mAlphaAlign;
     QFont mLabelFont, mSecondFont, mAlphaFont;

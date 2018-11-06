@@ -43,11 +43,7 @@ public:
             painter.drawPath(mKeyShape);
         }
     }
-    bool isUnder(const QPointF &center, qreal radius = {}) const {
-        QPainterPath circle{center};
-        circle.addEllipse(center, radius, radius);
-        return isUnder(circle);
-    }
+    virtual bool isUnder(const QPainterPath &area) const = 0;
     void pressOrRelease(bool isPress) {
         if (isPress) {
             press();
@@ -65,7 +61,6 @@ public:
     }
 
 protected:
-    virtual bool isUnder(const QPainterPath &area) const = 0;
     QString mLabelText;
     QPainterPath mKeyShape;
 
