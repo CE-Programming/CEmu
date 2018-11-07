@@ -397,7 +397,7 @@ void KeypadWidget::touchUpdate(const QList<QTouchEvent::TouchPoint> &points) {
                         continue;
                     }
                     if (point.state() != Qt::TouchPointReleased &&
-                        key->isUnder(point.pos() * mInverseTransform)) {
+                        key->isUnder(point.pos() * mInverseTransform, 4)) {
                         if (!mTouched.contains(point.id(), key->keycode())) {
                             mTouched.insert(point.id(), key->keycode());
                             key->press();
