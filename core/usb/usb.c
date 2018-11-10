@@ -19,10 +19,10 @@ static void usb_update(void) {
                          ( (usb.regs.gisr = (usb.regs.gisr2 & ~usb.regs.gimr2 ? GISR_GRP2 : 0) |
                                             (usb.regs.gisr1 & ~usb.regs.gimr1 ? GISR_GRP1 : 0) |
                                             (usb.regs.gisr0 & ~usb.regs.gimr0 ? GISR_GRP0 : 0) )
-                                               & ~usb.regs.gimr        ? ISR_DEV  : 0) |
+                                               & ~usb.regs.gimr &&
+                           usb.regs.dev_ctrl   & DEVCTRL_GIRQ_EN       ? ISR_DEV  : 0) |
                          (usb.regs.otgisr      & usb.regs.otgier       ? ISR_OTG  : 0) |
-                         (usb.regs.hcor.usbsts & usb.regs.hcor.usbintr ? ISR_HOST : 0) ) & ~usb.regs.imr
-               && usb.regs.dev_ctrl & DEVCTRL_GIRQ_EN);
+                         (usb.regs.hcor.usbsts & usb.regs.hcor.usbintr ? ISR_HOST : 0) ) & ~usb.regs.imr);
 }
 void usb_host_int(uint8_t which) {
     usb.regs.hcor.usbsts |= which & 0x3F;
