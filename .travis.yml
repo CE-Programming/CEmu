@@ -3,13 +3,13 @@ language: cpp
 branches:
   only:
     - master
+    - latest-stable
     - coverity_scan
     - gh-pages-dev
     - website-dev
 
-sudo: false
 os: linux
-dist: trusty
+dist: xenial
 
 env:
   - PATH=/opt/qt56/bin:/usr/local/opt/qt5/bin:$PATH
@@ -17,11 +17,8 @@ env:
 addons:
   apt:
     sources:
-      - sourceline: 'ppa:beineri/opt-qt563-trusty'
-      - sourceline: 'ppa:ubuntu-toolchain-r/test'
+      - sourceline: 'ppa:beineri/opt-qt563-xenial'
     packages:
-      - gcc-5
-      - g++-5
       - qt56base
       - libgl1-mesa-dev
       - libarchive-dev
@@ -30,11 +27,11 @@ script:
   - cd gui/qt/capture ; bash ./get_libpng-apng.sh ; cd ../../../
   - mkdir build
   - cd build
-  - qmake ../gui/qt && make -j4 CC=gcc-5 CXX=g++-5 LINK=g++-5
+  - qmake ../gui/qt && make -j4
   - cd ../core
-  - make clean && make -j4 CC=gcc-5 CXX=g++-5 LINK=g++-5 CPPFLAGS="-DMULTITHREAD" all
+  - make clean && make -j4 CPPFLAGS="-DMULTITHREAD" all
   - cd ../tests/autotester
-  - make clean && make -j4 CC=gcc-5 CXX=g++-5 LINK=g++-5 CPPFLAGS="-DMULTITHREAD" all
+  - make clean && make -j4 CPPFLAGS="-DMULTITHREAD" all
 
 notifications:
   irc:
