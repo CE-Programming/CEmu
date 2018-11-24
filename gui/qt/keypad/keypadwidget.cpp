@@ -397,7 +397,9 @@ void KeypadWidget::touchUpdate(const QList<QTouchEvent::TouchPoint> &points) {
                         continue;
                     }
                     QRectF ellipse;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 9, 0)
                     ellipse.setSize(point.ellipseDiameters());
+#endif
                     ellipse.moveCenter(point.pos());
                     ellipse = mInverseTransform.mapRect(ellipse);
                     if (ellipse.isEmpty()) {
@@ -405,12 +407,14 @@ void KeypadWidget::touchUpdate(const QList<QTouchEvent::TouchPoint> &points) {
                     }
                     QPainterPath area;
                     area.addEllipse(ellipse);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 9, 0)
                     if (point.rotation()) {
                         area = area * QTransform::fromTranslate(ellipse.center().x(),
                                                                 ellipse.center().y()).
                             rotate(point.rotation()).
                             translate(-ellipse.center().x(), -ellipse.center().y());
                     }
+#endif
                     if (point.state() != Qt::TouchPointReleased && key->isUnder(area)) {
                         if (!mTouched.contains(point.id(), key->keycode())) {
                             mTouched.insert(point.id(), key->keycode());
