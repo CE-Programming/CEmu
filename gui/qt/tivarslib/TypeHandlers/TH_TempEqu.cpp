@@ -21,9 +21,14 @@ namespace tivars
     std::string TH_TempEqu::makeStringFromData(const data_t& data, const options_t& options)
     {
         (void)options;
+        
+        if (data.size() < 2)
+        {
+            throw std::invalid_argument("Invalid data array. Missing the 2 initial bytes.");
+        }
 
-        const ssize_t writtenSize = (data[0] & 0xFF) + ((data[1] & 0xFF) << 8);
-        const ssize_t dataSize    = data.size() - 2;
+        const size_t writtenSize = (data[0] & 0xFF) + ((data[1] & 0xFF) << 8);
+        const size_t dataSize    = data.size() - 2;
 
         if (dataSize < 6)
         {
