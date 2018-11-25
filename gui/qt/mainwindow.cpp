@@ -487,6 +487,10 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
         consoleModified();
     }
 
+    // server name
+    console(QStringLiteral("[CEmu] Initialized Server [") + opts.idString +
+            QStringLiteral(" | ") + com.getServerName() + QStringLiteral("]\n"));
+
     m_dir.setPath(m_config->value(SETTING_CURRENT_DIR, appDir().path()).toString());
 
     if (!m_config->contains(SETTING_IMAGE_PATH) || m_portable) {
@@ -2173,8 +2177,8 @@ void MainWindow::disasmLine() {
 
     if (disasm.base != disasm.next) {
         disasm.base = disasm.next;
-        if (disasm.map.count(disasm.next)) {
-            range = disasm.map.equal_range(disasm.next);
+        if (disasm.map.count(static_cast<uint32_t>(disasm.next))) {
+            range = disasm.map.equal_range(static_cast<uint32_t>(disasm.next));
 
             numLines = 0;
             for (sit = range.first;  sit != range.second;  ++sit) {
@@ -2200,7 +2204,7 @@ void MainWindow::disasmLine() {
     }
 
     if (useLabel) {
-        range = disasm.map.equal_range(disasm.next);
+        range = disasm.map.equal_range(static_cast<uint32_t>(disasm.next));
         sit = range.first;
     }
 
@@ -2213,7 +2217,7 @@ void MainWindow::disasmLine() {
         if (useLabel) {
             if (disasm.base > 511 || (disasm.base < 512 && sit->second[0] == '_')) {
                 line = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b>     %2</pre>"))
-                                        .arg(int2hex(disasm.base, 6),
+                                        .arg(int2hex(static_cast<uint32_t>(disasm.base), 6),
                                              QString::fromStdString(disasm.bold_sym ? "<b>" + sit->second + "</b>" : sit->second) + ":");
 
                 m_disasm->appendHtml(line);
@@ -2235,7 +2239,7 @@ void MainWindow::disasmLine() {
                                   .replace(QRegularExpression(QStringLiteral("([()])")), QStringLiteral("<font color='#600'>\\1</font>"));            // parentheses
 
             line = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2 %3  <font color='darkblue'>%4</font> %5</pre>"))
-                           .arg(disasm.addr ? int2hex(disasm.base, 6) : QString(), symbols,
+                           .arg(disasm.addr ? int2hex(static_cast<uint32_t>(disasm.base), 6) : QString(), symbols,
                                 disasm.bytes ? QString::fromStdString(disasm.instr.data).leftJustified(12, ' ') : QStringLiteral(" "),
                                 QString::fromStdString(disasm.instr.opcode),
                                 highlighted);
@@ -2409,7 +2413,6 @@ void MainWindow::contextConsole(const QPoint &posa) {
 bool MainWindow::ipcSetup() {
     // start the main communictions
     if (com.ipcSetup(opts.idString, opts.pidString)) {
-        console(QStringLiteral("[CEmu] Initialized Server [") + opts.idString + QStringLiteral(" | ") + com.getServerName() + QStringLiteral("]\n"));
         return true;
     }
 
