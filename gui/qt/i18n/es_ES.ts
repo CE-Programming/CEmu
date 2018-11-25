@@ -11,17 +11,17 @@
     <message>
         <location filename="../basiccodeviewerwindow.ui" line="49"/>
         <source>Highlight</source>
-        <translation type="unfinished"></translation>
+        <translation>Destacar</translation>
     </message>
     <message>
         <location filename="../basiccodeviewerwindow.ui" line="75"/>
         <source>Wrap lines</source>
-        <translation type="unfinished"></translation>
+        <translation>Ajuste de texto</translation>
     </message>
     <message>
         <location filename="../basiccodeviewerwindow.ui" line="98"/>
         <source>Reformat</source>
-        <translation type="unfinished"></translation>
+        <translation>Reformatear</translation>
     </message>
 </context>
 <context>
@@ -1273,12 +1273,12 @@
     <message>
         <location filename="../mainwindow.ui" line="6792"/>
         <source>Save PNG</source>
-        <translation type="unfinished"></translation>
+        <translation>Guardar PNG</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6814"/>
         <source>Copy PNG</source>
-        <translation type="unfinished"></translation>
+        <translation>Copiar PNG</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6830"/>
@@ -1713,7 +1713,7 @@ CEmu usa una interfaz de pantalla personalizable. Arrastra y suelta para mover p
     <message>
         <location filename="../mainwindow.cpp" line="1739"/>
         <source>Empty</source>
-        <translation type="unfinished"></translation>
+        <translation>Vacío</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1742"/>
@@ -1866,12 +1866,12 @@ El modo portátil ha sido activado.</translation>
     <message>
         <location filename="../mainwindow.cpp" line="1103"/>
         <source>Select RAM image to load</source>
-        <translation type="unfinished"></translation>
+        <translation>Seleccionar imagen de RAM</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1105"/>
         <source>RAM images (*.ram);;All files (*.*)</source>
-        <translation type="unfinished"></translation>
+        <translation>Imagen de RAM (*.ram);;Todos los archivos (*.*)</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1134"/>
@@ -2231,7 +2231,8 @@ Archivo: </translation>
         <location filename="../sendinghandler.cpp" line="51"/>
         <source>Could not create the temporary directory to extract the archive.
 File: </source>
-        <translation type="unfinished"></translation>
+        <translation>No se pudo crear el directorio temporal para extraer el archivo
+Archivo: </translation>
     </message>
 </context>
 <context>
