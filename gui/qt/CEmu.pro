@@ -103,7 +103,10 @@ if (!win32-msvc*) {
     # TODO: add equivalent flags
     # Example for -Werror=shadow: /weC4456 /weC4457 /weC4458 /weC4459
     #     Source: https://connect.microsoft.com/VisualStudio/feedback/details/1355600/
-    QMAKE_CXXFLAGS  += /Wall
+    # /wd5045: disable C5045
+    #          (new warning that causes errors: "Compiler will insert Spectre mitigation
+    #          for memory load if /Qspectre switch specified")
+    QMAKE_CXXFLAGS  += /Wall /wd5045
 
     # Add -MP to enable speedier builds
     QMAKE_CXXFLAGS += /MP
