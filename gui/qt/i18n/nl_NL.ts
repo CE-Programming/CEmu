@@ -11,17 +11,17 @@
     <message>
         <location filename="../basiccodeviewerwindow.ui" line="49"/>
         <source>Highlight</source>
-        <translation type="unfinished"></translation>
+        <translation>Markeren</translation>
     </message>
     <message>
         <location filename="../basiccodeviewerwindow.ui" line="75"/>
         <source>Wrap lines</source>
-        <translation type="unfinished"></translation>
+        <translation>Lijnen afbreken</translation>
     </message>
     <message>
         <location filename="../basiccodeviewerwindow.ui" line="98"/>
         <source>Reformat</source>
-        <translation type="unfinished"></translation>
+        <translation>Herformatteren</translation>
     </message>
 </context>
 <context>
@@ -903,7 +903,7 @@
     <message>
         <location filename="../mainwindow.ui" line="3421"/>
         <source>Autoloads any .inc, .map, or .lab found when transferring files </source>
-        <translation>Automatisch alle .inc, .map of .lab bestanden laden</translation>
+        <translation>Automatisch alle .inc, .map of .lab bestanden laden wanneer bestanden worden overgedragen </translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="3424"/>
@@ -1133,12 +1133,12 @@
     <message>
         <location filename="../mainwindow.ui" line="6792"/>
         <source>Save PNG</source>
-        <translation type="unfinished"></translation>
+        <translation>PNG opslaan</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6814"/>
         <source>Copy PNG</source>
-        <translation type="unfinished"></translation>
+        <translation>PNG kopiëren</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8259"/>
@@ -1611,7 +1611,9 @@ CEmu uses a customizable dock-style interface. Drag and drop to move tabs and wi
 (Notice: depending on your version, you can drag grouped tabs or an individual tab from their title or tab bar, respectively)</source>
         <translation>Welkom!
 
-CEmu maakt gebruik van een aanpasbare dock-style interface. Verplaats de tabs en windows op het scherm en kies welke docks er beschikbaar zijn via het &apos;Docks&apos; menu in de menubalk. Zorg ervoor dat &apos;UI bewerk-modus&apos; is geselecteerd wanneer u de interface aanpast. Veel plezier!</translation>
+CEmu maakt gebruik van een aanpasbare dock-style interface. Verplaats de tabs en windows op het scherm en kies welke docks er beschikbaar zijn via het &apos;Docks&apos; menu in de menubalk. Zorg ervoor dat &apos;UI bewerk-modus&apos; is geselecteerd wanneer u de interface aanpast. Veel plezier!
+
+(Let op: afhankelijk van uw versie kan u gegroepeerde tabbladen of een individuele tabblad slepen via de titel of bovenste balk)</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="564"/>
@@ -1651,12 +1653,12 @@ CEmu maakt gebruik van een aanpasbare dock-style interface. Verplaats de tabs en
     <message>
         <location filename="../mainwindow.cpp" line="1103"/>
         <source>Select RAM image to load</source>
-        <translation type="unfinished"></translation>
+        <translation>RAM bestand selecteren om te laden</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1105"/>
         <source>RAM images (*.ram);;All files (*.*)</source>
-        <translation type="unfinished"></translation>
+        <translation>RAM-bestanden (*.ram);;Alle bestanden (*.*)</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1374"/>
@@ -1726,7 +1728,7 @@ CEmu maakt gebruik van een aanpasbare dock-style interface. Verplaats de tabs en
     <message>
         <location filename="../mainwindow.cpp" line="1739"/>
         <source>Empty</source>
-        <translation type="unfinished"></translation>
+        <translation>Leeg</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1742"/>
@@ -2228,7 +2230,8 @@ Bestand: </translation>
         <location filename="../sendinghandler.cpp" line="51"/>
         <source>Could not create the temporary directory to extract the archive.
 File: </source>
-        <translation type="unfinished"></translation>
+        <translation>Kon geen tijdelijke map maken om het archief uit te pakken.
+Bestand: </translation>
     </message>
 </context>
 <context>
