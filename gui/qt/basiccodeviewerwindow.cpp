@@ -259,6 +259,8 @@ BasicCodeViewerWindow::BasicCodeViewerWindow(QWidget *parent) : QDialog{parent},
     connect(ui->checkboxLineWrapping, &QCheckBox::toggled, this, &BasicCodeViewerWindow::toggleWrap);
     connect(ui->checkboxReformatting, &QCheckBox::toggled, this, &BasicCodeViewerWindow::toggleFormat);
 
+    ui->basicEdit->setWordWrapMode(m_showingWrapped ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);
+
     // Add special jacobly font
     ui->basicEdit->setFont(QFont(QStringLiteral("TICELarge"), 11));
 }
