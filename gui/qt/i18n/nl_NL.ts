@@ -1653,7 +1653,7 @@ CEmu maakt gebruik van een aanpasbare dock-style interface. Verplaats de tabs en
     <message>
         <location filename="../mainwindow.cpp" line="1103"/>
         <source>Select RAM image to load</source>
-        <translation>RAM bestand selecteren om te laden</translation>
+        <translation>Selecteer RAM-bestand om te laden</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1105"/>
