@@ -1366,7 +1366,7 @@ void MainWindow::consoleSubmission() {
 
 void MainWindow::showEmuSpeed(int speed) {
     if (m_timerEmuTriggered) {
-        m_speedLabel.setText(tr("Emulated Speed: ") + QString::number(speed) + QStringLiteral("%"));
+        m_speedLabel.setText(QStringLiteral("  ") + tr("Emulated Speed: ") + QString::number(speed) + QStringLiteral("%"));
         m_timerEmuTriggered = !m_timerEmuTriggerable;
     }
 }
