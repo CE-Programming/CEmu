@@ -3,7 +3,7 @@
 CEmu is a third-party TI-84 Plus CE / TI-83 Premium CE calculator emulator, focused on developer features.  
 CEmu works natively on Windows, macOS, and Linux. For performance and portability, the core is programmed in C and its customizable GUI in C++ with Qt.
 
-<a href="https://i.imgur.com/XTrCWQn.png"><img src="https://i.imgur.com/RhX2wof.png" /></a>
+<a href="https://i.imgur.com/7QsJd5L.png"><img src="https://i.imgur.com/mTC6yXp.png" /></a>
 
 _Note: CEmu is not a TI product nor is it TI-endorsed/affiliated. If you need an official TI CE emulator, TI-SmartView™ CE is for you._
 
@@ -20,7 +20,7 @@ _Note that Release builds have an update checking feature, which is disabled in 
 * Accurate and fast emulation (you can also customize the speed and even toggle throttling)
 * Resizable calculator screen
 * "Always-on-top" window option
-* Screen capture (PNG)
+* Screen capture, copy, and drag'n'drop (PNG)
 * Screen recording (animated PNG)
 * File sending/receiving (not for Apps/OS yet)
 * Multiple keybinding presets
@@ -33,6 +33,7 @@ _Note that Release builds have an update checking feature, which is disabled in 
 ### _Developer features_
 * Main options available via CLI arguments
 * IPC features when launching several CEmu processes
+* Import/Export RAM, ROM, images...
 * Custom display refresh rate, FPS indicator
 * Custom emulation speed/throttling
 * Rich text console for easier logging/debugging
@@ -50,7 +51,7 @@ _Note that Release builds have an update checking feature, which is disabled in 
 * FP and OP stacks viewer/editor
 * Variable Allocation Table (VAT) viewer
 * Variable list with preview and program launcher
-* TI-Basic program viewer with syntax-highlight
+* TI-Basic program viewer with syntax-highlight and reformatting
 * Recent files list with ability to quickly resend
 * Cycle counter for benchmarking/profiling
 * Emulation of DMA and SPI (for optimal accuracy)
