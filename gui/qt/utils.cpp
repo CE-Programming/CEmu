@@ -6,6 +6,8 @@
 #include "tivarslib/TIVarType.h"
 #include "tivarslib/TypeHandlers/TypeHandlers.h"
 
+#include <array>
+
 #include <QtCore/QDir>
 #include <QtCore/QString>
 #include <QtCore/QTime>
@@ -60,6 +62,36 @@ std::string calc_var_content_string(const calc_var_t& var) {
                             ? options_t({ {"prettify", true} }) : options_t();
     return func(data_t(var.data, var.data + var.size), opts);
 }
+
+bool isRunningInDarkMode() {
+    static bool isDarkMode = false;
+    static bool boolSet = false;
+
+    if (boolSet) {
+        return isDarkMode;
+    }
+
+    // TODO: handle other OS' way to know if we're running in dark mode
+#ifdef Q_OS_MACX
+    {
+        std::array<char, 20> buffer;
+        std::string result;
+        std::unique_ptr<FILE, decltype(&pclose)> pipe(popen("defaults read -g AppleInterfaceStyle", "r"), pclose);
+        while (pipe && fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+            result += buffer.data();
+        }
+        if (result.back() == '\n') {
+            result.pop_back();
+        }
+        isDarkMode = (result == "Dark");
+    }
+#endif
+
+    boolSet = true;
+
+    return isDarkMode;
+}
+
 
 QString getAddressOfEquate(const std::string &in) {
     QString value;

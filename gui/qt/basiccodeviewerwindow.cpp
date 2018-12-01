@@ -1,6 +1,8 @@
 #include "basiccodeviewerwindow.h"
 #include "ui_basiccodeviewerwindow.h"
 
+#include "utils.h"
+
 #include "tivarslib/TypeHandlers/TypeHandlers.h"
 
 #include <QtGui/QPainter>
@@ -136,7 +138,7 @@ BasicHighlighter::BasicHighlighter(QTextDocument *parent) : QSyntaxHighlighter(p
     rule.format = listFormat;
     highlightingRules.append(rule);
 
-    keywordFormat.setForeground(Qt::darkBlue);
+    keywordFormat.setForeground(QColor(isRunningInDarkMode() ? "darkorange" : "darkblue"));
     rule.pattern = QRegExp("\\b(Else|End|For|Goto|EndIf|ElseIf|End!If|If|!If|Lbl|Repeat|Return|Stop|Then|While)\\b");
     rule.format = keywordFormat;
     highlightingRules.append(rule);
@@ -233,7 +235,7 @@ BasicHighlighter::BasicHighlighter(QTextDocument *parent) : QSyntaxHighlighter(p
     rule.format = quotationFormat;
     highlightingRules.append(rule);
 
-    otherFormat.setForeground(Qt::black);
+    otherFormat.setForeground(isRunningInDarkMode() ? Qt::darkGray : Qt::black);
     rule.pattern = QRegExp("→");
     rule.format = otherFormat;
     highlightingRules.append(rule);

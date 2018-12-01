@@ -69,6 +69,9 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     // setting metatypes
     qRegisterMetaTypeStreamOperators<QList<int>>("QList<int>");
     qRegisterMetaTypeStreamOperators<QList<bool>>("QList<bool>");
+
+    m_isInDarkMode = isRunningInDarkMode();
+
     ui->setupUi(this);
     
     setStyleSheet(QStringLiteral("QMainWindow::separator{ width: 0px; height: 0px; }"));
@@ -92,6 +95,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     m_breakpoints = ui->breakpoints;
     m_ports = ui->ports;
     m_disasm = ui->disasm;
+
+    m_disasmOpcodeColor = m_isInDarkMode ? "darkorange" : "darkblue";
 
     ui->console->setMaximumBlockCount(1000);
 
@@ -2240,9 +2245,11 @@ void MainWindow::disasmLine() {
                                   .replace(QRegularExpression(QStringLiteral("(^\\d)")), QStringLiteral("<font color='blue'>\\1</font>"))             // dec number
                                   .replace(QRegularExpression(QStringLiteral("([()])")), QStringLiteral("<font color='#600'>\\1</font>"));            // parentheses
 
-            line = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2 %3  <font color='darkblue'>%4</font> %5</pre>"))
-                           .arg(disasm.addr ? int2hex(static_cast<uint32_t>(disasm.base), 6) : QString(), symbols,
+            line = QString(QStringLiteral("<pre><b><font color='#444'>%1</font></b> %2 %3  <font color='%4'>%5</font> %6</pre>"))
+                           .arg(disasm.addr ? int2hex(static_cast<uint32_t>(disasm.base), 6) : QString(),
+                                symbols,
                                 disasm.bytes ? QString::fromStdString(disasm.instr.data).leftJustified(12, ' ') : QStringLiteral(" "),
+                                m_disasmOpcodeColor,
                                 QString::fromStdString(disasm.instr.opcode),
                                 highlighted);
 

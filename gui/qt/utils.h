@@ -25,6 +25,8 @@
 bool fileExists(const QString& path);
 std::string calc_var_content_string(const calc_var_t& var);
 
+bool isRunningInDarkMode();
+
 // Qt Specific
 #include <QtCore/QString>
 

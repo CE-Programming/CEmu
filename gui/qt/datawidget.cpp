@@ -6,6 +6,7 @@
 
 DataWidget::DataWidget(QWidget *parent) : QPlainTextEdit{parent} {
     moveable = false;
+    currentLineColor = isRunningInDarkMode() ? QColor(Qt::black) : QColor(Qt::yellow).lighter(180);
     setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
@@ -69,7 +70,7 @@ void DataWidget::highlightCurrentLine() {
         if (!highlights.isEmpty()) {
             highlights.removeLast();
         }
-        addHighlight(QColor(Qt::yellow).lighter(160));
+        addHighlight(currentLineColor);
         setExtraSelections(highlights);
         if (QApplication::keyboardModifiers().testFlag(Qt::ControlModifier)) {
             bool ok = true;

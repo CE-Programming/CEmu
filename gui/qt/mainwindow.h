@@ -52,7 +52,7 @@ class MainWindow : public QMainWindow {
 
 public:
     explicit MainWindow(CEmuOpts &opts, QWidget *p = Q_NULLPTR);
-    ~MainWindow();
+    ~MainWindow() Q_DECL_OVERRIDE;
     void setup();
     bool isInitialized();
     bool isReload();
@@ -523,6 +523,9 @@ private:
     EmuThread emu;
     CEmuOpts opts;
     InterCom com;
+
+    bool m_isInDarkMode = false;
+    const char* m_disasmOpcodeColor;
 
     unsigned int m_watchGUIMask = DBG_MASK_NONE;
 

@@ -30,6 +30,7 @@ signals:
 
 private:
     bool moveable;
+    QColor currentLineColor;
     QList<QTextEdit::ExtraSelection> highlights;
 };
 
