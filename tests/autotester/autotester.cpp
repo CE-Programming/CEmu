@@ -613,7 +613,7 @@ bool sendFilesForTest()
     {
         if (file_exists(forced_libs_group))
         {
-            forced_files.push_back(forced_libs_group);
+            forced_files.emplace_back(forced_libs_group);
         } else {
             std::cerr << "[Error] Env var for libs group given, but no such file...?" << std::endl;
             forced_libs_group = nullptr;

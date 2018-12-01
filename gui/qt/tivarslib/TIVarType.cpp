@@ -32,7 +32,7 @@ namespace tivars
      * @return  TIVarType
      * @throws  \Exception
      */
-    TIVarType TIVarType::createFromName(std::string name)
+    TIVarType TIVarType::createFromName(const std::string& name)
     {
         if (TIVarTypes::isValidName(name))
         {

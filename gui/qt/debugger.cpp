@@ -2481,7 +2481,7 @@ void MainWindow::setCalcId() {
     bool ok = true;
     const uint8_t *data = mem.flash.block;
     const uint16_t subSize = 5;
-    const uint8_t *contents = NULL;
+    const uint8_t *contents = nullptr;
     uint32_t offset = 0x3B0001;
     uint32_t size;
 

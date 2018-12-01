@@ -303,7 +303,7 @@ void HexWidget::paintEvent(QPaintEvent *event) {
     QPainter painter(viewport());
     const QRect &region = event->rect();
     const QPalette &pal = viewport()->palette();
-    const QColor cText = pal.color(QPalette::WindowText);
+    const QColor &cText = pal.color(QPalette::WindowText);
     const QColor cBg = Qt::white;
     const QColor cSelected = QColor(Qt::yellow).lighter(160);
     const QColor cModified = QColor(Qt::blue).lighter(160);

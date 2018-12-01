@@ -34,7 +34,7 @@ namespace tivars
 
         /*** "Constructors" ***/
         static TIVarType createFromID(uint id);
-        static TIVarType createFromName(std::string name);
+        static TIVarType createFromName(const std::string& name);
 
     private:
         int id = -1;

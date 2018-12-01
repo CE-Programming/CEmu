@@ -45,7 +45,7 @@ namespace tivars
      * @return  TIModel
      * @throws  \Exception
      */
-    TIModel TIModel::createFromName(std::string name)
+    TIModel TIModel::createFromName(const std::string& name)
     {
         if (TIModels::isValidName(name))
         {
@@ -66,7 +66,7 @@ namespace tivars
      * @return  TIModel
      * @throws  \Exception
      */
-    TIModel TIModel::createFromSignature(std::string sig)
+    TIModel TIModel::createFromSignature(const std::string& sig)
     {
         if (TIModels::isValidSignature(sig))
         {

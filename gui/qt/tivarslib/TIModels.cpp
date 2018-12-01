@@ -120,7 +120,7 @@ namespace tivars
      * @param   string  name
      * @return  int             The default calc order ID whose file formats use that signature
      */
-    int TIModels::getOrderIDFromName(std::string name)
+    int TIModels::getOrderIDFromName(const std::string& name)
     {
         return isValidName(name) ? models[name].getOrderId() : -1;
     }

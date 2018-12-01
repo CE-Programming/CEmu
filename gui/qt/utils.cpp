@@ -152,7 +152,7 @@ static bool checkProc(DWORD processID) {
 }
 #else
 #include <sys/types.h>
-#include <signal.h>
+#include <csignal>
 static bool checkProc(pid_t pid) {
     if (!kill(pid, 0)) {
         return true;

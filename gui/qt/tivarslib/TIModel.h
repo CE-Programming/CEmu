@@ -48,14 +48,14 @@ namespace tivars
          * @return  TIModel
          * @throws  \Exception
          */
-        static TIModel createFromName(std::string name);
+        static TIModel createFromName(const std::string& name);
 
         /**
          * @param   string  sig    The signature (magic bytes)
          * @return  TIModel
          * @throws  \Exception
          */
-        static TIModel createFromSignature(std::string sig);
+        static TIModel createFromSignature(const std::string& sig);
 
 
     private:

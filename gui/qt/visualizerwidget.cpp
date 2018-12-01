@@ -57,7 +57,7 @@ VisualizerWidget::VisualizerWidget(QWidget *parent, const QString &config) : QWi
     translate();
 }
 
-VisualizerWidget::~VisualizerWidget() { }
+VisualizerWidget::~VisualizerWidget() = default;
 
 void VisualizerWidget::translate() {
     m_group->setTitle(tr("Settings"));

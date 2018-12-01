@@ -31,14 +31,14 @@ static const QStringList valid_suffixes = { QStringLiteral("8xp"),
                                             QStringLiteral("8ci"), };
 
 static inline bool pathHasBundleExtension(const QString& filepath) {
-    return filepath.toLower().endsWith("b84") || filepath.toLower().endsWith("b83");
+    return filepath.endsWith("b84", Qt::CaseInsensitive) || filepath.endsWith("b83", Qt::CaseInsensitive);
 }
 
 static QStringList bundleList;
 static bool checkValidFile(const char *path) {
     QString npath(path);
     foreach (const QString &str, valid_suffixes) {
-        if (npath.toLower().endsWith(str)) {
+        if (npath.endsWith(str, Qt::CaseInsensitive)) {
             bundleList.append(path);
             return true;
         }
@@ -176,8 +176,7 @@ void SendingHandler::sentFile(const QString &file, int ok) {
 
     // don't add temp files (created by bundles)
     if (directory != m_tempDir.path()) {
-        const QString path = file;
-        addFile(path, true);
+        addFile(file, true);
     }
 
     if (m_progressBar) {

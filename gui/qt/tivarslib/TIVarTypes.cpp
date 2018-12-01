@@ -28,7 +28,7 @@ namespace tivars
      * @param vector    exts        The extensions the type can have, ordered by feature flags.
      * @param pair      handlers    The data2str and str2data funcs
      */
-    void TIVarTypes::insertType(std::string name, int id, const std::vector<std::string>& exts, const handler_pair_t& handlers)
+    void TIVarTypes::insertType(const std::string& name, int id, const std::vector<std::string>& exts, const handler_pair_t& handlers)
     {
         TIVarType varType(id, name, exts, handlers);
         std::string id_str = std::to_string(id);
@@ -113,7 +113,7 @@ namespace tivars
      * @param   string  name   The type name
      * @return  int             The type ID for that name
      */
-    int TIVarTypes::getIDFromName(std::string name)
+    int TIVarTypes::getIDFromName(const std::string& name)
     {
         if (!name.empty() && types.count(name))
         {
@@ -142,7 +142,7 @@ namespace tivars
      * @param   string  name
      * @return  string[]        The array of extensions for that ID
      */
-    std::vector<std::string> TIVarTypes::getExtensionsFromName(std::string name)
+    std::vector<std::string> TIVarTypes::getExtensionsFromName(const std::string& name)
     {
         if (!name.empty() && types.count(name))
         {
