@@ -20,12 +20,13 @@ extern unsigned char ops_txt[];
 extern unsigned int ops_txt_len;
 
 void runerbot_init(void) {
-    return; // finish implementing me first...
     unsigned int i = 0;
     unsigned int s = 0;
     entry_t *e;
     bool newline = false;
     char mask[56];
+
+    return; // finish implementing me first...
 
     while (i < ops_txt_len) {
         char x = (char)ops_txt[i];
