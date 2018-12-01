@@ -6,7 +6,7 @@
 
 DataWidget::DataWidget(QWidget *parent) : QPlainTextEdit{parent} {
     moveable = false;
-    currentLineColor = isRunningInDarkMode() ? QColor(Qt::black) : QColor(Qt::yellow).lighter(180);
+    currentLineColor = isRunningInDarkMode() ? QColor(Qt::black) : QColor(Qt::yellow).lighter(160);
     setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
@@ -50,7 +50,7 @@ bool DataWidget::labelCheck() {
 void DataWidget::cursorState(bool state) {
     moveable = state;
     if (moveable) {
-        addHighlight(QColor(Qt::yellow).lighter(160));
+        addHighlight(currentLineColor);
     }
 }
 

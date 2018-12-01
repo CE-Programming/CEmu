@@ -80,7 +80,7 @@ void BasicEditor::highlightCurrentLine()
     if (!isReadOnly()) {
         QTextEdit::ExtraSelection selection;
 
-        QColor lineColor = QColor(Qt::yellow).lighter(160);
+        const QColor lineColor = isRunningInDarkMode() ? QColor(Qt::black) : QColor(Qt::yellow).lighter(180);
 
         selection.format.setBackground(lineColor);
         selection.format.setProperty(QTextFormat::FullWidthSelection, true);

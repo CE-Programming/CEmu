@@ -549,7 +549,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
         ui->checkPortable->blockSignals(false);
     }
 
-    m_cBack.setColor(QPalette::Base, QColor(Qt::yellow).lighter(160));
+    m_cBack.setColor(QPalette::Base, QColor(isRunningInDarkMode() ? Qt::blue : Qt::yellow).lighter(160));
     m_consoleFormat = ui->console->currentCharFormat();
 }
 
