@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1003</width>
+    <width>1004</width>
     <height>1005</height>
    </rect>
   </property>
@@ -6306,7 +6306,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -6486,6 +6486,9 @@
              <property name="sortingEnabled">
               <bool>true</bool>
              </property>
+             <property name="wordWrap">
+              <bool>false</bool>
+             </property>
              <attribute name="horizontalHeaderDefaultSectionSize">
               <number>100</number>
              </attribute>
@@ -6577,6 +6580,9 @@
              </property>
              <property name="sortingEnabled">
               <bool>true</bool>
+             </property>
+             <property name="wordWrap">
+              <bool>false</bool>
              </property>
              <attribute name="horizontalHeaderCascadingSectionResizes">
               <bool>true</bool>
@@ -9380,7 +9386,7 @@ QPushButton:pressed {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1003</width>
+     <width>1004</width>
      <height>22</height>
     </rect>
    </property>
