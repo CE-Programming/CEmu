@@ -72,7 +72,7 @@ bool isRunningInDarkMode() {
     }
 
     // TODO: handle other OS' way to know if we're running in dark mode
-#ifdef Q_OS_MACX
+#if defined(Q_OS_MACX) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_14
     {
         std::array<char, 20> buffer;
         std::string result;
