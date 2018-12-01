@@ -20,6 +20,7 @@ extern unsigned char ops_txt[];
 extern unsigned int ops_txt_len;
 
 void runerbot_init(void) {
+    return; // finish implementing me first...
     unsigned int i = 0;
     unsigned int s = 0;
     entry_t *e;
@@ -32,17 +33,24 @@ void runerbot_init(void) {
             if (x == ';') {
                 newline = true;
             } else {
+                int inc = 0;
                 e = &entry[s];
-                sscanf((const char*)&ops_txt[i], "%[^\t] %[^\t] %[^\t] %[^\t] %[^\t] %[^\n]",
+                inc = sscanf((const char*)&ops_txt[i], "%[^\t] %[^\t] %[^\t] %[^\t] %[^\t] %[^\n]",
                     mask, e->mnemonic, e->bytes, e->cycles, e->flags, e->description);
+                if (inc > 0) {
+                    i += (unsigned int)inc;
+                } else {
+                    i++;
+                }
                 newline = true;
                 s++;
             }
+        } else {
+            i++;
         }
         if (x == '\n') {
             newline = false;
         }
-        i++;
     }
 }
 /* need to implement assembly, but for now just instruction decoding should be fine */
