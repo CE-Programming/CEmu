@@ -2,19 +2,20 @@
 #include "cpu.h"
 #include "misc.h"
 #include "mem.h"
-#include "interrupt.h"
-#include "keypad.h"
-#include "control.h"
-#include "flash.h"
 #include "lcd.h"
 #include "spi.h"
-#include "backlight.h"
-#include "timers.h"
 #include "usb.h"
-#include "realclock.h"
-#include "sha256.h"
+#include "bus.h"
 #include "emu.h"
+#include "flash.h"
+#include "timers.h"
+#include "sha256.h"
+#include "keypad.h"
+#include "control.h"
 #include "schedule.h"
+#include "interrupt.h"
+#include "backlight.h"
+#include "realclock.h"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -85,6 +86,7 @@ void asic_init(void) {
 
     /* Seed the numbers */
     srand(time(NULL));
+    bus_init_rand(rand(), rand(), rand());
 
     plug_devices();
     gui_console_printf("[CEmu] Initialized ASIC...\n");

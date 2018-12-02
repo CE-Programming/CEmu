@@ -20,6 +20,7 @@
 #include "cpu.h"
 #include "emu.h"
 #include "mem.h"
+#include "bus.h"
 #include "defines.h"
 #include "control.h"
 #include "registers.h"
@@ -863,9 +864,9 @@ void cpu_execute(void) {
                 } else {
                     if (cpu.preI && cpu.IM == 3) {
                         cpu.cycles++;
-                        cpu_call(cpu_read_word(r->I << 8 | (rand() & 0xFF)), cpu.MADL);
+                        cpu_call(cpu_read_word(r->I << 8 | (bus_rand() & 0xFF)), cpu.MADL);
                     } else {
-                        cpu_call(rand() & 0x38, cpu.MADL);
+                        cpu_call(bus_rand() & 0x38, cpu.MADL);
                     }
                 }
             }

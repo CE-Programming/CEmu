@@ -1,9 +1,10 @@
 #include "mem.h"
 #include "emu.h"
 #include "cpu.h"
+#include "lcd.h"
+#include "bus.h"
 #include "flash.h"
 #include "control.h"
-#include "lcd.h"
 #include "debug/debug.h"
 
 #include <assert.h>
@@ -678,7 +679,7 @@ void mem_poke_word(uint32_t addr, uint32_t value, bool mode) {
 uint8_t mem_read_unmapped_ram(bool update) {
     static uint8_t value = 0;
     if (update) {
-        value = rand();
+        value = bus_rand();
     }
     return value;
 }
@@ -686,7 +687,7 @@ uint8_t mem_read_unmapped_ram(bool update) {
 uint8_t mem_read_unmapped_flash(bool update) {
     static uint8_t value = 0;
     if (update) {
-        value = rand();
+        value = bus_rand();
     }
     return value;
 }
@@ -694,7 +695,7 @@ uint8_t mem_read_unmapped_flash(bool update) {
 uint8_t mem_read_unmapped_other(bool update) {
     static uint8_t value = 0;
     if (update) {
-        value = rand();
+        value = bus_rand();
     }
     return value;
 }

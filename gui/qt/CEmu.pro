@@ -232,7 +232,8 @@ SOURCES += \
     memorywidget.cpp \
     archive/extractor.c \
     runerbot/ops.c \
-    runerbot/parse.c
+    runerbot/parse.c \
+    ../../core/bus.c
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
@@ -318,7 +319,8 @@ HEADERS  += \
     visualizerwidget.h \
     debugger/visualizerdisplaywidget.h \
     archive/extractor.h \
-    runerbot/runerbot.h
+    runerbot/runerbot.h \
+    ../../core/bus.h
 
 FORMS    += \
     mainwindow.ui \

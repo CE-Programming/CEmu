@@ -4,6 +4,7 @@
 #include "mem.h"
 #include "cpu.h"
 #include "lcd.h"
+#include "bus.h"
 #include "debug/debug.h"
 
 #include <stdio.h>
@@ -167,7 +168,7 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
             if (!(byte & (1 << 3))) {
                 lcd_disable();
                 for (i = LCD_RAM_OFFSET; i < LCD_RAM_OFFSET + LCD_BYTE_SIZE; i++) {
-                    mem.ram.block[i] = rand();
+                    mem.ram.block[i] = bus_rand();
                 }
             } else {
                 lcd_update();

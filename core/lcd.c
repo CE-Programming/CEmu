@@ -2,6 +2,7 @@
 #include "cpu.h"
 #include "emu.h"
 #include "mem.h"
+#include "bus.h"
 #include "asic.h"
 #include "defines.h"
 #include "control.h"
@@ -114,7 +115,7 @@ void lcd_drawframe(void *output, void *data, void *data_end, uint32_t control, u
     }
 
 draw_black:
-    while (out < out_end) { *out++ = 0xFF000000 | rand(); }
+    while (out < out_end) { *out++ = 0xFF000000 | (unsigned int)(bus_rand() << (bus_rand() & 0x18)); }
 }
 
 void lcd_gui_event(void) {

@@ -1,5 +1,6 @@
 #include "spi.h"
 #include "emu.h"
+#include "bus.h"
 #include "schedule.h"
 
 #include <assert.h>
@@ -77,9 +78,9 @@ bool spi_refresh_pixel(void) {
         red = green = blue = ~0;
     } else {
         if (unlikely(spi.srcRow > SPI_LAST_ROW)) {
-            red = rand();
-            green = rand();
-            blue = rand();
+            red = bus_rand();
+            green = bus_rand();
+            blue = bus_rand();
         } else {
             pixel = spi.frame[spi.srcRow][spi.col];
             red = pixel[SPI_RED];
