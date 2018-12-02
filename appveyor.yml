@@ -18,10 +18,11 @@ install:
   - cmd: set VCPKG_PLATFORM_TOOLSET=v140
 
 # Hack to update vcpkg to maybe make things work
-  - cd "C:\Tools\vcpkg"
-  - git pull
-  - .\bootstrap-vcpkg.bat
-  - cd %APPVEYOR_BUILD_FOLDER%
+# Temporarily disabled (AppVeyor's copy should work)
+#  - cd "C:\Tools\vcpkg"
+#  - git pull
+#  - .\bootstrap-vcpkg.bat
+#  - cd %APPVEYOR_BUILD_FOLDER%
 
 # Install libarchive for all targets
   - vcpkg install libarchive:x86-windows --recurse
