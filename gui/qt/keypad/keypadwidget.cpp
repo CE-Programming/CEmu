@@ -330,7 +330,7 @@ void KeypadWidget::updateKey(Key *key, bool wasSelected) {
         keypad_key_event(key->keycode().row(), key->keycode().col(), selected);
         if (selected) {
             QString out = QStringLiteral("[") + key->getLabel() + QStringLiteral("]");
-            emit keyPressed(out.simplified());
+            emit keyPressed(out.simplified().replace(" ",""));
         }
     }
 }

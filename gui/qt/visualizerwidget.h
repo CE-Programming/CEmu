@@ -51,5 +51,4 @@ private:
     QToolButton *m_btnInfo;
 };
 
-
 #endif

@@ -9806,7 +9806,7 @@ QPushButton:pressed {
   </action>
   <action name="actionKeyHistory">
    <property name="checkable">
-    <bool>true</bool>
+    <bool>false</bool>
    </property>
    <property name="icon">
     <iconset resource="resources.qrc">

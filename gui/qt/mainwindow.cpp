@@ -303,7 +303,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->consoleLine, &QLineEdit::returnPressed, this, &MainWindow::consoleSubmission);
     connect(ui->consoleSubmit, &QPushButton::clicked, this, &MainWindow::consoleSubmission);
     connect(ui->checkUpdates, &QCheckBox::stateChanged, this, &MainWindow::setAutoUpdates);
-    connect(ui->actionKeyHistory, &QAction::triggered, this, &MainWindow::keyHistoryToggle);
 
     // languages
     connect(ui->actionEnglish,  &QAction::triggered, [this]{ translateSwitch(QStringLiteral("en_EN")); });
@@ -372,6 +371,9 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     m_actionAddVisualizer = new QAction(MSG_ADD_VISUALIZER, this);
     connect(m_actionAddVisualizer, &QAction::triggered, [this]{ addVisualizerDock(randomString(20), QString()); });
+
+    // already have action for key history
+    connect(ui->actionKeyHistory, &QAction::triggered, [this]{ addKeyHistoryDock(randomString(20), 9); });
 
     // shortcut connections
     m_shortcutStepIn = new QShortcut(QKeySequence(Qt::Key_F6), this);
@@ -578,6 +580,10 @@ void MainWindow::translateExtras(int init) {
 
     QString __TXT_MEM_DOCK = tr("Memory View");
     QString __TXT_VISUALIZER_DOCK = tr("Memory Visualizer");
+    QString __TXT_KEYHISTORY_DOCK = tr("Keypress History");
+
+    QString __TXT_CLEAR_HISTORY = tr("Clear History");
+    QString __TXT_SIZE = tr("Size");
 
     QString __TXT_GOTO = tr("Goto");
     QString __TXT_SEARCH = tr("Search");
@@ -618,6 +624,13 @@ void MainWindow::translateExtras(int init) {
             if (dock->windowTitle() == TXT_VISUALIZER_DOCK) {
                 dock->setWindowTitle(__TXT_VISUALIZER_DOCK);
                 static_cast<VisualizerWidget*>(dock->widget())->translate();
+            }
+            if (dock->windowTitle() == TXT_KEYHISTORY_DOCK) {
+                QList<QPushButton*> buttons = dock->findChildren<QPushButton*>();
+                QList<QLabel*> labels = dock->findChildren<QLabel*>();
+                dock->setWindowTitle(__TXT_KEYHISTORY_DOCK);
+                buttons.at(0)->setText(__TXT_CLEAR_HISTORY);
+                labels.at(0)->setText(__TXT_SIZE);
             }
             if (dock->windowTitle() == TXT_CONSOLE) {
                 dock->setWindowTitle(__TXT_CONSOLE);
@@ -672,6 +685,10 @@ void MainWindow::translateExtras(int init) {
 
     TXT_MEM_DOCK = __TXT_MEM_DOCK;
     TXT_VISUALIZER_DOCK = __TXT_VISUALIZER_DOCK;
+    TXT_KEYHISTORY_DOCK = __TXT_KEYHISTORY_DOCK;
+
+    TXT_CLEAR_HISTORY = __TXT_CLEAR_HISTORY;
+    TXT_SIZE = __TXT_SIZE;
 
     TXT_CONSOLE = __TXT_CONSOLE;
     TXT_SETTINGS = __TXT_SETTINGS;
@@ -887,28 +904,6 @@ void MainWindow::setup() {
     setUIDockEditMode(m_uiEditMode);
     ui->lcd->setFocus();
     m_setup = true;
-}
-
-void MainWindow::keyHistoryToggle() {
-    if (!m_windowKeys) {
-        m_windowKeys = new KeyHistory();
-        connect(m_windowKeys, &KeyHistory::closed, this, &MainWindow::keyHistoryClosed);
-        connect(ui->keypadWidget, &KeypadWidget::keyPressed, m_windowKeys, &KeyHistory::add);
-        m_windowKeys->setAttribute(Qt::WA_DeleteOnClose);
-        m_windowKeys->show();
-        ui->actionKeyHistory->setChecked(true);
-    } else {
-        disconnect(ui->keypadWidget, &KeypadWidget::keyPressed, m_windowKeys, &KeyHistory::add);
-        m_windowKeys->close();
-        m_windowKeys = Q_NULLPTR;
-        ui->actionKeyHistory->setChecked(false);
-    }
-}
-
-void MainWindow::keyHistoryClosed() {
-    disconnect(ui->keypadWidget, &KeypadWidget::keyPressed, m_windowKeys, &KeyHistory::add);
-    ui->actionKeyHistory->setChecked(false);
-    m_windowKeys = Q_NULLPTR;
 }
 
 void MainWindow::optSend(CEmuOpts &o) {

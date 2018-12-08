@@ -67,6 +67,8 @@ const QString MainWindow::SETTING_WINDOW_MEMORY_DOCK_BYTES  = QStringLiteral("Wi
 const QString MainWindow::SETTING_WINDOW_MEMORY_DOCK_ASCII  = QStringLiteral("Window/memory_docks_ascii");
 const QString MainWindow::SETTING_WINDOW_VISUALIZER_DOCKS   = QStringLiteral("Window/visualizer_docks");
 const QString MainWindow::SETTING_WINDOW_VISUALIZER_CONFIG  = QStringLiteral("Window/visualizer_config");
+const QString MainWindow::SETTING_WINDOW_KEYHISTORY_DOCKS   = QStringLiteral("Window/keyhistory_docks");
+const QString MainWindow::SETTING_WINDOW_KEYHISTORY_CONFIG  = QStringLiteral("Window/keyhistory_config");
 const QString MainWindow::SETTING_CAPTURE_FRAMESKIP         = QStringLiteral("Capture/frameskip");
 const QString MainWindow::SETTING_CAPTURE_OPTIMIZE          = QStringLiteral("Capture/optimize");
 const QString MainWindow::SETTING_SLOT_NAMES                = QStringLiteral("Slot/names");
@@ -539,6 +541,7 @@ void MainWindow::setUIDocks() {
     // Load removable docks
     setMemDocks();
     setVisualizerDocks();
+    setKeyHistoryDocks();
 
     m_menuDebug->addSeparator();
     m_menuDebug->addAction(m_actionAddMemory);
@@ -937,6 +940,63 @@ void MainWindow::setVisualizerDocks() {
     }
 }
 
+void MainWindow::setKeyHistoryDocks() {
+    QStringList names = m_config->value(SETTING_WINDOW_KEYHISTORY_DOCKS).toStringList();
+    QList<int> sizes = m_config->value(SETTING_WINDOW_KEYHISTORY_CONFIG).value<QList<int>>();
+
+    if (names.length() != sizes.length()) {
+        return;
+    }
+
+    for (int i = 0; i < names.length(); i++) {
+        addKeyHistoryDock(names.at(i), sizes.at(i));
+    }
+}
+
+
+void MainWindow::addKeyHistoryDock(const QString &magic, int size) {
+    if (m_docksKeyHistory.contains(magic)) {
+        return;
+    }
+
+    m_docksKeyHistory.append(magic);
+    m_docksKeyHistorySize.append(size);
+
+    DockWidget *dw = new DockWidget(TXT_KEYHISTORY_DOCK, this);
+    KeyHistoryWidget *widget = new KeyHistoryWidget(this, size);
+
+    if (m_setup) {
+        dw->setFloating(true);
+        dw->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, dw->minimumSize(), qApp->desktop()->availableGeometry()));
+    }
+
+    connect(ui->keypadWidget, &KeypadWidget::keyPressed, widget, &KeyHistoryWidget::add);
+    connect(widget, &KeyHistoryWidget::fontSizeChanged, [this, widget, magic]{
+        int index;
+        if ((index = m_docksKeyHistory.indexOf(magic)) != -1) {
+            m_docksKeyHistorySize[index] = widget->getFontSize();
+        }
+    });
+    connect(dw, &DockWidget::closed, [this, magic]{
+        int index;
+        if ((index = m_docksKeyHistory.indexOf(magic)) != -1) {
+            m_docksKeyHistory.removeAt(index);
+            m_docksKeyHistorySize.removeAt(index);
+        }
+    });
+
+    dw->setState(m_uiEditMode);
+    addDockWidget(Qt::RightDockWidgetArea, dw);
+    dw->setObjectName(magic);
+    dw->setWidget(widget);
+
+    if (m_setup) {
+        dw->show();
+        dw->activateWindow();
+        dw->raise();
+    }
+}
+
 void MainWindow::setVersion() {
     m_config->setValue(SETTING_VERSION, QStringLiteral(CEMU_VERSION));
 }
@@ -1006,6 +1066,8 @@ void MainWindow::saveSettings() {
         m_config->setValue(SETTING_WINDOW_MEMORY_DOCK_ASCII, QVariant::fromValue(m_docksMemoryAscii));
         m_config->setValue(SETTING_WINDOW_VISUALIZER_DOCKS, m_docksVisualizer);
         m_config->setValue(SETTING_WINDOW_VISUALIZER_CONFIG, m_docksVisualizerConfig);
+        m_config->setValue(SETTING_WINDOW_KEYHISTORY_DOCKS, m_docksKeyHistory);
+        m_config->setValue(SETTING_WINDOW_KEYHISTORY_CONFIG, QVariant::fromValue(m_docksKeyHistorySize));
 
         saveDebug();
         stateSaveInfo();
@@ -1036,6 +1098,8 @@ void MainWindow::guiExport() {
     window.setValue(SETTING_WINDOW_MEMORY_DOCK_ASCII, QVariant::fromValue(m_docksMemoryAscii));
     window.setValue(SETTING_WINDOW_VISUALIZER_DOCKS, m_docksVisualizer);
     window.setValue(SETTING_WINDOW_VISUALIZER_CONFIG, m_docksVisualizerConfig);
+    window.setValue(SETTING_WINDOW_KEYHISTORY_DOCKS, m_docksKeyHistory);
+    window.setValue(SETTING_WINDOW_KEYHISTORY_CONFIG, QVariant::fromValue(m_docksKeyHistorySize));
     window.setValue(SETTING_UI_EDIT_MODE, m_uiEditMode);
     window.setValue(SETTING_STATUS_INTERVAL, ui->statusInterval->value());
     window.sync();
@@ -1060,6 +1124,8 @@ void MainWindow::guiImport() {
     m_config->setValue(SETTING_WINDOW_MEMORY_DOCK_ASCII, window.value(SETTING_WINDOW_MEMORY_DOCK_ASCII));
     m_config->setValue(SETTING_WINDOW_VISUALIZER_DOCKS, window.value(SETTING_WINDOW_VISUALIZER_DOCKS));
     m_config->setValue(SETTING_WINDOW_VISUALIZER_CONFIG, window.value(SETTING_WINDOW_VISUALIZER_CONFIG));
+    m_config->setValue(SETTING_WINDOW_KEYHISTORY_DOCKS, window.value(SETTING_WINDOW_KEYHISTORY_DOCKS));
+    m_config->setValue(SETTING_WINDOW_KEYHISTORY_CONFIG, window.value(SETTING_WINDOW_KEYHISTORY_CONFIG));
     m_config->setValue(SETTING_UI_EDIT_MODE, window.value(SETTING_UI_EDIT_MODE));
     m_config->setValue(SETTING_WINDOW_MENUBAR, window.value(SETTING_WINDOW_MENUBAR));
     m_config->setValue(SETTING_WINDOW_STATUSBAR, window.value(SETTING_WINDOW_STATUSBAR));

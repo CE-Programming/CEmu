@@ -7,7 +7,7 @@
 #include "lcdwidget.h"
 #include "romselection.h"
 #include "emuthread.h"
-#include "keyhistory.h"
+#include "keyhistorywidget.h"
 #include "dockwidget.h"
 #include "datawidget.h"
 #include "keypad/qtkeypadbridge.h"
@@ -447,6 +447,7 @@ private:
     void memUpdate();
     void setMemDocks();
     void setVisualizerDocks();
+    void setKeyHistoryDocks();
     void memLoadState();
     void memSync(HexWidget *edit);
     void memUpdateEdit(HexWidget *edit, bool force = false);
@@ -458,6 +459,7 @@ private:
     void memDocksUpdate();
     void addMemDock(const QString &magic, int bytes, bool ascii);
     void addVisualizerDock(const QString &magic, const QString &config);
+    void addKeyHistoryDock(const QString &magic, int size);
 
     // versions
     void setVersion();
@@ -481,10 +483,6 @@ private:
     void resetCEmu();
     void resetGui();
     void pauseEmu(Qt::ApplicationState state);
-
-    // history
-    void keyHistoryToggle();
-    void keyHistoryClosed();
 
     // process communication
     bool ipcSetup();
@@ -587,7 +585,7 @@ private:
     QMenu *m_menuDocks;
     QMenu *m_menuDebug;
 
-    KeyHistory *m_windowKeys = Q_NULLPTR;
+    KeyHistoryWidget *m_windowKeys = Q_NULLPTR;
 
     bool m_isSendingRom = false;
     QString m_dragRom;
@@ -610,10 +608,12 @@ private:
 
     QProgressBar *m_progressBar;
     QStringList m_docksMemory;
-    QStringList m_docksVisualizer;
-    QStringList m_docksVisualizerConfig;
     QList<int> m_docksMemoryBytes;
     QList<bool> m_docksMemoryAscii;
+    QStringList m_docksKeyHistory;
+    QList<int> m_docksKeyHistorySize;
+    QStringList m_docksVisualizer;
+    QStringList m_docksVisualizerConfig;
     QList<DockWidget*> m_dockPtrs;
     QSettings *m_config = Q_NULLPTR;
     HexWidget *m_memWidget = Q_NULLPTR;
@@ -673,6 +673,8 @@ private:
     static const QString SETTING_WINDOW_MEMORY_DOCK_ASCII;
     static const QString SETTING_WINDOW_VISUALIZER_DOCKS;
     static const QString SETTING_WINDOW_VISUALIZER_CONFIG;
+    static const QString SETTING_WINDOW_KEYHISTORY_DOCKS;
+    static const QString SETTING_WINDOW_KEYHISTORY_CONFIG;
     static const QString SETTING_CAPTURE_FRAMESKIP;
     static const QString SETTING_CAPTURE_OPTIMIZE;
     static const QString SETTING_SLOT_NAMES;
@@ -716,6 +718,10 @@ private:
 
     QString TXT_MEM_DOCK;
     QString TXT_VISUALIZER_DOCK;
+    QString TXT_KEYHISTORY_DOCK;
+
+    QString TXT_CLEAR_HISTORY;
+    QString TXT_SIZE;
 
     QString TXT_CONSOLE;
     QString TXT_SETTINGS;

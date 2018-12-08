@@ -211,7 +211,6 @@ SOURCES += \
     sendinghandler.cpp \
     debugger.cpp \
     settings.cpp \
-    keyhistory.cpp \
     capture/animated-png.c \
     keypad/qtkeypadbridge.cpp \
     keypad/keymap.cpp \
@@ -246,7 +245,8 @@ SOURCES += \
     archive/extractor.c \
     runerbot/ops.c \
     runerbot/parse.c \
-    ../../core/bus.c
+    ../../core/bus.c \
+    keyhistorywidget.cpp
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
@@ -302,7 +302,6 @@ HEADERS  += \
     searchwidget.h \
     basiccodeviewerwindow.h \
     sendinghandler.h \
-    keyhistory.h \
     keypad/qtkeypadbridge.h \
     keypad/keymap.h \
     keypad/keypadwidget.h \
@@ -333,14 +332,14 @@ HEADERS  += \
     debugger/visualizerdisplaywidget.h \
     archive/extractor.h \
     runerbot/runerbot.h \
-    ../../core/bus.h
+    ../../core/bus.h \
+    keyhistorywidget.h
 
 FORMS    += \
     mainwindow.ui \
     romselection.ui \
     searchwidget.ui \
-    basiccodeviewerwindow.ui \
-    keyhistory.ui
+    basiccodeviewerwindow.ui
 
 RESOURCES += \
     resources.qrc
