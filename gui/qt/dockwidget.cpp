@@ -20,6 +20,7 @@ DockWidget::DockWidget(QWidget *parent)
     // override sizeHint and minimumSizeHint to both return {0, 0}, or to just
     // set a dummy layout as we do below.
     m_titleHide->setLayout(new QStackedLayout{m_titleHide});
+    m_closeablefloat = false;
 }
 
 DockWidget::DockWidget(const QString &title, QWidget *parent) : DockWidget{parent} {
@@ -53,6 +54,9 @@ void DockWidget::setState(bool edit) {
         features = QDockWidget::NoDockWidgetFeatures;
         if (isFloating()) {
             features |= QDockWidget::DockWidgetFloatable;
+        }
+        if (m_closeablefloat) {
+            features |= QDockWidget::DockWidgetClosable;
         }
     }
     setFeatures(features);
@@ -112,6 +116,10 @@ void DockWidget::updateExpandability(const QList<DockWidget *> &tabs) {
         tab->m_tabs = other;
         other = tab;
     }
+}
+
+void DockWidget::makeCloseableFloat(bool state) {
+    m_closeablefloat = state;
 }
 
 void DockWidget::closeEvent(QCloseEvent *event) {

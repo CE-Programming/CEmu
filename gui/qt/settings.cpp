@@ -965,6 +965,8 @@ void MainWindow::addKeyHistoryDock(const QString &magic, int size) {
     DockWidget *dw = new DockWidget(TXT_KEYHISTORY_DOCK, this);
     KeyHistoryWidget *widget = new KeyHistoryWidget(this, size);
 
+    dw->makeCloseableFloat(true);
+
     if (m_setup) {
         dw->setFloating(true);
         dw->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, dw->minimumSize(), qApp->desktop()->availableGeometry()));

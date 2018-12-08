@@ -16,6 +16,7 @@ public:
     explicit DockWidget(QWidget *parent = Q_NULLPTR);
     DockWidget(QTabWidget *tabs, QWidget *parent = Q_NULLPTR);
     DockWidget(const QString &title, QWidget *parent = Q_NULLPTR);
+    void makeCloseableFloat(bool state);
     void setState(bool visible);
     bool isClosable() const { return m_closable; }
     void setClosable(bool closable) { m_closable = closable; }
@@ -35,7 +36,7 @@ protected:
 private:
     QWidget *m_titleHide;
     DockWidget *m_tabs;
-    bool m_closable : 1, m_expandable : 1;
+    bool m_closable : 1, m_expandable : 1, m_closeablefloat : 1;
 };
 
 #endif
