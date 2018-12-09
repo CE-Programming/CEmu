@@ -8,9 +8,9 @@ from util import *
 
 SEVENZIP="C:\\Program Files\\7-Zip\\7z.exe"
 QTBASEDIR="C:\\"
-QT32 = "Qt\\Qt5.10.0"
-QT64 = "Qt\\Qt5.10.0x64"
-LIB_DLL_DIR = "5.10\\msvc2015"
+QT32 = "Qt\\Qt5.11.0"
+QT64 = "Qt\\Qt5.11.0x64"
+LIB_DLL_DIR = "5.11\\msvc2015"
 ARC_PREFIX = "Qt5100_Rel_"
 ARC_SUFFIX_DEV = "_DevDeploy"
 
@@ -28,7 +28,7 @@ def collect_qt_files(deploy_tool, dest, exe_file):
         sys.exit(1)
 
 print("=====================================================")
-print("= Building Qt v5.10 development archive (dynamic)... =")
+print("= Building Qt v5.11 development archive (dynamic)... =")
 print("=====================================================")
 
 # Modify PATH if needed
@@ -49,7 +49,7 @@ os.chdir(os.path.dirname(os.path.realpath(__file__)))
 mkdir_p("build_32")
 
 os.chdir("build_32")
-if not simple_exec([r'C:\Qt\Qt5.10.0\5.10\msvc2015\bin\qmake', '-spec', 'win32-msvc2015', '-tp', 'vc', r'..\..\CEmu.pro']):
+if not simple_exec([r'C:\Qt\Qt5.11.0\5.11\msvc2015\bin\qmake', '-spec', 'win32-msvc2015', '-tp', 'vc', r'..\..\CEmu.pro']):
     print(" ! ERROR: Creating project files for x86 failed!")
     sys.exit(1)
 if not simple_exec(["msbuild", r'CEmu.vcxproj', r'/p:Configuration=Release']):
@@ -64,7 +64,7 @@ mkdir_p("tmp_devarchive")
 
 cemu32_exe = os.path.join("build_32", "release", "CEmu.exe")
 
-collect_qt_files(r"C:\Qt\Qt5.10.0\5.10\msvc2015\bin\windeployqt.exe", "tmp_devarchive", cemu32_exe)
+collect_qt_files(r"C:\Qt\Qt5.11.0\5.11\msvc2015\bin\windeployqt.exe", "tmp_devarchive", cemu32_exe)
 
 found_dlls = []
 

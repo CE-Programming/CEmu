@@ -329,8 +329,8 @@ def dl_and_validate(url):
     if check_url(url + ".sha256"):
         dlfile(url + ".sha256")
     else:
-        # https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.10.1_Rel_Static_Win32_DevDeploy.7z
-        # https://oss.jfrog.org/api/storage/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.10.1_Rel_Static_Win32_DevDeploy.7z
+        # https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.11.1_Rel_Static_Win32_DevDeploy.7z
+        # https://oss.jfrog.org/api/storage/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.11.1_Rel_Static_Win32_DevDeploy.7z
         url_parsed = urlparse(url)
         if url_parsed.netloc == "oss.jfrog.org" and url_parsed.path.startswith("/artifactory"):
             file_info_json_url = url.replace("://oss.jfrog.org/artifactory/", "://oss.jfrog.org/api/storage/")
@@ -395,16 +395,14 @@ def extract(filename):
 
 def install_deps():
     print(" * Attempting to download dependencies...")
-    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.10.1_Rel_Static_Win32_DevDeploy.7z.001')
-    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.10.1_Rel_Static_Win32_DevDeploy.7z.002')
-    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.10.1_Rel_Static_Win64_DevDeploy.7z.001')
-    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.10.1_Rel_Static_Win64_DevDeploy.7z.002')
-    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/libpng-apng-1.6.34.7z')
+    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.11.1_Rel_Static_Win32_DevDeploy.7z.001')
+    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.11.1_Rel_Static_Win32_DevDeploy.7z.002')
+    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.11.1_Rel_Static_Win64_DevDeploy.7z.001')
+    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.11.1_Rel_Static_Win64_DevDeploy.7z.002')
     
     print(" * Attempting to install dependencies...")
-    extract('Qt5.10.1_Rel_Static_Win32_DevDeploy.7z.001')
-    extract('Qt5.10.1_Rel_Static_Win64_DevDeploy.7z.001')
-    extract('libpng-apng-1.6.34.7z')
+    extract('Qt5.11.1_Rel_Static_Win32_DevDeploy.7z.001')
+    extract('Qt5.11.1_Rel_Static_Win64_DevDeploy.7z.001')
     
     print(" * Successfully installed build dependencies!")
 
@@ -624,7 +622,6 @@ def deploy_snapshots():
                        os.path.join("build_32", "release"),
                        os.path.join("deploy", "release32"),
                        extra_wc = {
-                                    "libpng/zlib x86 release DLLs" : r"C:\libpng-apng-1.6.34\release\32bit\shared\*.dll",
                                     "vcpkg provided DLLs" : os.path.join("build_32", "release") + r"\*.dll"
                                   }
                       )
@@ -633,7 +630,6 @@ def deploy_snapshots():
                        os.path.join("build_64", "release"),
                        os.path.join("deploy", "release64"),
                        extra_wc = {
-                                    "libpng/zlib x64 release DLLs" : r"C:\libpng-apng-1.6.34\release\64bit\shared\*.dll",
                                     "vcpkg provided DLLs" : os.path.join("build_64", "release") + r"\*.dll"
                                   }
                       )
@@ -646,7 +642,6 @@ def deploy_snapshots():
                        os.path.join("deploy", "release32_debug"),
                        extra_wc = {
                                     "UCRT Debug" : r"C:\Program Files (x86)\Windows Kits\10\bin\x86\ucrt\*.dll",
-                                    "libpng/zlib x86 debug DLLs" : r"C:\libpng-apng-1.6.34\debug\32bit\shared\*.dll",
                                     "vcpkg provided DLLs" : os.path.join("build_32", "debug") + r"\*.dll"
                                   }
                       )
@@ -656,7 +651,6 @@ def deploy_snapshots():
                        os.path.join("deploy", "release64_debug"),
                        extra_wc = {
                                     "UCRT Debug" : r"C:\Program Files (x86)\Windows Kits\10\bin\x64\ucrt\*.dll",
-                                    "libpng/zlib x64 debug DLLs" : r"C:\libpng-apng-1.6.34\debug\64bit\shared\*.dll",
                                     "vcpkg provided DLLs" : os.path.join("build_64", "debug") + r"\*.dll"
                                   }
                       )
@@ -665,45 +659,45 @@ def deploy_snapshots():
     # Release
     collect_static_main_files("x86 Static", os.path.join("build_static_32", "release"), os.path.join("deploy_static", "release32"),
                        #extra_wc = {
-                       #             "EGL Library" : r"C:\Qt\Qt5.10.1-static\bin\libEGL.dll",
-                       #             "GLESv2 Library" : r"C:\Qt\Qt5.10.1-static\bin\libGLESv2.dll",
-                       #             "DirectX Compiler Library" : r"C:\Qt\5.10.1\msvc2015\bin\d3dcompiler_*.dll",
-                       #             "Mesa OpenGL Software Rendering Library" : r"C:\Qt\5.10.1\msvc2015\bin\opengl32sw.dll",
+                       #             "EGL Library" : r"C:\Qt\Qt5.11.1-static\bin\libEGL.dll",
+                       #             "GLESv2 Library" : r"C:\Qt\Qt5.11.1-static\bin\libGLESv2.dll",
+                       #             "DirectX Compiler Library" : r"C:\Qt\5.11.1\msvc2015\bin\d3dcompiler_*.dll",
+                       #             "Mesa OpenGL Software Rendering Library" : r"C:\Qt\5.11.1\msvc2015\bin\opengl32sw.dll",
                        #           }
                       )
     collect_static_main_files("x64 Static", os.path.join("build_static_64", "release"), os.path.join("deploy_static", "release64"),
                        #extra_wc = {
-                       #             "EGL Library" : r"C:\Qt\Qt5.10.1x64-static\bin\libEGL.dll",
-                       #             "GLESv2 Library" : r"C:\Qt\Qt5.10.1x64-static\bin\libGLESv2.dll",
-                       #             "DirectX Compiler Library" : r"C:\Qt\5.10.1\msvc2015_64\bin\d3dcompiler_*.dll",
-                       #             "Mesa OpenGL Software Rendering Library" : r"C:\Qt\5.10.1\msvc2015_64\bin\opengl32sw.dll",
+                       #             "EGL Library" : r"C:\Qt\Qt5.11.1x64-static\bin\libEGL.dll",
+                       #             "GLESv2 Library" : r"C:\Qt\Qt5.11.1x64-static\bin\libGLESv2.dll",
+                       #             "DirectX Compiler Library" : r"C:\Qt\5.11.1\msvc2015_64\bin\d3dcompiler_*.dll",
+                       #             "Mesa OpenGL Software Rendering Library" : r"C:\Qt\5.11.1\msvc2015_64\bin\opengl32sw.dll",
                        #           }
                       )
     
     # Debug
     collect_static_main_files("x86 Static Debug", os.path.join("build_static_32", "debug"), os.path.join("deploy_static", "release32_debug"),
                        #extra_wc = {
-                       #             "EGL Library" : r"C:\Qt\Qt5.10.1-static\bin\libEGLd.dll",
-                       #             "GLESv2 Library" : r"C:\Qt\Qt5.10.1-static\bin\libGLESv2d.dll",
-                       #             "DirectX Compiler Library" : r"C:\Qt\5.10.1\msvc2015\bin\d3dcompiler_*.dll",
-                       #             "Mesa OpenGL Software Rendering Library" : r"C:\Qt\5.10.1\msvc2015\bin\opengl32sw.dll",
+                       #             "EGL Library" : r"C:\Qt\Qt5.11.1-static\bin\libEGLd.dll",
+                       #             "GLESv2 Library" : r"C:\Qt\Qt5.11.1-static\bin\libGLESv2d.dll",
+                       #             "DirectX Compiler Library" : r"C:\Qt\5.11.1\msvc2015\bin\d3dcompiler_*.dll",
+                       #             "Mesa OpenGL Software Rendering Library" : r"C:\Qt\5.11.1\msvc2015\bin\opengl32sw.dll",
                        #           }
                       )
     collect_static_main_files("x64 Static Debug", os.path.join("build_static_64", "debug"), os.path.join("deploy_static", "release64_debug"),
                        #extra_wc = {
-                       #             "EGL Library" : r"C:\Qt\Qt5.10.1x64-static\bin\libEGLd.dll",
-                       #             "GLESv2 Library" : r"C:\Qt\Qt5.10.1x64-static\bin\libGLESv2d.dll",
-                       #             "DirectX Compiler Library" : r"C:\Qt\5.10.1\msvc2015_64\bin\d3dcompiler_*.dll",
-                       #             "Mesa OpenGL Software Rendering Library" : r"C:\Qt\5.10.1\msvc2015_64\bin\opengl32sw.dll",
+                       #             "EGL Library" : r"C:\Qt\Qt5.11.1x64-static\bin\libEGLd.dll",
+                       #             "GLESv2 Library" : r"C:\Qt\Qt5.11.1x64-static\bin\libGLESv2d.dll",
+                       #             "DirectX Compiler Library" : r"C:\Qt\5.11.1\msvc2015_64\bin\d3dcompiler_*.dll",
+                       #             "Mesa OpenGL Software Rendering Library" : r"C:\Qt\5.11.1\msvc2015_64\bin\opengl32sw.dll",
                        #           }
                       )
     
     # Qt files only needed for dynamic builds
-    collect_qt_files("x86", r"C:\Qt\5.10.1\msvc2015\bin\windeployqt.exe", r"deploy\release32", r'build_32\release\CEmu.exe')
-    collect_qt_files("x64", r"C:\Qt\5.10.1\msvc2015_64\bin\windeployqt.exe", r"deploy\release64", r'build_64\release\CEmu.exe')
+    collect_qt_files("x86", r"C:\Qt\5.11.1\msvc2015\bin\windeployqt.exe", r"deploy\release32", r'build_32\release\CEmu.exe')
+    collect_qt_files("x64", r"C:\Qt\5.11.1\msvc2015_64\bin\windeployqt.exe", r"deploy\release64", r'build_64\release\CEmu.exe')
     
-    collect_qt_files("x86 Debug", r"C:\Qt\5.10.1\msvc2015\bin\windeployqt.exe", r"deploy\release32_debug", r'build_32\debug\CEmu.exe')
-    collect_qt_files("x64 Debug", r"C:\Qt\5.10.1\msvc2015_64\bin\windeployqt.exe", r"deploy\release64_debug", r'build_64\debug\CEmu.exe')
+    collect_qt_files("x86 Debug", r"C:\Qt\5.11.1\msvc2015\bin\windeployqt.exe", r"deploy\release32_debug", r'build_32\debug\CEmu.exe')
+    collect_qt_files("x64 Debug", r"C:\Qt\5.11.1\msvc2015_64\bin\windeployqt.exe", r"deploy\release64_debug", r'build_64\debug\CEmu.exe')
     
     file_list_32 = build_file_list("x86", r"deploy\release32")
     file_list_64 = build_file_list("x64", r"deploy\release64")
