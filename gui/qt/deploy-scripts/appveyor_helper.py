@@ -580,7 +580,7 @@ def deploy_snapshots():
     print(" * Preparing to deploy...")
     
     # Check for our needed environment variables!
-	# First up? Bintray!
+    # First up? Bintray!
     bintray_api_username = os.environ.get("BINTRAY_API_USERNAME")
     bintray_api_key = os.environ.get("BINTRAY_API_KEY")
     
@@ -589,17 +589,17 @@ def deploy_snapshots():
         print(" !        BINTRAY_API_USERNAME defined? %s" % ("Yes" if bintray_api_username else "No"))
         print(" !        BINTRAY_API_KEY defined?      %s" % ("Yes" if bintray_api_key else "No"))
         sys.exit(1)
-	
-	# One more - are the Qt5 dynamic directories defined?
-	qt5_bin_dir_dynamic_32 = os.environ.get("QT5_BIN_DIR_DYNAMIC_32")
-	qt5_bin_dir_dynamic_64 = os.environ.get("QT5_BIN_DIR_DYNAMIC_64")
     
-	if (qt5_bin_dir_dynamic_32 == None) or (qt5_bin_dir_dynamic_64 == None):
+    # One more - are the Qt5 dynamic directories defined?
+    qt5_bin_dir_dynamic_32 = os.environ.get("QT5_BIN_DIR_DYNAMIC_32")
+    qt5_bin_dir_dynamic_64 = os.environ.get("QT5_BIN_DIR_DYNAMIC_64")
+    
+    if (qt5_bin_dir_dynamic_32 == None) or (qt5_bin_dir_dynamic_64 == None):
         print(" ! ERROR: Qt5 dynamic location environmental variables not found!")
         print(" !        QT5_BIN_DIR_DYNAMIC_32 defined? %s" % ("Yes" if QT5_BIN_DIR_DYNAMIC_32 else "No"))
         print(" !        QT5_BIN_DIR_DYNAMIC_64 defined? %s" % ("Yes" if QT5_BIN_DIR_DYNAMIC_64 else "No"))
         sys.exit(1)
-	
+    
     # Make a directory for our deploy ZIPs
     mkdir_p("deploy")
     mkdir_p(os.path.join("deploy", "release32"))
