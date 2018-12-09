@@ -580,6 +580,7 @@ def deploy_snapshots():
     print(" * Preparing to deploy...")
     
     # Check for our needed environment variables!
+	# First up? Bintray!
     bintray_api_username = os.environ.get("BINTRAY_API_USERNAME")
     bintray_api_key = os.environ.get("BINTRAY_API_KEY")
     
@@ -588,7 +589,17 @@ def deploy_snapshots():
         print(" !        BINTRAY_API_USERNAME defined? %s" % ("Yes" if bintray_api_username else "No"))
         print(" !        BINTRAY_API_KEY defined?      %s" % ("Yes" if bintray_api_key else "No"))
         sys.exit(1)
+	
+	# One more - are the Qt5 dynamic directories defined?
+	qt5_bin_dir_dynamic_32 = os.environ.get("QT5_BIN_DIR_DYNAMIC_32")
+	qt5_bin_dir_dynamic_64 = os.environ.get("QT5_BIN_DIR_DYNAMIC_64")
     
+	if (qt5_bin_dir_dynamic_32 == None) or (qt5_bin_dir_dynamic_64 == None):
+        print(" ! ERROR: Qt5 dynamic location environmental variables not found!")
+        print(" !        QT5_BIN_DIR_DYNAMIC_32 defined? %s" % ("Yes" if QT5_BIN_DIR_DYNAMIC_32 else "No"))
+        print(" !        QT5_BIN_DIR_DYNAMIC_64 defined? %s" % ("Yes" if QT5_BIN_DIR_DYNAMIC_64 else "No"))
+        sys.exit(1)
+	
     # Make a directory for our deploy ZIPs
     mkdir_p("deploy")
     mkdir_p(os.path.join("deploy", "release32"))
@@ -693,11 +704,11 @@ def deploy_snapshots():
                       )
     
     # Qt files only needed for dynamic builds
-    collect_qt_files("x86", r"C:\Qt\5.11.1\msvc2015\bin\windeployqt.exe", r"deploy\release32", r'build_32\release\CEmu.exe')
-    collect_qt_files("x64", r"C:\Qt\5.11.1\msvc2015_64\bin\windeployqt.exe", r"deploy\release64", r'build_64\release\CEmu.exe')
+    collect_qt_files("x86", qt5_bin_dir_dynamic_32 + r"\windeployqt.exe", r"deploy\release32", r'build_32\release\CEmu.exe')
+    collect_qt_files("x64", qt5_bin_dir_dynamic_64 + r"\windeployqt.exe", r"deploy\release64", r'build_64\release\CEmu.exe')
     
-    collect_qt_files("x86 Debug", r"C:\Qt\5.11.1\msvc2015\bin\windeployqt.exe", r"deploy\release32_debug", r'build_32\debug\CEmu.exe')
-    collect_qt_files("x64 Debug", r"C:\Qt\5.11.1\msvc2015_64\bin\windeployqt.exe", r"deploy\release64_debug", r'build_64\debug\CEmu.exe')
+    collect_qt_files("x86 Debug", qt5_bin_dir_dynamic_32 + r"\windeployqt.exe", r"deploy\release32_debug", r'build_32\debug\CEmu.exe')
+    collect_qt_files("x64 Debug", qt5_bin_dir_dynamic_64 + r"\windeployqt.exe", r"deploy\release64_debug", r'build_64\debug\CEmu.exe')
     
     file_list_32 = build_file_list("x86", r"deploy\release32")
     file_list_64 = build_file_list("x64", r"deploy\release64")
