@@ -59,9 +59,9 @@ build_script:
   - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
 
   - cd build_32
-  - C:\Qt\5.11.1\msvc2015\bin\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"
+  - C:\Qt\5.11\msvc2015\bin\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"
   - msbuild CEmu.vcxproj /p:Configuration=Debug
-  - C:\Qt\5.11.1\msvc2015\bin\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"
+  - C:\Qt\5.11\msvc2015\bin\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"
   - msbuild CEmu.vcxproj /p:Configuration=Release
   - cd ..
 
@@ -79,9 +79,9 @@ build_script:
   - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86_amd64
 
   - cd build_64
-  - C:\Qt\5.11.1\msvc2015_64\bin\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"
+  - C:\Qt\5.11\msvc2015_64\bin\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"
   - msbuild CEmu.vcxproj /p:Configuration=Debug /p:Platform="x64"
-  - C:\Qt\5.11.1\msvc2015_64\bin\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"
+  - C:\Qt\5.11\msvc2015_64\bin\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"
   - msbuild CEmu.vcxproj /p:Configuration=Release /p:Platform="x64"
   - cd ..
 
