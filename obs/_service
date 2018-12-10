@@ -3,8 +3,8 @@
     <param name="url">https://github.com/CE-Programming/CEmu.git</param>
     <param name="scm">git</param>
     <param name="filename">CEmu</param>
-    <param name="revision">29adfe7</param>
-    <param name="version">1.1.1</param>
+    <param name="revision">f654cb8</param>
+    <param name="version">1.2</param>
   </service>
   <service name="recompress" mode="disabled">
     <param name="file">*.tar</param>

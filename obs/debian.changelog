@@ -1,3 +1,10 @@
+cemu (1.2-0) unstable; urgency=low
+
+  * Several improvements, bugfixes, minor additions (see GitHub)
+
+ -- Adrien Bertrand <bertrand.adrien@gmail.com>  Tue, 11 Dec 2018 00:03:40 +0800
+
+
 cemu (1.1.1-0) unstable; urgency=low
 
   * Minor update (update check issue fixed)
