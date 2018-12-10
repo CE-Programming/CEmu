@@ -1,7 +1,7 @@
 #ifndef KEYCODE_H
 #define KEYCODE_H
 
-#include <QtCore/QHashFunctions>
+#include <QtCore/QHash>
 
 struct KeyCode {
     KeyCode() : mCode(~0) {}
