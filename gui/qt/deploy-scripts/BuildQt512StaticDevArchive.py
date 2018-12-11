@@ -13,12 +13,12 @@ from util import *
 DEBUG_ENABLED = False
 SEVENZIP="C:\\Program Files\\7-Zip\\7z.exe"
 QTBASEDIR="C:\\"
-QT32 = "Qt\\Qt5.11.1-static"
-SSL32 = "LibreSSL-2.7.4-win32"
-SSL64 = "LibreSSL-2.7.4-win64"
-QT64 = "Qt\\Qt5.11.1x64-static"
+QT32 = "Qt\\Qt5.12.0-static"
+SSL32 = "LibreSSL-2.8.2-win32"
+SSL64 = "LibreSSL-2.8.2-win64"
+QT64 = "Qt\\Qt5.12.0x64-static"
 LIB_DLL_DIR = ""
-ARC_PREFIX = "Qt5.11.1_Rel_Static_"
+ARC_PREFIX = "Qt5.12.0_Rel_Static_"
 ARC_SUFFIX_DEV = "_DevDeploy"
 
 # What libraries need to be included?
@@ -133,7 +133,7 @@ def silent_remove_wildcard(file_wc):
         silentremove(f)
 
 print("====================================================")
-print("= Building Qt v5.11 development archive (static)   =")
+print("= Building Qt v5.12 development archive (static)   =")
 print("====================================================")
 
 # Modify PATH if needed
@@ -167,13 +167,13 @@ if not any(all([True if p in os.environ else False for p in envset]) for envset 
     sys.exit(1)
 
 if "LIBPNG_APNG_LIB" in os.environ:
-    if not simple_exec([r'C:\Qt\Qt5.11.1-static\bin\qmake', '-spec', 'win32-msvc', '-tp', 'vc',
+    if not simple_exec([r'C:\Qt\Qt5.12.0-static\bin\qmake', '-spec', 'win32-msvc', '-tp', 'vc',
                        'LIBS+=' + os.environ.get('ZLIB_LIB'), 'LIBS+=' + os.environ.get('LIBPNG_APNG_LIB'),
                        'INCLUDEPATH+=' + os.environ.get('LIBPNG_APNG_INCLUDE'), r'..\..\CEmu.pro']):
         print(" ! ERROR: Creating project files for x86 failed (using LIBPNG_APNG_LIB env)!")
         sys.exit(1)
 else:
-    if not simple_exec([r'C:\Qt\Qt5.11.1-static\bin\qmake', '-spec', 'win32-msvc', '-tp', 'vc',
+    if not simple_exec([r'C:\Qt\Qt5.12.0-static\bin\qmake', '-spec', 'win32-msvc', '-tp', 'vc',
                         'LIBPNG_APNG_FROM_VCPKG=' + os.environ.get('LIBPNG_APNG_FROM_VCPKG'),
                          r'..\..\CEmu.pro']):
         print(" ! ERROR: Creating project files for x86 failed (using LIBPNG_APNG_FROM_VCPKG env)!")

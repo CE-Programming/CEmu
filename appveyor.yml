@@ -8,8 +8,8 @@ environment:
     secure: yPv9WtzW+27giJAicFEXGV0KENiee+3+BG2CIOLarbu5wsm7q/h0Ixqsq70CITPi
   QT5_BIN_DIR_DYNAMIC_32: C:\Qt\5.11\msvc2015\bin
   QT5_BIN_DIR_DYNAMIC_64: C:\Qt\5.11\msvc2015_64\bin
-  QT5_BIN_DIR_STATIC_32: C:\Qt\Qt5.11.1-static\bin
-  QT5_BIN_DIR_STATIC_64: C:\Qt\Qt5.11.1x64-static\bin
+  QT5_BIN_DIR_STATIC_32: C:\Qt\Qt5.12.0-static\bin
+  QT5_BIN_DIR_STATIC_64: C:\Qt\Qt5.12.0x64-static\bin
 
 install:
   - git submodule update --init --recursive
