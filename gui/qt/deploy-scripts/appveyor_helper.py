@@ -395,12 +395,14 @@ def extract(filename):
 
 def install_deps():
     print(" * Attempting to download dependencies...")
-    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.12.0_Rel_Static_Win32_DevDeploy.7z')
-    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.12.0_Rel_Static_Win64_DevDeploy.7z')
+    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.12.0_Rel_Static_Win32_DevDeploy.7z.001')
+	dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.12.0_Rel_Static_Win32_DevDeploy.7z.002')
+    dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.12.0_Rel_Static_Win64_DevDeploy.7z.001')
+	dl_and_validate('https://oss.jfrog.org/artifactory/oss-snapshot-local/org/github/alberthdev/cemu/appveyor-qt/Qt5.12.0_Rel_Static_Win64_DevDeploy.7z.002')
     
     print(" * Attempting to install dependencies...")
-    extract('Qt5.12.0_Rel_Static_Win32_DevDeploy.7z')
-    extract('Qt5.12.0_Rel_Static_Win64_DevDeploy.7z')
+    extract('Qt5.12.0_Rel_Static_Win32_DevDeploy.7z.001')
+    extract('Qt5.12.0_Rel_Static_Win64_DevDeploy.7z.001')
     
     print(" * Successfully installed build dependencies!")
 

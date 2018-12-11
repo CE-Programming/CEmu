@@ -10,7 +10,7 @@ from difflib import SequenceMatcher
 
 from util import *
 
-DEBUG_ENABLED = False
+DEBUG_ENABLED = True
 SEVENZIP="C:\\Program Files\\7-Zip\\7z.exe"
 QTBASEDIR="C:\\"
 QT32 = "Qt\\Qt5.12.0-static"
@@ -310,7 +310,7 @@ for possible_wc_tuple in possible_wcs:
     possible_wc = "{0}*{1}".format(*possible_wc_tuple)
     if DEBUG_ENABLED: print(possible_wc)
     too_broad = False
-    for lib_match in qt_lib_include_arr:
+    for lib_match in qt_lib_include_arr + [qlia + "d" for qlia in qt_lib_include_arr]:
         if fnmatch.fnmatch(lib_match.lower(), possible_wc.lower()) and lib_match not in lc_prefix_matches:
             if DEBUG_ENABLED: print("too broad, removing (%s matched by wc %s)" % (lib_match, possible_wc))
             too_broad = True
