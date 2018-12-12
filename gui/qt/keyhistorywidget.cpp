@@ -5,7 +5,7 @@
 #include <QtWidgets/QHBoxLayout>
 
 KeyHistoryWidget::KeyHistoryWidget(QWidget *parent, int size) : QWidget{parent} {
-    QHBoxLayout *bottom = new QHBoxLayout();
+    QHBoxLayout *hlayout = new QHBoxLayout();
 
     m_btnClear = new QPushButton(tr("Clear History"));
     m_label = new QLabel(tr("Size"));
@@ -16,15 +16,15 @@ KeyHistoryWidget::KeyHistoryWidget(QWidget *parent, int size) : QWidget{parent} 
     m_view->setReadOnly(true);
     m_view->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-    bottom->addWidget(m_btnClear);
-    bottom->addSpacerItem(m_spacer);
-    bottom->addWidget(m_label);
-    bottom->addWidget(m_size);
+    hlayout->addWidget(m_btnClear);
+    hlayout->addSpacerItem(m_spacer);
+    hlayout->addWidget(m_label);
+    hlayout->addWidget(m_size);
 
-    QVBoxLayout *hlayout = new QVBoxLayout();
-    hlayout->addWidget(m_view);
-    hlayout->addLayout(bottom);
-    setLayout(hlayout);
+    QVBoxLayout *vlayout = new QVBoxLayout();
+    vlayout->addWidget(m_view);
+    vlayout->addLayout(hlayout);
+    setLayout(vlayout);
 
     connect(m_btnClear, &QPushButton::clicked, m_view, &QPlainTextEdit::clear);
     connect(m_size, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &KeyHistoryWidget::setFontSize);

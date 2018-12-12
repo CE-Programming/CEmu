@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
 
     execPath = QCoreApplication::applicationFilePath();
 
-    qsrand(time(nullptr));
+    qsrand(static_cast<uint>(time(nullptr)));
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
 
     // Add special jacobly font

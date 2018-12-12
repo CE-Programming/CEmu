@@ -1376,7 +1376,7 @@ void MainWindow::showEmuSpeed(int speed) {
 void MainWindow::showFpsSpeed(double emuFps, double guiFps) {
     static double guiFpsPrev = 0;
     static double emuFpsPrev = 0;
-    if (fabs(emuFpsPrev - emuFps) < 0.02) {
+    if (emuFps < emuFpsPrev - 1 || emuFps > emuFpsPrev + 1) {
         ui->maxFps->setText(tr("Actual FPS: ") + QString::number(emuFps, 'f', 2));
         emuFpsPrev = emuFps;
     }
