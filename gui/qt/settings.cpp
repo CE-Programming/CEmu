@@ -756,7 +756,6 @@ void MainWindow::keypadChanged() {
 
 void MainWindow::keymapCustomSelected() {
     QFileDialog dialog(this);
-    int good;
 
     m_config->remove(SETTING_KEYPAD_CUSTOM_PATH);
 
@@ -764,16 +763,19 @@ void MainWindow::keymapCustomSelected() {
     dialog.setFileMode(QFileDialog::ExistingFile);
     dialog.setNameFilter(tr("Keymap Config (*.ini);;All files (*.*)"));
 
-    good = dialog.exec();
-    m_dir = dialog.directory().absolutePath();
-    QString selected = dialog.selectedFiles().first();
-
-    if (!good || selected.isEmpty()) {
+    if (!dialog.exec()) {
         ui->radioCEmuKeys->setChecked(true);
         return;
     }
 
-    m_config->setValue(SETTING_KEYPAD_CUSTOM_PATH, selected);
+    m_dir = dialog.directory().absolutePath();
+    const auto& selectedFiles = dialog.selectedFiles();
+    if (selectedFiles.empty()) {
+        ui->radioCEmuKeys->setChecked(true);
+        return;
+    }
+
+    m_config->setValue(SETTING_KEYPAD_CUSTOM_PATH, selectedFiles.first());
     setKeymap(SETTING_KEYPAD_CUSTOM);
 }
 
