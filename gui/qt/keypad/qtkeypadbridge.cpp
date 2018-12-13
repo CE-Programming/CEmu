@@ -1,5 +1,6 @@
 #include <QtCore/QSettings>
 
+#include "utils.h"
 #include "qtkeypadbridge.h"
 #include "../../../core/keypad.h"
 #include "../../../core/asic.h"
@@ -160,6 +161,10 @@ bool QtKeypadBridge::keymapExport(const QString &path) {
 }
 
 bool QtKeypadBridge::keymapImport(const QString &path) {
+    if (!fileExists(path)) {
+        return false;
+    }
+
     QSettings config(path, QSettings::IniFormat);
 
     for (unsigned row = 0; row < sizeof(custom_keymap)/sizeof(*custom_keymap); ++row) {

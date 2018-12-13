@@ -796,7 +796,7 @@ void MainWindow::setKeymap(const QString &value) {
     QString map = value;
     QString customPath = m_config->value(SETTING_KEYPAD_CUSTOM_PATH, QString()).toString();
     if (!SETTING_KEYPAD_CUSTOM.compare(map, Qt::CaseInsensitive)) {
-        if (customPath.isEmpty()) {
+        if (customPath.isEmpty() || !fileExists(customPath)) {
             map = SETTING_KEYPAD_CEMU;
         } else if (!keypadBridge->keymapImport(customPath)) {
             QMessageBox::warning(this, MSG_WARNING, tr("Unable to set custom keymap."));
