@@ -3,7 +3,7 @@
 // --------------
 // common section
 // --------------
-#define KEYMAP_83PCE KEYMAP_TYPE HostKey *KEY(eymap_83pce)[8][8] = {                                      \
+#define KEYMAP_83PCE const HostKey *KEY(eymap_83pce)[8][8] = {                                      \
         { &none, &none, &none, &none, &none, &none, &none, &none },                                 \
         { KEY(graph), KEY(trace), KEY(zoom), KEY(wind), KEY(yequ), KEY(2nd), KEY(mode), KEY(del) }, \
         { KEY(on), KEY(sto), KEY(ln), KEY(log), KEY(sq), KEY(inv), KEY(math), KEY(alpha) },         \
@@ -13,7 +13,7 @@
         { KEY(enter), KEY(add), KEY(sub), KEY(mul), KEY(div), KEY(pow), KEY(clr), &none },          \
         { KEY(down), KEY(left), KEY(right), KEY(up), &none, &none, &none, &none }                   \
     }
-#define KEYMAP_84PCE KEYMAP_TYPE HostKey *KEY(eymap_84pce)[8][8] = {                                      \
+#define KEYMAP_84PCE const HostKey *KEY(eymap_84pce)[8][8] = {                                      \
         { &none, &none, &none, &none, &none, &none, &none, &none },                                 \
         { KEY(graph), KEY(trace), KEY(zoom), KEY(wind), KEY(yequ), KEY(2nd), KEY(mode), KEY(del) }, \
         { KEY(on), KEY(sto), KEY(ln), KEY(log), KEY(sq), KEY(inv), KEY(math), KEY(alpha) },         \
@@ -34,7 +34,6 @@ static HostKey none = { static_cast<Qt::Key>(0), 0, 0, Qt::NoModifier, Qt::NoMod
 // ------------
 // CEmu section
 // ------------
-#define KEYMAP_TYPE const
 #define KEY(key) cemu_k##key
 
 static const HostKey KEY(enter)[] = { NRM(Return), NRM(Enter), none };
@@ -98,12 +97,10 @@ KEYMAP_83PCE;
 KEYMAP_84PCE;
 
 #undef KEY
-#undef KEYMAP_TYPE
 
 // -------------
 // TilEm section
 // -------------
-#define KEYMAP_TYPE const
 #define KEY(key) tilem_k##key
 
 static const HostKey KEY(enter)[] = { NRM(Return), NRM(Enter), none };
@@ -167,12 +164,10 @@ KEYMAP_83PCE;
 KEYMAP_84PCE;
 
 #undef KEY
-#undef KEYMAP_TYPE
 
 // -----------------
 // Wabbitemu section
 // -----------------
-#define KEYMAP_TYPE const
 #define KEY(key) wabbitemu_k##key
 
 static const HostKey KEY(enter)[] = { NRM(Return), NRM(Enter), none };
@@ -236,12 +231,10 @@ KEYMAP_83PCE;
 KEYMAP_84PCE;
 
 #undef KEY
-#undef KEYMAP_TYPE
 
 // ----------------
 // jsTIfied section
 // ----------------
-#define KEYMAP_TYPE const
 #define KEY(key) jstified_k##key
 
 static const HostKey KEY(enter)[] = { NRM(Return), NRM(Enter), none };
@@ -305,12 +298,10 @@ KEYMAP_83PCE;
 KEYMAP_84PCE;
 
 #undef KEY
-#undef KEYMAP_TYPE
 
 // ----------------
 // custom section
 // ----------------
-#define KEYMAP_TYPE
 #define KEY(key) custom_k##key
 
 static HostKey KEY(enter)[] = { none, none, none, none, none };
@@ -370,7 +361,7 @@ static HostKey KEY(trace)[] = { none, none, none, none, none };
 static HostKey KEY(graph)[] = { none, none, none, none, none };
 static HostKey KEY(on)[] = { none, none, none, none, none };
 
-#define KEYMAP_CUSTOM KEYMAP_TYPE HostKey *KEY(eymap)[8][8] = {                                      \
+#define KEYMAP_CUSTOM HostKey *KEY(eymap)[8][8] = {                                      \
         { &none, &none, &none, &none, &none, &none, &none, &none },                                 \
         { KEY(graph), KEY(trace), KEY(zoom), KEY(wind), KEY(yequ), KEY(2nd), KEY(mode), KEY(del) }, \
         { KEY(on), KEY(sto), KEY(ln), KEY(log), KEY(sq), KEY(inv), KEY(math), KEY(alpha) },         \
