@@ -330,6 +330,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->radioTilEmKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
     connect(ui->radioWabbitemuKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
     connect(ui->radiojsTIfiedKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
+    connect(ui->radioCustomKeys, &QRadioButton::clicked, this, &MainWindow::keymapCustomSelected);
 
     // keypad
     connect(ui->buttonTrueBlue, &QPushButton::clicked, this, &MainWindow::keypadChanged);
@@ -351,6 +352,9 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     // gui configurations
     connect(ui->actionExportWindowConfig, &QAction::triggered, this, &MainWindow::guiExport);
     connect(ui->actionImportWindowConfig, &QAction::triggered, this, &MainWindow::guiImport);
+
+    // keypad mappings
+    connect(ui->actionExportKeypadMapping, &QAction::triggered, this, &MainWindow::keymapExport);
 
     // application state
     connect(qGuiApp, &QGuiApplication::applicationStateChanged, this, &MainWindow::pauseEmu);

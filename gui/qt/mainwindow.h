@@ -355,6 +355,7 @@ private:
     // keypad
     void keymapLoad();
     void keymapChanged();
+    void keymapCustomSelected();
     void keypadChanged();
     void setKeymap(const QString &value);
     void setKeypadColor(unsigned int color);
@@ -436,6 +437,9 @@ private:
     void autotesterReload();
     void autotesterLaunch();
     void autotesterRefreshCRC();
+
+    // keybindings
+    void keymapExport();
 
     // memory
     void flashUpdate();
@@ -701,6 +705,8 @@ private:
     static const QString SETTING_KEYPAD_TILEM;
     static const QString SETTING_KEYPAD_WABBITEMU;
     static const QString SETTING_KEYPAD_JSTIFIED;
+    static const QString SETTING_KEYPAD_CUSTOM;
+    static const QString SETTING_KEYPAD_CUSTOM_PATH;
 
     static const QString SETTING_PREFERRED_LANG;
     static const QString SETTING_VERSION;

@@ -6306,7 +6306,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -8275,21 +8275,6 @@ QPushButton:pressed {
                <string>Key bindings</string>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_14">
-               <property name="spacing">
-                <number>4</number>
-               </property>
-               <property name="leftMargin">
-                <number>6</number>
-               </property>
-               <property name="topMargin">
-                <number>6</number>
-               </property>
-               <property name="rightMargin">
-                <number>6</number>
-               </property>
-               <property name="bottomMargin">
-                <number>6</number>
-               </property>
                <item>
                 <widget class="QRadioButton" name="radioCEmuKeys">
                  <property name="sizePolicy">
@@ -8363,6 +8348,25 @@ QPushButton:pressed {
                  </property>
                  <property name="text">
                   <string notr="true">jsTIfied</string>
+                 </property>
+                 <property name="autoExclusive">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QRadioButton" name="radioCustomKeys">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="text">
+                  <string notr="true">Custom</string>
                  </property>
                  <property name="autoExclusive">
                   <bool>true</bool>
@@ -9415,8 +9419,9 @@ QPushButton:pressed {
      <addaction name="actionExportRamImage"/>
      <addaction name="actionExportCalculatorState"/>
      <addaction name="actionExportDebugger"/>
-     <addaction name="actionExportCEmuImage"/>
      <addaction name="actionExportWindowConfig"/>
+     <addaction name="actionExportKeypadMapping"/>
+     <addaction name="actionExportCEmuImage"/>
     </widget>
     <widget class="QMenu" name="menuImport">
      <property name="title">
@@ -9934,6 +9939,15 @@ QPushButton:pressed {
    </property>
    <property name="text">
     <string>RAM image</string>
+   </property>
+  </action>
+  <action name="actionExportKeypadMapping">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/resources/icons/keypad.png</normaloff>:/icons/resources/icons/keypad.png</iconset>
+   </property>
+   <property name="text">
+    <string>Keypad Mapping</string>
    </property>
   </action>
  </widget>

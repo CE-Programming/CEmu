@@ -55,6 +55,7 @@ const QString MainWindow::SETTING_SCREEN_SKIN               = QStringLiteral("Sc
 const QString MainWindow::SETTING_SCREEN_SPI                = QStringLiteral("Screen/spi");
 const QString MainWindow::SETTING_KEYPAD_KEYMAP             = QStringLiteral("Keypad/map");
 const QString MainWindow::SETTING_KEYPAD_COLOR              = QStringLiteral("Keypad/color");
+const QString MainWindow::SETTING_KEYPAD_CUSTOM_PATH        = QStringLiteral("Keypad/custom_path");
 const QString MainWindow::SETTING_WINDOW_GROUP_DRAG         = QStringLiteral("Window/group_dock_drag");
 const QString MainWindow::SETTING_WINDOW_STATE              = QStringLiteral("Window/state");
 const QString MainWindow::SETTING_WINDOW_GEOMETRY           = QStringLiteral("Window/geometry");
@@ -95,6 +96,7 @@ const QString MainWindow::SETTING_KEYPAD_CEMU               = QStringLiteral("ce
 const QString MainWindow::SETTING_KEYPAD_TILEM              = QStringLiteral("tilem");
 const QString MainWindow::SETTING_KEYPAD_WABBITEMU          = QStringLiteral("wabbitemu");
 const QString MainWindow::SETTING_KEYPAD_JSTIFIED           = QStringLiteral("jsTIfied");
+const QString MainWindow::SETTING_KEYPAD_CUSTOM             = QStringLiteral("custom");
 
 const QString MainWindow::SETTING_PREFERRED_LANG            = QStringLiteral("preferred_lang");
 const QString MainWindow::SETTING_VERSION                   = QStringLiteral("version");
@@ -752,6 +754,29 @@ void MainWindow::keypadChanged() {
     setKeypadColor(color);
 }
 
+void MainWindow::keymapCustomSelected() {
+    QFileDialog dialog(this);
+    int good;
+
+    m_config->remove(SETTING_KEYPAD_CUSTOM_PATH);
+
+    dialog.setDirectory(m_dir);
+    dialog.setFileMode(QFileDialog::ExistingFile);
+    dialog.setNameFilter(tr("Keymap Config (*.ini);;All files (*.*)"));
+
+    good = dialog.exec();
+    m_dir = dialog.directory().absolutePath();
+    QString selected = dialog.selectedFiles().first();
+
+    if (!good || selected.isEmpty()) {
+        ui->radioCEmuKeys->setChecked(true);
+        return;
+    }
+
+    m_config->setValue(SETTING_KEYPAD_CUSTOM_PATH, selected);
+    setKeymap(SETTING_KEYPAD_CUSTOM);
+}
+
 void MainWindow::keymapChanged() {
     if (ui->radioCEmuKeys->isChecked()) {
         setKeymap(SETTING_KEYPAD_CEMU);
@@ -761,27 +786,53 @@ void MainWindow::keymapChanged() {
         setKeymap(SETTING_KEYPAD_WABBITEMU);
     } else if (ui->radiojsTIfiedKeys->isChecked()) {
         setKeymap(SETTING_KEYPAD_JSTIFIED);
+    } else if (ui->radioCustomKeys->isChecked()) {
+        setKeymap(SETTING_KEYPAD_CUSTOM);
     }
 }
 
-void MainWindow::setKeymap(const QString & value) {
-    m_config->setValue(SETTING_KEYPAD_KEYMAP, value);
-    keypadBridge->setKeymap(value);
+void MainWindow::setKeymap(const QString &value) {
+    QtKeypadBridge::KeymapMode mode;
+    QString map = value;
+    QString customPath = m_config->value(SETTING_KEYPAD_CUSTOM_PATH, QString()).toString();
+    if (!SETTING_KEYPAD_CUSTOM.compare(map, Qt::CaseInsensitive)) {
+        if (customPath.isEmpty()) {
+            map = SETTING_KEYPAD_CEMU;
+        } else if (!keypadBridge->keymapImport(customPath)) {
+            QMessageBox::warning(this, MSG_WARNING, tr("Unable to set custom keymap."));
+            map = SETTING_KEYPAD_CEMU;
+        }
+    }
+    if (!SETTING_KEYPAD_CEMU.compare(map, Qt::CaseInsensitive)) {
+        mode = QtKeypadBridge::KEYMAP_CEMU;
+    } else if (!SETTING_KEYPAD_TILEM.compare(map, Qt::CaseInsensitive)) {
+        mode = QtKeypadBridge::KEYMAP_TILEM;
+    } else if (!SETTING_KEYPAD_WABBITEMU.compare(map, Qt::CaseInsensitive)) {
+        mode = QtKeypadBridge::KEYMAP_WABBITEMU;
+    } else if (!SETTING_KEYPAD_JSTIFIED.compare(map, Qt::CaseInsensitive)) {
+        mode = QtKeypadBridge::KEYMAP_JSTIFIED;
+    } else {
+        mode = QtKeypadBridge::KEYMAP_CUSTOM;
+    }
+    m_config->setValue(SETTING_KEYPAD_KEYMAP, map);
+    keypadBridge->setKeymap(mode);
+    if (map == SETTING_KEYPAD_CEMU) {
+        ui->radioCEmuKeys->setChecked(true);
+    }
 }
 
 void MainWindow::keymapLoad() {
     QString currKeyMap = m_config->value(SETTING_KEYPAD_KEYMAP, SETTING_KEYPAD_CEMU).toString();
     if (!SETTING_KEYPAD_CEMU.compare(currKeyMap, Qt::CaseInsensitive)) {
         ui->radioCEmuKeys->setChecked(true);
-    }
-    else if (!SETTING_KEYPAD_TILEM.compare(currKeyMap, Qt::CaseInsensitive)) {
+    } else if (!SETTING_KEYPAD_TILEM.compare(currKeyMap, Qt::CaseInsensitive)) {
         ui->radioTilEmKeys->setChecked(true);
-    }
-    else if (!SETTING_KEYPAD_WABBITEMU.compare(currKeyMap, Qt::CaseInsensitive)) {
+    } else if (!SETTING_KEYPAD_WABBITEMU.compare(currKeyMap, Qt::CaseInsensitive)) {
         ui->radioWabbitemuKeys->setChecked(true);
-    }
-    else if (!SETTING_KEYPAD_JSTIFIED.compare(currKeyMap, Qt::CaseInsensitive)) {
+    } else if (!SETTING_KEYPAD_JSTIFIED.compare(currKeyMap, Qt::CaseInsensitive)) {
         ui->radiojsTIfiedKeys->setChecked(true);
+    } else if (!SETTING_KEYPAD_CUSTOM.compare(currKeyMap, Qt::CaseInsensitive)) {
+        ui->radioCustomKeys->setChecked(true);
     }
     setKeymap(currKeyMap);
 }
@@ -1135,6 +1186,18 @@ void MainWindow::guiImport() {
     m_config->setValue(SETTING_STATUS_INTERVAL, window.value(SETTING_STATUS_INTERVAL));
     m_needReload = true;
     close();
+}
+
+void MainWindow::keymapExport() {
+    QString filter = tr("Keymap Config (*.ini)");
+    QString path = QFileDialog::getSaveFileName(this, tr("Save keymap configuration"),
+                                                m_dir.absolutePath(), filter, &filter);
+    if (path.isEmpty()) {
+        return;
+    }
+
+
+    keypadBridge->keymapExport(path);
 }
 
 bool MainWindow::isFirstRun() {
