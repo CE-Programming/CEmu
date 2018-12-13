@@ -23,7 +23,7 @@ _Note that Release builds have an update checking feature, which is disabled in 
 * Screen capture, copy, and drag'n'drop (PNG)
 * Screen recording (animated PNG)
 * File sending/receiving (not for Apps/OS yet)
-* Multiple keybinding presets
+* Customizable keybindings with multiple presets
 * Keypress recording and history
 * Full screen modes (F11 key)
 * Emulation states for efficient saving / restoring
