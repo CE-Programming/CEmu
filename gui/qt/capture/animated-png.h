@@ -10,7 +10,10 @@ extern "C" {
 #include <stdint.h>
 
 #include "../../../core/lcd.h"
+
+#ifdef PNG_SUPPORT
 #include "png.h"
+#endif
 
 #ifdef PNG_WRITE_APNG_SUPPORTED
 

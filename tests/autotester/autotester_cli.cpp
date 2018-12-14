@@ -24,14 +24,14 @@
 
 #include "autotester.h"
 
-std::atomic<bool> do_transfers;
-std::atomic<bool> transfers_done;
-std::atomic<bool> transfers_err;
+static std::atomic<bool> do_transfers;
+static std::atomic<bool> transfers_done;
+static std::atomic<bool> transfers_err;
 
 /* As expected by the core */
 extern "C"
 {
-    auto lastTime = std::chrono::steady_clock::now();
+    static auto lastTime = std::chrono::steady_clock::now();
 
     void gui_do_stuff(void)
     {
@@ -46,8 +46,8 @@ extern "C"
     }
 
     void gui_console_clear() {}
-    void gui_console_printf(const char *format, ...) {}
-    void gui_console_err_printf(const char *format, ...) {}
+    void gui_console_printf(const char *format, ...) { (void)format; }
+    void gui_console_err_printf(const char *format, ...) { (void)format; }
 
     void gui_throttle()
     {
@@ -177,7 +177,7 @@ cleanExit:
         std::cout << status << " Out of " << autotester::hashesTested << " tests attempted, "
                   << autotester::hashesPassed << " passed, and " << autotester::hashesFailed << " failed.\n" << std::endl;
 
-        return autotester::hashesFailed;
+        return static_cast<int>(autotester::hashesFailed);
     }
 
     return retVal;

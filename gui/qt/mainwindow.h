@@ -13,7 +13,7 @@
 #include "keypad/qtkeypadbridge.h"
 #include "debugger/hexwidget.h"
 #include "debugger/disasm.h"
-#include "png.h"
+#include "capture/animated-png.h"
 #include "../../core/vat.h"
 #include "../../core/debug/debug.h"
 

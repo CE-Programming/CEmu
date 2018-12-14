@@ -57,6 +57,10 @@ CONFIG += c++11 console
 # Core options
 DEFINES += DEBUG_SUPPORT
 
+# These options can be disabled / enabled depending on
+# compiler / library support for your toolchain
+DEFINES += LIB_ARCHIVE_SUPPORT PNG_SUPPORT GLOB_SUPPORT
+
 CONFIG(release, debug|release) {
     #This is a release build
     DEFINES += QT_NO_DEBUG_OUTPUT
@@ -76,8 +80,10 @@ if (!win32-msvc*) {
         CONFIG(release, debug|release): GLOBAL_FLAGS += -O3 -flto
     }
 
-    CONFIG += link_pkgconfig
-    PKGCONFIG += zlib libarchive
+    if (contains(DEFINES, LIB_ARCHIVE_SUPPORT)) {
+        CONFIG += link_pkgconfig
+        PKGCONFIG += zlib libarchive
+    }
     # You should run ./capture/get_libpng-apng.sh first!
     isEmpty(USE_LIBPNG) {
         exists("$$PWD/capture/libpng-apng/.libs/libpng16.a") {

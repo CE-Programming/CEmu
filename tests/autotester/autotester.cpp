@@ -158,7 +158,7 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
 
                 do
                 {
-                    temp_buffer = cemucore::virt_mem_dup(param.start, param.size);
+                    temp_buffer = cemucore::virt_mem_dup(param.start, static_cast<int32_t>(param.size));
                     real_hash = crc32(temp_buffer, param.size);
                     match = (std::find(param.expected_CRCs.begin(), param.expected_CRCs.end(), real_hash) != param.expected_CRCs.end());
                     if (debugMode && !match) {
@@ -411,7 +411,7 @@ bool loadJSONConfig(const std::string& jsonContents)
         tmp = configJson["delay_after_key"];
         if (tmp.is_number())
         {
-            unsigned int delay = tmp.int_value();
+            unsigned int delay = static_cast<unsigned int>(tmp.int_value());
             if (delay < 10000)
             {
                 config.delay_after_key = delay;
@@ -430,7 +430,7 @@ bool loadJSONConfig(const std::string& jsonContents)
         tmp = configJson["delay_after_step"];
         if (tmp.is_number())
         {
-            unsigned int delay = tmp.int_value();
+            unsigned int delay = static_cast<unsigned int>(tmp.int_value());
             if (delay < 10000)
             {
                 config.delay_after_step = delay;
@@ -512,7 +512,7 @@ bool loadJSONConfig(const std::string& jsonContents)
                     {
                         hash_param.start = start_tmp_const->second;
                     } else if (std::regex_match(start_tmp, std::regex("^(0x[0-9a-fA-F]+)|\\d+$"))) {
-                        hash_param.start = (uint32_t)std::stoul(start_tmp, nullptr, (start_tmp.substr(0, 2) == "0x") ? 16 : 10);
+                        hash_param.start = static_cast<uint32_t>(std::stoul(start_tmp, nullptr, (start_tmp.substr(0, 2) == "0x") ? 16 : 10));
                     } else {
                         std::cerr << "[Error] hash #" << tmpHashName << " config's start was invalid" << std::endl;
                         return false;
@@ -530,7 +530,7 @@ bool loadJSONConfig(const std::string& jsonContents)
                     {
                         hash_param.size = size_tmp_const->second;
                     } else if (std::regex_match(size_tmp, std::regex("^(0x[0-9a-fA-F]+)|\\d+$"))) {
-                        hash_param.size = (uint32_t)std::stoul(size_tmp, nullptr, (size_tmp.substr(0, 2) == "0x") ? 16 : 10);
+                        hash_param.size = static_cast<uint32_t>(std::stoul(size_tmp, nullptr, (size_tmp.substr(0, 2) == "0x") ? 16 : 10));
                     } else {
                         std::cerr << "[Error] hash #" << tmpHashName << " config's size was invalid" << std::endl;
                         return false;
@@ -547,7 +547,7 @@ bool loadJSONConfig(const std::string& jsonContents)
                         if (tmpHashCRC.is_string() && !tmpHashCRC.string_value().empty()) {
                             const std::string& crc_tmp = tmpHashCRC.string_value();
                             if (std::regex_match(crc_tmp, std::regex("^[0-9a-fA-F]+$"))) {
-                                hash_param.expected_CRCs.push_back((uint32_t)std::stoul(crc_tmp, nullptr, 16));
+                                hash_param.expected_CRCs.push_back(static_cast<uint32_t>(std::stoul(crc_tmp, nullptr, 16)));
                             } else {
                                 std::cerr << "[Error] the CRC '" << crc_tmp << "' from hash #" << tmpHashName << "'s config is not a valid hex string" << std::endl;
                                 return false;
@@ -590,6 +590,7 @@ std::vector<std::string> globVector(const std::string& pattern)
         FindClose(find_handle);
     }
 #else
+#if defined(GLOB_SUPPORT)
     glob_t glob_result;
     if (!glob(pattern.c_str(), GLOB_TILDE, nullptr, &glob_result))
     {
@@ -599,6 +600,9 @@ std::vector<std::string> globVector(const std::string& pattern)
         }
         globfree(&glob_result);
     }
+#else
+    static_cast<void>(pattern);
+#endif
 #endif
     return files;
 }

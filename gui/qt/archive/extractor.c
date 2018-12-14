@@ -1,13 +1,21 @@
 #include "archive/extractor.h"
 
+#ifdef LIB_ARCHIVE_SUPPORT
 #include <archive.h>
 #include <archive_entry.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 
 bool extractor(const char *filename, const char *tmppath, bool (*mark)(const char*)) {
+#ifndef LIB_ARCHIVE_SUPPORT
+    (void)filename;
+    (void)tmppath;
+    (void)mark;
+    return false;
+#else
     struct archive *a = archive_read_new();
     struct archive *ext;
     struct archive_entry *entry;
@@ -69,4 +77,5 @@ bool extractor(const char *filename, const char *tmppath, bool (*mark)(const cha
     archive_write_close(ext);
     archive_write_free(ext);
     return true;
+#endif
 }
