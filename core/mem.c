@@ -544,7 +544,7 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
             case 0x4: case 0x5: case 0x6: case 0x7:
                 if (unprivileged_code()) {
                     control.protectionStatus |= 2;
-                    gui_console_printf("[CEmu] NMI reset cause by write to flash at address %#06x from unprivileged code. Hint: Possibly a null pointer dereference.\n", addr);
+                    gui_console_printf("[CEmu] NMI reset caused by write to flash at address %#06x from unprivileged code. Hint: Possibly a null pointer dereference.\n", addr);
                     cpu_nmi();
                 } else if (flash_unlocked()) {
                     mem_write_flash(addr, value);
