@@ -65,6 +65,11 @@ static uint32_t flash_block(uint32_t *addr, uint32_t *size) {
         *size = mask + 1;
     }
     if (*addr <= mask && flash.mapped) {
+        /* assume this will crash */
+        if (flash.waitStates == 6) {
+            flash.waitStates = 10;
+            cpu_crash("[CEmu] Reset triggered, flash data not latched.\n");
+        }
         return flash.waitStates;
     }
     *addr &= mask;
@@ -96,7 +101,7 @@ static uint32_t addr_block(uint32_t *addr, int32_t size, void **block, uint32_t 
         *block = lcd.crsrImage;
         *block_size = sizeof lcd.crsrImage;
     }
-    return *addr + size;
+    return *addr + (unsigned int)size;
 }
 
 void *phys_mem_ptr(uint32_t addr, int32_t size) {
@@ -116,7 +121,7 @@ void *virt_mem_cpy(void *buf, uint32_t addr, int32_t size) {
     uint32_t temp_addr, block_size, end_addr;
     fix_size(&addr, &size);
     if (!dest) {
-        dest = malloc(size);
+        dest = malloc((unsigned long)size);
     }
     save_dest = dest;
     while (size) {
@@ -144,13 +149,13 @@ void *mem_dma_cpy(void *buf, uint32_t addr, int32_t size) {
     uint8_t *dest = buf, *save_dest;
     fix_size(&addr, &size);
     if (!dest) {
-        dest = malloc(size);
+        dest = malloc((unsigned long)size);
     }
     save_dest = dest;
     while (size) {
         addr &= 0x07FFFF;
-        if (addr + size > addr && addr + size <= SIZE_RAM) {
-            memcpy(dest, &mem.ram.block[addr], size);
+        if (addr + (unsigned int)size > addr && addr + (unsigned int)size <= SIZE_RAM) {
+            memcpy(dest, &mem.ram.block[addr], (unsigned long)size);
             break;
         }
         if (addr < SIZE_RAM) {
@@ -200,14 +205,14 @@ static void flash_erase(uint32_t addr, uint8_t byte) {
 }
 
 static void flash_erase_sector(uint32_t addr, uint8_t byte) {
-    uint8_t selected;
+    unsigned int selected;
     (void)byte;
 
     mem.flash.command = FLASH_SECTOR_ERASE;
-    selected = addr/SIZE_FLASH_SECTOR_64K;
+    selected = addr / SIZE_FLASH_SECTOR_64K;
 
     if (!mem.flash.sector[selected].locked) {
-        memset(mem.flash.sector[selected].ptr, 0xFF, SIZE_FLASH_SECTOR_64K);
+        memset(mem.flash.sector[selected].ptr, 0xff, SIZE_FLASH_SECTOR_64K);
     }
 }
 
@@ -544,7 +549,7 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
             case 0x4: case 0x5: case 0x6: case 0x7:
                 if (unprivileged_code()) {
                     control.protectionStatus |= 2;
-                    gui_console_printf("[CEmu] NMI reset caused by write to flash at address %#06x from unprivileged code. Hint: Possibly a null pointer dereference.\n", addr);
+                    gui_console_printf("[CEmu] NMI reset cause by write to flash at address %#06x from unprivileged code. Hint: Possibly a null pointer dereference.\n", addr);
                     cpu_nmi();
                 } else if (flash_unlocked()) {
                     mem_write_flash(addr, value);
