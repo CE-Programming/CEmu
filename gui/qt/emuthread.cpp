@@ -149,11 +149,14 @@ void EmuThread::doStuff() {
         }
 
         if (m_request == RequestAutoTester) {
+            uint32_t run_rate_prev = emu_get_run_rate();
+            emu_set_run_rate(1000);
             if (!autotester::doTestSequence()) {
                 emit tested(1);
             } else {
                 emit tested(0);
             }
+            emu_set_run_rate(run_rate_prev);
         }
 
         m_request = RequestNone;

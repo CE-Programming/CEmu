@@ -225,6 +225,10 @@ void sched_set_clock(enum clock_id clock, uint32_t new_rate) {
     sched.clockRates[clock] = new_rate;
 }
 
+uint32_t sched_get_clock_rate(enum clock_id clock) {
+    return sched.clockRates[clock];
+}
+
 void sched_reset(void) {
     const uint32_t def_rates[CLOCK_NUM_ITEMS] = { 48000000, 60, 48000000, 24000000, 12000000, 6000000, 32768, 1 };
 
