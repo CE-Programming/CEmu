@@ -411,8 +411,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
     setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
 
-    autotester::stepCallback = [](){ qApp->processEvents(); };
-
     /* Absolute paths */
     QString portableConfig = appDir().path() + SETTING_DEFAULT_CONFIG_FILE;
     QString sharedConfig = configPath + SETTING_DEFAULT_CONFIG_FILE;
