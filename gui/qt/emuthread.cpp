@@ -4,6 +4,8 @@
 #include "../../core/cpu.h"
 #include "../../core/control.h"
 #include "../../core/link.h"
+#include "../../tests/autotester/crc32.hpp"
+#include "../../tests/autotester/autotester.h"
 
 #include <cassert>
 #include <cstdarg>
@@ -146,6 +148,14 @@ void EmuThread::doStuff() {
             emit loaded(emu_load(m_loadType, m_loadPath.toStdString().c_str()), m_loadType);
         }
 
+        if (m_request == RequestAutoTester) {
+            if (!autotester::doTestSequence()) {
+                emit tested(1);
+            } else {
+                emit tested(0);
+            }
+        }
+
         m_request = RequestNone;
     }
 
@@ -201,6 +211,12 @@ void EmuThread::send(const QStringList &list, unsigned int location) {
     m_vars = list;
     m_sendLoc = location;
     req(RequestSend);
+}
+
+void EmuThread::test(const QString &config, bool run) {
+    m_autotesterPath = config;
+    m_autotesterRun = run;
+    req(RequestAutoTester);
 }
 
 void EmuThread::save(emu_data_t type, const QString &path) {
