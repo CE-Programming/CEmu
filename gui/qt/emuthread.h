@@ -34,6 +34,7 @@ public:
     void save(emu_data_t type, const QString &path);
     void setRam(const QString &path);
     void load(emu_data_t type, const QString &path);
+    void test(const QString &config, bool run);
 
     enum {
         ConsoleNorm,
@@ -48,6 +49,7 @@ public:
         RequestLoad,
         RequestSend,
         RequestReceive,
+        RequestAutoTester,
         RequestDebugger
     };
 
@@ -71,6 +73,7 @@ signals:
     void sendSpeed(int value);
 
     // state
+    void tested(int status);
     void saved(bool success);
     void loaded(emu_state_t state, emu_data_t type);
     void blocked(int req);
@@ -112,6 +115,9 @@ private:
 
     std::atomic<int> m_request;
     bool m_debug; // protected by m_mutexDebug
+
+    QString m_autotesterPath;
+    bool m_autotesterRun;
 
     QString m_savePath;
     QString m_loadPath;

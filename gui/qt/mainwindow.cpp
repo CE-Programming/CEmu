@@ -126,6 +126,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(&emu, &EmuThread::saved, this, &MainWindow::emuSaved, Qt::QueuedConnection);
     connect(&emu, &EmuThread::loaded, this, &MainWindow::emuCheck, Qt::QueuedConnection);
     connect(&emu, &EmuThread::blocked, this, &MainWindow::emuBlocked, Qt::QueuedConnection);
+    connect(&emu, &EmuThread::tested, this, &MainWindow::autotesterTested, Qt::QueuedConnection);
 
     // console actions
     connect(ui->buttonConsoleclear, &QPushButton::clicked, ui->console, &QPlainTextEdit::clear);
@@ -1919,6 +1920,8 @@ void MainWindow::recentSelectAll() {
 void MainWindow::autotesterErr(int errCode) {
     QString errMsg;
     switch (errCode) {
+        case 0:
+            return; // no error
         case -1:
             errMsg = tr("Error. No config loaded");
             break;
@@ -2024,10 +2027,11 @@ void MainWindow::autotesterLaunch() {
     }
 
     // Follow the sequence
-    if (!autotester::doTestSequence()) {
-        autotesterErr(1);
-        return;
-    }
+    emu.test(ui->JSONconfigPath->text(), true);
+}
+
+void MainWindow::autotesterTested(int status) {
+    autotesterErr(status);
     if (!opts.suppressTestDialog) {
         QMessageBox::information(this, tr("Test results"), QString(tr("Out of %2 tests attempted:\n%4 passed\n%6 failed")).arg(QString::number(autotester::hashesTested), QString::number(autotester::hashesPassed), QString::number(autotester::hashesFailed)));
     }
