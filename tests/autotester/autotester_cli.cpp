@@ -5,12 +5,10 @@
  * License: GPLv3
  */
 
-#include <atomic>
 #include <string>
 #include <vector>
 #include <fstream>
 #include <iostream>
-#include <thread>
 #include <chrono>
 #include <cstdarg>
 #include <cstring>
@@ -24,47 +22,12 @@
 
 #include "autotester.h"
 
-static std::atomic<bool> do_transfers;
-static std::atomic<bool> transfers_done;
-static std::atomic<bool> transfers_err;
-
 /* As expected by the core */
 extern "C"
 {
-    static auto lastTime = std::chrono::steady_clock::now();
-
-    void gui_do_stuff(void)
-    {
-        if (!transfers_done && do_transfers)
-        {
-            if (!autotester::sendFilesForTest())
-            {
-                transfers_err = true;
-            }
-            transfers_done = true;
-        }
-    }
-
     void gui_console_clear() {}
     void gui_console_printf(const char *format, ...) { (void)format; }
     void gui_console_err_printf(const char *format, ...) { (void)format; }
-
-    void gui_throttle()
-    {
-        auto interval  = std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<int, std::ratio<1, 60 * 1000000>>(1000000));
-
-        auto cur_time  = std::chrono::steady_clock::now(),
-             next_time = lastTime + interval;
-
-        if (cur_time < next_time)
-        {
-            lastTime = next_time;
-            std::this_thread::sleep_until(next_time);
-        } else {
-            lastTime = cur_time;
-            std::this_thread::yield();
-        }
-    }
 }
 
 int main(int argc, char* argv[])
@@ -85,10 +48,6 @@ int main(int argc, char* argv[])
     } else {
         autotester::debugMode = false;
     }
-
-    do_transfers   = false;
-    transfers_done = false;
-    transfers_err  = false;
 
     const std::string jsonPath(argv[1]);
     std::string jsonContents;
@@ -119,34 +78,23 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    /* Someone with better multithreading coding experience should probaly re-do this stuff correctly,
-     * i.e. actually wait until the core is ready to do stuff, instead of blinding doing sleeps, etc.
-     * Things like std::condition_variable should help, IIRC */
-    std::thread coreThread;
-    if (cemucore::EMU_STATE_VALID == cemucore::emu_load(cemucore::EMU_DATA_ROM, autotester::config.rom.c_str()))
+    if (cemucore::EMU_STATE_VALID != cemucore::emu_load(cemucore::EMU_DATA_ROM, autotester::config.rom.c_str()))
     {
-        coreThread = std::thread(&cemucore::emu_loop);
-    } else {
         std::cerr << "[Error] Couldn't start emulation!" << std::endl;
         return -1;
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    cemucore::emu_set_run_rate(1000);
+    cemucore::emu_run(10000);
 
     // Clear home screen
     autotester::sendKey(0x09);
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    cemucore::emu_run(300);
 
-    do_transfers = !autotester::config.transfer_files.empty();
-
-    if (do_transfers)
+    // Transfer things if needed
+    if (!autotester::config.transfer_files.empty())
     {
-        while (!transfers_done) {
-            // wait for the emu thread to finish that.
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
-        do_transfers = false;
-        if (transfers_err)
+        if (!autotester::sendFilesForTest())
         {
             std::cerr << "[Error] Error while in sendFilesForTest!" << std::endl;
             retVal = -1;
@@ -154,7 +102,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    cemucore::emu_run(500);
 
     // Follow the sequence
     if (!autotester::doTestSequence())
@@ -168,7 +116,7 @@ int main(int argc, char* argv[])
 
 cleanExit:
     cemucore::emu_exit();
-    coreThread.join();
+    cemucore::asic_free();
 
     // If no JSON/program/misc. error, return the hash failure count.
     if (retVal == 0)

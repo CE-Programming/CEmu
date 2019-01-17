@@ -12,8 +12,6 @@
 #include <algorithm>
 #include <functional>
 #include <unordered_map>
-#include <thread>
-#include <chrono>
 #include <regex>
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
@@ -69,7 +67,7 @@ static const std::unordered_map<std::string, coord2d> valid_keys = {
 void sendCSC(uint8_t csc)
 {
     while (!cemucore::sendCSC(csc)) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        cemucore::emu_run(50);
         DO_STEP_CALLBACK();
     }
 }
@@ -77,7 +75,7 @@ void sendCSC(uint8_t csc)
 void sendKey(uint16_t key)
 {
     while (!cemucore::sendKey(key)) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        cemucore::emu_run(50);
         DO_STEP_CALLBACK();
     }
 }
@@ -85,7 +83,7 @@ void sendKey(uint16_t key)
 void sendLetterKeyPress(char letter)
 {
     while (!cemucore::sendLetterKeyPress(letter)) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        cemucore::emu_run(50);
         DO_STEP_CALLBACK();
     }
 }
@@ -111,7 +109,7 @@ static const std::unordered_map<std::string, seq_cmd_action_func_t> valid_action
     {
         "reset", [] {
             cemucore::cpu_crash("autotester action");
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            cemucore::emu_run(1000);
         }
     },
     {
@@ -133,11 +131,10 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
     {
         "delay", [](const std::string& delay_str) {
             unsigned long delay = std::stoul(delay_str);
-            auto until = std::chrono::steady_clock::now() + std::chrono::milliseconds(delay);
-            while (std::chrono::steady_clock::now() < until)
-            {
-                std::this_thread::sleep_for(std::chrono::milliseconds(delay % 10));
-                DO_STEP_CALLBACK();
+            while (delay) {
+                unsigned long amount = (std::min)(delay, 100ul);
+                cemucore::emu_run(amount);
+                delay -= amount;
             }
         }
     },
@@ -152,9 +149,7 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
                 const hash_params_t& param = tmp->second;
                 bool match = false;
 
-                const int32_t timeout = param.timeout_ms;
-
-                auto until = std::chrono::steady_clock::now() + std::chrono::milliseconds(::abs(timeout));
+                int32_t delay = param.timeout_ms;
 
                 do
                 {
@@ -167,12 +162,10 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
                         memcpy(temp_buffer_dup, temp_buffer, param.size);
                     }
                     ::free(temp_buffer);
-                    if (timeout > 10)
-                    {
-                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                        DO_STEP_CALLBACK();
-                    }
-                } while (timeout > 0 && !match && std::chrono::steady_clock::now() < until);
+                    int32_t amount = (std::min)(delay, 100);
+                    cemucore::emu_run(amount);
+                    delay -= amount;
+                } while (delay > 0 && !match);
 
                 if (match)
                 {
@@ -234,11 +227,11 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
             {
                 const coord2d& key_coords = tmp->second;
                 cemucore::keypad_key_event(key_coords.y, key_coords.x, true);
-                std::this_thread::sleep_for(std::chrono::milliseconds(80));
+                cemucore::emu_run(80);
                 cemucore::keypad_key_event(key_coords.y, key_coords.x, false);
                 if (config.delay_after_key > 0)
                 {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(config.delay_after_key));
+                    cemucore::emu_run(config.delay_after_key);
                     DO_STEP_CALLBACK();
                 }
             } else {
@@ -697,7 +690,7 @@ bool doTestSequence()
             return false;
         }
         DO_STEP_CALLBACK();
-        std::this_thread::sleep_for(std::chrono::milliseconds(config.delay_after_step));
+        cemucore::emu_run(config.delay_after_step);
     }
     return true;
 }
