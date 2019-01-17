@@ -2025,6 +2025,7 @@ void MainWindow::autotesterLaunch() {
     }
 
     // Follow the sequence
+    ui->buttonLaunchTest->setEnabled(false);
     emu.test(ui->JSONconfigPath->text(), true);
 }
 
@@ -2033,6 +2034,7 @@ void MainWindow::autotesterTested(int status) {
     if (!opts.suppressTestDialog) {
         QMessageBox::information(this, tr("Test results"), QString(tr("Out of %2 tests attempted:\n%4 passed\n%6 failed")).arg(QString::number(autotester::hashesTested), QString::number(autotester::hashesPassed), QString::number(autotester::hashesFailed)));
     }
+    ui->buttonLaunchTest->setEnabled(true);
 }
 
 void MainWindow::autotesterUpdatePresets(int comboBoxIndex) {
