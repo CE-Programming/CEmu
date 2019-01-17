@@ -29,15 +29,14 @@ typedef enum {
 /* these should only be called from the emulation thread if multithreaded */
 emu_state_t emu_load(emu_data_t type, const char *path);  /* load an emulator state */
 bool emu_save(emu_data_t type, const char *path);         /* save an emulator state */
-void emu_loop(void);                                      /* core emulation loop, call after emu_load */
+void emu_run(uint64_t ticks);                             /* core emulation function, call after emu_load */
+void emu_set_run_rate(uint32_t rate);                     /* how many ticks per second for emu_run */
 void emu_reset(void);                                     /* reset emulation as if the reset button was pressed */
 void emu_exit(void);                                      /* exit emulation */
 
 /* gui callbacks called by the core */
 /* if you want to port CEmu to another platform, simply reimplement these callbacks */
 /* if you want debugging support, don't forget about the debug callbacks as well */
-void gui_do_stuff(void);                                  /* perform tasks such as sending files, opening debugger */
-void gui_throttle(void);                                  /* throttling to get correct emulation speed */
 void gui_console_clear(void);                             /* sent to clear the console */
 void gui_console_printf(const char *format, ...);         /* printf from the core to stdout */
 void gui_console_err_printf(const char *format, ...);     /* printf from the core to stderr */

@@ -30,10 +30,9 @@ static uint32_t muldiv_ceil(uint32_t a, uint32_t b, uint32_t c) {
     return ((uint64_t)a * b + c - 1) / c;
 }
 
-void sched_throttle_event(enum sched_item_id id) {
-    sched_repeat(id, 100000); /* 60 Hz */
-    gui_do_stuff();
-    gui_throttle();
+void sched_run_event(enum sched_item_id id) {
+    (void)id;
+    sched.run_event_triggered = true;
 }
 
 uint32_t sched_event_next_cycle(void) {
@@ -196,7 +195,7 @@ static void sched_second(enum sched_item_id id) {
     sched_update(SCHED_SECOND);
 }
 
-void sched_set_clocks(enum clock_id count, uint32_t *new_rates) {
+void sched_set_clock(enum clock_id clock, uint32_t new_rate) {
     enum sched_item_id id;
     struct sched_item *item;
     uint64_t ticks;
@@ -204,28 +203,30 @@ void sched_set_clocks(enum clock_id count, uint32_t *new_rates) {
     if (sched.event.cycle) {
         return;
     }
-    cpu.baseCycles += cpu.cycles;
-    cpu.cycles = muldiv_floor(cpu.cycles, new_rates[CLOCK_CPU], sched.clockRates[CLOCK_CPU]);
-    cpu.baseCycles -= cpu.cycles;
-    for (id = 0; id < SCHED_NUM_ITEMS; id++) {
-        if (sched_active(id)) {
-            item = &sched.items[id];
-            if (item->clock < count) {
-                ticks = (uint64_t)item->second * sched.clockRates[item->clock] + item->tick;
-                item->second = ticks / new_rates[item->clock];
-                item->tick = ticks % new_rates[item->clock];
-                item->cycle = muldiv_floor(item->tick, new_rates[CLOCK_CPU], new_rates[item->clock]);
-            } else {
-                item->cycle = muldiv_floor(item->tick, new_rates[CLOCK_CPU], sched.clockRates[item->clock]);
+    if (clock == CLOCK_CPU) {
+        cpu.baseCycles += cpu.cycles;
+        cpu.cycles = muldiv_floor(cpu.cycles, new_rate, sched.clockRates[CLOCK_CPU]);
+        cpu.baseCycles -= cpu.cycles;
+        for (id = 0; id < SCHED_NUM_ITEMS; id++) {
+            if (sched_active(id)) {
+                item = &sched.items[id];
+                if (item->clock == clock) {
+                    ticks = (uint64_t)item->second * sched.clockRates[item->clock] + item->tick;
+                    item->second = ticks / new_rate;
+                    item->tick = ticks % new_rate;
+                    item->cycle = item->tick;
+                } else {
+                    item->cycle = muldiv_floor(item->tick, new_rate, sched.clockRates[item->clock]);
+                }
             }
         }
     }
     sched_update(SCHED_SECOND);
-    memcpy(sched.clockRates, new_rates, sizeof(uint32_t) * count);
+    sched.clockRates[clock] = new_rate;
 }
 
 void sched_reset(void) {
-    const uint32_t def_rates[CLOCK_NUM_ITEMS] = { 48000000, 48000000, 24000000, 12000000, 6000000, 32768, 1 };
+    const uint32_t def_rates[CLOCK_NUM_ITEMS] = { 48000000, 60, 48000000, 24000000, 12000000, 6000000, 32768, 1 };
 
     memset(&sched, 0, sizeof sched);
     memcpy(sched.clockRates, def_rates, sizeof(def_rates));
@@ -238,9 +239,9 @@ void sched_reset(void) {
     sched.items[SCHED_SECOND].tick = 1;
     sched.items[SCHED_SECOND].cycle = sched.clockRates[CLOCK_CPU];
 
-    sched.items[SCHED_THROTTLE].clock = CLOCK_6M;
-    sched.items[SCHED_THROTTLE].callback.event = sched_throttle_event;
-    sched_set(SCHED_THROTTLE, 0);
+    sched.items[SCHED_RUN].clock = CLOCK_RUN;
+    sched.items[SCHED_RUN].callback.event = sched_run_event;
+    sched_set(SCHED_RUN, 0);
 
     sched.items[SCHED_PREV_MA].clock = CLOCK_48M;
     sched_set(SCHED_PREV_MA, 0);
