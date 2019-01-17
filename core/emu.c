@@ -17,7 +17,7 @@
 #include <emscripten.h>
 #endif
 
-#define IMAGE_VERSION 0xCECE0013
+#define IMAGE_VERSION 0xCECE0014
 
 void EMSCRIPTEN_KEEPALIVE emu_exit(void) {
     cpu.abort = CPU_ABORT_EXIT;
@@ -236,38 +236,9 @@ rerr:
     return state;
 }
 
-#ifdef __EMSCRIPTEN__
-
-extern bool throttle_triggered;
-
-static void emu_main_loop_inner(void) {
-    throttle_triggered = false;
-
-    while (true) {
-        if (cpu.abort == CPU_ABORT_EXIT) {
-            emscripten_cancel_main_loop();
-            return;
-        }
-        sched_process_pending_events();
-        if (cpu.abort == CPU_ABORT_RESET) {
-            cpu_transition_abort(CPU_ABORT_RESET, CPU_ABORT_NONE);
-            gui_console_printf("[CEmu] Reset triggered.\n");
-            asic_reset();
-        }
-        if (throttle_triggered) break;
-        cpu_execute();
-    }
-}
-
-void emu_loop(void) {
-    cpu.abort = CPU_ABORT_NONE;
-    emscripten_set_main_loop(emu_main_loop_inner, 60, 1);
-    asic_free();
-}
-
-#else
-
-void emu_loop(void) {
+void emu_run(uint64_t ticks) {
+    sched.run_event_triggered = false;
+    sched_repeat(SCHED_RUN, ticks);
     cpu.abort = CPU_ABORT_NONE;
     while (cpu.abort != CPU_ABORT_EXIT) {
         sched_process_pending_events();
@@ -279,9 +250,13 @@ void emu_loop(void) {
             gui_debug_open(DBG_READY, 0);
 #endif
         }
+        if (sched.run_event_triggered) {
+            break;
+        }
         cpu_execute();
     }
-    asic_free();
 }
 
-#endif
+void emu_set_run_rate(uint32_t rate) {
+    sched_set_clock(CLOCK_RUN, rate);
+}

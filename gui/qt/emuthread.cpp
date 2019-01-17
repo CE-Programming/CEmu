@@ -13,10 +13,6 @@ static EmuThread *emu;
 
 // reimplemented callbacks
 
-void gui_do_stuff(void) {
-    emu->doStuff();
-}
-
 void gui_console_clear(void) {
     emu->consoleClear();
 }
@@ -43,10 +39,6 @@ void gui_debug_close(void) {
     emu->debugDisable();
 }
 
-void gui_throttle(void) {
-    emu->throttleWait();
-}
-
 EmuThread::EmuThread(QObject *parent) : QThread{parent}, write{CONSOLE_BUFFER_SIZE},
                                         m_speed{100}, m_throttle{true},
                                         m_lastTime{std::chrono::steady_clock::now()},
@@ -56,7 +48,12 @@ EmuThread::EmuThread(QObject *parent) : QThread{parent}, write{CONSOLE_BUFFER_SI
 }
 
 void EmuThread::run() {
-    emu_loop();
+    while (cpu.abort != CPU_ABORT_EXIT) {
+        emu_run(1u);
+        doStuff();
+        throttleWait();
+    }
+    asic_free();
 }
 
 void EmuThread::writeConsole(int console, const char *format, va_list args) {

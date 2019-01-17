@@ -116,7 +116,7 @@ ti_device_t get_device_type(void) {
 }
 
 void set_cpu_clock(uint32_t new_rate) {
-   sched_set_clocks(1, &new_rate);
+   sched_set_clock(CLOCK_CPU, new_rate);
 }
 
 bool asic_restore(FILE *image) {

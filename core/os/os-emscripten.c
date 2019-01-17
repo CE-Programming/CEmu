@@ -21,14 +21,9 @@
 
 #include <time.h>
 
-bool throttle_triggered;
 char file_buf[500];
 
-void gui_throttle() {
-    throttle_triggered = true;
-}
-
-void gui_do_stuff() {
+static void gui_do_stuff(void) {
     if (file_buf[0] != '\0') {
         if (!sendVariableLink(file_buf, LINK_FILE)) {
             fprintf(stderr, "Error sending file to emu: %s\n", file_buf);
@@ -36,6 +31,11 @@ void gui_do_stuff() {
         }
         file_buf[0] = 0;
     }
+}
+
+static void emu_loop(void) {
+    emu_run(1u);
+    gui_do_stuff();
 }
 
 void gui_debug_close(void) {}
@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
             initLCD();
             enableGUI();
         );
-        emu_loop();
+        emscripten_set_main_loop(emu_loop, 60, 1);
     } else {
         EM_ASM(
             emul_is_inited = false;

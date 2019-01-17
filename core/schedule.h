@@ -9,13 +9,13 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
-enum clock_id { CLOCK_CPU, CLOCK_48M, CLOCK_24M, CLOCK_12M, CLOCK_6M, CLOCK_32K,
+enum clock_id { CLOCK_CPU, CLOCK_RUN, CLOCK_48M, CLOCK_24M, CLOCK_12M, CLOCK_6M, CLOCK_32K,
                 CLOCK_1, CLOCK_NUM_ITEMS };
 
 enum sched_item_id {
     SCHED_SECOND,
 
-    SCHED_THROTTLE,
+    SCHED_RUN,
     SCHED_WATCHDOG,
     SCHED_TIMER_DELAY, /* Must be before TIMER# */
     SCHED_TIMER1,
@@ -27,7 +27,7 @@ enum sched_item_id {
     SCHED_RTC,
     SCHED_USB,
 
-    SCHED_FIRST_EVENT = SCHED_THROTTLE,
+    SCHED_FIRST_EVENT = SCHED_RUN,
     SCHED_LAST_EVENT = SCHED_USB,
 
     SCHED_PREV_MA,
@@ -62,12 +62,13 @@ typedef struct sched_state {
     struct sched_dma {
         enum sched_item_id next;
     } dma;
+    bool run_event_triggered;
 } sched_state_t;
 
 extern sched_state_t sched;
 
 void sched_reset(void);
-void sched_throttle_event(enum sched_item_id id);
+void sched_run_event(enum sched_item_id id);
 uint32_t sched_event_next_cycle(void);
 uint32_t sched_dma_next_cycle(void);
 void sched_process_pending_events(void);
@@ -81,7 +82,7 @@ uint64_t sched_cycle(enum sched_item_id id);
 uint64_t sched_cycles_remaining(enum sched_item_id id);
 uint64_t sched_tick(enum sched_item_id id);
 uint64_t sched_ticks_remaining(enum sched_item_id id);
-void sched_set_clocks(enum clock_id count, uint32_t *new_rates);
+void sched_set_clock(enum clock_id clock, uint32_t new_rate);
 uint64_t sched_total_cycles(void);
 uint64_t sched_total_time(enum clock_id clock);
 uint64_t event_next_cycle(enum sched_item_id id);
