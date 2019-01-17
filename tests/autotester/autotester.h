@@ -84,9 +84,6 @@ namespace autotester
 
     bool doTestSequence();
 
-    /* Optional callback function called after each step (useful for GUIs) */
-    extern void (*stepCallback)();
-
     /* The global config variable */
     extern config_t config;
 

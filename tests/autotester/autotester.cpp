@@ -34,9 +34,6 @@ config_t config;
 bool debugMode = true;
 bool ignoreROMfield = false;
 bool configLoaded = false;
-void (*stepCallback)() = nullptr;
-
-#define DO_STEP_CALLBACK()  if (stepCallback) { stepCallback(); }
 
 /* Will be incremented in case of matching CRC */
 unsigned int hashesPassed = 0;
@@ -68,7 +65,6 @@ void sendCSC(uint8_t csc)
 {
     while (!cemucore::sendCSC(csc)) {
         cemucore::emu_run(50);
-        DO_STEP_CALLBACK();
     }
 }
 
@@ -76,7 +72,6 @@ void sendKey(uint16_t key)
 {
     while (!cemucore::sendKey(key)) {
         cemucore::emu_run(50);
-        DO_STEP_CALLBACK();
     }
 }
 
@@ -84,7 +79,6 @@ void sendLetterKeyPress(char letter)
 {
     while (!cemucore::sendLetterKeyPress(letter)) {
         cemucore::emu_run(50);
-        DO_STEP_CALLBACK();
     }
 }
 
@@ -232,7 +226,6 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
                 if (config.delay_after_key > 0)
                 {
                     cemucore::emu_run(config.delay_after_key);
-                    DO_STEP_CALLBACK();
                 }
             } else {
                 std::cerr << "\t[Error] unknown key \"" << which_key << "\" was not pressed." << std::endl;
@@ -646,7 +639,6 @@ bool sendFilesForTest()
             {
                 std::cout << "[OK]" << std::endl;
             }
-            DO_STEP_CALLBACK();
         }
     }
 
@@ -669,7 +661,6 @@ bool sendFilesForTest()
         {
             std::cout << "[OK]" << std::endl;
         }
-        DO_STEP_CALLBACK();
     }
     return true;
 }
@@ -689,7 +680,6 @@ bool doTestSequence()
         {
             return false;
         }
-        DO_STEP_CALLBACK();
         cemucore::emu_run(config.delay_after_step);
     }
     return true;
