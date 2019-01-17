@@ -83,6 +83,7 @@ uint64_t sched_cycles_remaining(enum sched_item_id id);
 uint64_t sched_tick(enum sched_item_id id);
 uint64_t sched_ticks_remaining(enum sched_item_id id);
 void sched_set_clock(enum clock_id clock, uint32_t new_rate);
+uint32_t sched_get_clock_rate(enum clock_id clock);
 uint64_t sched_total_cycles(void);
 uint64_t sched_total_time(enum clock_id clock);
 uint64_t event_next_cycle(enum sched_item_id id);
