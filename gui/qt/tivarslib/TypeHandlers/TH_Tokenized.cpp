@@ -102,7 +102,7 @@ namespace tivars
         uint errCount = 0;
         std::string str;
         const size_t dataSize = data.size();
-        for (uint i = 2; i < (uint)howManyBytes + 2; i++)
+        for (uint i = 2; i < (uint)dataSize; i++)
         {
             uint currentToken = data[i];
             uint nextToken = (i < dataSize-1) ? data[i+1] : (uint)-1;
