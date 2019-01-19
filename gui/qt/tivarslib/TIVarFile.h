@@ -28,13 +28,13 @@ namespace tivars
 
         struct var_entry_t
         {
-            uint16_t meta_length   = {0}; // byte count of the next 3 or 5 fields (== 11 or 13) depending on calcFlags, see below
-            uint16_t data_length   = {0};
+            uint16_t meta_length   = 0;   // byte count of the next 3 or 5 fields (== 11 or 13) depending on calcFlags, see below
+            uint16_t data_length   = 0;
             uchar    typeID        = 0;
             uchar    varname[8]    = {0};
             uchar    version       = 0;   // present only if calcFlags >= TIFeatureFlags::hasFlash
             uchar    archivedFlag  = 0;   // present only if calcFlags >= TIFeatureFlags::hasFlash
-            uint16_t data_length2  = {0}; // same as data_length
+            uint16_t data_length2  = 0;   // same as data_length
             data_t   data;
         };
 
