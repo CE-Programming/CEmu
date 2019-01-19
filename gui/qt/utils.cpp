@@ -58,7 +58,7 @@ std::string calc_var_content_string(const calc_var_t& var) {
     } else {
         func = tivars::TIVarType::createFromID((uint)var.type).getHandlers().second;
     }
-    const options_t opts = (var.type == CALC_VAR_TYPE_PROG || var.type == CALC_VAR_TYPE_STRING)
+    const options_t opts = (calc_var_is_prog(&var) || var.type == CALC_VAR_TYPE_STRING)
                             ? options_t({ {"prettify", true} }) : options_t();
     return func(data_t(var.data, var.data + var.size), opts);
 }
