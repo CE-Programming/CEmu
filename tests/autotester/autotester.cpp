@@ -587,6 +587,7 @@ std::vector<std::string> globVector(const std::string& pattern)
         globfree(&glob_result);
     }
 #else
+    #warning GLOB_SUPPORT is not defined, the vector returned by this function will be empty!
     static_cast<void>(pattern);
 #endif
 #endif
