@@ -758,6 +758,7 @@ static void cpu_execute_bli() {
 
 void cpu_init(void) {
     memset(&cpu, 0, sizeof(eZ80cpu_t));
+    cpu.abort = CPU_ABORT_NONE;
     gui_console_printf("[CEmu] Initialized CPU...\n");
 }
 

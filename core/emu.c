@@ -239,7 +239,6 @@ rerr:
 void emu_run(uint64_t ticks) {
     sched.run_event_triggered = false;
     sched_repeat(SCHED_RUN, ticks);
-    cpu.abort = CPU_ABORT_NONE;
     while (cpu.abort != CPU_ABORT_EXIT) {
         sched_process_pending_events();
         if (cpu.abort == CPU_ABORT_RESET) {
