@@ -513,6 +513,7 @@ static bool usb_execute_setup(struct libusb_transfer *xfer) {
                         libusb_release_interface(usb.xfer->dev_handle, iface);
                     }
                     libusb_free_config_descriptor(config);
+                    config = NULL;
                 }
                 if ((xfer->status = libusb_status_from_error(err = libusb_get_config_descriptor_by_value(libusb_get_device(xfer->dev_handle), index, &config))) == LIBUSB_TRANSFER_COMPLETED &&
                     (xfer->status = libusb_status_from_error(err = libusb_set_configuration(xfer->dev_handle, index))) == LIBUSB_TRANSFER_COMPLETED) {
@@ -1020,6 +1021,7 @@ void usb_reset(void) {
     usb_plug_b();
     sched.items[SCHED_USB].callback.event = usb_event;
     sched.items[SCHED_USB].clock = CLOCK_USB;
+    sched_clear(SCHED_USB_DMA);
 }
 
 static void usb_init_hccr(void) {
@@ -1087,6 +1089,7 @@ static int LIBUSB_CALL usb_hotplug(libusb_context *ctx, libusb_device *dev, libu
             if (dev == usb.dev) {
                 usb_unplug_a();
                 usb_close(&usb.xfer->dev_handle);
+                usb.dev = NULL;
                 gui_console_printf("[USB] Device unplugged.\n");
             }
             break;
@@ -1158,6 +1161,7 @@ bool usb_restore(FILE *image) {
     usb.data                        = NULL;
     usb.len                         = 0;
     usb.ctx                         = NULL;
+    usb.dev                         = NULL;
     usb.xfer                        = NULL;
     init_libusb();
     return success;
