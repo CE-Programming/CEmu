@@ -1275,11 +1275,12 @@ void SourcesWidget::VariableModel::fetchMore(const QModelIndex &parent) {
     auto &variable = m_variables[parent.internalId()];
     auto symbol = variable.symbol;
     qint32 addr = variable.base + symbol.value;
-    if (symbol.kind != SymbolKind::StackSlot) {
-        symbol.value = 0;
-    }
+    symbol.value = 0;
     if (symbol.type & 0xE0000000u) {
         symbol.type |= 0xFFFFFFE0u;
+    }
+    if (symbol.kind == SymbolKind::StackSlot) {
+        symbol.kind = SymbolKind::Uninitialized;
     }
     QString name = variable.data[0];
     if (variable.parent == s_topLevelParent) {
@@ -1327,7 +1328,7 @@ void SourcesWidget::VariableModel::fetchMore(const QModelIndex &parent) {
                 name = name + '.';
             }
             for (auto &member : scope.recordList.at(*record).symbolList) {
-                createVariable(parent, member, addr);
+                createVariable(parent, member, addr, name + stringList().value(member.name - 1));
             }
             break;
         }
