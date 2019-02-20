@@ -1065,8 +1065,8 @@ void SourcesWidget::VariableModel::createVariable(const QModelIndex &parent, con
                                                   qint32 base, const QString &name) {
     Q_ASSERT(parent.isValid() && parent.model() == this);
     auto &variable = m_variables.at(parent.internalId());
-    int child = createVariable(parent.internalId(), parent.row(), variable.children.
-                               count(), symbol, variable.context, base, name);
+    int child = createVariable(parent.internalId(), parent.row(), variable.children.count(),
+                               symbol, variable.context, base, name);
     m_variables[parent.internalId()].children << child;
 }
 void SourcesWidget::VariableModel::deleteVariable(int id) {
@@ -1374,8 +1374,8 @@ void SourcesWidget::GlobalModel::init(const QStringList &paths) {
         for (int child = 0; child < symbols.count(); ++child) {
             auto &symbol = symbols.at(child);
             QString name = stringList().value(symbol.name - 1);
-            m_topLevelChildren.last() << createVariable(s_topLevelParent, parent, child,
-                                                        symbol, context);
+            m_topLevelChildren.last() <<
+                createVariable(s_topLevelParent, parent, child, symbol, context);
         }
     }
     endResetModel();
@@ -1474,12 +1474,10 @@ void SourcesWidget::StackModel::update() {
             auto &symbols = entry.function->symbolList;
             for (int child = 0; child < symbols.count(); ++child) {
                 auto &symbol = symbols.at(child);
-                if (symbol.kind != SymbolKind::StackSlot) {
-                    continue;
-                }
                 QString name = stringList().value(symbol.name - 1);
-                m_topLevelChildren.first() << createVariable(s_topLevelParent, parent - stack.count(),
-                                                             child, symbol, context, entry.ix);
+                m_topLevelChildren.first() <<
+                    createVariable(s_topLevelParent, parent - stack.count(), child, symbol,
+                                   context, symbol.kind == SymbolKind::StackSlot ? entry.ix : 0);
             }
         }
         endInsertRows();
