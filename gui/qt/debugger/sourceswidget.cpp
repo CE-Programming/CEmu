@@ -1240,8 +1240,8 @@ QVariant SourcesWidget::VariableModel::data(const QModelIndex &index, int role) 
             return int((index.column() ? Qt::AlignLeft : Qt::AlignRight) |
                        Qt::AlignVCenter);
         case Qt::BackgroundRole:
-            if (index.internalId() != s_topLevelId && m_variables.
-                at(index.internalId()).flags.testFlag(VariableFlag::Changed)) {
+            if (index.internalId() != s_topLevelId && index.column() == 1 &&
+                m_variables.at(index.internalId()).flags.testFlag(VariableFlag::Changed)) {
                 return QColor::fromRgb(0xFFFF99);
             }
             break;
