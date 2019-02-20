@@ -1171,7 +1171,21 @@ int SourcesWidget::VariableModel::childCount(const QModelIndex &parent) const {
     switch (variable.symbol.type >> 5 & 7) {
         case 1:
         case 6:
-            return variable.data[1] != "NULL";
+            return (variable.symbol.type >> 5 >> 3 & 7) != 2 && variable.data[1] != "NULL";
+        case 2: {
+            int count = 0;
+            auto &source = *variable.context.global;
+            auto function = source.functionMap.find(variable.symbol.name);
+            if (function != source.functionMap.end()) {
+                for (auto &symbol : source.functionList.at(*function).symbolList) {
+                    if (symbol.kind == SymbolKind::StackSlot) {
+                        continue;
+                    }
+                    ++count;
+                }
+            }
+            return count;
+        }
         case 3:
             return variable.symbol.dims.value(0);
         case 0:
@@ -1278,6 +1292,17 @@ void SourcesWidget::VariableModel::fetchMore(const QModelIndex &parent) {
             if ((addr = mem_peek_long(addr))) {
                 createVariable(parent, symbol, addr, '*' + name);
             }
+        } else if (mod == 2) {
+            auto &source = *variable.context.global;
+            auto function = source.functionMap.find(variable.symbol.name);
+            if (function != source.functionMap.end()) {
+                for (auto &symbol : source.functionList.at(*function).symbolList) {
+                    if (symbol.kind == SymbolKind::StackSlot) {
+                        continue;
+                    }
+                    createVariable(parent, symbol);
+                }
+            }
         } else if (mod == 3 && !symbol.dims.isEmpty()) {
             quint32 elements = symbol.dims.takeFirst(),
                 elementSize = sizeOfSymbol(symbol, variable.context);
@@ -1348,9 +1373,6 @@ void SourcesWidget::GlobalModel::init(const QStringList &paths) {
         Context context = { nullptr, &source };
         for (int child = 0; child < symbols.count(); ++child) {
             auto &symbol = symbols.at(child);
-            if (symbol.kind == SymbolKind::Function) {
-                continue;
-            }
             QString name = stringList().value(symbol.name - 1);
             m_topLevelChildren.last() << createVariable(s_topLevelParent, parent, child,
                                                         symbol, context);
