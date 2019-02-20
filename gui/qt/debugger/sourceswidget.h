@@ -62,15 +62,16 @@ private:
         quint32 num, addr;
     };
     enum class SymbolKind : quint8 {
-        Unknown       = 0,
-        Function      = 2,
-        StructField   = 8,
-        UnionField    = 11,
-        BitField      = 18,
-        StackSlot     = 65, // can be Constant, Uninitialized or Variable
-        Constant      = 69,
-        Uninitialized = 83, // can be Constant or Variable
-        Variable      = 84,
+        Unknown        = 0,
+        Function       = 2,
+        StaticFunction = 3,
+        StructField    = 8,
+        UnionField     = 11,
+        BitField       = 18,
+        StackSlot      = 65, // can be Constant, Uninitialized or Variable
+        Constant       = 69,
+        Uninitialized  = 83, // can be Constant or Variable
+        Variable       = 84,
     };
     struct Symbol {
         quint32 name = s_unnamed, alias = s_unnamed;
@@ -87,9 +88,7 @@ private:
         QMultiHash<quint32, int> symbolMap;
         QMultiHash<quint32, int> recordMap;
     };
-    struct Context {
-        const Scope *local, *global;
-    };
+    struct Context;
     struct Record : Scope {
         quint32 name, size;
     };

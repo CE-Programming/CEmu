@@ -23,6 +23,58 @@
 #include <iterator>
 #include <utility>
 
+struct SourcesWidget::Context {
+    const Function *local;
+    const Source *global;
+
+    typedef Scope value_type;
+    typedef const Scope &reference;
+    typedef const Scope *pointer;
+    typedef qint8 difference_type;
+    typedef quint8 size_type;
+    struct const_iterator {
+        typedef Scope value_type;
+        typedef const Scope &reference;
+        typedef const Scope *pointer;
+        typedef qint8 difference_type;
+        typedef std::random_access_iterator_tag iterator_category;
+
+        const_iterator(const Context *context = nullptr, difference_type i = 0) : context(context), i(i) {}
+        reference operator*() const { switch (i) { case 0: return *context->local; default: return *context->global; } }
+        pointer operator->() const { return &**this; }
+        reference operator[](difference_type n) { return *(*this + n); }
+        const_iterator &operator++() { ++i; return *this; }
+        const_iterator operator++(int) { const_iterator temp(*this); ++*this; return temp; }
+        const_iterator &operator--() { ++i; return *this; }
+        const_iterator operator--(int) { const_iterator temp(*this); ++*this; return temp; }
+        const_iterator &operator+=(difference_type n) { i += n; return *this; }
+        friend const_iterator operator+(const_iterator iter, difference_type n) { return iter += n; }
+        friend const_iterator operator+(difference_type n, const_iterator iter) { return iter += n; }
+        const_iterator &operator-=(difference_type n) { i -= n; return *this; }
+        friend const_iterator operator-(const_iterator iter, difference_type n) { return iter -= n; }
+        difference_type operator-(const_iterator iter) const { return i - iter.i; }
+        bool operator==(const_iterator iter) const { return context == iter.context && i == iter.i; }
+        bool operator!=(const_iterator iter) const { return !(*this == iter); }
+        bool operator<(const_iterator iter) const { return i < iter.i; }
+        bool operator>(const_iterator iter) const { return i > iter.i; }
+        bool operator<=(const_iterator iter) const { return i <= iter.i; }
+        bool operator>=(const_iterator iter) const { return i >= iter.i; }
+
+    private:
+        const Context *context;
+        difference_type i;
+    };
+    typedef const_iterator iterator;
+
+    size_type size() const { return !!local + !!global; }
+    static size_type max_size() { return 2; }
+    const_iterator cbegin() const { return const_iterator(this, max_size() - size()); }
+    const_iterator cend() const { return const_iterator(this, max_size()); }
+    iterator begin() const { return cbegin(); }
+    iterator end() const { return cend(); }
+};
+
+
 #ifdef QT_DEBUG
 #include <QtTest/QAbstractItemModelTester>
 
@@ -37,6 +89,9 @@ QDebug operator<<(QDebug debug, const SourcesWidget::SymbolKind &kind) {
         case SourcesWidget::SymbolKind::Function:
             debug << "SymbolKind::Function";
             break;
+        case SourcesWidget::SymbolKind::StaticFunction:
+            debug << "SymbolKind::StaticFunction";
+            break;
         case SourcesWidget::SymbolKind::StructField:
             debug << "SymbolKind::StructField";
             break;
@@ -45,6 +100,9 @@ QDebug operator<<(QDebug debug, const SourcesWidget::SymbolKind &kind) {
             break;
         case SourcesWidget::SymbolKind::BitField:
             debug << "SymbolKind::BitField";
+            break;
+        case SourcesWidget::SymbolKind::StackSlot:
+            debug << "SymbolKind::StackSlot";
             break;
         case SourcesWidget::SymbolKind::Constant:
             debug << "SymbolKind::Constant";
@@ -124,12 +182,10 @@ protected:
             lookupAddr(addr, sourceIndex, functionIndex, lineIndex);
     }
     static quint32 sizeOfSymbol(const Symbol &symbol, Context context);
-    QString symbolTypeToString(const QString &name, const Symbol &symbol,
-                               Context context) const;
-    static QString symbolValueToString(const Symbol &symbol, qint32 base = 0);
-    int createVariable(int parent, int parentIndex, int childIndex, const Symbol &symbol, Context context, const QString &name, qint32 base = 0);
-    void createVariable(const QModelIndex &parent, const Symbol &symbol,
-                        const QString &name, qint32 base = 0);
+    QString symbolTypeToString(const Symbol &symbol, Context context) const;
+    QString symbolValueToString(const Symbol &symbol, qint32 base = 0) const;
+    int createVariable(int parent, int parentIndex, int childIndex, const Symbol &symbol, Context context, qint32 base = 0, const QString &name = {});
+    void createVariable(const QModelIndex &parent, const Symbol &symbol, qint32 base = 0, const QString &name = {});
     void removeTopLevels(int first, int last);
     constexpr static quintptr s_topLevelId = ~quintptr();
     constexpr static int s_topLevelParent = int(s_topLevelId);
@@ -137,11 +193,11 @@ public:
     virtual void update();
     QModelIndex parent(const QModelIndex &child) const override;
     QModelIndex index(int row, int column,
-                      const QModelIndex &parent = QModelIndex()) const override;
-    int childCount(const QModelIndex &parent = QModelIndex()) const;
-    bool hasChildren(const QModelIndex &parent = QModelIndex()) const override;
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+                      const QModelIndex &parent = {}) const override;
+    int childCount(const QModelIndex &parent = {}) const;
+    bool hasChildren(const QModelIndex &parent = {}) const override;
+    int rowCount(const QModelIndex &parent = {}) const override;
+    int columnCount(const QModelIndex &parent = {}) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
     bool canFetchMore(const QModelIndex &parent) const override;
@@ -558,20 +614,16 @@ void SourcesWidget::selectDebugFile() {
     if (!eof) {
         debugFile.setErrorString(tr("Missing EOF token"));
     }
-    if (stringList.value(lang - 1) != QStringLiteral("C")) {
+    if (stringList.value(lang - 1) != "C") {
         debugFile.setErrorString(tr("Unknown source language \"%0\"").
                                  arg(stringList.value(lang - 1)));
     }
     if (debugFile.success) {
-        const int sourceCount = sources.count();
         for (int i = 0; i != m_tabs->count(); i++) {
             m_tabs->widget(i)->deleteLater();
         }
         m_tabs->clear();
-        m_sources.clear();
-        m_stringList.clear();
-        m_stringMap.clear();
-        for (int i = 0; i != sourceCount; i++) {
+        for (int i = 0; i != sources.count(); i++) {
             QFile sourceFile(paths.at(i));
             if (sourceFile.open(QIODevice::ReadOnly)) {
                 QPlainTextEdit *sourceView = new QPlainTextEdit(sourceFile.readAll());
@@ -749,20 +801,19 @@ void SourcesWidget::sourceContextMenu(const QPoint &pos) {
 }
 
 void SourcesWidget::setSourceFont(const QFont &font) {
-    for (auto format : { &m_defaultFormat, &m_operatorFormat, &m_literalFormat, &m_escapeFormat,
-                         &m_preprocessorFormat, &m_commentFormat, &m_keywordFormat, &m_identifierFormat, &m_errorFormat }) {
+    for (auto *format : { &m_defaultFormat, &m_operatorFormat, &m_literalFormat, &m_escapeFormat,
+                          &m_preprocessorFormat, &m_commentFormat, &m_keywordFormat, &m_identifierFormat, &m_errorFormat }) {
         QFont::Weight weight = QFont::Weight(format->fontWeight());
         format->setFont(font);
         format->setFontWeight(weight);
     }
     updateFormats();
-    for (auto child : { m_global, m_stack }) {
+    for (auto *child : { m_global, m_stack }) {
         child->setFont(font);
     }
 }
 
-quint32 SourcesWidget::VariableModel::sizeOfSymbol(const Symbol &symbol,
-                                                   Context context) {
+quint32 SourcesWidget::VariableModel::sizeOfSymbol(const Symbol &symbol, Context context) {
     quint32 size = 1, type = symbol.type;
     if (type & 0xE0000000u) {
         type |= 0xFFFFFFE0u;
@@ -783,10 +834,10 @@ quint32 SourcesWidget::VariableModel::sizeOfSymbol(const Symbol &symbol,
                     case 6:
                         return size * 4;
                     case 8:
-                        for (auto scope : { context.local, context.global }) {
-                            auto record = scope->recordMap.find(symbol.tag);
-                            if (record != scope->recordMap.end()) {
-                                return size * scope->recordList.at(*record).size;
+                        for (auto &scope : context) {
+                            auto record = scope.recordMap.find(symbol.tag);
+                            if (record != scope.recordMap.end()) {
+                                return size * scope.recordList.at(*record).size;
                             }
                         }
                         [[fallthrough]];
@@ -807,9 +858,8 @@ quint32 SourcesWidget::VariableModel::sizeOfSymbol(const Symbol &symbol,
     }
     return 0;
 }
-QString SourcesWidget::VariableModel::symbolTypeToString(const QString &name,
-                                                         const Symbol &symbol,
-                                                         Context context) const {
+QString SourcesWidget::VariableModel::symbolTypeToString(const Symbol &symbol, Context context) const {
+    QString name = stringList().value(symbol.name - 1);
     quint32 type = symbol.type;
     QString prefix, tag = "struct ", base, suffix = name;
     if (type & 0xE0000000u) {
@@ -827,13 +877,13 @@ QString SourcesWidget::VariableModel::symbolTypeToString(const QString &name,
         case 5: base += "long";  break;
         case 6: base  = "float"; break;
         case 8:
-            for (auto scope : { context.local, context.global }) {
-                auto record = scope->recordMap.find(symbol.tag);
-                if (record == scope->recordMap.end()) {
+            for (auto &scope : context) {
+                auto record = scope.recordMap.find(symbol.tag);
+                if (record == scope.recordMap.end()) {
                     continue;
                 }
                 bool first = true;
-                for (auto &symbol : scope->recordList.at(*record).symbolList) {
+                for (auto &symbol : scope.recordList.at(*record).symbolList) {
                     switch (symbol.kind) {
                         case SymbolKind::BitField:
                             if (!first && symbol.length) {
@@ -895,8 +945,7 @@ QString SourcesWidget::VariableModel::symbolTypeToString(const QString &name,
         }
     }
 }
-QString SourcesWidget::VariableModel::symbolValueToString(const Symbol &symbol,
-                                                          qint32 base) {
+QString SourcesWidget::VariableModel::symbolValueToString(const Symbol &symbol, qint32 base) const {
     qint32 addr = base + symbol.value;
     bool isFloat = false, isBitField = false, isSigned = true;
     quint32 type = symbol.type;
@@ -979,16 +1028,20 @@ QString SourcesWidget::VariableModel::symbolValueToString(const Symbol &symbol,
         case 1:
         case 6:
             if (quint32 value = mem_peek_long(addr)) {
-                return "0x" + QString::number(value, 16).rightJustified(6, '0');
+                int sourceIndex, functionIndex;
+                if (lookupAddr(value, &sourceIndex, &functionIndex)) {
+                    return '&' + stringList().value(sources().at(sourceIndex).functionList.at(functionIndex).name - 1);
+                } else {
+                    return "0x" + QString::number(value, 16).rightJustified(6, '0');
+                }
             }
             return "NULL";
     }
 }
 
-int SourcesWidget::VariableModel::createVariable(int parent, int parentIndex,
-                                                 int childIndex, const Symbol &symbol,
-                                                 Context context, const QString &name,
-                                                 qint32 base) {
+int SourcesWidget::VariableModel::createVariable(int parent, int parentIndex, int childIndex,
+                                                 const Symbol &symbol, Context context, qint32 base,
+                                                 const QString &name) {
     int id = m_freeVariable;
     if (id == -1) {
         id = m_variables.count();
@@ -1003,18 +1056,17 @@ int SourcesWidget::VariableModel::createVariable(int parent, int parentIndex,
     variable.symbol = symbol;
     variable.base = base;
     variable.context = context;
-    variable.data[0] = name;
+    variable.data[0] = name.isNull() ? symbolTypeToString(symbol, context) : name;
     variable.data[1] = symbolValueToString(symbol, base);
     variable.flags = VariableFlag::None;
     return id;
 }
-void SourcesWidget::VariableModel::createVariable(const QModelIndex &parent,
-                                                  const Symbol &symbol,
-                                                  const QString &name, qint32 base) {
+void SourcesWidget::VariableModel::createVariable(const QModelIndex &parent, const Symbol &symbol,
+                                                  qint32 base, const QString &name) {
     Q_ASSERT(parent.isValid() && parent.model() == this);
     auto &variable = m_variables.at(parent.internalId());
     int child = createVariable(parent.internalId(), parent.row(), variable.children.
-                               count(), symbol, variable.context, name, base);
+                               count(), symbol, variable.context, base, name);
     m_variables[parent.internalId()].children << child;
 }
 void SourcesWidget::VariableModel::deleteVariable(int id) {
@@ -1124,11 +1176,10 @@ int SourcesWidget::VariableModel::childCount(const QModelIndex &parent) const {
             return variable.symbol.dims.value(0);
         case 0:
             if (variable.symbol.type == 8) {
-                for (auto scope : { variable.context.local,
-                                    variable.context.global }) {
-                    auto record = scope->recordMap.find(variable.symbol.tag);
-                    if (record != scope->recordMap.end()) {
-                        return scope->recordList.at(*record).symbolList.count();
+                for (auto &scope : variable.context) {
+                    auto record = scope.recordMap.find(variable.symbol.tag);
+                    if (record != scope.recordMap.end()) {
+                        return scope.recordList.at(*record).symbolList.count();
                     }
                 }
             }
@@ -1210,6 +1261,9 @@ void SourcesWidget::VariableModel::fetchMore(const QModelIndex &parent) {
     auto &variable = m_variables[parent.internalId()];
     auto symbol = variable.symbol;
     qint32 addr = variable.base + symbol.value;
+    if (symbol.kind != SymbolKind::StackSlot) {
+        symbol.value = 0;
+    }
     if (symbol.type & 0xE0000000u) {
         symbol.type |= 0xFFFFFFE0u;
     }
@@ -1222,7 +1276,7 @@ void SourcesWidget::VariableModel::fetchMore(const QModelIndex &parent) {
         symbol.type = (symbol.type >> 3 & ~0x1F) | (symbol.type & 0x1F);
         if (mod == 1 || mod == 6) {
             if ((addr = mem_peek_long(addr))) {
-                createVariable(parent, symbol, '*' + name, addr);
+                createVariable(parent, symbol, addr, '*' + name);
             }
         } else if (mod == 3 && !symbol.dims.isEmpty()) {
             quint32 elements = symbol.dims.takeFirst(),
@@ -1231,15 +1285,15 @@ void SourcesWidget::VariableModel::fetchMore(const QModelIndex &parent) {
                 name = '(' + name + ')';
             }
             for (quint32 index = 0; index != elements; ++index) {
-                createVariable(parent, symbol,
-                               name + '[' + QString::number(index) + ']', addr);
+                createVariable(parent, symbol, addr,
+                               name + '[' + QString::number(index) + ']');
                 addr += elementSize;
             }
         }
     } else if (symbol.type == 8) {
-        for (auto scope : { variable.context.local, variable.context.global }) {
-            auto record = scope->recordMap.find(variable.symbol.tag);
-            if (record == scope->recordMap.end()) {
+        for (auto &scope : variable.context) {
+            auto record = scope.recordMap.find(variable.symbol.tag);
+            if (record == scope.recordMap.end()) {
                 continue;
             }
             if (name.startsWith('*')) {
@@ -1247,9 +1301,8 @@ void SourcesWidget::VariableModel::fetchMore(const QModelIndex &parent) {
             } else {
                 name = name + '.';
             }
-            for (auto member : scope->recordList.at(*record).symbolList) {
-                createVariable(parent, member,
-                               name + stringList().value(member.name - 1), addr);
+            for (auto &member : scope.recordList.at(*record).symbolList) {
+                createVariable(parent, member, addr);
             }
             break;
         }
@@ -1292,7 +1345,7 @@ void SourcesWidget::GlobalModel::init(const QStringList &paths) {
 
         auto &source = sources().at(parent);
         auto &symbols = source.symbolList;
-        Context context = { &source, &source };
+        Context context = { nullptr, &source };
         for (int child = 0; child < symbols.count(); ++child) {
             auto &symbol = symbols.at(child);
             if (symbol.kind == SymbolKind::Function) {
@@ -1300,9 +1353,7 @@ void SourcesWidget::GlobalModel::init(const QStringList &paths) {
             }
             QString name = stringList().value(symbol.name - 1);
             m_topLevelChildren.last() << createVariable(s_topLevelParent, parent, child,
-                                                        symbol, context,
-                                                        symbolTypeToString(name, symbol,
-                                                                           context));
+                                                        symbol, context);
         }
     }
     endResetModel();
@@ -1405,13 +1456,8 @@ void SourcesWidget::StackModel::update() {
                     continue;
                 }
                 QString name = stringList().value(symbol.name - 1);
-                m_topLevelChildren.first() << createVariable(s_topLevelParent,
-                                                             parent - stack.count(),
-                                                             child, symbol, context,
-                                                             symbolTypeToString(name,
-                                                                                symbol,
-                                                                                context),
-                                                             entry.ix);
+                m_topLevelChildren.first() << createVariable(s_topLevelParent, parent - stack.count(),
+                                                             child, symbol, context, entry.ix);
             }
         }
         endInsertRows();
