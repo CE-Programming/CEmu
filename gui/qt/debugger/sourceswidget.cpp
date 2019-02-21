@@ -182,8 +182,8 @@ protected:
             lookupAddr(addr, sourceIndex, functionIndex, lineIndex);
     }
     static quint32 sizeOfSymbol(const Symbol &symbol, Context context);
-    QString symbolTypeToString(const Symbol &symbol, Context context) const;
-    QString symbolValueToString(const Symbol &symbol, qint32 base = 0) const;
+    QString variableTypeToString(const Variable &variable) const;
+    QString variableValueToString(const Variable &variable) const;
     int createVariable(int parent, int parentIndex, int childIndex, const Symbol &symbol, Context context, qint32 base = 0, const QString &name = {});
     void createVariable(const QModelIndex &parent, const Symbol &symbol, qint32 base = 0, const QString &name = {});
     void removeTopLevels(int first, int last);
@@ -858,9 +858,9 @@ quint32 SourcesWidget::VariableModel::sizeOfSymbol(const Symbol &symbol, Context
     }
     return 0;
 }
-QString SourcesWidget::VariableModel::symbolTypeToString(const Symbol &symbol, Context context) const {
-    QString name = stringList().value(symbol.name - 1);
-    quint32 type = symbol.type;
+QString SourcesWidget::VariableModel::variableTypeToString(const Variable &variable) const {
+    QString name = stringList().value(variable.symbol.name - 1);
+    quint32 type = variable.symbol.type;
     QString prefix, tag = "struct ", base, suffix = name;
     if (type & 0xE0000000u) {
         type |= 0xFFFFFFE0u;
@@ -877,8 +877,8 @@ QString SourcesWidget::VariableModel::symbolTypeToString(const Symbol &symbol, C
         case 5: base += "long";  break;
         case 6: base  = "float"; break;
         case 8:
-            for (auto &scope : context) {
-                auto record = scope.recordMap.find(symbol.tag);
+            for (auto &scope : variable.context) {
+                auto record = scope.recordMap.find(variable.symbol.tag);
                 if (record == scope.recordMap.end()) {
                     continue;
                 }
@@ -907,7 +907,7 @@ QString SourcesWidget::VariableModel::symbolTypeToString(const Symbol &symbol, C
                 }
                 break;
             }
-            base = tag + stringList().value(symbol.tag - 1);
+            base = tag + stringList().value(variable.symbol.tag - 1);
             break;
         default: base = "<unknown base type>"; break;
     }
@@ -936,7 +936,7 @@ QString SourcesWidget::VariableModel::symbolTypeToString(const Symbol &symbol, C
                     suffix = '(' + prefix + suffix + ')';
                     prefix = "";
                 }
-                suffix += '[' + QString::number(symbol.dims.value(dim++)) + ']';
+                suffix += '[' + QString::number(variable.symbol.dims.value(dim++)) + ']';
                 break;
             case 6:
                 suffix = '*' + prefix + suffix;
@@ -945,10 +945,10 @@ QString SourcesWidget::VariableModel::symbolTypeToString(const Symbol &symbol, C
         }
     }
 }
-QString SourcesWidget::VariableModel::symbolValueToString(const Symbol &symbol, qint32 base) const {
-    qint32 addr = base + symbol.value;
+QString SourcesWidget::VariableModel::variableValueToString(const Variable &variable) const {
+    qint32 addr = variable.base + variable.symbol.value;
     bool isFloat = false, isBitField = false, isSigned = true;
-    quint32 type = symbol.type;
+    quint32 type = variable.symbol.type;
     if (type & 0xE0000000u) {
         return {};
     }
@@ -961,7 +961,7 @@ QString SourcesWidget::VariableModel::symbolValueToString(const Symbol &symbol, 
                 isBitField = true;
                 isSigned = false; // We have no way of knowing if it is signed :(
                 type = 4;
-                addr = base + 3*(symbol.value / 24);
+                addr = variable.base + 3*(variable.symbol.value / 24);
             } else if ((type & ~3) == 0xC) {
                 isSigned = false;
                 type -= 10;
@@ -979,7 +979,7 @@ QString SourcesWidget::VariableModel::symbolValueToString(const Symbol &symbol, 
                     return QString::number(value.f);
                 }
                 if (isBitField) {
-                    int shift = symbol.value % 24, extend = 32 - symbol.length;
+                    int shift = variable.symbol.value % 24, extend = 32 - variable.symbol.length;
                     if (shift < 0) {
                         shift += 24;
                     }
@@ -1056,9 +1056,9 @@ int SourcesWidget::VariableModel::createVariable(int parent, int parentIndex, in
     variable.symbol = symbol;
     variable.base = base;
     variable.context = context;
-    variable.data[0] = name.isNull() ? symbolTypeToString(symbol, context) : name;
-    variable.data[1] = symbolValueToString(symbol, base);
     variable.flags = VariableFlag::None;
+    variable.data[0] = name.isNull() ? variableTypeToString(variable) : name;
+    variable.data[1] = variableValueToString(variable);
     return id;
 }
 void SourcesWidget::VariableModel::createVariable(const QModelIndex &parent, const Symbol &symbol,
@@ -1097,12 +1097,20 @@ void SourcesWidget::VariableModel::removeTopLevels(int first, int last) {
     endRemoveRows();
 }
 void SourcesWidget::VariableModel::update() {
-    for (int id = 0; id < m_variables.count(); id++) {
+    for (int id = 0; id < m_variables.count(); ++id) {
         auto &variable = m_variables[id];
         if (variable.flags.testFlag(VariableFlag::Deleted)) {
             continue;
         }
-        QString valueStr = symbolValueToString(variable.symbol, variable.base);
+        if (variable.parent != s_topLevelParent) {
+            auto &parent = m_variables.at(variable.parent);
+            if ((parent.symbol.type >> 5 & 7) == 1) {
+                variable.base = mem_peek_long(parent.base + parent.symbol.value);
+            } else {
+                variable.base = parent.base;
+            }
+        }
+        QString valueStr = variableValueToString(variable);
         bool valueChanged = variable.data[1] != valueStr;
         int firstChangedColumn = 1;
         QVector<int> changedRoles;
