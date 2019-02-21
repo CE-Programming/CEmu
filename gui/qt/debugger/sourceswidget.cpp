@@ -126,7 +126,7 @@ QDebug operator<<(QDebug debug, const SourcesWidget::Context &context) {
 }
 QDebug operator<<(QDebug debug, const SourcesWidget::Symbol &symbol) {
     QDebugStateSaver saver(debug);
-    debug.nospace() << "Symbol(name=" << symbol.name << ", alias=" << symbol.alias << ", value=" << symbol.value << ", type=" << symbol.type << ", tag=" << symbol.tag << ", kind=" << symbol.kind << ", length=" << symbol.length << ", dims=" << symbol.dims << ')';
+    debug.nospace() << "Symbol(name=" << symbol.name << ", alias=" << symbol.alias << ", value=" << QString::number(symbol.value, symbol.kind == SourcesWidget::SymbolKind::StackSlot ? 10 : 16) << ", type=" << symbol.type << ", tag=" << symbol.tag << ", kind=" << symbol.kind << ", length=" << symbol.length << ", dims=" << symbol.dims << ')';
     return debug.maybeSpace();
 }
 QDebug operator<<(QDebug debug, const SourcesWidget::Record &record) {
@@ -1059,6 +1059,7 @@ int SourcesWidget::VariableModel::createVariable(int parent, int parentIndex, in
     variable.flags = VariableFlag::None;
     variable.data[0] = name.isNull() ? variableTypeToString(variable) : name;
     variable.data[1] = variableValueToString(variable);
+    qDebug().noquote() << '\t' << stringList().value(m_variables.value(variable.parent).symbol.name - 1) << "→" << stringList().value(variable.symbol.name - 1) << variable.symbol << QString::number(variable.base, 16);
     return id;
 }
 void SourcesWidget::VariableModel::createVariable(const QModelIndex &parent, const Symbol &symbol,
@@ -1129,6 +1130,7 @@ void SourcesWidget::VariableModel::update() {
             emit dataChanged(createIndex(variable.childIndex, firstChangedColumn, id),
                              createIndex(variable.childIndex, 1, id), changedRoles);
         }
+        qDebug().noquote() << '\t' << stringList().value(m_variables.value(variable.parent).symbol.name - 1) << "→" << stringList().value(variable.symbol.name - 1) << variable.symbol << QString::number(variable.base, 16);
     }
 }
 QModelIndex SourcesWidget::VariableModel::parent(const QModelIndex &child) const {
@@ -1478,6 +1480,7 @@ void SourcesWidget::StackModel::update() {
         beginInsertRows(QModelIndex(), 0, stack.count() - commonSuffix);
         for (int parent = stack.count() - commonSuffix; parent >= 0; --parent) {
             auto &entry = stack.at(parent);
+            qDebug().nospace().noquote() << stringList().at(entry.function->name - 1) << ':';
             m_topLevelData[0].prepend(stringList().value(entry.function->name - 1));
             m_topLevelData[1].prepend("()");
             m_topLevelChildren.prepend({});
@@ -1491,6 +1494,7 @@ void SourcesWidget::StackModel::update() {
                                    context, symbol.kind == SymbolKind::StackSlot ? entry.ix : 0);
             }
         }
+        qDebug() << "";
         endInsertRows();
     }
     int firstParentChanged = -1;
