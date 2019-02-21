@@ -1104,10 +1104,11 @@ void SourcesWidget::VariableModel::update() {
         }
         if (variable.parent != s_topLevelParent) {
             auto &parent = m_variables.at(variable.parent);
-            if ((parent.symbol.type >> 5 & 7) == 1) {
-                variable.base = mem_peek_long(parent.base + parent.symbol.value);
-            } else {
-                variable.base = parent.base;
+            if (parent.symbol.kind > SymbolKind::StaticFunction) {
+                variable.base = parent.base + parent.symbol.value;
+                if ((parent.symbol.type >> 5 & 7) == 1) {
+                    variable.base = mem_peek_long(variable.base);
+                }
             }
         }
         QString valueStr = variableValueToString(variable);
@@ -1291,7 +1292,8 @@ void SourcesWidget::VariableModel::fetchMore(const QModelIndex &parent) {
         symbol.kind = SymbolKind::Uninitialized;
     }
     QString name = variable.data[0];
-    if (variable.parent == s_topLevelParent) {
+    if (variable.parent == s_topLevelParent ||
+        m_variables.at(variable.parent).symbol.kind <= SymbolKind::StaticFunction) {
         name = stringList().value(variable.symbol.name - 1);
     }
     if (symbol.type & ~0x1F) {
@@ -1321,7 +1323,7 @@ void SourcesWidget::VariableModel::fetchMore(const QModelIndex &parent) {
             for (quint32 index = 0; index != elements; ++index) {
                 createVariable(parent, symbol, addr,
                                name + '[' + QString::number(index) + ']');
-                addr += elementSize;
+                symbol.value += elementSize;
             }
         }
     } else if (symbol.type == 8) {
