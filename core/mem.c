@@ -180,7 +180,20 @@ static void flash_reset_write_index(uint32_t addr, uint8_t byte) {
 }
 
 static void flash_write(uint32_t addr, uint8_t byte) {
-    mem.flash.block[addr] &= byte;
+    unsigned int selected;
+    bool valid = false;
+
+    if (addr < 0x10000) {
+        selected = addr / SIZE_FLASH_SECTOR_8K;
+        valid = (mem.flash.sector8k[selected].ipb & mem.flash.sector8k[selected].dpb) == 1;
+    } else {
+        selected = addr / SIZE_FLASH_SECTOR_64K;
+        valid = (mem.flash.sector[selected].ipb & mem.flash.sector[selected].dpb) == 1;
+    }
+
+    if (valid == true) {
+        mem.flash.block[addr] &= byte;
+    }
 }
 
 static void flash_erase(uint32_t addr, uint8_t byte) {
@@ -210,10 +223,17 @@ static void flash_erase_sector(uint32_t addr, uint8_t byte) {
     (void)byte;
 
     mem.flash.command = FLASH_SECTOR_ERASE;
-    selected = addr / SIZE_FLASH_SECTOR_64K;
 
-    if ( (mem.flash.sector[selected].ipb & mem.flash.sector[selected].dpb) == 1 ) {
-        memset(mem.flash.sector[selected].ptr, 0xff, SIZE_FLASH_SECTOR_64K);
+    if (addr < 0x10000) {
+        selected = addr / SIZE_FLASH_SECTOR_8K;
+        if ((mem.flash.sector8k[selected].ipb & mem.flash.sector8k[selected].dpb) == 1) {
+            memset(mem.flash.sector8k[selected].ptr, 0xff, SIZE_FLASH_SECTOR_8K);
+        }
+    } else {
+        selected = addr / SIZE_FLASH_SECTOR_64K;
+        if ((mem.flash.sector[selected].ipb & mem.flash.sector[selected].dpb) == 1) {
+            memset(mem.flash.sector[selected].ptr, 0xff, SIZE_FLASH_SECTOR_64K);
+        }
     }
 }
 
