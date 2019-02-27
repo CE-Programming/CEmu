@@ -25,24 +25,24 @@ void mem_init(void) {
     mem.flash.block = (uint8_t*)malloc(SIZE_FLASH);
     memset(mem.flash.block, 0xFF, SIZE_FLASH);
 
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < NUM_8K_SECTORS; i++) {
         mem.flash.sector8k[i].ptr = mem.flash.block + i * SIZE_FLASH_SECTOR_8K;
-        mem.flash.sector8k[i].locked = true;
+        mem.flash.sector8k[i].ipb = 0;
+        mem.flash.sector8k[i].dpb = 1;
     }
 
-    for (i = 0; i < 64; i++) {
+    for (i = 0; i < NUM_SECTORS; i++) {
         mem.flash.sector[i].ptr = mem.flash.block + i * SIZE_FLASH_SECTOR_64K;
-        mem.flash.sector[i].locked = false;
+        mem.flash.sector[i].ipb = 1;
+        mem.flash.sector[i].dpb = 1;
     }
-
-    /* Sector 2 is locked */
-    mem.flash.sector[1].locked = true;
+    mem.flash.sector[1].ipb = 0;
 
     /* Allocate RAM */
     mem.ram.block = (uint8_t*)calloc(SIZE_RAM, 1);
 
     mem.flash.write = 0;
-    mem.flash.command = NO_COMMAND;
+    mem.flash.command = FLASH_NO_COMMAND;
     gui_console_printf("[CEmu] Initialized Memory...\n");
 }
 
@@ -56,6 +56,7 @@ void mem_free(void) {
 
 void mem_reset(void) {
     memset(mem.ram.block, 0, SIZE_RAM);
+    mem.flash.command = FLASH_NO_COMMAND;
     gui_console_printf("[CEmu] Memory reset.\n");
 }
 
@@ -189,14 +190,14 @@ static void flash_erase(uint32_t addr, uint8_t byte) {
 
     mem.flash.command = FLASH_CHIP_ERASE;
 
-    for (i = 0; i < 8; i++) {
-        if (!mem.flash.sector8k[i].locked) {
+    for (i = 0; i < NUM_8K_SECTORS; i++) {
+        if ((mem.flash.sector8k[i].ipb & mem.flash.sector8k[i].dpb) == 1) {
             memset(mem.flash.sector8k[i].ptr, 0xFF, SIZE_FLASH_SECTOR_8K);
         }
     }
 
-    for (i = 0; i < 64; i++) {
-        if (!mem.flash.sector[i].locked) {
+    for (i = 0; i < NUM_SECTORS; i++) {
+        if ((mem.flash.sector[i].ipb & mem.flash.sector[i].dpb) == 1) {
             memset(mem.flash.sector[i].ptr, 0xFF, SIZE_FLASH_SECTOR_64K);
         }
     }
@@ -211,7 +212,7 @@ static void flash_erase_sector(uint32_t addr, uint8_t byte) {
     mem.flash.command = FLASH_SECTOR_ERASE;
     selected = addr / SIZE_FLASH_SECTOR_64K;
 
-    if (!mem.flash.sector[selected].locked) {
+    if ( (mem.flash.sector[selected].ipb & mem.flash.sector[selected].dpb) == 1 ) {
         memset(mem.flash.sector[selected].ptr, 0xff, SIZE_FLASH_SECTOR_64K);
     }
 }
@@ -237,11 +238,82 @@ static void flash_enter_deep_power_down(uint32_t addr, uint8_t byte) {
     mem.flash.command = FLASH_DEEP_POWER_DOWN;
 }
 
-static void flash_enter_IPB(uint32_t addr, uint8_t byte) {
+static void flash_enter_ipb(uint32_t addr, uint8_t byte) {
     (void)addr;
     (void)byte;
 
     mem.flash.command = FLASH_IPB_MODE;
+}
+
+static void flash_enter_dpb(uint32_t addr, uint8_t byte) {
+    (void)addr;
+    (void)byte;
+
+    mem.flash.command = FLASH_DPB_MODE;
+}
+
+static void flash_erase_ipb(uint32_t addr, uint8_t byte) {
+    int i;
+    (void)addr;
+    (void)byte;
+
+    if( mem.flash.command == FLASH_IPB_MODE )
+    {
+        for (i = 0; i < NUM_8K_SECTORS; i++) {
+            mem.flash.sector8k[i].ipb = 1;
+        }
+
+        for (i = 0; i < NUM_SECTORS; i++) {
+            mem.flash.sector[i].ipb = 1;
+        }
+
+        // this doesn't seem to happen on hardware?
+        //mem.flash.command = FLASH_WAIT_PB_EXIT;
+    }
+}
+
+static void flash_program_ipb(uint32_t addr, uint8_t byte) {
+    (void)byte;
+
+    if( mem.flash.command == FLASH_IPB_MODE )
+    {
+        unsigned int selected;
+
+        if (addr < 0x10000) {
+            selected = addr / SIZE_FLASH_SECTOR_8K;
+            mem.flash.sector8k[selected].ipb = 0;
+        } else {
+            selected = addr / SIZE_FLASH_SECTOR_64K;
+            mem.flash.sector[selected].ipb = 0;
+        }
+
+        mem.flash.command = FLASH_WAIT_PB_EXIT;
+    }
+}
+
+static void flash_program_dpb(uint32_t addr, uint8_t byte) {
+    if( mem.flash.command == FLASH_DPB_MODE )
+    {
+        unsigned int selected;
+
+        if (addr < 0x10000) {
+            selected = addr / SIZE_FLASH_SECTOR_8K;
+            mem.flash.sector8k[selected].dpb = byte & 1;
+        } else {
+            selected = addr / SIZE_FLASH_SECTOR_64K;
+            mem.flash.sector[selected].dpb = byte & 1;
+        }
+
+        mem.flash.command = FLASH_WAIT_PB_EXIT;
+    }
+}
+
+static void flash_exit_pb(uint32_t addr, uint8_t byte) {
+    if( mem.flash.command == FLASH_WAIT_PB_EXIT )
+    {
+        mem.flash.command = FLASH_NO_COMMAND;
+        flash_reset_write_index(addr, byte);
+    }
 }
 
 typedef const struct flash_write_pattern {
@@ -322,7 +394,48 @@ static flash_write_pattern_t patterns[] = {
             { .addr = 0x555, .addrMask = 0xFFF, .value = 0x55, .valueMask = 0xFF },
             { .addr = 0xAAA, .addrMask = 0xFFF, .value = 0xC0, .valueMask = 0xFF },
         },
-        .handler = flash_enter_IPB
+        .handler = flash_enter_ipb
+    },
+    {
+        .length = 3,
+        .pattern = {
+            { .addr = 0xAAA, .addrMask = 0xFFF, .value = 0xAA, .valueMask = 0xFF },
+            { .addr = 0x555, .addrMask = 0xFFF, .value = 0x55, .valueMask = 0xFF },
+            { .addr = 0xAAA, .addrMask = 0xFFF, .value = 0xE0, .valueMask = 0xFF },
+        },
+        .handler = flash_enter_dpb
+    },
+    {
+        .length = 2,
+        .pattern = {
+            { .addr = 0x000, .addrMask = 0x000, .value = 0x80, .valueMask = 0xFF },
+            { .addr = 0x000, .addrMask = 0x000, .value = 0x30, .valueMask = 0xFF },
+        },
+        .handler = flash_erase_ipb
+    },
+    {
+        .length = 2,
+        .pattern = {
+            { .addr = 0x000, .addrMask = 0x000, .value = 0xA0, .valueMask = 0xFF },
+            { .addr = 0x000, .addrMask = 0x000, .value = 0x00, .valueMask = 0xFF },
+        },
+        .handler = flash_program_ipb
+    },
+    {
+        .length = 2,
+        .pattern = {
+            { .addr = 0x000, .addrMask = 0x000, .value = 0xA0, .valueMask = 0xFF },
+            { .addr = 0x000, .addrMask = 0x000, .value = 0x00, .valueMask = 0xFE },
+        },
+        .handler = flash_program_dpb
+    },
+    {
+        .length = 2,
+        .pattern = {
+            { .addr = 0x000, .addrMask = 0x000, .value = 0x90, .valueMask = 0xFF },
+            { .addr = 0x000, .addrMask = 0x000, .value = 0x00, .valueMask = 0xFF },
+        },
+        .handler = flash_exit_pb
     },
     {
         .length = 0
@@ -332,12 +445,12 @@ static flash_write_pattern_t patterns[] = {
 
 static uint8_t mem_read_flash(uint32_t addr) {
     uint8_t value = 0;
-    uint8_t selected;
+    unsigned int selected;
 
     cpu.cycles += flash_block(&addr, NULL);
     if (flash.mapped) {
         switch(mem.flash.command) {
-            case NO_COMMAND:
+            case FLASH_NO_COMMAND:
                 value = mem.flash.block[addr];
                 break;
             case FLASH_SECTOR_ERASE:
@@ -345,26 +458,26 @@ static uint8_t mem_read_flash(uint32_t addr) {
                 mem.flash.read++;
                 if (mem.flash.read == 3) {
                     mem.flash.read = 0;
-                    mem.flash.command = NO_COMMAND;
+                    mem.flash.command = FLASH_NO_COMMAND;
                 }
                 break;
             case FLASH_CHIP_ERASE:
                 value = 0xFF;
-                mem.flash.command = NO_COMMAND;
+                mem.flash.command = FLASH_NO_COMMAND;
                 break;
             case FLASH_READ_SECTOR_PROTECTION:
                 if (addr < 0x10000) {
-                    selected = addr/SIZE_FLASH_SECTOR_8K;
-                    value = mem.flash.sector8k[selected].locked ? 1 : 0;
+                    selected = addr / SIZE_FLASH_SECTOR_8K;
+                    value = !(mem.flash.sector8k[selected].ipb & mem.flash.sector8k[selected].dpb);
                 } else {
-                    selected = addr/SIZE_FLASH_SECTOR_64K;
-                    value = mem.flash.sector[selected].locked ? 1 : 0;
+                    selected = addr / SIZE_FLASH_SECTOR_64K;
+                    value = !(mem.flash.sector[selected].ipb & mem.flash.sector[selected].dpb);
                 }
                 break;
             case FLASH_READ_CFI:
                 if (addr >= 0x20 && addr <= 0x2A) {
                     static const uint8_t id[7] = { 0x51, 0x52, 0x59, 0x02, 0x00, 0x40, 0x00 };
-                    value = id[(addr - 0x20)/2];
+                    value = id[(addr - 0x20) / 2];
                 } else if (addr >= 0x36 && addr <= 0x50) {
                     static const uint8_t id[] = {
                         0x27, 0x36, 0x00, 0x00, 0x03, 0x04, 0x08, 0x0E,
@@ -374,12 +487,31 @@ static uint8_t mem_read_flash(uint32_t addr) {
                         0x00, 0x00, 0x50, 0x52, 0x49, 0x31, 0x33, 0x0C,
                         0x02, 0x01, 0x00, 0x08, 0x00, 0x00, 0x02, 0x95,
                         0xA5, 0x02, 0x01 };
-                    value = id[(addr - 0x36)/2];
+                    value = id[(addr - 0x36) / 2];
                 }
                 break;
             case FLASH_DEEP_POWER_DOWN:
                 break;
             case FLASH_IPB_MODE:
+                if (addr < 0x10000) {
+                    selected = addr / SIZE_FLASH_SECTOR_8K;
+                    value = mem.flash.sector8k[selected].ipb;
+                } else {
+                    selected = addr / SIZE_FLASH_SECTOR_64K;
+                    value = mem.flash.sector[selected].ipb;
+                }
+                break;
+            case FLASH_DPB_MODE:
+                if (addr < 0x10000) {
+                    selected = addr / SIZE_FLASH_SECTOR_8K;
+                    value = mem.flash.sector8k[selected].dpb;
+                } else {
+                    selected = addr / SIZE_FLASH_SECTOR_64K;
+                    value = mem.flash.sector[selected].dpb;
+                }
+                break;
+            case FLASH_WAIT_PB_EXIT:
+                value = 0;
                 break;
             default:
                 break;
@@ -402,11 +534,14 @@ static void mem_write_flash(uint32_t addr, uint8_t byte) {
         return;
     }
 
-    if (mem.flash.command != NO_COMMAND) {
+    if (mem.flash.command != FLASH_NO_COMMAND) {
         if ((mem.flash.command != FLASH_DEEP_POWER_DOWN && byte == 0xF0) ||
             (mem.flash.command == FLASH_DEEP_POWER_DOWN && byte == 0xAB)) {
-            mem.flash.command = NO_COMMAND;
-            flash_reset_write_index(addr, byte);
+            if( mem.flash.command != FLASH_WAIT_PB_EXIT )
+            {
+                mem.flash.command = FLASH_NO_COMMAND;
+                flash_reset_write_index(addr, byte);
+            }
             return;
         }
     }
@@ -460,7 +595,7 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
             if (entry->stack - addr <= 2 + (uint32_t)entry->mode) {
                 entry->popped = true;
             }
-            if (entry->retAddr + entry->range == addr) {
+            if ((uint32_t)entry->retAddr + entry->range == addr) {
                 if (!++entry->range) {
                     --entry->range;
                 }

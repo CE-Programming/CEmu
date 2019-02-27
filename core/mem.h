@@ -13,15 +13,19 @@ extern "C" {
 #define SIZE_FLASH            0x400000
 #define SIZE_FLASH_SECTOR_8K  0x2000
 #define SIZE_FLASH_SECTOR_64K 0x10000
+#define NUM_SECTORS 64
+#define NUM_8K_SECTORS 8
 
 enum flash_commands {
-    NO_COMMAND,
+    FLASH_NO_COMMAND,
     FLASH_SECTOR_ERASE,
     FLASH_CHIP_ERASE,
     FLASH_READ_SECTOR_PROTECTION,
     FLASH_DEEP_POWER_DOWN,
     FLASH_READ_CFI,
-    FLASH_IPB_MODE
+    FLASH_IPB_MODE,
+    FLASH_DPB_MODE,
+    FLASH_WAIT_PB_EXIT,
 };
 
 typedef struct {
@@ -32,7 +36,8 @@ typedef struct {
 } flash_write_t;
 
 typedef struct {
-    bool locked;
+    uint8_t dpb : 1;
+    uint8_t ipb : 1;
     uint8_t *ptr;
 } flash_sector_state_t;
 
