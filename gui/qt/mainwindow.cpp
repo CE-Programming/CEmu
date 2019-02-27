@@ -2321,9 +2321,9 @@ void MainWindow::contextDisasm(const QPoint &posa) {
 }
 
 void MainWindow::varLaunch(const calc_var_t *prgm) {
-    keypad_reset();
+    keypadBridge->releaseAll();
     ui->lcd->setFocus();
-    guiDelay(100);
+    guiDelay(50);
 
     autotester::sendKey(0x09); // Clear
     if (calc_var_is_asmprog(prgm)) {

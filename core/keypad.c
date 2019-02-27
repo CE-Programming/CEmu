@@ -170,11 +170,8 @@ static void keypad_write(const uint16_t pio, const uint8_t byte, bool poke) {
     }
 }
 
-void keypad_reset() {
+void keypad_reset(void) {
     keypad.row = 0;
-    memset(keypad.data, 0, sizeof(keypad.data));
-    memset(keypad.keyMap, 0, sizeof(keypad.keyMap));
-    memset(keypad.delay, 0, sizeof(keypad.delay));
 
     sched.items[SCHED_KEYPAD].callback.event = keypad_scan_event;
     sched.items[SCHED_KEYPAD].clock = CLOCK_6M;
@@ -189,6 +186,12 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_keypad(void) {
+    keypad.row = 0;
+
+    memset(keypad.data, 0, sizeof(keypad.data));
+    memset(keypad.keyMap, 0, sizeof(keypad.keyMap));
+    memset(keypad.delay, 0, sizeof(keypad.delay));
+
     gui_console_printf("[CEmu] Initialized Keypad...\n");
     return device;
 }
