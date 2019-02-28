@@ -214,19 +214,19 @@ void CDebugHighlighter::highlightBlock(const QString &text) {
                             token.toFloat(&ok);
                         } else {
                             bool unsignedSuffix = false, longSuffix = false;
-                            do {
+                            forever {
                                 if (!unsignedSuffix &&
                                     token.endsWith('u', Qt::CaseInsensitive)) {
                                     token.chop(1);
                                     unsignedSuffix = true;
-                                    continue;
                                 } else if (!longSuffix &&
                                            token.endsWith('l', Qt::CaseInsensitive)) {
                                     token.chop(1);
                                     longSuffix = true;
-                                    continue;
+                                } else {
+                                    break;
                                 }
-                            } while (false);
+                            }
                             if (unsignedSuffix) {
                                 uint value = token.toUInt(&ok, 0);
                                 ok &= longSuffix || value < 1u << 24;
