@@ -106,7 +106,14 @@ void LCDWidget::mousePressEvent(QMouseEvent *e) {
         drag->setMimeData(mimeData);
         drag->setHotSpot(e->pos());
         drag->setPixmap(mymap);
-        drag->exec(Qt::CopyAction | Qt::MoveAction);
+        switch (drag->exec(Qt::CopyAction | Qt::MoveAction, Qt::MoveAction)) {
+            case Qt::IgnoreAction:
+            case Qt::CopyAction:
+                QFile::remove(path);
+                break;
+            default:
+                break;
+        }
         e->accept();
     } else {
         e->ignore();
