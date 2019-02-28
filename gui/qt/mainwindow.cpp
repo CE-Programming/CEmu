@@ -1442,11 +1442,13 @@ void MainWindow::screenshotSave(const QString& nameFilter, const QString& defaul
         QStringList selected = dialog.selectedFiles();
         QString filename = selected.first();
         if (filename.isEmpty()) {
-            QFile(temppath).remove();
+            QFile::remove(temppath);
         } else {
-            QFile(filename).remove();
-            QFile(temppath).rename(filename);
+            QFile::remove(filename);
+            QFile::rename(temppath, filename);
         }
+    } else {
+        QFile::remove(temppath);
     }
     m_dir = dialog.directory().absolutePath();
 }
