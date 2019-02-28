@@ -157,22 +157,24 @@ protected:
     using(const, stringList)
     using(const, stringMap)
 #undef using
-    enum class VariableFlag : quint8 {
-        None = 0,
-        Deleted = 1 << 0,
-        Changed = 1 << 1,
-    };
-    Q_DECLARE_FLAGS(VariableFlags, VariableFlag)
     struct Variable {
+        enum class Flag : quint8 {
+            Deleted = 1 << 0,
+            Changed = 1 << 1,
+            Visited = 1 << 2,
+        };
+        Q_DECLARE_FLAGS(Flags, Flag)
+
         int parent, parentIndex, childIndex;
         QList<int> children;
         Symbol symbol;
         qint32 base;
         Context context;
         QString data[2];
-        VariableFlags flags;
+        Flags flags;
     };
-    int m_freeVariable;
+    bool m_visited = false;
+    int m_freeVariable = -1;
     QVector<Variable> m_variables;
     QStringList m_topLevelData[2];
     QList<QList<int>> m_topLevelChildren;
@@ -189,6 +191,8 @@ protected:
     void removeTopLevels(int first, int last);
     constexpr static quintptr s_topLevelId = ~quintptr();
     constexpr static int s_topLevelParent = int(s_topLevelId);
+private:
+    const Variable &updateVariable(int id);
 public:
     virtual void update();
     QModelIndex parent(const QModelIndex &child) const override;
@@ -1047,7 +1051,7 @@ int SourcesWidget::VariableModel::createVariable(int parent, int parentIndex, in
         id = m_variables.count();
         m_variables.resize(id + 1);
     } else {
-        m_freeVariable = m_variables[id].parent;
+        m_freeVariable = m_variables.at(id).parent;
     }
     auto &variable = m_variables[id];
     variable.parent = parent;
@@ -1056,7 +1060,8 @@ int SourcesWidget::VariableModel::createVariable(int parent, int parentIndex, in
     variable.symbol = symbol;
     variable.base = base;
     variable.context = context;
-    variable.flags = VariableFlag::None;
+    variable.flags = 0;
+    variable.flags.setFlag(Variable::Flag::Visited, m_visited);
     variable.data[0] = name.isNull() ? variableTypeToString(variable) : name;
     variable.data[1] = variableValueToString(variable);
     qDebug().noquote() << '\t' << stringList().value(m_variables.value(variable.parent).symbol.name - 1) << "→" << stringList().value(variable.symbol.name - 1) << variable.symbol << QString::number(variable.base, 16);
@@ -1071,12 +1076,13 @@ void SourcesWidget::VariableModel::createVariable(const QModelIndex &parent, con
     m_variables[parent.internalId()].children << child;
 }
 void SourcesWidget::VariableModel::deleteVariable(int id) {
-    for (int child : m_variables.at(id).children) {
+    auto &variable = m_variables[id];
+    for (int child : variable.children) {
         deleteVariable(child);
     }
-    m_variables[id].parent = m_freeVariable;
-    m_variables[id].children.clear();
-    m_variables[id].flags |= VariableFlag::Deleted;
+    variable.parent = m_freeVariable;
+    variable.children.clear();
+    variable.flags.setFlag(Variable::Flag::Deleted);
     m_freeVariable = id;
 }
 void SourcesWidget::VariableModel::removeTopLevels(int first, int last) {
@@ -1097,40 +1103,47 @@ void SourcesWidget::VariableModel::removeTopLevels(int first, int last) {
                              m_topLevelChildren.begin() + last + 1);
     endRemoveRows();
 }
-void SourcesWidget::VariableModel::update() {
-    for (int id = 0; id < m_variables.count(); ++id) {
-        auto &variable = m_variables[id];
-        if (variable.flags.testFlag(VariableFlag::Deleted)) {
-            continue;
-        }
-        if (variable.parent != s_topLevelParent) {
-            auto &parent = m_variables.at(variable.parent);
-            if (parent.symbol.kind > SymbolKind::StaticFunction) {
-                variable.base = parent.base + parent.symbol.value;
-                if ((parent.symbol.type >> 5 & 7) == 1) {
-                    variable.base = mem_peek_long(variable.base);
-                }
+auto SourcesWidget::VariableModel::updateVariable(int id) -> const Variable & {
+    auto &variable = m_variables[id];
+    if (variable.flags.testFlag(Variable::Flag::Deleted) ||
+        variable.flags.testFlag(Variable::Flag::Visited) == m_visited) {
+        return variable;
+    }
+    if (variable.parent != s_topLevelParent) {
+        auto &parent = updateVariable(variable.parent);
+        if (parent.symbol.kind > SymbolKind::StaticFunction) {
+            variable.base = parent.base + parent.symbol.value;
+            if ((parent.symbol.type >> 5 & 7) == 1) {
+                variable.base = mem_peek_long(variable.base);
             }
         }
-        QString valueStr = variableValueToString(variable);
-        bool valueChanged = variable.data[1] != valueStr;
-        int firstChangedColumn = 1;
-        QVector<int> changedRoles;
-        changedRoles.reserve(2);
-        if (valueChanged) {
-            variable.data[1] = valueStr;
-            changedRoles << Qt::DisplayRole;
-        }
-        if (valueChanged != variable.flags.testFlag(VariableFlag::Changed)) {
-            variable.flags.setFlag(VariableFlag::Changed, valueChanged);
-            firstChangedColumn = 0;
-            changedRoles << Qt::BackgroundRole;
-        }
-        if (!changedRoles.isEmpty()) {
-            emit dataChanged(createIndex(variable.childIndex, firstChangedColumn, id),
-                             createIndex(variable.childIndex, 1, id), changedRoles);
-        }
-        qDebug().noquote() << '\t' << stringList().value(m_variables.value(variable.parent).symbol.name - 1) << "→" << stringList().value(variable.symbol.name - 1) << variable.symbol << QString::number(variable.base, 16);
+    }
+    QString valueStr = variableValueToString(variable);
+    bool valueChanged = variable.data[1] != valueStr;
+    int firstChangedColumn = 1;
+    QVector<int> changedRoles;
+    changedRoles.reserve(2);
+    if (valueChanged) {
+        variable.data[1] = valueStr;
+        changedRoles << Qt::DisplayRole;
+    }
+    if (valueChanged != variable.flags.testFlag(Variable::Flag::Changed)) {
+        variable.flags.setFlag(Variable::Flag::Changed, valueChanged);
+        firstChangedColumn = 0;
+        changedRoles << Qt::BackgroundRole;
+    }
+    if (!changedRoles.isEmpty()) {
+        emit dataChanged(createIndex(variable.childIndex, firstChangedColumn, id),
+                         createIndex(variable.childIndex, 1, id), changedRoles);
+    }
+    qDebug().noquote() << '\t' << stringList().value(m_variables.value(variable.parent).symbol.name - 1) << "→" << stringList().value(variable.symbol.name - 1) << variable.symbol << QString::number(variable.base, 16);
+    variable.flags.setFlag(Variable::Flag::Visited, m_visited);
+    return variable;
+}
+void SourcesWidget::VariableModel::update() {
+    m_visited = !m_visited;
+    for (int id = 0; id < m_variables.count(); ++id) {
+        updateVariable(id);
     }
 }
 QModelIndex SourcesWidget::VariableModel::parent(const QModelIndex &child) const {
@@ -1252,7 +1265,7 @@ QVariant SourcesWidget::VariableModel::data(const QModelIndex &index, int role) 
                        Qt::AlignVCenter);
         case Qt::BackgroundRole:
             if (index.internalId() != s_topLevelId && index.column() == 1 &&
-                m_variables.at(index.internalId()).flags.testFlag(VariableFlag::Changed)) {
+                m_variables.at(index.internalId()).flags.testFlag(Variable::Flag::Changed)) {
                 return QColor::fromRgb(0xFFFF99);
             }
             break;
@@ -1283,7 +1296,7 @@ void SourcesWidget::VariableModel::fetchMore(const QModelIndex &parent) {
     if (!parent.isValid()) {
         return;
     }
-    auto &variable = m_variables[parent.internalId()];
+    auto &variable = m_variables.at(parent.internalId());
     auto symbol = variable.symbol;
     qint32 addr = variable.base + symbol.value;
     symbol.value = 0;
