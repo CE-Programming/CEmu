@@ -735,11 +735,13 @@ void SourcesWidget::updatePC(quint32 pc) {
     } else {
         pcSelection.cursor.movePosition(QTextCursor::NextWord);
     }
+    sourceView->setTextCursor(pcSelection.cursor);
     pcSelection.cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
     pcSelection.cursor.movePosition(QTextCursor::PreviousWord, QTextCursor::KeepAnchor);
     pcSelection.cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
     pcSelection.format.setBackground(QColor::fromRgb(0xFFFF99));
     sourceView->setExtraSelections({pcSelection});
+    sourceView->centerCursor();
     m_tabs->setCurrentWidget(sourceView);
 }
 
