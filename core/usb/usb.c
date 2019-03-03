@@ -446,6 +446,7 @@ static enum libusb_transfer_status libusb_status_from_error(enum libusb_error er
         case LIBUSB_ERROR_OVERFLOW:
             return LIBUSB_TRANSFER_OVERFLOW;
     }
+    return LIBUSB_TRANSFER_ERROR;
 }
 
 static bool usb_execute_setup(struct libusb_transfer *xfer) {
@@ -1114,8 +1115,8 @@ static void init_libusb(void) {
         return;
     }
     usb.xfer->callback = usb_process_xfer;
-    libusb_set_option(usb.ctx, LIBUSB_OPTION_LOG_LEVEL, LIBUSB_LOG_LEVEL_INFO);
-    libusb_hotplug_register_callback(usb.ctx, LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT, LIBUSB_HOTPLUG_ENUMERATE, /*0x0451,0xE008*/ 0x058F,0x6387, 0, usb_hotplug, NULL, NULL);
+    //libusb_set_option(usb.ctx, LIBUSB_OPTION_LOG_LEVEL, LIBUSB_LOG_LEVEL_INFO);
+    libusb_hotplug_register_callback(usb.ctx, LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT, LIBUSB_HOTPLUG_ENUMERATE, 0x0951, 0x1666, 0, usb_hotplug, NULL, NULL);
 }
 
 eZ80portrange_t init_usb(void) {
