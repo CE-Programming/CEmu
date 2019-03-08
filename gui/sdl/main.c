@@ -28,20 +28,14 @@ void sdl_update_lcd(void *data) {
     sdl_t *sdl = &cemu->sdl;
     void *pixels;
     int pitch;
-    SDL_Rect rect;
-
-    rect.x = 0;
-    rect.y = 0;
-    rect.w = LCD_WIDTH;
-    rect.h = LCD_HEIGHT;
 
     if (!SDL_LockTexture(sdl->texture, NULL, &pixels, &pitch)) {
         lcd_drawframe(pixels, lcd.control & 1 << 11 ? lcd.data : NULL, lcd.data_end, lcd.control, LCD_SIZE);
         SDL_UnlockTexture(sdl->texture);
     }
 
-    SDL_RenderClear(sdl->renderer);
-    SDL_RenderCopy(sdl->renderer, sdl->texture, NULL, &rect);
+    /* SDL_RenderClear(sdl->renderer); */
+    SDL_RenderCopy(sdl->renderer, sdl->texture, NULL, NULL);
     SDL_RenderPresent(sdl->renderer);
 }
 
@@ -56,7 +50,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
         fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());
         return;
     }
-    sdl->window = SDL_CreateWindow("CEmu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, LCD_WIDTH, LCD_HEIGHT, SDL_WINDOW_SHOWN);
+    sdl->window = SDL_CreateWindow("CEmu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, LCD_WIDTH, LCD_HEIGHT, /*SDL_WINDOW_FULLSCREEN_DESKTOP | */SDL_WINDOW_SHOWN);
     if (sdl->window == NULL) {
         fprintf(stderr, "could not create window: %s\n", SDL_GetError());
         return;
