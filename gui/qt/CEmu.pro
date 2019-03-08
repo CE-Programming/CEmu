@@ -54,7 +54,9 @@ TEMPLATE = app
 TRANSLATIONS += i18n/fr_FR.ts i18n/es_ES.ts i18n/nl_NL.ts
 
 CONFIG += c++11 console link_pkgconfig
-PKGCONFIG += libusb-1.0
+if (contains(DEFINES, HAS_LIBUSB)) {
+    PKGCONFIG += libusb-1.0
+}
 
 # Core options
 DEFINES += DEBUG_SUPPORT
