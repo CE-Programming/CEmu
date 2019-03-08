@@ -2,6 +2,7 @@
 
 #include <SDL2/SDL.h>
 #include <getopt.h>
+#include <stdio.h>
 
 typedef struct {
     SDL_Window *window;
@@ -47,6 +48,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
     uint32_t last;
     uint32_t pixfmt = SDL_PIXELFORMAT_BGRA32;
     sdl_t *sdl = &cemu->sdl;
+    char buf[20];
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
         fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());
@@ -93,6 +95,9 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
             SDL_RenderClear(sdl->renderer);
         }
         SDL_RenderPresent(sdl->renderer);
+
+        snprintf(buf, sizeof buf - 1, "CEmu | %f%%", 10000000.0 / ((float)ticks - (float)last));
+        SDL_SetWindowTitle(sdl->window, buf);
 
         SDL_PollEvent(&event);
 

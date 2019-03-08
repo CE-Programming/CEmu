@@ -50,7 +50,7 @@ const key_t cemu_keymap[] = {
     { SDLK_LESS, 5, 6 }, /* vars */
 
     { SDLK_RETURN, 6, 0 }, /* enter */
-    { SDLK_KP_PLUS, 6, 1 }, /* add */
+    { SDLK_PLUS, 6, 1 }, /* add */
     { SDLK_MINUS, 6, 2 }, /* sub */
     { SDLK_ASTERISK, 6, 3 }, /* mul */
     { SDLK_SLASH, 6, 4 }, /* div */
