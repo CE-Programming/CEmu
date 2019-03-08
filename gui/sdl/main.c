@@ -1,4 +1,5 @@
 #include "../../core/cemu.h"
+#include "keymap.h"
 
 #include <SDL2/SDL.h>
 #include <getopt.h>
@@ -19,12 +20,7 @@ typedef struct {
     sdl_t sdl;
 } cemu_sdl_t;
 
-typedef struct {
-    int sdl, row, col;
-} cemu_sdl_key_t;
-
-extern const cemu_sdl_key_t cemu_keymap[];
-extern const int numkeys;
+static const cemu_sdl_key_t *keymap = cemu_keymap;
 
 void gui_console_clear() {}
 void gui_console_printf(const char *format, ...) { (void)format; }
@@ -87,7 +83,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
     while (done == false) {
         SDL_DisplayMode mode;
         uint32_t max_ticks, ticks, expected_ticks, actual_ticks;
-        int i, status;
+        int status;
 
         SDL_GetWindowDisplayMode(sdl->window, &mode);
         max_ticks = 1000 * max_frame_skip / mode.refresh_rate;
@@ -96,7 +92,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
         expected_ticks = ticks - last_ticks;
         last_ticks = ticks;
         actual_ticks = expected_ticks < max_ticks ? expected_ticks : max_ticks;
-        speed += 100.0f * actual_ticks / expected_ticks;
+        speed += expected_ticks ? 100.0f * actual_ticks / expected_ticks : 100.0f;
         speed_count++;
         emu_run(actual_ticks);
 
@@ -122,9 +118,9 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
             switch (event.type) {
                 case SDL_KEYDOWN:
                 case SDL_KEYUP:
-                    for (i = 0; i < numkeys; i++) {
-                        if (cemu_keymap[i].sdl == event.key.keysym.sym) {
-                            emu_keypad_event(cemu_keymap[i].row, cemu_keymap[i].col, event.type == SDL_KEYDOWN);
+                    for (const cemu_sdl_key_t *key = keymap; key && (key->row | key->col) >= 0; key++) {
+                        if (keysyms_match(&key->keysym, &event.key.keysym, event.type == SDL_KEYUP)) {
+                            emu_keypad_event(key->row, key->col, event.type == SDL_KEYDOWN);
                         }
                     }
                     break;
@@ -177,6 +173,7 @@ int main(int argc, char **argv) {
             {"image",      required_argument, 0,  'i' },
             {"speed",      required_argument, 0,  's' },
             {"fullscreen", required_argument, 0,  'f' },
+            {"keymap",     required_argument, 0,  'k' },
         };
 
         c = getopt_long(argc, argv, "r:i:s:f:", long_options, &option_index);
@@ -205,6 +202,15 @@ int main(int argc, char **argv) {
                 tmp = strtol(optarg, NULL, 10);
                 fprintf(stdout, "fullscreen: %s\n", tmp ? "yes" : "no");
                 cemu.fullscreen = tmp;
+                break;
+
+            case 'k':
+                if (!strcmp(optarg, "cemu")) {
+                    keymap = cemu_keymap;
+                }
+                if (!strcmp(optarg, "smartpad")) {
+                    keymap = smartpad_keymap;
+                }
                 break;
 
             case '?':
