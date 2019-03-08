@@ -57,6 +57,7 @@ const QString MainWindow::SETTING_KEYPAD_KEYMAP             = QStringLiteral("Ke
 const QString MainWindow::SETTING_KEYPAD_COLOR              = QStringLiteral("Keypad/color");
 const QString MainWindow::SETTING_KEYPAD_CUSTOM_PATH        = QStringLiteral("Keypad/custom_path");
 const QString MainWindow::SETTING_WINDOW_GROUP_DRAG         = QStringLiteral("Window/group_dock_drag");
+const QString MainWindow::SETTING_WINDOW_FULLSCREEN         = QStringLiteral("Window/fullscreen");
 const QString MainWindow::SETTING_WINDOW_STATE              = QStringLiteral("Window/state");
 const QString MainWindow::SETTING_WINDOW_GEOMETRY           = QStringLiteral("Window/geometry");
 const QString MainWindow::SETTING_WINDOW_SEPARATOR          = QStringLiteral("Window/boundaries");
@@ -839,29 +840,31 @@ void MainWindow::keymapLoad() {
     setKeymap(currKeyMap);
 }
 
-void MainWindow::toggleFullscreen() {
+void MainWindow::setFullscreen(int value) {
     static QWidget *parentPtr = Q_NULLPTR;
-    switch (m_fullscreen) {
+    if (parentPtr == Q_NULLPTR) {
+        parentPtr = ui->lcd->parentWidget();
+    }
+    switch (value) {
         default:
         case FULLSCREEN_NONE:
+            showNormal();
+            ui->lcd->setParent(parentPtr);
+            ui->lcd->showNormal();
+            lcdAdjust();
+            m_fullscreen = FULLSCREEN_NONE;
+            break;
+        case FULLSCREEN_ALL:
             showFullScreen();
             m_fullscreen = FULLSCREEN_ALL;
             break;
-        case FULLSCREEN_ALL:
-            parentPtr = ui->lcd->parentWidget();
+        case FULLSCREEN_LCD:
             ui->lcd->setParent(this, Qt::Tool | Qt::FramelessWindowHint | Qt::CustomizeWindowHint);
             ui->lcd->setFixedSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
             ui->lcd->showFullScreen();
             ui->lcd->installEventFilter(keypadBridge);
             ui->lcd->setFocus();
             m_fullscreen = FULLSCREEN_LCD;
-            break;
-        case FULLSCREEN_LCD:
-            showNormal();
-            ui->lcd->setParent(parentPtr);
-            ui->lcd->showNormal();
-            lcdAdjust();
-            m_fullscreen = FULLSCREEN_NONE;
             break;
     }
 }
@@ -1116,6 +1119,7 @@ void MainWindow::saveSettings() {
         m_config->setValue(SETTING_DEBUGGER_RAM_BYTES, ui->ramBytes->value());
         m_config->setValue(SETTING_DEBUGGER_FLASH_ASCII, ui->flashAscii->isChecked());
         m_config->setValue(SETTING_DEBUGGER_RAM_ASCII, ui->ramAscii->isChecked());
+        m_config->setValue(SETTING_WINDOW_FULLSCREEN, m_fullscreen);
         m_config->setValue(SETTING_WINDOW_MEMORY_DOCKS, m_docksMemory);
         m_config->setValue(SETTING_WINDOW_MEMORY_DOCK_BYTES, QVariant::fromValue(m_docksMemoryBytes));
         m_config->setValue(SETTING_WINDOW_MEMORY_DOCK_ASCII, QVariant::fromValue(m_docksMemoryAscii));
@@ -1142,6 +1146,7 @@ void MainWindow::guiExport() {
 
     QSettings window(path, QSettings::IniFormat);
     window.setValue(SETTING_SCREEN_SKIN, m_config->value(SETTING_SCREEN_SKIN));
+    window.setValue(SETTING_WINDOW_FULLSCREEN, m_fullscreen);
     window.setValue(SETTING_WINDOW_MENUBAR, m_config->value(SETTING_WINDOW_MENUBAR));
     window.setValue(SETTING_WINDOW_STATUSBAR, m_config->value(SETTING_WINDOW_STATUSBAR));
     window.setValue(SETTING_WINDOW_SEPARATOR, m_config->value(SETTING_WINDOW_SEPARATOR));
@@ -1171,6 +1176,7 @@ void MainWindow::guiImport() {
     QSettings window(path, QSettings::IniFormat);
     ipcCloseConnected();
     m_config->setValue(SETTING_SCREEN_SKIN, window.value(SETTING_SCREEN_SKIN));
+    m_config->setValue(SETTING_WINDOW_FULLSCREEN, window.value(SETTING_WINDOW_FULLSCREEN));
     m_config->setValue(SETTING_WINDOW_GEOMETRY, window.value(SETTING_WINDOW_GEOMETRY));
     m_config->setValue(SETTING_WINDOW_STATE, window.value(SETTING_WINDOW_STATE));
     m_config->setValue(SETTING_WINDOW_POSITION, window.value(SETTING_WINDOW_POSITION));

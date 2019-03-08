@@ -118,7 +118,7 @@ draw_black:
     while (out < out_end) { *out++ = 0xFF000000 | (unsigned int)(bus_rand() << (bus_rand() & 0x18)); }
 }
 
-void lcd_gui_event(void) {
+static void lcd_gui_event(void) {
     if (lcd_gui_callback) {
         lcd_gui_callback(lcd_gui_callback_data);
     }

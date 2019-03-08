@@ -395,7 +395,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     m_shortcutAsm->setAutoRepeat(false);
     m_shortcutResend->setAutoRepeat(false);
 
-    connect(m_shortcutFullscreen, &QShortcut::activated, this, &MainWindow::toggleFullscreen);
+    connect(m_shortcutFullscreen, &QShortcut::activated, [this]{ setFullscreen(m_fullscreen + 1); });
     connect(m_shortcutResend, &QShortcut::activated, this, &MainWindow::varResend);
     connect(m_shortcutAsm, &QShortcut::activated, []{ autotester::sendKey(0xFC9C); });
     connect(m_shortcutDebug, &QShortcut::activated, this, &MainWindow::debugToggle);
@@ -851,6 +851,13 @@ void MainWindow::setup() {
         setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, size(), qApp->desktop()->availableGeometry()));
     }
 
+    // restore the fullscreen modes as needed
+    if (opts.fullscreen == -1) {
+        setFullscreen(m_config->value(SETTING_WINDOW_FULLSCREEN, 0).toInt());
+    } else {
+        setFullscreen(opts.fullscreen);
+    }
+
     setUIEditMode(m_uiEditMode);
 
     stateLoadInfo();
@@ -1011,6 +1018,7 @@ void MainWindow::resetGui() {
     ipcCloseConnected();
     m_config->remove(SETTING_SCREEN_SKIN);
     m_config->remove(SETTING_SCREEN_SCALE);
+    m_config->remove(SETTING_WINDOW_FULLSCREEN);
     m_config->remove(SETTING_WINDOW_GEOMETRY);
     m_config->remove(SETTING_WINDOW_POSITION);
     m_config->remove(SETTING_WINDOW_MEMORY_DOCKS);
@@ -1036,6 +1044,7 @@ bool MainWindow::isResetAll() {
         QFile(m_config->value(SETTING_IMAGE_PATH).toString()).remove();
         QFile(m_config->value(SETTING_DEBUGGER_IMAGE_PATH).toString()).remove();
         if (m_keepSetup) {
+            m_config->remove(SETTING_WINDOW_FULLSCREEN);
             m_config->remove(SETTING_IMAGE_PATH);
             m_config->remove(SETTING_DEBUGGER_IMAGE_PATH);
             m_config->remove(SETTING_SCREEN_SKIN);

@@ -2,9 +2,11 @@
 #define CEMUOPTS_H
 
 #include <QtCore/QString>
+#include <QtCore/QStringList>
 
 struct CEmuOpts {
     int speed;
+    int fullscreen;
     bool restoreOnOpen;
     bool useUnthrottled;
     bool suppressTestDialog;

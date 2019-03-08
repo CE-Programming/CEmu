@@ -81,7 +81,6 @@ void lcd_drawframe(void *output, void *data, void *data_end, uint32_t control, u
 void lcd_setptrs(uint32_t **dat, uint32_t **dat_end, uint32_t width, uint32_t height, uint32_t addr, uint32_t control, bool mask);
 void lcd_update(void);
 void lcd_disable(void);
-void lcd_gui_event(void);
 
 #ifdef __cplusplus
 }

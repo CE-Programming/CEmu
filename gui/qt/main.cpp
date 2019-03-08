@@ -119,6 +119,11 @@ int main(int argc, char *argv[]) {
                 QCoreApplication::translate("main", "speed"));
     parser.addOption(emuSpeed);
 
+    QCommandLineOption fullscreenOption(QStringList() << QStringLiteral("fullscreen"),
+                QCoreApplication::translate("main", "Set fullscreen option (0 = normal, 1 = application, 2 = lcd)"),
+                QCoreApplication::translate("main", "fullscreen"));
+    parser.addOption(fullscreenOption);
+
     // IPC hooks (can only use on an already running process)
 
     parser.process(app);
@@ -147,6 +152,19 @@ int main(int argc, char *argv[]) {
     }
     if (parser.isSet(loadTestFile)) {
         opts.autotesterFile = QDir::currentPath() + QDir::separator() + parser.value(loadTestFile);
+    }
+    if (parser.isSet(fullscreenOption)) {
+        int value = parser.value(loadRomFile).toInt();
+        switch (value) {
+            case 0: case 1: case 2:
+                break;
+            default:
+                value = -1;
+                break;
+        }
+        opts.fullscreen = value;
+    } else {
+        opts.fullscreen = -1;
     }
 
     // get application pid and tie it to the id
