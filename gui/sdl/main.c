@@ -33,6 +33,8 @@ void sdl_update_lcd(void *data) {
     rect.w = LCD_WIDTH;
     rect.h = LCD_HEIGHT;
 
+    lcd_drawframe(cemu->lcd, lcd.control & 1 << 11 ? lcd.data : NULL, lcd.data_end, lcd.control, LCD_SIZE);
+
     SDL_UpdateTexture(sdl->texture, NULL, cemu->lcd, LCD_WIDTH * 4);
     SDL_RenderClear(sdl->renderer);
     SDL_RenderCopy(sdl->renderer, sdl->texture, NULL, &rect);
