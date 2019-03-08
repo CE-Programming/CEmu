@@ -8,9 +8,11 @@ extern "C" {
 /* emulator functions for gui frontend use */
 /* single include file for ease of use */
 
+#include "backlight.h"
+#include "control.h"
 #include "emu.h"
-#include "lcd.h"
 #include "keypad.h"
+#include "lcd.h"
 #include "link.h"
 
 #ifdef __cplusplus

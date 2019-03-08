@@ -38,14 +38,13 @@ void sdl_update_lcd(void *data) {
     if (!SDL_LockTexture(sdl->texture, NULL, &pixels, &pitch)) {
         lcd_drawframe(pixels, lcd.control & 1 << 11 ? lcd.data : NULL, lcd.data_end, lcd.control, LCD_SIZE);
         SDL_UnlockTexture(sdl->texture);
-        SDL_RenderCopy(sdl->renderer, sdl->texture, NULL, NULL);
     }
 }
 
 void sdl_event_loop(cemu_sdl_t *cemu) {
     SDL_Event event;
     bool done = false;
-    unsigned last = 0;
+    uint32_t last;
     uint32_t pixfmt = SDL_PIXELFORMAT_BGRA32;
     sdl_t *sdl = &cemu->sdl;
 
@@ -81,10 +80,18 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
     while (done == false) {
         int i;
 
-        unsigned ticks = SDL_GetTicks();
+        uint32_t ticks = SDL_GetTicks();
         emu_run(ticks - last);
         last = ticks;
 
+        if (control.ports[5] & 1 << 4) {
+            uint8_t brightness = backlight.factor < 1 ? backlight.factor * 255 : 255;
+            SDL_SetTextureColorMod(sdl->texture, brightness, brightness, brightness);
+            SDL_RenderCopy(sdl->renderer, sdl->texture, NULL, NULL);
+        } else {
+            SDL_SetRenderDrawColor(sdl->renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+            SDL_RenderClear(sdl->renderer);
+        }
         SDL_RenderPresent(sdl->renderer);
 
         SDL_PollEvent(&event);
