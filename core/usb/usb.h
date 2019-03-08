@@ -13,7 +13,9 @@ extern "C" {
 #include <stdint.h>
 #include <stdio.h>
 #include "fotg210.h"
+#ifdef HAS_LIBUSB
 #include <libusb.h>
+#endif
 
 typedef enum usb_qtype {
     QTYPE_ITD, QTYPE_QH, QTYPE_SITD, QTYPE_FSTN
@@ -67,8 +69,10 @@ typedef struct usb_state {
     uint8_t *data;
     uint8_t len;
     int delay;
+#ifdef HAS_LIBUSB
     libusb_context *ctx;
     libusb_device *dev;
+#endif
     struct libusb_transfer *xfer;
     bool wait : 1, process : 1, control : 1;
     enum  {

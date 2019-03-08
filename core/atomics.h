@@ -2,7 +2,7 @@
 #define ATOMICS_H
 
 /* hacky atomics */
-#if defined (MULTITHREAD)
+#if defined (HAS_MULTITHREAD)
 #ifndef __cplusplus
 #if !defined(__STDC_NO_ATOMICS__) && !defined(_MSC_VER)
  #include <stdatomic.h>

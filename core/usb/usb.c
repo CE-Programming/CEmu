@@ -139,7 +139,7 @@ void usb_send_pkt(const void *data, uint32_t size) {
 //static uint8_t ep0_init[] = { 0x80, 0x06, 0x02, 0x02, 0x00, 0x00, 0x40, 0x00 };
 //static uint8_t ep0_init[] = { 0x80, 0x06, 0x03, 0x03, 0x09, 0x04, 0x40, 0x00 };
 //static uint8_t ep0_init[] = { 0x00, 0x05, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 };
-static void usb_event_old(enum sched_item_id event) {
+static void usb_event_no_libusb(enum sched_item_id event) {
     static const uint8_t set_addr[]   = { 0x00, 0x05, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 };
     static const uint8_t set_config[] = { 0x00, 0x09, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 };
     static const uint8_t rdy_pkt_00[] = { 0x00, 0x00, 0x00, 0x04, 0x01, 0x00, 0x00, 0x04, 0x00 };
@@ -336,6 +336,7 @@ static bool usb_scatter_qtd(usb_qtd_t *qtd, const uint8_t *src, uint16_t len) {
     return false;
 }
 
+#ifdef HAS_LIBUSB
 static void usb_xfer_append_data(struct libusb_transfer *xfer, const void *src, size_t len) {
     memcpy((xfer->type == LIBUSB_TRANSFER_TYPE_CONTROL ? libusb_control_transfer_get_data(xfer) : xfer->buffer) + xfer->actual_length, src, len);
     xfer->actual_length += len;
@@ -662,8 +663,10 @@ static void usb_start_event(void) {
     usb.nak_cnt_reload_state = USB_NAK_CNT_WAIT_FOR_LIST_HEAD;
     usb.fake_recl_head = NULL;
 }
+#endif
 
 static void usb_event(enum sched_item_id event) {
+#ifdef HAS_LIBUSB
     bool high_speed = false;
     usb_qh_t *qh;
     uint8_t i = 0;
@@ -724,6 +727,9 @@ static void usb_event(enum sched_item_id event) {
         }
     }
     sched_repeat(event, high_speed ? 1 : 8);
+#else
+    (void)event;
+#endif
 }
 
 static uint8_t usb_ep0_idx_update(void) {
@@ -755,7 +761,9 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
     uint8_t index = pio >> 2;
     uint8_t bit_offset = (pio & 3) << 3;
     uint32_t old, changed;
+#ifdef HAS_LIBUSB
     enum libusb_error err;
+#endif
     (void)poke;
     //fprintf(stderr, "%06x: 3%03hx <- %02hhx\n", cpu.registers.PC, pio, value);
     switch (index) {
@@ -792,6 +800,7 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             old = usb.regs.hcor.portsc[0];
             usb.regs.hcor.portsc[0] &= ~(((uint32_t)value << bit_offset & 0x2E) | 0x1F0100) ^ PORTSC_EN_STATUS; // W[0/1]C mask (V or RO or W)
             usb.regs.hcor.portsc[0] |= (uint32_t)value << bit_offset & 0x1F0100; // W mask (RO)
+#ifdef HAS_LIBUSB
             if (usb.xfer->dev_handle && old & ~usb.regs.hcor.portsc[0] & PORTSC_RESET) {
                 usb.control = false;
                 if ((err = libusb_reset_device(usb.xfer->dev_handle))) {
@@ -809,6 +818,7 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
                     }
                 }
             }
+#endif
             break;
         case 0x040 >> 2: // Miscellaneous Register
             usb_write_reg_masked(&usb.regs.miscr, 0xFFF, value, bit_offset);
@@ -1020,7 +1030,11 @@ void usb_reset(void) {
     usb.data  = NULL;
     usb.len   = 0;
     usb_plug_b();
+#ifdef HAS_LIBUSB
     sched.items[SCHED_USB].callback.event = usb_event;
+#else
+    sched.items[SCHED_USB].callback.event = usb_event_no_libusb;
+#endif
     sched.items[SCHED_USB].clock = CLOCK_USB;
     sched_clear(SCHED_USB_DMA);
 }
@@ -1034,6 +1048,7 @@ static void usb_init_hccr(void) {
     usb.regs.hccr.data[3] = 0; // No Port Routing Rules
 }
 
+#ifdef HAS_LIBUSB
 static void usb_close(libusb_device_handle **dev_handle) {
     struct libusb_config_descriptor *config;
     uint8_t iface;
@@ -1101,11 +1116,6 @@ static int LIBUSB_CALL usb_hotplug(libusb_context *ctx, libusb_device *dev, libu
     return false;
 }
 
-static const eZ80portrange_t device = {
-    .read  = usb_read,
-    .write = usb_write
-};
-
 static void init_libusb(void) {
     if (libusb_init(&usb.ctx)) {
         return;
@@ -1118,17 +1128,26 @@ static void init_libusb(void) {
     //libusb_set_option(usb.ctx, LIBUSB_OPTION_LOG_LEVEL, LIBUSB_LOG_LEVEL_INFO);
     libusb_hotplug_register_callback(usb.ctx, LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT, LIBUSB_HOTPLUG_ENUMERATE, 0x0951, 0x1666, 0, usb_hotplug, NULL, NULL);
 }
+#endif
+
+static const eZ80portrange_t device = {
+    .read  = usb_read,
+    .write = usb_write
+};
 
 eZ80portrange_t init_usb(void) {
     memset(&usb, 0, sizeof usb);
     usb_init_hccr();
     usb_reset();
     gui_console_printf("[CEmu] Initialized USB...\n");
+#ifdef HAS_LIBUSB
     init_libusb();
+#endif
     return device;
 }
 
 void usb_free(void) {
+#ifdef HAS_LIBUSB
     if (usb.xfer) {
         usb_close(&usb.xfer->dev_handle);
         free(usb.xfer->buffer);
@@ -1139,6 +1158,7 @@ void usb_free(void) {
         libusb_exit(usb.ctx);
         usb.ctx = NULL;
     }
+#endif
 }
 
 bool usb_save(FILE *image) {
@@ -1161,9 +1181,11 @@ bool usb_restore(FILE *image) {
     usb.regs.gimr2                 &= GIMR2_MASK;
     usb.data                        = NULL;
     usb.len                         = 0;
+    usb.xfer                        = NULL;
+#ifdef HAS_LIBUSB
     usb.ctx                         = NULL;
     usb.dev                         = NULL;
-    usb.xfer                        = NULL;
     init_libusb();
+#endif
     return success;
 }
