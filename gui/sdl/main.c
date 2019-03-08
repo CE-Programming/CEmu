@@ -72,7 +72,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
     }
 
     emu_set_run_rate(1000);
-    lcd_set_gui_event(sdl_update_lcd, NULL);
+    lcd_set_gui_event(sdl_update_lcd, cemu);
 
     while (done == false) {
 
