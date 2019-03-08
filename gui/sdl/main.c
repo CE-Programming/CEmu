@@ -45,7 +45,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
     SDL_Event event;
     bool done = false;
     uint64_t last = 0;
-    uint32_t pixfmt = SDL_PIXELFORMAT_RGBX8888;
+    uint32_t pixfmt = SDL_PIXELFORMAT_BGRA32;
     sdl_t *sdl = &cemu->sdl;
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
