@@ -1,25 +1,25 @@
 appname := cemu-sdl
 
-CXX := g++
+CC := gcc
 
-CXXFLAGS := -std=c++11 -O2 -g3 -Wall -Wextra
-CXXFLAGS += -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=declaration-after-statement -Werror=implicit-function-declaration -Werror=date-time -Werror=return-type -Werror=pointer-arith -Winit-self
+CCFLAGS := -std=c89 -O2 -g3 -Wall -Wextra
+CCFLAGS += -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=redundant-decls -Werror=format -Werror=format-security -Werror=declaration-after-statement -Werror=implicit-function-declaration -Werror=date-time -Werror=return-type -Werror=pointer-arith -Winit-self
 
 # Add these flags if your compiler supports it
 #CFLAGS += -Wstack-protector -fstack-protector-strong --param=ssp-buffer-size=1 -fsanitize=address,bounds -fsanitize-undefined-trap-on-error
 
 LDLIBS  := -L../../core/ -lcemucore -lSDL2
 
-srcfiles := main.cpp
-objects  := $(patsubst %.cpp, %.o, $(srcfiles))
+srcfiles := main.c
+objects  := $(patsubst %.c, %.o, $(srcfiles))
 
 all: $(appname)
 
 $(appname): $(objects)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $(appname) $(objects) $(LDLIBS)
+	$(CC) $(CCFLAGS) $(LDFLAGS) -o $(appname) $(objects) $(LDLIBS)
 
-%.o: %.cpp
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+%.o: %.c
+	$(CC) $(CPPFLAGS) $(CCFLAGS) -c $< -o $@
 
 clean:
 	rm -f $(objects) $(appname)

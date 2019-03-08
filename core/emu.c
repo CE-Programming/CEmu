@@ -31,7 +31,7 @@ bool emu_save(emu_data_t type, const char *path) {
     FILE *file = NULL;
     bool success = false;
 
-    if (mem.flash.block == NULL || mem.ram.block == NULL) {
+    if (mem.flash.block == NULL || mem.ram.block == NULL || path == NULL) {
         return false;
     }
 
