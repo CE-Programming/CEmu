@@ -831,7 +831,7 @@ void cpu_execute(void) {
     /* variable declarations */
     int8_t s;
     int32_t sw;
-    uint32_t w;
+    uint32_t w = 0;
 
     uint8_t old = 0;
     uint32_t old_word;
