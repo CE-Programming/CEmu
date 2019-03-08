@@ -33,7 +33,7 @@ void sdl_update_lcd(void *data) {
     rect.w = LCD_WIDTH;
     rect.h = LCD_HEIGHT;
 
-    SDL_UpdateTexture(sdl->texture, NULL, cemu->lcd, sizeof cemu->lcd);
+    SDL_UpdateTexture(sdl->texture, NULL, cemu->lcd, LCD_WIDTH * 4);
     SDL_RenderClear(sdl->renderer);
     SDL_RenderCopy(sdl->renderer, sdl->texture, NULL, &rect);
     SDL_RenderPresent(sdl->renderer);
@@ -104,7 +104,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
 }
 
 int main(int argc, char **argv) {
-    cemu_sdl_t cemu;
+    static cemu_sdl_t cemu;
 
     cemu.speed = 100;
     cemu.fullscreen = 0;
