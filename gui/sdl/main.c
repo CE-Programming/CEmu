@@ -20,7 +20,7 @@ typedef struct {
 } cemu_sdl_t;
 
 typedef struct {
-	int sdl, row, col;
+    int sdl, row, col;
 } cemu_sdl_key_t;
 
 extern const cemu_sdl_key_t cemu_keymap[];
@@ -45,10 +45,13 @@ void sdl_update_lcd(void *data) {
 void sdl_event_loop(cemu_sdl_t *cemu) {
     SDL_Event event;
     bool done = false;
-    uint32_t last;
+    uint32_t last_ticks, speed_ticks;
+    unsigned speed_count = 0;
+    float speed = 0.0f;
     uint32_t pixfmt = SDL_PIXELFORMAT_BGRA32;
     sdl_t *sdl = &cemu->sdl;
     char buf[20];
+    unsigned max_frame_skip = 5;
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
         fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());
@@ -78,13 +81,23 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
     emu_set_run_rate(1000);
     lcd_set_gui_event(sdl_update_lcd, cemu);
 
-    last = SDL_GetTicks();
+    last_ticks = SDL_GetTicks();
+    speed_ticks = last_ticks + 1000;
     while (done == false) {
+        SDL_DisplayMode mode;
+        uint32_t max_ticks, ticks, expected_ticks, actual_ticks;
         int i;
 
-        uint32_t ticks = SDL_GetTicks();
-        emu_run(ticks - last);
-        last = ticks;
+        SDL_GetWindowDisplayMode(sdl->window, &mode);
+        max_ticks = 1000 * max_frame_skip / mode.refresh_rate;
+
+        ticks = SDL_GetTicks();
+        expected_ticks = ticks - last_ticks;
+        last_ticks = ticks;
+        actual_ticks = expected_ticks < max_ticks ? expected_ticks : max_ticks;
+        speed += 100.0f * actual_ticks / expected_ticks;
+        speed_count++;
+        emu_run(actual_ticks);
 
         if (control.ports[5] & 1 << 4) {
             uint8_t brightness = backlight.factor < 1 ? backlight.factor * 255 : 255;
@@ -96,30 +109,35 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
         }
         SDL_RenderPresent(sdl->renderer);
 
-        snprintf(buf, sizeof buf - 1, "CEmu | %f%%", 10000000.0 / ((float)ticks - (float)last));
-        SDL_SetWindowTitle(sdl->window, buf);
+        if (SDL_TICKS_PASSED(ticks, speed_ticks)) {
+            snprintf(buf, sizeof buf - 1, "CEmu | %.1f%%", speed / speed_count);
+            SDL_SetWindowTitle(sdl->window, buf);
+            speed_ticks += 1000;
+            speed_count = 0;
+            speed = 0.0f;
+        }
 
-        SDL_PollEvent(&event);
-
-        switch (event.type) {
-            case SDL_KEYDOWN:
-            case SDL_KEYUP:
-                for (i = 0; i < numkeys; i++) {
-                    if (cemu_keymap[i].sdl == event.key.keysym.sym) {
-                        keypad_key_event(cemu_keymap[i].row, cemu_keymap[i].col, event.type == SDL_KEYDOWN);
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+                case SDL_KEYDOWN:
+                case SDL_KEYUP:
+                    for (i = 0; i < numkeys; i++) {
+                        if (cemu_keymap[i].sdl == event.key.keysym.sym) {
+                            keypad_key_event(cemu_keymap[i].row, cemu_keymap[i].col, event.type == SDL_KEYDOWN);
+                        }
                     }
-                }
-                break;
+                    break;
 
-            case SDL_MOUSEBUTTONDOWN:
-                break;
+                case SDL_MOUSEBUTTONDOWN:
+                    break;
 
-            case SDL_QUIT:
-                done = true;
-                break;
+                case SDL_QUIT:
+                    done = true;
+                    break;
 
-            default:
-                break;
+                default:
+                    break;
+            }
         }
     }
 
