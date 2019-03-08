@@ -15,12 +15,7 @@ extern "C" {
 #define LCD_HEIGHT     (240)
 #define LCD_SIZE       (LCD_WIDTH * LCD_HEIGHT)
 #define LCD_BYTE_SIZE  (LCD_SIZE * 2)
-#define LCD_RAM_ADDR   (0xD40000)
 #define LCD_RAM_OFFSET (0x40000)
-
-/* Set this callback function pointer from the GUI. Called in lcd_event() */
-extern void (*lcd_gui_callback)(void*);
-extern void *lcd_gui_callback_data;
 
 enum lcd_comp {
     LCD_SYNC,
@@ -69,14 +64,19 @@ typedef struct lcd_state {
     uint32_t *data;                /* Pointer to start of data to start extracting from */
     uint32_t *data_end;            /* End pointer that is allowed access */
     bool spi;
+    void (*gui_callback)(void*);
+    void *gui_callback_data;
 } lcd_state_t;
 
 extern lcd_state_t lcd;
 
 void lcd_reset(void);
+void lcd_free(void);
 eZ80portrange_t init_lcd(void);
 bool lcd_restore(FILE *image);
 bool lcd_save(FILE *image);
+
+void lcd_set_gui_event(void (*callback)(void*), void *data);
 void lcd_drawframe(void *output, void *data, void *data_end, uint32_t control, uint32_t size);
 void lcd_setptrs(uint32_t **dat, uint32_t **dat_end, uint32_t width, uint32_t height, uint32_t addr, uint32_t control, bool mask);
 void lcd_update(void);

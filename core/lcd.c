@@ -15,10 +15,6 @@
 /* Global LCD state */
 lcd_state_t lcd;
 
-/* Set this callback function pointer from the GUI. Called in lcd_event() */
-void (*lcd_gui_callback)(void*) = NULL;
-void *lcd_gui_callback_data = NULL;
-
 static bool _rgb;
 
 #define c1555(w) ((w) + ((w) & 0xFFE0) + ((w) >> 10 & 0x20))
@@ -119,9 +115,19 @@ draw_black:
 }
 
 static void lcd_gui_event(void) {
-    if (lcd_gui_callback) {
-        lcd_gui_callback(lcd_gui_callback_data);
+    if (lcd.gui_callback) {
+        lcd.gui_callback(lcd.gui_callback_data);
     }
+}
+
+void lcd_set_gui_event(void (*callback)(void*), void *data) {
+    lcd.gui_callback = callback;
+    lcd.gui_callback_data = data;
+}
+
+void lcd_free(void) {
+    lcd.gui_callback = NULL;
+    lcd.gui_callback_data = NULL;
 }
 
 static uint32_t lcd_process_pixel(uint8_t red, uint8_t green, uint8_t blue) {
@@ -542,16 +548,27 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_lcd(void) {
+    memset(&lcd, 0, sizeof lcd);
     gui_console_printf("[CEmu] Initialized LCD...\n");
     return device;
 }
 
 bool lcd_save(FILE *image) {
-    return fwrite(&lcd, sizeof(lcd), 1, image) == 1;
+    lcd_state_t sanatizedLcd;
+    memcpy(&sanatizedLcd, &lcd, sizeof(lcd_state_t));
+    sanatizedLcd.gui_callback = NULL;
+    sanatizedLcd.gui_callback_data = NULL;
+    sanatizedLcd.data = NULL;
+    sanatizedLcd.data_end = NULL;
+    return fwrite(&sanatizedLcd, sizeof(lcd_state_t), 1, image) == 1;
 }
 
 bool lcd_restore(FILE *image) {
     bool ret = fread(&lcd, sizeof(lcd), 1, image) == 1;
+    lcd.gui_callback = NULL;
+    lcd.gui_callback_data = NULL;
+    lcd.data = NULL;
+    lcd.data_end = NULL;
     lcd_update();
     return ret;
 }

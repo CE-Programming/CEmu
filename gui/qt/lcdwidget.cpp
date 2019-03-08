@@ -133,8 +133,7 @@ void LCDWidget::setMain() {
     m_mutex.lock();
     m_image.fill(Qt::black);
     m_mutex.unlock();
-    lcd_gui_callback_data = this;
-    lcd_gui_callback = [](void *lcd) { reinterpret_cast<LCDWidget*>(lcd)->draw(); };
+    lcd_set_gui_event([](void *lcd) { reinterpret_cast<LCDWidget*>(lcd)->draw(); }, this);
 }
 
 void LCDWidget::setMode(bool state) {
