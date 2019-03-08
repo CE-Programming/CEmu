@@ -15,7 +15,6 @@ typedef struct {
     char *image;
     int speed;
     int fullscreen;
-    uint8_t lcd[LCD_WIDTH * LCD_HEIGHT * 4];
     sdl_t sdl;
 } cemu_sdl_t;
 
@@ -39,18 +38,15 @@ void sdl_update_lcd(void *data) {
     if (!SDL_LockTexture(sdl->texture, NULL, &pixels, &pitch)) {
         lcd_drawframe(pixels, lcd.control & 1 << 11 ? lcd.data : NULL, lcd.data_end, lcd.control, LCD_SIZE);
         SDL_UnlockTexture(sdl->texture);
+        SDL_RenderCopy(sdl->renderer, sdl->texture, NULL, NULL);
     }
-
-    /* SDL_RenderClear(sdl->renderer); */
-    SDL_RenderCopy(sdl->renderer, sdl->texture, NULL, NULL);
-    SDL_RenderPresent(sdl->renderer);
 }
 
 void sdl_event_loop(cemu_sdl_t *cemu) {
     SDL_Event event;
     bool done = false;
-    uint64_t last = 0;
-    uint32_t pixfmt = SDL_PIXELFORMAT_RGBA32;
+    unsigned last = 0;
+    uint32_t pixfmt = SDL_PIXELFORMAT_BGRA32;
     sdl_t *sdl = &cemu->sdl;
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
@@ -62,7 +58,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
         fprintf(stderr, "could not create window: %s\n", SDL_GetError());
         return;
     }
-    sdl->renderer = SDL_CreateRenderer(sdl->window, -1, 0);
+    sdl->renderer = SDL_CreateRenderer(sdl->window, -1, SDL_RENDERER_PRESENTVSYNC);
     if (sdl->renderer == NULL) {
         fprintf(stderr, "could not create renderer: %s\n", SDL_GetError());
         return;
@@ -81,11 +77,15 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
     emu_set_run_rate(1000);
     lcd_set_gui_event(sdl_update_lcd, cemu);
 
+    last = SDL_GetTicks();
     while (done == false) {
         int i;
 
-        emu_run(SDL_GetTicks() - last);
-        last = SDL_GetTicks();
+        unsigned ticks = SDL_GetTicks();
+        emu_run(ticks - last);
+        last = ticks;
+
+        SDL_RenderPresent(sdl->renderer);
 
         SDL_PollEvent(&event);
 
