@@ -10,7 +10,7 @@ CCFLAGS += -Wno-unused-parameter -Werror=shadow -Werror=write-strings -Werror=re
 
 LDLIBS  := -L../../core/ -lcemucore -lSDL2
 
-srcfiles := main.c
+srcfiles := main.c keymap.c
 objects  := $(patsubst %.c, %.o, $(srcfiles))
 
 all: $(appname)

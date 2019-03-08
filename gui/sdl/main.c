@@ -19,6 +19,13 @@ typedef struct {
     sdl_t sdl;
 } cemu_sdl_t;
 
+typedef struct {
+	int sdl, row, col;
+} key_t;
+
+extern const key_t cemu_keymap[];
+extern const int numkeys;
+
 void gui_console_clear() {}
 void gui_console_printf(const char *format, ...) { (void)format; }
 void gui_console_err_printf(const char *format, ...) { (void)format; }
@@ -43,7 +50,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
     SDL_Event event;
     bool done = false;
     uint64_t last = 0;
-    uint32_t pixfmt = SDL_PIXELFORMAT_BGRA32;
+    uint32_t pixfmt = SDL_PIXELFORMAT_RGBA32;
     sdl_t *sdl = &cemu->sdl;
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
@@ -75,6 +82,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
     lcd_set_gui_event(sdl_update_lcd, cemu);
 
     while (done == false) {
+        int i;
 
         emu_run(SDL_GetTicks() - last);
         last = SDL_GetTicks();
@@ -83,6 +91,12 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
 
         switch (event.type) {
             case SDL_KEYDOWN:
+            case SDL_KEYUP:
+                for (i = 0; i < numkeys; i++) {
+                    if (cemu_keymap[i].sdl == event.key.keysym.sym) {
+                        keypad_key_event(cemu_keymap[i].row, cemu_keymap[i].col, event.type == SDL_KEYDOWN);
+                    }
+                }
                 break;
 
             case SDL_MOUSEBUTTONDOWN:
