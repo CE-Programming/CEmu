@@ -2,9 +2,9 @@
 
 typedef struct {
     int sdl, row, col;
-} key_t;
+} cemu_sdl_key_t;
 
-const key_t cemu_keymap[] = {
+const cemu_sdl_key_t cemu_keymap[] = {
     { SDLK_F5, 1, 0 }, /* graph */
     { SDLK_F4, 1, 1 }, /* trace */
     { SDLK_F3, 1, 2 }, /* zoom */
@@ -63,4 +63,4 @@ const key_t cemu_keymap[] = {
     { SDLK_UP, 7, 3 }, /* up */
 };
 
-const int numkeys = sizeof(cemu_keymap)/sizeof(key_t);
+const int numkeys = sizeof(cemu_keymap)/sizeof(cemu_sdl_key_t);

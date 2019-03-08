@@ -21,9 +21,9 @@ typedef struct {
 
 typedef struct {
 	int sdl, row, col;
-} key_t;
+} cemu_sdl_key_t;
 
-extern const key_t cemu_keymap[];
+extern const cemu_sdl_key_t cemu_keymap[];
 extern const int numkeys;
 
 void gui_console_clear() {}
