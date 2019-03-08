@@ -1,4 +1,4 @@
-#include "lcd.h"
+﻿#include "lcd.h"
 #include "cpu.h"
 #include "emu.h"
 #include "mem.h"
@@ -548,7 +548,6 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_lcd(void) {
-    memset(&lcd, 0, sizeof lcd);
     gui_console_printf("[CEmu] Initialized LCD...\n");
     return device;
 }
