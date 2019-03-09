@@ -48,13 +48,14 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
     sdl_t *sdl = &cemu->sdl;
     char buf[20];
     unsigned max_frame_skip = 5;
+    int fmt = cemu->fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0;
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
         fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());
         return;
     }
     SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
-    sdl->window = SDL_CreateWindow("CEmu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, LCD_WIDTH, LCD_HEIGHT, /*SDL_WINDOW_FULLSCREEN_DESKTOP | */SDL_WINDOW_SHOWN);
+    sdl->window = SDL_CreateWindow("CEmu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, LCD_WIDTH, LCD_HEIGHT, fmt | SDL_WINDOW_SHOWN);
     if (sdl->window == NULL) {
         fprintf(stderr, "could not create window: %s\n", SDL_GetError());
         return;
@@ -164,19 +165,17 @@ int main(int argc, char **argv) {
     cemu.rom = NULL;
 
     for (;;) {
-        int tmp;
         int c;
         int option_index = 0;
 
         static const struct option long_options[] = {
             {"rom",        required_argument, 0,  'r' },
             {"image",      required_argument, 0,  'i' },
-            {"speed",      required_argument, 0,  's' },
-            {"fullscreen", required_argument, 0,  'f' },
+            {"fullscreen", no_argument,       0,  'f' },
             {"keymap",     required_argument, 0,  'k' },
         };
 
-        c = getopt_long(argc, argv, "r:i:s:f:", long_options, &option_index);
+        c = getopt_long(argc, argv, "fr:i:", long_options, &option_index);
         if (c == -1) {
             break;
         }
@@ -192,16 +191,9 @@ int main(int argc, char **argv) {
                 cemu.image = optarg;
                 break;
 
-            case 's':
-                tmp = strtol(optarg, NULL, 10);
-                fprintf(stdout, "speed: %d\n", tmp);
-                cemu.speed = tmp;
-                break;
-
             case 'f':
-                tmp = strtol(optarg, NULL, 10);
-                fprintf(stdout, "fullscreen: %s\n", tmp ? "yes" : "no");
-                cemu.fullscreen = tmp;
+                fprintf(stdout, "fullscreen: yes\n");
+                cemu.fullscreen = 1;
                 break;
 
             case 'k':
