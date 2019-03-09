@@ -16,6 +16,7 @@ typedef struct {
     char *rom;
     char *image;
     int spi;
+    int speed;
     int fullscreen;
     sdl_t sdl;
 } cemu_sdl_t;
@@ -49,23 +50,22 @@ bool sdl_cemu_load(cemu_sdl_t *cemu) {
 }
 
 void sdl_event_loop(cemu_sdl_t *cemu) {
+    sdl_t *sdl = &cemu->sdl;
     SDL_Event event;
     bool done = false;
     uint32_t last_ticks, speed_ticks;
     unsigned speed_count = 0;
-    float speed = 0.0f;
-    uint32_t pixfmt = SDL_PIXELFORMAT_RGBA32;
-    sdl_t *sdl = &cemu->sdl;
-    char buf[20];
     unsigned max_frame_skip = 5;
-    int fmt = cemu->fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0;
+    float speed = 0.0f;
+    const int fmtflag = cemu->fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0;
+    char buf[20];
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
         fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());
         return;
     }
     SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
-    sdl->window = SDL_CreateWindow("CEmu", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, LCD_WIDTH, LCD_HEIGHT, fmt | SDL_WINDOW_SHOWN);
+    sdl->window = SDL_CreateWindow("CEmu", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, LCD_WIDTH, LCD_HEIGHT, fmtflag | SDL_WINDOW_SHOWN);
     if (sdl->window == NULL) {
         fprintf(stderr, "could not create window: %s\n", SDL_GetError());
         return;
@@ -75,7 +75,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
         fprintf(stderr, "could not create renderer: %s\n", SDL_GetError());
         return;
     }
-    sdl->texture = SDL_CreateTexture(sdl->renderer, pixfmt, SDL_TEXTUREACCESS_STREAMING, LCD_WIDTH, LCD_HEIGHT);
+    sdl->texture = SDL_CreateTexture(sdl->renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, LCD_WIDTH, LCD_HEIGHT);
     if (sdl->texture == NULL) {
         fprintf(stderr, "could not create texture: %s\n", SDL_GetError());
         return;
@@ -180,6 +180,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
 int main(int argc, char **argv) {
     static cemu_sdl_t cemu;
 
+    cemu.speed = 100;
     cemu.fullscreen = 0;
     cemu.image = NULL;
     cemu.rom = NULL;
