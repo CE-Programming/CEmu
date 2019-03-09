@@ -33,7 +33,9 @@ script:
   - make clean && make -j4 CPPFLAGS="-DMULTITHREAD" all
   - cd ../tests/autotester
   - make clean && make -j4 CPPFLAGS="-DMULTITHREAD" all
-  - cd ../../gui/sdl/
+  - cd ../../core
+  - make clean && make -j4 all
+  - cd ../gui/sdl/
   - make clean && make -j4 all
 
 notifications:

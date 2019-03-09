@@ -31,7 +31,7 @@ static inline int clzll(unsigned long long input_num) {
 #define clzll(x) __builtin_clzll(x)
 #endif
 
-apng_t apng;
+static apng_t apng;
 
 bool apng_start(const char *tmp_name, int frameskip) {
     /* temp file used for saving rgb888 data rather than storing everything in ram */
@@ -40,7 +40,7 @@ bool apng_start(const char *tmp_name, int frameskip) {
     }
 
     /* set frameskip rate */
-    apng.frameskip = frameskip + 1;
+    apng.frameskip = (unsigned int)frameskip + 1;
 
     /* init recording items */
     apng.recording = true;
@@ -53,7 +53,7 @@ bool apng_start(const char *tmp_name, int frameskip) {
 static void apng_write_delay(void) {
     uint64_t time = sched_total_time(CLOCK_48M) - apng.prev_time;
     int logo = 48 - clzll(time);
-    uint64_t shift = logo > 10 ? logo : 10;
+    uint64_t shift = logo > 10 ? (uint64_t)logo : 10;
     png_uint_16 num = time >> shift, den = sched.clockRates[CLOCK_48M] >> shift;
     fwrite(&num, sizeof(num), 1, apng.tmp);
     fwrite(&den, sizeof(den), 1, apng.tmp);
@@ -96,9 +96,9 @@ bool apng_save(const char *filename, bool optimize) {
     png_colorp palette;
     png_color_16 trans;
     FILE *f;
-
+    uint32_t count = ~0, pixel = 0;
     bool have_trans = true;
-    uint32_t count = ~0, pixel = 0, i, j, probe, hash;
+    uint32_t i, j, probe, hash;
     int x, y;
     struct { int x[2], y[2]; } frame;
 

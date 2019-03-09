@@ -127,7 +127,7 @@ static int disasmFetch(struct zdis_ctx *ctx, uint32_t addr) {
         disasm.highlight.watchW |= data & DBG_MASK_WRITE ? true : false;
         disasm.highlight.breakP |= data & DBG_MASK_EXEC ? true : false;
         if (data & DBG_INST_START_MARKER && disasm.highlight.addr < 0) {
-            disasm.highlight.addr = addr;
+            disasm.highlight.addr = static_cast<int32_t>(addr);
         }
     }
 
@@ -154,7 +154,7 @@ static bool disasmPut(struct zdis_ctx *ctx, enum zdis_put kind, int32_t val, boo
             *disasm.cur += tmp;
             break;
         case ZDIS_PUT_WORD:
-            *disasm.cur += strW(val);
+            *disasm.cur += strW(static_cast<uint32_t>(val));
             break;
         case ZDIS_PUT_OFF:
             if (val < 0) {
@@ -171,7 +171,7 @@ static bool disasmPut(struct zdis_ctx *ctx, enum zdis_put kind, int32_t val, boo
         case ZDIS_PUT_ADDR:
         case ZDIS_PUT_ABS:
         case ZDIS_PUT_RST:
-            *disasm.cur += strA(val);
+            *disasm.cur += strA(static_cast<uint32_t>(val));
             break;
         case ZDIS_PUT_CHAR:
             *disasm.cur += static_cast<char>(val);
@@ -212,9 +212,9 @@ void disasmGet() {
 
     zdis_put_inst(&disasm.ctx);
 
-    if (disasm.highlight.pc && cpu.registers.PC != disasm.base) {
+    if (disasm.highlight.pc && cpu.registers.PC != static_cast<uint32_t>(disasm.base)) {
         static char tmpbuf[20];
-        int32_t size = cpu.registers.PC - disasm.base;
+        size_t size = cpu.registers.PC - static_cast<uint32_t>(disasm.base);
         disasm.instr.data = disasm.instr.data.substr(0, size * 2);
         disasm.instr.operands.clear();
         int precision;
@@ -231,7 +231,7 @@ void disasmGet() {
             disasm.instr.opcode = "db";
         }
         do {
-            snprintf(tmpbuf, sizeof(tmpbuf) - 1, "$%0*X", precision, mem_peek_long(disasm.base) & ((1 << 4*precision) - 1));
+            snprintf(tmpbuf, sizeof(tmpbuf) - 1, "$%0*X", precision, mem_peek_long(static_cast<uint32_t>(disasm.base)) & ((1 << 4*precision) - 1));
             disasm.instr.operands += tmpbuf;
             if (--size) {
                 disasm.instr.operands += ',';
@@ -245,5 +245,5 @@ void disasmGet() {
         disasm.next = static_cast<int32_t>(disasm.ctx.zdis_end_addr);
     }
 
-    disasm.instr.size = disasm.next - disasm.base;
+    disasm.instr.size = static_cast<unsigned int>(disasm.next) - static_cast<unsigned int>(disasm.base);
 }
