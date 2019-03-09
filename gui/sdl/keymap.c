@@ -1,64 +1,64 @@
 #include "keymap.h"
 
 const cemu_sdl_key_t cemu_keymap[] = {
-    { { SDL_SCANCODE_UNKNOWN, SDLK_F5,         KMOD_NONE,  0 }, 1, 0 }, /* graph */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_F4,         KMOD_NONE,  0 }, 1, 1 }, /* trace */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_F3,         KMOD_NONE,  0 }, 1, 2 }, /* zoom */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_F2,         KMOD_NONE,  0 }, 1, 3 }, /* wind */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_F1,         KMOD_NONE,  0 }, 1, 4 }, /* yequ */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_SEMICOLON,  KMOD_NONE,  0 }, 1, 5 }, /* 2nd */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_BACKSPACE,  KMOD_NONE,  0 }, 1, 6 }, /* mode */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_DELETE,     KMOD_NONE,  0 }, 1, 7 }, /* del */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_F5,        KMOD_NONE,  0 }, 1, 0 }, /* graph */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_F4,        KMOD_NONE,  0 }, 1, 1 }, /* trace */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_F3,        KMOD_NONE,  0 }, 1, 2 }, /* zoom */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_F2,        KMOD_NONE,  0 }, 1, 3 }, /* wind */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_F1,        KMOD_NONE,  0 }, 1, 4 }, /* yequ */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_SEMICOLON, KMOD_NONE,  0 }, 1, 5 }, /* 2nd */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_BACKSPACE, KMOD_NONE,  0 }, 1, 6 }, /* mode */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_DELETE,    KMOD_NONE,  0 }, 1, 7 }, /* del */
 
-    { { SDL_SCANCODE_UNKNOWN, SDLK_F12,        KMOD_NONE,  0 }, 2, 0 }, /* on */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_GREATER,    KMOD_NONE,  0 }, 2, 1 }, /* sto */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_BACKQUOTE,  KMOD_NONE,  0 }, 2, 2 }, /* ln */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_EXCLAIM,    KMOD_NONE,  0 }, 2, 3 }, /* log */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_AT,         KMOD_NONE,  0 }, 2, 4 }, /* sq */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_BACKSLASH,  KMOD_NONE,  0 }, 2, 5 }, /* inv */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_EQUALS,     KMOD_NONE,  0 }, 2, 6 }, /* math */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_QUOTE,      KMOD_NONE,  0 }, 2, 7 }, /* alpha */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_F12,       KMOD_NONE,  0 }, 2, 0 }, /* on */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_PERIOD,    KMOD_SHIFT, 0 }, 2, 1 }, /* sto */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_BACKQUOTE, KMOD_NONE,  0 }, 2, 2 }, /* ln */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_1,         KMOD_SHIFT, 0 }, 2, 3 }, /* log */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_2,         KMOD_SHIFT, 0 }, 2, 4 }, /* sq */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_BACKSLASH, KMOD_NONE,  0 }, 2, 5 }, /* inv */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_EQUALS,    KMOD_NONE,  0 }, 2, 6 }, /* math */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_QUOTE,     KMOD_NONE,  0 }, 2, 7 }, /* alpha */
 
-    { { SDL_SCANCODE_UNKNOWN, SDLK_0,          KMOD_NONE,  0 }, 3, 0 }, /* 0 */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_1,          KMOD_NONE,  0 }, 3, 1 }, /* 1 */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_4,          KMOD_NONE,  0 }, 3, 2 }, /* 4 */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_7,          KMOD_NONE,  0 }, 3, 3 }, /* 7 */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_COMMA,      KMOD_NONE,  0 }, 3, 4 }, /* comma */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_DOLLAR,     KMOD_NONE,  0 }, 3, 5 }, /* sin */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_PAGEUP,     KMOD_NONE,  0 }, 3, 6 }, /* apps */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_UNDERSCORE, KMOD_NONE,  0 }, 3, 7 }, /* xton */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_0,         KMOD_NONE,  0 }, 3, 0 }, /* 0 */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_1,         KMOD_NONE,  0 }, 3, 1 }, /* 1 */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_4,         KMOD_NONE,  0 }, 3, 2 }, /* 4 */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_7,         KMOD_NONE,  0 }, 3, 3 }, /* 7 */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_COMMA,     KMOD_NONE,  0 }, 3, 4 }, /* comma */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_4,         KMOD_SHIFT, 0 }, 3, 5 }, /* sin */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_PAGEUP,    KMOD_NONE,  0 }, 3, 6 }, /* apps */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_MINUS,     KMOD_SHIFT, 0 }, 3, 7 }, /* xton */
 
-    { { SDL_SCANCODE_UNKNOWN, SDLK_PERIOD,     KMOD_NONE,  0 }, 4, 0 }, /* dot */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_2,          KMOD_NONE,  0 }, 4, 1 }, /* 2 */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_5,          KMOD_NONE,  0 }, 4, 2 }, /* 5 */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_8,          KMOD_NONE,  0 }, 4, 3 }, /* 8 */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_LEFTPAREN,  KMOD_NONE,  0 }, 4, 4 }, /* lpar */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_PERCENT,    KMOD_NONE,  0 }, 4, 5 }, /* cos */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_PAGEDOWN,   KMOD_NONE,  0 }, 4, 6 }, /* prgm */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_END,        KMOD_NONE,  0 }, 4, 7 }, /* stat */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_PERIOD,    KMOD_NONE,  0 }, 4, 0 }, /* dot */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_2,         KMOD_NONE,  0 }, 4, 1 }, /* 2 */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_5,         KMOD_NONE,  0 }, 4, 2 }, /* 5 */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_8,         KMOD_NONE,  0 }, 4, 3 }, /* 8 */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_9,         KMOD_SHIFT, 0 }, 4, 4 }, /* lpar */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_5,         KMOD_SHIFT, 0 }, 4, 5 }, /* cos */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_PAGEDOWN,  KMOD_NONE,  0 }, 4, 6 }, /* prgm */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_END,       KMOD_NONE,  0 }, 4, 7 }, /* stat */
 
-    { { SDL_SCANCODE_UNKNOWN, SDLK_DOLLAR,     KMOD_NONE,  0 }, 5, 0 }, /* neg */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_3,          KMOD_NONE,  0 }, 5, 1 }, /* 3 */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_6,          KMOD_NONE,  0 }, 5, 2 }, /* 6 */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_9,          KMOD_NONE,  0 }, 5, 3 }, /* 9 */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_RIGHTPAREN, KMOD_NONE,  0 }, 5, 4 }, /* rpar */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_AMPERSAND,  KMOD_NONE,  0 }, 5, 5 }, /* tan */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_LESS,       KMOD_NONE,  0 }, 5, 6 }, /* vars */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_BACKQUOTE, KMOD_SHIFT, 0 }, 5, 0 }, /* neg */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_3,         KMOD_NONE,  0 }, 5, 1 }, /* 3 */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_6,         KMOD_NONE,  0 }, 5, 2 }, /* 6 */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_9,         KMOD_NONE,  0 }, 5, 3 }, /* 9 */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_0,         KMOD_SHIFT, 0 }, 5, 4 }, /* rpar */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_7,         KMOD_SHIFT, 0 }, 5, 5 }, /* tan */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_COMMA,     KMOD_SHIFT, 0 }, 5, 6 }, /* vars */
 
-    { { SDL_SCANCODE_UNKNOWN, SDLK_RETURN,     KMOD_NONE,  0 }, 6, 0 }, /* enter */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_PLUS,       KMOD_NONE,  0 }, 6, 1 }, /* add */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_MINUS,      KMOD_NONE,  0 }, 6, 2 }, /* sub */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_ASTERISK,   KMOD_SHIFT, 0 }, 6, 3 }, /* mul */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_SLASH,      KMOD_NONE,  0 }, 6, 4 }, /* div */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_CARET,      KMOD_NONE,  0 }, 6, 5 }, /* pow */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_ESCAPE,     KMOD_NONE,  0 }, 6, 6 }, /* clr */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_RETURN,    KMOD_NONE,  0 }, 6, 0 }, /* enter */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_EQUALS,    KMOD_SHIFT, 0 }, 6, 1 }, /* add */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_MINUS,     KMOD_NONE,  0 }, 6, 2 }, /* sub */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_8,         KMOD_SHIFT, 0 }, 6, 3 }, /* mul */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_SLASH,     KMOD_NONE,  0 }, 6, 4 }, /* div */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_6,         KMOD_SHIFT, 0 }, 6, 5 }, /* pow */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_ESCAPE,    KMOD_NONE,  0 }, 6, 6 }, /* clr */
 
-    { { SDL_SCANCODE_UNKNOWN, SDLK_DOWN,       KMOD_NONE,  0 }, 7, 0 }, /* down */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_LEFT,       KMOD_NONE,  0 }, 7, 1 }, /* left */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_RIGHT,      KMOD_NONE,  0 }, 7, 2 }, /* right */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_UP,         KMOD_NONE,  0 }, 7, 3 }, /* up */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_DOWN,      KMOD_NONE,  0 }, 7, 0 }, /* down */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_LEFT,      KMOD_NONE,  0 }, 7, 1 }, /* left */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_RIGHT,     KMOD_NONE,  0 }, 7, 2 }, /* right */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_UP,        KMOD_NONE,  0 }, 7, 3 }, /* up */
 
-    { { SDL_SCANCODE_UNKNOWN, SDLK_UNKNOWN,    KMOD_NONE,  0 },-1,-1 }
+    { { SDL_SCANCODE_UNKNOWN, SDLK_UNKNOWN,   KMOD_NONE,  0 },-1,-1 }
 };
 
 const cemu_sdl_key_t smartpad_keymap[] = {
