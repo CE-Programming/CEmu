@@ -16,7 +16,6 @@ typedef struct {
     char *rom;
     char *image;
     int spi;
-    int speed;
     int fullscreen;
     sdl_t sdl;
 } cemu_sdl_t;
@@ -181,7 +180,6 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
 int main(int argc, char **argv) {
     static cemu_sdl_t cemu;
 
-    cemu.speed = 100;
     cemu.fullscreen = 0;
     cemu.image = NULL;
     cemu.rom = NULL;
