@@ -327,7 +327,7 @@ void KeypadWidget::updateKey(Key *key, bool wasSelected) {
     bool selected = key->isSelected();
     if (selected != wasSelected) {
         update(mTransform.mapRect(key->keyGeometry()));
-        keypad_key_event(key->keycode().row(), key->keycode().col(), selected);
+        emu_keypad_event(key->keycode().row(), key->keycode().col(), selected);
         if (selected) {
             QString out = QStringLiteral("[") + key->getLabel() + QStringLiteral("]");
             emit keyPressed(out.simplified().replace(" ",""));

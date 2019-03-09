@@ -31,7 +31,7 @@ uint8_t port_read_byte(uint16_t address) {
 #endif
 
     cpu.cycles += PORT_READ_DELAY;
-    sched_process_pending_events(); // make io ports consistent with mid-instruction state
+    sched_process_pending_events(); /* make io ports consistent with mid-instruction state */
     value = port_read(address, port_loc, false);
     cpu.cycles += port_read_cycles[port_loc] - PORT_READ_DELAY;
     return value;
@@ -59,7 +59,7 @@ void port_write_byte(uint16_t address, uint8_t value) {
 #endif
 
     cpu.cycles += PORT_WRITE_DELAY;
-    sched_process_pending_events(); // make io ports consistent with mid-instruction state
+    sched_process_pending_events(); /* make io ports consistent with mid-instruction state */
     port_write(address, port_loc, value, false);
     cpu.cycles -= PORT_WRITE_DELAY - port_write_cycles[port_loc];
 }

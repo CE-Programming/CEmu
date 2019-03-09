@@ -70,7 +70,7 @@ SendingHandler::SendingHandler(QObject *parent, QProgressBar *bar, QTableWidget 
     m_sendIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/variables.png")));
 }
 
-void SendingHandler::dropOccured(QDropEvent *e, unsigned int location) {
+void SendingHandler::dropOccured(QDropEvent *e, int location) {
     if (guiSend || guiReceive || guiDebug) {
         e->ignore();
         return;
@@ -223,7 +223,7 @@ void SendingHandler::addFile(const QString &file, bool select) {
     selected->setCheckState(select ? Qt::Checked : Qt::Unchecked);
 }
 
-void SendingHandler::sendFiles(const QStringList &fileNames, unsigned int location) {
+void SendingHandler::sendFiles(const QStringList &fileNames, int location) {
     QStringList list = fileNames;
 
     if (guiSend || guiReceive || guiDebug || !list.size()) {

@@ -80,7 +80,7 @@ signals:
     void sentFile(const QString &file, int ok);
 
 public slots:
-    void send(const QStringList &fileNames, unsigned int location);
+    void send(const QStringList &names, int location);
 
 protected:
     virtual void run() Q_DECL_OVERRIDE;
@@ -89,7 +89,7 @@ private:
 
     void sendFiles() {
         for (const QString &f : m_vars) {
-            emit sentFile(f, sendVariableLink(f.toUtf8(), m_sendLoc));
+            emit sentFile(f, emu_send_variable(f.toUtf8(), m_sendLoc));
         }
         emit sentFile(QString(), LINK_GOOD);
     }
@@ -122,7 +122,7 @@ private:
     QString m_savePath;
     QString m_loadPath;
     QStringList m_vars;
-    unsigned int m_sendLoc;
+    int m_sendLoc;
 
     std::mutex m_mutex;
     std::condition_variable m_cv;

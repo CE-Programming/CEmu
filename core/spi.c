@@ -282,7 +282,7 @@ static void spi_write_param(uint8_t value) {
             if (unlikely(!(spi.ifCtl & SPI_IC_CTRL_DATA))) {
                 switch (spi.ifBpp & 7) {
                     default:
-                    case 6: // 18bpp
+                    case 6: /* 18bpp */
                         switch (spi.param % 3) {
                             case 0:
                                 spi.ifBlue = value >> 2;
@@ -296,7 +296,7 @@ static void spi_write_param(uint8_t value) {
                                 break;
                         }
                         break;
-                    case 5: // 16bpp
+                    case 5: /* 16bpp */
                         switch (spi.param % 2) {
                             case 0:
                                 spi.ifBlue = value >> 3;
@@ -309,7 +309,7 @@ static void spi_write_param(uint8_t value) {
                                 break;
                         }
                         break;
-                    case 3: // 12bpp
+                    case 3: /* 12bpp */
                         switch (spi.param % 3) {
                             case 0:
                                 spi.ifBlue = value >> 4;

@@ -13,6 +13,9 @@
 #include <QtCore/QDirIterator>
 #include <QtCore/QTemporaryDir>
 
+#include "../../core/emu.h"
+#include "../../core/link.h"
+
 class SendingHandler : public QObject {
     Q_OBJECT
 
@@ -20,9 +23,9 @@ public:
     explicit SendingHandler(QObject *p = Q_NULLPTR, QProgressBar *bar = Q_NULLPTR, QTableWidget *t = Q_NULLPTR);
     ~SendingHandler() = default;
 
-    void sendFiles(const QStringList &fileNames, unsigned int location);
+    void sendFiles(const QStringList &fileNames, int location);
     bool dragOccured(QDragEnterEvent *e);
-    void dropOccured(QDropEvent *e, unsigned int location);
+    void dropOccured(QDropEvent *e, int location);
     void resendSelected();
     void addFile(const QString &path, bool select);
     void setLoadEquates(bool state);
@@ -33,7 +36,7 @@ public slots:
     void removeRow();
 
 signals:
-    void send(const QStringList &fileNames, unsigned int location);
+    void send(const QStringList &names, int location);
     void loadEquateFile(const QString &path);
 
 private:

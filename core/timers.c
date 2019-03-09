@@ -94,7 +94,7 @@ static uint64_t gpt_next_event(enum sched_item_id id) {
 static void gpt_refresh(enum sched_item_id id) {
     uint64_t next_event;
     sched.items[id].clock = CLOCK_CPU;
-    sched_set(id, 0); // dummy activate to current cycle
+    sched_set(id, 0); /* dummy activate to current cycle */
     next_event = gpt_next_event(id);
     if (next_event) {
         sched_set(id, next_event);
@@ -105,7 +105,7 @@ static void gpt_refresh(enum sched_item_id id) {
 
 static void gpt_event(enum sched_item_id id) {
     uint64_t next_event;
-    sched_repeat(id, 0); // re-activate to event cycle
+    sched_repeat(id, 0); /* re-activate to event cycle */
     next_event = gpt_next_event(id);
     if (next_event) {
         sched_repeat(id, next_event);

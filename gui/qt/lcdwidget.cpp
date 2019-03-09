@@ -133,7 +133,7 @@ void LCDWidget::setMain() {
     m_mutex.lock();
     m_image.fill(Qt::black);
     m_mutex.unlock();
-    lcd_set_gui_event([](void *lcd) { reinterpret_cast<LCDWidget*>(lcd)->draw(); }, this);
+    emu_set_lcd_callback([](void *lcd) { reinterpret_cast<LCDWidget*>(lcd)->draw(); }, this);
 }
 
 void LCDWidget::setMode(bool state) {
@@ -157,7 +157,7 @@ void LCDWidget::draw() {
             m_mutex.unlock();
         } else {
             m_mutex.lock();
-            lcd_drawframe(m_image.bits(), lcd.control & 1 << 11 ? lcd.data : nullptr, lcd.data_end, lcd.control, LCD_SIZE);
+            emu_lcd_drawframe(m_image.bits(), lcd.control & 1 << 11 ? lcd.data : nullptr, lcd.data_end, lcd.control, LCD_SIZE);
             m_mutex.unlock();
         }
 #ifdef PNG_WRITE_APNG_SUPPORTED

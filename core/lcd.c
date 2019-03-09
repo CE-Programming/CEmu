@@ -44,7 +44,7 @@ static uint32_t lcd_bgr16out(uint32_t bgr16) {
 }
 
 /* Draw the lcd onto an RGBA8888 buffer. Alpha is always 255. */
-void lcd_drawframe(void *output, void *data, void *data_end, uint32_t control, uint32_t size) {
+void emu_lcd_drawframe(void *output, void *data, void *data_end, uint32_t control, uint32_t size) {
     bool bebo = control & (1 << 9);
     uint_fast8_t mode = control >> 1 & 7;
     uint32_t word, color;
@@ -120,7 +120,7 @@ static void lcd_gui_event(void) {
     }
 }
 
-void lcd_set_gui_event(void (*callback)(void*), void *data) {
+void emu_set_lcd_callback(void (*callback)(void*), void *data) {
     lcd.gui_callback = callback;
     lcd.gui_callback_data = data;
 }

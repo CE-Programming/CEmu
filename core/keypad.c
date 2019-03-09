@@ -37,7 +37,7 @@ static void keypad_any_check(void) {
     }
 }
 
-void EMSCRIPTEN_KEEPALIVE keypad_key_event(unsigned int row, unsigned int col, bool press) {
+void EMSCRIPTEN_KEEPALIVE emu_keypad_event(unsigned int row, unsigned int col, bool press) {
     if (row == 2 && col == 0) {
         intrpt_set(INT_ON, press);
         if (press && control.off) {

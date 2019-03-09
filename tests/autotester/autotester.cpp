@@ -220,9 +220,9 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
             if (tmp != valid_keys.end())
             {
                 const coord2d& key_coords = tmp->second;
-                cemucore::keypad_key_event(key_coords.y, key_coords.x, true);
+                cemucore::emu_keypad_event(key_coords.y, key_coords.x, true);
                 cemucore::emu_run(80);
-                cemucore::keypad_key_event(key_coords.y, key_coords.x, false);
+                cemucore::emu_keypad_event(key_coords.y, key_coords.x, false);
                 if (config.delay_after_key > 0)
                 {
                     cemucore::emu_run(config.delay_after_key);
@@ -238,7 +238,7 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
             if (tmp != valid_keys.end())
             {
                 const coord2d& key_coords = tmp->second;
-                cemucore::keypad_key_event(key_coords.y, key_coords.x, true);
+                cemucore::emu_keypad_event(key_coords.y, key_coords.x, true);
             } else {
                 std::cerr << "\t[Error] unknown key \"" << which_key << "\" was not hold." << std::endl;
             };
@@ -250,7 +250,7 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
             if (tmp != valid_keys.end())
             {
                 const coord2d& key_coords = tmp->second;
-                cemucore::keypad_key_event(key_coords.y, key_coords.x, false);
+                cemucore::emu_keypad_event(key_coords.y, key_coords.x, false);
             } else {
                 std::cerr << "\t[Error] unknown key \"" << which_key << "\" was not released." << std::endl;
             };
@@ -627,7 +627,7 @@ bool sendFilesForTest()
             {
                 std::cout << "- Sending forced file " << file << "... ";
             }
-            if (cemucore::sendVariableLink(file.c_str(), cemucore::LINK_FILE) != cemucore::LINK_GOOD)
+            if (cemucore::emu_send_variable(file.c_str(), cemucore::LINK_FILE) != cemucore::LINK_GOOD)
             {
                 if (debugMode)
                 {
@@ -649,7 +649,7 @@ bool sendFilesForTest()
         {
             std::cout << "- Sending file " << file << "... ";
         }
-        if (cemucore::sendVariableLink(file.c_str(), cemucore::LINK_FILE) != cemucore::LINK_GOOD)
+        if (cemucore::emu_send_variable(file.c_str(), cemucore::LINK_FILE) != cemucore::LINK_GOOD)
         {
             if (debugMode)
             {

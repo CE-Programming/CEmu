@@ -1,4 +1,4 @@
-#include "link.h"
+﻿#include "link.h"
 #include "asic.h"
 #include "cpu.h"
 #include "mem.h"
@@ -13,6 +13,9 @@
 #define ADDR_SAFE_RAM   0xD052C6
 #define ADDR_ERRNO      0xD008DF
 #define ADDR_PRGM_SIZE  0xD0118C
+
+#define FILE_DATA 0x35
+#define FILE_DATA_START 0x37
 
 static const uint8_t jforcegraph[9] = {
     0xF3,                         /* di                            */
@@ -53,7 +56,8 @@ static const uint8_t pgrm_loader[34] = {
     0x18, 0xFE                    /* _sink: jr _sink      */
 };
 
-bool listVariablesLink(void) {
+/*
+bool emu_list_variables(void) {
     calc_var_t var;
     vat_search_init(&var);
     puts("VAT:");
@@ -65,6 +69,7 @@ bool listVariablesLink(void) {
     }
     return true;
 }
+*/
 
 static void run_asm(const uint8_t *data, const size_t data_size, const uint32_t cycles) {
     cpu.halted = cpu.IEF_wait = cpu.IEF1 = cpu.IEF2 = cpu.NMI = 0;
@@ -80,13 +85,13 @@ static void run_asm(const uint8_t *data, const size_t data_size, const uint32_t 
  * Proper USB emulation should really be a thing
  * See GitHub issue #25
  */
-int EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int location) {
+int EMSCRIPTEN_KEEPALIVE emu_send_variable(const char *file, int location) {
     const size_t h_size = sizeof header_data;
     const uint8_t tVarLst = 0x5D, tAns = 0x72, cxError = 0x52;
     unsigned int i;
     int ret = LINK_GOOD;
 
-    FILE *file;
+    FILE *fd;
     uint8_t tmp_buf[0x80];
 
     uint32_t save_cycles;
@@ -109,22 +114,22 @@ int EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int lo
     long     lSize;
 
     /* Return if we are at an error menu */
-    if (*cxCurApp == cxError || !(file = fopen_utf8(file_name, "rb"))) {
+    if (*cxCurApp == cxError || !(fd = fopen_utf8(file, "rb"))) {
         gui_console_printf("[CEmu] Transfer Error: OS in error screen.\n");
         return LINK_ERR;
     }
 
     save_cycles = cpu.cycles;
 
-    if (fread(tmp_buf, 1, h_size, file) != h_size)         goto r_err;
+    if (fread(tmp_buf, 1, h_size, fd) != h_size)         goto r_err;
     if (memcmp(tmp_buf, header_data, h_size))              goto r_err;
 
-    if (fseek(file, FILE_DATA, SEEK_SET))                  goto r_err;
-    if (fread(&data_size, 2, 1, file) != 1)                goto r_err;
+    if (fseek(fd, FILE_DATA, SEEK_SET))                  goto r_err;
+    if (fread(&data_size, 2, 1, fd) != 1)                goto r_err;
 
 
-    if (fseek(file, 0L, SEEK_END))                         goto r_err;
-    if ((lSize = ftell(file)) <= 0)                        goto r_err;
+    if (fseek(fd, 0L, SEEK_END))                         goto r_err;
+    if ((lSize = ftell(fd)) <= 0)                        goto r_err;
 
     temp_size = (size_t)data_size + FILE_DATA + 4;
 
@@ -133,26 +138,26 @@ int EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int lo
         ret = LINK_WARN;
     }
 
-    if (fseek(file, FILE_DATA_START, SEEK_SET))            goto r_err;
+    if (fseek(fd, FILE_DATA_START, SEEK_SET))            goto r_err;
 
     /* make sure the checksum is correct */
     checksum = 0;
     for (i = FILE_DATA_START; i<(unsigned int)lSize-2; i++) {
-        checksum = (checksum + fgetc(file)) & 0xffff;
+        checksum = (checksum + fgetc(fd)) & 0xffff;
     }
 
-    if (fread(&cchecksum, 2, 1, file) != 1)                goto r_err;
+    if (fread(&cchecksum, 2, 1, fd) != 1)                goto r_err;
 
     if (cchecksum != checksum) {
         gui_console_printf("[CEmu] Transfer Warning: File checksum invalid.\n");
         ret = LINK_WARN;
     }
 
-    if (fseek(file, FILE_DATA_START, SEEK_SET))            goto r_err;
+    if (fseek(fd, FILE_DATA_START, SEEK_SET))            goto r_err;
 
     if (control.off) {
         intrpt_set(INT_ON, true);
-        control.readBatteryStatus = ~1;
+        control.readBatteryStatus = (uint8_t)~1u;
         intrpt_pulse(INT_WAKE);
         cpu.cycles = cpu.IEF_wait = 0;
         cpu.next = 100000000;
@@ -165,18 +170,18 @@ int EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int lo
 
     run_asm(jforcegraph, sizeof jforcegraph, 2500000);
 
-    while (ftell(file) < lSize-2) {
+    while (ftell(fd) < lSize-2) {
 
-        if (fread(&header_size, 2, 1, file) != 1)          goto r_err;
-        if (fread(&var_size, 2, 1, file) != 1)             goto r_err;
-        if (fread(op1, 1, 9, file) != 9)                   goto r_err;
+        if (fread(&header_size, 2, 1, fd) != 1)          goto r_err;
+        if (fread(&var_size, 2, 1, fd) != 1)             goto r_err;
+        if (fread(op1, 1, 9, fd) != 9)                   goto r_err;
         if (header_size == 11) {
             var_ver = var_arc = 0;
         } else if (header_size == 13) {
-            if (fread(&var_ver, 1, 1, file) != 1)          goto r_err;
-            if (fread(&var_arc, 1, 1, file) != 1)          goto r_err;
+            if (fread(&var_ver, 1, 1, fd) != 1)          goto r_err;
+            if (fread(&var_arc, 1, 1, fd) != 1)          goto r_err;
         } else                                             goto r_err;
-        if (fread(&var_size2, 2, 1, file) != 1)            goto r_err;
+        if (fread(&var_size2, 2, 1, fd) != 1)            goto r_err;
         if (var_size != var_size2)                         goto r_err;
 
         /* Hack for TI Connect CE bug - see github issue #80 */
@@ -206,7 +211,7 @@ int EMSCRIPTEN_KEEPALIVE sendVariableLink(const char *file_name, unsigned int lo
 
         var_ptr = phys_mem_ptr(mem_peek_long(ADDR_SAFE_RAM), var_size);
 
-        if (fread(var_ptr, 1, var_size, file) != var_size) goto r_err;
+        if (fread(var_ptr, 1, var_size, fd) != var_size) goto r_err;
 
         switch (location) {
             case LINK_FILE:
@@ -225,51 +230,52 @@ r_err:
     cpu.cycles = save_cycles;
     sched.event.cycle = 0;
     cpu_restore_next();
-    fclose(file);
+    fclose(fd);
     return ret;
 }
 
 static const char header[] = "**TI83F*\x1A\x0A\0Exported via CEmu ";
-bool receiveVariableLink(int count, const calc_var_t *vars, const char *file_name) {
-    FILE *file;
+int emu_receive_variable(const char *file, const calc_var_t *vars, int count) {
+    FILE *fd;
     calc_var_t var;
     uint16_t header_size = 13, size = 0, checksum = 0;
     int byte;
 
-    file = fopen_utf8(file_name, "w+b");
-    if (!file) {
-        return false;
+    fd = fopen_utf8(file, "w+b");
+    if (!fd) {
+        goto w_err;
     }
-    setbuf(file, NULL);
-    if (fwrite(header, sizeof header - 1, 1, file) != 1) goto w_err;
-    if (fseek(file, FILE_DATA_START, SEEK_SET))          goto w_err;
+    setbuf(fd, NULL);
+    if (fwrite(header, sizeof header - 1, 1, fd) != 1) goto w_err;
+    if (fseek(fd, FILE_DATA_START, SEEK_SET))          goto w_err;
     while (count--) {
-        if (!vat_search_find(vars++, &var))              goto w_err;
-        if (fwrite(&header_size,       2, 1, file) != 1) goto w_err;
-        if (fwrite(&var.size,          2, 1, file) != 1) goto w_err;
-        if (fwrite(&var.type,          1, 1, file) != 1) goto w_err;
-        if (fwrite(&var.name,          8, 1, file) != 1) goto w_err;
-        if (fwrite(&var.version,       1, 1, file) != 1) goto w_err;
-        if (fputc(var.archived << 7, file) == EOF)       goto w_err;
-        if (fwrite(&var.size,          2, 1, file) != 1) goto w_err;
-        if (fwrite(var.data,    var.size, 1, file) != 1) goto w_err;
+        if (!vat_search_find(vars++, &var))            goto w_err;
+        if (fwrite(&header_size,       2, 1, fd) != 1) goto w_err;
+        if (fwrite(&var.size,          2, 1, fd) != 1) goto w_err;
+        if (fwrite(&var.type,          1, 1, fd) != 1) goto w_err;
+        if (fwrite(&var.name,          8, 1, fd) != 1) goto w_err;
+        if (fwrite(&var.version,       1, 1, fd) != 1) goto w_err;
+        if (fputc(var.archived << 7, fd) == EOF)       goto w_err;
+        if (fwrite(&var.size,          2, 1, fd) != 1) goto w_err;
+        if (fwrite(var.data,    var.size, 1, fd) != 1) goto w_err;
         size += 17 + var.size;
     }
-    if (fseek(file, FILE_DATA, SEEK_SET))                goto w_err;
-    if (fwrite(&size,                  2, 1, file) != 1) goto w_err;
-    if (fflush(file))                                    goto w_err;
+    if (fseek(fd, FILE_DATA, SEEK_SET))                goto w_err;
+    if (fwrite(&size,                  2, 1, fd) != 1) goto w_err;
+    if (fflush(fd))                                    goto w_err;
     while (size--) {
-        if ((byte = fgetc(file)) == EOF)                 goto w_err;
+        if ((byte = fgetc(fd)) == EOF)                 goto w_err;
         checksum += byte;
     }
-    if (fwrite(&checksum,              2, 1, file) != 1) goto w_err;
+    if (fwrite(&checksum,              2, 1, fd) != 1) goto w_err;
+    (void)fclose(fd);
 
-    return !fclose(file);
+    return LINK_GOOD;
 
 w_err:
-    fclose(file);
-    if(remove(file_name)) {
+    (void)fclose(fd);
+    if(remove(file)) {
         gui_console_printf("[CEmu] Transfer Error: Please contact the developers\n");
     }
-    return false;
+    return LINK_ERR;
 }

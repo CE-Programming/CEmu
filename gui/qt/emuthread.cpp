@@ -210,7 +210,7 @@ void EmuThread::receive() {
     req(RequestReceive);
 }
 
-void EmuThread::send(const QStringList &list, unsigned int location) {
+void EmuThread::send(const QStringList &list, int location) {
     m_vars = list;
     m_sendLoc = location;
     req(RequestSend);

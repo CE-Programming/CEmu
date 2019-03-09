@@ -28,7 +28,7 @@ void VisualizerDisplayWidget::draw() {
     }
 
     lcd_setptrs(&m_data, &m_data_end, m_width, m_height, m_upbase, m_control, false);
-    lcd_drawframe(m_image.bits(), m_data, m_data_end, m_control, m_size);
+    emu_lcd_drawframe(m_image.bits(), m_data, m_data_end, m_control, m_size);
     update();
 }
 

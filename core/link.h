@@ -6,14 +6,12 @@ extern "C" {
 #endif
 
 #include "vat.h"
-#include <stdbool.h>
 
-enum { LINK_RAM=0, LINK_ARCH, LINK_FILE, LINK_GOOD, LINK_WARN, LINK_ERR };
-enum { FILE_DATA=0x35, FILE_DATA_START=0x37 };
+enum { LINK_RAM=0, LINK_ARCH, LINK_FILE };
+enum { LINK_GOOD=0, LINK_WARN, LINK_ERR };
 
-bool listVariablesLink(void);
-int sendVariableLink(const char *var_name, unsigned int location);
-bool receiveVariableLink(int count, const calc_var_t *vars, const char *file_name);
+int emu_send_variable(const char *file, int location);
+int emu_receive_variable(const char *file, const calc_var_t *vars, int count);
 
 #ifdef __cplusplus
 }

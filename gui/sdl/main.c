@@ -37,7 +37,7 @@ void sdl_update_lcd(void *data) {
     int pitch;
 
     if (!SDL_LockTexture(sdl->texture, NULL, &pixels, &pitch)) {
-        lcd_drawframe(pixels, lcd.control & 1 << 11 ? lcd.data : NULL, lcd.data_end, lcd.control, LCD_SIZE);
+        emu_lcd_drawframe(pixels, lcd.control & 1 << 11 ? lcd.data : NULL, lcd.data_end, lcd.control, LCD_SIZE);
         SDL_UnlockTexture(sdl->texture);
     }
 }
@@ -80,7 +80,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
     }
 
     emu_set_run_rate(1000);
-    lcd_set_gui_event(sdl_update_lcd, cemu);
+    emu_set_lcd_callback(sdl_update_lcd, cemu);
 
     last_ticks = SDL_GetTicks();
     speed_ticks = last_ticks + 1000;
@@ -124,7 +124,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
                 case SDL_KEYUP:
                     for (i = 0; i < numkeys; i++) {
                         if (cemu_keymap[i].sdl == event.key.keysym.sym) {
-                            keypad_key_event(cemu_keymap[i].row, cemu_keymap[i].col, event.type == SDL_KEYDOWN);
+                            emu_keypad_event(cemu_keymap[i].row, cemu_keymap[i].col, event.type == SDL_KEYDOWN);
                         }
                     }
                     break;
@@ -133,7 +133,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
                     break;
 
                 case SDL_DROPFILE:
-                    status = sendVariableLink(event.drop.file, LINK_FILE);
+                    status = emu_send_variable(event.drop.file, LINK_FILE);
                     SDL_ShowSimpleMessageBox(
                         SDL_MESSAGEBOX_INFORMATION,
                         status == LINK_GOOD ? "Transfer Success" : "Transfer Failure",

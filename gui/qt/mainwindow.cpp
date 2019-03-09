@@ -1835,7 +1835,7 @@ void MainWindow::varSaveSelected() {
     } else {
          fileNames = varDialog(QFileDialog::AcceptSave, tr("TI Group (*.8cg);;All Files (*.*)"), QStringLiteral("8cg"));
         if (fileNames.size() == 1) {
-            if (!receiveVariableLink(selectedVars.size(), selectedVars.constData(), fileNames.first().toUtf8())) {
+            if (emu_receive_variable(fileNames.first().toUtf8(), selectedVars.constData(), selectedVars.size()) != LINK_GOOD) {
                 QMessageBox::critical(this, MSG_ERROR, tr("Transfer error, see console for information:\nFile: ") + fileNames.first());
             } else {
                 QMessageBox::information(this, MSG_INFORMATION, tr("Transfer completed successfully."));
@@ -1881,7 +1881,7 @@ void MainWindow::varSaveSelectedFiles() {
             name = QString(calc_var_name_to_utf8(var.name));
             filename = dialog.directory().absolutePath() + "/" + name + "." + m_varExtensions[var.type1];
 
-            if (!receiveVariableLink(1, &var, filename.toStdString().c_str())) {
+            if (emu_receive_variable(filename.toStdString().c_str(), &var, 1) != LINK_GOOD) {
                 good = 0;
                 break;
             }
@@ -2342,7 +2342,7 @@ void MainWindow::varLaunch(const calc_var_t *prgm) {
     }
     autotester::sendKey(0xDA); // prgm
     for (const uint8_t *c = prgm->name; *c; c++) {
-        autotester::sendLetterKeyPress(*c); // type program name
+        autotester::sendLetterKeyPress(static_cast<char>(*c)); // type program name
     }
     autotester::sendKey(0x05); // Enter
     ui->lcd->setFocus();

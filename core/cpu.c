@@ -1068,7 +1068,7 @@ void cpu_execute(void) {
                             break;
                         }
                         if (context.z < 4) {
-                            if (cpu.SUFFIX && cpu.abort) { // suffix can infinite loop
+                            if (cpu.SUFFIX && cpu.abort) { /* suffix can infinite loop */
                                 return;
                             }
                             cpu.L = context.s;

@@ -287,8 +287,8 @@ static void flash_erase_ipb(uint32_t addr, uint8_t byte) {
             mem.flash.sector[i].ipb = 1;
         }
 
-        // this doesn't seem to happen on hardware?
-        //mem.flash.command = FLASH_WAIT_PB_EXIT;
+        /* this doesn't seem to happen on hardware? */
+        /*mem.flash.command = FLASH_WAIT_PB_EXIT;*/
     }
 }
 
