@@ -43,23 +43,47 @@ static uint32_t lcd_bgr16out(uint32_t bgr16) {
     }
 }
 
+void emu_set_lcd_callback(void (*callback)(void*), void *data) {
+    lcd.gui_callback = callback;
+    lcd.gui_callback_data = data;
+}
+
+void emu_set_lcd_spi(int enable) {
+    lcd.spi = enable;
+}
+
+void emu_lcd_drawframe(void *output) {
+    emu_lcd_drawmem(output, lcd.control & 1 << 11 ? lcd.data : NULL, lcd.data_end, lcd.control, LCD_SIZE, lcd.spi);
+}
+
 /* Draw the lcd onto an RGBA8888 buffer. Alpha is always 255. */
-void emu_lcd_drawframe(void *output, void *data, void *data_end, uint32_t control, uint32_t size) {
-    bool bebo = control & (1 << 9);
-    uint_fast8_t mode = control >> 1 & 7;
+void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t control, uint32_t size, int use_spi) {
+    bool bebo;
+    uint_fast8_t mode;
     uint32_t word, color;
-    uint32_t *out = output;
-    uint32_t *out_end = out + size;
-    uint32_t *dat = data;
-    uint32_t *dat_end = data_end;
+    uint32_t *out;
+    uint32_t *out_end;
+    uint32_t *dat;
+    uint32_t *dat_end;
+
+    if (use_spi) {
+        memcpy(output, spi.display, sizeof(spi.display));
+        return;
+    }
 
     _rgb = control & (1 << 8);
+    bebo = control & (1 << 9);
+    mode = control >> 1 & 7;
+    out = output;
+    out_end = out + size;
+    dat = data;
+    dat_end = data_end;
 
     if (!out) { return; }
     if (!dat) { goto draw_black; }
 
     if (mode < 4) {
-        uint_fast8_t bpp = 1 << mode;
+        uint_fast8_t bpp = 1u << mode;
         uint32_t mask = (1 << bpp) - 1;
         uint_fast8_t bi = bebo ? 0 : 24;
         bool bepo = control & (1 << 10);
@@ -118,11 +142,6 @@ static void lcd_gui_event(void) {
     if (lcd.gui_callback) {
         lcd.gui_callback(lcd.gui_callback_data);
     }
-}
-
-void emu_set_lcd_callback(void (*callback)(void*), void *data) {
-    lcd.gui_callback = callback;
-    lcd.gui_callback_data = data;
 }
 
 void lcd_free(void) {

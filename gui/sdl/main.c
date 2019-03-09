@@ -15,6 +15,7 @@ typedef struct {
 typedef struct {
     char *rom;
     char *image;
+    int spi;
     int speed;
     int fullscreen;
     sdl_t sdl;
@@ -33,7 +34,7 @@ void sdl_update_lcd(void *data) {
     int pitch;
 
     if (!SDL_LockTexture(sdl->texture, NULL, &pixels, &pitch)) {
-        emu_lcd_drawframe(pixels, lcd.control & 1 << 11 ? lcd.data : NULL, lcd.data_end, lcd.control, LCD_SIZE);
+        emu_lcd_drawframe(pixels);
         SDL_UnlockTexture(sdl->texture);
     }
 }
@@ -78,6 +79,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
 
     emu_set_run_rate(1000);
     emu_set_lcd_callback(sdl_update_lcd, cemu);
+    emu_set_lcd_spi(cemu->spi);
 
     last_ticks = SDL_GetTicks();
     speed_ticks = last_ticks + 1000;
@@ -163,16 +165,19 @@ int main(int argc, char **argv) {
     cemu.fullscreen = 0;
     cemu.image = NULL;
     cemu.rom = NULL;
+    cemu.spi = 0;
 
     for (;;) {
         int c;
         int option_index = 0;
 
         static const struct option long_options[] = {
+            {"fullscreen", no_argument,       0,  'f' },
             {"rom",        required_argument, 0,  'r' },
             {"image",      required_argument, 0,  'i' },
-            {"fullscreen", no_argument,       0,  'f' },
+            {"spi",        no_argument,       0,  's' },
             {"keymap",     required_argument, 0,  'k' },
+            {"yum",        no_argument,       0,  'y' },
         };
 
         c = getopt_long(argc, argv, "fr:i:", long_options, &option_index);
@@ -184,6 +189,11 @@ int main(int argc, char **argv) {
             case 'r':
                 fprintf(stdout, "rom: %s\n", optarg);
                 cemu.rom = optarg;
+                break;
+
+            case 's':
+                fprintf(stdout, "spi: yes\n");
+                cemu.spi = 1;
                 break;
 
             case 'i':

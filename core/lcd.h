@@ -63,7 +63,7 @@ typedef struct lcd_state {
     bool CLKSEL, IVS, IHS, IPC, IOE, LEE, BGR, BEBO, BEPO, WTRMRK;
     uint32_t *data;                /* Pointer to start of data to start extracting from */
     uint32_t *data_end;            /* End pointer that is allowed access */
-    bool spi;
+    int spi;
     void (*gui_callback)(void*);
     void *gui_callback_data;
 } lcd_state_t;
@@ -75,14 +75,17 @@ void lcd_free(void);
 eZ80portrange_t init_lcd(void);
 bool lcd_restore(FILE *image);
 bool lcd_save(FILE *image);
-
-void lcd_setptrs(uint32_t **dat, uint32_t **dat_end, uint32_t width, uint32_t height, uint32_t addr, uint32_t control, bool mask);
 void lcd_update(void);
 void lcd_disable(void);
 
 /* api functions */
-void emu_lcd_drawframe(void *output, void *data, void *data_end, uint32_t control, uint32_t size);
+void emu_lcd_drawframe(void *output);
 void emu_set_lcd_callback(void (*callback)(void*), void *data);
+void emu_set_lcd_spi(int enable);
+
+/* advanced api functions */
+void emu_set_lcd_ptrs(uint32_t **dat, uint32_t **dat_end, uint32_t width, uint32_t height, uint32_t addr, uint32_t control, bool mask);
+void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t control, uint32_t size, int spi);
 
 #ifdef __cplusplus
 }

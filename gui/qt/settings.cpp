@@ -347,7 +347,7 @@ void MainWindow::setDebugDisasmSpace(bool state) {
 void MainWindow::setLcdSpi(bool state) {
     ui->checkSpi->setChecked(state);
     m_config->setValue(SETTING_SCREEN_SPI, state);
-    lcd.spi = state;
+    emu_set_lcd_spi(state == false ? 0 : 1);
     emit setLcdMode(state);
 }
 

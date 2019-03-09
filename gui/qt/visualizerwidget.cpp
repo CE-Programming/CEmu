@@ -231,7 +231,7 @@ void VisualizerWidget::viewToString() {
     uint32_t *data;
     uint32_t *data_end;
 
-    lcd_setptrs(&data, &data_end, m_width, m_height, m_base, m_control, false);
+    emu_set_lcd_ptrs(&data, &data_end, m_width, m_height, m_base, m_control, false);
 
     m_view->setFixedSize(w, h);
     m_view->setRefreshRate(m_rate);

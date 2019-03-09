@@ -151,15 +151,9 @@ void LCDWidget::draw() {
         m_skip--;
     } else {
         m_skip = m_frameskip;
-        if (m_spiMode) {
-            m_mutex.lock();
-            memcpy(m_image.bits(), spi.display, sizeof(spi.display));
-            m_mutex.unlock();
-        } else {
-            m_mutex.lock();
-            emu_lcd_drawframe(m_image.bits(), lcd.control & 1 << 11 ? lcd.data : nullptr, lcd.data_end, lcd.control, LCD_SIZE);
-            m_mutex.unlock();
-        }
+        m_mutex.lock();
+        emu_lcd_drawframe(m_image.bits());
+        m_mutex.unlock();
 #ifdef PNG_WRITE_APNG_SUPPORTED
         apng_add_frame(m_image.constBits());
 #endif
