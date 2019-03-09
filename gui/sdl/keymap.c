@@ -61,14 +61,14 @@ const cemu_sdl_key_t cemu_keymap[] = {
     { { SDL_SCANCODE_UNKNOWN, SDLK_SPACE,     KMOD_NONE,  0 }, 3, 0 }, /* 0 alt */
     { { SDL_SCANCODE_UNKNOWN, SDLK_y,         KMOD_NONE,  0 }, 3, 1 }, /* 1 alt */
     { { SDL_SCANCODE_UNKNOWN, SDLK_z,         KMOD_NONE,  0 }, 4, 1 }, /* 2 alt */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_HASH,      KMOD_SHIFT, 0 }, 5, 1 }, /* 3 alt */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_3,         KMOD_SHIFT, 0 }, 5, 1 }, /* 3 alt */
     { { SDL_SCANCODE_UNKNOWN, SDLK_t,         KMOD_NONE,  0 }, 3, 2 }, /* 4 alt */
     { { SDL_SCANCODE_UNKNOWN, SDLK_u,         KMOD_NONE,  0 }, 4, 2 }, /* 5 alt */
     { { SDL_SCANCODE_UNKNOWN, SDLK_v,         KMOD_NONE,  0 }, 5, 2 }, /* 6 alt */
     { { SDL_SCANCODE_UNKNOWN, SDLK_o,         KMOD_NONE,  0 }, 3, 3 }, /* 7 alt */
     { { SDL_SCANCODE_UNKNOWN, SDLK_p,         KMOD_NONE,  0 }, 4, 3 }, /* 8 alt */
     { { SDL_SCANCODE_UNKNOWN, SDLK_q,         KMOD_NONE,  0 }, 5, 3 }, /* 9 alt */
-    { { SDL_SCANCODE_UNKNOWN, SDLK_COLON,     KMOD_SHIFT, 0 }, 4, 0 }, /* dot alt */
+    { { SDL_SCANCODE_UNKNOWN, SDLK_SEMICOLON, KMOD_SHIFT, 0 }, 4, 0 }, /* dot alt */
     { { SDL_SCANCODE_UNKNOWN, SDLK_k,         KMOD_NONE,  0 }, 4, 4 }, /* lpar alt */
     { { SDL_SCANCODE_UNKNOWN, SDLK_l,         KMOD_NONE,  0 }, 5, 4 }, /* rpar alt */
     { { SDL_SCANCODE_UNKNOWN, SDLK_j,         KMOD_NONE,  0 }, 3, 4 }, /* comma alt */
