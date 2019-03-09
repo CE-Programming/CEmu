@@ -22,6 +22,7 @@ addons:
       - qt56base
       - libgl1-mesa-dev
       - libarchive-dev
+      - libsdl2-dev
 
 script:
   - cd gui/qt/capture ; bash ./get_libpng-apng.sh ; cd ../../../
@@ -32,6 +33,8 @@ script:
   - make clean && make -j4 CPPFLAGS="-DMULTITHREAD" all
   - cd ../tests/autotester
   - make clean && make -j4 CPPFLAGS="-DMULTITHREAD" all
+  - cd ../../gui/sdl/
+  - make clean && make -j4 all
 
 notifications:
   irc:
