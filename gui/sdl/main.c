@@ -61,7 +61,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
         fprintf(stderr, "could not create window: %s\n", SDL_GetError());
         return;
     }
-    sdl->renderer = SDL_CreateRenderer(sdl->window, -1, SDL_RENDERER_PRESENTVSYNC);
+    sdl->renderer = SDL_CreateRenderer(sdl->window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
     if (sdl->renderer == NULL) {
         fprintf(stderr, "could not create renderer: %s\n", SDL_GetError());
         return;
