@@ -16,7 +16,7 @@ typedef struct {
     char *rom;
     char *image;
     int spi;
-    int speed;
+    int limit;
     int fullscreen;
     sdl_t sdl;
 } cemu_sdl_t;
@@ -106,6 +106,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
         expected_ticks = ticks - last_ticks;
         last_ticks = ticks;
         actual_ticks = expected_ticks < max_ticks ? expected_ticks : max_ticks;
+        actual_ticks = actual_ticks * cemu->limit / 100;
         speed += expected_ticks ? 100.0f * actual_ticks / expected_ticks : 100.0f;
         speed_count++;
         emu_run(actual_ticks);
@@ -179,7 +180,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
 int main(int argc, char **argv) {
     static cemu_sdl_t cemu;
 
-    cemu.speed = 100;
+    cemu.limit = 100;
     cemu.fullscreen = 0;
     cemu.image = NULL;
     cemu.rom = NULL;
@@ -187,18 +188,20 @@ int main(int argc, char **argv) {
 
     for (;;) {
         int c;
+        int number;
         int option_index = 0;
 
         static const struct option long_options[] = {
             {"fullscreen", no_argument,       0,  'f' },
             {"rom",        required_argument, 0,  'r' },
             {"image",      required_argument, 0,  'i' },
+            {"limit",      required_argument, 0,  'l' },
             {"spi",        no_argument,       0,  's' },
             {"keymap",     required_argument, 0,  'k' },
             {"yum",        no_argument,       0,  'y' },
         };
 
-        c = getopt_long(argc, argv, "fr:i:", long_options, &option_index);
+        c = getopt_long(argc, argv, "fr:i:l:sk:y", long_options, &option_index);
         if (c == -1) {
             break;
         }
@@ -209,14 +212,20 @@ int main(int argc, char **argv) {
                 cemu.rom = optarg;
                 break;
 
-            case 's':
-                fprintf(stdout, "spi: yes\n");
-                cemu.spi = 1;
-                break;
-
             case 'i':
                 fprintf(stdout, "image: %s\n", optarg);
                 cemu.image = optarg;
+                break;
+
+            case 'l':
+                number = atoi(optarg);
+                fprintf(stdout, "limit: %d\n", number);
+                cemu.limit = number;
+                break;
+
+            case 's':
+                fprintf(stdout, "spi: yes\n");
+                cemu.spi = 1;
                 break;
 
             case 'f':
