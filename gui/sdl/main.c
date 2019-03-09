@@ -140,11 +140,14 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
                             SDL_SetWindowFullscreen(sdl->window, isfull ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
                         }
                         if (event.key.keysym.sym == SDLK_F10) {
-                            emu_exit();
+                            asic_free();
                             if (EMU_STATE_VALID != emu_load(EMU_DATA_ROM, cemu->rom)) {
                                 fprintf(stderr, "could not load rom.\n");
                                 done = true;
                             }
+                            emu_set_run_rate(1000);
+                            emu_set_lcd_callback(sdl_update_lcd, cemu);
+                            emu_set_lcd_spi(cemu->spi);
                         }
                     }
                     break;
