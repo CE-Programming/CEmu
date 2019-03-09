@@ -424,10 +424,10 @@ void lcd_disable(void) {
 }
 
 void lcd_update(void) {
-    lcd_setptrs(&lcd.data, &lcd.data_end, LCD_WIDTH, LCD_HEIGHT, lcd.upbase, lcd.control, true);
+    emu_set_lcd_ptrs(&lcd.data, &lcd.data_end, LCD_WIDTH, LCD_HEIGHT, lcd.upbase, lcd.control, true);
 }
 
-void lcd_setptrs(uint32_t **dat, uint32_t **dat_end, uint32_t width, uint32_t height, uint32_t addr, uint32_t control, bool mask) {
+void emu_set_lcd_ptrs(uint32_t **dat, uint32_t **dat_end, uint32_t width, uint32_t height, uint32_t addr, uint32_t control, bool mask) {
     uint8_t mode = control >> 1 & 7;
     uint8_t *data_start, *data_end, *mem_end;
     uint32_t length = 0;

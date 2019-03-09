@@ -128,9 +128,6 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
                     }
                     break;
 
-                case SDL_MOUSEBUTTONDOWN:
-                    break;
-
                 case SDL_DROPFILE:
                     status = emu_send_variable(event.drop.file, LINK_FILE);
                     SDL_ShowSimpleMessageBox(
@@ -215,8 +212,6 @@ int main(int argc, char **argv) {
                 }
                 break;
 
-            case '?':
-                break;
             default:
                 break;
         }
