@@ -132,15 +132,17 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
                 case SDL_KEYUP:
-                    switch (event.key.keysym.sym) {
-                        case SDLK_F10:
-                            if (!sdl_cemu_load(cemu)) {
-                                done = true;
-                            }
-                            break;
-                        case SDLK_F11:
-                            SDL_SetWindowFullscreen(sdl->window, ~SDL_GetWindowFlags(sdl->window) & SDL_WINDOW_FULLSCREEN_DESKTOP);
-                            break;
+                    if ((event.key.keysym.mod & (KMOD_CTRL | KMOD_SHIFT | KMOD_ALT | KMOD_GUI)) == KMOD_NONE) {
+                        switch (event.key.keysym.sym) {
+                            case SDLK_F10:
+                                if (!sdl_cemu_load(cemu)) {
+                                    done = true;
+                                }
+                                break;
+                            case SDLK_F11:
+                                SDL_SetWindowFullscreen(sdl->window, ~SDL_GetWindowFlags(sdl->window) & SDL_WINDOW_FULLSCREEN_DESKTOP);
+                                break;
+                        }
                     }
                     // fallthrough
                 case SDL_KEYDOWN:
