@@ -130,26 +130,25 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
 
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
-                case SDL_KEYDOWN:
                 case SDL_KEYUP:
+                    switch (event.key.keysym.sym) {
+                        case SDLK_F10:
+                            if (!sdl_cemu_load(cemu)) {
+                                done = true;
+                            }
+                            break;
+                        case SDLK_F11:
+                            SDL_SetWindowFullscreen(sdl->window, ~SDL_GetWindowFlags(sdl->window) & SDL_WINDOW_FULLSCREEN_DESKTOP);
+                            break;
+                    }
+                    // fallthrough
+                case SDL_KEYDOWN:
                     for (const cemu_sdl_key_t *key = keymap; key && (key->row | key->col) >= 0; key++) {
                         if (keysyms_match(&key->keysym, &event.key.keysym, event.type == SDL_KEYUP)) {
                             emu_keypad_event(key->row, key->col, event.type == SDL_KEYDOWN);
                         }
                     }
-                    if (event.type == SDL_KEYUP) {
-                        if (event.key.keysym.sym == SDLK_F11) {
-                            int isfull = SDL_GetWindowFlags(sdl->window) & SDL_WINDOW_FULLSCREEN_DESKTOP;
-                            SDL_SetWindowFullscreen(sdl->window, isfull ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
-                        }
-                        if (event.key.keysym.sym == SDLK_F10) {
-                            if (sdl_cemu_load(cemu) == false) {
-                                done = true;
-                            }
-                        }
-                    }
                     break;
-
                 case SDL_DROPFILE:
                     status = emu_send_variable(event.drop.file, LINK_FILE);
                     SDL_ShowSimpleMessageBox(
