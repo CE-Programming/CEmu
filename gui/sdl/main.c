@@ -48,7 +48,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
     uint32_t last_ticks, speed_ticks;
     unsigned speed_count = 0;
     float speed = 0.0f;
-    uint32_t pixfmt = SDL_PIXELFORMAT_BGRA32;
+    uint32_t pixfmt = SDL_PIXELFORMAT_RGBA32;
     sdl_t *sdl = &cemu->sdl;
     char buf[20];
     unsigned max_frame_skip = 5;
@@ -57,6 +57,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
         fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());
         return;
     }
+    SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
     sdl->window = SDL_CreateWindow("CEmu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, LCD_WIDTH, LCD_HEIGHT, /*SDL_WINDOW_FULLSCREEN_DESKTOP | */SDL_WINDOW_SHOWN);
     if (sdl->window == NULL) {
         fprintf(stderr, "could not create window: %s\n", SDL_GetError());
@@ -86,7 +87,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
     while (done == false) {
         SDL_DisplayMode mode;
         uint32_t max_ticks, ticks, expected_ticks, actual_ticks;
-        int i;
+        int i, status;
 
         SDL_GetWindowDisplayMode(sdl->window, &mode);
         max_ticks = 1000 * max_frame_skip / mode.refresh_rate;
@@ -129,6 +130,17 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
                     break;
 
                 case SDL_MOUSEBUTTONDOWN:
+                    break;
+
+                case SDL_DROPFILE:
+                    status = sendVariableLink(event.drop.file, LINK_FILE);
+                    SDL_ShowSimpleMessageBox(
+                        SDL_MESSAGEBOX_INFORMATION,
+                        status == LINK_GOOD ? "Transfer Success" : "Transfer Failure",
+                        event.drop.file,
+                        sdl->window
+                    );
+                    SDL_free(event.drop.file);
                     break;
 
                 case SDL_QUIT:
