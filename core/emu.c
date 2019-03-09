@@ -120,6 +120,7 @@ emu_state_t emu_load(emu_data_t type, const char *path) {
         }
         rewind(file);
 
+        asic_free();
         asic_init();
 
         if (fread(mem.flash.block, size, 1, file) != 1) {

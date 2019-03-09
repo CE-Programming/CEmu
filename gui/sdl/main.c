@@ -39,6 +39,17 @@ void sdl_update_lcd(void *data) {
     }
 }
 
+bool sdl_cemu_load(cemu_sdl_t *cemu) {
+    if (EMU_STATE_VALID != emu_load(EMU_DATA_ROM, cemu->rom)) {
+        fprintf(stderr, "could not load rom.\n");
+        return false;
+    }
+    emu_set_run_rate(1000);
+    emu_set_lcd_callback(sdl_update_lcd, cemu);
+    emu_set_lcd_spi(cemu->spi);
+    return true;
+}
+
 void sdl_event_loop(cemu_sdl_t *cemu) {
     SDL_Event event;
     bool done = false;
@@ -75,19 +86,13 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
     if (cemu->image) {
         if (EMU_STATE_VALID != emu_load(EMU_DATA_IMAGE, cemu->image)) {
             fprintf(stderr, "could not load image.\n");
-            if (EMU_STATE_VALID != emu_load(EMU_DATA_ROM, cemu->rom)) {
-                fprintf(stderr, "could not load rom.\n");
+            if (sdl_cemu_load(cemu) == false) {
                 return;
             }
         }
-    } else if (EMU_STATE_VALID != emu_load(EMU_DATA_ROM, cemu->rom)) {
-        fprintf(stderr, "could not load rom.\n");
+    } else if (sdl_cemu_load(cemu) == false) {
         return;
     }
-
-    emu_set_run_rate(1000);
-    emu_set_lcd_callback(sdl_update_lcd, cemu);
-    emu_set_lcd_spi(cemu->spi);
 
     last_ticks = SDL_GetTicks();
     speed_ticks = last_ticks + 1000;
@@ -140,14 +145,9 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
                             SDL_SetWindowFullscreen(sdl->window, isfull ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
                         }
                         if (event.key.keysym.sym == SDLK_F10) {
-                            asic_free();
-                            if (EMU_STATE_VALID != emu_load(EMU_DATA_ROM, cemu->rom)) {
-                                fprintf(stderr, "could not load rom.\n");
+                            if (sdl_cemu_load(cemu) == false) {
                                 done = true;
                             }
-                            emu_set_run_rate(1000);
-                            emu_set_lcd_callback(sdl_update_lcd, cemu);
-                            emu_set_lcd_spi(cemu->spi);
                         }
                     }
                     break;
