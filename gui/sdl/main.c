@@ -28,8 +28,7 @@ void gui_console_printf(const char *format, ...) { (void)format; }
 void gui_console_err_printf(const char *format, ...) { (void)format; }
 
 void sdl_update_lcd(void *data) {
-    cemu_sdl_t *cemu = (cemu_sdl_t*)data;
-    sdl_t *sdl = &cemu->sdl;
+    sdl_t *sdl = (sdl_t*)data;
     void *pixels;
     int pitch;
 
@@ -45,7 +44,7 @@ bool sdl_cemu_load(cemu_sdl_t *cemu) {
         return false;
     }
     emu_set_run_rate(1000);
-    emu_set_lcd_callback(sdl_update_lcd, cemu);
+    emu_set_lcd_callback(sdl_update_lcd, &cemu->sdl);
     emu_set_lcd_spi(cemu->spi);
     return true;
 }
