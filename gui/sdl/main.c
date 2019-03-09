@@ -131,7 +131,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
 
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
-                case SDL_KEYUP:
+                case SDL_KEYDOWN:
                     if ((event.key.keysym.mod & (KMOD_CTRL | KMOD_SHIFT | KMOD_ALT | KMOD_GUI)) == KMOD_NONE) {
                         switch (event.key.keysym.sym) {
                             case SDLK_F10:
@@ -145,7 +145,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
                         }
                     }
                     // fallthrough
-                case SDL_KEYDOWN:
+                case SDL_KEYUP:
                     for (const cemu_sdl_key_t *key = keymap; key && (key->row | key->col) >= 0; key++) {
                         if (keysyms_match(&key->keysym, &event.key.keysym, event.type == SDL_KEYUP)) {
                             emu_keypad_event(key->row, key->col, event.type == SDL_KEYDOWN);
