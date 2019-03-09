@@ -56,7 +56,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
         return;
     }
     SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
-    sdl->window = SDL_CreateWindow("CEmu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, LCD_WIDTH, LCD_HEIGHT, fmt | SDL_WINDOW_SHOWN);
+    sdl->window = SDL_CreateWindow("CEmu", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, LCD_WIDTH, LCD_HEIGHT, fmt | SDL_WINDOW_SHOWN);
     if (sdl->window == NULL) {
         fprintf(stderr, "could not create window: %s\n", SDL_GetError());
         return;
@@ -132,6 +132,19 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
                     for (const cemu_sdl_key_t *key = keymap; key && (key->row | key->col) >= 0; key++) {
                         if (keysyms_match(&key->keysym, &event.key.keysym, event.type == SDL_KEYUP)) {
                             emu_keypad_event(key->row, key->col, event.type == SDL_KEYDOWN);
+                        }
+                    }
+                    if (event.type == SDL_KEYUP) {
+                        if (event.key.keysym.sym == SDLK_F11) {
+                            int isfull = SDL_GetWindowFlags(sdl->window) & SDL_WINDOW_FULLSCREEN_DESKTOP;
+                            SDL_SetWindowFullscreen(sdl->window, isfull ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
+                        }
+                        if (event.key.keysym.sym == SDLK_F10) {
+                            emu_exit();
+                            if (EMU_STATE_VALID != emu_load(EMU_DATA_ROM, cemu->rom)) {
+                                fprintf(stderr, "could not load rom.\n");
+                                done = true;
+                            }
                         }
                     }
                     break;
