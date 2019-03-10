@@ -85,6 +85,7 @@ typedef struct usb_state {
           USB_NAK_CNT_WAIT_FOR_LIST_HEAD,
     } nak_cnt_reload_state : 2;
     usb_qh_t *fake_recl_head;
+    libusb_hotplug_callback_handle hotplug_handle;
 } usb_state_t;
 
 extern usb_state_t usb;

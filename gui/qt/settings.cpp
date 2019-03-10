@@ -1051,7 +1051,7 @@ void MainWindow::usbAddRow(const QString &vid, const QString &pid, Qt::CheckStat
 }
 
 void MainWindow::usbSelectChange(int state) {
-    emu_usb_detach();
+    emu.usbDetach();
     for (int row = 0; row < ui->usbTable->rowCount(); row++) {
         QWidget *item = ui->usbTable->cellWidget(row, USB_SELECTED);
         QCheckBox *chkbox = qobject_cast<QCheckBox*>(item->layout()->itemAt(0)->widget());
@@ -1061,7 +1061,7 @@ void MainWindow::usbSelectChange(int state) {
             if (!vids.isEmpty() && !pids.isEmpty()) {
                 int vid = vids.toInt(Q_NULLPTR, 16);
                 int pid = pids.toInt(Q_NULLPTR, 16);
-                emu_usb_attach(vid, pid);
+                emu.usbAttach(vid, pid);
             } else {
                 chkbox->blockSignals(true);
                 chkbox->setCheckState(Qt::Unchecked);
@@ -1091,8 +1091,8 @@ void MainWindow::usbIdModified(QTableWidgetItem *item) {
         if (chkbox->checkState() == Qt::Checked) {
             int vid = ui->usbTable->item(row, USB_VID)->text().toInt(Q_NULLPTR, 16);
             int pid = ui->usbTable->item(row, USB_PID)->text().toInt(Q_NULLPTR, 16);
-            emu_usb_detach();
-            emu_usb_attach(vid, pid);
+            emu.usbDetach();
+            emu.usbAttach(vid, pid);
         }
     }
 }
@@ -1101,7 +1101,7 @@ void MainWindow::usbRemoveRow() {
     for (int row = 0; row < ui->usbTable->rowCount(); row++) {
         if (sender() == ui->usbTable->cellWidget(row, USB_REMOVE)) {
             if (ui->usbTable->item(row, USB_SELECTED)) {
-                emu_usb_detach();
+                emu.usbDetach();
             }
             ui->usbTable->removeRow(row);
             break;

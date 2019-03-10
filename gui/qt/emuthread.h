@@ -29,6 +29,8 @@ public:
     void debug(bool);
     void doStuff();
     void throttleWait();
+    void usbDetach();
+    void usbAttach(int vid, int pid);
     void setSpeed(int value);
     void setThrottle(bool state);
     void writeConsole(int console, const char *format, va_list args);
@@ -52,6 +54,8 @@ public:
         RequestSend,
         RequestReceive,
         RequestAutoTester,
+        RequestUSBDetach,
+        RequestUSBAttach,
         RequestDebugger
     };
 
@@ -111,6 +115,7 @@ private:
     emu_data_t m_saveType;
     emu_data_t m_loadType;
 
+    int m_pid, m_vid;
     int m_speed, m_actualSpeed;
     bool m_throttle;
     std::chrono::steady_clock::time_point m_lastTime;

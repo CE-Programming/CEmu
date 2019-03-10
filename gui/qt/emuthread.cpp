@@ -5,6 +5,7 @@
 #include "../../core/emu.h"
 #include "../../core/extras.h"
 #include "../../core/link.h"
+#include "../../core/usb/usb.h"
 #include "../../tests/autotester/autotester.h"
 #include "../../tests/autotester/crc32.hpp"
 #include "capture/animated-png.h"
@@ -138,6 +139,12 @@ void EmuThread::doStuff() {
             case RequestReceive:
                 block(req);
                 break;
+            case RequestUSBAttach:
+                emu_usb_attach(m_vid, m_pid);
+                break;
+            case RequestUSBDetach:
+                emu_usb_detach();
+                break;
             case RequestDebugger:
                 debug_open(DBG_USER, 0);
                 break;
@@ -265,6 +272,16 @@ void EmuThread::debugOpen(int reason, uint32_t data) {
     m_debug = true;
     emit debugCommand(reason, data);
     m_cvDebug.wait(lock, [this](){ return !m_debug; });
+}
+
+void EmuThread::usbAttach(int vid, int pid) {
+    m_vid = vid;
+    m_pid = pid;
+    req(RequestUSBAttach);
+}
+
+void EmuThread::usbDetach() {
+    req(RequestUSBDetach);
 }
 
 void EmuThread::resume() {

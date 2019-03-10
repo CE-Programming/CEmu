@@ -227,6 +227,9 @@ static void usb_process_async(void) {
                 break;
             case ADVANCE_QUEUE:
                 link.term = true;
+                if (qh == NULL) {
+                    return usb_host_sys_err();
+                }
                 if (qh->overlay.total_bytes) {
                     link = qh->overlay.alt;
                 } if (link.term) {
@@ -1124,16 +1127,25 @@ static void init_libusb(void) {
     }
     usb.xfer->callback = usb_process_xfer;
     //libusb_set_option(usb.ctx, LIBUSB_OPTION_LOG_LEVEL, LIBUSB_LOG_LEVEL_INFO);
-    libusb_hotplug_register_callback(usb.ctx, LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT, LIBUSB_HOTPLUG_ENUMERATE, 0x0951, 0x1666, 0, usb_hotplug, NULL, NULL);
 }
 #endif
 
 void emu_usb_detach(void) {
-
+#ifdef HAS_LIBUSB
+    if (usb.ctx && usb.xfer && usb.xfer->dev_handle && usb.hotplug_handle) {
+         libusb_hotplug_deregister_callback(usb.ctx, usb.hotplug_handle);
+         usb_close(&usb.xfer->dev_handle);
+         usb.xfer->dev_handle = NULL;
+    }
+#endif
+    usb_reset();
 }
 
 void emu_usb_attach(int vid, int pid) {
-
+    emu_usb_detach();
+#ifdef HAS_LIBUSB
+    libusb_hotplug_register_callback(usb.ctx, LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT, LIBUSB_HOTPLUG_ENUMERATE, vid, pid, 0, usb_hotplug, NULL, &usb.hotplug_handle);
+#endif
 }
 
 static const eZ80portrange_t device = {
@@ -1145,10 +1157,10 @@ eZ80portrange_t init_usb(void) {
     memset(&usb, 0, sizeof usb);
     usb_init_hccr();
     usb_reset();
-    gui_console_printf("[CEmu] Initialized USB...\n");
 #ifdef HAS_LIBUSB
     init_libusb();
 #endif
+    gui_console_printf("[CEmu] Initialized USB...\n");
     return device;
 }
 

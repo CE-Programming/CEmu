@@ -44,7 +44,6 @@ static uint8_t control_read(const uint16_t pio, bool peek) {
         case 0x0F:
             value = control.ports[index] | usb_status();
             //fprintf(stderr, "%06x: 0%03hx -> %02hhx\n", cpu.registers.PC, pio, value);
-            //debugInstruction();
             break;
         case 0x1D: case 0x1E: case 0x1F:
             value = read8(control.privileged, (index - 0x1D) << 3);
