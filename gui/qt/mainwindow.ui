@@ -2525,6 +2525,15 @@
                         </color>
                        </brush>
                       </colorrole>
+                      <colorrole role="PlaceholderText">
+                       <brush brushstyle="NoBrush">
+                        <color alpha="128">
+                         <red>0</red>
+                         <green>0</green>
+                         <blue>0</blue>
+                        </color>
+                       </brush>
+                      </colorrole>
                      </active>
                      <inactive>
                       <colorrole role="WindowText">
@@ -2539,6 +2548,15 @@
                       <colorrole role="Text">
                        <brush brushstyle="SolidPattern">
                         <color alpha="255">
+                         <red>0</red>
+                         <green>0</green>
+                         <blue>0</blue>
+                        </color>
+                       </brush>
+                      </colorrole>
+                      <colorrole role="PlaceholderText">
+                       <brush brushstyle="NoBrush">
+                        <color alpha="128">
                          <red>0</red>
                          <green>0</green>
                          <blue>0</blue>
@@ -2562,6 +2580,15 @@
                          <red>120</red>
                          <green>120</green>
                          <blue>120</blue>
+                        </color>
+                       </brush>
+                      </colorrole>
+                      <colorrole role="PlaceholderText">
+                       <brush brushstyle="NoBrush">
+                        <color alpha="128">
+                         <red>0</red>
+                         <green>0</green>
+                         <blue>0</blue>
                         </color>
                        </brush>
                       </colorrole>
@@ -2602,6 +2629,15 @@
                         </color>
                        </brush>
                       </colorrole>
+                      <colorrole role="PlaceholderText">
+                       <brush brushstyle="NoBrush">
+                        <color alpha="128">
+                         <red>0</red>
+                         <green>0</green>
+                         <blue>0</blue>
+                        </color>
+                       </brush>
+                      </colorrole>
                      </active>
                      <inactive>
                       <colorrole role="WindowText">
@@ -2616,6 +2652,15 @@
                       <colorrole role="Text">
                        <brush brushstyle="SolidPattern">
                         <color alpha="255">
+                         <red>0</red>
+                         <green>0</green>
+                         <blue>0</blue>
+                        </color>
+                       </brush>
+                      </colorrole>
+                      <colorrole role="PlaceholderText">
+                       <brush brushstyle="NoBrush">
+                        <color alpha="128">
                          <red>0</red>
                          <green>0</green>
                          <blue>0</blue>
@@ -2639,6 +2684,15 @@
                          <red>120</red>
                          <green>120</green>
                          <blue>120</blue>
+                        </color>
+                       </brush>
+                      </colorrole>
+                      <colorrole role="PlaceholderText">
+                       <brush brushstyle="NoBrush">
+                        <color alpha="128">
+                         <red>0</red>
+                         <green>0</green>
+                         <blue>0</blue>
                         </color>
                        </brush>
                       </colorrole>
@@ -7018,7 +7072,7 @@
            </sizepolicy>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="tab_2">
            <attribute name="title">
@@ -8801,6 +8855,60 @@ QPushButton:pressed {
                 </widget>
                </item>
               </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab">
+           <attribute name="title">
+            <string>USB</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_16">
+            <item>
+             <widget class="QPushButton" name="buttonAddUSB">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="focusPolicy">
+               <enum>Qt::NoFocus</enum>
+              </property>
+              <property name="text">
+               <string>Add</string>
+              </property>
+              <property name="icon">
+               <iconset resource="resources.qrc">
+                <normaloff>:/icons/resources/icons/plus.png</normaloff>:/icons/resources/icons/plus.png</iconset>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QTableWidget" name="usbTable">
+              <attribute name="horizontalHeaderStretchLastSection">
+               <bool>true</bool>
+              </attribute>
+              <column>
+               <property name="text">
+                <string>Enabled</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Vendor ID</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Product ID</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Remove</string>
+               </property>
+              </column>
              </widget>
             </item>
            </layout>

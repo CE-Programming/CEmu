@@ -188,6 +188,8 @@ static void usb_host_sys_err(void) {
     gui_console_printf("[USB] Warning: Fatal host controller error!\n");
 }
 
+#ifdef HAS_LIBUSB
+
 #define ASYNC_ITER_CAP 64
 static void usb_process_async(void) {
     usb_qh_t *qh;
@@ -336,7 +338,6 @@ static bool usb_scatter_qtd(usb_qtd_t *qtd, const uint8_t *src, uint16_t len) {
     return false;
 }
 
-#ifdef HAS_LIBUSB
 static void usb_xfer_append_data(struct libusb_transfer *xfer, const void *src, size_t len) {
     memcpy((xfer->type == LIBUSB_TRANSFER_TYPE_CONTROL ? libusb_control_transfer_get_data(xfer) : xfer->buffer) + xfer->actual_length, src, len);
     xfer->actual_length += len;
