@@ -108,6 +108,10 @@ uint8_t usb_status(void);
 void usb_setup(const uint8_t *);
 void usb_send_pkt(const void *, uint32_t);
 
+/* api functions */
+void emu_usb_detach(void);
+void emu_usb_attach(int vid, int pid);
+
 #ifdef __cplusplus
 }
 #endif

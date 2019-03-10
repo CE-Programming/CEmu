@@ -68,6 +68,7 @@ void usb_grp2_int(uint16_t which) {
     usb_update();
 }
 
+#ifdef HAS_LIBUSB
 // Connected Plug B:
 //  plug:
 //   0 -> 1 OTGCSR_A_VBUS_VLD
@@ -120,6 +121,7 @@ static void usb_unplug_a(void) {
     usb_otg_int(OTGISR_APRM | OTGISR_IDCHG | OTGISR_RLCHG);
     usb_plug_b();
 }
+#endif
 
 void usb_setup(const uint8_t *setup) {
     usb.regs.cxfifo &= ~0x3F;
@@ -180,6 +182,7 @@ static void usb_event_no_libusb(enum sched_item_id event) {
     sched_repeat(event, 8);
 }
 
+#ifdef HAS_LIBUSB
 static void usb_host_sys_err(void) {
     asm("int3");
     usb.regs.hcor.usbcmd &= ~USBCMD_RUN;
@@ -187,8 +190,6 @@ static void usb_host_sys_err(void) {
     usb_host_int(USBSTS_HOST_SYS_ERR);
     gui_console_printf("[USB] Warning: Fatal host controller error!\n");
 }
-
-#ifdef HAS_LIBUSB
 
 #define ASYNC_ITER_CAP 64
 static void usb_process_async(void) {
@@ -664,10 +665,8 @@ static void usb_start_event(void) {
     usb.nak_cnt_reload_state = USB_NAK_CNT_WAIT_FOR_LIST_HEAD;
     usb.fake_recl_head = NULL;
 }
-#endif
 
 static void usb_event(enum sched_item_id event) {
-#ifdef HAS_LIBUSB
     bool high_speed = false;
     usb_qh_t *qh;
     uint8_t i = 0;
@@ -728,10 +727,8 @@ static void usb_event(enum sched_item_id event) {
         }
     }
     sched_repeat(event, high_speed ? 1 : 8);
-#else
-    (void)event;
-#endif
 }
+#endif
 
 static uint8_t usb_ep0_idx_update(void) {
     if (usb.regs.dma_fifo & DMAFIFO_CX) {
@@ -1030,8 +1027,8 @@ void usb_reset(void) {
     usb.state = 0;
     usb.data  = NULL;
     usb.len   = 0;
-    usb_plug_b();
 #ifdef HAS_LIBUSB
+    usb_plug_b();
     sched.items[SCHED_USB].callback.event = usb_event;
 #else
     sched.items[SCHED_USB].callback.event = usb_event_no_libusb;
@@ -1130,6 +1127,14 @@ static void init_libusb(void) {
     libusb_hotplug_register_callback(usb.ctx, LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT, LIBUSB_HOTPLUG_ENUMERATE, 0x0951, 0x1666, 0, usb_hotplug, NULL, NULL);
 }
 #endif
+
+void emu_usb_detach(void) {
+
+}
+
+void emu_usb_attach(int vid, int pid) {
+
+}
 
 static const eZ80portrange_t device = {
     .read  = usb_read,
