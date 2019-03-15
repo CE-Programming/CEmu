@@ -106,7 +106,7 @@ void sdl_event_loop(cemu_sdl_t *cemu) {
         int status;
 
         SDL_GetWindowDisplayMode(sdl->window, &mode);
-        max_ticks = 1000 * max_frame_skip / mode.refresh_rate;
+        max_ticks = 1000 * max_frame_skip / (mode.refresh_rate ? mode.refresh_rate : 60);
 
         ticks = SDL_GetTicks();
         expected_ticks = ticks - last_ticks;
