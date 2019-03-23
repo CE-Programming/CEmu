@@ -47,7 +47,7 @@ void gui_debug_close(void) {
 EmuThread::EmuThread(QObject *parent) : QThread{parent}, write{CONSOLE_BUFFER_SIZE},
                                         m_speed{100}, m_throttle{true},
                                         m_lastTime{std::chrono::steady_clock::now()},
-                                        m_debug{false} {
+                                        m_debug{false}, m_usbDevice{nullptr} {
     assert(emu == nullptr);
     emu = this;
 }
@@ -139,11 +139,10 @@ void EmuThread::doStuff() {
             case RequestReceive:
                 block(req);
                 break;
-            case RequestUSBAttach:
-                emu_usb_attach(m_vid, m_pid);
-                break;
-            case RequestUSBDetach:
-                emu_usb_detach();
+            case RequestSetUsbDevice:
+#ifdef HAS_LIBUSB
+                emu_set_usb_device(m_usbDevice);
+#endif
                 break;
             case RequestDebugger:
                 debug_open(DBG_USER, 0);
@@ -274,15 +273,13 @@ void EmuThread::debugOpen(int reason, uint32_t data) {
     m_cvDebug.wait(lock, [this](){ return !m_debug; });
 }
 
-void EmuThread::usbAttach(int vid, int pid) {
-    m_vid = vid;
-    m_pid = pid;
-    req(RequestUSBAttach);
+#ifdef HAS_LIBUSB
+void EmuThread::setUsbDevice(libusb_device *device) {
+    libusb_unref_device(m_usbDevice);
+    m_usbDevice = device ? libusb_ref_device(device) : nullptr;
+    req(RequestSetUsbDevice);
 }
-
-void EmuThread::usbDetach() {
-    req(RequestUSBDetach);
-}
+#endif
 
 void EmuThread::resume() {
     {

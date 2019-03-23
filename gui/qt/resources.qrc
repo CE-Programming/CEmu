@@ -1,66 +1,75 @@
 <RCC>
     <qresource prefix="/skin">
-        <file>resources/skin/ti84pce.png</file>
         <file>resources/skin/ti83pce.png</file>
+        <file>resources/skin/ti84pce.png</file>
     </qresource>
     <qresource prefix="/setup">
         <file>resources/setup/home.png</file>
     </qresource>
     <qresource prefix="/icons">
+        <file>resources/icons/add_mem.png</file>
+        <file>resources/icons/autotester.png</file>
+        <file>resources/icons/break_watch_port.png</file>
+        <file>resources/icons/breakpoints.png</file>
+        <file>resources/icons/bug.png</file>
         <file>resources/icons/capture.png</file>
         <file>resources/icons/change_cert.png</file>
         <file>resources/icons/change_language.png</file>
+        <file>resources/icons/characters.png</file>
         <file>resources/icons/check_update.png</file>
         <file>resources/icons/clock.png</file>
+        <file>resources/icons/connect.png</file>
         <file>resources/icons/console.png</file>
+        <file>resources/icons/cpu_status.png</file>
+        <file>resources/icons/debug_control.png</file>
         <file>resources/icons/debugger.png</file>
-        <file>resources/icons/record.png</file>
+        <file>resources/icons/disasm.png</file>
+        <file>resources/icons/disconnect.png</file>
+        <file>resources/icons/exit.png</file>
+        <file>resources/icons/export.png</file>
+        <file>resources/icons/generic_export.png</file>
+        <file>resources/icons/generic_import.png</file>
         <file>resources/icons/goto.png</file>
         <file>resources/icons/icon.ico</file>
         <file>resources/icons/icon.png</file>
+        <file>resources/icons/import.png</file>
         <file>resources/icons/info.png</file>
+        <file>resources/icons/key_history.png</file>
         <file>resources/icons/keypad.png</file>
+        <file>resources/icons/lcd.png</file>
+        <file>resources/icons/memory.png</file>
         <file>resources/icons/minus.png</file>
+        <file>resources/icons/misc.png</file>
         <file>resources/icons/open.png</file>
+        <file>resources/icons/os_view.png</file>
         <file>resources/icons/plus.png</file>
-        <file>resources/icons/screenshot.png</file>
+        <file>resources/icons/port.png</file>
+        <file>resources/icons/profiler.png</file>
+        <file>resources/icons/ram_chip.png</file>
+        <file>resources/icons/record.png</file>
+        <file>resources/icons/refresh.png</file>
+        <file>resources/icons/reload_rom.png</file>
+        <file>resources/icons/reset.png</file>
+        <file>resources/icons/reset_cemu.png</file>
+        <file>resources/icons/reset_gui.png</file>
+        <file>resources/icons/rom_chip.png</file>
         <file>resources/icons/run.png</file>
+        <file>resources/icons/save.png</file>
+        <file>resources/icons/screenshot.png</file>
+        <file>resources/icons/screenshot_copy.png</file>
+        <file>resources/icons/script.png</file>
         <file>resources/icons/search.png</file>
         <file>resources/icons/settings.png</file>
+        <file>resources/icons/source_code.png</file>
+        <file>resources/icons/stack.png</file>
+        <file>resources/icons/states.png</file>
         <file>resources/icons/stepin.png</file>
         <file>resources/icons/stepnext.png</file>
         <file>resources/icons/stepout.png</file>
         <file>resources/icons/stepover.png</file>
         <file>resources/icons/stop.png</file>
-        <file>resources/icons/variables.png</file>
-        <file>resources/icons/exit.png</file>
-        <file>resources/icons/export.png</file>
-        <file>resources/icons/import.png</file>
-        <file>resources/icons/lcd.png</file>
-        <file>resources/icons/reset.png</file>
-        <file>resources/icons/wizard.png</file>
-        <file>resources/icons/bug.png</file>
-        <file>resources/icons/save.png</file>
-        <file>resources/icons/refresh.png</file>
-        <file>resources/icons/generic_import.png</file>
-        <file>resources/icons/generic_export.png</file>
-        <file>resources/icons/autotester.png</file>
-        <file>resources/icons/misc.png</file>
-        <file>resources/icons/os_view.png</file>
-        <file>resources/icons/watchpoints.png</file>
-        <file>resources/icons/break_watch_port.png</file>
-        <file>resources/icons/profiler.png</file>
-        <file>resources/icons/breakpoints.png</file>
         <file>resources/icons/timers.png</file>
-        <file>resources/icons/disasm.png</file>
-        <file>resources/icons/memory.png</file>
-        <file>resources/icons/source_code.png</file>
-        <file>resources/icons/debug_control.png</file>
-        <file>resources/icons/cpu_status.png</file>
-        <file>resources/icons/script.png</file>
         <file>resources/icons/toggle_console.png</file>
-        <file>resources/icons/port.png</file>
-        <file>resources/icons/key_history.png</file>
         <file>resources/icons/ui_edit.png</file>
         <file>resources/icons/checkgray.png</file>
         <file>resources/icons/check.png</file>
@@ -75,8 +84,8 @@
         <file>resources/icons/add_mem.png</file>
     </qresource>
     <qresource prefix="/fonts">
-        <file>resources/custom_fonts/TICELarge.ttf</file>
         <file>resources/custom_fonts/LiberationSansNarrow-Bold.ttf</file>
+        <file>resources/custom_fonts/TICELarge.ttf</file>
     </qresource>
     <qresource prefix="/other">
         <file>tivars_lib_cpp/programs_tokens.csv</file>

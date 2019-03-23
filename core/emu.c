@@ -17,7 +17,7 @@
 #include <emscripten.h>
 #endif
 
-#define IMAGE_VERSION 0xCECE0016
+#define IMAGE_VERSION 0xCECE0017
 
 void EMSCRIPTEN_KEEPALIVE emu_exit(void) {
     cpu.abort = CPU_ABORT_EXIT;

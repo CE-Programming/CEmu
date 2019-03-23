@@ -227,9 +227,6 @@ static void usb_process_async(void) {
                 break;
             case ADVANCE_QUEUE:
                 link.term = true;
-                if (qh == NULL) {
-                    return usb_host_sys_err();
-                }
                 if (qh->overlay.total_bytes) {
                     link = qh->overlay.alt;
                 } if (link.term) {
@@ -674,17 +671,23 @@ static void usb_event(enum sched_item_id event) {
     usb_qh_t *qh;
     uint8_t i = 0;
     enum libusb_error err;
-    if (usb.dev && !usb.xfer->dev_handle && ++usb.delay > 100) {
+    if (usb.dev && usb.xfer && !usb.xfer->dev_handle) {
         if ((err = libusb_open(usb.dev, &usb.xfer->dev_handle))) {
             gui_console_printf("[USB] Error: Open device: %s!\n", libusb_error_name(err));
             usb.xfer->dev_handle = NULL;
         } else {
             usb_plug_a();
         }
-        usb.delay = 0;
     }
     if ((err = libusb_handle_events_timeout(usb.ctx, &zero_tv))) {
         gui_console_printf("[USB] Error: Handle events: %s!\n", libusb_error_name(err));
+    }
+    if (usb.devChanged && !usb.wait) {
+        usb.devChanged = false;
+        if (usb.xfer && usb.xfer->dev_handle) {
+            libusb_close(usb.xfer->dev_handle);
+            usb.xfer->dev_handle = NULL;
+        }
     }
     if (!usb.wait && usb.regs.otgcsr & OTGCSR_A_VBUS_VLD) {
         if (usb.regs.otgcsr & OTGCSR_DEV_B) {
@@ -802,7 +805,7 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             usb.regs.hcor.portsc[0] &= ~(((uint32_t)value << bit_offset & 0x2E) | 0x1F0100) ^ PORTSC_EN_STATUS; // W[0/1]C mask (V or RO or W)
             usb.regs.hcor.portsc[0] |= (uint32_t)value << bit_offset & 0x1F0100; // W mask (RO)
 #ifdef HAS_LIBUSB
-            if (usb.xfer->dev_handle && old & ~usb.regs.hcor.portsc[0] & PORTSC_RESET) {
+            if (usb.xfer && usb.xfer->dev_handle && old & ~usb.regs.hcor.portsc[0] & PORTSC_RESET) {
                 usb.control = false;
                 if ((err = libusb_reset_device(usb.xfer->dev_handle))) {
                     gui_console_printf("[USB] Error: Reset device failed: %s!\n", libusb_error_name(err));
@@ -1037,6 +1040,7 @@ void usb_reset(void) {
     sched.items[SCHED_USB].callback.event = usb_event_no_libusb;
 #endif
     sched.items[SCHED_USB].clock = CLOCK_USB;
+    sched_set(SCHED_USB, 0);
     sched_clear(SCHED_USB_DMA);
 }
 
@@ -1068,59 +1072,7 @@ static void usb_close(libusb_device_handle **dev_handle) {
     *dev_handle = NULL;
 }
 
-static int LIBUSB_CALL usb_hotplug(libusb_context *ctx, libusb_device *dev, libusb_hotplug_event evt, void *data) {
-    struct libusb_device_descriptor desc;
-    uint16_t langid[2], manu[129], prod[129];
-    int len;
-    bool wasopen = usb.xfer->dev_handle;
-    enum libusb_error err;
-    switch (evt) {
-        case LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED:
-            usb_close(&usb.xfer->dev_handle);
-            usb.dev = dev;
-            gui_console_printf("[USB] Device plugged.\n");
-            break;
-            if ((err = libusb_open(dev, &usb.xfer->dev_handle))) {
-                gui_console_printf("[USB] Error: Open device failed: %s!\n", libusb_error_name(err));
-            } else {
-                usb_plug_a();
-            }
-            break;
-            if (!libusb_get_device_descriptor(dev, &desc) &&
-                !libusb_open(dev, &usb.xfer->dev_handle)) {
-                len = libusb_get_string_descriptor(usb.xfer->dev_handle, 0, 0, (unsigned char *)langid, sizeof langid);
-                if (len < (int)sizeof langid) break;
-                len = libusb_get_string_descriptor(usb.xfer->dev_handle, desc.iManufacturer, langid[1], (unsigned char *)manu, sizeof manu - sizeof *manu);
-                if (len < (int)sizeof *manu) break;
-                manu[len >> 1] = 0;
-                len = libusb_get_string_descriptor(usb.xfer->dev_handle, desc.iProduct, langid[1], (unsigned char *)prod, sizeof prod - sizeof *prod);
-                if (len < (int)sizeof *prod) break;
-                prod[len >> 1] = 0;
-                gui_console_printf("[USB] %ls %ls connected.\n", &manu[1], &prod[1]);
-                if (!wasopen) {
-                    libusb_reset_device(usb.xfer->dev_handle);
-                }
-            }
-            break;
-        case LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT:
-            if (dev == usb.dev) {
-                usb_unplug_a();
-                usb_close(&usb.xfer->dev_handle);
-                usb.dev = NULL;
-                gui_console_printf("[USB] Device unplugged.\n");
-            }
-            break;
-        default:
-            gui_console_printf("Unhandled hotplug event: %d\n", evt);
-            break;
-    }
-    return false;
-}
-
 static void init_libusb(void) {
-    if (libusb_init(&usb.ctx)) {
-        return;
-    }
     if (!(usb.xfer = libusb_alloc_transfer(3)) || !(usb.xfer->buffer = malloc(0x5008))) {
         usb_free();
         return;
@@ -1130,23 +1082,17 @@ static void init_libusb(void) {
 }
 #endif
 
-void emu_usb_detach(void) {
 #ifdef HAS_LIBUSB
-    if (usb.ctx && usb.xfer && usb.xfer->dev_handle && usb.hotplug_handle) {
-         libusb_hotplug_deregister_callback(usb.ctx, usb.hotplug_handle);
+void emu_set_usb_device(libusb_device *device) {
+    if (usb.ctx && usb.xfer && usb.xfer->dev_handle) {
          usb_close(&usb.xfer->dev_handle);
          usb.xfer->dev_handle = NULL;
     }
-#endif
-    usb_reset();
+    usb.devChanged = true;
+    libusb_unref_device(usb.dev);
+    usb.dev = device ? libusb_ref_device(device) : NULL;
 }
-
-void emu_usb_attach(int vid, int pid) {
-    emu_usb_detach();
-#ifdef HAS_LIBUSB
-    libusb_hotplug_register_callback(usb.ctx, LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT, LIBUSB_HOTPLUG_ENUMERATE, vid, pid, 0, usb_hotplug, NULL, &usb.hotplug_handle);
 #endif
-}
 
 static const eZ80portrange_t device = {
     .read  = usb_read,
@@ -1156,7 +1102,6 @@ static const eZ80portrange_t device = {
 eZ80portrange_t init_usb(void) {
     memset(&usb, 0, sizeof usb);
     usb_init_hccr();
-    usb_reset();
 #ifdef HAS_LIBUSB
     init_libusb();
 #endif
@@ -1171,10 +1116,6 @@ void usb_free(void) {
         free(usb.xfer->buffer);
         libusb_free_transfer(usb.xfer);
         usb.xfer = NULL;
-    }
-    if (usb.ctx) {
-        libusb_exit(usb.ctx);
-        usb.ctx = NULL;
     }
 #endif
 }

@@ -17,20 +17,23 @@
 #include "../../core/vat.h"
 #include "../../core/debug/debug.h"
 
-#include <QtWidgets/QProgressBar>
-#include <QtWidgets/QShortcut>
-#include <QtWidgets/QMainWindow>
-#include <QtWidgets/QLabel>
-#include <QtWidgets/QTableWidgetItem>
-#include <QtWidgets/QPlainTextEdit>
-#include <QtWidgets/QFileDialog>
-#include <QtCore/QSettings>
-#include <QtCore/QTimer>
-#include <QtGui/QTextCursor>
-#include <QtGui/QFont>
-#include <QtWidgets/QMessageBox>
-#include <QtCore/QTranslator>
 #include <QtCore/QStandardPaths>
+#include <QtCore/QThread>
+#include <QtCore/QTranslator>
+#include <QtWidgets/QFileDialog>
+#include <QtWidgets/QMainWindow>
+QT_BEGIN_NAMESPACE
+    class QButtonGroup;
+    class QProgressBar;
+    class QSettings;
+    class QShortcut;
+    class QTableWidget;
+    class QTableWidgetItem;
+QT_END_NAMESPACE
+
+#ifdef HAS_LIBUSB
+#include <libusb.h>
+#endif
 
 #ifdef PNG_WRITE_APNG_SUPPORTED
 class RecordingThread : public QThread {
@@ -61,6 +64,9 @@ public:
 signals:
     void setLcdFrameskip(int value);
     void setLcdMode(bool spi);
+#ifdef HAS_LIBUSB
+    void usbHotplug(void *device, bool attached);
+#endif
 
     // Debugging
     void debugPointChanged(quint32 address, unsigned type, bool state);
@@ -155,10 +161,10 @@ private:
     };
 
     enum {
-        USB_SELECTED,
-        USB_VID,
-        USB_PID,
-        USB_REMOVE
+        USB_CONNECT,
+        USB_MANUFACTURER,
+        USB_PRODUCT,
+        USB_SERIAL_NUMBER
     };
 
     enum {
@@ -209,7 +215,7 @@ private:
 
     // translations
     void translateExtras(int init);
-    void translateSwitch(const QString &lang);
+    void translateSwitch(const QLocale &locale);
 
     // state slots
     void stateAdd(QString &name, QString &path);
@@ -447,12 +453,11 @@ private:
     void recentSaveInfo();
 
     // usb configuration
-    void usbSaveInfo();
-    void usbLoadInfo();
-    void usbRemoveRow();
-    void usbAddRow(const QString &vid = QStringLiteral(""), const QString &pid = QStringLiteral(""), Qt::CheckState check = Qt::Unchecked);
-    void usbSelectChange(int state);
-    void usbIdModified(QTableWidgetItem *item);
+#ifdef HAS_LIBUSB
+    static int LIBUSB_CALL usbHotplugCallback(libusb_context *context, libusb_device *device, libusb_hotplug_event event, void *user_data);
+    void usbUpdate(void *opaqueDevice, bool arrived = true);
+    void usbRefresh();
+#endif
 
     // autotester
     int autotesterOpen(const QString &jsonPath);
@@ -544,6 +549,9 @@ private:
                            Qt::CursorShape cursorShape,
                            int (QSize::*dimension)() const,
                            Qt::Orientation orientation);
+
+    // Semi Exclusive Buttons
+    void semiExclusiveButtonPressed();
 
     // Members
     Ui::MainWindow *ui = Q_NULLPTR;
@@ -728,9 +736,6 @@ private:
     static const QString SETTING_ENABLE_WIN_CONSOLE;
     static const QString SETTING_RECENT_SAVE;
     static const QString SETTING_RECENT_PATHS;
-    static const QString SETTING_USB_VID;
-    static const QString SETTING_USB_PID;
-    static const QString SETTING_USB_SELECTED;
     static const QString SETTING_RECENT_SELECT;
 
     static const QString SETTING_KEYPAD_NATURAL;
@@ -793,6 +798,11 @@ private:
     QTableWidget *m_watchpoints = Q_NULLPTR;
     QTableWidget *m_ports = Q_NULLPTR;
     DataWidget *m_disasm = Q_NULLPTR;
+
+#ifdef HAS_LIBUSB
+    uint16_t m_usbLangID = 0x0409;
+    QButtonGroup *m_usbConnectGroup = Q_NULLPTR;
+#endif
 
 #ifdef _WIN32
     QAction *actionToggleConsole;

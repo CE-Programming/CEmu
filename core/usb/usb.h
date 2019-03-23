@@ -68,13 +68,12 @@ typedef struct usb_state {
     uint8_t state;
     uint8_t *data;
     uint8_t len;
-    int delay;
 #ifdef HAS_LIBUSB
     libusb_context *ctx;
     libusb_device *dev;
-#endif
     struct libusb_transfer *xfer;
-    bool wait : 1, process : 1, control : 1;
+#endif
+    bool devChanged : 1, wait : 1, process : 1, control : 1;
     enum  {
         USB_HC_STATE_PERIOD,
         USB_HC_STATE_ASYNC
@@ -85,7 +84,6 @@ typedef struct usb_state {
           USB_NAK_CNT_WAIT_FOR_LIST_HEAD,
     } nak_cnt_reload_state : 2;
     usb_qh_t *fake_recl_head;
-    libusb_hotplug_callback_handle hotplug_handle;
 } usb_state_t;
 
 extern usb_state_t usb;
@@ -110,8 +108,9 @@ void usb_setup(const uint8_t *);
 void usb_send_pkt(const void *, uint32_t);
 
 /* api functions */
-void emu_usb_detach(void);
-void emu_usb_attach(int vid, int pid);
+#ifdef HAS_LIBUSB
+void emu_set_usb_device(libusb_device *device);
+#endif
 
 #ifdef __cplusplus
 }

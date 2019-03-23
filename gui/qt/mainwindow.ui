@@ -8865,7 +8865,7 @@ QPushButton:pressed {
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_16">
             <item>
-             <widget class="QPushButton" name="buttonAddUSB">
+             <widget class="QPushButton" name="buttonRefreshUSB">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -8876,18 +8876,24 @@ QPushButton:pressed {
                <enum>Qt::NoFocus</enum>
               </property>
               <property name="text">
-               <string>Add</string>
+               <string>Refresh</string>
               </property>
               <property name="icon">
                <iconset resource="resources.qrc">
-                <normaloff>:/icons/resources/icons/plus.png</normaloff>:/icons/resources/icons/plus.png</iconset>
+                <normaloff>:/icons/resources/icons/refresh.png</normaloff>:/icons/resources/icons/refresh.png</iconset>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QTableWidget" name="usbTable">
+              <property name="selectionBehavior">
+               <enum>QAbstractItemView::SelectRows</enum>
+              </property>
+              <property name="textElideMode">
+               <enum>Qt::ElideRight</enum>
+              </property>
               <attribute name="horizontalHeaderDefaultSectionSize">
-               <number>80</number>
+               <number>100</number>
               </attribute>
               <attribute name="horizontalHeaderMinimumSectionSize">
                <number>30</number>
@@ -8903,22 +8909,22 @@ QPushButton:pressed {
               </attribute>
               <column>
                <property name="text">
-                <string>Enabled</string>
+                <string>Plug</string>
                </property>
               </column>
               <column>
                <property name="text">
-                <string>Vendor ID</string>
+                <string>Manufacturer</string>
                </property>
               </column>
               <column>
                <property name="text">
-                <string>Product ID</string>
+                <string>Product</string>
                </property>
               </column>
               <column>
                <property name="text">
-                <string>Remove</string>
+                <string>Serial Number</string>
                </property>
               </column>
              </widget>

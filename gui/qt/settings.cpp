@@ -11,16 +11,18 @@
 #include "../../core/debug/debug.h"
 #include "../../core/usb/usb.h"
 
-#include <cmath>
 #include <QtCore/QFileInfo>
 #include <QtCore/QRegularExpression>
+#include <QtCore/QSettings>
 #include <QtNetwork/QNetworkAccessManager>
-#include <QtWidgets/QDesktopWidget>
-#include <QtWidgets/QApplication>
-#include <QtWidgets/QMessageBox>
-#include <QtWidgets/QInputDialog>
-#include <QtWidgets/QScrollBar>
 #include <QtNetwork/QNetworkReply>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QDesktopWidget>
+#include <QtWidgets/QInputDialog>
+#include <QtWidgets/QMessageBox>
+#include <QtWidgets/QScrollBar>
+
+#include <cmath>
 
 #ifdef _MSC_VER
     #include <direct.h>
@@ -92,9 +94,6 @@ const QString MainWindow::SETTING_CURRENT_DIR               = QStringLiteral("cu
 const QString MainWindow::SETTING_ENABLE_WIN_CONSOLE        = QStringLiteral("enable_windows_console");
 const QString MainWindow::SETTING_RECENT_SAVE               = QStringLiteral("Recent/save_paths");
 const QString MainWindow::SETTING_RECENT_PATHS              = QStringLiteral("Recent/paths");
-const QString MainWindow::SETTING_USB_VID                   = QStringLiteral("USB/vendor_id");
-const QString MainWindow::SETTING_USB_PID                   = QStringLiteral("USB/product_id");
-const QString MainWindow::SETTING_USB_SELECTED              = QStringLiteral("USB/selected");
 const QString MainWindow::SETTING_RECENT_SELECT             = QStringLiteral("Recent/selected");
 
 const QString MainWindow::SETTING_KEYPAD_NATURAL            = QStringLiteral("natural");
@@ -982,133 +981,6 @@ void MainWindow::recentLoadInfo() {
     }
 }
 
-void MainWindow::usbSaveInfo() {
-    QStringList vid;
-    QStringList pid;
-    int selected = -1;
-
-    for (int i = 0; i < ui->usbTable->rowCount(); i++) {
-        vid.append(ui->usbTable->item(i, USB_VID)->text());
-        pid.append(ui->usbTable->item(i, USB_PID)->text());
-        if (ui->usbTable->item(i, USB_SELECTED)->checkState() == Qt::Checked) {
-            selected = i;
-        }
-    }
-
-    m_config->setValue(SETTING_USB_VID, vid);
-    m_config->setValue(SETTING_USB_PID, pid);
-    m_config->setValue(SETTING_USB_SELECTED, selected);
-}
-
-void MainWindow::usbLoadInfo() {
-    QStringList vids = m_config->value(SETTING_USB_VID).toStringList();
-    QStringList pids = m_config->value(SETTING_USB_PID).toStringList();
-    int selected = m_config->value(SETTING_USB_SELECTED).toInt();
-
-    for (int i = 0; i < vids.size(); i++) {
-        const QString vid = vids.at(i);
-        const QString pid = pids.at(i);
-        usbAddRow(vid, pid, selected == i ? Qt::Checked : Qt::Unchecked);
-    }
-}
-
-void MainWindow::usbAddRow(const QString &vid, const QString &pid, Qt::CheckState check) {
-    int rows = ui->usbTable->rowCount();
-    ui->usbTable->blockSignals(true);
-
-    QIcon removeIcon(QPixmap(QStringLiteral(":/icons/resources/icons/exit.png")));
-    QToolButton *btnRemove = new QToolButton();
-    btnRemove->setIcon(removeIcon);
-    QWidget *checkWidget = new QWidget();
-    QCheckBox *checkBox = new QCheckBox();
-    QHBoxLayout *layoutCheckBox = new QHBoxLayout(checkWidget);
-    layoutCheckBox->addWidget(checkBox);
-    layoutCheckBox->setAlignment(Qt::AlignCenter);
-    layoutCheckBox->setContentsMargins(0, 0, 0, 0);
-
-    ui->usbTable->setRowCount(rows + 1);
-    QTableWidgetItem *selectitem = new QTableWidgetItem();
-    QTableWidgetItem *viditem = new QTableWidgetItem(vid);
-    QTableWidgetItem *piditem = new QTableWidgetItem(pid);
-    QTableWidgetItem *removeitem = new QTableWidgetItem();
-    connect(btnRemove, &QToolButton::clicked, this, &MainWindow::usbRemoveRow);
-    connect(checkBox, &QCheckBox::stateChanged, this, &MainWindow::usbSelectChange);
-
-    selectitem->setFlags(selectitem->flags() & ~Qt::ItemIsEditable);
-    removeitem->setFlags(removeitem->flags() & ~Qt::ItemIsEditable);
-    selectitem->setTextAlignment(Qt::AlignCenter);
-    removeitem->setTextAlignment(Qt::AlignCenter);
-
-    ui->usbTable->setItem(rows, USB_SELECTED, selectitem);
-    ui->usbTable->setItem(rows, USB_VID, viditem);
-    ui->usbTable->setItem(rows, USB_PID, piditem);
-    ui->usbTable->setItem(rows, USB_REMOVE, removeitem);
-    ui->usbTable->setCellWidget(rows, USB_REMOVE, btnRemove);
-    ui->usbTable->setCellWidget(rows, USB_SELECTED, checkWidget);
-
-    checkBox->setCheckState(check);
-    ui->usbTable->blockSignals(false);
-}
-
-void MainWindow::usbSelectChange(int state) {
-    emu.usbDetach();
-    for (int row = 0; row < ui->usbTable->rowCount(); row++) {
-        QWidget *item = ui->usbTable->cellWidget(row, USB_SELECTED);
-        QCheckBox *chkbox = qobject_cast<QCheckBox*>(item->layout()->itemAt(0)->widget());
-        if (sender() == chkbox && state == Qt::Checked) {
-            QString vids = ui->usbTable->item(row, USB_VID)->text();
-            QString pids = ui->usbTable->item(row, USB_PID)->text();
-            if (!vids.isEmpty() && !pids.isEmpty()) {
-                int vid = vids.toInt(Q_NULLPTR, 16);
-                int pid = pids.toInt(Q_NULLPTR, 16);
-                emu.usbAttach(vid, pid);
-            } else {
-                chkbox->blockSignals(true);
-                chkbox->setCheckState(Qt::Unchecked);
-                chkbox->blockSignals(false);
-            }
-        } else {
-            chkbox->blockSignals(true);
-            chkbox->setCheckState(Qt::Unchecked);
-            chkbox->blockSignals(false);
-        }
-    }
-}
-
-void MainWindow::usbIdModified(QTableWidgetItem *item) {
-    auto row = item->row();
-    auto col = item->column();
-
-    if (col == USB_VID || col == USB_PID) {
-        uint16_t value = static_cast<uint16_t>(hex2int(item->text()));
-        ui->usbTable->blockSignals(true);
-        item->setText(int2hex(value, 4));
-        ui->usbTable->blockSignals(false);
-
-        QWidget *item = ui->usbTable->cellWidget(row, USB_SELECTED);
-        QCheckBox *chkbox = qobject_cast<QCheckBox*>(item->layout()->itemAt(0)->widget());
-
-        if (chkbox->checkState() == Qt::Checked) {
-            int vid = ui->usbTable->item(row, USB_VID)->text().toInt(Q_NULLPTR, 16);
-            int pid = ui->usbTable->item(row, USB_PID)->text().toInt(Q_NULLPTR, 16);
-            emu.usbDetach();
-            emu.usbAttach(vid, pid);
-        }
-    }
-}
-
-void MainWindow::usbRemoveRow() {
-    for (int row = 0; row < ui->usbTable->rowCount(); row++) {
-        if (sender() == ui->usbTable->cellWidget(row, USB_REMOVE)) {
-            if (ui->usbTable->item(row, USB_SELECTED)) {
-                emu.usbDetach();
-            }
-            ui->usbTable->removeRow(row);
-            break;
-        }
-    }
-}
-
 void MainWindow::setMemDocks() {
     QStringList names = m_config->value(SETTING_WINDOW_MEMORY_DOCKS).toStringList();
     QList<int> bytes = m_config->value(SETTING_WINDOW_MEMORY_DOCK_BYTES).value<QList<int>>();
@@ -1271,7 +1143,6 @@ void MainWindow::saveSettings() {
         saveDebug();
         stateSaveInfo();
         recentSaveInfo();
-        usbSaveInfo();
 
         m_config->sync();
     }

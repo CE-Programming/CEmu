@@ -23,16 +23,18 @@
 #include "../../core/sha256.h"
 #include "../../core/schedule.h"
 
-#include <QtWidgets/QToolTip>
 #include <QtCore/QFileInfo>
 #include <QtCore/QRegularExpression>
-#include <QtNetwork/QNetworkAccessManager>
-#include <QtWidgets/QMessageBox>
-#include <QtWidgets/QInputDialog>
-#include <QtWidgets/QScrollBar>
-#include <QtWidgets/QDesktopWidget>
-#include <QtNetwork/QNetworkReply>
+#include <QtCore/QSettings>
 #include <QtGui/QClipboard>
+#include <QtNetwork/QNetworkAccessManager>
+#include <QtNetwork/QNetworkReply>
+#include <QtWidgets/QDesktopWidget>
+#include <QtWidgets/QInputDialog>
+#include <QtWidgets/QMessageBox>
+#include <QtWidgets/QScrollBar>
+#include <QtWidgets/QShortcut>
+#include <QtWidgets/QToolTip>
 
 #ifdef _MSC_VER
     #include <direct.h>
