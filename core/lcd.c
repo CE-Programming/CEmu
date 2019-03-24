@@ -53,7 +53,9 @@ void emu_set_lcd_spi(int enable) {
 }
 
 void emu_lcd_drawframe(void *output) {
-    emu_lcd_drawmem(output, lcd.control & 1 << 11 ? lcd.data : NULL, lcd.data_end, lcd.control, LCD_SIZE, lcd.spi);
+    if (lcd.control & 1 << 11) {
+        emu_lcd_drawmem(output, lcd.data, lcd.data_end, lcd.control, LCD_SIZE, lcd.spi);
+    }
 }
 
 /* Draw the lcd onto an RGBA8888 buffer. Alpha is always 255. */

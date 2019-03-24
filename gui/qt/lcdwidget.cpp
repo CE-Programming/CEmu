@@ -34,7 +34,7 @@ void LCDWidget::paintEvent(QPaintEvent*) {
 
     // Interpolation only for < 100% scale
     c.setRenderHint(QPainter::SmoothPixmapTransform, cw.width() < LCD_WIDTH);
-    if (control.ports[5] & 1 << 4) {
+    if ((control.ports[5] & 1 << 4) && (lcd.control & 1 << 11)) {
         m_mutex.lock();
         c.drawImage(cw, m_image);
         m_mutex.unlock();
