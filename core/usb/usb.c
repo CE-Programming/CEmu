@@ -602,6 +602,8 @@ static bool usb_process_qh(usb_qh_t *qh) {
         return false;
     }
     if (!qh->overlay.active) {
+        bool dt;
+        bool ping;
         usb_qlink_t link;
         usb_qtd_t *qtd;
         if (qh->i) {
@@ -625,8 +627,8 @@ static bool usb_process_qh(usb_qh_t *qh) {
         if (!qtd->active) {
             return false;
         }
-        bool dt = qh->dtc ? qtd->dt : qh->overlay.dt;
-        bool ping = qh->eps != 2 ? qtd->ping : qh->overlay.ping;
+        dt = qh->dtc ? qtd->dt : qh->overlay.dt;
+        ping = qh->eps != 2 ? qtd->ping : qh->overlay.ping;
         qh->cur = link;
         qh->overlay = *qtd;
         qh->overlay.alt.nak_cnt = qh->nak_rl;
