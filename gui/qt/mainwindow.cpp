@@ -1687,7 +1687,8 @@ void MainWindow::varPressed(QTableWidgetItem *item) {
     calc_var_t var = ui->emuVarView->item(item->row(), VAR_NAME)->data(Qt::UserRole).value<calc_var_t>();
     if (var.size <= 2 || calc_var_is_asmprog(&var)) {
         return;
-    } else if (var.type != CALC_VAR_TYPE_APP_VAR && (!calc_var_is_internal(&var) || var.name[0] == '#')) {
+    } else if ((var.type != CALC_VAR_TYPE_APP_VAR || calc_var_is_python_appvar(&var))
+               && (!calc_var_is_internal(&var) || var.name[0] == '#')) {
         std::string str;
         try {
             str = calc_var_content_string(var);
@@ -1764,7 +1765,7 @@ void MainWindow::varShow() {
                 } else if (calc_var_is_internal(&var) && var.name[0] != '#') { // # is previewable
                     var_value = tr("Can't preview this OS variable");
                     var_preview_needs_gray = true;
-                }  else if (var.type == CALC_VAR_TYPE_APP_VAR) { // nothing to do for now (or ever)
+                }  else if (var.type == CALC_VAR_TYPE_APP_VAR && !calc_var_is_python_appvar(&var)) { // nothing to do
                     var_value = tr("Can't preview this");
                     var_preview_needs_gray = true;
                 } else if (var.size > 500) {

@@ -306,3 +306,10 @@ bool calc_var_is_internal(const calc_var_t *var) {
                 || (var->type == CALC_VAR_TYPE_EQU  && !strcmp((const char*)var->name, "."))
                 || (var->type == CALC_VAR_TYPE_PROG && !strcmp((const char*)var->name, "!")));
 }
+
+bool calc_var_is_python_appvar(const calc_var_t *var) {
+    return var && var->type == CALC_VAR_TYPE_APP_VAR
+               && var->size > 6
+               && memcmp("PYCD", var->data + 2, 4) == 0;
+}
+
