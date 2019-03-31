@@ -45,6 +45,17 @@ namespace tivars
         static const constexpr char* validPattern = "===UNIMPLEMENTED==="; // TODO
     }
 
+    namespace STH_DataAppVar
+    {
+        th();
+    }
+    namespace STH_PythonAppVar
+    {
+        th();
+        static const constexpr char ID_SCRIPT[] = "PYSC";
+        static const constexpr char ID_CODE[] = "PYCD";
+    }
+
     namespace TH_GenericReal
     {
         th();
@@ -56,11 +67,11 @@ namespace tivars
         const constexpr size_t dataByteCount = 18;
     }
 
-    namespace TH_GenericList { th(); }
+    namespace TH_GenericList   { th(); }
 
-    namespace TH_Matrix      { th(); }
+    namespace TH_Matrix        { th(); }
 
-    namespace TH_AppVar      { th(); }
+    namespace TH_GenericAppVar { th(); }
 
     // Program, Protected Program, Y-Variable, String
     namespace TH_Tokenized

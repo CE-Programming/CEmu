@@ -238,8 +238,10 @@ SOURCES += \
     tivarslib/TypeHandlers/TH_GenericComplex.cpp \
     tivarslib/TypeHandlers/TH_Matrix.cpp \
     tivarslib/TypeHandlers/TH_GenericReal.cpp \
-    tivarslib/TypeHandlers/TH_AppVar.cpp \
+    tivarslib/TypeHandlers/TH_GenericAppVar.cpp \
     tivarslib/TypeHandlers/TH_TempEqu.cpp \
+    tivarslib/TypeHandlers/STH_DataAppVar.cpp \
+    tivarslib/TypeHandlers/STH_PythonAppVar.cpp \
     tivarslib/TypeHandlers/STH_ExactFractionPi.cpp \
     tivarslib/TypeHandlers/STH_ExactFraction.cpp \
     tivarslib/TypeHandlers/STH_ExactRadical.cpp \

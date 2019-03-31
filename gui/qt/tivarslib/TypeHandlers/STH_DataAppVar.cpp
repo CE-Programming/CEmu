@@ -11,8 +11,7 @@
 
 namespace tivars
 {
-
-    data_t TH_AppVar::makeDataFromString(const std::string& str, const options_t& options)
+    data_t STH_DataAppVar::makeDataFromString(const std::string& str, const options_t& options)
     {
         (void)options;
 
@@ -36,7 +35,7 @@ namespace tivars
         return data;
     }
 
-    std::string TH_AppVar::makeStringFromData(const data_t& data, const options_t& options)
+    std::string STH_DataAppVar::makeStringFromData(const data_t& data, const options_t& options)
     {
         (void)options;
 

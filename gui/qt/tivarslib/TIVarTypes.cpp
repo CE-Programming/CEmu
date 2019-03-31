@@ -66,7 +66,8 @@ namespace tivars
         insertType("RecallWindow",         0x10,  {"82z", "83z", "8xz", "8xz", "8xz", "8xz", "8xz"});
         insertType("TableRange",           0x11,  {"82t", "83t", "8xt", "8xt", "8xt", "8xt", "8xt"});
         insertType("Backup",               0x13,  {"82b", "83b",   "" , "8xb", "8cb",   "" ,   "" });
-        insertType("AppVar",               0x15,  {  "" ,   "" ,   "" , "8xv", "8xv", "8xv", "8xv"},  make_handler_pair(TH_AppVar) );
+        insertType("AppVar",               0x15,  {  "" ,   "" ,   "" , "8xv", "8xv", "8xv", "8xv"},  GenericHandlerPair(AppVar, 0x15) );
+        insertType("PythonAppVar",         0x15,  {  "" ,   "" ,   "" ,   "" ,   "" ,   "" , "8xv"},  make_handler_pair(STH_PythonAppVar) );
         insertType("TemporaryItem",        0x16,  {  "" ,   "" ,   "" ,   "" ,   "" ,   "" ,   "" });
         insertType("GroupObject",          0x17,  {"82g", "83g", "8xg", "8xg", "8xg", "8cg", "8cg"});
         insertType("RealFraction",         0x18,  {  "" ,   "" ,   "" , "8xn", "8xn", "8xn", "8xn"},  GenericHandlerPair(Real, 0x18) );
