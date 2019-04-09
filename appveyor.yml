@@ -10,6 +10,10 @@ environment:
   QT5_BIN_DIR_DYNAMIC_64: C:\Qt\5.11\msvc2015_64\bin
   QT5_BIN_DIR_STATIC_32: C:\Qt\Qt5.12.0-static\bin
   QT5_BIN_DIR_STATIC_64: C:\Qt\Qt5.12.0x64-static\bin
+  LIBUSB_INCLUDE_DIR_DYNAMIC_32: C:\Tools\vcpkg\installed\x86-windows\include\libusb-1.0
+  LIBUSB_INCLUDE_DIR_DYNAMIC_64: C:\Tools\vcpkg\installed\x64-windows\include\libusb-1.0
+  LIBUSB_INCLUDE_DIR_STATIC_32: C:\Tools\vcpkg\installed\x86-windows-static\include\libusb-1.0
+  LIBUSB_INCLUDE_DIR_STATIC_64: C:\Tools\vcpkg\installed\x64-windows-static\include\libusb-1.0
 
 install:
   - git submodule update --init --recursive
@@ -34,17 +38,17 @@ install:
   - vcpkg install libarchive:x86-windows-static --recurse
   - vcpkg install libarchive:x64-windows-static --recurse
 
-# Install libpng-apng for all targets
-  - vcpkg install libpng-apng:x86-windows --recurse
-  - vcpkg install libpng-apng:x64-windows --recurse
-  - vcpkg install libpng-apng:x86-windows-static --recurse
-  - vcpkg install libpng-apng:x64-windows-static --recurse
-
 # Install libusb for all targets
   - vcpkg install libusb:x86-windows --recurse
   - vcpkg install libusb:x64-windows --recurse
   - vcpkg install libusb:x86-windows-static --recurse
   - vcpkg install libusb:x64-windows-static --recurse
+
+# Install libpng-apng for all targets
+  - vcpkg install libpng-apng:x86-windows --recurse
+  - vcpkg install libpng-apng:x64-windows --recurse
+  - vcpkg install libpng-apng:x86-windows-static --recurse
+  - vcpkg install libpng-apng:x64-windows-static --recurse
 
   - md build_32
   - md build_64
@@ -62,24 +66,20 @@ build_script:
   # If not, set it to a space (which would evaluate to empty in our QMake command).
   - if defined APPVEYOR_REPO_TAG_NAME (set CEMU_VERSION=%APPVEYOR_REPO_TAG_NAME% & echo Using tagged version %CEMU_VERSION%) ELSE (set "CEMU_VERSION= " & echo No version defined, using empty version '%CEMU_VERSION%' and allowing QMake to set default for dev.)
 
-  - set LIBPNG_APNG_INCLUDE=C:\libpng-apng-1.6.34\include
-
   - setlocal
 
   - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
   - set QMAKE_FLAGS=-spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBUSB_FROM_VCPKG=1 LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"
 
   - cd build_32
-  - '%QT5_BIN_DIR_DYNAMIC_32%\qmake %QMAKE_FLAGS%'
+  - '%QT5_BIN_DIR_DYNAMIC_32%\qmake %QMAKE_FLAGS% INCLUDEPATH+=%LIBUSB_INCLUDE_DIR_DYNAMIC_32%'
   - msbuild CEmu.vcxproj /p:Configuration=Debug
-  - '%QT5_BIN_DIR_DYNAMIC_32%\qmake %QMAKE_FLAGS%'
   - msbuild CEmu.vcxproj /p:Configuration=Release
   - cd ..
 
   - cd build_static_32
-  - '%QT5_BIN_DIR_STATIC_32%\qmake %QMAKE_FLAGS%'
+  - '%QT5_BIN_DIR_STATIC_32%\qmake %QMAKE_FLAGS% INCLUDEPATH+=%LIBUSB_INCLUDE_DIR_STATIC_32%'
   - msbuild CEmu.vcxproj /p:Configuration=Debug /p:VcpkgTriplet=x86-windows-static
-  - '%QT5_BIN_DIR_STATIC_32%\qmake %QMAKE_FLAGS%'
   - msbuild CEmu.vcxproj /p:Configuration=Release /p:VcpkgTriplet=x86-windows-static
   - cd ..
 
@@ -90,16 +90,14 @@ build_script:
   - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86_amd64
 
   - cd build_64
-  - '%QT5_BIN_DIR_DYNAMIC_64%\qmake%QMAKE_FLAGS%'
+  - '%QT5_BIN_DIR_DYNAMIC_64%\qmake%QMAKE_FLAGS% INCLUDEPATH+=%LIBUSB_INCLUDE_DIR_DYNAMIC_64%'
   - msbuild CEmu.vcxproj /p:Configuration=Debug /p:Platform="x64"
-  - '%QT5_BIN_DIR_DYNAMIC_64%\qmake%QMAKE_FLAGS%'
   - msbuild CEmu.vcxproj /p:Configuration=Release /p:Platform="x64"
   - cd ..
 
   - cd build_static_64
-  - '%QT5_BIN_DIR_STATIC_64%\qmake%QMAKE_FLAGS%'
+  - '%QT5_BIN_DIR_STATIC_64%\qmake%QMAKE_FLAGS% INCLUDEPATH+=%LIBUSB_INCLUDE_DIR_STATIC_64%'
   - msbuild CEmu.vcxproj /p:Configuration=Debug /p:Platform="x64" /p:VcpkgTriplet=x64-windows-static
-  - '%QT5_BIN_DIR_STATIC_64%\qmake%QMAKE_FLAGS%'
   - msbuild CEmu.vcxproj /p:Configuration=Release /p:Platform="x64" /p:VcpkgTriplet=x64-windows-static
   - cd ..
 
