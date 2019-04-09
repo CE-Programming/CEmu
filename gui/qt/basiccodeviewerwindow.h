@@ -102,7 +102,7 @@ class BasicCodeViewerWindow : public QDialog {
     Q_OBJECT
 
 public:
-    explicit BasicCodeViewerWindow(QWidget *p = Q_NULLPTR);
+    explicit BasicCodeViewerWindow(QWidget *p = Q_NULLPTR, bool doHighlight = true, bool doWrap = false, bool doFormat = false);
     void setVariableName(const QString &name);
     void setOriginalCode(const QString &code);
     ~BasicCodeViewerWindow() override;

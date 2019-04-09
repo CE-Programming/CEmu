@@ -255,8 +255,15 @@ void BasicHighlighter::highlightBlock(const QString &text)
     setCurrentBlockState(0);
 }
 
-BasicCodeViewerWindow::BasicCodeViewerWindow(QWidget *parent) : QDialog{parent}, ui(new Ui::BasicCodeViewerWindow) {
+BasicCodeViewerWindow::BasicCodeViewerWindow(QWidget *parent, bool doHighlight, bool doWrap, bool doFormat)
+  : QDialog{parent}, ui(new Ui::BasicCodeViewerWindow) {
     ui->setupUi(this);
+
+    // Considering the default values...
+    if (!doHighlight) { m_showingHighlighted = false; ui->checkboxHighlighting->setCheckState(Qt::Unchecked); ui->basicEdit->toggleHighlight(); }
+    if (doWrap) { m_showingWrapped = true; ui->checkboxLineWrapping->setCheckState(Qt::Checked); }
+    if (doFormat) { m_showingFormatted = true; ui->checkboxReformatting->setCheckState(Qt::Checked); }
+
     connect(ui->checkboxHighlighting, &QCheckBox::toggled, this, &BasicCodeViewerWindow::toggleHighlight);
     connect(ui->checkboxLineWrapping, &QCheckBox::toggled, this, &BasicCodeViewerWindow::toggleWrap);
     connect(ui->checkboxReformatting, &QCheckBox::toggled, this, &BasicCodeViewerWindow::toggleFormat);
@@ -299,7 +306,6 @@ void BasicCodeViewerWindow::toggleFormat() {
 }
 
 void BasicCodeViewerWindow::showCode() {
-
     if (!hasCodeYet) {
         ui->basicEdit->document()->setPlainText(m_showingFormatted ? m_formattedCode : m_originalCode);
         hasCodeYet = true;
