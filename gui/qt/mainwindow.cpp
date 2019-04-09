@@ -2770,32 +2770,15 @@ void MainWindow::usbUpdate(void *opaqueDevice, bool attached) {
         item->setData(Qt::UserRole, QVariant::fromValue(opaqueDevice));
         ui->usbTable->setItem(row, USB_CONNECT, item);
 
-        for (int i = USB_VID; i <= USB_PRODUCT_NAME; i++) {
-            int size;
-            item = Q_NULLPTR;
-            switch (i) {
-                case USB_VID:
-                    item = new QTableWidgetItem(int2hex(desc.idVendor, 4));
-                    break;
-                case USB_PID:
-                    item = new QTableWidgetItem(int2hex(desc.idProduct, 4));
-                    break;
-                case USB_PRODUCT_NAME:
-                    size = libusb_get_string_descriptor(handle, desc.iProduct, langid, reinterpret_cast<unsigned char *>(string), sizeof(string));
-                    if (size >= 4) {
-                        string[0] = QChar::ByteOrderMark & 0xFF; string[1] = QChar::ByteOrderMark >> 8;
-                        item = new QTableWidgetItem(QString::fromUtf16(reinterpret_cast<char16_t *>(string), size >> 1));
-                    } else {
-                        item = new QTableWidgetItem("N/A");
-                        item->setTextColor(QColor(128, 128, 128));
-                    }
-                    break;
-                default:
-                    break;
-            }
-            if (item) {
-                item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-                ui->usbTable->setItem(row, i, item);
+        for (int i = USB_MANUFACTURER; i <= USB_SERIAL_NUMBER; i++) {
+            if (uint8_t index = (&desc.iManufacturer)[i - USB_MANUFACTURER]) {
+                int size = libusb_get_string_descriptor(handle, index, langid, reinterpret_cast<unsigned char *>(string), sizeof(string));
+                if (size >= 4) {
+                    string[0] = QChar::ByteOrderMark & 0xFF; string[1] = QChar::ByteOrderMark >> 8;
+                    item = new QTableWidgetItem(QString::fromUtf16(reinterpret_cast<char16_t *>(string), size >> 1));
+                    item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+                    ui->usbTable->setItem(row, i, item);
+                }
             }
         }
         ui->usbTable->setSortingEnabled(true);

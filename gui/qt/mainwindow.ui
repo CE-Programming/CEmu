@@ -6370,7 +6370,7 @@ np           </property>
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>5</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -8899,7 +8899,7 @@ QPushButton:pressed {
                <number>30</number>
               </attribute>
               <attribute name="horizontalHeaderStretchLastSection">
-               <bool>true</bool>
+               <bool>false</bool>
               </attribute>
               <attribute name="verticalHeaderVisible">
                <bool>false</bool>
@@ -8914,17 +8914,17 @@ QPushButton:pressed {
               </column>
               <column>
                <property name="text">
-                <string>VID</string>
+                <string>Manufacturer</string>
                </property>
               </column>
               <column>
                <property name="text">
-                <string>PID</string>
+                <string>Product</string>
                </property>
               </column>
               <column>
                <property name="text">
-                <string>Product Name</string>
+                <string>Serial Number</string>
                </property>
               </column>
              </widget>
