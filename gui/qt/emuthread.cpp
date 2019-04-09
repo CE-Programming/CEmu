@@ -45,9 +45,9 @@ void gui_debug_close(void) {
 }
 
 EmuThread::EmuThread(QObject *parent) : QThread{parent}, write{CONSOLE_BUFFER_SIZE},
-                                        m_speed{100}, m_throttle{true},
+                                        m_usbDevice{nullptr}, m_speed{100}, m_throttle{true},
                                         m_lastTime{std::chrono::steady_clock::now()},
-                                        m_debug{false}, m_usbDevice{nullptr} {
+                                        m_debug{false} {
     assert(emu == nullptr);
     emu = this;
 }

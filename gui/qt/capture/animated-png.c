@@ -102,6 +102,9 @@ bool apng_save(const char *filename, bool optimize) {
     int x, y;
     struct { int x[2], y[2]; } frame;
 
+    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (setjmp(png_jmpbuf(png_ptr))) { goto err; }
+
     if (optimize) {
         rewind(apng.tmp);
         memset(apng.table, 0, sizeof(apng.table));
@@ -160,9 +163,7 @@ bool apng_save(const char *filename, bool optimize) {
         return false;
     }
 
-    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     info_ptr = png_create_info_struct(png_ptr);
-    if (setjmp(png_jmpbuf(png_ptr))) { goto err; }
     png_init_io(png_ptr, f);
 
     png_set_IHDR(png_ptr, info_ptr, LCD_WIDTH, LCD_HEIGHT, count <= 1 << 1 ? 1 : count <= 1 << 2 ? 2 : count <= 1 << 4 ? 4 : 8,
