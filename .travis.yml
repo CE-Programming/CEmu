@@ -1,13 +1,5 @@
 language: cpp
 
-branches:
-  only:
-    - master
-    - latest-stable
-    - coverity_scan
-    - gh-pages-dev
-    - website-dev
-
 os: linux
 dist: xenial
 
@@ -23,6 +15,7 @@ addons:
       - libgl1-mesa-dev
       - libarchive-dev
       - libsdl2-dev
+      - libusb-1.0-0-dev
 
 script:
   - cd gui/qt/capture ; bash ./get_libpng-apng.sh ; cd ../../../
@@ -32,7 +25,7 @@ script:
   - cd ../core
   - make clean && make -j4 CPPFLAGS="-DMULTITHREAD" all
   - cd ../tests/autotester
-  - make clean && make -j4 CPPFLAGS="-DMULTITHREAD" all
+  - make clean && make -j4 CPPFLAGS="-DMULTITHREAD -DGLOB_SUPPORT" all
   - cd ../../core
   - make clean && make -j4 all
   - cd ../gui/sdl/
