@@ -1687,15 +1687,15 @@ void MainWindow::varPressed(QTableWidgetItem *item) {
     calc_var_t var = ui->emuVarView->item(item->row(), VAR_NAME)->data(Qt::UserRole).value<calc_var_t>();
     if (var.size <= 2 || calc_var_is_asmprog(&var)) {
         return;
-    } else if ((var.type != CALC_VAR_TYPE_APP_VAR || calc_var_is_python_appvar(&var))
-               && (!calc_var_is_internal(&var) || var.name[0] == '#')) {
+    } else if (!calc_var_is_internal(&var) || var.name[0] == '#') {
         std::string str;
         try {
             str = calc_var_content_string(var);
         } catch(...) {
             return;
         }
-        BasicCodeViewerWindow *codePopup = new BasicCodeViewerWindow(this);
+        bool isHexAppVar = var.type == CALC_VAR_TYPE_APP_VAR && !calc_var_is_python_appvar(&var);
+        BasicCodeViewerWindow *codePopup = new BasicCodeViewerWindow(this, !isHexAppVar);
         codePopup->setVariableName(ui->emuVarView->item(item->row(), VAR_NAME)->text());
         codePopup->setWindowModality(Qt::NonModal);
         codePopup->setAttribute(Qt::WA_DeleteOnClose);
@@ -1754,7 +1754,6 @@ void MainWindow::varShow() {
                 ui->emuVarView->setRowCount(row + 1);
 
                 bool var_preview_needs_gray = false;
-                bool var_preview_is_invite = false;
                 QString var_value;
                 if (var.size <= 2) {
                     var_value = tr("Empty");
@@ -1765,15 +1764,13 @@ void MainWindow::varShow() {
                 } else if (calc_var_is_internal(&var) && var.name[0] != '#') { // # is previewable
                     var_value = tr("Can't preview this OS variable");
                     var_preview_needs_gray = true;
-                }  else if (var.type == CALC_VAR_TYPE_APP_VAR && !calc_var_is_python_appvar(&var)) { // nothing to do
-                    var_value = tr("Can't preview this");
-                    var_preview_needs_gray = true;
-                } else if (var.size > 500) {
-                    var_value = tr("[Double-click to view...]");
-                    var_preview_is_invite = true;
                 } else {
                     try {
-                        var_value = QString::fromStdString(calc_var_content_string(var));
+                        var_value = QString::fromStdString(calc_var_content_string(var)).trimmed().replace("\n", " \\ ");
+                        if (var_value.size() > 50) {
+                            var_value.truncate(50);
+                            var_value += QStringLiteral(" [...]");
+                        }
                     } catch(...) {
                         var_value = tr("Can't preview this");
                         var_preview_needs_gray = true;
@@ -1798,13 +1795,11 @@ void MainWindow::varShow() {
 
                 var_name->setCheckState(Qt::Unchecked);
 
-                if (var_preview_is_invite || var_preview_needs_gray) {
+                if (var_preview_needs_gray) {
                     var_preview->setFont(varPreviewItalicFont);
+                    var_preview->setForeground(Qt::gray);
                 } else {
                     var_preview->setFont(varPreviewCEFont);
-                }
-                if (var_preview_needs_gray) {
-                    var_preview->setForeground(Qt::gray);
                 }
 
                 ui->emuVarView->setItem(row, VAR_NAME, var_name);
