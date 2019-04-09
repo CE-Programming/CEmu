@@ -54,9 +54,6 @@ TEMPLATE = app
 TRANSLATIONS += i18n/fr_FR.ts i18n/es_ES.ts i18n/nl_NL.ts
 
 CONFIG += c++11 console link_pkgconfig
-if (contains(DEFINES, HAS_LIBUSB)) {
-    PKGCONFIG += libusb-1.0
-}
 
 # Core options
 DEFINES += DEBUG_SUPPORT
@@ -86,8 +83,10 @@ if (!win32-msvc*) {
     }
 
     if (contains(DEFINES, LIB_ARCHIVE_SUPPORT)) {
-        CONFIG += link_pkgconfig
         PKGCONFIG += zlib libarchive
+    }
+    if (contains(DEFINES, HAS_LIBUSB)) {
+        PKGCONFIG += libusb-1.0
     }
     # You should run ./capture/get_libpng-apng.sh first!
     isEmpty(USE_LIBPNG) {
@@ -122,15 +121,20 @@ if (!win32-msvc*) {
     # Add -MP to enable speedier builds
     QMAKE_CXXFLAGS += /MP
 
-    # Do we have a flag specifying use of libpng-apng from vcpkg?
-	equals(LIBPNG_APNG_FROM_VCPKG, 1) {
-		warning("Enabled using libpng-apng from vcpkg. Note that if you do not have vcpkg integrated into MSVC, and/or do not have libpng-apng installed within vcpkg, the build will likely fail.")
-		# This is a bad hack, but MOC kinda needs it to work correctly...
-		QMAKE_MOC_OPTIONS += -DPNG_WRITE_APNG_SUPPORTED
-	}
+    if (contains(DEFINES, HAS_LIBUSB)) {
+        equals(LIBUSB_FROM_VCPKG, 1) {
+            warning("Enabled using libusb from vcpkg. Note that if you do not have vcpkg integrated into MSVC, and/or do not have libusb installed within vcpkg, the build will likely fail.")
+        } else {
+            PKGCONFIG += libusb-1.0
+        }
+    }
 
-	# Otherwise...
-    !equals(LIBPNG_APNG_FROM_VCPKG, 1) {
+    # Do we have a flag specifying use of libpng-apng from vcpkg?
+    equals(LIBPNG_APNG_FROM_VCPKG, 1) {
+        warning("Enabled using libpng-apng from vcpkg. Note that if you do not have vcpkg integrated into MSVC, and/or do not have libpng-apng installed within vcpkg, the build will likely fail.")
+        # This is a bad hack, but MOC kinda needs it to work correctly...
+        QMAKE_MOC_OPTIONS += -DPNG_WRITE_APNG_SUPPORTED
+    } else {
         # If we're not using vcpkg, we rely on manual variables to find needed
         # libpng-apng components.
         #
