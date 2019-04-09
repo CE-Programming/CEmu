@@ -31,9 +31,12 @@ namespace tivars
     void TIVarTypes::insertType(const std::string& name, int id, const std::vector<std::string>& exts, const handler_pair_t& handlers)
     {
         TIVarType varType(id, name, exts, handlers);
+        types[name] = varType;
         std::string id_str = std::to_string(id);
-        types[name]   = varType;
-        types[id_str] = varType;
+        if (types.count(id_str) == 0)
+        {
+            types[id_str] = varType;
+        }
         for (const std::string& ext : exts)
         {
             if (!ext.empty() && !types.count(ext))
@@ -92,7 +95,7 @@ namespace tivars
         insertType("FlashLicense",         0x3E,  {  "" ,   "" ,   "" ,   "" ,   "" ,   "" ,   "" });
 
         // WindowSettings clone thing
-        types["0x0B"] = types["0x0F"];
+        types["11"] = types["15"];
     }
 
     /**
