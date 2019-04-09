@@ -162,6 +162,8 @@ private:
 
     enum {
         USB_CONNECT,
+        USB_VID,
+        USB_PID,
         USB_MANUFACTURER,
         USB_PRODUCT,
         USB_SERIAL_NUMBER

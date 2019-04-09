@@ -8899,7 +8899,7 @@ QPushButton:pressed {
                <number>30</number>
               </attribute>
               <attribute name="horizontalHeaderStretchLastSection">
-               <bool>false</bool>
+               <bool>true</bool>
               </attribute>
               <attribute name="verticalHeaderVisible">
                <bool>false</bool>
@@ -8910,6 +8910,16 @@ QPushButton:pressed {
               <column>
                <property name="text">
                 <string>Plug</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>VID</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>PID</string>
                </property>
               </column>
               <column>
