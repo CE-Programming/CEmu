@@ -2,8 +2,10 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <QtCore/QSettings>
 #include <QtWidgets/QAction>
 #include <QtWidgets/QMessageBox>
+
 #include <windows.h>
 
 void MainWindow::toggleConsole() {

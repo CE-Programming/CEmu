@@ -39,7 +39,13 @@ install:
   - vcpkg install libpng-apng:x64-windows --recurse
   - vcpkg install libpng-apng:x86-windows-static --recurse
   - vcpkg install libpng-apng:x64-windows-static --recurse
-  
+
+# Install libusb for all targets
+  - vcpkg install libusb:x86-windows --recurse
+  - vcpkg install libusb:x64-windows --recurse
+  - vcpkg install libusb:x86-windows-static --recurse
+  - vcpkg install libusb:x64-windows-static --recurse
+
   - md build_32
   - md build_64
   - md build_static_32
@@ -95,7 +101,7 @@ build_script:
   - '%QT5_BIN_DIR_STATIC_64%\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"'
   - msbuild CEmu.vcxproj /p:Configuration=Release /p:Platform="x64" /p:VcpkgTriplet=x64-windows-static
   - cd ..
-  
+
   - endlocal
 
 after_build:
@@ -118,7 +124,7 @@ artifacts:
  - path: deploy\*-win32-release-static*.zip
    name: static_32_release
    type: zip
- 
+
  - path: deploy\*-win64-release-static*.zip
    name: static_64_release
    type: zip

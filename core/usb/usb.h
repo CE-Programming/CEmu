@@ -23,12 +23,12 @@ typedef enum usb_qtype {
 typedef union usb_qlink {
     uint32_t val;
     struct {
-        bool term : 1;
+        uint32_t term : 1;
         usb_qtype_t type : 2;
     };
     struct {
-        bool : 1;
-        uint8_t nak_cnt : 4; // overlay alt
+        uint32_t : 1;
+        uint32_t nak_cnt : 4; // overlay alt
         uint32_t ptr : 27;
     };
 } usb_qlink_t;
@@ -36,12 +36,13 @@ typedef union usb_qbuf {
     uint32_t val;
     struct { uint32_t off : 12, ptr : 20; };        // index 0
     uint8_t c_prog_mask;                            // index 1
-    struct { uint8_t frame_tag : 5, s_bytes : 7; }; // index 2
+    struct { uint32_t frame_tag : 5, s_bytes : 7; }; // index 2
 } usb_qbuf_t;
 typedef struct usb_qtd {
     usb_qlink_t next, alt;
     bool ping : 1, split : 1, missed : 1, xact_err : 1, babble : 1, buf_err : 1, halted : 1, active : 1;
-    uint16_t pid : 2, cerr : 2, c_page : 3, ioc : 1, total_bytes : 15, dt : 1;
+    uint8_t pid : 2, cerr : 2, c_page : 3, ioc : 1;
+    uint16_t total_bytes : 15, dt : 1;
     usb_qbuf_t bufs[5];
 } usb_qtd_t;
 typedef struct usb_qh {
@@ -52,6 +53,7 @@ typedef struct usb_qh {
     usb_qlink_t cur;
     usb_qtd_t overlay;
 } usb_qh_t;
+static_assert(sizeof(usb_qbuf_t) == 0x04, "usb_qbuf_t does not have a sive of 0x04");
 static_assert(offsetof(usb_qtd_t, next) == 0x00, "Next qTD Pointer is not at offset 0x00");
 static_assert(offsetof(usb_qtd_t, alt) == 0x04, "Alternate Next qTD Pointer is not at offset 0x04");
 static_assert(offsetof(usb_qtd_t, bufs) == 0x0C, "Buffer Pointers are not at offset 0x0C");

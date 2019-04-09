@@ -14,13 +14,9 @@ CFLAGS = -Wall -Wextra -fPIC -O3 -static
 
 ## Build rules, you shouldn't need to edit anything below this line
 
-ifneq (,$(findstring DEBUG_SUPPORT,$(CFLAGS)))
-    CFLAGS += -std=gnu11
-else
-    CFLAGS += -std=c89
-endif
+CFLAGS += -std=gnu11
 
-OBJS  = $(patsubst %.c,   %.o, $(shell find . -name usb -prune -or -name \*.c -print))
+OBJS  = $(patsubst %.c,   %.o, $(shell find . -name \*.c))
 
 STATICLIB = libcemucore.a
 

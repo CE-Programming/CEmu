@@ -1143,8 +1143,8 @@ bool usb_restore(FILE *image) {
     usb.regs.gimr2                 &= GIMR2_MASK;
     usb.data                        = NULL;
     usb.len                         = 0;
-    usb.xfer                        = NULL;
 #ifdef HAS_LIBUSB
+    usb.xfer                        = NULL;
     usb.ctx                         = NULL;
     usb.dev                         = NULL;
     init_libusb();
