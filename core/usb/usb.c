@@ -689,6 +689,7 @@ static void usb_event(enum sched_item_id event) {
         if (usb.xfer && usb.xfer->dev_handle) {
             libusb_close(usb.xfer->dev_handle);
             usb.xfer->dev_handle = NULL;
+            usb_unplug_a();
         }
     }
     if (!usb.wait && usb.regs.otgcsr & OTGCSR_A_VBUS_VLD) {
