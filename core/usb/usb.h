@@ -8,7 +8,6 @@ extern "C" {
 #include "../port.h"
 
 #include <assert.h>
-#include <stdalign.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
