@@ -52,7 +52,7 @@ typedef struct usb_qh {
     usb_qlink_t cur;
     usb_qtd_t overlay;
 } usb_qh_t;
-static_assert(sizeof(usb_qbuf_t) == 0x04, "usb_qbuf_t does not have a sive of 0x04");
+static_assert(sizeof(usb_qbuf_t) == 0x04, "usb_qbuf_t does not have a size of 0x04");
 static_assert(offsetof(usb_qtd_t, next) == 0x00, "Next qTD Pointer is not at offset 0x00");
 static_assert(offsetof(usb_qtd_t, alt) == 0x04, "Alternate Next qTD Pointer is not at offset 0x04");
 static_assert(offsetof(usb_qtd_t, bufs) == 0x0C, "Buffer Pointers are not at offset 0x0C");
