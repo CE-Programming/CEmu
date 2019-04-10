@@ -90,13 +90,13 @@ build_script:
   - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86_amd64
 
   - cd build_64
-  - '%QT5_BIN_DIR_DYNAMIC_64%\qmake%QMAKE_FLAGS% INCLUDEPATH+=%LIBUSB_INCLUDE_DIR_DYNAMIC_64%'
+  - '%QT5_BIN_DIR_DYNAMIC_64%\qmake %QMAKE_FLAGS% INCLUDEPATH+=%LIBUSB_INCLUDE_DIR_DYNAMIC_64%'
   - msbuild CEmu.vcxproj /p:Configuration=Debug /p:Platform="x64"
   - msbuild CEmu.vcxproj /p:Configuration=Release /p:Platform="x64"
   - cd ..
 
   - cd build_static_64
-  - '%QT5_BIN_DIR_STATIC_64%\qmake%QMAKE_FLAGS% INCLUDEPATH+=%LIBUSB_INCLUDE_DIR_STATIC_64%'
+  - '%QT5_BIN_DIR_STATIC_64%\qmake %QMAKE_FLAGS% INCLUDEPATH+=%LIBUSB_INCLUDE_DIR_STATIC_64%'
   - msbuild CEmu.vcxproj /p:Configuration=Debug /p:Platform="x64" /p:VcpkgTriplet=x64-windows-static
   - msbuild CEmu.vcxproj /p:Configuration=Release /p:Platform="x64" /p:VcpkgTriplet=x64-windows-static
   - cd ..

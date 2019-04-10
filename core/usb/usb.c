@@ -16,7 +16,9 @@ extern void debugInstruction(void);
 
 /* Global GPT state */
 usb_state_t usb;
-static struct timeval zero_tv = {};
+#ifdef HAS_LIBUSB
+static struct timeval zero_tv = {0};
+#endif
 
 static void usb_set_bits(uint32_t *reg, uint32_t bits, bool val) {
     *reg = val ? *reg | bits : *reg & ~bits;
@@ -184,7 +186,7 @@ static void usb_event_no_libusb(enum sched_item_id event) {
 
 #ifdef HAS_LIBUSB
 static void usb_host_sys_err(void) {
-    asm("int3");
+    //asm("int3");
     usb.regs.hcor.usbcmd &= ~USBCMD_RUN;
     usb.regs.hcor.usbsts |= USBSTS_HCHALTED;
     usb_host_int(USBSTS_HOST_SYS_ERR);
@@ -414,12 +416,12 @@ static void LIBUSB_CALL usb_process_xfer(struct libusb_transfer *xfer) {
                         qh->overlay.buf_err = true;
                         return usb_qh_halted(qh);
                     default:
-                        asm("int3");
+                        //asm("int3");
                         gui_console_printf("[USB] Error: Callback called with unknown status %d!\n", xfer->status);
                         return usb_qh_halted(qh);
                 }
             default:
-                asm("int3");
+                //asm("int3");
                 gui_console_printf("[USB] Error: Callback called with unknown type %d!\n", xfer->type);
                 return usb_qh_halted(qh);
         }
@@ -705,7 +707,7 @@ static void usb_event(enum sched_item_id event) {
             high_speed = usb.regs.otgcsr & OTGCSR_SPD_HIGH;
             while (usb.regs.hcor.usbcmd & USBCMD_RUN) {
                 if (false && usb.regs.hcor.usbsts & USBSTS_PERIOD_SCHED) {
-                    asm("int3");
+                    //asm("int3");
                     usb_host_sys_err();
                     break;
                 }

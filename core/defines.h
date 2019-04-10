@@ -14,11 +14,12 @@
 #define write8(data, index, value) WRITE(data, index, 8, value)
 #define read8(data, index) READFROM(data, index, 8)
 
-/* MSVC doesn't support __builtin_expect, stub it out */
+/* MSVC doesn't support __builtin_expect or __attribute__, stub them out */
 #ifndef _MSC_VER
  #define likely(x) __builtin_expect(!!(x), 1)
 #else
  #define likely(x) (x)
+ #define __attribute__(x)
 #endif
 
 #define unlikely(x) !likely(!(x))
