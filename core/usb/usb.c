@@ -1092,10 +1092,6 @@ static void init_libusb(void) {
 
 #ifdef HAS_LIBUSB
 void emu_set_usb_device(libusb_device *device) {
-    if (usb.ctx && usb.xfer && usb.xfer->dev_handle) {
-         usb_close(&usb.xfer->dev_handle);
-         usb.xfer->dev_handle = NULL;
-    }
     usb.devChanged = true;
     libusb_unref_device(usb.dev);
     usb.dev = device ? libusb_ref_device(device) : NULL;
