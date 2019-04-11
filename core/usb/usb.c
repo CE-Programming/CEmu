@@ -694,8 +694,8 @@ static void usb_event(enum sched_item_id event) {
             usb_unplug_a();
         }
     }
-    if (!usb.wait && usb.regs.otgcsr & OTGCSR_A_VBUS_VLD) {
-        if (usb.regs.otgcsr & OTGCSR_DEV_B) {
+    if (!usb.wait && usb.xfer && usb.xfer->dev_handle && usb.regs.otgcsr & OTGCSR_A_VBUS_VLD) {
+        if (usb.regs.otgcsr & OTGCSR_ROLE_D) {
             if ((high_speed = usb.regs.dev_ctrl & DEVCTRL_HS)) {
                 usb.regs.sof_fnr += 1 << 11;
                 usb.regs.sof_fnr &= (1 << 14) - 1;
@@ -735,6 +735,8 @@ static void usb_event(enum sched_item_id event) {
                 }
                 break;
             }
+            usb.regs.hcor.frindex += high_speed ? 1 : 8;
+            usb.regs.hcor.frindex &= (1 << 14) - 1;
         }
     }
     sched_repeat(event, high_speed ? 1 : 8);
