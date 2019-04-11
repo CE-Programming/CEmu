@@ -9,8 +9,9 @@
 #include "schedule.h"
 #include "interrupt.h"
 
-#include <string.h>
+#include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* Global LCD state */
 lcd_state_t lcd;
@@ -360,9 +361,7 @@ static uint32_t lcd_dma(enum sched_item_id id) {
 }
 
 void lcd_reset(void) {
-    bool spi = lcd.spi;
-    memset(&lcd, 0, sizeof(lcd_state_t));
-    lcd.spi = spi;
+    memset(&lcd, 0, offsetof(lcd_state_t, spi));
     lcd_update();
 
     sched.items[SCHED_LCD].callback.event = lcd_event;
@@ -569,6 +568,7 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_lcd(void) {
+    memset(&lcd, 0, sizeof(lcd_state_t));
     gui_console_printf("[CEmu] Initialized LCD...\n");
     return device;
 }

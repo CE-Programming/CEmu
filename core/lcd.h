@@ -63,6 +63,8 @@ typedef struct lcd_state {
     bool CLKSEL, IVS, IHS, IPC, IOE, LEE, BGR, BEBO, BEPO, WTRMRK;
     uint32_t *data;                /* Pointer to start of data to start extracting from */
     uint32_t *data_end;            /* End pointer that is allowed access */
+
+    /* Everything after here persists through reset! */
     int spi;
     void (*gui_callback)(void*);
     void *gui_callback_data;
