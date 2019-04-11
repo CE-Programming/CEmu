@@ -1042,6 +1042,10 @@ void usb_reset(void) {
     usb.data  = NULL;
     usb.len   = 0;
 #ifdef HAS_LIBUSB
+    if (usb.xfer && usb.xfer->dev_handle) {
+        libusb_close(usb.xfer->dev_handle);
+        usb.xfer->dev_handle = NULL;
+    }
     usb_plug_b();
     sched.items[SCHED_USB].callback.event = usb_event;
 #else
