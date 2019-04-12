@@ -2783,9 +2783,10 @@ void MainWindow::usbUpdate(void *opaqueDevice, bool attached) {
                 if (size >= 4) {
                     string[0] = QChar::ByteOrderMark & 0xFF; string[1] = QChar::ByteOrderMark >> 8;
                     item->setText(QString::fromUtf16(reinterpret_cast<char16_t *>(string), size >> 1));
-                } else {
-                    item->setText("N/A");
-                    item->setTextColor(Qt::darkGray);
+                }
+                if (item->text().simplified().trimmed().isEmpty()) {
+                    item->setText(QStringLiteral("N/A"));
+                    item->setTextColor(QColor(Qt::darkGray));
                 }
                 item->setFlags(item->flags() & ~Qt::ItemIsEditable);
                 ui->usbTable->setItem(row, i, item);
