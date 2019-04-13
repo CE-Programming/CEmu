@@ -106,6 +106,11 @@ int main(int argc, char *argv[]) {
                 QCoreApplication::translate("main", "Does not reset when sending"));
     parser.addOption(deforceReset);
 
+    QCommandLineOption launchPrgm(QStringList() << QStringLiteral("launch"),
+                QCoreApplication::translate("main", "Launch a program specified by <prgm>"),
+                QCoreApplication::translate("main", "prgm"));
+    parser.addOption(launchPrgm);
+
     QCommandLineOption noSettings(QStringList() << QStringLiteral("no-settings"),
                 QCoreApplication::translate("main", "Do not restore or save settings when running"));
     parser.addOption(noSettings);
@@ -138,6 +143,7 @@ int main(int argc, char *argv[]) {
     opts.forceReloadRom     = parser.isSet(forceRomReload);
     opts.romFile            = parser.value(loadRomFile);
     opts.settingsFile       = parser.value(settingsFile);
+    opts.launchPrgm         = parser.value(launchPrgm);
     opts.imageFile          = parser.value(imageFile);
     opts.debugFile          = parser.value(debugFile);
     opts.sendFiles          = parser.values(sendFiles);

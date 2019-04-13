@@ -15,6 +15,7 @@
 #include "../../core/cpu.h"
 #include "../../core/misc.h"
 #include "../../core/mem.h"
+#include "../../core/extras.h"
 #include "../../core/interrupt.h"
 #include "../../core/keypad.h"
 #include "../../core/control.h"
@@ -397,7 +398,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     connect(m_shortcutFullscreen, &QShortcut::activated, [this]{ setFullscreen(m_fullscreen + 1); });
     connect(m_shortcutResend, &QShortcut::activated, this, &MainWindow::varResend);
-    connect(m_shortcutAsm, &QShortcut::activated, []{ autotester::sendKey(0xFC9C); });
+    connect(m_shortcutAsm, &QShortcut::activated, [this]{ sendEmuKey(CE_KEY_ASM); });
     connect(m_shortcutDebug, &QShortcut::activated, this, &MainWindow::debugToggle);
     connect(m_shortcutStepIn, &QShortcut::activated, this, &MainWindow::stepIn);
     connect(m_shortcutStepOver, &QShortcut::activated, this, &MainWindow::stepOver);
@@ -916,6 +917,26 @@ void MainWindow::setup() {
     m_setup = true;
 }
 
+void MainWindow::sendEmuKey(uint16_t key) {
+    int retry = 200;
+    do {
+        if (sendKey(key)) {
+            break;
+        }
+        guiDelay(50);
+    } while(retry--);
+}
+
+void MainWindow::sendEmuLetterKey(char letter) {
+    int retry = 200;
+    do {
+        if (sendLetterKeyPress(letter)) {
+            break;
+        }
+        guiDelay(50);
+    } while(retry--);
+}
+
 void MainWindow::optSend(CEmuOpts &o) {
     int speed = m_config->value(SETTING_EMUSPEED).toInt();
     if (!o.autotesterFile.isEmpty()) {
@@ -952,6 +973,15 @@ void MainWindow::optSend(CEmuOpts &o) {
 
     setThrottle(o.useUnthrottled ? Qt::Unchecked : Qt::Checked);
     setEmuSpeed(speed);
+
+    if (!o.launchPrgm.isEmpty()) {
+        sendEmuKey(CE_KEY_CLEAR);
+        sendEmuKey(CE_KEY_PRGM);
+        for (const QChar &c : o.launchPrgm) {
+            sendEmuLetterKey(c.toLatin1());
+        }
+        sendEmuKey(CE_KEY_ENTER);
+    }
 }
 
 void MainWindow::optLoadFiles(CEmuOpts &o) {
@@ -2017,7 +2047,7 @@ void MainWindow::autotesterLaunch() {
     }
 
     if (ui->checkBoxTestClear->isChecked()) {
-        autotester::sendKey(0x09);
+        sendEmuKey(CE_KEY_CLEAR);
     }
 
     QStringList filesList;
@@ -2332,15 +2362,15 @@ void MainWindow::varLaunch(const calc_var_t *prgm) {
     ui->lcd->setFocus();
     guiDelay(50);
 
-    autotester::sendKey(0x09); // Clear
+    sendEmuKey(CE_KEY_CLEAR);
     if (calc_var_is_asmprog(prgm)) {
-        autotester::sendKey(0xFC9C); // Asm(
+        sendEmuKey(CE_KEY_ASM);
     }
-    autotester::sendKey(0xDA); // prgm
+    sendEmuKey(CE_KEY_PRGM);
     for (const uint8_t *c = prgm->name; *c; c++) {
-        autotester::sendLetterKeyPress(static_cast<char>(*c)); // type program name
+        sendEmuLetterKey(static_cast<char>(*c)); // type program name
     }
-    autotester::sendKey(0x05); // Enter
+    sendEmuKey(CE_KEY_ENTER);
     ui->lcd->setFocus();
 }
 
@@ -2453,7 +2483,8 @@ bool MainWindow::ipcSetup() {
            << opts.sendArchFiles
            << opts.sendRAMFiles
            << opts.restoreOnOpen
-           << opts.speed;
+           << opts.speed
+           << opts.launchPrgm;
 
     // blocking call
     com.send(byteArray);
@@ -2475,7 +2506,8 @@ void MainWindow::ipcCli(QDataStream &stream) {
            >> o.sendArchFiles
            >> o.sendRAMFiles
            >> o.restoreOnOpen
-           >> o.speed;
+           >> o.speed
+           >> o.launchPrgm;
 
     optLoadFiles(o);
     optAttemptLoad(o);

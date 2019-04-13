@@ -17,6 +17,7 @@ struct CEmuOpts {
     QString autotesterFile;
     QString settingsFile;
     QString imageFile;
+    QString launchPrgm;
     QString debugFile;
     QString idString;
     QString pidString;

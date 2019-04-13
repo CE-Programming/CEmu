@@ -172,6 +172,10 @@ private:
         FULLSCREEN_LCD
     };
 
+    // emu keypresses
+    void sendEmuKey(uint16_t key);
+    void sendEmuLetterKey(char letter);
+
     // console
     void console(const QString &str, const QColor &colorFg = Qt::black, const QColor &colorBg = Qt::white, int type = EmuThread::ConsoleNorm);
     void console(int type, const char *str, int size = -1);

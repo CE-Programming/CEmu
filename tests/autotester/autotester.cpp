@@ -54,32 +54,37 @@ static const std::unordered_map<std::string, coord2d> valid_keys = {
     { "down", {0,7}}, { "left", {1,7}}, {"right", {2,7}}, {    "up", {3,7}}
 };
 
-// Those aren't related to physical keys - they're keycodes for the OS.
-#define CE_KEY_ENTER    0x05
-#define CE_KEY_CLEAR    0x09
-#define CE_KEY_PRGM     0xDA
-#define CE_KEY_ASM      0xFC9C
-#define CE_KEY_CLASSIC  0xFBD3
-
 void sendCSC(uint8_t csc)
 {
-    while (!cemucore::sendCSC(csc)) {
+    int retry = 200;
+    do {
+        if (cemucore::sendCSC(csc)) {
+            break;
+        }
         cemucore::emu_run(50);
-    }
+    } while(retry--);
 }
 
 void sendKey(uint16_t key)
 {
-    while (!cemucore::sendKey(key)) {
+    int retry = 200;
+    do {
+        if (cemucore::sendKey(key)) {
+            break;
+        }
         cemucore::emu_run(50);
-    }
+    } while(retry--);
 }
 
 void sendLetterKeyPress(char letter)
 {
-    while (!cemucore::sendLetterKeyPress(letter)) {
+    int retry = 200;
+    do {
+        if (cemucore::sendLetterKeyPress(letter)) {
+            break;
+        }
         cemucore::emu_run(50);
-    }
+    } while(retry--);
 }
 
 typedef std::function<void(const std::string&)> seq_cmd_func_t;
