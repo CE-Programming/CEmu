@@ -2376,12 +2376,12 @@ void MainWindow::varLaunch(const calc_var_t *prgm) {
 }
 
 void MainWindow::contextVars(const QPoint& posa) {
-    int itemRow = ui->emuVarView->rowAt(posa.y());
-    if (itemRow == -1) {
+    int row = ui->emuVarView->rowAt(posa.y());
+    if (row < 0) {
         return;
     }
 
-    const calc_var_t var = *reinterpret_cast<const calc_var_t*>(ui->emuVarView->item(itemRow, VAR_NAME)->data(Qt::UserRole).toByteArray().constData());
+    const calc_var_t var = ui->emuVarView->item(row, VAR_NAME)->data(Qt::UserRole).value<calc_var_t>();
 
     QString launch = tr("Launch program");
 
