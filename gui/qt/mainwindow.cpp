@@ -299,8 +299,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->actionExportCEmuImage, &QAction::triggered, this, &MainWindow::bootImageExport);
     connect(ui->lcd, &LCDWidget::sendROM, this, &MainWindow::setRom);
     connect(ui->lcd, &LCDWidget::customContextMenuRequested, this, &MainWindow::contextLcd);
-    connect(ui->consoleLine, &QLineEdit::returnPressed, this, &MainWindow::consoleSubmission);
-    connect(ui->consoleSubmit, &QPushButton::clicked, this, &MainWindow::consoleSubmission);
     connect(ui->checkUpdates, &QCheckBox::stateChanged, this, &MainWindow::setAutoUpdates);
 
     // languages
@@ -360,7 +358,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     // process communication
     connect(ui->actionNew, &QAction::triggered, this, &MainWindow::ipcSpawn);
-    connect(ui->buttonChangeID, &QPushButton::clicked, this, &MainWindow::ipcSetId);
+    connect(ui->actionChangeID, &QAction::triggered, this, &MainWindow::ipcSetId);
     connect(&com, &InterCom::readDone, this, &MainWindow::ipcReceived);
 
     // docks
@@ -1382,28 +1380,6 @@ void MainWindow::consoleStr() {
 
         emu.write.release(available);
     }
-}
-
-void MainWindow::consoleSubmission() {
-    QString string = ui->consoleLine->text().trimmed().toUpper();
-    if (string == QStringLiteral("DBG")) {
-        debugToggle();
-    }
-    if (guiDebug) {
-        if (string == QStringLiteral("C") || string == QStringLiteral("CONTINUE")) {
-            debugToggle();
-        }
-        if (string == QStringLiteral("N") || string == QStringLiteral("NEXT")) {
-            stepNext();
-        }
-        if (string == QStringLiteral("S") || string == QStringLiteral("STEP")) {
-            stepIn();
-        }
-        if (string == QStringLiteral("Q") || string == QStringLiteral("QUIT")) {
-            debugToggle();
-        }
-    }
-    ui->consoleLine->clear();
 }
 
 void MainWindow::showEmuSpeed(int speed) {

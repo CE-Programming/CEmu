@@ -3,7 +3,6 @@
 #include "dockwidget.h"
 #include "utils.h"
 #include "visualizerwidget.h"
-#include "runerbot/runerbot.h"
 #include "tivarslib/TIVarType.h"
 #include "tivarslib/TypeHandlers/TypeHandlers.h"
 #include "../../core/asic.h"
@@ -78,7 +77,6 @@ void MainWindow::debugInit() {
     ui->checkADLStack->setCheckState(Qt::PartiallyChecked);
     ui->checkADLStack->blockSignals(false);
 
-    runerbot_init();
     debug_init();
 }
 

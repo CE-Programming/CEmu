@@ -181,7 +181,6 @@ private:
     void console(int type, const char *str, int size = -1);
     void consoleStr();
     void consoleClear();
-    void consoleSubmission();
     void consoleModified();
 
     // Other

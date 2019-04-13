@@ -251,8 +251,6 @@ SOURCES += \
     debugger/visualizerdisplaywidget.cpp \
     memorywidget.cpp \
     archive/extractor.c \
-    runerbot/ops.c \
-    runerbot/parse.c \
     ../../core/bus.c \
     keyhistorywidget.cpp
 
@@ -339,7 +337,6 @@ HEADERS  += \
     visualizerwidget.h \
     debugger/visualizerdisplaywidget.h \
     archive/extractor.h \
-    runerbot/runerbot.h \
     ../../core/bus.h \
     keyhistorywidget.h
 
