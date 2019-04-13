@@ -63,14 +63,13 @@ private:
 
     QDir m_dir;
     uint8_t *m_array = Q_NULLPTR;
-    uint32_t m_OsSize = 0;
     QString m_rom;
-    bool m_segmentStatus[30] = {0};
-    int m_segmentsNum = 0;
-    QStringList m_segmentsList;
+    bool m_status[30] = {0};
+    int m_num = 0;
+    QStringList m_segs;
 
     bool m_config = false;
-    bool m_allocedMem = false;
+    bool m_alloced = false;
 };
 
 #endif
