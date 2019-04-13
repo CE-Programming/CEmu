@@ -975,6 +975,7 @@ void MainWindow::optSend(CEmuOpts &o) {
     setEmuSpeed(speed);
 
     if (!o.launchPrgm.isEmpty()) {
+        guiDelay(50);
         sendEmuKey(CE_KEY_CLEAR);
         sendEmuKey(CE_KEY_PRGM);
         for (const QChar &c : o.launchPrgm) {
