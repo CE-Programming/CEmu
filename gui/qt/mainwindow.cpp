@@ -601,7 +601,9 @@ void MainWindow::translateExtras(int init) {
     QString __TXT_DISASSEMBLY = tr("Disassembly");
     QString __TXT_MEMORY = tr("Memory");
     QString __TXT_TIMERS = tr("Timers");
-    QString __TXT_BREAK_WATCH = tr("Break / Watch / Port");
+    QString __TXT_BREAKPOINTS = tr("Breakpoints");
+    QString __TXT_WATCHPOINTS = tr("Watchpoints");
+    QString __TXT_PORTMON = tr("Port Monitor");
     QString __TXT_OS_VIEW = tr("OS Variables");
     QString __TXT_OS_STACKS = tr("OS Stacks");
     QString __TXT_MISC = tr("Miscellaneous");
@@ -664,8 +666,14 @@ void MainWindow::translateExtras(int init) {
             if (dock->windowTitle() == TXT_TIMERS) {
                 dock->setWindowTitle(__TXT_TIMERS);
             }
-            if (dock->windowTitle() == TXT_BREAK_WATCH) {
-                dock->setWindowTitle(__TXT_BREAK_WATCH);
+            if (dock->windowTitle() == TXT_BREAKPOINTS) {
+                dock->setWindowTitle(__TXT_BREAKPOINTS);
+            }
+            if (dock->windowTitle() == TXT_WATCHPOINTS) {
+                dock->setWindowTitle(__TXT_WATCHPOINTS);
+            }
+            if (dock->windowTitle() == TXT_PORTMON) {
+                dock->setWindowTitle(__TXT_PORTMON);
             }
             if (dock->windowTitle() == TXT_OS_VIEW) {
                 dock->setWindowTitle(__TXT_OS_VIEW);
@@ -701,7 +709,9 @@ void MainWindow::translateExtras(int init) {
     TXT_DISASSEMBLY = __TXT_DISASSEMBLY;
     TXT_MEMORY = __TXT_MEMORY;
     TXT_TIMERS = __TXT_TIMERS;
-    TXT_BREAK_WATCH = __TXT_BREAK_WATCH;
+    TXT_BREAKPOINTS = __TXT_BREAKPOINTS;
+    TXT_WATCHPOINTS = __TXT_WATCHPOINTS;
+    TXT_PORTMON = __TXT_PORTMON;
     TXT_OS_VIEW = __TXT_OS_VIEW;
     TXT_OS_STACKS = __TXT_OS_STACKS;
     TXT_MISC = __TXT_MISC;
@@ -742,14 +752,18 @@ void MainWindow::translateExtras(int init) {
         action = m_menuDebug->actions().at(4);
         action->setText(TXT_TIMERS);
         action = m_menuDebug->actions().at(5);
-        action->setText(TXT_BREAK_WATCH);
+        action->setText(TXT_BREAKPOINTS);
         action = m_menuDebug->actions().at(6);
-        action->setText(TXT_OS_VIEW);
+        action->setText(TXT_WATCHPOINTS);
         action = m_menuDebug->actions().at(7);
-        action->setText(TXT_OS_STACKS);
+        action->setText(TXT_PORTMON);
         action = m_menuDebug->actions().at(8);
-        action->setText(TXT_MISC);
+        action->setText(TXT_OS_VIEW);
         action = m_menuDebug->actions().at(9);
+        action->setText(TXT_OS_STACKS);
+        action = m_menuDebug->actions().at(10);
+        action->setText(TXT_MISC);
+        action = m_menuDebug->actions().at(11);
         action->setText(TXT_AUTOTESTER);
 
 #ifdef _WIN32

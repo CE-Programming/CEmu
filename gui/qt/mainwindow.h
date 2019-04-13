@@ -743,7 +743,9 @@ private:
     QString TXT_DISASSEMBLY;
     QString TXT_MEMORY;
     QString TXT_TIMERS;
-    QString TXT_BREAK_WATCH;
+    QString TXT_BREAKPOINTS;
+    QString TXT_WATCHPOINTS;
+    QString TXT_PORTMON;
     QString TXT_OS_VIEW;
     QString TXT_OS_STACKS;
     QString TXT_MISC;
