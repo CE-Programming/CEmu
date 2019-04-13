@@ -25,7 +25,7 @@ char file_buf[500];
 
 static void gui_do_stuff(void) {
     if (file_buf[0] != '\0') {
-        if (!sendVariableLink(file_buf, LINK_FILE)) {
+        if (emu_send_variable(file_buf, LINK_FILE) != LINK_GOOD) {
             fprintf(stderr, "Error sending file to emu: %s\n", file_buf);
             fflush(stderr);
         }
@@ -38,6 +38,7 @@ static void emu_loop(void) {
     gui_do_stuff();
 }
 
+void gui_console_clear(void) {}
 void gui_debug_close(void) {}
 
 void gui_debug_open(int reason, uint32_t data) {
@@ -93,7 +94,7 @@ int main(int argc, char* argv[]) {
 
     success = emu_load(false, "CE.rom");
 
-    if (success == EMU_LOAD_OKAY) {
+    if (success == EMU_STATE_VALID) {
 #ifdef DEBUG_SUPPORT
         debug_init();
         debug_flag(DBG_SOFT_COMMANDS, true);
