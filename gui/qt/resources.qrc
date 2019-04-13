@@ -8,6 +8,10 @@
     </qresource>
     <qresource prefix="/icons">
         <file>resources/icons/capture.png</file>
+        <file>resources/icons/change_cert.png</file>
+        <file>resources/icons/change_language.png</file>
+        <file>resources/icons/check_update.png</file>
+        <file>resources/icons/clock.png</file>
         <file>resources/icons/console.png</file>
         <file>resources/icons/debugger.png</file>
         <file>resources/icons/record.png</file>
@@ -61,17 +65,11 @@
         <file>resources/icons/key_history.png</file>
         <file>resources/icons/check_update.png</file>
         <file>resources/icons/ui_edit.png</file>
-        <file>resources/icons/change_language.png</file>
-        <file>resources/icons/screenshot_copy.png</file>
-        <file>resources/icons/add_mem.png</file>
-        <file>resources/icons/reset_gui.png</file>
-        <file>resources/icons/reload_rom.png</file>
-        <file>resources/icons/rom_chip.png</file>
-        <file>resources/icons/states.png</file>
-        <file>resources/icons/reset_cemu.png</file>
-        <file>resources/icons/characters.png</file>
-        <file>resources/icons/stack.png</file>
-        <file>resources/icons/ram_chip.png</file>
+        <file>resources/icons/variables.png</file>
+        <file>resources/icons/watchpoints.png</file>
+        <file>resources/icons/wizard.png</file>
+        <file>resources/icons/checkgray.png</file>
+        <file>resources/icons/check.png</file>
     </qresource>
     <qresource prefix="/fonts">
         <file>resources/custom_fonts/TICELarge.ttf</file>
@@ -85,7 +83,5 @@
         <file>i18n/fr_FR.qm</file>
         <file>i18n/nl_NL.qm</file>
     </qresource>
-    <qresource prefix="/">
-        <file>resources/icons/characters.png</file>
-    </qresource>
+    <qresource prefix="/"/>
 </RCC>

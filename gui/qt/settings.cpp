@@ -948,7 +948,7 @@ void MainWindow::recentSaveInfo() {
     if (m_config->value(SETTING_RECENT_SAVE).toBool()) {
         for (int i = 0; i < ui->varLoadedView->rowCount(); i++) {
             paths.append(ui->varLoadedView->item(i, RECENT_PATH)->text());
-            selects.append(ui->varLoadedView->item(i, RECENT_SELECT)->checkState() == Qt::Checked ? TXT_YES : TXT_NO);
+            selects.append(static_cast<QAbstractButton *>(ui->varLoadedView->cellWidget(i, RECENT_SELECT))->isChecked() ? TXT_YES : TXT_NO);
         }
     }
 

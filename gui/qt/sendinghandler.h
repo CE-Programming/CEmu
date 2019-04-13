@@ -43,17 +43,18 @@ private:
     void checkDirForEquateFiles(QString &dirPath);
     QStringList getValidFilesFromArchive(const QString &archivePath);
 
-    enum recentIndex {
-        RECENT_SELECT=0,
-        RECENT_RESEND,
+    enum {
         RECENT_REMOVE,
+        RECENT_RESEND,
+        RECENT_SELECT,
         RECENT_PATH
     };
 
     QTemporaryDir m_tempDir;
     QProgressBar *m_progressBar;
     QTableWidget *m_table;
-    QIcon m_sendIcon;
+    QIcon m_iconSend;
+    QIcon m_iconCheck, m_iconCheckGray;
     QStringList m_dirs;
     bool m_sendEquates = false;
 };

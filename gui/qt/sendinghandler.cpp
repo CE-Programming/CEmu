@@ -67,7 +67,9 @@ SendingHandler::SendingHandler(QObject *parent, QProgressBar *bar, QTableWidget 
     bar->setTextVisible(false);
     bar->setValue(0);
     bar->setVisible(false);
-    m_sendIcon.addPixmap(QPixmap(QStringLiteral(":/icons/resources/icons/variables.png")));
+    m_iconSend.addPixmap(QPixmap(":/icons/resources/icons/variables.png"));
+    m_iconCheck.addPixmap(QPixmap(":/icons/resources/icons/check.png"));
+    m_iconCheckGray.addPixmap(QPixmap(":/icons/resources/icons/checkgray.png"));
 }
 
 void SendingHandler::dropOccured(QDropEvent *e, int location) {
@@ -94,7 +96,7 @@ void SendingHandler::resendSelected() {
     QStringList files;
 
     for (int row = 0; row < m_table->rowCount(); row++) {
-        if (m_table->item(row, RECENT_SELECT)->checkState() == Qt::Checked) {
+        if (static_cast<QAbstractButton *>(m_table->cellWidget(row, RECENT_SELECT))->isChecked()) {
             files.append(m_table->item(row, RECENT_PATH)->text());
         }
     }
@@ -189,38 +191,45 @@ void SendingHandler::addFile(const QString &file, bool select) {
     int j, rows = m_table->rowCount();
 
     for (j = 0; j < rows; j++) {
-        if (!m_table->item(j, RECENT_PATH)->text().compare(file)) {
+        if (!m_table->item(j, RECENT_PATH)->text().compare(file, Qt::CaseInsensitive)) {
             return;
         }
     }
 
-    QIcon removeIcon(QPixmap(QStringLiteral(":/icons/resources/icons/exit.png")));
-    QToolButton *btnRemove = new QToolButton();
-    btnRemove->setIcon(removeIcon);
+    m_table->setSortingEnabled(false);
 
     m_table->setRowCount(rows + 1);
+    QTableWidgetItem *remove = new QTableWidgetItem;
+    QTableWidgetItem *resend = new QTableWidgetItem;
+    QTableWidgetItem *selected = new QTableWidgetItem;
     QTableWidgetItem *path = new QTableWidgetItem(file);
-    QTableWidgetItem *resend = new QTableWidgetItem();
-    QTableWidgetItem *remove = new QTableWidgetItem();
-    QTableWidgetItem *selected = new QTableWidgetItem();
 
-    selected->setFlags(selected->flags() & ~Qt::ItemIsEditable);
-    selected->setFlags(resend->flags() & ~Qt::ItemIsEditable);
-    selected->setTextAlignment(Qt::AlignCenter);
+    QIcon removeIcon(QPixmap(QStringLiteral(":/icons/resources/icons/exit.png")));
+    QToolButton *btnRemove = new QToolButton;
+    btnRemove->setIcon(removeIcon);
 
-    QToolButton *btnResend = new QToolButton();
-    btnResend->setIcon(m_sendIcon);
+    QToolButton *btnResend = new QToolButton;
+    btnResend->setIcon(m_iconSend);
+
+    QToolButton *btnSelect = new QToolButton;
+    btnSelect->setIcon(select ? m_iconCheck : m_iconCheckGray);
+    btnSelect->setCheckable(true);
+    btnSelect->setChecked(select);
+
     connect(btnResend, &QToolButton::clicked, this, &SendingHandler::resendPressed);
     connect(btnRemove, &QToolButton::clicked, this, &SendingHandler::removeRow);
+    connect(btnSelect, &QToolButton::clicked, [this, btnSelect](bool checked) { btnSelect->setIcon(checked ? m_iconCheck : m_iconCheckGray); });
 
-    m_table->setItem(rows, RECENT_SELECT, selected);
-    m_table->setItem(rows, RECENT_RESEND, resend);
     m_table->setItem(rows, RECENT_REMOVE, remove);
+    m_table->setItem(rows, RECENT_RESEND, resend);
+    m_table->setItem(rows, RECENT_SELECT, selected);
     m_table->setItem(rows, RECENT_PATH, path);
-    m_table->setCellWidget(rows, RECENT_RESEND, btnResend);
     m_table->setCellWidget(rows, RECENT_REMOVE, btnRemove);
+    m_table->setCellWidget(rows, RECENT_RESEND, btnResend);
+    m_table->setCellWidget(rows, RECENT_SELECT, btnSelect);
 
-    selected->setCheckState(select ? Qt::Checked : Qt::Unchecked);
+    m_table->setSortingEnabled(true);
+    m_table->resizeColumnsToContents();
 }
 
 void SendingHandler::sendFiles(const QStringList &fileNames, int location) {

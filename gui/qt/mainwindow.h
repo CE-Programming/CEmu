@@ -146,9 +146,9 @@ private:
     };
 
     enum {
-        RECENT_SELECT,
-        RECENT_LOAD,
         RECENT_REMOVE,
+        RECENT_RESEND,
+        RECENT_SELECT,
         RECENT_PATH
     };
 
@@ -428,8 +428,6 @@ private:
     void varToggle();
 
     // recent
-    void recentDeselectAll();
-    void recentSelectAll();
     void recentLoadInfo();
     void recentSaveInfo();
 
@@ -509,7 +507,6 @@ private:
     void contextVat(const QPoint &posa);
     void contextOp(const QPoint &posa);
     void contextMem(const QPoint &posa);
-    void contextRecent(const QPoint &posa);
     void contextMemWidget(const QPoint &posa, uint32_t addr);
 
 #ifdef _WIN32

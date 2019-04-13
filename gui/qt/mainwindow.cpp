@@ -208,9 +208,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonReceiveFile, &QPushButton::clicked, this, &MainWindow::varSaveSelected);
     connect(ui->buttonReceiveFiles, &QPushButton::clicked, this, &MainWindow::varSaveSelectedFiles);
     connect(ui->buttonResendFiles, &QPushButton::clicked, this, &MainWindow::varResend);
-    connect(ui->buttonDeselectVars, &QPushButton::clicked, this, &MainWindow::recentDeselectAll);
-    connect(ui->buttonSelectVars, &QPushButton::clicked, this, &MainWindow::recentSelectAll);
-    connect(ui->varLoadedView, &QWidget::customContextMenuRequested, this, &MainWindow::contextRecent);
 
     // autotester
     connect(ui->buttonOpenJSONconfig, &QPushButton::clicked, this, &MainWindow::autotesterLoad);
@@ -1924,29 +1921,6 @@ void MainWindow::varSaveSelectedFiles() {
 
 void MainWindow::varResend() {
     sendingHandler->resendSelected();
-}
-
-void MainWindow::contextRecent(const QPoint& posa) {
-    int row = ui->varLoadedView->rowAt(posa.y());
-
-    if (row == -1) {
-        return;
-    }
-
-    int check = ui->varLoadedView->item(row, RECENT_PATH)->checkState();
-    ui->varLoadedView->item(row, RECENT_SELECT)->setCheckState(check == Qt::Checked ? Qt::Unchecked : Qt::Checked);
-}
-
-void MainWindow::recentDeselectAll() {
-    for (int row = 0; row < ui->varLoadedView->rowCount(); row++) {
-        ui->varLoadedView->item(row, RECENT_SELECT)->setCheckState(Qt::Unchecked);
-    }
-}
-
-void MainWindow::recentSelectAll() {
-    for (int row = 0; row < ui->varLoadedView->rowCount(); row++) {
-        ui->varLoadedView->item(row, RECENT_SELECT)->setCheckState(Qt::Checked);
-    }
 }
 
 // ------------------------------------------------

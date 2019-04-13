@@ -6306,7 +6306,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -6604,7 +6604,7 @@
              </attribute>
              <column>
               <property name="text">
-               <string>Select</string>
+               <string>Remove</string>
               </property>
              </column>
              <column>
@@ -6614,7 +6614,7 @@
              </column>
              <column>
               <property name="text">
-               <string>Remove</string>
+               <string>Selected</string>
               </property>
              </column>
              <column>
@@ -6630,48 +6630,41 @@
               <number>0</number>
              </property>
              <item>
-              <layout class="QVBoxLayout" name="verticalLayout_17">
-               <property name="rightMargin">
-                <number>0</number>
+              <widget class="QPushButton" name="buttonSend">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
                </property>
-               <item>
-                <widget class="QPushButton" name="buttonSend">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="focusPolicy">
-                  <enum>Qt::TabFocus</enum>
-                 </property>
-                 <property name="text">
-                  <string>Send files to calc</string>
-                 </property>
-                 <property name="icon">
-                  <iconset resource="resources.qrc">
-                   <normaloff>:/icons/resources/icons/open.png</normaloff>:/icons/resources/icons/open.png</iconset>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="buttonResendFiles">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Resend checked</string>
-                 </property>
-                 <property name="icon">
-                  <iconset resource="resources.qrc">
-                   <normaloff>:/icons/resources/icons/variables.png</normaloff>:/icons/resources/icons/variables.png</iconset>
-                 </property>
-                </widget>
-               </item>
-              </layout>
+               <property name="focusPolicy">
+                <enum>Qt::TabFocus</enum>
+               </property>
+               <property name="text">
+                <string>Send files to calc</string>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/resources/icons/open.png</normaloff>:/icons/resources/icons/open.png</iconset>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="buttonResendFiles">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Resend selected</string>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/resources/icons/variables.png</normaloff>:/icons/resources/icons/variables.png</iconset>
+               </property>
+              </widget>
              </item>
              <item>
               <spacer name="horizontalSpacer_2">
@@ -6694,38 +6687,6 @@
                <property name="bottomMargin">
                 <number>0</number>
                </property>
-               <item>
-                <layout class="QVBoxLayout" name="verticalLayout_26">
-                 <property name="rightMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>0</number>
-                 </property>
-                 <item>
-                  <widget class="QPushButton" name="buttonSelectVars">
-                   <property name="text">
-                    <string>Check all</string>
-                   </property>
-                   <property name="icon">
-                    <iconset resource="resources.qrc">
-                     <normaloff>:/icons/resources/icons/run.png</normaloff>:/icons/resources/icons/run.png</iconset>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="buttonDeselectVars">
-                   <property name="text">
-                    <string>Check none</string>
-                   </property>
-                   <property name="icon">
-                    <iconset resource="resources.qrc">
-                     <normaloff>:/icons/resources/icons/minus.png</normaloff>:/icons/resources/icons/minus.png</iconset>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
               </layout>
              </item>
             </layout>
@@ -6733,7 +6694,7 @@
            <item row="3" column="0">
             <widget class="QCheckBox" name="checkSaveRecent">
              <property name="text">
-              <string>Save recent file paths on exit</string>
+              <string>Save transferred file paths on exit</string>
              </property>
             </widget>
            </item>
@@ -9985,7 +9946,6 @@ QPushButton:pressed {
  <tabstops>
   <tabstop>emuVarView</tabstop>
   <tabstop>buttonReceiveFiles</tabstop>
-  <tabstop>buttonSelectVars</tabstop>
   <tabstop>opView</tabstop>
   <tabstop>checkFocus</tabstop>
   <tabstop>textSize</tabstop>
@@ -10020,7 +9980,6 @@ QPushButton:pressed {
   <tabstop>ramBytes</tabstop>
   <tabstop>ramEdit</tabstop>
   <tabstop>checkADLDisasm</tabstop>
-  <tabstop>buttonDeselectVars</tabstop>
   <tabstop>console</tabstop>
   <tabstop>JSONconfigPath</tabstop>
   <tabstop>buttonOpenJSONconfig</tabstop>
