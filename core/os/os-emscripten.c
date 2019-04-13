@@ -21,7 +21,7 @@
 
 #include <time.h>
 
-char file_buf[500];
+static char file_buf[500] = {0};
 
 static void gui_do_stuff(void) {
     if (file_buf[0] != '\0') {
@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
 
-    success = emu_load(false, "CE.rom");
+    success = emu_load(EMU_DATA_ROM, "CE.rom");
 
     if (success == EMU_STATE_VALID) {
 #ifdef DEBUG_SUPPORT
