@@ -400,14 +400,16 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(m_shortcutStepNext, &QShortcut::activated, this, &MainWindow::stepNext);
     connect(m_shortcutStepOut, &QShortcut::activated, this, &MainWindow::stepOut);
 
-    m_ports->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    m_breakpoints->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    m_watchpoints->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-
     setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
     setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
 
-    /* Absolute paths */
+    // configure table font
+    const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    ui->breakpoints->setFont(fixedFont);
+    ui->watchpoints->setFont(fixedFont);
+    ui->ports->setFont(fixedFont);
+
+    // absolute paths
     QString portableConfig = appDir().path() + SETTING_DEFAULT_CONFIG_FILE;
     QString sharedConfig = configPath + SETTING_DEFAULT_CONFIG_FILE;
 
@@ -2407,13 +2409,13 @@ void MainWindow::contextConsole(const QPoint &posa) {
                 debugForce();
                 gotoDisasmAddr(address);
             } else if (item->text() == toggleBreak) {
-                breakAdd(breakNextLabel(), address, true, true);
+                breakAdd(breakNextLabel(), address, true, true, false);
             } else if (item->text() == toggleRead) {
-                watchAdd(watchNextLabel(), address, 1, DBG_MASK_READ, true);
+                watchAdd(watchNextLabel(), address, DBG_MASK_READ, true, false);
             } else if (item->text() == toggleWrite) {
-                watchAdd(watchNextLabel(), address, 1, DBG_MASK_WRITE, true);
+                watchAdd(watchNextLabel(), address, DBG_MASK_WRITE, true, false);
             } else if (item->text() == toggleRw) {
-                watchAdd(watchNextLabel(), address, 1, DBG_MASK_READ | DBG_MASK_WRITE, true);
+                watchAdd(watchNextLabel(), address, DBG_MASK_READ | DBG_MASK_WRITE, true, false);
             }
             memDocksUpdate();
         }
@@ -2573,6 +2575,7 @@ void MainWindow::stateAddNew() {
 
 void MainWindow::stateAdd(QString &name, QString &path) {
     const int row = ui->slotView->rowCount();
+    ui->slotView->setSortingEnabled(false);
 
     QToolButton *btnLoad   = new QToolButton();
     QToolButton *btnSave   = new QToolButton();
@@ -2611,7 +2614,13 @@ void MainWindow::stateAdd(QString &name, QString &path) {
     ui->slotView->setCellWidget(row, SLOT_REMOVE, btnRemove);
 
     ui->slotView->setCurrentCell(row, SLOT_NAME);
+
     stateSaveInfo();
+
+    ui->slotView->setVisible(false);
+    ui->slotView->resizeColumnsToContents();
+    ui->slotView->setVisible(true);
+    ui->slotView->setSortingEnabled(true);
 }
 
 int MainWindow::stateGet(QObject *obj, int col) {

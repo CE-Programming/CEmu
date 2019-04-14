@@ -194,6 +194,8 @@ void MainWindow::iconsLoad() {
     m_iconLcd.addPixmap(QPixmap(iconPath + QStringLiteral("lcd.png")));
     m_iconUiEdit.addPixmap(QPixmap(iconPath + QStringLiteral("ui_edit.png")));
     m_iconAscii.addPixmap(QPixmap(iconPath + QStringLiteral("characters.png")));
+    m_iconCheck.addPixmap(QPixmap(iconPath + QStringLiteral("check.png")));
+    m_iconCheckGray.addPixmap(QPixmap(iconPath + QStringLiteral("checkgray.png")));
     m_actionAddMemory->setIcon(m_iconAddMem);
     m_actionAddVisualizer->setIcon(m_iconLcd);
     m_actionToggleUI->setIcon(m_iconUiEdit);

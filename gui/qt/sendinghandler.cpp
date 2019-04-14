@@ -228,8 +228,10 @@ void SendingHandler::addFile(const QString &file, bool select) {
     m_table->setCellWidget(rows, RECENT_RESEND, btnResend);
     m_table->setCellWidget(rows, RECENT_SELECT, btnSelect);
 
-    m_table->setSortingEnabled(true);
+    m_table->setVisible(false);
     m_table->resizeColumnsToContents();
+    m_table->setVisible(true);
+    m_table->setSortingEnabled(true);
 }
 
 void SendingHandler::sendFiles(const QStringList &fileNames, int location) {

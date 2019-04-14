@@ -83,29 +83,28 @@ private:
     };
 
     enum {
-        BREAK_LABEL_LOC,
-        BREAK_ADDR_LOC,
+        BREAK_REMOVE_LOC,
         BREAK_ENABLE_LOC,
-        BREAK_REMOVE_LOC
+        BREAK_ADDR_LOC,
+        BREAK_NAME_LOC
     };
 
     enum {
-        WATCH_LABEL_LOC,
-        WATCH_ADDR_LOC,
-        WATCH_SIZE_LOC,
-        WATCH_VALUE_LOC,
+        WATCH_REMOVE_LOC,
         WATCH_READ_LOC,
         WATCH_WRITE_LOC,
-        WATCH_REMOVE_LOC
+        WATCH_ADDR_LOC,
+        WATCH_VALUE_LOC,
+        WATCH_NAME_LOC,
     };
 
     enum {
-        PORT_ADDR_LOC,
-        PORT_VALUE_LOC,
+        PORT_REMOVE_LOC,
         PORT_READ_LOC,
         PORT_WRITE_LOC,
         PORT_FREEZE_LOC,
-        PORT_REMOVE_LOC
+        PORT_ADDR_LOC,
+        PORT_VALUE_LOC,
     };
 
     enum {
@@ -153,11 +152,11 @@ private:
     };
 
     enum {
-        SLOT_NAME,
+        SLOT_REMOVE,
         SLOT_LOAD,
         SLOT_SAVE,
         SLOT_EDIT,
-        SLOT_REMOVE
+        SLOT_NAME
     };
 
     enum {
@@ -289,9 +288,10 @@ private:
     // breakpoints
     void breakModified(QTableWidgetItem *item);
     void breakSetPrev(QTableWidgetItem *item);
+    int breakGetMask(int row);
 
     // breakpoint additions
-    bool breakAdd(const QString &label, uint32_t address, bool enabled, bool toggle);
+    bool breakAdd(const QString &label, uint32_t address, bool enabled, bool toggle, bool unset);
     void breakAddGui();
     void breakAddSlot();
 
@@ -304,9 +304,10 @@ private:
     void watchModified(QTableWidgetItem *item);
     void watchSetPrev(QTableWidgetItem *item);
     void watchPopulate(int row);
+    int watchGetMask(int row);
 
     // watchpoint additions
-    bool watchAdd(const QString &label, uint32_t addr, uint8_t len, unsigned int mask, bool toggle);
+    bool watchAdd(const QString &label, uint32_t addr, int mask, bool toggle, bool unset);
     void watchAddGui();
     void watchAddGuiR();
     void watchAddGuiW();
@@ -322,9 +323,10 @@ private:
     void portModified(QTableWidgetItem *item);
     void portSetPrev(QTableWidgetItem *item);
     void portPopulate(int row);
+    int portGetMask(int row);
 
     // port additions
-    bool portAdd(uint16_t port, unsigned int mask);
+    bool portAdd(uint16_t port, int mask, bool unset);
     void portAddSlot();
 
     // port removal
@@ -554,11 +556,12 @@ private:
     bool m_shutdown = false;
     bool m_recording = false;
 
-    uint32_t m_prevBreakAddr = 0;
-    uint32_t m_prevWatchAddr = 0;
     uint32_t m_prevDisasmAddr = 0;
-    uint16_t m_prevPortAddr = 0;
     QPalette m_cBack, m_cNone;
+
+    QString m_prevWatchAddr;
+    QString m_prevBreakAddr;
+    QString m_prevPortAddr;
 
     QShortcut *m_shortcutStepIn;
     QShortcut *m_shortcutStepOver;
@@ -579,6 +582,7 @@ private:
     QIcon m_iconSearch, m_iconGoto;
     QIcon m_iconSync, m_iconAddMem, m_iconLcd;
     QIcon m_iconAscii, m_iconUiEdit;
+    QIcon m_iconCheck, m_iconCheckGray;
     QTextCharFormat m_consoleFormat;
 
     QString m_gotoAddr;
@@ -717,9 +721,12 @@ private:
     static const QString SETTING_DEFAULT_ROM_FILE;
     static const QString SETTING_DEFAULT_IMAGE_FILE;
     static const QString SETTING_DEFAULT_DEBUG_FILE;
+
     static const QString TXT_YES;
     static const QString TXT_NO;
     static const QString TXT_NAN;
+    static const QString DEBUG_UNSET_ADDR;
+    static const QString DEBUG_UNSET_PORT;
 
     QString TITLE_DEBUG;
     QString TITLE_DOCKS;

@@ -70,6 +70,7 @@
         <file>resources/icons/wizard.png</file>
         <file>resources/icons/checkgray.png</file>
         <file>resources/icons/check.png</file>
+        <file>resources/icons/characters.png</file>
     </qresource>
     <qresource prefix="/fonts">
         <file>resources/custom_fonts/TICELarge.ttf</file>

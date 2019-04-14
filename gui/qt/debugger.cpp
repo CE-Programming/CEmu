@@ -1,4 +1,4 @@
-﻿#include "mainwindow.h"
+#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "dockwidget.h"
 #include "utils.h"
@@ -40,6 +40,9 @@
 #else
     #include <unistd.h>
 #endif
+
+const QString MainWindow::DEBUG_UNSET_ADDR = QStringLiteral("XXXXXX");
+const QString MainWindow::DEBUG_UNSET_PORT = QStringLiteral("XXXX");
 
 // -----------------------------------------------
 // Debugger Initialization
@@ -128,19 +131,18 @@ void MainWindow::debugImportFile(const QString &file) {
     QStringList breakAddr = info.value(QStringLiteral("breakpoints/address")).toStringList();
     QStringList breakSet = info.value(QStringLiteral("breakpoints/enable")).toStringList();
     for (i = 0; i < breakLabel.size(); i++) {
-        breakAdd(breakLabel.at(i), hex2int(breakAddr.at(i)), breakSet.at(i) == TXT_YES, false);
+        breakAdd(breakLabel.at(i), hex2int(breakAddr.at(i)), breakSet.at(i) == TXT_YES, false, false);
     }
 
     // Load the watchpoint information
     QStringList watchLabel = info.value(QStringLiteral("watchpoints/label")).toStringList();
     QStringList watchAddr = info.value(QStringLiteral("watchpoints/address")).toStringList();
-    QStringList watchLen = info.value(QStringLiteral("watchpoints/size")).toStringList();
     QStringList watchR = info.value(QStringLiteral("watchpoints/read")).toStringList();
     QStringList watchW = info.value(QStringLiteral("watchpoints/write")).toStringList();
     for (i = 0; i < watchLabel.size(); i++) {
         unsigned int mask = (watchR.at(i) == TXT_YES ? DBG_MASK_READ : DBG_MASK_NONE) |
                             (watchW.at(i) == TXT_YES ? DBG_MASK_WRITE : DBG_MASK_NONE);
-        watchAdd(watchLabel.at(i), hex2int(watchAddr.at(i)), hex2int(watchLen.at(i)), mask, false);
+        watchAdd(watchLabel.at(i), hex2int(watchAddr.at(i)), mask, false, false);
     }
 
     // Load the port monitor information
@@ -152,7 +154,7 @@ void MainWindow::debugImportFile(const QString &file) {
         unsigned int mask = (portR.at(i) == TXT_YES ? DBG_MASK_PORT_READ : DBG_MASK_NONE)  |
                             (portW.at(i) == TXT_YES ? DBG_MASK_PORT_WRITE : DBG_MASK_NONE) |
                             (portF.at(i) == TXT_YES ? DBG_MASK_PORT_FREEZE : DBG_MASK_NONE);
-        portAdd(hex2int(portAddr.at(i)), mask);
+        portAdd(hex2int(portAddr.at(i)), mask, false);
     }
 
     // Add all the equate files and load them in
@@ -181,9 +183,11 @@ void MainWindow::debugExportFile(const QString &filename) {
     QStringList breakAddr;
     QStringList breakSet;
     for(i = 0; i < m_breakpoints->rowCount(); i++) {
-        breakLabel.append(m_breakpoints->item(i, BREAK_LABEL_LOC)->text());
-        breakAddr.append(m_breakpoints->item(i, BREAK_ADDR_LOC)->text());
-        breakSet.append(m_breakpoints->item(i, BREAK_ENABLE_LOC)->checkState() == Qt::Checked ? TXT_YES : TXT_NO);
+        if (m_breakpoints->item(i, BREAK_ADDR_LOC)->text() != DEBUG_UNSET_ADDR) {
+            breakLabel.append(m_breakpoints->item(i, BREAK_NAME_LOC)->text());
+            breakAddr.append(m_breakpoints->item(i, BREAK_ADDR_LOC)->text());
+            breakSet.append(static_cast<QAbstractButton *>(m_breakpoints->cellWidget(i, BREAK_ENABLE_LOC))->isChecked() ? TXT_YES : TXT_NO);
+        }
     }
 
     info.setValue(QStringLiteral("breakpoints/label"), breakLabel);
@@ -193,20 +197,19 @@ void MainWindow::debugExportFile(const QString &filename) {
     // Save watchpoint information
     QStringList watchLabel;
     QStringList watchAddr;
-    QStringList watchLen;
     QStringList watchR;
     QStringList watchW;
     for(i = 0; i < m_watchpoints->rowCount(); i++) {
-        watchLabel.append(m_watchpoints->item(i, WATCH_LABEL_LOC)->text());
-        watchAddr.append(m_watchpoints->item(i, WATCH_ADDR_LOC)->text());
-        watchLen.append(m_watchpoints->item(i, WATCH_SIZE_LOC)->text());
-        watchR.append(m_watchpoints->item(i, WATCH_READ_LOC)->checkState() == Qt::Checked ? TXT_YES : TXT_NO);
-        watchW.append(m_watchpoints->item(i, WATCH_WRITE_LOC)->checkState() == Qt::Checked ? TXT_YES : TXT_NO);
+        if (m_watchpoints->item(i, WATCH_ADDR_LOC)->text() != DEBUG_UNSET_ADDR) {
+            watchLabel.append(m_watchpoints->item(i, WATCH_NAME_LOC)->text());
+            watchAddr.append(m_watchpoints->item(i, WATCH_ADDR_LOC)->text());
+            watchR.append(static_cast<QAbstractButton *>(m_watchpoints->cellWidget(i, WATCH_READ_LOC))->isChecked() ? TXT_YES : TXT_NO);
+            watchW.append(static_cast<QAbstractButton *>(m_watchpoints->cellWidget(i, WATCH_WRITE_LOC))->isChecked() ? TXT_YES : TXT_NO);
+        }
     }
 
     info.setValue(QStringLiteral("watchpoints/label"), watchLabel);
     info.setValue(QStringLiteral("watchpoints/address"), watchAddr);
-    info.setValue(QStringLiteral("watchpoints/size"), watchLen);
     info.setValue(QStringLiteral("watchpoints/read"), watchR);
     info.setValue(QStringLiteral("watchpoints/write"), watchW);
 
@@ -216,10 +219,12 @@ void MainWindow::debugExportFile(const QString &filename) {
     QStringList portW;
     QStringList portF;
     for(i = 0; i < m_ports->rowCount(); i++) {
-        portAddr.append(m_ports->item(i, PORT_ADDR_LOC)->text());
-        portR.append(m_ports->item(i, PORT_READ_LOC)->checkState() == Qt::Checked ? TXT_YES : TXT_NO);
-        portW.append(m_ports->item(i, PORT_WRITE_LOC)->checkState() == Qt::Checked ? TXT_YES : TXT_NO);
-        portF.append(m_ports->item(i, PORT_FREEZE_LOC)->checkState() == Qt::Checked ? TXT_YES : TXT_NO);
+        if (m_ports->item(i, PORT_ADDR_LOC)->text() != DEBUG_UNSET_PORT) {
+            portAddr.append(m_ports->item(i, PORT_ADDR_LOC)->text());
+            portR.append(static_cast<QAbstractButton *>(m_ports->cellWidget(i, PORT_READ_LOC))->isChecked() ? TXT_YES : TXT_NO);
+            portW.append(static_cast<QAbstractButton *>(m_ports->cellWidget(i, PORT_WRITE_LOC))->isChecked() ? TXT_YES : TXT_NO);
+            portF.append(static_cast<QAbstractButton *>(m_ports->cellWidget(i, PORT_FREEZE_LOC))->isChecked() ? TXT_YES : TXT_NO);
+        }
     }
 
     info.setValue(QStringLiteral("portmonitor/address"), portAddr);
@@ -278,22 +283,22 @@ void MainWindow::debugExecute(uint32_t offset, uint8_t cmd) {
                 m_useSoftCom = false;
                 return; // don't exit the debugger
             case CMD_SET_BREAKPOINT:
-                breakAdd(breakNextLabel(), cpu.registers.DE, true, false);
+                breakAdd(breakNextLabel(), cpu.registers.DE, true, false, false);
                 break;
             case CMD_REM_BREAKPOINT:
                 breakRemove(cpu.registers.DE);
                 break;
             case CMD_SET_R_WATCHPOINT:
                 watchRemove(cpu.registers.DE);
-                watchAdd(watchNextLabel(), cpu.registers.DE, cpu.registers.bc.l, DBG_MASK_READ, false);
+                watchAdd(watchNextLabel(), cpu.registers.DE, DBG_MASK_READ, false, false);
                 break;
             case CMD_SET_W_WATCHPOINT:
                 watchRemove(cpu.registers.DE);
-                watchAdd(watchNextLabel(), cpu.registers.DE, cpu.registers.bc.l, DBG_MASK_WRITE, false);
+                watchAdd(watchNextLabel(), cpu.registers.DE, DBG_MASK_WRITE, false, false);
                 break;
             case CMD_SET_RW_WATCHPOINT:
                 watchRemove(cpu.registers.DE);
-                watchAdd(watchNextLabel(), cpu.registers.DE, cpu.registers.bc.l, DBG_MASK_RW, false);
+                watchAdd(watchNextLabel(), cpu.registers.DE, DBG_MASK_RW, false, false);
                 break;
             case CMD_REM_WATCHPOINT:
                 watchRemove(cpu.registers.DE);
@@ -312,7 +317,7 @@ void MainWindow::debugExecute(uint32_t offset, uint8_t cmd) {
                 break;
             case CMD_SET_E_WATCHPOINT:
                 watchRemove(cpu.registers.DE);
-                watchAdd(watchNextLabel(), cpu.registers.DE, cpu.registers.bc.l, DBG_MASK_NONE, false);
+                watchAdd(watchNextLabel(), cpu.registers.DE, DBG_MASK_NONE, false, false);
                 break;
             default:
                 console(QStringLiteral("[CEmu] Unknown debug Command: 0x") +
@@ -360,14 +365,21 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
 
     QString input, type, text;
     QString label = QStringLiteral("Unknown");
+    bool valid = false;
 
     switch (reason) {
         case DBG_BREAKPOINT:
             input = int2hex(data, 6);
 
-            if (m_breakpoints->rowCount()) {
-                while (m_breakpoints->item(row++, BREAK_ADDR_LOC)->text() != input);
-                label = m_breakpoints->item(row-1, BREAK_LABEL_LOC)->text();
+            for (int i = 0; i < m_breakpoints->rowCount(); i++) {
+                if (m_breakpoints->item(i, BREAK_ADDR_LOC)->text() == input) {
+                    label = m_breakpoints->item(row, BREAK_NAME_LOC)->text();
+                    valid = true;
+                    break;
+                }
+            }
+            if (valid == false) {
+                return;
             }
 
             text = tr("Hit breakpoint ") + input + QStringLiteral(" (") + label + QStringLiteral(")");
@@ -378,9 +390,15 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
             type = (reason == DBG_WATCHPOINT_READ) ? tr("read") : tr("write");
             text = tr("Hit ") + type + tr(" watchpoint ") + input;
 
-            if (m_watchpoints->rowCount()) {
-                while (m_watchpoints->item(row++, WATCH_ADDR_LOC)->text() != input);
-                label = m_watchpoints->item(row-1, WATCH_LABEL_LOC)->text();
+            for (int i = 0; i < m_watchpoints->rowCount(); i++) {
+                if (m_watchpoints->item(i, WATCH_ADDR_LOC)->text() == input) {
+                    label = m_watchpoints->item(row, WATCH_NAME_LOC)->text();
+                    valid = true;
+                    break;
+                }
+            }
+            if (valid == false) {
+                return;
             }
 
             text = tr("Hit ") + type + tr(" watchpoint ") + input + QStringLiteral(" (") + label + QStringLiteral(")");
@@ -759,11 +777,11 @@ void MainWindow::debugZeroCycles() {
 // Breakpoints
 // ------------------------------------------------
 
-void MainWindow::breakSetPrev(QTableWidgetItem *curr_item) {
-    if (curr_item->text().isEmpty()) {
+void MainWindow::breakSetPrev(QTableWidgetItem *item) {
+    if (item->text().isEmpty()) {
         return;
     }
-    m_prevBreakAddr = static_cast<uint32_t>(hex2int(m_breakpoints->item(curr_item->row(), BREAK_ADDR_LOC)->text()));
+    m_prevBreakAddr = m_breakpoints->item(item->row(), BREAK_ADDR_LOC)->text();
 }
 
 void MainWindow::breakRemoveRow(int row) {
@@ -795,56 +813,67 @@ void MainWindow::breakRemove(uint32_t address) {
     }
 }
 
+int MainWindow::breakGetMask(int row) {
+    int mask;
+    if (static_cast<QAbstractButton *>(m_breakpoints->cellWidget(row, BREAK_ENABLE_LOC))->isChecked()) {
+        mask = DBG_MASK_EXEC;
+    } else {
+        mask = DBG_MASK_NONE;
+    }
+    return mask;
+}
+
 void MainWindow::breakModified(QTableWidgetItem *item) {
     int row = item->row();
     int col = item->column();
-    QString addrString;
+    QString addrStr;
     uint32_t addr;
 
     if (col == BREAK_ENABLE_LOC) {
         addr = static_cast<uint32_t>(hex2int(m_breakpoints->item(row, BREAK_ADDR_LOC)->text()));
         debug_watch(addr, DBG_MASK_EXEC, item->checkState() == Qt::Checked);
-    } else if (col == BREAK_LABEL_LOC) {
+    } else if (col == BREAK_NAME_LOC) {
         updateLabels();
     } else if (col == BREAK_ADDR_LOC){
         std::string s = item->text().toUpper().toStdString();
         QString equate;
-        unsigned int mask;
+        int mask;
 
         equate = getAddressOfEquate(s);
         if (!equate.isEmpty()) {
             s = equate.toStdString();
             m_breakpoints->blockSignals(true);
-            if (m_breakpoints->item(row, BREAK_LABEL_LOC)->text() == (QStringLiteral("Label") + QString::number(row))) {
-                m_breakpoints->item(row, BREAK_LABEL_LOC)->setText(item->text());
+            if (m_breakpoints->item(row, BREAK_NAME_LOC)->text() == (QStringLiteral("Label") + QString::number(row))) {
+                m_breakpoints->item(row, BREAK_NAME_LOC)->setText(item->text());
             }
             m_breakpoints->blockSignals(false);
         }
 
         if (isNotValidHex(s) || s.length() > 6) {
-            item->setText(int2hex(m_prevBreakAddr, 6));
+            item->setText(m_prevBreakAddr);
             return;
         }
 
         addr = static_cast<uint32_t>(hex2int(QString::fromStdString(s)));
-        addrString = int2hex(addr, 6);
+        addrStr = int2hex(addr, 6);
 
         m_breakpoints->blockSignals(true);
 
         // Return if address is already set
         for (int i = 0; i < m_breakpoints->rowCount(); i++) {
-            if (m_breakpoints->item(i, BREAK_ADDR_LOC)->text() == addrString && i != row) {
-                item->setText(int2hex(m_prevBreakAddr, 6));
+            if (m_breakpoints->item(i, BREAK_ADDR_LOC)->text() == addrStr && i != row) {
+                item->setText(m_prevBreakAddr);
                 m_breakpoints->blockSignals(false);
                 return;
             }
         }
 
-        mask = ((m_breakpoints->item(row, BREAK_ENABLE_LOC)->checkState() == Qt::Checked) ? DBG_MASK_EXEC
-                                                                                               : DBG_MASK_NONE);
+        mask = breakGetMask(row);
 
-        debug_watch(m_prevBreakAddr, DBG_MASK_EXEC, false);
-        item->setText(addrString);
+        if (m_prevBreakAddr != DEBUG_UNSET_ADDR) {
+            debug_watch(hex2int(m_prevBreakAddr), DBG_MASK_EXEC, false);
+        }
+        item->setText(addrStr);
         debug_watch(addr, mask, true);
         m_breakpoints->blockSignals(false);
     }
@@ -860,7 +889,7 @@ QString MainWindow::watchNextLabel() {
 }
 
 void MainWindow::breakAddSlot() {
-    breakAdd(breakNextLabel(), 0, true, false);
+    breakAdd(breakNextLabel(), 0, true, false, true);
 }
 
 void MainWindow::breakAddGui() {
@@ -871,7 +900,7 @@ void MainWindow::breakAddGui() {
 
     m_guiAdd = true;
 
-    breakAdd(breakNextLabel(), address, true, true);
+    breakAdd(breakNextLabel(), address, true, true, false);
 
     m_guiAdd = false;
 
@@ -900,14 +929,20 @@ void MainWindow::breakAddGui() {
     }
 }
 
-bool MainWindow::breakAdd(const QString &label, uint32_t addr, bool enabled, bool toggle) {
+bool MainWindow::breakAdd(const QString &label, uint32_t addr, bool enabled, bool toggle, bool unset) {
     const int row = m_breakpoints->rowCount();
-    QString addrStr = int2hex((addr &= 0xFFFFFF), 6).toUpper();
+    QString addrStr;
 
-    // Return if address is already set
+    if (unset) {
+        addrStr = DEBUG_UNSET_ADDR;
+    } else {
+        addrStr = int2hex((addr &= 0xFFFFFF), 6).toUpper();
+    }
+
+    // return if address is already set
     for (int i = 0; i < row; i++) {
         if (m_breakpoints->item(i, BREAK_ADDR_LOC)->text() == addrStr) {
-            if (addrStr != QStringLiteral("000000")) {
+            if (addrStr != DEBUG_UNSET_ADDR) {
                 if (!m_useSoftCom) {
                     m_breakpoints->selectRow(i);
                     if (toggle) {
@@ -921,44 +956,52 @@ bool MainWindow::breakAdd(const QString &label, uint32_t addr, bool enabled, boo
         }
     }
 
-    m_breakpoints->setUpdatesEnabled(false);
     m_breakpoints->blockSignals(true);
-
     m_breakpoints->setRowCount(row + 1);
 
-    QToolButton *button = new QToolButton();
-    button->setIcon(m_iconRemove);
-    connect(button, &QToolButton::clicked, this, &MainWindow::breakRemoveSelected);
+    QToolButton *btnRemove = new QToolButton;
+    btnRemove->setIcon(m_iconRemove);
+
+    QToolButton *btnEnable = new QToolButton;
+    btnEnable->setIcon(enabled ? m_iconCheck : m_iconCheckGray);
+    btnEnable->setCheckable(true);
+    btnEnable->setChecked(enabled);
+
+    connect(btnRemove, &QToolButton::clicked, this, &MainWindow::breakRemoveSelected);
+    connect(btnEnable, &QToolButton::clicked, [this, btnEnable](bool checked) { btnEnable->setIcon(checked ? m_iconCheck : m_iconCheckGray); });
 
     QTableWidgetItem *itemLabel = new QTableWidgetItem(label);
     QTableWidgetItem *itemAddr = new QTableWidgetItem(addrStr);
-    QTableWidgetItem *itemBreak = new QTableWidgetItem();
-    QTableWidgetItem *itemRemove = new QTableWidgetItem();
+    QTableWidgetItem *itemBreak = new QTableWidgetItem;
+    QTableWidgetItem *itemRemove = new QTableWidgetItem;
 
-    itemBreak->setCheckState(enabled ? Qt::Checked : Qt::Unchecked);
-    itemBreak->setFlags(itemBreak->flags() & ~Qt::ItemIsEditable);
-
-    m_breakpoints->setItem(row, BREAK_LABEL_LOC, itemLabel);
+    m_breakpoints->setItem(row, BREAK_NAME_LOC, itemLabel);
     m_breakpoints->setItem(row, BREAK_ADDR_LOC, itemAddr);
     m_breakpoints->setItem(row, BREAK_ENABLE_LOC, itemBreak);
     m_breakpoints->setItem(row, BREAK_REMOVE_LOC, itemRemove);
-    m_breakpoints->setCellWidget(row, BREAK_REMOVE_LOC, button);
+    m_breakpoints->setCellWidget(row, BREAK_REMOVE_LOC, btnRemove);
+    m_breakpoints->setCellWidget(row, BREAK_ENABLE_LOC, btnEnable);
 
     m_breakpoints->setCurrentCell(row, BREAK_ADDR_LOC);
-    m_breakpoints->setUpdatesEnabled(true);
 
-    debug_watch(addr, DBG_MASK_EXEC, enabled);
+    if (addrStr != DEBUG_UNSET_ADDR) {
+        debug_watch(addr, DBG_MASK_EXEC, enabled);
+    }
 
     if (!m_guiAdd && !m_useSoftCom) {
         disasmUpdate();
     }
 
-    m_prevBreakAddr = addr;
+    m_prevBreakAddr = addrStr;
     m_breakpoints->blockSignals(false);
 
     if (m_useSoftCom) {
         ui->lcd->setFocus();
     }
+
+    m_breakpoints->setVisible(false);
+    m_breakpoints->resizeColumnsToContents();
+    m_breakpoints->setVisible(true);
     return true;
 }
 
@@ -970,7 +1013,7 @@ void MainWindow::portSetPrev(QTableWidgetItem *item) {
     if (item->text().isEmpty()) {
         return;
     }
-    m_prevPortAddr = static_cast<uint16_t>(hex2int(m_ports->item(item->row(), PORT_ADDR_LOC)->text()));
+    m_prevPortAddr = m_ports->item(item->row(), PORT_ADDR_LOC)->text();
 }
 
 void MainWindow::portRemoveRow(int row) {
@@ -996,70 +1039,102 @@ void MainWindow::portPopulate(int currRow) {
 }
 
 void MainWindow::portAddSlot() {
-    portAdd(0, DBG_MASK_NONE);
+    portAdd(0, DBG_MASK_NONE, true);
 }
 
-bool MainWindow::portAdd(uint16_t port, unsigned int mask) {
+bool MainWindow::portAdd(uint16_t port, int mask, bool unset) {
     const int row = m_ports->rowCount();
-    QString portStr = int2hex(port, 4).toUpper();
+    QString portStr;
     uint8_t data = 0;
 
-    // Read the data from the port
-    if (guiDebug) {
-        data = port_peek_byte(port);
+    if (unset) {
+        portStr = DEBUG_UNSET_PORT;
+    } else {
+        portStr = int2hex(port, 4).toUpper();
+        if (guiDebug) {
+            data = port_peek_byte(port);
+        }
     }
 
-    // Return if port is already set
+    // return if port is already set
     for (int i = 0; i < row; i++) {
         if (m_ports->item(i, PORT_ADDR_LOC)->text() == portStr) {
-            if (portStr != QStringLiteral("0000")) {
+            if (portStr != DEBUG_UNSET_PORT) {
                 return false;
             }
         }
     }
 
     m_ports->setRowCount(row + 1);
-    m_ports->setUpdatesEnabled(false);
     m_ports->blockSignals(true);
 
-    QToolButton *button = new QToolButton();
-    button->setIcon(m_iconRemove);
-    connect(button, &QToolButton::clicked, this, &MainWindow::portRemoveSelected);
+    QToolButton *btnRemove = new QToolButton;
+    btnRemove->setIcon(m_iconRemove);
+
+    QToolButton *btnRead = new QToolButton;
+    btnRead->setIcon((mask & DBG_MASK_PORT_READ) ? m_iconCheck : m_iconCheckGray);
+    btnRead->setCheckable(true);
+    btnRead->setChecked(mask & DBG_MASK_PORT_READ);
+
+    QToolButton *btnWrite = new QToolButton;
+    btnWrite->setIcon((mask & DBG_MASK_PORT_WRITE) ? m_iconCheck : m_iconCheckGray);
+    btnWrite->setCheckable(true);
+    btnWrite->setChecked(mask & DBG_MASK_PORT_WRITE);
+
+    QToolButton *btnFreeze = new QToolButton;
+    btnFreeze->setIcon((mask & DBG_MASK_PORT_FREEZE) ? m_iconCheck : m_iconCheckGray);
+    btnFreeze->setCheckable(true);
+    btnFreeze->setChecked(mask & DBG_MASK_PORT_FREEZE);
+
+    connect(btnRemove, &QToolButton::clicked, this, &MainWindow::portRemoveSelected);
+    connect(btnRead, &QToolButton::clicked, [this, btnRead](bool checked) { btnRead->setIcon(checked ? m_iconCheck : m_iconCheckGray); });
+    connect(btnWrite, &QToolButton::clicked, [this, btnWrite](bool checked) { btnWrite->setIcon(checked ? m_iconCheck : m_iconCheckGray); });
+    connect(btnFreeze, &QToolButton::clicked, [this, btnFreeze](bool checked) { btnFreeze->setIcon(checked ? m_iconCheck : m_iconCheckGray); });
 
     QTableWidgetItem *itemAddr = new QTableWidgetItem(portStr);
     QTableWidgetItem *itemData = new QTableWidgetItem(int2hex(data, 2));
-    QTableWidgetItem *itemR = new QTableWidgetItem();
-    QTableWidgetItem *itemW = new QTableWidgetItem();
-    QTableWidgetItem *itemF = new QTableWidgetItem();
-    QTableWidgetItem *itemD = new QTableWidgetItem();
-
-    itemR->setFlags(itemR->flags() & ~Qt::ItemIsEditable);
-    itemW->setFlags(itemW->flags() & ~Qt::ItemIsEditable);
-    itemF->setFlags(itemF->flags() & ~Qt::ItemIsEditable);
-    itemD->setFlags(itemD->flags() & ~Qt::ItemIsEditable);
-
-    itemR->setCheckState(mask & DBG_MASK_PORT_READ ? Qt::Checked : Qt::Unchecked);
-    itemW->setCheckState(mask & DBG_MASK_PORT_WRITE ? Qt::Checked : Qt::Unchecked);
-    itemF->setCheckState(mask & DBG_MASK_PORT_FREEZE ? Qt::Checked : Qt::Unchecked);
+    QTableWidgetItem *itemRead = new QTableWidgetItem;
+    QTableWidgetItem *itemWrite = new QTableWidgetItem;
+    QTableWidgetItem *itemFreeze = new QTableWidgetItem;
+    QTableWidgetItem *itemRemove = new QTableWidgetItem;
 
     m_ports->setItem(row, PORT_ADDR_LOC, itemAddr);
     m_ports->setItem(row, PORT_VALUE_LOC, itemData);
-    m_ports->setItem(row, PORT_READ_LOC, itemR);
-    m_ports->setItem(row, PORT_WRITE_LOC, itemW);
-    m_ports->setItem(row, PORT_FREEZE_LOC, itemF);
-    m_ports->setItem(row, PORT_REMOVE_LOC, itemD);
-    m_ports->setCellWidget(row, PORT_REMOVE_LOC, button);
+    m_ports->setItem(row, PORT_READ_LOC, itemRead);
+    m_ports->setItem(row, PORT_WRITE_LOC, itemWrite);
+    m_ports->setItem(row, PORT_FREEZE_LOC, itemFreeze);
+    m_ports->setItem(row, PORT_REMOVE_LOC, itemRemove);
+    m_ports->setCellWidget(row, PORT_REMOVE_LOC, btnRemove);
+    m_ports->setCellWidget(row, PORT_READ_LOC, btnRead);
+    m_ports->setCellWidget(row, PORT_WRITE_LOC, btnWrite);
+    m_ports->setCellWidget(row, PORT_FREEZE_LOC, btnFreeze);
 
     m_ports->selectRow(row);
-    m_ports->setUpdatesEnabled(true);
-    m_prevPortAddr = port;
+    m_prevPortAddr = portStr;
     m_ports->blockSignals(false);
+    m_ports->setVisible(false);
+    m_ports->resizeColumnsToContents();
+    m_ports->setVisible(true);
     return true;
 }
 
+int MainWindow::portGetMask(int row) {
+    unsigned int mask = 0;
+    if (static_cast<QAbstractButton *>(m_ports->cellWidget(row, PORT_READ_LOC))->isChecked()) {
+        mask |= DBG_MASK_PORT_READ;
+    }
+    if (static_cast<QAbstractButton *>(m_ports->cellWidget(row, PORT_WRITE_LOC))->isChecked()) {
+        mask |= DBG_MASK_PORT_WRITE;
+    }
+    if (static_cast<QAbstractButton *>(m_ports->cellWidget(row, PORT_FREEZE_LOC))->isChecked()) {
+        mask |= DBG_MASK_PORT_FREEZE;
+    }
+    return mask;
+}
+
 void MainWindow::portModified(QTableWidgetItem *item) {
-    auto row = item->row();
-    auto col = item->column();
+    int row = item->row();
+    int col = item->column();
 
     if (col == PORT_READ_LOC || col == PORT_WRITE_LOC || col == PORT_FREEZE_LOC) {
         uint16_t port = static_cast<uint16_t>(hex2int(m_ports->item(row, PORT_ADDR_LOC)->text()));
@@ -1077,10 +1152,10 @@ void MainWindow::portModified(QTableWidgetItem *item) {
         debug_ports(port, mask, item->checkState() == Qt::Checked);
     } else if (col == PORT_ADDR_LOC) {
         std::string s = item->text().toUpper().toStdString();
-        unsigned int mask;
+        int mask;
 
         if (isNotValidHex(s) || s.length() > 4) {
-            item->setText(int2hex(m_prevPortAddr, 4));
+            item->setText(m_prevPortAddr);
             return;
         }
 
@@ -1090,31 +1165,31 @@ void MainWindow::portModified(QTableWidgetItem *item) {
 
         m_ports->blockSignals(true);
 
-        // Return if port is already set
+        // return if port is already set
         for (int i=0; i<m_ports->rowCount(); i++) {
             if (m_ports->item(i, PORT_ADDR_LOC)->text() == portStr && i != row) {
-                item->setText(int2hex(m_prevPortAddr, 4));
+                item->setText(m_prevPortAddr);
                 m_ports->blockSignals(false);
                 return;
             }
         }
 
-        debug_ports(m_prevPortAddr, ~DBG_MASK_NONE, false);
+        if (m_prevPortAddr != DEBUG_UNSET_PORT) {
+            debug_ports(hex2int(m_prevPortAddr), ~DBG_MASK_NONE, false);
+        }
 
-        mask = (m_ports->item(row, PORT_READ_LOC)->checkState() == Qt::Checked ? DBG_MASK_PORT_READ : DBG_MASK_NONE)  |
-               (m_ports->item(row, PORT_WRITE_LOC)->checkState() == Qt::Checked ? DBG_MASK_PORT_WRITE : DBG_MASK_NONE) |
-               (m_ports->item(row, PORT_FREEZE_LOC)->checkState() == Qt::Checked ? DBG_MASK_PORT_FREEZE : DBG_MASK_NONE);
-
+        mask = portGetMask(row);
         debug_ports(port, mask, true);
         item->setText(portStr);
         m_ports->item(row, PORT_VALUE_LOC)->setText(int2hex(data, 2));
     } else if (col == PORT_VALUE_LOC) {
-        uint8_t pdata = static_cast<uint8_t>(hex2int(item->text()));
-        uint16_t port = static_cast<uint16_t>(hex2int(m_ports->item(row, PORT_ADDR_LOC)->text()));
+        if (m_ports->item(row, PORT_ADDR_LOC)->text() != DEBUG_UNSET_PORT) {
+            uint8_t pdata = static_cast<uint8_t>(hex2int(item->text()));
+            uint16_t port = static_cast<uint16_t>(hex2int(m_ports->item(row, PORT_ADDR_LOC)->text()));
 
-        port_poke_byte(port, pdata);
-
-        item->setText(int2hex(port_peek_byte(port), 2));
+            port_poke_byte(port, pdata);
+            item->setText(int2hex(port_peek_byte(port), 2));
+        }
     }
     m_ports->blockSignals(false);
 }
@@ -1128,18 +1203,19 @@ void MainWindow::watchSetPrev(QTableWidgetItem *item) {
         return;
     }
 
-    m_prevWatchAddr = static_cast<uint32_t>(hex2int(m_watchpoints->item(item->row(), WATCH_ADDR_LOC)->text()));
+    m_prevWatchAddr = m_watchpoints->item(item->row(), WATCH_ADDR_LOC)->text();
 }
 
 void MainWindow::watchRemoveRow(int row) {
-    uint32_t address = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_ADDR_LOC)->text()));
+    if (m_watchpoints->item(row, WATCH_ADDR_LOC)->text() != DEBUG_UNSET_ADDR) {
+        uint32_t address = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_ADDR_LOC)->text()));
 
-    debug_watch(address, DBG_MASK_READ | DBG_MASK_WRITE, false);
+        debug_watch(address, DBG_MASK_READ | DBG_MASK_WRITE, false);
 
-    if (!m_guiAdd && !m_useSoftCom) {
-        disasmUpdate();
+        if (!m_guiAdd && !m_useSoftCom) {
+            disasmUpdate();
+        }
     }
-
     m_watchpoints->removeRow(row);
 }
 
@@ -1163,15 +1239,16 @@ void MainWindow::watchRemove(uint32_t address) {
 }
 
 void MainWindow::watchPopulate(int row) {
-    uint8_t i,size = m_watchpoints->item(row, WATCH_SIZE_LOC)->text().toUInt();
-    uint32_t address = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_ADDR_LOC)->text()));
-    uint32_t read = 0;
+    unsigned int i;
+    int read = 0;
+    if (m_watchpoints->item(row, WATCH_ADDR_LOC)->text() != DEBUG_UNSET_ADDR) {
+        uint32_t address = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_ADDR_LOC)->text()));
 
-    for (i=0; i<size; i++) {
-        read |= mem_peek_byte(address+i) << (i << 3);
+        for (i = 0; i < 4; i++) {
+            read |= mem_peek_byte(address+i) << (i << 3);
+        }
     }
-
-    m_watchpoints->item(row, WATCH_VALUE_LOC)->setText(int2hex(read, size << 1));
+    m_watchpoints->item(row, WATCH_VALUE_LOC)->setText(int2hex(static_cast<uint32_t>(read), 8));
 }
 
 void MainWindow::watchAddGuiR() {
@@ -1198,7 +1275,7 @@ void MainWindow::watchAddGui() {
 
     m_guiAdd = true;
 
-    watchAdd(watchNextLabel(), address, 1, mask, true);
+    watchAdd(watchNextLabel(), address, mask, true, false);
 
     m_guiAdd = false;
 
@@ -1241,22 +1318,24 @@ void MainWindow::watchAddGui() {
 }
 
 void MainWindow::watchAddSlot() {
-    watchAdd(watchNextLabel(), 0, 1, DBG_MASK_READ | DBG_MASK_WRITE, false);
+    watchAdd(watchNextLabel(), 0, DBG_MASK_READ | DBG_MASK_WRITE, false, true);
 }
 
-bool MainWindow::watchAdd(const QString& label, uint32_t address, uint8_t len, unsigned int mask, bool toggle) {
+bool MainWindow::watchAdd(const QString& label, uint32_t addr, int mask, bool toggle, bool unset) {
     const int row = m_watchpoints->rowCount();
-    QString addressStr = int2hex((address &= 0xFFFFFF), 6).toUpper();
+    QString addrStr;
     QString watchLen;
 
-    if (!len) { len = 1; }
-    if (len > 4) { len = 4; }
-    watchLen = QString::number(len);
+    if (unset) {
+        addrStr = DEBUG_UNSET_ADDR;
+    } else {
+        addrStr = int2hex((addr &= 0xFFFFFF), 6).toUpper();
+    }
 
-    // Return if address is already set
+    // return if address is already set
     for (int i = 0; i < row; i++) {
-        if (m_watchpoints->item(i, WATCH_ADDR_LOC)->text() == addressStr) {
-            if (addressStr != QStringLiteral("000000")) {
+        if (m_watchpoints->item(i, WATCH_ADDR_LOC)->text() == addrStr) {
+            if (addrStr != DEBUG_UNSET_ADDR) {
                 if (!m_useSoftCom) {
                     m_watchpoints->selectRow(i);
                     if (toggle) {
@@ -1270,7 +1349,6 @@ bool MainWindow::watchAdd(const QString& label, uint32_t address, uint8_t len, u
         }
     }
 
-    m_watchpoints->setUpdatesEnabled(false);
     m_watchpoints->blockSignals(true);
 
     QToolButton *button = new QToolButton();
@@ -1278,50 +1356,62 @@ bool MainWindow::watchAdd(const QString& label, uint32_t address, uint8_t len, u
     connect(button, &QToolButton::clicked, this, &MainWindow::watchRemoveSelected);
 
     QTableWidgetItem *itemLabel = new QTableWidgetItem(label);
-    QTableWidgetItem *itemAddr = new QTableWidgetItem(addressStr);
-    QTableWidgetItem *itemLen = new QTableWidgetItem(watchLen);
-    QTableWidgetItem *itemD = new QTableWidgetItem();
-    QTableWidgetItem *itemR = new QTableWidgetItem();
-    QTableWidgetItem *itemW = new QTableWidgetItem();
-    QTableWidgetItem *itemE = new QTableWidgetItem();
+    QTableWidgetItem *itemAddr = new QTableWidgetItem(addrStr);
+    QTableWidgetItem *itemValue = new QTableWidgetItem(QStringLiteral("00000000"));
+    QTableWidgetItem *itemRead = new QTableWidgetItem;
+    QTableWidgetItem *itemWrite = new QTableWidgetItem;
+    QTableWidgetItem *itemRemove = new QTableWidgetItem;
 
-    itemW->setFlags(itemW->flags() & ~Qt::ItemIsEditable);
-    itemR->setFlags(itemR->flags() & ~Qt::ItemIsEditable);
-    itemE->setFlags(itemE->flags() & ~Qt::ItemIsEditable);
+    itemValue->setFlags(itemValue->flags() & ~Qt::ItemIsEditable);
 
-    itemR->setCheckState(mask & DBG_MASK_READ ? Qt::Checked : Qt::Unchecked);
-    itemW->setCheckState(mask & DBG_MASK_WRITE ? Qt::Checked : Qt::Unchecked);
+    QToolButton *btnRead = new QToolButton;
+    btnRead->setIcon((mask & DBG_MASK_READ) ? m_iconCheck : m_iconCheckGray);
+    btnRead->setCheckable(true);
+    btnRead->setChecked((mask & DBG_MASK_READ) ? true : false);
+
+    QToolButton *btnWrite = new QToolButton;
+    btnWrite->setIcon((mask & DBG_MASK_WRITE) ? m_iconCheck : m_iconCheckGray);
+    btnWrite->setCheckable(true);
+    btnWrite->setChecked((mask & DBG_MASK_WRITE) ? true : false);
+
+    connect(btnRead, &QToolButton::clicked, [this, btnRead](bool checked) { btnRead->setIcon(checked ? m_iconCheck : m_iconCheckGray); });
+    connect(btnWrite, &QToolButton::clicked, [this, btnWrite](bool checked) { btnWrite->setIcon(checked ? m_iconCheck : m_iconCheckGray); });
 
     m_watchpoints->setRowCount(row + 1);
-    m_watchpoints->setItem(row, WATCH_LABEL_LOC, itemLabel);
+    m_watchpoints->setItem(row, WATCH_NAME_LOC, itemLabel);
     m_watchpoints->setItem(row, WATCH_ADDR_LOC,  itemAddr);
-    m_watchpoints->setItem(row, WATCH_SIZE_LOC,  itemLen);
-    m_watchpoints->setItem(row, WATCH_VALUE_LOC, itemD);
-    m_watchpoints->setItem(row, WATCH_READ_LOC,  itemR);
-    m_watchpoints->setItem(row, WATCH_WRITE_LOC, itemW);
-    m_watchpoints->setItem(row, WATCH_REMOVE_LOC, itemE);
+    m_watchpoints->setItem(row, WATCH_VALUE_LOC, itemValue);
+    m_watchpoints->setItem(row, WATCH_READ_LOC,  itemRead);
+    m_watchpoints->setItem(row, WATCH_WRITE_LOC, itemWrite);
+    m_watchpoints->setItem(row, WATCH_REMOVE_LOC, itemRemove);
     m_watchpoints->setCellWidget(row, WATCH_REMOVE_LOC, button);
+    m_watchpoints->setCellWidget(row, WATCH_READ_LOC, btnRead);
+    m_watchpoints->setCellWidget(row, WATCH_WRITE_LOC, btnWrite);
 
     if (guiDebug) {
         watchPopulate(row);
     }
 
     m_watchpoints->setCurrentCell(row, WATCH_ADDR_LOC);
-    m_watchpoints->setUpdatesEnabled(true);
 
-    // actually set it in the debugger core
-    debug_watch(address, mask, true);
+    if (addrStr != DEBUG_UNSET_ADDR) {
+        debug_watch(addr, mask, true);
+    }
 
     if (!m_guiAdd && !m_useSoftCom) {
         disasmUpdate();
     }
 
-    m_prevWatchAddr = address;
+    m_prevWatchAddr = addrStr;
     m_watchpoints->blockSignals(false);
 
     if (m_useSoftCom) {
         ui->lcd->setFocus();
     }
+
+    m_watchpoints->setVisible(false);
+    m_watchpoints->resizeColumnsToContents();
+    m_watchpoints->setVisible(true);
     return true;
 }
 
@@ -1331,51 +1421,33 @@ void MainWindow::memUpdate() {
     memDocksUpdate();
 }
 
+int MainWindow::watchGetMask(int row) {
+    int mask = 0;
+    if (static_cast<QAbstractButton *>(m_watchpoints->cellWidget(row, WATCH_READ_LOC))->isChecked()) {
+        mask |= DBG_MASK_READ;
+    } else {
+        mask |= DBG_MASK_NONE;
+    }
+    if (static_cast<QAbstractButton *>(m_watchpoints->cellWidget(row, WATCH_WRITE_LOC))->isChecked()) {
+        mask |= DBG_MASK_WRITE;
+    } else {
+        mask |= DBG_MASK_NONE;
+    }
+    return mask;
+}
+
 void MainWindow::watchModified(QTableWidgetItem *item) {
     auto row = item->row();
     auto col = item->column();
-    QString newString;
-    uint32_t address;
+    QString addrStr;
+    uint32_t addr;
 
     m_watchpoints->blockSignals(true);
 
-    if (col == WATCH_VALUE_LOC) { // update the data located at this address
-        uint8_t i,wSize = m_watchpoints->item(row, WATCH_SIZE_LOC)->text().toUInt();
-        uint32_t wData;
-
-        address = static_cast<uint32_t>(m_watchpoints->item(row, WATCH_ADDR_LOC)->text().toUInt());
-
-        std::string s = item->text().toUpper().toStdString();
-        if (isNotValidHex(s)) {
-            item->setText(int2hex(0, wSize << 1));
-            m_watchpoints->blockSignals(false);
-            return;
-        }
-
-        wData = static_cast<uint32_t>(item->text().toUpper().toUInt(Q_NULLPTR, 16));
-        newString = int2hex(wData, wSize << 1);
-
-        item->setText(newString);
-        wData = static_cast<uint32_t>(newString.toUInt(Q_NULLPTR, 16));
-
-        for (i = 0; i < wSize; i++) {
-            mem_poke_byte(address + i, (wData >> ((i << 3)) & 255));
-        }
-
-        memUpdate();
-    } else if (col == WATCH_LABEL_LOC) {
+    if (col == WATCH_NAME_LOC) {
         updateLabels();
-    } else if (col == WATCH_SIZE_LOC) { // length of data we wish to read
-        unsigned int data_length = item->text().toUInt();
-        if (data_length > 4) {
-            data_length = 4;
-        } else if (data_length < 1) {
-            data_length = 1;
-        }
-        item->setText(QString::number(data_length));
-        watchPopulate(row);
     } else if (col == WATCH_READ_LOC || col == WATCH_WRITE_LOC) {
-        address = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_ADDR_LOC)->text()));
+        addr = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_ADDR_LOC)->text()));
         unsigned int mask = DBG_MASK_NONE;
 
         if (col == WATCH_READ_LOC) { // Break on read
@@ -1384,46 +1456,47 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
         if (col == WATCH_WRITE_LOC) { // Break on write
             mask = DBG_MASK_WRITE;
         }
-        debug_watch(address, mask, item->checkState() == Qt::Checked);
-    } else if (col == WATCH_ADDR_LOC){
+        debug_watch(addr, mask, item->checkState() == Qt::Checked);
+    } else if (col == WATCH_ADDR_LOC) {
         std::string s = item->text().toUpper().toStdString();
         QString equate;
-        unsigned int mask;
+        int mask;
 
         equate = getAddressOfEquate(s);
         if (!equate.isEmpty()) {
             s = equate.toStdString();
             m_watchpoints->blockSignals(true);
-            if (m_watchpoints->item(row, WATCH_LABEL_LOC)->text() == (QStringLiteral("Label") + QString::number(row))) {
-                m_watchpoints->item(row, WATCH_LABEL_LOC)->setText(item->text());
+            if (m_watchpoints->item(row, WATCH_NAME_LOC)->text() == (QStringLiteral("Label") + QString::number(row))) {
+                m_watchpoints->item(row, WATCH_NAME_LOC)->setText(item->text());
             }
             m_watchpoints->blockSignals(false);
         }
 
         if (isNotValidHex(s) || s.length() > 6) {
-            item->setText(int2hex(m_prevWatchAddr, 6));
+            item->setText(m_prevWatchAddr);
             m_watchpoints->blockSignals(false);
             return;
         }
 
-        address = static_cast<uint32_t>(hex2int(QString::fromStdString(s)));
-        newString = int2hex(address, 6);
+        addr = static_cast<uint32_t>(hex2int(QString::fromStdString(s)));
+        addrStr = int2hex(addr, 6);
 
         /* Return if address is already set */
         for (int i = 0; i < m_watchpoints->rowCount(); i++) {
-            if (m_watchpoints->item(i, WATCH_ADDR_LOC)->text() == newString && i != row) {
-                item->setText(int2hex(m_prevWatchAddr, 6));
+            if (m_watchpoints->item(i, WATCH_ADDR_LOC)->text() == addrStr && i != row) {
+                item->setText(m_prevWatchAddr);
                 m_watchpoints->blockSignals(false);
                 return;
             }
         }
 
-        mask = ((m_watchpoints->item(row, WATCH_READ_LOC)->checkState() == Qt::Checked) ? DBG_MASK_READ : DBG_MASK_NONE)|
-               ((m_watchpoints->item(row, WATCH_WRITE_LOC)->checkState() == Qt::Checked) ? DBG_MASK_WRITE : DBG_MASK_NONE);
+        mask = watchGetMask(row);
 
-        debug_watch(m_prevWatchAddr, DBG_MASK_READ | DBG_MASK_WRITE, false);
-        item->setText(newString);
-        debug_watch(address, mask, true);
+        if (m_prevWatchAddr != DEBUG_UNSET_ADDR) {
+            debug_watch(hex2int(m_prevWatchAddr), DBG_MASK_READ | DBG_MASK_WRITE, false);
+        }
+        item->setText(addrStr);
+        debug_watch(addr, mask, true);
         watchPopulate(row);
     }
     m_watchpoints->blockSignals(false);
@@ -1477,7 +1550,7 @@ void MainWindow::equatesClear() {
 
 void MainWindow::updateLabels() {
     for (int row = 0; row < m_watchpoints->rowCount(); row++) {
-        QString next = getAddressOfEquate(m_watchpoints->item(row, WATCH_LABEL_LOC)->text().toUpper().toStdString());
+        QString next = getAddressOfEquate(m_watchpoints->item(row, WATCH_NAME_LOC)->text().toUpper().toStdString());
         QString old = m_watchpoints->item(row, WATCH_ADDR_LOC)->text();
         if (!next.isEmpty() && next != old) {
             unsigned int mask = (m_watchpoints->item(row, WATCH_READ_LOC)->checkState() == Qt::Checked ? DBG_MASK_READ : DBG_MASK_NONE) |
@@ -1492,10 +1565,10 @@ void MainWindow::updateLabels() {
         }
     }
     for (int row = 0; row < m_breakpoints->rowCount(); row++) {
-        QString next = getAddressOfEquate(m_breakpoints->item(row, BREAK_LABEL_LOC)->text().toUpper().toStdString());
+        QString next = getAddressOfEquate(m_breakpoints->item(row, BREAK_NAME_LOC)->text().toUpper().toStdString());
         QString old = m_breakpoints->item(row, BREAK_ADDR_LOC)->text();
         if (!next.isEmpty() && next != old) {
-            unsigned int mask = m_breakpoints->item(row, BREAK_ENABLE_LOC)->checkState() == Qt::Checked ? DBG_MASK_EXEC : DBG_MASK_NONE;
+            int mask = breakGetMask(row);
             m_breakpoints->blockSignals(true);
             debug_watch(static_cast<uint32_t>(hex2int(old)), mask, false);
             m_breakpoints->item(row, BREAK_ADDR_LOC)->setText(next);
