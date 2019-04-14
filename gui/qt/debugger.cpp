@@ -1627,7 +1627,7 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
         }
 
         if (lowStr == DEBUG_UNSET_ADDR) {
-            m_watchpoints->item(row, WATCH_HIGH_LOC)->setText(highStr);
+            m_watchpoints->item(row, WATCH_LOW_LOC)->setText(highStr);
         }
         item->setText(highStr);
     }
