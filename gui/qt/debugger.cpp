@@ -1390,11 +1390,6 @@ void MainWindow::watchUpdateRow(int row) {
     }
 
     watchUpdate();
-
-    if (!m_guiAdd && !m_useSoftCom) {
-        disasmUpdate();
-        memUpdate();
-    }
 }
 
 bool MainWindow::watchAdd(const QString& label, uint32_t low, uint32_t high, int mask, bool toggle, bool unset) {
