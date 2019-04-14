@@ -13,7 +13,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-#define VERSION_DBG 0x0003
+#define VERSION_DBG 0x0004
 
 /* main user interface */
 /* please read the comments */

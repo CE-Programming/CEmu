@@ -93,8 +93,8 @@ private:
         WATCH_REMOVE_LOC,
         WATCH_READ_LOC,
         WATCH_WRITE_LOC,
-        WATCH_ADDR_LOC,
-        WATCH_VALUE_LOC,
+        WATCH_LOW_LOC,
+        WATCH_HIGH_LOC,
         WATCH_NAME_LOC,
     };
 
@@ -303,11 +303,12 @@ private:
     // watchpoints
     void watchModified(QTableWidgetItem *item);
     void watchSetPrev(QTableWidgetItem *item);
-    void watchPopulate(int row);
+    void watchUpdate();
+    void watchUpdateRow(int row);
     int watchGetMask(int row);
 
     // watchpoint additions
-    bool watchAdd(const QString &label, uint32_t addr, int mask, bool toggle, bool unset);
+    bool watchAdd(const QString &label, uint32_t low, uint32_t high, int mask, bool toggle, bool unset);
     void watchAddGui();
     void watchAddGuiR();
     void watchAddGuiW();
@@ -559,7 +560,8 @@ private:
     uint32_t m_prevDisasmAddr = 0;
     QPalette m_cBack, m_cNone;
 
-    QString m_prevWatchAddr;
+    QString m_prevWatchLow;
+    QString m_prevWatchHigh;
     QString m_prevBreakAddr;
     QString m_prevPortAddr;
 

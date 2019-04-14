@@ -2411,11 +2411,11 @@ void MainWindow::contextConsole(const QPoint &posa) {
             } else if (item->text() == toggleBreak) {
                 breakAdd(breakNextLabel(), address, true, true, false);
             } else if (item->text() == toggleRead) {
-                watchAdd(watchNextLabel(), address, DBG_MASK_READ, true, false);
+                watchAdd(watchNextLabel(), address, address, DBG_MASK_READ, true, false);
             } else if (item->text() == toggleWrite) {
-                watchAdd(watchNextLabel(), address, DBG_MASK_WRITE, true, false);
+                watchAdd(watchNextLabel(), address, address, DBG_MASK_WRITE, true, false);
             } else if (item->text() == toggleRw) {
-                watchAdd(watchNextLabel(), address, DBG_MASK_READ | DBG_MASK_WRITE, true, false);
+                watchAdd(watchNextLabel(), address, address, DBG_MASK_READ | DBG_MASK_WRITE, true, false);
             }
             memDocksUpdate();
         }

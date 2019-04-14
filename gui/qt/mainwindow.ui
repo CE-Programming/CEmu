@@ -77,7 +77,7 @@
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="debugControlWidget">
        <attribute name="icon">
@@ -4386,12 +4386,12 @@
           </column>
           <column>
            <property name="text">
-            <string>Address</string>
+            <string>Low</string>
            </property>
           </column>
           <column>
            <property name="text">
-            <string>Value</string>
+            <string>High</string>
            </property>
           </column>
           <column>
@@ -6289,7 +6289,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
@@ -6374,8 +6374,8 @@
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
-                 <width>20</width>
-                 <height>0</height>
+                 <width>0</width>
+                 <height>2</height>
                 </size>
                </property>
               </spacer>
@@ -6657,7 +6657,7 @@
                <property name="sizeHint" stdset="0">
                 <size>
                  <width>0</width>
-                 <height>20</height>
+                 <height>2</height>
                 </size>
                </property>
               </spacer>
