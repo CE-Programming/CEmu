@@ -199,16 +199,17 @@ void VisualizerWidget::forceUpdate() {
 
 void VisualizerWidget::viewToString() {
     QString bpp;
+    float bppstep = 1.0f;
 
     switch ((m_control >> 1) & 7) {
-        case 0: bpp = QStringLiteral("1"); break;
-        case 1: bpp = QStringLiteral("2"); break;
-        case 2: bpp = QStringLiteral("4"); break;
-        case 3: bpp = QStringLiteral("8"); break;
-        case 4: bpp = QStringLiteral("1555"); break;
-        case 5: bpp = QStringLiteral("888"); break;
-        case 6: bpp = QStringLiteral("565"); break;
-        case 7: bpp = QStringLiteral("444"); break;
+        case 0: bpp = QStringLiteral("1"); bppstep = 8.0f; break;
+        case 1: bpp = QStringLiteral("2"); bppstep = 4.0f; break;
+        case 2: bpp = QStringLiteral("4"); bppstep = 2.0f; break;
+        case 3: bpp = QStringLiteral("8"); bppstep = 1.0f; break;
+        case 4: bpp = QStringLiteral("1555"); bppstep = 0.5f; break;
+        case 5: bpp = QStringLiteral("888"); bppstep = 0.5f; break;
+        case 6: bpp = QStringLiteral("565"); bppstep = 0.5f; break;
+        case 7: bpp = QStringLiteral("444"); bppstep = 0.6f; break;
         default: break;
     }
 
@@ -224,7 +225,7 @@ void VisualizerWidget::viewToString() {
 
     m_config->setText(m_setup.join(","));
 
-    float s = m_scale / 100.0;
+    float s = m_scale / 100.0f;
     float w = m_width * s;
     float h = m_height * s;
 
@@ -233,9 +234,9 @@ void VisualizerWidget::viewToString() {
 
     emu_set_lcd_ptrs(&data, &data_end, m_width, m_height, m_base, m_control, false);
 
-    m_view->setFixedSize(w, h);
+    m_view->setFixedSize(static_cast<int>(w), static_cast<int>(h));
     m_view->setRefreshRate(m_rate);
-    m_view->setConfig(m_height, m_width, m_base, m_control, data, data_end);
+    m_view->setConfig(bppstep, m_height, m_width, m_base, m_control, data, data_end);
     adjustSize();
 
     emit configChanged();

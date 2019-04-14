@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "../../core/lcd.h"
 
+#include <cmath>
 #include <QtGui/QPainter>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QAction>
@@ -55,7 +56,8 @@ void VisualizerDisplayWidget::setRefreshRate(int rate) {
     m_refresh = rate;
 }
 
-void VisualizerDisplayWidget::setConfig(uint32_t h, uint32_t w, uint32_t u, uint32_t c, uint32_t *d, uint32_t *e) {
+void VisualizerDisplayWidget::setConfig(float bppstep, uint32_t h, uint32_t w, uint32_t u, uint32_t c, uint32_t *d, uint32_t *e) {
+    m_bppstep = bppstep;
     m_height = h;
     m_width = w;
     m_upbase = u;
@@ -73,10 +75,10 @@ void VisualizerDisplayWidget::contextMenu(const QPoint& posa) {
     QTransform tr;
     tr.scale(m_width * 1.0 / width(), m_height * 1.0 / height());
     QPoint point = tr.map(posa);
-    uint32_t x = point.x();
-    uint32_t y = point.y();
+    uint32_t x = static_cast<uint32_t>(point.x());
+    uint32_t y = static_cast<uint32_t>(point.y());
 
-    QString addr = int2hex(m_upbase + (x + (m_width * y)), 6);
+    QString addr = int2hex(m_upbase + (static_cast<uint32_t>(std::floor((static_cast<float>(x)) / m_bppstep))) + (m_width * y), 6);
 
     coord += QString::number(x) + QStringLiteral("x") + QString::number(y);
     copy_addr += QStringLiteral(" '") + addr + QStringLiteral("'");
