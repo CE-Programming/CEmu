@@ -817,6 +817,7 @@ void MainWindow::breakRemoveRow(int row) {
     debug_watch(address, DBG_MASK_EXEC, false);
     if (!m_guiAdd && !m_useSoftCom) {
         disasmUpdate();
+        memUpdate();
     }
     m_breakpoints->removeRow(row);
 }
@@ -856,10 +857,7 @@ void MainWindow::breakModified(QTableWidgetItem *item) {
     QString addrStr;
     uint32_t addr;
 
-    if (col == BREAK_ENABLE_LOC) {
-        addr = static_cast<uint32_t>(hex2int(m_breakpoints->item(row, BREAK_ADDR_LOC)->text()));
-        debug_watch(addr, DBG_MASK_EXEC, item->checkState() == Qt::Checked);
-    } else if (col == BREAK_NAME_LOC) {
+    if (col == BREAK_NAME_LOC) {
         updateLabels();
     } else if (col == BREAK_ADDR_LOC){
         std::string s = item->text().toUpper().toStdString();
@@ -905,6 +903,7 @@ void MainWindow::breakModified(QTableWidgetItem *item) {
         m_breakpoints->blockSignals(false);
     }
     disasmUpdate();
+    memUpdate();
 }
 
 QString MainWindow::breakNextLabel() {
@@ -944,15 +943,16 @@ void MainWindow::breakAddGui() {
     c.setPosition(c.position()+9, QTextCursor::MoveAnchor);
     c.deleteChar();
 
-    // Add the red dot
+    // mark breakpoint
     if (disasm.highlight.breakP) {
-        c.insertHtml(QStringLiteral("<font color='#FFA3A3'>&#9679;</font>"));
+        c.insertHtml(QStringLiteral("<b>X</b>"));
     } else {
         c.insertText(QStringLiteral(" "));
     }
 
     if (m_disasm->labelCheck()) {
         disasmUpdate();
+        memUpdate();
     }
 }
 
@@ -995,7 +995,13 @@ bool MainWindow::breakAdd(const QString &label, uint32_t addr, bool enabled, boo
     btnEnable->setChecked(enabled);
 
     connect(btnRemove, &QToolButton::clicked, this, &MainWindow::breakRemoveSelected);
-    connect(btnEnable, &QToolButton::clicked, [this, btnEnable](bool checked) { btnEnable->setIcon(checked ? m_iconCheck : m_iconCheckGray); });
+    connect(btnEnable, &QToolButton::clicked, [this, btnEnable, row](bool checked) {
+        uint32_t addr = static_cast<uint32_t>(hex2int(m_breakpoints->item(row, BREAK_ADDR_LOC)->text()));
+        btnEnable->setIcon(checked ? m_iconCheck : m_iconCheckGray);
+        debug_watch(addr, DBG_MASK_EXEC, checked);
+        disasmUpdate();
+        memUpdate();
+    });
 
     QTableWidgetItem *itemLabel = new QTableWidgetItem(label);
     QTableWidgetItem *itemAddr = new QTableWidgetItem(addrStr);
@@ -1017,6 +1023,7 @@ bool MainWindow::breakAdd(const QString &label, uint32_t addr, bool enabled, boo
 
     if (!m_guiAdd && !m_useSoftCom) {
         disasmUpdate();
+        memUpdate();
     }
 
     m_prevBreakAddr = addrStr;
@@ -1250,6 +1257,7 @@ void MainWindow::watchRemoveRow(int row) {
 
         if (!m_guiAdd && !m_useSoftCom) {
             disasmUpdate();
+            memUpdate();
         }
     }
     m_watchpoints->removeRow(row);
@@ -1291,22 +1299,22 @@ void MainWindow::watchAddGuiRW() {
 }
 
 void MainWindow::watchAddGui() {
-    unsigned int mask = m_watchGUIMask;
-    uint32_t address = static_cast<uint32_t>(hex2int(m_disasm->getSelectedAddr()));
+    int mask = m_watchGUIMask;
+    uint32_t addr = static_cast<uint32_t>(hex2int(m_disasm->getSelectedAddr()));
 
     QTextCursor c = m_disasm->textCursor();
     c.setCharFormat(m_disasm->currentCharFormat());
 
     m_guiAdd = true;
 
-    watchAdd(watchNextLabel(), address, address, mask, true, false);
+    watchAdd(watchNextLabel(), addr, addr, mask, true, false);
 
     m_guiAdd = false;
 
     int32_t base = disasm.base;
     int32_t next = disasm.next;
 
-    disasm.base = address;
+    disasm.base = static_cast<int32_t>(addr);
     disasm.highlight.watchR = false;
     disasm.highlight.watchW = false;
     disasmGet();
@@ -1315,12 +1323,12 @@ void MainWindow::watchAddGui() {
     disasm.next = next;
 
     c.movePosition(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
-    c.setPosition(c.position()+7, QTextCursor::MoveAnchor);
+    c.setPosition(c.position() + 7, QTextCursor::MoveAnchor);
     c.deleteChar();
 
-    // Add the green dot
+    // mark read
     if (disasm.highlight.watchR) {
-        c.insertHtml(QStringLiteral("<font color='#A3FFA3'>&#9679;</font>"));
+        c.insertHtml(QStringLiteral("<b>R</b>"));
     } else {
         c.insertText(QStringLiteral(" "));
     }
@@ -1329,15 +1337,16 @@ void MainWindow::watchAddGui() {
     c.setPosition(c.position()+8, QTextCursor::MoveAnchor);
     c.deleteChar();
 
-    // Add the blue dot
+    // mark write
     if (disasm.highlight.watchW) {
-        c.insertHtml(QStringLiteral("<font color='#A3A3FF'>&#9679;</font>"));
+        c.insertHtml(QStringLiteral("<b>W</b>"));
     } else {
         c.insertText(QStringLiteral(" "));
     }
 
     if (m_disasm->labelCheck()) {
         disasmUpdate();
+        memUpdate();
     }
 }
 
@@ -2118,7 +2127,7 @@ void MainWindow::osUpdate() {
 
         for (uint32_t j = i; j < i+11; j++) {
             uint8_t ch = mem_peek_byte(j);
-            array.append(ch);
+            array.append(static_cast<char>(ch));
             if ((ch < 0x20) || (ch > 0x7e)) {
                 ch = '.';
             }

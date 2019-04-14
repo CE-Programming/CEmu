@@ -2242,10 +2242,10 @@ void MainWindow::disasmLine() {
             }
             sit++;
         } else {
-            symbols = QString(QStringLiteral("<font color='#A3FFA3'>%1</font><font color='#A3A3FF'>%2</font><font color='#FFA3A3'>%3</font>"))
-                             .arg((disasm.highlight.watchR  ? QStringLiteral("&#9679;") : QStringLiteral(" ")),
-                                  (disasm.highlight.watchW ? QStringLiteral("&#9679;") : QStringLiteral(" ")),
-                                  (disasm.highlight.breakP  ? QStringLiteral("&#9679;") : QStringLiteral(" ")));
+            symbols = QString(QStringLiteral("<b>%1%2%3</b>"))
+                             .arg((disasm.highlight.watchR  ? QStringLiteral("R") : QStringLiteral(" ")),
+                                  (disasm.highlight.watchW ? QStringLiteral("W") : QStringLiteral(" ")),
+                                  (disasm.highlight.breakP  ? QStringLiteral("X") : QStringLiteral(" ")));
 
             highlighted = QString::fromStdString(disasm.instr.operands)
                                   .replace(QRegularExpression(QStringLiteral("(\\$[0-9a-fA-F]+)")), QStringLiteral("<font color='green'>\\1</font>")) // hex numbers
@@ -2308,12 +2308,16 @@ void MainWindow::contextDisasm(const QPoint &posa) {
             disasmUpdateAddr(static_cast<int>(cpu.registers.PC), true);
         } else if (item->text() == toggleBreak) {
             breakAddGui();
+            memUpdate();
         } else if (item->text() == toggleRead) {
             watchAddGuiR();
+            memUpdate();
         } else if (item->text() == toggleWrite) {
             watchAddGuiW();
+            memUpdate();
         } else if (item->text() == toggleRw) {
             watchAddGuiRW();
+            memUpdate();
         } else if (item->text() == runUntil) {
             m_runUntilAddr = addr;
             debugToggle();

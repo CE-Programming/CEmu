@@ -533,7 +533,7 @@ private:
     bool m_isInDarkMode = false;
     const char* m_disasmOpcodeColor;
 
-    unsigned int m_watchGUIMask = DBG_MASK_NONE;
+    int m_watchGUIMask = DBG_MASK_NONE;
 
     QTranslator m_appTranslator;
     QLabel m_speedLabel;

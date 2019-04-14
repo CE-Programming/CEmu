@@ -281,16 +281,16 @@ void MainWindow::contextMemWidget(const QPoint &pos, uint32_t address) {
             qApp->clipboard()->setText(addr.toLatin1());
         } else if (item->text() == toggleBreak) {
             breakAdd(breakNextLabel(), address, true, true, false);
-            memDocksUpdate();
+            memUpdate();
         } else if (item->text() == toggleRead) {
             watchAdd(watchNextLabel(), address, address, DBG_MASK_READ, true, false);
-            memDocksUpdate();
+            memUpdate();
         } else if (item->text() == toggleWrite) {
             watchAdd(watchNextLabel(), address, address, DBG_MASK_WRITE, true, false);
-            memDocksUpdate();
+            memUpdate();
         } else if (item->text() == toggleRw) {
             watchAdd(watchNextLabel(), address, address, DBG_MASK_READ | DBG_MASK_WRITE, true, false);
-            memDocksUpdate();
+            memUpdate();
         }
     }
 }
