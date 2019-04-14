@@ -202,14 +202,14 @@ void VisualizerWidget::viewToString() {
     float bppstep = 1.0f;
 
     switch ((m_control >> 1) & 7) {
-        case 0: bpp = QStringLiteral("1"); bppstep = 8.0f; break;
-        case 1: bpp = QStringLiteral("2"); bppstep = 4.0f; break;
-        case 2: bpp = QStringLiteral("4"); bppstep = 2.0f; break;
-        case 3: bpp = QStringLiteral("8"); bppstep = 1.0f; break;
-        case 4: bpp = QStringLiteral("1555"); bppstep = 0.5f; break;
-        case 5: bpp = QStringLiteral("888"); bppstep = 0.5f; break;
-        case 6: bpp = QStringLiteral("565"); bppstep = 0.5f; break;
-        case 7: bpp = QStringLiteral("444"); bppstep = 0.6f; break;
+        case 0: bpp = QStringLiteral("1"); bppstep = 1.0f/0.125f; break;
+        case 1: bpp = QStringLiteral("2"); bppstep = 1.0f/0.25f; break;
+        case 2: bpp = QStringLiteral("4"); bppstep = 1.0f/0.5f; break;
+        case 3: bpp = QStringLiteral("8"); bppstep = 1.0f/1.0f; break;
+        case 4: bpp = QStringLiteral("1555"); bppstep = 1.0f/2.0f; break;
+        case 5: bpp = QStringLiteral("888"); bppstep = 1.0f/3.0f; break;
+        case 6: bpp = QStringLiteral("565"); bppstep = 1.0f/2.0f; break;
+        case 7: bpp = QStringLiteral("444"); bppstep = 1.0f/1.5f; break;
         default: break;
     }
 
