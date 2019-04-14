@@ -332,19 +332,28 @@ void HexWidget::paintEvent(QPaintEvent *event) {
             addr = lineAddr + col;
 
             painter.setPen(cText);
-            uint8_t data = m_data[addr];
+            uint8_t data = static_cast<uint8_t>(m_data[addr]);
             uint8_t flags = debug.addr[addr + m_base];
             bool selected = addr >= m_selectStart && addr <= m_selectEnd;
             bool modified = m_modified[addr];
 
+            QFont font = painter.font();
+            const QFont fontorig = painter.font();
+
             if (flags & DBG_MASK_READ) {
-                painter.setPen(QColor(0xA3FFA3));
+                font.setWeight(QFont::DemiBold);
+                painter.setFont(font);
+                painter.setPen(Qt::darkGreen);
             }
             if (flags & DBG_MASK_WRITE) {
-                painter.setPen(QColor(0xA3A3FF));
+                font.setWeight(QFont::DemiBold);
+                painter.setFont(font);
+                painter.setPen(Qt::darkYellow);
             }
             if (flags & DBG_MASK_EXEC) {
-                painter.setPen(QColor(0xFFA3A3));
+                font.setWeight(QFont::DemiBold);
+                painter.setFont(font);
+                painter.setPen(Qt::darkRed);
             }
 
             if (modified || selected) {
@@ -358,16 +367,18 @@ void HexWidget::paintEvent(QPaintEvent *event) {
 
             QString hex = int2hex(data, 2);
             if ((flags & DBG_MASK_READ) && (flags & DBG_MASK_WRITE)) {
-                painter.setPen(QColor(0xA3FFA3));
+                painter.setPen(Qt::darkGreen);
                 painter.drawText(xData, y, hex.at(0));
                 xData += m_charWidth;
-                painter.setPen(QColor(0xA3A3FF));
+                painter.setPen(Qt::darkYellow);
                 painter.drawText(xData, y, hex.at(1));
                 xData += 2 * m_charWidth;
             } else {
                 painter.drawText(xData, y, hex);
                 xData += 3 * m_charWidth;
             }
+
+            painter.setFont(fontorig);
 
             if (m_asciiArea) {
                 char ch = static_cast<char>(data);

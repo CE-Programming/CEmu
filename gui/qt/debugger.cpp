@@ -945,7 +945,7 @@ void MainWindow::breakAddGui() {
 
     // mark breakpoint
     if (disasm.highlight.breakP) {
-        c.insertHtml(QStringLiteral("<b>X</b>"));
+        c.insertHtml(QStringLiteral("<b><font color='#800000'>X</font></b>"));
     } else {
         c.insertText(QStringLiteral(" "));
     }
@@ -1328,7 +1328,7 @@ void MainWindow::watchAddGui() {
 
     // mark read
     if (disasm.highlight.watchR) {
-        c.insertHtml(QStringLiteral("<b>R</b>"));
+        c.insertHtml(QStringLiteral("<b><font color='#008000'>R</font></b>"));
     } else {
         c.insertText(QStringLiteral(" "));
     }
@@ -1339,7 +1339,7 @@ void MainWindow::watchAddGui() {
 
     // mark write
     if (disasm.highlight.watchW) {
-        c.insertHtml(QStringLiteral("<b>W</b>"));
+        c.insertHtml(QStringLiteral("<b><font color='#808000'>W</font></b>"));
     } else {
         c.insertText(QStringLiteral(" "));
     }
@@ -2427,7 +2427,7 @@ void MainWindow::contextOp(const QPoint &posa) {
     QAction *item = menu.exec(globalPos);
     if (item) {
         if (item->text() == gotoMem) {
-            gotoMemAddr(hex2int(addr));
+            gotoMemAddr(static_cast<uint32_t>(hex2int(addr)));
         }
         if (item->text() == copyAddr) {
             qApp->clipboard()->setText(addr);

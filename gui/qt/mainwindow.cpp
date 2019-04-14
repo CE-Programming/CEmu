@@ -2242,7 +2242,7 @@ void MainWindow::disasmLine() {
             }
             sit++;
         } else {
-            symbols = QString(QStringLiteral("<b>%1%2%3</b>"))
+            symbols = QString(QStringLiteral("<b><font color='#008000'>%1</font><font color='#808000'>%2</font><font color='#800000'>%3</font></b>"))
                              .arg((disasm.highlight.watchR  ? QStringLiteral("R") : QStringLiteral(" ")),
                                   (disasm.highlight.watchW ? QStringLiteral("W") : QStringLiteral(" ")),
                                   (disasm.highlight.breakP  ? QStringLiteral("X") : QStringLiteral(" ")));
