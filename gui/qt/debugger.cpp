@@ -1120,17 +1120,17 @@ bool MainWindow::portAdd(uint16_t port, int mask, bool unset) {
     btnFreeze->setCheckable(true);
     btnFreeze->setChecked(mask & DBG_MASK_PORT_FREEZE);
 
-    connect(btnRemove, &QToolButton::clicked, this, &MainWindow::portRemoveSelected);
-    connect(btnRead, &QToolButton::clicked, [this, btnRead](bool checked) { btnRead->setIcon(checked ? m_iconCheck : m_iconCheckGray); });
-    connect(btnWrite, &QToolButton::clicked, [this, btnWrite](bool checked) { btnWrite->setIcon(checked ? m_iconCheck : m_iconCheckGray); });
-    connect(btnFreeze, &QToolButton::clicked, [this, btnFreeze](bool checked) { btnFreeze->setIcon(checked ? m_iconCheck : m_iconCheckGray); });
-
     QTableWidgetItem *itemAddr = new QTableWidgetItem(portStr);
     QTableWidgetItem *itemData = new QTableWidgetItem(int2hex(data, 2));
     QTableWidgetItem *itemRead = new QTableWidgetItem;
     QTableWidgetItem *itemWrite = new QTableWidgetItem;
     QTableWidgetItem *itemFreeze = new QTableWidgetItem;
     QTableWidgetItem *itemRemove = new QTableWidgetItem;
+
+    connect(btnRemove, &QToolButton::clicked, this, &MainWindow::portRemoveSelected);
+    connect(btnRead, &QToolButton::clicked, [this, btnRead, itemRead](bool checked) { btnRead->setIcon(checked ? m_iconCheck : m_iconCheckGray); portModified(itemRead); });
+    connect(btnWrite, &QToolButton::clicked, [this, btnWrite, itemWrite](bool checked) { btnWrite->setIcon(checked ? m_iconCheck : m_iconCheckGray); portModified(itemWrite); });
+    connect(btnFreeze, &QToolButton::clicked, [this, btnFreeze, itemFreeze](bool checked) { btnFreeze->setIcon(checked ? m_iconCheck : m_iconCheckGray); portModified(itemFreeze); });
 
     m_ports->setItem(row, PORT_ADDR_LOC, itemAddr);
     m_ports->setItem(row, PORT_VALUE_LOC, itemData);
@@ -1183,7 +1183,7 @@ void MainWindow::portModified(QTableWidgetItem *item) {
         if (col == PORT_FREEZE_LOC) { // Freeze
             mask = DBG_MASK_PORT_FREEZE;
         }
-        debug_ports(port, mask, item->checkState() == Qt::Checked);
+        debug_ports(port, mask, static_cast<QAbstractButton *>(m_ports->cellWidget(row, col))->isChecked());
     } else if (col == PORT_ADDR_LOC) {
         std::string s = item->text().toUpper().toStdString();
         int mask;
