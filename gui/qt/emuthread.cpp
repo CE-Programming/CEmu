@@ -44,8 +44,8 @@ void gui_debug_close(void) {
 EmuThread::EmuThread(QObject *parent) : QThread{parent}, write{CONSOLE_BUFFER_SIZE},
                                         m_speed{100}, m_throttle{true},
                                         m_lastTime{std::chrono::steady_clock::now()},
-                                        m_request{RequestNone}, m_debug{false} {
-    assert(emu == Q_NULLPTR);
+                                        m_debug{false} {
+    assert(emu == nullptr);
     emu = this;
 }
 
@@ -119,12 +119,13 @@ void EmuThread::writeConsole(int console, const char *format, va_list args) {
 void EmuThread::doStuff() {
     const std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
 
-    if (m_request != RequestNone) {
-        switch (+m_request) {
+    if (!m_reqQueue.isEmpty()) {
+        int req = m_reqQueue.dequeue();
+        switch (+req) {
             default:
                 break;
             case RequestPause:
-                block();
+                block(req);
                 break;
             case RequestReset:
                 cpu_crash("user request");
@@ -133,33 +134,28 @@ void EmuThread::doStuff() {
                 sendFiles();
                 break;
             case RequestReceive:
-                block();
+                block(req);
                 break;
             case RequestDebugger:
                 debug_open(DBG_USER, 0);
                 break;
+            case RequestSave:
+                emit saved(emu_save(m_saveType, m_savePath.toStdString().c_str()));
+                break;
+            case RequestLoad:
+                emit loaded(emu_load(m_loadType, m_loadPath.toStdString().c_str()), m_loadType);
+                break;
+            case RequestAutoTester:
+                uint32_t run_rate_prev = emu_get_run_rate();
+                emu_set_run_rate(1000);
+                if (!autotester::doTestSequence()) {
+                    emit tested(1);
+                } else {
+                    emit tested(0);
+                }
+                emu_set_run_rate(run_rate_prev);
+                break;
         }
-
-        if (m_request == RequestSave) {
-            emit saved(emu_save(m_saveType, m_savePath.toStdString().c_str()));
-        }
-
-        if (m_request == RequestLoad) {
-            emit loaded(emu_load(m_loadType, m_loadPath.toStdString().c_str()), m_loadType);
-        }
-
-        if (m_request == RequestAutoTester) {
-            uint32_t run_rate_prev = emu_get_run_rate();
-            emu_set_run_rate(1000);
-            if (!autotester::doTestSequence()) {
-                emit tested(1);
-            } else {
-                emit tested(0);
-            }
-            emu_set_run_rate(run_rate_prev);
-        }
-
-        m_request = RequestNone;
     }
 
     m_lastTime += std::chrono::steady_clock::now() - cur_time;

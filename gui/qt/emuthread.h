@@ -8,6 +8,7 @@
 #include <QtCore/QThread>
 #include <QtCore/QTimer>
 #include <QtCore/QSemaphore>
+#include <QtCore/QQueue>
 
 #include <chrono>
 #include <condition_variable>
@@ -95,15 +96,16 @@ private:
     }
 
     void req(int req) {
-        m_request = req;
+        m_reqQueue.enqueue(req);
     }
 
-    void block() {
+    void block(int status) {
         std::unique_lock<std::mutex> lock(m_mutex);
-        emit blocked(m_request);
+        emit blocked(status);
         m_cv.wait(lock);
     }
 
+    QQueue<int> m_reqQueue;
     emu_data_t m_saveType;
     emu_data_t m_loadType;
 
@@ -113,7 +115,6 @@ private:
     std::mutex m_mutexSpeed;
     std::condition_variable m_cvSpeed;
 
-    std::atomic<int> m_request;
     bool m_debug; // protected by m_mutexDebug
 
     QString m_autotesterPath;
