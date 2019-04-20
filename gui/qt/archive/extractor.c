@@ -22,7 +22,7 @@ bool extractor(const char *filename, const char *tmppath, bool (*mark)(const cha
     static char arr[4096];
     const void *buff;
     size_t size;
-    la_int64_t offset;
+    int64_t offset;
     int r;
 
     archive_read_support_format_all(a);

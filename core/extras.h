@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-// Those aren't related to physical keys - they're keycodes for the OS.
+/* Those aren't related to physical keys - they're keycodes for the OS. */
 #define CE_KEY_ENTER    0x05
 #define CE_KEY_CLEAR    0x09
 #define CE_KEY_PRGM     0xDA
