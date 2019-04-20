@@ -460,6 +460,7 @@ static bool usb_execute_setup(struct libusb_transfer *xfer) {
     struct libusb_control_setup *setup = libusb_control_transfer_get_setup(xfer);
     void *data = libusb_control_transfer_get_data(xfer);
     uint8_t type = setup->wValue >> 8, index = setup->wValue, iface, alt, endpt;
+    uint16_t length = setup->wLength;
     xfer->status = LIBUSB_TRANSFER_STALL;
     xfer->actual_length = 0;
     switch (setup->bRequest) {
@@ -540,8 +541,8 @@ static bool usb_execute_setup(struct libusb_transfer *xfer) {
         default:
             return false;
     }
-    if (xfer->actual_length > setup->wLength) {
-        xfer->actual_length = setup->wLength;
+    if (xfer->actual_length > length) {
+        xfer->actual_length = length;
     }
     if (xfer->status != LIBUSB_TRANSFER_COMPLETED) {
         //asm("int3");
