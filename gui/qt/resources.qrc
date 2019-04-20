@@ -39,7 +39,6 @@
         <file>resources/icons/lcd.png</file>
         <file>resources/icons/reset.png</file>
         <file>resources/icons/wizard.png</file>
-        <file>resources/icons/clock.png</file>
         <file>resources/icons/bug.png</file>
         <file>resources/icons/save.png</file>
         <file>resources/icons/refresh.png</file>
@@ -61,13 +60,8 @@
         <file>resources/icons/script.png</file>
         <file>resources/icons/toggle_console.png</file>
         <file>resources/icons/port.png</file>
-        <file>resources/icons/change_cert.png</file>
         <file>resources/icons/key_history.png</file>
-        <file>resources/icons/check_update.png</file>
         <file>resources/icons/ui_edit.png</file>
-        <file>resources/icons/variables.png</file>
-        <file>resources/icons/watchpoints.png</file>
-        <file>resources/icons/wizard.png</file>
         <file>resources/icons/checkgray.png</file>
         <file>resources/icons/check.png</file>
         <file>resources/icons/characters.png</file>
