@@ -809,8 +809,9 @@ void MainWindow::breakSetPrev(QTableWidgetItem *current, QTableWidgetItem *previ
     if (current == Q_NULLPTR || current->text().isEmpty()) {
         return;
     }
-    if (current == m_breakpoints->item(current->row(), BREAK_ADDR_LOC)) {
-        m_prevBreakAddr = m_breakpoints->item(current->row(), BREAK_ADDR_LOC)->text();
+
+    if (current->column() == BREAK_ADDR_LOC) {
+        m_prevBreakAddr = current->text();
     }
 }
 
@@ -1055,8 +1056,9 @@ void MainWindow::portSetPrev(QTableWidgetItem *current, QTableWidgetItem *previo
     if (current == Q_NULLPTR || current->text().isEmpty()) {
         return;
     }
-    if (current == m_ports->item(current->row(), PORT_ADDR_LOC)) {
-        m_prevPortAddr = m_ports->item(current->row(), PORT_ADDR_LOC)->text();
+
+    if (current->column() == PORT_ADDR_LOC) {
+        m_prevPortAddr = current->text();
     }
 }
 
@@ -1252,11 +1254,11 @@ void MainWindow::watchSetPrev(QTableWidgetItem *current, QTableWidgetItem *previ
         return;
     }
 
-    if (current == m_watchpoints->item(current->row(), WATCH_LOW_LOC)) {
-        m_prevWatchLow = m_watchpoints->item(current->row(), WATCH_LOW_LOC)->text();
+    if (current->column() == WATCH_LOW_LOC) {
+        m_prevWatchLow = current->text();
     }
-    if (current == m_watchpoints->item(current->row(), WATCH_HIGH_LOC)) {
-        m_prevWatchHigh = m_watchpoints->item(current->row(), WATCH_HIGH_LOC)->text();
+    if (current->column() == WATCH_HIGH_LOC) {
+        m_prevWatchHigh = current->text();
     }
 }
 
