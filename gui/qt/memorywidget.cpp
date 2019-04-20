@@ -43,7 +43,7 @@ void MainWindow::flashUpdate() {
         return;
     }
 
-    ui->flashEdit->setData(QByteArray::fromRawData(reinterpret_cast<char*>(mem.flash.block), 0x400000));
+    ui->flashEdit->setData({reinterpret_cast<const char *>(mem.flash.block), 0x400000});
 }
 
 void MainWindow::ramUpdate() {
@@ -52,7 +52,7 @@ void MainWindow::ramUpdate() {
     }
 
     ui->ramEdit->setBase(0xD00000);
-    ui->ramEdit->setData(QByteArray::fromRawData(reinterpret_cast<char*>(mem.ram.block), 0x65800));
+    ui->ramEdit->setData({reinterpret_cast<const char *>(mem.ram.block), 0x65800});
 }
 
 void MainWindow::memUpdateEdit(HexWidget *edit, bool force) {
