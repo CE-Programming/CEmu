@@ -564,11 +564,11 @@ static void usb_execute_qh(usb_qh_t *qh) {
         if (usb.xfer->length != 8 || usb_gather_qtd(libusb_control_transfer_get_data(usb.xfer), qtd, &usb.xfer->length)) {
             return usb_host_sys_err();
         }
+        usb.xfer->type = LIBUSB_TRANSFER_TYPE_CONTROL;
         if (usb_execute_setup(usb.xfer)) {
             usb.wait = usb.process = true;
             return usb_process_xfer(usb.xfer);
         }
-        usb.xfer->type = LIBUSB_TRANSFER_TYPE_CONTROL;
     } else {
         if (qtd->pid > 2 || usb_gather_qtd(usb.xfer->buffer, qtd, &usb.xfer->length)) {
             return usb_host_sys_err();
