@@ -96,8 +96,8 @@ void SendingHandler::resendSelected() {
     QStringList files;
 
     for (int row = 0; row < m_table->rowCount(); row++) {
-        if (static_cast<QAbstractButton *>(m_table->cellWidget(row, RECENT_SELECT))->isChecked()) {
-            files.append(m_table->item(row, RECENT_PATH)->text());
+        if (static_cast<QAbstractButton *>(m_table->cellWidget(row, RECENT_SELECT_COL))->isChecked()) {
+            files.append(m_table->item(row, RECENT_PATH_COL)->text());
         }
     }
 
@@ -108,8 +108,8 @@ void SendingHandler::resendPressed() {
     QStringList files;
 
     for (int row = 0; row < m_table->rowCount(); row++){
-        if (sender() == m_table->cellWidget(row, RECENT_RESEND)) {
-            files.append(m_table->item(row, RECENT_PATH)->text());
+        if (sender() == m_table->cellWidget(row, RECENT_RESEND_COL)) {
+            files.append(m_table->item(row, RECENT_PATH_COL)->text());
             break;
         }
     }
@@ -119,7 +119,7 @@ void SendingHandler::resendPressed() {
 
 void SendingHandler::removeRow() {
     for (int row = 0; row < m_table->rowCount(); row++){
-        if (sender() == m_table->cellWidget(row, RECENT_REMOVE)) {
+        if (sender() == m_table->cellWidget(row, RECENT_REMOVE_COL)) {
             m_table->removeRow(row);
             break;
         }
@@ -191,7 +191,7 @@ void SendingHandler::addFile(const QString &file, bool select) {
     int j, rows = m_table->rowCount();
 
     for (j = 0; j < rows; j++) {
-        if (!m_table->item(j, RECENT_PATH)->text().compare(file, Qt::CaseInsensitive)) {
+        if (!m_table->item(j, RECENT_PATH_COL)->text().compare(file, Qt::CaseInsensitive)) {
             return;
         }
     }
@@ -220,13 +220,13 @@ void SendingHandler::addFile(const QString &file, bool select) {
     connect(btnRemove, &QToolButton::clicked, this, &SendingHandler::removeRow);
     connect(btnSelect, &QToolButton::clicked, [this, btnSelect](bool checked) { btnSelect->setIcon(checked ? m_iconCheck : m_iconCheckGray); });
 
-    m_table->setItem(rows, RECENT_REMOVE, remove);
-    m_table->setItem(rows, RECENT_RESEND, resend);
-    m_table->setItem(rows, RECENT_SELECT, selected);
-    m_table->setItem(rows, RECENT_PATH, path);
-    m_table->setCellWidget(rows, RECENT_REMOVE, btnRemove);
-    m_table->setCellWidget(rows, RECENT_RESEND, btnResend);
-    m_table->setCellWidget(rows, RECENT_SELECT, btnSelect);
+    m_table->setItem(rows, RECENT_REMOVE_COL, remove);
+    m_table->setItem(rows, RECENT_RESEND_COL, resend);
+    m_table->setItem(rows, RECENT_SELECT_COL, selected);
+    m_table->setItem(rows, RECENT_PATH_COL, path);
+    m_table->setCellWidget(rows, RECENT_REMOVE_COL, btnRemove);
+    m_table->setCellWidget(rows, RECENT_RESEND_COL, btnResend);
+    m_table->setCellWidget(rows, RECENT_SELECT_COL, btnSelect);
 
     m_table->setVisible(false);
     m_table->resizeColumnsToContents();

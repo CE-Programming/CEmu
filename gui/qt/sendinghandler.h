@@ -44,10 +44,10 @@ private:
     QStringList getValidFilesFromArchive(const QString &archivePath);
 
     enum {
-        RECENT_REMOVE,
-        RECENT_RESEND,
-        RECENT_SELECT,
-        RECENT_PATH
+        RECENT_REMOVE_COL,
+        RECENT_RESEND_COL,
+        RECENT_SELECT_COL,
+        RECENT_PATH_COL
     };
 
     QTemporaryDir m_tempDir;

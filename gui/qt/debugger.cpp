@@ -195,10 +195,10 @@ void MainWindow::debugExportFile(const QString &filename) {
     QStringList breakAddr;
     QStringList breakSet;
     for(i = 0; i < m_breakpoints->rowCount(); i++) {
-        if (m_breakpoints->item(i, BREAK_ADDR_LOC)->text() != DEBUG_UNSET_ADDR) {
-            breakLabel.append(m_breakpoints->item(i, BREAK_NAME_LOC)->text());
-            breakAddr.append(m_breakpoints->item(i, BREAK_ADDR_LOC)->text());
-            breakSet.append(static_cast<QAbstractButton *>(m_breakpoints->cellWidget(i, BREAK_ENABLE_LOC))->isChecked() ? TXT_YES : TXT_NO);
+        if (m_breakpoints->item(i, BREAK_ADDR_COL)->text() != DEBUG_UNSET_ADDR) {
+            breakLabel.append(m_breakpoints->item(i, BREAK_NAME_COL)->text());
+            breakAddr.append(m_breakpoints->item(i, BREAK_ADDR_COL)->text());
+            breakSet.append(static_cast<QAbstractButton *>(m_breakpoints->cellWidget(i, BREAK_ENABLE_COL))->isChecked() ? TXT_YES : TXT_NO);
         }
     }
 
@@ -213,12 +213,12 @@ void MainWindow::debugExportFile(const QString &filename) {
     QStringList watchR;
     QStringList watchW;
     for(i = 0; i < m_watchpoints->rowCount(); i++) {
-        if (m_watchpoints->item(i, WATCH_LOW_LOC)->text() != DEBUG_UNSET_ADDR) {
-            watchLabel.append(m_watchpoints->item(i, WATCH_NAME_LOC)->text());
-            watchLow.append(m_watchpoints->item(i, WATCH_LOW_LOC)->text());
-            watchHigh.append(m_watchpoints->item(i, WATCH_HIGH_LOC)->text());
-            watchR.append(static_cast<QAbstractButton *>(m_watchpoints->cellWidget(i, WATCH_READ_LOC))->isChecked() ? TXT_YES : TXT_NO);
-            watchW.append(static_cast<QAbstractButton *>(m_watchpoints->cellWidget(i, WATCH_WRITE_LOC))->isChecked() ? TXT_YES : TXT_NO);
+        if (m_watchpoints->item(i, WATCH_LOW_COL)->text() != DEBUG_UNSET_ADDR) {
+            watchLabel.append(m_watchpoints->item(i, WATCH_NAME_COL)->text());
+            watchLow.append(m_watchpoints->item(i, WATCH_LOW_COL)->text());
+            watchHigh.append(m_watchpoints->item(i, WATCH_HIGH_COL)->text());
+            watchR.append(static_cast<QAbstractButton *>(m_watchpoints->cellWidget(i, WATCH_READ_COL))->isChecked() ? TXT_YES : TXT_NO);
+            watchW.append(static_cast<QAbstractButton *>(m_watchpoints->cellWidget(i, WATCH_WRITE_COL))->isChecked() ? TXT_YES : TXT_NO);
         }
     }
 
@@ -234,11 +234,11 @@ void MainWindow::debugExportFile(const QString &filename) {
     QStringList portW;
     QStringList portF;
     for(i = 0; i < m_ports->rowCount(); i++) {
-        if (m_ports->item(i, PORT_ADDR_LOC)->text() != DEBUG_UNSET_PORT) {
-            portAddr.append(m_ports->item(i, PORT_ADDR_LOC)->text());
-            portR.append(static_cast<QAbstractButton *>(m_ports->cellWidget(i, PORT_READ_LOC))->isChecked() ? TXT_YES : TXT_NO);
-            portW.append(static_cast<QAbstractButton *>(m_ports->cellWidget(i, PORT_WRITE_LOC))->isChecked() ? TXT_YES : TXT_NO);
-            portF.append(static_cast<QAbstractButton *>(m_ports->cellWidget(i, PORT_FREEZE_LOC))->isChecked() ? TXT_YES : TXT_NO);
+        if (m_ports->item(i, PORT_ADDR_COL)->text() != DEBUG_UNSET_PORT) {
+            portAddr.append(m_ports->item(i, PORT_ADDR_COL)->text());
+            portR.append(static_cast<QAbstractButton *>(m_ports->cellWidget(i, PORT_READ_COL))->isChecked() ? TXT_YES : TXT_NO);
+            portW.append(static_cast<QAbstractButton *>(m_ports->cellWidget(i, PORT_WRITE_COL))->isChecked() ? TXT_YES : TXT_NO);
+            portF.append(static_cast<QAbstractButton *>(m_ports->cellWidget(i, PORT_FREEZE_COL))->isChecked() ? TXT_YES : TXT_NO);
         }
     }
 
@@ -396,8 +396,8 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
             input = int2hex(data, 6);
 
             for (int i = 0; i < m_breakpoints->rowCount(); i++) {
-                if (m_breakpoints->item(i, BREAK_ADDR_LOC)->text() == input) {
-                    label = m_breakpoints->item(row, BREAK_NAME_LOC)->text();
+                if (m_breakpoints->item(i, BREAK_ADDR_COL)->text() == input) {
+                    label = m_breakpoints->item(row, BREAK_NAME_COL)->text();
                     valid = true;
                     break;
                 }
@@ -417,10 +417,10 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
             text = tr("Hit ") + type + tr(" watchpoint ") + input;
 
             for (int i = 0; i < m_watchpoints->rowCount(); i++) {
-                uint32_t low = static_cast<uint32_t>(hex2int(m_watchpoints->item(i, WATCH_LOW_LOC)->text()));
-                uint32_t high = static_cast<uint32_t>(hex2int(m_watchpoints->item(i, WATCH_HIGH_LOC)->text()));
+                uint32_t low = static_cast<uint32_t>(hex2int(m_watchpoints->item(i, WATCH_LOW_COL)->text()));
+                uint32_t high = static_cast<uint32_t>(hex2int(m_watchpoints->item(i, WATCH_HIGH_COL)->text()));
                 if (addr >= low && addr <= high) {
-                    label = m_watchpoints->item(row, WATCH_NAME_LOC)->text();
+                    label = m_watchpoints->item(row, WATCH_NAME_COL)->text();
                     valid = true;
                     break;
                 }
@@ -810,13 +810,13 @@ void MainWindow::breakSetPrev(QTableWidgetItem *current, QTableWidgetItem *previ
         return;
     }
 
-    if (current->column() == BREAK_ADDR_LOC) {
+    if (current->column() == BREAK_ADDR_COL) {
         m_prevBreakAddr = current->text();
     }
 }
 
 void MainWindow::breakRemoveRow(int row) {
-    uint32_t address = static_cast<uint32_t>(hex2int(m_breakpoints->item(row, BREAK_ADDR_LOC)->text()));
+    uint32_t address = static_cast<uint32_t>(hex2int(m_breakpoints->item(row, BREAK_ADDR_COL)->text()));
 
     debug_watch(address, DBG_MASK_EXEC, false);
     if (!m_guiAdd && !m_useSoftCom) {
@@ -828,7 +828,7 @@ void MainWindow::breakRemoveRow(int row) {
 
 void MainWindow::breakRemoveSelected() {
     for (int row = 0; row < m_breakpoints->rowCount(); row++){
-        if (sender() == m_breakpoints->cellWidget(row, BREAK_REMOVE_LOC)) {
+        if (sender() == m_breakpoints->cellWidget(row, BREAK_REMOVE_COL)) {
             breakRemoveRow(row);
             break;
         }
@@ -837,7 +837,7 @@ void MainWindow::breakRemoveSelected() {
 
 void MainWindow::breakRemove(uint32_t address) {
     for (int row = 0; row < m_breakpoints->rowCount(); row++) {
-        uint32_t test = static_cast<uint32_t>(hex2int(m_breakpoints->item(row, BREAK_ADDR_LOC)->text()));
+        uint32_t test = static_cast<uint32_t>(hex2int(m_breakpoints->item(row, BREAK_ADDR_COL)->text()));
         if (address == test) {
             breakRemoveRow(row);
             break;
@@ -847,7 +847,7 @@ void MainWindow::breakRemove(uint32_t address) {
 
 int MainWindow::breakGetMask(int row) {
     int mask;
-    if (static_cast<QAbstractButton *>(m_breakpoints->cellWidget(row, BREAK_ENABLE_LOC))->isChecked()) {
+    if (static_cast<QAbstractButton *>(m_breakpoints->cellWidget(row, BREAK_ENABLE_COL))->isChecked()) {
         mask = DBG_MASK_EXEC;
     } else {
         mask = DBG_MASK_NONE;
@@ -865,9 +865,9 @@ void MainWindow::breakModified(QTableWidgetItem *item) {
     QString addrStr;
     uint32_t addr;
 
-    if (col == BREAK_NAME_LOC) {
+    if (col == BREAK_NAME_COL) {
         updateLabels();
-    } else if (col == BREAK_ADDR_LOC){
+    } else if (col == BREAK_ADDR_COL){
         std::string s = item->text().toUpper().toStdString();
         QString equate;
         int mask;
@@ -876,8 +876,8 @@ void MainWindow::breakModified(QTableWidgetItem *item) {
         if (!equate.isEmpty()) {
             s = equate.toStdString();
             m_breakpoints->blockSignals(true);
-            if (m_breakpoints->item(row, BREAK_NAME_LOC)->text() == (QStringLiteral("Label") + QString::number(row))) {
-                m_breakpoints->item(row, BREAK_NAME_LOC)->setText(item->text());
+            if (m_breakpoints->item(row, BREAK_NAME_COL)->text() == (QStringLiteral("Label") + QString::number(row))) {
+                m_breakpoints->item(row, BREAK_NAME_COL)->setText(item->text());
             }
             m_breakpoints->blockSignals(false);
         }
@@ -894,7 +894,7 @@ void MainWindow::breakModified(QTableWidgetItem *item) {
 
         // Return if address is already set
         for (int i = 0; i < m_breakpoints->rowCount(); i++) {
-            if (m_breakpoints->item(i, BREAK_ADDR_LOC)->text() == addrStr && i != row) {
+            if (m_breakpoints->item(i, BREAK_ADDR_COL)->text() == addrStr && i != row) {
                 item->setText(m_prevBreakAddr);
                 m_breakpoints->blockSignals(false);
                 return;
@@ -976,7 +976,7 @@ bool MainWindow::breakAdd(const QString &label, uint32_t addr, bool enabled, boo
 
     // return if address is already set
     for (int i = 0; i < row; i++) {
-        if (m_breakpoints->item(i, BREAK_ADDR_LOC)->text() == addrStr) {
+        if (m_breakpoints->item(i, BREAK_ADDR_COL)->text() == addrStr) {
             if (addrStr != DEBUG_UNSET_ADDR) {
                 if (!m_useSoftCom) {
                     m_breakpoints->selectRow(i);
@@ -1004,7 +1004,7 @@ bool MainWindow::breakAdd(const QString &label, uint32_t addr, bool enabled, boo
 
     connect(btnRemove, &QToolButton::clicked, this, &MainWindow::breakRemoveSelected);
     connect(btnEnable, &QToolButton::clicked, [this, btnEnable, row](bool checked) {
-        uint32_t addr = static_cast<uint32_t>(hex2int(m_breakpoints->item(row, BREAK_ADDR_LOC)->text()));
+        uint32_t addr = static_cast<uint32_t>(hex2int(m_breakpoints->item(row, BREAK_ADDR_COL)->text()));
         btnEnable->setIcon(checked ? m_iconCheck : m_iconCheckGray);
         debug_watch(addr, DBG_MASK_EXEC, checked);
         disasmUpdate();
@@ -1016,14 +1016,14 @@ bool MainWindow::breakAdd(const QString &label, uint32_t addr, bool enabled, boo
     QTableWidgetItem *itemBreak = new QTableWidgetItem;
     QTableWidgetItem *itemRemove = new QTableWidgetItem;
 
-    m_breakpoints->setItem(row, BREAK_NAME_LOC, itemLabel);
-    m_breakpoints->setItem(row, BREAK_ADDR_LOC, itemAddr);
-    m_breakpoints->setItem(row, BREAK_ENABLE_LOC, itemBreak);
-    m_breakpoints->setItem(row, BREAK_REMOVE_LOC, itemRemove);
-    m_breakpoints->setCellWidget(row, BREAK_REMOVE_LOC, btnRemove);
-    m_breakpoints->setCellWidget(row, BREAK_ENABLE_LOC, btnEnable);
+    m_breakpoints->setItem(row, BREAK_NAME_COL, itemLabel);
+    m_breakpoints->setItem(row, BREAK_ADDR_COL, itemAddr);
+    m_breakpoints->setItem(row, BREAK_ENABLE_COL, itemBreak);
+    m_breakpoints->setItem(row, BREAK_REMOVE_COL, itemRemove);
+    m_breakpoints->setCellWidget(row, BREAK_REMOVE_COL, btnRemove);
+    m_breakpoints->setCellWidget(row, BREAK_ENABLE_COL, btnEnable);
 
-    m_breakpoints->setCurrentCell(row, BREAK_REMOVE_LOC);
+    m_breakpoints->setCurrentCell(row, BREAK_REMOVE_COL);
 
     if (addrStr != DEBUG_UNSET_ADDR) {
         debug_watch(addr, DBG_MASK_EXEC, enabled);
@@ -1057,20 +1057,20 @@ void MainWindow::portSetPrev(QTableWidgetItem *current, QTableWidgetItem *previo
         return;
     }
 
-    if (current->column() == PORT_ADDR_LOC) {
+    if (current->column() == PORT_ADDR_COL) {
         m_prevPortAddr = current->text();
     }
 }
 
 void MainWindow::portRemoveRow(int row) {
-    uint16_t port = static_cast<uint16_t>(hex2int(m_ports->item(row, PORT_ADDR_LOC)->text()));
+    uint16_t port = static_cast<uint16_t>(hex2int(m_ports->item(row, PORT_ADDR_COL)->text()));
     debug_ports(port, ~DBG_MASK_NONE, false);
     m_ports->removeRow(row);
 }
 
 void MainWindow::portRemoveSelected() {
     for (int row = 0; row < m_ports->rowCount(); row++){
-        if (sender() == m_ports->cellWidget(row, PORT_REMOVE_LOC)) {
+        if (sender() == m_ports->cellWidget(row, PORT_REMOVE_COL)) {
             portRemoveRow(row);
             break;
         }
@@ -1078,10 +1078,10 @@ void MainWindow::portRemoveSelected() {
 }
 
 void MainWindow::portPopulate(int currRow) {
-    uint16_t port = static_cast<uint16_t>(hex2int(m_ports->item(currRow, PORT_ADDR_LOC)->text()));
+    uint16_t port = static_cast<uint16_t>(hex2int(m_ports->item(currRow, PORT_ADDR_COL)->text()));
     uint8_t read = static_cast<uint8_t>(port_peek_byte(port));
 
-    m_ports->item(currRow, PORT_VALUE_LOC)->setText(int2hex(read, 2));
+    m_ports->item(currRow, PORT_VALUE_COL)->setText(int2hex(read, 2));
 }
 
 void MainWindow::portAddSlot() {
@@ -1104,7 +1104,7 @@ bool MainWindow::portAdd(uint16_t port, int mask, bool unset) {
 
     // return if port is already set
     for (int i = 0; i < row; i++) {
-        if (m_ports->item(i, PORT_ADDR_LOC)->text() == portStr) {
+        if (m_ports->item(i, PORT_ADDR_COL)->text() == portStr) {
             if (portStr != DEBUG_UNSET_PORT) {
                 return false;
             }
@@ -1144,16 +1144,16 @@ bool MainWindow::portAdd(uint16_t port, int mask, bool unset) {
     connect(btnWrite, &QToolButton::clicked, [this, btnWrite, itemWrite](bool checked) { btnWrite->setIcon(checked ? m_iconCheck : m_iconCheckGray); portModified(itemWrite); });
     connect(btnFreeze, &QToolButton::clicked, [this, btnFreeze, itemFreeze](bool checked) { btnFreeze->setIcon(checked ? m_iconCheck : m_iconCheckGray); portModified(itemFreeze); });
 
-    m_ports->setItem(row, PORT_ADDR_LOC, itemAddr);
-    m_ports->setItem(row, PORT_VALUE_LOC, itemData);
-    m_ports->setItem(row, PORT_READ_LOC, itemRead);
-    m_ports->setItem(row, PORT_WRITE_LOC, itemWrite);
-    m_ports->setItem(row, PORT_FREEZE_LOC, itemFreeze);
-    m_ports->setItem(row, PORT_REMOVE_LOC, itemRemove);
-    m_ports->setCellWidget(row, PORT_REMOVE_LOC, btnRemove);
-    m_ports->setCellWidget(row, PORT_READ_LOC, btnRead);
-    m_ports->setCellWidget(row, PORT_WRITE_LOC, btnWrite);
-    m_ports->setCellWidget(row, PORT_FREEZE_LOC, btnFreeze);
+    m_ports->setItem(row, PORT_ADDR_COL, itemAddr);
+    m_ports->setItem(row, PORT_VALUE_COL, itemData);
+    m_ports->setItem(row, PORT_READ_COL, itemRead);
+    m_ports->setItem(row, PORT_WRITE_COL, itemWrite);
+    m_ports->setItem(row, PORT_FREEZE_COL, itemFreeze);
+    m_ports->setItem(row, PORT_REMOVE_COL, itemRemove);
+    m_ports->setCellWidget(row, PORT_REMOVE_COL, btnRemove);
+    m_ports->setCellWidget(row, PORT_READ_COL, btnRead);
+    m_ports->setCellWidget(row, PORT_WRITE_COL, btnWrite);
+    m_ports->setCellWidget(row, PORT_FREEZE_COL, btnFreeze);
 
     m_ports->selectRow(row);
     m_prevPortAddr = portStr;
@@ -1166,13 +1166,13 @@ bool MainWindow::portAdd(uint16_t port, int mask, bool unset) {
 
 int MainWindow::portGetMask(int row) {
     unsigned int mask = 0;
-    if (static_cast<QAbstractButton *>(m_ports->cellWidget(row, PORT_READ_LOC))->isChecked()) {
+    if (static_cast<QAbstractButton *>(m_ports->cellWidget(row, PORT_READ_COL))->isChecked()) {
         mask |= DBG_MASK_PORT_READ;
     }
-    if (static_cast<QAbstractButton *>(m_ports->cellWidget(row, PORT_WRITE_LOC))->isChecked()) {
+    if (static_cast<QAbstractButton *>(m_ports->cellWidget(row, PORT_WRITE_COL))->isChecked()) {
         mask |= DBG_MASK_PORT_WRITE;
     }
-    if (static_cast<QAbstractButton *>(m_ports->cellWidget(row, PORT_FREEZE_LOC))->isChecked()) {
+    if (static_cast<QAbstractButton *>(m_ports->cellWidget(row, PORT_FREEZE_COL))->isChecked()) {
         mask |= DBG_MASK_PORT_FREEZE;
     }
     return mask;
@@ -1186,21 +1186,21 @@ void MainWindow::portModified(QTableWidgetItem *item) {
     int row = item->row();
     int col = item->column();
 
-    if (col == PORT_READ_LOC || col == PORT_WRITE_LOC || col == PORT_FREEZE_LOC) {
-        uint16_t port = static_cast<uint16_t>(hex2int(m_ports->item(row, PORT_ADDR_LOC)->text()));
+    if (col == PORT_READ_COL || col == PORT_WRITE_COL || col == PORT_FREEZE_COL) {
+        uint16_t port = static_cast<uint16_t>(hex2int(m_ports->item(row, PORT_ADDR_COL)->text()));
         unsigned int mask = DBG_MASK_NONE;
 
-        if (col == PORT_READ_LOC) {   // Break on read
+        if (col == PORT_READ_COL) {   // Break on read
             mask = DBG_MASK_PORT_READ;
         }
-        if (col == PORT_WRITE_LOC) {  // Break on write
+        if (col == PORT_WRITE_COL) {  // Break on write
             mask = DBG_MASK_PORT_WRITE;
         }
-        if (col == PORT_FREEZE_LOC) { // Freeze
+        if (col == PORT_FREEZE_COL) { // Freeze
             mask = DBG_MASK_PORT_FREEZE;
         }
         debug_ports(port, mask, static_cast<QAbstractButton *>(m_ports->cellWidget(row, col))->isChecked());
-    } else if (col == PORT_ADDR_LOC) {
+    } else if (col == PORT_ADDR_COL) {
         std::string s = item->text().toUpper().toStdString();
         int mask;
 
@@ -1217,7 +1217,7 @@ void MainWindow::portModified(QTableWidgetItem *item) {
 
         // return if port is already set
         for (int i=0; i<m_ports->rowCount(); i++) {
-            if (m_ports->item(i, PORT_ADDR_LOC)->text() == portStr && i != row) {
+            if (m_ports->item(i, PORT_ADDR_COL)->text() == portStr && i != row) {
                 item->setText(m_prevPortAddr);
                 m_ports->blockSignals(false);
                 return;
@@ -1231,11 +1231,11 @@ void MainWindow::portModified(QTableWidgetItem *item) {
         mask = portGetMask(row);
         debug_ports(port, mask, true);
         item->setText(portStr);
-        m_ports->item(row, PORT_VALUE_LOC)->setText(int2hex(data, 2));
-    } else if (col == PORT_VALUE_LOC) {
-        if (m_ports->item(row, PORT_ADDR_LOC)->text() != DEBUG_UNSET_PORT) {
+        m_ports->item(row, PORT_VALUE_COL)->setText(int2hex(data, 2));
+    } else if (col == PORT_VALUE_COL) {
+        if (m_ports->item(row, PORT_ADDR_COL)->text() != DEBUG_UNSET_PORT) {
             uint8_t pdata = static_cast<uint8_t>(hex2int(item->text()));
-            uint16_t port = static_cast<uint16_t>(hex2int(m_ports->item(row, PORT_ADDR_LOC)->text()));
+            uint16_t port = static_cast<uint16_t>(hex2int(m_ports->item(row, PORT_ADDR_COL)->text()));
 
             port_poke_byte(port, pdata);
             item->setText(int2hex(port_peek_byte(port), 2));
@@ -1254,19 +1254,19 @@ void MainWindow::watchSetPrev(QTableWidgetItem *current, QTableWidgetItem *previ
         return;
     }
 
-    if (current->column() == WATCH_LOW_LOC) {
+    if (current->column() == WATCH_LOW_COL) {
         m_prevWatchLow = current->text();
     }
-    if (current->column() == WATCH_HIGH_LOC) {
+    if (current->column() == WATCH_HIGH_COL) {
         m_prevWatchHigh = current->text();
     }
 }
 
 void MainWindow::watchRemoveRow(int row) {
-    if (m_watchpoints->item(row, WATCH_LOW_LOC)->text() != DEBUG_UNSET_ADDR &&
-        m_watchpoints->item(row, WATCH_HIGH_LOC)->text() != DEBUG_UNSET_ADDR) {
-        uint32_t low = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_LOW_LOC)->text()));
-        uint32_t high = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_HIGH_LOC)->text()));
+    if (m_watchpoints->item(row, WATCH_LOW_COL)->text() != DEBUG_UNSET_ADDR &&
+        m_watchpoints->item(row, WATCH_HIGH_COL)->text() != DEBUG_UNSET_ADDR) {
+        uint32_t low = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_LOW_COL)->text()));
+        uint32_t high = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_HIGH_COL)->text()));
 
         for (uint32_t addr = low; addr <= high; addr++) {
             debug_watch(addr, DBG_MASK_READ | DBG_MASK_WRITE, false);
@@ -1283,7 +1283,7 @@ void MainWindow::watchRemoveRow(int row) {
 
 void MainWindow::watchRemoveSelected() {
     for (int row = 0; row < m_watchpoints->rowCount(); row++){
-        if (sender() == m_watchpoints->cellWidget(row, WATCH_REMOVE_LOC)) {
+        if (sender() == m_watchpoints->cellWidget(row, WATCH_REMOVE_COL)) {
             watchRemoveRow(row);
             break;
         }
@@ -1292,7 +1292,7 @@ void MainWindow::watchRemoveSelected() {
 
 void MainWindow::watchRemove(uint32_t address) {
     for (int row = 0; row < m_watchpoints->rowCount(); row++) {
-        uint32_t test = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_LOW_LOC)->text()));
+        uint32_t test = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_LOW_COL)->text()));
         if (address == test) {
             watchRemoveRow(row);
             break;
@@ -1375,10 +1375,10 @@ void MainWindow::watchUpdate() {
 
     // this is needed in the case of overlapping address spaces
     for (int row = 0; row < m_watchpoints->rowCount(); row++) {
-        if (m_watchpoints->item(row, WATCH_LOW_LOC)->text() != DEBUG_UNSET_ADDR &&
-            m_watchpoints->item(row, WATCH_HIGH_LOC)->text() != DEBUG_UNSET_ADDR) {
-            uint32_t low = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_LOW_LOC)->text()));
-            uint32_t high = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_HIGH_LOC)->text()));
+        if (m_watchpoints->item(row, WATCH_LOW_COL)->text() != DEBUG_UNSET_ADDR &&
+            m_watchpoints->item(row, WATCH_HIGH_COL)->text() != DEBUG_UNSET_ADDR) {
+            uint32_t low = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_LOW_COL)->text()));
+            uint32_t high = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_HIGH_COL)->text()));
             int mask = watchGetMask(row);
 
             for (uint32_t addr = low; addr <= high; addr++) {
@@ -1396,10 +1396,10 @@ void MainWindow::watchUpdate() {
 void MainWindow::watchUpdateRow(int row) {
 
     // this is needed in the case of overlapping address spaces
-    if (m_watchpoints->item(row, WATCH_LOW_LOC)->text() != DEBUG_UNSET_ADDR &&
-        m_watchpoints->item(row, WATCH_HIGH_LOC)->text() != DEBUG_UNSET_ADDR) {
-        uint32_t low = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_LOW_LOC)->text()));
-        uint32_t high = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_HIGH_LOC)->text()));
+    if (m_watchpoints->item(row, WATCH_LOW_COL)->text() != DEBUG_UNSET_ADDR &&
+        m_watchpoints->item(row, WATCH_HIGH_COL)->text() != DEBUG_UNSET_ADDR) {
+        uint32_t low = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_LOW_COL)->text()));
+        uint32_t high = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_HIGH_COL)->text()));
 
         for (uint32_t addr = low; addr <= high; addr++) {
             debug_watch(addr, DBG_MASK_READ | DBG_MASK_WRITE, false);
@@ -1425,8 +1425,8 @@ bool MainWindow::watchAdd(const QString& label, uint32_t low, uint32_t high, int
 
     // return if address is already set
     for (int i = 0; i < row; i++) {
-        if (m_watchpoints->item(i, WATCH_LOW_LOC)->text() == lowStr &&
-            m_watchpoints->item(i, WATCH_HIGH_LOC)->text() == highStr) {
+        if (m_watchpoints->item(i, WATCH_LOW_COL)->text() == lowStr &&
+            m_watchpoints->item(i, WATCH_HIGH_COL)->text() == highStr) {
             if (lowStr != DEBUG_UNSET_ADDR && highStr != DEBUG_UNSET_ADDR) {
                 if (!m_useSoftCom) {
                     m_watchpoints->selectRow(i);
@@ -1474,17 +1474,17 @@ bool MainWindow::watchAdd(const QString& label, uint32_t low, uint32_t high, int
     });
 
     m_watchpoints->setRowCount(row + 1);
-    m_watchpoints->setItem(row, WATCH_NAME_LOC, itemLabel);
-    m_watchpoints->setItem(row, WATCH_LOW_LOC, itemLow);
-    m_watchpoints->setItem(row, WATCH_HIGH_LOC, itemHigh);
-    m_watchpoints->setItem(row, WATCH_READ_LOC, itemRead);
-    m_watchpoints->setItem(row, WATCH_WRITE_LOC, itemWrite);
-    m_watchpoints->setItem(row, WATCH_REMOVE_LOC, itemRemove);
-    m_watchpoints->setCellWidget(row, WATCH_REMOVE_LOC, button);
-    m_watchpoints->setCellWidget(row, WATCH_READ_LOC, btnRead);
-    m_watchpoints->setCellWidget(row, WATCH_WRITE_LOC, btnWrite);
+    m_watchpoints->setItem(row, WATCH_NAME_COL, itemLabel);
+    m_watchpoints->setItem(row, WATCH_LOW_COL, itemLow);
+    m_watchpoints->setItem(row, WATCH_HIGH_COL, itemHigh);
+    m_watchpoints->setItem(row, WATCH_READ_COL, itemRead);
+    m_watchpoints->setItem(row, WATCH_WRITE_COL, itemWrite);
+    m_watchpoints->setItem(row, WATCH_REMOVE_COL, itemRemove);
+    m_watchpoints->setCellWidget(row, WATCH_REMOVE_COL, button);
+    m_watchpoints->setCellWidget(row, WATCH_READ_COL, btnRead);
+    m_watchpoints->setCellWidget(row, WATCH_WRITE_COL, btnWrite);
 
-    m_watchpoints->setCurrentCell(row, WATCH_REMOVE_LOC);
+    m_watchpoints->setCurrentCell(row, WATCH_REMOVE_COL);
 
     if (!m_guiAdd && !m_useSoftCom) {
         disasmUpdate();
@@ -1515,12 +1515,12 @@ void MainWindow::memUpdate() {
 
 int MainWindow::watchGetMask(int row) {
     int mask = 0;
-    if (static_cast<QAbstractButton *>(m_watchpoints->cellWidget(row, WATCH_READ_LOC))->isChecked()) {
+    if (static_cast<QAbstractButton *>(m_watchpoints->cellWidget(row, WATCH_READ_COL))->isChecked()) {
         mask |= DBG_MASK_READ;
     } else {
         mask |= DBG_MASK_NONE;
     }
-    if (static_cast<QAbstractButton *>(m_watchpoints->cellWidget(row, WATCH_WRITE_LOC))->isChecked()) {
+    if (static_cast<QAbstractButton *>(m_watchpoints->cellWidget(row, WATCH_WRITE_COL))->isChecked()) {
         mask |= DBG_MASK_WRITE;
     } else {
         mask |= DBG_MASK_NONE;
@@ -1541,9 +1541,9 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
 
     m_watchpoints->blockSignals(true);
 
-    if (col == WATCH_NAME_LOC) {
+    if (col == WATCH_NAME_COL) {
         updateLabels();
-    } if (col == WATCH_LOW_LOC) {
+    } if (col == WATCH_LOW_COL) {
         std::string s = item->text().toUpper().toStdString();
         QString equate;
 
@@ -1551,14 +1551,14 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
         if (!equate.isEmpty()) {
             s = equate.toStdString();
             m_watchpoints->blockSignals(true);
-            if (m_watchpoints->item(row, WATCH_NAME_LOC)->text() == (QStringLiteral("Label") + QString::number(row))) {
-                m_watchpoints->item(row, WATCH_NAME_LOC)->setText(item->text());
+            if (m_watchpoints->item(row, WATCH_NAME_COL)->text() == (QStringLiteral("Label") + QString::number(row))) {
+                m_watchpoints->item(row, WATCH_NAME_COL)->setText(item->text());
             }
             m_watchpoints->blockSignals(false);
         }
 
         addr = static_cast<uint32_t>(hex2int(QString::fromStdString(s)));
-        highStr = m_watchpoints->item(row, WATCH_HIGH_LOC)->text();
+        highStr = m_watchpoints->item(row, WATCH_HIGH_COL)->text();
 
         if (isNotValidHex(s) || s.length() > 6 ||
            (highStr != DEBUG_UNSET_ADDR && addr > hex2int(highStr))) {
@@ -1571,8 +1571,8 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
 
         // return if address is already set in this range
         for (int i = 0; i < m_watchpoints->rowCount(); i++) {
-            if (m_watchpoints->item(i, WATCH_LOW_LOC)->text() == lowStr &&
-                m_watchpoints->item(i, WATCH_HIGH_LOC)->text() == highStr &&
+            if (m_watchpoints->item(i, WATCH_LOW_COL)->text() == lowStr &&
+                m_watchpoints->item(i, WATCH_HIGH_COL)->text() == highStr &&
                 i != row) {
                 item->setText(m_prevWatchLow);
                 m_watchpoints->blockSignals(false);
@@ -1582,7 +1582,7 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
 
         if (m_prevWatchLow != DEBUG_UNSET_ADDR) {
             uint32_t low = static_cast<uint32_t>(hex2int(m_prevWatchLow));
-            uint32_t high = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_HIGH_LOC)->text()));
+            uint32_t high = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_HIGH_COL)->text()));
 
             for (uint32_t addr = low; addr <= high; addr++) {
                 debug_watch(addr, DBG_MASK_READ | DBG_MASK_WRITE, false);
@@ -1591,10 +1591,10 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
 
 
         if (highStr == DEBUG_UNSET_ADDR) {
-            m_watchpoints->item(row, WATCH_HIGH_LOC)->setText(lowStr);
+            m_watchpoints->item(row, WATCH_HIGH_COL)->setText(lowStr);
         }
         item->setText(lowStr);
-    } else if (col == WATCH_HIGH_LOC) {
+    } else if (col == WATCH_HIGH_COL) {
         std::string s = item->text().toUpper().toStdString();
         QString equate;
 
@@ -1602,14 +1602,14 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
         if (!equate.isEmpty()) {
             s = equate.toStdString();
             m_watchpoints->blockSignals(true);
-            if (m_watchpoints->item(row, WATCH_NAME_LOC)->text() == (QStringLiteral("Label") + QString::number(row))) {
-                m_watchpoints->item(row, WATCH_NAME_LOC)->setText(item->text());
+            if (m_watchpoints->item(row, WATCH_NAME_COL)->text() == (QStringLiteral("Label") + QString::number(row))) {
+                m_watchpoints->item(row, WATCH_NAME_COL)->setText(item->text());
             }
             m_watchpoints->blockSignals(false);
         }
 
         addr = static_cast<uint32_t>(hex2int(QString::fromStdString(s)));
-        lowStr = m_watchpoints->item(row, WATCH_LOW_LOC)->text();
+        lowStr = m_watchpoints->item(row, WATCH_LOW_COL)->text();
 
         if (isNotValidHex(s) || s.length() > 6 ||
            (lowStr != DEBUG_UNSET_ADDR && addr < hex2int(lowStr))) {
@@ -1622,8 +1622,8 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
 
         // return if address is already set in this range
         for (int i = 0; i < m_watchpoints->rowCount(); i++) {
-            if (m_watchpoints->item(i, WATCH_HIGH_LOC)->text() == highStr &&
-                m_watchpoints->item(i, WATCH_LOW_LOC)->text() == lowStr &&
+            if (m_watchpoints->item(i, WATCH_HIGH_COL)->text() == highStr &&
+                m_watchpoints->item(i, WATCH_LOW_COL)->text() == lowStr &&
                 i != row) {
                 item->setText(m_prevWatchLow);
                 m_watchpoints->blockSignals(false);
@@ -1632,7 +1632,7 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
         }
 
         if (m_prevWatchHigh != DEBUG_UNSET_ADDR) {
-            uint32_t low = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_LOW_LOC)->text()));
+            uint32_t low = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_LOW_COL)->text()));
             uint32_t high = static_cast<uint32_t>(hex2int(m_prevWatchHigh));
 
             for (uint32_t addr = low; addr <= high; addr++) {
@@ -1641,7 +1641,7 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
         }
 
         if (lowStr == DEBUG_UNSET_ADDR) {
-            m_watchpoints->item(row, WATCH_LOW_LOC)->setText(highStr);
+            m_watchpoints->item(row, WATCH_LOW_COL)->setText(highStr);
         }
         item->setText(highStr);
     }
@@ -1698,27 +1698,27 @@ void MainWindow::equatesClear() {
 
 void MainWindow::updateLabels() {
     for (int row = 0; row < m_watchpoints->rowCount(); row++) {
-        QString next = getAddressOfEquate(m_watchpoints->item(row, WATCH_NAME_LOC)->text().toUpper().toStdString());
-        QString old = m_watchpoints->item(row, WATCH_LOW_LOC)->text();
+        QString next = getAddressOfEquate(m_watchpoints->item(row, WATCH_NAME_COL)->text().toUpper().toStdString());
+        QString old = m_watchpoints->item(row, WATCH_LOW_COL)->text();
         if (!next.isEmpty() && next != old) {
-            unsigned int mask = (m_watchpoints->item(row, WATCH_READ_LOC)->checkState() == Qt::Checked ? DBG_MASK_READ : DBG_MASK_NONE) |
-                                (m_watchpoints->item(row, WATCH_WRITE_LOC)->checkState() == Qt::Checked ? DBG_MASK_WRITE : DBG_MASK_NONE);
+            unsigned int mask = (m_watchpoints->item(row, WATCH_READ_COL)->checkState() == Qt::Checked ? DBG_MASK_READ : DBG_MASK_NONE) |
+                                (m_watchpoints->item(row, WATCH_WRITE_COL)->checkState() == Qt::Checked ? DBG_MASK_WRITE : DBG_MASK_NONE);
             // remove old watchpoint and add new one
             m_watchpoints->blockSignals(true);
             debug_watch(static_cast<uint32_t>(hex2int(old)), mask, false);
-            m_watchpoints->item(row, WATCH_LOW_LOC)->setText(next);
+            m_watchpoints->item(row, WATCH_LOW_COL)->setText(next);
             debug_watch(static_cast<uint32_t>(hex2int(next)), mask, true);
             m_watchpoints->blockSignals(true);
         }
     }
     for (int row = 0; row < m_breakpoints->rowCount(); row++) {
-        QString next = getAddressOfEquate(m_breakpoints->item(row, BREAK_NAME_LOC)->text().toUpper().toStdString());
-        QString old = m_breakpoints->item(row, BREAK_ADDR_LOC)->text();
+        QString next = getAddressOfEquate(m_breakpoints->item(row, BREAK_NAME_COL)->text().toUpper().toStdString());
+        QString old = m_breakpoints->item(row, BREAK_ADDR_COL)->text();
         if (!next.isEmpty() && next != old) {
             int mask = breakGetMask(row);
             m_breakpoints->blockSignals(true);
             debug_watch(static_cast<uint32_t>(hex2int(old)), mask, false);
-            m_breakpoints->item(row, BREAK_ADDR_LOC)->setText(next);
+            m_breakpoints->item(row, BREAK_ADDR_COL)->setText(next);
             debug_watch(static_cast<uint32_t>(hex2int(next)), mask, true);
             m_breakpoints->blockSignals(false);
         }
@@ -2162,11 +2162,11 @@ void MainWindow::osUpdate() {
 
         ui->opView->setRowCount(index+1);
 
-        ui->opView->setItem(index, OP_ADDRESS, opAddr);
-        ui->opView->setItem(index, OP_NUMBER, opNumber);
-        ui->opView->setItem(index, OP_DATA, opData);
-        ui->opView->setItem(index, OP_STRING, opString);
-        ui->opView->setItem(index, OP_VALUE, opValue);
+        ui->opView->setItem(index, OP_ADDR_COL, opAddr);
+        ui->opView->setItem(index, OP_NUMBER_COL, opNumber);
+        ui->opView->setItem(index, OP_DATA_COL, opData);
+        ui->opView->setItem(index, OP_STRING_COL, opString);
+        ui->opView->setItem(index, OP_VALUE_COL, opValue);
 
         index++;
     }
@@ -2210,10 +2210,10 @@ void MainWindow::osUpdate() {
 
             ui->fpStack->setRowCount(index+1);
 
-            ui->fpStack->setItem(index, FP_ADDRESS, fpAddr);
-            ui->fpStack->setItem(index, FP_DATA, fpData);
-            ui->fpStack->setItem(index, FP_STRING, fpString);
-            ui->fpStack->setItem(index, FP_VALUE, fpValue);
+            ui->fpStack->setItem(index, FP_ADDR_COL, fpAddr);
+            ui->fpStack->setItem(index, FP_DATA_COL, fpData);
+            ui->fpStack->setItem(index, FP_STRING_COL, fpString);
+            ui->fpStack->setItem(index, FP_VALUE_COL, fpValue);
 
             index++;
         }
@@ -2241,8 +2241,8 @@ void MainWindow::osUpdate() {
 
             ui->opStack->setRowCount(index+1);
 
-            ui->opStack->setItem(index, OPS_ADDRESS, opAddr);
-            ui->opStack->setItem(index, OPS_DATA, opData);
+            ui->opStack->setItem(index, OPS_ADDR_COL, opAddr);
+            ui->opStack->setItem(index, OPS_DATA_COL, opData);
 
             index++;
         }
@@ -2268,20 +2268,20 @@ void MainWindow::osUpdate() {
 
         ui->vatView->setRowCount(index+1);
 
-        ui->vatView->setItem(index, VAT_ADDRESS, varAddr);
-        ui->vatView->setItem(index, VAT_VAT_ADDRESS, varVatAddr);
-        ui->vatView->setItem(index, VAT_SIZE, varSize);
-        ui->vatView->setItem(index, VAT_NAME, varName);
-        ui->vatView->setItem(index, VAT_TYPE, varType);
+        ui->vatView->setItem(index, VAT_ADDR_COL, varAddr);
+        ui->vatView->setItem(index, VAT_VAT_ADDR_COL, varVatAddr);
+        ui->vatView->setItem(index, VAT_SIZE_COL, varSize);
+        ui->vatView->setItem(index, VAT_NAME_COL, varName);
+        ui->vatView->setItem(index, VAT_TYPE_COL, varType);
 
         index++;
     }
 
-    ui->vatView->resizeColumnToContents(VAT_ADDRESS);
-    ui->vatView->resizeColumnToContents(VAT_VAT_ADDRESS);
-    ui->vatView->resizeColumnToContents(VAT_NAME);
-    ui->vatView->resizeColumnToContents(VAT_TYPE);
-    ui->vatView->resizeColumnToContents(VAT_SIZE);
+    ui->vatView->resizeColumnToContents(VAT_ADDR_COL);
+    ui->vatView->resizeColumnToContents(VAT_VAT_ADDR_COL);
+    ui->vatView->resizeColumnToContents(VAT_NAME_COL);
+    ui->vatView->resizeColumnToContents(VAT_TYPE_COL);
+    ui->vatView->resizeColumnToContents(VAT_SIZE_COL);
 
     connect(ui->opView, &QTableWidget::itemChanged, this, &MainWindow::opModified);
     connect(ui->fpStack, &QTableWidget::itemChanged, this, &MainWindow::fpModified);
@@ -2298,22 +2298,22 @@ void MainWindow::opModified(QTableWidgetItem *item) {
     QString txt = item->text();
     QString data;
     QByteArray array;
-    uint32_t addr = static_cast<uint32_t>(hex2int(ui->opView->item(row, OP_ADDRESS)->text()));
+    uint32_t addr = static_cast<uint32_t>(hex2int(ui->opView->item(row, OP_ADDR_COL)->text()));
     array.resize(11);
 
     sender()->blockSignals(true);
 
-    if (col == OP_DATA) {
+    if (col == OP_DATA_COL) {
         array.fill(0);
         for (int i = 0; i < 11 && i < txt.length() / 2; i++) {
             array[i] = hex2int(txt.mid(i * 2, 2));
         }
-    } else if (col == OP_STRING) {
+    } else if (col == OP_STRING_COL) {
         array.fill('.');
         for (int i = 0; i < 11 && i < txt.length(); i++) {
             array[i] = txt[i].toLatin1();
         }
-    } else if (col == OP_VALUE) {
+    } else if (col == OP_VALUE_COL) {
         array.fill(0);
         try {
             data_t value = tivars::TH_GenericReal::makeDataFromString(txt.toStdString());
@@ -2341,12 +2341,12 @@ void MainWindow::opModified(QTableWidgetItem *item) {
 
     data_t vect(array.constData(), array.constEnd() - 2);
 
-    ui->opView->item(row, OP_STRING)->setText(data);
-    ui->opView->item(row, OP_DATA)->setText(QString(array.toHex()));
+    ui->opView->item(row, OP_STRING_COL)->setText(data);
+    ui->opView->item(row, OP_DATA_COL)->setText(QString(array.toHex()));
     try {
-        ui->opView->item(row, OP_VALUE)->setText(QString::fromStdString(tivars::TH_GenericReal::makeStringFromData(vect)));
+        ui->opView->item(row, OP_VALUE_COL)->setText(QString::fromStdString(tivars::TH_GenericReal::makeStringFromData(vect)));
     } catch(...) {
-        ui->opView->item(row, OP_VALUE)->setText(TXT_NAN);
+        ui->opView->item(row, OP_VALUE_COL)->setText(TXT_NAN);
     }
 
     sender()->blockSignals(false);
@@ -2363,22 +2363,22 @@ void MainWindow::fpModified(QTableWidgetItem *item) {
     QString txt = item->text();
     QString data;
     QByteArray array;
-    uint32_t addr = static_cast<uint32_t>(hex2int(ui->fpStack->item(row, FP_ADDRESS)->text()));
+    uint32_t addr = static_cast<uint32_t>(hex2int(ui->fpStack->item(row, FP_ADDR_COL)->text()));
     array.resize(11);
 
     sender()->blockSignals(true);
 
-    if (col == FP_DATA) {
+    if (col == FP_DATA_COL) {
         array.fill(0);
         for (int i = 0; i < 9 && i < txt.length() / 2; i++) {
             array[i] = hex2int(txt.mid(i * 2, 2));
         }
-    } else if (col == FP_STRING) {
+    } else if (col == FP_STRING_COL) {
         array.fill('.');
         for (int i = 0; i < 9 && i < txt.length(); i++) {
             array[i] = txt[i].toLatin1();
         }
-    } else if (col == FP_VALUE) {
+    } else if (col == FP_VALUE_COL) {
         array.fill(0);
         try {
             data_t value = tivars::TH_GenericReal::makeDataFromString(txt.toStdString());
@@ -2406,12 +2406,12 @@ void MainWindow::fpModified(QTableWidgetItem *item) {
 
     data_t vect(array.constData(), array.constEnd());
 
-    ui->fpStack->item(row, FP_STRING)->setText(data);
-    ui->fpStack->item(row, FP_DATA)->setText(QString(array.toHex()));
+    ui->fpStack->item(row, FP_STRING_COL)->setText(data);
+    ui->fpStack->item(row, FP_DATA_COL)->setText(QString(array.toHex()));
     try {
-        ui->fpStack->item(row, FP_VALUE)->setText(QString::fromStdString(tivars::TH_GenericReal::makeStringFromData(vect)));
+        ui->fpStack->item(row, FP_VALUE_COL)->setText(QString::fromStdString(tivars::TH_GenericReal::makeStringFromData(vect)));
     } catch(...) {
-        ui->fpStack->item(row, FP_VALUE)->setText(TXT_NAN);
+        ui->fpStack->item(row, FP_VALUE_COL)->setText(TXT_NAN);
     }
 
     sender()->blockSignals(false);
@@ -2428,7 +2428,7 @@ void MainWindow::contextOp(const QPoint &posa) {
     QString copyData = tr("Copy Data");
     QPoint globalPos = obj->mapToGlobal(posa);
 
-    QString addr = obj->item(obj->selectionModel()->selectedRows().first().row(), OP_ADDRESS)->text();
+    QString addr = obj->item(obj->selectionModel()->selectedRows().first().row(), OP_ADDR_COL)->text();
     QString data = obj->item(obj->selectionModel()->selectedRows().first().row(), obj->objectName() == QStringLiteral("opView") ? 2 : 1)->text();
 
     QMenu menu;
@@ -2462,8 +2462,8 @@ void MainWindow::contextVat(const QPoint &posa) {
     QString gotoDisasm = tr("Goto Disasm View");
     QPoint globalPos = obj->mapToGlobal(posa);
 
-    QString addr = obj->item(obj->selectionModel()->selectedRows().first().row(), VAT_ADDRESS)->text();
-    QString vatAddr = obj->item(obj->selectionModel()->selectedRows().first().row(), VAT_VAT_ADDRESS)->text();
+    QString addr = obj->item(obj->selectionModel()->selectedRows().first().row(), VAT_ADDR_COL)->text();
+    QString vatAddr = obj->item(obj->selectionModel()->selectedRows().first().row(), VAT_VAT_ADDR_COL)->text();
 
     QMenu menu;
     menu.addAction(gotoMem);

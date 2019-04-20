@@ -1707,7 +1707,7 @@ QStringList MainWindow::varDialog(QFileDialog::AcceptMode mode, const QString &n
 }
 
 void MainWindow::varPressed(QTableWidgetItem *item) {
-    calc_var_t var = ui->emuVarView->item(item->row(), VAR_NAME)->data(Qt::UserRole).value<calc_var_t>();
+    calc_var_t var = ui->emuVarView->item(item->row(), VAR_NAME_COL)->data(Qt::UserRole).value<calc_var_t>();
     if (var.size <= 2 || calc_var_is_asmprog(&var)) {
         return;
     } else if (!calc_var_is_internal(&var) || var.name[0] == '#') {
@@ -1719,7 +1719,7 @@ void MainWindow::varPressed(QTableWidgetItem *item) {
         }
         bool isHexAppVar = var.type == CALC_VAR_TYPE_APP_VAR && !calc_var_is_python_appvar(&var);
         BasicCodeViewerWindow *codePopup = new BasicCodeViewerWindow(this, !isHexAppVar);
-        codePopup->setVariableName(ui->emuVarView->item(item->row(), VAR_NAME)->text());
+        codePopup->setVariableName(ui->emuVarView->item(item->row(), VAR_NAME_COL)->text());
         codePopup->setWindowModality(Qt::NonModal);
         codePopup->setAttribute(Qt::WA_DeleteOnClose);
         codePopup->setOriginalCode(QString::fromStdString(str));
@@ -1825,17 +1825,17 @@ void MainWindow::varShow() {
                     var_preview->setFont(varPreviewCEFont);
                 }
 
-                ui->emuVarView->setItem(row, VAR_NAME, var_name);
-                ui->emuVarView->setItem(row, VAR_LOCATION, var_location);
-                ui->emuVarView->setItem(row, VAR_TYPE, var_type);
-                ui->emuVarView->setItem(row, VAR_SIZE, var_size);
-                ui->emuVarView->setItem(row, VAR_PREVIEW, var_preview);
+                ui->emuVarView->setItem(row, VAR_NAME_COL, var_name);
+                ui->emuVarView->setItem(row, VAR_LOCATION_COL, var_location);
+                ui->emuVarView->setItem(row, VAR_TYPE_COL, var_type);
+                ui->emuVarView->setItem(row, VAR_SIZE_COL, var_size);
+                ui->emuVarView->setItem(row, VAR_PREVIEW_COL, var_preview);
             }
         }
-        ui->emuVarView->resizeColumnToContents(VAR_NAME);
-        ui->emuVarView->resizeColumnToContents(VAR_LOCATION);
-        ui->emuVarView->resizeColumnToContents(VAR_TYPE);
-        ui->emuVarView->resizeColumnToContents(VAR_SIZE);
+        ui->emuVarView->resizeColumnToContents(VAR_NAME_COL);
+        ui->emuVarView->resizeColumnToContents(VAR_LOCATION_COL);
+        ui->emuVarView->resizeColumnToContents(VAR_TYPE_COL);
+        ui->emuVarView->resizeColumnToContents(VAR_SIZE_COL);
     }
 
     ui->emuVarView->setSortingEnabled(true);
@@ -1845,8 +1845,8 @@ void MainWindow::varSaveSelected() {
     QVector<calc_var_t> selectedVars;
     QStringList fileNames;
     for (int currRow = 0; currRow < ui->emuVarView->rowCount(); currRow++) {
-        if (ui->emuVarView->item(currRow, VAR_NAME)->checkState() == Qt::Checked) {
-            selectedVars.append(ui->emuVarView->item(currRow, VAR_NAME)->data(Qt::UserRole).value<calc_var_t>());
+        if (ui->emuVarView->item(currRow, VAR_NAME_COL)->checkState() == Qt::Checked) {
+            selectedVars.append(ui->emuVarView->item(currRow, VAR_NAME_COL)->data(Qt::UserRole).value<calc_var_t>());
         }
     }
     if (selectedVars.size() < 2) {
@@ -1872,7 +1872,7 @@ void MainWindow::varSaveSelectedFiles() {
     int good = 0;
 
     for (int currRow = 0; currRow < ui->emuVarView->rowCount(); currRow++) {
-        if (ui->emuVarView->item(currRow, VAR_NAME)->checkState() == Qt::Checked) {
+        if (ui->emuVarView->item(currRow, VAR_NAME_COL)->checkState() == Qt::Checked) {
             good = 1;
             break;
         }
@@ -1894,8 +1894,8 @@ void MainWindow::varSaveSelectedFiles() {
     QString filename;
 
     for (int currRow = 0; currRow < ui->emuVarView->rowCount(); currRow++) {
-        if (ui->emuVarView->item(currRow, VAR_NAME)->checkState() == Qt::Checked) {
-            calc_var_t var = ui->emuVarView->item(currRow, VAR_NAME)->data(Qt::UserRole).value<calc_var_t>();
+        if (ui->emuVarView->item(currRow, VAR_NAME_COL)->checkState() == Qt::Checked) {
+            calc_var_t var = ui->emuVarView->item(currRow, VAR_NAME_COL)->data(Qt::UserRole).value<calc_var_t>();
 
             name = QString(calc_var_name_to_utf8(var.name));
             filename = dialog.directory().absolutePath() + "/" + name + "." + m_varExtensions[var.type1];
@@ -2354,7 +2354,7 @@ void MainWindow::contextVars(const QPoint& posa) {
         return;
     }
 
-    const calc_var_t var = ui->emuVarView->item(row, VAR_NAME)->data(Qt::UserRole).value<calc_var_t>();
+    const calc_var_t var = ui->emuVarView->item(row, VAR_NAME_COL)->data(Qt::UserRole).value<calc_var_t>();
 
     QString launch = tr("Launch program");
 
@@ -2609,18 +2609,18 @@ void MainWindow::stateAdd(QString &name, QString &path) {
     stateToPath(itemEdit->data(Qt::UserRole).toString());
 
     ui->slotView->setRowCount(row + 1);
-    ui->slotView->setItem(row, SLOT_NAME, itemName);
-    ui->slotView->setItem(row, SLOT_LOAD, itemLoad);
-    ui->slotView->setItem(row, SLOT_SAVE, itemSave);
-    ui->slotView->setItem(row, SLOT_EDIT, itemEdit);
-    ui->slotView->setItem(row, SLOT_REMOVE, itemRemove);
+    ui->slotView->setItem(row, SLOT_NAME_COL, itemName);
+    ui->slotView->setItem(row, SLOT_LOAD_COL, itemLoad);
+    ui->slotView->setItem(row, SLOT_SAVE_COL, itemSave);
+    ui->slotView->setItem(row, SLOT_EDIT_COL, itemEdit);
+    ui->slotView->setItem(row, SLOT_REMOVE_COL, itemRemove);
 
-    ui->slotView->setCellWidget(row, SLOT_LOAD, btnLoad);
-    ui->slotView->setCellWidget(row, SLOT_SAVE, btnSave);
-    ui->slotView->setCellWidget(row, SLOT_EDIT, btnEdit);
-    ui->slotView->setCellWidget(row, SLOT_REMOVE, btnRemove);
+    ui->slotView->setCellWidget(row, SLOT_LOAD_COL, btnLoad);
+    ui->slotView->setCellWidget(row, SLOT_SAVE_COL, btnSave);
+    ui->slotView->setCellWidget(row, SLOT_EDIT_COL, btnEdit);
+    ui->slotView->setCellWidget(row, SLOT_REMOVE_COL, btnRemove);
 
-    ui->slotView->setCurrentCell(row, SLOT_NAME);
+    ui->slotView->setCurrentCell(row, SLOT_NAME_COL);
 
     stateSaveInfo();
 
@@ -2644,30 +2644,30 @@ int MainWindow::stateGet(QObject *obj, int col) {
 
 void MainWindow::stateEdit() {
     bool ok;
-    int row = stateGet(sender(), SLOT_EDIT);
-    QString old = ui->slotView->item(row, SLOT_EDIT)->data(Qt::UserRole).toString();
+    int row = stateGet(sender(), SLOT_EDIT_COL);
+    QString old = ui->slotView->item(row, SLOT_EDIT_COL)->data(Qt::UserRole).toString();
     QString path = QInputDialog::getText(this, tr("Enter image path"), Q_NULLPTR, QLineEdit::Normal, old, &ok);
     if (ok && !path.isEmpty()) {
         QFile(old).rename(path);
-        ui->slotView->item(row, SLOT_EDIT)->setData(Qt::UserRole, path);
+        ui->slotView->item(row, SLOT_EDIT_COL)->setData(Qt::UserRole, path);
     }
 }
 
 void MainWindow::stateRemove() {
-    int row = stateGet(sender(), SLOT_REMOVE);
-    QFile(ui->slotView->item(row, SLOT_EDIT)->data(Qt::UserRole).toString()).remove();
+    int row = stateGet(sender(), SLOT_REMOVE_COL);
+    QFile(ui->slotView->item(row, SLOT_EDIT_COL)->data(Qt::UserRole).toString()).remove();
     ui->slotView->removeRow(row);
 }
 
 void MainWindow::stateSave() {
-    int row = stateGet(sender(), SLOT_SAVE);
-    QString path = ui->slotView->item(row, SLOT_EDIT)->data(Qt::UserRole).toString();
+    int row = stateGet(sender(), SLOT_SAVE_COL);
+    QString path = ui->slotView->item(row, SLOT_EDIT_COL)->data(Qt::UserRole).toString();
     stateToPath(path);
 }
 
 void MainWindow::stateLoad() {
-    int row = stateGet(sender(), SLOT_LOAD);
-    QString path = ui->slotView->item(row, SLOT_EDIT)->data(Qt::UserRole).toString();
+    int row = stateGet(sender(), SLOT_LOAD_COL);
+    QString path = ui->slotView->item(row, SLOT_EDIT_COL)->data(Qt::UserRole).toString();
     stateFromPath(path);
 }
 

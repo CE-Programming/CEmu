@@ -889,8 +889,8 @@ void MainWindow::stateSaveInfo() {
     QStringList slotPaths;
 
     for (int i = 0; i < ui->slotView->rowCount(); i++) {
-        slotNames.append(ui->slotView->item(i, SLOT_NAME)->text());
-        slotPaths.append(ui->slotView->item(i, SLOT_EDIT)->data(Qt::UserRole).toString());
+        slotNames.append(ui->slotView->item(i, SLOT_NAME_COL)->text());
+        slotPaths.append(ui->slotView->item(i, SLOT_EDIT_COL)->data(Qt::UserRole).toString());
     }
 
     m_config->setValue(SETTING_SLOT_NAMES, slotNames);
@@ -949,8 +949,8 @@ void MainWindow::recentSaveInfo() {
 
     if (m_config->value(SETTING_RECENT_SAVE).toBool()) {
         for (int i = 0; i < ui->varLoadedView->rowCount(); i++) {
-            paths.append(ui->varLoadedView->item(i, RECENT_PATH)->text());
-            selects.append(static_cast<QAbstractButton *>(ui->varLoadedView->cellWidget(i, RECENT_SELECT))->isChecked() ? TXT_YES : TXT_NO);
+            paths.append(ui->varLoadedView->item(i, RECENT_PATH_COL)->text());
+            selects.append(static_cast<QAbstractButton *>(ui->varLoadedView->cellWidget(i, RECENT_SELECT_COL))->isChecked() ? TXT_YES : TXT_NO);
         }
     }
 

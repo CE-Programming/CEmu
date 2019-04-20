@@ -83,80 +83,80 @@ private:
     };
 
     enum {
-        BREAK_REMOVE_LOC,
-        BREAK_ENABLE_LOC,
-        BREAK_ADDR_LOC,
-        BREAK_NAME_LOC
+        BREAK_REMOVE_COL,
+        BREAK_ENABLE_COL,
+        BREAK_ADDR_COL,
+        BREAK_NAME_COL
     };
 
     enum {
-        WATCH_REMOVE_LOC,
-        WATCH_READ_LOC,
-        WATCH_WRITE_LOC,
-        WATCH_LOW_LOC,
-        WATCH_HIGH_LOC,
-        WATCH_NAME_LOC,
+        WATCH_REMOVE_COL,
+        WATCH_READ_COL,
+        WATCH_WRITE_COL,
+        WATCH_LOW_COL,
+        WATCH_HIGH_COL,
+        WATCH_NAME_COL,
     };
 
     enum {
-        PORT_REMOVE_LOC,
-        PORT_READ_LOC,
-        PORT_WRITE_LOC,
-        PORT_FREEZE_LOC,
-        PORT_ADDR_LOC,
-        PORT_VALUE_LOC,
+        PORT_REMOVE_COL,
+        PORT_READ_COL,
+        PORT_WRITE_COL,
+        PORT_FREEZE_COL,
+        PORT_ADDR_COL,
+        PORT_VALUE_COL,
     };
 
     enum {
-        OP_ADDRESS,
-        OP_NUMBER,
-        OP_DATA,
-        OP_STRING,
-        OP_VALUE
+        OP_ADDR_COL,
+        OP_NUMBER_COL,
+        OP_DATA_COL,
+        OP_STRING_COL,
+        OP_VALUE_COL
     };
 
     enum {
-        FP_ADDRESS,
-        FP_DATA,
-        FP_STRING,
-        FP_VALUE
+        FP_ADDR_COL,
+        FP_DATA_COL,
+        FP_STRING_COL,
+        FP_VALUE_COL
     };
 
     enum {
-        OPS_ADDRESS,
-        OPS_DATA,
-        OPS_DATASTRING
+        OPS_ADDR_COL,
+        OPS_DATA_COL,
+        OPS_STRING_COL
     };
 
     enum {
-        VAT_ADDRESS,
-        VAT_VAT_ADDRESS,
-        VAT_SIZE,
-        VAT_NAME,
-        VAT_TYPE
+        VAT_ADDR_COL,
+        VAT_VAT_ADDR_COL,
+        VAT_SIZE_COL,
+        VAT_NAME_COL,
+        VAT_TYPE_COL
     };
 
     enum {
-        VAR_NAME,
-        VAR_LOCATION,
-        VAR_TYPE,
-        VAR_SIZE,
-        VAR_PREVIEW
+        VAR_NAME_COL,
+        VAR_LOCATION_COL,
+        VAR_TYPE_COL,
+        VAR_SIZE_COL,
+        VAR_PREVIEW_COL
     };
 
     enum {
-        RECENT_REMOVE,
-        RECENT_RESEND,
-        RECENT_SELECT,
-        RECENT_PATH
+        RECENT_REMOVE_COL,
+        RECENT_RESEND_COL,
+        RECENT_SELECT_COL,
+        RECENT_PATH_COL
     };
 
     enum {
-        SLOT_REMOVE,
-        SLOT_LOAD,
-        SLOT_SAVE,
-        SLOT_EDIT,
-        SLOT_NAME
+        SLOT_REMOVE_COL,
+        SLOT_LOAD_COL,
+        SLOT_SAVE_COL,
+        SLOT_EDIT_COL,
+        SLOT_NAME_COL
     };
 
     enum {
