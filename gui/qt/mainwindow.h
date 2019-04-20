@@ -287,7 +287,7 @@ private:
 
     // breakpoints
     void breakModified(QTableWidgetItem *item);
-    void breakSetPrev(QTableWidgetItem *item);
+    void breakSetPrev(QTableWidgetItem *current, QTableWidgetItem *previous);
     int breakGetMask(int row);
 
     // breakpoint additions
@@ -302,7 +302,7 @@ private:
 
     // watchpoints
     void watchModified(QTableWidgetItem *item);
-    void watchSetPrev(QTableWidgetItem *item);
+    void watchSetPrev(QTableWidgetItem *current, QTableWidgetItem *previous);
     void watchUpdate();
     void watchUpdateRow(int row);
     int watchGetMask(int row);
@@ -322,7 +322,7 @@ private:
 
     // ports
     void portModified(QTableWidgetItem *item);
-    void portSetPrev(QTableWidgetItem *item);
+    void portSetPrev(QTableWidgetItem *current, QTableWidgetItem *previous);
     void portPopulate(int row);
     int portGetMask(int row);
 

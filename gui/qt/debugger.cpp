@@ -804,11 +804,14 @@ void MainWindow::debugZeroCycles() {
 // Breakpoints
 // ------------------------------------------------
 
-void MainWindow::breakSetPrev(QTableWidgetItem *item) {
-    if (item->text().isEmpty()) {
+void MainWindow::breakSetPrev(QTableWidgetItem *current, QTableWidgetItem *previous) {
+    (void)previous;
+    if (current == Q_NULLPTR || current->text().isEmpty()) {
         return;
     }
-    m_prevBreakAddr = m_breakpoints->item(item->row(), BREAK_ADDR_LOC)->text();
+    if (current == m_breakpoints->item(current->row(), BREAK_ADDR_LOC)) {
+        m_prevBreakAddr = m_breakpoints->item(current->row(), BREAK_ADDR_LOC)->text();
+    }
 }
 
 void MainWindow::breakRemoveRow(int row) {
@@ -852,6 +855,10 @@ int MainWindow::breakGetMask(int row) {
 }
 
 void MainWindow::breakModified(QTableWidgetItem *item) {
+    if (item == Q_NULLPTR) {
+        return;
+    }
+
     int row = item->row();
     int col = item->column();
     QString addrStr;
@@ -1015,7 +1022,7 @@ bool MainWindow::breakAdd(const QString &label, uint32_t addr, bool enabled, boo
     m_breakpoints->setCellWidget(row, BREAK_REMOVE_LOC, btnRemove);
     m_breakpoints->setCellWidget(row, BREAK_ENABLE_LOC, btnEnable);
 
-    m_breakpoints->setCurrentCell(row, BREAK_ADDR_LOC);
+    m_breakpoints->setCurrentCell(row, BREAK_REMOVE_LOC);
 
     if (addrStr != DEBUG_UNSET_ADDR) {
         debug_watch(addr, DBG_MASK_EXEC, enabled);
@@ -1043,11 +1050,14 @@ bool MainWindow::breakAdd(const QString &label, uint32_t addr, bool enabled, boo
 // Ports
 // ------------------------------------------------
 
-void MainWindow::portSetPrev(QTableWidgetItem *item) {
-    if (item->text().isEmpty()) {
+void MainWindow::portSetPrev(QTableWidgetItem *current, QTableWidgetItem *previous) {
+    (void)previous;
+    if (current == Q_NULLPTR || current->text().isEmpty()) {
         return;
     }
-    m_prevPortAddr = m_ports->item(item->row(), PORT_ADDR_LOC)->text();
+    if (current == m_ports->item(current->row(), PORT_ADDR_LOC)) {
+        m_prevPortAddr = m_ports->item(current->row(), PORT_ADDR_LOC)->text();
+    }
 }
 
 void MainWindow::portRemoveRow(int row) {
@@ -1167,6 +1177,10 @@ int MainWindow::portGetMask(int row) {
 }
 
 void MainWindow::portModified(QTableWidgetItem *item) {
+    if (item == Q_NULLPTR) {
+        return;
+    }
+
     int row = item->row();
     int col = item->column();
 
@@ -1232,16 +1246,17 @@ void MainWindow::portModified(QTableWidgetItem *item) {
 // Watchpoints
 // ------------------------------------------------
 
-void MainWindow::watchSetPrev(QTableWidgetItem *item) {
-    if (item->text().isEmpty()) {
+void MainWindow::watchSetPrev(QTableWidgetItem *current, QTableWidgetItem *previous) {
+    (void)previous;
+    if (current == Q_NULLPTR || current->text().isEmpty()) {
         return;
     }
 
-    if (item == m_watchpoints->item(item->row(), WATCH_LOW_LOC)) {
-        m_prevWatchLow = m_watchpoints->item(item->row(), WATCH_LOW_LOC)->text();
+    if (current == m_watchpoints->item(current->row(), WATCH_LOW_LOC)) {
+        m_prevWatchLow = m_watchpoints->item(current->row(), WATCH_LOW_LOC)->text();
     }
-    if (item == m_watchpoints->item(item->row(), WATCH_HIGH_LOC)) {
-        m_prevWatchHigh = m_watchpoints->item(item->row(), WATCH_HIGH_LOC)->text();
+    if (current == m_watchpoints->item(current->row(), WATCH_HIGH_LOC)) {
+        m_prevWatchHigh = m_watchpoints->item(current->row(), WATCH_HIGH_LOC)->text();
     }
 }
 
@@ -1467,7 +1482,7 @@ bool MainWindow::watchAdd(const QString& label, uint32_t low, uint32_t high, int
     m_watchpoints->setCellWidget(row, WATCH_READ_LOC, btnRead);
     m_watchpoints->setCellWidget(row, WATCH_WRITE_LOC, btnWrite);
 
-    m_watchpoints->setCurrentCell(row, WATCH_LOW_LOC);
+    m_watchpoints->setCurrentCell(row, WATCH_REMOVE_LOC);
 
     if (!m_guiAdd && !m_useSoftCom) {
         disasmUpdate();
@@ -1512,8 +1527,12 @@ int MainWindow::watchGetMask(int row) {
 }
 
 void MainWindow::watchModified(QTableWidgetItem *item) {
-    auto row = item->row();
-    auto col = item->column();
+    if (item == Q_NULLPTR) {
+        return;
+    }
+
+    int row = item->row();
+    int col = item->column();
     QString lowStr;
     QString highStr;
     uint32_t addr;
@@ -1522,18 +1541,7 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
 
     if (col == WATCH_NAME_LOC) {
         updateLabels();
-    } else if (col == WATCH_READ_LOC || col == WATCH_WRITE_LOC) {
-        addr = static_cast<uint32_t>(hex2int(m_watchpoints->item(row, WATCH_LOW_LOC)->text()));
-        unsigned int mask = DBG_MASK_NONE;
-
-        if (col == WATCH_READ_LOC) { // Break on read
-            mask = DBG_MASK_READ;
-        } else
-        if (col == WATCH_WRITE_LOC) { // Break on write
-            mask = DBG_MASK_WRITE;
-        }
-        debug_watch(addr, mask, item->checkState() == Qt::Checked);
-    } else if (col == WATCH_LOW_LOC) {
+    } if (col == WATCH_LOW_LOC) {
         std::string s = item->text().toUpper().toStdString();
         QString equate;
 
@@ -2278,13 +2286,17 @@ void MainWindow::osUpdate() {
 }
 
 void MainWindow::opModified(QTableWidgetItem *item) {
+    if (item == Q_NULLPTR) {
+        return;
+    }
+
     int col = item->column();
     int row = item->row();
 
     QString txt = item->text();
     QString data;
     QByteArray array;
-    uint32_t addr = hex2int(ui->opView->item(row, OP_ADDRESS)->text());
+    uint32_t addr = static_cast<uint32_t>(hex2int(ui->opView->item(row, OP_ADDRESS)->text()));
     array.resize(11);
 
     sender()->blockSignals(true);
@@ -2318,7 +2330,7 @@ void MainWindow::opModified(QTableWidgetItem *item) {
 
     for (uint32_t j = addr; j < addr + 11; j++) {
         uint8_t ch = mem_peek_byte(j);
-        array.append(ch);
+        array.append(static_cast<char>(ch));
         if ((ch < 0x20) || (ch > 0x7e)) {
             ch = '.';
         }
@@ -2339,13 +2351,17 @@ void MainWindow::opModified(QTableWidgetItem *item) {
 }
 
 void MainWindow::fpModified(QTableWidgetItem *item) {
+    if (item == Q_NULLPTR) {
+        return;
+    }
+
     int col = item->column();
     int row = item->row();
 
     QString txt = item->text();
     QString data;
     QByteArray array;
-    uint32_t addr = hex2int(ui->fpStack->item(row, FP_ADDRESS)->text());
+    uint32_t addr = static_cast<uint32_t>(hex2int(ui->fpStack->item(row, FP_ADDRESS)->text()));
     array.resize(11);
 
     sender()->blockSignals(true);
@@ -2379,7 +2395,7 @@ void MainWindow::fpModified(QTableWidgetItem *item) {
 
     for (uint32_t j = addr; j < addr + 9; j++) {
         uint8_t ch = mem_peek_byte(j);
-        array.append(ch);
+        array.append(static_cast<char>(ch));
         if ((ch < 0x20) || (ch > 0x7e)) {
             ch = '.';
         }
@@ -2420,7 +2436,7 @@ void MainWindow::contextOp(const QPoint &posa) {
     menu.addAction(copyData);
 
     QAction *item = menu.exec(globalPos);
-    if (item) {
+    if (item != Q_NULLPTR) {
         if (item->text() == gotoMem) {
             gotoMemAddr(static_cast<uint32_t>(hex2int(addr)));
         }
