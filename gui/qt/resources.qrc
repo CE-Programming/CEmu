@@ -65,6 +65,13 @@
         <file>resources/icons/checkgray.png</file>
         <file>resources/icons/check.png</file>
         <file>resources/icons/characters.png</file>
+        <file>resources/icons/reload_rom.png</file>
+        <file>resources/icons/reset_gui.png</file>
+        <file>resources/icons/reset_cemu.png</file>
+        <file>resources/icons/ram_chip.png</file>
+        <file>resources/icons/rom_chip.png</file>
+        <file>resources/icons/stack.png</file>
+        <file>resources/icons/states.png</file>
     </qresource>
     <qresource prefix="/fonts">
         <file>resources/custom_fonts/TICELarge.ttf</file>
