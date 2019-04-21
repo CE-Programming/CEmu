@@ -20,7 +20,7 @@
 #include <unistd.h>
 #endif
 
-#define set_reset(in, out, var) ((var) = (bool)(in) ? ((var) | (out)) : ((var) & ~(out)))
+#define set_reset(in, out, var) ((var) = static_cast<bool>(in) ? ((var) | (out)) : ((var) & ~(out)))
 
 bool fileExists(const QString& path);
 std::string calc_var_content_string(const calc_var_t& var);

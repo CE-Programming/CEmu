@@ -9,11 +9,15 @@
 #include <QtWidgets/QToolButton>
 #include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QMenu>
+#include <QtWidgets/QCheckBox>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QSpinBox>
+#include <QtWidgets/QComboBox>
 
 VisualizerWidget::VisualizerWidget(QWidget *parent, const QString &config) : QWidget{parent} {
+    QIcon iconRefresh(QPixmap(QStringLiteral(":/icons/resources/icons/refresh.png")));
     QIcon iconLcd(QPixmap(QStringLiteral(":/icons/resources/icons/lcd.png")));
-    QIcon iconDebug(QPixmap(QStringLiteral(":/icons/resources/icons/debugger.png")));
-    QIcon iconInfo(QPixmap(QStringLiteral(":/icons/resources/icons/info.png")));
+    QIcon iconInfo(QPixmap(QStringLiteral(":/icons/resources/icons/misc.png")));
 
     m_group = new QGroupBox(this);
     QHBoxLayout *hlayout = new QHBoxLayout(m_group);
@@ -21,17 +25,17 @@ VisualizerWidget::VisualizerWidget(QWidget *parent, const QString &config) : QWi
     m_config = new QLineEdit(m_group);
     m_config->setFocusPolicy(Qt::ClickFocus);
     m_btnLcd = new QToolButton(m_group);
-    m_btnDebug = new QToolButton(m_group);
-    m_btnInfo = new QToolButton(m_group);
+    m_btnRefresh = new QToolButton(m_group);
+    m_btnConfig = new QToolButton(m_group);
 
     m_btnLcd->setIcon(iconLcd);
-    m_btnDebug->setIcon(iconDebug);
-    m_btnInfo->setIcon(iconInfo);
+    m_btnRefresh->setIcon(iconRefresh);
+    m_btnConfig->setIcon(iconInfo);
 
     hlayout->addWidget(m_config);
+    hlayout->addWidget(m_btnRefresh);
     hlayout->addWidget(m_btnLcd);
-    hlayout->addWidget(m_btnDebug);
-    hlayout->addWidget(m_btnInfo);
+    hlayout->addWidget(m_btnConfig);
 
     m_view = new VisualizerDisplayWidget(this);
     m_view->setLayoutDirection(Qt::LeftToRight);
@@ -43,12 +47,12 @@ VisualizerWidget::VisualizerWidget(QWidget *parent, const QString &config) : QWi
     setLayout(vlayout);
 
     connect(m_config, &QLineEdit::returnPressed, this, &VisualizerWidget::stringToView);
-    connect(m_btnDebug, &QPushButton::clicked, this, &VisualizerWidget::stringToView);
+    connect(m_btnRefresh, &QPushButton::clicked, this, &VisualizerWidget::stringToView);
     connect(m_btnLcd, &QPushButton::clicked, this, &VisualizerWidget::showPresets);
-    connect(m_btnInfo, &QPushButton::clicked, this, &VisualizerWidget::showHelp);
+    connect(m_btnConfig, &QPushButton::clicked, this, &VisualizerWidget::showConfig);
 
     if (config.isEmpty()) {
-        setDefaultView();
+        resetView();
     } else {
         m_config->setText(config);
         stringToView();
@@ -61,16 +65,16 @@ VisualizerWidget::~VisualizerWidget() = default;
 
 void VisualizerWidget::translate() {
     m_group->setTitle(tr("Settings"));
-    m_btnLcd->setToolTip(tr("Reset to default"));
-    m_btnDebug->setToolTip(tr("Apply changes"));
-    m_btnInfo->setToolTip(tr("Help"));
+    m_btnLcd->setToolTip(tr("Preset Configurations"));
+    m_btnRefresh->setToolTip(tr("Apply changes"));
+    m_btnConfig->setToolTip(tr("Change Configuration"));
 }
 
 void VisualizerWidget::showPresets() {
-    QString preset_1 = tr("Default");
-    QString preset_2 = tr("8bpp Buffer 1");
-    QString preset_3 = tr("8bpp Buffer 2");
-    QString preset_4 = tr("Palette");
+    const QString preset_1 = tr("Current LCD State");
+    const QString preset_2 = tr("8bpp Buffer 1");
+    const QString preset_3 = tr("8bpp Buffer 2");
+    const QString preset_4 = tr("Palette View");
 
     QMenu menu;
     menu.addAction(preset_1);
@@ -79,9 +83,9 @@ void VisualizerWidget::showPresets() {
     menu.addAction(preset_4);
 
     QAction *item = menu.exec(mapToGlobal(m_btnLcd->pos()));
-    if (item) {
+    if (item != Q_NULLPTR) {
         if (item->text() == preset_1) {
-            setDefaultView();
+            resetView();
         } else
         if (item->text() == preset_2) {
             m_config->setText("d40000,320x240,8bpp,bgr");
@@ -98,18 +102,107 @@ void VisualizerWidget::showPresets() {
     }
 }
 
-void VisualizerWidget::showHelp() {
-    QMessageBox::information(this, m_btnInfo->toolTip(),
-                             tr("Use the format string to change the visual display. "
-                                "Press the screen button to grab the current LCD state. Examples:\n\n"
-                                " 'd40000'\t6 hex digits specify start address\n"
-                                " '320x240'\tSpecify width and height of data\n"
-                                " '16bpp'\tChange the bits per pixel\n"
-                                " 'bebo'\tSet BEBO LCD bit\n"
-                                " 'bepo'\tSet BEPO LCD bit\n"
-                                " 'bgr'\tSet BGR LCD bit\n"
-                                " '200%'\tChange scale of displayed image\n"
-                                " '40fps'\tChange refresh rate of displayed image"));
+void VisualizerWidget::showConfig() {
+    QDialog *dialog = new QDialog;
+
+    QGridLayout *mlayout = new QGridLayout(dialog);
+    QGridLayout *glayout = new QGridLayout;
+    QHBoxLayout *hlayout = new QHBoxLayout;
+
+    QLabel *baseLbl = new QLabel(tr("Base Address"));
+    QLineEdit *baseEdit = new QLineEdit(int2hex(m_base, 6));
+    QLabel *fpsLbl = new QLabel(QStringLiteral("FPS"));
+    QSpinBox *fpsSpin = new QSpinBox;
+    QLabel *scaleLbl = new QLabel(tr("Scale"));
+    QSpinBox *scaleSpin = new QSpinBox;
+    QLabel *widthLbl = new QLabel(tr("Width"));
+    QSpinBox *widthSpin = new QSpinBox;
+    QLabel *heightLbl = new QLabel(tr("Height"));
+    QSpinBox *heightSpin = new QSpinBox;
+    QLabel *bppLbl = new QLabel(QStringLiteral("BPP"));
+    QComboBox *bppCombo = new QComboBox;
+    QCheckBox *beboChk = new QCheckBox(QStringLiteral("BEBO"));
+    QCheckBox *bepoChk = new QCheckBox(QStringLiteral("BEPO"));
+    QCheckBox *bgrChk = new QCheckBox(QStringLiteral("BGR"));
+    QCheckBox *gridChk = new QCheckBox(tr("Grid"));
+    QPushButton *submitBtn = new QPushButton(tr("Submit"));
+
+    fpsSpin->setRange(0, 120);
+    fpsSpin->setValue(m_fps);
+
+    scaleSpin->setRange(0, 5000);
+    scaleSpin->setValue(m_scale);
+
+    widthSpin->setRange(0, 5000);
+    widthSpin->setValue(m_width);
+
+    heightSpin->setRange(0, 5000);
+    heightSpin->setValue(m_height);
+
+    bepoChk->setChecked(m_control & 0x400 ? true : false);
+    beboChk->setChecked(m_control & 0x200 ? true : false);
+    bgrChk->setChecked(m_control & 0x100 ? true : false);
+    gridChk->setChecked(m_grid);
+
+    bppCombo->addItem(QStringLiteral("1"));
+    bppCombo->addItem(QStringLiteral("2"));
+    bppCombo->addItem(QStringLiteral("4"));
+    bppCombo->addItem(QStringLiteral("8"));
+    bppCombo->addItem(QStringLiteral("16"));
+    bppCombo->addItem(QStringLiteral("24"));
+    bppCombo->addItem(QStringLiteral("16 (5:6:5)"));
+    bppCombo->addItem(QStringLiteral("12 (4:4:4)"));
+
+    bppCombo->setCurrentIndex((m_control >> 1) & 7);
+
+    glayout->addWidget(baseLbl, 0, 0);
+    glayout->addWidget(baseEdit, 0, 1);
+    glayout->addWidget(fpsLbl, 1, 0);
+    glayout->addWidget(fpsSpin, 1, 1);
+    glayout->addWidget(scaleLbl, 2, 0);
+    glayout->addWidget(scaleSpin, 2, 1);
+    glayout->addWidget(widthLbl, 0, 2);
+    glayout->addWidget(widthSpin, 0, 3);
+    glayout->addWidget(heightLbl, 1, 2);
+    glayout->addWidget(heightSpin, 1, 3);
+    glayout->addWidget(bppLbl, 2, 2);
+    glayout->addWidget(bppCombo, 2, 3);
+
+    hlayout->addWidget(beboChk);
+    hlayout->addWidget(bepoChk);
+    hlayout->addWidget(bgrChk);
+    hlayout->addWidget(gridChk);
+    hlayout->addWidget(submitBtn);
+
+    mlayout->addLayout(glayout, 0, 0);
+    mlayout->addLayout(hlayout, 1, 0);
+
+    dialog->setLayout(mlayout);
+
+    connect(submitBtn, &QPushButton::clicked, [this, dialog, baseEdit,
+            fpsSpin, scaleSpin, widthSpin, heightSpin,
+            bppCombo, beboChk, bepoChk, bgrChk, gridChk]{
+
+        m_base = static_cast<uint32_t>(hex2int(baseEdit->text()));
+
+        m_control &= ~14u;
+        m_control |= static_cast<unsigned int>(bppCombo->currentIndex() << 1);
+
+        m_fps = fpsSpin->value();
+        m_scale = scaleSpin->value();
+        m_width = widthSpin->value();
+        m_height = heightSpin->value();
+        m_grid = gridChk->isChecked();
+
+        set_reset(bepoChk->isChecked(), 0x400u, m_control);
+        set_reset(beboChk->isChecked(), 0x200u, m_control);
+        set_reset(bgrChk->isChecked(), 0x100u, m_control);
+
+        viewToString();
+
+        dialog->close();
+    });
+    dialog->exec();
 }
 
 void VisualizerWidget::stringToView() {
@@ -118,33 +211,41 @@ void VisualizerWidget::stringToView() {
     QRegExp bpp_reg("^\\d{1,6}bpp$", Qt::CaseInsensitive);
     QRegExp fps_reg("^\\d+fps$", Qt::CaseInsensitive);
 
-    m_rate = 30; m_scale = 100;
+    m_fps = 30;
+    m_scale = 100;
+    m_grid = false;
 
-    set_reset(false, 0x400, m_control);
-    set_reset(false, 0x200, m_control);
-    set_reset(false, 0x100, m_control);
+    set_reset(false, 0x400u, m_control);
+    set_reset(false, 0x200u, m_control);
+    set_reset(false, 0x100u, m_control);
 
     foreach (QString str, string) {
         str = str.toLower();
+        if (!str.compare(QLatin1Literal("grid"), Qt::CaseInsensitive)) {
+            m_grid = true;
+        }
         if (!str.compare(QLatin1Literal("bepo"), Qt::CaseInsensitive)) {
-            set_reset(true, 0x400, m_control);
+            set_reset(true, 0x400u, m_control);
         }
         if (!str.compare(QLatin1Literal("bebo"), Qt::CaseInsensitive)) {
-            set_reset(true, 0x200, m_control);
+            set_reset(true, 0x200u, m_control);
         }
         if (!str.compare(QLatin1Literal("bgr"), Qt::CaseInsensitive)) {
-            set_reset(true, 0x100, m_control);
+            set_reset(true, 0x100u, m_control);
         }
         if (str.contains('x')) {
             QStringList wh = str.split('x');
             if (wh.size() == 2) {
-                m_width = wh.at(0).toUInt();
-                m_height = wh.at(1).toUInt();
+                m_width = wh.at(0).toInt();
+                m_height = wh.at(1).toInt();
             }
         }
         if (str.endsWith('%')) {
             str.remove('%');
             m_scale = str.toInt();
+            if (m_scale > 5000) {
+                m_scale = 5000;
+            }
         }
         if (str.length() == 8 && str.at(0) == '0' && str.at(1) == 'x') {
             str.remove(0, 2);
@@ -170,21 +271,21 @@ void VisualizerWidget::stringToView() {
                 default: bpp = 255; break;
             }
             if (bpp != 255) {
-                m_control &= ~14;
-                m_control |= bpp << 1;
+                m_control &= ~14u;
+                m_control |= static_cast<unsigned int>(bpp << 1);
             }
         }
         if (fps_reg.exactMatch(str)) {
             str.chop(3);
-            m_rate = str.toUInt();
-            if (m_rate < 1 || m_rate > 120) { m_rate = 30; }
+            m_fps = str.toInt();
+            if (m_fps < 1 || m_fps > 120) { m_fps = 30; }
         }
     }
 
     viewToString();
 }
 
-void VisualizerWidget::setDefaultView() {
+void VisualizerWidget::resetView() {
     m_width = LCD_WIDTH;
     m_height = LCD_HEIGHT;
     m_base = lcd.upbase;
@@ -214,14 +315,15 @@ void VisualizerWidget::viewToString() {
     }
 
     m_setup.clear();
-    m_setup.append(int2hex(m_base, 6).toLower());
+    m_setup.append(int2hex(m_base, 6).toUpper());
     m_setup.append(QString::number(m_width) + QStringLiteral("x") + QString::number(m_height));
     m_setup.append(bpp + QStringLiteral("bpp"));
     if (m_control & 0x400) { m_setup.append(QStringLiteral("bepo")); }
     if (m_control & 0x200) { m_setup.append(QStringLiteral("bebo")); }
     if (m_control & 0x100) { m_setup.append(QStringLiteral("bgr")); }
     if (m_scale != 100) { m_setup.append(QString::number(m_scale) + QStringLiteral("%")); }
-    if (m_rate != 30) { m_setup.append(QString::number(m_rate) + QStringLiteral("fps")); }
+    if (m_fps != 30) { m_setup.append(QString::number(m_fps) + QStringLiteral("fps")); }
+    if (m_grid == true) { m_setup.append(QStringLiteral("grid")); }
 
     m_config->setText(m_setup.join(","));
 
@@ -235,8 +337,8 @@ void VisualizerWidget::viewToString() {
     emu_set_lcd_ptrs(&data, &data_end, m_width, m_height, m_base, m_control, false);
 
     m_view->setFixedSize(static_cast<int>(w), static_cast<int>(h));
-    m_view->setRefreshRate(m_rate);
-    m_view->setConfig(bppstep, m_height, m_width, m_base, m_control, data, data_end);
+    m_view->setRefreshRate(m_fps);
+    m_view->setConfig(bppstep, m_width, m_height, m_base, m_control, m_grid, data, data_end);
     adjustSize();
 
     emit configChanged();

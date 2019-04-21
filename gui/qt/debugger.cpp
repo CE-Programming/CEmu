@@ -487,7 +487,7 @@ void MainWindow::debugSync() {
     cpu.registers.MBASE = static_cast<uint8_t>(hex2int(ui->mbregView->text()));
     cpu.registers.I = static_cast<uint16_t>(hex2int(ui->iregView->text()));
     cpu.registers.R = static_cast<uint8_t>(hex2int(ui->rregView->text()));
-    cpu.registers.R = cpu.registers.R << 1 | cpu.registers.R >> 7;
+    cpu.registers.R = static_cast<uint8_t>(cpu.registers.R << 1 | cpu.registers.R >> 7);
     cpu.IM = static_cast<uint8_t>(hex2int(ui->imregView->text()));
     cpu.IM += !!cpu.IM;
 
@@ -521,12 +521,12 @@ void MainWindow::debugSync() {
     lcd.upcurr = static_cast<uint32_t>(hex2int(ui->lcdcurrView->text()));
 
     lcd.control &= ~14u;
-    lcd.control |= ui->bppView->currentIndex() << 1;
+    lcd.control |= static_cast<unsigned int>(ui->bppView->currentIndex() << 1);
 
-    set_reset(ui->checkPowered->isChecked(), 0x800, lcd.control);
-    set_reset(ui->checkBEPO->isChecked(), 0x400, lcd.control);
-    set_reset(ui->checkBEBO->isChecked(), 0x200, lcd.control);
-    set_reset(ui->checkBGR->isChecked(), 0x100, lcd.control);
+    set_reset(ui->checkPowered->isChecked(), 0x800u, lcd.control);
+    set_reset(ui->checkBEPO->isChecked(), 0x400u, lcd.control);
+    set_reset(ui->checkBEBO->isChecked(), 0x200u, lcd.control);
+    set_reset(ui->checkBGR->isChecked(), 0x100u, lcd.control);
 
     lcd_update();
 

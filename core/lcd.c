@@ -23,19 +23,19 @@ static bool _rgb;
 #define c12(w)   (((w) << 4 & 0xF000) | ((w) << 3 & 0x780) | ((w) << 1 & 0x1E))
 
 static uint32_t lcd_bgr16out(uint32_t bgr16) {
-    uint_fast8_t r, g, b;
+    uint8_t r, g, b;
 
     r = (bgr16 >> 10) & 0x3E;
     g = bgr16 >> 5 & 0x3F;
     b = (bgr16 << 1) & 0x3E;
 
     r |= r >> 5;
-    r = (r << 2) | (r >> 4);
+    r = (uint8_t)((r << 2) | (r >> 4));
 
-    g = (g << 2) | (g >> 4);
+    g = (uint8_t)((g << 2) | (g >> 4));
 
     b |= b >> 5;
-    b = (b << 2) | (b >> 4);
+    b = (uint8_t)((b << 2) | (b >> 4));
 
     if (_rgb) {
         return r | (g << 8) | (b << 16) | (255 << 24);
@@ -60,7 +60,7 @@ void emu_lcd_drawframe(void *output) {
 }
 
 /* Draw the lcd onto an RGBA8888 buffer. Alpha is always 255. */
-void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t control, uint32_t size, int use_spi) {
+void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t control, int size, int use_spi) {
     bool bebo;
     uint_fast8_t mode;
     uint32_t word, color;
@@ -428,11 +428,11 @@ void lcd_update(void) {
     emu_set_lcd_ptrs(&lcd.data, &lcd.data_end, LCD_WIDTH, LCD_HEIGHT, lcd.upbase, lcd.control, true);
 }
 
-void emu_set_lcd_ptrs(uint32_t **dat, uint32_t **dat_end, uint32_t width, uint32_t height, uint32_t addr, uint32_t control, bool mask) {
+void emu_set_lcd_ptrs(uint32_t **dat, uint32_t **dat_end, int width, int height, uint32_t addr, uint32_t control, bool mask) {
     uint8_t mode = control >> 1 & 7;
     uint8_t *data_start, *data_end, *mem_end;
-    uint32_t length = 0;
-    uint32_t size;
+    int length = 0;
+    int size;
 
     *dat = NULL;
     *dat_end = NULL;
@@ -477,8 +477,8 @@ void emu_set_lcd_ptrs(uint32_t **dat, uint32_t **dat_end, uint32_t width, uint32
     data_end = data_start + length;
     if (data_end > mem_end) { data_end = mem_end; }
 
-    *dat     = (uint32_t *)data_start;
-    *dat_end = (uint32_t *)data_end;
+    *dat     = (uint32_t*)data_start;
+    *dat_end = (uint32_t*)data_end;
 }
 
 static void lcd_write(const uint16_t pio, const uint8_t value, bool poke) {
