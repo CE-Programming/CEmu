@@ -101,10 +101,10 @@ void MainWindow::debugStep(int mode) {
     if (mode == DBG_RUN_UNTIL) {
         debug_step(mode, m_runUntilAddr);
     } else {
-        disasm.base = cpu.registers.PC;
+        disasm.base = static_cast<int32_t>(cpu.registers.PC);
         disasm.ctx.zdis_adl = cpu.ADL;
         disasmGet();
-        debug_step(mode, disasm.next);
+        debug_step(mode, static_cast<uint32_t>(disasm.next));
     }
     emu.resume();
 }
@@ -136,7 +136,7 @@ error:
         goto error;
     }
     for (i = 0; i < breakLabel.size(); i++) {
-        breakAdd(breakLabel.at(i), hex2int(breakAddr.at(i)), breakSet.at(i) == TXT_YES, false, false);
+        breakAdd(breakLabel.at(i), static_cast<uint32_t>(hex2int(breakAddr.at(i))), breakSet.at(i) == TXT_YES, false, false);
     }
 
     // load the watchpoint information
@@ -151,7 +151,8 @@ error:
     for (i = 0; i < watchLabel.size(); i++) {
         int mask = (watchR.at(i) == TXT_YES ? DBG_MASK_READ : DBG_MASK_NONE) |
                    (watchW.at(i) == TXT_YES ? DBG_MASK_WRITE : DBG_MASK_NONE);
-        watchAdd(watchLabel.at(i), hex2int(watchLow.at(i)), hex2int(watchHigh.at(i)), mask, false, false);
+        watchAdd(watchLabel.at(i), static_cast<uint32_t>(hex2int(watchLow.at(i))),
+                 static_cast<uint32_t>(hex2int(watchHigh.at(i))), mask, false, false);
     }
 
     // load the port monitor information
@@ -166,7 +167,7 @@ error:
         int mask = (portR.at(i) == TXT_YES ? DBG_MASK_PORT_READ : DBG_MASK_NONE)  |
                    (portW.at(i) == TXT_YES ? DBG_MASK_PORT_WRITE : DBG_MASK_NONE) |
                    (portF.at(i) == TXT_YES ? DBG_MASK_PORT_FREEZE : DBG_MASK_NONE);
-        portAdd(hex2int(portAddr.at(i)), mask, false);
+        portAdd(static_cast<uint16_t>(hex2int(portAddr.at(i))), mask, false);
     }
 
     // add all the equate files and load them in
@@ -514,12 +515,12 @@ void MainWindow::debugSync() {
     }
 
     backlight.brightness = static_cast<uint8_t>(ui->brightnessSlider->value());
-    backlight.factor = (310 - (float)backlight.brightness) / 160.0;
+    backlight.factor = (310.0f - static_cast<float>(backlight.brightness)) / 160.0f;
 
     lcd.upbase = static_cast<uint32_t>(hex2int(ui->lcdbaseView->text()));
     lcd.upcurr = static_cast<uint32_t>(hex2int(ui->lcdcurrView->text()));
 
-    lcd.control &= ~14;
+    lcd.control &= ~14u;
     lcd.control |= ui->bppView->currentIndex() << 1;
 
     set_reset(ui->checkPowered->isChecked(), 0x800, lcd.control);
@@ -1561,7 +1562,7 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
         highStr = m_watchpoints->item(row, WATCH_HIGH_COL)->text();
 
         if (isNotValidHex(s) || s.length() > 6 ||
-           (highStr != DEBUG_UNSET_ADDR && addr > hex2int(highStr))) {
+           (highStr != DEBUG_UNSET_ADDR && addr > static_cast<uint32_t>(hex2int(highStr)))) {
             item->setText(m_prevWatchLow);
             m_watchpoints->blockSignals(false);
             return;
@@ -1612,7 +1613,7 @@ void MainWindow::watchModified(QTableWidgetItem *item) {
         lowStr = m_watchpoints->item(row, WATCH_LOW_COL)->text();
 
         if (isNotValidHex(s) || s.length() > 6 ||
-           (lowStr != DEBUG_UNSET_ADDR && addr < hex2int(lowStr))) {
+           (lowStr != DEBUG_UNSET_ADDR && addr < static_cast<uint32_t>(hex2int(lowStr)))) {
             item->setText(m_prevWatchLow);
             m_watchpoints->blockSignals(false);
             return;
@@ -2575,10 +2576,13 @@ void MainWindow::addVisualizerDock(const QString &magic, const QString &config) 
 
     VisualizerWidget *widget = new VisualizerWidget(this, config);
 
-    connect(widget, &VisualizerWidget::configChanged, [this, widget, magic]{
+    connect(widget, &VisualizerWidget::configChanged, [this, widget, magic, dw]{
         int index;
         if ((index = m_docksVisualizer.indexOf(magic)) != -1) {
             m_docksVisualizerConfig[index] = widget->getConfig();
+        }
+        if (dw->isFloating() && dw->isVisible()) {
+            dw->adjustSize();
         }
     });
     connect(dw, &DockWidget::closed, [this, magic]{

@@ -43,7 +43,7 @@ bool fileExists(const QString &location) {
 }
 
 int hex2int(const QString &str) {
-    return (int)strtol(str.toStdString().c_str(), nullptr, 16);
+    return static_cast<int>(strtol(str.toStdString().c_str(), nullptr, 16));
 }
 
 QString int2hex(uint32_t a, uint8_t l) {
@@ -56,7 +56,7 @@ std::string calc_var_content_string(const calc_var_t& var) {
     if (var.type == CALC_VAR_TYPE_EQU && var.name[0] == '$') {
         func = &tivars::TH_TempEqu::makeStringFromData;
     } else {
-        func = tivars::TIVarType::createFromID((uint)var.type).getHandlers().second;
+        func = tivars::TIVarType::createFromID(static_cast<uint>(var.type)).getHandlers().second;
     }
     const options_t opts = (calc_var_is_prog(&var) || var.type == CALC_VAR_TYPE_STRING)
                             ? options_t({ {"prettify", true} }) : options_t();

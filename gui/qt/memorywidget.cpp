@@ -35,7 +35,7 @@ QString MainWindow::getAddressString(const QString& string, bool* ok) {
         return exists;
     }
 
-   return int2hex(hex2int(address), 6);
+   return int2hex(static_cast<uint32_t>(hex2int(address)), 6);
 }
 
 void MainWindow::flashUpdate() {
@@ -81,7 +81,7 @@ void MainWindow::memUpdateEdit(HexWidget *edit, bool force) {
         data.resize(end - start + 1);
 
         for (int j = 0, i = start; i < end; j++, i++) {
-            data[j] = mem_peek_byte(i);
+            data[j] = static_cast<char>(mem_peek_byte(static_cast<uint32_t>(i)));
         }
 
         edit->setBase(start);
@@ -97,7 +97,7 @@ void MainWindow::memUpdateEdit(HexWidget *edit, bool force) {
         data.resize(len);
 
         for (int j = 0, i = start; j < len; j++, i++) {
-            data[j] = mem_peek_byte(i);
+            data[j] = static_cast<char>(mem_peek_byte(static_cast<uint32_t>(i)));
         }
 
         edit->setData(data);
@@ -254,7 +254,7 @@ void MainWindow::memAsciiToggle(HexWidget *edit) {
 
 void MainWindow::contextMem(const QPoint &posa) {
     HexWidget *p = qobject_cast<HexWidget*>(sender());
-    contextMemWidget(p->mapToGlobal(posa), p->getOffset() + p->getBase());
+    contextMemWidget(p->mapToGlobal(posa), static_cast<uint32_t>(p->getOffset() + p->getBase()));
 }
 
 void MainWindow::contextMemWidget(const QPoint &pos, uint32_t address) {
@@ -262,7 +262,7 @@ void MainWindow::contextMemWidget(const QPoint &pos, uint32_t address) {
     QString toggleBreak = tr("Toggle Breakpoint");
     QString toggleWrite = tr("Toggle Write Watchpoint");
     QString toggleRead = tr("Toggle Read Watchpoint");
-    QString toggleRw = tr("Toggle Read/Write Watchpoint");
+    QString toggleReadWrite = tr("Toggle Read/Write Watchpoint");
     QString addr = int2hex(address, 6);
 
     copyAddr += QStringLiteral(" '") + addr + QStringLiteral("'");
@@ -273,7 +273,7 @@ void MainWindow::contextMemWidget(const QPoint &pos, uint32_t address) {
     menu.addAction(toggleBreak);
     menu.addAction(toggleRead);
     menu.addAction(toggleWrite);
-    menu.addAction(toggleRw);
+    menu.addAction(toggleReadWrite);
 
     QAction* item = menu.exec(pos);
     if (item) {
@@ -288,7 +288,7 @@ void MainWindow::contextMemWidget(const QPoint &pos, uint32_t address) {
         } else if (item->text() == toggleWrite) {
             watchAdd(watchNextLabel(), address, address, DBG_MASK_WRITE, true, false);
             memDocksUpdate();
-        } else if (item->text() == toggleRw) {
+        } else if (item->text() == toggleReadWrite) {
             watchAdd(watchNextLabel(), address, address, DBG_MASK_READ | DBG_MASK_WRITE, true, false);
             memDocksUpdate();
         }

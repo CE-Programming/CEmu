@@ -72,6 +72,7 @@
         <file>resources/icons/rom_chip.png</file>
         <file>resources/icons/stack.png</file>
         <file>resources/icons/states.png</file>
+        <file>resources/icons/add_mem.png</file>
     </qresource>
     <qresource prefix="/fonts">
         <file>resources/custom_fonts/TICELarge.ttf</file>
