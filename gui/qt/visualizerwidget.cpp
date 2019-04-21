@@ -291,6 +291,7 @@ void VisualizerWidget::resetView() {
     m_base = lcd.upbase;
     m_control = lcd.control;
     m_scale = 100.0;
+    m_grid = false;
     viewToString();
 }
 
