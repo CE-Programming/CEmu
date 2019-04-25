@@ -246,6 +246,16 @@ bool apng_save(const char *filename, bool optimize) {
                     cur++;
                 }
             }
+
+            /* Hack around libpng-apng bug that doesn't like 1 row frames */
+            if (frame.y[0] == frame.y[1]) {
+                if (frame.y[0]) {
+                    --frame.y[0];
+                } else {
+                    ++frame.y[1];
+                }
+            }
+
             if (frame.x[0] > frame.x[1] || frame.y[0] > frame.y[1]) {
                 frame.x[0] = frame.y[0] = 0;
                 frame.x[1] = frame.y[1] = -1;
@@ -280,6 +290,16 @@ bool apng_save(const char *filename, bool optimize) {
                     cur++;
                 }
             }
+
+            /* Hack around libpng-apng bug that doesn't like 1 row frames */
+            if (frame.y[0] == frame.y[1]) {
+                if (frame.y[0]) {
+                    --frame.y[0];
+                } else {
+                    ++frame.y[1];
+                }
+            }
+
             if (frame.x[0] > frame.x[1] || frame.y[0] > frame.y[1]) {
                 frame.x[0] = frame.y[0] = 0;
                 frame.x[1] = frame.y[1] = -1;
