@@ -97,7 +97,7 @@ bool apng_save(const char *filename, bool optimize) {
     png_color_16 trans;
     FILE *f;
     uint32_t count = ~0, pixel = 0;
-    bool have_trans = true;
+    bool have_trans = false;
     uint32_t i, j, probe, hash;
     int x, y;
     struct { int x[2], y[2]; } frame;
@@ -105,6 +105,7 @@ bool apng_save(const char *filename, bool optimize) {
     if (optimize) {
         rewind(apng.tmp);
         memset(apng.table, 0, sizeof(apng.table));
+        have_trans = true;
         count = 1;
         for (i = 0; i != apng.n; i++) {
             for (j = 0; j != LCD_SIZE; j++) {
@@ -280,7 +281,6 @@ bool apng_save(const char *filename, bool optimize) {
                 }
             }
             if (frame.x[0] > frame.x[1] || frame.y[0] > frame.y[1]) {
-                printf("zero on frame %u/%u\n", i, apng.n);
                 frame.x[0] = frame.y[0] = 0;
                 frame.x[1] = frame.y[1] = -1;
             }
