@@ -528,6 +528,8 @@ void MainWindow::debugSync() {
     set_reset(ui->checkBEBO->isChecked(), 0x200u, lcd.control);
     set_reset(ui->checkBGR->isChecked(), 0x100u, lcd.control);
 
+    set_cpu_clock(static_cast<uint32_t>(ui->freqView->text().toUInt() * 1e6));
+
     lcd_update();
 
     ui->debuggerLabel->clear();
@@ -685,7 +687,7 @@ void MainWindow::debugPopulate() {
     ui->pcregView->setPalette(tmp == ui->pcregView->text() ? m_cNone : m_cBack);
     ui->pcregView->setText(tmp);
 
-    tmp = int2hex(cpu.registers.R >> 1 | cpu.registers.R << 7, 2);
+    tmp = int2hex(static_cast<uint32_t>(cpu.registers.R >> 1 | cpu.registers.R << 7), 2);
     ui->rregView->setPalette(tmp == ui->rregView->text() ? m_cNone : m_cBack);
     ui->rregView->setText(tmp);
 
@@ -697,7 +699,7 @@ void MainWindow::debugPopulate() {
     ui->lcdcurrView->setPalette(tmp == ui->lcdcurrView->text() ? m_cNone : m_cBack);
     ui->lcdcurrView->setText(tmp);
 
-    tmp = QString::number(sched.clockRates[CLOCK_CPU]);
+    tmp = QString::number(sched.clockRates[CLOCK_CPU] / 1e6);
     ui->freqView->setPalette(tmp == ui->freqView->text() ? m_cNone : m_cBack);
     ui->freqView->setText(tmp);
 

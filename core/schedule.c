@@ -200,7 +200,7 @@ void sched_set_clock(enum clock_id clock, uint32_t new_rate) {
     struct sched_item *item;
     uint64_t ticks;
 
-    if (sched.event.cycle) {
+    if (new_rate == 0 || sched.event.cycle) {
         return;
     }
     if (clock == CLOCK_CPU) {
