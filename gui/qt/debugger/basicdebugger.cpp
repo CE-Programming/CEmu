@@ -120,22 +120,26 @@ int MainWindow::debugBasicPgrmLookup() {
             }
 
             // find the program in memory
-            if (vat_search_find(&search, &var)) {
-                QString str;
+            const int begPC = static_cast<int>(mem_peek_long(DBG_BASIC_BEGPC));
+            const int endPC = static_cast<int>(mem_peek_long(DBG_BASIC_ENDPC));
 
-                try {
-                    str = QString::fromStdString(tivars::TIVarType::createFromID(CALC_VAR_TYPE_PROG).getHandlers().second(data_t(var.data, var.data + var.size), options_t()));
-                } catch(...) {
-                    return 0;
-                }
+            const QByteArray tmp(reinterpret_cast<const char*>(phys_mem_ptr(static_cast<uint32_t>(begPC), 3)), endPC - begPC + 1);
+            const data_t prgmBytes(tmp.constData(), tmp.constEnd());
 
-                m_basicPrgmsMap[var_name] = m_basicPrgmsOriginalCode.count();
-                m_basicPrgmsOriginalCode.append(str);
-                m_basicPrgmsFormattedCode.append(QString::fromStdString(tivars::TH_Tokenized::reindentCodeString(str.toStdString())));
-                m_basicOriginalCode = &m_basicPrgmsOriginalCode.last();
-                m_basicFormattedCode = &m_basicPrgmsFormattedCode.last();
-                refresh = 1;
+            QString str;
+
+            try {
+                str = QString::fromStdString(tivars::TIVarType::createFromID(CALC_VAR_TYPE_PROG).getHandlers().second(prgmBytes, options_t()));
+            } catch(...) {
+                return 0;
             }
+
+            m_basicPrgmsMap[var_name] = m_basicPrgmsOriginalCode.count();
+            m_basicPrgmsOriginalCode.append(str);
+            m_basicPrgmsFormattedCode.append(QString::fromStdString(tivars::TH_Tokenized::reindentCodeString(str.toStdString())));
+            m_basicOriginalCode = &m_basicPrgmsOriginalCode.last();
+            m_basicFormattedCode = &m_basicPrgmsFormattedCode.last();
+            refresh = 1;
         }
         ui->labelBasicStatus->setText(tr("Executing Program: ") + var_name);
     }
@@ -148,9 +152,21 @@ void MainWindow::debugBasicStep() {
 }
 
 int MainWindow::debugBasicLiveUpdate() {
+    static int prevCurPC;
+
     if (!m_basicShowingLiveExecution) {
         return 0;
     }
+
+    const int begPC = static_cast<int>(mem_peek_long(DBG_BASIC_BEGPC));
+    const int curPC = static_cast<int>(mem_peek_long(DBG_BASIC_CURPC));
+    const int endPC = static_cast<int>(mem_peek_long(DBG_BASIC_ENDPC));
+
+    if (curPC >= endPC || curPC < begPC || prevCurPC == curPC) {
+        return 2;
+    }
+
+    prevCurPC = curPC;
 
     int refresh = debugBasicPgrmLookup();
     switch (refresh) {
@@ -161,14 +177,6 @@ int MainWindow::debugBasicLiveUpdate() {
             break;
         case 2:
             return 2;
-    }
-
-    const int begPC = static_cast<int>(mem_peek_long(DBG_BASIC_BEGPC));
-    const int curPC = static_cast<int>(mem_peek_long(DBG_BASIC_CURPC));
-    const int endPC = static_cast<int>(mem_peek_long(DBG_BASIC_ENDPC));
-
-    if (curPC >= endPC || curPC < begPC) {
-        return 2;
     }
 
     const QByteArray tmp(reinterpret_cast<const char*>(phys_mem_ptr(static_cast<uint32_t>(begPC), 3)), curPC - begPC + 1);
