@@ -1,6 +1,6 @@
 /*
  * Part of tivars_lib_cpp
- * (C) 2015-2018 Adrien "Adriweb" Bertrand
+ * (C) 2015-2019 Adrien "Adriweb" Bertrand
  * https://github.com/adriweb/tivars_lib_cpp
  * License: MIT
  */
@@ -21,7 +21,7 @@ namespace tivars
     std::string TH_TempEqu::makeStringFromData(const data_t& data, const options_t& options)
     {
         (void)options;
-        
+
         if (data.size() < 2)
         {
             throw std::invalid_argument("Invalid data array. Missing the 2 initial bytes.");

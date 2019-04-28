@@ -1,6 +1,6 @@
 /*
  * Part of tivars_lib_cpp
- * (C) 2015-2018 Adrien "Adriweb" Bertrand
+ * (C) 2015-2019 Adrien "Adriweb" Bertrand
  * https://github.com/adriweb/tivars_lib_cpp
  * License: MIT
  */
@@ -39,12 +39,6 @@ namespace tivars
         th();
         static const constexpr char* validPattern = "===UNIMPLEMENTED==="; // TODO
     }
-    namespace STH_ExactFractionPi
-    {
-        th();
-        static const constexpr char* validPattern = "===UNIMPLEMENTED==="; // TODO
-    }
-
     namespace STH_DataAppVar
     {
         th();
@@ -54,6 +48,11 @@ namespace tivars
         th();
         static const constexpr char ID_SCRIPT[] = "PYSC";
         static const constexpr char ID_CODE[] = "PYCD";
+    }
+    namespace STH_ExactFractionPi
+    {
+        th();
+        static const constexpr char* validPattern = "===UNIMPLEMENTED==="; // TODO
     }
 
     namespace TH_GenericReal
