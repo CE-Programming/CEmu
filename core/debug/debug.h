@@ -121,6 +121,7 @@ bool debug_get_executing_basic_prgm(char *name);
 #define DBG_BASIC_BEGPC       0xD02317
 #define DBG_BASIC_CURPC       0xD0231A
 #define DBG_BASIC_ENDPC       0xD0231D
+#define DBG_BASIC_BASIC_PROG  0xD0230E
 
 typedef struct {
     bool mode : 1;

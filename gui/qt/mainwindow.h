@@ -260,6 +260,7 @@ private:
     void debugBasicEnable();
     void debugBasicDisable();
     void debugBasicStep();
+    QString debugBasicGetPrgmName();
     int debugBasicLiveUpdate();
     int debugBasicPgrmLookup();
     void debugBasicCreateTokenMap(const QByteArray &data, int base);

@@ -195,6 +195,15 @@ void MainWindow::debugBasicStep() {
     debugBasicToggle();
 }
 
+QString MainWindow::debugBasicGetPrgmName() {
+    char name[10];
+    if (!debug_get_executing_basic_prgm(name)) {
+        return QString();
+    } else {
+        return QString(&name[1]);
+    }
+}
+
 int MainWindow::debugBasicLiveUpdate() {
     static int prevCurPC;
 

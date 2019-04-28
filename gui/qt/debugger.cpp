@@ -371,6 +371,18 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
 
     // handle basic commands first
     if (reason > DBG_BASIC_LIVE_START && reason < DBG_BASIC_LIVE_END) {
+        static int prevReason = DBG_BASIC_CURPC_WRITE;
+
+        // in the case where the program is returning from a subprogram, the updates
+        // to the pc haven't finished yet on endpc, so skip this case
+        // the only bug is that entering a subprogram currently skips the first token
+        // I doubt most people will notice though
+        if (prevReason == DBG_BASIC_BEGPC_WRITE && reason == DBG_BASIC_CURPC_WRITE) {
+            prevReason = reason;
+            emu.resume();
+            return;
+        }
+
         if (debug.stepBasic == true && reason == DBG_BASIC_CURPC_WRITE) {
             if (debugBasicLiveUpdate() == 2) {
                 emu.resume();
@@ -378,11 +390,14 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
                 debugBasicRaise();
                 debug.stepBasic = false;
             }
+            prevReason = reason;
             return;
         }
         if (reason == DBG_BASIC_CURPC_WRITE) {
             debugBasicLiveUpdate();
         }
+
+        prevReason = reason;
         emu.resume();
         return;
     }

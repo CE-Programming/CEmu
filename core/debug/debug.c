@@ -53,11 +53,15 @@ void debug_open(int reason, uint32_t data) {
 
     /* fixup reason for basic debugger */
     if (debug.mode == DBG_MODE_BASIC && debug.basicLiveExecution) {
-        if (reason == DBG_WATCHPOINT_READ || reason == DBG_WATCHPOINT_WRITE) {
-            if (data == DBG_BASIC_CURPC + 0 ||
-                data == DBG_BASIC_CURPC + 1 ||
-                data == DBG_BASIC_CURPC + 2) {
-                reason = reason == DBG_WATCHPOINT_WRITE ? DBG_BASIC_CURPC_WRITE : DBG_BASIC_CURPC_READ;
+        if (reason == DBG_WATCHPOINT_WRITE) {
+            if (data == DBG_BASIC_CURPC + 1) {
+                reason = DBG_BASIC_CURPC_WRITE;
+            }
+            else if (data == DBG_BASIC_BEGPC + 1) {
+                reason = DBG_BASIC_BEGPC_WRITE;
+            }
+            else if (data == DBG_BASIC_ENDPC + 1) {
+                reason = DBG_BASIC_ENDPC_WRITE;
             }
         }
     }
@@ -211,31 +215,20 @@ void debug_set_pc(uint32_t addr) {
     cpu_flush(addr, cpu.ADL);
 }
 
+#define DBG_BASIC_NEWDISPF 0xD00088
+#define DBG_BASIC_CMDFLAGS 0xD0008C
+#define DBG_BASIC_CMDEXEC_BIT (1 << 6)
+#define DBG_BASIC_PROGEXECUTING_BIT (1 << 1)
+
 /* internal breakpoints not visible in gui */
 /* the gui should automatically update breakpoints, so it should be */
 /* fine if asm or C also uses these addresses */
 void debug_set_mode(debug_mode_t mode) {
-    /*
-     * debug_watch(DBG_BASIC_BEGPC + 0, DBG_MASK_RW, mode == DBG_MODE_BASIC);
-     * debug_watch(DBG_BASIC_BEGPC + 1, DBG_MASK_RW, mode == DBG_MODE_BASIC);
-     * debug_watch(DBG_BASIC_BEGPC + 2, DBG_MASK_RW, mode == DBG_MODE_BASIC);
-     */
-    debug_watch(DBG_BASIC_CURPC + 0, DBG_MASK_RW, mode == DBG_MODE_BASIC);
-    debug_watch(DBG_BASIC_CURPC + 1, DBG_MASK_RW, mode == DBG_MODE_BASIC);
-    debug_watch(DBG_BASIC_CURPC + 2, DBG_MASK_RW, mode == DBG_MODE_BASIC);
-    /*
-     * debug_watch(DBG_BASIC_ENDPC + 0, DBG_MASK_RW, mode == DBG_MODE_BASIC);
-     * debug_watch(DBG_BASIC_ENDPC + 1, DBG_MASK_RW, mode == DBG_MODE_BASIC);
-     * debug_watch(DBG_BASIC_ENDPC + 2, DBG_MASK_RW, mode == DBG_MODE_BASIC);
-     */
+    debug_watch(DBG_BASIC_BEGPC + 1, DBG_MASK_WRITE, mode == DBG_MODE_BASIC);
+    debug_watch(DBG_BASIC_CURPC + 1, DBG_MASK_WRITE, mode == DBG_MODE_BASIC);
+    debug_watch(DBG_BASIC_ENDPC + 1, DBG_MASK_WRITE, mode == DBG_MODE_BASIC);
     debug.mode = mode;
 }
-
-#define DBG_BASIC_NEWDISPF 0xD00088
-#define DBG_BASIC_CMDFLAGS 0xD0008C
-#define DBG_BASIC_BASIC_PROG 0xD0230E
-#define DBG_BASIC_CMDEXEC_BIT (1 << 6)
-#define DBG_BASIC_PROGEXECUTING_BIT (1 << 1)
 
 bool debug_get_executing_basic_prgm(char *name) {
     if (name == NULL) {
