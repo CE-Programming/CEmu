@@ -153,13 +153,40 @@ int MainWindow::debugBasicPgrmLookup() {
 void MainWindow::debugBasicCreateTokenMap(const QByteArray &data, int base) {
     token_highlight_t posinfo = { 0, 0, 0 };
 
-    for (int i = 0; i < data.size(); i++) {
-        m_basicPrgmsTokensMap[base + i] = posinfo;
+    for (int i = 0; i < data.size();) {
+        uint8_t token = static_cast<uint8_t>(data[i]);
+        uint8_t tokenNext = i < data.size() - 1 ? static_cast<uint8_t>(data[i + 1]) : static_cast<uint8_t>(-1u);
 
         // check for newline
-        if (data[i] == 0x3F) {
+        if (token == 0x3F) {
+            m_basicPrgmsTokensMap[base + i] = posinfo;
             posinfo.line++;
+            posinfo.column = 0;
+            posinfo.len = 0;
+            i++;
+            continue;
         }
+
+        // get current token
+        int incr;
+        data_t tokBytes(2);
+        tokBytes[0] = token;
+        tokBytes[1] = tokenNext;
+        std::string tokStr = tivars::TH_Tokenized::tokenToString(tokBytes, &incr, options_t({ {"prettify", true} }));
+
+        if (!tokStr.empty()) {
+            posinfo.len = utf8_strlen(tokStr);
+        }
+
+        m_basicPrgmsTokensMap[base + i] = posinfo;
+        if (incr == 2) {
+            m_basicPrgmsTokensMap[base + i + 1] = posinfo;
+        }
+
+        if (!tokStr.empty()) {
+            posinfo.column += posinfo.len;
+        }
+        i += incr;
     }
 }
 
@@ -208,7 +235,7 @@ int MainWindow::debugBasicLiveUpdate() {
     currToken.format.setBackground(QColor(Qt::yellow).lighter(100));
     currToken.cursor = QTextCursor(ui->basicEdit->document());
     currToken.cursor.clearSelection();
-    currToken.cursor.movePosition(QTextCursor::MoveOperation::Down, QTextCursor::MoveMode::MoveAnchor, posinfo.line);
+    currToken.cursor.movePosition(QTextCursor::MoveOperation::NextBlock, QTextCursor::MoveMode::MoveAnchor, posinfo.line);
     currToken.cursor.movePosition(QTextCursor::MoveOperation::Right, QTextCursor::MoveMode::MoveAnchor, posinfo.column);
     currToken.cursor.movePosition(QTextCursor::MoveOperation::Right, QTextCursor::MoveMode::KeepAnchor, posinfo.len);
 
@@ -216,7 +243,7 @@ int MainWindow::debugBasicLiveUpdate() {
     currLine.format.setBackground(QColor(Qt::blue).lighter(180));
     currLine.format.setProperty(QTextFormat::FullWidthSelection, true);
     currLine.cursor = QTextCursor(ui->basicEdit->document());
-    currLine.cursor.movePosition(QTextCursor::MoveOperation::Down, QTextCursor::MoveMode::MoveAnchor, posinfo.line);
+    currLine.cursor.movePosition(QTextCursor::MoveOperation::NextBlock, QTextCursor::MoveMode::MoveAnchor, posinfo.line);
     currLine.cursor.clearSelection();
 
     ui->basicEdit->setExtraSelections({ currLine, currToken });

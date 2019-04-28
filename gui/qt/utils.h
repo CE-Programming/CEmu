@@ -22,8 +22,9 @@
 
 #define set_reset(in, out, var) ((var) = static_cast<bool>(in) ? ((var) | (out)) : ((var) & ~(out)))
 
-bool fileExists(const QString& path);
-std::string calc_var_content_string(const calc_var_t& var);
+bool fileExists(const QString &path);
+std::string calc_var_content_string(const calc_var_t &var);
+int utf8_strlen(const std::string &str);
 
 bool isRunningInDarkMode();
 

@@ -55,7 +55,7 @@ QString int2hex(uint32_t a, uint8_t l) {
     return QString::number(a, 16).rightJustified(l, '0', true).toUpper();
 }
 
-std::string calc_var_content_string(const calc_var_t& var) {
+std::string calc_var_content_string(const calc_var_t &var) {
     tivars::stringFromData_handler_t func;
     // We need to special case some specific temp-equ variables...
     if (var.type == CALC_VAR_TYPE_EQU && var.name[0] == '$') {
@@ -66,6 +66,19 @@ std::string calc_var_content_string(const calc_var_t& var) {
     const options_t opts = (calc_var_is_prog(&var) || var.type == CALC_VAR_TYPE_STRING)
                             ? options_t({ {"prettify", true} }) : options_t();
     return func(data_t(var.data, var.data + var.size), opts);
+}
+
+int utf8_strlen(const std::string &str) {
+    int c,i,ix,q;
+    for (q=0, i=0, ix = static_cast<int>(str.length()); i < ix; i++, q++) {
+        c = static_cast<int>(str[static_cast<size_t>(i)]);
+        if      (c>=0   && c<=127) i+=0;
+        else if ((c & 0xE0) == 0xC0) i+=1;
+        else if ((c & 0xF0) == 0xE0) i+=2;
+        else if ((c & 0xF8) == 0xF0) i+=3;
+        else return 0;
+    }
+    return q;
 }
 
 bool isRunningInDarkMode() {
