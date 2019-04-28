@@ -21,6 +21,7 @@ QString execPath;
 QString configPath;
 
 bool guiDebug;
+bool guiDebugBasic;
 bool guiSend;
 bool guiReceive;
 bool guiEmuValid = false;

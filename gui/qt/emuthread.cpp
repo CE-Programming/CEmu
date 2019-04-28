@@ -146,6 +146,9 @@ void EmuThread::doStuff() {
             case RequestDebugger:
                 debug_open(DBG_USER, 0);
                 break;
+            case RequestBasicDebugger:
+                debug_open(DBG_BASIC_USER, 0);
+                break;
             case RequestSave:
                 emit saved(emu_save(m_saveType, m_savePath.toStdString().c_str()));
                 break;
@@ -308,7 +311,7 @@ void EmuThread::resume() {
     m_cvDebug.notify_all();
 }
 
-void EmuThread::debug(bool state) {
+void EmuThread::debug(bool state, debug_mode_t mode) {
     bool oldState;
     {
         std::lock_guard<std::mutex> lock(m_mutexDebug);
@@ -318,7 +321,18 @@ void EmuThread::debug(bool state) {
         resume();
     }
     if (state) {
-        req(RequestDebugger);
+        switch (mode) {
+            case DBG_MODE_C:
+                req(RequestDebugger);
+                break;
+            case DBG_MODE_ASM:
+                req(RequestDebugger);
+                break;
+            case DBG_MODE_BASIC:
+                req(RequestBasicDebugger);
+                break;
+
+        }
     }
 }
 

@@ -623,6 +623,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     keymapLoad();
     debugInit();
+    debugBasicInit();
 
     if (!fileExists(m_pathRom)) {
         if (!runSetup()) {
@@ -696,6 +697,7 @@ void MainWindow::translateExtras(int init) {
     QString __TXT_STATE = tr("State");
     QString __TXT_KEYPAD = tr("Keypad");
 
+    QString __TXT_TI_BASIC_DEBUG = tr("TI-Basic Debug");
     QString __TXT_DEBUG_CONTROL = tr("Debug Control");
     QString __TXT_CPU_STATUS = tr("CPU Status");
     QString __TXT_DISASSEMBLY = tr("Disassembly");
@@ -751,6 +753,9 @@ void MainWindow::translateExtras(int init) {
             if (dock->windowTitle() == TXT_KEYPAD) {
                 dock->setWindowTitle(__TXT_KEYPAD);
             }
+            if (dock->windowTitle() == TXT_TI_BASIC_DEBUG) {
+                dock->setWindowTitle(__TXT_TI_BASIC_DEBUG);
+            }
             if (dock->windowTitle() == TXT_DEBUG_CONTROL) {
                 dock->setWindowTitle(__TXT_DEBUG_CONTROL);
             }
@@ -804,6 +809,7 @@ void MainWindow::translateExtras(int init) {
     TXT_STATE = __TXT_STATE;
     TXT_KEYPAD = __TXT_KEYPAD;
 
+    TXT_TI_BASIC_DEBUG = __TXT_TI_BASIC_DEBUG;
     TXT_DEBUG_CONTROL = __TXT_DEBUG_CONTROL;
     TXT_CPU_STATUS = __TXT_CPU_STATUS;
     TXT_DISASSEMBLY = __TXT_DISASSEMBLY;
@@ -842,28 +848,30 @@ void MainWindow::translateExtras(int init) {
         action->setText(TXT_KEYPAD);
 
         action = m_menuDebug->actions().at(0);
-        action->setText(TXT_DEBUG_CONTROL);
+        action->setText(TXT_TI_BASIC_DEBUG);
         action = m_menuDebug->actions().at(1);
-        action->setText(TXT_CPU_STATUS);
+        action->setText(TXT_DEBUG_CONTROL);
         action = m_menuDebug->actions().at(2);
-        action->setText(TXT_DISASSEMBLY);
+        action->setText(TXT_CPU_STATUS);
         action = m_menuDebug->actions().at(3);
-        action->setText(TXT_MEMORY);
+        action->setText(TXT_DISASSEMBLY);
         action = m_menuDebug->actions().at(4);
-        action->setText(TXT_TIMERS);
+        action->setText(TXT_MEMORY);
         action = m_menuDebug->actions().at(5);
-        action->setText(TXT_BREAKPOINTS);
+        action->setText(TXT_TIMERS);
         action = m_menuDebug->actions().at(6);
-        action->setText(TXT_WATCHPOINTS);
+        action->setText(TXT_BREAKPOINTS);
         action = m_menuDebug->actions().at(7);
-        action->setText(TXT_PORTMON);
+        action->setText(TXT_WATCHPOINTS);
         action = m_menuDebug->actions().at(8);
-        action->setText(TXT_OS_VIEW);
+        action->setText(TXT_PORTMON);
         action = m_menuDebug->actions().at(9);
-        action->setText(TXT_OS_STACKS);
+        action->setText(TXT_OS_VIEW);
         action = m_menuDebug->actions().at(10);
-        action->setText(TXT_MISC);
+        action->setText(TXT_OS_STACKS);
         action = m_menuDebug->actions().at(11);
+        action->setText(TXT_MISC);
+        action = m_menuDebug->actions().at(12);
         action->setText(TXT_AUTOTESTER);
 
 #ifdef _WIN32

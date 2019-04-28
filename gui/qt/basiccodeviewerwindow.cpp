@@ -15,7 +15,6 @@
 BasicEditor::BasicEditor(QWidget *parent) : QPlainTextEdit(parent)
 {
     highlighter = new BasicHighlighter(document());
-
     lineNumberArea = new LineNumberArea(this);
 
     QFont font = QFont(QStringLiteral("TICELarge"), 11);
@@ -111,19 +110,17 @@ void BasicEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
 
     QTextBlock block = firstVisibleBlock();
     int blockNumber = block.blockNumber();
-    int top = (int) blockBoundingGeometry(block).translated(contentOffset()).top();
-    int bottom = top + (int) blockBoundingRect(block).height();
+    int top = static_cast<int>(blockBoundingGeometry(block).translated(contentOffset()).top());
+    int bottom = top + static_cast<int>(blockBoundingRect(block).height());
 
-    while (block.isValid() && top <= event->rect().bottom())
-    {
-        if (block.isVisible() && bottom >= event->rect().top())
-        {
+    while (block.isValid() && top <= event->rect().bottom()) {
+        if (block.isVisible() && bottom >= event->rect().top()) {
             QString number = QString::number(blockNumber + 1);
             painter.drawText(-2, top, lineNumberArea->width(), fontMetrics().height(), Qt::AlignRight, number);
         }
         block = block.next();
         top = bottom;
-        bottom = top + (int) blockBoundingRect(block).height();
+        bottom = top + static_cast<int>(blockBoundingRect(block).height());
         ++blockNumber;
     }
 }
@@ -336,27 +333,22 @@ void BasicCodeViewerWindow::setOriginalCode(const QString &code, bool reindent) 
         m_formattedCode = m_originalCode;
     }
     showCode();
-
-    // TODO: ahem
-    currExecTimer = new QTimer(this);
-    connect(currExecTimer, &QTimer::timeout, this, &BasicCodeViewerWindow::getAndProcessCurrExecPos);
-    currExecTimer->start(10);
 }
 
 void BasicCodeViewerWindow::toggleHighlight() {
-    m_showingHighlighted ^= true;
+    m_showingHighlighted = !m_showingHighlighted;
     ui->basicEdit->toggleHighlight();
     showCode();
 }
 
 void BasicCodeViewerWindow::toggleWrap() {
-    m_showingWrapped ^= true;
+    m_showingWrapped = !m_showingWrapped;
     ui->basicEdit->setWordWrapMode(m_showingWrapped ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);
     showCode();
 }
 
 void BasicCodeViewerWindow::toggleFormat() {
-    m_showingFormatted ^= true;
+    m_showingFormatted = !m_showingFormatted;
     const int scrollValue = ui->basicEdit->verticalScrollBar()->value();
     ui->basicEdit->document()->setPlainText(m_showingFormatted ? m_formattedCode : m_originalCode);
     ui->basicEdit->verticalScrollBar()->setValue(scrollValue);
@@ -368,7 +360,7 @@ void BasicCodeViewerWindow::showCode() {
         ui->basicEdit->document()->setPlainText(m_showingFormatted ? m_formattedCode : m_originalCode);
         hasCodeYet = true;
     } else {
-        ui->basicEdit->repaint();
+        ui->basicEdit->update();
     }
 }
 

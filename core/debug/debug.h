@@ -20,18 +20,27 @@ extern "C" {
 
 /* reason for debug trigger */
 enum {
-    DBG_USER,              /* request to open the debugger externally */
-    DBG_READY,             /* if reset, debugger ready for new commands */
-    DBG_FROZEN,            /* di \ halt */
-    DBG_BREAKPOINT,        /* hit a breakpoint */
-    DBG_WATCHPOINT_READ,   /* hit a read watchpoint */
-    DBG_WATCHPOINT_WRITE,  /* hit a write watchpoint */
-    DBG_PORT_READ,         /* read a monitored port */
-    DBG_PORT_WRITE,        /* wrote a monitored port */
-    DBG_NMI_TRIGGERED,     /* triggered a non maskable interrupt */
-    DBG_WATCHDOG_TIMEOUT,  /* watchdog timer reset */
-    DBG_MISC_RESET,        /* miscellaneous reset */
-    DBG_STEP,              /* step command executed */
+    DBG_USER,                /* request to open the debugger externally */
+    DBG_READY,               /* if reset, debugger ready for new commands */
+    DBG_FROZEN,              /* di \ halt */
+    DBG_BREAKPOINT,          /* hit a breakpoint */
+    DBG_WATCHPOINT_READ,     /* hit a read watchpoint */
+    DBG_WATCHPOINT_WRITE,    /* hit a write watchpoint */
+    DBG_PORT_READ,           /* read a monitored port */
+    DBG_PORT_WRITE,          /* wrote a monitored port */
+    DBG_NMI_TRIGGERED,       /* triggered a non maskable interrupt */
+    DBG_WATCHDOG_TIMEOUT,    /* watchdog timer reset */
+    DBG_MISC_RESET,          /* miscellaneous reset */
+    DBG_STEP,                /* step command executed */
+    DBG_BASIC_USER,          /* user requested a basic debug session */
+    DBG_BASIC_LIVE_START,
+    DBG_BASIC_BEGPC_READ,    /* begpc read */
+    DBG_BASIC_CURPC_READ,    /* curpc read */
+    DBG_BASIC_ENDPC_READ,    /* endpc read */
+    DBG_BASIC_BEGPC_WRITE,   /* begpc write */
+    DBG_BASIC_CURPC_WRITE,   /* curpc write */
+    DBG_BASIC_ENDPC_WRITE,   /* endpc write */
+    DBG_BASIC_LIVE_END,
     DBG_NUMBER
 };
 
@@ -52,6 +61,13 @@ enum {
     CMD_NUMBER
 };
 
+/* available debugging modes */
+typedef enum {
+    DBG_MODE_ASM,
+    DBG_MODE_BASIC,
+    DBG_MODE_C
+} debug_mode_t;
+
 /* interface functions */
 void debug_init(void);                               /* call before starting emulation */
 void debug_free(void);                               /* call after emulation end */
@@ -67,6 +83,8 @@ void debug_flag(int mask, bool set);                 /* configure setup of debug
 void debug_step(int mode, uint32_t addr);            /* set a step mode, addr points to the instruction after pc */
 void debug_open(int reason, uint32_t data);          /* open the debugger (Should only be called from gui_do_stuff) */
 bool debug_is_open(void);                            /* returns the status of the core debugger */
+void debug_set_mode(debug_mode_t mode);
+bool debug_get_executing_basic_prgm(char *name);
 
 /* masks */
 #define DBG_MASK_NONE         (0 << 0)
@@ -100,6 +118,10 @@ bool debug_is_open(void);                            /* returns the status of th
 #define DBG_PORT_SIZE         0x10000
 #define SIZEOF_DBG_BUFFER     0x1000
 
+#define DBG_BASIC_BEGPC       0xD02317
+#define DBG_BASIC_CURPC       0xD0231A
+#define DBG_BASIC_ENDPC       0xD0231D
+
 typedef struct {
     bool mode : 1;
     bool popped : 1;
@@ -132,6 +154,10 @@ typedef struct {
     _Atomic(bool) ignore;
     _Atomic(bool) commands;
     _Atomic(bool) openOnReset;
+    debug_mode_t mode;
+
+    _Atomic(bool) basicLiveExecution;
+    bool stepBasic;
 } debug_state_t;
 
 extern debug_state_t debug;
@@ -141,7 +167,8 @@ enum {
     DBG_STEP_OUT,
     DBG_STEP_OVER,
     DBG_STEP_NEXT,
-    DBG_RUN_UNTIL
+    DBG_RUN_UNTIL,
+    DBG_BASIC_STEP,
 };
 
 /* internal core functions */

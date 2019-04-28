@@ -19,6 +19,7 @@ void debug_init(void) {
     debug.port = (uint8_t*)calloc(DBG_PORT_SIZE, sizeof(uint8_t));
     debug.bufPos = debug.bufErrPos = 0;
     debug.open = false;
+    debug_set_mode(DBG_MODE_ASM);
     gui_console_printf("[CEmu] Initialized Debugger...\n");
 }
 
@@ -37,6 +38,9 @@ void debug_open(int reason, uint32_t data) {
     if (cpu.abort == CPU_ABORT_EXIT || debug.open || (debug.ignore && (reason >= DBG_BREAKPOINT && reason <= DBG_PORT_WRITE))) {
         return;
     }
+    if (debug.mode == DBG_MODE_BASIC && !debug.basicLiveExecution) {
+        return;
+    }
 
     debug_clear_step();
 
@@ -46,6 +50,17 @@ void debug_open(int reason, uint32_t data) {
     debug.cpuHaltCycles = cpu.haltCycles;
     debug.totalCycles += sched_total_cycles();
     debug.dmaCycles += cpu.dmaCycles;
+
+    /* fixup reason for basic debugger */
+    if (debug.mode == DBG_MODE_BASIC && debug.basicLiveExecution) {
+        if (reason == DBG_WATCHPOINT_READ || reason == DBG_WATCHPOINT_WRITE) {
+            if (data == DBG_BASIC_CURPC + 0 ||
+                data == DBG_BASIC_CURPC + 1 ||
+                data == DBG_BASIC_CURPC + 2) {
+                reason = reason == DBG_WATCHPOINT_WRITE ? DBG_BASIC_CURPC_WRITE : DBG_BASIC_CURPC_READ;
+            }
+        }
+    }
 
     debug.open = true;
     gui_debug_open(reason, data);
@@ -105,12 +120,16 @@ void debug_step(int mode, uint32_t addr) {
             gui_debug_close();
             debug.tempExec = addr;
             break;
+        case DBG_BASIC_STEP:
+            gui_debug_close();
+            debug.stepBasic = true;
+            break;
     }
 }
 
 void debug_clear_step(void) {
     debug.step = debug.stepOver = false;
-    debug.tempExec = debug.stepOut = ~0;
+    debug.tempExec = debug.stepOut = ~0u;
 }
 
 void debug_inst_start(void) {
@@ -184,12 +203,57 @@ void debug_record_ret(uint32_t retAddr, bool mode) {
     }
     if (found && stepOut) {
         debug.step = true;
-        debug.stepOut = ~0;
+        debug.stepOut = ~0u;
     }
 }
 
 void debug_set_pc(uint32_t addr) {
     cpu_flush(addr, cpu.ADL);
+}
+
+/* internal breakpoints not visible in gui */
+/* the gui should automatically update breakpoints, so it should be */
+/* fine if asm or C also uses these addresses */
+void debug_set_mode(debug_mode_t mode) {
+    /*
+     * debug_watch(DBG_BASIC_BEGPC + 0, DBG_MASK_RW, mode == DBG_MODE_BASIC);
+     * debug_watch(DBG_BASIC_BEGPC + 1, DBG_MASK_RW, mode == DBG_MODE_BASIC);
+     * debug_watch(DBG_BASIC_BEGPC + 2, DBG_MASK_RW, mode == DBG_MODE_BASIC);
+     */
+    debug_watch(DBG_BASIC_CURPC + 0, DBG_MASK_RW, mode == DBG_MODE_BASIC);
+    debug_watch(DBG_BASIC_CURPC + 1, DBG_MASK_RW, mode == DBG_MODE_BASIC);
+    debug_watch(DBG_BASIC_CURPC + 2, DBG_MASK_RW, mode == DBG_MODE_BASIC);
+    /*
+     * debug_watch(DBG_BASIC_ENDPC + 0, DBG_MASK_RW, mode == DBG_MODE_BASIC);
+     * debug_watch(DBG_BASIC_ENDPC + 1, DBG_MASK_RW, mode == DBG_MODE_BASIC);
+     * debug_watch(DBG_BASIC_ENDPC + 2, DBG_MASK_RW, mode == DBG_MODE_BASIC);
+     */
+    debug.mode = mode;
+}
+
+#define DBG_BASIC_NEWDISPF 0xD00088
+#define DBG_BASIC_CMDFLAGS 0xD0008C
+#define DBG_BASIC_BASIC_PROG 0xD0230E
+#define DBG_BASIC_CMDEXEC_BIT (1 << 6)
+#define DBG_BASIC_PROGEXECUTING_BIT (1 << 1)
+
+bool debug_get_executing_basic_prgm(char *name) {
+    if (name == NULL) {
+        return false;
+    }
+
+    /* check if a basic program is executing */
+    if ((mem_peek_byte(DBG_BASIC_NEWDISPF) & DBG_BASIC_PROGEXECUTING_BIT) &&
+        (mem_peek_byte(DBG_BASIC_CMDFLAGS) & DBG_BASIC_CMDEXEC_BIT)) {
+
+        /* return the executing program */
+        virt_mem_cpy(name, DBG_BASIC_BASIC_PROG, 9);
+        name[9] = '\0';
+
+        return true;
+    } else {
+        return false;
+    }
 }
 
 #endif

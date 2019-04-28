@@ -360,12 +360,26 @@ void MainWindow::debugExecute(uint32_t offset, uint8_t cmd) {
     if (guiDebug) {
         debugRaise();
     } else {
-        emu.debug(false);
+        emu.debug(false, DBG_MODE_ASM);
     }
 }
 
 void MainWindow::debugCommand(int reason, uint32_t data) {
     if (!guiEmuValid) {
+        return;
+    }
+
+    // handle basic commands first
+    if (reason > DBG_BASIC_LIVE_START && reason < DBG_BASIC_LIVE_END) {
+        if (debug.stepBasic == true && reason == DBG_BASIC_CURPC_WRITE) {
+            debugBasicRaise();
+            debug.stepBasic = false;
+            return;
+        }
+        if (reason == DBG_BASIC_CURPC_WRITE) {
+            debugBasicLiveUpdate();
+        }
+        emu.resume();
         return;
     }
 
@@ -454,6 +468,9 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
         default:
         case DBG_USER:
             debugRaise();
+            return;
+        case DBG_BASIC_USER:
+            debugBasicRaise();
             return;
     }
 
@@ -618,7 +635,7 @@ void MainWindow::debugToggle() {
         debugDisable();
     }
 
-    emu.debug(!state);
+    emu.debug(!state, DBG_MODE_ASM);
 }
 
 void MainWindow::debugPopulate() {
@@ -2762,4 +2779,3 @@ void MainWindow::setCalcId() {
         }
     }
 }
-

@@ -247,6 +247,22 @@ private:
     void debugCommand(int reason, uint32_t data);
     void debugZeroCycles();
 
+    // ti-basic debugging
+    void debugBasicInit();
+    void debugBasicRaise();
+    void debugBasicToggle();
+    void debugBasicEnable();
+    void debugBasicDisable();
+    void debugBasicStep();
+    void debugBasicLiveUpdate();
+    int debugBasicPgrmLookup();
+    void debugBasicGuiState(bool state);
+    void debugBasicToggleHighlight();
+    void debugBasicToggleWrap();
+    void debugBasicToggleFormat();
+    void debugBasicToggleLiveExecution();
+    void debugBasicShowCode();
+
     // battery
     void batterySetCharging(bool state);
     void batterySet(int value);
@@ -536,6 +552,8 @@ private:
 
     int m_watchGUIMask = DBG_MASK_NONE;
 
+    QString m_basicStringReference;
+
     QTranslator m_appTranslator;
     QLabel m_speedLabel;
     QLabel m_fpsLabel;
@@ -557,6 +575,17 @@ private:
     bool m_nativeConsole = false;
     bool m_shutdown = false;
     bool m_recording = false;
+
+    QString m_basicVariableName;
+    const QString *m_basicOriginalCode;
+    const QString *m_basicFormattedCode;
+    bool m_basicShowingHighlighted = true;
+    bool m_basicShowingWrapped = false;
+    bool m_basicShowingFormatted = false;
+    bool m_basicShowingLiveExecution = true;
+    QMap<QString, int> m_basicPrgmsMap;
+    QStringList m_basicPrgmsOriginalCode;
+    QStringList m_basicPrgmsFormattedCode;
 
     uint32_t m_prevDisasmAddr = 0;
     QPalette m_cBack, m_cNone;
@@ -751,6 +780,7 @@ private:
     QString TXT_STATE;
     QString TXT_KEYPAD;
 
+    QString TXT_TI_BASIC_DEBUG;
     QString TXT_DEBUG_CONTROL;
     QString TXT_CPU_STATUS;
     QString TXT_DISASSEMBLY;

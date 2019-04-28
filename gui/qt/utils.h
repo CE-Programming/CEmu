@@ -51,6 +51,7 @@ QDir appDir();
 bool isNotValidHex(const std::string& s);
 
 extern bool guiDebug;
+extern bool guiDebugBasic;
 extern bool guiSend;
 extern bool guiReceive;
 extern bool guiEmuValid;

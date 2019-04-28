@@ -30,7 +30,7 @@ void LCDWidget::paintEvent(QPaintEvent*) {
     }
 
     QPainter c(this);
-    const QRect& cw = c.window();
+    const QRect &cw = c.window();
 
     // Interpolation only for < 100% scale
     c.setRenderHint(QPainter::SmoothPixmapTransform, cw.width() < LCD_WIDTH);
