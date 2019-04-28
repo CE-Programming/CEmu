@@ -283,43 +283,6 @@ BasicCodeViewerWindow::BasicCodeViewerWindow(QWidget *parent, bool doHighlight, 
     ui->basicEdit->setFont(QFont(QStringLiteral("TICELarge"), 11));
 }
 
-void BasicCodeViewerWindow::getAndProcessCurrExecPos()
-{
-    // todo: check if a program is currently being run
-
-    const std::string basic_prog((std::string((const char*)phys_mem_ptr(0xD0230E + 1, 1), 8)).c_str());
-    if (strcmp(m_variableName.toStdString().c_str(), basic_prog.c_str()) != 0) {
-        //QMessageBox::warning(this, "Oops...", tr("This window isn't showing the currently-running program! ") + m_variableName);
-        return;
-    }
-
-    const uint32_t begPC = mem_peek_long(0xD02317);
-    const uint32_t curPC = mem_peek_long(0xD0231A);
-
-    // todo: pre"compute" all pos info when opening a basic viewer window
-    const QByteArray tmp(reinterpret_cast<const char*>(phys_mem_ptr(begPC, 3)), curPC-begPC+1);
-    const data_t prgmPartialBytes(tmp.constData(), tmp.constEnd());
-
-    const auto posinfo = tivars::TH_Tokenized::getPosInfoAtOffset(prgmPartialBytes, curPC-begPC, { {"prettify", true} });
-
-    QTextEdit::ExtraSelection currToken;
-    currToken.format.setBackground(QColor(Qt::yellow).lighter(100));
-    currToken.cursor = QTextCursor(ui->basicEdit->document());
-    currToken.cursor.clearSelection();
-    currToken.cursor.movePosition(QTextCursor::MoveOperation::Down, QTextCursor::MoveMode::MoveAnchor, posinfo.line);
-    currToken.cursor.movePosition(QTextCursor::MoveOperation::Right, QTextCursor::MoveMode::MoveAnchor, posinfo.column);
-    currToken.cursor.movePosition(QTextCursor::MoveOperation::Right, QTextCursor::MoveMode::KeepAnchor, posinfo.len);
-
-    QTextEdit::ExtraSelection currLine;
-    currLine.format.setBackground(QColor(Qt::blue).lighter(180));
-    currLine.format.setProperty(QTextFormat::FullWidthSelection, true);
-    currLine.cursor = QTextCursor(ui->basicEdit->document());
-    currLine.cursor.movePosition(QTextCursor::MoveOperation::Down, QTextCursor::MoveMode::MoveAnchor, posinfo.line);
-    currLine.cursor.clearSelection();
-
-    ui->basicEdit->setExtraSelections({ currLine, currToken });
-}
-
 void BasicCodeViewerWindow::setVariableName(const QString &name) {
     m_variableName = name;
     setWindowTitle(tr("Variable viewer") + QStringLiteral(" | ") + m_variableName);
