@@ -254,7 +254,7 @@ private:
     void debugBasicEnable();
     void debugBasicDisable();
     void debugBasicStep();
-    void debugBasicLiveUpdate();
+    int debugBasicLiveUpdate();
     int debugBasicPgrmLookup();
     void debugBasicGuiState(bool state);
     void debugBasicToggleHighlight();

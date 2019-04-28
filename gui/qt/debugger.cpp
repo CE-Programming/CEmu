@@ -372,8 +372,12 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
     // handle basic commands first
     if (reason > DBG_BASIC_LIVE_START && reason < DBG_BASIC_LIVE_END) {
         if (debug.stepBasic == true && reason == DBG_BASIC_CURPC_WRITE) {
-            debugBasicRaise();
-            debug.stepBasic = false;
+            if (debugBasicLiveUpdate() == 2) {
+                emu.resume();
+            } else {
+                debugBasicRaise();
+                debug.stepBasic = false;
+            }
             return;
         }
         if (reason == DBG_BASIC_CURPC_WRITE) {

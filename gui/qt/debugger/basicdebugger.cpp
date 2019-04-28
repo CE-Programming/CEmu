@@ -147,9 +147,9 @@ void MainWindow::debugBasicStep() {
     debugBasicToggle();
 }
 
-void MainWindow::debugBasicLiveUpdate() {
+int MainWindow::debugBasicLiveUpdate() {
     if (!m_basicShowingLiveExecution) {
-        return;
+        return 0;
     }
 
     int refresh = debugBasicPgrmLookup();
@@ -160,7 +160,7 @@ void MainWindow::debugBasicLiveUpdate() {
             ui->basicEdit->document()->setPlainText(m_basicShowingFormatted ? *m_basicFormattedCode : *m_basicOriginalCode);
             break;
         case 2:
-            return;
+            return 2;
     }
 
     const int begPC = static_cast<int>(mem_peek_long(DBG_BASIC_BEGPC));
@@ -168,13 +168,13 @@ void MainWindow::debugBasicLiveUpdate() {
     const int endPC = static_cast<int>(mem_peek_long(DBG_BASIC_ENDPC));
 
     if (curPC >= endPC || curPC < begPC) {
-        return;
+        return 2;
     }
 
     const QByteArray tmp(reinterpret_cast<const char*>(phys_mem_ptr(static_cast<uint32_t>(begPC), 3)), curPC - begPC + 1);
     const data_t prgmPartialBytes(tmp.constData(), tmp.constEnd());
 
-    const auto posinfo = tivars::TH_Tokenized::getPosInfoAtOffset(prgmPartialBytes, static_cast<uint16_t>(curPC - begPC), { {"prettify", true} });
+    const auto posinfo = tivars::TH_Tokenized::getPosInfoAtOffset(prgmPartialBytes, static_cast<uint16_t>(curPC - begPC), options_t());
 
     QTextEdit::ExtraSelection currToken;
     currToken.format.setBackground(QColor(Qt::yellow).lighter(100));
@@ -192,6 +192,8 @@ void MainWindow::debugBasicLiveUpdate() {
     currLine.cursor.clearSelection();
 
     ui->basicEdit->setExtraSelections({ currLine, currToken });
+
+    return 1;
 }
 
 void MainWindow::debugBasicToggleHighlight() {
