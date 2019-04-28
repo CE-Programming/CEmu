@@ -72,6 +72,12 @@ protected:
     virtual void dragEnterEvent(QDragEnterEvent *event) Q_DECL_OVERRIDE;
 
 private:
+    typedef struct {
+        int line;
+        int column;
+        int len;
+    } token_highlight_t;
+
     enum {
         CONSOLE_ESC,
         CONSOLE_BRACKET,
@@ -256,6 +262,7 @@ private:
     void debugBasicStep();
     int debugBasicLiveUpdate();
     int debugBasicPgrmLookup();
+    void debugBasicCreateTokenMap(const QByteArray &data, int base);
     void debugBasicGuiState(bool state);
     void debugBasicToggleHighlight();
     void debugBasicToggleWrap();
@@ -583,6 +590,7 @@ private:
     bool m_basicShowingWrapped = false;
     bool m_basicShowingFormatted = false;
     bool m_basicShowingLiveExecution = true;
+    QMap<int, token_highlight_t> m_basicPrgmsTokensMap;
     QMap<QString, int> m_basicPrgmsMap;
     QStringList m_basicPrgmsOriginalCode;
     QStringList m_basicPrgmsFormattedCode;

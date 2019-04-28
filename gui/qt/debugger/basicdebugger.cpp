@@ -75,11 +75,13 @@ void MainWindow::debugBasicGuiState(bool state) {
 
     // refresh program view
     if (state) {
+        m_basicPrgmsTokensMap.clear();
         m_basicPrgmsMap.clear();
         m_basicPrgmsOriginalCode.clear();
         m_basicPrgmsFormattedCode.clear();
         debugBasicLiveUpdate();
     } else {
+        m_basicPrgmsTokensMap.clear();
         m_basicPrgmsMap.clear();
         m_basicPrgmsOriginalCode.clear();
         m_basicPrgmsFormattedCode.clear();
@@ -95,8 +97,6 @@ int MainWindow::debugBasicPgrmLookup() {
         ui->labelBasicStatus->setText(tr("No Basic Program Executing."));
         ui->basicEdit->clear();
     } else {
-        calc_var_t var;
-        calc_var_t search;
         QString var_name = QString(&name[1]);
 
         // lookup in map to see if we've already parsed this file
@@ -109,12 +109,10 @@ int MainWindow::debugBasicPgrmLookup() {
                 refresh = 1;
             }
         } else {
-            memcpy(search.name, &name[1], 8);
-            search.namelen = static_cast<uint8_t>(var_name.length());
-            search.type = static_cast<calc_var_type>(name[0]);
+            calc_var_type_t type = static_cast<calc_var_type_t>(name[0]);
 
-            if (search.type == CALC_VAR_TYPE_TEMP_PROG ||
-                search.type == CALC_VAR_TYPE_EQU ||
+            if (type == CALC_VAR_TYPE_TEMP_PROG ||
+                type == CALC_VAR_TYPE_EQU ||
                 name[1] == '$') {
                 return 2;
             }
@@ -123,16 +121,20 @@ int MainWindow::debugBasicPgrmLookup() {
             const int begPC = static_cast<int>(mem_peek_long(DBG_BASIC_BEGPC));
             const int endPC = static_cast<int>(mem_peek_long(DBG_BASIC_ENDPC));
 
-            const QByteArray tmp(reinterpret_cast<const char*>(phys_mem_ptr(static_cast<uint32_t>(begPC), 3)), endPC - begPC + 1);
-            const data_t prgmBytes(tmp.constData(), tmp.constEnd());
+            if (begPC > endPC) {
+                return 2;
+            }
 
+            const QByteArray prgmBytes(reinterpret_cast<const char*>(phys_mem_ptr(static_cast<uint32_t>(begPC), 3)), endPC - begPC + 1);
             QString str;
 
             try {
-                str = QString::fromStdString(tivars::TIVarType::createFromID(CALC_VAR_TYPE_PROG).getHandlers().second(prgmBytes, options_t({ {"fromRawBytes", true} })));
+                str = QString::fromStdString(tivars::TIVarType::createFromID(CALC_VAR_TYPE_PROG).getHandlers().second(data_t(prgmBytes.constData(), prgmBytes.constEnd()), options_t({ {"fromRawBytes", true} })));
             } catch(...) {
                 return 0;
             }
+
+            debugBasicCreateTokenMap(prgmBytes, begPC);
 
             m_basicPrgmsMap[var_name] = m_basicPrgmsOriginalCode.count();
             m_basicPrgmsOriginalCode.append(str);
@@ -144,6 +146,21 @@ int MainWindow::debugBasicPgrmLookup() {
         ui->labelBasicStatus->setText(tr("Executing Program: ") + var_name);
     }
     return refresh;
+}
+
+/* function to parse the program and store the mapping of all bytes to highlights */
+/* who cares about eating all of the user's ram */
+void MainWindow::debugBasicCreateTokenMap(const QByteArray &data, int base) {
+    token_highlight_t posinfo = { 0, 0, 0 };
+
+    for (int i = 0; i < data.size(); i++) {
+        m_basicPrgmsTokensMap[base + i] = posinfo;
+
+        // check for newline
+        if (data[i] == 0x3F) {
+            posinfo.line++;
+        }
+    }
 }
 
 void MainWindow::debugBasicStep() {
@@ -182,7 +199,10 @@ int MainWindow::debugBasicLiveUpdate() {
     const QByteArray tmp(reinterpret_cast<const char*>(phys_mem_ptr(static_cast<uint32_t>(begPC), 3)), curPC - begPC + 1);
     const data_t prgmPartialBytes(tmp.constData(), tmp.constEnd());
 
-    const auto posinfo = tivars::TH_Tokenized::getPosInfoAtOffset(prgmPartialBytes, static_cast<uint16_t>(curPC - begPC), options_t());
+    if (!m_basicPrgmsTokensMap.contains(curPC)) {
+        return 2;
+    }
+    const token_highlight_t posinfo = m_basicPrgmsTokensMap[curPC];
 
     QTextEdit::ExtraSelection currToken;
     currToken.format.setBackground(QColor(Qt::yellow).lighter(100));
