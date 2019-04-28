@@ -74,7 +74,7 @@ protected:
 private:
     typedef struct {
         int line;
-        int column;
+        int offset;
         int len;
     } token_highlight_t;
 
@@ -262,9 +262,9 @@ private:
     void debugBasicStep();
     void debugBasicStepNext();
     QString debugBasicGetPrgmName();
-    int debugBasicLiveUpdate();
-    int debugBasicPgrmLookup();
-    void debugBasicCreateTokenMap(const QByteArray &data, int base);
+    int debugBasicUpdate(bool force);
+    bool debugBasicPgrmLookup(bool allowSwitch, int *idx);
+    void debugBasicCreateTokenMap(int idx, const QByteArray &data, int base);
     void debugBasicGuiState(bool state);
     void debugBasicToggleHighlight();
     void debugBasicToggleWrap();
@@ -585,17 +585,23 @@ private:
     bool m_shutdown = false;
     bool m_recording = false;
 
+    bool m_basicTempOpen = false;
     QString m_basicVariableName;
     const QString *m_basicOriginalCode;
     const QString *m_basicFormattedCode;
+    QString m_basicOriginalCodeTemp;
+    QString m_basicFormattedCodeTemp;
     bool m_basicShowingHighlighted = true;
     bool m_basicShowingWrapped = false;
     bool m_basicShowingFormatted = false;
     bool m_basicShowingLiveExecution = true;
-    QMap<int, token_highlight_t> m_basicPrgmsTokensMap;
+    QList<QList<token_highlight_t>> m_basicPrgmsTokensMap;
     QMap<QString, int> m_basicPrgmsMap;
     QStringList m_basicPrgmsOriginalCode;
     QStringList m_basicPrgmsFormattedCode;
+
+    QTextEdit::ExtraSelection m_basicCurrToken;
+    QTextEdit::ExtraSelection m_basicCurrLine;
 
     uint32_t m_prevDisasmAddr = 0;
     QPalette m_cBack, m_cNone;

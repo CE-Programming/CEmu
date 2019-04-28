@@ -22,10 +22,8 @@ BasicEditor::BasicEditor(QWidget *parent) : QPlainTextEdit(parent)
 
     connect(this, &QPlainTextEdit::blockCountChanged, this, &BasicEditor::updateLineNumberAreaWidth);
     connect(this, &QPlainTextEdit::updateRequest, this, &BasicEditor::updateLineNumberArea);
-    connect(this, &QPlainTextEdit::cursorPositionChanged, this, &BasicEditor::highlightCurrentLine);
 
     updateLineNumberAreaWidth(0);
-    highlightCurrentLine();
 }
 
 void BasicEditor::toggleHighlight()
@@ -81,25 +79,6 @@ void BasicEditor::resizeEvent(QResizeEvent *e)
 
     QRect cr = contentsRect();
     lineNumberArea->setGeometry(QRect(cr.left(), cr.top(), lineNumberAreaWidth(), cr.height()));
-}
-
-void BasicEditor::highlightCurrentLine()
-{
-    QList<QTextEdit::ExtraSelection> extraSelections;
-
-    if (!isReadOnly()) {
-        QTextEdit::ExtraSelection selection;
-
-        const QColor lineColor = isRunningInDarkMode() ? QColor(Qt::black) : QColor(Qt::yellow).lighter(180);
-
-        selection.format.setBackground(lineColor);
-        selection.format.setProperty(QTextFormat::FullWidthSelection, true);
-        selection.cursor = textCursor();
-        selection.cursor.clearSelection();
-        extraSelections.append(selection);
-    }
-
-    setExtraSelections(extraSelections);
 }
 
 void BasicEditor::lineNumberAreaPaintEvent(QPaintEvent *event)

@@ -14,9 +14,6 @@
 void MainWindow::debugBasicInit() {
     debugBasicDisable();
 
-    debug.basicLiveExecution = m_basicShowingLiveExecution;
-
-
     ui->checkBasicHighlighting->setChecked(m_basicShowingHighlighted);
     ui->checkBasicLineWrapping->setChecked(m_basicShowingWrapped);
     ui->checkBasicReformatting->setChecked(m_basicShowingFormatted);
@@ -29,10 +26,19 @@ void MainWindow::debugBasicInit() {
 
     connect(ui->buttonBasicStep, &QPushButton::clicked, this, &MainWindow::debugBasicStep);
     connect(ui->buttonBasicStepNext, &QPushButton::clicked, this, &MainWindow::debugBasicStepNext);
-    connect(ui->buttonBasicRun, &QPushButton::clicked, [this]{ debug_set_mode(DBG_MODE_BASIC); debugBasicToggle(); });
+    connect(ui->buttonBasicRun, &QPushButton::clicked, [this]{
+        debug_set_mode(DBG_MODE_BASIC);
+        debugBasicToggle();
+    });
 
     ui->basicEdit->setWordWrapMode(m_basicShowingWrapped ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);
     ui->basicEdit->setFont(QFont(QStringLiteral("TICELarge"), 11));
+    ui->basicTempEdit->setWordWrapMode(m_basicShowingWrapped ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);
+    ui->basicTempEdit->setFont(QFont(QStringLiteral("TICELarge"), 11));
+
+    m_basicCurrToken.format.setBackground(QColor(Qt::yellow).lighter(100));
+    m_basicCurrLine.format.setBackground(QColor(Qt::blue).lighter(180));
+    m_basicCurrLine.format.setProperty(QTextFormat::FullWidthSelection, true);
 }
 
 void MainWindow::debugBasicRaise() {
@@ -51,13 +57,22 @@ void MainWindow::debugBasicDisable() {
 
 void MainWindow::debugBasicToggle() {
     bool state = guiDebugBasic;
+    bool live = m_basicShowingLiveExecution;
 
     if (m_pathRom.isEmpty()) {
         return;
     }
 
+    if (live) {
+        debugBasicToggleLiveExecution();
+    }
+
     if (state) {
         debugBasicDisable();
+    }
+
+    if (live) {
+        debugBasicToggleLiveExecution();
     }
 
     emu.debug(!state, DBG_MODE_BASIC);
@@ -75,31 +90,35 @@ void MainWindow::debugBasicGuiState(bool state) {
     ui->buttonBasicStep->setEnabled(state);
     ui->buttonBasicStepNext->setEnabled(state);
 
-    // refresh program view
+    m_basicPrgmsTokensMap.clear();
+    m_basicPrgmsMap.clear();
+    m_basicPrgmsOriginalCode.clear();
+    m_basicPrgmsFormattedCode.clear();
+    m_basicOriginalCode = Q_NULLPTR;
+    m_basicFormattedCode = Q_NULLPTR;
+
+    m_basicPrgmsTokensMap.push_back(QList<token_highlight_t>());
+    m_basicPrgmsOriginalCode.push_back(QString());
+    m_basicPrgmsFormattedCode.push_back(QString());
+
     if (state) {
-        m_basicPrgmsTokensMap.clear();
-        m_basicPrgmsMap.clear();
-        m_basicPrgmsOriginalCode.clear();
-        m_basicPrgmsFormattedCode.clear();
-        debugBasicLiveUpdate();
-    } else {
-        m_basicPrgmsTokensMap.clear();
-        m_basicPrgmsMap.clear();
-        m_basicPrgmsOriginalCode.clear();
-        m_basicPrgmsFormattedCode.clear();
+        debugBasicUpdate(true);
     }
 }
 
-int MainWindow::debugBasicPgrmLookup() {
+bool MainWindow::debugBasicPgrmLookup(bool allowSwitch, int *idx) {
     const QString *origReference = m_basicOriginalCode;
-    int refresh = 0;
+
+    m_basicTempOpen = false;
 
     char name[10];
     if (!debug_get_executing_basic_prgm(name)) {
         ui->labelBasicStatus->setText(tr("No Basic Program Executing."));
         ui->basicEdit->clear();
+        ui->basicTempEdit->clear();
+        return false;
     } else {
-        QString var_name = QString(&name[1]);
+        QString var_name = QString(calc_var_name_to_utf8(reinterpret_cast<uint8_t*>(&name[1])));
 
         // lookup in map to see if we've already parsed this file
         QList<int> values = m_basicPrgmsMap.values(var_name);
@@ -108,24 +127,18 @@ int MainWindow::debugBasicPgrmLookup() {
             if (origReference != m_basicPrgmsOriginalCode.at(index)) {
                 m_basicOriginalCode = &m_basicPrgmsOriginalCode.at(index);
                 m_basicFormattedCode = &m_basicPrgmsFormattedCode.at(index);
-                refresh = 1;
+                return true;
             }
+            if (idx) {
+                *idx = index;
+            }
+            return false;
         } else {
             calc_var_type_t type = static_cast<calc_var_type_t>(name[0]);
-
-            if (type == CALC_VAR_TYPE_TEMP_PROG ||
-                type == CALC_VAR_TYPE_EQU ||
-                name[1] == '$') {
-                return 2;
-            }
 
             // find the program in memory
             const int begPC = static_cast<int>(mem_peek_long(DBG_BASIC_BEGPC));
             const int endPC = static_cast<int>(mem_peek_long(DBG_BASIC_ENDPC));
-
-            if (begPC > endPC) {
-                return 2;
-            }
 
             const QByteArray prgmBytes(reinterpret_cast<const char*>(phys_mem_ptr(static_cast<uint32_t>(begPC), 3)), endPC - begPC + 1);
             QString str;
@@ -133,26 +146,53 @@ int MainWindow::debugBasicPgrmLookup() {
             try {
                 str = QString::fromStdString(tivars::TIVarType::createFromID(CALC_VAR_TYPE_PROG).getHandlers().second(data_t(prgmBytes.constData(), prgmBytes.constEnd()), options_t({ {"fromRawBytes", true} })));
             } catch(...) {
-                return 0;
+                return false;
             }
 
-            debugBasicCreateTokenMap(prgmBytes, begPC);
+            if (type == CALC_VAR_TYPE_TEMP_PROG ||
+                type == CALC_VAR_TYPE_EQU ||
+                name[1] == '$') {
 
-            m_basicPrgmsMap[var_name] = m_basicPrgmsOriginalCode.count();
-            m_basicPrgmsOriginalCode.append(str);
-            m_basicPrgmsFormattedCode.append(QString::fromStdString(tivars::TH_Tokenized::reindentCodeString(str.toStdString())));
-            m_basicOriginalCode = &m_basicPrgmsOriginalCode.last();
-            m_basicFormattedCode = &m_basicPrgmsFormattedCode.last();
-            refresh = 1;
+                debugBasicCreateTokenMap(0, prgmBytes, begPC);
+
+                if (allowSwitch) {
+                    ui->tabDebugBasic->setCurrentIndex(1);
+                }
+                m_basicTempOpen = true;
+                m_basicOriginalCodeTemp = str;
+                m_basicFormattedCodeTemp = QString::fromStdString(tivars::TH_Tokenized::reindentCodeString(str.toStdString()));
+                m_basicOriginalCode = &m_basicOriginalCodeTemp;
+                m_basicFormattedCode = &m_basicFormattedCodeTemp;
+            } else {
+                if (allowSwitch) {
+                    ui->tabDebugBasic->setCurrentIndex(0);
+                }
+
+                int index = m_basicPrgmsOriginalCode.count();
+                if (idx) {
+                    *idx = index;
+                }
+
+                m_basicPrgmsTokensMap.push_back(QList<token_highlight_t>());
+                debugBasicCreateTokenMap(index, prgmBytes, begPC);
+
+                m_basicPrgmsMap[var_name] = index;
+                m_basicPrgmsOriginalCode.append(str);
+                m_basicPrgmsFormattedCode.append(QString::fromStdString(tivars::TH_Tokenized::reindentCodeString(str.toStdString())));
+                m_basicOriginalCode = &m_basicPrgmsOriginalCode.last();
+                m_basicFormattedCode = &m_basicPrgmsFormattedCode.last();
+            }
         }
-        ui->labelBasicStatus->setText(tr("Executing Program: ") + var_name);
+        if (m_basicTempOpen == false) {
+            ui->labelBasicStatus->setText(tr("Executing Program: ") + var_name);
+        }
     }
-    return refresh;
+    return true;
 }
 
 /* function to parse the program and store the mapping of all bytes to highlights */
 /* who cares about eating all of the user's ram */
-void MainWindow::debugBasicCreateTokenMap(const QByteArray &data, int base) {
+void MainWindow::debugBasicCreateTokenMap(int idx, const QByteArray &data, int base) {
     token_highlight_t posinfo = { 0, 0, 0 };
 
     for (int i = 0; i < data.size();) {
@@ -161,10 +201,10 @@ void MainWindow::debugBasicCreateTokenMap(const QByteArray &data, int base) {
 
         // check for newline
         if (token == 0x3F) {
-            m_basicPrgmsTokensMap[base + i] = posinfo;
+            posinfo.len = 1;
+            m_basicPrgmsTokensMap[idx].append(posinfo); // need new lines for temp parser
             posinfo.line++;
-            posinfo.column = 0;
-            posinfo.len = 0;
+            posinfo.offset++;
             i++;
             continue;
         }
@@ -180,13 +220,15 @@ void MainWindow::debugBasicCreateTokenMap(const QByteArray &data, int base) {
             posinfo.len = utf8_strlen(tokStr);
         }
 
-        m_basicPrgmsTokensMap[base + i] = posinfo;
         if (incr == 2) {
-            m_basicPrgmsTokensMap[base + i + 1] = posinfo;
+            m_basicPrgmsTokensMap[idx].append(posinfo);
+            m_basicPrgmsTokensMap[idx].append(posinfo);
+        } else {
+            m_basicPrgmsTokensMap[idx].append(posinfo);
         }
 
         if (!tokStr.empty()) {
-            posinfo.column += posinfo.len;
+            posinfo.offset += posinfo.len;
         }
         i += incr;
     }
@@ -201,10 +243,11 @@ void MainWindow::debugBasicStepNext() {
     // locate next line
     const int begPC = static_cast<int>(mem_peek_long(DBG_BASIC_BEGPC));
     const int curPC = static_cast<int>(mem_peek_long(DBG_BASIC_CURPC));
-    const int endPC = static_cast<int>(mem_peek_long(DBG_BASIC_CURPC));
+    const int endPC = static_cast<int>(mem_peek_long(DBG_BASIC_ENDPC));
 
-    int curLine = m_basicPrgmsTokensMap[curPC].line;
     int watchPC = begPC;
+/*
+    int curLine = m_basicPrgmsTokensMap[curPC].line;
 
     for (int i = curPC; i < endPC; i++) {
         if (m_basicPrgmsTokensMap[i].line == curLine + 1) {
@@ -212,7 +255,7 @@ void MainWindow::debugBasicStepNext() {
             break;
         }
     }
-
+*/
     debug_step(DBG_BASIC_STEP_NEXT, static_cast<uint32_t>(watchPC));
     debugBasicToggle();
 }
@@ -226,10 +269,10 @@ QString MainWindow::debugBasicGetPrgmName() {
     }
 }
 
-int MainWindow::debugBasicLiveUpdate() {
+int MainWindow::debugBasicUpdate(bool force) {
     static int prevCurPC;
 
-    if (!m_basicShowingLiveExecution) {
+    if (!force && !m_basicShowingLiveExecution) {
         return 0;
     }
 
@@ -237,47 +280,44 @@ int MainWindow::debugBasicLiveUpdate() {
     const int curPC = static_cast<int>(mem_peek_long(DBG_BASIC_CURPC));
     const int endPC = static_cast<int>(mem_peek_long(DBG_BASIC_ENDPC));
 
-    if (curPC >= endPC || curPC < begPC || prevCurPC == curPC) {
+    if (curPC > endPC || curPC < begPC || prevCurPC == curPC) {
         return 2;
     }
 
     prevCurPC = curPC;
 
-    int refresh = debugBasicPgrmLookup();
-    switch (refresh) {
-        default:
-            break;
-        case 1:
-            ui->basicEdit->document()->setPlainText(m_basicShowingFormatted ? *m_basicFormattedCode : *m_basicOriginalCode);
-            break;
-        case 2:
-            return 2;
+    int index = 0;
+    bool refresh = debugBasicPgrmLookup(force, &index);
+    if (refresh) {
+        if (m_basicOriginalCode != Q_NULLPTR && m_basicFormattedCode != Q_NULLPTR) {
+            if (m_basicTempOpen) {
+                ui->basicTempEdit->document()->setPlainText(m_basicShowingFormatted ? *m_basicFormattedCode : *m_basicOriginalCode);
+            } else {
+                ui->basicEdit->document()->setPlainText(m_basicShowingFormatted ? *m_basicFormattedCode : *m_basicOriginalCode);
+            }
+        }
     }
 
-    const QByteArray tmp(reinterpret_cast<const char*>(phys_mem_ptr(static_cast<uint32_t>(begPC), 3)), curPC - begPC + 1);
-    const data_t prgmPartialBytes(tmp.constData(), tmp.constEnd());
+    const token_highlight_t posinfo = m_basicPrgmsTokensMap[index][curPC - begPC];
 
-    if (!m_basicPrgmsTokensMap.contains(curPC)) {
-        return 2;
+    if (m_basicTempOpen == false) {
+        m_basicCurrToken.cursor = QTextCursor(ui->basicEdit->document());
+    } else {
+        m_basicCurrToken.cursor = QTextCursor(ui->basicTempEdit->document());
     }
-    const token_highlight_t posinfo = m_basicPrgmsTokensMap[curPC];
 
-    QTextEdit::ExtraSelection currToken;
-    currToken.format.setBackground(QColor(Qt::yellow).lighter(100));
-    currToken.cursor = QTextCursor(ui->basicEdit->document());
-    currToken.cursor.clearSelection();
-    currToken.cursor.movePosition(QTextCursor::MoveOperation::NextBlock, QTextCursor::MoveMode::MoveAnchor, posinfo.line);
-    currToken.cursor.movePosition(QTextCursor::MoveOperation::Right, QTextCursor::MoveMode::MoveAnchor, posinfo.column);
-    currToken.cursor.movePosition(QTextCursor::MoveOperation::Right, QTextCursor::MoveMode::KeepAnchor, posinfo.len);
+    m_basicCurrToken.cursor.movePosition(QTextCursor::MoveOperation::Start, QTextCursor::MoveMode::MoveAnchor, 0);
+    m_basicCurrToken.cursor.movePosition(QTextCursor::MoveOperation::Right, QTextCursor::MoveMode::MoveAnchor, posinfo.offset);
+    m_basicCurrLine.cursor = m_basicCurrToken.cursor;
+    m_basicCurrToken.cursor.movePosition(QTextCursor::MoveOperation::Right, QTextCursor::MoveMode::KeepAnchor, posinfo.len);
 
-    QTextEdit::ExtraSelection currLine;
-    currLine.format.setBackground(QColor(Qt::blue).lighter(180));
-    currLine.format.setProperty(QTextFormat::FullWidthSelection, true);
-    currLine.cursor = QTextCursor(ui->basicEdit->document());
-    currLine.cursor.movePosition(QTextCursor::MoveOperation::NextBlock, QTextCursor::MoveMode::MoveAnchor, posinfo.line);
-    currLine.cursor.clearSelection();
-
-    ui->basicEdit->setExtraSelections({ currLine, currToken });
+    if (m_basicTempOpen == false) {
+        ui->basicEdit->setTextCursor(m_basicCurrLine.cursor);
+        ui->basicEdit->setExtraSelections({ m_basicCurrLine, m_basicCurrToken });
+    } else {
+        ui->basicTempEdit->setTextCursor(m_basicCurrLine.cursor);
+        ui->basicTempEdit->setExtraSelections({ m_basicCurrLine, m_basicCurrToken });
+    }
 
     return 1;
 }
@@ -285,29 +325,34 @@ int MainWindow::debugBasicLiveUpdate() {
 void MainWindow::debugBasicToggleHighlight() {
     m_basicShowingHighlighted = !m_basicShowingHighlighted;
     ui->basicEdit->toggleHighlight();
+    ui->basicTempEdit->toggleHighlight();
     debugBasicShowCode();
 }
 
 void MainWindow::debugBasicToggleWrap() {
     m_basicShowingWrapped = !m_basicShowingWrapped;
     ui->basicEdit->setWordWrapMode(m_basicShowingWrapped ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);
+    ui->basicTempEdit->setWordWrapMode(m_basicShowingWrapped ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);
     debugBasicShowCode();
 }
 
 void MainWindow::debugBasicToggleFormat() {
     m_basicShowingFormatted = !m_basicShowingFormatted;
-    const int scrollValue = ui->basicEdit->verticalScrollBar()->value();
-    ui->basicEdit->document()->setPlainText(m_basicShowingFormatted ? *m_basicFormattedCode : *m_basicOriginalCode);
-    ui->basicEdit->verticalScrollBar()->setValue(scrollValue);
-    ui->basicEdit->update();
+    debugBasicShowCode();
 }
 
 void MainWindow::debugBasicToggleLiveExecution() {
     m_basicShowingLiveExecution = !m_basicShowingLiveExecution;
-    debug.basicLiveExecution = m_basicShowingLiveExecution;
+    debugBasicShowCode();
 }
 
 void MainWindow::debugBasicShowCode() {
-    ui->basicEdit->document()->setPlainText(m_basicShowingFormatted ? *m_basicFormattedCode : *m_basicOriginalCode);
-    ui->basicEdit->update();
+    if (m_basicOriginalCode != Q_NULLPTR && m_basicFormattedCode != Q_NULLPTR) {
+        if (m_basicTempOpen) {
+            ui->basicTempEdit->document()->setPlainText(m_basicShowingFormatted ? *m_basicFormattedCode : *m_basicOriginalCode);
+        } else {
+            ui->basicEdit->document()->setPlainText(m_basicShowingFormatted ? *m_basicFormattedCode : *m_basicOriginalCode);
+        }
+    }
 }
+

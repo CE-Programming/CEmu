@@ -373,6 +373,10 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
     if (reason > DBG_BASIC_LIVE_START && reason < DBG_BASIC_LIVE_END) {
         static int prevReason = DBG_BASIC_CURPC_WRITE;
 
+        //fprintf(stderr, "reason: %d\n", reason);
+        //fflush(stderr);
+
+
         // in the case where the program is returning from a subprogram, the updates
         // to the pc haven't finished yet on endpc, so skip this case
         // the only bug is that entering a subprogram currently skips the first token
@@ -383,18 +387,19 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
             return;
         }
 
-        if (debug.stepBasic == true && reason == DBG_BASIC_CURPC_WRITE) {
-            if (debugBasicLiveUpdate() == 2) {
-                emu.resume();
-            } else {
-                debugBasicRaise();
-                debug.stepBasic = false;
-            }
+        if ((debug.stepBasic == true || (debug.stepBasicNext == true && debug.stepBasicNextAddr == data)) &&
+                reason == DBG_BASIC_CURPC_WRITE) {
+            debugBasicRaise();
+            debug.stepBasic = false;
+            debug.stepBasicNext = false;
             prevReason = reason;
             return;
         }
         if (reason == DBG_BASIC_CURPC_WRITE) {
-            debugBasicLiveUpdate();
+            debugBasicUpdate(false);
+        }
+        if (reason == DBG_BASIC_ENDPC_WRITE) {
+            debugBasicPgrmLookup(false, Q_NULLPTR);
         }
 
         prevReason = reason;

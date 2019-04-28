@@ -156,11 +156,9 @@ typedef struct {
     _Atomic(bool) commands;
     _Atomic(bool) openOnReset;
     debug_mode_t mode;
-
-    _Atomic(bool) basicLiveExecution;
     bool stepBasic;
     bool stepBasicNext;
-    uint32_t stepBasicBreakAddr;
+    uint32_t stepBasicNextAddr;
 } debug_state_t;
 
 extern debug_state_t debug;

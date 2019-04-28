@@ -4,6 +4,7 @@
 #include "../mem.h"
 #include "../emu.h"
 #include "../cpu.h"
+#include "../vat.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -42,15 +43,15 @@ void debug_open(int reason, uint32_t data) {
     debug_clear_step();
 
     /* fixup reason for basic debugger */
-    if (debug.mode == DBG_MODE_BASIC && reason != DBG_BASIC_USER) {
+    if (debug.mode == DBG_MODE_BASIC) {
         if (reason == DBG_WATCHPOINT_WRITE) {
-            if (data == DBG_BASIC_CURPC + 1) {
+            if (data == DBG_BASIC_CURPC) {
                 reason = DBG_BASIC_CURPC_WRITE;
             }
-            else if (data == DBG_BASIC_BEGPC + 1) {
+            else if (data == DBG_BASIC_BEGPC) {
                 reason = DBG_BASIC_BEGPC_WRITE;
             }
-            else if (data == DBG_BASIC_ENDPC + 1) {
+            else if (data == DBG_BASIC_ENDPC) {
                 reason = DBG_BASIC_ENDPC_WRITE;
             }
         }
@@ -127,10 +128,8 @@ void debug_step(int mode, uint32_t addr) {
             debug.stepBasic = true;
             break;
         case DBG_BASIC_STEP_NEXT:
-            gui_debug_close();
-            debug.stepBasic = true;
             debug.stepBasicNext = true;
-            debug.stepBasicBreakAddr = addr;
+            debug.stepBasicNextAddr = addr;
             break;
     }
 }
@@ -228,9 +227,9 @@ void debug_set_pc(uint32_t addr) {
 /* the gui should automatically update breakpoints, so it should be */
 /* fine if asm or C also uses these addresses */
 void debug_set_mode(debug_mode_t mode) {
-    debug_watch(DBG_BASIC_BEGPC + 1, DBG_MASK_WRITE, mode == DBG_MODE_BASIC);
-    debug_watch(DBG_BASIC_CURPC + 1, DBG_MASK_WRITE, mode == DBG_MODE_BASIC);
-    debug_watch(DBG_BASIC_ENDPC + 1, DBG_MASK_WRITE, mode == DBG_MODE_BASIC);
+    debug_watch(DBG_BASIC_BEGPC, DBG_MASK_WRITE, mode == DBG_MODE_BASIC);
+    debug_watch(DBG_BASIC_CURPC, DBG_MASK_WRITE, mode == DBG_MODE_BASIC);
+    debug_watch(DBG_BASIC_ENDPC, DBG_MASK_WRITE, mode == DBG_MODE_BASIC);
     debug.mode = mode;
 }
 

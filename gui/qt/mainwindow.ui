@@ -192,22 +192,6 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QGroupBox" name="groupBox_7">
-            <property name="title">
-             <string>Debugging Status</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_24">
-             <item>
-              <widget class="QLabel" name="labelBasicStatus">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
            <widget class="QGroupBox" name="groupBox_15">
             <property name="title">
              <string>Configuration</string>
@@ -238,7 +222,7 @@
                 <string>Highlight</string>
                </property>
                <property name="checked">
-                <bool>true</bool>
+                <bool>false</bool>
                </property>
               </widget>
              </item>
@@ -262,10 +246,76 @@
          </layout>
         </item>
         <item>
-         <widget class="BasicEditor" name="basicEdit">
-          <property name="readOnly">
-           <bool>true</bool>
+         <widget class="QTabWidget" name="tabDebugBasic">
+          <property name="currentIndex">
+           <number>0</number>
           </property>
+          <widget class="QWidget" name="tab_8">
+           <attribute name="title">
+            <string>Program Debug</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_28">
+            <item>
+             <widget class="BasicEditor" name="basicEdit">
+              <property name="verticalScrollBarPolicy">
+               <enum>Qt::ScrollBarAlwaysOn</enum>
+              </property>
+              <property name="horizontalScrollBarPolicy">
+               <enum>Qt::ScrollBarAlwaysOn</enum>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+              <property name="centerOnScroll">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="labelBasicStatus">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab_9">
+           <attribute name="title">
+            <string>Temporary Parser</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_27">
+            <item>
+             <widget class="BasicEditor" name="basicTempEdit">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="verticalScrollBarPolicy">
+               <enum>Qt::ScrollBarAlwaysOn</enum>
+              </property>
+              <property name="horizontalScrollBarPolicy">
+               <enum>Qt::ScrollBarAlwaysOn</enum>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+              <property name="centerOnScroll">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="labelBasicTempStatus">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
          </widget>
         </item>
        </layout>
@@ -6507,7 +6557,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>
