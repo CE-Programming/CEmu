@@ -129,7 +129,7 @@ int MainWindow::debugBasicPgrmLookup() {
             QString str;
 
             try {
-                str = QString::fromStdString(tivars::TIVarType::createFromID(CALC_VAR_TYPE_PROG).getHandlers().second(prgmBytes, options_t()));
+                str = QString::fromStdString(tivars::TIVarType::createFromID(CALC_VAR_TYPE_PROG).getHandlers().second(prgmBytes, options_t({ {"fromRawBytes", true} })));
             } catch(...) {
                 return 0;
             }
