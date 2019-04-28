@@ -38,21 +38,11 @@ void debug_open(int reason, uint32_t data) {
     if (cpu.abort == CPU_ABORT_EXIT || debug.open || (debug.ignore && (reason >= DBG_BREAKPOINT && reason <= DBG_PORT_WRITE))) {
         return;
     }
-    if (debug.mode == DBG_MODE_BASIC && !debug.basicLiveExecution) {
-        return;
-    }
 
     debug_clear_step();
 
-    debug.cpuCycles = cpu.cycles;
-    debug.cpuNext = cpu.next;
-    debug.cpuBaseCycles = cpu.baseCycles;
-    debug.cpuHaltCycles = cpu.haltCycles;
-    debug.totalCycles += sched_total_cycles();
-    debug.dmaCycles += cpu.dmaCycles;
-
     /* fixup reason for basic debugger */
-    if (debug.mode == DBG_MODE_BASIC && debug.basicLiveExecution) {
+    if (debug.mode == DBG_MODE_BASIC && reason != DBG_BASIC_USER) {
         if (reason == DBG_WATCHPOINT_WRITE) {
             if (data == DBG_BASIC_CURPC + 1) {
                 reason = DBG_BASIC_CURPC_WRITE;
@@ -65,6 +55,13 @@ void debug_open(int reason, uint32_t data) {
             }
         }
     }
+
+    debug.cpuCycles = cpu.cycles;
+    debug.cpuNext = cpu.next;
+    debug.cpuBaseCycles = cpu.baseCycles;
+    debug.cpuHaltCycles = cpu.haltCycles;
+    debug.totalCycles += sched_total_cycles();
+    debug.dmaCycles += cpu.dmaCycles;
 
     debug.open = true;
     gui_debug_open(reason, data);
@@ -113,7 +110,8 @@ void debug_step(int mode, uint32_t addr) {
             debug.step = true;
             break;
         case DBG_STEP_OVER:
-            debug.step = debug.stepOver = true;
+            debug.step = true;
+            debug.stepOver = true;
             break;
         case DBG_STEP_OUT:
             gui_debug_close();
@@ -127,6 +125,12 @@ void debug_step(int mode, uint32_t addr) {
         case DBG_BASIC_STEP:
             gui_debug_close();
             debug.stepBasic = true;
+            break;
+        case DBG_BASIC_STEP_NEXT:
+            gui_debug_close();
+            debug.stepBasic = true;
+            debug.stepBasicNext = true;
+            debug.stepBasicBreakAddr = addr;
             break;
     }
 }

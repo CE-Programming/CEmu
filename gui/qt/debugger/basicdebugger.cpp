@@ -28,6 +28,7 @@ void MainWindow::debugBasicInit() {
     connect(ui->checkBasicLiveExecution, &QCheckBox::toggled, this, &MainWindow::debugBasicToggleLiveExecution);
 
     connect(ui->buttonBasicStep, &QPushButton::clicked, this, &MainWindow::debugBasicStep);
+    connect(ui->buttonBasicStepNext, &QPushButton::clicked, this, &MainWindow::debugBasicStepNext);
     connect(ui->buttonBasicRun, &QPushButton::clicked, [this]{ debug_set_mode(DBG_MODE_BASIC); debugBasicToggle(); });
 
     ui->basicEdit->setWordWrapMode(m_basicShowingWrapped ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);
@@ -72,6 +73,7 @@ void MainWindow::debugBasicGuiState(bool state) {
     }
 
     ui->buttonBasicStep->setEnabled(state);
+    ui->buttonBasicStepNext->setEnabled(state);
 
     // refresh program view
     if (state) {
@@ -192,6 +194,26 @@ void MainWindow::debugBasicCreateTokenMap(const QByteArray &data, int base) {
 
 void MainWindow::debugBasicStep() {
     debug_step(DBG_BASIC_STEP, 0u);
+    debugBasicToggle();
+}
+
+void MainWindow::debugBasicStepNext() {
+    // locate next line
+    const int begPC = static_cast<int>(mem_peek_long(DBG_BASIC_BEGPC));
+    const int curPC = static_cast<int>(mem_peek_long(DBG_BASIC_CURPC));
+    const int endPC = static_cast<int>(mem_peek_long(DBG_BASIC_CURPC));
+
+    int curLine = m_basicPrgmsTokensMap[curPC].line;
+    int watchPC = begPC;
+
+    for (int i = curPC; i < endPC; i++) {
+        if (m_basicPrgmsTokensMap[i].line == curLine + 1) {
+            watchPC = i;
+            break;
+        }
+    }
+
+    debug_step(DBG_BASIC_STEP_NEXT, static_cast<uint32_t>(watchPC));
     debugBasicToggle();
 }
 

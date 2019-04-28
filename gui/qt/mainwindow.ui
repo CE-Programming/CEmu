@@ -99,7 +99,7 @@
             </property>
             <property name="sizeHint" stdset="0">
              <size>
-              <width>0</width>
+              <width>13</width>
               <height>20</height>
              </size>
             </property>
@@ -149,6 +149,26 @@
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="buttonBasicStepNext">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Step Next</string>
+            </property>
+            <property name="icon">
+             <iconset resource="resources.qrc">
+              <normaloff>:/icons/resources/icons/stepnext.png</normaloff>:/icons/resources/icons/stepnext.png</iconset>
+            </property>
+           </widget>
+          </item>
+          <item>
            <spacer name="horizontalSpacer_27">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
@@ -158,7 +178,7 @@
             </property>
             <property name="sizeHint" stdset="0">
              <size>
-              <width>0</width>
+              <width>13</width>
               <height>20</height>
              </size>
             </property>
@@ -10403,6 +10423,11 @@ QPushButton:pressed {
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
+  <customwidget>
+   <class>BasicEditor</class>
+   <extends>QPlainTextEdit</extends>
+   <header>basiccodeviewerwindow.h</header>
+  </customwidget>
   <customwidget>
    <class>LCDWidget</class>
    <extends>QWidget</extends>

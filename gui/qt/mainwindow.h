@@ -260,6 +260,7 @@ private:
     void debugBasicEnable();
     void debugBasicDisable();
     void debugBasicStep();
+    void debugBasicStepNext();
     QString debugBasicGetPrgmName();
     int debugBasicLiveUpdate();
     int debugBasicPgrmLookup();

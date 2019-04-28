@@ -159,6 +159,8 @@ typedef struct {
 
     _Atomic(bool) basicLiveExecution;
     bool stepBasic;
+    bool stepBasicNext;
+    uint32_t stepBasicBreakAddr;
 } debug_state_t;
 
 extern debug_state_t debug;
@@ -170,6 +172,7 @@ enum {
     DBG_STEP_NEXT,
     DBG_RUN_UNTIL,
     DBG_BASIC_STEP,
+    DBG_BASIC_STEP_NEXT,
 };
 
 /* internal core functions */
