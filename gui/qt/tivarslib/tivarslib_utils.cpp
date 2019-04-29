@@ -19,11 +19,11 @@ unsigned char hexdec(const std::string& str)
     return (unsigned char) stoul(str, nullptr, 16);
 }
 
-std::string dechex(unsigned char i)
+std::string dechex(unsigned char i, bool zeropad)
 {
-    std::stringstream stream;
-    stream << std::hex << (unsigned int)i;
-    return stream.str();
+    std::string str = "00";
+    sprintf(&str[0], zeropad ? "%02X" : "%X", i);
+    return str;
 }
 
 std::string strtoupper(const std::string& str)

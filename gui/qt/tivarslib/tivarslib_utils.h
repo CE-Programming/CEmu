@@ -26,7 +26,7 @@ bool has_option(const options_t& m, const std::string& element);
 
 unsigned char hexdec(const std::string& str);
 
-std::string dechex(unsigned char i);
+std::string dechex(unsigned char i, bool zeropad = true);
 
 std::string strtoupper(const std::string& str);
 

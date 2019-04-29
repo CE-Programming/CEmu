@@ -57,7 +57,7 @@ namespace tivars
 
         for (size_t i=2; i<byteCount; i++)
         {
-            str += strtoupper(dechex(data[i]));
+            str += dechex(data[i]);
         }
 
         return str;

@@ -37,11 +37,10 @@ namespace tivars
         std::string dataStr;
         for (uint i = 0; i < 9; i++)
         {
-            dataStr += (data[i] < 0x10 ? "0" : "") + dechex(data[i]); // zero left pad
+            dataStr += dechex(data[i]);
         }
 
-        int type = hexdec(dataStr.substr(0, 2));
-        type &= ~0x80; // sign bit discarded
+        int type = data[0] & ~0x80; // sign bit discarded
         if (type != 0x1C && type != 0x1D) // real or complex
         {
             throw std::invalid_argument("Invalid data bytes - invalid vartype: " + std::to_string(type));
