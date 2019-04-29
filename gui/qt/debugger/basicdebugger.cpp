@@ -78,6 +78,29 @@ void MainWindow::debugBasicToggle() {
     emu.debug(!state, DBG_MODE_BASIC);
 }
 
+void MainWindow::debugBasicLeave(bool allowRefresh) {
+    bool state = guiDebugBasic;
+    bool live = m_basicShowingLiveExecution;
+
+    if (m_pathRom.isEmpty()) {
+        return;
+    }
+
+    if (allowRefresh && live) {
+        debugBasicToggleLiveExecution();
+    }
+
+    if (state) {
+        debugBasicDisable();
+    }
+
+    if (allowRefresh && live) {
+        debugBasicToggleLiveExecution();
+    }
+
+    emu.debug(!state, DBG_MODE_BASIC);
+}
+
 void MainWindow::debugBasicGuiState(bool state) {
     if (state) {
         ui->buttonBasicRun->setText(tr("Run"));
@@ -119,6 +142,7 @@ bool MainWindow::debugBasicPgrmLookup(bool allowSwitch, int *idx) {
         return false;
     } else {
         QString var_name = QString(calc_var_name_to_utf8(reinterpret_cast<uint8_t*>(&name[1])));
+        QString map_name = QString(&name[1]);
 
         // lookup in map to see if we've already parsed this file
         QList<int> values = m_basicPrgmsMap.values(var_name);
@@ -236,7 +260,7 @@ void MainWindow::debugBasicCreateTokenMap(int idx, const QByteArray &data, int b
 
 void MainWindow::debugBasicStep() {
     debug_step(DBG_BASIC_STEP, 0u);
-    debugBasicToggle();
+    debugBasicLeave(false);
 }
 
 void MainWindow::debugBasicStepNext() {
@@ -298,6 +322,7 @@ int MainWindow::debugBasicUpdate(bool force) {
         }
     }
 
+    // quick lookup using lists rather than map/hash
     const token_highlight_t posinfo = m_basicPrgmsTokensMap[index][curPC - begPC];
 
     if (m_basicTempOpen == false) {

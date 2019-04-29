@@ -257,6 +257,7 @@ private:
     void debugBasicInit();
     void debugBasicRaise();
     void debugBasicToggle();
+    void debugBasicLeave(bool allowRefresh);
     void debugBasicEnable();
     void debugBasicDisable();
     void debugBasicStep();
