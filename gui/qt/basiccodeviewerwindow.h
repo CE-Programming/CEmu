@@ -94,6 +94,7 @@ protected:
     }
 
 private:
+    virtual void anchor();
     BasicEditor *basicEditor;
 };
 

@@ -317,3 +317,5 @@ void BasicCodeViewerWindow::showCode() {
 BasicCodeViewerWindow::~BasicCodeViewerWindow() {
     delete ui;
 }
+
+void LineNumberArea::anchor() {} /* weak vtable thing */
