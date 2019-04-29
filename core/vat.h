@@ -94,6 +94,7 @@ bool vat_search_find(const calc_var_t *, calc_var_t *);
 bool calc_var_is_prog(const calc_var_t *);
 bool calc_var_is_asmprog(const calc_var_t *);
 bool calc_var_is_internal(const calc_var_t *);
+bool calc_var_is_tokenized(const calc_var_t *);
 bool calc_var_is_python_appvar(const calc_var_t *);
 
 #ifdef __cplusplus

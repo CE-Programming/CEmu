@@ -1722,7 +1722,7 @@ void MainWindow::varPressed(QTableWidgetItem *item) {
         codePopup->setVariableName(ui->emuVarView->item(item->row(), VAR_NAME_COL)->text());
         codePopup->setWindowModality(Qt::NonModal);
         codePopup->setAttribute(Qt::WA_DeleteOnClose);
-        codePopup->setOriginalCode(QString::fromStdString(str));
+        codePopup->setOriginalCode(QString::fromStdString(str), calc_var_is_tokenized(&var));
         codePopup->show();
     }
 }

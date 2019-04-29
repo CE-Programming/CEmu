@@ -279,9 +279,13 @@ void BasicCodeViewerWindow::setVariableName(const QString &name) {
     setWindowTitle(tr("Variable viewer") + QStringLiteral(" | ") + m_variableName);
 }
 
-void BasicCodeViewerWindow::setOriginalCode(const QString &code) {
+void BasicCodeViewerWindow::setOriginalCode(const QString &code, bool reindent) {
     m_originalCode = code;
-    m_formattedCode = QString::fromStdString(tivars::TH_Tokenized::reindentCodeString(m_originalCode.toStdString()));
+    if (reindent) {
+        m_formattedCode = QString::fromStdString(tivars::TH_Tokenized::reindentCodeString(m_originalCode.toStdString()));
+    } else {
+        m_formattedCode = m_originalCode;
+    }
     showCode();
 }
 

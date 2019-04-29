@@ -307,6 +307,10 @@ bool calc_var_is_internal(const calc_var_t *var) {
                 || (var->type == CALC_VAR_TYPE_PROG && !strcmp((const char*)var->name, "!")));
 }
 
+bool calc_var_is_tokenized(const calc_var_t *var) {
+    return calc_var_is_prog(var) || var->type == CALC_VAR_TYPE_EQU || var->type == CALC_VAR_TYPE_STRING;
+}
+
 bool calc_var_is_python_appvar(const calc_var_t *var) {
     return var && var->type == CALC_VAR_TYPE_APP_VAR
                && var->size > 6
