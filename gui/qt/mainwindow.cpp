@@ -1258,17 +1258,18 @@ void MainWindow::console(const QString &str, const QColor &colorFg, const QColor
 }
 
 void MainWindow::console(int type, const char *str, int size) {
-    static QColor sColorFg = ui->console->palette().color(QPalette::Text);
-    static QColor sColorBg = ui->console->palette().color(QPalette::Base);
-    const QColor lookup[8] = { Qt::black, Qt::red, Qt::green, Qt::yellow, Qt::blue, Qt::magenta, Qt::cyan, Qt::white };
-    static int state = CONSOLE_ESC;
     if (size == -1) {
         size = static_cast<int>(strlen(str));
     }
     if (m_nativeConsole) {
         fwrite(str, sizeof(char), static_cast<size_t>(size), type == EmuThread::ConsoleErr ? stderr : stdout);
     } else {
+        static int state = CONSOLE_ESC;
+        static QColor sColorFg = ui->console->palette().color(QPalette::Text);
+        static QColor sColorBg = ui->console->palette().color(QPalette::Base);
         const char *tok;
+        const QColor lookup[8] = { Qt::black, Qt::red, Qt::green, Qt::yellow, Qt::blue, Qt::magenta, Qt::cyan, Qt::white };
+
         QColor colorFg = sColorFg;
         QColor colorBg = sColorBg;
         if ((tok = static_cast<const char*>(memchr(str, '\x1B', static_cast<size_t>(size))))) {
@@ -1647,6 +1648,15 @@ void MainWindow::contextLcd(const QPoint &posa) {
 }
 
 void MainWindow::consoleModified() {
+    ui->console->clear();
+    if (ui->radioConsole->isChecked()) {
+        ui->console->setEnabled(false);
+        console(tr("[CEmu] Dock output redirected to stdout. Use the radio button to enable dock."),
+                ui->console->palette().color(QPalette::Text),
+                ui->console->palette().color(QPalette::Base));
+    } else {
+        ui->console->setEnabled(true);
+    }
     m_nativeConsole = ui->radioConsole->isChecked();
     m_config->setValue(SETTING_NATIVE_CONSOLE, m_nativeConsole);
 }
