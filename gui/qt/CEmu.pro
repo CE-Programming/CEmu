@@ -2,7 +2,7 @@ lessThan(QT_MAJOR_VERSION, 5) : error("You need at least Qt 5.5 to build CEmu!")
 lessThan(QT_MINOR_VERSION, 5) : error("You need at least Qt 5.5 to build CEmu!")
 
 # Error if git submodules are not downloaded
-!exists("../../core/debug/zdis/zdis.c"): error("You have to run 'git submodule init' and 'git submodule update' first.")
+!exists("../../core/debug/zdis/zdis.c")|!exists("../../core/jit/asmjit"): error("You have to run 'git submodule init' and 'git submodule update' first.")
 
 # CEmu version and info
 CEMU_RELEASE = true
@@ -56,6 +56,36 @@ CONFIG += c++11 console
 
 # Core options
 DEFINES += DEBUG_SUPPORT
+
+!isEmpty(NO_JIT) {
+} else:equals(QMAKE_HOST.arch, x86) {
+    DEFINES += JIT_SUPPORT JIT_BACKEND_X86 ASMJIT_BUILD_X86
+    HEADERS += ../../core/jit/x86jit.h
+    SOURCES += ../../core/jit/x86jit.cpp
+} else:equals(QMAKE_HOST.arch, x86_64) {
+    DEFINES += JIT_SUPPORT JIT_BACKEND_X64 ASMJIT_BUILD_X86
+    HEADERS += ../../core/jit/x64jit.h
+    SOURCES += ../../core/jit/x64jit.cpp
+} else:equals(QMAKE_HOST.arch, arm) {
+    DEFINES += JIT_SUPPORT JIT_BACKEND_ARM ASMJIT_BUILD_ARM
+    HEADERS += ../../core/jit/armjit.h
+    SOURCES += ../../core/jit/armjit.cpp
+} else:equals(QMAKE_HOST.arch, aarch64) {
+    DEFINES += JIT_SUPPORT JIT_BACKEND_AARCH64 ASMJIT_BUILD_ARM
+    HEADERS += ../../core/jit/aarch64jit.h
+    SOURCES += ../../core/jit/aarch64jit.cpp
+}
+contains(DEFINES, ASMJIT_BUILD_...) {
+    DEFINES += ASMJIT_BUILD_EMBED ASMJIT_DISABLE_BUILDER ASMJIT_DISABLE_COMPILER ASMJIT_DISABLE_LOGGING ASMJIT_DISABLE_TEXT ASMJIT_DISABLE_INST_API
+    INCLUDEPATH += ../../core/jit/asmjit/src
+    HEADERS += $$files(../../core/jit/asmjit/src/asmjit/*.h, true)
+    SOURCES += $$files(../../core/jit/asmjit/src/asmjit/*.cpp, true)
+    CONFIG(release, debug|release) {
+        DEFINES += ASMJIT_BUILD_RELEASE
+    } else {
+        DEFINES += ASMJIT_BUILD_DEBUG
+    }
+}
 
 # These options can be disabled / enabled depending on
 # compiler / library support for your toolchain
@@ -118,13 +148,13 @@ if (!win32-msvc*) {
     QMAKE_CXXFLAGS += /MP
 
     # Do we have a flag specifying use of libpng-apng from vcpkg?
-	equals(LIBPNG_APNG_FROM_VCPKG, 1) {
-		warning("Enabled using libpng-apng from vcpkg. Note that if you do not have vcpkg integrated into MSVC, and/or do not have libpng-apng installed within vcpkg, the build will likely fail.")
-		# This is a bad hack, but MOC kinda needs it to work correctly...
-		QMAKE_MOC_OPTIONS += -DPNG_WRITE_APNG_SUPPORTED
-	}
-	
-	# Otherwise...
+    equals(LIBPNG_APNG_FROM_VCPKG, 1) {
+        warning("Enabled using libpng-apng from vcpkg. Note that if you do not have vcpkg integrated into MSVC, and/or do not have libpng-apng installed within vcpkg, the build will likely fail.")
+        # This is a bad hack, but MOC kinda needs it to work correctly...
+        QMAKE_MOC_OPTIONS += -DPNG_WRITE_APNG_SUPPORTED
+    }
+
+    # Otherwise...
     !equals(LIBPNG_APNG_FROM_VCPKG, 1) {
         # If we're not using vcpkg, we rely on manual variables to find needed
         # libpng-apng components.
@@ -177,82 +207,82 @@ macx: QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.12
 macx: ICON = resources/icons/icon.icns
 
 SOURCES += \
-    ../../tests/autotester/autotester.cpp \
     ../../core/asic.c \
-    ../../core/cpu.c \
-    ../../core/keypad.c \
-    ../../core/lcd.c \
-    ../../core/registers.c \
-    ../../core/port.c \
-    ../../core/interrupt.c \
-    ../../core/flash.c \
-    ../../core/misc.c \
-    ../../core/schedule.c \
-    ../../core/timers.c \
-    ../../core/usb.c \
-    ../../core/sha256.c \
-    ../../core/realclock.c \
     ../../core/backlight.c \
+    ../../core/bus.c \
     ../../core/cert.c \
     ../../core/control.c \
-    ../../core/mem.c \
-    ../../core/link.c \
-    ../../core/vat.c \
-    ../../core/emu.c \
-    ../../core/extras.c \
-    ../../core/spi.c \
+    ../../core/cpu.c \
     ../../core/debug/debug.c \
     ../../core/debug/zdis/zdis.c \
-    ipc.cpp \
-    main.cpp \
-    utils.cpp \
-    mainwindow.cpp \
-    romselection.cpp \
-    lcdwidget.cpp \
-    emuthread.cpp \
-    datawidget.cpp \
-    dockwidget.cpp \
-    searchwidget.cpp \
+    ../../core/emu.c \
+    ../../core/extras.c \
+    ../../core/flash.c \
+    ../../core/interrupt.c \
+    ../../core/keypad.c \
+    ../../core/lcd.c \
+    ../../core/link.c \
+    ../../core/mem.c \
+    ../../core/misc.c \
+    ../../core/port.c \
+    ../../core/realclock.c \
+    ../../core/registers.c \
+    ../../core/schedule.c \
+    ../../core/sha256.c \
+    ../../core/spi.c \
+    ../../core/timers.c \
+    ../../core/usb.c \
+    ../../core/vat.c \
+    ../../tests/autotester/autotester.cpp \
+    archive/extractor.c \
     basiccodeviewerwindow.cpp \
-    sendinghandler.cpp \
-    debugger.cpp \
-    settings.cpp \
     capture/animated-png.c \
-    keypad/qtkeypadbridge.cpp \
+    datawidget.cpp \
+    debugger.cpp \
+    debugger/disasm.cpp \
+    debugger/hexwidget.cpp \
+    debugger/visualizerdisplaywidget.cpp \
+    dockwidget.cpp \
+    emuthread.cpp \
+    ipc.cpp \
+    keyhistorywidget.cpp \
+    keypad/arrowkey.cpp \
     keypad/keymap.cpp \
     keypad/keypadwidget.cpp \
+    keypad/qtkeypadbridge.cpp \
     keypad/rectkey.cpp \
-    keypad/arrowkey.cpp \
-    debugger/hexwidget.cpp \
-    debugger/disasm.cpp \
-    tivarslib/tivarslib_utils.cpp \
+    lcdwidget.cpp \
+    main.cpp \
+    mainwindow.cpp \
+    memorywidget.cpp \
+    romselection.cpp \
+    searchwidget.cpp \
+    sendinghandler.cpp \
+    settings.cpp \
     tivarslib/BinaryFile.cpp \
-    tivarslib/TIVarFile.cpp \
     tivarslib/TIModel.cpp \
     tivarslib/TIModels.cpp \
+    tivarslib/TIVarFile.cpp \
     tivarslib/TIVarType.cpp \
     tivarslib/TIVarTypes.cpp \
     tivarslib/TypeHandlers/DummyHandler.cpp \
-    tivarslib/TypeHandlers/TH_GenericList.cpp \
-    tivarslib/TypeHandlers/TH_Tokenized.cpp \
-    tivarslib/TypeHandlers/TH_GenericComplex.cpp \
-    tivarslib/TypeHandlers/TH_Matrix.cpp \
-    tivarslib/TypeHandlers/TH_GenericReal.cpp \
-    tivarslib/TypeHandlers/TH_GenericAppVar.cpp \
-    tivarslib/TypeHandlers/TH_TempEqu.cpp \
     tivarslib/TypeHandlers/STH_DataAppVar.cpp \
-    tivarslib/TypeHandlers/STH_PythonAppVar.cpp \
-    tivarslib/TypeHandlers/STH_ExactFractionPi.cpp \
     tivarslib/TypeHandlers/STH_ExactFraction.cpp \
-    tivarslib/TypeHandlers/STH_ExactRadical.cpp \
+    tivarslib/TypeHandlers/STH_ExactFractionPi.cpp \
     tivarslib/TypeHandlers/STH_ExactPi.cpp \
+    tivarslib/TypeHandlers/STH_ExactRadical.cpp \
     tivarslib/TypeHandlers/STH_FP.cpp \
-    visualizerwidget.cpp \
-    debugger/visualizerdisplaywidget.cpp \
-    memorywidget.cpp \
-    archive/extractor.c \
-    ../../core/bus.c \
-    keyhistorywidget.cpp
+    tivarslib/TypeHandlers/STH_PythonAppVar.cpp \
+    tivarslib/TypeHandlers/TH_GenericAppVar.cpp \
+    tivarslib/TypeHandlers/TH_GenericComplex.cpp \
+    tivarslib/TypeHandlers/TH_GenericList.cpp \
+    tivarslib/TypeHandlers/TH_GenericReal.cpp \
+    tivarslib/TypeHandlers/TH_Matrix.cpp \
+    tivarslib/TypeHandlers/TH_TempEqu.cpp \
+    tivarslib/TypeHandlers/TH_Tokenized.cpp \
+    tivarslib/tivarslib_utils.cpp \
+    utils.cpp \
+    visualizerwidget.cpp
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
@@ -267,84 +297,84 @@ SOURCES +=  ../../tests/autotester/autotester_cli.cpp \
 }
 
 HEADERS  += \
-    ../../tests/autotester/autotester.h \
     ../../core/asic.h \
-    ../../core/cpu.h \
     ../../core/atomics.h \
-    ../../core/defines.h \
-    ../../core/keypad.h \
-    ../../core/lcd.h \
-    ../../core/registers.h \
-    ../../core/port.h \
-    ../../core/interrupt.h \
-    ../../core/emu.h \
-    ../../core/flash.h \
-    ../../core/misc.h \
-    ../../core/schedule.h \
-    ../../core/timers.h \
-    ../../core/usb.h \
-    ../../core/sha256.h \
-    ../../core/realclock.h \
     ../../core/backlight.h \
+    ../../core/bus.h \
     ../../core/cert.h \
     ../../core/control.h \
-    ../../core/mem.h \
-    ../../core/link.h \
-    ../../core/vat.h \
-    ../../core/extras.h \
-    ../../core/os/os.h \
-    ../../core/spi.h \
+    ../../core/cpu.h \
     ../../core/debug/debug.h \
     ../../core/debug/zdis/zdis.h \
-    ipc.h \
-    utils.h \
-    cemuopts.h \
-    mainwindow.h \
-    romselection.h \
-    lcdwidget.h \
-    emuthread.h \
-    datawidget.h \
-    dockwidget.h \
-    searchwidget.h \
+    ../../core/defines.h \
+    ../../core/emu.h \
+    ../../core/extras.h \
+    ../../core/flash.h \
+    ../../core/interrupt.h \
+    ../../core/keypad.h \
+    ../../core/lcd.h \
+    ../../core/link.h \
+    ../../core/mem.h \
+    ../../core/misc.h \
+    ../../core/os/os.h \
+    ../../core/port.h \
+    ../../core/realclock.h \
+    ../../core/registers.h \
+    ../../core/schedule.h \
+    ../../core/sha256.h \
+    ../../core/spi.h \
+    ../../core/timers.h \
+    ../../core/usb.h \
+    ../../core/vat.h \
+    ../../tests/autotester/autotester.h \
+    archive/extractor.h \
     basiccodeviewerwindow.h \
-    sendinghandler.h \
-    keypad/qtkeypadbridge.h \
-    keypad/keymap.h \
-    keypad/keypadwidget.h \
+    capture/animated-png.h \
+    cemuopts.h \
+    datawidget.h \
+    debugger/disasm.h \
+    debugger/hexwidget.h \
+    debugger/visualizerdisplaywidget.h \
+    dockwidget.h \
+    emuthread.h \
+    ipc.h \
+    keyhistorywidget.h \
+    keypad/alphakey.h \
+    keypad/arrowkey.h \
+    keypad/graphkey.h \
     keypad/key.h \
     keypad/keycode.h \
     keypad/keyconfig.h \
-    keypad/rectkey.h \
-    keypad/graphkey.h \
-    keypad/secondkey.h \
-    keypad/alphakey.h \
-    keypad/otherkey.h \
+    keypad/keymap.h \
+    keypad/keypadwidget.h \
     keypad/numkey.h \
     keypad/operkey.h \
-    keypad/arrowkey.h \
-    capture/animated-png.h \
-    debugger/hexwidget.h \
-    debugger/disasm.h \
-    tivarslib/tivarslib_utils.h \
-    tivarslib/CommonTypes.h \
+    keypad/otherkey.h \
+    keypad/qtkeypadbridge.h \
+    keypad/rectkey.h \
+    keypad/secondkey.h \
+    lcdwidget.h \
+    mainwindow.h \
+    romselection.h \
+    searchwidget.h \
+    sendinghandler.h \
     tivarslib/BinaryFile.h \
+    tivarslib/CommonTypes.h \
     tivarslib/TIModel.h \
     tivarslib/TIModels.h \
     tivarslib/TIVarFile.h \
     tivarslib/TIVarType.h \
     tivarslib/TIVarTypes.h \
     tivarslib/TypeHandlers/TypeHandlers.h \
-    visualizerwidget.h \
-    debugger/visualizerdisplaywidget.h \
-    archive/extractor.h \
-    ../../core/bus.h \
-    keyhistorywidget.h
+    tivarslib/tivarslib_utils.h \
+    utils.h \
+    visualizerwidget.h
 
 FORMS    += \
+    basiccodeviewerwindow.ui \
     mainwindow.ui \
     romselection.ui \
-    searchwidget.ui \
-    basiccodeviewerwindow.ui
+    searchwidget.ui
 
 RESOURCES += \
     resources.qrc
