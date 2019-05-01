@@ -178,7 +178,6 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicPgrmLookup(bool allowSwit
         return DBG_BASIC_NO_EXECUTING_PRGM;
     } else {
         QString var_name = QString(calc_var_name_to_utf8(reinterpret_cast<uint8_t*>(&name[1])));
-        QString map_name = QString(&name[1]);
 
         // lookup in map to see if we've already parsed this file
         QList<int> values = m_basicPrgmsMap.values(var_name);
@@ -204,7 +203,8 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicPgrmLookup(bool allowSwit
             QString str;
 
             try {
-                str = QString::fromStdString(tivars::TIVarType::createFromID(CALC_VAR_TYPE_PROG).getHandlers().second(data_t(prgmBytes.constData(), prgmBytes.constEnd()), options_t({ {"fromRawBytes", true} })));
+                const options_t opts = { { "fromRawBytes", true }, { "prettify", true } };
+                str = QString::fromStdString(tivars::TH_Tokenized::makeStringFromData(data_t(prgmBytes.constData(), prgmBytes.constEnd()), opts));
             } catch(...) {
                 return DBG_BASIC_NO_EXECUTING_PRGM;
             }
@@ -282,7 +282,7 @@ void MainWindow::debugBasicCreateTokenMap(int idx, const QByteArray &data) {
                 data_t tokBytes(2);
                 tokBytes[0] = token;
                 tokBytes[1] = tokenNext;
-                std::string tokStr = tivars::TH_Tokenized::tokenToString(tokBytes, &incr, options_t({ {"prettify", true} }));
+                std::string tokStr = tivars::TH_Tokenized::tokenToString(tokBytes, &incr, { { "prettify", true } });
 
                 if (!tokStr.empty()) {
                     posinfo.len += utf8_strlen(tokStr);
@@ -321,7 +321,7 @@ void MainWindow::debugBasicCreateTokenMap(int idx, const QByteArray &data) {
             data_t tokBytes(2);
             tokBytes[0] = token;
             tokBytes[1] = tokenNext;
-            std::string tokStr = tivars::TH_Tokenized::tokenToString(tokBytes, &incr, options_t({ {"prettify", true} }));
+            std::string tokStr = tivars::TH_Tokenized::tokenToString(tokBytes, &incr, { {"prettify", true } });
 
             if (!tokStr.empty()) {
                 posinfo.len = utf8_strlen(tokStr);
