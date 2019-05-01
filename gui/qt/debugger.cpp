@@ -389,11 +389,16 @@ void MainWindow::debugCommand(int reason, uint32_t data) {
 
         if ((debug.stepBasic == true || (debug.stepBasicNext == true && debug.stepBasicNextAddr == data)) &&
                 reason == DBG_BASIC_CURPC_WRITE) {
-            debugBasicRaise();
-            debug.stepBasic = false;
-            debug.stepBasicNext = false;
-            prevReason = reason;
-            return;
+            if (debugBasicRaise() == DBG_BASIC_NO_EXECUTING_PRGM) {
+                prevReason = reason;
+                emu.resume();
+                return;
+            } else {
+                debug.stepBasic = false;
+                debug.stepBasicNext = false;
+                prevReason = reason;
+                return;
+            }
         }
         if (reason == DBG_BASIC_CURPC_WRITE) {
             debugBasicUpdate(false);

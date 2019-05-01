@@ -83,7 +83,7 @@ void debug_flag(int mask, bool set);                 /* configure setup of debug
 void debug_step(int mode, uint32_t addr);            /* set a step mode, addr points to the instruction after pc */
 void debug_open(int reason, uint32_t data);          /* open the debugger (Should only be called from gui_do_stuff) */
 bool debug_is_open(void);                            /* returns the status of the core debugger */
-void debug_set_mode(debug_mode_t mode);
+void debug_set_mode(debug_mode_t mode, bool fetches);
 bool debug_get_executing_basic_prgm(char *name);
 
 /* masks */
@@ -118,10 +118,17 @@ bool debug_get_executing_basic_prgm(char *name);
 #define DBG_PORT_SIZE         0x10000
 #define SIZEOF_DBG_BUFFER     0x1000
 
-#define DBG_BASIC_BEGPC       0xD02317
-#define DBG_BASIC_CURPC       0xD0231A
-#define DBG_BASIC_ENDPC       0xD0231D
-#define DBG_BASIC_BASIC_PROG  0xD0230E
+/* tios specific debugging locations */
+#define DBG_BASIC_BEGPC             0xD02317
+#define DBG_BASIC_CURPC             0xD0231A
+#define DBG_BASIC_ENDPC             0xD0231D
+#define DBG_BASIC_BASIC_PROG        0xD0230E
+#define DBG_BASIC_NEWDISPF          0xD00088
+#define DBG_BASIC_CMDFLAGS          0xD0008C
+#define DBG_BASIC_SYSHOOKFLAG2      0xD000B6
+#define DBG_BASIC_PARSER_ACTIVE_BIT (1 << 1)
+#define DBG_BASIC_CMDEXEC_BIT       (1 << 6)
+#define DBG_BASIC_PROGEXECUTING_BIT (1 << 1)
 
 typedef struct {
     bool mode : 1;

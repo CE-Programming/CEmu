@@ -78,6 +78,13 @@ private:
         int len;
     } token_highlight_t;
 
+    typedef enum {
+        DBG_BASIC_SUCCESS,
+        DBG_BASIC_NO_EXECUTING_PRGM,
+        DBG_BASIC_NEED_REFRESH,
+        DBG_BASIC_NO_REFRESH,
+    } debug_basic_status_t;
+
     enum {
         CONSOLE_ESC,
         CONSOLE_BRACKET,
@@ -255,21 +262,21 @@ private:
 
     // ti-basic debugging
     void debugBasicInit();
-    void debugBasicRaise();
+    debug_basic_status_t debugBasicRaise();
     void debugBasicToggle();
     void debugBasicLeave(bool allowRefresh);
-    void debugBasicEnable();
+    debug_basic_status_t debugBasicEnable();
     void debugBasicDisable();
     void debugBasicStep();
     void debugBasicStepNext();
     QString debugBasicGetPrgmName();
-    int debugBasicUpdate(bool force);
-    bool debugBasicPgrmLookup(bool allowSwitch, int *idx);
+    debug_basic_status_t  debugBasicUpdate(bool force);
+    debug_basic_status_t debugBasicPgrmLookup(bool allowSwitch, int *idx);
     void debugBasicCreateTokenMap(int idx, const QByteArray &data, int base);
-    void debugBasicGuiState(bool state);
+    debug_basic_status_t debugBasicGuiState(bool state);
     void debugBasicToggleHighlight();
-    void debugBasicToggleWrap();
-    void debugBasicToggleFormat();
+    void debugBasicToggleShowFetch();
+    void debugBasicToggleShowTempParse();
     void debugBasicToggleLiveExecution();
     void debugBasicShowCode();
 
@@ -593,8 +600,8 @@ private:
     QString m_basicOriginalCodeTemp;
     QString m_basicFormattedCodeTemp;
     bool m_basicShowingHighlighted = true;
-    bool m_basicShowingWrapped = false;
-    bool m_basicShowingFormatted = false;
+    bool m_basicShowingFetches = false;
+    bool m_basicShowingTempParse = false;
     bool m_basicShowingLiveExecution = true;
     QList<QList<token_highlight_t>> m_basicPrgmsTokensMap;
     QMap<QString, int> m_basicPrgmsMap;

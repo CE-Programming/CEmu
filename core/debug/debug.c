@@ -20,7 +20,7 @@ void debug_init(void) {
     debug.port = (uint8_t*)calloc(DBG_PORT_SIZE, sizeof(uint8_t));
     debug.bufPos = debug.bufErrPos = 0;
     debug.open = false;
-    debug_set_mode(DBG_MODE_ASM);
+    debug_set_mode(DBG_MODE_ASM, 0);
     gui_console_printf("[CEmu] Initialized Debugger...\n");
 }
 
@@ -53,6 +53,22 @@ void debug_open(int reason, uint32_t data) {
             }
             else if (data == DBG_BASIC_ENDPC) {
                 reason = DBG_BASIC_ENDPC_WRITE;
+            }
+        }
+        if (reason == DBG_WATCHPOINT_READ) {
+            if (data == DBG_BASIC_SYSHOOKFLAG2) {
+
+                // verify basic program execution
+                if ((mem_peek_byte(DBG_BASIC_NEWDISPF) & DBG_BASIC_PROGEXECUTING_BIT) &&
+                    (mem_peek_byte(DBG_BASIC_CMDFLAGS) & DBG_BASIC_CMDEXEC_BIT)) {
+
+                    // check current pc for instruction "bit 1,(iy+$36)"
+                    if(*(uint32_t*)phys_mem_ptr(cpu.registers.PC - 4, 4) == 0x4E36CBFD) {
+                        reason = DBG_BASIC_CURPC_WRITE;
+                    }
+                } else {
+                    return;
+                }
             }
         }
     }
@@ -218,18 +234,21 @@ void debug_set_pc(uint32_t addr) {
     cpu_flush(addr, cpu.ADL);
 }
 
-#define DBG_BASIC_NEWDISPF 0xD00088
-#define DBG_BASIC_CMDFLAGS 0xD0008C
-#define DBG_BASIC_CMDEXEC_BIT (1 << 6)
-#define DBG_BASIC_PROGEXECUTING_BIT (1 << 1)
-
 /* internal breakpoints not visible in gui */
 /* the gui should automatically update breakpoints, so it should be */
 /* fine if asm or C also uses these addresses */
-void debug_set_mode(debug_mode_t mode) {
-    debug_watch(DBG_BASIC_BEGPC, DBG_MASK_WRITE, mode == DBG_MODE_BASIC);
-    debug_watch(DBG_BASIC_CURPC, DBG_MASK_WRITE, mode == DBG_MODE_BASIC);
-    debug_watch(DBG_BASIC_ENDPC, DBG_MASK_WRITE, mode == DBG_MODE_BASIC);
+void debug_set_mode(debug_mode_t mode, bool fetches) {
+    if (mode == DBG_MODE_BASIC) {
+        debug_watch(DBG_BASIC_BEGPC, DBG_MASK_WRITE, fetches);
+        debug_watch(DBG_BASIC_CURPC, DBG_MASK_WRITE, fetches);
+        debug_watch(DBG_BASIC_ENDPC, DBG_MASK_WRITE, fetches);
+        debug_watch(DBG_BASIC_SYSHOOKFLAG2, DBG_MASK_READ, !fetches);
+    } else {
+        debug_watch(DBG_BASIC_BEGPC, DBG_MASK_WRITE, false);
+        debug_watch(DBG_BASIC_CURPC, DBG_MASK_WRITE, false);
+        debug_watch(DBG_BASIC_ENDPC, DBG_MASK_WRITE, false);
+        debug_watch(DBG_BASIC_SYSHOOKFLAG2, DBG_MASK_READ, false);
+    }
     debug.mode = mode;
 }
 

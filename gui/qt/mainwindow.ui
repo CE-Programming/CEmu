@@ -209,13 +209,6 @@
              <property name="bottomMargin">
               <number>6</number>
              </property>
-             <item row="0" column="0">
-              <widget class="QCheckBox" name="checkBasicLiveExecution">
-               <property name="text">
-                <string>Live Execution View</string>
-               </property>
-              </widget>
-             </item>
              <item row="1" column="0">
               <widget class="QCheckBox" name="checkBasicHighlighting">
                <property name="text">
@@ -226,17 +219,24 @@
                </property>
               </widget>
              </item>
-             <item row="0" column="1">
-              <widget class="QCheckBox" name="checkBasicLineWrapping">
+             <item row="1" column="1">
+              <widget class="QCheckBox" name="checkBasicShowTempParse">
                <property name="text">
-                <string>Wrap lines</string>
+                <string>Show temporary parsing</string>
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
-              <widget class="QCheckBox" name="checkBasicReformatting">
+             <item row="0" column="0">
+              <widget class="QCheckBox" name="checkBasicLiveExecution">
                <property name="text">
-                <string>Reformat</string>
+                <string>Live Execution View</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QCheckBox" name="checkBasicShowFetch">
+               <property name="text">
+                <string>Show Fetches</string>
                </property>
               </widget>
              </item>
@@ -10473,11 +10473,6 @@ QPushButton:pressed {
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
-  <customwidget>
-   <class>BasicEditor</class>
-   <extends>QPlainTextEdit</extends>
-   <header>basiccodeviewerwindow.h</header>
-  </customwidget>
   <customwidget>
    <class>LCDWidget</class>
    <extends>QWidget</extends>
