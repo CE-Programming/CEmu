@@ -26,7 +26,7 @@ public:
     void resume();
     void receive();
     void unblock();
-    void debug(bool state, debug_mode_t mode);
+    void debug(bool state, int mode);
     void doStuff();
     void throttleWait();
     void setSpeed(int value);

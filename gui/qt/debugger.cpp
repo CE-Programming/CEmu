@@ -360,7 +360,7 @@ void MainWindow::debugExecute(uint32_t offset, uint8_t cmd) {
     if (guiDebug) {
         debugRaise();
     } else {
-        emu.debug(false, DBG_MODE_ASM);
+        emu.debug(false, EmuThread::RequestDebugger);
     }
 }
 
@@ -651,6 +651,10 @@ void MainWindow::debugGuiState(bool state) {
 void MainWindow::debugToggle() {
     bool state = guiDebug;
 
+    if (guiDebugBasic) {
+        return;
+    }
+
     if (m_pathRom.isEmpty()) {
         return;
     }
@@ -664,7 +668,7 @@ void MainWindow::debugToggle() {
         debugDisable();
     }
 
-    emu.debug(!state, DBG_MODE_ASM);
+    emu.debug(!state, EmuThread::RequestDebugger);
 }
 
 void MainWindow::debugPopulate() {

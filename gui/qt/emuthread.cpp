@@ -311,7 +311,7 @@ void EmuThread::resume() {
     m_cvDebug.notify_all();
 }
 
-void EmuThread::debug(bool state, debug_mode_t mode) {
+void EmuThread::debug(bool state, int mode) {
     bool oldState;
     {
         std::lock_guard<std::mutex> lock(m_mutexDebug);
@@ -321,18 +321,7 @@ void EmuThread::debug(bool state, debug_mode_t mode) {
         resume();
     }
     if (state) {
-        switch (mode) {
-            case DBG_MODE_C:
-                req(RequestDebugger);
-                break;
-            case DBG_MODE_ASM:
-                req(RequestDebugger);
-                break;
-            case DBG_MODE_BASIC:
-                req(RequestBasicDebugger);
-                break;
-
-        }
+        req(mode);
     }
 }
 
@@ -356,8 +345,8 @@ void EmuThread::stop() {
         return;
     }
     emu_exit();
-    if (!wait(200)) {
+    if (!wait(500)) {
         terminate();
-        wait(300);
+        wait(500);
     }
 }

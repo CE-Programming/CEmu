@@ -261,6 +261,7 @@ private:
     void debugZeroCycles();
 
     // ti-basic debugging
+    void debugBasic(bool enable);
     void debugBasicInit();
     debug_basic_status_t debugBasicRaise();
     void debugBasicToggle();
@@ -269,16 +270,16 @@ private:
     void debugBasicDisable();
     void debugBasicStep();
     void debugBasicStepNext();
+    void debugBasicClearCache();
     QString debugBasicGetPrgmName();
     debug_basic_status_t  debugBasicUpdate(bool force);
     debug_basic_status_t debugBasicPgrmLookup(bool allowSwitch, int *idx);
-    void debugBasicCreateTokenMap(int idx, const QByteArray &data, int base);
+    void debugBasicCreateTokenMap(int idx, const QByteArray &data);
     debug_basic_status_t debugBasicGuiState(bool state);
-    void debugBasicToggleHighlight();
-    void debugBasicToggleShowFetch();
-    void debugBasicToggleShowTempParse();
-    void debugBasicToggleLiveExecution();
-    void debugBasicShowCode();
+    void debugBasicToggleHighlight(bool enabled);
+    void debugBasicToggleShowFetch(bool enabled);
+    void debugBasicToggleShowTempParse(bool enabled);
+    void debugBasicToggleLiveExecution(bool enabled);
 
     // battery
     void batterySetCharging(bool state);
@@ -599,10 +600,11 @@ private:
     const QString *m_basicFormattedCode;
     QString m_basicOriginalCodeTemp;
     QString m_basicFormattedCodeTemp;
-    bool m_basicShowingHighlighted = true;
-    bool m_basicShowingFetches = false;
-    bool m_basicShowingTempParse = false;
-    bool m_basicShowingLiveExecution = true;
+    bool m_basicShowHighlighted = true;
+    bool m_basicShowFetches = false;
+    bool m_basicShowTempParser = false;
+    bool m_basicShowLiveExecution = true;
+    bool m_basicClearCache = false;
     QList<QList<token_highlight_t>> m_basicPrgmsTokensMap;
     QMap<QString, int> m_basicPrgmsMap;
     QStringList m_basicPrgmsOriginalCode;

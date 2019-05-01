@@ -61,13 +61,6 @@ enum {
     CMD_NUMBER
 };
 
-/* available debugging modes */
-typedef enum {
-    DBG_MODE_ASM,
-    DBG_MODE_BASIC,
-    DBG_MODE_C
-} debug_mode_t;
-
 /* interface functions */
 void debug_init(void);                               /* call before starting emulation */
 void debug_free(void);                               /* call after emulation end */
@@ -83,7 +76,8 @@ void debug_flag(int mask, bool set);                 /* configure setup of debug
 void debug_step(int mode, uint32_t addr);            /* set a step mode, addr points to the instruction after pc */
 void debug_open(int reason, uint32_t data);          /* open the debugger (Should only be called from gui_do_stuff) */
 bool debug_is_open(void);                            /* returns the status of the core debugger */
-void debug_set_mode(debug_mode_t mode, bool fetches);
+void debug_enable_basic_mode(bool fetches);
+void debug_disable_basic_mode(void);
 bool debug_get_executing_basic_prgm(char *name);
 
 /* masks */
@@ -162,7 +156,7 @@ typedef struct {
     _Atomic(bool) ignore;
     _Atomic(bool) commands;
     _Atomic(bool) openOnReset;
-    debug_mode_t mode;
+    bool basicMode;
     bool stepBasic;
     bool stepBasicNext;
     uint32_t stepBasicNextAddr;

@@ -106,7 +106,10 @@
            </spacer>
           </item>
           <item>
-           <widget class="QPushButton" name="buttonBasicRun">
+           <widget class="QPushButton" name="btnDebugBasicRun">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="sizePolicy">
              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Maximum">
               <horstretch>0</horstretch>
@@ -126,7 +129,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="buttonBasicStep">
+           <widget class="QPushButton" name="btnDebugBasicStep">
             <property name="enabled">
              <bool>false</bool>
             </property>
@@ -149,7 +152,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="buttonBasicStepNext">
+           <widget class="QPushButton" name="btnDebugBasicStepNext">
             <property name="enabled">
              <bool>false</bool>
             </property>
@@ -197,22 +200,49 @@
              <string>Configuration</string>
             </property>
             <layout class="QGridLayout" name="gridLayout">
-             <property name="leftMargin">
-              <number>6</number>
-             </property>
-             <property name="topMargin">
-              <number>6</number>
-             </property>
-             <property name="rightMargin">
-              <number>6</number>
-             </property>
              <property name="bottomMargin">
+              <number>9</number>
+             </property>
+             <property name="horizontalSpacing">
+              <number>7</number>
+             </property>
+             <property name="verticalSpacing">
               <number>6</number>
              </property>
-             <item row="1" column="0">
-              <widget class="QCheckBox" name="checkBasicHighlighting">
+             <item row="1" column="3">
+              <widget class="QLabel" name="label_31">
                <property name="text">
-                <string>Highlight</string>
+                <string>Show Fetches</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QToolButton" name="btnDebugBasicShowTempParser">
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/resources/icons/checkgray.png</normaloff>
+                 <normalon>:/icons/resources/icons/check.png</normalon>:/icons/resources/icons/checkgray.png</iconset>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QToolButton" name="btnDebugBasicLiveExecution">
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/resources/icons/checkgray.png</normaloff>
+                 <normalon>:/icons/resources/icons/check.png</normalon>:/icons/resources/icons/checkgray.png</iconset>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
                </property>
                <property name="checked">
                 <bool>false</bool>
@@ -220,23 +250,75 @@
               </widget>
              </item>
              <item row="1" column="1">
-              <widget class="QCheckBox" name="checkBasicShowTempParse">
+              <widget class="QLabel" name="label_25">
                <property name="text">
-                <string>Show temporary parsing</string>
+                <string>Enable TI-Basic Debugging</string>
                </property>
               </widget>
              </item>
-             <item row="0" column="0">
-              <widget class="QCheckBox" name="checkBasicLiveExecution">
+             <item row="1" column="4">
+              <widget class="QToolButton" name="btnDebugBasicHighlight">
                <property name="text">
-                <string>Live Execution View</string>
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/resources/icons/checkgray.png</normaloff>
+                 <normalon>:/icons/resources/icons/check.png</normalon>:/icons/resources/icons/checkgray.png</iconset>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
-             <item row="0" column="1">
-              <widget class="QCheckBox" name="checkBasicShowFetch">
+             <item row="1" column="0">
+              <widget class="QToolButton" name="btnDebugBasicEnable">
                <property name="text">
-                <string>Show Fetches</string>
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/resources/icons/checkgray.png</normaloff>
+                 <normalon>:/icons/resources/icons/check.png</normalon>:/icons/resources/icons/checkgray.png</iconset>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="3">
+              <widget class="QLabel" name="label_32">
+               <property name="text">
+                <string>Show Temp Parser</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QToolButton" name="btnDebugBasicShowFetches">
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="resources.qrc">
+                 <normaloff>:/icons/resources/icons/checkgray.png</normaloff>
+                 <normalon>:/icons/resources/icons/check.png</normalon>:/icons/resources/icons/checkgray.png</iconset>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLabel" name="label_29">
+               <property name="text">
+                <string>Show Live Execution</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="5">
+              <widget class="QLabel" name="label_30">
+               <property name="text">
+                <string>Highlight Source</string>
                </property>
               </widget>
              </item>
@@ -247,6 +329,9 @@
         </item>
         <item>
          <widget class="QTabWidget" name="tabDebugBasic">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="currentIndex">
            <number>0</number>
           </property>
@@ -6557,7 +6642,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>0</number>
       </property>
       <property name="elideMode">
        <enum>Qt::ElideLeft</enum>

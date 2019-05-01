@@ -12,33 +12,53 @@
 #include <QtWidgets/QScrollBar>
 
 void MainWindow::debugBasicInit() {
+    debugBasic(false);
     debugBasicDisable();
 
-    ui->checkBasicHighlighting->setChecked(m_basicShowingHighlighted);
-    ui->checkBasicShowFetch->setChecked(m_basicShowingFetches);
-    ui->checkBasicShowTempParse->setChecked(m_basicShowingTempParse);
-    ui->checkBasicLiveExecution->setChecked(m_basicShowingLiveExecution);
+    ui->btnDebugBasicHighlight->setChecked(m_basicShowHighlighted);
+    ui->btnDebugBasicShowFetches->setChecked(m_basicShowFetches);
+    ui->btnDebugBasicShowTempParser->setChecked(m_basicShowTempParser);
+    ui->btnDebugBasicLiveExecution->setChecked(m_basicShowLiveExecution);
 
-    connect(ui->checkBasicHighlighting, &QCheckBox::toggled, this, &MainWindow::debugBasicToggleHighlight);
-    connect(ui->checkBasicShowFetch, &QCheckBox::toggled, this, &MainWindow::debugBasicToggleShowFetch);
-    connect(ui->checkBasicShowTempParse, &QCheckBox::toggled, this, &MainWindow::debugBasicToggleShowTempParse);
-    connect(ui->checkBasicLiveExecution, &QCheckBox::toggled, this, &MainWindow::debugBasicToggleLiveExecution);
+    connect(ui->btnDebugBasicHighlight, &QToolButton::toggled, this, &MainWindow::debugBasicToggleHighlight);
+    connect(ui->btnDebugBasicShowFetches, &QToolButton::toggled, this, &MainWindow::debugBasicToggleShowFetch);
+    connect(ui->btnDebugBasicShowTempParser, &QToolButton::toggled, this, &MainWindow::debugBasicToggleShowTempParse);
+    connect(ui->btnDebugBasicLiveExecution, &QToolButton::toggled, this, &MainWindow::debugBasicToggleLiveExecution);
+    connect(ui->btnDebugBasicEnable, &QToolButton::toggled, this, &MainWindow::debugBasic);
 
-    connect(ui->buttonBasicStep, &QPushButton::clicked, this, &MainWindow::debugBasicStep);
-    connect(ui->buttonBasicStepNext, &QPushButton::clicked, this, &MainWindow::debugBasicStepNext);
-    connect(ui->buttonBasicRun, &QPushButton::clicked, [this]{
-        debug_set_mode(DBG_MODE_BASIC, m_basicShowingFetches);
-        debugBasicToggle();
-    });
+    connect(ui->btnDebugBasicStep, &QPushButton::clicked, this, &MainWindow::debugBasicStep);
+    connect(ui->btnDebugBasicStepNext, &QPushButton::clicked, this, &MainWindow::debugBasicStepNext);
+    connect(ui->btnDebugBasicRun, &QPushButton::clicked, this, &MainWindow::debugBasicToggle);
 
-    ui->basicEdit->setWordWrapMode(m_basicShowingFetches ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);
     ui->basicEdit->setFont(QFont(QStringLiteral("TICELarge"), 11));
-    ui->basicTempEdit->setWordWrapMode(m_basicShowingFetches ? QTextOption::WrapAtWordBoundaryOrAnywhere : QTextOption::NoWrap);
     ui->basicTempEdit->setFont(QFont(QStringLiteral("TICELarge"), 11));
 
     m_basicCurrToken.format.setBackground(QColor(Qt::yellow).lighter(100));
     m_basicCurrLine.format.setBackground(QColor(Qt::blue).lighter(180));
     m_basicCurrLine.format.setProperty(QTextFormat::FullWidthSelection, true);
+}
+
+void MainWindow::debugBasic(bool enable) {
+    ui->tabDebugBasic->setEnabled(enable);
+    ui->btnDebugBasicRun->setEnabled(enable);
+    debug.basicMode = enable;
+    if (enable) {
+        debug_enable_basic_mode(m_basicShowFetches);
+    } else {
+        ui->basicEdit->clear();
+        ui->basicTempEdit->clear();
+        debug_disable_basic_mode();
+    }
+    if (guiDebugBasic == true) {
+        debugBasicToggle();
+    }
+
+    // disable other debugger / var list
+    ui->buttonSend->setEnabled(!enable);
+    ui->buttonReceiveFiles->setEnabled(!enable);
+    ui->buttonReceiveFile->setEnabled(!enable);
+    ui->buttonResendFiles->setEnabled(!enable);
+    ui->buttonRun->setEnabled(!enable);
 }
 
 MainWindow::debug_basic_status_t MainWindow::debugBasicRaise() {
@@ -57,37 +77,36 @@ void MainWindow::debugBasicDisable() {
 
 void MainWindow::debugBasicToggle() {
     bool state = guiDebugBasic;
-    bool live = m_basicShowingLiveExecution;
+
+    if (guiDebug || guiReceive || guiSend) {
+        return;
+    }
 
     if (m_pathRom.isEmpty()) {
         return;
     }
 
-    if (live) {
-        debugBasicToggleLiveExecution();
-    }
+    debug_disable_basic_mode();
 
     if (state) {
         debugBasicDisable();
     }
 
-    if (live) {
-        debugBasicToggleLiveExecution();
-    }
+    debug_enable_basic_mode(m_basicShowFetches);
 
-    emu.debug(!state, DBG_MODE_BASIC);
+    emu.debug(!state, EmuThread::RequestBasicDebugger);
 }
 
 void MainWindow::debugBasicLeave(bool allowRefresh) {
     bool state = guiDebugBasic;
-    bool live = m_basicShowingLiveExecution;
+    bool live = m_basicShowLiveExecution;
 
     if (m_pathRom.isEmpty()) {
         return;
     }
 
     if (allowRefresh && live) {
-        debugBasicToggleLiveExecution();
+        debugBasicToggleLiveExecution(!live);
     }
 
     if (state) {
@@ -95,23 +114,14 @@ void MainWindow::debugBasicLeave(bool allowRefresh) {
     }
 
     if (allowRefresh && live) {
-        debugBasicToggleLiveExecution();
+        debugBasicToggleLiveExecution(live);
     }
 
-    emu.debug(!state, DBG_MODE_BASIC);
+    emu.debug(!state, EmuThread::RequestBasicDebugger);
 }
 
-MainWindow::debug_basic_status_t MainWindow::debugBasicGuiState(bool state) {
-    if (state) {
-        ui->buttonBasicRun->setText(tr("Run"));
-        ui->buttonBasicRun->setIcon(m_iconRun);
-    } else {
-        ui->buttonBasicRun->setText(tr("Stop"));
-        ui->buttonBasicRun->setIcon(m_iconStop);
-    }
-
-    ui->buttonBasicStep->setEnabled(state);
-    ui->buttonBasicStepNext->setEnabled(state);
+void MainWindow::debugBasicClearCache() {
+    debug_enable_basic_mode(m_basicShowFetches);
 
     m_basicPrgmsTokensMap.clear();
     m_basicPrgmsMap.clear();
@@ -124,8 +134,28 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicGuiState(bool state) {
     m_basicPrgmsOriginalCode.push_back(QString());
     m_basicPrgmsFormattedCode.push_back(QString());
 
+    m_basicClearCache = false;
+}
+
+MainWindow::debug_basic_status_t MainWindow::debugBasicGuiState(bool state) {
+    if (state) {
+        ui->btnDebugBasicRun->setText(tr("Run"));
+        ui->btnDebugBasicRun->setIcon(m_iconRun);
+    } else {
+        ui->btnDebugBasicRun->setText(tr("Stop"));
+        ui->btnDebugBasicRun->setIcon(m_iconStop);
+    }
+
+    ui->btnDebugBasicStep->setEnabled(state);
+    ui->btnDebugBasicStepNext->setEnabled(state);
+
+    m_basicClearCache = true;
+
     if (state) {
         return debugBasicUpdate(true);
+    } else if (!m_basicShowLiveExecution) {
+        ui->basicEdit->clear();
+        ui->basicTempEdit->clear();
     }
 
     return DBG_BASIC_NO_EXECUTING_PRGM;
@@ -133,6 +163,10 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicGuiState(bool state) {
 
 MainWindow::debug_basic_status_t MainWindow::debugBasicPgrmLookup(bool allowSwitch, int *idx) {
     const QString *origReference = m_basicOriginalCode;
+
+    if (m_basicClearCache == true) {
+        debugBasicClearCache();
+    }
 
     m_basicTempOpen = false;
 
@@ -179,11 +213,11 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicPgrmLookup(bool allowSwit
                 type == CALC_VAR_TYPE_EQU ||
                 name[1] == '$') {
 
-                if (!m_basicShowingTempParse) {
+                if (!m_basicShowTempParser) {
                     return DBG_BASIC_NO_EXECUTING_PRGM;
                 }
 
-                debugBasicCreateTokenMap(0, prgmBytes, begPC);
+                debugBasicCreateTokenMap(0, prgmBytes);
 
                 if (allowSwitch) {
                     ui->tabDebugBasic->setCurrentIndex(1);
@@ -204,7 +238,7 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicPgrmLookup(bool allowSwit
                 }
 
                 m_basicPrgmsTokensMap.push_back(QList<token_highlight_t>());
-                debugBasicCreateTokenMap(index, prgmBytes, begPC);
+                debugBasicCreateTokenMap(index, prgmBytes);
 
                 m_basicPrgmsMap[var_name] = index;
                 m_basicPrgmsOriginalCode.append(str);
@@ -220,47 +254,91 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicPgrmLookup(bool allowSwit
     return DBG_BASIC_NEED_REFRESH;
 }
 
-/* function to parse the program and store the mapping of all bytes to highlights */
-/* who cares about eating all of the user's ram */
-void MainWindow::debugBasicCreateTokenMap(int idx, const QByteArray &data, int base) {
+// function to parse the program and store the mapping of all bytes to highlights
+// who cares about eating all of the user's ram
+void MainWindow::debugBasicCreateTokenMap(int idx, const QByteArray &data) {
     token_highlight_t posinfo = { 0, 0, 0 };
+    int i = 0;
 
-    for (int i = 0; i < data.size();) {
-        uint8_t token = static_cast<uint8_t>(data[i]);
-        uint8_t tokenNext = i < data.size() - 1 ? static_cast<uint8_t>(data[i + 1]) : static_cast<uint8_t>(-1u);
+    // if we are doing normal debug, we just highlight based on the
+    // entire string from (:,\n) to the next break
+    if (!m_basicShowFetches) {
+        bool instr = false;
+        while (i < data.size()) {
+            int j = 0;
+            while (i < data.size() && data[i] != 0x3F) {
+                uint8_t token = static_cast<uint8_t>(data[i]);
+                uint8_t tokenNext = i < data.size() - 1 ? static_cast<uint8_t>(data[i + 1]) : static_cast<uint8_t>(-1u);
 
-        // check for newline
-        if (token == 0x3F) {
-            posinfo.len = 1;
-            m_basicPrgmsTokensMap[idx].append(posinfo); // need new lines for temp parser
+                // check for : (make sure not in string)
+                if (token == 0x2A) {
+                    instr = !instr;
+                } else if (token == 0x3E && !instr) {
+                    break;
+                }
+
+                // get current token
+                int incr;
+                data_t tokBytes(2);
+                tokBytes[0] = token;
+                tokBytes[1] = tokenNext;
+                std::string tokStr = tivars::TH_Tokenized::tokenToString(tokBytes, &incr, options_t({ {"prettify", true} }));
+
+                if (!tokStr.empty()) {
+                    posinfo.len += utf8_strlen(tokStr);
+                }
+
+                i += incr;
+                j += incr;
+            }
+            j++;
+            while (j) {
+                m_basicPrgmsTokensMap[idx].append(posinfo);
+                j--;
+            }
+            posinfo.offset += posinfo.len + 1;
             posinfo.line++;
-            posinfo.offset++;
+            posinfo.len = 0;
             i++;
-            continue;
         }
+    } else {
+        while (i < data.size()) {
+            uint8_t token = static_cast<uint8_t>(data[i]);
+            uint8_t tokenNext = i < data.size() - 1 ? static_cast<uint8_t>(data[i + 1]) : static_cast<uint8_t>(-1u);
 
-        // get current token
-        int incr;
-        data_t tokBytes(2);
-        tokBytes[0] = token;
-        tokBytes[1] = tokenNext;
-        std::string tokStr = tivars::TH_Tokenized::tokenToString(tokBytes, &incr, options_t({ {"prettify", true} }));
+            // check for newline
+            if (token == 0x3F) {
+                posinfo.len = 1;
+                m_basicPrgmsTokensMap[idx].append(posinfo); // need new lines for temp parser
+                posinfo.line++;
+                posinfo.offset++;
+                i++;
+                continue;
+            }
 
-        if (!tokStr.empty()) {
-            posinfo.len = utf8_strlen(tokStr);
+            // get current token
+            int incr;
+            data_t tokBytes(2);
+            tokBytes[0] = token;
+            tokBytes[1] = tokenNext;
+            std::string tokStr = tivars::TH_Tokenized::tokenToString(tokBytes, &incr, options_t({ {"prettify", true} }));
+
+            if (!tokStr.empty()) {
+                posinfo.len = utf8_strlen(tokStr);
+            }
+
+            if (incr == 2) {
+                m_basicPrgmsTokensMap[idx].append(posinfo);
+                m_basicPrgmsTokensMap[idx].append(posinfo);
+            } else {
+                m_basicPrgmsTokensMap[idx].append(posinfo);
+            }
+
+            if (!tokStr.empty()) {
+                posinfo.offset += posinfo.len;
+            }
+            i += incr;
         }
-
-        if (incr == 2) {
-            m_basicPrgmsTokensMap[idx].append(posinfo);
-            m_basicPrgmsTokensMap[idx].append(posinfo);
-        } else {
-            m_basicPrgmsTokensMap[idx].append(posinfo);
-        }
-
-        if (!tokStr.empty()) {
-            posinfo.offset += posinfo.len;
-        }
-        i += incr;
     }
 }
 
@@ -301,8 +379,9 @@ QString MainWindow::debugBasicGetPrgmName() {
 
 MainWindow::debug_basic_status_t MainWindow::debugBasicUpdate(bool force) {
     static int prevCurPC;
+    static token_highlight_t prevPosinfo = { 0, 0, 0 };
 
-    if (!force && !m_basicShowingLiveExecution) {
+    if (!force && !m_basicShowLiveExecution) {
         return DBG_BASIC_NO_EXECUTING_PRGM;
     }
 
@@ -318,24 +397,32 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicUpdate(bool force) {
 
     int index = 0;
     debug_basic_status_t status = debugBasicPgrmLookup(force, &index);
-    switch (status) {
-        case DBG_BASIC_NEED_REFRESH:
-            if (m_basicOriginalCode != Q_NULLPTR) {
-                if (m_basicTempOpen) {
-                    ui->basicTempEdit->document()->setPlainText(*m_basicOriginalCode);
-                } else {
-                    ui->basicEdit->document()->setPlainText(*m_basicOriginalCode);
-                }
-            }
-            break;
-        case DBG_BASIC_NO_REFRESH:
-            break;
-        default:
-            return DBG_BASIC_NO_EXECUTING_PRGM;
+    if (status == DBG_BASIC_NO_EXECUTING_PRGM) {
+        return DBG_BASIC_NO_EXECUTING_PRGM;
     }
 
     // quick lookup using lists rather than map/hash
     const token_highlight_t posinfo = m_basicPrgmsTokensMap[index][curPC - begPC];
+
+    // skip already highlighted lines
+    if (!m_basicShowFetches &&
+        prevPosinfo.len == posinfo.len &&
+        prevPosinfo.offset == posinfo.offset &&
+        prevPosinfo.line == posinfo.line) {
+        return DBG_BASIC_NO_EXECUTING_PRGM;
+    }
+
+    prevPosinfo = posinfo;
+
+    if (status == DBG_BASIC_NEED_REFRESH) {
+        if (m_basicOriginalCode != Q_NULLPTR) {
+            if (m_basicTempOpen) {
+                ui->basicTempEdit->document()->setPlainText(*m_basicOriginalCode);
+            } else {
+                ui->basicEdit->document()->setPlainText(*m_basicOriginalCode);
+            }
+        }
+    }
 
     if (m_basicTempOpen == false) {
         m_basicCurrToken.cursor = QTextCursor(ui->basicEdit->document());
@@ -359,36 +446,27 @@ MainWindow::debug_basic_status_t MainWindow::debugBasicUpdate(bool force) {
     return DBG_BASIC_SUCCESS;
 }
 
-void MainWindow::debugBasicToggleHighlight() {
-    m_basicShowingHighlighted = !m_basicShowingHighlighted;
+void MainWindow::debugBasicToggleHighlight(bool enabled) {
+    m_basicShowHighlighted = enabled;
     ui->basicEdit->toggleHighlight();
     ui->basicTempEdit->toggleHighlight();
-    debugBasicShowCode();
 }
 
-void MainWindow::debugBasicToggleShowFetch() {
-    m_basicShowingFetches = !m_basicShowingFetches;
-    debug_set_mode(DBG_MODE_BASIC, m_basicShowingFetches);
-    debugBasicShowCode();
+void MainWindow::debugBasicToggleShowFetch(bool enabled) {
+    m_basicClearCache = true;
+    m_basicShowFetches = enabled;
 }
 
-void MainWindow::debugBasicToggleShowTempParse() {
-    m_basicShowingTempParse = !m_basicShowingTempParse;
-    debugBasicShowCode();
+void MainWindow::debugBasicToggleShowTempParse(bool enabled) {
+    m_basicClearCache = true;
+    m_basicShowTempParser = enabled;
 }
 
-void MainWindow::debugBasicToggleLiveExecution() {
-    m_basicShowingLiveExecution = !m_basicShowingLiveExecution;
-    debugBasicShowCode();
+void MainWindow::debugBasicToggleLiveExecution(bool enabled) {
+    m_basicClearCache = true;
+    m_basicShowLiveExecution = enabled;
+    ui->basicEdit->clear();
+    ui->basicTempEdit->clear();
 }
 
-void MainWindow::debugBasicShowCode() {
-    if (m_basicOriginalCode != Q_NULLPTR) {
-        if (m_basicTempOpen) {
-            ui->basicTempEdit->document()->setPlainText(*m_basicOriginalCode);
-        } else {
-            ui->basicEdit->document()->setPlainText(*m_basicOriginalCode);
-        }
-    }
-}
 

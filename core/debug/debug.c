@@ -20,7 +20,7 @@ void debug_init(void) {
     debug.port = (uint8_t*)calloc(DBG_PORT_SIZE, sizeof(uint8_t));
     debug.bufPos = debug.bufErrPos = 0;
     debug.open = false;
-    debug_set_mode(DBG_MODE_ASM, 0);
+    debug_disable_basic_mode();
     gui_console_printf("[CEmu] Initialized Debugger...\n");
 }
 
@@ -43,7 +43,7 @@ void debug_open(int reason, uint32_t data) {
     debug_clear_step();
 
     /* fixup reason for basic debugger */
-    if (debug.mode == DBG_MODE_BASIC) {
+    if (debug.basicMode == true) {
         if (reason == DBG_WATCHPOINT_WRITE) {
             if (data == DBG_BASIC_CURPC) {
                 reason = DBG_BASIC_CURPC_WRITE;
@@ -237,19 +237,18 @@ void debug_set_pc(uint32_t addr) {
 /* internal breakpoints not visible in gui */
 /* the gui should automatically update breakpoints, so it should be */
 /* fine if asm or C also uses these addresses */
-void debug_set_mode(debug_mode_t mode, bool fetches) {
-    if (mode == DBG_MODE_BASIC) {
-        debug_watch(DBG_BASIC_BEGPC, DBG_MASK_WRITE, fetches);
-        debug_watch(DBG_BASIC_CURPC, DBG_MASK_WRITE, fetches);
-        debug_watch(DBG_BASIC_ENDPC, DBG_MASK_WRITE, fetches);
-        debug_watch(DBG_BASIC_SYSHOOKFLAG2, DBG_MASK_READ, !fetches);
-    } else {
-        debug_watch(DBG_BASIC_BEGPC, DBG_MASK_WRITE, false);
-        debug_watch(DBG_BASIC_CURPC, DBG_MASK_WRITE, false);
-        debug_watch(DBG_BASIC_ENDPC, DBG_MASK_WRITE, false);
-        debug_watch(DBG_BASIC_SYSHOOKFLAG2, DBG_MASK_READ, false);
-    }
-    debug.mode = mode;
+void debug_enable_basic_mode(bool fetches) {
+    debug_watch(DBG_BASIC_BEGPC, DBG_MASK_WRITE, fetches);
+    debug_watch(DBG_BASIC_CURPC, DBG_MASK_WRITE, fetches);
+    debug_watch(DBG_BASIC_ENDPC, DBG_MASK_WRITE, fetches);
+    debug_watch(DBG_BASIC_SYSHOOKFLAG2, DBG_MASK_READ, !fetches);
+}
+
+void debug_disable_basic_mode(void) {
+    debug_watch(DBG_BASIC_BEGPC, DBG_MASK_WRITE, false);
+    debug_watch(DBG_BASIC_CURPC, DBG_MASK_WRITE, false);
+    debug_watch(DBG_BASIC_ENDPC, DBG_MASK_WRITE, false);
+    debug_watch(DBG_BASIC_SYSHOOKFLAG2, DBG_MASK_READ, false);
 }
 
 bool debug_get_executing_basic_prgm(char *name) {

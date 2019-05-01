@@ -1853,7 +1853,7 @@ void MainWindow::emuBlocked(int req) {
 void MainWindow::varShow() {
     calc_var_t var;
 
-    if (guiSend || guiDebug) {
+    if (guiSend || guiDebug || guiDebugBasic) {
         return;
     }
 
