@@ -85,6 +85,11 @@ contains(DEFINES, ASMJIT_BUILD_...) {
     } else {
         DEFINES += ASMJIT_BUILD_DEBUG
     }
+    # Judy/optional is only used by jit for now
+    INCLUDEPATH += ../../core/jit/optional/tl
+    HEADERS += ../../core/jit/Judy++.h
+    SOURCES += ../../core/jit/Judy++.cpp
+    LIBS += -lJudy
 }
 
 # These options can be disabled / enabled depending on
