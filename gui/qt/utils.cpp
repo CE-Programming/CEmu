@@ -69,16 +69,16 @@ std::string calc_var_content_string(const calc_var_t &var) {
 }
 
 int utf8_strlen(const std::string &str) {
-    int c,i,ix,q;
-    for (q=0, i=0, ix = static_cast<int>(str.length()); i < ix; i++, q++) {
-        c = static_cast<int>(str[static_cast<size_t>(i)]);
-        if      (c>=0   && c<=127) i+=0;
-        else if ((c & 0xE0) == 0xC0) i+=1;
-        else if ((c & 0xF0) == 0xE0) i+=2;
-        else if ((c & 0xF8) == 0xF0) i+=3;
-        else return 0;
+    if (str.compare("𝑖") == 0 ||
+        str.compare("x̄") == 0 ||
+        str.compare("ȳ") == 0) {
+        return 1;
     }
-    return q;
+    if (str.compare("p̂₂") == 0 ||
+        str.compare("p̂₁") == 0) {
+        return 2;
+    }
+    return QString::fromUtf8(str.c_str()).length();
 }
 
 bool isRunningInDarkMode() {

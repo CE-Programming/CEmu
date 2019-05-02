@@ -41,6 +41,7 @@ void MainWindow::debugBasicInit() {
 void MainWindow::debugBasic(bool enable) {
     ui->tabDebugBasic->setEnabled(enable);
     ui->btnDebugBasicRun->setEnabled(enable);
+    ui->btnDebugBasicEnable->setChecked(enable);
     debug.basicMode = enable;
     if (enable) {
         debug_enable_basic_mode(m_basicShowFetches);
@@ -263,14 +264,17 @@ void MainWindow::debugBasicCreateTokenMap(int idx, const QByteArray &data) {
     // if we are doing normal debug, we just highlight based on the
     // entire string from (:,\n) to the next break
     if (!m_basicShowFetches) {
-        bool instr = false;
         while (i < data.size()) {
+            bool instr = false;
             int j = 0;
             while (i < data.size() && data[i] != 0x3F) {
                 uint8_t token = static_cast<uint8_t>(data[i]);
                 uint8_t tokenNext = i < data.size() - 1 ? static_cast<uint8_t>(data[i + 1]) : static_cast<uint8_t>(-1u);
 
                 // check for : (make sure not in string)
+                if (token == 0x04) {
+                    instr = false;
+                }
                 if (token == 0x2A) {
                     instr = !instr;
                 } else if (token == 0x3E && !instr) {
@@ -285,7 +289,7 @@ void MainWindow::debugBasicCreateTokenMap(int idx, const QByteArray &data) {
                 std::string tokStr = tivars::TH_Tokenized::tokenToString(tokBytes, &incr, { { "prettify", true } });
 
                 if (!tokStr.empty()) {
-                    posinfo.len += utf8_strlen(tokStr);
+                    posinfo.len += utf8_strlen(tokStr.c_str());
                 }
 
                 i += incr;
@@ -324,7 +328,7 @@ void MainWindow::debugBasicCreateTokenMap(int idx, const QByteArray &data) {
             std::string tokStr = tivars::TH_Tokenized::tokenToString(tokBytes, &incr, { {"prettify", true } });
 
             if (!tokStr.empty()) {
-                posinfo.len = utf8_strlen(tokStr);
+                posinfo.len += utf8_strlen(tokStr.c_str());
             }
 
             if (incr == 2) {
