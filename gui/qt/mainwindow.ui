@@ -4136,7 +4136,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QTableWidget" name="breakpoints">
+         <widget class="TableWidget" name="breakpoints">
           <property name="enabled">
            <bool>true</bool>
           </property>
@@ -4177,10 +4177,19 @@
            <set>QAbstractItemView::AnyKeyPressed|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
           </property>
           <property name="showDropIndicator" stdset="0">
-           <bool>false</bool>
+           <bool>true</bool>
+          </property>
+          <property name="dragEnabled">
+           <bool>true</bool>
           </property>
           <property name="dragDropOverwriteMode">
            <bool>false</bool>
+          </property>
+          <property name="dragDropMode">
+           <enum>QAbstractItemView::InternalMove</enum>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
           </property>
           <property name="selectionBehavior">
            <enum>QAbstractItemView::SelectRows</enum>
@@ -4284,7 +4293,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QTableWidget" name="watchpoints">
+         <widget class="TableWidget" name="watchpoints">
           <property name="enabled">
            <bool>true</bool>
           </property>
@@ -4322,10 +4331,19 @@
            <set>QAbstractItemView::AnyKeyPressed|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
           </property>
           <property name="showDropIndicator" stdset="0">
-           <bool>false</bool>
+           <bool>true</bool>
+          </property>
+          <property name="dragEnabled">
+           <bool>true</bool>
           </property>
           <property name="dragDropOverwriteMode">
            <bool>false</bool>
+          </property>
+          <property name="dragDropMode">
+           <enum>QAbstractItemView::InternalMove</enum>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
           </property>
           <property name="selectionBehavior">
            <enum>QAbstractItemView::SelectRows</enum>
@@ -4433,7 +4451,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QTableWidget" name="ports">
+         <widget class="TableWidget" name="ports">
           <property name="enabled">
            <bool>true</bool>
           </property>
@@ -4471,10 +4489,19 @@
            <set>QAbstractItemView::AnyKeyPressed|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
           </property>
           <property name="showDropIndicator" stdset="0">
-           <bool>false</bool>
+           <bool>true</bool>
+          </property>
+          <property name="dragEnabled">
+           <bool>true</bool>
           </property>
           <property name="dragDropOverwriteMode">
            <bool>false</bool>
+          </property>
+          <property name="dragDropMode">
+           <enum>QAbstractItemView::InternalMove</enum>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
           </property>
           <property name="selectionBehavior">
            <enum>QAbstractItemView::SelectRows</enum>
@@ -6533,7 +6560,7 @@
           </property>
           <layout class="QGridLayout" name="gridLayout_12">
            <item row="2" column="0">
-            <widget class="QTableWidget" name="varLoadedView">
+            <widget class="TableWidget" name="varLoadedView">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                <horstretch>0</horstretch>
@@ -6546,11 +6573,26 @@
              <property name="contextMenuPolicy">
               <enum>Qt::CustomContextMenu</enum>
              </property>
+             <property name="editTriggers">
+              <set>QAbstractItemView::AnyKeyPressed|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
+             </property>
              <property name="showDropIndicator" stdset="0">
-              <bool>false</bool>
+              <bool>true</bool>
+             </property>
+             <property name="dragEnabled">
+              <bool>true</bool>
              </property>
              <property name="dragDropOverwriteMode">
               <bool>false</bool>
+             </property>
+             <property name="dragDropMode">
+              <enum>QAbstractItemView::InternalMove</enum>
+             </property>
+             <property name="defaultDropAction">
+              <enum>Qt::IgnoreAction</enum>
+             </property>
+             <property name="selectionMode">
+              <enum>QAbstractItemView::SingleSelection</enum>
              </property>
              <property name="selectionBehavior">
               <enum>QAbstractItemView::SelectRows</enum>
@@ -9094,7 +9136,7 @@ QPushButton:pressed {
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_20">
         <item>
-         <widget class="QTableWidget" name="slotView">
+         <widget class="TableWidget" name="slotView">
           <property name="enabled">
            <bool>true</bool>
           </property>
@@ -9132,10 +9174,19 @@ QPushButton:pressed {
            <set>QAbstractItemView::AnyKeyPressed|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
           </property>
           <property name="showDropIndicator" stdset="0">
-           <bool>false</bool>
+           <bool>true</bool>
+          </property>
+          <property name="dragEnabled">
+           <bool>true</bool>
           </property>
           <property name="dragDropOverwriteMode">
            <bool>false</bool>
+          </property>
+          <property name="dragDropMode">
+           <enum>QAbstractItemView::InternalMove</enum>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
           </property>
           <property name="selectionBehavior">
            <enum>QAbstractItemView::SelectRows</enum>
@@ -9910,6 +9961,11 @@ QPushButton:pressed {
    <class>HexWidget</class>
    <extends>QPlainTextEdit</extends>
    <header>debugger/hexwidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>TableWidget</class>
+   <extends>QTableWidget</extends>
+   <header>tablewidget.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
