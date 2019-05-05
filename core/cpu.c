@@ -887,7 +887,7 @@ void cpu_execute(void) {
             goto cpu_execute_bli_continue;
         }
         do {
-            if (jitTryExecute()) {
+            if (!cpu.PREFIX && !cpu.SUFFIX && jitTryExecute()) {
                 continue;
             }
             /* fetch opcode */

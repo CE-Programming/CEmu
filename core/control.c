@@ -21,6 +21,10 @@ static uint8_t control_read(const uint16_t pio, bool peek) {
     uint8_t value;
     (void)peek;
 
+    if (index >= 0x80) {
+        return 0;
+    }
+
     switch (index) {
         case 0x02:
             value = control.readBatteryStatus;
@@ -76,6 +80,10 @@ static void control_write(const uint16_t pio, const uint8_t byte, bool poke) {
     unsigned int i;
     uint8_t index = (uint8_t)pio;
     (void)poke;
+
+    if (index >= 0x80) {
+        return;
+    }
 
     switch (index) {
         case 0x00:

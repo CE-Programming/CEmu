@@ -51,6 +51,7 @@ typedef struct {
     union {
         short_reg_t af;
         uint16_t AF;
+        uint32_t AFL;
         struct {
             union {
                 uint8_t F;
@@ -144,8 +145,16 @@ typedef struct {
         };
     };
     uint32_t rawPC;
-    uint16_t I;
-    uint8_t R, MBASE;
+    union {
+        uint16_t I;
+        uint32_t IL;
+    };
+    union {
+        struct {
+            uint8_t R, MBASE;
+        };
+        uint32_t MBRL;
+    };
 } eZ80registers_t;
 
 typedef enum {

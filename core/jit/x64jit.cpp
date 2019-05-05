@@ -326,10 +326,10 @@ struct Gen {
         assert(numX86Flags == Support::popcnt(x86Flags));
         if (numX86Flags <= 2 && !Support::bitTest(x86Flags, u(x86::Flag::AuxCarry))) {
             bool high = false;
-            x86::Flag highX86Flag;
+            x86::Flag x86Flag[2];
             uint8_t rotAmts[2] = { 0, 0 };
             for (Support::BitWordIterator<typeof(x86Flags)> it(x86Flags); it.hasNext(); high = true)
-                a.emit(x86::setccFromFlag(highX86Flag = x86::Flag(it.next())),
+                a.emit(x86::setccFromFlag(x86Flag[high] = x86::Flag(it.next())),
                        x86::gpb(x86::Gp::kIdAx, high));
             if (constAnd != Support::allOnes<typeof(constAnd)>())
                 a.and_(x86::gpb_lo(mat(z80::Reg::AF, true)), constAnd);
@@ -338,7 +338,7 @@ struct Gen {
             for (z80::Flag z80Flag{}; z80Flag != z80::Flag::End; z80Flag = next(z80Flag)) {
                 if (!state(z80Flag).isInX86Flag())
                     continue;
-                high = state(z80Flag).x86Flag() == highX86Flag;
+                high = state(z80Flag).x86Flag() != x86Flag[0];
                 auto x86Reg = x86::gpb(x86::Gp::kIdAx, high);
                 if (rotAmts[high] != u(z80Flag)) {
                     a.rol(x86Reg, (u(z80Flag) - rotAmts[high]) & 7);
@@ -376,21 +376,6 @@ struct Gen {
                         matchingFlags |= Support::bitMask(u(x86Flag));
                     }
                 }
-#if 0
-                for (Support::BitWordIterator<typeof(constAnd)> it(~constAnd); it.hasNext(); ) {
-                    auto x86Flag = x86::Flag(it.next());
-                    if (!state(x86Flag).isConstant() || state(x86Flag).constantValue())
-                        continue;
-                    matchingFlags |= Support::bitMask(u(x86Flag));
-                }
-                for (Support::BitWordIterator<typeof(constOr)> it(constOr); it.hasNext(); ) {
-                    auto x86Flag = x86::Flag(it.next());
-                    if (!state(x86Flag).isConstant() || !state(x86Flag).constantValue())
-                        continue;
-                    constOr &= ~Support::bitMask(u(x86Flag));
-                    matchingFlags |= Support::bitMask(u(x86Flag));
-                }
-#endif
             }
             if (constAnd != Support::allOnes<typeof(constAnd)>())
                 a.and_(x86::gpb_lo(mat(z80::Reg::AF, true)), constAnd);
@@ -490,6 +475,35 @@ struct Gen {
         state(x86::Flag::Zero) = x86::Flag::Zero;
         state(x86::Flag::Sign) = x86::Flag::Sign;
         state(x86::Flag::Overflow) = x86::Flag::Overflow;
+    }
+
+    void rota(bool carry, bool left) {
+        if (!carry)
+            ensureZ80CarryInX86Carry();
+        a.emit(carry ? left ? x86::Inst::kIdRol : x86::Inst::kIdRor
+                     : left ? x86::Inst::kIdRcl : x86::Inst::kIdRcr,
+               access(z80::Reg::AF, true, true), 1);
+        // Update Z80 flags
+        state(z80::Flag::Carry) = x86::Flag::Carry;
+        state(z80::Flag::AddSub) = false;
+        state(z80::Flag::HalfCarry) = false;
+        // Update X86 flags
+        state(x86::Flag::Carry) = x86::Flag::Carry;
+        state(x86::Flag::Overflow) = {};
+    }
+
+    void cpl() {
+        a.not_(access(z80::Reg::AF, true, true));
+        // Update Z80 flags
+        state(z80::Flag::AddSub) = true;
+        state(z80::Flag::HalfCarry) = true;
+    }
+
+    void scf() {
+        // Update Z80 flags
+        state(z80::Flag::Carry) = true;
+        state(z80::Flag::AddSub) = false;
+        state(z80::Flag::HalfCarry) = false;
     }
 
     void ld(z80::Reg z80Dst, bool highDst, z80::Reg z80Src, bool highSrc) {
@@ -709,21 +723,27 @@ struct Gen {
             case 0004:           incdec(false, z80::Reg::BC,  true); break; // INC B
             case 0005:           incdec( true, z80::Reg::BC,  true); break; // DEC B
             case 0006:                     return ldi(z80::Reg::BC,  true); // LD B,n
+            case 0007:                           rota( true,  true); break; // RLCA
             case 0014:           incdec(false, z80::Reg::BC, false); break; // INC C
             case 0015:           incdec( true, z80::Reg::BC, false); break; // DEC C
             case 0016:                     return ldi(z80::Reg::BC, false); // LD C,n
+            case 0017:                           rota( true, false); break; // RRCA
             case 0024:           incdec(false, z80::Reg::DE,  true); break; // INC D
             case 0025:           incdec( true, z80::Reg::DE,  true); break; // DEC D
             case 0026:                     return ldi(z80::Reg::DE,  true); // LD D,n
+            case 0027:                           rota(false,  true); break; // RLA
             case 0034:           incdec(false, z80::Reg::DE, false); break; // INC E
             case 0035:           incdec( true, z80::Reg::DE, false); break; // DEC E
             case 0036:                     return ldi(z80::Reg::DE, false); // LD E,n
+            case 0037:                           rota(false, false); break; // RRA
             case 0044:           incdec(false, z80::Reg::HL,  true); break; // INC H
             case 0045:           incdec( true, z80::Reg::HL,  true); break; // DEC H
             case 0046:                     return ldi(z80::Reg::HL,  true); // LD H,n
             case 0054:           incdec(false, z80::Reg::HL, false); break; // INC L
             case 0055:           incdec( true, z80::Reg::HL, false); break; // DEC L
             case 0056:                     return ldi(z80::Reg::HL, false); // LD L,n
+            case 0057:                                        cpl(); break; // CPL
+            case 0067:                                        scf(); break; // SCF
             case 0074:           incdec(false, z80::Reg::AF,  true); break; // INC A
             case 0075:           incdec( true, z80::Reg::AF,  true); break; // DEC A
             case 0076:                     return ldi(z80::Reg::AF,  true); // LD A,n
@@ -940,7 +960,7 @@ void jitReportWrite(uint32_t address, uint8_t value) {
 
 bool jitTryExecute() {
     uint32_t address = cpu.ADL ? kAdlFlag | (cpu.registers.PC & 0xFFFFFF)
-                                          : cpu.registers.MBASE << 16 | (cpu.registers.PC & 0xFFFF);
+                               : cpu.registers.MBASE << 16 | (cpu.registers.PC & 0xFFFF);
     do {
         if (auto block = blocks.find(address)) {
             uint32_t address = dispatch(&cpu, cpu.cycles - cpu.next, (*block)->entry);
