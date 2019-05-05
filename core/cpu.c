@@ -18,15 +18,17 @@
 */
 
 #include "cpu.h"
-#include "emu.h"
-#include "mem.h"
+
 #include "bus.h"
-#include "defines.h"
 #include "control.h"
+#include "debug/debug.h"
+#include "defines.h"
+#include "emu.h"
+#include "interrupt.h"
+#include "jit/jit.h"
+#include "mem.h"
 #include "registers.h"
 #include "schedule.h"
-#include "interrupt.h"
-#include "debug/debug.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -885,6 +887,9 @@ void cpu_execute(void) {
             goto cpu_execute_bli_continue;
         }
         do {
+            if (jitTryExecute()) {
+                continue;
+            }
             /* fetch opcode */
             context.opcode = cpu_fetch_byte();
             r->R += 2;

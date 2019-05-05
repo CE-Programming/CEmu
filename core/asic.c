@@ -1,21 +1,23 @@
 #include "asic.h"
-#include "cpu.h"
-#include "misc.h"
-#include "mem.h"
-#include "lcd.h"
-#include "spi.h"
-#include "usb.h"
+
+#include "backlight.h"
 #include "bus.h"
+#include "control.h"
+#include "cpu.h"
 #include "emu.h"
 #include "flash.h"
-#include "timers.h"
-#include "sha256.h"
-#include "keypad.h"
-#include "control.h"
-#include "schedule.h"
 #include "interrupt.h"
-#include "backlight.h"
+#include "jit/jit.h"
+#include "keypad.h"
+#include "lcd.h"
+#include "mem.h"
+#include "misc.h"
 #include "realclock.h"
+#include "schedule.h"
+#include "sha256.h"
+#include "spi.h"
+#include "timers.h"
+#include "usb.h"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -81,6 +83,7 @@ static void plug_devices(void) {
 
 void asic_init(void) {
     /* First, initilize memory and CPU */
+    jitFlush();
     mem_init();
     cpu_init();
 

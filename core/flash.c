@@ -1,5 +1,7 @@
 #include "flash.h"
+
 #include "emu.h"
+#include "jit/jit.h"
 #include "os/os.h"
 
 #include <string.h>
@@ -9,6 +11,7 @@
 flash_state_t flash;
 
 static void flash_set_map(uint8_t map) {
+    jitFlush();
     flash.map = map & 0x0F;
     if (map & 8) {
         flash.mask = 0xFFFF;
@@ -59,6 +62,7 @@ static void flash_write(const uint16_t pio, const uint8_t byte, bool poke) {
             flash_set_map(byte);
             break;
         case 0x05:
+            jitFlush(); /* changing flash wait states */
             flash.waitStates = byte + 6;
             break;
         case 0x08:

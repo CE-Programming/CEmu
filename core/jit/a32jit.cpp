@@ -1,4 +1,4 @@
-#if defined(JIT_SUPPORT) && defined(JIT_BACKEND_X86)
+#if defined(JIT_SUPPORT) && defined(JIT_BACKEND_ARM)
 
 #include "jit.h"
 

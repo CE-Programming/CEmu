@@ -1,11 +1,13 @@
 #include "mem.h"
-#include "emu.h"
-#include "cpu.h"
-#include "lcd.h"
+
 #include "bus.h"
-#include "flash.h"
 #include "control.h"
+#include "cpu.h"
 #include "debug/debug.h"
+#include "emu.h"
+#include "flash.h"
+#include "jit/jit.h"
+#include "lcd.h"
 
 #include <assert.h>
 #include <string.h>
@@ -68,6 +70,7 @@ static uint32_t flash_block(uint32_t *addr, uint32_t *size) {
     if (*addr <= mask && flash.mapped) {
         /* assume this will crash */
         if (flash.waitStates == 6) {
+            jitFlush(); /* changing flash wait states */
             flash.waitStates = 10;
             cpu_crash("[CEmu] Reset triggered, flash data not latched.\n");
         }
@@ -698,6 +701,7 @@ void mem_write_cpu(uint32_t addr, uint8_t value) {
         gui_console_printf("[CEmu] NMI reset caused by writing to protected memory (%#06x through %#06x) at address %#06x from unprivileged code.\n", control.protectedStart, control.protectedEnd, addr);
         cpu_nmi();
     } else { /* writes to protected memory are ignored */
+        jitReportWrite(addr, value);
         switch((addr >> 20) & 0xF) {
                 /* FLASH */
             case 0x0: case 0x1: case 0x2: case 0x3:

@@ -58,30 +58,28 @@ CONFIG += c++11 console
 DEFINES += DEBUG_SUPPORT
 
 !isEmpty(NO_JIT) {
+    SOURCES += ../../core/jit/dummyjit.c
 } else:equals(QMAKE_HOST.arch, x86) {
     DEFINES += JIT_SUPPORT JIT_BACKEND_X86 ASMJIT_BUILD_X86
-    HEADERS += ../../core/jit/x86jit.h
     SOURCES += ../../core/jit/x86jit.cpp
 } else:equals(QMAKE_HOST.arch, x86_64) {
     DEFINES += JIT_SUPPORT JIT_BACKEND_X64 ASMJIT_BUILD_X86
-    HEADERS += ../../core/jit/x64jit.h
     SOURCES += ../../core/jit/x64jit.cpp
 } else:equals(QMAKE_HOST.arch, arm) {
     DEFINES += JIT_SUPPORT JIT_BACKEND_ARM ASMJIT_BUILD_ARM
-    HEADERS += ../../core/jit/armjit.h
-    SOURCES += ../../core/jit/armjit.cpp
+    SOURCES += ../../core/jit/a32jit.cpp
 } else:equals(QMAKE_HOST.arch, aarch64) {
     DEFINES += JIT_SUPPORT JIT_BACKEND_AARCH64 ASMJIT_BUILD_ARM
-    HEADERS += ../../core/jit/aarch64jit.h
-    SOURCES += ../../core/jit/aarch64jit.cpp
+    SOURCES += ../../core/jit/a64jit.cpp
 }
 contains(DEFINES, ASMJIT_BUILD_...) {
-    DEFINES += ASMJIT_BUILD_EMBED ASMJIT_DISABLE_BUILDER ASMJIT_DISABLE_COMPILER ASMJIT_DISABLE_LOGGING ASMJIT_DISABLE_TEXT ASMJIT_DISABLE_INST_API
+    DEFINES += ASMJIT_BUILD_EMBED ASMJIT_DISABLE_BUILDER ASMJIT_DISABLE_COMPILER ASMJIT_DISABLE_INST_API
     INCLUDEPATH += ../../core/jit/asmjit/src
-    HEADERS += $$files(../../core/jit/asmjit/src/asmjit/*.h, true)
+    HEADERS += $$files(../../core/jit/asmjit/src/asmjit/*.h, true) ../../core/jit/jit.h
     SOURCES += $$files(../../core/jit/asmjit/src/asmjit/*.cpp, true)
+    LIBS += -lrt
     CONFIG(release, debug|release) {
-        DEFINES += ASMJIT_BUILD_RELEASE
+        DEFINES += ASMJIT_BUILD_RELEASE ASMJIT_DISABLE_TEXT ASMJIT_DISABLE_LOGGING
     } else {
         DEFINES += ASMJIT_BUILD_DEBUG
     }

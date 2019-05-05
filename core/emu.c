@@ -17,10 +17,6 @@
 #include <emscripten.h>
 #endif
 
-#ifdef JIT_SUPPORT
-#include "jit/jit.h"
-#endif
-
 #define IMAGE_VERSION 0xCECE0015
 
 void EMSCRIPTEN_KEEPALIVE emu_exit(void) {
@@ -236,10 +232,6 @@ rerr:
 
     if (state == EMU_STATE_INVALID) {
         asic_free();
-    } else {
-#ifdef JIT_SUPPORT
-        jit();
-#endif
     }
 
     return state;

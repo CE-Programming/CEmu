@@ -116,6 +116,7 @@ class Util {
         Word index;
         Ref1(Judy1 &judy, Word index) : judy(judy), index(index) {}
     public:
+        operator bool() const { return judy.Test(index); }
         Ref1 &operator=(bool value) {
             (judy.*(value ? &Judy1::Set : &Judy1::Unset))(index);
             return *this;
@@ -134,7 +135,9 @@ public:
     using key_type = Key;
     using value_type = Value;
     Value &operator[](Key key) { return *reinterpret_cast<Value *>(Ins(Util::from(key))); }
+    Value *find(Key key) { return reinterpret_cast<Value *>(Get(Util::from(key))); }
     void clear() { FreeArray(); }
+    bool empty() const { return Empty(); }
     Size size() const { return Count(); }
     Size count(Key first) const { return Count(Util::from(first)); }
     Size count(Key first, Key last) const { return Count(Util::from(first), Util::from(last)); }
@@ -162,6 +165,7 @@ public:
     bool operator[](Key key) const { return Test(Util::from(key)); }
     Util::Ref1 operator[](Key key) { return Util::Ref1(*this, Util::from(key)); }
     void clear() { FreeArray(); }
+    bool empty() const { return Empty(); }
     Size size() const { return Count(); }
     Size count(Key first) const { return Count(Util::from(first)); }
     Size count(Key first, Key last) const { return Count(Util::from(first), Util::from(last)); }
