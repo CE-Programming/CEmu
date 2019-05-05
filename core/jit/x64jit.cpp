@@ -523,8 +523,8 @@ struct Gen {
         return true;
     }
 
-    bool addsub(bool sub, z80::Reg z80Reg, bool high) {
-        a.emit(sub ? x86::Inst::kIdSub : x86::Inst::kIdAdd,
+    void addsubcp(bool sub, bool cp, z80::Reg z80Reg, bool high) {
+        a.emit(sub ? cp ? x86::Inst::kIdCmp : x86::Inst::kIdSub : x86::Inst::kIdAdd,
                access(z80::Reg::AF, true, true), access(z80Reg, high));
         // Update Z80 flags
         state(z80::Flag::Carry) = x86::Flag::Carry;
@@ -540,10 +540,9 @@ struct Gen {
         state(x86::Flag::Zero) = x86::Flag::Zero;
         state(x86::Flag::Sign) = x86::Flag::Sign;
         state(x86::Flag::Overflow) = x86::Flag::Overflow;
-        return true;
     }
 
-    bool adcsbc(bool sbc, z80::Reg z80Reg, bool high) {
+    void adcsbc(bool sbc, z80::Reg z80Reg, bool high) {
         ensureZ80CarryInX86Carry();
         a.emit(sbc ? x86::Inst::kIdSbb : x86::Inst::kIdAdc,
                access(z80::Reg::AF, true, true), access(z80Reg, high));
@@ -561,28 +560,18 @@ struct Gen {
         state(x86::Flag::Zero) = x86::Flag::Zero;
         state(x86::Flag::Sign) = x86::Flag::Sign;
         state(x86::Flag::Overflow) = x86::Flag::Overflow;
-        return true;
     }
 
-    void zeroa(bool sub) {
-        x86::Gp af = x86::gpd(mat(z80::Reg::AF, true));
-        a.and_(af, Support::bitMask(u(z80::Flag::X), u(z80::Flag::Y)));
-        a.or_(af, Support::bitMask(u(z80::Flag::Zero),
-                                   u(sub ? z80::Flag::AddSub : z80::Flag::ParityOverflow)));
+    void subxorcpaa(bool sub, bool cp) {
+        if (!cp)
+            a.mov(x86::gpb_hi(mat(z80::Reg::AF, true)), 0);
         // Update Z80 flags
-        state(z80::Flag::Carry) = z80::Flag::Carry;
-        state(z80::Flag::AddSub) = z80::Flag::AddSub;
-        state(z80::Flag::ParityOverflow) = z80::Flag::ParityOverflow;
-        state(z80::Flag::HalfCarry) = z80::Flag::HalfCarry;
-        state(z80::Flag::Zero) = z80::Flag::Zero;
-        state(z80::Flag::Sign) = z80::Flag::Sign;
-        // Update X86 flags
-        state(x86::Flag::Carry) = false;
-        state(x86::Flag::Parity) = {};
-        state(x86::Flag::AuxCarry) = {};
-        state(x86::Flag::Zero) = {};
-        state(x86::Flag::Sign) = false;
-        state(x86::Flag::Overflow) = false;
+        state(z80::Flag::Carry) = false;
+        state(z80::Flag::AddSub) = sub;
+        state(z80::Flag::ParityOverflow) = !sub;
+        state(z80::Flag::HalfCarry) = false;
+        state(z80::Flag::Zero) = true;
+        state(z80::Flag::Sign) = false;
     }
 
     void andxoror(bool half, bool x, z80::Reg z80Reg, bool high) {
@@ -604,9 +593,8 @@ struct Gen {
         state(x86::Flag::Overflow) = false;
     }
 
-    void tstaa(bool half) {
-        auto x86Reg = mat(z80::Reg::AF);
-        a.test(x86::gpb_hi(x86Reg), x86::gpb_hi(x86Reg));
+    void andortstaa(bool half) {
+        a.test(x86::gpb_hi(mat(z80::Reg::AF)), x86::gpb_hi(mat(z80::Reg::AF)));
         // Update Z80 flags
         state(z80::Flag::Carry) = false;
         state(z80::Flag::AddSub) = false;
@@ -621,6 +609,76 @@ struct Gen {
         state(x86::Flag::Zero) = x86::Flag::Zero;
         state(x86::Flag::Sign) = x86::Flag::Sign;
         state(x86::Flag::Overflow) = false;
+    }
+
+    bool addsubcpi(bool sub, bool cp) {
+        uint8_t imm;
+        if (!fetch(imm))
+            return false;
+        a.emit(sub ? cp ? x86::Inst::kIdCmp : x86::Inst::kIdSub : x86::Inst::kIdAdd,
+               access(z80::Reg::AF, true, true), imm);
+        // Update Z80 flags
+        state(z80::Flag::Carry) = x86::Flag::Carry;
+        state(z80::Flag::AddSub) = sub;
+        state(z80::Flag::ParityOverflow) = x86::Flag::Overflow;
+        state(z80::Flag::HalfCarry) = x86::Flag::AuxCarry;
+        state(z80::Flag::Zero) = x86::Flag::Zero;
+        state(z80::Flag::Sign) = x86::Flag::Sign;
+        // Update X86 flags
+        state(x86::Flag::Carry) = x86::Flag::Carry;
+        state(x86::Flag::Parity) = x86::Flag::Parity;
+        state(x86::Flag::AuxCarry) = x86::Flag::AuxCarry;
+        state(x86::Flag::Zero) = x86::Flag::Zero;
+        state(x86::Flag::Sign) = x86::Flag::Sign;
+        state(x86::Flag::Overflow) = x86::Flag::Overflow;
+        return true;
+    }
+
+    bool adcsbci(bool sbc) {
+        uint8_t imm;
+        if (!fetch(imm))
+            return false;
+        ensureZ80CarryInX86Carry();
+        a.emit(sbc ? x86::Inst::kIdSbb : x86::Inst::kIdAdc,
+               access(z80::Reg::AF, true, true), imm);
+        // Update Z80 flags
+        state(z80::Flag::Carry) = x86::Flag::Carry;
+        state(z80::Flag::AddSub) = sbc;
+        state(z80::Flag::ParityOverflow) = x86::Flag::Overflow;
+        state(z80::Flag::HalfCarry) = x86::Flag::AuxCarry;
+        state(z80::Flag::Zero) = x86::Flag::Zero;
+        state(z80::Flag::Sign) = x86::Flag::Sign;
+        // Update X86 flags
+        state(x86::Flag::Carry) = x86::Flag::Carry;
+        state(x86::Flag::Parity) = x86::Flag::Parity;
+        state(x86::Flag::AuxCarry) = x86::Flag::AuxCarry;
+        state(x86::Flag::Zero) = x86::Flag::Zero;
+        state(x86::Flag::Sign) = x86::Flag::Sign;
+        state(x86::Flag::Overflow) = x86::Flag::Overflow;
+        return true;
+    }
+
+    bool andxorori(bool half, bool x) {
+        uint8_t imm;
+        if (!fetch(imm))
+            return false;
+        a.emit(half ? x86::Inst::kIdAnd : x ? x86::Inst::kIdXor : x86::Inst::kIdOr,
+               access(z80::Reg::AF, true, true), imm);
+        // Update Z80 flags
+        state(z80::Flag::Carry) = false;
+        state(z80::Flag::AddSub) = false;
+        state(z80::Flag::ParityOverflow) = x86::Flag::Parity;
+        state(z80::Flag::HalfCarry) = half;
+        state(z80::Flag::Zero) = x86::Flag::Zero;
+        state(z80::Flag::Sign) = x86::Flag::Sign;
+        // Update X86 flags
+        state(x86::Flag::Carry) = false;
+        state(x86::Flag::Parity) = x86::Flag::Parity;
+        state(x86::Flag::AuxCarry) = {};
+        state(x86::Flag::Zero) = x86::Flag::Zero;
+        state(x86::Flag::Sign) = x86::Flag::Sign;
+        state(x86::Flag::Overflow) = false;
+        return true;
     }
 
     bool fetch(uint8_t &value) {
@@ -718,59 +776,74 @@ struct Gen {
             case 0174: ld(z80::Reg::AF,  true, z80::Reg::HL,  true); break; // LD A,H
             case 0175: ld(z80::Reg::AF,  true, z80::Reg::HL, false); break; // LD A,L
             case 0177:                                               break; // LD A,A
-            case 0200:           return addsub(false, z80::Reg::BC,  true); // ADD A,B
-            case 0201:           return addsub(false, z80::Reg::BC, false); // ADD A,C
-            case 0202:           return addsub(false, z80::Reg::DE,  true); // ADD A,D
-            case 0203:           return addsub(false, z80::Reg::DE, false); // ADD A,E
-            case 0204:           return addsub(false, z80::Reg::HL,  true); // ADD A,H
-            case 0205:           return addsub(false, z80::Reg::HL, false); // ADD A,L
-            case 0207:           return addsub(false, z80::Reg::AF,  true); // ADD A,A
-            case 0210:           return adcsbc(false, z80::Reg::BC,  true); // ADC A,B
-            case 0211:           return adcsbc(false, z80::Reg::BC, false); // ADC A,C
-            case 0212:           return adcsbc(false, z80::Reg::DE,  true); // ADC A,D
-            case 0213:           return adcsbc(false, z80::Reg::DE, false); // ADC A,E
-            case 0214:           return adcsbc(false, z80::Reg::HL,  true); // ADC A,H
-            case 0215:           return adcsbc(false, z80::Reg::HL, false); // ADC A,L
-            case 0217:           return adcsbc(false, z80::Reg::AF,  true); // ADC A,A
-            case 0220:           return addsub( true, z80::Reg::BC,  true); // SUB A,B
-            case 0221:           return addsub( true, z80::Reg::BC, false); // SUB A,C
-            case 0222:           return addsub( true, z80::Reg::DE,  true); // SUB A,D
-            case 0223:           return addsub( true, z80::Reg::DE, false); // SUB A,E
-            case 0224:           return addsub( true, z80::Reg::HL,  true); // SUB A,H
-            case 0225:           return addsub( true, z80::Reg::HL, false); // SUB A,L
-            case 0227:                                 zeroa( true); break; // SUB A,A
-            case 0230:           return adcsbc( true, z80::Reg::BC,  true); // SBC A,B
-            case 0231:           return adcsbc( true, z80::Reg::BC, false); // SBC A,C
-            case 0232:           return adcsbc( true, z80::Reg::DE,  true); // SBC A,D
-            case 0233:           return adcsbc( true, z80::Reg::DE, false); // SBC A,E
-            case 0234:           return adcsbc( true, z80::Reg::HL,  true); // SBC A,H
-            case 0235:           return adcsbc( true, z80::Reg::HL, false); // SBC A,L
-            case 0237:           return adcsbc( true, z80::Reg::AF,  true); // SBC A,A
+            case 0200:  addsubcp(false, false, z80::Reg::BC,  true); break; // ADD A,B
+            case 0201:  addsubcp(false, false, z80::Reg::BC, false); break; // ADD A,C
+            case 0202:  addsubcp(false, false, z80::Reg::DE,  true); break; // ADD A,D
+            case 0203:  addsubcp(false, false, z80::Reg::DE, false); break; // ADD A,E
+            case 0204:  addsubcp(false, false, z80::Reg::HL,  true); break; // ADD A,H
+            case 0205:  addsubcp(false, false, z80::Reg::HL, false); break; // ADD A,L
+            case 0207:  addsubcp(false, false, z80::Reg::AF,  true); break; // ADD A,A
+            case 0210:           adcsbc(false, z80::Reg::BC,  true); break; // ADC A,B
+            case 0211:           adcsbc(false, z80::Reg::BC, false); break; // ADC A,C
+            case 0212:           adcsbc(false, z80::Reg::DE,  true); break; // ADC A,D
+            case 0213:           adcsbc(false, z80::Reg::DE, false); break; // ADC A,E
+            case 0214:           adcsbc(false, z80::Reg::HL,  true); break; // ADC A,H
+            case 0215:           adcsbc(false, z80::Reg::HL, false); break; // ADC A,L
+            case 0217:           adcsbc(false, z80::Reg::AF,  true); break; // ADC A,A
+            case 0220:  addsubcp( true, false, z80::Reg::BC,  true); break; // SUB A,B
+            case 0221:  addsubcp( true, false, z80::Reg::BC, false); break; // SUB A,C
+            case 0222:  addsubcp( true, false, z80::Reg::DE,  true); break; // SUB A,D
+            case 0223:  addsubcp( true, false, z80::Reg::DE, false); break; // SUB A,E
+            case 0224:  addsubcp( true, false, z80::Reg::HL,  true); break; // SUB A,H
+            case 0225:  addsubcp( true, false, z80::Reg::HL, false); break; // SUB A,L
+            case 0227:                     subxorcpaa( true, false); break; // SUB A,A
+            case 0230:           adcsbc( true, z80::Reg::BC,  true); break; // SBC A,B
+            case 0231:           adcsbc( true, z80::Reg::BC, false); break; // SBC A,C
+            case 0232:           adcsbc( true, z80::Reg::DE,  true); break; // SBC A,D
+            case 0233:           adcsbc( true, z80::Reg::DE, false); break; // SBC A,E
+            case 0234:           adcsbc( true, z80::Reg::HL,  true); break; // SBC A,H
+            case 0235:           adcsbc( true, z80::Reg::HL, false); break; // SBC A,L
+            case 0237:           adcsbc( true, z80::Reg::AF,  true); break; // SBC A,A
             case 0240:  andxoror( true, false, z80::Reg::BC,  true); break; // AND A,B
             case 0241:  andxoror( true, false, z80::Reg::BC, false); break; // AND A,C
             case 0242:  andxoror( true, false, z80::Reg::DE,  true); break; // AND A,D
             case 0243:  andxoror( true, false, z80::Reg::DE, false); break; // AND A,E
             case 0244:  andxoror( true, false, z80::Reg::HL,  true); break; // AND A,H
             case 0245:  andxoror( true, false, z80::Reg::HL, false); break; // AND A,L
-            case 0247:                                 tstaa( true); break; // AND A,A
+            case 0247:                            andortstaa( true); break; // AND A,A
             case 0250:  andxoror(false,  true, z80::Reg::BC,  true); break; // XOR A,B
             case 0251:  andxoror(false,  true, z80::Reg::BC, false); break; // XOR A,C
             case 0252:  andxoror(false,  true, z80::Reg::DE,  true); break; // XOR A,D
             case 0253:  andxoror(false,  true, z80::Reg::DE, false); break; // XOR A,E
             case 0254:  andxoror(false,  true, z80::Reg::HL,  true); break; // XOR A,H
             case 0255:  andxoror(false,  true, z80::Reg::HL, false); break; // XOR A,L
-            case 0257:                                 zeroa(false); break; // XOR A,A
+            case 0257:                     subxorcpaa(false, false); break; // XOR A,A
             case 0260:  andxoror(false, false, z80::Reg::BC,  true); break; // OR A,B
             case 0261:  andxoror(false, false, z80::Reg::BC, false); break; // OR A,C
             case 0262:  andxoror(false, false, z80::Reg::DE,  true); break; // OR A,D
             case 0263:  andxoror(false, false, z80::Reg::DE, false); break; // OR A,E
             case 0264:  andxoror(false, false, z80::Reg::HL,  true); break; // OR A,H
             case 0265:  andxoror(false, false, z80::Reg::HL, false); break; // OR A,L
-            case 0267:                                 tstaa(false); break; // OR A,A
+            case 0267:                            andortstaa(false); break; // OR A,A
+            case 0270:  addsubcp( true,  true, z80::Reg::BC,  true); break; // CP A,B
+            case 0271:  addsubcp( true,  true, z80::Reg::BC, false); break; // CP A,C
+            case 0272:  addsubcp( true,  true, z80::Reg::DE,  true); break; // CP A,D
+            case 0273:  addsubcp( true,  true, z80::Reg::DE, false); break; // CP A,E
+            case 0274:  addsubcp( true,  true, z80::Reg::HL,  true); break; // CP A,H
+            case 0275:  addsubcp( true,  true, z80::Reg::HL, false); break; // CP A,L
+            case 0277:                     subxorcpaa( true,  true); break; // CP A,A
+            case 0306:                      return addsubcpi(false, false); // ADD A,n
+            case 0316:                               return adcsbci(false); // ADC A,n
+            case 0326:                      return addsubcpi( true, false); // SUB A,n
+            case 0336:                               return adcsbci( true); // SBC A,n
+            case 0346:                      return andxorori( true, false); // AND A,n
+            case 0356:                      return andxorori(false,  true); // XOR A,n
+            case 0366:                      return andxorori(false, false); // OR A,n
+            case 0376:                      return addsubcpi( true,  true); // CP A,n
             case 0355: { // ED
                 if (!fetch(value)) return false;
                 switch (value) {
-                    case 0074:                         tstaa( true); break; // TST A,A
+                    case 0074:                    andortstaa( true); break; // TST A,A
                     default:        ++unhandledValues[value]; return false;
                 }
                 break;
