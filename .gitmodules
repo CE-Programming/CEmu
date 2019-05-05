@@ -3,7 +3,7 @@
 	url = https://github.com/CE-Programming/zdis.git
 [submodule "core/jit/asmjit"]
 	path = core/jit/asmjit
-	url = https://github.com/asmjit/asmjit.git
+	url = https://github.com/jacobly0/asmjit.git
 [submodule "core/jit/optional"]
 	path = core/jit/optional
 	url = https://github.com/TartanLlama/optional.git
