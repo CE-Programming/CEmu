@@ -77,7 +77,7 @@ contains(DEFINES, ASMJIT_BUILD_...) {
     INCLUDEPATH += ../../core/jit/asmjit/src
     HEADERS += $$files(../../core/jit/asmjit/src/asmjit/*.h, true) ../../core/jit/jit.h
     SOURCES += $$files(../../core/jit/asmjit/src/asmjit/*.cpp, true)
-    LIBS += -lrt
+    linux:LIBS += -lrt
     CONFIG(release, debug|release) {
         DEFINES += ASMJIT_BUILD_RELEASE ASMJIT_DISABLE_TEXT ASMJIT_DISABLE_LOGGING
     } else {
