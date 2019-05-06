@@ -10,7 +10,7 @@
 using namespace asmjit;
 
 #include "Judy++.h"
-using namespace Judy;
+using namespace judy;
 
 #include <iostream>
 #include <type_traits>

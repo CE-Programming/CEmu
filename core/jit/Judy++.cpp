@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-namespace Judy {
+namespace judy {
 
 namespace {
 tl::optional<Word> searchIndex(int result, Word &index) {

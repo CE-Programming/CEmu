@@ -9,7 +9,7 @@
 #include <functional>
 #include <utility>
 
-namespace Judy {
+namespace judy {
 
 using Word = unsigned long;
 using Size = std::size_t;
@@ -31,15 +31,15 @@ public:
     tl::optional<Word> Next(Word index) const;
     tl::optional<Word> Last(Word index = ~Word()) const;
     tl::optional<Word> Prev(Word index) const;
-    tl::optional<Word> FirstEmpty(Word index) const;
+    tl::optional<Word> FirstEmpty(Word index = Word()) const;
     tl::optional<Word> NextEmpty(Word index) const;
-    tl::optional<Word> LastEmpty(Word index) const;
+    tl::optional<Word> LastEmpty(Word index = ~Word()) const;
     tl::optional<Word> PrevEmpty(Word index) const;
 
     ~Judy1() noexcept { FreeArray(); }
     template<typename C>
     void SetArray(const C &c) { SetArray(c.cbegin(), c.size()); }
-    bool Empty() { return !array; }
+    bool Empty() const { return !array; }
 
 private:
     void *array = nullptr;
@@ -71,7 +71,7 @@ public:
     ~JudyL() { FreeArray(); }
     bool invalid() const noexcept;
     void *user() const noexcept;
-    bool Empty() { return !array; }
+    bool Empty() const { return !array; }
 
 private:
     void *array = nullptr;
