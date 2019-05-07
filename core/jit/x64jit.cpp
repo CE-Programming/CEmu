@@ -89,7 +89,6 @@ Judy<uint32_t, bool> fetched;
 Judy<uint32_t, CodeBlock *> blocks;
 Judy<void *, uint32_t> patchPoints;
 Zone blockZone(0x1000 - Zone::kBlockOverhead, alignof(CodeBlock));
-ZoneAllocator blockAlloc;
 
 void init(CodeHolder &code, BaseEmitter &e) {
     code.init(runtime.codeInfo());
@@ -208,14 +207,15 @@ struct Gen {
                                                   x86::Gp::kIdDi,   // reserved for cpu
                                                   x86::Gp::kIdSi) | // reserved for cycles
         calleeSave;
-    std::int32_t pc, cycles = 0;
-    bool l, il, done = false;
+    std::int32_t pc, cycles;
+    bool l, il, done;
     enum class InstKind {
         Unknown,
         IncDecWord,
     } prevInstKind, curInstKind;
     std::size_t cycleOffset, prevInstOffset;
     std::int32_t prevInstData[2];
+    std::uint32_t target;
     Gen(CodeBlock &block, std::uint32_t pc) : block(block), pc(pc) {
         block.start = pc;
         init(code, a);
@@ -239,17 +239,24 @@ struct Gen {
             address &= 0x07FFFF;
             value = mem.ram.block[address];
         } else {
-            return done = true;
+            done = true;
         }
-        return false;
+        return done;
     }
 
     bool fetch(std::uint32_t &value) {
         std::uint8_t low, high, upper;
-        if (fetch(low) || fetch(high) || (il && fetch(upper))) return true;
-        value = low << 0 | high << 8;
-        if (l && il) value |= upper << 16;
-        return false;
+        if (!(fetch(low) || fetch(high) || (il && fetch(upper)))) {
+            value = low << 0 | high << 8;
+            if (l && il) value |= upper << 16;
+        }
+        return done;
+    }
+
+    void term() {
+        block.end = pc;
+        block.cycles = cycles;
+        done = true;
     }
 
     x86::Mem reg_ptr(z80::Reg reg) {
@@ -772,6 +779,12 @@ struct Gen {
         state(x86::Flag::Overflow) = false;
     }
 
+    void jp() {
+        if (addCycles(1) || fetch(target)) return;
+        if (l) target |= kAdlFlag;
+        term();
+    }
+
     void genInst() {
         while (true) {
             std::uint8_t value; if (fetch(value)) return;
@@ -918,6 +931,7 @@ struct Gen {
                 case 0274:            addsubcp( true,  true, z80::Reg::HL,  true); return; // CP A,H
                 case 0275:            addsubcp( true,  true, z80::Reg::HL, false); return; // CP A,L
                 case 0277:                               subxorcpaa( true,  true); return; // CP A,A
+                case 0303:                                                   jp(); return; // JP nn
                 case 0306:                                addsubcpi(false, false); return; // ADD A,n
                 case 0316:                                         adcsbci(false); return; // ADC A,n
                 case 0326:                                addsubcpi( true, false); return; // SUB A,n
@@ -946,12 +960,14 @@ struct Gen {
         }
     }
 
-    bool gen() {
-        prolog();
+    void gen() {
+        cycles = 0;
         prevInstKind = InstKind::Unknown;
+        prolog();
         do {
-            block.end = pc;
-            block.cycles = cycles;
+            term();
+            target = pc;
+            done = false;
             l = il = pc & kAdlFlag;
             curInstKind = InstKind::Unknown;
             genInst();
@@ -961,7 +977,7 @@ struct Gen {
             for (uint32_t address = block.start; address < block.end; address++)
                 fetched[address & 0xFFFFFF] = true;
             flush();
-            a.mov(x86::eax, block.end);
+            a.mov(x86::eax, target);
             a.ret();
             a.bind(eventLabel);
             a.add(x86::esi, -block.cycles);
@@ -979,26 +995,23 @@ struct Gen {
 #if 0
             patchPoints[static_cast<void *>(reinterpret_cast<char *>(block.entry) + code.labelOffset(patchPoint))] = block.end;
 #endif
-            blocks[block.start] = &block;
             //if (void *p = phys_mem_ptr(block->start & 0xFFFFFF, block->size))
             //    logger.logBinary(p, block->size);
             //if (block->size) {
             //    puts(logger.data());
             //    fflush(stdout);
             //}
-            return true;
         } else {
-            blockAlloc.release(&block, sizeof(CodeBlock));
-            return false;
+            block.entry = nullptr;
         }
+        blocks[block.start] = &block;
     }
 };
 
-bool gen(uint32_t pc) {
-    CodeBlock *block = blockAlloc.allocT<CodeBlock>();
-    if (!block)
-        return false;
-    return Gen(*block, pc).gen();
+CodeBlock *gen(uint32_t pc) {
+    CodeBlock *block = blockZone.allocT<CodeBlock>();
+    if (block) Gen(*block, pc).gen();
+    return block;
 }
 
 void jitPatch(void *target) {
@@ -1013,7 +1026,6 @@ void jitFlush() {
     fetched.clear();
     blocks.clear();
     blockZone.reset();
-    blockAlloc.reset(&blockZone);
 
     CodeHolder code;
     x86::Assembler a;
@@ -1039,18 +1051,17 @@ void jitReportWrite(uint32_t address, uint8_t value) {
 bool jitTryExecute() {
     uint32_t address = cpu.ADL ? kAdlFlag | (cpu.registers.PC & 0xFFFFFF)
                                : cpu.registers.MBASE << 16 | (cpu.registers.PC & 0xFFFF);
-    do {
-        if (auto block = blocks.find(address)) {
-            uint32_t address = dispatch(&cpu, cpu.cycles - cpu.next, (*block)->entry);
-            ++blocksExecuted;
-            cpu_flush(address & 0xFFFFFF, address & kAdlFlag);
-            return true;
-        }
-        if (fetched[address & 0xFFFFFF]) {
-            return false;
-        }
-    } while (gen(address));
-    return false;
+    CodeBlock *block;
+    if (auto it = blocks.find(address))
+        block = *it;
+    else
+        block = gen(address);
+    if (!block || !block->entry)
+        return false;
+    ++blocksExecuted;
+    address = dispatch(&cpu, cpu.cycles - cpu.next, block->entry);
+    cpu_flush(address & 0xFFFFFF, address & kAdlFlag);
+    return true;
 }
 
 #endif
