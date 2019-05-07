@@ -316,8 +316,7 @@ struct Gen {
     x86::Gp::Id mat(z80::Reg z80Reg, bool dirty = false) {
         state(z80Reg).dirty |= dirty;
         if (state(z80Reg).x86Reg == z80::RegState::kInMem)
-            a.emit(regSize(z80Reg) == 2 ? x86::Inst::kIdMovzx : x86::Inst::kIdMov,
-                   x86::gpd(alloc(z80Reg)), reg_ptr(z80Reg));
+            a.mov(x86::gpd(alloc(z80Reg)), reg_ptr(z80Reg));
         return x86::Gp::Id(state(z80Reg).x86Reg);
     }
 
@@ -517,14 +516,14 @@ struct Gen {
         int32_t off = Support::bitMask(pos);
         if (dec) off = Support::neg(off);
         if (prevInstKind == InstKind::IncDecWord &&
-            prevInstData[0] == u(z80Reg)) {
+            prevInstData[0] == (u(z80Reg) << 1 | l)) {
             a.setOffset(prevInstOffset);
             off += prevInstData[1];
         }
         setRotAmt(z80Reg, pos);
         curInstKind = InstKind::IncDecWord;
         prevInstOffset = a.offset();
-        prevInstData[0] = u(z80Reg);
+        prevInstData[0] = u(z80Reg) << 1 | l;
         prevInstData[1] = off;
         if (checkX86FlagsInUse(Support::bitMask(u(x86::Flag::Carry),
                                                 u(x86::Flag::Parity),
@@ -535,6 +534,7 @@ struct Gen {
             a.lea(x86::gpd(mat(z80Reg, true)), a.ptr_base(mat(z80Reg), off));
         else
             a.add(x86::gpd(mat(z80Reg, true)), off);
+        if (!l) a.mov(x86::gpb_lo(mat(z80Reg, true)), 0);
     }
 
     void incdec(bool dec, z80::Reg z80Reg, bool high) {
@@ -672,8 +672,9 @@ struct Gen {
         state(z80::Flag::Sign) = false;
     }
 
-    void andxoror(bool half, bool x, z80::Reg z80Reg, bool high) {
-        a.emit(half ? x86::Inst::kIdAnd : x ? x86::Inst::kIdXor : x86::Inst::kIdOr,
+    void andxorortst(bool half, bool x, z80::Reg z80Reg, bool high) {
+        a.emit(half ? x ? x86::Inst::kIdTest : x86::Inst::kIdAnd
+                    : x ? x86::Inst::kIdXor  : x86::Inst::kIdOr,
                access(z80::Reg::AF, true, true), access(z80Reg, high));
         // Update Z80 flags
         state(z80::Flag::Carry) = false;
@@ -750,9 +751,10 @@ struct Gen {
         state(x86::Flag::Overflow) = x86::Flag::Overflow;
     }
 
-    void andxorori(bool half, bool x) {
+    void andxorortsti(bool half, bool x) {
         std::uint8_t imm; if (fetch(imm)) return;
-        a.emit(half ? x86::Inst::kIdAnd : x ? x86::Inst::kIdXor : x86::Inst::kIdOr,
+        a.emit(half ? x ? x86::Inst::kIdTest : x86::Inst::kIdAnd
+                    : x ? x86::Inst::kIdXor  : x86::Inst::kIdOr,
                access(z80::Reg::AF, true, true), imm);
         // Update Z80 flags
         state(z80::Flag::Carry) = false;
@@ -774,160 +776,167 @@ struct Gen {
         while (true) {
             std::uint8_t value; if (fetch(value)) return;
             switch (value) {
-                case 0000:                                               return; // NOP
-                case 0001:                            ldi(z80::Reg::BC); return; // LD BC,nn
-                case 0003:                  incdec(false, z80::Reg::BC); return; // INC BC
-                case 0004:           incdec(false, z80::Reg::BC,  true); return; // INC B
-                case 0005:           incdec( true, z80::Reg::BC,  true); return; // DEC B
-                case 0006:                     ldi(z80::Reg::BC,  true); return; // LD B,n
-                case 0007:                           rota( true,  true); return; // RLCA
-                case 0013:                  incdec( true, z80::Reg::BC); return; // DEC BC
-                case 0014:           incdec(false, z80::Reg::BC, false); return; // INC C
-                case 0015:           incdec( true, z80::Reg::BC, false); return; // DEC C
-                case 0016:                     ldi(z80::Reg::BC, false); return; // LD C,n
-                case 0017:                           rota( true, false); return; // RRCA
-                case 0021:                            ldi(z80::Reg::DE); return; // LD DE,nn
-                case 0023:                  incdec(false, z80::Reg::DE); return; // INC DE
-                case 0024:           incdec(false, z80::Reg::DE,  true); return; // INC D
-                case 0025:           incdec( true, z80::Reg::DE,  true); return; // DEC D
-                case 0026:                     ldi(z80::Reg::DE,  true); return; // LD D,n
-                case 0027:                           rota(false,  true); return; // RLA
-                case 0033:                  incdec( true, z80::Reg::DE); return; // DEC DE
-                case 0034:           incdec(false, z80::Reg::DE, false); return; // INC E
-                case 0035:           incdec( true, z80::Reg::DE, false); return; // DEC E
-                case 0036:                     ldi(z80::Reg::DE, false); return; // LD E,n
-                case 0037:                           rota(false, false); return; // RRA
-                case 0041:                            ldi(z80::Reg::HL); return; // LD HL,nn
-                case 0043:                  incdec(false, z80::Reg::HL); return; // INC HL
-                case 0044:           incdec(false, z80::Reg::HL,  true); return; // INC H
-                case 0045:           incdec( true, z80::Reg::HL,  true); return; // DEC H
-                case 0046:                     ldi(z80::Reg::HL,  true); return; // LD H,n
-                case 0053:                  incdec( true, z80::Reg::HL); return; // DEC HL
-                case 0054:           incdec(false, z80::Reg::HL, false); return; // INC L
-                case 0055:           incdec( true, z80::Reg::HL, false); return; // DEC L
-                case 0056:                     ldi(z80::Reg::HL, false); return; // LD L,n
-                case 0057:                                        cpl(); return; // CPL
-                case 0067:                                        scf(); return; // SCF
-                case 0074:           incdec(false, z80::Reg::AF,  true); return; // INC A
-                case 0075:           incdec( true, z80::Reg::AF,  true); return; // DEC A
-                case 0076:                     ldi(z80::Reg::AF,  true); return; // LD A,n
-                case 0100:                        l = false; il = false;  break; // .SIS
-                case 0101:                      ld(z80::Reg::BC, false); return; // LD B,C
-                case 0102: ld(z80::Reg::BC,  true, z80::Reg::DE,  true); return; // LD B,D
-                case 0103: ld(z80::Reg::BC,  true, z80::Reg::DE, false); return; // LD B,E
-                case 0104: ld(z80::Reg::BC,  true, z80::Reg::HL,  true); return; // LD B,H
-                case 0105: ld(z80::Reg::BC,  true, z80::Reg::HL, false); return; // LD B,L
-                case 0107: ld(z80::Reg::BC,  true, z80::Reg::AF,  true); return; // LD B,A
-                case 0110:                      ld(z80::Reg::BC,  true); return; // LD C,B
-                case 0111:                        l =  true; il = false;  break; // .LIS
-                case 0112: ld(z80::Reg::BC, false, z80::Reg::DE,  true); return; // LD C,D
-                case 0113: ld(z80::Reg::BC, false, z80::Reg::DE, false); return; // LD C,E
-                case 0114: ld(z80::Reg::BC, false, z80::Reg::HL,  true); return; // LD C,H
-                case 0115: ld(z80::Reg::BC, false, z80::Reg::HL, false); return; // LD C,L
-                case 0117: ld(z80::Reg::BC, false, z80::Reg::AF,  true); return; // LD C,A
-                case 0120: ld(z80::Reg::DE,  true, z80::Reg::BC,  true); return; // LD D,B
-                case 0121: ld(z80::Reg::DE,  true, z80::Reg::BC, false); return; // LD D,C
-                case 0122:                        l = false; il =  true;  break; // .SIL
-                case 0123:                      ld(z80::Reg::DE, false); return; // LD D,E
-                case 0124: ld(z80::Reg::DE,  true, z80::Reg::HL,  true); return; // LD D,H
-                case 0125: ld(z80::Reg::DE,  true, z80::Reg::HL, false); return; // LD D,L
-                case 0127: ld(z80::Reg::DE,  true, z80::Reg::AF,  true); return; // LD D,A
-                case 0130: ld(z80::Reg::DE, false, z80::Reg::BC,  true); return; // LD E,B
-                case 0131: ld(z80::Reg::DE, false, z80::Reg::BC, false); return; // LD E,C
-                case 0132:                      ld(z80::Reg::DE,  true); return; // LD E,D
-                case 0133:                        l =  true; il =  true;  break; // .LIL
-                case 0134: ld(z80::Reg::DE, false, z80::Reg::HL,  true); return; // LD E,H
-                case 0135: ld(z80::Reg::DE, false, z80::Reg::HL, false); return; // LD E,L
-                case 0137: ld(z80::Reg::DE, false, z80::Reg::AF,  true); return; // LD E,A
-                case 0140: ld(z80::Reg::HL,  true, z80::Reg::BC,  true); return; // LD H,B
-                case 0141: ld(z80::Reg::HL,  true, z80::Reg::BC, false); return; // LD H,C
-                case 0142: ld(z80::Reg::HL,  true, z80::Reg::DE,  true); return; // LD H,D
-                case 0143: ld(z80::Reg::HL,  true, z80::Reg::DE, false); return; // LD H,E
-                case 0144:                                               return; // LD H,H
-                case 0145:                      ld(z80::Reg::HL, false); return; // LD H,L
-                case 0147: ld(z80::Reg::HL,  true, z80::Reg::AF,  true); return; // LD H,A
-                case 0150: ld(z80::Reg::HL, false, z80::Reg::BC,  true); return; // LD L,B
-                case 0151: ld(z80::Reg::HL, false, z80::Reg::BC, false); return; // LD L,C
-                case 0152: ld(z80::Reg::HL, false, z80::Reg::DE,  true); return; // LD L,D
-                case 0153: ld(z80::Reg::HL, false, z80::Reg::DE, false); return; // LD L,E
-                case 0154:                      ld(z80::Reg::HL,  true); return; // LD L,H
-                case 0155:                                               return; // LD L,L
-                case 0157: ld(z80::Reg::HL, false, z80::Reg::AF,  true); return; // LD L,A
-                case 0170: ld(z80::Reg::AF,  true, z80::Reg::BC,  true); return; // LD A,B
-                case 0171: ld(z80::Reg::AF,  true, z80::Reg::BC, false); return; // LD A,C
-                case 0172: ld(z80::Reg::AF,  true, z80::Reg::DE,  true); return; // LD A,D
-                case 0173: ld(z80::Reg::AF,  true, z80::Reg::DE, false); return; // LD A,E
-                case 0174: ld(z80::Reg::AF,  true, z80::Reg::HL,  true); return; // LD A,H
-                case 0175: ld(z80::Reg::AF,  true, z80::Reg::HL, false); return; // LD A,L
-                case 0177:                                               return; // LD A,A
-                case 0200:  addsubcp(false, false, z80::Reg::BC,  true); return; // ADD A,B
-                case 0201:  addsubcp(false, false, z80::Reg::BC, false); return; // ADD A,C
-                case 0202:  addsubcp(false, false, z80::Reg::DE,  true); return; // ADD A,D
-                case 0203:  addsubcp(false, false, z80::Reg::DE, false); return; // ADD A,E
-                case 0204:  addsubcp(false, false, z80::Reg::HL,  true); return; // ADD A,H
-                case 0205:  addsubcp(false, false, z80::Reg::HL, false); return; // ADD A,L
-                case 0207:  addsubcp(false, false, z80::Reg::AF,  true); return; // ADD A,A
-                case 0210:           adcsbc(false, z80::Reg::BC,  true); return; // ADC A,B
-                case 0211:           adcsbc(false, z80::Reg::BC, false); return; // ADC A,C
-                case 0212:           adcsbc(false, z80::Reg::DE,  true); return; // ADC A,D
-                case 0213:           adcsbc(false, z80::Reg::DE, false); return; // ADC A,E
-                case 0214:           adcsbc(false, z80::Reg::HL,  true); return; // ADC A,H
-                case 0215:           adcsbc(false, z80::Reg::HL, false); return; // ADC A,L
-                case 0217:           adcsbc(false, z80::Reg::AF,  true); return; // ADC A,A
-                case 0220:  addsubcp( true, false, z80::Reg::BC,  true); return; // SUB A,B
-                case 0221:  addsubcp( true, false, z80::Reg::BC, false); return; // SUB A,C
-                case 0222:  addsubcp( true, false, z80::Reg::DE,  true); return; // SUB A,D
-                case 0223:  addsubcp( true, false, z80::Reg::DE, false); return; // SUB A,E
-                case 0224:  addsubcp( true, false, z80::Reg::HL,  true); return; // SUB A,H
-                case 0225:  addsubcp( true, false, z80::Reg::HL, false); return; // SUB A,L
-                case 0227:                     subxorcpaa( true, false); return; // SUB A,A
-                case 0230:           adcsbc( true, z80::Reg::BC,  true); return; // SBC A,B
-                case 0231:           adcsbc( true, z80::Reg::BC, false); return; // SBC A,C
-                case 0232:           adcsbc( true, z80::Reg::DE,  true); return; // SBC A,D
-                case 0233:           adcsbc( true, z80::Reg::DE, false); return; // SBC A,E
-                case 0234:           adcsbc( true, z80::Reg::HL,  true); return; // SBC A,H
-                case 0235:           adcsbc( true, z80::Reg::HL, false); return; // SBC A,L
-                case 0237:           adcsbc( true, z80::Reg::AF,  true); return; // SBC A,A
-                case 0240:  andxoror( true, false, z80::Reg::BC,  true); return; // AND A,B
-                case 0241:  andxoror( true, false, z80::Reg::BC, false); return; // AND A,C
-                case 0242:  andxoror( true, false, z80::Reg::DE,  true); return; // AND A,D
-                case 0243:  andxoror( true, false, z80::Reg::DE, false); return; // AND A,E
-                case 0244:  andxoror( true, false, z80::Reg::HL,  true); return; // AND A,H
-                case 0245:  andxoror( true, false, z80::Reg::HL, false); return; // AND A,L
-                case 0247:                            andortstaa( true); return; // AND A,A
-                case 0250:  andxoror(false,  true, z80::Reg::BC,  true); return; // XOR A,B
-                case 0251:  andxoror(false,  true, z80::Reg::BC, false); return; // XOR A,C
-                case 0252:  andxoror(false,  true, z80::Reg::DE,  true); return; // XOR A,D
-                case 0253:  andxoror(false,  true, z80::Reg::DE, false); return; // XOR A,E
-                case 0254:  andxoror(false,  true, z80::Reg::HL,  true); return; // XOR A,H
-                case 0255:  andxoror(false,  true, z80::Reg::HL, false); return; // XOR A,L
-                case 0257:                     subxorcpaa(false, false); return; // XOR A,A
-                case 0260:  andxoror(false, false, z80::Reg::BC,  true); return; // OR A,B
-                case 0261:  andxoror(false, false, z80::Reg::BC, false); return; // OR A,C
-                case 0262:  andxoror(false, false, z80::Reg::DE,  true); return; // OR A,D
-                case 0263:  andxoror(false, false, z80::Reg::DE, false); return; // OR A,E
-                case 0264:  andxoror(false, false, z80::Reg::HL,  true); return; // OR A,H
-                case 0265:  andxoror(false, false, z80::Reg::HL, false); return; // OR A,L
-                case 0267:                            andortstaa(false); return; // OR A,A
-                case 0270:  addsubcp( true,  true, z80::Reg::BC,  true); return; // CP A,B
-                case 0271:  addsubcp( true,  true, z80::Reg::BC, false); return; // CP A,C
-                case 0272:  addsubcp( true,  true, z80::Reg::DE,  true); return; // CP A,D
-                case 0273:  addsubcp( true,  true, z80::Reg::DE, false); return; // CP A,E
-                case 0274:  addsubcp( true,  true, z80::Reg::HL,  true); return; // CP A,H
-                case 0275:  addsubcp( true,  true, z80::Reg::HL, false); return; // CP A,L
-                case 0277:                     subxorcpaa( true,  true); return; // CP A,A
-                case 0306:                      addsubcpi(false, false); return; // ADD A,n
-                case 0316:                               adcsbci(false); return; // ADC A,n
-                case 0326:                      addsubcpi( true, false); return; // SUB A,n
-                case 0336:                               adcsbci( true); return; // SBC A,n
-                case 0346:                      andxorori( true, false); return; // AND A,n
-                case 0356:                      andxorori(false,  true); return; // XOR A,n
-                case 0366:                      andxorori(false, false); return; // OR A,n
-                case 0376:                      addsubcpi( true,  true); return; // CP A,n
+                case 0000:                                                         return; // NOP
+                case 0001:                                      ldi(z80::Reg::BC); return; // LD BC,nn
+                case 0003:                            incdec(false, z80::Reg::BC); return; // INC BC
+                case 0004:                     incdec(false, z80::Reg::BC,  true); return; // INC B
+                case 0005:                     incdec( true, z80::Reg::BC,  true); return; // DEC B
+                case 0006:                               ldi(z80::Reg::BC,  true); return; // LD B,n
+                case 0007:                                     rota( true,  true); return; // RLCA
+                case 0013:                            incdec( true, z80::Reg::BC); return; // DEC BC
+                case 0014:                     incdec(false, z80::Reg::BC, false); return; // INC C
+                case 0015:                     incdec( true, z80::Reg::BC, false); return; // DEC C
+                case 0016:                               ldi(z80::Reg::BC, false); return; // LD C,n
+                case 0017:                                     rota( true, false); return; // RRCA
+                case 0021:                                      ldi(z80::Reg::DE); return; // LD DE,nn
+                case 0023:                            incdec(false, z80::Reg::DE); return; // INC DE
+                case 0024:                     incdec(false, z80::Reg::DE,  true); return; // INC D
+                case 0025:                     incdec( true, z80::Reg::DE,  true); return; // DEC D
+                case 0026:                               ldi(z80::Reg::DE,  true); return; // LD D,n
+                case 0027:                                     rota(false,  true); return; // RLA
+                case 0033:                            incdec( true, z80::Reg::DE); return; // DEC DE
+                case 0034:                     incdec(false, z80::Reg::DE, false); return; // INC E
+                case 0035:                     incdec( true, z80::Reg::DE, false); return; // DEC E
+                case 0036:                               ldi(z80::Reg::DE, false); return; // LD E,n
+                case 0037:                                     rota(false, false); return; // RRA
+                case 0041:                                      ldi(z80::Reg::HL); return; // LD HL,nn
+                case 0043:                            incdec(false, z80::Reg::HL); return; // INC HL
+                case 0044:                     incdec(false, z80::Reg::HL,  true); return; // INC H
+                case 0045:                     incdec( true, z80::Reg::HL,  true); return; // DEC H
+                case 0046:                               ldi(z80::Reg::HL,  true); return; // LD H,n
+                case 0053:                            incdec( true, z80::Reg::HL); return; // DEC HL
+                case 0054:                     incdec(false, z80::Reg::HL, false); return; // INC L
+                case 0055:                     incdec( true, z80::Reg::HL, false); return; // DEC L
+                case 0056:                               ldi(z80::Reg::HL, false); return; // LD L,n
+                case 0057:                                                  cpl(); return; // CPL
+                case 0067:                                                  scf(); return; // SCF
+                case 0074:                     incdec(false, z80::Reg::AF,  true); return; // INC A
+                case 0075:                     incdec( true, z80::Reg::AF,  true); return; // DEC A
+                case 0076:                               ldi(z80::Reg::AF,  true); return; // LD A,n
+                case 0100:                                  l = false; il = false;  break; // .SIS
+                case 0101:                                ld(z80::Reg::BC, false); return; // LD B,C
+                case 0102:           ld(z80::Reg::BC,  true, z80::Reg::DE,  true); return; // LD B,D
+                case 0103:           ld(z80::Reg::BC,  true, z80::Reg::DE, false); return; // LD B,E
+                case 0104:           ld(z80::Reg::BC,  true, z80::Reg::HL,  true); return; // LD B,H
+                case 0105:           ld(z80::Reg::BC,  true, z80::Reg::HL, false); return; // LD B,L
+                case 0107:           ld(z80::Reg::BC,  true, z80::Reg::AF,  true); return; // LD B,A
+                case 0110:                                ld(z80::Reg::BC,  true); return; // LD C,B
+                case 0111:                                  l =  true; il = false;  break; // .LIS
+                case 0112:           ld(z80::Reg::BC, false, z80::Reg::DE,  true); return; // LD C,D
+                case 0113:           ld(z80::Reg::BC, false, z80::Reg::DE, false); return; // LD C,E
+                case 0114:           ld(z80::Reg::BC, false, z80::Reg::HL,  true); return; // LD C,H
+                case 0115:           ld(z80::Reg::BC, false, z80::Reg::HL, false); return; // LD C,L
+                case 0117:           ld(z80::Reg::BC, false, z80::Reg::AF,  true); return; // LD C,A
+                case 0120:           ld(z80::Reg::DE,  true, z80::Reg::BC,  true); return; // LD D,B
+                case 0121:           ld(z80::Reg::DE,  true, z80::Reg::BC, false); return; // LD D,C
+                case 0122:                                  l = false; il =  true;  break; // .SIL
+                case 0123:                                ld(z80::Reg::DE, false); return; // LD D,E
+                case 0124:           ld(z80::Reg::DE,  true, z80::Reg::HL,  true); return; // LD D,H
+                case 0125:           ld(z80::Reg::DE,  true, z80::Reg::HL, false); return; // LD D,L
+                case 0127:           ld(z80::Reg::DE,  true, z80::Reg::AF,  true); return; // LD D,A
+                case 0130:           ld(z80::Reg::DE, false, z80::Reg::BC,  true); return; // LD E,B
+                case 0131:           ld(z80::Reg::DE, false, z80::Reg::BC, false); return; // LD E,C
+                case 0132:                                ld(z80::Reg::DE,  true); return; // LD E,D
+                case 0133:                                  l =  true; il =  true;  break; // .LIL
+                case 0134:           ld(z80::Reg::DE, false, z80::Reg::HL,  true); return; // LD E,H
+                case 0135:           ld(z80::Reg::DE, false, z80::Reg::HL, false); return; // LD E,L
+                case 0137:           ld(z80::Reg::DE, false, z80::Reg::AF,  true); return; // LD E,A
+                case 0140:           ld(z80::Reg::HL,  true, z80::Reg::BC,  true); return; // LD H,B
+                case 0141:           ld(z80::Reg::HL,  true, z80::Reg::BC, false); return; // LD H,C
+                case 0142:           ld(z80::Reg::HL,  true, z80::Reg::DE,  true); return; // LD H,D
+                case 0143:           ld(z80::Reg::HL,  true, z80::Reg::DE, false); return; // LD H,E
+                case 0144:                                                         return; // LD H,H
+                case 0145:                                ld(z80::Reg::HL, false); return; // LD H,L
+                case 0147:           ld(z80::Reg::HL,  true, z80::Reg::AF,  true); return; // LD H,A
+                case 0150:           ld(z80::Reg::HL, false, z80::Reg::BC,  true); return; // LD L,B
+                case 0151:           ld(z80::Reg::HL, false, z80::Reg::BC, false); return; // LD L,C
+                case 0152:           ld(z80::Reg::HL, false, z80::Reg::DE,  true); return; // LD L,D
+                case 0153:           ld(z80::Reg::HL, false, z80::Reg::DE, false); return; // LD L,E
+                case 0154:                                ld(z80::Reg::HL,  true); return; // LD L,H
+                case 0155:                                                         return; // LD L,L
+                case 0157:           ld(z80::Reg::HL, false, z80::Reg::AF,  true); return; // LD L,A
+                case 0170:           ld(z80::Reg::AF,  true, z80::Reg::BC,  true); return; // LD A,B
+                case 0171:           ld(z80::Reg::AF,  true, z80::Reg::BC, false); return; // LD A,C
+                case 0172:           ld(z80::Reg::AF,  true, z80::Reg::DE,  true); return; // LD A,D
+                case 0173:           ld(z80::Reg::AF,  true, z80::Reg::DE, false); return; // LD A,E
+                case 0174:           ld(z80::Reg::AF,  true, z80::Reg::HL,  true); return; // LD A,H
+                case 0175:           ld(z80::Reg::AF,  true, z80::Reg::HL, false); return; // LD A,L
+                case 0177:                                                         return; // LD A,A
+                case 0200:            addsubcp(false, false, z80::Reg::BC,  true); return; // ADD A,B
+                case 0201:            addsubcp(false, false, z80::Reg::BC, false); return; // ADD A,C
+                case 0202:            addsubcp(false, false, z80::Reg::DE,  true); return; // ADD A,D
+                case 0203:            addsubcp(false, false, z80::Reg::DE, false); return; // ADD A,E
+                case 0204:            addsubcp(false, false, z80::Reg::HL,  true); return; // ADD A,H
+                case 0205:            addsubcp(false, false, z80::Reg::HL, false); return; // ADD A,L
+                case 0207:            addsubcp(false, false, z80::Reg::AF,  true); return; // ADD A,A
+                case 0210:                     adcsbc(false, z80::Reg::BC,  true); return; // ADC A,B
+                case 0211:                     adcsbc(false, z80::Reg::BC, false); return; // ADC A,C
+                case 0212:                     adcsbc(false, z80::Reg::DE,  true); return; // ADC A,D
+                case 0213:                     adcsbc(false, z80::Reg::DE, false); return; // ADC A,E
+                case 0214:                     adcsbc(false, z80::Reg::HL,  true); return; // ADC A,H
+                case 0215:                     adcsbc(false, z80::Reg::HL, false); return; // ADC A,L
+                case 0217:                     adcsbc(false, z80::Reg::AF,  true); return; // ADC A,A
+                case 0220:            addsubcp( true, false, z80::Reg::BC,  true); return; // SUB A,B
+                case 0221:            addsubcp( true, false, z80::Reg::BC, false); return; // SUB A,C
+                case 0222:            addsubcp( true, false, z80::Reg::DE,  true); return; // SUB A,D
+                case 0223:            addsubcp( true, false, z80::Reg::DE, false); return; // SUB A,E
+                case 0224:            addsubcp( true, false, z80::Reg::HL,  true); return; // SUB A,H
+                case 0225:            addsubcp( true, false, z80::Reg::HL, false); return; // SUB A,L
+                case 0227:                               subxorcpaa( true, false); return; // SUB A,A
+                case 0230:                     adcsbc( true, z80::Reg::BC,  true); return; // SBC A,B
+                case 0231:                     adcsbc( true, z80::Reg::BC, false); return; // SBC A,C
+                case 0232:                     adcsbc( true, z80::Reg::DE,  true); return; // SBC A,D
+                case 0233:                     adcsbc( true, z80::Reg::DE, false); return; // SBC A,E
+                case 0234:                     adcsbc( true, z80::Reg::HL,  true); return; // SBC A,H
+                case 0235:                     adcsbc( true, z80::Reg::HL, false); return; // SBC A,L
+                case 0237:                     adcsbc( true, z80::Reg::AF,  true); return; // SBC A,A
+                case 0240:         andxorortst( true, false, z80::Reg::BC,  true); return; // AND A,B
+                case 0241:         andxorortst( true, false, z80::Reg::BC, false); return; // AND A,C
+                case 0242:         andxorortst( true, false, z80::Reg::DE,  true); return; // AND A,D
+                case 0243:         andxorortst( true, false, z80::Reg::DE, false); return; // AND A,E
+                case 0244:         andxorortst( true, false, z80::Reg::HL,  true); return; // AND A,H
+                case 0245:         andxorortst( true, false, z80::Reg::HL, false); return; // AND A,L
+                case 0247:                                      andortstaa( true); return; // AND A,A
+                case 0250:         andxorortst(false,  true, z80::Reg::BC,  true); return; // XOR A,B
+                case 0251:         andxorortst(false,  true, z80::Reg::BC, false); return; // XOR A,C
+                case 0252:         andxorortst(false,  true, z80::Reg::DE,  true); return; // XOR A,D
+                case 0253:         andxorortst(false,  true, z80::Reg::DE, false); return; // XOR A,E
+                case 0254:         andxorortst(false,  true, z80::Reg::HL,  true); return; // XOR A,H
+                case 0255:         andxorortst(false,  true, z80::Reg::HL, false); return; // XOR A,L
+                case 0257:                               subxorcpaa(false, false); return; // XOR A,A
+                case 0260:         andxorortst(false, false, z80::Reg::BC,  true); return; // OR A,B
+                case 0261:         andxorortst(false, false, z80::Reg::BC, false); return; // OR A,C
+                case 0262:         andxorortst(false, false, z80::Reg::DE,  true); return; // OR A,D
+                case 0263:         andxorortst(false, false, z80::Reg::DE, false); return; // OR A,E
+                case 0264:         andxorortst(false, false, z80::Reg::HL,  true); return; // OR A,H
+                case 0265:         andxorortst(false, false, z80::Reg::HL, false); return; // OR A,L
+                case 0267:                                      andortstaa(false); return; // OR A,A
+                case 0270:            addsubcp( true,  true, z80::Reg::BC,  true); return; // CP A,B
+                case 0271:            addsubcp( true,  true, z80::Reg::BC, false); return; // CP A,C
+                case 0272:            addsubcp( true,  true, z80::Reg::DE,  true); return; // CP A,D
+                case 0273:            addsubcp( true,  true, z80::Reg::DE, false); return; // CP A,E
+                case 0274:            addsubcp( true,  true, z80::Reg::HL,  true); return; // CP A,H
+                case 0275:            addsubcp( true,  true, z80::Reg::HL, false); return; // CP A,L
+                case 0277:                               subxorcpaa( true,  true); return; // CP A,A
+                case 0306:                                addsubcpi(false, false); return; // ADD A,n
+                case 0316:                                         adcsbci(false); return; // ADC A,n
+                case 0326:                                addsubcpi( true, false); return; // SUB A,n
+                case 0336:                                         adcsbci( true); return; // SBC A,n
+                case 0346:                             andxorortsti( true, false); return; // AND A,n
+                case 0356:                             andxorortsti(false,  true); return; // XOR A,n
+                case 0366:                             andxorortsti(false, false); return; // OR A,n
+                case 0376:                                addsubcpi( true,  true); return; // CP A,n
                 case 0355: { // ED
                     if (fetch(value)) return;
                     switch (value) {
-                        case 0074:                    andortstaa( true); return; // TST A,A
+                        case 0004: andxorortst( true,  true, z80::Reg::BC,  true); return; // TST A,B
+                        case 0014: andxorortst( true,  true, z80::Reg::BC, false); return; // TST A,C
+                        case 0024: andxorortst( true,  true, z80::Reg::DE,  true); return; // TST A,D
+                        case 0034: andxorortst( true,  true, z80::Reg::DE, false); return; // TST A,E
+                        case 0044: andxorortst( true,  true, z80::Reg::HL,  true); return; // TST A,H
+                        case 0054: andxorortst( true,  true, z80::Reg::HL, false); return; // TST A,L
+                        case 0074:                              andortstaa( true); return; // TST A,A
+                        case 0144:                     andxorortsti( true,  true); return; // TST A,n
                         default:  ++unhandledValues[value]; done = true; return;
                     }
                     break;
