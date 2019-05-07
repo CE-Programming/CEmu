@@ -117,7 +117,8 @@ enum class Reg : uint8_t {
     IX,
     IY,
     SPL,
-    TEMP,
+    Temp,
+    End,
 };
 enum class Flag : uint8_t {
     Carry,
@@ -132,7 +133,8 @@ enum class Flag : uint8_t {
 };
 
 struct RegState {
-    uint8_t x86Reg = Support::allOnes<typeof(x86Reg)>();
+    static constexpr uint8_t kInMem = Support::allOnes<uint8_t>();
+    uint8_t x86Reg = kInMem;
     uint8_t rotAmt = 0;
     bool dirty = false;
 };
@@ -207,15 +209,20 @@ struct Gen {
                                                   x86::Gp::kIdSi) | // reserved for cycles
         calleeSave;
     std::int32_t pc, cycles = 0;
-    std::size_t cycleOffset;
     bool l, il, done = false;
+    enum class InstKind {
+        Unknown,
+        IncDecWord,
+    } prevInstKind, curInstKind;
+    std::size_t cycleOffset, prevInstOffset;
+    std::int32_t prevInstData[2];
     Gen(CodeBlock &block, std::uint32_t pc) : block(block), pc(pc) {
         block.start = pc;
         init(code, a);
         eventLabel = a.newLabel();
     }
 
-    bool addCycles(std::int32_t offset) { return done = (cycles += offset) < 0x80; }
+    bool addCycles(std::int32_t offset) { return done = (cycles += offset) >= 0x80; }
 
     bool fetch(std::uint8_t &value) {
         std::uint32_t address = pc++ & 0xFFFFFF;
@@ -241,7 +248,7 @@ struct Gen {
         std::uint8_t low, high, upper;
         if (fetch(low) || fetch(high) || (il && fetch(upper))) return true;
         value = low << 0 | high << 8;
-        if (l && il) value |= upper << 24;
+        if (l && il) value |= upper << 16;
         return false;
     }
 
@@ -295,7 +302,7 @@ struct Gen {
     }
 
     x86::Gp::Id alloc(z80::Reg z80Reg) {
-        if (state(z80Reg).x86Reg == Support::allOnes<typeof(std::declval<z80::RegState>().x86Reg)>()) {
+        if (state(z80Reg).x86Reg == z80::RegState::kInMem) {
             if (z80Reg == z80::Reg::AF) {
                 state(z80Reg).x86Reg = x86::Gp::kIdBx;
             } else {
@@ -308,27 +315,22 @@ struct Gen {
 
     x86::Gp::Id mat(z80::Reg z80Reg, bool dirty = false) {
         state(z80Reg).dirty |= dirty;
-        if (state(z80Reg).x86Reg == Support::allOnes<typeof(std::declval<z80::RegState>().x86Reg)>()) {
-            x86::Inst::Id inst = x86::Inst::kIdMovzx;
-            inst = regSize(z80Reg) == 2 ? inst = x86::Inst::kIdMovzx : x86::Inst::kIdMov;
-            a.emit(inst, x86::gpd(alloc(z80Reg)), reg_ptr(z80Reg));
-        }
+        if (state(z80Reg).x86Reg == z80::RegState::kInMem)
+            a.emit(regSize(z80Reg) == 2 ? x86::Inst::kIdMovzx : x86::Inst::kIdMov,
+                   x86::gpd(alloc(z80Reg)), reg_ptr(z80Reg));
         return x86::Gp::Id(state(z80Reg).x86Reg);
     }
 
-    Error flush(z80::Reg z80Reg) {
+    void flush(z80::Reg z80Reg) {
         if (state(z80Reg).dirty) {
-            ASMJIT_PROPAGATE(setRotAmt(z80Reg));
-            ASMJIT_PROPAGATE(a.mov(reg_ptr(z80Reg), x86::gpd(state(z80Reg).x86Reg)));
-            state(z80Reg).x86Reg = Support::allOnes<typeof(std::declval<z80::RegState>().x86Reg)>();
+            setRotAmt(z80Reg);
+            a.mov(reg_ptr(z80Reg), x86::gpd(state(z80Reg).x86Reg));
+            state(z80Reg).x86Reg = z80::RegState::kInMem;
             state(z80Reg).dirty = false;
         }
-        return kErrorOk;
     }
 
-    void flush() {
-        for (z80::Reg z80Reg = next(z80::Reg::AF); z80Reg != z80::Reg::TEMP; z80Reg = next(z80Reg))
-            flush(z80Reg);
+    void flushFlags() {
         uint8_t constOr = 0, constAnd = Support::allOnes<typeof(constAnd)>(),
             numX86Flags = 0, matchingFlags = 0;
         uint16_t x86Flags = 0;
@@ -437,27 +439,49 @@ struct Gen {
                 a.or_(x86::gpb_lo(mat(z80::Reg::AF, true)), overflowX86Reg);
             }
         }
+    }
+
+    void flush() {
+        for (z80::Reg z80Reg = next(z80::Reg::AF); z80Reg != z80::Reg::Temp; z80Reg = next(z80Reg))
+            flush(z80Reg);
+        flushFlags();
         flush(z80::Reg::AF);
     }
 
-    void flush(x86::Flag x86Flag) {
-        for (z80::Flag z80Flag{}; z80Flag != z80::Flag::End; z80Flag = next(z80Flag)) {
-            if (!state(z80Flag).isInX86Flag() || state(z80Flag).x86Flag() != x86Flag)
-                continue;
-            assert(0); // uh oh
-        }
-        state(x86Flag) = {};
+    bool checkX86FlagsInUse(uint16_t x86Flags) {
+        for (z80::Flag z80Flag{}; z80Flag != z80::Flag::End; z80Flag = next(z80Flag))
+            if (state(z80Flag).isInX86Flag() &&
+                Support::bitTest(x86Flags, u(state(z80Flag).x86Flag())))
+                return true;
+        return false;
     }
 
-    Error setRotAmt(z80::Reg reg, uint8_t target = 0) {
+    void flushX86Flags(uint16_t x86Flags) {
+        if (checkX86FlagsInUse(x86Flags)) {
+            // TODO: Optimize me
+            asm("int3");
+            bool saveAx = Support::bitTest(x86RegsInUse, Support::bitMask(x86::Gp::kIdAx));
+            if (saveAx) a.push(a.zax());
+            flushFlags();
+            if (saveAx) a.pop(a.zax());
+        }
+        for (Support::BitWordIterator<typeof(x86Flags)> it(x86Flags); it.hasNext(); )
+            state(x86::Flag(it.next())) = {};
+    }
+
+    void setRotAmt(z80::Reg reg, uint8_t target = 0) {
         target &= 31;
         if (state(reg).rotAmt != target) {
-            flush(x86::Flag::Carry);
-            flush(x86::Flag::Overflow);
-            ASMJIT_PROPAGATE(a.rol(x86::gpd(state(reg).x86Reg), (target - state(reg).rotAmt) & 31));
+            if (CpuInfo::host().features<x86::Features>().hasBMI2() &&
+                checkX86FlagsInUse(Support::bitMask(u(x86::Flag::Carry), u(x86::Flag::Overflow)))) {
+                auto x86Reg = x86::gpd(mat(reg));
+                a.rorx(x86Reg, x86Reg, (state(reg).rotAmt - target) & 31);
+            } else {
+                flushX86Flags(Support::bitMask(u(x86::Flag::Carry), u(x86::Flag::Overflow)));
+                a.rol(x86::gpd(mat(reg)), (target - state(reg).rotAmt) & 31);
+            }
+            state(reg).rotAmt = target;
         }
-        state(reg).rotAmt = target;
-        return kErrorOk;
     }
 
     x86::Gp access(z80::Reg z80Reg, bool high, bool dirty = false) {
@@ -486,6 +510,31 @@ struct Gen {
                                                                : x86::Inst::kIdClc);
                 break;
         }
+    }
+
+    void incdec(bool dec, z80::Reg z80Reg) {
+        uint8_t pos = l ? 8 : 16;
+        int32_t off = Support::bitMask(pos);
+        if (dec) off = Support::neg(off);
+        if (prevInstKind == InstKind::IncDecWord &&
+            prevInstData[0] == u(z80Reg)) {
+            a.setOffset(prevInstOffset);
+            off += prevInstData[1];
+        }
+        setRotAmt(z80Reg, pos);
+        curInstKind = InstKind::IncDecWord;
+        prevInstOffset = a.offset();
+        prevInstData[0] = u(z80Reg);
+        prevInstData[1] = off;
+        if (checkX86FlagsInUse(Support::bitMask(u(x86::Flag::Carry),
+                                                u(x86::Flag::Parity),
+                                                u(x86::Flag::AuxCarry),
+                                                u(x86::Flag::Zero),
+                                                u(x86::Flag::Sign),
+                                                u(x86::Flag::Overflow))))
+            a.lea(x86::gpd(mat(z80Reg, true)), a.ptr_base(mat(z80Reg), off));
+        else
+            a.add(x86::gpd(mat(z80Reg, true)), off);
     }
 
     void incdec(bool dec, z80::Reg z80Reg, bool high) {
@@ -546,7 +595,7 @@ struct Gen {
         auto x86DstSrc = mat(z80DstSrc, true);
         if (!x86::hasHi(x86DstSrc)) {
             asm("int3");
-            for (z80::Reg z80Reg = next(z80::Reg::AF); z80Reg != z80::Reg::TEMP; z80Reg = next(z80Reg)) {
+            for (z80::Reg z80Reg = next(z80::Reg::AF); z80Reg != z80::Reg::Temp; z80Reg = next(z80Reg)) {
                 auto x86Reg = x86::Gp::Id(state(z80Reg).x86Reg);
                 if (x86::hasHi(x86Reg)) {
                     a.xchg(x86::gpd(x86DstSrc), x86::gpd(x86Reg));
@@ -567,8 +616,9 @@ struct Gen {
 
     void ldi(z80::Reg z80Reg) {
         std::uint32_t imm; if (fetch(imm)) return;
-        state(z80Reg).rotAmt = 0;
         a.mov(x86::gpd(alloc(z80Reg)), imm);
+        state(z80Reg).rotAmt = 0;
+        state(z80Reg).dirty = true;
     }
 
     void addsubcp(bool sub, bool cp, z80::Reg z80Reg, bool high) {
@@ -726,27 +776,33 @@ struct Gen {
             switch (value) {
                 case 0000:                                               return; // NOP
                 case 0001:                            ldi(z80::Reg::BC); return; // LD BC,nn
+                case 0003:                  incdec(false, z80::Reg::BC); return; // INC BC
                 case 0004:           incdec(false, z80::Reg::BC,  true); return; // INC B
                 case 0005:           incdec( true, z80::Reg::BC,  true); return; // DEC B
                 case 0006:                     ldi(z80::Reg::BC,  true); return; // LD B,n
                 case 0007:                           rota( true,  true); return; // RLCA
+                case 0013:                  incdec( true, z80::Reg::BC); return; // DEC BC
                 case 0014:           incdec(false, z80::Reg::BC, false); return; // INC C
                 case 0015:           incdec( true, z80::Reg::BC, false); return; // DEC C
                 case 0016:                     ldi(z80::Reg::BC, false); return; // LD C,n
                 case 0017:                           rota( true, false); return; // RRCA
                 case 0021:                            ldi(z80::Reg::DE); return; // LD DE,nn
+                case 0023:                  incdec(false, z80::Reg::DE); return; // INC DE
                 case 0024:           incdec(false, z80::Reg::DE,  true); return; // INC D
                 case 0025:           incdec( true, z80::Reg::DE,  true); return; // DEC D
                 case 0026:                     ldi(z80::Reg::DE,  true); return; // LD D,n
                 case 0027:                           rota(false,  true); return; // RLA
+                case 0033:                  incdec( true, z80::Reg::DE); return; // DEC DE
                 case 0034:           incdec(false, z80::Reg::DE, false); return; // INC E
                 case 0035:           incdec( true, z80::Reg::DE, false); return; // DEC E
                 case 0036:                     ldi(z80::Reg::DE, false); return; // LD E,n
                 case 0037:                           rota(false, false); return; // RRA
                 case 0041:                            ldi(z80::Reg::HL); return; // LD HL,nn
+                case 0043:                  incdec(false, z80::Reg::HL); return; // INC HL
                 case 0044:           incdec(false, z80::Reg::HL,  true); return; // INC H
                 case 0045:           incdec( true, z80::Reg::HL,  true); return; // DEC H
                 case 0046:                     ldi(z80::Reg::HL,  true); return; // LD H,n
+                case 0053:                  incdec( true, z80::Reg::HL); return; // DEC HL
                 case 0054:           incdec(false, z80::Reg::HL, false); return; // INC L
                 case 0055:           incdec( true, z80::Reg::HL, false); return; // DEC L
                 case 0056:                     ldi(z80::Reg::HL, false); return; // LD L,n
@@ -883,11 +939,14 @@ struct Gen {
 
     bool gen() {
         prolog();
+        prevInstKind = InstKind::Unknown;
         do {
             block.end = pc;
             block.cycles = cycles;
             l = il = pc & kAdlFlag;
+            curInstKind = InstKind::Unknown;
             genInst();
+            prevInstKind = curInstKind;
         } while (!done);
         if ((block.size = block.end - block.start)) {
             for (uint32_t address = block.start; address < block.end; address++)
