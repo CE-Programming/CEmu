@@ -995,6 +995,7 @@ struct Gen {
 #if 0
             patchPoints[static_cast<void *>(reinterpret_cast<char *>(block.entry) + code.labelOffset(patchPoint))] = block.end;
 #endif
+            //if (block.size > 9) asm("int3");
             //if (void *p = phys_mem_ptr(block->start & 0xFFFFFF, block->size))
             //    logger.logBinary(p, block->size);
             //if (block->size) {

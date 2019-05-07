@@ -50,6 +50,7 @@ EmuThread::EmuThread(QObject *parent) : QThread{parent}, write{CONSOLE_BUFFER_SI
 }
 
 void EmuThread::run() {
+    debug_open(DBG_USER, 0);
     while (cpu.abort != CPU_ABORT_EXIT) {
         emu_run(1u);
         doStuff();
