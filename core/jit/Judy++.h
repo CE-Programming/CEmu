@@ -137,6 +137,7 @@ public:
     using value_type = Value;
     Value &operator[](Key key) { return *reinterpret_cast<Value *>(Ins(Util::from(key))); }
     Value *find(Key key) { return reinterpret_cast<Value *>(Get(Util::from(key))); }
+    bool erase(Key key) { return Del(Util::from(key)); }
     void clear() { FreeArray(); }
     bool empty() const { return Empty(); }
     Size size() const { return Count(); }

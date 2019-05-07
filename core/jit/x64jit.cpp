@@ -73,32 +73,31 @@ constexpr typename std::underlying_type<Enum>::type u(Enum value) {
 }
 
 struct CodeBlock {
-    uint32_t (*entry)(eZ80cpu_t *, int32_t);
-    uint32_t start, end, size, cycles;
+    std::int32_t (*entry)(eZ80cpu_t *, std::int32_t);
+    std::int32_t start, end, size, cycles;
 };
-extern "C" {
-[[noreturn]] void jitBind();
-void jitPatch(void *target);
-}
 
 uint64_t blocksExecuted, unhandledValues[256];
 
 JitRuntime runtime;
-uint32_t (*dispatch)(eZ80cpu_t *, int32_t, uint32_t (*)(eZ80cpu_t *, int32_t));
-Judy<uint32_t, bool> fetched;
-Judy<uint32_t, CodeBlock *> blocks;
-Judy<void *, uint32_t> patchPoints;
+std::int32_t (*dispatch)(eZ80cpu_t *, std::int32_t, std::int32_t (*)(eZ80cpu_t *, std::int32_t));
+void (*patcher)(eZ80cpu_t *, int32_t, std::int32_t);
+Judy<int32_t, bool> fetched;
+Judy<int32_t, CodeBlock *> blocks;
+Judy<void *, int32_t> patches;
 Zone blockZone(0x1000 - Zone::kBlockOverhead, alignof(CodeBlock));
 
-void init(CodeHolder &code, BaseEmitter &e) {
-    code.init(runtime.codeInfo());
+void init(CodeHolder &code, BaseEmitter &e, void *baseAddress = nullptr) {
+    CodeInfo info = runtime.codeInfo();
+    if (baseAddress) info.setBaseAddress(std::uint64_t(baseAddress));
+    code.init(info);
     code.addEmitterOptions(BaseAssembler::kOptionStrictValidation |
                            BaseAssembler::kOptionOptimizedForSize |
                            BaseAssembler::kOptionOptimizedAlign);
     code.attach(&e);
 }
 
-enum AddressFlag : uint32_t {
+enum AddressFlag : std::int32_t {
       kAdlFlag   = Support::bitMask(24),
       kEventFlag = Support::bitMask(25),
 };
@@ -215,8 +214,8 @@ struct Gen {
     } prevInstKind, curInstKind;
     std::size_t cycleOffset, prevInstOffset;
     std::int32_t prevInstData[2];
-    std::uint32_t target;
-    Gen(CodeBlock &block, std::uint32_t pc) : block(block), pc(pc) {
+    std::int32_t target;
+    Gen(CodeBlock &block, std::int32_t pc) : block(block), pc(pc) {
         block.start = pc;
         init(code, a);
         eventLabel = a.newLabel();
@@ -244,7 +243,7 @@ struct Gen {
         return done;
     }
 
-    bool fetch(std::uint32_t &value) {
+    bool fetch(std::int32_t &value) {
         std::uint8_t low, high, upper;
         if (!(fetch(low) || fetch(high) || (il && fetch(upper)))) {
             value = low << 0 | high << 8;
@@ -622,7 +621,7 @@ struct Gen {
     }
 
     void ldi(z80::Reg z80Reg) {
-        std::uint32_t imm; if (fetch(imm)) return;
+        std::int32_t imm; if (fetch(imm)) return;
         a.mov(x86::gpd(alloc(z80Reg)), imm);
         state(z80Reg).rotAmt = 0;
         state(z80Reg).dirty = true;
@@ -974,34 +973,20 @@ struct Gen {
             prevInstKind = curInstKind;
         } while (!done);
         if ((block.size = block.end - block.start)) {
-            for (uint32_t address = block.start; address < block.end; address++)
+            for (std::int32_t address = block.start; address < block.end; address++)
                 fetched[address & 0xFFFFFF] = true;
             flush();
-            a.mov(x86::eax, target);
-            a.ret();
+            Label patchLabel = a.newLabel();
+            a.bind(patchLabel);
+            a.call(imm(patcher));
+            assert(a.offset() == code.labelOffset(patchLabel) + 6);
             a.bind(eventLabel);
             a.add(x86::esi, -block.cycles);
             a.mov(x86::eax, kEventFlag | block.start);
             a.ret();
-#if 0
-            Label patchPoint = a.newLabel();
-            a.bind(patchPoint);
-            a.long_().mov(a.zax(), imm(jitBind));
-            a.call(a.zax());
-            a.ud2();
-#endif
             fixup();
             runtime.add(&block.entry, &code);
-#if 0
-            patchPoints[static_cast<void *>(reinterpret_cast<char *>(block.entry) + code.labelOffset(patchPoint))] = block.end;
-#endif
-            //if (block.size > 9) asm("int3");
-            //if (void *p = phys_mem_ptr(block->start & 0xFFFFFF, block->size))
-            //    logger.logBinary(p, block->size);
-            //if (block->size) {
-            //    puts(logger.data());
-            //    fflush(stdout);
-            //}
+            patches[static_cast<void *>(reinterpret_cast<char *>(block.entry) + code.labelOffset(patchLabel))] = target;
         } else {
             block.entry = nullptr;
         }
@@ -1009,15 +994,31 @@ struct Gen {
     }
 };
 
-CodeBlock *gen(uint32_t pc) {
+CodeBlock *gen(std::int32_t pc) {
     CodeBlock *block = blockZone.allocT<CodeBlock>();
     if (block) Gen(*block, pc).gen();
     return block;
 }
 
-void jitPatch(void *target) {
-    uint32_t address = *patchPoints.find(target);
-    gen(address);
+void *jitPatch(void *patchPoint) {
+    auto entry = patches.last(patchPoint);
+    assert(entry);
+    patchPoint = entry->first;
+    std::int32_t address = entry->second;
+    patches.erase(patchPoint);
+    CodeBlock *block = gen(address);
+    CodeHolder code;
+    x86::Assembler a;
+    init(code, a, patchPoint);
+    if (block && block->entry)
+        a.jmp(imm(block->entry));
+    else {
+        a.mov(x86::eax, address);
+        a.ret();
+    }
+    assert(!code.hasUnresolvedLinks() && !code.hasAddressTable());
+    code.copySectionData(patchPoint, 6, 0);
+    return block && block->entry ? reinterpret_cast<void *>(block->entry) : patchPoint;
 }
 
 }
@@ -1031,6 +1032,7 @@ void jitFlush() {
     CodeHolder code;
     x86::Assembler a;
     init(code, a);
+
     a.push(a.zbx());
     a.call(a.zdx());
     //a.and_(x86::eax, 0xFFFFFF);
@@ -1039,10 +1041,23 @@ void jitFlush() {
     a.mov(a.ptr_zdi(offsetof(eZ80cpu_t, cycles)), x86::esi);
     a.pop(a.zbx());
     a.ret();
+
+    Label patcherLabel = a.newLabel();
+    a.bind(patcherLabel);
+    a.mov(a.zbx(), a.zdi());
+    a.pop(a.zdi());
+    a.push(a.zsi());
+    a.mov(a.zax(), imm(jitPatch));
+    a.call(a.zax());
+    a.pop(a.zsi());
+    a.mov(a.zdi(), a.zbx());
+    a.jmp(a.zax());
+
     runtime.add(&dispatch, &code);
+    patcher = dispatch ? reinterpret_cast<typeof(patcher)>(reinterpret_cast<char *>(dispatch) + code.labelOffset(patcherLabel)) : nullptr;
 }
 
-void jitReportWrite(uint32_t address, uint8_t value) {
+void jitReportWrite(std::int32_t address, std::uint8_t value) {
     if (!fetched[address & 0xFFFFFF]) {
         return;
     }
@@ -1050,8 +1065,8 @@ void jitReportWrite(uint32_t address, uint8_t value) {
 }
 
 bool jitTryExecute() {
-    uint32_t address = cpu.ADL ? kAdlFlag | (cpu.registers.PC & 0xFFFFFF)
-                               : cpu.registers.MBASE << 16 | (cpu.registers.PC & 0xFFFF);
+    std::int32_t address = cpu.ADL ? kAdlFlag | (cpu.registers.PC & 0xFFFFFF)
+                                   : cpu.registers.MBASE << 16 | (cpu.registers.PC & 0xFFFF);
     CodeBlock *block;
     if (auto it = blocks.find(address))
         block = *it;

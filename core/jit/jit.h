@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 void jitFlush(void);
-void jitReportWrite(uint32_t address, uint8_t value);
+void jitReportWrite(int32_t address, uint8_t value);
 bool jitTryExecute(void);
 
 #ifdef __cplusplus
