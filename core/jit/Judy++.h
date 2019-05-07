@@ -5,13 +5,14 @@
 
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <functional>
 #include <utility>
 
 namespace judy {
 
-using Word = unsigned long;
+using Word = std::uintptr_t;
 using Size = std::size_t;
 
 template<typename Key = Word, typename Value = Word> class Judy;
