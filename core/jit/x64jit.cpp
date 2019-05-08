@@ -13,6 +13,7 @@ using namespace asmjit;
 using namespace judy;
 
 #include <iostream>
+#include <limits>
 #include <type_traits>
 #include <utility>
 
@@ -73,17 +74,19 @@ constexpr typename std::underlying_type<Enum>::type u(Enum value) {
 }
 
 struct CodeBlock {
-    std::int32_t (*entry)(eZ80cpu_t *, std::int32_t);
+    std::int64_t (*entry)(eZ80cpu_t *, std::int32_t);
     std::int32_t start, end, size, cycles;
+    std::uint8_t prefetch;
 };
 
 uint64_t blocksExecuted, unhandledValues[256];
 
 JitRuntime runtime;
-std::int32_t (*dispatch)(eZ80cpu_t *, std::int32_t, std::int32_t (*)(eZ80cpu_t *, std::int32_t));
+std::int32_t (*dispatch)(eZ80cpu_t *, std::int32_t, std::int64_t (*)(eZ80cpu_t *, std::int32_t));
 void (*patcher)(eZ80cpu_t *, int32_t, std::int32_t);
 Judy<int32_t, bool> fetched;
 Judy<int32_t, CodeBlock *> blocks;
+enum { kMaxPatchSize = 8 }; // mov dl,prefetch \ mov eax,address \ ret
 Judy<void *, int32_t> patches;
 Zone blockZone(0x1000 - Zone::kBlockOverhead, alignof(CodeBlock));
 
@@ -98,8 +101,8 @@ void init(CodeHolder &code, BaseEmitter &e, void *baseAddress = nullptr) {
 }
 
 enum AddressFlag : std::int32_t {
-      kAdlFlag   = Support::bitMask(24),
-      kEventFlag = Support::bitMask(25),
+      kEventFlag = Support::bitMask(24),
+      kAdlFlag   = Support::bitMask(25), // must be highest flag
 };
 
 namespace z80 {
@@ -207,6 +210,7 @@ struct Gen {
                                                   x86::Gp::kIdSi) | // reserved for cycles
         calleeSave;
     std::int32_t pc, cycles;
+    std::uint8_t prefetch;
     bool l, il, done;
     enum class InstKind {
         Unknown,
@@ -223,7 +227,7 @@ struct Gen {
 
     bool addCycles(std::int32_t offset) { return done = (cycles += offset) >= 0x80; }
 
-    bool fetch(std::uint8_t &value) {
+    bool fetch() {
         std::uint32_t address = pc++ & 0xFFFFFF;
         if (address < 0x800000) {
             if (address <= flash.mask) {
@@ -232,30 +236,48 @@ struct Gen {
                 addCycles(258);
                 address &= flash.mask;
             }
-            value = mem.flash.block[address];
+            prefetch = mem.flash.block[address];
         } else if (address >= 0xD00000 && address < 0xD00000 + SIZE_RAM) {
             addCycles(4);
+            cycles = 4;
             address &= 0x07FFFF;
-            value = mem.ram.block[address];
+            prefetch = mem.ram.block[address];
         } else {
             done = true;
         }
         return done;
     }
 
-    bool fetch(std::int32_t &value) {
-        std::uint8_t low, high, upper;
-        if (!(fetch(low) || fetch(high) || (il && fetch(upper)))) {
-            value = low << 0 | high << 8;
-            if (l && il) value |= upper << 16;
-        }
-        return done;
+    std::int32_t fetchWord() {
+        std::int32_t value = prefetch;
+        if (fetch()) return -1;
+        value |= prefetch << 8;
+        if (fetch()) return -1;
+        if (l && il) value |= prefetch << 16;
+        if (il && fetch()) return -1;
+        return value;
     }
 
-    void term() {
-        block.end = pc;
+    std::int32_t fetchWordNoPrefetch() {
+        std::int32_t value = prefetch;
+        if (fetch()) return -1;
+        value |= prefetch << 8;
+        if (il && fetch()) return -1;
+        if (l && il) value |= prefetch << 16;
+        return value;
+    }
+
+    void stash(bool end) {
         block.cycles = cycles;
-        done = true;
+        block.prefetch = prefetch;
+        done = end;
+    }
+
+    void term(std::int32_t address) {
+        block.end = pc;
+        target = pc = address;
+        if (fetch()) return;
+        stash(true);
     }
 
     x86::Mem reg_ptr(z80::Reg reg) {
@@ -616,12 +638,14 @@ struct Gen {
     }
 
     void ldi(z80::Reg z80Reg, bool high) {
-        std::uint8_t imm; if (fetch(imm)) return;
+        std::uint8_t imm = prefetch;
+        if (fetch()) return;
         a.mov(access(z80Reg, high, true), imm);
     }
 
     void ldi(z80::Reg z80Reg) {
-        std::int32_t imm; if (fetch(imm)) return;
+        std::int32_t imm = fetchWord();
+        if (imm < 0) return;
         a.mov(x86::gpd(alloc(z80Reg)), imm);
         state(z80Reg).rotAmt = 0;
         state(z80Reg).dirty = true;
@@ -717,7 +741,8 @@ struct Gen {
     }
 
     void addsubcpi(bool sub, bool cp) {
-        std::uint8_t imm; if (fetch(imm)) return;
+        std::uint8_t imm = prefetch;
+        if (fetch()) return;
         a.emit(sub ? cp ? x86::Inst::kIdCmp : x86::Inst::kIdSub : x86::Inst::kIdAdd,
                access(z80::Reg::AF, true, true), imm);
         // Update Z80 flags
@@ -737,7 +762,8 @@ struct Gen {
     }
 
     void adcsbci(bool sbc) {
-        std::uint8_t imm; if (fetch(imm)) return;
+        std::uint8_t imm = prefetch;
+        if (fetch()) return;
         ensureZ80CarryInX86Carry();
         a.emit(sbc ? x86::Inst::kIdSbb : x86::Inst::kIdAdc,
                access(z80::Reg::AF, true, true), imm);
@@ -758,7 +784,8 @@ struct Gen {
     }
 
     void andxorortsti(bool half, bool x) {
-        std::uint8_t imm; if (fetch(imm)) return;
+        std::uint8_t imm = prefetch;
+        if (fetch()) return;
         a.emit(half ? x ? x86::Inst::kIdTest : x86::Inst::kIdAnd
                     : x ? x86::Inst::kIdXor  : x86::Inst::kIdOr,
                access(z80::Reg::AF, true, true), imm);
@@ -779,14 +806,17 @@ struct Gen {
     }
 
     void jp() {
-        if (addCycles(1) || fetch(target)) return;
-        if (l) target |= kAdlFlag;
-        term();
+        if (addCycles(1)) return;
+        std::int32_t address = fetchWordNoPrefetch();
+        if (address < 0) return;
+        if (l) address |= kAdlFlag;
+        term(address);
     }
 
     void genInst() {
         while (true) {
-            std::uint8_t value; if (fetch(value)) return;
+            std::uint8_t value = prefetch;
+            if (fetch()) return;
             switch (value) {
                 case 0000:                                                         return; // NOP
                 case 0001:                                      ldi(z80::Reg::BC); return; // LD BC,nn
@@ -940,7 +970,8 @@ struct Gen {
                 case 0366:                             andxorortsti(false, false); return; // OR A,n
                 case 0376:                                addsubcpi( true,  true); return; // CP A,n
                 case 0355: { // ED
-                    if (fetch(value)) return;
+                    value = prefetch;
+                    if (fetch()) return;
                     switch (value) {
                         case 0004: andxorortst( true,  true, z80::Reg::BC,  true); return; // TST A,B
                         case 0014: andxorortst( true,  true, z80::Reg::BC, false); return; // TST A,C
@@ -960,28 +991,33 @@ struct Gen {
     }
 
     void gen() {
-        cycles = 0;
         prevInstKind = InstKind::Unknown;
         prolog();
-        do {
-            term();
-            target = pc;
-            done = false;
+        cycles = std::numeric_limits<typeof(cycles)>::min(); // ignore cycles from inital fetch
+        fetch();
+        std::uint8_t initialPrefetch = prefetch;
+        cycles = 0;
+        while (!done) {
+            block.end = target = pc - 1;
+            stash(false);
             l = il = pc & kAdlFlag;
             curInstKind = InstKind::Unknown;
             genInst();
             prevInstKind = curInstKind;
-        } while (!done);
+        }
         if ((block.size = block.end - block.start)) {
             for (std::int32_t address = block.start; address < block.end; address++)
                 fetched[address & 0xFFFFFF] = true;
+            fetched[target & 0xFFFFFF] = true;
             flush();
             Label patchLabel = a.newLabel();
             a.bind(patchLabel);
             a.call(imm(patcher));
-            assert(a.offset() == code.labelOffset(patchLabel) + 6);
+            a.ud2();
+            assert(a.offset() == code.labelOffset(patchLabel) + kMaxPatchSize);
             a.bind(eventLabel);
-            a.add(x86::esi, -block.cycles);
+            a.short_().add(x86::esi, -block.cycles);
+            a.mov(x86::dl, initialPrefetch);
             a.mov(x86::eax, kEventFlag | block.start);
             a.ret();
             fixup();
@@ -1013,11 +1049,12 @@ void *jitPatch(void *patchPoint) {
     if (block && block->entry)
         a.jmp(imm(block->entry));
     else {
+        a.mov(x86::dl, block->prefetch);
         a.mov(x86::eax, address);
         a.ret();
     }
     assert(!code.hasUnresolvedLinks() && !code.hasAddressTable());
-    code.copySectionData(patchPoint, 6, 0);
+    code.copySectionData(patchPoint, kMaxPatchSize, 0);
     return block && block->entry ? reinterpret_cast<void *>(block->entry) : patchPoint;
 }
 
@@ -1035,10 +1072,25 @@ void jitFlush() {
 
     a.push(a.zbx());
     a.call(a.zdx());
-    //a.and_(x86::eax, 0xFFFFFF);
+    a.mov(x86::ecx, x86::eax);
+    a.movzx(x86::ebx, a.ptr_zdi(offsetof(eZ80cpu_t, registers.MBASE), 1));
     a.add(x86::esi, a.ptr_zdi(offsetof(eZ80cpu_t, next)));
-    //a.mov(a.ptr_zdi(offsetof(eZ80cpu_t, registers.PC)), x86::eax);
+    a.mov(a.ptr_zdi(offsetof(eZ80cpu_t, prefetch)), x86::dl);
+    a.shr(x86::ecx, Support::constCtz(kAdlFlag));
+    a.mov(x86::edx, x86::eax);
     a.mov(a.ptr_zdi(offsetof(eZ80cpu_t, cycles)), x86::esi);
+    a.shl(x86::cl, 3);
+    a.mov(x86::esi, ~0xFFFF);
+    a.shl(x86::ebx, 16);
+    a.shl(x86::esi, x86::cl);
+    a.and_(x86::ebx, x86::esi);
+    a.not_(x86::esi);
+    a.lea(x86::ecx, a.ptr_zdx(1));
+    a.and_(x86::edx, x86::esi);
+    a.and_(x86::ecx, x86::esi);
+    a.or_(x86::edx, x86::ebx);
+    a.mov(a.ptr_zdi(offsetof(eZ80cpu_t, registers.rawPC)), x86::ecx);
+    a.mov(a.ptr_zdi(offsetof(eZ80cpu_t, registers.PC)), x86::edx);
     a.pop(a.zbx());
     a.ret();
 
@@ -1076,8 +1128,8 @@ bool jitTryExecute() {
         return false;
     ++blocksExecuted;
     address = dispatch(&cpu, cpu.cycles - cpu.next, block->entry);
-    cpu_flush(address & 0xFFFFFF, address & kAdlFlag);
-    return true;
+    cpu.ADL = address & kAdlFlag;
+    return !(address & kEventFlag);
 }
 
 #endif

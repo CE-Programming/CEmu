@@ -888,7 +888,7 @@ void cpu_execute(void) {
         }
         do {
             if (!cpu.PREFIX && !cpu.SUFFIX && jitTryExecute()) {
-                continue;
+                goto cpu_execute_next_instruction;
             }
             /* fetch opcode */
             context.opcode = cpu_fetch_byte();
@@ -1558,6 +1558,7 @@ void cpu_execute(void) {
                     }
                     break;
             }
+        cpu_execute_next_instruction:
             cpu_inst_start();
         } while (cpu.PREFIX || cpu.SUFFIX || cpu.cycles < cpu.next);
     }
