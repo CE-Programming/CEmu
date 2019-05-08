@@ -640,6 +640,10 @@ struct Gen {
     void ldi(z80::Reg z80Reg, bool high) {
         std::uint8_t imm = prefetch;
         if (fetch()) return;
+        if (z80Reg == z80::Reg::AF && prefetch == 0363) {
+            done = true;
+            return;
+        }
         a.mov(access(z80Reg, high, true), imm);
     }
 
