@@ -603,6 +603,17 @@ struct Gen {
         state(x86::Flag::Overflow) = {};
     }
 
+    void jr() {
+        if (!prefetch) { // @Flash
+            done = true;
+            return;
+        }
+        std::int32_t address = (pc & kAdlFlag) |
+            cpu_mask_mode(pc + std::int8_t(prefetch), pc & kAdlFlag);
+        if (fetch()) return;
+        term(address);
+    }
+
     void cpl() {
         a.not_(access(z80::Reg::AF, true, true));
         // Update Z80 flags
@@ -643,7 +654,7 @@ struct Gen {
     void ldi(z80::Reg z80Reg, bool high) {
         std::uint8_t imm = prefetch;
         if (fetch()) return;
-        if (z80Reg == z80::Reg::AF && prefetch == 0363) {
+        if (z80Reg == z80::Reg::AF && prefetch == 0363) { // @Flash
             done = true;
             return;
         }
@@ -698,7 +709,7 @@ struct Gen {
     }
 
     void subxorcpaa(bool sub, bool cp) {
-        if (!sub && prefetch == 0363) {
+        if (!sub && prefetch == 0363) { // @Flash
             done = true;
             return;
         }
@@ -847,6 +858,7 @@ struct Gen {
                 case 0025:                     incdec( true, z80::Reg::DE,  true); return; // DEC D
                 case 0026:                               ldi(z80::Reg::DE,  true); return; // LD D,n
                 case 0027:                                     rota(false,  true); return; // RLA
+                case 0030:                                                   jr(); return; // JR o
                 case 0033:                            incdec( true, z80::Reg::DE); return; // DEC DE
                 case 0034:                     incdec(false, z80::Reg::DE, false); return; // INC E
                 case 0035:                     incdec( true, z80::Reg::DE, false); return; // DEC E
