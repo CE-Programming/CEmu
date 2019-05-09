@@ -635,6 +635,7 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
         case 0x4: case 0x5: case 0x6: case 0x7:
             value = mem_read_flash(addr);
             if (fetch && detect_flash_unlock_sequence(value)) {
+                //debug_open(DBG_USER, 0);
                 control.flashUnlocked |= 1 << 3;
             }
             break;

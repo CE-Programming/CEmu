@@ -84,11 +84,14 @@ uint64_t blocksExecuted, unhandledValues[256];
 JitRuntime runtime;
 std::int32_t (*dispatch)(eZ80cpu_t *, std::int32_t, std::int64_t (*)(eZ80cpu_t *, std::int32_t));
 void (*patcher)(eZ80cpu_t *, int32_t, std::int32_t);
+
 Judy<int32_t, bool> fetched;
+
 Judy<int32_t, CodeBlock *> blocks;
-enum { kMaxPatchSize = 8 }; // mov dl,prefetch \ mov eax,address \ ret
-Judy<void *, int32_t> patches;
 Zone blockZone(0x1000 - Zone::kBlockOverhead, alignof(CodeBlock));
+
+Judy<void *, int32_t> patches;
+enum { kPatchOffset = 6, kMaxPatchSize = 8 }; // mov dl,prefetch \ mov eax,address \ ret
 
 void init(CodeHolder &code, BaseEmitter &e, void *baseAddress = nullptr) {
     CodeInfo info = runtime.codeInfo();
@@ -695,6 +698,10 @@ struct Gen {
     }
 
     void subxorcpaa(bool sub, bool cp) {
+        if (!sub && prefetch == 0363) {
+            done = true;
+            return;
+        }
         if (!cp)
             a.mov(x86::gpb_hi(mat(z80::Reg::AF, true)), 0);
         // Update Z80 flags
@@ -1017,6 +1024,7 @@ struct Gen {
             Label patchLabel = a.newLabel();
             a.bind(patchLabel);
             a.call(imm(patcher));
+            assert(a.offset() == code.labelOffset(patchLabel) + kPatchOffset);
             a.ud2();
             assert(a.offset() == code.labelOffset(patchLabel) + kMaxPatchSize);
             a.bind(eventLabel);
@@ -1024,6 +1032,7 @@ struct Gen {
             a.mov(x86::dl, initialPrefetch);
             a.mov(x86::eax, kEventFlag | block.start);
             a.ret();
+            //a.mov(x86::rax, imm(&block));
             fixup();
             runtime.add(&block.entry, &code);
             patches[static_cast<void *>(reinterpret_cast<char *>(block.entry) + code.labelOffset(patchLabel))] = target;
@@ -1042,7 +1051,7 @@ CodeBlock *gen(std::int32_t pc) {
 
 void *jitPatch(void *patchPoint) {
     auto entry = patches.last(patchPoint);
-    assert(entry);
+    assert(entry && static_cast<char *>(patchPoint) == static_cast<char *>(entry->first) + kPatchOffset);
     patchPoint = entry->first;
     std::int32_t address = entry->second;
     patches.erase(patchPoint);
@@ -1069,6 +1078,7 @@ void jitFlush() {
     fetched.clear();
     blocks.clear();
     blockZone.reset();
+    patches.clear();
 
     CodeHolder code;
     x86::Assembler a;
