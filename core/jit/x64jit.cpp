@@ -82,6 +82,9 @@ struct CodeBlock {
 uint64_t blocksExecuted, unhandledValues[256];
 
 JitRuntime runtime;
+CodeHolder code;
+x86::Assembler a;
+
 std::int32_t (*dispatch)(eZ80cpu_t *, std::int32_t, std::int64_t (*)(eZ80cpu_t *, std::int32_t));
 void (*patcher)(eZ80cpu_t *, int32_t, std::int32_t);
 
@@ -96,6 +99,7 @@ enum { kPatchOffset = 6, kMaxPatchSize = 8 }; // mov dl,prefetch \ mov eax,addre
 void init(CodeHolder &code, BaseEmitter &e, void *baseAddress = nullptr) {
     CodeInfo info = runtime.codeInfo();
     if (baseAddress) info.setBaseAddress(std::uint64_t(baseAddress));
+    code.reset();
     code.init(info);
     code.addEmitterOptions(BaseAssembler::kOptionStrictValidation |
                            BaseAssembler::kOptionOptimizedForSize |
@@ -183,8 +187,6 @@ const std::uint16_t calleeSave = Support::bitMask(x86::Gp::kIdBx,
                                                   x86::Gp::kIdR15);
 struct Gen {
     CodeBlock &block;
-    CodeHolder code;
-    x86::Assembler a;
     Label eventLabel;
     FlagState z80Flags[8] = {
         z80::Flag::Carry,
@@ -1030,16 +1032,16 @@ struct Gen {
         }
     }
 
-    struct PatchEntry { std::uint32_t labelId; std::int32_t target; };
-    ZoneVector<PatchEntry> patchEntries;
-    void addPatch(std::int32_t address) {
+    struct PatchPoint { std::uint32_t labelId; std::int32_t target; };
+    ZoneVector<PatchPoint> patchPoints;
+    void addPatchPoint(std::int32_t address) {
         Label label = a.newLabel();;
         a.bind(label);
         a.call(imm(patcher));
         assert(a.offset() == code.labelOffset(label) + kPatchOffset);
         a.ud2();
         assert(a.offset() == code.labelOffset(label) + kMaxPatchSize);
-        patchEntries.append(code.allocator(), PatchEntry{label.id(), address});
+        patchPoints.append(code.allocator(), PatchPoint{label.id(), address});
     }
 
     void gen() {
@@ -1062,7 +1064,7 @@ struct Gen {
                 fetched[address & 0xFFFFFF] = true;
             fetched[target & 0xFFFFFF] = true;
             flush();
-            addPatch(target);
+            addPatchPoint(target);
             a.bind(eventLabel);
             a.short_().add(x86::esi, -block.cycles);
             a.mov(x86::dl, initialPrefetch);
@@ -1071,8 +1073,9 @@ struct Gen {
             //a.mov(x86::rax, imm(&block));
             fixupCycles();
             runtime.add(&block.entry, &code);
-            for (auto &patchEntry : patchEntries)
-                patches[static_cast<void *>(reinterpret_cast<char *>(block.entry) + code.labelOffset(patchEntry.labelId))] = patchEntry.target;
+            for (auto &patchPoint : patchPoints)
+                patches[static_cast<void *>(reinterpret_cast<char *>(block.entry) +
+                                            code.labelOffset(patchPoint.labelId))] = patchPoint.target;
         } else {
             block.entry = nullptr;
         }
@@ -1093,8 +1096,6 @@ void *jitPatch(void *patchPoint) {
     std::int32_t address = entry->second;
     patches.erase(patchPoint);
     CodeBlock *block = gen(address);
-    CodeHolder code;
-    x86::Assembler a;
     init(code, a, patchPoint);
     if (block && block->entry)
         a.jmp(imm(block->entry));
@@ -1117,8 +1118,6 @@ void jitFlush() {
     blockZone.reset();
     patches.clear();
 
-    CodeHolder code;
-    x86::Assembler a;
     init(code, a);
 
     a.push(a.zbx());
