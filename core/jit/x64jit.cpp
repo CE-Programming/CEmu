@@ -320,12 +320,12 @@ struct Gen {
         return z80Regs[index];
     }
 
-    void prolog() {
+    void checkCycles() {
         cycleOffset = a.offset();
         a.short_().sub(x86::esi, 0);
         a.notTaken().jg(eventLabel);
     }
-    void fixup() {
+    void fixupCycles() {
         std::size_t offset = a.offset();
         a.setOffset(cycleOffset);
         a.short_().sub(x86::esi, -block.cycles);
@@ -614,6 +614,19 @@ struct Gen {
         term(address);
     }
 
+    void jr(bool value, z80::Flag z80Flag) {
+        if (state(z80Flag).isConstant()) {
+            if (state(z80Flag).constantValue() == value) {
+                if (!addCycles(1)) jr();
+            } else {
+                fetch();
+            }
+            return;
+        }
+        done = true;
+        return;
+    }
+
     void cpl() {
         a.not_(access(z80::Reg::AF, true, true));
         // Update Z80 flags
@@ -864,17 +877,21 @@ struct Gen {
                 case 0035:                     incdec( true, z80::Reg::DE, false); return; // DEC E
                 case 0036:                               ldi(z80::Reg::DE, false); return; // LD E,n
                 case 0037:                                     rota(false, false); return; // RRA
+                case 0040:                            jr(false, z80::Flag:: Zero); return; // JR nz,o
                 case 0041:                                      ldi(z80::Reg::HL); return; // LD HL,nn
                 case 0043:                            incdec(false, z80::Reg::HL); return; // INC HL
                 case 0044:                     incdec(false, z80::Reg::HL,  true); return; // INC H
                 case 0045:                     incdec( true, z80::Reg::HL,  true); return; // DEC H
                 case 0046:                               ldi(z80::Reg::HL,  true); return; // LD H,n
+                case 0050:                            jr( true, z80::Flag:: Zero); return; // JR z,o
                 case 0053:                            incdec( true, z80::Reg::HL); return; // DEC HL
                 case 0054:                     incdec(false, z80::Reg::HL, false); return; // INC L
                 case 0055:                     incdec( true, z80::Reg::HL, false); return; // DEC L
                 case 0056:                               ldi(z80::Reg::HL, false); return; // LD L,n
                 case 0057:                                                  cpl(); return; // CPL
+                case 0060:                            jr(false, z80::Flag::Carry); return; // JR nc,o
                 case 0067:                                                  scf(); return; // SCF
+                case 0070:                            jr( true, z80::Flag::Carry); return; // JR c,o
                 case 0074:                     incdec(false, z80::Reg::AF,  true); return; // INC A
                 case 0075:                     incdec( true, z80::Reg::AF,  true); return; // DEC A
                 case 0076:                               ldi(z80::Reg::AF,  true); return; // LD A,n
@@ -1013,9 +1030,21 @@ struct Gen {
         }
     }
 
+    struct PatchEntry { std::uint32_t labelId; std::int32_t target; };
+    ZoneVector<PatchEntry> patchEntries;
+    void addPatch(std::int32_t address) {
+        Label label = a.newLabel();;
+        a.bind(label);
+        a.call(imm(patcher));
+        assert(a.offset() == code.labelOffset(label) + kPatchOffset);
+        a.ud2();
+        assert(a.offset() == code.labelOffset(label) + kMaxPatchSize);
+        patchEntries.append(code.allocator(), PatchEntry{label.id(), address});
+    }
+
     void gen() {
         prevInstKind = InstKind::Unknown;
-        prolog();
+        checkCycles();
         cycles = std::numeric_limits<typeof(cycles)>::min(); // ignore cycles from inital fetch
         fetch();
         std::uint8_t initialPrefetch = prefetch;
@@ -1033,21 +1062,17 @@ struct Gen {
                 fetched[address & 0xFFFFFF] = true;
             fetched[target & 0xFFFFFF] = true;
             flush();
-            Label patchLabel = a.newLabel();
-            a.bind(patchLabel);
-            a.call(imm(patcher));
-            assert(a.offset() == code.labelOffset(patchLabel) + kPatchOffset);
-            a.ud2();
-            assert(a.offset() == code.labelOffset(patchLabel) + kMaxPatchSize);
+            addPatch(target);
             a.bind(eventLabel);
             a.short_().add(x86::esi, -block.cycles);
             a.mov(x86::dl, initialPrefetch);
             a.mov(x86::eax, kEventFlag | block.start);
             a.ret();
             //a.mov(x86::rax, imm(&block));
-            fixup();
+            fixupCycles();
             runtime.add(&block.entry, &code);
-            patches[static_cast<void *>(reinterpret_cast<char *>(block.entry) + code.labelOffset(patchLabel))] = target;
+            for (auto &patchEntry : patchEntries)
+                patches[static_cast<void *>(reinterpret_cast<char *>(block.entry) + code.labelOffset(patchEntry.labelId))] = patchEntry.target;
         } else {
             block.entry = nullptr;
         }
@@ -1079,7 +1104,7 @@ void *jitPatch(void *patchPoint) {
         a.ret();
     }
     assert(!code.hasUnresolvedLinks() && !code.hasAddressTable());
-    code.copySectionData(patchPoint, kMaxPatchSize, 0);
+    code.copyFlattenedData(patchPoint, kMaxPatchSize);
     return block && block->entry ? reinterpret_cast<void *>(block->entry) : patchPoint;
 }
 
@@ -1125,8 +1150,9 @@ void jitFlush() {
     a.mov(a.zbx(), a.zdi());
     a.pop(a.zdi());
     a.push(a.zsi());
-    a.mov(a.zax(), imm(jitPatch));
-    a.call(a.zax());
+    //a.mov(a.zax(), imm(jitPatch));
+    //a.call(a.zax());
+    a.call(imm(jitPatch));
     a.pop(a.zsi());
     a.mov(a.zdi(), a.zbx());
     a.jmp(a.zax());
