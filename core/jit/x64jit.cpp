@@ -621,12 +621,23 @@ struct Gen {
         term(address);
     }
 
-    void jr(bool value, z80::Flag z80Flag) {
-        std::int32_t address = (pc & kAdlFlag) |
-            cpu_mask_mode(pc + std::int8_t(prefetch), pc & kAdlFlag);
-        if (fetch()) return;
-        std::int32_t savePc = pc, saveCycles = cycles;
-        std::uint8_t savePrefetch = prefetch;
+    void j(bool r, bool value, z80::Flag z80Flag) {
+        std::int32_t address, saveCycles;
+        if (r) {
+            address = (pc & kAdlFlag) | cpu_mask_mode(pc + std::int8_t(prefetch), pc & kAdlFlag);
+            if (fetch()) return;
+            saveCycles = cycles;
+        } else {
+            address = fetchWordNoPrefetch();
+            if (address < 0) return;
+            if (l) address |= kAdlFlag;
+            saveCycles = cycles;
+            if (fetch()) return;
+            std::swap(cycles, saveCycles);
+        }
+        auto savePc = pc;
+        auto savePrefetch = prefetch;
+        pc = address;
         if (addCycles(1) || fetch()) return;
         if (cycles > maxCycles) maxCycles = cycles;
         bool x86Value = value;
@@ -651,25 +662,30 @@ struct Gen {
                 x86Flag = state(z80Flag).x86Flag();
                 break;
             case FlagState::Kind::Constant:
-                if (state(z80Flag).constantValue() != value)
-                    fetch();
-                else if (!addCycles(1))
-                    jr();
+                if (state(z80Flag).constantValue() != value) {
+                    pc = savePc;
+                    cycles = saveCycles;
+                    prefetch = savePrefetch;
+                }
                 return;
         }
         x86::Cond::Value cond = x86::condFromFlag(x86Flag);
         if (x86Value) cond = x86::Cond::Value(x86::Cond::negate(cond));
-        Label noJumpLabel = a.newLabel();
-        a.short_().emit(x86::Inst::jccFromCond(cond), noJumpLabel);
-        state(z80Flag) = value;
+        Label fallthroughLabel = a.newLabel();
+        a.short_().emit(x86::Inst::jccFromCond(cond), fallthroughLabel);
+        if (!state(z80Flag).isInZ80Flag() || state(z80Flag).z80Flag() != z80Flag)
+            state(z80Flag) = value;
+        state(x86Flag) = x86Value;
         flushPreserveState();
         addCycleFixup();
         addPatchPoint(address);
         pc = savePc;
         cycles = saveCycles;
         prefetch = savePrefetch;
-        a.bind(noJumpLabel);
-        state(z80Flag) = !value;
+        a.bind(fallthroughLabel);
+        if (!state(z80Flag).isInZ80Flag() || state(z80Flag).z80Flag() != z80Flag)
+            state(z80Flag) = !value;
+        state(x86Flag) = !x86Value;
     }
 
     void cpl() {
@@ -922,21 +938,21 @@ struct Gen {
                 case 0035:                     incdec( true, z80::Reg::DE, false); return; // DEC E
                 case 0036:                               ldi(z80::Reg::DE, false); return; // LD E,n
                 case 0037:                                     rota(false, false); return; // RRA
-                case 0040:                            jr(false, z80::Flag:: Zero); return; // JR nz,o
+                case 0040:                      j( true, false, z80::Flag:: Zero); return; // JR nz,o
                 case 0041:                                      ldi(z80::Reg::HL); return; // LD HL,nn
                 case 0043:                            incdec(false, z80::Reg::HL); return; // INC HL
                 case 0044:                     incdec(false, z80::Reg::HL,  true); return; // INC H
                 case 0045:                     incdec( true, z80::Reg::HL,  true); return; // DEC H
                 case 0046:                               ldi(z80::Reg::HL,  true); return; // LD H,n
-                case 0050:                            jr( true, z80::Flag:: Zero); return; // JR z,o
+                case 0050:                      j( true,  true, z80::Flag:: Zero); return; // JR z,o
                 case 0053:                            incdec( true, z80::Reg::HL); return; // DEC HL
                 case 0054:                     incdec(false, z80::Reg::HL, false); return; // INC L
                 case 0055:                     incdec( true, z80::Reg::HL, false); return; // DEC L
                 case 0056:                               ldi(z80::Reg::HL, false); return; // LD L,n
                 case 0057:                                                  cpl(); return; // CPL
-                case 0060:                            jr(false, z80::Flag::Carry); return; // JR nc,o
+                case 0060:                      j( true, false, z80::Flag::Carry); return; // JR nc,o
                 case 0067:                                                  scf(); return; // SCF
-                case 0070:                            jr( true, z80::Flag::Carry); return; // JR c,o
+                case 0070:                      j( true,  true, z80::Flag::Carry); return; // JR c,o
                 case 0074:                     incdec(false, z80::Reg::AF,  true); return; // INC A
                 case 0075:                     incdec( true, z80::Reg::AF,  true); return; // DEC A
                 case 0076:                               ldi(z80::Reg::AF,  true); return; // LD A,n
@@ -1045,14 +1061,22 @@ struct Gen {
                 case 0274:            addsubcp( true,  true, z80::Reg::HL,  true); return; // CP A,H
                 case 0275:            addsubcp( true,  true, z80::Reg::HL, false); return; // CP A,L
                 case 0277:                               subxorcpaa( true,  true); return; // CP A,A
+                case 0302:             j(false, false, z80::Flag::          Zero); return; // JP nz,nn
                 case 0303:                                                   jp(); return; // JP nn
                 case 0306:                                addsubcpi(false, false); return; // ADD A,n
+                case 0312:             j(false,  true, z80::Flag::          Zero); return; // JP z,nn
                 case 0316:                                         adcsbci(false); return; // ADC A,n
+                case 0322:             j(false, false, z80::Flag::         Carry); return; // JP nc,nn
                 case 0326:                                addsubcpi( true, false); return; // SUB A,n
+                case 0332:             j(false,  true, z80::Flag::         Carry); return; // JP c,nn
                 case 0336:                                         adcsbci( true); return; // SBC A,n
+                case 0342:             j(false, false, z80::Flag::ParityOverflow); return; // JP po,nn
                 case 0346:                             andxorortsti( true, false); return; // AND A,n
+                case 0352:             j(false,  true, z80::Flag::ParityOverflow); return; // JP pe,nn
                 case 0356:                             andxorortsti(false,  true); return; // XOR A,n
+                case 0362:             j(false, false, z80::Flag::          Sign); return; // JP p,nn
                 case 0366:                             andxorortsti(false, false); return; // OR A,n
+                case 0372:             j(false,  true, z80::Flag::          Sign); return; // JP m,nn
                 case 0376:                                addsubcpi( true,  true); return; // CP A,n
                 case 0355: { // ED
                     value = prefetch;
