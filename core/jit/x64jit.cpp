@@ -494,8 +494,7 @@ struct Gen {
     void flushX86Flags(uint16_t x86Flags) {
         if (checkX86FlagsInUse(x86Flags)) {
             // TODO: Optimize me
-            asm("int3");
-            bool saveAx = Support::bitTest(x86RegsInUse, Support::bitMask(x86::Gp::kIdAx));
+            bool saveAx = Support::bitTest(x86RegsInUse, x86::Gp::kIdAx);
             if (saveAx) a.push(a.zax());
             flushFlags();
             if (saveAx) a.pop(a.zax());
@@ -610,6 +609,35 @@ struct Gen {
         state(x86::Flag::Overflow) = {};
     }
 
+    void djnz() {
+        std::int32_t address = (pc & kAdlFlag) |
+            cpu_mask_mode(pc + std::int8_t(prefetch), pc & kAdlFlag);
+        if (fetch()) return;
+        std::int32_t saveCycles = cycles;
+        std::int32_t savePc = pc;
+        std::uint8_t savePrefetch = prefetch;
+        pc = address;
+        if (addCycles(1) || fetch()) return;
+        if (cycles > maxCycles) maxCycles = cycles;
+        flushX86Flags(Support::bitMask(u(x86::Flag::Parity),
+                                       u(x86::Flag::AuxCarry),
+                                       u(x86::Flag::Zero),
+                                       u(x86::Flag::Sign),
+                                       u(x86::Flag::Overflow)));
+        a.dec(access(z80::Reg::BC, true, true));
+        Label fallthroughLabel = a.newLabel();
+        a.short_().jz(fallthroughLabel);
+        state(x86::Flag::Zero) = false;
+        flushPreserveState();
+        addCycleFixup();
+        addPatchPoint(address);
+        pc = savePc;
+        cycles = saveCycles;
+        prefetch = savePrefetch;
+        a.bind(fallthroughLabel);
+        state(x86::Flag::Zero) = true;
+    }
+
     void jr() {
         if (!prefetch) { // @Flash
             done = true;
@@ -635,8 +663,8 @@ struct Gen {
             if (fetch()) return;
             std::swap(cycles, saveCycles);
         }
-        auto savePc = pc;
-        auto savePrefetch = prefetch;
+        std::int32_t savePc = pc;
+        std::uint8_t savePrefetch = prefetch;
         pc = address;
         if (addCycles(1) || fetch()) return;
         if (cycles > maxCycles) maxCycles = cycles;
@@ -926,6 +954,7 @@ struct Gen {
                 case 0015:                     incdec( true, z80::Reg::BC, false); return; // DEC C
                 case 0016:                               ldi(z80::Reg::BC, false); return; // LD C,n
                 case 0017:                                     rota( true, false); return; // RRCA
+                case 0020:                                                 djnz(); return; // DJNZ o
                 case 0021:                                      ldi(z80::Reg::DE); return; // LD DE,nn
                 case 0023:                            incdec(false, z80::Reg::DE); return; // INC DE
                 case 0024:                     incdec(false, z80::Reg::DE,  true); return; // INC D
