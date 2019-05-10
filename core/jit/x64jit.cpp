@@ -41,17 +41,6 @@ static Cond::Value condFromFlag(Flag flag) noexcept {
     }
 }
 
-static Inst::Id setccFromFlag(Flag flag) noexcept {
-    switch (flag) {
-        case Flag::Carry:    return Inst::kIdSetc;
-        case Flag::Parity:   return Inst::kIdSetp;
-        case Flag::Zero:     return Inst::kIdSetz;
-        case Flag::Sign:     return Inst::kIdSets;
-        case Flag::Overflow: return Inst::kIdSeto;
-        default: assert(0);
-    }
-}
-
 static constexpr Gp gpb(Gp::Id rId, bool hi) noexcept {
     return Gp(hi ? GpbHi::kSignature : GpbLo::kSignature, rId);
 }
@@ -75,7 +64,7 @@ constexpr typename std::underlying_type<Enum>::type u(Enum value) {
 
 struct CodeBlock {
     std::int64_t (*entry)(eZ80cpu_t *, std::int32_t);
-    std::int32_t start, end, size, cycles;
+    std::int32_t start, end, size;
     std::uint8_t prefetch;
 };
 
@@ -214,7 +203,7 @@ struct Gen {
                                                   x86::Gp::kIdDi,   // reserved for cpu
                                                   x86::Gp::kIdSi) | // reserved for cycles
         calleeSave;
-    std::int32_t pc, cycles;
+    std::int32_t pc, cycles, blockCycles, maxCycles = 0;
     std::uint8_t prefetch;
     bool l, il, done;
     enum class InstKind {
@@ -244,7 +233,6 @@ struct Gen {
             prefetch = mem.flash.block[address];
         } else if (address >= 0xD00000 && address < 0xD00000 + SIZE_RAM) {
             addCycles(4);
-            cycles = 4;
             address &= 0x07FFFF;
             prefetch = mem.ram.block[address];
         } else {
@@ -273,8 +261,8 @@ struct Gen {
     }
 
     void stash(bool end) {
-        block.cycles = cycles;
-        block.prefetch = prefetch;
+        blockCycles = cycles;
+        if (cycles > maxCycles) maxCycles = cycles;
         done = end;
     }
 
@@ -324,14 +312,22 @@ struct Gen {
 
     void checkCycles() {
         cycleOffset = a.offset();
-        a.short_().sub(x86::esi, 0);
+        a.sub(x86::esi, 0);
         a.notTaken().jg(eventLabel);
+    }
+    ZoneVector<std::size_t> cycleFixups;
+    void addCycleFixup() {
+        a.add(x86::esi, std::int8_t(cycles));
+        cycleFixups.append(code.allocator(), a.offset() - 1);
     }
     void fixupCycles() {
         std::size_t offset = a.offset();
         a.setOffset(cycleOffset);
-        a.short_().sub(x86::esi, -block.cycles);
+        a.sub(x86::esi, -maxCycles);
+        for (auto &cycleFixup : cycleFixups)
+            a.bufferData()[cycleFixup] -= maxCycles;
         a.setOffset(offset);
+        a.add(x86::esi, -maxCycles);
     }
 
     x86::Gp::Id alloc(z80::Reg z80Reg) {
@@ -394,7 +390,7 @@ struct Gen {
             x86::Flag x86Flag[2];
             uint8_t rotAmts[2] = { 0, 0 };
             for (Support::BitWordIterator<typeof(x86Flags)> it(x86Flags); it.hasNext(); high = true)
-                a.emit(x86::setccFromFlag(x86Flag[high] = x86::Flag(it.next())),
+                a.emit(x86::Inst::setccFromCond(x86::condFromFlag(x86Flag[high] = x86::Flag(it.next()))),
                        x86::gpb(x86::Gp::kIdAx, high));
             if (constAnd != Support::allOnes<typeof(constAnd)>())
                 a.and_(x86::gpb_lo(mat(z80::Reg::AF, true)), constAnd);
@@ -480,6 +476,13 @@ struct Gen {
         flush(z80::Reg::AF);
     }
 
+    void flushPreserveState() {
+        typeof(z80Regs) saveZ80Regs;
+        memcpy(saveZ80Regs, z80Regs, sizeof(z80Regs));
+        flush();
+        memcpy(z80Regs, saveZ80Regs, sizeof(z80Regs));
+    }
+
     bool checkX86FlagsInUse(uint16_t x86Flags) {
         for (z80::Flag z80Flag{}; z80Flag != z80::Flag::End; z80Flag = next(z80Flag))
             if (state(z80Flag).isInX86Flag() &&
@@ -496,6 +499,8 @@ struct Gen {
             if (saveAx) a.push(a.zax());
             flushFlags();
             if (saveAx) a.pop(a.zax());
+            for (z80::Flag z80Flag{}; z80Flag != z80::Flag::End; z80Flag = next(z80Flag))
+                state(z80Flag) = z80Flag;
         }
         for (Support::BitWordIterator<typeof(x86Flags)> it(x86Flags); it.hasNext(); )
             state(x86::Flag(it.next())) = {};
@@ -617,16 +622,54 @@ struct Gen {
     }
 
     void jr(bool value, z80::Flag z80Flag) {
-        if (state(z80Flag).isConstant()) {
-            if (state(z80Flag).constantValue() == value) {
-                if (!addCycles(1)) jr();
-            } else {
-                fetch();
-            }
-            return;
+        std::int32_t address = (pc & kAdlFlag) |
+            cpu_mask_mode(pc + std::int8_t(prefetch), pc & kAdlFlag);
+        if (fetch()) return;
+        std::int32_t savePc = pc, saveCycles = cycles;
+        std::uint8_t savePrefetch = prefetch;
+        if (addCycles(1) || fetch()) return;
+        if (cycles > maxCycles) maxCycles = cycles;
+        bool x86Value = value;
+        x86::Flag x86Flag;
+        switch (state(z80Flag).kind()) {
+            case FlagState::Kind::Unknown:
+                assert(0);
+            case FlagState::Kind::InZ80Flag:
+                x86Value = !x86Value;
+                x86Flag = x86::Flag::Zero;
+                flushX86Flags(Support::bitMask(u(x86::Flag::Carry),
+                                               u(x86::Flag::Parity),
+                                               u(x86::Flag::AuxCarry),
+                                               u(x86::Flag::Zero),
+                                               u(x86::Flag::Sign),
+                                               u(x86::Flag::Overflow)));
+                a.test(access(z80::Reg::AF, false), Support::bitMask(u(state(z80Flag).z80Flag())));
+                state(x86::Flag::Carry) = false;
+                state(x86::Flag::Overflow) = false;
+                break;
+            case FlagState::Kind::InX86Flag:
+                x86Flag = state(z80Flag).x86Flag();
+                break;
+            case FlagState::Kind::Constant:
+                if (state(z80Flag).constantValue() != value)
+                    fetch();
+                else if (!addCycles(1))
+                    jr();
+                return;
         }
-        done = true;
-        return;
+        x86::Cond::Value cond = x86::condFromFlag(x86Flag);
+        if (x86Value) cond = x86::Cond::Value(x86::Cond::negate(cond));
+        Label noJumpLabel = a.newLabel();
+        a.short_().emit(x86::Inst::jccFromCond(cond), noJumpLabel);
+        state(z80Flag) = value;
+        flushPreserveState();
+        addCycleFixup();
+        addPatchPoint(address);
+        pc = savePc;
+        cycles = saveCycles;
+        prefetch = savePrefetch;
+        a.bind(noJumpLabel);
+        state(z80Flag) = !value;
     }
 
     void cpl() {
@@ -1032,16 +1075,19 @@ struct Gen {
         }
     }
 
-    struct PatchPoint { std::uint32_t labelId; std::int32_t target; };
+    struct PatchPoint {
+        std::uint32_t labelId;
+        std::int32_t target;
+    };
     ZoneVector<PatchPoint> patchPoints;
     void addPatchPoint(std::int32_t address) {
         Label label = a.newLabel();;
+        patchPoints.append(code.allocator(), PatchPoint{label.id(), address});
         a.bind(label);
         a.call(imm(patcher));
         assert(a.offset() == code.labelOffset(label) + kPatchOffset);
         a.ud2();
         assert(a.offset() == code.labelOffset(label) + kMaxPatchSize);
-        patchPoints.append(code.allocator(), PatchPoint{label.id(), address});
     }
 
     void gen() {
@@ -1049,7 +1095,7 @@ struct Gen {
         checkCycles();
         cycles = std::numeric_limits<typeof(cycles)>::min(); // ignore cycles from inital fetch
         fetch();
-        std::uint8_t initialPrefetch = prefetch;
+        block.prefetch = prefetch;
         cycles = 0;
         while (!done) {
             block.end = target = pc - 1;
@@ -1064,14 +1110,15 @@ struct Gen {
                 fetched[address & 0xFFFFFF] = true;
             fetched[target & 0xFFFFFF] = true;
             flush();
+            if (blockCycles < maxCycles)
+                a.add(x86::esi, blockCycles - maxCycles);
             addPatchPoint(target);
             a.bind(eventLabel);
-            a.short_().add(x86::esi, -block.cycles);
-            a.mov(x86::dl, initialPrefetch);
+            fixupCycles();
+            a.mov(x86::dl, block.prefetch);
             a.mov(x86::eax, kEventFlag | block.start);
             a.ret();
             //a.mov(x86::rax, imm(&block));
-            fixupCycles();
             runtime.add(&block.entry, &code);
             for (auto &patchPoint : patchPoints)
                 patches[static_cast<void *>(reinterpret_cast<char *>(block.entry) +
@@ -1083,7 +1130,9 @@ struct Gen {
     }
 };
 
-CodeBlock *gen(std::int32_t pc) {
+CodeBlock *lookup(std::int32_t pc) {
+    if (auto it = blocks.find(pc))
+        return *it;
     CodeBlock *block = blockZone.allocT<CodeBlock>();
     if (block) Gen(*block, pc).gen();
     return block;
@@ -1095,7 +1144,7 @@ void *jitPatch(void *patchPoint) {
     patchPoint = entry->first;
     std::int32_t address = entry->second;
     patches.erase(patchPoint);
-    CodeBlock *block = gen(address);
+    CodeBlock *block = lookup(address);
     init(code, a, patchPoint);
     if (block && block->entry)
         a.jmp(imm(block->entry));
@@ -1170,11 +1219,7 @@ void jitReportWrite(std::int32_t address, std::uint8_t value) {
 bool jitTryExecute() {
     std::int32_t address = cpu.ADL ? kAdlFlag | (cpu.registers.PC & 0xFFFFFF)
                                    : cpu.registers.MBASE << 16 | (cpu.registers.PC & 0xFFFF);
-    CodeBlock *block;
-    if (auto it = blocks.find(address))
-        block = *it;
-    else
-        block = gen(address);
+    CodeBlock *block = lookup(address);
     if (!block || !block->entry)
         return false;
     ++blocksExecuted;
