@@ -16,6 +16,7 @@ public:
 
 protected:
     virtual void paintEvent(QPaintEvent*) Q_DECL_OVERRIDE;
+    virtual void mousePressEvent(QMouseEvent*) Q_DECL_OVERRIDE;
 
 private slots:
     void draw();

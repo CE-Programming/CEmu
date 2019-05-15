@@ -62,6 +62,33 @@ void VisualizerDisplayWidget::paintEvent(QPaintEvent*) {
     }
 }
 
+void VisualizerDisplayWidget::mousePressEvent(QMouseEvent *e) {
+    if (e->button() == Qt::LeftButton) {
+        QDrag *drag = new QDrag(this);
+        QMimeData *mimeData = new QMimeData;
+        QImage image = *m_image;
+        QPixmap mymap = QPixmap::fromImage(image);
+        QString path = QDir::tempPath() + QDir::separator() + QStringLiteral("cemu_") + randomString(5) + QStringLiteral(".png");
+        image.save(path, "PNG", 0);
+        mimeData->setImageData(image);
+        mimeData->setUrls(QList<QUrl>() << QUrl::fromLocalFile(path));
+        drag->setMimeData(mimeData);
+        drag->setHotSpot(e->pos());
+        drag->setPixmap(mymap);
+        switch (drag->exec(Qt::CopyAction | Qt::MoveAction, Qt::MoveAction)) {
+            case Qt::IgnoreAction:
+            case Qt::CopyAction:
+                QFile::remove(path);
+                break;
+            default:
+                break;
+        }
+        e->accept();
+    } else {
+        e->ignore();
+    }
+}
+
 void VisualizerDisplayWidget::setRefreshRate(int rate) {
     if (!rate) {
         return;
