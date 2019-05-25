@@ -24,9 +24,11 @@
 sched_state_t sched;
 
 static uint32_t muldiv_floor(uint32_t a, uint32_t b, uint32_t c) {
+    if (likely(b == c)) return a;
     return (uint64_t)a * b / c;
 }
 static uint32_t muldiv_ceil(uint32_t a, uint32_t b, uint32_t c) {
+    if (likely(b == c)) return a;
     return ((uint64_t)a * b + c - 1) / c;
 }
 
