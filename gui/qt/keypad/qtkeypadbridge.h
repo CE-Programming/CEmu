@@ -39,7 +39,6 @@ private:
     QString toModifierString(Qt::KeyboardModifiers m);
     Qt::KeyboardModifiers toModifierValue(QString m);
 
-    static const QHash<QString, unsigned int> str2key;
     QHash<quint32, KeyCode> pressed;
     const HostKey *(*keymap)[8][8] = nullptr;
     KeymapMode m_mode;
