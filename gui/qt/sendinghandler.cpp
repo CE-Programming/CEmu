@@ -147,14 +147,18 @@ bool SendingHandler::dragOccured(QDragEnterEvent *e) {
 
 void SendingHandler::sentFile(const QString &file, int ok) {
 
+    static int result = LINK_GOOD;
+    result |= ok;
+
     // Send null to complete sending
-    if (ok != LINK_GOOD || file.isEmpty()) {
-        if (ok == LINK_ERR) {
-            QMessageBox::critical(Q_NULLPTR, QObject::tr("Transfer error"), QObject::tr("Transfer Error, see console for information.\nFile: ") + file);
+    if (file.isEmpty()) {
+        if (result & LINK_ERR) {
+            QMessageBox::critical(Q_NULLPTR, QObject::tr("Transfer error"), QObject::tr("Transfer Error, see console for information."));
         }
-        if (ok == LINK_WARN) {
-            QMessageBox::warning(Q_NULLPTR, QObject::tr("Transfer warning"), QObject::tr("Transfer Warning, see console for information.\nFile: ") + file);
+        else if (result & LINK_WARN) {
+            QMessageBox::warning(Q_NULLPTR, QObject::tr("Transfer warning"), QObject::tr("Transfer Warning, see console for information."));
         }
+        result = LINK_GOOD;
         m_progressBar->setValue(m_progressBar->maximum());
         guiDelay(100);
         if (m_progressBar) {
