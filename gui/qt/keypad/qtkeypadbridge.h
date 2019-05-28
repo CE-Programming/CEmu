@@ -40,7 +40,7 @@ private:
     Qt::KeyboardModifiers toModifierValue(QString m);
 
     QHash<quint32, KeyCode> pressed;
-    const HostKey *const (*keymap)[8][8] = nullptr;
+    const HostKey *const *keymap = nullptr;
     KeymapMode m_mode;
 };
 

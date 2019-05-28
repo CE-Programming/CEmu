@@ -3,25 +3,15 @@
 // --------------
 // common section
 // --------------
-#define KEYMAP_83PCE const HostKey *const KEY(eymap_83pce)[8][8] = {                                \
-        { &none, &none, &none, &none, &none, &none, &none, &none },                                 \
-        { KEY(graph), KEY(trace), KEY(zoom), KEY(wind), KEY(yequ), KEY(2nd), KEY(mode), KEY(del) }, \
-        { KEY(on), KEY(sto), KEY(ln), KEY(log), KEY(sq), KEY(inv), KEY(math), KEY(alpha) },         \
-        { KEY(0), KEY(1), KEY(4), KEY(7), KEY(comma), KEY(sin), KEY(apps), KEY(xton) },             \
-        { KEY(dot), KEY(2), KEY(5), KEY(8), KEY(lpar), KEY(cos), KEY(prgm), KEY(stat) },            \
-        { KEY(neg), KEY(3), KEY(6), KEY(9), KEY(rpar), KEY(tan), KEY(vars), &none },                \
-        { KEY(enter), KEY(add), KEY(sub), KEY(mul), KEY(div), KEY(pow), KEY(clr), &none },          \
-        { KEY(down), KEY(left), KEY(right), KEY(up), &none, &none, &none, &none }                   \
-    }
-#define KEYMAP_84PCE const HostKey *const KEY(eymap_84pce)[8][8] = {                                \
-        { &none, &none, &none, &none, &none, &none, &none, &none },                                 \
-        { KEY(graph), KEY(trace), KEY(zoom), KEY(wind), KEY(yequ), KEY(2nd), KEY(mode), KEY(del) }, \
-        { KEY(on), KEY(sto), KEY(ln), KEY(log), KEY(sq), KEY(inv), KEY(math), KEY(alpha) },         \
-        { KEY(0), KEY(1), KEY(4), KEY(7), KEY(comma), KEY(sin), KEY(apps), KEY(xton) },             \
-        { KEY(dot), KEY(2), KEY(5), KEY(8), KEY(lpar), KEY(cos), KEY(prgm), KEY(stat) },            \
-        { KEY(neg), KEY(3), KEY(6), KEY(9), KEY(rpar), KEY(tan), KEY(vars), &none },                \
-        { KEY(enter), KEY(add), KEY(sub), KEY(mul), KEY(div), KEY(pow), KEY(clr), &none },          \
-        { KEY(down), KEY(left), KEY(right), KEY(up), &none, &none, &none, &none }                   \
+#define KEYMAP(const, suffix) const HostKey *const KEY(eymap##suffix)[8*8] = {                  \
+        &none, &none, &none, &none, &none, &none, &none, &none,                                 \
+        KEY(graph), KEY(trace), KEY(zoom), KEY(wind), KEY(yequ), KEY(2nd), KEY(mode), KEY(del), \
+        KEY(on), KEY(sto), KEY(ln), KEY(log), KEY(sq), KEY(inv), KEY(math), KEY(alpha),         \
+        KEY(0), KEY(1), KEY(4), KEY(7), KEY(comma), KEY(sin), KEY(apps), KEY(xton),             \
+        KEY(dot), KEY(2), KEY(5), KEY(8), KEY(lpar), KEY(cos), KEY(prgm), KEY(stat),            \
+        KEY(neg), KEY(3), KEY(6), KEY(9), KEY(rpar), KEY(tan), KEY(vars), &none,                \
+        KEY(enter), KEY(add), KEY(sub), KEY(mul), KEY(div), KEY(pow), KEY(clr), &none,          \
+        KEY(down), KEY(left), KEY(right), KEY(up), &none, &none, &none, &none                   \
     }
 
 #define HK(code, nativeCode, nativeMask, modifier, mask) { Qt::Key_##code, nativeCode, nativeMask, Qt::modifier##Modifier, Qt::mask##Modifier, QStringLiteral(#code) }
@@ -29,7 +19,7 @@
 #define NAT(code, nativeCode, nativeMask) HK(code, nativeCode, nativeMask, No, No)
 #define MOD(code, modifier, mask) HK(code, 0, 0, modifier, mask)
 
-static HostKey none = { static_cast<Qt::Key>(0), 0, 0, Qt::NoModifier, Qt::NoModifier, {} };
+static HostKey none = { Qt::Key(0), 0, 0, Qt::NoModifier, Qt::NoModifier, {} };
 
 // ------------
 // CEmu section
@@ -93,9 +83,8 @@ static const HostKey KEY(trace)[] = { NRM(F4), none };
 static const HostKey KEY(graph)[] = { NRM(F5), none };
 static const HostKey KEY(on)[] = { NRM(F12), none };
 
-KEYMAP_83PCE;
-KEYMAP_84PCE;
-
+KEYMAP(const, _83pce);
+KEYMAP(const, _84pce);
 #undef KEY
 
 // -------------
@@ -160,9 +149,8 @@ static const HostKey KEY(trace)[] = { NRM(F4), MOD(H, No, Shift), none };
 static const HostKey KEY(graph)[] = { NRM(F5), MOD(G, No, Shift), none };
 static const HostKey KEY(on)[] = { NRM(F12), MOD(F, No, Shift), none };
 
-KEYMAP_83PCE;
-KEYMAP_84PCE;
-
+KEYMAP(const, _83pce);
+KEYMAP(const, _84pce);
 #undef KEY
 
 // -----------------
@@ -227,9 +215,8 @@ static const HostKey KEY(trace)[] = { NRM(F4), none };
 static const HostKey KEY(graph)[] = { NRM(F5), none };
 static const HostKey KEY(on)[] = { NRM(F12), none };
 
-KEYMAP_83PCE;
-KEYMAP_84PCE;
-
+KEYMAP(const, _83pce);
+KEYMAP(const, _84pce);
 #undef KEY
 
 // ----------------
@@ -294,9 +281,8 @@ static const HostKey KEY(trace)[] = { NRM(F4), none };
 static const HostKey KEY(graph)[] = { NRM(F5), none };
 static const HostKey KEY(on)[] = { NRM(F12), none };
 
-KEYMAP_83PCE;
-KEYMAP_84PCE;
-
+KEYMAP(const, _83pce);
+KEYMAP(const, _84pce);
 #undef KEY
 
 // ----------------
@@ -361,19 +347,5 @@ static HostKey KEY(trace)[] = { none, none, none, none, none };
 static HostKey KEY(graph)[] = { none, none, none, none, none };
 static HostKey KEY(on)[] = { none, none, none, none, none };
 
-#define KEYMAP_CUSTOM HostKey *KEY(eymap)[8][8] = {                                      \
-        { &none, &none, &none, &none, &none, &none, &none, &none },                                 \
-        { KEY(graph), KEY(trace), KEY(zoom), KEY(wind), KEY(yequ), KEY(2nd), KEY(mode), KEY(del) }, \
-        { KEY(on), KEY(sto), KEY(ln), KEY(log), KEY(sq), KEY(inv), KEY(math), KEY(alpha) },         \
-        { KEY(0), KEY(1), KEY(4), KEY(7), KEY(comma), KEY(sin), KEY(apps), KEY(xton) },             \
-        { KEY(dot), KEY(2), KEY(5), KEY(8), KEY(lpar), KEY(cos), KEY(prgm), KEY(stat) },            \
-        { KEY(neg), KEY(3), KEY(6), KEY(9), KEY(rpar), KEY(tan), KEY(vars), &none },                \
-        { KEY(enter), KEY(add), KEY(sub), KEY(mul), KEY(div), KEY(pow), KEY(clr), &none },          \
-        { KEY(down), KEY(left), KEY(right), KEY(up), &none, &none, &none, &none }                   \
-    }
-
-KEYMAP_CUSTOM;
-#undef KEYMAP_CUSTOM
+KEYMAP(,);
 #undef KEY
-
-

@@ -24,19 +24,19 @@ bool QtKeypadBridge::setKeymap(KeymapMode map) {
     m_mode = map;
     switch (map) {
         case KEYMAP_CEMU:
-            keymap = get_device_type() == TI84PCE ? &cemu_keymap_84pce : &cemu_keymap_83pce;
+            keymap = get_device_type() == TI84PCE ? cemu_keymap_84pce : cemu_keymap_83pce;
             break;
         case KEYMAP_TILEM:
-            keymap = get_device_type() == TI84PCE ? &tilem_keymap_84pce : &tilem_keymap_83pce;
+            keymap = get_device_type() == TI84PCE ? tilem_keymap_84pce : tilem_keymap_83pce;
             break;
         case KEYMAP_WABBITEMU:
-            keymap = get_device_type() == TI84PCE ? &wabbitemu_keymap_84pce : &wabbitemu_keymap_83pce;
+            keymap = get_device_type() == TI84PCE ? wabbitemu_keymap_84pce : wabbitemu_keymap_83pce;
             break;
         case KEYMAP_JSTIFIED:
-            keymap = get_device_type() == TI84PCE ? &jstified_keymap_84pce : &jstified_keymap_83pce;
+            keymap = get_device_type() == TI84PCE ? jstified_keymap_84pce : jstified_keymap_83pce;
             break;
         case KEYMAP_CUSTOM:
-            keymap = &custom_keymap;
+            keymap = custom_keymap;
             break;
     }
     return ret;
@@ -62,9 +62,9 @@ void QtKeypadBridge::keyEvent(QKeyEvent *event, bool press) {
         }
     }
 
-    for (unsigned row = 0; row < sizeof(*keymap)/sizeof(**keymap); ++row) {
-        for (unsigned col = 0; col < sizeof(**keymap)/sizeof(***keymap); ++col) {
-            for (const HostKey *key = (*keymap)[row][col]; key->code; ++key) {
+    for (unsigned row = 0; row < 8; ++row) {
+        for (unsigned col = 0; col < 8; ++col) {
+            for (const HostKey *key = keymap[row*8+col]; key->code; ++key) {
                 if (key->code == code && key->modifier == (key->mask & modifiers)
                     && key->nativeCode == (key->nativeMask & nativeCode)) {
                     emit keyStateChanged({row, col}, press);
@@ -117,14 +117,14 @@ bool QtKeypadBridge::keymapExport(const QString &path) {
     QSettings config(path, QSettings::IniFormat);
     config.clear();
 
-    for (unsigned row = 0; row < sizeof(*keymap)/sizeof(**keymap); ++row) {
-        for (unsigned col = 0; col < sizeof(**keymap)/sizeof(***keymap); ++col) {
+    for (unsigned row = 0; row < 8; ++row) {
+        for (unsigned col = 0; col < 8; ++col) {
             QStringList nameBindings;
             QStringList nativeCodeBindings;
             QStringList nativeMaskBindings;
             QStringList modifierBindings;
             QStringList maskBindings;
-            for (const HostKey *key = (*keymap)[row][col]; key->code; ++key) {
+            for (const HostKey *key = keymap[row*8+col]; key->code; ++key) {
                 nameBindings.append(key->name);
                 nativeCodeBindings.append(QString::number(key->nativeCode, 16));
                 nativeMaskBindings.append(QString::number(key->nativeMask, 16));
@@ -152,8 +152,8 @@ bool QtKeypadBridge::keymapImport(const QString &path) {
 
     QSettings config(path, QSettings::IniFormat);
 
-    for (unsigned row = 0; row < sizeof(custom_keymap)/sizeof(*custom_keymap); ++row) {
-        for (unsigned col = 0; col < sizeof(*custom_keymap)/sizeof(**custom_keymap); ++col) {
+    for (unsigned row = 0; row < 8; ++row) {
+        for (unsigned col = 0; col < 8; ++col) {
             if (!custom_keys[row][col].isEmpty()) {
                 QStringList nameBindings = config.value(custom_keys[row][col] + QStringLiteral("/keys")).toStringList();
                 QStringList nativeCodeBindings = config.value(custom_keys[row][col] + QStringLiteral("/native_codes")).toStringList();
@@ -167,7 +167,7 @@ bool QtKeypadBridge::keymapImport(const QString &path) {
                     nameBindings.length() > 4) {
                     return false;
                 }
-                HostKey *key = custom_keymap[row][col];
+                HostKey *key = custom_keymap[row*8+col];
                 for (int i = 0; i < nameBindings.length(); ++i) {
                     key->name = nameBindings.at(i);
                     key->code = Qt::Key(QMetaEnum::fromType<Qt::Key>().keyToValue(("Key_" + key->name).toUtf8()));
