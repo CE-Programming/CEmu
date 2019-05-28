@@ -36,6 +36,7 @@ bool QtKeypadBridge::setKeymap(KeymapMode map) {
             keymap = get_device_type() == TI84PCE ? &jstified_keymap_84pce : &jstified_keymap_83pce;
             break;
         case KEYMAP_CUSTOM:
+            keymap = &custom_keymap;
             break;
     }
     return ret;
@@ -61,33 +62,16 @@ void QtKeypadBridge::keyEvent(QKeyEvent *event, bool press) {
         }
     }
 
-    if (m_mode == KEYMAP_CUSTOM) {
-        for (unsigned row = 0; row < sizeof(custom_keymap)/sizeof(*custom_keymap); ++row) {
-            for (unsigned col = 0; col < sizeof(*custom_keymap)/sizeof(**custom_keymap); ++col) {
-                for (const HostKey *key = custom_keymap[row][col]; key->code; ++key) {
-                    if (key->code == code && key->modifier == (key->mask & modifiers)
-                                          && key->nativeCode == (key->nativeMask & nativeCode)) {
-                        emit keyStateChanged({row, col}, press);
-                        if (nativeCode > 1 && press) {
-                            pressed[nativeCode] = {row, col};
-                        }
-                        return;
+    for (unsigned row = 0; row < sizeof(*keymap)/sizeof(**keymap); ++row) {
+        for (unsigned col = 0; col < sizeof(**keymap)/sizeof(***keymap); ++col) {
+            for (const HostKey *key = (*keymap)[row][col]; key->code; ++key) {
+                if (key->code == code && key->modifier == (key->mask & modifiers)
+                    && key->nativeCode == (key->nativeMask & nativeCode)) {
+                    emit keyStateChanged({row, col}, press);
+                    if (nativeCode > 1 && press) {
+                        pressed[nativeCode] = {row, col};
                     }
-                }
-            }
-        }
-    } else {
-        for (unsigned row = 0; row < sizeof(*keymap)/sizeof(**keymap); ++row) {
-            for (unsigned col = 0; col < sizeof(**keymap)/sizeof(***keymap); ++col) {
-                for (const HostKey *key = (*keymap)[row][col]; key->code; ++key) {
-                    if (key->code == code && key->modifier == (key->mask & modifiers)
-                                          && key->nativeCode == (key->nativeMask & nativeCode)) {
-                        emit keyStateChanged({row, col}, press);
-                        if (nativeCode > 1 && press) {
-                            pressed[nativeCode] = {row, col};
-                        }
-                        return;
-                    }
+                    return;
                 }
             }
         }

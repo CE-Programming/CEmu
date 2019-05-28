@@ -3,7 +3,7 @@
 // --------------
 // common section
 // --------------
-#define KEYMAP_83PCE const HostKey *KEY(eymap_83pce)[8][8] = {                                      \
+#define KEYMAP_83PCE const HostKey *const KEY(eymap_83pce)[8][8] = {                                \
         { &none, &none, &none, &none, &none, &none, &none, &none },                                 \
         { KEY(graph), KEY(trace), KEY(zoom), KEY(wind), KEY(yequ), KEY(2nd), KEY(mode), KEY(del) }, \
         { KEY(on), KEY(sto), KEY(ln), KEY(log), KEY(sq), KEY(inv), KEY(math), KEY(alpha) },         \
@@ -13,7 +13,7 @@
         { KEY(enter), KEY(add), KEY(sub), KEY(mul), KEY(div), KEY(pow), KEY(clr), &none },          \
         { KEY(down), KEY(left), KEY(right), KEY(up), &none, &none, &none, &none }                   \
     }
-#define KEYMAP_84PCE const HostKey *KEY(eymap_84pce)[8][8] = {                                      \
+#define KEYMAP_84PCE const HostKey *const KEY(eymap_84pce)[8][8] = {                                \
         { &none, &none, &none, &none, &none, &none, &none, &none },                                 \
         { KEY(graph), KEY(trace), KEY(zoom), KEY(wind), KEY(yequ), KEY(2nd), KEY(mode), KEY(del) }, \
         { KEY(on), KEY(sto), KEY(ln), KEY(log), KEY(sq), KEY(inv), KEY(math), KEY(alpha) },         \

@@ -10,15 +10,15 @@ struct HostKey {
     QString name;
 };
 
-extern const HostKey *cemu_keymap_83pce[8][8];
-extern const HostKey *tilem_keymap_83pce[8][8];
-extern const HostKey *wabbitemu_keymap_83pce[8][8];
-extern const HostKey *jstified_keymap_83pce[8][8];
+extern const HostKey *const cemu_keymap_83pce[8][8];
+extern const HostKey *const tilem_keymap_83pce[8][8];
+extern const HostKey *const wabbitemu_keymap_83pce[8][8];
+extern const HostKey *const jstified_keymap_83pce[8][8];
 
-extern const HostKey *cemu_keymap_84pce[8][8];
-extern const HostKey *tilem_keymap_84pce[8][8];
-extern const HostKey *wabbitemu_keymap_84pce[8][8];
-extern const HostKey *jstified_keymap_84pce[8][8];
+extern const HostKey *const cemu_keymap_84pce[8][8];
+extern const HostKey *const tilem_keymap_84pce[8][8];
+extern const HostKey *const wabbitemu_keymap_84pce[8][8];
+extern const HostKey *const jstified_keymap_84pce[8][8];
 
 extern HostKey *custom_keymap[8][8];
 
