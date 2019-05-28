@@ -3,7 +3,7 @@
 // --------------
 // common section
 // --------------
-#define KEYMAP(const, suffix) const HostKey *const KEY(eymap##suffix)[8*8] = {                  \
+#define KEYMAP(suffix) HostKey *const KEY(eymap##suffix)[8*8] = {                               \
         &none, &none, &none, &none, &none, &none, &none, &none,                                 \
         KEY(graph), KEY(trace), KEY(zoom), KEY(wind), KEY(yequ), KEY(2nd), KEY(mode), KEY(del), \
         KEY(on), KEY(sto), KEY(ln), KEY(log), KEY(sq), KEY(inv), KEY(math), KEY(alpha),         \
@@ -83,8 +83,8 @@ static const HostKey KEY(trace)[] = { NRM(F4), none };
 static const HostKey KEY(graph)[] = { NRM(F5), none };
 static const HostKey KEY(on)[] = { NRM(F12), none };
 
-KEYMAP(const, _83pce);
-KEYMAP(const, _84pce);
+const KEYMAP(_83pce);
+const KEYMAP(_84pce);
 #undef KEY
 
 // -------------
@@ -149,8 +149,8 @@ static const HostKey KEY(trace)[] = { NRM(F4), MOD(H, No, Shift), none };
 static const HostKey KEY(graph)[] = { NRM(F5), MOD(G, No, Shift), none };
 static const HostKey KEY(on)[] = { NRM(F12), MOD(F, No, Shift), none };
 
-KEYMAP(const, _83pce);
-KEYMAP(const, _84pce);
+const KEYMAP(_83pce);
+const KEYMAP(_84pce);
 #undef KEY
 
 // -----------------
@@ -215,8 +215,8 @@ static const HostKey KEY(trace)[] = { NRM(F4), none };
 static const HostKey KEY(graph)[] = { NRM(F5), none };
 static const HostKey KEY(on)[] = { NRM(F12), none };
 
-KEYMAP(const, _83pce);
-KEYMAP(const, _84pce);
+const KEYMAP(_83pce);
+const KEYMAP(_84pce);
 #undef KEY
 
 // ----------------
@@ -281,8 +281,8 @@ static const HostKey KEY(trace)[] = { NRM(F4), none };
 static const HostKey KEY(graph)[] = { NRM(F5), none };
 static const HostKey KEY(on)[] = { NRM(F12), none };
 
-KEYMAP(const, _83pce);
-KEYMAP(const, _84pce);
+const KEYMAP(_83pce);
+const KEYMAP(_84pce);
 #undef KEY
 
 // ----------------
@@ -347,5 +347,5 @@ static HostKey KEY(trace)[] = { none, none, none, none, none };
 static HostKey KEY(graph)[] = { none, none, none, none, none };
 static HostKey KEY(on)[] = { none, none, none, none, none };
 
-KEYMAP(,);
+KEYMAP();
 #undef KEY

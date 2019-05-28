@@ -20,6 +20,6 @@ extern const HostKey *const tilem_keymap_84pce[8*8];
 extern const HostKey *const wabbitemu_keymap_84pce[8*8];
 extern const HostKey *const jstified_keymap_84pce[8*8];
 
-extern HostKey *custom_keymap[8*8];
+extern HostKey *const custom_keymap[8*8];
 
 #endif

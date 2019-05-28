@@ -46,7 +46,7 @@ void QtKeypadBridge::keyEvent(QKeyEvent *event, bool press) {
     if (event->isAutoRepeat())
         return;
 
-    Qt::Key code = static_cast<Qt::Key>(event->key());
+    Qt::Key code = Qt::Key(event->key());
     quint32 nativeCode = event->nativeScanCode();
     Qt::KeyboardModifiers modifiers = event->modifiers();
 
@@ -173,8 +173,8 @@ bool QtKeypadBridge::keymapImport(const QString &path) {
                     key->code = Qt::Key(QMetaEnum::fromType<Qt::Key>().keyToValue(("Key_" + key->name).toUtf8()));
                     key->mask = toModifierValue(maskBindings.at(i));
                     key->modifier = toModifierValue(modifierBindings.at(i));
-                    key->nativeCode = static_cast<quint32>(nativeCodeBindings.at(i).toInt(nullptr, 16));
-                    key->nativeMask = static_cast<quint32>(nativeMaskBindings.at(i).toInt(nullptr, 16));
+                    key->nativeCode = quint32(nativeCodeBindings.at(i).toInt(nullptr, 16));
+                    key->nativeMask = quint32(nativeMaskBindings.at(i).toInt(nullptr, 16));
                     key++;
                 }
             }
@@ -188,9 +188,9 @@ bool QtKeypadBridge::eventFilter(QObject *obj, QEvent *e){
     Q_UNUSED(obj);
 
     if (e->type() == QEvent::KeyPress) {
-        keyEvent(static_cast<QKeyEvent*>(e), true);
+        keyEvent(static_cast<QKeyEvent *>(e), true);
     } else if (e->type() == QEvent::KeyRelease) {
-        keyEvent(static_cast<QKeyEvent*>(e), false);
+        keyEvent(static_cast<QKeyEvent *>(e), false);
     } else if (e->type() == QEvent::WindowDeactivate) {
         releaseAll();
     }
