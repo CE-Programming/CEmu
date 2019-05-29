@@ -108,7 +108,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setWindowTitle(QStringLiteral("CEmu | ") + opts.idString);
 
     connect(keypadBridge, &QtKeypadBridge::keyStateChanged, ui->keypadWidget, &KeypadWidget::changeKeyState);
-    connect(keypadBridge, &QtKeypadBridge::sendKey, &emu, &EmuThread::enqueueKeys);
+    connect(keypadBridge, &QtKeypadBridge::sendKeys, &emu, &EmuThread::enqueueKeys);
     installEventFilter(keypadBridge);
     for (const auto &tab : ui->tabWidget->children()[0]->children()) {
         tab->installEventFilter(keypadBridge);
