@@ -221,10 +221,15 @@ void EmuThread::send(const QStringList &list, int location) {
     req(RequestSend);
 }
 
-void EmuThread::enqueueKey(quint16 key, bool repeat) {
-    if (key && (!repeat || m_keyQueue.isEmpty() || m_keyQueue.front() != key)) {
+void EmuThread::enqueueKeys(quint16 key1, quint16 key2, bool repeat) {
+    if (!repeat || m_keyQueue.isEmpty() ||
+        (m_keyQueue.front() != key1 && m_keyQueue.front() != key2)) {
         QMutexLocker locker(&m_keyQueueMutex);
-        m_keyQueue.enqueue(key);
+        for (auto key : {key1, key2}) {
+            if (key) {
+                m_keyQueue.enqueue(key);
+            }
+        }
     }
 }
 

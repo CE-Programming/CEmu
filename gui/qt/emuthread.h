@@ -83,7 +83,7 @@ signals:
 
 public slots:
     void send(const QStringList &names, int location);
-    void enqueueKey(quint16 key, bool repeat);
+    void enqueueKeys(quint16 key1, quint16 key2 = 0, bool repeat = false);
 
 protected:
     virtual void run() Q_DECL_OVERRIDE;

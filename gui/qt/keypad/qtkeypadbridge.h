@@ -36,7 +36,7 @@ public:
 
 signals:
     void keyStateChanged(KeyCode, bool, bool = false);
-    void sendKey(quint16, bool = false);
+    void sendKey(quint16, quint16, bool = false);
 
 private:
     QString toModifierString(Qt::KeyboardModifiers m);

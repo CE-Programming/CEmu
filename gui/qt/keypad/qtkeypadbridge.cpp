@@ -87,8 +87,7 @@ void QtKeypadBridge::skEvent(QKeyEvent *event, bool press) {
 
 void QtKeypadBridge::kEvent(QString text, int key, bool repeat) {
     if (auto keys = text.length() == 1 ? kTextMap[text[0]] : kKeyMap[key]) {
-        sendKey(keys >> 16, repeat);
-        sendKey(keys >>  0, repeat);
+        sendKey(keys >> 16, keys >> 0, repeat);
     }
 }
 
