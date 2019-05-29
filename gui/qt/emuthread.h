@@ -1,14 +1,15 @@
 #ifndef EMUTHREAD_H
 #define EMUTHREAD_H
 
-#include "../../core/emu.h"
 #include "../../core/debug/debug.h"
+#include "../../core/emu.h"
 #include "../../core/link.h"
 
+#include <QtCore/QMutex>
+#include <QtCore/QQueue>
+#include <QtCore/QSemaphore>
 #include <QtCore/QThread>
 #include <QtCore/QTimer>
-#include <QtCore/QSemaphore>
-#include <QtCore/QQueue>
 
 #include <chrono>
 #include <condition_variable>
@@ -82,6 +83,7 @@ signals:
 
 public slots:
     void send(const QStringList &names, int location);
+    void enqueueKey(quint16 key, bool repeat);
 
 protected:
     virtual void run() Q_DECL_OVERRIDE;
@@ -129,6 +131,9 @@ private:
     std::condition_variable m_cv;
     std::mutex m_mutexDebug;
     std::condition_variable m_cvDebug; // protected by m_mutexDebug
+
+    QQueue<quint16> m_keyQueue;
+    QMutex m_keyQueueMutex;
 };
 
 #endif

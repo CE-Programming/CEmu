@@ -709,6 +709,7 @@ private:
     static const QString SETTING_RECENT_PATHS;
     static const QString SETTING_RECENT_SELECT;
 
+    static const QString SETTING_KEYPAD_NATURAL;
     static const QString SETTING_KEYPAD_CEMU;
     static const QString SETTING_KEYPAD_TILEM;
     static const QString SETTING_KEYPAD_WABBITEMU;

@@ -1,11 +1,13 @@
 #include "emuthread.h"
-#include "capture/animated-png.h"
-#include "../../core/emu.h"
-#include "../../core/cpu.h"
+
 #include "../../core/control.h"
+#include "../../core/cpu.h"
+#include "../../core/emu.h"
+#include "../../core/extras.h"
 #include "../../core/link.h"
-#include "../../tests/autotester/crc32.hpp"
 #include "../../tests/autotester/autotester.h"
+#include "../../tests/autotester/crc32.hpp"
+#include "capture/animated-png.h"
 
 #include <cassert>
 #include <cstdarg>
@@ -119,7 +121,7 @@ void EmuThread::writeConsole(int console, const char *format, va_list args) {
 void EmuThread::doStuff() {
     const std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
 
-    if (!m_reqQueue.isEmpty()) {
+    while (!m_reqQueue.isEmpty()) {
         int req = m_reqQueue.dequeue();
         switch (+req) {
             default:
@@ -155,6 +157,13 @@ void EmuThread::doStuff() {
                 }
                 emu_set_run_rate(run_rate_prev);
                 break;
+        }
+    }
+
+    {
+        QMutexLocker locker(&m_keyQueueMutex);
+        while (!m_keyQueue.isEmpty() && sendKey(m_keyQueue.head())) {
+            m_keyQueue.dequeue();
         }
     }
 
@@ -210,6 +219,13 @@ void EmuThread::send(const QStringList &list, int location) {
     m_vars = list;
     m_sendLoc = location;
     req(RequestSend);
+}
+
+void EmuThread::enqueueKey(quint16 key, bool repeat) {
+    if (key && (!repeat || m_keyQueue.isEmpty() || m_keyQueue.front() != key)) {
+        QMutexLocker locker(&m_keyQueueMutex);
+        m_keyQueue.enqueue(key);
+    }
 }
 
 void EmuThread::test(const QString &config, bool run) {

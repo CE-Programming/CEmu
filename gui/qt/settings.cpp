@@ -93,6 +93,7 @@ const QString MainWindow::SETTING_RECENT_SAVE               = QStringLiteral("Re
 const QString MainWindow::SETTING_RECENT_PATHS              = QStringLiteral("Recent/paths");
 const QString MainWindow::SETTING_RECENT_SELECT             = QStringLiteral("Recent/selected");
 
+const QString MainWindow::SETTING_KEYPAD_NATURAL            = QStringLiteral("natural");
 const QString MainWindow::SETTING_KEYPAD_CEMU               = QStringLiteral("cemu");
 const QString MainWindow::SETTING_KEYPAD_TILEM              = QStringLiteral("tilem");
 const QString MainWindow::SETTING_KEYPAD_WABBITEMU          = QStringLiteral("wabbitemu");
@@ -783,7 +784,9 @@ void MainWindow::keymapCustomSelected() {
 }
 
 void MainWindow::keymapChanged() {
-    if (ui->radioCEmuKeys->isChecked()) {
+    if (ui->radioNaturalKeys->isChecked()) {
+        setKeymap(SETTING_KEYPAD_NATURAL);
+    } else if (ui->radioCEmuKeys->isChecked()) {
         setKeymap(SETTING_KEYPAD_CEMU);
     } else if (ui->radioTilEmKeys->isChecked()) {
         setKeymap(SETTING_KEYPAD_TILEM);
@@ -808,7 +811,9 @@ void MainWindow::setKeymap(const QString &value) {
             map = SETTING_KEYPAD_CEMU;
         }
     }
-    if (!SETTING_KEYPAD_CEMU.compare(map, Qt::CaseInsensitive)) {
+    if (!SETTING_KEYPAD_NATURAL.compare(map, Qt::CaseInsensitive)) {
+        mode = QtKeypadBridge::KEYMAP_NATURAL;
+    } else if (!SETTING_KEYPAD_CEMU.compare(map, Qt::CaseInsensitive)) {
         mode = QtKeypadBridge::KEYMAP_CEMU;
     } else if (!SETTING_KEYPAD_TILEM.compare(map, Qt::CaseInsensitive)) {
         mode = QtKeypadBridge::KEYMAP_TILEM;
@@ -828,7 +833,9 @@ void MainWindow::setKeymap(const QString &value) {
 
 void MainWindow::keymapLoad() {
     QString currKeyMap = m_config->value(SETTING_KEYPAD_KEYMAP, SETTING_KEYPAD_CEMU).toString();
-    if (!SETTING_KEYPAD_CEMU.compare(currKeyMap, Qt::CaseInsensitive)) {
+    if (!SETTING_KEYPAD_NATURAL.compare(currKeyMap, Qt::CaseInsensitive)) {
+        ui->radioNaturalKeys->setChecked(true);
+    } else if (!SETTING_KEYPAD_CEMU.compare(currKeyMap, Qt::CaseInsensitive)) {
         ui->radioCEmuKeys->setChecked(true);
     } else if (!SETTING_KEYPAD_TILEM.compare(currKeyMap, Qt::CaseInsensitive)) {
         ui->radioTilEmKeys->setChecked(true);

@@ -8262,6 +8262,28 @@ QPushButton:pressed {
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_14">
                <item>
+                <widget class="QRadioButton" name="radioNaturalKeys">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="text">
+                  <string>Natural</string>
+                 </property>
+                 <property name="checked">
+                  <bool>false</bool>
+                 </property>
+                 <property name="autoExclusive">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <widget class="QRadioButton" name="radioCEmuKeys">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -8352,7 +8374,7 @@ QPushButton:pressed {
                   <enum>Qt::NoFocus</enum>
                  </property>
                  <property name="text">
-                  <string notr="true">Custom</string>
+                  <string>Custom</string>
                  </property>
                  <property name="autoExclusive">
                   <bool>true</bool>

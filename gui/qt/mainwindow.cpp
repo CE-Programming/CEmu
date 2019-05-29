@@ -62,6 +62,7 @@ Q_DECLARE_METATYPE(emu_data_t)
 #endif
 
 MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new Ui::MainWindow), opts(cliOpts) {
+    keypadBridge = new QtKeypadBridge(this); // This must be before setupUi for some reason >.>
 
     // setup translations
     m_appTranslator.load(QLocale::system().name(), QStringLiteral(":/i18n/i18n/"));
@@ -74,7 +75,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     m_isInDarkMode = isRunningInDarkMode();
 
     ui->setupUi(this);
-    
+
     setStyleSheet(QStringLiteral("QMainWindow::separator{ width: 0px; height: 0px; }"));
 
     if (!ipcSetup()) {
@@ -106,8 +107,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
 
     setWindowTitle(QStringLiteral("CEmu | ") + opts.idString);
 
-    keypadBridge = new QtKeypadBridge(this);
     connect(keypadBridge, &QtKeypadBridge::keyStateChanged, ui->keypadWidget, &KeypadWidget::changeKeyState);
+    connect(keypadBridge, &QtKeypadBridge::sendKey, &emu, &EmuThread::enqueueKey);
     installEventFilter(keypadBridge);
     for (const auto &tab : ui->tabWidget->children()[0]->children()) {
         tab->installEventFilter(keypadBridge);
@@ -326,6 +327,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->ramEdit, &HexWidget::customContextMenuRequested, this, &MainWindow::contextMem);
 
     // keymap
+    connect(ui->radioNaturalKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
     connect(ui->radioCEmuKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
     connect(ui->radioTilEmKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
     connect(ui->radioWabbitemuKeys, &QRadioButton::clicked, this, &MainWindow::keymapChanged);
