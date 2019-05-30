@@ -171,10 +171,11 @@ QMAKE_CFLAGS    += $$GLOBAL_FLAGS
 QMAKE_CXXFLAGS  += $$GLOBAL_FLAGS
 QMAKE_LFLAGS    += $$GLOBAL_FLAGS
 
-# If we want to keep supporting macOS down to 10.9, change this and build/deploy with Qt 5.8
-macx: QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.12
-
-macx: ICON = resources/icons/icon.icns
+if(macx) {
+    QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.12
+    ICON = resources/icons/icon.icns
+    LIBS += -framework Cocoa
+}
 
 SOURCES += \
     ../../tests/autotester/autotester.cpp \
@@ -258,6 +259,11 @@ SOURCES += \
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
 win32: LIBS += -lpsapi
+
+
+macx: SOURCES += os/mac/kdmactouchbar.mm
+macx: HEADERS += os/mac/kdmactouchbar.h os/mac/kdmactouchbar_global.h
+
 
 # This doesn't exist, but Qt Creator ignores that
 just_show_up_in_qt_creator {

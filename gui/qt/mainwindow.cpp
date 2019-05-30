@@ -39,6 +39,7 @@
 #include <QtGui/QDesktopServices>
 #include <QtGui/QClipboard>
 #include <QtWidgets/QDesktopWidget>
+#include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QShortcut>
 #include <QtWidgets/QProgressDialog>
 #include <QtWidgets/QInputDialog>
@@ -49,6 +50,10 @@
 #include <fstream>
 #include <iostream>
 #include <math.h>
+
+#ifdef Q_OS_MACX
+    #include "os/mac/kdmactouchbar.h"
+#endif
 
 Q_DECLARE_METATYPE(calc_var_t)
 Q_DECLARE_METATYPE(emu_state_t)
@@ -82,6 +87,10 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
         m_initPassed = false;
         return;
     }
+
+#ifdef Q_OS_MACX
+    KDMacTouchBar *touchBar = new KDMacTouchBar(this);
+#endif
 
     // init tivars_lib stuff
     tivars::TIModels::initTIModelsArray();
@@ -172,6 +181,34 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(m_disasm, &DataWidget::gotoDisasmAddress, this, &MainWindow::gotoDisasmAddr);
     connect(m_disasm, &DataWidget::gotoMemoryAddress, this, &MainWindow::gotoMemAddr);
 
+#ifdef Q_OS_MACX
+    {
+        QAction *action = new QAction(ui->actionReportBug->icon(), tr("Run/Stop"));
+        touchBar->addAction(action);
+        connect(action, &QAction::triggered, this, &MainWindow::debugToggle);
+    }
+    {
+        QAction *action = new QAction(ui->buttonStepIn->icon(), "in");
+        touchBar->addAction(action);
+        connect(action, &QAction::triggered, this, &MainWindow::stepIn);
+    }
+    {
+        QAction *action = new QAction(ui->buttonStepOver->icon(), "over");
+        touchBar->addAction(action);
+        connect(action, &QAction::triggered, this, &MainWindow::stepOver);
+    }
+    {
+        QAction *action = new QAction(ui->buttonStepNext->icon(), "next");
+        touchBar->addAction(action);
+        connect(action, &QAction::triggered, this, &MainWindow::stepNext);
+    }
+    {
+        QAction *action = new QAction(ui->buttonStepOut->icon(), "out");
+        touchBar->addAction(action);
+        connect(action, &QAction::triggered, this, &MainWindow::stepOut);
+    }
+#endif
+
     // ctrl + click
     connect(ui->console, &QPlainTextEdit::cursorPositionChanged, [this]{ handleCtrlClickText(ui->console); });
     connect(ui->stackView, &QPlainTextEdit::cursorPositionChanged, [this]{ handleCtrlClickText(ui->stackView); });
@@ -242,6 +279,47 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->actionHideStatusBar, &QAction::triggered, this, &MainWindow::setStatusBarState);
     connect(ui->buttonResetCalculator, &QPushButton::clicked, this, &MainWindow::resetEmu);
     connect(ui->buttonReloadROM, &QPushButton::clicked, [this]{ emuLoad(EMU_DATA_ROM); });
+
+#ifdef Q_OS_MACX
+    touchBar->addSeparator();
+    {
+        QAction *resetAction = new QAction(ui->actionResetCalculator->icon(), tr("Reset"));
+        QAction *reloadAction = new QAction(ui->actionReloadROM->icon(), tr("Reload"));
+        touchBar->addActions({ resetAction, reloadAction });
+
+        connect(resetAction, &QAction::triggered, this, [touchBar, resetAction, reloadAction, this] {
+            touchBar->removeAction(resetAction);
+            touchBar->removeAction(reloadAction);
+            QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+            touchBar->addDialogButtonBox(buttonBox);
+            connect(buttonBox, &QDialogButtonBox::accepted, this, [touchBar, buttonBox, resetAction, reloadAction, this] {
+                this->resetEmu();
+                touchBar->removeDialogButtonBox(buttonBox);
+                touchBar->addActions({ resetAction, reloadAction });
+            });
+            connect(buttonBox, &QDialogButtonBox::rejected, this, [touchBar, buttonBox, resetAction, reloadAction] {
+                touchBar->removeDialogButtonBox(buttonBox);
+                touchBar->addActions({ resetAction, reloadAction });
+            });
+        });
+
+        connect(reloadAction, &QAction::triggered, this, [touchBar, resetAction, reloadAction, this] {
+            touchBar->removeAction(resetAction);
+            touchBar->removeAction(reloadAction);
+            QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+            touchBar->addDialogButtonBox(buttonBox);
+            connect(buttonBox, &QDialogButtonBox::accepted, this, [touchBar, buttonBox, resetAction, reloadAction, this] {
+                this->emuLoad(EMU_DATA_ROM);
+                touchBar->removeDialogButtonBox(buttonBox);
+                touchBar->addActions({ resetAction, reloadAction });
+            });
+            connect(buttonBox, &QDialogButtonBox::rejected, this, [touchBar, buttonBox, resetAction, reloadAction] {
+                touchBar->removeDialogButtonBox(buttonBox);
+                touchBar->addActions({ resetAction, reloadAction });
+            });
+        });
+    }
+#endif
 
     // lcd flow
     connect(ui->lcd, &LCDWidget::updateLcd, this, &MainWindow::lcdUpdate, Qt::QueuedConnection);
