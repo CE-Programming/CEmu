@@ -575,7 +575,7 @@
     <message>
         <location filename="../mainwindow.ui" line="2437"/>
         <source>MHz</source>
-        <translation type="unfinished"></translation>
+        <translation>MHz</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4708"/>
@@ -846,33 +846,33 @@
     <message>
         <location filename="../mainwindow.ui" line="4130"/>
         <source>Add Breakpoint</source>
-        <translation type="unfinished"></translation>
+        <translation>Breakpoint toevoegen</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4287"/>
         <source>Add Watchpoint</source>
-        <translation type="unfinished"></translation>
+        <translation>Watchpoint toevoegen</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4402"/>
         <location filename="../mainwindow.ui" line="4560"/>
         <source>Write</source>
-        <translation type="unfinished"></translation>
+        <translation>Schrijven</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4407"/>
         <source>Low</source>
-        <translation type="unfinished"></translation>
+        <translation>Laag</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4412"/>
         <source>High</source>
-        <translation type="unfinished"></translation>
+        <translation>Hoog</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="4445"/>
         <source>Add Port Monitor</source>
-        <translation type="unfinished"></translation>
+        <translation>Port monitor toevoegen</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="5162"/>
@@ -1012,17 +1012,17 @@
     <message>
         <location filename="../mainwindow.ui" line="6642"/>
         <source>Selected</source>
-        <translation type="unfinished"></translation>
+        <translation>Selectie</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6686"/>
         <source>Resend selected</source>
-        <translation type="unfinished"></translation>
+        <translation>Selectie opnieuw verzenden</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6722"/>
         <source>Save transferred file paths on exit</source>
-        <translation type="unfinished"></translation>
+        <translation>Bestandspaden opslaan</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8762"/>
@@ -1054,12 +1054,12 @@
     <message>
         <location filename="../mainwindow.ui" line="9944"/>
         <source>Keypad Mapping</source>
-        <translation type="unfinished"></translation>
+        <translation>Keymap-toewijzing</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9953"/>
         <source>Change Instance ID</source>
-        <translation type="unfinished"></translation>
+        <translation>Instantie-ID aanpassen</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8895"/>
@@ -1133,12 +1133,12 @@
     <message>
         <location filename="../mainwindow.ui" line="8276"/>
         <source>Natural</source>
-        <translation type="unfinished"></translation>
+        <translation>Natuurlijk</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8377"/>
         <source>Custom</source>
-        <translation type="unfinished"></translation>
+        <translation>Aangepast</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8912"/>
@@ -1409,12 +1409,12 @@
     <message>
         <location filename="../debugger.cpp" line="123"/>
         <source>Invalid Configuration</source>
-        <translation type="unfinished"></translation>
+        <translation>Ongeldige configuratie</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="124"/>
         <source>The debugging configuration is incompatible with CEmu</source>
-        <translation type="unfinished"></translation>
+        <translation>De debug-configuratie is niet compatible met CEmu</translation>
     </message>
     <message>
         <location filename="../debugger.cpp" line="263"/>
@@ -1611,12 +1611,12 @@ CEmu maakt gebruik van een aanpasbare dock-style interface. Verplaats de tabs en
     <message>
         <location filename="../mainwindow.cpp" line="186"/>
         <source>Run/Stop</source>
-        <translation type="unfinished"></translation>
+        <translation>Run/Stop</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="287"/>
         <source>Reload</source>
-        <translation type="unfinished"></translation>
+        <translation>Reload</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="661"/>
@@ -1736,7 +1736,7 @@ CEmu maakt gebruik van een aanpasbare dock-style interface. Verplaats de tabs en
     <message>
         <location filename="../mainwindow.cpp" line="1734"/>
         <source>[CEmu] Dock output redirected to stdout. Use the radio button to enable dock.</source>
-        <translation type="unfinished"></translation>
+        <translation>[CEmu] Dock-output omgeleid naar stdout. Gebruik het keuzerondje om dock in te schakelen.</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1773"/>
@@ -2038,12 +2038,12 @@ Plaats hiertoe de bootable image in dezelfde folder als de CEmu executable. Als 
     <message>
         <location filename="../settings.cpp" line="768"/>
         <source>Keymap Config (*.ini);;All files (*.*)</source>
-        <translation type="unfinished"></translation>
+        <translation>Keymap-instellingen (*.ini);;Alle bestanden (*.*)</translation>
     </message>
     <message>
         <location filename="../settings.cpp" line="810"/>
         <source>Unable to set custom keymap.</source>
-        <translation type="unfinished"></translation>
+        <translation>Niet in staat aangepaste keymap in te stellen.</translation>
     </message>
     <message>
         <location filename="../settings.cpp" line="1093"/>
@@ -2073,12 +2073,12 @@ Plaats hiertoe de bootable image in dezelfde folder als de CEmu executable. Als 
     <message>
         <location filename="../settings.cpp" line="1209"/>
         <source>Keymap Config (*.ini)</source>
-        <translation type="unfinished"></translation>
+        <translation>Keymap-instellingen (*.ini)</translation>
     </message>
     <message>
         <location filename="../settings.cpp" line="1210"/>
         <source>Save keymap configuration</source>
-        <translation type="unfinished"></translation>
+        <translation>Keymap-instellingen opslaan</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="806"/>
@@ -2096,12 +2096,12 @@ Plaats hiertoe de bootable image in dezelfde folder als de CEmu executable. Als 
     <message>
         <location filename="../sendinghandler.cpp" line="156"/>
         <source>Transfer Error, see console for information.</source>
-        <translation type="unfinished"></translation>
+        <translation>Overdrachtsfout, zie de console voor meer informatie</translation>
     </message>
     <message>
         <location filename="../sendinghandler.cpp" line="159"/>
         <source>Transfer Warning, see console for information.</source>
-        <translation type="unfinished"></translation>
+        <translation>Overdrachtswaarschuwing, zie de console voor meer informatie</translation>
     </message>
     <message>
         <source>Transfer Error, see console for information.
@@ -2302,17 +2302,17 @@ Bestand: </translation>
     <message>
         <location filename="../visualizerwidget.cpp" line="68"/>
         <source>Preset Configurations</source>
-        <translation type="unfinished"></translation>
+        <translation>Voorinstellingen</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="70"/>
         <source>Change Configuration</source>
-        <translation type="unfinished"></translation>
+        <translation>Instellingen wijzigen</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="74"/>
         <source>Current LCD State</source>
-        <translation type="unfinished"></translation>
+        <translation>Huidige LCD-toestand</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="75"/>
@@ -2327,37 +2327,37 @@ Bestand: </translation>
     <message>
         <location filename="../visualizerwidget.cpp" line="77"/>
         <source>Palette View</source>
-        <translation type="unfinished"></translation>
+        <translation>Pallet weergave</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="112"/>
         <source>Base Address</source>
-        <translation type="unfinished"></translation>
+        <translation>Basisadres</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="116"/>
         <source>Scale</source>
-        <translation type="unfinished"></translation>
+        <translation>Schaal</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="118"/>
         <source>Width</source>
-        <translation type="unfinished"></translation>
+        <translation>Breedte</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="120"/>
         <source>Height</source>
-        <translation type="unfinished"></translation>
+        <translation>Hoogte</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="127"/>
         <source>Grid</source>
-        <translation type="unfinished"></translation>
+        <translation>Raster</translation>
     </message>
     <message>
         <location filename="../visualizerwidget.cpp" line="128"/>
         <source>Submit</source>
-        <translation type="unfinished"></translation>
+        <translation>Indienen</translation>
     </message>
 </context>
 <context>
@@ -2467,12 +2467,12 @@ Bestand: </translation>
     <message>
         <location filename="../main.cpp" line="110"/>
         <source>Launch a program specified by &lt;prgm&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>Start een programma  gespecificeerd door &lt;prgm&gt;</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="111"/>
         <source>prgm</source>
-        <translation type="unfinished"></translation>
+        <translation>prgm</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="115"/>
@@ -2497,12 +2497,12 @@ Bestand: </translation>
     <message>
         <location filename="../main.cpp" line="128"/>
         <source>Set fullscreen option (0 = normal, 1 = application, 2 = lcd)</source>
-        <translation type="unfinished"></translation>
+        <translation>Volledig scherm instellen (0 = normaal, 1 = totoepassing, 2 = lcd)</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="129"/>
         <source>fullscreen</source>
-        <translation type="unfinished"></translation>
+        <translation>Volledig scherm</translation>
     </message>
 </context>
 <context>
