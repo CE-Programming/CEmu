@@ -615,7 +615,7 @@
     <message>
         <location filename="../mainwindow.ui" line="6642"/>
         <source>Selected</source>
-        <translation type="unfinished"></translation>
+        <translation>Sélectionné</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="6669"/>
@@ -625,22 +625,22 @@
     <message>
         <location filename="../mainwindow.ui" line="8276"/>
         <source>Natural</source>
-        <translation type="unfinished"></translation>
+        <translation>Naturel</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8377"/>
         <source>Custom</source>
-        <translation type="unfinished"></translation>
+        <translation>Personnalisé</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9944"/>
         <source>Keypad Mapping</source>
-        <translation type="unfinished"></translation>
+        <translation>Associations de touches</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="9953"/>
         <source>Change Instance ID</source>
-        <translation type="unfinished"></translation>
+        <translation>Changer l&apos;ID de l&apos;instance</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="8762"/>
@@ -2095,12 +2095,12 @@ L&apos;image bootable doit être placée dans le même dossier que CEmu. Au proc
     <message>
         <location filename="../sendinghandler.cpp" line="156"/>
         <source>Transfer Error, see console for information.</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur de transfert, voir la console pour plus d&apos;infos.</translation>
     </message>
     <message>
         <location filename="../sendinghandler.cpp" line="159"/>
         <source>Transfer Warning, see console for information.</source>
-        <translation type="unfinished"></translation>
+        <translation>Avertissement de transfert, voir la console pour plus d&apos;infos.</translation>
     </message>
     <message>
         <source>Transfer Error, see console for information.
@@ -2500,7 +2500,7 @@ File: </source>
     <message>
         <location filename="../main.cpp" line="129"/>
         <source>fullscreen</source>
-        <translation type="unfinished">Plein-écran</translation>
+        <translation>Plein-écran</translation>
     </message>
 </context>
 <context>
