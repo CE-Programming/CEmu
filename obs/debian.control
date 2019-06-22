@@ -1,5 +1,5 @@
 Source: cemu
-Section: sectionName
+Section: devel
 Priority: optional
 Maintainer: Adrien Bertrand <bertrand.adrien@gmail.com>
 Homepage: https://github.com/CE-Programming/CEmu
