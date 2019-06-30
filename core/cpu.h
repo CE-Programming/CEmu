@@ -83,7 +83,6 @@ typedef struct eZ80cpu {
         bool    IEF_wait    : 1;  /* Wait for interrupt enable                                                                   */
         bool    halted      : 1;  /* Have we halted the CPU?                                                                     */
         bool    inBlock     : 1;  /* Are we processing a block instruction?                                                      */
-        bool    preI        : 1;
     };
 } eZ80cpu_t;
 

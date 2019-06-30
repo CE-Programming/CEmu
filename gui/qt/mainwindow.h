@@ -419,6 +419,7 @@ private:
     void setStatusBarState(bool state);
     void setUIBoundaries(bool state);
     void setPreRevisionI(bool state);
+    void setRevMHardware(bool state);
     void setNormalOs(bool state);
     void setRecentSave(bool state);
     void setPortable(bool state);
@@ -723,6 +724,7 @@ private:
     static const QString SETTING_DEBUGGER_AUTO_EQUATES;
     static const QString SETTING_DEBUGGER_PRE_I;
     static const QString SETTING_DEBUGGER_NORM_OS;
+    static const QString SETTING_REV_M_HARDWARE;
     static const QString SETTING_SCREEN_FRAMESKIP;
     static const QString SETTING_SCREEN_SCALE;
     static const QString SETTING_SCREEN_SKIN;

@@ -16,6 +16,8 @@ typedef enum {
 
 typedef struct asic_state {
     ti_device_t device;
+    bool preI;
+    bool revM;
 } asic_state_t;
 
 extern asic_state_t asic;

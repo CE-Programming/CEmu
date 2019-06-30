@@ -27,7 +27,7 @@ static uint8_t control_read(const uint16_t pio, bool peek) {
             value = control.readBatteryStatus;
             break;
         case 0x03:
-            value = get_device_type();
+            value = get_device_type() | asic.revM << 4;
             break;
         case 0x06:
             value = control.protectedPortsUnlocked;

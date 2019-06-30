@@ -9393,6 +9393,13 @@ QPushButton:pressed {
                  </property>
                 </widget>
                </item>
+               <item>
+                <widget class="QCheckBox" name="checkRevMHardware">
+                 <property name="text">
+                  <string>Emulate revision M+</string>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </widget>
             </item>

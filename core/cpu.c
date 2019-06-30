@@ -814,9 +814,7 @@ void cpu_init(void) {
 }
 
 void cpu_reset(void) {
-    bool preI = cpu.preI;
     memset(&cpu, 0, sizeof(cpu));
-    cpu.preI = preI;
     cpu_restore_next();
     cpu_flush(0, false);
     gui_console_printf("[CEmu] CPU reset.\n");
@@ -914,7 +912,7 @@ void cpu_execute(void) {
                 if (cpu.IM == 2) {
                     cpu_interrupt(0x38);
                 } else {
-                    if (cpu.preI && cpu.IM == 3) {
+                    if (asic.preI && cpu.IM == 3) {
                         cpu.cycles++;
                         cpu_interrupt(cpu_read_word(r->I << 8 | (bus_rand() & 0xFF)));
                     } else {

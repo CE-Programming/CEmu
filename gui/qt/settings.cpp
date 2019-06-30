@@ -49,6 +49,7 @@ const QString MainWindow::SETTING_DEBUGGER_AUTO_EQUATES     = QStringLiteral("De
 const QString MainWindow::SETTING_DEBUGGER_IGNORE_DMA       = QStringLiteral("Debugger/ignore_dma");
 const QString MainWindow::SETTING_DEBUGGER_NORM_OS          = QStringLiteral("Debugger/norm_os");
 const QString MainWindow::SETTING_DEBUGGER_PRE_I            = QStringLiteral("Debugger/pre_i");
+const QString MainWindow::SETTING_REV_M_HARDWARE            = QStringLiteral("rev_m_hardware");
 const QString MainWindow::SETTING_SCREEN_FRAMESKIP          = QStringLiteral("Screen/frameskip");
 const QString MainWindow::SETTING_SCREEN_SCALE              = QStringLiteral("Screen/scale");
 const QString MainWindow::SETTING_SCREEN_SKIN               = QStringLiteral("Screen/skin");
@@ -933,7 +934,13 @@ void MainWindow::setRecentSave(bool state) {
 void MainWindow::setPreRevisionI(bool state) {
     ui->checkPreI->setChecked(state);
     m_config->setValue(SETTING_DEBUGGER_PRE_I, state);
-    cpu.preI = state;
+    asic.preI = state;
+}
+
+void MainWindow::setRevMHardware(bool state) {
+    ui->checkRevMHardware->setChecked(state);
+    m_config->setValue(SETTING_REV_M_HARDWARE, state);
+    asic.revM = state;
 }
 
 void MainWindow::setNormalOs(bool state) {
