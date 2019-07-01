@@ -13,8 +13,10 @@ extern "C" {
 typedef struct flash_state {
     uint8_t ports[0x100];
     uint8_t command[0x10];
+    uint64_t uniqueID;
     uint8_t commandStatus[4];
-    uint32_t commandAddress, commandLength;
+    uint32_t commandAddress;
+    uint32_t commandLength;
     uint32_t waitStates;
     uint32_t mask;
     uint8_t mapped : 1;

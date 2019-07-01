@@ -1,6 +1,7 @@
 #include "spi.h"
-#include "emu.h"
 #include "bus.h"
+#include "cpu.h"
+#include "emu.h"
 #include "schedule.h"
 
 #include <assert.h>
@@ -409,24 +410,48 @@ static void spi_write_param(uint8_t value) {
 
 /* Read from the SPI range of ports */
 static uint8_t spi_read(const uint16_t pio, bool peek) {
+    uint8_t value = 0;
     (void)peek;
-    (void)pio;
-    return 0;
+    if (pio < 0x18) {
+        value = spi.regs[pio];
+    } else if (pio == 0x18) {
+        switch (spi.regs[0x12]) {
+            case 0: // LCD?
+                break;
+            case 1: // ARM?
+                if (!asic.revM) {
+                    break;
+                }
+                break;
+        }
+    }
+    return value;
 }
 
 /* Write to the SPI range of ports */
 static void spi_write(const uint16_t pio, const uint8_t byte, bool poke) {
     (void)poke;
 
-    if (pio == 0x18) {
-        spi.fifo = spi.fifo << 3 | (byte & 7);
-        if (spi.fifo & 0x200) {
-            if (spi.fifo & 0x100) {
-                spi_write_param(spi.fifo);
-            } else {
-                spi_write_cmd(spi.fifo);
-            }
-            spi.fifo = 1;
+    if (pio < 0x18) {
+        spi.regs[pio] = byte;
+    } else if (pio == 0x18) {
+        switch (spi.regs[0x12]) {
+            case 0: // LCD?
+                spi.fifo = spi.fifo << 3 | (byte & 7);
+                if (spi.fifo & 0x200) {
+                    if (spi.fifo & 0x100) {
+                        spi_write_param(spi.fifo);
+                    } else {
+                        spi_write_cmd(spi.fifo);
+                    }
+                    spi.fifo = 1;
+                }
+                break;
+            case 1: // ARM?
+                if (!asic.revM) {
+                    break;
+                }
+                break;
         }
     }
 }
@@ -440,6 +465,7 @@ static const eZ80portrange_t pspi = {
 void spi_reset(void) {
     uint8_t i = 0, c;
     memset(&spi, 0, sizeof(spi));
+    spi.regs[0x0C] = 0xF2;
     spi_hw_reset();
     for (c = 0; c < 1 << 5; c++) {
         spi.lut[i++] = c << 3 | c >> 2;
