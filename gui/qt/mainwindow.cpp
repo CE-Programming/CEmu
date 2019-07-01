@@ -1523,6 +1523,8 @@ void MainWindow::showAsicRevInfo(const QList<int>& supportedRevs, int loadedRev,
     if (loadedRev != defaultRev || ui->comboBoxAsicRev->currentIndex() != 0) {
         ui->comboBoxAsicRev->setCurrentIndex(loadedRev);
     }
+
+    setCalcSkinTopFromType(python);
 }
 
 void MainWindow::showEmuSpeed(int speed) {
@@ -2281,7 +2283,6 @@ void MainWindow::emuCheck(emu_state_t state, emu_data_t type) {
 
     if (state == EMU_STATE_VALID) {
         ui->lcd->setMain();
-        setCalcSkinTopFromType();
         setKeypadColor(m_config->value(SETTING_KEYPAD_COLOR, get_device_type() ? KEYPAD_WHITE : KEYPAD_BLACK).toUInt());
         for (const auto &dock : findChildren<DockWidget*>()) {
             if (dock->windowTitle() == TXT_VISUALIZER_DOCK) {

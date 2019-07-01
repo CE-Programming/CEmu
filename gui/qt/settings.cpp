@@ -471,10 +471,14 @@ void MainWindow::setKeypadHolding(bool enabled) {
     m_config->setValue(SETTING_KEYPAD_HOLDING, enabled);
 }
 
-void MainWindow::setCalcSkinTopFromType() {
-    bool is83 = get_device_type() == TI83PCE;
-    ui->calcSkinTop->setStyleSheet(is83 ? QStringLiteral(".QFrame { border-image: url(:/skin/resources/skin/ti83pce.png) 0 0 0 0 stretch stretch; }")
-                                        : QStringLiteral(".QFrame { border-image: url(:/skin/resources/skin/ti84pce.png) 0 0 0 0 stretch stretch; }"));
+void MainWindow::setCalcSkinTopFromType(bool python) {
+    QString fileName;
+    if (get_device_type() == TI83PCE) {
+        fileName = python ? "ti83pce_ep.png" : "ti83pce.png";
+    } else {
+        fileName = python ? "ti84pce_py.png" : "ti84pce.png";
+    }
+    ui->calcSkinTop->setStyleSheet(".QFrame { border-image: url(:/skin/resources/skin/" + fileName + ") 0 0 0 0 stretch stretch; }");
 }
 
 void MainWindow::setImagePath() {

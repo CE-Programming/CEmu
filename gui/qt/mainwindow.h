@@ -400,7 +400,7 @@ private:
     void setKeymap(const QString &value);
     void setKeypadColor(unsigned int color);
     void setKeypadHolding(bool enabled);
-    void setCalcSkinTopFromType();
+    void setCalcSkinTopFromType(bool python);
 
     // settings
     void setRom(const QString &path);
