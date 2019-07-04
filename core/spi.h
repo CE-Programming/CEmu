@@ -49,6 +49,8 @@ enum spi_ic {
 typedef struct spi_state {
     uint32_t param;
     uint16_t fifo, row, dstRow, srcRow;
+    const uint8_t *data;
+    uint8_t cbw[0x20], csw[0x10], cbwIndex, dataLength, cswIndex;
     uint8_t regs[0x18];
     uint8_t cmd, col, colDir;
 

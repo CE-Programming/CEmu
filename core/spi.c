@@ -422,6 +422,24 @@ static uint8_t spi_read(const uint16_t pio, bool peek) {
                 if (!asic.revM) {
                     break;
                 }
+                if (spi.dataLength) {
+                    value = *spi.data++;
+                    spi.dataLength--;
+                } else if (!memcmp(spi.cbw, "USBC", 4)) {
+                    memcpy(spi.csw, spi.cbw, 8);
+                    spi.csw[3] = 'S';
+                    memset(spi.csw + 8, 0, 5);
+                    spi.cswIndex = 0;
+                    switch (spi.cbw[15]) {
+                        case 0x12: { // INQUIRY
+                            static const uint8_t inquiry[] = { 0xA5, 0x00, 0x80, 0x03, 0x02, 0x1F, 0x00, 0x00, 0x00, 0x54, 0x49, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x50, 0x79, 0x74, 0x68, 0x6F, 0x6E, 0x20, 0x41, 0x64, 0x61, 0x70, 0x74, 0x65, 0x72, 0x20, 0x20, 0x33, 0x2E, 0x30, 0x30, 0x00, 0xA5, 0x55, 0x53, 0x42, 0x53, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+                            spi.data = inquiry;
+                            spi.dataLength = sizeof(inquiry);
+                            break;
+                        }
+                    }
+                }
+                spi.cbw[spi.cbwIndex = 0] = 0;
                 break;
         }
     }
@@ -451,6 +469,7 @@ static void spi_write(const uint16_t pio, const uint8_t byte, bool poke) {
                 if (!asic.revM) {
                     break;
                 }
+                spi.cbw[spi.cbwIndex++ & 0x1F] = byte;
                 break;
         }
     }
