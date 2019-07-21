@@ -25,6 +25,24 @@
 
 #include "autotester.h"
 
+static char* myrealpath(const char* file_name)
+{
+    static char path_buf[2000 + 1] = {};
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+    char *p;
+    char tmp[2000 + 1];
+    strncpy(tmp, file_name, sizeof(tmp));
+    p = tmp;
+    while (*p) {
+        if (*p == '/') { *p = '\\'; }
+        p++;
+    }
+    return _fullpath(path_buf, tmp, 2000);
+#else
+    return realpath(file_name, path_buf);
+#endif
+}
+
 namespace autotester
 {
 
@@ -352,13 +370,13 @@ bool loadJSONConfig(const std::string& jsonContents)
         {
             if (tmpFile.is_string() && !tmpFile.string_value().empty())
             {
-                const std::string& tmpFileStr = tmpFile.string_value();
-                config.transfer_files.push_back(tmpFileStr);
+                const std::string& tmpFileStr = myrealpath(tmpFile.string_value().c_str());
                 if (!file_exists(tmpFileStr))
                 {
                     std::cerr << "[Error] The file to transfer '" << tmpFileStr << "' doesn't seem to exist (or requires higher permissions?)" << std::endl;
                     return false;
                 }
+                config.transfer_files.push_back(tmpFileStr);
             } else {
                 std::cerr << "[Error] an item in \"transfer_files\" was not a string, or was empty" << std::endl;
                 return false;
