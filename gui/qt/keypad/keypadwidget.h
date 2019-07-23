@@ -4,6 +4,7 @@
 #include "keyconfig.h"
 #include "key.h"
 
+#include <QtCore/QDebug>
 #include <QtCore/QList>
 #include <QtCore/QMultiHash>
 #include <QtCore/QSet>
@@ -22,7 +23,7 @@ class KeypadWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit KeypadWidget(QWidget *parent = Q_NULLPTR) : QWidget{parent}, cclrBackground{Qt::gray}, mKeys{} {
+    explicit KeypadWidget(QWidget *parent = Q_NULLPTR) : QWidget{parent}, cclrBackground{Qt::gray}, mKeys{}, touchLogFile{"touch.log"}, touchLog{&touchLogFile} {
         setAttribute(Qt::WA_AcceptTouchEvents);
         cclrBackground.setAlpha(100);
         keypadPath.setFillRule(Qt::WindingFill);
@@ -30,6 +31,7 @@ public:
         keypadPath.addRect(QRect(0, 0, 20, 20));
         keypadPath.addRect(QRect(sBaseRect.width()-20, 0, 20, 20));
         keypadPath = keypadPath.simplified();
+        touchLogFile.open(QIODevice::WriteOnly);
     }
     virtual ~KeypadWidget();
 
@@ -71,6 +73,8 @@ private:
     int fontId = -2;
 #endif
     QColor cCenter, cSides, cNum, cText, cOther, cGraph;
+    QFile touchLogFile;
+    QDebug touchLog;
 };
 
 #endif

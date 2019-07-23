@@ -418,9 +418,11 @@ void KeypadWidget::touchUpdate(const QList<QTouchEvent::TouchPoint> &points) {
                     if (point.state() != Qt::TouchPointReleased && key->isUnder(area)) {
                         if (!mTouched.contains(point.id(), key->keycode())) {
                             mTouched.insert(point.id(), key->keycode());
+                            touchLog << key->keycode().code() << "press" << endl;
                             key->press();
                         }
                     } else if (mTouched.remove(point.id(), key->keycode())) {
+                        touchLog << key->keycode().code() << "release" << endl;
                         key->release();
                     }
                 }
@@ -434,6 +436,7 @@ void KeypadWidget::touchEnd() {
     for (KeyCode code : mTouched) {
         if (Key *key = mKeys[code.row()][code.col()]) {
             bool wasSelected = key->isSelected();
+            touchLog << key->keycode().code() << "end" << endl;
             key->release();
             updateKey(key, wasSelected);
         }
@@ -446,6 +449,7 @@ void KeypadWidget::touchEvent(QTouchEvent *event) {
         event->ignore();
         return;
     }
+    touchLog << event << endl;
     switch (event->type()) {
         case QEvent::TouchBegin:
         case QEvent::TouchUpdate:
