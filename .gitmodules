@@ -1,3 +1,6 @@
 [submodule "core/debug/zdis"]
 	path = core/debug/zdis
 	url = https://github.com/CE-Programming/zdis.git
+[submodule "gui/qt/tivars_lib_cpp"]
+	path = gui/qt/tivars_lib_cpp
+	url = https://github.com/adriweb/tivars_lib_cpp.git

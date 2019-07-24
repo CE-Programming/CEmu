@@ -3,7 +3,7 @@
 
 #include "utils.h"
 
-#include "tivarslib/TypeHandlers/TypeHandlers.h"
+#include "tivars_lib_cpp/src/TypeHandlers/TypeHandlers.h"
 
 #include <QtGui/QPainter>
 #include <QtWidgets/QScrollBar>

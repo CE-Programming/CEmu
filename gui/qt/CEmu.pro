@@ -3,6 +3,7 @@ lessThan(QT_MINOR_VERSION, 5) : error("You need at least Qt 5.5 to build CEmu!")
 
 # Error if git submodules are not downloaded
 !exists("../../core/debug/zdis/zdis.c"): error("You have to run 'git submodule init' and 'git submodule update' first.")
+!exists("tivars_lib_cpp/src/TIVarFile.cpp"): error("You have to run 'git submodule init' and 'git submodule update' first.")
 
 # CEmu version and info
 CEMU_RELEASE = true
@@ -226,28 +227,28 @@ SOURCES += \
     keypad/arrowkey.cpp \
     debugger/hexwidget.cpp \
     debugger/disasm.cpp \
-    tivarslib/tivarslib_utils.cpp \
-    tivarslib/BinaryFile.cpp \
-    tivarslib/TIVarFile.cpp \
-    tivarslib/TIModel.cpp \
-    tivarslib/TIModels.cpp \
-    tivarslib/TIVarType.cpp \
-    tivarslib/TIVarTypes.cpp \
-    tivarslib/TypeHandlers/DummyHandler.cpp \
-    tivarslib/TypeHandlers/TH_GenericList.cpp \
-    tivarslib/TypeHandlers/TH_Tokenized.cpp \
-    tivarslib/TypeHandlers/TH_GenericComplex.cpp \
-    tivarslib/TypeHandlers/TH_Matrix.cpp \
-    tivarslib/TypeHandlers/TH_GenericReal.cpp \
-    tivarslib/TypeHandlers/TH_GenericAppVar.cpp \
-    tivarslib/TypeHandlers/TH_TempEqu.cpp \
-    tivarslib/TypeHandlers/STH_DataAppVar.cpp \
-    tivarslib/TypeHandlers/STH_PythonAppVar.cpp \
-    tivarslib/TypeHandlers/STH_ExactFractionPi.cpp \
-    tivarslib/TypeHandlers/STH_ExactFraction.cpp \
-    tivarslib/TypeHandlers/STH_ExactRadical.cpp \
-    tivarslib/TypeHandlers/STH_ExactPi.cpp \
-    tivarslib/TypeHandlers/STH_FP.cpp \
+    tivars_lib_cpp/src/tivarslib_utils.cpp \
+    tivars_lib_cpp/src/BinaryFile.cpp \
+    tivars_lib_cpp/src/TIVarFile.cpp \
+    tivars_lib_cpp/src/TIModel.cpp \
+    tivars_lib_cpp/src/TIModels.cpp \
+    tivars_lib_cpp/src/TIVarType.cpp \
+    tivars_lib_cpp/src/TIVarTypes.cpp \
+    tivars_lib_cpp/src/TypeHandlers/DummyHandler.cpp \
+    tivars_lib_cpp/src/TypeHandlers/TH_GenericList.cpp \
+    tivars_lib_cpp/src/TypeHandlers/TH_Tokenized.cpp \
+    tivars_lib_cpp/src/TypeHandlers/TH_GenericComplex.cpp \
+    tivars_lib_cpp/src/TypeHandlers/TH_Matrix.cpp \
+    tivars_lib_cpp/src/TypeHandlers/TH_GenericReal.cpp \
+    tivars_lib_cpp/src/TypeHandlers/TH_GenericAppVar.cpp \
+    tivars_lib_cpp/src/TypeHandlers/TH_TempEqu.cpp \
+    tivars_lib_cpp/src/TypeHandlers/STH_DataAppVar.cpp \
+    tivars_lib_cpp/src/TypeHandlers/STH_PythonAppVar.cpp \
+    tivars_lib_cpp/src/TypeHandlers/STH_ExactFractionPi.cpp \
+    tivars_lib_cpp/src/TypeHandlers/STH_ExactFraction.cpp \
+    tivars_lib_cpp/src/TypeHandlers/STH_ExactRadical.cpp \
+    tivars_lib_cpp/src/TypeHandlers/STH_ExactPi.cpp \
+    tivars_lib_cpp/src/TypeHandlers/STH_FP.cpp \
     visualizerwidget.cpp \
     debugger/visualizerdisplaywidget.cpp \
     memorywidget.cpp \
@@ -332,15 +333,15 @@ HEADERS  += \
     capture/animated-png.h \
     debugger/hexwidget.h \
     debugger/disasm.h \
-    tivarslib/tivarslib_utils.h \
-    tivarslib/CommonTypes.h \
-    tivarslib/BinaryFile.h \
-    tivarslib/TIModel.h \
-    tivarslib/TIModels.h \
-    tivarslib/TIVarFile.h \
-    tivarslib/TIVarType.h \
-    tivarslib/TIVarTypes.h \
-    tivarslib/TypeHandlers/TypeHandlers.h \
+    tivars_lib_cpp/src/tivarslib_utils.h \
+    tivars_lib_cpp/src/CommonTypes.h \
+    tivars_lib_cpp/src/BinaryFile.h \
+    tivars_lib_cpp/src/TIModel.h \
+    tivars_lib_cpp/src/TIModels.h \
+    tivars_lib_cpp/src/TIVarFile.h \
+    tivars_lib_cpp/src/TIVarType.h \
+    tivars_lib_cpp/src/TIVarTypes.h \
+    tivars_lib_cpp/src/TypeHandlers/TypeHandlers.h \
     visualizerwidget.h \
     debugger/visualizerdisplaywidget.h \
     archive/extractor.h \

@@ -79,7 +79,7 @@
         <file>resources/custom_fonts/LiberationSansNarrow-Bold.ttf</file>
     </qresource>
     <qresource prefix="/other">
-        <file>tivarslib/TypeHandlers/programs_tokens.csv</file>
+        <file>tivars_lib_cpp/programs_tokens.csv</file>
     </qresource>
     <qresource prefix="/i18n">
         <file>i18n/es_ES.qm</file>
