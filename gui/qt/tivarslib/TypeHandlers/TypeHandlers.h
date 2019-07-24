@@ -27,16 +27,19 @@ namespace tivars
     namespace STH_ExactFraction
     {
         th();
+        const constexpr size_t dataByteCount = 9;
         static const constexpr char* validPattern = "===UNIMPLEMENTED==="; // TODO
     }
     namespace STH_ExactRadical
     {
         th();
+        const constexpr size_t dataByteCount = 9;
         static const constexpr char* validPattern = "===UNIMPLEMENTED==="; // TODO
     }
     namespace STH_ExactPi
     {
         th();
+        const constexpr size_t dataByteCount = 9;
         static const constexpr char* validPattern = "===UNIMPLEMENTED==="; // TODO
     }
     namespace STH_DataAppVar
@@ -52,6 +55,7 @@ namespace tivars
     namespace STH_ExactFractionPi
     {
         th();
+        const constexpr size_t dataByteCount = 9;
         static const constexpr char* validPattern = "===UNIMPLEMENTED==="; // TODO
     }
 
@@ -63,7 +67,7 @@ namespace tivars
     namespace TH_GenericComplex
     {
         th();
-        const constexpr size_t dataByteCount = 18;
+        const constexpr size_t dataByteCount = 2 * TH_GenericReal::dataByteCount;
     }
 
     namespace TH_GenericList   { th(); }

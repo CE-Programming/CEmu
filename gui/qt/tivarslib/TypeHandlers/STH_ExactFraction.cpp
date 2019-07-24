@@ -26,9 +26,9 @@ namespace tivars
 
     std::string STH_ExactFraction::makeStringFromData(const data_t& data, const options_t& options)
     {
-        if (data.size() != 9)
+        if (data.size() != dataByteCount)
         {
-            throw std::invalid_argument("Invalid data array. Needs to contain 9 bytes");
+            throw std::invalid_argument("Invalid data array. Needs to contain " + std::to_string(dataByteCount) + " bytes");
         }
 
         return dec2frac(stod(STH_FP::makeStringFromData(data, options)));

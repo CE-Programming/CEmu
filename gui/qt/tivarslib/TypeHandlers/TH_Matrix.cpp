@@ -84,7 +84,7 @@ namespace tivars
         const size_t colCount = data[0];
         const size_t rowCount = data[1];
 
-        if (data.size() < 2+TH_GenericReal::dataByteCount || colCount < 1 || rowCount < 1 || colCount > 255 || rowCount > 255
+        if (data.size() < 2+TH_GenericReal::dataByteCount || colCount < 1 || rowCount < 1
             || ((byteCount - 2) % TH_GenericReal::dataByteCount != 0) || (colCount*rowCount != (byteCount - 2) / TH_GenericReal::dataByteCount))
         {
             throw std::invalid_argument("Invalid data array. Needs to contain 1+1+" + std::to_string(TH_GenericReal::dataByteCount) + "*n bytes");

@@ -20,9 +20,9 @@ namespace tivars
     {
         struct var_header_t
         {
-            uchar    signature[8]  = {0};
-            uchar    sig_extra[3]  = {0};
-            uchar    comment[42]   = {0};
+            uchar    signature[8]  = {};
+            uchar    sig_extra[3]  = {};
+            uchar    comment[42]   = {};
             uint16_t entries_len   = 0;
         };
 
@@ -31,7 +31,7 @@ namespace tivars
             uint16_t meta_length   = 0; // byte count of the next 3 or 5 fields (== 11 or 13) depending on calcFlags, see below
             uint16_t data_length   = 0;
             uchar    typeID        = 0;
-            uchar    varname[8]    = {0};
+            uchar    varname[8]    = {};
             uchar    version       = 0;   // present only if calcFlags >= TIFeatureFlags::hasFlash
             uchar    archivedFlag  = 0;   // present only if calcFlags >= TIFeatureFlags::hasFlash
             uint16_t data_length2  = 0; // same as data_length

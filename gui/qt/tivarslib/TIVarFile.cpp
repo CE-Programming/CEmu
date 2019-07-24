@@ -69,7 +69,7 @@ namespace tivars
         this->varEntry.meta_length  = (this->calcModel.getFlags() >= TIFeatureFlags::hasFlash) ? varEntryNewLength : varEntryOldLength;
         this->varEntry.data_length  = 0; // will have to be overwritten later
         this->varEntry.typeID       = (uchar) type.getId();
-        std::string varname = str_pad(newName, 8, "\0");    std::copy(varname.begin(), varname.begin() + 7, this->varEntry.varname);
+        std::string varname         = str_pad(newName, 8, "\0"); std::copy(varname.begin(), varname.begin() + 8, this->varEntry.varname);
         this->varEntry.data_length2 = 0; // will have to be overwritten later
     }
 
@@ -108,7 +108,7 @@ namespace tivars
         this->varEntry.meta_length  = (uint16_t)((this->get_raw_bytes(1)[0] & 0xFF) + (this->get_raw_bytes(1)[0] << 8));
         this->varEntry.data_length  = (uint16_t)((this->get_raw_bytes(1)[0] & 0xFF) + (this->get_raw_bytes(1)[0] << 8));
         this->varEntry.typeID       = this->get_raw_bytes(1)[0];
-        std::string varname              = this->get_string_bytes(8); std::copy(varname.begin(), varname.begin() + 7, this->varEntry.varname);
+        std::string varname         = this->get_string_bytes(8); std::copy(varname.begin(), varname.begin() + 8, this->varEntry.varname);
         if (this->calcModel.getFlags() >= TIFeatureFlags::hasFlash)
         {
             this->varEntry.version      = this->get_raw_bytes(1)[0];
@@ -236,7 +236,7 @@ namespace tivars
     void TIVarFile::setVarName(const std::string& name)
     {
         std::string varname = TIVarFile::fixVarName(name);
-        std::copy(varname.begin(), varname.begin() + 7, this->varEntry.varname);
+        std::copy(varname.begin(), varname.begin() + 8, this->varEntry.varname);
         this->refreshMetadataFields();
     }
 

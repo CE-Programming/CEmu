@@ -50,7 +50,7 @@ namespace tivars
         if (file)
         {
             data_t v(bytes);
-            size_t n = fread(v.data(), sizeof(uchar), bytes, file);
+            const size_t n = fread(v.data(), sizeof(uchar), bytes, file);
             if (n != bytes || ferror(file))
             {
                 throw std::runtime_error("Error in get_raw_bytes");
@@ -73,7 +73,7 @@ namespace tivars
         if (file)
         {
             std::string buf(bytes, '\0');
-            size_t n = fread(&buf[0], sizeof(char), bytes, file);
+            const size_t n = fread(&buf[0], sizeof(char), bytes, file);
             if (n != bytes || ferror(file))
             {
                 throw std::runtime_error("Error in get_string_bytes");

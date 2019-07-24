@@ -9,6 +9,9 @@
 #include <sstream>
 #include <cmath>
 
+namespace tivars
+{
+
 bool has_option(const options_t& m, const std::string& element)
 {
     return m.find(element) != m.end();
@@ -272,8 +275,8 @@ std::string dec2frac(double num, const std::string& var, double err)
     while (true)
     {
         // The middle fraction is (lower_n + upper_n) / (lower_d + upper_d)
-        int middle_n = lower_n + upper_n;
-        int middle_d = lower_d + upper_d;
+        const int middle_n = lower_n + upper_n;
+        const int middle_d = lower_d + upper_d;
 
         if (middle_d * (num + err) < middle_n)
         {
@@ -296,4 +299,6 @@ std::string dec2frac(double num, const std::string& var, double err)
 std::string trimZeros(const std::string& str)
 {
     return std::to_string(std::stoi(str));
+}
+
 }
