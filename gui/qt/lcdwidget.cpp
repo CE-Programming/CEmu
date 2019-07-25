@@ -88,10 +88,9 @@ void LCDWidget::dragLeaveEvent(QDragLeaveEvent *e) {
 }
 
 QImage LCDWidget::getImage() {
-    m_mutex.lock();
-    QImage ret(m_image);
-    m_mutex.unlock();
-    return ret;
+    QPixmap pixmap(size());
+    render(&pixmap);
+    return pixmap.toImage();
 }
 
 void LCDWidget::mousePressEvent(QMouseEvent *e) {
