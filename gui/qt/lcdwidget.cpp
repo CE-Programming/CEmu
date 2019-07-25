@@ -46,7 +46,7 @@ void LCDWidget::paintEvent(QPaintEvent*) {
         c.setPen(Qt::white);
         c.drawText(cw, Qt::AlignCenter, tr("LCD OFF"));
     }
-    if (m_drag) {
+    if (m_transferDrag) {
         m_left = cw;
         m_right = m_left;
         m_left.setRight(m_left.right() >> 1);
@@ -63,7 +63,7 @@ void LCDWidget::dropEvent(QDropEvent *e) {
     if (m_isSendingRom) {
         emit sendROM(m_dragRom);
     } else {
-        m_drag = false;
+        m_transferDrag = false;
         sendingHandler->dropOccured(e, (e->pos().x() < width() / 2) ? LINK_ARCH : LINK_RAM);
     }
 }
@@ -72,7 +72,7 @@ void LCDWidget::dragEnterEvent(QDragEnterEvent *e) {
     m_dragRom = sendingROM(e, &m_isSendingRom);
 
     if (!m_isSendingRom) {
-        m_drag = sendingHandler->dragOccured(e);
+        m_transferDrag = sendingHandler->dragOccured(e);
         m_side = (e->pos().x() < width() / 2) ? LcdLeft : LcdRight;
     }
 }
@@ -83,7 +83,8 @@ void LCDWidget::dragMoveEvent(QDragMoveEvent *e) {
 
 void LCDWidget::dragLeaveEvent(QDragLeaveEvent *e) {
     e->accept();
-    m_drag = false;
+    m_transferDrag = false;
+    m_screenshotDrag = false;
 }
 
 QImage LCDWidget::getImage() {
@@ -95,6 +96,16 @@ QImage LCDWidget::getImage() {
 
 void LCDWidget::mousePressEvent(QMouseEvent *e) {
     if (e->button() == Qt::LeftButton && (control.ports[5] & 1 << 4)) {
+        m_screenshotDrag = true;
+        e->accept();
+    } else {
+        e->ignore();
+    }
+}
+
+void LCDWidget::mouseMoveEvent(QMouseEvent *e) {
+    if (m_screenshotDrag)
+    {
         QDrag *drag = new QDrag(this);
         QMimeData *mimeData = new QMimeData;
         QImage image = getImage();
@@ -114,6 +125,7 @@ void LCDWidget::mousePressEvent(QMouseEvent *e) {
             default:
                 break;
         }
+        m_screenshotDrag = false;
         e->accept();
     } else {
         e->ignore();

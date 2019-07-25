@@ -32,6 +32,7 @@ protected:
     virtual void dragLeaveEvent(QDragLeaveEvent*) Q_DECL_OVERRIDE;
     virtual void dragMoveEvent(QDragMoveEvent*) Q_DECL_OVERRIDE;
     virtual void mousePressEvent(QMouseEvent*) Q_DECL_OVERRIDE;
+    virtual void mouseMoveEvent(QMouseEvent*) Q_DECL_OVERRIDE;
 
 signals:
     void sendROM(const QString& romPath);
@@ -47,7 +48,8 @@ private:
     };
 
     unsigned int m_side;
-    bool m_drag = false;
+    bool m_transferDrag = false;
+    bool m_screenshotDrag = false;
     QRect m_left, m_right;
     QImage m_image;
     QMutex m_mutex;
