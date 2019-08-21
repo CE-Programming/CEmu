@@ -17,16 +17,16 @@ install:
   - C:\Python35\python -u gui\qt\deploy-scripts\appveyor_helper.py install
 
 # Leverage vcpkg to install libarchive deps, because we're lazy
-# Make sure we set the special VCPKG_PLATFORM_TOOLSET var to v140
-# to build for VS2010.
-  - cmd: set VCPKG_PLATFORM_TOOLSET=v140
+# Make sure we set the special VCPKG_PLATFORM_TOOLSET var to v142
+# because we build with MSVS 2019 (appveyor project config)
+  - cmd: set VCPKG_PLATFORM_TOOLSET=v142
 
-# Hack to update vcpkg to maybe make things work
-# Temporarily disabled (AppVeyor's copy should work)
-#  - cd "C:\Tools\vcpkg"
-#  - git pull
-#  - .\bootstrap-vcpkg.bat
-#  - cd %APPVEYOR_BUILD_FOLDER%
+# Update vcpkg to make things work
+  - cd "C:\Tools\vcpkg"
+  - git fetch
+  - git checkout 2019.07
+  - .\bootstrap-vcpkg.bat
+  - cd %APPVEYOR_BUILD_FOLDER%
 
 # Install libarchive for all targets
   - vcpkg install libarchive:x86-windows --recurse
