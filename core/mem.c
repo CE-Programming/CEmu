@@ -592,13 +592,16 @@ static bool detect_flash_unlock_sequence(uint8_t current) {
     static const uint8_t flash_unlock_sequence[] = { 0xF3, 0x18, 0x00, 0xF3, 0xF3, 0xED, 0x7E, 0xED, 0x56, 0xED, 0x39, 0x28, 0xED, 0x38, 0x28, 0xCB, 0x57 };
     uint8_t i;
     if (current != flash_unlock_sequence[sizeof(flash_unlock_sequence) - 1] ||
-        !protected_ports_unlocked() || unprivileged_code()) {
+        !protected_ports_unlocked()) {
         return false;
     }
     for (i = 1; i != sizeof(flash_unlock_sequence); i++) {
         if (mem.buffer[(mem.fetch + i) & (sizeof(mem.buffer) - 1)] != flash_unlock_sequence[i - 1]) {
             return false;
         }
+    }
+    if (unprivileged_code()) {
+        return false;
     }
     return true;
 }
@@ -668,7 +671,7 @@ uint8_t mem_read_cpu(uint32_t addr, bool fetch) {
     }
     if (fetch) {
         mem.buffer[++mem.fetch] = value;
-        if (unprivileged_code()) {
+        if (control.flashUnlocked & 1 << 3 && unprivileged_code()) {
             control.flashUnlocked &= ~(1 << 3);
         }
     } else if (addr >= control.protectedStart && addr <= control.protectedEnd && unprivileged_code()) {

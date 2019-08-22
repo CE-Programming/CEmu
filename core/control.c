@@ -258,7 +258,10 @@ bool flash_unlocked(void) {
 }
 
 bool unprivileged_code(void) {
-    return cpu.registers.rawPC > control.privileged &&
-        (cpu.registers.rawPC < control.protectedStart ||
-         cpu.registers.rawPC > control.protectedEnd);
+    /* rawPC the PC after the next prefetch (which we do late), before (after on EP) adding MBASE. */
+    uint32_t rawPC = cpu.registers.PC + 1;
+    bool mode = cpu.ADL;
+    rawPC = asic.revM ? cpu_address_mode(rawPC, mode) : cpu_mask_mode(rawPC, mode);
+    return rawPC > control.privileged && (rawPC < control.protectedStart ||
+                                          rawPC > control.protectedEnd);
 }
