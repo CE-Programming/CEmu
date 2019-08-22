@@ -56,8 +56,8 @@ uint32_t cpu_address_mode(uint32_t address, bool mode) {
 }
 static void cpu_prefetch(uint32_t address, bool mode) {
     cpu.ADL = mode;
-    /* rawPC the PC after the next prefetch (which we do late), before adding MBASE. */
-    cpu.registers.rawPC = cpu_mask_mode(address + 1, mode);
+    /* rawPC the PC after the next prefetch (which we do late), before (after on EP) adding MBASE. */
+    cpu.registers.rawPC = asic.python ? cpu_address_mode(address + 1, mode) : cpu_mask_mode(address + 1, mode);
     cpu.registers.PC = cpu_address_mode(address, mode);
     cpu.prefetch = mem_read_cpu(cpu.registers.PC, true);
 }
