@@ -5,7 +5,9 @@
 
 arm_mem_state_t arm_mem;
 
-void arm_mem_init(void) {
+void arm_mem_reset(void) {
+    free(arm_mem.flash);
+    free(arm_mem.ram);
     arm_mem.flash = calloc(0x10000, sizeof(uint32_t));
     arm_mem.ram = calloc(0x2000, sizeof(uint32_t));
 }
@@ -15,7 +17,7 @@ uint8_t arm_mem_load_byte(uint32_t addr) {
 }
 
 uint16_t arm_mem_load_half(uint32_t addr) {
-    return arm_mem_load_word(addr & ~UINT32_C(1)) >> ((addr & UINT32_C(1)) << UINT32_C(4));
+    return arm_mem_load_word(addr & ~UINT32_C(2)) >> ((addr & UINT32_C(2)) << UINT32_C(3));
 }
 
 uint32_t arm_mem_load_word(uint32_t addr) {
@@ -43,8 +45,8 @@ void arm_mem_store_byte(uint8_t val, uint32_t addr) {
 }
 
 void arm_mem_store_half(uint16_t val, uint32_t addr) {
-    uint32_t shift = (addr & UINT32_C(1)) << UINT32_C(4);
-    arm_mem_store(val << shift, UINT32_C(0xFFFF) << shift, addr & ~UINT32_C(1));
+    uint32_t shift = (addr & UINT32_C(2)) << UINT32_C(3);
+    arm_mem_store(val << shift, UINT32_C(0xFFFF) << shift, addr & ~UINT32_C(2));
 }
 
 void arm_mem_store_word(uint32_t val, uint32_t addr) {
