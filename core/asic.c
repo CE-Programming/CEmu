@@ -1,4 +1,6 @@
 #include "asic.h"
+#include "arm/armcpu.h"
+#include "arm/armmem.h"
 #include "cpu.h"
 #include "misc.h"
 #include "mem.h"
@@ -83,6 +85,8 @@ static void plug_devices(void) {
     add_reset_proc(panel_reset);
     add_reset_proc(spi_reset);
     add_reset_proc(uart_reset);
+    add_reset_proc(arm_mem_reset);
+    add_reset_proc(arm_cpu_reset);
 
     gui_console_printf("[CEmu] Initialized Advanced Peripheral Bus...\n");
 }
