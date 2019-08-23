@@ -4,6 +4,7 @@
 #include "armmem.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 arm_cpu_state_t arm_cpu;
 
@@ -271,12 +272,18 @@ static void arm_exception(arm_exception_number_t type) {
     abort();
 }
 
+void arm_cpu_reset(void) {
+    memset(&arm_cpu, 0, sizeof(arm_cpu));
+    arm_cpu.sp = arm_mem_load_word(0x2000);
+    arm_cpu.pc = arm_mem_load_word(0x2004) + 1;
+}
+
 void arm_execute(void) {
     uint32_t opcode;
     if (unlikely(arm_cpu.pc & 1)) {
         arm_exception(ARM_Exception_HardFault);
     }
-    opcode = arm_mem_load_half(arm_cpu.pc - 4);
+    opcode = arm_mem_load_half(arm_cpu.pc - 2);
     arm_cpu.pc += 2;
     switch (opcode >> 12 & 0xF) {
         case 0:
@@ -308,6 +315,7 @@ void arm_execute(void) {
                     }
                     break;
             }
+            break;
         case 2:
         case 3:
             switch (opcode >> 11 & 3) {
@@ -398,7 +406,7 @@ void arm_execute(void) {
                                 // Exception Return
                                 abort();
                             }
-                            arm_cpu.pc = address;
+                            arm_cpu.pc = address + 1;
                             break;
                         }
                     }
@@ -538,7 +546,7 @@ void arm_execute(void) {
                         }
                     }
                     if (opcode >> i & 1) {
-                        arm_cpu.pc = arm_mem_load_word(arm_cpu.sp) - 1;
+                        arm_cpu.pc = arm_mem_load_word(arm_cpu.sp) + 1;
                         arm_cpu.sp += 4;
                     }
                     break;
@@ -603,72 +611,72 @@ void arm_execute(void) {
             switch (opcode >> 8 & 0xF) { // Conditional branch, and Supervisor Call
                 case 0: // Branch Equal
                     if (arm_cpu.z) {
-                        arm_cpu.pc += (int32_t)opcode << 24 >> 23;
+                        arm_cpu.pc += ((int32_t)opcode << 24 >> 23) + 2;
                     }
                     break;
                 case 1: // Branch Not equal
                     if (!arm_cpu.z) {
-                        arm_cpu.pc += (int32_t)opcode << 24 >> 23;
+                        arm_cpu.pc += ((int32_t)opcode << 24 >> 23) + 2;
                     }
                     break;
                 case 2: // Branch Carry set
                     if (arm_cpu.c) {
-                        arm_cpu.pc += (int32_t)opcode << 24 >> 23;
+                        arm_cpu.pc += ((int32_t)opcode << 24 >> 23) + 2;
                     }
                     break;
                 case 3: // Branch Carry clear
                     if (!arm_cpu.c) {
-                        arm_cpu.pc += (int32_t)opcode << 24 >> 23;
+                        arm_cpu.pc += ((int32_t)opcode << 24 >> 23) + 2;
                     }
                     break;
                 case 4: // Branch Minus, negative
                     if (arm_cpu.n) {
-                        arm_cpu.pc += (int32_t)opcode << 24 >> 23;
+                        arm_cpu.pc += ((int32_t)opcode << 24 >> 23) + 2;
                     }
                     break;
                 case 5: // Branch Plus, positive or zero
                     if (!arm_cpu.n) {
-                        arm_cpu.pc += (int32_t)opcode << 24 >> 23;
+                        arm_cpu.pc += ((int32_t)opcode << 24 >> 23) + 2;
                     }
                     break;
                 case 6: // Branch Overflow
                     if (arm_cpu.v) {
-                        arm_cpu.pc += (int32_t)opcode << 24 >> 23;
+                        arm_cpu.pc += ((int32_t)opcode << 24 >> 23) + 2;
                     }
                     break;
                 case 7: // Branch No overflow
                     if (!arm_cpu.v) {
-                        arm_cpu.pc += (int32_t)opcode << 24 >> 23;
+                        arm_cpu.pc += ((int32_t)opcode << 24 >> 23) + 2;
                     }
                     break;
                 case 8: // Branch Unsigned higher
                     if (arm_cpu.c && !arm_cpu.z) {
-                        arm_cpu.pc += (int32_t)opcode << 24 >> 23;
+                        arm_cpu.pc += ((int32_t)opcode << 24 >> 23) + 2;
                     }
                     break;
                 case 9: // Branch Unsigned lower or same
                     if (!arm_cpu.c || arm_cpu.z) {
-                        arm_cpu.pc += (int32_t)opcode << 24 >> 23;
+                        arm_cpu.pc += ((int32_t)opcode << 24 >> 23) + 2;
                     }
                     break;
                 case 10: // Branch Signed greater than or equal
                     if (arm_cpu.n == arm_cpu.v) {
-                        arm_cpu.pc += (int32_t)opcode << 24 >> 23;
+                        arm_cpu.pc += ((int32_t)opcode << 24 >> 23) + 2;
                     }
                     break;
                 case 11: // Branch Signed less than
                     if (arm_cpu.n != arm_cpu.v) {
-                        arm_cpu.pc += (int32_t)opcode << 24 >> 23;
+                        arm_cpu.pc += ((int32_t)opcode << 24 >> 23) + 2;
                     }
                     break;
                 case 12: // Branch Signed greater than
                     if (!arm_cpu.z && arm_cpu.n == arm_cpu.v) {
-                        arm_cpu.pc += (int32_t)opcode << 24 >> 23;
+                        arm_cpu.pc += ((int32_t)opcode << 24 >> 23) + 2;
                     }
                     break;
                 case 13: // Branch Signed less than or equal
                     if (arm_cpu.z || arm_cpu.n != arm_cpu.v) {
-                        arm_cpu.pc += (int32_t)opcode << 24 >> 23;
+                        arm_cpu.pc += ((int32_t)opcode << 24 >> 23) + 2;
                     }
                     break;
                 default: // Permanently UNDEFINED
@@ -682,107 +690,112 @@ void arm_execute(void) {
         case 14:
             switch (opcode >> 11 & 1) {
                 case 0: // Unconditional Branch
-                    arm_cpu.pc += (int32_t)opcode << 21 >> 20;
+                    arm_cpu.pc += ((int32_t)opcode << 21 >> 20) + 2;
                     break;
                 default: // UNDEFINED 32-bit Thumb instruction
-                    opcode = opcode << 16 | arm_mem_load_half(arm_cpu.pc - 4);
+                    opcode = opcode << 16 | arm_mem_load_half(arm_cpu.pc - 2);
                     arm_cpu.pc += 2;
                     arm_exception(ARM_Exception_HardFault);
                     break;
             }
             break;
         case 15: // 32-bit Thumb instruction.
-            opcode = opcode << 16 | arm_mem_load_half(arm_cpu.pc - 4);
+            opcode = opcode << 16 | arm_mem_load_half(arm_cpu.pc - 2);
             arm_cpu.pc += 2;
             if (!(opcode >> 27 & 1) && (opcode >> 15 & 1)) {
-                switch (opcode >> 20 & 0x7F) {
-                    case 0x38:
-                    case 0x39: { // Move to Special Register
-                        uint32_t value = arm_cpu.r[opcode >> 16 & 0xF];
-                        switch (opcode >> 0 & 0xFF) {
-                            case 0x00:
-                            case 0x01:
-                            case 0x02:
-                            case 0x03:
-                                arm_cpu.v = value >> 28 & 1;
-                                arm_cpu.c = value >> 29 & 1;
-                                arm_cpu.z = value >> 30 & 1;
-                                arm_cpu.n = value >> 31 & 1;
-                                break;
-                            case 0x80:
-                            case 0x81:
-                                *((opcode >> 0 & 1) == arm_cpu.spsel ? &arm_cpu.sp : &arm_cpu.altsp) = value >> 0 & ~3;
-                                break;
-                            case 0x10:
-                                arm_cpu.pm = value >> 0 & 1;
-                                break;
-                            case 0x14:
-                                if (arm_cpu.mode && arm_cpu.spsel != (value >> 1 & 1)) {
-                                    uint32_t sp = arm_cpu.sp;
-                                    arm_cpu.sp = arm_cpu.altsp;
-                                    arm_cpu.altsp = sp;
-                                    arm_cpu.spsel = value >> 1 & 1;
+                switch (opcode >> 12 & 5) {
+                    case 0:
+                        switch (opcode >> 20 & 0x7F) {
+                            case 0x38:
+                            case 0x39: { // Move to Special Register
+                                uint32_t value = arm_cpu.r[opcode >> 16 & 0xF];
+                                switch (opcode >> 0 & 0xFF) {
+                                    case 0x00:
+                                    case 0x01:
+                                    case 0x02:
+                                    case 0x03:
+                                        arm_cpu.v = value >> 28 & 1;
+                                        arm_cpu.c = value >> 29 & 1;
+                                        arm_cpu.z = value >> 30 & 1;
+                                        arm_cpu.n = value >> 31 & 1;
+                                        break;
+                                    case 0x80:
+                                    case 0x81:
+                                        *((opcode >> 0 & 1) == arm_cpu.spsel ? &arm_cpu.sp : &arm_cpu.altsp) = value >> 0 & ~3;
+                                        break;
+                                    case 0x10:
+                                        arm_cpu.pm = value >> 0 & 1;
+                                        break;
+                                    case 0x14:
+                                        if (arm_cpu.mode && arm_cpu.spsel != (value >> 1 & 1)) {
+                                            uint32_t sp = arm_cpu.sp;
+                                            arm_cpu.sp = arm_cpu.altsp;
+                                            arm_cpu.altsp = sp;
+                                            arm_cpu.spsel = value >> 1 & 1;
+                                        }
+                                        break;
                                 }
+                                break;
+                            }
+                            case 0x3B: // Miscellaneous control instructions
+                                switch (opcode >> 4 & 0xF) {
+                                    case 4: // Data Synchronization Barrier
+                                        break;
+                                    case 5: // Data Memory Barrier
+                                        break;
+                                    case 6: // Instruction Synchronization Barrier
+                                        break;
+                                }
+                                break;
+                            case 0x3E:
+                            case 0x3F: { // Move from Special Register
+                                uint32_t value = 0;
+                                switch (opcode >> 0 & 0xFF) {
+                                    case 0x00:
+                                    case 0x01:
+                                    case 0x03:
+                                    case 0x04:
+                                    case 0x05:
+                                    case 0x06:
+                                    case 0x07:
+                                        if (opcode >> 0 & 1) {
+                                            value |= arm_cpu.excNum << 0;
+                                        }
+                                        if (!(opcode >> 2 & 1)) {
+                                            value |= arm_cpu.v << 28;
+                                            value |= arm_cpu.c << 29;
+                                            value |= arm_cpu.z << 30;
+                                            value |= arm_cpu.n << 31;
+                                        }
+                                        break;
+                                    case 0x08:
+                                    case 0x09:
+                                        value = (opcode >> 0 & 1) == arm_cpu.spsel ? arm_cpu.sp : arm_cpu.altsp;
+                                        break;
+                                    case 0x10:
+                                        value |= arm_cpu.pm;
+                                        break;
+                                    case 0x14:
+                                        value |= arm_cpu.spsel << 1;
+                                        break;
+                                }
+                                arm_cpu.r[opcode >> 16 & 0xF] = value;
+                                break;
+                            }
+                            default:
+                                arm_exception(ARM_Exception_HardFault);
                                 break;
                         }
                         break;
-                    }
-                    case 0x3B: // Miscellaneous control instructions
-                        switch (opcode >> 4 & 0xF) {
-                            case 4: // Data Synchronization Barrier
-                                break;
-                            case 5: // Data Memory Barrier
-                                break;
-                            case 6: // Instruction Synchronization Barrier
-                                break;
-                        }
-                        break;
-                    case 0x3E:
-                    case 0x3F: { // Move from Special Register
-                        uint32_t value = 0;
-                        switch (opcode >> 0 & 0xFF) {
-                            case 0x00:
-                            case 0x01:
-                            case 0x03:
-                            case 0x04:
-                            case 0x05:
-                            case 0x06:
-                            case 0x07:
-                                if (opcode >> 0 & 1) {
-                                    value |= arm_cpu.excNum << 0;
-                                }
-                                if (!(opcode >> 2 & 1)) {
-                                    value |= arm_cpu.v << 28;
-                                    value |= arm_cpu.c << 29;
-                                    value |= arm_cpu.z << 30;
-                                    value |= arm_cpu.n << 31;
-                                }
-                                break;
-                            case 0x08:
-                            case 0x09:
-                                value = (opcode >> 0 & 1) == arm_cpu.spsel ? arm_cpu.sp : arm_cpu.altsp;
-                                break;
-                            case 0x10:
-                                value |= arm_cpu.pm;
-                                break;
-                            case 0x14:
-                                value |= arm_cpu.spsel << 1;
-                                break;
-                        }
-                        arm_cpu.r[opcode >> 16 & 0xF] = value;
-                        break;
-                    }
-                    default:
-                        arm_exception(ARM_Exception_HardFault);
+                    case 5: // Branch with Link
+                        arm_cpu.lr = arm_cpu.pc - 1;
+                        arm_cpu.pc += ((int32_t)opcode << 5 >> 7 & UINT32_C(0xFF000000)) |
+                            (~(opcode >> 3 ^ opcode << 10) & UINT32_C(0x00800000)) |
+                            (~(opcode >> 4 ^ opcode << 11) & UINT32_C(0x00400000)) |
+                            (opcode >> 4 & UINT32_C(0x003FF000)) |
+                            (opcode << 1 & UINT32_C(0x00000FFE));
                         break;
                 }
-            } else if ((opcode >> 1 & 5) == 5) { // Branch with Link
-                arm_cpu.lr = arm_cpu.pc - 1;
-                arm_cpu.pc += ((int32_t)opcode << 5 >> 7 & UINT32_C(0xFF000000)) |
-                    (~(opcode >> 3 ^ opcode << 10) & UINT32_C(0x00800000)) |
-                    (~(opcode >> 4 ^ opcode << 11) & UINT32_C(0x00400000)) |
-                    (opcode >> 4 & UINT32_C(0x003FF000)) |
-                    (opcode << 1 & UINT32_C(0x00000FFE));
             } else { // UNDEFINED 32-bit Thumb instruction
                 arm_exception(ARM_Exception_HardFault);
             }
