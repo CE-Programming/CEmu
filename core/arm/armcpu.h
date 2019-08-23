@@ -28,6 +28,7 @@ typedef union arm_cpu_state {
 
 extern arm_cpu_state_t arm_cpu;
 
+void arm_cpu_reset(void);
 void arm_execute(void);
 
 #ifdef __cplusplus
