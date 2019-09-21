@@ -687,12 +687,17 @@ static void usb_event(enum sched_item_id event) {
     if ((err = libusb_handle_events_timeout(usb.ctx, &zero_tv))) {
         gui_console_printf("[USB] Error: Handle events: %s!\n", libusb_error_name(err));
     }
-    if (usb.devChanged && !usb.wait) {
-        usb.devChanged = false;
-        if (usb.xfer && usb.xfer->dev_handle) {
-            libusb_close(usb.xfer->dev_handle);
-            usb.xfer->dev_handle = NULL;
-            usb_unplug_a();
+    if (usb.devChanged) {
+        if (usb.wait) {
+            usb.process = false;
+            libusb_cancel_transfer(usb.xfer);
+        } else {
+            usb.devChanged = false;
+            if (usb.xfer && usb.xfer->dev_handle) {
+                libusb_close(usb.xfer->dev_handle);
+                usb.xfer->dev_handle = NULL;
+                usb_unplug_a();
+            }
         }
     }
     if (!usb.wait && usb.xfer && usb.xfer->dev_handle && usb.regs.otgcsr & OTGCSR_A_VBUS_VLD) {
