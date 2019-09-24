@@ -1,5 +1,5 @@
-lessThan(QT_MAJOR_VERSION, 5) : error("You need at least Qt 5.5 to build CEmu!")
-lessThan(QT_MINOR_VERSION, 5) : error("You need at least Qt 5.5 to build CEmu!")
+lessThan(QT_MAJOR_VERSION, 5) : error("You need at least Qt 5.7 to build CEmu!")
+lessThan(QT_MINOR_VERSION, 7) : error("You need at least Qt 5.7 to build CEmu!")
 
 # Error if git submodules are not downloaded
 !exists("../../core/debug/zdis/zdis.c"): error("You have to run 'git submodule init' and 'git submodule update' first.")
@@ -9,7 +9,7 @@ lessThan(QT_MINOR_VERSION, 5) : error("You need at least Qt 5.5 to build CEmu!")
 CEMU_RELEASE = true
 CEMU_GIT_SHA = $$system(git describe --abbrev=7 --always)
 isEmpty(CEMU_VERSION) {
-    CEMU_VERSION = v1.3dev
+    CEMU_VERSION = v2.0dev
     CEMU_RELEASE = false
 }
 DEFINES += CEMU_VERSION=\\\"$$CEMU_VERSION\\\"
