@@ -4,14 +4,14 @@ os: linux
 dist: xenial
 
 env:
-  - PATH=/opt/qt56/bin:/usr/local/opt/qt5/bin:$PATH
+  - PATH=/opt/qt57/bin:/usr/local/opt/qt5/bin:$PATH
 
 addons:
   apt:
     sources:
-      - sourceline: 'ppa:beineri/opt-qt563-xenial'
+      - sourceline: 'ppa:beineri/opt-qt571-xenial'
     packages:
-      - qt56base
+      - qt57base
       - libgl1-mesa-dev
       - libarchive-dev
       - libsdl2-dev
