@@ -186,17 +186,17 @@ void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
         font.setStretch(QFont::SemiCondensed);
     }
 
-    mConfig.labelFont   = font,
-    mConfig.secondFont  = font,
-    mConfig.alphaFont   = font,
-    mConfig.secondColor = QColor::fromRgb(0x93c3f3),
-    mConfig.alphaColor  = QColor::fromRgb(0xa0ca1e),
-    mConfig.graphColor  = cGraph,
-    mConfig.numColor    = cNum,
-    mConfig.otherColor  = cOther,
-    mConfig.blackColor  = QColor::fromRgb(0x222222),
-    mConfig.whiteColor  = QColor::fromRgb(0xeeeeee),
-    mConfig.textColor   = cText,
+    mConfig.labelFont   = font;
+    mConfig.secondFont  = font;
+    mConfig.alphaFont   = font;
+    mConfig.secondColor = QColor::fromRgb(0x93c3f3);
+    mConfig.alphaColor  = QColor::fromRgb(0xa0ca1e);
+    mConfig.graphColor  = cGraph;
+    mConfig.numColor    = cNum;
+    mConfig.otherColor  = cOther;
+    mConfig.blackColor  = QColor::fromRgb(0x222222);
+    mConfig.whiteColor  = QColor::fromRgb(0xeeeeee);
+    mConfig.textColor   = cText;
     mConfig.key         = {1, 0};
 
 #define LabelFrEn(fr, en)   (is83 ? Label(fr) : Label(en))
@@ -289,9 +289,9 @@ KeypadWidget::~KeypadWidget() {
 void KeypadWidget::resizeEvent(QResizeEvent *event) {
     QSize size{sBaseRect.size().scaled(event->size(), Qt::KeepAspectRatio)},
         origin{(event->size() - size) / 2};
-    mTransform.setMatrix((qreal)size.width() / sBaseRect.width(), 0, 0, 0,
-                          (qreal)size.height() / sBaseRect.height(), 0,
-                          origin.width(), 0, 1);
+    mTransform.setMatrix(static_cast<qreal>(size.width()) / sBaseRect.width(), 0, 0, 0,
+                         static_cast<qreal>(size.height()) / sBaseRect.height(), 0,
+                         origin.width(), 0, 1);
     mInverseTransform = mTransform.inverted();
 }
 
@@ -416,11 +416,11 @@ void KeypadWidget::touchUpdate(const QList<QTouchEvent::TouchPoint> &points) {
                     }
 #endif
                     if ((point.state() & (Qt::TouchPointMoved | Qt::TouchPointPressed)) && key->isUnder(area)) {
-                        if (!mTouched.contains(point.id(), key->keycode())) {
-                            mTouched.insert(point.id(), key->keycode());
+                        if (!mTouched.contains(key->keycode())) {
+                            mTouched.insert(key->keycode());
                             key->press();
                         }
-                    } else if (mTouched.remove(point.id(), key->keycode())) {
+                    } else if (mTouched.remove(key->keycode())) {
                         key->release();
                     }
                 }

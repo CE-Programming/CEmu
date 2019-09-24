@@ -8,7 +8,7 @@
 #include <QtGui/QPainter>
 #include <QtGui/QClipboard>
 
-HexWidget::HexWidget(QWidget *parent) : QAbstractScrollArea{parent}, m_data{0} {
+HexWidget::HexWidget(QWidget *parent) : QAbstractScrollArea{parent}, m_data{Q_NULLPTR} {
 #ifdef Q_OS_WIN
     setFont(QFont(QStringLiteral("Courier"), 10));
 #else
@@ -59,7 +59,7 @@ void HexWidget::scroll(int value) {
         QByteArray data;
         for (int i = -m_bytesPerLine; i < 0; i++) {
             if (addr + i >= 0) {
-                data.append(mem_peek_byte(addr + i));
+                data.append(static_cast<char>(mem_peek_byte(addr + i)));
             }
         }
         if (data.size()) {
@@ -197,7 +197,7 @@ void HexWidget::showCursor() {
 void HexWidget::adjust() {
     m_size = m_data.size();
     m_maxOffset = m_size - 1;
-    m_charWidth = fontMetrics().width(QLatin1Char('D'));
+    m_charWidth = fontMetrics().horizontalAdvance(QLatin1Char('D'));
     m_charHeight = fontMetrics().height();
     m_cursorHeight = m_charHeight / 7;
     m_margin = m_charHeight / 5;

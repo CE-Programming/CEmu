@@ -6,7 +6,6 @@
 #include <QtCore/QCommandLineOption>
 #include <QtCore/QCommandLineParser>
 #include <QtWidgets/QApplication>
-#include <QtWidgets/QDesktopWidget>
 #include <QtGui/QFontDatabase>
 
 int main(int argc, char *argv[]) {

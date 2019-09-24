@@ -11,10 +11,10 @@
 #include "../../core/debug/debug.h"
 
 #include <cmath>
+#include <QtGui/QScreen>
 #include <QtCore/QFileInfo>
 #include <QtCore/QRegularExpression>
 #include <QtNetwork/QNetworkAccessManager>
-#include <QtWidgets/QDesktopWidget>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QInputDialog>
@@ -772,7 +772,7 @@ void MainWindow::keymapCustomSelected() {
         return;
     }
 
-    m_dir = dialog.directory().absolutePath();
+    m_dir.setPath(dialog.directory().absolutePath());
     const auto& selectedFiles = dialog.selectedFiles();
     if (selectedFiles.empty()) {
         ui->radioCEmuKeys->setChecked(true);
@@ -1034,7 +1034,7 @@ void MainWindow::addKeyHistoryDock(const QString &magic, int size) {
 
     if (m_setup) {
         dw->setFloating(true);
-        dw->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, dw->minimumSize(), qApp->desktop()->availableGeometry()));
+        dw->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, dw->minimumSize(), qApp->screens().first()->availableGeometry()));
     }
 
     connect(ui->keypadWidget, &KeypadWidget::keyPressed, widget, &KeyHistoryWidget::add);

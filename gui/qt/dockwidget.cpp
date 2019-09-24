@@ -6,8 +6,9 @@
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QStackedLayout>
 #include <QtWidgets/QTabWidget>
-#include <QtWidgets/QDesktopWidget>
 #include <QtGui/QHoverEvent>
+#include <QtGui/QWindow>
+#include <QtGui/QScreen>
 
 DockWidget::DockWidget(QWidget *parent)
     : QDockWidget{parent}, m_titleHide{new QWidget{this}}, m_tabs{this},
@@ -124,7 +125,10 @@ void DockWidget::makeCloseableFloat(bool state) {
 
 void DockWidget::closeEvent(QCloseEvent *event) {
     setFloating(true);
-    setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, minimumSize(), qApp->desktop()->availableGeometry()));
+    setGeometry(QStyle::alignedRect(Qt::LeftToRight,
+                                    Qt::AlignCenter,
+                                    minimumSize(),
+                                    qApp->screens().first()->availableGeometry()));
     emit closed();
     event->accept();
     QDockWidget::closeEvent(event);

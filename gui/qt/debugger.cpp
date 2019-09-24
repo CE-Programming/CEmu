@@ -30,9 +30,10 @@
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QScrollBar>
-#include <QtWidgets/QDesktopWidget>
 #include <QtNetwork/QNetworkReply>
 #include <QtGui/QClipboard>
+#include <QtGui/QWindow>
+#include <QtGui/QScreen>
 
 #ifdef _MSC_VER
     #include <direct.h>
@@ -2391,7 +2392,7 @@ void MainWindow::fpModified(QTableWidgetItem *item) {
         } catch(...) {}
     }
 
-    for (int i = 0; i < 9; i++) {
+    for (unsigned int i = 0; i < 9; i++) {
         mem_poke_byte(addr + i, array[i]);
     }
 
@@ -2573,7 +2574,10 @@ void MainWindow::addVisualizerDock(const QString &magic, const QString &config) 
 
     if (m_setup) {
         dw->setFloating(true);
-        dw->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, dw->minimumSize(), qApp->desktop()->availableGeometry()));
+        dw->setGeometry(QStyle::alignedRect(Qt::LeftToRight,
+                                            Qt::AlignCenter,
+                                            dw->minimumSize(),
+                                            qApp->screens().first()->availableGeometry()));
     }
 
     VisualizerWidget *widget = new VisualizerWidget(this, config);
@@ -2619,7 +2623,11 @@ void MainWindow::addMemDock(const QString &magic, int bytes, bool ascii) {
 
     if (m_setup) {
         dw->setFloating(true);
-        dw->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, dw->minimumSize(), qApp->desktop()->availableGeometry()));
+        dw->setGeometry(QStyle::alignedRect(
+                            Qt::LeftToRight,
+                            Qt::AlignCenter,
+                            dw->minimumSize(),
+                            qApp->screens().first()->availableGeometry()));
     }
 
     m_docksMemory.append(magic);

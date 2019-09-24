@@ -66,7 +66,7 @@ private:
     QTransform mTransform, mInverseTransform;
     Key *mKeys[sRows][sCols];
     QSet<KeyCode> mClicked;
-    QMultiHash<int, KeyCode> mTouched;
+    QSet<KeyCode> mTouched;
 #ifndef Q_OS_WIN
     int fontId = -2;
 #endif

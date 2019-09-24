@@ -38,7 +38,7 @@
 #include <QtGui/QWindow>
 #include <QtGui/QDesktopServices>
 #include <QtGui/QClipboard>
-#include <QtWidgets/QDesktopWidget>
+#include <QtGui/QScreen>
 #include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QShortcut>
 #include <QtWidgets/QProgressDialog>
@@ -943,7 +943,7 @@ void MainWindow::setup() {
             dw->setVisible(true);
         }
         resize(minimumWidth(), minimumHeight());
-        setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, size(), qApp->desktop()->availableGeometry()));
+        setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, size(), qApp->screens().first()->availableGeometry()));
     }
 
     // restore the fullscreen modes as needed
@@ -1563,7 +1563,7 @@ void MainWindow::screenshotSave(const QString& nameFilter, const QString& defaul
     } else {
         QFile::remove(temppath);
     }
-    m_dir = dialog.directory().absolutePath();
+    m_dir.setPath(dialog.directory().absolutePath());
 }
 
 void MainWindow::screenshot() {
@@ -1787,7 +1787,7 @@ QStringList MainWindow::varDialog(QFileDialog::AcceptMode mode, const QString &n
     dialog.setNameFilter(name_filter);
     good = dialog.exec();
 
-    m_dir = dialog.directory().absolutePath();
+    m_dir.setPath(dialog.directory().absolutePath());
 
     if (good) {
         return dialog.selectedFiles();
@@ -1974,7 +1974,7 @@ void MainWindow::varSaveSelectedFiles() {
     }
 
     good = dialog.exec();
-    m_dir = dialog.directory().absolutePath();
+    m_dir.setPath(dialog.directory().absolutePath());
 
     if (!good) {
         return;
@@ -2081,7 +2081,7 @@ void MainWindow::autotesterLoad() {
     dialog.setNameFilter(QStringLiteral("JSON config (*.json)"));
 
     good = dialog.exec();
-    m_dir = dialog.directory().absolutePath();
+    m_dir.setPath(dialog.directory().absolutePath());
 
     if (!good) {
         return;
