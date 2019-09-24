@@ -393,7 +393,7 @@ void KeypadWidget::touchUpdate(const QList<QTouchEvent::TouchPoint> &points) {
             if (Key *key = mKeys[row][col]) {
                 bool wasSelected = key->isSelected();
                 for (const QTouchEvent::TouchPoint &point : points) {
-                    if (point.state() == Qt::TouchPointStationary) {
+                    if (point.state() & Qt::TouchPointStationary) {
                         continue;
                     }
                     QRectF ellipse;
@@ -408,14 +408,14 @@ void KeypadWidget::touchUpdate(const QList<QTouchEvent::TouchPoint> &points) {
                     QPainterPath area;
                     area.addEllipse(ellipse);
 #if QT_VERSION >= QT_VERSION_CHECK(5, 9, 0)
-                    if (point.rotation()) {
+                    if (point.rotation() != 0.0) {
                         area = area * QTransform::fromTranslate(ellipse.center().x(),
                                                                 ellipse.center().y()).
                             rotate(point.rotation()).
                             translate(-ellipse.center().x(), -ellipse.center().y());
                     }
 #endif
-                    if (point.state() != Qt::TouchPointReleased && key->isUnder(area)) {
+                    if ((point.state() & (Qt::TouchPointMoved | Qt::TouchPointPressed)) && key->isUnder(area)) {
                         if (!mTouched.contains(point.id(), key->keycode())) {
                             mTouched.insert(point.id(), key->keycode());
                             key->press();
@@ -442,14 +442,14 @@ void KeypadWidget::touchEnd() {
 }
 
 void KeypadWidget::touchEvent(QTouchEvent *event) {
-    if (!event->device()->capabilities().testFlag(QTouchDevice::Position)) {
-        event->ignore();
-        return;
-    }
     switch (event->type()) {
         case QEvent::TouchBegin:
         case QEvent::TouchUpdate:
-            touchUpdate(event->touchPoints());
+            if (event->device()->capabilities().testFlag(QTouchDevice::Position)) {
+                touchUpdate(event->touchPoints());
+            } else {
+                event->ignore();
+            }
             break;
         case QEvent::TouchEnd:
         case QEvent::TouchCancel:

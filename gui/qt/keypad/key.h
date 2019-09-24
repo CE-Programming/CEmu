@@ -14,7 +14,7 @@ class Key {
 public:
     Key(KeyCode keycode, const QRect &textGeometry, const QRect &keyGeometry, const QColor &keyColor) :
         mTextGeometry{textGeometry}, mKeyGeometry{keyGeometry}, mKeyColor{keyColor},
-        mSelected{}, mKeycode{keycode}, mHeld{}, mPressed{} {}
+        mKeycode{keycode}, mSelected{}, mHeld{}, mPressed{} {}
     virtual ~Key() {}
 
     const QString getLabel() const { return mLabelText; }
@@ -52,12 +52,10 @@ public:
         }
     }
     void press() {
-        assert(static_cast<decltype(mSelected)>(mSelected + 1));
-        ++mSelected;
+        mSelected = true;
     }
     void release() {
-        assert(mSelected);
-        --mSelected;
+        mSelected = false;
     }
 
 protected:
@@ -67,8 +65,8 @@ protected:
 private:
     QRect mTextGeometry, mKeyGeometry;
     QColor mKeyColor;
-    unsigned mSelected;
     const KeyCode mKeycode;
+    bool mSelected;
     bool mHeld;
     bool mPressed;
 };
