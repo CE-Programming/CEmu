@@ -439,6 +439,19 @@ void KeypadWidget::touchEnd() {
         }
     }
     mTouched.clear();
+
+    // release any other keys that may be stuck??
+    for (uint8_t row = 0; row != sRows; ++row) {
+        for (uint8_t col = 0; col != sCols; ++col) {
+            if (Key *key = mKeys[row][col]) {
+                bool selected = key->isSelected();
+                if (selected) {
+                    key->release();
+                    updateKey(key, selected);
+                }
+            }
+        }
+    }
 }
 
 void KeypadWidget::touchEvent(QTouchEvent *event) {
