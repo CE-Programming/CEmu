@@ -44,7 +44,14 @@ int BasicEditor::lineNumberAreaWidth()
         ++digits;
     }
 
-    int space = 3 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits;
+    int singlespace;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
+    singlespace = fontMetrics().horizontalAdvance(QLatin1Char('9'));
+#else
+    singlespace = fontMetrics().width(QLatin1Char('9'));
+#endif
+
+    int space = 3 + singlespace * digits;
 
     return space;
 }
