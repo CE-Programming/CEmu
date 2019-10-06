@@ -16,6 +16,7 @@
 #include "interrupt.h"
 #include "backlight.h"
 #include "realclock.h"
+#include "defines.h"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -110,7 +111,7 @@ void set_device_type(ti_device_t device) {
     asic.device = device;
 }
 
-ti_device_t get_device_type(void) {
+ti_device_t EMSCRIPTEN_KEEPALIVE get_device_type(void) {
     return asic.device;
 }
 

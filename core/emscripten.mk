@@ -7,7 +7,7 @@ CFLAGS  = -W -Wall -O3
 CFLAGS += -DDEBUG_SUPPORT
 
 # Emscripten stuff
-CFLAGS += -s TOTAL_MEMORY=33554432 --llvm-lto 3 -s INVOKE_RUN=0 -s NO_EXIT_RUNTIME=1 -s ASSERTIONS=0 -s "EXTRA_EXPORTED_RUNTIME_METHODS=['ccall', 'cwrap']"
+CFLAGS += -s TOTAL_MEMORY=33554432 --llvm-lto 3 -s INVOKE_RUN=0 -s NO_EXIT_RUNTIME=1 -s ASSERTIONS=0 -s "EXTRA_EXPORTED_RUNTIME_METHODS=['callMain', 'ccall', 'cwrap']"
 
 # You may want to try with closure 1
 asmjs:  CFLAGS += --closure 0 -s WASM=0
