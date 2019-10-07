@@ -459,7 +459,8 @@ static bool usb_execute_setup(struct libusb_transfer *xfer) {
     struct libusb_config_descriptor *config = NULL;
     struct libusb_control_setup *setup = libusb_control_transfer_get_setup(xfer);
     void *data = libusb_control_transfer_get_data(xfer);
-    uint8_t type = setup->wValue >> 8, index = setup->wValue, iface, alt, endpt;
+    int configValueInt = 0;
+    uint8_t type = setup->wValue >> 8, index = setup->wValue, iface, alt, endpt, configValueByte;
     uint16_t length = setup->wLength;
     xfer->status = LIBUSB_TRANSFER_STALL;
     xfer->actual_length = 0;
@@ -509,8 +510,14 @@ static bool usb_execute_setup(struct libusb_transfer *xfer) {
             }
             break;
         case LIBUSB_REQUEST_SET_DESCRIPTOR:
-        case LIBUSB_REQUEST_GET_CONFIGURATION:
             return false;
+        case LIBUSB_REQUEST_GET_CONFIGURATION:
+            if (usb.config) {
+                libusb_get_configuration(xfer->dev_handle, &configValueInt);
+            }
+            configValueByte = configValueInt;
+            usb_xfer_append_data(xfer, &configValueByte, sizeof(configValueByte));
+            break;
         case LIBUSB_REQUEST_SET_CONFIGURATION:
             if (setup->bmRequestType == (LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE) && !type && !setup->wIndex) {
                 if (libusb_get_active_config_descriptor(libusb_get_device(xfer->dev_handle), &config) == LIBUSB_SUCCESS) {
@@ -524,6 +531,7 @@ static bool usb_execute_setup(struct libusb_transfer *xfer) {
                 }
                 if ((xfer->status = libusb_status_from_error(err = libusb_get_config_descriptor_by_value(libusb_get_device(xfer->dev_handle), index, &config))) == LIBUSB_TRANSFER_COMPLETED &&
                     (xfer->status = libusb_status_from_error(err = libusb_set_configuration(xfer->dev_handle, index))) == LIBUSB_TRANSFER_COMPLETED) {
+                    usb.config = true;
                     for (iface = 0; iface != config->bNumInterfaces; ++iface) {
                         gui_console_printf("[USB] Info: Kernel driver now active on interface %u: %s!\n", iface, libusb_kernel_driver_active(usb.xfer->dev_handle, iface) ? "yes" : "no");
                         libusb_claim_interface(usb.xfer->dev_handle, iface);
@@ -823,6 +831,7 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
                 if ((err = libusb_reset_device(usb.xfer->dev_handle))) {
                     gui_console_printf("[USB] Error: Reset device failed: %s!\n", libusb_error_name(err));
                 } else {
+                    usb.config = false;
                     if (usb_update_status_change(usb.regs.hcor.portsc, PORTSC_EN_STATUS, PORTSC_EN_CHANGE, true)) {
                         usb_host_int(USBSTS_PORT_CHANGE);
                     }
@@ -1048,10 +1057,7 @@ void usb_reset(void) {
     usb.data  = NULL;
     usb.len   = 0;
 #ifdef HAS_LIBUSB
-    if (usb.xfer && usb.xfer->dev_handle) {
-        libusb_close(usb.xfer->dev_handle);
-        usb.xfer->dev_handle = NULL;
-    }
+    usb_free();
     usb_plug_b();
     sched.items[SCHED_USB].callback.event = usb_event;
 #else
@@ -1131,6 +1137,10 @@ void usb_free(void) {
         libusb_free_transfer(usb.xfer);
         usb.xfer = NULL;
     }
+    if (usb.ctx) {
+        libusb_exit(usb.ctx);
+        usb.ctx = NULL;
+    }
 #endif
 }
 
@@ -1139,7 +1149,9 @@ bool usb_save(FILE *image) {
 }
 
 bool usb_restore(FILE *image) {
-    bool success = fread(&usb, sizeof(usb), 1, image) == 1;
+    bool success;
+    usb_free();
+    success = fread(&usb, sizeof(usb), 1, image) == 1;
     usb_init_hccr(); // hccr is read only
     // these bits are raz
     usb.regs.hcor.periodiclistbase &= 0xFFFFF000;

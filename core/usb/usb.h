@@ -74,7 +74,7 @@ typedef struct usb_state {
     libusb_device *dev;
     struct libusb_transfer *xfer;
 #endif
-    bool devChanged : 1, wait : 1, process : 1, control : 1;
+    bool devChanged : 1, config : 1, wait : 1, process : 1, control : 1;
     enum  {
         USB_HC_STATE_PERIOD,
         USB_HC_STATE_ASYNC
