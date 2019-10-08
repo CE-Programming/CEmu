@@ -512,11 +512,10 @@ static bool usb_execute_setup(struct libusb_transfer *xfer) {
         case LIBUSB_REQUEST_SET_DESCRIPTOR:
             return false;
         case LIBUSB_REQUEST_GET_CONFIGURATION:
-            if (usb.config) {
-                libusb_get_configuration(xfer->dev_handle, &configValueInt);
+            if ((xfer->status = usb.config ? libusb_status_from_error(libusb_get_configuration(xfer->dev_handle, &configValueInt)) : LIBUSB_TRANSFER_COMPLETED) == LIBUSB_TRANSFER_COMPLETED) {
+                configValueByte = configValueInt;
+                usb_xfer_append_data(xfer, &configValueByte, sizeof(configValueByte));
             }
-            configValueByte = configValueInt;
-            usb_xfer_append_data(xfer, &configValueByte, sizeof(configValueByte));
             break;
         case LIBUSB_REQUEST_SET_CONFIGURATION:
             if (setup->bmRequestType == (LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_STANDARD | LIBUSB_RECIPIENT_DEVICE) && !type && !setup->wIndex) {
@@ -1137,10 +1136,6 @@ void usb_free(void) {
         libusb_free_transfer(usb.xfer);
         usb.xfer = NULL;
     }
-    if (usb.ctx) {
-        libusb_exit(usb.ctx);
-        usb.ctx = NULL;
-    }
 #endif
 }
 
@@ -1150,7 +1145,10 @@ bool usb_save(FILE *image) {
 
 bool usb_restore(FILE *image) {
     bool success;
+#ifdef HAS_LIBUSB
+    libusb_context *ctx = usb.ctx;
     usb_free();
+#endif
     success = fread(&usb, sizeof(usb), 1, image) == 1;
     usb_init_hccr(); // hccr is read only
     // these bits are raz
@@ -1168,7 +1166,7 @@ bool usb_restore(FILE *image) {
     usb.len                         = 0;
 #ifdef HAS_LIBUSB
     usb.xfer                        = NULL;
-    usb.ctx                         = NULL;
+    usb.ctx                         = ctx;
     usb.dev                         = NULL;
     init_libusb();
 #endif
