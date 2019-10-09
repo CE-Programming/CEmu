@@ -69,11 +69,6 @@ typedef struct usb_state {
     uint8_t state;
     uint8_t *data;
     uint8_t len;
-#ifdef HAS_LIBUSB
-    libusb_context *ctx;
-    libusb_device *dev;
-    struct libusb_transfer *xfer;
-#endif
     bool devChanged : 1, config : 1, wait : 1, process : 1, control : 1;
     enum  {
         USB_HC_STATE_PERIOD,
@@ -84,7 +79,12 @@ typedef struct usb_state {
           USB_NAK_CNT_DO_RELOAD,
           USB_NAK_CNT_WAIT_FOR_LIST_HEAD,
     } nak_cnt_reload_state : 2;
-    usb_qh_t *fake_recl_head;
+    usb_qh_t *fake_recl_head; /* Nothing from here on is saved/restored */
+#ifdef HAS_LIBUSB
+    libusb_context *ctx;
+    libusb_device *dev;
+    struct libusb_transfer *xfer;
+#endif
 } usb_state_t;
 
 extern usb_state_t usb;

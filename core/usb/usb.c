@@ -1056,7 +1056,6 @@ void usb_reset(void) {
     usb.data  = NULL;
     usb.len   = 0;
 #ifdef HAS_LIBUSB
-    usb_free();
     usb_plug_b();
     sched.items[SCHED_USB].callback.event = usb_event;
 #else
@@ -1119,7 +1118,7 @@ static const eZ80portrange_t device = {
 };
 
 eZ80portrange_t init_usb(void) {
-    memset(&usb, 0, sizeof usb);
+    memset(&usb, 0, offsetof(usb_state_t, fake_recl_head) + sizeof(usb.fake_recl_head));
     usb_init_hccr();
 #ifdef HAS_LIBUSB
     init_libusb();
@@ -1140,16 +1139,11 @@ void usb_free(void) {
 }
 
 bool usb_save(FILE *image) {
-    return fwrite(&usb, sizeof(usb), 1, image) == 1;
+    return fwrite(&usb, offsetof(usb_state_t, fake_recl_head), 1, image) == 1;
 }
 
 bool usb_restore(FILE *image) {
-    bool success;
-#ifdef HAS_LIBUSB
-    libusb_context *ctx = usb.ctx;
-    usb_free();
-#endif
-    success = fread(&usb, sizeof(usb), 1, image) == 1;
+    bool success = fread(&usb, offsetof(usb_state_t, fake_recl_head), 1, image) == 1;
     usb_init_hccr(); // hccr is read only
     // these bits are raz
     usb.regs.hcor.periodiclistbase &= 0xFFFFF000;
@@ -1164,11 +1158,6 @@ bool usb_restore(FILE *image) {
     usb.regs.gimr2                 &= GIMR2_MASK;
     usb.data                        = NULL;
     usb.len                         = 0;
-#ifdef HAS_LIBUSB
-    usb.xfer                        = NULL;
-    usb.ctx                         = ctx;
-    usb.dev                         = NULL;
-    init_libusb();
-#endif
+    usb.fake_recl_head              = NULL;
     return success;
 }
