@@ -1,4 +1,6 @@
 CC = gcc
+AR = ar
+RM = rm -f
 
 # If you want debug/symbol info, add -gX and remove -OX as needed
 # If you want core debug support, add -DDEBUG_SUPPORT
@@ -29,12 +31,12 @@ all: lib
 lib: $(STATICLIB)
 
 $(STATICLIB): $(OBJS)
-	ar rcs $@ $?
+	$(AR) rcs $@ $?
 
 %.o: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) $(STATICLIB)
+	$(RM) $(OBJS) $(STATICLIB)
 
 .PHONY: clean all lib
