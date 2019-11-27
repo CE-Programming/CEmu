@@ -27,17 +27,17 @@
 
 static char* myrealpath(const char* file_name)
 {
-    static char path_buf[2000 + 1] = {};
+    static char path_buf[8192 + 1] = {};
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
     char *p;
-    char tmp[2000 + 1];
+    char tmp[8192 + 1];
     strncpy(tmp, file_name, sizeof(tmp));
     p = tmp;
     while (*p) {
         if (*p == '/') { *p = '\\'; }
         p++;
     }
-    return _fullpath(path_buf, tmp, 2000);
+    return _fullpath(path_buf, tmp, 8192);
 #else
     return realpath(file_name, path_buf);
 #endif
@@ -710,4 +710,3 @@ bool doTestSequence()
 }
 
 } // namespace autotester
-
