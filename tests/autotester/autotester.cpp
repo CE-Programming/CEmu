@@ -370,10 +370,10 @@ bool loadJSONConfig(const std::string& jsonContents)
         {
             if (tmpFile.is_string() && !tmpFile.string_value().empty())
             {
-                const std::string& tmpFileStr = myrealpath(tmpFile.string_value().c_str());
-                if (!file_exists(tmpFileStr))
+                const char* tmpFileStr = myrealpath(tmpFile.string_value().c_str());
+                if (!tmpFileStr || !file_exists(tmpFileStr))
                 {
-                    std::cerr << "[Error] The file to transfer '" << tmpFileStr << "' doesn't seem to exist (or requires higher permissions?)" << std::endl;
+                    std::cerr << "[Error] The file to transfer '" << tmpFile.string_value() << "' doesn't seem to exist (or requires higher permissions?)" << std::endl;
                     return false;
                 }
                 config.transfer_files.push_back(tmpFileStr);
