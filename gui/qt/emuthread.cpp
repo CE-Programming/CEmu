@@ -222,9 +222,9 @@ void EmuThread::send(const QStringList &list, int location) {
 }
 
 void EmuThread::enqueueKeys(quint16 key1, quint16 key2, bool repeat) {
+    QMutexLocker locker(&m_keyQueueMutex);
     if (!repeat || m_keyQueue.isEmpty() ||
         (m_keyQueue.front() != key1 && m_keyQueue.front() != key2)) {
-        QMutexLocker locker(&m_keyQueueMutex);
         for (auto key : {key1, key2}) {
             if (key) {
                 m_keyQueue.enqueue(key);

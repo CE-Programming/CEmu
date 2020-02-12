@@ -1012,23 +1012,17 @@ void MainWindow::setup() {
 }
 
 void MainWindow::sendEmuKey(uint16_t key) {
-    int retry = 200;
-    do {
-        if (sendKey(key)) {
-            break;
-        }
-        guiDelay(50);
-    } while(retry--);
+    emu.enqueueKeys(key);
 }
 
 void MainWindow::sendEmuLetterKey(char letter) {
-    int retry = 200;
-    do {
-        if (sendLetterKeyPress(letter)) {
-            break;
-        }
-        guiDelay(50);
-    } while(retry--);
+    if (letter >= '0' && letter <= '9') {
+        sendEmuKey(0x8E + letter - '0');
+    } else if (letter >= 'A' && letter <= 'Z') {
+        sendEmuKey(0x9A + letter - 'A');
+    } else if (letter == 'Z' + 1 || letter == '@') { /* [ or @ for theta (caller should replace it) */
+        sendEmuKey(0xCC);
+    }
 }
 
 void MainWindow::optSend(CEmuOpts &o) {
