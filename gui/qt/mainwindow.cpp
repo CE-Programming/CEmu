@@ -487,7 +487,8 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
 
     // configure table font
-    const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    fixedFont.setStyleHint(QFont::Monospace);
     ui->breakpoints->setFont(fixedFont);
     ui->watchpoints->setFont(fixedFont);
     ui->ports->setFont(fixedFont);

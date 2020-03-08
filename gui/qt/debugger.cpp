@@ -2126,6 +2126,7 @@ void MainWindow::osUpdate() {
     ui->fpStack->setRowCount(0);
 
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    monospace.setStyleHint(QFont::Monospace);
 
     disconnect(ui->fpStack, &QTableWidget::itemChanged, this, &MainWindow::fpModified);
     disconnect(ui->opView, &QTableWidget::itemChanged, this, &MainWindow::opModified);

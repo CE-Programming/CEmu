@@ -425,6 +425,7 @@ void MainWindow::setFont(int fontSize) {
     m_config->setValue(SETTING_DEBUGGER_TEXT_SIZE, ui->textSize->value());
 
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    monospace.setStyleHint(QFont::Monospace);
 
     monospace.setPointSize(fontSize);
     ui->console->setFont(monospace);

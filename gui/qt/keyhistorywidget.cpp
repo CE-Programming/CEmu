@@ -42,6 +42,7 @@ void KeyHistoryWidget::add(const QString &entry) {
 
 void KeyHistoryWidget::setFontSize(int size) {
     QFont monospace = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    monospace.setStyleHint(QFont::Monospace);
     m_size->setValue(size);
     monospace.setPointSize(size);
     m_view->setFont(monospace);
