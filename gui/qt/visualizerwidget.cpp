@@ -221,16 +221,16 @@ void VisualizerWidget::stringToView() {
 
     foreach (QString str, string) {
         str = str.toLower();
-        if (!str.compare(QLatin1Literal("grid"), Qt::CaseInsensitive)) {
+        if (!str.compare(QLatin1String("grid"), Qt::CaseInsensitive)) {
             m_grid = true;
         }
-        if (!str.compare(QLatin1Literal("bepo"), Qt::CaseInsensitive)) {
+        if (!str.compare(QLatin1String("bepo"), Qt::CaseInsensitive)) {
             set_reset(true, 0x400u, m_control);
         }
-        if (!str.compare(QLatin1Literal("bebo"), Qt::CaseInsensitive)) {
+        if (!str.compare(QLatin1String("bebo"), Qt::CaseInsensitive)) {
             set_reset(true, 0x200u, m_control);
         }
-        if (!str.compare(QLatin1Literal("bgr"), Qt::CaseInsensitive)) {
+        if (!str.compare(QLatin1String("bgr"), Qt::CaseInsensitive)) {
             set_reset(true, 0x100u, m_control);
         }
         if (str.contains('x')) {
