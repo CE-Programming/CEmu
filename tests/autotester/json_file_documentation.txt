@@ -7,6 +7,15 @@ Structure of the JSON object for the test config files:
 "transfer_files" (array of strings)
     Path(s) of the file(s) to be transferred after emulation has started
 
+"target" (object)
+    Program properties: "name" -> string (ASCII name of the program, @ is theta) ; "isASM" -> boolean.
+
+"delay_after_key" (integer, 0<x<10000)
+    The number of ms to wait for after each pressed key
+
+"delay_after_step" (integer, 0<x<10000)
+    The number of ms to wait for after each sequence step
+
 "sequence" (array of strings)
     Sequential list of commands.
     Format: "command|arg", with commands and arguments being:
@@ -14,7 +23,9 @@ Structure of the JSON object for the test config files:
         delay|num (with num being a number of milliseconds to wait for)
         hash|hashName (the hash param's key (string), as defined later in your JSON)
         hashWait|hashName (the hash param's key (string), as defined later in your JSON)
-        key|keyName (with keyName being one of: ***TODO***)
+        key|keyName (with keyName being one of the ones in the source code, see autotester.cpp, valid_keys)
+        hold|keyName (with keyName being one of the ones in the source code, see autotester.cpp, valid_keys)
+        release|keyName (with keyName being one of the ones in the source code, see autotester.cpp, valid_keys)
 
 "hashes" (array of objects)
     each object's key corresponds to the name of the hash (params).
