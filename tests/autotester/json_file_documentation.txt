@@ -26,6 +26,7 @@ Structure of the JSON object for the test config files:
         key|keyName (with keyName being one of the ones in the source code, see autotester.cpp, valid_keys)
         hold|keyName (with keyName being one of the ones in the source code, see autotester.cpp, valid_keys)
         release|keyName (with keyName being one of the ones in the source code, see autotester.cpp, valid_keys)
+        sendCSC|keyName[|keyName...] (with keyName being one of the ones in the source code, see autotester.cpp, valid_keys)
 
 "hashes" (array of objects)
     each object's key corresponds to the name of the hash (params).

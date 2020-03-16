@@ -9,6 +9,7 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <algorithm>
 #include <functional>
 #include <unordered_map>
@@ -253,6 +254,36 @@ static const std::unordered_map<std::string, seq_cmd_func_t> valid_seq_commands 
             } else {
                 std::cerr << "\t[Error] unknown key \"" << which_key << "\" was not pressed." << std::endl;
             };
+        }
+    },
+    {
+        "sendCSC", [](const std::string& str) {
+            std::vector<std::string> parts;
+            std::stringstream ss(str);
+            std::string token;
+            while (std::getline(ss, token, '|'))
+            {
+                parts.push_back(token);
+            }
+            if (parts.size() == 0)
+            {
+                parts.push_back(str);
+            }
+            for (const auto& part : parts)
+            {
+                const auto& tmp = valid_keys.find(part);
+                if (tmp != valid_keys.end())
+                {
+                    const coord2d& key_coords = tmp->second;
+                    sendCSC((7-key_coords.y)*8 + key_coords.x + 1);
+                    if (config.delay_after_key > 0)
+                    {
+                        cemucore::emu_run(config.delay_after_key);
+                    }
+                } else {
+                    std::cerr << "\t[Error] unknown key \"" << part << "\" was not sendCSC'd." << std::endl;
+                };
+            }
         }
     },
     {
