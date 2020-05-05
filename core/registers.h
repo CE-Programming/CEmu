@@ -94,7 +94,7 @@ typedef struct {
             union {
                 long_reg_t hl;
                 uint32_t HL;
-                uint16_t HLs;
+                uint16_t HLS;
                 struct {
                     uint8_t L;
                     uint8_t H;
