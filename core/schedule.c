@@ -232,7 +232,9 @@ uint32_t sched_get_clock_rate(enum clock_id clock) {
 }
 
 void sched_reset(void) {
-    const uint32_t def_rates[CLOCK_NUM_ITEMS] = { 48000000, 60, 48000000, 24000000, 12000000, 6000000, 32768, 1 };
+    const uint32_t def_rates[CLOCK_NUM_ITEMS] = { 48000000, 60, 48000000, 24000000, 12000000, 6000000, 1000000, 32768, 1 };
+
+    struct sched_item usb_device_item = sched.items[SCHED_USB_DEVICE];
 
     memset(&sched, 0, sizeof sched);
     memcpy(sched.clockRates, def_rates, sizeof(def_rates));
@@ -249,8 +251,15 @@ void sched_reset(void) {
     sched.items[SCHED_RUN].callback.event = sched_run_event;
     sched_set(SCHED_RUN, 0);
 
+    sched.items[SCHED_USB_DEVICE] = usb_device_item;
+    sched_repeat(SCHED_USB_DEVICE, 0);
+
     sched.items[SCHED_PREV_MA].clock = CLOCK_48M;
     sched_set(SCHED_PREV_MA, 0);
+}
+
+void sched_init(void) {
+    memset(&sched, 0, sizeof sched);
 }
 
 uint64_t sched_total_cycles(void) {
