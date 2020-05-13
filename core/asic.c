@@ -84,6 +84,7 @@ void asic_init(void) {
     /* First, initilize memory and CPU */
     mem_init();
     cpu_init();
+    sched_init();
 
     /* Seed the numbers */
     srand(time(NULL));

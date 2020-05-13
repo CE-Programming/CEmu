@@ -62,9 +62,8 @@ struct fotg210_regs {
 	uint32_t rsvd7[1];
 	uint32_t iep[8]; /* 0x160 - 0x17f: IN Endpoint Register */
 	uint32_t oep[8]; /* 0x180 - 0x19f: OUT Endpoint Register */
-	uint32_t epmap14;/* 0x1a0: Endpoint Map Register (EP1 ~ 4) */
-	uint32_t epmap58;/* 0x1a4: Endpoint Map Register (EP5 ~ 8) */
-	uint32_t fifomap;/* 0x1a8: FIFO Map Register */
+	uint8_t  epmap[8];/* 0x1a0: Endpoint Map Register (EP1 ~ 8) */
+	uint8_t  fifomap[4];/* 0x1a8: FIFO Map Register */
 	uint32_t fifocfg; /* 0x1ac: FIFO Configuration Register */
 	uint32_t fifocsr[4];/* 0x1b0 - 0x1bf: FIFO Control Status Register */
 	uint32_t dma_fifo; /* 0x1c0: DMA Target FIFO Register */
@@ -187,7 +186,8 @@ struct fotg210_regs {
 #define PHYTMSR_UNPLUG      (1 << 0) /* Enable soft-detachment */
 
 /* CX FIFO Register */
-#define CXFIFO_BYTES(x)     (((x) >> 24) & 0x7f) /* CX/EP0 FIFO byte count */
+#define CXFIFO_GET_BYTES(x) (((x) >> 24) & 0x7f) /* CX/EP0 FIFO byte count */
+#define CXFIFO_SET_BYTES(x, bytes) (((x) & 0xffffff) | (((bytes) & 0x7f) << 24))
 #define CXFIFO_FIFOE(x)     (1 << (((x) & 0x03) + 8)) /* EPx FIFO empty */
 #define CXFIFO_FIFOE_FIFO0  (1 << 8)
 #define CXFIFO_FIFOE_FIFO1  (1 << 9)
@@ -288,46 +288,25 @@ struct fotg210_regs {
 	/* Transaction Number for High-Bandwidth EP(ISOC) */
 #define IEP_RESET           (1 << 12)     /* Reset Toggle Sequence */
 #define IEP_STALL           (1 << 11)     /* Stall */
-#define IEP_MAXPS(x)        ((x) & 0x7ff) /* Max. packet size */
 
 /* OUT Endpoint Register */
 #define OEP_RESET           (1 << 12)     /* Reset Toggle Sequence */
 #define OEP_STALL           (1 << 11)     /* Stall */
-#define OEP_MAXPS(x)        ((x) & 0x7ff) /* Max. packet size */
+#define EP_MAXPS(x)         ((x) & 0x7ff) /* Max. packet size */
 
-/* Endpoint Map Register (EP1 ~ EP4) */
-#define EPMAP14_SET_IN(ep, fifo) \
-	((fifo) & 3) << (((ep) - 1) << 3 + 0)
-#define EPMAP14_SET_OUT(ep, fifo) \
-	((fifo) & 3) << (((ep) - 1) << 3 + 4)
-#define EPMAP14_SET(ep, in, out) \
-	do { \
-		EPMAP14_SET_IN(ep, in); \
-		EPMAP14_SET_OUT(ep, out); \
-	} while (0)
-
-#define EPMAP14_DEFAULT     0x33221100 /* EP1->FIFO0, EP2->FIFO1... */
-
-/* Endpoint Map Register (EP5 ~ EP8) */
-#define EPMAP58_SET_IN(ep, fifo) \
-	((fifo) & 3) << (((ep) - 5) << 3 + 0)
-#define EPMAP58_SET_OUT(ep, fifo) \
-	((fifo) & 3) << (((ep) - 5) << 3 + 4)
-#define EPMAP58_SET(ep, in, out) \
-	do { \
-		EPMAP58_SET_IN(ep, in); \
-		EPMAP58_SET_OUT(ep, out); \
-	} while (0)
-
-#define EPMAP58_DEFAULT     0x00000000 /* All EPx->FIFO0 */
+/* Endpoint Map Register (EP1 ~ EP8) */
+#define EPMAP_SET_IN(fifo)  (((fifo) & 3) << 0)
+#define EPMAP_SET_OUT(fifo) (((fifo) & 3) << 4)
+#define EPMAP_GET_IN(x)     ((x) >> 0 & 3)
+#define EPMAP_GET_OUT(x)    ((x) >> 4 & 3)
 
 /* FIFO Map Register */
 #define FIFOMAP_BIDIR       (2 << 4)
 #define FIFOMAP_IN          (1 << 4)
 #define FIFOMAP_OUT         (0 << 4)
 #define FIFOMAP_DIR_MASK    0x30
-#define FIFOMAP_EP(x)       ((x) & 0x0f)
 #define FIFOMAP_EP_MASK     0x0f
+#define FIFOMAP_EP(x)       ((x) & FIFOMAP_EP_MASK)
 #define FIFOMAP_CFG_MASK    0x3f
 #define FIFOMAP_DEFAULT     0x04030201 /* FIFO0->EP1, FIFO1->EP2... */
 #define FIFOMAP(fifo, cfg)  (((cfg) & 0x3f) << (((fifo) & 3) << 3))
@@ -359,8 +338,9 @@ struct fotg210_regs {
 #define DMAFIFO_FIFO(x)     (1 << ((x) & 0x3)) /* DMA FIFO = FIFOx */
 
 /* DMA Control Register */
-#define DMACTRL_LEN(x)      (((x) & 0x1ffff) << 8) /* DMA length (Bytes) */
 #define DMACTRL_LEN_SHIFT   8
+#define DMACTRL_LEN_MASK    0x1ffff
+#define DMACTRL_LEN(x)      (((x) >> DMACTRL_LEN_SHIFT) & DMACTRL_LEN_MASK) /* DMA length (Bytes) */
 #define DMACTRL_CLRFF       (1 << 4) /* Clear FIFO upon DMA abort */
 #define DMACTRL_ABORT       (1 << 3) /* DMA abort */
 #define DMACTRL_IO2IO       (1 << 2) /* IO to IO */

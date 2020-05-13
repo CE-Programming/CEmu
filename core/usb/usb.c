@@ -6,13 +6,18 @@
 #include "../interrupt.h"
 #include "../debug/debug.h"
 
+#include <errno.h>
 #include <string.h>
 #include <stdio.h>
+
+#define CONTROL_MPS 0x40
 
 void debugInstruction(void);
 
 /* Global GPT state */
 usb_state_t usb;
+
+static void usb_host_reset(void);
 
 static void usb_update(void) {
     intrpt_set(INT_USB, (usb.regs.isr =
@@ -74,63 +79,114 @@ static void usb_plug(void) {
     usb_grp2_int(GISR2_RESUME);
 }
 
-void usb_setup(const uint8_t *setup) {
-    usb.regs.cxfifo &= ~0x3F;
-    memcpy(usb.ep0_data, setup, sizeof usb.ep0_data);
-    usb.ep0_idx = 0;
-    usb_grp0_int(GISR0_CXSETUP);
-}
-
-void usb_send_pkt(const void *data, uint32_t size) {
-    usb.data = data;
-    usb.len = size;
-    usb.regs.fifocsr[0] = (usb.regs.fifocsr[0] & FIFOCSR_RESET) | size;
-    usb.regs.cxfifo &= ~CXFIFO_FIFOE_FIFO0;
-    usb_grp1_int(GISR1_RX_FIFO(0));
-}
-
-//static uint8_t ep0_init[] = { 0x80, 0x06, 0x02, 0x02, 0x00, 0x00, 0x40, 0x00 };
-//static uint8_t ep0_init[] = { 0x80, 0x06, 0x03, 0x03, 0x09, 0x04, 0x40, 0x00 };
-//static uint8_t ep0_init[] = { 0x00, 0x05, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 };
-static void usb_event(enum sched_item_id event) {
-    static const uint8_t set_addr[]   = { 0x00, 0x05, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    static const uint8_t set_config[] = { 0x00, 0x09, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    static const uint8_t rdy_pkt_00[] = { 0x00, 0x00, 0x00, 0x04, 0x01, 0x00, 0x00, 0x04, 0x00 };
-    static const uint8_t rdy_pkt_01[] = { 0x00, 0x00, 0x00, 0x10, 0x04, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x01, 0x00, 0x03, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x07, 0xd0 };
-    switch (usb.state) {
-        case 0: // reset
-            if (usb.regs.dev_ctrl & 0x80) {
+static int usb_dispatch_event(void) {
+    while (true) {
+        int error = usb.device(&usb.event);
+        if (error) {
+            return error;
+        }
+        switch (usb.event.type) {
+            case USB_INIT_EVENT:
+                // do nothing
+                break;
+            case USB_RESET_EVENT:
                 usb_grp2_int(GISR2_RESET);
-                usb.state++;
+                continue;
+            case USB_TRANSFER_EVENT: {
+                usb_transfer_info_t *transfer = &usb.event.info.transfer;
+                uint8_t endpoint = transfer->endpoint;
+                if (!endpoint) {
+                    if (transfer->setup) {
+                        usb.regs.cxfifo &= ~(CXFIFO_CXFIN | CXFIFO_TSTPKTFIN | CXFIFO_CXSTALL | CXFIFO_CXFIFOCLR);
+                        usb.regs.cxfifo |= CXFIFO_CXFIFOE;
+                        memcpy(usb.ep0_data, transfer->buffer, sizeof usb.ep0_data);
+                        usb.ep0_idx = 0;
+                        usb_grp0_int(GISR0_CXSETUP);
+                    } else if (transfer->length < CONTROL_MPS) {
+                        CXFIFO_SET_BYTES(usb.regs.cxfifo, transfer->length);
+                        usb_grp0_int(GISR0_CXEND);
+                    } else {
+                        CXFIFO_SET_BYTES(usb.regs.cxfifo, CONTROL_MPS);
+                        usb.regs.cxfifo |= CXFIFO_CXFIFOF;
+                    }
+                } else if (--endpoint < 8) {
+                    if (transfer->length) {
+                        uint8_t fifo = EPMAP_GET_OUT(usb.regs.epmap[endpoint]);
+                        transfer->max_pkt_size =
+                            EP_MAXPS((transfer->direction ? usb.regs.iep : usb.regs.oep)[endpoint]);
+                        usb.regs.cxfifo &= ~CXFIFO_FIFOE(fifo);
+                        usb.regs.gisr1 &= ~GISR1_IN_FIFO(fifo);
+                        if (transfer->length >= transfer->max_pkt_size) {
+                            usb.regs.fifocsr[fifo] = (usb.regs.fifocsr[fifo] & FIFOCSR_RESET) |
+                                transfer->max_pkt_size;
+                            usb_grp1_int(GISR1_OUT_FIFO(fifo));
+                        } else {
+                            usb.regs.fifocsr[fifo] = (usb.regs.fifocsr[fifo] & FIFOCSR_RESET) |
+                                transfer->length;
+                            usb_grp1_int(GISR1_RX_FIFO(fifo));
+                        }
+                    } else {
+                        usb.regs.rxzlp |= 1 << endpoint;
+                        usb_grp2_int(GISR2_ZLPRX);
+                        continue;
+                    }
+                }
+                break;
             }
-            break;
-        case 1: // set addr
-            if (!(usb.regs.gisr2 & GISR2_RESET)) {
-                usb_setup(set_addr);
-                usb.state++;
+            case USB_TIMER_EVENT: {
+                usb_timer_info_t *timer = &usb.event.info.timer;
+                switch (timer->mode) {
+                    case USB_TIMER_NONE:
+                        sched_clear(SCHED_USB_DEVICE);
+                        break;
+                    case USB_TIMER_RELATIVE_MODE:
+                        sched_repeat(SCHED_USB_DEVICE, timer->useconds);
+                        break;
+                    case USB_TIMER_ABSOLUTE_MODE:
+                        sched_set(SCHED_USB_DEVICE, timer->useconds);
+                        break;
+                }
+                break;
             }
-            break;
-        case 2: // set config
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb_setup(set_config);
-                usb.state++;
-            }
-            break;
-        case 3: // rdy_pkt_00
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
-                usb.regs.cxfifo &= ~CXFIFO_CXFIN;
-                usb_send_pkt(rdy_pkt_00, sizeof rdy_pkt_00);
-                usb.state++;
-            }
-            break;
-        case 4: // rdy_pkt_01
-            if (!(usb.regs.gisr1 & GISR1_RX_FIFO(0))) {
-                usb_send_pkt(rdy_pkt_01, sizeof rdy_pkt_01);
-                usb.state++;
-            }
-            break;
+            case USB_DESTROY_EVENT:
+                usb.device(&usb.event);
+                usb.device = usb_disconnected_device;
+                break;
+        }
+        break;
     }
-    sched_repeat(event, 5000);
+    return 0;
+}
+
+int usb_init_device(int argc, const char *const *argv) {
+    usb.event.type = USB_DESTROY_EVENT;
+    usb.device(&usb.event);
+    usb.event.type = USB_INIT_EVENT;
+    usb_init_info_t *init = &usb.event.info.init;
+    init->argc = argc;
+    init->argv = argv;
+    if (argc < 1) {
+        usb.device = usb_disconnected_device;
+    } else if (!strcasecmp(argv[0], "dusb")) {
+        usb.device = usb_dusb_device;
+    } else {
+        return ENOENT;
+    }
+    int error = usb_dispatch_event();
+    if (!error) {
+        usb_plug();
+    }
+    return error;
+}
+
+static void usb_event(enum sched_item_id event) {
+    (void)event;
+}
+
+static void usb_device_event(enum sched_item_id event) {
+    (void)event;
+    usb.event.type = USB_TIMER_EVENT;
+    usb_dispatch_event();
 }
 
 uint8_t usb_status(void) {
@@ -167,7 +223,7 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             usb.regs.hcor.usbsts |= ~usb.regs.hcor.usbcmd << 12 & 0x1000;
             usb.regs.hcor.usbsts |= usb.regs.hcor.usbcmd << 10 & 0xC000;
             if ((uint32_t)value << bit_offset & 2) {
-                usb_reset();
+                usb_host_reset();
             }
             break;
         case 0x014 >> 2: // USBSTS - USB Status Register
@@ -235,6 +291,16 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             write8(usb.regs.cxfifo,                bit_offset, value &         0x7 >> bit_offset); // W mask (V or RO)
             if (usb.regs.cxfifo & CXFIFO_CXFIN) {
                 usb.regs.gisr0 &= ~GISR0_CXEND;
+                // Status Stage
+                usb.event.type = USB_TRANSFER_EVENT;
+                usb_transfer_info_t *transfer = &usb.event.info.transfer;
+                transfer->buffer = NULL;
+                transfer->length = 0;
+                transfer->max_pkt_size = CONTROL_MPS;
+                transfer->endpoint = 0;
+                transfer->setup = false;
+                transfer->direction = !(usb.ep0_data[0] >> 7);
+                usb_dispatch_event();
             }
             break;
         case 0x124 >> 2: // IDLE Counter Register
@@ -292,32 +358,51 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             write8(usb.regs.dma_fifo,              bit_offset, value &       0x1F >> bit_offset); // W mask (V)
             break;
         case 0x1C8 >> 2: // DMA Control Register
-            write8(usb.regs.dma_ctrl,              bit_offset, value & 0x81FFFF17 >> bit_offset); // W mask (V)
-            if (usb.regs.dma_ctrl & DMACTRL_START) {
-                uint32_t len = usb.regs.dma_ctrl >> 8 & 0x1ffff;
-                uint8_t *mem = phys_mem_ptr(usb.regs.dma_addr, len);
-                if (mem) {
-                    if (usb.regs.dma_ctrl & DMACTRL_MEM2FIFO) {
-                        gui_console_printf("[USB] ");
-                        while (len--)
-                            gui_console_printf("%02X", *mem++);
-                        gui_console_printf("\n");
-                    } else if (usb.data && usb.len) {
-                        uint32_t rem = FIFOCSR_BYTES(usb.regs.fifocsr[0]);
-                        uint32_t amt = len < rem ? len : rem;
-                        memcpy(mem, usb.data, amt);
-                        usb.regs.fifocsr[0] -= amt;
-                        if (amt == rem) {
-                            usb.regs.cxfifo |= CXFIFO_FIFOE_MASK;
-                            usb.regs.gisr1 &= ~0xff;
-                        }
-                        usb.data += amt;
-                    }
-                    usb.regs.dma_ctrl &= ~DMACTRL_START;
-                    usb_grp2_int(GISR2_DMAFIN);
+            write8(usb.regs.dma_ctrl,              bit_offset, value & 0x81FFFF16 >> bit_offset); // W mask (V)
+            if (value & DMACTRL_START >> bit_offset) {
+                usb.event.type = USB_TRANSFER_EVENT;
+                usb_transfer_info_t *transfer = &usb.event.info.transfer;
+                transfer->length = DMACTRL_LEN(usb.regs.dma_ctrl);
+                transfer->buffer = phys_mem_ptr(usb.regs.dma_addr, transfer->length);
+                if (!transfer->buffer) {
+                    usb_grp2_int(GISR2_DMAERR);
                     break;
                 }
-                usb_grp2_int(GISR2_DMAERR);
+                transfer->direction = usb.regs.dma_ctrl & DMACTRL_MEM2FIFO;
+                if (usb.regs.dma_fifo & DMAFIFO_CX) {
+                    transfer->max_pkt_size = CONTROL_MPS;
+                    transfer->endpoint = 0;
+                    CXFIFO_SET_BYTES(usb.regs.cxfifo, 0);
+                    usb.regs.cxfifo |= CXFIFO_CXFIFOE;
+                    usb.regs.cxfifo &= ~CXFIFO_CXFIFOF;
+                } else {
+                    uint8_t *epmap = usb.regs.epmap;
+                    for (transfer->endpoint = 1; transfer->endpoint <= 8;
+                         ++transfer->endpoint, ++epmap) {
+                        uint8_t fifo = *epmap >> (!transfer->direction << 2) & 3;
+                        if (usb.regs.dma_fifo & 1 << fifo) {
+                            transfer->max_pkt_size =
+                                EP_MAXPS((transfer->direction ? usb.regs.iep
+                                                              : usb.regs.oep)[transfer->endpoint]);
+                            usb.regs.cxfifo |= CXFIFO_FIFOE(fifo);
+                            usb.regs.gisr1 &= ~GISR1_RX_FIFO(fifo);
+                            usb_grp1_int(GISR1_IN_FIFO(fifo));
+                            usb.regs.fifocsr[fifo] &= FIFOCSR_RESET;
+                            break;
+                        }
+                    }
+                    if (transfer->endpoint > 8) {
+                        usb_grp2_int(GISR2_DMAERR);
+                        break;
+                    }
+                }
+                transfer->setup = false;
+                //usb_transfer_info_t debug_transfer = *transfer;
+                usb_dispatch_event();
+                //gui_console_printf("[USB] %c", debug_transfer.direction ? 'R' : 'S');
+                //while (debug_transfer.length--) gui_console_printf(" %02X", *debug_transfer.buffer++);
+                //gui_console_printf("\n");
+                usb_grp2_int(GISR2_DMAFIN);
             }
             break;
         case 0x1D0 >> 2: // EP0 Data Register
@@ -329,9 +414,9 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
     usb_update();
 }
 
-void usb_reset(void) {
-    int i;
-#define clear(array) memset(array, 0, sizeof array)
+static void usb_host_reset(void) {
+#define fill(array, value) memset(array, value, sizeof array)
+#define clear(array) fill(array, 0)
     usb.regs.hcor.usbcmd                = 0x00080B00;
     usb.regs.hcor.usbsts                = 0x00001000;
     usb.regs.hcor.usbintr               = 0;
@@ -340,6 +425,11 @@ void usb_reset(void) {
     clear(usb.regs.hcor.rsvd0);
     clear(usb.regs.hcor.portsc);
     clear(usb.regs.rsvd1);
+}
+
+void usb_reset(void) {
+    int i;
+    usb_host_reset();
     usb.regs.miscr                      = 0x00000181;
     clear(usb.regs.rsvd2);
     usb.regs.otgcsr                     = 0x00310E20;
@@ -366,8 +456,8 @@ void usb_reset(void) {
     clear(usb.regs.rsvd7);
     for (i = 0; i != 8; ++i)
     usb.regs.iep[i] = usb.regs.oep[i]   = 0x00000200;
-    usb.regs.epmap14 = usb.regs.epmap58 = 0xFFFFFFFF;
-    usb.regs.fifomap                    = 0x0F0F0F0F;
+    fill(usb.regs.epmap, 0xFF);
+    fill(usb.regs.fifomap, 0x0F);
     usb.regs.fifocfg                    = 0;
     clear(usb.regs.fifocsr);
     usb.regs.dma_fifo                   = 0;
@@ -375,15 +465,18 @@ void usb_reset(void) {
     usb.regs.dma_ctrl                   = 0;
     clear(usb.ep0_data);
     usb.ep0_idx                         = 0;
-    usb.state                           = 0;
-    usb.data                            = NULL;
-    usb.len                             = 0;
-    usb_otg_int(OTGISR_BSESSEND); // because otgcsr & OTGCSR_B_SESS_END
-    usb_grp2_int(GISR2_IDLE);     // because idle == 0 ms
-    usb_plug();
+    usb_grp2_int(GISR2_IDLE);         // because idle == 0 ms
+    if (usb.device == usb_disconnected_device) {
+        usb_otg_int(OTGISR_BSESSEND); // because otgcsr & OTGCSR_B_SESS_END
+    } else {
+        usb_plug();
+    }
 #undef clear
+#undef fill
     sched.items[SCHED_USB].callback.event = usb_event;
-    sched.items[SCHED_USB].clock = CLOCK_32K;
+    sched.items[SCHED_USB].clock = CLOCK_12M;
+    sched.items[SCHED_USB_DEVICE].callback.event = usb_device_event;
+    sched.items[SCHED_USB_DEVICE].clock = CLOCK_1M;
 }
 
 static void usb_init_hccr(void) {
@@ -393,6 +486,7 @@ static void usb_init_hccr(void) {
                             1 << 1 | // prog frame list (supported)
                             0 << 0 ; // interface (32-bit)
     usb.regs.hccr.data[3] = 0; // No Port Routing Rules
+    usb.device = usb_disconnected_device;
 }
 
 static const eZ80portrange_t device = {
@@ -413,7 +507,11 @@ bool usb_save(FILE *image) {
 }
 
 bool usb_restore(FILE *image) {
+    usb_device_t *device = usb.device;
+    void *context = usb.event.context;
     bool success = fread(&usb, sizeof(usb), 1, image) == 1;
+    usb.device = device;
+    usb.event.context = context;
     usb_init_hccr(); // hccr is read only
     // these bits are raz
     usb.regs.hcor.periodiclistbase &= 0xFFFFF000;

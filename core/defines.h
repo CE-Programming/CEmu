@@ -17,8 +17,10 @@
 /* MSVC doesn't support __builtin_expect, stub it out */
 #ifndef _MSC_VER
  #define likely(x) __builtin_expect(!!(x), 1)
+ #define unreachable() __builtin_unreachable()
 #else
  #define likely(x) (x)
+ #define unreachable() abort()
 #endif
 
 #define unlikely(x) !likely(!(x))
