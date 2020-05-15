@@ -19,7 +19,7 @@ CFLAGS = -Wall -Wextra -fPIC -O3 -static
 ifneq (,$(findstring DEBUG_SUPPORT,$(CFLAGS)))
     CFLAGS += -std=gnu11
 else
-    CFLAGS += -std=c89
+    CFLAGS += -std=c99
 endif
 
 OBJS  = $(patsubst %.c,   %.o, $(shell find . -name usb -prune -or -name \*.c -print))
