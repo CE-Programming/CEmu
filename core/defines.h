@@ -21,6 +21,7 @@
 #else
  #define likely(x) (x)
  #define unreachable() abort()
+ #define strcasecmp _stricmp
 #endif
 
 #define unlikely(x) !likely(!(x))
