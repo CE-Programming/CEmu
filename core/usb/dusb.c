@@ -117,8 +117,7 @@ static const char *command_names[DUSB_NUM_COMMANDS] = {
 typedef struct dusb_command {
     FILE *file;
     dusb_command_type_t type;
-    calc_var_type_t vartype;
-    uint8_t varname_length, varname[8], varname_utf8_length, varname_utf8[8 * 3];
+    uint8_t vartype, varname_length, varname[8], varname_utf8_length, varname_utf8[8 * 3];
 } dusb_command_t;
 
 typedef enum dusb_state {
