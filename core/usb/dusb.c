@@ -236,6 +236,7 @@ static bool dusb_convert_varname_to_utf8(dusb_command_t *command) {
             if (command->varname[0] < 'A' || command->varname[0] > 'Z' + 1) {
                 return false;
             }
+        case CALC_VAR_TYPE_OPERATING_SYSTEM:
             memcpy(tiascii, command->varname, command->varname_length);
             tiascii[command->varname_length] = '\0';
             break;
@@ -386,10 +387,10 @@ static dusb_state_t dusb_detect(dusb_context_t *context) {
         if (fseek(file, DUSB_FLASH_FILE_NAME_OFFSET, SEEK_SET) ||
             fread(&command->varname_length, sizeof command->varname_length, 1, file) != 1 ||
             fread(command->varname, command->varname_length, 1, file) != 1 ||
-            !dusb_convert_varname_to_utf8(command) ||
             fseek(file, DUSB_FLASH_FILE_DEVICE_TYPE_OFFSET, SEEK_SET) ||
             fread(&context->version, sizeof context->version, 1, file) != 1 || context->version != 0x73 ||
             fread(&command->vartype, sizeof command->vartype, 1, file) != 1 ||
+            !dusb_convert_varname_to_utf8(command) ||
             fseek(file, DUSB_FLASH_FILE_LENGTH_OFFSET, SEEK_SET) ||
             fread(&context->length, sizeof context->length, 1, file) != 1 ||
             fseek(file, 0, SEEK_END) || DUSB_FLASH_FILE_DATA_OFFSET + context->length != ftell(file)) {
