@@ -103,10 +103,10 @@ static int usb_dispatch_event(void) {
                         usb.ep0_idx = 0;
                         usb_grp0_int(GISR0_CXSETUP);
                     } else if (transfer->length < CONTROL_MPS) {
-                        CXFIFO_SET_BYTES(usb.regs.cxfifo, transfer->length);
+                        usb.regs.cxfifo = CXFIFO_SET_BYTES(usb.regs.cxfifo, transfer->length);
                         usb_grp0_int(GISR0_CXEND);
                     } else {
-                        CXFIFO_SET_BYTES(usb.regs.cxfifo, CONTROL_MPS);
+                        usb.regs.cxfifo = CXFIFO_SET_BYTES(usb.regs.cxfifo, CONTROL_MPS);
                         usb.regs.cxfifo |= CXFIFO_CXFIFOF;
                     }
                 } else if (--endpoint < 8) {
@@ -371,7 +371,7 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
                 if (usb.regs.dma_fifo & DMAFIFO_CX) {
                     transfer->max_pkt_size = CONTROL_MPS;
                     transfer->endpoint = 0;
-                    CXFIFO_SET_BYTES(usb.regs.cxfifo, 0);
+                    usb.regs.cxfifo = CXFIFO_SET_BYTES(usb.regs.cxfifo, 0);
                     usb.regs.cxfifo |= CXFIFO_CXFIFOE;
                     usb.regs.cxfifo &= ~CXFIFO_CXFIFOF;
                 } else {
