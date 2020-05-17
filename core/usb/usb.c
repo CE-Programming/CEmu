@@ -288,8 +288,7 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
             write8(usb.regs.rsvd5[0],              bit_offset, value &        0x3F >> bit_offset); // W mask (V)
             break;
         case 0x120 >> 2: // CX FIFO Register
-            write8(usb.regs.cxfifo,                bit_offset, value &         0x7 >> bit_offset); // W mask (V or RO)
-            if (usb.regs.cxfifo & CXFIFO_CXFIN) {
+            if (value & CXFIFO_CXFIN >> bit_offset) {
                 usb.regs.gisr0 &= ~GISR0_CXEND;
                 // Status Stage
                 usb.event.type = USB_TRANSFER_EVENT;
