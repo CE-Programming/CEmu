@@ -1780,6 +1780,7 @@ void MainWindow::equatesAddFile(const QString &fileName) {
     } else {
         QRegularExpression equatesRegexp(QStringLiteral("^\\h*\\??\\h*([.A-Z_a-z][.\\w]*)\\h*(?::?=|\\h\\.?equ(?!\\d))\\h*([%@$]\\S+|\\d\\S*[boh]?)\\h*(?:;.*)?$"),
                                          QRegularExpression::CaseInsensitiveOption);
+        QRegularExpression typedEquatesRegexp(QStringLiteral("^(.*)_([0-9A-F]{6})\t(.*)$"));
         do {
             QRegularExpressionMatch matches = equatesRegexp.match(line);
             if (matches.hasMatch()) {
@@ -1805,6 +1806,12 @@ void MainWindow::equatesAddFile(const QString &fileName) {
                     base = 16;
                 }
                 equatesAddEquate(matches.captured(1), addrStr.toUInt(Q_NULLPTR, base));
+                continue;
+            }
+            matches = typedEquatesRegexp.match(line);
+            if (matches.hasMatch()) {
+                equatesAddEquate(matches.captured(3), matches.captured(2).toUInt(Q_NULLPTR, 16));
+                continue;
             }
         } while (in.readLineInto(&line));
     }
