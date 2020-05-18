@@ -91,9 +91,20 @@ protected:
 private:
 
     void sendFiles() {
-        for (const QString &f : m_vars) {
-            emit sentFile(f, emu_send_variable(f.toUtf8(), m_sendLoc));
+        const auto num = m_vars.size();
+        char ** paths = new char*[num];
+
+        for(int i=0; i<num; i++) {
+            paths[i] = strdup(m_vars[i].toUtf8());
         }
+
+        emu_send_variables((const char**)paths, num, m_sendLoc);
+
+        for(int i=0; i<num; i++) {
+            delete (paths[i]);
+        }
+        delete[] (paths);
+
         emit sentFile(QString(), LINK_GOOD);
     }
 
