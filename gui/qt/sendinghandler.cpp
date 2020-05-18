@@ -28,7 +28,11 @@ static const QStringList valid_suffixes = { QStringLiteral("8xp"),
                                             QStringLiteral("8xt"),
                                             QStringLiteral("8ca"),
                                             QStringLiteral("8cg"),
-                                            QStringLiteral("8ci"), };
+                                            QStringLiteral("8ci"),
+                                            QStringLiteral("8ek"),
+                                            QStringLiteral("8eu"),
+                                            QStringLiteral("8pu"),
+                                          };
 
 static inline bool pathHasBundleExtension(const QString& filepath) {
     return filepath.endsWith("b84", Qt::CaseInsensitive) || filepath.endsWith("b83", Qt::CaseInsensitive);
