@@ -412,7 +412,7 @@ static dusb_state_t dusb_detect(dusb_context_t *context) {
     if (!memcmp("**TI83F*", magic, sizeof magic)) {
         uint16_t data_length;
         if (fread(magic, 3, 1, file) != 1 ||
-            magic[0] != 0x1A || magic[1] != 0x0A || magic[2] != 0x00 ||
+            magic[0] != 0x1A || magic[1] != 0x0A || magic[2] > 0x0F ||
             fseek(file, DUSB_VAR_FILE_DATA_LENGTH_OFFSET, SEEK_SET) ||
             fread(&data_length, sizeof data_length, 1, file) != 1 ||
             !dusb_verify_checksum(file) || DUSB_VAR_FILE_DATA_OFFSET +
