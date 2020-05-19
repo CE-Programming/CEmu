@@ -119,7 +119,7 @@ typedef struct dusb_command {
     FILE *file;
     uint32_t file_length;
     dusb_command_type_t type;
-    uint8_t vartype, varname_length, varname[8], varname_utf8_length, varname_utf8[8 * 3];
+    uint8_t flag, vartype, varname_length, varname[8], varname_utf8_length, varname_utf8[8 * 3];
 } dusb_command_t;
 
 typedef enum dusb_state {
@@ -806,6 +806,25 @@ int usb_dusb_device(usb_event_t *event) {
                 if (!command->type) {
                     return EINVAL;
                 }
+                while (*arg == '-') {
+                    switch (command->type) {
+                        case DUSB_SEND_COMMAND:
+                            switch (*++arg) {
+                                case 'a':
+                                    command->flag = 1;
+                                    break;
+                                case 'r':
+                                    command->flag = 2;
+                                    break;
+                                default:
+                                    return EINVAL;
+                            }
+                            break;
+                        default:
+                            return EINVAL;
+                    }
+                    ++arg;
+                }
                 while (*arg == ',') {
                     int type = parse_hex_digits(++arg);
                     if (type < 0) {
@@ -1126,7 +1145,7 @@ int usb_dusb_device(usb_event_t *event) {
                     *buffer++ = DUSB_ATTR_ARCHIVED >> 0 & 0xFF;
                     *buffer++ = DUSB_ATTR_ARCHIVED_SIZE >> 8 & 0xFF;
                     *buffer++ = DUSB_ATTR_ARCHIVED_SIZE >> 0 & 0xFF;
-                    *buffer++ = context->flag >> 7 & 1;
+                    *buffer++ = (command->flag ? command->flag : context->flag >> 7) & 1;
 
                     if (command->vartype != CALC_VAR_TYPE_FLASH_APP) {
                         *buffer++ = DUSB_ATTR_VAR_VERSION >> 8 & 0xFF;
