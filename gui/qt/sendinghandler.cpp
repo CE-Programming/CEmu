@@ -149,6 +149,30 @@ bool SendingHandler::dragOccured(QDragEnterEvent *e) {
     return true;
 }
 
+void SendingHandler::linkProgress(int value, int total) {
+    if (total) {
+        if (m_progressBar) {
+            m_progressBar->setMaximum(total);
+            m_progressBar->setValue(value);
+        }
+        if (value != total) {
+            return;
+        }
+    } else {
+        switch (value) {
+            default:
+                QMessageBox::warning(Q_NULLPTR, QObject::tr("Transfer issue"), QObject::tr("Transfer issue, see console for information."));
+                break;
+        }
+    }
+    guiDelay(100);
+    if (m_progressBar) {
+        m_progressBar->setVisible(false);
+        m_progressBar->setValue(0);
+    }
+    guiSend = false;
+}
+
 void SendingHandler::sentFile(const QString &file, int ok) {
 
     static int result = LINK_GOOD;
@@ -252,11 +276,17 @@ void SendingHandler::sendFiles(const QStringList &fileNames, int location) {
     guiSend = true;
     m_dirs.clear();
 
-    foreach(const QString &str, fileNames) {
-        if (pathHasBundleExtension(str)) {
-            list.removeOne(str);
-            list.append(getValidFilesFromArchive(str));
-            addFile(str, true);
+    foreach(const QString &fileName, fileNames) {
+        QFileInfo fileInfo(fileName);
+        QString fileDir = fileInfo.absolutePath();
+        if (!m_dirs.contains(fileDir)) {
+            m_dirs.append(fileDir);
+            checkDirForEquateFiles(fileDir);
+        }
+        addFile(fileName, true);
+        if (pathHasBundleExtension(fileName)) {
+            list.removeOne(fileName);
+            list.append(getValidFilesFromArchive(fileName));
         }
     }
 

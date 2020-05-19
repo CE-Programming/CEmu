@@ -43,8 +43,11 @@ typedef struct usb_timer_info {
     uint32_t useconds;
 } usb_timer_info_t;
 
+typedef bool usb_progress_handler_t(void *context, int value, int total);
+
 typedef struct usb_event {
-    void *context;
+    usb_progress_handler_t *progress_handler;
+    void *progress_context, *context;
     usb_event_type_t type;
     union {
         usb_init_info_t init;

@@ -221,6 +221,23 @@ void EmuThread::send(const QStringList &list, int location) {
     req(RequestSend);
 }
 
+void EmuThread::sendFiles() {
+    QList<QByteArray> utf8Vars;
+    QVector<const char *> args;
+    utf8Vars.reserve(m_vars.size());
+    args.reserve(m_vars.size());
+    for (const QString &string : m_vars) {
+        utf8Vars.push_back(string.toUtf8());
+        args.push_back(utf8Vars.back());
+    }
+    emu_send_variables(args.data(), args.size(), m_sendLoc, &EmuThread::progressHandler, this);
+}
+
+bool EmuThread::progressHandler(void *context, int value, int total) {
+    emit reinterpret_cast<EmuThread *>(context)->linkProgress(value, total);
+    return false;
+}
+
 void EmuThread::enqueueKeys(quint16 key1, quint16 key2, bool repeat) {
     QMutexLocker locker(&m_keyQueueMutex);
     if (!repeat || m_keyQueue.isEmpty() ||

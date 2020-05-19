@@ -158,7 +158,8 @@ static int usb_dispatch_event(void) {
     return 0;
 }
 
-int usb_init_device(int argc, const char *const *argv) {
+int usb_init_device(int argc, const char *const *argv,
+                    usb_progress_handler_t *progress_handler, void *progress_context) {
     usb.event.type = USB_DESTROY_EVENT;
     usb.device(&usb.event);
     usb.event.type = USB_INIT_EVENT;
@@ -172,6 +173,8 @@ int usb_init_device(int argc, const char *const *argv) {
     } else {
         return ENOENT;
     }
+    usb.event.progress_handler = progress_handler;
+    usb.event.progress_context = progress_context;
     int error = usb_dispatch_event();
     if (!error) {
         usb_plug();
@@ -502,14 +505,12 @@ eZ80portrange_t init_usb(void) {
 }
 
 bool usb_save(FILE *image) {
-    return fwrite(&usb, sizeof(usb), 1, image) == 1;
+    return fwrite(&usb, offsetof(usb_state_t, event), 1, image) == 1;
 }
 
 bool usb_restore(FILE *image) {
-    usb_device_t *device = usb.device;
     void *context = usb.event.context;
-    bool success = fread(&usb, sizeof(usb), 1, image) == 1;
-    usb.device = device;
+    bool success = fread(&usb, offsetof(usb_state_t, event), 1, image) == 1;
     usb.event.context = context;
     usb_init_hccr(); // hccr is read only
     // these bits are raz

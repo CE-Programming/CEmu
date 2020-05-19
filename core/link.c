@@ -20,27 +20,15 @@
 
 int EMSCRIPTEN_KEEPALIVE emu_send_variable(const char *file, int location) {
     const char * files[1] = { file };
-    return emu_send_variables(files, 1, location);
+    return emu_send_variables(files, 1, location, NULL, NULL);
 }
 
-int EMSCRIPTEN_KEEPALIVE emu_send_variables(const char **files, int num, int location) {
+int EMSCRIPTEN_KEEPALIVE emu_send_variables(const char *const *files, int num, int location,
+                                            usb_progress_handler_t *progress_handler,
+                                            void *progress_context) {
     (void)location; // not yet supported
 
-    const uint8_t cxError = 0x52;
-    uint8_t *cxCurApp = phys_mem_ptr(0xD007E0, 1);
-
-    /* Return if we are at an error menu */
-    if (*cxCurApp == cxError) {
-        gui_console_printf("[CEmu] Transfer Error: OS in error screen.\n");
-        return LINK_ERR;
-    }
-
-    if (num < 1) {
-        gui_console_printf("[CEmu] Transfer Error: invalid number of files to transfer.\n");
-        return LINK_ERR;
-    }
-
-    char ** argv = malloc((1+num) * sizeof(char*));
+    char **argv = malloc((1+num) * sizeof(char *));
     if (!argv) {
         gui_console_printf("[CEmu] Transfer Error: can't allocate transfer commands... wut\n");
         return LINK_ERR;
@@ -51,7 +39,7 @@ int EMSCRIPTEN_KEEPALIVE emu_send_variables(const char **files, int num, int loc
         argv[i+1] = malloc(5+strlen(files[i])+1);
         sprintf(argv[i+1], "send:%s", files[i]);
     }
-    int err = usb_init_device(1+num, (const char* const*)argv);
+    int err = usb_init_device(1+num, (const char *const *)argv, progress_handler, progress_context);
     gui_console_printf("[CEmu] Transfer. usb_init_device ret = %d.\n", err);
 
     for(int i=1; i<=num; i++) {

@@ -79,6 +79,7 @@ signals:
     void saved(bool success);
     void loaded(emu_state_t state, emu_data_t type);
     void blocked(int req);
+    void linkProgress(int value, int total);
     void sentFile(const QString &file, int ok);
 
 public slots:
@@ -90,23 +91,8 @@ protected:
 
 private:
 
-    void sendFiles() {
-        const auto num = m_vars.size();
-        char ** paths = new char*[num];
-
-        for(int i=0; i<num; i++) {
-            paths[i] = strdup(m_vars[i].toUtf8());
-        }
-
-        emu_send_variables((const char**)paths, num, m_sendLoc);
-
-        for(int i=0; i<num; i++) {
-            delete (paths[i]);
-        }
-        delete[] (paths);
-
-        emit sentFile(QString(), LINK_GOOD);
-    }
+    void sendFiles();
+    static bool progressHandler(void *context, int value, int amount);
 
     void req(int req) {
         m_reqQueue.enqueue(req);

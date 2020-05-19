@@ -36,7 +36,8 @@ void usb_grp1_int(uint32_t);
 void usb_grp2_int(uint16_t);
 uint8_t usb_status(void);
 
-int usb_init_device(int argc, const char *const *argv);
+int usb_init_device(int argc, const char *const *argv,
+                    usb_progress_handler_t *progress_handler, void *progress_context);
 
 #ifdef __cplusplus
 }
