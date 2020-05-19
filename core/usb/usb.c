@@ -7,8 +7,9 @@
 #include "../debug/debug.h"
 
 #include <errno.h>
-#include <string.h>
+#include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 #define CONTROL_MPS 0x40
 
