@@ -9,6 +9,8 @@
 #include "../../tests/autotester/crc32.hpp"
 #include "capture/animated-png.h"
 
+#include <QtCore/QVector>
+
 #include <cassert>
 #include <cstdarg>
 #include <thread>

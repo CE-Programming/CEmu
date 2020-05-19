@@ -857,14 +857,15 @@ int usb_dusb_device(usb_event_t *event) {
                 }
             }
             event->context = context;
-            return dusb_transition(event, DUSB_INIT_STATE);
+            break;
         case USB_RESET_EVENT:
             switch (context->state) {
                 case DUSB_RESET_STATE:
-                    return dusb_transition(event, DUSB_RESET_RECOVERY_STATE);
+                    break;
                 default:
                     return dusb_transition(event, DUSB_INVALID_STATE);
             }
+            break;
         case USB_TRANSFER_EVENT:
             command = context->command;
             buffer = transfer->buffer;
@@ -1202,16 +1203,16 @@ int usb_dusb_device(usb_event_t *event) {
                 default:
                     return dusb_transition(event, DUSB_INVALID_STATE);
             }
-            return dusb_transition(event, context->state + 1);
+            break;
         case USB_TIMER_EVENT:
             switch (context->state) {
                 case DUSB_INIT_STATE:
-                    return dusb_transition(event, DUSB_RESET_STATE);
                 case DUSB_RESET_RECOVERY_STATE:
-                    return dusb_transition(event, DUSB_SET_ADDRESS_STATE);
+                    break;
                 default:
                     return 0;
             }
+            break;
         case USB_DESTROY_EVENT:
             if (event->progress_handler) {
                 event->progress_handler(event->progress_context, 1, 1);
@@ -1231,4 +1232,5 @@ int usb_dusb_device(usb_event_t *event) {
         default:
             return EINVAL;
     }
+    return dusb_transition(event, context->state + 1);
 }
