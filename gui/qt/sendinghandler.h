@@ -32,7 +32,6 @@ public:
 
 public slots:
     void linkProgress(int amount, int total);
-    void sentFile(const QString &file, int ok);
     void resendPressed();
     void removeRow();
 

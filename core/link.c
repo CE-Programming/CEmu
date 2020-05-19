@@ -39,7 +39,9 @@ int EMSCRIPTEN_KEEPALIVE emu_send_variables(const char *const *files, int num, i
         sprintf(argv[i+1], "send%s:%s", locations[location], files[i]);
     }
     int err = usb_init_device(1+num, (const char *const *)argv, progress_handler, progress_context);
-    gui_console_printf("[CEmu] Transfer. usb_init_device ret = %d.\n", err);
+    if (err != 0) {
+        gui_console_printf("[CEmu] USB transfer error code %d.\n", err);
+    }
 
     for(int i=1; i<=num; i++) {
         free(argv[i]);

@@ -173,52 +173,6 @@ void SendingHandler::linkProgress(int value, int total) {
     guiSend = false;
 }
 
-void SendingHandler::sentFile(const QString &file, int ok) {
-
-    static int result = LINK_GOOD;
-    result |= ok;
-
-    // Send null to complete sending
-    if (file.isEmpty()) {
-        if (result & LINK_ERR) {
-            QMessageBox::critical(Q_NULLPTR, QObject::tr("Transfer error"), QObject::tr("Transfer Error, see console for information."));
-        }
-        else if (result & LINK_WARN) {
-            QMessageBox::warning(Q_NULLPTR, QObject::tr("Transfer warning"), QObject::tr("Transfer Warning, see console for information."));
-        }
-        result = LINK_GOOD;
-        m_progressBar->setValue(m_progressBar->maximum());
-        guiDelay(100);
-        if (m_progressBar) {
-            m_progressBar->setVisible(false);
-            m_progressBar->setValue(0);
-        }
-        guiSend = false;
-        return;
-    }
-
-    QFileInfo fi(file);
-    QString directory = fi.absolutePath();
-
-    // check for sending of equate file
-    if (m_sendEquates) {
-        if (!m_dirs.contains(directory)) {
-            m_dirs.append(directory);
-            checkDirForEquateFiles(directory);
-        }
-    }
-
-    // don't add temp files (created by bundles)
-    if (directory != m_tempDir.path()) {
-        addFile(file, true);
-    }
-
-    if (m_progressBar) {
-        m_progressBar->setValue(m_progressBar->value() + 1);
-    }
-}
-
-
 void SendingHandler::addFile(const QString &file, bool select) {
     int j, rows = m_table->rowCount();
 
