@@ -2,6 +2,7 @@
 
 #include "../defines.h"
 #include "../emu.h"
+#include "../os/os.h"
 #include "../vat.h"
 
 #include <errno.h>
@@ -116,11 +117,14 @@ static const char *command_names[DUSB_NUM_COMMANDS] = {
 
 typedef struct dusb_command {
     FILE *file;
+    uint32_t file_length;
     dusb_command_type_t type;
     uint8_t vartype, varname_length, varname[8], varname_utf8_length, varname_utf8[8 * 3];
 } dusb_command_t;
 
 typedef enum dusb_state {
+    DUSB_INVALID_STATE,
+
     DUSB_INIT_STATE,
     DUSB_RESET_STATE,
     DUSB_RESET_RECOVERY_STATE,
@@ -170,13 +174,11 @@ typedef enum dusb_state {
     DUSB_SEND_EOT_STATE,
     DUSB_SEND_EOT_ACK_STATE,
     DUSB_SEND_NEXT_STATE,
-
-    DUSB_INVALID_STATE,
 } dusb_state_t;
 
 typedef struct dusb_context {
     dusb_state_t state;
-    uint32_t start, position, offset, length, max_rpkt_size, max_vpkt_size;
+    uint32_t progress, total, start, position, offset, length, max_rpkt_size, max_vpkt_size;
     uint8_t version, flag, buffer[8];
     dusb_command_t *command, commands[];
 } dusb_context_t;
@@ -581,6 +583,27 @@ static uint32_t dusb_transfer_remaining(dusb_context_t *context) {
     return dusb_transfer_length(context) - dusb_transfer_header_length(context) - context->offset;
 }
 
+static void dusb_update_progress(usb_event_t *event) {
+    dusb_context_t *context = event->context;
+    if (event->progress_handler) {
+        event->progress_handler(event->progress_context,
+                                context->progress + context->start + context->position + context->offset,
+                                context->total);
+    }
+}
+
+static void dusb_next_command(usb_event_t *event) {
+    dusb_context_t *context = event->context;
+    dusb_command_t *command = context->command++;
+    switch (command->type) {
+        case DUSB_SEND_COMMAND:
+            context->progress += command->file_length;
+            break;
+        default:
+            break;
+    }
+}
+
 static int dusb_transition(usb_event_t *event, dusb_state_t state) {
     dusb_context_t *context = event->context;
     usb_transfer_info_t *transfer = &event->info.transfer;
@@ -645,7 +668,7 @@ static int dusb_transition(usb_event_t *event, dusb_state_t state) {
             case DUSB_SEND_EOT_ACK_STATE:
                 break;
             case DUSB_NEXT_COMMAND_STATE:
-                ++context->command;
+                dusb_next_command(event);
                 /* fallthrough */
             case DUSB_COMMAND_STATE:
                 switch (context->command->type) {
@@ -706,7 +729,7 @@ static int dusb_transition(usb_event_t *event, dusb_state_t state) {
                     continue;
                 }
                 /* Wait for calculator to reboot. */
-                ++context->command;
+                dusb_next_command(event);
                 context->state = DUSB_INIT_STATE;
                 event->type = USB_TIMER_EVENT;
                 timer->mode = USB_TIMER_ABSOLUTE_MODE;
@@ -758,7 +781,7 @@ int usb_dusb_device(usb_event_t *event) {
             if (init->argc < 1) {
                 return EINVAL;
             }
-            context = calloc(1, sizeof(dusb_context_t) + sizeof(dusb_command_t) * init->argc);
+            event->context = context = calloc(1, sizeof(dusb_context_t) + sizeof(dusb_command_t) * init->argc);
             if (!context) {
                 return ENOMEM;
             }
@@ -781,13 +804,11 @@ int usb_dusb_device(usb_event_t *event) {
                     }
                 }
                 if (!command->type) {
-                    free(context);
                     return EINVAL;
                 }
                 while (*arg == ',') {
                     int type = parse_hex_digits(++arg);
                     if (type < 0) {
-                        free(context);
                         return EINVAL;
                     }
                     command->vartype = type;
@@ -803,9 +824,17 @@ int usb_dusb_device(usb_event_t *event) {
                     }
                 }
                 if (*arg == ':' ?
-                    !(command->file = fopen(++arg, command->type == DUSB_SEND_COMMAND ? "rb" : "wb")) : *arg) {
-                    free(context);
+                    !(command->file = fopen_utf8(++arg, command->type == DUSB_SEND_COMMAND ? "rb" : "wb")) : *arg) {
                     return EINVAL;
+                }
+                if (command->type == DUSB_SEND_COMMAND) {
+                    long length;
+                    if (fseek(command->file, 0, SEEK_END) ||
+                        (length = ftell(command->file)) < 0) {
+                        return EINVAL;
+                    }
+                    command->file_length = length;
+                    context->total += length;
                 }
             }
             event->context = context;
@@ -979,6 +1008,7 @@ int usb_dusb_device(usb_event_t *event) {
                         return dusb_transition(event, DUSB_INVALID_STATE);
                     }
                     context->offset += length;
+
                     if ((transfer->length = dusb_transfer_remaining(context)) ||
                         !(transfer_length % transfer->max_pkt_size)) {
                         event->type = USB_TRANSFER_EVENT;
@@ -1016,6 +1046,7 @@ int usb_dusb_device(usb_event_t *event) {
                         return dusb_transition(event, DUSB_INVALID_STATE);
                     }
                     context->offset += length;
+                    dusb_update_progress(event);
                     if ((transfer->length = dusb_transfer_remaining(context)) ||
                         !(transfer_length % transfer->max_pkt_size)) {
                         event->type = USB_TRANSFER_EVENT;
@@ -1142,6 +1173,7 @@ int usb_dusb_device(usb_event_t *event) {
                         return dusb_transition(event, DUSB_INVALID_STATE);
                     }
                     context->offset += length;
+                    dusb_update_progress(event);
                     if ((transfer->length = dusb_transfer_remaining(context)) ||
                         !(transfer_length % transfer->max_pkt_size)) {
                         event->type = USB_TRANSFER_EVENT;
@@ -1162,7 +1194,11 @@ int usb_dusb_device(usb_event_t *event) {
                     return 0;
             }
         case USB_DESTROY_EVENT:
-            if (context) {
+            if (event->progress_handler) {
+                event->progress_handler(event->progress_context, 1, 1);
+                event->progress_handler = NULL;
+            }
+            if (!context) {
                 return 0;
             }
             for (command = context->command; command && command->type; ++command) {
