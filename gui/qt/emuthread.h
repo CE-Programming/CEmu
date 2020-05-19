@@ -80,7 +80,6 @@ signals:
     void loaded(emu_state_t state, emu_data_t type);
     void blocked(int req);
     void linkProgress(int value, int total);
-    void sentFile(const QString &file, int ok);
 
 public slots:
     void send(const QStringList &names, int location);

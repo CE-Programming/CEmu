@@ -241,6 +241,7 @@ bool EmuThread::progressHandler(void *context, int value, int total) {
     EmuThread* emuThread = reinterpret_cast<EmuThread *>(context);
     if (value == 1 && total == 1) {
         emuThread->setThrottle(emuThread->m_backupThrottleForTransfers);
+        gui_console_printf("[CEmu] USB transfer(s) completed succesfully.\n");
     }
     emit emuThread->linkProgress(value, total);
     return false;

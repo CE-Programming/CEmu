@@ -392,7 +392,6 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     // sending handler
     connect(sendingHandler, &SendingHandler::send, &emu, &EmuThread::send, Qt::QueuedConnection);
     connect(&emu, &EmuThread::linkProgress, sendingHandler, &SendingHandler::linkProgress, Qt::QueuedConnection);
-    connect(&emu, &EmuThread::sentFile, sendingHandler, &SendingHandler::sentFile, Qt::QueuedConnection);
     connect(sendingHandler, &SendingHandler::loadEquateFile, this, &MainWindow::equatesAddFile);
 
     // memory editors
