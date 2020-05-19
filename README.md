@@ -22,7 +22,7 @@ _Note that Release builds have an update checking feature, which is disabled in 
 * "Always-on-top" window option
 * Screen capture, copy, and drag'n'drop (PNG)
 * Screen recording (animated PNG)
-* File sending/receiving (not for Apps/OS yet)
+* USB emulation for transfers (including for Apps and OSes)
 * Customizable keybindings with multiple presets
 * Keypress recording and history
 * Full screen modes (F11 key)
