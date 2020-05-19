@@ -19,14 +19,13 @@
 #define FILE_DATA_START 0x37
 
 int EMSCRIPTEN_KEEPALIVE emu_send_variable(const char *file, int location) {
-    const char * files[1] = { file };
-    return emu_send_variables(files, 1, location, NULL, NULL);
+    return emu_send_variables(&file, 1, location, NULL, NULL);
 }
 
 int EMSCRIPTEN_KEEPALIVE emu_send_variables(const char *const *files, int num, int location,
                                             usb_progress_handler_t *progress_handler,
                                             void *progress_context) {
-    (void)location; // not yet supported
+    static const char *locations[] = { "-r", "-a", "" };
 
     char **argv = malloc((1+num) * sizeof(char *));
     if (!argv) {
@@ -36,8 +35,8 @@ int EMSCRIPTEN_KEEPALIVE emu_send_variables(const char *const *files, int num, i
 
     argv[0] = "dusb";
     for(int i=0; i<num; i++) {
-        argv[i+1] = malloc(5+strlen(files[i])+1);
-        sprintf(argv[i+1], "send:%s", files[i]);
+        argv[i+1] = malloc(7+strlen(files[i])+1);
+        sprintf(argv[i+1], "send%s:%s", locations[location], files[i]);
     }
     int err = usb_init_device(1+num, (const char *const *)argv, progress_handler, progress_context);
     gui_console_printf("[CEmu] Transfer. usb_init_device ret = %d.\n", err);
