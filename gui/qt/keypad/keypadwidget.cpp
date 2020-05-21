@@ -278,6 +278,23 @@ void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
     repaint();
 }
 
+void KeypadWidget::setHolding(bool enabled) {
+    mHoldingEnabled = enabled;
+    if (!enabled) {
+        for (uint8_t row = 0; row != sRows; ++row) {
+            for (uint8_t col = 0; col != sCols; ++col) {
+                if (Key *key = mKeys[row][col]) {
+                    if (key->isHeld()) {
+                        bool wasSelected = key->isSelected();
+                        key->toggleHeld();
+                        updateKey(key, wasSelected);
+                    }
+                }
+            }
+        }
+    }
+}
+
 KeypadWidget::~KeypadWidget() {
     for (uint8_t row = 0; row != sRows; ++row) {
         for (uint8_t col = 0; col != sCols; ++col) {
@@ -360,7 +377,7 @@ void KeypadWidget::mouseEnd(bool toggleHeld) {
         if (Key *key = mKeys[code.row()][code.col()]) {
             bool wasSelected = key->isSelected();
             key->release();
-            if (toggleHeld) {
+            if (key->isHeld() || toggleHeld) {
                 key->toggleHeld();
             }
             updateKey(key, wasSelected);
@@ -380,7 +397,7 @@ void KeypadWidget::mouseEvent(QMouseEvent *event) {
             mouseUpdate(event->localPos());
             break;
         case QEvent::MouseButtonRelease:
-            mouseEnd(event->button() == Qt::RightButton);
+            mouseEnd(mHoldingEnabled && event->button() == Qt::RightButton);
             break;
         default:
             abort();

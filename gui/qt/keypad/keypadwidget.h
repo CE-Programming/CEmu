@@ -34,6 +34,7 @@ public:
     virtual ~KeypadWidget();
 
     void setType(bool, unsigned int);
+    void setHolding(bool);
     unsigned getCurrColor(void);
 
 signals:
@@ -57,6 +58,7 @@ private:
     void addKey(Key *key);
 
     unsigned int color = KEYPAD_BLACK;
+    bool mHoldingEnabled = true;
     QColor cclrBackground;
     QPainterPath keypadPath;
     static const size_t sRows{8}, sCols{8};

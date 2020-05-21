@@ -552,6 +552,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     setSkinToggle(m_config->value(SETTING_SCREEN_SKIN, true).toBool());
     setLcdSpi(m_config->value(SETTING_SCREEN_SPI, true).toBool());
     setGuiSkip(m_config->value(SETTING_SCREEN_FRAMESKIP, 0).toInt());
+    setKeypadHolding(m_config->value(SETTING_KEYPAD_HOLDING, true).toBool());
     setEmuSpeed(m_config->value(SETTING_EMUSPEED, 100).toInt());
     setAutoSave(m_config->value(SETTING_RESTORE_ON_OPEN, true).toBool());
     setFont(m_config->value(SETTING_DEBUGGER_TEXT_SIZE, 9).toInt());

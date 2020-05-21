@@ -365,6 +365,7 @@ private:
     void keypadChanged();
     void setKeymap(const QString &value);
     void setKeypadColor(unsigned int color);
+    void setKeypadHolding(bool enabled);
     void setCalcSkinTopFromType();
 
     // settings
@@ -672,6 +673,7 @@ private:
     static const QString SETTING_SCREEN_SPI;
     static const QString SETTING_KEYPAD_KEYMAP;
     static const QString SETTING_KEYPAD_COLOR;
+    static const QString SETTING_KEYPAD_HOLDING;
     static const QString SETTING_WINDOW_FULLSCREEN;
     static const QString SETTING_WINDOW_GROUP_DRAG;
     static const QString SETTING_WINDOW_STATE;

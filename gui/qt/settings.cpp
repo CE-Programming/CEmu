@@ -56,6 +56,7 @@ const QString MainWindow::SETTING_SCREEN_SPI                = QStringLiteral("Sc
 const QString MainWindow::SETTING_KEYPAD_KEYMAP             = QStringLiteral("Keypad/map");
 const QString MainWindow::SETTING_KEYPAD_COLOR              = QStringLiteral("Keypad/color");
 const QString MainWindow::SETTING_KEYPAD_CUSTOM_PATH        = QStringLiteral("Keypad/custom_path");
+const QString MainWindow::SETTING_KEYPAD_HOLDING            = QStringLiteral("Keypad/holding");
 const QString MainWindow::SETTING_WINDOW_GROUP_DRAG         = QStringLiteral("Window/group_dock_drag");
 const QString MainWindow::SETTING_WINDOW_FULLSCREEN         = QStringLiteral("Window/fullscreen");
 const QString MainWindow::SETTING_WINDOW_STATE              = QStringLiteral("Window/state");
@@ -459,6 +460,11 @@ void MainWindow::setFont(int fontSize) {
 void MainWindow::setKeypadColor(unsigned int color) {
     ui->keypadWidget->setType(get_device_type(), color);
     m_config->setValue(SETTING_KEYPAD_COLOR, color);
+}
+
+void MainWindow::setKeypadHolding(bool enabled) {
+    ui->keypadWidget->setHolding(enabled);
+    m_config->setValue(SETTING_KEYPAD_HOLDING, enabled);
 }
 
 void MainWindow::setCalcSkinTopFromType() {
