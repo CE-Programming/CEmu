@@ -171,6 +171,8 @@ int usb_init_device(int argc, const char *const *argv,
         usb.device = usb_disconnected_device;
     } else if (!strcasecmp(argv[0], "dusb")) {
         usb.device = usb_dusb_device;
+    } else if (!strcasecmp(argv[0], "fuzz")) {
+        usb.device = usb_fuzz_device;
     } else {
         return ENOENT;
     }

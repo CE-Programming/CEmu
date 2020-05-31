@@ -193,6 +193,7 @@ SOURCES += \
     ../../core/timers.c \
     ../../core/usb/disconnected.c \
     ../../core/usb/dusb.c \
+    ../../core/usb/fuzz.c \
     ../../core/usb/usb.c \
     ../../core/sha256.c \
     ../../core/realclock.c \
