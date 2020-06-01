@@ -1,5 +1,5 @@
 /****************************************************************************
-** Copyright (C) 2019 Klaralvdalens Datakonsult AB, a KDAB Group company, info@kdab.com.
+** Copyright (C) 2019-2020 Klaralvdalens Datakonsult AB, a KDAB Group company, info@kdab.com.
 ** All rights reserved.
 **
 ** This file is part of the KD MacTouchBar library.

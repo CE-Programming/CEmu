@@ -1,5 +1,5 @@
 /****************************************************************************
-** Copyright (C) 2019 Klaralvdalens Datakonsult AB, a KDAB Group company, info@kdab.com.
+** Copyright (C) 2019-2020 Klaralvdalens Datakonsult AB, a KDAB Group company, info@kdab.com.
 ** All rights reserved.
 **
 ** This file is part of the KD MacTouchBar library.
@@ -37,10 +37,18 @@ class KDMACTOUCHBAR_EXPORT KDMacTouchBar : public QWidget
     Q_OBJECT
     Q_PROPERTY(QAction *principialAction READ principialAction WRITE setPrincipialAction)
     Q_PROPERTY(QAction *escapeAction READ escapeAction WRITE setEscapeAction)
+    Q_PROPERTY(TouchButtonStyle touchButtonStyle READ touchButtonStyle WRITE setTouchButtonStyle)
 public:
     explicit KDMacTouchBar(QWidget *parent = nullptr);
     explicit KDMacTouchBar(QMessageBox *messageBox);
     ~KDMacTouchBar();
+
+    enum TouchButtonStyle
+    {
+        IconOnly,
+        TextOnly,
+        TextBesideIcon
+    };
 
     static void setAutomaticallyCreateMessageBoxTouchBar(bool automatic);
     static bool isAutomacicallyCreatingMessageBoxTouchBar();
@@ -60,6 +68,11 @@ public:
 
     void setEscapeAction(QAction *action);
     QAction *escapeAction() const;
+
+    void setTouchButtonStyle(TouchButtonStyle touchButtonStyle);
+    TouchButtonStyle touchButtonStyle() const;
+
+    void clear();
 
 protected:
     bool event(QEvent *event);

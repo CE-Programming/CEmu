@@ -1,5 +1,5 @@
 /****************************************************************************
-** Copyright (C) 2019 Klaralvdalens Datakonsult AB, a KDAB Group company, info@kdab.com.
+** Copyright (C) 2019-2020 Klaralvdalens Datakonsult AB, a KDAB Group company, info@kdab.com.
 ** All rights reserved.
 **
 ** This file is part of the KD MacTouchBar library.
@@ -37,7 +37,18 @@
 
 QT_BEGIN_NAMESPACE
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
 NSImage *qt_mac_create_nsimage(const QIcon &icon, int defaultSize = 0);
+#else
+//  defined in gui/painting/qcoregraphics.mm
+@interface NSImage (QtExtras)
++ (instancetype)imageFromQIcon:(const QIcon &)icon;
+@end
+static NSImage *qt_mac_create_nsimage(const QIcon &icon)
+{
+    return [NSImage imageFromQIcon:icon];
+}
+#endif
 
 static QString identifierForAction(QObject *action)
 {
@@ -471,6 +482,18 @@ public:
         button.hidden = !action->isVisible();
         button.image = qt_mac_create_nsimage(action->icon());
         button.title = removeMnemonics(action->text()).toNSString();
+        switch (qMacTouchBar->touchButtonStyle())
+        {
+        case KDMacTouchBar::IconOnly:
+            button.imagePosition = NSImageOnly;
+            break;
+        case KDMacTouchBar::TextOnly:
+            button.imagePosition = NSNoImage;
+            break;
+        case KDMacTouchBar::TextBesideIcon:
+            button.imagePosition = NSImageLeft;
+            break;
+        }
         item.showsCloseButton = action->menu() != nullptr;
         if (action->menu()) {
             item.popoverTouchBar = [[NSTouchBar alloc] init];
@@ -497,9 +520,11 @@ public:
 {
     NSString *identifier = identifierForAction(action).toNSString();
     NSPopoverTouchBarItem *item = [items objectForKey:identifier];
+    if (item == nil)
+        return;
     QObjectPointer *command = [commands objectForKey:[NSValue valueWithPointer:item.view]];
-    [items removeObjectForKey:identifier];
     [commands removeObjectForKey:[NSValue valueWithPointer:item.view]];
+    [items removeObjectForKey:identifier];
     [command release];
 
     [self makeTouchBar];
@@ -642,6 +667,7 @@ public:
     DynamicTouchBarProvider *touchBarProvider = nil;
     QAction *principialAction = nullptr;
     QAction *escapeAction = nullptr;
+    KDMacTouchBar::TouchButtonStyle touchButtonStyle = TextBesideIcon;
 
     static bool automaticallyCreateMessageBoxTouchBar;
 };
@@ -687,6 +713,13 @@ public:
     touchBar->addSeparator();
     touchBar->addAction(actionSaveFile);
   \endcode
+*/
+
+/*!
+\enum KDMacTouchBar::TouchButtonStyle
+\value IconOnly Only display the icon.
+\value TextOnly Only display the text.
+\value TextBesideIcon The text appears beside the icon.
 */
 
 /*!
@@ -866,7 +899,7 @@ void KDMacTouchBar::removeDialogButtonBox(QDialogButtonBox *buttonBox)
 void KDMacTouchBar::setPrincipialAction(QAction *action)
 {
     d->principialAction = action;
-    d->touchBarProvider.touchBar.principalItemIdentifier = identifierForAction(action).toNSString();
+    d->touchBarProvider.touchBar.principalItemIdentifier = action ? identifierForAction(action).toNSString() : nil;
 }
 
 QAction *KDMacTouchBar::principialAction() const
@@ -902,6 +935,46 @@ void KDMacTouchBar::setEscapeAction(QAction *action)
 QAction *KDMacTouchBar::escapeAction() const
 {
     return d->escapeAction;
+}
+
+/*!
+   \property KDMacTouchBar::touchButtonStyle
+   This property holds the style of touch bar buttons.
+
+   This property defines the style of all touch buttons that are added as QActions.
+   Added tab widgets, dialog button boxes, message boxes or QWidgetActions won't
+   follow this style.
+
+   The default is KDMacTouchBar::TextBesideIcon
+   */
+void KDMacTouchBar::setTouchButtonStyle(TouchButtonStyle touchButtonStyle)
+{
+    if (d->touchButtonStyle == touchButtonStyle)
+        return;
+
+    d->touchButtonStyle = touchButtonStyle;
+
+    for (auto* action : actions())
+        [d->touchBarProvider changeItem:action];
+    if (d->escapeAction)
+        [d->touchBarProvider changeItem:d->escapeAction];
+}
+
+KDMacTouchBar::TouchButtonStyle KDMacTouchBar::touchButtonStyle() const
+{
+    return d->touchButtonStyle;
+}
+
+/*!
+   Removes all actions from the touch bar. Removes even the escapeAction.
+   The principialAction is cleared.
+*/
+void KDMacTouchBar::clear()
+{
+    setEscapeAction(nullptr);
+    setPrincipialAction(nullptr);
+    for (auto* action : actions())
+        removeAction(action);
 }
 
 QT_END_NAMESPACE
