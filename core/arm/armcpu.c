@@ -14,6 +14,8 @@ arm_cpu_state_t arm_cpu;
 # else
 #  define FLAGS_FROM_EXTENDED_X86_ASM 0
 # endif
+#else
+# define FLAGS_FROM_EXTENDED_X86_ASM 0
 #endif
 
 #if (__has_builtin(__builtin_add_overflow) && __has_builtin(__builtin_sub_overflow)) || __GNUC__ >= 5
