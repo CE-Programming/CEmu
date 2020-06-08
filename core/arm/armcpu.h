@@ -4,10 +4,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef enum arm_exception_number {
     ARM_Exception_Reset = 1,
     ARM_Exception_NMI = 2,
@@ -17,19 +13,23 @@ typedef enum arm_exception_number {
     ARM_Exception_SysTick = 15,
 } arm_exception_number_t;
 
-typedef union arm_cpu_state {
+typedef union arm_cpu {
     uint32_t r[32];
     struct {
         uint32_t r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, sp, lr, pc, altsp;
-        uint8_t excNum : 6;
+        arm_exception_number_t excNum : 6;
         bool v, c, z, n, pm, spsel, mode;
     };
-} arm_cpu_state_t;
+} arm_cpu_t;
 
-extern arm_cpu_state_t arm_cpu;
+typedef struct arm_state arm_state_t;
 
-void arm_cpu_reset(void);
-void arm_execute(void);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void arm_cpu_reset(arm_state_t *state);
+void arm_execute(arm_state_t *state);
 
 #ifdef __cplusplus
 }
