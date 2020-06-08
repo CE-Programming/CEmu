@@ -105,6 +105,11 @@ endif()
 qt_add_resources(CEmu_Resources resources.qrc)
 
 set(CEmu_Sources
+    ../../core/arm/arm.c ../../core/arm/arm.h
+    ../../core/arm/armcpu.c ../../core/arm/armcpu.h
+    ../../core/arm/armmem.c ../../core/arm/armmem.h
+    ../../core/arm/armstate.c ../../core/arm/armstate.h
+    ../../core/arm/sync.c ../../core/arm/sync.h
     ../../core/asic.c ../../core/asic.h
     ../../core/atomics.h
     ../../core/backlight.c ../../core/backlight.h
@@ -112,6 +117,7 @@ set(CEmu_Sources
     ../../core/bus.c ../../core/bus.h
     ../../core/cert.c ../../core/cert.h
     ../../core/control.c ../../core/control.h
+    ../../core/coproc.c ../../core/coproc.h
     ../../core/cpu.c ../../core/cpu.h
     ../../core/debug/debug.c ../../core/debug/debug.h
     ../../core/debug/zdis/zdis.c ../../core/debug/zdis/zdis.h
