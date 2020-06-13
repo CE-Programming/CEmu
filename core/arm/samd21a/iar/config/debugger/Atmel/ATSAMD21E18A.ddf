@@ -1,0 +1,26 @@
+
+;; Memory information ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Used to define address zones within the ARM address space (Memory).
+;;
+;;   Name      may be almost anything
+;;   AdrSpace  must be Memory
+;;   StartAdr  start of memory block
+;;   EndAdr    end of memory block
+;;   AccType   type of access, read-only (R), read-write (RW) or SFR (W)
+
+[Memory]
+;;          Name       AdrSpace  StartAdr    EndAdr      AccType
+Memory0  =  FLASH        Memory  0x00000000  0x0003FFFF  R
+Memory1  =  HMCRAMC0     Memory  0x20000000  0x20007FFF  RW
+Memory2  =  HPB0         Memory  0x40000000  0x4000FFFF  W
+Memory3  =  HPB1         Memory  0x41000000  0x4100FFFF  W
+Memory4  =  HPB2         Memory  0x42000000  0x4200FFFF  W
+Memory5  =  PPB          Memory  0xE0000000  0xE00FFFFF  W
+Memory6  =  PORT_IOBUS   Memory  0x60000000  0x600001FF  W
+
+TrustedRanges = true
+UseSfrFilter = true
+
+[SfrInclude]
+File = ATSAMD21E18A.svd
