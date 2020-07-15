@@ -456,6 +456,7 @@ private:
 
     // settings
     void setRom(const QString &path);
+    void setArmRom();
     void setImagePath();
     void setCalcId();
     void setFocusSetting(bool state);
@@ -768,6 +769,7 @@ private:
     QPointer<HexWidget> m_memWidget = nullptr;
 
     QString m_pathRom;
+    QString m_pathArmRom;
     QString m_pathRam;
     QString m_pathImage;
     QTimer m_timerEmu;
@@ -836,6 +838,7 @@ private:
     static const QString SETTING_SLOT_PATHS;
     static const QString SETTING_IMAGE_PATH;
     static const QString SETTING_ROM_PATH;
+    static const QString SETTING_ARM_ROM_PATH;
     static const QString SETTING_STATUS_INTERVAL;
     static const QString SETTING_FIRST_RUN;
     static const QString SETTING_UI_EDIT_MODE;
