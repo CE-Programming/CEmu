@@ -47,6 +47,7 @@
 
 #if !(defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__))
 #include <stdint.h>
+#ifndef NO_VOLATILE_CONST_IO
 #ifndef __cplusplus
 typedef volatile const uint32_t RoReg;   /**< Read only 32-bit register (volatile const unsigned int) */
 typedef volatile const uint16_t RoReg16; /**< Read only 16-bit register (volatile const unsigned int) */
@@ -62,6 +63,17 @@ typedef volatile       uint8_t  WoReg8;  /**< Write only  8-bit register (volati
 typedef volatile       uint32_t RwReg;   /**< Read-Write 32-bit register (volatile unsigned int) */
 typedef volatile       uint16_t RwReg16; /**< Read-Write 16-bit register (volatile unsigned int) */
 typedef volatile       uint8_t  RwReg8;  /**< Read-Write  8-bit register (volatile unsigned int) */
+#else /* NO_VOLATILE_CONST_IO */
+typedef                uint32_t RoReg;   /**< Read only 32-bit register (volatile const unsigned int) */
+typedef                uint16_t RoReg16; /**< Read only 16-bit register (volatile const unsigned int) */
+typedef                uint8_t  RoReg8;  /**< Read only  8-bit register (volatile const unsigned int) */
+typedef                uint32_t WoReg;   /**< Write only 32-bit register (volatile unsigned int) */
+typedef                uint16_t WoReg16; /**< Write only 16-bit register (volatile unsigned int) */
+typedef                uint8_t  WoReg8;  /**< Write only  8-bit register (volatile unsigned int) */
+typedef                uint32_t RwReg;   /**< Read-Write 32-bit register (volatile unsigned int) */
+typedef                uint16_t RwReg16; /**< Read-Write 16-bit register (volatile unsigned int) */
+typedef                uint8_t  RwReg8;  /**< Read-Write  8-bit register (volatile unsigned int) */
+#endif /* NO_VOLATILE_CONST_IO */
 #endif
 
 #if !defined(SKIP_INTEGER_LITERALS)

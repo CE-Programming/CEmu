@@ -1,28 +1,22 @@
 #ifndef ARMSTATE_H
 #define ARMSTATE_H
 
+#include "arm.h"
 #include "armcpu.h"
+#include "armmem.h"
+#include "spscqueue.h"
+#include "sync.h"
 
 #include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
+#include <threads.h>
 
-typedef struct arm_state {
+struct arm {
+    sync_t sync;
     arm_cpu_t cpu;
-    uint32_t *flash, *ram;
-} arm_state_t;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-bool arm_state_init(arm_state_t *state);
-void arm_state_destroy(arm_state_t *state);
-void arm_state_reset(arm_state_t *state);
-void arm_state_load(arm_state_t *state, FILE *file);
-
-#ifdef __cplusplus
-}
-#endif
+    arm_mem_t mem;
+    spsc_queue_t usart[2];
+    thrd_t thrd;
+    bool debug;
+};
 
 #endif
