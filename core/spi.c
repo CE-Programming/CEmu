@@ -1,4 +1,5 @@
 #include "spi.h"
+#include "coproc.h"
 #include "cpu.h"
 #include "debug/debug.h"
 #include "emu.h"
@@ -30,9 +31,15 @@ static uint8_t null_spi_transfer(uint32_t txData, uint32_t *rxData) {
 
 static void spi_set_device_funcs(void) {
     if (spi.arm) {
-        spi.device_select = null_spi_select;
-        spi.device_peek = null_spi_peek;
-        spi.device_transfer = null_spi_transfer;
+        if (asic.python) {
+            spi.device_select = coproc_spi_select;
+            spi.device_peek = coproc_spi_peek;
+            spi.device_transfer = coproc_spi_transfer;
+        } else {
+            spi.device_select = null_spi_select;
+            spi.device_peek = null_spi_peek;
+            spi.device_transfer = null_spi_transfer;
+        }
     } else {
         spi.device_select = panel_spi_select;
         spi.device_peek = panel_spi_peek;

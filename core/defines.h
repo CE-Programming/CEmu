@@ -98,6 +98,9 @@ static inline uint32_t from_le32(uint32_t w) {
 #define to_le16 from_le16
 #define to_le32 from_le32
 
+#define PASTE(x, y) x ## y
+#define CONCAT(x, y) PASTE(x, y)
+
 #define GETMASK(index, size) (((1U << (size)) - 1) << (index))
 #define READFROM(data, index, size) (((data) & GETMASK((index), (size))) >> (index))
 #define WRITE(data, index, size, value) ((data) = ((data) & (~GETMASK((index), (size)))) | ((uint32_t)(value) << (index)))
