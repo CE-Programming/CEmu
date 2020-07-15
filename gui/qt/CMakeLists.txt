@@ -77,7 +77,8 @@ qt_add_executable(CEmu ${MAYBE_MACOSX_BUNDLE}
     ../../core/arm/arm.c ../../core/arm/arm.h
     ../../core/arm/armcpu.c ../../core/arm/armcpu.h
     ../../core/arm/armmem.c ../../core/arm/armmem.h
-    ../../core/arm/armstate.c ../../core/arm/armstate.h
+    ../../core/arm/armstate.h
+    ../../core/arm/spscqueue.c ../../core/arm/spscqueue.h
     ../../core/arm/sync.c ../../core/arm/sync.h
     ../../core/asic.c ../../core/asic.h
     ../../core/atomics.h
@@ -180,6 +181,10 @@ qt_add_executable(CEmu ${MAYBE_MACOSX_BUNDLE}
     tivars_lib_cpp/src/tivarslib_utils.cpp tivars_lib_cpp/src/tivarslib_utils.h
     utils.cpp utils.h
     visualizerwidget.cpp visualizerwidget.h
+)
+
+target_include_directories(CEmu PRIVATE
+    ../../core/arm/CMSIS/Core/Include
 )
 
 # TODO better, see https://stackoverflow.com/a/21028226/378298

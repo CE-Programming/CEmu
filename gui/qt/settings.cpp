@@ -5,6 +5,7 @@
 #include "utils.h"
 
 #include "../../core/schedule.h"
+#include "../../core/coproc.h"
 #include "../../core/cpu.h"
 #include "../../core/emu.h"
 #include "../../core/link.h"
@@ -80,6 +81,7 @@ const QString MainWindow::SETTING_SLOT_NAMES                = QStringLiteral("Sl
 const QString MainWindow::SETTING_SLOT_PATHS                = QStringLiteral("Slot/paths");
 const QString MainWindow::SETTING_IMAGE_PATH                = QStringLiteral("image_path");
 const QString MainWindow::SETTING_ROM_PATH                  = QStringLiteral("rom_path");
+const QString MainWindow::SETTING_ARM_ROM_PATH              = QStringLiteral("arm_rom_path");
 const QString MainWindow::SETTING_STATUS_INTERVAL           = QStringLiteral("status_interval");
 const QString MainWindow::SETTING_FIRST_RUN                 = QStringLiteral("first_run");
 const QString MainWindow::SETTING_UI_EDIT_MODE              = QStringLiteral("ui_edit_mode");
@@ -130,9 +132,10 @@ void MainWindow::setPortable(bool state) {
     // Get all new paths, in absolute
     const QString newConfigPath = QFileInfo((state ? dir.path() : configPath) + SETTING_DEFAULT_CONFIG_FILE).absoluteFilePath();
     const QString newConfigDirPath = QDir::cleanPath(QFileInfo(newConfigPath).absolutePath());
+    QString newRomPath = m_pathRom; // No change here
+    QString newArmRomPath = m_pathArmRom; // No change here
     QString newDebugPath = newConfigDirPath + SETTING_DEFAULT_DEBUG_FILE;
     QString newImagePath = newConfigDirPath + SETTING_DEFAULT_IMAGE_FILE;
-    QString newRomPath = m_pathRom; // No change here
 
     // Update the FS (still using absolute paths)
     QFile(m_pathConfig).copy(newConfigPath);
@@ -157,9 +160,10 @@ void MainWindow::setPortable(bool state) {
 
     // Update new QSettings (memory + FS)
     m_config = new QSettings(newConfigPath, QSettings::IniFormat); // Path is absolute
+    m_config->setValue(SETTING_ROM_PATH, newRomPath);
+    m_config->setValue(SETTING_ARM_ROM_PATH, newArmRomPath);
     m_config->setValue(SETTING_DEBUGGER_IMAGE_PATH, newDebugPath);
     m_config->setValue(SETTING_IMAGE_PATH, newImagePath);
-    m_config->setValue(SETTING_ROM_PATH, newRomPath);
     m_config->sync();
 
     ui->pathDebug->setText(newDebugPath);
@@ -479,6 +483,20 @@ void MainWindow::setCalcSkinTopFromType(bool python) {
         fileName = python ? "ti84pce_py.png" : "ti84pce.png";
     }
     ui->calcSkinTop->setStyleSheet(".QFrame { border-image: url(:/skin/resources/skin/" + fileName + ") 0 0 0 0 stretch stretch; }");
+}
+
+void MainWindow::setArmRom() {
+    m_pathArmRom = QFileDialog::getOpenFileName(this, tr("Set ARM ROM Image"),
+                                                m_dir.absolutePath(),
+                                                tr("ROM files (*.rom);;All files (*.*)"));
+    if (!m_pathArmRom.isEmpty()) {
+        m_dir = QFileInfo(m_pathArmRom).absoluteDir();
+        m_config->setValue(SETTING_ARM_ROM_PATH, m_pathArmRom);
+        ui->pathArmRom->setText(m_pathArmRom);
+        if (guiEmuValid) {
+            coproc_load(m_pathArmRom.toUtf8().constData());
+        }
+    }
 }
 
 void MainWindow::setImagePath() {

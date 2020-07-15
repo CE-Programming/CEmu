@@ -2,6 +2,11 @@
 #define COPROC_H
 
 #include "arm/arm.h"
+#include "port.h"
+#include "uart.h"
+
+#include <stdbool.h>
+#include <stdint.h>
 
 typedef struct coproc_state {
     arm_t *arm;
@@ -13,9 +18,13 @@ extern "C" {
 
 extern coproc_state_t state;
 
-void coproc_init(void);
 void coproc_reset(void);
 bool coproc_load(const char *path);
+void coproc_uart_transmit(const uart_transfer_t *transfer);
+bool coproc_uart_receive(uart_transfer_t *transfer);
+uint8_t coproc_spi_select(uint32_t *rxData);
+uint8_t coproc_spi_transfer(uint32_t txData, uint32_t *rxData);
+void coproc_spi_deselect(void);
 
 #ifdef __cplusplus
 }
