@@ -13,6 +13,7 @@
 #include "../../core/emu.h"
 #include "../../core/asic.h"
 #include "../../core/cpu.h"
+#include "../../core/coproc.h"
 #include "../../core/mem.h"
 #include "../../core/extras.h"
 #include "../../core/link.h"
@@ -402,6 +403,7 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     // other gui actions
     connect(ui->checkAllowGroupDrag, &QCheckBox::stateChanged, this, &MainWindow::setDockGroupDrag);
     connect(ui->buttonRunSetup, &QPushButton::clicked, this, &MainWindow::runSetup);
+    connect(ui->buttonChangeArmRom, &QPushButton::clicked, this, &MainWindow::setArmRom);
     connect(ui->scaleLCD, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::setLcdScale);
     connect(ui->upscaleLCD, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::setLcdUpscale);
     connect(ui->fullscreenLCD, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &MainWindow::setLcdFullscreen);
@@ -658,6 +660,9 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
             QStringLiteral(" | ") + com.getServerName() + QStringLiteral("]\n"));
 
     m_dir.setPath(m_config->value(SETTING_CURRENT_DIR, appDir().path()).toString());
+
+    m_pathArmRom = m_config->value(SETTING_ARM_ROM_PATH).toString();
+    ui->pathArmRom->setText(m_pathArmRom);
 
     if (!m_config->contains(SETTING_IMAGE_PATH) || m_portable) {
         QString path = QFileInfo(m_pathConfig).absolutePath() + SETTING_DEFAULT_IMAGE_FILE;
@@ -1802,6 +1807,9 @@ void MainWindow::showAsicRevInfo(const QList<int>& supportedRevs, int loadedRev,
     }
 
     setCalcSkinTopFromType(python);
+    ui->labelArmRom->setVisible(python);
+    ui->pathArmRom->setVisible(python);
+    ui->buttonChangeArmRom->setVisible(python);
 }
 
 void MainWindow::showEmuSpeed(double emuTime) {
@@ -2519,7 +2527,6 @@ void MainWindow::resetEmu() {
 }
 
 void MainWindow::emuCheck(emu_state_t state, emu_data_t type) {
-
     /* don't need to do anything if just loading ram */
     if (type == EMU_DATA_RAM && state == EMU_STATE_VALID) {
         guiEmuValid = true;
@@ -2553,6 +2560,7 @@ void MainWindow::emuCheck(emu_state_t state, emu_data_t type) {
                 static_cast<VisualizerWidget*>(dock->widget())->forceUpdate();
             }
         }
+        coproc_load(m_pathArmRom.toUtf8().constData());
         emu.start();
         guiEmuValid = true;
     }

@@ -210,7 +210,7 @@ SOURCES += \
     ../../core/arm/arm.c \
     ../../core/arm/armcpu.c \
     ../../core/arm/armmem.c \
-    ../../core/arm/armstate.c \
+    ../../core/arm/spscqueue.c \
     ../../core/arm/sync.c \
     ../../core/asic.c \
     ../../core/bootver.c \
@@ -317,12 +317,15 @@ SOURCES +=  ../../tests/autotester/autotester_cli.cpp \
     ../../core/os/os-win32.c
 }
 
+INCLUDEPATH += ../../core/arm/CMSIS/Core/Include
+
 HEADERS  += \
     ../../tests/autotester/autotester.h \
     ../../core/arm/arm.h \
     ../../core/arm/armcpu.h \
     ../../core/arm/armmem.h \
     ../../core/arm/armstate.h \
+    ../../core/arm/spscqueue.h \
     ../../core/arm/sync.h \
     ../../core/asic.h \
     ../../core/bootver.h \
