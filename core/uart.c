@@ -1,4 +1,6 @@
 #include "uart.h"
+#include "asic.h"
+#include "coproc.h"
 #include "emu.h"
 #include "interrupt.h"
 #include "schedule.h"
@@ -83,9 +85,14 @@ static void uart_set_device_funcs(void) {
         uart_set_modem_outputs(0);
     }
     else {
-        /* For non-Python models, discard transmitted characters */
-        uart.transmit_char = uart_transmit_null;
-        uart.receive_char = uart_receive_null;
+        if (asic.python) {
+            uart.transmit_char = coproc_uart_transmit;
+            uart.receive_char = coproc_uart_receive;
+        } else {
+            /* For non-Python models, discard transmitted characters */
+            uart.transmit_char = uart_transmit_null;
+            uart.receive_char = uart_receive_null;
+        }
         /* Modem outputs seen externally */
         uart_set_modem_outputs(uart.mcr & UART_MSR_BITS);
     }
@@ -103,7 +110,7 @@ static uint32_t uart_char_ticks(void) {
 }
 
 static bool uart_timer_should_run(void) {
-    return uart.txActive || uart.rxTimeoutChars;
+    return asic.python || uart.txActive || uart.rxTimeoutChars;
 }
 
 static void uart_set_timer(bool force) {
