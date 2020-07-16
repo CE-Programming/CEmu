@@ -128,6 +128,22 @@ void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
             this->setAttribute(Qt::WA_TranslucentBackground, true);
             this->setAutoFillBackground(true);
             break;
+        case KEYPAD_MATTEBLACK:
+            cCenter = QColor::fromRgb(0x0F0F0F);
+            cSides  = QColor::fromRgb(0x0F0F0F);
+            break;
+        case KEYPAD_TANGENTTEAL:
+            cCenter = QColor::fromRgb(0x005062);
+            cSides  = cCenter.lighter(150);
+            cOther  = QColor::fromRgb(0x00272C);
+            cGraph  = QColor::fromRgb(0x6C7F90);
+            break;
+        case KEYPAD_TOTALLYTEAL:
+            cCenter = QColor::fromRgb(0x108798);
+            cSides  = cCenter.darker(200);
+            cOther  = QColor::fromRgb(0x125E68);
+            cGraph  = QColor::fromRgb(0x2E4854);
+            break;
     }
 
     mBackground = {sBaseRect.topLeft(), sBaseRect.topRight()};

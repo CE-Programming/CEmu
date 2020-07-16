@@ -761,6 +761,9 @@ void MainWindow::keypadChanged() {
     else if (name == QStringLiteral("buttonMint"))         color = KEYPAD_MINT;
     else if (name == QStringLiteral("buttonRoseGold"))     color = KEYPAD_ROSEGOLD;
     else if (name == QStringLiteral("buttonCrystalClear")) color = KEYPAD_CRYSTALCLEAR;
+    else if (name == QStringLiteral("buttonMatteBlack"))   color = KEYPAD_MATTEBLACK;
+    else if (name == QStringLiteral("buttonTangentTeal"))  color = KEYPAD_TANGENTTEAL;
+    else if (name == QStringLiteral("buttonTotallyTeal"))  color = KEYPAD_TOTALLYTEAL;
 
     setKeypadColor(color);
 }

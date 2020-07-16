@@ -427,7 +427,9 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     connect(ui->buttonCoral, &QPushButton::clicked, this, &MainWindow::keypadChanged);
     connect(ui->buttonMint, &QPushButton::clicked, this, &MainWindow::keypadChanged);
     connect(ui->buttonRoseGold, &QPushButton::clicked, this, &MainWindow::keypadChanged);
-    connect(ui->buttonCrystalClear, &QPushButton::clicked, this, &MainWindow::keypadChanged);
+    connect(ui->buttonMatteBlack, &QPushButton::clicked, this, &MainWindow::keypadChanged);
+    connect(ui->buttonTangentTeal, &QPushButton::clicked, this, &MainWindow::keypadChanged);
+    connect(ui->buttonTotallyTeal, &QPushButton::clicked, this, &MainWindow::keypadChanged);
 
     // gui configurations
     connect(ui->actionExportWindowConfig, &QAction::triggered, this, &MainWindow::guiExport);

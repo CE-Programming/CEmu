@@ -7189,21 +7189,21 @@
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>27</width>
-                   <height>27</height>
+                   <width>25</width>
+                   <height>25</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>27</width>
-                   <height>27</height>
+                   <width>25</width>
+                   <height>25</height>
                   </size>
                  </property>
                  <property name="focusPolicy">
                   <enum>Qt::NoFocus</enum>
                  </property>
                  <property name="styleSheet">
-                  <string notr="true">QPushButton {  background-color: rgb(25, 25, 25); border-radius:6px; }
+                  <string notr="true">QPushButton {  background-color: rgb(15, 15, 15); border-radius:6px; }
 QPushButton:pressed { 
 	border: 3px solid gray;
 	border-radius: 8px; 
@@ -7211,6 +7211,440 @@ QPushButton:pressed {
                  </property>
                  <property name="text">
                   <string/>
+                 </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="buttonMatteBlack">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton {  background-color: rgb(1,1,1); border-radius:6px; }
+QPushButton:pressed { 
+	border: 3px solid gray;
+	border-radius: 8px; 
+}</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="buttonTrueBlue">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton { background-color: rgb(56, 94, 157); border-radius:6px; }
+QPushButton:pressed { 
+	border: 3px solid gray;
+	border-radius: 8px; 
+}</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="buttonLightning">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton {  background-color: rgb(0, 119, 200); border-radius:6px; }
+QPushButton:pressed { 
+	border: 3px solid gray;
+	border-radius: 8px; 
+}</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="buttonDenim">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton {  background-color: rgb(0, 60, 113); border-radius:6px; }QPushButton:pressed { 
+	border: 3px solid gray;
+	border-radius: 8px; 
+}
+</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="buttonTangentTeal">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="palette">
+                  <palette>
+                   <active>
+                    <colorrole role="Button">
+                     <brush brushstyle="SolidPattern">
+                      <color alpha="255">
+                       <red>0</red>
+                       <green>81</green>
+                       <blue>99</blue>
+                      </color>
+                     </brush>
+                    </colorrole>
+                    <colorrole role="Base">
+                     <brush brushstyle="SolidPattern">
+                      <color alpha="255">
+                       <red>0</red>
+                       <green>81</green>
+                       <blue>99</blue>
+                      </color>
+                     </brush>
+                    </colorrole>
+                    <colorrole role="Window">
+                     <brush brushstyle="SolidPattern">
+                      <color alpha="255">
+                       <red>0</red>
+                       <green>81</green>
+                       <blue>99</blue>
+                      </color>
+                     </brush>
+                    </colorrole>
+                   </active>
+                   <inactive>
+                    <colorrole role="Button">
+                     <brush brushstyle="SolidPattern">
+                      <color alpha="255">
+                       <red>0</red>
+                       <green>81</green>
+                       <blue>99</blue>
+                      </color>
+                     </brush>
+                    </colorrole>
+                    <colorrole role="Base">
+                     <brush brushstyle="SolidPattern">
+                      <color alpha="255">
+                       <red>0</red>
+                       <green>81</green>
+                       <blue>99</blue>
+                      </color>
+                     </brush>
+                    </colorrole>
+                    <colorrole role="Window">
+                     <brush brushstyle="SolidPattern">
+                      <color alpha="255">
+                       <red>0</red>
+                       <green>81</green>
+                       <blue>99</blue>
+                      </color>
+                     </brush>
+                    </colorrole>
+                   </inactive>
+                   <disabled>
+                    <colorrole role="Button">
+                     <brush brushstyle="SolidPattern">
+                      <color alpha="255">
+                       <red>0</red>
+                       <green>81</green>
+                       <blue>99</blue>
+                      </color>
+                     </brush>
+                    </colorrole>
+                    <colorrole role="Base">
+                     <brush brushstyle="SolidPattern">
+                      <color alpha="255">
+                       <red>0</red>
+                       <green>81</green>
+                       <blue>99</blue>
+                      </color>
+                     </brush>
+                    </colorrole>
+                    <colorrole role="Window">
+                     <brush brushstyle="SolidPattern">
+                      <color alpha="255">
+                       <red>0</red>
+                       <green>81</green>
+                       <blue>99</blue>
+                      </color>
+                     </brush>
+                    </colorrole>
+                   </disabled>
+                  </palette>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton {  background-color: #005163; border-radius:6px; }
+QPushButton:pressed { 
+	border: 3px solid gray;
+	border-radius: 8px; 
+}</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="buttonTotallyTeal">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="palette">
+                  <palette>
+                   <active>
+                    <colorrole role="Button">
+                     <brush brushstyle="SolidPattern">
+                      <color alpha="255">
+                       <red>18</red>
+                       <green>150</green>
+                       <blue>136</blue>
+                      </color>
+                     </brush>
+                    </colorrole>
+                    <colorrole role="Base">
+                     <brush brushstyle="SolidPattern">
+                      <color alpha="255">
+                       <red>18</red>
+                       <green>150</green>
+                       <blue>136</blue>
+                      </color>
+                     </brush>
+                    </colorrole>
+                    <colorrole role="Window">
+                     <brush brushstyle="SolidPattern">
+                      <color alpha="255">
+                       <red>18</red>
+                       <green>150</green>
+                       <blue>136</blue>
+                      </color>
+                     </brush>
+                    </colorrole>
+                   </active>
+                   <inactive>
+                    <colorrole role="Button">
+                     <brush brushstyle="SolidPattern">
+                      <color alpha="255">
+                       <red>18</red>
+                       <green>150</green>
+                       <blue>136</blue>
+                      </color>
+                     </brush>
+                    </colorrole>
+                    <colorrole role="Base">
+                     <brush brushstyle="SolidPattern">
+                      <color alpha="255">
+                       <red>18</red>
+                       <green>150</green>
+                       <blue>136</blue>
+                      </color>
+                     </brush>
+                    </colorrole>
+                    <colorrole role="Window">
+                     <brush brushstyle="SolidPattern">
+                      <color alpha="255">
+                       <red>18</red>
+                       <green>150</green>
+                       <blue>136</blue>
+                      </color>
+                     </brush>
+                    </colorrole>
+                   </inactive>
+                   <disabled>
+                    <colorrole role="Button">
+                     <brush brushstyle="SolidPattern">
+                      <color alpha="255">
+                       <red>18</red>
+                       <green>150</green>
+                       <blue>136</blue>
+                      </color>
+                     </brush>
+                    </colorrole>
+                    <colorrole role="Base">
+                     <brush brushstyle="SolidPattern">
+                      <color alpha="255">
+                       <red>18</red>
+                       <green>150</green>
+                       <blue>136</blue>
+                      </color>
+                     </brush>
+                    </colorrole>
+                    <colorrole role="Window">
+                     <brush brushstyle="SolidPattern">
+                      <color alpha="255">
+                       <red>18</red>
+                       <green>150</green>
+                       <blue>136</blue>
+                      </color>
+                     </brush>
+                    </colorrole>
+                   </disabled>
+                  </palette>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton {  background-color: #129688; border-radius:6px; }
+QPushButton:pressed { 
+	border: 3px solid gray;
+	border-radius: 8px; 
+}</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
                  </property>
                 </widget>
                </item>
@@ -7224,14 +7658,14 @@ QPushButton:pressed {
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>27</width>
-                   <height>27</height>
+                   <width>25</width>
+                   <height>25</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>27</width>
-                   <height>27</height>
+                   <width>25</width>
+                   <height>25</height>
                   </size>
                  </property>
                  <property name="focusPolicy">
@@ -7247,6 +7681,12 @@ QPushButton:pressed {
                  <property name="text">
                   <string/>
                  </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
                 </widget>
                </item>
                <item>
@@ -7259,14 +7699,14 @@ QPushButton:pressed {
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>27</width>
-                   <height>27</height>
+                   <width>25</width>
+                   <height>25</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>27</width>
-                   <height>27</height>
+                   <width>25</width>
+                   <height>25</height>
                   </size>
                  </property>
                  <property name="palette">
@@ -7373,6 +7813,12 @@ QPushButton:pressed {
                  <property name="text">
                   <string/>
                  </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
                 </widget>
                </item>
                <item>
@@ -7385,14 +7831,14 @@ QPushButton:pressed {
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>27</width>
-                   <height>27</height>
+                   <width>25</width>
+                   <height>25</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>27</width>
-                   <height>27</height>
+                   <width>25</width>
+                   <height>25</height>
                   </size>
                  </property>
                  <property name="focusPolicy">
@@ -7408,6 +7854,12 @@ QPushButton:pressed {
                  <property name="text">
                   <string/>
                  </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
                 </widget>
                </item>
                <item>
@@ -7420,14 +7872,14 @@ QPushButton:pressed {
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>27</width>
-                   <height>27</height>
+                   <width>25</width>
+                   <height>25</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>27</width>
-                   <height>27</height>
+                   <width>25</width>
+                   <height>25</height>
                   </size>
                  </property>
                  <property name="palette">
@@ -7534,6 +7986,12 @@ QPushButton:pressed {
                  <property name="text">
                   <string/>
                  </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
                 </widget>
                </item>
                <item>
@@ -7546,14 +8004,14 @@ QPushButton:pressed {
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>27</width>
-                   <height>27</height>
+                   <width>25</width>
+                   <height>25</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>27</width>
-                   <height>27</height>
+                   <width>25</width>
+                   <height>25</height>
                   </size>
                  </property>
                  <property name="focusPolicy">
@@ -7569,341 +8027,11 @@ QPushButton:pressed {
                  <property name="text">
                   <string/>
                  </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="buttonDenim">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
+                 <property name="iconSize">
                   <size>
-                   <width>27</width>
-                   <height>27</height>
+                   <width>25</width>
+                   <height>25</height>
                   </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>27</width>
-                   <height>27</height>
-                  </size>
-                 </property>
-                 <property name="focusPolicy">
-                  <enum>Qt::NoFocus</enum>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton {  background-color: rgb(0, 60, 113); border-radius:6px; }QPushButton:pressed { 
-	border: 3px solid gray;
-	border-radius: 8px; 
-}
-</string>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="buttonTrueBlue">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>27</width>
-                   <height>27</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>27</width>
-                   <height>27</height>
-                  </size>
-                 </property>
-                 <property name="focusPolicy">
-                  <enum>Qt::NoFocus</enum>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton { background-color: rgb(56, 94, 157); border-radius:6px; }
-QPushButton:pressed { 
-	border: 3px solid gray;
-	border-radius: 8px; 
-}</string>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="buttonLightning">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>27</width>
-                   <height>27</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>27</width>
-                   <height>27</height>
-                  </size>
-                 </property>
-                 <property name="focusPolicy">
-                  <enum>Qt::NoFocus</enum>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton {  background-color: rgb(0, 119, 200); border-radius:6px; }
-QPushButton:pressed { 
-	border: 3px solid gray;
-	border-radius: 8px; 
-}</string>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="buttonPlum">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>27</width>
-                   <height>27</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>27</width>
-                   <height>27</height>
-                  </size>
-                 </property>
-                 <property name="focusPolicy">
-                  <enum>Qt::NoFocus</enum>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton {  background-color: rgb(131, 0, 101); border-radius:6px; }
-QPushButton:pressed { 
-	border: 3px solid gray;
-	border-radius: 8px; 
-}</string>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="buttonRed">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>27</width>
-                   <height>27</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>27</width>
-                   <height>27</height>
-                  </size>
-                 </property>
-                 <property name="focusPolicy">
-                  <enum>Qt::NoFocus</enum>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton {  background-color: rgb(171, 35, 40); border-radius:6px; }
-QPushButton:pressed { 
-	border: 3px solid gray;
-	border-radius: 8px; 
-}</string>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="buttonPink">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>27</width>
-                   <height>27</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>27</width>
-                   <height>27</height>
-                  </size>
-                 </property>
-                 <property name="focusPolicy">
-                  <enum>Qt::NoFocus</enum>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton {  background-color: rgb(223, 25, 149); border-radius:6px; }
-QPushButton:pressed { 
-	border: 3px solid gray;
-	border-radius: 8px; 
-}</string>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="buttonCoral">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>27</width>
-                   <height>27</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>27</width>
-                   <height>27</height>
-                  </size>
-                 </property>
-                 <property name="palette">
-                  <palette>
-                   <active>
-                    <colorrole role="Button">
-                     <brush brushstyle="SolidPattern">
-                      <color alpha="255">
-                       <red>253</red>
-                       <green>109</green>
-                       <blue>153</blue>
-                      </color>
-                     </brush>
-                    </colorrole>
-                    <colorrole role="Base">
-                     <brush brushstyle="SolidPattern">
-                      <color alpha="255">
-                       <red>253</red>
-                       <green>109</green>
-                       <blue>153</blue>
-                      </color>
-                     </brush>
-                    </colorrole>
-                    <colorrole role="Window">
-                     <brush brushstyle="SolidPattern">
-                      <color alpha="255">
-                       <red>253</red>
-                       <green>109</green>
-                       <blue>153</blue>
-                      </color>
-                     </brush>
-                    </colorrole>
-                   </active>
-                   <inactive>
-                    <colorrole role="Button">
-                     <brush brushstyle="SolidPattern">
-                      <color alpha="255">
-                       <red>253</red>
-                       <green>109</green>
-                       <blue>153</blue>
-                      </color>
-                     </brush>
-                    </colorrole>
-                    <colorrole role="Base">
-                     <brush brushstyle="SolidPattern">
-                      <color alpha="255">
-                       <red>253</red>
-                       <green>109</green>
-                       <blue>153</blue>
-                      </color>
-                     </brush>
-                    </colorrole>
-                    <colorrole role="Window">
-                     <brush brushstyle="SolidPattern">
-                      <color alpha="255">
-                       <red>253</red>
-                       <green>109</green>
-                       <blue>153</blue>
-                      </color>
-                     </brush>
-                    </colorrole>
-                   </inactive>
-                   <disabled>
-                    <colorrole role="Button">
-                     <brush brushstyle="SolidPattern">
-                      <color alpha="255">
-                       <red>253</red>
-                       <green>109</green>
-                       <blue>153</blue>
-                      </color>
-                     </brush>
-                    </colorrole>
-                    <colorrole role="Base">
-                     <brush brushstyle="SolidPattern">
-                      <color alpha="255">
-                       <red>253</red>
-                       <green>109</green>
-                       <blue>153</blue>
-                      </color>
-                     </brush>
-                    </colorrole>
-                    <colorrole role="Window">
-                     <brush brushstyle="SolidPattern">
-                      <color alpha="255">
-                       <red>253</red>
-                       <green>109</green>
-                       <blue>153</blue>
-                      </color>
-                     </brush>
-                    </colorrole>
-                   </disabled>
-                  </palette>
-                 </property>
-                 <property name="focusPolicy">
-                  <enum>Qt::NoFocus</enum>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QPushButton {  background-color: rgb(253, 109, 153); border-radius:6px; }
-QPushButton:pressed { 
-	border: 3px solid gray;
-	border-radius: 8px; 
-}</string>
-                 </property>
-                 <property name="text">
-                  <string/>
                  </property>
                 </widget>
                </item>
@@ -7917,14 +8045,14 @@ QPushButton:pressed {
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>27</width>
-                   <height>27</height>
+                   <width>25</width>
+                   <height>25</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>27</width>
-                   <height>27</height>
+                   <width>25</width>
+                   <height>25</height>
                   </size>
                  </property>
                  <property name="palette">
@@ -8031,10 +8159,16 @@ QPushButton:pressed {
                  <property name="text">
                   <string/>
                  </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="buttonCrystalClear">
+                <widget class="QPushButton" name="buttonCoral">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                    <horstretch>0</horstretch>
@@ -8043,14 +8177,14 @@ QPushButton:pressed {
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>10</width>
-                   <height>15</height>
+                   <width>25</width>
+                   <height>25</height>
                   </size>
                  </property>
                  <property name="maximumSize">
                   <size>
-                   <width>10</width>
-                   <height>15</height>
+                   <width>25</width>
+                   <height>25</height>
                   </size>
                  </property>
                  <property name="palette">
@@ -8058,28 +8192,28 @@ QPushButton:pressed {
                    <active>
                     <colorrole role="Button">
                      <brush brushstyle="SolidPattern">
-                      <color alpha="0">
-                       <red>255</red>
-                       <green>255</green>
-                       <blue>255</blue>
+                      <color alpha="255">
+                       <red>253</red>
+                       <green>109</green>
+                       <blue>153</blue>
                       </color>
                      </brush>
                     </colorrole>
                     <colorrole role="Base">
                      <brush brushstyle="SolidPattern">
-                      <color alpha="0">
-                       <red>255</red>
-                       <green>255</green>
-                       <blue>255</blue>
+                      <color alpha="255">
+                       <red>253</red>
+                       <green>109</green>
+                       <blue>153</blue>
                       </color>
                      </brush>
                     </colorrole>
                     <colorrole role="Window">
                      <brush brushstyle="SolidPattern">
-                      <color alpha="0">
-                       <red>255</red>
-                       <green>255</green>
-                       <blue>255</blue>
+                      <color alpha="255">
+                       <red>253</red>
+                       <green>109</green>
+                       <blue>153</blue>
                       </color>
                      </brush>
                     </colorrole>
@@ -8087,28 +8221,28 @@ QPushButton:pressed {
                    <inactive>
                     <colorrole role="Button">
                      <brush brushstyle="SolidPattern">
-                      <color alpha="0">
-                       <red>255</red>
-                       <green>255</green>
-                       <blue>255</blue>
+                      <color alpha="255">
+                       <red>253</red>
+                       <green>109</green>
+                       <blue>153</blue>
                       </color>
                      </brush>
                     </colorrole>
                     <colorrole role="Base">
                      <brush brushstyle="SolidPattern">
-                      <color alpha="0">
-                       <red>255</red>
-                       <green>255</green>
-                       <blue>255</blue>
+                      <color alpha="255">
+                       <red>253</red>
+                       <green>109</green>
+                       <blue>153</blue>
                       </color>
                      </brush>
                     </colorrole>
                     <colorrole role="Window">
                      <brush brushstyle="SolidPattern">
-                      <color alpha="0">
-                       <red>255</red>
-                       <green>255</green>
-                       <blue>255</blue>
+                      <color alpha="255">
+                       <red>253</red>
+                       <green>109</green>
+                       <blue>153</blue>
                       </color>
                      </brush>
                     </colorrole>
@@ -8116,28 +8250,28 @@ QPushButton:pressed {
                    <disabled>
                     <colorrole role="Button">
                      <brush brushstyle="SolidPattern">
-                      <color alpha="0">
-                       <red>255</red>
-                       <green>255</green>
-                       <blue>255</blue>
+                      <color alpha="255">
+                       <red>253</red>
+                       <green>109</green>
+                       <blue>153</blue>
                       </color>
                      </brush>
                     </colorrole>
                     <colorrole role="Base">
                      <brush brushstyle="SolidPattern">
-                      <color alpha="0">
-                       <red>255</red>
-                       <green>255</green>
-                       <blue>255</blue>
+                      <color alpha="255">
+                       <red>253</red>
+                       <green>109</green>
+                       <blue>153</blue>
                       </color>
                      </brush>
                     </colorrole>
                     <colorrole role="Window">
                      <brush brushstyle="SolidPattern">
-                      <color alpha="0">
-                       <red>255</red>
-                       <green>255</green>
-                       <blue>255</blue>
+                      <color alpha="255">
+                       <red>253</red>
+                       <green>109</green>
+                       <blue>153</blue>
                       </color>
                      </brush>
                     </colorrole>
@@ -8148,10 +8282,143 @@ QPushButton:pressed {
                   <enum>Qt::NoFocus</enum>
                  </property>
                  <property name="styleSheet">
-                  <string notr="true">QPushButton {  background-color: rgba(255,255,255,0); border-radius:6px; }</string>
+                  <string notr="true">QPushButton {  background-color: rgb(253, 109, 153); border-radius:6px; }
+QPushButton:pressed { 
+	border: 3px solid gray;
+	border-radius: 8px; 
+}</string>
                  </property>
                  <property name="text">
                   <string/>
+                 </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="buttonPlum">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton {  background-color: rgb(131, 0, 101); border-radius:6px; }
+QPushButton:pressed { 
+	border: 3px solid gray;
+	border-radius: 8px; 
+}</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="buttonPink">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton {  background-color: rgb(223, 25, 149); border-radius:6px; }
+QPushButton:pressed { 
+	border: 3px solid gray;
+	border-radius: 8px; 
+}</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="buttonRed">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
+                 <property name="focusPolicy">
+                  <enum>Qt::NoFocus</enum>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">QPushButton {  background-color: rgb(171, 35, 40); border-radius:6px; }
+QPushButton:pressed { 
+	border: 3px solid gray;
+	border-radius: 8px; 
+}</string>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
                  </property>
                 </widget>
                </item>
