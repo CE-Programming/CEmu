@@ -22,7 +22,10 @@ else
     CFLAGS += -std=c99
 endif
 
-OBJS  = $(patsubst %.c,   %.o, $(shell find . -name usb -prune -or -name \*.c -print))
+# source: http://blog.jgc.org/2011/07/gnu-make-recursive-wildcard-function.html
+rwildcard = $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2)$(filter $(subst *,%,$2),$d))
+
+OBJS = $(patsubst %.c,%.o,$(filter-out arm/% usb/%,$(call rwildcard,,*.c)))
 
 STATICLIB = libcemucore.a
 
