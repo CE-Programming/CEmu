@@ -35,10 +35,10 @@ install:
   - vcpkg install libarchive:x64-windows-static --recurse
 
 # Install libpng-apng for all targets
-  - vcpkg install libpng-apng:x86-windows --recurse
-  - vcpkg install libpng-apng:x64-windows --recurse
-  - vcpkg install libpng-apng:x86-windows-static --recurse
-  - vcpkg install libpng-apng:x64-windows-static --recurse
+  - vcpkg install libpng[core,apng]:x86-windows --recurse
+  - vcpkg install libpng[core,apng]:x64-windows --recurse
+  - vcpkg install libpng[core,apng]:x86-windows-static --recurse
+  - vcpkg install libpng[core,apng]:x64-windows-static --recurse
   
   - md build_32
   - md build_64
