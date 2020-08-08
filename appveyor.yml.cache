@@ -1,0 +1,2 @@
+# This file is used as a handy way to clear the VCPkg cache on appveyor.
+# Touch or update this file in a commit to do so.

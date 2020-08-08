@@ -111,8 +111,8 @@ on_failure:
 #  - C:\Python35\python -u gui\qt\deploy-scripts\build_status.py FAILURE
 
 cache:
-  - build_state -> appveyor.yml
-  - c:\tools\vcpkg\installed\
+  - build_state -> appveyor.yml, appveyor.yml.cache
+  - c:\tools\vcpkg\installed\ -> appveyor.yml.cache
 
 artifacts:
  - path: deploy\*-win32-release-static*.zip
