@@ -24,7 +24,7 @@ install:
 # Update vcpkg to make things work
   - cd "C:\Tools\vcpkg"
   - git fetch
-  - git checkout 2019.07
+  - git checkout 2020.06
   - .\bootstrap-vcpkg.bat
   - cd %APPVEYOR_BUILD_FOLDER%
 
