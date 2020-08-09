@@ -8,13 +8,48 @@ on:
   release:
     types: [published]
 
+env:
+  QT_VERSION: "5.15.0"
+
 jobs:
+  # Constants to simplify things
+  
   build:
-    name: Build all targets
+    name: "Build target: ${{ matrix.linking }} (${{ matrix.arch }})"
     runs-on: windows-2019
     
     strategy:
       fail-fast: false
+      matrix:
+        arch: [x86, x64]
+        linking: [dynamic, static]
+        include:
+          - arch: x86
+            arch_name: 32-bit
+            arch_suffix: "32"
+            arch_qt_msvc: win32_msvc2019
+            arch_extra_msbuild_args: ""
+          - arch: x64
+            arch_name: 64-bit
+            arch_suffix: "64"
+            arch_qt_msvc: win64_msvc2019_64
+            arch_extra_msbuild_args: '/p:Platform="x64"'
+          
+          - linking: dynamic
+            linking_name: Dynamic/Shared
+            linking_suffix: dyn
+            linking_build_dir_prefix: build
+          - linking: static
+            linking_name: Static
+            linking_suffix: static
+            linking_build_dir_prefix: build_static
+          
+          - arch: x86
+            linking: static
+            QT5_BIN_DIR: C:\Qt\Qt5.15.0-static\bin
+          - arch: x64
+            linking: static
+            QT5_BIN_DIR: C:\Qt\Qt5.15.0x64-static\bin
 
     env:
       VCPKG_PLATFORM_TOOLSET: v141
@@ -31,52 +66,30 @@ jobs:
     ## Install all major library deps
     
     # Setup caches
-    - name: Cache Qt (32-bit)
-      id: cache-qt-32
+    - name: "Cache shared/dynamic Qt (${{ matrix.arch_name }})"
+      id: "cache-qt"
       uses: actions/cache@v1
+      if: ${{ matrix.linking == 'dynamic' }}
       with:
-        path: ../QtDyn32
-        key: ${{ runner.os }}-QtCache32
-    
-    - name: Cache Qt (64-bit)
-      id: cache-qt-64
-      uses: actions/cache@v1
-      with:
-        path: ../QtDyn64
-        key: ${{ runner.os }}-QtCache64
+        path: ../QtDyn${{ matrix.arch_suffix }}
+        key: ${{ runner.os }}-QtCache${{ matrix.arch_suffix }}
     
     # Install Qt (from pre-defined action)
-    - name: Install Qt (v5.15.0, 32-bit)
+    - name: "Install shared/dynamic Qt (v${{ env.QT_VERSION }}, ${{ matrix.arch_name }})"
       uses: jurplel/install-qt-action@v2
+      if: ${{ matrix.linking == 'dynamic' }}
       with:
-        version: '5.15.0'
+        version: ${{ env.QT_VERSION }}
         host: 'windows'
         target: 'desktop'
-        arch: 'win32_msvc2019'
-        dir: ${{ runner.workspace }}/QtDyn32
-        cached: ${{ steps.cache-qt-32.outputs.cache-hit }}
+        arch: ${{ matrix.arch_qt_msvc }}
+        dir: ${{ runner.workspace }}/QtDyn${{ matrix.arch_suffix }}
+        cached: ${{ steps.cache-qt.outputs.cache-hit }}
     
-    - name: Set Qt location (v5.15.0, 32-bit)
+    - name: "Set shared/dynamic Qt location (v${{ env.QT_VERSION }}, ${{ matrix.arch_name }})"
+      if: ${{ matrix.linking == 'dynamic' }}
       run: |
-        echo '::set-env name=QT5_BIN_DIR_DYNAMIC_32::${{ env.Qt5_DIR }}/bin'
-        echo '::set-env name=QT_PLUGIN_PATH_DYNAMIC_32::${{ env.QT_PLUGIN_PATH }}'
-        echo '::set-env name=QML2_IMPORT_PATH_DYNAMIC_32::${{ env.QML2_IMPORT_PATH }}'
-    
-    - name: Install Qt (v5.15.0, 64-bit)
-      uses: jurplel/install-qt-action@v2
-      with:
-        version: '5.15.0'
-        host: 'windows'
-        target: 'desktop'
-        arch: 'win64_msvc2019_64'
-        dir: ${{ runner.workspace }}/QtDyn64
-        cached: ${{ steps.cache-qt-64.outputs.cache-hit }}
-    
-    - name: Set Qt location (v5.15.0, 64-bit)
-      run: |
-        echo '::set-env name=QT5_BIN_DIR_DYNAMIC_64::${{ env.Qt5_DIR }}/bin'
-        echo '::set-env name=QT_PLUGIN_PATH_DYNAMIC_64::${{ env.QT_PLUGIN_PATH }}'
-        echo '::set-env name=QML2_IMPORT_PATH_DYNAMIC_64::${{ env.QML2_IMPORT_PATH }}'
+        echo '::set-env name=QT5_BIN_DIR::${{ env.Qt5_DIR }}/bin'
     
     - name: Set vcpkg's response file path used as part of cache's key.
       uses: lukka/set-shell-env@master
@@ -95,13 +108,9 @@ jobs:
         vcpkgGitCommitId: 6185aa76504a5025f36754324abf307cc776f3da
         appendedCacheKey: ${{ hashFiles(env.VCPKGRESPONSEFILE) }}
 
-    # Install Python + modules to run our helper script
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
-    
-    - name: Install Python libraries for bootstrap helper script
+    # Install Python modules to run our helper script
+    - name: Install Python libraries for bootstrap helper script (static linking only)
+      if: ${{ matrix.linking == 'static' }}
       run: |
         python -m pip install --upgrade pip
         pip install requests jinja2 irc
@@ -109,13 +118,14 @@ jobs:
     # Install our static dependencies via helper script
     # TODO: get caching working here too
     - name: Install static dependencies via bootstrap helper script
+      if: ${{ matrix.linking == 'static' }}
       run: python -u gui\qt\deploy-scripts\appveyor_helper.py install
 
     # TODO: automate this somehow?
     - name: Set paths to newly installed static Qt libraries
+      if: ${{ matrix.linking == 'static' }}
       run: |
-        echo '::set-env name=QT5_BIN_DIR_STATIC_32::C:\Qt\Qt5.15.0-static\bin'
-        echo '::set-env name=QT5_BIN_DIR_STATIC_64::C:\Qt\Qt5.15.0x64-static\bin'
+        echo '::set-env name=QT5_BIN_DIR::${{ matrix.QT5_BIN_DIR }}'
 
     ## Build time!
     
@@ -129,131 +139,49 @@ jobs:
     - name: Set CEmu version for development (if applicable)
       run: |
         echo '::set-env name=CEMU_VERSION::'
-        echo No version defined, using empty version '${{ env.CEMU_VERSION }}'
+        echo "No version defined, using empty version '${{ env.CEMU_VERSION }}'"
       if: "!github.event.release.tag_name"
     
+    # Set dynamic, matrix-controlled env var
+    - name: Set extra static MSBuild flag, if applicable
+      run: |
+        echo '::set-env name=LINKING_EXTRA_MSBUILD_ARGS::/p:VcpkgTriplet=${{ matrix.arch }}-windows-static'
+        echo "Detected static linking, adding LINKING_EXTRA_MSBUILD_ARGS = '${{ env.LINKING_EXTRA_MSBUILD_ARGS }}'"
+      if: "matrix.linking == 'static'"
+    
     # Setup VS
-    - name: "Setup MSVC++ paths (32-bit target)"
+    - name: "Setup MSVC++ paths (${{ matrix.arch_name }} target)"
       uses: ilammy/msvc-dev-cmd@v1
       with:
-        arch: x86
+        arch: ${{ matrix.arch }}
         toolset: ${{ env.VC_VARS_VERSION }}
     
     # Install vcpkg integration
-    - name: Install vcpkg integration (32-bit)
+    - name: Install vcpkg integration (${{ matrix.arch_name }})
       run: ${{ env.VCPKG_ROOT }}/vcpkg integrate install
     
     # 32-bit dynamic + static builds
-    - name: "Build target: Dynamic/Shared (Debug, 32-bit)"
+    - name: "Build target: ${{ matrix.linking_name }} (Debug, ${{ matrix.arch_name }})"
       shell: cmd
-      if: always()
       run: |
-        mkdir -p build_32
-        cd build_32
-        ${{ env.QT5_BIN_DIR_DYNAMIC_32 }}\qmake -spec win32-msvc -tp vc CEMU_VERSION=${{ env.CEMU_VERSION }} LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"
-        msbuild CEmu.vcxproj /p:Configuration=Debug
-        cd ..
+        mkdir -p ${{ matrix.linking_build_dir_prefix }}_${{ matrix.arch_suffix }}
+        cd ${{ matrix.linking_build_dir_prefix }}_${{ matrix.arch_suffix }}
+        ${{ env.QT5_BIN_DIR }}\qmake -spec win32-msvc -tp vc CEMU_VERSION=${{ env.CEMU_VERSION }} LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro" && ^
+        msbuild CEmu.vcxproj /p:Configuration=Debug ${{ matrix.arch_extra_msbuild_args }} ${{ env.LINKING_EXTRA_MSBUILD_ARGS }}
     
-    - name: "Build target: Dynamic/Shared (Release, 32-bit)"
+    - name: "Build target: ${{ matrix.linking_name }} (Release, ${{ matrix.arch_name }})"
       shell: cmd
-      if: always()
       run: |
-        mkdir -p build_32
-        cd build_32
-        ${{ env.QT5_BIN_DIR_DYNAMIC_32 }}\qmake -spec win32-msvc -tp vc CEMU_VERSION=${{ env.CEMU_VERSION }} LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"
-        msbuild CEmu.vcxproj /p:Configuration=Release
-        cd ..
+        mkdir -p ${{ matrix.linking_build_dir_prefix }}_${{ matrix.arch_suffix }}
+        cd ${{ matrix.linking_build_dir_prefix }}_${{ matrix.arch_suffix }}
+        ${{ env.QT5_BIN_DIR }}\qmake -spec win32-msvc -tp vc CEMU_VERSION=${{ env.CEMU_VERSION }} LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro" && ^
+        msbuild CEmu.vcxproj /p:Configuration=Release ${{ matrix.arch_extra_msbuild_args }} ${{ env.LINKING_EXTRA_MSBUILD_ARGS }}
 
-    - name: "Build target: Static (Debug, 32-bit)"
-      shell: cmd
-      if: always()
-      run: |
-        md -p build_static_32
-        cd build_static_32
-        ${{ env.QT5_BIN_DIR_STATIC_32 }}\qmake -spec win32-msvc -tp vc CEMU_VERSION=${{ env.CEMU_VERSION }} LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"
-        msbuild CEmu.vcxproj /p:Configuration=Debug /p:VcpkgTriplet=x86-windows-static
-        cd ..
-    
-    - name: "Build target: Static (Release, 32-bit)"
-      shell: cmd
-      if: always()
-      run: |
-        mkdir -p build_static_32
-        cd build_static_32
-        ${{ env.QT5_BIN_DIR_STATIC_32 }}\qmake -spec win32-msvc -tp vc CEMU_VERSION=${{ env.CEMU_VERSION }} LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"
-        msbuild CEmu.vcxproj /p:Configuration=Release /p:VcpkgTriplet=x86-windows-static
-        cd ..
-
-    # 64-bit dynamic + static builds
-    - name: "Setup MSVC++ paths (64-bit target)"
-      uses: ilammy/msvc-dev-cmd@v1
-      with:
-        arch: x64
-        toolset: ${{ env.VC_VARS_VERSION }}
-
-    # Install vcpkg integration
-    - name: Install vcpkg integration (64-bit)
-      run: ${{ env.VCPKG_ROOT }}/vcpkg integrate install
-
-    - name: "Build target: Dynamic/Shared (Debug, 64-bit)"
-      shell: cmd
-      if: always()
-      run: |
-        mkdir -p build_64
-        cd build_64
-        ${{ env.QT5_BIN_DIR_DYNAMIC_64 }}\qmake -spec win32-msvc -tp vc CEMU_VERSION=${{ env.CEMU_VERSION }} LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"
-        msbuild CEmu.vcxproj /p:Configuration=Debug /p:Platform="x64"
-    
-    - name: "Build target: Dynamic/Shared (Release, 64-bit)"
-      shell: cmd
-      if: always()
-      run: |
-        mkdir -p build_64
-        cd build_64
-        ${{ env.QT5_BIN_DIR_DYNAMIC_64 }}\qmake -spec win32-msvc -tp vc CEMU_VERSION=${{ env.CEMU_VERSION }} LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"
-        msbuild CEmu.vcxproj /p:Configuration=Release /p:Platform="x64"
-    
-    - name: "Build target: Static (Debug, 64-bit)"
-      shell: cmd
-      if: always()
-      run: |
-        mkdir -p build_static_64
-        cd build_static_64
-        ${{ env.QT5_BIN_DIR_STATIC_64 }}\qmake -spec win32-msvc -tp vc CEMU_VERSION=${{ env.CEMU_VERSION }} LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"
-        msbuild CEmu.vcxproj /p:Configuration=Debug /p:Platform="x64" /p:VcpkgTriplet=x64-windows-static
-    
-    - name: "Build target: Static (Release, 64-bit)"
-      shell: cmd
-      if: always()
-      run: |
-        mkdir -p build_static_64
-        cd build_static_64
-        ${{ env.QT5_BIN_DIR_STATIC_64 }}\qmake -spec win32-msvc -tp vc CEMU_VERSION=${{ env.CEMU_VERSION }} LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"
-        msbuild CEmu.vcxproj /p:Configuration=Release /p:Platform="x64" /p:VcpkgTriplet=x64-windows-static
-
-    - name: "Upload artifacts: Dynamic/Shared (Debug + Release, 32-bit)"
+    - name: "Upload artifacts: ${{ matrix.linking_name }} (Debug + Release, ${{ matrix.arch_name }})"
       uses: actions/upload-artifact@v2
       with:
-        name: build-dyn-32
-        path: build_32
-
-    - name: "Upload artifacts: Dynamic/Shared (Debug + Release, 64-bit)"
-      uses: actions/upload-artifact@v2
-      with:
-        name: build-dyn-64
-        path: build_64
-
-    - name: "Upload artifacts: Static (Debug + Release, 32-bit)"
-      uses: actions/upload-artifact@v2
-      with:
-        name: build-static-32
-        path: build_static_32
-
-    - name: "Upload artifacts: Static (Debug + Release, 64-bit)"
-      uses: actions/upload-artifact@v2
-      with:
-        name: build-static-64
-        path: build_static_64
+        name: build-${{ matrix.linking_suffix }}-${{ matrix.arch_suffix }}
+        path: ${{ matrix.linking_build_dir_prefix }}_${{ matrix.arch_suffix }}
 
   deploy:
     # TODO: maybe find a way to reduce steps req'd to get running here
