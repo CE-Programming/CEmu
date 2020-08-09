@@ -1,4 +1,7 @@
 # AppVeyor CI config
+image:
+  - Visual Studio 2019
+
 environment:
   BINTRAY_API_KEY:
     secure: AGZJlJvqTJR3lySeBoANrPYyWfgLJciSqTZm3/ZEPbUx4dQ9m1fiWGY3RYBGaYOq
@@ -10,8 +13,16 @@ environment:
   QT5_BIN_DIR_DYNAMIC_64: C:\Qt\5.15.0\msvc2019_64\bin
   QT5_BIN_DIR_STATIC_32: C:\Qt\Qt5.15.0-static\bin
   QT5_BIN_DIR_STATIC_64: C:\Qt\Qt5.15.0x64-static\bin
+  APPVEYOR_SAVE_CACHE_ON_ERROR: true
 
 install:
+  - echo AppVeyor Build Image = %APPVEYOR_BUILD_WORKER_IMAGE%
+  - echo Directories...
+  - echo  - QT5_BIN_DIR_DYNAMIC_32 = %QT5_BIN_DIR_DYNAMIC_32%
+  - echo  - QT5_BIN_DIR_DYNAMIC_64 = %QT5_BIN_DIR_DYNAMIC_64%
+  - echo  - QT5_BIN_DIR_STATIC_32  = %QT5_BIN_DIR_STATIC_32%
+  - echo  - QT5_BIN_DIR_STATIC_64  = %QT5_BIN_DIR_STATIC_64%
+
   - git submodule update --init --recursive
   - C:\Python35\Scripts\pip install requests jinja2 irc
   - C:\Python35\python -u gui\qt\deploy-scripts\appveyor_helper.py install
