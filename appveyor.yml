@@ -56,18 +56,6 @@ build_script:
   # If not, set it to a space (which would evaluate to empty in our QMake command).
   - cmd: if defined APPVEYOR_REPO_TAG_NAME (set CEMU_VERSION=%APPVEYOR_REPO_TAG_NAME% & echo Using tagged version %CEMU_VERSION%) ELSE (set "CEMU_VERSION= " & echo No version defined, using empty version '%CEMU_VERSION%' and allowing QMake to set default for dev.)
 
-after_build:
-  - cd %APPVEYOR_BUILD_FOLDER%
-  - C:\Python35\python -u gui\qt\deploy-scripts\appveyor_helper.py deploy
-
-on_success:
-  - cd %APPVEYOR_BUILD_FOLDER%
-#  - C:\Python35\python -u gui\qt\deploy-scripts\build_status.py SUCCESS
-
-on_failure:
-  - cd %APPVEYOR_BUILD_FOLDER%
-#  - C:\Python35\python -u gui\qt\deploy-scripts\build_status.py FAILURE
-
 cache:
   - build_state -> appveyor.yml, appveyor.yml.cache
   - c:\tools\vcpkg\installed\ -> appveyor.yml.cache
