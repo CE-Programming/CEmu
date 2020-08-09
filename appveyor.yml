@@ -69,7 +69,7 @@ build_script:
 
   - setlocal
 
-  - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
+  - call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=x86 -host_arch=amd64 -vcvars_ver=14.0 -no_logo
 
   - cd build_32
   - '%QT5_BIN_DIR_DYNAMIC_32%\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"'
@@ -89,7 +89,7 @@ build_script:
 
   - setlocal
 
-  - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86_amd64
+  - call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64 -vcvars_ver=14.0 -no_logo
 
   - cd build_64
   - '%QT5_BIN_DIR_DYNAMIC_64%\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"'
