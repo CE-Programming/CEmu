@@ -39,22 +39,66 @@ install:
   - vcpkg install libpng[core,apng]:x64-windows --recurse
   - vcpkg install libpng[core,apng]:x86-windows-static --recurse
   - vcpkg install libpng[core,apng]:x64-windows-static --recurse
-  
-  - md build_32
-  - md build_64
-  - md build_static_32
-  - md build_static_64
-
-# Since we want to use vcpkg, ensure that it's integrated into the
-# build environment.
-  - cd c:\tools\vcpkg
-  - vcpkg integrate install
-  - cd %APPVEYOR_BUILD_FOLDER%
 
 build_script:
   # Figure out version to set - if tag is defined, use that.
   # If not, set it to a space (which would evaluate to empty in our QMake command).
   - cmd: if defined APPVEYOR_REPO_TAG_NAME (set CEMU_VERSION=%APPVEYOR_REPO_TAG_NAME% & echo Using tagged version %CEMU_VERSION%) ELSE (set "CEMU_VERSION= " & echo No version defined, using empty version '%CEMU_VERSION%' and allowing QMake to set default for dev.)
+
+  - md build_32
+  - md build_64
+  - md build_static_32
+  - md build_static_64
+
+  # Since we want to use vcpkg, ensure that it's integrated into the
+  # build environment.
+  - cd c:\tools\vcpkg
+  - vcpkg integrate install
+  - cd %APPVEYOR_BUILD_FOLDER%
+
+  - setlocal
+
+  - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86
+
+  - cd build_32
+  - '%QT5_BIN_DIR_DYNAMIC_32%\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"'
+  - msbuild CEmu.vcxproj /p:Configuration=Debug
+  - '%QT5_BIN_DIR_DYNAMIC_32%\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"'
+  - msbuild CEmu.vcxproj /p:Configuration=Release
+  - cd ..
+
+  - cd build_static_32
+  - '%QT5_BIN_DIR_STATIC_32%\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"'
+  - msbuild CEmu.vcxproj /p:Configuration=Debug /p:VcpkgTriplet=x86-windows-static
+  - '%QT5_BIN_DIR_STATIC_32%\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"'
+  - msbuild CEmu.vcxproj /p:Configuration=Release /p:VcpkgTriplet=x86-windows-static
+  - cd ..
+
+  - endlocal
+
+  - setlocal
+
+  - call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86_amd64
+
+  - cd build_64
+  - '%QT5_BIN_DIR_DYNAMIC_64%\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"'
+  - msbuild CEmu.vcxproj /p:Configuration=Debug /p:Platform="x64"
+  - '%QT5_BIN_DIR_DYNAMIC_64%\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"'
+  - msbuild CEmu.vcxproj /p:Configuration=Release /p:Platform="x64"
+  - cd ..
+
+  - cd build_static_64
+  - '%QT5_BIN_DIR_STATIC_64%\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"'
+  - msbuild CEmu.vcxproj /p:Configuration=Debug /p:Platform="x64" /p:VcpkgTriplet=x64-windows-static
+  - '%QT5_BIN_DIR_STATIC_64%\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"'
+  - msbuild CEmu.vcxproj /p:Configuration=Release /p:Platform="x64" /p:VcpkgTriplet=x64-windows-static
+  - cd ..
+
+  - endlocal
+
+after_build:
+  - cd %APPVEYOR_BUILD_FOLDER%
+  - C:\Python35\python -u gui\qt\deploy-scripts\appveyor_helper.py deploy
 
 cache:
   - build_state -> appveyor.yml, appveyor.yml.cache
