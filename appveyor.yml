@@ -28,9 +28,9 @@ install:
   - C:\Python35\python -u gui\qt\deploy-scripts\appveyor_helper.py install
 
 # Leverage vcpkg to install libarchive deps, because we're lazy
-# Make sure we set the special VCPKG_PLATFORM_TOOLSET var to v142
+# Make sure we set the special VCPKG_PLATFORM_TOOLSET var to v141
 # because we build with MSVS 2019 (appveyor project config)
-  - cmd: set VCPKG_PLATFORM_TOOLSET=v142
+  - cmd: set VCPKG_PLATFORM_TOOLSET=v141
 
 # Update vcpkg to make things work
   - cd "C:\Tools\vcpkg"
@@ -61,15 +61,15 @@ build_script:
   - md build_static_32
   - md build_static_64
 
-  # Since we want to use vcpkg, ensure that it's integrated into the
-  # build environment.
-  - cd c:\tools\vcpkg
-  - vcpkg integrate install
   - cd %APPVEYOR_BUILD_FOLDER%
 
   - setlocal
   
-  - call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsDevCmd.bat" -arch=x86 -host_arch=amd64 -vcvars_ver=14.0 -no_logo
+  - call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsDevCmd.bat" -arch=x86 -host_arch=amd64 -vcvars_ver=14.1 -no_logo
+
+  # Since we want to use vcpkg, ensure that it's integrated into the
+  # build environment.
+  - c:\tools\vcpkg\vcpkg integrate install
 
   - cd build_32
   - '%QT5_BIN_DIR_DYNAMIC_32%\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"'
@@ -89,7 +89,11 @@ build_script:
 
   - setlocal
 
-  - call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64 -vcvars_ver=14.0 -no_logo
+  - call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64 -vcvars_ver=14.1 -no_logo
+
+  # Since we want to use vcpkg, ensure that it's integrated into the
+  # build environment.
+  - c:\tools\vcpkg\vcpkg integrate install
 
   - cd build_64
   - '%QT5_BIN_DIR_DYNAMIC_64%\qmake -spec win32-msvc -tp vc CEMU_VERSION=%CEMU_VERSION% LIBPNG_APNG_FROM_VCPKG=1 "..\gui\qt\CEmu.pro"'
