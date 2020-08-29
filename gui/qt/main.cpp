@@ -21,7 +21,6 @@ int main(int argc, char *argv[]) {
 
     execPath = QCoreApplication::applicationFilePath();
 
-    qsrand(static_cast<uint>(time(nullptr)));
     app.setAttribute(Qt::AA_UseHighDpiPixmaps);
 
     // Add special jacobly font
@@ -128,6 +127,10 @@ int main(int argc, char *argv[]) {
                 QCoreApplication::translate("main", "fullscreen"));
     parser.addOption(fullscreenOption);
 
+    QCommandLineOption resetOption(QStringList() << QStringLiteral("reset"),
+                QCoreApplication::translate("main", "Reset CEmu completely and delete configuration files"));
+    parser.addOption(resetOption);
+
     // IPC hooks (can only use on an already running process)
 
     parser.process(app);
@@ -148,6 +151,7 @@ int main(int argc, char *argv[]) {
     opts.sendFiles          = parser.values(sendFiles);
     opts.sendArchFiles      = parser.values(sendArchFiles);
     opts.sendRAMFiles       = parser.values(sendRAMFiles);
+    opts.reset              = parser.isSet(resetOption);
     if (parser.isSet(emuSpeed)) {
         opts.speed          = parser.value(emuSpeed).toInt();
         if (opts.speed < 0)   { opts.speed = 0; }
@@ -181,6 +185,11 @@ int main(int argc, char *argv[]) {
 
     configPath = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
 
+    if (opts.reset) {
+        QDir dir(configPath);
+        dir.removeRecursively();
+    }
+
     int ret = 0;
     MainWindow EmuWin(opts);
 
@@ -196,7 +205,7 @@ int main(int argc, char *argv[]) {
     if (EmuWin.isResetAll() || EmuWin.isReload()) {
         QStringList args = qApp->arguments();
         if (args.length()) {
-            QProcess::startDetached(args.first());
+            QProcess::startDetached(args.first(), QStringList());
         }
     }
 

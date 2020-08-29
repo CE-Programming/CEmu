@@ -13,6 +13,7 @@ struct CEmuOpts {
     bool deforceReset;
     bool forceReloadRom;
     bool useSettings;
+    bool reset;
     QString romFile;
     QString autotesterFile;
     QString settingsFile;
