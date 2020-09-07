@@ -14,7 +14,7 @@ asmjs:  CFLAGS += --closure 0 -s WASM=0
 wasmfb: CFLAGS += --closure 0 -s WASM=1 -s "BINARYEN_METHOD='native-wasm,asmjs'"
 wasm:   CFLAGS += --closure 0 -s WASM=1
 
-CSOURCES := $(wildcard *.c) ./debug/debug.c ./os/os-emscripten.c
+CSOURCES := $(wildcard *.c) $(wildcard ./usb/*.c) ./debug/debug.c ./os/os-emscripten.c
 
 OBJS = $(patsubst %.c, %.bc, $(CSOURCES))
 
