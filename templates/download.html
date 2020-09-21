@@ -5,24 +5,18 @@
 {% block title %}Download{% endblock %}
 
 {% block navbar_tabs %}
-      <div class="container nav-content">
-        <ul class="tabs tabs-transparent cemu-header-tabs row">
-          <li class="tab col s2"><a class="active" href="#stable-builds">Stable</a></li>
-          <li class="tab col s2"><a href="#development-builds">Development</a></li>
-        </ul>
-      </div>
 {% endblock %}
 
 {% block content %}
 <div class="container">
-    <div class="section" id="stable-builds">
+    <div class="section">
+        <div class="divider"></div>
         <div class="row">
             <h3>Download Stable Version</h3>
             <p>This is your best bet if you want to get up and running quickly without any issues. If you want the cutting edge, click the above tab for a development build.</p>
             <a href="https://github.com/CE-Programming/CEmu/releases/latest" id="download-button" class="btn-large waves-effect waves-light cemu-color-lighter"><i class="material-icons left">file_download</i>Download For All Platforms</a>
         </div>
-    </div>
-    <div class="section" id="development-builds">
+        <div class="divider"></div>
         <div class="row">
             <h3>Download Development Builds</h3>
             <b>Build Statuses:</b><br />
