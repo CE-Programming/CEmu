@@ -106,7 +106,7 @@ jobs:
         vcpkgArguments: '@${{ env.VCPKGRESPONSEFILE }}'
         # This commit ID corresponds to 2020.06
         vcpkgGitCommitId: 6185aa76504a5025f36754324abf307cc776f3da
-        appendedCacheKey: ${{ hashFiles(env.VCPKGRESPONSEFILE) }}
+        appendedCacheKey: ${{ hashFiles(env.VCPKGRESPONSEFILE) }}-${{ runner.os }}-${{ matrix.arch_suffix }}-${{ matrix.linking }}
 
     # Install Python modules to run our helper script
     - name: Install Python libraries for bootstrap helper script (static linking only)
