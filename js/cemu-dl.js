@@ -2,7 +2,7 @@ var CEmuDownloader = CEmuDownloader || {};
 
 CEmuDownloader.config = {
     apiUrl: "https://oss.jfrog.org/artifactory/api",
-    basePath: "/oss-snapshot-local/org/github/alberthdev/cemu/git/",
+    basePath: "/oss-snapshot-local/org/github/CE-Programming/CEmu/git/",
     baseDLPath: "https://oss.jfrog.org/artifactory/",
     lastPathSeen: null,
     running: false,
