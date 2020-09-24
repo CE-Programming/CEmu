@@ -145,7 +145,7 @@ jobs:
     # Set dynamic, matrix-controlled env var
     - name: Set extra static MSBuild flag, if applicable
       run: |
-        echo '::set-env name=LINKING_EXTRA_MSBUILD_ARGS::/p:VcpkgTriplet=${{ matrix.arch }}-windows-static'
+        echo '::set-env name=LINKING_EXTRA_MSBUILD_ARGS::/p:VcpkgTriplet=${{ matrix.arch }}-windows-static /p:VcpkgEnabled=true'
         echo "Detected static linking, adding LINKING_EXTRA_MSBUILD_ARGS = '${{ env.LINKING_EXTRA_MSBUILD_ARGS }}'"
       if: "matrix.linking == 'static'"
     
