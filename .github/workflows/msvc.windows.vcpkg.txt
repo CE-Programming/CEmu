@@ -1,9 +1,0 @@
-libarchive:x86-windows
-libarchive:x64-windows
-libarchive:x86-windows-static
-libarchive:x64-windows-static
-libpng[core,apng]:x86-windows
-libpng[core,apng]:x64-windows
-libpng[core,apng]:x86-windows-static
-libpng[core,apng]:x64-windows-static
---recurse

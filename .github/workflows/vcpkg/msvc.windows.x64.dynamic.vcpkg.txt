@@ -1,0 +1,3 @@
+libarchive:x64-windows
+libpng[core,apng]:x64-windows
+--recurse

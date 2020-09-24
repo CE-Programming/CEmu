@@ -94,14 +94,14 @@ jobs:
     - name: Set vcpkg's response file path used as part of cache's key.
       uses: lukka/set-shell-env@master
       with:
-        VCPKGRESPONSEFILE: ${{ github.workspace }}/.github/workflows/msvc.windows.vcpkg.txt
+        VCPKGRESPONSEFILE: ${{ github.workspace }}/.github/workflows/vcpkg/msvc.windows.${{ matrix.arch }}.${{ matrix.linking }}.vcpkg.txt
         filter: ^VCPKG.*
     
     # Restore from cache the previously built ports. If cache-miss, download, build vcpkg.
     # Then install libarchive + libpng-apng for all targets.
     - name: Restore from cache and install vcpkg + libraries (libarchive, libpng-apng)
       # Download and build vcpkg, without installing any port. If content is cached already, it is a no-op.
-      uses: lukka/run-vcpkg@v3
+      uses: lukka/run-vcpkg@v4
       with:
         vcpkgArguments: '@${{ env.VCPKGRESPONSEFILE }}'
         # This commit ID corresponds to 2020.06
@@ -160,7 +160,7 @@ jobs:
     - name: Install vcpkg integration (${{ matrix.arch_name }})
       run: ${{ env.VCPKG_ROOT }}/vcpkg integrate install
     
-    # 32-bit dynamic + static builds
+    # Debug and release builds
     - name: "Build target: ${{ matrix.linking_name }} (Debug, ${{ matrix.arch_name }})"
       shell: cmd
       run: |
