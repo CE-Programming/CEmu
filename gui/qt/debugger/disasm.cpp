@@ -168,6 +168,7 @@ static bool disasmPut(struct zdis_ctx *ctx, enum zdis_put kind, int32_t val, boo
             break;
         case ZDIS_PUT_REL:
             val += disasm.ctx.zdis_end_addr;
+            [[gnu::fallthrough]];
         case ZDIS_PUT_ADDR:
         case ZDIS_PUT_ABS:
         case ZDIS_PUT_RST:
