@@ -252,6 +252,12 @@ SOURCES += \
     basiccodeviewerwindow.cpp \
     sendinghandler.cpp \
     debugger.cpp \
+    debugger/cdebughighlighter.cpp \
+    debugger/debuginfo.cpp \
+    debugger/disasm.cpp \
+    debugger/hexwidget.cpp \
+    debugger/sourceswidget.cpp \
+    debugger/visualizerdisplaywidget.cpp \
     settings.cpp \
     capture/animated-png.c \
     keypad/qtkeypadbridge.cpp \
@@ -259,8 +265,6 @@ SOURCES += \
     keypad/keypadwidget.cpp \
     keypad/rectkey.cpp \
     keypad/arrowkey.cpp \
-    debugger/hexwidget.cpp \
-    debugger/disasm.cpp \
     tivars_lib_cpp/src/tivarslib_utils.cpp \
     tivars_lib_cpp/src/BinaryFile.cpp \
     tivars_lib_cpp/src/TIVarFile.cpp \
@@ -286,10 +290,7 @@ SOURCES += \
     tivars_lib_cpp/src/TypeHandlers/STH_FP.cpp \
     vartablemodel.cpp \
     visualizerwidget.cpp \
-    debugger/visualizerdisplaywidget.cpp \
     memorywidget.cpp \
-    debugger/sourceswidget.cpp \
-    debugger/cdebughighlighter.cpp \
     archive/extractor.c \
     ../../core/bus.c \
     keyhistorywidget.cpp \
@@ -376,8 +377,12 @@ HEADERS  += \
     keypad/operkey.h \
     keypad/arrowkey.h \
     capture/animated-png.h \
-    debugger/hexwidget.h \
+    debugger/cdebughighlighter.h \
+    debugger/debuginfo.h \
     debugger/disasm.h \
+    debugger/hexwidget.h \
+    debugger/sourceswidget.h \
+    debugger/visualizerdisplaywidget.h \
     tivars_lib_cpp/src/tivarslib_utils.h \
     tivars_lib_cpp/src/CommonTypes.h \
     tivars_lib_cpp/src/BinaryFile.h \
@@ -389,9 +394,6 @@ HEADERS  += \
     tivars_lib_cpp/src/TypeHandlers/TypeHandlers.h \
     vartablemodel.h \
     visualizerwidget.h \
-    debugger/visualizerdisplaywidget.h \
-    debugger/sourceswidget.h \
-    debugger/cdebughighlighter.h \
     archive/extractor.h \
     ../../core/bus.h \
     keyhistorywidget.h \

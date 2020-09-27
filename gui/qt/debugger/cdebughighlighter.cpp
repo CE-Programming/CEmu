@@ -182,7 +182,7 @@ void CDebugHighlighter::highlightBlock(const QString &text) {
             case ParseState::MultilineComment:
                 if (i == text.length()) {
                     setFormat(start, i - start, m_sources->m_commentFormat);
-                } else if (i > start + 1 + (baseState != ParseState::MultilineComment) &&
+                } else if (i > start + (baseState != ParseState::MultilineComment) &&
                            c == '/' && text[i - 1] == '*') {
                     setFormat(start, i + 1 - start, m_sources->m_commentFormat);
                     start = i + 1;

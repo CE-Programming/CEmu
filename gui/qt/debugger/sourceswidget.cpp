@@ -1,9 +1,12 @@
 #include "sourceswidget.h"
+
 #include "cdebughighlighter.h"
-#include "mainwindow.h"
-#include "utils.h"
+#include "debuginfo.h"
+#include "../mainwindow.h"
+#include "../utils.h"
 #include "../../core/mem.h"
 
+#include <QtCore/QCryptographicHash>
 #include <QtCore/QDirIterator>
 #include <QtCore/QModelIndex>
 #include <QtCore/QVariant>
@@ -153,7 +156,7 @@ protected:
 #define using(const, field) const decltype(m_##field) &field() const {			\
         return static_cast<const SourcesWidget *>(QObject::parent())->m_##field;	\
     }
-    using(const, sources)
+    using(const, debugFile)
     using(const, stringList)
     using(const, stringMap)
 #undef using
@@ -167,9 +170,13 @@ protected:
 
         int parent, parentIndex, childIndex;
         QList<int> children;
+
         Symbol symbol;
         qint32 base;
         Context context;
+
+        std::string value;
+
         QString data[2];
         Flags flags;
     };
@@ -178,14 +185,10 @@ protected:
     QVector<Variable> m_variables;
     QStringList m_topLevelData[2];
     QList<QList<int>> m_topLevelChildren;
-    bool lookupAddr(quint32 addr, int *sourceIndex = nullptr,
-                    int *functionIndex = nullptr, int *lineIndex = nullptr) const {
-        return static_cast<const SourcesWidget *>(QObject::parent())->
-            lookupAddr(addr, sourceIndex, functionIndex, lineIndex);
-    }
     static quint32 sizeOfSymbol(const Symbol &symbol, Context context);
     QString variableTypeToString(const Variable &variable) const;
     QString variableValueToString(const Variable &variable) const;
+    int createVariable(int parent, int parentIndex, int childIndex, const debuginfo::dwarf::section::_Die &entry);
     int createVariable(int parent, int parentIndex, int childIndex, const Symbol &symbol, Context context, qint32 base = 0, const QString &name = {});
     void createVariable(const QModelIndex &parent, const Symbol &symbol, qint32 base = 0, const QString &name = {});
     void removeTopLevels(int first, int last);
@@ -214,16 +217,54 @@ public:
     void init(const QStringList &paths);
 };
 class SourcesWidget::StackModel : public VariableModel {
+    static constexpr quint32 undefValue = ~0u;
+
+    using RegsBase = std::array<quint32, std::size_t(debuginfo::dwarf::Reg::None)>;
+    struct Regs : RegsBase {
+        quint32 &operator[](debuginfo::dwarf::Reg reg) {
+            return RegsBase::operator[](std::size_t(reg));
+        }
+        const quint32 &operator[](debuginfo::dwarf::Reg reg) const {
+            return RegsBase::operator[](std::size_t(reg));
+        }
+    };
     struct StackEntry {
-        quint32 ix, pc, cookie[2];
-        const Source *source;
-        const Function *function;
+        quint32 cfa;
+        Regs regs;
+        const debuginfo::dwarf::section::Info::_Scope *scope;
+
+        bool same(const StackEntry &other) const {
+          return cfa == other.cfa &&
+                 regs[debuginfo::dwarf::Reg::PC] == other.regs[debuginfo::dwarf::Reg::PC] &&
+                 scope == other.scope;
+        }
     };
     QVector<StackEntry> m_stack;
+
+    static void computeRule(const StackEntry &state, quint32 &value,
+                            const debuginfo::dwarf::section::Frame::Rule &rule);
+
 public:
     explicit StackModel(SourcesWidget *parent) : VariableModel(parent) {}
     void update() override;
     void init();
+};
+
+class SourcesWidget::DebugFile : protected QFile, public debuginfo::dwarf::File {
+private:
+    debuginfo::Data mapData() {
+        if (open(ReadOnly)) {
+            if (auto ptr = reinterpret_cast<debuginfo::Data::pointer>(map(0, size()))) {
+                return { ptr, debuginfo::Data::size_type(size()) };
+            }
+        }
+        return {};
+    }
+
+public:
+    DebugFile(const QString &path) : QFile(path), debuginfo::dwarf::File(mapData()) {}
+
+    using debuginfo::dwarf::File::error;
 };
 
 namespace {
@@ -253,10 +294,10 @@ enum class DebugTokenKind {
     Value,
 };
 
-class DebugFile : public QFile {
+class DbgFile : public QFile {
 public:
     bool success;
-    DebugFile(QString name) : QFile(name), success(open(QIODevice::ReadOnly)) {}
+    DbgFile(QString name) : QFile(name), success(open(QIODevice::ReadOnly)) {}
     void setErrorString(const QString &errorString) {
         if (success) {
             success = false;
@@ -323,7 +364,7 @@ public:
         return QString::fromLocal8Bit(result);
     }
 };
-}
+} // end anonymous namespace
 
 SourcesWidget::SourcesWidget(QWidget *parent) : QWidget(parent) {
     QPushButton *button = new QPushButton(tr("Select Debug File"));
@@ -368,342 +409,88 @@ SourcesWidget::SourcesWidget(QWidget *parent) : QWidget(parent) {
     m_errorFormat.setBackground(QColor::fromRgb(0xFF3F3F));
 }
 
+SourcesWidget::~SourcesWidget() = default;
+
 void SourcesWidget::selectDebugFile() {
-    QString debugName = QFileDialog::getOpenFileName(this, tr("Open Debug File"), "/home/jacob/Programming/calc/ez80/c/debug/bin", tr("Debug File (*.dbg)"));
+    QString debugName = QFileDialog::getOpenFileName(this, tr("Open Debug File"), "/home/jacob/Programming/ez80/oiram/bin", tr("Debug File (*.debug)"));
     if (debugName.isNull()) {
         return;
     }
 
-    QStringList paths;
-    QVector<Source> sources;
-    QStringList stringList;
-    QHash<QString, quint32> stringMap;
-    DebugFile debugFile(debugName);
-    QDir dir = QFileInfo(debugFile).dir();
-    dir.cdUp();
-    Line prevLine{0, 0};
-    bool eof = false;
-    quint32 lang = 0;
-    QStack<Scope *> scopes;
-    scopes.reserve(3);
-    bool inFunction = false;
-    Symbol *curSymbol = Q_NULLPTR;
-    while (debugFile.success && !debugFile.atEnd()) {
-        switch (DebugTokenKind(debugFile.readULEB128())) {
-            case DebugTokenKind::Eof: {
-                if (!debugFile.atEnd() || !scopes.isEmpty()) {
-                    debugFile.setErrorString(tr("Unexpected EOF token"));
-                    break;
-                }
-                eof = true;
-                break;
-            }
-            case DebugTokenKind::Alias: {
-                if (!curSymbol) {
-                    debugFile.setErrorString(tr("Unexpected alias token"));
-                    break;
-                }
-                Scope &scope = *scopes.top();
-                curSymbol->alias = debugFile.readULEB128();
-                scope.symbolMap.insert(curSymbol->alias, scope.symbolList.count() - 1);
-                break;
-            }
-            case DebugTokenKind::BegFunc: {
-                if (scopes.count() != 1 || curSymbol) {
-                    debugFile.setErrorString(tr("Unexpected function token"));
-                    break;
-                }
-                Source &source = sources.last();
-                QVector<Function> &functionList = source.functionList;
-                QMultiHash<quint32, int> &functionMap = source.functionMap;
-                int functionIndex = functionList.count();
-                Function function;
-                function.name = debugFile.readULEB128();
-                functionMap.insert(function.name, functionIndex);
-                functionMap.insert(debugFile.readULEB128(), functionIndex);
-                prevLine.num += debugFile.readULEB128();
-                prevLine.addr += debugFile.readULEB128();
-                function.lines.append(prevLine);
-                functionList.append(function);
-                scopes.push(&functionList.last());
-                inFunction = true;
-                break;
-            }
-            case DebugTokenKind::BegRec: {
-                if (scopes.isEmpty() || curSymbol) {
-                    debugFile.setErrorString(tr("Unexpected record begin token"));
-                    break;
-                }
-                Scope &scope = *scopes.top();
-                Record record;
-                record.name = debugFile.readULEB128();
-                record.size = debugFile.readULEB128();
-                scope.recordMap.insert(record.name, scope.recordList.count());
-                scope.recordList.append(record);
-                scopes.push(&scope.recordList.last());
-                break;
-            }
-            case DebugTokenKind::Class: {
-                if (!curSymbol) {
-                    debugFile.setErrorString(tr("Unexpected class begin token"));
-                    break;
-                }
-                curSymbol->kind = SymbolKind(debugFile.readULEB128());
-                break;
-            }
-            case DebugTokenKind::Debug: {
-                if (lang ? lang != debugFile.readULEB128()
-                         : !(lang = debugFile.readULEB128())) {
-                    debugFile.setErrorString(tr("Mixed source languages"));
-                    break;
-                }
-                break;
-            }
-            case DebugTokenKind::Define: {
-                if (scopes.isEmpty() || curSymbol) {
-                    debugFile.setErrorString(tr("Unexpected define symbol begin token"));
-                    break;
-                }
-                Scope &scope = *scopes.top();
-                Symbol symbol;
-                symbol.name = debugFile.readULEB128();
-                scope.symbolMap.insert(symbol.name, scope.symbolList.count());
-                scope.symbolList.append(symbol);
-                curSymbol = &scope.symbolList.last();
-                break;
-            }
-            case DebugTokenKind::Dim: {
-                if (!curSymbol) {
-                    debugFile.setErrorString(tr("Unexpected dimension token"));
-                    break;
-                }
-                curSymbol->dims.append(debugFile.readULEB128());
-                break;
-            }
-            case DebugTokenKind::End: {
-                if (scopes.count() != 1 || curSymbol) {
-                    debugFile.setErrorString(tr("Unexpected source file end token"));
-                    break;
-                }
-                sources.last().endAddr = prevLine.addr += debugFile.readULEB128();
-                scopes.pop();
-                break;
-            }
-            case DebugTokenKind::Endef: {
-                if (!curSymbol) {
-                    debugFile.setErrorString(tr("Unexpected define symbol end token"));
-                    break;
-                }
-                curSymbol = Q_NULLPTR;
-                break;
-            }
-            case DebugTokenKind::EndFunc: {
-                if (scopes.count() != 2 || !inFunction || curSymbol) {
-                    debugFile.setErrorString(tr("Unexpected function end token"));
-                    break;
-                }
-                debugFile.readULEB128();
-                debugFile.readULEB128();
-                prevLine.num += debugFile.readULEB128();
-                prevLine.addr += debugFile.readULEB128();
-                sources.last().functionList.last().lines.append(prevLine);
-                scopes.pop();
-                inFunction = false;
-                break;
-            }
-            case DebugTokenKind::EndRec: {
-                if (scopes.count() <= 1 + inFunction || curSymbol) {
-                    debugFile.setErrorString(tr("Unexpected record end token"));
-                    break;
-                }
-                debugFile.readULEB128();
-                scopes.pop();
-                break;
-            }
-            case DebugTokenKind::File: {
-                if (!scopes.isEmpty()) {
-                    debugFile.setErrorString(tr("Unexpected source file begin token"));
-                    break;
-                }
-                paths << dir.path();
-                QStringList components = debugFile.readString().split('\\');
-                for (QStringList::iterator i = components.begin(), e = components.end();
-                     debugFile.success && i != e; ) {
-                    QStringList component(*i++);
-                    QDirIterator matches(paths.last(), component, QDir::Readable |
-                                         (i != e ? QDir::Dirs : QDir::Files));
-                    if (matches.hasNext()) {
-                        paths.last() = matches.next();
-                    } else {
-                        debugFile.setErrorString(tr("Unable to find source file \"%0\"").
-                                                 arg(components.
-                                                     join(QDir::separator())));
-                    }
-                }
-                if (debugFile.success) {
-                    sources.resize(sources.count() + 1);
-                    sources.last().startAddr = prevLine.addr += debugFile.readULEB128();
-                    prevLine.num = 0;
-                    scopes.push(&sources.last());
-                }
-                break;
-            }
-            case DebugTokenKind::Length: {
-                if (!curSymbol) {
-                    debugFile.setErrorString(tr("Unexpected length token"));
-                    break;
-                }
-                curSymbol->length = debugFile.readULEB128();
-                break;
-            }
-            case DebugTokenKind::Line: {
-                if (scopes.count() != 2 || !inFunction || curSymbol) {
-                    debugFile.setErrorString(tr("Unexpected line token"));
-                    break;
-                }
-                prevLine.num += debugFile.readULEB128();
-                prevLine.addr += debugFile.readULEB128();
-                sources.last().functionList.last().lines.append(prevLine);
-                break;
-            }
-            case DebugTokenKind::Strings: {
-                if (!scopes.isEmpty()) {
-                    debugFile.setErrorString(tr("Unexpected strings token"));
-                    break;
-                }
-                quint32 count = debugFile.readULEB128();
-                stringList.reserve(count);
-                stringMap.reserve(count);
-                for (quint32 index = 0; debugFile.success && index != count; ++index) {
-                    QString string = debugFile.readString();
-                    if (string.isEmpty()) {
-                        debugFile.setErrorString(tr("Invalid string in string table"));
-                    } else {
-                        stringList << string;
-                        stringMap[string] = index;
-                    }
-                }
-                break;
-            }
-            case DebugTokenKind::Tag: {
-                if (!curSymbol) {
-                    debugFile.setErrorString(tr("Unexpected tag token"));
-                    break;
-                }
-                curSymbol->tag = debugFile.readULEB128();
-                break;
-            }
-            case DebugTokenKind::Type: {
-                if (!curSymbol) {
-                    debugFile.setErrorString(tr("Unexpected value token"));
-                    break;
-                }
-                curSymbol->type = debugFile.readSLEB128();
-                break;
-            }
-            case DebugTokenKind::Value: {
-                if (!curSymbol) {
-                    debugFile.setErrorString(tr("Unexpected value token"));
-                    break;
-                }
-                curSymbol->value = debugFile.readSLEB128();
-                break;
-            }
-            default: debugFile.setErrorString(tr("Unknown debug token kind"));
-        }
-    }
-    if (sources.isEmpty()) {
-        debugFile.setErrorString(tr("No source files"));
-    }
-    if (!eof) {
-        debugFile.setErrorString(tr("Missing EOF token"));
-    }
-    if (stringList.value(lang - 1) != "C") {
-        debugFile.setErrorString(tr("Unknown source language \"%0\"").
-                                 arg(stringList.value(lang - 1)));
-    }
-    if (debugFile.success) {
-        for (int i = 0; i != m_tabs->count(); i++) {
+    auto debugFile = std::make_unique<DebugFile>(debugName);
+    debugFile->validate(debuginfo::elf::File::Header::ez80);
+
+    if (const char *error = debugFile->error()) {
+        QMessageBox dialog(QMessageBox::Critical,
+                           findParent<MainWindow *>(this)->MSG_ERROR,
+                           tr("Error loading debug file:"), QMessageBox::Ok, this);
+        dialog.setInformativeText(tr(error));
+        dialog.exec();
+    } else {
+        for (int i = 0; i != m_tabs->count(); ++i) {
             m_tabs->widget(i)->deleteLater();
         }
         m_tabs->clear();
-        for (int i = 0; i != sources.count(); i++) {
-            QFile sourceFile(paths.at(i));
+
+        QStringList changedSourcePaths;
+        for (std::size_t i = 0; i != debugFile->line().size(); ++i) {
+            auto source = debugFile->line().get(i);
+            QString sourcePath;
+            sourcePath.reserve(std::accumulate(source.path().begin(), source.path().end(), -1,
+                                               [](int length, const auto &str) {
+                                                   return length + str.rtrim('\0').size() + 1;
+                                               }));
+            std::for_each(source.path().canon().begin(), source.path().canon().end(),
+                          [&sourcePath](char c) { sourcePath += c; });
+            QFile sourceFile(sourcePath);
             if (sourceFile.open(QIODevice::ReadOnly)) {
-                QPlainTextEdit *sourceView = new QPlainTextEdit(sourceFile.readAll());
+                QByteArray sourceContents = sourceFile.readAll();
+                if (source.md5() && QCryptographicHash::hash(sourceContents, QCryptographicHash::Md5) !=
+                    QByteArray::fromRawData(reinterpret_cast<const char *>(source.md5()),
+                                            QCryptographicHash::hashLength(QCryptographicHash::Md5))) {
+                    changedSourcePaths << sourcePath;
+                }
+                QPlainTextEdit *sourceView = new QPlainTextEdit(sourceContents);
                 sourceView->setObjectName(QStringLiteral("sourceView%0").arg(i));
                 sourceView->setReadOnly(true);
                 sourceView->setCenterOnScroll(true);
                 sourceView->setContextMenuPolicy(Qt::CustomContextMenu);
                 connect(sourceView, &QWidget::customContextMenuRequested,
                         this, &SourcesWidget::sourceContextMenu);
-                m_tabs->addTab(sourceView, QFileInfo(sourceFile).baseName());
+                m_tabs->addTab(sourceView, QFileInfo(sourceFile).fileName());
                 new CDebugHighlighter(this, sourceView);
             }
         }
-        m_sources = std::move(sources);
-        m_stringList = std::move(stringList);
-        m_stringMap = std::move(stringMap);
-        m_globalModel->init(paths);
-        m_stackModel->init();
-    } else {
-        QMessageBox dialog(QMessageBox::Critical,
-                           findParent<MainWindow *>(this)->MSG_ERROR,
-                           tr("Error loading debug file:"), QMessageBox::Ok, this);
-        dialog.setInformativeText(debugFile.errorString());
-        dialog.exec();
+        if (!changedSourcePaths.empty()) {
+            QMessageBox dialog(QMessageBox::Warning, findParent<MainWindow *>(this)->MSG_WARNING,
+                               tr("Some source files have changed since compilation:"), QMessageBox::Ok,
+                               this);
+            dialog.setInformativeText(changedSourcePaths.join('\n'));
+            dialog.exec();
+        }
+        //m_stringList = std::move(stringList);
+        //m_stringMap = std::move(stringMap);
+        //m_globalModel->init(paths);
+        //m_stackModel->init();
+
+        m_debugFile = std::move(debugFile);
     }
 }
 
-bool SourcesWidget::lookupAddr(quint32 addr, int *sourceIndex, int *functionIndex,
-                               int *lineIndex) const {
-    if (!sourceIndex && !functionIndex && !lineIndex) {
-        return true;
+auto SourcesWidget::getLocInfo(quint32 addr) const -> LocInfo {
+    if (!m_debugFile) {
+        return {};
     }
-    const SourceBase sourceKey{addr, addr};
-    auto source = std::upper_bound(m_sources.begin(), m_sources.end(), sourceKey,
-                                   [](const SourceBase &first,
-                                      const SourceBase &second) {
-                                       return first.endAddr < second.startAddr;
-                                   });
-    if (source == m_sources.begin() ||
-        addr < (--source)->startAddr || addr >= source->endAddr) {
-        return false;
+    const auto &locs = m_debugFile->line().locs();
+    auto after = locs.upper_bound(addr);
+    if (after == locs.begin() || after == locs.end()) {
+        return {};
     }
-    if (sourceIndex) {
-        *sourceIndex = std::distance(m_sources.begin(), source);
-        if (!functionIndex && !lineIndex) {
-            return true;
-        }
+    auto cur = std::prev(after);
+    if (cur->second._M_end_sequence) {
+        return {};
     }
-    const Line lineKey{0, addr};
-    const FunctionBase functionKey{{lineKey}};
-    auto function = std::upper_bound(source->functionList.begin(),
-                                     source->functionList.end(), functionKey,
-                                     [](const FunctionBase &first,
-                                        const FunctionBase &second) {
-                                         return first.lines.last().addr <
-                                             second.lines.first().addr;
-                                     });
-    if (function == source->functionList.begin() ||
-        addr < (--function)->lines.first().addr ||
-        addr >= function->lines.last().addr) {
-        return false;
-    }
-    if (functionIndex) {
-        *functionIndex = std::distance(source->functionList.begin(), function);
-        if (!lineIndex) {
-            return true;
-        }
-    }
-    auto line =
-        std::prev(std::upper_bound(std::next(function->lines.begin()),
-                                   std::prev(function->lines.end()), lineKey,
-                                   [](const Line &first, const Line &second) {
-                                       return first.addr < second.addr;
-                                   }));
-    *lineIndex = std::distance(function->lines.begin(), line);
-    return true;
+    return { after->second._M_address, cur->second._M_file, cur->second._M_line, cur->second._M_column };
 }
 
 void SourcesWidget::updateFormats() {
@@ -713,32 +500,47 @@ void SourcesWidget::updateFormats() {
     }
 }
 
-void SourcesWidget::updatePC(quint32 pc) {
+void SourcesWidget::updatePC() {
     m_globalModel->update();
     m_stackModel->update();
-    for (auto &sourceView : m_tabs->findChildren<QPlainTextEdit *>()) {
+    for (auto sourceView : m_tabs->findChildren<QPlainTextEdit *>()) {
         sourceView->setExtraSelections({});
     }
-    int sourceIndex, functionIndex, lineIndex;
-    if (!lookupAddr(pc, &sourceIndex, &functionIndex, &lineIndex)) {
+    if (!m_debugFile) {
         return;
     }
-    QPlainTextEdit *sourceView = m_tabs->findChild<QPlainTextEdit *>(QStringLiteral("sourceView%0").arg(sourceIndex));
-    QTextBlock block = sourceView->document()->findBlockByNumber(m_sources.at(sourceIndex).functionList.at(functionIndex).lines.at(lineIndex).num - 1);
+    const auto &locs = m_debugFile->line().locs();
+    auto it = locs.upper_bound(cpu.registers.PC);
+    if (it == locs.begin()) {
+        return;
+    }
+    if (!(--it)->second._M_line) {
+        return;
+    }
+    QPlainTextEdit *sourceView = m_tabs->findChild<QPlainTextEdit *>(
+            QStringLiteral("sourceView%0").arg(it->second._M_file));
+    QTextBlock block = sourceView->document()->findBlockByNumber(it->second._M_line - 1);
     if (!block.isValid()) {
         return;
     }
     QTextEdit::ExtraSelection pcSelection;
     pcSelection.cursor = QTextCursor(block);
-    if (pcSelection.cursor.movePosition(QTextCursor::EndOfWord)) {
+    if (it->second._M_column) {
+        pcSelection.cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor,
+                                        it->second._M_column - 1);
+    } else if (pcSelection.cursor.movePosition(QTextCursor::EndOfWord)) {
         pcSelection.cursor.movePosition(QTextCursor::StartOfBlock);
     } else {
         pcSelection.cursor.movePosition(QTextCursor::NextWord);
     }
     sourceView->setTextCursor(pcSelection.cursor);
-    pcSelection.cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
-    pcSelection.cursor.movePosition(QTextCursor::PreviousWord, QTextCursor::KeepAnchor);
-    pcSelection.cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
+    if (it->second._M_column) {
+        pcSelection.cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
+    } else {
+        pcSelection.cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+        pcSelection.cursor.movePosition(QTextCursor::PreviousWord, QTextCursor::KeepAnchor);
+        pcSelection.cursor.movePosition(QTextCursor::EndOfWord, QTextCursor::KeepAnchor);
+    }
     pcSelection.format.setBackground(QColor::fromRgb(0xFFFF99));
     sourceView->setExtraSelections({pcSelection});
     sourceView->centerCursor();
@@ -747,12 +549,20 @@ void SourcesWidget::updatePC(quint32 pc) {
 
 void SourcesWidget::updateAddr(quint32 addr, unsigned type, bool state) {
     (void)type; // TODO: implement
-    int sourceIndex, functionIndex, lineIndex;
-    if (!lookupAddr(addr, &sourceIndex, &functionIndex, &lineIndex)) {
+    if (!m_debugFile) {
         return;
     }
-    auto sourceView = m_tabs->findChild<QPlainTextEdit *>(QStringLiteral("sourceView%0").arg(sourceIndex));
-    QTextBlock block = sourceView->document()->findBlockByNumber(m_sources.at(sourceIndex).functionList.at(functionIndex).lines.at(lineIndex).num - 1);
+    const auto &locs = m_debugFile->line().locs();
+    auto it = locs.upper_bound(addr);
+    if (it == locs.begin()) {
+        return;
+    }
+    if (!(--it)->second._M_line) {
+        return;
+    }
+    auto sourceView = m_tabs->findChild<QPlainTextEdit *>(
+            QStringLiteral("sourceView%0").arg(it->second._M_file));
+    QTextBlock block = sourceView->document()->findBlockByNumber(it->second._M_line - 1);
     if (!block.isValid()) {
         return;
     }
@@ -765,31 +575,10 @@ void SourcesWidget::updateAddr(quint32 addr, unsigned type, bool state) {
 }
 
 void SourcesWidget::sourceContextMenu(const QPoint &pos) {
+    if (!m_debugFile) {
+        return;
+    }
     QPlainTextEdit *sourceView = static_cast<QPlainTextEdit *>(m_tabs->currentWidget());
-    const QVector<Function> &functions = m_sources.at(sourceView->objectName().midRef(QStringLiteral("sourceView").count()).toInt()).functionList;
-    quint32 num = sourceView->cursorForPosition(pos).block().blockNumber() + 1;
-    const Line lineKey{num, 0};
-    const FunctionBase functionKey{{lineKey}};
-    auto function = std::upper_bound(functions.begin(), functions.end(),
-                                     functionKey,
-                                     [](const FunctionBase &first,
-                                        const FunctionBase &second) {
-                                         return first.lines.last().num <
-                                             second.lines.first().num;
-                                     });
-    if (function == functions.begin()) {
-        return;
-    }
-    const QVector<Line> &lines = (--function)->lines;
-    if (lineKey.num < lines.first().num || lineKey.num > lines.last().num) {
-        return;
-    }
-    auto line =
-        std::prev(std::upper_bound(std::next(lines.begin()), std::prev(lines.end()),
-                                   lineKey,
-                                   [](const Line &first, const Line &second) {
-                                       return first.num < second.num;
-                                   }));
 
     QMenu menu;
     QAction runUntilAction(tr("Run Until"));
@@ -799,10 +588,20 @@ void SourcesWidget::sourceContextMenu(const QPoint &pos) {
     menu.addAction(&toggleBreakAction);
 
     QAction *action = menu.exec(sourceView->mapToGlobal(pos));
+
+    const auto &source = m_debugFile->line()
+        .get(sourceView->objectName().midRef(QStringLiteral("sourceView").count()).toInt());
+    QTextCursor cursor = sourceView->cursorForPosition(pos);
+    auto it = source.lines().upper_bound({ cursor.blockNumber() + 1, cursor.columnNumber() });
+    if (it == source.lines().begin()) {
+        return;
+    }
+    --it;
+
     if (action == &runUntilAction) {
-        emit runUntilTriggered(line->addr);
+        emit runUntilTriggered(it->second);
     } else if (action == &toggleBreakAction) {
-        emit breakToggled(line->addr);
+        emit breakToggled(it->second);
     }
 }
 
@@ -1034,15 +833,35 @@ QString SourcesWidget::VariableModel::variableValueToString(const Variable &vari
         case 1:
         case 6:
             if (quint32 value = mem_peek_long(addr)) {
-                int sourceIndex, functionIndex;
-                if (lookupAddr(value, &sourceIndex, &functionIndex)) {
-                    return '&' + stringList().value(sources().at(sourceIndex).functionList.at(functionIndex).name - 1);
-                } else {
+                //int sourceIndex, functionIndex;
+                //if (lookupAddr(value, &sourceIndex, &functionIndex)) {
+                //    return '&' + stringList().value(sources().at(sourceIndex).functionList.at(functionIndex).name - 1);
+                //} else {
                     return "0x" + QString::number(value, 16).rightJustified(6, '0');
-                }
+                //}
             }
             return "NULL";
     }
+}
+
+int SourcesWidget::VariableModel::createVariable(int parent, int parentIndex, int childIndex, const debuginfo::dwarf::section::_Die &entry) {
+    int id = m_freeVariable;
+    if (id == -1) {
+        id = m_variables.count();
+        m_variables.resize(id + 1);
+    } else {
+        m_freeVariable = m_variables.at(id).parent;
+    }
+    auto &variable = m_variables[id];
+    variable.parent = parent;
+    variable.parentIndex = parentIndex;
+    variable.childIndex = childIndex;
+    variable.flags = {};
+    variable.flags.setFlag(Variable::Flag::Visited, m_visited);
+    const auto name = entry.attr(debuginfo::dwarf::_At::DW_AT_name);
+    variable.data[0] = QString::fromUtf8(name.str().data(), name.str().rtrim('\0').size());
+    variable.data[1] = "<unknown>";
+    return id;
 }
 
 int SourcesWidget::VariableModel::createVariable(int parent, int parentIndex, int childIndex,
@@ -1062,7 +881,7 @@ int SourcesWidget::VariableModel::createVariable(int parent, int parentIndex, in
     variable.symbol = symbol;
     variable.base = base;
     variable.context = context;
-    variable.flags = 0;
+    variable.flags = {};
     variable.flags.setFlag(Variable::Flag::Visited, m_visited);
     variable.data[0] = name.isNull() ? variableTypeToString(variable) : name;
     variable.data[1] = variableValueToString(variable);
@@ -1097,10 +916,8 @@ void SourcesWidget::VariableModel::removeTopLevels(int first, int last) {
             deleteVariable(id);
         }
     }
-    m_topLevelData[0].erase(m_topLevelData[0].begin() + first,
-                            m_topLevelData[0].begin() + last + 1);
-    m_topLevelData[1].erase(m_topLevelData[1].begin() + first,
-                            m_topLevelData[1].begin() + last + 1);
+    for (auto &topLevelData : m_topLevelData)
+        topLevelData.erase(topLevelData.begin() + first, topLevelData.begin() + last + 1);
     m_topLevelChildren.erase(m_topLevelChildren.begin() + first,
                              m_topLevelChildren.begin() + last + 1);
     endRemoveRows();
@@ -1258,9 +1075,8 @@ QVariant SourcesWidget::VariableModel::data(const QModelIndex &index, int role) 
     }
     switch (role) {
         case Qt::DisplayRole:
-            if (index.internalId() == s_topLevelId) {
+            if (index.internalId() == s_topLevelId)
                 return m_topLevelData[index.column()].at(index.row());
-            }
             return m_variables.at(index.internalId()).data[index.column()];
         case Qt::TextAlignmentRole:
             return int((index.column() ? Qt::AlignLeft : Qt::AlignRight) |
@@ -1385,179 +1201,317 @@ void SourcesWidget::GlobalModel::init(const QStringList &paths) {
     beginResetModel();
     m_freeVariable = -1;
     m_variables.clear();
-    m_topLevelData[0].clear();
-    m_topLevelData[1].clear();
+    for (auto &topLevelData : m_topLevelData)
+        topLevelData.clear();
     m_topLevelChildren.clear();
-    int prefixLength = commonPrefixLength(paths);
-    for (int parent = 0; parent < sources().count(); ++parent) {
-        QStringRef path = paths.at(parent).midRef(prefixLength);
-        int lastSeparator = path.lastIndexOf('/') + 1;
-        m_topLevelData[0] << path.left(lastSeparator).toString();
-        m_topLevelData[1] << path.mid(lastSeparator).toString();
-        m_topLevelChildren.append(QList<int>());
-
-        auto &source = sources().at(parent);
-        auto &symbols = source.symbolList;
-        Context context = { nullptr, &source };
-        for (int child = 0; child < symbols.count(); ++child) {
-            auto &symbol = symbols.at(child);
-            QString name = stringList().value(symbol.name - 1);
-            m_topLevelChildren.last() <<
-                createVariable(s_topLevelParent, parent, child, symbol, context);
-        }
-    }
+    //int prefixLength = commonPrefixLength(paths);
+    //for (int parent = 0; parent < sources().count(); ++parent) {
+    //    QStringRef path = paths.at(parent).midRef(prefixLength);
+    //    int lastSeparator = path.lastIndexOf('/') + 1;
+    //    m_topLevelData[0] << path.left(lastSeparator).toString();
+    //    m_topLevelData[1] << path.mid(lastSeparator).toString();
+    //    m_topLevelChildren.append(QList<int>());
+    //
+    //    auto &source = sources().at(parent);
+    //    auto &symbols = source.symbolList;
+    //    Context context = { nullptr, &source };
+    //    for (int child = 0; child < symbols.count(); ++child) {
+    //        auto &symbol = symbols.at(child);
+    //        QString name = stringList().value(symbol.name - 1);
+    //        m_topLevelChildren.last() <<
+    //            createVariable(s_topLevelParent, parent, child, symbol, context);
+    //    }
+    //}
     endResetModel();
 }
 
+constexpr quint32 SourcesWidget::StackModel::undefValue;
+
+void SourcesWidget::StackModel::computeRule(const StackEntry &entry, quint32 &value,
+                                            const debuginfo::dwarf::section::Frame::Rule &rule) {
+    if (rule.is_same_val()) {
+        return;
+    }
+    value = undefValue;
+    if (rule.is_off()) {
+        if (entry.cfa != undefValue) {
+            value = mem_peek_long((entry.cfa + rule.off()) & 0xFFFFFFu);
+        }
+    } else if (rule.is_val_off()) {
+        if (entry.cfa != undefValue) {
+            value = (entry.cfa + rule.off()) & 0xFFFFFFu;
+        }
+    } else if (rule.is_reg()) {
+        if (rule.reg() != debuginfo::dwarf::Reg::None) {
+            value = entry.regs[rule.reg()];
+        }
+    } else if (rule.is_reg_off()) {
+        if (rule.reg() != debuginfo::dwarf::Reg::None) {
+            quint32 reg = entry.regs[rule.reg()];
+            if (reg != undefValue) {
+                value = (reg + rule.off()) & 0xFFFFFFu;
+            }
+        }
+    }
+}
+
 void SourcesWidget::StackModel::update() {
+    if (!debugFile()) {
+        return;
+    }
+
     QVector<StackEntry> stack;
-    quint32 ix = cpu.registers.IX, pc = cpu.registers.PC;
-    bool top = true;
+    StackEntry entry;
+    entry.cfa = undefValue;
+    entry.regs[debuginfo::dwarf::Reg::BC]  = cpu.registers.BC;
+    entry.regs[debuginfo::dwarf::Reg::DE]  = cpu.registers.DE;
+    entry.regs[debuginfo::dwarf::Reg::HL]  = cpu.registers.HL;
+    entry.regs[debuginfo::dwarf::Reg::AF]  = cpu.registers.AF;
+    entry.regs[debuginfo::dwarf::Reg::IX]  = cpu.registers.IX;
+    entry.regs[debuginfo::dwarf::Reg::IY]  = cpu.registers.IY;
+    entry.regs[debuginfo::dwarf::Reg::SPS] = cpu.registers.SPS;
+    entry.regs[debuginfo::dwarf::Reg::SPL] = cpu.registers.SPL;
+    entry.regs[debuginfo::dwarf::Reg::PC]  = cpu.registers.PC;
+    QSet<quint32> seen;
+    seen << undefValue;
+    int fudgePC = 0;
     forever {
-        int sourceIndex, functionIndex;
-        if (!lookupAddr(pc, &sourceIndex, &functionIndex, nullptr)) {
+        quint32 pc = (entry.regs[debuginfo::dwarf::Reg::PC] + fudgePC) & 0xFFFFFFu;
+        const auto &rules = debugFile()->frame().get(pc);
+        computeRule(entry, entry.cfa, rules.cfa());
+        if (seen.contains(entry.cfa) || seen.size() > 1500)
             break;
+        seen << entry.cfa;
+        {
+            int index = stack.count();
+            const debuginfo::dwarf::section::Info::_Scope *prev =
+                 &debuginfo::dwarf::section::Info::_Scope::null();
+            const auto insert = [&]() {
+                if (*prev && !prev->is_unit()) {
+                    entry.scope = prev;
+                    stack.insert(index, entry);
+                }
+            };
+            for (const auto *scope = &debugFile()->info().root();
+                 *scope; prev = scope, scope = &scope->get(pc))
+                if (scope->is_function())
+                    insert();
+            insert();
         }
-        const Source &source = sources().at(sourceIndex);
-        const Function &function = source.functionList.at(functionIndex);
-        static const quint8 prolog[2 + 5 + 2] = {0xDD,0xE5, 0xDD,0x21,0,0,0, 0xDD,0x39},
-            epilog[2 + 2 + 1] = {0xDD,0xF9, 0xDD,0xE1, 0xC9};
-        static const quint32 stackTop = 0xD1A87E, stackBot = 0xD1987E;
-        quint32 prologStartAddr = function.lines.first().addr,
-            prologEndAddr = function.lines.at(1).addr,
-            epilogStartAddr = function.lines.last().addr - sizeof(epilog);
-        void *prologPtr = phys_mem_ptr(prologStartAddr, sizeof(prolog)),
-            *epilogPtr = phys_mem_ptr(epilogStartAddr, sizeof(epilog));
-        if (!prologPtr || memcmp(prologPtr, prolog, sizeof(prolog)) ||
-            !epilogPtr || memcmp(epilogPtr, epilog, sizeof(epilog))) {
-            break;
-        }
-        if (pc >= prologEndAddr && pc <= epilogStartAddr) {
-            stack << StackEntry{ ix, pc, { mem_peek_long(ix), mem_peek_long(ix + 3) },
-                                 &source, &function };
-        }
-        quint32 ixAddr, pcAddr;
-        if (pc < prologStartAddr + sizeof(prolog)) {
-            if (!top) {
-                break;
-            }
-            if (pc < prologStartAddr + 2) { // PUSH IX
-                ixAddr = ~0u;
-                pcAddr = cpu.registers.SPL;
-            } else { // LD IX,0 \ ADD IX,SP
-                ixAddr = cpu.registers.SPL;
-                pcAddr = cpu.registers.SPL + 3;
-            }
-        } else if (pc >= epilogStartAddr + 2 + 2) { // LD SP,IX \ POP IX
-            if (!top) {
-                break;
-            }
-            ixAddr = ~0u;
-            pcAddr = cpu.registers.SPL;
-        } else {
-            ixAddr = ix;
-            pcAddr = ix + 3;
-        }
-        if (ixAddr > stackBot + 3 && ixAddr <= stackTop - 3) {
-            ix = mem_peek_long(ixAddr);
-        } else if (ixAddr != ~0u) {
-            break;
-        }
-        if (pcAddr > stackBot + 3 && pcAddr <= stackTop - 3) {
-            pc = mem_peek_long(pcAddr);
-        } else {
-            break;
-        }
-        top = false;
+        for (debuginfo::dwarf::Reg reg{}; reg != debuginfo::dwarf::Reg::None;
+             reg = debuginfo::dwarf::Reg(std::size_t(reg) + 1))
+            computeRule(entry, entry.regs[reg], rules[reg]);
+        fudgePC = -1;
     }
-    if (stack.isEmpty()) {
-        ix = cpu.registers.SPL;
-    } else {
-        ix = stack.last().ix;
-    }
-    int aliveIndex = m_stack.count();
-    while (aliveIndex--) {
-        auto &entry = m_stack.at(aliveIndex);
-        if (entry.ix <= ix ||
-            mem_peek_long(entry.ix) != entry.cookie[0] ||
-            mem_peek_long(entry.ix + 3) != entry.cookie[1]) {
-            break;
-        }
-    }
-    int commonSuffix = m_stack.count() - aliveIndex++;
-    stack << m_stack.mid(aliveIndex);
-    for (; commonSuffix <= stack.count() && commonSuffix <= m_stack.count() &&
-             stack.at(stack.count() - commonSuffix).function ==
-             m_stack.at(m_stack.count() - commonSuffix).function; ++commonSuffix);
+    int commonSuffix = 1;
+    while (commonSuffix <= stack.count() && commonSuffix <= m_stack.count() &&
+           stack.at(stack.count() - commonSuffix).same(m_stack.at(m_stack.count() - commonSuffix)))
+        ++commonSuffix;
+    commonSuffix = 1;
     removeTopLevels(0, m_stack.count() - commonSuffix);
     VariableModel::update();
     if (commonSuffix <= stack.count()) {
         beginInsertRows(QModelIndex(), 0, stack.count() - commonSuffix);
         for (int parent = stack.count() - commonSuffix; parent >= 0; --parent) {
-            auto &entry = stack.at(parent);
-            qDebug().nospace().noquote() << stringList().at(entry.function->name - 1) << ':';
-            m_topLevelData[0].prepend(stringList().value(entry.function->name - 1));
-            m_topLevelData[1].prepend("()");
+            const auto &entry = stack.at(parent);
+            const auto pc = entry.regs[debuginfo::dwarf::Reg::PC];
+            const auto &name = entry.scope->function().entry().attr(debuginfo::dwarf::_At::DW_AT_name);
+            m_topLevelData[0].prepend(QString::fromUtf8(name.str().data(),
+                                                        name.str().rtrim('\0').size()));
+            m_topLevelData[1].prepend(QStringLiteral("()"));
             m_topLevelChildren.prepend({});
-            Context context = { entry.function, entry.source };
-            auto &symbols = entry.function->symbolList;
-            for (int child = 0; child < symbols.count(); ++child) {
-                auto &symbol = symbols.at(child);
-                QString name = stringList().value(symbol.name - 1);
-                m_topLevelChildren.first() <<
-                    createVariable(s_topLevelParent, parent - stack.count(), child, symbol,
-                                   context, symbol.kind == SymbolKind::StackSlot ? entry.ix : 0);
+            int child = 0;
+            for (const auto *scope = entry.scope,
+                     *prev = &debuginfo::dwarf::section::Info::_Scope::null();
+                 !prev->is_function(); prev = scope, scope = &scope->parent()) {
+                for (const auto &entity : *scope) {
+                    switch (entity.get()._M_tag) {
+                        case debuginfo::dwarf::_Tag::DW_TAG_variable: {
+                            const auto &location =
+                                entity.get().attr(debuginfo::dwarf::_At::DW_AT_location);
+                            debuginfo::Data expr;
+                            if (location.is_data())
+                                expr = location.data();
+                            else if (location.is_loclist())
+                                for (auto loc : location.loclist()) {
+                                    if (pc < decltype(pc)(loc._M_range.first))
+                                        break;
+                                    if (pc < decltype(pc)(loc._M_range.second)) {
+                                        expr = expr = loc._M_expr;
+                                        break;
+                                    }
+                                }
+                            if (!expr.empty())
+                                m_topLevelChildren.first() << createVariable(s_topLevelParent,
+                                                                             parent - stack.count(),
+                                                                             child++, entity);
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                }
             }
         }
-        qDebug() << "";
         endInsertRows();
     }
     int firstParentChanged = -1;
     const QVector<int> changedRoles{ Qt::DisplayRole };
     for (int parent = 0; parent < stack.count(); ++parent) {
-        auto &symbols = stack.at(parent).function->symbolList;
-        QStringList argumentList;
-        for (int child = 0; child < symbols.count(); ++child) {
-            auto &symbol = symbols.at(child);
-            if (symbol.kind != SymbolKind::StackSlot) {
-                continue;
-            }
-            if (symbol.value < 0) {
-                break;
-            }
-            argumentList <<
-                m_variables.at(m_topLevelChildren.at(parent).at(child)).data[1];
-            if (argumentList.last().isEmpty()) {
-                argumentList.last() = '?';
-            }
-        }
-        QString arguments = '(' + argumentList.join(", ") + ')';
-        bool argumentsChanged = m_topLevelData[1].at(parent) != arguments;
-        m_topLevelData[1][parent] = arguments;
-        if (argumentsChanged ^ (firstParentChanged == -1)) {
-            if (argumentsChanged) {
-                emit dataChanged(createIndex(firstParentChanged, 1, s_topLevelId),
-                                 createIndex(parent - 1, 1, s_topLevelId), changedRoles);
-                firstParentChanged = -1;
-            } else {
-                firstParentChanged = parent;
-            }
-        }
     }
-    if (firstParentChanged != -1) {
+    if (firstParentChanged != -1)
         emit dataChanged(createIndex(firstParentChanged, 1, s_topLevelId),
                          createIndex(stack.count() - 1, 1, s_topLevelId), changedRoles);
-    }
     m_stack = stack;
+
+    //QVector<StackEntry> stack;
+    //quint32 ix = cpu.registers.IX, pc = cpu.registers.PC;
+    //bool top = true;
+    //forever {
+    //    int sourceIndex, functionIndex;
+    //    if (!lookupAddr(pc, &sourceIndex, &functionIndex)) {
+    //        break;
+    //    }
+    //    const Source &source = sources().at(sourceIndex);
+    //    const Function &function = source.functionList.at(functionIndex);
+    //    static const quint8 prolog[2 + 5 + 2] = {0xDD,0xE5, 0xDD,0x21,0,0,0, 0xDD,0x39},
+    //        epilog[2 + 2 + 1] = {0xDD,0xF9, 0xDD,0xE1, 0xC9};
+    //    static const quint32 stackTop = 0xD1A87E, stackBot = 0xD1987E;
+    //    quint32 prologStartAddr = function.lines.first().addr,
+    //        prologEndAddr = function.lines.at(1).addr,
+    //        epilogStartAddr = function.lines.last().addr - sizeof(epilog);
+    //    void *prologPtr = phys_mem_ptr(prologStartAddr, sizeof(prolog)),
+    //        *epilogPtr = phys_mem_ptr(epilogStartAddr, sizeof(epilog));
+    //    if (!prologPtr || memcmp(prologPtr, prolog, sizeof(prolog)) ||
+    //        !epilogPtr || memcmp(epilogPtr, epilog, sizeof(epilog))) {
+    //        break;
+    //    }
+    //    if (pc >= prologEndAddr && pc <= epilogStartAddr) {
+    //        stack << StackEntry{ ix, pc, { mem_peek_long(ix), mem_peek_long(ix + 3) },
+    //                             &source, &function };
+    //    }
+    //    quint32 ixAddr, pcAddr;
+    //    if (pc < prologStartAddr + sizeof(prolog)) {
+    //        if (!top) {
+    //            break;
+    //        }
+    //        if (pc < prologStartAddr + 2) { // PUSH IX
+    //            ixAddr = ~0u;
+    //            pcAddr = cpu.registers.SPL;
+    //        } else { // LD IX,0 \ ADD IX,SP
+    //            ixAddr = cpu.registers.SPL;
+    //            pcAddr = cpu.registers.SPL + 3;
+    //        }
+    //    } else if (pc >= epilogStartAddr + 2 + 2) { // LD SP,IX \ POP IX
+    //        if (!top) {
+    //            break;
+    //        }
+    //        ixAddr = ~0u;
+    //        pcAddr = cpu.registers.SPL;
+    //    } else {
+    //        ixAddr = ix;
+    //        pcAddr = ix + 3;
+    //    }
+    //    if (ixAddr > stackBot + 3 && ixAddr <= stackTop - 3) {
+    //        ix = mem_peek_long(ixAddr);
+    //    } else if (ixAddr != ~0u) {
+    //        break;
+    //    }
+    //    if (pcAddr > stackBot + 3 && pcAddr <= stackTop - 3) {
+    //        pc = mem_peek_long(pcAddr);
+    //    } else {
+    //        break;
+    //    }
+    //    top = false;
+    //}
+    //if (stack.isEmpty()) {
+    //    ix = cpu.registers.SPL;
+    //} else {
+    //    ix = stack.last().ix;
+    //}
+    //int aliveIndex = m_stack.count();
+    //while (aliveIndex--) {
+    //    auto &entry = m_stack.at(aliveIndex);
+    //    if (entry.ix <= ix ||
+    //        mem_peek_long(entry.ix) != entry.cookie[0] ||
+    //        mem_peek_long(entry.ix + 3) != entry.cookie[1]) {
+    //        break;
+    //    }
+    //}
+    //int commonSuffix = m_stack.count() - aliveIndex++;
+    //stack << m_stack.mid(aliveIndex);
+    //for (; commonSuffix <= stack.count() && commonSuffix <= m_stack.count() &&
+    //         stack.at(stack.count() - commonSuffix).function ==
+    //         m_stack.at(m_stack.count() - commonSuffix).function; ++commonSuffix);
+    //removeTopLevels(0, m_stack.count() - commonSuffix);
+    //VariableModel::update();
+    //if (commonSuffix <= stack.count()) {
+    //    beginInsertRows(QModelIndex(), 0, stack.count() - commonSuffix);
+    //    for (int parent = stack.count() - commonSuffix; parent >= 0; --parent) {
+    //        auto &entry = stack.at(parent);
+    //        qDebug().nospace().noquote() << stringList().at(entry.function->name - 1) << ':';
+    //        m_topLevelData[0].prepend(stringList().value(entry.function->name - 1));
+    //        m_topLevelData[1].prepend("()");
+    //        m_topLevelChildren.prepend({});
+    //        Context context = { entry.function, entry.source };
+    //        auto &symbols = entry.function->symbolList;
+    //        for (int child = 0; child < symbols.count(); ++child) {
+    //            auto &symbol = symbols.at(child);
+    //            QString name = stringList().value(symbol.name - 1);
+    //            m_topLevelChildren.first() <<
+    //                createVariable(s_topLevelParent, parent - stack.count(), child, symbol,
+    //                               context, symbol.kind == SymbolKind::StackSlot ? entry.ix : 0);
+    //        }
+    //    }
+    //    qDebug() << "";
+    //    endInsertRows();
+    //}
+    //int firstParentChanged = -1;
+    //const QVector<int> changedRoles{ Qt::DisplayRole };
+    //for (int parent = 0; parent < stack.count(); ++parent) {
+    //    auto &symbols = stack.at(parent).function->symbolList;
+    //    QStringList argumentList;
+    //    for (int child = 0; child < symbols.count(); ++child) {
+    //        auto &symbol = symbols.at(child);
+    //        if (symbol.kind != SymbolKind::StackSlot) {
+    //            continue;
+    //        }
+    //        if (symbol.value < 0) {
+    //            break;
+    //        }
+    //        argumentList <<
+    //            m_variables.at(m_topLevelChildren.at(parent).at(child)).data[1];
+    //        if (argumentList.last().isEmpty()) {
+    //            argumentList.last() = '?';
+    //        }
+    //    }
+    //    QString arguments = '(' + argumentList.join(", ") + ')';
+    //    bool argumentsChanged = m_topLevelData[1].at(parent) != arguments;
+    //    m_topLevelData[1][parent] = arguments;
+    //    if (argumentsChanged ^ (firstParentChanged == -1)) {
+    //        if (argumentsChanged) {
+    //            emit dataChanged(createIndex(firstParentChanged, 1, s_topLevelId),
+    //                             createIndex(parent - 1, 1, s_topLevelId), changedRoles);
+    //            firstParentChanged = -1;
+    //        } else {
+    //            firstParentChanged = parent;
+    //        }
+    //    }
+    //}
+    //if (firstParentChanged != -1) {
+    //    emit dataChanged(createIndex(firstParentChanged, 1, s_topLevelId),
+    //                     createIndex(stack.count() - 1, 1, s_topLevelId), changedRoles);
+    //}
+    //m_stack = stack;
 }
+
 void SourcesWidget::StackModel::init() {
     beginResetModel();
     m_freeVariable = -1;
     m_variables.clear();
-    m_topLevelData[0].clear();
-    m_topLevelData[1].clear();
+    for (auto &topLevelData : m_topLevelData)
+        topLevelData.clear();
     m_topLevelChildren.clear();
     m_stack.clear();
     endResetModel();
-    update();
 }

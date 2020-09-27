@@ -11,8 +11,9 @@
 #include "dockwidget.h"
 #include "datawidget.h"
 #include "vartablemodel.h"
-#include "debugger/hexwidget.h"
 #include "debugger/disasm.h"
+#include "debugger/hexwidget.h"
+#include "debugger/sourceswidget.h"
 #include "capture/animated-png.h"
 #include "../../core/vat.h"
 #include "../../core/debug/debug.h"
@@ -767,6 +768,7 @@ private:
     bool m_setup = false;
     int m_fullscreen = FULLSCREEN_NONE;
     uint32_t m_runUntilAddr;
+    SourcesWidget::LocInfo m_runLoc;
 
     QPushButton *m_btnCancelTranser;
     QProgressBar *m_progressBar;

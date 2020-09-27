@@ -171,19 +171,38 @@ void debug_flag(int mask, bool set) {
 void debug_step(int mode, uint32_t addr) {
     switch (mode) {
         case DBG_STEP_IN:
+        case DBG_RUN_IN:
             debug.step = true;
+            debug.stepOver = false;
+            debug.stepOut = ~0u;
             break;
         case DBG_STEP_OVER:
+        case DBG_RUN_OVER:
             debug.step = true;
             debug.stepOver = true;
+            debug.stepOut = ~0u;
+            break;
+        case DBG_RUN_AGAIN:
+            gui_debug_close();
+            debug.step = true;
+            debug.stepOut = ~0u;
             break;
         case DBG_STEP_OUT:
+            debug.step = debug.stepOver = false;
+            /* fallthrough */
+        case DBG_RUN_OUT:
             gui_debug_close();
             debug.stepOut = debug.stackIndex;
             break;
+    }
+    switch (mode) {
         case DBG_STEP_NEXT:
         case DBG_RUN_UNTIL:
             gui_debug_close();
+            /* fallthrough */
+        case DBG_RUN_IN:
+        case DBG_RUN_OVER:
+        case DBG_RUN_OUT:
             debug.tempExec = addr;
             break;
         case DBG_BASIC_STEP_IN:
@@ -195,6 +214,9 @@ void debug_step(int mode, uint32_t addr) {
             debug.stepBasicBegin = addr;
             debug.stepBasicEnd = addr >> 16;
             debug_get_executing_basic_prgm(debug.stepBasicPrgm);
+            break;
+        default:
+            debug.tempExec = ~0u;
             break;
     }
 }
@@ -212,7 +234,7 @@ void debug_clear_basic_step(void) {
 void debug_inst_start(void) {
     uint32_t pc = cpu.registers.PC;
     debug.addr[pc] |= DBG_INST_START_MARKER;
-    if (debug.step && !(debug.addr[pc] & DBG_MASK_EXEC) && pc != debug.tempExec) {
+    if (debug.step && !(debug.addr[pc] & DBG_MASK_EXEC) && debug.tempExec == ~0u) {
         debug.step = debug.stepOver = false;
         debug_open(DBG_STEP, cpu.registers.PC);
     }
@@ -228,14 +250,22 @@ void debug_inst_fetch(void) {
     }
 }
 
-void debug_inst_repeat(void) {
+void debug_inst_repeat(bool first) {
     if (debug.step) {
-        if (debug.stepOver) {
-            gui_debug_close();
+        if (debug.stepOver || debug.tempExec != ~0u) {
+            if (first) {
+                gui_debug_close();
+            }
         } else {
             debug.step = false;
             debug_open(DBG_STEP, cpu.registers.PC);
         }
+    }
+}
+
+void debug_record_jump(uint32_t addr) {
+    if (debug.step) {
+        debug.tempExec = ~0u;
     }
 }
 
@@ -252,10 +282,14 @@ void debug_record_call(uint32_t retAddr, bool mode) {
     if (debug.stackSize < DBG_STACK_SIZE) {
         debug.stackSize++;
     }
-    if (debug.stepOver) {
-        gui_debug_close();
-        debug.step = debug.stepOver = false;
-        debug.stepOut = index;
+    if (debug.step) {
+        if (debug.stepOver) {
+            gui_debug_close();
+            debug.step = false;
+            debug.stepOut = index;
+        } else {
+            debug.tempExec = ~0u;
+        }
     }
 }
 
