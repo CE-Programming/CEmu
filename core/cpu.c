@@ -459,10 +459,15 @@ static void cpu_trap(void) {
     cpu_trap_rewind(1);
 }
 
-static void cpu_jump(uint32_t address, bool mode) {
+static void cpu_jump(uint32_t address, bool mode, bool absolute) {
     cpu_prefetch(address, mode);
 #ifdef DEBUG_SUPPORT
-    debug_record_ret(cpu.registers.PC, mode);
+    debug_record_jump(address);
+    if (absolute) {
+        debug_record_ret(cpu.registers.PC, mode);
+    }
+#else
+    (void)absolute;
 #endif
 }
 
@@ -480,7 +485,7 @@ static void cpu_return(void) {
     } else {
         address = cpu_pop_word();
     }
-    cpu_jump(address, mode);
+    cpu_jump(address, mode, true);
 }
 
 static void cpu_execute_alu(int i, uint8_t v) {
@@ -654,10 +659,14 @@ static void cpu_execute_bli() {
     uint_fast8_t xp = cpu.context.x << 2 | cpu.context.p;
     int_fast8_t delta = cpu.context.q ? -1 : 1;
     bool repeat = (cpu.context.x | cpu.context.p) & 1;
+#ifdef DEBUG_SUPPORT
+    bool first = true;
+#endif
     do {
 #ifdef DEBUG_SUPPORT
         if (cpu.inBlock) {
-            debug_inst_repeat();
+            debug_inst_repeat(first);
+            first = false;
         }
 #endif
         switch (cpu.context.z) {
@@ -973,12 +982,12 @@ void cpu_execute(void) {
                                     s = cpu_fetch_offset();
                                     if (--r->B) {
                                         cpu.cycles++;
-                                        cpu_prefetch(cpu_mask_mode(r->PC + s, cpu.L), cpu.ADL);
+                                        cpu_jump(cpu_mask_mode(r->PC + s, cpu.L), cpu.ADL, false);
                                     }
                                     break;
                                 case 3: /* JR d */
                                     s = cpu_fetch_offset();
-                                    cpu_prefetch(cpu_mask_mode(r->PC + s, cpu.L), cpu.ADL);
+                                    cpu_jump(cpu_mask_mode(r->PC + s, cpu.L), cpu.ADL, false);
                                     break;
                                 case 4:
                                 case 5:
@@ -987,7 +996,7 @@ void cpu_execute(void) {
                                     s = cpu_fetch_offset();
                                     if (cpu_read_cc(context.y - 4)) {
                                         cpu.cycles++;
-                                        cpu_prefetch(cpu_mask_mode(r->PC + s, cpu.L), cpu.ADL);
+                                        cpu_jump(cpu_mask_mode(r->PC + s, cpu.L), cpu.ADL, false);
                                     }
                                     break;
                             }
@@ -1208,7 +1217,7 @@ void cpu_execute(void) {
                                             break;
                                         case 2: /* JP (rr) */
                                             cpu_prefetch_discard();
-                                            cpu_jump(cpu_read_index(), cpu.L);
+                                            cpu_jump(cpu_read_index(), cpu.L, true);
                                             break;
                                         case 3: /* LD SP, HL */
                                             cpu_write_sp(cpu_read_index());
@@ -1220,7 +1229,7 @@ void cpu_execute(void) {
                         case 2: /* JP cc[y], nn */
                             if (cpu_read_cc(context.y)) {
                                 cpu.cycles++;
-                                cpu_jump(cpu_fetch_word_no_prefetch(), cpu.L);
+                                cpu_jump(cpu_fetch_word_no_prefetch(), cpu.L, true);
                             } else {
                                 cpu_fetch_word();
                             }
@@ -1233,7 +1242,7 @@ void cpu_execute(void) {
                             switch (context.y) {
                                 case 0: /* JP nn */
                                     cpu.cycles++;
-                                    cpu_jump(cpu_fetch_word_no_prefetch(), cpu.L);
+                                    cpu_jump(cpu_fetch_word_no_prefetch(), cpu.L, true);
                                     break;
                                 case 1: /* 0xCB prefixed opcodes */
                                     w = cpu_index_address();

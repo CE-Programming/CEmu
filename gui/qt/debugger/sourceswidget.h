@@ -5,6 +5,8 @@
 
 class CDebugHighlighter;
 
+#include <memory>
+
 #include <QtCore/QAbstractItemModel>
 #include <QtCore/QMultiHash>
 #include <QtCore/QStringList>
@@ -25,8 +27,27 @@ class SourcesWidget : public QWidget {
 
 public:
     SourcesWidget(QWidget * = Q_NULLPTR);
+    ~SourcesWidget() override;
 
     void setSourceFont(const QFont &font);
+
+    class LocInfo {
+        quint32 m_end, m_file, m_line, m_col;
+
+    public:
+        constexpr LocInfo() noexcept : m_end(~0u), m_file(), m_line(), m_col() {}
+        constexpr LocInfo(quint32 end, quint32 file, quint32 line, quint32 col) noexcept
+            : m_end(end), m_file(file), m_line(line), m_col(col) {}
+
+        constexpr bool invalid() const noexcept { return m_end == ~0u; }
+        constexpr bool unknown() const noexcept { return !m_line; }
+        constexpr quint32 end() const noexcept { return m_end; }
+        constexpr void end(quint32 end) noexcept { m_end = end; }
+        constexpr bool sameSourceLoc(const LocInfo &other) const noexcept {
+            return m_file == other.m_file && m_line == other.m_line && m_col == other.m_col;
+        }
+    };
+    LocInfo getLocInfo(quint32 addr) const;
 
 signals:
     void runUntilTriggered(quint32 addr);
@@ -34,7 +55,7 @@ signals:
 
 public slots:
     void selectDebugFile();
-    void updatePC(quint32 pc);
+    void updatePC();
     void updateAddr(quint32 addr, unsigned type, bool state);
 
 private slots:
@@ -47,6 +68,7 @@ private:
     class VariableModel;
     class GlobalModel;
     class StackModel;
+    class DebugFile;
 
     QTabWidget *m_tabs;
     //QTextCursor m_pcCursor;
@@ -56,6 +78,7 @@ private:
     StackModel *m_stackModel;
     QTextCharFormat m_defaultFormat, m_operatorFormat, m_literalFormat, m_escapeFormat,
         m_preprocessorFormat, m_commentFormat, m_keywordFormat, m_identifierFormat, m_errorFormat;
+    std::unique_ptr<DebugFile> m_debugFile;
 
     constexpr static quint32 s_unnamed = 0;
     struct Line {
@@ -105,7 +128,7 @@ private:
         QVector<Function> functionList;
         QMultiHash<quint32, int> functionMap;
     };
-    QVector<Source> m_sources;
+    //QVector<Source> m_sources;
     QStringList m_stringList;
     QHash<QString, quint32> m_stringMap;
 #ifdef QT_DEBUG
@@ -117,9 +140,6 @@ private:
     friend QDebug operator<<(QDebug debug, const Function &function);
     friend QDebug operator<<(QDebug debug, const Source &sourc);
 #endif
-
-    bool lookupAddr(quint32 addr, int *sourceIndex = nullptr,
-                    int *functionIndex = nullptr, int *lineIndex = nullptr) const;
 };
 
 #endif

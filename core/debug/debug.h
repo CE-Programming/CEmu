@@ -68,7 +68,8 @@ void debug_free(void);                               /* call after emulation end
 void debug_set_pc(uint32_t addr);                    /* when in gui debug set program counter */
 void debug_inst_start(void);
 void debug_inst_fetch(void);
-void debug_inst_repeat(void);
+void debug_inst_repeat(bool first);
+void debug_record_jump(uint32_t addr);
 void debug_record_call(uint32_t retAddr, bool stack);
 void debug_record_ret(uint32_t retAddr, bool stack);
 void debug_watch(uint32_t addr, int mask, bool set); /* set a breakpoint or a watchpoint */
@@ -175,6 +176,10 @@ enum {
     DBG_STEP_OVER,
     DBG_STEP_NEXT,
     DBG_RUN_UNTIL,
+    DBG_RUN_IN,
+    DBG_RUN_OVER,
+    DBG_RUN_AGAIN,
+    DBG_RUN_OUT,
     DBG_BASIC_STEP_IN,
     DBG_BASIC_STEP_NEXT,
 };
