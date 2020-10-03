@@ -387,7 +387,7 @@ static void usb_write(uint16_t pio, uint8_t value, bool poke) {
                         if (usb.regs.dma_fifo & 1 << fifo) {
                             transfer->max_pkt_size =
                                 EP_MAXPS((transfer->direction ? usb.regs.iep
-                                                              : usb.regs.oep)[transfer->endpoint]);
+                                                              : usb.regs.oep)[transfer->endpoint - 1]);
                             usb.regs.cxfifo |= CXFIFO_FIFOE(fifo);
                             usb.regs.gisr1 &= ~GISR1_RX_FIFO(fifo);
                             usb_grp1_int(GISR1_IN_FIFO(fifo));
