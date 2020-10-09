@@ -91,6 +91,31 @@ jobs:
       run: |
         echo QT5_BIN_DIR=${{ env.Qt5_DIR }}/bin >> $env:GITHUB_ENV
 
+    # Install Python + modules to run our helper script
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    # Install Python modules to run our helper script
+    - name: Install Python libraries for bootstrap helper script (static linking only)
+      if: ${{ matrix.linking == 'static' }}
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests jinja2 irc
+    
+    # Install our static dependencies via helper script
+    # TODO: get caching working here too
+    - name: Install static dependencies via bootstrap helper script
+      if: ${{ matrix.linking == 'static' }}
+      run: python -u gui\qt\deploy-scripts\appveyor_helper.py install
+
+    # TODO: automate this somehow?
+    - name: Set paths to newly installed static Qt libraries
+      if: ${{ matrix.linking == 'static' }}
+      run: |
+        echo QT5_BIN_DIR=${{ matrix.QT5_BIN_DIR }} >> $env:GITHUB_ENV
+    
     # Add MSYS2's /usr/bin to the PATH.
     # This allows vcpkg's build of libpng[apng] to succeed with adding the library prefix.
     # (It requires awk to correctly regen the source files...)
@@ -114,25 +139,6 @@ jobs:
         # This commit ID corresponds to 2020.07
         vcpkgGitCommitId: 56fffbe49dfb4dd8fae0940f272c5fd2b86be991
         appendedCacheKey: ${{ hashFiles(env.VCPKGRESPONSEFILE) }}-${{ runner.os }}-${{ matrix.arch_suffix }}-${{ matrix.linking }}
-
-    # Install Python modules to run our helper script
-    - name: Install Python libraries for bootstrap helper script (static linking only)
-      if: ${{ matrix.linking == 'static' }}
-      run: |
-        python -m pip install --upgrade pip
-        pip install requests jinja2 irc
-    
-    # Install our static dependencies via helper script
-    # TODO: get caching working here too
-    - name: Install static dependencies via bootstrap helper script
-      if: ${{ matrix.linking == 'static' }}
-      run: python -u gui\qt\deploy-scripts\appveyor_helper.py install
-
-    # TODO: automate this somehow?
-    - name: Set paths to newly installed static Qt libraries
-      if: ${{ matrix.linking == 'static' }}
-      run: |
-        echo QT5_BIN_DIR=${{ matrix.QT5_BIN_DIR }} >> $env:GITHUB_ENV
 
     ## Build time!
     
