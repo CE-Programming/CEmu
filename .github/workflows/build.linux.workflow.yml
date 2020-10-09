@@ -27,6 +27,7 @@ jobs:
     - name: Install Linux dependencies (Ubuntu 18.04+)
       run: |
         set -e
+        sudo apt-get update
         sudo apt-get install qt5-default qtbase5-dev libgl1-mesa-dev libarchive-dev libsdl2-dev libusb-1.0-0-dev
 
     - name: Build CEmu on Linux
