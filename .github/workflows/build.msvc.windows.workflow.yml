@@ -1,8 +1,5 @@
 name: Build/Deploy MSVC Windows
 
-# Note - for the newer GITHUB_ENV, %GITHUB_ENV% could be used but opted to use
-# the cross-platform ${{env.GITHUB_ENV}} instead. Similar story for GITHUB_PATH.
-
 on:
   push:
     branches: [ master, features/github-actions ]
@@ -92,14 +89,14 @@ jobs:
     - name: "Set shared/dynamic Qt location (v${{ env.QT_VERSION }}, ${{ matrix.arch_name }})"
       if: ${{ matrix.linking == 'dynamic' }}
       run: |
-        echo QT5_BIN_DIR::${{ env.Qt5_DIR }}/bin >> ${{env.GITHUB_ENV}}
+        echo QT5_BIN_DIR::${{ env.Qt5_DIR }}/bin >> %GITHUB_ENV%
 
     # Add MSYS2's /usr/bin to the PATH.
     # This allows vcpkg's build of libpng[apng] to succeed with adding the library prefix.
     # (It requires awk to correctly regen the source files...)
     - name: Add msys2 to system PATH
       run: |
-        echo C:\msys64\usr\bin >> ${{env.GITHUB_PATH}}
+        echo C:\msys64\usr\bin >> %GITHUB_PATH%
     
     - name: Set vcpkg's response file path used as part of cache's key.
       uses: lukka/set-shell-env@master
@@ -135,27 +132,27 @@ jobs:
     - name: Set paths to newly installed static Qt libraries
       if: ${{ matrix.linking == 'static' }}
       run: |
-        echo QT5_BIN_DIR=${{ matrix.QT5_BIN_DIR }} >> ${{env.GITHUB_ENV}}
+        echo QT5_BIN_DIR=${{ matrix.QT5_BIN_DIR }} >> %GITHUB_ENV%
 
     ## Build time!
     
     # Are we releasing?
     - name: Set CEmu version for release (if applicable)
       run: |
-        echo CEMU_VERSION=${{ github.event.release.tag_name }} >> ${{env.GITHUB_ENV}}
+        echo CEMU_VERSION=${{ github.event.release.tag_name }} >> %GITHUB_ENV%
         echo Using tagged version :${{ env.CEMU_VERSION }}
       if: "github.event.release.tag_name"
     
     - name: Set CEmu version for development (if applicable)
       run: |
-        echo CEMU_VERSION= >> ${{env.GITHUB_ENV}}
+        echo CEMU_VERSION= >> %GITHUB_ENV%
         echo "No version defined, using empty version '${{ env.CEMU_VERSION }}'"
       if: "!github.event.release.tag_name"
     
     # Set dynamic, matrix-controlled env var
     - name: Set extra static MSBuild flag, if applicable
       run: |
-        echo LINKING_EXTRA_MSBUILD_ARGS=/p:VcpkgTriplet=${{ matrix.arch }}-windows-static /p:VcpkgEnabled=true >> ${{env.GITHUB_ENV}}
+        echo LINKING_EXTRA_MSBUILD_ARGS=/p:VcpkgTriplet=${{ matrix.arch }}-windows-static /p:VcpkgEnabled=true >> %GITHUB_ENV%
         echo "Detected static linking, adding LINKING_EXTRA_MSBUILD_ARGS = '${{ env.LINKING_EXTRA_MSBUILD_ARGS }}'"
       if: "matrix.linking == 'static'"
     
@@ -241,9 +238,9 @@ jobs:
     
     - name: Set Qt location (v5.15.0, 32-bit)
       run: |
-        echo QT5_BIN_DIR_DYNAMIC_32=${{ env.Qt5_DIR }}/bin >> ${{env.GITHUB_ENV}}
-        echo QT_PLUGIN_PATH_DYNAMIC_32=${{ env.QT_PLUGIN_PATH }} >> ${{env.GITHUB_ENV}}
-        echo QML2_IMPORT_PATH_DYNAMIC_32=${{ env.QML2_IMPORT_PATH }} >> ${{env.GITHUB_ENV}}
+        echo QT5_BIN_DIR_DYNAMIC_32=${{ env.Qt5_DIR }}/bin >> %GITHUB_ENV%
+        echo QT_PLUGIN_PATH_DYNAMIC_32=${{ env.QT_PLUGIN_PATH }} >> %GITHUB_ENV%
+        echo QML2_IMPORT_PATH_DYNAMIC_32=${{ env.QML2_IMPORT_PATH }} >> %GITHUB_ENV%
     
     - name: Install Qt (v5.15.0, 64-bit)
       uses: jurplel/install-qt-action@v2
@@ -257,9 +254,9 @@ jobs:
     
     - name: Set Qt location (v5.15.0, 64-bit)
       run: |
-        echo QT5_BIN_DIR_DYNAMIC_64=${{ env.Qt5_DIR }}/bin >> ${{env.GITHUB_ENV}}
-        echo QT_PLUGIN_PATH_DYNAMIC_64=${{ env.QT_PLUGIN_PATH }} >> ${{env.GITHUB_ENV}}
-        echo QML2_IMPORT_PATH_DYNAMIC_64=${{ env.QML2_IMPORT_PATH }} >> ${{env.GITHUB_ENV}}
+        echo QT5_BIN_DIR_DYNAMIC_64=${{ env.Qt5_DIR }}/bin >> %GITHUB_ENV%
+        echo QT_PLUGIN_PATH_DYNAMIC_64=${{ env.QT_PLUGIN_PATH }} >> %GITHUB_ENV%
+        echo QML2_IMPORT_PATH_DYNAMIC_64=${{ env.QML2_IMPORT_PATH }} >> %GITHUB_ENV%
 
     # Install Python + modules to run our helper script
     - name: Set up Python 3.8
@@ -280,8 +277,8 @@ jobs:
     # TODO: automate this somehow?
     - name: Set paths to newly installed static Qt libraries
       run: |
-        echo QT5_BIN_DIR_STATIC_32=C:\Qt\Qt5.15.0-static\bin >> ${{env.GITHUB_ENV}}
-        echo QT5_BIN_DIR_STATIC_64=C:\Qt\Qt5.15.0x64-static\bin >> ${{env.GITHUB_ENV}}
+        echo QT5_BIN_DIR_STATIC_32=C:\Qt\Qt5.15.0-static\bin >> %GITHUB_ENV%
+        echo QT5_BIN_DIR_STATIC_64=C:\Qt\Qt5.15.0x64-static\bin >> %GITHUB_ENV%
     
     - name: "Download artifacts: Dynamic/Shared (Debug + Release, 32-bit)"
       uses: actions/download-artifact@v2
