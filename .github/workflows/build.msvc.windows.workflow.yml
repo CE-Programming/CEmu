@@ -123,10 +123,13 @@ jobs:
       run: |
         echo C:\msys64\usr\bin >> $env:GITHUB_PATH
     
+    # Temporarily set VCPKG_KEEP_ENV_VARS: PATH - a bit hacky but it works
+    # This is pending a fix being entered into microsoft/vcpkg#13837
     - name: Set vcpkg's response file path used as part of cache's key.
       uses: lukka/set-shell-env@master
       with:
         VCPKGRESPONSEFILE: ${{ github.workspace }}/.github/workflows/vcpkg/msvc.windows.${{ matrix.arch }}.${{ matrix.linking }}.vcpkg.txt
+        VCPKG_KEEP_ENV_VARS: PATH
         filter: ^VCPKG.*
 
     # Restore from cache the previously built ports. If cache-miss, download, build vcpkg.
