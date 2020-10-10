@@ -123,13 +123,10 @@ jobs:
       run: |
         echo C:\msys64\usr\bin >> $env:GITHUB_PATH
     
-    # Temporarily set VCPKG_KEEP_ENV_VARS: PATH - a bit hacky but it works
-    # This is pending a fix being entered into microsoft/vcpkg#13837
     - name: Set vcpkg's response file path used as part of cache's key.
       uses: lukka/set-shell-env@master
       with:
         VCPKGRESPONSEFILE: ${{ github.workspace }}/.github/workflows/vcpkg/msvc.windows.${{ matrix.arch }}.${{ matrix.linking }}.vcpkg.txt
-        VCPKG_KEEP_ENV_VARS: PATH
         filter: ^VCPKG.*
 
     # Restore from cache the previously built ports. If cache-miss, download, build vcpkg.
@@ -142,7 +139,20 @@ jobs:
         # This commit ID corresponds to 2020.07
         vcpkgGitCommitId: 56fffbe49dfb4dd8fae0940f272c5fd2b86be991
         appendedCacheKey: ${{ hashFiles(env.VCPKGRESPONSEFILE) }}-${{ runner.os }}-${{ matrix.arch_suffix }}-${{ matrix.linking }}
+        setupOnly: true
 
+    # This is pending a fix being entered into microsoft/vcpkg#13837
+    - name: Patch libpng-apng portfile
+      shell: cmd
+      run: |
+        copy /Y ${{ github.workspace }}\.github\workflows\vcpkg\libpng-portfile.cmake .\vcpkg\ports\libpng\portfile.cmake
+
+    - name: Install packages
+      shell: cmd
+      run: |
+        .\vcpkg\vcpkg remove --outdated --recurse
+        .\vcpkg\vcpkg install @${{ env.VCPKGRESPONSEFILE }}
+    
     ## Build time!
     
     # Are we releasing?
