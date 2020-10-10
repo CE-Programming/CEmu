@@ -116,13 +116,6 @@ jobs:
       run: |
         echo QT5_BIN_DIR=${{ matrix.QT5_BIN_DIR }} >> $env:GITHUB_ENV
     
-    # Add MSYS2's /usr/bin to the PATH.
-    # This allows vcpkg's build of libpng[apng] to succeed with adding the library prefix.
-    # (It requires awk to correctly regen the source files...)
-    - name: Add msys2 to system PATH
-      run: |
-        echo C:\msys64\usr\bin >> $env:GITHUB_PATH
-    
     - name: Set vcpkg's response file path used as part of cache's key.
       uses: lukka/set-shell-env@master
       with:
