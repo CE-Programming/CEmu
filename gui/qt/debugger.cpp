@@ -1768,7 +1768,7 @@ void MainWindow::equatesAddFile(const QString &fileName) {
 
     QTextStream in(&file);
     QString line;
-    if (in.readLineInto(&line) && line.startsWith(QStringLiteral("Segment"))) {
+    if (in.readLineInto(&line) && (line.startsWith(QStringLiteral("Segment")) || line.startsWith(QStringLiteral("Section")))) {
         while ((in.readLineInto(&line) && !line.startsWith(QStringLiteral("Label"))));
         if (!in.readLineInto(&line)) {
             return;
