@@ -1,5 +1,7 @@
-lessThan(QT_MAJOR_VERSION, 5) : error("You need at least Qt 5.7 to build CEmu!")
-lessThan(QT_MINOR_VERSION, 7) : error("You need at least Qt 5.7 to build CEmu!")
+if (lessThan(QT_MAJOR_VERSION, 6)) {
+    lessThan(QT_MAJOR_VERSION, 5) : error("You need at least Qt 5.7 to build CEmu!")
+    lessThan(QT_MINOR_VERSION, 7) : error("You need at least Qt 5.7 to build CEmu!")
+}
 
 # Error if git submodules are not downloaded
 !exists("../../core/debug/zdis/zdis.c"): error("You have to run 'git submodule init' and 'git submodule update' first.")
