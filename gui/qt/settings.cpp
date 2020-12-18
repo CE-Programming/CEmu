@@ -586,7 +586,7 @@ void MainWindow::setUIDockEditMode(bool mode) {
             setDockOptions(QMainWindow::AnimatedDocks | QMainWindow::AllowNestedDocks | QMainWindow::AllowTabbedDocks);
         }
     } else {
-        setDockOptions(0);
+        setDockOptions(DockOptions{});
     }
     for (const auto &dock : findChildren<DockWidget*>()) {
         dock->setState(mode);

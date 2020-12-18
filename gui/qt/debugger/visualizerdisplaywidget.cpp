@@ -6,8 +6,8 @@
 #include <cmath>
 #include <QtGui/QPainter>
 #include <QtWidgets/QMenu>
-#include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
+#include <QAction> /* Different module in Qt5 vs Qt6 */
 
 VisualizerDisplayWidget::VisualizerDisplayWidget(QWidget *parent) : QWidget{parent} {
     m_refreshTimer = new QTimer(this);

@@ -1774,7 +1774,13 @@ void MainWindow::equatesAddFile(const QString &fileName) {
             return;
         }
         while (in.readLineInto(&line) && !line.isEmpty()) {
-            QStringList split = line.split('=', QString::SkipEmptyParts);
+            QStringList split = line.split('=',
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
+                Qt::SkipEmptyParts
+#else
+                QString::SkipEmptyParts
+#endif
+            );
             equatesAddEquate(split.at(0).simplified(), hex2int(split.at(1).simplified()));
         }
     } else {

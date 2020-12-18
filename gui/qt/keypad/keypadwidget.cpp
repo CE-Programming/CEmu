@@ -491,8 +491,13 @@ void KeypadWidget::touchEvent(QTouchEvent *event) {
     switch (event->type()) {
         case QEvent::TouchBegin:
         case QEvent::TouchUpdate:
+#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
             if (event->device()->capabilities().testFlag(QTouchDevice::Position)) {
                 touchUpdate(event->touchPoints());
+#else
+            if (event->device()->capabilities().testFlag(QInputDevice::Capability::Position)) {
+                touchUpdate(event->points());
+#endif
             } else {
                 event->ignore();
             }

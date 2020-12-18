@@ -18,12 +18,12 @@
 #include "../../core/debug/debug.h"
 
 #include <QtWidgets/QProgressBar>
-#include <QtWidgets/QShortcut>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QTableWidgetItem>
 #include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QFileDialog>
+#include <QShortcut> /* Different module in Qt5 vs Qt6 */
 #include <QtCore/QSettings>
 #include <QtCore/QTimer>
 #include <QtGui/QTextCursor>

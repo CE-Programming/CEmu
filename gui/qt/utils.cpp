@@ -13,6 +13,10 @@
 #include <QtCore/QTime>
 #include <QtCore/QCoreApplication>
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
+#include <QtCore/QRandomGenerator>
+#endif
+
 QString execPath;
 QString configPath;
 
@@ -206,7 +210,11 @@ QString randomString(const int length) {
 
    QString randomString;
    for(int i=0; i<length; ++i) {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
+       int index = QRandomGenerator::global()->generate() % possibleCharacters.length();
+#else
        int index = qrand() % possibleCharacters.length();
+#endif
        QChar nextChar = possibleCharacters.at(index);
        randomString.append(nextChar);
    }

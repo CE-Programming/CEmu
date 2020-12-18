@@ -39,8 +39,8 @@
 #include <QtGui/QDesktopServices>
 #include <QtGui/QClipboard>
 #include <QtGui/QScreen>
+#include <QShortcut> /* Different module in Qt5 vs Qt6 */
 #include <QtWidgets/QDialogButtonBox>
-#include <QtWidgets/QShortcut>
 #include <QtWidgets/QProgressDialog>
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QComboBox>
@@ -70,12 +70,18 @@ MainWindow::MainWindow(CEmuOpts &cliOpts, QWidget *p) : QMainWindow(p), ui(new U
     keypadBridge = new QtKeypadBridge(this); // This must be before setupUi for some reason >.>
 
     // setup translations
-    m_appTranslator.load(QLocale::system().name(), QStringLiteral(":/i18n/i18n/"));
-    qApp->installTranslator(&m_appTranslator);
+    if (m_appTranslator.load(QLocale::system().name(), QStringLiteral(":/i18n/i18n/"))) {
+        qApp->installTranslator(&m_appTranslator);
+    }
 
     // setting metatypes
+#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
     qRegisterMetaTypeStreamOperators<QList<int>>("QList<int>");
     qRegisterMetaTypeStreamOperators<QList<bool>>("QList<bool>");
+#else
+    qRegisterMetaType<QList<int>>("QList<int>");
+    qRegisterMetaType<QList<bool>>("QList<bool>");
+#endif
 
     m_isInDarkMode = isRunningInDarkMode();
 
@@ -886,7 +892,7 @@ void MainWindow::showEvent(QShowEvent *e) {
 DockWidget *MainWindow::redistributeFindDock(const QPoint &pos) {
     QWidget *child = childAt(pos);
     if (QTabBar *tabBar = findSelfOrParent<QTabBar *>(child)) {
-        child = childAt({pos.x(), tabBar->mapTo(this, {}).y() - 1});
+        child = childAt({pos.x(), tabBar->mapTo(this, QPoint{}).y() - 1});
     }
     return findSelfOrParent<DockWidget *>(child);
 }
@@ -1953,8 +1959,8 @@ void MainWindow::varSaveSelected() {
 
 void MainWindow::varSaveSelectedFiles() {
     QFileDialog dialog(this);
-    dialog.setFileMode(QFileDialog::DirectoryOnly);
-    dialog.setOption(QFileDialog::ShowDirsOnly, false);
+    dialog.setFileMode(QFileDialog::Directory);
+    dialog.setOption(QFileDialog::ShowDirsOnly, true);
 
     dialog.setDirectory(m_dir);
     int good = 0;

@@ -4,7 +4,6 @@
 
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QMessageBox>
-#include <QtWidgets/QAction>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QToolButton>
 #include <QtWidgets/QSpacerItem>
@@ -13,6 +12,7 @@
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QComboBox>
+#include <QAction> /* Different module in Qt5 vs Qt6 */
 
 VisualizerWidget::VisualizerWidget(QWidget *parent, const QString &config) : QWidget{parent} {
     QIcon iconRefresh(QPixmap(QStringLiteral(":/icons/resources/icons/refresh.png")));
