@@ -2,6 +2,7 @@
 #define BASICCODEVIEWERWINDOW_H
 
 #include <QtCore/QString>
+#include <QtCore/QRegularExpression>
 #include <QtCore/QObject>
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QPlainTextEdit>
@@ -34,7 +35,7 @@ protected:
 private:
     struct HighlightingRule
     {
-        QRegExp pattern;
+        QRegularExpression pattern;
         QTextCharFormat format;
     };
     QVector<HighlightingRule> highlightingRules;

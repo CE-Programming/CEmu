@@ -131,22 +131,22 @@ BasicHighlighter::BasicHighlighter(QTextDocument *parent) : QSyntaxHighlighter(p
     HighlightingRule rule;
 
     numberFormat.setForeground(Qt::darkMagenta);
-    rule.pattern = QRegExp(R"((((\b[0-9]+)?\.)?\b[0-9]+(ᴇ⁻?[0-9]+)?))");
+    rule.pattern = QRegularExpression(R"((((\b[0-9]+)?\.)?\b[0-9]+(ᴇ⁻?[0-9]+)?))");
     rule.format = numberFormat;
     highlightingRules.append(rule);
 
     variableFormat.setForeground(Qt::darkYellow);
-    rule.pattern = QRegExp(R"((\[[A-J]\])|([A-Zθ])|([\|?uvw])|((GDB|Str|Pic|Img)[0-9])|([XYr][₁₂₃₄₅₆₇₈₉]ᴛ?)|([XY](min|max|scl|res)))");
+    rule.pattern = QRegularExpression(R"((\[[A-J]\])|([A-Zθ])|([\|?uvw])|((GDB|Str|Pic|Img)[0-9])|([XYr][₁₂₃₄₅₆₇₈₉]ᴛ?)|([XY](min|max|scl|res)))");
     rule.format = variableFormat;
     highlightingRules.append(rule);
 
     listFormat.setForeground(Qt::blue);
-    rule.pattern = QRegExp("(⌊[A-Zθ][A-Z0-9θ]{0,4})|(L[₁₂₃₄₅₆₇₈₉])");
+    rule.pattern = QRegularExpression("(⌊[A-Zθ][A-Z0-9θ]{0,4})|(L[₁₂₃₄₅₆₇₈₉])");
     rule.format = listFormat;
     highlightingRules.append(rule);
 
     keywordFormat.setForeground(QColor(isRunningInDarkMode() ? "darkorange" : "darkblue"));
-    rule.pattern = QRegExp("\\b(Else|End|For|Goto|EndIf|ElseIf|End!If|If|!If|Lbl|Repeat|Return|Stop|Then|While)\\b");
+    rule.pattern = QRegularExpression("\\b(Else|End|For|Goto|EndIf|ElseIf|End!If|If|!If|Lbl|Repeat|Return|Stop|Then|While)\\b");
     rule.format = keywordFormat;
     highlightingRules.append(rule);
 
@@ -207,43 +207,43 @@ BasicHighlighter::BasicHighlighter(QTextDocument *parent) : QSyntaxHighlighter(p
                     << "\\bUnArchive\\b" << "\\buvAxes\\b" << "\\buwAxes\\b" << "\\bVar\\b" << "\\bvariance\\b"
                     << "\\bVertical\\b" << "\\bvwAxes\\b" << "\\bWait\\b" << "\\bxor\\b" << "\\bxyLine\\b";
     foreach (const QString &pattern, builtinPatterns) {
-        rule.pattern = QRegExp(pattern);
+        rule.pattern = QRegularExpression(pattern);
         rule.format = builtinFormat;
         highlightingRules.append(rule);
     }
 
     constFormat.setForeground(QColor("orange"));
-    rule.pattern = QRegExp("(BLUE|RED|BLACK|MAGENTA|GREEN|ORANGE|BROWN|NAVY|LTBLUE|YELLOW|WHITE|LTGRAY|MEDGRAY|GRAY|DARKGRAY)");
+    rule.pattern = QRegularExpression("(BLUE|RED|BLACK|MAGENTA|GREEN|ORANGE|BROWN|NAVY|LTBLUE|YELLOW|WHITE|LTGRAY|MEDGRAY|GRAY|DARKGRAY)");
     rule.format = constFormat;
     highlightingRules.append(rule);
 
     numberFormat.setForeground(Qt::darkMagenta);
-    rule.pattern = QRegExp(R"((((\b[0-9]+)?\.)?\b[0-9]+([eE][-+]?[0-9]+)?\b))");
+    rule.pattern = QRegularExpression(R"((((\b[0-9]+)?\.)?\b[0-9]+([eE][-+]?[0-9]+)?\b))");
     rule.format = numberFormat;
     highlightingRules.append(rule);
 
     labelFormat.setForeground(QColor::fromRgb(0xBD, 0x3B, 0xB1));
-    rule.pattern = QRegExp("\\b(Lbl|Goto) [A-Z0-9θ]{1,2}\\b");
+    rule.pattern = QRegularExpression("\\b(Lbl|Goto) [A-Z0-9θ]{1,2}\\b");
     rule.format = labelFormat;
     highlightingRules.append(rule);
 
     prgmFormat.setForeground(QColor::fromRgb(0xCD, 0x5C, 0x5C));
-    rule.pattern = QRegExp("prgm[A-Z][A-Z0-9θ]{0,7}\\b");
+    rule.pattern = QRegularExpression("prgm[A-Z][A-Z0-9θ]{0,7}\\b");
     rule.format = prgmFormat;
     highlightingRules.append(rule);
 
     delvarFormat.setForeground(Qt::darkCyan);
-    rule.pattern = QRegExp("DelVar ");
+    rule.pattern = QRegularExpression("DelVar ");
     rule.format = delvarFormat;
     highlightingRules.append(rule);
 
     quotationFormat.setForeground(QColor::fromRgb(0x1A, 0x96, 0x28));
-    rule.pattern = QRegExp(R"("[^→"]*(→|"|$))");
+    rule.pattern = QRegularExpression(R"("[^→"]*(→|"|$))");
     rule.format = quotationFormat;
     highlightingRules.append(rule);
 
     otherFormat.setForeground(isRunningInDarkMode() ? Qt::darkGray : Qt::black);
-    rule.pattern = QRegExp("→");
+    rule.pattern = QRegularExpression("→");
     rule.format = otherFormat;
     highlightingRules.append(rule);
 }
@@ -251,12 +251,13 @@ BasicHighlighter::BasicHighlighter(QTextDocument *parent) : QSyntaxHighlighter(p
 void BasicHighlighter::highlightBlock(const QString &text)
 {
     foreach (const HighlightingRule &rule, highlightingRules) {
-        QRegExp expression(rule.pattern);
-        int index = expression.indexIn(text);
-        while (index >= 0) {
-            int length = expression.matchedLength();
-            setFormat(index, length, rule.format);
-            index = expression.indexIn(text, index + length);
+        const QRegularExpression expression(rule.pattern);
+        QRegularExpressionMatchIterator iter = expression.globalMatch(text);
+        while (iter.hasNext()) {
+            const auto& match = iter.next();
+            if (match.hasMatch()) {
+                setFormat(match.capturedStart(), match.capturedLength(), rule.format);
+            }
         }
     }
     setCurrentBlockState(0);

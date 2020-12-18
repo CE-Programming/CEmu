@@ -207,9 +207,9 @@ void VisualizerWidget::showConfig() {
 
 void VisualizerWidget::stringToView() {
     QStringList string = m_config->text().split(',');
-    QRegExp hex_reg("^[0-9A-F]{6}$", Qt::CaseInsensitive);
-    QRegExp bpp_reg("^\\d{1,6}bpp$", Qt::CaseInsensitive);
-    QRegExp fps_reg("^\\d+fps$", Qt::CaseInsensitive);
+    QRegularExpression hex_reg("^[0-9A-F]{6}$", QRegularExpression::CaseInsensitiveOption);
+    QRegularExpression bpp_reg("^\\d{1,6}bpp$", QRegularExpression::CaseInsensitiveOption);
+    QRegularExpression fps_reg("^\\d+fps$", QRegularExpression::CaseInsensitiveOption);
 
     m_fps = 30;
     m_scale = 100;
@@ -253,10 +253,10 @@ void VisualizerWidget::stringToView() {
         if (str.length() == 7 && str.at(0) == '$') {
             str.remove(0, 1);
         }
-        if (hex_reg.exactMatch(str)) {
+        if (hex_reg.match(str).hasMatch()) {
             m_base = str.toUInt(Q_NULLPTR, 16);
         }
-        if (bpp_reg.exactMatch(str)) {
+        if (bpp_reg.match(str).hasMatch()) {
             str.chop(3);
             uint8_t bpp;
             switch (str.toUInt()) {
@@ -275,7 +275,7 @@ void VisualizerWidget::stringToView() {
                 m_control |= static_cast<unsigned int>(bpp << 1);
             }
         }
-        if (fps_reg.exactMatch(str)) {
+        if (fps_reg.match(str).hasMatch()) {
             str.chop(3);
             m_fps = str.toInt();
             if (m_fps < 1 || m_fps > 120) { m_fps = 30; }
