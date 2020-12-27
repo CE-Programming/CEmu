@@ -38,10 +38,10 @@ CoreWindow::CoreWindow(const QString &uniqueName,
 {
     auto menubar = menuBar();
 
-    mCalcsMenu = new QMenu(tr("Calculator"));
-    mCaptureMenu = new QMenu(tr("Capture"));
-    mDocksMenu = new QMenu(tr("Docks"));
-    mDebugMenu = new QMenu(tr("Developer"));
+    mCalcsMenu = new QMenu(tr("Calculator"), this);
+    mCaptureMenu = new QMenu(tr("Capture"), this);
+    mDocksMenu = new QMenu(tr("Docks"), this);
+    mDebugMenu = new QMenu(tr("Developer"), this);
 
     menubar->addMenu(mCalcsMenu);
     menubar->addMenu(mCaptureMenu);
