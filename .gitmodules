@@ -4,3 +4,6 @@
 [submodule "gui/qt/tivars_lib_cpp"]
 	path = gui/qt/tivars_lib_cpp
 	url = https://github.com/adriweb/tivars_lib_cpp.git
+[submodule "gui/qt/deps/KDDockWidgets"]
+	path = gui/qt/deps/KDDockWidgets
+	url = https://github.com/KDAB/KDDockWidgets.git

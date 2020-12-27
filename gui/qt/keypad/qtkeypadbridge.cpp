@@ -3,7 +3,6 @@
 #include <QtCore/QSettings>
 #include <QtCore/QMetaEnum>
 
-#include "utils.h"
 #include "../../../core/keypad.h"
 #include "../../../core/asic.h"
 
@@ -158,10 +157,6 @@ bool QtKeypadBridge::keymapExport(const QString &path) {
 }
 
 bool QtKeypadBridge::keymapImport(const QString &path) {
-    if (!fileExists(path)) {
-        return false;
-    }
-
     QSettings config(path, QSettings::IniFormat);
 
     for (unsigned row = 0; row < 8; ++row) {

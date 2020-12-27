@@ -25,11 +25,11 @@ void KeypadWidget::addKey(Key *key) {
     mKeys[row][col] = key;
 }
 
-unsigned KeypadWidget::getCurrColor() {
+KeypadWidget::keypad_color_t KeypadWidget::getCurrColor() {
     return color;
 }
 
-void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
+void KeypadWidget::setType(bool is83, KeypadWidget::keypad_color_t color_scheme) {
     color = color_scheme;
 
     cNum   = QColor::fromRgb(0xeeeeee);
@@ -42,85 +42,85 @@ void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
 
     switch(color_scheme) {
         default:
-        case KEYPAD_BLACK:
+        case KeypadWidget::COLOR_BLACK:
             cCenter = QColor::fromRgb(0x191919);
             cSides  = QColor::fromRgb(0x3b3b3b);
             break;
-        case KEYPAD_WHITE:
+        case KeypadWidget::COLOR_WHITE:
             cCenter = QColor::fromRgb(0xe8e8e8);
             cSides  = QColor::fromRgb(0xdddddd);
             cNum    = QColor::fromRgb(0x707880);
             cText   = QColor::fromRgb(0x222222);
             cOther  = QColor::fromRgb(0xc0c0c0);
             break;
-        case KEYPAD_TRUE_BLUE:
+        case KeypadWidget::COLOR_TRUE_BLUE:
             cCenter = QColor::fromRgb(0x385E9D);
             cSides  = cCenter.lighter(130);
             cNum    = QColor::fromRgb(0xdedede);
             cOther  = QColor::fromRgb(0x274F91);
             break;
-        case KEYPAD_DENIM:
+        case KeypadWidget::COLOR_DENIM:
             cCenter = QColor::fromRgb(0x003C71);
             cSides  = cCenter.lighter(130);
             cOther  = QColor::fromRgb(0x013766);
             break;
-        case KEYPAD_SILVER:
+        case KeypadWidget::COLOR_SILVER:
             cCenter = QColor::fromRgb(0x7C878E);
             cSides  = cCenter.lighter(130);
             cOther  = QColor::fromRgb(0x191919);
             cGraph  = QColor::fromRgb(0xD0D3D4);
             break;
-        case KEYPAD_PINK:
+        case KeypadWidget::COLOR_PINK:
             cCenter = QColor::fromRgb(0xDF1995);
             cSides  = cCenter.lighter(130);
             cOther  = QColor::fromRgb(0xAA0061);
             break;
-        case KEYPAD_PLUM:
+        case KeypadWidget::COLOR_PLUM:
             cCenter = QColor::fromRgb(0x830065);
             cSides  = cCenter.lighter(130);
             cOther  = QColor::fromRgb(0x5E2751);
             break;
-        case KEYPAD_RED:
+        case KeypadWidget::COLOR_RED:
             cCenter = QColor::fromRgb(0xAB2328);
             cSides  = cCenter.lighter(130);
             cOther  = QColor::fromRgb(0x8A2A2B);
             break;
-        case KEYPAD_LIGHTNING:
+        case KeypadWidget::COLOR_LIGHTNING:
             cCenter = QColor::fromRgb(0x0077C8);
             cSides  = cCenter.lighter(130);
             cOther  = QColor::fromRgb(0x0077C8);
             break;
-        case KEYPAD_GOLDEN:
+        case KeypadWidget::COLOR_GOLDEN:
             cCenter = QColor::fromRgb(0xD8D3B6);
             cSides  = cCenter.lighter(130);
             cOther  = QColor::fromRgb(0xD8D3B6);
             break;
-        case KEYPAD_SPACEGREY:
+        case KeypadWidget::COLOR_SPACEGREY:
             cCenter = QColor::fromRgb(0xDBDBDB);
             cSides  = cCenter.darker(130);
             cOther  = QColor::fromRgb(53, 53, 53);
             cGraph  = QColor::fromRgb(0xD0D3D4);
             break;
-        case KEYPAD_CORAL:
+        case KeypadWidget::COLOR_CORAL:
             cCenter = QColor::fromRgb(0xFD6D99);
             cSides  = cCenter.lighter(120);
             cOther  = QColor::fromRgb(53, 53, 53);
             cGraph  = QColor::fromRgb(0xD0D3D4);
             break;
-        case KEYPAD_MINT:
+        case KeypadWidget::COLOR_MINT:
             cCenter = QColor::fromRgb(0xD2EBE8);
             cSides  = cCenter.darker(115);
             cOther  = QColor::fromRgb(53, 53, 53);
             cGraph  = QColor::fromRgb(0xD0D3D4);
             break;
-        case KEYPAD_ROSEGOLD:
+        case KeypadWidget::COLOR_ROSEGOLD:
             cCenter = QColor::fromRgb(0xAF867C);
             cSides  = cCenter.darker(105);
             cOther  = QColor::fromRgb(0xD8D3B6);
             cText   = QColor::fromRgb(0x222222);
             cGraph  = QColor::fromRgb(0xD0D3D4);
             break;
-        case KEYPAD_CRYSTALCLEAR:
+        case KeypadWidget::COLOR_CRYSTALCLEAR:
             cCenter = QColor::fromRgb(0xACA7AE); cCenter.setAlpha(220);
             cSides  = cCenter.lighter(130);
             cOther  = QColor::fromRgb(0x191919); cOther.setAlpha(120);
@@ -128,17 +128,17 @@ void KeypadWidget::setType(bool is83, unsigned int color_scheme) {
             this->setAttribute(Qt::WA_TranslucentBackground, true);
             this->setAutoFillBackground(true);
             break;
-        case KEYPAD_MATTEBLACK:
+        case KeypadWidget::COLOR_MATTEBLACK:
             cCenter = QColor::fromRgb(0x0F0F0F);
             cSides  = QColor::fromRgb(0x0F0F0F);
             break;
-        case KEYPAD_TANGENTTEAL:
+        case KeypadWidget::COLOR_TANGENTTEAL:
             cCenter = QColor::fromRgb(0x005062);
             cSides  = cCenter.lighter(150);
             cOther  = QColor::fromRgb(0x00272C);
             cGraph  = QColor::fromRgb(0x6C7F90);
             break;
-        case KEYPAD_TOTALLYTEAL:
+        case KeypadWidget::COLOR_TOTALLYTEAL:
             cCenter = QColor::fromRgb(0x108798);
             cSides  = cCenter.darker(200);
             cOther  = QColor::fromRgb(0x125E68);
@@ -326,13 +326,14 @@ void KeypadWidget::resizeEvent(QResizeEvent *event) {
                          static_cast<qreal>(size.height()) / sBaseRect.height(), 0,
                          origin.width(), 0, 1);
     mInverseTransform = mTransform.inverted();
+    emit resized(size);
 }
 
 void KeypadWidget::paintEvent(QPaintEvent *event) {
     QRegion region{mInverseTransform.map(event->region())};
     QPainter painter{this};
     painter.setRenderHint(QPainter::Antialiasing);
-    if (color == KEYPAD_CRYSTALCLEAR) {
+    if (color == KeypadWidget::COLOR_CRYSTALCLEAR) {
         painter.fillRect(this->rect(), cclrBackground);
     }
     painter.setTransform(mTransform);
@@ -491,13 +492,8 @@ void KeypadWidget::touchEvent(QTouchEvent *event) {
     switch (event->type()) {
         case QEvent::TouchBegin:
         case QEvent::TouchUpdate:
-#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
             if (event->device()->capabilities().testFlag(QTouchDevice::Position)) {
                 touchUpdate(event->touchPoints());
-#else
-            if (event->device()->capabilities().testFlag(QInputDevice::Capability::Position)) {
-                touchUpdate(event->points());
-#endif
             } else {
                 event->ignore();
             }

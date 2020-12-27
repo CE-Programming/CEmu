@@ -1,42 +1,25 @@
-#ifndef DOCKWIDGET_H
-#define DOCKWIDGET_H
+/*
+  This file is part of KDDockWidgets.
 
-#include <QtWidgets/QDockWidget>
+  SPDX-FileCopyrightText: 2019-2020 Klarälvdalens Datakonsult AB, a KDAB Group company <info@kdab.com>
+  Author: Sérgio Martins <sergio.martins@kdab.com>
 
-QT_BEGIN_NAMESPACE
-class QTabWidget;
-QT_END_NAMESPACE
+  SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only
 
-class DockWidget : public QDockWidget {
-    Q_OBJECT
-    Q_PROPERTY(bool closable READ isClosable WRITE setClosable)
-    Q_PROPERTY(bool expandable READ isExpandable WRITE setExpandable)
+  Contact KDAB at <info@kdab.com> for commercial licensing options.
+*/
 
+#pragma once
+
+#include <kddockwidgets/FrameworkWidgetFactory.h>
+
+#include <QPainter>
+
+class DockWidgetFactory : public KDDockWidgets::DefaultWidgetFactory
+{
 public:
-    explicit DockWidget(QWidget *parent = Q_NULLPTR);
-    DockWidget(QTabWidget *tabs, QWidget *parent = Q_NULLPTR);
-    DockWidget(const QString &title, QWidget *parent = Q_NULLPTR);
-    void makeCloseableFloat(bool state);
-    void setState(bool visible);
-    bool isClosable() const { return m_closable; }
-    void setClosable(bool closable) { m_closable = closable; }
-    bool isExpandable() const { return m_expandable; }
-    void setExpandable(bool expandable) { m_expandable = expandable; }
-
-signals:
-    void closed();
-
-protected:
-    virtual bool event(QEvent *event) Q_DECL_OVERRIDE;
-    QList<DockWidget *> tabs(DockWidget *without = Q_NULLPTR);
-    virtual void showEvent(QShowEvent *event) Q_DECL_OVERRIDE;
-    void updateExpandability(const QList<DockWidget *> &tabs);
-    virtual void closeEvent(QCloseEvent *event) Q_DECL_OVERRIDE;
-
-private:
-    QWidget *m_titleHide;
-    DockWidget *m_tabs;
-    bool m_closable : 1, m_expandable : 1, m_closeablefloat : 1;
+    KDDockWidgets::Frame *createFrame(KDDockWidgets::QWidgetOrQuick *parent = Q_NULLPTR, KDDockWidgets::FrameOptions options = KDDockWidgets::FrameOption_None) const override;
+    KDDockWidgets::TitleBar *createTitleBar(KDDockWidgets::Frame *frame) const override;
+    KDDockWidgets::TitleBar *createTitleBar(KDDockWidgets::FloatingWindow *fw) const override;
+    Layouting::Separator *createSeparator(Layouting::Widget *parent = nullptr) const override;
 };
-
-#endif

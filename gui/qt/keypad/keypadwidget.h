@@ -16,8 +16,6 @@ class QEvent;
 class QMouseEvent;
 QT_END_NAMESPACE
 
-enum keypad_colors { KEYPAD_BLACK=0, KEYPAD_WHITE, KEYPAD_TRUE_BLUE, KEYPAD_DENIM, KEYPAD_SILVER, KEYPAD_PINK, KEYPAD_PLUM, KEYPAD_RED, KEYPAD_LIGHTNING, KEYPAD_GOLDEN, KEYPAD_SPACEGREY, KEYPAD_CORAL, KEYPAD_MINT, KEYPAD_ROSEGOLD, KEYPAD_CRYSTALCLEAR, KEYPAD_MATTEBLACK, KEYPAD_TANGENTTEAL, KEYPAD_TOTALLYTEAL };
-
 class KeypadWidget : public QWidget {
     Q_OBJECT
 
@@ -33,12 +31,34 @@ public:
     }
     virtual ~KeypadWidget();
 
-    void setType(bool, unsigned int);
+    typedef enum {
+        COLOR_BLACK,
+        COLOR_WHITE,
+        COLOR_TRUE_BLUE,
+        COLOR_DENIM,
+        COLOR_SILVER,
+        COLOR_PINK,
+        COLOR_PLUM,
+        COLOR_RED,
+        COLOR_LIGHTNING,
+        COLOR_GOLDEN,
+        COLOR_SPACEGREY,
+        COLOR_CORAL,
+        COLOR_MINT,
+        COLOR_ROSEGOLD,
+        COLOR_CRYSTALCLEAR,
+        COLOR_MATTEBLACK,
+        COLOR_TANGENTTEAL,
+        COLOR_TOTALLYTEAL
+    } keypad_color_t;
+
+    void setType(bool is83, keypad_color_t color);
     void setHolding(bool);
-    unsigned getCurrColor(void);
+    keypad_color_t getCurrColor(void);
 
 signals:
     void keyPressed(const QString& key);
+    void resized(QSize size);
 
 public slots:
     void changeKeyState(KeyCode keycode, bool press);
@@ -57,7 +77,7 @@ private:
     void updateKey(Key *key, bool);
     void addKey(Key *key);
 
-    unsigned int color = KEYPAD_BLACK;
+    keypad_color_t color = KeypadWidget::COLOR_BLACK;
     bool mHoldingEnabled = true;
     QColor cclrBackground;
     QPainterPath keypadPath;
@@ -69,6 +89,8 @@ private:
     Key *mKeys[sRows][sCols];
     QSet<KeyCode> mClicked;
     QSet<KeyCode> mTouched;
+    int m22;
+    int m11;
 #ifndef Q_OS_WIN
     int fontId = -2;
 #endif
