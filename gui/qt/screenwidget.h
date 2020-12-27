@@ -29,7 +29,10 @@ public:
     explicit ScreenWidget(QWidget *parent = nullptr);
     ~ScreenWidget();
 
-    void setModel(const QString &product, const QString &model);
+    void setScreen(const QString &skin = QString());
+    void setModel(const QString &product, const QString &model, const QString &edition = QString());
+
+    static const QRect sOuterRect, sOuterCorner, sInnerRect, sInnerCorner;
 
 protected:
     virtual void paintEvent(QPaintEvent *event) override;
@@ -38,12 +41,9 @@ protected:
     QTransform mTransform;
     QPainterPath mOuterPath, mInnerPath;
     QLinearGradient mGradient;
-    QStaticText mProductText, mModelText, mUnpoweredText;
-    QFont mProductFont, mModelFont, mUnpoweredFont;
-    bool mOn;
-
-    static const QSize sOuterSize, sOuterCorner, sInnerCorner;
-    static const QRect sInnerRect;
+    QStaticText mProductText, mModelText, mEditionText, mUnpoweredText;
+    QFont mProductFont, mModelFont, mEditionFont, mUnpoweredFont;
+    QImage mSkin;
 
 private:
     void prepareText();

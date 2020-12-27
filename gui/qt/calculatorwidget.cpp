@@ -35,8 +35,8 @@ CalculatorWidget::CalculatorWidget(QWidget *parent)
     layout->addWidget(mScreen);
     layout->addWidget(mKeypad);
 
-    layout->setStretch(0, 35);
-    layout->setStretch(1, 65);
+    layout->setStretch(0, ScreenWidget::sOuterRect.height() * KeypadWidget::sBaseRect.width());
+    layout->setStretch(1, KeypadWidget::sBaseRect.height() * ScreenWidget::sOuterRect.width());
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     setFocusPolicy(Qt::StrongFocus);
@@ -57,14 +57,15 @@ void CalculatorWidget::setConfig(ti_device_t type, KeypadWidget::KeypadColor col
     {
         default:
             mKeypad->setType(false, color);
-            mScreen->setModel(QStringLiteral("TI-84 "), QStringLiteral("Plus CE"));
+            mScreen->setModel(QStringLiteral("TI-84 "), QStringLiteral("Plus CE")/*, QStringLiteral("PYTHON EDITION")*/);
             break;
 
         case ti_device_t::TI83PCE:
             mKeypad->setType(true, color);
-            mScreen->setModel(QStringLiteral("TI-83 "), QStringLiteral("Premium CE"));
+            mScreen->setModel(QStringLiteral("TI-83 "), QStringLiteral("Premium CE")/*, QStringLiteral("EDITION PYTHON")*/);
             break;
     }
+    mScreen->setScreen(QStringLiteral(":/assets/test/screen.png"));
 }
 
 void CalculatorWidget::changeKeyState(KeyCode code, bool press)

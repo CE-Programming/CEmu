@@ -56,6 +56,8 @@ public:
     void setHolding(bool);
     KeypadColor getCurrColor(void);
 
+    static const QRect sBaseRect;
+
 signals:
     void keyPressed(const QString& key);
     void resized(QSize size);
@@ -82,7 +84,6 @@ private:
     QColor cclrBackground;
     QPainterPath keypadPath;
     static const size_t sRows{8}, sCols{8};
-    static const QRect sBaseRect;
     KeyConfig mConfig;
     QLinearGradient mBackground;
     QTransform mTransform, mInverseTransform;

@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>assets/skin/ti84pce.png</file>
-        <file>assets/skin/ti83pce.png</file>
+        <file>assets/test/screen.png</file>
     </qresource>
 </RCC>
