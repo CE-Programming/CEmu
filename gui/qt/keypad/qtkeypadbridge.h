@@ -24,7 +24,7 @@ public:
         KEYMAP_CUSTOM,
     } KeymapMode;
 
-    explicit QtKeypadBridge(QObject *parent = Q_NULLPTR) : QObject(parent) {}
+    explicit QtKeypadBridge(QObject *parent = nullptr) : QObject(parent) {}
 
     bool setKeymap(KeymapMode map);
     void skEvent(QKeyEvent *event, bool press);

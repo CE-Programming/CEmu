@@ -81,6 +81,7 @@ SOURCES += \
     corewindow.cpp \
     dockwidget.cpp \
     emuthread.cpp \
+    keyhistorywidget.cpp \
     keypad/arrowkey.cpp \
     keypad/keymap.cpp \
     keypad/keypadwidget.cpp \
@@ -131,6 +132,7 @@ HEADERS  += \
     corewindow.h \
     dockwidget.h \
     emuthread.h \
+    keyhistorywidget.h \
     keypad/alphakey.h \
     keypad/arrowkey.h \
     keypad/graphkey.h \

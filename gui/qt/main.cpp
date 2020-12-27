@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2015-2020 CE Programming.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "corewindow.h"
 #include "screenwidget.h"
 #include "dockwidget.h"
@@ -23,7 +39,7 @@ int main(int argc, char **argv)
     app.setApplicationName(QStringLiteral("CEmu"));
 
     KDDockWidgets::Config::self().setFrameworkWidgetFactory(new DockWidgetFactory());
-    KDDockWidgets::Config::self().setSeparatorThickness(0);
+    KDDockWidgets::Config::self().setSeparatorThickness(3);
 
     auto flags = KDDockWidgets::Config::self().flags();
     flags |= KDDockWidgets::Config::Flag_AlwaysTitleBarWhenFloating;
@@ -31,7 +47,7 @@ int main(int argc, char **argv)
     KDDockWidgets::Config::self().setFlags(flags);
 
     QScreen *screen = QGuiApplication::primaryScreen();
-    QRect  screenGeometry = screen->geometry();
+    QRect screenGeometry = screen->geometry();
 
     CoreWindow window(QStringLiteral("CEmu"), options);
     window.setWindowTitle(QStringLiteral("CEmu"));

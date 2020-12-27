@@ -1,5 +1,22 @@
+/*
+ * Copyright (c) 2015-2020 CE Programming.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "corewindow.h"
 #include "calculatorwidget.h"
+#include "keyhistorywidget.h"
 
 #include <kddockwidgets/LayoutSaver.h>
 
@@ -16,8 +33,6 @@ CoreWindow::CoreWindow(const QString &uniqueName,
                        QWidget *parent)
     : KDDockWidgets::MainWindow(uniqueName, options, parent)
 {
-    setContentsMargins(0, 0, 0, 0);
-
     auto menubar = menuBar();
     auto fileMenu = new QMenu(tr("File"));
     menubar->addMenu(fileMenu);
@@ -44,20 +59,33 @@ CoreWindow::CoreWindow(const QString &uniqueName,
 
 CoreWindow::~CoreWindow()
 {
-    qDeleteAll(m_dockwidgets);
+    qDeleteAll(mDockWidgets);
 }
 
 void CoreWindow::createDockWidgets()
 {
-    Q_ASSERT(m_dockwidgets.isEmpty());
+    Q_ASSERT(mDockWidgets.isEmpty());
+
+    mKeypadBridge.setKeymap(QtKeypadBridge::KEYMAP_CEMU);
 
     auto *calcDock = new KDDockWidgets::DockWidget(tr("Calculator"));
     auto *calc = new CalculatorWidget();
 
-    calc->setType(ti_device_t::TI83PCE);
-    calcDock->setWidget(calc);
+    auto *keyHistoryDock = new KDDockWidgets::DockWidget(tr("Key History"));
+    auto *keyHistory = new KeyHistoryWidget();
 
-    m_dockwidgets << calcDock;
+    calc->setConfig(ti_device_t::TI84PCE, KeypadWidget::KeypadColor::COLOR_DENIM);
+
+    calcDock->setWidget(calc);
+    keyHistoryDock->setWidget(keyHistory);
+
+    connect(calc, &CalculatorWidget::keyPressed, keyHistory, &KeyHistoryWidget::add);
+    connect(&mKeypadBridge, &QtKeypadBridge::keyStateChanged, calc, &CalculatorWidget::changeKeyState);
+    calc->installEventFilter(&mKeypadBridge);
+
+    mDockWidgets << calcDock;
+    mDockWidgets << keyHistoryDock;
 
     addDockWidget(calcDock, KDDockWidgets::Location_OnTop);
+    addDockWidget(keyHistoryDock, KDDockWidgets::Location_OnRight);
 }

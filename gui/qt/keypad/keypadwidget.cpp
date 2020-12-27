@@ -25,11 +25,11 @@ void KeypadWidget::addKey(Key *key) {
     mKeys[row][col] = key;
 }
 
-KeypadWidget::keypad_color_t KeypadWidget::getCurrColor() {
+KeypadWidget::KeypadColor KeypadWidget::getCurrColor() {
     return color;
 }
 
-void KeypadWidget::setType(bool is83, KeypadWidget::keypad_color_t color_scheme) {
+void KeypadWidget::setType(bool is83, KeypadWidget::KeypadColor color_scheme) {
     color = color_scheme;
 
     cNum   = QColor::fromRgb(0xeeeeee);

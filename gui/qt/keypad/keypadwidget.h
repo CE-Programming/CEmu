@@ -50,11 +50,11 @@ public:
         COLOR_MATTEBLACK,
         COLOR_TANGENTTEAL,
         COLOR_TOTALLYTEAL
-    } keypad_color_t;
+    } KeypadColor;
 
-    void setType(bool is83, keypad_color_t color);
+    void setType(bool is83, KeypadColor color);
     void setHolding(bool);
-    keypad_color_t getCurrColor(void);
+    KeypadColor getCurrColor(void);
 
 signals:
     void keyPressed(const QString& key);
@@ -77,7 +77,7 @@ private:
     void updateKey(Key *key, bool);
     void addKey(Key *key);
 
-    keypad_color_t color = KeypadWidget::COLOR_BLACK;
+    KeypadColor color = KeypadWidget::COLOR_BLACK;
     bool mHoldingEnabled = true;
     QColor cclrBackground;
     QPainterPath keypadPath;

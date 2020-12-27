@@ -1,18 +1,35 @@
+/*
+ * Copyright (c) 2015-2020 CE Programming.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #ifndef KEYHISTORYWIDGET_H
 #define KEYHISTORYWIDGET_H
 
-#include <QtWidgets/QWidget>
-#include <QtWidgets/QPushButton>
-#include <QtWidgets/QPlainTextEdit>
-#include <QtWidgets/QSpacerItem>
-#include <QtWidgets/QLabel>
-#include <QtWidgets/QSpinBox>
+#include <QWidget>
+#include <QPushButton>
+#include <QPlainTextEdit>
+#include <QSpacerItem>
+#include <QLabel>
+#include <QSpinBox>
 
-class KeyHistoryWidget : public QWidget {
+class KeyHistoryWidget : public QWidget
+{
     Q_OBJECT
 
 public:
-    explicit KeyHistoryWidget(QWidget *parent = Q_NULLPTR, int size = 9);
+    explicit KeyHistoryWidget(QWidget *parent = nullptr);
     ~KeyHistoryWidget();
 
 public slots:
@@ -25,11 +42,11 @@ signals:
 private:
     void setFontSize(int size);
 
-    QLabel *m_label;
-    QSpinBox *m_size;
-    QSpacerItem *m_spacer;
-    QPlainTextEdit *m_view;
-    QPushButton *m_btnClear;
+    QLabel *mLblSize;
+    QSpinBox *mFontSize;
+    QSpacerItem *mSpacer;
+    QPlainTextEdit *mText;
+    QPushButton *mBtnClear;
 };
 
 #endif
