@@ -14,33 +14,45 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef KEYHISTORYWIDGET_H
-#define KEYHISTORYWIDGET_H
+#ifndef CONSOLEWIDGET_H
+#define CONSOLEWIDGET_H
 
 #include <QWidget>
+#include <QPushButton>
 #include <QPlainTextEdit>
+#include <QSpacerItem>
+#include <QLabel>
 #include <QSpinBox>
+#include <QCheckBox>
+#include <QRadioButton>
 
-class KeyHistoryWidget : public QWidget
+class ConsoleWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit KeyHistoryWidget(QWidget *parent = nullptr);
-    ~KeyHistoryWidget();
+    explicit ConsoleWidget(QWidget *parent = nullptr);
+    ~ConsoleWidget();
+
+public:
+    void setNativeConsole(bool dock);
 
 public slots:
-    void add(const QString &entry);
-    int getFontSize();
-
-signals:
-    void fontSizeChanged();
+    void clear();
+    void append(const QString &str, const QColor &colorFg, const QColor &colorBg);
+    void append(const char *str, int size);
+    void setAutoScroll(int state);
 
 private:
-    void setFontSize(int size);
+    QRadioButton *mRadDock;
+    QRadioButton *mRadNative;
+    QCheckBox *mChkAuto;
+    QPlainTextEdit *mConsole;
 
-    QSpinBox *mFontSize;
-    QPlainTextEdit *mText;
+    bool mNativeConsole;
+    bool mAutoscroll;
+
+    QTextCharFormat mFormat;
 };
 
 #endif

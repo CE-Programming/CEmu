@@ -22,6 +22,8 @@
 #include <kddockwidgets/DockWidget.h>
 #include <kddockwidgets/MainWindow.h>
 
+#include <QMenu>
+
 class CoreWindow : public KDDockWidgets::MainWindow
 {
     Q_OBJECT
@@ -30,10 +32,23 @@ public:
     ~CoreWindow() override;
 
 private:
+    // menu operations
+    void createFileMenu();
+    void createDocksMenu();
+    void createDebugMenu();
+    void createExtrasMenu();
+
+    // dock operations
     void createDockWidgets();
     KDDockWidgets::DockWidget::List mDockWidgets;
 
     QtKeypadBridge mKeypadBridge;
+
+    QMenu *mCalcsMenu;
+    QMenu *mDocksMenu;
+    QMenu *mDebugMenu;
+    QMenu *mCaptureMenu;
+
 };
 
 #endif

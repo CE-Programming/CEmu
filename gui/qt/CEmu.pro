@@ -7,7 +7,7 @@ TARGET = CEmu
 TEMPLATE = app
 
 CONFIG += c++11 console
-LIBS += -L$$_PRO_FILE_PWD_/deps/KDDockWidgets/build/lib
+LIBS += -L$$_PRO_FILE_PWD_/deps/KDDockWidgets/build/lib -L$$_PRO_FILE_PWD_/deps/KDDockWidgets/build/lib64
 LIBS += -lkddockwidgets
 
 INCLUDEPATH += $$_PRO_FILE_PWD_/deps/KDDockWidgets/build/include
@@ -78,6 +78,7 @@ SOURCES += \
     ../../core/debug/debug.c \
     ../../core/debug/zdis/zdis.c \
     calculatorwidget.cpp \
+    consolewidget.cpp \
     corewindow.cpp \
     dockwidget.cpp \
     emuthread.cpp \
@@ -88,7 +89,8 @@ SOURCES += \
     keypad/qtkeypadbridge.cpp \
     keypad/rectkey.cpp \
     main.cpp \
-    screenwidget.cpp
+    screenwidget.cpp \
+    statewidget.cpp
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
@@ -129,6 +131,7 @@ HEADERS  += \
     ../../core/debug/debug.h \
     ../../core/debug/zdis/zdis.h \
     calculatorwidget.h \
+    consolewidget.h \
     corewindow.h \
     dockwidget.h \
     emuthread.h \
@@ -147,7 +150,9 @@ HEADERS  += \
     keypad/qtkeypadbridge.h \
     keypad/rectkey.h \
     keypad/secondkey.h \
-    screenwidget.h
+    overlaywidget.h \
+    screenwidget.h \
+    statewidget.h
 
 DISTFILES +=
 

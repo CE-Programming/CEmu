@@ -14,33 +14,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef KEYHISTORYWIDGET_H
-#define KEYHISTORYWIDGET_H
+#ifndef STATEWIDGET_H
+#define STATEWIDGET_H
 
 #include <QWidget>
-#include <QPlainTextEdit>
-#include <QSpinBox>
 
-class KeyHistoryWidget : public QWidget
+class StateWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit KeyHistoryWidget(QWidget *parent = nullptr);
-    ~KeyHistoryWidget();
-
-public slots:
-    void add(const QString &entry);
-    int getFontSize();
-
-signals:
-    void fontSizeChanged();
-
-private:
-    void setFontSize(int size);
-
-    QSpinBox *mFontSize;
-    QPlainTextEdit *mText;
+    explicit StateWidget(QWidget *parent = nullptr);
+    ~StateWidget();
 };
 
 #endif

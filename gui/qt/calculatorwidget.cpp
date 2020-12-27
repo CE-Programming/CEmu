@@ -16,10 +16,8 @@
 
 #include "calculatorwidget.h"
 
-#include <QVBoxLayout>
-
 CalculatorWidget::CalculatorWidget(QWidget *parent)
-    : QWidget(parent)
+    : QWidget{parent}
 {
     QVBoxLayout *layout = new QVBoxLayout(this);
 

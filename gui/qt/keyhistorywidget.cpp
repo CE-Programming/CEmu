@@ -19,35 +19,38 @@
 #include <QWidget>
 #include <QPushButton>
 #include <QHBoxLayout>
+#include <QPushButton>
+#include <QLabel>
 
 KeyHistoryWidget::KeyHistoryWidget(QWidget *parent)
     : QWidget(parent)
 {
     QHBoxLayout *hlayout = new QHBoxLayout();
 
-    mBtnClear = new QPushButton(tr("Clear History"));
-    mLblSize = new QLabel(tr("Size"));
-    mText = new QPlainTextEdit();
-    mFontSize = new QSpinBox();
-    mSpacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred);
+    QPushButton *btnClear = new QPushButton(tr("Clear History"), this);
+    QLabel *lblSize = new QLabel(tr("Size"), this);
+    QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred);
+
+    mText = new QPlainTextEdit(this);
+    mFontSize = new QSpinBox(this);
 
     mText->setReadOnly(true);
     mText->setMaximumBlockCount(1000);
     mText->setMinimumSize(10, 100);
 
-    hlayout->addWidget(mBtnClear);
-    hlayout->addSpacerItem(mSpacer);
-    hlayout->addWidget(mLblSize);
+    hlayout->addWidget(btnClear);
+    hlayout->addSpacerItem(spacer);
+    hlayout->addWidget(lblSize);
     hlayout->addWidget(mFontSize);
 
-    QVBoxLayout *vlayout = new QVBoxLayout();
+    QVBoxLayout *vlayout = new QVBoxLayout(this);
     vlayout->addWidget(mText);
     vlayout->addLayout(hlayout);
     setLayout(vlayout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-    connect(mBtnClear, &QPushButton::clicked, mText, &QPlainTextEdit::clear);
+    connect(btnClear, &QPushButton::clicked, mText, &QPlainTextEdit::clear);
     connect(mFontSize, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &KeyHistoryWidget::setFontSize);
 }
 
