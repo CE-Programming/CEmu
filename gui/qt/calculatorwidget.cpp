@@ -57,12 +57,12 @@ void CalculatorWidget::setConfig(ti_device_t type, KeypadWidget::KeypadColor col
     {
         default:
             mKeypad->setType(false, color);
-            mScreen->setSkin(QStringLiteral(":/assets/skin/ti84pce.png"));
+            mScreen->setModel(QStringLiteral("TI-84 "), QStringLiteral("Plus CE"));
             break;
 
         case ti_device_t::TI83PCE:
             mKeypad->setType(true, color);
-            mScreen->setSkin(QStringLiteral(":/assets/skin/ti83pce.png"));
+            mScreen->setModel(QStringLiteral("TI-83 "), QStringLiteral("Premium CE"));
             break;
     }
 }

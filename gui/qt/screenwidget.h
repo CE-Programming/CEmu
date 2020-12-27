@@ -17,8 +17,10 @@
 #ifndef SCREENWIDGET_H
 #define SCREENWIDGET_H
 
-#include <QWidget>
-#include <QResizeEvent>
+#include <QtGui/QPainterPath>
+#include <QtGui/QResizeEvent>
+#include <QtGui/QStaticText>
+#include <QtWidgets/QWidget>
 
 class ScreenWidget : public QWidget
 {
@@ -27,14 +29,24 @@ public:
     explicit ScreenWidget(QWidget *parent = nullptr);
     ~ScreenWidget();
 
-    void setSkin(const QString &skin);
+    void setModel(const QString &product, const QString &model);
 
 protected:
     virtual void paintEvent(QPaintEvent *event) override;
     virtual void resizeEvent(QResizeEvent *event) override;
 
     QTransform mTransform;
-    QImage mSkin;
+    QPainterPath mOuterPath, mInnerPath;
+    QLinearGradient mGradient;
+    QStaticText mProductText, mModelText, mUnpoweredText;
+    QFont mProductFont, mModelFont, mUnpoweredFont;
+    bool mOn;
+
+    static const QSize sOuterSize, sOuterCorner, sInnerCorner;
+    static const QRect sInnerRect;
+
+private:
+    void prepareText();
 };
 
 #endif
