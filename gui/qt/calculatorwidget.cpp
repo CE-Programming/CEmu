@@ -16,6 +16,52 @@
 
 #include "calculatorwidget.h"
 
+CalculatorOverlay::CalculatorOverlay(QWidget *parent) : OverlayWidget{parent}
+{
+    QVBoxLayout *vlayout = new QVBoxLayout(this);
+    QVBoxLayout *layout = new QVBoxLayout();
+    QPushButton *loadRom = new QPushButton("Load ROM image");
+    QPushButton *createRom = new QPushButton("Create ROM image");
+    QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Preferred, QSizePolicy::Expanding);
+    QLabel *label = new QLabel();
+    QWidget *window = new QWidget();
+
+    label->setText(tr("Welcome!\n\nTo begin using CEmu, you will need a ROM image. "
+                      "This is a file that contains the code required to run the calculator's operating system. "
+                      "CEmu offers the ability to create a ROM image from a real calculator.\n\n"
+                      "Additionally, CEmu uses a customizable dock-style interface. "
+                      "Drag and drop to move tabs and windows around on the screen, "
+                      "and choose which docks are available in the 'Docks' menu in the topmost bar."));
+    label->setWordWrap(true);
+
+    layout->setSizeConstraint(QLayout::SetMinimumSize);
+    layout->addWidget(label);
+    layout->addWidget(createRom);
+    layout->addWidget(loadRom);
+
+    window->setLayout(layout);
+    window->setAutoFillBackground(true);
+    QPalette p(window->palette());
+    QColor windowColor = p.color(QPalette::Window);
+    windowColor.setAlpha(243);
+    p.setColor(QPalette::Window, windowColor);
+    window->setPalette(p);
+
+    vlayout->setSizeConstraint(QLayout::SetMinimumSize);
+    vlayout->addWidget(window);
+    vlayout->addSpacerItem(spacer);
+    vlayout->setAlignment(window, Qt::AlignHCenter);
+
+    connect(loadRom, &QPushButton::clicked, this, &CalculatorOverlay::loadRom);
+    connect(createRom, &QPushButton::clicked, this, &CalculatorOverlay::createRom);
+}
+
+void CalculatorOverlay::paintEvent(QPaintEvent *)
+{
+    QPainter p{this};
+    p.fillRect(rect(), {64, 64, 64, 128});
+}
+
 CalculatorWidget::CalculatorWidget(QWidget *parent)
     : QWidget{parent}
 {
