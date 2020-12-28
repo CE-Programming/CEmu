@@ -15,6 +15,7 @@
  */
 
 #include "consolewidget.h"
+#include "settings.h"
 
 #include <QWidget>
 #include <QPushButton>
@@ -25,8 +26,7 @@
 #include <cstdio>
 
 ConsoleWidget::ConsoleWidget(QWidget *parent)
-    : QWidget{parent},
-      mNativeConsole{false}
+    : QWidget{parent}
 {
     QHBoxLayout *hlayout = new QHBoxLayout();
 
@@ -42,6 +42,9 @@ ConsoleWidget::ConsoleWidget(QWidget *parent)
     mConsole->setMaximumBlockCount(2500);
     mConsole->setMinimumSize(10, 100);
 
+    mRadDock->setChecked(true);
+    mRadNative->setChecked(false);
+
     hlayout->addWidget(mRadDock);
     hlayout->addWidget(mRadNative);
     hlayout->addSpacerItem(spacer);
@@ -55,6 +58,15 @@ ConsoleWidget::ConsoleWidget(QWidget *parent)
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
+    if (Settings::boolOption(Settings::ConsoleAutoScroll))
+    {
+        setAutoScroll(Qt::Checked);
+    }
+    else
+    {
+        setAutoScroll(Qt::Unchecked);
+    }
+
     connect(btnClear, &QPushButton::clicked, this, &ConsoleWidget::clear);
     connect(mChkAuto, &QCheckBox::stateChanged, this, &ConsoleWidget::setAutoScroll);
 }
@@ -66,7 +78,7 @@ ConsoleWidget::~ConsoleWidget()
 
 void ConsoleWidget::clear()
 {
-    if (mNativeConsole)
+    if (mRadNative->isChecked())
     {
         int ret;
 #ifdef _WIN32
@@ -84,7 +96,7 @@ void ConsoleWidget::clear()
 
 void ConsoleWidget::append(const QString &str, const QColor &colorFg, const QColor &colorBg)
 {
-    if (mNativeConsole)
+    if (mRadNative->isChecked())
     {
         fputs(str.toStdString().c_str(), stdout);
     }
@@ -118,7 +130,7 @@ void ConsoleWidget::append(const char *str, int size)
     {
         size = static_cast<int>(strlen(str));
     }
-    if (mNativeConsole)
+    if (mRadNative->isChecked())
     {
         fwrite(str, sizeof(char), static_cast<size_t>(size), stdout);
     }
@@ -266,9 +278,7 @@ void ConsoleWidget::setAutoScroll(int state)
     mChkAuto->setCheckState(mAutoscroll ?
                             Qt::CheckState::Checked :
                             Qt::CheckState::Unchecked);
+
+    Settings::setBoolOption(Settings::ConsoleAutoScroll, mAutoscroll);
 }
 
-void ConsoleWidget::setNativeConsole(bool nativeConsole)
-{
-    mNativeConsole = nativeConsole;
-}

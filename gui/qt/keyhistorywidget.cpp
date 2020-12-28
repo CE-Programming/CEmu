@@ -15,6 +15,7 @@
  */
 
 #include "keyhistorywidget.h"
+#include "settings.h"
 
 #include <QWidget>
 #include <QPushButton>
@@ -48,6 +49,8 @@ KeyHistoryWidget::KeyHistoryWidget(QWidget *parent)
     vlayout->addLayout(hlayout);
     setLayout(vlayout);
 
+    setFontSize(Settings::intOption(Settings::KeyHistoryFont));
+
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     connect(btnClear, &QPushButton::clicked, mText, &QPlainTextEdit::clear);
@@ -72,7 +75,8 @@ void KeyHistoryWidget::setFontSize(int size)
     mFontSize->setValue(size);
     monospace.setPointSize(size);
     mText->setFont(monospace);
-    emit fontSizeChanged();
+
+    Settings::setIntOption(Settings::KeyHistoryFont, size);
 }
 
 int KeyHistoryWidget::getFontSize()

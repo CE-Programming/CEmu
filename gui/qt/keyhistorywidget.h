@@ -33,9 +33,6 @@ public slots:
     void add(const QString &entry);
     int getFontSize();
 
-signals:
-    void fontSizeChanged();
-
 private:
     void setFontSize(int size);
 

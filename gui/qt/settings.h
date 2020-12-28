@@ -29,8 +29,6 @@ public:
 
     static Settings* instance();
 
-    static void setSettingsDirectory(const QString &dirpath);
-
     static bool boolOption(const QString &key);
     static void setBoolOption(const QString &key, bool boolOption);
 
@@ -40,8 +38,7 @@ public:
     static int intOption(const QString &key);
     static void setIntOption(const QString &key, int integerOption);
 
-    static void setDefaults();
-    static void setDefaultOption(const QString &key, QVariant value);
+    static void setDefaults(bool force);
     static void saveSettings();
 
     static bool contains(const QString &key);
@@ -49,6 +46,7 @@ public:
     // setting strings
     static const QString KeyMap;
     static const QString KeyMapCustom;
+    static const QString KeyHistoryFont;
     static const QString KeypadColor;
     static const QString FirstRun;
 
@@ -62,7 +60,12 @@ public:
     static const QString KeyMapWabbit;
     static const QString KeyMapJstified;
 
+    // console settings
+    static const QString ConsoleAutoScroll;
+
 private:
+    static void setDefaultOption(bool force, const QString &key, QVariant value);
+
     static Settings *sInstance;
 
     QSettings *mSettings;

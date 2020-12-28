@@ -39,8 +39,6 @@ int main(int argc, char **argv)
     QApplication app(argc, argv);
     Settings settings("./cemu");
 
-    Settings::setDefaults();
-
     app.setOrganizationName(QStringLiteral("cemu-dev"));
     app.setApplicationName(QStringLiteral("CEmu"));
 

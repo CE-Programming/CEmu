@@ -34,9 +34,6 @@ public:
     explicit ConsoleWidget(QWidget *parent = nullptr);
     ~ConsoleWidget();
 
-public:
-    void setNativeConsole(bool dock);
-
 public slots:
     void clear();
     void append(const QString &str, const QColor &colorFg, const QColor &colorBg);
@@ -49,7 +46,6 @@ private:
     QCheckBox *mChkAuto;
     QPlainTextEdit *mConsole;
 
-    bool mNativeConsole;
     bool mAutoscroll;
 
     QTextCharFormat mFormat;

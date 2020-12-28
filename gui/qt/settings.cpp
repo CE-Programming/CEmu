@@ -23,8 +23,10 @@
 
 const QString Settings::KeyMap            = QStringLiteral("keys/map");
 const QString Settings::KeyMapCustom      = QStringLiteral("keys/custom");
+const QString Settings::KeyHistoryFont    = QStringLiteral("keyhistory/font");
 const QString Settings::KeypadColor       = QStringLiteral("keypad/color");
 const QString Settings::LayoutFile        = QStringLiteral("layout/file");
+const QString Settings::ConsoleAutoScroll = QStringLiteral("console/autoscroll");
 
 Settings *Settings::sInstance = nullptr;
 
@@ -37,7 +39,10 @@ Settings::Settings(const QString &dirpath)
     sInstance->mSettings = new QSettings(dirpath + "/config/preferences.conf", QSettings::IniFormat);
 
     qDebug() << "path: " << sInstance->mSettings->fileName();
+
     setTextOption(Settings::LayoutFile, dirpath + "/config/layout.json");
+
+    setDefaults(false);
 }
 
 Settings::~Settings()
@@ -47,11 +52,17 @@ Settings::~Settings()
     sInstance = nullptr;
 }
 
-void Settings::setDefaults()
+void Settings::setDefaults(bool force)
 {
-    setDefaultOption(Settings::KeyMap, Keymap::CEmu);
-    setDefaultOption(Settings::KeypadColor, KeypadWidget::Color::Denim);
-    setDefaultOption(Settings::KeyMapCustom, QStringLiteral("none"));
+    setDefaultOption(force, Settings::KeyMap, Keymap::CEmu);
+    setDefaultOption(force, Settings::KeypadColor, KeypadWidget::Color::Denim);
+    setDefaultOption(force, Settings::KeyMapCustom, QStringLiteral("none"));
+    setDefaultOption(force, Settings::KeyMapCustom, QStringLiteral("none"));
+    setDefaultOption(force, Settings::KeyHistoryFont, 9);
+
+    setDefaultOption(force, Settings::ConsoleAutoScroll, true);
+
+    saveSettings();
 }
 
 void Settings::saveSettings()
@@ -97,9 +108,9 @@ bool Settings::contains(const QString &key)
     return sInstance->mSettings->contains(key);
 }
 
-void Settings::setDefaultOption(const QString &key, QVariant value)
+void Settings::setDefaultOption(bool force, const QString &key, QVariant value)
 {
-    if (!contains(key))
+    if (force || !contains(key))
     {
         sInstance->mSettings->setValue(key, value);
     }
