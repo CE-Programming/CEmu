@@ -223,7 +223,7 @@ void CoreWindow::resetEmu()
 void CoreWindow::showPreferences()
 {
     SettingsDialog dialog;
-    connect(&dialog, &SettingsDialog::changedKeypadColor, [=](int color)
+    connect(&dialog, &SettingsDialog::changedKeypadColor, [this](int color)
     {
         mCalc->setConfig(mCalcType, color);
     });
