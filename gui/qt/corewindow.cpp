@@ -20,6 +20,7 @@
 #include "consolewidget.h"
 #include "statewidget.h"
 #include "settings.h"
+#include "romdialog.h"
 
 #include <kddockwidgets/LayoutSaver.h>
 
@@ -31,11 +32,17 @@
 #include <QTextEdit>
 #include <QApplication>
 #include <QMessageBox>
+#include <QFileDialog>
+
+const QString CoreWindow::sErrorStr        = CoreWindow::tr("Error");
+const QString CoreWindow::sWarningStr      = CoreWindow::tr("Warning");
+const QString CoreWindow::sInformationStr  = CoreWindow::tr("Information");
 
 CoreWindow::CoreWindow(const QString &uniqueName,
                        KDDockWidgets::MainWindowOptions options,
                        QWidget *parent)
-    : KDDockWidgets::MainWindow(uniqueName, options, parent)
+    : KDDockWidgets::MainWindow(uniqueName, options, parent),
+      mCalcOverlay{nullptr}
 {
     auto menubar = menuBar();
 
@@ -50,10 +57,10 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     menubar->addMenu(mDebugMenu);
 
     auto resetAction = mCalcsMenu->addAction(tr("Reset"));
-    connect(resetAction, &QAction::triggered, qApp, &QApplication::quit);
+    connect(resetAction, &QAction::triggered, this, &CoreWindow::resetEmu);
 
     auto romAction = mCalcsMenu->addAction(tr("Load ROM..."));
-    connect(romAction, &QAction::triggered, qApp, &QApplication::quit);
+    connect(romAction, &QAction::triggered, this, &CoreWindow::loadRom);
 
     mCalcsMenu->addSeparator();
 
@@ -81,7 +88,7 @@ CoreWindow::CoreWindow(const QString &uniqueName,
         const bool result = saver.saveToFile(Settings::textOption(Settings::LayoutFile));
         if (!result)
         {
-            qDebug() << "Saving layout to disk failed.";
+            QMessageBox::critical(nullptr, sErrorStr, tr("Unable to save layout. Ensure that the preferences directory is writable and has the required permissions."));
         }
     });
 
@@ -90,8 +97,18 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     {
         KDDockWidgets::RestoreOptions options = KDDockWidgets::RestoreOption_None;
         KDDockWidgets::LayoutSaver saver(options);
-        saver.restoreFromFile(Settings::textOption(Settings::LayoutFile));
+        const bool result = saver.restoreFromFile(Settings::textOption(Settings::LayoutFile));
+        if (!result)
+        {
+            QMessageBox::critical(nullptr, sErrorStr, tr("Unable to load layout. Ensure that the preferences directory is readable and has the required permissions."));
+        }
     });
+
+    connect(this, &CoreWindow::romChanged, this, &CoreWindow::resetEmu);
+
+    setKeymap();
+
+    resetEmu();
 }
 
 CoreWindow::~CoreWindow()
@@ -103,13 +120,8 @@ void CoreWindow::createDockWidgets()
 {
     Q_ASSERT(mDockWidgets.isEmpty());
 
-    Keymap keymap = static_cast<Keymap>(Settings::intOption(Settings::KeyMap));
-    KeypadWidget::Color keycolor = static_cast<KeypadWidget::Color>(Settings::intOption(Settings::KeypadColor));
-
     auto *calcDock = new KDDockWidgets::DockWidget(tr("Calculator"));
-    auto *calc = new CalculatorWidget();
-
-    auto *calcOverlay = new CalculatorOverlay(calc);
+    mCalc = new CalculatorWidget();
 
     auto *consoleDock = new KDDockWidgets::DockWidget(tr("Console"));
     auto *console = new ConsoleWidget();
@@ -120,17 +132,20 @@ void CoreWindow::createDockWidgets()
     auto *stateDock = new KDDockWidgets::DockWidget(tr("States"));
     auto *state = new StateWidget();
 
-    calc->setConfig(ti_device_t::TI84PCE, keycolor);
-    mKeypadBridge.setKeymap(keymap);
+    mCalcOverlay = new CalculatorOverlay(mCalc);
+    mCalcOverlay->setVisible(false);
 
-    calcDock->setWidget(calc);
+    connect(mCalcOverlay, &CalculatorOverlay::createRom, this, &CoreWindow::createRom);
+    connect(mCalcOverlay, &CalculatorOverlay::loadRom, this, &CoreWindow::loadRom);
+
+    calcDock->setWidget(mCalc);
     keyHistoryDock->setWidget(keyHistory);
     consoleDock->setWidget(console);
     stateDock->setWidget(state);
 
-    connect(calc, &CalculatorWidget::keyPressed, keyHistory, &KeyHistoryWidget::add);
-    connect(&mKeypadBridge, &QtKeypadBridge::keyStateChanged, calc, &CalculatorWidget::changeKeyState);
-    calc->installEventFilter(&mKeypadBridge);
+    connect(mCalc, &CalculatorWidget::keyPressed, keyHistory, &KeyHistoryWidget::add);
+    connect(&mKeypadBridge, &QtKeypadBridge::keyStateChanged, mCalc, &CalculatorWidget::changeKeyState);
+    mCalc->installEventFilter(&mKeypadBridge);
 
     mDockWidgets << calcDock;
     mDockWidgets << keyHistoryDock;
@@ -143,4 +158,60 @@ void CoreWindow::createDockWidgets()
     mDocksMenu->addAction(consoleDock->toggleAction());
 
     addDockWidget(calcDock, KDDockWidgets::Location_OnTop);
+}
+
+void CoreWindow::setKeymap()
+{
+    Keymap keymap = static_cast<Keymap>(Settings::intOption(Settings::KeyMap));
+    mKeypadBridge.setKeymap(keymap);
+}
+
+void CoreWindow::createRom()
+{
+    RomDialog romdialog;
+    if (romdialog.exec())
+    {
+        QString romFile = romdialog.romFile();
+
+        Settings::setTextOption(Settings::RomFile, romFile);
+        emit romChanged();
+    }
+}
+
+void CoreWindow::loadRom()
+{
+    QFileDialog dialog(this);
+    dialog.setFileMode(QFileDialog::AnyFile);
+    dialog.setWindowTitle(tr("Select ROM file"));
+    dialog.setNameFilter(tr("ROM Image (*.rom *.Rom *.ROM);;All Files (*.*)"));
+    if (dialog.exec())
+    {
+        QString romFile = dialog.selectedFiles().first();
+
+        Settings::setTextOption(Settings::RomFile, romFile);
+        emit romChanged();
+    }
+}
+
+void CoreWindow::resetEmu()
+{
+    KeypadWidget::Color keycolor = static_cast<KeypadWidget::Color>(Settings::intOption(Settings::KeypadColor));
+
+    // holds the path to the rom file to load into the emulator
+    //Settings::textOption(Settings::RomFile);
+    static bool test = false;
+
+    if (test)
+    {
+
+        mCalc->setConfig(ti_device_t::TI84PCE, keycolor);
+        mCalcOverlay->setVisible(false);
+    }
+    else
+    {
+        mCalc->setConfig(ti_device_t::TI84PCE, keycolor);
+        mCalcOverlay->setVisible(true);
+    }
+
+    test = true;
 }

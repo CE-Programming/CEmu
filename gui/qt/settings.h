@@ -63,6 +63,9 @@ public:
     // console settings
     static const QString ConsoleAutoScroll;
 
+    // file settings
+    static const QString RomFile;
+
 private:
     static void setDefaultOption(bool force, const QString &key, QVariant value);
 

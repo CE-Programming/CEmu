@@ -26,6 +26,7 @@ const QString Settings::KeyMapCustom      = QStringLiteral("keys/custom");
 const QString Settings::KeyHistoryFont    = QStringLiteral("keyhistory/font");
 const QString Settings::KeypadColor       = QStringLiteral("keypad/color");
 const QString Settings::LayoutFile        = QStringLiteral("layout/file");
+const QString Settings::RomFile           = QStringLiteral("files/rom");
 const QString Settings::ConsoleAutoScroll = QStringLiteral("console/autoscroll");
 
 Settings *Settings::sInstance = nullptr;
@@ -57,10 +58,11 @@ void Settings::setDefaults(bool force)
     setDefaultOption(force, Settings::KeyMap, Keymap::CEmu);
     setDefaultOption(force, Settings::KeypadColor, KeypadWidget::Color::Denim);
     setDefaultOption(force, Settings::KeyMapCustom, QStringLiteral("none"));
-    setDefaultOption(force, Settings::KeyMapCustom, QStringLiteral("none"));
     setDefaultOption(force, Settings::KeyHistoryFont, 9);
 
     setDefaultOption(force, Settings::ConsoleAutoScroll, true);
+
+    setDefaultOption(force, Settings::RomFile, QStringLiteral("none"));
 
     saveSettings();
 }

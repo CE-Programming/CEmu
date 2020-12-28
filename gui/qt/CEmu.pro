@@ -91,6 +91,7 @@ SOURCES += \
     keypad/qtkeypadbridge.cpp \
     keypad/rectkey.cpp \
     main.cpp \
+    romdialog.cpp \
     screenwidget.cpp \
     settings.cpp \
     statewidget.cpp
@@ -154,6 +155,7 @@ HEADERS  += \
     keypad/rectkey.h \
     keypad/secondkey.h \
     overlaywidget.h \
+    romdialog.h \
     screenwidget.h \
     settings.h \
     statewidget.h

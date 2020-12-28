@@ -71,13 +71,13 @@ public:
        vlayout->addSpacerItem(spacer);
        vlayout->setAlignment(window, Qt::AlignHCenter);
 
-       connect(loadRom, &QPushButton::clicked, this, &CalculatorOverlay::romLoad);
-       connect(createRom, &QPushButton::clicked, this, &CalculatorOverlay::romCreate);
+       connect(loadRom, &QPushButton::clicked, this, &CalculatorOverlay::loadRom);
+       connect(createRom, &QPushButton::clicked, this, &CalculatorOverlay::createRom);
    }
 
 signals:
-   void romLoad();
-   void romCreate();
+   void loadRom();
+   void createRom();
 
 protected:
    void paintEvent(QPaintEvent *) override

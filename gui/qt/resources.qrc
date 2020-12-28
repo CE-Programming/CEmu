@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>assets/test/screen.png</file>
+        <file>assets/rom/prgm.png</file>
     </qresource>
 </RCC>

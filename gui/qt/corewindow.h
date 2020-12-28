@@ -17,6 +17,7 @@
 #ifndef COREWINDOW_H
 #define COREWINDOW_H
 
+#include "calculatorwidget.h"
 #include "keypad/qtkeypadbridge.h"
 
 #include <kddockwidgets/DockWidget.h>
@@ -31,15 +32,23 @@ public:
     explicit CoreWindow(const QString &uniqueName, KDDockWidgets::MainWindowOptions options, QWidget *parent = nullptr);
     ~CoreWindow() override;
 
+signals:
+    void romChanged();
+
+private slots:
+    void createRom();
+    void loadRom();
+    void resetEmu();
+
 private:
-    // menu operations
     void createFileMenu();
     void createDocksMenu();
     void createDebugMenu();
     void createExtrasMenu();
 
-    // dock operations
     void createDockWidgets();
+    void setKeymap();
+
     KDDockWidgets::DockWidget::List mDockWidgets;
 
     QtKeypadBridge mKeypadBridge;
@@ -49,6 +58,12 @@ private:
     QMenu *mDebugMenu;
     QMenu *mCaptureMenu;
 
+    CalculatorOverlay *mCalcOverlay;
+    CalculatorWidget *mCalc;
+
+    static const QString sErrorStr;
+    static const QString sWarningStr;
+    static const QString sInformationStr;
 };
 
 #endif
