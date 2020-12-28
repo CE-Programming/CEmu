@@ -17,6 +17,7 @@
 #include "corewindow.h"
 #include "screenwidget.h"
 #include "dockwidget.h"
+#include "settings.h"
 
 #include <kddockwidgets/Config.h>
 
@@ -36,6 +37,9 @@ int main(int argc, char **argv)
 #endif
 
     QApplication app(argc, argv);
+    Settings settings("./cemu");
+
+    Settings::setDefaults();
 
     app.setOrganizationName(QStringLiteral("cemu-dev"));
     app.setApplicationName(QStringLiteral("CEmu"));

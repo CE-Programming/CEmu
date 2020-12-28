@@ -15,18 +15,9 @@ class QtKeypadBridge : public QObject {
 
 public:
 
-    typedef enum {
-        KEYMAP_NATURAL,
-        KEYMAP_CEMU,
-        KEYMAP_TILEM,
-        KEYMAP_WABBITEMU,
-        KEYMAP_JSTIFIED,
-        KEYMAP_CUSTOM,
-    } KeymapMode;
-
     explicit QtKeypadBridge(QObject *parent = nullptr) : QObject(parent) {}
 
-    bool setKeymap(KeymapMode map);
+    bool setKeymap(Keymap map);
     void skEvent(QKeyEvent *event, bool press);
     void kEvent(QString text, int key = 0, bool repeat = false);
     void releaseAll();
@@ -44,7 +35,7 @@ private:
 
     QHash<quint32, KeyCode> pressed;
     const HostKey *const *keymap = nullptr;
-    KeymapMode m_mode;
+    Keymap mKeymap;
 
     static const QHash<QChar, quint32> kTextMap;
     static const QHash<int, quint32> kKeyMap;

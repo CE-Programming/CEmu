@@ -19,26 +19,27 @@ static const QString custom_keys[8][8] = {
     { "down", "left", "right", "up", "", "", "", "" }
 };
 
-bool QtKeypadBridge::setKeymap(KeymapMode map) {
+bool QtKeypadBridge::setKeymap(Keymap map)
+{
     bool ret = true;
-    m_mode = map;
+    mKeymap = map;
     switch (map) {
-        case KEYMAP_NATURAL:
+        case Keymap::Natural:
             keymap = nullptr;
             break;
-        case KEYMAP_CEMU:
+        case Keymap::CEmu:
             keymap = get_device_type() == TI84PCE ? cemu_keymap_84pce : cemu_keymap_83pce;
             break;
-        case KEYMAP_TILEM:
+        case Keymap::TilEm:
             keymap = get_device_type() == TI84PCE ? tilem_keymap_84pce : tilem_keymap_83pce;
             break;
-        case KEYMAP_WABBITEMU:
+        case Keymap::WabbitEmu:
             keymap = get_device_type() == TI84PCE ? wabbitemu_keymap_84pce : wabbitemu_keymap_83pce;
             break;
-        case KEYMAP_JSTIFIED:
+        case Keymap::JsTIfied:
             keymap = get_device_type() == TI84PCE ? jstified_keymap_84pce : jstified_keymap_83pce;
             break;
-        case KEYMAP_CUSTOM:
+        case Keymap::Custom:
             keymap = custom_keymap;
             break;
     }

@@ -3,12 +3,23 @@
 
 #include <QtGui/QKeyEvent>
 
-struct HostKey {
+struct HostKey
+{
     Qt::Key code;
     quint32 nativeCode, nativeMask;
     Qt::KeyboardModifiers modifier, mask;
     QString name;
 };
+
+typedef enum
+{
+    Natural,
+    CEmu,
+    TilEm,
+    WabbitEmu,
+    JsTIfied,
+    Custom
+} Keymap;
 
 extern const HostKey *const cemu_keymap_83pce[8*8];
 extern const HostKey *const tilem_keymap_83pce[8*8];

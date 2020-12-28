@@ -90,6 +90,7 @@ SOURCES += \
     keypad/rectkey.cpp \
     main.cpp \
     screenwidget.cpp \
+    settings.cpp \
     statewidget.cpp
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
@@ -152,6 +153,7 @@ HEADERS  += \
     keypad/secondkey.h \
     overlaywidget.h \
     screenwidget.h \
+    settings.h \
     statewidget.h
 
 DISTFILES +=

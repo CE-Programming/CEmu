@@ -19,6 +19,7 @@
 #include "keyhistorywidget.h"
 #include "consolewidget.h"
 #include "statewidget.h"
+#include "settings.h"
 
 #include <kddockwidgets/LayoutSaver.h>
 
@@ -74,19 +75,23 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     createDockWidgets();
 
     auto saveLayoutAction = mDocksMenu->addAction(tr("Save Layout"));
-    connect(saveLayoutAction, &QAction::triggered, this, [] {
+    connect(saveLayoutAction, &QAction::triggered, this, []
+    {
         KDDockWidgets::LayoutSaver saver;
-        const bool result = saver.saveToFile(QStringLiteral("mylayout.json"));
-        qDebug() << "Saving layout to disk. Result=" << result;
+        const bool result = saver.saveToFile(Settings::textOption(Settings::LayoutFile));
+        if (!result)
+        {
+            qDebug() << "Saving layout to disk failed.";
+        }
     });
 
     auto restoreLayoutAction = mDocksMenu->addAction(tr("Restore Layout"));
-    connect(restoreLayoutAction, &QAction::triggered, this, [] {
+    connect(restoreLayoutAction, &QAction::triggered, this, []
+    {
         KDDockWidgets::RestoreOptions options = KDDockWidgets::RestoreOption_None;
         KDDockWidgets::LayoutSaver saver(options);
-        saver.restoreFromFile(QStringLiteral("mylayout.json"));
+        saver.restoreFromFile(Settings::textOption(Settings::LayoutFile));
     });
-
 }
 
 CoreWindow::~CoreWindow()
@@ -98,7 +103,8 @@ void CoreWindow::createDockWidgets()
 {
     Q_ASSERT(mDockWidgets.isEmpty());
 
-    mKeypadBridge.setKeymap(QtKeypadBridge::KEYMAP_CEMU);
+    Keymap keymap = static_cast<Keymap>(Settings::intOption(Settings::KeyMap));
+    KeypadWidget::Color keycolor = static_cast<KeypadWidget::Color>(Settings::intOption(Settings::KeypadColor));
 
     auto *calcDock = new KDDockWidgets::DockWidget(tr("Calculator"));
     auto *calc = new CalculatorWidget();
@@ -114,7 +120,8 @@ void CoreWindow::createDockWidgets()
     auto *stateDock = new KDDockWidgets::DockWidget(tr("States"));
     auto *state = new StateWidget();
 
-    calc->setConfig(ti_device_t::TI84PCE, KeypadWidget::KeypadColor::COLOR_DENIM);
+    calc->setConfig(ti_device_t::TI84PCE, keycolor);
+    mKeypadBridge.setKeymap(keymap);
 
     calcDock->setWidget(calc);
     keyHistoryDock->setWidget(keyHistory);

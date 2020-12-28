@@ -81,7 +81,7 @@ protected:
    void paintEvent(QPaintEvent *) override
    {
       QPainter p{this};
-      p.fillRect(rect(), {100, 100, 100, 128});
+      p.fillRect(rect(), {64, 64, 64, 128});
    }
 };
 
@@ -93,7 +93,7 @@ public:
     explicit CalculatorWidget(QWidget *parent = nullptr);
     ~CalculatorWidget();
 
-    void setConfig(ti_device_t type, KeypadWidget::KeypadColor color);
+    void setConfig(ti_device_t type, KeypadWidget::Color color);
 
 public slots:
     void changeKeyState(KeyCode keycode, bool press);

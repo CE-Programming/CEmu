@@ -49,7 +49,7 @@ CalculatorWidget::~CalculatorWidget()
 {
 }
 
-void CalculatorWidget::setConfig(ti_device_t type, KeypadWidget::KeypadColor color)
+void CalculatorWidget::setConfig(ti_device_t type, KeypadWidget::Color color)
 {
     switch (type)
     {

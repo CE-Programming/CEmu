@@ -32,29 +32,29 @@ public:
     virtual ~KeypadWidget();
 
     typedef enum {
-        COLOR_BLACK,
-        COLOR_WHITE,
-        COLOR_TRUE_BLUE,
-        COLOR_DENIM,
-        COLOR_SILVER,
-        COLOR_PINK,
-        COLOR_PLUM,
-        COLOR_RED,
-        COLOR_LIGHTNING,
-        COLOR_GOLDEN,
-        COLOR_SPACEGREY,
-        COLOR_CORAL,
-        COLOR_MINT,
-        COLOR_ROSEGOLD,
-        COLOR_CRYSTALCLEAR,
-        COLOR_MATTEBLACK,
-        COLOR_TANGENTTEAL,
-        COLOR_TOTALLYTEAL
-    } KeypadColor;
+        Black,
+        White,
+        TrueBlue,
+        Denim,
+        Silver,
+        Pink,
+        Plum,
+        Red,
+        Lightning,
+        Golder,
+        SpaceGrey,
+        Coral,
+        Mint,
+        RoseGold,
+        CrystalClear,
+        MatteBlack,
+        TangentTeal,
+        TotallyTeal
+    } Color;
 
-    void setType(bool is83, KeypadColor color);
+    void setType(bool is83, Color color);
     void setHolding(bool);
-    KeypadColor getCurrColor(void);
+    Color getCurrColor(void);
 
     static const QRect sBaseRect;
 
@@ -79,7 +79,7 @@ private:
     void updateKey(Key *key, bool);
     void addKey(Key *key);
 
-    KeypadColor color = KeypadWidget::COLOR_BLACK;
+    Color color = KeypadWidget::Black;
     bool mHoldingEnabled = true;
     QColor cclrBackground;
     QPainterPath keypadPath;
