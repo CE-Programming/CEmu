@@ -43,10 +43,10 @@ ScreenWidget::ScreenWidget(QWidget *parent)
     mOuterPath.lineTo(sOuterRect.topLeft() + QPoint{0, sOuterCorner.center().y()});
     mOuterPath.arcTo(sOuterCorner.translated(sOuterRect.topLeft()), 180, -90);
     QPoint topRightOffset{sOuterCorner.center().x(), 0},
-        topRightPoint = sOuterRect.topRight() - topRightOffset;
+        topRightPoint = sOuterRect.topRight() + QPoint{1, 0} - topRightOffset;
     mOuterPath.lineTo(topRightPoint);
     mOuterPath.arcTo(sOuterCorner.translated(topRightPoint - topRightOffset), 90, -90);
-    mOuterPath.lineTo(sOuterRect.bottomRight() + QPoint{0, 1});
+    mOuterPath.lineTo(sOuterRect.bottomRight() + QPoint{1, 1});
 
     mInnerPath.addRoundedRect(sInnerRect, sInnerCorner.center().x(), sInnerCorner.center().y());
 
@@ -84,8 +84,8 @@ void ScreenWidget::paintEvent(QPaintEvent */*event*/)
     painter.setPen({QColor{0x0A0A0A}, 3});
     painter.setBrush(QColor{0x161616});
     painter.drawPath(mInnerPath);
-    painter.setPen(Qt::white);
 
+    painter.setPen(Qt::white);
     QRect upperRect = sOuterRect;
     upperRect.setBottom(sInnerRect.top());
     qreal topMaxHeight = qMax(mProductText.size().height(), mModelText.size().height());
