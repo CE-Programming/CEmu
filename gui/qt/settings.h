@@ -45,28 +45,30 @@ public:
 
     static bool contains(const QString &key);
 
-    // setting strings
     static const QString KeyMap;
     static const QString KeyMapCustom;
     static const QString KeyHistoryFont;
     static const QString KeypadColor;
     static const QString FirstRun;
-
-    // layout strings
     static const QString LayoutFile;
-
-    // key map strings
     static const QString KeyMapNatural;
     static const QString KeyMapCemu;
     static const QString KeyMapTilem;
     static const QString KeyMapWabbit;
     static const QString KeyMapJstified;
-
-    // console settings
     static const QString ConsoleAutoScroll;
-
-    // file settings
     static const QString RomFile;
+    static const QString AutoUpdate;
+    static const QString PortableMode;
+    static const QString EmuThrottle;
+    static const QString EmuSpeed;
+    static const QString EmuPreI;
+    static const QString EmuLcdSpi;
+    static const QString EmuFrameSkip;
+    static const QString EmuFrameSkipRate;
+    static const QString DevSoftCmds;
+    static const QString DevTIOS;
+    static const QString DevOpenDebug;
 
 private:
     static void setDefaultOption(bool force, const QString &key, const QVariant &value);

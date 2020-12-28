@@ -94,14 +94,12 @@ SOURCES += \
     romdialog.cpp \
     screenwidget.cpp \
     settings.cpp \
+    settingsdialog.cpp \
     statewidget.cpp
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
-win32: SOURCES += ../../core/os/os-win32.c win32-console.cpp
+win32: SOURCES += ../../core/os/os-win32.c
 win32: LIBS += -lpsapi
-
-macx: SOURCES += os/mac/kdmactouchbar.mm
-macx: HEADERS += os/mac/kdmactouchbar.h os/mac/kdmactouchbar_global.h
 
 HEADERS  += \
     ../../core/asic.h \
@@ -158,6 +156,7 @@ HEADERS  += \
     romdialog.h \
     screenwidget.h \
     settings.h \
+    settingsdialog.h \
     statewidget.h
 
 DISTFILES +=

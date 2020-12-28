@@ -41,7 +41,7 @@ public:
         Plum,
         Red,
         Lightning,
-        Golder,
+        Gold,
         SpaceGrey,
         Coral,
         Mint,

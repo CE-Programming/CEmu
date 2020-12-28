@@ -21,6 +21,7 @@
 #include "keypad/qtkeypadbridge.h"
 #include "romdialog.h"
 #include "settings.h"
+#include "settingsdialog.h"
 #include "statewidget.h"
 
 #include <kddockwidgets/LayoutSaver.h>
@@ -67,7 +68,13 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     mCalcsMenu->addSeparator();
 
     auto *prefAction = mCalcsMenu->addAction(tr("Preferences"));
-    connect(prefAction, &QAction::triggered, qApp, &QApplication::quit);
+    connect(prefAction, &QAction::triggered, this, []
+    {
+        SettingsDialog dialog;
+        if (dialog.exec())
+        {
+        }
+    });
 
     auto *quitAction = mCalcsMenu->addAction(tr("Quit"));
     connect(quitAction, &QAction::triggered, qApp, &QApplication::quit);

@@ -29,6 +29,17 @@ const QString Settings::KeypadColor       = QStringLiteral("keypad/color");
 const QString Settings::LayoutFile        = QStringLiteral("layout/file");
 const QString Settings::RomFile           = QStringLiteral("files/rom");
 const QString Settings::ConsoleAutoScroll = QStringLiteral("console/autoscroll");
+const QString Settings::AutoUpdate        = QStringLiteral("general/autoupdate");
+const QString Settings::PortableMode      = QStringLiteral("general/portable");
+const QString Settings::EmuThrottle       = QStringLiteral("emu/throttle");
+const QString Settings::EmuSpeed          = QStringLiteral("emu/speed");
+const QString Settings::EmuPreI           = QStringLiteral("emu/prei");
+const QString Settings::EmuLcdSpi         = QStringLiteral("emu/lcdspi");
+const QString Settings::EmuFrameSkip      = QStringLiteral("display/frameskip_enabled");
+const QString Settings::EmuFrameSkipRate  = QStringLiteral("display/frameskip");
+const QString Settings::DevSoftCmds       = QStringLiteral("developer/softcmds");
+const QString Settings::DevTIOS           = QStringLiteral("developer/tios");
+const QString Settings::DevOpenDebug      = QStringLiteral("developer/resetnmi");
 
 Settings *Settings::sInstance = nullptr;
 
@@ -60,10 +71,19 @@ void Settings::setDefaults(bool force)
     setDefaultOption(force, Settings::KeypadColor, KeypadWidget::Color::Denim);
     setDefaultOption(force, Settings::KeyMapCustom, QStringLiteral("none"));
     setDefaultOption(force, Settings::KeyHistoryFont, 9);
-
     setDefaultOption(force, Settings::ConsoleAutoScroll, true);
-
     setDefaultOption(force, Settings::RomFile, QStringLiteral("none"));
+    setDefaultOption(force, Settings::AutoUpdate, true);
+    setDefaultOption(force, Settings::PortableMode, false);
+    setDefaultOption(force, Settings::EmuThrottle, true);
+    setDefaultOption(force, Settings::EmuSpeed, 100);
+    setDefaultOption(force, Settings::EmuPreI, false);
+    setDefaultOption(force, Settings::EmuLcdSpi, true);
+    setDefaultOption(force, Settings::EmuFrameSkip, false);
+    setDefaultOption(force, Settings::EmuFrameSkipRate, 0);
+    setDefaultOption(force, Settings::DevSoftCmds, true);
+    setDefaultOption(force, Settings::DevTIOS, true);
+    setDefaultOption(force, Settings::DevOpenDebug, false);
 
     saveSettings();
 }

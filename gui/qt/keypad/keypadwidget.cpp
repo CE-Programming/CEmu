@@ -90,7 +90,7 @@ void KeypadWidget::setType(bool is83, KeypadWidget::Color color_scheme) {
             cSides  = cCenter.lighter(130);
             cOther  = QColor::fromRgb(0x0077C8);
             break;
-        case KeypadWidget::Golder:
+        case KeypadWidget::Gold:
             cCenter = QColor::fromRgb(0xD8D3B6);
             cSides  = cCenter.lighter(130);
             cOther  = QColor::fromRgb(0xD8D3B6);
