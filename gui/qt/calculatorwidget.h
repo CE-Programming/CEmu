@@ -61,7 +61,9 @@ public:
        window->setLayout(layout);
        window->setAutoFillBackground(true);
        QPalette p(window->palette());
-       p.setColor(QPalette::Window, {255, 255, 255, 243});
+       QColor windowColor = p.color(QPalette::Window);
+       windowColor.setAlpha(243);
+       p.setColor(QPalette::Window, windowColor);
        window->setPalette(p);
 
        vlayout->setSizeConstraint(QLayout::SetMinimumSize);
