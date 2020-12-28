@@ -1,5 +1,7 @@
-lessThan(QT_MAJOR_VERSION, 5) : error("You need at least Qt 5.10 to build CEmu!")
-lessThan(QT_MINOR_VERSION, 10) : error("You need at least Qt 5.10 to build CEmu!")
+lessThan(QT_MAJOR_VERSION, 6) {
+    lessThan(QT_MAJOR_VERSION, 5) : error("You need at least Qt 5.15 to build CEmu!")
+    lessThan(QT_MINOR_VERSION, 10) : error("You need at least Qt 5.10 to build CEmu!")
+}
 
 QT += core gui widgets network
 
