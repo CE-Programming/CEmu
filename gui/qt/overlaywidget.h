@@ -23,46 +23,46 @@
 
 class OverlayWidget : public QWidget
 {
-   void newParent()
-   {
-      if (!parent()) return;
-      parent()->installEventFilter(this);
-      raise();
-   }
+    void newParent()
+    {
+        if (!parent()) return;
+        parent()->installEventFilter(this);
+        raise();
+    }
 
 public:
-   explicit OverlayWidget(QWidget * parent = {}) : QWidget{parent}
-   {
-      setAttribute(Qt::WA_NoSystemBackground);
-      newParent();
-   }
+    explicit OverlayWidget(QWidget * parent = {}) : QWidget{parent}
+    {
+        setAttribute(Qt::WA_NoSystemBackground);
+        newParent();
+    }
 
 protected:
-   bool eventFilter(QObject * obj, QEvent * ev) override
-   {
-      if (obj == parent()) {
-         if (ev->type() == QEvent::Resize)
-            resize(static_cast<QResizeEvent*>(ev)->size());
-         else if (ev->type() == QEvent::ChildAdded)
-            raise();
-      }
+    bool eventFilter(QObject * obj, QEvent * ev) override
+    {
+        if (obj == parent()) {
+            if (ev->type() == QEvent::Resize)
+                resize(static_cast<QResizeEvent*>(ev)->size());
+            else if (ev->type() == QEvent::ChildAdded)
+                raise();
+        }
 
-      return QWidget::eventFilter(obj, ev);
-   }
+        return QWidget::eventFilter(obj, ev);
+    }
 
-   bool event(QEvent* ev) override
-   {
-      if (ev->type() == QEvent::ParentAboutToChange)
-      {
-         if (parent()) parent()->removeEventFilter(this);
-      }
-      else if (ev->type() == QEvent::ParentChange)
-      {
-         newParent();
-      }
+    bool event(QEvent* ev) override
+    {
+        if (ev->type() == QEvent::ParentAboutToChange)
+        {
+            if (parent()) parent()->removeEventFilter(this);
+        }
+        else if (ev->type() == QEvent::ParentChange)
+        {
+            newParent();
+        }
 
-      return QWidget::event(ev);
-   }
+        return QWidget::event(ev);
+    }
 };
 
 #endif
