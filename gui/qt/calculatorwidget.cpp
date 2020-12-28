@@ -39,10 +39,7 @@ CalculatorWidget::CalculatorWidget(QWidget *parent)
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     setFocusPolicy(Qt::StrongFocus);
 
-    connect(mKeypad, &KeypadWidget::keyPressed, this, [=](const QString &key)
-    {
-        emit keyPressed(key);
-    });
+    connect(mKeypad, &KeypadWidget::keyPressed, this, &CalculatorWidget::keyPressed);
 }
 
 CalculatorWidget::~CalculatorWidget()
