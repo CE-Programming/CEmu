@@ -123,10 +123,7 @@ SettingsGeneralTab::SettingsGeneralTab(QWidget *parent)
     connect(btnColor, &QPushButton::clicked, this, [=]
     {
         KeyColorDialog dialog(mKeypadColor);
-        connect(&dialog, &KeyColorDialog::changedColor, [=](int id)
-        {
-            emit changedKeypadColor(id);
-        });
+        connect(&dialog, &KeyColorDialog::changedColor, this, &SettingsGeneralTab::changedKeypadColor);
 
         if (dialog.exec())
         {
@@ -400,10 +397,7 @@ KeyColorDialog::KeyColorDialog(int color, QWidget *parent)
     mainLayout->addStretch(1);
     setLayout(mainLayout);
 
-    connect(mColors, &QButtonGroup::idClicked, [=](int id)
-    {
-        emit changedColor(id);
-    });
+    connect(mColors, &QButtonGroup::idClicked, this, &KeyColorDialog::changedColor);
 }
 
 int KeyColorDialog::getColor()
