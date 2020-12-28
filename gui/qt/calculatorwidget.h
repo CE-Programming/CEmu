@@ -48,7 +48,7 @@ public:
     explicit CalculatorWidget(QWidget *parent = nullptr);
     ~CalculatorWidget();
 
-    void setConfig(ti_device_t type, KeypadWidget::Color color);
+    void setConfig(ti_device_t type, int color);
 
 public slots:
     void changeKeyState(KeyCode keycode, bool press);

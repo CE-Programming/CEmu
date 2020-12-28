@@ -36,6 +36,9 @@ class SettingsDialog : public QDialog
 public:
     explicit SettingsDialog(QWidget *parent = nullptr);
 
+signals:
+    void changedKeypadColor(int id);
+
 private:
     QDialogButtonBox *mBtnBox;
     QTabWidget *mTabWidget;
@@ -86,6 +89,9 @@ public:
 public slots:
     void saveSettings();
 
+signals:
+    void changedKeypadColor(int id);
+
 private:
     QCheckBox *mChkAutoUpdate;
     QCheckBox *mChkPortable;
@@ -99,7 +105,10 @@ class KeyColorDialog : public QDialog
 
 public:
     explicit KeyColorDialog(int color, QWidget *parent = nullptr);
-    int getSelectedColor();
+    int getColor();
+
+signals:
+    void changedColor(int id);
 
 private:
     QButtonGroup *mColors;

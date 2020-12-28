@@ -19,6 +19,8 @@
 
 class QtKeypadBridge;
 
+#include "../../core/asic.h"
+
 #include <kddockwidgets/DockWidget.h>
 #include <kddockwidgets/MainWindow.h>
 
@@ -43,6 +45,7 @@ private slots:
     void createRom();
     void loadRom();
     void resetEmu();
+    void showPreferences();
 
 private:
     void createFileMenu();
@@ -64,6 +67,8 @@ private:
 
     CalculatorOverlay *mCalcOverlay;
     CalculatorWidget *mCalc;
+
+    ti_device_t mCalcType;
 
     static const QString sErrorStr;
     static const QString sWarningStr;

@@ -99,17 +99,19 @@ CalculatorWidget::~CalculatorWidget()
 {
 }
 
-void CalculatorWidget::setConfig(ti_device_t type, KeypadWidget::Color color)
+void CalculatorWidget::setConfig(ti_device_t type, int color)
 {
+    KeypadWidget::Color keycolor = static_cast<KeypadWidget::Color>(color);
+
     switch (type)
     {
         default:
-            mKeypad->setType(false, color);
+            mKeypad->setType(false, keycolor);
             mScreen->setModel(QStringLiteral("TI-84 "), QStringLiteral("Plus CE")/*, QStringLiteral("PYTHON EDITION")*/);
             break;
 
         case ti_device_t::TI83PCE:
-            mKeypad->setType(true, color);
+            mKeypad->setType(true, keycolor);
             mScreen->setModel(QStringLiteral("TI-83 "), QStringLiteral("Premium CE")/*, QStringLiteral("EDITION PYTHON")*/);
             break;
     }

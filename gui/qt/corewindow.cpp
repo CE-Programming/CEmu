@@ -45,7 +45,8 @@ CoreWindow::CoreWindow(const QString &uniqueName,
                        QWidget *parent)
     : KDDockWidgets::MainWindow(uniqueName, options, parent),
       mKeypadBridge{new QtKeypadBridge{this}},
-      mCalcOverlay{nullptr}
+      mCalcOverlay{nullptr},
+      mCalcType{ti_device_t::TI84PCE}
 {
     auto *menubar = menuBar();
 
@@ -68,13 +69,7 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     mCalcsMenu->addSeparator();
 
     auto *prefAction = mCalcsMenu->addAction(tr("Preferences"));
-    connect(prefAction, &QAction::triggered, this, []
-    {
-        SettingsDialog dialog;
-        if (dialog.exec())
-        {
-        }
-    });
+    connect(prefAction, &QAction::triggered, this, &CoreWindow::showPreferences);
 
     auto *quitAction = mCalcsMenu->addAction(tr("Quit"));
     connect(quitAction, &QAction::triggered, qApp, &QApplication::quit);
@@ -204,7 +199,7 @@ void CoreWindow::loadRom()
 
 void CoreWindow::resetEmu()
 {
-    KeypadWidget::Color keycolor = static_cast<KeypadWidget::Color>(Settings::intOption(Settings::KeypadColor));
+    int keycolor = Settings::intOption(Settings::KeypadColor);
 
     // holds the path to the rom file to load into the emulator
     //Settings::textOption(Settings::RomFile);
@@ -213,14 +208,24 @@ void CoreWindow::resetEmu()
     if (test)
     {
 
-        mCalc->setConfig(ti_device_t::TI84PCE, keycolor);
+        mCalc->setConfig(mCalcType, keycolor);
         mCalcOverlay->setVisible(false);
     }
     else
     {
-        mCalc->setConfig(ti_device_t::TI84PCE, keycolor);
+        mCalc->setConfig(mCalcType, keycolor);
         mCalcOverlay->setVisible(true);
     }
 
     test = true;
+}
+
+void CoreWindow::showPreferences()
+{
+    SettingsDialog dialog;
+    connect(&dialog, &SettingsDialog::changedKeypadColor, [=](int color)
+    {
+        mCalc->setConfig(mCalcType, color);
+    });
+    dialog.exec();
 }

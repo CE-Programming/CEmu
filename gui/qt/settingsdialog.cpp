@@ -54,6 +54,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     layout->addWidget(mTabWidget, Qt::AlignCenter);
     layout->addWidget(mBtnBox, Qt::AlignCenter);
 
+    connect(genTab, &SettingsGeneralTab::changedKeypadColor, this, &SettingsDialog::changedKeypadColor);
     connect(mBtnBox, &QDialogButtonBox::accepted, genTab, &SettingsGeneralTab::saveSettings);
     connect(mBtnBox, &QDialogButtonBox::accepted, emuTab, &SettingsEmulationTab::saveSettings);
     connect(mBtnBox, &QDialogButtonBox::accepted, devTab, &SettingsDeveloperTab::saveSettings);
@@ -122,10 +123,16 @@ SettingsGeneralTab::SettingsGeneralTab(QWidget *parent)
     connect(btnColor, &QPushButton::clicked, this, [=]
     {
         KeyColorDialog dialog(mKeypadColor);
+        connect(&dialog, &KeyColorDialog::changedColor, [=](int id)
+        {
+            emit changedKeypadColor(id);
+        });
+
         if (dialog.exec())
         {
-            mKeypadColor = dialog.getSelectedColor();
+            mKeypadColor = dialog.getColor();
         }
+        emit changedKeypadColor(mKeypadColor);
     });
 
     int keymap = Settings::intOption(Settings::KeyMap);
@@ -277,22 +284,22 @@ KeyColorDialog::KeyColorDialog(int color, QWidget *parent)
 
     QRadioButton *btnBlack = new QRadioButton(QStringLiteral("Black"));
     QRadioButton *btnWhite = new QRadioButton(QStringLiteral("White"));
-    QRadioButton *btnTrueBlue = new QRadioButton(QStringLiteral("TrueBlue"));
+    QRadioButton *btnTrueBlue = new QRadioButton(QStringLiteral("True Blue"));
     QRadioButton *btnDenim = new QRadioButton(QStringLiteral("Denim"));
     QRadioButton *btnSilver = new QRadioButton(QStringLiteral("Silver"));
     QRadioButton *btnPink = new QRadioButton(QStringLiteral("Pink"));
     QRadioButton *btnPlum = new QRadioButton(QStringLiteral("Plum"));
     QRadioButton *btnRed = new QRadioButton(QStringLiteral("Red"));
     QRadioButton *btnLightning = new QRadioButton(QStringLiteral("Lightning"));
-    QRadioButton *btnGold = new QRadioButton(QStringLiteral("Golder"));
-    QRadioButton *btnSpaceGrey = new QRadioButton(QStringLiteral("SpaceGrey"));
+    QRadioButton *btnGold = new QRadioButton(QStringLiteral("Gold"));
+    QRadioButton *btnSpaceGrey = new QRadioButton(QStringLiteral("Space Grey"));
     QRadioButton *btnCoral = new QRadioButton(QStringLiteral("Coral"));
     QRadioButton *btnMint = new QRadioButton(QStringLiteral("Mint"));
-    QRadioButton *btnRoseGold = new QRadioButton(QStringLiteral("RoseGold"));
-    QRadioButton *btnCrystalClear = new QRadioButton(QStringLiteral("CrystalClear"));
-    QRadioButton *btnMatteBlack = new QRadioButton(QStringLiteral("MatteBlack"));
-    QRadioButton *btnTangentTeal = new QRadioButton(QStringLiteral("TangentTeal"));
-    QRadioButton *btnTotallyTeal = new QRadioButton(QStringLiteral("TotallyTeal"));
+    QRadioButton *btnRoseGold = new QRadioButton(QStringLiteral("Rose Gold"));
+    QRadioButton *btnCrystalClear = new QRadioButton(QStringLiteral("Crystal Clear"));
+    QRadioButton *btnMatteBlack = new QRadioButton(QStringLiteral("Matte Black"));
+    QRadioButton *btnTangentTeal = new QRadioButton(QStringLiteral("Tangent Teal"));
+    QRadioButton *btnTotallyTeal = new QRadioButton(QStringLiteral("Totally Teal"));
 
     QPalette palette(btnBlack->palette());
 
@@ -381,7 +388,8 @@ KeyColorDialog::KeyColorDialog(int color, QWidget *parent)
 
     grpColors->setLayout(gbox);
 
-    QDialogButtonBox *btnBox = new QDialogButtonBox(QDialogButtonBox::Ok);
+    QDialogButtonBox *btnBox = new QDialogButtonBox(QDialogButtonBox::Cancel |
+                                                    QDialogButtonBox::Save);
 
     connect(btnBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(btnBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
@@ -391,9 +399,14 @@ KeyColorDialog::KeyColorDialog(int color, QWidget *parent)
     mainLayout->addWidget(btnBox);
     mainLayout->addStretch(1);
     setLayout(mainLayout);
+
+    connect(mColors, &QButtonGroup::idClicked, [=](int id)
+    {
+        emit changedColor(id);
+    });
 }
 
-int KeyColorDialog::getSelectedColor()
+int KeyColorDialog::getColor()
 {
     return mColors->checkedId();
 }
