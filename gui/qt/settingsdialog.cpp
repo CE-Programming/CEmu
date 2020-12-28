@@ -397,7 +397,13 @@ KeyColorDialog::KeyColorDialog(int color, QWidget *parent)
     mainLayout->addStretch(1);
     setLayout(mainLayout);
 
-    connect(mColors, &QButtonGroup::idClicked, this, &KeyColorDialog::changedColor);
+    connect(mColors,
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
+            QOverload<int>::of(&QButtonGroup::buttonClicked),
+#else
+            &QButtonGroup::idClicked,
+#endif
+            this, &KeyColorDialog::changedColor);
 }
 
 int KeyColorDialog::getColor()
