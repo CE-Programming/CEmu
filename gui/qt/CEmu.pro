@@ -52,33 +52,33 @@ if(macx) {
 
 SOURCES += \
     ../../core/asic.c \
+    ../../core/backlight.c \
     ../../core/bus.c \
+    ../../core/cert.c \
+    ../../core/control.c \
     ../../core/cpu.c \
+    ../../core/debug/debug.c \
+    ../../core/debug/zdis/zdis.c \
+    ../../core/emu.c \
+    ../../core/extras.c \
+    ../../core/flash.c \
+    ../../core/interrupt.c \
     ../../core/keypad.c \
     ../../core/lcd.c \
-    ../../core/registers.c \
-    ../../core/port.c \
-    ../../core/interrupt.c \
-    ../../core/flash.c \
+    ../../core/link.c \
+    ../../core/mem.c \
     ../../core/misc.c \
+    ../../core/port.c \
+    ../../core/realclock.c \
+    ../../core/registers.c \
     ../../core/schedule.c \
+    ../../core/sha256.c \
+    ../../core/spi.c \
     ../../core/timers.c \
     ../../core/usb/disconnected.c \
     ../../core/usb/dusb.c \
     ../../core/usb/usb.c \
-    ../../core/sha256.c \
-    ../../core/realclock.c \
-    ../../core/backlight.c \
-    ../../core/cert.c \
-    ../../core/control.c \
-    ../../core/mem.c \
-    ../../core/link.c \
     ../../core/vat.c \
-    ../../core/emu.c \
-    ../../core/extras.c \
-    ../../core/spi.c \
-    ../../core/debug/debug.c \
-    ../../core/debug/zdis/zdis.c \
     calculatorwidget.cpp \
     consolewidget.cpp \
     corewindow.cpp \
@@ -91,6 +91,7 @@ SOURCES += \
     keypad/qtkeypadbridge.cpp \
     keypad/rectkey.cpp \
     main.cpp \
+    overlaywidget.cpp \
     romdialog.cpp \
     screenwidget.cpp \
     settings.cpp \
@@ -105,35 +106,35 @@ macx: HEADERS += os/mac/kdmactouchbar.h os/mac/kdmactouchbar_global.h
 
 HEADERS  += \
     ../../core/asic.h \
-    ../../core/cpu.h \
     ../../core/atomics.h \
+    ../../core/backlight.h \
+    ../../core/cert.h \
+    ../../core/control.h \
+    ../../core/cpu.h \
+    ../../core/debug/debug.h \
+    ../../core/debug/zdis/zdis.h \
     ../../core/defines.h \
+    ../../core/emu.h \
+    ../../core/extras.h \
+    ../../core/flash.h \
+    ../../core/interrupt.h \
     ../../core/keypad.h \
     ../../core/lcd.h \
-    ../../core/registers.h \
-    ../../core/port.h \
-    ../../core/interrupt.h \
-    ../../core/emu.h \
-    ../../core/flash.h \
+    ../../core/link.h \
+    ../../core/mem.h \
     ../../core/misc.h \
+    ../../core/os/os.h \
+    ../../core/port.h \
+    ../../core/realclock.h \
+    ../../core/registers.h \
     ../../core/schedule.h \
+    ../../core/sha256.h \
+    ../../core/spi.h \
     ../../core/timers.h \
     ../../core/usb/device.h \
     ../../core/usb/fotg210.h \
     ../../core/usb/usb.h \
-    ../../core/sha256.h \
-    ../../core/realclock.h \
-    ../../core/backlight.h \
-    ../../core/cert.h \
-    ../../core/control.h \
-    ../../core/mem.h \
-    ../../core/link.h \
     ../../core/vat.h \
-    ../../core/extras.h \
-    ../../core/os/os.h \
-    ../../core/spi.h \
-    ../../core/debug/debug.h \
-    ../../core/debug/zdis/zdis.h \
     calculatorwidget.h \
     consolewidget.h \
     corewindow.h \
@@ -163,5 +164,4 @@ HEADERS  += \
 DISTFILES +=
 
 RESOURCES += \
-    resources.qrc \
     resources.qrc

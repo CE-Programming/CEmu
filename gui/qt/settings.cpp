@@ -15,11 +15,12 @@
  */
 
 #include "settings.h"
+
 #include "keypad/keymap.h"
 #include "keypad/keypadwidget.h"
 
-#include <QDebug>
-#include <QStandardPaths>
+#include <QtCore/QDebug>
+#include <QtCore/QSettings>
 
 const QString Settings::KeyMap            = QStringLiteral("keys/map");
 const QString Settings::KeyMapCustom      = QStringLiteral("keys/custom");
@@ -110,7 +111,7 @@ bool Settings::contains(const QString &key)
     return sInstance->mSettings->contains(key);
 }
 
-void Settings::setDefaultOption(bool force, const QString &key, QVariant value)
+void Settings::setDefaultOption(bool force, const QString &key, const QVariant &value)
 {
     if (force || !contains(key))
     {

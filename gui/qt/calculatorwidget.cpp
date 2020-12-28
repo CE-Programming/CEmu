@@ -16,6 +16,13 @@
 
 #include "calculatorwidget.h"
 
+#include "screenwidget.h"
+
+#include <QtGui/QPalette>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QVBoxLayout>
+
 CalculatorOverlay::CalculatorOverlay(QWidget *parent) : OverlayWidget{parent}
 {
     QVBoxLayout *vlayout = new QVBoxLayout(this);

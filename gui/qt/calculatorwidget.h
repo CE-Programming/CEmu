@@ -17,18 +17,13 @@
 #ifndef CALCULATORWIDGET_H
 #define CALCULATORWIDGET_H
 
-#include "keypad/keypadwidget.h"
-#include "screenwidget.h"
 #include "overlaywidget.h"
+#include "keypad/keypadwidget.h"
+class ScreenWidget;
 
 #include "../../core/asic.h"
 
-#include <QWidget>
-#include <QResizeEvent>
-#include <QVBoxLayout>
-#include <QPushButton>
-#include <QLabel>
-#include <QPalette>
+#include <QtWidgets/QWidget>
 
 class CalculatorOverlay : public OverlayWidget
 {

@@ -14,25 +14,26 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "corewindow.h"
 #include "calculatorwidget.h"
-#include "keyhistorywidget.h"
 #include "consolewidget.h"
-#include "statewidget.h"
-#include "settings.h"
+#include "corewindow.h"
+#include "keyhistorywidget.h"
+#include "keypad/qtkeypadbridge.h"
 #include "romdialog.h"
+#include "settings.h"
+#include "statewidget.h"
 
 #include <kddockwidgets/LayoutSaver.h>
 
-#include <QMenu>
-#include <QMenuBar>
-#include <QEvent>
-#include <QDebug>
-#include <QString>
-#include <QTextEdit>
-#include <QApplication>
-#include <QMessageBox>
-#include <QFileDialog>
+#include <QtCore/QDebug>
+#include <QtCore/QEvent>
+#include <QtCore/QString>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QFileDialog>
+#include <QtWidgets/QMenu>
+#include <QtWidgets/QMenuBar>
+#include <QtWidgets/QMessageBox>
+#include <QtWidgets/QTextEdit>
 
 const QString CoreWindow::sErrorStr        = CoreWindow::tr("Error");
 const QString CoreWindow::sWarningStr      = CoreWindow::tr("Warning");
@@ -42,9 +43,10 @@ CoreWindow::CoreWindow(const QString &uniqueName,
                        KDDockWidgets::MainWindowOptions options,
                        QWidget *parent)
     : KDDockWidgets::MainWindow(uniqueName, options, parent),
+      mKeypadBridge{new QtKeypadBridge{this}},
       mCalcOverlay{nullptr}
 {
-    auto menubar = menuBar();
+    auto *menubar = menuBar();
 
     mCalcsMenu = new QMenu(tr("Calculator"), this);
     mCaptureMenu = new QMenu(tr("Capture"), this);
@@ -56,32 +58,32 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     menubar->addMenu(mDocksMenu);
     menubar->addMenu(mDebugMenu);
 
-    auto resetAction = mCalcsMenu->addAction(tr("Reset"));
+    auto *resetAction = mCalcsMenu->addAction(tr("Reset"));
     connect(resetAction, &QAction::triggered, this, &CoreWindow::resetEmu);
 
-    auto romAction = mCalcsMenu->addAction(tr("Load ROM..."));
+    auto *romAction = mCalcsMenu->addAction(tr("Load ROM..."));
     connect(romAction, &QAction::triggered, this, &CoreWindow::loadRom);
 
     mCalcsMenu->addSeparator();
 
-    auto prefAction = mCalcsMenu->addAction(tr("Preferences"));
+    auto *prefAction = mCalcsMenu->addAction(tr("Preferences"));
     connect(prefAction, &QAction::triggered, qApp, &QApplication::quit);
 
-    auto quitAction = mCalcsMenu->addAction(tr("Quit"));
+    auto *quitAction = mCalcsMenu->addAction(tr("Quit"));
     connect(quitAction, &QAction::triggered, qApp, &QApplication::quit);
 
-    auto screenshotAction = mCaptureMenu->addAction(tr("Capture Screenshot"));
+    auto *screenshotAction = mCaptureMenu->addAction(tr("Capture Screenshot"));
     connect(screenshotAction, &QAction::triggered, qApp, &QApplication::quit);
 
-    auto animatedAction = mCaptureMenu->addAction(tr("Record Animated Screen"));
+    auto *animatedAction = mCaptureMenu->addAction(tr("Record Animated Screen"));
     connect(animatedAction, &QAction::triggered, qApp, &QApplication::quit);
 
-    auto copyScreenAction = mCaptureMenu->addAction(tr("Copy Screen to Clipboard"));
+    auto *copyScreenAction = mCaptureMenu->addAction(tr("Copy Screen to Clipboard"));
     connect(copyScreenAction, &QAction::triggered, qApp, &QApplication::quit);
 
     createDockWidgets();
 
-    auto saveLayoutAction = mDocksMenu->addAction(tr("Save Layout"));
+    auto *saveLayoutAction = mDocksMenu->addAction(tr("Save Layout"));
     connect(saveLayoutAction, &QAction::triggered, this, []
     {
         KDDockWidgets::LayoutSaver saver;
@@ -92,7 +94,7 @@ CoreWindow::CoreWindow(const QString &uniqueName,
         }
     });
 
-    auto restoreLayoutAction = mDocksMenu->addAction(tr("Restore Layout"));
+    auto *restoreLayoutAction = mDocksMenu->addAction(tr("Restore Layout"));
     connect(restoreLayoutAction, &QAction::triggered, this, []
     {
         KDDockWidgets::RestoreOptions options = KDDockWidgets::RestoreOption_None;
@@ -144,8 +146,8 @@ void CoreWindow::createDockWidgets()
     stateDock->setWidget(state);
 
     connect(mCalc, &CalculatorWidget::keyPressed, keyHistory, &KeyHistoryWidget::add);
-    connect(&mKeypadBridge, &QtKeypadBridge::keyStateChanged, mCalc, &CalculatorWidget::changeKeyState);
-    mCalc->installEventFilter(&mKeypadBridge);
+    connect(mKeypadBridge, &QtKeypadBridge::keyStateChanged, mCalc, &CalculatorWidget::changeKeyState);
+    mCalc->installEventFilter(mKeypadBridge);
 
     mDockWidgets << calcDock;
     mDockWidgets << keyHistoryDock;
@@ -163,7 +165,7 @@ void CoreWindow::createDockWidgets()
 void CoreWindow::setKeymap()
 {
     Keymap keymap = static_cast<Keymap>(Settings::intOption(Settings::KeyMap));
-    mKeypadBridge.setKeymap(keymap);
+    mKeypadBridge->setKeymap(keymap);
 }
 
 void CoreWindow::createRom()

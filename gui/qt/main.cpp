@@ -15,17 +15,15 @@
  */
 
 #include "corewindow.h"
-#include "screenwidget.h"
 #include "dockwidget.h"
 #include "settings.h"
 
 #include <kddockwidgets/Config.h>
 
-#include <QStyleFactory>
-#include <QApplication>
-#include <QCommandLineParser>
-#include <QApplication>
-#include <QMessageBox>
+#include <QtCore/QCommandLineParser>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QMessageBox>
+#include <QtWidgets/QStyleFactory>
 
 int main(int argc, char **argv)
 {

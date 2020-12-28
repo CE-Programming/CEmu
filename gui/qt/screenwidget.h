@@ -17,14 +17,24 @@
 #ifndef SCREENWIDGET_H
 #define SCREENWIDGET_H
 
+#include <QtCore/QRect>
+#include <QtCore/QString>
+#include <QtGui/QFont>
+#include <QtGui/QImage>
+#include <QtGui/QLinearGradient>
 #include <QtGui/QPainterPath>
-#include <QtGui/QResizeEvent>
 #include <QtGui/QStaticText>
+#include <QtGui/QTransform>
 #include <QtWidgets/QWidget>
+QT_BEGIN_NAMESPACE
+class QPaintEvent;
+class QResizeEvent;
+QT_END_NAMESPACE
 
 class ScreenWidget : public QWidget
 {
     Q_OBJECT
+
 public:
     explicit ScreenWidget(QWidget *parent = nullptr);
     ~ScreenWidget();

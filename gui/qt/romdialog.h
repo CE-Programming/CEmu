@@ -17,14 +17,21 @@
 #ifndef ROMDIALOG_H
 #define ROMDIALOG_H
 
-#include <QDialog>
-#include <QDialogButtonBox>
-#include <QImage>
-#include <QLabel>
-#include <QDir>
-#include <QMimeData>
-#include <QDragLeaveEvent>
-#include <QDragEnterEvent>
+#include <QtCore/QDir>
+#include <QtCore/QString>
+#include <QtWidgets/QDialog>
+#include <QtWidgets/QLabel>
+QT_BEGIN_NAMESPACE
+class QDialogButtonBox;
+class QDragEnterEvent;
+class QDragLeaveEvent;
+class QDragMoveEvent;
+class QDropEvent;
+class QMimeData;
+class QMouseEvent;
+class QPushButton;
+class QWidget;
+QT_END_NAMESPACE
 
 class DropArea : public QLabel
 {

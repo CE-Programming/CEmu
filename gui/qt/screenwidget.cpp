@@ -16,9 +16,13 @@
 
 #include "screenwidget.h"
 
-#include <QtCore/QDebug>
+#include <QtCore/QPoint>
+#include <QtCore/QRectF>
+#include <QtCore/QSize>
+#include <QtCore/QSizeF>
+#include <QtCore/QtGlobal>
 #include <QtGui/QPainter>
-#include <QtWidgets/QSizePolicy>
+#include <QtGui/QResizeEvent>
 
 const QRect ScreenWidget::sOuterRect{0, 0, 450, 360},
             ScreenWidget::sOuterCorner{0, 0, 120, 120},
@@ -72,7 +76,7 @@ void ScreenWidget::setModel(const QString &product, const QString &model, const 
     prepareText();
 }
 
-void ScreenWidget::paintEvent(QPaintEvent */*event*/)
+void ScreenWidget::paintEvent(QPaintEvent *)
 {
     QPainter painter{this};
     painter.setTransform(mTransform);

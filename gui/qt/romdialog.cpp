@@ -15,17 +15,22 @@
  */
 
 #include "romdialog.h"
+
 #include "settings.h"
+
 #include "../../core/os/os.h"
 
-#include <QWidget>
-#include <QLabel>
-#include <QVBoxLayout>
-#include <QPushButton>
-#include <QImage>
-#include <QPixmap>
-#include <QFileDialog>
-#include <QMessageBox>
+#include <QtCore/QMimeData>
+#include <QtGui/QDragEnterEvent>
+#include <QtGui/QDragLeaveEvent>
+#include <QtGui/QImage>
+#include <QtGui/QPixmap>
+#include <QtWidgets/QDialogButtonBox>
+#include <QtWidgets/QFileDialog>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QMessageBox>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QVBoxLayout>
 
 #define ROM_SIZE 0x400000
 #define CERT_LOC 0x3B0000

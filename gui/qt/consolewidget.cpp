@@ -15,13 +15,15 @@
  */
 
 #include "consolewidget.h"
+
 #include "settings.h"
 
-#include <QWidget>
-#include <QPushButton>
-#include <QHBoxLayout>
-#include <QRadioButton>
-#include <QCheckBox>
+#include <QtWidgets/QCheckBox>
+#include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QPlainTextEdit>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QRadioButton>
+#include <QtWidgets/QSpacerItem>
 
 #include <cstdio>
 

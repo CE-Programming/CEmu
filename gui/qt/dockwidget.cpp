@@ -21,7 +21,8 @@
 #include <kddockwidgets/private/widgets/FrameWidget_p.h>
 #include <kddockwidgets/private/multisplitter/Separator_qwidget.h>
 
-#include <QApplication>
+#include <QtGui/QPaintEvent>
+#include <QtWidgets/QApplication>
 
 class DockTitleBar : public KDDockWidgets::TitleBarWidget
 {

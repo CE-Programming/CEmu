@@ -16,13 +16,7 @@
 
 #include "statewidget.h"
 
-#include <QWidget>
-#include <QPushButton>
-#include <QHBoxLayout>
-#include <QRadioButton>
-#include <QCheckBox>
-
-#include <cstdio>
+#include <QtWidgets/QSizePolicy>
 
 StateWidget::StateWidget(QWidget *parent)
     : QWidget{parent}

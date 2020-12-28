@@ -17,7 +17,7 @@
 #ifndef STATEWIDGET_H
 #define STATEWIDGET_H
 
-#include <QWidget>
+#include <QtWidgets/QWidget>
 
 class StateWidget : public QWidget
 {

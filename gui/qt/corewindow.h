@@ -17,13 +17,17 @@
 #ifndef COREWINDOW_H
 #define COREWINDOW_H
 
-#include "calculatorwidget.h"
-#include "keypad/qtkeypadbridge.h"
+class QtKeypadBridge;
 
 #include <kddockwidgets/DockWidget.h>
 #include <kddockwidgets/MainWindow.h>
 
-#include <QMenu>
+QT_BEGIN_NAMESPACE
+class QMenu;
+QT_END_NAMESPACE
+
+class CalculatorOverlay;
+class CalculatorWidget;
 
 class CoreWindow : public KDDockWidgets::MainWindow
 {
@@ -51,7 +55,7 @@ private:
 
     KDDockWidgets::DockWidget::List mDockWidgets;
 
-    QtKeypadBridge mKeypadBridge;
+    QtKeypadBridge *mKeypadBridge;
 
     QMenu *mCalcsMenu;
     QMenu *mDocksMenu;

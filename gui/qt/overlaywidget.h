@@ -17,52 +17,24 @@
 #ifndef OVERLAYWIDGET_H
 #define OVERLAYWIDGET_H
 
-#include <QWidget>
-#include <QResizeEvent>
-#include <QPainter>
+#include <QtWidgets/QWidget>
+QT_BEGIN_NAMESPACE
+class QEvent;
+class QObject;
+QT_END_NAMESPACE
 
 class OverlayWidget : public QWidget
 {
-    void newParent()
-    {
-        if (!parent()) return;
-        parent()->installEventFilter(this);
-        raise();
-    }
+    Q_OBJECT
+
+    void newParent();
 
 public:
-    explicit OverlayWidget(QWidget * parent = {}) : QWidget{parent}
-    {
-        setAttribute(Qt::WA_NoSystemBackground);
-        newParent();
-    }
+    explicit OverlayWidget(QWidget *parent = nullptr);
 
 protected:
-    bool eventFilter(QObject * obj, QEvent * ev) override
-    {
-        if (obj == parent()) {
-            if (ev->type() == QEvent::Resize)
-                resize(static_cast<QResizeEvent*>(ev)->size());
-            else if (ev->type() == QEvent::ChildAdded)
-                raise();
-        }
-
-        return QWidget::eventFilter(obj, ev);
-    }
-
-    bool event(QEvent* ev) override
-    {
-        if (ev->type() == QEvent::ParentAboutToChange)
-        {
-            if (parent()) parent()->removeEventFilter(this);
-        }
-        else if (ev->type() == QEvent::ParentChange)
-        {
-            newParent();
-        }
-
-        return QWidget::event(ev);
-    }
+    bool eventFilter(QObject *obj, QEvent *ev) override;
+    bool event(QEvent *ev) override;
 };
 
 #endif

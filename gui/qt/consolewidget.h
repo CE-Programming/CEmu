@@ -17,14 +17,14 @@
 #ifndef CONSOLEWIDGET_H
 #define CONSOLEWIDGET_H
 
-#include <QWidget>
-#include <QPushButton>
-#include <QPlainTextEdit>
-#include <QSpacerItem>
-#include <QLabel>
-#include <QSpinBox>
-#include <QCheckBox>
-#include <QRadioButton>
+#include <QtGui/QTextCharFormat>
+#include <QtWidgets/QWidget>
+QT_BEGIN_NAMESPACE
+class QCheckBox;
+class QPlainTextEdit;
+class QRadioButton;
+class QRadioButton;
+QT_END_NAMESPACE
 
 class ConsoleWidget : public QWidget
 {

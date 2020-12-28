@@ -17,11 +17,7 @@
 #ifndef EMUTHREAD_H
 #define EMUTHREAD_H
 
-#include <QtCore/QMutex>
-#include <QtCore/QQueue>
-#include <QtCore/QSemaphore>
 #include <QtCore/QThread>
-#include <QtCore/QTimer>
 
 class EmuThread : public QThread
 {

@@ -19,8 +19,6 @@
 
 #include <kddockwidgets/FrameworkWidgetFactory.h>
 
-#include <QPainter>
-
 class DockWidgetFactory : public KDDockWidgets::DefaultWidgetFactory
 {
 public:

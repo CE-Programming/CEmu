@@ -31,7 +31,7 @@ public:
     }
     virtual ~KeypadWidget();
 
-    typedef enum {
+    enum Color {
         Black,
         White,
         TrueBlue,
@@ -50,7 +50,7 @@ public:
         MatteBlack,
         TangentTeal,
         TotallyTeal
-    } Color;
+    };
 
     void setType(bool is83, Color color);
     void setHolding(bool);

@@ -17,12 +17,14 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-#include <QString>
-#include <QSettings>
+#include <QtCore/QString>
+QT_BEGIN_NAMESPACE
+class QSettings;
+class QVariant;
+QT_END_NAMESPACE
 
 class Settings
 {
-
 public:
     explicit Settings(const QString &dirpath);
     ~Settings();
@@ -67,7 +69,7 @@ public:
     static const QString RomFile;
 
 private:
-    static void setDefaultOption(bool force, const QString &key, QVariant value);
+    static void setDefaultOption(bool force, const QString &key, const QVariant &value);
 
     static Settings *sInstance;
 
