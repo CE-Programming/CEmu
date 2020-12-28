@@ -1,19 +1,18 @@
-lessThan(QT_MAJOR_VERSION, 6) {
-    lessThan(QT_MAJOR_VERSION, 5) : error("You need at least Qt 5.15 to build CEmu!")
-    lessThan(QT_MINOR_VERSION, 10) : error("You need at least Qt 5.10 to build CEmu!")
-}
+lessThan(QT_MAJOR_VERSION, 6) : if (lessThan(QT_MAJOR_VERSION, 5) | lessThan(QT_MINOR_VERSION, 10) : error("You need at least Qt 5.10 to build CEmu!"))
 
 QT += core gui widgets network
 
 TARGET = CEmu
 TEMPLATE = app
 
+!defined(KDDOCKWIDGETSPATH, var) : KDDOCKWIDGETSPATH = $$_PRO_FILE_PWD_/deps/KDDockWidgets/build
+
 CONFIG += c++11 console
-LIBS += -L$$_PRO_FILE_PWD_/deps/KDDockWidgets/build/lib -L$$_PRO_FILE_PWD_/deps/KDDockWidgets/build/lib64
+LIBS += -L$$KDDOCKWIDGETSPATH/lib -L$$KDDOCKWIDGETSPATH/lib64
 LIBS += -lkddockwidgets
 
-INCLUDEPATH += $$_PRO_FILE_PWD_/deps/KDDockWidgets/build/include
-DEPENDPATH += $$_PRO_FILE_PWD_/deps/KDDockWidgets/build/include
+INCLUDEPATH += $$KDDOCKWIDGETSPATH/include
+DEPENDPATH += $$KDDOCKWIDGETSPATH/include
 
 # Core options
 DEFINES += DEBUG_SUPPORT
