@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     app.setApplicationName(appName);
 
     KDDockWidgets::Config::self().setFrameworkWidgetFactory(new DockWidgetFactory());
-    KDDockWidgets::Config::self().setDockWidgetFactoryFunc(&CoreWindow::dockWidgetFactory);
+    KDDockWidgets::Config::self().setDockWidgetFactoryFunc(DockWidgetFactory::dockWidgetFactory);
     KDDockWidgets::Config::self().setSeparatorThickness(3);
 
     auto flags = KDDockWidgets::Config::self().flags();

@@ -46,6 +46,7 @@
 
 #include <QtCore/QDebug>
 #include <QtCore/QEvent>
+#include <QtCore/QJsonObject>
 #include <QtCore/QString>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QFileDialog>
@@ -66,8 +67,6 @@ CoreWindow::CoreWindow(const QString &uniqueName,
       mCalcOverlay{nullptr},
       mCalcType{ti_device_t::TI84PCE}
 {
-    sCoreWindow = this;
-
     auto *menubar = menuBar();
 
     mCalcsMenu = new QMenu(tr("Calculator"), this);
@@ -126,20 +125,6 @@ CoreWindow::~CoreWindow()
     {
         delete static_cast<VisualizerWidget *>(mVisualizerWidgets.prev())->parent();
     }
-
-    sCoreWindow = nullptr;
-}
-
-KDDockWidgets::DockWidgetBase *CoreWindow::dockWidgetFactory(const QString &name)
-{
-    if (sCoreWindow)
-    {
-        if (name.startsWith("Visualizer #"))
-        {
-            return sCoreWindow->addVisualizerDock(name);
-        }
-    }
-    return nullptr;
 }
 
 void CoreWindow::createDockWidgets()
@@ -285,7 +270,16 @@ void CoreWindow::createDeveloperWidgets()
     auto *visualizerAction = mDevMenu->addAction(tr("Add LCD Visualizer"));
     connect(visualizerAction, &QAction::triggered, [this]
     {
-        addVisualizerDock();
+        QString name;
+        do
+        {
+            name = QLatin1String("Visualizer #") + Util::randomString(10);
+        }
+        while (KDDockWidgets::DockWidgetBase::byName(name));
+
+        auto *dockWidget = new KDDockWidgets::DockWidget(name);
+        addVisualizerDock(dockWidget);
+        dockWidget->show();
     });
 }
 
@@ -358,41 +352,57 @@ void CoreWindow::showPreferences()
 void CoreWindow::saveLayout()
 {
     KDDockWidgets::LayoutSaver saver;
-    const bool result = saver.saveToFile(Settings::textOption(Settings::LayoutFile));
-    if (!result)
+    QJsonObject json;
+    json[QLatin1String("layout")] = QJsonDocument::fromJson(saver.serializeLayout()).object();
+    for (auto *visualizerWidgetNode = mVisualizerWidgets.next();
+         visualizerWidgetNode != &mVisualizerWidgets;
+         visualizerWidgetNode = visualizerWidgetNode->next())
     {
-        QMessageBox::critical(nullptr, sErrorStr, tr("Unable to save layout. Ensure that the preferences directory is writable and has the required permissions."));
+        auto *visualizerWidget = static_cast<VisualizerWidget *>(visualizerWidgetNode);
+        auto *dockWidget = static_cast<KDDockWidgets::DockWidget *>(visualizerWidget->parent());
+        json[dockWidget->uniqueName()] = visualizerWidget->getConfig();
     }
+
+    QFile file(Settings::textOption(Settings::LayoutFile));
+    if (!file.open(QIODevice::WriteOnly))
+    {
+        QMessageBox::critical(nullptr, sErrorStr, tr("Unable to restore layout. Ensure that the layout file is readable and has the required permissions."));
+        return;
+    }
+    file.write(QJsonDocument(json).toJson());
 }
 
 void CoreWindow::restoreLayout()
 {
-    KDDockWidgets::RestoreOptions options = KDDockWidgets::RestoreOption_None;
-    KDDockWidgets::LayoutSaver saver(options);
-    saver.restoreFromFile(Settings::textOption(Settings::LayoutFile));
-}
-
-KDDockWidgets::DockWidget *CoreWindow::addVisualizerDock(QString name, const QString &config)
-{
-    if (name.isNull())
+    QFile file(Settings::textOption(Settings::LayoutFile));
+    if (!file.open(QIODevice::ReadOnly))
     {
-        do
-        {
-            name = QStringLiteral("Visualizer #") + Util::randomString(10);
-        }
-        while (KDDockWidgets::DockWidgetBase::byName(name));
+        QMessageBox::critical(nullptr, sErrorStr, tr("Unable to restore layout. Ensure that the layout file is readable and has the required permissions."));
+        return;
     }
 
-    auto *visualizerDock = new KDDockWidgets::DockWidget(name);
-    auto *visualizer = new VisualizerWidget(&mVisualizerWidgets, config, visualizerDock);
+    auto json = QJsonDocument::fromJson(file.readAll()).object();
 
-    visualizerDock->setTitle(tr("Visualizer"));
+    KDDockWidgets::RestoreOptions options = KDDockWidgets::RestoreOption_None;
+    KDDockWidgets::LayoutSaver saver(options);
+    saver.restoreLayout(QJsonDocument(json.take(QLatin1String("layout")).toObject()).toJson());
 
-    visualizerDock->setWidget(visualizer);
-    visualizerDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-    visualizerDock->show();
-
-    return visualizerDock;
+    for (auto *restoredDockWidget : saver.restoredDockWidgets())
+    {
+        if (!restoredDockWidget->widget())
+        {
+            auto name = restoredDockWidget->uniqueName();
+            if (name.startsWith(QLatin1String("Visualizer #")))
+            {
+                addVisualizerDock(restoredDockWidget, json.take(name).toString());
+            }
+        }
+    }
 }
 
-CoreWindow *CoreWindow::sCoreWindow;
+void CoreWindow::addVisualizerDock(KDDockWidgets::DockWidgetBase *dockWidget, const QString &config)
+{
+    dockWidget->setTitle(tr("Visualizer"));
+    dockWidget->setWidget(new VisualizerWidget(&mVisualizerWidgets, config, dockWidget));
+    dockWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+}

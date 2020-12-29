@@ -40,8 +40,6 @@ public:
     explicit CoreWindow(const QString &uniqueName, KDDockWidgets::MainWindowOptions options, QWidget *parent = nullptr);
     ~CoreWindow() override;
 
-    static KDDockWidgets::DockWidgetBase *dockWidgetFactory(const QString &name);
-
 signals:
     void romChanged();
 
@@ -52,7 +50,6 @@ private slots:
     void showPreferences();
     void saveLayout();
     void restoreLayout();
-    KDDockWidgets::DockWidget *addVisualizerDock(QString magic = QString(), const QString &config = QString());
 
 private:
     void createFileMenu();
@@ -63,6 +60,8 @@ private:
     void createDockWidgets();
     void createDeveloperWidgets();
     void setKeymap();
+
+    void addVisualizerDock(KDDockWidgets::DockWidgetBase *dockWidget, const QString &config = QString());
 
     KDDockWidgets::DockWidget::List mDockWidgets;
     VisualizerWidgetList mVisualizerWidgets;
@@ -79,8 +78,6 @@ private:
     CalculatorWidget *mCalc;
 
     ti_device_t mCalcType;
-
-    static CoreWindow *sCoreWindow;
 
     static const QString sErrorStr;
     static const QString sWarningStr;

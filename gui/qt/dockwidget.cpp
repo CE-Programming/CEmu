@@ -16,10 +16,11 @@
 
 #include "dockwidget.h"
 
+#include <kddockwidgets/DockWidget.h>
 #include <kddockwidgets/FrameworkWidgetFactory.h>
-#include <kddockwidgets/private/widgets/TitleBarWidget_p.h>
-#include <kddockwidgets/private/widgets/FrameWidget_p.h>
 #include <kddockwidgets/private/multisplitter/Separator_qwidget.h>
+#include <kddockwidgets/private/widgets/FrameWidget_p.h>
+#include <kddockwidgets/private/widgets/TitleBarWidget_p.h>
 
 #include <QtWidgets/QApplication>
 
@@ -87,3 +88,7 @@ Layouting::Separator *DockWidgetFactory::createSeparator(Layouting::Widget *pare
     return new DockSeparator(parent);
 }
 
+KDDockWidgets::DockWidgetBase *DockWidgetFactory::dockWidgetFactory(const QString &name)
+{
+    return name.contains('#') ? new KDDockWidgets::DockWidget(name) : nullptr;
+}
