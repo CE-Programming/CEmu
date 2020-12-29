@@ -16,7 +16,7 @@ class VisualizerWidgetList
 {
 public:
     VisualizerWidgetList();
-    virtual ~VisualizerWidgetList();
+    ~VisualizerWidgetList();
 
     VisualizerWidgetList *prev() const { return mPrev; }
     VisualizerWidgetList *next() const { return mNext; }
