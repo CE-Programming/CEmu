@@ -46,7 +46,7 @@ private:
 
     VisualizerLcdWidget *mLcd;
     QLineEdit *mConfigStr;
-    QGroupBox *m_group;
+    QGroupBox *mGroup;
 
     QToolButton *mBtnLcd;
     QToolButton *mBtnRefresh;

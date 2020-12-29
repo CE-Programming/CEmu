@@ -24,7 +24,7 @@
 VisualizerWidget::VisualizerWidget(const QString &config, QWidget *parent)
     : QWidget{parent}
 {
-    m_group = new QGroupBox(tr("Settings"));
+    mGroup = new QGroupBox(tr("Settings"));
 
     mConfigStr = new QLineEdit;
     mBtnLcd = new QToolButton;
@@ -42,10 +42,11 @@ VisualizerWidget::VisualizerWidget(const QString &config, QWidget *parent)
     hLayout->addWidget(mBtnRefresh);
     hLayout->addWidget(mBtnLcd);
     hLayout->addWidget(mBtnConfig);
+    mGroup->setLayout(hLayout);
 
     QVBoxLayout *vLayout = new QVBoxLayout;
     vLayout->addStretch(1);
-    vLayout->addLayout(hLayout);
+    vLayout->addWidget(mGroup);
     vLayout->addWidget(mLcd);
     vLayout->addStretch(1);
     setLayout(vLayout);
