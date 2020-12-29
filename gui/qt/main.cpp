@@ -50,11 +50,8 @@ int main(int argc, char **argv)
     flags |= KDDockWidgets::Config::Flag_TabsHaveCloseButton;
     KDDockWidgets::Config::self().setFlags(flags);
 
-    QRect screenGeometry = QGuiApplication::primaryScreen()->geometry();
-
     CoreWindow window(appName, options);
     window.setWindowTitle(appName);
-    window.resize(screenGeometry.height() * .325, screenGeometry.height() * .8);
     window.show();
 
     return app.exec();

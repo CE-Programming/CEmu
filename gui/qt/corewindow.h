@@ -27,6 +27,7 @@ class QtKeypadBridge;
 
 #include <QtCore/QString>
 QT_BEGIN_NAMESPACE
+class QCloseEvent;
 class QMenu;
 QT_END_NAMESPACE
 
@@ -48,8 +49,8 @@ private slots:
     void loadRom();
     void resetEmu();
     void showPreferences();
-    void saveLayout();
-    void restoreLayout();
+    bool saveLayout(bool ignoreErrors = false);
+    bool restoreLayout();
 
 private:
     void createFileMenu();
@@ -61,6 +62,7 @@ private:
     void createDeveloperWidgets();
     void setKeymap();
 
+    void closeEvent(QCloseEvent *) override;
     void addVisualizerDock(KDDockWidgets::DockWidgetBase *dockWidget, const QString &config = QString());
 
     KDDockWidgets::DockWidget::List mDockWidgets;

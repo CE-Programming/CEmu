@@ -111,7 +111,13 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     connect(restoreLayoutAction, &QAction::triggered, this, &CoreWindow::restoreLayout);
 
     setKeymap();
-    restoreLayout();
+
+    if (!restoreLayout())
+    {
+        qDebug() << "Failed to restore layout";
+        QRect screenGeometry = QGuiApplication::primaryScreen()->geometry();
+        resize(screenGeometry.height() * .325, screenGeometry.height() * .8);
+    }
 
     connect(this, &CoreWindow::romChanged, this, &CoreWindow::resetEmu);
 
@@ -349,7 +355,7 @@ void CoreWindow::showPreferences()
     dialog.exec();
 }
 
-void CoreWindow::saveLayout()
+bool CoreWindow::saveLayout(bool ignoreErrors)
 {
     KDDockWidgets::LayoutSaver saver;
     QJsonObject json;
@@ -366,26 +372,31 @@ void CoreWindow::saveLayout()
     QFile file(Settings::textOption(Settings::LayoutFile));
     if (!file.open(QIODevice::WriteOnly))
     {
-        QMessageBox::critical(nullptr, sErrorStr, tr("Unable to restore layout. Ensure that the layout file is readable and has the required permissions."));
-        return;
+        if (!ignoreErrors)
+        {
+            QMessageBox::critical(nullptr, sErrorStr, tr("Unable to save layout. Ensure that the preferences directory is writable and has the required permissions."));
+        }
+        return false;
     }
     file.write(QJsonDocument(json).toJson());
+    return true;
 }
 
-void CoreWindow::restoreLayout()
+bool CoreWindow::restoreLayout()
 {
     QFile file(Settings::textOption(Settings::LayoutFile));
     if (!file.open(QIODevice::ReadOnly))
     {
-        QMessageBox::critical(nullptr, sErrorStr, tr("Unable to restore layout. Ensure that the layout file is readable and has the required permissions."));
-        return;
+        return false;
     }
-
     auto json = QJsonDocument::fromJson(file.readAll()).object();
 
     KDDockWidgets::RestoreOptions options = KDDockWidgets::RestoreOption_None;
     KDDockWidgets::LayoutSaver saver(options);
-    saver.restoreLayout(QJsonDocument(json.take(QLatin1String("layout")).toObject()).toJson());
+    if (!saver.restoreLayout(QJsonDocument(json.take(QLatin1String("layout")).toObject()).toJson()))
+    {
+        return false;
+    }
 
     for (auto *restoredDockWidget : saver.restoredDockWidgets())
     {
@@ -398,6 +409,13 @@ void CoreWindow::restoreLayout()
             }
         }
     }
+
+    return json.isEmpty();
+}
+
+void CoreWindow::closeEvent(QCloseEvent *)
+{
+    saveLayout(true);
 }
 
 void CoreWindow::addVisualizerDock(KDDockWidgets::DockWidgetBase *dockWidget, const QString &config)
