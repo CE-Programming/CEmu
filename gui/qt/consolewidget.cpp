@@ -19,13 +19,11 @@
 #include "settings.h"
 
 #include <QtWidgets/QCheckBox>
-#include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QRadioButton>
 #include <QtWidgets/QSpacerItem>
-
-#include <cstdio>
 
 ConsoleWidget::ConsoleWidget(QWidget *parent)
     : QWidget{parent}
@@ -36,19 +34,12 @@ ConsoleWidget::ConsoleWidget(QWidget *parent)
     QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred);
 
     mChkAuto = new QCheckBox(tr("Autoscroll"), this);
-    mRadDock = new QRadioButton(tr("Dock"), this);
-    mRadNative = new QRadioButton(tr("Native"), this);
     mConsole = new QPlainTextEdit(this);
 
     mConsole->setReadOnly(true);
     mConsole->setMaximumBlockCount(2500);
     mConsole->setMinimumSize(10, 100);
 
-    mRadDock->setChecked(true);
-    mRadNative->setChecked(false);
-
-    hlayout->addWidget(mRadDock);
-    hlayout->addWidget(mRadNative);
     hlayout->addSpacerItem(spacer);
     hlayout->addWidget(mChkAuto);
     hlayout->addWidget(btnClear);
@@ -69,56 +60,27 @@ ConsoleWidget::ConsoleWidget(QWidget *parent)
         setAutoScroll(Qt::Unchecked);
     }
 
-    connect(btnClear, &QPushButton::clicked, this, &ConsoleWidget::clear);
+    connect(btnClear, &QPushButton::clicked, mConsole, &QPlainTextEdit::clear);
     connect(mChkAuto, &QCheckBox::stateChanged, this, &ConsoleWidget::setAutoScroll);
-}
-
-ConsoleWidget::~ConsoleWidget()
-{
-}
-
-
-void ConsoleWidget::clear()
-{
-    if (mRadNative->isChecked())
-    {
-        int ret;
-#ifdef _WIN32
-        ret = system("cls");
-#else
-        ret = system("clear");
-#endif
-        (void)ret;
-    }
-    else
-    {
-        mConsole->clear();
-    }
 }
 
 void ConsoleWidget::append(const QString &str, const QColor &colorFg, const QColor &colorBg)
 {
-    if (mRadNative->isChecked())
+    mFormat.setBackground(colorBg);
+    mFormat.setForeground(colorFg);
+    QTextCursor cur(mConsole->document());
+    cur.movePosition(QTextCursor::End);
+    cur.insertText(str, mFormat);
+    if (mAutoscroll)
     {
-        fputs(str.toStdString().c_str(), stdout);
-    }
-    else
-    {
-        mFormat.setBackground(colorBg);
-        mFormat.setForeground(colorFg);
-        QTextCursor cur(mConsole->document());
-        cur.movePosition(QTextCursor::End);
-        cur.insertText(str, mFormat);
-        if (mAutoscroll)
-        {
-            mConsole->setTextCursor(cur);
-        }
+        mConsole->setTextCursor(cur);
     }
 }
 
 void ConsoleWidget::append(const char *str, int size)
 {
-    enum {
+    enum
+    {
         CONSOLE_ESC,
         CONSOLE_BRACKET,
         CONSOLE_PARSE,
@@ -132,144 +94,138 @@ void ConsoleWidget::append(const char *str, int size)
     {
         size = static_cast<int>(strlen(str));
     }
-    if (mRadNative->isChecked())
-    {
-        fwrite(str, sizeof(char), static_cast<size_t>(size), stdout);
-    }
-    else
-    {
-        static int state = CONSOLE_ESC;
-        static QColor sColorFg = mConsole->palette().color(QPalette::Text);
-        static QColor sColorBg = mConsole->palette().color(QPalette::Base);
-        const char *tok;
-        static const QColor colors[8] =
-        {
-            Qt::black, Qt::red, Qt::green, Qt::yellow, Qt::blue, Qt::magenta, Qt::cyan, Qt::white
-        };
 
-        QColor colorFg = sColorFg;
-        QColor colorBg = sColorBg;
-        if ((tok = static_cast<const char*>(memchr(str, '\x1B', static_cast<size_t>(size)))))
+    static int state = CONSOLE_ESC;
+    static QColor sColorFg = mConsole->palette().color(QPalette::Text);
+    static QColor sColorBg = mConsole->palette().color(QPalette::Base);
+    const char *tok;
+    static const QColor colors[8] =
+    {
+        Qt::black, Qt::red, Qt::green, Qt::yellow, Qt::blue, Qt::magenta, Qt::cyan, Qt::white
+    };
+
+    QColor colorFg = sColorFg;
+    QColor colorBg = sColorBg;
+    if ((tok = static_cast<const char*>(memchr(str, '\x1B', static_cast<size_t>(size)))))
+    {
+        if (tok != str)
         {
-            if (tok != str)
+            append(QString::fromUtf8(str, static_cast<int>(tok - str)), sColorFg, sColorBg);
+            size -= tok - str;
+        }
+        do {
+            while(--size > 0)
             {
-                append(QString::fromUtf8(str, static_cast<int>(tok - str)), sColorFg, sColorBg);
-                size -= tok - str;
-            }
-            do {
-                while(--size > 0)
+                char x = *tok++;
+                switch (state)
                 {
-                    char x = *tok++;
-                    switch (state)
-                    {
-                        case CONSOLE_ESC:
-                            if (x == '\x1B')
-                            {
-                                state = CONSOLE_BRACKET;
-                            }
-                            break;
-                        case CONSOLE_BRACKET:
-                            if (x == '[')
-                            {
-                                state = CONSOLE_PARSE;
-                            }
-                            else
-                            {
-                                state = CONSOLE_ESC;
-                            }
-                            break;
-                        case CONSOLE_PARSE:
-                            switch (x)
-                            {
-                                case '0':
-                                    state = CONSOLE_ENDVAL;
-                                    colorBg = mConsole->palette().color(QPalette::Base);
-                                    colorFg = mConsole->palette().color(QPalette::Text);
-                                    break;
-                                case '3':
-                                    state = CONSOLE_FGCOLOR;
-                                    break;
-                                case '4':
-                                    state = CONSOLE_BGCOLOR;
-                                    break;
-                                default:
-                                    state = CONSOLE_ESC;
-                                    sColorBg = mConsole->palette().color(QPalette::Base);
-                                    sColorFg = mConsole->palette().color(QPalette::Text);
-                                    break;
-                            }
-                            break;
-                        case CONSOLE_FGCOLOR:
-                            if (x >= '0' && x <= '7')
-                            {
-                                state = CONSOLE_ENDVAL;
-                                colorFg = colors[x - '0'];
-                            }
-                            else
-                            {
-                                state = CONSOLE_ESC;
-                            }
-                            break;
-                        case CONSOLE_BGCOLOR:
-                            if (x >= '0' && x <= '7')
-                            {
-                                state = CONSOLE_ENDVAL;
-                                colorBg = colors[x - '0'];
-                            }
-                            else
-                            {
-                                state = CONSOLE_ESC;
-                            }
-                            break;
-                        case CONSOLE_ENDVAL:
-                            if (x == ';')
-                            {
-                                state = CONSOLE_PARSE;
-                            }
-                            else if (x == 'm')
-                            {
-                                sColorBg = colorBg;
-                                sColorFg = colorFg;
-                                state = CONSOLE_ESC;
-                            }
-                            else
-                            {
-                                state = CONSOLE_ESC;
-                            }
-                            break;
-                        default:
-                            state = CONSOLE_ESC;
-                            break;
-                    }
-                    if (state == CONSOLE_ESC)
-                    {
+                    case CONSOLE_ESC:
+                        if (x == '\x1B')
+                        {
+                            state = CONSOLE_BRACKET;
+                        }
                         break;
-                    }
+                    case CONSOLE_BRACKET:
+                        if (x == '[')
+                        {
+                            state = CONSOLE_PARSE;
+                        }
+                        else
+                        {
+                            state = CONSOLE_ESC;
+                        }
+                        break;
+                    case CONSOLE_PARSE:
+                        switch (x)
+                        {
+                            case '0':
+                                state = CONSOLE_ENDVAL;
+                                colorBg = mConsole->palette().color(QPalette::Base);
+                                colorFg = mConsole->palette().color(QPalette::Text);
+                                break;
+                            case '3':
+                                state = CONSOLE_FGCOLOR;
+                                break;
+                            case '4':
+                                state = CONSOLE_BGCOLOR;
+                                break;
+                            default:
+                                state = CONSOLE_ESC;
+                                sColorBg = mConsole->palette().color(QPalette::Base);
+                                sColorFg = mConsole->palette().color(QPalette::Text);
+                                break;
+                        }
+                        break;
+                    case CONSOLE_FGCOLOR:
+                        if (x >= '0' && x <= '7')
+                        {
+                            state = CONSOLE_ENDVAL;
+                            colorFg = colors[x - '0'];
+                        }
+                        else
+                        {
+                            state = CONSOLE_ESC;
+                        }
+                        break;
+                    case CONSOLE_BGCOLOR:
+                        if (x >= '0' && x <= '7')
+                        {
+                            state = CONSOLE_ENDVAL;
+                            colorBg = colors[x - '0'];
+                        }
+                        else
+                        {
+                            state = CONSOLE_ESC;
+                        }
+                        break;
+                    case CONSOLE_ENDVAL:
+                        if (x == ';')
+                        {
+                            state = CONSOLE_PARSE;
+                        }
+                        else if (x == 'm')
+                        {
+                            sColorBg = colorBg;
+                            sColorFg = colorFg;
+                            state = CONSOLE_ESC;
+                        }
+                        else
+                        {
+                            state = CONSOLE_ESC;
+                        }
+                        break;
+                    default:
+                        state = CONSOLE_ESC;
+                        break;
                 }
-                if (size > 0)
+                if (state == CONSOLE_ESC)
                 {
-                    const char *tokn = static_cast<const char*>(memchr(tok, '\x1B', static_cast<size_t>(size)));
-                    if (tokn)
-                    {
-                        append(QString::fromUtf8(tok, static_cast<int>(tokn - tok)), sColorFg, sColorBg);
-                        size -= tokn - tok;
-                    }
-                    else
-                    {
-                        append(QString::fromUtf8(tok, static_cast<int>(size)), sColorFg, sColorBg);
-                    }
-                    tok = tokn;
+                    break;
+                }
+            }
+            if (size > 0)
+            {
+                const char *tokn = static_cast<const char*>(memchr(tok, '\x1B', static_cast<size_t>(size)));
+                if (tokn)
+                {
+                    append(QString::fromUtf8(tok, static_cast<int>(tokn - tok)), sColorFg, sColorBg);
+                    size -= tokn - tok;
                 }
                 else
                 {
-                    tok = nullptr;
+                    append(QString::fromUtf8(tok, static_cast<int>(size)), sColorFg, sColorBg);
                 }
-            } while (tok);
-        }
-        else
-        {
-            append(QString::fromUtf8(str, size), sColorFg, sColorBg);
-        }
+                tok = tokn;
+            }
+            else
+            {
+                tok = nullptr;
+            }
+        } while (tok);
+    }
+    else
+    {
+        append(QString::fromUtf8(str, size), sColorFg, sColorBg);
     }
 }
 
@@ -283,4 +239,3 @@ void ConsoleWidget::setAutoScroll(int state)
 
     Settings::setBoolOption(Settings::ConsoleAutoScroll, mAutoscroll);
 }
-

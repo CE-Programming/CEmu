@@ -45,6 +45,7 @@ public:
 
     static bool contains(const QString &key);
 
+    static const QString ClearWindow;
     static const QString KeyMap;
     static const QString KeyMapCustom;
     static const QString KeyHistoryFont;

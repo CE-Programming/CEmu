@@ -74,6 +74,20 @@ SOURCES += \
     calculatorwidget.cpp \
     consolewidget.cpp \
     corewindow.cpp \
+    developer/autotesterwidget.cpp \
+    developer/breakpointswidget.cpp \
+    developer/clockswidget.cpp \
+    developer/controlwidget.cpp \
+    developer/cpuwidget.cpp \
+    developer/devmiscwidget.cpp \
+    developer/disassemblywidget.cpp \
+    developer/memorywidget.cpp \
+    developer/osstackswidget.cpp \
+    developer/osvarwidget.cpp \
+    developer/portmonitorwidget.cpp \
+    developer/watchpointswidget.cpp \
+    developer/widgets/hexwidget.cpp \
+    developer/widgets/visualizerwidget.cpp \
     dockwidget.cpp \
     emuthread.cpp \
     keyhistorywidget.cpp \
@@ -88,7 +102,8 @@ SOURCES += \
     screenwidget.cpp \
     settings.cpp \
     settingsdialog.cpp \
-    statewidget.cpp
+    statewidget.cpp \
+    util.cpp
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c
@@ -128,6 +143,20 @@ HEADERS  += \
     calculatorwidget.h \
     consolewidget.h \
     corewindow.h \
+    developer/autotesterwidget.h \
+    developer/breakpointswidget.h \
+    developer/clockswidget.h \
+    developer/controlwidget.h \
+    developer/cpuwidget.h \
+    developer/devmiscwidget.h \
+    developer/disassemblywidget.h \
+    developer/memorywidget.h \
+    developer/osstackswidget.h \
+    developer/osvarswidget.h \
+    developer/portmonitorwidget.h \
+    developer/watchpointswidget.h \
+    developer/widgets/hexwidget.h \
+    developer/widgets/visualizerwidget.h \
     dockwidget.h \
     emuthread.h \
     keyhistorywidget.h \
@@ -150,7 +179,8 @@ HEADERS  += \
     screenwidget.h \
     settings.h \
     settingsdialog.h \
-    statewidget.h
+    statewidget.h \
+    util.h
 
 DISTFILES +=
 

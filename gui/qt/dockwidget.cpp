@@ -21,42 +21,25 @@
 #include <kddockwidgets/private/widgets/FrameWidget_p.h>
 #include <kddockwidgets/private/multisplitter/Separator_qwidget.h>
 
-#include <QtGui/QPaintEvent>
 #include <QtWidgets/QApplication>
 
 class DockTitleBar : public KDDockWidgets::TitleBarWidget
 {
 public:
     explicit DockTitleBar(KDDockWidgets::Frame *frame)
-        : KDDockWidgets::TitleBarWidget(frame),
-          isEditable{true}
+        : KDDockWidgets::TitleBarWidget(frame)
     {
-        init();
     }
 
     explicit DockTitleBar(KDDockWidgets::FloatingWindow *fw)
-        : KDDockWidgets::TitleBarWidget(fw),
-          isEditable{true}
+        : KDDockWidgets::TitleBarWidget(fw)
     {
-        init();
-    }
-
-    void init()
-    {
-        if (!isEditable)
-        {
-            setContentsMargins(0, 0, 0, 0);
-            setFixedHeight(0);
-        }
     }
 
     void paintEvent(QPaintEvent *event) override
     {
         KDDockWidgets::TitleBarWidget::paintEvent(event);
     }
-
-private:
-    bool isEditable;
 };
 
 class DockSeparator : public Layouting::SeparatorWidget
@@ -65,6 +48,7 @@ public:
     explicit DockSeparator(Layouting::Widget *parent)
         : Layouting::SeparatorWidget(parent)
     {
+        setContentsMargins(0, 0, 0, 0);
     }
 };
 
@@ -72,21 +56,15 @@ class DockFrame : public KDDockWidgets::FrameWidget
 {
 public:
     explicit DockFrame(QWidget *parent, KDDockWidgets::FrameOptions options)
-        : KDDockWidgets::FrameWidget(parent, options),
-          isEditable{true}
+        : KDDockWidgets::FrameWidget(parent, options)
     {
+        setContentsMargins(0, 0, 0, 0);
     }
 
     void paintEvent(QPaintEvent *event) override
     {
-        if (isEditable || isFloating())
-        {
-            KDDockWidgets::FrameWidget::paintEvent(event);
-        }
+        KDDockWidgets::FrameWidget::paintEvent(event);
     }
-
-private:
-    bool isEditable;
 };
 
 KDDockWidgets::Frame *DockWidgetFactory::createFrame(KDDockWidgets::QWidgetOrQuick *parent, KDDockWidgets::FrameOptions options) const

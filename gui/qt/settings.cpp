@@ -19,7 +19,6 @@
 #include "keypad/keymap.h"
 #include "keypad/keypadwidget.h"
 
-#include <QtCore/QDebug>
 #include <QtCore/QSettings>
 
 const QString Settings::KeyMap            = QStringLiteral("keys/map");
@@ -50,8 +49,6 @@ Settings::Settings(const QString &dirpath)
 
     QSettings::setDefaultFormat(QSettings::IniFormat);
     sInstance->mSettings = new QSettings(dirpath + "/config/preferences.conf", QSettings::IniFormat);
-
-    qDebug() << "path: " << sInstance->mSettings->fileName();
 
     setTextOption(Settings::LayoutFile, dirpath + "/config/layout.json");
 

@@ -90,7 +90,7 @@ void QtKeypadBridge::kEvent(QString text, int key, bool repeat) {
     if (!keys && text.length() == 1) {
         keys = kTextMap[text[0]];
     }
-    sendKeys(keys >> 16, keys, repeat);
+    emit sendKeys(keys >> 16, keys, repeat);
 }
 
 void QtKeypadBridge::releaseAll() {

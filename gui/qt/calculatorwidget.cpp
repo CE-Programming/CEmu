@@ -23,7 +23,8 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QVBoxLayout>
 
-CalculatorOverlay::CalculatorOverlay(QWidget *parent) : OverlayWidget{parent}
+CalculatorOverlay::CalculatorOverlay(QWidget *parent)
+    : OverlayWidget{parent}
 {
     QVBoxLayout *vlayout = new QVBoxLayout(this);
     QVBoxLayout *layout = new QVBoxLayout();

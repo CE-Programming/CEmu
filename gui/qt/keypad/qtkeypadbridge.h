@@ -6,16 +6,13 @@
 #include "keycode.h"
 #include "keymap.h"
 
-/* This class is used by every Widget which wants to interact with the
- * virtual keypad. Simply call QtKeypadBridge::keyEvent
- * to relay the key events into the virtual calc. */
-
-class QtKeypadBridge : public QObject {
+class QtKeypadBridge : public QObject
+{
     Q_OBJECT
 
 public:
-
-    explicit QtKeypadBridge(QObject *parent = nullptr) : QObject(parent) {}
+    explicit QtKeypadBridge(QObject *parent = nullptr)
+        : QObject(parent) {}
 
     bool setKeymap(Keymap map);
     void skEvent(QKeyEvent *event, bool press);
@@ -40,8 +37,5 @@ private:
     static const QHash<QChar, quint32> kTextMap;
     static const QHash<int, quint32> kKeyMap;
 };
-
-// global event filter
-extern QtKeypadBridge *keypadBridge;
 
 #endif

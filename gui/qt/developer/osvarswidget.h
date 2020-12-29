@@ -14,37 +14,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CONSOLEWIDGET_H
-#define CONSOLEWIDGET_H
+#ifndef OSVARSWIDGET_H
+#define OSVARSWIDGET_H
 
-#include <QtGui/QTextCharFormat>
 #include <QtWidgets/QWidget>
-QT_BEGIN_NAMESPACE
-class QCheckBox;
-class QPlainTextEdit;
-class QRadioButton;
-class QRadioButton;
-QT_END_NAMESPACE
 
-class ConsoleWidget : public QWidget
+class OsVarsWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit ConsoleWidget(QWidget *parent = nullptr);
-
-public slots:
-    void append(const QString &str, const QColor &colorFg, const QColor &colorBg);
-    void append(const char *str, int size);
-    void setAutoScroll(int state);
-
-private:
-    QCheckBox *mChkAuto;
-    QPlainTextEdit *mConsole;
-
-    bool mAutoscroll;
-
-    QTextCharFormat mFormat;
+    explicit OsVarsWidget(QWidget *parent = nullptr);
 };
 
 #endif

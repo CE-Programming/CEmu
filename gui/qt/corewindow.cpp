@@ -18,11 +18,25 @@
 #include "consolewidget.h"
 #include "corewindow.h"
 #include "keyhistorywidget.h"
-#include "keypad/qtkeypadbridge.h"
 #include "romdialog.h"
 #include "settings.h"
 #include "settingsdialog.h"
 #include "statewidget.h"
+
+#include "developer/autotesterwidget.h"
+#include "developer/breakpointswidget.h"
+#include "developer/clockswidget.h"
+#include "developer/controlwidget.h"
+#include "developer/cpuwidget.h"
+#include "developer/devmiscwidget.h"
+#include "developer/disassemblywidget.h"
+#include "developer/memorywidget.h"
+#include "developer/osstackswidget.h"
+#include "developer/osvarswidget.h"
+#include "developer/portmonitorwidget.h"
+#include "developer/watchpointswidget.h"
+
+#include "keypad/qtkeypadbridge.h"
 
 #include <kddockwidgets/LayoutSaver.h>
 
@@ -53,12 +67,12 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     mCalcsMenu = new QMenu(tr("Calculator"), this);
     mCaptureMenu = new QMenu(tr("Capture"), this);
     mDocksMenu = new QMenu(tr("Docks"), this);
-    mDebugMenu = new QMenu(tr("Developer"), this);
+    mDevMenu = new QMenu(tr("Developer"), this);
 
     menubar->addMenu(mCalcsMenu);
     menubar->addMenu(mCaptureMenu);
     menubar->addMenu(mDocksMenu);
-    menubar->addMenu(mDebugMenu);
+    menubar->addMenu(mDevMenu);
 
     auto *resetAction = mCalcsMenu->addAction(tr("Reset"));
     connect(resetAction, &QAction::triggered, this, &CoreWindow::resetEmu);
@@ -86,31 +100,15 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     createDockWidgets();
 
     auto *saveLayoutAction = mDocksMenu->addAction(tr("Save Layout"));
-    connect(saveLayoutAction, &QAction::triggered, this, []
-    {
-        KDDockWidgets::LayoutSaver saver;
-        const bool result = saver.saveToFile(Settings::textOption(Settings::LayoutFile));
-        if (!result)
-        {
-            QMessageBox::critical(nullptr, sErrorStr, tr("Unable to save layout. Ensure that the preferences directory is writable and has the required permissions."));
-        }
-    });
+    connect(saveLayoutAction, &QAction::triggered, this, &CoreWindow::saveLayout);
 
     auto *restoreLayoutAction = mDocksMenu->addAction(tr("Restore Layout"));
-    connect(restoreLayoutAction, &QAction::triggered, this, []
-    {
-        KDDockWidgets::RestoreOptions options = KDDockWidgets::RestoreOption_None;
-        KDDockWidgets::LayoutSaver saver(options);
-        const bool result = saver.restoreFromFile(Settings::textOption(Settings::LayoutFile));
-        if (!result)
-        {
-            QMessageBox::critical(nullptr, sErrorStr, tr("Unable to load layout. Ensure that the preferences directory is readable and has the required permissions."));
-        }
-    });
-
-    connect(this, &CoreWindow::romChanged, this, &CoreWindow::resetEmu);
+    connect(restoreLayoutAction, &QAction::triggered, this, &CoreWindow::restoreLayout);
 
     setKeymap();
+    //restoreLayout();
+
+    connect(this, &CoreWindow::romChanged, this, &CoreWindow::resetEmu);
 
     resetEmu();
 }
@@ -162,6 +160,86 @@ void CoreWindow::createDockWidgets()
     mDocksMenu->addAction(consoleDock->toggleAction());
 
     addDockWidget(calcDock, KDDockWidgets::Location_OnTop);
+
+    createDeveloperWidgets();
+}
+
+void CoreWindow::createDeveloperWidgets()
+{
+    auto *autotesterDock = new KDDockWidgets::DockWidget(tr("Autotester"));
+    auto *autotester = new AutotesterWidget();
+
+    auto *breakpointsDock = new KDDockWidgets::DockWidget(tr("Breakpoints"));
+    auto *breakpoints = new BreakpointsWidget();
+
+    auto *clocksDock = new KDDockWidgets::DockWidget(tr("Clocks"));
+    auto *clocks = new ClocksWidget();
+
+    auto *controlDock = new KDDockWidgets::DockWidget(tr("Control"));
+    auto *control = new ControlWidget();
+
+    auto *cpuDock = new KDDockWidgets::DockWidget(tr("CPU"));
+    auto *cpu = new CpuWidget();
+
+    auto *devMiscDock = new KDDockWidgets::DockWidget(tr("Miscellaneous"));
+    auto *devMisc = new DevMiscWidget();
+
+    auto *dissassmeblyDock = new KDDockWidgets::DockWidget(tr("Disassembly"));
+    auto *dissassmebly = new DisassemblyWidget();
+
+    auto *memoryDock = new KDDockWidgets::DockWidget(tr("Memory"));
+    auto *memory = new MemoryWidget();
+
+    auto *osStacksDock = new KDDockWidgets::DockWidget(tr("OS Stacks"));
+    auto *osStacks = new OsStacksWidget();
+
+    auto *osVarsDock = new KDDockWidgets::DockWidget(tr("OS Variables"));
+    auto *osVars = new OsVarsWidget();
+
+    auto *portMonitorDock = new KDDockWidgets::DockWidget(tr("Port Monitor"));
+    auto *portMonitor = new PortMonitorWidget();
+
+    auto *watchpointsDock = new KDDockWidgets::DockWidget(tr("Watchpoints"));
+    auto *watchpoints = new WatchpointsWidget();
+
+    autotesterDock->setWidget(autotester);
+    breakpointsDock->setWidget(breakpoints);
+    clocksDock->setWidget(clocks);
+    controlDock->setWidget(control);
+    cpuDock->setWidget(cpu);
+    devMiscDock->setWidget(devMisc);
+    dissassmeblyDock->setWidget(dissassmebly);
+    memoryDock->setWidget(memory);
+    osStacksDock->setWidget(osStacks);
+    osVarsDock->setWidget(osVars);
+    portMonitorDock->setWidget(portMonitor);
+    watchpointsDock->setWidget(watchpoints);
+
+    mDockWidgets << autotesterDock;
+    mDockWidgets << breakpointsDock;
+    mDockWidgets << clocksDock;
+    mDockWidgets << controlDock;
+    mDockWidgets << cpuDock;
+    mDockWidgets << devMiscDock;
+    mDockWidgets << dissassmeblyDock;
+    mDockWidgets << memoryDock;
+    mDockWidgets << osStacksDock;
+    mDockWidgets << osVarsDock;
+    mDockWidgets << portMonitorDock;
+    mDockWidgets << watchpointsDock;
+
+    mDevMenu->addAction(controlDock->toggleAction());
+    mDevMenu->addAction(cpuDock->toggleAction());
+    mDevMenu->addAction(dissassmeblyDock->toggleAction());
+    mDevMenu->addAction(memoryDock->toggleAction());
+    mDevMenu->addAction(clocksDock->toggleAction());
+    mDevMenu->addAction(breakpointsDock->toggleAction());
+    mDevMenu->addAction(watchpointsDock->toggleAction());
+    mDevMenu->addAction(portMonitorDock->toggleAction());
+    mDevMenu->addAction(osVarsDock->toggleAction());
+    mDevMenu->addAction(osStacksDock->toggleAction());
+    mDevMenu->addAction(devMiscDock->toggleAction());
+    mDevMenu->addAction(autotesterDock->toggleAction());
 }
 
 void CoreWindow::setKeymap()
@@ -228,4 +306,21 @@ void CoreWindow::showPreferences()
         mCalc->setConfig(mCalcType, color);
     });
     dialog.exec();
+}
+
+void CoreWindow::saveLayout()
+{
+    KDDockWidgets::LayoutSaver saver;
+    const bool result = saver.saveToFile(Settings::textOption(Settings::LayoutFile));
+    if (!result)
+    {
+        QMessageBox::critical(nullptr, sErrorStr, tr("Unable to save layout. Ensure that the preferences directory is writable and has the required permissions."));
+    }
+}
+
+void CoreWindow::restoreLayout()
+{
+    KDDockWidgets::RestoreOptions options = KDDockWidgets::RestoreOption_None;
+    KDDockWidgets::LayoutSaver saver(options);
+    saver.restoreFromFile(Settings::textOption(Settings::LayoutFile));
 }

@@ -28,6 +28,7 @@
 int main(int argc, char **argv)
 {
     KDDockWidgets::MainWindowOptions options = KDDockWidgets::MainWindowOption_None;
+    const QString appName = QStringLiteral("CEmu");
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
@@ -38,7 +39,7 @@ int main(int argc, char **argv)
     Settings settings("./cemu");
 
     app.setOrganizationName(QStringLiteral("cemu-dev"));
-    app.setApplicationName(QStringLiteral("CEmu"));
+    app.setApplicationName(appName);
 
     KDDockWidgets::Config::self().setFrameworkWidgetFactory(new DockWidgetFactory());
     KDDockWidgets::Config::self().setSeparatorThickness(3);
@@ -48,11 +49,10 @@ int main(int argc, char **argv)
     flags |= KDDockWidgets::Config::Flag_TabsHaveCloseButton;
     KDDockWidgets::Config::self().setFlags(flags);
 
-    QScreen *screen = QGuiApplication::primaryScreen();
-    QRect screenGeometry = screen->geometry();
+    QRect screenGeometry = QGuiApplication::primaryScreen()->geometry();
 
-    CoreWindow window(QStringLiteral("CEmu"), options);
-    window.setWindowTitle(QStringLiteral("CEmu"));
+    CoreWindow window(appName, options);
+    window.setWindowTitle(appName);
     window.resize(screenGeometry.height() * .325, screenGeometry.height() * .8);
     window.show();
 

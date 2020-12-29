@@ -46,6 +46,8 @@ private slots:
     void loadRom();
     void resetEmu();
     void showPreferences();
+    void saveLayout();
+    void restoreLayout();
 
 private:
     void createFileMenu();
@@ -54,6 +56,7 @@ private:
     void createExtrasMenu();
 
     void createDockWidgets();
+    void createDeveloperWidgets();
     void setKeymap();
 
     KDDockWidgets::DockWidget::List mDockWidgets;
@@ -62,7 +65,7 @@ private:
 
     QMenu *mCalcsMenu;
     QMenu *mDocksMenu;
-    QMenu *mDebugMenu;
+    QMenu *mDevMenu;
     QMenu *mCaptureMenu;
 
     CalculatorOverlay *mCalcOverlay;

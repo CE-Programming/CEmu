@@ -23,7 +23,7 @@
 #include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QPushButton>
-#include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QGroupBox>
@@ -75,7 +75,7 @@ SettingsGeneralTab::SettingsGeneralTab(QWidget *parent)
     QGroupBox *grpConfig = new QGroupBox(tr("Configuration"));
     QVBoxLayout *vbox = new QVBoxLayout;
     vbox->addWidget(mChkAutoUpdate);
-    vbox->addWidget(mChkPortable, Qt::AlignRight);
+    vbox->addWidget(mChkPortable);
     vbox->addStretch(1);
     grpConfig->setLayout(vbox);
 
@@ -124,7 +124,6 @@ SettingsGeneralTab::SettingsGeneralTab(QWidget *parent)
     {
         KeyColorDialog dialog(mKeypadColor);
         connect(&dialog, &KeyColorDialog::changedColor, this, &SettingsGeneralTab::changedKeypadColor);
-
         if (dialog.exec())
         {
             mKeypadColor = dialog.getColor();
