@@ -120,7 +120,7 @@ SettingsGeneralTab::SettingsGeneralTab(QWidget *parent)
     setLayout(mainLayout);
 
     mKeypadColor = Settings::intOption(Settings::KeypadColor);
-    connect(btnColor, &QPushButton::clicked, this, [this]
+    connect(btnColor, &QPushButton::clicked, [this]
     {
         KeyColorDialog dialog(mKeypadColor);
         connect(&dialog, &KeyColorDialog::changedColor, this, &SettingsGeneralTab::changedKeypadColor);
@@ -200,12 +200,12 @@ SettingsEmulationTab::SettingsEmulationTab(QWidget *parent)
     mainLayout->addStretch(1);
     setLayout(mainLayout);
 
-    connect(mChkThrottle, &QCheckBox::stateChanged, this, [this](int state)
+    connect(mChkThrottle, &QCheckBox::stateChanged, [this](int state)
     {
         mSpnSpeed->setEnabled(state == Qt::Checked);
     });
 
-    connect(mChkFrameSkip, &QCheckBox::stateChanged, this, [this](int state)
+    connect(mChkFrameSkip, &QCheckBox::stateChanged, [this](int state)
     {
         mSpnFrameSkip->setEnabled(state == Qt::Checked);
     });

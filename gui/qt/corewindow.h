@@ -25,6 +25,7 @@ class QtKeypadBridge;
 #include <kddockwidgets/DockWidget.h>
 #include <kddockwidgets/MainWindow.h>
 
+#include <QtCore/QString>
 QT_BEGIN_NAMESPACE
 class QMenu;
 QT_END_NAMESPACE
@@ -39,6 +40,8 @@ public:
     explicit CoreWindow(const QString &uniqueName, KDDockWidgets::MainWindowOptions options, QWidget *parent = nullptr);
     ~CoreWindow() override;
 
+    static KDDockWidgets::DockWidgetBase *dockWidgetFactory(const QString &name);
+
 signals:
     void romChanged();
 
@@ -49,7 +52,7 @@ private slots:
     void showPreferences();
     void saveLayout();
     void restoreLayout();
-    void addVisualizerDock(const QString &magic, const QString &config);
+    KDDockWidgets::DockWidget *addVisualizerDock(QString magic = QString(), const QString &config = QString());
 
 private:
     void createFileMenu();
@@ -76,6 +79,8 @@ private:
     CalculatorWidget *mCalc;
 
     ti_device_t mCalcType;
+
+    static CoreWindow *sCoreWindow;
 
     static const QString sErrorStr;
     static const QString sWarningStr;

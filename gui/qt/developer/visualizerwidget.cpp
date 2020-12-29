@@ -4,6 +4,8 @@
 
 #include "../../core/lcd.h"
 
+#include <kddockwidgets/DockWidget.h>
+
 #include <QtWidgets/QAction>
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QCheckBox>
@@ -40,7 +42,7 @@ VisualizerWidgetList::~VisualizerWidgetList()
     mNext->mPrev = mPrev;
 }
 
-VisualizerWidget::VisualizerWidget(const QString &config, VisualizerWidgetList *list, QWidget *parent)
+VisualizerWidget::VisualizerWidget(VisualizerWidgetList *list, const QString &config, QWidget *parent)
     : QWidget{parent},
       VisualizerWidgetList{list}
 {
@@ -76,11 +78,13 @@ VisualizerWidget::VisualizerWidget(const QString &config, VisualizerWidgetList *
     connect(mBtnLcd, &QPushButton::clicked, this, &VisualizerWidget::showPresets);
     connect(mBtnConfig, &QPushButton::clicked, this, &VisualizerWidget::showConfig);
 
-    resetView();
-    if (!config.isEmpty())
+    if (config.isEmpty())
     {
-        mConfigStr->setText(config);
-        stringToView();
+        resetView();
+    }
+    else
+    {
+        setConfig(config);
     }
 }
 
@@ -200,10 +204,8 @@ void VisualizerWidget::showConfig()
 
     dialog->setLayout(mlayout);
 
-    connect(submitBtn, &QPushButton::clicked, [this, dialog, baseEdit,
-            fpsSpin, scaleSpin, widthSpin, heightSpin,
-            bppCombo, beboChk, bepoChk, bgrChk, gridChk]{
-
+    connect(submitBtn, &QPushButton::clicked, [=]
+    {
         mLcdConfig.mBaseAddr = static_cast<uint32_t>(Util::hex2int(baseEdit->text()));
 
         mLcdConfig.mCtlReg &= ~14u;
@@ -384,10 +386,16 @@ void VisualizerWidget::viewToString()
     mLcd->setConfig(mLcdConfig);
     adjustSize();
 
-    emit configChanged();
+    emit configChanged(static_cast<KDDockWidgets::DockWidget *>(parent())->uniqueName(), getConfig());
 }
 
-QString VisualizerWidget::getConfig()
+void VisualizerWidget::setConfig(const QString &config)
+{
+    mConfigStr->setText(config);
+    stringToView();
+}
+
+QString VisualizerWidget::getConfig() const
 {
     return mConfigStr->text();
 }

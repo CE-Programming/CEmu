@@ -14,9 +14,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "corewindow.h"
+
 #include "calculatorwidget.h"
 #include "consolewidget.h"
-#include "corewindow.h"
+#include "dockwidget.h"
 #include "keyhistorywidget.h"
 #include "romdialog.h"
 #include "settings.h"
@@ -64,6 +66,8 @@ CoreWindow::CoreWindow(const QString &uniqueName,
       mCalcOverlay{nullptr},
       mCalcType{ti_device_t::TI84PCE}
 {
+    sCoreWindow = this;
+
     auto *menubar = menuBar();
 
     mCalcsMenu = new QMenu(tr("Calculator"), this);
@@ -108,7 +112,7 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     connect(restoreLayoutAction, &QAction::triggered, this, &CoreWindow::restoreLayout);
 
     setKeymap();
-    //restoreLayout();
+    restoreLayout();
 
     connect(this, &CoreWindow::romChanged, this, &CoreWindow::resetEmu);
 
@@ -122,6 +126,20 @@ CoreWindow::~CoreWindow()
     {
         delete static_cast<VisualizerWidget *>(mVisualizerWidgets.prev())->parent();
     }
+
+    sCoreWindow = nullptr;
+}
+
+KDDockWidgets::DockWidgetBase *CoreWindow::dockWidgetFactory(const QString &name)
+{
+    if (sCoreWindow)
+    {
+        if (name.startsWith("Visualizer #"))
+        {
+            return sCoreWindow->addVisualizerDock(name);
+        }
+    }
+    return nullptr;
 }
 
 void CoreWindow::createDockWidgets()
@@ -265,9 +283,9 @@ void CoreWindow::createDeveloperWidgets()
     connect(memoryAction, &QAction::triggered, this, &CoreWindow::restoreLayout);
 
     auto *visualizerAction = mDevMenu->addAction(tr("Add LCD Visualizer"));
-    connect(visualizerAction, &QAction::triggered, this, [=]
+    connect(visualizerAction, &QAction::triggered, [this]
     {
-        addVisualizerDock(Util::randomString(10), QString());
+        addVisualizerDock();
     });
 }
 
@@ -354,14 +372,27 @@ void CoreWindow::restoreLayout()
     saver.restoreFromFile(Settings::textOption(Settings::LayoutFile));
 }
 
-void CoreWindow::addVisualizerDock(const QString &magic, const QString &config)
+KDDockWidgets::DockWidget *CoreWindow::addVisualizerDock(QString name, const QString &config)
 {
-    auto *visualizerDock = new KDDockWidgets::DockWidget(magic);
-    auto *visualizer = new VisualizerWidget(config, &mVisualizerWidgets);
+    if (name.isNull())
+    {
+        do
+        {
+            name = QStringLiteral("Visualizer #") + Util::randomString(10);
+        }
+        while (KDDockWidgets::DockWidgetBase::byName(name));
+    }
+
+    auto *visualizerDock = new KDDockWidgets::DockWidget(name);
+    auto *visualizer = new VisualizerWidget(&mVisualizerWidgets, config, visualizerDock);
 
     visualizerDock->setTitle(tr("Visualizer"));
 
     visualizerDock->setWidget(visualizer);
     visualizerDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     visualizerDock->show();
+
+    return visualizerDock;
 }
+
+CoreWindow *CoreWindow::sCoreWindow;

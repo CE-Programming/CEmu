@@ -3,6 +3,7 @@
 
 #include "widgets/visualizerlcdwidget.h"
 
+#include <QtCore/QString>
 #include <QtWidgets/QWidget>
 QT_BEGIN_NAMESPACE
 class QCloseEvent;
@@ -32,8 +33,9 @@ class VisualizerWidget : public QWidget, public VisualizerWidgetList
     Q_OBJECT
 
 public:
-    explicit VisualizerWidget(const QString &config, VisualizerWidgetList *list, QWidget *parent = nullptr);
-    QString getConfig();
+    explicit VisualizerWidget(VisualizerWidgetList *list, const QString &config = QString(), QWidget *parent = nullptr);
+    void setConfig(const QString &config);
+    QString getConfig() const;
     void translate();
     void forceUpdate();
 
@@ -43,7 +45,7 @@ private slots:
     void showPresets();
 
 signals:
-    void configChanged();
+    void configChanged(const QString &uniqueName, const QString &config);
 
 private:
     void closeEvent(QCloseEvent *) override;
