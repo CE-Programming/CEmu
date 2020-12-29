@@ -4,25 +4,45 @@
 
 #include "../../core/lcd.h"
 
-#include <QtWidgets/QPushButton>
-#include <QtWidgets/QMessageBox>
 #include <QtWidgets/QAction>
-#include <QtWidgets/QVBoxLayout>
-#include <QtWidgets/QToolButton>
-#include <QtWidgets/QSpacerItem>
-#include <QtWidgets/QMenu>
+#include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QCheckBox>
-#include <QtWidgets/QLabel>
-#include <QtWidgets/QSpinBox>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QGroupBox>
-#include <QtWidgets/QBoxLayout>
+#include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
+#include <QtWidgets/QMenu>
+#include <QtWidgets/QMessageBox>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QSpacerItem>
+#include <QtWidgets/QSpinBox>
+#include <QtWidgets/QToolButton>
+#include <QtWidgets/QVBoxLayout>
 
 #define SETBITS(in, out, var) ((var) = static_cast<bool>(in) ? ((var) | (out)) : ((var) & ~(out)))
 
-VisualizerWidget::VisualizerWidget(const QString &config, QWidget *parent)
-    : QWidget{parent}
+VisualizerWidgetList::VisualizerWidgetList()
+    : mPrev{this},
+      mNext{this}
+{
+}
+
+VisualizerWidgetList::VisualizerWidgetList(VisualizerWidgetList *list)
+    : mPrev{qExchange(list->mPrev, this)},
+      mNext{list}
+{
+    mPrev->mNext = this;
+}
+
+VisualizerWidgetList::~VisualizerWidgetList()
+{
+    mPrev->mNext = mNext;
+    mNext->mPrev = mPrev;
+}
+
+VisualizerWidget::VisualizerWidget(const QString &config, VisualizerWidgetList *list, QWidget *parent)
+    : QWidget{parent},
+      VisualizerWidgetList{list}
 {
     mGroup = new QGroupBox(tr("Settings"));
 
@@ -204,6 +224,11 @@ void VisualizerWidget::showConfig()
         dialog->close();
     });
     dialog->exec();
+}
+
+void VisualizerWidget::closeEvent(QCloseEvent *)
+{
+    parent()->deleteLater();
 }
 
 void VisualizerWidget::stringToView()

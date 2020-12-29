@@ -17,6 +17,7 @@
 #ifndef COREWINDOW_H
 #define COREWINDOW_H
 
+#include "developer/visualizerwidget.h"
 class QtKeypadBridge;
 
 #include "../../core/asic.h"
@@ -61,7 +62,7 @@ private:
     void setKeymap();
 
     KDDockWidgets::DockWidget::List mDockWidgets;
-    KDDockWidgets::DockWidget::List mVisualizerWidgets;
+    VisualizerWidgetList mVisualizerWidgets;
     QStringList mVisualizerConfigs;
 
     QtKeypadBridge *mKeypadBridge;

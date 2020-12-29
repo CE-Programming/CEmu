@@ -118,6 +118,10 @@ CoreWindow::CoreWindow(const QString &uniqueName,
 CoreWindow::~CoreWindow()
 {
     qDeleteAll(mDockWidgets);
+    while (!mVisualizerWidgets.empty())
+    {
+        delete static_cast<VisualizerWidget *>(mVisualizerWidgets.prev())->parent();
+    }
 }
 
 void CoreWindow::createDockWidgets()
@@ -353,11 +357,9 @@ void CoreWindow::restoreLayout()
 void CoreWindow::addVisualizerDock(const QString &magic, const QString &config)
 {
     auto *visualizerDock = new KDDockWidgets::DockWidget(magic);
-    auto *visualizer = new VisualizerWidget(config);
+    auto *visualizer = new VisualizerWidget(config, &mVisualizerWidgets);
 
     visualizerDock->setTitle(tr("Visualizer"));
-
-    mVisualizerWidgets << visualizerDock;
 
     visualizerDock->setWidget(visualizer);
     visualizerDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);

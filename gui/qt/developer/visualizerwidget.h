@@ -5,18 +5,34 @@
 
 #include <QtWidgets/QWidget>
 QT_BEGIN_NAMESPACE
-class QLineEdit;
+class QCloseEvent;
 class QGroupBox;
-class QToolButton;
+class QLineEdit;
 class QRadioButton;
+class QToolButton;
 QT_END_NAMESPACE
 
-class VisualizerWidget : public QWidget
+class VisualizerWidgetList
+{
+public:
+    VisualizerWidgetList();
+    virtual ~VisualizerWidgetList();
+
+    VisualizerWidgetList *prev() const { return mPrev; }
+    VisualizerWidgetList *next() const { return mNext; }
+    bool empty() const { return mPrev == this; }
+
+protected:
+    VisualizerWidgetList(VisualizerWidgetList *list);
+    VisualizerWidgetList *mPrev, *mNext;
+};
+
+class VisualizerWidget : public QWidget, public VisualizerWidgetList
 {
     Q_OBJECT
 
 public:
-    explicit VisualizerWidget(const QString &config, QWidget *parent = nullptr);
+    explicit VisualizerWidget(const QString &config, VisualizerWidgetList *list, QWidget *parent = nullptr);
     QString getConfig();
     void translate();
     void forceUpdate();
@@ -30,6 +46,8 @@ signals:
     void configChanged();
 
 private:
+    void closeEvent(QCloseEvent *) override;
+
     void stringToView();
     void viewToString();
 
@@ -45,6 +63,7 @@ private:
     QToolButton *mBtnRefresh;
     QToolButton *mBtnConfig;
 
+    VisualizerWidget *mPrev, *mNext;
     VisualizerLcdWidget *mLcd;
     VisualizerLcdWidgetConfig mLcdConfig;
 };
