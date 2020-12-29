@@ -15,6 +15,7 @@
  */
 
 #include "visualizerlcdwidget.h"
+#include "settings.h"
 #include "util.h"
 
 #include "../../core/lcd.h"
@@ -22,6 +23,7 @@
 #include <cmath>
 #include <QtCore/QMimeData>
 #include <QtCore/QDir>
+#include <QtGui/QClipboard>
 #include <QtGui/QMouseEvent>
 #include <QtGui/QDrag>
 #include <QtGui/QPainter>
@@ -32,11 +34,8 @@
 VisualizerLcdWidget::VisualizerLcdWidget(QWidget *parent)
     : QWidget{parent},
       mImage{nullptr},
-      mHeight{LCD_HEIGHT},
-      mWidth{LCD_WIDTH},
-      mGrid{false},
-      mUpBase{0},
-      mControl{0}
+      mUnpoweredText{tr("CALCULATOR OFF")},
+      mUnpoweredFont{QStringLiteral("Arial"), 16}
 {
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, &VisualizerLcdWidget::customContextMenuRequested, this, &VisualizerLcdWidget::contextMenu);
@@ -49,37 +48,43 @@ VisualizerLcdWidget::~VisualizerLcdWidget()
 
 void VisualizerLcdWidget::draw()
 {
-    emu_set_lcd_ptrs(&mData, &mDataEnd, mWidth, mHeight, mUpBase, mControl, false);
-    emu_lcd_drawmem(mImage->bits(), mData, mDataEnd, mControl, mSize, 0);
+    emu_set_lcd_ptrs(&mConfig.mData, &mConfig.mDataEnd, mConfig.mWidth, mConfig.mHeight, mConfig.mBaseAddr, mConfig.mCtlReg, false);
+    emu_lcd_drawmem(mImage->bits(), mConfig.mData, mConfig.mDataEnd, mConfig.mCtlReg, mConfig.mWidth * mConfig.mHeight, Settings::boolOption(Settings::EmuLcdSpi));
     update();
 }
 
-void VisualizerLcdWidget::paintEvent(QPaintEvent*)
+void VisualizerLcdWidget::paintEvent(QPaintEvent *)
 {
-    QPainter c(this);
-    const QRect& cw = c.window();
+    QPainter painter(this);
+    const QRect& cw = painter.window();
 
-    c.setRenderHint(QPainter::SmoothPixmapTransform);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
     if (mImage != nullptr)
     {
-        c.drawImage(cw, *mImage);
+        painter.drawImage(cw, *mImage);
 
         // only draw grid if width/height scale >= 200%
-        if (mGrid && (cw.width() >= (mWidth * 2) && cw.height() >= (mHeight * 2)))
+        if (mConfig.mGrid && (cw.width() >= (mConfig.mWidth * 2) && cw.height() >= (mConfig.mHeight * 2)))
         {
             QVarLengthArray<QLineF, 100> lines;
 
-            for (int x = cw.left(); x < cw.right(); x += (cw.width() / mWidth))
+            for (int x = cw.left(); x < cw.right(); x += (cw.width() / mConfig.mWidth))
             {
                 lines.append(QLineF(x, cw.top(), x, cw.bottom()));
             }
-            for (int y = cw.top(); y < cw.bottom(); y += (cw.height() / mHeight))
+            for (int y = cw.top(); y < cw.bottom(); y += (cw.height() / mConfig.mHeight))
             {
                 lines.append(QLineF(cw.left(), y, cw.right(), y));
             }
 
-            c.drawLines(lines.data(), lines.size());
+            painter.drawLines(lines.data(), lines.size());
         }
+    }
+    else
+    {
+        painter.fillRect(painter.window(), Qt::black);
+        painter.drawStaticText(painter.window().center() - QRectF{{}, mUnpoweredText.size()}.center(),
+                               mUnpoweredText);
     }
 }
 
@@ -117,7 +122,7 @@ void VisualizerLcdWidget::mousePressEvent(QMouseEvent *event)
 
 void VisualizerLcdWidget::setRefreshRate(int rate)
 {
-    if (rate == 0 || rate < 0)
+    if (rate <= 0)
     {
         return;
     }
@@ -127,22 +132,15 @@ void VisualizerLcdWidget::setRefreshRate(int rate)
     mRefreshTimer.stop();
     mRefreshTimer.setInterval(1000 / rate);
     mRefreshTimer.start();
-    mRefresh = rate;
+    mConfig.mRefresh = rate;
 }
 
-void VisualizerLcdWidget::setConfig(float bppstep, int w, int h, uint32_t u, uint32_t c, bool g, uint32_t *d, uint32_t *e)
+void VisualizerLcdWidget::setConfig(const VisualizerLcdWidgetConfig &config)
 {
-    mBppStep = bppstep;
-    mWidth = w;
-    mHeight = h;
-    mUpBase = u;
-    mControl = c;
-    mData = d;
-    mDataEnd = e;
-    mSize = w * h;
-    mGrid = g;
+    mConfig = config;
+
     delete mImage;
-    mImage = new QImage(w, h, QImage::Format_RGBX8888);
+    mImage = new QImage(mConfig.mWidth, mConfig.mHeight, QImage::Format_RGBX8888);
 }
 
 void VisualizerLcdWidget::contextMenu(const QPoint& posa)
@@ -150,14 +148,14 @@ void VisualizerLcdWidget::contextMenu(const QPoint& posa)
     QString copyStr = tr("Copy Address");
     QString coordStr = tr("Coordinate: ");
 
-    QTransform tr;
-    tr.scale(mWidth * 1.0 / width(), mHeight * 1.0 / height());
-    QPoint point = tr.map(posa);
+    QTransform transform;
+    transform.scale(mConfig.mWidth * 1.0 / width(), mConfig.mHeight * 1.0 / height());
+    QPoint point = transform.map(posa);
     uint32_t x = static_cast<uint32_t>(point.x());
     uint32_t y = static_cast<uint32_t>(point.y());
 
-    QString addr = Util::int2hex(mUpBase + (static_cast<uint32_t>(std::floor((static_cast<float>(x)) / mBppStep))) +
-                                (static_cast<uint32_t>(mWidth) * y), 6);
+    QString addr = Util::int2hex(mConfig.mBaseAddr + (static_cast<uint32_t>(std::floor((static_cast<float>(x)) / mConfig.mBppStep))) +
+                                (static_cast<uint32_t>(mConfig.mWidth) * y), 6);
 
     coordStr += QString::number(x) + QStringLiteral("x") + QString::number(y);
     copyStr += QStringLiteral(" '") + addr + QStringLiteral("'");

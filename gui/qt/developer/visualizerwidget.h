@@ -38,19 +38,15 @@ private:
     int mScale = 100;
     int mFps = 30;
 
-    int mHeight;
-    int mWidth;
-    uint32_t mBaseAddr;
-    uint32_t mCtlReg;
-    bool mGrid;
-
-    VisualizerLcdWidget *mLcd;
     QLineEdit *mConfigStr;
     QGroupBox *mGroup;
 
     QToolButton *mBtnLcd;
     QToolButton *mBtnRefresh;
     QToolButton *mBtnConfig;
+
+    VisualizerLcdWidget *mLcd;
+    VisualizerLcdWidgetConfig mLcdConfig;
 };
 
 #endif

@@ -19,16 +19,27 @@
 
 #include <QtCore/QTimer>
 #include <QtWidgets/QWidget>
-#include <QtGui/QClipboard>
+#include <QtGui/QStaticText>
 
-class VisualizerLcdWidget : public QWidget {
+class VisualizerLcdWidgetConfig
+{
+public:
+    int mHeight, mWidth, mRefresh;
+    uint32_t mBaseAddr, mCtlReg;
+    uint32_t *mData, *mDataEnd;
+    float mBppStep;
+    bool mGrid;
+};
+
+class VisualizerLcdWidget : public QWidget
+{
   Q_OBJECT
 
 public:
     explicit VisualizerLcdWidget(QWidget *p = nullptr);
     ~VisualizerLcdWidget();
     void setRefreshRate(int rate);
-    void setConfig(float bppstep, int w, int h, uint32_t u, uint32_t c, bool g, uint32_t *d, uint32_t *e);
+    void setConfig(const VisualizerLcdWidgetConfig &config);
 
 protected:
     virtual void paintEvent(QPaintEvent *event) override;
@@ -41,17 +52,12 @@ private slots:
 private:
     QTimer mRefreshTimer;
     QImage *mImage;
-    int mRefresh;
 
-    int mHeight;
-    int mWidth;
-    int mSize;
-    bool mGrid;
-    uint32_t mUpBase;
-    uint32_t mControl;
-    float mBppStep;
-    uint32_t *mData;
-    uint32_t *mDataEnd;
+    VisualizerLcdWidgetConfig mConfig;
+
+    QStaticText mUnpoweredText;
+    QFont mUnpoweredFont;
+
 };
 
 #endif

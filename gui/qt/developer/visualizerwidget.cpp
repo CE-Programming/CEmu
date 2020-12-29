@@ -56,6 +56,7 @@ VisualizerWidget::VisualizerWidget(const QString &config, QWidget *parent)
     connect(mBtnLcd, &QPushButton::clicked, this, &VisualizerWidget::showPresets);
     connect(mBtnConfig, &QPushButton::clicked, this, &VisualizerWidget::showConfig);
 
+    resetView();
     if (!config.isEmpty())
     {
         mConfigStr->setText(config);
@@ -110,7 +111,7 @@ void VisualizerWidget::showConfig()
     QHBoxLayout *hlayout = new QHBoxLayout;
 
     QLabel *baseLbl = new QLabel(tr("Base Address"));
-    QLineEdit *baseEdit = new QLineEdit(Util::int2hex(mBaseAddr, 6));
+    QLineEdit *baseEdit = new QLineEdit(Util::int2hex(mLcdConfig.mBaseAddr, 6));
     QLabel *fpsLbl = new QLabel(QStringLiteral("FPS"));
     QSpinBox *fpsSpin = new QSpinBox;
     QLabel *scaleLbl = new QLabel(tr("Scale"));
@@ -134,15 +135,15 @@ void VisualizerWidget::showConfig()
     scaleSpin->setValue(mScale);
 
     widthSpin->setRange(0, 5000);
-    widthSpin->setValue(mWidth);
+    widthSpin->setValue(mLcdConfig.mWidth);
 
     heightSpin->setRange(0, 5000);
-    heightSpin->setValue(mHeight);
+    heightSpin->setValue(mLcdConfig.mHeight);
 
-    bepoChk->setChecked(mCtlReg & 0x400 ? true : false);
-    beboChk->setChecked(mCtlReg & 0x200 ? true : false);
-    bgrChk->setChecked(mCtlReg & 0x100 ? true : false);
-    gridChk->setChecked(mGrid);
+    bepoChk->setChecked(mLcdConfig.mCtlReg & 0x400 ? true : false);
+    beboChk->setChecked(mLcdConfig.mCtlReg & 0x200 ? true : false);
+    bgrChk->setChecked(mLcdConfig.mCtlReg & 0x100 ? true : false);
+    gridChk->setChecked(mLcdConfig.mGrid);
 
     bppCombo->addItem(QStringLiteral("1"));
     bppCombo->addItem(QStringLiteral("2"));
@@ -153,7 +154,7 @@ void VisualizerWidget::showConfig()
     bppCombo->addItem(QStringLiteral("16 (5:6:5)"));
     bppCombo->addItem(QStringLiteral("12 (4:4:4)"));
 
-    bppCombo->setCurrentIndex((mCtlReg >> 1) & 7);
+    bppCombo->setCurrentIndex((mLcdConfig.mCtlReg >> 1) & 7);
 
     glayout->addWidget(baseLbl, 0, 0);
     glayout->addWidget(baseEdit, 0, 1);
@@ -183,20 +184,20 @@ void VisualizerWidget::showConfig()
             fpsSpin, scaleSpin, widthSpin, heightSpin,
             bppCombo, beboChk, bepoChk, bgrChk, gridChk]{
 
-        mBaseAddr = static_cast<uint32_t>(Util::hex2int(baseEdit->text()));
+        mLcdConfig.mBaseAddr = static_cast<uint32_t>(Util::hex2int(baseEdit->text()));
 
-        mCtlReg &= ~14u;
-        mCtlReg |= static_cast<unsigned int>(bppCombo->currentIndex() << 1);
+        mLcdConfig.mCtlReg &= ~14u;
+        mLcdConfig.mCtlReg |= static_cast<unsigned int>(bppCombo->currentIndex() << 1);
 
         mFps = fpsSpin->value();
         mScale = scaleSpin->value();
-        mWidth = widthSpin->value();
-        mHeight = heightSpin->value();
-        mGrid = gridChk->isChecked();
+        mLcdConfig.mWidth = widthSpin->value();
+        mLcdConfig.mHeight = heightSpin->value();
+        mLcdConfig.mGrid = gridChk->isChecked();
 
-        SETBITS(bepoChk->isChecked(), 0x400u, mCtlReg);
-        SETBITS(beboChk->isChecked(), 0x200u, mCtlReg);
-        SETBITS(bgrChk->isChecked(), 0x100u, mCtlReg);
+        SETBITS(bepoChk->isChecked(), 0x400u, mLcdConfig.mCtlReg);
+        SETBITS(beboChk->isChecked(), 0x200u, mLcdConfig.mCtlReg);
+        SETBITS(bgrChk->isChecked(), 0x100u, mLcdConfig.mCtlReg);
 
         viewToString();
 
@@ -214,37 +215,37 @@ void VisualizerWidget::stringToView()
 
     mFps = 30;
     mScale = 100;
-    mGrid = false;
+    mLcdConfig.mGrid = false;
 
-    SETBITS(false, 0x400u, mCtlReg);
-    SETBITS(false, 0x200u, mCtlReg);
-    SETBITS(false, 0x100u, mCtlReg);
+    SETBITS(false, 0x400u, mLcdConfig.mCtlReg);
+    SETBITS(false, 0x200u, mLcdConfig.mCtlReg);
+    SETBITS(false, 0x100u, mLcdConfig.mCtlReg);
 
     foreach (QString str, string)
     {
         str = str.toLower();
         if (!str.compare(QLatin1String("grid"), Qt::CaseInsensitive))
         {
-            mGrid = true;
+            mLcdConfig.mGrid = true;
         }
         if (!str.compare(QLatin1String("bepo"), Qt::CaseInsensitive))
         {
-            SETBITS(true, 0x400u, mCtlReg);
+            SETBITS(true, 0x400u, mLcdConfig.mCtlReg);
         }
         if (!str.compare(QLatin1String("bebo"), Qt::CaseInsensitive))
         {
-            SETBITS(true, 0x200u, mCtlReg);
+            SETBITS(true, 0x200u, mLcdConfig.mCtlReg);
         }
         if (!str.compare(QLatin1String("bgr"), Qt::CaseInsensitive))
         {
-            SETBITS(true, 0x100u, mCtlReg);
+            SETBITS(true, 0x100u, mLcdConfig.mCtlReg);
         }
         if (str.contains('x'))
         {
             QStringList wh = str.split('x');
             if (wh.size() == 2) {
-                mWidth = wh.at(0).toInt();
-                mHeight = wh.at(1).toInt();
+                mLcdConfig.mWidth = wh.at(0).toInt();
+                mLcdConfig.mHeight = wh.at(1).toInt();
             }
         }
         if (str.endsWith('%'))
@@ -266,7 +267,7 @@ void VisualizerWidget::stringToView()
         }
         if (hex_reg.exactMatch(str))
         {
-            mBaseAddr = str.toUInt(Q_NULLPTR, 16);
+            mLcdConfig.mBaseAddr = str.toUInt(Q_NULLPTR, 16);
         }
         if (bpp_reg.exactMatch(str))
         {
@@ -286,8 +287,8 @@ void VisualizerWidget::stringToView()
             }
             if (bpp != 255)
             {
-                mCtlReg &= ~14u;
-                mCtlReg |= static_cast<unsigned int>(bpp << 1);
+                mLcdConfig.mCtlReg &= ~14u;
+                mLcdConfig.mCtlReg |= static_cast<unsigned int>(bpp << 1);
             }
         }
         if (fps_reg.exactMatch(str))
@@ -303,12 +304,13 @@ void VisualizerWidget::stringToView()
 
 void VisualizerWidget::resetView()
 {
-    mWidth = LCD_WIDTH;
-    mHeight = LCD_HEIGHT;
-    mBaseAddr = lcd.upbase;
-    mCtlReg = lcd.control;
     mScale = 100.0;
-    mGrid = false;
+
+    mLcdConfig.mWidth = LCD_WIDTH;
+    mLcdConfig.mHeight = LCD_HEIGHT;
+    mLcdConfig.mBaseAddr = lcd.upbase;
+    mLcdConfig.mCtlReg = lcd.control;
+    mLcdConfig.mGrid = false;
     viewToString();
 }
 
@@ -320,46 +322,41 @@ void VisualizerWidget::forceUpdate()
 void VisualizerWidget::viewToString()
 {
     QString bpp;
-    float bppstep = 1.0f;
+    mLcdConfig.mBppStep = 1.0f;
 
-    switch ((mCtlReg >> 1) & 7)
+    switch ((mLcdConfig.mCtlReg >> 1) & 7)
     {
-        case 0: bpp = QStringLiteral("1"); bppstep = 1.0f/0.125f; break;
-        case 1: bpp = QStringLiteral("2"); bppstep = 1.0f/0.25f; break;
-        case 2: bpp = QStringLiteral("4"); bppstep = 1.0f/0.5f; break;
-        case 3: bpp = QStringLiteral("8"); bppstep = 1.0f/1.0f; break;
-        case 4: bpp = QStringLiteral("1555"); bppstep = 1.0f/2.0f; break;
-        case 5: bpp = QStringLiteral("888"); bppstep = 1.0f/3.0f; break;
-        case 6: bpp = QStringLiteral("565"); bppstep = 1.0f/2.0f; break;
-        case 7: bpp = QStringLiteral("444"); bppstep = 1.0f/1.5f; break;
+        case 0: bpp = QStringLiteral("1"); mLcdConfig.mBppStep = 1.0f/0.125f; break;
+        case 1: bpp = QStringLiteral("2"); mLcdConfig.mBppStep = 1.0f/0.25f; break;
+        case 2: bpp = QStringLiteral("4"); mLcdConfig.mBppStep = 1.0f/0.5f; break;
+        case 3: bpp = QStringLiteral("8"); mLcdConfig.mBppStep = 1.0f/1.0f; break;
+        case 4: bpp = QStringLiteral("1555"); mLcdConfig.mBppStep = 1.0f/2.0f; break;
+        case 5: bpp = QStringLiteral("888"); mLcdConfig.mBppStep = 1.0f/3.0f; break;
+        case 6: bpp = QStringLiteral("565"); mLcdConfig.mBppStep = 1.0f/2.0f; break;
+        case 7: bpp = QStringLiteral("444"); mLcdConfig.mBppStep = 1.0f/1.5f; break;
         default: break;
     }
 
     mSetup.clear();
-    mSetup.append(Util::int2hex(mBaseAddr, 6).toUpper());
-    mSetup.append(QString::number(mWidth) + QStringLiteral("x") + QString::number(mHeight));
+    mSetup.append(Util::int2hex(mLcdConfig.mBaseAddr, 6).toUpper());
+    mSetup.append(QString::number(mLcdConfig.mWidth) + QStringLiteral("x") + QString::number(mLcdConfig.mHeight));
     mSetup.append(bpp + QStringLiteral("bpp"));
-    if (mCtlReg & 0x400) { mSetup.append(QStringLiteral("bepo")); }
-    if (mCtlReg & 0x200) { mSetup.append(QStringLiteral("bebo")); }
-    if (mCtlReg & 0x100) { mSetup.append(QStringLiteral("bgr")); }
+    if (mLcdConfig.mCtlReg & 0x400) { mSetup.append(QStringLiteral("bepo")); }
+    if (mLcdConfig.mCtlReg & 0x200) { mSetup.append(QStringLiteral("bebo")); }
+    if (mLcdConfig.mCtlReg & 0x100) { mSetup.append(QStringLiteral("bgr")); }
+    if (mLcdConfig.mGrid == true) { mSetup.append(QStringLiteral("grid")); }
     if (mScale != 100) { mSetup.append(QString::number(mScale) + QStringLiteral("%")); }
     if (mFps != 30) { mSetup.append(QString::number(mFps) + QStringLiteral("fps")); }
-    if (mGrid == true) { mSetup.append(QStringLiteral("grid")); }
 
     mConfigStr->setText(mSetup.join(","));
 
     float s = mScale / 100.0f;
-    float w = mWidth * s;
-    float h = mHeight * s;
-
-    uint32_t *data;
-    uint32_t *data_end;
-
-    emu_set_lcd_ptrs(&data, &data_end, mWidth, mHeight, mBaseAddr, mCtlReg, false);
+    float w = mLcdConfig.mWidth * s;
+    float h = mLcdConfig.mHeight * s;
 
     mLcd->setFixedSize(static_cast<int>(w), static_cast<int>(h));
     mLcd->setRefreshRate(mFps);
-    mLcd->setConfig(bppstep, mWidth, mHeight, mBaseAddr, mCtlReg, mGrid, data, data_end);
+    mLcd->setConfig(mLcdConfig);
     adjustSize();
 
     emit configChanged();
