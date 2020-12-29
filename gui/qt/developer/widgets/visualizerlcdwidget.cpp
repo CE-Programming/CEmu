@@ -31,12 +31,15 @@
 
 VisualizerLcdWidget::VisualizerLcdWidget(QWidget *parent)
     : QWidget{parent},
-      mImage{nullptr}
+      mImage{nullptr},
+      mHeight{LCD_HEIGHT},
+      mWidth{LCD_WIDTH},
+      mGrid{false},
+      mUpBase{0},
+      mControl{0}
 {
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, &VisualizerLcdWidget::customContextMenuRequested, this, &VisualizerLcdWidget::contextMenu);
-
-    mImage = new QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGBX8888);
 }
 
 VisualizerLcdWidget::~VisualizerLcdWidget()
@@ -56,7 +59,7 @@ void VisualizerLcdWidget::paintEvent(QPaintEvent*)
     QPainter c(this);
     const QRect& cw = c.window();
 
-    c.setRenderHint(QPainter::SmoothPixmapTransform, cw.width() < mWidth);
+    c.setRenderHint(QPainter::SmoothPixmapTransform);
     if (mImage != nullptr)
     {
         c.drawImage(cw, *mImage);

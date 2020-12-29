@@ -37,16 +37,6 @@ VisualizerWidget::VisualizerWidget(const QString &config, QWidget *parent)
     mBtnConfig->setToolTip(tr("Change Configuration"));
     mBtnRefresh->setToolTip(tr("Apply changes"));
 
-    if (config.isEmpty())
-    {
-        resetView();
-    }
-    else
-    {
-        mConfigStr->setText(config);
-        stringToView();
-    }
-
     QHBoxLayout *hLayout = new QHBoxLayout;
     hLayout->addWidget(mConfigStr);
     hLayout->addWidget(mBtnRefresh);
@@ -64,6 +54,12 @@ VisualizerWidget::VisualizerWidget(const QString &config, QWidget *parent)
     connect(mBtnRefresh, &QPushButton::clicked, this, &VisualizerWidget::stringToView);
     connect(mBtnLcd, &QPushButton::clicked, this, &VisualizerWidget::showPresets);
     connect(mBtnConfig, &QPushButton::clicked, this, &VisualizerWidget::showConfig);
+
+    if (!config.isEmpty())
+    {
+        mConfigStr->setText(config);
+        stringToView();
+    }
 }
 
 void VisualizerWidget::showPresets()
@@ -358,11 +354,11 @@ void VisualizerWidget::viewToString()
     uint32_t *data;
     uint32_t *data_end;
 
-    //emu_set_lcd_ptrs(&data, &data_end, m_width, m_height, m_base, m_control, false);
+    emu_set_lcd_ptrs(&data, &data_end, mWidth, mHeight, mBaseAddr, mCtlReg, false);
 
     mLcd->setFixedSize(static_cast<int>(w), static_cast<int>(h));
     mLcd->setRefreshRate(mFps);
-    //mLcd->setConfig(bppstep, mWidth, mHeight, mBaseAddr, mCtlReg, mGrid, data, data_end);
+    mLcd->setConfig(bppstep, mWidth, mHeight, mBaseAddr, mCtlReg, mGrid, data, data_end);
     adjustSize();
 
     emit configChanged();
