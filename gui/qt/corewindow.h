@@ -48,6 +48,7 @@ private slots:
     void showPreferences();
     void saveLayout();
     void restoreLayout();
+    void addVisualizerDock(const QString &magic, const QString &config);
 
 private:
     void createFileMenu();
@@ -60,6 +61,8 @@ private:
     void setKeymap();
 
     KDDockWidgets::DockWidget::List mDockWidgets;
+    KDDockWidgets::DockWidget::List mVisualizerWidgets;
+    QStringList mVisualizerConfigs;
 
     QtKeypadBridge *mKeypadBridge;
 

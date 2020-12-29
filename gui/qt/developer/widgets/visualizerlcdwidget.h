@@ -21,12 +21,12 @@
 #include <QtWidgets/QWidget>
 #include <QtGui/QClipboard>
 
-class VisualizerWidget : public QWidget {
+class VisualizerLcdWidget : public QWidget {
   Q_OBJECT
 
 public:
-    explicit VisualizerWidget(QWidget *p = nullptr);
-    ~VisualizerWidget();
+    explicit VisualizerLcdWidget(QWidget *p = nullptr);
+    ~VisualizerLcdWidget();
     void setRefreshRate(int rate);
     void setConfig(float bppstep, int w, int h, uint32_t u, uint32_t c, bool g, uint32_t *d, uint32_t *e);
 

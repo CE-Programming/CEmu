@@ -85,9 +85,10 @@ SOURCES += \
     developer/osstackswidget.cpp \
     developer/osvarwidget.cpp \
     developer/portmonitorwidget.cpp \
+    developer/visualizerwidget.cpp \
     developer/watchpointswidget.cpp \
     developer/widgets/hexwidget.cpp \
-    developer/widgets/visualizerwidget.cpp \
+    developer/widgets/visualizerlcdwidget.cpp \
     dockwidget.cpp \
     emuthread.cpp \
     keyhistorywidget.cpp \
@@ -154,9 +155,10 @@ HEADERS  += \
     developer/osstackswidget.h \
     developer/osvarswidget.h \
     developer/portmonitorwidget.h \
+    developer/visualizerwidget.h \
     developer/watchpointswidget.h \
     developer/widgets/hexwidget.h \
-    developer/widgets/visualizerwidget.h \
+    developer/widgets/visualizerlcdwidget.h \
     dockwidget.h \
     emuthread.h \
     keyhistorywidget.h \

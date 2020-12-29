@@ -57,16 +57,12 @@ ClocksWidget::ClocksWidget(QWidget *parent)
     QLineEdit *edtMin = new QLineEdit(QStringLiteral("0"));
     QLineEdit *edtSec = new QLineEdit(QStringLiteral("0"));
 
-    lblValue->setFont(monospaceFont);
-    lblReloadValue->setFont(monospaceFont);
-    lblTimer1->setFont(monospaceFont);
-    lblTimer2->setFont(monospaceFont);
-    lblTimer3->setFont(monospaceFont);
-    lblDays->setFont(monospaceFont);
-    lblHrs->setFont(monospaceFont);
-    lblMin->setFont(monospaceFont);
-    lblSec->setFont(monospaceFont);
-
+    edtTimer1V->setFont(monospaceFont);
+    edtTimer2V->setFont(monospaceFont);
+    edtTimer3V->setFont(monospaceFont);
+    edtTimer1RV->setFont(monospaceFont);
+    edtTimer2RV->setFont(monospaceFont);
+    edtTimer3RV->setFont(monospaceFont);
     edtDays->setFont(monospaceFont);
     edtHrs->setFont(monospaceFont);
     edtMin->setFont(monospaceFont);
@@ -83,9 +79,6 @@ ClocksWidget::ClocksWidget(QWidget *parent)
     hboxRtc->addWidget(edtSec);
     grpRtc->setLayout(hboxRtc);
 
-    lblTimer1->setAlignment(Qt::AlignRight);
-    lblTimer2->setAlignment(Qt::AlignRight);
-    lblTimer3->setAlignment(Qt::AlignRight);
     lblValue->setAlignment(Qt::AlignCenter);
     lblReloadValue->setAlignment(Qt::AlignCenter);
 

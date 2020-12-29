@@ -22,6 +22,7 @@
 #include "settings.h"
 #include "settingsdialog.h"
 #include "statewidget.h"
+#include "util.h"
 
 #include "developer/autotesterwidget.h"
 #include "developer/breakpointswidget.h"
@@ -35,6 +36,7 @@
 #include "developer/osvarswidget.h"
 #include "developer/portmonitorwidget.h"
 #include "developer/watchpointswidget.h"
+#include "developer/visualizerwidget.h"
 
 #include "keypad/qtkeypadbridge.h"
 
@@ -203,17 +205,29 @@ void CoreWindow::createDeveloperWidgets()
     auto *watchpoints = new WatchpointsWidget();
 
     autotesterDock->setWidget(autotester);
+    autotesterDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     breakpointsDock->setWidget(breakpoints);
+    breakpointsDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     clocksDock->setWidget(clocks);
+    clocksDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     controlDock->setWidget(control);
+    controlDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     cpuDock->setWidget(cpu);
+    cpuDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     devMiscDock->setWidget(devMisc);
+    devMiscDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     dissassmeblyDock->setWidget(dissassmebly);
+    dissassmeblyDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     memoryDock->setWidget(memory);
+    memoryDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     osStacksDock->setWidget(osStacks);
+    osStacksDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     osVarsDock->setWidget(osVars);
+    osVarsDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     portMonitorDock->setWidget(portMonitor);
+    portMonitorDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     watchpointsDock->setWidget(watchpoints);
+    watchpointsDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 
     mDockWidgets << autotesterDock;
     mDockWidgets << breakpointsDock;
@@ -240,6 +254,17 @@ void CoreWindow::createDeveloperWidgets()
     mDevMenu->addAction(osStacksDock->toggleAction());
     mDevMenu->addAction(devMiscDock->toggleAction());
     mDevMenu->addAction(autotesterDock->toggleAction());
+
+    mDevMenu->addSeparator();
+
+    auto *memoryAction = mDevMenu->addAction(tr("Add Memory View"));
+    connect(memoryAction, &QAction::triggered, this, &CoreWindow::restoreLayout);
+
+    auto *visualizerAction = mDevMenu->addAction(tr("Add LCD Visualizer"));
+    connect(visualizerAction, &QAction::triggered, this, [=]
+    {
+        addVisualizerDock(Util::randomString(10), QString());
+    });
 }
 
 void CoreWindow::setKeymap()
@@ -323,4 +348,18 @@ void CoreWindow::restoreLayout()
     KDDockWidgets::RestoreOptions options = KDDockWidgets::RestoreOption_None;
     KDDockWidgets::LayoutSaver saver(options);
     saver.restoreFromFile(Settings::textOption(Settings::LayoutFile));
+}
+
+void CoreWindow::addVisualizerDock(const QString &magic, const QString &config)
+{
+    auto *visualizerDock = new KDDockWidgets::DockWidget(magic);
+    auto *visualizer = new VisualizerWidget(config);
+
+    visualizerDock->setTitle(tr("Visualizer"));
+
+    mVisualizerWidgets << visualizerDock;
+
+    visualizerDock->setWidget(visualizer);
+    visualizerDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    visualizerDock->show();
 }

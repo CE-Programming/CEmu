@@ -14,7 +14,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "visualizerwidget.h"
+#include "visualizerlcdwidget.h"
 #include "util.h"
 
 #include "../../core/lcd.h"
@@ -29,29 +29,29 @@
 #include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
 
-VisualizerWidget::VisualizerWidget(QWidget *parent)
+VisualizerLcdWidget::VisualizerLcdWidget(QWidget *parent)
     : QWidget{parent},
       mImage{nullptr}
 {
     setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(this, &VisualizerWidget::customContextMenuRequested, this, &VisualizerWidget::contextMenu);
+    connect(this, &VisualizerLcdWidget::customContextMenuRequested, this, &VisualizerLcdWidget::contextMenu);
 
     mImage = new QImage(LCD_WIDTH, LCD_HEIGHT, QImage::Format_RGBX8888);
 }
 
-VisualizerWidget::~VisualizerWidget()
+VisualizerLcdWidget::~VisualizerLcdWidget()
 {
     delete mImage;
 }
 
-void VisualizerWidget::draw()
+void VisualizerLcdWidget::draw()
 {
     emu_set_lcd_ptrs(&mData, &mDataEnd, mWidth, mHeight, mUpBase, mControl, false);
     emu_lcd_drawmem(mImage->bits(), mData, mDataEnd, mControl, mSize, 0);
     update();
 }
 
-void VisualizerWidget::paintEvent(QPaintEvent*)
+void VisualizerLcdWidget::paintEvent(QPaintEvent*)
 {
     QPainter c(this);
     const QRect& cw = c.window();
@@ -80,7 +80,7 @@ void VisualizerWidget::paintEvent(QPaintEvent*)
     }
 }
 
-void VisualizerWidget::mousePressEvent(QMouseEvent *event)
+void VisualizerLcdWidget::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton)
     {
@@ -112,7 +112,7 @@ void VisualizerWidget::mousePressEvent(QMouseEvent *event)
     }
 }
 
-void VisualizerWidget::setRefreshRate(int rate)
+void VisualizerLcdWidget::setRefreshRate(int rate)
 {
     if (rate == 0 || rate < 0)
     {
@@ -127,7 +127,7 @@ void VisualizerWidget::setRefreshRate(int rate)
     mRefresh = rate;
 }
 
-void VisualizerWidget::setConfig(float bppstep, int w, int h, uint32_t u, uint32_t c, bool g, uint32_t *d, uint32_t *e)
+void VisualizerLcdWidget::setConfig(float bppstep, int w, int h, uint32_t u, uint32_t c, bool g, uint32_t *d, uint32_t *e)
 {
     mBppStep = bppstep;
     mWidth = w;
@@ -142,7 +142,7 @@ void VisualizerWidget::setConfig(float bppstep, int w, int h, uint32_t u, uint32
     mImage = new QImage(w, h, QImage::Format_RGBX8888);
 }
 
-void VisualizerWidget::contextMenu(const QPoint& posa)
+void VisualizerLcdWidget::contextMenu(const QPoint& posa)
 {
     QString copyStr = tr("Copy Address");
     QString coordStr = tr("Coordinate: ");

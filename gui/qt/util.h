@@ -14,8 +14,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef STATEWIDGET_H
-#define STATEWIDGET_H
+#ifndef UTIL_H
+#define UTIL_H
 
 #include <QtWidgets/QWidget>
 
