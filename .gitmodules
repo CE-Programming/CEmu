@@ -6,4 +6,4 @@
 	url = https://github.com/adriweb/tivars_lib_cpp.git
 [submodule "gui/qt/deps/KDDockWidgets"]
 	path = gui/qt/deps/KDDockWidgets
-	url = https://github.com/KDAB/KDDockWidgets.git
+	url = https://github.com/CE-Programming/KDDockWidgets.git
