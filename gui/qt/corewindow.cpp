@@ -400,13 +400,11 @@ bool CoreWindow::restoreLayout()
 
     for (auto *restoredDockWidget : saver.restoredDockWidgets())
     {
-        if (!restoredDockWidget->widget())
+        auto name = restoredDockWidget->uniqueName();
+        auto config = json.take(name);
+        if (name.startsWith(QLatin1String("Visualizer #")))
         {
-            auto name = restoredDockWidget->uniqueName();
-            if (name.startsWith(QLatin1String("Visualizer #")))
-            {
-                addVisualizerDock(restoredDockWidget, json.take(name).toString());
-            }
+            addVisualizerDock(restoredDockWidget, config.toString());
         }
     }
 
@@ -420,7 +418,14 @@ void CoreWindow::closeEvent(QCloseEvent *)
 
 void CoreWindow::addVisualizerDock(KDDockWidgets::DockWidgetBase *dockWidget, const QString &config)
 {
-    dockWidget->setTitle(tr("Visualizer"));
-    dockWidget->setWidget(new VisualizerWidget(&mVisualizerWidgets, config, dockWidget));
-    dockWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    if (auto *visualizerWidget = dockWidget->widget())
+    {
+        static_cast<VisualizerWidget *>(visualizerWidget)->setConfig(config);
+    }
+    else
+    {
+        dockWidget->setTitle(tr("Visualizer"));
+        dockWidget->setWidget(new VisualizerWidget(&mVisualizerWidgets, config, dockWidget));
+        dockWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    }
 }
