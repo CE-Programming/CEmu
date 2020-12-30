@@ -271,24 +271,25 @@ CpuWidget::CpuWidget(DevWidget *parent)
     hboxState->addLayout(vboxInt);
     grpState->setLayout(hboxState);
 
+    QVBoxLayout *vboxState0 = new QVBoxLayout;
+    vboxState0->addWidget(grpState);
+    vboxState0->addStretch();
+
     QVBoxLayout *vboxStack = new QVBoxLayout;
     vboxStack->addWidget(mChkAdlStack);
     vboxStack->addWidget(mEdtStack);
     grpStack->setLayout(vboxStack);
 
     QHBoxLayout *hLayout = new QHBoxLayout;
-    hLayout->addStretch(1);
-    hLayout->addWidget(grpState);
-    hLayout->addStretch(1);
+    hLayout->addStretch();
+    hLayout->addLayout(vboxState0);
     hLayout->addWidget(grpStack);
-    hLayout->addStretch(1);
+    hLayout->addStretch();
 
     QVBoxLayout *vLayout = new QVBoxLayout;
-    vLayout->addStretch(1);
     vLayout->addWidget(grpFlags);
     vLayout->addWidget(grpReg);
     vLayout->addLayout(hLayout);
-    vLayout->addStretch(1);
 
     QHBoxLayout *mainLayout = new QHBoxLayout;
     mainLayout->addStretch(1);
