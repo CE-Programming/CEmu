@@ -100,5 +100,5 @@ void CaptureWidget::takeScreenshot()
 
     screenshot->setImage(QImage(QStringLiteral(":/assets/test/screen.png")));
 
-    mLayoutTaken->addWidget(screenshot);
+    mLayoutTaken->insertWidget(0, screenshot);
 }
