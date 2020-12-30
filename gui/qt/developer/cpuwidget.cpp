@@ -31,12 +31,6 @@
 CpuWidget::CpuWidget(DevWidget *parent)
     : DevWidget{parent}
 {
-#ifdef Q_OS_WIN
-    QFont monospaceFont(QStringLiteral("Courier"), 10);
-#else
-    QFont monospaceFont(QStringLiteral("Monospace"), 10);
-#endif
-
     mRegEventFilter = new CpuRegisterFilter(this);
 
     QGroupBox *grpFlags = new QGroupBox(tr("Flags"));
@@ -96,23 +90,23 @@ CpuWidget::CpuWidget(DevWidget *parent)
     mEdtR = new HighlightEditWidget(">HH");
     mEdtIM = new HighlightEditWidget(">HH");
 
-    lblAF->setFont(monospaceFont);
-    lblBC->setFont(monospaceFont);
-    lblDE->setFont(monospaceFont);
-    lblHL->setFont(monospaceFont);
-    lblIX->setFont(monospaceFont);
-    lblAFX->setFont(monospaceFont);
-    lblBCX->setFont(monospaceFont);
-    lblDEX->setFont(monospaceFont);
-    lblHLX->setFont(monospaceFont);
-    lblIY->setFont(monospaceFont);
-    lblPC->setFont(monospaceFont);
-    lblMB->setFont(monospaceFont);
-    lblSPL->setFont(monospaceFont);
-    lblSPS->setFont(monospaceFont);
-    lblI->setFont(monospaceFont);
-    lblR->setFont(monospaceFont);
-    lblIM->setFont(monospaceFont);
+    lblAF->setFont(Util::monospaceFont());
+    lblBC->setFont(Util::monospaceFont());
+    lblDE->setFont(Util::monospaceFont());
+    lblHL->setFont(Util::monospaceFont());
+    lblIX->setFont(Util::monospaceFont());
+    lblAFX->setFont(Util::monospaceFont());
+    lblBCX->setFont(Util::monospaceFont());
+    lblDEX->setFont(Util::monospaceFont());
+    lblHLX->setFont(Util::monospaceFont());
+    lblIY->setFont(Util::monospaceFont());
+    lblPC->setFont(Util::monospaceFont());
+    lblMB->setFont(Util::monospaceFont());
+    lblSPL->setFont(Util::monospaceFont());
+    lblSPS->setFont(Util::monospaceFont());
+    lblI->setFont(Util::monospaceFont());
+    lblR->setFont(Util::monospaceFont());
+    lblIM->setFont(Util::monospaceFont());
 
     mEdtAF->setObjectName(QStringLiteral("afReg"));
     mEdtBC->setObjectName(QStringLiteral("bcReg"));

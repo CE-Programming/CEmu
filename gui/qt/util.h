@@ -33,6 +33,7 @@ public:
     static int hex2int(const QString &str);
     static QString int2hex(uint32_t a, uint8_t l);
     static QString randomString(const int length);
+    static QFont monospaceFont();
 };
 
 #endif

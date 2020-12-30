@@ -85,3 +85,14 @@ QString Util::randomString(const int length)
 
    return randomString;
 }
+
+QFont Util::monospaceFont()
+{
+#ifdef Q_OS_WIN
+    static QFont font(QStringLiteral("Courier"), 10);
+#else
+    static QFont font(QStringLiteral("Monospace"), 10);
+#endif
+
+    return font;
+}

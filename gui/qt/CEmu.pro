@@ -76,7 +76,6 @@ SOURCES += \
     consolewidget.cpp \
     corewindow.cpp \
     developer/autotesterwidget.cpp \
-    developer/breakpointswidget.cpp \
     developer/clockswidget.cpp \
     developer/controlwidget.cpp \
     developer/cpuwidget.cpp \
@@ -149,7 +148,6 @@ HEADERS  += \
     consolewidget.h \
     corewindow.h \
     developer/autotesterwidget.h \
-    developer/breakpointswidget.h \
     developer/clockswidget.h \
     developer/controlwidget.h \
     developer/cpuwidget.h \

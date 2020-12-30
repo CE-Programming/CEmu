@@ -29,7 +29,6 @@
 #include "variablewidget.h"
 
 #include "developer/autotesterwidget.h"
-#include "developer/breakpointswidget.h"
 #include "developer/clockswidget.h"
 #include "developer/controlwidget.h"
 #include "developer/cpuwidget.h"
@@ -178,18 +177,12 @@ void CoreWindow::createDockWidgets()
 
 void CoreWindow::createDeveloperWidgets()
 {
-    QList<Breakpoint> breakpoints =
-    {
-        {true, 10, "test"},
-        {false, 20, "test2"},
-        {true, 30, "test3"}
-    };
     QList<Watchpoint> watchpoints =
     {
-        {true, Watchpoint::Mode::Read, 10, 5, "test"},
-        {true, Watchpoint::Mode::Write, 20, 15, "test2"},
-        {false, Watchpoint::Mode::ReadWrite, 30, 25, "test3"},
-        {true, Watchpoint::Mode::Write, 40, 35, "test4"}
+        {Watchpoint::Mode::R, 10, 5, "test"},
+        {Watchpoint::Mode::W, 20, 15, "test2"},
+        {Watchpoint::Mode::R, 30, 25, "test3"},
+        {Watchpoint::Mode::X, 40, 35, "test4"}
     };
 
     auto *consoleDock = new KDDockWidgets::DockWidget(tr("Console"));
@@ -197,9 +190,6 @@ void CoreWindow::createDeveloperWidgets()
 
     auto *autotesterDock = new KDDockWidgets::DockWidget(tr("Autotester"));
     auto *autotester = new AutotesterWidget();
-
-    auto *breakpointsDock = new KDDockWidgets::DockWidget(tr("Breakpoints"));
-    auto *mBreakpointWidget = new BreakpointsWidget(breakpoints);
 
     auto *clocksDock = new KDDockWidgets::DockWidget(tr("Clocks"));
     auto *clocks = new ClocksWidget();
@@ -232,7 +222,6 @@ void CoreWindow::createDeveloperWidgets()
     auto *mWatchpointWidget = new WatchpointsWidget(watchpoints);
 
     autotesterDock->setWidget(autotester);
-    breakpointsDock->setWidget(mBreakpointWidget);
     clocksDock->setWidget(clocks);
     consoleDock->setWidget(console);
     controlDock->setWidget(control);
@@ -246,7 +235,6 @@ void CoreWindow::createDeveloperWidgets()
     watchpointsDock->setWidget(mWatchpointWidget);
 
     mDockWidgets << autotesterDock;
-    mDockWidgets << breakpointsDock;
     mDockWidgets << clocksDock;
     mDockWidgets << consoleDock;
     mDockWidgets << controlDock;
@@ -263,10 +251,9 @@ void CoreWindow::createDeveloperWidgets()
     mDevMenu->addAction(controlDock->toggleAction());
     mDevMenu->addAction(cpuDock->toggleAction());
     mDevMenu->addAction(dissassmeblyDock->toggleAction());
+    mDevMenu->addAction(watchpointsDock->toggleAction());
     mDevMenu->addAction(memoryDock->toggleAction());
     mDevMenu->addAction(clocksDock->toggleAction());
-    mDevMenu->addAction(breakpointsDock->toggleAction());
-    mDevMenu->addAction(watchpointsDock->toggleAction());
     mDevMenu->addAction(portMonitorDock->toggleAction());
     mDevMenu->addAction(osVarsDock->toggleAction());
     mDevMenu->addAction(osStacksDock->toggleAction());

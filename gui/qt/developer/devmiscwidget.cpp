@@ -16,6 +16,7 @@
 
 #include "devmiscwidget.h"
 #include "widgets/highlighteditwidget.h"
+#include "util.h"
 
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QCheckBox>
@@ -27,12 +28,6 @@
 DevMiscWidget::DevMiscWidget(DevWidget *parent)
     : DevWidget{parent}
 {
-#ifdef Q_OS_WIN
-    QFont monospaceFont(QStringLiteral("Courier"), 10);
-#else
-    QFont monospaceFont(QStringLiteral("Monospace"), 10);
-#endif
-
     QGroupBox *grpLcd = new QGroupBox(QStringLiteral("LCD"));
     QGroupBox *grpLcdCtl = new QGroupBox(tr("Control"));
     QGroupBox *grpLcdReg = new QGroupBox(tr("Registers"));
@@ -44,8 +39,8 @@ DevMiscWidget::DevMiscWidget(DevWidget *parent)
     QLabel *lblBatLevel = new QLabel(tr("Battery Level"));
     QLabel *lblBacklightLevel = new QLabel(tr("Backlight Level"));
 
-    lblLcdBase->setFont(monospaceFont);
-    lblLcdCurr->setFont(monospaceFont);
+    lblLcdBase->setFont(Util::monospaceFont());
+    lblLcdCurr->setFont(Util::monospaceFont());
 
     mChkLcdPwr = new QCheckBox(QStringLiteral("pwr"));
     mChkLcdBgr = new QCheckBox(QStringLiteral("bgr"));

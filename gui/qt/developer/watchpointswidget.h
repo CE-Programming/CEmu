@@ -30,12 +30,12 @@ class Watchpoint
 public:
     enum Mode
     {
-        Read,
-        Write,
-        ReadWrite
+        E = (1 << 0),
+        R = (1 << 1),
+        W = (1 << 2),
+        X = (1 << 3),
     };
 
-    bool enabled;
     int mode;
     int addr;
     int size;
@@ -49,15 +49,13 @@ class WatchpointsWidget : public DevWidget
 public:
     explicit WatchpointsWidget(const QList<Watchpoint> &watchpoints, DevWidget *parent = nullptr);
 
-public slots:
-    void addWatchpoint(const Watchpoint &watchpoint, bool edit);
-    bool getWatchpointEnabled(int row);
-    void setWatchpointEnabled(int row, bool enabled);
-    void setWatchpointMode(int row, int mode);
-    void toggleSelected();
-    void removeSelected();
-
 private slots:
+    void addWatchpoint(const Watchpoint &watchpoint, bool edit);
+    void setWatchpointMode(int row, int mode);
+    int getWatchpointMode(int row);
+    bool toggleMode(int row, int bit);
+    void removeSelected();
+    void itemClicked(QTableWidgetItem *item);
     void itemActivated(QTableWidgetItem *item);
     void itemChanged(QTableWidgetItem *item);
 
@@ -65,20 +63,22 @@ private:
     enum Column
     {
         Enabled,
-        Mode,
+        Read,
+        Write,
+        Execute,
         Address,
         Size,
         Name,
     };
 
     int mWpNum;
+    int mDefaultMode;
 
     QString mPrevAddr;
     QString mPrevSize;
 
     QTableWidget *mTbl;
 
-    QPushButton *mBtnToggleSelected;
     QPushButton *mBtnRemoveSelected;
 
     QBrush mNormalBackground;

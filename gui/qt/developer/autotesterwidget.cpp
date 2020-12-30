@@ -15,6 +15,7 @@
  */
 
 #include "autotesterwidget.h"
+#include "util.h"
 
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QCheckBox>
@@ -28,12 +29,6 @@
 AutotesterWidget::AutotesterWidget(QWidget *parent)
     : QWidget{parent}
 {
-#ifdef Q_OS_WIN
-    QFont monospaceFont(QStringLiteral("Courier"), 10);
-#else
-    QFont monospaceFont(QStringLiteral("Monospace"), 10);
-#endif
-
     QGroupBox *grpTest = new QGroupBox(tr("Launch Test"));
     QGroupBox *grpCfg = new QGroupBox(tr("Test Configuration"));
     QGroupBox *grpCrc = new QGroupBox(tr("Calculate CRC"));
@@ -59,9 +54,9 @@ AutotesterWidget::AutotesterWidget(QWidget *parent)
     QLineEdit *edtSize = new QLineEdit;
 
     edtCrc->setReadOnly(true);
-    edtCrc->setFont(monospaceFont);
-    edtStart->setFont(monospaceFont);
-    edtSize->setFont(monospaceFont);
+    edtCrc->setFont(Util::monospaceFont());
+    edtStart->setFont(Util::monospaceFont());
+    edtSize->setFont(Util::monospaceFont());
 
     QComboBox *cmbPreset = new QComboBox;
     cmbPreset->addItems(
