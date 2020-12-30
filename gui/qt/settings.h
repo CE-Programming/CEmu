@@ -29,6 +29,23 @@ public:
     explicit Settings(const QString &dirpath);
     ~Settings();
 
+    enum Lang
+    {
+        English,
+        French,
+        Spanish,
+        NumberOfLangs
+    };
+
+    enum Reset
+    {
+        None,
+        Langauge,
+        Defaults,
+        Gui,
+        All
+    };
+
     static Settings* instance();
 
     static bool boolOption(const QString &key);
@@ -70,6 +87,8 @@ public:
     static const QString DevSoftCmds;
     static const QString DevTIOS;
     static const QString DevOpenDebug;
+    static const QString SettingsPath;
+    static const QString Language;
 
 private:
     static void setDefaultOption(bool force, const QString &key, const QVariant &value);

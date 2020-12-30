@@ -81,12 +81,14 @@ SOURCES += \
     developer/cpuwidget.cpp \
     developer/devmiscwidget.cpp \
     developer/disassemblywidget.cpp \
+    developer/flashramwidget.cpp \
     developer/memorywidget.cpp \
     developer/osstackswidget.cpp \
     developer/osvarwidget.cpp \
     developer/portmonitorwidget.cpp \
     developer/visualizerwidget.cpp \
     developer/watchpointswidget.cpp \
+    developer/widgets/disasmwidget.cpp \
     developer/widgets/hexwidget.cpp \
     developer/widgets/highlighteditwidget.cpp \
     developer/widgets/visualizerlcdwidget.cpp \
@@ -154,12 +156,14 @@ HEADERS  += \
     developer/devmiscwidget.h \
     developer/devwidget.h \
     developer/disassemblywidget.h \
+    developer/flashramwidget.h \
     developer/memorywidget.h \
     developer/osstackswidget.h \
     developer/osvarswidget.h \
     developer/portmonitorwidget.h \
     developer/visualizerwidget.h \
     developer/watchpointswidget.h \
+    developer/widgets/disasmwidget.h \
     developer/widgets/hexwidget.h \
     developer/widgets/highlighteditwidget.h \
     developer/widgets/visualizerlcdwidget.h \

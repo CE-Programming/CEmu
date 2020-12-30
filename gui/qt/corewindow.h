@@ -18,6 +18,7 @@
 #define COREWINDOW_H
 
 #include "developer/visualizerwidget.h"
+#include "developer/memorywidget.h"
 class QtKeypadBridge;
 
 #include "../../core/asic.h"
@@ -40,6 +41,12 @@ class CoreWindow : public KDDockWidgets::MainWindow
 public:
     explicit CoreWindow(const QString &uniqueName, KDDockWidgets::MainWindowOptions options, QWidget *parent = nullptr);
     ~CoreWindow() override;
+
+    enum ExitCode
+    {
+        Quit = 0,
+        Restart = 1000
+    };
 
 signals:
     void romChanged();
@@ -64,9 +71,11 @@ private:
 
     void closeEvent(QCloseEvent *) override;
     void addVisualizerDock(KDDockWidgets::DockWidgetBase *dockWidget, const QString &config = QString());
+    void addMemoryDock(KDDockWidgets::DockWidgetBase *dockWidget);
 
     KDDockWidgets::DockWidget::List mDockWidgets;
     VisualizerWidgetList mVisualizerWidgets;
+    MemoryWidgetList mMemoryWidgets;
     QStringList mVisualizerConfigs;
 
     QtKeypadBridge *mKeypadBridge;

@@ -14,32 +14,32 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef DISASMWIDGET_H
+#define DISASMWIDGET_H
 
 #include <QtWidgets/QWidget>
 
-class Util
+class DisasmWidget : public QWidget
 {
+    Q_OBJECT
 
 public:
-    explicit Util() {};
+    explicit DisasmWidget(QWidget *parent = nullptr);
 
-    static const int AddrByteWidth;
-    static const int PortByteWidth;
+    QSize sizeHint() const override;
 
-    static const QString error;
-    static const QString warning;
-    static const QString information;
+protected:
+    virtual void wheelEvent(QWheelEvent *) override;
+    virtual void paintEvent(QPaintEvent *) override;
 
-    static bool isHexAddress(const QString &str);
-    static bool isHexPort(const QString &str);
-    static bool isHexString(const QString &str, int min = 0, int max = INT_MAX);
-    static bool isDecString(const QString &str, int min = 0, int max = INT_MAX);
-    static int hex2int(const QString &str);
-    static QString int2hex(uint32_t a, uint8_t l);
-    static QString randomString(const int length);
-    static QFont monospaceFont();
+private:
+    typedef enum { None, Label, Inst } addr_type_t;
+    typedef struct { uint32_t addr : 24; addr_type_t type : 8; } addr_t;
+    addr_t next(addr_t addr);
+
+    addr_t m_baseAddr = { 0, None };
+    int m_scroll = 0;
+    QHash<uint32_t, QString> m_labels;
 };
 
 #endif

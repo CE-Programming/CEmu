@@ -28,6 +28,7 @@
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QCheckBox>
+#include <QtWidgets/QComboBox>
 #include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QRadioButton>
 #include <QtWidgets/QColorDialog>
@@ -35,7 +36,8 @@
 #include <QtWidgets/QSpinBox>
 
 SettingsDialog::SettingsDialog(QWidget *parent)
-    : QDialog{parent}
+    : QDialog{parent},
+      mReset{Settings::Reset::None}
 {
     mBtnBox = new QDialogButtonBox(QDialogButtonBox::Cancel |
                                    QDialogButtonBox::Save);
@@ -43,18 +45,22 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     SettingsGeneralTab *genTab = new SettingsGeneralTab;
     SettingsEmulationTab *emuTab = new SettingsEmulationTab;
     SettingsDeveloperTab *devTab = new SettingsDeveloperTab;
+    SettingsResetTab *resetTab = new SettingsResetTab;
 
     mTabWidget = new QTabWidget;
     mTabWidget->addTab(genTab, tr("General"));
-    mTabWidget->addTab(emuTab, tr("Emulation"));
+    mTabWidget->addTab(emuTab, tr("Emu"));
     mTabWidget->addTab(devTab, tr("Developer"));
+    mTabWidget->addTab(resetTab, tr("Reset"));
 
     QVBoxLayout *layout = new QVBoxLayout(this);
     layout->setSizeConstraint(QLayout::SetMinimumSize);
     layout->addWidget(mTabWidget, Qt::AlignCenter);
     layout->addWidget(mBtnBox, Qt::AlignCenter);
 
-    connect(genTab, &SettingsGeneralTab::changedKeypadColor, this, &SettingsDialog::changedKeypadColor);
+    connect(genTab, &SettingsGeneralTab::changeLanguage, [this]{ mReset = Settings::Reset::Langauge; });
+    connect(emuTab, &SettingsEmulationTab::changedKeypadColor, this, &SettingsDialog::changedKeypadColor);
+    connect(resetTab, &SettingsResetTab::reset, [this](int reset){ mReset = reset; accept(); });
     connect(mBtnBox, &QDialogButtonBox::accepted, genTab, &SettingsGeneralTab::saveSettings);
     connect(mBtnBox, &QDialogButtonBox::accepted, emuTab, &SettingsEmulationTab::saveSettings);
     connect(mBtnBox, &QDialogButtonBox::accepted, devTab, &SettingsDeveloperTab::saveSettings);
@@ -72,12 +78,20 @@ SettingsGeneralTab::SettingsGeneralTab(QWidget *parent)
     mChkAutoUpdate = new QCheckBox(tr("Automatically check for updates"));
     mChkPortable = new QCheckBox(tr("Portable mode"));
 
+    mCmbLang = new QComboBox;
+    mCmbLang->addItems({ tr("English"), tr("French"), tr("Spanish") });
+
+    QGroupBox *grpLang = new QGroupBox(tr("Language"));
+    QVBoxLayout *vboxLang = new QVBoxLayout;
+    vboxLang->addWidget(mCmbLang);
+    grpLang->setLayout(vboxLang);
+
     QGroupBox *grpConfig = new QGroupBox(tr("Configuration"));
-    QVBoxLayout *vbox = new QVBoxLayout;
-    vbox->addWidget(mChkAutoUpdate);
-    vbox->addWidget(mChkPortable);
-    vbox->addStretch(1);
-    grpConfig->setLayout(vbox);
+    QVBoxLayout *vboxConfig = new QVBoxLayout;
+    vboxConfig->addWidget(mChkAutoUpdate);
+    vboxConfig->addWidget(mChkPortable);
+    vboxConfig->addStretch(1);
+    grpConfig->setLayout(vboxConfig);
 
     mKeybind = new QButtonGroup(this);
 
@@ -95,7 +109,7 @@ SettingsGeneralTab::SettingsGeneralTab(QWidget *parent)
     mKeybind->addButton(btn4, Keymap::JsTIfied);
     mKeybind->addButton(btn5, Keymap::Custom);
 
-    QGroupBox *grpKeys = new QGroupBox(tr("Key Bindings"));
+    QGroupBox *grpKeys = new QGroupBox(tr("Key bindings"));
     QGridLayout *gbox = new QGridLayout;
     gbox->addWidget(btn0, 0, 0);
     gbox->addWidget(btn1, 0, 1);
@@ -105,31 +119,12 @@ SettingsGeneralTab::SettingsGeneralTab(QWidget *parent)
     gbox->addWidget(btn5, 1, 2);
     grpKeys->setLayout(gbox);
 
-    QGroupBox *grpKeyColor = new QGroupBox(tr("Keypad Color"));
-    QPushButton *btnColor = new QPushButton(tr("Change Keypad Color"));
-
-    QHBoxLayout *hbox = new QHBoxLayout;
-    hbox->addWidget(btnColor);
-    grpKeyColor->setLayout(hbox);
-
     QVBoxLayout *mainLayout = new QVBoxLayout;
+    mainLayout->addWidget(grpLang);
     mainLayout->addWidget(grpConfig);
     mainLayout->addWidget(grpKeys);
-    mainLayout->addWidget(grpKeyColor);
     mainLayout->addStretch(1);
     setLayout(mainLayout);
-
-    mKeypadColor = Settings::intOption(Settings::KeypadColor);
-    connect(btnColor, &QPushButton::clicked, [this]
-    {
-        KeyColorDialog dialog(mKeypadColor);
-        connect(&dialog, &KeyColorDialog::changedColor, this, &SettingsGeneralTab::changedKeypadColor);
-        if (dialog.exec())
-        {
-            mKeypadColor = dialog.getColor();
-        }
-        emit changedKeypadColor(mKeypadColor);
-    });
 
     int keymap = Settings::intOption(Settings::KeyMap);
     if (keymap < 0 || keymap > 5)
@@ -139,13 +134,25 @@ SettingsGeneralTab::SettingsGeneralTab(QWidget *parent)
     }
     mKeybind->buttons().at(keymap)->setChecked(true);
 
+    mLang = Settings::intOption(Settings::Language);
+    if (mLang < 0 || mLang >= Settings::Lang::NumberOfLangs)
+    {
+        mLang = Settings::Lang::English;
+    }
+    mCmbLang->setCurrentIndex(mLang);
+
     mChkAutoUpdate->setChecked(Settings::boolOption(Settings::AutoUpdate));
     mChkPortable->setChecked(Settings::boolOption(Settings::PortableMode));
 }
 
 void SettingsGeneralTab::saveSettings()
 {
-    Settings::setIntOption(Settings::KeypadColor, mKeypadColor);
+    if (mLang != mCmbLang->currentIndex())
+    {
+        emit changeLanguage();
+    }
+
+    Settings::setIntOption(Settings::Language, mCmbLang->currentIndex());
     Settings::setIntOption(Settings::KeyMap, mKeybind->checkedId());
     Settings::setBoolOption(Settings::AutoUpdate, mChkAutoUpdate->isChecked());
     Settings::setBoolOption(Settings::PortableMode, mChkPortable->isChecked());
@@ -187,6 +194,12 @@ SettingsEmulationTab::SettingsEmulationTab(QWidget *parent)
 
     mChkPreI = new QCheckBox(tr("Emulate Pre-Revision I (IM 2)"));
 
+    QGroupBox *grpKeyColor = new QGroupBox(tr("Keypad color"));
+    QPushButton *btnColor = new QPushButton(tr("Change Keypad Color"));
+    QHBoxLayout *hboxColor = new QHBoxLayout;
+    hboxColor->addWidget(btnColor);
+    grpKeyColor->setLayout(hboxColor);
+
     QGroupBox *grpEmu = new QGroupBox(tr("Emulation"));
     QVBoxLayout *vbo = new QVBoxLayout;
     vbo->addWidget(mChkPreI);
@@ -197,6 +210,7 @@ SettingsEmulationTab::SettingsEmulationTab(QWidget *parent)
     mainLayout->addWidget(grpSpeed);
     mainLayout->addWidget(grpDisplay);
     mainLayout->addWidget(grpEmu);
+    mainLayout->addWidget(grpKeyColor);
     mainLayout->addStretch(1);
     setLayout(mainLayout);
 
@@ -208,6 +222,18 @@ SettingsEmulationTab::SettingsEmulationTab(QWidget *parent)
     connect(mChkFrameSkip, &QCheckBox::stateChanged, [this](int state)
     {
         mSpnFrameSkip->setEnabled(state == Qt::Checked);
+    });
+
+    mKeypadColor = Settings::intOption(Settings::KeypadColor);
+    connect(btnColor, &QPushButton::clicked, [this]
+    {
+        KeyColorDialog dialog(mKeypadColor);
+        connect(&dialog, &KeyColorDialog::changedColor, this, &SettingsEmulationTab::changedKeypadColor);
+        if (dialog.exec())
+        {
+            mKeypadColor = dialog.getColor();
+        }
+        emit changedKeypadColor(mKeypadColor);
     });
 
     int speed = Settings::intOption(Settings::EmuSpeed);
@@ -234,6 +260,7 @@ SettingsEmulationTab::SettingsEmulationTab(QWidget *parent)
 
 void SettingsEmulationTab::saveSettings()
 {
+    Settings::setIntOption(Settings::KeypadColor, mKeypadColor);
     Settings::setIntOption(Settings::EmuSpeed, mSpnSpeed->value());
     Settings::setIntOption(Settings::EmuFrameSkipRate, mSpnFrameSkip->value());
     Settings::setBoolOption(Settings::EmuFrameSkip, mChkFrameSkip->isChecked());
@@ -271,6 +298,31 @@ void SettingsDeveloperTab::saveSettings()
     Settings::setBoolOption(Settings::DevSoftCmds, mChkSoftCmds->isChecked());
     Settings::setBoolOption(Settings::DevTIOS, mChkTiOs->isChecked());
     Settings::setBoolOption(Settings::DevOpenDebug, mChkResetNmi->isChecked());
+}
+
+SettingsResetTab::SettingsResetTab(QWidget *parent)
+    : QWidget(parent)
+{
+    QGroupBox *grpReset = new QGroupBox(tr("Reset"));
+
+    QPushButton *btnResetDefaults = new QPushButton(tr("Reset Defaults"));
+    QPushButton *btnResetGui = new QPushButton(tr("Reset GUI Docks"));
+    QPushButton *btnResetAll = new QPushButton(tr("Reset All"));
+
+    QVBoxLayout *vboxReset = new QVBoxLayout;
+    vboxReset->addWidget(btnResetDefaults);
+    vboxReset->addWidget(btnResetGui);
+    vboxReset->addWidget(btnResetAll);
+    grpReset->setLayout(vboxReset);
+
+    QVBoxLayout *mainLayout = new QVBoxLayout;
+    mainLayout->addWidget(grpReset);
+    mainLayout->addStretch(1);
+    setLayout(mainLayout);
+
+    connect(btnResetDefaults, &QPushButton::clicked, [this]{ emit reset(Settings::Reset::Defaults); });
+    connect(btnResetGui, &QPushButton::clicked, [this]{ emit reset(Settings::Reset::Gui); });
+    connect(btnResetAll, &QPushButton::clicked, [this]{ emit reset(Settings::Reset::All); });
 }
 
 KeyColorDialog::KeyColorDialog(int color, QWidget *parent)

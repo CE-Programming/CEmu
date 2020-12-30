@@ -29,6 +29,7 @@ int main(int argc, char **argv)
 {
     KDDockWidgets::MainWindowOptions options = KDDockWidgets::MainWindowOption_None;
     const QString appName = QStringLiteral("CEmu");
+    int appRet;
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
@@ -36,8 +37,6 @@ int main(int argc, char **argv)
 #endif
 
     QApplication app(argc, argv);
-    Settings settings("./cemu");
-
     app.setOrganizationName(QStringLiteral("cemu-dev"));
     app.setApplicationName(appName);
 
@@ -50,9 +49,16 @@ int main(int argc, char **argv)
     flags |= KDDockWidgets::Config::Flag_TabsHaveCloseButton;
     KDDockWidgets::Config::self().setFlags(flags);
 
-    CoreWindow window(appName, options);
-    window.setWindowTitle(appName);
-    window.show();
+    do
+    {
+        Settings settings("./cemu");
 
-    return app.exec();
+        CoreWindow window(appName, options);
+        window.setWindowTitle(appName);
+        window.show();
+
+        appRet = app.exec();
+    } while (appRet == CoreWindow::Restart);
+
+    return appRet;
 }

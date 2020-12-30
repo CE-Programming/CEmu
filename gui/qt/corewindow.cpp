@@ -34,7 +34,7 @@
 #include "developer/cpuwidget.h"
 #include "developer/devmiscwidget.h"
 #include "developer/disassemblywidget.h"
-#include "developer/memorywidget.h"
+#include "developer/flashramwidget.h"
 #include "developer/osstackswidget.h"
 #include "developer/osvarswidget.h"
 #include "developer/portmonitorwidget.h"
@@ -55,10 +55,6 @@
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QTextEdit>
-
-const QString CoreWindow::sErrorStr        = CoreWindow::tr("Error");
-const QString CoreWindow::sWarningStr      = CoreWindow::tr("Warning");
-const QString CoreWindow::sInformationStr  = CoreWindow::tr("Information");
 
 CoreWindow::CoreWindow(const QString &uniqueName,
                        KDDockWidgets::MainWindowOptions options,
@@ -81,7 +77,7 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     auto *resetAction = mCalcsMenu->addAction(tr("Reset"));
     connect(resetAction, &QAction::triggered, this, &CoreWindow::resetEmu);
 
-    auto *romAction = mCalcsMenu->addAction(tr("Load ROM..."));
+    auto *romAction = mCalcsMenu->addAction(tr("Load ROM"));
     connect(romAction, &QAction::triggered, this, &CoreWindow::loadRom);
 
     mCalcsMenu->addSeparator();
@@ -213,8 +209,8 @@ void CoreWindow::createDeveloperWidgets()
     auto *dissassmeblyDock = new KDDockWidgets::DockWidget(tr("Disassembly"));
     auto *dissassmebly = new DisassemblyWidget();
 
-    auto *memoryDock = new KDDockWidgets::DockWidget(tr("Memory"));
-    auto *memory = new MemoryWidget();
+    auto *flashRamDock = new KDDockWidgets::DockWidget(tr("Flash/RAM"));
+    auto *flashRam = new FlashRamWidget();
 
     auto *osStacksDock = new KDDockWidgets::DockWidget(tr("OS Stacks"));
     auto *osStacks = new OsStacksWidget();
@@ -235,7 +231,7 @@ void CoreWindow::createDeveloperWidgets()
     cpuDock->setWidget(cpu);
     devMiscDock->setWidget(devMisc);
     dissassmeblyDock->setWidget(dissassmebly);
-    memoryDock->setWidget(memory);
+    flashRamDock->setWidget(flashRam);
     osStacksDock->setWidget(osStacks);
     osVarsDock->setWidget(osVars);
     portMonitorDock->setWidget(portMonitor);
@@ -248,7 +244,7 @@ void CoreWindow::createDeveloperWidgets()
     mDockWidgets << cpuDock;
     mDockWidgets << devMiscDock;
     mDockWidgets << dissassmeblyDock;
-    mDockWidgets << memoryDock;
+    mDockWidgets << flashRamDock;
     mDockWidgets << osStacksDock;
     mDockWidgets << osVarsDock;
     mDockWidgets << portMonitorDock;
@@ -259,7 +255,7 @@ void CoreWindow::createDeveloperWidgets()
     mDevMenu->addAction(cpuDock->toggleAction());
     mDevMenu->addAction(dissassmeblyDock->toggleAction());
     mDevMenu->addAction(watchpointsDock->toggleAction());
-    mDevMenu->addAction(memoryDock->toggleAction());
+    mDevMenu->addAction(flashRamDock->toggleAction());
     mDevMenu->addAction(clocksDock->toggleAction());
     mDevMenu->addAction(portMonitorDock->toggleAction());
     mDevMenu->addAction(osVarsDock->toggleAction());
@@ -270,7 +266,18 @@ void CoreWindow::createDeveloperWidgets()
     mDevMenu->addSeparator();
 
     auto *memoryAction = mDevMenu->addAction(tr("Add Memory View"));
-    connect(memoryAction, &QAction::triggered, this, &CoreWindow::restoreLayout);
+    connect(memoryAction, &QAction::triggered, [this]
+    {
+        QString name;
+        do
+        {
+            name = QLatin1String("Memory #") + Util::randomString(10);
+        } while (KDDockWidgets::DockWidgetBase::byName(name));
+
+        auto *dockWidget = new KDDockWidgets::DockWidget(name);
+        addMemoryDock(dockWidget);
+        dockWidget->show();
+    });
 
     auto *visualizerAction = mDevMenu->addAction(tr("Add LCD Visualizer"));
     connect(visualizerAction, &QAction::triggered, [this]
@@ -279,8 +286,7 @@ void CoreWindow::createDeveloperWidgets()
         do
         {
             name = QLatin1String("Visualizer #") + Util::randomString(10);
-        }
-        while (KDDockWidgets::DockWidgetBase::byName(name));
+        } while (KDDockWidgets::DockWidgetBase::byName(name));
 
         auto *dockWidget = new KDDockWidgets::DockWidget(name);
         addVisualizerDock(dockWidget);
@@ -327,7 +333,7 @@ void CoreWindow::resetEmu()
 
     // holds the path to the rom file to load into the emulator
     //Settings::textOption(Settings::RomFile);
-    static bool test = false;
+    bool test = true;
 
     if (test)
     {
@@ -340,18 +346,46 @@ void CoreWindow::resetEmu()
         mCalcWidget->setConfig(mCalcType, keycolor);
         mCalcOverlay->setVisible(true);
     }
-
-    test = true;
 }
 
 void CoreWindow::showPreferences()
 {
     SettingsDialog dialog;
+
     connect(&dialog, &SettingsDialog::changedKeypadColor, [this](int color)
     {
         mCalcWidget->setConfig(mCalcType, color);
     });
-    dialog.exec();
+
+    if (dialog.exec())
+    {
+        switch (dialog.checkForReset())
+        {
+            default:
+            case Settings::Reset::None:
+                break;
+            case Settings::Reset::Langauge:
+                close();
+                qApp->exit(CoreWindow::Restart);
+                break;
+            case Settings::Reset::Defaults:
+                close();
+                Settings::setDefaults(true);
+                qApp->exit(CoreWindow::Restart);
+                break;
+            case Settings::Reset::Gui:
+                close();
+                QFile::remove(Settings::textOption(Settings::LayoutFile));
+                qApp->exit(CoreWindow::Restart);
+                break;
+            case Settings::Reset::All:
+                close();
+                QDir tmp(Settings::textOption(Settings::SettingsPath));
+                tmp.removeRecursively();
+                qApp->exit(CoreWindow::Restart);
+                break;
+        }
+    }
 }
 
 bool CoreWindow::saveLayout(bool ignoreErrors)
@@ -373,7 +407,7 @@ bool CoreWindow::saveLayout(bool ignoreErrors)
     {
         if (!ignoreErrors)
         {
-            QMessageBox::critical(nullptr, sErrorStr, tr("Unable to save layout. Ensure that the preferences directory is writable and has the required permissions."));
+            QMessageBox::critical(nullptr, Util::error, tr("Unable to save layout. Ensure that the preferences directory is writable and has the required permissions."));
         }
         return false;
     }
@@ -405,6 +439,10 @@ bool CoreWindow::restoreLayout()
         {
             addVisualizerDock(restoredDockWidget, config.toString());
         }
+        if (name.startsWith(QLatin1String("Memory #")))
+        {
+            addMemoryDock(restoredDockWidget);
+        }
     }
 
     return json.isEmpty();
@@ -426,4 +464,15 @@ void CoreWindow::addVisualizerDock(KDDockWidgets::DockWidgetBase *dockWidget, co
         dockWidget->setTitle(tr("Visualizer"));
         dockWidget->setWidget(new VisualizerWidget(&mVisualizerWidgets, config, dockWidget));
     }
+}
+
+void CoreWindow::addMemoryDock(KDDockWidgets::DockWidgetBase *dockWidget)
+{
+    if (dockWidget->widget())
+    {
+        return;
+    }
+
+    dockWidget->setTitle(tr("Memory"));
+    dockWidget->setWidget(new MemoryWidget(&mMemoryWidgets, dockWidget));
 }

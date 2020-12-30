@@ -39,6 +39,8 @@ const QString Settings::EmuFrameSkipRate  = QStringLiteral("display/frameskip");
 const QString Settings::DevSoftCmds       = QStringLiteral("developer/softcmds");
 const QString Settings::DevTIOS           = QStringLiteral("developer/tios");
 const QString Settings::DevOpenDebug      = QStringLiteral("developer/resetnmi");
+const QString Settings::SettingsPath      = QStringLiteral("preferences/file");
+const QString Settings::Language          = QStringLiteral("preferences/language");
 
 Settings *Settings::sInstance = nullptr;
 
@@ -51,6 +53,7 @@ Settings::Settings(const QString &dirpath)
     sInstance->mSettings = new QSettings(dirpath + "/config/preferences.conf", QSettings::IniFormat);
 
     setTextOption(Settings::LayoutFile, dirpath + "/config/layout.json");
+    setTextOption(Settings::SettingsPath, dirpath);
 
     setDefaults(false);
 }
@@ -69,7 +72,6 @@ void Settings::setDefaults(bool force)
     setDefaultOption(force, Settings::KeyMapCustom, QStringLiteral("none"));
     setDefaultOption(force, Settings::KeyHistoryFont, 9);
     setDefaultOption(force, Settings::ConsoleAutoScroll, true);
-    setDefaultOption(force, Settings::RomFile, QStringLiteral("none"));
     setDefaultOption(force, Settings::AutoUpdate, true);
     setDefaultOption(force, Settings::PortableMode, false);
     setDefaultOption(force, Settings::EmuThrottle, true);
@@ -81,6 +83,9 @@ void Settings::setDefaults(bool force)
     setDefaultOption(force, Settings::DevSoftCmds, true);
     setDefaultOption(force, Settings::DevTIOS, true);
     setDefaultOption(force, Settings::DevOpenDebug, false);
+    setDefaultOption(force, Settings::Language, Lang::English);
+
+    setDefaultOption(false, Settings::RomFile, QStringLiteral("none"));
 
     saveSettings();
 }

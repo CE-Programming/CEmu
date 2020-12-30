@@ -22,6 +22,7 @@
 QT_BEGIN_NAMESPACE
 class QDialogButtonBox;
 class QButtonGroup;
+class QComboBox;
 class QRadioButton;
 class QTabWidget;
 class QCheckBox;
@@ -35,6 +36,7 @@ class SettingsDialog : public QDialog
 
 public:
     explicit SettingsDialog(QWidget *parent = nullptr);
+    int checkForReset() { return mReset; }
 
 signals:
     void changedKeypadColor(int id);
@@ -42,6 +44,19 @@ signals:
 private:
     QDialogButtonBox *mBtnBox;
     QTabWidget *mTabWidget;
+
+    int mReset;
+};
+
+class SettingsResetTab : public QWidget
+{
+    Q_OBJECT
+
+public:
+    explicit SettingsResetTab(QWidget *parent = nullptr);
+
+signals:
+    void reset(int mode);
 };
 
 class SettingsDeveloperTab : public QWidget
@@ -70,6 +85,9 @@ public:
 public slots:
     void saveSettings();
 
+signals:
+    void changedKeypadColor(int id);
+
 private:
     QSpinBox *mSpnSpeed;
     QSpinBox *mSpnFrameSkip;
@@ -77,6 +95,7 @@ private:
     QCheckBox *mChkFrameSkip;
     QCheckBox *mChkLcdSpi;
     QCheckBox *mChkPreI;
+    int mKeypadColor;
 };
 
 class SettingsGeneralTab : public QWidget
@@ -90,13 +109,14 @@ public slots:
     void saveSettings();
 
 signals:
-    void changedKeypadColor(int id);
+    void changeLanguage();
 
 private:
     QCheckBox *mChkAutoUpdate;
     QCheckBox *mChkPortable;
     QButtonGroup *mKeybind;
-    int mKeypadColor;
+    QComboBox *mCmbLang;
+    int mLang;
 };
 
 class KeyColorDialog : public QDialog

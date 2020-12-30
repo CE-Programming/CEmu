@@ -16,12 +16,17 @@
 
 #include "util.h"
 
+#include <QApplication>
 #include <QtCore/QRandomGenerator>
 #include <QtCore/QRegularExpression>
 #include <QtGui/QValidator>
 
 const int Util::AddrByteWidth = 6;
 const int Util::PortByteWidth = 4;
+
+const QString Util::error        = QObject::tr("Error");
+const QString Util::warning      = QObject::tr("Warning");
+const QString Util::information  = QObject::tr("Information");
 
 int Util::hex2int(const QString &str)
 {

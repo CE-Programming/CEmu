@@ -14,26 +14,22 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DISASSEMBLYWIDGET_H
-#define DISASSEMBLYWIDGET_H
+#ifndef MEMORYWIDGET_H
+#define MEMORYWIDGET_H
 
 #include "devwidget.h"
-class DisasmWidget;
+class MemoryWidget;
 
-QT_BEGIN_NAMESPACE
-class QCheckBox;
-class QPushButton;
-QT_END_NAMESPACE
-
-class DisassemblyWidget : public DevWidget
+class FlashRamWidget : public DevWidget
 {
     Q_OBJECT
 
 public:
-    explicit DisassemblyWidget(DevWidget *parent = nullptr);
+    explicit FlashRamWidget(DevWidget *parent = nullptr);
 
 private:
-    DisasmWidget *mDisasm;
+    MemoryWidget *mFlash;
+    MemoryWidget *mRam;
 };
 
 #endif

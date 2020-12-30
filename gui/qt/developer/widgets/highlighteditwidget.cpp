@@ -15,6 +15,7 @@
  */
 
 #include "highlighteditwidget.h"
+#include "util.h"
 
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QCheckBox>
@@ -27,16 +28,10 @@
 HighlightEditWidget::HighlightEditWidget(const QString &mask, QWidget *parent)
     : QLineEdit{parent}
 {
-#ifdef Q_OS_WIN
-    QFont monospaceFont(QStringLiteral("Courier"), 10);
-#else
-    QFont monospaceFont(QStringLiteral("Monospace"), 10);
-#endif
-
     QColor highlightColor({200, 235, 255});
 
     setInputMask(mask);
-    setFont(monospaceFont);
+    setFont(Util::monospaceFont());
 
     mPaletteNoHighlight = palette();
     mPaletteHighlight = palette();

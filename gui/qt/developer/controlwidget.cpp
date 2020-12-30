@@ -19,30 +19,42 @@
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QBoxLayout>
+#include <QtWidgets/QComboBox>
 
 ControlWidget::ControlWidget(DevWidget *parent)
     : DevWidget{parent}
 {
     QPushButton *btnRun = new QPushButton(tr("Stop"));
     QPushButton *btnStep = new QPushButton(tr("Step"));
-    QPushButton *btnStepOver = new QPushButton(tr("Step Over"));
-    QPushButton *btnStepNext = new QPushButton(tr("Step Next"));
-    QPushButton *btnStepOut = new QPushButton(tr("Step Out"));
-    QPushButton *btnMode = new QPushButton(tr("Mode: ASM"));
+    QPushButton *btnStepOver = new QPushButton(tr("Over"));
+    QPushButton *btnStepNext = new QPushButton(tr("Next"));
+    QPushButton *btnStepOut = new QPushButton(tr("Out"));
+    QComboBox *cmbMode = new QComboBox;
+    cmbMode->addItems({ tr("ASM"), tr("C"), tr("Disable") });
 
-    QSpacerItem *spacel = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Expanding);
-    QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Expanding);
+    btnRun->setMinimumWidth(5);
+    btnStep->setMinimumWidth(5);
+    btnStepOver->setMinimumWidth(5);
+    btnStepNext->setMinimumWidth(5);
+    btnStepOut->setMinimumWidth(5);
 
-    QHBoxLayout *layout = new QHBoxLayout(this);
-    layout->setSizeConstraint(QLayout::SetMinimumSize);
-    layout->addSpacerItem(spacel);
-    layout->addWidget(btnRun, Qt::AlignCenter);
-    layout->addWidget(btnStep, Qt::AlignCenter);
-    layout->addWidget(btnStepOver, Qt::AlignCenter);
-    layout->addWidget(btnStepNext, Qt::AlignCenter);
-    layout->addWidget(btnStepOut, Qt::AlignCenter);
-    layout->addWidget(btnMode, Qt::AlignCenter);
-    layout->addSpacerItem(spacer);
+    QHBoxLayout *hLayout = new QHBoxLayout;
+    hLayout->setSizeConstraint(QLayout::SetMaximumSize);
+    hLayout->addStretch(1);
+    hLayout->addWidget(btnRun);
+    hLayout->addWidget(btnStep);
+    hLayout->addWidget(btnStepOver);
+    hLayout->addWidget(btnStepNext);
+    hLayout->addWidget(btnStepOut);
+    hLayout->addWidget(cmbMode);
+    hLayout->addStretch(1);
+
+    QVBoxLayout *vLayout = new QVBoxLayout;
+    vLayout->setSizeConstraint(QLayout::SetMaximumSize);
+    vLayout->addStretch(1);
+    vLayout->addLayout(hLayout);
+    vLayout->addStretch(1);
+    setLayout(vLayout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
