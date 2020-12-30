@@ -14,27 +14,51 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CAPTUREWIDGET_H
-#define CAPTUREWIDGET_H
+#ifndef SCREENSHOTWIDGET_H
+#define SCREENSHOTWIDGET_H
 
+#include "overlaywidget.h"
+
+#include <QtGui/QImage>
+#include <QtWidgets/QLabel>
 #include <QtWidgets/QWidget>
 QT_BEGIN_NAMESPACE
-class QVBoxLayout;
+class QPushButton;
 QT_END_NAMESPACE
 
-class CaptureWidget : public QWidget
+class ScreenshotOverlayWidget : public OverlayWidget
 {
     Q_OBJECT
 
 public:
-    explicit CaptureWidget(QWidget *parent = nullptr);
+    explicit ScreenshotOverlayWidget(QWidget *parent = nullptr);
 
-public slots:
-    void takeScreenshot();
+signals:
+    void saveScreenshot();
+
+protected:
+    void enterEvent(QEvent *event) override;
+    void leaveEvent(QEvent *event) override;
 
 private:
-    QVBoxLayout *mLayoutTaken;
+    QPushButton *mBtnSave;
+    QPushButton *mBtnRemove;
+};
 
+
+class ScreenshotWidget : public QLabel
+{
+    Q_OBJECT
+
+public:
+    explicit ScreenshotWidget(QWidget *parent = nullptr);
+    void setImage(const QImage &image);
+
+public slots:
+    void saveImage();
+
+private:
+    ScreenshotOverlayWidget *mOverlay;
 };
 
 #endif

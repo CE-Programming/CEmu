@@ -104,6 +104,7 @@ SOURCES += \
     main.cpp \
     overlaywidget.cpp \
     romdialog.cpp \
+    screenshotwidget.cpp \
     screenwidget.cpp \
     settings.cpp \
     settingsdialog.cpp \
@@ -188,6 +189,7 @@ HEADERS  += \
     keypad/secondkey.h \
     overlaywidget.h \
     romdialog.h \
+    screenshotwidget.h \
     screenwidget.h \
     settings.h \
     settingsdialog.h \
