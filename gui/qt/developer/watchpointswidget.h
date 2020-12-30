@@ -30,12 +30,12 @@ class Watchpoint
 public:
     enum Mode
     {
-        Disabled,
         Read,
         Write,
         ReadWrite
     };
 
+    bool enabled;
     int mode;
     int addr;
     int size;
@@ -51,8 +51,10 @@ public:
 
 public slots:
     void addWatchpoint(const Watchpoint &watchpoint, bool edit);
-    void setWatchpoint(int row, int mode);
-    void toggleSelected(int mode);
+    bool getWatchpointEnabled(int row);
+    void setWatchpointEnabled(int row, bool enabled);
+    void setWatchpointMode(int row, int mode);
+    void toggleSelected();
     void removeSelected();
 
 private slots:
@@ -62,6 +64,7 @@ private slots:
 private:
     enum Column
     {
+        Enabled,
         Mode,
         Address,
         Size,
@@ -75,13 +78,12 @@ private:
 
     QTableWidget *mTbl;
 
-    QPushButton *mBtnMarkDisabled;
-    QPushButton *mBtnMarkRead;
-    QPushButton *mBtnMarkWrite;
-    QPushButton *mBtnMarkReadWrite;
+    QPushButton *mBtnToggleSelected;
+    QPushButton *mBtnRemoveSelected;
 
     QBrush mNormalBackground;
 
+    static const QString mEnabledText;
     static const QString mDisabledText;
     static const QString mRdText;
     static const QString mWrText;

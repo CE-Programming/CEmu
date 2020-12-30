@@ -19,6 +19,7 @@
 
 #include <QtGui/QColor>
 #include <QtWidgets/QBoxLayout>
+#include <QtWidgets/QComboBox>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QPushButton>
@@ -26,7 +27,8 @@
 #include <QtWidgets/QTableWidgetItem>
 #include <QtWidgets/QSizePolicy>
 
-const QString WatchpointsWidget::mDisabledText = tr("Disabled");
+const QString WatchpointsWidget::mEnabledText = tr("Yes");
+const QString WatchpointsWidget::mDisabledText = tr("No");
 const QString WatchpointsWidget::mRdText = tr("Read");
 const QString WatchpointsWidget::mWrText = tr("Write");
 const QString WatchpointsWidget::mRdWrText = tr("Read/Write");
@@ -35,37 +37,33 @@ WatchpointsWidget::WatchpointsWidget(const QList<Watchpoint> &watchpoints, DevWi
     : DevWidget{parent},
       mWpNum{0}
 {
-    mTbl = new QTableWidget(0, 4);
-    mTbl->setHorizontalHeaderLabels({tr("Trigger"), tr("Address"), tr("Size"), tr("Name")});
+    mTbl = new QTableWidget(0, 5);
+    mTbl->setHorizontalHeaderLabels({tr("Enabled"), tr("Trigger"), tr("Address"), tr("Size"), tr("Name")});
     mTbl->horizontalHeader()->setStretchLastSection(true);
     mTbl->verticalHeader()->setVisible(false);
+    mTbl->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     mTbl->setSelectionMode(QAbstractItemView::ExtendedSelection);
     mTbl->setSelectionBehavior(QAbstractItemView::SelectRows);
+    mTbl->setDragDropMode(QAbstractItemView::InternalMove);
+    mTbl->setDragDropOverwriteMode(false);
+    mTbl->setDragEnabled(true);
+    mTbl->setAcceptDrops(false);
 
-    mBtnMarkDisabled = new QPushButton(tr("Mark disabled"));
-    mBtnMarkRead = new QPushButton(tr("Mark read"));
-    mBtnMarkWrite = new QPushButton(tr("Mark write"));
-    mBtnMarkReadWrite = new QPushButton(tr("Mark read/write"));
-
-    QPushButton *btnAddWatchpoint = new QPushButton(tr("Add watchpoint"));
-    QPushButton *btnRemoveSelected = new QPushButton(tr("Remove selected"));
+    mBtnToggleSelected = new QPushButton(tr("Toggle selected"));
+    mBtnRemoveSelected = new QPushButton(tr("Remove selected"));
 
     mNormalBackground = QTableWidgetItem().background();
 
-    QHBoxLayout *hboxAddRemove = new QHBoxLayout;
-    hboxAddRemove->addWidget(btnAddWatchpoint);
-    hboxAddRemove->addStretch(1);
-    hboxAddRemove->addWidget(btnRemoveSelected);
+    QPushButton *btnAddWatchpoint = new QPushButton(tr("Add watchpoint"));
 
-    QHBoxLayout *hboxBtns = new QHBoxLayout;
-    hboxBtns->addWidget(mBtnMarkDisabled);
-    hboxBtns->addWidget(mBtnMarkRead);
-    hboxBtns->addWidget(mBtnMarkWrite);
-    hboxBtns->addWidget(mBtnMarkReadWrite);
+    QHBoxLayout *hboxbtns = new QHBoxLayout;
+    hboxbtns->addWidget(btnAddWatchpoint);
+    hboxbtns->addStretch(1);
+    hboxbtns->addWidget(mBtnToggleSelected);
+    hboxbtns->addWidget(mBtnRemoveSelected);
 
     QVBoxLayout *vLayout = new QVBoxLayout;
-    vLayout->addLayout(hboxAddRemove);
-    vLayout->addLayout(hboxBtns);
+    vLayout->addLayout(hboxbtns);
     vLayout->addWidget(mTbl);
     setLayout(vLayout);
 
@@ -76,15 +74,13 @@ WatchpointsWidget::WatchpointsWidget(const QList<Watchpoint> &watchpoints, DevWi
 
     connect(btnAddWatchpoint, &QPushButton::clicked, [this]
     {
-        Watchpoint watchpoint = { Watchpoint::Mode::Disabled, 0, 1, QStringLiteral("wp") + QString::number(mWpNum) };
+        Watchpoint watchpoint ={ false, Watchpoint::Mode::ReadWrite, 0, 1, QStringLiteral("wp") + QString::number(mWpNum) };
         addWatchpoint(watchpoint, true);
         mWpNum++;
     });
 
-    connect(mBtnMarkDisabled, &QPushButton::clicked, [this]{ toggleSelected(Watchpoint::Mode::Disabled); });
-    connect(mBtnMarkRead, &QPushButton::clicked, [this]{ toggleSelected(Watchpoint::Mode::Read); });
-    connect(mBtnMarkWrite, &QPushButton::clicked, [this]{ toggleSelected(Watchpoint::Mode::Write); });
-    connect(mBtnMarkReadWrite, &QPushButton::clicked, [this]{ toggleSelected(Watchpoint::Mode::ReadWrite); });
+    connect(mBtnRemoveSelected, &QPushButton::clicked, this, &WatchpointsWidget::removeSelected);
+    connect(mBtnToggleSelected, &QPushButton::clicked, this, &WatchpointsWidget::toggleSelected);
     connect(mTbl, &QTableWidget::itemChanged, this, &WatchpointsWidget::itemChanged);
     connect(mTbl, &QTableWidget::itemActivated, this, &WatchpointsWidget::itemActivated);
 
@@ -94,28 +90,31 @@ WatchpointsWidget::WatchpointsWidget(const QList<Watchpoint> &watchpoints, DevWi
 
 void WatchpointsWidget::addWatchpoint(const Watchpoint &watchpoint, bool edit)
 {
+    QComboBox *cmbEnabled = new QComboBox;
+    cmbEnabled->addItems({ mEnabledText, mDisabledText });
+    QComboBox *cmbMode = new QComboBox;
+    cmbMode->addItems({ mRdText, mWrText, mRdWrText });
+
     QString addrStr = Util::int2hex(watchpoint.addr, Util::AddrByteWidth);
     QString sizeStr = QString::number(watchpoint.size);
 
     if (mTbl->rowCount() == 0)
     {
-        mBtnMarkDisabled->setEnabled(true);
-        mBtnMarkRead->setEnabled(true);
-        mBtnMarkWrite->setEnabled(true);
-        mBtnMarkReadWrite->setEnabled(true);
+        mBtnToggleSelected->setEnabled(true);
+        mBtnRemoveSelected->setEnabled(true);
     }
 
-    QTableWidgetItem *mode = new QTableWidgetItem;
     QTableWidgetItem *addr = new QTableWidgetItem(addrStr);
     QTableWidgetItem *size = new QTableWidgetItem(sizeStr);
     QTableWidgetItem *name = new QTableWidgetItem(watchpoint.name);
 
     mTbl->blockSignals(true);
     mTbl->insertRow(0);
-    mTbl->setItem(0, 0, mode);
-    mTbl->setItem(0, 1, addr);
-    mTbl->setItem(0, 2, size);
-    mTbl->setItem(0, 3, name);
+    mTbl->setCellWidget(0, Column::Enabled, cmbEnabled);
+    mTbl->setCellWidget(0, Column::Mode, cmbMode);
+    mTbl->setItem(0, Column::Address, addr);
+    mTbl->setItem(0, Column::Size, size);
+    mTbl->setItem(0, Column::Name, name);
     mTbl->blockSignals(false);
 
     if (edit)
@@ -123,31 +122,43 @@ void WatchpointsWidget::addWatchpoint(const Watchpoint &watchpoint, bool edit)
         mTbl->editItem(addr);
     }
 
-    setWatchpoint(0, Watchpoint::Mode::Disabled);
+    setWatchpointEnabled(0, watchpoint.enabled);
+    setWatchpointMode(0, watchpoint.mode);
 }
 
-void WatchpointsWidget::setWatchpoint(int row, int mode)
+bool WatchpointsWidget::getWatchpointEnabled(int row)
 {
+    QComboBox *cmbEnabled = static_cast<QComboBox *>(mTbl->cellWidget(row, Column::Enabled));
+    return cmbEnabled->currentIndex() == 0;
+}
+
+void WatchpointsWidget::setWatchpointEnabled(int row, bool enabled)
+{
+    QComboBox *cmbEnabled = static_cast<QComboBox *>(mTbl->cellWidget(row, Column::Enabled));
+    cmbEnabled->setCurrentIndex(enabled ? 0 : 1);
+}
+
+void WatchpointsWidget::setWatchpointMode(int row, int mode)
+{
+    QComboBox *cmbMode = static_cast<QComboBox *>(mTbl->cellWidget(row, Column::Mode));
+
     switch (mode)
     {
         default:
             abort();
-        case Watchpoint::Mode::Disabled:
-            mTbl->item(row, Column::Mode)->setText(mDisabledText);
-            break;
         case Watchpoint::Mode::Read:
-            mTbl->item(row, Column::Mode)->setText(mRdText);
+            cmbMode->setCurrentIndex(0);
             break;
         case Watchpoint::Mode::Write:
-            mTbl->item(row, Column::Mode)->setText(mWrText);
+            cmbMode->setCurrentIndex(1);
             break;
         case Watchpoint::Mode::ReadWrite:
-            mTbl->item(row, Column::Mode)->setText(mRdWrText);
+            cmbMode->setCurrentIndex(2);
             break;
     }
 }
 
-void WatchpointsWidget::toggleSelected(int mode)
+void WatchpointsWidget::toggleSelected()
 {
     Q_ASSERT(mTbl->rowCount() != 0);
 
@@ -158,12 +169,11 @@ void WatchpointsWidget::toggleSelected(int mode)
         {
             if (Util::isHexAddress(item->text()))
             {
-                setWatchpoint(i, mode);
-
+                setWatchpointEnabled(i, !getWatchpointEnabled(i));
             }
             else
             {
-                setWatchpoint(i, Watchpoint::Mode::Disabled);
+                setWatchpointEnabled(i, false);
             }
         }
     }
@@ -175,7 +185,7 @@ void WatchpointsWidget::removeSelected()
 
     for (int i = mTbl->rowCount() - 1; i >= 0; --i)
     {
-        if (mTbl->item(i, 0)->isSelected())
+        if (mTbl->item(i, Column::Address)->isSelected())
         {
             mTbl->removeRow(i);
         }
@@ -183,10 +193,8 @@ void WatchpointsWidget::removeSelected()
 
     if (mTbl->rowCount() == 0)
     {
-        mBtnMarkDisabled->setEnabled(false);
-        mBtnMarkRead->setEnabled(false);
-        mBtnMarkWrite->setEnabled(false);
-        mBtnMarkReadWrite->setEnabled(false);
+        mBtnRemoveSelected->setEnabled(false);
+        mBtnToggleSelected->setEnabled(false);
     }
 }
 
@@ -223,12 +231,14 @@ void WatchpointsWidget::itemChanged(QTableWidgetItem *item)
 
                 if (Util::isDecString(mTbl->item(row, Column::Size)->text(), 1, 16777215))
                 {
-                    setWatchpoint(row, Watchpoint::ReadWrite);
+                    mTbl->cellWidget(row, Column::Enabled)->setEnabled(true);
+                    setWatchpointEnabled(row, true);
                 }
             }
             else
             {
-                setWatchpoint(row, Watchpoint::Disabled);
+                mTbl->cellWidget(row, Column::Enabled)->setEnabled(false);
+                setWatchpointEnabled(row, false);
                 item->setBackground(QBrush(QColor(Qt::red).lighter()));
             }
             break;
@@ -239,12 +249,14 @@ void WatchpointsWidget::itemChanged(QTableWidgetItem *item)
 
                 if (Util::isHexAddress(mTbl->item(row, Column::Address)->text()))
                 {
-                    setWatchpoint(row, Watchpoint::ReadWrite);
+                    mTbl->cellWidget(row, Column::Enabled)->setEnabled(true);
+                    setWatchpointEnabled(row, true);
                 }
             }
             else
             {
-                setWatchpoint(row, Watchpoint::Disabled);
+                mTbl->cellWidget(row, Column::Enabled)->setEnabled(false);
+                setWatchpointEnabled(row, false);
                 item->setBackground(QBrush(QColor(Qt::red).lighter()));
             }
             break;

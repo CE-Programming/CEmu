@@ -19,6 +19,7 @@
 
 #include <QtGui/QColor>
 #include <QtWidgets/QBoxLayout>
+#include <QtWidgets/QComboBox>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QPushButton>
@@ -37,8 +38,16 @@ BreakpointsWidget::BreakpointsWidget(const QList<Breakpoint> &breakpoints, DevWi
     mTbl->setHorizontalHeaderLabels({tr("Enabled"), tr("Address"), tr("Name")});
     mTbl->horizontalHeader()->setStretchLastSection(true);
     mTbl->verticalHeader()->setVisible(false);
+    mTbl->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     mTbl->setSelectionMode(QAbstractItemView::ExtendedSelection);
     mTbl->setSelectionBehavior(QAbstractItemView::SelectRows);
+    mTbl->setDragDropMode(QAbstractItemView::InternalMove);
+    mTbl->setDragDropOverwriteMode(false);
+    mTbl->setDragEnabled(true);
+    mTbl->setAcceptDrops(true);
+    mTbl->setDefaultDropAction(Qt::IgnoreAction);
+    mTbl->setSortingEnabled(false);
+    mTbl->setDropIndicatorShown(true);
 
     mBtnToggleSelected = new QPushButton(tr("Toggle selected"));
     mBtnRemoveSelected = new QPushButton(tr("Remove selected"));
@@ -80,6 +89,9 @@ BreakpointsWidget::BreakpointsWidget(const QList<Breakpoint> &breakpoints, DevWi
 
 void BreakpointsWidget::addBreakpoint(const Breakpoint &breakpoint, bool edit)
 {
+    QComboBox *cmbEnabled = new QComboBox;
+    cmbEnabled->addItems({ mEnabledText, mDisabledText });
+
     QString addrStr = Util::int2hex(breakpoint.addr, Util::AddrByteWidth);
 
     if (mTbl->rowCount() == 0)
@@ -88,15 +100,14 @@ void BreakpointsWidget::addBreakpoint(const Breakpoint &breakpoint, bool edit)
         mBtnRemoveSelected->setEnabled(true);
     }
 
-    QTableWidgetItem *enabled = new QTableWidgetItem;
     QTableWidgetItem *addr = new QTableWidgetItem(addrStr);
     QTableWidgetItem *name = new QTableWidgetItem(breakpoint.name);
 
     mTbl->blockSignals(true);
     mTbl->insertRow(0);
-    mTbl->setItem(0, 0, enabled);
-    mTbl->setItem(0, 1, addr);
-    mTbl->setItem(0, 2, name);
+    mTbl->setCellWidget(0, Column::Enabled, cmbEnabled);
+    mTbl->setItem(0, Column::Address, addr);
+    mTbl->setItem(0, Column::Name, name);
     mTbl->blockSignals(false);
 
     if (edit)
@@ -109,7 +120,9 @@ void BreakpointsWidget::addBreakpoint(const Breakpoint &breakpoint, bool edit)
 
 void BreakpointsWidget::setBreakpoint(int row, bool enable)
 {
-    mTbl->item(row, Column::Enabled)->setText(enable ? mEnabledText : mDisabledText);
+    QComboBox *cmbEnabled = static_cast<QComboBox *>(mTbl->cellWidget(row, Column::Enabled));
+
+    cmbEnabled->setCurrentIndex(enable ? 0 : 1);
 }
 
 void BreakpointsWidget::toggleSelected()
@@ -118,12 +131,13 @@ void BreakpointsWidget::toggleSelected()
 
     for (int i = mTbl->rowCount() - 1; i >= 0; --i)
     {
-        QTableWidgetItem *item = mTbl->item(i, Column::Enabled);
+        QTableWidgetItem *item = mTbl->item(i, Column::Address);
         if (item->isSelected())
         {
             if (Util::isHexAddress(item->text()))
             {
-                setBreakpoint(i, !(item->text() == mEnabledText));
+                QComboBox *cmbEnabled = static_cast<QComboBox *>(mTbl->cellWidget(i, Column::Enabled));
+                setBreakpoint(i, !(cmbEnabled->currentIndex() == 0));
             }
             else
             {
@@ -139,7 +153,7 @@ void BreakpointsWidget::removeSelected()
 
     for (int i = mTbl->rowCount() - 1; i >= 0; --i)
     {
-        if (mTbl->item(i, 0)->isSelected())
+        if (mTbl->item(i, Column::Address)->isSelected())
         {
             mTbl->removeRow(i);
         }
@@ -179,6 +193,7 @@ void BreakpointsWidget::itemChanged(QTableWidgetItem *item)
                 setBreakpoint(row, true);
                 item->setBackground(mNormalBackground);
                 blockSignals(true);
+                mTbl->cellWidget(row, Column::Enabled)->setEnabled(true);
                 item->setText(Util::int2hex(Util::hex2int(item->text()), Util::AddrByteWidth));
                 blockSignals(false);
             }
@@ -186,6 +201,7 @@ void BreakpointsWidget::itemChanged(QTableWidgetItem *item)
             {
                 setBreakpoint(row, false);
                 item->setBackground(QBrush(QColor(Qt::red).lighter()));
+                mTbl->cellWidget(row, Column::Enabled)->setEnabled(false);
             }
             break;
 

@@ -178,8 +178,19 @@ void CoreWindow::createDockWidgets()
 
 void CoreWindow::createDeveloperWidgets()
 {
-    QList<Breakpoint> breakpoints = { {true, 10, "test"}, {false, 20, "test2"}, {true, 30, "test3"} };
-    QList<Watchpoint> watchpoints = { {Watchpoint::Mode::Read, 10, 5, "test"}, {Watchpoint::Mode::Write, 20, 15, "test2"}, {Watchpoint::Mode::ReadWrite, 30, 25, "test3"}, {Watchpoint::Mode::Disabled, 40, 35, "test4"} };
+    QList<Breakpoint> breakpoints =
+    {
+        {true, 10, "test"},
+        {false, 20, "test2"},
+        {true, 30, "test3"}
+    };
+    QList<Watchpoint> watchpoints =
+    {
+        {true, Watchpoint::Mode::Read, 10, 5, "test"},
+        {true, Watchpoint::Mode::Write, 20, 15, "test2"},
+        {false, Watchpoint::Mode::ReadWrite, 30, 25, "test3"},
+        {true, Watchpoint::Mode::Write, 40, 35, "test4"}
+    };
 
     auto *consoleDock = new KDDockWidgets::DockWidget(tr("Console"));
     auto *console = new ConsoleWidget();
