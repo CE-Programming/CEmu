@@ -26,7 +26,9 @@
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
+#include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QSizePolicy>
+#include <QtWidgets/QSpinBox>
 
 CpuWidget::CpuWidget(DevWidget *parent)
     : DevWidget{parent}
@@ -36,8 +38,8 @@ CpuWidget::CpuWidget(DevWidget *parent)
     QGroupBox *grpFlags = new QGroupBox(tr("Flags"));
     QGroupBox *grpReg = new QGroupBox(tr("Registers"));
     QGroupBox *grpRegPcSp = new QGroupBox(tr("PC/SP"));
-    QGroupBox *grpMode = new QGroupBox(tr("Mode"));
     QGroupBox *grpState = new QGroupBox(tr("Mode/Interrupts"));
+    QGroupBox *grpStack = new QGroupBox(tr("Stack"));
 
     QLabel *lblAF = new QLabel(QStringLiteral("af"));
     QLabel *lblBC = new QLabel(QStringLiteral("bc"));
@@ -56,6 +58,9 @@ CpuWidget::CpuWidget(DevWidget *parent)
     QLabel *lblI = new QLabel(QStringLiteral("i "));
     QLabel *lblR = new QLabel(QStringLiteral("r "));
     QLabel *lblIM = new QLabel(QStringLiteral("im"));
+
+    mEdtStack = new QPlainTextEdit;
+    mChkAdlStack = new QCheckBox(QStringLiteral("ADL"));
 
     mChkS = new QCheckBox(QStringLiteral("s"));
     mChkZ = new QCheckBox(QStringLiteral("z"));
@@ -88,7 +93,10 @@ CpuWidget::CpuWidget(DevWidget *parent)
     mEdtSPS = new HighlightEditWidget(">HHHH");
     mEdtI = new HighlightEditWidget(">HHHH");
     mEdtR = new HighlightEditWidget(">HH");
-    mEdtIM = new HighlightEditWidget(">HH");
+    mSpnIM = new QSpinBox;
+
+    mSpnIM->setMinimum(0);
+    mSpnIM->setMaximum(2);
 
     lblAF->setFont(Util::monospaceFont());
     lblBC->setFont(Util::monospaceFont());
@@ -107,6 +115,9 @@ CpuWidget::CpuWidget(DevWidget *parent)
     lblI->setFont(Util::monospaceFont());
     lblR->setFont(Util::monospaceFont());
     lblIM->setFont(Util::monospaceFont());
+
+    mEdtStack->setFont(Util::monospaceFont());
+    mEdtStack->setReadOnly(true);
 
     mEdtAF->setObjectName(QStringLiteral("afReg"));
     mEdtBC->setObjectName(QStringLiteral("bcReg"));
@@ -231,15 +242,12 @@ CpuWidget::CpuWidget(DevWidget *parent)
     hboxRegs->addWidget(grpRegPcSp, Qt::AlignLeft);
     grpReg->setLayout(hboxRegs);
 
-    QVBoxLayout *vboxMode = new QVBoxLayout;
-    vboxMode->addWidget(mChkAdl);
-    vboxMode->addWidget(mChkMadl);
-    grpMode->setLayout(vboxMode);
-
-    QVBoxLayout *vboxIff = new QVBoxLayout;
-    vboxIff->addWidget(mChkIef1);
-    vboxIff->addWidget(mChkIef2);
-    vboxIff->addWidget(mChkHalt);
+    QGridLayout *gridIm = new QGridLayout;
+    gridIm->addWidget(mChkAdl, 0, 0);
+    gridIm->addWidget(mChkMadl, 1, 0);
+    gridIm->addWidget(mChkIef1, 0, 1);
+    gridIm->addWidget(mChkIef2, 1, 1);
+    gridIm->addWidget(mChkHalt, 2, 1);
 
     QHBoxLayout *reglayoutI = new QHBoxLayout;
     reglayoutI->addWidget(lblI);
@@ -251,7 +259,7 @@ CpuWidget::CpuWidget(DevWidget *parent)
 
     QHBoxLayout *reglayoutIm = new QHBoxLayout;
     reglayoutIm->addWidget(lblIM);
-    reglayoutIm->addWidget(mEdtIM);
+    reglayoutIm->addWidget(mSpnIM, Qt::AlignLeft);
 
     QVBoxLayout *vboxInt = new QVBoxLayout;
     vboxInt->addLayout(reglayoutI);
@@ -259,18 +267,27 @@ CpuWidget::CpuWidget(DevWidget *parent)
     vboxInt->addLayout(reglayoutIm);
 
     QHBoxLayout *hboxState = new QHBoxLayout;
-    hboxState->addStretch(1);
-    hboxState->addWidget(grpMode);
-    hboxState->addLayout(vboxIff);
+    hboxState->addLayout(gridIm);
     hboxState->addLayout(vboxInt);
-    hboxState->addStretch(1);
     grpState->setLayout(hboxState);
+
+    QVBoxLayout *vboxStack = new QVBoxLayout;
+    vboxStack->addWidget(mChkAdlStack);
+    vboxStack->addWidget(mEdtStack);
+    grpStack->setLayout(vboxStack);
+
+    QHBoxLayout *hLayout = new QHBoxLayout;
+    hLayout->addStretch(1);
+    hLayout->addWidget(grpState);
+    hLayout->addStretch(1);
+    hLayout->addWidget(grpStack);
+    hLayout->addStretch(1);
 
     QVBoxLayout *vLayout = new QVBoxLayout;
     vLayout->addStretch(1);
     vLayout->addWidget(grpFlags);
     vLayout->addWidget(grpReg);
-    vLayout->addWidget(grpState);
+    vLayout->addLayout(hLayout);
     vLayout->addStretch(1);
 
     QHBoxLayout *mainLayout = new QHBoxLayout;

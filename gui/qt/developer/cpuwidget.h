@@ -23,6 +23,8 @@ class HighlightEditWidget;
 QT_BEGIN_NAMESPACE
 class QCheckBox;
 class QLineEdit;
+class QPlainTextEdit;
+class QSpinBox;
 QT_END_NAMESPACE
 
 class CpuRegisterFilter : public QObject
@@ -65,6 +67,8 @@ private:
     QCheckBox *mChkIef2;
     QCheckBox *mChkIef1;
 
+    QCheckBox *mChkAdlStack;
+
     HighlightEditWidget *mEdtAF;
     HighlightEditWidget *mEdtBC;
     HighlightEditWidget *mEdtDE;
@@ -81,7 +85,10 @@ private:
     HighlightEditWidget *mEdtSPS;
     HighlightEditWidget *mEdtI;
     HighlightEditWidget *mEdtR;
-    HighlightEditWidget *mEdtIM;
+    QSpinBox *mSpnIM;
+
+    QPlainTextEdit *mEdtStack;
+
 };
 
 #endif
