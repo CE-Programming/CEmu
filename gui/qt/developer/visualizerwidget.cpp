@@ -1,8 +1,8 @@
 #include "visualizerwidget.h"
+
+#include "cemucore.h"
 #include "keypad/keypadwidget.h"
 #include "util.h"
-
-#include "../../core/lcd.h"
 
 #include <kddockwidgets/DockWidget.h>
 

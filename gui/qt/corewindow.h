@@ -17,11 +17,10 @@
 #ifndef COREWINDOW_H
 #define COREWINDOW_H
 
-#include "developer/visualizerwidget.h"
+#include "cemucore.h"
 #include "developer/memorywidget.h"
+#include "developer/visualizerwidget.h"
 class QtKeypadBridge;
-
-#include "../../core/asic.h"
 
 #include <kddockwidgets/DockWidget.h>
 #include <kddockwidgets/MainWindow.h>

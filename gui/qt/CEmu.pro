@@ -42,35 +42,13 @@ if(macx) {
     LIBS += -framework Cocoa
 }
 
+INCLUDEPATH += \
+    ../../cemucore
+
 SOURCES += \
-    ../../core/asic.c \
-    ../../core/backlight.c \
-    ../../core/bus.c \
-    ../../core/cert.c \
-    ../../core/control.c \
-    ../../core/cpu.c \
-    ../../core/debug/debug.c \
-    ../../core/debug/zdis/zdis.c \
-    ../../core/emu.c \
-    ../../core/extras.c \
-    ../../core/flash.c \
-    ../../core/interrupt.c \
-    ../../core/keypad.c \
-    ../../core/lcd.c \
-    ../../core/link.c \
-    ../../core/mem.c \
-    ../../core/misc.c \
-    ../../core/port.c \
-    ../../core/realclock.c \
-    ../../core/registers.c \
-    ../../core/schedule.c \
-    ../../core/sha256.c \
-    ../../core/spi.c \
-    ../../core/timers.c \
-    ../../core/usb/disconnected.c \
-    ../../core/usb/dusb.c \
-    ../../core/usb/usb.c \
-    ../../core/vat.c \
+    ../../cemucore/cemucore.c
+
+SOURCES += \
     calculatorwidget.cpp \
     capturewidget.cpp \
     consolewidget.cpp \
@@ -94,7 +72,6 @@ SOURCES += \
     developer/widgets/highlighteditwidget.cpp \
     developer/widgets/visualizerlcdwidget.cpp \
     dockwidget.cpp \
-    emuthread.cpp \
     keyhistorywidget.cpp \
     keypad/arrowkey.cpp \
     keypad/keymap.cpp \
@@ -112,41 +89,7 @@ SOURCES += \
     util.cpp \
     variablewidget.cpp
 
-linux|macx: SOURCES += ../../core/os/os-linux.c
-win32: SOURCES += ../../core/os/os-win32.c
-win32: LIBS += -lpsapi
-
 HEADERS  += \
-    ../../core/asic.h \
-    ../../core/atomics.h \
-    ../../core/backlight.h \
-    ../../core/cert.h \
-    ../../core/control.h \
-    ../../core/cpu.h \
-    ../../core/debug/debug.h \
-    ../../core/debug/zdis/zdis.h \
-    ../../core/defines.h \
-    ../../core/emu.h \
-    ../../core/extras.h \
-    ../../core/flash.h \
-    ../../core/interrupt.h \
-    ../../core/keypad.h \
-    ../../core/lcd.h \
-    ../../core/link.h \
-    ../../core/mem.h \
-    ../../core/misc.h \
-    ../../core/os/os.h \
-    ../../core/port.h \
-    ../../core/realclock.h \
-    ../../core/registers.h \
-    ../../core/schedule.h \
-    ../../core/sha256.h \
-    ../../core/spi.h \
-    ../../core/timers.h \
-    ../../core/usb/device.h \
-    ../../core/usb/fotg210.h \
-    ../../core/usb/usb.h \
-    ../../core/vat.h \
     calculatorwidget.h \
     capturewidget.h \
     consolewidget.h \
@@ -171,7 +114,6 @@ HEADERS  += \
     developer/widgets/highlighteditwidget.h \
     developer/widgets/visualizerlcdwidget.h \
     dockwidget.h \
-    emuthread.h \
     keyhistorywidget.h \
     keypad/alphakey.h \
     keypad/arrowkey.h \

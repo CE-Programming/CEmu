@@ -1,10 +1,9 @@
 #include "qtkeypadbridge.h"
 
-#include <QtCore/QSettings>
-#include <QtCore/QMetaEnum>
+#include "cemucore.h"
 
-#include "../../../core/keypad.h"
-#include "../../../core/asic.h"
+#include <QtCore/QMetaEnum>
+#include <QtCore/QSettings>
 
 QtKeypadBridge *keypadBridge = Q_NULLPTR;
 

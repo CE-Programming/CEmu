@@ -1,5 +1,5 @@
 [submodule "core/debug/zdis"]
-	path = core/debug/zdis
+	path = cemucore/debug/zdis
 	url = https://github.com/CE-Programming/zdis.git
 [submodule "gui/qt/deps/tivars_lib_cpp"]
 	path = gui/qt/deps/tivars_lib_cpp

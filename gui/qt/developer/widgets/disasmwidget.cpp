@@ -15,7 +15,8 @@
  */
 
 #include "disasmwidget.h"
-#include "../../core/mem.h"
+
+#include "cemucore.h"
 
 #include <QtGui/QWheelEvent>
 #include <QtGui/QPainter>

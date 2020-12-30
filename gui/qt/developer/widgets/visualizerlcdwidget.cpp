@@ -18,7 +18,7 @@
 #include "settings.h"
 #include "util.h"
 
-#include "../../core/lcd.h"
+#include "cemucore.h"
 
 #include <cmath>
 #include <QtCore/QMimeData>

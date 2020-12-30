@@ -17,11 +17,10 @@
 #ifndef CALCULATORWIDGET_H
 #define CALCULATORWIDGET_H
 
-#include "overlaywidget.h"
+#include "cemucore.h"
 #include "keypad/keypadwidget.h"
+#include "overlaywidget.h"
 class ScreenWidget;
-
-#include "../../core/asic.h"
 
 #include <QtWidgets/QWidget>
 

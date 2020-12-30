@@ -1,19 +1,19 @@
-#include <QtWidgets/QApplication>
-#include <QtGui/QPaintEvent>
-#include <QtGui/QScreen>
-#include <QtGui/QFontDatabase>
-
 #include "keypadwidget.h"
-#include "graphkey.h"
-#include "secondkey.h"
+
 #include "alphakey.h"
+#include "arrowkey.h"
+#include "graphkey.h"
+#include "numkey.h"
 #include "operkey.h"
 #include "otherkey.h"
-#include "numkey.h"
-#include "arrowkey.h"
+#include "secondkey.h"
 
-#include "../../../core/asic.h"
-#include "../../../core/keypad.h"
+#include "cemucore.h"
+
+#include <QtGui/QFontDatabase>
+#include <QtGui/QPaintEvent>
+#include <QtGui/QScreen>
+#include <QtWidgets/QApplication>
 
 const QRect KeypadWidget::sBaseRect{{}, QSize{162, 238}};
 
