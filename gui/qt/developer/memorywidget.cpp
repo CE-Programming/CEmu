@@ -20,8 +20,8 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QBoxLayout>
 
-MemoryWidget::MemoryWidget(QWidget *parent)
-    : QWidget{parent}
+MemoryWidget::MemoryWidget(DevWidget *parent)
+    : DevWidget{parent}
 {
     QHBoxLayout *layout = new QHBoxLayout(this);
     layout->setSizeConstraint(QLayout::SetMinimumSize);

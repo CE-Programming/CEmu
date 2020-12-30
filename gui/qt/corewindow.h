@@ -74,10 +74,9 @@ private:
     QMenu *mCalcsMenu;
     QMenu *mDocksMenu;
     QMenu *mDevMenu;
-    QMenu *mCaptureMenu;
 
     CalculatorOverlay *mCalcOverlay;
-    CalculatorWidget *mCalc;
+    CalculatorWidget *mCalcWidget;
 
     ti_device_t mCalcType;
 

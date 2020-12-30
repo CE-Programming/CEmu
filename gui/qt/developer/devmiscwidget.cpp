@@ -15,17 +15,17 @@
  */
 
 #include "devmiscwidget.h"
+#include "widgets/highlighteditwidget.h"
 
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QLabel>
-#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QSpinBox>
 
-DevMiscWidget::DevMiscWidget(QWidget *parent)
-    : QWidget{parent}
+DevMiscWidget::DevMiscWidget(DevWidget *parent)
+    : DevWidget{parent}
 {
 #ifdef Q_OS_WIN
     QFont monospaceFont(QStringLiteral("Courier"), 10);
@@ -37,46 +37,46 @@ DevMiscWidget::DevMiscWidget(QWidget *parent)
     QGroupBox *grpLcdCtl = new QGroupBox(tr("Control"));
     QGroupBox *grpLcdReg = new QGroupBox(tr("Registers"));
     QGroupBox *grpBat = new QGroupBox(tr("Battery"));
-
-    QCheckBox *chkLcdPwr = new QCheckBox(QStringLiteral("pwr"));
-    QCheckBox *chkLcdBgr = new QCheckBox(QStringLiteral("bgr"));
-    QCheckBox *chkLcdBepo = new QCheckBox(QStringLiteral("bepo"));
-    QCheckBox *chkLcdBebo = new QCheckBox(QStringLiteral("bebo"));
-
-    QCheckBox *chkBatCharge = new QCheckBox(QStringLiteral("Charging"));
-    QSpinBox *spnBatLevel = new QSpinBox;
+    QGroupBox *grpBacklight = new QGroupBox(tr("Backlight"));
 
     QLabel *lblLcdBase = new QLabel(tr("Base"));
     QLabel *lblLcdCurr = new QLabel(tr("Current"));
-    QLabel *lblLcdBright = new QLabel(tr("Brightness"));
-    QLabel *lblBatLevel = new QLabel(tr("Level"));
-
-    QLineEdit *edtlcdBase = new QLineEdit(QStringLiteral("000000"));
-    QLineEdit *edtlcdCurr = new QLineEdit(QStringLiteral("000000"));
+    QLabel *lblBatLevel = new QLabel(tr("Battery Level"));
+    QLabel *lblBacklightLevel = new QLabel(tr("Backlight Level"));
 
     lblLcdBase->setFont(monospaceFont);
     lblLcdCurr->setFont(monospaceFont);
-    lblLcdBright->setFont(monospaceFont);
-    lblBatLevel->setFont(monospaceFont);
 
-    edtlcdBase->setFont(monospaceFont);
-    edtlcdCurr->setFont(monospaceFont);
+    mChkLcdPwr = new QCheckBox(QStringLiteral("pwr"));
+    mChkLcdBgr = new QCheckBox(QStringLiteral("bgr"));
+    mChkLcdBepo = new QCheckBox(QStringLiteral("bepo"));
+    mChkLcdBebo = new QCheckBox(QStringLiteral("bebo"));
+    mChkBacklightEnable = new QCheckBox(QStringLiteral("Enabled"));
+    mChkBatCharge = new QCheckBox(QStringLiteral("Charging"));
+    mSpnBatLevel = new QSpinBox;
+    mSpnBacklightLevel = new QSpinBox;
 
-    spnBatLevel->setMinimum(0);
-    spnBatLevel->setMaximum(5);
+    mEdtLcdBase = new HighlightEditWidget(">HHHHHH");
+    mEdtLcdCurr = new HighlightEditWidget(">HHHHHH");
+
+    mSpnBatLevel->setMinimum(0);
+    mSpnBatLevel->setMaximum(5);
+
+    mSpnBacklightLevel->setMinimum(0);
+    mSpnBacklightLevel->setMaximum(255);
 
     QGridLayout *gridLcdCtl = new QGridLayout;
-    gridLcdCtl->addWidget(chkLcdPwr, 0, 0);
-    gridLcdCtl->addWidget(chkLcdBgr, 0, 1);
-    gridLcdCtl->addWidget(chkLcdBepo, 1, 0);
-    gridLcdCtl->addWidget(chkLcdBebo, 1, 1);
+    gridLcdCtl->addWidget(mChkLcdPwr, 0, 0);
+    gridLcdCtl->addWidget(mChkLcdBgr, 0, 1);
+    gridLcdCtl->addWidget(mChkLcdBepo, 1, 0);
+    gridLcdCtl->addWidget(mChkLcdBebo, 1, 1);
     grpLcdCtl->setLayout(gridLcdCtl);
 
     QGridLayout *gridLcdReg = new QGridLayout;
     gridLcdReg->addWidget(lblLcdBase, 0, 0);
     gridLcdReg->addWidget(lblLcdCurr, 1, 0);
-    gridLcdReg->addWidget(edtlcdBase, 0, 1);
-    gridLcdReg->addWidget(edtlcdCurr, 1, 1);
+    gridLcdReg->addWidget(mEdtLcdBase, 0, 1);
+    gridLcdReg->addWidget(mEdtLcdCurr, 1, 1);
     grpLcdReg->setLayout(gridLcdReg);
 
     QHBoxLayout *hboxLcd = new QHBoxLayout;
@@ -85,15 +85,23 @@ DevMiscWidget::DevMiscWidget(QWidget *parent)
     grpLcd->setLayout(hboxLcd);
 
     QHBoxLayout *hboxBat = new QHBoxLayout;
-    hboxBat->addWidget(chkBatCharge);
+    hboxBat->addWidget(mChkBatCharge);
     hboxBat->addStretch(1);
     hboxBat->addWidget(lblBatLevel);
-    hboxBat->addWidget(spnBatLevel);
+    hboxBat->addWidget(mSpnBatLevel);
     grpBat->setLayout(hboxBat);
+
+    QHBoxLayout *hboxBacklight = new QHBoxLayout;
+    hboxBacklight->addWidget(mChkBacklightEnable);
+    hboxBacklight->addStretch(1);
+    hboxBacklight->addWidget(lblBacklightLevel);
+    hboxBacklight->addWidget(mSpnBacklightLevel);
+    grpBacklight->setLayout(hboxBacklight);
 
     QVBoxLayout *vLayout = new QVBoxLayout;
     vLayout->addStretch(1);
     vLayout->addWidget(grpLcd);
+    vLayout->addWidget(grpBacklight);
     vLayout->addWidget(grpBat);
     vLayout->addStretch(1);
 
@@ -104,4 +112,14 @@ DevMiscWidget::DevMiscWidget(QWidget *parent)
     setLayout(hLayout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+}
+
+void DevMiscWidget::saveState()
+{
+
+}
+
+void DevMiscWidget::loadState()
+{
+
 }

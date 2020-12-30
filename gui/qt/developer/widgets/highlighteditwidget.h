@@ -14,25 +14,29 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OSVARSWIDGET_H
-#define OSVARSWIDGET_H
+#ifndef HIGHLIGHTWIDGET
+#define HIGHLIGHTWIDGET
 
-#include "devwidget.h"
-
+#include <QtWidgets/QLineEdit>
 QT_BEGIN_NAMESPACE
-class QTableWidget;
+class QCheckBox;
+class QLineEdit;
+class QSpinBox;
 QT_END_NAMESPACE
 
-class OsVarsWidget : public DevWidget
+class HighlightEditWidget : public QLineEdit
 {
     Q_OBJECT
 
 public:
-    explicit OsVarsWidget(DevWidget *parent = nullptr);
+    explicit HighlightEditWidget(const QString &mask = QString(), QWidget *parent = nullptr);
+
+public slots:
+    void setText(const QString &text);
+    void clearHighlight();
 
 private:
-    QTableWidget *mTblFp;
-    QTableWidget *mTblOp;
+    QPalette mPaletteHighlight, mPaletteNoHighlight;
 };
 
 #endif

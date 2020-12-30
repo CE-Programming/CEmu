@@ -17,14 +17,22 @@
 #ifndef OSSTACKSWIDGET_H
 #define OSSTACKSWIDGET_H
 
-#include <QtWidgets/QWidget>
+#include "devwidget.h"
 
-class OsStacksWidget : public QWidget
+QT_BEGIN_NAMESPACE
+class QTableWidget;
+QT_END_NAMESPACE
+
+class OsStacksWidget : public DevWidget
 {
     Q_OBJECT
 
 public:
-    explicit OsStacksWidget(QWidget *parent = nullptr);
+    explicit OsStacksWidget(DevWidget *parent = nullptr);
+
+private:
+    QTableWidget *mTblFp;
+    QTableWidget *mTblOp;
 };
 
 #endif

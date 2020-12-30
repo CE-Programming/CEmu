@@ -14,25 +14,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OSVARSWIDGET_H
-#define OSVARSWIDGET_H
+#ifndef CAPTUREWIDGET_H
+#define CAPTUREWIDGET_H
 
-#include "devwidget.h"
+#include <QtWidgets/QWidget>
 
-QT_BEGIN_NAMESPACE
-class QTableWidget;
-QT_END_NAMESPACE
-
-class OsVarsWidget : public DevWidget
+class CaptureWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit OsVarsWidget(DevWidget *parent = nullptr);
-
-private:
-    QTableWidget *mTblFp;
-    QTableWidget *mTblOp;
+    explicit CaptureWidget(QWidget *parent = nullptr);
+    ~CaptureWidget();
 };
 
 #endif

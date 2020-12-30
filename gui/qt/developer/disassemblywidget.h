@@ -17,14 +17,14 @@
 #ifndef DISASSEMBLYWIDGET_H
 #define DISASSEMBLYWIDGET_H
 
-#include <QtWidgets/QWidget>
+#include "devwidget.h"
 
-class DisassemblyWidget : public QWidget
+class DisassemblyWidget : public DevWidget
 {
     Q_OBJECT
 
 public:
-    explicit DisassemblyWidget(QWidget *parent = nullptr);
+    explicit DisassemblyWidget(DevWidget *parent = nullptr);
 };
 
 #endif

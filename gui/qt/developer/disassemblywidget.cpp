@@ -20,8 +20,8 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QBoxLayout>
 
-DisassemblyWidget::DisassemblyWidget(QWidget *parent)
-    : QWidget{parent}
+DisassemblyWidget::DisassemblyWidget(DevWidget *parent)
+    : DevWidget{parent}
 {
     QHBoxLayout *layout = new QHBoxLayout(this);
     layout->setSizeConstraint(QLayout::SetMinimumSize);

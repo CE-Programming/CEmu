@@ -20,8 +20,8 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QBoxLayout>
 
-PortMonitorWidget::PortMonitorWidget(QWidget *parent)
-    : QWidget{parent}
+PortMonitorWidget::PortMonitorWidget(DevWidget *parent)
+    : DevWidget{parent}
 {
     QHBoxLayout *layout = new QHBoxLayout(this);
     layout->setSizeConstraint(QLayout::SetMinimumSize);

@@ -17,14 +17,14 @@
 #ifndef PORTMONITORWIDGET_H
 #define PORTMONITORWIDGET_H
 
-#include <QtWidgets/QWidget>
+#include "devwidget.h"
 
-class PortMonitorWidget : public QWidget
+class PortMonitorWidget : public DevWidget
 {
     Q_OBJECT
 
 public:
-    explicit PortMonitorWidget(QWidget *parent = nullptr);
+    explicit PortMonitorWidget(DevWidget *parent = nullptr);
 };
 
 #endif

@@ -15,7 +15,12 @@
  */
 
 #include "cpuwidget.h"
+#include "widgets/highlighteditwidget.h"
+#include "util.h"
 
+#include <QtCore/QEvent>
+#include <QtGui/QMouseEvent>
+#include <QtWidgets/QToolTip>
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QGroupBox>
@@ -23,8 +28,8 @@
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QSizePolicy>
 
-CpuWidget::CpuWidget(QWidget *parent)
-    : QWidget{parent}
+CpuWidget::CpuWidget(DevWidget *parent)
+    : DevWidget{parent}
 {
 #ifdef Q_OS_WIN
     QFont monospaceFont(QStringLiteral("Courier"), 10);
@@ -32,20 +37,13 @@ CpuWidget::CpuWidget(QWidget *parent)
     QFont monospaceFont(QStringLiteral("Monospace"), 10);
 #endif
 
+    mRegEventFilter = new CpuRegisterFilter(this);
+
     QGroupBox *grpFlags = new QGroupBox(tr("Flags"));
     QGroupBox *grpReg = new QGroupBox(tr("Registers"));
     QGroupBox *grpRegPcSp = new QGroupBox(tr("PC/SP"));
     QGroupBox *grpMode = new QGroupBox(tr("Mode"));
     QGroupBox *grpState = new QGroupBox(tr("Mode/Interrupts"));
-
-    QCheckBox *chkS = new QCheckBox(QStringLiteral("s"));
-    QCheckBox *chkZ = new QCheckBox(QStringLiteral("z"));
-    QCheckBox *chk5 = new QCheckBox(QStringLiteral("5"));
-    QCheckBox *chkh = new QCheckBox(QStringLiteral("h"));
-    QCheckBox *chk3 = new QCheckBox(QStringLiteral("3"));
-    QCheckBox *chkPV = new QCheckBox(QStringLiteral("p/v"));
-    QCheckBox *chkN = new QCheckBox(QStringLiteral("n"));
-    QCheckBox *chkC = new QCheckBox(QStringLiteral("c"));
 
     QLabel *lblAF = new QLabel(QStringLiteral("af"));
     QLabel *lblBC = new QLabel(QStringLiteral("bc"));
@@ -65,23 +63,38 @@ CpuWidget::CpuWidget(QWidget *parent)
     QLabel *lblR = new QLabel(QStringLiteral("r "));
     QLabel *lblIM = new QLabel(QStringLiteral("im"));
 
-    QLineEdit *edtAF = new QLineEdit(QStringLiteral("0000"));
-    QLineEdit *edtBC = new QLineEdit(QStringLiteral("000000"));
-    QLineEdit *edtDE = new QLineEdit(QStringLiteral("000000"));
-    QLineEdit *edtHL = new QLineEdit(QStringLiteral("000000"));
-    QLineEdit *edtIX = new QLineEdit(QStringLiteral("000000"));
-    QLineEdit *edtAFX = new QLineEdit(QStringLiteral("0000"));
-    QLineEdit *edtBCX = new QLineEdit(QStringLiteral("000000"));
-    QLineEdit *edtDEX = new QLineEdit(QStringLiteral("000000"));
-    QLineEdit *edtHLX = new QLineEdit(QStringLiteral("000000"));
-    QLineEdit *edtIY = new QLineEdit(QStringLiteral("000000"));
-    QLineEdit *edtPC = new QLineEdit(QStringLiteral("000000"));
-    QLineEdit *edtMB = new QLineEdit(QStringLiteral("00"));
-    QLineEdit *edtSPL = new QLineEdit(QStringLiteral("000000"));
-    QLineEdit *edtSPS = new QLineEdit(QStringLiteral("0000"));
-    QLineEdit *edtI = new QLineEdit(QStringLiteral("0000"));
-    QLineEdit *edtR = new QLineEdit(QStringLiteral("00"));
-    QLineEdit *edtIM = new QLineEdit(QStringLiteral("1"));
+    mChkS = new QCheckBox(QStringLiteral("s"));
+    mChkZ = new QCheckBox(QStringLiteral("z"));
+    mChk5 = new QCheckBox(QStringLiteral("5"));
+    mChkH = new QCheckBox(QStringLiteral("h"));
+    mChk3 = new QCheckBox(QStringLiteral("3"));
+    mChkPV = new QCheckBox(QStringLiteral("p/v"));
+    mChkN = new QCheckBox(QStringLiteral("n"));
+    mChkC = new QCheckBox(QStringLiteral("c"));
+
+    mChkHalt = new QCheckBox(QStringLiteral("Halted"));
+    mChkAdl = new QCheckBox(QStringLiteral("ADL"));
+    mChkMadl = new QCheckBox(QStringLiteral("MADL"));
+    mChkIef2 = new QCheckBox(QStringLiteral("IEF2"));
+    mChkIef1 = new QCheckBox(QStringLiteral("IEF1"));
+
+    mEdtAF = new HighlightEditWidget(">HHHH");
+    mEdtBC = new HighlightEditWidget(">HHHHHH");
+    mEdtDE = new HighlightEditWidget(">HHHHHH");
+    mEdtHL = new HighlightEditWidget(">HHHHHH");
+    mEdtIX = new HighlightEditWidget(">HHHHHH");
+    mEdtAFX = new HighlightEditWidget(">HHHH");
+    mEdtBCX = new HighlightEditWidget(">HHHHHH");
+    mEdtDEX = new HighlightEditWidget(">HHHHHH");
+    mEdtHLX = new HighlightEditWidget(">HHHHHH");
+    mEdtIY = new HighlightEditWidget(">HHHHHH");
+    mEdtPC = new HighlightEditWidget(">HHHHHH");
+    mEdtMB = new HighlightEditWidget(">HH");
+    mEdtSPL = new HighlightEditWidget(">HHHHHH");
+    mEdtSPS = new HighlightEditWidget(">HHHH");
+    mEdtI = new HighlightEditWidget(">HHHH");
+    mEdtR = new HighlightEditWidget(">HH");
+    mEdtIM = new HighlightEditWidget(">HH");
 
     lblAF->setFont(monospaceFont);
     lblBC->setFont(monospaceFont);
@@ -101,84 +114,88 @@ CpuWidget::CpuWidget(QWidget *parent)
     lblR->setFont(monospaceFont);
     lblIM->setFont(monospaceFont);
 
-    edtAF->setFont(monospaceFont);
-    edtBC->setFont(monospaceFont);
-    edtDE->setFont(monospaceFont);
-    edtHL->setFont(monospaceFont);
-    edtIX->setFont(monospaceFont);
-    edtAFX->setFont(monospaceFont);
-    edtBCX->setFont(monospaceFont);
-    edtDEX->setFont(monospaceFont);
-    edtHLX->setFont(monospaceFont);
-    edtIY->setFont(monospaceFont);
-    edtPC->setFont(monospaceFont);
-    edtMB->setFont(monospaceFont);
-    edtSPL->setFont(monospaceFont);
-    edtSPS->setFont(monospaceFont);
-    edtI->setFont(monospaceFont);
-    edtR->setFont(monospaceFont);
-    edtIM->setFont(monospaceFont);
+    mEdtAF->setObjectName(QStringLiteral("afReg"));
+    mEdtBC->setObjectName(QStringLiteral("bcReg"));
+    mEdtDE->setObjectName(QStringLiteral("deReg"));
+    mEdtHL->setObjectName(QStringLiteral("hlReg"));
+    mEdtIX->setObjectName(QStringLiteral("ixReg"));
+    mEdtAFX->setObjectName(QStringLiteral("afxReg"));
+    mEdtBCX->setObjectName(QStringLiteral("bcxReg"));
+    mEdtDEX->setObjectName(QStringLiteral("dexReg"));
+    mEdtHLX->setObjectName(QStringLiteral("hlxReg"));
+    mEdtIY->setObjectName(QStringLiteral("iyReg"));
+
+    mEdtAF->installEventFilter(mRegEventFilter);
+    mEdtBC->installEventFilter(mRegEventFilter);
+    mEdtDE->installEventFilter(mRegEventFilter);
+    mEdtHL->installEventFilter(mRegEventFilter);
+    mEdtIX->installEventFilter(mRegEventFilter);
+    mEdtAFX->installEventFilter(mRegEventFilter);
+    mEdtBCX->installEventFilter(mRegEventFilter);
+    mEdtDEX->installEventFilter(mRegEventFilter);
+    mEdtHLX->installEventFilter(mRegEventFilter);
+    mEdtIY->installEventFilter(mRegEventFilter);
 
     QHBoxLayout *hboxFlags = new QHBoxLayout;
     hboxFlags->setSizeConstraint(QLayout::SetMinimumSize);
     hboxFlags->addStretch(1);
-    hboxFlags->addWidget(chkS);
+    hboxFlags->addWidget(mChkS);
     hboxFlags->addStretch(1);
-    hboxFlags->addWidget(chkZ);
+    hboxFlags->addWidget(mChkZ);
     hboxFlags->addStretch(1);
-    hboxFlags->addWidget(chk5);
+    hboxFlags->addWidget(mChk5);
     hboxFlags->addStretch(1);
-    hboxFlags->addWidget(chkh);
+    hboxFlags->addWidget(mChkH);
     hboxFlags->addStretch(1);
-    hboxFlags->addWidget(chk3);
+    hboxFlags->addWidget(mChk3);
     hboxFlags->addStretch(1);
-    hboxFlags->addWidget(chkPV);
+    hboxFlags->addWidget(mChkPV);
     hboxFlags->addStretch(1);
-    hboxFlags->addWidget(chkN);
+    hboxFlags->addWidget(mChkN);
     hboxFlags->addStretch(1);
-    hboxFlags->addWidget(chkC);
+    hboxFlags->addWidget(mChkC);
     hboxFlags->addStretch(1);
     grpFlags->setLayout(hboxFlags);
 
     QHBoxLayout *reglayout0 = new QHBoxLayout;
     reglayout0->addWidget(lblAF);
-    reglayout0->addWidget(edtAF);
+    reglayout0->addWidget(mEdtAF);
 
     QHBoxLayout *reglayout1 = new QHBoxLayout;
     reglayout1->addWidget(lblBC);
-    reglayout1->addWidget(edtBC);
+    reglayout1->addWidget(mEdtBC);
 
     QHBoxLayout *reglayout2 = new QHBoxLayout;
     reglayout2->addWidget(lblDE);
-    reglayout2->addWidget(edtDE);
+    reglayout2->addWidget(mEdtDE);
 
     QHBoxLayout *reglayout3 = new QHBoxLayout;
     reglayout3->addWidget(lblHL);
-    reglayout3->addWidget(edtHL);
+    reglayout3->addWidget(mEdtHL);
 
     QHBoxLayout *reglayout4 = new QHBoxLayout;
     reglayout4->addWidget(lblIX);
-    reglayout4->addWidget(edtIX);
+    reglayout4->addWidget(mEdtIX);
 
     QHBoxLayout *reglayout5 = new QHBoxLayout;
     reglayout5->addWidget(lblAFX);
-    reglayout5->addWidget(edtAFX);
+    reglayout5->addWidget(mEdtAFX);
 
     QHBoxLayout *reglayout6 = new QHBoxLayout;
     reglayout6->addWidget(lblBCX);
-    reglayout6->addWidget(edtBCX);
+    reglayout6->addWidget(mEdtBCX);
 
     QHBoxLayout *reglayout7 = new QHBoxLayout;
     reglayout7->addWidget(lblDEX);
-    reglayout7->addWidget(edtDEX);
+    reglayout7->addWidget(mEdtDEX);
 
     QHBoxLayout *reglayout8 = new QHBoxLayout;
     reglayout8->addWidget(lblHLX);
-    reglayout8->addWidget(edtHLX);
+    reglayout8->addWidget(mEdtHLX);
 
     QHBoxLayout *reglayout9 = new QHBoxLayout;
     reglayout9->addWidget(lblIY);
-    reglayout9->addWidget(edtIY);
+    reglayout9->addWidget(mEdtIY);
 
     QGridLayout *gridRegs = new QGridLayout;
     gridRegs->addLayout(reglayout0, 0, 0);
@@ -194,26 +211,25 @@ CpuWidget::CpuWidget(QWidget *parent)
 
     QHBoxLayout *reglayoutPc = new QHBoxLayout;
     reglayoutPc->addWidget(lblPC);
-    reglayoutPc->addWidget(edtPC);
+    reglayoutPc->addWidget(mEdtPC);
 
     QHBoxLayout *reglayoutMb = new QHBoxLayout;
     reglayoutMb->addWidget(lblMB);
-    reglayoutMb->addWidget(edtMB);
+    reglayoutMb->addWidget(mEdtMB);
 
     QHBoxLayout *reglayoutSpl = new QHBoxLayout;
     reglayoutSpl->addWidget(lblSPL);
-    reglayoutSpl->addWidget(edtSPL);
+    reglayoutSpl->addWidget(mEdtSPL);
 
     QHBoxLayout *reglayoutSps = new QHBoxLayout;
     reglayoutSps->addWidget(lblSPS);
-    reglayoutSps->addWidget(edtSPS);
+    reglayoutSps->addWidget(mEdtSPS);
 
     QVBoxLayout *vboxRegs = new QVBoxLayout;
     vboxRegs->addLayout(reglayoutPc);
     vboxRegs->addLayout(reglayoutMb);
     vboxRegs->addLayout(reglayoutSpl);
     vboxRegs->addLayout(reglayoutSps);
-
     grpRegPcSp->setLayout(vboxRegs);
 
     QHBoxLayout *hboxRegs = new QHBoxLayout;
@@ -221,33 +237,27 @@ CpuWidget::CpuWidget(QWidget *parent)
     hboxRegs->addWidget(grpRegPcSp, Qt::AlignLeft);
     grpReg->setLayout(hboxRegs);
 
-    QCheckBox *chkHalt = new QCheckBox(QStringLiteral("Halted"));
-    QCheckBox *chkAdl = new QCheckBox(QStringLiteral("ADL"));
-    QCheckBox *chkMadl = new QCheckBox(QStringLiteral("MADL"));
-    QCheckBox *chkIef2 = new QCheckBox(QStringLiteral("IEF2"));
-    QCheckBox *chkIef1 = new QCheckBox(QStringLiteral("IEF1"));
-
     QVBoxLayout *vboxMode = new QVBoxLayout;
-    vboxMode->addWidget(chkAdl);
-    vboxMode->addWidget(chkMadl);
+    vboxMode->addWidget(mChkAdl);
+    vboxMode->addWidget(mChkMadl);
     grpMode->setLayout(vboxMode);
 
     QVBoxLayout *vboxIff = new QVBoxLayout;
-    vboxIff->addWidget(chkIef1);
-    vboxIff->addWidget(chkIef2);
-    vboxIff->addWidget(chkHalt);
+    vboxIff->addWidget(mChkIef1);
+    vboxIff->addWidget(mChkIef2);
+    vboxIff->addWidget(mChkHalt);
 
     QHBoxLayout *reglayoutI = new QHBoxLayout;
     reglayoutI->addWidget(lblI);
-    reglayoutI->addWidget(edtI);
+    reglayoutI->addWidget(mEdtI);
 
     QHBoxLayout *reglayoutR = new QHBoxLayout;
     reglayoutR->addWidget(lblR);
-    reglayoutR->addWidget(edtR);
+    reglayoutR->addWidget(mEdtR);
 
     QHBoxLayout *reglayoutIm = new QHBoxLayout;
     reglayoutIm->addWidget(lblIM);
-    reglayoutIm->addWidget(edtIM);
+    reglayoutIm->addWidget(mEdtIM);
 
     QVBoxLayout *vboxInt = new QVBoxLayout;
     vboxInt->addLayout(reglayoutI);
@@ -276,4 +286,129 @@ CpuWidget::CpuWidget(QWidget *parent)
     setLayout(mainLayout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+}
+
+void CpuWidget::saveState()
+{
+
+}
+
+void CpuWidget::loadState()
+{
+
+}
+
+bool CpuRegisterFilter::eventFilter(QObject *obj, QEvent *event)
+{
+    if (event->type() == QEvent::MouseMove)
+    {
+        QString name = obj->objectName();
+        HighlightEditWidget *widget = static_cast<HighlightEditWidget *>(obj);
+
+        if (!widget->isEnabled())
+        {
+            return QObject::eventFilter(obj, event);
+        }
+
+        unsigned int num  = Util::hex2int(widget->text());
+        unsigned int num0 = num & 255;
+        unsigned int num1 = (num >> 8) & 255;
+        unsigned int num2 = (num >> 16) & 255;
+
+        QString t;
+        QString val  = QString::number(num);
+        QString val0 = QString::number(num0);
+        QString val1 = QString::number(num1);
+        QString val2 = QString::number(num2);
+
+        if (num  > 0x7FFFFF)
+        {
+            val += QStringLiteral("\n\t") + QString::number(static_cast<int32_t>(num | 0xFF000000u));
+        }
+        if (num0 > 0x7F)
+        {
+            val0 += QStringLiteral("\t") + QString::number(static_cast<int8_t>(num0));
+        }
+        if (num1 > 0x7F)
+        {
+            val1 += QStringLiteral("\t") + QString::number(static_cast<int8_t>(num1));
+        }
+        if (num2 > 0x7F)
+        {
+            val2 += QStringLiteral("\t") + QString::number(static_cast<int8_t>(num2));
+        }
+
+        if (name == QStringLiteral("afReg"))
+        {
+            t = QStringLiteral("a:\t") + val1 +
+                QStringLiteral("\nf:\t") + val0;
+        }
+        else if (name == QStringLiteral("hlReg"))
+        {
+            t = QStringLiteral("hl:\t") + val +
+                QStringLiteral("\nu:\t") + val2 +
+                QStringLiteral("\nh:\t") + val1 +
+                QStringLiteral("\nl:\t") + val0;
+        }
+        else if (name == QStringLiteral("deReg"))
+        {
+            t = QStringLiteral("de:\t") + val +
+                QStringLiteral("\nu:\t") + val2 +
+                QStringLiteral("\nd:\t") + val1 +
+                QStringLiteral("\ne:\t") + val0;
+        }
+        else if (name == QStringLiteral("bcReg"))
+        {
+            t = QStringLiteral("bc:\t") + val +
+                QStringLiteral("\nu:\t") + val2 +
+                QStringLiteral("\nb:\t") + val1 +
+                QStringLiteral("\nc:\t") + val0;
+        }
+        else if (name == QStringLiteral("ixReg"))
+        {
+            t = QStringLiteral("ix:\t") + val +
+                QStringLiteral("\nixh:\t") + val1 +
+                QStringLiteral("\nixl:\t") + val0;
+        }
+        else if (name == QStringLiteral("iyReg"))
+        {
+            t = QStringLiteral("iy:\t") + val +
+                QStringLiteral("\niyh:\t") + val1 +
+                QStringLiteral("\niyl:\t") + val0;
+        }
+        else if (name == QStringLiteral("afxReg"))
+        {
+            t = QStringLiteral("a':\t") + val1 +
+                QStringLiteral("\nf':\t") + val0;
+        }
+        else if (name == QStringLiteral("hlxReg"))
+        {
+            t = QStringLiteral("hl':\t") + val +
+                QStringLiteral("\nu':\t") + val2 +
+                QStringLiteral("\nh':\t") + val1 +
+                QStringLiteral("\nl':\t") + val0;
+        }
+        else if (name == QStringLiteral("dexReg"))
+        {
+            t = QStringLiteral("de':\t") + val +
+                QStringLiteral("\nu':\t") + val2 +
+                QStringLiteral("\nd':\t") + val1 +
+                QStringLiteral("\ne':\t") + val0;
+        }
+        else if (name == QStringLiteral("bcxReg"))
+        {
+            t = QStringLiteral("bc':\t") + val +
+                QStringLiteral("\nu':\t") + val2 +
+                QStringLiteral("\nb':\t") + val1 +
+                QStringLiteral("\nc':\t") + val0;
+        }
+        else
+        {
+            return QObject::eventFilter(obj, event);
+        }
+
+        QToolTip::showText(widget->mapToGlobal({0, 5}), t, widget);
+    }
+
+    return QObject::eventFilter(obj, event);
 }

@@ -20,8 +20,8 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QBoxLayout>
 
-ControlWidget::ControlWidget(QWidget *parent)
-    : QWidget{parent}
+ControlWidget::ControlWidget(DevWidget *parent)
+    : DevWidget{parent}
 {
     QPushButton *btnRun = new QPushButton(tr("Stop"));
     QPushButton *btnStep = new QPushButton(tr("Step"));

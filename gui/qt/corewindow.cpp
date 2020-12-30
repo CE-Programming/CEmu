@@ -17,6 +17,7 @@
 #include "corewindow.h"
 
 #include "calculatorwidget.h"
+#include "capturewidget.h"
 #include "consolewidget.h"
 #include "dockwidget.h"
 #include "keyhistorywidget.h"
@@ -25,6 +26,7 @@
 #include "settingsdialog.h"
 #include "statewidget.h"
 #include "util.h"
+#include "variablewidget.h"
 
 #include "developer/autotesterwidget.h"
 #include "developer/breakpointswidget.h"
@@ -70,12 +72,10 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     auto *menubar = menuBar();
 
     mCalcsMenu = new QMenu(tr("Calculator"), this);
-    mCaptureMenu = new QMenu(tr("Capture"), this);
     mDocksMenu = new QMenu(tr("Docks"), this);
     mDevMenu = new QMenu(tr("Developer"), this);
 
     menubar->addMenu(mCalcsMenu);
-    menubar->addMenu(mCaptureMenu);
     menubar->addMenu(mDocksMenu);
     menubar->addMenu(mDevMenu);
 
@@ -92,15 +92,6 @@ CoreWindow::CoreWindow(const QString &uniqueName,
 
     auto *quitAction = mCalcsMenu->addAction(tr("Quit"));
     connect(quitAction, &QAction::triggered, qApp, &QApplication::quit);
-
-    auto *screenshotAction = mCaptureMenu->addAction(tr("Capture Screenshot"));
-    connect(screenshotAction, &QAction::triggered, qApp, &QApplication::quit);
-
-    auto *animatedAction = mCaptureMenu->addAction(tr("Record Animated Screen"));
-    connect(animatedAction, &QAction::triggered, qApp, &QApplication::quit);
-
-    auto *copyScreenAction = mCaptureMenu->addAction(tr("Copy Screen to Clipboard"));
-    connect(copyScreenAction, &QAction::triggered, qApp, &QApplication::quit);
 
     createDockWidgets();
 
@@ -138,10 +129,13 @@ void CoreWindow::createDockWidgets()
     Q_ASSERT(mDockWidgets.isEmpty());
 
     auto *calcDock = new KDDockWidgets::DockWidget(tr("Calculator"));
-    mCalc = new CalculatorWidget();
+    mCalcWidget = new CalculatorWidget();
 
-    auto *consoleDock = new KDDockWidgets::DockWidget(tr("Console"));
-    auto *console = new ConsoleWidget();
+    auto *captureDock = new KDDockWidgets::DockWidget(tr("Screen Capture"));
+    auto *capture = new CaptureWidget();
+
+    auto *variableDock = new KDDockWidgets::DockWidget(tr("Variable Transfer"));
+    auto *variable = new VariableWidget(QStringList({"test", "test2"}));
 
     auto *keyHistoryDock = new KDDockWidgets::DockWidget(tr("Key History"));
     auto *keyHistory = new KeyHistoryWidget();
@@ -149,30 +143,33 @@ void CoreWindow::createDockWidgets()
     auto *stateDock = new KDDockWidgets::DockWidget(tr("States"));
     auto *state = new StateWidget();
 
-    mCalcOverlay = new CalculatorOverlay(mCalc);
+    mCalcOverlay = new CalculatorOverlay(mCalcWidget);
     mCalcOverlay->setVisible(false);
 
     connect(mCalcOverlay, &CalculatorOverlay::createRom, this, &CoreWindow::createRom);
     connect(mCalcOverlay, &CalculatorOverlay::loadRom, this, &CoreWindow::loadRom);
 
-    calcDock->setWidget(mCalc);
+    calcDock->setWidget(mCalcWidget);
     keyHistoryDock->setWidget(keyHistory);
-    consoleDock->setWidget(console);
     stateDock->setWidget(state);
+    captureDock->setWidget(capture);
+    variableDock->setWidget(variable);
 
-    connect(mCalc, &CalculatorWidget::keyPressed, keyHistory, &KeyHistoryWidget::add);
-    connect(mKeypadBridge, &QtKeypadBridge::keyStateChanged, mCalc, &CalculatorWidget::changeKeyState);
-    mCalc->installEventFilter(mKeypadBridge);
+    connect(mCalcWidget, &CalculatorWidget::keyPressed, keyHistory, &KeyHistoryWidget::add);
+    connect(mKeypadBridge, &QtKeypadBridge::keyStateChanged, mCalcWidget, &CalculatorWidget::changeKeyState);
+    mCalcWidget->installEventFilter(mKeypadBridge);
 
     mDockWidgets << calcDock;
     mDockWidgets << keyHistoryDock;
-    mDockWidgets << consoleDock;
+    mDockWidgets << captureDock;
     mDockWidgets << stateDock;
+    mDockWidgets << variableDock;
 
     mDocksMenu->addAction(calcDock->toggleAction());
+    mDocksMenu->addAction(captureDock->toggleAction());
     mDocksMenu->addAction(keyHistoryDock->toggleAction());
+    mDocksMenu->addAction(variableDock->toggleAction());
     mDocksMenu->addAction(stateDock->toggleAction());
-    mDocksMenu->addAction(consoleDock->toggleAction());
 
     addDockWidget(calcDock, KDDockWidgets::Location_OnTop);
 
@@ -181,11 +178,17 @@ void CoreWindow::createDockWidgets()
 
 void CoreWindow::createDeveloperWidgets()
 {
+    QList<Breakpoint> breakpoints = { {true, 10, "test"}, {false, 20, "test2"}, {true, 30, "test3"} };
+    QList<Watchpoint> watchpoints = { {Watchpoint::Mode::Read, 10, 5, "test"}, {Watchpoint::Mode::Write, 20, 15, "test2"}, {Watchpoint::Mode::ReadWrite, 30, 25, "test3"}, {Watchpoint::Mode::Disabled, 40, 35, "test4"} };
+
+    auto *consoleDock = new KDDockWidgets::DockWidget(tr("Console"));
+    auto *console = new ConsoleWidget();
+
     auto *autotesterDock = new KDDockWidgets::DockWidget(tr("Autotester"));
     auto *autotester = new AutotesterWidget();
 
     auto *breakpointsDock = new KDDockWidgets::DockWidget(tr("Breakpoints"));
-    auto *breakpoints = new BreakpointsWidget();
+    auto *mBreakpointWidget = new BreakpointsWidget(breakpoints);
 
     auto *clocksDock = new KDDockWidgets::DockWidget(tr("Clocks"));
     auto *clocks = new ClocksWidget();
@@ -215,36 +218,26 @@ void CoreWindow::createDeveloperWidgets()
     auto *portMonitor = new PortMonitorWidget();
 
     auto *watchpointsDock = new KDDockWidgets::DockWidget(tr("Watchpoints"));
-    auto *watchpoints = new WatchpointsWidget();
+    auto *mWatchpointWidget = new WatchpointsWidget(watchpoints);
 
     autotesterDock->setWidget(autotester);
-    autotesterDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-    breakpointsDock->setWidget(breakpoints);
-    breakpointsDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    breakpointsDock->setWidget(mBreakpointWidget);
     clocksDock->setWidget(clocks);
-    clocksDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    consoleDock->setWidget(console);
     controlDock->setWidget(control);
-    controlDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     cpuDock->setWidget(cpu);
-    cpuDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     devMiscDock->setWidget(devMisc);
-    devMiscDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     dissassmeblyDock->setWidget(dissassmebly);
-    dissassmeblyDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     memoryDock->setWidget(memory);
-    memoryDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     osStacksDock->setWidget(osStacks);
-    osStacksDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     osVarsDock->setWidget(osVars);
-    osVarsDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     portMonitorDock->setWidget(portMonitor);
-    portMonitorDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-    watchpointsDock->setWidget(watchpoints);
-    watchpointsDock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    watchpointsDock->setWidget(mWatchpointWidget);
 
     mDockWidgets << autotesterDock;
     mDockWidgets << breakpointsDock;
     mDockWidgets << clocksDock;
+    mDockWidgets << consoleDock;
     mDockWidgets << controlDock;
     mDockWidgets << cpuDock;
     mDockWidgets << devMiscDock;
@@ -255,6 +248,7 @@ void CoreWindow::createDeveloperWidgets()
     mDockWidgets << portMonitorDock;
     mDockWidgets << watchpointsDock;
 
+    mDevMenu->addAction(consoleDock->toggleAction());
     mDevMenu->addAction(controlDock->toggleAction());
     mDevMenu->addAction(cpuDock->toggleAction());
     mDevMenu->addAction(dissassmeblyDock->toggleAction());
@@ -333,12 +327,12 @@ void CoreWindow::resetEmu()
     if (test)
     {
 
-        mCalc->setConfig(mCalcType, keycolor);
+        mCalcWidget->setConfig(mCalcType, keycolor);
         mCalcOverlay->setVisible(false);
     }
     else
     {
-        mCalc->setConfig(mCalcType, keycolor);
+        mCalcWidget->setConfig(mCalcType, keycolor);
         mCalcOverlay->setVisible(true);
     }
 
@@ -350,7 +344,7 @@ void CoreWindow::showPreferences()
     SettingsDialog dialog;
     connect(&dialog, &SettingsDialog::changedKeypadColor, [this](int color)
     {
-        mCalc->setConfig(mCalcType, color);
+        mCalcWidget->setConfig(mCalcType, color);
     });
     dialog.exec();
 }
@@ -426,6 +420,5 @@ void CoreWindow::addVisualizerDock(KDDockWidgets::DockWidgetBase *dockWidget, co
     {
         dockWidget->setTitle(tr("Visualizer"));
         dockWidget->setWidget(new VisualizerWidget(&mVisualizerWidgets, config, dockWidget));
-        dockWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     }
 }

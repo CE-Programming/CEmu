@@ -17,14 +17,14 @@
 #ifndef CONTROLWIDGET_H
 #define CONTROLWIDGET_H
 
-#include <QtWidgets/QWidget>
+#include "devwidget.h"
 
-class ControlWidget : public QWidget
+class ControlWidget : public DevWidget
 {
     Q_OBJECT
 
 public:
-    explicit ControlWidget(QWidget *parent = nullptr);
+    explicit ControlWidget(DevWidget *parent = nullptr);
 };
 
 #endif

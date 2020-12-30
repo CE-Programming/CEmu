@@ -27,4 +27,3 @@ StateWidget::StateWidget(QWidget *parent)
 StateWidget::~StateWidget()
 {
 }
-

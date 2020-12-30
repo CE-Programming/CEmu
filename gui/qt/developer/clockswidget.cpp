@@ -15,7 +15,9 @@
  */
 
 #include "clockswidget.h"
+#include "widgets/highlighteditwidget.h"
 
+#include <QtGui/QIntValidator>
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QLineEdit>
@@ -23,15 +25,9 @@
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QLabel>
 
-ClocksWidget::ClocksWidget(QWidget *parent)
-    : QWidget{parent}
+ClocksWidget::ClocksWidget(DevWidget *parent)
+    : DevWidget{parent}
 {
-#ifdef Q_OS_WIN
-    QFont monospaceFont(QStringLiteral("Courier"), 10);
-#else
-    QFont monospaceFont(QStringLiteral("Monospace"), 10);
-#endif
-
     QGroupBox *grpGpt = new QGroupBox(tr("General Purpose Timers"));
     QGroupBox *grpRtc = new QGroupBox(tr("Real Time Clock"));
 
@@ -45,38 +41,27 @@ ClocksWidget::ClocksWidget(QWidget *parent)
     QLabel *lblMin = new QLabel(tr("Minutes"));
     QLabel *lblSec = new QLabel(tr("Seconds"));
 
-    QLineEdit *edtTimer1V = new QLineEdit(QStringLiteral("0"));
-    QLineEdit *edtTimer2V = new QLineEdit(QStringLiteral("0"));
-    QLineEdit *edtTimer3V = new QLineEdit(QStringLiteral("0"));
-    QLineEdit *edtTimer1RV = new QLineEdit(QStringLiteral("0"));
-    QLineEdit *edtTimer2RV = new QLineEdit(QStringLiteral("0"));
-    QLineEdit *edtTimer3RV = new QLineEdit(QStringLiteral("0"));
+    mEdtTimer1V = new HighlightEditWidget;
+    mEdtTimer2V = new HighlightEditWidget;
+    mEdtTimer3V = new HighlightEditWidget;
+    mEdtTimer1RV = new HighlightEditWidget;
+    mEdtTimer2RV = new HighlightEditWidget;
+    mEdtTimer3RV = new HighlightEditWidget;
 
-    QLineEdit *edtDays = new QLineEdit(QStringLiteral("0"));
-    QLineEdit *edtHrs = new QLineEdit(QStringLiteral("0"));
-    QLineEdit *edtMin = new QLineEdit(QStringLiteral("0"));
-    QLineEdit *edtSec = new QLineEdit(QStringLiteral("0"));
-
-    edtTimer1V->setFont(monospaceFont);
-    edtTimer2V->setFont(monospaceFont);
-    edtTimer3V->setFont(monospaceFont);
-    edtTimer1RV->setFont(monospaceFont);
-    edtTimer2RV->setFont(monospaceFont);
-    edtTimer3RV->setFont(monospaceFont);
-    edtDays->setFont(monospaceFont);
-    edtHrs->setFont(monospaceFont);
-    edtMin->setFont(monospaceFont);
-    edtSec->setFont(monospaceFont);
+    mEdtDays = new HighlightEditWidget;
+    mEdtHrs = new HighlightEditWidget;
+    mEdtMin = new HighlightEditWidget;
+    mEdtSec = new HighlightEditWidget;
 
     QHBoxLayout *hboxRtc = new QHBoxLayout;
     hboxRtc->addWidget(lblDays);
-    hboxRtc->addWidget(edtDays);
+    hboxRtc->addWidget(mEdtDays);
     hboxRtc->addWidget(lblHrs);
-    hboxRtc->addWidget(edtHrs);
+    hboxRtc->addWidget(mEdtHrs);
     hboxRtc->addWidget(lblMin);
-    hboxRtc->addWidget(edtMin);
+    hboxRtc->addWidget(mEdtMin);
     hboxRtc->addWidget(lblSec);
-    hboxRtc->addWidget(edtSec);
+    hboxRtc->addWidget(mEdtSec);
     grpRtc->setLayout(hboxRtc);
 
     lblValue->setAlignment(Qt::AlignCenter);
@@ -88,12 +73,12 @@ ClocksWidget::ClocksWidget(QWidget *parent)
     gridGpt->addWidget(lblTimer1, 1, 0);
     gridGpt->addWidget(lblTimer2, 2, 0);
     gridGpt->addWidget(lblTimer3, 3, 0);
-    gridGpt->addWidget(edtTimer1V, 1, 1);
-    gridGpt->addWidget(edtTimer2V, 2, 1);
-    gridGpt->addWidget(edtTimer3V, 3, 1);
-    gridGpt->addWidget(edtTimer1RV, 1, 2);
-    gridGpt->addWidget(edtTimer2RV, 2, 2);
-    gridGpt->addWidget(edtTimer3RV, 3, 2);
+    gridGpt->addWidget(mEdtTimer1V, 1, 1);
+    gridGpt->addWidget(mEdtTimer2V, 2, 1);
+    gridGpt->addWidget(mEdtTimer3V, 3, 1);
+    gridGpt->addWidget(mEdtTimer1RV, 1, 2);
+    gridGpt->addWidget(mEdtTimer2RV, 2, 2);
+    gridGpt->addWidget(mEdtTimer3RV, 3, 2);
     grpGpt->setLayout(gridGpt);
 
     QVBoxLayout *vLayout = new QVBoxLayout;

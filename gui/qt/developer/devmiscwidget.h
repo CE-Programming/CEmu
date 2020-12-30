@@ -17,14 +17,37 @@
 #ifndef DEVMISCWIDGET_H
 #define DEVMISCWIDGET_H
 
-#include <QtWidgets/QWidget>
+#include "devwidget.h"
+class HighlightEditWidget;
 
-class DevMiscWidget : public QWidget
+QT_BEGIN_NAMESPACE
+class QCheckBox;
+class QLineEdit;
+class QSpinBox;
+QT_END_NAMESPACE
+
+class DevMiscWidget : public DevWidget
 {
     Q_OBJECT
 
 public:
-    explicit DevMiscWidget(QWidget *parent = nullptr);
+    explicit DevMiscWidget(DevWidget *parent = nullptr);
+
+protected:
+    virtual void saveState();
+    virtual void loadState();
+
+private:
+    QCheckBox *mChkLcdPwr;
+    QCheckBox *mChkLcdBgr;
+    QCheckBox *mChkLcdBepo;
+    QCheckBox *mChkLcdBebo;
+    QCheckBox *mChkBatCharge;
+    QCheckBox *mChkBacklightEnable;
+    QSpinBox *mSpnBatLevel;
+    QSpinBox *mSpnBacklightLevel;
+    HighlightEditWidget *mEdtLcdBase;
+    HighlightEditWidget *mEdtLcdCurr;
 };
 
 #endif

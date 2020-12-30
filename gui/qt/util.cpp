@@ -17,6 +17,10 @@
 #include "util.h"
 
 #include <QtCore/QRandomGenerator>
+#include <QtCore/QRegularExpression>
+#include <QtGui/QValidator>
+
+const int Util::AddrByteWidth = 6;
 
 int Util::hex2int(const QString &str)
 {
@@ -26,6 +30,45 @@ int Util::hex2int(const QString &str)
 QString Util::int2hex(uint32_t a, uint8_t l)
 {
     return QString::number(a, 16).rightJustified(l, '0', true).toUpper();
+}
+
+bool Util::isHexAddress(const QString &str)
+{
+    return isHexString(str, 0, 16777215);
+}
+
+bool Util::isHexString(const QString &str, int min, int max)
+{
+    QRegularExpression matcher(QString("^[0-9A-F]"), QRegularExpression::CaseInsensitiveOption);
+    QRegularExpressionMatch match = matcher.match(str);
+
+    if (match.hasMatch())
+    {
+        int value = hex2int(str);
+        if (value <= max && value >= min)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool Util::isDecString(const QString &str, int min, int max)
+{
+    QRegularExpression matcher(QString("^[0-9]"), QRegularExpression::CaseInsensitiveOption);
+    QRegularExpressionMatch match = matcher.match(str);
+
+    if (match.hasMatch())
+    {
+        int value = hex2int(str);
+        if (value <= max && value >= min)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 QString Util::randomString(const int length)

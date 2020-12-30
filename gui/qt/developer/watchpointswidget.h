@@ -17,14 +17,75 @@
 #ifndef WATCHPOINTSWIDGET_H
 #define WATCHPOINTSWIDGET_H
 
-#include <QtWidgets/QWidget>
+#include "devwidget.h"
 
-class WatchpointsWidget : public QWidget
+QT_BEGIN_NAMESPACE
+class QPushButton;
+class QTableWidget;
+class QTableWidgetItem;
+QT_END_NAMESPACE
+
+class Watchpoint
+{
+public:
+    enum Mode
+    {
+        Disabled,
+        Read,
+        Write,
+        ReadWrite
+    };
+
+    int mode;
+    int addr;
+    int size;
+    QString name;
+};
+
+class WatchpointsWidget : public DevWidget
 {
     Q_OBJECT
 
 public:
-    explicit WatchpointsWidget(QWidget *parent = nullptr);
+    explicit WatchpointsWidget(const QList<Watchpoint> &watchpoints, DevWidget *parent = nullptr);
+
+public slots:
+    void addWatchpoint(const Watchpoint &watchpoint, bool edit);
+    void setWatchpoint(int row, int mode);
+    void toggleSelected(int mode);
+    void removeSelected();
+
+private slots:
+    void itemActivated(QTableWidgetItem *item);
+    void itemChanged(QTableWidgetItem *item);
+
+private:
+    enum Column
+    {
+        Mode,
+        Address,
+        Size,
+        Name,
+    };
+
+    int mWpNum;
+
+    QString mPrevAddr;
+    QString mPrevSize;
+
+    QTableWidget *mTbl;
+
+    QPushButton *mBtnMarkDisabled;
+    QPushButton *mBtnMarkRead;
+    QPushButton *mBtnMarkWrite;
+    QPushButton *mBtnMarkReadWrite;
+
+    QBrush mNormalBackground;
+
+    static const QString mDisabledText;
+    static const QString mRdText;
+    static const QString mWrText;
+    static const QString mRdWrText;
 };
 
 #endif

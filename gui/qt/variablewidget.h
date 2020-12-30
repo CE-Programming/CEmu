@@ -14,25 +14,35 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OSVARSWIDGET_H
-#define OSVARSWIDGET_H
+#ifndef VARIABLSEWIDGET_H
+#define VARIABLSEWIDGET_H
 
-#include "devwidget.h"
-
+#include <QtWidgets/QWidget>
 QT_BEGIN_NAMESPACE
+class QPushButton;
 class QTableWidget;
 QT_END_NAMESPACE
 
-class OsVarsWidget : public DevWidget
+class VariableWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit OsVarsWidget(DevWidget *parent = nullptr);
+    explicit VariableWidget(const QStringList &recentVars, QWidget *parent = nullptr);
+
+public slots:
+    void addRecentVar(const QString &path);
+    void removeRecentSelected();
 
 private:
-    QTableWidget *mTblFp;
-    QTableWidget *mTblOp;
+    QTableWidget *mCalcVars;
+    QTableWidget *mSentVars;
+
+    QPushButton *mBtnSaveSelected;
+    QPushButton *mBtnSaveGroup;
+    QPushButton *mBtnResendVars;
+    QPushButton *mBtnRemoveVars;
+
 };
 
 #endif

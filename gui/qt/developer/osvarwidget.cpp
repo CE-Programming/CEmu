@@ -22,26 +22,26 @@
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QTableWidget>
 
-OsVarsWidget::OsVarsWidget(QWidget *parent)
-    : QWidget{parent}
+OsVarsWidget::OsVarsWidget(DevWidget *parent)
+    : DevWidget{parent}
 {
     QGroupBox *grpVat = new QGroupBox(QStringLiteral("VAT View"));
     QGroupBox *grpOp = new QGroupBox(tr("OP Variables"));
 
-    QTableWidget *tblFp = new QTableWidget(0, 5);
-    tblFp->setHorizontalHeaderLabels({"Address", "VAT", "Size", "Name", "Type"});
-    tblFp->horizontalHeader()->setStretchLastSection(true);
+    mTblFp = new QTableWidget(0, 5);
+    mTblFp->setHorizontalHeaderLabels({"Address", "VAT", "Size", "Name", "Type"});
+    mTblFp->horizontalHeader()->setStretchLastSection(true);
 
-    QTableWidget *tblOp = new QTableWidget(0, 5);
-    tblOp->setHorizontalHeaderLabels({"Address", "OP", "Data", "String", "Value"});
-    tblOp->horizontalHeader()->setStretchLastSection(true);
+    mTblOp = new QTableWidget(0, 5);
+    mTblOp->setHorizontalHeaderLabels({"Address", "OP", "Data", "String", "Value"});
+    mTblOp->horizontalHeader()->setStretchLastSection(true);
 
     QHBoxLayout *hboxFp = new QHBoxLayout;
-    hboxFp->addWidget(tblFp);
+    hboxFp->addWidget(mTblFp);
     grpVat->setLayout(hboxFp);
 
     QHBoxLayout *hboxOp = new QHBoxLayout;
-    hboxOp->addWidget(tblOp);
+    hboxOp->addWidget(mTblOp);
     grpOp->setLayout(hboxOp);
 
     QVBoxLayout *vLayout = new QVBoxLayout;

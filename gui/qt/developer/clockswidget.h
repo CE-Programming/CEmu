@@ -17,14 +17,27 @@
 #ifndef GPTWIDGET_H
 #define GPTWIDGET_H
 
-#include <QtWidgets/QWidget>
+#include "devwidget.h"
+class HighlightEditWidget;
 
-class ClocksWidget : public QWidget
+class ClocksWidget : public DevWidget
 {
     Q_OBJECT
 
 public:
-    explicit ClocksWidget(QWidget *parent = nullptr);
+    explicit ClocksWidget(DevWidget *parent = nullptr);
+
+private:
+    HighlightEditWidget *mEdtTimer1V;
+    HighlightEditWidget *mEdtTimer2V;
+    HighlightEditWidget *mEdtTimer3V;
+    HighlightEditWidget *mEdtTimer1RV;
+    HighlightEditWidget *mEdtTimer2RV;
+    HighlightEditWidget *mEdtTimer3RV;
+    HighlightEditWidget *mEdtDays;
+    HighlightEditWidget *mEdtHrs;
+    HighlightEditWidget *mEdtMin;
+    HighlightEditWidget *mEdtSec;
 };
 
 #endif

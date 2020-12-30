@@ -17,14 +17,14 @@
 #ifndef MEMORYWIDGET_H
 #define MEMORYWIDGET_H
 
-#include <QtWidgets/QWidget>
+#include "devwidget.h"
 
-class MemoryWidget : public QWidget
+class MemoryWidget : public DevWidget
 {
     Q_OBJECT
 
 public:
-    explicit MemoryWidget(QWidget *parent = nullptr);
+    explicit MemoryWidget(DevWidget *parent = nullptr);
 };
 
 #endif

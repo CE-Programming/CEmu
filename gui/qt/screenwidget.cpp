@@ -129,7 +129,7 @@ void ScreenWidget::resizeEvent(QResizeEvent *event)
     qreal dx = .5*origin.width();
     qreal dy = origin.height();
 
-    mTransform.setMatrix(m11,  0    , 0,
+    mTransform.setMatrix(m11,  0, 0,
                          0,  m22, 0,
                          dx,  dy, 1);
     prepareText();

@@ -72,6 +72,7 @@ SOURCES += \
     ../../core/usb/usb.c \
     ../../core/vat.c \
     calculatorwidget.cpp \
+    capturewidget.cpp \
     consolewidget.cpp \
     corewindow.cpp \
     developer/autotesterwidget.cpp \
@@ -88,6 +89,7 @@ SOURCES += \
     developer/visualizerwidget.cpp \
     developer/watchpointswidget.cpp \
     developer/widgets/hexwidget.cpp \
+    developer/widgets/highlighteditwidget.cpp \
     developer/widgets/visualizerlcdwidget.cpp \
     dockwidget.cpp \
     emuthread.cpp \
@@ -104,7 +106,8 @@ SOURCES += \
     settings.cpp \
     settingsdialog.cpp \
     statewidget.cpp \
-    util.cpp
+    util.cpp \
+    variablewidget.cpp
 
 linux|macx: SOURCES += ../../core/os/os-linux.c
 win32: SOURCES += ../../core/os/os-win32.c
@@ -142,6 +145,7 @@ HEADERS  += \
     ../../core/usb/usb.h \
     ../../core/vat.h \
     calculatorwidget.h \
+    capturewidget.h \
     consolewidget.h \
     corewindow.h \
     developer/autotesterwidget.h \
@@ -150,6 +154,7 @@ HEADERS  += \
     developer/controlwidget.h \
     developer/cpuwidget.h \
     developer/devmiscwidget.h \
+    developer/devwidget.h \
     developer/disassemblywidget.h \
     developer/memorywidget.h \
     developer/osstackswidget.h \
@@ -158,6 +163,7 @@ HEADERS  += \
     developer/visualizerwidget.h \
     developer/watchpointswidget.h \
     developer/widgets/hexwidget.h \
+    developer/widgets/highlighteditwidget.h \
     developer/widgets/visualizerlcdwidget.h \
     dockwidget.h \
     emuthread.h \
@@ -182,7 +188,8 @@ HEADERS  += \
     settings.h \
     settingsdialog.h \
     statewidget.h \
-    util.h
+    util.h \
+    variablewidget.h
 
 DISTFILES +=
 

@@ -14,25 +14,24 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OSVARSWIDGET_H
-#define OSVARSWIDGET_H
+#ifndef DEVWIDGET_H
+#define DEVWIDGET_H
 
-#include "devwidget.h"
+#include <QtWidgets/QWidget>
 
-QT_BEGIN_NAMESPACE
-class QTableWidget;
-QT_END_NAMESPACE
-
-class OsVarsWidget : public DevWidget
+class DevWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit OsVarsWidget(DevWidget *parent = nullptr);
+    explicit DevWidget(QWidget *parent = nullptr)
+        : QWidget{parent} { enable(); }
 
-private:
-    QTableWidget *mTblFp;
-    QTableWidget *mTblOp;
+protected:
+    virtual void storeState() {}
+    virtual void loadState() {}
+    virtual void disable() { setEnabled(false); }
+    virtual void enable() { setEnabled(true); }
 };
 
 #endif

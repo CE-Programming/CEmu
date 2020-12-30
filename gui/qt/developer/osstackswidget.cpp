@@ -22,26 +22,26 @@
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QTableWidget>
 
-OsStacksWidget::OsStacksWidget(QWidget *parent)
-    : QWidget{parent}
+OsStacksWidget::OsStacksWidget(DevWidget *parent)
+    : DevWidget{parent}
 {
     QGroupBox *grpFp = new QGroupBox(QStringLiteral("FP Stack"));
     QGroupBox *grpOp = new QGroupBox(tr("OP Stack"));
 
-    QTableWidget *tblFp = new QTableWidget(0, 4);
-    tblFp->setHorizontalHeaderLabels({"Address", "Data", "String", "Value"});
-    tblFp->horizontalHeader()->setStretchLastSection(true);
+    mTblFp = new QTableWidget(0, 4);
+    mTblFp->setHorizontalHeaderLabels({"Address", "Data", "String", "Value"});
+    mTblFp->horizontalHeader()->setStretchLastSection(true);
 
-    QTableWidget *tblOp = new QTableWidget(0, 2);
-    tblOp->setHorizontalHeaderLabels({"Address", "Data"});
-    tblOp->horizontalHeader()->setStretchLastSection(true);
+    mTblOp = new QTableWidget(0, 2);
+    mTblOp->setHorizontalHeaderLabels({"Address", "Data"});
+    mTblOp->horizontalHeader()->setStretchLastSection(true);
 
     QHBoxLayout *hboxFp = new QHBoxLayout;
-    hboxFp->addWidget(tblFp);
+    hboxFp->addWidget(mTblFp);
     grpFp->setLayout(hboxFp);
 
     QHBoxLayout *hboxOp = new QHBoxLayout;
-    hboxOp->addWidget(tblOp);
+    hboxOp->addWidget(mTblOp);
     grpOp->setLayout(hboxOp);
 
     QVBoxLayout *vLayout = new QVBoxLayout;

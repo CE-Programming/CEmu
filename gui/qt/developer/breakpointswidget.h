@@ -17,14 +17,59 @@
 #ifndef BREAKPOINTSWIDGET_H
 #define BREAKPOINTSWIDGET_H
 
-#include <QtWidgets/QWidget>
+#include "devwidget.h"
 
-class BreakpointsWidget : public QWidget
+QT_BEGIN_NAMESPACE
+class QPushButton;
+class QTableWidget;
+class QTableWidgetItem;
+QT_END_NAMESPACE
+
+class Breakpoint
+{
+public:
+    bool enabled;
+    int addr;
+    QString name;
+};
+
+class BreakpointsWidget : public DevWidget
 {
     Q_OBJECT
 
 public:
-    explicit BreakpointsWidget(QWidget *parent = nullptr);
+    explicit BreakpointsWidget(const QList<Breakpoint> &breakpoints, DevWidget *parent = nullptr);
+
+public slots:
+    void addBreakpoint(const Breakpoint &breakpoint, bool edit);
+    void setBreakpoint(int row, bool enable);
+    void removeSelected();
+    void toggleSelected();
+
+private slots:
+    void itemActivated(QTableWidgetItem *item);
+    void itemChanged(QTableWidgetItem *item);
+
+private:
+    enum Column
+    {
+        Enabled,
+        Address,
+        Name,
+    };
+
+    int mBpNum;
+
+    QString mPrevAddr;
+
+    QTableWidget *mTbl;
+
+    QPushButton *mBtnToggleSelected;
+    QPushButton *mBtnRemoveSelected;
+
+    QBrush mNormalBackground;
+
+    static const QString mEnabledText, mDisabledText;
 };
 
 #endif

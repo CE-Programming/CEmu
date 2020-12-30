@@ -14,25 +14,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OSVARSWIDGET_H
-#define OSVARSWIDGET_H
+#include "capturewidget.h"
 
-#include "devwidget.h"
+#include <QtWidgets/QSizePolicy>
 
-QT_BEGIN_NAMESPACE
-class QTableWidget;
-QT_END_NAMESPACE
-
-class OsVarsWidget : public DevWidget
+CaptureWidget::CaptureWidget(QWidget *parent)
+    : QWidget{parent}
 {
-    Q_OBJECT
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+}
 
-public:
-    explicit OsVarsWidget(DevWidget *parent = nullptr);
-
-private:
-    QTableWidget *mTblFp;
-    QTableWidget *mTblOp;
-};
-
-#endif
+CaptureWidget::~CaptureWidget()
+{
+}
