@@ -21,6 +21,7 @@
 #include <QtGui/QValidator>
 
 const int Util::AddrByteWidth = 6;
+const int Util::PortByteWidth = 4;
 
 int Util::hex2int(const QString &str)
 {
@@ -35,6 +36,11 @@ QString Util::int2hex(uint32_t a, uint8_t l)
 bool Util::isHexAddress(const QString &str)
 {
     return isHexString(str, 0, 16777215);
+}
+
+bool Util::isHexPort(const QString &str)
+{
+    return isHexString(str, 0, 65535);
 }
 
 bool Util::isHexString(const QString &str, int min, int max)

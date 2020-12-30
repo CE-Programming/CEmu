@@ -28,11 +28,6 @@
 #include <QtWidgets/QToolButton>
 #include <QtWidgets/QSizePolicy>
 
-const QString WatchpointsWidget::mEnabledText = tr("E");
-const QString WatchpointsWidget::mRdText = tr("R");
-const QString WatchpointsWidget::mWrText = tr("W");
-const QString WatchpointsWidget::mRdWrText = tr("X");
-
 WatchpointsWidget::WatchpointsWidget(const QList<Watchpoint> &watchpoints, DevWidget *parent)
     : DevWidget{parent},
       mWpNum{0},
@@ -84,7 +79,7 @@ WatchpointsWidget::WatchpointsWidget(const QList<Watchpoint> &watchpoints, DevWi
 
     connect(btnAddWatchpoint, &QPushButton::clicked, [this]
     {
-        Watchpoint watchpoint ={ mDefaultMode, 0, 1, QStringLiteral("wp") + QString::number(mWpNum++) };
+        Watchpoint watchpoint = { mDefaultMode, 0, 1, QStringLiteral("wp") + QString::number(mWpNum++) };
         addWatchpoint(watchpoint, true);
     });
 
@@ -111,7 +106,7 @@ WatchpointsWidget::WatchpointsWidget(const QList<Watchpoint> &watchpoints, DevWi
     connect(mBtnRemoveSelected, &QPushButton::clicked, this, &WatchpointsWidget::removeSelected);
     connect(mTbl, &QTableWidget::itemChanged, this, &WatchpointsWidget::itemChanged);
     connect(mTbl, &QTableWidget::itemActivated, this, &WatchpointsWidget::itemActivated);
-    connect(mTbl, &QTableWidget::itemPressed, this, &WatchpointsWidget::itemClicked);
+    connect(mTbl, &QTableWidget::itemPressed, this, &WatchpointsWidget::itemPressed);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
@@ -236,7 +231,7 @@ bool WatchpointsWidget::toggleMode(int row, int bit)
     return true;
 }
 
-void WatchpointsWidget::itemClicked(QTableWidgetItem *item)
+void WatchpointsWidget::itemPressed(QTableWidgetItem *item)
 {
     int bit;
 
@@ -309,9 +304,9 @@ void WatchpointsWidget::itemChanged(QTableWidgetItem *item)
             if (Util::isHexAddress(item->text()))
             {
                 item->setBackground(mNormalBackground);
-                blockSignals(true);
+                mTbl->blockSignals(true);
                 item->setText(Util::int2hex(Util::hex2int(item->text()), Util::AddrByteWidth));
-                blockSignals(false);
+                mTbl->blockSignals(false);
 
                 if (Util::isDecString(mTbl->item(row, Column::Size)->text(), 1, 16777215))
                 {

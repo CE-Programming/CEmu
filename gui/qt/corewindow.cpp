@@ -184,6 +184,13 @@ void CoreWindow::createDeveloperWidgets()
         {Watchpoint::Mode::R, 30, 25, "test3"},
         {Watchpoint::Mode::X, 40, 35, "test4"}
     };
+    QList<PortMonitor> portmonitors =
+    {
+        {PortMonitor::Mode::R, 10 },
+        {PortMonitor::Mode::W, 20 },
+        {PortMonitor::Mode::W | PortMonitor::Mode::R, 30 },
+        {PortMonitor::Mode::F, 40 }
+    };
 
     auto *consoleDock = new KDDockWidgets::DockWidget(tr("Console"));
     auto *console = new ConsoleWidget();
@@ -216,7 +223,7 @@ void CoreWindow::createDeveloperWidgets()
     auto *osVars = new OsVarsWidget();
 
     auto *portMonitorDock = new KDDockWidgets::DockWidget(tr("Port Monitor"));
-    auto *portMonitor = new PortMonitorWidget();
+    auto *portMonitor = new PortMonitorWidget(portmonitors);
 
     auto *watchpointsDock = new KDDockWidgets::DockWidget(tr("Watchpoints"));
     auto *mWatchpointWidget = new WatchpointsWidget(watchpoints);

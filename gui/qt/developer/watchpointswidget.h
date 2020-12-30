@@ -55,7 +55,7 @@ private slots:
     int getWatchpointMode(int row);
     bool toggleMode(int row, int bit);
     void removeSelected();
-    void itemClicked(QTableWidgetItem *item);
+    void itemPressed(QTableWidgetItem *item);
     void itemActivated(QTableWidgetItem *item);
     void itemChanged(QTableWidgetItem *item);
 
@@ -82,12 +82,6 @@ private:
     QPushButton *mBtnRemoveSelected;
 
     QBrush mNormalBackground;
-
-    static const QString mEnabledText;
-    static const QString mDisabledText;
-    static const QString mRdText;
-    static const QString mWrText;
-    static const QString mRdWrText;
 };
 
 #endif

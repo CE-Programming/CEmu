@@ -26,8 +26,10 @@ public:
     explicit Util() {};
 
     static const int AddrByteWidth;
+    static const int PortByteWidth;
 
     static bool isHexAddress(const QString &str);
+    static bool isHexPort(const QString &str);
     static bool isHexString(const QString &str, int min = 0, int max = INT_MAX);
     static bool isDecString(const QString &str, int min = 0, int max = INT_MAX);
     static int hex2int(const QString &str);
