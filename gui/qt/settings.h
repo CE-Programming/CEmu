@@ -88,6 +88,7 @@ public:
     static const QString DevTIOS;
     static const QString DevOpenDebug;
     static const QString SettingsPath;
+    static const QString StatesPath;
     static const QString Language;
 
 private:

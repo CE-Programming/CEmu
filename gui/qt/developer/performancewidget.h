@@ -14,44 +14,22 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MEMORYWIDGET_H
-#define MEMORYWIDGET_H
+#ifndef PERFORMANCEWIDGET_H
+#define PERFORMANCEWIDGET_H
 
 #include "devwidget.h"
-class HexWidget;
-
 QT_BEGIN_NAMESPACE
 class QCheckBox;
 class QLineEdit;
 class QSpinBox;
 QT_END_NAMESPACE
 
-class MemoryWidgetList
-{
-public:
-    MemoryWidgetList();
-    ~MemoryWidgetList();
-
-    MemoryWidgetList *prev() const { return mPrev; }
-    MemoryWidgetList *next() const { return mNext; }
-    bool empty() const { return mPrev == this; }
-
-protected:
-    MemoryWidgetList(MemoryWidgetList *list);
-    MemoryWidgetList *mPrev, *mNext;
-};
-
-class MemoryWidget : public QWidget, public MemoryWidgetList
+class PerformanceWidget : public DevWidget
 {
     Q_OBJECT
 
 public:
-    explicit MemoryWidget(QWidget *parent = nullptr);
-    MemoryWidget(MemoryWidgetList *list, QWidget *parent = nullptr);
-
-private:
-    void init();
-    HexWidget *mView;
+    explicit PerformanceWidget(DevWidget *parent = nullptr);
 };
 
 #endif

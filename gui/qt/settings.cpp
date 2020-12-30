@@ -40,6 +40,7 @@ const QString Settings::DevSoftCmds       = QStringLiteral("developer/softcmds")
 const QString Settings::DevTIOS           = QStringLiteral("developer/tios");
 const QString Settings::DevOpenDebug      = QStringLiteral("developer/resetnmi");
 const QString Settings::SettingsPath      = QStringLiteral("preferences/file");
+const QString Settings::StatesPath        = QStringLiteral("states/path");
 const QString Settings::Language          = QStringLiteral("preferences/language");
 
 Settings *Settings::sInstance = nullptr;
@@ -52,8 +53,9 @@ Settings::Settings(const QString &dirpath)
     QSettings::setDefaultFormat(QSettings::IniFormat);
     sInstance->mSettings = new QSettings(dirpath + "/config/preferences.conf", QSettings::IniFormat);
 
+    setTextOption(Settings::SettingsPath, dirpath + "/config");
+    setTextOption(Settings::StatesPath, dirpath + "/states");
     setTextOption(Settings::LayoutFile, dirpath + "/config/layout.json");
-    setTextOption(Settings::SettingsPath, dirpath);
 
     setDefaults(false);
 }

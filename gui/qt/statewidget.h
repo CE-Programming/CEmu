@@ -19,13 +19,34 @@
 
 #include <QtWidgets/QWidget>
 
+QT_BEGIN_NAMESPACE
+class QPushButton;
+class QTableWidget;
+class QTableWidgetItem;
+QT_END_NAMESPACE
+
+class State
+{
+public:
+    QString path;
+};
+
 class StateWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit StateWidget(QWidget *parent = nullptr);
-    ~StateWidget();
+    explicit StateWidget(const QList<State> &states, QWidget *parent = nullptr);
+
+private:
+    void addState(const State &state, bool edit);
+    void removeSelected();
+
+    QTableWidget *mTbl;
+
+    QPushButton *mBtnExportSelected;
+    QPushButton *mBtnRestoreSelected;
+    QPushButton *mBtnRemoveSelected;
 };
 
 #endif

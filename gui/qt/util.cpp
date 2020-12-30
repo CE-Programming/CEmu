@@ -21,12 +21,14 @@
 #include <QtCore/QRegularExpression>
 #include <QtGui/QValidator>
 
-const int Util::AddrByteWidth = 6;
-const int Util::PortByteWidth = 4;
+const int Util::addrByteWidth = 6;
+const int Util::portByteWidth = 4;
 
 const QString Util::error        = QObject::tr("Error");
 const QString Util::warning      = QObject::tr("Warning");
 const QString Util::information  = QObject::tr("Information");
+
+const QString Util::stateExtension = QStringLiteral("ce");
 
 int Util::hex2int(const QString &str)
 {

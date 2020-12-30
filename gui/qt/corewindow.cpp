@@ -37,6 +37,7 @@
 #include "developer/flashramwidget.h"
 #include "developer/osstackswidget.h"
 #include "developer/osvarswidget.h"
+#include "developer/performancewidget.h"
 #include "developer/portmonitorwidget.h"
 #include "developer/watchpointswidget.h"
 #include "developer/visualizerwidget.h"
@@ -69,6 +70,8 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     mCalcsMenu = new QMenu(tr("Calculator"), this);
     mDocksMenu = new QMenu(tr("Docks"), this);
     mDevMenu = new QMenu(tr("Developer"), this);
+    QMenu *importMenu = new QMenu(tr("Import"), this);
+    QMenu *exportMenu = new QMenu(tr("Export"), this);
 
     menubar->addMenu(mCalcsMenu);
     menubar->addMenu(mDocksMenu);
@@ -77,8 +80,19 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     auto *resetAction = mCalcsMenu->addAction(tr("Reset"));
     connect(resetAction, &QAction::triggered, this, &CoreWindow::resetEmu);
 
-    auto *romAction = mCalcsMenu->addAction(tr("Load ROM"));
-    connect(romAction, &QAction::triggered, this, &CoreWindow::loadRom);
+    mCalcsMenu->addSeparator();
+
+    mCalcsMenu->addMenu(importMenu);
+
+    auto *importRomAction = importMenu->addAction(tr("ROM Image"));
+    auto *importRamAction = importMenu->addAction(tr("RAM Image"));
+    auto *importStateAction = importMenu->addAction(tr("Calculator State"));
+
+    mCalcsMenu->addMenu(exportMenu);
+
+    auto *exportRomAction = exportMenu->addAction(tr("ROM Image"));
+    auto *exportRamAction = exportMenu->addAction(tr("RAM Image"));
+    auto *exportStateAction = exportMenu->addAction(tr("Calculator State"));
 
     mCalcsMenu->addSeparator();
 
@@ -121,6 +135,13 @@ CoreWindow::~CoreWindow()
 
 void CoreWindow::createDockWidgets()
 {
+    QList<State> states =
+    {
+        {"test"},
+        {"test2"},
+        {"test3"},
+    };
+
     Q_ASSERT(mDockWidgets.isEmpty());
 
     auto *calcDock = new KDDockWidgets::DockWidget(tr("Calculator"));
@@ -136,7 +157,7 @@ void CoreWindow::createDockWidgets()
     auto *keyHistory = new KeyHistoryWidget();
 
     auto *stateDock = new KDDockWidgets::DockWidget(tr("States"));
-    auto *state = new StateWidget();
+    auto *state = new StateWidget(states);
 
     mCalcOverlay = new CalculatorOverlay(mCalcWidget);
     mCalcOverlay->setVisible(false);
@@ -224,6 +245,9 @@ void CoreWindow::createDeveloperWidgets()
     auto *watchpointsDock = new KDDockWidgets::DockWidget(tr("Watchpoints"));
     auto *mWatchpointWidget = new WatchpointsWidget(watchpoints);
 
+    auto *performanceDock = new KDDockWidgets::DockWidget(tr("Cycle Counter"));
+    auto *performance = new PerformanceWidget();
+
     autotesterDock->setWidget(autotester);
     clocksDock->setWidget(clocks);
     consoleDock->setWidget(console);
@@ -234,6 +258,7 @@ void CoreWindow::createDeveloperWidgets()
     flashRamDock->setWidget(flashRam);
     osStacksDock->setWidget(osStacks);
     osVarsDock->setWidget(osVars);
+    performanceDock->setWidget(performance);
     portMonitorDock->setWidget(portMonitor);
     watchpointsDock->setWidget(mWatchpointWidget);
 
@@ -247,6 +272,7 @@ void CoreWindow::createDeveloperWidgets()
     mDockWidgets << flashRamDock;
     mDockWidgets << osStacksDock;
     mDockWidgets << osVarsDock;
+    mDockWidgets << performanceDock;
     mDockWidgets << portMonitorDock;
     mDockWidgets << watchpointsDock;
 
@@ -261,6 +287,7 @@ void CoreWindow::createDeveloperWidgets()
     mDevMenu->addAction(osVarsDock->toggleAction());
     mDevMenu->addAction(osStacksDock->toggleAction());
     mDevMenu->addAction(devMiscDock->toggleAction());
+    mDevMenu->addAction(performanceDock->toggleAction());
     mDevMenu->addAction(autotesterDock->toggleAction());
 
     mDevMenu->addSeparator();

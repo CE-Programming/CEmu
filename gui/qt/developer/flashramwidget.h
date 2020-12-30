@@ -14,8 +14,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MEMORYWIDGET_H
-#define MEMORYWIDGET_H
+#ifndef FLASHRAMWIDGET_H
+#define FLASHRAMWIDGET_H
 
 #include "devwidget.h"
 class MemoryWidget;

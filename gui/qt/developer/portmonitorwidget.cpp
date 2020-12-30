@@ -88,7 +88,7 @@ PortMonitorWidget::PortMonitorWidget(const QList<PortMonitor> &portmonitors, Dev
 
 void PortMonitorWidget::addPortMonitor(const PortMonitor &portmonitor, bool edit)
 {
-    QString portStr = Util::int2hex(portmonitor.port, Util::PortByteWidth);
+    QString portStr = Util::int2hex(portmonitor.port, Util::portByteWidth);
 
     if (mTbl->rowCount() == 0)
     {
@@ -271,7 +271,7 @@ void PortMonitorWidget::itemChanged(QTableWidgetItem *item)
             if (Util::isHexPort(item->text()))
             {
                 mTbl->blockSignals(true);
-                item->setText(Util::int2hex(Util::hex2int(item->text()), Util::AddrByteWidth));
+                item->setText(Util::int2hex(Util::hex2int(item->text()), Util::addrByteWidth));
                 mTbl->blockSignals(false);
                 setPortMonitorMode(row, getPortMonitorMode(row) | PortMonitor::Mode::E);
                 mTbl->item(row, Column::Port)->setBackground(mNormalBackground);

@@ -114,7 +114,7 @@ WatchpointsWidget::WatchpointsWidget(const QList<Watchpoint> &watchpoints, DevWi
 
 void WatchpointsWidget::addWatchpoint(const Watchpoint &watchpoint, bool edit)
 {
-    QString addrStr = Util::int2hex(watchpoint.addr, Util::AddrByteWidth);
+    QString addrStr = Util::int2hex(watchpoint.addr, Util::addrByteWidth);
     QString sizeStr = QString::number(watchpoint.size);
 
     if (mTbl->rowCount() == 0)
@@ -305,7 +305,7 @@ void WatchpointsWidget::itemChanged(QTableWidgetItem *item)
             {
                 item->setBackground(mNormalBackground);
                 mTbl->blockSignals(true);
-                item->setText(Util::int2hex(Util::hex2int(item->text()), Util::AddrByteWidth));
+                item->setText(Util::int2hex(Util::hex2int(item->text()), Util::addrByteWidth));
                 mTbl->blockSignals(false);
 
                 if (Util::isDecString(mTbl->item(row, Column::Size)->text(), 1, 16777215))

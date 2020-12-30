@@ -108,9 +108,14 @@ void VariableWidget::addRecentVar(const QString &path)
 
 void VariableWidget::removeRecentSelected()
 {
-    foreach(QTableWidgetItem *item, mSentVars->selectedItems())
+    Q_ASSERT(mSentVars->rowCount() != 0);
+
+    for (int i = mSentVars->rowCount() - 1; i >= 0; --i)
     {
-        mSentVars->removeRow(item->row());
+        if (mSentVars->item(i, 0)->isSelected())
+        {
+            mSentVars->removeRow(i);
+        }
     }
 
     if (mSentVars->rowCount() == 0)

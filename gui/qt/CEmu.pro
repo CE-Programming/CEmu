@@ -85,6 +85,7 @@ SOURCES += \
     developer/memorywidget.cpp \
     developer/osstackswidget.cpp \
     developer/osvarwidget.cpp \
+    developer/performancewidget.cpp \
     developer/portmonitorwidget.cpp \
     developer/visualizerwidget.cpp \
     developer/watchpointswidget.cpp \
@@ -160,6 +161,7 @@ HEADERS  += \
     developer/memorywidget.h \
     developer/osstackswidget.h \
     developer/osvarswidget.h \
+    developer/performancewidget.h \
     developer/portmonitorwidget.h \
     developer/visualizerwidget.h \
     developer/watchpointswidget.h \
