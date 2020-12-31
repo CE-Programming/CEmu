@@ -34,17 +34,24 @@ public:
 
 private slots:
     void createState();
+    void importState();
+    void exportState();
 
 private:
     QString getStatePath(const QString &name) const;
     void addState(const QString &name, bool edit);
     void removeSelected();
 
-    QTableWidget *mTbl;
+    static const QString sDefaultStateName;
+    static const QString sStateExtension;
 
-    QPushButton *mBtnExportSelected;
-    QPushButton *mBtnRestoreSelected;
-    QPushButton *mBtnRemoveSelected;
+    QTableWidget *mTbl;
+    int mStateNum;
+
+    QPushButton *mBtnExport;
+    QPushButton *mBtnImport;
+    QPushButton *mBtnRestore;
+    QPushButton *mBtnRemove;
 };
 
 #endif

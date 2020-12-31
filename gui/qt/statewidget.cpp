@@ -21,6 +21,7 @@
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
 #include <QtWidgets/QBoxLayout>
+#include <QtWidgets/QFileDialog>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QMessageBox>
@@ -28,8 +29,12 @@
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QTableWidget>
 
+const QString StateWidget::sDefaultStateName = tr("State");
+const QString StateWidget::sStateExtension = QStringLiteral(".cemu");
+
 StateWidget::StateWidget(QWidget *parent)
-    : QWidget{parent}
+    : QWidget{parent},
+      mStateNum{1}
 {
     mTbl = new QTableWidget(0, 1);
     mTbl->setHorizontalHeaderLabels({ tr("State name") });
@@ -38,28 +43,39 @@ StateWidget::StateWidget(QWidget *parent)
     mTbl->setSelectionMode(QAbstractItemView::ExtendedSelection);
     mTbl->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-    mBtnExportSelected = new QPushButton(tr("Export"));
-    mBtnRestoreSelected = new QPushButton(tr("Restore"));
-    mBtnRemoveSelected = new QPushButton(tr("Remove selected"));
+    mBtnExport = new QPushButton(tr("Export state"));
+    mBtnImport = new QPushButton(tr("Import state"));
 
-    QPushButton *btnCreateState = new QPushButton(tr("Save calculator state"));
+    mBtnRestore = new QPushButton(tr("Restore"));
+    mBtnRemove = new QPushButton(tr("Remove"));
 
-    QHBoxLayout *hboxBtns = new QHBoxLayout;
-    hboxBtns->addWidget(btnCreateState);
-    hboxBtns->addStretch(1);
-    hboxBtns->addWidget(mBtnExportSelected);
-    hboxBtns->addWidget(mBtnRestoreSelected);
-    hboxBtns->addWidget(mBtnRemoveSelected);
+    QPushButton *btnCreateState = new QPushButton(tr("Save state"));
+
+    btnCreateState->setIcon(QIcon(style()->standardIcon(QStyle::SP_DialogSaveButton)));
+    mBtnRemove->setIcon(QIcon(style()->standardIcon(QStyle::SP_DialogDiscardButton)));
+
+
+    QHBoxLayout *hboxTopBtns = new QHBoxLayout;
+    hboxTopBtns->addWidget(btnCreateState);
+    hboxTopBtns->addStretch(1);
+    hboxTopBtns->addWidget(mBtnRestore);
+    hboxTopBtns->addWidget(mBtnRemove);
+
+    QHBoxLayout *hboxBotBtns = new QHBoxLayout;
+    hboxBotBtns->addWidget(mBtnImport);
+    hboxBotBtns->addWidget(mBtnExport);
+    hboxBotBtns->addStretch();
 
     QVBoxLayout *vLayout = new QVBoxLayout;
-    vLayout->addLayout(hboxBtns);
+    vLayout->addLayout(hboxTopBtns);
     vLayout->addWidget(mTbl);
+    vLayout->addLayout(hboxBotBtns);
     setLayout(vLayout);
 
     QDir stateDir(Settings::textOption(Settings::StatesPath));
     if (stateDir.exists())
     {
-        stateDir.setNameFilters({QStringLiteral("*.ce")});
+        stateDir.setNameFilters({'*' + sStateExtension});
         stateDir.setFilter(QDir::Files | QDir::Readable);
 
         foreach (const QString &state, stateDir.entryList())
@@ -68,13 +84,17 @@ StateWidget::StateWidget(QWidget *parent)
         }
     }
 
-    connect(mBtnRemoveSelected, &QPushButton::clicked, this, &StateWidget::removeSelected);
+    connect(mBtnRemove, &QPushButton::clicked, this, &StateWidget::removeSelected);
+    connect(mBtnImport, &QPushButton::clicked, this, &StateWidget::importState);
+    connect(mBtnExport, &QPushButton::clicked, this, &StateWidget::exportState);
     connect(btnCreateState, &QPushButton::clicked, this, &StateWidget::createState);
     connect(mTbl, &QTableWidget::itemSelectionChanged, [this]
     {
-        bool enable = mTbl->selectedItems().count() == 1;
-        mBtnExportSelected->setEnabled(enable);
-        mBtnRestoreSelected->setEnabled(enable);
+        int count = mTbl->selectedItems().count();
+        bool enable = count == 1;
+        mBtnExport->setEnabled(enable);
+        mBtnRestore->setEnabled(enable);
+        mBtnRemove->setEnabled(count >= 1);
     });
     connect(mTbl, &QTableWidget::itemChanged, [this](QTableWidgetItem *item)
     {
@@ -107,7 +127,7 @@ StateWidget::StateWidget(QWidget *parent)
 
 QString StateWidget::getStatePath(const QString &state) const
 {
-    return Settings::textOption(Settings::StatesPath) + '/' + state + '.' + Util::stateExtension;
+    return Settings::textOption(Settings::StatesPath) + '/' + state + sStateExtension;
 }
 
 void StateWidget::addState(const QString &state, bool edit)
@@ -121,7 +141,7 @@ void StateWidget::addState(const QString &state, bool edit)
 
     if (mTbl->rowCount() == 0)
     {
-        mBtnRemoveSelected->setEnabled(true);
+        mBtnRemove->setEnabled(true);
     }
 
     QTableWidgetItem *item = new QTableWidgetItem(state);
@@ -141,7 +161,6 @@ void StateWidget::addState(const QString &state, bool edit)
 void StateWidget::createState()
 {
     QString stateDir = Settings::textOption(Settings::StatesPath);
-    QString state = Util::randomString(6);
     QDir dir;
 
     if (!dir.exists(stateDir))
@@ -149,13 +168,70 @@ void StateWidget::createState()
         dir.mkpath(stateDir);
     }
 
+    QString state = sDefaultStateName + QString::number(mStateNum);
+    QString dstPath = getStatePath(state);
+    while (QFileInfo(dstPath).exists())
+    {
+        state = sDefaultStateName + QString::number(mStateNum++);
+        dstPath = getStatePath(state);
+    }
+
     // temporary for testing
     QFile file(getStatePath(state));
     file.open(QIODevice::WriteOnly);
-    file.putChar('E');
+    file.putChar('S');
     file.close();
 
     addState(state, true);
+}
+
+void StateWidget::importState()
+{
+    QFileDialog dialog(this, tr("Import Calculator State"));
+    dialog.setAcceptMode(QFileDialog::AcceptOpen);
+    dialog.setDefaultSuffix(sStateExtension);
+    dialog.setNameFilter('*' + sStateExtension);
+
+    if (dialog.exec())
+    {
+        QString srcPath = dialog.selectedFiles().first();
+        QString baseName = QFileInfo(srcPath).baseName();
+        QString dstPath = getStatePath(baseName);
+        int copy = 0;
+
+        while (QFileInfo(dstPath).exists())
+        {
+            baseName = QFileInfo(srcPath).baseName() + QString::number(copy++);
+            dstPath = getStatePath(baseName);
+        }
+
+        if (QFile::copy(srcPath, dstPath))
+        {
+            addState(baseName, true);
+        }
+        else
+        {
+            QMessageBox::critical(nullptr, Util::error, tr("Could not import state."));
+        }
+    }
+}
+
+void StateWidget::exportState()
+{
+    QFileDialog dialog(this, tr("Export Calculator State"));
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    dialog.setDefaultSuffix(sStateExtension);
+    dialog.setNameFilter('*' + sStateExtension);
+
+    if (dialog.exec())
+    {
+        QTableWidgetItem *item = mTbl->selectedItems().first();
+
+        QString srcPath = getStatePath(item->text());
+        QString dstPath = dialog.selectedFiles().first();
+
+        QFile::copy(srcPath, dstPath);
+    }
 }
 
 void StateWidget::removeSelected()
@@ -174,6 +250,6 @@ void StateWidget::removeSelected()
 
     if (mTbl->rowCount() == 0)
     {
-        mBtnRemoveSelected->setEnabled(false);
+        mBtnRemove->setEnabled(false);
     }
 }

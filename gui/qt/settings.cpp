@@ -82,7 +82,7 @@ void Settings::setDefaults(bool force)
     setDefaultOption(force, Settings::KeyMap, Keymap::CEmu);
     setDefaultOption(force, Settings::KeypadColor, KeypadWidget::Color::Denim);
     setDefaultOption(force, Settings::KeyMapCustom, QStringLiteral("none"));
-    setDefaultOption(force, Settings::KeyHistoryFont, 9);
+    setDefaultOption(force, Settings::KeyHistoryFont, 18);
     setDefaultOption(force, Settings::ConsoleAutoScroll, true);
     setDefaultOption(force, Settings::AutoUpdate, true);
     setDefaultOption(force, Settings::EmuThrottle, true);

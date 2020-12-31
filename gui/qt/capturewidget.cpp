@@ -17,6 +17,8 @@
 #include "capturewidget.h"
 #include "screenshotwidget.h"
 
+#include <QtGui/QClipboard>
+#include <QtWidgets/QApplication>
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QLabel>
@@ -40,6 +42,10 @@ CaptureWidget::CaptureWidget(QWidget *parent)
     QPushButton *btnCopyScreen = new QPushButton(tr("Copy screen"));
     QPushButton *btnRecord = new QPushButton(tr("Record screen"));
     QSpinBox *spnFrameskip = new QSpinBox;
+
+#ifndef HAS_APNG_SUPPORT
+    grpAnimated->setEnabled(false);
+#endif
 
     spnFrameskip->setMinimum(0);
     spnFrameskip->setMaximum(5);
@@ -92,6 +98,7 @@ CaptureWidget::CaptureWidget(QWidget *parent)
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     connect(btnScreenshot, &QPushButton::clicked, this, &CaptureWidget::takeScreenshot);
+    connect(btnCopyScreen, &QPushButton::clicked, this, &CaptureWidget::copyScreen);
 }
 
 void CaptureWidget::takeScreenshot()
@@ -101,4 +108,9 @@ void CaptureWidget::takeScreenshot()
     screenshot->setImage(QImage(QStringLiteral(":/assets/test/screen.png")));
 
     mLayoutTaken->insertWidget(0, screenshot);
+}
+
+void CaptureWidget::copyScreen()
+{
+    QApplication::clipboard()->setImage(QImage(QStringLiteral(":/assets/test/screen.png")), QClipboard::Clipboard);
 }

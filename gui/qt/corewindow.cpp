@@ -70,8 +70,6 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     mCalcsMenu = new QMenu(tr("Calculator"), this);
     mDocksMenu = new QMenu(tr("Docks"), this);
     mDevMenu = new QMenu(tr("Developer"), this);
-    QMenu *importMenu = new QMenu(tr("Import"), this);
-    QMenu *exportMenu = new QMenu(tr("Export"), this);
 
     menubar->addMenu(mCalcsMenu);
     menubar->addMenu(mDocksMenu);
@@ -82,17 +80,11 @@ CoreWindow::CoreWindow(const QString &uniqueName,
 
     mCalcsMenu->addSeparator();
 
-    mCalcsMenu->addMenu(importMenu);
+    auto *importRomAction = mCalcsMenu->addAction(tr("Import ROM"));
+    connect(importRomAction, &QAction::triggered, this, &CoreWindow::importRom);
 
-    auto *importRomAction = importMenu->addAction(tr("ROM Image"));
-    auto *importRamAction = importMenu->addAction(tr("RAM Image"));
-    auto *importStateAction = importMenu->addAction(tr("Calculator State"));
-
-    mCalcsMenu->addMenu(exportMenu);
-
-    auto *exportRomAction = exportMenu->addAction(tr("ROM Image"));
-    auto *exportRamAction = exportMenu->addAction(tr("RAM Image"));
-    auto *exportStateAction = exportMenu->addAction(tr("Calculator State"));
+    auto *exportRomAction = mCalcsMenu->addAction(tr("Export ROM"));
+    connect(exportRomAction, &QAction::triggered, this, &CoreWindow::exportRom);
 
     mCalcsMenu->addSeparator();
 
@@ -103,6 +95,8 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     connect(quitAction, &QAction::triggered, qApp, &QApplication::quit);
 
     createDockWidgets();
+
+    mDocksMenu->addSeparator();
 
     auto *saveLayoutAction = mDocksMenu->addAction(tr("Save Layout"));
     connect(saveLayoutAction, &QAction::triggered, this, &CoreWindow::saveLayout);
@@ -149,14 +143,14 @@ void CoreWindow::createDockWidgets()
     auto *keyHistoryDock = new KDDockWidgets::DockWidget(tr("Key History"));
     auto *keyHistory = new KeyHistoryWidget();
 
-    auto *stateDock = new KDDockWidgets::DockWidget(tr("States"));
+    auto *stateDock = new KDDockWidgets::DockWidget(tr("Calculator State"));
     auto *state = new StateWidget();
 
     mCalcOverlay = new CalculatorOverlay(mCalcWidget);
     mCalcOverlay->setVisible(false);
 
     connect(mCalcOverlay, &CalculatorOverlay::createRom, this, &CoreWindow::createRom);
-    connect(mCalcOverlay, &CalculatorOverlay::loadRom, this, &CoreWindow::loadRom);
+    connect(mCalcOverlay, &CalculatorOverlay::loadRom, this, &CoreWindow::importRom);
 
     calcDock->setWidget(mCalcWidget);
     keyHistoryDock->setWidget(keyHistory);
@@ -332,18 +326,40 @@ void CoreWindow::createRom()
     }
 }
 
-void CoreWindow::loadRom()
+void CoreWindow::importRom()
 {
     QFileDialog dialog(this);
     dialog.setFileMode(QFileDialog::AnyFile);
-    dialog.setWindowTitle(tr("Select ROM file"));
+    dialog.setWindowTitle(tr("Import ROM"));
     dialog.setNameFilter(tr("ROM Image (*.rom *.Rom *.ROM);;All Files (*.*)"));
+
     if (dialog.exec())
     {
         QString romFile = dialog.selectedFiles().first();
 
         Settings::setTextOption(Settings::RomFile, romFile);
         emit romChanged();
+    }
+}
+
+void CoreWindow::exportRom()
+{
+    QFileDialog dialog(this, tr("Export ROM"));
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    dialog.setDefaultSuffix(QStringLiteral(".rom"));
+    dialog.setNameFilter(QStringLiteral("*.rom"));
+
+    if (dialog.exec())
+    {
+        const QString romFile = dialog.selectedFiles().first();
+        if (!romFile.isEmpty())
+        {
+            // temporary for testing
+            QFile file(romFile);
+            file.open(QIODevice::WriteOnly);
+            file.putChar('R');
+            file.close();
+        }
     }
 }
 

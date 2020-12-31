@@ -52,7 +52,8 @@ signals:
 
 private slots:
     void createRom();
-    void loadRom();
+    void importRom();
+    void exportRom();
     void resetEmu();
     void showPreferences();
     bool saveLayout(bool ignoreErrors = false);

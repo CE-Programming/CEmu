@@ -31,6 +31,7 @@ public:
 
 public slots:
     void takeScreenshot();
+    void copyScreen();
 
 private:
     QVBoxLayout *mLayoutTaken;

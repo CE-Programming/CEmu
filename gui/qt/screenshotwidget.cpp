@@ -89,12 +89,17 @@ void ScreenshotWidget::saveImage()
 
     if (dialog.exec())
     {
+        const QString imageFile = dialog.selectedFiles().first();
+
+        if (!imageFile.isEmpty())
+        {
 #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-        pixmap()->
+            pixmap()->
 #else
-        pixmap(Qt::ReturnByValue).
+            pixmap(Qt::ReturnByValue).
 #endif
-            save(dialog.selectedFiles().first());
+                save(dialog.selectedFiles().first());
+        }
     }
 }
 

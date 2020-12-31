@@ -28,8 +28,6 @@ const QString Util::error = QObject::tr("Error");
 const QString Util::warning = QObject::tr("Warning");
 const QString Util::information = QObject::tr("Information");
 
-const QString Util::stateExtension = QStringLiteral("ce");
-
 int Util::hex2int(const QString &str)
 {
     return static_cast<int>(strtol(str.toStdString().c_str(), nullptr, 16));
