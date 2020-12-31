@@ -5,7 +5,7 @@ endef
 reverse = $(if $(wordlist 2,2,$1),$(call reverse,$(wordlist 2,$(words $1),$1)) $(firstword $1),$1)
 
 ifeq ($(OS),Windows_NT)
-MKDIR          = ( md $1 2>nul || call )
+MKDIR         = ( md $1 2>nul || call )
 REMOVE        = ( del /f /q $1 2>nul || call )
 REMOVE_DIR    = ( rd /q $1 2>nul || call )
 WHERE_IS      = where 2>nul
@@ -26,8 +26,8 @@ endif
 OBJECT_EXT    = .o
 endif
 
-CC            = $(or $(firstword $(shell $(WHERE_IS) clang gcc cc)),cc)
-AR_C          = ar cqs
+CC            = $(or $(firstword $(shell $(WHERE_IS) $(addprefix $(CROSS_COMPILE),clang gcc cc))),$(CROSS_COMPILE)cc)
+AR_C          = $(CROSS_COMPILE)ar cqs
 
 STATICLIB_EXT = .a
 
