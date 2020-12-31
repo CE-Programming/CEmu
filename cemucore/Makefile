@@ -18,11 +18,16 @@ REMOVE        = rm -f $1
 REMOVE_DIR    = ( rmdir $1 2>/dev/null || true )
 WHERE_IS      = which 2>/dev/null
 
+ifeq ($(shell uname -s),Darwin)
+SHLIB_EXT     = .dylib
+else
 SHLIB_EXT     = .so
+endif
 OBJECT_EXT    = .o
 endif
 
 CC            = $(or $(firstword $(shell $(WHERE_IS) clang gcc cc)),cc)
+AR_C          = ar cqs
 
 STATICLIB_EXT = .a
 
@@ -55,7 +60,7 @@ $(SHLIB_TARGET): $(OBJECTS) | $(ARTIFACT_DIRS)
 
 $(STATICLIB_TARGET): $(OBJECTS) | $(ARTIFACT_DIRS)
 	$(call REMOVE,$@)
-	$(AR) qc $@ $^
+	$(AR_C) $@ $^
 
 $(BUILD)/%.o: % $(HEADERS) | $(ARTIFACT_DIRS)
 	$(CC) $(CFLAGS) -c -o $@ $<
