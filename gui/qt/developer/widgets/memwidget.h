@@ -14,24 +14,27 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DEVWIDGET_H
-#define DEVWIDGET_H
+#ifndef MEMWIDGET_H
+#define MEMWIDGET_H
+
+class HexWidget;
+
+namespace KDDockWidgets
+{
+class DockWidget;
+}
 
 #include <QtWidgets/QWidget>
 
-class DevWidget : public QWidget
+class MemWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit DevWidget(QWidget *parent = nullptr)
-        : QWidget{parent} { enable(); }
+    explicit MemWidget(QWidget *parent = nullptr);
 
-protected:
-    virtual void storeState() {}
-    virtual void loadState() {}
-    virtual void disable() { setEnabled(false); }
-    virtual void enable() { setEnabled(true); }
+private:
+    HexWidget *mView;
 };
 
 #endif

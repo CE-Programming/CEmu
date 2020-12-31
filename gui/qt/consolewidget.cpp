@@ -18,6 +18,8 @@
 
 #include "settings.h"
 
+#include <kddockwidgets/DockWidget.h>
+
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QPlainTextEdit>
@@ -25,8 +27,8 @@
 #include <QtWidgets/QRadioButton>
 #include <QtWidgets/QSpacerItem>
 
-ConsoleWidget::ConsoleWidget(QWidget *parent)
-    : QWidget{parent}
+ConsoleWidget::ConsoleWidget(DockedWidgetList &list)
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Console")}, list}
 {
     QHBoxLayout *hlayout = new QHBoxLayout();
 

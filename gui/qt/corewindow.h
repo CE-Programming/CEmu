@@ -17,10 +17,11 @@
 #ifndef COREWINDOW_H
 #define COREWINDOW_H
 
-#include "cemucore.h"
-#include "developer/memorywidget.h"
 #include "developer/visualizerwidget.h"
+#include "dockedwidget.h"
 class QtKeypadBridge;
+
+#include <cemucore.h>
 
 #include <kddockwidgets/DockWidget.h>
 #include <kddockwidgets/MainWindow.h>
@@ -70,12 +71,8 @@ private:
     void setKeymap();
 
     void closeEvent(QCloseEvent *) override;
-    void addVisualizerDock(KDDockWidgets::DockWidgetBase *dockWidget, const QString &config = QString());
-    void addMemoryDock(KDDockWidgets::DockWidgetBase *dockWidget);
 
-    KDDockWidgets::DockWidget::List mDockWidgets;
-    VisualizerWidgetList mVisualizerWidgets;
-    MemoryWidgetList mMemoryWidgets;
+    DockedWidgetList mDockedWidgets;
     QStringList mVisualizerConfigs;
 
     QtKeypadBridge *mKeypadBridge;
@@ -88,6 +85,7 @@ private:
     CalculatorWidget *mCalcWidget;
 
     ti_device_t mCalcType;
+    cemucore_t *mCore;
 
     static const QString sErrorStr;
     static const QString sWarningStr;

@@ -16,6 +16,8 @@
 
 #include "variablewidget.h"
 
+#include <kddockwidgets/DockWidget.h>
+
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHeaderView>
@@ -23,8 +25,8 @@
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QTableWidget>
 
-VariableWidget::VariableWidget(const QStringList &recentVars, QWidget *parent)
-    : QWidget{parent}
+VariableWidget::VariableWidget(DockedWidgetList &list, const QStringList &recentVars)
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Variable Transfer")}, list}
 {
     mCalcVars = new QTableWidget(0, 3);
     mCalcVars->setHorizontalHeaderLabels({tr("Name"), tr("Type"), tr("Preview")});

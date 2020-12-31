@@ -15,8 +15,11 @@
  */
 
 #include "disassemblywidget.h"
+
+#include "../util.h"
 #include "widgets/disasmwidget.h"
-#include "util.h"
+
+#include <kddockwidgets/DockWidget.h>
 
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QCheckBox>
@@ -25,10 +28,10 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QSizePolicy>
 
-DisassemblyWidget::DisassemblyWidget(DevWidget *parent)
-    : DevWidget{parent}
+DisassemblyWidget::DisassemblyWidget(DockedWidgetList &list)
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Disassembly")}, list}
 {
-    mDisasm = new DisasmWidget;
+    mDisasm = new DisasmWidget{this};
 
     QGroupBox *grpAddr = new QGroupBox(tr("Address"));
     QGroupBox *grpEquates = new QGroupBox(tr("Equates"));

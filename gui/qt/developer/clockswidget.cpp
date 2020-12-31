@@ -17,16 +17,18 @@
 #include "clockswidget.h"
 #include "widgets/highlighteditwidget.h"
 
+#include <kddockwidgets/DockWidget.h>
+
 #include <QtGui/QIntValidator>
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QCheckBox>
-#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QGroupBox>
-#include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QLabel>
+#include <QtWidgets/QLineEdit>
+#include <QtWidgets/QSizePolicy>
 
-ClocksWidget::ClocksWidget(DevWidget *parent)
-    : DevWidget{parent}
+ClocksWidget::ClocksWidget(DockedWidgetList &list)
+    : DockedWidget{new KDDockWidgets::DockWidget(QStringLiteral("Clocks")), list}
 {
     QGroupBox *grpGpt = new QGroupBox(tr("General Purpose Timers"));
     QGroupBox *grpRtc = new QGroupBox(tr("Real Time Clock"));

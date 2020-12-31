@@ -4,7 +4,7 @@ lessThan(QT_MAJOR_VERSION, 6) : if (lessThan(QT_MAJOR_VERSION, 5) | lessThan(QT_
 TARGET = CEmu
 TEMPLATE = app
 
-CONFIG += c++11 console
+CONFIG += c++11 console no_include_pwd
 
 # Dependencies
 !defined(DEPLIBS, var) : DEPLIBS = STATIC
@@ -13,7 +13,7 @@ QMAKE_EXTRA_TARGETS += cemucore cemucore.clean cemucore.distclean
 cemucore.path = $$_PRO_FILE_PWD_/../../cemucore
 cemucore.outpath = $$OUT_PWD/cemucore
 cemucore.target = $$cemucore.outpath/libcemucore.$$eval(QMAKE_EXTENSION_$${DEPLIBS}LIB)
-cemucore.commands = $(MAKE) -C $$shell_quote($$cemucore.path) $$shell_quote(BUILD=$$cemucore.outpath) $$shell_quote(CROSS_COMPILE=$$CROSS_COMPILE) $$shell_quote($${DEPLIBS}LIB=1)
+cemucore.commands = $(MAKE) -C $$shell_quote($$cemucore.path) $$shell_quote(BUILD=$$cemucore.outpath) $$shell_quote(CROSS_COMPILE=$$CROSS_COMPILE) $$shell_quote(CFLAGS=-fPIC) $$shell_quote($${DEPLIBS}LIB=1)
 cemucore.depends = $$cemucore.path
 cemucore.clean.target = cemucore_clean
 cemucore.clean.commands = $$cemucore.commands clean
@@ -74,7 +74,6 @@ HEADERS += \
     developer/controlwidget.h \
     developer/cpuwidget.h \
     developer/devmiscwidget.h \
-    developer/devwidget.h \
     developer/disassemblywidget.h \
     developer/flashramwidget.h \
     developer/memorywidget.h \
@@ -87,7 +86,9 @@ HEADERS += \
     developer/widgets/disasmwidget.h \
     developer/widgets/hexwidget.h \
     developer/widgets/highlighteditwidget.h \
+    developer/widgets/memwidget.h \
     developer/widgets/visualizerlcdwidget.h \
+    dockedwidget.h \
     dockwidget.h \
     keyhistorywidget.h \
     keypad/alphakey.h \
@@ -136,7 +137,9 @@ SOURCES += \
     developer/widgets/disasmwidget.cpp \
     developer/widgets/hexwidget.cpp \
     developer/widgets/highlighteditwidget.cpp \
+    developer/widgets/memwidget.cpp \
     developer/widgets/visualizerlcdwidget.cpp \
+    dockedwidget.cpp \
     dockwidget.cpp \
     keyhistorywidget.cpp \
     keypad/arrowkey.cpp \

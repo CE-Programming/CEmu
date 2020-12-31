@@ -15,7 +15,10 @@
  */
 
 #include "watchpointswidget.h"
-#include "util.h"
+
+#include "../util.h"
+
+#include <kddockwidgets/DockWidget.h>
 
 #include <QtGui/QColor>
 #include <QtWidgets/QBoxLayout>
@@ -23,13 +26,13 @@
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QPushButton>
+#include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QTableWidget>
 #include <QtWidgets/QTableWidgetItem>
 #include <QtWidgets/QToolButton>
-#include <QtWidgets/QSizePolicy>
 
-WatchpointsWidget::WatchpointsWidget(const QList<Watchpoint> &watchpoints, DevWidget *parent)
-    : DevWidget{parent},
+WatchpointsWidget::WatchpointsWidget(DockedWidgetList &list, const QList<Watchpoint> &watchpoints)
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Watchpoints")}, list},
       mWpNum{0},
       mDefaultMode{Watchpoint::Mode::R | Watchpoint::Mode::W}
 {

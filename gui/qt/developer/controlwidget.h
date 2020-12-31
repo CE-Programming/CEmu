@@ -17,14 +17,14 @@
 #ifndef CONTROLWIDGET_H
 #define CONTROLWIDGET_H
 
-#include "devwidget.h"
+#include "../dockedwidget.h"
 
-class ControlWidget : public DevWidget
+class ControlWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit ControlWidget(DevWidget *parent = nullptr);
+    explicit ControlWidget(DockedWidgetList &list);
 };
 
 #endif

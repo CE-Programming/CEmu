@@ -15,10 +15,11 @@
  */
 
 #include "visualizerlcdwidget.h"
-#include "settings.h"
-#include "util.h"
 
-#include "cemucore.h"
+#include "../../settings.h"
+#include "../../util.h"
+
+#include <cemucore.h>
 
 #include <cmath>
 #include <QtCore/QMimeData>

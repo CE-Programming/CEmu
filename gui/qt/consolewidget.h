@@ -17,21 +17,22 @@
 #ifndef CONSOLEWIDGET_H
 #define CONSOLEWIDGET_H
 
+#include "dockedwidget.h"
+
 #include <QtGui/QTextCharFormat>
 #include <QtWidgets/QWidget>
 QT_BEGIN_NAMESPACE
 class QCheckBox;
 class QPlainTextEdit;
 class QRadioButton;
-class QRadioButton;
 QT_END_NAMESPACE
 
-class ConsoleWidget : public QWidget
+class ConsoleWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit ConsoleWidget(QWidget *parent = nullptr);
+    explicit ConsoleWidget(DockedWidgetList &list);
 
 public slots:
     void append(const QString &str, const QColor &colorFg, const QColor &colorBg);

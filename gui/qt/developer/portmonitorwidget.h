@@ -17,7 +17,7 @@
 #ifndef PORTMONITORWIDGET_H
 #define PORTMONITORWIDGET_H
 
-#include "devwidget.h"
+#include "../dockedwidget.h"
 
 QT_BEGIN_NAMESPACE
 class QPushButton;
@@ -40,12 +40,12 @@ public:
     int port;
 };
 
-class PortMonitorWidget : public DevWidget
+class PortMonitorWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit PortMonitorWidget(const QList<PortMonitor> &portmonitors, DevWidget *parent = nullptr);
+    explicit PortMonitorWidget(DockedWidgetList &list, const QList<PortMonitor> &portmonitors);
 
 private slots:
     void addPortMonitor(const PortMonitor &portmonitor, bool edit);

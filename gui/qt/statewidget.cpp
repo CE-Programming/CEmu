@@ -18,6 +18,8 @@
 #include "settings.h"
 #include "util.h"
 
+#include <kddockwidgets/DockWidget.h>
+
 #include <QtCore/QDir>
 #include <QtCore/QFileInfo>
 #include <QtWidgets/QBoxLayout>
@@ -32,8 +34,8 @@
 const QString StateWidget::sDefaultStateName = tr("State");
 const QString StateWidget::sStateExtension = QStringLiteral(".cemu");
 
-StateWidget::StateWidget(QWidget *parent)
-    : QWidget{parent},
+StateWidget::StateWidget(DockedWidgetList &list)
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("States")}, list},
       mStateNum{1}
 {
     mTbl = new QTableWidget(0, 1);

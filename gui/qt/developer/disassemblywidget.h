@@ -17,20 +17,15 @@
 #ifndef DISASSEMBLYWIDGET_H
 #define DISASSEMBLYWIDGET_H
 
-#include "devwidget.h"
+#include "../dockedwidget.h"
 class DisasmWidget;
 
-QT_BEGIN_NAMESPACE
-class QCheckBox;
-class QPushButton;
-QT_END_NAMESPACE
-
-class DisassemblyWidget : public DevWidget
+class DisassemblyWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit DisassemblyWidget(DevWidget *parent = nullptr);
+    explicit DisassemblyWidget(DockedWidgetList &list);
 
 private:
     DisasmWidget *mDisasm;

@@ -17,15 +17,15 @@
 #ifndef GPTWIDGET_H
 #define GPTWIDGET_H
 
-#include "devwidget.h"
+#include "../dockedwidget.h"
 class HighlightEditWidget;
 
-class ClocksWidget : public DevWidget
+class ClocksWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit ClocksWidget(DevWidget *parent = nullptr);
+    explicit ClocksWidget(DockedWidgetList &list);
 
 private:
     HighlightEditWidget *mEdtTimer1V;

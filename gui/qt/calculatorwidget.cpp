@@ -18,6 +18,8 @@
 
 #include "screenwidget.h"
 
+#include <kddockwidgets/DockWidget.h>
+
 #include <QtGui/QPalette>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QPushButton>
@@ -70,8 +72,8 @@ void CalculatorOverlay::paintEvent(QPaintEvent *)
     p.fillRect(rect(), {64, 64, 64, 128});
 }
 
-CalculatorWidget::CalculatorWidget(QWidget *parent)
-    : QWidget{parent}
+CalculatorWidget::CalculatorWidget(DockedWidgetList &list)
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Calculator")}, list}
 {
     QVBoxLayout *layout = new QVBoxLayout(this);
 

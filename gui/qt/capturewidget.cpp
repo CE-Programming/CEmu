@@ -17,20 +17,22 @@
 #include "capturewidget.h"
 #include "screenshotwidget.h"
 
+#include <kddockwidgets/DockWidget.h>
+
 #include <QtGui/QClipboard>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QCheckBox>
+#include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QLabel>
-#include <QtWidgets/QGroupBox>
 #include <QtWidgets/QPushButton>
-#include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QScrollArea>
+#include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QVBoxLayout>
 
-CaptureWidget::CaptureWidget(QWidget *parent)
-    : QWidget{parent}
+CaptureWidget::CaptureWidget(DockedWidgetList &list)
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Screen Capture")}, list}
 {
     QLabel *lblFrameskip = new QLabel(tr("Frameskip: "));
 

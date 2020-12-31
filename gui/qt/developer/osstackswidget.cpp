@@ -16,14 +16,16 @@
 
 #include "osstackswidget.h"
 
+#include <kddockwidgets/DockWidget.h>
+
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QTableWidget>
 
-OsStacksWidget::OsStacksWidget(DevWidget *parent)
-    : DevWidget{parent}
+OsStacksWidget::OsStacksWidget(DockedWidgetList &list)
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("OS Stacks")}, list}
 {
     QGroupBox *grpFp = new QGroupBox(QStringLiteral("FP Stack"));
     QGroupBox *grpOp = new QGroupBox(tr("OP Stack"));

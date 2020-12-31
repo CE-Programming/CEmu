@@ -17,7 +17,7 @@
 #ifndef DEVMISCWIDGET_H
 #define DEVMISCWIDGET_H
 
-#include "devwidget.h"
+#include "../dockedwidget.h"
 class HighlightEditWidget;
 
 QT_BEGIN_NAMESPACE
@@ -26,12 +26,12 @@ class QLineEdit;
 class QSpinBox;
 QT_END_NAMESPACE
 
-class DevMiscWidget : public DevWidget
+class DevMiscWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit DevMiscWidget(DevWidget *parent = nullptr);
+    explicit DevMiscWidget(DockedWidgetList &list);
 
 protected:
     virtual void saveState();

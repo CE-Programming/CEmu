@@ -14,29 +14,28 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CAPTUREWIDGET_H
-#define CAPTUREWIDGET_H
-
 #include "dockedwidget.h"
 
-#include <QtWidgets/QWidget>
-QT_BEGIN_NAMESPACE
-class QVBoxLayout;
-QT_END_NAMESPACE
+#include <kddockwidgets/DockWidgetBase.h>
 
-class CaptureWidget : public DockedWidget
+#include <QtCore/QString>
+#include <QtCore/QtGlobal>
+
+DockedWidget::DockedWidget(KDDockWidgets::DockWidgetBase *dock, DockedWidgetList &list)
+    : QWidget{dock},
+      DockedWidgetList{&list}
 {
-    Q_OBJECT
+    QString title = dock->title();
+    int hash = title.lastIndexOf('#');
+    if (hash != -1)
+    {
+        title = title.left(hash - 1);
+    }
+    dock->setTitle(tr(qUtf8Printable(title)));
+    dock->setWidget(this);
+}
 
-public:
-    explicit CaptureWidget(DockedWidgetList &list);
-
-public slots:
-    void takeScreenshot();
-    void copyScreen();
-
-private:
-    QVBoxLayout *mLayoutTaken;
-};
-
-#endif
+KDDockWidgets::DockWidgetBase *DockedWidget::dock() const
+{
+    return static_cast<KDDockWidgets::DockWidgetBase *>(parent());
+}

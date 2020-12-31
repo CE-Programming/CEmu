@@ -16,8 +16,9 @@
 
 #include "romdialog.h"
 
-#include "cemucore.h"
 #include "settings.h"
+
+#include <cemucore.h>
 
 #include <QtCore/QMimeData>
 #include <QtGui/QDragEnterEvent>

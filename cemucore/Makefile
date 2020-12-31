@@ -43,7 +43,8 @@ $(eval $(foreach S,SH STATIC,$SLIB_TARGET = $$(BUILD)/$$(TARGET)$($SLIB_EXT)$(ne
 TARGETS = $(foreach S,SH STATIC,$(if $($SLIB),$($SLIB_TARGET)))
 
 HEADERS += \
-	cemucore.h
+	cemucore.h \
+	private.h
 
 SOURCES += \
 	cemucore.c

@@ -17,16 +17,18 @@
 #ifndef KEYHISTORYWIDGET_H
 #define KEYHISTORYWIDGET_H
 
-#include <QWidget>
-#include <QPlainTextEdit>
-#include <QSpinBox>
+#include "dockedwidget.h"
 
-class KeyHistoryWidget : public QWidget
+#include <QtWidgets/QPlainTextEdit>
+#include <QtWidgets/QSpinBox>
+#include <QtWidgets/QWidget>
+
+class KeyHistoryWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit KeyHistoryWidget(QWidget *parent = nullptr);
+    explicit KeyHistoryWidget(DockedWidgetList &list);
     ~KeyHistoryWidget();
 
 public slots:

@@ -1,7 +1,13 @@
 #ifndef MEMORYVISUALIZER_H
 #define MEMORYVISUALIZER_H
 
+#include "../dockedwidget.h"
 #include "widgets/visualizerlcdwidget.h"
+
+namespace KDDockWidgets
+{
+class DockWidgetBase;
+}
 
 #include <QtCore/QString>
 #include <QtWidgets/QWidget>
@@ -13,27 +19,12 @@ class QRadioButton;
 class QToolButton;
 QT_END_NAMESPACE
 
-class VisualizerWidgetList
-{
-public:
-    VisualizerWidgetList();
-    ~VisualizerWidgetList();
-
-    VisualizerWidgetList *prev() const { return mPrev; }
-    VisualizerWidgetList *next() const { return mNext; }
-    bool empty() const { return mPrev == this; }
-
-protected:
-    VisualizerWidgetList(VisualizerWidgetList *list);
-    VisualizerWidgetList *mPrev, *mNext;
-};
-
-class VisualizerWidget : public QWidget, public VisualizerWidgetList
+class VisualizerWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit VisualizerWidget(VisualizerWidgetList *list, const QString &config = QString(), QWidget *parent = nullptr);
+    explicit VisualizerWidget(DockedWidgetList &list, KDDockWidgets::DockWidgetBase *dock = nullptr);
     void setConfig(const QString &config);
     QString getConfig() const;
     void translate();

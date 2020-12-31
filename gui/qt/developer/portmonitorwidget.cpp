@@ -15,7 +15,11 @@
  */
 
 #include "portmonitorwidget.h"
-#include "util.h"
+
+#include "../dockedwidget.h"
+#include "../util.h"
+
+#include <kddockwidgets/DockWidget.h>
 
 #include <QtGui/QColor>
 #include <QtWidgets/QBoxLayout>
@@ -23,13 +27,13 @@
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QPushButton>
+#include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QTableWidget>
 #include <QtWidgets/QTableWidgetItem>
 #include <QtWidgets/QToolButton>
-#include <QtWidgets/QSizePolicy>
 
-PortMonitorWidget::PortMonitorWidget(const QList<PortMonitor> &portmonitors, DevWidget *parent)
-    : DevWidget{parent}
+PortMonitorWidget::PortMonitorWidget(DockedWidgetList &list, const QList<PortMonitor> &portmonitors)
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Port Monitor")}, list}
 {
     mTbl = new QTableWidget(0, 6);
     mTbl->setHorizontalHeaderLabels({tr("E"), tr("R"), tr("W"), tr("F"), tr("Address"), tr("Data")});

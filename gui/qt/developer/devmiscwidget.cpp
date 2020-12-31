@@ -15,8 +15,11 @@
  */
 
 #include "devmiscwidget.h"
+
+#include "../util.h"
 #include "widgets/highlighteditwidget.h"
-#include "util.h"
+
+#include <kddockwidgets/DockWidget.h>
 
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QCheckBox>
@@ -25,8 +28,8 @@
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QSpinBox>
 
-DevMiscWidget::DevMiscWidget(DevWidget *parent)
-    : DevWidget{parent}
+DevMiscWidget::DevMiscWidget(DockedWidgetList &list)
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Miscellaneous")}, list}
 {
     QGroupBox *grpLcd = new QGroupBox(QStringLiteral("LCD"));
     QGroupBox *grpLcdCtl = new QGroupBox(tr("Control"));

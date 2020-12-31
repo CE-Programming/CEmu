@@ -17,18 +17,18 @@
 #ifndef OSVARSWIDGET_H
 #define OSVARSWIDGET_H
 
-#include "devwidget.h"
+#include "../dockedwidget.h"
 
 QT_BEGIN_NAMESPACE
 class QTableWidget;
 QT_END_NAMESPACE
 
-class OsVarsWidget : public DevWidget
+class OsVarsWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit OsVarsWidget(DevWidget *parent = nullptr);
+    explicit OsVarsWidget(DockedWidgetList &list);
 
 private:
     QTableWidget *mTblFp;

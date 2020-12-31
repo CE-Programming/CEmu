@@ -17,19 +17,19 @@
 #ifndef FLASHRAMWIDGET_H
 #define FLASHRAMWIDGET_H
 
-#include "devwidget.h"
-class MemoryWidget;
+#include "../dockedwidget.h"
+class MemWidget;
 
-class FlashRamWidget : public DevWidget
+class FlashRamWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit FlashRamWidget(DevWidget *parent = nullptr);
+    explicit FlashRamWidget(DockedWidgetList &list);
 
 private:
-    MemoryWidget *mFlash;
-    MemoryWidget *mRam;
+    MemWidget *mFlash;
+    MemWidget *mRam;
 };
 
 #endif

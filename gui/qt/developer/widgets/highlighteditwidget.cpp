@@ -15,13 +15,14 @@
  */
 
 #include "highlighteditwidget.h"
-#include "util.h"
+
+#include "../../util.h"
 
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QCheckBox>
+#include <QtWidgets/QGroupBox>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
-#include <QtWidgets/QGroupBox>
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QSpinBox>
 

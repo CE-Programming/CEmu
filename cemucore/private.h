@@ -14,29 +14,21 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CAPTUREWIDGET_H
-#define CAPTUREWIDGET_H
+#ifndef CEMUCORE_INTERNAL_H
+#define CEMUCORE_INTERNAL_H
 
-#include "dockedwidget.h"
+#include "cemucore.h"
 
-#include <QtWidgets/QWidget>
-QT_BEGIN_NAMESPACE
-class QVBoxLayout;
-QT_END_NAMESPACE
+#ifndef CEMUCORE_NOTHREADS
+#include <stdatomic.h>
+#include <threads.h>
+#endif
 
-class CaptureWidget : public DockedWidget
+struct cemucore
 {
-    Q_OBJECT
-
-public:
-    explicit CaptureWidget(DockedWidgetList &list);
-
-public slots:
-    void takeScreenshot();
-    void copyScreen();
-
-private:
-    QVBoxLayout *mLayoutTaken;
+#ifndef CEMUCORE_NOTHREADS
+    thrd_t thread;
+#endif
 };
 
 #endif

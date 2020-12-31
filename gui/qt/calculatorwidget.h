@@ -17,10 +17,12 @@
 #ifndef CALCULATORWIDGET_H
 #define CALCULATORWIDGET_H
 
-#include "cemucore.h"
+#include "dockedwidget.h"
 #include "keypad/keypadwidget.h"
 #include "overlaywidget.h"
 class ScreenWidget;
+
+#include <cemucore.h>
 
 #include <QtWidgets/QWidget>
 
@@ -39,12 +41,12 @@ protected:
     void paintEvent(QPaintEvent *) override;
 };
 
-class CalculatorWidget : public QWidget
+class CalculatorWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit CalculatorWidget(QWidget *parent = nullptr);
+    explicit CalculatorWidget(DockedWidgetList &list);
     ~CalculatorWidget();
 
     void setConfig(ti_device_t type, int color);

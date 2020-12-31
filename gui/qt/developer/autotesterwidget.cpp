@@ -15,7 +15,10 @@
  */
 
 #include "autotesterwidget.h"
-#include "util.h"
+
+#include "../util.h"
+
+#include <kddockwidgets/DockWidget.h>
 
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QCheckBox>
@@ -26,8 +29,8 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QSizePolicy>
 
-AutotesterWidget::AutotesterWidget(QWidget *parent)
-    : QWidget{parent}
+AutotesterWidget::AutotesterWidget(DockedWidgetList &list)
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Autotester")}, list}
 {
     QGroupBox *grpTest = new QGroupBox(tr("Launch Test"));
     QGroupBox *grpCfg = new QGroupBox(tr("Test Configuration"));

@@ -17,19 +17,14 @@
 #ifndef PERFORMANCEWIDGET_H
 #define PERFORMANCEWIDGET_H
 
-#include "devwidget.h"
-QT_BEGIN_NAMESPACE
-class QCheckBox;
-class QLineEdit;
-class QSpinBox;
-QT_END_NAMESPACE
+#include "../dockedwidget.h"
 
-class PerformanceWidget : public DevWidget
+class PerformanceWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit PerformanceWidget(DevWidget *parent = nullptr);
+    explicit PerformanceWidget(DockedWidgetList &list);
 };
 
 #endif

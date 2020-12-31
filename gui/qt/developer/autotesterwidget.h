@@ -17,14 +17,16 @@
 #ifndef AUTOTESTERWIDGET_H
 #define AUTOTESTERWIDGET_H
 
+#include "../dockedwidget.h"
+
 #include <QtWidgets/QWidget>
 
-class AutotesterWidget : public QWidget
+class AutotesterWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit AutotesterWidget(QWidget *parent = nullptr);
+    explicit AutotesterWidget(DockedWidgetList &list);
 };
 
 #endif

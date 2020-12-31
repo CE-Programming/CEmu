@@ -14,7 +14,57 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "cemucore.h"
+#include "private.h"
+
+#include <stdlib.h>
+
+#ifndef CEMUCORE_NOTHREADS
+static int thread(void *data)
+{
+    cemucore_t *core = data;
+    return 0;
+}
+#endif
+
+cemucore_t *cemucore_init(cemucore_init_flags_t init_flags)
+{
+    cemucore_t *core = malloc(sizeof(cemucore_t));
+    if (!core)
+    {
+        return NULL;
+    }
+
+#ifndef CEMUCORE_NOTHREADS
+    if (init_flags & CEMUCORE_INIT_CREATE_THREAD)
+    {
+        if (thrd_create(&core->thread, &thread, core) != thrd_success)
+        {
+            free(core);
+            return NULL;
+        }
+    }
+    else
+    {
+        core->thread = thrd_current();
+    }
+#endif
+
+    return core;
+}
+
+void cemucore_destroy(cemucore_t *core)
+{
+    if (!core)
+    {
+        return;
+    }
+
+#ifndef CEMUCORE_NOTHREADS
+    thrd_join(core->thread, NULL);
+#endif
+
+    free(core);
+}
 
 keypad_t keypad;
 debug_t debug;

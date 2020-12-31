@@ -15,7 +15,10 @@
  */
 
 #include "performancewidget.h"
-#include "util.h"
+
+#include "../util.h"
+
+#include <kddockwidgets/DockWidget.h>
 
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QCheckBox>
@@ -26,8 +29,8 @@
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QSpinBox>
 
-PerformanceWidget::PerformanceWidget(DevWidget *parent)
-    : DevWidget{parent}
+PerformanceWidget::PerformanceWidget(DockedWidgetList &list)
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Cycle Counter")}, list}
 {
     QGroupBox *grpCycles = new QGroupBox(tr("Cycle Counter"));
     QGroupBox *grpState = new QGroupBox(tr("CPU State"));

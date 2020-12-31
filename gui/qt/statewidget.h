@@ -17,20 +17,22 @@
 #ifndef STATEWIDGET_H
 #define STATEWIDGET_H
 
-#include <QtWidgets/QWidget>
+#include "dockedwidget.h"
 
+#include <QtCore/QString>
+#include <QtWidgets/QWidget>
 QT_BEGIN_NAMESPACE
 class QPushButton;
 class QTableWidget;
 class QTableWidgetItem;
 QT_END_NAMESPACE
 
-class StateWidget : public QWidget
+class StateWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit StateWidget(QWidget *parent = nullptr);
+    explicit StateWidget(DockedWidgetList &list);
 
 private slots:
     void createState();

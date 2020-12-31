@@ -16,14 +16,16 @@
 
 #include "osvarswidget.h"
 
+#include <kddockwidgets/DockWidget.h>
+
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QTableWidget>
 
-OsVarsWidget::OsVarsWidget(DevWidget *parent)
-    : DevWidget{parent}
+OsVarsWidget::OsVarsWidget(DockedWidgetList &list)
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("OS Variables")}, list}
 {
     QGroupBox *grpVat = new QGroupBox(QStringLiteral("VAT View"));
     QGroupBox *grpOp = new QGroupBox(tr("OP Variables"));

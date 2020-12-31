@@ -17,14 +17,15 @@
 #include "keyhistorywidget.h"
 #include "settings.h"
 
-#include <QWidget>
-#include <QPushButton>
-#include <QHBoxLayout>
-#include <QPushButton>
-#include <QLabel>
+#include <kddockwidgets/DockWidget.h>
 
-KeyHistoryWidget::KeyHistoryWidget(QWidget *parent)
-    : QWidget(parent)
+#include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QWidget>
+
+KeyHistoryWidget::KeyHistoryWidget(DockedWidgetList &list)
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Key History")}, list}
 {
     QHBoxLayout *hlayout = new QHBoxLayout();
 

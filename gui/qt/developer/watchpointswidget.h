@@ -17,8 +17,10 @@
 #ifndef WATCHPOINTSWIDGET_H
 #define WATCHPOINTSWIDGET_H
 
-#include "devwidget.h"
+#include "../dockedwidget.h"
 
+#include <QtCore/QString>
+#include <QtGui/QBrush>
 QT_BEGIN_NAMESPACE
 class QPushButton;
 class QTableWidget;
@@ -42,12 +44,12 @@ public:
     QString name;
 };
 
-class WatchpointsWidget : public DevWidget
+class WatchpointsWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit WatchpointsWidget(const QList<Watchpoint> &watchpoints, DevWidget *parent = nullptr);
+    explicit WatchpointsWidget(DockedWidgetList &list, const QList<Watchpoint> &watchpoints);
 
 private slots:
     void addWatchpoint(const Watchpoint &watchpoint, bool edit);

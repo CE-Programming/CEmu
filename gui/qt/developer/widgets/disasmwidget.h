@@ -18,6 +18,10 @@
 #define DISASMWIDGET_H
 
 #include <QtWidgets/QWidget>
+QT_BEGIN_NAMESPACE
+class QPaintEvent;
+class QWheelEvent;
+QT_END_NAMESPACE
 
 class DisasmWidget : public QWidget
 {

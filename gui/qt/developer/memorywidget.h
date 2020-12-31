@@ -17,41 +17,25 @@
 #ifndef MEMORYWIDGET_H
 #define MEMORYWIDGET_H
 
-#include "devwidget.h"
-class HexWidget;
+#include "../dockedwidget.h"
+class MemWidget;
 
-QT_BEGIN_NAMESPACE
-class QCheckBox;
-class QLineEdit;
-class QSpinBox;
-QT_END_NAMESPACE
-
-class MemoryWidgetList
+namespace KDDockWidgets
 {
-public:
-    MemoryWidgetList();
-    ~MemoryWidgetList();
+class DockWidgetBase;
+}
 
-    MemoryWidgetList *prev() const { return mPrev; }
-    MemoryWidgetList *next() const { return mNext; }
-    bool empty() const { return mPrev == this; }
-
-protected:
-    MemoryWidgetList(MemoryWidgetList *list);
-    MemoryWidgetList *mPrev, *mNext;
-};
-
-class MemoryWidget : public QWidget, public MemoryWidgetList
+class MemoryWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit MemoryWidget(QWidget *parent = nullptr);
-    MemoryWidget(MemoryWidgetList *list, QWidget *parent = nullptr);
+    explicit MemoryWidget(DockedWidgetList &list, KDDockWidgets::DockWidgetBase *dock = nullptr);
 
 private:
-    void init();
-    HexWidget *mView;
+    void closeEvent(QCloseEvent *) override;
+
+    MemWidget *mMem;
 };
 
 #endif

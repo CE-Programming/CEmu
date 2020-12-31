@@ -21,8 +21,19 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
+
+typedef enum cemucore_init_flags
+{
+    CEMUCORE_INIT_CREATE_THREAD = 1,
+} cemucore_init_flags_t;
+
+typedef struct cemucore cemucore_t;
+
+cemucore_t *cemucore_init(cemucore_init_flags_t init_flags);
+void cemucore_destroy(cemucore_t *core);
 
 /* !!! DEPRECATED API !!! */
 typedef enum {

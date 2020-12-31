@@ -17,7 +17,9 @@
 #ifndef CPUWIDGET_H
 #define CPUWIDGET_H
 
-#include "devwidget.h"
+struct cemucore;
+
+#include "../dockedwidget.h"
 class HighlightEditWidget;
 
 QT_BEGIN_NAMESPACE
@@ -38,16 +40,15 @@ public:
     bool eventFilter(QObject *obj, QEvent *event) override;
 };
 
-class CpuWidget : public DevWidget
+class CpuWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit CpuWidget(DevWidget *parent = nullptr);
+    explicit CpuWidget(DockedWidgetList &list);
 
-protected:
-    virtual void saveState();
-    virtual void loadState();
+    void loadFromCore(const cemucore *) override;
+    void storeToCore(cemucore *) const override;
 
 private:
     CpuRegisterFilter *mRegEventFilter;

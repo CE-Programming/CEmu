@@ -8,7 +8,7 @@
 #include "otherkey.h"
 #include "secondkey.h"
 
-#include "cemucore.h"
+#include <cemucore.h>
 
 #include <QtGui/QFontDatabase>
 #include <QtGui/QPaintEvent>

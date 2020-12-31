@@ -16,8 +16,9 @@
 
 #include "hexwidget.h"
 
-#include "cemucore.h"
-#include "util.h"
+#include "../../util.h"
+
+#include <cemucore.h>
 
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QScrollBar>

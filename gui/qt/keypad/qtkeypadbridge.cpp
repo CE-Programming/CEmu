@@ -1,6 +1,6 @@
 #include "qtkeypadbridge.h"
 
-#include "cemucore.h"
+#include <cemucore.h>
 
 #include <QtCore/QMetaEnum>
 #include <QtCore/QSettings>

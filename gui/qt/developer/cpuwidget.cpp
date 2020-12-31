@@ -15,8 +15,11 @@
  */
 
 #include "cpuwidget.h"
+
 #include "widgets/highlighteditwidget.h"
-#include "util.h"
+#include "../util.h"
+
+#include <kddockwidgets/DockWidget.h>
 
 #include <QtCore/QEvent>
 #include <QtGui/QMouseEvent>
@@ -30,8 +33,8 @@
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QSpinBox>
 
-CpuWidget::CpuWidget(DevWidget *parent)
-    : DevWidget{parent}
+CpuWidget::CpuWidget(DockedWidgetList &list)
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("CPU")}, list}
 {
     mRegEventFilter = new CpuRegisterFilter(this);
 
@@ -46,10 +49,10 @@ CpuWidget::CpuWidget(DevWidget *parent)
     QLabel *lblDE = new QLabel(QStringLiteral("de"));
     QLabel *lblHL = new QLabel(QStringLiteral("hl"));
     QLabel *lblIX = new QLabel(QStringLiteral("ix"));
-    QLabel *lblAFX = new QLabel(QStringLiteral("af\'"));
-    QLabel *lblBCX = new QLabel(QStringLiteral("bc\'"));
-    QLabel *lblDEX = new QLabel(QStringLiteral("de\'"));
-    QLabel *lblHLX = new QLabel(QStringLiteral("hl\'"));
+    QLabel *lblAFX = new QLabel(QStringLiteral("af'"));
+    QLabel *lblBCX = new QLabel(QStringLiteral("bc'"));
+    QLabel *lblDEX = new QLabel(QStringLiteral("de'"));
+    QLabel *lblHLX = new QLabel(QStringLiteral("hl'"));
     QLabel *lblIY = new QLabel(QStringLiteral("iy "));
     QLabel *lblPC = new QLabel(QStringLiteral("pc "));
     QLabel *lblMB = new QLabel(QStringLiteral("mb "));
@@ -300,14 +303,12 @@ CpuWidget::CpuWidget(DevWidget *parent)
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
-void CpuWidget::saveState()
+void CpuWidget::loadFromCore(const cemucore *)
 {
-
 }
 
-void CpuWidget::loadState()
+void CpuWidget::storeToCore(cemucore *) const
 {
-
 }
 
 bool CpuRegisterFilter::eventFilter(QObject *obj, QEvent *event)

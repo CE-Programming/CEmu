@@ -16,13 +16,15 @@
 
 #include "controlwidget.h"
 
+#include <kddockwidgets/DockWidget.h>
+
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QComboBox>
 
-ControlWidget::ControlWidget(DevWidget *parent)
-    : DevWidget{parent}
+ControlWidget::ControlWidget(DockedWidgetList &list)
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Control")}, list}
 {
     QPushButton *btnRun = new QPushButton(tr("Stop"));
     QPushButton *btnStep = new QPushButton(tr("Step"));

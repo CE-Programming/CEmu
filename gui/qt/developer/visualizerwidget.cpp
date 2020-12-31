@@ -1,8 +1,9 @@
 #include "visualizerwidget.h"
 
-#include "cemucore.h"
-#include "keypad/keypadwidget.h"
-#include "util.h"
+#include "../keypad/keypadwidget.h"
+#include "../util.h"
+
+#include <cemucore.h>
 
 #include <kddockwidgets/DockWidget.h>
 
@@ -23,28 +24,8 @@
 
 #define SETBITS(in, out, var) ((var) = static_cast<bool>(in) ? ((var) | (out)) : ((var) & ~(out)))
 
-VisualizerWidgetList::VisualizerWidgetList()
-    : mPrev{this},
-      mNext{this}
-{
-}
-
-VisualizerWidgetList::VisualizerWidgetList(VisualizerWidgetList *list)
-    : mPrev{qExchange(list->mPrev, this)},
-      mNext{list}
-{
-    mPrev->mNext = this;
-}
-
-VisualizerWidgetList::~VisualizerWidgetList()
-{
-    mPrev->mNext = mNext;
-    mNext->mPrev = mPrev;
-}
-
-VisualizerWidget::VisualizerWidget(VisualizerWidgetList *list, const QString &config, QWidget *parent)
-    : QWidget{parent},
-      VisualizerWidgetList{list}
+VisualizerWidget::VisualizerWidget(DockedWidgetList &list, KDDockWidgets::DockWidgetBase *dock)
+    : DockedWidget{dock ? dock : new KDDockWidgets::DockWidget{QStringLiteral("Visualizer #")}, list}
 {
     mGroup = new QGroupBox(tr("Settings"));
 
@@ -78,14 +59,7 @@ VisualizerWidget::VisualizerWidget(VisualizerWidgetList *list, const QString &co
     connect(mBtnLcd, &QPushButton::clicked, this, &VisualizerWidget::showPresets);
     connect(mBtnConfig, &QPushButton::clicked, this, &VisualizerWidget::showConfig);
 
-    if (config.isEmpty())
-    {
-        resetView();
-    }
-    else
-    {
-        setConfig(config);
-    }
+    resetView();
 }
 
 void VisualizerWidget::showPresets()
@@ -230,7 +204,10 @@ void VisualizerWidget::showConfig()
 
 void VisualizerWidget::closeEvent(QCloseEvent *)
 {
-    parent()->deleteLater();
+    if (auto *p = parent())
+    {
+        p->deleteLater();
+    }
 }
 
 void VisualizerWidget::stringToView()

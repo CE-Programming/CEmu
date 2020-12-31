@@ -19,15 +19,6 @@
 #include "calculatorwidget.h"
 #include "capturewidget.h"
 #include "consolewidget.h"
-#include "dockwidget.h"
-#include "keyhistorywidget.h"
-#include "romdialog.h"
-#include "settings.h"
-#include "settingsdialog.h"
-#include "statewidget.h"
-#include "util.h"
-#include "variablewidget.h"
-
 #include "developer/autotesterwidget.h"
 #include "developer/clockswidget.h"
 #include "developer/controlwidget.h"
@@ -35,14 +26,22 @@
 #include "developer/devmiscwidget.h"
 #include "developer/disassemblywidget.h"
 #include "developer/flashramwidget.h"
+#include "developer/memorywidget.h"
 #include "developer/osstackswidget.h"
 #include "developer/osvarswidget.h"
 #include "developer/performancewidget.h"
 #include "developer/portmonitorwidget.h"
-#include "developer/watchpointswidget.h"
 #include "developer/visualizerwidget.h"
-
+#include "developer/watchpointswidget.h"
+#include "dockwidget.h"
+#include "keyhistorywidget.h"
 #include "keypad/qtkeypadbridge.h"
+#include "romdialog.h"
+#include "settings.h"
+#include "settingsdialog.h"
+#include "statewidget.h"
+#include "util.h"
+#include "variablewidget.h"
 
 #include <kddockwidgets/LayoutSaver.h>
 
@@ -63,7 +62,8 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     : KDDockWidgets::MainWindow(uniqueName, options, parent),
       mKeypadBridge{new QtKeypadBridge{this}},
       mCalcOverlay{nullptr},
-      mCalcType{ti_device_t::TI84PCE}
+      mCalcType{ti_device_t::TI84PCE},
+      mCore{nullptr}
 {
     auto *menubar = menuBar();
 
@@ -120,31 +120,22 @@ CoreWindow::CoreWindow(const QString &uniqueName,
 
 CoreWindow::~CoreWindow()
 {
-    qDeleteAll(mDockWidgets);
-    while (!mVisualizerWidgets.empty())
+    while (!mDockedWidgets.empty())
     {
-        delete static_cast<VisualizerWidget *>(mVisualizerWidgets.prev())->parent();
+        delete mDockedWidgets.back().dock();
     }
+    cemucore_destroy(mCore);
 }
 
 void CoreWindow::createDockWidgets()
 {
-    Q_ASSERT(mDockWidgets.isEmpty());
+    Q_ASSERT(mDockedWidgets.empty());
 
-    auto *calcDock = new KDDockWidgets::DockWidget(tr("Calculator"));
-    mCalcWidget = new CalculatorWidget();
-
-    auto *captureDock = new KDDockWidgets::DockWidget(tr("Screen Capture"));
-    auto *capture = new CaptureWidget();
-
-    auto *variableDock = new KDDockWidgets::DockWidget(tr("Variable Transfer"));
-    auto *variable = new VariableWidget(QStringList({"test", "test2"}));
-
-    auto *keyHistoryDock = new KDDockWidgets::DockWidget(tr("Key History"));
-    auto *keyHistory = new KeyHistoryWidget();
-
-    auto *stateDock = new KDDockWidgets::DockWidget(tr("Calculator State"));
-    auto *state = new StateWidget();
+    mCalcWidget = new CalculatorWidget{mDockedWidgets};
+    auto *capture = new CaptureWidget{mDockedWidgets};
+    auto *variable = new VariableWidget{mDockedWidgets, QStringList{"test", "test2"}};
+    auto *keyHistory = new KeyHistoryWidget{mDockedWidgets};
+    auto *state = new StateWidget{mDockedWidgets};
 
     mCalcOverlay = new CalculatorOverlay(mCalcWidget);
     mCalcOverlay->setVisible(false);
@@ -152,43 +143,31 @@ void CoreWindow::createDockWidgets()
     connect(mCalcOverlay, &CalculatorOverlay::createRom, this, &CoreWindow::createRom);
     connect(mCalcOverlay, &CalculatorOverlay::loadRom, this, &CoreWindow::importRom);
 
-    calcDock->setWidget(mCalcWidget);
-    keyHistoryDock->setWidget(keyHistory);
-    stateDock->setWidget(state);
-    captureDock->setWidget(capture);
-    variableDock->setWidget(variable);
-
     connect(mCalcWidget, &CalculatorWidget::keyPressed, keyHistory, &KeyHistoryWidget::add);
     connect(mKeypadBridge, &QtKeypadBridge::keyStateChanged, mCalcWidget, &CalculatorWidget::changeKeyState);
     mCalcWidget->installEventFilter(mKeypadBridge);
 
-    mDockWidgets << calcDock;
-    mDockWidgets << keyHistoryDock;
-    mDockWidgets << captureDock;
-    mDockWidgets << stateDock;
-    mDockWidgets << variableDock;
+    mDocksMenu->addAction(mCalcWidget->dock()->toggleAction());
+    mDocksMenu->addAction(capture->dock()->toggleAction());
+    mDocksMenu->addAction(keyHistory->dock()->toggleAction());
+    mDocksMenu->addAction(variable->dock()->toggleAction());
+    mDocksMenu->addAction(state->dock()->toggleAction());
 
-    mDocksMenu->addAction(calcDock->toggleAction());
-    mDocksMenu->addAction(captureDock->toggleAction());
-    mDocksMenu->addAction(keyHistoryDock->toggleAction());
-    mDocksMenu->addAction(variableDock->toggleAction());
-    mDocksMenu->addAction(stateDock->toggleAction());
-
-    addDockWidget(calcDock, KDDockWidgets::Location_OnTop);
+    addDockWidget(mCalcWidget->dock(), KDDockWidgets::Location_OnTop);
 
     createDeveloperWidgets();
 }
 
 void CoreWindow::createDeveloperWidgets()
 {
-    QList<Watchpoint> watchpoints =
+    QList<Watchpoint> watchpointList =
     {
         {Watchpoint::Mode::R, 10, 5, "test"},
         {Watchpoint::Mode::W, 20, 15, "test2"},
         {Watchpoint::Mode::R, 30, 25, "test3"},
         {Watchpoint::Mode::X, 40, 35, "test4"}
     };
-    QList<PortMonitor> portmonitors =
+    QList<PortMonitor> portmonitorList =
     {
         {PortMonitor::Mode::R, 10 },
         {PortMonitor::Mode::W, 20 },
@@ -196,115 +175,48 @@ void CoreWindow::createDeveloperWidgets()
         {PortMonitor::Mode::F, 40 }
     };
 
-    auto *consoleDock = new KDDockWidgets::DockWidget(tr("Console"));
-    auto *console = new ConsoleWidget();
+    auto *console = new ConsoleWidget{mDockedWidgets};
+    auto *autotester = new AutotesterWidget{mDockedWidgets};
+    auto *clocks = new ClocksWidget{mDockedWidgets};
+    auto *control = new ControlWidget{mDockedWidgets};
+    auto *cpu = new CpuWidget{mDockedWidgets};
+    auto *devMisc = new DevMiscWidget{mDockedWidgets};
+    auto *disassembly = new DisassemblyWidget{mDockedWidgets};
+    auto *flashRam = new FlashRamWidget{mDockedWidgets};
+    auto *osStacks = new OsStacksWidget{mDockedWidgets};
+    auto *osVars = new OsVarsWidget{mDockedWidgets};
+    auto *portMonitor = new PortMonitorWidget{mDockedWidgets, portmonitorList};
+    auto *watchpoints = new WatchpointsWidget{mDockedWidgets, watchpointList};
+    auto *performance = new PerformanceWidget{mDockedWidgets};
 
-    auto *autotesterDock = new KDDockWidgets::DockWidget(tr("Autotester"));
-    auto *autotester = new AutotesterWidget();
-
-    auto *clocksDock = new KDDockWidgets::DockWidget(tr("Clocks"));
-    auto *clocks = new ClocksWidget();
-
-    auto *controlDock = new KDDockWidgets::DockWidget(tr("Control"));
-    auto *control = new ControlWidget();
-
-    auto *cpuDock = new KDDockWidgets::DockWidget(tr("CPU"));
-    auto *cpu = new CpuWidget();
-
-    auto *devMiscDock = new KDDockWidgets::DockWidget(tr("Miscellaneous"));
-    auto *devMisc = new DevMiscWidget();
-
-    auto *dissassmeblyDock = new KDDockWidgets::DockWidget(tr("Disassembly"));
-    auto *dissassmebly = new DisassemblyWidget();
-
-    auto *flashRamDock = new KDDockWidgets::DockWidget(tr("Flash/RAM"));
-    auto *flashRam = new FlashRamWidget();
-
-    auto *osStacksDock = new KDDockWidgets::DockWidget(tr("OS Stacks"));
-    auto *osStacks = new OsStacksWidget();
-
-    auto *osVarsDock = new KDDockWidgets::DockWidget(tr("OS Variables"));
-    auto *osVars = new OsVarsWidget();
-
-    auto *portMonitorDock = new KDDockWidgets::DockWidget(tr("Port Monitor"));
-    auto *portMonitor = new PortMonitorWidget(portmonitors);
-
-    auto *watchpointsDock = new KDDockWidgets::DockWidget(tr("Watchpoints"));
-    auto *mWatchpointWidget = new WatchpointsWidget(watchpoints);
-
-    auto *performanceDock = new KDDockWidgets::DockWidget(tr("Cycle Counter"));
-    auto *performance = new PerformanceWidget();
-
-    autotesterDock->setWidget(autotester);
-    clocksDock->setWidget(clocks);
-    consoleDock->setWidget(console);
-    controlDock->setWidget(control);
-    cpuDock->setWidget(cpu);
-    devMiscDock->setWidget(devMisc);
-    dissassmeblyDock->setWidget(dissassmebly);
-    flashRamDock->setWidget(flashRam);
-    osStacksDock->setWidget(osStacks);
-    osVarsDock->setWidget(osVars);
-    performanceDock->setWidget(performance);
-    portMonitorDock->setWidget(portMonitor);
-    watchpointsDock->setWidget(mWatchpointWidget);
-
-    mDockWidgets << autotesterDock;
-    mDockWidgets << clocksDock;
-    mDockWidgets << consoleDock;
-    mDockWidgets << controlDock;
-    mDockWidgets << cpuDock;
-    mDockWidgets << devMiscDock;
-    mDockWidgets << dissassmeblyDock;
-    mDockWidgets << flashRamDock;
-    mDockWidgets << osStacksDock;
-    mDockWidgets << osVarsDock;
-    mDockWidgets << performanceDock;
-    mDockWidgets << portMonitorDock;
-    mDockWidgets << watchpointsDock;
-
-    mDevMenu->addAction(consoleDock->toggleAction());
-    mDevMenu->addAction(controlDock->toggleAction());
-    mDevMenu->addAction(cpuDock->toggleAction());
-    mDevMenu->addAction(dissassmeblyDock->toggleAction());
-    mDevMenu->addAction(watchpointsDock->toggleAction());
-    mDevMenu->addAction(flashRamDock->toggleAction());
-    mDevMenu->addAction(clocksDock->toggleAction());
-    mDevMenu->addAction(portMonitorDock->toggleAction());
-    mDevMenu->addAction(osVarsDock->toggleAction());
-    mDevMenu->addAction(osStacksDock->toggleAction());
-    mDevMenu->addAction(devMiscDock->toggleAction());
-    mDevMenu->addAction(performanceDock->toggleAction());
-    mDevMenu->addAction(autotesterDock->toggleAction());
+    mDevMenu->addAction(console->dock()->toggleAction());
+    mDevMenu->addAction(control->dock()->toggleAction());
+    mDevMenu->addAction(cpu->dock()->toggleAction());
+    mDevMenu->addAction(disassembly->dock()->toggleAction());
+    mDevMenu->addAction(watchpoints->dock()->toggleAction());
+    mDevMenu->addAction(flashRam->dock()->toggleAction());
+    mDevMenu->addAction(clocks->dock()->toggleAction());
+    mDevMenu->addAction(portMonitor->dock()->toggleAction());
+    mDevMenu->addAction(osVars->dock()->toggleAction());
+    mDevMenu->addAction(osStacks->dock()->toggleAction());
+    mDevMenu->addAction(devMisc->dock()->toggleAction());
+    mDevMenu->addAction(performance->dock()->toggleAction());
+    mDevMenu->addAction(autotester->dock()->toggleAction());
 
     mDevMenu->addSeparator();
 
     auto *memoryAction = mDevMenu->addAction(tr("Add Memory View"));
     connect(memoryAction, &QAction::triggered, [this]
     {
-        QString name;
-        do
-        {
-            name = QLatin1String("Memory #") + Util::randomString(10);
-        } while (KDDockWidgets::DockWidgetBase::byName(name));
-
-        auto *dockWidget = new KDDockWidgets::DockWidget(name);
-        addMemoryDock(dockWidget);
-        dockWidget->show();
+        auto *memory = new MemoryWidget{mDockedWidgets};
+        memory->dock()->show();
     });
 
     auto *visualizerAction = mDevMenu->addAction(tr("Add LCD Visualizer"));
     connect(visualizerAction, &QAction::triggered, [this]
     {
-        QString name;
-        do
-        {
-            name = QLatin1String("Visualizer #") + Util::randomString(10);
-        } while (KDDockWidgets::DockWidgetBase::byName(name));
-
-        auto *dockWidget = new KDDockWidgets::DockWidget(name);
-        addVisualizerDock(dockWidget);
-        dockWidget->show();
+        auto *visualizer = new VisualizerWidget{mDockedWidgets};
+        visualizer->dock()->show();
     });
 }
 
@@ -365,6 +277,11 @@ void CoreWindow::exportRom()
 
 void CoreWindow::resetEmu()
 {
+    if (!mCore)
+    {
+        mCore = cemucore_init(CEMUCORE_INIT_CREATE_THREAD);
+    }
+
     int keycolor = Settings::intOption(Settings::KeypadColor);
 
     // holds the path to the rom file to load into the emulator
@@ -430,13 +347,9 @@ bool CoreWindow::saveLayout(bool ignoreErrors)
     KDDockWidgets::LayoutSaver saver;
     QJsonObject json;
     json[QLatin1String("layout")] = QJsonDocument::fromJson(saver.serializeLayout()).object();
-    for (auto *visualizerWidgetNode = mVisualizerWidgets.next();
-         visualizerWidgetNode != &mVisualizerWidgets;
-         visualizerWidgetNode = visualizerWidgetNode->next())
+    for (auto &dockedWidget : mDockedWidgets)
     {
-        auto *visualizerWidget = static_cast<VisualizerWidget *>(visualizerWidgetNode);
-        auto *dockWidget = static_cast<KDDockWidgets::DockWidget *>(visualizerWidget->parent());
-        json[dockWidget->uniqueName()] = visualizerWidget->getConfig();
+        json[dockedWidget.dock()->uniqueName()] = dockedWidget.serialize();
     }
 
     QFile file(Settings::textOption(Settings::LayoutFile));
@@ -471,15 +384,24 @@ bool CoreWindow::restoreLayout()
     for (auto *restoredDockWidget : saver.restoredDockWidgets())
     {
         auto name = restoredDockWidget->uniqueName();
-        auto config = json.take(name);
-        if (name.startsWith(QLatin1String("Visualizer #")))
+        auto *dockedWidget = static_cast<DockedWidget *>(restoredDockWidget->widget());
+        if (!dockedWidget)
         {
-            addVisualizerDock(restoredDockWidget, config.toString());
+            if (name.startsWith(QLatin1String("Visualizer #")))
+            {
+                dockedWidget = new VisualizerWidget{mDockedWidgets, restoredDockWidget};
+            }
+            else if (name.startsWith(QLatin1String("Memory #")))
+            {
+                dockedWidget = new MemoryWidget{mDockedWidgets, restoredDockWidget};
+            }
+            else
+            {
+                qInfo() << "Unknown spawnable dock:" << name;
+                continue;
+            }
         }
-        if (name.startsWith(QLatin1String("Memory #")))
-        {
-            addMemoryDock(restoredDockWidget);
-        }
+        dockedWidget->unserialize(json.take(name));
     }
 
     return json.isEmpty();
@@ -488,28 +410,4 @@ bool CoreWindow::restoreLayout()
 void CoreWindow::closeEvent(QCloseEvent *)
 {
     saveLayout(true);
-}
-
-void CoreWindow::addVisualizerDock(KDDockWidgets::DockWidgetBase *dockWidget, const QString &config)
-{
-    if (auto *visualizerWidget = dockWidget->widget())
-    {
-        static_cast<VisualizerWidget *>(visualizerWidget)->setConfig(config);
-    }
-    else
-    {
-        dockWidget->setTitle(tr("Visualizer"));
-        dockWidget->setWidget(new VisualizerWidget(&mVisualizerWidgets, config, dockWidget));
-    }
-}
-
-void CoreWindow::addMemoryDock(KDDockWidgets::DockWidgetBase *dockWidget)
-{
-    if (dockWidget->widget())
-    {
-        return;
-    }
-
-    dockWidget->setTitle(tr("Memory"));
-    dockWidget->setWidget(new MemoryWidget(&mMemoryWidgets, dockWidget));
 }

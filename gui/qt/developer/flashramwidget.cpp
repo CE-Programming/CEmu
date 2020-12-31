@@ -15,20 +15,22 @@
  */
 
 #include "flashramwidget.h"
-#include "memorywidget.h"
+#include "widgets/memwidget.h"
+
+#include <kddockwidgets/DockWidget.h>
 
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QSizePolicy>
 
-FlashRamWidget::FlashRamWidget(DevWidget *parent)
-    : DevWidget{parent}
+FlashRamWidget::FlashRamWidget(DockedWidgetList &list)
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Flash/RAM")}, list}
 {
     QGroupBox *grpFlash = new QGroupBox(tr("Flash"));
     QGroupBox *grpRam = new QGroupBox(tr("RAM"));
 
-    mFlash = new MemoryWidget;
-    mRam = new MemoryWidget;
+    mFlash = new MemWidget;
+    mRam = new MemWidget;
 
     QHBoxLayout *hboxFlash = new QHBoxLayout;
     hboxFlash->addWidget(mFlash);

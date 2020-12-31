@@ -17,18 +17,20 @@
 #ifndef VARIABLSEWIDGET_H
 #define VARIABLSEWIDGET_H
 
+#include "dockedwidget.h"
+
 #include <QtWidgets/QWidget>
 QT_BEGIN_NAMESPACE
 class QPushButton;
 class QTableWidget;
 QT_END_NAMESPACE
 
-class VariableWidget : public QWidget
+class VariableWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
-    explicit VariableWidget(const QStringList &recentVars, QWidget *parent = nullptr);
+    explicit VariableWidget(DockedWidgetList &list, const QStringList &recentVars);
 
 public slots:
     void addRecentVar(const QString &path);
@@ -42,7 +44,6 @@ private:
     QPushButton *mBtnSaveGroup;
     QPushButton *mBtnResendVars;
     QPushButton *mBtnRemoveVars;
-
 };
 
 #endif
