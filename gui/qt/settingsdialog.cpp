@@ -59,6 +59,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
     layout->addWidget(mBtnBox, Qt::AlignCenter);
 
     connect(genTab, &SettingsGeneralTab::changeLanguage, [this]{ mReset = Settings::Reset::Langauge; });
+    connect(genTab, &SettingsGeneralTab::changePortable, [this]{ mReset = Settings::Reset::Portable; });
     connect(emuTab, &SettingsEmulationTab::changedKeypadColor, this, &SettingsDialog::changedKeypadColor);
     connect(resetTab, &SettingsResetTab::reset, [this](int reset){ mReset = reset; accept(); });
     connect(mBtnBox, &QDialogButtonBox::accepted, genTab, &SettingsGeneralTab::saveSettings);
@@ -75,7 +76,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
 SettingsGeneralTab::SettingsGeneralTab(QWidget *parent)
     : QWidget(parent)
 {
-    mChkAutoUpdate = new QCheckBox(tr("Automatically check for updates"));
+    mChkAutoUpdate = new QCheckBox(tr("Check for updates on start"));
     mChkPortable = new QCheckBox(tr("Portable mode"));
 
     mCmbLang = new QComboBox;
@@ -126,6 +127,16 @@ SettingsGeneralTab::SettingsGeneralTab(QWidget *parent)
     mainLayout->addStretch(1);
     setLayout(mainLayout);
 
+    mPortable = Settings::boolOption(Settings::PortableMode);
+    if (mPortable)
+    {
+        mChkPortable->setEnabled(!Settings::hasPortableDir());
+    }
+    else
+    {
+        mChkPortable->setEnabled(Settings::canBePortable());
+    }
+
     int keymap = Settings::intOption(Settings::KeyMap);
     if (keymap < 0 || keymap > 5)
     {
@@ -147,15 +158,20 @@ SettingsGeneralTab::SettingsGeneralTab(QWidget *parent)
 
 void SettingsGeneralTab::saveSettings()
 {
+    Settings::setIntOption(Settings::Language, mCmbLang->currentIndex());
+    Settings::setIntOption(Settings::KeyMap, mKeybind->checkedId());
+    Settings::setBoolOption(Settings::AutoUpdate, mChkAutoUpdate->isChecked());
+
+    if (mPortable != mChkPortable->isChecked())
+    {
+        Settings::setPortable(mChkPortable->isChecked());
+        emit changePortable();
+    }
+
     if (mLang != mCmbLang->currentIndex())
     {
         emit changeLanguage();
     }
-
-    Settings::setIntOption(Settings::Language, mCmbLang->currentIndex());
-    Settings::setIntOption(Settings::KeyMap, mKeybind->checkedId());
-    Settings::setBoolOption(Settings::AutoUpdate, mChkAutoUpdate->isChecked());
-    Settings::setBoolOption(Settings::PortableMode, mChkPortable->isChecked());
 }
 
 SettingsEmulationTab::SettingsEmulationTab(QWidget *parent)

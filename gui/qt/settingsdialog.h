@@ -110,6 +110,7 @@ public slots:
 
 signals:
     void changeLanguage();
+    void changePortable();
 
 private:
     QCheckBox *mChkAutoUpdate;
@@ -117,6 +118,7 @@ private:
     QButtonGroup *mKeybind;
     QComboBox *mCmbLang;
     int mLang;
+    bool mPortable;
 };
 
 class KeyColorDialog : public QDialog

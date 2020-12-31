@@ -19,6 +19,7 @@
 #include "keypad/keymap.h"
 #include "keypad/keypadwidget.h"
 
+#include <QtCore/QDir>
 #include <QtCore/QFileInfo>
 #include <QtCore/QStandardPaths>
 #include <QtCore/QSettings>
@@ -51,14 +52,9 @@ Settings *Settings::sInstance = nullptr;
 
 Settings::Settings()
 {
-    QFileInfo testPortable(Settings::sPortablePath);
-    bool hasPortableDir =
-            testPortable.exists() &&
-            testPortable.isDir() &&
-            testPortable.isWritable() &&
-            testPortable.isReadable();
-    const QString configPath = hasPortableDir ? Settings::sPortablePath
-                                              : QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+    bool isPortable = hasPortableDir();
+    const QString configPath = isPortable ? Settings::sPortablePath
+                                          : QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
 
     Q_ASSERT(sInstance == nullptr);
     sInstance = this;
@@ -69,6 +65,7 @@ Settings::Settings()
     setTextOption(Settings::SettingsPath, configPath + "/config");
     setTextOption(Settings::StatesPath, configPath + "/states");
     setTextOption(Settings::LayoutFile, configPath + "/config/layout.json");
+    setBoolOption(Settings::PortableMode, isPortable);
 
     setDefaults(false);
 }
@@ -88,7 +85,6 @@ void Settings::setDefaults(bool force)
     setDefaultOption(force, Settings::KeyHistoryFont, 9);
     setDefaultOption(force, Settings::ConsoleAutoScroll, true);
     setDefaultOption(force, Settings::AutoUpdate, true);
-    setDefaultOption(force, Settings::PortableMode, false);
     setDefaultOption(force, Settings::EmuThrottle, true);
     setDefaultOption(force, Settings::EmuSpeed, 100);
     setDefaultOption(force, Settings::EmuPreI, false);
@@ -105,9 +101,45 @@ void Settings::setDefaults(bool force)
     saveSettings();
 }
 
+bool Settings::canBePortable()
+{
+    QFileInfo testPortable(".");
+    return testPortable.isWritable() &&
+           testPortable.isReadable();
+}
+
+bool Settings::hasPortableDir()
+{
+    QFileInfo testPortable(Settings::sPortablePath);
+    return testPortable.exists() &&
+           testPortable.isDir() &&
+           testPortable.isWritable() &&
+           testPortable.isReadable();
+}
+
 void Settings::setPortable(bool portable)
 {
-    (void)portable;
+    saveSettings();
+
+    if (portable == Settings::boolOption(Settings::PortableMode))
+    {
+        return;
+    }
+
+    const QString oldPath = Settings::textOption(Settings::SettingsPath);
+    const QString newPath = portable ? Settings::sPortablePath
+                                     : QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+
+    const QString oldConfig = oldPath + "/config/preferences.conf";
+    const QString newConfig = newPath + "/config/preferences.conf";
+
+    QDir().mkpath(newPath);
+    QFile::copy(oldConfig, newConfig);
+
+    setTextOption(Settings::SettingsPath, newPath + "/config");
+    setTextOption(Settings::StatesPath, newPath + "/states");
+    setTextOption(Settings::LayoutFile, newPath + "/config/layout.json");
+    setBoolOption(Settings::PortableMode, portable);
 }
 
 void Settings::saveSettings()

@@ -41,6 +41,7 @@ public:
     {
         None,
         Langauge,
+        Portable,
         Defaults,
         Gui,
         All
@@ -60,8 +61,12 @@ public:
     static void setDefaults(bool force);
     static void saveSettings();
     static void setPortable(bool portable);
+    static bool canBePortable();
+    static bool hasPortableDir();
 
     static bool contains(const QString &key);
+    static void loadConfig();
+    static void deleteInstance();
 
     static const QString ClearWindow;
     static const QString KeyMap;

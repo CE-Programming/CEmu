@@ -385,6 +385,7 @@ void CoreWindow::showPreferences()
             case Settings::Reset::None:
                 break;
             case Settings::Reset::Langauge:
+            case Settings::Reset::Portable:
                 close();
                 qApp->exit(CoreWindow::Restart);
                 break;
