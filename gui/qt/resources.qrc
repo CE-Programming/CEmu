@@ -2,5 +2,7 @@
     <qresource prefix="/">
         <file>assets/test/screen.png</file>
         <file>assets/rom/prgm.png</file>
+        <file>assets/fonts/TICELarge.ttf</file>
+        <file>assets/fonts/LiberationSansNarrow-Bold.ttf</file>
     </qresource>
 </RCC>

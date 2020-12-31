@@ -26,7 +26,7 @@ QT_END_NAMESPACE
 class Settings
 {
 public:
-    explicit Settings(const QString &dirpath);
+    explicit Settings();
     ~Settings();
 
     enum Lang
@@ -59,6 +59,7 @@ public:
 
     static void setDefaults(bool force);
     static void saveSettings();
+    static void setPortable(bool portable);
 
     static bool contains(const QString &key);
 
@@ -90,6 +91,8 @@ public:
     static const QString SettingsPath;
     static const QString StatesPath;
     static const QString Language;
+
+    static const QString sPortablePath;
 
 private:
     static void setDefaultOption(bool force, const QString &key, const QVariant &value);

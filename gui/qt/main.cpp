@@ -17,12 +17,16 @@
 #include "corewindow.h"
 #include "dockwidget.h"
 #include "settings.h"
+#include "util.h"
 
 #include <kddockwidgets/Config.h>
 
 #include <QtCore/QCommandLineParser>
+#include <QtCore/QDir>
+#include <QtGui/QFontDatabase>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QMessageBox>
+#include <QtCore/QStandardPaths>
 #include <QtWidgets/QStyleFactory>
 
 int main(int argc, char **argv)
@@ -37,8 +41,15 @@ int main(int argc, char **argv)
 #endif
 
     QApplication app(argc, argv);
-    app.setOrganizationName(QStringLiteral("cemu-dev"));
+    app.setOrganizationName(appName);
     app.setApplicationName(appName);
+
+    QFontDatabase::addApplicationFont(QStringLiteral(":/assets/fonts/TICELarge.ttf"));
+
+    QCommandLineParser parser;
+    parser.setApplicationDescription(QStringLiteral("CEmu Emulator"));
+    parser.addHelpOption();
+    parser.addVersionOption();
 
     KDDockWidgets::Config::self().setFrameworkWidgetFactory(new DockWidgetFactory());
     KDDockWidgets::Config::self().setDockWidgetFactoryFunc(DockWidgetFactory::dockWidgetFactory);
@@ -49,9 +60,11 @@ int main(int argc, char **argv)
     flags |= KDDockWidgets::Config::Flag_TabsHaveCloseButton;
     KDDockWidgets::Config::self().setFlags(flags);
 
+    parser.process(app);
+
     do
     {
-        Settings settings("./cemu");
+        Settings settings(configPath);
 
         CoreWindow window(appName, options);
         window.setWindowTitle(appName);

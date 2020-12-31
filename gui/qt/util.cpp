@@ -24,9 +24,9 @@
 const int Util::addrByteWidth = 6;
 const int Util::portByteWidth = 4;
 
-const QString Util::error        = QObject::tr("Error");
-const QString Util::warning      = QObject::tr("Warning");
-const QString Util::information  = QObject::tr("Information");
+const QString Util::error = QObject::tr("Error");
+const QString Util::warning = QObject::tr("Warning");
+const QString Util::information = QObject::tr("Information");
 
 const QString Util::stateExtension = QStringLiteral("ce");
 

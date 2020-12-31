@@ -19,6 +19,8 @@
 #include "keypad/keymap.h"
 #include "keypad/keypadwidget.h"
 
+#include <QtCore/QFileInfo>
+#include <QtCore/QStandardPaths>
 #include <QtCore/QSettings>
 
 const QString Settings::KeyMap            = QStringLiteral("keys/map");
@@ -43,19 +45,30 @@ const QString Settings::SettingsPath      = QStringLiteral("preferences/file");
 const QString Settings::StatesPath        = QStringLiteral("states/path");
 const QString Settings::Language          = QStringLiteral("preferences/language");
 
+const QString Settings::sPortablePath     = QStringLiteral("./cemu");
+
 Settings *Settings::sInstance = nullptr;
 
-Settings::Settings(const QString &dirpath)
+Settings::Settings()
 {
+    QFileInfo testPortable(Settings::sPortablePath);
+    bool hasPortableDir =
+            testPortable.exists() &&
+            testPortable.isDir() &&
+            testPortable.isWritable() &&
+            testPortable.isReadable();
+    const QString configPath = hasPortableDir ? Settings::sPortablePath
+                                              : QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+
     Q_ASSERT(sInstance == nullptr);
     sInstance = this;
 
     QSettings::setDefaultFormat(QSettings::IniFormat);
-    sInstance->mSettings = new QSettings(dirpath + "/config/preferences.conf", QSettings::IniFormat);
+    sInstance->mSettings = new QSettings(configPath + "/config/preferences.conf", QSettings::IniFormat);
 
-    setTextOption(Settings::SettingsPath, dirpath + "/config");
-    setTextOption(Settings::StatesPath, dirpath + "/states");
-    setTextOption(Settings::LayoutFile, dirpath + "/config/layout.json");
+    setTextOption(Settings::SettingsPath, configPath + "/config");
+    setTextOption(Settings::StatesPath, configPath + "/states");
+    setTextOption(Settings::LayoutFile, configPath + "/config/layout.json");
 
     setDefaults(false);
 }
@@ -90,6 +103,11 @@ void Settings::setDefaults(bool force)
     setDefaultOption(false, Settings::RomFile, QStringLiteral("none"));
 
     saveSettings();
+}
+
+void Settings::setPortable(bool portable)
+{
+    (void)portable;
 }
 
 void Settings::saveSettings()

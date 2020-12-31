@@ -157,7 +157,7 @@ void KeypadWidget::setType(bool is83, KeypadWidget::Color color_scheme) {
 #ifndef Q_OS_WIN
     if (fontId == -2) {
         // Font not loaded yet, load it now!
-        fontId = QFontDatabase::addApplicationFont(QStringLiteral(":/fonts/resources/custom_fonts/LiberationSansNarrow-Bold.ttf"));
+        fontId = QFontDatabase::addApplicationFont(QStringLiteral(":/assets/fonts/LiberationSansNarrow-Bold.ttf"));
     }
     
     if (fontId != -1) {

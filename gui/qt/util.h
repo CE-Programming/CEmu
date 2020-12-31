@@ -33,6 +33,7 @@ public:
     static const QString information;
 
     static const QString stateExtension;
+    static const QString portablePath;
 
     static bool isHexAddress(const QString &str);
     static bool isHexPort(const QString &str);
