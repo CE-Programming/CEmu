@@ -25,21 +25,19 @@ class QTableWidget;
 class QTableWidgetItem;
 QT_END_NAMESPACE
 
-class State
-{
-public:
-    QString path;
-};
-
 class StateWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit StateWidget(const QList<State> &states, QWidget *parent = nullptr);
+    explicit StateWidget(QWidget *parent = nullptr);
+
+private slots:
+    void createState();
 
 private:
-    void addState(const State &state, bool edit);
+    QString getStatePath(const QString &name) const;
+    void addState(const QString &name, bool edit);
     void removeSelected();
 
     QTableWidget *mTbl;

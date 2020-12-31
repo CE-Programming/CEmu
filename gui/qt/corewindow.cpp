@@ -135,13 +135,6 @@ CoreWindow::~CoreWindow()
 
 void CoreWindow::createDockWidgets()
 {
-    QList<State> states =
-    {
-        {"test"},
-        {"test2"},
-        {"test3"},
-    };
-
     Q_ASSERT(mDockWidgets.isEmpty());
 
     auto *calcDock = new KDDockWidgets::DockWidget(tr("Calculator"));
@@ -157,7 +150,7 @@ void CoreWindow::createDockWidgets()
     auto *keyHistory = new KeyHistoryWidget();
 
     auto *stateDock = new KDDockWidgets::DockWidget(tr("States"));
-    auto *state = new StateWidget(states);
+    auto *state = new StateWidget();
 
     mCalcOverlay = new CalculatorOverlay(mCalcWidget);
     mCalcOverlay->setVisible(false);

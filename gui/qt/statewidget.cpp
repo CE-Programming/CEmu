@@ -18,19 +18,21 @@
 #include "settings.h"
 #include "util.h"
 
+#include <QtCore/QDir>
 #include <QtCore/QFileInfo>
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHeaderView>
+#include <QtWidgets/QMessageBox>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QTableWidget>
 
-StateWidget::StateWidget(const QList<State> &states, QWidget *parent)
+StateWidget::StateWidget(QWidget *parent)
     : QWidget{parent}
 {
     mTbl = new QTableWidget(0, 1);
-    mTbl->setHorizontalHeaderLabels({ tr("Name") });
+    mTbl->setHorizontalHeaderLabels({ tr("State name") });
     mTbl->horizontalHeader()->setStretchLastSection(true);
     mTbl->verticalHeader()->setVisible(false);
     mTbl->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -54,46 +56,106 @@ StateWidget::StateWidget(const QList<State> &states, QWidget *parent)
     vLayout->addWidget(mTbl);
     setLayout(vLayout);
 
-    foreach (const State &state, states)
+    QDir stateDir(Settings::textOption(Settings::StatesPath));
+    if (stateDir.exists())
     {
-        addState(state, false);
+        stateDir.setNameFilters({QStringLiteral("*.ce")});
+        stateDir.setFilter(QDir::Files | QDir::Readable);
+
+        foreach (const QString &state, stateDir.entryList())
+        {
+            addState(QFileInfo(state).baseName(), false);
+        }
     }
 
     connect(mBtnRemoveSelected, &QPushButton::clicked, this, &StateWidget::removeSelected);
-    connect(btnCreateState, &QPushButton::clicked, [this]
-    {
-        State state = { Settings::textOption(Settings::StatesPath) + '/' + Util::randomString(6) + '.' + Util::stateExtension };
-        addState(state, true);
-    });
+    connect(btnCreateState, &QPushButton::clicked, this, &StateWidget::createState);
     connect(mTbl, &QTableWidget::itemSelectionChanged, [this]
     {
         bool enable = mTbl->selectedItems().count() == 1;
         mBtnExportSelected->setEnabled(enable);
         mBtnRestoreSelected->setEnabled(enable);
     });
+    connect(mTbl, &QTableWidget::itemChanged, [this](QTableWidgetItem *item)
+    {
+        mTbl->blockSignals(true);
+        QString oldState = item->data(Qt::UserRole).toString();
+        QString newState = item->text();
+        QString oldPath = getStatePath(oldState);
+        QString newPath = getStatePath(newState);
+        if (!QFile::rename(oldPath, newPath))
+        {
+            bool exists = QFileInfo(oldPath).exists();
+            QString error = !exists ? tr("State was removed from disk!")
+                                    : tr("Could not rename state.");
+            QMessageBox::critical(nullptr, Util::error, error);
+            item->setText(oldState);
+            if (!exists)
+            {
+                mTbl->removeRow(item->row());
+            }
+        }
+        else
+        {
+            item->setData(Qt::UserRole, newState);
+        }
+        mTbl->blockSignals(false);
+    });
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
-void StateWidget::addState(const State &state, bool edit)
+QString StateWidget::getStatePath(const QString &state) const
 {
-    QString name = QFileInfo(state.path).baseName();
+    return Settings::textOption(Settings::StatesPath) + '/' + state + '.' + Util::stateExtension;
+}
+
+void StateWidget::addState(const QString &state, bool edit)
+{
+    QString statePath = getStatePath(state);
+
+    if (!QFileInfo(statePath).exists())
+    {
+        return;
+    }
 
     if (mTbl->rowCount() == 0)
     {
         mBtnRemoveSelected->setEnabled(true);
     }
 
-    QTableWidgetItem *item = new QTableWidgetItem(name);
-    item->setData(Qt::UserRole, state.path);
+    QTableWidgetItem *item = new QTableWidgetItem(state);
+    item->setData(Qt::UserRole, state);
 
+    mTbl->blockSignals(true);
     mTbl->insertRow(0);
     mTbl->setItem(0, 0, item);
+    mTbl->blockSignals(false);
 
     if (edit)
     {
         mTbl->editItem(item);
     }
+}
+
+void StateWidget::createState()
+{
+    QString stateDir = Settings::textOption(Settings::StatesPath);
+    QString state = Util::randomString(6);
+    QDir dir;
+
+    if (!dir.exists(stateDir))
+    {
+        dir.mkpath(stateDir);
+    }
+
+    // temporary for testing
+    QFile file(getStatePath(state));
+    file.open(QIODevice::WriteOnly);
+    file.putChar('E');
+    file.close();
+
+    addState(state, true);
 }
 
 void StateWidget::removeSelected()
@@ -102,8 +164,10 @@ void StateWidget::removeSelected()
 
     for (int i = mTbl->rowCount() - 1; i >= 0; --i)
     {
-        if (mTbl->item(i, 0)->isSelected())
+        QTableWidgetItem *item = mTbl->item(i, 0);
+        if (item->isSelected())
         {
+            QFile::remove(getStatePath(item->text()));
             mTbl->removeRow(i);
         }
     }
