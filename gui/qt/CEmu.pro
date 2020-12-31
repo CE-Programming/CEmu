@@ -13,7 +13,7 @@ QMAKE_EXTRA_TARGETS += cemucore cemucore.clean cemucore.distclean
 cemucore.path = $$_PRO_FILE_PWD_/../../cemucore
 cemucore.outpath = $$OUT_PWD/cemucore
 cemucore.target = $$cemucore.outpath/libcemucore.$$eval(QMAKE_EXTENSION_$${DEPLIBS}LIB)
-cemucore.commands = make -C $$cemucore.path BUILD=$$cemucore.outpath AR_C=$$QMAKE_AR $${DEPLIBS}LIB=1
+cemucore.commands = make -C "$$cemucore.path" BUILD="$$cemucore.outpath" AR_C="$$QMAKE_AR" $${DEPLIBS}LIB=1
 cemucore.depends = $$cemucore.path
 cemucore.clean.target = cemucore_clean
 cemucore.clean.commands = $$cemucore.commands clean
