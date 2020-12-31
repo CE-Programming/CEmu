@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 
     do
     {
-        Settings settings(configPath);
+        Settings settings;
 
         CoreWindow window(appName, options);
         window.setWindowTitle(appName);
