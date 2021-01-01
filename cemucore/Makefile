@@ -28,17 +28,19 @@ endif
 
 STATICLIB_EXT = .a
 
-CC            = $(or $(firstword $(shell $(WHERE_IS) $(addprefix $(CROSS_COMPILE),clang gcc cc))),$(CROSS_COMPILE)cc)
+FIRST_EXE     = $(or $(firstword $(shell $(WHERE_IS) $1)),$(lastword $1))
+
+CC            = $(call FIRST_EXE,$(addprefix $(CROSS_COMPILE),clang gcc cc))
 ALL_CFLAGS    = -std=c11 -Wall -Wextra -pedantic
 ifneq ($(NOTHREADS),)
 ALL_CFLAGS   += -DCEMUCORE_NOTHREADS
 else
 ALL_CFLAGS   += -pthread
-ALL_LDFLAGS  += -pthread
+ALL_LFLAGS   += -pthread
 endif
-ALL_CFLAGS   += $(CFLAGS) $(CLDFLAGS)
-ALL_LDFLAGS  += $(LDFLAGS) $(CLDFLAGS)
-AR_C          = $(CROSS_COMPILE)ar cqs
+ALL_CFLAGS   += $(CFLAGS) $(CLFLAGS)
+ALL_LFLAGS   += $(LFLAGS) $(CLFLAGS)
+AR            = $(call FIRST_EXE,$(subst clang,llvm,$(notdir $(CC)))-ar $(CROSS_COMPILE)ar) cqs
 
 BUILD = $(CURDIR)
 
@@ -66,11 +68,11 @@ ARTIFACT_DIRS = $(sort $(dir $(ARTIFACTS)))
 all: $(TARGETS)
 
 $(SHLIB_TARGET): $(OBJECTS) | $(ARTIFACT_DIRS)
-	$(CC) $(ALL_LDFLAGS) -shared -o $@ $^
+	$(CC) $(ALL_LFLAGS) -shared -o $@ $^
 
 $(STATICLIB_TARGET): $(OBJECTS) | $(ARTIFACT_DIRS)
 	$(call REMOVE,$@)
-	$(AR_C) $@ $^
+	$(AR) $@ $^
 
 $(BUILD)/%.o: % $(HEADERS) | $(ARTIFACT_DIRS)
 	$(CC) $(ALL_CFLAGS) -c -o $@ $<
