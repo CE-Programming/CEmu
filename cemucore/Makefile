@@ -26,16 +26,19 @@ endif
 OBJECT_EXT    = .o
 endif
 
-CC            = $(or $(firstword $(shell $(WHERE_IS) $(addprefix $(CROSS_COMPILE),clang gcc cc))),$(CROSS_COMPILE)cc)
-ifneq ($(NOTHREADS),)
-CFLAGS       += -DCEMUCORE_NOTHREADS
-else
-CFLAGS       += -pthread
-LDFLAGS      += -pthread
-endif
-AR_C          = $(CROSS_COMPILE)ar cqs
-
 STATICLIB_EXT = .a
+
+CC            = $(or $(firstword $(shell $(WHERE_IS) $(addprefix $(CROSS_COMPILE),clang gcc cc))),$(CROSS_COMPILE)cc)
+ALL_CFLAGS    = -std=c11 -Wall -Wextra -pedantic
+ifneq ($(NOTHREADS),)
+ALL_CFLAGS   += -DCEMUCORE_NOTHREADS
+else
+ALL_CFLAGS   += -pthread
+ALL_LDFLAGS  += -pthread
+endif
+ALL_CFLAGS   += $(CFLAGS) $(CLDFLAGS)
+ALL_LDFLAGS  += $(LDFLAGS) $(CLDFLAGS)
+AR_C          = $(CROSS_COMPILE)ar cqs
 
 BUILD = $(CURDIR)
 
@@ -50,10 +53,10 @@ TARGETS = $(foreach S,SH STATIC,$(if $($SLIB),$($SLIB_TARGET)))
 
 HEADERS += \
 	cemucore.h \
-	private.h
+	core.h
 
 SOURCES += \
-	cemucore.c
+	core.c
 
 OBJECTS = $(addprefix $(BUILD)/,$(addsuffix $(OBJECT_EXT),$(SOURCES)))
 
@@ -63,14 +66,14 @@ ARTIFACT_DIRS = $(sort $(dir $(ARTIFACTS)))
 all: $(TARGETS)
 
 $(SHLIB_TARGET): $(OBJECTS) | $(ARTIFACT_DIRS)
-	$(CC) $(LDFLAGS) -shared -o $@ $^
+	$(CC) $(ALL_LDFLAGS) -shared -o $@ $^
 
 $(STATICLIB_TARGET): $(OBJECTS) | $(ARTIFACT_DIRS)
 	$(call REMOVE,$@)
 	$(AR_C) $@ $^
 
 $(BUILD)/%.o: % $(HEADERS) | $(ARTIFACT_DIRS)
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(ALL_CFLAGS) -c -o $@ $<
 
 $(ARTIFACT_DIRS):
 	$(call MKDIR,$@)

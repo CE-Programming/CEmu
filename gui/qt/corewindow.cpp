@@ -65,6 +65,8 @@ CoreWindow::CoreWindow(const QString &uniqueName,
       mCalcType{ti_device_t::TI84PCE},
       mCore{nullptr}
 {
+    connect(this, &CoreWindow::coreSignal, this, &CoreWindow::coreSignalled, Qt::QueuedConnection);
+
     auto *menubar = menuBar();
 
     mCalcsMenu = new QMenu(tr("Calculator"), this);
@@ -279,7 +281,7 @@ void CoreWindow::resetEmu()
 {
     if (!mCore)
     {
-        mCore = cemucore_create(CEMUCORE_CREATE_THREADED);
+        mCore = cemucore_create(CEMUCORE_CREATE_THREADED, &CoreWindow::emitCoreSignal, this);
     }
 
     int keycolor = Settings::intOption(Settings::KeypadColor);
@@ -407,7 +409,17 @@ bool CoreWindow::restoreLayout()
     return json.isEmpty();
 }
 
+void CoreWindow::coreSignalled()
+{
+    fprintf(stderr, "%s\n", __PRETTY_FUNCTION__);
+}
+
 void CoreWindow::closeEvent(QCloseEvent *)
 {
     saveLayout(true);
+}
+
+void CoreWindow::emitCoreSignal(void *data)
+{
+    emit static_cast<CoreWindow *>(data)->coreSignal();
 }

@@ -28,7 +28,13 @@ struct cemucore
 {
 #ifndef CEMUCORE_NOTHREADS
     pthread_t thread;
+#if ATOMIC_INT_LOCK_FREE != 2
+    atomic_flag no_pending;
 #endif
+    atomic_uint pending;
+#endif
+    cemucore_signal_t signal;
+    void *signal_data;
 };
 
 #endif

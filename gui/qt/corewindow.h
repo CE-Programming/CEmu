@@ -50,6 +50,7 @@ public:
 
 signals:
     void romChanged();
+    void coreSignal();
 
 private slots:
     void createRom();
@@ -59,6 +60,7 @@ private slots:
     void showPreferences();
     bool saveLayout(bool ignoreErrors = false);
     bool restoreLayout();
+    void coreSignalled();
 
 private:
     void createFileMenu();
@@ -71,6 +73,8 @@ private:
     void setKeymap();
 
     void closeEvent(QCloseEvent *) override;
+
+    static void emitCoreSignal(void *);
 
     DockedWidgetList mDockedWidgets;
     QStringList mVisualizerConfigs;

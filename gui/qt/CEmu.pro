@@ -6,27 +6,6 @@ TEMPLATE = app
 
 CONFIG += c++11 console no_include_pwd
 
-# Dependencies
-!defined(DEPLIBS, var) : DEPLIBS = STATIC
-
-QMAKE_EXTRA_TARGETS += cemucore cemucore.clean cemucore.distclean
-cemucore.path = $$_PRO_FILE_PWD_/../../cemucore
-cemucore.outpath = $$OUT_PWD/cemucore
-cemucore.target = $$cemucore.outpath/libcemucore.$$eval(QMAKE_EXTENSION_$${DEPLIBS}LIB)
-cemucore.commands = $(MAKE) -C $$shell_quote($$cemucore.path) $$shell_quote(BUILD=$$cemucore.outpath) $$shell_quote(CROSS_COMPILE=$$CROSS_COMPILE) $$shell_quote(CFLAGS=-fPIC) $$shell_quote($${DEPLIBS}LIB=1)
-cemucore.depends = $$cemucore.path
-cemucore.clean.target = cemucore_clean
-cemucore.clean.commands = $$cemucore.commands clean
-cemucore.clean.depends = FORCE
-CLEAN_DEPS += $$cemucore.clean.target
-cemucore.distclean.target = cemucore_distclean
-cemucore.distclean.commands = $$cemucore.commands distclean
-cemucore.distclean.depends = FORCE
-DISTCLEAN_DEPS += $$cemucore.distclean.target
-PRE_TARGETDEPS += $$cemucore.target
-INCLUDEPATH += $$cemucore.path
-LIBS += $$cemucore.target
-
 QT += core gui widgets network KDDockWidgets
 
 # Core options
@@ -58,6 +37,27 @@ linux: QMAKE_LFLAGS += -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack -Wl,--gc-secti
 QMAKE_CFLAGS    += $$GLOBAL_FLAGS
 QMAKE_CXXFLAGS  += $$GLOBAL_FLAGS
 QMAKE_LFLAGS    += $$GLOBAL_FLAGS
+
+# Dependencies
+!defined(DEPLIBS, var) : DEPLIBS = STATIC
+
+QMAKE_EXTRA_TARGETS += cemucore cemucore.clean cemucore.distclean
+cemucore.path = $$_PRO_FILE_PWD_/../../cemucore
+cemucore.outpath = $$OUT_PWD/cemucore
+cemucore.target = $$cemucore.outpath/libcemucore.$$eval(QMAKE_EXTENSION_$${DEPLIBS}LIB)
+cemucore.commands = $(MAKE) -C $$shell_quote($$cemucore.path) $$shell_quote(BUILD=$$cemucore.outpath) $$shell_quote(CROSS_COMPILE=$$CROSS_COMPILE) $$shell_quote(CLDFLAGS=-fPIC $$GLOBAL_FLAGS) $$shell_quote($${DEPLIBS}LIB=1)
+cemucore.depends = $$cemucore.path
+cemucore.clean.target = cemucore_clean
+cemucore.clean.commands = $$cemucore.commands clean
+cemucore.clean.depends = FORCE
+CLEAN_DEPS += $$cemucore.clean.target
+cemucore.distclean.target = cemucore_distclean
+cemucore.distclean.commands = $$cemucore.commands distclean
+cemucore.distclean.depends = FORCE
+DISTCLEAN_DEPS += $$cemucore.distclean.target
+PRE_TARGETDEPS += $$cemucore.target
+INCLUDEPATH += $$cemucore.path
+LIBS += $$cemucore.target
 
 if(macx) {
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.12

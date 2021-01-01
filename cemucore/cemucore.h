@@ -25,6 +25,8 @@ extern "C"
 {
 #endif
 
+typedef void (*cemucore_signal_t)(void *);
+
 typedef enum cemucore_create_flags
 {
 #ifndef CEMUCORE_NOTHREADS
@@ -34,8 +36,8 @@ typedef enum cemucore_create_flags
 
 typedef struct cemucore cemucore_t;
 
-cemucore_t *cemucore_create(cemucore_create_flags_t create_flags);
-void cemucore_destroy(cemucore_t *core);
+cemucore_t *cemucore_create(cemucore_create_flags_t, cemucore_signal_t, void *);
+void cemucore_destroy(cemucore_t *);
 
 /* !!! DEPRECATED API !!! */
 typedef enum {

@@ -14,27 +14,44 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "private.h"
+#include "core.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 
 #ifndef CEMUCORE_NOTHREADS
+static bool check_signals(cemucore_t *core)
+{
+#if ATOMIC_INT_LOCK_FREE != 2
+    return !atomic_flag_test_and_set_explicit(&core->no_pending, memory_order_relaxed);
+#else
+    return !atomic_load_explicit(&core->pending, memory_order_relaxed);
+#endif
+}
+
 static void *thread_start(void *data)
 {
     cemucore_t *core = data;
     fprintf(stderr, "Hello from the other side\n");
+    if (core->signal)
+    {
+        core->signal(core->signal_data);
+    }
     return NULL;
 }
 #endif
 
-cemucore_t *cemucore_create(cemucore_create_flags_t create_flags)
+cemucore_t *cemucore_create(cemucore_create_flags_t create_flags,
+                            cemucore_signal_t signal, void *signal_data)
 {
     cemucore_t *core = malloc(sizeof(cemucore_t));
     if (!core)
     {
         return NULL;
     }
+
+    core->signal = signal;
+    core->signal_data = signal_data;
 
 #ifndef CEMUCORE_NOTHREADS
     if (create_flags & CEMUCORE_CREATE_THREADED)
