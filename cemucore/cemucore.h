@@ -25,14 +25,16 @@ extern "C"
 {
 #endif
 
-typedef enum cemucore_init_flags
+typedef enum cemucore_create_flags
 {
-    CEMUCORE_INIT_CREATE_THREAD = 1,
-} cemucore_init_flags_t;
+#ifndef CEMUCORE_NOTHREADS
+    CEMUCORE_CREATE_THREADED = 1,
+#endif
+} cemucore_create_flags_t;
 
 typedef struct cemucore cemucore_t;
 
-cemucore_t *cemucore_init(cemucore_init_flags_t init_flags);
+cemucore_t *cemucore_create(cemucore_create_flags_t create_flags);
 void cemucore_destroy(cemucore_t *core);
 
 /* !!! DEPRECATED API !!! */

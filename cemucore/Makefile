@@ -27,6 +27,12 @@ OBJECT_EXT    = .o
 endif
 
 CC            = $(or $(firstword $(shell $(WHERE_IS) $(addprefix $(CROSS_COMPILE),clang gcc cc))),$(CROSS_COMPILE)cc)
+ifneq ($(NOTHREADS),)
+CFLAGS       += -DCEMUCORE_NOTHREADS
+else
+CFLAGS       += -pthread
+LDFLAGS      += -pthread
+endif
 AR_C          = $(CROSS_COMPILE)ar cqs
 
 STATICLIB_EXT = .a

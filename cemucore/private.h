@@ -20,14 +20,14 @@
 #include "cemucore.h"
 
 #ifndef CEMUCORE_NOTHREADS
+#include <pthread.h>
 #include <stdatomic.h>
-#include <threads.h>
 #endif
 
 struct cemucore
 {
 #ifndef CEMUCORE_NOTHREADS
-    thrd_t thread;
+    pthread_t thread;
 #endif
 };
 

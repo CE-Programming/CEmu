@@ -279,7 +279,7 @@ void CoreWindow::resetEmu()
 {
     if (!mCore)
     {
-        mCore = cemucore_init(CEMUCORE_INIT_CREATE_THREAD);
+        mCore = cemucore_create(CEMUCORE_CREATE_THREADED);
     }
 
     int keycolor = Settings::intOption(Settings::KeypadColor);

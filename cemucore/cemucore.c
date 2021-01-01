@@ -16,17 +16,19 @@
 
 #include "private.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #ifndef CEMUCORE_NOTHREADS
-static int thread(void *data)
+static void *thread_start(void *data)
 {
     cemucore_t *core = data;
-    return 0;
+    fprintf(stderr, "Hello from the other side\n");
+    return NULL;
 }
 #endif
 
-cemucore_t *cemucore_init(cemucore_init_flags_t init_flags)
+cemucore_t *cemucore_create(cemucore_create_flags_t create_flags)
 {
     cemucore_t *core = malloc(sizeof(cemucore_t));
     if (!core)
@@ -35,9 +37,9 @@ cemucore_t *cemucore_init(cemucore_init_flags_t init_flags)
     }
 
 #ifndef CEMUCORE_NOTHREADS
-    if (init_flags & CEMUCORE_INIT_CREATE_THREAD)
+    if (create_flags & CEMUCORE_CREATE_THREADED)
     {
-        if (thrd_create(&core->thread, &thread, core) != thrd_success)
+        if (pthread_create(&core->thread, NULL, &thread_start, core))
         {
             free(core);
             return NULL;
@@ -45,7 +47,7 @@ cemucore_t *cemucore_init(cemucore_init_flags_t init_flags)
     }
     else
     {
-        core->thread = thrd_current();
+        core->thread = pthread_self();
     }
 #endif
 
@@ -60,7 +62,7 @@ void cemucore_destroy(cemucore_t *core)
     }
 
 #ifndef CEMUCORE_NOTHREADS
-    thrd_join(core->thread, NULL);
+    pthread_join(core->thread, NULL);
 #endif
 
     free(core);
