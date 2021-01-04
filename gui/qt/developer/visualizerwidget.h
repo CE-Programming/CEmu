@@ -15,8 +15,8 @@ QT_BEGIN_NAMESPACE
 class QCloseEvent;
 class QGroupBox;
 class QLineEdit;
+class QPushButton;
 class QRadioButton;
-class QToolButton;
 QT_END_NAMESPACE
 
 class VisualizerWidget : public DockedWidget
@@ -52,9 +52,9 @@ private:
     QLineEdit *mConfigStr;
     QGroupBox *mGroup;
 
-    QToolButton *mBtnLcd;
-    QToolButton *mBtnRefresh;
-    QToolButton *mBtnConfig;
+    QPushButton *mBtnLcd;
+    QPushButton *mBtnRefresh;
+    QPushButton *mBtnConfig;
 
     VisualizerWidget *mPrev, *mNext;
     VisualizerLcdWidget *mLcd;

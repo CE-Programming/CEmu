@@ -26,7 +26,9 @@
 #include <QtWidgets/QTableWidget>
 
 VariableWidget::VariableWidget(DockedWidgetList &list, const QStringList &recentVars)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Variable Transfer")}, list}
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Variable Transfer")},
+                   QIcon(QStringLiteral(":/assets/icons/opened_folder.svg")),
+                   list}
 {
     mCalcVars = new QTableWidget(0, 3);
     mCalcVars->setHorizontalHeaderLabels({tr("Name"), tr("Type"), tr("Preview")});
@@ -42,10 +44,10 @@ VariableWidget::VariableWidget(DockedWidgetList &list, const QStringList &recent
     mSentVars->setSelectionMode(QAbstractItemView::ExtendedSelection);
     mSentVars->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-    mBtnSaveSelected = new QPushButton(tr("Save selected"));
-    mBtnSaveGroup = new QPushButton(tr("Save selected as group"));
-    mBtnResendVars = new QPushButton(tr("Resend selected"));
-    mBtnRemoveVars = new QPushButton(tr("Remove selected"));
+    mBtnSaveSelected = new QPushButton(QIcon(QStringLiteral(":/assets/icons/save.svg")), tr("Save"));
+    mBtnSaveGroup = new QPushButton(QIcon(QStringLiteral(":/assets/icons/save.svg")), tr("Save as group"));
+    mBtnResendVars = new QPushButton(QIcon(QStringLiteral(":/assets/icons/internal.svg")), tr("Resend"));
+    mBtnRemoveVars = new QPushButton(QIcon(QStringLiteral(":/assets/icons/cross.svg")), tr("Remove"));
 
     mBtnResendVars->setEnabled(false);
     mBtnRemoveVars->setEnabled(false);
@@ -55,8 +57,8 @@ VariableWidget::VariableWidget(DockedWidgetList &list, const QStringList &recent
     QGroupBox *grpSent = new QGroupBox(tr("Send variables to calculator"));
     QGroupBox *grpCalc = new QGroupBox(tr("Get variables from calculator"));
 
-    QPushButton *btnSendVars = new QPushButton(tr("Send variables"));
-    QPushButton *btnRefreshList = new QPushButton(tr("Refresh list"));
+    QPushButton *btnSendVars = new QPushButton(QIcon(QStringLiteral(":/assets/icons/opened_folder.svg")), tr("Send variables"));
+    QPushButton *btnRefreshList = new QPushButton(QIcon(QStringLiteral(":/assets/icons/process.svg")), tr("Refresh list"));
 
     QHBoxLayout *hboxSentBtns = new QHBoxLayout;
     hboxSentBtns->addWidget(btnSendVars);

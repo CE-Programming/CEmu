@@ -25,20 +25,22 @@
 #define SETBITS(in, out, var) ((var) = static_cast<bool>(in) ? ((var) | (out)) : ((var) & ~(out)))
 
 VisualizerWidget::VisualizerWidget(DockedWidgetList &list, KDDockWidgets::DockWidgetBase *dock)
-    : DockedWidget{dock ? dock : new KDDockWidgets::DockWidget{QStringLiteral("Visualizer #")}, list}
+    : DockedWidget{dock ? dock : new KDDockWidgets::DockWidget{QStringLiteral("Visualizer #") + Util::randomString(6)},
+                   QIcon(QStringLiteral(":/assets/icons/add_image.svg")),
+                   list}
 {
     mGroup = new QGroupBox(tr("Settings"));
 
     mConfigStr = new QLineEdit;
-    mBtnLcd = new QToolButton;
-    mBtnRefresh = new QToolButton;
-    mBtnConfig = new QToolButton;
+    mBtnLcd =  new QPushButton(QIcon(QStringLiteral(":/assets/icons/picture.svg")), tr("Presets"));
+    mBtnRefresh = new QPushButton(QIcon(QStringLiteral(":/assets/icons/ok.svg")), tr("Apply"));
+    mBtnConfig = new QPushButton(QIcon(QStringLiteral(":/assets/icons/support.svg")), tr("Setup"));
 
     mLcd = new VisualizerLcdWidget;
 
-    mBtnLcd->setToolTip(tr("Preset Configurations"));
-    mBtnConfig->setToolTip(tr("Change Configuration"));
-    mBtnRefresh->setToolTip(tr("Apply changes"));
+    mConfigStr->setFont(Util::monospaceFont());
+    mConfigStr->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    mConfigStr->setMinimumWidth(QFontMetrics(Util::monospaceFont()).maxWidth() * 3);
 
     QHBoxLayout *hLayout = new QHBoxLayout;
     hLayout->addWidget(mConfigStr);
@@ -47,11 +49,16 @@ VisualizerWidget::VisualizerWidget(DockedWidgetList &list, KDDockWidgets::DockWi
     hLayout->addWidget(mBtnConfig);
     mGroup->setLayout(hLayout);
 
+    QHBoxLayout *hLcdLayout = new QHBoxLayout;
+    hLcdLayout->addStretch();
+    hLcdLayout->addWidget(mLcd);
+    hLcdLayout->addStretch();
+
     QVBoxLayout *vLayout = new QVBoxLayout;
-    vLayout->addStretch(1);
+    vLayout->addStretch();
     vLayout->addWidget(mGroup);
-    vLayout->addWidget(mLcd);
-    vLayout->addStretch(1);
+    vLayout->addLayout(hLcdLayout);
+    vLayout->addStretch();
     setLayout(vLayout);
 
     connect(mConfigStr, &QLineEdit::returnPressed, this, &VisualizerWidget::stringToView);
@@ -64,35 +71,35 @@ VisualizerWidget::VisualizerWidget(DockedWidgetList &list, KDDockWidgets::DockWi
 
 void VisualizerWidget::showPresets()
 {
-    const QString preset_1 = tr("Current LCD State");
-    const QString preset_2 = tr("8bpp Buffer 1");
-    const QString preset_3 = tr("8bpp Buffer 2");
-    const QString preset_4 = tr("Palette View");
+    const QString preset1 = tr("Current LCD State");
+    const QString preset2 = tr("8bpp Buffer 1");
+    const QString preset3 = tr("8bpp Buffer 2");
+    const QString preset4 = tr("Palette View");
 
     QMenu menu;
-    menu.addAction(preset_1);
-    menu.addAction(preset_2);
-    menu.addAction(preset_3);
-    menu.addAction(preset_4);
+    menu.addAction(preset1);
+    menu.addAction(preset2);
+    menu.addAction(preset3);
+    menu.addAction(preset4);
 
-    QAction *item = menu.exec(mapToGlobal(mBtnLcd->pos()));
+    QAction *item = menu.exec(mBtnLcd->mapToGlobal({0, mBtnLcd->height() + 1}));
     if (item)
     {
-        if (item->text() == preset_1)
+        if (item->text() == preset1)
         {
             resetView();
         }
-        else if (item->text() == preset_2)
+        else if (item->text() == preset2)
         {
             mConfigStr->setText("d40000,320x240,8bpp,bgr");
             stringToView();
         }
-        else if (item->text() == preset_3)
+        else if (item->text() == preset3)
         {
             mConfigStr->setText("d52c00,320x240,8bpp,bgr");
             stringToView();
         }
-        else if (item->text() == preset_4)
+        else if (item->text() == preset4)
         {
             mConfigStr->setText("e30200,32x8,1555bpp,bgr,1000%");
             stringToView();
@@ -102,9 +109,9 @@ void VisualizerWidget::showPresets()
 
 void VisualizerWidget::showConfig()
 {
-    QDialog *dialog = new QDialog;
+    QDialog dialog;
 
-    QGridLayout *mlayout = new QGridLayout(dialog);
+    QGridLayout *mlayout = new QGridLayout;
     QGridLayout *glayout = new QGridLayout;
     QHBoxLayout *hlayout = new QHBoxLayout;
 
@@ -124,7 +131,7 @@ void VisualizerWidget::showConfig()
     QCheckBox *bepoChk = new QCheckBox(QStringLiteral("BEPO"));
     QCheckBox *bgrChk = new QCheckBox(QStringLiteral("BGR"));
     QCheckBox *gridChk = new QCheckBox(tr("Grid"));
-    QPushButton *submitBtn = new QPushButton(tr("Submit"));
+    QPushButton *submitBtn = new QPushButton(QIcon(QStringLiteral(":/assets/icons/ok.svg")), tr("Apply"));
 
     fpsSpin->setRange(0, 120);
     fpsSpin->setValue(mFps);
@@ -176,9 +183,13 @@ void VisualizerWidget::showConfig()
     mlayout->addLayout(glayout, 0, 0);
     mlayout->addLayout(hlayout, 1, 0);
 
-    dialog->setLayout(mlayout);
+    dialog.setLayout(mlayout);
+    dialog.setWindowTitle(tr("Visualizer Setup"));
+    dialog.setWindowIcon(QIcon(QStringLiteral(":/assets/icons/support.svg")));
 
-    connect(submitBtn, &QPushButton::clicked, [=]
+    connect(submitBtn, &QPushButton::clicked, &dialog, &QDialog::accept);
+
+    if (dialog.exec())
     {
         mLcdConfig.mBaseAddr = static_cast<uint32_t>(Util::hex2int(baseEdit->text()));
 
@@ -196,10 +207,7 @@ void VisualizerWidget::showConfig()
         SETBITS(bgrChk->isChecked(), 0x100u, mLcdConfig.mCtlReg);
 
         viewToString();
-
-        dialog->close();
-    });
-    dialog->exec();
+    }
 }
 
 void VisualizerWidget::closeEvent(QCloseEvent *)
@@ -361,7 +369,6 @@ void VisualizerWidget::viewToString()
     mLcd->setFixedSize(static_cast<int>(w), static_cast<int>(h));
     mLcd->setRefreshRate(mFps);
     mLcd->setConfig(mLcdConfig);
-    adjustSize();
 
     emit configChanged(static_cast<KDDockWidgets::DockWidget *>(parent())->uniqueName(), getConfig());
 }

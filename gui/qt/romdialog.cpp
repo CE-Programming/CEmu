@@ -88,8 +88,8 @@ RomDialog::RomDialog(QWidget *parent)
     info2->setWordWrap(true);
     info3->setWordWrap(true);
 
-    mBtnSaveDumper = new QPushButton("Save ROM dumper", this);
-    mBtnSaveImage = new QPushButton("Save ROM image", this);
+    mBtnSaveDumper = new QPushButton(QIcon(QStringLiteral(":/assets/icons/save.svg")), "Save ROM dumper", this);
+    mBtnSaveImage = new QPushButton(QIcon(QStringLiteral(":/assets/icons/save.svg")), "Save ROM image", this);
 
     mDropArea = new DropArea;
     mDropArea->setText(tr("Drop ROMData files here (0/unk)"));

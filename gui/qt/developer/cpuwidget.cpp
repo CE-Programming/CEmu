@@ -34,7 +34,9 @@
 #include <QtWidgets/QSpinBox>
 
 CpuWidget::CpuWidget(DockedWidgetList &list)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("CPU")}, list}
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("CPU")},
+                   QIcon(QStringLiteral(":/assets/icons/electronics.svg")),
+                   list}
 {
     mRegEventFilter = new CpuRegisterFilter(this);
 

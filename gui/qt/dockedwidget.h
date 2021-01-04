@@ -25,6 +25,7 @@ class DockWidgetBase;
 }
 
 #include <QtCore/QJsonValue>
+#include <QtGui/QIcon>
 #include <QtWidgets/QWidget>
 
 #include <iterator>
@@ -119,7 +120,7 @@ class DockedWidget : public QWidget, protected DockedWidgetList
     friend class DockedWidgetList;
 
 protected:
-    DockedWidget(KDDockWidgets::DockWidgetBase *dock, DockedWidgetList &list);
+    DockedWidget(KDDockWidgets::DockWidgetBase *dock, const QIcon &icon, DockedWidgetList &list);
 
 public:
     KDDockWidgets::DockWidgetBase *dock() const;

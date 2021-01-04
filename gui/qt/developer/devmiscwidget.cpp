@@ -29,7 +29,9 @@
 #include <QtWidgets/QSpinBox>
 
 DevMiscWidget::DevMiscWidget(DockedWidgetList &list)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Miscellaneous")}, list}
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Miscellaneous")},
+                   QIcon(QStringLiteral(":/assets/icons/charge_battery.svg")),
+                   list}
 {
     QGroupBox *grpLcd = new QGroupBox(QStringLiteral("LCD"));
     QGroupBox *grpLcdCtl = new QGroupBox(tr("Control"));

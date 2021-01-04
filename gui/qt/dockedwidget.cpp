@@ -21,7 +21,7 @@
 #include <QtCore/QString>
 #include <QtCore/QtGlobal>
 
-DockedWidget::DockedWidget(KDDockWidgets::DockWidgetBase *dock, DockedWidgetList &list)
+DockedWidget::DockedWidget(KDDockWidgets::DockWidgetBase *dock, const QIcon &icon, DockedWidgetList &list)
     : QWidget{dock},
       DockedWidgetList{&list}
 {
@@ -32,6 +32,7 @@ DockedWidget::DockedWidget(KDDockWidgets::DockWidgetBase *dock, DockedWidgetList
         title = title.left(hash - 1);
     }
     dock->setTitle(tr(qUtf8Printable(title)));
+    dock->setIcon(icon);
     dock->setWidget(this);
 }
 

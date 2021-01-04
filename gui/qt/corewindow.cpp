@@ -78,22 +78,31 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     menubar->addMenu(mDevMenu);
 
     auto *resetAction = mCalcsMenu->addAction(tr("Reset"));
+    resetAction->setIcon(QIcon(QStringLiteral(":/assets/icons/synchronize.svg")));
     connect(resetAction, &QAction::triggered, this, &CoreWindow::resetEmu);
 
     mCalcsMenu->addSeparator();
 
     auto *importRomAction = mCalcsMenu->addAction(tr("Import ROM"));
+    importRomAction->setIcon(QIcon(QStringLiteral(":/assets/icons/import.svg")));
     connect(importRomAction, &QAction::triggered, this, &CoreWindow::importRom);
 
     auto *exportRomAction = mCalcsMenu->addAction(tr("Export ROM"));
+    exportRomAction->setIcon(QIcon(QStringLiteral(":/assets/icons/export.svg")));
     connect(exportRomAction, &QAction::triggered, this, &CoreWindow::exportRom);
 
     mCalcsMenu->addSeparator();
 
     auto *prefAction = mCalcsMenu->addAction(tr("Preferences"));
+    prefAction->setIcon(QIcon(QStringLiteral(":/assets/icons/support.svg")));
     connect(prefAction, &QAction::triggered, this, &CoreWindow::showPreferences);
 
+    auto *aboutAction = mCalcsMenu->addAction(tr("About"));
+    aboutAction->setIcon(QIcon(QStringLiteral(":/assets/icons/about.svg")));
+    connect(aboutAction, &QAction::triggered, qApp, &QApplication::quit);
+
     auto *quitAction = mCalcsMenu->addAction(tr("Quit"));
+    quitAction->setIcon(QIcon(QStringLiteral(":/assets/icons/cross.svg")));
     connect(quitAction, &QAction::triggered, qApp, &QApplication::quit);
 
     createDockWidgets();
@@ -101,9 +110,11 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     mDocksMenu->addSeparator();
 
     auto *saveLayoutAction = mDocksMenu->addAction(tr("Save Layout"));
+    saveLayoutAction->setIcon(QIcon(QStringLiteral(":/assets/icons/template.svg")));
     connect(saveLayoutAction, &QAction::triggered, this, &CoreWindow::saveLayout);
 
     auto *restoreLayoutAction = mDocksMenu->addAction(tr("Restore Layout"));
+    restoreLayoutAction->setIcon(QIcon(QStringLiteral(":/assets/icons/reload_template.svg")));
     connect(restoreLayoutAction, &QAction::triggered, this, &CoreWindow::restoreLayout);
 
     setKeymap();
@@ -288,9 +299,8 @@ void CoreWindow::resetEmu()
 
     // holds the path to the rom file to load into the emulator
     //Settings::textOption(Settings::RomFile);
-    bool test = true;
 
-    if (test)
+    if (true)
     {
 
         mCalcWidget->setConfig(mCalcType, keycolor);

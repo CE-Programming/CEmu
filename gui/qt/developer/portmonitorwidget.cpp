@@ -33,7 +33,9 @@
 #include <QtWidgets/QToolButton>
 
 PortMonitorWidget::PortMonitorWidget(DockedWidgetList &list, const QList<PortMonitor> &portmonitors)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Port Monitor")}, list}
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Port Monitor")},
+                   QIcon(QStringLiteral(":/assets/icons/cable_release.svg")),
+                   list}
 {
     mTbl = new QTableWidget(0, 6);
     mTbl->setHorizontalHeaderLabels({tr("E"), tr("R"), tr("W"), tr("F"), tr("Address"), tr("Data")});

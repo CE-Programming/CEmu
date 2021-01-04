@@ -18,6 +18,8 @@
 
 #include "widgets/memwidget.h"
 
+#include "../util.h"
+
 #include <kddockwidgets/DockWidget.h>
 
 #include <QtWidgets/QBoxLayout>
@@ -30,9 +32,17 @@
 #include <QtWidgets/QSpinBox>
 
 MemoryWidget::MemoryWidget(DockedWidgetList &list, KDDockWidgets::DockWidgetBase *dock)
-    : DockedWidget{dock ? dock : new KDDockWidgets::DockWidget{QStringLiteral("Memory #")}, list}
+    : DockedWidget{dock ? dock : new KDDockWidgets::DockWidget{QStringLiteral("Memory #") + Util::randomString(6)},
+                   QIcon(QStringLiteral(":/assets/icons/add_grid.svg")),
+                   list}
 {
-    mMem = new MemWidget{this};
+    mMem = new MemWidget;
+
+    QVBoxLayout *vLayout = new QVBoxLayout;
+    vLayout->addWidget(mMem);
+    setLayout(vLayout);
+
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
 void MemoryWidget::closeEvent(QCloseEvent *)

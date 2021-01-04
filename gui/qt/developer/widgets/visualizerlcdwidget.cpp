@@ -40,6 +40,8 @@ VisualizerLcdWidget::VisualizerLcdWidget(QWidget *parent)
 {
     setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this, &VisualizerLcdWidget::customContextMenuRequested, this, &VisualizerLcdWidget::contextMenu);
+
+    mImage = new QImage(QStringLiteral(":/assets/test/screen.png"));
 }
 
 VisualizerLcdWidget::~VisualizerLcdWidget()
@@ -49,8 +51,8 @@ VisualizerLcdWidget::~VisualizerLcdWidget()
 
 void VisualizerLcdWidget::draw()
 {
-    emu_set_lcd_ptrs(&mConfig.mData, &mConfig.mDataEnd, mConfig.mWidth, mConfig.mHeight, mConfig.mBaseAddr, mConfig.mCtlReg, false);
-    emu_lcd_drawmem(mImage->bits(), mConfig.mData, mConfig.mDataEnd, mConfig.mCtlReg, mConfig.mWidth * mConfig.mHeight, Settings::boolOption(Settings::EmuLcdSpi));
+    //emu_set_lcd_ptrs(&mConfig.mData, &mConfig.mDataEnd, mConfig.mWidth, mConfig.mHeight, mConfig.mBaseAddr, mConfig.mCtlReg, false);
+    //emu_lcd_drawmem(mImage->bits(), mConfig.mData, mConfig.mDataEnd, mConfig.mCtlReg, mConfig.mWidth * mConfig.mHeight, Settings::boolOption(Settings::EmuLcdSpi));
     update();
 }
 
@@ -140,8 +142,8 @@ void VisualizerLcdWidget::setConfig(const VisualizerLcdWidgetConfig &config)
 {
     mConfig = config;
 
-    delete mImage;
-    mImage = new QImage(mConfig.mWidth, mConfig.mHeight, QImage::Format_RGBX8888);
+    //delete mImage;
+    //mImage = new QImage(mConfig.mWidth, mConfig.mHeight, QImage::Format_RGBX8888);
 }
 
 void VisualizerLcdWidget::contextMenu(const QPoint& posa)

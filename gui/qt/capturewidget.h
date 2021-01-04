@@ -22,6 +22,7 @@
 #include <QtWidgets/QWidget>
 QT_BEGIN_NAMESPACE
 class QVBoxLayout;
+class QPushButton;
 QT_END_NAMESPACE
 
 class CaptureWidget : public DockedWidget
@@ -37,6 +38,7 @@ public slots:
 
 private:
     QVBoxLayout *mLayoutTaken;
+    QPushButton *mBtnCopyScreen;
 };
 
 #endif

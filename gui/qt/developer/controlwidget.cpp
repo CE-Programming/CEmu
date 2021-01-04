@@ -24,13 +24,15 @@
 #include <QtWidgets/QComboBox>
 
 ControlWidget::ControlWidget(DockedWidgetList &list)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Control")}, list}
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Control")},
+                   QIcon(QStringLiteral(":/assets/icons/services.svg")),
+                   list}
 {
-    QPushButton *btnRun = new QPushButton(tr("Stop"));
-    QPushButton *btnStep = new QPushButton(tr("Step"));
-    QPushButton *btnStepOver = new QPushButton(tr("Over"));
-    QPushButton *btnStepNext = new QPushButton(tr("Next"));
-    QPushButton *btnStepOut = new QPushButton(tr("Out"));
+    QPushButton *btnRun = new QPushButton(QIcon(QStringLiteral(":/assets/icons/stop.svg")), tr("Stop"));
+    QPushButton *btnStep = new QPushButton(QIcon(QStringLiteral(":/assets/icons/right.svg")), tr("Step"));
+    QPushButton *btnStepOver = new QPushButton(QIcon(QStringLiteral(":/assets/icons/down_right.svg")), tr("Over"));
+    QPushButton *btnStepNext = new QPushButton(QIcon(QStringLiteral(":/assets/icons/down.svg")), tr("Next"));
+    QPushButton *btnStepOut = new QPushButton(QIcon(QStringLiteral(":/assets/icons/right_up2.svg")), tr("Out"));
     QComboBox *cmbMode = new QComboBox;
     cmbMode->addItems({ tr("ASM"), tr("C"), tr("Disable") });
 

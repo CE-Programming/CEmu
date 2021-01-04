@@ -30,8 +30,8 @@ CalculatorOverlay::CalculatorOverlay(QWidget *parent)
 {
     QVBoxLayout *vlayout = new QVBoxLayout(this);
     QVBoxLayout *layout = new QVBoxLayout();
-    QPushButton *loadRom = new QPushButton("Load ROM image");
-    QPushButton *createRom = new QPushButton("Create ROM image");
+    QPushButton *loadRom = new QPushButton(QIcon(QStringLiteral(":/assets/icons/opened_folder.svg")), tr("Load ROM image"));
+    QPushButton *createRom = new QPushButton(QIcon(QStringLiteral(":/assets/icons/circuit.svg")), tr("Create ROM image"));
     QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Preferred, QSizePolicy::Expanding);
     QLabel *label = new QLabel();
     QWidget *window = new QWidget();
@@ -73,7 +73,9 @@ void CalculatorOverlay::paintEvent(QPaintEvent *)
 }
 
 CalculatorWidget::CalculatorWidget(DockedWidgetList &list)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Calculator")}, list}
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Calculator")},
+                   QIcon(QStringLiteral(":/assets/icons/calculator.svg")),
+                   list}
 {
     QVBoxLayout *layout = new QVBoxLayout(this);
 

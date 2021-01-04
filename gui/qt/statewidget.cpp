@@ -35,7 +35,9 @@ const QString StateWidget::sDefaultStateName = tr("State");
 const QString StateWidget::sStateExtension = QStringLiteral(".cemu");
 
 StateWidget::StateWidget(DockedWidgetList &list)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("States")}, list},
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("States")},
+                   QIcon(QStringLiteral(":/assets/icons/filing_cabinet.svg")),
+                   list},
       mStateNum{1}
 {
     mTbl = new QTableWidget(0, 1);
@@ -45,17 +47,13 @@ StateWidget::StateWidget(DockedWidgetList &list)
     mTbl->setSelectionMode(QAbstractItemView::ExtendedSelection);
     mTbl->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-    mBtnExport = new QPushButton(tr("Export state"));
-    mBtnImport = new QPushButton(tr("Import state"));
+    mBtnExport = new QPushButton(QIcon(QStringLiteral(":/assets/icons/external.svg")), tr("Export state"));
+    mBtnImport = new QPushButton(QIcon(QStringLiteral(":/assets/icons/internal.svg")), tr("Import state"));
 
-    mBtnRestore = new QPushButton(tr("Restore"));
-    mBtnRemove = new QPushButton(tr("Remove"));
+    mBtnRestore = new QPushButton(QIcon(QStringLiteral(":/assets/icons/synchronize.svg")), tr("Restore"));
+    mBtnRemove = new QPushButton(QIcon(QStringLiteral(":/assets/icons/cross.svg")), tr("Remove"));
 
-    QPushButton *btnCreateState = new QPushButton(tr("Save state"));
-
-    btnCreateState->setIcon(QIcon(style()->standardIcon(QStyle::SP_DialogSaveButton)));
-    mBtnRemove->setIcon(QIcon(style()->standardIcon(QStyle::SP_DialogDiscardButton)));
-
+    QPushButton *btnCreateState = new QPushButton(QIcon(QStringLiteral(":/assets/icons/add_row.svg")), tr("Save state"));
 
     QHBoxLayout *hboxTopBtns = new QHBoxLayout;
     hboxTopBtns->addWidget(btnCreateState);

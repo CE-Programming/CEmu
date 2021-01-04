@@ -25,7 +25,9 @@
 #include <QtWidgets/QTableWidget>
 
 OsStacksWidget::OsStacksWidget(DockedWidgetList &list)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("OS Stacks")}, list}
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("OS Stacks")},
+                   QIcon(QStringLiteral(":/assets/icons/database.svg")),
+                   list}
 {
     QGroupBox *grpFp = new QGroupBox(QStringLiteral("FP Stack"));
     QGroupBox *grpOp = new QGroupBox(tr("OP Stack"));

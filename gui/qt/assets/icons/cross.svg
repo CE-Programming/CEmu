@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1"
+   viewBox="0 0 48 48"
+   enable-background="new 0 0 48 48"
+   id="svg12"
+   sodipodi:docname="cross.svg"
+   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)">
+  <metadata
+     id="metadata18">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs16">
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath4546">
+      <use
+         x="0"
+         y="0"
+         xlink:href="#g4542"
+         id="use4548"
+         width="100%"
+         height="100%" />
+    </clipPath>
+  </defs>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1920"
+     inkscape:window-height="1032"
+     id="namedview14"
+     showgrid="false"
+     inkscape:zoom="9.8333333"
+     inkscape:cx="-7.8406608"
+     inkscape:cy="36.322518"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg12" />
+  <g
+     id="g4544"
+     clip-path="url(#clipPath4546)"
+     transform="matrix(2.1,0,0,2.1,-55.8,-55.8)">
+    <g
+       inkscape:label="Clip"
+       id="g4542">
+      <g
+         id="g4535">
+        <circle
+           cx="38"
+           cy="38"
+           id="circle4"
+           r="10"
+           style="fill:#f44336" />
+        <g
+           id="g10"
+           style="fill:#ffffff">
+          <rect
+             x="36.5"
+             y="32"
+             transform="matrix(-0.707,0.707,-0.707,-0.707,91.74,38)"
+             width="3"
+             height="12"
+             id="rect6" />
+          <rect
+             x="36.5"
+             y="32"
+             transform="matrix(-0.707,-0.707,0.707,-0.707,38,91.74)"
+             width="3"
+             height="12"
+             id="rect8" />
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

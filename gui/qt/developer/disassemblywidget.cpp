@@ -29,7 +29,9 @@
 #include <QtWidgets/QSizePolicy>
 
 DisassemblyWidget::DisassemblyWidget(DockedWidgetList &list)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Disassembly")}, list}
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Disassembly")},
+                   QIcon(QStringLiteral(":/assets/icons/fine_print.svg")),
+                   list}
 {
     mDisasm = new DisasmWidget{this};
 
@@ -39,10 +41,10 @@ DisassemblyWidget::DisassemblyWidget(DockedWidgetList &list)
     QLineEdit *editAddr = new QLineEdit;
     editAddr->setFont(Util::monospaceFont());
 
-    QPushButton *btnGoto = new QPushButton(tr("Goto"));
-    QPushButton *btnLoadEquates = new QPushButton(tr("Load"));
-    QPushButton *btnReloadEquates = new QPushButton(tr("Reload"));
-    QPushButton *btnRemoveEquates = new QPushButton(tr("Remove All"));
+    QPushButton *btnGoto = new QPushButton(QIcon(QStringLiteral(":/assets/icons/ok.svg")), tr("Goto"));
+    QPushButton *btnLoadEquates = new QPushButton(QIcon(QStringLiteral(":/assets/icons/opened_folder.svg")), tr("Load"));
+    QPushButton *btnReloadEquates = new QPushButton(QIcon(QStringLiteral(":/assets/icons/process.svg")), tr("Reload"));
+    QPushButton *btnRemoveEquates = new QPushButton(QIcon(QStringLiteral(":/assets/icons/cross.svg")), tr("Remove All"));
 
     QCheckBox *chkAdl = new QCheckBox(tr("ADL"));
     chkAdl->setTristate(true);

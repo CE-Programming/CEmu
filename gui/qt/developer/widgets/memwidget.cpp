@@ -38,30 +38,36 @@ MemWidget::MemWidget(QWidget *parent)
 
     mView = new HexWidget;
 
-    QPushButton *btnGoto = new QPushButton(tr("Goto"));
-    QPushButton *btnSearch = new QPushButton(tr("Search"));
-    QPushButton *btnApply = new QPushButton(tr("Apply Changes"));
-    QPushButton *btnAscii = new QPushButton(tr("ASCII"));
-    QSpinBox *spnWidth = new QSpinBox;
+    QLabel *lblNumBytes = new QLabel(tr("Bytes per row") + ':');
+    QPushButton *btnGoto = new QPushButton(QIcon(QStringLiteral(":/assets/icons/ok.svg")), tr("Goto"));
+    QPushButton *btnSearch = new QPushButton(QIcon(QStringLiteral(":/assets/icons/search.svg")), tr("Search"));
+    QPushButton *btnApply = new QPushButton(QIcon(QStringLiteral(":/assets/icons/high_priority.svg")), tr("Apply Changes"));
+    QPushButton *btnAscii = new QPushButton(QIcon(QStringLiteral(":/assets/icons/alphabetical_az.svg")), tr("ASCII"));
+    QSpinBox *spnNumBytes = new QSpinBox;
 
     btnAscii->setCheckable(true);
     btnAscii->setChecked(true);
 
-    spnWidth->setMinimum(1);
-    spnWidth->setMaximum(1024);
+    spnNumBytes->setMinimum(1);
+    spnNumBytes->setMaximum(1024);
 
     QHBoxLayout *hboxBtns = new QHBoxLayout;
     hboxBtns->addWidget(editAddr);
     hboxBtns->addWidget(btnGoto);
     hboxBtns->addWidget(btnSearch);
     hboxBtns->addStretch();
-    hboxBtns->addWidget(spnWidth);
-    hboxBtns->addWidget(btnAscii);
     hboxBtns->addWidget(btnApply);
+
+    QHBoxLayout *hboxBtmBtns = new QHBoxLayout;
+    hboxBtmBtns->addWidget(lblNumBytes);
+    hboxBtmBtns->addWidget(spnNumBytes);
+    hboxBtmBtns->addStretch();
+    hboxBtmBtns->addWidget(btnAscii);
 
     QVBoxLayout *vLayout = new QVBoxLayout;
     vLayout->addLayout(hboxBtns);
     vLayout->addWidget(mView);
+    vLayout->addLayout(hboxBtmBtns);
     setLayout(vLayout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);

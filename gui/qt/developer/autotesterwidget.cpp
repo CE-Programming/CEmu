@@ -30,7 +30,9 @@
 #include <QtWidgets/QSizePolicy>
 
 AutotesterWidget::AutotesterWidget(DockedWidgetList &list)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Autotester")}, list}
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Autotester")},
+                   QIcon(QStringLiteral(":/assets/icons/todo_list.svg")),
+                   list}
 {
     QGroupBox *grpTest = new QGroupBox(tr("Launch Test"));
     QGroupBox *grpCfg = new QGroupBox(tr("Test Configuration"));

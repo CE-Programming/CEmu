@@ -29,10 +29,13 @@
 #include <QtWidgets/QScrollArea>
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QSpinBox>
+#include <QtWidgets/QToolTip>
 #include <QtWidgets/QVBoxLayout>
 
 CaptureWidget::CaptureWidget(DockedWidgetList &list)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Screen Capture")}, list}
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Screen Capture")},
+                   QIcon(QStringLiteral(":/assets/icons/cable_release.svg")),
+                   list}
 {
     QLabel *lblFrameskip = new QLabel(tr("Frameskip: "));
 
@@ -40,9 +43,9 @@ CaptureWidget::CaptureWidget(DockedWidgetList &list)
     QGroupBox *grpAnimated = new QGroupBox(tr("Record animated"));
     QGroupBox *grpTaken = new QGroupBox(tr("Screenshots taken"));
 
-    QPushButton *btnScreenshot = new QPushButton(tr("Screenshot"));
-    QPushButton *btnCopyScreen = new QPushButton(tr("Copy screen"));
-    QPushButton *btnRecord = new QPushButton(tr("Record screen"));
+    QPushButton *btnScreenshot = new QPushButton(QIcon(QStringLiteral(":/assets/icons/picture.svg")), tr("Screenshot"));
+    mBtnCopyScreen = new QPushButton(QIcon(QStringLiteral(":/assets/icons/clipboard_picture.svg")), tr("Copy screen"));
+    QPushButton *btnRecord = new QPushButton(QIcon(QStringLiteral(":/assets/icons/film.svg")), tr("Record screen"));
     QSpinBox *spnFrameskip = new QSpinBox;
 
 #ifndef HAS_APNG_SUPPORT
@@ -56,7 +59,7 @@ CaptureWidget::CaptureWidget(DockedWidgetList &list)
     QHBoxLayout *hboxScreenshot = new QHBoxLayout;
     hboxScreenshot->addWidget(btnScreenshot);
     hboxScreenshot->addStretch();
-    hboxScreenshot->addWidget(btnCopyScreen);
+    hboxScreenshot->addWidget(mBtnCopyScreen);
     grpScreenshot->setLayout(hboxScreenshot);
 
     QHBoxLayout *hboxAnimated = new QHBoxLayout;
@@ -100,7 +103,7 @@ CaptureWidget::CaptureWidget(DockedWidgetList &list)
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     connect(btnScreenshot, &QPushButton::clicked, this, &CaptureWidget::takeScreenshot);
-    connect(btnCopyScreen, &QPushButton::clicked, this, &CaptureWidget::copyScreen);
+    connect(mBtnCopyScreen, &QPushButton::clicked, this, &CaptureWidget::copyScreen);
 }
 
 void CaptureWidget::takeScreenshot()
@@ -115,4 +118,6 @@ void CaptureWidget::takeScreenshot()
 void CaptureWidget::copyScreen()
 {
     QApplication::clipboard()->setImage(QImage(QStringLiteral(":/assets/test/screen.png")), QClipboard::Clipboard);
+
+    QToolTip::showText(mBtnCopyScreen->mapToGlobal({0, 5}), tr("Copied screen to clipboard"), mBtnCopyScreen);
 }

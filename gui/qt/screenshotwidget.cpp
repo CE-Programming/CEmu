@@ -29,14 +29,11 @@
 ScreenshotOverlayWidget::ScreenshotOverlayWidget(QWidget *parent)
     : OverlayWidget{parent}
 {
-    mBtnSave = new QPushButton("Save");
-    mBtnRemove = new QPushButton("Remove");
+    mBtnSave = new QPushButton(QIcon(QStringLiteral(":/assets/icons/save.svg")), "Save");
+    mBtnRemove = new QPushButton(QIcon(QStringLiteral(":/assets/icons/empty_trash.svg")), "Remove");
 
     mBtnSave->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     mBtnRemove->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-
-    mBtnSave->setIcon(QIcon(style()->standardIcon(QStyle::SP_DialogSaveButton)));
-    mBtnRemove->setIcon(QIcon(style()->standardIcon(QStyle::SP_DialogDiscardButton)));
 
     QHBoxLayout *layout = new QHBoxLayout;
     layout->setAlignment(Qt::AlignTop);

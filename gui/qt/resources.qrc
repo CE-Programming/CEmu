@@ -4,5 +4,54 @@
         <file>assets/rom/prgm.png</file>
         <file>assets/fonts/TICELarge.ttf</file>
         <file>assets/fonts/LiberationSansNarrow-Bold.ttf</file>
+        <file>assets/icons/support.svg</file>
+        <file>assets/icons/plus.svg</file>
+        <file>assets/icons/picture.svg</file>
+        <file>assets/icons/opened_folder.svg</file>
+        <file>assets/icons/ok.svg</file>
+        <file>assets/icons/import.svg</file>
+        <file>assets/icons/fine_print.svg</file>
+        <file>assets/icons/export.svg</file>
+        <file>assets/icons/empty_trash.svg</file>
+        <file>assets/icons/down_right.svg</file>
+        <file>assets/icons/down.svg</file>
+        <file>assets/icons/compact_camera.svg</file>
+        <file>assets/icons/command_line.svg</file>
+        <file>assets/icons/clock.svg</file>
+        <file>assets/icons/add_row.svg</file>
+        <file>assets/icons/add_image.svg</file>
+        <file>assets/icons/about.svg</file>
+        <file>assets/icons/synchronize.svg</file>
+        <file>assets/icons/search.svg</file>
+        <file>assets/icons/kindle.svg</file>
+        <file>assets/icons/flash_on.svg</file>
+        <file>assets/icons/electronics.svg</file>
+        <file>assets/icons/database.svg</file>
+        <file>assets/icons/cross.svg</file>
+        <file>assets/icons/circuit.svg</file>
+        <file>assets/icons/charge_battery.svg</file>
+        <file>assets/icons/calculator.svg</file>
+        <file>assets/icons/todo_list.svg</file>
+        <file>assets/icons/services.svg</file>
+        <file>assets/icons/internal.svg</file>
+        <file>assets/icons/grid.svg</file>
+        <file>assets/icons/external.svg</file>
+        <file>assets/icons/filing_cabinet.svg</file>
+        <file>assets/icons/statistics.svg</file>
+        <file>assets/icons/cable_release.svg</file>
+        <file>assets/icons/template.svg</file>
+        <file>assets/icons/reload_template.svg</file>
+        <file>assets/icons/data_sheet.svg</file>
+        <file>assets/icons/add_grid.svg</file>
+        <file>assets/icons/right_up2.svg</file>
+        <file>assets/icons/right.svg</file>
+        <file>assets/icons/stop.svg</file>
+        <file>assets/icons/start.svg</file>
+        <file>assets/icons/alphabetical_az.svg</file>
+        <file>assets/icons/save.svg</file>
+        <file>assets/icons/process.svg</file>
+        <file>assets/icons/film.svg</file>
+        <file>assets/icons/clipboard_picture.svg</file>
+        <file>assets/icons/high_priority.svg</file>
     </qresource>
 </RCC>

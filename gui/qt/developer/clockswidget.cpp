@@ -28,7 +28,9 @@
 #include <QtWidgets/QSizePolicy>
 
 ClocksWidget::ClocksWidget(DockedWidgetList &list)
-    : DockedWidget{new KDDockWidgets::DockWidget(QStringLiteral("Clocks")), list}
+    : DockedWidget{new KDDockWidgets::DockWidget(QStringLiteral("Clocks")),
+                   QIcon(QStringLiteral(":/assets/icons/clock.svg")),
+                   list}
 {
     QGroupBox *grpGpt = new QGroupBox(tr("General Purpose Timers"));
     QGroupBox *grpRtc = new QGroupBox(tr("Real Time Clock"));

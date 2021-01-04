@@ -25,7 +25,9 @@
 #include <QtWidgets/QTableWidget>
 
 OsVarsWidget::OsVarsWidget(DockedWidgetList &list)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("OS Variables")}, list}
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("OS Variables")},
+                   QIcon(QStringLiteral(":/assets/icons/data_sheet.svg")),
+                   list}
 {
     QGroupBox *grpVat = new QGroupBox(QStringLiteral("VAT View"));
     QGroupBox *grpOp = new QGroupBox(tr("OP Variables"));

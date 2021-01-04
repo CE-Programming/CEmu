@@ -24,7 +24,9 @@
 #include <QtWidgets/QSizePolicy>
 
 FlashRamWidget::FlashRamWidget(DockedWidgetList &list)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Flash/RAM")}, list}
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Flash/RAM")},
+                   QIcon(QStringLiteral(":/assets/icons/grid.svg")),
+                   list}
 {
     QGroupBox *grpFlash = new QGroupBox(tr("Flash"));
     QGroupBox *grpRam = new QGroupBox(tr("RAM"));

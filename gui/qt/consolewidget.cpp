@@ -28,11 +28,13 @@
 #include <QtWidgets/QSpacerItem>
 
 ConsoleWidget::ConsoleWidget(DockedWidgetList &list)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Console")}, list}
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Console")},
+                   QIcon(QStringLiteral(":/assets/icons/command_line.svg")),
+                   list}
 {
     QHBoxLayout *hlayout = new QHBoxLayout();
 
-    QPushButton *btnClear = new QPushButton(tr("Clear"), this);
+    QPushButton *btnClear = new QPushButton(QIcon(QStringLiteral(":/assets/icons/empty_trash.svg")), tr("Clear"), this);
     QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred);
 
     mChkAuto = new QCheckBox(tr("Autoscroll"), this);

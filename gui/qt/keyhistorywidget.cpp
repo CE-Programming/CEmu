@@ -25,12 +25,14 @@
 #include <QtWidgets/QWidget>
 
 KeyHistoryWidget::KeyHistoryWidget(DockedWidgetList &list)
-    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Key History")}, list}
+    : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Key History")},
+                   QIcon(QStringLiteral(":/assets/icons/kindle.svg")),
+                   list}
 {
     QHBoxLayout *hlayout = new QHBoxLayout();
 
-    QPushButton *btnClear = new QPushButton(tr("Clear History"), this);
-    QLabel *lblSize = new QLabel(tr("Size"), this);
+    QPushButton *btnClear = new QPushButton(QIcon(QStringLiteral(":/assets/icons/empty_trash.svg")), tr("Clear History"), this);
+    QLabel *lblSize = new QLabel(tr("Font size") + ':', this);
     QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred);
 
     mText = new QPlainTextEdit(this);
@@ -40,10 +42,10 @@ KeyHistoryWidget::KeyHistoryWidget(DockedWidgetList &list)
     mText->setMaximumBlockCount(1000);
     mText->setMinimumSize(10, 100);
 
-    hlayout->addWidget(btnClear);
-    hlayout->addSpacerItem(spacer);
     hlayout->addWidget(lblSize);
     hlayout->addWidget(mFontSize);
+    hlayout->addSpacerItem(spacer);
+    hlayout->addWidget(btnClear);
 
     QVBoxLayout *vlayout = new QVBoxLayout(this);
     vlayout->addWidget(mText);

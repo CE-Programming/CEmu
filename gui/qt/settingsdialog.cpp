@@ -70,6 +70,7 @@ SettingsDialog::SettingsDialog(QWidget *parent)
 
     setLayout(layout);
     setWindowTitle(tr("Preferences"));
+    setWindowIcon(QIcon(QStringLiteral(":/assets/icons/support.svg")));
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
 }
 
