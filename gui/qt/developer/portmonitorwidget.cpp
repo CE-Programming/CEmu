@@ -64,7 +64,7 @@ PortMonitorWidget::PortMonitorWidget(DockedWidgetList &list, const QList<PortMon
 
     QHBoxLayout *hboxbtns = new QHBoxLayout;
     hboxbtns->addWidget(btnAddPortMonitor);
-    hboxbtns->addStretch(1);
+    hboxbtns->addStretch();
     hboxbtns->addWidget(mBtnRemoveSelected);
 
     QVBoxLayout *vLayout = new QVBoxLayout;

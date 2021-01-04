@@ -16,6 +16,8 @@
 
 #include "controlwidget.h"
 
+#include "../util.h"
+
 #include <kddockwidgets/DockWidget.h>
 
 #include <QtWidgets/QSizePolicy>
@@ -28,6 +30,8 @@ ControlWidget::ControlWidget(DockedWidgetList &list)
                    QIcon(QStringLiteral(":/assets/icons/services.svg")),
                    list}
 {
+    int maxMonoWidth = QFontMetrics(Util::monospaceFont()).maxWidth();
+
     QPushButton *btnRun = new QPushButton(QIcon(QStringLiteral(":/assets/icons/stop.svg")), tr("Stop"));
     QPushButton *btnStep = new QPushButton(QIcon(QStringLiteral(":/assets/icons/right.svg")), tr("Step"));
     QPushButton *btnStepOver = new QPushButton(QIcon(QStringLiteral(":/assets/icons/down_right.svg")), tr("Over"));
@@ -36,28 +40,35 @@ ControlWidget::ControlWidget(DockedWidgetList &list)
     QComboBox *cmbMode = new QComboBox;
     cmbMode->addItems({ tr("ASM"), tr("C"), tr("Disable") });
 
-    btnRun->setMinimumWidth(5);
-    btnStep->setMinimumWidth(5);
-    btnStepOver->setMinimumWidth(5);
-    btnStepNext->setMinimumWidth(5);
-    btnStepOut->setMinimumWidth(5);
+    btnRun->setFont(Util::monospaceFont());
+    btnStep->setFont(Util::monospaceFont());
+    btnStepOver->setFont(Util::monospaceFont());
+    btnStepNext->setFont(Util::monospaceFont());
+    btnStepOut->setFont(Util::monospaceFont());
+    cmbMode->setFont(Util::monospaceFont());
+
+    btnRun->setMinimumWidth(btnRun->iconSize().width() + maxMonoWidth * (btnRun->text().length() + 2));
+    btnStep->setMinimumWidth(btnStep->iconSize().width() + maxMonoWidth * (btnStep->text().length() + 2));
+    btnStepOver->setMinimumWidth(btnStepOver->iconSize().width() + maxMonoWidth * (btnStepOver->text().length() + 2));
+    btnStepNext->setMinimumWidth(btnStepNext->iconSize().width() + maxMonoWidth * (btnStepNext->text().length() + 2));
+    btnStepOut->setMinimumWidth(btnStepOut->iconSize().width() + maxMonoWidth * (btnStepOut->text().length() + 2));
 
     QHBoxLayout *hLayout = new QHBoxLayout;
     hLayout->setSizeConstraint(QLayout::SetMaximumSize);
-    hLayout->addStretch(1);
+    hLayout->addStretch();
     hLayout->addWidget(btnRun);
     hLayout->addWidget(btnStep);
     hLayout->addWidget(btnStepOver);
     hLayout->addWidget(btnStepNext);
     hLayout->addWidget(btnStepOut);
     hLayout->addWidget(cmbMode);
-    hLayout->addStretch(1);
+    hLayout->addStretch();
 
     QVBoxLayout *vLayout = new QVBoxLayout;
     vLayout->setSizeConstraint(QLayout::SetMaximumSize);
-    vLayout->addStretch(1);
+    vLayout->addStretch();
     vLayout->addLayout(hLayout);
-    vLayout->addStretch(1);
+    vLayout->addStretch();
     setLayout(vLayout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);

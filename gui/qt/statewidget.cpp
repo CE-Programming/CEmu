@@ -57,7 +57,7 @@ StateWidget::StateWidget(DockedWidgetList &list)
 
     QHBoxLayout *hboxTopBtns = new QHBoxLayout;
     hboxTopBtns->addWidget(btnCreateState);
-    hboxTopBtns->addStretch(1);
+    hboxTopBtns->addStretch();
     hboxTopBtns->addWidget(mBtnRestore);
     hboxTopBtns->addWidget(mBtnRemove);
 

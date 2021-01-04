@@ -32,26 +32,24 @@ ConsoleWidget::ConsoleWidget(DockedWidgetList &list)
                    QIcon(QStringLiteral(":/assets/icons/command_line.svg")),
                    list}
 {
-    QHBoxLayout *hlayout = new QHBoxLayout();
-
     QPushButton *btnClear = new QPushButton(QIcon(QStringLiteral(":/assets/icons/empty_trash.svg")), tr("Clear"), this);
-    QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred);
 
-    mChkAuto = new QCheckBox(tr("Autoscroll"), this);
-    mConsole = new QPlainTextEdit(this);
+    mChkAuto = new QCheckBox(tr("Autoscroll"));
+    mConsole = new QPlainTextEdit;
 
     mConsole->setReadOnly(true);
     mConsole->setMaximumBlockCount(2500);
     mConsole->setMinimumSize(10, 100);
 
-    hlayout->addSpacerItem(spacer);
-    hlayout->addWidget(mChkAuto);
-    hlayout->addWidget(btnClear);
+    QHBoxLayout *hLayout = new QHBoxLayout;
+    hLayout->addStretch();
+    hLayout->addWidget(mChkAuto);
+    hLayout->addWidget(btnClear);
 
-    QVBoxLayout *vlayout = new QVBoxLayout(this);
-    vlayout->addWidget(mConsole);
-    vlayout->addLayout(hlayout);
-    setLayout(vlayout);
+    QVBoxLayout *vLayout = new QVBoxLayout;
+    vLayout->addWidget(mConsole);
+    vLayout->addLayout(hLayout);
+    setLayout(vLayout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 

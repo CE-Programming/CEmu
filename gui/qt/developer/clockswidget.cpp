@@ -86,15 +86,15 @@ ClocksWidget::ClocksWidget(DockedWidgetList &list)
     grpGpt->setLayout(gridGpt);
 
     QVBoxLayout *vLayout = new QVBoxLayout;
-    vLayout->addStretch(1);
+    vLayout->addStretch();
     vLayout->addWidget(grpGpt);
     vLayout->addWidget(grpRtc);
-    vLayout->addStretch(1);
+    vLayout->addStretch();
 
     QHBoxLayout *hLayout = new QHBoxLayout;
-    hLayout->addStretch(1);
+    hLayout->addStretch();
     hLayout->addLayout(vLayout);
-    hLayout->addStretch(1);
+    hLayout->addStretch();
     setLayout(hLayout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);

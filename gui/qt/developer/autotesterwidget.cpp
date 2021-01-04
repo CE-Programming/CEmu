@@ -108,7 +108,7 @@ AutotesterWidget::AutotesterWidget(DockedWidgetList &list)
 
     QHBoxLayout *hboxPreset = new QHBoxLayout;
     hboxPreset->addWidget(lblPreset);
-    hboxPreset->addStretch(1);
+    hboxPreset->addStretch();
     hboxPreset->addWidget(cmbPreset);
 
     QHBoxLayout *hboxHash = new QHBoxLayout;
@@ -124,10 +124,10 @@ AutotesterWidget::AutotesterWidget(DockedWidgetList &list)
     grpCrc->setLayout(vboxCrc);
 
     QVBoxLayout *vLayout = new QVBoxLayout;
-    vLayout->addStretch(1);
+    vLayout->addStretch();
     vLayout->addWidget(grpTest);
     vLayout->addWidget(grpCrc);
-    vLayout->addStretch(1);
+    vLayout->addStretch();
     setLayout(vLayout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);

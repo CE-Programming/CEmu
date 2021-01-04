@@ -51,6 +51,7 @@ DisassemblyWidget::DisassemblyWidget(DockedWidgetList &list)
 
     QHBoxLayout *hboxEquates = new QHBoxLayout;
     hboxEquates->addWidget(btnLoadEquates);
+    hboxEquates->addStretch();
     hboxEquates->addWidget(btnReloadEquates);
     hboxEquates->addWidget(btnRemoveEquates);
     grpEquates->setLayout(hboxEquates);

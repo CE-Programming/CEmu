@@ -29,28 +29,26 @@ KeyHistoryWidget::KeyHistoryWidget(DockedWidgetList &list)
                    QIcon(QStringLiteral(":/assets/icons/kindle.svg")),
                    list}
 {
-    QHBoxLayout *hlayout = new QHBoxLayout();
-
     QPushButton *btnClear = new QPushButton(QIcon(QStringLiteral(":/assets/icons/empty_trash.svg")), tr("Clear History"), this);
     QLabel *lblSize = new QLabel(tr("Font size") + ':', this);
-    QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Preferred);
 
-    mText = new QPlainTextEdit(this);
-    mFontSize = new QSpinBox(this);
+    mText = new QPlainTextEdit;
+    mFontSize = new QSpinBox;
 
     mText->setReadOnly(true);
     mText->setMaximumBlockCount(1000);
     mText->setMinimumSize(10, 100);
 
-    hlayout->addWidget(lblSize);
-    hlayout->addWidget(mFontSize);
-    hlayout->addSpacerItem(spacer);
-    hlayout->addWidget(btnClear);
+    QHBoxLayout *hLayout = new QHBoxLayout;
+    hLayout->addWidget(lblSize);
+    hLayout->addWidget(mFontSize);
+    hLayout->addStretch();
+    hLayout->addWidget(btnClear);
 
-    QVBoxLayout *vlayout = new QVBoxLayout(this);
-    vlayout->addWidget(mText);
-    vlayout->addLayout(hlayout);
-    setLayout(vlayout);
+    QVBoxLayout *vLayout = new QVBoxLayout;
+    vLayout->addWidget(mText);
+    vLayout->addLayout(hLayout);
+    setLayout(vLayout);
 
     setFontSize(Settings::intOption(Settings::KeyHistoryFont));
 

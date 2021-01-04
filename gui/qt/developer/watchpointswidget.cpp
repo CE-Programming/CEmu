@@ -69,7 +69,7 @@ WatchpointsWidget::WatchpointsWidget(DockedWidgetList &list, const QList<Watchpo
     QHBoxLayout *hboxbtns = new QHBoxLayout;
     hboxbtns->addWidget(btnAddWatchpoint);
     hboxbtns->addWidget(cmbDefaultMode);
-    hboxbtns->addStretch(1);
+    hboxbtns->addStretch();
     hboxbtns->addWidget(mBtnRemoveSelected);
 
     QVBoxLayout *vLayout = new QVBoxLayout;

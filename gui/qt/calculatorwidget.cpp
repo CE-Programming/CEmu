@@ -28,11 +28,8 @@
 CalculatorOverlay::CalculatorOverlay(QWidget *parent)
     : OverlayWidget{parent}
 {
-    QVBoxLayout *vlayout = new QVBoxLayout(this);
-    QVBoxLayout *layout = new QVBoxLayout();
     QPushButton *loadRom = new QPushButton(QIcon(QStringLiteral(":/assets/icons/opened_folder.svg")), tr("Load ROM image"));
     QPushButton *createRom = new QPushButton(QIcon(QStringLiteral(":/assets/icons/circuit.svg")), tr("Create ROM image"));
-    QSpacerItem *spacer = new QSpacerItem(0, 0, QSizePolicy::Preferred, QSizePolicy::Expanding);
     QLabel *label = new QLabel();
     QWidget *window = new QWidget();
 
@@ -44,12 +41,13 @@ CalculatorOverlay::CalculatorOverlay(QWidget *parent)
                       "and choose which docks are available in the 'Docks' menu in the topmost bar."));
     label->setWordWrap(true);
 
-    layout->setSizeConstraint(QLayout::SetMinimumSize);
-    layout->addWidget(label);
-    layout->addWidget(createRom);
-    layout->addWidget(loadRom);
+    QVBoxLayout *winLayout = new QVBoxLayout;
+    winLayout->setSizeConstraint(QLayout::SetMinimumSize);
+    winLayout->addWidget(label);
+    winLayout->addWidget(createRom);
+    winLayout->addWidget(loadRom);
 
-    window->setLayout(layout);
+    window->setLayout(winLayout);
     window->setAutoFillBackground(true);
     QPalette p(window->palette());
     QColor windowColor = p.color(QPalette::Window);
@@ -57,10 +55,12 @@ CalculatorOverlay::CalculatorOverlay(QWidget *parent)
     p.setColor(QPalette::Window, windowColor);
     window->setPalette(p);
 
-    vlayout->setSizeConstraint(QLayout::SetMinimumSize);
-    vlayout->addWidget(window);
-    vlayout->addSpacerItem(spacer);
-    vlayout->setAlignment(window, Qt::AlignHCenter);
+    QVBoxLayout *vLayout = new QVBoxLayout;
+    vLayout->setSizeConstraint(QLayout::SetMinimumSize);
+    vLayout->addWidget(window);
+    vLayout->addStretch();
+    vLayout->setAlignment(window, Qt::AlignHCenter);
+    setLayout(vLayout);
 
     connect(loadRom, &QPushButton::clicked, this, &CalculatorOverlay::loadRom);
     connect(createRom, &QPushButton::clicked, this, &CalculatorOverlay::createRom);
@@ -77,22 +77,20 @@ CalculatorWidget::CalculatorWidget(DockedWidgetList &list)
                    QIcon(QStringLiteral(":/assets/icons/calculator.svg")),
                    list}
 {
-    QVBoxLayout *layout = new QVBoxLayout(this);
-
-    mKeypad = new KeypadWidget(this);
-    mScreen = new ScreenWidget(this);
+    mKeypad = new KeypadWidget;
+    mScreen = new ScreenWidget;
 
     mKeypad->setMinimumSize(50, 50);
     mScreen->setMinimumSize(50, 28);
 
+    QVBoxLayout *layout = new QVBoxLayout;
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
-
     layout->addWidget(mScreen);
     layout->addWidget(mKeypad);
-
     layout->setStretch(0, ScreenWidget::sOuterRect.height() * KeypadWidget::sBaseRect.width());
     layout->setStretch(1, KeypadWidget::sBaseRect.height() * ScreenWidget::sOuterRect.width());
+    setLayout(layout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     setFocusPolicy(Qt::StrongFocus);

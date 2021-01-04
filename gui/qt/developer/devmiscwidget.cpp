@@ -86,29 +86,29 @@ DevMiscWidget::DevMiscWidget(DockedWidgetList &list)
 
     QHBoxLayout *hboxBat = new QHBoxLayout;
     hboxBat->addWidget(mChkBatCharge);
-    hboxBat->addStretch(1);
+    hboxBat->addStretch();
     hboxBat->addWidget(lblBatLevel);
     hboxBat->addWidget(mSpnBatLevel);
     grpBat->setLayout(hboxBat);
 
     QHBoxLayout *hboxBacklight = new QHBoxLayout;
     hboxBacklight->addWidget(mChkBacklightEnable);
-    hboxBacklight->addStretch(1);
+    hboxBacklight->addStretch();
     hboxBacklight->addWidget(lblBacklightLevel);
     hboxBacklight->addWidget(mSpnBacklightLevel);
     grpBacklight->setLayout(hboxBacklight);
 
     QVBoxLayout *vLayout = new QVBoxLayout;
-    vLayout->addStretch(1);
+    vLayout->addStretch();
     vLayout->addWidget(grpLcd);
     vLayout->addWidget(grpBacklight);
     vLayout->addWidget(grpBat);
-    vLayout->addStretch(1);
+    vLayout->addStretch();
 
     QHBoxLayout *hLayout = new QHBoxLayout;
-    hLayout->addStretch(1);
+    hLayout->addStretch();
     hLayout->addLayout(vLayout);
-    hLayout->addStretch(1);
+    hLayout->addStretch();
     setLayout(hLayout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
