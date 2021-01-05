@@ -21,17 +21,22 @@
 
 #include <kddockwidgets/DockWidget.h>
 
+#include <QtWidgets/QApplication>
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QCheckBox>
+#include <QtWidgets/QComboBox>
+#include <QtWidgets/QDialog>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QPushButton>
+#include <QtWidgets/QRadioButton>
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QSpinBox>
 
 MemWidget::MemWidget(QWidget *parent)
-    : QWidget{parent}
+    : QWidget{parent},
+      mSeachHex{true}
 {
     QLineEdit *editAddr = new QLineEdit;
     editAddr->setFont(Util::monospaceFont());
@@ -71,4 +76,86 @@ MemWidget::MemWidget(QWidget *parent)
     setLayout(vLayout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    connect(btnSearch, &QPushButton::clicked, this, &MemWidget::showSeachDialog);
+}
+
+void MemWidget::showSeachDialog()
+{
+    QDialog dialog;
+    int ret;
+
+    enum Target
+    {
+        Next = 1,
+        NextNot,
+        Prev,
+        PrevNot
+    };
+
+    QLabel *lblFind = new QLabel(tr("Find") + ':');
+    QLineEdit *edtSearch = new QLineEdit(mSearch);
+    QPushButton *btnNext = new QPushButton(tr("Next"));
+    QPushButton *btnNextNot = new QPushButton(tr("Next Not"));
+    QPushButton *btnPrev = new QPushButton(tr("Prev"));
+    QPushButton *btnPrevNot = new QPushButton(tr("Prev Not"));
+    QPushButton *btnCancel = new QPushButton(QApplication::style()->standardIcon(QStyle::SP_DialogCancelButton), tr("Cancel"));
+
+    QRadioButton *chkHex = new QRadioButton(tr("Hexadecimal"));
+    QRadioButton *chkAscii = new QRadioButton(tr("ASCII"));
+
+    QGroupBox *grpOptions = new QGroupBox(tr("Search options"));
+
+    chkHex->setChecked(mSeachHex);
+    chkAscii->setChecked(!mSeachHex);
+
+    QGridLayout *gLayout = new QGridLayout;
+    gLayout->addWidget(btnNext, 0, 0);
+    gLayout->addWidget(btnNextNot, 0, 1);
+    gLayout->addWidget(btnPrev, 1, 0);
+    gLayout->addWidget(btnPrevNot, 1, 1);
+    gLayout->addWidget(btnCancel, 2, 1);
+
+    QHBoxLayout *hFindLayout = new QHBoxLayout;
+    hFindLayout->addWidget(lblFind);
+    hFindLayout->addWidget(edtSearch);
+
+    QVBoxLayout *vLayout = new QVBoxLayout;
+    vLayout->addWidget(chkHex);
+    vLayout->addWidget(chkAscii);
+    grpOptions->setLayout(vLayout);
+
+    QHBoxLayout *hLayout = new QHBoxLayout;
+    hLayout->addWidget(grpOptions);
+    hLayout->addLayout(gLayout);
+
+    QVBoxLayout *mainLayout = new QVBoxLayout;
+    mainLayout->addLayout(hFindLayout);
+    mainLayout->addLayout(hLayout);
+
+    dialog.setLayout(mainLayout);
+    dialog.setWindowTitle(tr("Memory search"));
+    dialog.setWindowIcon(QIcon(QStringLiteral(":/assets/icons/search.svg")));
+
+    connect(btnCancel, &QPushButton::clicked, &dialog, &QDialog::reject);
+    connect(btnNext, &QPushButton::clicked, [&dialog]{ dialog.done(Target::Next); });
+    connect(btnNextNot, &QPushButton::clicked, [&dialog]{ dialog.done(Target::NextNot); });
+    connect(btnPrev, &QPushButton::clicked, [&dialog]{ dialog.done(Target::Prev); });
+    connect(btnPrevNot, &QPushButton::clicked, [&dialog]{ dialog.done(Target::PrevNot); });
+
+    if ((ret = dialog.exec()))
+    {
+        mSeachHex = chkHex->isChecked();
+        mSearch = edtSearch->text();
+
+        switch (ret)
+        {
+            default:
+            case Target::Next:
+            case Target::NextNot:
+            case Target::Prev:
+            case Target::PrevNot:
+                break;
+        }
+    }
 }

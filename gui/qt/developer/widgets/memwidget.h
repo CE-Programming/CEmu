@@ -34,7 +34,11 @@ public:
     explicit MemWidget(QWidget *parent = nullptr);
 
 private:
+    void showSeachDialog();
+
     HexWidget *mView;
+    QString mSearch;
+    bool mSeachHex;
 };
 
 #endif
