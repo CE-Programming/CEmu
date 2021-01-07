@@ -29,9 +29,6 @@ LIBS += $$cemucore.target
 
 QT += core gui widgets network KDDockWidgets
 
-# Core options
-DEFINES += DEBUG_SUPPORT
-
 CONFIG(release, debug|release) {
     DEFINES += QT_NO_DEBUG_OUTPUT
     CONFIG += ltcg
