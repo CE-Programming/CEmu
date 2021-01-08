@@ -72,13 +72,14 @@ void CalculatorOverlay::paintEvent(QPaintEvent *)
     p.fillRect(rect(), {64, 64, 64, 128});
 }
 
-CalculatorWidget::CalculatorWidget(DockedWidgetList &list)
+CalculatorWidget::CalculatorWidget(DockedWidgetList &list, CoreWindow *coreWindow)
     : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Calculator")},
                    QIcon(QStringLiteral(":/assets/icons/calculator.svg")),
-                   list}
+                   list},
+      mCoreWindow{coreWindow}
 {
-    mKeypad = new KeypadWidget;
-    mScreen = new ScreenWidget;
+    mKeypad = new KeypadWidget{this};
+    mScreen = new ScreenWidget{this};
 
     mKeypad->setMinimumSize(50, 50);
     mScreen->setMinimumSize(50, 28);
@@ -119,6 +120,11 @@ void CalculatorWidget::setConfig(ti_device_t type, int color)
             break;
     }
     mScreen->setScreen(QStringLiteral(":/assets/test/screen.png"));
+}
+
+CoreWindow *CalculatorWidget::coreWindow() const
+{
+    return mCoreWindow;
 }
 
 void CalculatorWidget::changeKeyState(KeyCode code, bool press)

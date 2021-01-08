@@ -28,7 +28,7 @@ typedef struct sync
     pthread_mutex_t mutex;
 #define SYNC_COND_COUNT 3
     pthread_cond_t cond[SYNC_COND_COUNT];
-    _Atomic uint32_t state;
+    atomic_uint_fast32_t state;
 } sync_t;
 
 #ifdef __cplusplus

@@ -14,33 +14,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CEMUCORE_CORE_H
-#define CEMUCORE_CORE_H
+#ifndef CEMUCORE_MEM_H
+#define CEMUCORE_MEM_H
 
-#include "cemucore.h"
-
-#include "cpu.h"
-#include "keypad.h"
-#include "mem.h"
-
-#ifndef CEMUCORE_NOTHREADS
-# include "sync.h"
-
-# include <pthread.h>
-# include <stdatomic.h>
-#endif
-
-struct cemucore
+typedef struct mem
 {
-#ifndef CEMUCORE_NOTHREADS
-    pthread_t thread;
-    sync_t sync;
-#endif
-    cemucore_signal_t signal;
-    void *signal_data;
-    cpu_t cpu;
-    mem_t mem;
-    keypad_t keypad;
-};
+    char dummy;
+} mem_t;
 
 #endif

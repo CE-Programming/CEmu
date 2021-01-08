@@ -20,6 +20,66 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+typedef enum cemucore_create_flags
+{
+#ifndef CEMUCORE_NOTHREADS
+    CEMUCORE_CREATE_FLAG_THREADED = 1 << 0,
+#endif
+} cemucore_create_flags_t;
+
+typedef enum cemucore_prop_t
+{
+    CEMUCORE_PROP_REG,
+    CEMUCORE_PROP_REG_SHADOW,
+    CEMUCORE_PROP_KEY,
+    CEMUCORE_PROP_GPIO_ENABLE,
+} cemucore_prop_t;
+
+typedef enum cemucore_reg
+{
+    /* 8-bit registers */
+    CEMUCORE_REG_F,
+    CEMUCORE_REG_A,
+    CEMUCORE_REG_C,
+    CEMUCORE_REG_B,
+    CEMUCORE_REG_BCU,
+    CEMUCORE_REG_E,
+    CEMUCORE_REG_D,
+    CEMUCORE_REG_DEU,
+    CEMUCORE_REG_L,
+    CEMUCORE_REG_H,
+    CEMUCORE_REG_HLU,
+    CEMUCORE_REG_IXL,
+    CEMUCORE_REG_IXH,
+    CEMUCORE_REG_IXU,
+    CEMUCORE_REG_IYL,
+    CEMUCORE_REG_IYH,
+    CEMUCORE_REG_IYU,
+    CEMUCORE_REG_R,
+
+    /* 16-bit registers */
+    CEMUCORE_REG_AF,
+    CEMUCORE_REG_BC,
+    CEMUCORE_REG_DE,
+    CEMUCORE_REG_HL,
+    CEMUCORE_REG_IX,
+    CEMUCORE_REG_IY,
+    CEMUCORE_REG_SPS,
+    CEMUCORE_REG_I,
+
+    /* 24-bit registers */
+    CEMUCORE_REG_UBC,
+    CEMUCORE_REG_UDE,
+    CEMUCORE_REG_UHL,
+    CEMUCORE_REG_UIX,
+    CEMUCORE_REG_UIY,
+    CEMUCORE_REG_SPL,
+    CEMUCORE_REG_PC,
+    CEMUCORE_REG_RPC,
+} cemucore_reg_t;
+
+typedef struct cemucore cemucore_t;
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -27,17 +87,11 @@ extern "C"
 
 typedef void (*cemucore_signal_t)(void *);
 
-typedef enum cemucore_create_flags
-{
-#ifndef CEMUCORE_NOTHREADS
-    CEMUCORE_CREATE_THREADED = 1,
-#endif
-} cemucore_create_flags_t;
-
-typedef struct cemucore cemucore_t;
-
 cemucore_t *cemucore_create(cemucore_create_flags_t, cemucore_signal_t, void *);
 void cemucore_destroy(cemucore_t *);
+
+int32_t cemucore_get(cemucore_t *, cemucore_prop_t, int32_t);
+void cemucore_set(cemucore_t *, cemucore_prop_t, int32_t, int32_t);
 
 /* !!! DEPRECATED API !!! */
 typedef enum {
@@ -51,10 +105,6 @@ void emu_set_lcd_ptrs(uint32_t **dat, uint32_t **dat_end, int width, int height,
 #define DBG_MASK_WRITE 2
 #define DBG_MASK_EXEC  4
 typedef struct {
-    uint32_t gpioEnable;
-} keypad_t;
-extern keypad_t keypad;
-typedef struct {
     uint8_t addr[0x10000];
 } debug_t;
 extern debug_t debug;
@@ -65,7 +115,6 @@ extern lcd_t lcd;
 void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t control, int size, int spi);
 #define LCD_WIDTH 320
 #define LCD_HEIGHT 240
-void emu_keypad_event(unsigned int row, unsigned int col, bool press);
 void keypad_intrpt_check(void);
 #include <stdio.h>
 FILE *fopen_utf8(const char *filename, const char *mode);

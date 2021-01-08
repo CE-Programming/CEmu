@@ -127,7 +127,7 @@ static void sync_reenter(sync_t *sync)
 
 static void sync_maybe_leave(sync_t *sync, bool unlock)
 {
-    bool more = (atomic_fetch_sub_explicit(&sync->state, STATE_COUNTER, memory_order_relaxed) - STATE_COUNTER) / STATE_COUNTER;
+    bool more = atomic_fetch_sub_explicit(&sync->state, STATE_COUNTER, memory_order_relaxed) >= STATE_COUNTER << 1;
     if (unlock)
     {
         sync_unlock(sync);

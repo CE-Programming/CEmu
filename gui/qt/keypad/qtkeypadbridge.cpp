@@ -1,5 +1,7 @@
 #include "qtkeypadbridge.h"
 
+#include "../corewindow.h"
+
 #include <cemucore.h>
 
 #include <QtCore/QMetaEnum>
@@ -17,6 +19,11 @@ static const QString custom_keys[8][8] = {
     { "enter", "add", "sub", "mul", "div", "pow", "clr", "" },
     { "down", "left", "right", "up", "", "", "", "" }
 };
+
+QtKeypadBridge::QtKeypadBridge(CoreWindow *parent)
+    : QObject(parent)
+{
+}
 
 bool QtKeypadBridge::setKeymap(Keymap map)
 {
@@ -80,7 +87,7 @@ void QtKeypadBridge::skEvent(QKeyEvent *event, bool press) {
         }
     }
 
-    keypad.gpioEnable |= 0x800;
+    cemucore_set(coreWindow()->core(), CEMUCORE_PROP_GPIO_ENABLE, 11, true);
     keypad_intrpt_check();
 }
 
@@ -122,6 +129,11 @@ Qt::KeyboardModifiers QtKeypadBridge::toModifierValue(QString m) {
     if (m.contains("Shift")) { seq |= Qt::ShiftModifier; }
     if (m.contains("Meta")) { seq |= Qt::MetaModifier; }
     return seq;
+}
+
+CoreWindow *QtKeypadBridge::coreWindow() const
+{
+    return static_cast<CoreWindow *>(parent());
 }
 
 bool QtKeypadBridge::keymapExport(const QString &path) {

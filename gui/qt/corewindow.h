@@ -42,6 +42,8 @@ public:
     explicit CoreWindow(const QString &uniqueName, KDDockWidgets::MainWindowOptions options, QWidget *parent = nullptr);
     ~CoreWindow() override;
 
+    cemucore_t *core() const;
+
     enum ExitCode
     {
         Quit = 0,

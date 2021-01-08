@@ -1,18 +1,20 @@
 #ifndef QTKEYPADBRIDGE_H
 #define QTKEYPADBRIDGE_H
 
-#include <QtGui/QKeyEvent>
-
 #include "keycode.h"
 #include "keymap.h"
+class CoreWindow;
+typedef struct cemucore cemucore_t;
+
+#include <QtCore/QObject>
+#include <QtGui/QKeyEvent>
 
 class QtKeypadBridge : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit QtKeypadBridge(QObject *parent = nullptr)
-        : QObject(parent) {}
+    explicit QtKeypadBridge(CoreWindow *parent);
 
     bool setKeymap(Keymap map);
     void skEvent(QKeyEvent *event, bool press);
@@ -29,6 +31,8 @@ signals:
 private:
     QString toModifierString(Qt::KeyboardModifiers m);
     Qt::KeyboardModifiers toModifierValue(QString m);
+
+    CoreWindow *coreWindow() const;
 
     QHash<quint32, KeyCode> pressed;
     const HostKey *const *keymap = nullptr;

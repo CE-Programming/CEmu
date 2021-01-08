@@ -14,33 +14,27 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CEMUCORE_CORE_H
-#define CEMUCORE_CORE_H
+#ifndef KEYPAD_H
+#define KEYPAD_H
 
-#include "cemucore.h"
+#include "compiler.h"
 
-#include "cpu.h"
-#include "keypad.h"
-#include "mem.h"
+#include <stdint.h>
 
-#ifndef CEMUCORE_NOTHREADS
-# include "sync.h"
-
-# include <pthread.h>
-# include <stdatomic.h>
-#endif
-
-struct cemucore
+typedef struct keypad
 {
-#ifndef CEMUCORE_NOTHREADS
-    pthread_t thread;
-    sync_t sync;
+    uint8_t keys[8];
+    CEMUCORE_MAYBE_ATOMIC(uint16_t) events[8];
+    CEMUCORE_MAYBE_ATOMIC(uint32_t) gpio_enable;
+} keypad_t;
+
+#ifdef __cplusplus
+extern "C"
+{
 #endif
-    cemucore_signal_t signal;
-    void *signal_data;
-    cpu_t cpu;
-    mem_t mem;
-    keypad_t keypad;
-};
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

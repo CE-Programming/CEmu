@@ -57,10 +57,14 @@ HEADERS += \
 	cemucore.h \
 	compiler.h \
 	core.h \
+	cpu.h \
+	mem.h \
 	sync.h
 
 SOURCES += \
 	core.c \
+	cpu.c \
+	mem.c \
 	sync.c
 
 OBJECTS = $(addprefix $(BUILD)/,$(addsuffix $(OBJECT_EXT),$(SOURCES)))

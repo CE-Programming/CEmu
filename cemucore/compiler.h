@@ -29,4 +29,37 @@
 # define   likely(x) (x)
 #endif
 
+#ifndef CEMUCORE_BYTE_ORDER
+# ifdef __BYTE_ORDER__
+#  define CEMUCORE_ORDER_LITTLE_ENDIAN __ORDER_LITTLE_ENDIAN__
+#  define CEMUCORE_ORDER_BIG_ENDIAN    __ORDER_BIG_ENDIAN__
+#  define CEMUCORE_BYTE_ORDER          __BYTE_ORDER__
+# else
+#  define CEMUCORE_ORDER_LITTLE_ENDIAN 0
+#  define CEMUCORE_ORDER_BIG_ENDIAN    1
+#  define CEMUCORE_BYTE_ORDER          ORDER_LITTLE_ENDIAN
+# endif
+#endif
+
+#ifdef CEMUCORE_NOTHREADS
+# define CEMUCORE_MAYBE_ATOMIC(type) type
+# define cemucore_maybe_atomic_load_explicit(obj, order) (*(obj))
+# define cemucore_maybe_atomic_store_explicit(obj, desired, order) (*(obj) = (desired))
+# define cemucore_maybe_atomic_exchange_explicit(obj, desired, order)   \
+    ({ typeof(*(obj)) cemucore_maybe_atomic_value = *(obj);             \
+        *(obj) = (desired);                                             \
+        cemucore_maybe_atomic_value })
+# define cemucore_maybe_atomic_fetch_or_explicit(obj, arg, order)       \
+    ({ typeof(*(obj)) cemucore_maybe_atomic_value = *(obj);             \
+        *(obj) |= (arg);                                                \
+        cemucore_maybe_atomic_value })
+#else
+# include <stdatomic.h>
+# define CEMUCORE_MAYBE_ATOMIC(type) _Atomic(type)
+# define cemucore_maybe_atomic_load_explicit atomic_load_explicit
+# define cemucore_maybe_atomic_store_explicit atomic_store_explicit
+# define cemucore_maybe_atomic_exchange_explicit atomic_exchange_explicit
+# define cemucore_maybe_atomic_fetch_or_explicit atomic_fetch_or_explicit
+#endif
+
 #endif

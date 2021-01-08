@@ -3,6 +3,7 @@
 
 #include "keyconfig.h"
 #include "key.h"
+class CalculatorWidget;
 
 #include <QtCore/QList>
 #include <QtCore/QMultiHash>
@@ -20,15 +21,7 @@ class KeypadWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit KeypadWidget(QWidget *parent = Q_NULLPTR) : QWidget{parent}, cclrBackground{Qt::gray}, mKeys{} {
-        setAttribute(Qt::WA_AcceptTouchEvents);
-        cclrBackground.setAlpha(100);
-        keypadPath.setFillRule(Qt::WindingFill);
-        keypadPath.addRoundedRect(sBaseRect, 20, 20);
-        keypadPath.addRect(QRect(0, 0, 20, 20));
-        keypadPath.addRect(QRect(sBaseRect.width()-20, 0, 20, 20));
-        keypadPath = keypadPath.simplified();
-    }
+    explicit KeypadWidget(CalculatorWidget *parent);
     virtual ~KeypadWidget();
 
     enum Color {
@@ -78,6 +71,8 @@ public slots:
 private:
     void updateKey(Key *key, bool);
     void addKey(Key *key);
+
+    CalculatorWidget *calcWidget() const;
 
     Color color = KeypadWidget::Black;
     bool mHoldingEnabled = true;

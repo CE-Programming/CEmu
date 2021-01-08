@@ -137,14 +137,19 @@ CoreWindow::~CoreWindow()
     {
         delete mDockedWidgets.back().dock();
     }
-    cemucore_destroy(mCore);
+    cemucore_destroy(qExchange(mCore, nullptr));
+}
+
+cemucore_t *CoreWindow::core() const
+{
+    return mCore;
 }
 
 void CoreWindow::createDockWidgets()
 {
     Q_ASSERT(mDockedWidgets.empty());
 
-    mCalcWidget = new CalculatorWidget{mDockedWidgets};
+    mCalcWidget = new CalculatorWidget{mDockedWidgets, this};
     auto *capture = new CaptureWidget{mDockedWidgets};
     auto *variable = new VariableWidget{mDockedWidgets, QStringList{"test", "test2"}};
     auto *keyHistory = new KeyHistoryWidget{mDockedWidgets};
@@ -294,7 +299,7 @@ void CoreWindow::resetEmu()
 {
     if (!mCore)
     {
-        mCore = cemucore_create(CEMUCORE_CREATE_THREADED, &CoreWindow::emitCoreSignal, this);
+        mCore = cemucore_create(CEMUCORE_CREATE_FLAG_THREADED, &CoreWindow::emitCoreSignal, this);
     }
 
     int keycolor = Settings::intOption(Settings::KeypadColor);

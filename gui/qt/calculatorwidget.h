@@ -20,6 +20,7 @@
 #include "dockedwidget.h"
 #include "keypad/keypadwidget.h"
 #include "overlaywidget.h"
+class CoreWindow;
 class ScreenWidget;
 
 #include <cemucore.h>
@@ -46,10 +47,12 @@ class CalculatorWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit CalculatorWidget(DockedWidgetList &list);
+    explicit CalculatorWidget(DockedWidgetList &list, CoreWindow *coreWindow);
     ~CalculatorWidget();
 
     void setConfig(ti_device_t type, int color);
+
+    CoreWindow *coreWindow() const;
 
 public slots:
     void changeKeyState(KeyCode keycode, bool press);
@@ -58,6 +61,7 @@ signals:
     void keyPressed(const QString& key);
 
 private:
+    CoreWindow *mCoreWindow;
     ScreenWidget *mScreen;
     KeypadWidget *mKeypad;
 };

@@ -1,5 +1,7 @@
 #include "keypadwidget.h"
 
+#include "../calculatorwidget.h"
+#include "../corewindow.h"
 #include "alphakey.h"
 #include "arrowkey.h"
 #include "graphkey.h"
@@ -16,6 +18,19 @@
 #include <QtWidgets/QApplication>
 
 const QRect KeypadWidget::sBaseRect{{}, QSize{162, 238}};
+
+KeypadWidget::KeypadWidget(CalculatorWidget *parent)
+    : QWidget{parent},
+      cclrBackground{Qt::gray},
+      mKeys{} {
+    setAttribute(Qt::WA_AcceptTouchEvents);
+    cclrBackground.setAlpha(100);
+    keypadPath.setFillRule(Qt::WindingFill);
+    keypadPath.addRoundedRect(sBaseRect, 20, 20);
+    keypadPath.addRect(QRect(0, 0, 20, 20));
+    keypadPath.addRect(QRect(sBaseRect.width()-20, 0, 20, 20));
+    keypadPath = keypadPath.simplified();
+}
 
 void KeypadWidget::addKey(Key *key) {
     const KeyCode code = key->keycode();
@@ -361,7 +376,8 @@ void KeypadWidget::updateKey(Key *key, bool wasSelected) {
     bool selected = key->isSelected();
     if (selected != wasSelected) {
         update(mTransform.mapRect(key->keyGeometry()));
-        emu_keypad_event(key->keycode().row(), key->keycode().col(), selected);
+        cemucore_set(calcWidget()->coreWindow()->core(), CEMUCORE_PROP_KEY,
+                     key->keycode().code(), selected);
         if (selected) {
             QString out = QStringLiteral("[") + key->getLabel() + QStringLiteral("]");
             emit keyPressed(out.simplified().replace(" ",""));
@@ -524,4 +540,9 @@ bool KeypadWidget::event(QEvent *event) {
             return QWidget::event(event);
     }
     return true;
+}
+
+CalculatorWidget *KeypadWidget::calcWidget() const
+{
+    return static_cast<CalculatorWidget *>(parent());
 }
