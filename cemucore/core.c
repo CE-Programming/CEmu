@@ -18,24 +18,19 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #ifndef CEMUCORE_NOTHREADS
-static bool check_signals(cemucore_t *core)
-{
-#if ATOMIC_INT_LOCK_FREE != 2
-    return !atomic_flag_test_and_set_explicit(&core->no_pending, memory_order_relaxed);
-#else
-    return !atomic_load_explicit(&core->pending, memory_order_relaxed);
-#endif
-}
-
 static void *thread_start(void *data)
 {
     cemucore_t *core = data;
-    fprintf(stderr, "Hello from the other side\n");
-    if (core->signal)
+    while (sync_loop(&core->sync))
     {
-        core->signal(core->signal_data);
+        const struct timespec sleep = {
+            .tv_sec = 0,
+            .tv_nsec = 100000000L,
+        };
+        nanosleep(&sleep, NULL);
     }
     return NULL;
 }
@@ -54,6 +49,12 @@ cemucore_t *cemucore_create(cemucore_create_flags_t create_flags,
     core->signal_data = signal_data;
 
 #ifndef CEMUCORE_NOTHREADS
+    if (!sync_init(&core->sync))
+    {
+        free(core);
+        return NULL;
+    }
+
     if (create_flags & CEMUCORE_CREATE_THREADED)
     {
         if (pthread_create(&core->thread, NULL, &thread_start, core))
@@ -79,6 +80,7 @@ void cemucore_destroy(cemucore_t *core)
     }
 
 #ifndef CEMUCORE_NOTHREADS
+    sync_stop(&core->sync);
     pthread_join(core->thread, NULL);
 #endif
 

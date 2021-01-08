@@ -14,26 +14,46 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CORE_H
-#define CORE_H
+#ifndef SYNC_H
+#define SYNC_H
 
-#include "cemucore.h"
-
-#ifndef CEMUCORE_NOTHREADS
-#include "sync.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 #include <pthread.h>
 #include <stdatomic.h>
+
+typedef struct sync
+{
+    pthread_mutex_t mutex;
+#define SYNC_COND_COUNT 3
+    pthread_cond_t cond[SYNC_COND_COUNT];
+    _Atomic uint32_t state;
+} sync_t;
+
+#ifdef __cplusplus
+extern "C"
+{
 #endif
 
-struct cemucore
-{
-#ifndef CEMUCORE_NOTHREADS
-    pthread_t thread;
-    sync_t sync;
+bool sync_init(sync_t *sync);
+void sync_destroy(sync_t *sync);
+
+/* Thread-safe, any thread */
+void sync_lock(sync_t *sync);
+
+/* Target thread or while synced only */
+bool sync_check(sync_t *sync);
+bool sync_loop(sync_t *sync);
+
+void sync_enter(sync_t *sync);
+void sync_run(sync_t *sync);
+void sync_leave(sync_t *sync);
+void sync_run_leave(sync_t *sync);
+void sync_stop(sync_t *sync);
+
+#ifdef __cplusplus
+}
 #endif
-    cemucore_signal_t signal;
-    void *signal_data;
-};
 
 #endif

@@ -14,26 +14,19 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CORE_H
-#define CORE_H
+#ifndef CEMUCORE_COMPILER_H
+#define CEMUCORE_COMPILER_H
 
-#include "cemucore.h"
-
-#ifndef CEMUCORE_NOTHREADS
-#include "sync.h"
-
-#include <pthread.h>
-#include <stdatomic.h>
+#ifndef __has_builtin
+# define __has_builtin(x) 0
 #endif
 
-struct cemucore
-{
-#ifndef CEMUCORE_NOTHREADS
-    pthread_t thread;
-    sync_t sync;
+#if __has_builtin(__builtin_expect)
+# define unlikely(x) __builtin_expect(x, 0)
+# define   likely(x) (!unlikely(!(x)))
+#else
+# define unlikely(x) (x)
+# define   likely(x) (x)
 #endif
-    cemucore_signal_t signal;
-    void *signal_data;
-};
 
 #endif

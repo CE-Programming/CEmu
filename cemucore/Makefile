@@ -55,10 +55,13 @@ TARGETS = $(foreach S,SH STATIC,$(if $($SLIB),$($SLIB_TARGET)))
 
 HEADERS += \
 	cemucore.h \
-	core.h
+	compiler.h \
+	core.h \
+	sync.h
 
 SOURCES += \
-	core.c
+	core.c \
+	sync.c
 
 OBJECTS = $(addprefix $(BUILD)/,$(addsuffix $(OBJECT_EXT),$(SOURCES)))
 
