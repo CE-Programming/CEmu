@@ -47,7 +47,7 @@ MemWidget::MemWidget(QWidget *parent)
     QPushButton *btnGoto = new QPushButton(QIcon(QStringLiteral(":/assets/icons/ok.svg")), tr("Goto"));
     QPushButton *btnSearch = new QPushButton(QIcon(QStringLiteral(":/assets/icons/search.svg")), tr("Search"));
     QPushButton *btnApply = new QPushButton(QIcon(QStringLiteral(":/assets/icons/high_priority.svg")), tr("Apply Changes"));
-    QPushButton *btnAscii = new QPushButton(QIcon(QStringLiteral(":/assets/icons/alphabetical_az.svg")), tr("ASCII"));
+    QPushButton *btnAscii = new QPushButton(QIcon(QStringLiteral(":/assets/icons/alphabetical_az.svg")), QStringLiteral("ASCII"));
     QSpinBox *spnNumBytes = new QSpinBox;
 
     btnAscii->setCheckable(true);
@@ -102,7 +102,7 @@ void MemWidget::showSeachDialog()
     QPushButton *btnCancel = new QPushButton(QApplication::style()->standardIcon(QStyle::SP_DialogCancelButton), tr("Cancel"));
 
     QRadioButton *chkHex = new QRadioButton(tr("Hexadecimal"));
-    QRadioButton *chkAscii = new QRadioButton(tr("ASCII"));
+    QRadioButton *chkAscii = new QRadioButton(QStringLiteral("ASCII"));
 
     QGroupBox *grpOptions = new QGroupBox(tr("Search options"));
 

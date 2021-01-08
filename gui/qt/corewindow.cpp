@@ -219,6 +219,7 @@ void CoreWindow::createDeveloperWidgets()
     mDevMenu->addSeparator();
 
     auto *memoryAction = mDevMenu->addAction(tr("Add Memory View"));
+    memoryAction->setIcon(QIcon(QStringLiteral(":/assets/icons/add_grid.svg")));
     connect(memoryAction, &QAction::triggered, [this]
     {
         auto *memory = new MemoryWidget{mDockedWidgets};
@@ -226,6 +227,7 @@ void CoreWindow::createDeveloperWidgets()
     });
 
     auto *visualizerAction = mDevMenu->addAction(tr("Add LCD Visualizer"));
+    visualizerAction->setIcon(QIcon(QStringLiteral(":/assets/icons/add_image.svg")));
     connect(visualizerAction, &QAction::triggered, [this]
     {
         auto *visualizer = new VisualizerWidget{mDockedWidgets};

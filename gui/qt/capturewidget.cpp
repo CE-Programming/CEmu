@@ -34,7 +34,7 @@
 
 CaptureWidget::CaptureWidget(DockedWidgetList &list)
     : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Screen Capture")},
-                   QIcon(QStringLiteral(":/assets/icons/cable_release.svg")),
+                   QIcon(QStringLiteral(":/assets/icons/picture.svg")),
                    list}
 {
     QLabel *lblFrameskip = new QLabel(tr("Frameskip: "));
