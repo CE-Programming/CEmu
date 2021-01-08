@@ -28,6 +28,7 @@ INCLUDEPATH += $$cemucore.path
 LIBS += $$cemucore.target
 
 QT += core gui widgets network KDDockWidgets
+QTPLUGIN += qsvg
 
 CONFIG(release, debug|release) {
     DEFINES += QT_NO_DEBUG_OUTPUT
