@@ -74,7 +74,7 @@ ControlWidget::ControlWidget(CoreWindow *coreWindow)
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-    connect(mBtnRun, &QPushButton::toggle, [this]
+    connect(mBtnRun, &QPushButton::clicked, [this]
     {
         if (mInDebug)
         {
