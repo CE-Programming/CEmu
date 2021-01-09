@@ -42,6 +42,7 @@ StateWidget::StateWidget(CoreWindow *coreWindow)
       mStateNum{1}
 {
     mTbl = new TableWidget(0, 1);
+    mTbl->verticalHeader()->setVisible(false);
     mTbl->setHorizontalHeaderLabels({ tr("State name") });
     mTbl->horizontalHeader()->setStretchLastSection(true);
     mTbl->setSelectionMode(QAbstractItemView::ExtendedSelection);

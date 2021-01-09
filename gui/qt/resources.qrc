@@ -53,5 +53,6 @@
         <file>assets/icons/clipboard_picture.svg</file>
         <file>assets/icons/high_priority.svg</file>
         <file>assets/icons/run.svg</file>
+        <file>assets/icons/updown.svg</file>
     </qresource>
 </RCC>

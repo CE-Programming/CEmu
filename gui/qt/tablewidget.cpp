@@ -15,6 +15,7 @@
  */
 
 #include "tablewidget.h"
+#include "util.h"
 
 #include <QtWidgets/QHeaderView>
 #include <QtGui/QKeyEvent>
@@ -24,6 +25,7 @@ TableWidget::TableWidget(int rows, int cols, QWidget *parent)
 {
     setItemDelegate(new TableWidgetItemFocusDelegate{this});
     verticalHeader()->setSectionsMovable(true);
+    setFont(Util::monospaceFont());
 }
 
 void TableWidget::keyPressEvent(QKeyEvent *event)

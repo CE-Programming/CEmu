@@ -46,7 +46,6 @@ WatchpointsWidget::WatchpointsWidget(CoreWindow *coreWindow, const QList<Watchpo
     mTbl = new TableWidget(0, 7);
     mTbl->setHorizontalHeaderLabels({tr("E"), tr("R"), tr("W"), tr("X"), tr("Address"), tr("Size"), tr("Name")});
     mTbl->horizontalHeader()->setStretchLastSection(true);
-    mTbl->verticalHeader()->setDefaultSectionSize(QFontMetrics(Util::monospaceFont()).maxWidth());
     mTbl->horizontalHeader()->setDefaultSectionSize(QFontMetrics(Util::monospaceFont()).maxWidth() * 10);
     mTbl->horizontalHeader()->setMinimumSectionSize(mTbl->verticalHeader()->defaultSectionSize());
     mTbl->horizontalHeader()->setSectionResizeMode(Column::Enabled, QHeaderView::ResizeToContents);
@@ -161,6 +160,7 @@ void WatchpointsWidget::addWatchpoint(const Watchpoint &watchpoint, bool edit)
     mTbl->setItem(0, Column::Address, addr);
     mTbl->setItem(0, Column::Size, size);
     mTbl->setItem(0, Column::Name, name);
+    mTbl->setVerticalHeaderItem(0, new QTableWidgetItem(QIcon(QStringLiteral(":/assets/icons/updown.svg")), QString()));
     mTbl->blockSignals(false);
 
     if (edit)

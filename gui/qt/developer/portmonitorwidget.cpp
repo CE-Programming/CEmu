@@ -41,7 +41,6 @@ PortMonitorWidget::PortMonitorWidget(CoreWindow *coreWindow, const QList<PortMon
     mTbl = new TableWidget(0, 5);
     mTbl->setHorizontalHeaderLabels({tr("E"), tr("R"), tr("W"), tr("Port"), tr("Data")});
     mTbl->horizontalHeader()->setStretchLastSection(true);
-    mTbl->verticalHeader()->setDefaultSectionSize(QFontMetrics(Util::monospaceFont()).maxWidth());
     mTbl->horizontalHeader()->setDefaultSectionSize(QFontMetrics(Util::monospaceFont()).maxWidth() * 10);
     mTbl->horizontalHeader()->setMinimumSectionSize(mTbl->verticalHeader()->defaultSectionSize());
     mTbl->horizontalHeader()->setSectionResizeMode(Column::Enabled, QHeaderView::ResizeToContents);
@@ -125,6 +124,7 @@ void PortMonitorWidget::addPortMonitor(const PortMonitor &portmonitor, bool edit
     mTbl->setItem(0, Column::Write, r);
     mTbl->setItem(0, Column::Port, port);
     mTbl->setItem(0, Column::Data, data);
+    mTbl->setVerticalHeaderItem(0, new QTableWidgetItem(QIcon(QStringLiteral(":/assets/icons/updown.svg")), QString()));
     mTbl->blockSignals(false);
 
     if (edit)

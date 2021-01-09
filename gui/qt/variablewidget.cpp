@@ -106,9 +106,9 @@ void VariableWidget::addRecentVar(const QString &path)
         mBtnRemoveVars->setEnabled(true);
     }
 
-    QTableWidgetItem *item = new QTableWidgetItem(path);
     mSentVars->insertRow(0);
-    mSentVars->setItem(0, 0, item);
+    mSentVars->setItem(0, 0, new QTableWidgetItem(path));
+    mSentVars->setVerticalHeaderItem(0, new QTableWidgetItem(QIcon(QStringLiteral(":/assets/icons/updown.svg")), QString()));
 }
 
 void VariableWidget::removeRecentSelected()
