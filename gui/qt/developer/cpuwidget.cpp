@@ -483,6 +483,7 @@ void CpuWidget::loadFromCore(const CoreWrapper &core)
 {
     mEdtI->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_I), 4);
     mEdtR->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_R), 2);
+    mEdtMB->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_MB), 2);
     mEdtAF->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_AF), 4);
     mEdtBC->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_UBC), 6);
     mEdtDE->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_UDE), 6);
@@ -492,7 +493,7 @@ void CpuWidget::loadFromCore(const CoreWrapper &core)
     mEdtPC->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_PC), 6);
     mEdtSPS->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_SPS), 4);
     mEdtSPL->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_SPL), 6);
-    mEdtAFX->setInt(core.get(cemucore::CEMUCORE_PROP_REG_SHADOW, cemucore::CEMUCORE_REG_AF), 6);
+    mEdtAFX->setInt(core.get(cemucore::CEMUCORE_PROP_REG_SHADOW, cemucore::CEMUCORE_REG_AF), 4);
     mEdtBCX->setInt(core.get(cemucore::CEMUCORE_PROP_REG_SHADOW, cemucore::CEMUCORE_REG_UBC), 6);
     mEdtDEX->setInt(core.get(cemucore::CEMUCORE_PROP_REG_SHADOW, cemucore::CEMUCORE_REG_UDE), 6);
     mEdtHLX->setInt(core.get(cemucore::CEMUCORE_PROP_REG_SHADOW, cemucore::CEMUCORE_REG_UHL), 6);
@@ -502,6 +503,7 @@ void CpuWidget::storeToCore(CoreWrapper &core) const
 {
     core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_I, mEdtI->getInt());
     core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_R, mEdtR->getInt());
+    core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_MB, mEdtMB->getInt());
     core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_AF, mEdtR->getInt());
     core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_UBC, mEdtR->getInt());
     core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_UDE, mEdtR->getInt());
