@@ -17,13 +17,12 @@
 #ifndef CALCULATORWIDGET_H
 #define CALCULATORWIDGET_H
 
+#include "corewrapper.h"
 #include "dockedwidget.h"
 #include "keypad/keypadwidget.h"
 #include "overlaywidget.h"
 class CoreWindow;
 class ScreenWidget;
-
-#include <cemucore.h>
 
 #include <QtWidgets/QWidget>
 
@@ -50,7 +49,7 @@ public:
     explicit CalculatorWidget(DockedWidgetList &list, CoreWindow *coreWindow);
     ~CalculatorWidget();
 
-    void setConfig(ti_device_t type, int color);
+    void setConfig(cemucore::ti_device_t type, int color);
 
     CoreWindow *coreWindow() const;
 

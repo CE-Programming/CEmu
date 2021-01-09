@@ -2,6 +2,7 @@
 
 #include "../calculatorwidget.h"
 #include "../corewindow.h"
+#include "../corewrapper.h"
 #include "alphakey.h"
 #include "arrowkey.h"
 #include "graphkey.h"
@@ -9,8 +10,6 @@
 #include "operkey.h"
 #include "otherkey.h"
 #include "secondkey.h"
-
-#include <cemucore.h>
 
 #include <QtGui/QFontDatabase>
 #include <QtGui/QPaintEvent>
@@ -376,8 +375,8 @@ void KeypadWidget::updateKey(Key *key, bool wasSelected) {
     bool selected = key->isSelected();
     if (selected != wasSelected) {
         update(mTransform.mapRect(key->keyGeometry()));
-        cemucore_set(calcWidget()->coreWindow()->core(), CEMUCORE_PROP_KEY,
-                     key->keycode().code(), selected);
+        calcWidget()->coreWindow()->core()
+            .set(cemucore::CEMUCORE_PROP_KEY, key->keycode().code(), selected);
         if (selected) {
             QString out = QStringLiteral("[") + key->getLabel() + QStringLiteral("]");
             emit keyPressed(out.simplified().replace(" ",""));

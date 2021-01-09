@@ -68,6 +68,7 @@ HEADERS += \
     capturewidget.h \
     consolewidget.h \
     corewindow.h \
+    corewrapper.h \
     developer/autotesterwidget.h \
     developer/clockswidget.h \
     developer/controlwidget.h \
@@ -119,6 +120,7 @@ SOURCES += \
     capturewidget.cpp \
     consolewidget.cpp \
     corewindow.cpp \
+    corewrapper.cpp \
     developer/autotesterwidget.cpp \
     developer/clockswidget.cpp \
     developer/controlwidget.cpp \

@@ -1,8 +1,7 @@
 #include "qtkeypadbridge.h"
 
 #include "../corewindow.h"
-
-#include <cemucore.h>
+#include "../corewrapper.h"
 
 #include <QtCore/QMetaEnum>
 #include <QtCore/QSettings>
@@ -34,16 +33,16 @@ bool QtKeypadBridge::setKeymap(Keymap map)
             keymap = nullptr;
             break;
         case Keymap::CEmu:
-            keymap = get_device_type() == TI84PCE ? cemu_keymap_84pce : cemu_keymap_83pce;
+            keymap = cemucore::get_device_type() == cemucore::TI84PCE ? cemu_keymap_84pce : cemu_keymap_83pce;
             break;
         case Keymap::TilEm:
-            keymap = get_device_type() == TI84PCE ? tilem_keymap_84pce : tilem_keymap_83pce;
+            keymap = cemucore::get_device_type() == cemucore::TI84PCE ? tilem_keymap_84pce : tilem_keymap_83pce;
             break;
         case Keymap::WabbitEmu:
-            keymap = get_device_type() == TI84PCE ? wabbitemu_keymap_84pce : wabbitemu_keymap_83pce;
+            keymap = cemucore::get_device_type() == cemucore::TI84PCE ? wabbitemu_keymap_84pce : wabbitemu_keymap_83pce;
             break;
         case Keymap::JsTIfied:
-            keymap = get_device_type() == TI84PCE ? jstified_keymap_84pce : jstified_keymap_83pce;
+            keymap = cemucore::get_device_type() == cemucore::TI84PCE ? jstified_keymap_84pce : jstified_keymap_83pce;
             break;
         case Keymap::Custom:
             keymap = custom_keymap;
@@ -87,8 +86,7 @@ void QtKeypadBridge::skEvent(QKeyEvent *event, bool press) {
         }
     }
 
-    cemucore_set(coreWindow()->core(), CEMUCORE_PROP_GPIO_ENABLE, 11, true);
-    keypad_intrpt_check();
+    coreWindow()->core().set(cemucore::CEMUCORE_PROP_GPIO_ENABLE, 11, true);
 }
 
 void QtKeypadBridge::kEvent(QString text, int key, bool repeat) {

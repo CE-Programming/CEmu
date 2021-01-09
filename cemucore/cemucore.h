@@ -20,6 +20,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+typedef enum cemucore_signal
+{
+    CEMUCORE_SIGNAL_LCD_FRAME,
+    CEMUCORE_SIGNAL_SOFT_CMD,
+} cemucore_signal_t;
+
 typedef enum cemucore_create_flags
 {
 #ifndef CEMUCORE_NOTHREADS
@@ -27,7 +33,7 @@ typedef enum cemucore_create_flags
 #endif
 } cemucore_create_flags_t;
 
-typedef enum cemucore_prop_t
+typedef enum cemucore_prop
 {
     CEMUCORE_PROP_REG,
     CEMUCORE_PROP_REG_SHADOW,
@@ -85,13 +91,16 @@ extern "C"
 {
 #endif
 
-typedef void (*cemucore_signal_t)(void *);
+typedef void (*cemucore_signal_handler_t)(cemucore_signal_t, void *);
 
-cemucore_t *cemucore_create(cemucore_create_flags_t, cemucore_signal_t, void *);
+cemucore_t *cemucore_create(cemucore_create_flags_t, cemucore_signal_handler_t, void *);
 void cemucore_destroy(cemucore_t *);
 
-int32_t cemucore_get(cemucore_t *, cemucore_prop_t, int32_t);
+int32_t cemucore_get(const cemucore_t *, cemucore_prop_t, int32_t);
 void cemucore_set(cemucore_t *, cemucore_prop_t, int32_t, int32_t);
+
+void cemucore_sleep(cemucore_t *);
+void cemucore_wake(cemucore_t *);
 
 /* !!! DEPRECATED API !!! */
 typedef enum {
@@ -115,7 +124,6 @@ extern lcd_t lcd;
 void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t control, int size, int spi);
 #define LCD_WIDTH 320
 #define LCD_HEIGHT 240
-void keypad_intrpt_check(void);
 #include <stdio.h>
 FILE *fopen_utf8(const char *filename, const char *mode);
 

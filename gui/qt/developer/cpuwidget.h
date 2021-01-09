@@ -17,8 +17,6 @@
 #ifndef CPUWIDGET_H
 #define CPUWIDGET_H
 
-struct cemucore;
-
 #include "../dockedwidget.h"
 class HighlightEditWidget;
 
@@ -47,8 +45,8 @@ class CpuWidget : public DockedWidget
 public:
     explicit CpuWidget(DockedWidgetList &list);
 
-    void loadFromCore(cemucore *) override;
-    void storeToCore(cemucore *) const override;
+    void loadFromCore(const CoreWrapper &) override;
+    void storeToCore(CoreWrapper &) const override;
 
 private:
     CpuRegisterFilter *mRegEventFilter;

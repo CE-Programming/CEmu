@@ -49,13 +49,19 @@ static void *thread_start(void *data)
             core->keypad.keys[debug_keypad_row] &= ~events;
             debug_keypad_row = (debug_keypad_row + 1) & 7;
         }
+        if (!(rand() & 0xF) && core->signal_handler)
+        {
+            core->signal_handler(CEMUCORE_SIGNAL_SOFT_CMD, core->signal_handler_data);
+            sync_sleep(&core->sync); // wait for response
+        }
     }
     return NULL;
 }
 #endif
 
 cemucore_t *cemucore_create(cemucore_create_flags_t create_flags,
-                            cemucore_signal_t signal, void *signal_data)
+                            cemucore_signal_handler_t signal_handler,
+                            void *signal_handler_data)
 {
     cemucore_t *core = calloc(1, sizeof(cemucore_t));
     if (!core)
@@ -63,8 +69,8 @@ cemucore_t *cemucore_create(cemucore_create_flags_t create_flags,
         return NULL;
     }
 
-    core->signal = signal;
-    core->signal_data = signal_data;
+    core->signal_handler = signal_handler;
+    core->signal_handler_data = signal_handler_data;
 
 #ifndef CEMUCORE_NOTHREADS
     if (!sync_init(&core->sync))
@@ -105,8 +111,9 @@ void cemucore_destroy(cemucore_t *core)
     free(core);
 }
 
-int32_t cemucore_get(cemucore_t *core, cemucore_prop_t prop, int32_t addr)
+int32_t cemucore_get(const cemucore_t *const_core, cemucore_prop_t prop, int32_t addr)
 {
+    cemucore_t *core = (cemucore_t *)const_core;
     int32_t val = -1;
     if (!core)
     {
@@ -285,16 +292,27 @@ void cemucore_set(cemucore_t *core, cemucore_prop_t prop, int32_t addr, int32_t 
         (void)cemucore_maybe_atomic_fetch_or_explicit(&core->keypad.events[addr >> 3 & 7],
                                                       UINT16_C(1) << ((val ? 8 : 0) + (addr & 7)),
                                                       memory_order_release);
+        // handle keypad_intrpt_check?
         break;
     case CEMUCORE_PROP_GPIO_ENABLE:
         (void)cemucore_maybe_atomic_fetch_or_explicit(&core->keypad.gpio_enable,
                                                       UINT32_C(1) << (addr & 15),
                                                       memory_order_release);
+        // handle keypad_intrpt_check?
         break;
     }
 }
 
-keypad_t keypad;
+void cemucore_sleep(cemucore_t *core)
+{
+    sync_sleep(&core->sync);
+}
+
+void cemucore_wake(cemucore_t *core)
+{
+    sync_wake(&core->sync);
+}
+
 debug_t debug;
 lcd_t lcd;
 
@@ -322,12 +340,6 @@ void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t control,
     (void)size;
     (void)spi;
 }
-void emu_keypad_event(unsigned int row, unsigned int col, bool press) {
-    (void)row;
-    (void)col;
-    (void)press;
-}
-void keypad_intrpt_check(void) {}
 FILE *fopen_utf8(const char *filename, const char *mode) {
     return fopen(filename, mode);
 }

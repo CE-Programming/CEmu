@@ -62,10 +62,10 @@ CoreWindow::CoreWindow(const QString &uniqueName,
     : KDDockWidgets::MainWindow(uniqueName, options, parent),
       mKeypadBridge{new QtKeypadBridge{this}},
       mCalcOverlay{nullptr},
-      mCalcType{ti_device_t::TI84PCE},
-      mCore{nullptr}
+      mCalcType{cemucore::ti_device_t::TI84PCE},
+      mCore{this}
 {
-    connect(this, &CoreWindow::coreSignal, this, &CoreWindow::coreSignalled, Qt::QueuedConnection);
+    connect(&mCore, &CoreWrapper::coreSignal, this, &CoreWindow::coreSignal, Qt::QueuedConnection);
 
     auto *menubar = menuBar();
 
@@ -137,10 +137,9 @@ CoreWindow::~CoreWindow()
     {
         delete mDockedWidgets.back().dock();
     }
-    cemucore_destroy(qExchange(mCore, nullptr));
 }
 
-cemucore_t *CoreWindow::core() const
+CoreWrapper &CoreWindow::core()
 {
     return mCore;
 }
@@ -297,11 +296,6 @@ void CoreWindow::exportRom()
 
 void CoreWindow::resetEmu()
 {
-    if (!mCore)
-    {
-        mCore = cemucore_create(CEMUCORE_CREATE_FLAG_THREADED, &CoreWindow::emitCoreSignal, this);
-    }
-
     int keycolor = Settings::intOption(Settings::KeypadColor);
 
     // holds the path to the rom file to load into the emulator
@@ -426,17 +420,14 @@ bool CoreWindow::restoreLayout()
     return json.isEmpty();
 }
 
-void CoreWindow::coreSignalled()
+void CoreWindow::coreSignal(cemucore::signal_t signal)
 {
-    fprintf(stderr, "%s\n", __PRETTY_FUNCTION__);
+    qDebug() << __PRETTY_FUNCTION__ << signal;
+    // TODO: make sure signal is handled
+    mCore.wake();
 }
 
 void CoreWindow::closeEvent(QCloseEvent *)
 {
     saveLayout(true);
-}
-
-void CoreWindow::emitCoreSignal(void *data)
-{
-    emit static_cast<CoreWindow *>(data)->coreSignal();
 }

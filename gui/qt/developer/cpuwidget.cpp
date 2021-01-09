@@ -16,8 +16,9 @@
 
 #include "cpuwidget.h"
 
-#include "widgets/highlighteditwidget.h"
+#include "../corewrapper.h"
 #include "../util.h"
+#include "widgets/highlighteditwidget.h"
 
 #include <cemucore.h>
 
@@ -422,9 +423,9 @@ bool CpuRegisterFilter::eventFilter(QObject *obj, QEvent *event)
     return QObject::eventFilter(obj, event);
 }
 
-void CpuWidget::loadFromCore(cemucore *core)
+void CpuWidget::loadFromCore(const CoreWrapper &core)
 {
-    uint8_t regF = cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_F);
+    uint8_t regF = core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_F);
 
     mChkS->setChecked(regF & (1 << 7));
     mChkZ->setChecked(regF & (1 << 6));
@@ -435,24 +436,24 @@ void CpuWidget::loadFromCore(cemucore *core)
     mChkN->setChecked(regF & (1 << 1));
     mChkC->setChecked(regF & (1 << 0));
 
-    mEdtI->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_I), 4);
-    mEdtR->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_R), 2);
-    mEdtAF->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_AF), 4);
-    mEdtBC->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_UBC), 6);
-    mEdtDE->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_UDE), 6);
-    mEdtHL->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_UHL), 6);
-    mEdtIX->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_UIX), 6);
-    mEdtIY->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_UIY), 6);
-    mEdtPC->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_PC), 6);
-    mEdtSPS->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_SPS), 4);
-    mEdtSPL->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_SPL), 6);
-    mEdtAFX->setInt(cemucore_get(core, CEMUCORE_PROP_REG_SHADOW, CEMUCORE_REG_AF), 6);
-    mEdtBCX->setInt(cemucore_get(core, CEMUCORE_PROP_REG_SHADOW, CEMUCORE_REG_UBC), 6);
-    mEdtDEX->setInt(cemucore_get(core, CEMUCORE_PROP_REG_SHADOW, CEMUCORE_REG_UDE), 6);
-    mEdtHLX->setInt(cemucore_get(core, CEMUCORE_PROP_REG_SHADOW, CEMUCORE_REG_UHL), 6);
+    mEdtI->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_I), 4);
+    mEdtR->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_R), 2);
+    mEdtAF->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_AF), 4);
+    mEdtBC->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_UBC), 6);
+    mEdtDE->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_UDE), 6);
+    mEdtHL->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_UHL), 6);
+    mEdtIX->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_UIX), 6);
+    mEdtIY->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_UIY), 6);
+    mEdtPC->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_PC), 6);
+    mEdtSPS->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_SPS), 4);
+    mEdtSPL->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_SPL), 6);
+    mEdtAFX->setInt(core.get(cemucore::CEMUCORE_PROP_REG_SHADOW, cemucore::CEMUCORE_REG_AF), 6);
+    mEdtBCX->setInt(core.get(cemucore::CEMUCORE_PROP_REG_SHADOW, cemucore::CEMUCORE_REG_UBC), 6);
+    mEdtDEX->setInt(core.get(cemucore::CEMUCORE_PROP_REG_SHADOW, cemucore::CEMUCORE_REG_UDE), 6);
+    mEdtHLX->setInt(core.get(cemucore::CEMUCORE_PROP_REG_SHADOW, cemucore::CEMUCORE_REG_UHL), 6);
 }
 
-void CpuWidget::storeToCore(cemucore *core) const
+void CpuWidget::storeToCore(CoreWrapper &core) const
 {
     uint8_t regF = 0;
 
@@ -465,20 +466,20 @@ void CpuWidget::storeToCore(cemucore *core) const
     regF |= mChkN->isChecked() ? 1 << 1 : 0;
     regF |= mChkC->isChecked() ? 1 << 0 : 0;
 
-    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_F, regF);
-    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_I, mEdtI->getInt());
-    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_R, mEdtR->getInt());
-    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_AF, mEdtR->getInt());
-    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_UBC, mEdtR->getInt());
-    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_UDE, mEdtR->getInt());
-    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_UHL, mEdtR->getInt());
-    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_UIX, mEdtR->getInt());
-    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_UIY, mEdtR->getInt());
-    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_PC, mEdtR->getInt());
-    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_SPS, mEdtR->getInt());
-    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_SPL, mEdtR->getInt());
-    cemucore_set(core, CEMUCORE_PROP_REG_SHADOW, CEMUCORE_REG_AF, mEdtAFX->getInt());
-    cemucore_set(core, CEMUCORE_PROP_REG_SHADOW, CEMUCORE_REG_UBC, mEdtBCX->getInt());
-    cemucore_set(core, CEMUCORE_PROP_REG_SHADOW, CEMUCORE_REG_UDE, mEdtDEX->getInt());
-    cemucore_set(core, CEMUCORE_PROP_REG_SHADOW, CEMUCORE_REG_UHL, mEdtHLX->getInt());
+    core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_F, regF);
+    core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_I, mEdtI->getInt());
+    core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_R, mEdtR->getInt());
+    core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_AF, mEdtR->getInt());
+    core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_UBC, mEdtR->getInt());
+    core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_UDE, mEdtR->getInt());
+    core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_UHL, mEdtR->getInt());
+    core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_UIX, mEdtR->getInt());
+    core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_UIY, mEdtR->getInt());
+    core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_PC, mEdtR->getInt());
+    core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_SPS, mEdtR->getInt());
+    core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_SPL, mEdtR->getInt());
+    core.set(cemucore::CEMUCORE_PROP_REG_SHADOW, cemucore::CEMUCORE_REG_AF, mEdtAFX->getInt());
+    core.set(cemucore::CEMUCORE_PROP_REG_SHADOW, cemucore::CEMUCORE_REG_UBC, mEdtBCX->getInt());
+    core.set(cemucore::CEMUCORE_PROP_REG_SHADOW, cemucore::CEMUCORE_REG_UDE, mEdtDEX->getInt());
+    core.set(cemucore::CEMUCORE_PROP_REG_SHADOW, cemucore::CEMUCORE_REG_UHL, mEdtHLX->getInt());
 }

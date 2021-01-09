@@ -16,10 +16,9 @@
 
 #include "visualizerlcdwidget.h"
 
+#include "../../corewrapper.h"
 #include "../../settings.h"
 #include "../../util.h"
-
-#include <cemucore.h>
 
 #include <cmath>
 #include <QtCore/QMimeData>

@@ -16,9 +16,8 @@
 
 #include "romdialog.h"
 
+#include "corewrapper.h"
 #include "settings.h"
-
-#include <cemucore.h>
 
 #include <QtCore/QMimeData>
 #include <QtGui/QDragEnterEvent>
@@ -183,7 +182,7 @@ void RomDialog::parseROMSegments()
 
     for (i = 0; i < mSegments.size(); ++i)
     {
-        fd = fopen_utf8(mSegments.at(i).toStdString().c_str(), "rb");
+        fd = cemucore::fopen_utf8(mSegments.at(i).toStdString().c_str(), "rb");
         if (!fd) goto invalid;
         if (fseek(fd, 0x3C, SEEK_SET)) goto invalid;
         if (fread(buf, 1, 8, fd) != 8) goto invalid;
@@ -268,7 +267,7 @@ void RomDialog::saveDumper()
         filename += QStringLiteral(".8xp");
     }
 
-    file = fopen_utf8(filename.toStdString().c_str(), "wb");
+    file = cemucore::fopen_utf8(filename.toStdString().c_str(), "wb");
 
     if (file)
     {
@@ -294,7 +293,7 @@ void RomDialog::saveImage()
     if (!filename.endsWith(QStringLiteral(".rom"), Qt::CaseInsensitive))
         filename += QStringLiteral(".rom");
 
-    saveRom = fopen_utf8(filename.toStdString().c_str(), "wb");
+    saveRom = cemucore::fopen_utf8(filename.toStdString().c_str(), "wb");
     if (saveRom)
     {
         mRomPath = filename;

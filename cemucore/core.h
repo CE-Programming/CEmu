@@ -36,8 +36,8 @@ struct cemucore
     pthread_t thread;
     sync_t sync;
 #endif
-    cemucore_signal_t signal;
-    void *signal_data;
+    cemucore_signal_handler_t signal_handler;
+    void *signal_handler_data;
     cpu_t cpu;
     mem_t mem;
     keypad_t keypad;

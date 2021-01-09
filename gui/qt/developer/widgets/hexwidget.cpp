@@ -16,9 +16,8 @@
 
 #include "hexwidget.h"
 
+#include "../../corewrapper.h"
 #include "../../util.h"
-
-#include <cemucore.h>
 
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QScrollBar>
@@ -89,7 +88,7 @@ void HexWidget::scroll(int value)
         {
             if (addr + i >= 0)
             {
-                data.append(static_cast<char>(mem_peek_byte(addr + i)));
+                data.append(static_cast<char>(cemucore::mem_peek_byte(addr + i)));
             }
         }
         if (data.size())
@@ -107,7 +106,7 @@ void HexWidget::scroll(int value)
         QByteArray data;
         for (int i = 0; i < m_bytesPerLine && (addr + i) < 0x1000000; i++)
         {
-            data.append(mem_peek_byte(addr + i));
+            data.append(cemucore::mem_peek_byte(addr + i));
         }
         if (data.size())
         {
@@ -431,7 +430,7 @@ void HexWidget::paintEvent(QPaintEvent *event)
 
             painter.setPen(cText);
             uint8_t data = static_cast<uint8_t>(m_data[addr]);
-            uint8_t flags = debug.addr[addr + m_base];
+            uint8_t flags = cemucore::debug.addr[addr + m_base];
             bool selected = addr >= m_selectStart && addr <= m_selectEnd;
             bool modified = m_modified[addr];
 

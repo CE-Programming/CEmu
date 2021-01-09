@@ -17,7 +17,7 @@
 #ifndef DOCKEDWIDGET_H
 #define DOCKEDWIDGET_H
 
-struct cemucore;
+class CoreWrapper;
 
 namespace KDDockWidgets
 {
@@ -124,8 +124,8 @@ protected:
 
 public:
     KDDockWidgets::DockWidgetBase *dock() const;
-    virtual void loadFromCore(cemucore *) {}
-    virtual void storeToCore(cemucore *) const {}
+    virtual void loadFromCore(const CoreWrapper &) {}
+    virtual void storeToCore(CoreWrapper &) const {}
     virtual QJsonValue serialize() const { return QJsonValue::Undefined; }
     virtual bool unserialize(const QJsonValue &config) { return config.isUndefined(); }
 };

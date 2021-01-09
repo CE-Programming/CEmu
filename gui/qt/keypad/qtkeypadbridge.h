@@ -4,7 +4,6 @@
 #include "keycode.h"
 #include "keymap.h"
 class CoreWindow;
-typedef struct cemucore cemucore_t;
 
 #include <QtCore/QObject>
 #include <QtGui/QKeyEvent>

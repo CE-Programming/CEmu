@@ -16,7 +16,7 @@
 
 #include "disasmwidget.h"
 
-#include <cemucore.h>
+#include "../../corewrapper.h"
 
 #include <QtGui/QWheelEvent>
 #include <QtGui/QPainter>
@@ -98,7 +98,7 @@ void DisasmWidget::paintEvent(QPaintEvent *)
                 case Inst: {
                     uint32_t data = 0, size = nextAddr.addr - addr.addr;
                     for (uint32_t i = 0; i != size; i++)
-                        data = data << 8 | mem_peek_byte(addr.addr + i);
+                        data = data << 8 | cemucore::mem_peek_byte(addr.addr + i);
                     /*painter.drawText(lineRect, Qt::TextSingleLine, QStringLiteral("%1 %2")
                                      .arg(addr.addr, 6, 16, QChar('0'))
                                      .arg(data, size << 1, 16, QChar('0'))

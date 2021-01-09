@@ -1,9 +1,8 @@
 #include "visualizerwidget.h"
 
+#include "../corewrapper.h"
 #include "../keypad/keypadwidget.h"
 #include "../util.h"
-
-#include <cemucore.h>
 
 #include <kddockwidgets/DockWidget.h>
 
@@ -320,8 +319,8 @@ void VisualizerWidget::resetView()
 
     mLcdConfig.mWidth = LCD_WIDTH;
     mLcdConfig.mHeight = LCD_HEIGHT;
-    mLcdConfig.mBaseAddr = lcd.upbase;
-    mLcdConfig.mCtlReg = lcd.control;
+    mLcdConfig.mBaseAddr = cemucore::lcd.upbase;
+    mLcdConfig.mCtlReg = cemucore::lcd.control;
     mLcdConfig.mGrid = false;
     viewToString();
 }

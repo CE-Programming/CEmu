@@ -17,11 +17,10 @@
 #ifndef COREWINDOW_H
 #define COREWINDOW_H
 
+#include "corewrapper.h"
 #include "developer/visualizerwidget.h"
 #include "dockedwidget.h"
 class QtKeypadBridge;
-
-#include <cemucore.h>
 
 #include <kddockwidgets/DockWidget.h>
 #include <kddockwidgets/MainWindow.h>
@@ -42,7 +41,7 @@ public:
     explicit CoreWindow(const QString &uniqueName, KDDockWidgets::MainWindowOptions options, QWidget *parent = nullptr);
     ~CoreWindow() override;
 
-    cemucore_t *core() const;
+    CoreWrapper &core();
 
     enum ExitCode
     {
@@ -52,7 +51,6 @@ public:
 
 signals:
     void romChanged();
-    void coreSignal();
 
 private slots:
     void createRom();
@@ -62,7 +60,7 @@ private slots:
     void showPreferences();
     bool saveLayout(bool ignoreErrors = false);
     bool restoreLayout();
-    void coreSignalled();
+    void coreSignal(cemucore::signal_t);
 
 private:
     void createFileMenu();
@@ -76,8 +74,6 @@ private:
 
     void closeEvent(QCloseEvent *) override;
 
-    static void emitCoreSignal(void *);
-
     DockedWidgetList mDockedWidgets;
     QStringList mVisualizerConfigs;
 
@@ -90,8 +86,8 @@ private:
     CalculatorOverlay *mCalcOverlay;
     CalculatorWidget *mCalcWidget;
 
-    ti_device_t mCalcType;
-    cemucore_t *mCore;
+    cemucore::ti_device_t mCalcType;
+    CoreWrapper mCore;
 };
 
 #endif
