@@ -53,7 +53,6 @@ WatchpointsWidget::WatchpointsWidget(CoreWindow *coreWindow, const QList<Watchpo
     mTbl->horizontalHeader()->setSectionResizeMode(Column::Read, QHeaderView::ResizeToContents);
     mTbl->horizontalHeader()->setSectionResizeMode(Column::Write, QHeaderView::ResizeToContents);
     mTbl->horizontalHeader()->setSectionResizeMode(Column::Execute, QHeaderView::ResizeToContents);
-    mTbl->verticalHeader()->setVisible(false);
     mTbl->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     mTbl->setSelectionMode(QAbstractItemView::ExtendedSelection);
     mTbl->setSelectionBehavior(QAbstractItemView::SelectRows);

@@ -16,12 +16,14 @@
 
 #include "tablewidget.h"
 
+#include <QtWidgets/QHeaderView>
 #include <QtGui/QKeyEvent>
 
 TableWidget::TableWidget(int rows, int cols, QWidget *parent)
     : QTableWidget{rows, cols, parent}
 {
     setItemDelegate(new TableWidgetItemFocusDelegate{this});
+    verticalHeader()->setSectionsMovable(true);
 }
 
 void TableWidget::keyPressEvent(QKeyEvent *event)

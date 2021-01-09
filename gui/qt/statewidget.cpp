@@ -44,9 +44,9 @@ StateWidget::StateWidget(CoreWindow *coreWindow)
     mTbl = new TableWidget(0, 1);
     mTbl->setHorizontalHeaderLabels({ tr("State name") });
     mTbl->horizontalHeader()->setStretchLastSection(true);
-    mTbl->verticalHeader()->setVisible(false);
     mTbl->setSelectionMode(QAbstractItemView::ExtendedSelection);
     mTbl->setSelectionBehavior(QAbstractItemView::SelectRows);
+    mTbl->setSortingEnabled(true);
 
     mBtnExport = new QPushButton(QIcon(QStringLiteral(":/assets/icons/external.svg")), tr("Export state"));
     mBtnImport = new QPushButton(QIcon(QStringLiteral(":/assets/icons/internal.svg")), tr("Import state"));

@@ -41,7 +41,6 @@ VariableWidget::VariableWidget(CoreWindow *coreWindow, const QStringList &recent
     mSentVars = new TableWidget(0, 1);
     mSentVars->setHorizontalHeaderLabels({tr("Recently Sent")});
     mSentVars->horizontalHeader()->setStretchLastSection(true);
-    mSentVars->verticalHeader()->setVisible(false);
     mSentVars->setSelectionMode(QAbstractItemView::ExtendedSelection);
     mSentVars->setSelectionBehavior(QAbstractItemView::SelectRows);
 
