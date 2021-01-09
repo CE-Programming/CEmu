@@ -112,6 +112,7 @@ HEADERS += \
     settings.h \
     settingsdialog.h \
     statewidget.h \
+    tablewidget.h \
     util.h \
     variablewidget.h
 
@@ -156,6 +157,7 @@ SOURCES += \
     settings.cpp \
     settingsdialog.cpp \
     statewidget.cpp \
+    tablewidget.cpp \
     util.cpp \
     variablewidget.cpp
 

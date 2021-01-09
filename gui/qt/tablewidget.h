@@ -14,37 +14,32 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VARIABLSEWIDGET_H
-#define VARIABLSEWIDGET_H
+#ifndef TABLEWIDGET_H
+#define TABLEWIDGET_H
 
-#include "dockedwidget.h"
-class TableWidget;
+#include <QtWidgets/QTableWidget>
+#include <QtWidgets/QStyledItemDelegate>
 
-#include <QtWidgets/QWidget>
-QT_BEGIN_NAMESPACE
-class QPushButton;
-class QTableWidget;
-QT_END_NAMESPACE
-
-class VariableWidget : public DockedWidget
+class TableWidget : public QTableWidget
 {
     Q_OBJECT
 
 public:
-    explicit VariableWidget(CoreWindow *coreWindow, const QStringList &recentVars);
+    explicit TableWidget(int rows = 0, int cols = 0, QWidget *parent = nullptr);
 
-public slots:
-    void addRecentVar(const QString &path);
-    void removeRecentSelected();
+protected:
+   void keyPressEvent(QKeyEvent *) override;
 
-private:
-    TableWidget *mCalcVars;
-    TableWidget *mSentVars;
+signals:
+   void deletePressed();
+};
 
-    QPushButton *mBtnSaveSelected;
-    QPushButton *mBtnSaveGroup;
-    QPushButton *mBtnResendVars;
-    QPushButton *mBtnRemoveVars;
+class TableWidgetItemFocusDelegate : public QStyledItemDelegate
+{
+public:
+    TableWidgetItemFocusDelegate(QObject *parent = nullptr)
+        : QStyledItemDelegate(parent) {}
+    virtual void initStyleOption(QStyleOptionViewItem *option, const QModelIndex &index) const;
 };
 
 #endif

@@ -18,12 +18,12 @@
 #define STATEWIDGET_H
 
 #include "dockedwidget.h"
+class TableWidget;
 
 #include <QtCore/QString>
 #include <QtWidgets/QWidget>
 QT_BEGIN_NAMESPACE
 class QPushButton;
-class QTableWidget;
 class QTableWidgetItem;
 QT_END_NAMESPACE
 
@@ -47,7 +47,7 @@ private:
     static const QString sDefaultStateName;
     static const QString sStateExtension;
 
-    QTableWidget *mTbl;
+    TableWidget *mTbl;
     int mStateNum;
 
     QPushButton *mBtnExport;

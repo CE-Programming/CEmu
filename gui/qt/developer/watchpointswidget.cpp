@@ -17,6 +17,7 @@
 #include "watchpointswidget.h"
 
 #include "../corewrapper.h"
+#include "../tablewidget.h"
 #include "../util.h"
 
 #include <kddockwidgets/DockWidget.h>
@@ -42,7 +43,7 @@ WatchpointsWidget::WatchpointsWidget(CoreWindow *coreWindow, const QList<Watchpo
       mWpNum{0},
       mDefaultMode{Watchpoint::Mode::R | Watchpoint::Mode::W}
 {
-    mTbl = new QTableWidget(0, 7);
+    mTbl = new TableWidget(0, 7);
     mTbl->setHorizontalHeaderLabels({tr("E"), tr("R"), tr("W"), tr("X"), tr("Address"), tr("Size"), tr("Name")});
     mTbl->horizontalHeader()->setStretchLastSection(true);
     mTbl->verticalHeader()->setDefaultSectionSize(QFontMetrics(Util::monospaceFont()).maxWidth());
@@ -56,16 +57,13 @@ WatchpointsWidget::WatchpointsWidget(CoreWindow *coreWindow, const QList<Watchpo
     mTbl->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     mTbl->setSelectionMode(QAbstractItemView::ExtendedSelection);
     mTbl->setSelectionBehavior(QAbstractItemView::SelectRows);
-    mTbl->setDragDropMode(QAbstractItemView::InternalMove);
-    mTbl->setDragDropOverwriteMode(false);
-    mTbl->setDragEnabled(true);
-    mTbl->setAcceptDrops(false);
 
-    mBtnRemoveSelected = new QPushButton(tr("Remove selected"));
+    mBtnRemoveSelected = new QPushButton(QIcon(QStringLiteral(":/assets/icons/cross.svg")), tr("Remove selected"));
+    mBtnRemoveSelected->setEnabled(false);
 
     mNormalBackground = QTableWidgetItem().background();
 
-    QPushButton *btnAddWatchpoint = new QPushButton(tr("Add watchpoint"));
+    QPushButton *btnAddWatchpoint = new QPushButton(QIcon(QStringLiteral(":/assets/icons/plus.svg")), tr("Add watchpoint"));
     QComboBox *cmbDefaultMode = new QComboBox;
     cmbDefaultMode->addItems({ tr("Default: R"), tr("Default: W"), tr("Default: RW"), tr("Default: X") });
     cmbDefaultMode->setCurrentIndex(2);
@@ -113,8 +111,13 @@ WatchpointsWidget::WatchpointsWidget(CoreWindow *coreWindow, const QList<Watchpo
     });
 
     connect(mBtnRemoveSelected, &QPushButton::clicked, this, &WatchpointsWidget::removeSelected);
+    connect(mTbl, &TableWidget::deletePressed, this, &WatchpointsWidget::removeSelected);
     connect(mTbl, &QTableWidget::itemChanged, this, &WatchpointsWidget::itemChanged);
     connect(mTbl, &QTableWidget::itemPressed, this, &WatchpointsWidget::itemPressed);
+    connect(mTbl, &QTableWidget::itemSelectionChanged, [this]
+    {
+        mBtnRemoveSelected->setEnabled(mTbl->selectedItems().count() >= 1);
+    });
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
@@ -123,11 +126,6 @@ void WatchpointsWidget::addWatchpoint(const Watchpoint &watchpoint, bool edit)
 {
     QString addrStr = Util::int2hex(watchpoint.addr, Util::addrByteWidth);
     QString sizeStr = QString::number(watchpoint.size);
-
-    if (mTbl->rowCount() == 0)
-    {
-        mBtnRemoveSelected->setEnabled(true);
-    }
 
     QTableWidgetItem *e = new QTableWidgetItem;
     QTableWidgetItem *r = new QTableWidgetItem;
@@ -225,11 +223,6 @@ void WatchpointsWidget::removeSelected()
                               mTbl->item(i, Column::Size)->text());
             mTbl->removeRow(i);
         }
-    }
-
-    if (mTbl->rowCount() == 0)
-    {
-        mBtnRemoveSelected->setEnabled(false);
     }
 }
 

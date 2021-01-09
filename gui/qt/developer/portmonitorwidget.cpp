@@ -17,6 +17,7 @@
 #include "portmonitorwidget.h"
 
 #include "../corewrapper.h"
+#include "../tablewidget.h"
 #include "../util.h"
 
 #include <kddockwidgets/DockWidget.h>
@@ -37,7 +38,7 @@ PortMonitorWidget::PortMonitorWidget(CoreWindow *coreWindow, const QList<PortMon
                    QIcon(QStringLiteral(":/assets/icons/cable_release.svg")),
                    coreWindow}
 {
-    mTbl = new QTableWidget(0, 5);
+    mTbl = new TableWidget(0, 5);
     mTbl->setHorizontalHeaderLabels({tr("E"), tr("R"), tr("W"), tr("Port"), tr("Data")});
     mTbl->horizontalHeader()->setStretchLastSection(true);
     mTbl->verticalHeader()->setDefaultSectionSize(QFontMetrics(Util::monospaceFont()).maxWidth());
@@ -50,16 +51,13 @@ PortMonitorWidget::PortMonitorWidget(CoreWindow *coreWindow, const QList<PortMon
     mTbl->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     mTbl->setSelectionMode(QAbstractItemView::ExtendedSelection);
     mTbl->setSelectionBehavior(QAbstractItemView::SelectRows);
-    mTbl->setDragDropMode(QAbstractItemView::InternalMove);
-    mTbl->setDragDropOverwriteMode(false);
-    mTbl->setDragEnabled(true);
-    mTbl->setAcceptDrops(false);
 
-    mBtnRemoveSelected = new QPushButton(tr("Remove selected"));
+    mBtnRemoveSelected = new QPushButton(QIcon(QStringLiteral(":/assets/icons/cross.svg")), tr("Remove selected"));
+    mBtnRemoveSelected->setEnabled(false);
 
     mNormalBackground = QTableWidgetItem().background();
 
-    QPushButton *btnAddPortMonitor = new QPushButton(tr("Add port monitor"));
+    QPushButton *btnAddPortMonitor = new QPushButton(QIcon(QStringLiteral(":/assets/icons/plus.svg")), tr("Add port monitor"));
 
     QHBoxLayout *hboxbtns = new QHBoxLayout;
     hboxbtns->addWidget(btnAddPortMonitor);
@@ -83,8 +81,13 @@ PortMonitorWidget::PortMonitorWidget(CoreWindow *coreWindow, const QList<PortMon
     });
 
     connect(mBtnRemoveSelected, &QPushButton::clicked, this, &PortMonitorWidget::removeSelected);
+    connect(mTbl, &TableWidget::deletePressed, this, &PortMonitorWidget::removeSelected);
     connect(mTbl, &QTableWidget::itemChanged, this, &PortMonitorWidget::itemChanged);
     connect(mTbl, &QTableWidget::itemPressed, this, &PortMonitorWidget::itemPressed);
+    connect(mTbl, &QTableWidget::itemSelectionChanged, [this]
+    {
+        mBtnRemoveSelected->setEnabled(mTbl->selectedItems().count() >= 1);
+    });
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
@@ -95,11 +98,6 @@ PortMonitorWidget::PortMonitorWidget(CoreWindow *coreWindow, const QList<PortMon
 void PortMonitorWidget::addPortMonitor(const PortMonitor &portmonitor, bool edit)
 {
     QString portStr = Util::int2hex(portmonitor.port, Util::portByteWidth);
-
-    if (mTbl->rowCount() == 0)
-    {
-        mBtnRemoveSelected->setEnabled(true);
-    }
 
     QTableWidgetItem *e = new QTableWidgetItem;
     QTableWidgetItem *r = new QTableWidgetItem;
@@ -179,11 +177,6 @@ void PortMonitorWidget::removeSelected()
             clrCorePortMonitor(mTbl->item(i, Column::Port)->text());
             mTbl->removeRow(i);
         }
-    }
-
-    if (mTbl->rowCount() == 0)
-    {
-        mBtnRemoveSelected->setEnabled(false);
     }
 }
 

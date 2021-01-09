@@ -16,6 +16,7 @@
 
 #include "statewidget.h"
 #include "settings.h"
+#include "tablewidget.h"
 #include "util.h"
 
 #include <kddockwidgets/DockWidget.h>
@@ -40,7 +41,7 @@ StateWidget::StateWidget(CoreWindow *coreWindow)
                    coreWindow},
       mStateNum{1}
 {
-    mTbl = new QTableWidget(0, 1);
+    mTbl = new TableWidget(0, 1);
     mTbl->setHorizontalHeaderLabels({ tr("State name") });
     mTbl->horizontalHeader()->setStretchLastSection(true);
     mTbl->verticalHeader()->setVisible(false);
@@ -84,10 +85,11 @@ StateWidget::StateWidget(CoreWindow *coreWindow)
         }
     }
 
-    connect(mBtnRemove, &QPushButton::clicked, this, &StateWidget::removeSelected);
+    connect(btnCreateState, &QPushButton::clicked, this, &StateWidget::createState);
     connect(mBtnImport, &QPushButton::clicked, this, &StateWidget::importState);
     connect(mBtnExport, &QPushButton::clicked, this, &StateWidget::exportState);
-    connect(btnCreateState, &QPushButton::clicked, this, &StateWidget::createState);
+    connect(mBtnRemove, &QPushButton::clicked, this, &StateWidget::removeSelected);
+    connect(mTbl, &TableWidget::deletePressed, this, &StateWidget::removeSelected);
     connect(mTbl, &QTableWidget::itemSelectionChanged, [this]
     {
         int count = mTbl->selectedItems().count();

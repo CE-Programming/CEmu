@@ -15,6 +15,7 @@
  */
 
 #include "variablewidget.h"
+#include "tablewidget.h"
 
 #include <kddockwidgets/DockWidget.h>
 
@@ -30,14 +31,14 @@ VariableWidget::VariableWidget(CoreWindow *coreWindow, const QStringList &recent
                    QIcon(QStringLiteral(":/assets/icons/opened_folder.svg")),
                    coreWindow}
 {
-    mCalcVars = new QTableWidget(0, 3);
+    mCalcVars = new TableWidget(0, 3);
     mCalcVars->setHorizontalHeaderLabels({tr("Name"), tr("Type"), tr("Preview")});
     mCalcVars->horizontalHeader()->setStretchLastSection(true);
     mCalcVars->verticalHeader()->setVisible(false);
     mCalcVars->setSelectionMode(QAbstractItemView::ExtendedSelection);
     mCalcVars->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-    mSentVars = new QTableWidget(0, 1);
+    mSentVars = new TableWidget(0, 1);
     mSentVars->setHorizontalHeaderLabels({tr("Recently Sent")});
     mSentVars->horizontalHeader()->setStretchLastSection(true);
     mSentVars->verticalHeader()->setVisible(false);
@@ -93,6 +94,7 @@ VariableWidget::VariableWidget(CoreWindow *coreWindow, const QStringList &recent
     }
 
     connect(mBtnRemoveVars, &QPushButton::clicked, this, &VariableWidget::removeRecentSelected);
+    connect(mSentVars, &TableWidget::deletePressed, this, &VariableWidget::removeRecentSelected);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }

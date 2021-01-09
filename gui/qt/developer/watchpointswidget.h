@@ -18,12 +18,12 @@
 #define WATCHPOINTSWIDGET_H
 
 #include "../dockedwidget.h"
+class TableWidget;
 
 #include <QtCore/QString>
 #include <QtGui/QBrush>
 QT_BEGIN_NAMESPACE
 class QPushButton;
-class QTableWidget;
 class QTableWidgetItem;
 QT_END_NAMESPACE
 
@@ -78,7 +78,7 @@ private:
     int mWpNum;
     int mDefaultMode;
 
-    QTableWidget *mTbl;
+    TableWidget *mTbl;
 
     QPushButton *mBtnRemoveSelected;
 

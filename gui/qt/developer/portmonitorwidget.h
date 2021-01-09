@@ -18,10 +18,10 @@
 #define PORTMONITORWIDGET_H
 
 #include "../dockedwidget.h"
+class TableWidget;
 
 QT_BEGIN_NAMESPACE
 class QPushButton;
-class QTableWidget;
 class QTableWidgetItem;
 QT_END_NAMESPACE
 
@@ -72,7 +72,7 @@ private:
     void clrCorePortMonitor(const QString &portStr);
     void setCorePortMonitor(const QString &portStr, int mode);
 
-    QTableWidget *mTbl;
+    TableWidget *mTbl;
 
     QPushButton *mBtnRemoveSelected;
 
