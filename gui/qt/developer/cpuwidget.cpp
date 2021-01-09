@@ -19,6 +19,8 @@
 #include "widgets/highlighteditwidget.h"
 #include "../util.h"
 
+#include <cemucore.h>
+
 #include <kddockwidgets/DockWidget.h>
 
 #include <QtCore/QEvent>
@@ -72,7 +74,7 @@ CpuWidget::CpuWidget(DockedWidgetList &list)
     mChk5 = new QCheckBox(QStringLiteral("5"));
     mChkH = new QCheckBox(QStringLiteral("h"));
     mChk3 = new QCheckBox(QStringLiteral("3"));
-    mChkPV = new QCheckBox(QStringLiteral("p/v"));
+    mChkP = new QCheckBox(QStringLiteral("p/v"));
     mChkN = new QCheckBox(QStringLiteral("n"));
     mChkC = new QCheckBox(QStringLiteral("c"));
 
@@ -159,7 +161,7 @@ CpuWidget::CpuWidget(DockedWidgetList &list)
     hboxFlags->addStretch(1);
     hboxFlags->addWidget(mChk3);
     hboxFlags->addStretch(1);
-    hboxFlags->addWidget(mChkPV);
+    hboxFlags->addWidget(mChkP);
     hboxFlags->addStretch(1);
     hboxFlags->addWidget(mChkN);
     hboxFlags->addStretch(1);
@@ -305,14 +307,6 @@ CpuWidget::CpuWidget(DockedWidgetList &list)
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
-void CpuWidget::loadFromCore(const cemucore *)
-{
-}
-
-void CpuWidget::storeToCore(cemucore *) const
-{
-}
-
 bool CpuRegisterFilter::eventFilter(QObject *obj, QEvent *event)
 {
     if (event->type() == QEvent::MouseMove)
@@ -426,4 +420,65 @@ bool CpuRegisterFilter::eventFilter(QObject *obj, QEvent *event)
     }
 
     return QObject::eventFilter(obj, event);
+}
+
+void CpuWidget::loadFromCore(cemucore *core)
+{
+    uint8_t regF = cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_F);
+
+    mChkS->setChecked(regF & (1 << 7));
+    mChkZ->setChecked(regF & (1 << 6));
+    mChk5->setChecked(regF & (1 << 5));
+    mChkH->setChecked(regF & (1 << 4));
+    mChk3->setChecked(regF & (1 << 3));
+    mChkP->setChecked(regF & (1 << 2));
+    mChkN->setChecked(regF & (1 << 1));
+    mChkC->setChecked(regF & (1 << 0));
+
+    mEdtI->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_I), 4);
+    mEdtR->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_R), 2);
+    mEdtAF->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_AF), 4);
+    mEdtBC->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_UBC), 6);
+    mEdtDE->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_UDE), 6);
+    mEdtHL->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_UHL), 6);
+    mEdtIX->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_UIX), 6);
+    mEdtIY->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_UIY), 6);
+    mEdtPC->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_PC), 6);
+    mEdtSPS->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_SPS), 4);
+    mEdtSPL->setInt(cemucore_get(core, CEMUCORE_PROP_REG, CEMUCORE_REG_SPL), 6);
+    mEdtAFX->setInt(cemucore_get(core, CEMUCORE_PROP_REG_SHADOW, CEMUCORE_REG_AF), 6);
+    mEdtBCX->setInt(cemucore_get(core, CEMUCORE_PROP_REG_SHADOW, CEMUCORE_REG_UBC), 6);
+    mEdtDEX->setInt(cemucore_get(core, CEMUCORE_PROP_REG_SHADOW, CEMUCORE_REG_UDE), 6);
+    mEdtHLX->setInt(cemucore_get(core, CEMUCORE_PROP_REG_SHADOW, CEMUCORE_REG_UHL), 6);
+}
+
+void CpuWidget::storeToCore(cemucore *core) const
+{
+    uint8_t regF = 0;
+
+    regF |= mChkS->isChecked() ? 1 << 7 : 0;
+    regF |= mChkZ->isChecked() ? 1 << 6 : 0;
+    regF |= mChk5->isChecked() ? 1 << 5 : 0;
+    regF |= mChkH->isChecked() ? 1 << 4 : 0;
+    regF |= mChk3->isChecked() ? 1 << 3 : 0;
+    regF |= mChkP->isChecked() ? 1 << 2 : 0;
+    regF |= mChkN->isChecked() ? 1 << 1 : 0;
+    regF |= mChkC->isChecked() ? 1 << 0 : 0;
+
+    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_F, regF);
+    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_I, mEdtI->getInt());
+    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_R, mEdtR->getInt());
+    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_AF, mEdtR->getInt());
+    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_UBC, mEdtR->getInt());
+    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_UDE, mEdtR->getInt());
+    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_UHL, mEdtR->getInt());
+    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_UIX, mEdtR->getInt());
+    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_UIY, mEdtR->getInt());
+    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_PC, mEdtR->getInt());
+    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_SPS, mEdtR->getInt());
+    cemucore_set(core, CEMUCORE_PROP_REG, CEMUCORE_REG_SPL, mEdtR->getInt());
+    cemucore_set(core, CEMUCORE_PROP_REG_SHADOW, CEMUCORE_REG_AF, mEdtAFX->getInt());
+    cemucore_set(core, CEMUCORE_PROP_REG_SHADOW, CEMUCORE_REG_UBC, mEdtBCX->getInt());
+    cemucore_set(core, CEMUCORE_PROP_REG_SHADOW, CEMUCORE_REG_UDE, mEdtDEX->getInt());
+    cemucore_set(core, CEMUCORE_PROP_REG_SHADOW, CEMUCORE_REG_UHL, mEdtHLX->getInt());
 }

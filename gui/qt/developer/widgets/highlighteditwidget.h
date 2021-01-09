@@ -33,6 +33,8 @@ public:
 
 public slots:
     void setText(const QString &text);
+    void setInt(uint32_t value, uint8_t length);
+    uint32_t getInt();
     void clearHighlight();
 
 private:

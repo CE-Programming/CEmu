@@ -92,10 +92,6 @@ private:
 
     ti_device_t mCalcType;
     cemucore_t *mCore;
-
-    static const QString sErrorStr;
-    static const QString sWarningStr;
-    static const QString sInformationStr;
 };
 
 #endif

@@ -47,7 +47,7 @@ class CpuWidget : public DockedWidget
 public:
     explicit CpuWidget(DockedWidgetList &list);
 
-    void loadFromCore(const cemucore *) override;
+    void loadFromCore(cemucore *) override;
     void storeToCore(cemucore *) const override;
 
 private:
@@ -58,7 +58,7 @@ private:
     QCheckBox *mChk5;
     QCheckBox *mChkH;
     QCheckBox *mChk3;
-    QCheckBox *mChkPV;
+    QCheckBox *mChkP;
     QCheckBox *mChkN;
     QCheckBox *mChkC;
 

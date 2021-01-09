@@ -124,7 +124,7 @@ protected:
 
 public:
     KDDockWidgets::DockWidgetBase *dock() const;
-    virtual void loadFromCore(const cemucore *) {}
+    virtual void loadFromCore(cemucore *) {}
     virtual void storeToCore(cemucore *) const {}
     virtual QJsonValue serialize() const { return QJsonValue::Undefined; }
     virtual bool unserialize(const QJsonValue &config) { return config.isUndefined(); }

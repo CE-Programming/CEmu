@@ -51,6 +51,18 @@ void HighlightEditWidget::setText(const QString &newText)
     }
 }
 
+void HighlightEditWidget::setInt(uint32_t value, uint8_t length)
+{
+    setText(Util::int2hex(value, length));
+}
+
+
+uint32_t HighlightEditWidget::getInt()
+{
+    return Util::hex2int(text());
+}
+
+
 void HighlightEditWidget::clearHighlight()
 {
     setPalette(mPaletteNoHighlight);
