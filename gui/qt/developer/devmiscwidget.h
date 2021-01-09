@@ -31,7 +31,7 @@ class DevMiscWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit DevMiscWidget(DockedWidgetList &list);
+    explicit DevMiscWidget(CoreWindow *coreWindow);
 
 protected:
     virtual void saveState();

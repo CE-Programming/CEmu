@@ -17,6 +17,7 @@
 #ifndef MEMWIDGET_H
 #define MEMWIDGET_H
 
+class DockedWidget;
 class HexWidget;
 
 namespace KDDockWidgets
@@ -31,7 +32,8 @@ class MemWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit MemWidget(QWidget *parent = nullptr);
+    explicit MemWidget(DockedWidget *parent);
+    DockedWidget *parent() const;
 
 private:
     void showSeachDialog();

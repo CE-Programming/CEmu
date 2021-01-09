@@ -130,7 +130,7 @@ SOURCES += \
     developer/flashramwidget.cpp \
     developer/memorywidget.cpp \
     developer/osstackswidget.cpp \
-    developer/osvarwidget.cpp \
+    developer/osvarswidget.cpp \
     developer/performancewidget.cpp \
     developer/portmonitorwidget.cpp \
     developer/visualizerwidget.cpp \

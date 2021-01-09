@@ -17,12 +17,13 @@
 #include "disasmwidget.h"
 
 #include "../../corewrapper.h"
+#include "../disassemblywidget.h"
 
 #include <QtGui/QWheelEvent>
 #include <QtGui/QPainter>
 #include <QtCore/QDebug>
 
-DisasmWidget::DisasmWidget(QWidget *parent)
+DisasmWidget::DisasmWidget(DisassemblyWidget *parent)
     : QWidget{parent}
 {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -35,6 +36,11 @@ DisasmWidget::DisasmWidget(QWidget *parent)
     m_labels[0x30] = QStringLiteral("Rst30");
     m_labels[0x38] = QStringLiteral("Rst38");
     m_baseAddr = next(m_baseAddr);
+}
+
+DisassemblyWidget *DisasmWidget::parent() const
+{
+    return static_cast<DisassemblyWidget *>(QWidget::parent());
 }
 
 QSize DisasmWidget::sizeHint() const
@@ -98,7 +104,7 @@ void DisasmWidget::paintEvent(QPaintEvent *)
                 case Inst: {
                     uint32_t data = 0, size = nextAddr.addr - addr.addr;
                     for (uint32_t i = 0; i != size; i++)
-                        data = data << 8 | cemucore::mem_peek_byte(addr.addr + i);
+                        data = data << 8 | parent()->core().get(cemucore::CEMUCORE_PROP_MEM, addr.addr + i);
                     /*painter.drawText(lineRect, Qt::TextSingleLine, QStringLiteral("%1 %2")
                                      .arg(addr.addr, 6, 16, QChar('0'))
                                      .arg(data, size << 1, 16, QChar('0'))

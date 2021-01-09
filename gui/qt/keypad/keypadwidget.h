@@ -17,12 +17,14 @@ class QEvent;
 class QMouseEvent;
 QT_END_NAMESPACE
 
-class KeypadWidget : public QWidget {
+class KeypadWidget : public QWidget
+{
     Q_OBJECT
 
 public:
     explicit KeypadWidget(CalculatorWidget *parent);
     virtual ~KeypadWidget();
+    CalculatorWidget *parent() const;
 
     enum Color {
         Black,
@@ -71,8 +73,6 @@ public slots:
 private:
     void updateKey(Key *key, bool);
     void addKey(Key *key);
-
-    CalculatorWidget *calcWidget();
 
     Color color = KeypadWidget::Black;
     bool mHoldingEnabled = true;

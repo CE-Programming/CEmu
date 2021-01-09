@@ -28,7 +28,7 @@ class OsVarsWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit OsVarsWidget(DockedWidgetList &list);
+    explicit OsVarsWidget(CoreWindow *coreWindow);
 
 private:
     QTableWidget *mTblFp;

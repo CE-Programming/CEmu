@@ -16,14 +16,19 @@
 
 #include "dockedwidget.h"
 
+#include "corewindow.h"
+
 #include <kddockwidgets/DockWidgetBase.h>
 
 #include <QtCore/QString>
 #include <QtCore/QtGlobal>
 
-DockedWidget::DockedWidget(KDDockWidgets::DockWidgetBase *dock, const QIcon &icon, DockedWidgetList &list)
+DockedWidget::DockedWidget(KDDockWidgets::DockWidgetBase *dock,
+                           const QIcon &icon,
+                           CoreWindow *coreWindow)
     : QWidget{dock},
-      DockedWidgetList{&list}
+      DockedWidgetList{&coreWindow->dockedWidgets()},
+      mCoreWindow{coreWindow}
 {
     QString title = dock->title();
     int hash = title.lastIndexOf('#');
@@ -36,7 +41,17 @@ DockedWidget::DockedWidget(KDDockWidgets::DockWidgetBase *dock, const QIcon &ico
     dock->setWidget(this);
 }
 
-KDDockWidgets::DockWidgetBase *DockedWidget::dock() const
+KDDockWidgets::DockWidgetBase *DockedWidget::dock()
 {
     return static_cast<KDDockWidgets::DockWidgetBase *>(parent());
+}
+
+CoreWindow *DockedWidget::coreWindow()
+{
+    return mCoreWindow;
+}
+
+CoreWrapper &DockedWidget::core()
+{
+    return mCoreWindow->core();
 }

@@ -36,10 +36,10 @@
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QSpinBox>
 
-CpuWidget::CpuWidget(DockedWidgetList &list)
+CpuWidget::CpuWidget(CoreWindow *coreWindow)
     : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("CPU")},
                    QIcon(QStringLiteral(":/assets/icons/electronics.svg")),
-                   list}
+                   coreWindow}
 {
     mRegEventFilter = new CpuRegisterFilter(this);
 

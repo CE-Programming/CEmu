@@ -21,7 +21,8 @@ const QRect KeypadWidget::sBaseRect{{}, QSize{162, 238}};
 KeypadWidget::KeypadWidget(CalculatorWidget *parent)
     : QWidget{parent},
       cclrBackground{Qt::gray},
-      mKeys{} {
+      mKeys{}
+{
     setAttribute(Qt::WA_AcceptTouchEvents);
     cclrBackground.setAlpha(100);
     keypadPath.setFillRule(Qt::WindingFill);
@@ -31,7 +32,14 @@ KeypadWidget::KeypadWidget(CalculatorWidget *parent)
     keypadPath = keypadPath.simplified();
 }
 
-void KeypadWidget::addKey(Key *key) {
+
+CalculatorWidget *KeypadWidget::parent() const
+{
+    return static_cast<CalculatorWidget *>(QWidget::parent());
+}
+
+void KeypadWidget::addKey(Key *key)
+{
     const KeyCode code = key->keycode();
     unsigned char row = code.row();
     unsigned char col = code.col();
@@ -39,11 +47,13 @@ void KeypadWidget::addKey(Key *key) {
     mKeys[row][col] = key;
 }
 
-KeypadWidget::Color KeypadWidget::getCurrColor() {
+KeypadWidget::Color KeypadWidget::getCurrColor()
+{
     return color;
 }
 
-void KeypadWidget::setType(bool is83, KeypadWidget::Color color_scheme) {
+void KeypadWidget::setType(bool is83, KeypadWidget::Color color_scheme)
+{
     color = color_scheme;
 
     cNum   = QColor::fromRgb(0xeeeeee);
@@ -54,7 +64,8 @@ void KeypadWidget::setType(bool is83, KeypadWidget::Color color_scheme) {
     this->setAttribute(Qt::WA_TranslucentBackground, false);
     this->setAutoFillBackground(false);
 
-    switch(color_scheme) {
+    switch(color_scheme)
+    {
         default:
         case KeypadWidget::Black:
             cCenter = QColor::fromRgb(0x191919);
@@ -169,21 +180,26 @@ void KeypadWidget::setType(bool is83, KeypadWidget::Color color_scheme) {
     QFont font;
     font.setStyleHint(QFont::SansSerif, QFont::PreferOutline);
 #ifndef Q_OS_WIN
-    if (fontId == -2) {
+    if (fontId == -2)
+    {
         // Font not loaded yet, load it now!
         fontId = QFontDatabase::addApplicationFont(QStringLiteral(":/assets/fonts/LiberationSansNarrow-Bold.ttf"));
     }
     
-    if (fontId != -1) {
+    if (fontId != -1)
+    {
         // Successfully loaded, use the internal font!
         QString family = QFontDatabase::applicationFontFamilies(fontId).at(0);
         font.setFamily(family);
-    } else {
+    }
+    else
+    {
         // Fallback
         //fprintf(stderr, "Failed to load internal font, using fallback... (%d)\n", fontId);
 #endif
         font.setFamily(QStringLiteral("Helvetica Neue Bold"));
-        if (!font.exactMatch()) {
+        if (!font.exactMatch())
+        {
             font.setFamily(QStringLiteral("Open Sans Bold"));
         }
 #ifndef Q_OS_WIN
@@ -210,9 +226,12 @@ void KeypadWidget::setType(bool is83, KeypadWidget::Color color_scheme) {
     bool isWin = false;
 #endif
 
-    if (isWin) {
+    if (isWin)
+    {
         font.setWeight(QFont::Black);
-    } else {
+    }
+    else
+    {
         font.setStretch(QFont::SemiCondensed);
     }
 
@@ -308,13 +327,19 @@ void KeypadWidget::setType(bool is83, KeypadWidget::Color color_scheme) {
     repaint();
 }
 
-void KeypadWidget::setHolding(bool enabled) {
+void KeypadWidget::setHolding(bool enabled)
+{
     mHoldingEnabled = enabled;
-    if (!enabled) {
-        for (uint8_t row = 0; row != sRows; ++row) {
-            for (uint8_t col = 0; col != sCols; ++col) {
-                if (Key *key = mKeys[row][col]) {
-                    if (key->isHeld()) {
+    if (!enabled)
+    {
+        for (uint8_t row = 0; row != sRows; ++row)
+        {
+            for (uint8_t col = 0; col != sCols; ++col)
+            {
+                if (Key *key = mKeys[row][col])
+                {
+                    if (key->isHeld())
+                    {
                         bool wasSelected = key->isSelected();
                         key->toggleHeld();
                         updateKey(key, wasSelected);
@@ -325,15 +350,19 @@ void KeypadWidget::setHolding(bool enabled) {
     }
 }
 
-KeypadWidget::~KeypadWidget() {
-    for (uint8_t row = 0; row != sRows; ++row) {
-        for (uint8_t col = 0; col != sCols; ++col) {
+KeypadWidget::~KeypadWidget()
+{
+    for (uint8_t row = 0; row != sRows; ++row)
+    {
+        for (uint8_t col = 0; col != sCols; ++col)
+        {
             delete mKeys[row][col];
         }
     }
 }
 
-void KeypadWidget::resizeEvent(QResizeEvent *event) {
+void KeypadWidget::resizeEvent(QResizeEvent *event)
+{
     QSize size{sBaseRect.size().scaled(event->size(), Qt::KeepAspectRatio)},
         origin{(event->size() - size) / 2};
     mTransform.setMatrix(static_cast<qreal>(size.width()) / sBaseRect.width(), 0, 0, 0,
@@ -343,19 +372,25 @@ void KeypadWidget::resizeEvent(QResizeEvent *event) {
     emit resized(size);
 }
 
-void KeypadWidget::paintEvent(QPaintEvent *event) {
+void KeypadWidget::paintEvent(QPaintEvent *event)
+{
     QRegion region{mInverseTransform.map(event->region())};
     QPainter painter{this};
     painter.setRenderHint(QPainter::Antialiasing);
-    if (color == KeypadWidget::CrystalClear) {
+    if (color == KeypadWidget::CrystalClear)
+    {
         painter.fillRect(this->rect(), cclrBackground);
     }
     painter.setTransform(mTransform);
     painter.fillPath(keypadPath, mBackground);
-    for (uint8_t row = 0; row != sRows; ++row) {
-        for (uint8_t col = 0; col != sCols; ++col) {
-            if (const Key *key = mKeys[row][col]) {
-                if (region.intersects(key->textGeometry() | key->keyGeometry())) {
+    for (uint8_t row = 0; row != sRows; ++row)
+    {
+        for (uint8_t col = 0; col != sCols; ++col)
+        {
+            if (const Key *key = mKeys[row][col])
+            {
+                if (region.intersects(key->textGeometry() | key->keyGeometry()))
+                {
                     key->paint(painter);
                 }
             }
@@ -363,39 +398,51 @@ void KeypadWidget::paintEvent(QPaintEvent *event) {
     }
 }
 
-void KeypadWidget::changeKeyState(KeyCode code, bool press) {
-    if (Key *key = mKeys[code.row()][code.col()]) {
+void KeypadWidget::changeKeyState(KeyCode code, bool press)
+{
+    if (Key *key = mKeys[code.row()][code.col()])
+    {
         bool wasSelected = key->isSelected();
         key->setPressed(press);
         updateKey(key, wasSelected);
     }
 }
 
-void KeypadWidget::updateKey(Key *key, bool wasSelected) {
+void KeypadWidget::updateKey(Key *key, bool wasSelected)
+{
     bool selected = key->isSelected();
-    if (selected != wasSelected) {
+    if (selected != wasSelected)
+    {
         update(mTransform.mapRect(key->keyGeometry()));
-        calcWidget()->coreWindow()->core()
-            .set(cemucore::CEMUCORE_PROP_KEY, key->keycode().code(), selected);
-        if (selected) {
+        parent()->core().set(cemucore::CEMUCORE_PROP_KEY, key->keycode().code(), selected);
+        if (selected)
+        {
             QString out = QStringLiteral("[") + key->getLabel() + QStringLiteral("]");
             emit keyPressed(out.simplified().replace(" ",""));
         }
     }
 }
 
-void KeypadWidget::mouseUpdate(const QPointF &pos) {
+void KeypadWidget::mouseUpdate(const QPointF &pos)
+{
     const QPainterPath area{pos * mInverseTransform};
-    for (uint8_t row = 0; row != sRows; ++row) {
-        for (uint8_t col = 0; col != sCols; ++col) {
-            if (Key *key = mKeys[row][col]) {
+    for (uint8_t row = 0; row != sRows; ++row)
+    {
+        for (uint8_t col = 0; col != sCols; ++col)
+        {
+            if (Key *key = mKeys[row][col])
+            {
                 bool wasSelected = key->isSelected();
-                if (key->isUnder(area)) {
-                    if (!mClicked.contains(key->keycode())) {
+                if (key->isUnder(area))
+                {
+                    if (!mClicked.contains(key->keycode()))
+                    {
                         mClicked.insert(key->keycode());
                         key->press();
                     }
-                } else if (mClicked.remove(key->keycode())) {
+                }
+                else if (mClicked.remove(key->keycode()))
+                {
                     key->release();
                 }
                 updateKey(key, wasSelected);
@@ -404,12 +451,16 @@ void KeypadWidget::mouseUpdate(const QPointF &pos) {
     }
 }
 
-void KeypadWidget::mouseEnd(bool toggleHeld) {
-    for (KeyCode code : mClicked) {
-        if (Key *key = mKeys[code.row()][code.col()]) {
+void KeypadWidget::mouseEnd(bool toggleHeld)
+{
+    for (KeyCode code : mClicked)
+    {
+        if (Key *key = mKeys[code.row()][code.col()])
+        {
             bool wasSelected = key->isSelected();
             key->release();
-            if (key->isHeld() || toggleHeld) {
+            if (key->isHeld() || toggleHeld)
+            {
                 key->toggleHeld();
             }
             updateKey(key, wasSelected);
@@ -418,12 +469,15 @@ void KeypadWidget::mouseEnd(bool toggleHeld) {
     mClicked.clear();
 }
 
-void KeypadWidget::mouseEvent(QMouseEvent *event) {
-    if (event->source() != Qt::MouseEventNotSynthesized) {
+void KeypadWidget::mouseEvent(QMouseEvent *event)
+{
+    if (event->source() != Qt::MouseEventNotSynthesized)
+    {
         event->accept();
         return;
     }
-    switch (event->type()) {
+    switch (event->type())
+    {
         case QEvent::MouseButtonPress:
         case QEvent::MouseMove:
             mouseUpdate(event->localPos());
@@ -436,13 +490,19 @@ void KeypadWidget::mouseEvent(QMouseEvent *event) {
     }
 }
 
-void KeypadWidget::touchUpdate(const QList<QTouchEvent::TouchPoint> &points) {
-    for (uint8_t row = 0; row != sRows; ++row) {
-        for (uint8_t col = 0; col != sCols; ++col) {
-            if (Key *key = mKeys[row][col]) {
+void KeypadWidget::touchUpdate(const QList<QTouchEvent::TouchPoint> &points)
+{
+    for (uint8_t row = 0; row != sRows; ++row)
+    {
+        for (uint8_t col = 0; col != sCols; ++col)
+        {
+            if (Key *key = mKeys[row][col])
+            {
                 bool wasSelected = key->isSelected();
-                for (const QTouchEvent::TouchPoint &point : points) {
-                    if (point.state() & Qt::TouchPointStationary) {
+                for (const QTouchEvent::TouchPoint &point : points)
+                {
+                    if (point.state() & Qt::TouchPointStationary)
+                    {
                         continue;
                     }
                     QRectF ellipse;
@@ -451,25 +511,31 @@ void KeypadWidget::touchUpdate(const QList<QTouchEvent::TouchPoint> &points) {
 #endif
                     ellipse.moveCenter(point.pos());
                     ellipse = mInverseTransform.mapRect(ellipse);
-                    if (ellipse.isEmpty()) {
+                    if (ellipse.isEmpty())
+                    {
                         ellipse += {4, 4, 4, 4};
                     }
                     QPainterPath area;
                     area.addEllipse(ellipse);
 #if QT_VERSION >= QT_VERSION_CHECK(5, 9, 0)
-                    if (point.rotation() != 0.0) {
+                    if (point.rotation() != 0.0)
+                    {
                         area = area * QTransform::fromTranslate(ellipse.center().x(),
                                                                 ellipse.center().y()).
                             rotate(point.rotation()).
                             translate(-ellipse.center().x(), -ellipse.center().y());
                     }
 #endif
-                    if ((point.state() & (Qt::TouchPointMoved | Qt::TouchPointPressed)) && key->isUnder(area)) {
-                        if (!mTouched.contains(key->keycode())) {
+                    if ((point.state() & (Qt::TouchPointMoved | Qt::TouchPointPressed)) && key->isUnder(area))
+                    {
+                        if (!mTouched.contains(key->keycode()))
+                        {
                             mTouched.insert(key->keycode());
                             key->press();
                         }
-                    } else if (mTouched.remove(key->keycode())) {
+                    }
+                    else if (mTouched.remove(key->keycode()))
+                    {
                         key->release();
                     }
                 }
@@ -479,9 +545,12 @@ void KeypadWidget::touchUpdate(const QList<QTouchEvent::TouchPoint> &points) {
     }
 }
 
-void KeypadWidget::touchEnd() {
-    for (KeyCode code : mTouched) {
-        if (Key *key = mKeys[code.row()][code.col()]) {
+void KeypadWidget::touchEnd()
+{
+    for (KeyCode code : mTouched)
+    {
+        if (Key *key = mKeys[code.row()][code.col()])
+        {
             bool wasSelected = key->isSelected();
             key->release();
             updateKey(key, wasSelected);
@@ -490,11 +559,15 @@ void KeypadWidget::touchEnd() {
     mTouched.clear();
 
     // release any other keys that may be stuck??
-    for (uint8_t row = 0; row != sRows; ++row) {
-        for (uint8_t col = 0; col != sCols; ++col) {
-            if (Key *key = mKeys[row][col]) {
+    for (uint8_t row = 0; row != sRows; ++row)
+    {
+        for (uint8_t col = 0; col != sCols; ++col)
+        {
+            if (Key *key = mKeys[row][col])
+            {
                 bool selected = key->isSelected();
-                if (selected) {
+                if (selected)
+                {
                     key->release();
                     updateKey(key, selected);
                 }
@@ -503,13 +576,18 @@ void KeypadWidget::touchEnd() {
     }
 }
 
-void KeypadWidget::touchEvent(QTouchEvent *event) {
-    switch (event->type()) {
+void KeypadWidget::touchEvent(QTouchEvent *event)
+{
+    switch (event->type())
+    {
         case QEvent::TouchBegin:
         case QEvent::TouchUpdate:
-            if (event->device()->capabilities().testFlag(QTouchDevice::Position)) {
+            if (event->device()->capabilities().testFlag(QTouchDevice::Position))
+            {
                 touchUpdate(event->touchPoints());
-            } else {
+            }
+            else
+            {
                 event->ignore();
             }
             break;
@@ -522,8 +600,10 @@ void KeypadWidget::touchEvent(QTouchEvent *event) {
     }
 }
 
-bool KeypadWidget::event(QEvent *event) {
-    switch (event->type()) {
+bool KeypadWidget::event(QEvent *event)
+{
+    switch (event->type())
+    {
         case QEvent::MouseButtonPress:
         case QEvent::MouseMove:
         case QEvent::MouseButtonRelease:
@@ -539,9 +619,4 @@ bool KeypadWidget::event(QEvent *event) {
             return QWidget::event(event);
     }
     return true;
-}
-
-CalculatorWidget *KeypadWidget::calcWidget()
-{
-    return static_cast<CalculatorWidget *>(parent());
 }

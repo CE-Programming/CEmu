@@ -25,7 +25,7 @@ class FlashRamWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit FlashRamWidget(DockedWidgetList &list);
+    explicit FlashRamWidget(CoreWindow *coreWindow);
 
 private:
     MemWidget *mFlash;

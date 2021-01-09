@@ -30,7 +30,7 @@ class VariableWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit VariableWidget(DockedWidgetList &list, const QStringList &recentVars);
+    explicit VariableWidget(CoreWindow *coreWindow, const QStringList &recentVars);
 
 public slots:
     void addRecentVar(const QString &path);

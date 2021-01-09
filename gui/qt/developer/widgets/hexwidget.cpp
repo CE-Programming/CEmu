@@ -17,7 +17,9 @@
 #include "hexwidget.h"
 
 #include "../../corewrapper.h"
+#include "../../dockedwidget.h"
 #include "../../util.h"
+#include "memwidget.h"
 
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QScrollBar>
@@ -25,7 +27,7 @@
 #include <QtGui/QPaintEvent>
 #include <QtGui/QClipboard>
 
-HexWidget::HexWidget(QWidget *parent)
+HexWidget::HexWidget(MemWidget *parent)
     : QAbstractScrollArea{parent},
       m_data{Q_NULLPTR}
 {
@@ -40,6 +42,11 @@ HexWidget::HexWidget(QWidget *parent)
 
     resetSelection();
     adjust();
+}
+
+MemWidget *HexWidget::parent() const
+{
+    return static_cast<MemWidget *>(QWidget::parent());
 }
 
 void HexWidget::setData(const QByteArray &ba)
@@ -88,7 +95,7 @@ void HexWidget::scroll(int value)
         {
             if (addr + i >= 0)
             {
-                data.append(static_cast<char>(cemucore::mem_peek_byte(addr + i)));
+                data.append(parent()->parent()->core().get(cemucore::CEMUCORE_PROP_MEM, addr + i));
             }
         }
         if (data.size())
@@ -106,7 +113,7 @@ void HexWidget::scroll(int value)
         QByteArray data;
         for (int i = 0; i < m_bytesPerLine && (addr + i) < 0x1000000; i++)
         {
-            data.append(cemucore::mem_peek_byte(addr + i));
+            data.append(parent()->parent()->core().get(cemucore::CEMUCORE_PROP_MEM, addr + i));
         }
         if (data.size())
         {
@@ -429,27 +436,27 @@ void HexWidget::paintEvent(QPaintEvent *event)
             addr = lineAddr + col;
 
             painter.setPen(cText);
-            uint8_t data = static_cast<uint8_t>(m_data[addr]);
-            uint8_t flags = cemucore::debug.addr[addr + m_base];
+            uint8_t data = m_data[addr];
+            uint8_t flags = parent()->parent()->core().get(cemucore::CEMUCORE_PROP_DBG_FLAGS, addr + m_base);
             bool selected = addr >= m_selectStart && addr <= m_selectEnd;
             bool modified = m_modified[addr];
 
             QFont font = painter.font();
             const QFont fontorig = painter.font();
 
-            if (flags & DBG_MASK_READ)
+            if (flags & cemucore::CEMUCORE_DBG_WATCH_READ)
             {
                 font.setWeight(QFont::DemiBold);
                 painter.setFont(font);
                 painter.setPen(Qt::darkGreen);
             }
-            if (flags & DBG_MASK_WRITE)
+            if (flags & cemucore::CEMUCORE_DBG_WATCH_WRITE)
             {
                 font.setWeight(QFont::DemiBold);
                 painter.setFont(font);
                 painter.setPen(Qt::darkYellow);
             }
-            if (flags & DBG_MASK_EXEC)
+            if (flags & cemucore::CEMUCORE_DBG_WATCH_EXEC)
             {
                 font.setWeight(QFont::DemiBold);
                 painter.setFont(font);
@@ -470,7 +477,8 @@ void HexWidget::paintEvent(QPaintEvent *event)
             }
 
             QString hex = Util::int2hex(data, 2);
-            if ((flags & DBG_MASK_READ) && (flags & DBG_MASK_WRITE))
+            if ((flags & cemucore::CEMUCORE_DBG_WATCH_READ) &&
+                (flags & cemucore::CEMUCORE_DBG_WATCH_WRITE))
             {
                 painter.setPen(Qt::darkGreen);
                 painter.drawText(xData, y, hex.at(0));

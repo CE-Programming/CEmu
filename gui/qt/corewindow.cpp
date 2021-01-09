@@ -139,6 +139,11 @@ CoreWindow::~CoreWindow()
     }
 }
 
+DockedWidgetList &CoreWindow::dockedWidgets()
+{
+    return mDockedWidgets;
+}
+
 CoreWrapper &CoreWindow::core()
 {
     return mCore;
@@ -148,11 +153,11 @@ void CoreWindow::createDockWidgets()
 {
     Q_ASSERT(mDockedWidgets.empty());
 
-    mCalcWidget = new CalculatorWidget{mDockedWidgets, this};
-    auto *capture = new CaptureWidget{mDockedWidgets};
-    auto *variable = new VariableWidget{mDockedWidgets, QStringList{"test", "test2"}};
-    auto *keyHistory = new KeyHistoryWidget{mDockedWidgets};
-    auto *state = new StateWidget{mDockedWidgets};
+    mCalcWidget = new CalculatorWidget{this};
+    auto *capture = new CaptureWidget{this};
+    auto *variable = new VariableWidget{this, QStringList{"test", "test2"}};
+    auto *keyHistory = new KeyHistoryWidget{this};
+    auto *state = new StateWidget{this};
 
     mCalcOverlay = new CalculatorOverlay(mCalcWidget);
     mCalcOverlay->setVisible(false);
@@ -193,19 +198,19 @@ void CoreWindow::createDeveloperWidgets()
         {PortMonitor::Mode::F, 40 }
     };
 
-    auto *console = new ConsoleWidget{mDockedWidgets};
-    auto *autotester = new AutotesterWidget{mDockedWidgets};
-    auto *clocks = new ClocksWidget{mDockedWidgets};
-    auto *control = new ControlWidget{mDockedWidgets};
-    auto *cpu = new CpuWidget{mDockedWidgets};
-    auto *devMisc = new DevMiscWidget{mDockedWidgets};
-    auto *disassembly = new DisassemblyWidget{mDockedWidgets};
-    auto *flashRam = new FlashRamWidget{mDockedWidgets};
-    auto *osStacks = new OsStacksWidget{mDockedWidgets};
-    auto *osVars = new OsVarsWidget{mDockedWidgets};
-    auto *portMonitor = new PortMonitorWidget{mDockedWidgets, portmonitorList};
-    auto *watchpoints = new WatchpointsWidget{mDockedWidgets, watchpointList};
-    auto *performance = new PerformanceWidget{mDockedWidgets};
+    auto *console = new ConsoleWidget{this};
+    auto *autotester = new AutotesterWidget{this};
+    auto *clocks = new ClocksWidget{this};
+    auto *control = new ControlWidget{this};
+    auto *cpu = new CpuWidget{this};
+    auto *devMisc = new DevMiscWidget{this};
+    auto *disassembly = new DisassemblyWidget{this};
+    auto *flashRam = new FlashRamWidget{this};
+    auto *osStacks = new OsStacksWidget{this};
+    auto *osVars = new OsVarsWidget{this};
+    auto *portMonitor = new PortMonitorWidget{this, portmonitorList};
+    auto *watchpoints = new WatchpointsWidget{this, watchpointList};
+    auto *performance = new PerformanceWidget{this};
 
     mDevMenu->addAction(console->dock()->toggleAction());
     mDevMenu->addAction(control->dock()->toggleAction());
@@ -227,7 +232,7 @@ void CoreWindow::createDeveloperWidgets()
     memoryAction->setIcon(QIcon(QStringLiteral(":/assets/icons/add_grid.svg")));
     connect(memoryAction, &QAction::triggered, [this]
     {
-        auto *memory = new MemoryWidget{mDockedWidgets};
+        auto *memory = new MemoryWidget{this};
         memory->dock()->show();
     });
 
@@ -235,7 +240,7 @@ void CoreWindow::createDeveloperWidgets()
     visualizerAction->setIcon(QIcon(QStringLiteral(":/assets/icons/add_image.svg")));
     connect(visualizerAction, &QAction::triggered, [this]
     {
-        auto *visualizer = new VisualizerWidget{mDockedWidgets};
+        auto *visualizer = new VisualizerWidget{this};
         visualizer->dock()->show();
     });
 }
@@ -403,11 +408,11 @@ bool CoreWindow::restoreLayout()
         {
             if (name.startsWith(QLatin1String("Visualizer #")))
             {
-                dockedWidget = new VisualizerWidget{mDockedWidgets, restoredDockWidget};
+                dockedWidget = new VisualizerWidget{this, restoredDockWidget};
             }
             else if (name.startsWith(QLatin1String("Memory #")))
             {
-                dockedWidget = new MemoryWidget{mDockedWidgets, restoredDockWidget};
+                dockedWidget = new MemoryWidget{this, restoredDockWidget};
             }
             else
             {
@@ -423,7 +428,14 @@ bool CoreWindow::restoreLayout()
 
 void CoreWindow::softCmd()
 {
-    qDebug() << __PRETTY_FUNCTION__;
+    for (auto &dockedWidget : mDockedWidgets)
+    {
+        dockedWidget.loadFromCore(mCore);
+    }
+    for (auto &dockedWidget : mDockedWidgets)
+    {
+        dockedWidget.storeToCore(mCore);
+    }
     mCore.wake();
 }
 

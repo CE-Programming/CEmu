@@ -25,10 +25,10 @@
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QComboBox>
 
-ControlWidget::ControlWidget(DockedWidgetList &list)
+ControlWidget::ControlWidget(CoreWindow *coreWindow)
     : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Control")},
                    QIcon(QStringLiteral(":/assets/icons/services.svg")),
-                   list}
+                   coreWindow}
 {
     int maxMonoWidth = QFontMetrics(Util::monospaceFont()).maxWidth();
 

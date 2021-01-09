@@ -28,7 +28,7 @@ class OsStacksWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit OsStacksWidget(DockedWidgetList &list);
+    explicit OsStacksWidget(CoreWindow *coreWindow);
 
 private:
     QTableWidget *mTblFp;

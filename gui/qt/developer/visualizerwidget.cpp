@@ -23,10 +23,10 @@
 
 #define SETBITS(in, out, var) ((var) = static_cast<bool>(in) ? ((var) | (out)) : ((var) & ~(out)))
 
-VisualizerWidget::VisualizerWidget(DockedWidgetList &list, KDDockWidgets::DockWidgetBase *dock)
+VisualizerWidget::VisualizerWidget(CoreWindow *coreWindow, KDDockWidgets::DockWidgetBase *dock)
     : DockedWidget{dock ? dock : new KDDockWidgets::DockWidget{QStringLiteral("Visualizer #") + Util::randomString(6)},
                    QIcon(QStringLiteral(":/assets/icons/add_image.svg")),
-                   list}
+                   coreWindow}
 {
     mGroup = new QGroupBox(tr("Settings"));
 
@@ -317,10 +317,10 @@ void VisualizerWidget::resetView()
 {
     mScale = 100.0;
 
-    mLcdConfig.mWidth = LCD_WIDTH;
-    mLcdConfig.mHeight = LCD_HEIGHT;
-    mLcdConfig.mBaseAddr = cemucore::lcd.upbase;
-    mLcdConfig.mCtlReg = cemucore::lcd.control;
+    mLcdConfig.mWidth = 320;
+    mLcdConfig.mHeight = 240;
+    mLcdConfig.mBaseAddr = core().get(cemucore::CEMUCORE_PROP_PORT, 0x4010);
+    mLcdConfig.mCtlReg = core().get(cemucore::CEMUCORE_PROP_PORT, 0x4018);
     mLcdConfig.mGrid = false;
     viewToString();
 }
@@ -369,7 +369,7 @@ void VisualizerWidget::viewToString()
     mLcd->setRefreshRate(mFps);
     mLcd->setConfig(mLcdConfig);
 
-    emit configChanged(static_cast<KDDockWidgets::DockWidget *>(parent())->uniqueName(), getConfig());
+    emit configChanged(dock()->uniqueName(), getConfig());
 }
 
 void VisualizerWidget::setConfig(const QString &config)

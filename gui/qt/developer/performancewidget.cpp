@@ -29,10 +29,10 @@
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QSpinBox>
 
-PerformanceWidget::PerformanceWidget(DockedWidgetList &list)
+PerformanceWidget::PerformanceWidget(CoreWindow *coreWindow)
     : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Cycle Counter")},
                    QIcon(QStringLiteral(":/assets/icons/statistics.svg")),
-                   list}
+                   coreWindow}
 {
     QGroupBox *grpCycles = new QGroupBox(tr("Cycle Counter"));
     QGroupBox *grpState = new QGroupBox(tr("CPU State"));

@@ -27,10 +27,10 @@
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QSizePolicy>
 
-ClocksWidget::ClocksWidget(DockedWidgetList &list)
+ClocksWidget::ClocksWidget(CoreWindow *coreWindow)
     : DockedWidget{new KDDockWidgets::DockWidget(QStringLiteral("Clocks")),
                    QIcon(QStringLiteral(":/assets/icons/clock.svg")),
-                   list}
+                   coreWindow}
 {
     QGroupBox *grpGpt = new QGroupBox(tr("General Purpose Timers"));
     QGroupBox *grpRtc = new QGroupBox(tr("Real Time Clock"));

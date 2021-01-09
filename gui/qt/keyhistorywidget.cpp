@@ -24,10 +24,10 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QWidget>
 
-KeyHistoryWidget::KeyHistoryWidget(DockedWidgetList &list)
+KeyHistoryWidget::KeyHistoryWidget(CoreWindow *coreWindow)
     : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Key History")},
                    QIcon(QStringLiteral(":/assets/icons/kindle.svg")),
-                   list}
+                   coreWindow}
 {
     QPushButton *btnClear = new QPushButton(QIcon(QStringLiteral(":/assets/icons/empty_trash.svg")), tr("Clear History"), this);
     QLabel *lblSize = new QLabel(tr("Font size") + ':', this);

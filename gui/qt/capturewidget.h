@@ -30,7 +30,7 @@ class CaptureWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit CaptureWidget(DockedWidgetList &list);
+    explicit CaptureWidget(CoreWindow *coreWindow);
 
 public slots:
     void takeScreenshot();

@@ -25,10 +25,10 @@
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QTableWidget>
 
-VariableWidget::VariableWidget(DockedWidgetList &list, const QStringList &recentVars)
+VariableWidget::VariableWidget(CoreWindow *coreWindow, const QStringList &recentVars)
     : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Variable Transfer")},
                    QIcon(QStringLiteral(":/assets/icons/opened_folder.svg")),
-                   list}
+                   coreWindow}
 {
     mCalcVars = new QTableWidget(0, 3);
     mCalcVars->setHorizontalHeaderLabels({tr("Name"), tr("Type"), tr("Preview")});

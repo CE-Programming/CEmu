@@ -43,7 +43,7 @@ class CpuWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit CpuWidget(DockedWidgetList &list);
+    explicit CpuWidget(CoreWindow *coreWindow);
 
     void loadFromCore(const CoreWrapper &) override;
     void storeToCore(CoreWrapper &) const override;

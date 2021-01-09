@@ -49,7 +49,7 @@ class WatchpointsWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit WatchpointsWidget(DockedWidgetList &list, const QList<Watchpoint> &watchpoints);
+    explicit WatchpointsWidget(CoreWindow *coreWindow, const QList<Watchpoint> &watchpoints);
 
 private slots:
     void addWatchpoint(const Watchpoint &watchpoint, bool edit);

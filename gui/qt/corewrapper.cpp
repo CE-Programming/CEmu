@@ -25,6 +25,7 @@ CoreWrapper::CoreWrapper(QObject *parent)
     qRegisterMetaType<cemucore::create_flags_t>();
     qRegisterMetaType<cemucore::prop_t>();
     qRegisterMetaType<cemucore::reg_t>();
+    qRegisterMetaType<cemucore::dbg_flags_t>();
 }
 
 CoreWrapper::~CoreWrapper()

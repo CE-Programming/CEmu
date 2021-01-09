@@ -86,7 +86,7 @@ void QtKeypadBridge::skEvent(QKeyEvent *event, bool press) {
         }
     }
 
-    coreWindow()->core().set(cemucore::CEMUCORE_PROP_GPIO_ENABLE, 11, true);
+    parent()->core().set(cemucore::CEMUCORE_PROP_GPIO_ENABLE, 11, true);
 }
 
 void QtKeypadBridge::kEvent(QString text, int key, bool repeat) {
@@ -129,9 +129,14 @@ Qt::KeyboardModifiers QtKeypadBridge::toModifierValue(QString m) {
     return seq;
 }
 
-CoreWindow *QtKeypadBridge::coreWindow() const
+CoreWindow *QtKeypadBridge::parent() const
 {
-    return static_cast<CoreWindow *>(parent());
+    return static_cast<CoreWindow *>(QObject::parent());
+}
+
+CoreWrapper &QtKeypadBridge::core() const
+{
+    return parent()->core();
 }
 
 bool QtKeypadBridge::keymapExport(const QString &path) {

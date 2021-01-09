@@ -17,9 +17,18 @@
 #ifndef CEMUCORE_MEM_H
 #define CEMUCORE_MEM_H
 
+#include <stdbool.h>
+#include <stdint.h>
+
 typedef struct mem
 {
-    char dummy;
+    uint8_t *flash, *ram;
+#ifndef CEMUCORE_NODEBUG
+    uint8_t *dbg;
+#endif
 } mem_t;
+
+bool mem_init(mem_t *mem);
+void mem_destroy(mem_t *mem);
 
 #endif

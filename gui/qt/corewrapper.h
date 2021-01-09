@@ -32,7 +32,9 @@ namespace cemucore
     Q_ENUM_NS(prop_t)
     using reg_t          = cemucore_reg_t;
     Q_ENUM_NS(reg_t)
-};
+    using dbg_flags_t    = cemucore_dbg_flags_t;
+    Q_FLAG_NS(dbg_flags_t)
+}
 
 class CoreWrapper : public QObject
 {

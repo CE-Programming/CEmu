@@ -54,6 +54,7 @@ static void *thread_start(void *data)
             core->signal_handler(CEMUCORE_SIGNAL_SOFT_CMD, core->signal_handler_data);
             sync_sleep(&core->sync); // wait for response
         }
+        core->cpu.regs.r += 2;
     }
     return NULL;
 }
@@ -66,6 +67,12 @@ cemucore_t *cemucore_create(cemucore_create_flags_t create_flags,
     cemucore_t *core = calloc(1, sizeof(cemucore_t));
     if (!core)
     {
+        return NULL;
+    }
+
+    if (!mem_init(&core->mem))
+    {
+        free(core);
         return NULL;
     }
 
@@ -108,6 +115,7 @@ void cemucore_destroy(cemucore_t *core)
     pthread_join(core->thread, NULL);
 #endif
 
+    mem_destroy(&core->mem);
     free(core);
 }
 
@@ -222,6 +230,43 @@ int32_t cemucore_get(const cemucore_t *const_core, cemucore_prop_t prop, int32_t
         val = cemucore_maybe_atomic_load_explicit(&core->keypad.gpio_enable,
                                                   memory_order_relaxed) >> (addr & 15) & 1;
         sync_leave(&core->sync);
+        break;
+#ifndef CEMUCORE_NODEBUG
+    case CEMUCORE_PROP_DBG_FLAGS:
+        val = core->mem.dbg[addr & 0xFFFFFF];
+        break;
+#endif
+    case CEMUCORE_PROP_MEM:
+        if (addr >= 0 && addr < 0x400000)
+        {
+            val = core->mem.flash[addr];
+        }
+        else if (addr >= 0xD00000 && addr < 0xE00000)
+        {
+            if ((addr &= 0x7FFFF) < 0x65800)
+            {
+                val = core->mem.ram[addr];
+            }
+            else
+            {
+                val = rand();
+            }
+        }
+        break;
+    case CEMUCORE_PROP_FLASH:
+        val = core->mem.flash[addr & 0x3FFFFF];
+        break;
+    case CEMUCORE_PROP_RAM:
+        if ((addr &= 0x7FFFF) < 0x65800)
+        {
+            val = core->mem.ram[addr];
+        }
+        else
+        {
+            val = rand();
+        }
+        break;
+    case CEMUCORE_PROP_PORT:
         break;
     }
     return val;
@@ -338,6 +383,35 @@ void cemucore_set(cemucore_t *core, cemucore_prop_t prop, int32_t addr, int32_t 
                                                       memory_order_release);
         // handle keypad_intrpt_check?
         break;
+#ifndef CEMUCORE_NODEBUG
+    case CEMUCORE_PROP_DBG_FLAGS:
+        core->mem.dbg[addr & 0xFFFFFF] = val;
+        break;
+#endif
+    case CEMUCORE_PROP_MEM:
+        if (addr >= 0 && addr < 0x400000)
+        {
+            core->mem.flash[addr] = val;
+        }
+        else if (addr >= 0xD00000 && addr < 0xE00000)
+        {
+            if ((addr &= 0x7FFFF) < 0x65800)
+            {
+                core->mem.ram[addr] = val;
+            }
+        }
+        break;
+    case CEMUCORE_PROP_FLASH:
+        core->mem.flash[addr & 0x3FFFFF] = val;
+        break;
+    case CEMUCORE_PROP_RAM:
+        if ((addr &= 0x7FFFF) < 0x65800)
+        {
+            core->mem.ram[addr] = val;
+        }
+        break;
+    case CEMUCORE_PROP_PORT:
+        break;
     }
 }
 
@@ -351,15 +425,8 @@ void cemucore_wake(cemucore_t *core)
     sync_wake(&core->sync);
 }
 
-debug_t debug;
-lcd_t lcd;
-
 ti_device_t get_device_type(void) {
     return TI84PCE;
-}
-uint8_t mem_peek_byte(uint32_t addr) {
-    (void)addr;
-    return 0;
 }
 void emu_set_lcd_ptrs(uint32_t **dat, uint32_t **dat_end, int width, int height, uint32_t addr, uint32_t control, bool mask) {
     (void)dat;

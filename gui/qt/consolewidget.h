@@ -32,7 +32,7 @@ class ConsoleWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit ConsoleWidget(DockedWidgetList &list);
+    explicit ConsoleWidget(CoreWindow *coreWindow);
 
 public slots:
     void append(const QString &str, const QColor &colorFg, const QColor &colorBg);

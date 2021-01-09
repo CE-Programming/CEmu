@@ -24,7 +24,7 @@ class PerformanceWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit PerformanceWidget(DockedWidgetList &list);
+    explicit PerformanceWidget(CoreWindow *coreWindow);
 };
 
 #endif

@@ -25,7 +25,7 @@ class ClocksWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit ClocksWidget(DockedWidgetList &list);
+    explicit ClocksWidget(CoreWindow *coreWindow);
 
 private:
     HighlightEditWidget *mEdtTimer1V;

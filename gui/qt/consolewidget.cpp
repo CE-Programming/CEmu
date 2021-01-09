@@ -27,10 +27,10 @@
 #include <QtWidgets/QRadioButton>
 #include <QtWidgets/QSpacerItem>
 
-ConsoleWidget::ConsoleWidget(DockedWidgetList &list)
+ConsoleWidget::ConsoleWidget(CoreWindow *coreWindow)
     : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Console")},
                    QIcon(QStringLiteral(":/assets/icons/command_line.svg")),
-                   list}
+                   coreWindow}
 {
     QPushButton *btnClear = new QPushButton(QIcon(QStringLiteral(":/assets/icons/empty_trash.svg")), tr("Clear"), this);
 

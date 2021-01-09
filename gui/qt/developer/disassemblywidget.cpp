@@ -28,10 +28,10 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QSizePolicy>
 
-DisassemblyWidget::DisassemblyWidget(DockedWidgetList &list)
+DisassemblyWidget::DisassemblyWidget(CoreWindow *coreWindow)
     : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Disassembly")},
                    QIcon(QStringLiteral(":/assets/icons/fine_print.svg")),
-                   list}
+                   coreWindow}
 {
     mDisasm = new DisasmWidget{this};
 

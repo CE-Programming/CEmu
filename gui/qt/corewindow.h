@@ -41,6 +41,7 @@ public:
     explicit CoreWindow(const QString &uniqueName, KDDockWidgets::MainWindowOptions options, QWidget *parent = nullptr);
     ~CoreWindow() override;
 
+    DockedWidgetList &dockedWidgets();
     CoreWrapper &core();
 
     enum ExitCode

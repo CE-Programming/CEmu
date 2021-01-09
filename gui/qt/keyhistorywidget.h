@@ -28,7 +28,7 @@ class KeyHistoryWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit KeyHistoryWidget(DockedWidgetList &list);
+    explicit KeyHistoryWidget(CoreWindow *coreWindow);
     ~KeyHistoryWidget();
 
 public slots:

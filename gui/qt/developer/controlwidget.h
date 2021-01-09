@@ -24,7 +24,7 @@ class ControlWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit ControlWidget(DockedWidgetList &list);
+    explicit ControlWidget(CoreWindow *coreWindow);
 };
 
 #endif

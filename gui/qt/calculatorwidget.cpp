@@ -72,11 +72,10 @@ void CalculatorOverlay::paintEvent(QPaintEvent *)
     p.fillRect(rect(), {64, 64, 64, 128});
 }
 
-CalculatorWidget::CalculatorWidget(DockedWidgetList &list, CoreWindow *coreWindow)
+CalculatorWidget::CalculatorWidget(CoreWindow *coreWindow)
     : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Calculator")},
                    QIcon(QStringLiteral(":/assets/icons/calculator.svg")),
-                   list},
-      mCoreWindow{coreWindow}
+                   coreWindow}
 {
     mScreen = new ScreenWidget{this};
     mKeypad = new KeypadWidget{this};
@@ -121,11 +120,6 @@ void CalculatorWidget::setConfig(cemucore::ti_device_t type, int color)
             break;
     }
     mScreen->setScreen(QStringLiteral(":/assets/test/screen.png"));
-}
-
-CoreWindow *CalculatorWidget::coreWindow() const
-{
-    return mCoreWindow;
 }
 
 void CalculatorWidget::changeKeyState(KeyCode code, bool press)

@@ -29,10 +29,10 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QSizePolicy>
 
-AutotesterWidget::AutotesterWidget(DockedWidgetList &list)
+AutotesterWidget::AutotesterWidget(CoreWindow *coreWindow)
     : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Autotester")},
                    QIcon(QStringLiteral(":/assets/icons/todo_list.svg")),
-                   list}
+                   coreWindow}
 {
     QGroupBox *grpTest = new QGroupBox(tr("Launch Test"));
     QGroupBox *grpCfg = new QGroupBox(tr("Test Configuration"));

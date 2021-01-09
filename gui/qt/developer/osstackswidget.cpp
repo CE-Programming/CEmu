@@ -24,10 +24,10 @@
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QTableWidget>
 
-OsStacksWidget::OsStacksWidget(DockedWidgetList &list)
+OsStacksWidget::OsStacksWidget(CoreWindow *coreWindow)
     : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("OS Stacks")},
                    QIcon(QStringLiteral(":/assets/icons/database.svg")),
-                   list}
+                   coreWindow}
 {
     QGroupBox *grpFp = new QGroupBox(QStringLiteral("FP Stack"));
     QGroupBox *grpOp = new QGroupBox(tr("OP Stack"));

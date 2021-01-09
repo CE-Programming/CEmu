@@ -17,6 +17,8 @@
 #ifndef HEXWIDGET_H
 #define HEXWIDGET_H
 
+class MemWidget;
+
 #include <QtCore/QPoint>
 #include <QtCore/QStack>
 #include <QtWidgets/QWidget>
@@ -27,8 +29,9 @@ class HexWidget : public QAbstractScrollArea
     Q_OBJECT
 
 public:
-    explicit HexWidget(QWidget *parent = nullptr);
-    virtual ~HexWidget() { }
+    explicit HexWidget(MemWidget *parent);
+    MemWidget *parent() const;
+
     void setData(const QByteArray &ba);
     void setBase(int address) { m_base = address; adjust(); }
     void setBytesPerLine(int bytes) { m_bytesPerLine = bytes; adjust(); }

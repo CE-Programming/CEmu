@@ -32,10 +32,10 @@
 #include <QtWidgets/QToolTip>
 #include <QtWidgets/QVBoxLayout>
 
-CaptureWidget::CaptureWidget(DockedWidgetList &list)
+CaptureWidget::CaptureWidget(CoreWindow *coreWindow)
     : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Screen Capture")},
                    QIcon(QStringLiteral(":/assets/icons/picture.svg")),
-                   list}
+                   coreWindow}
 {
     QLabel *lblFrameskip = new QLabel(tr("Frameskip: "));
 

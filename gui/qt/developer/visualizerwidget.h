@@ -24,7 +24,8 @@ class VisualizerWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit VisualizerWidget(DockedWidgetList &list, KDDockWidgets::DockWidgetBase *dock = nullptr);
+    explicit VisualizerWidget(CoreWindow *coreWindow, KDDockWidgets::DockWidgetBase *dock = nullptr);
+
     void setConfig(const QString &config);
     QString getConfig() const;
     void translate();

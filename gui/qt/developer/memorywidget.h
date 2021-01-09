@@ -30,7 +30,7 @@ class MemoryWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit MemoryWidget(DockedWidgetList &list, KDDockWidgets::DockWidgetBase *dock = nullptr);
+    explicit MemoryWidget(CoreWindow *coreWindow, KDDockWidgets::DockWidgetBase *dock = nullptr);
 
 private:
     void closeEvent(QCloseEvent *) override;

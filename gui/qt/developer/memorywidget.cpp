@@ -31,12 +31,12 @@
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QSpinBox>
 
-MemoryWidget::MemoryWidget(DockedWidgetList &list, KDDockWidgets::DockWidgetBase *dock)
+MemoryWidget::MemoryWidget(CoreWindow *coreWindow, KDDockWidgets::DockWidgetBase *dock)
     : DockedWidget{dock ? dock : new KDDockWidgets::DockWidget{QStringLiteral("Memory #") + Util::randomString(6)},
                    QIcon(QStringLiteral(":/assets/icons/add_grid.svg")),
-                   list}
+                   coreWindow}
 {
-    mMem = new MemWidget;
+    mMem = new MemWidget{this};
 
     QVBoxLayout *vLayout = new QVBoxLayout;
     vLayout->addWidget(mMem);

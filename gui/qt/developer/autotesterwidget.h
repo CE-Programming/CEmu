@@ -26,7 +26,7 @@ class AutotesterWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit AutotesterWidget(DockedWidgetList &list);
+    explicit AutotesterWidget(CoreWindow *coreWindow);
 };
 
 #endif

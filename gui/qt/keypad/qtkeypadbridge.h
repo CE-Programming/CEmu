@@ -4,6 +4,7 @@
 #include "keycode.h"
 #include "keymap.h"
 class CoreWindow;
+class CoreWrapper;
 
 #include <QtCore/QObject>
 #include <QtGui/QKeyEvent>
@@ -31,7 +32,8 @@ private:
     QString toModifierString(Qt::KeyboardModifiers m);
     Qt::KeyboardModifiers toModifierValue(QString m);
 
-    CoreWindow *coreWindow() const;
+    CoreWindow *parent() const;
+    CoreWrapper &core() const;
 
     QHash<quint32, KeyCode> pressed;
     const HostKey *const *keymap = nullptr;

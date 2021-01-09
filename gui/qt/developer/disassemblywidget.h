@@ -25,7 +25,7 @@ class DisassemblyWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit DisassemblyWidget(DockedWidgetList &list);
+    explicit DisassemblyWidget(CoreWindow *coreWindow);
 
 private:
     DisasmWidget *mDisasm;

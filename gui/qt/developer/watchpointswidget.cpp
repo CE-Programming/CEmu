@@ -31,10 +31,10 @@
 #include <QtWidgets/QTableWidgetItem>
 #include <QtWidgets/QToolButton>
 
-WatchpointsWidget::WatchpointsWidget(DockedWidgetList &list, const QList<Watchpoint> &watchpoints)
+WatchpointsWidget::WatchpointsWidget(CoreWindow *coreWindow, const QList<Watchpoint> &watchpoints)
     : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Watchpoints")},
                    QIcon(QStringLiteral(":/assets/icons/flash_on.svg")),
-                   list},
+                   coreWindow},
       mWpNum{0},
       mDefaultMode{Watchpoint::Mode::R | Watchpoint::Mode::W}
 {

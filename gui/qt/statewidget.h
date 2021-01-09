@@ -32,7 +32,7 @@ class StateWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit StateWidget(DockedWidgetList &list);
+    explicit StateWidget(CoreWindow *coreWindow);
 
 private slots:
     void createState();

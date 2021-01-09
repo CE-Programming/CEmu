@@ -17,6 +17,7 @@
 #ifndef DOCKEDWIDGET_H
 #define DOCKEDWIDGET_H
 
+class CoreWindow;
 class CoreWrapper;
 
 namespace KDDockWidgets
@@ -25,8 +26,10 @@ class DockWidgetBase;
 }
 
 #include <QtCore/QJsonValue>
-#include <QtGui/QIcon>
 #include <QtWidgets/QWidget>
+QT_BEGIN_NAMESPACE
+class QIcon;
+QT_END_NAMESPACE
 
 #include <iterator>
 #include <limits>
@@ -67,6 +70,11 @@ class DockedWidgetList
 
         operator Iter<const Node, const Value, Dec, Inc>() { return node; }
     };
+
+    DockedWidgetList(const DockedWidgetList &) = delete;
+    DockedWidgetList(DockedWidgetList &&) = delete;
+    DockedWidgetList &operator=(const DockedWidgetList &) = delete;
+    DockedWidgetList &operator=(DockedWidgetList &&) = delete;
 
 protected:
     DockedWidgetList(DockedWidgetList *list) noexcept
@@ -120,14 +128,19 @@ class DockedWidget : public QWidget, protected DockedWidgetList
     friend class DockedWidgetList;
 
 protected:
-    DockedWidget(KDDockWidgets::DockWidgetBase *dock, const QIcon &icon, DockedWidgetList &list);
+    DockedWidget(KDDockWidgets::DockWidgetBase *dock, const QIcon &icon, CoreWindow *coreWindow);
 
 public:
-    KDDockWidgets::DockWidgetBase *dock() const;
+    KDDockWidgets::DockWidgetBase *dock();
+    CoreWindow *coreWindow();
+    CoreWrapper &core();
     virtual void loadFromCore(const CoreWrapper &) {}
     virtual void storeToCore(CoreWrapper &) const {}
     virtual QJsonValue serialize() const { return QJsonValue::Undefined; }
     virtual bool unserialize(const QJsonValue &config) { return config.isUndefined(); }
+
+ private:
+    CoreWindow *mCoreWindow;
 };
 
 #endif

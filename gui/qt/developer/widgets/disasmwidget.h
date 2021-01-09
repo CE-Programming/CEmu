@@ -17,6 +17,8 @@
 #ifndef DISASMWIDGET_H
 #define DISASMWIDGET_H
 
+class DisassemblyWidget;
+
 #include <QtWidgets/QWidget>
 QT_BEGIN_NAMESPACE
 class QPaintEvent;
@@ -28,7 +30,8 @@ class DisasmWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit DisasmWidget(QWidget *parent = nullptr);
+    explicit DisasmWidget(DisassemblyWidget *parent);
+    DisassemblyWidget *parent() const;
 
     QSize sizeHint() const override;
 

@@ -38,6 +38,13 @@ typedef enum cemucore_prop
     CEMUCORE_PROP_REG,
     CEMUCORE_PROP_REG_SHADOW,
     CEMUCORE_PROP_KEY,
+#ifndef CEMUCORE_NODEBUG
+    CEMUCORE_PROP_DBG_FLAGS,
+#endif
+    CEMUCORE_PROP_MEM,
+    CEMUCORE_PROP_FLASH,
+    CEMUCORE_PROP_RAM,
+    CEMUCORE_PROP_PORT,
     CEMUCORE_PROP_GPIO_ENABLE,
 } cemucore_prop_t;
 
@@ -95,6 +102,13 @@ typedef enum cemucore_reg
     CEMUCORE_REG_RPC,
 } cemucore_reg_t;
 
+typedef enum cemucore_dbg_flags
+{
+    CEMUCORE_DBG_WATCH_READ  = 1 << 0,
+    CEMUCORE_DBG_WATCH_WRITE = 1 << 1,
+    CEMUCORE_DBG_WATCH_EXEC  = 1 << 2,
+} cemucore_dbg_flags_t;
+
 typedef struct cemucore cemucore_t;
 
 #ifdef __cplusplus
@@ -119,22 +133,8 @@ typedef enum {
     TI83PCE = 1
 } ti_device_t;
 ti_device_t get_device_type(void);
-uint8_t mem_peek_byte(uint32_t addr);
 void emu_set_lcd_ptrs(uint32_t **dat, uint32_t **dat_end, int width, int height, uint32_t addr, uint32_t control, bool mask);
-#define DBG_MASK_READ  1
-#define DBG_MASK_WRITE 2
-#define DBG_MASK_EXEC  4
-typedef struct {
-    uint8_t addr[0x10000];
-} debug_t;
-extern debug_t debug;
-typedef struct {
-    uint32_t control, upbase;
-} lcd_t;
-extern lcd_t lcd;
 void emu_lcd_drawmem(void *output, void *data, void *data_end, uint32_t control, int size, int spi);
-#define LCD_WIDTH 320
-#define LCD_HEIGHT 240
 #include <stdio.h>
 FILE *fopen_utf8(const char *filename, const char *mode);
 

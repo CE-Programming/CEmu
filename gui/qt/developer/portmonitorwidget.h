@@ -45,7 +45,7 @@ class PortMonitorWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit PortMonitorWidget(DockedWidgetList &list, const QList<PortMonitor> &portmonitors);
+    explicit PortMonitorWidget(CoreWindow *coreWindow, const QList<PortMonitor> &portmonitors);
 
 private slots:
     void addPortMonitor(const PortMonitor &portmonitor, bool edit);

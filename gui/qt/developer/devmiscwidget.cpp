@@ -28,10 +28,10 @@
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QSpinBox>
 
-DevMiscWidget::DevMiscWidget(DockedWidgetList &list)
+DevMiscWidget::DevMiscWidget(CoreWindow *coreWindow)
     : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Miscellaneous")},
                    QIcon(QStringLiteral(":/assets/icons/charge_battery.svg")),
-                   list}
+                   coreWindow}
 {
     QGroupBox *grpLcd = new QGroupBox(QStringLiteral("LCD"));
     QGroupBox *grpLcdCtl = new QGroupBox(tr("Control"));

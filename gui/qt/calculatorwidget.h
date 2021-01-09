@@ -46,12 +46,10 @@ class CalculatorWidget : public DockedWidget
     Q_OBJECT
 
 public:
-    explicit CalculatorWidget(DockedWidgetList &list, CoreWindow *coreWindow);
+    explicit CalculatorWidget(CoreWindow *coreWindow);
     ~CalculatorWidget();
 
     void setConfig(cemucore::ti_device_t type, int color);
-
-    CoreWindow *coreWindow() const;
 
 public slots:
     void changeKeyState(KeyCode keycode, bool press);
@@ -61,7 +59,6 @@ signals:
     void keyPressed(const QString& key);
 
 private:
-    CoreWindow *mCoreWindow;
     ScreenWidget *mScreen;
     KeypadWidget *mKeypad;
 };

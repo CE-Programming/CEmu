@@ -16,6 +16,7 @@
 
 #include "memwidget.h"
 
+#include "../../dockedwidget.h"
 #include "../../util.h"
 #include "hexwidget.h"
 
@@ -34,14 +35,14 @@
 #include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QSpinBox>
 
-MemWidget::MemWidget(QWidget *parent)
+MemWidget::MemWidget(DockedWidget *parent)
     : QWidget{parent},
       mSeachHex{true}
 {
     QLineEdit *editAddr = new QLineEdit;
     editAddr->setFont(Util::monospaceFont());
 
-    mView = new HexWidget;
+    mView = new HexWidget{this};
 
     QLabel *lblNumBytes = new QLabel(tr("Bytes per row") + ':');
     QPushButton *btnGoto = new QPushButton(QIcon(QStringLiteral(":/assets/icons/ok.svg")), tr("Goto"));
@@ -78,6 +79,11 @@ MemWidget::MemWidget(QWidget *parent)
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     connect(btnSearch, &QPushButton::clicked, this, &MemWidget::showSeachDialog);
+}
+
+DockedWidget *MemWidget::parent() const
+{
+    return static_cast<DockedWidget *>(QWidget::parent());
 }
 
 void MemWidget::showSeachDialog()
