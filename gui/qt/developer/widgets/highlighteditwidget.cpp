@@ -52,12 +52,19 @@ void HighlightEditWidget::setString(const QString &str)
     setText(str);
 }
 
-void HighlightEditWidget::setInt(uint32_t value, uint8_t length)
+void HighlightEditWidget::setInt(qulonglong value, int length)
 {
-    setString(Util::int2hex(value, length));
+    if (length == -1)
+    {
+        setString(QString::number(value));
+    }
+    else
+    {
+        setString(Util::int2hex(value, length));
+    }
 }
 
-uint32_t HighlightEditWidget::getInt()
+qulonglong HighlightEditWidget::getInt()
 {
     return Util::hex2int(text());
 }

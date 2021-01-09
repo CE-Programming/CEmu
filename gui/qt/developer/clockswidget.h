@@ -27,6 +27,10 @@ class ClocksWidget : public DockedWidget
 public:
     explicit ClocksWidget(CoreWindow *coreWindow);
 
+    void enableDebugWidgets(bool) override;
+    void loadFromCore(const CoreWrapper &) override;
+    void storeToCore(CoreWrapper &) const override;
+
 private:
     HighlightEditWidget *mEdtTimer1V;
     HighlightEditWidget *mEdtTimer2V;

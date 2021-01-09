@@ -27,6 +27,8 @@ class DisassemblyWidget : public DockedWidget
 public:
     explicit DisassemblyWidget(CoreWindow *coreWindow);
 
+    void enableDebugWidgets(bool) override;
+
 private:
     DisasmWidget *mDisasm;
 };

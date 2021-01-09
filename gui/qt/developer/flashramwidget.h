@@ -27,6 +27,8 @@ class FlashRamWidget : public DockedWidget
 public:
     explicit FlashRamWidget(CoreWindow *coreWindow);
 
+    void enableDebugWidgets(bool) override;
+
 private:
     MemWidget *mFlash;
     MemWidget *mRam;

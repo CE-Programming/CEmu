@@ -54,4 +54,11 @@ OsStacksWidget::OsStacksWidget(CoreWindow *coreWindow)
     setLayout(vLayout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    enableDebugWidgets(false);
+}
+
+void OsStacksWidget::enableDebugWidgets(bool enbaled)
+{
+    setEnabled(enbaled);
 }

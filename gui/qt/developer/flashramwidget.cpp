@@ -49,4 +49,11 @@ FlashRamWidget::FlashRamWidget(CoreWindow *coreWindow)
     setLayout(vLayout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    enableDebugWidgets(false);
+}
+
+void FlashRamWidget::enableDebugWidgets(bool enbaled)
+{
+    setEnabled(enbaled);
 }

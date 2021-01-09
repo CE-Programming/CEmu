@@ -39,8 +39,8 @@ public:
     static bool isHexPort(const QString &str);
     static bool isHexString(const QString &str, int min = 0, int max = INT_MAX);
     static bool isDecString(const QString &str, int min = 0, int max = INT_MAX);
-    static int hex2int(const QString &str);
-    static QString int2hex(uint32_t a, uint8_t l);
+    static qulonglong hex2int(const QString &str);
+    static QString int2hex(qulonglong a, uint8_t l);
     static QString randomString(const int length);
     static QFont monospaceFont();
 };

@@ -47,7 +47,6 @@ class CalculatorWidget : public DockedWidget
 
 public:
     explicit CalculatorWidget(CoreWindow *coreWindow);
-    ~CalculatorWidget();
 
     void setConfig(cemucore::ti_device_t type, int color);
 

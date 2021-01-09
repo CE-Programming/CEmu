@@ -195,7 +195,7 @@ void CoreWindow::createDeveloperWidgets()
         {PortMonitor::Mode::R, 10 },
         {PortMonitor::Mode::W, 20 },
         {PortMonitor::Mode::W | PortMonitor::Mode::R, 30 },
-        {PortMonitor::Mode::F, 40 }
+        {PortMonitor::Mode::R, 40 }
     };
 
     auto *console = new ConsoleWidget{this};
@@ -431,9 +431,11 @@ void CoreWindow::softCmd()
     for (auto &dockedWidget : mDockedWidgets)
     {
         dockedWidget.loadFromCore(mCore);
+        dockedWidget.enableDebugWidgets(true);
     }
     for (auto &dockedWidget : mDockedWidgets)
     {
+        //dockedWidget.enableDebugWidgets(false);
         dockedWidget.storeToCore(mCore);
     }
     mCore.wake();

@@ -33,7 +33,6 @@ public:
         E = (1 << 0),
         R = (1 << 1),
         W = (1 << 2),
-        F = (1 << 3),
     };
 
     int mode;
@@ -47,6 +46,10 @@ class PortMonitorWidget : public DockedWidget
 public:
     explicit PortMonitorWidget(CoreWindow *coreWindow, const QList<PortMonitor> &portmonitors);
 
+    void enableDebugWidgets(bool) override;
+    void loadFromCore(const CoreWrapper &) override;
+    void storeToCore(CoreWrapper &) const override;
+
 private slots:
     void addPortMonitor(const PortMonitor &portmonitor, bool edit);
     void setPortMonitorMode(int row, int mode);
@@ -54,7 +57,6 @@ private slots:
     bool toggleMode(int row, int bit);
     void removeSelected();
     void itemPressed(QTableWidgetItem *item);
-    void itemActivated(QTableWidgetItem *item);
     void itemChanged(QTableWidgetItem *item);
 
 private:
@@ -63,13 +65,12 @@ private:
         Enabled,
         Read,
         Write,
-        Freeze,
         Port,
         Data,
     };
 
-    QString mPrevPort;
-    QString mPrevSize;
+    void clrCorePortMonitor(const QString &portStr);
+    void setCorePortMonitor(const QString &portStr, int mode);
 
     QTableWidget *mTbl;
 
@@ -82,6 +83,8 @@ private:
     static const QString mRdText;
     static const QString mWrText;
     static const QString mRdWrText;
+
+    bool mInDebug;
 };
 
 #endif

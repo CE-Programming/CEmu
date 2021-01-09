@@ -33,8 +33,8 @@ public:
 
 public slots:
     void setString(const QString &str);
-    void setInt(uint32_t value, uint8_t length);
-    uint32_t getInt();
+    void setInt(qulonglong value, int length = 6);
+    qulonglong getInt();
     void clearHighlight();
 
 private:

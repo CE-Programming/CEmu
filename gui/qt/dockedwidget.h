@@ -136,6 +136,7 @@ public:
     CoreWrapper &core();
     virtual void loadFromCore(const CoreWrapper &) {}
     virtual void storeToCore(CoreWrapper &) const {}
+    virtual void enableDebugWidgets(bool) {}
     virtual QJsonValue serialize() const { return QJsonValue::Undefined; }
     virtual bool unserialize(const QJsonValue &config) { return config.isUndefined(); }
 

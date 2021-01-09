@@ -45,6 +45,7 @@ class CpuWidget : public DockedWidget
 public:
     explicit CpuWidget(CoreWindow *coreWindow);
 
+    void enableDebugWidgets(bool) override;
     void loadFromCore(const CoreWrapper &) override;
     void storeToCore(CoreWrapper &) const override;
 

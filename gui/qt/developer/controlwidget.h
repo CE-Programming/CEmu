@@ -19,12 +19,33 @@
 
 #include "../dockedwidget.h"
 
+QT_BEGIN_NAMESPACE
+class QComboBox;
+class QPushButton;
+QT_END_NAMESPACE
+
 class ControlWidget : public DockedWidget
 {
     Q_OBJECT
 
 public:
     explicit ControlWidget(CoreWindow *coreWindow);
+
+    void enableDebugWidgets(bool) override;
+
+signals:
+    void run();
+    void stop();
+
+private:
+    QPushButton *mBtnRun;
+    QPushButton *mBtnStep;
+    QPushButton *mBtnOver;
+    QPushButton *mBtnNext;
+    QPushButton *mBtnOut;
+    QComboBox *mCmbMode;
+
+    bool mInDebug;
 };
 
 #endif

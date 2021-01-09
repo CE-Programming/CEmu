@@ -33,9 +33,9 @@ class DevMiscWidget : public DockedWidget
 public:
     explicit DevMiscWidget(CoreWindow *coreWindow);
 
-protected:
-    virtual void saveState();
-    virtual void loadState();
+    void enableDebugWidgets(bool) override;
+    void loadFromCore(const CoreWrapper &) override;
+    void storeToCore(CoreWrapper &) const override;
 
 private:
     QCheckBox *mChkLcdPwr;

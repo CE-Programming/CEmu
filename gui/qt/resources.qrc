@@ -46,12 +46,12 @@
         <file>assets/icons/right_up2.svg</file>
         <file>assets/icons/right.svg</file>
         <file>assets/icons/stop.svg</file>
-        <file>assets/icons/start.svg</file>
         <file>assets/icons/alphabetical_az.svg</file>
         <file>assets/icons/save.svg</file>
         <file>assets/icons/process.svg</file>
         <file>assets/icons/film.svg</file>
         <file>assets/icons/clipboard_picture.svg</file>
         <file>assets/icons/high_priority.svg</file>
+        <file>assets/icons/run.svg</file>
     </qresource>
 </RCC>

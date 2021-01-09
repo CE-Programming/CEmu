@@ -54,4 +54,11 @@ OsVarsWidget::OsVarsWidget(CoreWindow *coreWindow)
     setLayout(vLayout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    enableDebugWidgets(false);
+}
+
+void OsVarsWidget::enableDebugWidgets(bool enbaled)
+{
+    setEnabled(enbaled);
 }

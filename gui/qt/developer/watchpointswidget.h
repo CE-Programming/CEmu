@@ -58,7 +58,6 @@ private slots:
     bool toggleMode(int row, int bit);
     void removeSelected();
     void itemPressed(QTableWidgetItem *item);
-    void itemActivated(QTableWidgetItem *item);
     void itemChanged(QTableWidgetItem *item);
 
 private:
@@ -73,17 +72,20 @@ private:
         Name,
     };
 
+    void clrCoreWatchpoint(const QString &addrStr, const QString &sizeStr);
+    void setCoreWatchpoint(const QString &addrStr, const QString &sizeStr, int mode);
+
     int mWpNum;
     int mDefaultMode;
-
-    QString mPrevAddr;
-    QString mPrevSize;
 
     QTableWidget *mTbl;
 
     QPushButton *mBtnRemoveSelected;
 
     QBrush mNormalBackground;
+
+    static const uint32_t sMaxSize;
+    static const uint32_t sMaxAddr;
 };
 
 #endif

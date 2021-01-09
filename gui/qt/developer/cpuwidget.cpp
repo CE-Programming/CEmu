@@ -20,8 +20,6 @@
 #include "../util.h"
 #include "widgets/highlighteditwidget.h"
 
-#include <cemucore.h>
-
 #include <kddockwidgets/DockWidget.h>
 
 #include <QtCore/QEvent>
@@ -149,78 +147,81 @@ CpuWidget::CpuWidget(CoreWindow *coreWindow)
     mEdtHLX->installEventFilter(mRegEventFilter);
     mEdtIY->installEventFilter(mRegEventFilter);
 
+    int minwidth = QFontMetrics(Util::monospaceFont()).maxWidth() * 8;
+    mEdtAF->setMinimumWidth(minwidth);
+    mEdtBC->setMinimumWidth(minwidth);
+    mEdtDE->setMinimumWidth(minwidth);
+    mEdtHL->setMinimumWidth(minwidth);
+    mEdtIX->setMinimumWidth(minwidth);
+    mEdtAFX->setMinimumWidth(minwidth);
+    mEdtBCX->setMinimumWidth(minwidth);
+    mEdtDEX->setMinimumWidth(minwidth);
+    mEdtHLX->setMinimumWidth(minwidth);
+    mEdtIY->setMinimumWidth(minwidth);
+    mEdtI->setMinimumWidth(minwidth);
+    mEdtR->setMinimumWidth(minwidth);
+    mSpnIM->setMinimumWidth(minwidth);
+    mEdtMB->setMinimumWidth(minwidth);
+    mEdtSPL->setMinimumWidth(minwidth);
+    mEdtSPS->setMinimumWidth(minwidth);
+    mEdtPC->setMinimumWidth(minwidth);
+
     QHBoxLayout *hboxFlags = new QHBoxLayout;
-    hboxFlags->setSizeConstraint(QLayout::SetMinimumSize);
-    hboxFlags->addStretch(1);
+    hboxFlags->addStretch();
     hboxFlags->addWidget(mChkS);
-    hboxFlags->addStretch(1);
+    hboxFlags->addStretch();
     hboxFlags->addWidget(mChkZ);
-    hboxFlags->addStretch(1);
+    hboxFlags->addStretch();
     hboxFlags->addWidget(mChk5);
-    hboxFlags->addStretch(1);
+    hboxFlags->addStretch();
     hboxFlags->addWidget(mChkH);
-    hboxFlags->addStretch(1);
+    hboxFlags->addStretch();
     hboxFlags->addWidget(mChk3);
-    hboxFlags->addStretch(1);
+    hboxFlags->addStretch();
     hboxFlags->addWidget(mChkP);
-    hboxFlags->addStretch(1);
+    hboxFlags->addStretch();
     hboxFlags->addWidget(mChkN);
-    hboxFlags->addStretch(1);
+    hboxFlags->addStretch();
     hboxFlags->addWidget(mChkC);
-    hboxFlags->addStretch(1);
+    hboxFlags->addStretch();
     grpFlags->setLayout(hboxFlags);
 
     QHBoxLayout *reglayout0 = new QHBoxLayout;
     reglayout0->addWidget(lblAF);
     reglayout0->addWidget(mEdtAF);
+    reglayout0->addWidget(lblAFX);
+    reglayout0->addWidget(mEdtAFX);
 
     QHBoxLayout *reglayout1 = new QHBoxLayout;
     reglayout1->addWidget(lblBC);
     reglayout1->addWidget(mEdtBC);
+    reglayout1->addWidget(lblBCX);
+    reglayout1->addWidget(mEdtBCX);
 
     QHBoxLayout *reglayout2 = new QHBoxLayout;
     reglayout2->addWidget(lblDE);
     reglayout2->addWidget(mEdtDE);
+    reglayout2->addWidget(lblDEX);
+    reglayout2->addWidget(mEdtDEX);
 
     QHBoxLayout *reglayout3 = new QHBoxLayout;
     reglayout3->addWidget(lblHL);
     reglayout3->addWidget(mEdtHL);
+    reglayout3->addWidget(lblHLX);
+    reglayout3->addWidget(mEdtHLX);
 
     QHBoxLayout *reglayout4 = new QHBoxLayout;
     reglayout4->addWidget(lblIX);
     reglayout4->addWidget(mEdtIX);
+    reglayout4->addWidget(lblIY);
+    reglayout4->addWidget(mEdtIY);
 
-    QHBoxLayout *reglayout5 = new QHBoxLayout;
-    reglayout5->addWidget(lblAFX);
-    reglayout5->addWidget(mEdtAFX);
-
-    QHBoxLayout *reglayout6 = new QHBoxLayout;
-    reglayout6->addWidget(lblBCX);
-    reglayout6->addWidget(mEdtBCX);
-
-    QHBoxLayout *reglayout7 = new QHBoxLayout;
-    reglayout7->addWidget(lblDEX);
-    reglayout7->addWidget(mEdtDEX);
-
-    QHBoxLayout *reglayout8 = new QHBoxLayout;
-    reglayout8->addWidget(lblHLX);
-    reglayout8->addWidget(mEdtHLX);
-
-    QHBoxLayout *reglayout9 = new QHBoxLayout;
-    reglayout9->addWidget(lblIY);
-    reglayout9->addWidget(mEdtIY);
-
-    QGridLayout *gridRegs = new QGridLayout;
-    gridRegs->addLayout(reglayout0, 0, 0);
-    gridRegs->addLayout(reglayout1, 1, 0);
-    gridRegs->addLayout(reglayout2, 2, 0);
-    gridRegs->addLayout(reglayout3, 3, 0);
-    gridRegs->addLayout(reglayout4, 4, 0);
-    gridRegs->addLayout(reglayout5, 0, 1);
-    gridRegs->addLayout(reglayout6, 1, 1);
-    gridRegs->addLayout(reglayout7, 2, 1);
-    gridRegs->addLayout(reglayout8, 3, 1);
-    gridRegs->addLayout(reglayout9, 4, 1);
+    QVBoxLayout *reglayout = new QVBoxLayout;
+    reglayout->addLayout(reglayout0);
+    reglayout->addLayout(reglayout1);
+    reglayout->addLayout(reglayout2);
+    reglayout->addLayout(reglayout3);
+    reglayout->addLayout(reglayout4);
 
     QHBoxLayout *reglayoutPc = new QHBoxLayout;
     reglayoutPc->addWidget(lblPC);
@@ -246,8 +247,9 @@ CpuWidget::CpuWidget(CoreWindow *coreWindow)
     grpRegPcSp->setLayout(vboxRegs);
 
     QHBoxLayout *hboxRegs = new QHBoxLayout;
-    hboxRegs->addLayout(gridRegs, Qt::AlignRight);
-    hboxRegs->addWidget(grpRegPcSp, Qt::AlignLeft);
+    hboxRegs->setSizeConstraint(QLayout::SetMinimumSize);
+    hboxRegs->addLayout(reglayout);
+    hboxRegs->addWidget(grpRegPcSp);
     grpReg->setLayout(hboxRegs);
 
     QGridLayout *gridIm = new QGridLayout;
@@ -300,9 +302,9 @@ CpuWidget::CpuWidget(CoreWindow *coreWindow)
     vLayout->addLayout(hLayout);
 
     QHBoxLayout *mainLayout = new QHBoxLayout;
-    mainLayout->addStretch(1);
+    mainLayout->addStretch();
     mainLayout->addLayout(vLayout);
-    mainLayout->addStretch(1);
+    mainLayout->addStretch();
     setLayout(mainLayout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -344,6 +346,8 @@ CpuWidget::CpuWidget(CoreWindow *coreWindow)
         mChkC->setChecked(flags & (1 << 0));
         mChkC->blockSignals(false);
     });
+
+    enableDebugWidgets(false);
 }
 
 void CpuWidget::setFlags()
@@ -477,6 +481,11 @@ bool CpuRegisterFilter::eventFilter(QObject *obj, QEvent *event)
     }
 
     return QObject::eventFilter(obj, event);
+}
+
+void CpuWidget::enableDebugWidgets(bool enabled)
+{
+    setEnabled(enabled);
 }
 
 void CpuWidget::loadFromCore(const CoreWrapper &core)

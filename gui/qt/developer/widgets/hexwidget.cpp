@@ -270,11 +270,7 @@ void HexWidget::adjust()
     m_size = m_data.size();
     m_maxOffset = m_size - 1;
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
-    m_charWidth = fontMetrics().horizontalAdvance(QLatin1Char('D'));
-#else
-    m_charWidth = fontMetrics().width(QLatin1Char('D'));
-#endif
+    m_charWidth = fontMetrics().maxWidth();
     m_charHeight = fontMetrics().height();
     m_cursorHeight = m_charHeight / 7;
     m_margin = m_charHeight / 5;
@@ -437,7 +433,7 @@ void HexWidget::paintEvent(QPaintEvent *event)
 
             painter.setPen(cText);
             uint8_t data = m_data[addr];
-            uint8_t flags = parent()->parent()->core().get(cemucore::CEMUCORE_PROP_DBG_FLAGS, addr + m_base);
+            int flags = parent()->parent()->core().get(cemucore::CEMUCORE_PROP_DBG_FLAGS, addr + m_base);
             bool selected = addr >= m_selectStart && addr <= m_selectEnd;
             bool modified = m_modified[addr];
 

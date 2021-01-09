@@ -15,6 +15,8 @@
  */
 
 #include "clockswidget.h"
+
+#include "../corewrapper.h"
 #include "widgets/highlighteditwidget.h"
 
 #include <kddockwidgets/DockWidget.h>
@@ -98,4 +100,33 @@ ClocksWidget::ClocksWidget(CoreWindow *coreWindow)
     setLayout(hLayout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    enableDebugWidgets(false);
+}
+
+void ClocksWidget::enableDebugWidgets(bool enbaled)
+{
+    setEnabled(enbaled);
+}
+
+void ClocksWidget::loadFromCore(const CoreWrapper &core)
+{
+    qulonglong portValue = core.get(cemucore::CEMUCORE_PROP_PORT, 0x8000);
+
+    mEdtTimer1V->setInt(portValue, -1);
+    mEdtTimer2V->setInt(portValue, -1);
+    mEdtTimer3V->setInt(portValue, -1);
+    mEdtTimer1RV->setInt(portValue, -1);
+    mEdtTimer2RV->setInt(portValue, -1);
+    mEdtTimer3RV->setInt(portValue, -1);
+
+    mEdtSec->setInt(portValue, -1);
+    mEdtMin->setInt(portValue, -1);
+    mEdtHrs->setInt(portValue, -1);
+    mEdtDays->setInt(portValue, -1);
+}
+
+void ClocksWidget::storeToCore(CoreWrapper &core) const
+{
+    core.set(cemucore::CEMUCORE_PROP_PORT, 0x8000, core.get(cemucore::CEMUCORE_PROP_PORT, 0x8000));
 }

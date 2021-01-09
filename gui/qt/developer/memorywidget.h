@@ -32,6 +32,8 @@ class MemoryWidget : public DockedWidget
 public:
     explicit MemoryWidget(CoreWindow *coreWindow, KDDockWidgets::DockWidgetBase *dock = nullptr);
 
+    void enableDebugWidgets(bool) override;
+
 private:
     void closeEvent(QCloseEvent *) override;
 

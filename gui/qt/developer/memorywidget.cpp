@@ -43,6 +43,8 @@ MemoryWidget::MemoryWidget(CoreWindow *coreWindow, KDDockWidgets::DockWidgetBase
     setLayout(vLayout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    enableDebugWidgets(false);
 }
 
 void MemoryWidget::closeEvent(QCloseEvent *)
@@ -51,4 +53,9 @@ void MemoryWidget::closeEvent(QCloseEvent *)
     {
         p->deleteLater();
     }
+}
+
+void MemoryWidget::enableDebugWidgets(bool enbaled)
+{
+    setEnabled(enbaled);
 }

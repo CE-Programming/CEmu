@@ -80,4 +80,19 @@ PerformanceWidget::PerformanceWidget(CoreWindow *coreWindow)
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     connect(btnZeroCycles, &QPushButton::clicked, [edtCycles]{ edtCycles->setText(QStringLiteral("0")); });
+
+    enableDebugWidgets(false);
+}
+
+void PerformanceWidget::enableDebugWidgets(bool enbaled)
+{
+    setEnabled(enbaled);
+}
+
+void PerformanceWidget::loadFromCore(const CoreWrapper &core)
+{
+}
+
+void PerformanceWidget::storeToCore(CoreWrapper &core) const
+{
 }

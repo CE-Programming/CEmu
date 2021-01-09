@@ -30,6 +30,8 @@ class OsVarsWidget : public DockedWidget
 public:
     explicit OsVarsWidget(CoreWindow *coreWindow);
 
+    void enableDebugWidgets(bool) override;
+
 private:
     QTableWidget *mTblFp;
     QTableWidget *mTblOp;

@@ -112,14 +112,19 @@ DevMiscWidget::DevMiscWidget(CoreWindow *coreWindow)
     setLayout(hLayout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    enableDebugWidgets(false);
 }
 
-void DevMiscWidget::saveState()
+void DevMiscWidget::enableDebugWidgets(bool enabled)
 {
-
+    setEnabled(enabled);
 }
 
-void DevMiscWidget::loadState()
+void DevMiscWidget::loadFromCore(const CoreWrapper &core)
 {
+}
 
+void DevMiscWidget::storeToCore(CoreWrapper &core) const
+{
 }

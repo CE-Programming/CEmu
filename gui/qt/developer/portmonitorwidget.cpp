@@ -16,7 +16,7 @@
 
 #include "portmonitorwidget.h"
 
-#include "../dockedwidget.h"
+#include "../corewrapper.h"
 #include "../util.h"
 
 #include <kddockwidgets/DockWidget.h>
@@ -37,8 +37,8 @@ PortMonitorWidget::PortMonitorWidget(CoreWindow *coreWindow, const QList<PortMon
                    QIcon(QStringLiteral(":/assets/icons/cable_release.svg")),
                    coreWindow}
 {
-    mTbl = new QTableWidget(0, 6);
-    mTbl->setHorizontalHeaderLabels({tr("E"), tr("R"), tr("W"), tr("F"), tr("Address"), tr("Data")});
+    mTbl = new QTableWidget(0, 5);
+    mTbl->setHorizontalHeaderLabels({tr("E"), tr("R"), tr("W"), tr("Port"), tr("Data")});
     mTbl->horizontalHeader()->setStretchLastSection(true);
     mTbl->verticalHeader()->setDefaultSectionSize(QFontMetrics(Util::monospaceFont()).maxWidth());
     mTbl->horizontalHeader()->setDefaultSectionSize(QFontMetrics(Util::monospaceFont()).maxWidth() * 10);
@@ -46,7 +46,6 @@ PortMonitorWidget::PortMonitorWidget(CoreWindow *coreWindow, const QList<PortMon
     mTbl->horizontalHeader()->setSectionResizeMode(Column::Enabled, QHeaderView::ResizeToContents);
     mTbl->horizontalHeader()->setSectionResizeMode(Column::Read, QHeaderView::ResizeToContents);
     mTbl->horizontalHeader()->setSectionResizeMode(Column::Write, QHeaderView::ResizeToContents);
-    mTbl->horizontalHeader()->setSectionResizeMode(Column::Freeze, QHeaderView::ResizeToContents);
     mTbl->verticalHeader()->setVisible(false);
     mTbl->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     mTbl->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -85,10 +84,11 @@ PortMonitorWidget::PortMonitorWidget(CoreWindow *coreWindow, const QList<PortMon
 
     connect(mBtnRemoveSelected, &QPushButton::clicked, this, &PortMonitorWidget::removeSelected);
     connect(mTbl, &QTableWidget::itemChanged, this, &PortMonitorWidget::itemChanged);
-    connect(mTbl, &QTableWidget::itemActivated, this, &PortMonitorWidget::itemActivated);
     connect(mTbl, &QTableWidget::itemPressed, this, &PortMonitorWidget::itemPressed);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    enableDebugWidgets(false);
 }
 
 
@@ -104,24 +104,20 @@ void PortMonitorWidget::addPortMonitor(const PortMonitor &portmonitor, bool edit
     QTableWidgetItem *e = new QTableWidgetItem;
     QTableWidgetItem *r = new QTableWidgetItem;
     QTableWidgetItem *w = new QTableWidgetItem;
-    QTableWidgetItem *f = new QTableWidgetItem;
     QTableWidgetItem *port = new QTableWidgetItem(portStr);
     QTableWidgetItem *data = new QTableWidgetItem;
 
     e->setFlags(e->flags() & ~Qt::ItemIsEditable);
     r->setFlags(r->flags() & ~Qt::ItemIsEditable);
     w->setFlags(w->flags() & ~Qt::ItemIsEditable);
-    f->setFlags(f->flags() & ~Qt::ItemIsEditable);
 
     e->setTextAlignment(Qt::AlignCenter);
     r->setTextAlignment(Qt::AlignCenter);
     w->setTextAlignment(Qt::AlignCenter);
-    f->setTextAlignment(Qt::AlignCenter);
 
     e->setFont(Util::monospaceFont());
     r->setFont(Util::monospaceFont());
     w->setFont(Util::monospaceFont());
-    f->setFont(Util::monospaceFont());
     port->setFont(Util::monospaceFont());
     data->setFont(Util::monospaceFont());
 
@@ -130,7 +126,6 @@ void PortMonitorWidget::addPortMonitor(const PortMonitor &portmonitor, bool edit
     mTbl->setItem(0, Column::Enabled, e);
     mTbl->setItem(0, Column::Read, w);
     mTbl->setItem(0, Column::Write, r);
-    mTbl->setItem(0, Column::Freeze, f);
     mTbl->setItem(0, Column::Port, port);
     mTbl->setItem(0, Column::Data, data);
     mTbl->blockSignals(false);
@@ -155,7 +150,6 @@ void PortMonitorWidget::setPortMonitorMode(int row, int mode)
     mTbl->item(row, Column::Enabled)->setText(space);
     mTbl->item(row, Column::Read)->setText(space);
     mTbl->item(row, Column::Write)->setText(space);
-    mTbl->item(row, Column::Freeze)->setText(space);
     mTbl->item(row, Column::Enabled)->setData(Qt::UserRole, mode);
 
     if (mode & PortMonitor::Mode::E)
@@ -170,10 +164,8 @@ void PortMonitorWidget::setPortMonitorMode(int row, int mode)
     {
         mTbl->item(row, Column::Write)->setText(QStringLiteral("w"));
     }
-    if (mode & PortMonitor::Mode::F)
-    {
-        mTbl->item(row, Column::Freeze)->setText(QStringLiteral("f"));
-    }
+
+    setCorePortMonitor(mTbl->item(row, Column::Port)->text(), mode);
 }
 
 void PortMonitorWidget::removeSelected()
@@ -184,6 +176,7 @@ void PortMonitorWidget::removeSelected()
     {
         if (mTbl->item(i, Column::Port)->isSelected())
         {
+            clrCorePortMonitor(mTbl->item(i, Column::Port)->text());
             mTbl->removeRow(i);
         }
     }
@@ -224,9 +217,6 @@ void PortMonitorWidget::itemPressed(QTableWidgetItem *item)
         case Column::Write:
             bit = PortMonitor::Mode::W;
             break;
-        case Column::Freeze:
-            bit = PortMonitor::Mode::F;
-            break;
     }
 
     mTbl->blockSignals(true);
@@ -252,44 +242,132 @@ void PortMonitorWidget::itemPressed(QTableWidgetItem *item)
     mTbl->blockSignals(false);
 }
 
-void PortMonitorWidget::itemActivated(QTableWidgetItem *item)
-{
-    switch (item->column())
-    {
-        default:
-            break;
-        case Column::Port:
-            mPrevPort = item->text();
-            break;
-    }
-}
-
 void PortMonitorWidget::itemChanged(QTableWidgetItem *item)
 {
     const QBrush invalidItemBrush(QColor(Qt::red).lighter());
     int row = item->row();
 
+    QTableWidgetItem *dataItem = mTbl->item(row, Column::Data);
+    QTableWidgetItem *portItem = mTbl->item(row, Column::Port);
+
     switch (item->column())
     {
         default:
             break;
         case Column::Port:
-            if (Util::isHexPort(item->text()))
+            mTbl->blockSignals(true);
+            clrCorePortMonitor(portItem->data(Qt::UserRole).toString());
+            if (Util::isHexPort(portItem->text()))
             {
-                mTbl->blockSignals(true);
-                item->setText(Util::int2hex(Util::hex2int(item->text()), Util::addrByteWidth));
-                mTbl->blockSignals(false);
+                uint32_t port = Util::hex2int(portItem->text());
+
+                portItem->setText(Util::int2hex(Util::hex2int(portItem->text()), Util::addrByteWidth));
                 setPortMonitorMode(row, getPortMonitorMode(row) | PortMonitor::Mode::E);
                 mTbl->item(row, Column::Port)->setBackground(mNormalBackground);
                 mTbl->item(row, Column::Enabled)->setBackground(mNormalBackground);
+                if (mInDebug)
+                {
+                    dataItem->setText(Util::int2hex(core().get(cemucore::CEMUCORE_PROP_PORT, port), 2));
+                    dataItem->setFlags(dataItem->flags() | Qt::ItemIsEnabled);
+                }
             }
             else
             {
                 setPortMonitorMode(row, getPortMonitorMode(row) & ~PortMonitor::Mode::E);
                 mTbl->item(row, Column::Port)->setBackground(invalidItemBrush);
                 mTbl->item(row, Column::Enabled)->setBackground(invalidItemBrush);
-                mTbl->item(row, Column::Data)->setText(QString());
+                dataItem->setText(QString());
+                dataItem->setFlags(dataItem->flags() & ~Qt::ItemIsEnabled);
             }
+            portItem->setData(Qt::UserRole, portItem->text());
+            mTbl->blockSignals(false);
             break;
+        case Column::Data:
+            if (!mInDebug)
+            {
+                break;
+            }
+
+            dataItem->setBackground(Util::isHexString(dataItem->text(), 0, 255) ? mNormalBackground :
+                                                                                  invalidItemBrush);
+            break;
+    }
+}
+
+void PortMonitorWidget::clrCorePortMonitor(const QString &portStr)
+{
+    if (Util::isHexPort(portStr))
+    {
+        core().set(cemucore::CEMUCORE_PROP_DBG_PORT_FLAGS, Util::hex2int(portStr), 0);
+    }
+}
+
+void PortMonitorWidget::setCorePortMonitor(const QString &portStr, int mode)
+{
+    if (!(mode & PortMonitor::Mode::E))
+    {
+        clrCorePortMonitor(portStr);
+        return;
+    }
+
+    if (Util::isHexPort(portStr))
+    {
+        uint32_t port = Util::hex2int(portStr);
+
+        int flags = (mode & PortMonitor::Mode::R ? cemucore::CEMUCORE_DBG_WATCH_READ : 0) |
+                    (mode & PortMonitor::Mode::W ? cemucore::CEMUCORE_DBG_WATCH_WRITE : 0);
+
+        core().set(cemucore::CEMUCORE_PROP_DBG_PORT_FLAGS, port, flags);
+    }
+}
+
+void PortMonitorWidget::enableDebugWidgets(bool enabled)
+{
+    mInDebug = enabled;
+
+    for (int i = 0; i < mTbl->rowCount(); ++i)
+    {
+        QTableWidgetItem *item = mTbl->item(i, Column::Data);
+
+        QString portStr = mTbl->item(i, Column::Port)->text();
+        QString dataStr = item->text();
+
+        if (enabled &&
+            Util::isHexPort(portStr) &&
+            Util::isHexString(dataStr, 0, 255))
+        {
+            item->setFlags(item->flags() | Qt::ItemIsEnabled);
+        }
+        else
+        {
+            item->setText(QString());
+            item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
+        }
+    }
+}
+
+void PortMonitorWidget::loadFromCore(const CoreWrapper &core)
+{
+    for (int i = 0; i < mTbl->rowCount(); ++i)
+    {
+        uint32_t port = Util::hex2int(mTbl->item(i, Column::Port)->text());
+        mTbl->item(i, Column::Data)->setText(Util::int2hex(core.get(cemucore::CEMUCORE_PROP_PORT, port), 2));
+    }
+}
+
+void PortMonitorWidget::storeToCore(CoreWrapper &core) const
+{
+    for (int i = 0; i < mTbl->rowCount(); ++i)
+    {
+        QString portStr = mTbl->item(i, Column::Port)->text();
+        QString dataStr = mTbl->item(i, Column::Data)->text();
+
+        if (Util::isHexPort(portStr) && Util::isHexString(dataStr, 0, 255))
+        {
+            uint32_t port = Util::hex2int(portStr);
+            uint32_t data = Util::hex2int(dataStr);
+
+            core.set(cemucore::CEMUCORE_PROP_PORT, port, data);
+        }
     }
 }

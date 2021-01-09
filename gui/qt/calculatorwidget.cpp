@@ -99,10 +99,6 @@ CalculatorWidget::CalculatorWidget(CoreWindow *coreWindow)
     connect(mKeypad, &KeypadWidget::keyPressed, this, &CalculatorWidget::keyPressed);
 }
 
-CalculatorWidget::~CalculatorWidget()
-{
-}
-
 void CalculatorWidget::setConfig(cemucore::ti_device_t type, int color)
 {
     KeypadWidget::Color keycolor = static_cast<KeypadWidget::Color>(color);

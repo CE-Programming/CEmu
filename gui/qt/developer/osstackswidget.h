@@ -30,6 +30,8 @@ class OsStacksWidget : public DockedWidget
 public:
     explicit OsStacksWidget(CoreWindow *coreWindow);
 
+    void enableDebugWidgets(bool) override;
+
 private:
     QTableWidget *mTblFp;
     QTableWidget *mTblOp;

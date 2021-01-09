@@ -25,6 +25,10 @@ class PerformanceWidget : public DockedWidget
 
 public:
     explicit PerformanceWidget(CoreWindow *coreWindow);
+
+    void enableDebugWidgets(bool) override;
+    void loadFromCore(const CoreWrapper &) override;
+    void storeToCore(CoreWrapper &) const override;
 };
 
 #endif

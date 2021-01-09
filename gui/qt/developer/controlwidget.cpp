@@ -28,40 +28,41 @@
 ControlWidget::ControlWidget(CoreWindow *coreWindow)
     : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Control")},
                    QIcon(QStringLiteral(":/assets/icons/services.svg")),
-                   coreWindow}
+                   coreWindow},
+      mInDebug{false}
 {
     int maxMonoWidth = QFontMetrics(Util::monospaceFont()).maxWidth();
 
-    QPushButton *btnRun = new QPushButton(QIcon(QStringLiteral(":/assets/icons/stop.svg")), tr("Stop"));
-    QPushButton *btnStep = new QPushButton(QIcon(QStringLiteral(":/assets/icons/right.svg")), tr("Step"));
-    QPushButton *btnStepOver = new QPushButton(QIcon(QStringLiteral(":/assets/icons/down_right.svg")), tr("Over"));
-    QPushButton *btnStepNext = new QPushButton(QIcon(QStringLiteral(":/assets/icons/down.svg")), tr("Next"));
-    QPushButton *btnStepOut = new QPushButton(QIcon(QStringLiteral(":/assets/icons/right_up2.svg")), tr("Out"));
-    QComboBox *cmbMode = new QComboBox;
-    cmbMode->addItems({ tr("ASM"), tr("C"), tr("Disable") });
+    mBtnRun = new QPushButton(QIcon(QStringLiteral(":/assets/icons/run.svg")), tr("Stop"));
+    mBtnStep = new QPushButton(QIcon(QStringLiteral(":/assets/icons/right.svg")), tr("Step"));
+    mBtnOver = new QPushButton(QIcon(QStringLiteral(":/assets/icons/down_right.svg")), tr("Over"));
+    mBtnNext = new QPushButton(QIcon(QStringLiteral(":/assets/icons/down.svg")), tr("Next"));
+    mBtnOut = new QPushButton(QIcon(QStringLiteral(":/assets/icons/right_up2.svg")), tr("Out"));
+    mCmbMode = new QComboBox;
+    mCmbMode->addItems({ tr("ASM"), tr("C"), tr("Disable") });
 
-    btnRun->setFont(Util::monospaceFont());
-    btnStep->setFont(Util::monospaceFont());
-    btnStepOver->setFont(Util::monospaceFont());
-    btnStepNext->setFont(Util::monospaceFont());
-    btnStepOut->setFont(Util::monospaceFont());
-    cmbMode->setFont(Util::monospaceFont());
+    mBtnRun->setFont(Util::monospaceFont());
+    mBtnStep->setFont(Util::monospaceFont());
+    mBtnOver->setFont(Util::monospaceFont());
+    mBtnNext->setFont(Util::monospaceFont());
+    mBtnOut->setFont(Util::monospaceFont());
+    mCmbMode->setFont(Util::monospaceFont());
 
-    btnRun->setMinimumWidth(btnRun->iconSize().width() + maxMonoWidth * (btnRun->text().length() + 2));
-    btnStep->setMinimumWidth(btnStep->iconSize().width() + maxMonoWidth * (btnStep->text().length() + 2));
-    btnStepOver->setMinimumWidth(btnStepOver->iconSize().width() + maxMonoWidth * (btnStepOver->text().length() + 2));
-    btnStepNext->setMinimumWidth(btnStepNext->iconSize().width() + maxMonoWidth * (btnStepNext->text().length() + 2));
-    btnStepOut->setMinimumWidth(btnStepOut->iconSize().width() + maxMonoWidth * (btnStepOut->text().length() + 2));
+    mBtnRun->setMinimumWidth(mBtnRun->iconSize().width() + maxMonoWidth * (mBtnRun->text().length() + 2));
+    mBtnStep->setMinimumWidth(mBtnStep->iconSize().width() + maxMonoWidth * (mBtnStep->text().length() + 2));
+    mBtnOver->setMinimumWidth(mBtnOver->iconSize().width() + maxMonoWidth * (mBtnOver->text().length() + 2));
+    mBtnNext->setMinimumWidth(mBtnNext->iconSize().width() + maxMonoWidth * (mBtnNext->text().length() + 2));
+    mBtnOut->setMinimumWidth(mBtnOut->iconSize().width() + maxMonoWidth * (mBtnOut->text().length() + 2));
 
     QHBoxLayout *hLayout = new QHBoxLayout;
     hLayout->setSizeConstraint(QLayout::SetMaximumSize);
     hLayout->addStretch();
-    hLayout->addWidget(btnRun);
-    hLayout->addWidget(btnStep);
-    hLayout->addWidget(btnStepOver);
-    hLayout->addWidget(btnStepNext);
-    hLayout->addWidget(btnStepOut);
-    hLayout->addWidget(cmbMode);
+    hLayout->addWidget(mBtnRun);
+    hLayout->addWidget(mBtnStep);
+    hLayout->addWidget(mBtnOver);
+    hLayout->addWidget(mBtnNext);
+    hLayout->addWidget(mBtnOut);
+    hLayout->addWidget(mCmbMode);
     hLayout->addStretch();
 
     QVBoxLayout *vLayout = new QVBoxLayout;
@@ -72,4 +73,40 @@ ControlWidget::ControlWidget(CoreWindow *coreWindow)
     setLayout(vLayout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    connect(mBtnRun, &QPushButton::toggle, [this]
+    {
+        if (mInDebug)
+        {
+            emit run();
+        }
+        else
+        {
+            emit stop();
+        }
+    });
+
+    enableDebugWidgets(false);
 }
+
+void ControlWidget::enableDebugWidgets(bool enabled)
+{
+    mInDebug = enabled;
+
+    mBtnStep->setEnabled(mInDebug);
+    mBtnOver->setEnabled(mInDebug);
+    mBtnNext->setEnabled(mInDebug);
+    mBtnOut->setEnabled(mInDebug);
+
+    if (mInDebug)
+    {
+        mBtnRun->setText(tr("Run"));
+        mBtnRun->setIcon(QIcon(QStringLiteral(":/assets/icons/run.svg")));
+    }
+    else
+    {
+        mBtnRun->setText(tr("Stop"));
+        mBtnRun->setIcon(QIcon(QStringLiteral(":/assets/icons/stop.svg")));
+    }
+}
+

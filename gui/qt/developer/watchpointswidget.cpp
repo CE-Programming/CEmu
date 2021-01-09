@@ -16,6 +16,7 @@
 
 #include "watchpointswidget.h"
 
+#include "../corewrapper.h"
 #include "../util.h"
 
 #include <kddockwidgets/DockWidget.h>
@@ -30,6 +31,9 @@
 #include <QtWidgets/QTableWidget>
 #include <QtWidgets/QTableWidgetItem>
 #include <QtWidgets/QToolButton>
+
+const uint32_t WatchpointsWidget::sMaxSize = (2 << 24);
+const uint32_t WatchpointsWidget::sMaxAddr = (2 << 24) - 1;
 
 WatchpointsWidget::WatchpointsWidget(CoreWindow *coreWindow, const QList<Watchpoint> &watchpoints)
     : DockedWidget{new KDDockWidgets::DockWidget{QStringLiteral("Watchpoints")},
@@ -110,12 +114,10 @@ WatchpointsWidget::WatchpointsWidget(CoreWindow *coreWindow, const QList<Watchpo
 
     connect(mBtnRemoveSelected, &QPushButton::clicked, this, &WatchpointsWidget::removeSelected);
     connect(mTbl, &QTableWidget::itemChanged, this, &WatchpointsWidget::itemChanged);
-    connect(mTbl, &QTableWidget::itemActivated, this, &WatchpointsWidget::itemActivated);
     connect(mTbl, &QTableWidget::itemPressed, this, &WatchpointsWidget::itemPressed);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
-
 
 void WatchpointsWidget::addWatchpoint(const Watchpoint &watchpoint, bool edit)
 {
@@ -170,6 +172,8 @@ void WatchpointsWidget::addWatchpoint(const Watchpoint &watchpoint, bool edit)
     }
 
     setWatchpointMode(0, watchpoint.mode);
+
+    enableDebugWidgets(false);
 }
 
 int WatchpointsWidget::getWatchpointMode(int row)
@@ -203,6 +207,10 @@ void WatchpointsWidget::setWatchpointMode(int row, int mode)
     {
         mTbl->item(row, Column::Execute)->setText(QStringLiteral("x"));
     }
+
+    setCoreWatchpoint(mTbl->item(row, Column::Address)->text(),
+                      mTbl->item(row, Column::Size)->text(),
+                      mode);
 }
 
 void WatchpointsWidget::removeSelected()
@@ -213,6 +221,8 @@ void WatchpointsWidget::removeSelected()
     {
         if (mTbl->item(i, Column::Address)->isSelected())
         {
+            clrCoreWatchpoint(mTbl->item(i, Column::Address)->text(),
+                              mTbl->item(i, Column::Size)->text());
             mTbl->removeRow(i);
         }
     }
@@ -281,21 +291,6 @@ void WatchpointsWidget::itemPressed(QTableWidgetItem *item)
     mTbl->blockSignals(false);
 }
 
-void WatchpointsWidget::itemActivated(QTableWidgetItem *item)
-{
-    switch (item->column())
-    {
-        default:
-            break;
-        case Column::Address:
-            mPrevAddr = item->text();
-            break;
-        case Column::Size:
-            mPrevSize = item->text();
-            break;
-    }
-}
-
 void WatchpointsWidget::itemChanged(QTableWidgetItem *item)
 {
     const QBrush invalidItemBrush(QColor(Qt::red).lighter());
@@ -306,14 +301,15 @@ void WatchpointsWidget::itemChanged(QTableWidgetItem *item)
         default:
             break;
         case Column::Address:
+            mTbl->blockSignals(true);
+            clrCoreWatchpoint(mTbl->item(row, Column::Address)->data(Qt::UserRole).toString(),
+                              mTbl->item(row, Column::Size)->text());
             if (Util::isHexAddress(item->text()))
             {
                 item->setBackground(mNormalBackground);
-                mTbl->blockSignals(true);
                 item->setText(Util::int2hex(Util::hex2int(item->text()), Util::addrByteWidth));
-                mTbl->blockSignals(false);
 
-                if (Util::isDecString(mTbl->item(row, Column::Size)->text(), 1, 16777215))
+                if (Util::isDecString(mTbl->item(row, Column::Size)->text(), 1, ((2 << 24) - 1)))
                 {
                     setWatchpointMode(row, getWatchpointMode(row) | Watchpoint::Mode::E);
                 }
@@ -324,9 +320,14 @@ void WatchpointsWidget::itemChanged(QTableWidgetItem *item)
                 mTbl->item(row, Column::Address)->setBackground(invalidItemBrush);
                 mTbl->item(row, Column::Enabled)->setBackground(invalidItemBrush);
             }
+            item->setData(Qt::UserRole, item->text());
+            mTbl->blockSignals(false);
             break;
         case Column::Size:
-            if (Util::isDecString(item->text(), 1, 16777215))
+            mTbl->blockSignals(true);
+            clrCoreWatchpoint(mTbl->item(row, Column::Address)->text(),
+                              mTbl->item(row, Column::Size)->data(Qt::UserRole).toString());
+            if (Util::isDecString(item->text(), 1, sMaxSize))
             {
                 item->setBackground(mNormalBackground);
 
@@ -340,8 +341,58 @@ void WatchpointsWidget::itemChanged(QTableWidgetItem *item)
                 setWatchpointMode(row, getWatchpointMode(row) & ~Watchpoint::Mode::E);
                 mTbl->item(row, Column::Size)->setBackground(invalidItemBrush);
                 mTbl->item(row, Column::Enabled)->setBackground(invalidItemBrush);
-
             }
+            item->setData(Qt::UserRole, item->text());
+            mTbl->blockSignals(false);
             break;
+    }
+}
+
+void WatchpointsWidget::clrCoreWatchpoint(const QString &addrStr, const QString &sizeStr)
+{
+    if (Util::isHexAddress(addrStr) && Util::isDecString(sizeStr, 1, sMaxSize))
+    {
+        uint32_t addr = Util::hex2int(addrStr);
+        uint32_t size = sizeStr.toUInt();
+
+        for (uint32_t i = 0; i < size; ++i)
+        {
+            if (addr + i > sMaxAddr)
+            {
+                break;
+            }
+
+            core().set(cemucore::CEMUCORE_PROP_DBG_FLAGS, addr + i, 0);
+        }
+    }
+}
+
+void WatchpointsWidget::setCoreWatchpoint(const QString &addrStr, const QString &sizeStr, int mode)
+{
+    if (!(mode & Watchpoint::Mode::E))
+    {
+        clrCoreWatchpoint(addrStr, sizeStr);
+        return;
+    }
+
+    if (Util::isHexAddress(addrStr) && Util::isDecString(sizeStr, 1, sMaxSize))
+    {
+        uint32_t addr = Util::hex2int(addrStr);
+        uint32_t size = sizeStr.toUInt();
+        int flags = 0;
+
+        flags |= mode & Watchpoint::Mode::R ? cemucore::CEMUCORE_DBG_WATCH_READ : 0;
+        flags |= mode & Watchpoint::Mode::W ? cemucore::CEMUCORE_DBG_WATCH_WRITE : 0;
+        flags |= mode & Watchpoint::Mode::X ? cemucore::CEMUCORE_DBG_WATCH_EXEC : 0;
+
+        for (uint32_t i = 0; i < size; ++i)
+        {
+            if (addr + i > sMaxAddr)
+            {
+                break;
+            }
+
+            core().set(cemucore::CEMUCORE_PROP_DBG_FLAGS, addr + i, flags);
+        }
     }
 }
