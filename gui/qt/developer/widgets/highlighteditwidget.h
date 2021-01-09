@@ -32,7 +32,7 @@ public:
     explicit HighlightEditWidget(const QString &mask = QString(), QWidget *parent = nullptr);
 
 public slots:
-    void setText(const QString &text);
+    void setString(const QString &str);
     void setInt(uint32_t value, uint8_t length);
     uint32_t getInt();
     void clearHighlight();

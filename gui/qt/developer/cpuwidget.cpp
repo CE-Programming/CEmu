@@ -306,6 +306,62 @@ CpuWidget::CpuWidget(DockedWidgetList &list)
     setLayout(mainLayout);
 
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    connect(mChkS, &QCheckBox::toggled, this, &CpuWidget::setFlags);
+    connect(mChkZ, &QCheckBox::toggled, this, &CpuWidget::setFlags);
+    connect(mChk5, &QCheckBox::toggled, this, &CpuWidget::setFlags);
+    connect(mChkH, &QCheckBox::toggled, this, &CpuWidget::setFlags);
+    connect(mChk3, &QCheckBox::toggled, this, &CpuWidget::setFlags);
+    connect(mChkP, &QCheckBox::toggled, this, &CpuWidget::setFlags);
+    connect(mChkN, &QCheckBox::toggled, this, &CpuWidget::setFlags);
+    connect(mChkC, &QCheckBox::toggled, this, &CpuWidget::setFlags);
+    connect(mEdtAF, &HighlightEditWidget::textChanged, [this](const QString &text)
+    {
+        uint8_t flags = Util::hex2int(text) & 0xFF;
+
+        mChkS->blockSignals(true);
+        mChkS->setChecked(flags & (1 << 7));
+        mChkS->blockSignals(false);
+        mChkZ->blockSignals(true);
+        mChkZ->setChecked(flags & (1 << 6));
+        mChkZ->blockSignals(false);
+        mChk5->blockSignals(true);
+        mChk5->setChecked(flags & (1 << 5));
+        mChk5->blockSignals(false);
+        mChkH->blockSignals(true);
+        mChkH->setChecked(flags & (1 << 4));
+        mChkH->blockSignals(false);
+        mChk3->blockSignals(true);
+        mChk3->setChecked(flags & (1 << 3));
+        mChk3->blockSignals(false);
+        mChkP->blockSignals(true);
+        mChkP->setChecked(flags & (1 << 2));
+        mChkP->blockSignals(false);
+        mChkN->blockSignals(true);
+        mChkN->setChecked(flags & (1 << 1));
+        mChkN->blockSignals(false);
+        mChkC->blockSignals(true);
+        mChkC->setChecked(flags & (1 << 0));
+        mChkC->blockSignals(false);
+    });
+}
+
+void CpuWidget::setFlags()
+{
+    uint8_t flags = 0;
+
+    flags |= mChkS->isChecked() ? 1 << 7 : 0;
+    flags |= mChkZ->isChecked() ? 1 << 6 : 0;
+    flags |= mChk5->isChecked() ? 1 << 5 : 0;
+    flags |= mChkH->isChecked() ? 1 << 4 : 0;
+    flags |= mChk3->isChecked() ? 1 << 3 : 0;
+    flags |= mChkP->isChecked() ? 1 << 2 : 0;
+    flags |= mChkN->isChecked() ? 1 << 1 : 0;
+    flags |= mChkC->isChecked() ? 1 << 0 : 0;
+
+    mEdtAF->blockSignals(true);
+    mEdtAF->setInt((mEdtAF->getInt() & 0xFF00) | flags, 4);
+    mEdtAF->blockSignals(false);
 }
 
 bool CpuRegisterFilter::eventFilter(QObject *obj, QEvent *event)
@@ -425,17 +481,6 @@ bool CpuRegisterFilter::eventFilter(QObject *obj, QEvent *event)
 
 void CpuWidget::loadFromCore(const CoreWrapper &core)
 {
-    uint8_t regF = core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_F);
-
-    mChkS->setChecked(regF & (1 << 7));
-    mChkZ->setChecked(regF & (1 << 6));
-    mChk5->setChecked(regF & (1 << 5));
-    mChkH->setChecked(regF & (1 << 4));
-    mChk3->setChecked(regF & (1 << 3));
-    mChkP->setChecked(regF & (1 << 2));
-    mChkN->setChecked(regF & (1 << 1));
-    mChkC->setChecked(regF & (1 << 0));
-
     mEdtI->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_I), 4);
     mEdtR->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_R), 2);
     mEdtAF->setInt(core.get(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_AF), 4);
@@ -455,18 +500,6 @@ void CpuWidget::loadFromCore(const CoreWrapper &core)
 
 void CpuWidget::storeToCore(CoreWrapper &core) const
 {
-    uint8_t regF = 0;
-
-    regF |= mChkS->isChecked() ? 1 << 7 : 0;
-    regF |= mChkZ->isChecked() ? 1 << 6 : 0;
-    regF |= mChk5->isChecked() ? 1 << 5 : 0;
-    regF |= mChkH->isChecked() ? 1 << 4 : 0;
-    regF |= mChk3->isChecked() ? 1 << 3 : 0;
-    regF |= mChkP->isChecked() ? 1 << 2 : 0;
-    regF |= mChkN->isChecked() ? 1 << 1 : 0;
-    regF |= mChkC->isChecked() ? 1 << 0 : 0;
-
-    core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_F, regF);
     core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_I, mEdtI->getInt());
     core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_R, mEdtR->getInt());
     core.set(cemucore::CEMUCORE_PROP_REG, cemucore::CEMUCORE_REG_AF, mEdtR->getInt());

@@ -49,6 +49,8 @@ public:
     void storeToCore(CoreWrapper &) const override;
 
 private:
+    void setFlags();
+
     CpuRegisterFilter *mRegEventFilter;
 
     QCheckBox *mChkS;

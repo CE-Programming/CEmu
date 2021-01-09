@@ -39,9 +39,9 @@ HighlightEditWidget::HighlightEditWidget(const QString &mask, QWidget *parent)
     mPaletteHighlight.setColor(QPalette::Base, highlightColor);
 }
 
-void HighlightEditWidget::setText(const QString &newText)
+void HighlightEditWidget::setString(const QString &str)
 {
-    if (text() != newText)
+    if (text() != str)
     {
         setPalette(mPaletteHighlight);
     }
@@ -49,19 +49,18 @@ void HighlightEditWidget::setText(const QString &newText)
     {
         setPalette(mPaletteNoHighlight);
     }
+    setText(str);
 }
 
 void HighlightEditWidget::setInt(uint32_t value, uint8_t length)
 {
-    setText(Util::int2hex(value, length));
+    setString(Util::int2hex(value, length));
 }
-
 
 uint32_t HighlightEditWidget::getInt()
 {
     return Util::hex2int(text());
 }
-
 
 void HighlightEditWidget::clearHighlight()
 {
