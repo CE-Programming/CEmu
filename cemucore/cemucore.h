@@ -43,6 +43,16 @@ typedef enum cemucore_prop
 
 typedef enum cemucore_reg
 {
+    /* 1-bit flags */
+    CEMUCORE_FLAG_C,
+    CEMUCORE_FLAG_N,
+    CEMUCORE_FLAG_PV,
+    CEMUCORE_FLAG_X,
+    CEMUCORE_FLAG_HC,
+    CEMUCORE_FLAG_Y,
+    CEMUCORE_FLAG_Z,
+    CEMUCORE_FLAG_S,
+
     /* 8-bit registers */
     CEMUCORE_REG_F,
     CEMUCORE_REG_A,
@@ -62,6 +72,7 @@ typedef enum cemucore_reg
     CEMUCORE_REG_IYH,
     CEMUCORE_REG_IYU,
     CEMUCORE_REG_R,
+    CEMUCORE_REG_MB,
 
     /* 16-bit registers */
     CEMUCORE_REG_AF,

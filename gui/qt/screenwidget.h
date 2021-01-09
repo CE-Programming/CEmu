@@ -17,6 +17,8 @@
 #ifndef SCREENWIDGET_H
 #define SCREENWIDGET_H
 
+class CalculatorWidget;
+
 #include <QtCore/QRect>
 #include <QtCore/QString>
 #include <QtGui/QFont>
@@ -36,13 +38,16 @@ class ScreenWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit ScreenWidget(QWidget *parent = nullptr);
+    explicit ScreenWidget(CalculatorWidget *parent);
     ~ScreenWidget();
 
     void setScreen(const QString &skin = QString());
     void setModel(const QString &product, const QString &model, const QString &edition = QString());
 
     static const QRect sOuterRect, sOuterCorner, sInnerRect, sInnerCorner;
+
+public slots:
+    void lcdFrame();
 
 protected:
     virtual void paintEvent(QPaintEvent *event) override;
@@ -56,6 +61,8 @@ protected:
     QImage mSkin;
 
 private:
+    CalculatorWidget *calcWidget();
+
     void prepareText();
 };
 

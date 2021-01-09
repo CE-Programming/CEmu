@@ -16,6 +16,10 @@
 
 #include "screenwidget.h"
 
+#include "calculatorwidget.h"
+#include "corewindow.h"
+#include "corewrapper.h"
+
 #include <QtCore/QPoint>
 #include <QtCore/QRectF>
 #include <QtCore/QSize>
@@ -29,7 +33,7 @@ const QRect ScreenWidget::sOuterRect{0, 0, 450, 360},
             ScreenWidget::sInnerRect = sOuterRect - QMargins{32, 60, 32, 16},
             ScreenWidget::sInnerCorner{0, 0, 60, 60};
 
-ScreenWidget::ScreenWidget(QWidget *parent)
+ScreenWidget::ScreenWidget(CalculatorWidget *parent)
     : QWidget(parent),
       mGradient{sOuterRect.topLeft(), sOuterRect.topRight()},
       mUnpoweredText{tr("LCD OFF")},
@@ -74,6 +78,11 @@ void ScreenWidget::setModel(const QString &product, const QString &model, const 
     mModelText.setText(model);
     mEditionText.setText(edition);
     prepareText();
+}
+
+void ScreenWidget::lcdFrame()
+{
+    calcWidget()->coreWindow()->core().wake();
 }
 
 void ScreenWidget::paintEvent(QPaintEvent *)
@@ -133,6 +142,11 @@ void ScreenWidget::resizeEvent(QResizeEvent *event)
                          0,  m22, 0,
                          dx,  dy, 1);
     prepareText();
+}
+
+CalculatorWidget *ScreenWidget::calcWidget()
+{
+    return static_cast<CalculatorWidget *>(parent());
 }
 
 void ScreenWidget::prepareText()

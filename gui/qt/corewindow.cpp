@@ -65,7 +65,7 @@ CoreWindow::CoreWindow(const QString &uniqueName,
       mCalcType{cemucore::ti_device_t::TI84PCE},
       mCore{this}
 {
-    connect(&mCore, &CoreWrapper::coreSignal, this, &CoreWindow::coreSignal, Qt::QueuedConnection);
+    connect(&mCore, &CoreWrapper::softCmd, this, &CoreWindow::softCmd, Qt::QueuedConnection);
 
     auto *menubar = menuBar();
 
@@ -160,6 +160,7 @@ void CoreWindow::createDockWidgets()
     connect(mCalcOverlay, &CalculatorOverlay::createRom, this, &CoreWindow::createRom);
     connect(mCalcOverlay, &CalculatorOverlay::loadRom, this, &CoreWindow::importRom);
 
+    connect(&mCore, &CoreWrapper::lcdFrame, mCalcWidget, &CalculatorWidget::lcdFrame, Qt::QueuedConnection);
     connect(mCalcWidget, &CalculatorWidget::keyPressed, keyHistory, &KeyHistoryWidget::add);
     connect(mKeypadBridge, &QtKeypadBridge::keyStateChanged, mCalcWidget, &CalculatorWidget::changeKeyState);
     mCalcWidget->installEventFilter(mKeypadBridge);
@@ -420,10 +421,9 @@ bool CoreWindow::restoreLayout()
     return json.isEmpty();
 }
 
-void CoreWindow::coreSignal(cemucore::signal_t signal)
+void CoreWindow::softCmd()
 {
-    qDebug() << __PRETTY_FUNCTION__ << signal;
-    // TODO: make sure signal is handled
+    qDebug() << __PRETTY_FUNCTION__;
     mCore.wake();
 }
 

@@ -42,17 +42,31 @@
 
 typedef struct regs
 {
-#define CEMUCORE_REG16(hl, h, l)                \
+#define CEMUCORE_REGAF(p)                       \
     union                                       \
     {                                           \
         struct                                  \
         {                                       \
             CEMUCORE_ORDER_SWAP2(               \
-                uint8_t h,                      \
-                uint8_t l);                     \
+                uint8_t : 8,                    \
+                CEMUCORE_ORDER_SWAP8(           \
+                    bool p##sf : 1,             \
+                    bool p##zf : 1,             \
+                    bool p##yf : 1,             \
+                    bool p##hc : 1,             \
+                    bool p##xf : 1,             \
+                    bool p##pv : 1,             \
+                    bool p##nf : 1,             \
+                    bool p##cf : 1));           \
         };                                      \
-        uint16_t hl;                            \
-    }
+        struct                                  \
+        {                                       \
+            CEMUCORE_ORDER_SWAP2(               \
+                uint8_t p##a,                   \
+                uint8_t p##f);                  \
+        };                                      \
+        uint16_t p##af;                         \
+    };
 #define CEMUCORE_REG24(hl, h, l)                \
     union                                       \
     {                                           \
@@ -77,31 +91,8 @@ typedef struct regs
                 uint32_t u##hl : 24);           \
         };                                      \
     }
-    union
-    {
-        struct
-        {
-            CEMUCORE_ORDER_SWAP2(
-                uint8_t : 8,
-                CEMUCORE_ORDER_SWAP8(
-                    bool sf : 1,
-                    bool zf : 1,
-                    bool yf : 1,
-                    bool hc : 1,
-                    bool xf : 1,
-                    bool pv : 1,
-                    bool nf : 1,
-                    bool cf : 1));
-        };
-        struct
-        {
-            CEMUCORE_ORDER_SWAP2(
-                uint8_t a,
-                uint8_t f);
-        };
-        uint16_t af;
-    };
-    CEMUCORE_REG16(shadow_af, shadow_a, shadow_f);
+    CEMUCORE_REGAF()
+    CEMUCORE_REGAF(shadow_)
     CEMUCORE_REG24(bc, b, c);
     CEMUCORE_REG24(de, d, e);
     CEMUCORE_REG24(hl, h, l);
@@ -132,8 +123,10 @@ typedef struct regs
     uint32_t pc : 24, : 8;
     uint32_t rpc : 24, : 8;
     uint16_t i;
-    uint8_t r;
+    uint8_t r, mb;
     bool adl : 1, madl : 1;
+#undef CEMUCORE_REG24
+#undef CEMUCORE_REGAF
 } regs_t;
 
 typedef struct cpu

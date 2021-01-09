@@ -57,6 +57,7 @@ public slots:
     void changeKeyState(KeyCode keycode, bool press);
 
 signals:
+    void lcdFrame();
     void keyPressed(const QString& key);
 
 private:

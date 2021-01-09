@@ -72,7 +72,7 @@ private:
     void updateKey(Key *key, bool);
     void addKey(Key *key);
 
-    CalculatorWidget *calcWidget() const;
+    CalculatorWidget *calcWidget();
 
     Color color = KeypadWidget::Black;
     bool mHoldingEnabled = true;

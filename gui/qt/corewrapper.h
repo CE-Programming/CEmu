@@ -52,7 +52,8 @@ public:
     void wake();
 
 signals:
-    void coreSignal(cemucore::signal_t);
+    void lcdFrame();
+    void softCmd();
 
 private:
     static void signalHandler(cemucore::signal_t, void *);

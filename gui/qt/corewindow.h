@@ -60,7 +60,7 @@ private slots:
     void showPreferences();
     bool saveLayout(bool ignoreErrors = false);
     bool restoreLayout();
-    void coreSignal(cemucore::signal_t);
+    void softCmd();
 
 private:
     void createFileMenu();

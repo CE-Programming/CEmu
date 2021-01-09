@@ -78,11 +78,11 @@ CalculatorWidget::CalculatorWidget(DockedWidgetList &list, CoreWindow *coreWindo
                    list},
       mCoreWindow{coreWindow}
 {
-    mKeypad = new KeypadWidget{this};
     mScreen = new ScreenWidget{this};
+    mKeypad = new KeypadWidget{this};
 
-    mKeypad->setMinimumSize(50, 50);
     mScreen->setMinimumSize(50, 28);
+    mKeypad->setMinimumSize(50, 50);
 
     QVBoxLayout *layout = new QVBoxLayout;
     layout->setContentsMargins(0, 0, 0, 0);
@@ -96,6 +96,7 @@ CalculatorWidget::CalculatorWidget(DockedWidgetList &list, CoreWindow *coreWindo
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     setFocusPolicy(Qt::StrongFocus);
 
+    connect(this, &CalculatorWidget::lcdFrame, mScreen, &ScreenWidget::lcdFrame);
     connect(mKeypad, &KeypadWidget::keyPressed, this, &CalculatorWidget::keyPressed);
 }
 

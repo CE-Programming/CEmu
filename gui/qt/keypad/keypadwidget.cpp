@@ -541,7 +541,7 @@ bool KeypadWidget::event(QEvent *event) {
     return true;
 }
 
-CalculatorWidget *KeypadWidget::calcWidget() const
+CalculatorWidget *KeypadWidget::calcWidget()
 {
     return static_cast<CalculatorWidget *>(parent());
 }

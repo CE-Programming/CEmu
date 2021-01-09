@@ -64,5 +64,14 @@ void CoreWrapper::set(cemucore::cemucore_prop_t prop, int32_t addr, int32_t val)
 
 void CoreWrapper::signalHandler(cemucore::signal_t signal, void *data)
 {
-    emit static_cast<CoreWrapper *>(data)->coreSignal(signal);
+    CoreWrapper *core = static_cast<CoreWrapper *>(data);
+    switch (signal)
+    {
+    case cemucore::CEMUCORE_SIGNAL_LCD_FRAME:
+        emit core->lcdFrame();
+        break;
+    case cemucore::CEMUCORE_SIGNAL_SOFT_CMD:
+        emit core->softCmd();
+        break;
+    }
 }
