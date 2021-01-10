@@ -30,6 +30,7 @@
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QLabel>
+#include <QtWidgets/QMenu>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QRadioButton>
@@ -69,28 +70,23 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
     QLabel *lblNumBytes = new QLabel(tr("Bytes per row") + ':');
     QPushButton *btnGoto = new QPushButton(QIcon(QStringLiteral(":/assets/icons/ok.svg")), tr("Goto"));
     QPushButton *btnSearch = new QPushButton(QIcon(QStringLiteral(":/assets/icons/search.svg")), tr("Search"));
-    QPushButton *btnApply = new QPushButton(QIcon(QStringLiteral(":/assets/icons/high_priority.svg")), tr("Apply Changes"));
-    QPushButton *btnAscii = new QPushButton(QIcon(QStringLiteral(":/assets/icons/alphabetical_az.svg")), QStringLiteral("ASCII"));
+    mBtnCharset = new QPushButton(QIcon(QStringLiteral(":/assets/icons/alphabetical_az.svg")), QStringLiteral("ASCII"));
     QSpinBox *spnNumBytes = new QSpinBox;
 
-    btnAscii->setCheckable(true);
-    btnAscii->setChecked(true);
-
     spnNumBytes->setMinimum(1);
-    spnNumBytes->setMaximum(1024);
+    spnNumBytes->setMaximum(256);
+    spnNumBytes->setValue(mView->bytesPerLine());
 
     QHBoxLayout *hboxBtns = new QHBoxLayout;
     hboxBtns->addWidget(editAddr);
     hboxBtns->addWidget(btnGoto);
     hboxBtns->addWidget(btnSearch);
-    hboxBtns->addStretch();
-    hboxBtns->addWidget(btnApply);
 
     QHBoxLayout *hboxBtmBtns = new QHBoxLayout;
     hboxBtmBtns->addWidget(lblNumBytes);
     hboxBtmBtns->addWidget(spnNumBytes);
     hboxBtmBtns->addStretch();
-    hboxBtmBtns->addWidget(btnAscii);
+    hboxBtmBtns->addWidget(mBtnCharset);
 
     QVBoxLayout *vLayout = new QVBoxLayout;
     vLayout->addLayout(hboxBtns);
@@ -101,11 +97,43 @@ MemWidget::MemWidget(DockedWidget *parent, Area area)
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     connect(btnSearch, &QPushButton::clicked, this, &MemWidget::showSearchDialog);
+    connect(spnNumBytes, QOverload<int>::of(&QSpinBox::valueChanged), mView, &HexWidget::setBytesPerLine);
+    connect(mBtnCharset, &QPushButton::clicked, this, &MemWidget::selectCharset);
 }
 
 DockedWidget *MemWidget::dockedWidget() const
 {
     return mDockedWidget;
+}
+
+void MemWidget::selectCharset()
+{
+    const QString setAscii = QStringLiteral("ASCII");
+    const QString setTiAscii = QStringLiteral("TI ASCII");
+    const QString setNone = tr("None");
+
+    QMenu menu;
+    menu.addAction(setAscii);
+    menu.addAction(setTiAscii);
+    menu.addAction(setNone);
+
+    QAction *action = menu.exec(mBtnCharset->mapToGlobal({0, mBtnCharset->height() + 1}));
+    if (action)
+    {
+        mBtnCharset->setText(action->text());
+        if (action->text() == setAscii)
+        {
+            mView->setCharset(HexWidget::Charset::Ascii);
+        }
+        else if (action->text() == setTiAscii)
+        {
+            mView->setCharset(HexWidget::Charset::TIAscii);
+        }
+        else if (action->text() == setNone)
+        {
+            mView->setCharset(HexWidget::Charset::None);
+        }
+    }
 }
 
 void MemWidget::showSearchDialog()

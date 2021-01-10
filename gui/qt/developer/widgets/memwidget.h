@@ -27,6 +27,10 @@ class DockWidget;
 
 #include <QtWidgets/QWidget>
 
+QT_BEGIN_NAMESPACE
+class QPushButton;
+QT_END_NAMESPACE
+
 class MemWidget : public QWidget
 {
     Q_OBJECT
@@ -45,8 +49,10 @@ public:
 
 private:
     void showSearchDialog();
+    void selectCharset();
 
     DockedWidget *mDockedWidget;
+    QPushButton *mBtnCharset;
     HexWidget *mView;
     QString mSearch;
     bool mSearchHex;

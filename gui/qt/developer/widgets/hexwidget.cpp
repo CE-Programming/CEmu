@@ -182,6 +182,7 @@ void HexWidget::setBytesPerLine(int bytesPerLine)
 {
     mStride = bytesPerLine * 2;
     resizeEvent();
+    viewport()->update();
 }
 
 auto HexWidget::charset() const -> Charset
