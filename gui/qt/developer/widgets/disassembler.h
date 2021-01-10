@@ -21,24 +21,23 @@
 
 #include "../../deps/zdis/zdis.h"
 
-#include <string>
-#include <unordered_map>
+#include <QtCore/QString>
 
 class Disassembler
 {
 public:
     explicit Disassembler();
 
-    QString disassemble(uint32_t addr, uint32_t *nextAddr);
+    QString disassemble(uint32_t &addr);
 
 private:
-    char *strWord(int32_t data, bool il);
-    char *strAddr(int32_t data, bool il);
+    QString strWord(int32_t data, bool il);
+    QString strAddr(int32_t data, bool il);
 
-    int zdisRead(struct zdis_ctx *ctx, uint32_t addr);
-    bool zdisPut(struct zdis_ctx *ctx, enum zdis_put kind, int32_t val, bool il);
+    int zdisRead(zdis_ctx *ctx, uint32_t addr);
+    bool zdisPut(zdis_ctx *ctx, zdis_put kind, int32_t val, bool il);
 
-    struct zdis_ctx mZdis;
+    zdis_ctx mZdis;
 
     QString mBuffer;
 };

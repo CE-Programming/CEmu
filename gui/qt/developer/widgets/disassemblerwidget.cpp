@@ -56,20 +56,17 @@ void DisassemblerWidget::setAddress(uint32_t addr)
 
     for (int i = 0; i < 128; i++)
     {
-        uint32_t nextAddr;
+        uint32_t prevAddr = addr;
+        QString mnemonic = mDis.disassemble(addr);
 
-        QString mnemonic = mDis.disassemble(addr, &nextAddr);
-
-        if (addr >= mTopAddress)
+        if (prevAddr >= mTopAddress)
         {
             int row = rowCount();
             insertRow(row);
-            setItem(row, Column::Address, new QTableWidgetItem{Util::int2hex(addr, Util::addrByteWidth)});
+            setItem(row, Column::Address, new QTableWidgetItem{Util::int2hex(prevAddr, Util::addrByteWidth)});
             setItem(row, Column::Data, new QTableWidgetItem{QStringLiteral("00")});
             setItem(row, Column::Mnemonic, new QTableWidgetItem{mnemonic});
         }
-
-        addr = nextAddr;
     }
 
     mBottomAddress = addr;
@@ -114,34 +111,32 @@ bool DisassemblerWidget::isAtBottom()
 void DisassemblerWidget::append()
 {
     uint32_t addr = mBottomAddress;
-    uint32_t nextAddr;
 
     int row = rowCount();
     insertRow(row);
     setItem(row, Column::Address, new QTableWidgetItem{Util::int2hex(addr, Util::addrByteWidth)});
     setItem(row, Column::Data, new QTableWidgetItem{QStringLiteral("00")});
-    setItem(row, Column::Mnemonic, new QTableWidgetItem{mDis.disassemble(addr, &nextAddr)});
+    setItem(row, Column::Mnemonic, new QTableWidgetItem{mDis.disassemble(addr)});
 
-    mBottomAddress = nextAddr;
+    mBottomAddress = addr;
 }
 
 void DisassemblerWidget::prepend()
 {
-    uint32_t addr = mBottomAddress;
-    uint32_t prevAddr = addr;
-    uint32_t nextAddr;
-
     if (mTopAddress == 0)
     {
         return;
     }
+
+    uint32_t addr = mBottomAddress;
 
     addr = mTopAddress;
     addr = addr < 32 ? 0 : addr - 32;
 
     for (int i = 0; i < 64; i++)
     {
-        QString mnemonic = mDis.disassemble(addr, &nextAddr);
+        uint32_t prevAddr = addr;
+        QString mnemonic = mDis.disassemble(addr);
 
         if (addr >= mTopAddress)
         {
@@ -151,14 +146,11 @@ void DisassemblerWidget::prepend()
             insertRow(row);
             setItem(row, Column::Address, new QTableWidgetItem{Util::int2hex(prevAddr, Util::addrByteWidth)});
             setItem(row, Column::Data, new QTableWidgetItem{QStringLiteral("00")});
-            setItem(row, Column::Mnemonic, new QTableWidgetItem{mDis.disassemble(prevAddr, nullptr)});
+            setItem(row, Column::Mnemonic, new QTableWidgetItem{mnemonic});
 
             mTopAddress = instSize > mTopAddress ? 0 : mTopAddress - instSize;
             return;
         }
-
-        prevAddr = addr;
-        addr = nextAddr;
     }
 
     abort();
