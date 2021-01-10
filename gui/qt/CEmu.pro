@@ -87,8 +87,8 @@ HEADERS += \
     developer/portmonitorwidget.h \
     developer/visualizerwidget.h \
     developer/watchpointswidget.h \
-    developer/widgets/disassembly.h \
-    developer/widgets/disassemblyview.h \
+    developer/widgets/disassembler.h \
+    developer/widgets/disassemblerwidget.h \
     developer/widgets/hexwidget.h \
     developer/widgets/highlighteditwidget.h \
     developer/widgets/memwidget.h \
@@ -142,8 +142,8 @@ SOURCES += \
     developer/portmonitorwidget.cpp \
     developer/visualizerwidget.cpp \
     developer/watchpointswidget.cpp \
-    developer/widgets/disassembly.cpp \
-    developer/widgets/disassemblyview.cpp \
+    developer/widgets/disassembler.cpp \
+    developer/widgets/disassemblerwidget.cpp \
     developer/widgets/hexwidget.cpp \
     developer/widgets/highlighteditwidget.cpp \
     developer/widgets/memwidget.cpp \

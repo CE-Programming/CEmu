@@ -14,8 +14,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DISASSEMBLY_H
-#define DISASSEMBLY_H
+#ifndef DISASSEMBLER_H
+#define DISASSEMBLER_H
 
 #include "../../corewindow.h"
 
@@ -24,10 +24,10 @@
 #include <string>
 #include <unordered_map>
 
-class Disassembly
+class Disassembler
 {
 public:
-    explicit Disassembly();
+    explicit Disassembler();
 
     QString disassemble(uint32_t addr, uint32_t *nextAddr);
 

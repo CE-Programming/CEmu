@@ -17,7 +17,7 @@
 #include "disassemblywidget.h"
 
 #include "../util.h"
-#include "widgets/disassemblyview.h"
+#include "widgets/disassemblerwidget.h"
 
 #include <kddockwidgets/DockWidget.h>
 
@@ -33,7 +33,7 @@ DisassemblyWidget::DisassemblyWidget(CoreWindow *coreWindow)
                    QIcon(QStringLiteral(":/assets/icons/fine_print.svg")),
                    coreWindow}
 {
-    mDisasm = new DisassemblyView{this};
+    mDisasm = new DisassemblerWidget{this};
 
     QGroupBox *grpAddr = new QGroupBox(tr("Address"));
     QGroupBox *grpEquates = new QGroupBox(tr("Equates"));

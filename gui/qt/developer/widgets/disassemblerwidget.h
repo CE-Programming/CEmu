@@ -14,23 +14,43 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DISASSEMBLYWIDGET_H
-#define DISASSEMBLYWIDGET_H
+#ifndef DISASSEMBLERWIDGET_H
+#define DISASSEMBLERWIDGET_H
 
-#include "../dockedwidget.h"
-class DisassemblerWidget;
+#include "disassembler.h"
 
-class DisassemblyWidget : public DockedWidget
+#include <QtWidgets/QTableWidget>
+
+class DisassemblerWidget : public QTableWidget
 {
     Q_OBJECT
 
 public:
-    explicit DisassemblyWidget(CoreWindow *coreWindow);
+    explicit DisassemblerWidget(QWidget *parent = nullptr);
 
-    void enableDebugWidgets(bool) override;
+    void setAddress(uint32_t);
+
+    enum Column
+    {
+        Address,
+        Data,
+        Mnemonic,
+        Count
+    };
+
+private slots:
+    void scroll(int);
 
 private:
-    DisassemblerWidget *mDisasm;
+    bool isAtTop();
+    bool isAtBottom();
+    void append();
+    void prepend();
+
+    uint32_t mTopAddress;
+    uint32_t mBottomAddress;
+
+    Disassembler mDis;
 };
 
 #endif

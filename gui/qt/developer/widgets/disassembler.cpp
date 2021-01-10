@@ -17,18 +17,18 @@
 #include <cstring>
 #include <unordered_map>
 
-#include "disassembly.h"
+#include "disassembler.h"
 
-Disassembly::Disassembly()
+Disassembler::Disassembler()
 {
     mZdis.zdis_user_ptr = reinterpret_cast<uint8_t*>(this);
     mZdis.zdis_read = [](zdis_ctx *ctx, uint32_t addr) ->
-            int { return reinterpret_cast<Disassembly *>(ctx->zdis_user_ptr)->zdisRead(ctx, addr); };
+            int { return reinterpret_cast<Disassembler *>(ctx->zdis_user_ptr)->zdisRead(ctx, addr); };
     mZdis.zdis_put = [](zdis_ctx *ctx, zdis_put kind, int32_t val, bool il) ->
-            bool { return reinterpret_cast<Disassembly *>(ctx->zdis_user_ptr)->zdisPut(ctx, kind, val, il); };
+            bool { return reinterpret_cast<Disassembler *>(ctx->zdis_user_ptr)->zdisPut(ctx, kind, val, il); };
 }
 
-QString Disassembly::disassemble(uint32_t addr, uint32_t *nextAddr)
+QString Disassembler::disassemble(uint32_t addr, uint32_t *nextAddr)
 {
     mZdis.zdis_end_addr = addr;
     mZdis.zdis_adl = 1;
@@ -47,7 +47,7 @@ QString Disassembly::disassemble(uint32_t addr, uint32_t *nextAddr)
     return mBuffer;
 }
 
-char *Disassembly::strWord(int32_t data, bool il)
+char *Disassembler::strWord(int32_t data, bool il)
 {
     static char tmpbuf[20];
 
@@ -63,7 +63,7 @@ char *Disassembly::strWord(int32_t data, bool il)
     return tmpbuf;
 }
 
-char *Disassembly::strAddr(int32_t data, bool il)
+char *Disassembler::strAddr(int32_t data, bool il)
 {
     static char tmpbuf[20];
 
@@ -79,7 +79,7 @@ char *Disassembly::strAddr(int32_t data, bool il)
     return tmpbuf;
 }
 
-int Disassembly::zdisRead(struct zdis_ctx *ctx, uint32_t addr)
+int Disassembler::zdisRead(struct zdis_ctx *ctx, uint32_t addr)
 {
     int value = 0x83;
 
@@ -89,7 +89,7 @@ int Disassembly::zdisRead(struct zdis_ctx *ctx, uint32_t addr)
     return value;
 }
 
-bool Disassembly::zdisPut(struct zdis_ctx *ctx, enum zdis_put kind, int32_t val, bool il)
+bool Disassembler::zdisPut(struct zdis_ctx *ctx, enum zdis_put kind, int32_t val, bool il)
 {
     char tmp[11], sign = '+';
     (void)ctx;
